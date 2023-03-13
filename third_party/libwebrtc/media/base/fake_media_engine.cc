@@ -427,7 +427,10 @@ void FakeVideoMediaChannel::SetRecordableEncodedFrameCallback(
 void FakeVideoMediaChannel::ClearRecordableEncodedFrameCallback(uint32_t ssrc) {
 }
 
-void FakeVideoMediaChannel::GenerateKeyFrame(uint32_t ssrc) {}
+void FakeVideoMediaChannel::RequestRecvKeyFrame(uint32_t ssrc) {}
+void FakeVideoMediaChannel::GenerateSendKeyFrame(
+    uint32_t ssrc,
+    const std::vector<std::string>& rids) {}
 
 FakeVoiceEngine::FakeVoiceEngine() : fail_create_channel_(false) {
   // Add a fake audio codec. Note that the name must not be "" as there are

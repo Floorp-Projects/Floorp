@@ -297,7 +297,7 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
     RtcpMuxPolicy rtcp_mux_policy;
     std::vector<rtc::scoped_refptr<rtc::RTCCertificate>> certificates;
     int ice_candidate_pool_size;
-    bool disable_ipv6;
+    bool DEPRECATED_disable_ipv6;
     bool disable_ipv6_on_wifi;
     int max_ipv6_networks;
     bool disable_link_local_networks;
@@ -365,7 +365,8 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
          certificates == o.certificates &&
          prioritize_most_likely_ice_candidate_pairs ==
              o.prioritize_most_likely_ice_candidate_pairs &&
-         media_config == o.media_config && disable_ipv6 == o.disable_ipv6 &&
+         media_config == o.media_config &&
+         DEPRECATED_disable_ipv6 == o.DEPRECATED_disable_ipv6 &&
          disable_ipv6_on_wifi == o.disable_ipv6_on_wifi &&
          max_ipv6_networks == o.max_ipv6_networks &&
          disable_link_local_networks == o.disable_link_local_networks &&
@@ -836,6 +837,20 @@ void PeerConnection::RemoveStream(MediaStreamInterface* local_stream) {
 RTCErrorOr<rtc::scoped_refptr<RtpSenderInterface>> PeerConnection::AddTrack(
     rtc::scoped_refptr<MediaStreamTrackInterface> track,
     const std::vector<std::string>& stream_ids) {
+  return AddTrack(std::move(track), stream_ids, nullptr);
+}
+
+RTCErrorOr<rtc::scoped_refptr<RtpSenderInterface>> PeerConnection::AddTrack(
+    rtc::scoped_refptr<MediaStreamTrackInterface> track,
+    const std::vector<std::string>& stream_ids,
+    const std::vector<RtpEncodingParameters>& init_send_encodings) {
+  return AddTrack(std::move(track), stream_ids, &init_send_encodings);
+}
+
+RTCErrorOr<rtc::scoped_refptr<RtpSenderInterface>> PeerConnection::AddTrack(
+    rtc::scoped_refptr<MediaStreamTrackInterface> track,
+    const std::vector<std::string>& stream_ids,
+    const std::vector<RtpEncodingParameters>* init_send_encodings) {
   RTC_DCHECK_RUN_ON(signaling_thread());
   TRACE_EVENT0("webrtc", "PeerConnection::AddTrack");
   if (!ConfiguredForMedia()) {
@@ -859,7 +874,8 @@ RTCErrorOr<rtc::scoped_refptr<RtpSenderInterface>> PeerConnection::AddTrack(
         RTCErrorType::INVALID_PARAMETER,
         "Sender already exists for track " + track->id() + ".");
   }
-  auto sender_or_error = rtp_manager()->AddTrack(track, stream_ids);
+  auto sender_or_error =
+      rtp_manager()->AddTrack(track, stream_ids, init_send_encodings);
   if (sender_or_error.ok()) {
     sdp_handler_->UpdateNegotiationNeeded();
     legacy_stats_->AddTrack(track.get());
@@ -1075,7 +1091,14 @@ PeerConnection::AddTransceiver(
         "Attempted to set an unimplemented parameter of RtpParameters.");
   }
 
-  auto result = cricket::CheckRtpParametersValues(parameters);
+  std::vector<cricket::VideoCodec> codecs;
+  if (media_type == cricket::MEDIA_TYPE_VIDEO) {
+    // Gather the current codec capabilities to allow checking scalabilityMode
+    // against supported values.
+    codecs = context_->media_engine()->video().send_codecs(false);
+  }
+
+  auto result = cricket::CheckRtpParametersValues(parameters, codecs);
   if (!result.ok()) {
     LOG_AND_RETURN_ERROR(result.type(), result.message());
   }
@@ -1948,29 +1971,6 @@ void PeerConnection::ReportFirstConnectUsageMetrics() {
   RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.BundlePolicy", policy,
                             kBundlePolicyUsageMax);
 
-  // Record configured ice candidate pool size depending on the
-  // BUNDLE policy. See
-  // https://w3c.github.io/webrtc-pc/#dom-rtcconfiguration-icecandidatepoolsize
-  // The ICE candidate pool size is an optimization and it may be desirable
-  // to restrict the maximum size of the pre-gathered candidates.
-  switch (configuration_.bundle_policy) {
-    case kBundlePolicyBalanced:
-      RTC_HISTOGRAM_COUNTS_LINEAR(
-          "WebRTC.PeerConnection.CandidatePoolUsage.Balanced",
-          configuration_.ice_candidate_pool_size, 0, 255, 256);
-      break;
-    case kBundlePolicyMaxBundle:
-      RTC_HISTOGRAM_COUNTS_LINEAR(
-          "WebRTC.PeerConnection.CandidatePoolUsage.MaxBundle",
-          configuration_.ice_candidate_pool_size, 0, 255, 256);
-      break;
-    case kBundlePolicyMaxCompat:
-      RTC_HISTOGRAM_COUNTS_LINEAR(
-          "WebRTC.PeerConnection.CandidatePoolUsage.MaxCompat",
-          configuration_.ice_candidate_pool_size, 0, 255, 256);
-      break;
-  }
-
   // Record whether there was a local or remote provisional answer.
   ProvisionalAnswerUsage pranswer = kProvisionalAnswerNotUsed;
   if (local_description()->GetType() == SdpType::kPrAnswer) {
@@ -2095,7 +2095,7 @@ PeerConnection::InitializePortAllocator_n(
                           cricket::PORTALLOCATOR_ENABLE_IPV6_ON_WIFI;
   // If the disable-IPv6 flag was specified, we'll not override it
   // by experiment.
-  if (configuration.disable_ipv6) {
+  if (configuration.DEPRECATED_disable_ipv6) {
     port_allocator_flags &= ~(cricket::PORTALLOCATOR_ENABLE_IPV6);
   } else if (trials().IsDisabled("WebRTC-IPv6Default")) {
     port_allocator_flags &= ~(cricket::PORTALLOCATOR_ENABLE_IPV6);
@@ -2621,8 +2621,19 @@ void PeerConnection::AddRemoteCandidate(const std::string& mid,
                                         const cricket::Candidate& candidate) {
   RTC_DCHECK_RUN_ON(signaling_thread());
 
+  if (candidate.network_type() != rtc::ADAPTER_TYPE_UNKNOWN) {
+    RTC_DLOG(LS_WARNING) << "Using candidate with adapter type set - this "
+                            "should only happen in test";
+  }
+
+  // Clear fields that do not make sense as remote candidates.
+  cricket::Candidate new_candidate(candidate);
+  new_candidate.set_network_type(rtc::ADAPTER_TYPE_UNKNOWN);
+  new_candidate.set_relay_protocol("");
+  new_candidate.set_underlying_type_for_vpn(rtc::ADAPTER_TYPE_UNKNOWN);
+
   network_thread()->PostTask(SafeTask(
-      network_thread_safety_, [this, mid = mid, candidate = candidate] {
+      network_thread_safety_, [this, mid = mid, candidate = new_candidate] {
         RTC_DCHECK_RUN_ON(network_thread());
         std::vector<cricket::Candidate> candidates = {candidate};
         RTCError error =

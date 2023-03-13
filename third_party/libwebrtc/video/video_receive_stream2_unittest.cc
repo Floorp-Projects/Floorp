@@ -42,7 +42,6 @@
 #include "modules/pacing/packet_router.h"
 #include "modules/rtp_rtcp/source/rtp_packet_to_send.h"
 #include "modules/video_coding/encoded_frame.h"
-#include "rtc_base/event.h"
 #include "rtc_base/logging.h"
 #include "system_wrappers/include/clock.h"
 #include "test/fake_decoder.h"
@@ -197,8 +196,7 @@ class VideoReceiveStream2Test : public ::testing::TestWithParam<bool> {
         config_(&mock_transport_, &mock_h264_decoder_factory_),
         call_stats_(clock_, time_controller_.GetMainThread()),
         fake_renderer_(&time_controller_),
-        fake_metronome_(time_controller_.GetTaskQueueFactory(),
-                        TimeDelta::Millis(16)),
+        fake_metronome_(TimeDelta::Millis(16)),
         decode_sync_(clock_,
                      &fake_metronome_,
                      time_controller_.GetMainThread()),
@@ -229,7 +227,6 @@ class VideoReceiveStream2Test : public ::testing::TestWithParam<bool> {
       video_receive_stream_->Stop();
       video_receive_stream_->UnregisterFromTransport();
     }
-    fake_metronome_.Stop();
     time_controller_.AdvanceTime(TimeDelta::Zero());
   }
 

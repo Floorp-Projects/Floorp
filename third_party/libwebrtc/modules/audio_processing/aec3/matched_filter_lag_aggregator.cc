@@ -18,6 +18,8 @@
 
 namespace webrtc {
 namespace {
+constexpr int kPreEchoHistogramDataNotUpdated = -1;
+
 int GetDownSamplingBlockSizeLog2(int down_sampling_factor) {
   int down_sampling_factor_log2 = 0;
   down_sampling_factor >>= 1;
@@ -129,7 +131,7 @@ MatchedFilterLagAggregator::PreEchoLagAggregator::PreEchoLagAggregator(
 
 void MatchedFilterLagAggregator::PreEchoLagAggregator::Reset() {
   std::fill(histogram_.begin(), histogram_.end(), 0);
-  histogram_data_.fill(0);
+  histogram_data_.fill(kPreEchoHistogramDataNotUpdated);
   histogram_data_index_ = 0;
   pre_echo_candidate_ = 0;
 }
@@ -141,7 +143,10 @@ void MatchedFilterLagAggregator::PreEchoLagAggregator::Aggregate(
              pre_echo_block_size < static_cast<int>(histogram_.size()));
   pre_echo_block_size =
       rtc::SafeClamp(pre_echo_block_size, 0, histogram_.size() - 1);
-  if (histogram_[histogram_data_[histogram_data_index_]] > 0) {
+  // Remove the oldest point from the `histogram_`, it ignores the initial
+  // points where no updates have been done to the `histogram_data_` array.
+  if (histogram_data_[histogram_data_index_] !=
+      kPreEchoHistogramDataNotUpdated) {
     --histogram_[histogram_data_[histogram_data_index_]];
   }
   histogram_data_[histogram_data_index_] = pre_echo_block_size;

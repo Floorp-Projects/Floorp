@@ -707,8 +707,7 @@ class WebRtcVoiceEngineTestFake : public ::testing::TestWithParam<bool> {
               stats.header_and_padding_bytes_rcvd);
     EXPECT_EQ(rtc::checked_cast<unsigned int>(info.packets_rcvd),
               stats.packets_rcvd);
-    EXPECT_EQ(rtc::checked_cast<unsigned int>(info.packets_lost),
-              stats.packets_lost);
+    EXPECT_EQ(info.packets_lost, stats.packets_lost);
     EXPECT_EQ(info.codec_name, stats.codec_name);
     EXPECT_EQ(info.codec_payload_type, stats.codec_payload_type);
     EXPECT_EQ(rtc::checked_cast<unsigned int>(info.jitter_ms), stats.jitter_ms);

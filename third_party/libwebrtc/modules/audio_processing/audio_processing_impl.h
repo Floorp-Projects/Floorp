@@ -25,8 +25,8 @@
 #include "api/function_view.h"
 #include "modules/audio_processing/aec3/echo_canceller3.h"
 #include "modules/audio_processing/agc/agc_manager_direct.h"
-#include "modules/audio_processing/agc/analog_gain_stats_reporter.h"
 #include "modules/audio_processing/agc/gain_control.h"
+#include "modules/audio_processing/agc2/input_volume_stats_reporter.h"
 #include "modules/audio_processing/audio_buffer.h"
 #include "modules/audio_processing/capture_levels_adjuster/capture_levels_adjuster.h"
 #include "modules/audio_processing/echo_control_mobile_impl.h"
@@ -539,7 +539,9 @@ class AudioProcessingImpl : public AudioProcessing {
   RmsLevel capture_output_rms_ RTC_GUARDED_BY(mutex_capture_);
   int capture_rms_interval_counter_ RTC_GUARDED_BY(mutex_capture_) = 0;
 
-  AnalogGainStatsReporter input_volume_stats_reporter_
+  InputVolumeStatsReporter applied_input_volume_stats_reporter_
+      RTC_GUARDED_BY(mutex_capture_);
+  InputVolumeStatsReporter recommended_input_volume_stats_reporter_
       RTC_GUARDED_BY(mutex_capture_);
 
   // Lock protection not needed.

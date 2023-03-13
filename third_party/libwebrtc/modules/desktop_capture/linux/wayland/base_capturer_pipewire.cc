@@ -12,11 +12,11 @@
 
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capturer.h"
+#include "modules/desktop_capture/linux/wayland/pipewire_utils.h"
 #include "modules/desktop_capture/linux/wayland/restore_token_manager.h"
 #include "modules/desktop_capture/linux/wayland/xdg_desktop_portal_utils.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
-#include "screencast_portal.h"
 
 namespace webrtc {
 
@@ -27,6 +27,18 @@ using xdg_portal::ScreenCapturePortalInterface;
 using xdg_portal::SessionDetails;
 
 }  // namespace
+
+// static
+bool BaseCapturerPipeWire::IsSupported() {
+  // Unfortunately, the best way we have to check if PipeWire is available is
+  // to try to initialize it.
+  // InitializePipeWire should prevent us from repeatedly initializing PipeWire,
+  // but we also don't really expect support to change without the application
+  // restarting.
+  static bool supported =
+      DesktopCapturer::IsRunningUnderWayland() && InitializePipeWire();
+  return supported;
+}
 
 BaseCapturerPipeWire::BaseCapturerPipeWire(const DesktopCaptureOptions& options,
                                            CaptureType type)
@@ -42,6 +54,8 @@ BaseCapturerPipeWire::BaseCapturerPipeWire(
       is_screencast_portal_(false),
       portal_(std::move(portal)) {
   source_id_ = RestoreTokenManager::GetInstance().GetUnusedId();
+  options_.screencast_stream()->SetUseDamageRegion(
+      options_.pipewire_use_damage_region());
 }
 
 BaseCapturerPipeWire::~BaseCapturerPipeWire() {

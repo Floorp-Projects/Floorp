@@ -18,6 +18,7 @@ DEFINES["WEBRTC_ENABLE_PROTOBUF"] = "0"
 DEFINES["WEBRTC_LIBRARY_IMPL"] = True
 DEFINES["WEBRTC_MOZILLA_BUILD"] = True
 DEFINES["WEBRTC_NON_STATIC_TRACE_EVENT_HANDLERS"] = "0"
+DEFINES["WEBRTC_STRICT_FIELD_TRIALS"] = "0"
 
 FINAL_LIBRARY = "webrtc"
 
@@ -265,6 +266,7 @@ if CONFIG["CPU_ARCH"] == "arm":
     UNIFIED_SOURCES += [
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/egl_dmabuf.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/mouse_cursor_monitor_pipewire.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/pipewire_utils.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/restore_token_manager.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/scoped_glib.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/screen_capture_portal_interface.cc",
@@ -342,6 +344,7 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
     UNIFIED_SOURCES += [
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/egl_dmabuf.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/mouse_cursor_monitor_pipewire.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/pipewire_utils.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/restore_token_manager.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/scoped_glib.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/screen_capture_portal_interface.cc",
@@ -378,6 +381,7 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
     UNIFIED_SOURCES += [
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/egl_dmabuf.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/mouse_cursor_monitor_pipewire.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/pipewire_utils.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/restore_token_manager.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/scoped_glib.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/screen_capture_portal_interface.cc",
@@ -410,6 +414,7 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
     UNIFIED_SOURCES += [
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/egl_dmabuf.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/mouse_cursor_monitor_pipewire.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/pipewire_utils.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/restore_token_manager.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/scoped_glib.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/screen_capture_portal_interface.cc",

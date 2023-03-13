@@ -1,0 +1,39 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+  ### This moz.build was AUTOMATICALLY GENERATED from a GN config,  ###
+  ### DO NOT edit it by hand.                                       ###
+
+COMPILE_FLAGS["OS_INCLUDES"] = []
+AllowCompilerWarnings()
+
+FINAL_LIBRARY = "webrtc"
+
+
+GeneratedFile(
+    "/third_party/libwebrtc/gen/experiments/registered_field_trials.h",
+    entry_point="action",
+    flags=[
+        "/third_party/libwebrtc/experiments/field_trials.py",
+        "/third_party/libwebrtc/",
+        "header",
+        "--output",
+        "gen/experiments/registered_field_trials.h"
+    ],
+    script="/python/mozbuild/mozbuild/action/file_generate_wrapper.py",
+)
+
+LOCAL_INCLUDES += [
+    "!/ipc/ipdl/_ipdlheaders",
+    "/ipc/chromium/src",
+    "/tools/profiler/public"
+]
+
+if CONFIG["OS_TARGET"] == "WINNT":
+
+    DEFINES["UNICODE"] = True
+    DEFINES["_UNICODE"] = True
+
+Library("registered_field_trials_header_gn")

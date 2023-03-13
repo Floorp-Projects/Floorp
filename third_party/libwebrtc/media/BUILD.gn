@@ -298,6 +298,7 @@ rtc_library("rtc_audio_video") {
   libs = []
   deps = [
     ":rtc_media_base",
+    "../api:array_view",
     "../api:call_api",
     "../api:field_trials_view",
     "../api:libjingle_peerconnection_api",

@@ -142,6 +142,7 @@ rtc_library("gain_controller2") {
     "agc2:cpu_features",
     "agc2:fixed_digital",
     "agc2:gain_applier",
+    "agc2:input_volume_controller",
     "agc2:vad_wrapper",
   ]
 }
@@ -202,9 +203,9 @@ rtc_library("audio_processing") {
     "aec_dump:aec_dump",
     "aecm:aecm_core",
     "agc",
-    "agc:analog_gain_stats_reporter",
     "agc:gain_control_interface",
     "agc:legacy_agc",
+    "agc2:input_volume_stats_reporter",
     "capture_levels_adjuster",
     "ns",
     "transient:transient_suppressor_api",
@@ -419,7 +420,9 @@ if (rtc_include_tests) {
         "agc2:biquad_filter_unittests",
         "agc2:fixed_digital_unittests",
         "agc2:input_volume_controller_unittests",
+        "agc2:input_volume_stats_reporter_unittests",
         "agc2:noise_estimator_unittests",
+        "agc2:speech_level_estimator_unittest",
         "agc2:test_utils",
         "agc2:vad_wrapper_unittests",
         "agc2/rnn_vad:unittests",

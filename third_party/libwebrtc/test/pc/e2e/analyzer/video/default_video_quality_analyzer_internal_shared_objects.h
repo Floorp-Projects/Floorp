@@ -63,8 +63,8 @@ struct FrameStats {
   DataSize pre_decoded_image_size = DataSize::Bytes(0);
   uint32_t target_encode_bitrate = 0;
 
-  absl::optional<int> rendered_frame_width = absl::nullopt;
-  absl::optional<int> rendered_frame_height = absl::nullopt;
+  absl::optional<int> decoded_frame_width = absl::nullopt;
+  absl::optional<int> decoded_frame_height = absl::nullopt;
 
   // Can be not set if frame was dropped by encoder.
   absl::optional<StreamCodecInfo> used_encoder = absl::nullopt;

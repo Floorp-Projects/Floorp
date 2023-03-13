@@ -110,6 +110,10 @@ PeerConnectionFactory::PeerConnectionFactory(
 
 PeerConnectionFactory::~PeerConnectionFactory() {
   RTC_DCHECK_RUN_ON(signaling_thread());
+  worker_thread()->BlockingCall([this] {
+    RTC_DCHECK_RUN_ON(worker_thread());
+    metronome_ = nullptr;
+  });
 }
 
 void PeerConnectionFactory::SetOptions(const Options& options) {

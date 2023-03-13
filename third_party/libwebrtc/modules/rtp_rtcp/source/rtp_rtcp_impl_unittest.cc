@@ -44,6 +44,9 @@ const uint8_t kPayloadType = 100;
 const int kWidth = 320;
 const int kHeight = 100;
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 class RtcpRttStatsTestImpl : public RtcpRttStats {
  public:
   RtcpRttStatsTestImpl() : rtt_ms_(0) {}
@@ -696,5 +699,7 @@ TEST_F(RtpRtcpImplTest, SenderReportStatsPacketByteCounters) {
               Optional(AllOf(Field(&SenderReportStats::packets_sent, Gt(0u)),
                              Field(&SenderReportStats::bytes_sent, Gt(0u)))));
 }
+
+#pragma clang diagnostic pop
 
 }  // namespace webrtc

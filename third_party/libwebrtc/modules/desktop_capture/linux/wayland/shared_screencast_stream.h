@@ -16,8 +16,9 @@
 #include "absl/types/optional.h"
 #include "api/ref_counted_base.h"
 #include "api/scoped_refptr.h"
-#include "modules/desktop_capture/desktop_frame.h"
 #include "modules/desktop_capture/mouse_cursor.h"
+#include "modules/desktop_capture/screen_capture_frame_queue.h"
+#include "modules/desktop_capture/shared_desktop_frame.h"
 #include "rtc_base/system/rtc_export.h"
 
 namespace webrtc {
@@ -27,6 +28,19 @@ class SharedScreenCastStreamPrivate;
 class RTC_EXPORT SharedScreenCastStream
     : public rtc::RefCountedNonVirtual<SharedScreenCastStream> {
  public:
+  class Observer {
+   public:
+    virtual void OnCursorPositionChanged() = 0;
+    virtual void OnCursorShapeChanged() = 0;
+    virtual void OnDesktopFrameChanged() = 0;
+    virtual void OnFailedToProcessBuffer() = 0;
+    virtual void OnStreamConfigured() = 0;
+
+   protected:
+    Observer() = default;
+    virtual ~Observer() = default;
+  };
+
   static rtc::scoped_refptr<SharedScreenCastStream> CreateDefault();
 
   bool StartScreenCastStream(uint32_t stream_node_id);
@@ -35,6 +49,8 @@ class RTC_EXPORT SharedScreenCastStream
                              uint32_t width = 0,
                              uint32_t height = 0);
   void UpdateScreenCastStreamResolution(uint32_t width, uint32_t height);
+  void SetUseDamageRegion(bool use_damage_region);
+  void SetObserver(SharedScreenCastStream::Observer* observer);
   void StopScreenCastStream();
 
   // Below functions return the most recent information we get from a
@@ -47,7 +63,7 @@ class RTC_EXPORT SharedScreenCastStream
   // Returns the most recent screen/window frame we obtained from PipeWire
   // buffer. Will return an empty frame in case we didn't manage to get a frame
   // from PipeWire buffer.
-  std::unique_ptr<DesktopFrame> CaptureFrame();
+  std::unique_ptr<SharedDesktopFrame> CaptureFrame();
 
   // Returns the most recent mouse cursor image. Will return an nullptr cursor
   // in case we didn't manage to get a cursor from PipeWire buffer. NOTE: the
@@ -65,6 +81,8 @@ class RTC_EXPORT SharedScreenCastStream
   SharedScreenCastStream();
 
  private:
+  friend class SharedScreenCastStreamPrivate;
+
   SharedScreenCastStream(const SharedScreenCastStream&) = delete;
   SharedScreenCastStream& operator=(const SharedScreenCastStream&) = delete;
 

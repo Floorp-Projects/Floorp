@@ -1058,6 +1058,7 @@ void RtpVideoStreamReceiver2::SetProtectionPayloadTypes(
   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
   RTC_DCHECK(red_payload_type >= -1 && red_payload_type < 0x80);
   RTC_DCHECK(ulpfec_payload_type >= -1 && ulpfec_payload_type < 0x80);
+  red_payload_type_ = red_payload_type;
   ulpfec_receiver_ = MaybeConstructUlpfecReceiver(
       config_.rtp.remote_ssrc, red_payload_type, ulpfec_payload_type,
       config_.rtp.extensions, this, clock_);

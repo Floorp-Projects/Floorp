@@ -80,10 +80,10 @@ FrameComparison ValidateFrameComparison(FrameComparison comparison) {
           << "Regular comparison has to have finite decode_end_time";
       RTC_DCHECK(comparison.frame_stats.rendered_time.IsFinite())
           << "Regular comparison has to have finite rendered_time";
-      RTC_DCHECK(comparison.frame_stats.rendered_frame_width.has_value())
-          << "Regular comparison has to have rendered_frame_width";
-      RTC_DCHECK(comparison.frame_stats.rendered_frame_height.has_value())
-          << "Regular comparison has to have rendered_frame_height";
+      RTC_DCHECK(comparison.frame_stats.decoded_frame_width.has_value())
+          << "Regular comparison has to have decoded_frame_width";
+      RTC_DCHECK(comparison.frame_stats.decoded_frame_height.has_value())
+          << "Regular comparison has to have decoded_frame_height";
       RTC_DCHECK(comparison.frame_stats.used_encoder.has_value())
           << "Regular comparison has to have used_encoder";
       RTC_DCHECK(comparison.frame_stats.used_decoder.has_value())
@@ -119,6 +119,13 @@ FrameComparison ValidateFrameComparison(FrameComparison comparison) {
         RTC_DCHECK(comparison.frame_stats.used_decoder.has_value())
             << "Dropped frame comparison has to have used_decoder when "
             << "decode_end_time is set or decoder_failed is true";
+      } else if (comparison.frame_stats.decode_end_time.IsFinite()) {
+        RTC_DCHECK(comparison.frame_stats.decoded_frame_width.has_value())
+            << "Dropped frame comparison has to have decoded_frame_width when "
+            << "decode_end_time is set";
+        RTC_DCHECK(comparison.frame_stats.decoded_frame_height.has_value())
+            << "Dropped frame comparison has to have decoded_frame_height when "
+            << "decode_end_time is set";
       } else {
         RTC_DCHECK(!comparison.frame_stats.received_time.IsFinite())
             << "Dropped frame comparison can't have received_time when "
@@ -132,10 +139,6 @@ FrameComparison ValidateFrameComparison(FrameComparison comparison) {
       }
       RTC_DCHECK(!comparison.frame_stats.rendered_time.IsFinite())
           << "Dropped frame comparison can't have rendered_time";
-      RTC_DCHECK(!comparison.frame_stats.rendered_frame_width.has_value())
-          << "Dropped frame comparison can't have rendered_frame_width";
-      RTC_DCHECK(!comparison.frame_stats.rendered_frame_height.has_value())
-          << "Dropped frame comparison can't have rendered_frame_height";
       break;
     case FrameComparisonType::kFrameInFlight:
       // Frame in flight comparison may miss almost any FrameStats, but if
@@ -147,10 +150,6 @@ FrameComparison ValidateFrameComparison(FrameComparison comparison) {
           << "Frame in flight comparison can't have rendered frame";
       RTC_DCHECK(!comparison.frame_stats.rendered_time.IsFinite())
           << "Frame in flight comparison can't have rendered_time";
-      RTC_DCHECK(!comparison.frame_stats.rendered_frame_width.has_value())
-          << "Frame in flight comparison can't have rendered_frame_width";
-      RTC_DCHECK(!comparison.frame_stats.rendered_frame_height.has_value())
-          << "Frame in flight comparison can't have rendered_frame_height";
 
       if (comparison.frame_stats.decode_end_time.IsFinite() ||
           comparison.frame_stats.decoder_failed) {
@@ -161,6 +160,14 @@ FrameComparison ValidateFrameComparison(FrameComparison comparison) {
             << "Frame in flight comparison has to have finite "
             << "decode_start_time when decode_end_time is finite or "
             << "decoder_failed is true.";
+      }
+      if (comparison.frame_stats.decode_end_time.IsFinite()) {
+        RTC_DCHECK(comparison.frame_stats.decoded_frame_width.has_value())
+            << "Frame in flight comparison has to have decoded_frame_width "
+            << "when decode_end_time is set.";
+        RTC_DCHECK(comparison.frame_stats.decoded_frame_height.has_value())
+            << "Frame in flight comparison has to have decoded_frame_height "
+            << "when decode_end_time is set.";
       }
       if (comparison.frame_stats.decode_start_time.IsFinite()) {
         RTC_DCHECK(comparison.frame_stats.received_time.IsFinite())
@@ -434,6 +441,7 @@ void DefaultVideoQualityAnalyzerFramesComparator::ProcessComparison(
     stats->ssim.AddSample(
         StatsSample(ssim, frame_stats.received_time, metadata));
   }
+  stats->capture_frame_rate.AddEvent(frame_stats.captured_time);
 
   // Compute dropped phase for dropped frame
   if (comparison.type == FrameComparisonType::kDroppedFrame) {
@@ -472,10 +480,6 @@ void DefaultVideoQualityAnalyzerFramesComparator::ProcessComparison(
   if (comparison.type != FrameComparisonType::kDroppedFrame ||
       comparison.frame_stats.decoder_failed) {
     if (frame_stats.rendered_time.IsFinite()) {
-      stats->resolution_of_rendered_frame.AddSample(
-          StatsSample(*comparison.frame_stats.rendered_frame_width *
-                          *comparison.frame_stats.rendered_frame_height,
-                      frame_stats.rendered_time, metadata));
       stats->total_delay_incl_transport_ms.AddSample(
           StatsSample(frame_stats.rendered_time - frame_stats.captured_time,
                       frame_stats.received_time, metadata));
@@ -506,6 +510,10 @@ void DefaultVideoQualityAnalyzerFramesComparator::ProcessComparison(
       stats->decode_time_ms.AddSample(StatsSample(
           frame_stats.decode_end_time - frame_stats.decode_start_time,
           frame_stats.decode_end_time, metadata));
+      stats->resolution_of_decoded_frame.AddSample(
+          StatsSample(*comparison.frame_stats.decoded_frame_width *
+                          *comparison.frame_stats.decoded_frame_height,
+                      frame_stats.decode_end_time, metadata));
     }
 
     if (frame_stats.prev_frame_rendered_time.IsFinite() &&

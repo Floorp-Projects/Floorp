@@ -16,6 +16,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/strings/string_view.h"
+#include "api/array_view.h"
 #include "api/dtls_transport_interface.h"
 #include "api/rtc_event_log/rtc_event_log.h"
 #include "logging/rtc_event_log/events/rtc_event_dtls_transport_state.h"
@@ -445,7 +446,12 @@ int DtlsTransport::SendPacket(const char* data,
 
         return ice_transport_->SendPacket(data, size, options);
       } else {
-        return (dtls_->WriteAll(data, size, NULL, NULL) == rtc::SR_SUCCESS)
+        size_t written;
+        int error;
+        return (dtls_->WriteAll(
+                    rtc::MakeArrayView(reinterpret_cast<const uint8_t*>(data),
+                                       size),
+                    written, error) == rtc::SR_SUCCESS)
                    ? static_cast<int>(size)
                    : -1;
       }
@@ -691,16 +697,17 @@ void DtlsTransport::OnDtlsEvent(rtc::StreamInterface* dtls, int sig, int err) {
     }
   }
   if (sig & rtc::SE_READ) {
-    char buf[kMaxDtlsPacketLen];
+    uint8_t buf[kMaxDtlsPacketLen];
     size_t read;
     int read_error;
     rtc::StreamResult ret;
     // The underlying DTLS stream may have received multiple DTLS records in
     // one packet, so read all of them.
     do {
-      ret = dtls_->Read(buf, sizeof(buf), &read, &read_error);
+      ret = dtls_->Read(buf, read, read_error);
       if (ret == rtc::SR_SUCCESS) {
-        SignalReadPacket(this, buf, read, rtc::TimeMicros(), 0);
+        SignalReadPacket(this, reinterpret_cast<const char*>(buf), read,
+                         rtc::TimeMicros(), 0);
       } else if (ret == rtc::SR_EOS) {
         // Remote peer shut down the association with no error.
         RTC_LOG(LS_INFO) << ToString() << ": DTLS transport closed by remote";

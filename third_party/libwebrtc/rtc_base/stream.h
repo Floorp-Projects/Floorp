@@ -13,6 +13,7 @@
 
 #include <memory>
 
+#include "api/array_view.h"
 #include "rtc_base/buffer.h"
 #include "rtc_base/system/rtc_export.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
@@ -68,14 +69,48 @@ class RTC_EXPORT StreamInterface {
   //    block, or the stream is in SS_OPENING state.
   //  SR_EOS: the end-of-stream has been reached, or the stream is in the
   //    SS_CLOSED state.
-  virtual StreamResult Read(void* buffer,
-                            size_t buffer_len,
-                            size_t* read,
-                            int* error) = 0;
-  virtual StreamResult Write(const void* data,
-                             size_t data_len,
-                             size_t* written,
-                             int* error) = 0;
+
+  // The deprecated method has a default implementation that may be
+  // overridden in subclasses, rather than being =0.
+  // This allows subclasses to delete the method.
+  // TODO(bugs.webrtc.org/14632): Remove when downstream is converted.
+  [[deprecated("Use ArrayView version")]] virtual StreamResult
+  Read(void* buffer, size_t buffer_len, size_t* read, int* error) {
+    RTC_CHECK_NOTREACHED();
+  }
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+  // Preserve backwards compatibility using a default implementation
+  // because there are subclasses
+  // outside of the WebRTC codebase that need to be converted.
+  //
+  // TODO(bugs.webrtc.org/14632): Remove when downstream is converted.
+  virtual StreamResult Read(rtc::ArrayView<uint8_t> buffer,
+                            size_t& read,
+                            int& error) {
+    return Read(buffer.data(), buffer.size(), &read, &error);
+  }
+#pragma clang diagnostic pop
+
+  // The deprecated method has a default implementation that may be
+  // overridden in subclasses, rather than being =0.
+  // This allows subclasses to delete the method.
+  // TODO(bugs.webrtc.org/14632): Remove when downstream is converted.
+  [[deprecated("Use ArrayView version")]] virtual StreamResult
+  Write(const void* data, size_t data_len, size_t* written, int* error) {
+    RTC_CHECK_NOTREACHED();
+  }
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+  virtual StreamResult Write(rtc::ArrayView<const uint8_t> data,
+                             size_t& written,
+                             int& error) {
+    return Write(data.data(), data.size(), &written, &error);
+  }
+#pragma clang diagnostic pop
+
   // Attempt to transition to the SS_CLOSED state.  SE_CLOSE will not be
   // signalled as a result of this call.
   virtual void Close() = 0;
@@ -104,10 +139,19 @@ class RTC_EXPORT StreamInterface {
   // unlike Write, the argument 'written' is always set, and may be non-zero
   // on results other than SR_SUCCESS.  The remaining arguments have the
   // same semantics as Write.
-  StreamResult WriteAll(const void* data,
-                        size_t data_len,
-                        size_t* written,
-                        int* error);
+  [[deprecated("Use version with ArrayView")]] StreamResult
+  WriteAll(const void* data, size_t data_len, size_t* written, int* error);
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+  // TODO(bugs.webrc.org/14632): Remove pragmas and change underlying
+  // implementation when downstream code is converted.
+  StreamResult WriteAll(ArrayView<const uint8_t> data,
+                        size_t& written,
+                        int& error) {
+    return WriteAll(data.data(), data.size(), &written, &error);
+  }
+#pragma clang diagnostic pop
 
  protected:
   StreamInterface();

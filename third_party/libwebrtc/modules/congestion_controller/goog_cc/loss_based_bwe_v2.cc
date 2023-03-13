@@ -138,8 +138,7 @@ bool LossBasedBweV2::IsReady() const {
          num_observations_ > 0;
 }
 
-LossBasedBweV2::Result LossBasedBweV2::GetLossBasedResult(
-    DataRate delay_based_limit) const {
+LossBasedBweV2::Result LossBasedBweV2::GetLossBasedResult() const {
   Result result;
   result.state = current_state_;
   if (!IsReady()) {
@@ -156,16 +155,16 @@ LossBasedBweV2::Result LossBasedBweV2::GetLossBasedResult(
                                "statistics before it can be used.";
       }
     }
-    result.bandwidth_estimate = IsValid(delay_based_limit)
-                                    ? delay_based_limit
+    result.bandwidth_estimate = IsValid(delay_based_estimate_)
+                                    ? delay_based_estimate_
                                     : DataRate::PlusInfinity();
     return result;
   }
 
-  if (IsValid(delay_based_limit)) {
+  if (IsValid(delay_based_estimate_)) {
     result.bandwidth_estimate =
         std::min({current_estimate_.loss_limited_bandwidth,
-                  GetInstantUpperBound(), delay_based_limit});
+                  GetInstantUpperBound(), delay_based_estimate_});
   } else {
     result.bandwidth_estimate = std::min(
         current_estimate_.loss_limited_bandwidth, GetInstantUpperBound());
@@ -191,12 +190,20 @@ void LossBasedBweV2::SetBandwidthEstimate(DataRate bandwidth_estimate) {
   }
 }
 
-void LossBasedBweV2::SetMinBitrate(DataRate min_bitrate) {
+void LossBasedBweV2::SetMinMaxBitrate(DataRate min_bitrate,
+                                      DataRate max_bitrate) {
   if (IsValid(min_bitrate)) {
     min_bitrate_ = min_bitrate;
   } else {
     RTC_LOG(LS_WARNING) << "The min bitrate must be finite: "
                         << ToString(min_bitrate);
+  }
+
+  if (IsValid(max_bitrate)) {
+    max_bitrate_ = max_bitrate;
+  } else {
+    RTC_LOG(LS_WARNING) << "The max bitrate must be finite: "
+                        << ToString(max_bitrate);
   }
 }
 
@@ -213,6 +220,7 @@ void LossBasedBweV2::UpdateBandwidthEstimate(
     DataRate delay_based_estimate,
     BandwidthUsage delay_detector_state,
     absl::optional<DataRate> probe_bitrate) {
+  delay_based_estimate_ = delay_based_estimate;
   if (!IsEnabled()) {
     RTC_LOG(LS_WARNING)
         << "The estimator must be enabled before it can be used.";
@@ -237,7 +245,7 @@ void LossBasedBweV2::UpdateBandwidthEstimate(
 
   ChannelParameters best_candidate = current_estimate_;
   double objective_max = std::numeric_limits<double>::lowest();
-  for (ChannelParameters candidate : GetCandidates(delay_based_estimate)) {
+  for (ChannelParameters candidate : GetCandidates()) {
     NewtonsMethodUpdate(candidate);
 
     const double candidate_objective = GetObjective(candidate);
@@ -301,11 +309,11 @@ void LossBasedBweV2::UpdateBandwidthEstimate(
 
   if (IsEstimateIncreasingWhenLossLimited(best_candidate)) {
     current_state_ = LossBasedState::kIncreasing;
-  } else if (IsValid(delay_based_estimate) &&
-             best_candidate.loss_limited_bandwidth < delay_based_estimate) {
+  } else if (IsValid(delay_based_estimate_) &&
+             best_candidate.loss_limited_bandwidth < delay_based_estimate_) {
     current_state_ = LossBasedState::kDecreasing;
-  } else if (IsValid(delay_based_estimate) &&
-             best_candidate.loss_limited_bandwidth == delay_based_estimate) {
+  } else if (IsValid(delay_based_estimate_) &&
+             best_candidate.loss_limited_bandwidth == delay_based_estimate_) {
     current_state_ = LossBasedState::kDelayBasedEstimate;
   }
   current_estimate_ = best_candidate;
@@ -708,19 +716,19 @@ double LossBasedBweV2::GetAverageReportedLossRatio() const {
   return num_lost_packets / num_packets;
 }
 
-DataRate LossBasedBweV2::GetCandidateBandwidthUpperBound(
-    DataRate delay_based_estimate) const {
-  DataRate candidate_bandwidth_upper_bound = DataRate::PlusInfinity();
-  if (IsBandwidthLimitedDueToLoss()) {
+DataRate LossBasedBweV2::GetCandidateBandwidthUpperBound() const {
+  DataRate candidate_bandwidth_upper_bound = max_bitrate_;
+  if (IsBandwidthLimitedDueToLoss() &&
+      IsValid(bandwidth_limit_in_current_window_)) {
     candidate_bandwidth_upper_bound = bandwidth_limit_in_current_window_;
   }
 
   if (config_->trendline_integration_enabled) {
     candidate_bandwidth_upper_bound =
         std::min(GetInstantUpperBound(), candidate_bandwidth_upper_bound);
-    if (IsValid(delay_based_estimate)) {
+    if (IsValid(delay_based_estimate_)) {
       candidate_bandwidth_upper_bound =
-          std::min(delay_based_estimate, candidate_bandwidth_upper_bound);
+          std::min(delay_based_estimate_, candidate_bandwidth_upper_bound);
     }
   }
 
@@ -742,8 +750,8 @@ DataRate LossBasedBweV2::GetCandidateBandwidthUpperBound(
   return candidate_bandwidth_upper_bound;
 }
 
-std::vector<LossBasedBweV2::ChannelParameters> LossBasedBweV2::GetCandidates(
-    DataRate delay_based_estimate) const {
+std::vector<LossBasedBweV2::ChannelParameters> LossBasedBweV2::GetCandidates()
+    const {
   std::vector<DataRate> bandwidths;
   bool can_increase_bitrate = TrendlineEsimateAllowBitrateIncrease();
   for (double candidate_factor : config_->candidate_factors) {
@@ -761,16 +769,16 @@ std::vector<LossBasedBweV2::ChannelParameters> LossBasedBweV2::GetCandidates(
                          config_->bandwidth_backoff_lower_bound_factor);
   }
 
-  if (IsValid(delay_based_estimate) &&
+  if (IsValid(delay_based_estimate_) &&
       config_->append_delay_based_estimate_candidate) {
     if (can_increase_bitrate &&
-        delay_based_estimate > current_estimate_.loss_limited_bandwidth) {
-      bandwidths.push_back(delay_based_estimate);
+        delay_based_estimate_ > current_estimate_.loss_limited_bandwidth) {
+      bandwidths.push_back(delay_based_estimate_);
     }
   }
 
   const DataRate candidate_bandwidth_upper_bound =
-      GetCandidateBandwidthUpperBound(delay_based_estimate);
+      GetCandidateBandwidthUpperBound();
 
   std::vector<ChannelParameters> candidates;
   candidates.resize(bandwidths.size());
@@ -918,11 +926,11 @@ DataRate LossBasedBweV2::GetSendingRate(
 }
 
 DataRate LossBasedBweV2::GetInstantUpperBound() const {
-  return cached_instant_upper_bound_.value_or(DataRate::PlusInfinity());
+  return cached_instant_upper_bound_.value_or(max_bitrate_);
 }
 
 void LossBasedBweV2::CalculateInstantUpperBound() {
-  DataRate instant_limit = DataRate::PlusInfinity();
+  DataRate instant_limit = max_bitrate_;
   const double average_reported_loss_ratio = GetAverageReportedLossRatio();
   if (average_reported_loss_ratio > config_->instant_upper_bound_loss_offset) {
     instant_limit = config_->instant_upper_bound_bandwidth_balance /

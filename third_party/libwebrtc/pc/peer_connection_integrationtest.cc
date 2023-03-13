@@ -1364,7 +1364,8 @@ TEST_P(PeerConnectionIntegrationTest, NewGetStatsManyAudioAndManyVideoStreams) {
     }
     ASSERT_TRUE(stat->track_id.is_defined());
     const auto* track_stat =
-        caller_report->GetAs<webrtc::RTCMediaStreamTrackStats>(*stat->track_id);
+        caller_report->GetAs<webrtc::DEPRECATED_RTCMediaStreamTrackStats>(
+            *stat->track_id);
     ASSERT_TRUE(track_stat);
     outbound_track_ids.push_back(*track_stat->track_identifier);
   }
@@ -1388,7 +1389,8 @@ TEST_P(PeerConnectionIntegrationTest, NewGetStatsManyAudioAndManyVideoStreams) {
     }
     ASSERT_TRUE(stat->track_id.is_defined());
     const auto* track_stat =
-        callee_report->GetAs<webrtc::RTCMediaStreamTrackStats>(*stat->track_id);
+        callee_report->GetAs<webrtc::DEPRECATED_RTCMediaStreamTrackStats>(
+            *stat->track_id);
     ASSERT_TRUE(track_stat);
     inbound_track_ids.push_back(*track_stat->track_identifier);
   }
@@ -1465,7 +1467,8 @@ TEST_P(PeerConnectionIntegrationTest,
       callee()->NewGetStats();
   ASSERT_NE(nullptr, report);
 
-  auto media_stats = report->GetStatsOfType<webrtc::RTCMediaStreamTrackStats>();
+  auto media_stats =
+      report->GetStatsOfType<webrtc::DEPRECATED_RTCMediaStreamTrackStats>();
   auto audio_index = FindFirstMediaStatsIndexByKind("audio", media_stats);
   ASSERT_GE(audio_index, 0);
   EXPECT_TRUE(media_stats[audio_index]->audio_level.is_defined());
@@ -1483,11 +1486,11 @@ void ModifySsrcs(cricket::SessionDescription* desc) {
   }
 }
 
-// Test that the "RTCMediaSteamTrackStats"  object is updated correctly when
-// SSRCs are unsignaled, and the SSRC of the received (audio) stream changes.
-// This should result in two "RTCInboundRTPStreamStats", but only one
-// "RTCMediaStreamTrackStats", whose counters go up continuously rather than
-// being reset to 0 once the SSRC change occurs.
+// Test that the "DEPRECATED_RTCMediaStreamTrackStats"  object is updated
+// correctly when SSRCs are unsignaled, and the SSRC of the received (audio)
+// stream changes. This should result in two "RTCInboundRTPStreamStats", but
+// only one "DEPRECATED_RTCMediaStreamTrackStats", whose counters go up
+// continuously rather than being reset to 0 once the SSRC change occurs.
 //
 // Regression test for this bug:
 // https://bugs.chromium.org/p/webrtc/issues/detail?id=8158
@@ -1519,7 +1522,8 @@ TEST_P(PeerConnectionIntegrationTest,
   rtc::scoped_refptr<const webrtc::RTCStatsReport> report =
       callee()->NewGetStats();
   ASSERT_NE(nullptr, report);
-  auto track_stats = report->GetStatsOfType<webrtc::RTCMediaStreamTrackStats>();
+  auto track_stats =
+      report->GetStatsOfType<webrtc::DEPRECATED_RTCMediaStreamTrackStats>();
   ASSERT_EQ(1U, track_stats.size());
   ASSERT_TRUE(track_stats[0]->total_samples_received.is_defined());
   ASSERT_GT(*track_stats[0]->total_samples_received, 0U);
@@ -1539,7 +1543,8 @@ TEST_P(PeerConnectionIntegrationTest,
 
   report = callee()->NewGetStats();
   ASSERT_NE(nullptr, report);
-  track_stats = report->GetStatsOfType<webrtc::RTCMediaStreamTrackStats>();
+  track_stats =
+      report->GetStatsOfType<webrtc::DEPRECATED_RTCMediaStreamTrackStats>();
   ASSERT_EQ(1U, track_stats.size());
   ASSERT_TRUE(track_stats[0]->total_samples_received.is_defined());
   // The "total samples received" stat should only be greater than it was
@@ -2878,8 +2883,9 @@ TEST_P(PeerConnectionIntegrationTest, DisableAndEnableAudioPlayout) {
 double GetAudioEnergyStat(PeerConnectionIntegrationWrapper* pc) {
   auto report = pc->NewGetStats();
   auto track_stats_list =
-      report->GetStatsOfType<webrtc::RTCMediaStreamTrackStats>();
-  const webrtc::RTCMediaStreamTrackStats* remote_track_stats = nullptr;
+      report->GetStatsOfType<webrtc::DEPRECATED_RTCMediaStreamTrackStats>();
+  const webrtc::DEPRECATED_RTCMediaStreamTrackStats* remote_track_stats =
+      nullptr;
   for (const auto* track_stats : track_stats_list) {
     if (track_stats->remote_source.is_defined() &&
         *track_stats->remote_source) {

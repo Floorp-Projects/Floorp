@@ -86,8 +86,8 @@ FrameStats FrameStatsWith10msDeltaBetweenPhasesAnd10x10Frame(
   frame_stats.used_encoder = Vp8CodecForOneFrame(1, frame_stats.encoded_time);
   frame_stats.used_decoder =
       Vp8CodecForOneFrame(1, frame_stats.decode_end_time);
-  frame_stats.rendered_frame_width = 10;
-  frame_stats.rendered_frame_height = 10;
+  frame_stats.decoded_frame_width = 10;
+  frame_stats.decoded_frame_height = 10;
   return frame_stats;
 }
 
@@ -102,8 +102,8 @@ FrameStats ShiftStatsOn(const FrameStats& stats, TimeDelta delta) {
 
   frame_stats.used_encoder = stats.used_encoder;
   frame_stats.used_decoder = stats.used_decoder;
-  frame_stats.rendered_frame_width = stats.rendered_frame_width;
-  frame_stats.rendered_frame_height = stats.rendered_frame_height;
+  frame_stats.decoded_frame_width = stats.decoded_frame_width;
+  frame_stats.decoded_frame_height = stats.decoded_frame_height;
 
   return frame_stats;
 }
@@ -174,7 +174,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   EXPECT_DOUBLE_EQ(GetFirstOrDie(stats.at(stats_key).receive_to_render_time_ms),
                    30.0);
   EXPECT_DOUBLE_EQ(
-      GetFirstOrDie(stats.at(stats_key).resolution_of_rendered_frame), 100.0);
+      GetFirstOrDie(stats.at(stats_key).resolution_of_decoded_frame), 100.0);
 }
 
 TEST(
@@ -274,13 +274,13 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
       frame_stats.captured_time + TimeDelta::Millis(50);
   frame_stats.used_decoder =
       Vp8CodecForOneFrame(1, frame_stats.decode_end_time);
+  frame_stats.decoded_frame_width = 10;
+  frame_stats.decoded_frame_height = 10;
   stats.push_back(frame_stats);
   // 6th stat
   frame_stats = ShiftStatsOn(frame_stats, TimeDelta::Millis(15));
   frame_stats.frame_id = 6;
   frame_stats.rendered_time = frame_stats.captured_time + TimeDelta::Millis(60);
-  frame_stats.rendered_frame_width = 10;
-  frame_stats.rendered_frame_height = 10;
   stats.push_back(frame_stats);
 
   comparator.Start(/*max_threads_count=*/1);
@@ -323,9 +323,9 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
       << ToString(result_stats.receive_to_render_time_ms);
   EXPECT_EQ(result_stats.receive_to_render_time_ms.NumSamples(), 1);
 
-  EXPECT_DOUBLE_EQ(result_stats.resolution_of_rendered_frame.GetAverage(), 100)
-      << ToString(result_stats.resolution_of_rendered_frame);
-  EXPECT_EQ(result_stats.resolution_of_rendered_frame.NumSamples(), 1);
+  EXPECT_DOUBLE_EQ(result_stats.resolution_of_decoded_frame.GetAverage(), 100)
+      << ToString(result_stats.resolution_of_decoded_frame);
+  EXPECT_EQ(result_stats.resolution_of_decoded_frame.NumSamples(), 2);
 
   EXPECT_DOUBLE_EQ(result_stats.encode_frame_rate.GetEventsPerSecond(),
                    4.0 / 45 * 1000)
@@ -375,7 +375,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   expectEmpty(stats.skipped_between_rendered);
   expectEmpty(stats.freeze_time_ms);
   expectEmpty(stats.time_between_freezes_ms);
-  expectEmpty(stats.resolution_of_rendered_frame);
+  expectEmpty(stats.resolution_of_decoded_frame);
   expectEmpty(stats.target_encode_bitrate);
   expectEmpty(stats.recv_key_frame_size_bytes);
   expectEmpty(stats.recv_delta_frame_size_bytes);
@@ -434,7 +434,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   expectEmpty(stats.skipped_between_rendered);
   expectEmpty(stats.freeze_time_ms);
   expectEmpty(stats.time_between_freezes_ms);
-  expectEmpty(stats.resolution_of_rendered_frame);
+  expectEmpty(stats.resolution_of_decoded_frame);
   expectEmpty(stats.target_encode_bitrate);
   expectEmpty(stats.recv_key_frame_size_bytes);
   expectEmpty(stats.recv_delta_frame_size_bytes);
@@ -501,7 +501,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   expectEmpty(stats.skipped_between_rendered);
   expectEmpty(stats.freeze_time_ms);
   expectEmpty(stats.time_between_freezes_ms);
-  expectEmpty(stats.resolution_of_rendered_frame);
+  expectEmpty(stats.resolution_of_decoded_frame);
   EXPECT_DOUBLE_EQ(GetFirstOrDie(stats.target_encode_bitrate), 2000.0);
   expectEmpty(stats.recv_key_frame_size_bytes);
   expectEmpty(stats.recv_delta_frame_size_bytes);
@@ -569,7 +569,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   expectEmpty(stats.skipped_between_rendered);
   expectEmpty(stats.freeze_time_ms);
   expectEmpty(stats.time_between_freezes_ms);
-  expectEmpty(stats.resolution_of_rendered_frame);
+  expectEmpty(stats.resolution_of_decoded_frame);
   EXPECT_DOUBLE_EQ(GetFirstOrDie(stats.target_encode_bitrate), 2000.0);
   expectEmpty(stats.recv_key_frame_size_bytes);
   expectEmpty(stats.recv_delta_frame_size_bytes);
@@ -642,7 +642,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   expectEmpty(stats.skipped_between_rendered);
   expectEmpty(stats.freeze_time_ms);
   expectEmpty(stats.time_between_freezes_ms);
-  expectEmpty(stats.resolution_of_rendered_frame);
+  expectEmpty(stats.resolution_of_decoded_frame);
   EXPECT_DOUBLE_EQ(GetFirstOrDie(stats.target_encode_bitrate), 2000.0);
   EXPECT_DOUBLE_EQ(GetFirstOrDie(stats.recv_key_frame_size_bytes), 500.0);
   expectEmpty(stats.recv_delta_frame_size_bytes);
@@ -692,6 +692,9 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   frame_stats.decode_start_time = captured_time + TimeDelta::Millis(40);
   // Frame decoded
   frame_stats.decode_end_time = captured_time + TimeDelta::Millis(50);
+  frame_stats.decoded_frame_width = 200;
+  frame_stats.decoded_frame_height = 100;
+
   frame_stats.used_decoder =
       Vp8CodecForOneFrame(frame_id, frame_stats.decode_end_time);
 
@@ -719,7 +722,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   expectEmpty(stats.skipped_between_rendered);
   expectEmpty(stats.freeze_time_ms);
   expectEmpty(stats.time_between_freezes_ms);
-  expectEmpty(stats.resolution_of_rendered_frame);
+  EXPECT_GE(GetFirstOrDie(stats.resolution_of_decoded_frame), 200 * 100.0);
   EXPECT_DOUBLE_EQ(GetFirstOrDie(stats.target_encode_bitrate), 2000.0);
   EXPECT_DOUBLE_EQ(GetFirstOrDie(stats.recv_key_frame_size_bytes), 500.0);
   expectEmpty(stats.recv_delta_frame_size_bytes);
@@ -797,7 +800,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   expectEmpty(stats.skipped_between_rendered);
   expectEmpty(stats.freeze_time_ms);
   expectEmpty(stats.time_between_freezes_ms);
-  expectEmpty(stats.resolution_of_rendered_frame);
+  expectEmpty(stats.resolution_of_decoded_frame);
   EXPECT_DOUBLE_EQ(GetFirstOrDie(stats.target_encode_bitrate), 2000.0);
   EXPECT_DOUBLE_EQ(GetFirstOrDie(stats.recv_key_frame_size_bytes), 500.0);
   expectEmpty(stats.recv_delta_frame_size_bytes);
@@ -859,7 +862,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   expectEmpty(stats.skipped_between_rendered);
   expectEmpty(stats.freeze_time_ms);
   expectEmpty(stats.time_between_freezes_ms);
-  expectEmpty(stats.resolution_of_rendered_frame);
+  expectEmpty(stats.resolution_of_decoded_frame);
   expectEmpty(stats.target_encode_bitrate);
   expectEmpty(stats.recv_key_frame_size_bytes);
   expectEmpty(stats.recv_delta_frame_size_bytes);
@@ -918,7 +921,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   expectEmpty(stats.skipped_between_rendered);
   expectEmpty(stats.freeze_time_ms);
   expectEmpty(stats.time_between_freezes_ms);
-  expectEmpty(stats.resolution_of_rendered_frame);
+  expectEmpty(stats.resolution_of_decoded_frame);
   expectEmpty(stats.target_encode_bitrate);
   expectEmpty(stats.recv_key_frame_size_bytes);
   expectEmpty(stats.recv_delta_frame_size_bytes);
@@ -985,7 +988,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   expectEmpty(stats.skipped_between_rendered);
   expectEmpty(stats.freeze_time_ms);
   expectEmpty(stats.time_between_freezes_ms);
-  expectEmpty(stats.resolution_of_rendered_frame);
+  expectEmpty(stats.resolution_of_decoded_frame);
   EXPECT_DOUBLE_EQ(GetFirstOrDie(stats.target_encode_bitrate), 2000.0);
   expectEmpty(stats.recv_key_frame_size_bytes);
   expectEmpty(stats.recv_delta_frame_size_bytes);
@@ -1053,7 +1056,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   expectEmpty(stats.skipped_between_rendered);
   expectEmpty(stats.freeze_time_ms);
   expectEmpty(stats.time_between_freezes_ms);
-  expectEmpty(stats.resolution_of_rendered_frame);
+  expectEmpty(stats.resolution_of_decoded_frame);
   EXPECT_DOUBLE_EQ(GetFirstOrDie(stats.target_encode_bitrate), 2000.0);
   expectEmpty(stats.recv_key_frame_size_bytes);
   expectEmpty(stats.recv_delta_frame_size_bytes);
@@ -1111,6 +1114,8 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   frame_stats.decode_end_time = captured_time + TimeDelta::Millis(50);
   frame_stats.used_decoder =
       Vp8CodecForOneFrame(frame_id, frame_stats.decode_end_time);
+  frame_stats.decoded_frame_width = 200;
+  frame_stats.decoded_frame_height = 100;
 
   comparator.Start(/*max_threads_count=*/1);
   comparator.EnsureStatsForStream(stream, sender, /*peers_count=*/2,
@@ -1136,7 +1141,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   expectEmpty(stats.skipped_between_rendered);
   expectEmpty(stats.freeze_time_ms);
   expectEmpty(stats.time_between_freezes_ms);
-  expectEmpty(stats.resolution_of_rendered_frame);
+  expectEmpty(stats.resolution_of_decoded_frame);
   EXPECT_DOUBLE_EQ(GetFirstOrDie(stats.target_encode_bitrate), 2000.0);
   expectEmpty(stats.recv_key_frame_size_bytes);
   expectEmpty(stats.recv_delta_frame_size_bytes);
@@ -1214,7 +1219,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   expectEmpty(stats.skipped_between_rendered);
   expectEmpty(stats.freeze_time_ms);
   expectEmpty(stats.time_between_freezes_ms);
-  expectEmpty(stats.resolution_of_rendered_frame);
+  expectEmpty(stats.resolution_of_decoded_frame);
   EXPECT_DOUBLE_EQ(GetFirstOrDie(stats.target_encode_bitrate), 2000.0);
   EXPECT_DOUBLE_EQ(GetFirstOrDie(stats.recv_key_frame_size_bytes), 500.0);
   expectEmpty(stats.recv_delta_frame_size_bytes);
@@ -1271,10 +1276,10 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   frame_stats.decode_end_time = captured_time + TimeDelta::Millis(50);
   frame_stats.used_decoder =
       Vp8CodecForOneFrame(frame_id, frame_stats.decode_end_time);
+  frame_stats.decoded_frame_width = 200;
+  frame_stats.decoded_frame_height = 100;
   // Frame rendered
   frame_stats.rendered_time = captured_time + TimeDelta::Millis(60);
-  frame_stats.rendered_frame_width = 200;
-  frame_stats.rendered_frame_height = 100;
 
   comparator.Start(/*max_threads_count=*/1);
   comparator.EnsureStatsForStream(stream, sender, /*peers_count=*/2,
@@ -1300,7 +1305,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   expectEmpty(stats.skipped_between_rendered);
   expectEmpty(stats.freeze_time_ms);
   expectEmpty(stats.time_between_freezes_ms);
-  EXPECT_GE(GetFirstOrDie(stats.resolution_of_rendered_frame), 200 * 100.0);
+  EXPECT_GE(GetFirstOrDie(stats.resolution_of_decoded_frame), 200 * 100.0);
   EXPECT_DOUBLE_EQ(GetFirstOrDie(stats.target_encode_bitrate), 2000.0);
   EXPECT_DOUBLE_EQ(GetFirstOrDie(stats.recv_key_frame_size_bytes), 500.0);
   expectEmpty(stats.recv_delta_frame_size_bytes);
@@ -1356,8 +1361,8 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest, AllStatsHaveMetadataSet) {
       Vp8CodecForOneFrame(frame_id, frame_stats.decode_end_time);
   // Frame rendered
   frame_stats.rendered_time = captured_time + TimeDelta::Millis(60);
-  frame_stats.rendered_frame_width = 200;
-  frame_stats.rendered_frame_height = 100;
+  frame_stats.decoded_frame_width = 200;
+  frame_stats.decoded_frame_height = 100;
 
   comparator.Start(/*max_threads_count=*/1);
   comparator.EnsureStatsForStream(stream, sender, /*peers_count=*/2,
@@ -1378,7 +1383,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest, AllStatsHaveMetadataSet) {
   AssertFirstMetadataHasField(stats.encode_time_ms, "frame_id", "1");
   AssertFirstMetadataHasField(stats.decode_time_ms, "frame_id", "1");
   AssertFirstMetadataHasField(stats.receive_to_render_time_ms, "frame_id", "1");
-  AssertFirstMetadataHasField(stats.resolution_of_rendered_frame, "frame_id",
+  AssertFirstMetadataHasField(stats.resolution_of_decoded_frame, "frame_id",
                               "1");
   AssertFirstMetadataHasField(stats.target_encode_bitrate, "frame_id", "1");
   AssertFirstMetadataHasField(stats.recv_key_frame_size_bytes, "frame_id", "1");

@@ -52,6 +52,7 @@
 #include "rtc_base/null_socket_server.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/time_utils.h"
+#include "system_wrappers/include/field_trial.h"
 
 #if defined(WEBRTC_LINUX)
 #include <linux/sockios.h>
@@ -121,6 +122,12 @@ class ScopedSetTrue {
  private:
   bool* value_;
 };
+
+// Returns true if the the client is in the experiment to get timestamps
+// from the socket implementation.
+bool IsScmTimeStampExperimentEnabled() {
+  return webrtc::field_trial::IsEnabled("WebRTC-SCM-Timestamp");
+}
 }  // namespace
 
 namespace rtc {
@@ -130,7 +137,8 @@ PhysicalSocket::PhysicalSocket(PhysicalSocketServer* ss, SOCKET s)
       s_(s),
       error_(0),
       state_((s == INVALID_SOCKET) ? CS_CLOSED : CS_CONNECTED),
-      resolver_(nullptr) {
+      resolver_(nullptr),
+      read_scm_timestamp_experiment_(IsScmTimeStampExperimentEnabled()) {
   if (s_ != INVALID_SOCKET) {
     SetEnabledEvents(DE_READ | DE_WRITE);
 
@@ -398,7 +406,7 @@ int PhysicalSocket::SendTo(const void* buffer,
 
 int PhysicalSocket::Recv(void* buffer, size_t length, int64_t* timestamp) {
   int received =
-      ::recv(s_, static_cast<char*>(buffer), static_cast<int>(length), 0);
+      DoReadFromSocket(buffer, length, /*out_addr*/ nullptr, timestamp);
   if ((received == 0) && (length != 0)) {
     // Note: on graceful shutdown, recv can return 0.  In this case, we
     // pretend it is blocking, and then signal close, so that simplifying
@@ -410,9 +418,7 @@ int PhysicalSocket::Recv(void* buffer, size_t length, int64_t* timestamp) {
     SetError(EWOULDBLOCK);
     return SOCKET_ERROR;
   }
-  if (timestamp) {
-    *timestamp = GetSocketRecvTimestamp(s_);
-  }
+
   UpdateLastError();
   int error = GetError();
   bool success = (received >= 0) || IsBlockingError(error);
@@ -429,17 +435,8 @@ int PhysicalSocket::RecvFrom(void* buffer,
                              size_t length,
                              SocketAddress* out_addr,
                              int64_t* timestamp) {
-  sockaddr_storage addr_storage;
-  socklen_t addr_len = sizeof(addr_storage);
-  sockaddr* addr = reinterpret_cast<sockaddr*>(&addr_storage);
-  int received = ::recvfrom(s_, static_cast<char*>(buffer),
-                            static_cast<int>(length), 0, addr, &addr_len);
-  if (timestamp) {
-    *timestamp = GetSocketRecvTimestamp(s_);
-  }
+  int received = DoReadFromSocket(buffer, length, out_addr, timestamp);
   UpdateLastError();
-  if ((received >= 0) && (out_addr != nullptr))
-    SocketAddressFromSockAddrStorage(addr_storage, out_addr);
   int error = GetError();
   bool success = (received >= 0) || IsBlockingError(error);
   if (udp_ || success) {
@@ -449,6 +446,84 @@ int PhysicalSocket::RecvFrom(void* buffer,
     RTC_LOG_F(LS_VERBOSE) << "Error = " << error;
   }
   return received;
+}
+
+int PhysicalSocket::DoReadFromSocket(void* buffer,
+                                     size_t length,
+                                     SocketAddress* out_addr,
+                                     int64_t* timestamp) {
+  sockaddr_storage addr_storage;
+  socklen_t addr_len = sizeof(addr_storage);
+  sockaddr* addr = reinterpret_cast<sockaddr*>(&addr_storage);
+
+#if defined(WEBRTC_POSIX)
+  int received = 0;
+  if (read_scm_timestamp_experiment_) {
+    iovec iov = {.iov_base = buffer, .iov_len = length};
+    msghdr msg = {.msg_name = nullptr, .msg_namelen = 0, .msg_iov = &iov, .msg_iovlen = 1};
+    if (out_addr) {
+      out_addr->Clear();
+      msg.msg_name = addr;
+      msg.msg_namelen = addr_len;
+    }
+    char control[CMSG_SPACE(sizeof(struct timeval))] = {};
+    if (timestamp) {
+      *timestamp = -1;
+      msg.msg_control = &control;
+      msg.msg_controllen = sizeof(control);
+    }
+    received = ::recvmsg(s_, &msg, 0);
+    if (received <= 0) {
+      // An error occured or shut down.
+      return received;
+    }
+    if (timestamp) {
+      struct cmsghdr* cmsg;
+      for (cmsg = CMSG_FIRSTHDR(&msg); cmsg; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
+        if (cmsg->cmsg_level != SOL_SOCKET)
+          continue;
+        if (cmsg->cmsg_type == SCM_TIMESTAMP) {
+          timeval* ts = reinterpret_cast<timeval*>(CMSG_DATA(cmsg));
+          *timestamp =
+              rtc::kNumMicrosecsPerSec * static_cast<int64_t>(ts->tv_sec) +
+              static_cast<int64_t>(ts->tv_usec);
+          break;
+        }
+      }
+    }
+    if (out_addr) {
+      SocketAddressFromSockAddrStorage(addr_storage, out_addr);
+    }
+  } else {  // !read_scm_timestamp_experiment_
+    if (out_addr) {
+      received = ::recvfrom(s_, static_cast<char*>(buffer),
+                            static_cast<int>(length), 0, addr, &addr_len);
+      SocketAddressFromSockAddrStorage(addr_storage, out_addr);
+    } else {
+      received =
+          ::recv(s_, static_cast<char*>(buffer), static_cast<int>(length), 0);
+    }
+    if (timestamp) {
+      *timestamp = GetSocketRecvTimestamp(s_);
+    }
+  }
+  return received;
+
+#else
+  int received = 0;
+  if (out_addr) {
+    received = ::recvfrom(s_, static_cast<char*>(buffer),
+                          static_cast<int>(length), 0, addr, &addr_len);
+    SocketAddressFromSockAddrStorage(addr_storage, out_addr);
+  } else {
+    received =
+        ::recv(s_, static_cast<char*>(buffer), static_cast<int>(length), 0);
+  }
+  if (timestamp) {
+    *timestamp = -1;
+  }
+  return received;
+#endif
 }
 
 int PhysicalSocket::Listen(int backlog) {
@@ -646,7 +721,16 @@ bool SocketDispatcher::Initialize() {
   ioctlsocket(s_, FIONBIO, &argp);
 #elif defined(WEBRTC_POSIX)
   fcntl(s_, F_SETFL, fcntl(s_, F_GETFL, 0) | O_NONBLOCK);
+  if (IsScmTimeStampExperimentEnabled()) {
+    int value = 1;
+    // Attempt to get receive packet timestamp from the socket.
+    if (::setsockopt(s_, SOL_SOCKET, SO_TIMESTAMP, &value, sizeof(value)) !=
+        0) {
+      RTC_DLOG(LS_ERROR) << "::setsockopt failed. errno: " << LAST_SYSTEM_ERROR;
+    }
+  }
 #endif
+
 #if defined(WEBRTC_IOS)
   // iOS may kill sockets when the app is moved to the background
   // (specifically, if the app doesn't use the "voip" UIBackgroundMode). When
@@ -654,7 +738,9 @@ bool SocketDispatcher::Initialize() {
   // default will terminate the process, which we don't want. By specifying
   // this socket option, SIGPIPE will be disabled for the socket.
   int value = 1;
-  ::setsockopt(s_, SOL_SOCKET, SO_NOSIGPIPE, &value, sizeof(value));
+  if (::setsockopt(s_, SOL_SOCKET, SO_NOSIGPIPE, &value, sizeof(value)) != 0) {
+    RTC_DLOG(LS_ERROR) << "::setsockopt failed. errno: " << LAST_SYSTEM_ERROR;
+  }
 #endif
   ss_->Add(this);
   return true;

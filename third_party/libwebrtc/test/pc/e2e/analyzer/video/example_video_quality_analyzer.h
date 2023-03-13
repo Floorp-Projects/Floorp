@@ -86,7 +86,7 @@ class ExampleVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
   // process frame id overlap.
   std::set<uint16_t> frames_in_flight_ RTC_GUARDED_BY(lock_);
   std::map<uint16_t, std::string> frames_to_stream_label_ RTC_GUARDED_BY(lock_);
-  uint16_t next_frame_id_ RTC_GUARDED_BY(lock_) = 0;
+  uint16_t next_frame_id_ RTC_GUARDED_BY(lock_) = 1;
   uint64_t frames_captured_ RTC_GUARDED_BY(lock_) = 0;
   uint64_t frames_pre_encoded_ RTC_GUARDED_BY(lock_) = 0;
   uint64_t frames_encoded_ RTC_GUARDED_BY(lock_) = 0;

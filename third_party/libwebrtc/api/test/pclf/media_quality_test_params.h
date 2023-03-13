@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2022 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -7,8 +7,8 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#ifndef TEST_PC_E2E_PEER_CONNECTION_QUALITY_TEST_PARAMS_H_
-#define TEST_PC_E2E_PEER_CONNECTION_QUALITY_TEST_PARAMS_H_
+#ifndef API_TEST_PCLF_MEDIA_QUALITY_TEST_PARAMS_H_
+#define API_TEST_PCLF_MEDIA_QUALITY_TEST_PARAMS_H_
 
 #include <cstddef>
 #include <memory>
@@ -22,7 +22,7 @@
 #include "api/field_trials_view.h"
 #include "api/rtc_event_log/rtc_event_log_factory_interface.h"
 #include "api/task_queue/task_queue_factory.h"
-#include "api/test/peerconnection_quality_test_fixture.h"
+#include "api/test/pclf/media_configuration.h"
 #include "api/transport/network_control.h"
 #include "api/video_codecs/video_decoder_factory.h"
 #include "api/video_codecs/video_encoder_factory.h"
@@ -118,7 +118,7 @@ struct Params {
   // Peer name. If empty - default one will be set by the fixture.
   absl::optional<std::string> name;
   // If `audio_config` is set audio stream will be configured
-  absl::optional<PeerConnectionE2EQualityTestFixture::AudioConfig> audio_config;
+  absl::optional<AudioConfig> audio_config;
   // Flags to set on `cricket::PortAllocator`. These flags will be added
   // to the default ones that are presented on the port allocator.
   uint32_t port_allocator_extra_flags = cricket::kDefaultPortAllocatorFlags;
@@ -142,21 +142,41 @@ struct Params {
   PeerConnectionInterface::RTCConfiguration rtc_configuration;
   PeerConnectionInterface::RTCOfferAnswerOptions rtc_offer_answer_options;
   BitrateSettings bitrate_settings;
-  std::vector<PeerConnectionE2EQualityTestFixture::VideoCodecConfig>
-      video_codecs;
+  std::vector<VideoCodecConfig> video_codecs;
 };
 
 // Contains parameters that maybe changed by test writer during the test call.
 struct ConfigurableParams {
   // If `video_configs` is empty - no video should be added to the test call.
-  std::vector<PeerConnectionE2EQualityTestFixture::VideoConfig> video_configs;
+  std::vector<VideoConfig> video_configs;
 
-  PeerConnectionE2EQualityTestFixture::VideoSubscription video_subscription =
-      PeerConnectionE2EQualityTestFixture::VideoSubscription()
-          .SubscribeToAllPeers();
+  VideoSubscription video_subscription =
+      VideoSubscription().SubscribeToAllPeers();
+};
+
+// Contains parameters, that describe how long framework should run quality
+// test.
+struct RunParams {
+  explicit RunParams(TimeDelta run_duration) : run_duration(run_duration) {}
+
+  // Specifies how long the test should be run. This time shows how long
+  // the media should flow after connection was established and before
+  // it will be shut downed.
+  TimeDelta run_duration;
+
+  // If set to true peers will be able to use Flex FEC, otherwise they won't
+  // be able to negotiate it even if it's enabled on per peer level.
+  bool enable_flex_fec_support = false;
+  // If true will set conference mode in SDP media section for all video
+  // tracks for all peers.
+  bool use_conference_mode = false;
+  // If specified echo emulation will be done, by mixing the render audio into
+  // the capture signal. In such case input signal will be reduced by half to
+  // avoid saturation or compression in the echo path simulation.
+  absl::optional<EchoEmulationConfig> echo_emulation_config;
 };
 
 }  // namespace webrtc_pc_e2e
 }  // namespace webrtc
 
-#endif  // TEST_PC_E2E_PEER_CONNECTION_QUALITY_TEST_PARAMS_H_
+#endif  // API_TEST_PCLF_MEDIA_QUALITY_TEST_PARAMS_H_

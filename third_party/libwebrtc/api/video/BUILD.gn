@@ -363,6 +363,7 @@ rtc_library("builtin_video_bitrate_allocator_factory") {
 }
 
 rtc_library("frame_buffer") {
+  visibility = [ "*" ]
   sources = [
     "frame_buffer.cc",
     "frame_buffer.h",

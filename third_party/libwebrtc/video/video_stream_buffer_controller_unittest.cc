@@ -132,8 +132,7 @@ class VideoStreamBufferControllerFixture
         field_trials_(std::get<1>(GetParam())),
         time_controller_(kClockStart),
         clock_(time_controller_.GetClock()),
-        fake_metronome_(time_controller_.GetTaskQueueFactory(),
-                        TimeDelta::Millis(16)),
+        fake_metronome_(TimeDelta::Millis(16)),
         decode_sync_(clock_,
                      &fake_metronome_,
                      time_controller_.GetMainThread()),
@@ -163,7 +162,6 @@ class VideoStreamBufferControllerFixture
     if (buffer_) {
       buffer_->Stop();
     }
-    fake_metronome_.Stop();
     time_controller_.AdvanceTime(TimeDelta::Zero());
   }
 

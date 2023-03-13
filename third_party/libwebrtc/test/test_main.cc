@@ -22,8 +22,11 @@ int main(int argc, char* argv[]) {
   testing::InitGoogleMock(&argc, argv);
   absl::ParseCommandLine(argc, argv);
 
+// This absl handler use unsupported features/instructions on Fuchsia
+#if !defined(WEBRTC_FUCHSIA)
   absl::FailureSignalHandlerOptions options;
   absl::InstallFailureSignalHandler(options);
+#endif
 
   std::unique_ptr<webrtc::TestMain> main = webrtc::TestMain::Create();
   int err_code = main->Init();

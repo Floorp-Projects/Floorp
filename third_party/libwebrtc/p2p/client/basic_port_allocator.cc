@@ -298,7 +298,8 @@ PortAllocatorSession* BasicPortAllocator::CreateSessionInternal(
   return session;
 }
 
-void BasicPortAllocator::AddTurnServer(const RelayServerConfig& turn_server) {
+void BasicPortAllocator::AddTurnServerForTesting(
+    const RelayServerConfig& turn_server) {
   CheckRunOnValidThreadAndInitialized();
   std::vector<RelayServerConfig> new_turn_servers = turn_servers();
   new_turn_servers.push_back(turn_server);
@@ -1647,12 +1648,17 @@ void AllocationSequence::CreateRelayPorts() {
     return;
   }
 
+  // Relative priority of candidates from this TURN server in relation
+  // to the candidates from other servers. Required because ICE priorities
+  // need to be unique.
+  int relative_priority = config_->relays.size();
   for (RelayServerConfig& relay : config_->relays) {
-    CreateTurnPort(relay);
+    CreateTurnPort(relay, relative_priority--);
   }
 }
 
-void AllocationSequence::CreateTurnPort(const RelayServerConfig& config) {
+void AllocationSequence::CreateTurnPort(const RelayServerConfig& config,
+                                        int relative_priority) {
   PortList::const_iterator relay_port;
   for (relay_port = config.ports.begin(); relay_port != config.ports.end();
        ++relay_port) {
@@ -1685,6 +1691,7 @@ void AllocationSequence::CreateTurnPort(const RelayServerConfig& config) {
     args.config = &config;
     args.turn_customizer = session_->allocator()->turn_customizer();
     args.field_trials = session_->allocator()->field_trials();
+    args.relative_priority = relative_priority;
 
     std::unique_ptr<cricket::Port> port;
     // Shared socket mode must be enabled only for UDP based ports. Hence

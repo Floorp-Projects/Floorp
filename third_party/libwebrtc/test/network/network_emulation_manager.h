@@ -84,6 +84,9 @@ class NetworkEmulationManagerImpl : public NetworkEmulationManager {
   void GetStats(rtc::ArrayView<EmulatedEndpoint* const> endpoints,
                 std::function<void(std::unique_ptr<EmulatedNetworkStats>)>
                     stats_callback) override;
+  void GetStats(
+      rtc::ArrayView<EmulatedEndpoint* const> endpoints,
+      std::function<void(EmulatedNetworkStats)> stats_callback) override;
 
   TimeController* time_controller() override { return time_controller_.get(); }
 

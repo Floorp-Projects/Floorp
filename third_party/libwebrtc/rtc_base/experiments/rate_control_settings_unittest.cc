@@ -172,16 +172,6 @@ TEST(RateControlSettingsTest,
   EXPECT_FALSE(settings_after.Vp8BaseHeavyTl3RateAllocation());
 }
 
-TEST(RateControlSettingsTest, TriggerProbeOnMaxAllocatedBitrateChange) {
-  EXPECT_TRUE(RateControlSettings::ParseFromFieldTrials()
-                  .TriggerProbeOnMaxAllocatedBitrateChange());
-
-  test::ScopedFieldTrials field_trials(
-      "WebRTC-VideoRateControl/probe_max_allocation:0/");
-  EXPECT_FALSE(RateControlSettings::ParseFromFieldTrials()
-                   .TriggerProbeOnMaxAllocatedBitrateChange());
-}
-
 TEST(RateControlSettingsTest, UseEncoderBitrateAdjuster) {
   // Should be on by default.
   EXPECT_TRUE(

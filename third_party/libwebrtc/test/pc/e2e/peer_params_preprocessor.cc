@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2020 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2022 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -8,11 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "test/pc/e2e/peer_configurer.h"
+#include "test/pc/e2e/peer_params_preprocessor.h"
 
 #include <set>
+#include <string>
 
 #include "absl/strings/string_view.h"
+#include "api/test/pclf/media_configuration.h"
+#include "api/test/pclf/media_quality_test_params.h"
+#include "api/test/pclf/peer_configurer.h"
+#include "api/test/peer_network_dependencies.h"
 #include "modules/video_coding/svc/create_scalability_structure.h"
 #include "modules/video_coding/svc/scalability_mode_util.h"
 #include "rtc_base/arraysize.h"
@@ -22,11 +27,6 @@ namespace webrtc {
 namespace webrtc_pc_e2e {
 namespace {
 
-using AudioConfig = PeerConnectionE2EQualityTestFixture::AudioConfig;
-using VideoConfig = PeerConnectionE2EQualityTestFixture::VideoConfig;
-using RunParams = PeerConnectionE2EQualityTestFixture::RunParams;
-using VideoCodecConfig = PeerConnectionE2EQualityTestFixture::VideoCodecConfig;
-
 // List of default names of generic participants according to
 // https://en.wikipedia.org/wiki/Alice_and_Bob
 constexpr absl::string_view kDefaultNames[] = {"alice", "bob",  "charlie",
@@ -34,42 +34,56 @@ constexpr absl::string_view kDefaultNames[] = {"alice", "bob",  "charlie",
 
 }  // namespace
 
-DefaultNamesProvider::DefaultNamesProvider(
-    absl::string_view prefix,
-    rtc::ArrayView<const absl::string_view> default_names)
-    : prefix_(prefix), default_names_(default_names) {}
+class PeerParamsPreprocessor::DefaultNamesProvider {
+ public:
+  // Caller have to ensure that default names array will outlive names provider
+  // instance.
+  explicit DefaultNamesProvider(
+      absl::string_view prefix,
+      rtc::ArrayView<const absl::string_view> default_names = {})
+      : prefix_(prefix), default_names_(default_names) {}
 
-void DefaultNamesProvider::MaybeSetName(absl::optional<std::string>& name) {
-  if (name.has_value()) {
-    known_names_.insert(name.value());
-  } else {
-    name = GenerateName();
+  void MaybeSetName(absl::optional<std::string>& name) {
+    if (name.has_value()) {
+      known_names_.insert(name.value());
+    } else {
+      name = GenerateName();
+    }
   }
-}
 
-std::string DefaultNamesProvider::GenerateName() {
-  std::string name;
-  do {
-    name = GenerateNameInternal();
-  } while (!known_names_.insert(name).second);
-  return name;
-}
-
-std::string DefaultNamesProvider::GenerateNameInternal() {
-  if (counter_ < default_names_.size()) {
-    return std::string(default_names_[counter_++]);
+ private:
+  std::string GenerateName() {
+    std::string name;
+    do {
+      name = GenerateNameInternal();
+    } while (!known_names_.insert(name).second);
+    return name;
   }
-  return prefix_ + std::to_string(counter_++);
-}
+
+  std::string GenerateNameInternal() {
+    if (counter_ < default_names_.size()) {
+      return std::string(default_names_[counter_++]);
+    }
+    return prefix_ + std::to_string(counter_++);
+  }
+
+  const std::string prefix_;
+  const rtc::ArrayView<const absl::string_view> default_names_;
+
+  std::set<std::string> known_names_;
+  size_t counter_ = 0;
+};
 
 PeerParamsPreprocessor::PeerParamsPreprocessor()
-    : peer_names_provider_("peer_", kDefaultNames) {}
+    : peer_names_provider_(
+          std::make_unique<DefaultNamesProvider>("peer_", kDefaultNames)) {}
+PeerParamsPreprocessor::~PeerParamsPreprocessor() = default;
 
 void PeerParamsPreprocessor::SetDefaultValuesForMissingParams(
-    PeerConfigurerImpl& peer) {
+    PeerConfigurer& peer) {
   Params* params = peer.params();
   ConfigurableParams* configurable_params = peer.configurable_params();
-  peer_names_provider_.MaybeSetName(params->name);
+  peer_names_provider_->MaybeSetName(params->name);
   DefaultNamesProvider video_stream_names_provider(*params->name +
                                                    "_auto_video_stream_label_");
   for (VideoConfig& config : configurable_params->video_configs) {
@@ -83,13 +97,11 @@ void PeerParamsPreprocessor::SetDefaultValuesForMissingParams(
   }
 
   if (params->video_codecs.empty()) {
-    params->video_codecs.push_back(
-        PeerConnectionE2EQualityTestFixture::VideoCodecConfig(
-            cricket::kVp8CodecName));
+    params->video_codecs.push_back(VideoCodecConfig(cricket::kVp8CodecName));
   }
 }
 
-void PeerParamsPreprocessor::ValidateParams(const PeerConfigurerImpl& peer) {
+void PeerParamsPreprocessor::ValidateParams(const PeerConfigurer& peer) {
   const Params& p = peer.params();
   RTC_CHECK_GT(p.video_encoder_bitrate_multiplier, 0.0);
   // Each peer should at least support 1 video codec.

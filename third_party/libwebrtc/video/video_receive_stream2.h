@@ -334,11 +334,6 @@ class VideoReceiveStream2
   std::vector<std::unique_ptr<EncodedFrame>> buffered_encoded_frames_
       RTC_GUARDED_BY(decode_queue_);
 
-  // Set by the field trial WebRTC-PreStreamDecoders. The parameter `max`
-  // determines the maximum number of decoders that are created up front before
-  // any video frame has been received.
-  FieldTrialParameter<int> maximum_pre_stream_decoders_;
-
   // Defined last so they are destroyed before all other members.
   rtc::TaskQueue decode_queue_;
 

@@ -46,9 +46,9 @@ class ReceiveStatisticsProxy2Test : public ::testing::Test {
  public:
   ReceiveStatisticsProxy2Test() : time_controller_(Timestamp::Millis(1234)) {
     metrics::Reset();
-    statistics_proxy_.reset(
-        new ReceiveStatisticsProxy(kRemoteSsrc, time_controller_.GetClock(),
-                                   time_controller_.GetMainThread()));
+    statistics_proxy_ = std::make_unique<ReceiveStatisticsProxy>(
+        kRemoteSsrc, time_controller_.GetClock(),
+        time_controller_.GetMainThread());
   }
 
   ~ReceiveStatisticsProxy2Test() override { statistics_proxy_.reset(); }
@@ -578,12 +578,19 @@ TEST_F(ReceiveStatisticsProxy2Test, GetStatsReportsIncomingPayloadType) {
   EXPECT_EQ(kPayloadType, statistics_proxy_->GetStats().current_payload_type);
 }
 
-TEST_F(ReceiveStatisticsProxy2Test, GetStatsReportsDecoderImplementationName) {
-  const char* kName = "decoderName";
-  statistics_proxy_->OnDecoderImplementationName(kName);
+TEST_F(ReceiveStatisticsProxy2Test, GetStatsReportsDecoderInfo) {
+  auto init_stats = statistics_proxy_->GetStats();
+  EXPECT_EQ(init_stats.decoder_implementation_name, "unknown");
+  EXPECT_EQ(init_stats.power_efficient_decoder, absl::nullopt);
+
+  const VideoDecoder::DecoderInfo decoder_info{
+      .implementation_name = "decoderName", .is_hardware_accelerated = true};
+  statistics_proxy_->OnDecoderInfo(decoder_info);
   time_controller_.AdvanceTime(TimeDelta::Zero());
-  EXPECT_STREQ(
-      kName, statistics_proxy_->GetStats().decoder_implementation_name.c_str());
+  auto stats = statistics_proxy_->GetStats();
+  EXPECT_EQ(decoder_info.implementation_name,
+            stats.decoder_implementation_name);
+  EXPECT_TRUE(stats.power_efficient_decoder);
 }
 
 TEST_F(ReceiveStatisticsProxy2Test, GetStatsReportsOnCompleteFrame) {

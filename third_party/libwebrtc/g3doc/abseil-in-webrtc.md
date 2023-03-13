@@ -34,6 +34,7 @@ will generate a shared library.
 * `absl::string_view`
 * The functions in `absl/strings/ascii.h`, `absl/strings/match.h`,
   and `absl/strings/str_replace.h`.
+* The functions in `absl/strings/escaping.h`.
 * `absl::is_trivially_copy_constructible`,
   `absl::is_trivially_copy_assignable`, and
   `absl::is_trivially_destructible` from `absl/meta/type_traits.h`.

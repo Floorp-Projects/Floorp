@@ -180,8 +180,9 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal,
   void SwitchSelectedConnection(const Connection* connection,
                                 IceSwitchReason reason) override;
   void ForgetLearnedStateForConnections(
-      std::vector<const Connection*> connections) override;
-  bool PruneConnections(std::vector<const Connection*> connections) override;
+      rtc::ArrayView<const Connection* const> connections) override;
+  bool PruneConnections(
+      rtc::ArrayView<const Connection* const> connections) override;
 
   // TODO(honghaiz): Remove this method once the reference of it in
   // Chromoting is removed.

@@ -24,9 +24,11 @@
 #include "api/video_codecs/video_codec.h"
 #include "rtc_base/fake_clock.h"
 #include "system_wrappers/include/metrics.h"
+#include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/scoped_key_value_config.h"
 #include "video/config/video_encoder_config.h"
+#include "video/video_stream_encoder_observer.h"
 
 namespace webrtc {
 namespace {
@@ -2811,8 +2813,13 @@ TEST_F(SendStatisticsProxyTest, FecBitrateNotReportedWhenNotEnabled) {
 
 TEST_F(SendStatisticsProxyTest, GetStatsReportsEncoderImplementationName) {
   const std::string kName = "encoderName";
-  statistics_proxy_->OnEncoderImplementationChanged(kName);
+  statistics_proxy_->OnEncoderImplementationChanged(EncoderImplementation{
+      .name = kName,
+      .is_hardware_accelerated = true,
+  });
   EXPECT_EQ(kName, statistics_proxy_->GetStats().encoder_implementation_name);
+  EXPECT_THAT(statistics_proxy_->GetStats().power_efficient_encoder,
+              ::testing::IsTrue());
 }
 
 TEST_F(SendStatisticsProxyTest, Vp9SvcLowSpatialLayerDoesNotUpdateResolution) {
@@ -2867,7 +2874,8 @@ class ForcedFallbackTest : public SendStatisticsProxyTest {
 
  protected:
   void InsertEncodedFrames(int num_frames, int interval_ms) {
-    statistics_proxy_->OnEncoderImplementationChanged(codec_name_);
+    statistics_proxy_->OnEncoderImplementationChanged(
+        {.name = codec_name_, .is_hardware_accelerated = false});
 
     // First frame is not updating stats, insert initial frame.
     if (statistics_proxy_->GetStats().frames_encoded == 0) {

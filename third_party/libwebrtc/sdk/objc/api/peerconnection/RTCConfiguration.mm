@@ -32,7 +32,6 @@
 @synthesize tcpCandidatePolicy = _tcpCandidatePolicy;
 @synthesize candidateNetworkPolicy = _candidateNetworkPolicy;
 @synthesize continualGatheringPolicy = _continualGatheringPolicy;
-@synthesize disableIPV6 = _disableIPV6;
 @synthesize disableIPV6OnWiFi = _disableIPV6OnWiFi;
 @synthesize maxIPv6Networks = _maxIPv6Networks;
 @synthesize disableLinkLocalNetworks = _disableLinkLocalNetworks;
@@ -103,9 +102,7 @@
         candidateNetworkPolicyForNativePolicy:config.candidate_network_policy];
     webrtc::PeerConnectionInterface::ContinualGatheringPolicy nativePolicy =
     config.continual_gathering_policy;
-    _continualGatheringPolicy =
-        [[self class] continualGatheringPolicyForNativePolicy:nativePolicy];
-    _disableIPV6 = config.disable_ipv6;
+    _continualGatheringPolicy = [[self class] continualGatheringPolicyForNativePolicy:nativePolicy];
     _disableIPV6OnWiFi = config.disable_ipv6_on_wifi;
     _maxIPv6Networks = config.max_ipv6_networks;
     _disableLinkLocalNetworks = config.disable_link_local_networks;
@@ -190,7 +187,6 @@
                        _shouldSurfaceIceCandidatesOnIceTransportTypeChanged,
                        _iceCheckMinInterval,
                        _disableLinkLocalNetworks,
-                       _disableIPV6,
                        _disableIPV6OnWiFi,
                        _maxIPv6Networks,
                        _activeResetSrtpParams,
@@ -220,9 +216,8 @@
       [[self class] nativeTcpCandidatePolicyForPolicy:_tcpCandidatePolicy];
   nativeConfig->candidate_network_policy = [[self class]
       nativeCandidateNetworkPolicyForPolicy:_candidateNetworkPolicy];
-  nativeConfig->continual_gathering_policy = [[self class]
-      nativeContinualGatheringPolicyForPolicy:_continualGatheringPolicy];
-  nativeConfig->disable_ipv6 = _disableIPV6;
+  nativeConfig->continual_gathering_policy =
+      [[self class] nativeContinualGatheringPolicyForPolicy:_continualGatheringPolicy];
   nativeConfig->disable_ipv6_on_wifi = _disableIPV6OnWiFi;
   nativeConfig->max_ipv6_networks = _maxIPv6Networks;
   nativeConfig->disable_link_local_networks = _disableLinkLocalNetworks;

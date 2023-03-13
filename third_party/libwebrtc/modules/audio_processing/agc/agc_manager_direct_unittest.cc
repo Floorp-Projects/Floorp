@@ -1443,8 +1443,6 @@ TEST(AgcManagerDirectTest, AgcMinMicLevelExperimentDefault) {
       CreateAgcManagerDirect(kInitialInputVolume, kClippedLevelStep,
                              kClippedRatioThreshold, kClippedWaitFrames);
   EXPECT_EQ(manager->channel_agcs_[0]->min_mic_level(), kMinMicLevel);
-  EXPECT_EQ(manager->channel_agcs_[0]->startup_min_level(),
-            kInitialInputVolume);
 }
 
 TEST(AgcManagerDirectTest, AgcMinMicLevelExperimentDisabled) {
@@ -1455,8 +1453,6 @@ TEST(AgcManagerDirectTest, AgcMinMicLevelExperimentDisabled) {
         CreateAgcManagerDirect(kInitialInputVolume, kClippedLevelStep,
                                kClippedRatioThreshold, kClippedWaitFrames);
     EXPECT_EQ(manager->channel_agcs_[0]->min_mic_level(), kMinMicLevel);
-    EXPECT_EQ(manager->channel_agcs_[0]->startup_min_level(),
-              kInitialInputVolume);
   }
 }
 
@@ -1469,8 +1465,6 @@ TEST(AgcManagerDirectTest, AgcMinMicLevelExperimentOutOfRangeAbove) {
       CreateAgcManagerDirect(kInitialInputVolume, kClippedLevelStep,
                              kClippedRatioThreshold, kClippedWaitFrames);
   EXPECT_EQ(manager->channel_agcs_[0]->min_mic_level(), kMinMicLevel);
-  EXPECT_EQ(manager->channel_agcs_[0]->startup_min_level(),
-            kInitialInputVolume);
 }
 
 // Checks that a field-trial parameter outside of the valid range [0,255] is
@@ -1482,8 +1476,6 @@ TEST(AgcManagerDirectTest, AgcMinMicLevelExperimentOutOfRangeBelow) {
       CreateAgcManagerDirect(kInitialInputVolume, kClippedLevelStep,
                              kClippedRatioThreshold, kClippedWaitFrames);
   EXPECT_EQ(manager->channel_agcs_[0]->min_mic_level(), kMinMicLevel);
-  EXPECT_EQ(manager->channel_agcs_[0]->startup_min_level(),
-            kInitialInputVolume);
 }
 
 // Verifies that a valid experiment changes the minimum microphone level. The
@@ -1500,8 +1492,6 @@ TEST(AgcManagerDirectTest, AgcMinMicLevelExperimentEnabled50) {
         CreateAgcManagerDirect(kInitialInputVolume, kClippedLevelStep,
                                kClippedRatioThreshold, kClippedWaitFrames);
     EXPECT_EQ(manager->channel_agcs_[0]->min_mic_level(), kMinMicLevelOverride);
-    EXPECT_EQ(manager->channel_agcs_[0]->startup_min_level(),
-              kInitialInputVolume);
   }
 }
 

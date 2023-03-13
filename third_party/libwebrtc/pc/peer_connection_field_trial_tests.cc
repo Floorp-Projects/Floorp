@@ -17,6 +17,7 @@
 #include "api/audio_codecs/builtin_audio_encoder_factory.h"
 #include "api/create_peerconnection_factory.h"
 #include "api/peer_connection_interface.h"
+#include "api/stats/rtcstats_objects.h"
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/video_codecs/builtin_video_decoder_factory.h"
 #include "api/video_codecs/builtin_video_encoder_factory.h"
@@ -228,6 +229,10 @@ TEST_F(PeerConnectionFieldTrialTest, ApplyFakeNetworkConfig) {
   CreatePCFactory(std::move(field_trials));
 
   WrapperPtr caller = CreatePeerConnection();
+  BitrateSettings bitrate_settings;
+  bitrate_settings.start_bitrate_bps = 1'000'000;
+  bitrate_settings.max_bitrate_bps = 1'000'000;
+  caller->pc()->SetBitrate(bitrate_settings);
   FrameGeneratorCapturerVideoTrackSource::Config config;
   auto video_track_source =
       rtc::make_ref_counted<FrameGeneratorCapturerVideoTrackSource>(
@@ -259,9 +264,14 @@ TEST_F(PeerConnectionFieldTrialTest, ApplyFakeNetworkConfig) {
   ASSERT_TRUE_WAIT(caller->IsIceConnected(), kDefaultTimeoutMs);
 
   // Send packets for kDefaultTimeoutMs
-  // For now, whether this field trial works or not is checked by
-  // whether a crash occurs. Additional validation can be added later.
   WAIT(false, kDefaultTimeoutMs);
+
+  std::vector<const RTCOutboundRTPStreamStats*> outbound_rtp_stats =
+      caller->GetStats()->GetStatsOfType<RTCOutboundRTPStreamStats>();
+  ASSERT_GE(outbound_rtp_stats.size(), 1u);
+  ASSERT_TRUE(outbound_rtp_stats[0]->target_bitrate.is_defined());
+  // Link capacity is limited to 500k, so BWE is expected to be close to 500k.
+  ASSERT_LE(*outbound_rtp_stats[0]->target_bitrate, 500'000 * 1.1);
 }
 
 }  // namespace webrtc

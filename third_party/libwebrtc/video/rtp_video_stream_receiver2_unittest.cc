@@ -371,6 +371,16 @@ TEST_F(RtpVideoStreamReceiver2Test, GenericKeyFrame) {
                                                     video_header);
 }
 
+TEST_F(RtpVideoStreamReceiver2Test, SetProtectionPayloadTypes) {
+  EXPECT_NE(rtp_video_stream_receiver_->red_payload_type(), 104);
+  EXPECT_NE(rtp_video_stream_receiver_->ulpfec_payload_type(), 107);
+
+  rtp_video_stream_receiver_->SetProtectionPayloadTypes(104, 107);
+
+  EXPECT_EQ(rtp_video_stream_receiver_->red_payload_type(), 104);
+  EXPECT_EQ(rtp_video_stream_receiver_->ulpfec_payload_type(), 107);
+}
+
 TEST_F(RtpVideoStreamReceiver2Test, PacketInfoIsPropagatedIntoVideoFrames) {
   constexpr uint64_t kAbsoluteCaptureTimestamp = 12;
   constexpr int kId0 = 1;

@@ -8,29 +8,29 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_PROCESSING_AGC2_ADAPTIVE_MODE_LEVEL_ESTIMATOR_H_
-#define MODULES_AUDIO_PROCESSING_AGC2_ADAPTIVE_MODE_LEVEL_ESTIMATOR_H_
+#ifndef MODULES_AUDIO_PROCESSING_AGC2_SPEECH_LEVEL_ESTIMATOR_H_
+#define MODULES_AUDIO_PROCESSING_AGC2_SPEECH_LEVEL_ESTIMATOR_H_
 
 #include <stddef.h>
 
 #include <type_traits>
 
 #include "modules/audio_processing/agc2/agc2_common.h"
-#include "modules/audio_processing/agc2/vad_wrapper.h"
 #include "modules/audio_processing/include/audio_processing.h"
 
 namespace webrtc {
 class ApmDataDumper;
 
-// Level estimator for the digital adaptive gain controller.
-class AdaptiveModeLevelEstimator {
+// Active speech level estimator based on the analysis of the following
+// framewise properties: RMS level (dBFS), peak level (dBFS), speech
+// probability.
+class SpeechLevelEstimator {
  public:
-  AdaptiveModeLevelEstimator(
+  SpeechLevelEstimator(
       ApmDataDumper* apm_data_dumper,
       const AudioProcessing::Config::GainController2::AdaptiveDigital& config);
-  AdaptiveModeLevelEstimator(const AdaptiveModeLevelEstimator&) = delete;
-  AdaptiveModeLevelEstimator& operator=(const AdaptiveModeLevelEstimator&) =
-      delete;
+  SpeechLevelEstimator(const SpeechLevelEstimator&) = delete;
+  SpeechLevelEstimator& operator=(const SpeechLevelEstimator&) = delete;
 
   // Updates the level estimation.
   void Update(float rms_dbfs, float peak_dbfs, float speech_probability);
@@ -74,4 +74,4 @@ class AdaptiveModeLevelEstimator {
 
 }  // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AGC2_ADAPTIVE_MODE_LEVEL_ESTIMATOR_H_
+#endif  // MODULES_AUDIO_PROCESSING_AGC2_SPEECH_LEVEL_ESTIMATOR_H_
