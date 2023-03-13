@@ -276,3 +276,13 @@ msix:
         mozharness:
             extra-options:
                 - "--installer-path installer.msix"
+
+http3:
+    description: "{description} with http3 server"
+    component: "Testing::General"
+    expiration: "2023-09-01"
+    suffix: "http3"
+    merge:
+        mozharness:
+            extra-options:
+                - "--use-http3-server"

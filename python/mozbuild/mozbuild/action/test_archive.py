@@ -541,7 +541,7 @@ ARCHIVE_FILES = {
                 "mach_test_package_commands.py",
                 "moz-http2/**",
                 "node-http2/**",
-                "node-ip/**",
+                "node_ip/**",
                 "node-ws/**",
                 "dns-packet/**",
                 "odoh-wasm/**",
