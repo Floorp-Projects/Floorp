@@ -235,8 +235,8 @@ class ProtectionCategory {
     }
 
     // Create an item to hold the origin label and shim allow indicator. Using
-    // an html element here, so we can use CSS flex, which handles the label
-    // overflow in combination with the icon correctly.
+    // an html element here, so we can use CSS flex rather than -moz-box, which
+    // handles the label overflow in combination with the icon correctly.
     let listItem = document.createElementNS(
       "http://www.w3.org/1999/xhtml",
       "div"

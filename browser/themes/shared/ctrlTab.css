@@ -52,7 +52,7 @@
 
 .ctrlTab-favicon-container {
   position: relative;
-  justify-content: flex-end;
+  -moz-box-pack: end;
 }
 
 .ctrlTab-favicon[src] {
@@ -117,7 +117,7 @@
 }
 
 .ctrlTab-label {
-  flex: 1;
-  justify-content: center;
+  -moz-box-flex: 1;
+  -moz-box-pack: center;
   contain: inline-size;
 }

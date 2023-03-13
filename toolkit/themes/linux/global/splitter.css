@@ -13,8 +13,8 @@
 splitter {
   appearance: auto;
   -moz-default-appearance: splitter;
-  align-items: center;
-  justify-content: center;
+  -moz-box-align: center;
+  -moz-box-pack: center;
   cursor: ew-resize;
 }
 

@@ -67,7 +67,7 @@ const kModalStyles = {
     ["border-radius", `${kOutlineBoxBorderRadius}px`],
     ["box-shadow", `0 2px 0 0 rgba(0,0,0,.1)`],
     ["color", "#000"],
-    ["display", "flex"],
+    ["display", "-moz-box"],
     [
       "margin",
       `-${kOutlineBoxBorderSize}px 0 0 -${kOutlineBoxBorderSize}px !important`,

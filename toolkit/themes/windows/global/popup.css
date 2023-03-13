@@ -77,8 +77,7 @@ menupopup > menu > menupopup {
 }
 
 :is(panel, menupopup)::part(content) {
-  display: flex;
-  /* TODO: Remove -moz-box-flex once bug 1809084 lands */
+  display: -moz-box;
   -moz-box-flex: 1;
   padding: var(--panel-padding);
   margin: var(--panel-shadow-margin);
@@ -93,7 +92,7 @@ menupopup > menu > menupopup {
 }
 
 :is(panel, menupopup)[orient=vertical]::part(content) {
-  flex-direction: column;
+  -moz-box-orient: vertical;
 }
 
 panel[type="arrow"].panel-no-padding::part(content) {

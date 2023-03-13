@@ -44,7 +44,7 @@ window {
 }
 
 window[sharingscreen] > #screenShareButton {
-  display: flex;
+  display: -moz-box;
 }
 
 #audioVideoButton {
@@ -60,7 +60,7 @@ window[sharingscreen] > #audioVideoButton {
 /* Single icon button: */
 window[sharingvideo] > #audioVideoButton,
 window[sharingaudio] > #audioVideoButton {
-  display: flex;
+  display: -moz-box;
   background-position: center center;
   background-size: 16px;
   min-width: 26px;
@@ -113,7 +113,7 @@ window[sharingaudio][sharingvideo] > #audioVideoButton {
 
 window[sharingscreen][sharingvideo] > #shareSeparator,
 window[sharingscreen][sharingaudio] > #shareSeparator {
-  display: flex;
+  display: -moz-box;
 }
 
 :is(#audioVideoButton, #screenShareButton, #firefoxButton):-moz-focusring {

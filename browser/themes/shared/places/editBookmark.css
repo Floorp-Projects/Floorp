@@ -34,7 +34,7 @@
 }
 
 .folder-icon > .menu-iconic-left {
-  display: flex;
+  display: -moz-box;
 }
 
 .folder-icon {
@@ -46,7 +46,7 @@
 #editBMPanel_tagsSelector > richlistitem > image {
   appearance: auto;
   -moz-default-appearance: checkbox;
-  align-items: center;
+  -moz-box-align: center;
   margin: 0 2px;
   min-width: 13px;
   min-height: 13px;

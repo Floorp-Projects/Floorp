@@ -5,11 +5,11 @@
 @import url("chrome://browser/content/usercontext/usercontext.css");
 
 #name {
-  flex: 1;
+  -moz-box-flex: 1;
 }
 
 .radio-buttons {
-  flex-direction: row;
+  -moz-box-orient: horizontal;
   margin-inline-start: 0.35rem;
 }
 

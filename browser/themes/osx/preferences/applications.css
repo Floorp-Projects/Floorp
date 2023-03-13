@@ -45,7 +45,7 @@ menuitem[appHandlerIcon] > .menu-iconic-left > .menu-iconic-icon {
 }
 
 #appList > richlistitem {
-  align-items: center;
+  -moz-box-align: center;
 }
 
 #appList > richlistitem > image {

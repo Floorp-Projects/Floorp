@@ -9,8 +9,8 @@
   appearance: auto;
   -moz-default-appearance: toolbar;
   -moz-window-dragging: drag;
-  align-items: center;
-  justify-content: center;
+  -moz-box-align: center;
+  -moz-box-pack: center;
 }
 
 #viewGroup {
@@ -19,8 +19,8 @@
 
 #viewGroup > radio,
 #viewGroup > toolbarbutton {
-  flex-direction: column;
-  align-items: center;
+  -moz-box-orient: vertical;
+  -moz-box-align: center;
   appearance: auto;
   -moz-default-appearance: toolbarbutton;
   font: menu;

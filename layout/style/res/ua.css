@@ -193,6 +193,7 @@
   mask: inherit;
   opacity: inherit;
   text-decoration: inherit;
+  -moz-box-ordinal-group: inherit;
   overflow-clip-box: inherit;
   unicode-bidi: inherit;
   user-select: inherit;

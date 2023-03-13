@@ -579,7 +579,7 @@ xul|menulist::part(dropmarker) {
   border: none;
   background-color: transparent;
   list-style-image: url("chrome://global/skin/icons/arrow-down-12.svg");
-  align-items: center;
+  -moz-box-align: center;
   -moz-context-properties: fill;
   fill: currentColor;
 }
@@ -1073,7 +1073,7 @@ html|*#categories[last-input-type="mouse"] > html|button.category:focus-visible 
   margin-inline-end: 4px; /* add the 4px end-margin of other elements */
   margin-bottom: 15px;
   padding-bottom: 15px;
-  align-items: baseline;
+  -moz-box-align: baseline;
 }
 
 .header-name {
@@ -1258,7 +1258,7 @@ xul|treechildren::-moz-tree-image(selected) {
   background-color: var(--in-content-box-info-background);
   border-radius: 4px;
   min-height: 32px;
-  align-items: center;
+  -moz-box-align: center;
   padding: 4px;
 }
 
@@ -1378,8 +1378,8 @@ input[type="text"][warning]:enabled:not(:focus) {
 }
 
 xul|*.sidebar-footer-link {
-  display: flex;
-  align-items: center;
+  display: -moz-box;
+  -moz-box-align: center;
 }
 
 .sidebar-footer-link:hover {
@@ -1417,7 +1417,7 @@ xul|*.sidebar-footer-link {
 @media (max-width: 830px) {
   .sidebar-footer-list {
     margin-inline-start: 40px;
-    align-items: flex-start;
+    -moz-box-align: start;
   }
 
   .sidebar-footer-link {

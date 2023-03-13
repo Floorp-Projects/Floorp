@@ -378,7 +378,7 @@ var gPermissionManager = {
     let richlistitem = document.createXULElement("richlistitem");
     richlistitem.setAttribute("origin", permission.origin);
     let row = document.createXULElement("hbox");
-    row.setAttribute("style", "flex: 1");
+    row.setAttribute("style", "-moz-box-flex: 1");
 
     let hbox = document.createXULElement("hbox");
     let website = document.createXULElement("label");
@@ -386,7 +386,7 @@ var gPermissionManager = {
     website.setAttribute("class", "website-name-value");
     website.setAttribute("value", permission.origin);
     hbox.setAttribute("class", "website-name");
-    hbox.setAttribute("style", "flex: 3 3; width: 0");
+    hbox.setAttribute("style", "-moz-box-flex: 3; width: 0");
     hbox.appendChild(website);
     row.appendChild(hbox);
 
@@ -400,7 +400,7 @@ var gPermissionManager = {
         this._getCapabilityL10nId(permission.capability)
       );
       hbox.setAttribute("class", "website-name");
-      hbox.setAttribute("style", "flex: 1; width: 0");
+      hbox.setAttribute("style", "-moz-box-flex: 1; width: 0");
       hbox.appendChild(capability);
       row.appendChild(hbox);
     }

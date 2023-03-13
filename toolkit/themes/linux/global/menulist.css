@@ -37,8 +37,8 @@ label {
 #label-box[native] {
   appearance: auto;
   -moz-default-appearance: menulist-text;
-  align-items: center;
-  justify-content: center;
+  -moz-box-align: center;
+  -moz-box-pack: center;
   color: inherit;
 }
 

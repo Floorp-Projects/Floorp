@@ -416,7 +416,7 @@ export class StyleEditorUI extends EventEmitter {
     const visibleElements = Array.from(
       this.#nav.querySelectorAll(`li:not(.${FILTERED_CLASSNAME})`)
     );
-    // Elements have a different visual order (due to the use of order), so
+    // Elements have a different visual order (due to the use of MozBoxOrdinalGroup), so
     // we need to sort them by their data-ordinal attribute
     visibleElements.sort(
       (a, b) => a.getAttribute("data-ordinal") - b.getAttribute("data-ordinal")
@@ -863,7 +863,7 @@ export class StyleEditorUI extends EventEmitter {
 
     let ordinal = editor.styleSheet.styleSheetIndex;
     ordinal = ordinal == -1 ? Number.MAX_SAFE_INTEGER : ordinal;
-    summary.style.order = ordinal;
+    summary.style.MozBoxOrdinalGroup = ordinal;
     summary.setAttribute("data-ordinal", ordinal);
 
     const isSystem = !!editor.styleSheet.system;

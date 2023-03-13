@@ -158,10 +158,6 @@ toolbarpaletteitem:not([notransition])[place="toolbar"] {
   transition: border-width var(--drag-drop-transition-duration) ease-in-out;
 }
 
-#widget-overflow-fixed-list > toolbarpaletteitem {
-  flex: none;
-}
-
 toolbarpaletteitem[mousedown] {
   cursor: -moz-grabbing;
 }
@@ -290,15 +286,15 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
 #wrapper-zoom-controls[place="palette"] > #zoom-controls > #zoom-out-button,
 #wrapper-edit-controls[place="palette"] > #edit-controls > #cut-button,
 #wrapper-profiler-button[place="palette"] > #profiler-button > #profiler-button-button {
-  align-items: flex-end;
+  -moz-box-align: end;
 }
 #wrapper-zoom-controls[place="palette"] > #zoom-controls > #zoom-in-button,
 #wrapper-edit-controls[place="palette"] > #edit-controls > #paste-button,
 #wrapper-profiler-button[place="palette"] > #profiler-button > #profiler-button-dropmarker {
-  align-items: flex-start;
+  -moz-box-align: start;
 }
 #wrapper-edit-controls[place="palette"] > #edit-controls > #copy-button {
-  flex: none;
+  -moz-box-flex: 0;
 }
 
 #customization-uidensity-touch-spacer {

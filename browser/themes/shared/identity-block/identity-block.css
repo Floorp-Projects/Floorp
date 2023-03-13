@@ -203,7 +203,7 @@
 #identity-permission-box[open=true],
 #identity-permission-box[hasPermissions],
 #identity-permission-box[hasSharingIcon] {
-  display: flex;
+  display: -moz-box;
 }
 
 /* SHARING ICON */

@@ -26,7 +26,7 @@
 }
 
 #menubar-items {
-  flex-direction: column; /* for flex hack */
+  -moz-box-orient: vertical; /* for flex hack */
 }
 
 #main-menubar > menu {
@@ -212,14 +212,14 @@
 }
 
 .titlebar-buttonbox-container {
-  align-items: stretch;
+  -moz-box-align: stretch;
 }
 
 @media (-moz-platform: windows-win7),
        (-moz-platform: windows-win8) {
   /* Preserve window control buttons position at the top of the button box. */
   .titlebar-buttonbox-container {
-    align-items: flex-start;
+    -moz-box-align: start;
   }
 }
 
@@ -524,11 +524,11 @@ menupopup[touchmode] :is(menu, menuitem, menucaption) {
    * will stretch to pick up the extra space. In that case, the outer icons
    * should align to the start/end of their containing <menuitem>: */
   #context-navigation > .menuitem-iconic:first-child {
-    justify-content: flex-start;
+    -moz-box-pack: start;
   }
 
   #context-navigation > .menuitem-iconic:last-child {
-    justify-content: flex-end;
+    -moz-box-pack: end;
   }
 
   #context-navigation > .menuitem-iconic:last-child,
