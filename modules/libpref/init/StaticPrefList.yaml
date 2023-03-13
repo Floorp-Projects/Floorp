@@ -12331,6 +12331,13 @@
   value: false
   mirror: always
 
+# Whether to use HTTPS RR and ignore NS_HTTP_DISALLOW_HTTPS_RR
+# This pref is only set when running tests
+- name: network.dns.force_use_https_rr
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: network.cache.frecency_array_check_enabled
   type: RelaxedAtomicBool
   value: @IS_EARLY_BETA_OR_EARLIER@
