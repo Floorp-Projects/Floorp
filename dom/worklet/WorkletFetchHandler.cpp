@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "WorkletFetchHandler.h"
 
+#include "js/loader/ModuleLoadRequest.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/Request.h"
@@ -16,12 +17,89 @@
 #include "mozilla/dom/WorkletGlobalScope.h"
 #include "mozilla/dom/WorkletImpl.h"
 #include "mozilla/dom/WorkletThread.h"
+#include "mozilla/dom/worklet/WorkletModuleLoader.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/ScopeExit.h"
 #include "nsIInputStreamPump.h"
 #include "nsIThreadRetargetableRequest.h"
 
+using JS::loader::ModuleLoadRequest;
+using JS::loader::ScriptFetchOptions;
+using mozilla::dom::loader::WorkletModuleLoader;
+
 namespace mozilla::dom {
+
+// A Runnable to call ModuleLoadRequest::StartModuleLoad on a worklet thread.
+class StartModuleLoadRunnable final : public Runnable {
+ public:
+  StartModuleLoadRunnable(WorkletImpl* aWorkletImpl, nsCOMPtr<nsIURI> aURI,
+                          nsIURI* aReferrer)
+      : Runnable("Worklet::StartModuleLoadRunnable"),
+        mWorkletImpl(aWorkletImpl),
+        mURI(std::move(aURI)),
+        mReferrer(aReferrer),
+        mParentRuntime(
+            JS_GetParentRuntime(CycleCollectedJSContext::Get()->Context())) {
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(mParentRuntime);
+  }
+
+  ~StartModuleLoadRunnable() = default;
+
+  NS_IMETHOD Run() override;
+
+ private:
+  NS_IMETHOD RunOnWorkletThread();
+
+  RefPtr<WorkletImpl> mWorkletImpl;
+  nsCOMPtr<nsIURI> mURI;
+  nsIURI* mReferrer;
+  JSRuntime* mParentRuntime;
+};
+
+NS_IMETHODIMP
+StartModuleLoadRunnable::Run() {
+  // WorkletThread::IsOnWorkletThread() cannot be used here because it depends
+  // on a WorkletJSContext having been created for this thread.  That does not
+  // happen until the global scope is created the first time
+  // RunOnWorkletThread() is called.
+  MOZ_ASSERT(!NS_IsMainThread());
+  return RunOnWorkletThread();
+}
+
+NS_IMETHODIMP StartModuleLoadRunnable::RunOnWorkletThread() {
+  // This can be called on a GraphRunner thread or a DOM Worklet thread.
+  WorkletThread::EnsureCycleCollectedJSContext(mParentRuntime);
+
+  WorkletGlobalScope* globalScope = mWorkletImpl->GetGlobalScope();
+  if (!globalScope) {
+    return NS_ERROR_DOM_UNKNOWN_ERR;
+  }
+
+  // To fetch a worklet/module worker script graph:
+  // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-a-worklet/module-worker-script-graph
+  // Step 1. Let options be a script fetch options. And referrer policy is the
+  // empty string.
+  ReferrerPolicy referrerPolicy = ReferrerPolicy::_empty;
+  RefPtr<ScriptFetchOptions> fetchOptions = new ScriptFetchOptions(
+      CORSMode::CORS_NONE, referrerPolicy, /*triggeringPrincipal*/ nullptr);
+
+  WorkletModuleLoader* moduleLoader =
+      static_cast<WorkletModuleLoader*>(globalScope->GetModuleLoader());
+  MOZ_ASSERT(moduleLoader);
+
+  // Part of Step 2. This sets the Top-level flag to true
+  RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
+      mURI, fetchOptions, SRIMetadata(), mReferrer, nullptr,
+      true,  /* is top level */
+      false, /* is dynamic import */
+      moduleLoader, ModuleLoadRequest::NewVisitedSetForTopLevelImport(mURI),
+      nullptr);
+
+  request->mURL = request->mURI->GetSpecOrDefault();
+
+  return request->StartModuleLoad();
+}
 
 class ExecutionRunnable final : public Runnable {
  public:
@@ -158,7 +236,7 @@ void ExecutionRunnable::RunOnMainThread() {
 NS_IMPL_ISUPPORTS(WorkletFetchHandler, nsISupports)
 
 // static
-already_AddRefed<Promise> WorkletFetchHandler::Fetch(
+already_AddRefed<Promise> WorkletFetchHandler::AddModule(
     Worklet* aWorklet, JSContext* aCx, const nsAString& aModuleURL,
     const WorkletOptions& aOptions, ErrorResult& aRv) {
   MOZ_ASSERT(aWorklet);
@@ -244,14 +322,28 @@ already_AddRefed<Promise> WorkletFetchHandler::Fetch(
     return nullptr;
   }
 
-  promiseSettledGuard.release();
-
   RefPtr<WorkletScriptHandler> scriptHandler =
       new WorkletScriptHandler(aWorklet);
   fetchPromise->AppendNativeHandler(scriptHandler);
 
   RefPtr<WorkletFetchHandler> handler =
       new WorkletFetchHandler(aWorklet, spec, promise);
+
+  // Determine request's Referrer
+  // https://w3c.github.io/webappsec-referrer-policy/#determine-requests-referrer
+  // Step 3.  Switch on request’s referrer:
+  //    "client"
+  //    Step 1.4. Let referrerSource be document’s URL.
+  nsIURI* referrer = doc->GetDocumentURIAsReferrer();
+  nsCOMPtr<nsIRunnable> runnable = new StartModuleLoadRunnable(
+      aWorklet->mImpl, std::move(resolvedURI), referrer);
+
+  if (NS_FAILED(aWorklet->mImpl->SendControlMessage(runnable.forget()))) {
+    return nullptr;
+  }
+
+  promiseSettledGuard.release();
+
   aWorklet->AddImportFetchHandler(spec, handler);
   return promise.forget();
 }
