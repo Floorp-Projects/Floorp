@@ -837,11 +837,11 @@ class EditorDOMPointBase final {
     return EditorDOMPointType(parent);
   }
 
-  bool IsSet() const {
+  [[nodiscard]] bool IsSet() const {
     return mParent && (mIsChildInitialized || mOffset.isSome());
   }
 
-  bool IsSetAndValid() const {
+  [[nodiscard]] bool IsSetAndValid() const {
     if (!IsSet()) {
       return false;
     }
@@ -854,6 +854,14 @@ class EditorDOMPointBase final {
       return false;
     }
     return true;
+  }
+
+  [[nodiscard]] bool IsInComposedDoc() const {
+    return IsSet() && mParent->IsInComposedDoc();
+  }
+
+  [[nodiscard]] bool IsSetAndValidInComposedDoc() const {
+    return IsInComposedDoc() && IsSetAndValid();
   }
 
   bool IsStartOfContainer() const {

@@ -2102,8 +2102,7 @@ nsresult HTMLEditor::InsertElementAtSelectionAsAction(
     if (MOZ_UNLIKELY(insertElementResult.isErr())) {
       NS_WARNING(
           "HTMLEditor::InsertNodeIntoProperAncestorWithTransaction("
-          "SplitAtEdges::"
-          "eAllowToCreateEmptyContainer) failed");
+          "SplitAtEdges::eAllowToCreateEmptyContainer) failed");
       return EditorBase::ToGenericNSResult(insertElementResult.unwrapErr());
     }
     insertElementResult.inspect().IgnoreCaretPointSuggestion();
@@ -2150,6 +2149,7 @@ Result<CreateNodeResultBase<NodeType>, nsresult>
 HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
     NodeType& aContentToInsert, const EditorDOMPoint& aPointToInsert,
     SplitAtEdges aSplitAtEdges) {
+  MOZ_ASSERT(aPointToInsert.IsSetAndValidInComposedDoc());
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
     return Err(NS_ERROR_FAILURE);
   }
@@ -2196,7 +2196,7 @@ HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
       return splitNodeResult.propagateErr();
     }
     pointToInsert = splitNodeResult.inspect().AtSplitPoint<EditorDOMPoint>();
-    MOZ_ASSERT(pointToInsert.IsSet());
+    MOZ_ASSERT(pointToInsert.IsSetAndValidInComposedDoc());
     // Caret should be set by the caller of this method so that we don't
     // need to handle it here.
     splitNodeResult.inspect().IgnoreCaretPointSuggestion();
@@ -4833,6 +4833,10 @@ Result<SplitNodeResult, nsresult> HTMLEditor::SplitNodeWithTransaction(
   }
   TopLevelEditSubActionDataRef().DidSplitContent(
       *this, *splitContent, *newContent, transaction->GetSplitNodeDirection());
+  if (NS_WARN_IF(!newContent->IsInComposedDoc()) ||
+      NS_WARN_IF(!splitContent->IsInComposedDoc())) {
+    return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  }
 
   return SplitNodeResult(*newContent, *splitContent,
                          transaction->GetSplitNodeDirection());
@@ -4842,13 +4846,13 @@ Result<SplitNodeResult, nsresult> HTMLEditor::SplitNodeDeepWithTransaction(
     nsIContent& aMostAncestorToSplit,
     const EditorDOMPoint& aDeepestStartOfRightNode,
     SplitAtEdges aSplitAtEdges) {
-  MOZ_ASSERT(aDeepestStartOfRightNode.IsSetAndValid());
+  MOZ_ASSERT(aDeepestStartOfRightNode.IsSetAndValidInComposedDoc());
   MOZ_ASSERT(
       aDeepestStartOfRightNode.GetContainer() == &aMostAncestorToSplit ||
       EditorUtils::IsDescendantOf(*aDeepestStartOfRightNode.GetContainer(),
                                   aMostAncestorToSplit));
 
-  if (NS_WARN_IF(!aDeepestStartOfRightNode.IsSet())) {
+  if (NS_WARN_IF(!aDeepestStartOfRightNode.IsInComposedDoc())) {
     return Err(NS_ERROR_INVALID_ARG);
   }
 
@@ -4858,6 +4862,8 @@ Result<SplitNodeResult, nsresult> HTMLEditor::SplitNodeDeepWithTransaction(
   // split a node actually.
   SplitNodeResult lastResult =
       SplitNodeResult::NotHandled(atStartOfRightNode, GetSplitNodeDirection());
+  MOZ_ASSERT(lastResult.AtSplitPoint<EditorRawDOMPoint>()
+                 .IsSetAndValidInComposedDoc());
 
   while (true) {
     // Need to insert rules code call here to do things like not split a list
@@ -4900,6 +4906,10 @@ Result<SplitNodeResult, nsresult> HTMLEditor::SplitNodeDeepWithTransaction(
       }
       lastResult = SplitNodeResult::MergeWithDeeperSplitNodeResult(
           splitNodeResult.unwrap(), lastResult);
+      if (NS_WARN_IF(!lastResult.AtSplitPoint<EditorRawDOMPoint>()
+                          .IsInComposedDoc())) {
+        return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+      }
       MOZ_ASSERT(lastResult.HasCaretPointSuggestion());
       MOZ_ASSERT(lastResult.GetOriginalContent() == splittingContent);
       if (splittingContent == &aMostAncestorToSplit) {
@@ -4915,6 +4925,8 @@ Result<SplitNodeResult, nsresult> HTMLEditor::SplitNodeDeepWithTransaction(
     else if (!atStartOfRightNode.IsStartOfContainer()) {
       lastResult = SplitNodeResult::HandledButDidNotSplitDueToEndOfContainer(
           *splittingContent, GetSplitNodeDirection(), &lastResult);
+      MOZ_ASSERT(lastResult.AtSplitPoint<EditorRawDOMPoint>()
+                     .IsSetAndValidInComposedDoc());
       if (splittingContent == &aMostAncestorToSplit) {
         return lastResult;
       }
@@ -4936,7 +4948,10 @@ Result<SplitNodeResult, nsresult> HTMLEditor::SplitNodeDeepWithTransaction(
       //     method will return "not handled".
       lastResult = SplitNodeResult::NotHandled(
           atStartOfRightNode, GetSplitNodeDirection(), &lastResult);
+      MOZ_ASSERT(lastResult.AtSplitPoint<EditorRawDOMPoint>()
+                     .IsSetAndValidInComposedDoc());
       atStartOfRightNode.Set(splittingContent);
+      MOZ_ASSERT(atStartOfRightNode.IsSetAndValidInComposedDoc());
     }
   }
 
