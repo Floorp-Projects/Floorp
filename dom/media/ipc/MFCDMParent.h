@@ -35,7 +35,7 @@ class MFCDMParent final : public PMFCDMParent {
               nsISerialEventTarget* aManagerThread);
 
   static MFCDMParent* GetCDMById(uint64_t aId) {
-    MOZ_ASSERT(!sRegisteredCDMs.Contains(aId));
+    MOZ_ASSERT(sRegisteredCDMs.Contains(aId));
     return sRegisteredCDMs.Get(aId);
   }
   uint64_t Id() const { return mId; }
