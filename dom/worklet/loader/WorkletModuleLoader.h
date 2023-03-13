@@ -9,6 +9,7 @@
 
 #include "js/loader/LoadContextBase.h"
 #include "js/loader/ModuleLoaderBase.h"
+#include "js/loader/ResolveResult.h"  // For ResolveError
 #include "mozilla/dom/WorkletFetchHandler.h"
 
 namespace mozilla::dom {
@@ -54,6 +55,11 @@ class WorkletModuleLoader : public JS::loader::ModuleLoaderBase {
   void RemoveRequest(nsIURI* aURI);
   JS::loader::ModuleLoadRequest* GetRequest(nsIURI* aURI) const;
 
+  bool HasSetLocalizedStrings() const { return (bool)mLocalizedStrs; }
+  void SetLocalizedStrings(const nsTArray<nsString>* aStrings) {
+    mLocalizedStrs = aStrings;
+  }
+
  private:
   ~WorkletModuleLoader() = default;
 
@@ -78,10 +84,18 @@ class WorkletModuleLoader : public JS::loader::ModuleLoaderBase {
 
   void OnModuleLoadComplete(JS::loader::ModuleLoadRequest* aRequest) override;
 
+  nsresult GetResolveFailureMessage(JS::loader::ResolveError aError,
+                                    const nsAString& aSpecifier,
+                                    nsAString& aResult) override;
+
   // A hashtable to map a nsIURI(from main thread) to a ModuleLoadRequest(in
   // worklet thread).
   nsRefPtrHashtable<nsURIHashKey, JS::loader::ModuleLoadRequest>
       mFetchingRequests;
+
+  // We get the localized strings on the main thread, and pass it to
+  // WorkletModuleLoader.
+  const nsTArray<nsString>* mLocalizedStrs = nullptr;
 };
 }  // namespace loader
 

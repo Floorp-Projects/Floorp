@@ -36,12 +36,14 @@ class StartModuleLoadRunnable final : public Runnable {
   StartModuleLoadRunnable(
       WorkletImpl* aWorkletImpl,
       const nsMainThreadPtrHandle<WorkletFetchHandler>& aHandlerRef,
-      nsCOMPtr<nsIURI> aURI, nsIURI* aReferrer)
+      nsCOMPtr<nsIURI> aURI, nsIURI* aReferrer,
+      const nsTArray<nsString>& aLocalizedStrs)
       : Runnable("Worklet::StartModuleLoadRunnable"),
         mWorkletImpl(aWorkletImpl),
         mHandlerRef(aHandlerRef),
         mURI(std::move(aURI)),
         mReferrer(aReferrer),
+        mLocalizedStrs(aLocalizedStrs),
         mParentRuntime(
             JS_GetParentRuntime(CycleCollectedJSContext::Get()->Context())) {
     MOZ_ASSERT(NS_IsMainThread());
@@ -59,6 +61,7 @@ class StartModuleLoadRunnable final : public Runnable {
   nsMainThreadPtrHandle<WorkletFetchHandler> mHandlerRef;
   nsCOMPtr<nsIURI> mURI;
   nsIURI* mReferrer;
+  const nsTArray<nsString>& mLocalizedStrs;
   JSRuntime* mParentRuntime;
 };
 
@@ -92,6 +95,10 @@ NS_IMETHODIMP StartModuleLoadRunnable::RunOnWorkletThread() {
   WorkletModuleLoader* moduleLoader =
       static_cast<WorkletModuleLoader*>(globalScope->GetModuleLoader());
   MOZ_ASSERT(moduleLoader);
+
+  if (!moduleLoader->HasSetLocalizedStrings()) {
+    moduleLoader->SetLocalizedStrings(&mLocalizedStrs);
+  }
 
   RefPtr<WorkletLoadContext> loadContext = new WorkletLoadContext(mHandlerRef);
 
@@ -297,7 +304,8 @@ already_AddRefed<Promise> WorkletFetchHandler::AddModule(
   //    Step 1.4. Let referrerSource be document’s URL.
   nsIURI* referrer = doc->GetDocumentURIAsReferrer();
   nsCOMPtr<nsIRunnable> runnable = new StartModuleLoadRunnable(
-      aWorklet->mImpl, handlerRef, std::move(resolvedURI), referrer);
+      aWorklet->mImpl, handlerRef, std::move(resolvedURI), referrer,
+      aWorklet->GetLocalizedStrings());
 
   if (NS_FAILED(aWorklet->mImpl->SendControlMessage(runnable.forget()))) {
     return nullptr;
