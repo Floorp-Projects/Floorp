@@ -12,6 +12,7 @@
 #include "mozilla/dom/Response.h"
 #include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/ScriptLoader.h"
+#include "mozilla/dom/ScriptLoadHandler.h"  // ScriptDecoder
 #include "mozilla/dom/Worklet.h"
 #include "mozilla/dom/WorkletBinding.h"
 #include "mozilla/dom/WorkletGlobalScope.h"
@@ -140,132 +141,80 @@ StartFetchRunnable::Run() {
   return NS_OK;
 }
 
-class ExecutionRunnable final : public Runnable {
+// A Runnable to call ModuleLoadRequest::OnFetchComplete on a worklet thread.
+class FetchCompleteRunnable final : public Runnable {
  public:
-  ExecutionRunnable(WorkletFetchHandler* aHandler, WorkletImpl* aWorkletImpl,
-                    UniquePtr<Utf8Unit[], JS::FreePolicy> aScriptBuffer,
-                    size_t aScriptLength)
-      : Runnable("Worklet::ExecutionRunnable"),
-        mHandler(aHandler),
+  FetchCompleteRunnable(WorkletImpl* aWorkletImpl, nsIURI* aURI,
+                        nsresult aResult,
+                        UniquePtr<uint8_t[]> aScriptBuffer = nullptr,
+                        size_t aScriptLength = 0)
+      : Runnable("Worklet::FetchCompleteRunnable"),
         mWorkletImpl(aWorkletImpl),
+        mURI(aURI),
+        mResult(aResult),
         mScriptBuffer(std::move(aScriptBuffer)),
-        mScriptLength(aScriptLength),
-        mParentRuntime(
-            JS_GetParentRuntime(CycleCollectedJSContext::Get()->Context())),
-        mResult(NS_ERROR_FAILURE) {
+        mScriptLength(aScriptLength) {
     MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(mParentRuntime);
   }
 
-  NS_IMETHOD
-  Run() override;
+  ~FetchCompleteRunnable() = default;
+
+  NS_IMETHOD Run() override;
 
  private:
-  void RunOnWorkletThread();
+  NS_IMETHOD RunOnWorkletThread();
 
-  void RunOnMainThread();
-
-  bool ParseAndLinkModule(JSContext* aCx, JS::MutableHandle<JSObject*> aModule);
-
-  RefPtr<WorkletFetchHandler> mHandler;
   RefPtr<WorkletImpl> mWorkletImpl;
-  UniquePtr<Utf8Unit[], JS::FreePolicy> mScriptBuffer;
-  size_t mScriptLength;
-  JSRuntime* mParentRuntime;
+  nsCOMPtr<nsIURI> mURI;
   nsresult mResult;
+  UniquePtr<uint8_t[]> mScriptBuffer;
+  size_t mScriptLength;
 };
 
 NS_IMETHODIMP
-ExecutionRunnable::Run() {
-  // WorkletThread::IsOnWorkletThread() cannot be used here because it depends
-  // on a WorkletJSContext having been created for this thread.  That does not
-  // happen until the global scope is created the first time
-  // RunOnWorkletThread() is called.
-  if (!NS_IsMainThread()) {
-    RunOnWorkletThread();
-    return NS_DispatchToMainThread(this);
-  }
-
-  RunOnMainThread();
-  return NS_OK;
+FetchCompleteRunnable::Run() {
+  MOZ_ASSERT(WorkletThread::IsOnWorkletThread());
+  return RunOnWorkletThread();
 }
 
-bool ExecutionRunnable::ParseAndLinkModule(
-    JSContext* aCx, JS::MutableHandle<JSObject*> aModule) {
-  JS::CompileOptions compileOptions(aCx);
-  compileOptions.setIntroductionType("Worklet");
-  compileOptions.setIsRunOnce(true);
-  compileOptions.setNoScriptRval(true);
-
-  JS::SourceText<Utf8Unit> buffer;
-  if (!buffer.init(aCx, std::move(mScriptBuffer), mScriptLength)) {
-    return false;
-  }
-  JS::Rooted<JSObject*> module(aCx,
-                               JS::CompileModule(aCx, compileOptions, buffer));
-  if (!module) {
-    return false;
-  }
-  // Any imports will fail here - bug 1572644.
-  if (!JS::ModuleLink(aCx, module)) {
-    return false;
-  }
-  aModule.set(module);
-  return true;
-}
-
-void ExecutionRunnable::RunOnWorkletThread() {
-  // This can be called on a GraphRunner thread or a DOM Worklet thread.
-  WorkletThread::EnsureCycleCollectedJSContext(mParentRuntime);
-
+NS_IMETHODIMP FetchCompleteRunnable::RunOnWorkletThread() {
   WorkletGlobalScope* globalScope = mWorkletImpl->GetGlobalScope();
   if (!globalScope) {
-    mResult = NS_ERROR_DOM_UNKNOWN_ERR;
-    return;
+    return NS_ERROR_DOM_UNKNOWN_ERR;
   }
 
-  AutoEntryScript aes(globalScope, "Worklet");
-  JSContext* cx = aes.cx();
+  WorkletModuleLoader* moduleLoader =
+      static_cast<WorkletModuleLoader*>(globalScope->GetModuleLoader());
+  MOZ_ASSERT(moduleLoader);
+  MOZ_ASSERT(mURI);
+  ModuleLoadRequest* request = moduleLoader->GetRequest(mURI);
+  MOZ_ASSERT(request);
 
-  JS::Rooted<JSObject*> module(cx);
-  if (!ParseAndLinkModule(cx, &module)) {
-    mResult = NS_ERROR_DOM_ABORT_ERR;
-    return;
+  // Set the Source type to "text" for decoding.
+  request->SetTextSource();
+
+  nsresult rv;
+  if (mScriptBuffer) {
+    UniquePtr<ScriptDecoder> decoder = MakeUnique<ScriptDecoder>(
+        UTF_8_ENCODING, ScriptDecoder::BOMHandling::Remove);
+    rv = decoder->DecodeRawData(request, mScriptBuffer.get(), mScriptLength,
+                                true);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // https://drafts.css-houdini.org/worklets/#fetch-and-invoke-a-worklet-script
-  // invokes
-  // https://html.spec.whatwg.org/multipage/webappapis.html#run-a-module-script
-  // without /rethrow errors/ and so unhandled exceptions do not cause the
-  // promise to be rejected.
-  JS::Rooted<JS::Value> rval(cx);
-  JS::ModuleEvaluate(cx, module, &rval);
-  // With top-level await, we need to unwrap the module promise, or we end up
-  // with less helpfull error messages. A modules return value can either be a
-  // promise or undefined. If the value is defined, we have an async module and
-  // can unwrap it.
-  if (!rval.isUndefined() && rval.isObject()) {
-    JS::Rooted<JSObject*> aEvaluationPromise(cx);
-    aEvaluationPromise.set(&rval.toObject());
-    if (!JS::ThrowOnModuleEvaluationFailure(cx, aEvaluationPromise)) {
-      mResult = NS_ERROR_DOM_ABORT_ERR;
-      return;
+  request->mBaseURL = mURI;
+  request->OnFetchComplete(mResult);
+
+  if (NS_FAILED(mResult)) {
+    if (request->IsTopLevel()) {
+      request->LoadFailed();
+    } else {
+      request->Cancel();
     }
   }
 
-  // All done.
-  mResult = NS_OK;
-}
-
-void ExecutionRunnable::RunOnMainThread() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (NS_FAILED(mResult)) {
-    mHandler->ExecutionFailed(mResult);
-    return;
-  }
-
-  mHandler->ExecutionSucceeded();
+  moduleLoader->RemoveRequest(mURI);
+  return NS_OK;
 }
 
 //////////////////////////////////////////////////////////////
@@ -485,20 +434,28 @@ nsresult WorkletFetchHandler::StartFetch(JSContext* aCx, nsIURI* aURI,
   }
 
   RefPtr<WorkletScriptHandler> scriptHandler =
-      new WorkletScriptHandler(mWorklet);
+      new WorkletScriptHandler(mWorklet, aURI);
   fetchPromise->AppendNativeHandler(scriptHandler);
   return NS_OK;
 }
 
-void WorkletFetchHandler::HandleFetchFailed(nsIURI* aURI) {}
+void WorkletFetchHandler::HandleFetchFailed(nsIURI* aURI) {
+  nsCOMPtr<nsIRunnable> runnable = new FetchCompleteRunnable(
+      mWorklet->mImpl, aURI, NS_ERROR_FAILURE, nullptr, 0);
+
+  if (NS_WARN_IF(
+          NS_FAILED(mWorklet->mImpl->SendControlMessage(runnable.forget())))) {
+    NS_WARNING("Failed to dispatch FetchCompleteRunnable to a worklet thread.");
+  }
+}
 
 //////////////////////////////////////////////////////////////
 // WorkletScriptHandler
 //////////////////////////////////////////////////////////////
 NS_IMPL_ISUPPORTS(WorkletScriptHandler, nsIStreamLoaderObserver)
 
-WorkletScriptHandler::WorkletScriptHandler(Worklet* aWorklet)
-    : mWorklet(aWorklet) {}
+WorkletScriptHandler::WorkletScriptHandler(Worklet* aWorklet, nsIURI* aURI)
+    : mWorklet(aWorklet), mURI(aURI) {}
 
 void WorkletScriptHandler::ResolvedCallback(JSContext* aCx,
                                             JS::Handle<JS::Value> aValue,
@@ -575,22 +532,13 @@ NS_IMETHODIMP WorkletScriptHandler::OnStreamComplete(nsIStreamLoader* aLoader,
     return NS_OK;
   }
 
-  UniquePtr<Utf8Unit[], JS::FreePolicy> scriptTextBuf;
-  size_t scriptTextLength;
-  nsresult rv =
-      ScriptLoader::ConvertToUTF8(nullptr, aString, aStringLen, u"UTF-8"_ns,
-                                  nullptr, scriptTextBuf, scriptTextLength);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    HandleFailure(rv);
-    return NS_OK;
-  }
+  // Copy the buffer and decode it on worklet thread, as we can only access
+  // ModuleLoadRequest on worklet thread.
+  UniquePtr<uint8_t[]> scriptTextBuf = MakeUnique<uint8_t[]>(aStringLen);
+  memcpy(scriptTextBuf.get(), aString, aStringLen);
 
-  // Moving the ownership of the buffer
-  //
-  // Note: ExecutableRunnable will be removed by later patch, so we simply pass
-  // nullptr as the first argument to bypass the compilation error.
-  nsCOMPtr<nsIRunnable> runnable = new ExecutionRunnable(
-      nullptr, mWorklet->mImpl, std::move(scriptTextBuf), scriptTextLength);
+  nsCOMPtr<nsIRunnable> runnable = new FetchCompleteRunnable(
+      mWorklet->mImpl, mURI, NS_OK, std::move(scriptTextBuf), aStringLen);
 
   if (NS_FAILED(mWorklet->mImpl->SendControlMessage(runnable.forget()))) {
     HandleFailure(NS_ERROR_FAILURE);
@@ -610,6 +558,18 @@ void WorkletScriptHandler::RejectedCallback(JSContext* aCx,
   HandleFailure(NS_ERROR_DOM_ABORT_ERR);
 }
 
-void WorkletScriptHandler::HandleFailure(nsresult aResult) {}
+void WorkletScriptHandler::HandleFailure(nsresult aResult) {
+  DispatchFetchCompleteToWorklet(aResult);
+}
+
+void WorkletScriptHandler::DispatchFetchCompleteToWorklet(nsresult aRv) {
+  nsCOMPtr<nsIRunnable> runnable =
+      new FetchCompleteRunnable(mWorklet->mImpl, mURI, aRv, nullptr, 0);
+
+  if (NS_WARN_IF(
+          NS_FAILED(mWorklet->mImpl->SendControlMessage(runnable.forget())))) {
+    NS_WARNING("Failed to dispatch FetchCompleteRunnable to a worklet thread.");
+  }
+}
 
 }  // namespace mozilla::dom
