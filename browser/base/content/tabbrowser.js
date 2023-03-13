@@ -760,11 +760,7 @@
     },
 
     _notifyPinnedStatus(aTab) {
-      aTab.linkedBrowser.sendMessageToActor(
-        "Browser:AppTab",
-        { isAppTab: aTab.pinned },
-        "BrowserTab"
-      );
+      aTab.linkedBrowser.browsingContext.isAppTab = aTab.pinned;
 
       let event = document.createEvent("Events");
       event.initEvent(aTab.pinned ? "TabPinned" : "TabUnpinned", true, false);
@@ -2049,12 +2045,6 @@
         // we call updatetabIndicatorAttr here, rather than _tabAttrModified, so as
         // to be consistent with how "crashed" attribute changes are handled elsewhere
         this.tabContainer.updateTabIndicatorAttr(tab);
-      } else {
-        aBrowser.sendMessageToActor(
-          "Browser:AppTab",
-          { isAppTab: tab.pinned },
-          "BrowserTab"
-        );
       }
 
       if (wasActive) {
@@ -2452,11 +2442,7 @@
         browser.setAttribute("usercontextid", aTab.userContextId);
       }
 
-      browser.sendMessageToActor(
-        "Browser:AppTab",
-        { isAppTab: aTab.pinned },
-        "BrowserTab"
-      );
+      browser.browsingContext.isAppTab = aTab.pinned;
 
       // We don't want to update the container icon and identifier if
       // this is not the selected browser.
@@ -6266,12 +6252,6 @@
             // crashed.
             tab.removeAttribute("crashed");
             gBrowser.tabContainer.updateTabIndicatorAttr(tab);
-          } else {
-            browser.sendMessageToActor(
-              "Browser:AppTab",
-              { isAppTab: tab.pinned },
-              "BrowserTab"
-            );
           }
 
           if (wasActive) {

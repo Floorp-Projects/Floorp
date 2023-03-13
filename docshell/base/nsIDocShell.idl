@@ -448,13 +448,6 @@ interface nsIDocShell : nsIDocShellTreeItem
   [noscript, notxpcom] nsIDRef HistoryID();
 
   /**
-   * Sets whether a docshell is an app tab. An app tab docshell may behave
-   * differently than a non-app tab docshell in some cases, such as when
-   * handling link clicks. Docshells are not app tabs unless told otherwise.
-   */
-  attribute boolean isAppTab;
-
-  /**
    * Create a new about:blank document and content viewer.
    * @param aPrincipal the principal to use for the new document.
    * @param aPartitionedPrincipal the partitioned principal to use for the new
