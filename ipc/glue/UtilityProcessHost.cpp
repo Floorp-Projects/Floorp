@@ -39,7 +39,9 @@ UtilityProcessHost::UtilityProcessHost(SandboxingKind aSandbox,
                                        RefPtr<Listener> aListener)
     : GeckoChildProcessHost(GeckoProcessType_Utility),
       mListener(std::move(aListener)),
-      mLiveToken(new media::Refcountable<bool>(true)) {
+      mLiveToken(new media::Refcountable<bool>(true)),
+      mLaunchPromise(
+          MakeRefPtr<GenericNonExclusivePromise::Private>(__func__)) {
   MOZ_COUNT_CTOR(UtilityProcessHost);
   LOGD("[%p] UtilityProcessHost::UtilityProcessHost sandboxingKind=%" PRIu64,
        this, aSandbox);
@@ -128,10 +130,10 @@ bool UtilityProcessHost::Launch(StringVector aExtraOpts) {
 RefPtr<GenericNonExclusivePromise> UtilityProcessHost::LaunchPromise() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (mLaunchPromise) {
+  if (mLaunchPromiseLaunched) {
     return mLaunchPromise;
   }
-  mLaunchPromise = MakeRefPtr<GenericNonExclusivePromise::Private>(__func__);
+
   WhenProcessHandleReady()->Then(
       GetCurrentSerialEventTarget(), __func__,
       [this, liveToken = mLiveToken](
@@ -153,6 +155,8 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessHost::LaunchPromise() {
         // Utility process. The promise will be resolved once the channel has
         // connected (or failed to) later.
       });
+
+  mLaunchPromiseLaunched = true;
   return mLaunchPromise;
 }
 
