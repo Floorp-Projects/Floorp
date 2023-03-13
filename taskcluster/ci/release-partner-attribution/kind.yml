@@ -29,7 +29,7 @@ job-defaults:
         max-run-time: 1800
     run:
         using: mach
-        mach: python python/mozrelease/mozrelease/partner_attribution.py
+        mach: python python/mozrelease/mozrelease/attribute_builds.py
 
 jobs:
     partner-attribution:
