@@ -20,28 +20,6 @@ NS_IMPL_QUERY_INTERFACE_CI(ExpandedPrincipal, nsIPrincipal,
 NS_IMPL_CI_INTERFACE_GETTER(ExpandedPrincipal, nsIPrincipal,
                             nsIExpandedPrincipal)
 
-struct OriginComparator {
-  bool LessThan(nsIPrincipal* a, nsIPrincipal* b) const {
-    nsAutoCString originA;
-    DebugOnly<nsresult> rv = a->GetOrigin(originA);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    nsAutoCString originB;
-    rv = b->GetOrigin(originB);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    return originA < originB;
-  }
-
-  bool Equals(nsIPrincipal* a, nsIPrincipal* b) const {
-    nsAutoCString originA;
-    DebugOnly<nsresult> rv = a->GetOrigin(originA);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    nsAutoCString originB;
-    rv = b->GetOrigin(originB);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    return a == b;
-  }
-};
-
 ExpandedPrincipal::ExpandedPrincipal(
     nsTArray<nsCOMPtr<nsIPrincipal>>&& aPrincipals,
     const nsACString& aOriginNoSuffix, const OriginAttributes& aAttrs)
@@ -53,12 +31,9 @@ ExpandedPrincipal::~ExpandedPrincipal() = default;
 already_AddRefed<ExpandedPrincipal> ExpandedPrincipal::Create(
     const nsTArray<nsCOMPtr<nsIPrincipal>>& aAllowList,
     const OriginAttributes& aAttrs) {
-  // We force the principals to be sorted by origin so that ExpandedPrincipal
-  // origins can have a canonical form.
   nsTArray<nsCOMPtr<nsIPrincipal>> principals;
-  OriginComparator c;
   for (size_t i = 0; i < aAllowList.Length(); ++i) {
-    principals.InsertElementSorted(aAllowList[i], c);
+    principals.AppendElement(aAllowList[i]);
   }
 
   nsAutoCString origin;
@@ -248,7 +223,6 @@ ExpandedPrincipal::Deserializer::Read(nsIObjectInputStream* aStream) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  OriginComparator c;
   for (uint32_t i = 0; i < count; ++i) {
     nsCOMPtr<nsISupports> read;
     rv = aStream->ReadObject(true, getter_AddRefs(read));
@@ -261,9 +235,7 @@ ExpandedPrincipal::Deserializer::Read(nsIObjectInputStream* aStream) {
       return NS_ERROR_UNEXPECTED;
     }
 
-    // Play it safe and InsertElementSorted, in case the sort order
-    // changed for some bizarre reason.
-    principals.InsertElementSorted(std::move(principal), c);
+    principals.AppendElement(std::move(principal));
   }
 
   mPrincipal = ExpandedPrincipal::Create(principals, OriginAttributes());

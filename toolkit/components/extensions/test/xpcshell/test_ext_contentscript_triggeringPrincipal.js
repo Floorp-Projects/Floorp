@@ -1258,7 +1258,7 @@ function getOrigins(extension) {
     page: Services.scriptSecurityManager.createContentPrincipal(pageURI, {})
       .origin,
     contentScript: Cu.getObjectPrincipal(
-      Cu.Sandbox([extension.principal, pageURL])
+      Cu.Sandbox([pageURL, extension.principal])
     ).origin,
     extension: extension.principal.origin,
   };

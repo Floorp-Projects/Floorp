@@ -410,6 +410,16 @@ inline bool BasePrincipal::FastEqualsConsideringDomain(nsIPrincipal* aOther) {
     return FastEquals(aOther);
   }
 
+  // Principals of different kinds can't be equal.
+  if (Kind() != other->Kind()) {
+    return false;
+  }
+
+  // Only ContentPrincipals should have mHasExplicitDomain set to true, so test
+  // that we haven't ended up here instead of FastEquals by mistake.
+  MOZ_ASSERT(IsContentPrincipal(),
+             "Only content principals can set mHasExplicitDomain");
+
   return Subsumes(aOther, ConsiderDocumentDomain) &&
          other->Subsumes(this, ConsiderDocumentDomain);
 }
