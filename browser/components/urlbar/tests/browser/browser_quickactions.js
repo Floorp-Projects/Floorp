@@ -11,11 +11,12 @@ requestLongerTimeout(3);
 
 ChromeUtils.defineESModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
+  UpdateService: "resource://gre/modules/UpdateService.sys.mjs",
+
   UrlbarProviderQuickActions:
     "resource:///modules/UrlbarProviderQuickActions.sys.mjs",
 });
 XPCOMUtils.defineLazyModuleGetters(this, {
-  UpdateService: "resource://gre/modules/UpdateService.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
 });
 

@@ -8,8 +8,8 @@
 /* import-globals-from /browser/base/content/aboutDialog-appUpdater.js */
 /* global MozXULElement */
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  BackgroundUpdate: "resource://gre/modules/BackgroundUpdate.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  BackgroundUpdate: "resource://gre/modules/BackgroundUpdate.sys.mjs",
 });
 
 // Constants & Enumeration Values

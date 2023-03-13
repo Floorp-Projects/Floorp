@@ -110,13 +110,13 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 });
 
 if (AppConstants.MOZ_UPDATER) {
-  XPCOMUtils.defineLazyModuleGetters(lazy, {
-    UpdateListener: "resource://gre/modules/UpdateListener.jsm",
+  ChromeUtils.defineESModuleGetters(lazy, {
+    UpdateListener: "resource://gre/modules/UpdateListener.sys.mjs",
   });
 }
 if (AppConstants.MOZ_UPDATE_AGENT) {
-  XPCOMUtils.defineLazyModuleGetters(lazy, {
-    BackgroundUpdate: "resource://gre/modules/BackgroundUpdate.jsm",
+  ChromeUtils.defineESModuleGetters(lazy, {
+    BackgroundUpdate: "resource://gre/modules/BackgroundUpdate.sys.mjs",
   });
 }
 

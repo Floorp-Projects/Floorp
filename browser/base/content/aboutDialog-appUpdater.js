@@ -12,11 +12,11 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 );
 
 ChromeUtils.defineESModuleGetters(this, {
+  AppUpdater: "resource://gre/modules/AppUpdater.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AppUpdater: "resource://gre/modules/AppUpdater.jsm",
   DownloadUtils: "resource://gre/modules/DownloadUtils.jsm",
 });
 
