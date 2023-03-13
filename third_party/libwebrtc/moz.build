@@ -44,6 +44,7 @@ DIRS += [
     "/third_party/libwebrtc/api/crypto/frame_encryptor_interface_gn",
     "/third_party/libwebrtc/api/crypto/options_gn",
     "/third_party/libwebrtc/api/fec_controller_api_gn",
+    "/third_party/libwebrtc/api/field_trials_registry_gn",
     "/third_party/libwebrtc/api/field_trials_view_gn",
     "/third_party/libwebrtc/api/frame_transformer_interface_gn",
     "/third_party/libwebrtc/api/function_view_gn",
