@@ -16,7 +16,7 @@ class DependenciesPlugin : Plugin<Settings> {
 object Versions {
     const val kotlin = "1.8.10"
     const val coroutines = "1.6.4"
-    const val serialization = "1.4.1"
+    const val serialization = "1.5.0"
 
     const val junit = "4.13.2"
     const val robolectric = "4.9.2"

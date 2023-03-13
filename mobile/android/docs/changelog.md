@@ -31,6 +31,9 @@ permalink: /changelog/
 * **lib-crash-sentry-legacy**
   * ⚠️ **This is a breaking change**: This component has been removed. Consumers should use the newer `lib-crash-sentry` component instead.
 
+* **lib-crash**
+  * 🚒 Bug fixed [Bug 1822148](https://bugzilla.mozilla.org/show_bug.cgi?id=1822148). Ensure proguard rules retain serialization classes.
+
 * **browser-engine-gecko**:
   * Add support for `hasCookieBannerRuleForSession` API for checking whether a cookie banner from the current website in the session can be handled.
 
