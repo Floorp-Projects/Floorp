@@ -37,12 +37,6 @@ export class BrowserTabChild extends JSWindowActorChild {
     let docShell = context.docShell;
 
     switch (message.name) {
-      case "Browser:AppTab":
-        if (docShell) {
-          docShell.isAppTab = message.data.isAppTab;
-        }
-        break;
-
       case "Browser:HasSiblings":
         try {
           let browserChild = docShell

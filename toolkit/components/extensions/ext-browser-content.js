@@ -48,9 +48,6 @@ const BrowserListener = {
       content.windowUtils.allowScriptsToClose();
     }
 
-    // Force external links to open in tabs.
-    docShell.isAppTab = true;
-
     if (this.blockParser) {
       this.blockingPromise = new Promise(resolve => {
         this.unblockParser = resolve;

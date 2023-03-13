@@ -131,6 +131,12 @@ interface BrowsingContext {
 
   [SetterThrows] attribute boolean isActive;
 
+  /**
+   * Sets whether this is an app tab. Non-same-origin link navigations from app
+   * tabs may be forced to open in new contexts, rather than in the same context.
+   */
+  [SetterThrows] attribute boolean isAppTab;
+
   // The inRDMPane flag indicates whether or not Responsive Design Mode is
   // active for the browsing context.
   [SetterThrows] attribute boolean inRDMPane;

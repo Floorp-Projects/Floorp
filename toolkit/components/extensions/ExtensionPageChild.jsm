@@ -409,10 +409,6 @@ ExtensionPageChild = {
   },
 
   expectViewLoad(global, viewType) {
-    if (["popup", "sidebar"].includes(viewType)) {
-      global.docShell.isAppTab = true;
-    }
-
     promiseEvent(
       global,
       "DOMContentLoaded",
