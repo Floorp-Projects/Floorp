@@ -12,7 +12,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 export class BrowserTabChild extends JSWindowActorChild {
   constructor() {
     super();
-    this.rpmInitialized = false;
   }
 
   actorCreated() {
@@ -22,14 +21,7 @@ export class BrowserTabChild extends JSWindowActorChild {
   }
 
   handleEvent(event) {
-    switch (event.type) {
-      case "DOMDocElementInserted":
-        // NOTE: DOMDocElementInserted may be called multiple times per
-        // PWindowGlobal due to the initial about:blank document's window global
-        // being re-used.
-        this.initializeRPM();
-        break;
-    }
+    // DOMDocElementInserted is only used to create the actor.
   }
 
   receiveMessage(message) {
@@ -78,31 +70,6 @@ export class BrowserTabChild extends JSWindowActorChild {
       case "ForceEncodingDetection":
         docShell.forceEncodingDetection();
         break;
-    }
-  }
-
-  // Creates a new PageListener for this process. This will listen for page loads
-  // and for those that match URLs provided by the parent process will set up
-  // a dedicated message port and notify the parent process.
-  // Note: this is part of the old message-manager based RPM and is only still
-  // used by newtab and talos tests.
-  initializeRPM() {
-    if (this.rpmInitialized) {
-      return;
-    }
-
-    // Strip the hash from the URL, because it's not part of the origin.
-    let url = this.document.documentURI.replace(/[\#?].*$/, "");
-
-    let registeredURLs = Services.cpmm.sharedData.get("RemotePageManager:urls");
-
-    if (registeredURLs && registeredURLs.has(url)) {
-      let { ChildMessagePort } = ChromeUtils.importESModule(
-        "resource://gre/modules/remotepagemanager/RemotePageManagerChild.sys.mjs"
-      );
-      // Set up the child side of the message port
-      new ChildMessagePort(this.contentWindow);
-      this.rpmInitialized = true;
     }
   }
 }
