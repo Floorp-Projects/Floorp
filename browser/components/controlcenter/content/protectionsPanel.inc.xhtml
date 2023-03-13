@@ -376,7 +376,7 @@
             data-l10n-id="protections-panel-sendreportview-error"
             hidden="true" role="alert"></label>
         </vbox>
-        <vbox id="protections-popup-sendReportView-footer"
+        <hbox id="protections-popup-sendReportView-footer"
               class="panel-footer">
           <button id="protections-popup-sendReportView-cancel"
                   data-l10n-id="protections-panel-content-blocking-breakage-report-view-cancel"
@@ -385,7 +385,7 @@
                   default="true"
                   data-l10n-id="protections-panel-content-blocking-breakage-report-view-send-report"
                   oncommand="gProtectionsHandler.onSendReportClicked(); gProtectionsHandler.recordClick('send_report_submit');"/>
-        </vbox>
+        </hbox>
     </panelview>
 
     <!-- Cookie Banner SubView -->
@@ -412,7 +412,7 @@
           <description id="cookieBannerView-disable-site-warning" data-l10n-id="protections-panel-cookie-banner-view-cookie-clear-warning"></description>
           <description id="cookieBannerView-enable-site-description" data-l10n-id="protections-panel-cookie-banner-view-turn-on-description"></description>
         </vbox>
-        <vbox class="panel-footer protections-popup-cookieBannerView-footer">
+        <hbox class="panel-footer protections-popup-cookieBannerView-footer">
           <button id="protections-popup-cookieBannerView-cancel"
                     data-l10n-id="protections-panel-cookie-banner-view-cancel"
                     oncommand="gProtectionsHandler._protectionsPopupMultiView.goBack();"
@@ -427,7 +427,7 @@
                     oncommand="gProtectionsHandler.onCookieBannerToggleCommand()"
                     default="true"
                     class="subviewbutton panel-subview-footer-button" />
-        </vbox>
+        </hbox>
     </panelview>
   </panelmultiview>
 </panel>
