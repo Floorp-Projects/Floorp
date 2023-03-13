@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test fetch an child module script with an invalid uri for Worklet</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="common.js"></script>
+</head>
+<body>
+
+<script type="application/javascript">
+
+function configureTest() {
+  return SpecialPowers.pushPrefEnv(
+    {"set": [["dom.audioworklet.enabled", true],
+             ["dom.worklet.enabled", true]]});
+}
+
+// This function is called into an iframe.
+function runTestInIframe() {
+  var audioContext = new AudioContext();
+  ok(!!audioContext.audioWorklet, "audioContext.audioWorklet exists");
+
+  audioContext.audioWorklet.addModule("specifier_with_user.mjs")
+  .then(() => {
+    ok(false, "Error: load shouldn't succeed.");
+  }, () => {
+    ok(true, "OK: load should fail.");
+  })
+
+  // done
+  .then(() => {
+    SimpleTest.finish();
+  });
+}
+
+</script>
+</body>
+</html>
