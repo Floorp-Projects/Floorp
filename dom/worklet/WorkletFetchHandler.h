@@ -8,6 +8,7 @@
 #define mozilla_dom_WorkletFetchHandler_h
 
 #include "mozilla/dom/PromiseNativeHandler.h"
+#include "mozilla/dom/RequestBinding.h"  // RequestCredentials
 #include "nsIStreamLoader.h"
 
 namespace mozilla::dom {
@@ -26,12 +27,18 @@ class WorkletFetchHandler final : public nsISupports {
                                              const WorkletOptions& aOptions,
                                              ErrorResult& aRv);
 
+  // Load a module script on main thread.
+  nsresult StartFetch(JSContext* aCx, nsIURI* aURI, nsIURI* aReferrer);
+
   void ExecutionFailed(nsresult aRv);
 
   void ExecutionSucceeded();
 
+  void HandleFetchFailed(nsIURI* aURI);
+
  private:
-  WorkletFetchHandler(Worklet* aWorklet, Promise* aPromise);
+  WorkletFetchHandler(Worklet* aWorklet, Promise* aPromise,
+                      RequestCredentials aCredentials);
 
   ~WorkletFetchHandler() = default;
 
@@ -41,10 +48,30 @@ class WorkletFetchHandler final : public nsISupports {
 
   void ResolvePromises();
 
+  friend class StartFetchRunnable;
   RefPtr<Worklet> mWorklet;
   nsTArray<RefPtr<Promise>> mPromises;
 
   enum { ePending, eRejected, eResolved } mStatus;
+
+  RequestCredentials mCredentials;
+};
+
+// A Runnable to call WorkletFetchHandler::StartFetch on the main thread.
+class StartFetchRunnable final : public Runnable {
+ public:
+  StartFetchRunnable(
+      const nsMainThreadPtrHandle<WorkletFetchHandler>& aHandlerRef,
+      nsIURI* aURI, nsIURI* aReferrer);
+  ~StartFetchRunnable() = default;
+
+  NS_IMETHOD
+  Run() override;
+
+ private:
+  nsMainThreadPtrHandle<WorkletFetchHandler> mHandlerRef;
+  nsCOMPtr<nsIURI> mURI;
+  nsCOMPtr<nsIURI> mReferrer;
 };
 
 // WorkletScriptHandler is used to handle the result of fetching the module
