@@ -88,6 +88,9 @@ if CONFIG["MOZ_WMF_CDM"]:
     SOURCES += [
         "MFCDMParent.cpp",
     ]
+    LOCAL_INCLUDES += [
+        "../eme/mediafoundation",
+    ]
 
 # so we can include nsMacUtilsImpl.h in RDDParent.cpp for sandboxing
 LOCAL_INCLUDES += [
