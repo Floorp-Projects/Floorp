@@ -14574,11 +14574,7 @@ void Document::SetFullscreenElement(Element& aElement) {
 void Document::TopLayerPush(Element& aElement) {
   const bool modal = aElement.State().HasState(ElementState::MODAL);
 
-  auto predictFunc = [&aElement](Element* element) {
-    return element == &aElement;
-  };
-  TopLayerPop(predictFunc);
-
+  TopLayerPop(aElement);
   mTopLayer.AppendElement(do_GetWeakReference(&aElement));
   NS_ASSERTION(GetTopLayerTop() == &aElement, "Should match");
 
@@ -14614,10 +14610,7 @@ void Document::AddModalDialog(HTMLDialogElement& aDialogElement) {
 }
 
 void Document::RemoveModalDialog(HTMLDialogElement& aDialogElement) {
-  auto predicate = [&aDialogElement](Element* element) -> bool {
-    return element == &aDialogElement;
-  };
-  DebugOnly<Element*> removedElement = TopLayerPop(predicate);
+  DebugOnly<Element*> removedElement = TopLayerPop(aDialogElement);
   MOZ_ASSERT(removedElement == &aDialogElement);
   aDialogElement.RemoveStates(ElementState::MODAL);
 }
@@ -14683,6 +14676,13 @@ Element* Document::TopLayerPop(FunctionRef<bool(Element*)> aPredicate) {
   }
 
   return removedElement;
+}
+
+Element* Document::TopLayerPop(Element& aElement) {
+  auto predictFunc = [&aElement](Element* element) {
+    return element == &aElement;
+  };
+  return TopLayerPop(predictFunc);
 }
 
 void Document::GetWireframe(bool aIncludeNodes,
@@ -14824,6 +14824,38 @@ nsTArray<Element*> Document::GetTopLayer() const {
     }
   }
   return elements;
+}
+
+nsTArray<Element*> Document::AutoPopoverList() const {
+  nsTArray<Element*> elements;
+  for (const nsWeakPtr& ptr : mTopLayer) {
+    if (nsCOMPtr<Element> element = do_QueryReferent(ptr)) {
+      if (element && element->IsAutoPopover()) {
+        elements.AppendElement(element);
+      }
+    }
+  }
+  return elements;
+}
+
+Element* Document::GetTopmostAutoPopover() const {
+  for (const nsWeakPtr& weakPtr : Reversed(mTopLayer)) {
+    nsCOMPtr<Element> element(do_QueryReferent(weakPtr));
+    if (element && element->IsAutoPopover()) {
+      return element;
+    }
+  }
+  return nullptr;
+}
+
+void Document::AddToAutoPopoverList(Element& aElement) {
+  MOZ_ASSERT(aElement.IsAutoPopover());
+  TopLayerPush(aElement);
+}
+
+void Document::RemoveFromAutoPopoverList(Element& aElement) {
+  MOZ_ASSERT(aElement.IsAutoPopover());
+  TopLayerPop(aElement);
 }
 
 // Returns true if aDoc is in the focused tab in the active window.

@@ -4205,6 +4205,11 @@ void Element::ClearServoData(Document* aDoc) {
   }
 }
 
+bool Element::IsAutoPopover() const {
+  const auto* htmlElement = nsGenericHTMLElement::FromNode(this);
+  return htmlElement && htmlElement->GetPopoverState() == PopoverState::Auto;
+}
+
 ElementAnimationData& Element::CreateAnimationData() {
   MOZ_ASSERT(!GetAnimationData());
   SetMayHaveAnimations();
