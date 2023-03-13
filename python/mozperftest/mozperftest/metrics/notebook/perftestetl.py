@@ -142,27 +142,9 @@ class PerftestETL(object):
         for name, files in self.file_groups.items():
             files = self.parse_file_grouping(files)
             if isinstance(files, dict):
-                for subtest, files in files.items():
-                    self.transformer.files = files
-
-                    trfm_data = self.transformer.process(name, **kwargs)
-
-                    if isinstance(trfm_data, list):
-                        for e in trfm_data:
-                            if "subtest" not in e:
-                                e["subtest"] = subtest
-                            else:
-                                e["subtest"] = "%s-%s" % (subtest, e["subtest"])
-                        fmt_data.extend(trfm_data)
-                    else:
-                        if "subtest" not in trfm_data:
-                            trfm_data["subtest"] = subtest
-                        else:
-                            trfm_data["subtest"] = "%s-%s" % (
-                                subtest,
-                                trfm_data["subtest"],
-                            )
-                        fmt_data.append(trfm_data)
+                raise Exception(
+                    "Artifact downloader tooling is disabled for the time being."
+                )
             else:
                 # Transform the data
                 self.transformer.files = files

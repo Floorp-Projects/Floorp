@@ -2,6 +2,7 @@ import json
 import pathlib
 
 import mozunit
+import pytest
 
 from mozperftest.metrics.notebook.constant import Constant
 from mozperftest.metrics.notebook.transformer import Transformer
@@ -84,6 +85,21 @@ def test_process(ptetls, files):
         actual_output = json.load(f)
 
     assert expected_output == actual_output
+
+
+def test_process_fail_artifact_downloading(ptetls, files):
+    ptetl = ptetls["ptetl_list"]
+    ptetl.file_groups = {"group-name": {"artifact_downloader_setting": False}}
+
+    # Set a custom transformer.
+    ptetl.transformer = Transformer([], SingleJsonRetriever())
+    with pytest.raises(Exception) as exc_info:
+        ptetl.process()
+
+    assert (
+        str(exc_info.value)
+        == "Artifact downloader tooling is disabled for the time being."
+    )
 
 
 if __name__ == "__main__":
