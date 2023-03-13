@@ -6,6 +6,8 @@
 
 #include "WorkletModuleLoader.h"
 
+#include "js/CompileOptions.h"  // JS::InstantiateOptions
+#include "js/experimental/JSStencil.h"  // JS::CompileModuleScriptToStencil, JS::InstantiateModuleStencil
 #include "js/loader/ModuleLoadRequest.h"
 #include "mozilla/dom/Worklet.h"
 #include "mozilla/dom/WorkletFetchHandler.h"
@@ -77,7 +79,26 @@ nsresult WorkletModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
 nsresult WorkletModuleLoader::CompileFetchedModule(
     JSContext* aCx, JS::Handle<JSObject*> aGlobal, JS::CompileOptions& aOptions,
     ModuleLoadRequest* aRequest, JS::MutableHandle<JSObject*> aModuleScript) {
-  return NS_ERROR_FAILURE;
+  RefPtr<JS::Stencil> stencil;
+  MOZ_ASSERT(aRequest->IsTextSource());
+
+  MaybeSourceText maybeSource;
+  nsresult rv = aRequest->GetScriptSource(aCx, &maybeSource);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  auto compile = [&](auto& source) {
+    return JS::CompileModuleScriptToStencil(aCx, aOptions, source);
+  };
+  stencil = maybeSource.mapNonEmpty(compile);
+
+  if (!stencil) {
+    return NS_ERROR_FAILURE;
+  }
+
+  JS::InstantiateOptions instantiateOptions(aOptions);
+  aModuleScript.set(
+      JS::InstantiateModuleStencil(aCx, instantiateOptions, stencil));
+  return aModuleScript ? NS_OK : NS_ERROR_FAILURE;
 }
 
 void WorkletModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {}

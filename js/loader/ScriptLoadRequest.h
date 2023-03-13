@@ -348,7 +348,8 @@ class ScriptLoadRequest
   nsCOMPtr<nsIPrincipal> mOriginPrincipal;
 
   // Keep the URI's filename alive during off thread parsing.
-  // Also used by workers to report on errors while loading.
+  // Also used by workers to report on errors while loading, and used by
+  // worklets as the file name in compile options.
   nsAutoCString mURL;
 
   // The base URL used for resolving relative module imports.

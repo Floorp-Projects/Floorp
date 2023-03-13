@@ -30,6 +30,10 @@ class WorkletScriptLoader : public JS::loader::ScriptLoaderInterface {
   nsresult FillCompileOptionsForRequest(
       JSContext* cx, ScriptLoadRequest* aRequest, JS::CompileOptions* aOptions,
       JS::MutableHandle<JSScript*> aIntroductionScript) override {
+    aOptions->setIntroductionType("Worklet");
+    aOptions->setFileAndLine(aRequest->mURL.get(), 1);
+    aOptions->setIsRunOnce(true);
+    aOptions->setNoScriptRval(true);
     return NS_OK;
   }
 
