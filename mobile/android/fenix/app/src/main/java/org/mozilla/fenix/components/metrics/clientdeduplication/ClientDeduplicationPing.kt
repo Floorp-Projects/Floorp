@@ -8,7 +8,6 @@ import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.mozilla.fenix.GleanMetrics.Activation
 import org.mozilla.fenix.GleanMetrics.ClientDeduplication
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.components.metrics.MetricsUtils.getHashedIdentifier
@@ -29,7 +28,7 @@ class ClientDeduplicationPing(private val context: Context) {
             // Record the metrics.
             if (hashedId != null) {
                 // We have a valid, hashed Google Advertising ID.
-                Activation.identifier.set(hashedId)
+                ClientDeduplication.hashedGaid.set(hashedId)
                 ClientDeduplication.validAdvertisingId.set(true)
             } else {
                 ClientDeduplication.validAdvertisingId.set(false)

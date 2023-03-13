@@ -2988,7 +2988,6 @@ activation:
       This will never be sent in a ping that also contains the client_id.
     send_in_pings:
       - activation
-      - client-deduplication
     bugs:
       - https://bugzilla.mozilla.org/1538011
       - https://bugzilla.mozilla.org/1501822
@@ -9075,6 +9074,23 @@ client_deduplication:
     type: string
     description: |
       A string we use to identify which run of the experiment this is.
+    send_in_pings:
+      - client-deduplication
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1817029
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1813195#c11
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - fbertsch@mozilla.com
+    expires: 122
+  hashed_gaid:
+    type: string
+    lifetime: ping
+    description: |
+      A hashed and salted version of the Google Advertising ID from the device.
     send_in_pings:
       - client-deduplication
     bugs:
