@@ -165,6 +165,7 @@ nsresult HeadlessLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = 0;
       break;
     case IntID::PrefersReducedMotion:
+    case IntID::PrefersReducedTransparency:
       aResult = 0;
       break;
     case IntID::PrimaryPointerCapabilities:

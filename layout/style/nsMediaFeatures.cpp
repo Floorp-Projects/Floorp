@@ -283,6 +283,14 @@ bool Gecko_MediaFeatures_PrefersReducedMotion(const Document* aDocument) {
   return LookAndFeel::GetInt(LookAndFeel::IntID::PrefersReducedMotion, 0) == 1;
 }
 
+bool Gecko_MediaFeatures_PrefersReducedTransparency(const Document* aDocument) {
+  if (aDocument->ShouldResistFingerprinting()) {
+    return false;
+  }
+  return LookAndFeel::GetInt(LookAndFeel::IntID::PrefersReducedTransparency,
+                             0) == 1;
+}
+
 StylePrefersColorScheme Gecko_MediaFeatures_PrefersColorScheme(
     const Document* aDocument, bool aUseContent) {
   auto scheme = aUseContent ? LookAndFeel::PreferredColorSchemeForContent()

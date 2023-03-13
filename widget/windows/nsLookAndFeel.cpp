@@ -608,6 +608,12 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = !enable;
       break;
     }
+    case IntID::PrefersReducedTransparency: {
+      // Prefers reduced transparency if the option for "Transparency Effects"
+      // is disabled
+      aResult = !WindowsUIUtils::ComputeTransparencyEffects();
+      break;
+    }
     case IntID::PrimaryPointerCapabilities: {
       aResult = static_cast<int32_t>(
           widget::WinUtils::GetPrimaryPointerCapabilities());

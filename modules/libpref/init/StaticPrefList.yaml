@@ -3481,7 +3481,7 @@
   mirror: never
 #endif
 
-# Use to control to dump CheckedUnsafePtr creation stack and assignment stacks. 
+# Use to control to dump CheckedUnsafePtr creation stack and assignment stacks.
 - name: dom.checkedUnsafePtr.dumpStacks.enabled
   type: RelaxedAtomicBool
   value: false
@@ -8767,6 +8767,13 @@
 - name: layout.css.forced-colors.enabled
   type: RelaxedAtomicBool
   value: true
+  mirror: always
+  rust: true
+
+# Dictates whether or not the prefers-reduced-transparency media query is enabled.
+- name: layout.css.prefers-reduced-transparency.enabled
+  type: RelaxedAtomicBool
+  value: false
   mirror: always
   rust: true
 

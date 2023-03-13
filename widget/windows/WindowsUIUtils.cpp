@@ -400,6 +400,20 @@ static IInspectable* GetUISettings() {
           uiSettings3->add_ColorValuesChanged(callback.Get(), &unusedToken)));
     }
 
+    ComPtr<IUISettings4> uiSettings4;
+    if (SUCCEEDED(uiSettingsAsInspectable.As(&uiSettings4))) {
+      EventRegistrationToken unusedToken;
+      auto callback =
+          Callback<ITypedEventHandler<UISettings*, IInspectable*>>([](auto...) {
+            // Transparent effects changes change media queries only.
+            LookAndFeel::NotifyChangedAllWindows(
+                widget::ThemeChangeKind::MediaQueriesOnly);
+            return S_OK;
+          });
+      (void)NS_WARN_IF(FAILED(uiSettings4->add_AdvancedEffectsEnabledChanged(
+          callback.Get(), &unusedToken)));
+    }
+
     sUiSettingsAsInspectable = dont_AddRef(uiSettingsAsInspectable.Detach());
     ClearOnShutdown(&sUiSettingsAsInspectable);
   }
@@ -548,6 +562,28 @@ double WindowsUIUtils::ComputeTextScaleFactor() {
   return scaleFactor;
 #else
   return 1.0;
+#endif
+}
+
+bool WindowsUIUtils::ComputeTransparencyEffects() {
+  constexpr bool kDefault = true;
+#ifndef __MINGW32__
+  ComPtr<IInspectable> settings = GetUISettings();
+  if (NS_WARN_IF(!settings)) {
+    return kDefault;
+  }
+  ComPtr<IUISettings4> uiSettings4;
+  if (NS_WARN_IF(FAILED(settings.As(&uiSettings4)))) {
+    return kDefault;
+  }
+  boolean transparencyEffects = kDefault;
+  if (NS_WARN_IF(FAILED(
+          uiSettings4->get_AdvancedEffectsEnabled(&transparencyEffects)))) {
+    return kDefault;
+  }
+  return transparencyEffects;
+#else
+  return kDefault;
 #endif
 }
 
