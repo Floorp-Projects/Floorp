@@ -126,6 +126,7 @@ class JUnitTestRunner(MochitestDesktop):
         self.options.webServer = self.options.remoteWebServer
         self.options.webSocketPort = "9988"
         self.options.httpdPath = None
+        self.options.http3ServerPath = None
         self.options.keep_open = False
         self.options.pidFile = ""
         self.options.subsuite = None

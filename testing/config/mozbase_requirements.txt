@@ -18,6 +18,7 @@
 ../mozbase/mozprofile
 ../mozbase/mozproxy
 ../mozbase/mozrunner
+../mozbase/mozserve
 ../mozbase/mozscreenshot
 ../mozbase/moztest
 ../mozbase/mozversion
