@@ -5,8 +5,9 @@
 
 #include "SelectionState.h"
 
-#include "AutoRangeArray.h"          // for AutoRangeArray
-#include "EditorUtils.h"             // for EditorUtils, AutoRangeArray
+#include "AutoRangeArray.h"  // for AutoRangeArray
+#include "EditorUtils.h"     // for EditorUtils, AutoRangeArray
+#include "ErrorList.h"
 #include "JoinSplitNodeDirection.h"  // for JoinNodesDirection, SplitNodeDirection
 
 #include "mozilla/Assertions.h"    // for MOZ_ASSERT, etc.
@@ -311,18 +312,41 @@ nsresult RangeUpdater::SelAdjSplitNode(nsIContent& aOriginalContent,
   }
 
   EditorRawDOMPoint atNewNode(&aNewContent);
-  nsresult rv = SelAdjInsertNode(atNewNode);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("RangeUpdater::SelAdjInsertNode() failed");
-    return rv;
+  if (NS_WARN_IF(!atNewNode.IsSetAndValid())) {
+    return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
   }
 
-  // If point is in the range which are moved from aOriginalContent to
-  // aNewContent, we need to change its container to aNewContent and may need to
-  // adjust the offset. If point is in the range which are not moved from
-  // aOriginalContent, we may need to adjust the offset.
   auto AdjustDOMPoint = [&](nsCOMPtr<nsINode>& aContainer,
                             uint32_t& aOffset) -> void {
+    if (aContainer == atNewNode.GetContainer()) {
+      if (aSplitNodeDirection == SplitNodeDirection::LeftNodeIsNewOne) {
+        // When we create a left node, we insert it before the right node.
+        // In this case,
+        // - `{}<right/>` should become `{}<left/><right/>` (0 -> 0)
+        // - `<right/>{}` should become `<left/><right/>{}` (1 -> 2)
+        // - `{<right/>}` should become `{<left/><right/>}` (0 -> 0, 1 -> 2}
+        // Therefore, we need to increate the offset only when the offset is
+        // larger than the offset at the left node.
+        if (aOffset > atNewNode.Offset()) {
+          aOffset++;
+        }
+      } else {
+        // When we create a right node, we insert it after the left node.
+        // In this case,
+        // - `{}<left/>` should become `{}<left/><right/>` (0 -> 0)
+        // - `<left/>{}` should become `<left/><right/>{}` (1 -> 2)
+        // - `{<left/>}` should become `{<left/><right/>}` (0 -> 0, 1 -> 2}
+        // Therefore, we need to increate the offset only when the offset equals
+        // or is larger than the offset at the right node.
+        if (aOffset >= atNewNode.Offset()) {
+          aOffset++;
+        }
+      }
+    }
+    // If point is in the range which are moved from aOriginalContent to
+    // aNewContent, we need to change its container to aNewContent and may need
+    // to adjust the offset. If point is in the range which are not moved from
+    // aOriginalContent, we may need to adjust the offset.
     if (aContainer != &aOriginalContent) {
       return;
     }
