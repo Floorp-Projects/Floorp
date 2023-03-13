@@ -13,9 +13,11 @@
 namespace mozilla::dom {
 class Worklet;
 struct WorkletOptions;
+class WorkletScriptHandler;
 
-class WorkletFetchHandler final : public PromiseNativeHandler,
-                                  public nsIStreamLoaderObserver {
+// WorkletFetchHandler is used to fetch the module scripts on the main thread,
+// and notifies the result of addModule back to |aWorklet|.
+class WorkletFetchHandler final : public nsISupports {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
@@ -23,16 +25,6 @@ class WorkletFetchHandler final : public PromiseNativeHandler,
                                          const nsAString& aModuleURL,
                                          const WorkletOptions& aOptions,
                                          ErrorResult& aRv);
-
-  virtual void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                                ErrorResult& aRv) override;
-  NS_IMETHOD
-  OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext,
-                   nsresult aStatus, uint32_t aStringLen,
-                   const uint8_t* aString) override;
-
-  virtual void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                                ErrorResult& aRv) override;
 
   const nsCString& URL() const { return mURL; }
 
@@ -60,6 +52,34 @@ class WorkletFetchHandler final : public PromiseNativeHandler,
   nsresult mErrorStatus;
 
   nsCString mURL;
+};
+
+// WorkletScriptHandler is used to handle the result of fetching the module
+// script.
+class WorkletScriptHandler final : public PromiseNativeHandler,
+                                   public nsIStreamLoaderObserver {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+
+  explicit WorkletScriptHandler(Worklet* aWorklet);
+
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override;
+
+  NS_IMETHOD
+  OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext,
+                   nsresult aStatus, uint32_t aStringLen,
+                   const uint8_t* aString) override;
+
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override;
+
+  void HandleFailure(nsresult aResult);
+
+ private:
+  ~WorkletScriptHandler() = default;
+
+  RefPtr<Worklet> mWorklet;
 };
 
 }  // namespace mozilla::dom

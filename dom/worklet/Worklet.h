@@ -23,6 +23,7 @@ namespace dom {
 
 class Promise;
 class WorkletFetchHandler;
+class WorkletScriptHandler;
 struct WorkletOptions;
 enum class CallerType : uint32_t;
 
@@ -65,6 +66,7 @@ class Worklet final : public nsISupports, public nsWrapperCache {
   const RefPtr<WorkletImpl> mImpl;
 
   friend class WorkletFetchHandler;
+  friend class WorkletScriptHandler;
 };
 
 }  // namespace dom

@@ -152,9 +152,10 @@ void ExecutionRunnable::RunOnMainThread() {
   mHandler->ExecutionSucceeded();
 }
 
-// ---------------------------------------------------------------------------
+//////////////////////////////////////////////////////////////
 // WorkletFetchHandler
-NS_IMPL_ISUPPORTS(WorkletFetchHandler, nsIStreamLoaderObserver)
+//////////////////////////////////////////////////////////////
+NS_IMPL_ISUPPORTS(WorkletFetchHandler, nsISupports)
 
 // static
 already_AddRefed<Promise> WorkletFetchHandler::Fetch(
@@ -245,10 +246,12 @@ already_AddRefed<Promise> WorkletFetchHandler::Fetch(
 
   promiseSettledGuard.release();
 
+  RefPtr<WorkletScriptHandler> scriptHandler =
+      new WorkletScriptHandler(aWorklet);
+  fetchPromise->AppendNativeHandler(scriptHandler);
+
   RefPtr<WorkletFetchHandler> handler =
       new WorkletFetchHandler(aWorklet, spec, promise);
-  fetchPromise->AppendNativeHandler(handler);
-
   aWorklet->AddImportFetchHandler(spec, handler);
   return promise.forget();
 }
@@ -326,20 +329,28 @@ void WorkletFetchHandler::ResolvePromises() {
   mWorklet = nullptr;
 }
 
-void WorkletFetchHandler::ResolvedCallback(JSContext* aCx,
-                                           JS::Handle<JS::Value> aValue,
-                                           ErrorResult& aRv) {
+//////////////////////////////////////////////////////////////
+// WorkletScriptHandler
+//////////////////////////////////////////////////////////////
+NS_IMPL_ISUPPORTS(WorkletScriptHandler, nsIStreamLoaderObserver)
+
+WorkletScriptHandler::WorkletScriptHandler(Worklet* aWorklet)
+    : mWorklet(aWorklet) {}
+
+void WorkletScriptHandler::ResolvedCallback(JSContext* aCx,
+                                            JS::Handle<JS::Value> aValue,
+                                            ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!aValue.isObject()) {
-    RejectPromises(NS_ERROR_FAILURE);
+    HandleFailure(NS_ERROR_FAILURE);
     return;
   }
 
   RefPtr<Response> response;
   nsresult rv = UNWRAP_OBJECT(Response, &aValue.toObject(), response);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    RejectPromises(NS_ERROR_FAILURE);
+    HandleFailure(NS_ERROR_FAILURE);
     return;
   }
 
@@ -347,34 +358,34 @@ void WorkletFetchHandler::ResolvedCallback(JSContext* aCx,
   // Step 6.4.1. If script is null, then:
   //   Step 1.1.2. Reject promise with an "AbortError" DOMException.
   if (!response->Ok()) {
-    RejectPromises(NS_ERROR_DOM_ABORT_ERR);
+    HandleFailure(NS_ERROR_DOM_ABORT_ERR);
     return;
   }
 
   nsCOMPtr<nsIInputStream> inputStream;
   response->GetBody(getter_AddRefs(inputStream));
   if (!inputStream) {
-    RejectPromises(NS_ERROR_DOM_NETWORK_ERR);
+    HandleFailure(NS_ERROR_DOM_NETWORK_ERR);
     return;
   }
 
   nsCOMPtr<nsIInputStreamPump> pump;
   rv = NS_NewInputStreamPump(getter_AddRefs(pump), inputStream.forget());
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    RejectPromises(rv);
+    HandleFailure(rv);
     return;
   }
 
   nsCOMPtr<nsIStreamLoader> loader;
   rv = NS_NewStreamLoader(getter_AddRefs(loader), this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    RejectPromises(rv);
+    HandleFailure(rv);
     return;
   }
 
   rv = pump->AsyncRead(loader);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    RejectPromises(rv);
+    HandleFailure(rv);
     return;
   }
 
@@ -389,15 +400,15 @@ void WorkletFetchHandler::ResolvedCallback(JSContext* aCx,
   }
 }
 
-NS_IMETHODIMP WorkletFetchHandler::OnStreamComplete(nsIStreamLoader* aLoader,
-                                                    nsISupports* aContext,
-                                                    nsresult aStatus,
-                                                    uint32_t aStringLen,
-                                                    const uint8_t* aString) {
+NS_IMETHODIMP WorkletScriptHandler::OnStreamComplete(nsIStreamLoader* aLoader,
+                                                     nsISupports* aContext,
+                                                     nsresult aStatus,
+                                                     uint32_t aStringLen,
+                                                     const uint8_t* aString) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (NS_FAILED(aStatus)) {
-    RejectPromises(aStatus);
+    HandleFailure(aStatus);
     return NS_OK;
   }
 
@@ -407,31 +418,35 @@ NS_IMETHODIMP WorkletFetchHandler::OnStreamComplete(nsIStreamLoader* aLoader,
       ScriptLoader::ConvertToUTF8(nullptr, aString, aStringLen, u"UTF-8"_ns,
                                   nullptr, scriptTextBuf, scriptTextLength);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    RejectPromises(rv);
+    HandleFailure(rv);
     return NS_OK;
   }
 
   // Moving the ownership of the buffer
+  //
+  // Note: ExecutableRunnable will be removed by later patch, so we simply pass
+  // nullptr as the first argument to bypass the compilation error.
   nsCOMPtr<nsIRunnable> runnable = new ExecutionRunnable(
-      this, mWorklet->mImpl, std::move(scriptTextBuf), scriptTextLength);
+      nullptr, mWorklet->mImpl, std::move(scriptTextBuf), scriptTextLength);
 
   if (NS_FAILED(mWorklet->mImpl->SendControlMessage(runnable.forget()))) {
-    RejectPromises(NS_ERROR_FAILURE);
-    return NS_OK;
+    HandleFailure(NS_ERROR_FAILURE);
   }
 
   return NS_OK;
 }
 
-void WorkletFetchHandler::RejectedCallback(JSContext* aCx,
-                                           JS::Handle<JS::Value> aValue,
-                                           ErrorResult& aRv) {
+void WorkletScriptHandler::RejectedCallback(JSContext* aCx,
+                                            JS::Handle<JS::Value> aValue,
+                                            ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
 
   // https://html.spec.whatwg.org/multipage/worklets.html#dom-worklet-addmodule
   // Step 6.4.1. If script is null, then:
   //   Step 1.1.2. Reject promise with an "AbortError" DOMException.
-  RejectPromises(NS_ERROR_DOM_ABORT_ERR);
+  HandleFailure(NS_ERROR_DOM_ABORT_ERR);
 }
+
+void WorkletScriptHandler::HandleFailure(nsresult aResult) {}
 
 }  // namespace mozilla::dom
