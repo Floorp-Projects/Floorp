@@ -76,7 +76,6 @@ _ContextualIdentityService.prototype = {
       color: "blue",
       l10nID: "userContextPersonal.label",
       accessKey: "userContextPersonal.accesskey",
-      telemetryId: 1,
     },
     {
       userContextId: 2,
@@ -85,7 +84,6 @@ _ContextualIdentityService.prototype = {
       color: "orange",
       l10nID: "userContextWork.label",
       accessKey: "userContextWork.accesskey",
-      telemetryId: 2,
     },
     {
       userContextId: 3,
@@ -94,7 +92,6 @@ _ContextualIdentityService.prototype = {
       color: "green",
       l10nID: "userContextBanking.label",
       accessKey: "userContextBanking.accesskey",
-      telemetryId: 3,
     },
     {
       userContextId: 4,
@@ -103,7 +100,6 @@ _ContextualIdentityService.prototype = {
       color: "pink",
       l10nID: "userContextShopping.label",
       accessKey: "userContextShopping.accesskey",
-      telemetryId: 4,
     },
     {
       userContextId: 5,
@@ -566,28 +562,6 @@ _ContextualIdentityService.prototype = {
           callback(tab, tabbrowser);
         }
       }
-    }
-  },
-
-  telemetry(userContextId) {
-    let identity = this.getPublicIdentityFromId(userContextId);
-
-    // Let's ignore unknown identities for now.
-    if (!identity) {
-      return;
-    }
-
-    if (!this._openedIdentities.has(userContextId)) {
-      this._openedIdentities.add(userContextId);
-      Services.telemetry.getHistogramById("UNIQUE_CONTAINERS_OPENED").add(1);
-    }
-
-    Services.telemetry.getHistogramById("TOTAL_CONTAINERS_OPENED").add(1);
-
-    if (identity.telemetryId) {
-      Services.telemetry
-        .getHistogramById("CONTAINER_USED")
-        .add(identity.telemetryId);
     }
   },
 

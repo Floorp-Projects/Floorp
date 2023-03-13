@@ -25,7 +25,6 @@ add_task(async function migratedFile() {
         color: "blue",
         l10nID: "userContextPersonal.label",
         accessKey: "userContextPersonal.accesskey",
-        telemetryId: 1,
       },
       {
         userContextId: 2,
@@ -34,7 +33,6 @@ add_task(async function migratedFile() {
         color: "orange",
         l10nID: "userContextWork.label",
         accessKey: "userContextWork.accesskey",
-        telemetryId: 2,
       },
       {
         userContextId: 3,
@@ -43,7 +41,6 @@ add_task(async function migratedFile() {
         color: "green",
         l10nID: "userContextBanking.label",
         accessKey: "userContextBanking.accesskey",
-        telemetryId: 3,
       },
       {
         userContextId: 4,
@@ -52,7 +49,6 @@ add_task(async function migratedFile() {
         color: "pink",
         l10nID: "userContextShopping.label",
         accessKey: "userContextShopping.accesskey",
-        telemetryId: 4,
       },
       {
         userContextId: 5,
