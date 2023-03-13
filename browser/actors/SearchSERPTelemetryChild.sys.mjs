@@ -1,9 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
-
-var EXPORTED_SYMBOLS = ["SearchSERPTelemetryChild", "ADLINK_CHECK_TIMEOUT_MS"];
 
 const lazy = {};
 
@@ -13,7 +10,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 const SHARED_DATA_KEY = "SearchTelemetry:ProviderInfo";
-const ADLINK_CHECK_TIMEOUT_MS = 1000;
+export const ADLINK_CHECK_TIMEOUT_MS = 1000;
 
 /**
  * SearchProviders looks after keeping track of the search provider information
@@ -92,7 +89,7 @@ const searchProviders = new SearchProviders();
  * page are returned to SearchTelemetry. If no ads are found, no notification is
  * given.
  */
-class SearchSERPTelemetryChild extends JSWindowActorChild {
+export class SearchSERPTelemetryChild extends JSWindowActorChild {
   /**
    * Determines if there is a provider that matches the supplied URL and returns
    * the information associated with that provider.

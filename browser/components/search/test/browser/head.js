@@ -2,6 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 ChromeUtils.defineESModuleGetters(this, {
+  ADLINK_CHECK_TIMEOUT_MS:
+    "resource:///actors/SearchSERPTelemetryChild.sys.mjs",
   FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
   FormHistoryTestUtils:
     "resource://testing-common/FormHistoryTestUtils.sys.mjs",
@@ -13,7 +15,6 @@ ChromeUtils.defineESModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  ADLINK_CHECK_TIMEOUT_MS: "resource:///actors/SearchSERPTelemetryChild.jsm",
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
   CustomizableUITestUtils:
     "resource://testing-common/CustomizableUITestUtils.jsm",

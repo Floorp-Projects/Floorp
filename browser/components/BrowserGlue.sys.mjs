@@ -729,10 +729,10 @@ let JSWINDOWACTORS = {
 
   SearchSERPTelemetry: {
     parent: {
-      moduleURI: "resource:///actors/SearchSERPTelemetryParent.jsm",
+      esModuleURI: "resource:///actors/SearchSERPTelemetryParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource:///actors/SearchSERPTelemetryChild.jsm",
+      esModuleURI: "resource:///actors/SearchSERPTelemetryChild.sys.mjs",
       events: {
         DOMContentLoaded: {},
         pageshow: { mozSystemGroup: true },
