@@ -2008,6 +2008,17 @@ bool nsGenericHTMLFormElement::IsElementDisabledForEvents(WidgetEvent* aEvent,
     case eLegacyMouseLineOrPageScroll:
     case eLegacyMousePixelScroll:
       return false;
+    case eFocus:
+    case eBlur:
+    case eFocusIn:
+    case eFocusOut:
+    case eKeyPress:
+    case eKeyUp:
+    case eKeyDown:
+      if (StaticPrefs::dom_forms_always_allow_key_and_focus_events_enabled()) {
+        return false;
+      }
+      [[fallthrough]];
     case ePointerDown:
     case ePointerUp:
     case ePointerCancel:
