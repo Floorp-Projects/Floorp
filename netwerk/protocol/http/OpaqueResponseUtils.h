@@ -60,8 +60,6 @@ ParseContentRangeHeaderString(const nsAutoCString& aRangeStr);
 
 bool IsFirstPartialResponse(nsHttpResponseHead& aResponseHead);
 
-void LogORBError(nsILoadInfo* aLoadInfo, nsIURI* aURI);
-
 class OpaqueResponseBlocker final : public nsIStreamListener {
   enum class State { Sniffing, Allowed, Blocked };
 
@@ -75,7 +73,7 @@ class OpaqueResponseBlocker final : public nsIStreamListener {
 
   bool IsSniffing() const;
   void AllowResponse();
-  void BlockResponse(HttpBaseChannel* aChannel, nsresult aReason);
+  void BlockResponse(HttpBaseChannel* aChannel, nsresult aStatus);
 
   nsresult EnsureOpaqueResponseIsAllowedAfterSniff(nsIRequest* aRequest);
 
