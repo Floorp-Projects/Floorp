@@ -20,9 +20,14 @@ const MAX_UINT32 = Math.pow(2, 32) - 1;
 const LOWER_CASE_ALPHA = "abcdefghijkmnpqrstuvwxyz"; // no 'l' or 'o'
 const UPPER_CASE_ALPHA = "ABCDEFGHJKLMNPQRSTUVWXYZ"; // no 'I' or 'O'
 const DIGITS = "23456789"; // no '1' or '0'
-const SPECIAL_CHARACTERS = " -~!@#$%^&*_+=`|(){}[:;\"'<>,.?]";
+const SPECIAL_CHARACTERS = "-~!@#$%^&*_+=)}:;\"'>,.?]";
 
-const REQUIRED_CHARACTER_CLASSES = [LOWER_CASE_ALPHA, UPPER_CASE_ALPHA, DIGITS];
+const REQUIRED_CHARACTER_CLASSES = [
+  LOWER_CASE_ALPHA,
+  UPPER_CASE_ALPHA,
+  DIGITS,
+  SPECIAL_CHARACTERS,
+];
 
 // Consts for different password rules
 const REQUIRED = "required";
@@ -38,7 +43,7 @@ const SPECIAL = "special";
 const DEFAULT_RULES = new Map();
 DEFAULT_RULES.set(MIN_LENGTH, REQUIRED_CHARACTER_CLASSES.length);
 DEFAULT_RULES.set(MAX_LENGTH, MAX_UINT8);
-DEFAULT_RULES.set(REQUIRED, [UPPER, LOWER, DIGIT]);
+DEFAULT_RULES.set(REQUIRED, [UPPER, LOWER, DIGIT, SPECIAL]);
 
 const PasswordGenerator = {
   /**
