@@ -18,8 +18,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AboutHomeStartupCache: "resource:///modules/BrowserGlue.sys.mjs",
 });
 
-const { RemotePages } = ChromeUtils.import(
-  "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm"
+const { RemotePages } = ChromeUtils.importESModule(
+  "resource://gre/modules/remotepagemanager/RemotePageManagerParent.sys.mjs"
 );
 
 const {

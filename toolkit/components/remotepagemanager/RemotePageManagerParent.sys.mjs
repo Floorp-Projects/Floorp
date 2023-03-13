@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["RemotePages", "RemotePageManager"];
-
 /*
  * Using the RemotePageManager:
  * * Create a new page listener by calling 'new RemotePages(URI)' which
@@ -19,9 +15,10 @@ var EXPORTED_SYMBOLS = ["RemotePages", "RemotePageManager"];
  *   from MessagePort.jsm.
  */
 
-const { MessageListener, MessagePort } = ChromeUtils.import(
-  "resource://gre/modules/remotepagemanager/MessagePort.jsm"
-);
+import {
+  MessageListener,
+  MessagePort,
+} from "resource://gre/modules/remotepagemanager/MessagePort.sys.mjs";
 
 /**
  * Creates a RemotePages object which listens for new remote pages of some
@@ -29,7 +26,7 @@ const { MessageListener, MessagePort } = ChromeUtils.import(
  * object for every page loaded. Message listeners added to this object receive
  * messages from all loaded pages from the requested urls.
  */
-class RemotePages {
+export class RemotePages {
   constructor(urls) {
     this.urls = Array.isArray(urls) ? urls : [urls];
     this.messagePorts = new Set();
@@ -340,7 +337,7 @@ if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
 RemotePageManagerInternal.init();
 
 // The public API for the above object
-var RemotePageManager = {
+export var RemotePageManager = {
   addRemotePageListener: RemotePageManagerInternal.addRemotePageListener.bind(
     RemotePageManagerInternal
   ),
