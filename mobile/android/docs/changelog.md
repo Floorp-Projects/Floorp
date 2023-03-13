@@ -3,11 +3,18 @@ layout: page
 title: Changelog
 permalink: /changelog/
 ---
-# 112.0.0 (In Development)
-* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/v111.0.0...main)
+
+# 113.0.0 (In Development)
+* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v112..main)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
 * [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
+
+# 112.0.0
+* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v111...releases_v112)
+* [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v112/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
+* [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/releases_v112/android-components/plugins/dependencies/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/releases_v112/android-components/.config.yml)
 
 * **service-pocket**
   * 🌟 ⚠️ **This is a breaking change**: Use `id` instead of `flight_id` to identify a Pocket sponsored story. [Bug 1820967](https://bugzilla.mozilla.org/show_bug.cgi?id=1820967).
@@ -32,10 +39,10 @@ permalink: /changelog/
 
 
 # 111.0.0
-* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/v110.0.0...v111.0.0)
-* [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/v111.0.0/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
-* [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/v111.0.0/android-components/plugins/dependencies/src/main/java/Gecko.kt)
-* [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/v111.0.0/android-components/.config.yml)
+* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v110...releases_v111)
+* [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v111/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
+* [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/releases_v111/android-components/plugins/dependencies/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/releases_v111/android-components/.config.yml)
 
 * **compose-cfr**
   * 🚒 Bug fixed [bug #1809592](https://bugzilla.mozilla.org/show_bug.cgi?id=1809592). Improve screen alignment for Contextual Feature Recommendation popups.
@@ -88,10 +95,10 @@ permalink: /changelog/
   * 🌟 Added support for Glean crash pings in the `GleanCrashReporterService`. [Bug 1810951](https://bugzilla.mozilla.org/show_bug.cgi?id=1810951)
 
 # 110.0.0
-* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/v109.0.0...v110.0.0)
-* [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/v110.0.0/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
-* [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/v110.0.0/android-components/plugins/dependencies/src/main/java/Gecko.kt)
-* [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/v110.0.0/android-components/.config.yml)
+* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v109...releases_v110)
+* [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v110/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
+* [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/releases_v110/android-components/plugins/dependencies/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/releases_v110/android-components/.config.yml)
 
 * **support-telemetry-sync**
   * 🚒 Bug fixed [Bug 1804996](https://bugzilla.mozilla.org/show_bug.cgi?id=1804996). Removed fpsa, ftas, ftsa and ffos DDG type tags and replaced them with fpas.
@@ -134,10 +141,10 @@ permalink: /changelog/
   * 🆕 Added `GeckoCookieBannersStorage.addPersistentExceptionInPrivateMode` to allow to add persistent cookie banner exceptions in private browsing [Bug 1797605](https://bugzilla.mozilla.org/show_bug.cgi?id=1806924).
 
 # 109.0.0
-* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/v108.0.0...v109.0.0)
-* [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/v109.0.0/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
-* [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/v109.0.0/android-components/plugins/dependencies/src/main/java/Gecko.kt)
-* [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/v109.0.0/android-components/.config.yml)
+* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v108...releases_v109)
+* [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v109/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
+* [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/releases_v109/android-components/plugins/dependencies/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/releases_v109/android-components/.config.yml)
 
 * **support-ktx, feature-contextmenu**
   * 🚒 Bug fixed [Bug 1798873](https://bugzilla.mozilla.org/show_bug.cgi?id=1798873) Added a way to exclude current app from share targets. Used when sharing text.
