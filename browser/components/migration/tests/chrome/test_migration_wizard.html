@@ -199,7 +199,7 @@
       selectAllCheckbox.checked = true;
       selectAllCheckbox.dispatchEvent(new CustomEvent("change"));
       let checkboxes = gShadowRoot.querySelectorAll(
-        'label[data-resource-type] > input[type="checkbox"]'
+        'label:not([hidden])[data-resource-type] > input[type="checkbox"]'
       );
       for (let checkbox of checkboxes) {
         is(
@@ -208,6 +208,35 @@
           "Testing if checking select-all selects unchecked resources"
         );
       }
+      let selectedDataHeader = gShadowRoot.querySelector(".selected-data-header");
+      let selectedData = gShadowRoot.querySelector(".selected-data");
+
+      let bookmarks = gShadowRoot.querySelector("#bookmarks");
+      let history = gShadowRoot.querySelector("#history");
+
+      let selectedDataUpdated = BrowserTestUtils.waitForCondition(() => {
+        return selectedData.textContent == "Bookmarks and history";
+      });
+      bookmarks.control.checked = true;
+      history.control.checked = true;
+      bookmarks.dispatchEvent(new CustomEvent("change"));
+
+      ok(bookmarks.control.checked, "Bookmarks should be checked");
+      ok(history.control.checked, "History should be checked");
+
+      await selectedDataUpdated;
+
+      is(
+        selectedData.textContent,
+        "Bookmarks and history",
+        "Testing if selected-data reflects the selected resources."
+      );
+
+      is(
+        selectedDataHeader.dataset.l10nId,
+        "migration-all-available-data-label",
+        "Testing if selected-data-header reflects the selected resources"
+      );
     });
 
     /**
