@@ -18,6 +18,8 @@ function configureTest() {
 
 // This function is called into an iframe.
 function runTestInIframe() {
+  let error;
+
   // This loading should fail
   var audioContext = new AudioContext();
   audioContext.audioWorklet.addModule("404.js")
@@ -35,6 +37,30 @@ function runTestInIframe() {
     ok(true, "The script threw but we are still here.");
   }, () => {
     ok(false, "We should not be called!");
+  })
+
+  // invalid_specifier.mjs will throw a TypeError.
+  .then(() => {
+    return audioContext.audioWorklet.addModule("invalid_specifier.mjs")
+  })
+  .then(() => {
+    ok(false, "We should not be called!");
+  }, (e) => {
+    ok(true, "The script thrown but we are still here.");
+    ok(e instanceof TypeError, "The error should be a TypeError.");
+    error = e;
+  })
+
+  // import "invalid_specifier.mjs" again, this will reuse the response from the
+  // previous addModule("invalid_specifier.mjs") call.
+  .then(() => {
+    return audioContext.audioWorklet.addModule("invalid_specifier.mjs")
+  })
+  .then(() => {
+    ok(false, "We should not be called!");
+  }, (e) => {
+    ok(true, "The script thrown but we are still here.");
+    ok (e === error, "The TypeError object should be reused.");
   })
 
   .then(() => {

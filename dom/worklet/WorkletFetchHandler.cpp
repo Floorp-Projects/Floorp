@@ -227,7 +227,27 @@ NS_IMETHODIMP FetchCompleteRunnable::RunOnWorkletThread() {
 //////////////////////////////////////////////////////////////
 // WorkletFetchHandler
 //////////////////////////////////////////////////////////////
-NS_IMPL_ISUPPORTS(WorkletFetchHandler, nsISupports)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(WorkletFetchHandler)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(WorkletFetchHandler)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WorkletFetchHandler)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(WorkletFetchHandler)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(WorkletFetchHandler)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWorklet, mPromises)
+  tmp->mErrorToRethrow.setUndefined();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(WorkletFetchHandler)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWorklet, mPromises)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(WorkletFetchHandler)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mErrorToRethrow)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 // static
 already_AddRefed<Promise> WorkletFetchHandler::AddModule(
@@ -286,7 +306,7 @@ already_AddRefed<Promise> WorkletFetchHandler::AddModule(
   {
     WorkletFetchHandler* handler = aWorklet->GetImportFetchHandler(spec);
     if (handler) {
-      handler->AddPromise(promise);
+      handler->AddPromise(aCx, promise);
       return promise.forget();
     }
   }
@@ -327,6 +347,8 @@ WorkletFetchHandler::WorkletFetchHandler(Worklet* aWorklet, Promise* aPromise,
   mPromises.AppendElement(aPromise);
 }
 
+WorkletFetchHandler::~WorkletFetchHandler() { mozilla::DropJSObjects(this); }
+
 void WorkletFetchHandler::ExecutionFailed() {
   MOZ_ASSERT(NS_IsMainThread());
   RejectPromises(NS_ERROR_DOM_ABORT_ERR);
@@ -342,7 +364,7 @@ void WorkletFetchHandler::ExecutionSucceeded() {
   ResolvePromises();
 }
 
-void WorkletFetchHandler::AddPromise(Promise* aPromise) {
+void WorkletFetchHandler::AddPromise(JSContext* aCx, Promise* aPromise) {
   MOZ_ASSERT(aPromise);
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -352,7 +374,12 @@ void WorkletFetchHandler::AddPromise(Promise* aPromise) {
       return;
 
     case eRejected:
-      aPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+      if (mHasError) {
+        JS::Rooted<JS::Value> error(aCx, mErrorToRethrow);
+        aPromise->MaybeReject(error);
+      } else {
+        aPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+      }
       return;
 
     case eResolved:
@@ -387,6 +414,11 @@ void WorkletFetchHandler::RejectPromises(JS::Handle<JS::Value> aValue) {
     mPromises[i]->MaybeReject(aValue);
   }
   mPromises.Clear();
+
+  mHasError = true;
+  mErrorToRethrow = aValue;
+
+  mozilla::HoldJSObjects(this);
 
   mStatus = eRejected;
   mWorklet = nullptr;
