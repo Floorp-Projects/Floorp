@@ -9,6 +9,7 @@ with Files("**"):
 
 EXPORTS.mozilla.dom += [
     "Worklet.h",
+    "WorkletFetchHandler.h",
     "WorkletGlobalScope.h",
     "WorkletImpl.h",
     "WorkletThread.h",
@@ -16,6 +17,7 @@ EXPORTS.mozilla.dom += [
 
 UNIFIED_SOURCES += [
     "Worklet.cpp",
+    "WorkletFetchHandler.cpp",
     "WorkletGlobalScope.cpp",
     "WorkletImpl.cpp",
     "WorkletThread.cpp",
