@@ -946,24 +946,6 @@ SVGElement::IsAttributeMapped(const nsAtom* name) const {
   return SVGElementBase::IsAttributeMapped(name);
 }
 
-// PresentationAttributes-FillStroke
-/* static */
-const Element::MappedAttributeEntry SVGElement::sFillStrokeMap[] = {
-    {nsGkAtoms::fill},
-    {nsGkAtoms::fill_opacity},
-    {nsGkAtoms::fill_rule},
-    {nsGkAtoms::paint_order},
-    {nsGkAtoms::stroke},
-    {nsGkAtoms::stroke_dasharray},
-    {nsGkAtoms::stroke_dashoffset},
-    {nsGkAtoms::stroke_linecap},
-    {nsGkAtoms::stroke_linejoin},
-    {nsGkAtoms::stroke_miterlimit},
-    {nsGkAtoms::stroke_opacity},
-    {nsGkAtoms::stroke_width},
-    {nsGkAtoms::vector_effect},
-    {nullptr}};
-
 // PresentationAttributes-Graphics
 /* static */
 const Element::MappedAttributeEntry SVGElement::sGraphicsMap[] = {
@@ -972,14 +954,27 @@ const Element::MappedAttributeEntry SVGElement::sGraphicsMap[] = {
     {nsGkAtoms::colorInterpolation},
     {nsGkAtoms::cursor},
     {nsGkAtoms::display},
+    {nsGkAtoms::fill},
+    {nsGkAtoms::fill_opacity},
+    {nsGkAtoms::fill_rule},
     {nsGkAtoms::filter},
     {nsGkAtoms::image_rendering},
     {nsGkAtoms::mask},
     {nsGkAtoms::opacity},
+    {nsGkAtoms::paint_order},
     {nsGkAtoms::pointer_events},
     {nsGkAtoms::shape_rendering},
+    {nsGkAtoms::stroke},
+    {nsGkAtoms::stroke_dasharray},
+    {nsGkAtoms::stroke_dashoffset},
+    {nsGkAtoms::stroke_linecap},
+    {nsGkAtoms::stroke_linejoin},
+    {nsGkAtoms::stroke_miterlimit},
+    {nsGkAtoms::stroke_opacity},
+    {nsGkAtoms::stroke_width},
     {nsGkAtoms::text_rendering},
     {nsGkAtoms::transform_origin},
+    {nsGkAtoms::vector_effect},
     {nsGkAtoms::visibility},
     {nullptr}};
 
