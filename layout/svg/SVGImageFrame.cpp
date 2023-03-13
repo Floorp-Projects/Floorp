@@ -824,6 +824,11 @@ uint16_t SVGImageFrame::GetHitTestFlags() {
   return flags;
 }
 
+void SVGImageFrame::NotifySVGChanged(uint32_t aFlags) {
+  MOZ_ASSERT(aFlags & (TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED),
+             "Invalidation logic may need adjusting");
+}
+
 //----------------------------------------------------------------------
 // SVGImageListener implementation
 
