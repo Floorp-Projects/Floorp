@@ -6,6 +6,8 @@ const { CustomizableUI } = ChromeUtils.import(
 
 add_task(async function() {
   registerFakePath("ULibDir", do_get_file("Library/"));
+  const faviconPath = do_get_file("Library/Safari/Favicon Cache/favicons.db")
+    .path;
 
   let migrator = await MigrationUtils.getMigrator("safari");
   // Sanity check for the source.
@@ -24,7 +26,7 @@ add_task(async function() {
       itemCount++;
       if (
         event.itemType == PlacesUtils.bookmarks.TYPE_FOLDER &&
-        event.title == "Stuff"
+        event.title == "Food and Travel"
       ) {
         gotFolder = true;
       }
@@ -58,12 +60,25 @@ add_task(async function() {
   // Check the bookmarks have been imported to all the expected parents.
   Assert.ok(!expectedParentGuids.length, "No more expected parents");
   Assert.ok(gotFolder, "Should have seen the folder get imported");
-  Assert.equal(itemCount, 13, "Should import all 13 items.");
+  Assert.equal(itemCount, 14, "Should import all 14 items.");
   // Check that the telemetry matches:
   Assert.equal(
     MigrationUtils._importQuantities.bookmarks,
     itemCount,
     "Telemetry reporting correct."
   );
+
+  // Check that favicons migrated
+  let faviconURIs = await MigrationUtils.getRowsFromDBWithoutLocks(
+    faviconPath,
+    "Safari Bookmark Favicons",
+    `SELECT I.uuid, I.url AS favicon_url, P.url 
+    FROM icon_info I 
+    INNER JOIN page_url P ON I.uuid = P.uuid;`
+  );
+  let pageUrls = Array.from(faviconURIs, row =>
+    Services.io.newURI(row.getResultByName("url"))
+  );
+  await assertFavicons(pageUrls);
   Assert.ok(observerNotified, "The observer should be notified upon migration");
 });
