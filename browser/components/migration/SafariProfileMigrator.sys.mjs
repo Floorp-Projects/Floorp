@@ -38,7 +38,7 @@ Bookmarks.prototype = {
         dict.get("Title") == "com.apple.ReadingList"
           ? this.READING_LIST_COLLECTION
           : this.ROOT_COLLECTION;
-      await this._migrateCollection(children, collection);
+      await this._migrateRootCollection(children, collection);
     })().then(
       () => aCallback(true),
       e => {
@@ -55,14 +55,72 @@ Bookmarks.prototype = {
   READING_LIST_COLLECTION: 3,
 
   /**
-   * Recursively migrate a Safari collection of bookmarks.
+   * Start the migration of a Safari collection of bookmarks by retrieving favicon data.
    *
    * @param {object[]} aEntries
    *   The collection's children
    * @param {number} aCollection
    *   One of the _COLLECTION values above.
    */
-  async _migrateCollection(aEntries, aCollection) {
+  async _migrateRootCollection(aEntries, aCollection) {
+    // First, try to get the favicon data of a user's bookmarks.
+    // In Safari, Favicons are stored as files with a unique name:
+    // the MD5 hash of the UUID of an SQLite entry in favicons.db.
+    // Thus, we must create a map from bookmark URLs -> their favicon entry's UUID.
+    let bookmarkURLToUUIDMap = new Map();
+
+    const faviconFolder = FileUtils.getDir(
+      "ULibDir",
+      ["Safari", "Favicon Cache"],
+      false
+    ).path;
+    let dbPath = PathUtils.join(faviconFolder, "favicons.db");
+
+    try {
+      // If there is an error getting favicon data, we catch the error and move on.
+      // In this case, the bookmarkURLToUUIDMap will be left empty.
+      let rows = await MigrationUtils.getRowsFromDBWithoutLocks(
+        dbPath,
+        "Safari favicons",
+        `SELECT I.uuid, I.url AS favicon_url, P.url 
+        FROM icon_info I 
+        INNER JOIN page_url P ON I.uuid = P.uuid;`
+      );
+
+      if (rows) {
+        // Convert the rows from our SQLite database into a map from bookmark url to uuid
+        for (let row of rows) {
+          let uniqueURL = Services.io.newURI(row.getResultByName("url")).spec;
+
+          // Normalize the URL by removing any trailing slashes. We'll make sure to do
+          // the same when doing look-ups during a migration.
+          if (uniqueURL.endsWith("/")) {
+            uniqueURL = uniqueURL.replace(/\/+$/, "");
+          }
+          bookmarkURLToUUIDMap.set(uniqueURL, row.getResultByName("uuid"));
+        }
+      }
+    } catch (ex) {
+      console.error(ex);
+    }
+
+    await this._migrateCollection(aEntries, aCollection, bookmarkURLToUUIDMap);
+  },
+
+  /**
+   * Recursively migrate a Safari collection of bookmarks.
+   *
+   * @param {object[]} aEntries
+   *   The collection's children
+   * @param {number} aCollection
+   *   One of the _COLLECTION values above
+   * @param {Map} bookmarkURLToUUIDMap
+   *   A map from a bookmark's URL to the UUID of its entry in the favicons.db database
+   * @returns {Promise<undefined>}
+   *   Resolves after the bookmarks and favicons have been inserted into the
+   *   appropriate databases.
+   */
+  async _migrateCollection(aEntries, aCollection, bookmarkURLToUUIDMap) {
     // A collection of bookmarks in Safari resembles places roots.  In the
     // property list files (Bookmarks.plist, ReadingList.plist) they are
     // stored as regular bookmarks folders, and thus can only be distinguished
@@ -76,13 +134,22 @@ Bookmarks.prototype = {
           let title = entry.get("Title");
           let children = entry.get("Children");
           if (title == "BookmarksBar") {
-            await this._migrateCollection(children, this.TOOLBAR_COLLECTION);
+            await this._migrateCollection(
+              children,
+              this.TOOLBAR_COLLECTION,
+              bookmarkURLToUUIDMap
+            );
           } else if (title == "BookmarksMenu") {
-            await this._migrateCollection(children, this.MENU_COLLECTION);
+            await this._migrateCollection(
+              children,
+              this.MENU_COLLECTION,
+              bookmarkURLToUUIDMap
+            );
           } else if (title == "com.apple.ReadingList") {
             await this._migrateCollection(
               children,
-              this.READING_LIST_COLLECTION
+              this.READING_LIST_COLLECTION,
+              bookmarkURLToUUIDMap
             );
           } else if (entry.get("ShouldOmitFromUI") !== true) {
             entriesFiltered.push(entry);
@@ -142,50 +209,123 @@ Bookmarks.prototype = {
       throw new Error("Invalid folder GUID");
     }
 
-    await this._migrateEntries(entriesFiltered, folderGuid);
-  },
-
-  // migrate the given array of safari bookmarks to the given places
-  // folder.
-  _migrateEntries(entries, parentGuid) {
-    let convertedEntries = this._convertEntries(entries);
-    return MigrationUtils.insertManyBookmarksWrapper(
-      convertedEntries,
-      parentGuid
+    await this._migrateEntries(
+      entriesFiltered,
+      folderGuid,
+      bookmarkURLToUUIDMap
     );
   },
 
-  _convertEntries(entries) {
-    return entries
-      .map(function(entry) {
-        let type = entry.get("WebBookmarkType");
-        if (type == "WebBookmarkTypeList" && entry.has("Children")) {
-          return {
-            title: entry.get("Title"),
-            type: lazy.PlacesUtils.bookmarks.TYPE_FOLDER,
-            children: this._convertEntries(entry.get("Children")),
-          };
+  /**
+   * Migrates bookmarks and favicons from Safari to Firefox.
+   *
+   * @param {object[]} entries
+   *   The Safari collection's children
+   * @param {number} parentGuid
+   *   GUID of the collection folder
+   * @param {Map} bookmarkURLToUUIDMap
+   *   A map from a bookmark's URL to the UUID of its entry in the favicons.db database
+   */
+  async _migrateEntries(entries, parentGuid, bookmarkURLToUUIDMap) {
+    let { convertedEntries, favicons } = await this._convertEntries(
+      entries,
+      bookmarkURLToUUIDMap
+    );
+
+    await MigrationUtils.insertManyBookmarksWrapper(
+      convertedEntries,
+      parentGuid
+    );
+
+    MigrationUtils.insertManyFavicons(favicons);
+  },
+
+  /**
+   * Converts Safari collection entries into a suitable format for
+   * inserting bookmarks and favicons.
+   *
+   * @param {object[]} entries
+   *   The collection's children
+   * @param {Map} bookmarkURLToUUIDMap
+   *   A map from a bookmark's URL to the UUID of its entry in the favicons.db database
+   * @returns {object[]}
+   *   Returns an object with an array of converted bookmark entries and favicons
+   */
+  async _convertEntries(entries, bookmarkURLToUUIDMap) {
+    let favicons = [];
+    let convertedEntries = [];
+
+    const faviconFolder = FileUtils.getDir(
+      "ULibDir",
+      ["Safari", "Favicon Cache"],
+      false
+    ).path;
+
+    for (const entry of entries) {
+      try {
+        // Try to get the favicon data for each bookmark we have.
+        // We use uri.spec as our unique identifier since bookmark links
+        // don't completely match up in the Safari data.
+        let uri = Services.io.newURI(entry.get("URLString"));
+        let uriSpec = uri.spec;
+
+        // Safari's favicon database doesn't include forward slashes for
+        // the page URLs, despite adding them in the Bookmarks.plist file.
+        // We'll strip any off here for our favicon lookup.
+        if (uriSpec.endsWith("/")) {
+          uriSpec = uriSpec.replace(/\/+$/, "");
         }
-        if (type == "WebBookmarkTypeLeaf" && entry.has("URLString")) {
-          // Check we understand this URL before adding it:
-          let url = entry.get("URLString");
-          try {
-            new URL(url);
-          } catch (ex) {
-            console.error(
-              `Ignoring ${url} when importing from Safari because of exception: ${ex}`
-            );
-            return null;
-          }
-          let title;
-          if (entry.has("URIDictionary")) {
-            title = entry.get("URIDictionary").get("title");
-          }
-          return { url, title };
+
+        let uuid = bookmarkURLToUUIDMap.get(uriSpec);
+        if (uuid) {
+          // Hash the UUID with md5 to give us the favicon file name
+          let hashedUUID = lazy.PlacesUtils.md5(uuid, {
+            format: "hex",
+          }).toUpperCase();
+          let faviconFile = PathUtils.join(
+            faviconFolder,
+            "favicons",
+            hashedUUID
+          );
+          let faviconData = await IOUtils.read(faviconFile);
+          favicons.push({ faviconData, uri });
         }
-        return null;
-      }, this)
-      .filter(e => !!e);
+      } catch (error) {
+        console.error(error);
+      }
+
+      let type = entry.get("WebBookmarkType");
+      if (type == "WebBookmarkTypeList" && entry.has("Children")) {
+        let convertedChildren = await this._convertEntries(
+          entry.get("Children"),
+          bookmarkURLToUUIDMap
+        );
+        favicons.push(...convertedChildren.favicons);
+        convertedEntries.push({
+          title: entry.get("Title"),
+          type: lazy.PlacesUtils.bookmarks.TYPE_FOLDER,
+          children: convertedChildren.convertedEntries,
+        });
+      } else if (type == "WebBookmarkTypeLeaf" && entry.has("URLString")) {
+        // Check we understand this URL before adding it:
+        let url = entry.get("URLString");
+        try {
+          new URL(url);
+        } catch (ex) {
+          console.error(
+            `Ignoring ${url} when importing from Safari because of exception: ${ex}`
+          );
+          continue;
+        }
+        let title;
+        if (entry.has("URIDictionary")) {
+          title = entry.get("URIDictionary").get("title");
+        }
+        convertedEntries.push({ url, title });
+      }
+    }
+
+    return { convertedEntries, favicons };
   },
 };
 
