@@ -192,26 +192,6 @@ bool IsFirstPartialResponse(nsHttpResponseHead& aResponseHead) {
   return responseFirstBytePos == 0;
 }
 
-void LogORBError(nsILoadInfo* aLoadInfo, nsIURI* aURI) {
-  RefPtr<dom::Document> doc;
-  aLoadInfo->GetLoadingDocument(getter_AddRefs(doc));
-
-  nsAutoCString uri;
-  nsresult rv = nsContentUtils::AnonymizeURI(aURI, uri);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  AutoTArray<nsString, 1> params;
-  CopyUTF8toUTF16(uri, *params.AppendElement());
-
-  MOZ_LOG(gORBLog, LogLevel::Debug,
-          ("%s: Resource blocked: %s ", __func__, uri.get()));
-  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "ORB"_ns, doc,
-                                  nsContentUtils::eNECKO_PROPERTIES,
-                                  "ResourceBlockedCORS", params);
-}
-
 OpaqueResponseBlocker::OpaqueResponseBlocker(nsIStreamListener* aNext,
                                              HttpBaseChannel* aChannel,
                                              const nsCString& aContentType,
@@ -452,7 +432,7 @@ nsresult OpaqueResponseBlocker::ValidateJavaScript(HttpBaseChannel* aChannel,
           self->AllowResponse();
         } else {
           self->BlockResponse(channel, NS_ERROR_FAILURE);
-          LogORBError(loadInfo, uri);
+          channel->LogORBError(u"Javascript validation failed"_ns);
         }
         self->ResolveAndProcessData(channel, allowed, aSharedData);
         if (aSharedData.isSome()) {
@@ -480,11 +460,11 @@ void OpaqueResponseBlocker::AllowResponse() {
 }
 
 void OpaqueResponseBlocker::BlockResponse(HttpBaseChannel* aChannel,
-                                          nsresult aReason) {
+                                          nsresult aStatus) {
   LOGORB("Sniffer is done, block response, this=%p", this);
   MOZ_ASSERT(mState == State::Sniffing);
   mState = State::Blocked;
-  mStatus = aReason;
+  mStatus = aStatus;
   aChannel->SetChannelBlockedByOpaqueResponse();
   aChannel->CancelWithReason(mStatus,
                              "OpaqueResponseBlocker::BlockResponse"_ns);
