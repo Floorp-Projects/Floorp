@@ -11,6 +11,7 @@
 #include "MediaEventSource.h"
 #include "MediaInfo.h"
 #include "MediaMetadataManager.h"
+#include "MediaPromiseDefs.h"
 #include "ReaderProxy.h"
 #include "VideoFrameContainer.h"
 #include "mozilla/dom/MediaDebugInfoBinding.h"
@@ -22,6 +23,7 @@ class AudioDeviceInfo;
 namespace mozilla {
 
 class AbstractThread;
+class CDMProxy;
 class FrameStatistics;
 class MediaFormatReader;
 class TaskQueue;
@@ -153,6 +155,8 @@ class MediaDecoderStateMachineBase {
   void DispatchCanPlayThrough(bool aCanPlayThrough);
   void DispatchIsLiveStream(bool aIsLiveStream);
   void DispatchSetPlaybackRate(double aPlaybackRate);
+
+  virtual RefPtr<SetCDMPromise> SetCDMProxy(CDMProxy* aProxy);
 
  protected:
   virtual ~MediaDecoderStateMachineBase() = default;

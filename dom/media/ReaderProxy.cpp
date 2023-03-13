@@ -206,4 +206,10 @@ void ReaderProxy::UpdateMediaEngineId(uint64_t aMediaEngineId) {
   Unused << rv;
 }
 
+RefPtr<SetCDMPromise> ReaderProxy::SetCDMProxy(CDMProxy* aProxy) {
+  return InvokeAsync<RefPtr<CDMProxy>>(mReader->OwnerThread(), mReader.get(),
+                                       __func__,
+                                       &MediaFormatReader::SetCDMProxy, aProxy);
+}
+
 }  // namespace mozilla

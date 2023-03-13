@@ -168,6 +168,11 @@ void MediaDecoderStateMachineBase::DecodeError(const MediaResult& aError) {
   mOnPlaybackErrorEvent.Notify(aError);
 }
 
+RefPtr<SetCDMPromise> MediaDecoderStateMachineBase::SetCDMProxy(
+    CDMProxy* aProxy) {
+  return mReader->SetCDMProxy(aProxy);
+}
+
 #undef INIT_MIRROR
 #undef INIT_CANONICAL
 #undef FMT
