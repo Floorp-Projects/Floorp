@@ -10,6 +10,8 @@
 #include "js/experimental/JSStencil.h"  // JS::CompileModuleScriptToStencil, JS::InstantiateModuleStencil
 #include "js/loader/ModuleLoadRequest.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/Unused.h"
+#include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/Worklet.h"
 #include "mozilla/dom/WorkletFetchHandler.h"
 #include "nsStringBundle.h"
@@ -157,6 +159,51 @@ AddModuleResultRunnable::Run() {
   return NS_OK;
 }
 
+class AddModuleThrowErrorRunnable final : public Runnable,
+                                          public StructuredCloneHolder {
+ public:
+  explicit AddModuleThrowErrorRunnable(
+      const nsMainThreadPtrHandle<WorkletFetchHandler>& aHandlerRef)
+      : Runnable("Worklet::AddModuleThrowErrorRunnable"),
+        StructuredCloneHolder(CloningSupported, TransferringNotSupported,
+                              StructuredCloneScope::SameProcess),
+        mHandlerRef(aHandlerRef) {
+    MOZ_ASSERT(!NS_IsMainThread());
+  }
+
+  ~AddModuleThrowErrorRunnable() = default;
+
+  NS_IMETHOD
+  Run() override;
+
+ private:
+  nsMainThreadPtrHandle<WorkletFetchHandler> mHandlerRef;
+};
+
+NS_IMETHODIMP
+AddModuleThrowErrorRunnable::Run() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIGlobalObject> global =
+      do_QueryInterface(mHandlerRef->mWorklet->GetParentObject());
+  MOZ_ASSERT(global);
+
+  AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.Init(global))) {
+    mHandlerRef->ExecutionFailed();
+    return NS_ERROR_FAILURE;
+  }
+
+  JSContext* cx = jsapi.cx();
+  JS::Rooted<JS::Value> error(cx);
+  ErrorResult result;
+  Read(global, cx, &error, result);
+  Unused << NS_WARN_IF(result.Failed());
+  mHandlerRef->ExecutionFailed(error);
+
+  return NS_OK;
+}
+
 void WorkletModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {
   if (!aRequest->IsTopLevel()) {
     return;
@@ -183,8 +230,30 @@ void WorkletModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {
   if (NS_FAILED(rv)) {
     return;
   }
-  addModuleFailed.release();
 
+  bool hasError = aRequest->mModuleScript->HasErrorToRethrow();
+  if (hasError) {
+    AutoJSAPI jsapi;
+    if (NS_WARN_IF(!jsapi.Init(GetGlobalObject()))) {
+      return;
+    }
+
+    JSContext* cx = jsapi.cx();
+    JS::Rooted<JS::Value> error(cx, aRequest->mModuleScript->ErrorToRethrow());
+    RefPtr<AddModuleThrowErrorRunnable> runnable =
+        new AddModuleThrowErrorRunnable(handlerRef);
+    ErrorResult result;
+    runnable->Write(cx, error, result);
+    if (NS_WARN_IF(result.Failed())) {
+      return;
+    }
+
+    addModuleFailed.release();
+    NS_DispatchToMainThread(runnable.forget());
+    return;
+  }
+
+  addModuleFailed.release();
   RefPtr<AddModuleResultRunnable> runnable =
       new AddModuleResultRunnable(handlerRef, true);
   NS_DispatchToMainThread(runnable.forget());

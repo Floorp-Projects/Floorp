@@ -332,6 +332,11 @@ void WorkletFetchHandler::ExecutionFailed() {
   RejectPromises(NS_ERROR_DOM_ABORT_ERR);
 }
 
+void WorkletFetchHandler::ExecutionFailed(JS::Handle<JS::Value> aError) {
+  MOZ_ASSERT(NS_IsMainThread());
+  RejectPromises(aError);
+}
+
 void WorkletFetchHandler::ExecutionSucceeded() {
   MOZ_ASSERT(NS_IsMainThread());
   ResolvePromises();
@@ -365,6 +370,21 @@ void WorkletFetchHandler::RejectPromises(nsresult aResult) {
 
   for (uint32_t i = 0; i < mPromises.Length(); ++i) {
     mPromises[i]->MaybeReject(aResult);
+  }
+  mPromises.Clear();
+
+  mStatus = eRejected;
+  mWorklet = nullptr;
+}
+
+void WorkletFetchHandler::RejectPromises(JS::Handle<JS::Value> aValue) {
+  MOZ_ASSERT(mStatus == ePending);
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mWorklet->Impl()->OnAddModulePromiseSettled();
+
+  for (uint32_t i = 0; i < mPromises.Length(); ++i) {
+    mPromises[i]->MaybeReject(aValue);
   }
   mPromises.Clear();
 
