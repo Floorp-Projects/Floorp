@@ -40,6 +40,16 @@ Defaults to 120 (activity), 1200 (inactivity).
 
 ## Defines
 
+`MOZ_AUTOMATION`
+
+If set, and `GLEAN_SOURCE_TAGS` isn't set, FOG will set a
+[Glean source tag](https://mozilla.github.io/glean/book/reference/debug/sourceTags.html)
+of `automation`.
+
+If `GLEAN_SOURCE_TAGS` is set, the `automation` source tag will not be added automatically.
+
+If not set, any tags set by `GLEAN_SOURCE_TAGS` will be present.
+
 `MOZ_GLEAN_ANDROID`
 
 If set, the Glean SDK is assumed to be managed by something other than FOG, meaning:
