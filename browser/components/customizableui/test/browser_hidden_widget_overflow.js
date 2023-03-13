@@ -49,7 +49,7 @@ add_setup(async function() {
   // of the hidden widget) get overflowed.
   for (let webExtID of [kWebExtensionButtonID1, kWebExtensionButtonID2]) {
     let webExtNode = CustomizableUI.getWidget(webExtID).forWindow(gWin).node;
-    webExtNode.style.width = "100px";
+    webExtNode.style.minWidth = "100px";
   }
 
   CustomizableUI.createWidget({

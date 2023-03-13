@@ -19,10 +19,6 @@
   -moz-user-focus: ignore;
   display: flex;
   box-sizing: border-box;
-  /* By default XUL content isn't allowed to shrink. This is legacy (result of
-   * -moz-box-flex defaulting to zero) and could be removed with some amount of
-   * effort. */
-  flex-shrink: 0;
 }
 
 /* hide the content and destroy the frame */
