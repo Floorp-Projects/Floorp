@@ -6,11 +6,7 @@
 #ifndef GFX_CONTEXT_H
 #define GFX_CONTEXT_H
 
-#include "gfxTypes.h"
-
-#include "gfxPoint.h"
-#include "gfxRect.h"
-#include "gfxMatrix.h"
+#include "gfx2DGlue.h"
 #include "gfxPattern.h"
 #include "nsTArray.h"
 
@@ -164,8 +160,10 @@ class gfxContext final {
   /**
    * Returns the current transformation matrix.
    */
-  mozilla::gfx::Matrix CurrentMatrix() const;
-  gfxMatrix CurrentMatrixDouble() const;
+  mozilla::gfx::Matrix CurrentMatrix() const { return mAzureState.transform; }
+  gfxMatrix CurrentMatrixDouble() const {
+    return ThebesMatrix(CurrentMatrix());
+  }
 
   /**
    * Converts a point from device to user coordinates using the inverse
@@ -505,7 +503,6 @@ class gfxContext final {
   Rect mRect;
   RefPtr<PathBuilder> mPathBuilder;
   RefPtr<Path> mPath;
-  Matrix mTransform;
   AzureState mAzureState;
   nsTArray<AzureState> mSavedStates;
 
