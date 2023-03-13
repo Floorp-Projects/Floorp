@@ -81,7 +81,7 @@ class WorkletScriptHandler final : public PromiseNativeHandler,
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  explicit WorkletScriptHandler(Worklet* aWorklet);
+  WorkletScriptHandler(Worklet* aWorklet, nsIURI* aURI);
 
   void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
                         ErrorResult& aRv) override;
@@ -99,7 +99,10 @@ class WorkletScriptHandler final : public PromiseNativeHandler,
  private:
   ~WorkletScriptHandler() = default;
 
+  void DispatchFetchCompleteToWorklet(nsresult aRv);
+
   RefPtr<Worklet> mWorklet;
+  nsCOMPtr<nsIURI> mURI;
 };
 
 }  // namespace mozilla::dom
