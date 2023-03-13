@@ -26,15 +26,12 @@ class WorkletFetchHandler final : public nsISupports {
                                              const WorkletOptions& aOptions,
                                              ErrorResult& aRv);
 
-  const nsCString& URL() const { return mURL; }
-
   void ExecutionFailed(nsresult aRv);
 
   void ExecutionSucceeded();
 
  private:
-  WorkletFetchHandler(Worklet* aWorklet, const nsACString& aURL,
-                      Promise* aPromise);
+  WorkletFetchHandler(Worklet* aWorklet, Promise* aPromise);
 
   ~WorkletFetchHandler() = default;
 
@@ -48,10 +45,6 @@ class WorkletFetchHandler final : public nsISupports {
   nsTArray<RefPtr<Promise>> mPromises;
 
   enum { ePending, eRejected, eResolved } mStatus;
-
-  nsresult mErrorStatus;
-
-  nsCString mURL;
 };
 
 // WorkletScriptHandler is used to handle the result of fetching the module
