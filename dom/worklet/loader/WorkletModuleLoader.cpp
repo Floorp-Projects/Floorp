@@ -9,6 +9,7 @@
 #include "js/CompileOptions.h"  // JS::InstantiateOptions
 #include "js/experimental/JSStencil.h"  // JS::CompileModuleScriptToStencil, JS::InstantiateModuleStencil
 #include "js/loader/ModuleLoadRequest.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/dom/Worklet.h"
 #include "mozilla/dom/WorkletFetchHandler.h"
 
@@ -119,7 +120,73 @@ nsresult WorkletModuleLoader::CompileFetchedModule(
   return aModuleScript ? NS_OK : NS_ERROR_FAILURE;
 }
 
-void WorkletModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {}
+// AddModuleResultRunnable is a Runnable which will notify the result of
+// Worklet::AddModule on the main thread.
+class AddModuleResultRunnable final : public Runnable {
+ public:
+  explicit AddModuleResultRunnable(
+      const nsMainThreadPtrHandle<WorkletFetchHandler>& aHandlerRef,
+      bool aSucceeded)
+      : Runnable("Worklet::AddModuleResultRunnable"),
+        mHandlerRef(aHandlerRef),
+        mSucceeded(aSucceeded) {
+    MOZ_ASSERT(!NS_IsMainThread());
+  }
+
+  ~AddModuleResultRunnable() = default;
+
+  NS_IMETHOD
+  Run() override;
+
+ private:
+  nsMainThreadPtrHandle<WorkletFetchHandler> mHandlerRef;
+  bool mSucceeded;
+};
+
+NS_IMETHODIMP
+AddModuleResultRunnable::Run() {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mSucceeded) {
+    mHandlerRef->ExecutionSucceeded();
+  } else {
+    mHandlerRef->ExecutionFailed();
+  }
+
+  return NS_OK;
+}
+
+void WorkletModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {
+  if (!aRequest->IsTopLevel()) {
+    return;
+  }
+
+  const nsMainThreadPtrHandle<WorkletFetchHandler>& handlerRef =
+      aRequest->GetWorkletLoadContext()->GetHandlerRef();
+
+  auto addModuleFailed = MakeScopeExit([&] {
+    RefPtr<AddModuleResultRunnable> runnable =
+        new AddModuleResultRunnable(handlerRef, false);
+    NS_DispatchToMainThread(runnable.forget());
+  });
+
+  if (!aRequest->mModuleScript) {
+    return;
+  }
+
+  if (!aRequest->InstantiateModuleGraph()) {
+    return;
+  }
+
+  nsresult rv = aRequest->EvaluateModule();
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  addModuleFailed.release();
+
+  RefPtr<AddModuleResultRunnable> runnable =
+      new AddModuleResultRunnable(handlerRef, true);
+  NS_DispatchToMainThread(runnable.forget());
+}
 
 void WorkletModuleLoader::InsertRequest(nsIURI* aURI,
                                         ModuleLoadRequest* aRequest) {

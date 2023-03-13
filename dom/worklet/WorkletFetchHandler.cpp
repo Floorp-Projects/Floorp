@@ -319,9 +319,9 @@ WorkletFetchHandler::WorkletFetchHandler(Worklet* aWorklet, Promise* aPromise,
   mPromises.AppendElement(aPromise);
 }
 
-void WorkletFetchHandler::ExecutionFailed(nsresult aRv) {
+void WorkletFetchHandler::ExecutionFailed() {
   MOZ_ASSERT(NS_IsMainThread());
-  RejectPromises(aRv);
+  RejectPromises(NS_ERROR_DOM_ABORT_ERR);
 }
 
 void WorkletFetchHandler::ExecutionSucceeded() {
