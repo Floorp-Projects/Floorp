@@ -46,7 +46,7 @@ export class MigrationWizard extends HTMLElement {
             <details class="resource-selection-details" open="true">
               <summary>
                 <div class="selected-data-header" data-l10n-id="migration-all-available-data-label"></div>
-                <div class="selected-data">&nbsp;</div>
+                <div class="selected-data deemphasized-text">&nbsp;</div>
                 <span class="dropdown-icon" role="img"></span>
               </summary>
               <fieldset id="resource-type-list">
@@ -80,25 +80,25 @@ export class MigrationWizard extends HTMLElement {
               <div data-resource-type="BOOKMARKS" class="resource-progress-group">
                 <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
                 <span data-l10n-id="migration-bookmarks-option-label"></span>
-                <span class="success-text">&nbsp;</span>
+                <span class="success-text deemphasized-text">&nbsp;</span>
               </div>
 
               <div data-resource-type="PASSWORDS" class="resource-progress-group">
                 <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
                 <span data-l10n-id="migration-logins-and-passwords-option-label"></span>
-                <span class="success-text">&nbsp;</span>
+                <span class="success-text deemphasized-text">&nbsp;</span>
               </div>
 
               <div data-resource-type="HISTORY" class="resource-progress-group">
                 <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
                 <span data-l10n-id="migration-history-option-label"></span>
-                <span class="success-text">&nbsp;</span>
+                <span class="success-text deemphasized-text">&nbsp;</span>
               </div>
 
               <div data-resource-type="FORMDATA" class="resource-progress-group">
                 <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
                 <span data-l10n-id="migration-form-autofill-option-label"></span>
-                <span class="success-text">&nbsp;</span>
+                <span class="success-text deemphasized-text">&nbsp;</span>
               </div>
             </div>
             <moz-button-group class="buttons">
