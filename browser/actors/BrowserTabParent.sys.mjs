@@ -14,11 +14,8 @@ export class BrowserTabParent extends JSWindowActorParent {
       return; // Can happen sometimes if browser is being destroyed
     }
 
-    let gBrowser = browser.ownerGlobal.gBrowser;
-
     switch (message.name) {
       case "Browser:WindowCreated": {
-        gBrowser.announceWindowCreated(browser, message.data.userContextId);
         BrowserWindowTracker.windowCreated(browser);
         break;
       }

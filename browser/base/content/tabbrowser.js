@@ -28,6 +28,57 @@
     LOAD_FLAGS_DISABLE_TRR,
   } = Ci.nsIWebNavigation;
 
+  /**
+   * Updates the User Context UI indicators if the browser is in a non-default context
+   */
+  function updateUserContextUIIndicator() {
+    function replaceContainerClass(classType, element, value) {
+      let prefix = "identity-" + classType + "-";
+      if (value && element.classList.contains(prefix + value)) {
+        return;
+      }
+      for (let className of element.classList) {
+        if (className.startsWith(prefix)) {
+          element.classList.remove(className);
+        }
+      }
+      if (value) {
+        element.classList.add(prefix + value);
+      }
+    }
+
+    let hbox = document.getElementById("userContext-icons");
+
+    let userContextId = gBrowser.selectedBrowser.getAttribute("usercontextid");
+    if (!userContextId) {
+      replaceContainerClass("color", hbox, "");
+      hbox.hidden = true;
+      return;
+    }
+
+    let identity = ContextualIdentityService.getPublicIdentityFromId(
+      userContextId
+    );
+    if (!identity) {
+      replaceContainerClass("color", hbox, "");
+      hbox.hidden = true;
+      return;
+    }
+
+    replaceContainerClass("color", hbox, identity.color);
+
+    let label = ContextualIdentityService.getUserContextLabel(userContextId);
+    document.getElementById("userContext-label").setAttribute("value", label);
+    // Also set the container label as the tooltip so we can only show the icon
+    // in small windows.
+    hbox.setAttribute("tooltiptext", label);
+
+    let indicator = document.getElementById("userContext-indicator");
+    replaceContainerClass("icon", indicator, identity.icon);
+
+    hbox.hidden = false;
+  }
+
   window._gBrowser = {
     init() {
       ChromeUtils.defineModuleGetter(
@@ -2397,6 +2448,22 @@
         );
       }
 
+      if (aTab.userContextId) {
+        browser.setAttribute("usercontextid", aTab.userContextId);
+      }
+
+      browser.sendMessageToActor(
+        "Browser:AppTab",
+        { isAppTab: aTab.pinned },
+        "BrowserTab"
+      );
+
+      // We don't want to update the container icon and identifier if
+      // this is not the selected browser.
+      if (aTab.selected) {
+        updateUserContextUIIndicator();
+      }
+
       // Only fire this event if the tab is already in the DOM
       // and will be handled by a listener.
       if (aTab.isConnected) {
@@ -4583,27 +4650,6 @@
       }
       if (tmp) {
         aOtherBrowser.registeredOpenURI = tmp;
-      }
-    },
-
-    announceWindowCreated(browser, userContextId) {
-      let tab = this.getTabForBrowser(browser);
-      if (tab) {
-        if (userContextId) {
-          tab.setUserContextId(userContextId);
-        }
-
-        browser.sendMessageToActor(
-          "Browser:AppTab",
-          { isAppTab: tab.pinned },
-          "BrowserTab"
-        );
-      }
-
-      // We don't want to update the container icon and identifier if
-      // this is not the selected browser.
-      if (browser == gBrowser.selectedBrowser) {
-        updateUserContextUIIndicator();
       }
     },
 
