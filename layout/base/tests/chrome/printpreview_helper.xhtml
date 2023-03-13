@@ -4,8 +4,8 @@
                  type="text/css"?>
 <window onload="runTests()"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <iframe style="height: 200px; width: 600px" type="content"></iframe>
-  <iframe style="height: 200px; width: 600px" type="content"></iframe>
+  <iframe style="min-height: 200px; min-width: 600px" type="content"></iframe>
+  <iframe style="min-height: 200px; min-width: 600px" type="content"></iframe>
 <script type="application/javascript">
 <![CDATA[
 // Note: We can't use window.frames directly here because the type="content"
@@ -86,9 +86,8 @@ function printpreview(options = {}) {
     let bc = frameElts[0].contentWindow.browsingContext;
     let browser = document.createXULElement("browser");
     browser.setAttribute("type", "content");
-    browser.style.width = "800px";
-    browser.style.height = "800px";
-    browser.style.maxWidth = "800px"; // Deal with XUL silliness.
+    browser.style.minHeight = "800px";
+    browser.style.maxWidth = browser.style.minWidth = "800px";
     browser.setAttribute("initialBrowsingContextGroupId", bc.group.id);
     browser.setAttribute("nodefaultsrc", "true");
     document.documentElement.appendChild(browser);
