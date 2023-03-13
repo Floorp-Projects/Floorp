@@ -12,6 +12,7 @@ import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mozilla.fenix.settings.PhoneFeature
+import org.mozilla.fenix.trackingprotection.CookieBannerUIMode
 import org.mozilla.fenix.trackingprotection.ProtectionsState
 import org.mozilla.fenix.trackingprotection.ProtectionsState.Mode.Normal
 
@@ -34,7 +35,7 @@ class QuickSettingsFragmentReducerTest {
             null,
             "",
             isTrackingProtectionEnabled = false,
-            isCookieBannerHandlingEnabled = false,
+            cookieBannerUIMode = CookieBannerUIMode.DISABLE,
             listTrackers = emptyList(),
             mode = Normal,
             lastAccessedCategory = "",
@@ -72,7 +73,7 @@ class QuickSettingsFragmentReducerTest {
             null,
             "",
             isTrackingProtectionEnabled = false,
-            isCookieBannerHandlingEnabled = false,
+            cookieBannerUIMode = CookieBannerUIMode.DISABLE,
             listTrackers = emptyList(),
             mode = Normal,
             lastAccessedCategory = "",
@@ -102,7 +103,7 @@ class QuickSettingsFragmentReducerTest {
                 tab = null,
                 url = "https://www.firefox.com",
                 isTrackingProtectionEnabled = true,
-                isCookieBannerHandlingEnabled = true,
+                cookieBannerUIMode = CookieBannerUIMode.ENABLE,
                 listTrackers = listOf(),
                 mode = Normal,
                 lastAccessedCategory = "",

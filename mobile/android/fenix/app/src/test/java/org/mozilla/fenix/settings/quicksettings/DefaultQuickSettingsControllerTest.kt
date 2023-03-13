@@ -48,6 +48,7 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeEnabled
 import org.mozilla.fenix.settings.toggle
+import org.mozilla.fenix.trackingprotection.CookieBannerUIMode
 import org.mozilla.fenix.utils.Settings
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -366,7 +367,7 @@ class DefaultQuickSettingsControllerTest {
             websiteUrl = tab.content.url,
             sessionId = tab.id,
             isTrackingProtectionEnabled = isTrackingProtectionEnabled,
-            isCookieHandlingEnabled = isTrackingProtectionEnabled,
+            cookieBannerUIMode = CookieBannerUIMode.ENABLE,
         )
 
         every { store.state.protectionsState } returns state

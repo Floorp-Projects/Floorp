@@ -19,6 +19,7 @@ import org.mozilla.fenix.settings.quicksettings.QuickSettingsFragmentStore.Compa
 import org.mozilla.fenix.settings.quicksettings.WebsiteInfoState.Companion.createWebsiteInfoState
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeEnabled
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeVisible
+import org.mozilla.fenix.trackingprotection.CookieBannerUIMode
 import org.mozilla.fenix.trackingprotection.ProtectionsState
 import org.mozilla.fenix.utils.Settings
 import java.util.EnumMap
@@ -69,7 +70,7 @@ class QuickSettingsFragmentStore(
             settings: Settings,
             sessionId: String,
             isTrackingProtectionEnabled: Boolean,
-            isCookieHandlingEnabled: Boolean,
+            cookieBannerUIMode: CookieBannerUIMode,
         ) = QuickSettingsFragmentStore(
             QuickSettingsFragmentState(
                 webInfoState = createWebsiteInfoState(
@@ -89,7 +90,7 @@ class QuickSettingsFragmentStore(
                     sessionId,
                     websiteUrl,
                     isTrackingProtectionEnabled,
-                    isCookieHandlingEnabled,
+                    cookieBannerUIMode,
                 ),
             ),
         )
@@ -142,13 +143,13 @@ class QuickSettingsFragmentStore(
             sessionId: String,
             websiteUrl: String,
             isTrackingProtectionEnabled: Boolean,
-            isCookieHandlingEnabled: Boolean,
+            cookieBannerUIMode: CookieBannerUIMode,
         ): ProtectionsState {
             return ProtectionsState(
                 tab = context.components.core.store.state.findTabOrCustomTab(sessionId),
                 url = websiteUrl,
                 isTrackingProtectionEnabled = isTrackingProtectionEnabled,
-                isCookieBannerHandlingEnabled = isCookieHandlingEnabled,
+                cookieBannerUIMode = cookieBannerUIMode,
                 listTrackers = listOf(),
                 mode = ProtectionsState.Mode.Normal,
                 lastAccessedCategory = "",

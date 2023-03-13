@@ -41,7 +41,7 @@ class TrackingProtectionPanelViewTest {
         tab = null,
         url = "",
         isTrackingProtectionEnabled = false,
-        isCookieBannerHandlingEnabled = false,
+        cookieBannerUIMode = CookieBannerUIMode.DISABLE,
         listTrackers = emptyList(),
         mode = ProtectionsState.Mode.Normal,
         lastAccessedCategory = "",

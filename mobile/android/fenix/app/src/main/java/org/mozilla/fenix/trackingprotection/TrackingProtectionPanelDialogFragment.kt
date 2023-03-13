@@ -91,7 +91,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
                     tab = tab,
                     url = args.url,
                     isTrackingProtectionEnabled = args.trackingProtectionEnabled,
-                    isCookieBannerHandlingEnabled = args.cookieBannerHandlingEnabled,
+                    cookieBannerUIMode = args.cookieBannerUIMode,
                     listTrackers = listOf(),
                     mode = ProtectionsState.Mode.Normal,
                     lastAccessedCategory = "",

@@ -49,6 +49,7 @@ import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.settings.quicksettings.protections.cookiebanners.dialog.CookieBannerReEngagementDialogUtils
+import org.mozilla.fenix.settings.quicksettings.protections.cookiebanners.getCookieBannerUIMode
 import org.mozilla.fenix.shortcut.PwaOnboardingObserver
 import org.mozilla.fenix.theme.ThemeManager
 
@@ -377,36 +378,31 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         val useCase = requireComponents.useCases.trackingProtectionUseCases
         FxNimbus.features.cookieBanners.recordExposure()
         useCase.containsException(tab.id) { hasTrackingProtectionException ->
-            lifecycleScope.launch(Dispatchers.Main) {
+            lifecycleScope.launch {
                 val cookieBannersStorage = requireComponents.core.cookieBannersStorage
-                val hasCookieBannerException =
-                    if (requireContext().settings().shouldUseCookieBanner) {
-                        withContext(Dispatchers.IO) {
-                            cookieBannersStorage.hasException(
-                                tab.content.url,
-                                tab.content.private,
+                val cookieBannerUIMode = cookieBannersStorage.getCookieBannerUIMode(
+                    requireContext(),
+                    tab,
+                )
+                withContext(Dispatchers.Main) {
+                    runIfFragmentIsAttached {
+                        val isTrackingProtectionEnabled =
+                            tab.trackingProtection.enabled && !hasTrackingProtectionException
+                        val directions =
+                            BrowserFragmentDirections.actionBrowserFragmentToQuickSettingsSheetDialogFragment(
+                                sessionId = tab.id,
+                                url = tab.content.url,
+                                title = tab.content.title,
+                                isSecured = tab.content.securityInfo.secure,
+                                sitePermissions = sitePermissions,
+                                gravity = getAppropriateLayoutGravity(),
+                                certificateName = tab.content.securityInfo.issuer,
+                                permissionHighlights = tab.content.permissionHighlights,
+                                isTrackingProtectionEnabled = isTrackingProtectionEnabled,
+                                cookieBannerUIMode = cookieBannerUIMode,
                             )
-                        }
-                    } else {
-                        false
+                        nav(R.id.browserFragment, directions)
                     }
-                runIfFragmentIsAttached {
-                    val isTrackingProtectionEnabled =
-                        tab.trackingProtection.enabled && !hasTrackingProtectionException
-                    val directions =
-                        BrowserFragmentDirections.actionBrowserFragmentToQuickSettingsSheetDialogFragment(
-                            sessionId = tab.id,
-                            url = tab.content.url,
-                            title = tab.content.title,
-                            isSecured = tab.content.securityInfo.secure,
-                            sitePermissions = sitePermissions,
-                            gravity = getAppropriateLayoutGravity(),
-                            certificateName = tab.content.securityInfo.issuer,
-                            permissionHighlights = tab.content.permissionHighlights,
-                            isTrackingProtectionEnabled = isTrackingProtectionEnabled,
-                            isCookieHandlingEnabled = !hasCookieBannerException,
-                        )
-                    nav(R.id.browserFragment, directions)
                 }
             }
         }

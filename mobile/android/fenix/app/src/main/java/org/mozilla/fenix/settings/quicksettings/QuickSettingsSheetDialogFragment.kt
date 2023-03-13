@@ -91,7 +91,7 @@ class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
             permissionHighlights = args.permissionHighlights,
             sessionId = args.sessionId,
             isTrackingProtectionEnabled = args.isTrackingProtectionEnabled,
-            isCookieHandlingEnabled = args.isCookieHandlingEnabled,
+            cookieBannerUIMode = args.cookieBannerUIMode,
         )
 
         quickSettingsController = DefaultQuickSettingsController(

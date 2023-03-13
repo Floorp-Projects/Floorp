@@ -7,10 +7,10 @@ package org.mozilla.fenix.settings.quicksettings.protections.cookiebanners
 import android.content.Context
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
-import androidx.navigation.NavDirections
 import io.mockk.MockKAnnotations
 import io.mockk.Runs
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
@@ -18,11 +18,11 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.spyk
-import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.advanceUntilIdle
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
@@ -35,6 +35,7 @@ import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
@@ -42,9 +43,11 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.CookieBanners
+import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.trackingprotection.CookieBannerUIMode
 import org.mozilla.fenix.trackingprotection.ProtectionsAction
 import org.mozilla.fenix.trackingprotection.ProtectionsStore
 
@@ -131,27 +134,25 @@ internal class DefaultCookieBannerDetailsControllerTest {
     }
 
     @Test
-    fun `WHEN handleBackPressed is called THEN should call popBackStack and navigate`() {
-        every { context.settings().shouldUseCookieBanner } returns true
+    fun `WHEN handleBackPressed is called THEN should call popBackStack and navigate`() = runTestOnMain {
+        every { context.settings().shouldUseCookieBanner } returns false
 
         controller.handleBackPressed()
 
-        verify {
+        coVerify {
             navController.popBackStack()
-
-            navController.navigate(any<NavDirections>())
         }
     }
 
     @Test
     fun `GIVEN cookie banner is enabled WHEN handleTogglePressed THEN remove from the storage, send telemetry and reload the tab`() =
         runTestOnMain {
-            val isEnabled = true
+            val cookieBannerUIMode = CookieBannerUIMode.ENABLE
 
             assertNull(CookieBanners.exceptionRemoved.testGetValue())
             every { protectionsStore.dispatch(any()) } returns mockk()
 
-            controller.handleTogglePressed(isEnabled)
+            controller.handleTogglePressed(true)
 
             advanceUntilIdle()
 
@@ -162,7 +163,7 @@ internal class DefaultCookieBannerDetailsControllerTest {
                 )
                 protectionsStore.dispatch(
                     ProtectionsAction.ToggleCookieBannerHandlingProtectionEnabled(
-                        isEnabled,
+                        cookieBannerUIMode,
                     ),
                 )
                 reload(tab.id)
@@ -174,13 +175,13 @@ internal class DefaultCookieBannerDetailsControllerTest {
     @Test
     fun `GIVEN cookie banner is disabled WHEN handleTogglePressed THEN remove from the storage, send telemetry and reload the tab`() =
         runTestOnMain {
-            val isEnabled = false
+            val cookieBannerUIMode = CookieBannerUIMode.DISABLE
 
             assertNull(CookieBanners.exceptionRemoved.testGetValue())
             every { protectionsStore.dispatch(any()) } returns mockk()
             coEvery { controller.clearSiteData(any()) } just Runs
 
-            controller.handleTogglePressed(isEnabled)
+            controller.handleTogglePressed(false)
 
             advanceUntilIdle()
 
@@ -192,7 +193,7 @@ internal class DefaultCookieBannerDetailsControllerTest {
                 )
                 protectionsStore.dispatch(
                     ProtectionsAction.ToggleCookieBannerHandlingProtectionEnabled(
-                        isEnabled,
+                        cookieBannerUIMode,
                     ),
                 )
                 reload(tab.id)
@@ -214,6 +215,45 @@ internal class DefaultCookieBannerDetailsControllerTest {
                     data = Engine.BrowsingData.select(
                         Engine.BrowsingData.AUTH_SESSIONS,
                         Engine.BrowsingData.ALL_SITE_DATA,
+                    ),
+                )
+            }
+        }
+
+    @Test
+    fun `GIVEN cookie banner mode is site not supported WHEN handleRequestSiteSupportPressed THEN request report site domain`() =
+        runTestOnMain {
+            val store = BrowserStore(
+                BrowserState(
+                    customTabs = listOf(
+                        createCustomTab(
+                            url = "https://www.mozilla.org",
+                            id = "mozilla",
+                        ),
+                    ),
+                ),
+            )
+            every { testContext.components.core.store } returns store
+            coEvery { controller.getTabDomain(any()) } returns "https://www.amazon.de"
+            every { protectionsStore.dispatch(any()) } returns mockk()
+
+            controller.handleRequestSiteSupportPressed()
+
+            assertNotNull(CookieBanners.reportDomainSiteButton.testGetValue())
+            Pings.cookieBannerReportSite.testBeforeNextSubmit {
+                assertNotNull(CookieBanners.reportSiteDomain.testGetValue())
+                assertEquals("https://www.amazon.de", CookieBanners.reportSiteDomain.testGetValue())
+            }
+            advanceUntilIdle()
+            coVerifyOrder {
+                protectionsStore.dispatch(
+                    ProtectionsAction.RequestReportSiteDomain(
+                        "https://www.amazon.de",
+                    ),
+                )
+                protectionsStore.dispatch(
+                    ProtectionsAction.UpdateCookieBannerMode(
+                        cookieBannerUIMode = CookieBannerUIMode.REQUEST_UNSUPPORTED_SITE_SUBMITTED,
                     ),
                 )
             }

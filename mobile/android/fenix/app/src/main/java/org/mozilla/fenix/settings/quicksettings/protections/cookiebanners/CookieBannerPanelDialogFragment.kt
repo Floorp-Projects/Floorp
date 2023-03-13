@@ -50,15 +50,15 @@ class CookieBannerPanelDialogFragment : FenixDialogFragment() {
     ): View {
         val store = requireComponents.core.store
         val rootView = inflateRootView(container)
-        val tab = store.state.findTabOrCustomTab(provideCurrentTabId())
 
+        val tab = store.state.findTabOrCustomTab(provideCurrentTabId())
         protectionsStore = StoreProvider.get(this) {
             ProtectionsStore(
                 ProtectionsState(
                     tab = tab,
                     url = args.url,
                     isTrackingProtectionEnabled = args.trackingProtectionEnabled,
-                    isCookieBannerHandlingEnabled = args.cookieBannerHandlingEnabled,
+                    cookieBannerUIMode = args.cookieBannerUIMode,
                     listTrackers = listOf(),
                     mode = ProtectionsState.Mode.Normal,
                     lastAccessedCategory = "",
@@ -89,6 +89,7 @@ class CookieBannerPanelDialogFragment : FenixDialogFragment() {
             container = binding.cookieBannerDetailsInfoLayout,
             publicSuffixList = requireComponents.publicSuffixList,
             interactor = DefaultCookieBannerDetailsInteractor(controller),
+            onDismiss = { dismiss() },
         )
 
         return rootView

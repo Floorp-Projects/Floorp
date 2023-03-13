@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
@@ -57,6 +56,7 @@
         android:minHeight="@dimen/tracking_protection_item_height"
         android:paddingHorizontal="16dp"
         android:paddingTop="23dp"
+        android:visibility="gone"
         app:layout_constraintStart_toEndOf="@+id/navigate_back"
         app:layout_constraintTop_toBottomOf="@id/details"
         app:switchDescriptionOff="@string/reduce_cookie_banner_off_for_site"
@@ -64,4 +64,40 @@
         app:switchShowIcon="false"
         app:switchTitle="@string/preferences_cookie_banner_reduction" />
 
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/cancel_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:layout_marginTop="16dp"
+        android:background="@android:color/transparent"
+        android:gravity="center"
+        android:minHeight="48dp"
+        android:text="@string/cookie_banner_handling_details_site_is_not_supported_cancel_button"
+        android:layout_marginEnd="16dp"
+        android:textAllCaps="true"
+        android:textColor="@color/fx_mobile_text_color_accent"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/details" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/request_support"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:layout_marginTop="16dp"
+        android:background="@android:color/transparent"
+        android:gravity="center"
+        android:minHeight="48dp"
+        android:layout_marginEnd="16dp"
+        android:text="@string/cookie_banner_handling_details_site_is_not_supported_request_support_button"
+        android:textAllCaps="true"
+        android:textColor="@color/fx_mobile_text_color_accent"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/cancel_button"
+        app:layout_constraintTop_toBottomOf="@id/details" />
 </androidx.constraintlayout.widget.ConstraintLayout>

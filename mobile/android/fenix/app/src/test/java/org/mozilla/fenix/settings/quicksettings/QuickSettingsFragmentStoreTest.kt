@@ -39,6 +39,7 @@ import org.mozilla.fenix.settings.quicksettings.WebsiteInfoState.Companion.creat
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeEnabled
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeVisible
 import org.mozilla.fenix.settings.sitepermissions.AUTOPLAY_BLOCK_ALL
+import org.mozilla.fenix.trackingprotection.CookieBannerUIMode
 import org.mozilla.fenix.trackingprotection.ProtectionsState
 import org.mozilla.fenix.utils.Settings
 
@@ -83,7 +84,7 @@ class QuickSettingsFragmentStoreTest {
             settings = appSettings,
             sessionId = tab.id,
             isTrackingProtectionEnabled = true,
-            isCookieHandlingEnabled = true,
+            cookieBannerUIMode = CookieBannerUIMode.ENABLE,
         )
 
         assertNotNull(store)
@@ -341,7 +342,7 @@ class QuickSettingsFragmentStoreTest {
         val tab = createTab("https://www.firefox.com")
         val browserStore = BrowserStore(BrowserState(tabs = listOf(tab)))
         val isTrackingProtectionEnabled = true
-        val isCookieHandlingEnabled = true
+        val cookieBannerMode = CookieBannerUIMode.ENABLE
 
         every { context.components.core.store } returns browserStore
 
@@ -350,14 +351,14 @@ class QuickSettingsFragmentStoreTest {
             websiteUrl = tab.content.url,
             sessionId = tab.id,
             isTrackingProtectionEnabled = isTrackingProtectionEnabled,
-            isCookieHandlingEnabled = isCookieHandlingEnabled,
+            cookieBannerUIMode = CookieBannerUIMode.ENABLE,
         )
 
         assertNotNull(state)
         assertEquals(tab, state.tab)
         assertEquals(tab.content.url, state.url)
         assertEquals(isTrackingProtectionEnabled, state.isTrackingProtectionEnabled)
-        assertEquals(isCookieHandlingEnabled, state.isCookieBannerHandlingEnabled)
+        assertEquals(cookieBannerMode, state.cookieBannerUIMode)
         assertEquals(0, state.listTrackers.size)
         assertEquals(ProtectionsState.Mode.Normal, state.mode)
         assertEquals("", state.lastAccessedCategory)

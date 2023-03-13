@@ -22,6 +22,7 @@ import org.mozilla.fenix.databinding.QuicksettingsProtectionsPanelBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.quicksettings.protections.ProtectionsInteractor
 import org.mozilla.fenix.settings.quicksettings.protections.ProtectionsView
+import org.mozilla.fenix.trackingprotection.CookieBannerUIMode
 import org.mozilla.fenix.trackingprotection.ProtectionsState
 import org.mozilla.fenix.utils.Settings
 
@@ -50,7 +51,7 @@ class ProtectionsViewTest {
             tab = createTab(url = websiteUrl),
             url = websiteUrl,
             isTrackingProtectionEnabled = true,
-            isCookieBannerHandlingEnabled = true,
+            cookieBannerUIMode = CookieBannerUIMode.ENABLE,
             listTrackers = listOf(),
             mode = ProtectionsState.Mode.Normal,
             lastAccessedCategory = "",
@@ -71,7 +72,7 @@ class ProtectionsViewTest {
             tab = createTab(url = websiteUrl),
             url = websiteUrl,
             isTrackingProtectionEnabled = true,
-            isCookieBannerHandlingEnabled = true,
+            cookieBannerUIMode = CookieBannerUIMode.ENABLE,
             listTrackers = listOf(),
             mode = ProtectionsState.Mode.Normal,
             lastAccessedCategory = "",
@@ -91,7 +92,7 @@ class ProtectionsViewTest {
             tab = createTab(url = websiteUrl),
             url = websiteUrl,
             isTrackingProtectionEnabled = true,
-            isCookieBannerHandlingEnabled = true,
+            cookieBannerUIMode = CookieBannerUIMode.ENABLE,
             listTrackers = listOf(),
             mode = ProtectionsState.Mode.Normal,
             lastAccessedCategory = "",
@@ -112,7 +113,7 @@ class ProtectionsViewTest {
             tab = createTab(url = websiteUrl),
             url = websiteUrl,
             isTrackingProtectionEnabled = true,
-            isCookieBannerHandlingEnabled = true,
+            cookieBannerUIMode = CookieBannerUIMode.ENABLE,
             listTrackers = listOf(),
             mode = ProtectionsState.Mode.Normal,
             lastAccessedCategory = "",
@@ -120,6 +121,27 @@ class ProtectionsViewTest {
 
         every { settings.shouldShowCookieBannerUI } returns false
         every { settings.shouldUseCookieBanner } returns false
+
+        view.update(state)
+
+        assertFalse(binding.cookieBannerItem.isVisible)
+    }
+
+    @Test
+    fun `GIVEN cookie banners handling mode is hide WHEN updating THEN hide the cookie banner section`() {
+        val websiteUrl = "https://mozilla.org"
+        val state = ProtectionsState(
+            tab = createTab(url = websiteUrl),
+            url = websiteUrl,
+            isTrackingProtectionEnabled = true,
+            cookieBannerUIMode = CookieBannerUIMode.HIDE,
+            listTrackers = listOf(),
+            mode = ProtectionsState.Mode.Normal,
+            lastAccessedCategory = "",
+        )
+
+        every { settings.shouldShowCookieBannerUI } returns true
+        every { settings.shouldUseCookieBanner } returns true
 
         view.update(state)
 

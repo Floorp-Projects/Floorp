@@ -9,12 +9,12 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import io.mockk.MockKAnnotations
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.spyk
-import io.mockk.verify
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.concept.engine.cookiehandling.CookieBannersStorage
@@ -22,6 +22,7 @@ import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -87,12 +88,12 @@ class DefaultConnectionDetailsControllerTest {
     }
 
     @Test
-    fun `WHEN handleBackPressed is called THEN should call popBackStack and navigate`() {
-        every { context.settings().shouldUseCookieBanner } returns true
+    fun `WHEN handleBackPressed is called THEN should call popBackStack and navigate`() = runTestOnMain {
+        every { context.settings().shouldUseCookieBanner } returns false
 
         controller.handleBackPressed()
 
-        verify {
+        coVerify {
             navController.popBackStack()
 
             navController.navigate(any<NavDirections>())

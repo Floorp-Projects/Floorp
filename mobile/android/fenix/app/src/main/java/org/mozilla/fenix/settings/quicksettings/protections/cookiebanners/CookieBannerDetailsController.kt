@@ -23,10 +23,15 @@ import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.service.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.CookieBanners
+import org.mozilla.fenix.GleanMetrics.Pings
+import org.mozilla.fenix.R
+import org.mozilla.fenix.addons.showSnackBar
 import org.mozilla.fenix.browser.BrowserFragmentDirections
+import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
-import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.trackingprotection.CookieBannerUIMode
 import org.mozilla.fenix.trackingprotection.ProtectionsAction
 import org.mozilla.fenix.trackingprotection.ProtectionsStore
 
@@ -46,6 +51,11 @@ interface CookieBannerDetailsController {
      * @see [CookieBannerDetailsInteractor.onTogglePressed]
      */
     fun handleTogglePressed(isEnabled: Boolean)
+
+    /**
+     * @see [CookieBannerDetailsInteractor.handleRequestSiteSupportPressed]
+     */
+    fun handleRequestSiteSupportPressed()
 }
 
 /**
@@ -73,15 +83,15 @@ class DefaultCookieBannerDetailsController(
         getCurrentTab()?.let { tab ->
             context.components.useCases.trackingProtectionUseCases.containsException(tab.id) { contains ->
                 ioScope.launch {
-                    val hasException = if (context.settings().shouldUseCookieBanner) {
-                        cookieBannersStorage.hasException(tab.content.url, tab.content.private)
-                    } else {
-                        false
-                    }
+                    val cookieBannerUIMode = cookieBannersStorage.getCookieBannerUIMode(
+                        context,
+                        tab,
+                    )
                     withContext(Dispatchers.Main) {
                         fragment.runIfFragmentIsAttached {
                             navController().popBackStack()
-                            val isTrackingProtectionEnabled = tab.trackingProtection.enabled && !contains
+                            val isTrackingProtectionEnabled =
+                                tab.trackingProtection.enabled && !contains
                             val directions =
                                 BrowserFragmentDirections.actionGlobalQuickSettingsSheetDialogFragment(
                                     sessionId = tab.id,
@@ -93,7 +103,7 @@ class DefaultCookieBannerDetailsController(
                                     certificateName = tab.content.securityInfo.issuer,
                                     permissionHighlights = tab.content.permissionHighlights,
                                     isTrackingProtectionEnabled = isTrackingProtectionEnabled,
-                                    isCookieHandlingEnabled = !hasException,
+                                    cookieBannerUIMode = cookieBannerUIMode,
                                 )
                             navController().navigate(directions)
                         }
@@ -108,30 +118,64 @@ class DefaultCookieBannerDetailsController(
             "A session is required to update the cookie banner mode"
         }
         ioScope.launch {
+            val cookieBannerUIMode: CookieBannerUIMode
             if (isEnabled) {
                 cookieBannersStorage.removeException(
                     uri = tab.content.url,
                     privateBrowsing = tab.content.private,
                 )
                 CookieBanners.exceptionRemoved.record(NoExtras())
+                cookieBannerUIMode = CookieBannerUIMode.ENABLE
             } else {
                 clearSiteData(tab)
-                cookieBannersStorage.addException(uri = tab.content.url, privateBrowsing = tab.content.private)
+                cookieBannersStorage.addException(
+                    uri = tab.content.url,
+                    privateBrowsing = tab.content.private,
+                )
                 CookieBanners.exceptionAdded.record(NoExtras())
+                cookieBannerUIMode = CookieBannerUIMode.DISABLE
             }
             protectionsStore.dispatch(
                 ProtectionsAction.ToggleCookieBannerHandlingProtectionEnabled(
-                    isEnabled,
+                    cookieBannerUIMode,
                 ),
             )
             reload(tab.id)
         }
     }
 
+    override fun handleRequestSiteSupportPressed() {
+        val tab = requireNotNull(browserStore.state.findTabOrCustomTab(sessionId)) {
+            "A session is required to report site domain"
+        }
+        CookieBanners.reportDomainSiteButton.record(NoExtras())
+        ioScope.launch {
+            val siteDomain = getTabDomain(tab)
+            siteDomain?.let { domain ->
+                withContext(Dispatchers.Main) {
+                    protectionsStore.dispatch(ProtectionsAction.RequestReportSiteDomain(domain))
+                    CookieBanners.reportSiteDomain.set(domain)
+                    Pings.cookieBannerReportSite.submit()
+                    protectionsStore.dispatch(
+                        ProtectionsAction.UpdateCookieBannerMode(
+                            cookieBannerUIMode = CookieBannerUIMode.REQUEST_UNSUPPORTED_SITE_SUBMITTED,
+                        ),
+                    )
+                    fragment.activity?.getRootView()?.let { view ->
+                        showSnackBar(
+                            view,
+                            context.getString(R.string.cookie_banner_handling_report_site_snack_bar_text),
+                            FenixSnackbar.LENGTH_LONG,
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     @VisibleForTesting
     internal suspend fun clearSiteData(tab: SessionState) {
-        val host = tab.content.url.toUri().host.orEmpty()
-        val domain = publicSuffixList.getPublicSuffixPlusOne(host).await()
+        val domain = getTabDomain(tab)
         withContext(Dispatchers.Main) {
             engine.clearData(
                 host = domain,
@@ -141,5 +185,11 @@ class DefaultCookieBannerDetailsController(
                 ),
             )
         }
+    }
+
+    @VisibleForTesting
+    internal suspend fun getTabDomain(tab: SessionState): String? {
+        val host = tab.content.url.toUri().host.orEmpty()
+        return publicSuffixList.getPublicSuffixPlusOne(host).await()
     }
 }

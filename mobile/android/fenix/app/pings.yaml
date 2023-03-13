@@ -80,3 +80,16 @@ client-deduplication:
   notification_emails:
     - android-probes@mozilla.com
     - fbertsch@mozilla.com
+
+cookie-banner-report-site:
+  description: |
+    This ping is needed when the cookie banner reducer doesn't work on
+    a website, and the user wants to report the site.
+    This ping doesn't include a client id.
+  include_client_id: false
+  bugs:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1805450
+  data_reviews:
+    - https://github.com/mozilla-mobile/firefox-android/pull/1298#pullrequestreview-1350344223
+  notification_emails:
+    - android-probes@mozilla.com

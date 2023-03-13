@@ -4,7 +4,10 @@
 
 package org.mozilla.fenix.trackingprotection
 
+import android.os.Parcelable
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import kotlinx.parcelize.Parcelize
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.lib.state.Action
@@ -31,7 +34,7 @@ sealed class ProtectionsAction : Action {
     data class Change(
         val url: String,
         val isTrackingProtectionEnabled: Boolean,
-        val isCookieBannerHandlingEnabled: Boolean,
+        val cookieBannerUIMode: CookieBannerUIMode,
         val listTrackers: List<TrackerLog>,
         val mode: ProtectionsState.Mode,
     ) : ProtectionsAction()
@@ -39,9 +42,24 @@ sealed class ProtectionsAction : Action {
     /**
      * Toggles the enabled state of cookie banner handling protection.
      *
-     * @param isEnabled Whether or not cookie banner protection is enabled.
+     * @param cookieBannerUIMode the current status of the cookie banner handling mode.
      */
-    data class ToggleCookieBannerHandlingProtectionEnabled(val isEnabled: Boolean) :
+    data class ToggleCookieBannerHandlingProtectionEnabled(val cookieBannerUIMode: CookieBannerUIMode) :
+        ProtectionsAction()
+
+    /**
+     * Reports a site domain where cookie banner reducer didn't work.
+     *
+     * @param url to report.
+     */
+    data class RequestReportSiteDomain(
+        val url: String,
+    ) : ProtectionsAction()
+
+    /**
+     * Indicates that cookie banner handling mode has been updated.
+     */
+    data class UpdateCookieBannerMode(val cookieBannerUIMode: CookieBannerUIMode) :
         ProtectionsAction()
 
     /**
@@ -74,7 +92,7 @@ sealed class ProtectionsAction : Action {
  * @property url Current URL to display
  * @property isTrackingProtectionEnabled Current status of tracking protection for this session
  * (ie is an exception)
- * @property isCookieBannerHandlingEnabled Current status of cookie banner handling protection
+ * @property cookieBannerUIMode Current status of cookie banner handling protection
  * for this session (ie is an exception).
  * @property listTrackers Current Tracker Log list of blocked and loaded tracker categories
  * @property mode Current Mode of TrackingProtection
@@ -85,11 +103,12 @@ data class ProtectionsState(
     val tab: SessionState?,
     val url: String,
     val isTrackingProtectionEnabled: Boolean,
-    val isCookieBannerHandlingEnabled: Boolean,
+    val cookieBannerUIMode: CookieBannerUIMode,
     val listTrackers: List<TrackerLog>,
     val mode: Mode,
     val lastAccessedCategory: String,
 ) : State {
+
     /**
      * Indicates the modes in which a tracking protection view could be in.
      */
@@ -107,6 +126,56 @@ data class ProtectionsState(
             val categoryBlocked: Boolean,
         ) : Mode()
     }
+}
+
+/**
+ * CookieBannerUIMode - contains a description and icon that will be shown
+ * in the protection view.
+ */
+@Parcelize
+enum class CookieBannerUIMode(
+    @StringRes val description: Int? = null,
+    @DrawableRes val icon: Int? = null,
+) : Parcelable {
+
+    /**
+     * ENABLE - The site domain wasn't added to the list of exceptions.
+     */
+    ENABLE(
+        R.string.reduce_cookie_banner_on_for_site,
+        R.drawable.ic_cookies_enabled,
+    ),
+
+    /**
+     * DISABLE - The site domain was added to the exceptions list.
+     * The cookie banner reducer will not work.
+     */
+    DISABLE(
+        R.string.reduce_cookie_banner_off_for_site,
+        R.drawable.ic_cookies_disabled,
+    ),
+
+    /**
+     * SITE_NOT_SUPPORTED - The domain is not supported by cookie banner handling.
+     */
+    SITE_NOT_SUPPORTED(
+        R.string.reduce_cookie_banner_unsupported_site,
+        R.drawable.ic_cookies_disabled,
+    ),
+
+    /**
+     * REQUEST_UNSUPPORTED_SITE_SUBMITTED - The user submitted a request
+     * for adding support for cookie banner handling for the domain.
+     */
+    REQUEST_UNSUPPORTED_SITE_SUBMITTED(
+        R.string.reduce_cookie_banner_unsupported_site_request_submitted,
+        R.drawable.ic_cookies_disabled,
+    ),
+
+    /**
+     HIDE - All the cookie banner handling in the tracking panel is hidden.
+     */
+    HIDE,
 }
 
 /**
@@ -153,7 +222,7 @@ fun protectionsStateReducer(
         is ProtectionsAction.Change -> state.copy(
             url = action.url,
             isTrackingProtectionEnabled = action.isTrackingProtectionEnabled,
-            isCookieBannerHandlingEnabled = action.isCookieBannerHandlingEnabled,
+            cookieBannerUIMode = action.cookieBannerUIMode,
             listTrackers = action.listTrackers,
             mode = action.mode,
         )
@@ -172,7 +241,13 @@ fun protectionsStateReducer(
             lastAccessedCategory = action.category.name,
         )
         is ProtectionsAction.ToggleCookieBannerHandlingProtectionEnabled -> state.copy(
-            isCookieBannerHandlingEnabled = action.isEnabled,
+            cookieBannerUIMode = action.cookieBannerUIMode,
+        )
+        is ProtectionsAction.RequestReportSiteDomain -> state.copy(
+            url = action.url,
+        )
+        is ProtectionsAction.UpdateCookieBannerMode -> state.copy(
+            cookieBannerUIMode = action.cookieBannerUIMode,
         )
     }
 }

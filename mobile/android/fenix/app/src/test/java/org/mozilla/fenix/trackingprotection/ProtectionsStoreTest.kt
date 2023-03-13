@@ -10,7 +10,6 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.content.blocking.TrackerLog
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ProtectionsStoreTest {
@@ -88,7 +87,7 @@ class ProtectionsStoreTest {
             ProtectionsAction.Change(
                 "newURL",
                 isTrackingProtectionEnabled = false,
-                isCookieBannerHandlingEnabled = false,
+                cookieBannerUIMode = CookieBannerUIMode.DISABLE,
                 listTrackers = listOf(tracker),
                 mode = ProtectionsState.Mode.Details(
                     TrackingProtectionCategory.FINGERPRINTERS,
@@ -106,8 +105,8 @@ class ProtectionsStoreTest {
             store.state.isTrackingProtectionEnabled,
         )
         assertEquals(
-            false,
-            store.state.isCookieBannerHandlingEnabled,
+            CookieBannerUIMode.DISABLE,
+            store.state.cookieBannerUIMode,
         )
         assertEquals(
             listOf(tracker),
@@ -126,18 +125,55 @@ class ProtectionsStoreTest {
 
         store.dispatch(
             ProtectionsAction.ToggleCookieBannerHandlingProtectionEnabled(
-                isEnabled = true,
+                cookieBannerUIMode = CookieBannerUIMode.ENABLE,
             ),
         ).join()
 
-        assertTrue(store.state.isCookieBannerHandlingEnabled)
+        assertEquals(
+            CookieBannerUIMode.ENABLE,
+            store.state.cookieBannerUIMode,
+        )
+    }
+
+    @Test
+    fun `ProtectionsAction - RequestReportSiteDomain`() = runTest {
+        val initialState = defaultState()
+        val store = ProtectionsStore(initialState)
+
+        store.dispatch(
+            ProtectionsAction.RequestReportSiteDomain(
+                url = "youtube.com",
+            ),
+        ).join()
+
+        assertEquals(
+            "youtube.com",
+            store.state.url,
+        )
+    }
+
+    @Test
+    fun `ProtectionsAction - UpdateCookieBannerMode`() = runTest {
+        val initialState = defaultState()
+        val store = ProtectionsStore(initialState)
+
+        store.dispatch(
+            ProtectionsAction.UpdateCookieBannerMode(
+                cookieBannerUIMode = CookieBannerUIMode.DISABLE,
+            ),
+        ).join()
+
+        assertEquals(
+            CookieBannerUIMode.DISABLE,
+            store.state.cookieBannerUIMode,
+        )
     }
 
     private fun defaultState(): ProtectionsState = ProtectionsState(
         tab = tab,
         url = "www.mozilla.org",
         isTrackingProtectionEnabled = true,
-        isCookieBannerHandlingEnabled = false,
+        cookieBannerUIMode = CookieBannerUIMode.DISABLE,
         listTrackers = listOf(),
         mode = ProtectionsState.Mode.Normal,
         lastAccessedCategory = "",
@@ -147,7 +183,7 @@ class ProtectionsStoreTest {
         tab = tab,
         url = "www.mozilla.org",
         isTrackingProtectionEnabled = true,
-        isCookieBannerHandlingEnabled = false,
+        cookieBannerUIMode = CookieBannerUIMode.DISABLE,
         listTrackers = listOf(),
         mode = ProtectionsState.Mode.Details(TrackingProtectionCategory.CRYPTOMINERS, true),
         lastAccessedCategory = TrackingProtectionCategory.CRYPTOMINERS.name,

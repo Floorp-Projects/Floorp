@@ -17,6 +17,11 @@ interface CookieBannerDetailsInteractor {
      * Called whenever the user press the toggle widget.
      */
     fun onTogglePressed(vale: Boolean) = Unit
+
+    /**
+     * Called whenever the user press request support site domain.
+     */
+    fun handleRequestSiteSupportPressed()
 }
 
 /**
@@ -38,5 +43,9 @@ class DefaultCookieBannerDetailsInteractor(
 
     override fun onTogglePressed(vale: Boolean) {
         controller.handleTogglePressed(vale)
+    }
+
+    override fun handleRequestSiteSupportPressed() {
+        controller.handleRequestSiteSupportPressed()
     }
 }

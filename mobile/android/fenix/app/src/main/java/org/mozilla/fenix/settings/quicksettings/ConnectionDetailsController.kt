@@ -17,7 +17,7 @@ import mozilla.components.concept.engine.permission.SitePermissions
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
-import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.settings.quicksettings.protections.cookiebanners.getCookieBannerUIMode
 
 /**
  * [ConnectionDetailsController] controller.
@@ -51,11 +51,10 @@ class DefaultConnectionDetailsController(
         getCurrentTab()?.let { tab ->
             context.components.useCases.trackingProtectionUseCases.containsException(tab.id) { contains ->
                 ioScope.launch {
-                    val hasException = if (context.settings().shouldUseCookieBanner) {
-                        cookieBannersStorage.hasException(tab.content.url, tab.content.private)
-                    } else {
-                        false
-                    }
+                    val cookieBannerUIMode = cookieBannersStorage.getCookieBannerUIMode(
+                        context,
+                        tab,
+                    )
                     withContext(Dispatchers.Main) {
                         fragment.runIfFragmentIsAttached {
                             navController().popBackStack()
@@ -72,7 +71,7 @@ class DefaultConnectionDetailsController(
                                     certificateName = tab.content.securityInfo.issuer,
                                     permissionHighlights = tab.content.permissionHighlights,
                                     isTrackingProtectionEnabled = isTrackingProtectionEnabled,
-                                    isCookieHandlingEnabled = !hasException,
+                                    cookieBannerUIMode = cookieBannerUIMode,
                                 )
                             navController().navigate(directions)
                         }

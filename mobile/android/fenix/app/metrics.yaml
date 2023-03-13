@@ -7237,6 +7237,63 @@ cookie_banners:
     metadata:
       tags:
         - Privacy&Security
+  report_site_domain:
+    type: url
+    description: |
+      A user can report a site domain(Ex. for https://edition.cnn.com/
+      site domain will be cnn.com) when the cookie banner reducer is not
+      working from the cookie banner details panel.
+    lifetime: ping
+    send_in_pings:
+      - cookie-banner-report-site
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1805450
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/1298#pullrequestreview-1350344223
+    data_sensitivity:
+      - technical
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+    metadata:
+      tags:
+        - Privacy&Security
+  report_site_cancel_button:
+    type: event
+    description: |
+      The user has pressed the report site domain cancel button
+      from the cookie banner reducer details panel.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1805450
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/1298#pullrequestreview-1350344223
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+    metadata:
+      tags:
+        - Privacy&Security
+  report_domain_site_button:
+    type: event
+    description: |
+      The user has pressed the report site domain button
+      from the cookie banner reducer details panel.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1805450
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/1298#pullrequestreview-1350344223
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+    metadata:
+      tags:
+        - Privacy&Security
+
 site_permissions:
   prompt_shown:
     type: event

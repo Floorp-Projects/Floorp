@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.settings.quicksettings.protections.cookiebanners
 
+import android.view.View
 import android.widget.FrameLayout
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
@@ -28,6 +29,7 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.ComponentCookieBannerDetailsPanelBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.trackingprotection.CookieBannerUIMode
 import org.mozilla.fenix.trackingprotection.ProtectionsState
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -55,6 +57,7 @@ class CookieBannerHandlingDetailsViewTest {
                 publicSuffixList = publicSuffixList,
                 interactor = interactor,
                 ioScope = scope,
+                onDismiss = {},
             ),
         )
         binding = view.binding
@@ -67,7 +70,7 @@ class CookieBannerHandlingDetailsViewTest {
             tab = createTab(url = websiteUrl),
             url = websiteUrl,
             isTrackingProtectionEnabled = true,
-            isCookieBannerHandlingEnabled = true,
+            cookieBannerUIMode = CookieBannerUIMode.ENABLE,
             listTrackers = listOf(),
             mode = ProtectionsState.Mode.Normal,
             lastAccessedCategory = "",
@@ -76,21 +79,21 @@ class CookieBannerHandlingDetailsViewTest {
         view.update(state)
 
         verify {
-            view.bindTitle(state.url, state.isCookieBannerHandlingEnabled)
+            view.bindTitle(state.url, state.cookieBannerUIMode)
             view.bindBackButtonListener()
-            view.bindDescription(state.isCookieBannerHandlingEnabled)
-            view.bindSwitch(state.isCookieBannerHandlingEnabled)
+            view.bindDescription(state.cookieBannerUIMode)
+            view.bindSwitch(state.cookieBannerUIMode)
         }
     }
 
     @Test
-    fun `GIVEN cookie banner handling is enabled WHEN biding title THEN title view must have the expected string`() =
+    fun `GIVEN cookie banner handling mode is enabled WHEN biding title THEN title view must have the expected string`() =
         runTestOnMain {
             coEvery { publicSuffixList.getPublicSuffixPlusOne(any()) } returns CompletableDeferred("mozilla.org")
 
             val websiteUrl = "https://mozilla.org"
 
-            view.bindTitle(url = websiteUrl, isCookieBannerHandlingEnabled = true)
+            view.bindTitle(url = websiteUrl, state = CookieBannerUIMode.ENABLE)
 
             val expectedText =
                 testContext.getString(
@@ -102,13 +105,33 @@ class CookieBannerHandlingDetailsViewTest {
         }
 
     @Test
-    fun `GIVEN cookie banner handling is disabled WHEN biding title THEN title view must have the expected string`() =
+    fun `GIVEN cookie banner handling mode is site not supported WHEN biding title THEN title view must have the expected string`() =
         runTestOnMain {
             coEvery { publicSuffixList.getPublicSuffixPlusOne(any()) } returns CompletableDeferred("mozilla.org")
 
             val websiteUrl = "https://mozilla.org"
 
-            view.bindTitle(url = websiteUrl, isCookieBannerHandlingEnabled = false)
+            view.bindTitle(url = websiteUrl, state = CookieBannerUIMode.SITE_NOT_SUPPORTED)
+
+            val expectedText =
+                testContext.getString(
+                    R.string.cookie_banner_handling_details_site_is_not_supported_title,
+                )
+
+            assertEquals(expectedText, view.binding.title.text)
+        }
+
+    @Test
+    fun `GIVEN cookie banner handling mode is disabled WHEN biding title THEN title view must have the expected string`() =
+        runTestOnMain {
+            coEvery { publicSuffixList.getPublicSuffixPlusOne(any()) } returns CompletableDeferred("mozilla.org")
+
+            val websiteUrl = "https://mozilla.org"
+
+            view.bindTitle(
+                url = websiteUrl,
+                state = CookieBannerUIMode.DISABLE,
+            )
 
             advanceUntilIdle()
 
@@ -133,8 +156,8 @@ class CookieBannerHandlingDetailsViewTest {
     }
 
     @Test
-    fun `GIVEN cookie banner handling is enabled WHEN biding description THEN description view must have the expected string`() {
-        view.bindDescription(isCookieBannerHandlingEnabled = true)
+    fun `GIVEN cookie banner handling mode is enabled WHEN biding description THEN description view must have the expected string`() {
+        view.bindDescription(state = CookieBannerUIMode.ENABLE)
 
         val expectedText =
             testContext.getString(
@@ -146,8 +169,20 @@ class CookieBannerHandlingDetailsViewTest {
     }
 
     @Test
-    fun `GIVEN cookie banner handling is disabled WHEN biding description THEN description view must have the expected string`() {
-        view.bindDescription(isCookieBannerHandlingEnabled = false)
+    fun `GIVEN cookie banner handling mode is site not supported WHEN biding description THEN description view must have the expected string`() {
+        view.bindDescription(state = CookieBannerUIMode.SITE_NOT_SUPPORTED)
+
+        val expectedText =
+            testContext.getString(
+                R.string.reduce_cookie_banner_details_panel_title_unsupported_site_request,
+            )
+
+        assertEquals(expectedText, view.binding.details.text)
+    }
+
+    @Test
+    fun `GIVEN cookie banner handling mode is disabled WHEN biding description THEN description view must have the expected string`() {
+        view.bindDescription(state = CookieBannerUIMode.DISABLE)
 
         val appName = testContext.getString(R.string.app_name)
         val expectedText =
@@ -162,15 +197,57 @@ class CookieBannerHandlingDetailsViewTest {
 
     @Test
     fun `GIVEN cookie banner handling is disabled WHEN biding switch THEN switch view must have the expected isChecked status`() {
-        view.bindSwitch(isCookieBannerHandlingEnabled = false)
+        view.bindSwitch(state = CookieBannerUIMode.DISABLE)
 
         assertFalse(view.binding.cookieBannerSwitch.isChecked)
     }
 
     @Test
     fun `GIVEN cookie banner handling is enabled WHEN biding switch THEN switch view must have the expected isChecked status`() {
-        view.bindSwitch(isCookieBannerHandlingEnabled = true)
+        view.bindSwitch(state = CookieBannerUIMode.ENABLE)
 
         assertTrue(view.binding.cookieBannerSwitch.isChecked)
+    }
+
+    @Test
+    fun `GIVEN cookie banner handling is site not supported WHEN setUiForCookieBannerMode THEN set ui for site not supported should be visible`() {
+        val websiteUrl = "https://mozilla.org"
+        val state = ProtectionsState(
+            tab = createTab(url = websiteUrl),
+            url = websiteUrl,
+            isTrackingProtectionEnabled = true,
+            cookieBannerUIMode = CookieBannerUIMode.SITE_NOT_SUPPORTED,
+            listTrackers = listOf(),
+            mode = ProtectionsState.Mode.Normal,
+            lastAccessedCategory = "",
+        )
+
+        view.update(state)
+
+        assertEquals(View.GONE, view.binding.cookieBannerSwitch.visibility)
+        assertEquals(View.VISIBLE, view.binding.cancelButton.visibility)
+        assertEquals(View.VISIBLE, view.binding.requestSupport.visibility)
+    }
+
+    @Test
+    fun `WHEN clicking the request support button THEN view must delegate to the interactor#handleRequestSiteSupportPressed()`() {
+        val websiteUrl = "https://mozilla.org"
+        val state = ProtectionsState(
+            tab = createTab(url = websiteUrl),
+            url = websiteUrl,
+            isTrackingProtectionEnabled = true,
+            cookieBannerUIMode = CookieBannerUIMode.SITE_NOT_SUPPORTED,
+            listTrackers = listOf(),
+            mode = ProtectionsState.Mode.Normal,
+            lastAccessedCategory = "",
+        )
+
+        view.update(state)
+
+        view.binding.requestSupport.performClick()
+
+        verify {
+            interactor.handleRequestSiteSupportPressed()
+        }
     }
 }
