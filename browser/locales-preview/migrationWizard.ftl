@@ -42,8 +42,14 @@ migration-wizard-migrator-display-name-opera-gx = Opera GX
 migration-wizard-migrator-display-name-safari = Safari
 migration-wizard-migrator-display-name-vivaldi = Vivaldi
 
-migration-all-available-data-label = All available data
-migration-available-data-label = Bookmark, password, history, and autofill data.
+## These strings will be displayed based on how many resources are selected to import
+
+migration-all-available-data-label = Import all available data
+migration-no-selected-data-label = No data selected for import
+migration-selected-data-label = Import selected data
+
+##
+
 migration-select-all-option-label = Select all
 migration-bookmarks-option-label = Bookmarks
 migration-logins-and-passwords-option-label = Saved logins and passwords
@@ -54,6 +60,20 @@ migration-cancel-button-label = Cancel
 migration-done-button-label = Done
 
 migration-wizard-import-browser-no-browsers = { -brand-short-name } couldn’t find any programs that contain bookmark, history or password data.
+
+## These strings will be used to create a dynamic list of items that can be
+## imported. The list will be created using Intl.ListFormat(), so it will
+## follow each locale's rules, and the first item will be capitalized by code.
+## When applicable, the resources should be in their plural form.
+## For example, a possible list could be "Bookmarks, passwords and autofill data".
+
+migration-list-bookmark-label = bookmarks
+migration-list-password-label = passwords
+migration-list-history-label = history
+migration-list-autofill-label = autofill data
+
+##
+
 migration-wizard-progress-header = Importing Data
 migration-wizard-progress-done-header = Data Imported Successfully
 migration-wizard-progress-icon-in-progress =
