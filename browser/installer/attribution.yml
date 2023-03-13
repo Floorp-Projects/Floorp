@@ -1,0 +1,12 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# This file contains the at-rest attribution codes used as part of Firefox
+# nightlies and releases on supported platforms (at the time of writing this
+# is Windows only). At present, we only have need of one code for all supported
+# builds. Because this file is structured yaml, we can fairly easily expand it
+# to support different codes (eg: by platform) if needed in the future.
+attribution_code:
+  json:
+    dlsource: "mozillaci"
