@@ -15,24 +15,20 @@ add_task(async function() {
     let tab = BrowserTestUtils.addTab(gBrowser);
     BrowserTestUtils.loadURIString(tab.linkedBrowser, uri);
     await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+    let isRemote = tab.linkedBrowser.isRemoteBrowser;
 
     let win = gBrowser.replaceTabWithWindow(tab);
-
-    let contentPainted = Promise.resolve();
-    // In the e10s case, we wait for the content to first paint before we focus
-    // the URL in the new window, to optimize for content paint time.
-    if (tab.linkedBrowser.isRemoteBrowser) {
-      contentPainted = BrowserTestUtils.waitForContentEvent(
-        tab.linkedBrowser,
-        "MozAfterPaint"
-      );
-    }
 
     await TestUtils.topicObserved(
       "browser-delayed-startup-finished",
       subject => subject == win
     );
-    await contentPainted;
+    // In the e10s case, we wait for the content to first paint before we focus
+    // the URL in the new window, to optimize for content paint time.
+    if (isRemote) {
+      await win.gBrowserInit.firstContentWindowPaintPromise;
+    }
+
     tab = win.gBrowser.selectedTab;
 
     Assert.equal(

@@ -426,7 +426,6 @@ let JSWINDOWACTORS = {
 
       events: {
         DOMDocElementInserted: {},
-        MozAfterPaint: {},
       },
     },
 
