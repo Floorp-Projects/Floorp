@@ -683,10 +683,10 @@ let JSWINDOWACTORS = {
 
   PointerLock: {
     parent: {
-      moduleURI: "resource:///actors/PointerLockParent.jsm",
+      esModuleURI: "resource:///actors/PointerLockParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource:///actors/PointerLockChild.jsm",
+      esModuleURI: "resource:///actors/PointerLockChild.sys.mjs",
       events: {
         "MozDOMPointerLock:Entered": {},
         "MozDOMPointerLock:Exited": {},
