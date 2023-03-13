@@ -313,6 +313,7 @@ void CanonicalBrowsingContext::ReplacedBy(
   Transaction txn;
   txn.SetBrowserId(GetBrowserId());
   txn.SetIsAppTab(GetIsAppTab());
+  txn.SetHasSiblings(GetHasSiblings());
   txn.SetHistoryID(GetHistoryID());
   txn.SetExplicitActive(GetExplicitActive());
   txn.SetEmbedderColorSchemes(GetEmbedderColorSchemes());

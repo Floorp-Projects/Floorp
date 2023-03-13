@@ -32,11 +32,6 @@ interface nsIBrowserChild : nsISupports
 
   readonly attribute uint64_t tabId;
 
-  /*
-   * Indicates whether or not there are other tabs in this tab's window.
-   */
-  attribute boolean hasSiblings;
-
   /**
    * Send a message from the BrowserChild to the BrowserParent that a
    * nsIWebNavigation navigation finished in the child.

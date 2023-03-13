@@ -2904,6 +2904,11 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_IsAppTab>, const bool& aValue,
   return XRE_IsParentProcess() && !aSource && IsTop();
 }
 
+bool BrowsingContext::CanSet(FieldIndex<IDX_HasSiblings>, const bool& aValue,
+                             ContentParent* aSource) {
+  return XRE_IsParentProcess() && !aSource && IsTop();
+}
+
 bool BrowsingContext::CanSet(FieldIndex<IDX_ShouldDelayMediaFromStart>,
                              const bool& aValue, ContentParent* aSource) {
   return IsTop();
