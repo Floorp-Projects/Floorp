@@ -82,7 +82,7 @@ class ThreeDotMenuMainTest {
         }.openThreeDotMenu {
         }.openCustomizeHome {
             verifyHomePageView()
-        }.goBack {
+        }.goBackToHomeScreen {
         }.openThreeDotMenu {
         }.openSettings {
             verifySettingsView()
@@ -133,7 +133,7 @@ class ThreeDotMenuMainTest {
         }.openThreeDotMenu {
         }.openCustomizeHome {
             verifyHomePageView()
-        }.goBack {
+        }.goBackToHomeScreen {
         }.openThreeDotMenu {
         }.openSettings {
             verifySettingsView()

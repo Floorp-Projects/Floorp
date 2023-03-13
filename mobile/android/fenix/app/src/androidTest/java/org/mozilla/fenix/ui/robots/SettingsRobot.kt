@@ -75,6 +75,8 @@ class SettingsRobot {
     fun verifyTabsButtonSummary(summary: String) =
         assertItemContainingTextExists(itemContainingText(summary))
     fun verifyHomepageButton() = assertHomepageButton()
+    fun verifyHomepageButtonSummary(summary: String) =
+        assertItemContainingTextExists(itemContainingText(summary))
     fun verifyAutofillButton() = assertAutofillButton()
     fun verifyLanguageButton() = assertLanguageButton()
     fun verifyDefaultBrowserIsDisabled() = assertDefaultBrowserIsDisabled()

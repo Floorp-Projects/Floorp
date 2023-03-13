@@ -63,7 +63,7 @@ class SponsoredShortcutsTest {
             verifySponsoredShortcutsCheckBox(true)
             clickSponsoredShortcuts()
             verifySponsoredShortcutsCheckBox(false)
-        }.goBack {
+        }.goBackToHomeScreen {
             verifyNotExistingSponsoredTopSitesList()
         }
     }

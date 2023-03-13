@@ -75,7 +75,7 @@ class SettingsHomepageTest {
         }.openThreeDotMenu {
         }.openCustomizeHome {
             clickShortcutsButton()
-        }.goBack {
+        }.goBackToHomeScreen {
             defaultTopSites.forEach { item ->
                 verifyNotExistingTopSitesList(item)
             }
@@ -96,7 +96,7 @@ class SettingsHomepageTest {
         }.openThreeDotMenu {
         }.openCustomizeHome {
             clickRecentlyVisited()
-        }.goBack {
+        }.goBackToHomeScreen {
             verifyRecentlyVisitedSectionIsNotDisplayed()
         }
     }
@@ -116,7 +116,7 @@ class SettingsHomepageTest {
         }.openThreeDotMenu {
         }.openCustomizeHome {
             clickPocketButton()
-        }.goBack {
+        }.goBackToHomeScreen {
             verifyPocketSectionIsNotDisplayed()
         }
     }
@@ -133,7 +133,7 @@ class SettingsHomepageTest {
         }.openThreeDotMenu {
         }.openCustomizeHome {
             clickJumpBackInButton()
-        }.goBack {
+        }.goBackToHomeScreen {
             verifyJumpBackInSectionIsNotDisplayed()
         }
     }
@@ -152,7 +152,7 @@ class SettingsHomepageTest {
         }.openThreeDotMenu {
         }.openCustomizeHome {
             clickRecentBookmarksButton()
-        }.goBack {
+        }.goBackToHomeScreen {
             verifyRecentBookmarksSectionIsNotDisplayed()
         }
     }
@@ -167,7 +167,7 @@ class SettingsHomepageTest {
         }.openThreeDotMenu {
         }.openSettings {
         }.openHomepageSubMenu {
-            clickStartOnHomepageButton()
+            clickOpeningScreenOption("Homepage")
         }
 
         restartApp(activityIntentTestRule)
@@ -187,7 +187,7 @@ class SettingsHomepageTest {
         }.goToHomescreen {
         }.openThreeDotMenu {
         }.openCustomizeHome {
-            clickStartOnLastTabButton()
+            clickOpeningScreenOption("Last tab")
         }
 
         restartApp(activityIntentTestRule)
@@ -205,8 +205,8 @@ class SettingsHomepageTest {
         }.openThreeDotMenu {
         }.openSettings {
         }.openHomepageSubMenu {
-            clickStartOnHomepageButton()
-        }.goBack {}
+            clickOpeningScreenOption("Homepage")
+        }.goBackToHomeScreen {}
 
         with(activityIntentTestRule) {
             finishActivity()

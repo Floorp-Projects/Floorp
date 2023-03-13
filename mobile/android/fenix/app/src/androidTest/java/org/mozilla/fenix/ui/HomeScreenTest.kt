@@ -166,7 +166,7 @@ class HomeScreenTest {
         }.openThreeDotMenu {
         }.openCustomizeHome {
             clickPocketButton()
-        }.goBack {
+        }.goBackToHomeScreen {
             verifyThoughtProvokingStories(false)
             verifyStoriesByTopic(false)
         }
@@ -257,12 +257,12 @@ class HomeScreenTest {
             clickRecentBookmarksButton()
             clickRecentSearchesButton()
             clickPocketButton()
-        }.goBack {
+        }.goBackToHomeScreen {
             verifyCustomizeHomepageButton(false)
         }.openThreeDotMenu {
         }.openCustomizeHome {
             clickJumpBackInButton()
-        }.goBack {
+        }.goBackToHomeScreen {
             verifyCustomizeHomepageButton(true)
         }
     }

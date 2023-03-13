@@ -26,6 +26,7 @@ import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.click
+import org.mozilla.fenix.helpers.isChecked
 
 /**
  * Implementation of Robot Pattern for the settings Homepage sub menu.
@@ -61,6 +62,14 @@ class SettingsSubMenuHomepageRobot {
         assertHomepageAfterFourHoursButton()
     }
 
+    fun verifySelectedOpeningScreenOption(openingScreenOption: String) =
+        onView(
+            allOf(
+                withId(R.id.radio_button),
+                hasSibling(withText(openingScreenOption)),
+            ),
+        ).check(matches(isChecked(true)))
+
     fun clickShortcutsButton() = shortcutsButton().click()
 
     fun clickSponsoredShortcuts() = sponsoredShortcutsButton().click()
@@ -75,9 +84,13 @@ class SettingsSubMenuHomepageRobot {
 
     fun clickPocketButton() = pocketButton().click()
 
-    fun clickStartOnHomepageButton() = homepageButton().click()
-
-    fun clickStartOnLastTabButton() = lastTabButton().click()
+    fun clickOpeningScreenOption(openingScreenOption: String) {
+        when (openingScreenOption) {
+            "Homepage" -> homepageButton().click()
+            "Last tab" -> lastTabButton().click()
+            "Homepage after four hours of inactivity" -> homepageAfterFourHoursButton().click()
+        }
+    }
 
     fun openWallpapersMenu() = wallpapersMenuButton.click()
 
@@ -96,11 +109,18 @@ class SettingsSubMenuHomepageRobot {
 
     class Transition {
 
-        fun goBack(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+        fun goBackToHomeScreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
             goBackButton().click()
 
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
+        }
+
+        fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
+            goBackButton().click()
+
+            SettingsRobot().interact()
+            return SettingsRobot.Transition()
         }
 
         fun clickSnackBarViewButton(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {

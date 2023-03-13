@@ -168,6 +168,27 @@ class SettingsGeneralTest {
         }
     }
 
+    @SmokeTest
+    @Test
+    fun verifyHomepageOptionSummaryUpdatesTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+            verifyHomepageButtonSummary("Open on homepage after four hours")
+        }.openHomepageSubMenu {
+            verifySelectedOpeningScreenOption("Homepage after four hours of inactivity")
+            clickOpeningScreenOption("Homepage")
+            verifySelectedOpeningScreenOption("Homepage")
+        }.goBack {
+            verifyHomepageButtonSummary("Open on homepage")
+        }.openHomepageSubMenu {
+            clickOpeningScreenOption("Last tab")
+            verifySelectedOpeningScreenOption("Last tab")
+        }.goBack {
+            verifyHomepageButtonSummary("Open on last tab")
+        }
+    }
+
     @Test
     fun verifyTabsOptionSummaryUpdatesTest() {
         homeScreen {
