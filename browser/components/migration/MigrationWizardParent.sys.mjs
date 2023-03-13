@@ -197,7 +197,7 @@ export class MigrationWizardParent extends JSWindowActorParent {
   async #getMigratorAndProfiles(key) {
     try {
       let migrator = await MigrationUtils.getMigrator(key);
-      if (!migrator) {
+      if (!migrator?.enabled) {
         return null;
       }
 
