@@ -3,18 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :root {
-  --font-size-default: 1.1rem;
-  --spinner-width: 3rem;
-  --spinner-margin-top-bottom: 0.4rem;
-  --spinner-item-height: 2.4rem;
-  --spinner-item-margin-bottom: 0.1rem;
-  --spinner-button-height: 1.2rem;
-  --colon-width: 2rem;
-  --day-period-spacing-width: 1rem;
-  --calendar-width: 23.1rem;
-  --date-picker-item-height: 2.5rem;
-  --date-picker-item-width: 3.3rem;
-
   --border-radius: 0.3rem;
 
   --border: 0.1rem solid FieldText;
@@ -34,6 +22,20 @@
 
   --disabled-opacity: 0.2;
 
+  /* TODO: these need to be in sync (ish) with DateTimePickerPanel.sys.mjs */
+  font-size: 10px;
+  --font-size-default: 1.1rem;
+  --spinner-width: 3rem;
+  --spinner-margin-top-bottom: 0.4rem;
+  --spinner-item-height: 2.4rem;
+  --spinner-item-margin-bottom: 0.1rem;
+  --spinner-button-height: 1.2rem;
+  --colon-width: 2rem;
+  --day-period-spacing-width: 1rem;
+  --calendar-width: 23rem;
+  --date-picker-item-height: 2.5rem;
+  --date-picker-item-width: 3.3rem;
+
   /* We need to hide the scroll bar but maintain its scrolling
      capability, so using |overflow: hidden| is not an option. */
   scrollbar-width: none;
@@ -49,9 +51,6 @@
   }
 }
 
-html {
-  font-size: 10px;
-}
 
 body {
   margin: 0;
@@ -67,9 +66,13 @@ button {
   border: none;
 }
 
+#date-picker {
+  /* 3px are enough for outlines not to overflow our viewport. */
+  padding: 3px;
+}
+
 .month-year-nav {
   display: flex;
-  width: var(--calendar-width);
   height: 2.4rem;
   margin-bottom: 0.8rem;
   justify-content: space-evenly;
@@ -123,7 +126,6 @@ button.month-year {
   padding-top: 0.2rem;
   padding-bottom: 0.3rem;
   padding-inline: 1.2rem 2.6rem;
-  outline-offset: 0.1rem;
 }
 
 button.month-year:hover {
@@ -154,10 +156,7 @@ button.month-year.active::after {
   position: absolute;
   z-index: 5;
   padding-top: 3.2rem;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: var(--calendar-width);
+  inset: 0;
   background-color: window;
   color: windowtext;
   opacity: 1;
@@ -202,7 +201,6 @@ button.month-year.active::after {
 
 .days-view {
   min-height: 15rem;
-  overflow: hidden;
   position: relative;
 }
 
