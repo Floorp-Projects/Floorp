@@ -9778,13 +9778,15 @@ void nsHttpChannel::DisableIsOpaqueResponseAllowedAfterSniffCheck(
 
         if (!isInitialRequest) {
           // Step 8.1
-          BlockOpaqueResponseAfterSniff();
+          BlockOpaqueResponseAfterSniff(
+              u"media request after sniffing, but not initial request"_ns);
           return;
         }
 
         if (mResponseHead->Status() != 200 && mResponseHead->Status() != 206) {
           // Step 8.2
-          BlockOpaqueResponseAfterSniff();
+          BlockOpaqueResponseAfterSniff(
+              u"media request's response status is neither 200 nor 206"_ns);
           return;
         }
       }
