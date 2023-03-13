@@ -25,17 +25,14 @@ import org.mozilla.fenix.ext.nav
  * @property navController [NavController] used for navigation.
  * @property tabCounter The [TabCounter] that will be setup with event handlers.
  */
-class TabCounterBuilder(
+class TabCounterView(
     private val context: Context,
     private val browsingModeManager: BrowsingModeManager,
     private val navController: NavController,
     private val tabCounter: TabCounter,
 ) {
 
-    /**
-     * Builds the [FenixTabCounterMenu].
-     */
-    fun build() {
+    init {
         val tabCounterMenu = FenixTabCounterMenu(
             context = context,
             onItemTapped = ::onItemTapped,
