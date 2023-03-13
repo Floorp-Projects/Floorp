@@ -570,7 +570,7 @@ class HomeFragment : Fragment() {
         observeSearchEngineNameChanges()
         observeWallpaperUpdates()
 
-        HomeMenuBuilder(
+        HomeMenuView(
             view = view,
             context = view.context,
             lifecycleOwner = viewLifecycleOwner,

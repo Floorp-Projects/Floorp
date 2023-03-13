@@ -16,7 +16,6 @@ import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.menu.view.MenuButton
 import mozilla.components.service.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.Config
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.HomeScreen
 import org.mozilla.fenix.HomeActivity
@@ -45,7 +44,7 @@ import org.mozilla.fenix.GleanMetrics.HomeMenu as HomeMenuMetrics
  * @property hideOnboardingIfNeeded Lambda invoked to dismiss onboarding.
  */
 @Suppress("LongParameterList")
-class HomeMenuBuilder(
+class HomeMenuView(
     private val view: View,
     private val context: Context,
     private val lifecycleOwner: LifecycleOwner,

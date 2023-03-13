@@ -37,7 +37,7 @@ import java.lang.ref.WeakReference
 import org.mozilla.fenix.GleanMetrics.HomeMenu as HomeMenuMetrics
 
 @RunWith(FenixRobolectricTestRunner::class)
-class HomeMenuBuilderTest {
+class HomeMenuViewTest {
 
     @get:Rule
     val gleanTestRule = GleanTestRule(testContext)
@@ -47,7 +47,7 @@ class HomeMenuBuilderTest {
     private lateinit var homeActivity: HomeActivity
     private lateinit var navController: NavController
     private lateinit var menuButton: WeakReference<MenuButton>
-    private lateinit var homeMenuBuilder: HomeMenuBuilder
+    private lateinit var homeMenuView: HomeMenuView
 
     @Before
     fun setup() {
@@ -57,7 +57,7 @@ class HomeMenuBuilderTest {
         menuButton = mockk(relaxed = true)
         navController = mockk(relaxed = true)
 
-        homeMenuBuilder = HomeMenuBuilder(
+        homeMenuView = HomeMenuView(
             view = view,
             context = testContext,
             lifecycleOwner = lifecycleOwner,
@@ -72,7 +72,7 @@ class HomeMenuBuilderTest {
     fun `WHEN Settings menu item is tapped THEN navigate to settings fragment and record metrics`() {
         assertNull(HomeMenuMetrics.settingsItemClicked.testGetValue())
 
-        homeMenuBuilder.onItemTapped(HomeMenu.Item.Settings)
+        homeMenuView.onItemTapped(HomeMenu.Item.Settings)
 
         assertNotNull(HomeMenuMetrics.settingsItemClicked.testGetValue())
 
@@ -88,7 +88,7 @@ class HomeMenuBuilderTest {
     fun `WHEN Customize Home menu item is tapped THEN navigate to home settings fragment and record metrics`() {
         assertNull(HomeScreen.customizeHomeClicked.testGetValue())
 
-        homeMenuBuilder.onItemTapped(HomeMenu.Item.CustomizeHome)
+        homeMenuView.onItemTapped(HomeMenu.Item.CustomizeHome)
 
         assertNotNull(HomeScreen.customizeHomeClicked.testGetValue())
 
@@ -102,7 +102,7 @@ class HomeMenuBuilderTest {
 
     @Test
     fun `GIVEN various sync account state WHEN Sync Account menu item is tapped THEN navigate to the appropriate sync fragment`() {
-        homeMenuBuilder.onItemTapped(HomeMenu.Item.SyncAccount(AccountState.AUTHENTICATED))
+        homeMenuView.onItemTapped(HomeMenu.Item.SyncAccount(AccountState.AUTHENTICATED))
 
         verify {
             navController.nav(
@@ -111,7 +111,7 @@ class HomeMenuBuilderTest {
             )
         }
 
-        homeMenuBuilder.onItemTapped(HomeMenu.Item.SyncAccount(AccountState.NEEDS_REAUTHENTICATION))
+        homeMenuView.onItemTapped(HomeMenu.Item.SyncAccount(AccountState.NEEDS_REAUTHENTICATION))
 
         verify {
             navController.nav(
@@ -120,7 +120,7 @@ class HomeMenuBuilderTest {
             )
         }
 
-        homeMenuBuilder.onItemTapped(HomeMenu.Item.SyncAccount(AccountState.NO_ACCOUNT))
+        homeMenuView.onItemTapped(HomeMenu.Item.SyncAccount(AccountState.NO_ACCOUNT))
 
         verify {
             navController.nav(
@@ -132,7 +132,7 @@ class HomeMenuBuilderTest {
 
     @Test
     fun `WHEN Bookmarks menu item is tapped THEN navigate to the bookmarks fragment`() {
-        homeMenuBuilder.onItemTapped(HomeMenu.Item.Bookmarks)
+        homeMenuView.onItemTapped(HomeMenu.Item.Bookmarks)
 
         verify {
             navController.nav(
@@ -144,7 +144,7 @@ class HomeMenuBuilderTest {
 
     @Test
     fun `WHEN History menu item is tapped THEN navigate to the history fragment`() {
-        homeMenuBuilder.onItemTapped(HomeMenu.Item.History)
+        homeMenuView.onItemTapped(HomeMenu.Item.History)
 
         verify {
             navController.nav(
@@ -156,7 +156,7 @@ class HomeMenuBuilderTest {
 
     @Test
     fun `WHEN Downloads menu item is tapped THEN navigate to the downloads fragment`() {
-        homeMenuBuilder.onItemTapped(HomeMenu.Item.Downloads)
+        homeMenuView.onItemTapped(HomeMenu.Item.Downloads)
 
         verify {
             navController.nav(
@@ -168,7 +168,7 @@ class HomeMenuBuilderTest {
 
     @Test
     fun `WHEN Help menu item is tapped THEN open the browser to the SUMO help page`() {
-        homeMenuBuilder.onItemTapped(HomeMenu.Item.Help)
+        homeMenuView.onItemTapped(HomeMenu.Item.Help)
 
         verify {
             homeActivity.openToBrowserAndLoad(
@@ -186,7 +186,7 @@ class HomeMenuBuilderTest {
     fun `WHEN Whats New menu item is tapped THEN open the browser to the SUMO whats new page and record metrics`() {
         assertNull(Events.whatsNewTapped.testGetValue())
 
-        homeMenuBuilder.onItemTapped(HomeMenu.Item.WhatsNew)
+        homeMenuView.onItemTapped(HomeMenu.Item.WhatsNew)
 
         assertNotNull(Events.whatsNewTapped.testGetValue())
 
@@ -203,7 +203,7 @@ class HomeMenuBuilderTest {
 
     @Test
     fun `WHEN Reconnect Sync menu item is tapped THEN navigate to the account problem fragment`() {
-        homeMenuBuilder.onItemTapped(HomeMenu.Item.ReconnectSync)
+        homeMenuView.onItemTapped(HomeMenu.Item.ReconnectSync)
 
         verify {
             navController.nav(
@@ -215,7 +215,7 @@ class HomeMenuBuilderTest {
 
     @Test
     fun `WHEN Extensions menu item is tapped THEN navigate to the addons management fragment`() {
-        homeMenuBuilder.onItemTapped(HomeMenu.Item.Extensions)
+        homeMenuView.onItemTapped(HomeMenu.Item.Extensions)
 
         verify {
             navController.nav(
@@ -229,7 +229,7 @@ class HomeMenuBuilderTest {
     fun `WHEN Desktop Mode menu item is tapped THEN set the desktop mode settings`() {
         every { testContext.settings() } returns Settings(testContext)
 
-        homeMenuBuilder.onItemTapped(HomeMenu.Item.DesktopMode(checked = true))
+        homeMenuView.onItemTapped(HomeMenu.Item.DesktopMode(checked = true))
 
         assertTrue(testContext.settings().openNextTabInDesktopMode)
     }
