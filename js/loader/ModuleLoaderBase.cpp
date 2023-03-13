@@ -206,8 +206,8 @@ JSString* ModuleLoaderBase::ImportMetaResolveImpl(
     auto result = loader->ResolveModuleSpecifier(script, specifier);
     if (result.isErr()) {
       JS::Rooted<JS::Value> error(aCx);
-      nsresult rv = HandleResolveFailure(aCx, script, specifier,
-                                         result.unwrapErr(), 0, 0, &error);
+      nsresult rv = loader->HandleResolveFailure(
+          aCx, script, specifier, result.unwrapErr(), 0, 0, &error);
       if (NS_FAILED(rv)) {
         JS_ReportOutOfMemory(aCx);
         return nullptr;
@@ -301,8 +301,8 @@ bool ModuleLoaderBase::HostImportModuleDynamically(
   auto result = loader->ResolveModuleSpecifier(script, specifier);
   if (result.isErr()) {
     JS::Rooted<JS::Value> error(aCx);
-    nsresult rv = HandleResolveFailure(aCx, script, specifier,
-                                       result.unwrapErr(), 0, 0, &error);
+    nsresult rv = loader->HandleResolveFailure(
+        aCx, script, specifier, result.unwrapErr(), 0, 0, &error);
     if (NS_FAILED(rv)) {
       JS_ReportOutOfMemory(aCx);
       return false;
@@ -648,6 +648,19 @@ nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
   return rv;
 }
 
+nsresult ModuleLoaderBase::GetResolveFailureMessage(ResolveError aError,
+                                                    const nsAString& aSpecifier,
+                                                    nsAString& aResult) {
+  AutoTArray<nsString, 1> errorParams;
+  errorParams.AppendElement(aSpecifier);
+
+  nsresult rv = nsContentUtils::FormatLocalizedString(
+      nsContentUtils::eDOM_PROPERTIES, ResolveErrorInfo::GetString(aError),
+      errorParams, aResult);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
 nsresult ModuleLoaderBase::HandleResolveFailure(
     JSContext* aCx, LoadedScript* aScript, const nsAString& aSpecifier,
     ResolveError aError, uint32_t aLineNumber, uint32_t aColumnNumber,
@@ -665,13 +678,8 @@ nsresult ModuleLoaderBase::HandleResolveFailure(
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  AutoTArray<nsString, 1> errorParams;
-  errorParams.AppendElement(aSpecifier);
-
   nsAutoString errorText;
-  nsresult rv = nsContentUtils::FormatLocalizedString(
-      nsContentUtils::eDOM_PROPERTIES, ResolveErrorInfo::GetString(aError),
-      errorParams, errorText);
+  nsresult rv = GetResolveFailureMessage(aError, aSpecifier, errorText);
   NS_ENSURE_SUCCESS(rv, rv);
 
   JS::Rooted<JSString*> string(aCx, JS_NewUCStringCopyZ(aCx, errorText.get()));
@@ -781,8 +789,9 @@ nsresult ModuleLoaderBase::ResolveRequestedModules(
                                       &columnNumber);
 
       JS::Rooted<JS::Value> error(cx);
-      nsresult rv = HandleResolveFailure(cx, ms, specifier, result.unwrapErr(),
-                                         lineNumber, columnNumber, &error);
+      nsresult rv =
+          loader->HandleResolveFailure(cx, ms, specifier, result.unwrapErr(),
+                                       lineNumber, columnNumber, &error);
       NS_ENSURE_SUCCESS(rv, rv);
 
       ms->SetParseError(error);
