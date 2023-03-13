@@ -27,6 +27,10 @@ kind-dependencies:
     - repackage-signing-shippable-l10n-msix
     - mar-signing
     - mar-signing-l10n
+    # Windows
+    - attribution
+    # Windows
+    - attribution-l10n
 
 primary-dependency:
     - repackage
