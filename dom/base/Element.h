@@ -580,6 +580,8 @@ class Element : public FragmentOrElement {
     return CreatePopoverData();
   }
 
+  bool IsAutoPopover() const;
+
   ElementAnimationData* GetAnimationData() const {
     if (!MayHaveAnimations()) {
       return nullptr;

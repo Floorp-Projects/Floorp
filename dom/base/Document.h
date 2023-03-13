@@ -1927,6 +1927,10 @@ class Document : public nsINode,
   // layer. The removed element, if any, is returned.
   Element* TopLayerPop(FunctionRef<bool(Element*)> aPredicate);
 
+  // Removes the given element from the top layer. The removed element, if any,
+  // is returned.
+  Element* TopLayerPop(Element&);
+
   MOZ_CAN_RUN_SCRIPT bool TryAutoFocusCandidate(Element& aElement);
 
  public:
@@ -3448,6 +3452,20 @@ class Document : public nsINode,
 
   MOZ_CAN_RUN_SCRIPT void GetWireframe(bool aIncludeNodes,
                                        Nullable<Wireframe>&);
+
+  // Returns a list of all the elements in the Document's top layer whose
+  // popover attribute is in the auto state.
+  // See https://html.spec.whatwg.org/multipage/popover.html#auto-popover-list
+  nsTArray<Element*> AutoPopoverList() const;
+
+  // Teturn document's auto popover list's last element.
+  // See
+  // https://html.spec.whatwg.org/multipage/popover.html#topmost-auto-popover
+  Element* GetTopmostAutoPopover() const;
+
+  // Adds/removes an element to/from the auto popover list.
+  void AddToAutoPopoverList(Element&);
+  void RemoveFromAutoPopoverList(Element&);
 
   Element* GetTopLayerTop();
   // Return the fullscreen element in the top layer
