@@ -161,7 +161,6 @@ bool ExecutionRunnable::ParseAndLinkModule(
     JSContext* aCx, JS::MutableHandle<JSObject*> aModule) {
   JS::CompileOptions compileOptions(aCx);
   compileOptions.setIntroductionType("Worklet");
-  compileOptions.setFileAndLine(mHandler->URL().get(), 1);
   compileOptions.setIsRunOnce(true);
   compileOptions.setNoScriptRval(true);
 
@@ -333,7 +332,7 @@ already_AddRefed<Promise> WorkletFetchHandler::AddModule(
   fetchPromise->AppendNativeHandler(scriptHandler);
 
   RefPtr<WorkletFetchHandler> handler =
-      new WorkletFetchHandler(aWorklet, spec, promise);
+      new WorkletFetchHandler(aWorklet, promise);
 
   nsMainThreadPtrHandle<WorkletFetchHandler> handlerRef{
       new nsMainThreadPtrHolder<WorkletFetchHandler>("FetchHandler", handler)};
@@ -357,10 +356,8 @@ already_AddRefed<Promise> WorkletFetchHandler::AddModule(
   return promise.forget();
 }
 
-WorkletFetchHandler::WorkletFetchHandler(Worklet* aWorklet,
-                                         const nsACString& aURL,
-                                         Promise* aPromise)
-    : mWorklet(aWorklet), mStatus(ePending), mErrorStatus(NS_OK), mURL(aURL) {
+WorkletFetchHandler::WorkletFetchHandler(Worklet* aWorklet, Promise* aPromise)
+    : mWorklet(aWorklet), mStatus(ePending) {
   MOZ_ASSERT(aWorklet);
   MOZ_ASSERT(aPromise);
   MOZ_ASSERT(NS_IsMainThread());
@@ -388,8 +385,7 @@ void WorkletFetchHandler::AddPromise(Promise* aPromise) {
       return;
 
     case eRejected:
-      MOZ_ASSERT(NS_FAILED(mErrorStatus));
-      aPromise->MaybeReject(mErrorStatus);
+      aPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
       return;
 
     case eResolved:
@@ -411,7 +407,6 @@ void WorkletFetchHandler::RejectPromises(nsresult aResult) {
   mPromises.Clear();
 
   mStatus = eRejected;
-  mErrorStatus = aResult;
   mWorklet = nullptr;
 }
 
