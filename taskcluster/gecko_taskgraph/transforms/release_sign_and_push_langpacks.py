@@ -151,6 +151,7 @@ def make_task_worker(config, jobs):
             job, expected_kinds=("build", "shippable-l10n")
         )
 
+        job["worker"]["implementation"] = "push-addons"
         job["worker"]["upstream-artifacts"] = generate_upstream_artifacts(
             upstream_task_ref, job["attributes"]["chunk_locales"]
         )
