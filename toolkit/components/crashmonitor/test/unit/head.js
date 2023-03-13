@@ -19,8 +19,8 @@ function run_test() {
     PathUtils.profileDir,
     "sessionCheckpoints.json"
   );
-  ({ CrashMonitor } = ChromeUtils.import(
-    "resource://gre/modules/CrashMonitor.jsm"
+  ({ CrashMonitor } = ChromeUtils.importESModule(
+    "resource://gre/modules/CrashMonitor.sys.mjs"
   ));
   run_next_test();
 }

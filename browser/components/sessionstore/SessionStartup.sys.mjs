@@ -32,16 +32,12 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  CrashMonitor: "resource://gre/modules/CrashMonitor.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   SessionFile: "resource:///modules/sessionstore/SessionFile.sys.mjs",
   StartupPerformance:
     "resource:///modules/sessionstore/StartupPerformance.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CrashMonitor",
-  "resource://gre/modules/CrashMonitor.jsm"
-);
 
 const STATE_RUNNING_STR = "running";
 

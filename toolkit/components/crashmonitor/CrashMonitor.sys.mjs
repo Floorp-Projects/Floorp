@@ -31,14 +31,8 @@
  * does not necessarily tell us that the checkpoint wasn't reached.
  */
 
-var EXPORTED_SYMBOLS = ["CrashMonitor"];
-
-const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PrivateBrowsingUtils.sys.mjs"
-);
-const { PromiseUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseUtils.sys.mjs"
-);
+import { PrivateBrowsingUtils } from "resource://gre/modules/PrivateBrowsingUtils.sys.mjs";
+import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
 
 const SESSIONSTORE_WINDOWS_RESTORED_TOPIC = "sessionstore-windows-restored";
 const SESSIONSTORE_FINAL_STATE_WRITE_COMPLETE_TOPIC =
@@ -130,7 +124,7 @@ var CrashMonitorInternal = {
   },
 };
 
-var CrashMonitor = {
+export var CrashMonitor = {
   /**
    * Notifications received during previous session.
    *
@@ -238,4 +232,5 @@ var CrashMonitor = {
     }
   },
 };
+
 Object.freeze(CrashMonitor);
