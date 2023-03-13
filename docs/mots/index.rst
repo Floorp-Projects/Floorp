@@ -800,11 +800,10 @@ Framework for embedding Gecko into Android applications
 
     * - Owner(s)
       -
-        | `agi <https://people.mozilla.org/s?query=agi>`__
+        | `owlish <https://people.mozilla.org/s?query=owlish>`__
     * - Peer(s)
       -
         | `Makoto Kato (m_kato) <https://people.mozilla.org/s?query=m_kato>`__
-        | `owlish <https://people.mozilla.org/s?query=owlish>`__
     * - Owner(s) Emeritus
       - James Willcox
     * - Peer(s) Emeritus
