@@ -1628,9 +1628,12 @@ ImageResolution StyleImage::GetResolution() const {
     }
   }
   if (IsImageSet()) {
-    auto& set = AsImageSet();
-    float r = set->items.AsSpan()[set->selected_index].resolution._0;
-    resolution.ScaleBy(r);
+    const auto& set = *AsImageSet();
+    auto items = set.items.AsSpan();
+    if (MOZ_LIKELY(set.selected_index < items.Length())) {
+      float r = items[set.selected_index].resolution._0;
+      resolution.ScaleBy(r);
+    }
   }
   return resolution;
 }
