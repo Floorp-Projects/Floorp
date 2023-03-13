@@ -2,8 +2,8 @@ alabaster==0.7.12
 charset-normalizer==2.0.12
 docutils==0.16
 idna==2.10
-isort==5.10.1
 imagesize==1.2.0
+markupsafe==2.0.1
 packaging==20.9
 requests==2.27.1
 snowballstemmer==2.0.0
@@ -11,6 +11,7 @@ sphinxcontrib-applehelp==1.0.2
 sphinxcontrib-htmlhelp==2.0.0
 rstcheck==3.5.0
 Pygments==2.6.1
+pytz==2021.1
 urllib3==1.26.9
 # We need sphinx to avoid some rstcheck errors and warnings
 Sphinx==4.3.0
