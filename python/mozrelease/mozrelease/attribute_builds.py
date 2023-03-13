@@ -145,24 +145,36 @@ def main():
         for 1 or more attributions. Or the script arguments may be used for a single attribution.
 
         The attribution code should be a string which is not url-encoded.
+
+        If command line arguments are used instead, one or more `--input` parameters may be provided.
+        Each will be written to the `--output` directory provided to a file of the same name as the
+        input filename. All inputs will be attributed with the same `--attribution` code.
         """,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("--input", help="Source installer to attribute a copy of")
-    parser.add_argument("--output", help="Location to write the attributed installer")
+    parser.add_argument(
+        "--input",
+        default=[],
+        action="append",
+        help="Source installer to attribute; may be specified multiple times",
+    )
+    parser.add_argument("--output", help="Location to write the attributed installers")
     parser.add_argument("--attribution", help="Attribution code")
     args = parser.parse_args()
 
     if os.environ.get("ATTRIBUTION_CONFIG"):
         work = json.loads(os.environ["ATTRIBUTION_CONFIG"])
     elif args.input and args.output and args.attribution:
-        work = [
-            {
-                "input": args.input,
-                "output": args.output,
-                "attribution": args.attribution,
-            }
-        ]
+        work = []
+        for i in args.input:
+            fn = os.path.basename(i)
+            work.append(
+                {
+                    "input": i,
+                    "output": os.path.join(args.output, fn),
+                    "attribution": args.attribution,
+                }
+            )
     else:
         log.error("No configuration found. Set ATTRIBUTION_CONFIG or pass arguments.")
         return 1
