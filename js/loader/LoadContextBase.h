@@ -13,6 +13,7 @@
 namespace mozilla::dom {
 class ScriptLoadContext;
 class WorkerLoadContext;
+class WorkletLoadContext;
 }  // namespace mozilla::dom
 
 namespace mozilla::loader {
@@ -31,7 +32,7 @@ class ScriptLoadRequest;
  *
  */
 
-enum class ContextKind { Window, Component, Worker };
+enum class ContextKind { Window, Component, Worker, Worklet };
 
 class LoadContextBase : public nsISupports {
  private:
@@ -60,6 +61,9 @@ class LoadContextBase : public nsISupports {
 
   bool IsWorkerContext() const { return mKind == ContextKind::Worker; }
   mozilla::dom::WorkerLoadContext* AsWorkerContext();
+
+  bool IsWorkletContext() const { return mKind == ContextKind::Worklet; }
+  mozilla::dom::WorkletLoadContext* AsWorkletContext();
 
   RefPtr<JS::loader::ScriptLoadRequest> mRequest;
 };

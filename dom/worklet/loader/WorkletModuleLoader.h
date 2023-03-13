@@ -7,9 +7,12 @@
 #ifndef mozilla_dom_worklet_WorkletModuleLoader_h
 #define mozilla_dom_worklet_WorkletModuleLoader_h
 
+#include "js/loader/LoadContextBase.h"
 #include "js/loader/ModuleLoaderBase.h"
+#include "mozilla/dom/WorkletFetchHandler.h"
 
-namespace mozilla::dom::loader {
+namespace mozilla::dom {
+namespace loader {
 class WorkletScriptLoader : public JS::loader::ScriptLoaderInterface {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -67,5 +70,23 @@ class WorkletModuleLoader : public JS::loader::ModuleLoaderBase {
 
   void OnModuleLoadComplete(JS::loader::ModuleLoadRequest* aRequest) override;
 };
-}  // namespace mozilla::dom::loader
+}  // namespace loader
+
+class WorkletLoadContext : public JS::loader::LoadContextBase {
+ public:
+  explicit WorkletLoadContext(
+      const nsMainThreadPtrHandle<WorkletFetchHandler>& aHandlerRef)
+      : JS::loader::LoadContextBase(JS::loader::ContextKind::Worklet),
+        mHandlerRef(aHandlerRef) {}
+
+  const nsMainThreadPtrHandle<WorkletFetchHandler>& GetHandlerRef() const {
+    return mHandlerRef;
+  }
+
+ private:
+  ~WorkletLoadContext() = default;
+
+  nsMainThreadPtrHandle<WorkletFetchHandler> mHandlerRef;
+};
+}  // namespace mozilla::dom
 #endif  // mozilla_dom_worklet_WorkletModuleLoader_h

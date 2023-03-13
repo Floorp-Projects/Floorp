@@ -138,6 +138,11 @@ mozilla::dom::WorkerLoadContext* ScriptLoadRequest::GetWorkerLoadContext() {
   return mLoadContext->AsWorkerContext();
 }
 
+mozilla::dom::WorkletLoadContext* ScriptLoadRequest::GetWorkletLoadContext() {
+  MOZ_ASSERT(mLoadContext);
+  return mLoadContext->AsWorkletContext();
+}
+
 ModuleLoadRequest* ScriptLoadRequest::AsModuleRequest() {
   MOZ_ASSERT(IsModuleRequest());
   return static_cast<ModuleLoadRequest*>(this);

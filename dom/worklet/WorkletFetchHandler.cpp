@@ -32,10 +32,13 @@ namespace mozilla::dom {
 // A Runnable to call ModuleLoadRequest::StartModuleLoad on a worklet thread.
 class StartModuleLoadRunnable final : public Runnable {
  public:
-  StartModuleLoadRunnable(WorkletImpl* aWorkletImpl, nsCOMPtr<nsIURI> aURI,
-                          nsIURI* aReferrer)
+  StartModuleLoadRunnable(
+      WorkletImpl* aWorkletImpl,
+      const nsMainThreadPtrHandle<WorkletFetchHandler>& aHandlerRef,
+      nsCOMPtr<nsIURI> aURI, nsIURI* aReferrer)
       : Runnable("Worklet::StartModuleLoadRunnable"),
         mWorkletImpl(aWorkletImpl),
+        mHandlerRef(aHandlerRef),
         mURI(std::move(aURI)),
         mReferrer(aReferrer),
         mParentRuntime(
@@ -52,6 +55,7 @@ class StartModuleLoadRunnable final : public Runnable {
   NS_IMETHOD RunOnWorkletThread();
 
   RefPtr<WorkletImpl> mWorkletImpl;
+  nsMainThreadPtrHandle<WorkletFetchHandler> mHandlerRef;
   nsCOMPtr<nsIURI> mURI;
   nsIURI* mReferrer;
   JSRuntime* mParentRuntime;
@@ -88,9 +92,11 @@ NS_IMETHODIMP StartModuleLoadRunnable::RunOnWorkletThread() {
       static_cast<WorkletModuleLoader*>(globalScope->GetModuleLoader());
   MOZ_ASSERT(moduleLoader);
 
+  RefPtr<WorkletLoadContext> loadContext = new WorkletLoadContext(mHandlerRef);
+
   // Part of Step 2. This sets the Top-level flag to true
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      mURI, fetchOptions, SRIMetadata(), mReferrer, nullptr,
+      mURI, fetchOptions, SRIMetadata(), mReferrer, loadContext,
       true,  /* is top level */
       false, /* is dynamic import */
       moduleLoader, ModuleLoadRequest::NewVisitedSetForTopLevelImport(mURI),
@@ -329,6 +335,9 @@ already_AddRefed<Promise> WorkletFetchHandler::AddModule(
   RefPtr<WorkletFetchHandler> handler =
       new WorkletFetchHandler(aWorklet, spec, promise);
 
+  nsMainThreadPtrHandle<WorkletFetchHandler> handlerRef{
+      new nsMainThreadPtrHolder<WorkletFetchHandler>("FetchHandler", handler)};
+
   // Determine request's Referrer
   // https://w3c.github.io/webappsec-referrer-policy/#determine-requests-referrer
   // Step 3.  Switch on request’s referrer:
@@ -336,7 +345,7 @@ already_AddRefed<Promise> WorkletFetchHandler::AddModule(
   //    Step 1.4. Let referrerSource be document’s URL.
   nsIURI* referrer = doc->GetDocumentURIAsReferrer();
   nsCOMPtr<nsIRunnable> runnable = new StartModuleLoadRunnable(
-      aWorklet->mImpl, std::move(resolvedURI), referrer);
+      aWorklet->mImpl, handlerRef, std::move(resolvedURI), referrer);
 
   if (NS_FAILED(aWorklet->mImpl->SendControlMessage(runnable.forget()))) {
     return nullptr;

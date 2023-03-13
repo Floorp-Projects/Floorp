@@ -7,6 +7,7 @@
 #include "mozilla/dom/ScriptLoadContext.h"
 #include "mozilla/loader/ComponentModuleLoader.h"
 #include "mozilla/dom/WorkerLoadContext.h"
+#include "mozilla/dom/worklet/WorkletModuleLoader.h"  // WorkletLoadContext
 #include "js/loader/LoadContextBase.h"
 #include "js/loader/ScriptLoadRequest.h"
 
@@ -49,6 +50,11 @@ mozilla::loader::ComponentLoadContext* LoadContextBase::AsComponentContext() {
 mozilla::dom::WorkerLoadContext* LoadContextBase::AsWorkerContext() {
   MOZ_ASSERT(IsWorkerContext());
   return static_cast<mozilla::dom::WorkerLoadContext*>(this);
+}
+
+mozilla::dom::WorkletLoadContext* LoadContextBase::AsWorkletContext() {
+  MOZ_ASSERT(IsWorkletContext());
+  return static_cast<mozilla::dom::WorkletLoadContext*>(this);
 }
 
 }  // namespace JS::loader
