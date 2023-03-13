@@ -35,9 +35,9 @@
     <!-- Description for browser_data permission. -->
     <string name="mozac_feature_addons_permissions_browser_data_description">Обришите недавну историју прегледања, колачиће и сродне податке</string>
     <!-- Description for clipboard_read permission. -->
-    <string name="mozac_feature_addons_permissions_clipboard_read_description">Узмите податке из међуспремника</string>
+    <string name="mozac_feature_addons_permissions_clipboard_read_description">Узмите податке из привремене меморије</string>
     <!-- Description for clipboard_write permission. -->
-    <string name="mozac_feature_addons_permissions_clipboard_write_description">Унесите податке у међуспремник</string>
+    <string name="mozac_feature_addons_permissions_clipboard_write_description">Унесите податке у привремену меморију</string>
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">Блокирајте садржај на било којој страници</string>
     <!-- Description for declarativeNetRequestFeedback permission. -->

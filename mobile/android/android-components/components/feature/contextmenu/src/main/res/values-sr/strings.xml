@@ -18,6 +18,8 @@
     <string name="mozac_feature_contextmenu_copy_image_location">Копирај локацију слике</string>
     <!-- Text for context menu item to save / download the image. -->
     <string name="mozac_feature_contextmenu_save_image">Сачувај слику</string>
+    <!-- Text for context menu item to copy the image to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_image">Копирај слику</string>
     <!-- Text for context menu item to save / download the file. -->
     <string name="mozac_feature_contextmenu_save_file_to_device">Сачувај датотеку на уређај</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->
@@ -25,7 +27,7 @@
     <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
     <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">Нови приватни језичак је отворен</string>
     <!-- Text for confirmation "snackbar" shown after copying a link or image URL to the clipboard. -->
-    <string name="mozac_feature_contextmenu_snackbar_link_copied">Веза је копирана у међуспремник</string>
+    <string name="mozac_feature_contextmenu_snackbar_link_copied">Веза је копирана у привремену меморију</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Пребаци</string>
     <!-- Text for context menu item to open the link in an external app. -->
@@ -35,7 +37,7 @@
     <!-- Text for context menu item to copy the email address to the clipboard. -->
     <string name="mozac_feature_contextmenu_copy_email_address">Копирај адресу е-поште</string>
     <!-- Text for confirmation "snackbar" shown after copying a email address to the clipboard. -->
-    <string name="mozac_feature_contextmenu_snackbar_email_address_copied">Адреса е-поште је копирана у међуспремник</string>
+    <string name="mozac_feature_contextmenu_snackbar_email_address_copied">Адреса е-поште је копирана у привремену меморију</string>
     <!-- Text for context menu item to add to a contact. -->
     <string name="mozac_feature_contextmenu_add_to_contact">Додај у контакте</string>
     <!-- Action shown in a text selection context menu. This will prompt a search using the selected text.-->
