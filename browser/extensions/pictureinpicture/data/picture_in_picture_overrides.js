@@ -166,6 +166,12 @@ let AVAILABLE_PIP_OVERRIDES;
       },
     },
 
+    radiocanada: {
+      "https://*.ici.radio-canada.ca/*": {
+        videoWrapperScriptPath: "video-wrappers/radiocanada.js",
+      },
+    },
+
     sonyliv: {
       "https://*.sonyliv.com/*": {
         videoWrapperScriptPath: "video-wrappers/videojsWrapper.js",
