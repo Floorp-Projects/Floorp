@@ -47,10 +47,6 @@ toolbar[brighttext]:-moz-lwtheme {
   animation-fill-mode: forwards;
   animation-iteration-count: 1;
   list-style-image: none;
-  /* Height must be equal to height of toolbarbutton padding-box. --toolbarbutton-height
-     is calculated and set during runtime by BrowserUIUtils.setToolbarButtonHeightProperty()
-     before the animation begins. */
-  height: var(--toolbarbutton-height);
 }
 
 #back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
