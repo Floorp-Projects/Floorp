@@ -31,7 +31,7 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/modules/audio_processing/agc/analog_gain_stats_reporter.cc"
+    "/third_party/libwebrtc/modules/audio_processing/agc2/input_volume_stats_reporter.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -212,4 +212,4 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
-Library("analog_gain_stats_reporter_gn")
+Library("input_volume_stats_reporter_gn")
