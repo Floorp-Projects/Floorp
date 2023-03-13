@@ -63,10 +63,6 @@ class MFMediaEngineParent final : public PMFMediaEngineParent {
   mozilla::ipc::IPCResult RecvNotifyEndOfStream(TrackInfo::TrackType aType);
   mozilla::ipc::IPCResult RecvShutdown();
 
-#ifdef MOZ_WMF_CDM
-  void SetCDMProxy(MFCDMProxy* aCDMProxy);
-#endif
-
   void Destroy();
 
  private:

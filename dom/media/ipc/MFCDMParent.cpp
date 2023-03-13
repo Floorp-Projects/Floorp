@@ -12,6 +12,7 @@
 #include "mozilla/dom/KeySystemNames.h"
 #include "mozilla/EMEUtils.h"
 #include "mozilla/KeySystemConfig.h"
+#include "MFCDMProxy.h"
 #include "RemoteDecodeUtils.h"       // For GetCurrentSandboxingKind()
 #include "SpecialSystemDirectory.h"  // For temp dir
 
@@ -612,6 +613,14 @@ MFCDMSession* MFCDMParent::GetSession(const nsString& aSessionId) {
     return nullptr;
   }
   return iter->second.get();
+}
+
+already_AddRefed<MFCDMProxy> MFCDMParent::GetMFCDMProxy() {
+  if (!mCDM) {
+    return nullptr;
+  }
+  RefPtr<MFCDMProxy> proxy = new MFCDMProxy(mCDM.Get());
+  return proxy.forget();
 }
 
 #undef MFCDM_REJECT_IF_FAILED
