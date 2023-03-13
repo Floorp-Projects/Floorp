@@ -33,7 +33,8 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(WorkletScriptLoader)
 NS_IMPL_ADDREF_INHERITED(WorkletModuleLoader, ModuleLoaderBase)
 NS_IMPL_RELEASE_INHERITED(WorkletModuleLoader, ModuleLoaderBase)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(WorkletModuleLoader, ModuleLoaderBase)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(WorkletModuleLoader, ModuleLoaderBase,
+                                   mFetchingRequests)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WorkletModuleLoader)
 NS_INTERFACE_MAP_END_INHERITING(ModuleLoaderBase)
@@ -64,6 +65,8 @@ bool WorkletModuleLoader::CanStartLoad(ModuleLoadRequest* aRequest,
 }
 
 nsresult WorkletModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
+  InsertRequest(aRequest->mURI, aRequest);
+
   RefPtr<StartFetchRunnable> runnable =
       new StartFetchRunnable(aRequest->GetWorkletLoadContext()->GetHandlerRef(),
                              aRequest->mURI, aRequest->mReferrer);
@@ -78,4 +81,20 @@ nsresult WorkletModuleLoader::CompileFetchedModule(
 }
 
 void WorkletModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {}
+
+void WorkletModuleLoader::InsertRequest(nsIURI* aURI,
+                                        ModuleLoadRequest* aRequest) {
+  mFetchingRequests.InsertOrUpdate(aURI, aRequest);
+}
+
+void WorkletModuleLoader::RemoveRequest(nsIURI* aURI) {
+  MOZ_ASSERT(mFetchingRequests.Remove(aURI));
+}
+
+ModuleLoadRequest* WorkletModuleLoader::GetRequest(nsIURI* aURI) const {
+  RefPtr<ModuleLoadRequest> req;
+  MOZ_ALWAYS_TRUE(mFetchingRequests.Get(aURI, getter_AddRefs(req)));
+  return req;
+}
+
 }  // namespace mozilla::dom::loader
