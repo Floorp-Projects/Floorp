@@ -750,3 +750,7 @@ Collects data about the transition to ECMAScript Modules from JSMs.
 attribution
 -----------
 Injects attribution information into en-US installers.
+
+attribution-l10n
+----------------
+Injects attribution information into localized installers.
