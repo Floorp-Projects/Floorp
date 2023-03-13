@@ -32,13 +32,13 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 
 #ifdef DEBUG
-#  define CURRENTSTATE_CHANGED() CurrentState().mContentChanged = true;
+#  define CURRENTSTATE_CHANGED() mAzureState.mContentChanged = true;
 #else
 #  define CURRENTSTATE_CHANGED()
 #endif
 
 PatternFromState::operator mozilla::gfx::Pattern&() {
-  gfxContext::AzureState& state = mContext->CurrentState();
+  gfxContext::AzureState& state = mContext->mAzureState;
 
   if (state.pattern) {
     return *state.pattern->GetPattern(
@@ -52,14 +52,12 @@ PatternFromState::operator mozilla::gfx::Pattern&() {
 
 gfxContext::gfxContext(DrawTarget* aTarget, const Point& aDeviceOffset)
     : mPathIsRect(false), mTransformChanged(false), mDT(aTarget) {
-  mStateStack.SetLength(1);
-  CurrentState().deviceOffset = aDeviceOffset;
+  mAzureState.deviceOffset = aDeviceOffset;
   mDT->SetTransform(GetDTTransform());
 }
 
 gfxContext::gfxContext(DrawTarget* aTarget, bool aPreserveTransform)
     : mPathIsRect(false), mTransformChanged(false), mDT(aTarget) {
-  mStateStack.SetLength(1);
   if (aPreserveTransform) {
     SetMatrix(aTarget->GetTransform());
   } else {
@@ -80,10 +78,11 @@ UniquePtr<gfxContext> gfxContext::CreateOrNull(DrawTarget* aTarget,
 }
 
 gfxContext::~gfxContext() {
-  for (int i = mStateStack.Length() - 1; i >= 0; i--) {
-    for (unsigned int c = 0; c < mStateStack[i].pushedClips.Length(); c++) {
-      mDT->PopClip();
-    }
+  while (!mSavedStates.IsEmpty()) {
+    Restore();
+  }
+  for (unsigned int c = 0; c < mAzureState.pushedClips.Length(); c++) {
+    mDT->PopClip();
   }
 }
 
@@ -95,11 +94,11 @@ mozilla::layout::TextDrawTarget* gfxContext::GetTextDrawer() {
 }
 
 void gfxContext::Save() {
-  CurrentState().transform = mTransform;
-  mStateStack.AppendElement(AzureState(CurrentState()));
-  CurrentState().pushedClips.Clear();
+  mAzureState.transform = mTransform;
+  mSavedStates.AppendElement(mAzureState);
+  mAzureState.pushedClips.Clear();
 #ifdef DEBUG
-  CurrentState().mContentChanged = false;
+  mAzureState.mContentChanged = false;
 #endif
 }
 
@@ -134,19 +133,19 @@ void gfxContext::Restore() {
   // Save current AzureState before using these type of APIs does nothing but
   // make performance worse.
   NS_ASSERTION(
-      CurrentState().mContentChanged || CurrentState().pushedClips.Length() > 0,
+      mAzureState.mContentChanged || mAzureState.pushedClips.Length() > 0,
       "The context of the current AzureState is not altered after "
       "Save() been called. you may consider to remove this pair of "
       "gfxContext::Save/Restore.");
 #endif
 
-  for (unsigned int c = 0; c < CurrentState().pushedClips.Length(); c++) {
+  for (unsigned int c = 0; c < mAzureState.pushedClips.Length(); c++) {
     mDT->PopClip();
   }
 
-  mStateStack.RemoveLastElement();
+  mAzureState = mSavedStates.PopLastElement();
 
-  ChangeTransform(CurrentState().transform, false);
+  ChangeTransform(mAzureState.transform, false);
 }
 
 // drawing
@@ -178,7 +177,6 @@ void gfxContext::Fill() { Fill(PatternFromState(this)); }
 
 void gfxContext::Fill(const Pattern& aPattern) {
   AUTO_PROFILER_LABEL("gfxContext::Fill", GRAPHICS);
-  AzureState& state = CurrentState();
 
   CompositionOp op = GetOp();
 
@@ -190,11 +188,11 @@ void gfxContext::Fill(const Pattern& aPattern) {
       mDT->ClearRect(mRect);
       mDT->FillRect(mRect, aPattern, DrawOptions(1.0f));
     } else {
-      mDT->FillRect(mRect, aPattern, DrawOptions(1.0f, op, state.aaMode));
+      mDT->FillRect(mRect, aPattern, DrawOptions(1.0f, op, mAzureState.aaMode));
     }
   } else {
     EnsurePath();
-    mDT->Fill(mPath, aPattern, DrawOptions(1.0f, op, state.aaMode));
+    mDT->Fill(mPath, aPattern, DrawOptions(1.0f, op, mAzureState.aaMode));
   }
 }
 
@@ -390,88 +388,85 @@ bool gfxContext::UserToDevicePixelSnapped(gfxPoint& pt,
 
 void gfxContext::SetAntialiasMode(AntialiasMode mode) {
   CURRENTSTATE_CHANGED()
-  CurrentState().aaMode = mode;
+  mAzureState.aaMode = mode;
 }
 
 AntialiasMode gfxContext::CurrentAntialiasMode() const {
-  return CurrentState().aaMode;
+  return mAzureState.aaMode;
 }
 
 void gfxContext::SetDash(const Float* dashes, int ndash, Float offset,
                          Float devPxScale) {
   CURRENTSTATE_CHANGED()
-  AzureState& state = CurrentState();
 
-  state.dashPattern.SetLength(ndash);
+  mAzureState.dashPattern.SetLength(ndash);
   for (int i = 0; i < ndash; i++) {
-    state.dashPattern[i] = dashes[i] * devPxScale;
+    mAzureState.dashPattern[i] = dashes[i] * devPxScale;
   }
-  state.strokeOptions.mDashLength = ndash;
-  state.strokeOptions.mDashOffset = offset * devPxScale;
-  state.strokeOptions.mDashPattern =
-      ndash ? state.dashPattern.Elements() : nullptr;
+  mAzureState.strokeOptions.mDashLength = ndash;
+  mAzureState.strokeOptions.mDashOffset = offset * devPxScale;
+  mAzureState.strokeOptions.mDashPattern =
+      ndash ? mAzureState.dashPattern.Elements() : nullptr;
 }
 
 bool gfxContext::CurrentDash(FallibleTArray<Float>& dashes,
                              Float* offset) const {
-  const AzureState& state = CurrentState();
-  int count = state.strokeOptions.mDashLength;
-
-  if (count <= 0 || !dashes.Assign(state.dashPattern, fallible)) {
+  if (mAzureState.strokeOptions.mDashLength == 0 ||
+      !dashes.Assign(mAzureState.dashPattern, fallible)) {
     return false;
   }
 
-  *offset = state.strokeOptions.mDashOffset;
+  *offset = mAzureState.strokeOptions.mDashOffset;
 
   return true;
 }
 
 void gfxContext::SetLineWidth(Float width) {
-  CurrentState().strokeOptions.mLineWidth = width;
+  mAzureState.strokeOptions.mLineWidth = width;
 }
 
 Float gfxContext::CurrentLineWidth() const {
-  return CurrentState().strokeOptions.mLineWidth;
+  return mAzureState.strokeOptions.mLineWidth;
 }
 
 void gfxContext::SetOp(CompositionOp aOp) {
   CURRENTSTATE_CHANGED()
-  CurrentState().op = aOp;
+  mAzureState.op = aOp;
 }
 
-CompositionOp gfxContext::CurrentOp() const { return CurrentState().op; }
+CompositionOp gfxContext::CurrentOp() const { return mAzureState.op; }
 
 void gfxContext::SetLineCap(CapStyle cap) {
   CURRENTSTATE_CHANGED()
-  CurrentState().strokeOptions.mLineCap = cap;
+  mAzureState.strokeOptions.mLineCap = cap;
 }
 
 CapStyle gfxContext::CurrentLineCap() const {
-  return CurrentState().strokeOptions.mLineCap;
+  return mAzureState.strokeOptions.mLineCap;
 }
 
 void gfxContext::SetLineJoin(JoinStyle join) {
   CURRENTSTATE_CHANGED()
-  CurrentState().strokeOptions.mLineJoin = join;
+  mAzureState.strokeOptions.mLineJoin = join;
 }
 
 JoinStyle gfxContext::CurrentLineJoin() const {
-  return CurrentState().strokeOptions.mLineJoin;
+  return mAzureState.strokeOptions.mLineJoin;
 }
 
 void gfxContext::SetMiterLimit(Float limit) {
   CURRENTSTATE_CHANGED()
-  CurrentState().strokeOptions.mMiterLimit = limit;
+  mAzureState.strokeOptions.mMiterLimit = limit;
 }
 
 Float gfxContext::CurrentMiterLimit() const {
-  return CurrentState().strokeOptions.mMiterLimit;
+  return mAzureState.strokeOptions.mMiterLimit;
 }
 
 // clipping
 void gfxContext::Clip(const Rect& rect) {
   AzureState::PushedClip clip = {nullptr, rect, mTransform};
-  CurrentState().pushedClips.AppendElement(clip);
+  mAzureState.pushedClips.AppendElement(clip);
   mDT->PushClipRect(rect);
   NewPath();
 }
@@ -481,7 +476,7 @@ void gfxContext::Clip(const gfxRect& rect) { Clip(ToRect(rect)); }
 void gfxContext::Clip(Path* aPath) {
   mDT->PushClip(aPath);
   AzureState::PushedClip clip = {aPath, Rect(), mTransform};
-  CurrentState().pushedClips.AppendElement(clip);
+  mAzureState.pushedClips.AppendElement(clip);
 }
 
 void gfxContext::Clip() {
@@ -489,20 +484,20 @@ void gfxContext::Clip() {
     MOZ_ASSERT(!mTransformChanged);
 
     AzureState::PushedClip clip = {nullptr, mRect, mTransform};
-    CurrentState().pushedClips.AppendElement(clip);
+    mAzureState.pushedClips.AppendElement(clip);
     mDT->PushClipRect(mRect);
   } else {
     EnsurePath();
     mDT->PushClip(mPath);
     AzureState::PushedClip clip = {mPath, Rect(), mTransform};
-    CurrentState().pushedClips.AppendElement(clip);
+    mAzureState.pushedClips.AppendElement(clip);
   }
 }
 
 void gfxContext::PopClip() {
-  MOZ_ASSERT(CurrentState().pushedClips.Length() > 0);
+  MOZ_ASSERT(mAzureState.pushedClips.Length() > 0);
 
-  CurrentState().pushedClips.RemoveLastElement();
+  mAzureState.pushedClips.RemoveLastElement();
   mDT->PopClip();
 }
 
@@ -523,25 +518,24 @@ gfxRect gfxContext::GetClipExtents(ClipExtentsSpace aSpace) const {
 }
 
 bool gfxContext::ExportClip(ClipExporter& aExporter) {
-  for (unsigned int i = 0; i < mStateStack.Length(); i++) {
-    for (unsigned int c = 0; c < mStateStack[i].pushedClips.Length(); c++) {
-      AzureState::PushedClip& clip = mStateStack[i].pushedClips[c];
-      gfx::Matrix transform = clip.transform;
-      transform.PostTranslate(-GetDeviceOffset());
+  ForAllClips([&](const AzureState::PushedClip& aClip) -> bool {
+    gfx::Matrix transform = aClip.transform;
+    transform.PostTranslate(-GetDeviceOffset());
 
-      aExporter.BeginClip(transform);
-      if (clip.path) {
-        clip.path->StreamToSink(&aExporter);
-      } else {
-        aExporter.MoveTo(clip.rect.TopLeft());
-        aExporter.LineTo(clip.rect.TopRight());
-        aExporter.LineTo(clip.rect.BottomRight());
-        aExporter.LineTo(clip.rect.BottomLeft());
-        aExporter.Close();
-      }
-      aExporter.EndClip();
+    aExporter.BeginClip(transform);
+    if (aClip.path) {
+      aClip.path->StreamToSink(&aExporter);
+    } else {
+      aExporter.MoveTo(aClip.rect.TopLeft());
+      aExporter.LineTo(aClip.rect.TopRight());
+      aExporter.LineTo(aClip.rect.BottomRight());
+      aExporter.LineTo(aClip.rect.BottomLeft());
+      aExporter.Close();
     }
-  }
+    aExporter.EndClip();
+
+    return true;
+  });
 
   return true;
 }
@@ -553,19 +547,17 @@ bool gfxContext::ClipContainsRect(const gfxRect& aRect) {
   Rect clipBounds(0, 0, Float(mDT->GetSize().width),
                   Float(mDT->GetSize().height));
 
-  for (unsigned int i = 0; i < mStateStack.Length(); i++) {
-    for (unsigned int c = 0; c < mStateStack[i].pushedClips.Length(); c++) {
-      AzureState::PushedClip& clip = mStateStack[i].pushedClips[c];
-      if (clip.path || !clip.transform.IsRectilinear()) {
-        // Cairo behavior is we return false if the clip contains a non-
-        // rectangle.
-        return false;
-      } else {
-        Rect clipRect = mTransform.TransformBounds(clip.rect);
-
+  // Cairo behavior is we return false if the clip contains a non-rectangle,
+  // in which case we'll bail out of the ForAllClips iteration.
+  if (!ForAllClips([&](const AzureState::PushedClip& aClip) -> bool {
+        if (aClip.path || !aClip.transform.IsRectilinear()) {
+          return false;
+        }
+        Rect clipRect = mTransform.TransformBounds(aClip.rect);
         clipBounds.IntersectRect(clipBounds, clipRect);
-      }
-    }
+        return true;
+      })) {
+    return false;
   }
 
   return clipBounds.Contains(ToRect(aRect));
@@ -575,39 +567,38 @@ bool gfxContext::ClipContainsRect(const gfxRect& aRect) {
 
 void gfxContext::SetColor(const sRGBColor& aColor) {
   CURRENTSTATE_CHANGED()
-  CurrentState().pattern = nullptr;
-  CurrentState().color = ToDeviceColor(aColor);
+  mAzureState.pattern = nullptr;
+  mAzureState.color = ToDeviceColor(aColor);
 }
 
 void gfxContext::SetDeviceColor(const DeviceColor& aColor) {
   CURRENTSTATE_CHANGED()
-  CurrentState().pattern = nullptr;
-  CurrentState().color = aColor;
+  mAzureState.pattern = nullptr;
+  mAzureState.color = aColor;
 }
 
 bool gfxContext::GetDeviceColor(DeviceColor& aColorOut) {
-  if (CurrentState().pattern) {
-    return CurrentState().pattern->GetSolidColor(aColorOut);
+  if (mAzureState.pattern) {
+    return mAzureState.pattern->GetSolidColor(aColorOut);
   }
 
-  aColorOut = CurrentState().color;
+  aColorOut = mAzureState.color;
   return true;
 }
 
 void gfxContext::SetPattern(gfxPattern* pattern) {
   CURRENTSTATE_CHANGED()
-  CurrentState().patternTransformChanged = false;
-  CurrentState().pattern = pattern;
+  mAzureState.patternTransformChanged = false;
+  mAzureState.pattern = pattern;
 }
 
 already_AddRefed<gfxPattern> gfxContext::GetPattern() {
   RefPtr<gfxPattern> pat;
 
-  AzureState& state = CurrentState();
-  if (state.pattern) {
-    pat = state.pattern;
+  if (mAzureState.pattern) {
+    pat = mAzureState.pattern;
   } else {
-    pat = new gfxPattern(state.color);
+    pat = new gfxPattern(mAzureState.color);
   }
   return pat.forget();
 }
@@ -619,18 +610,16 @@ void gfxContext::Mask(SourceSurface* aSurface, Float aAlpha,
   Matrix mat = aTransform * mTransform;
 
   ChangeTransform(mat);
-  mDT->MaskSurface(
-      PatternFromState(this), aSurface, Point(),
-      DrawOptions(aAlpha, CurrentState().op, CurrentState().aaMode));
+  mDT->MaskSurface(PatternFromState(this), aSurface, Point(),
+                   DrawOptions(aAlpha, mAzureState.op, mAzureState.aaMode));
   ChangeTransform(old);
 }
 
 void gfxContext::Mask(SourceSurface* surface, float alpha,
                       const Point& offset) {
   // We clip here to bind to the mask surface bounds, see above.
-  mDT->MaskSurface(
-      PatternFromState(this), surface, offset,
-      DrawOptions(alpha, CurrentState().op, CurrentState().aaMode));
+  mDT->MaskSurface(PatternFromState(this), surface, offset,
+                   DrawOptions(alpha, mAzureState.op, mAzureState.aaMode));
 }
 
 void gfxContext::Paint(Float alpha) {
@@ -742,19 +731,18 @@ void gfxContext::EnsurePathBuilder() {
 }
 
 CompositionOp gfxContext::GetOp() {
-  if (CurrentState().op != CompositionOp::OP_SOURCE) {
-    return CurrentState().op;
+  if (mAzureState.op != CompositionOp::OP_SOURCE) {
+    return mAzureState.op;
   }
 
-  AzureState& state = CurrentState();
-  if (state.pattern) {
-    if (state.pattern->IsOpaque()) {
+  if (mAzureState.pattern) {
+    if (mAzureState.pattern->IsOpaque()) {
       return CompositionOp::OP_OVER;
     } else {
       return CompositionOp::OP_SOURCE;
     }
   } else {
-    if (state.color.a > 0.999) {
+    if (mAzureState.color.a > 0.999) {
       return CompositionOp::OP_OVER;
     } else {
       return CompositionOp::OP_SOURCE;
@@ -769,18 +757,16 @@ CompositionOp gfxContext::GetOp() {
  * needed here if the pattern is actually used.
  * We need to avoid doing this when this ChangeTransform comes from a restore,
  * since the current pattern and the current transform are both part of the
- * state we know the new CurrentState()'s values are valid. But if we assume
+ * state we know the new mAzureState's values are valid. But if we assume
  * a change they might become invalid since patternTransformChanged is part of
  * the state and might be false for the restored AzureState.
  */
 void gfxContext::ChangeTransform(const Matrix& aNewMatrix,
                                  bool aUpdatePatternTransform) {
-  AzureState& state = CurrentState();
-
-  if (aUpdatePatternTransform && (state.pattern) &&
-      !state.patternTransformChanged) {
-    state.patternTransform = GetDTTransform();
-    state.patternTransformChanged = true;
+  if (aUpdatePatternTransform && (mAzureState.pattern) &&
+      !mAzureState.patternTransformChanged) {
+    mAzureState.patternTransform = GetDTTransform();
+    mAzureState.patternTransformChanged = true;
   }
 
   if (mPathIsRect) {
@@ -818,35 +804,49 @@ void gfxContext::ChangeTransform(const Matrix& aNewMatrix,
 }
 
 Rect gfxContext::GetAzureDeviceSpaceClipBounds() const {
-  Rect rect(CurrentState().deviceOffset.x + Float(mDT->GetRect().x),
-            CurrentState().deviceOffset.y + Float(mDT->GetRect().y),
+  Rect rect(mAzureState.deviceOffset.x + Float(mDT->GetRect().x),
+            mAzureState.deviceOffset.y + Float(mDT->GetRect().y),
             Float(mDT->GetSize().width), Float(mDT->GetSize().height));
-  for (unsigned int i = 0; i < mStateStack.Length(); i++) {
-    for (unsigned int c = 0; c < mStateStack[i].pushedClips.Length(); c++) {
-      const AzureState::PushedClip& clip = mStateStack[i].pushedClips[c];
-      if (clip.path) {
-        Rect bounds = clip.path->GetBounds(clip.transform);
-        rect.IntersectRect(rect, bounds);
-      } else {
-        rect.IntersectRect(rect, clip.transform.TransformBounds(clip.rect));
-      }
+  ForAllClips([&](const AzureState::PushedClip& aClip) -> bool {
+    if (aClip.path) {
+      Rect bounds = aClip.path->GetBounds(aClip.transform);
+      rect.IntersectRect(rect, bounds);
+    } else {
+      rect.IntersectRect(rect, aClip.transform.TransformBounds(aClip.rect));
     }
-  }
+    return true;
+  });
 
   return rect;
 }
 
-Point gfxContext::GetDeviceOffset() const {
-  return CurrentState().deviceOffset;
+template <typename F>
+bool gfxContext::ForAllClips(F&& aLambda) const {
+  for (unsigned int i = 0; i < mSavedStates.Length(); i++) {
+    const auto& state = mSavedStates[i];
+    for (unsigned int c = 0; c < state.pushedClips.Length(); c++) {
+      if (!aLambda(state.pushedClips[c])) {
+        return false;
+      }
+    }
+  }
+  for (unsigned int c = 0; c < mAzureState.pushedClips.Length(); c++) {
+    if (!aLambda(mAzureState.pushedClips[c])) {
+      return false;
+    }
+  }
+  return true;
 }
 
+Point gfxContext::GetDeviceOffset() const { return mAzureState.deviceOffset; }
+
 void gfxContext::SetDeviceOffset(const Point& aOffset) {
-  CurrentState().deviceOffset = aOffset;
+  mAzureState.deviceOffset = aOffset;
 }
 
 Matrix gfxContext::GetDTTransform() const {
   Matrix mat = mTransform;
-  mat._31 -= CurrentState().deviceOffset.x;
-  mat._32 -= CurrentState().deviceOffset.y;
+  mat._31 -= mAzureState.deviceOffset.x;
+  mat._32 -= mAzureState.deviceOffset.y;
   return mat;
 }
