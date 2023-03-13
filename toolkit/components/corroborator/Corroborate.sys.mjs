@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -12,12 +10,10 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
   gCertDB: ["@mozilla.org/security/x509certdb;1", "nsIX509CertDB"],
 });
 
-var EXPORTED_SYMBOLS = ["Corroborate"];
-
 /**
  * Tools for verifying internal files in Mozilla products.
  */
-const Corroborate = {
+export const Corroborate = {
   async init() {},
 
   /**
