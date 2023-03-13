@@ -1028,17 +1028,6 @@ void ExternalEngineStateMachine::UpdateSecondaryVideoContainer() {
   mOnSecondaryVideoContainerInstalled.Notify(mSecondaryVideoContainer.Ref());
 }
 
-RefPtr<SetCDMPromise> ExternalEngineStateMachine::SetCDMProxy(
-    CDMProxy* aProxy) {
-  // TODO : set CDM proxy again if we recreate the media engine after crash.
-  LOG("SetCDMProxy=%p", aProxy);
-  MOZ_DIAGNOSTIC_ASSERT(mEngine);
-  if (!mEngine->SetCDMProxy(aProxy)) {
-    return SetCDMPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_CDM_ERR, __func__);
-  }
-  return MediaDecoderStateMachineBase::SetCDMProxy(aProxy);
-}
-
 #undef FMT
 #undef LOG
 #undef LOGV

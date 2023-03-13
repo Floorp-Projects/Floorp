@@ -8,7 +8,6 @@
 #define EME_LOG_H_
 
 #include "mozilla/Logging.h"
-#include "mozilla/dom/MediaKeyStatusMapBinding.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -98,8 +97,6 @@ enum CDMType {
 };
 
 CDMType ToCDMTypeTelemetryEnum(const nsString& aKeySystem);
-
-const char* ToMediaKeyStatusStr(dom::MediaKeyStatus aStatus);
 
 }  // namespace mozilla
 

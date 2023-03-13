@@ -111,7 +111,6 @@ class MFMediaEngineWrapper final : public ExternalPlaybackEngine {
   void NotifyEndOfStream(TrackInfo::TrackType aType) override;
   uint64_t Id() const override { return mEngine->Id(); }
   void SetMediaInfo(const MediaInfo& aInfo) override;
-  bool SetCDMProxy(CDMProxy* aProxy) override;
 
   nsISerialEventTarget* ManagerThread() { return mEngine->ManagerThread(); }
   void AssertOnManagerThread() const { mEngine->AssertOnManagerThread(); }

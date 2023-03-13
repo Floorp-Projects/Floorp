@@ -43,7 +43,6 @@ parent:
   async Play();
   async Pause();
   async Seek(double targetTimeInSecond);
-  async SetCDMProxyId(uint64_t type);
   async SetVolume(double volume);
   async SetPlaybackRate(double playbackRate);
   async SetLooping(bool looping);
