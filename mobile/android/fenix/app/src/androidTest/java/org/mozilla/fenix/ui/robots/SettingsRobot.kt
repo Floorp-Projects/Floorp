@@ -41,8 +41,11 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.LISTS_MAXSWIPES
 import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_PLAY_SERVICES
 import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.isPackageInstalled
@@ -67,7 +70,10 @@ class SettingsRobot {
     fun verifyThemeSelected() = assertThemeSelected()
     fun verifyAccessibilityButton() = assertAccessibilityButton()
     fun verifySetAsDefaultBrowserButton() = assertSetAsDefaultBrowserButton()
-    fun verifyTabsButton() = assertTabsButton()
+    fun verifyTabsButton() =
+        assertItemContainingTextExists(itemContainingText(getStringResource(R.string.preferences_tabs)))
+    fun verifyTabsButtonSummary(summary: String) =
+        assertItemContainingTextExists(itemContainingText(summary))
     fun verifyHomepageButton() = assertHomepageButton()
     fun verifyAutofillButton() = assertAutofillButton()
     fun verifyLanguageButton() = assertLanguageButton()
@@ -152,8 +158,11 @@ class SettingsRobot {
         }
 
         fun openTabsSubMenu(interact: SettingsSubMenuTabsRobot.() -> Unit): SettingsSubMenuTabsRobot.Transition {
-            fun tabsButton() = onView(withText("Tabs"))
-            tabsButton().click()
+            itemWithText(getStringResource(R.string.preferences_tabs))
+                .also {
+                    it.waitForExists(waitingTime)
+                    it.clickAndWaitForNewWindow(waitingTimeShort)
+                }
 
             SettingsSubMenuTabsRobot().interact()
             return SettingsSubMenuTabsRobot.Transition()
@@ -413,12 +422,6 @@ private fun toggleDefaultBrowserSwitch() {
 
 private fun assertAndroidDefaultAppsMenuAppears() {
     intended(IntentMatchers.hasAction(DEFAULT_APPS_SETTINGS_ACTION))
-}
-
-private fun assertTabsButton() {
-    mDevice.wait(Until.findObject(By.text("Tabs")), waitingTime)
-    onView(withText(R.string.preferences_tabs))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
 // PRIVACY SECTION

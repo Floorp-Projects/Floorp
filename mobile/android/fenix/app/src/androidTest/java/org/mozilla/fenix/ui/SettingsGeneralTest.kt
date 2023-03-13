@@ -34,7 +34,7 @@ import java.util.Locale
  *  Tests for verifying the General section of the Settings menu
  *
  */
-class SettingsBasicsTest {
+class SettingsGeneralTest {
     /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
     private lateinit var mockWebServer: MockWebServer
 
@@ -165,6 +165,32 @@ class SettingsBasicsTest {
                 verifyLanguageHeaderIsTranslated(FRENCH_LANGUAGE_HEADER)
                 verifySelectedLanguage(FRENCH_SYSTEM_LOCALE_OPTION)
             }
+        }
+    }
+
+    @Test
+    fun verifyTabsOptionSummaryUpdatesTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+            verifyTabsButton()
+            verifyTabsButtonSummary("Close manually")
+        }.openTabsSubMenu {
+            verifySelectedCloseTabsOption("Never")
+            clickClosedTabsOption("After one day")
+            verifySelectedCloseTabsOption("After one day")
+        }.goBack {
+            verifyTabsButtonSummary("Close after one day")
+        }.openTabsSubMenu {
+            clickClosedTabsOption("After one week")
+            verifySelectedCloseTabsOption("After one week")
+        }.goBack {
+            verifyTabsButtonSummary("Close after one week")
+        }.openTabsSubMenu {
+            clickClosedTabsOption("After one month")
+            verifySelectedCloseTabsOption("After one month")
+        }.goBack {
+            verifyTabsButtonSummary("Close after one month")
         }
     }
 }

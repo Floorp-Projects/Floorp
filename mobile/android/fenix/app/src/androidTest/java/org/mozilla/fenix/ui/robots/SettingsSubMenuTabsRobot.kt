@@ -11,11 +11,15 @@ import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.assertion.ViewAssertions
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
+import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import org.hamcrest.CoreMatchers.allOf
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.helpers.click
+import org.mozilla.fenix.helpers.isChecked
 
 /**
  * Implementation of Robot Pattern for the settings Tabs sub menu.
@@ -27,6 +31,23 @@ class SettingsSubMenuTabsRobot {
     fun verifyCloseTabsOptions() = assertCloseTabsOptions()
 
     fun verifyMoveOldTabsToInactiveOptions() = assertMoveOldTabsToInactiveOptions()
+
+    fun verifySelectedCloseTabsOption(closedTabsOption: String) =
+        onView(
+            allOf(
+                withId(R.id.radio_button),
+                hasSibling(withText(closedTabsOption)),
+            ),
+        ).check(matches(isChecked(true)))
+
+    fun clickClosedTabsOption(closedTabsOption: String) {
+        when (closedTabsOption) {
+            "Never" -> neverOption().click()
+            "After one day" -> afterOneDayOption().click()
+            "After one week" -> afterOneWeekOption().click()
+            "After one month" -> afterOneMonthOption().click()
+        }
+    }
 
     class Transition {
         fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
@@ -51,13 +72,13 @@ private fun assertTabViewOptions() {
 private fun assertCloseTabsOptions() {
     closeTabsHeading()
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    neverToggle()
+    neverOption()
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    afterOneDayToggle()
+    afterOneDayOption()
         .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    afterOneWeekToggle()
+    afterOneWeekOption()
         .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    afterOneMonthToggle()
+    afterOneMonthOption()
         .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
 
@@ -78,13 +99,13 @@ private fun closeTabsHeading() = onView(withText("Close tabs"))
 
 private fun manuallyToggle() = onView(withText("Manually"))
 
-private fun neverToggle() = onView(withText("Never"))
+private fun neverOption() = onView(withText("Never"))
 
-private fun afterOneDayToggle() = onView(withText("After one day"))
+private fun afterOneDayOption() = onView(withText("After one day"))
 
-private fun afterOneWeekToggle() = onView(withText("After one week"))
+private fun afterOneWeekOption() = onView(withText("After one week"))
 
-private fun afterOneMonthToggle() = onView(withText("After one month"))
+private fun afterOneMonthOption() = onView(withText("After one month"))
 
 private fun moveOldTabsToInactiveHeading() = onView(withText("Move old tabs to inactive"))
 

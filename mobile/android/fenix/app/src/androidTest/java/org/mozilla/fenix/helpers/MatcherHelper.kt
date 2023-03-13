@@ -22,6 +22,9 @@ object MatcherHelper {
     fun itemContainingText(itemText: String) =
         mDevice.findObject(UiSelector().textContains(itemText))
 
+    fun itemWithText(itemText: String) =
+        mDevice.findObject(UiSelector().text(itemText))
+
     fun itemWithDescription(description: String) =
         mDevice.findObject(UiSelector().descriptionContains(description))
 
