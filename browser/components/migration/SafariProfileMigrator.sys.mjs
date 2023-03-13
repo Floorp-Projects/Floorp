@@ -393,7 +393,7 @@ export class SafariProfileMigrator extends MigratorBase {
   async getLastUsedDate() {
     const profileDir = FileUtils.getDir("ULibDir", ["Safari"], false);
     const dates = await Promise.all(
-      ["Bookmarks.plist", "History.plist"].map(file => {
+      ["Bookmarks.plist", "History.db"].map(file => {
         const path = PathUtils.join(profileDir.path, file);
         return IOUtils.stat(path)
           .then(info => info.lastModified)
