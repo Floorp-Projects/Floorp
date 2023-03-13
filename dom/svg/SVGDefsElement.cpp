@@ -33,14 +33,10 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGDefsElement)
 
 NS_IMETHODIMP_(bool)
 SVGDefsElement::IsAttributeMapped(const nsAtom* name) const {
-  static const MappedAttributeEntry* const map[] = {sFEFloodMap,
-                                                    sFiltersMap,
-                                                    sFontSpecificationMap,
-                                                    sGradientStopMap,
-                                                    sLightingEffectsMap,
-                                                    sMarkersMap,
-                                                    sTextContentElementsMap,
-                                                    sViewportsMap};
+  static const MappedAttributeEntry* const map[] = {
+      sFEFloodMap,         sFiltersMap, sGradientStopMap,
+      sLightingEffectsMap, sMarkersMap, sTextContentElementsMap,
+      sViewportsMap};
 
   return FindAttributeDependence(name, map) ||
          SVGGraphicsElement::IsAttributeMapped(name);

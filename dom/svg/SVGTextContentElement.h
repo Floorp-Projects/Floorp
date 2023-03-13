@@ -50,6 +50,9 @@ class SVGTextContentElement : public SVGTextContentElementBase {
   MOZ_CAN_RUN_SCRIPT float GetRotationOfChar(uint32_t charnum, ErrorResult& rv);
   MOZ_CAN_RUN_SCRIPT int32_t GetCharNumAtPosition(const DOMPointInit& aPoint);
 
+  // nsIContent interface
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
+
  protected:
   explicit SVGTextContentElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)

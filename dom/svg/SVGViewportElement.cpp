@@ -87,17 +87,11 @@ SVGViewportElement::IsAttributeMapped(const nsAtom* name) const {
     return true;
   }
 
-  static const MappedAttributeEntry* const map[] = {sColorMap,
-                                                    sFEFloodMap,
-                                                    sFillStrokeMap,
-                                                    sFiltersMap,
-                                                    sFontSpecificationMap,
-                                                    sGradientStopMap,
-                                                    sGraphicsMap,
-                                                    sLightingEffectsMap,
-                                                    sMarkersMap,
-                                                    sTextContentElementsMap,
-                                                    sViewportsMap};
+  static const MappedAttributeEntry* const map[] = {
+      sColorMap,           sFEFloodMap,      sFillStrokeMap,
+      sFiltersMap,         sGradientStopMap, sGraphicsMap,
+      sLightingEffectsMap, sMarkersMap,      sTextContentElementsMap,
+      sViewportsMap};
 
   return FindAttributeDependence(name, map) ||
          SVGGraphicsElement::IsAttributeMapped(name);
