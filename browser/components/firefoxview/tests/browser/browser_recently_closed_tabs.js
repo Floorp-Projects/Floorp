@@ -787,3 +787,40 @@ add_task(async function test_dismiss_tab() {
     );
   });
 });
+
+/**
+ * Asserts that the actionable part of each list item is role="button".
+ * Discussion on why we want a button role can be seen here:
+ * https://bugzilla.mozilla.org/show_bug.cgi?id=1789875#c1
+ */
+add_task(async function test_button_role() {
+  Services.obs.notifyObservers(null, "browser:purge-session-history");
+  Assert.equal(
+    SessionStore.getClosedTabCount(window),
+    0,
+    "Closed tab count after purging session history"
+  );
+
+  await withFirefoxView({ win: window }, async browser => {
+    const { document } = browser.contentWindow;
+
+    clearHistory();
+
+    await open_then_close(URLs[0]);
+    await open_then_close(URLs[1]);
+    await open_then_close(URLs[2]);
+
+    await EventUtils.synthesizeMouseAtCenter(
+      gBrowser.ownerDocument.getElementById("firefox-view-button"),
+      { type: "mousedown" },
+      window
+    );
+
+    const tabsList = document.querySelector("ol.closed-tabs-list");
+
+    Array.from(tabsList.children).forEach(tabItem => {
+      let actionableElement = tabItem.querySelector(".closed-tab-li-main");
+      Assert.ok(actionableElement.getAttribute("role"), "button");
+    });
+  });
+});
