@@ -6,7 +6,8 @@
 #ifndef mozilla_gfx_AllOfDcomp_h
 #define mozilla_gfx_AllOfDcomp_h
 
-// Getting everything that we need in dcomp.h defined means messing with some defines.
+// Getting everything that we need in dcomp.h defined means messing with some
+// defines.
 
 #if (_WIN32_WINNT < _WIN32_WINNT_WIN10)
 
