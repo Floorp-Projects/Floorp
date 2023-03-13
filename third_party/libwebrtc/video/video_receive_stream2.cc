@@ -66,10 +66,6 @@ namespace {
 constexpr TimeDelta kMinBaseMinimumDelay = TimeDelta::Zero();
 constexpr TimeDelta kMaxBaseMinimumDelay = TimeDelta::Seconds(10);
 
-// Create no decoders before the stream starts. All decoders are created on
-// demand when we receive payload data of the corresponding type.
-constexpr int kDefaultMaximumPreStreamDecoders = 0;
-
 // Concrete instance of RecordableEncodedFrame wrapping needed content
 // from EncodedFrame.
 class WebRtcRecordableEncodedFrame : public RecordableEncodedFrame {
@@ -228,7 +224,6 @@ VideoReceiveStream2::VideoReceiveStream2(
       max_wait_for_frame_(DetermineMaxWaitForFrame(
           TimeDelta::Millis(config_.rtp.nack.rtp_history_ms),
           false)),
-      maximum_pre_stream_decoders_("max", kDefaultMaximumPreStreamDecoders),
       decode_queue_(task_queue_factory_->CreateTaskQueue(
           "DecodingQueue",
           TaskQueueFactory::Priority::HIGH)) {
@@ -269,12 +264,6 @@ VideoReceiveStream2::VideoReceiveStream2(
   } else {
     rtp_receive_statistics_->EnableRetransmitDetection(remote_ssrc(), true);
   }
-
-  ParseFieldTrial(
-      {
-          &maximum_pre_stream_decoders_,
-      },
-      call_->trials().Lookup("WebRTC-PreStreamDecoders"));
 }
 
 VideoReceiveStream2::~VideoReceiveStream2() {
@@ -394,18 +383,6 @@ void VideoReceiveStream2::Start() {
   stats_proxy_.DecoderThreadStarting();
   decode_queue_.PostTask([this] {
     RTC_DCHECK_RUN_ON(&decode_queue_);
-    // Create up to maximum_pre_stream_decoders_ up front, wait the the other
-    // decoders until they are requested (i.e., we receive the corresponding
-    // payload).
-    int decoders_count = 0;
-    for (const Decoder& decoder : config_.decoders) {
-      if (decoders_count >= maximum_pre_stream_decoders_) {
-        break;
-      }
-      CreateAndRegisterExternalDecoder(decoder);
-      ++decoders_count;
-    }
-
     decoder_stopped_ = false;
   });
   buffer_->StartNextDecode(true);

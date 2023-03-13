@@ -102,4 +102,14 @@ TEST(EventTest, DISABLED_PerformanceMultiThread) {
   thread.Stop();
 }
 
+#if RTC_DCHECK_IS_ON && GTEST_HAS_DEATH_TEST && !defined(WEBRTC_ANDROID)
+// Tests that we crash if we attempt to call rtc::Event::Wait while we're
+// not allowed to (as per `RTC_DISALLOW_WAIT()`).
+TEST(EventTestDeathTest, DisallowEventWait) {
+  Event event;
+  RTC_DISALLOW_WAIT();
+  EXPECT_DEATH(event.Wait(Event::kForever), "");
+}
+#endif  // RTC_DCHECK_IS_ON && GTEST_HAS_DEATH_TEST && !defined(WEBRTC_ANDROID)
+
 }  // namespace rtc

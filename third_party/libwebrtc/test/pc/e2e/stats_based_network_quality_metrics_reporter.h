@@ -72,7 +72,7 @@ class StatsBasedNetworkQualityMetricsReporter
   };
 
   struct NetworkLayerStats {
-    std::unique_ptr<EmulatedNetworkStats> stats;
+    EmulatedNetworkStats stats;
     std::set<std::string> receivers;
   };
 

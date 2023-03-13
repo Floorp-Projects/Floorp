@@ -46,10 +46,6 @@
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
 
-namespace cricket {
-class ChannelManager;
-}
-
 namespace rtc {
 class BasicNetworkManager;
 class BasicPacketSocketFactory;
@@ -156,7 +152,7 @@ class PeerConnectionFactory : public PeerConnectionFactoryInterface {
   std::unique_ptr<NetEqFactory> neteq_factory_;
   const std::unique_ptr<RtpTransportControllerSendFactoryInterface>
       transport_controller_send_factory_;
-  std::unique_ptr<Metronome> metronome_;
+  std::unique_ptr<Metronome> metronome_ RTC_GUARDED_BY(worker_thread());
 };
 
 }  // namespace webrtc

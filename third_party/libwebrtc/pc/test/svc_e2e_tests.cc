@@ -19,6 +19,9 @@
 #include "api/test/frame_generator_interface.h"
 #include "api/test/metrics/global_metrics_logger_and_exporter.h"
 #include "api/test/network_emulation_manager.h"
+#include "api/test/pclf/media_configuration.h"
+#include "api/test/pclf/media_quality_test_params.h"
+#include "api/test/pclf/peer_configurer.h"
 #include "api/test/peerconnection_quality_test_fixture.h"
 #include "api/test/simulated_network.h"
 #include "api/test/time_controller.h"
@@ -38,18 +41,6 @@
 namespace webrtc {
 namespace {
 
-using PeerConfigurer = ::webrtc::webrtc_pc_e2e::
-    PeerConnectionE2EQualityTestFixture::PeerConfigurer;
-using RunParams =
-    ::webrtc::webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture::RunParams;
-using VideoConfig =
-    ::webrtc::webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture::VideoConfig;
-using ScreenShareConfig = ::webrtc::webrtc_pc_e2e::
-    PeerConnectionE2EQualityTestFixture::ScreenShareConfig;
-using VideoCodecConfig = ::webrtc::webrtc_pc_e2e::
-    PeerConnectionE2EQualityTestFixture::VideoCodecConfig;
-using EmulatedSFUConfig = ::webrtc::webrtc_pc_e2e::
-    PeerConnectionE2EQualityTestFixture::EmulatedSFUConfig;
 using ::cricket::kAv1CodecName;
 using ::cricket::kH264CodecName;
 using ::cricket::kVp8CodecName;
@@ -58,6 +49,12 @@ using ::testing::Combine;
 using ::testing::UnitTest;
 using ::testing::Values;
 using ::testing::ValuesIn;
+using ::webrtc::webrtc_pc_e2e::EmulatedSFUConfig;
+using ::webrtc::webrtc_pc_e2e::PeerConfigurer;
+using ::webrtc::webrtc_pc_e2e::RunParams;
+using ::webrtc::webrtc_pc_e2e::ScreenShareConfig;
+using ::webrtc::webrtc_pc_e2e::VideoCodecConfig;
+using ::webrtc::webrtc_pc_e2e::VideoConfig;
 
 std::unique_ptr<webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture>
 CreateTestFixture(absl::string_view test_case_name,
@@ -71,10 +68,14 @@ CreateTestFixture(absl::string_view test_case_name,
   auto fixture = webrtc_pc_e2e::CreatePeerConnectionE2EQualityTestFixture(
       std::string(test_case_name), time_controller, nullptr,
       std::move(video_quality_analyzer));
-  fixture->AddPeer(network_links.first->network_dependencies(),
-                   alice_configurer);
-  fixture->AddPeer(network_links.second->network_dependencies(),
-                   bob_configurer);
+  auto alice = std::make_unique<PeerConfigurer>(
+      network_links.first->network_dependencies());
+  auto bob = std::make_unique<PeerConfigurer>(
+      network_links.second->network_dependencies());
+  alice_configurer(alice.get());
+  bob_configurer(bob.get());
+  fixture->AddPeer(std::move(alice));
+  fixture->AddPeer(std::move(bob));
   return fixture;
 }
 

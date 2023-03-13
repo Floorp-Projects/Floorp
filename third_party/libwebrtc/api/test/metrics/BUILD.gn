@@ -18,7 +18,6 @@ group("metrics") {
     ":metrics_accumulator",
     ":metrics_exporter",
     ":metrics_logger",
-    ":metrics_logger_and_exporter",
     ":stdout_metrics_exporter",
   ]
 }
@@ -30,7 +29,6 @@ if (rtc_include_tests) {
     deps = [
       ":global_metrics_logger_and_exporter_test",
       ":metrics_accumulator_test",
-      ":metrics_logger_and_exporter_test",
       ":metrics_logger_test",
       ":print_result_proxy_metrics_exporter_test",
       ":stdout_metrics_exporter_test",
@@ -176,29 +174,6 @@ rtc_library("print_result_proxy_metrics_exporter") {
   ]
 }
 
-rtc_library("metrics_logger_and_exporter") {
-  visibility = [ "*" ]
-  sources = [
-    "metrics_logger_and_exporter.cc",
-    "metrics_logger_and_exporter.h",
-  ]
-  deps = [
-    ":metric",
-    ":metrics_exporter",
-    ":metrics_logger",
-    "../../../rtc_base:checks",
-    "../../../rtc_base:logging",
-    "../../../rtc_base/synchronization:mutex",
-    "../../../system_wrappers",
-    "../../numerics",
-  ]
-
-  absl_deps = [
-    "//third_party/abseil-cpp/absl/strings",
-    "//third_party/abseil-cpp/absl/types:optional",
-  ]
-}
-
 rtc_library("global_metrics_logger_and_exporter") {
   visibility = [ "*" ]
   sources = [
@@ -208,7 +183,6 @@ rtc_library("global_metrics_logger_and_exporter") {
   deps = [
     ":metrics_exporter",
     ":metrics_logger",
-    ":metrics_logger_and_exporter",
     "../../../rtc_base:checks",
     "../../../system_wrappers",
   ]
@@ -262,20 +236,6 @@ if (rtc_include_tests) {
     ]
   }
 
-  rtc_library("metrics_logger_and_exporter_test") {
-    testonly = true
-    sources = [ "metrics_logger_and_exporter_test.cc" ]
-    deps = [
-      ":metric",
-      ":metrics_exporter",
-      ":metrics_logger_and_exporter",
-      "../../../system_wrappers",
-      "../../../test:test_support",
-      "../../numerics",
-    ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
-  }
-
   rtc_library("global_metrics_logger_and_exporter_test") {
     testonly = true
     sources = [ "global_metrics_logger_and_exporter_test.cc" ]
@@ -284,7 +244,6 @@ if (rtc_include_tests) {
       ":metric",
       ":metrics_exporter",
       ":metrics_logger",
-      ":metrics_logger_and_exporter",
       "../../../system_wrappers",
       "../../../test:test_support",
     ]

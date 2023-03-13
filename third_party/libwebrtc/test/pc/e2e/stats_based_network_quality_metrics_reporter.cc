@@ -35,6 +35,7 @@
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "system_wrappers/include/field_trial.h"
+#include "test/pc/e2e/metric_metadata_keys.h"
 
 namespace webrtc {
 namespace webrtc_pc_e2e {
@@ -50,14 +51,13 @@ constexpr TimeDelta kStatsWaitTimeout = TimeDelta::Seconds(1);
 // in bytes sent or received.
 constexpr char kUseStandardBytesStats[] = "WebRTC-UseStandardBytesStats";
 
-std::unique_ptr<EmulatedNetworkStats> PopulateStats(
-    std::vector<EmulatedEndpoint*> endpoints,
-    NetworkEmulationManager* network_emulation) {
+EmulatedNetworkStats PopulateStats(std::vector<EmulatedEndpoint*> endpoints,
+                                   NetworkEmulationManager* network_emulation) {
   rtc::Event stats_loaded;
-  std::unique_ptr<EmulatedNetworkStats> stats;
+  EmulatedNetworkStats stats;
   network_emulation->GetStats(endpoints,
                               [&](std::unique_ptr<EmulatedNetworkStats> s) {
-                                stats = std::move(s);
+                                stats = *s;
                                 stats_loaded.Set();
                               });
   bool stats_received = stats_loaded.Wait(kStatsWaitTimeout);
@@ -105,10 +105,10 @@ void StatsBasedNetworkQualityMetricsReporter::NetworkLayerStatsCollector::
   MutexLock lock(&mutex_);
   // Check that network stats are clean before test execution.
   for (const auto& entry : peer_endpoints_) {
-    std::unique_ptr<EmulatedNetworkStats> stats =
+    EmulatedNetworkStats stats =
         PopulateStats(entry.second, network_emulation_);
-    RTC_CHECK_EQ(stats->PacketsSent(), 0);
-    RTC_CHECK_EQ(stats->PacketsReceived(), 0);
+    RTC_CHECK_EQ(stats.overall_outgoing_stats.packets_sent, 0);
+    RTC_CHECK_EQ(stats.overall_incoming_stats.packets_received, 0);
   }
 }
 
@@ -139,7 +139,7 @@ StatsBasedNetworkQualityMetricsReporter::NetworkLayerStatsCollector::
     stats.stats = PopulateStats(entry.second, network_emulation_);
     const std::string& peer_name = entry.first;
     for (const auto& income_stats_entry :
-         stats.stats->IncomingStatsPerSource()) {
+         stats.stats.incoming_stats_per_source) {
       const rtc::IPAddress& source_ip = income_stats_entry.first;
       auto it = ip_to_peer_.find(source_ip);
       if (it == ip_to_peer_.end()) {
@@ -252,48 +252,54 @@ void StatsBasedNetworkQualityMetricsReporter::ReportStats(
     const NetworkLayerStats& network_layer_stats,
     int64_t packet_loss,
     const Timestamp& end_time) {
+  std::map<std::string, std::string> metric_metadata{
+      {MetricMetadataKey::kPeerMetadataKey, pc_label}};
   metrics_logger_->LogSingleValueMetric(
       "bytes_discarded_no_receiver", GetTestCaseName(pc_label),
-      network_layer_stats.stats->BytesDropped().bytes(), Unit::kBytes,
-      ImprovementDirection::kNeitherIsBetter);
+      network_layer_stats.stats.overall_incoming_stats
+          .bytes_discarded_no_receiver.bytes(),
+      Unit::kBytes, ImprovementDirection::kNeitherIsBetter, metric_metadata);
   metrics_logger_->LogSingleValueMetric(
       "packets_discarded_no_receiver", GetTestCaseName(pc_label),
-      network_layer_stats.stats->PacketsDropped(), Unit::kUnitless,
-      ImprovementDirection::kNeitherIsBetter);
+      network_layer_stats.stats.overall_incoming_stats
+          .packets_discarded_no_receiver,
+      Unit::kUnitless, ImprovementDirection::kNeitherIsBetter, metric_metadata);
 
   metrics_logger_->LogSingleValueMetric(
       "payload_bytes_received", GetTestCaseName(pc_label),
       pc_stats.payload_received.bytes(), Unit::kBytes,
-      ImprovementDirection::kNeitherIsBetter);
+      ImprovementDirection::kNeitherIsBetter, metric_metadata);
   metrics_logger_->LogSingleValueMetric(
       "payload_bytes_sent", GetTestCaseName(pc_label),
       pc_stats.payload_sent.bytes(), Unit::kBytes,
-      ImprovementDirection::kNeitherIsBetter);
+      ImprovementDirection::kNeitherIsBetter, metric_metadata);
 
   metrics_logger_->LogSingleValueMetric(
       "bytes_sent", GetTestCaseName(pc_label), pc_stats.total_sent.bytes(),
-      Unit::kBytes, ImprovementDirection::kNeitherIsBetter);
+      Unit::kBytes, ImprovementDirection::kNeitherIsBetter, metric_metadata);
   metrics_logger_->LogSingleValueMetric(
       "packets_sent", GetTestCaseName(pc_label), pc_stats.packets_sent,
-      Unit::kUnitless, ImprovementDirection::kNeitherIsBetter);
+      Unit::kUnitless, ImprovementDirection::kNeitherIsBetter, metric_metadata);
   metrics_logger_->LogSingleValueMetric(
       "average_send_rate", GetTestCaseName(pc_label),
       (pc_stats.total_sent / (end_time - start_time_)).kbps<double>(),
-      Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter);
+      Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter,
+      metric_metadata);
   metrics_logger_->LogSingleValueMetric(
       "bytes_received", GetTestCaseName(pc_label),
       pc_stats.total_received.bytes(), Unit::kBytes,
-      ImprovementDirection::kNeitherIsBetter);
+      ImprovementDirection::kNeitherIsBetter, metric_metadata);
   metrics_logger_->LogSingleValueMetric(
       "packets_received", GetTestCaseName(pc_label), pc_stats.packets_received,
-      Unit::kUnitless, ImprovementDirection::kNeitherIsBetter);
+      Unit::kUnitless, ImprovementDirection::kNeitherIsBetter, metric_metadata);
   metrics_logger_->LogSingleValueMetric(
       "average_receive_rate", GetTestCaseName(pc_label),
       (pc_stats.total_received / (end_time - start_time_)).kbps<double>(),
-      Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter);
+      Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter,
+      metric_metadata);
   metrics_logger_->LogSingleValueMetric(
       "sent_packets_loss", GetTestCaseName(pc_label), packet_loss,
-      Unit::kUnitless, ImprovementDirection::kNeitherIsBetter);
+      Unit::kUnitless, ImprovementDirection::kNeitherIsBetter, metric_metadata);
 }
 
 std::string StatsBasedNetworkQualityMetricsReporter::GetTestCaseName(
@@ -306,100 +312,103 @@ std::string StatsBasedNetworkQualityMetricsReporter::GetTestCaseName(
 void StatsBasedNetworkQualityMetricsReporter::LogNetworkLayerStats(
     const std::string& peer_name,
     const NetworkLayerStats& stats) const {
-  DataRate average_send_rate = stats.stats->PacketsSent() >= 2
-                                   ? stats.stats->AverageSendRate()
-                                   : DataRate::Zero();
-  DataRate average_receive_rate = stats.stats->PacketsReceived() >= 2
-                                      ? stats.stats->AverageReceiveRate()
-                                      : DataRate::Zero();
+  DataRate average_send_rate =
+      stats.stats.overall_outgoing_stats.packets_sent >= 2
+          ? stats.stats.overall_outgoing_stats.AverageSendRate()
+          : DataRate::Zero();
+  DataRate average_receive_rate =
+      stats.stats.overall_incoming_stats.packets_received >= 2
+          ? stats.stats.overall_incoming_stats.AverageReceiveRate()
+          : DataRate::Zero();
+  std::map<std::string, std::string> metric_metadata{
+      {MetricMetadataKey::kPeerMetadataKey, peer_name}};
   rtc::StringBuilder log;
   log << "Raw network layer statistic for [" << peer_name << "]:\n"
       << "Local IPs:\n";
-  std::vector<rtc::IPAddress> local_ips = stats.stats->LocalAddresses();
-  for (size_t i = 0; i < local_ips.size(); ++i) {
-    log << "  " << local_ips[i].ToString() << "\n";
+  for (size_t i = 0; i < stats.stats.local_addresses.size(); ++i) {
+    log << "  " << stats.stats.local_addresses[i].ToString() << "\n";
   }
-  if (!stats.stats->SentPacketsSizeCounter().IsEmpty()) {
-    metrics_logger_->LogMetric("sent_packets_size", GetTestCaseName(peer_name),
-                               stats.stats->SentPacketsSizeCounter(),
-                               Unit::kBytes,
-                               ImprovementDirection::kNeitherIsBetter);
+  if (!stats.stats.overall_outgoing_stats.sent_packets_size.IsEmpty()) {
+    metrics_logger_->LogMetric(
+        "sent_packets_size", GetTestCaseName(peer_name),
+        stats.stats.overall_outgoing_stats.sent_packets_size, Unit::kBytes,
+        ImprovementDirection::kNeitherIsBetter, metric_metadata);
   }
-  if (!stats.stats->ReceivedPacketsSizeCounter().IsEmpty()) {
+  if (!stats.stats.overall_incoming_stats.received_packets_size.IsEmpty()) {
     metrics_logger_->LogMetric(
         "received_packets_size", GetTestCaseName(peer_name),
-        stats.stats->ReceivedPacketsSizeCounter(), Unit::kBytes,
-        ImprovementDirection::kNeitherIsBetter);
+        stats.stats.overall_incoming_stats.received_packets_size, Unit::kBytes,
+        ImprovementDirection::kNeitherIsBetter, metric_metadata);
   }
-  if (!stats.stats->DroppedPacketsSizeCounter().IsEmpty()) {
+  if (!stats.stats.overall_incoming_stats.packets_discarded_no_receiver_size
+           .IsEmpty()) {
     metrics_logger_->LogMetric(
-        "dropped_packets_size", GetTestCaseName(peer_name),
-        stats.stats->DroppedPacketsSizeCounter(), Unit::kBytes,
-        ImprovementDirection::kNeitherIsBetter);
+        "packets_discarded_no_receiver_size", GetTestCaseName(peer_name),
+        stats.stats.overall_incoming_stats.packets_discarded_no_receiver_size,
+        Unit::kBytes, ImprovementDirection::kNeitherIsBetter, metric_metadata);
   }
-  if (!stats.stats->SentPacketsQueueWaitTimeUs().IsEmpty()) {
+  if (!stats.stats.sent_packets_queue_wait_time_us.IsEmpty()) {
     metrics_logger_->LogMetric(
         "sent_packets_queue_wait_time_us", GetTestCaseName(peer_name),
-        stats.stats->SentPacketsQueueWaitTimeUs(), Unit::kUnitless,
-        ImprovementDirection::kNeitherIsBetter);
+        stats.stats.sent_packets_queue_wait_time_us, Unit::kUnitless,
+        ImprovementDirection::kNeitherIsBetter, metric_metadata);
   }
 
   log << "Send statistic:\n"
-      << "  packets: " << stats.stats->PacketsSent()
-      << " bytes: " << stats.stats->BytesSent().bytes()
+      << "  packets: " << stats.stats.overall_outgoing_stats.packets_sent
+      << " bytes: " << stats.stats.overall_outgoing_stats.bytes_sent.bytes()
       << " avg_rate (bytes/sec): " << average_send_rate.bytes_per_sec()
       << " avg_rate (bps): " << average_send_rate.bps() << "\n"
       << "Send statistic per destination:\n";
 
-  for (const auto& entry : stats.stats->OutgoingStatsPerDestination()) {
-    DataRate source_average_send_rate = entry.second->PacketsSent() >= 2
-                                            ? entry.second->AverageSendRate()
+  for (const auto& entry : stats.stats.outgoing_stats_per_destination) {
+    DataRate source_average_send_rate = entry.second.packets_sent >= 2
+                                            ? entry.second.AverageSendRate()
                                             : DataRate::Zero();
     log << "(" << entry.first.ToString() << "):\n"
-        << "  packets: " << entry.second->PacketsSent()
-        << " bytes: " << entry.second->BytesSent().bytes()
+        << "  packets: " << entry.second.packets_sent
+        << " bytes: " << entry.second.bytes_sent.bytes()
         << " avg_rate (bytes/sec): " << source_average_send_rate.bytes_per_sec()
         << " avg_rate (bps): " << source_average_send_rate.bps() << "\n";
-    if (!entry.second->SentPacketsSizeCounter().IsEmpty()) {
+    if (!entry.second.sent_packets_size.IsEmpty()) {
       metrics_logger_->LogMetric(
           "sent_packets_size",
           GetTestCaseName(peer_name + "/" + entry.first.ToString()),
-          stats.stats->SentPacketsSizeCounter(), Unit::kBytes,
-          ImprovementDirection::kNeitherIsBetter);
+          entry.second.sent_packets_size, Unit::kBytes,
+          ImprovementDirection::kNeitherIsBetter, metric_metadata);
     }
   }
 
   log << "Receive statistic:\n"
-      << "  packets: " << stats.stats->PacketsReceived()
-      << " bytes: " << stats.stats->BytesReceived().bytes()
+      << "  packets: " << stats.stats.overall_incoming_stats.packets_received
+      << " bytes: " << stats.stats.overall_incoming_stats.bytes_received.bytes()
       << " avg_rate (bytes/sec): " << average_receive_rate.bytes_per_sec()
       << " avg_rate (bps): " << average_receive_rate.bps() << "\n"
       << "Receive statistic per source:\n";
 
-  for (const auto& entry : stats.stats->IncomingStatsPerSource()) {
+  for (const auto& entry : stats.stats.incoming_stats_per_source) {
     DataRate source_average_receive_rate =
-        entry.second->PacketsReceived() >= 2
-            ? entry.second->AverageReceiveRate()
-            : DataRate::Zero();
+        entry.second.packets_received >= 2 ? entry.second.AverageReceiveRate()
+                                           : DataRate::Zero();
     log << "(" << entry.first.ToString() << "):\n"
-        << "  packets: " << entry.second->PacketsReceived()
-        << " bytes: " << entry.second->BytesReceived().bytes()
+        << "  packets: " << entry.second.packets_received
+        << " bytes: " << entry.second.bytes_received.bytes()
         << " avg_rate (bytes/sec): "
         << source_average_receive_rate.bytes_per_sec()
         << " avg_rate (bps): " << source_average_receive_rate.bps() << "\n";
-    if (!entry.second->ReceivedPacketsSizeCounter().IsEmpty()) {
+    if (!entry.second.received_packets_size.IsEmpty()) {
       metrics_logger_->LogMetric(
           "received_packets_size",
           GetTestCaseName(peer_name + "/" + entry.first.ToString()),
-          stats.stats->ReceivedPacketsSizeCounter(), Unit::kBytes,
-          ImprovementDirection::kNeitherIsBetter);
+          entry.second.received_packets_size, Unit::kBytes,
+          ImprovementDirection::kNeitherIsBetter, metric_metadata);
     }
-    if (!entry.second->DroppedPacketsSizeCounter().IsEmpty()) {
+    if (!entry.second.packets_discarded_no_receiver_size.IsEmpty()) {
       metrics_logger_->LogMetric(
-          "dropped_packets_size",
+          "packets_discarded_no_receiver_size",
           GetTestCaseName(peer_name + "/" + entry.first.ToString()),
-          stats.stats->DroppedPacketsSizeCounter(), Unit::kBytes,
-          ImprovementDirection::kNeitherIsBetter);
+          entry.second.packets_discarded_no_receiver_size, Unit::kBytes,
+          ImprovementDirection::kNeitherIsBetter, metric_metadata);
     }
   }
 

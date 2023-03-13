@@ -29,7 +29,9 @@
 #include "modules/audio_processing/aec3/downsampled_render_buffer.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/logging.h"
+#include "system_wrappers/include/field_trial.h"
 
 namespace {
 
@@ -53,21 +55,87 @@ void UpdateAccumulatedError(
   }
 }
 
-size_t ComputePreEchoLag(const rtc::ArrayView<float> accumulated_error,
-                         size_t lag,
-                         size_t alignment_shift_winner) {
+size_t ComputePreEchoLag(
+    const webrtc::MatchedFilter::PreEchoConfiguration& pre_echo_configuration,
+    const rtc::ArrayView<const float> accumulated_error,
+    size_t lag,
+    size_t alignment_shift_winner) {
+  RTC_DCHECK_GE(lag, alignment_shift_winner);
   size_t pre_echo_lag_estimate = lag - alignment_shift_winner;
   size_t maximum_pre_echo_lag =
       std::min(pre_echo_lag_estimate / kAccumulatedErrorSubSampleRate,
                accumulated_error.size());
-  for (size_t k = 1; k < maximum_pre_echo_lag; ++k) {
-    if (accumulated_error[k] < 0.5f * accumulated_error[k - 1] &&
-        accumulated_error[k] < 0.5f) {
-      pre_echo_lag_estimate = (k + 1) * kAccumulatedErrorSubSampleRate - 1;
+  switch (pre_echo_configuration.mode) {
+    case 0:
+      // Mode 0: Pre echo lag is defined as the first coefficient with an error
+      // lower than a threshold with a certain decrease slope.
+      for (size_t k = 1; k < maximum_pre_echo_lag; ++k) {
+        if (accumulated_error[k] <
+                pre_echo_configuration.threshold * accumulated_error[k - 1] &&
+            accumulated_error[k] < pre_echo_configuration.threshold) {
+          pre_echo_lag_estimate = (k + 1) * kAccumulatedErrorSubSampleRate - 1;
+          break;
+        }
+      }
       break;
-    }
+    case 1:
+      // Mode 1: Pre echo lag is defined as the first coefficient with an error
+      // lower than a certain threshold.
+      for (size_t k = 0; k < maximum_pre_echo_lag; ++k) {
+        if (accumulated_error[k] < pre_echo_configuration.threshold) {
+          pre_echo_lag_estimate = (k + 1) * kAccumulatedErrorSubSampleRate - 1;
+          break;
+        }
+      }
+      break;
+    case 2:
+      // Mode 2: Pre echo lag is defined as the closest coefficient to the lag
+      // with an error lower than a certain threshold.
+      for (int k = static_cast<int>(maximum_pre_echo_lag) - 1; k >= 0; --k) {
+        if (accumulated_error[k] > pre_echo_configuration.threshold) {
+          break;
+        }
+        pre_echo_lag_estimate = (k + 1) * kAccumulatedErrorSubSampleRate - 1;
+      }
+      break;
+    default:
+      RTC_DCHECK_NOTREACHED();
+      break;
   }
   return pre_echo_lag_estimate + alignment_shift_winner;
+}
+
+webrtc::MatchedFilter::PreEchoConfiguration FetchPreEchoConfiguration() {
+  float threshold = 0.5f;
+  int mode = 0;
+  const std::string pre_echo_configuration_field_trial =
+      webrtc::field_trial::FindFullName("WebRTC-Aec3PreEchoConfiguration");
+  webrtc::FieldTrialParameter<double> threshold_field_trial_parameter(
+      /*key=*/"threshold", /*default_value=*/threshold);
+  webrtc::FieldTrialParameter<int> mode_field_trial_parameter(
+      /*key=*/"mode", /*default_value=*/mode);
+  webrtc::ParseFieldTrial(
+      {&threshold_field_trial_parameter, &mode_field_trial_parameter},
+      pre_echo_configuration_field_trial);
+  float threshold_read =
+      static_cast<float>(threshold_field_trial_parameter.Get());
+  int mode_read = mode_field_trial_parameter.Get();
+  if (threshold_read < 1.0f && threshold_read > 0.0f) {
+    threshold = threshold_read;
+  } else {
+    RTC_LOG(LS_ERROR)
+        << "AEC3: Pre echo configuration:  wrong input, threshold = "
+        << threshold_read << ".";
+  }
+  if (mode_read >= 0 && mode_read <= 3) {
+    mode = mode_read;
+  } else {
+    RTC_LOG(LS_ERROR) << "AEC3: Pre echo configuration:  wrong input, mode = "
+                      << mode_read << ".";
+  }
+  RTC_LOG(LS_INFO) << "AEC3: Pre echo configuration:  threshold = " << threshold
+                   << ", mode =  " << mode << ".";
+  return {.threshold = threshold, .mode = mode};
 }
 
 }  // namespace
@@ -612,7 +680,8 @@ MatchedFilter::MatchedFilter(ApmDataDumper* data_dumper,
       smoothing_fast_(smoothing_fast),
       smoothing_slow_(smoothing_slow),
       matching_filter_threshold_(matching_filter_threshold),
-      detect_pre_echo_(detect_pre_echo) {
+      detect_pre_echo_(detect_pre_echo),
+      pre_echo_config_(FetchPreEchoConfiguration()) {
   RTC_DCHECK(data_dumper);
   RTC_DCHECK_LT(0, window_size_sub_blocks);
   RTC_DCHECK((kBlockSize % sub_block_size) == 0);
@@ -753,7 +822,8 @@ void MatchedFilter::Update(const DownsampledRenderBuffer& render_buffer,
                                1.0f / error_sum_anchor);
       }
       reported_lag_estimate_->pre_echo_lag = ComputePreEchoLag(
-          accumulated_error_[winner_index], winner_lag_.value(),
+          pre_echo_config_, accumulated_error_[winner_index],
+          winner_lag_.value(),
           winner_index * filter_intra_lag_shift_ /*alignment_shift_winner*/);
     }
     last_detected_best_lag_filter_ = winner_index;
@@ -794,9 +864,10 @@ void MatchedFilter::Dump() {
           "aec3_correlator_error_" + std::to_string(n) + "_h";
       data_dumper_->DumpRaw(dumper_error.c_str(), accumulated_error_[n]);
 
-      size_t pre_echo_lag = ComputePreEchoLag(
-          accumulated_error_[n], lag_estimate + n * filter_intra_lag_shift_,
-          n * filter_intra_lag_shift_);
+      size_t pre_echo_lag =
+          ComputePreEchoLag(pre_echo_config_, accumulated_error_[n],
+                            lag_estimate + n * filter_intra_lag_shift_,
+                            n * filter_intra_lag_shift_);
       std::string dumper_pre_lag =
           "aec3_correlator_pre_echo_lag_" + std::to_string(n);
       data_dumper_->DumpRaw(dumper_pre_lag.c_str(), pre_echo_lag);

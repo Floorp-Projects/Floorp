@@ -141,6 +141,7 @@ class VideoSendStream {
         webrtc::VideoContentType::UNSPECIFIED;
     uint32_t frames_sent = 0;
     uint32_t huge_frames_sent = 0;
+    absl::optional<bool> power_efficient_encoder;
   };
 
   struct Config {
@@ -251,6 +252,8 @@ class VideoSendStream {
   virtual void ReconfigureVideoEncoder(VideoEncoderConfig config) = 0;
 
   virtual Stats GetStats() = 0;
+
+  virtual void GenerateKeyFrame(const std::vector<std::string>& rids) = 0;
 
  protected:
   virtual ~VideoSendStream() {}

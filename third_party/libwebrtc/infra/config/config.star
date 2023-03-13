@@ -58,11 +58,6 @@ def make_reclient_properties(instance, jobs = None):
 # useful when a failure can be safely ignored while fixing it without
 # blocking the LKGR finder on it.
 skipped_lkgr_bots = [
-    "Android32 (M Nexus5X)(reclient)",
-    "Linux64 Release (reclient)",
-    "Mac64 Release (reclient)",
-    "Win64 Release (Clang)(reclient)",
-    "iOS64 Release (reclient)",
     "Fuchsia Release",
 ]
 
@@ -405,8 +400,7 @@ luci.tree_closer(
         "compile",
         "gn",
     ],
-    # TODO(b/239908030, b/243594984): remove reclient builders after migration.
-    failed_step_regexp_exclude = ".*(\\(experimental\\)|\\(reclient\\)).*",
+    failed_step_regexp_exclude = ".*\\(experimental\\).*",
 )
 
 # Recipe definitions:
@@ -713,12 +707,13 @@ android_builder("Android32 (M Nexus5X)(dbg)", "Android|arm|dbg")
 android_try_job("android_compile_arm_dbg", cq = None)
 android_try_job("android_arm_dbg")
 android_builder("Android32 (M Nexus5X)", "Android|arm|rel")
-android_builder("Android32 (M Nexus5X)(reclient)", "Android|arm|re")
 android_try_job("android_arm_rel")
 android_builder("Android32 Builder arm", "Android|arm|size", perf_cat = "Android|arm|Builder|", prioritized = True)
 android_try_job("android_compile_arm_rel")
 perf_builder("Perf Android32 (M Nexus5)", "Android|arm|Tester|M Nexus5", triggered_by = ["Android32 Builder arm"])
 perf_builder("Perf Android32 (M AOSP Nexus6)", "Android|arm|Tester|M AOSP Nexus6", triggered_by = ["Android32 Builder arm"])
+perf_builder("Perf Android32 (O Pixel2)", "Android|arm|Tester|O Pixel2", triggered_by = ["Android32 Builder arm"])
+perf_builder("Perf Android32 (R Pixel5)", "Android|arm|Tester|R Pixel5", triggered_by = ["Android32 Builder arm"])
 android_try_job("android_compile_arm64_dbg", cq = None)
 android_try_job("android_arm64_dbg", cq = None)
 android_builder("Android64 (M Nexus5X)", "Android|arm64|rel")
@@ -726,6 +721,7 @@ android_try_job("android_arm64_rel")
 android_builder("Android64 Builder arm64", "Android|arm64|size", perf_cat = "Android|arm64|Builder|", prioritized = True)
 perf_builder("Perf Android64 (M Nexus5X)", "Android|arm64|Tester|M Nexus5X", triggered_by = ["Android64 Builder arm64"])
 perf_builder("Perf Android64 (O Pixel2)", "Android|arm64|Tester|O Pixel2", triggered_by = ["Android64 Builder arm64"])
+perf_builder("Perf Android64 (R Pixel5)", "Android|arm64|Tester|R Pixel5", triggered_by = ["Android64 Builder arm64"])
 android_try_job("android_compile_arm64_rel")
 android_builder("Android64 Builder x64 (dbg)", "Android|x64|dbg")
 android_try_job("android_compile_x64_dbg")
@@ -741,7 +737,6 @@ android_try_job("android_chromium_compile", recipe = "chromium_trybot", branch_c
 ios_builder("iOS64 Debug", "iOS|arm64|dbg")
 ios_try_job("ios_compile_arm64_dbg")
 ios_builder("iOS64 Release", "iOS|arm64|rel")
-ios_builder("iOS64 Release (reclient)", "iOS|arm64|re")
 ios_try_job("ios_compile_arm64_rel")
 ios_builder("iOS64 Sim Debug (iOS 14)", "iOS|x64|14")
 ios_try_job("ios_sim_x64_dbg_ios14")
@@ -760,7 +755,6 @@ linux_builder("Linux64 Debug", "Linux|x64|dbg")
 linux_try_job("linux_dbg", cq = None)
 linux_try_job("linux_compile_dbg")
 linux_builder("Linux64 Release", "Linux|x64|rel")
-linux_builder("Linux64 Release (reclient)", "Linux|x64|re")
 linux_try_job("linux_rel")
 linux_builder("Linux64 Builder", "Linux|x64|size", perf_cat = "Linux|x64|Builder|", prioritized = True)
 linux_try_job("linux_compile_rel")
@@ -796,7 +790,7 @@ mac_builder("Mac64 Debug", "Mac|x64|dbg")
 mac_try_job("mac_dbg", cq = None)
 mac_try_job("mac_compile_dbg")
 mac_builder("Mac64 Release", "Mac|x64|rel")
-mac_builder("Mac64 Release (reclient)", "Mac|x64|re")
+
 mac_try_job("mac_rel")
 mac_try_job("mac_compile_rel", cq = None)
 mac_builder("Mac64 Builder", ci_cat = None, perf_cat = "Mac|x64|Builder|")
@@ -824,7 +818,6 @@ win_try_job("win_x64_clang_dbg", cq = None)
 win_try_job("win_x64_clang_dbg_win10", cq = None)
 win_try_job("win_compile_x64_clang_dbg")
 win_builder("Win64 Release (Clang)", "Win Clang|x64|rel")
-win_builder("Win64 Release (Clang)(reclient)", "Win Clang|x64|re")
 win_try_job("win_x64_clang_rel", cq = None)
 win_try_job("win_compile_x64_clang_rel")
 win_builder("Win64 ASan", "Win Clang|x64|asan")
@@ -877,7 +870,6 @@ lkgr_config = {
                 "WebRTC Chromium FYI Android Builder (dbg)",
                 "WebRTC Chromium FYI Android Builder ARM64 (dbg)",
                 "WebRTC Chromium FYI Android Builder",
-                "WebRTC Chromium FYI Android Tests (dbg) (M Nexus5X)",
                 "WebRTC Chromium FYI Linux Builder (dbg)",
                 "WebRTC Chromium FYI Linux Builder",
                 "WebRTC Chromium FYI Linux Tester",

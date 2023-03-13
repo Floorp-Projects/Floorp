@@ -510,10 +510,7 @@ rtc_source_set("peer_connection_quality_test_fixture_api") {
 if (!build_with_mozilla) {
   visibility = [ "*" ]
   testonly = true
-  sources = [
-    "test/peerconnection_quality_test_fixture.cc",
-    "test/peerconnection_quality_test_fixture.h",
-  ]
+  sources = [ "test/peerconnection_quality_test_fixture.h" ]
 
   deps = [
     ":array_view",
@@ -543,6 +540,9 @@ if (!build_with_mozilla) {
     "audio:audio_mixer_api",
     "rtc_event_log",
     "task_queue",
+    "test/pclf:media_configuration",
+    "test/pclf:media_quality_test_params",
+    "test/pclf:peer_configurer",
     "test/video:video_frame_writer",
     "transport:network_control",
     "units:time_delta",
@@ -550,6 +550,7 @@ if (!build_with_mozilla) {
     "video_codecs:video_codecs_api",
   ]
   absl_deps = [
+    "//third_party/abseil-cpp/absl/base:core_headers",
     "//third_party/abseil-cpp/absl/memory",
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
@@ -654,6 +655,7 @@ rtc_library("create_frame_generator") {
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
+if (!build_with_mozilla) {
 rtc_library("create_peer_connection_quality_test_frame_generator") {
   visibility = [ "*" ]
   testonly = true
@@ -664,11 +666,12 @@ rtc_library("create_peer_connection_quality_test_frame_generator") {
   deps = [
     ":create_frame_generator",
     ":frame_generator_api",
-    ":peer_connection_quality_test_fixture_api",
     "../rtc_base:checks",
     "../test:fileutils",
+    "test/pclf:media_configuration",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+}
 }
 
 rtc_source_set("libjingle_logging_api") {
@@ -712,6 +715,8 @@ rtc_source_set("rtc_stats_api") {
     "../rtc_base/system:rtc_export",
     "units:timestamp",
   ]
+
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
 rtc_library("audio_options_api") {
@@ -1147,6 +1152,16 @@ if (rtc_include_tests) {
     ]
   }
 
+  rtc_source_set("mock_session_description_interface") {
+    visibility = [ "*" ]
+    testonly = true
+    sources = [ "test/mock_session_description_interface.h" ]
+    deps = [
+      ":libjingle_peerconnection_api",
+      "../test:test_support",
+    ]
+  }
+
   rtc_source_set("mock_async_dns_resolver") {
     visibility = [ "*" ]
     testonly = true
@@ -1312,12 +1327,15 @@ if (rtc_include_tests) {
       "../rtc_base:rtc_event",
       "../rtc_base:rtc_task_queue",
       "../rtc_base:task_queue_for_test",
+      "../rtc_base/containers:flat_set",
       "../rtc_base/task_utils:repeating_task",
       "../system_wrappers:field_trial",
       "../test:fileutils",
       "../test:rtc_expect_death",
       "../test:test_support",
       "task_queue:task_queue_default_factory_unittests",
+      "test/pclf:media_configuration",
+      "test/video:video_frame_writer",
       "transport:field_trial_based_config",
       "units:time_delta",
       "units:timestamp",
@@ -1326,7 +1344,10 @@ if (rtc_include_tests) {
       "video:rtp_video_frame_assembler_unittests",
       "video:video_unittests",
     ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/strings",
+      "//third_party/abseil-cpp/absl/types:optional",
+    ]
   }
 
   rtc_library("compile_all_headers") {
@@ -1349,6 +1370,7 @@ if (rtc_include_tests) {
       ":mock_peer_connection_factory_interface",
       ":mock_peerconnectioninterface",
       ":mock_rtp",
+      ":mock_session_description_interface",
       ":mock_transformable_video_frame",
       ":mock_video_bitrate_allocator",
       ":mock_video_bitrate_allocator_factory",
@@ -1360,6 +1382,25 @@ if (rtc_include_tests) {
       "units:units_unittests",
     ]
   }
+}
+
+rtc_source_set("field_trials_registry") {
+  visibility = [ "*" ]
+  sources = [
+    "field_trials_registry.cc",
+    "field_trials_registry.h",
+  ]
+  deps = [
+    ":field_trials_view",
+    "../experiments:registered_field_trials",
+    "../rtc_base:checks",
+    "../rtc_base/containers:flat_set",
+    "../rtc_base/system:rtc_export",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/strings",
+  ]
 }
 
 rtc_source_set("field_trials_view") {
@@ -1382,7 +1423,7 @@ rtc_library("field_trials") {
     "field_trials.h",
   ]
   deps = [
-    ":field_trials_view",
+    ":field_trials_registry",
     "../rtc_base:checks",
     "../rtc_base/containers:flat_map",
     "../system_wrappers:field_trial",

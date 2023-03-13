@@ -68,7 +68,7 @@ class NoLossTest : public AudioEndToEndTest {
         receive_stream()->GetStats(/*get_and_clear_legacy_stats=*/true);
     EXPECT_PRED2(IsNear, kBytesSent, recv_stats.payload_bytes_rcvd);
     EXPECT_PRED2(IsNear, kPacketsSent, recv_stats.packets_rcvd);
-    EXPECT_EQ(0u, recv_stats.packets_lost);
+    EXPECT_EQ(0, recv_stats.packets_lost);
     EXPECT_EQ("opus", send_stats.codec_name);
     // recv_stats.jitter_ms
     // recv_stats.jitter_buffer_ms

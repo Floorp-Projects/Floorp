@@ -2692,6 +2692,10 @@
   "Fuchsia Release": {
     "isolated_scripts": [
       {
+        "args": [
+          "--",
+          "--undefok=use-vulkan"
+        ],
         "isolate_name": "audio_decoder_unittests",
         "merge": {
           "args": [],
@@ -2713,6 +2717,10 @@
         "test_id_prefix": "ninja://modules/audio_coding:audio_decoder_unittests/"
       },
       {
+        "args": [
+          "--",
+          "--undefok=use-vulkan"
+        ],
         "isolate_name": "common_audio_unittests",
         "merge": {
           "args": [],
@@ -2734,6 +2742,10 @@
         "test_id_prefix": "ninja://common_audio:common_audio_unittests/"
       },
       {
+        "args": [
+          "--",
+          "--undefok=use-vulkan"
+        ],
         "isolate_name": "common_video_unittests",
         "merge": {
           "args": [],
@@ -2755,6 +2767,10 @@
         "test_id_prefix": "ninja://common_video:common_video_unittests/"
       },
       {
+        "args": [
+          "--",
+          "--undefok=use-vulkan"
+        ],
         "isolate_name": "dcsctp_unittests",
         "merge": {
           "args": [],
@@ -2777,7 +2793,8 @@
       },
       {
         "args": [
-          "--quick"
+          "--",
+          "--undefok=use-vulkan"
         ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
@@ -2798,327 +2815,6 @@
           ]
         },
         "test_id_prefix": "ninja://audio:low_bandwidth_audio_test/"
-      },
-      {
-        "isolate_name": "modules_tests",
-        "merge": {
-          "args": [],
-          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
-        },
-        "name": "modules_tests",
-        "resultdb": {
-          "result_format": "json"
-        },
-        "swarming": {
-          "can_use_on_swarming_builders": true,
-          "dimension_sets": [
-            {
-              "cpu": "x86-64",
-              "os": "Ubuntu-18.04"
-            }
-          ],
-          "shards": 2
-        },
-        "test_id_prefix": "ninja://modules:modules_tests/"
-      },
-      {
-        "isolate_name": "modules_unittests",
-        "merge": {
-          "args": [],
-          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
-        },
-        "name": "modules_unittests",
-        "resultdb": {
-          "result_format": "json"
-        },
-        "swarming": {
-          "can_use_on_swarming_builders": true,
-          "dimension_sets": [
-            {
-              "cpu": "x86-64",
-              "os": "Ubuntu-18.04"
-            }
-          ],
-          "shards": 6
-        },
-        "test_id_prefix": "ninja://modules:modules_unittests/"
-      },
-      {
-        "isolate_name": "peerconnection_unittests",
-        "merge": {
-          "args": [],
-          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
-        },
-        "name": "peerconnection_unittests",
-        "resultdb": {
-          "result_format": "json"
-        },
-        "swarming": {
-          "can_use_on_swarming_builders": true,
-          "dimension_sets": [
-            {
-              "cpu": "x86-64",
-              "os": "Ubuntu-18.04"
-            }
-          ],
-          "shards": 4
-        },
-        "test_id_prefix": "ninja://pc:peerconnection_unittests/"
-      },
-      {
-        "isolate_name": "rtc_media_unittests",
-        "merge": {
-          "args": [],
-          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
-        },
-        "name": "rtc_media_unittests",
-        "resultdb": {
-          "result_format": "json"
-        },
-        "swarming": {
-          "can_use_on_swarming_builders": true,
-          "dimension_sets": [
-            {
-              "cpu": "x86-64",
-              "os": "Ubuntu-18.04"
-            }
-          ]
-        },
-        "test_id_prefix": "ninja://media:rtc_media_unittests/"
-      },
-      {
-        "isolate_name": "rtc_pc_unittests",
-        "merge": {
-          "args": [],
-          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
-        },
-        "name": "rtc_pc_unittests",
-        "resultdb": {
-          "result_format": "json"
-        },
-        "swarming": {
-          "can_use_on_swarming_builders": true,
-          "dimension_sets": [
-            {
-              "cpu": "x86-64",
-              "os": "Ubuntu-18.04"
-            }
-          ]
-        },
-        "test_id_prefix": "ninja://pc:rtc_pc_unittests/"
-      },
-      {
-        "isolate_name": "rtc_stats_unittests",
-        "merge": {
-          "args": [],
-          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
-        },
-        "name": "rtc_stats_unittests",
-        "resultdb": {
-          "result_format": "json"
-        },
-        "swarming": {
-          "can_use_on_swarming_builders": true,
-          "dimension_sets": [
-            {
-              "cpu": "x86-64",
-              "os": "Ubuntu-18.04"
-            }
-          ]
-        },
-        "test_id_prefix": "ninja://stats:rtc_stats_unittests/"
-      },
-      {
-        "isolate_name": "rtc_unittests",
-        "merge": {
-          "args": [],
-          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
-        },
-        "name": "rtc_unittests",
-        "resultdb": {
-          "result_format": "json"
-        },
-        "swarming": {
-          "can_use_on_swarming_builders": true,
-          "dimension_sets": [
-            {
-              "cpu": "x86-64",
-              "os": "Ubuntu-18.04"
-            }
-          ],
-          "shards": 6
-        },
-        "test_id_prefix": "ninja://:rtc_unittests/"
-      },
-      {
-        "isolate_name": "slow_peer_connection_unittests",
-        "merge": {
-          "args": [],
-          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
-        },
-        "name": "slow_peer_connection_unittests",
-        "resultdb": {
-          "result_format": "json"
-        },
-        "swarming": {
-          "can_use_on_swarming_builders": true,
-          "dimension_sets": [
-            {
-              "cpu": "x86-64",
-              "os": "Ubuntu-18.04"
-            }
-          ]
-        },
-        "test_id_prefix": "ninja://pc:slow_peer_connection_unittests/"
-      },
-      {
-        "isolate_name": "svc_tests",
-        "merge": {
-          "args": [],
-          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
-        },
-        "name": "svc_tests",
-        "resultdb": {
-          "result_format": "json"
-        },
-        "swarming": {
-          "can_use_on_swarming_builders": true,
-          "dimension_sets": [
-            {
-              "cpu": "x86-64",
-              "os": "Ubuntu-18.04"
-            }
-          ],
-          "shards": 4
-        },
-        "test_id_prefix": "ninja://pc:svc_tests/"
-      },
-      {
-        "isolate_name": "system_wrappers_unittests",
-        "merge": {
-          "args": [],
-          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
-        },
-        "name": "system_wrappers_unittests",
-        "resultdb": {
-          "result_format": "json"
-        },
-        "swarming": {
-          "can_use_on_swarming_builders": true,
-          "dimension_sets": [
-            {
-              "cpu": "x86-64",
-              "os": "Ubuntu-18.04"
-            }
-          ]
-        },
-        "test_id_prefix": "ninja://system_wrappers:system_wrappers_unittests/"
-      },
-      {
-        "isolate_name": "test_support_unittests",
-        "merge": {
-          "args": [],
-          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
-        },
-        "name": "test_support_unittests",
-        "resultdb": {
-          "result_format": "json"
-        },
-        "swarming": {
-          "can_use_on_swarming_builders": true,
-          "dimension_sets": [
-            {
-              "cpu": "x86-64",
-              "os": "Ubuntu-18.04"
-            }
-          ]
-        },
-        "test_id_prefix": "ninja://test:test_support_unittests/"
-      },
-      {
-        "isolate_name": "tools_unittests",
-        "merge": {
-          "args": [],
-          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
-        },
-        "name": "tools_unittests",
-        "resultdb": {
-          "result_format": "json"
-        },
-        "swarming": {
-          "can_use_on_swarming_builders": true,
-          "dimension_sets": [
-            {
-              "cpu": "x86-64",
-              "os": "Ubuntu-18.04"
-            }
-          ]
-        },
-        "test_id_prefix": "ninja://rtc_tools:tools_unittests/"
-      },
-      {
-        "isolate_name": "video_engine_tests",
-        "merge": {
-          "args": [],
-          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
-        },
-        "name": "video_engine_tests",
-        "resultdb": {
-          "result_format": "json"
-        },
-        "swarming": {
-          "can_use_on_swarming_builders": true,
-          "dimension_sets": [
-            {
-              "cpu": "x86-64",
-              "os": "Ubuntu-18.04"
-            }
-          ],
-          "shards": 4
-        },
-        "test_id_prefix": "ninja://:video_engine_tests/"
-      },
-      {
-        "isolate_name": "voip_unittests",
-        "merge": {
-          "args": [],
-          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
-        },
-        "name": "voip_unittests",
-        "resultdb": {
-          "result_format": "json"
-        },
-        "swarming": {
-          "can_use_on_swarming_builders": true,
-          "dimension_sets": [
-            {
-              "cpu": "x86-64",
-              "os": "Ubuntu-18.04"
-            }
-          ]
-        },
-        "test_id_prefix": "ninja://:voip_unittests/"
-      },
-      {
-        "isolate_name": "webrtc_nonparallel_tests",
-        "merge": {
-          "args": [],
-          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
-        },
-        "name": "webrtc_nonparallel_tests",
-        "resultdb": {
-          "result_format": "json"
-        },
-        "swarming": {
-          "can_use_on_swarming_builders": true,
-          "dimension_sets": [
-            {
-              "cpu": "x86-64",
-              "os": "Ubuntu-18.04"
-            }
-          ]
-        },
-        "test_id_prefix": "ninja://:webrtc_nonparallel_tests/"
       }
     ]
   },
@@ -3408,6 +3104,27 @@
           "shards": 6
         },
         "test_id_prefix": "ninja://:rtc_unittests/"
+      },
+      {
+        "isolate_name": "shared_screencast_stream_test",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "shared_screencast_stream_test",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Ubuntu-18.04"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://modules/desktop_capture:shared_screencast_stream_test/"
       },
       {
         "isolate_name": "slow_peer_connection_unittests",
@@ -4709,6 +4426,27 @@
         "test_id_prefix": "ninja://:rtc_unittests/"
       },
       {
+        "isolate_name": "shared_screencast_stream_test",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "shared_screencast_stream_test",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Ubuntu-18.04"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://modules/desktop_capture:shared_screencast_stream_test/"
+      },
+      {
         "isolate_name": "slow_peer_connection_unittests",
         "merge": {
           "args": [],
@@ -5140,6 +4878,27 @@
           "shards": 6
         },
         "test_id_prefix": "ninja://:rtc_unittests/"
+      },
+      {
+        "isolate_name": "shared_screencast_stream_test",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "shared_screencast_stream_test",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Ubuntu-18.04"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://modules/desktop_capture:shared_screencast_stream_test/"
       },
       {
         "isolate_name": "slow_peer_connection_unittests",
@@ -6444,6 +6203,27 @@
         "test_id_prefix": "ninja://:rtc_unittests/"
       },
       {
+        "isolate_name": "shared_screencast_stream_test",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "shared_screencast_stream_test",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Ubuntu-18.04"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://modules/desktop_capture:shared_screencast_stream_test/"
+      },
+      {
         "isolate_name": "slow_peer_connection_unittests",
         "merge": {
           "args": [],
@@ -6876,6 +6656,27 @@
           "shards": 6
         },
         "test_id_prefix": "ninja://:rtc_unittests/"
+      },
+      {
+        "isolate_name": "shared_screencast_stream_test",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "shared_screencast_stream_test",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Ubuntu-18.04"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://modules/desktop_capture:shared_screencast_stream_test/"
       },
       {
         "isolate_name": "slow_peer_connection_unittests",
@@ -9797,6 +9598,7 @@
           "iPhone X",
           "--version",
           "12.4",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -9844,6 +9646,7 @@
           "iPhone X",
           "--version",
           "12.4",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -9890,6 +9693,7 @@
           "iPhone X",
           "--version",
           "12.4",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -9936,6 +9740,7 @@
           "iPhone X",
           "--version",
           "12.4",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -9982,6 +9787,7 @@
           "iPhone X",
           "--version",
           "12.4",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -10028,6 +9834,7 @@
           "iPhone X",
           "--version",
           "12.4",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -10075,6 +9882,7 @@
           "iPhone X",
           "--version",
           "12.4",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -10122,6 +9930,7 @@
           "iPhone X",
           "--version",
           "12.4",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -10168,6 +9977,7 @@
           "iPhone X",
           "--version",
           "12.4",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -10214,6 +10024,7 @@
           "iPhone X",
           "--version",
           "12.4",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -10260,6 +10071,7 @@
           "iPhone X",
           "--version",
           "12.4",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -10307,6 +10119,7 @@
           "iPhone X",
           "--version",
           "12.4",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -10354,6 +10167,7 @@
           "iPhone X",
           "--version",
           "12.4",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -10401,6 +10215,7 @@
           "iPhone X",
           "--version",
           "12.4",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -10427,6 +10242,7 @@
           ],
           "dimension_sets": [
             {
+              "cores": "12",
               "cpu": "x86-64",
               "os": "Mac-12"
             }
@@ -10448,6 +10264,7 @@
           "iPhone X",
           "--version",
           "12.4",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -10494,6 +10311,7 @@
           "iPhone X",
           "--version",
           "12.4",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -10540,6 +10358,7 @@
           "iPhone X",
           "--version",
           "12.4",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -10586,6 +10405,7 @@
           "iPhone X",
           "--version",
           "12.4",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -10632,6 +10452,7 @@
           "iPhone X",
           "--version",
           "12.4",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -10679,6 +10500,7 @@
           "iPhone X",
           "--version",
           "12.4",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -10725,6 +10547,7 @@
           "iPhone X",
           "--version",
           "12.4",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -10775,6 +10598,7 @@
           "iPhone X",
           "--version",
           "13.6",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -10822,6 +10646,7 @@
           "iPhone X",
           "--version",
           "13.6",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -10868,6 +10693,7 @@
           "iPhone X",
           "--version",
           "13.6",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -10914,6 +10740,7 @@
           "iPhone X",
           "--version",
           "13.6",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -10960,6 +10787,7 @@
           "iPhone X",
           "--version",
           "13.6",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -11006,6 +10834,7 @@
           "iPhone X",
           "--version",
           "13.6",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -11053,6 +10882,7 @@
           "iPhone X",
           "--version",
           "13.6",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -11100,6 +10930,7 @@
           "iPhone X",
           "--version",
           "13.6",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -11146,6 +10977,7 @@
           "iPhone X",
           "--version",
           "13.6",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -11192,6 +11024,7 @@
           "iPhone X",
           "--version",
           "13.6",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -11238,6 +11071,7 @@
           "iPhone X",
           "--version",
           "13.6",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -11285,6 +11119,7 @@
           "iPhone X",
           "--version",
           "13.6",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -11332,6 +11167,7 @@
           "iPhone X",
           "--version",
           "13.6",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -11379,6 +11215,7 @@
           "iPhone X",
           "--version",
           "13.6",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -11405,6 +11242,7 @@
           ],
           "dimension_sets": [
             {
+              "cores": "12",
               "cpu": "x86-64",
               "os": "Mac-12"
             }
@@ -11426,6 +11264,7 @@
           "iPhone X",
           "--version",
           "13.6",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -11472,6 +11311,7 @@
           "iPhone X",
           "--version",
           "13.6",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -11518,6 +11358,7 @@
           "iPhone X",
           "--version",
           "13.6",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -11564,6 +11405,7 @@
           "iPhone X",
           "--version",
           "13.6",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -11610,6 +11452,7 @@
           "iPhone X",
           "--version",
           "13.6",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -11657,6 +11500,7 @@
           "iPhone X",
           "--version",
           "13.6",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -11703,6 +11547,7 @@
           "iPhone X",
           "--version",
           "13.6",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -11753,6 +11598,7 @@
           "iPhone X",
           "--version",
           "14.5",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -11800,6 +11646,7 @@
           "iPhone X",
           "--version",
           "14.5",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -11846,6 +11693,7 @@
           "iPhone X",
           "--version",
           "14.5",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -11892,6 +11740,7 @@
           "iPhone X",
           "--version",
           "14.5",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -11938,6 +11787,7 @@
           "iPhone X",
           "--version",
           "14.5",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -11984,6 +11834,7 @@
           "iPhone X",
           "--version",
           "14.5",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -12031,6 +11882,7 @@
           "iPhone X",
           "--version",
           "14.5",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -12078,6 +11930,7 @@
           "iPhone X",
           "--version",
           "14.5",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -12124,6 +11977,7 @@
           "iPhone X",
           "--version",
           "14.5",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -12170,6 +12024,7 @@
           "iPhone X",
           "--version",
           "14.5",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -12216,6 +12071,7 @@
           "iPhone X",
           "--version",
           "14.5",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -12263,6 +12119,7 @@
           "iPhone X",
           "--version",
           "14.5",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -12310,6 +12167,7 @@
           "iPhone X",
           "--version",
           "14.5",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -12357,6 +12215,7 @@
           "iPhone X",
           "--version",
           "14.5",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -12383,6 +12242,7 @@
           ],
           "dimension_sets": [
             {
+              "cores": "12",
               "cpu": "x86-64",
               "os": "Mac-12"
             }
@@ -12404,6 +12264,7 @@
           "iPhone X",
           "--version",
           "14.5",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -12450,6 +12311,7 @@
           "iPhone X",
           "--version",
           "14.5",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -12496,6 +12358,7 @@
           "iPhone X",
           "--version",
           "14.5",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -12542,6 +12405,7 @@
           "iPhone X",
           "--version",
           "14.5",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -12588,6 +12452,7 @@
           "iPhone X",
           "--version",
           "14.5",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -12635,6 +12500,7 @@
           "iPhone X",
           "--version",
           "14.5",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -12681,6 +12547,7 @@
           "iPhone X",
           "--version",
           "14.5",
+          "--undefok=write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",

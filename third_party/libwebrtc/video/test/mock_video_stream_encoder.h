@@ -34,7 +34,10 @@ class MockVideoStreamEncoder : public VideoStreamEncoderInterface {
               (override));
   MOCK_METHOD(void, SetSink, (EncoderSink*, bool), (override));
   MOCK_METHOD(void, SetStartBitrate, (int), (override));
-  MOCK_METHOD(void, SendKeyFrame, (), (override));
+  MOCK_METHOD(void,
+              SendKeyFrame,
+              (const std::vector<VideoFrameType>&),
+              (override));
   MOCK_METHOD(void,
               OnLossNotification,
               (const VideoEncoder::LossNotification&),

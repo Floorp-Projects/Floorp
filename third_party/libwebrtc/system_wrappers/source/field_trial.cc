@@ -13,9 +13,13 @@
 
 #include <map>
 #include <string>
+#include <utility>
 
+#include "absl/algorithm/container.h"
 #include "absl/strings/string_view.h"
+#include "experiments/registered_field_trials.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/containers/flat_set.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/string_encode.h"
 
@@ -27,7 +31,14 @@ namespace field_trial {
 static const char* trials_init_string = NULL;
 
 namespace {
+
 constexpr char kPersistentStringSeparator = '/';
+
+flat_set<std::string>& TestKeys() {
+  static auto* test_keys = new flat_set<std::string>();
+  return *test_keys;
+}
+
 // Validates the given field trial string.
 //  E.g.:
 //    "WebRTC-experimentFoo/Enabled/WebRTC-experimentBar/Enabled100kbps/"
@@ -67,6 +78,7 @@ bool FieldTrialsStringIsValidInternal(const absl::string_view trials) {
 
   return true;
 }
+
 }  // namespace
 
 bool FieldTrialsStringIsValid(absl::string_view trials_string) {
@@ -104,6 +116,12 @@ std::string MergeFieldTrialsStrings(absl::string_view first,
 
 #ifndef WEBRTC_EXCLUDE_FIELD_TRIAL_DEFAULT
 std::string FindFullName(absl::string_view name) {
+#if WEBRTC_STRICT_FIELD_TRIALS
+  RTC_DCHECK(absl::c_linear_search(kRegisteredFieldTrials, name) ||
+             TestKeys().contains(name))
+      << name << " is not registered.";
+#endif
+
   if (trials_init_string == NULL)
     return std::string();
 
@@ -148,6 +166,15 @@ void InitFieldTrialsFromString(const char* trials_string) {
 
 const char* GetFieldTrialString() {
   return trials_init_string;
+}
+
+ScopedGlobalFieldTrialsForTesting::ScopedGlobalFieldTrialsForTesting(
+    flat_set<std::string> keys) {
+  TestKeys() = std::move(keys);
+}
+
+ScopedGlobalFieldTrialsForTesting::~ScopedGlobalFieldTrialsForTesting() {
+  TestKeys().clear();
 }
 
 }  // namespace field_trial

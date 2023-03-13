@@ -1468,6 +1468,36 @@ TEST_F(RtpSenderReceiverTest, VideoReceiverCanGetParametersWithSimulcast) {
   DestroyVideoRtpReceiver();
 }
 
+TEST_F(RtpSenderReceiverTest, GenerateKeyFrameWithAudio) {
+  CreateAudioRtpSender();
+
+  auto error = audio_rtp_sender_->GenerateKeyFrame({});
+  EXPECT_FALSE(error.ok());
+  EXPECT_EQ(error.type(), RTCErrorType::UNSUPPORTED_OPERATION);
+
+  DestroyAudioRtpSender();
+}
+
+TEST_F(RtpSenderReceiverTest, GenerateKeyFrameWithVideo) {
+  CreateVideoRtpSenderWithSimulcast({"1", "2", "3"});
+
+  auto error = video_rtp_sender_->GenerateKeyFrame({});
+  EXPECT_TRUE(error.ok());
+
+  error = video_rtp_sender_->GenerateKeyFrame({"1"});
+  EXPECT_TRUE(error.ok());
+
+  error = video_rtp_sender_->GenerateKeyFrame({""});
+  EXPECT_FALSE(error.ok());
+  EXPECT_EQ(error.type(), RTCErrorType::INVALID_PARAMETER);
+
+  error = video_rtp_sender_->GenerateKeyFrame({"no-such-rid"});
+  EXPECT_FALSE(error.ok());
+  EXPECT_EQ(error.type(), RTCErrorType::INVALID_PARAMETER);
+
+  DestroyVideoRtpSender();
+}
+
 // Test that makes sure that a video track content hint translates to the proper
 // value for sources that are not screencast.
 TEST_F(RtpSenderReceiverTest, PropagatesVideoTrackContentHint) {

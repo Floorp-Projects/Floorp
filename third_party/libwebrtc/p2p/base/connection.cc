@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "absl/algorithm/container.h"
+#include "absl/strings/escaping.h"
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
 #include "p2p/base/port_allocator.h"
@@ -234,6 +235,7 @@ Connection::Connection(rtc::WeakPtr<Port> port,
       last_ping_response_received_(0),
       state_(IceCandidatePairState::WAITING),
       time_created_ms_(rtc::TimeMillis()),
+      delta_internal_unix_epoch_ms_(rtc::TimeUTCMillis() - rtc::TimeMillis()),
       field_trials_(&kDefaultFieldTrials),
       rtt_estimate_(DEFAULT_RTT_ESTIMATE_HALF_TIME_MS) {
   RTC_DCHECK_RUN_ON(network_thread_);
@@ -474,22 +476,20 @@ void Connection::OnReadPacket(const char* data,
     rtc::LoggingSeverity sev = (!writable() ? rtc::LS_INFO : rtc::LS_VERBOSE);
     switch (msg->integrity()) {
       case StunMessage::IntegrityStatus::kNotSet:
-        // Late computation of integrity status, but not an error.
+        // This packet did not come through Port processing?
+        // TODO(bugs.webrtc.org/14578): Clean up this situation.
         msg->ValidateMessageIntegrity(remote_candidate().password());
         break;
       case StunMessage::IntegrityStatus::kIntegrityOk:
         if (remote_candidate().password() != msg->password()) {
-          // Password has changed. Recheck message.
-          // TODO(crbug.com/1177125): Redesign logic to check only once.
-          msg->RevalidateMessageIntegrity(remote_candidate().password());
+          // TODO(bugs.webrtc.org/14578): Do a better thing
+          RTC_LOG(LS_INFO) << "STUN code error - Different passwords, old = "
+                           << absl::CHexEscape(msg->password()) << ", new "
+                           << absl::CHexEscape(remote_candidate().password());
         }
         break;
-      case StunMessage::IntegrityStatus::kIntegrityBad:
-        // Possibly we have a new password to try.
-        // TODO(crbug.com/1177125): Redesign logic to check only once.
-        msg->RevalidateMessageIntegrity(remote_candidate().password());
-        break;
       default:
+        // kIntegrityBad and kNoIntegrity.
         // This shouldn't happen.
         RTC_DCHECK_NOTREACHED();
         break;
@@ -1527,6 +1527,14 @@ ConnectionInfo Connection::stats() {
   stats_.total_round_trip_time_ms = total_round_trip_time_ms_;
   stats_.current_round_trip_time_ms = current_round_trip_time_ms_;
   stats_.remote_candidate = remote_candidate();
+  if (last_data_received_ > 0) {
+    stats_.last_data_received = webrtc::Timestamp::Millis(
+        last_data_received_ + delta_internal_unix_epoch_ms_);
+  }
+  if (last_send_data_ > 0) {
+    stats_.last_data_sent = webrtc::Timestamp::Millis(
+        last_send_data_ + delta_internal_unix_epoch_ms_);
+  }
   return stats_;
 }
 

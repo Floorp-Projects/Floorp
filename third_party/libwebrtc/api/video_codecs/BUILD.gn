@@ -75,6 +75,7 @@ rtc_library("video_codecs_api") {
     "../../api:array_view",
     "../../modules/video_coding:codec_globals_headers",
     "../../rtc_base:checks",
+    "../../rtc_base:logging",
     "../../rtc_base:macromagic",
     "../../rtc_base:refcount",
     "../../rtc_base:stringutils",

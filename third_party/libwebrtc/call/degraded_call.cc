@@ -416,6 +416,11 @@ PacketReceiver::DeliveryStatus DegradedCall::DeliverPacket(
   return status;
 }
 
+void DegradedCall::SetClientBitratePreferences(
+    const webrtc::BitrateSettings& preferences) {
+  call_->SetClientBitratePreferences(preferences);
+}
+
 void DegradedCall::UpdateSendNetworkConfig() {
   send_config_index_ = (send_config_index_ + 1) % send_configs_.size();
   send_simulated_network_->SetConfig(send_configs_[send_config_index_]);

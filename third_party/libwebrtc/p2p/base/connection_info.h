@@ -15,6 +15,7 @@
 
 #include "absl/types/optional.h"
 #include "api/candidate.h"
+#include "api/units/timestamp.h"
 
 namespace cricket {
 
@@ -72,6 +73,10 @@ struct ConnectionInfo {
   uint64_t total_round_trip_time_ms;
   // https://w3c.github.io/webrtc-stats/#dom-rtcicecandidatepairstats-currentroundtriptime
   absl::optional<uint32_t> current_round_trip_time_ms;
+
+  // https://w3c.github.io/webrtc-stats/#dom-rtcicecandidatepairstats-lastpacketreceivedtimestamp
+  absl::optional<webrtc::Timestamp> last_data_received;
+  absl::optional<webrtc::Timestamp> last_data_sent;
 };
 
 // Information about all the candidate pairs of a channel.

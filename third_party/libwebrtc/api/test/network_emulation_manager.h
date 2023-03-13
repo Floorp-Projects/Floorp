@@ -142,9 +142,12 @@ class EmulatedNetworkManagerInterface {
   // Passes summarized network stats for endpoints for this manager into
   // specified `stats_callback`. Callback will be executed on network emulation
   // internal task queue.
+  // Deprecated.
   virtual void GetStats(
       std::function<void(std::unique_ptr<EmulatedNetworkStats>)> stats_callback)
       const = 0;
+  virtual void GetStats(
+      std::function<void(EmulatedNetworkStats)> stats_callback) const = 0;
 };
 
 enum class TimeMode { kRealTime, kSimulated };
@@ -327,10 +330,14 @@ class NetworkEmulationManager {
   // Passes summarized network stats for specified `endpoints` into specified
   // `stats_callback`. Callback will be executed on network emulation
   // internal task queue.
+  // Deprecated.
   virtual void GetStats(
       rtc::ArrayView<EmulatedEndpoint* const> endpoints,
       std::function<void(std::unique_ptr<EmulatedNetworkStats>)>
           stats_callback) = 0;
+  virtual void GetStats(
+      rtc::ArrayView<EmulatedEndpoint* const> endpoints,
+      std::function<void(EmulatedNetworkStats)> stats_callback) = 0;
 
   // Create a EmulatedTURNServer.
   // The TURN server has 2 endpoints that need to be connected with routes,

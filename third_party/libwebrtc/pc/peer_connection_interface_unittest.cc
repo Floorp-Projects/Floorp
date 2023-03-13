@@ -106,6 +106,7 @@ static const char kVideoTracks[][32] = {"videotrack0", "videotrack1"};
 
 static const char kRecvonly[] = "recvonly";
 static const char kSendrecv[] = "sendrecv";
+constexpr uint64_t kTiebreakerDefault = 44444;
 
 // Reference SDP with a MediaStream with label "stream1" and audio track with
 // id "audio_1" and a video track with id "video_1;
@@ -441,7 +442,9 @@ class RtcEventLogOutputNull final : public RtcEventLogOutput {
 };
 
 using ::cricket::StreamParams;
+using ::testing::Eq;
 using ::testing::Exactly;
+using ::testing::SizeIs;
 using ::testing::Values;
 
 using RTCConfiguration = PeerConnectionInterface::RTCConfiguration;
@@ -732,6 +735,7 @@ class PeerConnectionInterfaceBaseTest : public ::testing::Test {
             rtc::Thread::Current(),
             std::make_unique<rtc::BasicPacketSocketFactory>(vss_.get())));
     port_allocator_ = port_allocator.get();
+    port_allocator_->SetIceTiebreaker(kTiebreakerDefault);
 
     // Create certificate generator unless DTLS constraint is explicitly set to
     // false.
@@ -1330,7 +1334,7 @@ TEST_P(PeerConnectionInterfaceTest, CreatePeerConnectionWithPooledCandidates) {
   server.uri = kStunAddressOnly;
   config.servers.push_back(server);
   config.type = PeerConnectionInterface::kRelay;
-  config.disable_ipv6 = true;
+  config.DEPRECATED_disable_ipv6 = true;
   config.tcp_candidate_policy =
       PeerConnectionInterface::kTcpCandidatePolicyDisabled;
   config.candidate_network_policy =
@@ -1578,6 +1582,57 @@ TEST_F(PeerConnectionInterfaceTestPlanB, AddTrackRemoveTrack) {
   // should return false.
   EXPECT_FALSE(pc_->RemoveTrackOrError(audio_sender).ok());
   EXPECT_FALSE(pc_->RemoveTrackOrError(video_sender).ok());
+}
+
+// Test for AddTrack with init_send_encoding.
+TEST_F(PeerConnectionInterfaceTestPlanB, AddTrackWithSendEncodings) {
+  CreatePeerConnectionWithoutDtls();
+  rtc::scoped_refptr<AudioTrackInterface> audio_track(
+      CreateAudioTrack("audio_track"));
+  rtc::scoped_refptr<VideoTrackInterface> video_track(
+      CreateVideoTrack("video_track"));
+  RtpEncodingParameters audio_encodings;
+  audio_encodings.active = false;
+  auto audio_sender =
+      pc_->AddTrack(audio_track, {kStreamId1}, {audio_encodings}).MoveValue();
+  RtpEncodingParameters video_encodings;
+  video_encodings.active = true;
+  auto video_sender =
+      pc_->AddTrack(video_track, {kStreamId1}, {video_encodings}).MoveValue();
+  EXPECT_EQ(1UL, audio_sender->stream_ids().size());
+  EXPECT_EQ(kStreamId1, audio_sender->stream_ids()[0]);
+  EXPECT_EQ("audio_track", audio_sender->id());
+  EXPECT_EQ(audio_track, audio_sender->track());
+  EXPECT_EQ(1UL, video_sender->stream_ids().size());
+  EXPECT_EQ(kStreamId1, video_sender->stream_ids()[0]);
+  EXPECT_EQ("video_track", video_sender->id());
+  EXPECT_EQ(video_track, video_sender->track());
+
+  // Now create an offer and check for the senders.
+  std::unique_ptr<SessionDescriptionInterface> offer;
+  ASSERT_TRUE(DoCreateOffer(&offer, nullptr));
+
+  const cricket::ContentInfo* audio_content =
+      cricket::GetFirstAudioContent(offer->description());
+  EXPECT_TRUE(ContainsTrack(audio_content->media_description()->streams(),
+                            kStreamId1, "audio_track"));
+
+  const cricket::ContentInfo* video_content =
+      cricket::GetFirstVideoContent(offer->description());
+  EXPECT_TRUE(ContainsTrack(video_content->media_description()->streams(),
+                            kStreamId1, "video_track"));
+
+  EXPECT_TRUE(DoSetLocalDescription(std::move(offer)));
+
+  // Check the encodings.
+  ASSERT_THAT(audio_sender->GetParameters().encodings, SizeIs(1));
+  EXPECT_THAT(audio_sender->GetParameters().encodings[0].active, Eq(false));
+  ASSERT_THAT(video_sender->GetParameters().encodings, SizeIs(1));
+  EXPECT_THAT(video_sender->GetParameters().encodings[0].active, Eq(true));
+
+  // Now try removing the tracks.
+  EXPECT_TRUE(pc_->RemoveTrackOrError(audio_sender).ok());
+  EXPECT_TRUE(pc_->RemoveTrackOrError(video_sender).ok());
 }
 
 // Test creating senders without a stream specified,
@@ -3774,7 +3829,7 @@ TEST(RTCConfigurationTest, ComparisonOperators) {
   EXPECT_NE(a, f);
 
   PeerConnectionInterface::RTCConfiguration g;
-  g.disable_ipv6 = true;
+  g.DEPRECATED_disable_ipv6 = true;
   EXPECT_NE(a, g);
 
   PeerConnectionInterface::RTCConfiguration h(

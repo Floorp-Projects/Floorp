@@ -1026,6 +1026,8 @@ webrtc::VideoReceiveStreamInterface* Call::CreateVideoReceiveStream(
   // and `video_receiver_controller_` out of VideoReceiveStream2 construction
   // and set it up asynchronously on the network thread (the registration and
   // `video_receiver_controller_` need to live on the network thread).
+  // TODO(crbug.com/1381982): Re-enable decode synchronizer once the Chromium
+  // API has adapted to the new Metronome interface.
   VideoReceiveStream2* receive_stream = new VideoReceiveStream2(
       task_queue_factory_, this, num_cpu_cores_,
       transport_send_->packet_router(), std::move(configuration),

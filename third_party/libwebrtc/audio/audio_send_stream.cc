@@ -442,6 +442,7 @@ webrtc::AudioSendStream::Stats AudioSendStream::GetStats(
       call_stats.header_and_padding_bytes_sent;
   stats.retransmitted_bytes_sent = call_stats.retransmitted_bytes_sent;
   stats.packets_sent = call_stats.packetsSent;
+  stats.total_packet_send_delay = call_stats.total_packet_send_delay;
   stats.retransmitted_packets_sent = call_stats.retransmitted_packets_sent;
   // RTT isn't known until a RTCP report is received. Until then, VoiceEngine
   // returns 0 to indicate an error value.

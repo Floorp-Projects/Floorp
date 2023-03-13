@@ -116,6 +116,13 @@
       'voip_unittests': {},
       'webrtc_nonparallel_tests': {},
     },
+    'fuchsia_compatible_tests': {
+      'audio_decoder_unittests': {},
+      'common_audio_unittests': {},
+      'common_video_unittests': {},
+      'dcsctp_unittests': {},
+      'low_bandwidth_audio_test': {},
+    },
     'ios_device_tests': {
       # TODO(bugs.webrtc.org/11362): Real XCTests fail to start on devices.
       #'apprtcmobile_tests': {'mixins': ['xcodebuild-device-runner']},
@@ -171,7 +178,7 @@
         'mixins': ['xcode_parallelization']
       },
       'svc_tests': {
-        'mixins': ['shards-4'],
+        'mixins': ['shards-4', 'cores-12'],
       },
       'system_wrappers_unittests': {},
       'test_support_unittests': {},
@@ -182,6 +189,9 @@
       },
       'voip_unittests': {},
       'webrtc_nonparallel_tests': {},
+    },
+    'linux_desktop_specific_tests': {
+      'shared_screencast_stream_test': {},
     },
     'more_configs_tests': {
       'peerconnection_unittests': {
@@ -224,6 +234,21 @@
     'desktop_tests_with_video_capture': [
       'desktop_tests',
       'video_capture_tests',
+    ],
+    'linux_desktop_tests_tryserver': [
+      'desktop_tests',
+      'linux_desktop_specific_tests',
+      'video_capture_tests_tryserver',
+      'webrtc_perf_tests_tryserver',
+    ],
+    'linux_desktop_tests_with_video_capture': [
+      'desktop_tests',
+      'linux_desktop_specific_tests',
+      'video_capture_tests',
+    ],
+    'linux_tests': [
+      'desktop_tests',
+      'linux_desktop_specific_tests',
     ],
   },
 }

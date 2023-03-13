@@ -13,7 +13,6 @@
 
 #include <stdio.h>
 
-#include <list>
 #include <map>
 #include <memory>
 #include <set>
@@ -82,7 +81,7 @@ class TurnPort : public Port {
     return absl::WrapUnique(
         new TurnPort(args.network_thread, args.socket_factory, args.network,
                      socket, args.username, args.password, *args.server_address,
-                     args.config->credentials, args.config->priority,
+                     args.config->credentials, args.relative_priority,
                      args.config->tls_alpn_protocols,
                      args.config->tls_elliptic_curves, args.turn_customizer,
                      args.config->tls_cert_verifier, args.field_trials));
@@ -101,7 +100,7 @@ class TurnPort : public Port {
         new TurnPort(args.network_thread, args.socket_factory, args.network,
                      min_port, max_port, args.username, args.password,
                      *args.server_address, args.config->credentials,
-                     args.config->priority, args.config->tls_alpn_protocols,
+                     args.relative_priority, args.config->tls_alpn_protocols,
                      args.config->tls_elliptic_curves, args.turn_customizer,
                      args.config->tls_cert_verifier, args.field_trials));
   }
@@ -151,6 +150,14 @@ class TurnPort : public Port {
                             int64_t packet_time_us) override;
   bool CanHandleIncomingPacketsFrom(
       const rtc::SocketAddress& addr) const override;
+
+  // Checks if a connection exists for `addr` before forwarding the call to
+  // the base class.
+  void SendBindingErrorResponse(StunMessage* message,
+                                const rtc::SocketAddress& addr,
+                                int error_code,
+                                absl::string_view reason) override;
+
   virtual void OnReadPacket(rtc::AsyncPacketSocket* socket,
                             const char* data,
                             size_t size,
@@ -231,11 +238,7 @@ class TurnPort : public Port {
 
   // NOTE: This method needs to be accessible for StunPort
   // return true if entry was created (i.e channel_number consumed).
-  bool CreateOrRefreshEntry(const rtc::SocketAddress& addr, int channel_number);
-
-  bool CreateOrRefreshEntry(const rtc::SocketAddress& addr,
-                            int channel_number,
-                            absl::string_view remote_ufrag);
+  bool CreateOrRefreshEntry(Connection* conn, int channel_number);
 
   rtc::DiffServCodePoint StunDscpValue() const override;
 
@@ -243,7 +246,6 @@ class TurnPort : public Port {
   void Close();
 
  private:
-  typedef std::list<TurnEntry*> EntryList;
   typedef std::map<rtc::Socket::Option, int> SocketOptionsMap;
   typedef std::set<rtc::SocketAddress> AttemptedServerSet;
 
@@ -300,11 +302,6 @@ class TurnPort : public Port {
   bool HasPermission(const rtc::IPAddress& ipaddr) const;
   TurnEntry* FindEntry(const rtc::SocketAddress& address) const;
   TurnEntry* FindEntry(int channel_id) const;
-  bool EntryExists(TurnEntry* e);
-  void DestroyEntry(TurnEntry* entry);
-  // Destroys the entry only if `timestamp` matches the destruction timestamp
-  // in `entry`.
-  void DestroyEntryIfNotCancelled(TurnEntry* entry, int64_t timestamp);
 
   // Marks the connection with remote address `address` failed and
   // pruned (a.k.a. write-timed-out). Returns true if a connection is found.
@@ -340,7 +337,7 @@ class TurnPort : public Port {
   std::string hash_;   // Digest of username:realm:password
 
   int next_channel_number_;
-  EntryList entries_;
+  std::vector<std::unique_ptr<TurnEntry>> entries_;
 
   PortState state_;
   // By default the value will be set to 0. This value will be used in

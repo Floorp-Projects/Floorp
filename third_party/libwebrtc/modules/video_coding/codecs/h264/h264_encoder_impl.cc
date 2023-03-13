@@ -31,10 +31,19 @@
 #include "system_wrappers/include/metrics.h"
 #include "third_party/libyuv/include/libyuv/convert.h"
 #include "third_party/libyuv/include/libyuv/scale.h"
+// TODO(crbug.com/1218384): Remove after new openh264 is rolled.
+#include "third_party/openh264/buildflags.h"
+#if BUILDFLAG(OPENH264_API_WELS)
+#include "third_party/openh264/src/codec/api/wels/codec_api.h"
+#include "third_party/openh264/src/codec/api/wels/codec_app_def.h"
+#include "third_party/openh264/src/codec/api/wels/codec_def.h"
+#include "third_party/openh264/src/codec/api/wels/codec_ver.h"
+#else
 #include "third_party/openh264/src/codec/api/svc/codec_api.h"
 #include "third_party/openh264/src/codec/api/svc/codec_app_def.h"
 #include "third_party/openh264/src/codec/api/svc/codec_def.h"
 #include "third_party/openh264/src/codec/api/svc/codec_ver.h"
+#endif
 
 namespace webrtc {
 

@@ -238,6 +238,11 @@ declare_args() {
 
   # Includes the dav1d decoder in the internal decoder factory when set to true.
   rtc_include_dav1d_in_internal_decoder_factory = true
+
+  # When set to true, a run-time check will make sure that all field trial keys
+  # have been registered in accordance with the field trial policy. The check
+  # will only run with builds that have RTC_DCHECKs enabled.
+  rtc_strict_field_trials = false
 }
 
 if (!build_with_mozilla) {

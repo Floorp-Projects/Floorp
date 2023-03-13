@@ -36,6 +36,9 @@ int ScalabilityModeToNumTemporalLayers(ScalabilityMode scalability_mode);
 absl::optional<ScalabilityModeResolutionRatio> ScalabilityModeToResolutionRatio(
     ScalabilityMode scalability_mode);
 
+ScalabilityMode LimitNumSpatialLayers(ScalabilityMode scalability_mode,
+                                      int max_spatial_layers);
+
 }  // namespace webrtc
 
 #endif  // MODULES_VIDEO_CODING_SVC_SCALABILITY_MODE_UTIL_H_

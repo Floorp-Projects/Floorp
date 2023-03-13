@@ -14,11 +14,9 @@
 #include <string>
 #include <vector>
 
-#include "absl/types/optional.h"
 #include "api/video/video_adaptation_counters.h"
 #include "api/video/video_adaptation_reason.h"
 #include "api/video/video_bitrate_allocation.h"
-#include "api/video/video_codec_constants.h"
 #include "api/video_codecs/video_encoder.h"
 #include "video/config/video_encoder_config.h"
 
@@ -28,6 +26,11 @@ namespace webrtc {
 // wants metadata such as size, encode timing, qp, but doesn't need actual
 // encoded data. So use some other type to represent that.
 class EncodedImage;
+
+struct EncoderImplementation {
+  const std::string& name;
+  bool is_hardware_accelerated;
+};
 
 // Broken out into a base class, with public inheritance below, only to ease
 // unit testing of the internal class OveruseFrameDetector.
@@ -71,7 +74,7 @@ class VideoStreamEncoderObserver : public CpuOveruseMetricsObserver {
                                   const CodecSpecificInfo* codec_info) = 0;
 
   virtual void OnEncoderImplementationChanged(
-      const std::string& implementation_name) = 0;
+      EncoderImplementation implementation) = 0;
 
   virtual void OnFrameDropped(DropReason reason) = 0;
 

@@ -1053,11 +1053,12 @@ void SendStatisticsProxy::OnSendEncodedImage(
 }
 
 void SendStatisticsProxy::OnEncoderImplementationChanged(
-    const std::string& implementation_name) {
+    EncoderImplementation implementation) {
   MutexLock lock(&mutex_);
   encoder_changed_ = EncoderChangeEvent{stats_.encoder_implementation_name,
-                                        implementation_name};
-  stats_.encoder_implementation_name = implementation_name;
+                                        implementation.name};
+  stats_.encoder_implementation_name = implementation.name;
+  stats_.power_efficient_encoder = implementation.is_hardware_accelerated;
 }
 
 int SendStatisticsProxy::GetInputFrameRate() const {

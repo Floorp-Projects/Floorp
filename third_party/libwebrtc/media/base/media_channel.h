@@ -405,6 +405,8 @@ struct MediaSenderInfo {
   // the SSRC of the corresponding outbound RTP stream, is unique.
   std::vector<webrtc::ReportBlockData> report_block_datas;
   absl::optional<bool> active;
+  // https://w3c.github.io/webrtc-stats/#dom-rtcoutboundrtpstreamstats-totalpacketsenddelay
+  webrtc::TimeDelta total_packet_send_delay = webrtc::TimeDelta::Zero();
 };
 
 struct MediaReceiverInfo {
@@ -595,8 +597,6 @@ struct VideoSenderInfo : public MediaSenderInfo {
   uint64_t total_encode_time_ms = 0;
   // https://w3c.github.io/webrtc-stats/#dom-rtcoutboundrtpstreamstats-totalencodedbytestarget
   uint64_t total_encoded_bytes_target = 0;
-  // https://w3c.github.io/webrtc-stats/#dom-rtcoutboundrtpstreamstats-totalpacketsenddelay
-  webrtc::TimeDelta total_packet_send_delay = webrtc::TimeDelta::Zero();
   bool has_entered_low_resolution = false;
   absl::optional<uint64_t> qp_sum;
   webrtc::VideoContentType content_type = webrtc::VideoContentType::UNSPECIFIED;
@@ -605,6 +605,7 @@ struct VideoSenderInfo : public MediaSenderInfo {
   uint32_t huge_frames_sent = 0;
   uint32_t aggregated_huge_frames_sent = 0;
   absl::optional<std::string> rid;
+  absl::optional<bool> power_efficient_encoder;
 };
 
 struct VideoReceiverInfo : public MediaReceiverInfo {
@@ -612,6 +613,7 @@ struct VideoReceiverInfo : public MediaReceiverInfo {
   ~VideoReceiverInfo();
   std::vector<SsrcGroup> ssrc_groups;
   std::string decoder_implementation_name;
+  absl::optional<bool> power_efficient_decoder;
   int packets_concealed = 0;
   int firs_sent = 0;
   int plis_sent = 0;
@@ -920,8 +922,12 @@ class VideoMediaChannel : public MediaChannel, public Delayable {
       std::function<void(const webrtc::RecordableEncodedFrame&)> callback) = 0;
   // Clear recordable encoded frame callback for `ssrc`
   virtual void ClearRecordableEncodedFrameCallback(uint32_t ssrc) = 0;
-  // Cause generation of a keyframe for `ssrc`
-  virtual void GenerateKeyFrame(uint32_t ssrc) = 0;
+  // Request generation of a keyframe for `ssrc` on a receiving channel via
+  // RTCP feedback.
+  virtual void RequestRecvKeyFrame(uint32_t ssrc) = 0;
+  // Cause generation of a keyframe for `ssrc` on a sending channel.
+  virtual void GenerateSendKeyFrame(uint32_t ssrc,
+                                    const std::vector<std::string>& rids) = 0;
 
   virtual std::vector<webrtc::RtpSource> GetSources(uint32_t ssrc) const = 0;
 };

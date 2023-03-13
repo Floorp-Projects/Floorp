@@ -129,9 +129,13 @@ bool FrameInFlight::HasReceivedTime(size_t peer) const {
 
 void FrameInFlight::OnFrameDecoded(size_t peer,
                                    webrtc::Timestamp time,
+                                   int width,
+                                   int height,
                                    const StreamCodecInfo& used_decoder) {
   receiver_stats_[peer].decode_end_time = time;
   receiver_stats_[peer].used_decoder = used_decoder;
+  receiver_stats_[peer].decoded_frame_width = width;
+  receiver_stats_[peer].decoded_frame_height = height;
 }
 
 void FrameInFlight::OnDecoderError(size_t peer,
@@ -148,13 +152,8 @@ bool FrameInFlight::HasDecodeEndTime(size_t peer) const {
   return it->second.decode_end_time.IsFinite();
 }
 
-void FrameInFlight::OnFrameRendered(size_t peer,
-                                    webrtc::Timestamp time,
-                                    int width,
-                                    int height) {
+void FrameInFlight::OnFrameRendered(size_t peer, webrtc::Timestamp time) {
   receiver_stats_[peer].rendered_time = time;
-  receiver_stats_[peer].rendered_frame_width = width;
-  receiver_stats_[peer].rendered_frame_height = height;
 }
 
 bool FrameInFlight::HasRenderedTime(size_t peer) const {
@@ -192,8 +191,8 @@ FrameStats FrameInFlight::GetStatsForPeer(size_t peer) const {
     stats.decode_end_time = receiver_stats->decode_end_time;
     stats.rendered_time = receiver_stats->rendered_time;
     stats.prev_frame_rendered_time = receiver_stats->prev_frame_rendered_time;
-    stats.rendered_frame_width = receiver_stats->rendered_frame_width;
-    stats.rendered_frame_height = receiver_stats->rendered_frame_height;
+    stats.decoded_frame_width = receiver_stats->decoded_frame_width;
+    stats.decoded_frame_height = receiver_stats->decoded_frame_height;
     stats.used_decoder = receiver_stats->used_decoder;
     stats.pre_decoded_frame_type = receiver_stats->frame_type;
     stats.pre_decoded_image_size = receiver_stats->encoded_image_size;

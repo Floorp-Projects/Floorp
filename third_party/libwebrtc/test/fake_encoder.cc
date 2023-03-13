@@ -275,6 +275,7 @@ const char* FakeEncoder::kImplementationName = "fake_encoder";
 VideoEncoder::EncoderInfo FakeEncoder::GetEncoderInfo() const {
   EncoderInfo info;
   info.implementation_name = kImplementationName;
+  info.is_hardware_accelerated = true;
   MutexLock lock(&mutex_);
   for (int sid = 0; sid < config_.numberOfSimulcastStreams; ++sid) {
     int number_of_temporal_layers =

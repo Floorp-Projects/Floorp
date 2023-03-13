@@ -101,14 +101,14 @@ Xcode is the default and preferred IDE to develop for the iOS platform.
 *Generating an Xcode project*
 
 To have GN generate Xcode project files, pass the argument `--ide=xcode`
-when running `gn gen`. This will result in a file named `all.xcworkspace`
+when running `gn gen`. This will result in a file named `all.xcodeproj`
 placed in your specified output directory.
 
 Example:
 
 ```
 $ gn gen out/ios --args='target_os="ios" target_cpu="arm64"' --ide=xcode
-$ open -a Xcode.app out/ios/all.xcworkspace
+$ open -a Xcode.app out/ios/all.xcodeproj
 ```
 
 *Compile and run with Xcode*

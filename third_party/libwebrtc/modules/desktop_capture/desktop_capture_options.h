@@ -194,6 +194,13 @@ class RTC_EXPORT DesktopCaptureOptions {
 
   void set_height(uint32_t height) { height_ = height; }
   uint32_t get_height() const { return height_; }
+
+  void set_pipewire_use_damage_region(bool use_damage_regions) {
+    pipewire_use_damage_region_ = use_damage_regions;
+  }
+  bool pipewire_use_damage_region() const {
+    return pipewire_use_damage_region_;
+  }
 #endif
 
  private:
@@ -232,6 +239,7 @@ class RTC_EXPORT DesktopCaptureOptions {
   bool detect_updated_region_ = false;
 #if defined(WEBRTC_USE_PIPEWIRE)
   bool allow_pipewire_ = false;
+  bool pipewire_use_damage_region_ = true;
   uint32_t width_ = 0;
   uint32_t height_ = 0;
 #endif

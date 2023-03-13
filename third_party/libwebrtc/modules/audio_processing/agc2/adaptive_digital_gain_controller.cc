@@ -13,7 +13,6 @@
 #include <algorithm>
 
 #include "common_audio/include/audio_util.h"
-#include "modules/audio_processing/agc2/vad_wrapper.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"

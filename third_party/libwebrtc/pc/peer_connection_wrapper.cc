@@ -289,6 +289,16 @@ rtc::scoped_refptr<RtpSenderInterface> PeerConnectionWrapper::AddTrack(
   return result.MoveValue();
 }
 
+rtc::scoped_refptr<RtpSenderInterface> PeerConnectionWrapper::AddTrack(
+    rtc::scoped_refptr<MediaStreamTrackInterface> track,
+    const std::vector<std::string>& stream_ids,
+    const std::vector<RtpEncodingParameters>& init_send_encodings) {
+  RTCErrorOr<rtc::scoped_refptr<RtpSenderInterface>> result =
+      pc()->AddTrack(track, stream_ids, init_send_encodings);
+  EXPECT_EQ(RTCErrorType::NONE, result.error().type());
+  return result.MoveValue();
+}
+
 rtc::scoped_refptr<RtpSenderInterface> PeerConnectionWrapper::AddAudioTrack(
     const std::string& track_label,
     const std::vector<std::string>& stream_ids) {

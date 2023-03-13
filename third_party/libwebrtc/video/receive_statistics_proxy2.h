@@ -21,6 +21,7 @@
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/units/timestamp.h"
+#include "api/video_codecs/video_decoder.h"
 #include "call/video_receive_stream.h"
 #include "modules/include/module_common_types.h"
 #include "modules/video_coding/include/video_coding_defines.h"
@@ -75,7 +76,7 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
                            double estimated_freq_khz);
   void OnRenderedFrame(const VideoFrameMetaData& frame_meta);
   void OnIncomingPayloadType(int payload_type);
-  void OnDecoderImplementationName(const char* implementation_name);
+  void OnDecoderInfo(const VideoDecoder::DecoderInfo& decoder_info);
 
   void OnPreDecode(VideoCodecType codec_type, int qp);
 

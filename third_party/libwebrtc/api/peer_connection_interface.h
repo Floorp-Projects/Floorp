@@ -427,9 +427,11 @@ class RTC_EXPORT PeerConnectionInterface : public rtc::RefCountInterface {
     //////////////////////////////////////////////////////////////////////////
 
     // If set to true, don't gather IPv6 ICE candidates.
-    // TODO(https://crbug.com/1315576): Remove the ability to set it in Chromium
-    // and delete this flag.
-    bool disable_ipv6 = false;
+    // TODO(https://crbug.com/webrtc/14608): Delete this flag.
+    union {
+      bool DEPRECATED_disable_ipv6 = false;
+      bool ABSL_DEPRECATED("https://crbug.com/webrtc/14608") disable_ipv6;
+    };
 
     // If set to true, don't gather IPv6 ICE candidates on Wi-Fi.
     // Only intended to be used on specific devices. Certain phones disable IPv6
@@ -803,6 +805,16 @@ class RTC_EXPORT PeerConnectionInterface : public rtc::RefCountInterface {
   virtual RTCErrorOr<rtc::scoped_refptr<RtpSenderInterface>> AddTrack(
       rtc::scoped_refptr<MediaStreamTrackInterface> track,
       const std::vector<std::string>& stream_ids) = 0;
+
+  // Add a new MediaStreamTrack as above, but with an additional parameter,
+  // `init_send_encodings` : initial RtpEncodingParameters for RtpSender,
+  // similar to init_send_encodings in RtpTransceiverInit.
+  // Note that a new transceiver will always be created.
+  //
+  virtual RTCErrorOr<rtc::scoped_refptr<RtpSenderInterface>> AddTrack(
+      rtc::scoped_refptr<MediaStreamTrackInterface> track,
+      const std::vector<std::string>& stream_ids,
+      const std::vector<RtpEncodingParameters>& init_send_encodings) = 0;
 
   // Removes the connection between a MediaStreamTrack and the PeerConnection.
   // Stops sending on the RtpSender and marks the

@@ -291,7 +291,11 @@ AudioProcessingImpl::AudioProcessingImpl(
                  MinimizeProcessingForUnusedOutput(),
                  field_trial::IsEnabled("WebRTC-TransientSuppressorForcedOff")),
       capture_(),
-      capture_nonlocked_() {
+      capture_nonlocked_(),
+      applied_input_volume_stats_reporter_(
+          InputVolumeStatsReporter::InputVolumeType::kApplied),
+      recommended_input_volume_stats_reporter_(
+          InputVolumeStatsReporter::InputVolumeType::kRecommended) {
   RTC_LOG(LS_INFO) << "Injected APM submodules:"
                       "\nEcho control factory: "
                    << !!echo_control_factory_
@@ -1131,8 +1135,7 @@ int AudioProcessingImpl::ProcessCaptureStreamLocked() {
   }
 
   if (capture_.applied_input_volume.has_value()) {
-    // Log the applied input volume only when available.
-    input_volume_stats_reporter_.UpdateStatistics(
+    applied_input_volume_stats_reporter_.UpdateStatistics(
         *capture_.applied_input_volume);
   }
 
@@ -1362,6 +1365,10 @@ int AudioProcessingImpl::ProcessCaptureStreamLocked() {
   stats_reporter_.UpdateStatistics(capture_.stats);
 
   UpdateRecommendedInputVolumeLocked();
+  if (capture_.recommended_input_volume.has_value()) {
+    recommended_input_volume_stats_reporter_.UpdateStatistics(
+        *capture_.recommended_input_volume);
+  }
 
   if (submodules_.capture_levels_adjuster) {
     submodules_.capture_levels_adjuster->ApplyPostLevelAdjustment(
@@ -2058,10 +2065,6 @@ void AudioProcessingImpl::WriteAecDumpConfigMessage(bool forced) {
   std::string experiments_description = "";
   // TODO(peah): Add semicolon-separated concatenations of experiment
   // descriptions for other submodules.
-  if (config_.gain_controller1.analog_gain_controller.clipped_level_min !=
-      kClippedLevelMin) {
-    experiments_description += "AgcClippingLevelExperiment;";
-  }
   if (!!submodules_.capture_post_processor) {
     experiments_description += "CapturePostProcessor;";
   }

@@ -416,6 +416,28 @@ MergeInfoAboutOutboundRtpSubstreams(
   return rtp_substreams;
 }
 
+bool IsActiveFromEncodings(
+    absl::optional<uint32_t> ssrc,
+    const std::vector<webrtc::RtpEncodingParameters>& encodings) {
+  if (ssrc.has_value()) {
+    // Report the `active` value of a specific ssrc, or false if an encoding
+    // with this ssrc does not exist.
+    auto encoding_it = std::find_if(
+        encodings.begin(), encodings.end(),
+        [ssrc = ssrc.value()](const webrtc::RtpEncodingParameters& encoding) {
+          return encoding.ssrc.has_value() && encoding.ssrc.value() == ssrc;
+        });
+    return encoding_it != encodings.end() ? encoding_it->active : false;
+  }
+  // If `ssrc` is not specified then any encoding being active counts as active.
+  for (const auto& encoding : encodings) {
+    if (encoding.active) {
+      return true;
+    }
+  }
+  return false;
+}
+
 }  // namespace
 
 // This constant is really an on/off, lower-level configurable NACK history
@@ -2285,9 +2307,14 @@ void WebRtcVideoChannel::WebRtcVideoSendStream::SetSendParameters(
 webrtc::RTCError WebRtcVideoChannel::WebRtcVideoSendStream::SetRtpParameters(
     const webrtc::RtpParameters& new_parameters) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
+  // This is checked higher in the stack (RtpSender), so this is only checking
+  // for users accessing the private APIs or tests, not specification
+  // conformance.
+  // TODO(orphis): Migrate tests to later make this a DCHECK only
   webrtc::RTCError error = CheckRtpParametersInvalidModificationAndValues(
       rtp_parameters_, new_parameters);
   if (!error.ok()) {
+    // Error is propagated to the callback at a higher level
     return error;
   }
 
@@ -2620,21 +2647,18 @@ WebRtcVideoChannel::WebRtcVideoSendStream::GetPerLayerVideoSenderInfos(
     common_info.content_type = stats.content_type;
     common_info.aggregated_framerate_sent = stats.encode_frame_rate;
     common_info.aggregated_huge_frames_sent = stats.huge_frames_sent;
+    common_info.power_efficient_encoder = stats.power_efficient_encoder;
 
-    // If we don't have any substreams, get the remaining metrics from `stats`.
-    // Otherwise, these values are obtained from `sub_stream` below.
+    // The normal case is that substreams are present, handled below. But if
+    // substreams are missing (can happen before negotiated/connected where we
+    // have no stats yet) a single outbound-rtp is created representing any and
+    // all layers.
     if (stats.substreams.empty()) {
       for (uint32_t ssrc : parameters_.config.rtp.ssrcs) {
         common_info.add_ssrc(ssrc);
-        auto encoding_it = std::find_if(
-            rtp_parameters_.encodings.begin(), rtp_parameters_.encodings.end(),
-            [&ssrc](const webrtc::RtpEncodingParameters& parameters) {
-              return parameters.ssrc && parameters.ssrc == ssrc;
-            });
-        if (encoding_it != rtp_parameters_.encodings.end()) {
-          common_info.active = encoding_it->active;
-        }
       }
+      common_info.active =
+          IsActiveFromEncodings(absl::nullopt, rtp_parameters_.encodings);
       common_info.framerate_sent = stats.encode_frame_rate;
       common_info.frames_encoded = stats.frames_encoded;
       common_info.total_encode_time_ms = stats.total_encode_time_ms;
@@ -2645,21 +2669,24 @@ WebRtcVideoChannel::WebRtcVideoSendStream::GetPerLayerVideoSenderInfos(
       return infos;
     }
   }
+  // Merge `stats.substreams`, which may contain additional SSRCs for RTX or
+  // Flexfec, with media SSRCs. This results in a set of substreams that match
+  // with the outbound-rtp stats objects.
   auto outbound_rtp_substreams =
       MergeInfoAboutOutboundRtpSubstreams(stats.substreams);
+  // If SVC is used, one stream is configured but multiple encodings exist. This
+  // is not spec-compliant, but it is how we've implemented SVC so this affects
+  // how the RTP stream's "active" value is determined.
+  bool is_svc = (parameters_.encoder_config.number_of_streams == 1 &&
+                 rtp_parameters_.encodings.size() > 1);
   for (const auto& pair : outbound_rtp_substreams) {
     auto info = common_info;
-    info.add_ssrc(pair.first);
-    info.rid = parameters_.config.rtp.GetRidForSsrc(pair.first);
-    // Search the associated encoding by SSRC.
-    auto encoding_it = std::find_if(
-        rtp_parameters_.encodings.begin(), rtp_parameters_.encodings.end(),
-        [&pair](const webrtc::RtpEncodingParameters& parameters) {
-          return parameters.ssrc && pair.first == *parameters.ssrc;
-        });
-    if (encoding_it != rtp_parameters_.encodings.end()) {
-      info.active = encoding_it->active;
-    }
+    uint32_t ssrc = pair.first;
+    info.add_ssrc(ssrc);
+    info.rid = parameters_.config.rtp.GetRidForSsrc(ssrc);
+    info.active = IsActiveFromEncodings(
+        !is_svc ? absl::optional<uint32_t>(ssrc) : absl::nullopt,
+        rtp_parameters_.encodings);
     auto stream_stats = pair.second;
     RTC_DCHECK_EQ(stream_stats.type,
                   webrtc::VideoSendStream::StreamStats::StreamType::kMedia);
@@ -2819,6 +2846,17 @@ void WebRtcVideoChannel::WebRtcVideoSendStream::RecreateWebRtcStream() {
   // being injected into a not-yet initializated video stream encoder.
   if (source_) {
     stream_->SetSource(source_, GetDegradationPreference());
+  }
+}
+
+void WebRtcVideoChannel::WebRtcVideoSendStream::GenerateKeyFrame(
+    const std::vector<std::string>& rids) {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  if (stream_ != NULL) {
+    stream_->GenerateKeyFrame(rids);
+  } else {
+    RTC_LOG(LS_WARNING)
+        << "Absent send stream; ignoring request to generate keyframe.";
   }
 }
 
@@ -3209,6 +3247,7 @@ WebRtcVideoChannel::WebRtcVideoReceiveStream::GetVideoReceiverInfo(
   info.add_ssrc(config_.rtp.remote_ssrc);
   webrtc::VideoReceiveStreamInterface::Stats stats = stream_->GetStats();
   info.decoder_implementation_name = stats.decoder_implementation_name;
+  info.power_efficient_decoder = stats.power_efficient_decoder;
   if (stats.current_payload_type != -1) {
     info.codec_payload_type = stats.current_payload_type;
     auto decoder_it = absl::c_find_if(config_.decoders, [&](const auto& d) {
@@ -3270,8 +3309,6 @@ WebRtcVideoChannel::WebRtcVideoReceiveStream::GetVideoReceiverInfo(
   info.pause_count = stats.pause_count;
   info.total_freezes_duration_ms = stats.total_freezes_duration_ms;
   info.total_pauses_duration_ms = stats.total_pauses_duration_ms;
-  info.total_frames_duration_ms = stats.total_frames_duration_ms;
-  info.sum_squared_frame_durations = stats.sum_squared_frame_durations;
 
   info.content_type = stats.content_type;
 
@@ -3545,14 +3582,28 @@ void WebRtcVideoChannel::ClearRecordableEncodedFrameCallback(uint32_t ssrc) {
   }
 }
 
-void WebRtcVideoChannel::GenerateKeyFrame(uint32_t ssrc) {
+void WebRtcVideoChannel::RequestRecvKeyFrame(uint32_t ssrc) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   WebRtcVideoReceiveStream* stream = FindReceiveStream(ssrc);
   if (stream) {
-    stream->GenerateKeyFrame();
+    return stream->GenerateKeyFrame();
   } else {
     RTC_LOG(LS_ERROR)
         << "Absent receive stream; ignoring key frame generation for ssrc "
+        << ssrc;
+  }
+}
+
+void WebRtcVideoChannel::GenerateSendKeyFrame(
+    uint32_t ssrc,
+    const std::vector<std::string>& rids) {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  auto it = send_streams_.find(ssrc);
+  if (it != send_streams_.end()) {
+    it->second->GenerateKeyFrame(rids);
+  } else {
+    RTC_LOG(LS_ERROR)
+        << "Absent send stream; ignoring key frame generation for ssrc "
         << ssrc;
   }
 }

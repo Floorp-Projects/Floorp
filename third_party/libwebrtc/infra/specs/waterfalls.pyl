@@ -67,9 +67,10 @@
       'Android64 Builder x64 (dbg)': {},
       'Fuchsia Release': {
         'os_type': 'linux',
-        'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
+        'mixins':
+        ['linux-bionic', 'x86-64', 'resultdb-json-format', 'fuchsia'],
         'test_suites': {
-          'isolated_scripts': 'desktop_tests',
+          'isolated_scripts': 'fuchsia_compatible_tests',
         },
       },
       'Linux (more configs)': {
@@ -83,13 +84,16 @@
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'desktop_tests',
+          'isolated_scripts': 'linux_tests',
         },
       },
       'Linux MSan': {
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
+          # TODO(crbug.com/webrtc/14568): Using 'linux_tests'
+          # fails on "MemorySanitizer: use-of-uninitialized-value in
+          # libpipewire-0.3.so."
           'isolated_scripts': 'desktop_tests',
         },
       },
@@ -97,6 +101,9 @@
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
+          # TODO(crbug.com/webrtc/14568): Using 'linux_tests'
+          # fails on "ThreadSanitizer: data race on vptr (ctor/dtor vs
+          # virtual call) in shared_screencast_stream_test."
           'isolated_scripts': 'desktop_tests',
         },
       },
@@ -104,14 +111,14 @@
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'desktop_tests',
+          'isolated_scripts': 'linux_tests',
         },
       },
       'Linux UBSan vptr': {
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'desktop_tests',
+          'isolated_scripts': 'linux_tests',
         },
       },
       'Linux32 Debug': {
@@ -135,7 +142,7 @@
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'desktop_tests',
+          'isolated_scripts': 'linux_tests',
         },
       },
       'Linux64 Debug (ARM)': {},
@@ -143,7 +150,7 @@
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'desktop_tests_with_video_capture',
+          'isolated_scripts': 'linux_desktop_tests_with_video_capture',
         },
       },
       'Linux64 Release (ARM)': {},
@@ -261,6 +268,24 @@
           'gtest_tests': 'android_perf_tests',
         },
       },
+      'Perf Android32 (O Pixel2)': {
+        'mixins': [
+          'walleye', 'android-devices', 'perf-pool', 'timeout-3h',
+          'perf-output', 'has_native_resultdb_integration'
+        ],
+        'test_suites': {
+          'gtest_tests': 'android_perf_tests',
+        },
+      },
+      'Perf Android32 (R Pixel5)': {
+        'mixins': [
+          'redfin', 'android-devices', 'perf-pool', 'timeout-3h',
+          'perf-output', 'has_native_resultdb_integration'
+        ],
+        'test_suites': {
+          'gtest_tests': 'android_perf_tests',
+        },
+      },
       'Perf Android64 (M Nexus5X)': {
         'mixins': [
           'bullhead', 'marshmallow', 'android-devices', 'perf-pool',
@@ -273,6 +298,15 @@
       'Perf Android64 (O Pixel2)': {
         'mixins': [
           'walleye', 'android-devices', 'perf-pool', 'timeout-3h',
+          'perf-output', 'has_native_resultdb_integration'
+        ],
+        'test_suites': {
+          'gtest_tests': 'android_perf_tests',
+        },
+      },
+      'Perf Android64 (R Pixel5)': {
+        'mixins': [
+          'redfin', 'android-devices', 'perf-pool', 'timeout-3h',
           'perf-output', 'has_native_resultdb_integration'
         ],
         'test_suites': {
@@ -425,9 +459,10 @@
       'android_compile_x86_rel': {},
       'fuchsia_rel': {
         'os_type': 'linux',
-        'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
-        'test_suties': {
-          'isolateds_scripts': 'desktop_tests',
+        'mixins':
+        ['linux-bionic', 'x86-64', 'resultdb-json-format', 'fuchsia'],
+        'test_suites': {
+          'isolated_scripts': 'fuchsia_compatible_tests',
         },
       },
       'ios_compile_arm64_dbg': {},
@@ -466,7 +501,7 @@
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'desktop_tests',
+          'isolated_scripts': 'linux_tests',
         },
       },
       'linux_compile_arm64_dbg': {},
@@ -479,7 +514,7 @@
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'desktop_tests',
+          'isolated_scripts': 'linux_tests',
         },
       },
       'linux_libfuzzer_rel': {},
@@ -487,7 +522,7 @@
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'desktop_tests',
+          'isolated_scripts': 'linux_tests',
         },
       },
       'linux_more_configs': {
@@ -501,6 +536,9 @@
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
+          # TODO(crbug.com/webrtc/14568): Using 'linux_tests'
+          # fails on "MemorySanitizer: use-of-uninitialized-value in
+          # libpipewire-0.3.so."
           'isolated_scripts': 'desktop_tests',
         },
       },
@@ -508,13 +546,16 @@
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'desktop_tests_tryserver',
+          'isolated_scripts': 'linux_desktop_tests_tryserver',
         },
       },
       'linux_tsan2': {
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
+          # TODO(crbug.com/webrtc/14568): Using 'linux_tests'
+          # fails on "ThreadSanitizer: data race on vptr (ctor/dtor vs
+          # virtual call) in shared_screencast_stream_test."
           'isolated_scripts': 'desktop_tests',
         },
       },
@@ -522,14 +563,14 @@
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'desktop_tests',
+          'isolated_scripts': 'linux_tests',
         },
       },
       'linux_ubsan_vptr': {
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'desktop_tests',
+          'isolated_scripts': 'linux_tests',
         },
       },
       'linux_x86_dbg': {

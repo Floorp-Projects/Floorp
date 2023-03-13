@@ -15,9 +15,9 @@
 
 #include "absl/types/optional.h"
 #include "modules/audio_processing/agc2/adaptive_digital_gain_applier.h"
-#include "modules/audio_processing/agc2/adaptive_mode_level_estimator.h"
 #include "modules/audio_processing/agc2/noise_level_estimator.h"
 #include "modules/audio_processing/agc2/saturation_protector.h"
+#include "modules/audio_processing/agc2/speech_level_estimator.h"
 #include "modules/audio_processing/include/audio_frame_view.h"
 #include "modules/audio_processing/include/audio_processing.h"
 
@@ -56,7 +56,7 @@ class AdaptiveDigitalGainController {
   absl::optional<float> GetSpeechLevelDbfsIfConfident() const;
 
  private:
-  AdaptiveModeLevelEstimator speech_level_estimator_;
+  SpeechLevelEstimator speech_level_estimator_;
   AdaptiveDigitalGainApplier gain_controller_;
   ApmDataDumper* const apm_data_dumper_;
   std::unique_ptr<NoiseLevelEstimator> noise_level_estimator_;

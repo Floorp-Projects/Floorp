@@ -550,6 +550,7 @@ rtc_library("webrtc_h264") {
   if (rtc_use_h264) {
     deps += [
       "//third_party/ffmpeg",
+      "//third_party/openh264:buildflags",
       "//third_party/openh264:encoder",
     ]
     if (!build_with_mozilla) {

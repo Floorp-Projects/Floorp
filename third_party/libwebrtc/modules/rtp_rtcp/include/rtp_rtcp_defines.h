@@ -25,6 +25,7 @@
 #include "api/audio_codecs/audio_format.h"
 #include "api/rtp_headers.h"
 #include "api/transport/network_types.h"
+#include "api/units/time_delta.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/remote_estimate.h"
 #include "system_wrappers/include/clock.h"
 
@@ -238,9 +239,6 @@ enum class RtpPacketMediaType : size_t {
 };
 
 struct RtpPacketSendInfo {
- public:
-  RtpPacketSendInfo() = default;
-
   uint16_t transport_sequence_number = 0;
   absl::optional<uint32_t> media_ssrc;
   uint16_t rtp_sequence_number = 0;  // Only valid if `media_ssrc` is set.
@@ -459,7 +457,10 @@ struct RtpReceiveStats {
   // RTCReceivedRtpStreamStats dictionary, see
   // https://w3c.github.io/webrtc-stats/#receivedrtpstats-dict*
   int32_t packets_lost = 0;
+  // Interarrival jitter in samples.
   uint32_t jitter = 0;
+  // Interarrival jitter in time.
+  webrtc::TimeDelta interarrival_jitter = webrtc::TimeDelta::Zero();
 
   // Timestamp and counters exposed in RTCInboundRtpStreamStats, see
   // https://w3c.github.io/webrtc-stats/#inboundrtpstats-dict*

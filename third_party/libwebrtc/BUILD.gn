@@ -106,6 +106,9 @@ if (!build_with_chromium && !build_with_mozilla) {
           "tools_webrtc/perf:webrtc_dashboard_upload",
         ]
       }
+      if ((is_linux || is_chromeos) && rtc_use_pipewire) {
+        deps += [ "modules/desktop_capture:shared_screencast_stream_test" ]
+      }
     }
     if (target_os == "android") {
       deps += [ "tools_webrtc:binary_version_check" ]
@@ -275,6 +278,12 @@ config("common_config") {
     defines += [ "WEBRTC_ENABLE_PROTOBUF=1" ]
   } else {
     defines += [ "WEBRTC_ENABLE_PROTOBUF=0" ]
+  }
+
+  if (rtc_strict_field_trials) {
+    defines += [ "WEBRTC_STRICT_FIELD_TRIALS=1" ]
+  } else {
+    defines += [ "WEBRTC_STRICT_FIELD_TRIALS=0" ]
   }
 
   if (rtc_include_internal_audio_device) {
