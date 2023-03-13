@@ -10,8 +10,8 @@ with Files("**"):
 XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
 
 EXTRA_JS_MODULES += [
-    "CrashMonitor.jsm",
-    "nsCrashMonitor.jsm",
+    "CrashMonitor.sys.mjs",
+    "nsCrashMonitor.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [

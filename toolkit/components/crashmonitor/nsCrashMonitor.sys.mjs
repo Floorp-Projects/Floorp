@@ -2,10 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var MonitorAPI = ChromeUtils.import("resource://gre/modules/CrashMonitor.jsm")
-  .CrashMonitor;
+var MonitorAPI = ChromeUtils.importESModule(
+  "resource://gre/modules/CrashMonitor.sys.mjs"
+).CrashMonitor;
 
-function CrashMonitor() {}
+export function CrashMonitor() {}
 
 CrashMonitor.prototype = {
   classID: Components.ID("{d9d75e86-8f17-4c57-993e-f738f0d86d42}"),
@@ -20,5 +21,3 @@ CrashMonitor.prototype = {
     }
   },
 };
-
-var EXPORTED_SYMBOLS = ["CrashMonitor"];
