@@ -8,9 +8,9 @@ with Files("**"):
     BUG_COMPONENT = ("Toolkit", "General")
 
 EXTRA_JS_MODULES.remotepagemanager = [
-    "MessagePort.jsm",
-    "RemotePageManagerChild.jsm",
-    "RemotePageManagerParent.jsm",
+    "MessagePort.sys.mjs",
+    "RemotePageManagerChild.sys.mjs",
+    "RemotePageManagerParent.sys.mjs",
 ]
 
 BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]

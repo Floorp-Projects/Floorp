@@ -112,8 +112,8 @@ export class BrowserTabChild extends JSWindowActorChild {
     let registeredURLs = Services.cpmm.sharedData.get("RemotePageManager:urls");
 
     if (registeredURLs && registeredURLs.has(url)) {
-      let { ChildMessagePort } = ChromeUtils.import(
-        "resource://gre/modules/remotepagemanager/RemotePageManagerChild.jsm"
+      let { ChildMessagePort } = ChromeUtils.importESModule(
+        "resource://gre/modules/remotepagemanager/RemotePageManagerChild.sys.mjs"
       );
       // Set up the child side of the message port
       new ChildMessagePort(this.contentWindow);

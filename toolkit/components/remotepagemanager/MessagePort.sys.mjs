@@ -2,17 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["MessagePort", "MessageListener"];
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
 
-class MessageListener {
+export class MessageListener {
   constructor() {
     this.listeners = new Map();
   }
@@ -65,7 +61,7 @@ class MessageListener {
  * We roughly implement the same contract as nsIMessageSender and
  * nsIMessageListenerManager
  */
-class MessagePort {
+export class MessagePort {
   constructor(messageManagerOrActor, portID) {
     this.messageManager = messageManagerOrActor;
     this.portID = portID;

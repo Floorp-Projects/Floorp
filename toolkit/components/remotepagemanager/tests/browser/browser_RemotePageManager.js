@@ -5,8 +5,8 @@
 const TEST_URL =
   "http://www.example.com/browser/toolkit/components/remotepagemanager/tests/browser/testremotepagemanager.html";
 
-var { RemotePages, RemotePageManager } = ChromeUtils.import(
-  "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm"
+var { RemotePages, RemotePageManager } = ChromeUtils.importESModule(
+  "resource://gre/modules/remotepagemanager/RemotePageManagerParent.sys.mjs"
 );
 
 function failOnMessage(message) {
