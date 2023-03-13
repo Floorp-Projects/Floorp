@@ -40,11 +40,12 @@ add_setup(async function() {
   });
 
   // Reload the providers
-  await BrowserTestUtils.waitForCondition(async () => {
-    await ASRouter._updateMessageProviders();
-    await ASRouter.loadMessagesFromAllProviders();
-    return ASRouter.state.messages.length > initialMsgCount;
-  }, "Should load the extra heartbeat message");
+  await ASRouter._updateMessageProviders();
+  await ASRouter.loadMessagesFromAllProviders();
+  await BrowserTestUtils.waitForCondition(
+    () => ASRouter.state.messages.length > initialMsgCount,
+    "Should load the extra heartbeat message"
+  );
 
   BrowserTestUtils.waitForCondition(
     () => ASRouter.state.messages.find(m => m.id === testMessage.id),
@@ -58,11 +59,12 @@ add_setup(async function() {
   registerCleanupFunction(async () => {
     await client.db.clear();
     // Reload the providers
-    await BrowserTestUtils.waitForCondition(async () => {
-      await ASRouter._updateMessageProviders();
-      await ASRouter.loadMessagesFromAllProviders();
-      return ASRouter.state.messages.length === initialMsgCount;
-    }, "Should reset messages");
+    await ASRouter._updateMessageProviders();
+    await ASRouter.loadMessagesFromAllProviders();
+    await BrowserTestUtils.waitForCondition(
+      () => ASRouter.state.messages.length === initialMsgCount,
+      "Should reset messages"
+    );
     await SpecialPowers.popPrefEnv();
   });
 });
