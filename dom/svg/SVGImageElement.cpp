@@ -150,6 +150,23 @@ bool SVGImageElement::ShouldLoadImage() const {
   return LoadingEnabled() && OwnerDoc()->ShouldLoadImages();
 }
 
+Rect SVGImageElement::GeometryBounds(const Matrix& aToBoundsSpace) {
+  Rect rect;
+
+  DebugOnly<bool> ok =
+      SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y, SVGT::Width,
+                                      SVGT::Height>(this, &rect.x, &rect.y,
+                                                    &rect.width, &rect.height);
+  MOZ_ASSERT(ok, "SVGGeometryProperty::ResolveAll failed");
+
+  if (rect.IsEmpty()) {
+    // Rendering of the element disabled
+    rect.SetEmpty();  // Make sure width/height are zero and not negative
+  }
+
+  return aToBoundsSpace.TransformBounds(rect);
+}
+
 //----------------------------------------------------------------------
 // EventTarget methods:
 
@@ -253,28 +270,6 @@ SVGImageElement::IsAttributeMapped(const nsAtom* name) const {
 
 //----------------------------------------------------------------------
 // SVGGeometryElement methods
-
-/* For the purposes of the update/invalidation logic pretend to
-   be a rectangle. */
-bool SVGImageElement::GetGeometryBounds(
-    Rect* aBounds, const StrokeOptions& aStrokeOptions,
-    const Matrix& aToBoundsSpace, const Matrix* aToNonScalingStrokeSpace) {
-  Rect rect;
-
-  DebugOnly<bool> ok =
-      SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y, SVGT::Width,
-                                      SVGT::Height>(this, &rect.x, &rect.y,
-                                                    &rect.width, &rect.height);
-  MOZ_ASSERT(ok, "SVGGeometryProperty::ResolveAll failed");
-
-  if (rect.IsEmpty()) {
-    // Rendering of the element disabled
-    rect.SetEmpty();  // Make sure width/height are zero and not negative
-  }
-
-  *aBounds = aToBoundsSpace.TransformBounds(rect);
-  return true;
-}
 
 already_AddRefed<Path> SVGImageElement::BuildPath(PathBuilder* aBuilder) {
   // To get bound, the faster method GetGeometryBounds() should already return
