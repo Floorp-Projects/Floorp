@@ -180,11 +180,11 @@ async function test_closed(path) {
 }
 
 add_task(async function test_closed_0ms() {
-  test_closed("/closeafter0ms");
+  await test_closed("/closeafter0ms");
 });
 
 add_task(async function test_closed_100ms() {
-  test_closed("/closeafter100ms");
+  await test_closed("/closeafter100ms");
 });
 
 add_task(async function test_wt_stream_create() {
@@ -250,6 +250,7 @@ add_task(async function test_wt_stream_send_and_stats() {
   webTransport.closeSession(0, "");
 });
 
+// strangely unidi/bidi works with debug --verify in test_webtransport_simple.js
 add_task(async function test_wt_receive_stream_and_stats() {
   let webTransport = NetUtil.newWebTransport().QueryInterface(
     Ci.nsIWebTransport
@@ -266,7 +267,7 @@ add_task(async function test_wt_receive_stream_and_stats() {
     listener.streamAvailable = resolve;
   });
   webTransport.asyncConnect(
-    NetUtil.newURI(`https://${host}/create_unidi_stream`),
+    NetUtil.newURI(`https://${host}/create_unidi_stream_and_hello`),
     Services.scriptSecurityManager.getSystemPrincipal(),
     Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
     listener
@@ -285,7 +286,7 @@ add_task(async function test_wt_receive_stream_and_stats() {
   });
 
   info("data: " + data);
-  Assert.equal(data, "0123456789");
+  Assert.equal(data, "qwerty");
 
   let stats = await receiveStreamStatsPromise(stream);
   Assert.equal(stats.bytesReceived, data.length);
