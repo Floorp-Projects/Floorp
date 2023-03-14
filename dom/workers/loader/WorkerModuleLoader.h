@@ -67,6 +67,8 @@ class WorkerModuleLoader : public JS::loader::ModuleLoaderBase {
       JS::MutableHandle<JSObject*> aModuleScript) override;
 
   void OnModuleLoadComplete(ModuleLoadRequest* aRequest) override;
+
+  bool IsModuleEvaluationAborted(ModuleLoadRequest* aRequest) override;
 };
 
 }  // namespace mozilla::dom::workerinternals::loader

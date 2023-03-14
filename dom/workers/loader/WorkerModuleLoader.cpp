@@ -9,6 +9,7 @@
 #include "mozilla/dom/WorkerLoadContext.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/workerinternals/ScriptLoader.h"
+#include "mozilla/dom/WorkerScope.h"
 #include "WorkerModuleLoader.h"
 
 #include "nsISupportsImpl.h"
@@ -121,6 +122,12 @@ void WorkerModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {
     GetScriptLoader()->MaybeMoveToLoadedList(aRequest);
     GetScriptLoader()->ProcessPendingRequests(jsapi.cx());
   }
+}
+
+bool WorkerModuleLoader::IsModuleEvaluationAborted(
+    ModuleLoadRequest* aRequest) {
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+  return workerPrivate->GlobalScope()->IsDying();
 }
 
 }  // namespace mozilla::dom::workerinternals::loader
