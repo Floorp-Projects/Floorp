@@ -7832,14 +7832,15 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyOnHistoryReload(
     const MaybeDiscarded<BrowsingContext>& aContext, const bool& aForceReload,
     NotifyOnHistoryReloadResolver&& aResolver) {
   bool canReload = false;
-  Maybe<RefPtr<nsDocShellLoadState>> loadState;
+  Maybe<NotNull<RefPtr<nsDocShellLoadState>>> loadState;
   Maybe<bool> reloadActiveEntry;
   if (!aContext.IsDiscarded()) {
     aContext.get_canonical()->NotifyOnHistoryReload(
         aForceReload, canReload, loadState, reloadActiveEntry);
   }
-  aResolver(Tuple<const bool&, const Maybe<RefPtr<nsDocShellLoadState>>&,
-                  const Maybe<bool>&>(canReload, loadState, reloadActiveEntry));
+  aResolver(
+      Tuple<const bool&, const Maybe<NotNull<RefPtr<nsDocShellLoadState>>>&,
+            const Maybe<bool>&>(canReload, loadState, reloadActiveEntry));
   return IPC_OK();
 }
 

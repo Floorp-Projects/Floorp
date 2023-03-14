@@ -576,6 +576,12 @@ nsDOMNavigationTiming::nsDOMNavigationTiming(nsDocShell* aDocShell,
 void mozilla::ipc::IPDLParamTraits<nsDOMNavigationTiming*>::Write(
     IPC::MessageWriter* aWriter, IProtocol* aActor,
     nsDOMNavigationTiming* aParam) {
+  bool isNull = !aParam;
+  WriteIPDLParam(aWriter, aActor, isNull);
+  if (isNull) {
+    return;
+  }
+
   RefPtr<nsIURI> unloadedURI = aParam->mUnloadedURI.get();
   RefPtr<nsIURI> loadedURI = aParam->mLoadedURI.get();
   WriteIPDLParam(aWriter, aActor, unloadedURI ? Some(unloadedURI) : Nothing());
@@ -605,6 +611,15 @@ void mozilla::ipc::IPDLParamTraits<nsDOMNavigationTiming*>::Write(
 bool mozilla::ipc::IPDLParamTraits<nsDOMNavigationTiming*>::Read(
     IPC::MessageReader* aReader, IProtocol* aActor,
     RefPtr<nsDOMNavigationTiming>* aResult) {
+  bool isNull;
+  if (!ReadIPDLParam(aReader, aActor, &isNull)) {
+    return false;
+  }
+  if (isNull) {
+    *aResult = nullptr;
+    return true;
+  }
+
   auto timing = MakeRefPtr<nsDOMNavigationTiming>(nullptr);
   uint32_t type;
   Maybe<RefPtr<nsIURI>> unloadedURI;

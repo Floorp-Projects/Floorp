@@ -157,9 +157,10 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // aReloadActiveEntry will be true if we have an active entry. If aCanReload
   // is true and aLoadState and aReloadActiveEntry are not set then we should
   // attempt to reload based on the current document in the docshell.
-  void NotifyOnHistoryReload(bool aForceReload, bool& aCanReload,
-                             Maybe<RefPtr<nsDocShellLoadState>>& aLoadState,
-                             Maybe<bool>& aReloadActiveEntry);
+  void NotifyOnHistoryReload(
+      bool aForceReload, bool& aCanReload,
+      Maybe<NotNull<RefPtr<nsDocShellLoadState>>>& aLoadState,
+      Maybe<bool>& aReloadActiveEntry);
 
   // See BrowsingContext::SetActiveSessionHistoryEntry.
   void SetActiveSessionHistoryEntry(const Maybe<nsPoint>& aPreviousScrollPos,

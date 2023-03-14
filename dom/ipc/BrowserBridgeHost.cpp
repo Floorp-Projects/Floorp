@@ -44,7 +44,7 @@ bool BrowserBridgeHost::CanRecv() const {
 
 void BrowserBridgeHost::LoadURL(nsDocShellLoadState* aLoadState) {
   MOZ_ASSERT(aLoadState);
-  Unused << mBridge->SendLoadURL(aLoadState);
+  Unused << mBridge->SendLoadURL(WrapNotNull(aLoadState));
 }
 
 void BrowserBridgeHost::ResumeLoad(uint64_t aPendingSwitchId) {

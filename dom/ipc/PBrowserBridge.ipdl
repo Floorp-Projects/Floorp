@@ -93,7 +93,7 @@ parent:
   async BeginDestroy();
 
   // DocShell messaging.
-  async LoadURL(nullable nsDocShellLoadState aLoadState);
+  async LoadURL(nsDocShellLoadState aLoadState);
   async ResumeLoad(uint64_t aPendingSwitchID);
 
   // Out of process rendering.
