@@ -7168,26 +7168,7 @@
     "n_buckets": 10,
     "description": "PLACES: Database filesize (MB)"
   },
-  "PLACES_DATABASE_PAGESIZE_B": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "thunderbird"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "low": 1024,
-    "high": 32768,
-    "n_buckets": 10,
-    "description": "PLACES: Database page size (bytes)"
-  },
-  "PLACES_DATABASE_SIZE_PER_PAGE_B": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "thunderbird"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "low": 500,
-    "high": 10240,
-    "n_buckets": 20,
-    "description": "PLACES: Average size of a place in the database (bytes)"
-  },
+
   "PLACES_DATABASE_FAVICONS_FILESIZE_MB": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "thunderbird"],

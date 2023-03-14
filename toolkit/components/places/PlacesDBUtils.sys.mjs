@@ -1136,23 +1136,6 @@ export var PlacesDBUtils = {
       },
 
       {
-        histogram: "PLACES_DATABASE_PAGESIZE_B",
-        query: "PRAGMA page_size /* PlacesDBUtils.jsm PAGESIZE_B */",
-      },
-
-      {
-        histogram: "PLACES_DATABASE_SIZE_PER_PAGE_B",
-        query: "PRAGMA page_count",
-        callback(aDbPageCount) {
-          // Note that the database file size would not be meaningful for this
-          // calculation, because the file grows in fixed-size chunks.
-          let dbPageSize = probeValues.PLACES_DATABASE_PAGESIZE_B;
-          let placesPageCount = probeValues.PLACES_PAGES_COUNT;
-          return Math.round((dbPageSize * aDbPageCount) / placesPageCount);
-        },
-      },
-
-      {
         histogram: "PLACES_DATABASE_FAVICONS_FILESIZE_MB",
         async callback() {
           let faviconsDbPath = PathUtils.join(
