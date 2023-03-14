@@ -76,7 +76,7 @@ bookmarks-bottom-mode =
 
 nav-bar-settings = Navigation Bar Settings
 show-nav-bar-bottom =
- .label = Show the navigation bar at the bottom of { -brand-short-name }
+ .label = Show the navigation bar at the bottom of { -brand-short-name } (experimental)
 
 material-effect =
  .label = Allow Mica for Everyone to modify the browser design
