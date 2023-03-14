@@ -291,10 +291,7 @@ class RenderThread final {
                                const TimeStamp& aRecordingStart,
                                wr::PipelineId aRootPipelineId);
 
-  void WriteCollectedFramesForWindow(wr::WindowId aWindowId);
-
-  Maybe<layers::CollectedFrames> GetCollectedFramesForWindow(
-      wr::WindowId aWindowId);
+  Maybe<layers::FrameRecording> EndRecordingForWindow(wr::WindowId aWindowId);
 
   static void MaybeEnableGLDebugMessage(gl::GLContext* aGLContext);
 

@@ -32,76 +32,83 @@ CompositionRecorder::CompositionRecorder(TimeStamp aRecordingStart)
     : mRecordingStart(aRecordingStart) {}
 
 void CompositionRecorder::RecordFrame(RecordedFrame* aFrame) {
-  mCollectedFrames.AppendElement(aFrame);
+  mRecordedFrames.AppendElement(aFrame);
 }
 
-void CompositionRecorder::WriteCollectedFrames() {
-  // The directory has the format of
-  // "[LayersWindowRecordingPath]/windowrecording-[mRecordingStartTime as unix
-  // timestamp]". We need mRecordingStart as a unix timestamp here because we
-  // want the consumer of these files to be able to compute an absolute
-  // timestamp of each screenshot, so that we can align screenshots with timed
-  // data from other sources, such as Gecko profiler information. The time of
-  // each screenshot is part of the screenshot's filename, expressed as
-  // milliseconds *relative to mRecordingStart*. We want to compute the number
-  // of milliseconds between midnight 1 January 1970 UTC and mRecordingStart,
-  // unfortunately, mozilla::TimeStamp does not have a built-in way of doing
-  // that. However, PR_Now() returns the number of microseconds since midnight 1
-  // January 1970 UTC. We call PR_Now() and TimeStamp::Now() very
-  // closely to each other so that they return their representation of "the same
-  // time", and then compute (Now - (Now - mRecordingStart)).
-  std::stringstream str;
-  nsCString recordingStartTime;
-  TimeDuration delta = TimeStamp::Now() - mRecordingStart;
-  recordingStartTime.AppendFloat(
-      static_cast<double>(PR_Now() / 1000.0 - delta.ToMilliseconds()));
-  str << gfxVars::LayersWindowRecordingPath() << "windowrecording-"
-      << recordingStartTime;
+Maybe<FrameRecording> CompositionRecorder::GetRecording() {
+  FrameRecording recording;
 
-#ifdef XP_WIN
-  _mkdir(str.str().c_str());
-#else
-  mkdir(str.str().c_str(), 0777);
+  recording.startTime() = mRecordingStart;
+
+  nsTArray<uint8_t> bytes;
+  for (RefPtr<RecordedFrame>& recordedFrame : mRecordedFrames) {
+    RefPtr<DataSourceSurface> surf = recordedFrame->GetSourceSurface();
+    if (!surf) {
+      return Nothing();
+    }
+
+    nsCOMPtr<nsIInputStream> imgStream;
+    nsresult rv = gfxUtils::EncodeSourceSurfaceAsStream(
+        surf, ImageType::PNG, u""_ns, getter_AddRefs(imgStream));
+    if (NS_FAILED(rv)) {
+      return Nothing();
+    }
+
+    uint64_t bufSize64;
+    rv = imgStream->Available(&bufSize64);
+    if (NS_FAILED(rv) || bufSize64 > UINT32_MAX) {
+      return Nothing();
+    }
+
+    const uint32_t frameLength = static_cast<uint32_t>(bufSize64);
+    size_t startIndex = bytes.Length();
+    bytes.SetLength(startIndex + frameLength);
+
+    uint8_t* bytePtr = &bytes[startIndex];
+    uint32_t bytesLeft = frameLength;
+
+    while (bytesLeft > 0) {
+      uint32_t bytesRead = 0;
+      rv = imgStream->Read(reinterpret_cast<char*>(bytePtr), bytesLeft,
+                           &bytesRead);
+      if (NS_FAILED(rv) || bytesRead == 0) {
+        return Nothing();
+      }
+
+      bytePtr += bytesRead;
+      bytesLeft -= bytesRead;
+    }
+
+#ifdef DEBUG
+
+    // Currently, all implementers of imgIEncoder report their exact size
+    // through nsIInputStream::Available(), but let's explicitly state that we
+    // rely on that behavior for the algorithm above.
+
+    char dummy = 0;
+    uint32_t bytesRead = 0;
+    rv = imgStream->Read(&dummy, 1, &bytesRead);
+    MOZ_ASSERT(NS_SUCCEEDED(rv) && bytesRead == 0);
+
 #endif
 
-  uint32_t i = 1;
-  for (RefPtr<RecordedFrame>& frame : mCollectedFrames) {
-    RefPtr<DataSourceSurface> surf = frame->GetSourceSurface();
-    std::stringstream filename;
-    filename << str.str() << "/frame-" << i << "-"
-             << uint32_t(
-                    (frame->GetTimeStamp() - mRecordingStart).ToMilliseconds())
-             << ".png";
-    gfxUtils::WriteAsPNG(surf, filename.str().c_str());
-    i++;
-  }
-  mCollectedFrames.Clear();
-}
+    RecordedFrameData frameData;
 
-CollectedFrames CompositionRecorder::GetCollectedFrames() {
-  nsTArray<CollectedFrame> frames;
+    frameData.timeOffset() = recordedFrame->GetTimeStamp();
+    frameData.length() = frameLength;
 
-  TimeDuration delta = TimeStamp::Now() - mRecordingStart;
-  double recordingStart = PR_Now() / 1000.0 - delta.ToMilliseconds();
+    recording.frames().AppendElement(std::move(frameData));
 
-  for (RefPtr<RecordedFrame>& frame : mCollectedFrames) {
-    nsCString buffer;
-
-    RefPtr<DataSourceSurface> surf = frame->GetSourceSurface();
-    double offset = (frame->GetTimeStamp() - mRecordingStart).ToMilliseconds();
-
-    gfxUtils::EncodeSourceSurface(surf, ImageType::PNG, u""_ns,
-                                  gfxUtils::eDataURIEncode, nullptr, &buffer);
-
-    frames.EmplaceBack(offset, std::move(buffer));
+    // Now that we're done, release the frame so we can free up its memory
+    recordedFrame = nullptr;
   }
 
-  mCollectedFrames.Clear();
+  mRecordedFrames.Clear();
 
-  return CollectedFrames(recordingStart, std::move(frames));
+  recording.bytes() = ipc::BigBuffer(bytes);
+
+  return Some(std::move(recording));
 }
-
-void CompositionRecorder::ClearCollectedFrames() { mCollectedFrames.Clear(); }
 
 }  // namespace layers
 }  // namespace mozilla

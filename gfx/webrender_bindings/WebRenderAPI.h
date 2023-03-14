@@ -297,25 +297,10 @@ class WebRenderAPI final {
   void BeginRecording(const TimeStamp& aRecordingStart,
                       wr::PipelineId aRootPipelineId);
 
-  typedef MozPromise<bool, nsresult, true> WriteCollectedFramesPromise;
-  typedef MozPromise<layers::CollectedFrames, nsresult, true>
-      GetCollectedFramesPromise;
+  typedef MozPromise<layers::FrameRecording, nsresult, true>
+      EndRecordingPromise;
 
-  /**
-   * Write the frames collected since the call to BeginRecording() to disk.
-   *
-   * If there is not currently a recorder, this is a no-op.
-   */
-  RefPtr<WriteCollectedFramesPromise> WriteCollectedFrames();
-
-  /**
-   * Return the frames collected since the call to BeginRecording() encoded
-   * as data URIs.
-   *
-   * If there is not currently a recorder, this is a no-op and the promise will
-   * be rejected.
-   */
-  RefPtr<GetCollectedFramesPromise> GetCollectedFrames();
+  RefPtr<EndRecordingPromise> EndRecording();
 
  protected:
   WebRenderAPI(wr::DocumentHandle* aHandle, wr::WindowId aId,

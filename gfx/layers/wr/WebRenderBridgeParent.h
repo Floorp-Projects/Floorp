@@ -290,13 +290,6 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
 
   void BeginRecording(const TimeStamp& aRecordingStart);
 
-  /**
-   * Write the frames collected since the call to BeginRecording to disk.
-   *
-   * If there is not currently a recorder, this is a no-op.
-   */
-  RefPtr<wr::WebRenderAPI::WriteCollectedFramesPromise> WriteCollectedFrames();
-
 #if defined(MOZ_WIDGET_ANDROID)
   /**
    * Request a screengrab for android
@@ -305,13 +298,9 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
   void MaybeCaptureScreenPixels();
 #endif
   /**
-   * Return the frames collected since the call to BeginRecording encoded
-   * as data URIs.
-   *
-   * If there is not currently a recorder, this is a no-op and the promise will
-   * be rejected.
+   * Stop recording and the frames collected since the call to BeginRecording
    */
-  RefPtr<wr::WebRenderAPI::GetCollectedFramesPromise> GetCollectedFrames();
+  RefPtr<wr::WebRenderAPI::EndRecordingPromise> EndRecording();
 
   void DisableNativeCompositor();
   void AddPendingScrollPayload(CompositionPayload& aPayload,

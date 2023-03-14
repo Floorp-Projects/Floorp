@@ -378,21 +378,13 @@ void RenderThread::BeginRecordingForWindow(wr::WindowId aWindowId,
   renderer->BeginRecording(aRecordingStart, aRootPipelineId);
 }
 
-void RenderThread::WriteCollectedFramesForWindow(wr::WindowId aWindowId) {
-  MOZ_ASSERT(IsInRenderThread());
-
-  RendererOGL* renderer = GetRenderer(aWindowId);
-  MOZ_ASSERT(renderer);
-  renderer->WriteCollectedFrames();
-}
-
-Maybe<layers::CollectedFrames> RenderThread::GetCollectedFramesForWindow(
+Maybe<layers::FrameRecording> RenderThread::EndRecordingForWindow(
     wr::WindowId aWindowId) {
   MOZ_ASSERT(IsInRenderThread());
 
   RendererOGL* renderer = GetRenderer(aWindowId);
   MOZ_ASSERT(renderer);
-  return renderer->GetCollectedFrames();
+  return renderer->EndRecording();
 }
 
 void RenderThread::HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender,

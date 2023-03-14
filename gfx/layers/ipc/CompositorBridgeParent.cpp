@@ -1871,78 +1871,27 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvBeginRecording(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult CompositorBridgeParent::RecvEndRecordingToDisk(
-    EndRecordingToDiskResolver&& aResolve) {
-  if (!mHaveCompositionRecorder) {
-    aResolve(false);
-    return IPC_OK();
-  }
-
-  if (mWrBridge) {
-    mWrBridge->WriteCollectedFrames()->Then(
-        NS_GetCurrentThread(), __func__,
-        [resolve{aResolve}](const bool success) { resolve(success); },
-        [resolve{aResolve}]() { resolve(false); });
-  } else {
-    aResolve(false);
-  }
-
-  mHaveCompositionRecorder = false;
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult CompositorBridgeParent::RecvEndRecordingToMemory(
-    EndRecordingToMemoryResolver&& aResolve) {
+mozilla::ipc::IPCResult CompositorBridgeParent::RecvEndRecording(
+    EndRecordingResolver&& aResolve) {
   if (!mHaveCompositionRecorder) {
     aResolve(Nothing());
     return IPC_OK();
   }
 
   if (mWrBridge) {
-    RefPtr<CompositorBridgeParent> self = this;
-    mWrBridge->GetCollectedFrames()->Then(
+    mWrBridge->EndRecording()->Then(
         NS_GetCurrentThread(), __func__,
-        [self, resolve{aResolve}](CollectedFrames&& frames) {
-          resolve(self->WrapCollectedFrames(std::move(frames)));
+        [resolve{aResolve}](FrameRecording&& recording) {
+          resolve(Some(std::move(recording)));
         },
         [resolve{aResolve}]() { resolve(Nothing()); });
+  } else {
+    aResolve(Nothing());
   }
 
   mHaveCompositionRecorder = false;
 
   return IPC_OK();
-}
-
-Maybe<CollectedFramesParams> CompositorBridgeParent::WrapCollectedFrames(
-    CollectedFrames&& aFrames) {
-  CollectedFramesParams ipcFrames;
-  ipcFrames.recordingStart() = aFrames.mRecordingStart;
-
-  size_t totalLength = 0;
-  for (const CollectedFrame& frame : aFrames.mFrames) {
-    totalLength += frame.mDataUri.Length();
-  }
-
-  Shmem shmem;
-  if (!AllocShmem(totalLength, &shmem)) {
-    return Nothing();
-  }
-
-  {
-    char* raw = shmem.get<char>();
-    for (CollectedFrame& frame : aFrames.mFrames) {
-      size_t length = frame.mDataUri.Length();
-
-      PodCopy(raw, frame.mDataUri.get(), length);
-      raw += length;
-
-      ipcFrames.frames().EmplaceBack(frame.mTimeOffset, length);
-    }
-  }
-  ipcFrames.buffer() = std::move(shmem);
-
-  return Some(std::move(ipcFrames));
 }
 
 void RecordCompositionPayloadsPresented(

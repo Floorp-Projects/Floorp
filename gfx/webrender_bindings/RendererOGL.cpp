@@ -375,37 +375,22 @@ bool RendererOGL::DidPaintContent(const WebRenderPipelineInfo* aFrameEpochs) {
 
   return didPaintContent;
 }
-void RendererOGL::WriteCollectedFrames() {
-  if (!mCompositionRecorder) {
-    MOZ_DIAGNOSTIC_ASSERT(
-        false,
-        "Attempted to write frames from a window that was not recording.");
-    return;
-  }
 
-  mCompositionRecorder->WriteCollectedFrames();
-
-  wr_renderer_release_composition_recorder_structures(mRenderer);
-
-  mCompositor->MaybeRequestAllowFrameRecording(false);
-  mCompositionRecorder = nullptr;
-}
-
-Maybe<layers::CollectedFrames> RendererOGL::GetCollectedFrames() {
+Maybe<layers::FrameRecording> RendererOGL::EndRecording() {
   if (!mCompositionRecorder) {
     MOZ_DIAGNOSTIC_ASSERT(
         false, "Attempted to get frames from a window that was not recording.");
     return Nothing();
   }
 
-  layers::CollectedFrames frames = mCompositionRecorder->GetCollectedFrames();
+  auto maybeRecording = mCompositionRecorder->GetRecording();
 
   wr_renderer_release_composition_recorder_structures(mRenderer);
 
   mCompositor->MaybeRequestAllowFrameRecording(false);
   mCompositionRecorder = nullptr;
 
-  return Some(std::move(frames));
+  return maybeRecording;
 }
 
 void RendererOGL::FlushPipelineInfo() {
