@@ -2757,6 +2757,7 @@ media:
   decode_error_per_mime_type:
     bug_numbers:
       - 1688775
+      - 1804291
     description: >
       Count the number of times the media with a specific mime type (Eg. audio/vorbis, that would be used as the key) encounters a decode error during playback.
     expires: never
@@ -2769,6 +2770,9 @@ media:
       - 'firefox'
     record_in_processes:
       - 'content'
+      - 'gpu'
+      - 'rdd'
+      - 'utility'
 
   audio_process_per_codec_name:
     bug_numbers:
@@ -2785,7 +2789,10 @@ media:
     products:
       - "firefox"
     record_in_processes:
-      - "all"
+      - 'main'
+      - 'content'
+      - 'rdd'
+      - 'utility'
     release_channel_collection: opt-out
 
   video_hardware_decoding_support:
@@ -9162,6 +9169,20 @@ telemetry.test:
       - 'thunderbird'
     record_in_processes:
       - 'content'
+
+  rdd_only_uint:
+    bug_numbers:
+      - 1804291
+    description: A testing uint scalar; not meant to be touched.
+    expires: never
+    kind: uint
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    products:
+      - 'firefox'
+      - 'thunderbird'
+    record_in_processes:
+      - 'rdd'
 
   socket_only_uint:
     bug_numbers:

@@ -21,6 +21,5 @@ add_task(async function testAudioDecodingInRDD() {
 add_task(async function testRDDTelemetry() {
   const codecs = ["vorbis", "mp3", "aac", "flac"];
   await verifyNoTelemetryForProcess("utility", codecs);
-  // TODO: Bug 1804291
-  // await verifyTelemetryForProcess("rdd", codecs);
+  await verifyTelemetryForProcess("rdd", codecs);
 });
