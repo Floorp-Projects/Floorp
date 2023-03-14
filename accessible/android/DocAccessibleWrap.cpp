@@ -302,7 +302,7 @@ void DocAccessibleWrap::UpdateFocusPathBounds() {
           UNIQUE_ID(accessible), 0, accessible->Bounds(), 0, nsString(),
           nsString(), nsString(), nsString(), UnspecifiedNaN<double>(),
           UnspecifiedNaN<double>(), UnspecifiedNaN<double>(),
-          UnspecifiedNaN<double>(), nullptr));
+          UnspecifiedNaN<double>(), RefPtr<AccAttributes>{}));
     }
 
     ipcDoc->SendBatch(eBatch_BoundsUpdate, boundsData);
