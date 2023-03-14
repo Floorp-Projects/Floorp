@@ -32,7 +32,7 @@ function isAutocompleteDisabled(aField) {
  *        If this is searchbar-history, then formField needs to be null,
  *        otherwise constructing will throw.
  */
-function FormHistoryClient({ formField, inputName }) {
+export function FormHistoryClient({ formField, inputName }) {
   if (formField && inputName != this.SEARCHBAR_ID) {
     let window = formField.ownerGlobal;
     this.windowGlobal = window.windowGlobalChild;
@@ -581,7 +581,12 @@ FormAutoComplete.prototype = {
 }; // end of FormAutoComplete implementation
 
 // nsIAutoCompleteResult implementation
-function FormAutoCompleteResult(client, entries, fieldName, searchString) {
+export function FormAutoCompleteResult(
+  client,
+  entries,
+  fieldName,
+  searchString
+) {
   this.client = client;
   this.entries = entries;
   this.fieldName = fieldName;
