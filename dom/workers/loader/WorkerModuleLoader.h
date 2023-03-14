@@ -8,6 +8,8 @@
 #define mozilla_loader_WorkerModuleLoader_h
 
 #include "js/loader/ModuleLoaderBase.h"
+#include "mozilla/dom/SerializedStackHolder.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla::dom::workerinternals::loader {
 class WorkerScriptLoader;
@@ -41,6 +43,14 @@ class WorkerModuleLoader : public JS::loader::ModuleLoaderBase {
 
  private:
   ~WorkerModuleLoader() = default;
+
+  void CreateDynamicImportLoader();
+  void SetScriptLoader(JS::loader::ScriptLoaderInterface* aLoader) {
+    mLoader = aLoader;
+  }
+  void SetEventTarget(nsISerialEventTarget* aEventTarget) {
+    mEventTarget = aEventTarget;
+  }
 
   WorkerScriptLoader* GetScriptLoader();
 

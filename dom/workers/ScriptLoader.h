@@ -202,6 +202,8 @@ class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
 
   bool DispatchLoadScripts();
 
+  WorkerScriptType GetWorkerScriptType() { return mWorkerScriptType; }
+
  protected:
   nsIURI* GetBaseURI() const override;
 

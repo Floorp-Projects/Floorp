@@ -61,6 +61,18 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateStaticImport(
   return request.forget();
 }
 
+void WorkerModuleLoader::CreateDynamicImportLoader() {
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+  workerPrivate->AssertIsOnWorkerThread();
+
+  ErrorResult rv;
+  SetScriptLoader(new loader::WorkerScriptLoader(
+      workerPrivate, nullptr, nullptr, GetScriptLoader()->GetWorkerScriptType(),
+      rv));
+
+  SetEventTarget(GetCurrentSerialEventTarget());
+}
+
 already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateDynamicImport(
     JSContext* aCx, nsIURI* aURI, LoadedScript* aMaybeActiveScript,
     JS::Handle<JS::Value> aReferencingPrivate, JS::Handle<JSString*> aSpecifier,

@@ -177,16 +177,15 @@ class ModuleLoaderBase : public nsISupports {
 
   nsCOMPtr<nsIGlobalObject> mGlobalObject;
 
-  // Event handler used to process MozPromise actions, used internally to wait
-  // for fetches to finish and for imports to become avilable.
-  nsCOMPtr<nsISerialEventTarget> mEventTarget;
-
   // https://html.spec.whatwg.org/multipage/webappapis.html#import-maps-allowed
   //
   // Each Window has an import maps allowed boolean, initially true.
   bool mImportMapsAllowed = true;
 
  protected:
+  // Event handler used to process MozPromise actions, used internally to wait
+  // for fetches to finish and for imports to become avilable.
+  nsCOMPtr<nsISerialEventTarget> mEventTarget;
   RefPtr<ScriptLoaderInterface> mLoader;
 
   mozilla::UniquePtr<ImportMap> mImportMap;

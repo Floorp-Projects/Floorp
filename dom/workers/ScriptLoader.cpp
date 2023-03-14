@@ -477,7 +477,6 @@ WorkerScriptLoader::WorkerScriptLoader(
       mCleanedUp(false),
       mCleanUpLock("cleanUpLock") {
   aWorkerPrivate->AssertIsOnWorkerThread();
-  MOZ_ASSERT(aSyncLoopTarget);
 
   RefPtr<WorkerScriptLoader> self = this;
 
@@ -515,6 +514,10 @@ ScriptLoadRequest* WorkerScriptLoader::GetMainScript() {
 
 void WorkerScriptLoader::InitModuleLoader() {
   mWorkerRef->Private()->AssertIsOnWorkerThread();
+  if (GetGlobal()->GetModuleLoader(nullptr)) {
+    return;
+  }
+
   RefPtr<WorkerModuleLoader> moduleLoader =
       new WorkerModuleLoader(this, GetGlobal(), mSyncLoopTarget.get());
 
@@ -1181,8 +1184,11 @@ void WorkerScriptLoader::ShutdownScriptLoader(bool aResult, bool aMutedError) {
     }
 
     mWorkerRef->Private()->AssertIsOnWorkerThread();
-    mWorkerRef->Private()->StopSyncLoop(mSyncLoopTarget,
-                                        aResult ? NS_OK : NS_ERROR_FAILURE);
+    // Module loader doesn't use sync loop for dynamic import
+    if (mSyncLoopTarget) {
+      mWorkerRef->Private()->StopSyncLoop(mSyncLoopTarget,
+                                          aResult ? NS_OK : NS_ERROR_FAILURE);
+    }
 
     // Signal cleanup
     mCleanedUp = true;
@@ -1447,6 +1453,7 @@ void ScriptLoaderRunnable::DispatchProcessPendingRequests() {
         mScriptLoader, mWorkerRef->Private(), mScriptLoader->mSyncLoopTarget,
         Span<RefPtr<ThreadSafeRequestHandle>>{maybeRangeToExecute->first,
                                               maybeRangeToExecute->second});
+
     if (!runnable->Dispatch()) {
       MOZ_ASSERT(false, "This should never fail!");
     }
