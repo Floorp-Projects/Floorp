@@ -15,36 +15,12 @@ static CGFloat sCurrentCursorScaleFactor = 0.0f;
 static nsIWidget::Cursor sCurrentCursor;
 static constexpr nsCursor kCustomCursor = eCursorCount;
 
-/*! @category nsCursorManager(PrivateMethods)
-    Private methods for the cursor manager class.
-*/
 @interface nsCursorManager (PrivateMethods)
-/*! @method     getCursor:
-    @abstract   Get a reference to the native Mac representation of a cursor.
-    @discussion Gets a reference to the Mac native implementation of a cursor.
-                If the cursor has been requested before, it is retreived from the cursor cache,
-                otherwise it is created and cached.
-    @param      aCursor the cursor to get
-    @result     the Mac native implementation of the cursor
-*/
-- (NSCursor*)getCursor:(nsCursor)aCursor;
++ (NSCursor*)freshCursorWithType:(nsCursor)aCursor;
+- (NSCursor*)cursorWithType:(nsCursor)aCursor;
 
-/*! @method     setMacCursor:
- @abstract   Set the current Mac native cursor
- @discussion Sets the current cursor - this routine is what actually causes the cursor to change.
- The argument is retained and the old cursor is released.
- @param      aMacCursor the cursor to set
- @result     NS_OK
- */
-- (nsresult)setMacCursor:(NSCursor*)aMacCursor;
-
-/*! @method     createCursor:
-    @abstract   Create a Mac native representation of a cursor.
-    @discussion Creates a version of the Mac native representation of this cursor
-    @param      aCursor the cursor to create
-    @result     the Mac native implementation of the cursor
-*/
-+ (NSCursor*)createCursor:(enum nsCursor)aCursor;
+// Set the cursor.
+- (void)setCursor:(NSCursor*)aMacCursor;
 
 @end
 
@@ -66,7 +42,7 @@ static constexpr nsCursor kCustomCursor = eCursorCount;
   gInstance = nil;
 }
 
-+ (NSCursor*)createCursor:(enum nsCursor)aCursor {
++ (NSCursor*)freshCursorWithType:(enum nsCursor)aCursor {
   switch (aCursor) {
     case eCursor_standard:
       return [NSCursor arrowCursor];
@@ -163,14 +139,13 @@ static constexpr nsCursor kCustomCursor = eCursorCount;
   return self;
 }
 
-- (nsresult)setNonCustomCursor:(const nsIWidget::Cursor&)aCursor {
-  [self setMacCursor:[self getCursor:aCursor.mDefaultCursor] type:aCursor.mDefaultCursor];
+- (void)setNonCustomCursor:(const nsIWidget::Cursor&)aCursor {
+  [self setCursor:[self cursorWithType:aCursor.mDefaultCursor] type:aCursor.mDefaultCursor];
 
   sCurrentCursor = aCursor;
-  return NS_OK;
 }
 
-- (nsresult)setMacCursor:(NSCursor*)aMacCursor type:(nsCursor)aType {
+- (void)setCursor:(NSCursor*)aMacCursor type:(nsCursor)aType {
   if (mCurrentCursorType != aType) {
     if (aType == eCursor_none) {
       [NSCursor hide];
@@ -186,8 +161,6 @@ static constexpr nsCursor kCustomCursor = eCursorCount;
     [mCurrentCursor release];
     mCurrentCursor = aMacCursor;
   }
-
-  return NS_OK;
 }
 
 - (nsresult)setCustomCursor:(const nsIWidget::Cursor&)aCursor
@@ -231,16 +204,15 @@ static constexpr nsCursor kCustomCursor = eCursorCount;
   uint32_t hotspotX = aCursor.mHotspotX > (uint32_t(size.width) - 1) ? 0 : aCursor.mHotspotX;
   uint32_t hotspotY = aCursor.mHotspotY > (uint32_t(size.height) - 1) ? 0 : aCursor.mHotspotY;
   NSPoint hotSpot = ::NSMakePoint(hotspotX, hotspotY);
-  [self setMacCursor:[[NSCursor alloc] initWithImage:cursorImage hotSpot:hotSpot]
-                type:kCustomCursor];
+  [self setCursor:[[NSCursor alloc] initWithImage:cursorImage hotSpot:hotSpot] type:kCustomCursor];
   [cursorImage release];
   return NS_OK;
 }
 
-- (NSCursor*)getCursor:(enum nsCursor)aCursor {
+- (NSCursor*)cursorWithType:(enum nsCursor)aCursor {
   NSCursor* result = [mCursors objectForKey:[NSNumber numberWithInt:aCursor]];
   if (!result) {
-    result = [nsCursorManager createCursor:aCursor];
+    result = [nsCursorManager freshCursorWithType:aCursor];
     [mCursors setObject:result forKey:[NSNumber numberWithInt:aCursor]];
   }
   return result;
