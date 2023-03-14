@@ -536,8 +536,23 @@ class BrowserRobot {
     }
 
     fun clickSelectAddressButton() {
-        selectAddressButton.waitForExists(waitingTime)
-        selectAddressButton.clickAndWaitForNewWindow(waitingTime)
+        for (i in 1..RETRY_COUNT) {
+            try {
+                assertTrue(selectAddressButton.waitForExists(waitingTime))
+                selectAddressButton.clickAndWaitForNewWindow(waitingTime)
+
+                break
+            } catch (e: AssertionError) {
+                // Retrying, in case we hit https://bugzilla.mozilla.org/show_bug.cgi?id=1816869
+                // This should be removed when the bug is fixed.
+                if (i == RETRY_COUNT) {
+                    throw e
+                } else {
+                    clickPageObject(webPageItemWithResourceId("city"))
+                    clickPageObject(webPageItemWithResourceId("country"))
+                }
+            }
+        }
     }
 
     fun verifySelectAddressButtonExists(exists: Boolean) = assertItemWithResIdExists(selectAddressButton, exists = exists)

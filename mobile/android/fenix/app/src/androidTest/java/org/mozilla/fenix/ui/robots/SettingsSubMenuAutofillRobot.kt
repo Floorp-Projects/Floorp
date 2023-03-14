@@ -407,11 +407,22 @@ class SettingsSubMenuAutofillRobot {
 
 private val autofillToolbarTitle = itemContainingText(getStringResource(R.string.preferences_autofill))
 private val addressesSectionTitle = itemContainingText(getStringResource(R.string.preferences_addresses))
-private val manageAddressesToolbarTitle = itemContainingText(getStringResource(R.string.addresses_manage_addresses))
+private val manageAddressesToolbarTitle =
+    mDevice.findObject(
+        UiSelector()
+            .resourceId("$packageName:id/navigationToolbar")
+            .childSelector(UiSelector().text(getStringResource(R.string.addresses_manage_addresses))),
+    )
+
 private val saveAndAutofillAddressesOption = itemContainingText(getStringResource(R.string.preferences_addresses_save_and_autofill_addresses))
 private val saveAndAutofillAddressesSummary = itemContainingText(getStringResource(R.string.preferences_addresses_save_and_autofill_addresses_summary))
 private val addAddressButton = itemContainingText(getStringResource(R.string.preferences_addresses_add_address))
-private val manageAddressesButton = itemContainingText(getStringResource(R.string.preferences_addresses_manage_addresses))
+private val manageAddressesButton =
+    mDevice.findObject(
+        UiSelector()
+            .resourceId("android:id/title")
+            .text(getStringResource(R.string.preferences_addresses_manage_addresses)),
+    )
 private val addAddressToolbarTitle = itemContainingText(getStringResource(R.string.addresses_add_address))
 private val editAddressToolbarTitle = itemContainingText(getStringResource(R.string.addresses_edit_address))
 private val toolbarCheckmarkButton = itemWithResId("$packageName:id/save_address_button")
