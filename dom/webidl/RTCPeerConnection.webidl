@@ -174,6 +174,7 @@ interface RTCPeerConnection : EventTarget  {
 
   Promise<RTCStatsReport> getStats (optional MediaStreamTrack? selector = null);
 
+  readonly attribute RTCSctpTransport? sctp;
   // Data channel.
   RTCDataChannel createDataChannel (DOMString label,
                                     optional RTCDataChannelInit dataChannelDict = {});

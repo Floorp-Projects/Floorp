@@ -141,6 +141,12 @@ class DataChannelConnection final : public net::NeckoTargetHolder
     // Called when a DataChannel (that was open at some point in the past)
     // transitions to state closed
     virtual void NotifyDataChannelClosed(DataChannel* aChannel) = 0;
+
+    // Called when SCTP connects
+    virtual void NotifySctpConnected() = 0;
+
+    // Called when SCTP closes
+    virtual void NotifySctpClosed() = 0;
   };
 
   // Create a new DataChannel Connection
@@ -666,6 +672,9 @@ class DataChannelOnMessageAvailable : public Runnable {
       case ON_DISCONNECTED:
         // If we've disconnected, make sure we close all the streams - from
         // mainthread!
+        if (mConnection->mListener) {
+          mConnection->mListener->NotifySctpClosed();
+        }
         mConnection->CloseAll();
         break;
       case ON_CHANNEL_CREATED:
@@ -679,7 +688,9 @@ class DataChannelOnMessageAvailable : public Runnable {
         mConnection->mListener->NotifyDataChannel(mChannel.forget());
         break;
       case ON_CONNECTION:
-        // TODO: Notify someday? How? What does the spec say about this?
+        if (mConnection->mListener) {
+          mConnection->mListener->NotifySctpConnected();
+        }
         break;
     }
     return NS_OK;
