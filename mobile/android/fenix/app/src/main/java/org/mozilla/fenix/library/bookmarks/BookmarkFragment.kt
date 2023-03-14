@@ -40,6 +40,7 @@ import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.ktx.kotlin.toShortUrl
+import mozilla.components.ui.widgets.withCenterAlignedButtons
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.HomeActivity
@@ -305,7 +306,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                 dialog.dismiss()
             }
             setCancelable(false)
-            create()
+            create().withCenterAlignedButtons()
             show()
         }
     }
@@ -410,7 +411,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                         operation = getDeleteOperation(BookmarkRemoveType.FOLDER),
                     )
                 }
-                create()
+                create().withCenterAlignedButtons()
             }
                 .show()
         }

@@ -38,6 +38,7 @@ dependencies {
     implementation project(':support-ktx')
     implementation project(':support-utils')
     implementation project(':ui-icons')
+    implementation project(':ui-widgets')
 
     implementation ComponentsDependencies.androidx_constraintlayout
     implementation ComponentsDependencies.androidx_core_ktx

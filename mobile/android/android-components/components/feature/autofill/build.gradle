@@ -32,6 +32,7 @@ dependencies {
     implementation project(':support-base')
     implementation project(':support-ktx')
     implementation project(":support-utils")
+    implementation project(':ui-widgets')
 
     implementation ComponentsDependencies.androidx_annotation
     implementation ComponentsDependencies.androidx_autofill

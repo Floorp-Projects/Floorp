@@ -26,6 +26,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.concept.engine.permission.SitePermissions.Status.ALLOWED
 import mozilla.components.concept.engine.permission.SitePermissions.Status.BLOCKED
+import mozilla.components.ui.widgets.withCenterAlignedButtons
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
@@ -162,7 +163,7 @@ class SitePermissionsManageExceptionsPhoneFeatureFragment : Fragment() {
                 setNegativeButton(R.string.clear_permission_negative) { dialog: DialogInterface, _ ->
                     dialog.cancel()
                 }
-            }.show()
+            }.show().withCenterAlignedButtons()
         }
     }
 

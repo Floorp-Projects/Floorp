@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.concept.engine.prompt.Choice
 import mozilla.components.feature.prompts.R
 import mozilla.components.support.utils.ext.getParcelableArrayCompat
+import mozilla.components.ui.widgets.withCenterAlignedButtons
 
 private const val KEY_CHOICES = "KEY_CHOICES"
 private const val KEY_DIALOG_TYPE = "KEY_DIALOG_TYPE"
@@ -127,7 +128,7 @@ internal class ChoiceDialogFragment : PromptDialogFragment() {
                 feature?.onConfirm(sessionId, promptRequestUID, mapSelectChoice.keys.toTypedArray())
             }.setOnDismissListener {
                 feature?.onCancel(sessionId, promptRequestUID)
-            }.create()
+            }.create().withCenterAlignedButtons()
     }
 }
 

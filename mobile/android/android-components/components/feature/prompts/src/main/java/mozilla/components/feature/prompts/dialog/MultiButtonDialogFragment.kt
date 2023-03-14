@@ -8,6 +8,7 @@ import android.app.Dialog
 import android.content.DialogInterface
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
+import mozilla.components.ui.widgets.withCenterAlignedButtons
 
 private const val KEY_POSITIVE_BUTTON_TITLE = "KEY_POSITIVE_BUTTON_TITLE"
 private const val KEY_NEGATIVE_BUTTON_TITLE = "KEY_NEGATIVE_BUTTON_TITLE"
@@ -32,6 +33,7 @@ internal class MultiButtonDialogFragment : AbstractPromptTextDialogFragment() {
             .setupButtons()
         return setCustomMessageView(builder)
             .create()
+            .withCenterAlignedButtons()
     }
 
     override fun onCancel(dialog: DialogInterface) {

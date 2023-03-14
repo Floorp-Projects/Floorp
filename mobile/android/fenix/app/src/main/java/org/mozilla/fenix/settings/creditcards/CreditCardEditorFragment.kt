@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.android.view.showKeyboard
+import mozilla.components.ui.widgets.withCenterAlignedButtons
 import org.mozilla.fenix.R
 import org.mozilla.fenix.SecureFragment
 import org.mozilla.fenix.databinding.FragmentCreditCardEditorBinding
@@ -155,7 +156,7 @@ class CreditCardEditorFragment :
                 dialog.cancel()
             }
             setPositiveButton(R.string.credit_cards_delete_dialog_button, onPositiveClickListener)
-            create()
+            create().withCenterAlignedButtons()
         }.show()
     }
 

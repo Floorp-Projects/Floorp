@@ -12,6 +12,7 @@ import mozilla.components.feature.addons.update.AddonUpdater
 import mozilla.components.feature.addons.update.AddonUpdater.Status.Error
 import mozilla.components.feature.addons.update.AddonUpdater.Status.NoUpdateAvailable
 import mozilla.components.feature.addons.update.AddonUpdater.Status.SuccessfullyUpdated
+import mozilla.components.ui.widgets.withCenterAlignedButtons
 import java.text.DateFormat
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
@@ -99,6 +100,7 @@ fun AddonUpdater.UpdateAttempt.showInformationDialog(context: Context) {
         .setTitle(R.string.mozac_feature_addons_updater_dialog_title)
         .setMessage(getDialogMessage(context))
         .show()
+        .withCenterAlignedButtons()
 }
 
 private fun AddonUpdater.UpdateAttempt.getDialogMessage(context: Context): String {

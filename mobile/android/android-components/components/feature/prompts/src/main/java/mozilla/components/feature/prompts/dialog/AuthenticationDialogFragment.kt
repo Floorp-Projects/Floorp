@@ -18,6 +18,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.Companion.PRIVATE
 import androidx.appcompat.app.AlertDialog
 import mozilla.components.feature.prompts.R
+import mozilla.components.ui.widgets.withCenterAlignedButtons
 
 private const val KEY_USERNAME_EDIT_TEXT = "KEY_USERNAME_EDIT_TEXT"
 private const val KEY_PASSWORD_EDIT_TEXT = "KEY_PASSWORD_EDIT_TEXT"
@@ -62,7 +63,7 @@ internal class AuthenticationDialogFragment : PromptDialogFragment() {
             .setPositiveButton(android.R.string.ok) { _, _ ->
                 onPositiveClickAction()
             }
-        return addLayout(builder).create()
+        return addLayout(builder).create().withCenterAlignedButtons()
     }
 
     override fun onCancel(dialog: DialogInterface) {

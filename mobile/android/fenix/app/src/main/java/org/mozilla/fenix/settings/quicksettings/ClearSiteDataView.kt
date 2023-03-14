@@ -18,6 +18,7 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import mozilla.components.ui.widgets.withCenterAlignedButtons
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.QuicksettingsClearSiteDataBinding
 import org.mozilla.fenix.ext.components
@@ -107,7 +108,7 @@ class ClearSiteDataView(
                 it.dismiss()
                 interactor.onClearSiteDataClicked(baseDomain)
             }
-            create()
+            create().withCenterAlignedButtons()
         }.show()
     }
 }

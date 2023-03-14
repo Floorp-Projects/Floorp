@@ -17,6 +17,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.feature.prompts.R
+import mozilla.components.ui.widgets.withCenterAlignedButtons
 
 private const val KEY_SELECTED_COLOR = "KEY_SELECTED_COLOR"
 
@@ -47,6 +48,7 @@ internal class ColorPickerDialogFragment : PromptDialogFragment(), DialogInterfa
             .setPositiveButton(R.string.mozac_feature_prompts_set_date, this)
             .setView(createDialogContentView())
             .create()
+            .withCenterAlignedButtons()
 
     override fun onCancel(dialog: DialogInterface) {
         super.onCancel(dialog)

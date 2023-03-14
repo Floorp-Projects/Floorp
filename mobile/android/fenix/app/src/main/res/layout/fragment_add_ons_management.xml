@@ -37,6 +37,7 @@
         android:layout_gravity="center"
         android:gravity="center"
         android:text="@string/no_add_ons"
+        android:textAlignment="center"
         android:textColor="?attr/textSecondary"
         android:textSize="16sp"
         android:visibility="gone"/>

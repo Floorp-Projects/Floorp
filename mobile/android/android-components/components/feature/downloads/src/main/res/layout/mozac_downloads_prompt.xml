@@ -87,5 +87,6 @@
         android:paddingStart="8dp"
         android:paddingEnd="8dp"
         android:text="@string/mozac_feature_downloads_dialog_download"
+        android:textAlignment="center"
         android:textAllCaps="false" />
 </RelativeLayout>

@@ -26,6 +26,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.sync.autofill.AutofillCreditCardsAddressesStorage
+import mozilla.components.ui.widgets.withCenterAlignedButtons
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
@@ -288,7 +289,7 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
                 startActivity(intent)
             }
 
-            create()
+            create().withCenterAlignedButtons()
         }.show().secure(activity)
         context.settings().incrementSecureWarningCount()
     }

@@ -37,6 +37,7 @@
         android:layout_height="0dp"
         android:gravity="center"
         android:text="@string/no_site_exceptions"
+        android:textAlignment="center"
         android:textColor="?attr/textPrimary"
         android:textSize="20sp"
         android:visibility="gone"

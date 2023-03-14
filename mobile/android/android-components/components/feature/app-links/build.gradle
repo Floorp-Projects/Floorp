@@ -44,6 +44,7 @@ dependencies {
     implementation project(':support-ktx')
     implementation project(':support-utils')
     implementation project(':feature-session')
+    implementation project(':ui-widgets')
 
     implementation ComponentsDependencies.kotlin_coroutines
 

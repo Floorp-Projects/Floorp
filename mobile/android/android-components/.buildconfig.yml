@@ -580,7 +580,9 @@ projects:
     - support-test-libstate
     - support-utils
     - tooling-lint
+    - ui-colors
     - ui-icons
+    - ui-widgets
   feature-autofill:
     description: Component adding support for Android`s Autofill framework.
     path: components/feature/autofill
@@ -597,6 +599,9 @@ projects:
     - support-test
     - support-utils
     - tooling-lint
+    - ui-colors
+    - ui-icons
+    - ui-widgets
   feature-awesomebar:
     description: Component connecting a concept-toolbar with a concept-awesomebar.
     path: components/feature/awesomebar
@@ -755,7 +760,9 @@ projects:
     - support-test-libstate
     - support-utils
     - tooling-lint
+    - ui-colors
     - ui-icons
+    - ui-widgets
   feature-findinpage:
     description: Feature that will subscribe to the selected session and show an UI
       for results of find in page.
@@ -832,7 +839,9 @@ projects:
     - support-test
     - support-utils
     - tooling-lint
+    - ui-colors
     - ui-icons
+    - ui-widgets
   feature-media:
     description: Feature component for website media related features.
     path: components/feature/media
@@ -896,7 +905,9 @@ projects:
     - support-test-libstate
     - support-utils
     - tooling-lint
+    - ui-colors
     - ui-icons
+    - ui-widgets
   feature-push:
     description: Feature that implements push notifications with a supported push
       service.

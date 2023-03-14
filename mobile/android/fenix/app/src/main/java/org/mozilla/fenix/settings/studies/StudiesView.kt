@@ -22,6 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.service.nimbus.NimbusApi
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.ui.widgets.withCenterAlignedButtons
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.experiments.nimbus.internal.EnrolledExperiment
 import org.mozilla.fenix.GleanMetrics.Preferences
@@ -82,7 +83,7 @@ class StudiesView(
                 .setTitle(R.string.preference_experiments_2)
                 .setMessage(R.string.studies_restart_app)
                 .setCancelable(false)
-            val alertDialog: AlertDialog = builder.create()
+            val alertDialog: AlertDialog = builder.create().withCenterAlignedButtons()
             alertDialog.show()
         }
         bindDescription()
