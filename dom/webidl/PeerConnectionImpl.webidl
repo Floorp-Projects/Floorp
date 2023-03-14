@@ -108,6 +108,7 @@ interface PeerConnectionImpl  {
 
   readonly attribute RTCIceConnectionState iceConnectionState;
   readonly attribute RTCIceGatheringState iceGatheringState;
+  readonly attribute RTCPeerConnectionState connectionState;
   readonly attribute RTCSignalingState signalingState;
   attribute DOMString id;
 

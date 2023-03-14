@@ -16,7 +16,8 @@
 enum RTCLifecycleEvent {
     "initialized",
     "icegatheringstatechange",
-    "iceconnectionstatechange"
+    "iceconnectionstatechange",
+    "connectionstatechange",
 };
 
 callback PeerConnectionLifecycleCallback = undefined (RTCPeerConnection pc,

@@ -51,9 +51,7 @@ class RTCRtpSender;
  * Audio/VideoConduit for feeding RTP/RTCP into webrtc.org for decoding, and
  * feeding audio/video frames into webrtc.org for encoding into RTP/RTCP.
  */
-class RTCRtpTransceiver : public nsISupports,
-                          public nsWrapperCache,
-                          public sigslot::has_slots<> {
+class RTCRtpTransceiver : public nsISupports, public nsWrapperCache {
  public:
   /**
    * |aSendTrack| might or might not be set.
@@ -112,8 +110,6 @@ class RTCRtpTransceiver : public nsISupports,
   void SetJsepSession(JsepSession* aJsepSession);
   std::string GetMidAscii() const;
 
-  void UpdateDtlsTransportState(const std::string& aTransportId,
-                                TransportLayer::State aState);
   void SetDtlsTransport(RTCDtlsTransport* aDtlsTransport, bool aStable);
   void RollbackToStableDtlsTransport();
 

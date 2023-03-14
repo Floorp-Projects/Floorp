@@ -368,6 +368,14 @@ class PeerConnectionImpl final
     return mIceGatheringState;
   }
 
+  NS_IMETHODIMP ConnectionState(mozilla::dom::RTCPeerConnectionState* aState);
+
+  mozilla::dom::RTCPeerConnectionState ConnectionState() {
+    mozilla::dom::RTCPeerConnectionState state;
+    ConnectionState(&state);
+    return state;
+  }
+
   NS_IMETHODIMP Close();
 
   void Close(ErrorResult& rv) { rv = Close(); }
@@ -468,6 +476,11 @@ class PeerConnectionImpl final
 
   // called when DTLS connects; we only need this once
   nsresult OnAlpnNegotiated(bool aPrivacyRequested);
+
+  void OnDtlsStateChange(const std::string& aTransportId,
+                         TransportLayer::State aState);
+  void UpdateConnectionState();
+  dom::RTCPeerConnectionState GetNewConnectionState() const;
 
   // initialize telemetry for when calls start
   void StartCallTelem();
@@ -598,6 +611,8 @@ class PeerConnectionImpl final
   // ICE State
   mozilla::dom::RTCIceConnectionState mIceConnectionState;
   mozilla::dom::RTCIceGatheringState mIceGatheringState;
+
+  mozilla::dom::RTCPeerConnectionState mConnectionState;
 
   RefPtr<PeerConnectionObserver> mPCObserver;
 
@@ -869,6 +884,8 @@ class PeerConnectionImpl final
     void OnCandidateFound_s(const std::string& aTransportId,
                             const CandidateInfo& aCandidateInfo);
     void AlpnNegotiated_s(const std::string& aAlpn, bool aPrivacyRequested);
+    void ConnectionStateChange_s(const std::string& aTransportId,
+                                 TransportLayer::State aState);
 
    private:
     const std::string mHandle;

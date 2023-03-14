@@ -10,7 +10,8 @@ enum PCObserverStateType {
     "None",
     "IceConnectionState",
     "IceGatheringState",
-    "SignalingState"
+    "SignalingState",
+    "ConnectionState",
 };
 
 enum PCError {
