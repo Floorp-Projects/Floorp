@@ -439,11 +439,28 @@ XPCOMUtils.defineLazyGetter(this, "PopupNotifications", () => {
       );
     };
 
+    // Before a Popup is shown, check that its anchor is visible.
+    // If the anchor is not visible, use one of the fallbacks.
+    // If no fallbacks are visible, return null.
+    const getVisibleAnchorElement = anchorElement => {
+      // If the anchor element is present in the Urlbar,
+      // ensure that both the anchor and page URL are visible.
+      gURLBar.maybeHandleRevertFromPopup(anchorElement);
+      if (anchorElement?.checkVisibility()) {
+        return anchorElement;
+      }
+      let fallback = [
+        document.getElementById("identity-icon"),
+        document.getElementById("urlbar-search-button"),
+      ];
+      return fallback.find(element => element?.checkVisibility()) ?? null;
+    };
+
     return new PopupNotifications(
       gBrowser,
       document.getElementById("notification-popup"),
       document.getElementById("notification-popup-box"),
-      { shouldSuppress }
+      { shouldSuppress, getVisibleAnchorElement }
     );
   } catch (ex) {
     console.error(ex);
