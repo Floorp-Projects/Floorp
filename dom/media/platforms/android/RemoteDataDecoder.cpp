@@ -244,6 +244,20 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
     return RemoteDataDecoder::Flush();
   }
 
+  nsCString GetCodecName() const override {
+    if (mMediaInfoFlag & MediaInfoFlag::VIDEO_H264) {
+      return "h264"_ns;
+    } else if (mMediaInfoFlag & MediaInfoFlag::VIDEO_VP8) {
+      return "vp8"_ns;
+    } else if (mMediaInfoFlag & MediaInfoFlag::VIDEO_VP9) {
+      return "vp9"_ns;
+    } else if (mMediaInfoFlag & MediaInfoFlag::VIDEO_AV1) {
+      return "av1"_ns;
+    } else {
+      return "unknown"_ns;
+    }
+  }
+
   RefPtr<MediaDataDecoder::DecodePromise> Decode(
       MediaRawData* aSample) override {
     AssertOnThread();
@@ -607,6 +621,13 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
     }
 
     return InitPromise::CreateAndResolve(TrackInfo::kAudioTrack, __func__);
+  }
+
+  nsCString GetCodecName() const override {
+    if (mMimeType.EqualsLiteral("audio/mp4a-latm")) {
+      return "aac"_ns;
+    }
+    return "unknown"_ns;
   }
 
   RefPtr<FlushPromise> Flush() override {

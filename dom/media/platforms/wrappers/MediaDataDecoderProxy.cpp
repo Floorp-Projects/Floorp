@@ -100,6 +100,18 @@ nsCString MediaDataDecoderProxy::GetDescriptionName() const {
   return mProxyDecoder->GetDescriptionName();
 }
 
+nsCString MediaDataDecoderProxy::GetProcessName() const {
+  MOZ_ASSERT(!mIsShutdown);
+
+  return mProxyDecoder->GetProcessName();
+}
+
+nsCString MediaDataDecoderProxy::GetCodecName() const {
+  MOZ_ASSERT(!mIsShutdown);
+
+  return mProxyDecoder->GetCodecName();
+}
+
 bool MediaDataDecoderProxy::IsHardwareAccelerated(
     nsACString& aFailureReason) const {
   MOZ_ASSERT(!mIsShutdown);

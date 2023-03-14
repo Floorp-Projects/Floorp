@@ -22,6 +22,10 @@ extern "C" {
 #endif
 }
 
+#if LIBAVCODEC_VERSION_MAJOR >= 58
+#  include "libavcodec/codec_desc.h"
+#endif  // LIBAVCODEC_VERSION_MAJOR >= 58
+
 #if LIBAVCODEC_VERSION_MAJOR < 55
 #  define AV_CODEC_ID_VP6F CODEC_ID_VP6F
 #  define AV_CODEC_ID_H264 CODEC_ID_H264

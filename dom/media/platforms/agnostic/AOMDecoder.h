@@ -31,6 +31,7 @@ class AOMDecoder : public MediaDataDecoder,
   nsCString GetDescriptionName() const override {
     return "av1 libaom video decoder"_ns;
   }
+  nsCString GetCodecName() const override { return "av1"_ns; }
 
   // Return true if aMimeType is a one of the strings used
   // by our demuxers to identify AV1 streams.

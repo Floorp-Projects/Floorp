@@ -39,6 +39,8 @@ class MFMediaEngineStream
 
   virtual nsCString GetDescriptionName() const = 0;
 
+  virtual nsCString GetCodecName() const = 0;
+
   HRESULT RuntimeClassInitialize(uint64_t aStreamId, const TrackInfo& aInfo,
                                  MFMediaSource* aParentSource);
 
@@ -206,6 +208,7 @@ class MFMediaEngineStreamWrapper : public MediaDataDecoder {
   RefPtr<FlushPromise> Flush() override;
   RefPtr<ShutdownPromise> Shutdown() override;
   nsCString GetDescriptionName() const override;
+  nsCString GetCodecName() const override;
   ConversionRequired NeedsConversion() const override;
 
  private:

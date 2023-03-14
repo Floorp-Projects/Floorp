@@ -29,6 +29,8 @@ struct InitCompletionIPDL
 {
   TrackType type;
   nsCString decoderDescription;
+  nsCString decoderProcessName;
+  nsCString decoderCodecName;
   bool hardware;
   nsCString hardwareReason;
   ConversionRequired conversion;

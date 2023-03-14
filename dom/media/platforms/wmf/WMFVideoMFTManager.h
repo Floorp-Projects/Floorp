@@ -46,6 +46,8 @@ class WMFVideoMFTManager : public MFTManager {
 
   nsCString GetDescriptionName() const override;
 
+  nsCString GetCodecName() const override;
+
   MediaDataDecoder::ConversionRequired NeedsConversion() const override {
     return mStreamType == WMFStreamType::H264
                ? MediaDataDecoder::ConversionRequired::kNeedAnnexB

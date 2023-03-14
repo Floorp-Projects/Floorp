@@ -94,6 +94,10 @@ nsCString MFMediaEngineStreamWrapper::GetDescriptionName() const {
   return mStream ? mStream->GetDescriptionName() : nsLiteralCString("none");
 }
 
+nsCString MFMediaEngineStreamWrapper::GetCodecName() const {
+  return mStream ? mStream->GetCodecName() : nsLiteralCString("none");
+}
+
 MediaDataDecoder::ConversionRequired
 MFMediaEngineStreamWrapper::NeedsConversion() const {
   return mStream ? mStream->NeedsConversion()

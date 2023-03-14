@@ -38,6 +38,7 @@ class FFmpegAudioDecoder<LIBAV_VER>
     return "ffmpeg audio decoder"_ns;
 #endif
   }
+  nsCString GetCodecName() const override;
 
  private:
   MediaResult DoDecode(MediaRawData* aSample, uint8_t* aData, int aSize,

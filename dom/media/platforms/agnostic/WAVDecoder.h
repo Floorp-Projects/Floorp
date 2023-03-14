@@ -29,6 +29,7 @@ class WaveDataDecoder : public MediaDataDecoder,
   nsCString GetDescriptionName() const override {
     return "wave audio decoder"_ns;
   }
+  nsCString GetCodecName() const override { return "wave"_ns; }
 
  private:
   const AudioInfo mInfo;

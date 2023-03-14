@@ -328,6 +328,21 @@ bool MFMediaEngineVideoStream::IsEnded() const {
 
 bool MFMediaEngineVideoStream::IsEncrypted() const { return mIsEncrypted; }
 
+nsCString MFMediaEngineVideoStream::GetCodecName() const {
+  switch (mStreamType) {
+    case WMFStreamType::H264:
+      return "h264"_ns;
+    case WMFStreamType::VP8:
+      return "vp8"_ns;
+    case WMFStreamType::VP9:
+      return "vp9"_ns;
+    case WMFStreamType::AV1:
+      return "av1"_ns;
+    default:
+      return "unknown"_ns;
+  };
+}
+
 #undef LOGV
 
 }  // namespace mozilla

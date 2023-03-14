@@ -261,6 +261,8 @@ class EMEDecryptor : public MediaDataDecoder,
     return mDecoder->GetDescriptionName();
   }
 
+  nsCString GetCodecName() const override { return mDecoder->GetCodecName(); }
+
   ConversionRequired NeedsConversion() const override {
     return mDecoder->NeedsConversion();
   }

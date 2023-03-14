@@ -74,6 +74,8 @@ class OmxDataDecoder : public MediaDataDecoder,
 
   nsCString GetDescriptionName() const override { return "omx decoder"_ns; }
 
+  nsCString GetCodecName() const override { return "unknown"_ns; }
+
   ConversionRequired NeedsConversion() const override {
     return ConversionRequired::kNeedAnnexB;
   }

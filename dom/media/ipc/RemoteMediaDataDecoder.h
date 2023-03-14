@@ -40,6 +40,8 @@ class RemoteMediaDataDecoder
   bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
   void SetSeekThreshold(const media::TimeUnit& aTime) override;
   nsCString GetDescriptionName() const override;
+  nsCString GetProcessName() const override;
+  nsCString GetCodecName() const override;
   ConversionRequired NeedsConversion() const override;
 
  private:
@@ -52,6 +54,8 @@ class RemoteMediaDataDecoder
   // Only ever written/modified during decoder initialisation.
   // As such can be accessed from any threads after that.
   nsCString mDescription = "RemoteMediaDataDecoder"_ns;
+  nsCString mProcessName = "unknown"_ns;
+  nsCString mCodecName = "unknown"_ns;
   bool mIsHardwareAccelerated = false;
   nsCString mHardwareAcceleratedReason;
   ConversionRequired mConversion = ConversionRequired::kNeedNone;

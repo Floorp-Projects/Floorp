@@ -43,6 +43,18 @@ class MediaChangeMonitor : public MediaDataDecoder,
     }
     return "MediaChangeMonitor decoder (pending)"_ns;
   }
+  nsCString GetProcessName() const override {
+    if (mDecoder) {
+      return mDecoder->GetProcessName();
+    }
+    return "MediaChangeMonitor"_ns;
+  }
+  nsCString GetCodecName() const override {
+    if (mDecoder) {
+      return mDecoder->GetCodecName();
+    }
+    return "MediaChangeMonitor"_ns;
+  }
   void SetSeekThreshold(const media::TimeUnit& aTime) override;
   bool SupportDecoderRecycling() const override {
     if (mDecoder) {

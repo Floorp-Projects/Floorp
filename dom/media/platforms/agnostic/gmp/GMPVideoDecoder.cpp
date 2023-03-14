@@ -38,6 +38,17 @@ GMPVideoDecoderParams::GMPVideoDecoderParams(const CreateDecoderParams& aParams)
       mKnowsCompositor(aParams.mKnowsCompositor),
       mTrackingId(aParams.mTrackingId) {}
 
+nsCString GMPVideoDecoder::GetCodecName() const {
+  if (MP4Decoder::IsH264(mConfig.mMimeType)) {
+    return "h264"_ns;
+  } else if (VPXDecoder::IsVP8(mConfig.mMimeType)) {
+    return "vp8"_ns;
+  } else if (VPXDecoder::IsVP9(mConfig.mMimeType)) {
+    return "vp9"_ns;
+  }
+  return "unknown"_ns;
+}
+
 void GMPVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame) {
   GMPUniquePtr<GMPVideoi420Frame> decodedFrame(aDecodedFrame);
 

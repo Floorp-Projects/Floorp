@@ -372,6 +372,17 @@ void AppleVTDecoder::MaybeRegisterCallbackThread() {
                                           "AppleVTDecoderCallback");
 }
 
+nsCString AppleVTDecoder::GetCodecName() const {
+  switch (mStreamType) {
+    case StreamType::H264:
+      return "h264"_ns;
+    case StreamType::VP9:
+      return "vp9"_ns;
+    default:
+      return "unknown"_ns;
+  }
+}
+
 // Copy and return a decoded frame.
 void AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
                                  AppleVTDecoder::AppleFrameRef aFrameRef) {

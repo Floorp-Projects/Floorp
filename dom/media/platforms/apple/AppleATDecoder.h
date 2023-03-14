@@ -34,6 +34,8 @@ class AppleATDecoder : public MediaDataDecoder,
     return "apple coremedia decoder"_ns;
   }
 
+  nsCString GetCodecName() const override;
+
   // Callbacks also need access to the config.
   const AudioInfo mConfig;
 

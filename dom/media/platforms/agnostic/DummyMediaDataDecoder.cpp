@@ -69,6 +69,8 @@ nsCString DummyMediaDataDecoder::GetDescriptionName() const {
   return "blank media data decoder"_ns;
 }
 
+nsCString DummyMediaDataDecoder::GetCodecName() const { return "unknown"_ns; }
+
 MediaDataDecoder::ConversionRequired DummyMediaDataDecoder::NeedsConversion()
     const {
   return mIsH264 ? ConversionRequired::kNeedAVCC

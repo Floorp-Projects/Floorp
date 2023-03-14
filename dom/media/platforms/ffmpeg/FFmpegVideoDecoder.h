@@ -63,6 +63,7 @@ class FFmpegVideoDecoder<LIBAV_VER>
     return "ffmpeg video decoder"_ns;
 #endif
   }
+  nsCString GetCodecName() const override;
   ConversionRequired NeedsConversion() const override {
     return ConversionRequired::kNeedAVCC;
   }

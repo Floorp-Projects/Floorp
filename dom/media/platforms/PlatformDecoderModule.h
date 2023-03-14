@@ -523,6 +523,11 @@ class MediaDataDecoder : public DecoderDoctorLifeLogger<MediaDataDecoder> {
   // May be accessed in a non thread-safe fashion.
   virtual nsCString GetDescriptionName() const = 0;
 
+  virtual nsCString GetProcessName() const {
+    return nsCString(XRE_GetProcessTypeString());
+  };
+  virtual nsCString GetCodecName() const = 0;
+
   // Set a hint of seek target time to decoder. Decoder will drop any decoded
   // data which pts is smaller than this value. This threshold needs to be clear
   // after reset decoder. To clear it explicitly, call this method with
