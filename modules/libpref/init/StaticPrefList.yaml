@@ -11809,6 +11809,13 @@
   value: 30000
   mirror: always
 
+# Similar to network.http.http2.ping-timeout, but this is used when the
+# Http/2 connection is connected to the TRR server.
+- name: network.trr.ping_timeout
+  type: RelaxedAtomicUint32
+  value: 3000
+  mirror: always
+
 # The timeout of the TRR confirmation request
 - name: network.trr.confirmation_timeout_ms
   type: RelaxedAtomicUint32

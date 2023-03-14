@@ -2381,6 +2381,8 @@ void nsHttpConnectionMgr::OnMsgVerifyTraffic(int32_t, ARefBase*) {
   } else {
     NS_WARNING("failed to create timer for VerifyTraffic!");
   }
+  // Calling ActivateTimeoutTick to ensure the next timeout tick is 1s.
+  ActivateTimeoutTick();
 }
 
 void nsHttpConnectionMgr::OnMsgDoShiftReloadConnectionCleanup(int32_t,
