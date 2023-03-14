@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ISVGDisplayableFrame.h"
+#include "mozilla/SVGUtils.h"
 #include "gfxMatrix.h"
 #include "gfxRect.h"
 #include "nsDisplayList.h"
@@ -161,8 +162,12 @@ class DisplaySVGGeometry final : public nsPaintedDisplayItem {
   NS_DISPLAY_DECL_NAME("DisplaySVGGeometry", TYPE_SVG_GEOMETRY)
 
   void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
-               HitTestState* aState, nsTArray<nsIFrame*>* aOutFrames) override;
-  void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
+               HitTestState* aState, nsTArray<nsIFrame*>* aOutFrames) override {
+    SVGUtils::HitTest(aBuilder, this, aRect, aOutFrames);
+  }
+  void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override {
+    SVGUtils::Paint(aBuilder, this, aCtx);
+  }
 
   // Whether this part of the SVG should be natively handled by webrender,
   // potentially becoming an "active layer" inside a blob image.
