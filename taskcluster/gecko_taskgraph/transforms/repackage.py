@@ -261,7 +261,7 @@ PACKAGE_FORMATS = {
             "input-xpi-file": "target.langpack.xpi",
             "input-tar-file": "target{archive_format}",
         },
-        "output": "target.deb",
+        "output": "target.langpack.deb",
     },
 }
 MOZHARNESS_EXPANSIONS = [

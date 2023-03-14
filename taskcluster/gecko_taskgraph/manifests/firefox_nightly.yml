@@ -43,6 +43,7 @@ tasktype_map:
     partials-signing: signing
     repackage: repackage
     repackage-deb: repackage
+    repackage-deb-l10n: repackage
     repackage-signing: repackage
     repackage-signing-msi: repackage
     repackage-signing-shippable-l10n-msix: signing
@@ -242,6 +243,27 @@ mapping:
                 default:
                     - ${year}/${month}/${upload_date}-${branch}-l10n/${filename_platform}/xpi
                     - latest-${branch}-l10n/${filename_platform}/xpi
+    target.langpack.deb:
+        <<: *default
+        all_locales: true
+        description: "langpack.xpi repackaged as a .deb"
+        from:
+            - repackage-deb-l10n
+        only_for_platforms:
+            - linux-shippable
+            - linux64-shippable
+            - linux-devedition
+            - linux64-devedition
+        pretty_name: firefox-${version}.${locale}.langpack.deb
+        checksums_path: firefox-${version}.${locale}.langpack.deb
+        destinations:
+            by-locale:
+                en-US:
+                    - ${year}/${month}/${upload_date}-${branch}
+                    - latest-${branch}
+                default:
+                    - ${year}/${month}/${upload_date}-${branch}-l10n/${filename_platform}/deb-l10n
+                    - latest-${branch}-l10n/${filename_platform}/deb-l10n
     mar:
         <<: *default
         description: "Alongside `mbsdiff`, a tool used to generate partials"
