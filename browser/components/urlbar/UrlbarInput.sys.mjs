@@ -764,6 +764,16 @@ export class UrlbarInput {
     }
   }
 
+  maybeHandleRevertFromPopup(anchorElement) {
+    if (
+      anchorElement?.closest("#urlbar") &&
+      this.window.gBrowser.selectedBrowser.searchTerms
+    ) {
+      this.handleRevert(true);
+      // TODO: Bug 1815971, add telemetry.
+    }
+  }
+
   /**
    * Called by inputs that resemble search boxes, but actually hand input off
    * to the Urlbar. We use these fake inputs on the new tab page and
