@@ -10,7 +10,6 @@
 #include "nsTHashMap.h"
 #include "nsIObserver.h"
 #include "nsIStorageActivityService.h"
-#include "nsITimer.h"
 #include "nsWeakReference.h"
 
 namespace mozilla {
@@ -23,15 +22,11 @@ namespace dom {
 
 class StorageActivityService final : public nsIStorageActivityService,
                                      public nsIObserver,
-                                     public nsITimerCallback,
-                                     public nsINamed,
                                      public nsSupportsWeakReference {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTORAGEACTIVITYSERVICE
   NS_DECL_NSIOBSERVER
-  NS_DECL_NSITIMERCALLBACK
-  NS_DECL_NSINAMED
 
   // Main-thread only.
   static void SendActivity(nsIPrincipal* aPrincipal);
@@ -55,14 +50,10 @@ class StorageActivityService final : public nsIStorageActivityService,
 
   void SendActivityToParent(nsIPrincipal* aPrincipal);
 
-  void MaybeStartTimer();
-
-  void MaybeStopTimer();
+  void CleanUp();
 
   // Activities grouped by origin (+OriginAttributes).
   nsTHashMap<nsCStringHashKey, PRTime> mActivities;
-
-  nsCOMPtr<nsITimer> mTimer;
 };
 
 }  // namespace dom
