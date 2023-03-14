@@ -322,8 +322,9 @@ class ProviderSearchSuggestions extends UrlbarProvider {
       return null;
     }
 
-    this._suggestionsController = new lazy.SearchSuggestionController();
-    this._suggestionsController.formHistoryParam = queryContext.formHistoryName;
+    this._suggestionsController = new lazy.SearchSuggestionController(
+      queryContext.formHistoryName
+    );
 
     // If there's a form history entry that equals the search string, the search
     // suggestions controller will include it, and we'll make a result for it.

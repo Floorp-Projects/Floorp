@@ -9,6 +9,16 @@ ChromeUtils.defineESModuleGetters(lazy, {
   SearchSuggestionController:
     "resource://gre/modules/SearchSuggestionController.sys.mjs",
 });
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "FormHistoryClient",
+  "resource://gre/modules/FormAutoComplete.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "FormAutoCompleteResult",
+  "resource://gre/modules/FormAutoComplete.jsm"
+);
 
 /**
  * SuggestAutoComplete is a base class that implements nsIAutoCompleteSearch
@@ -80,11 +90,6 @@ class SuggestAutoComplete {
    *   results are ready.
    */
   startSearch(searchString, searchParam, previousResult, listener) {
-    // Don't reuse a previous form history result when it no longer applies.
-    if (!previousResult) {
-      this.#formHistoryResult = null;
-    }
-
     var formHistorySearchParam = searchParam.split("|")[0];
 
     // Receive the information about the privacy mode of the window to which
@@ -134,7 +139,6 @@ class SuggestAutoComplete {
   }
 
   #suggestionController;
-  #formHistoryResult;
 
   /**
    * Maximum number of history items displayed. This is capped at 7
@@ -188,8 +192,22 @@ class SuggestAutoComplete {
       finalResults = finalResults.concat(nonTailEntries.map(e => e.value));
     }
 
+    // Bug 1822297: This re-uses the wrappers from Satchel, to avoid re-writing
+    // our own nsIAutoCompleteSimpleResult implementation for now. However,
+    // we should do that at some stage to remove the dependency on satchel.
+    let client = new lazy.FormHistoryClient({
+      formField: null,
+      inputName: this.#suggestionController.formHistoryParam,
+    });
+    let formHistoryResult = new lazy.FormAutoCompleteResult(
+      client,
+      results.formHistoryResults,
+      this.#suggestionController.formHistoryParam,
+      searchString
+    );
+
     // Notify the FE of our new results
-    this.onResultsReady(results.term, finalResults, results.formHistoryResult);
+    this.onResultsReady(results.term, finalResults, formHistoryResult);
   }
 
   QueryInterface = ChromeUtils.generateQI([
