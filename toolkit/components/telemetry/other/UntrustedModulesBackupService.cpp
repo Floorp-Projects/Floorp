@@ -40,7 +40,7 @@ void UntrustedModulesBackupData::AddWithoutStacks(
         if (p) {
           p.Data()->mData.MergeWithoutStacks(std::move(aData));
         } else {
-          aData.Truncate();
+          aData.Truncate(true);
           p.Insert(MakeRefPtr<UntrustedModulesDataContainer>(std::move(aData)));
         }
       });
