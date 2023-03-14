@@ -88,6 +88,14 @@ class QuotaManager final : public BackgroundThreadObject {
   class Observer;
 
  public:
+  // StorageId uniquely identifies an origin by the combination
+  // of it's persistence type, name and quota client type.
+  class StorageId {
+   public:
+    static nsCString Serialize(const nsACString& origin, PersistenceType pType,
+                               Client::Type cType);
+  };
+
   QuotaManager(const nsAString& aBasePath, const nsAString& aStorageName);
 
   NS_INLINE_DECL_REFCOUNTING(QuotaManager)

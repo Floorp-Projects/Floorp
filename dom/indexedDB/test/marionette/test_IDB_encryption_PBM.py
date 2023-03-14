@@ -33,11 +33,7 @@ class IDBEncryptionPBM(MarionetteTestCase):
         self.marionette.set_pref(INDEXED_DB_PBM_PREF, True)
 
         # Navigate by opening a new private window
-        pbmWindowHandle = self.marionette.open(type="window", private=True)["handle"]
-        self.marionette.switch_to_window(pbmWindowHandle)
-        self.marionette.navigate(
-            self.marionette.absolute_url("dom/indexedDB/basicIDB_PBM.html")
-        )
+        self.navigate_to_private_window()
 
         self.idbStoragePath = self.getIDBStoragePath()
 
@@ -103,6 +99,45 @@ class IDBEncryptionPBM(MarionetteTestCase):
             )
 
         self.assertFalse(foundRawValue, "sqlite data did not get encrypted")
+
+    def test_purge_private_origin_restart(self):
+        self.marionette.execute_script(
+            """
+                const [idb, store, key, value] = arguments;
+                window.wrappedJSObject.addDataIntoIDB(idb, store, key, value);
+            """,
+            script_args=(self.IDBName, self.IDBStoreName, "textKey", self.IDBValue),
+        )
+
+        self.marionette.restart(in_app=True)
+        self.ensureInvariantHolds(lambda _: not os.path.exists(self.idbStoragePath))
+
+    def purge_private_origin_session_end(self):
+        # Bug 1821027: test disabled
+        self.marionette.execute_script(
+            """
+                const [idb, store, key, value] = arguments;
+                window.wrappedJSObject.addDataIntoIDB(idb, store, key, value);
+            """,
+            script_args=(self.IDBName, self.IDBStoreName, "textKey", self.IDBValue),
+        )
+
+        self.marionette.close()
+        try:
+            self.ensureInvariantHolds(lambda _: not os.path.exists(self.idbStoragePath))
+        finally:
+            # revert back to the original state
+            self.marionette.start_session()
+            self.navigate_to_private_window()
+
+    def navigate_to_private_window(self):
+        # Navigate by opening a new private window
+        pbmWindowHandle = self.marionette.open(type="window", private=True)["handle"]
+        self.marionette.switch_to_window(pbmWindowHandle)
+
+        self.marionette.navigate(
+            self.marionette.absolute_url("dom/indexedDB/basicIDB_PBM.html")
+        )
 
     def getIDBStoragePath(self):
         origin = (
