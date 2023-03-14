@@ -145,7 +145,9 @@ enum {
   NODE_HAS_EMPTY_SELECTOR = NODE_FLAG_BIT(6),
 
   // A child of the node has a selector such that any insertion,
-  // removal, or appending of children requires restyling the parent.
+  // removal, or appending of children requires restyling the parent, if the
+  // parent is an element. If the parent is the shadow root, the child's
+  // siblings are restyled.
   NODE_HAS_SLOW_SELECTOR = NODE_FLAG_BIT(7),
 
   // A child of the node has a :first-child, :-moz-first-node,
