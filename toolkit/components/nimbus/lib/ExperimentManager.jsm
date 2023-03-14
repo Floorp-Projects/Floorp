@@ -452,7 +452,7 @@ class _ExperimentManager {
       { force: true }
     );
 
-    Services.obs.notifyObservers(null, "nimbus:force-enroll", slug);
+    Services.obs.notifyObservers(null, "nimbus:enrollments-updated", slug);
 
     return enrollment;
   }
@@ -461,6 +461,7 @@ class _ExperimentManager {
    * Update an enrollment that was already set
    *
    * @param {RecipeArgs} recipe
+   * @returns {boolean} whether the enrollment is still active
    */
   updateEnrollment(recipe) {
     /** @type Enrollment */
@@ -480,6 +481,7 @@ class _ExperimentManager {
     if (!branch) {
       // Our branch has been removed. Unenroll.
       this.unenroll(recipe.slug, "branch-removed");
+      return false;
     }
 
     return true;
