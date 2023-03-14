@@ -5270,7 +5270,7 @@ nscoord nsLayoutUtils::ComputeBSizeDependentValue(
   // the unit conditions.
   // XXXldb Many callers pass a non-'auto' containing block height when
   // according to CSS2.1 they should be passing 'auto'.
-  MOZ_ASSERT(
+  NS_ASSERTION(
       NS_UNCONSTRAINEDSIZE != aContainingBlockBSize || !aCoord.HasPercent(),
       "unexpected containing block block-size");
 
