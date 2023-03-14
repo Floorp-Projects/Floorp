@@ -570,8 +570,8 @@ const kTestPairs = [
 const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"
 );
-let { LanguageDetector, workerManager } = ChromeUtils.import(
-  "resource://gre/modules/translation/LanguageDetector.jsm"
+let { LanguageDetector, workerManager } = ChromeUtils.importESModule(
+  "resource://gre/modules/translation/LanguageDetector.sys.mjs"
 );
 
 function check_result(result, langCode, expected) {

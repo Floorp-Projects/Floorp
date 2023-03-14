@@ -7,11 +7,10 @@
 var EXPORTED_SYMBOLS = ["TranslationChild"];
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "LanguageDetector",
-  "resource://gre/modules/translation/LanguageDetector.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  LanguageDetector:
+    "resource://gre/modules/translation/LanguageDetector.sys.mjs",
+});
 
 const STATE_OFFER = 0;
 const STATE_TRANSLATED = 2;

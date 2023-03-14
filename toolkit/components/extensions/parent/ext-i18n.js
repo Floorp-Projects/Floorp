@@ -4,11 +4,10 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "LanguageDetector",
-  "resource://gre/modules/translation/LanguageDetector.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  LanguageDetector:
+    "resource://gre/modules/translation/LanguageDetector.sys.mjs",
+});
 
 this.i18n = class extends ExtensionAPI {
   getAPI(context) {

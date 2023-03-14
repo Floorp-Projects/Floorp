@@ -2,18 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 // workerManager is exported for tests.
-var EXPORTED_SYMBOLS = ["LanguageDetector", "workerManager"];
-
-const { clearTimeout, setTimeout } = ChromeUtils.importESModule(
-  "resource://gre/modules/Timer.sys.mjs"
-);
+import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
 const WORKER_URL = "resource://gre/modules/translation/cld-worker.js";
 
-var workerManager = {
+export var workerManager = {
   // Since Emscripten can handle heap growth, but not heap shrinkage, we
   // need to refresh the worker after we've processed a particularly large
   // string in order to prevent unnecessary resident memory growth.
@@ -110,7 +104,7 @@ var workerManager = {
   },
 };
 
-var LanguageDetector = {
+export var LanguageDetector = {
   /**
    * Detect the language of a given string.
    *

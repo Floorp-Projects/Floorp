@@ -8,7 +8,7 @@ with Files("**"):
 EXTRA_JS_MODULES.translation = [
     "cld2/cld-worker.js",
     "cld2/cld-worker.js.mem",
-    "LanguageDetector.jsm",
+    "LanguageDetector.sys.mjs",
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
