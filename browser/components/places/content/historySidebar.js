@@ -77,7 +77,7 @@ function GroupBy(groupingType) {
   searchHistory(gSearchBox.value);
 }
 
-function updateHistoryTelemetry(urlsOpened = []) {
+function updateTelemetry(urlsOpened = []) {
   let searchesHistogram = Services.telemetry.getHistogramById(
     "PLACES_SEARCHBAR_CUMULATIVE_SEARCHES"
   );
