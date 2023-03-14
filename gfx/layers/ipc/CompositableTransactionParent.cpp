@@ -43,7 +43,8 @@ bool CompositableParentManager::ReceiveCompositableUpdate(
     case CompositableOperationDetail::TOpRemoveTexture: {
       const OpRemoveTexture& op = aDetail.get_OpRemoveTexture();
 
-      RefPtr<TextureHost> tex = TextureHost::AsTextureHost(op.textureParent());
+      RefPtr<TextureHost> tex =
+          TextureHost::AsTextureHost(op.texture().AsParent());
 
       MOZ_ASSERT(tex.get());
       aCompositable->RemoveTextureHost(tex);
@@ -55,7 +56,8 @@ bool CompositableParentManager::ReceiveCompositableUpdate(
       AutoTArray<CompositableHost::TimedTexture, 4> textures;
       for (auto& timedTexture : op.textures()) {
         CompositableHost::TimedTexture* t = textures.AppendElement();
-        t->mTexture = TextureHost::AsTextureHost(timedTexture.textureParent());
+        t->mTexture =
+            TextureHost::AsTextureHost(timedTexture.texture().AsParent());
         MOZ_ASSERT(t->mTexture);
         t->mTimeStamp = timedTexture.timeStamp();
         t->mPictureRect = timedTexture.picture();
@@ -70,7 +72,7 @@ bool CompositableParentManager::ReceiveCompositableUpdate(
 
         for (auto& timedTexture : op.textures()) {
           RefPtr<TextureHost> texture =
-              TextureHost::AsTextureHost(timedTexture.textureParent());
+              TextureHost::AsTextureHost(timedTexture.texture().AsParent());
           if (texture) {
             texture->SetLastFwdTransactionId(mFwdTransactionId);
             // Make sure that each texture was handled by the compositable
@@ -108,8 +110,8 @@ bool CompositableParentManager::ReceiveCompositableUpdate(
 
 void CompositableParentManager::DestroyActor(const OpDestroy& aOp) {
   switch (aOp.type()) {
-    case OpDestroy::TPTextureParent: {
-      auto actor = aOp.get_PTextureParent();
+    case OpDestroy::TPTexture: {
+      auto actor = aOp.get_PTexture().AsParent();
       TextureHost::ReceivedDestroy(actor);
       break;
     }

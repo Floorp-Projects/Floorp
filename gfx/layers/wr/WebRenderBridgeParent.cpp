@@ -576,7 +576,7 @@ bool WebRenderBridgeParent::UpdateResources(
       case OpUpdateResource::TOpPushExternalImageForTexture: {
         const auto& op = cmd.get_OpPushExternalImageForTexture();
         CompositableTextureHostRef texture;
-        texture = TextureHost::AsTextureHost(op.textureParent());
+        texture = TextureHost::AsTextureHost(op.texture().AsParent());
         // gfxCriticalNote is called on error
         if (!PushExternalImageForTexture(op.externalImageId(), op.key(),
                                          texture, op.isUpdate(), aUpdates)) {
