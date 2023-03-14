@@ -16,11 +16,7 @@ use parking_lot::Mutex;
 
 use nsstring::nsACString;
 
-use std::{
-    borrow::Cow,
-    num::NonZeroU8,
-    ptr,
-};
+use std::{borrow::Cow, num::NonZeroU8, ptr};
 
 // we can't call `from_raw_parts` unconditionally because the caller
 // may not even have a valid pointer (e.g. NULL) if the `length` is zero.
