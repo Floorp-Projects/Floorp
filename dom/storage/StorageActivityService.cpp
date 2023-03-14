@@ -19,7 +19,7 @@
 #include "nsIMutableArray.h"
 #include "nsIObserverService.h"
 #include "nsIPrincipal.h"
-#include "nsITimer.h"
+#include "nsIUserIdleService.h"
 #include "nsSupportsPrimitives.h"
 #include "nsXPCOM.h"
 
@@ -136,7 +136,6 @@ StorageActivityService::StorageActivityService() {
 
 StorageActivityService::~StorageActivityService() {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!mTimer);
 }
 
 void StorageActivityService::SendActivityInternal(nsIPrincipal* aPrincipal) {
@@ -162,8 +161,17 @@ void StorageActivityService::SendActivityInternal(nsIPrincipal* aPrincipal) {
 void StorageActivityService::SendActivityInternal(const nsACString& aOrigin) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
+  bool shouldAddObserver = mActivities.Count() == 0;
   mActivities.InsertOrUpdate(aOrigin, PR_Now());
-  MaybeStartTimer();
+
+  if (shouldAddObserver) {
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (NS_WARN_IF(!obs)) {
+      return;
+    }
+
+    obs->AddObserver(this, OBSERVER_TOPIC_IDLE_DAILY, true);
+  }
 }
 
 void StorageActivityService::SendActivityToParent(nsIPrincipal* aPrincipal) {
@@ -190,46 +198,21 @@ NS_IMETHODIMP
 StorageActivityService::Observe(nsISupports* aSubject, const char* aTopic,
                                 const char16_t* aData) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID));
 
-  MaybeStopTimer();
-
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  if (obs) {
-    obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+  if (!strcmp(aTopic, OBSERVER_TOPIC_IDLE_DAILY)) {
+    CleanUp();
+    return NS_OK;
   }
+
+  MOZ_ASSERT(!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID));
 
   gStorageActivityShutdown = true;
   gStorageActivityService = nullptr;
   return NS_OK;
 }
 
-void StorageActivityService::MaybeStartTimer() {
+void StorageActivityService::CleanUp() {
   MOZ_ASSERT(NS_IsMainThread());
-
-  if (!mTimer) {
-    nsresult rv = NS_NewTimerWithCallback(
-        getter_AddRefs(mTimer), this, 1000 * 5 * 60 /* any 5 minutes */,
-        nsITimer::TYPE_REPEATING_SLACK, nullptr);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Could not start StorageActivityService timer");
-    }
-  }
-}
-
-void StorageActivityService::MaybeStopTimer() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (mTimer) {
-    mTimer->Cancel();
-    mTimer = nullptr;
-  }
-}
-
-NS_IMETHODIMP
-StorageActivityService::Notify(nsITimer* aTimer) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mTimer == aTimer);
 
   uint64_t now = PR_Now();
 
@@ -239,18 +222,13 @@ StorageActivityService::Notify(nsITimer* aTimer) {
     }
   }
 
-  // If no activities, let's stop the timer.
+  // If no activities, remove the observer.
   if (mActivities.Count() == 0) {
-    MaybeStopTimer();
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+      obs->RemoveObserver(this, OBSERVER_TOPIC_IDLE_DAILY);
+    }
   }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-StorageActivityService::GetName(nsACString& aName) {
-  aName.AssignLiteral("StorageActivityService");
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -260,6 +238,9 @@ StorageActivityService::GetActiveOrigins(PRTime aFrom, PRTime aTo,
   if (((now - aFrom) / PR_USEC_PER_SEC) > TIME_MAX_SECS || aFrom >= aTo) {
     return NS_ERROR_INVALID_ARG;
   }
+
+  // Remove expired entries first.
+  CleanUp();
 
   nsresult rv = NS_OK;
   nsCOMPtr<nsIMutableArray> devices =
@@ -312,8 +293,6 @@ NS_INTERFACE_MAP_BEGIN(StorageActivityService)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStorageActivityService)
   NS_INTERFACE_MAP_ENTRY(nsIStorageActivityService)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
-  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
-  NS_INTERFACE_MAP_ENTRY(nsINamed)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
