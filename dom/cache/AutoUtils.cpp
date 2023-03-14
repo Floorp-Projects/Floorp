@@ -328,12 +328,11 @@ AutoParentOpResult::~AutoParentOpResult() {
   switch (mOpResult.type()) {
     case CacheOpResult::TStorageOpenResult: {
       StorageOpenResult& result = mOpResult.get_StorageOpenResult();
-      if (action == Forget || !result.actor()) {
+      if (action == Forget || result.actorParent() == nullptr) {
         break;
       }
 
-      QM_WARNONLY_TRY(
-          OkIf(PCacheParent::Send__delete__(result.actor().AsParent())));
+      QM_WARNONLY_TRY(OkIf(PCacheParent::Send__delete__(result.actorParent())));
       break;
     }
     default:
@@ -351,9 +350,11 @@ AutoParentOpResult::~AutoParentOpResult() {
 void AutoParentOpResult::Add(CacheId aOpenedCacheId,
                              SafeRefPtr<Manager> aManager) {
   MOZ_DIAGNOSTIC_ASSERT(mOpResult.type() == CacheOpResult::TStorageOpenResult);
-  MOZ_DIAGNOSTIC_ASSERT(!mOpResult.get_StorageOpenResult().actor());
-  mOpResult.get_StorageOpenResult().actor() = mManager->SendPCacheConstructor(
-      new CacheParent(std::move(aManager), aOpenedCacheId));
+  MOZ_DIAGNOSTIC_ASSERT(mOpResult.get_StorageOpenResult().actorParent() ==
+                        nullptr);
+  mOpResult.get_StorageOpenResult().actorParent() =
+      mManager->SendPCacheConstructor(
+          new CacheParent(std::move(aManager), aOpenedCacheId));
 }
 
 void AutoParentOpResult::Add(const SavedResponse& aSavedResponse,

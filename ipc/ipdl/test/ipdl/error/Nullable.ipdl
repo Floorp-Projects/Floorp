@@ -1,4 +1,4 @@
-//error: `nullable' qualifier for type `int' is unsupported
+//error: `nullable' qualifier for type `int' makes no sense
 
 protocol PNullable {
 child:

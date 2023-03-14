@@ -1379,9 +1379,9 @@ class Manager::StorageOpenAction final : public Manager::BaseAction {
 
   virtual void Complete(Listener* aListener, ErrorResult&& aRv) override {
     MOZ_DIAGNOSTIC_ASSERT(aRv.Failed() || mCacheId != INVALID_CACHE_ID);
-    aListener->OnOpComplete(
-        std::move(aRv), StorageOpenResult((PCacheParent*)nullptr, mNamespace),
-        mCacheId);
+    aListener->OnOpComplete(std::move(aRv),
+                            StorageOpenResult(nullptr, nullptr, mNamespace),
+                            mCacheId);
   }
 
  private:

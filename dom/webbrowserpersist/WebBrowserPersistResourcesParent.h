@@ -28,7 +28,7 @@ class WebBrowserPersistResourcesParent final
       const nsContentPolicyType& aContentPolicyType) override;
 
   virtual mozilla::ipc::IPCResult RecvVisitDocument(
-      NotNull<PWebBrowserPersistDocumentParent*> aSubDocument) override;
+      PWebBrowserPersistDocumentParent* aSubDocument) override;
 
   virtual mozilla::ipc::IPCResult RecvVisitBrowsingContext(
       const dom::MaybeDiscarded<dom::BrowsingContext>& aContext) override;

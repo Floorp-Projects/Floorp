@@ -67,7 +67,8 @@ void CacheStreamControlChild::SerializeControl(
     CacheReadStream* aReadStreamOut) {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlChild);
   MOZ_DIAGNOSTIC_ASSERT(aReadStreamOut);
-  aReadStreamOut->control() = this;
+  aReadStreamOut->controlParent() = nullptr;
+  aReadStreamOut->controlChild() = this;
 }
 
 void CacheStreamControlChild::SerializeStream(CacheReadStream* aReadStreamOut,

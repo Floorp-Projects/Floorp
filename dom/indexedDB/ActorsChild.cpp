@@ -832,7 +832,7 @@ bool BackgroundFactoryChild::DeallocPBackgroundIDBDatabaseChild(
 mozilla::ipc::IPCResult
 BackgroundFactoryChild::RecvPBackgroundIDBDatabaseConstructor(
     PBackgroundIDBDatabaseChild* aActor, const DatabaseSpec& aSpec,
-    NotNull<PBackgroundIDBFactoryRequestChild*> aRequest) {
+    PBackgroundIDBFactoryRequestChild* aRequest) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aActor);
 
@@ -901,8 +901,8 @@ void BackgroundFactoryRequestChild::HandleResponse(
 
   mRequest->Reset();
 
-  auto* databaseActor = static_cast<BackgroundDatabaseChild*>(
-      aResponse.database().AsChild().get());
+  auto* databaseActor =
+      static_cast<BackgroundDatabaseChild*>(aResponse.databaseChild());
   MOZ_ASSERT(databaseActor);
 
   IDBDatabase* const database = [this, databaseActor]() -> IDBDatabase* {

@@ -23,7 +23,7 @@ struct CheckedContentData {
 };
 
 union FileContentData {
-  nullable BlobImpl;
+  BlobImpl;
   nsString;
 };
 

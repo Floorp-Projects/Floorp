@@ -1124,9 +1124,9 @@ struct ParamTraits<mozilla::layers::ZoomTarget> {
       MOZ_ASSERT(rv, "Serialize ##type_## failed");                         \
       WriteParam(aWriter, std::move(v));                                    \
     }                                                                       \
-    static ReadResult<paramType> Read(MessageReader* aReader) {             \
+    static mozilla::Maybe<paramType> Read(MessageReader* aReader) {         \
       mozilla::ipc::ByteBuf in;                                             \
-      ReadResult<paramType> result;                                         \
+      mozilla::Maybe<paramType> result;                                     \
       if (!ReadParam(aReader, &in) || !in.mData) {                          \
         return result;                                                      \
       }                                                                     \
@@ -1135,7 +1135,7 @@ struct ParamTraits<mozilla::layers::ZoomTarget> {
       if (!Servo_##type_##_Deserialize(&in, value.addr())) {                \
         return result;                                                      \
       }                                                                     \
-      result = std::move(*value.addr());                                    \
+      result.emplace(std::move(*value.addr()));                             \
       value.addr()->~paramType();                                           \
       return result;                                                        \
     }                                                                       \

@@ -18,7 +18,7 @@ protocol PWebSocketConnection
   manager PBackground;
 
 parent:
-  async OnTransportAvailable(nullable nsITransportSecurityInfo aSecurityInfo);
+  async OnTransportAvailable(nsITransportSecurityInfo aSecurityInfo);
   async OnError(nsresult aStatus);
   async OnTCPClosed();
   async OnDataReceived(uint8_t[] aData);

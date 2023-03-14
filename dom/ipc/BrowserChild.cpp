@@ -714,8 +714,8 @@ BrowserChild::ProvideWindow(nsIOpenWindowInfo* aOpenWindowInfo,
   // code back to our caller.
   ContentChild* cc = ContentChild::GetSingleton();
   return cc->ProvideWindowCommon(
-      WrapNotNull(this), aOpenWindowInfo, aChromeFlags, aCalledFromJS, aURI,
-      aName, aFeatures, aForceNoOpener, aForceNoReferrer, aIsPopupRequested,
+      this, aOpenWindowInfo, aChromeFlags, aCalledFromJS, aURI, aName,
+      aFeatures, aForceNoOpener, aForceNoReferrer, aIsPopupRequested,
       aLoadState, aWindowIsNew, aReturn);
 }
 
@@ -1016,8 +1016,7 @@ nsresult BrowserChild::UpdateRemotePrintSettings(
       // everything.
       ([&]() MOZ_CAN_RUN_SCRIPT_BOUNDARY {
         RefPtr<RemotePrintJobChild> printJob =
-            static_cast<RemotePrintJobChild*>(
-                aPrintData.remotePrintJob().AsChild());
+            static_cast<RemotePrintJobChild*>(aPrintData.remotePrintJobChild());
         cv->SetPrintSettingsForSubdocument(printSettings, printJob);
       }());
     } else if (RefPtr<BrowserBridgeChild> remoteChild =
@@ -2412,8 +2411,8 @@ mozilla::ipc::IPCResult BrowserChild::RecvPrint(
   printSettingsSvc->DeserializeToPrintSettings(aPrintData, printSettings);
   {
     IgnoredErrorResult rv;
-    RefPtr printJob = static_cast<RemotePrintJobChild*>(
-        aPrintData.remotePrintJob().AsChild());
+    RefPtr printJob =
+        static_cast<RemotePrintJobChild*>(aPrintData.remotePrintJobChild());
     outerWindow->Print(printSettings, printJob,
                        /* aListener = */ nullptr,
                        /* aWindowToCloneInto = */ nullptr,

@@ -79,7 +79,7 @@ class DocAccessibleChild : public DocAccessibleChildBase {
   bool ConstructChildDocInParentProcess(DocAccessibleChild* aNewChildDoc,
                                         uint64_t aUniqueID, uint32_t aMsaaID);
 
-  bool SendBindChildDoc(NotNull<DocAccessibleChild*> aChildDoc,
+  bool SendBindChildDoc(DocAccessibleChild* aChildDoc,
                         const uint64_t& aNewParentID);
 
   /**
@@ -346,8 +346,7 @@ class DocAccessibleChild : public DocAccessibleChildBase {
 
   struct SerializedBindChildDoc final : public DeferredEvent {
     SerializedBindChildDoc(DocAccessibleChild* aParentDoc,
-                           NotNull<DocAccessibleChild*> aChildDoc,
-                           uint64_t aNewParentID)
+                           DocAccessibleChild* aChildDoc, uint64_t aNewParentID)
         : DeferredEvent(aParentDoc),
           mChildDoc(aChildDoc),
           mNewParentID(aNewParentID) {}
@@ -356,7 +355,7 @@ class DocAccessibleChild : public DocAccessibleChildBase {
       Unused << aParentIPCDoc->SendBindChildDoc(mChildDoc, mNewParentID);
     }
 
-    NotNull<DocAccessibleChild*> mChildDoc;
+    DocAccessibleChild* mChildDoc;
     uint64_t mNewParentID;
   };
 

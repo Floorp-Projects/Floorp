@@ -497,7 +497,8 @@ void TypeUtils::SerializeCacheStream(nsIInputStream* aStream,
   aStreamOut->emplace(CacheReadStream());
   CacheReadStream& cacheStream = aStreamOut->ref();
 
-  cacheStream.control() = nullptr;
+  cacheStream.controlChild() = nullptr;
+  cacheStream.controlParent() = nullptr;
 
   MOZ_ALWAYS_TRUE(mozilla::ipc::SerializeIPCStream(do_AddRef(aStream),
                                                    cacheStream.stream(),

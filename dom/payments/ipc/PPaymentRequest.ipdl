@@ -76,7 +76,7 @@ struct IPCPaymentCreateActionRequest
 {
   uint64_t topOuterWindowId;
   nsString requestId;
-  nullable nsIPrincipal topLevelPrincipal;
+  nsIPrincipal topLevelPrincipal;
   IPCPaymentMethodData[] methodData;
   IPCPaymentDetails details;
   IPCPaymentOptions options;

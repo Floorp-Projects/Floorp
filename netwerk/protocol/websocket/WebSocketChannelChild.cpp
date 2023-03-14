@@ -495,7 +495,7 @@ WebSocketChannelChild::AsyncOpenNative(
 
   nsCOMPtr<nsIURI> uri;
   Maybe<LoadInfoArgs> loadInfoArgs;
-  Maybe<NotNull<PTransportProviderChild*>> transportProvider;
+  Maybe<PTransportProviderChild*> transportProvider;
 
   if (!mIsServerSide) {
     uri = aURI;
@@ -509,7 +509,7 @@ WebSocketChannelChild::AsyncOpenNative(
     nsresult rv = mServerTransportProvider->GetIPCChild(&ipcChild);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    transportProvider = Some(WrapNotNull(ipcChild));
+    transportProvider = Some(ipcChild);
   }
 
   // This must be called before sending constructor message.

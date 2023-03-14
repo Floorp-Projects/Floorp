@@ -173,7 +173,7 @@ class DocAccessibleParent : public RemoteAccessible,
       const a11y::role& aRole, const uint8_t& aRoleMapEntryIndex) final;
 
   virtual mozilla::ipc::IPCResult RecvBindChildDoc(
-      NotNull<PDocAccessibleParent*> aChildDoc, const uint64_t& aID) override;
+      PDocAccessibleParent* aChildDoc, const uint64_t& aID) override;
 
   void Unbind() {
     if (DocAccessibleParent* parent = ParentDoc()) {

@@ -12,7 +12,7 @@ namespace a11y {
 struct CacheData
 {
   uint64_t ID;
-  nullable AccAttributes Fields;
+  AccAttributes Fields;
 };
 
 }

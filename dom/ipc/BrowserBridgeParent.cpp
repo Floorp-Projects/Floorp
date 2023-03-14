@@ -166,7 +166,7 @@ IPCResult BrowserBridgeParent::RecvScrollbarPreferenceChanged(
 }
 
 IPCResult BrowserBridgeParent::RecvLoadURL(nsDocShellLoadState* aLoadState) {
-  Unused << mBrowserParent->SendLoadURL(WrapNotNull(aLoadState),
+  Unused << mBrowserParent->SendLoadURL(aLoadState,
                                         mBrowserParent->GetShowInfo());
   return IPC_OK();
 }

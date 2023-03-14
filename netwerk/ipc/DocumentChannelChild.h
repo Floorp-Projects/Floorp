@@ -66,7 +66,7 @@ class DocumentChannelChild final : public DocumentChannel,
 
   RedirectToRealChannelResolver mRedirectResolver;
   nsTArray<Endpoint<extensions::PStreamFilterParent>> mStreamFilterEndpoints;
-  dom::BrowsingContext* mLoadingContext;
+  BrowsingContext* mLoadingContext;
 };
 
 }  // namespace net
