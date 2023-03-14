@@ -38,7 +38,7 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   let consoleOptions = {
     // tip: set maxLogLevel to "debug" and use log.debug() to create detailed
     // messages during development. See LOG_LEVELS in Console.sys.mjs for details.
-    maxLogLevel: "debug",
+    maxLogLevel: "error",
     maxLogLevelPref: "browser.shell.loglevel",
     prefix: "ShellService",
   };
