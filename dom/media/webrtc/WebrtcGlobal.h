@@ -32,10 +32,10 @@ static auto ForAllPublicRTCStatsCollectionMembers(Collection& aStats,
   return aFunction(
       aStats.mInboundRtpStreamStats, aStats.mOutboundRtpStreamStats,
       aStats.mRemoteInboundRtpStreamStats, aStats.mRemoteOutboundRtpStreamStats,
-      aStats.mPeerConnectionStats, aStats.mRtpContributingSourceStats,
-      aStats.mIceCandidatePairStats, aStats.mIceCandidateStats,
-      aStats.mTrickledIceCandidateStats, aStats.mDataChannelStats,
-      aStats.mCodecStats);
+      aStats.mMediaSourceStats, aStats.mPeerConnectionStats,
+      aStats.mRtpContributingSourceStats, aStats.mIceCandidatePairStats,
+      aStats.mIceCandidateStats, aStats.mTrickledIceCandidateStats,
+      aStats.mDataChannelStats, aStats.mCodecStats);
 }
 
 // Calls aFunction with all members of aStats, including internal ones.
@@ -438,6 +438,9 @@ struct ParamTraits<mozilla::dom::RTCRemoteOutboundRtpStreamStats> {
            ReadRTCSentRtpStreamStats(aReader, aResult);
   }
 };
+
+DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::RTCMediaSourceStats, mId,
+                                  mTimestamp, mType, mTrackIdentifier, mKind);
 
 template <>
 struct ParamTraits<mozilla::dom::RTCRTPContributingSourceStats> {
