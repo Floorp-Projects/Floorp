@@ -179,7 +179,7 @@ void IPCFuzzController::AddToplevelActor(PortName name, ProtocolId protocolId) {
     MOZ_FUZZING_NYX_PRINTF(
         "ERROR: [OnActorConnected] Unknown Top-Level Protocol: %s\n",
         protocolName);
-    MOZ_REALLY_CRASH(__LINE__);
+    MOZ_FUZZING_NYX_ABORT("Unknown Top-Level Protocol\n");
   }
   uint8_t portIndex = result->second;
   portNames[portIndex].push_back(name);
@@ -228,7 +228,7 @@ bool IPCFuzzController::ObserveIPCMessage(mozilla::ipc::NodeChannel* channel,
     // We can also use this message as the base template for other messages
     if (!this->sampleHeader.initLengthUninitialized(
             sizeof(IPC::Message::Header))) {
-      MOZ_REALLY_CRASH(__LINE__);
+      MOZ_FUZZING_NYX_ABORT("sampleHeader.initLengthUninitialized failed\n");
     }
 
     memcpy(sampleHeader.begin(), aMessage.header(),
@@ -251,19 +251,17 @@ bool IPCFuzzController::ObserveIPCMessage(mozilla::ipc::NodeChannel* channel,
   Vector<char, 256, InfallibleAllocPolicy> footer;
 
   if (!footer.initLengthUninitialized(aMessage.event_footer_size())) {
-    MOZ_REALLY_CRASH(__LINE__);
+    MOZ_FUZZING_NYX_ABORT("footer.initLengthUninitialized failed\n");
   }
 
   if (!aMessage.ReadFooter(footer.begin(), footer.length(), false)) {
-    MOZ_FUZZING_NYX_PRINT("ERROR: ReadFooter() failed?!\n");
-    MOZ_REALLY_CRASH(__LINE__);
+    MOZ_FUZZING_NYX_ABORT("ERROR: ReadFooter() failed?!\n");
   }
 
   UniquePtr<Event> event = Event::Deserialize(footer.begin(), footer.length());
 
   if (!event) {
-    MOZ_FUZZING_NYX_PRINT("ERROR: Failed to deserialize observed message?!\n");
-    MOZ_REALLY_CRASH(__LINE__);
+    MOZ_FUZZING_NYX_ABORT("ERROR: Failed to deserialize observed message?!\n");
   }
 
   if (event->type() == Event::kUserMessage) {
@@ -492,8 +490,7 @@ void IPCFuzzController::StartFuzzing(mozilla::ipc::NodeChannel* channel,
       NS_NewNamedThread("IPCFuzzLoop", getter_AddRefs(newThread), runnable);
 
   if (NS_FAILED(rv)) {
-    MOZ_FUZZING_NYX_PRINT("ERROR: [StartFuzzing] NS_NewNamedThread failed?!\n");
-    MOZ_REALLY_CRASH(__LINE__);
+    MOZ_FUZZING_NYX_ABORT("ERROR: [StartFuzzing] NS_NewNamedThread failed?!\n");
   }
 #endif
 }
@@ -517,8 +514,7 @@ NS_IMETHODIMP IPCFuzzController::IPCFuzzLoop::Run() {
   // must either be observed to update the sequence numbers, or the packet
   // must be dropped already.
   if (!IPCFuzzController::instance().haveTargetNodeName) {
-    MOZ_FUZZING_NYX_PRINT("ERROR: I don't have the target NodeName?!\n");
-    MOZ_REALLY_CRASH(__LINE__);
+    MOZ_FUZZING_NYX_ABORT("ERROR: I don't have the target NodeName?!\n");
   }
 
   {

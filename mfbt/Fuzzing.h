@@ -68,12 +68,18 @@
 #  else
 #    define MOZ_FUZZING_NYX_DEBUG(x)
 #  endif
+#  define MOZ_FUZZING_NYX_ABORT(aMsg) \
+    do {                              \
+      MOZ_FUZZING_NYX_PRINT(aMsg);    \
+      MOZ_REALLY_CRASH(__LINE__);     \
+    } while (false);
 #else
 #  define MOZ_FUZZING_NYX_RELEASE(id)
 #  define MOZ_FUZZING_NYX_GUARD(id)
 #  define MOZ_FUZZING_NYX_PRINT(aMsg)
 #  define MOZ_FUZZING_NYX_PRINTF(aFormat, ...)
 #  define MOZ_FUZZING_NYX_DEBUG(aMsg)
+#  define MOZ_FUZZING_NYX_ABORT(aMsg)
 #  define MOZ_FUZZING_HANDLE_CRASH_EVENT2(aType, aReason) \
     do {                                                  \
     } while (false)
