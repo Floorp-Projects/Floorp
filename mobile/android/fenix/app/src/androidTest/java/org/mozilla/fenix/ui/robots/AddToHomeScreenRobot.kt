@@ -5,23 +5,21 @@
 package org.mozilla.fenix.ui.robots
 
 import android.os.Build
-import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers
-import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.junit4.ComposeTestRule
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.junit.Assert.assertTrue
-import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
-import org.mozilla.fenix.helpers.click
 import java.util.regex.Pattern
 
 /**
@@ -29,11 +27,11 @@ import java.util.regex.Pattern
  */
 class AddToHomeScreenRobot {
 
-    fun verifyAddPrivateBrowsingShortcutButton() = assertAddPrivateBrowsingShortcutButton()
+    fun verifyAddPrivateBrowsingShortcutButton(composeTestRule: ComposeTestRule) = assertAddPrivateBrowsingShortcutButton(composeTestRule)
 
-    fun verifyNoThanksPrivateBrowsingShortcutButton() = assertNoThanksPrivateBrowsingShortcutButton()
+    fun verifyNoThanksPrivateBrowsingShortcutButton(composeTestRule: ComposeTestRule) = assertNoThanksPrivateBrowsingShortcutButton(composeTestRule)
 
-    fun clickAddPrivateBrowsingShortcutButton() = addPrivateBrowsingShortcutButton().click()
+    fun clickAddPrivateBrowsingShortcutButton(composeTestRule: ComposeTestRule) = composeTestRule.onNodeWithTag("private.add").performClick()
 
     fun addShortcutName(title: String) = shortcutTextField.setText(title)
 
@@ -104,15 +102,11 @@ fun addToHomeScreen(interact: AddToHomeScreenRobot.() -> Unit): AddToHomeScreenR
 private fun addAutomaticallyButton() =
     mDevice.findObject(UiSelector().textContains("add automatically"))
 
-private fun addPrivateBrowsingShortcutButton() = onView(withId(R.id.cfr_pos_button))
+private fun assertAddPrivateBrowsingShortcutButton(composeTestRule: ComposeTestRule) =
+    composeTestRule.onNodeWithTag("private.add").assertIsDisplayed()
 
-private fun assertAddPrivateBrowsingShortcutButton() = addPrivateBrowsingShortcutButton()
-    .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-
-private fun noThanksPrivateBrowsingShortcutButton() = onView(withId(R.id.cfr_neg_button))
-
-private fun assertNoThanksPrivateBrowsingShortcutButton() = noThanksPrivateBrowsingShortcutButton()
-    .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+private fun assertNoThanksPrivateBrowsingShortcutButton(composeTestRule: ComposeTestRule) =
+    composeTestRule.onNodeWithTag("private.cancel").assertIsDisplayed()
 
 private val cancelAddToHomeScreenButton =
     itemWithResId("$packageName:id/cancel_button")

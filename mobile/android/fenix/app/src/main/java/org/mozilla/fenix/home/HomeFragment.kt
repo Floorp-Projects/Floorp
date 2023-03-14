@@ -10,16 +10,27 @@ import android.content.res.Configuration
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.LinearLayout
-import android.widget.PopupWindow
 import androidx.annotation.VisibleForTesting
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Text
+import androidx.compose.material.TextButton
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getColor
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -47,6 +58,8 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.compose.cfr.CFRPopup
+import mozilla.components.compose.cfr.CFRPopupProperties
 import mozilla.components.concept.storage.FrecencyThresholdOption
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
@@ -61,6 +74,7 @@ import mozilla.components.lib.state.ext.consumeFlow
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.GleanMetrics.HomeScreen
 import org.mozilla.fenix.GleanMetrics.Homepage
 import org.mozilla.fenix.GleanMetrics.PrivateBrowsingShortcutCfr
@@ -77,10 +91,8 @@ import org.mozilla.fenix.databinding.FragmentHomeBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.containsQueryParameters
 import org.mozilla.fenix.ext.hideToolbar
-import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.scaleToBottomOfView
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.pocket.DefaultPocketStoriesController
@@ -111,11 +123,11 @@ import org.mozilla.fenix.perf.runBlockingIncrement
 import org.mozilla.fenix.search.toolbar.DefaultSearchSelectorController
 import org.mozilla.fenix.search.toolbar.SearchSelectorMenu
 import org.mozilla.fenix.tabstray.TabsTrayAccessPoint
+import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.Settings.Companion.TOP_SITES_PROVIDER_MAX_THRESHOLD
 import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.wallpapers.Wallpaper
 import java.lang.ref.WeakReference
-import kotlin.math.min
 
 @Suppress("TooManyFunctions", "LargeClass")
 class HomeFragment : Fragment() {
@@ -828,49 +840,95 @@ class HomeFragment : Fragment() {
         requireComponents.useCases.sessionUseCases.updateLastAccess()
     }
 
-    @SuppressLint("InflateParams")
+    private var recommendPrivateBrowsingCFR: CFRPopup? = null
+
+    @OptIn(ExperimentalComposeUiApi::class)
+    @Suppress("LongMethod")
     private fun recommendPrivateBrowsingShortcut() {
         context?.let { context ->
-            val layout = LayoutInflater.from(context)
-                .inflate(R.layout.pbm_shortcut_popup, null)
-            val privateBrowsingRecommend =
-                PopupWindow(
-                    layout,
-                    min(
-                        (resources.displayMetrics.widthPixels / CFR_WIDTH_DIVIDER).toInt(),
-                        (resources.displayMetrics.heightPixels / CFR_WIDTH_DIVIDER).toInt(),
+            CFRPopup(
+                anchor = binding.privateBrowsingButton,
+                properties = CFRPopupProperties(
+                    popupWidth = 256.dp,
+                    popupAlignment = CFRPopup.PopupAlignment.INDICATOR_CENTERED_IN_ANCHOR,
+                    popupBodyColors = listOf(
+                        getColor(context, R.color.fx_mobile_layer_color_gradient_end),
+                        getColor(context, R.color.fx_mobile_layer_color_gradient_start),
                     ),
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    true,
-                )
-            layout.findViewById<Button>(R.id.cfr_pos_button).apply {
-                this.increaseTapArea(CFR_TAP_INCREASE_DPS)
-
-                setOnClickListener {
-                    PrivateBrowsingShortcutCfr.addShortcut.record(NoExtras())
-                    PrivateShortcutCreateManager.createPrivateShortcut(context)
-                    privateBrowsingRecommend.dismiss()
-                }
-            }
-            layout.findViewById<Button>(R.id.cfr_neg_button).apply {
-                setOnClickListener {
+                    showDismissButton = false,
+                    dismissButtonColor = getColor(context, R.color.fx_mobile_icon_color_oncolor),
+                    indicatorDirection = CFRPopup.IndicatorDirection.UP,
+                ),
+                onDismiss = {
                     PrivateBrowsingShortcutCfr.cancel.record()
-                    privateBrowsingRecommend.dismiss()
-                }
-            }
-            // We want to show the popup only after privateBrowsingButton is available.
-            // Otherwise, we will encounter an activity token error.
-            binding.privateBrowsingButton.post {
-                runIfFragmentIsAttached {
                     context.settings().showedPrivateModeContextualFeatureRecommender = true
                     context.settings().lastCfrShownTimeInMillis = System.currentTimeMillis()
-                    privateBrowsingRecommend.showAsDropDown(
-                        binding.privateBrowsingButton,
-                        0,
-                        CFR_Y_OFFSET,
-                        Gravity.TOP or Gravity.END,
-                    )
-                }
+                    recommendPrivateBrowsingCFR?.dismiss()
+                },
+                text = {
+                    FirefoxTheme {
+                        Text(
+                            text = context.getString(R.string.private_mode_cfr_message_2),
+                            color = FirefoxTheme.colors.textOnColorPrimary,
+                            style = FirefoxTheme.typography.headline7,
+                        )
+                    }
+                },
+                action = {
+                    FirefoxTheme {
+                        TextButton(
+                            onClick = {
+                                PrivateBrowsingShortcutCfr.addShortcut.record(NoExtras())
+                                PrivateShortcutCreateManager.createPrivateShortcut(context)
+                                context.settings().showedPrivateModeContextualFeatureRecommender = true
+                                context.settings().lastCfrShownTimeInMillis = System.currentTimeMillis()
+                                recommendPrivateBrowsingCFR?.dismiss()
+                            },
+                            colors = ButtonDefaults.buttonColors(backgroundColor = PhotonColors.LightGrey30),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier
+                                .padding(top = 16.dp)
+                                .heightIn(36.dp)
+                                .fillMaxWidth()
+                                .semantics {
+                                    testTagsAsResourceId = true
+                                    testTag = "private.add"
+                                },
+                        ) {
+                            Text(
+                                text = context.getString(R.string.private_mode_cfr_pos_button_text),
+                                color = PhotonColors.DarkGrey50,
+                                style = FirefoxTheme.typography.headline7,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
+                        TextButton(
+                            onClick = {
+                                PrivateBrowsingShortcutCfr.cancel.record()
+                                context.settings().showedPrivateModeContextualFeatureRecommender = true
+                                context.settings().lastCfrShownTimeInMillis = System.currentTimeMillis()
+                                recommendPrivateBrowsingCFR?.dismiss()
+                            },
+                            modifier = Modifier
+                                .heightIn(36.dp)
+                                .fillMaxWidth()
+                                .semantics {
+                                    testTagsAsResourceId = true
+                                    testTag = "private.cancel"
+                                },
+                        ) {
+                            Text(
+                                text = context.getString(R.string.cfr_neg_button_text),
+                                textAlign = TextAlign.Center,
+                                color = FirefoxTheme.colors.textOnColorPrimary,
+                                style = FirefoxTheme.typography.headline7,
+                            )
+                        }
+                    }
+                },
+            ).run {
+                recommendPrivateBrowsingCFR = this
+                show()
             }
         }
     }
@@ -994,11 +1052,6 @@ class HomeFragment : Fragment() {
 
         private const val SCROLL_TO_COLLECTION = "scrollToCollection"
         private const val ANIM_SCROLL_DELAY = 100L
-
-        private const val CFR_WIDTH_DIVIDER = 1.7
-        private const val CFR_Y_OFFSET = -20
-
-        private const val CFR_TAP_INCREASE_DPS = 6
 
         // Sponsored top sites titles and search engine names used for filtering
         const val AMAZON_SPONSORED_TITLE = "Amazon"

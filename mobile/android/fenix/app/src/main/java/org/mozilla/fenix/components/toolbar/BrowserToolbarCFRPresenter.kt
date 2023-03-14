@@ -271,7 +271,6 @@ class BrowserToolbarCFRPresenter(
                 }
             },
         ).run {
-            settings.shouldShowTotalCookieProtectionCFR = false
             popup = this
             show()
             TrackingProtection.tcpCfrShown.record(NoExtras())

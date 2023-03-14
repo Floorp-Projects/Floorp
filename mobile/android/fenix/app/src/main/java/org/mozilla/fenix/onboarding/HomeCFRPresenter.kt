@@ -69,7 +69,12 @@ class HomeCFRPresenter(
             ),
             onDismiss = {
                 when (it) {
-                    true -> Onboarding.syncCfrExplicitDismissal.record(NoExtras())
+                    true -> {
+                        Onboarding.syncCfrExplicitDismissal.record(NoExtras())
+                        // Turn off both the recent tab and synced tab CFR after the recent synced tab CFR is shown.
+                        context.settings().showSyncCFR = false
+                        context.settings().shouldShowJumpBackInCFR = false
+                    }
                     false -> Onboarding.syncCfrImplicitDismissal.record(NoExtras())
                 }
             },
@@ -83,10 +88,6 @@ class HomeCFRPresenter(
                 }
             },
         ).show()
-
-        // Turn off both the recent tab and synced tab CFR after the recent synced tab CFR is shown.
-        context.settings().showSyncCFR = false
-        context.settings().shouldShowJumpBackInCFR = false
 
         Onboarding.synCfrShown.record(NoExtras())
     }
@@ -106,7 +107,12 @@ class HomeCFRPresenter(
             ),
             onDismiss = {
                 when (it) {
-                    true -> RecentTabs.jumpBackInCfrDismissed.record(NoExtras())
+                    true -> {
+                        RecentTabs.jumpBackInCfrDismissed.record(NoExtras())
+                        // Users can still see the recent synced tab CFR after the recent tab CFR is shown in
+                        // subsequent navigation to the Home screen.
+                        context.settings().shouldShowJumpBackInCFR = false
+                    }
                     false -> RecentTabs.jumpBackInCfrCancelled.record(NoExtras())
                 }
             },
@@ -120,10 +126,6 @@ class HomeCFRPresenter(
                 }
             },
         ).show()
-
-        // Users can still see the recent synced tab CFR after the recent tab CFR is shown in
-        // subsequent navigation to the Home screen.
-        context.settings().shouldShowJumpBackInCFR = false
 
         RecentTabs.jumpBackInCfrShown.record(NoExtras())
     }

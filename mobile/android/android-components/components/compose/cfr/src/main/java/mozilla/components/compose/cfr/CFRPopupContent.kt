@@ -103,7 +103,7 @@ fun CFRPopupContent(
             ) {
                 Box(
                     modifier = Modifier.padding(
-                        end = 24.dp, // 8.dp extra padding to the "X" icon
+                        end = if(showDismissButton) 24.dp else 16.dp, // 8.dp extra padding to the "X" icon
                     ),
                 ) {
                     text()
