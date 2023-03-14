@@ -9,20 +9,8 @@ use minidump_writer::crash_context::CrashContext;
 use minidump_writer::minidump_writer::MinidumpWriter;
 use nsstring::nsCString;
 use std::ffi::CStr;
-use std::mem;
+use std::mem::{self, MaybeUninit};
 use std::os::raw::c_char;
-
-// This structure will be exposed to C++
-#[repr(C)]
-#[derive(Clone)]
-pub struct InternalCrashContext {
-    pub context: crash_context::ucontext_t,
-    #[cfg(not(target_arch = "arm"))]
-    pub float_state: crash_context::fpregset_t,
-    pub siginfo: libc::signalfd_siginfo,
-    pub pid: libc::pid_t,
-    pub tid: libc::pid_t,
-}
 
 // This function will be exposed to C++
 #[no_mangle]
@@ -77,14 +65,31 @@ pub unsafe extern "C" fn write_minidump_linux(
 pub unsafe extern "C" fn write_minidump_linux_with_context(
     dump_path: *const c_char,
     child: pid_t,
-    context: *const InternalCrashContext,
+    ucontext: *const crash_context::ucontext_t,
+    float_state: *const crash_context::fpregset_t,
+    siginfo: *const libc::signalfd_siginfo,
+    child_thread: libc::pid_t,
     error_msg: &mut nsCString,
 ) -> bool {
-    assert!(!dump_path.is_null());
     let c_path = CStr::from_ptr(dump_path);
 
-    assert!(!context.is_null());
-    let cc: CrashContext = mem::transmute_copy(&(*(context as *const CrashContext)));
+    let mut crash_context: MaybeUninit<crash_context::CrashContext> = mem::MaybeUninit::zeroed();
+    let mut cc = &mut *crash_context.as_mut_ptr();
+
+    core::ptr::copy_nonoverlapping(siginfo, &mut cc.siginfo, 1);
+    core::ptr::copy_nonoverlapping(ucontext, &mut cc.context, 1);
+
+    #[cfg(not(target_arch = "arm"))]
+    core::ptr::copy_nonoverlapping(float_state, &mut cc.float_state, 1);
+    // core::ptr::copy_nonoverlapping(float_state, ((&mut cc.float_state) as *mut crash_context::fpregset_t).cast(), 1);
+
+    cc.pid = child;
+    cc.tid = child_thread;
+    let crash_context = crash_context.assume_init();
+    let crash_context = CrashContext {
+        inner: crash_context,
+    };
+
     let path = match c_path.to_str() {
         Ok(s) => s,
         Err(x) => {
@@ -112,8 +117,8 @@ pub unsafe extern "C" fn write_minidump_linux_with_context(
         }
     };
 
-    match MinidumpWriter::new(child, cc.inner.tid)
-        .set_crash_context(cc)
+    match MinidumpWriter::new(child, child_thread)
+        .set_crash_context(crash_context)
         .dump(&mut dump_file)
     {
         Ok(_) => {
