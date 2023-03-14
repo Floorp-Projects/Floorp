@@ -15,6 +15,7 @@ enum RTCStatsType {
   "outbound-rtp",
   "remote-inbound-rtp",
   "remote-outbound-rtp",
+  "peer-connection",
   "csrc",
   "data-channel",
   "session",
@@ -135,6 +136,11 @@ dictionary RTCRemoteOutboundRtpStreamStats : RTCSentRtpStreamStats {
   DOMHighResTimeStamp remoteTimestamp;
 };
 
+dictionary RTCPeerConnectionStats : RTCStats {
+  unsigned long dataChannelsOpened;
+  unsigned long dataChannelsClosed;
+};
+
 dictionary RTCRTPContributingSourceStats : RTCStats {
   unsigned long contributorSsrc;
   DOMString     inboundRtpStreamId;
@@ -253,6 +259,7 @@ dictionary RTCStatsCollection {
   sequence<RTCOutboundRtpStreamStats>       outboundRtpStreamStats = [];
   sequence<RTCRemoteInboundRtpStreamStats>  remoteInboundRtpStreamStats = [];
   sequence<RTCRemoteOutboundRtpStreamStats> remoteOutboundRtpStreamStats = [];
+  sequence<RTCPeerConnectionStats>          peerConnectionStats = [];
   sequence<RTCRTPContributingSourceStats>   rtpContributingSourceStats = [];
   sequence<RTCIceCandidatePairStats>        iceCandidatePairStats = [];
   sequence<RTCIceCandidateStats>            iceCandidateStats = [];
