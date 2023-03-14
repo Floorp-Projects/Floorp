@@ -50,7 +50,8 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateStaticImport(
   Maybe<ClientInfo> clientInfo = GetGlobalObject()->GetClientInfo();
 
   RefPtr<WorkerLoadContext> loadContext =
-      new WorkerLoadContext(WorkerLoadContext::Kind::StaticImport, clientInfo);
+      new WorkerLoadContext(WorkerLoadContext::Kind::StaticImport, clientInfo,
+                            aParent->GetWorkerLoadContext()->mScriptLoader);
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
       aURI, aParent->mFetchOptions, SRIMetadata(), aParent->mURI, loadContext,
       false, /* is top level */
@@ -67,8 +68,8 @@ void WorkerModuleLoader::CreateDynamicImportLoader() {
 
   ErrorResult rv;
   SetScriptLoader(new loader::WorkerScriptLoader(
-      workerPrivate, nullptr, nullptr, GetScriptLoader()->GetWorkerScriptType(),
-      rv));
+      workerPrivate, nullptr, nullptr,
+      GetCurrentScriptLoader()->GetWorkerScriptType(), rv));
 
   SetEventTarget(GetCurrentSerialEventTarget());
 }
@@ -87,7 +88,7 @@ bool WorkerModuleLoader::CanStartLoad(ModuleLoadRequest* aRequest,
 }
 
 nsresult WorkerModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
-  if (!GetScriptLoader()->DispatchLoadScript(aRequest)) {
+  if (!GetScriptLoaderFor(aRequest)->DispatchLoadScript(aRequest)) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -121,8 +122,13 @@ nsresult WorkerModuleLoader::CompileFetchedModule(
   return NS_OK;
 }
 
-WorkerScriptLoader* WorkerModuleLoader::GetScriptLoader() {
+WorkerScriptLoader* WorkerModuleLoader::GetCurrentScriptLoader() {
   return static_cast<WorkerScriptLoader*>(mLoader.get());
+}
+
+WorkerScriptLoader* WorkerModuleLoader::GetScriptLoaderFor(
+    ModuleLoadRequest* aRequest) {
+  return aRequest->GetWorkerLoadContext()->mScriptLoader;
 }
 
 void WorkerModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {
@@ -131,8 +137,8 @@ void WorkerModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {
     if (NS_WARN_IF(!jsapi.Init(GetGlobalObject()))) {
       return;
     }
-    GetScriptLoader()->MaybeMoveToLoadedList(aRequest);
-    GetScriptLoader()->ProcessPendingRequests(jsapi.cx());
+    GetScriptLoaderFor(aRequest)->MaybeMoveToLoadedList(aRequest);
+    GetScriptLoaderFor(aRequest)->ProcessPendingRequests(jsapi.cx());
   }
 }
 

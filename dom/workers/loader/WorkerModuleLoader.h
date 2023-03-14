@@ -52,7 +52,9 @@ class WorkerModuleLoader : public JS::loader::ModuleLoaderBase {
     mEventTarget = aEventTarget;
   }
 
-  WorkerScriptLoader* GetScriptLoader();
+  WorkerScriptLoader* GetCurrentScriptLoader();
+
+  WorkerScriptLoader* GetScriptLoaderFor(ModuleLoadRequest* aRequest);
 
   nsIURI* GetBaseURI() const override;
 

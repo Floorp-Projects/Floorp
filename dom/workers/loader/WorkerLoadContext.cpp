@@ -11,11 +11,13 @@
 namespace mozilla {
 namespace dom {
 
-WorkerLoadContext::WorkerLoadContext(Kind aKind,
-                                     const Maybe<ClientInfo>& aClientInfo)
+WorkerLoadContext::WorkerLoadContext(
+    Kind aKind, const Maybe<ClientInfo>& aClientInfo,
+    workerinternals::loader::WorkerScriptLoader* aScriptLoader)
     : JS::loader::LoadContextBase(JS::loader::ContextKind::Worker),
       mKind(aKind),
-      mClientInfo(aClientInfo){};
+      mClientInfo(aClientInfo),
+      mScriptLoader(aScriptLoader){};
 
 ThreadSafeRequestHandle::ThreadSafeRequestHandle(
     JS::loader::ScriptLoadRequest* aRequest, nsISerialEventTarget* aSyncTarget)
