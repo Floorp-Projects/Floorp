@@ -15,6 +15,7 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import mozilla.components.feature.prompts.R
+import mozilla.components.ui.widgets.withCenterAlignedButtons
 
 private const val KEY_USER_EDIT_TEXT = "KEY_USER_EDIT_TEXT"
 private const val KEY_LABEL_INPUT = "KEY_LABEL_INPUT"
@@ -50,7 +51,7 @@ internal class TextPromptDialogFragment : AbstractPromptTextDialogFragment(), Te
             .setPositiveButton(android.R.string.ok) { _, _ ->
                 onPositiveClickAction()
             }
-        return addLayout(builder).create()
+        return addLayout(builder).create().withCenterAlignedButtons()
     }
 
     override fun onCancel(dialog: DialogInterface) {

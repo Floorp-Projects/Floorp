@@ -104,6 +104,7 @@ import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.kotlin.getOrigin
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import mozilla.components.support.locale.ActivityContextWrapper
+import mozilla.components.ui.widgets.withCenterAlignedButtons
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.MediaState
@@ -999,7 +1000,7 @@ abstract class BaseBrowserFragment :
             }
 
             create()
-        }.show().secure(activity)
+        }.show().withCenterAlignedButtons().secure(activity)
 
         context.settings().incrementSecureWarningCount()
     }

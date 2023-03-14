@@ -8,6 +8,7 @@ import android.app.Dialog
 import android.content.DialogInterface
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
+import mozilla.components.ui.widgets.withCenterAlignedButtons
 
 /**
  * [android.support.v4.app.DialogFragment] implementation to display web Alerts with native dialogs.
@@ -23,6 +24,7 @@ internal class AlertDialogFragment : AbstractPromptTextDialogFragment() {
             }
         return setCustomMessageView(builder)
             .create()
+            .withCenterAlignedButtons()
     }
 
     override fun onCancel(dialog: DialogInterface) {

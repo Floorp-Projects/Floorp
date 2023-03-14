@@ -91,6 +91,7 @@
         android:paddingStart="8dp"
         android:paddingEnd="8dp"
         android:text="@string/mozac_feature_downloads_dialog_download"
+        android:textAlignment="center"
         android:background="@drawable/download_dialog_download_button_background"
         android:textColor="?attr/textOnColorPrimary"
         android:textAllCaps="false"

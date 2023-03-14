@@ -62,6 +62,7 @@
         android:layout_marginTop="16dp"
         android:layout_toStartOf="@id/allow_button"
         android:text="@string/mozac_feature_addons_permissions_dialog_cancel"
+        android:textAlignment="center"
         android:textAllCaps="false" />
 
     <Button
@@ -75,6 +76,7 @@
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
         android:text="@string/mozac_feature_addons_permissions_dialog_add"
+        android:textAlignment="center"
         android:textAllCaps="false" />
 
 </RelativeLayout>

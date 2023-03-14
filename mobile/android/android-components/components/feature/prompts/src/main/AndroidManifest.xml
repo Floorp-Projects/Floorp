@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 
-    <application>
+    <application android:supportsRtl="true">
         <provider
             android:name="mozilla.components.feature.prompts.provider.FileProvider"
             android:authorities="${applicationId}.feature.prompts.fileprovider"

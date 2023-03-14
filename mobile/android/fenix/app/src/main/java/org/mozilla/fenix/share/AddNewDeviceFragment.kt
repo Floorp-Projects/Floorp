@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
+import mozilla.components.ui.widgets.withCenterAlignedButtons
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -44,7 +45,7 @@ class AddNewDeviceFragment : Fragment(R.layout.fragment_add_new_device) {
             AlertDialog.Builder(requireContext()).apply {
                 setMessage(R.string.sync_connect_device_dialog)
                 setPositiveButton(R.string.sync_confirmation_button) { dialog, _ -> dialog.cancel() }
-                create()
+                create().withCenterAlignedButtons()
             }.show()
         }
     }

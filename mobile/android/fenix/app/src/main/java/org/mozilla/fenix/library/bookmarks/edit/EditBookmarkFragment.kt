@@ -37,6 +37,7 @@ import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.android.view.showKeyboard
 import mozilla.components.support.ktx.kotlin.toShortUrl
+import mozilla.components.ui.widgets.withCenterAlignedButtons
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.NavHostActivity
@@ -246,7 +247,7 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark), MenuProv
                     }
                     dialog.dismiss()
                 }
-                create()
+                create().withCenterAlignedButtons()
             }.show()
         }
     }

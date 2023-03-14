@@ -25,35 +25,40 @@
                 android:id="@+id/buttonSignIn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/sign_in" />
+                android:text="@string/sign_in"
+                android:textAlignment="center" />
 
             <Button
                 android:id="@+id/buttonSync"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/buttonSignIn"
-                android:text="@string/sync" />
+                android:text="@string/sync"
+                android:textAlignment="center" />
 
             <Button
                 android:id="@+id/refreshDevice"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/buttonSync"
-                android:text="@string/refresh_device" />
+                android:text="@string/refresh_device"
+                android:textAlignment="center" />
 
             <Button
                 android:id="@+id/sendTab"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/refreshDevice"
-                android:text="@string/send_tab" />
+                android:text="@string/send_tab"
+                android:textAlignment="center" />
 
             <Button
                 android:id="@+id/buttonLogout"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/sendTab"
-                android:text="@string/log_out" />
+                android:text="@string/log_out"
+                android:textAlignment="center" />
 
             <TextView
                 android:id="@+id/fxaStatusView"

@@ -26,6 +26,7 @@
         android:layout_height="0dp"
         android:gravity="center"
         android:text="@string/download_empty_message_1"
+        android:textAlignment="center"
         android:textColor="?attr/textSecondary"
         android:textSize="16sp"
         android:visibility="gone"

@@ -24,6 +24,7 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.downloads.DownloadDialogFragment.Companion.FRAGMENT_TAG
+import mozilla.components.feature.downloads.dialog.DeniedPermissionDialogFragment
 import mozilla.components.feature.downloads.ext.realFilenameOrGuessed
 import mozilla.components.feature.downloads.facts.emitPromptDismissedFact
 import mozilla.components.feature.downloads.facts.emitPromptDisplayedFact
@@ -34,7 +35,6 @@ import mozilla.components.feature.downloads.manager.onDownloadStopped
 import mozilla.components.feature.downloads.ui.DownloadAppChooserDialog
 import mozilla.components.feature.downloads.ui.DownloaderApp
 import mozilla.components.lib.state.ext.flowScoped
-import mozilla.components.support.base.dialog.DeniedPermissionDialogFragment
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.base.feature.PermissionsFeature

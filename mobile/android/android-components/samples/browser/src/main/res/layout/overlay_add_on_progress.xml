@@ -36,6 +36,7 @@
             android:layout_marginEnd="16dp"
             android:layout_marginBottom="16dp"
             android:text="@string/mozac_feature_addons_install_addon_dialog_cancel"
+            android:textAlignment="center"
             android:textAllCaps="false" />
 
     </RelativeLayout>

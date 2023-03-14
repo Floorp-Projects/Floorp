@@ -12,6 +12,7 @@ import android.text.Spanned
 import android.text.method.LinkMovementMethod
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import mozilla.components.ui.widgets.withCenterAlignedButtons
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.MetricServiceType
@@ -79,7 +80,7 @@ fun showPrivacyPopWindow(context: Context, activity: Activity) {
         .setTitle(context.getString(R.string.privacy_notice_title))
         .setMessage(messageSpannable)
         .setCancelable(false)
-    val alertDialog: AlertDialog = builder.create()
+    val alertDialog: AlertDialog = builder.create().withCenterAlignedButtons()
     alertDialog.show()
     alertDialog.findViewById<TextView>(android.R.id.message)?.movementMethod = LinkMovementMethod.getInstance()
 }

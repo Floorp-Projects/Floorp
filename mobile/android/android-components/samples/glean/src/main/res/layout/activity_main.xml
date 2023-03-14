@@ -41,7 +41,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="5dp"
-        android:text="@string/generate_data" />
+        android:text="@string/generate_data"
+        android:textAlignment="center" />
 
     <TextView
         android:id="@+id/textView"
@@ -54,7 +55,8 @@
         android:id="@+id/buttonCheckExperiments"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/check_experiments" />
+        android:text="@string/check_experiments"
+        android:textAlignment="center" />
 
     <TextView
         android:id="@+id/textViewExperimentStatus"
