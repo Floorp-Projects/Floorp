@@ -601,7 +601,7 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
   Maybe<ClientInfo> clientInfo = GetGlobal()->GetClientInfo();
 
   RefPtr<WorkerLoadContext> loadContext =
-      new WorkerLoadContext(kind, clientInfo);
+      new WorkerLoadContext(kind, clientInfo, this);
 
   // Create ScriptLoadRequests for this WorkerScriptLoader
   ReferrerPolicy referrerPolicy = mWorkerRef->Private()->GetReferrerPolicy();
