@@ -26,7 +26,6 @@
 - (void)setNonCustomCursor:(const nsIWidget::Cursor&)aCursor;
 
 + (nsCursorManager*)sharedInstance;
-+ (void)dispose;
 @end
 
 @interface NSCursor (Undocumented)
