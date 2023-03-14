@@ -18,17 +18,8 @@ body {
   flex: 1;
 }
 
-#logging {
-  padding: 1em;
-}
-
-.page-section {
-  padding: 0.5em;
-}
-
-.page-section > div {
-  padding-inline-start: 0.5em;
-  padding-bottom: 2em;
+.page-subsection {
+  margin-bottom: 2em;
 }
 
 .radio-entry {
@@ -38,15 +29,9 @@ body {
   margin: 0.3em 0;
 }
 
-.page-section > .radio-entry {
-  /* override the padding to all divs that is set above. */
-  padding-bottom: 0;
-}
-
 #current-log-modules,
 #no-log-modules {
   font-family: monospace;
-  padding-inline-start: 8px;
   margin-bottom: 1em;
   word-break: break-word;
 }
@@ -54,22 +39,30 @@ body {
 #current-log-file,
 #no-log-file {
   font-family: monospace;
-  padding-inline-start: 8px;
 }
 
-#logging-preset-description {
-  padding-inline-start: 8px;
+#log-file-configuration {
+  /* 16px is the size of the radio button, 6px is its margin
+   * Then it's properly aligned with the text above. */
+  padding-inline-start: calc(16px + 6px);
 }
 
 input[type=text] {
+  box-sizing: border-box;
   width: 100%;
   font-family: monospace;
-  padding-inline-start: 0;
+
+  /* This cancels the default margin applied to all inputs in common-shared.css. */
+  margin-inline: 0 !important;
+}
+
+.button-row > button:first-of-type {
+  /* This cancels the default margin applied to all buttons in common-shared.css. */
+  margin-inline-start: 0;
 }
 
 .info-box {
-  width: 100%;
-  padding: 0.3em 1em;
+  padding: 1em;
   border-radius: 4px;
 }
 
