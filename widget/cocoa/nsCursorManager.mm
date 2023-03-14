@@ -68,13 +68,11 @@ static constexpr nsCursor kCustomCursor = eCursorCount;
 
 + (NSCursor*)createCursor:(enum nsCursor)aCursor {
   switch (aCursor) {
-    SEL cursorSelector;
     case eCursor_standard:
       return [NSCursor arrowCursor];
     case eCursor_wait:
-    case eCursor_spinning: {
+    case eCursor_spinning:
       return [NSCursor busyButClickableCursor];
-    }
     case eCursor_select:
       return [NSCursor IBeamCursor];
     case eCursor_hyperlink:
@@ -86,20 +84,11 @@ static constexpr nsCursor kCustomCursor = eCursorCount;
     case eCursor_help:
       return [NSCursor cursorWithImageNamed:@"help" hotSpot:NSMakePoint(12, 12)];
     case eCursor_copy:
-      cursorSelector = @selector(dragCopyCursor);
-      return [NSCursor respondsToSelector:cursorSelector]
-                 ? [NSCursor performSelector:cursorSelector]
-                 : [NSCursor arrowCursor];
+      return [NSCursor dragCopyCursor];
     case eCursor_alias:
-      cursorSelector = @selector(dragLinkCursor);
-      return [NSCursor respondsToSelector:cursorSelector]
-                 ? [NSCursor performSelector:cursorSelector]
-                 : [NSCursor arrowCursor];
+      return [NSCursor dragLinkCursor];
     case eCursor_context_menu:
-      cursorSelector = @selector(contextualMenuCursor);
-      return [NSCursor respondsToSelector:cursorSelector]
-                 ? [NSCursor performSelector:cursorSelector]
-                 : [NSCursor arrowCursor];
+      return [NSCursor contextualMenuCursor];
     case eCursor_cell:
       return [NSCursor cursorWithImageNamed:@"cell" hotSpot:NSMakePoint(12, 12)];
     case eCursor_grab:
@@ -116,10 +105,7 @@ static constexpr nsCursor kCustomCursor = eCursorCount;
       return [NSCursor openHandCursor];
     case eCursor_not_allowed:
     case eCursor_no_drop:
-      cursorSelector = @selector(operationNotAllowedCursor);
-      return [NSCursor respondsToSelector:cursorSelector]
-                 ? [NSCursor performSelector:cursorSelector]
-                 : [NSCursor arrowCursor];
+      return [NSCursor operationNotAllowedCursor];
     // Resize Cursors:
     // North
     case eCursor_n_resize:
