@@ -236,6 +236,8 @@ class _RemoteSettingsExperimentLoader {
       Services.prefs.setIntPref(TIMER_LAST_UPDATE_PREF, lastUpdateTime);
     }
 
+    Services.obs.notifyObservers(null, "nimbus:enrollments-updated");
+
     this._updating = false;
   }
 
