@@ -390,13 +390,6 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   void SetLineDashOffset(double aOffset) override;
   double LineDashOffset() const override;
 
-  void GetMozTextStyle(nsACString& aMozTextStyle) { GetFont(aMozTextStyle); }
-
-  void SetMozTextStyle(const nsACString& aMozTextStyle,
-                       mozilla::ErrorResult& aError) {
-    SetFont(aMozTextStyle, aError);
-  }
-
   bool ImageSmoothingEnabled() override {
     return CurrentState().imageSmoothingEnabled;
   }

@@ -7,10 +7,7 @@
 "use strict";
 
 module.exports = {
-  CanvasRenderingContext2D: [
-    ["prototype", "mozTextStyle"],
-    ["prototype", "mozImageSmoothingEnabled"],
-  ],
+  CanvasRenderingContext2D: [["prototype", "mozImageSmoothingEnabled"]],
   Document: [
     ["prototype", "releaseCapture"],
     ["prototype", "onmozfullscreenchange"],

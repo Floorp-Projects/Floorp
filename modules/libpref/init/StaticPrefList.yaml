@@ -2158,12 +2158,6 @@
 # Prefs starting with "dom."
 #---------------------------------------------------------------------------
 
-# Whether CanvasRenderingContext2D.mozTextStyle is enabled.
-- name: dom.mozTextStyle.enabled
-  type: bool
-  value: false
-  mirror: always
-
 # Allow cut/copy
 - name: dom.allow_cut_copy
   type: bool
