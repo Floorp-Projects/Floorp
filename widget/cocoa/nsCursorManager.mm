@@ -49,28 +49,18 @@ static constexpr nsCursor kCustomCursor = eCursorCount;
 @implementation nsCursorManager
 
 + (nsCursorManager*)sharedInstance {
-  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
-
   if (!gInstance) {
     gInstance = [[nsCursorManager alloc] init];
   }
   return gInstance;
-
-  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 + (void)dispose {
-  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
-
   [gInstance release];
   gInstance = nil;
-
-  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 + (nsMacCursor*)createCursor:(enum nsCursor)aCursor {
-  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
-
   switch (aCursor) {
     SEL cursorSelector;
     case eCursor_standard:
@@ -182,35 +172,23 @@ static constexpr nsCursor kCustomCursor = eCursorCount;
     default:
       return [nsMacCursor cursorWithCursor:[NSCursor arrowCursor] type:aCursor];
   }
-
-  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (id)init {
-  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
-
   if ((self = [super init])) {
     mCursors = [[NSMutableDictionary alloc] initWithCapacity:25];
   }
   return self;
-
-  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (nsresult)setNonCustomCursor:(const nsIWidget::Cursor&)aCursor {
-  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
-
   [self setMacCursor:[self getCursor:aCursor.mDefaultCursor]];
 
   sCurrentCursor = aCursor;
   return NS_OK;
-
-  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 - (nsresult)setMacCursor:(nsMacCursor*)aMacCursor {
-  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
-
   nsCursor oldType = [mCurrentMacCursor type];
   nsCursor newType = [aMacCursor type];
   if (oldType != newType) {
@@ -230,14 +208,10 @@ static constexpr nsCursor kCustomCursor = eCursorCount;
   }
 
   return NS_OK;
-
-  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 - (nsresult)setCustomCursor:(const nsIWidget::Cursor&)aCursor
           widgetScaleFactor:(CGFloat)scaleFactor {
-  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
-
   // As the user moves the mouse, this gets called repeatedly with the same aCursorImage
   if (sCurrentCursor == aCursor && sCurrentCursorScaleFactor == scaleFactor && mCurrentMacCursor) {
     // Native dragging can unset our cursor apparently (see bug 1739352).
@@ -282,33 +256,23 @@ static constexpr nsCursor kCustomCursor = eCursorCount;
                                               type:kCustomCursor]];
   [cursorImage release];
   return NS_OK;
-
-  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 - (nsMacCursor*)getCursor:(enum nsCursor)aCursor {
-  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
-
   nsMacCursor* result = [mCursors objectForKey:[NSNumber numberWithInt:aCursor]];
   if (!result) {
     result = [nsCursorManager createCursor:aCursor];
     [mCursors setObject:result forKey:[NSNumber numberWithInt:aCursor]];
   }
   return result;
-
-  NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
 - (void)dealloc {
-  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
-
   [mCurrentMacCursor unset];
   [mCurrentMacCursor release];
   [mCursors release];
   sCurrentCursor = {};
   [super dealloc];
-
-  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 @end
