@@ -914,6 +914,25 @@ struct ParamTraitsMozilla<nsCOMPtr<T>> {
   }
 };
 
+template <class T>
+struct ParamTraitsMozilla<mozilla::NotNull<T>> {
+  static void Write(MessageWriter* writer, const mozilla::NotNull<T>& p) {
+    ParamTraits<T>::Write(writer, p.get());
+  }
+
+  static mozilla::Maybe<mozilla::NotNull<T>> Read(MessageReader* reader) {
+    auto ptr = ReadParam<T>(reader);
+    if (!ptr) {
+      return mozilla::Nothing();
+    }
+    if (!*ptr) {
+      reader->FatalError("unexpected null value");
+      return mozilla::Nothing();
+    }
+    return mozilla::Some(mozilla::WrapNotNull(std::move(*ptr)));
+  }
+};
+
 // Finally, ParamTraits itself.
 
 template <class P>
