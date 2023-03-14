@@ -246,6 +246,10 @@ class ModuleLoaderBase : public nsISupports {
   // Called when a module script has been loaded, including imports.
   virtual void OnModuleLoadComplete(ModuleLoadRequest* aRequest) = 0;
 
+  virtual bool IsModuleEvaluationAborted(ModuleLoadRequest* aRequest) {
+    return false;
+  }
+
   // Get the error message when resolving failed. The default is to call
   // nsContentUtils::FormatLoalizedString. But currently
   // nsContentUtils::FormatLoalizedString cannot be called on a worklet thread,
