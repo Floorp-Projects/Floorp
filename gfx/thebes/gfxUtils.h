@@ -12,6 +12,7 @@
 #include "ImageTypes.h"
 #include "imgIContainer.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "nsColor.h"
@@ -324,6 +325,45 @@ class gfxUtils {
                                       const nsAString& aOutputOptions,
                                       BinaryOrData aBinaryOrData, FILE* aFile,
                                       nsACString* aString = nullptr);
+
+  /**
+   * Encodes the given surface to PNG/JPEG/BMP/etc. using imgIEncoder
+   * and returns the result as an nsIInputStream.
+   *
+   * @param aSurface The source surface to encode
+   *
+   * @param aImageType The image type that the surface is to be encoded to.
+   *   Used to create an appropriate imgIEncoder instance to do the encoding.
+   *
+   * @param aOutputOptions Passed directly to imgIEncoder::InitFromData as
+   *   the value of the |outputOptions| parameter. Callers are responsible
+   *   for making sure that this is a sane value for the passed MIME-type
+   *   (i.e. for the type of encoder that will be created).
+   *
+   * @param aOutStream pointer to the output stream
+   *
+   */
+  static nsresult EncodeSourceSurfaceAsStream(SourceSurface* aSurface,
+                                              const ImageType aImageType,
+                                              const nsAString& aOutputOptions,
+                                              nsIInputStream** aOutStream);
+
+  /**
+   * Encodes the given surface to PNG/JPEG/BMP/etc. using imgIEncoder
+   * and returns the result as a vector of bytes
+   *
+   * @param aImageType The image type that the surface is to be encoded to.
+   *   Used to create an appropriate imgIEncoder instance to do the encoding.
+   *
+   * @param aOutputOptions Passed directly to imgIEncoder::InitFromData as
+   *   the value of the |outputOptions| parameter. Callers are responsible
+   *   for making sure that this is a sane value for the passed MIME-type
+   *   (i.e. for the type of encoder that will be created).
+   *
+   */
+  static mozilla::Maybe<nsTArray<uint8_t>> EncodeSourceSurfaceAsBytes(
+      SourceSurface* aSurface, const ImageType aImageType,
+      const nsAString& aOutputOptions);
 
   /**
    * Write as a PNG file to the path aFile.

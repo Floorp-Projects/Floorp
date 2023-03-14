@@ -40,7 +40,6 @@
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Unused.h"
-#include "mozilla/Vector.h"
 #include "mozilla/webrender/webrender_ffi.h"
 #include "nsAppRunner.h"
 #include "nsComponentManagerUtils.h"
@@ -1070,20 +1069,15 @@ const gfx::DeviceColor& gfxUtils::GetColorForFrameNumber(
   return colors[aFrameNumber % sNumFrameColors];
 }
 
-/* static */
-nsresult gfxUtils::EncodeSourceSurface(SourceSurface* aSurface,
-                                       const ImageType aImageType,
-                                       const nsAString& aOutputOptions,
-                                       BinaryOrData aBinaryOrData, FILE* aFile,
-                                       nsACString* aStrOut) {
-  MOZ_ASSERT(aBinaryOrData == gfxUtils::eDataURIEncode || aFile || aStrOut,
-             "Copying binary encoding to clipboard not currently supported");
-
+// static
+nsresult gfxUtils::EncodeSourceSurfaceAsStream(SourceSurface* aSurface,
+                                               const ImageType aImageType,
+                                               const nsAString& aOutputOptions,
+                                               nsIInputStream** aOutStream) {
   const IntSize size = aSurface->GetSize();
   if (size.IsEmpty()) {
-    return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_FAILURE;
   }
-  const Size floatSize(size.width, size.height);
 
   RefPtr<DataSourceSurface> dataSurface;
   if (aSurface->GetFormat() != SurfaceFormat::B8G8R8A8) {
@@ -1132,53 +1126,91 @@ nsresult gfxUtils::EncodeSourceSurface(SourceSurface* aSurface,
       size.width, size.height, map.mStride, imgIEncoder::INPUT_FORMAT_HOSTARGB,
       aOutputOptions);
   dataSurface->Unmap();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsCOMPtr<nsIInputStream> imgStream(encoder);
   if (!imgStream) {
     return NS_ERROR_FAILURE;
   }
 
+  imgStream.forget(aOutStream);
+
+  return NS_OK;
+}
+
+// static
+Maybe<nsTArray<uint8_t>> gfxUtils::EncodeSourceSurfaceAsBytes(
+    SourceSurface* aSurface, const ImageType aImageType,
+    const nsAString& aOutputOptions) {
+  nsCOMPtr<nsIInputStream> imgStream;
+  nsresult rv = EncodeSourceSurfaceAsStream(
+      aSurface, aImageType, aOutputOptions, getter_AddRefs(imgStream));
+  if (NS_FAILED(rv)) {
+    return Nothing();
+  }
+
   uint64_t bufSize64;
   rv = imgStream->Available(&bufSize64);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_ENSURE_TRUE(bufSize64 < UINT32_MAX - 16, NS_ERROR_FAILURE);
-
-  uint32_t bufSize = (uint32_t)bufSize64;
-
-  // ...leave a little extra room so we can call read again and make sure we
-  // got everything. 16 bytes for better padding (maybe)
-  bufSize += 16;
-  uint32_t imgSize = 0;
-  Vector<char> imgData;
-  if (!imgData.initCapacity(bufSize)) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (NS_FAILED(rv) || bufSize64 > UINT32_MAX) {
+    return Nothing();
   }
-  uint32_t numReadThisTime = 0;
-  while ((rv = imgStream->Read(imgData.begin() + imgSize, bufSize - imgSize,
-                               &numReadThisTime)) == NS_OK &&
-         numReadThisTime > 0) {
-    // Update the length of the vector without overwriting the new data.
-    if (!imgData.growByUninitialized(numReadThisTime)) {
-      return NS_ERROR_OUT_OF_MEMORY;
+
+  uint32_t bytesLeft = static_cast<uint32_t>(bufSize64);
+
+  nsTArray<uint8_t> imgData;
+  imgData.SetLength(bytesLeft);
+  uint8_t* bytePtr = imgData.Elements();
+
+  while (bytesLeft > 0) {
+    uint32_t bytesRead = 0;
+    rv = imgStream->Read(reinterpret_cast<char*>(bytePtr), bytesLeft,
+                         &bytesRead);
+    if (NS_FAILED(rv) || bytesRead == 0) {
+      return Nothing();
     }
 
-    imgSize += numReadThisTime;
-    if (imgSize == bufSize) {
-      // need a bigger buffer, just double
-      bufSize *= 2;
-      if (!imgData.resizeUninitialized(bufSize)) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-    }
+    bytePtr += bytesRead;
+    bytesLeft -= bytesRead;
   }
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(!imgData.empty(), NS_ERROR_FAILURE);
+
+#ifdef DEBUG
+
+  // Currently, all implementers of imgIEncoder report their exact size through
+  // nsIInputStream::Available(), but let's explicitly state that we rely on
+  // that behavior for the algorithm above.
+
+  char dummy = 0;
+  uint32_t bytesRead = 0;
+  rv = imgStream->Read(&dummy, 1, &bytesRead);
+  MOZ_ASSERT(NS_SUCCEEDED(rv) && bytesRead == 0);
+
+#endif
+
+  return Some(std::move(imgData));
+}
+
+/* static */
+nsresult gfxUtils::EncodeSourceSurface(SourceSurface* aSurface,
+                                       const ImageType aImageType,
+                                       const nsAString& aOutputOptions,
+                                       BinaryOrData aBinaryOrData, FILE* aFile,
+                                       nsACString* aStrOut) {
+  MOZ_ASSERT(aBinaryOrData == gfxUtils::eDataURIEncode || aFile || aStrOut,
+             "Copying binary encoding to clipboard not currently supported");
+
+  auto maybeImgData =
+      EncodeSourceSurfaceAsBytes(aSurface, aImageType, aOutputOptions);
+  if (!maybeImgData) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsTArray<uint8_t>& imgData = *maybeImgData;
 
   if (aBinaryOrData == gfxUtils::eBinaryEncode) {
     if (aFile) {
-      Unused << fwrite(imgData.begin(), 1, imgSize, aFile);
+      Unused << fwrite(imgData.Elements(), 1, imgData.Length(), aFile);
     }
     return NS_OK;
   }
@@ -1208,7 +1240,8 @@ nsresult gfxUtils::EncodeSourceSurface(SourceSurface* aSurface,
   }
 
   dataURI.AppendLiteral(";base64,");
-  rv = Base64EncodeAppend(imgData.begin(), imgSize, dataURI);
+  nsresult rv = Base64EncodeAppend(reinterpret_cast<char*>(imgData.Elements()),
+                                   imgData.Length(), dataURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aFile) {
