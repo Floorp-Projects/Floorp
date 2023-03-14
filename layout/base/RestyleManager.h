@@ -471,8 +471,11 @@ class RestyleManager {
 
   ServoStyleSet* StyleSet() const { return PresContext()->StyleSet(); }
 
+  void RestylePreviousSiblings(nsIContent* aStartingSibling);
+  void RestyleSiblingsStartingWith(nsIContent* aStartingSibling);
+
   void RestyleForEmptyChange(Element* aContainer);
-  void MaybeRestyleForEdgeChildChange(Element* aContainer,
+  void MaybeRestyleForEdgeChildChange(nsINode* aContainer,
                                       nsIContent* aChangedChild);
 
   bool IsDisconnected() const { return !mPresContext; }
