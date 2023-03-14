@@ -1249,7 +1249,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvBatch(
   nsTArray<RemoteAccessible*> proxies(aData.Length());
   for (size_t i = 0; i < aData.Length(); i++) {
     DocAccessibleParent* doc = static_cast<DocAccessibleParent*>(
-        aData.ElementAt(i).Document().get_PDocAccessibleParent());
+        aData.ElementAt(i).Document().get_PDocAccessible().AsParent());
     MOZ_ASSERT(doc);
 
     if (doc->IsShutdown()) {

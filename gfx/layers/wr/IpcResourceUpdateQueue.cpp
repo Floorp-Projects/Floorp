@@ -350,7 +350,7 @@ void IpcResourceUpdateQueue::PushExternalImageForTexture(
   MOZ_RELEASE_ASSERT(aTexture->GetIPDLActor()->GetIPCChannel() ==
                      mWriter.WrBridge()->GetIPCChannel());
   mUpdates.AppendElement(layers::OpPushExternalImageForTexture(
-      aExtId, aKey, nullptr, aTexture->GetIPDLActor(), aIsUpdate));
+      aExtId, aKey, aTexture->GetIPDLActor(), aIsUpdate));
 }
 
 bool IpcResourceUpdateQueue::UpdateImageBuffer(

@@ -10268,7 +10268,7 @@ bool TransactionBase::VerifyRequestParams(
   }
 
   for (const FileAddInfo& fileAddInfo : aParams.fileAddInfos()) {
-    const PBackgroundIDBDatabaseFileParent* file = fileAddInfo.fileParent();
+    const PBackgroundIDBDatabaseFileParent* file = fileAddInfo.file().AsParent();
 
     switch (fileAddInfo.type()) {
       case StructuredCloneFileBase::eBlob:
@@ -15848,8 +15848,7 @@ void OpenDatabaseOp::SendResults() {
 
         // XXX OpenDatabaseRequestResponse stores a raw pointer, can this be
         // avoided?
-        response =
-            OpenDatabaseRequestResponse{mDatabase.unsafeGetRawPtr(), nullptr};
+        response = OpenDatabaseRequestResponse{mDatabase.unsafeGetRawPtr()};
       } else {
         response = ClampResultCode(rv);
 #ifdef DEBUG
@@ -18441,7 +18440,7 @@ bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase& aTransaction) {
             switch (fileAddInfo.type()) {
               case StructuredCloneFileBase::eBlob: {
                 PBackgroundIDBDatabaseFileParent* file =
-                    fileAddInfo.fileParent();
+                    fileAddInfo.file().AsParent();
                 MOZ_ASSERT(file);
 
                 auto* const fileActor = static_cast<DatabaseFile*>(file);
