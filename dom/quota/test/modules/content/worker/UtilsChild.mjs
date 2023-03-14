@@ -3,7 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-const _UtilsChild = {
+export const UtilsChild = {
   async getCachedOriginUsage() {
     postMessage({
       moduleName: "UtilsParent",
@@ -20,7 +20,3 @@ const _UtilsChild = {
     });
   },
 };
-
-function importUtilsChild() {
-  return { UtilsChild: _UtilsChild };
-}
