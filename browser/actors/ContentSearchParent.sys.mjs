@@ -87,7 +87,7 @@ export let ContentSearch = {
   _currentEventPromise: null,
 
   // This is used to handle search suggestions.  It maps xul:browsers to objects
-  // { controller, previousFormHistoryResult }.  See _onMessageGetSuggestions.
+  // { controller, previousFormHistoryResults }.  See _onMessageGetSuggestions.
   _suggestionMap: new WeakMap(),
 
   // Resolved when we finish shutting down.
@@ -193,14 +193,18 @@ export let ContentSearch = {
 
   removeFormHistoryEntry(browser, entry) {
     let browserData = this._suggestionDataForBrowser(browser);
-    if (browserData && browserData.previousFormHistoryResult) {
-      let { previousFormHistoryResult } = browserData;
-      for (let i = 0; i < previousFormHistoryResult.matchCount; i++) {
-        if (previousFormHistoryResult.getValueAt(i) === entry) {
-          previousFormHistoryResult.removeValueAt(i);
-          break;
-        }
-      }
+    if (browserData?.previousFormHistoryResults) {
+      let result = browserData.previousFormHistoryResults.find(
+        e => e.text == entry
+      );
+      lazy.FormHistory.update({
+        op: "remove",
+        fieldname: browserData.controller.formHistoryParam,
+        value: entry,
+        guid: result.guid,
+      }).catch(err =>
+        console.error("Error removing form history entry: ", err)
+      );
     }
   },
 
@@ -297,12 +301,12 @@ export let ContentSearch = {
       return result;
     }
 
-    // Keep the form history result so RemoveFormHistoryEntry can remove entries
+    // Keep the form history results so RemoveFormHistoryEntry can remove entries
     // from it.  Keeping only one result isn't foolproof because the client may
     // try to remove an entry from one set of suggestions after it has requested
     // more but before it's received them.  In that case, the entry may not
     // appear in the new suggestions.  But that should happen rarely.
-    browserData.previousFormHistoryResult = suggestions.formHistoryResult;
+    browserData.previousFormHistoryResults = suggestions.formHistoryResults;
     result = {
       engineName,
       term: suggestions.term,

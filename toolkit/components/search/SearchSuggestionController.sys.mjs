@@ -16,16 +16,6 @@ ChromeUtils.defineModuleGetter(
   "FormHistory",
   "resource://gre/modules/FormHistory.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FormHistoryClient",
-  "resource://gre/modules/FormAutoComplete.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FormAutoCompleteResult",
-  "resource://gre/modules/FormAutoComplete.jsm"
-);
 
 const DEFAULT_FORM_HISTORY_PARAM = "searchbar-history";
 const HTTP_OK = 200;
@@ -156,6 +146,16 @@ var gFirstPartyDomains = new Map();
  *
  */
 export class SearchSuggestionController {
+  /**
+   * Constructor
+   *
+   * @param {string} [formHistoryParam]
+   *   The form history type to use with this controller.
+   */
+  constructor(formHistoryParam = DEFAULT_FORM_HISTORY_PARAM) {
+    this.formHistoryParam = formHistoryParam;
+  }
+
   /**
    * The maximum length of a value to be stored in search history.
    *
@@ -354,24 +354,13 @@ export class SearchSuggestionController {
     // We don't cache these results as we assume that the in-memory SQL cache is
     // good enough in performance.
     let params = {
-      fieldname: this.formHistoryParam || DEFAULT_FORM_HISTORY_PARAM,
+      fieldname: this.formHistoryParam,
     };
 
     if (context.restrictToEngine) {
       params.source = context.engine.name;
     }
 
-    // Needed to keep the legacy autocomplete happy, including removing items.
-    let client = new lazy.FormHistoryClient({
-      formField: null,
-      inputName: params.fieldname,
-    });
-    let formHistoryResult = new lazy.FormAutoCompleteResult(
-      client,
-      [],
-      params.fieldname,
-      context.searchString
-    );
     let results = await lazy.FormHistory.getAutoCompleteResults(
       context.searchString,
       params
@@ -379,11 +368,7 @@ export class SearchSuggestionController {
 
     context.awaitingLocalResults = false;
 
-    formHistoryResult.entries = results;
-    return {
-      formHistoryResult,
-      result: results.map(r => r.text),
-    };
+    return { localResults: results };
   }
 
   /**
@@ -641,7 +626,6 @@ export class SearchSuggestionController {
       term: context.searchString,
       remote: [],
       local: [],
-      formHistoryResult: null,
     };
 
     for (let resultData of suggestResults) {
@@ -651,14 +635,11 @@ export class SearchSuggestionController {
           "SearchSuggestionController found an unexpected string value: " +
             resultData
         );
-      } else if (resultData.formHistoryResult) {
-        // Local results have a formHistoryResult property.
-        results.formHistoryResult = resultData.formHistoryResult;
-        if (resultData.result) {
-          results.local = resultData.result.map(
-            s => new SearchSuggestionEntry(s)
-          );
-        }
+      } else if (resultData.localResults) {
+        results.formHistoryResults = resultData.localResults;
+        results.local = resultData.localResults.map(
+          s => new SearchSuggestionEntry(s.text)
+        );
       } else if (resultData.result) {
         // Remote result
         let richSuggestionData = this.#getRichSuggestionData(resultData.result);
