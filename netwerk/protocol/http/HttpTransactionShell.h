@@ -112,6 +112,8 @@ class HttpTransactionShell : public nsISupports {
 
   virtual void GetNetworkAddresses(NetAddr& self, NetAddr& peer,
                                    bool& aResolvedByTRR,
+                                   nsIRequest::TRRMode& aEffectiveTRRMode,
+                                   TRRSkippedReason& aSkipReason,
                                    bool& aEchConfigUsed) = 0;
 
   // Functions for Timing interface
@@ -192,9 +194,10 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
   virtual already_AddRefed<nsITransportSecurityInfo> SecurityInfo() override;  \
   virtual void SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks)         \
       override;                                                                \
-  virtual void GetNetworkAddresses(NetAddr& self, NetAddr& peer,               \
-                                   bool& aResolvedByTRR, bool& aEchConfigUsed) \
-      override;                                                                \
+  virtual void GetNetworkAddresses(                                            \
+      NetAddr& self, NetAddr& peer, bool& aResolvedByTRR,                      \
+      nsIRequest::TRRMode& aEffectiveTRRMode, TRRSkippedReason& aSkipReason,   \
+      bool& aEchConfigUsed) override;                                          \
   virtual mozilla::TimeStamp GetDomainLookupStart() override;                  \
   virtual mozilla::TimeStamp GetDomainLookupEnd() override;                    \
   virtual mozilla::TimeStamp GetConnectStart() override;                       \
