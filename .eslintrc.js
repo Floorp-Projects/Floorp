@@ -85,6 +85,12 @@ module.exports = {
       },
     },
     {
+      files: ["browser/components/storybook/**"],
+      env: {
+        "mozilla/privileged": false,
+      },
+    },
+    {
       files: ["*.mjs"],
       rules: {
         "import/default": "error",
