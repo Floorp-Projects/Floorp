@@ -420,8 +420,7 @@ GetStructuredCloneReadInfoFromExternalBlob(
     nsCString fileKeyId;
     fileKeyId.AppendInt(file.FileInfo().Id());
 
-    maybeKey = GetIndexedDBCipherKeyManager()->Get(aFileManager.DatabaseID(),
-                                                   fileKeyId);
+    maybeKey = aFileManager.MutableCipherKeyManagerRef().Get(fileKeyId);
   }
 
   auto data = JSStructuredCloneData{JS::StructuredCloneScope::DifferentProcess};
