@@ -12,7 +12,7 @@ module.exports = {
 
   overrides: [
     {
-      files: ["Assert.js", "ModuleLoader.js", "Utils.js", "UtilsChild.js"],
+      files: ["Assert.js", "ModuleLoader.js", "Utils.js"],
       parserOptions: {
         sourceType: "script",
       },

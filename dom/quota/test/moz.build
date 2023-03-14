@@ -51,7 +51,7 @@ TEST_HARNESS_FILES.testing.mochitest.tests.dom.quota.test.modules.worker += [
     "modules/content/worker/head.js",
     "modules/content/worker/ModuleLoader.js",
     "modules/content/worker/Utils.js",
-    "modules/content/worker/UtilsChild.js",
+    "modules/content/worker/UtilsChild.mjs",
 ]
 
 TEST_HARNESS_FILES.xpcshell.dom.quota.test.common += [
