@@ -4,7 +4,7 @@
 
 #include "StreamUtils.h"
 
-#include "mozilla/FloatingPoint.h"
+#include <cmath>
 #include "mozilla/dom/QueuingStrategyBinding.h"
 
 namespace mozilla::dom {
@@ -22,7 +22,7 @@ double ExtractHighWaterMark(const QueuingStrategy& aStrategy,
   double highWaterMark = aStrategy.mHighWaterMark.Value();
 
   // Step 3.
-  if (mozilla::IsNaN(highWaterMark) || highWaterMark < 0) {
+  if (std::isnan(highWaterMark) || highWaterMark < 0) {
     aRv.ThrowRangeError("Invalid highWaterMark");
     return 0.0;
   }
