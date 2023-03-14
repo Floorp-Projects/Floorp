@@ -116,7 +116,7 @@ class ReportErrorRunnable final : public WorkerDebuggeeRunnable {
       // the ServiceWorkerManager to report on any controlled documents.
       if (aWorkerPrivate->IsServiceWorker()) {
         RefPtr<RemoteWorkerChild> actor(
-            aWorkerPrivate->GetRemoteWorkerControllerWeakRef());
+            aWorkerPrivate->GetRemoteWorkerController());
 
         Unused << NS_WARN_IF(!actor);
 
@@ -195,7 +195,7 @@ class ReportGenericErrorRunnable final : public WorkerDebuggeeRunnable {
 
     if (aWorkerPrivate->IsServiceWorker()) {
       RefPtr<RemoteWorkerChild> actor(
-          aWorkerPrivate->GetRemoteWorkerControllerWeakRef());
+          aWorkerPrivate->GetRemoteWorkerController());
 
       Unused << NS_WARN_IF(!actor);
 

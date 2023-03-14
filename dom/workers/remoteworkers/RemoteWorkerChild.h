@@ -15,7 +15,6 @@
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ThreadBound.h"
-#include "mozilla/ThreadSafeWeakPtr.h"
 #include "mozilla/dom/PRemoteWorkerChild.h"
 #include "mozilla/dom/ServiceWorkerOpArgs.h"
 
@@ -27,6 +26,7 @@ namespace mozilla::dom {
 class ErrorValue;
 class FetchEventOpProxyChild;
 class RemoteWorkerData;
+class RemoteWorkerServiceKeepAlive;
 class ServiceWorkerOp;
 class UniqueMessagePortId;
 class WeakWorkerRef;
@@ -40,9 +40,7 @@ class WorkerPrivate;
  * created on background threads and other ownership invariants, most of which
  * can be relaxed in the future.
  */
-class RemoteWorkerChild final
-    : public SupportsThreadSafeWeakPtr<RemoteWorkerChild>,
-      public PRemoteWorkerChild {
+class RemoteWorkerChild final : public PRemoteWorkerChild {
   friend class FetchEventOpProxyChild;
   friend class PRemoteWorkerChild;
   friend class ServiceWorkerOp;
@@ -50,11 +48,12 @@ class RemoteWorkerChild final
   ~RemoteWorkerChild();
 
  public:
-  NS_INLINE_DECL_REFCOUNTING(RemoteWorkerChild, final)
+  // Note that all IPC-using methods must only be invoked on the
+  // RemoteWorkerService thread which the inherited
+  // IProtocol::GetActorEventTarget() will return for us.
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteWorkerChild, final)
 
   explicit RemoteWorkerChild(const RemoteWorkerData& aData);
-
-  nsISerialEventTarget* GetOwningEventTarget() const;
 
   void ExecWorker(const RemoteWorkerData& aData);
 
@@ -85,22 +84,61 @@ class RemoteWorkerChild final
     RefPtr<WorkerPrivate> mWorkerPrivate;
   };
 
+  // Initial state, mWorkerPrivate is initially null but will be initialized on
+  // the main thread by ExecWorkerOnMainThread when the WorkerPrivate is
+  // created.  The state will transition to Running or Canceled, also from the
+  // main thread.
   struct Pending : WorkerPrivateAccessibleState {
     nsTArray<RefPtr<Op>> mPendingOps;
   };
 
-  struct PendingTerminated {};
+  // Running, with the state transition happening on the main thread as a result
+  // of the worker successfully processing our initialization runnable,
+  // indicating that top-level script execution successfully completed.  Because
+  // all of our state transitions happen on the main thread and are posed in
+  // terms of the main thread's perspective of the worker's state, it's very
+  // possible for us to skip directly from Pending to Canceled because we decide
+  // to cancel/terminate the worker prior to it finishing script loading or
+  // reporting back to us.
+  struct Running : WorkerPrivateAccessibleState {};
 
-  struct Running : WorkerPrivateAccessibleState {
-    ~Running();
-    RefPtr<WeakWorkerRef> mWorkerRef;
-  };
+  // Cancel() has been called on the WorkerPrivate on the main thread by a
+  // TerminationOp, top-level script evaluation has failed and canceled the
+  // worker, or in the case of a SharedWorker, close() has been called on
+  // the global scope by content code and the worker has advanced to the
+  // Canceling state.  (Dedicated Workers can also self close, but they will
+  // never be RemoteWorkers.  Although a SharedWorker can own DedicatedWorkers.)
+  // Browser shutdown will result in a TerminationOp thanks to use of a shutdown
+  // blocker in the parent, so the RuntimeService shouldn't get involved, but we
+  // would also handle that case acceptably too.
+  //
+  // Because worker self-closing is still handled by dispatching a runnable to
+  // the main thread to effectively call WorkerPrivate::Cancel(), there isn't
+  // a race between a worker deciding to self-close and our termination ops.
+  //
+  // In this state, we have dropped the reference to the WorkerPrivate and will
+  // no longer be dispatching runnables to the worker.  We wait in this state
+  // until the termination lambda is invoked letting us know that the worker has
+  // entirely shutdown and we can advanced to the Killed state.
+  struct Canceled {};
 
-  struct Terminated {};
+  // The worker termination lambda has been invoked and we know the Worker is
+  // entirely shutdown.  (Inherently it is possible for us to advance to this
+  // state while the nsThread for the worker is still in the process of
+  // shutting down, but no more worker code will run on it.)
+  //
+  // This name is chosen to match the Worker's own state model.
+  struct Killed {};
 
-  using State = Variant<Pending, Running, PendingTerminated, Terminated>;
+  using State = Variant<Pending, Running, Canceled, Killed>;
 
+  // The state of the WorkerPrivate as perceived by the owner on the main
+  // thread.  All state transitions now happen on the main thread, but the
+  // Worker Launcher thread will consult the state and will directly append ops
+  // to the Pending queue
   DataMutex<State> mState;
+
+  const RefPtr<RemoteWorkerServiceKeepAlive> mServiceKeepAlive;
 
   class Op {
    public:
@@ -109,6 +147,8 @@ class RemoteWorkerChild final
     virtual ~Op() = default;
 
     virtual bool MaybeStart(RemoteWorkerChild* aOwner, State& aState) = 0;
+
+    virtual void StartOnMainThread(RefPtr<RemoteWorkerChild>& aOwner) = 0;
 
     virtual void Cancel() = 0;
   };
@@ -129,9 +169,11 @@ class RemoteWorkerChild final
 
   nsresult ExecWorkerOnMainThread(RemoteWorkerData&& aData);
 
-  void InitializeOnWorker();
+  void ExceptionalErrorTransitionDuringExecWorker();
 
-  void ShutdownOnWorker();
+  void RequestWorkerCancellation();
+
+  void InitializeOnWorker();
 
   void CreationSucceededOnAnyThread();
 
@@ -139,16 +181,31 @@ class RemoteWorkerChild final
 
   void CreationSucceededOrFailedOnAnyThread(bool aDidCreationSucceed);
 
-  void CloseWorkerOnMainThread(State& aState);
+  // Cancels the worker if it has been started and ensures that we transition
+  // to the Terminated state once the worker has been terminated or we have
+  // ensured that it will never start.
+  void CloseWorkerOnMainThread();
 
   void ErrorPropagation(const ErrorValue& aValue);
 
   void ErrorPropagationDispatch(nsresult aError);
 
-  void TransitionStateToPendingTerminated(State& aState);
+  // When the WorkerPrivate Cancellation lambda is invoked, it's possible that
+  // we have not yet advanced to running from pending, so we could be in either
+  // state.  This method is expected to be called by the Workers' cancellation
+  // lambda and will obtain the lock and call the
+  // TransitionStateFromPendingToCanceled if appropriate.  Otherwise it will
+  // directly move from the running state to the canceled state which does not
+  // require additional cleanup.
+  void OnWorkerCancellationTransitionStateFromPendingOrRunningToCanceled();
+  // A helper used by the above method by the worker cancellation lambda if the
+  // the worker hasn't started running, or in exceptional cases where we bail
+  // out of the ExecWorker method early.  The caller must be holding the lock
+  // (in order to pass in the state).
+  void TransitionStateFromPendingToCanceled(State& aState);
+  void TransitionStateFromCanceledToKilled();
 
-  void TransitionStateToRunning(already_AddRefed<WorkerPrivate> aWorkerPrivate,
-                                already_AddRefed<WeakWorkerRef> aWorkerRef);
+  void TransitionStateToRunning();
 
   void TransitionStateToTerminated();
 
@@ -159,14 +216,15 @@ class RemoteWorkerChild final
   void MaybeStartOp(RefPtr<Op>&& aOp);
 
   const bool mIsServiceWorker;
-  const nsCOMPtr<nsISerialEventTarget> mOwningEventTarget;
 
   // Touched on main-thread only.
   nsTArray<uint64_t> mWindowIDs;
 
   struct LauncherBoundData {
-    bool mIPCActive = true;
     MozPromiseHolder<GenericNonExclusivePromise> mTerminationPromise;
+    // Flag to ensure we report creation at most once.  This could be cleaned up
+    // further.
+    bool mDidSendCreated = false;
   };
 
   ThreadBound<LauncherBoundData> mLauncherData;

@@ -7,14 +7,42 @@
 #ifndef mozilla_dom_RemoteWorkerService_h
 #define mozilla_dom_RemoteWorkerService_h
 
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/DataMutex.h"
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
+#include "nsISupportsImpl.h"
 
 class nsIThread;
 
 namespace mozilla::dom {
 
+class RemoteWorkerService;
 class RemoteWorkerServiceChild;
+class RemoteWorkerServiceShutdownBlocker;
+
+/**
+ * Refcounted lifecycle helper; when its refcount goes to zero its destructor
+ * will call RemoteWorkerService::Shutdown() which will remove the shutdown
+ * blocker and shutdown the "Worker Launcher" thread.
+ *
+ * The RemoteWorkerService itself will hold a reference to this singleton which
+ * it will use to hand out additional refcounts to RemoteWorkerChild instances.
+ * When the shutdown blocker is notified that it's time to shutdown, the
+ * RemoteWorkerService's reference will be dropped.
+ */
+class RemoteWorkerServiceKeepAlive {
+ public:
+  explicit RemoteWorkerServiceKeepAlive(
+      RemoteWorkerServiceShutdownBlocker* aBlocker);
+
+ private:
+  ~RemoteWorkerServiceKeepAlive();
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteWorkerServiceKeepAlive);
+
+  RefPtr<RemoteWorkerServiceShutdownBlocker> mBlocker;
+};
 
 /**
  * Every process has a RemoteWorkerService which does the actual spawning of
@@ -31,6 +59,9 @@ class RemoteWorkerServiceChild;
  * manipulation of the worker must happen from the owning thread.)
  */
 class RemoteWorkerService final : public nsIObserver {
+  friend class RemoteWorkerServiceShutdownBlocker;
+  friend class RemoteWorkerServiceKeepAlive;
+
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
@@ -39,6 +70,22 @@ class RemoteWorkerService final : public nsIObserver {
   static void Initialize();
 
   static nsIThread* Thread();
+
+  // Called by RemoteWorkerChild instances on the "Worker Launcher" thread at
+  // their creation to assist in tracking when it's safe to shutdown the
+  // RemoteWorkerService and "Worker Launcher" thread.  This method will return
+  // a null pointer if the RemoteWorkerService has already begun shutdown.
+  //
+  // This is somewhat awkwardly a static method because the RemoteWorkerChild
+  // instances are not managed by RemoteWorkerServiceChild, but instead are
+  // managed by PBackground(Child).  So we either need to find the
+  // RemoteWorkerService via the hidden singleton or by having the
+  // RemoteWorkerChild use PBackgroundChild::ManagedPRemoteWorkerServiceChild()
+  // to locate the instance.  We are choosing to use the singleton because we
+  // already need to acquire a mutex in the call regardless and the upcoming
+  // refactorings may want to start using new toplevel protocols and this will
+  // avoid requiring a change when that happens.
+  static already_AddRefed<RemoteWorkerServiceKeepAlive> MaybeGetKeepAlive();
 
  private:
   RemoteWorkerService();
@@ -50,8 +97,22 @@ class RemoteWorkerService final : public nsIObserver {
 
   void CloseActorOnTargetThread();
 
+  // Called by RemoteWorkerServiceShutdownBlocker when it's time to drop the
+  // RemoteWorkerServiceKeepAlive reference.
+  void BeginShutdown();
+
+  // Called by RemoteWorkerServiceShutdownBlocker when the blocker has been
+  // removed and it's safe to shutdown the "Worker Launcher" thread.
+  void FinishShutdown();
+
   nsCOMPtr<nsIThread> mThread;
   RefPtr<RemoteWorkerServiceChild> mActor;
+  // The keep-alive is set and cleared on the main thread but we will hand out
+  // additional references to it from the "Worker Launcher" thread, so it's
+  // appropriate to use a mutex.  (Alternately we could have used a ThreadBound
+  // and set and cleared on the "Worker Launcher" thread, but that would
+  // involve more moving parts and could have complicated edge cases.)
+  DataMutex<RefPtr<RemoteWorkerServiceKeepAlive>> mKeepAlive;
 };
 
 }  // namespace mozilla::dom
