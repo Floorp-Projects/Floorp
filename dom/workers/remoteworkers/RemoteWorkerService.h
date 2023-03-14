@@ -113,6 +113,9 @@ class RemoteWorkerService final : public nsIObserver {
   // and set and cleared on the "Worker Launcher" thread, but that would
   // involve more moving parts and could have complicated edge cases.)
   DataMutex<RefPtr<RemoteWorkerServiceKeepAlive>> mKeepAlive;
+  // In order to poll the blocker to know when we can stop spinning the event
+  // loop at shutdown, we retain a reference to the blocker.
+  RefPtr<RemoteWorkerServiceShutdownBlocker> mShutdownBlocker;
 };
 
 }  // namespace mozilla::dom
