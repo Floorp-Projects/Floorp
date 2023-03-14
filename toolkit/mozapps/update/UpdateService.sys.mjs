@@ -7,12 +7,12 @@
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { AUSTLMY } from "resource://gre/modules/UpdateTelemetry.sys.mjs";
 
-const {
+import {
   Bits,
   BitsRequest,
   BitsUnknownError,
   BitsVerificationError,
-} = ChromeUtils.import("resource://gre/modules/Bits.jsm");
+} from "resource://gre/modules/Bits.sys.mjs";
 import { FileUtils } from "resource://gre/modules/FileUtils.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 

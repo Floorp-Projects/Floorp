@@ -4,9 +4,10 @@
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
-const { BitsError, BitsUnknownError } = ChromeUtils.import(
-  "resource://gre/modules/Bits.jsm"
-);
+import {
+  BitsError,
+  BitsUnknownError,
+} from "resource://gre/modules/Bits.sys.mjs";
 
 export var AUSTLMY = {
   // Telemetry for the application update background update check occurs when

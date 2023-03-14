@@ -14,14 +14,8 @@
  * provided by nsIBits via Promises rather than callbacks.
  */
 
-"use strict";
-
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -60,7 +54,7 @@ const kBitsMethodTimeoutMs = 10 * 60 * 1000; // 10 minutes
  * It may be null, a number (corresponding to an nsresult or hresult value),
  * a string, or an exception.
  */
-class BitsError extends Error {
+export class BitsError extends Error {
   // If codeType == "none", code may be unspecified.
   constructor(type, action, stage, codeType, code) {
     let message =
@@ -101,7 +95,7 @@ class BitsError extends Error {
 
 // These specializations exist to make them easier to construct since they may
 // need to be constructed outside of this file.
-class BitsVerificationError extends BitsError {
+export class BitsVerificationError extends BitsError {
   constructor() {
     super(
       Ci.nsIBits.ERROR_TYPE_VERIFICATION_FAILURE,
@@ -111,7 +105,8 @@ class BitsVerificationError extends BitsError {
     );
   }
 }
-class BitsUnknownError extends BitsError {
+
+export class BitsUnknownError extends BitsError {
   constructor() {
     super(
       Ci.nsIBits.ERROR_TYPE_UNKNOWN,
@@ -239,7 +234,7 @@ async function requestPromise(errorAction, actionFn) {
  * Getter methods (except loadGroup and loadFlags) should continue to be
  * accessible, even after shutdown.
  */
-class BitsRequest {
+export class BitsRequest {
   constructor(request) {
     this._request = request;
     this._request.QueryInterface(Ci.nsIBitsRequest);
@@ -581,6 +576,7 @@ class BitsRequest {
     });
   }
 }
+
 BitsRequest.prototype.QueryInterface = ChromeUtils.generateQI(["nsIRequest"]);
 
 /**
@@ -762,7 +758,7 @@ async function servicePromise(errorAction, observer, actionFn) {
   });
 }
 
-var Bits = {
+export var Bits = {
   /**
    * This function wraps nsIBits::initialized.
    */
@@ -828,12 +824,3 @@ var Bits = {
     });
   },
 };
-
-const EXPORTED_SYMBOLS = [
-  "Bits",
-  "BitsError",
-  "BitsRequest",
-  "BitsSuccess",
-  "BitsUnknownError",
-  "BitsVerificationError",
-];
