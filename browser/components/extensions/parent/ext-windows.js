@@ -70,13 +70,13 @@ function sanitizePositionParams(params, window = null, positionOffset = 0) {
   const availTop = Math.floor(availDeviceTop.value / factor);
   const availWidth = Math.floor(availDeviceWidth.value / factor);
   const availHeight = Math.floor(availDeviceHeight.value / factor);
-  params.left = Math.max(
-    availLeft,
-    Math.min(availLeft + availWidth - width, params.left)
+  params.left = Math.min(
+    availLeft + availWidth - width,
+    Math.max(availLeft, params.left)
   );
-  params.top = Math.max(
-    availTop,
-    Math.min(availTop + availHeight - height, params.top)
+  params.top = Math.min(
+    availTop + availHeight - height,
+    Math.max(availTop, params.top)
   );
 }
 
