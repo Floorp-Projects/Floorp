@@ -112,7 +112,7 @@ class BackgroundFactoryChild final : public PBackgroundIDBFactoryChild {
 
   mozilla::ipc::IPCResult RecvPBackgroundIDBDatabaseConstructor(
       PBackgroundIDBDatabaseChild* aActor, const DatabaseSpec& aSpec,
-      PBackgroundIDBFactoryRequestChild* aRequest) override;
+      NotNull<PBackgroundIDBFactoryRequestChild*> aRequest) override;
 };
 
 class BackgroundDatabaseChild;

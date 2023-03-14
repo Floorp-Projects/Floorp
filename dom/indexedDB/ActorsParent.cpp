@@ -2146,7 +2146,7 @@ class Factory final : public PBackgroundIDBFactoryParent,
 
   PBackgroundIDBDatabaseParent* AllocPBackgroundIDBDatabaseParent(
       const DatabaseSpec& aSpec,
-      PBackgroundIDBFactoryRequestParent* aRequest) override;
+      NotNull<PBackgroundIDBFactoryRequestParent*> aRequest) override;
 
   bool DeallocPBackgroundIDBDatabaseParent(
       PBackgroundIDBDatabaseParent* aActor) override;
@@ -9118,7 +9118,8 @@ bool Factory::DeallocPBackgroundIDBFactoryRequestParent(
 }
 
 PBackgroundIDBDatabaseParent* Factory::AllocPBackgroundIDBDatabaseParent(
-    const DatabaseSpec& aSpec, PBackgroundIDBFactoryRequestParent* aRequest) {
+    const DatabaseSpec& aSpec,
+    NotNull<PBackgroundIDBFactoryRequestParent*> aRequest) {
   MOZ_CRASH(
       "PBackgroundIDBDatabaseParent actors should be constructed "
       "manually!");
@@ -10268,7 +10269,8 @@ bool TransactionBase::VerifyRequestParams(
   }
 
   for (const FileAddInfo& fileAddInfo : aParams.fileAddInfos()) {
-    const PBackgroundIDBDatabaseFileParent* file = fileAddInfo.file().AsParent();
+    const PBackgroundIDBDatabaseFileParent* file =
+        fileAddInfo.file().AsParent();
 
     switch (fileAddInfo.type()) {
       case StructuredCloneFileBase::eBlob:
@@ -15848,7 +15850,8 @@ void OpenDatabaseOp::SendResults() {
 
         // XXX OpenDatabaseRequestResponse stores a raw pointer, can this be
         // avoided?
-        response = OpenDatabaseRequestResponse{mDatabase.unsafeGetRawPtr()};
+        response = OpenDatabaseRequestResponse{
+            WrapNotNull(mDatabase.unsafeGetRawPtr())};
       } else {
         response = ClampResultCode(rv);
 #ifdef DEBUG
@@ -15987,7 +15990,7 @@ nsresult OpenDatabaseOp::EnsureDatabaseActorIsAlive() {
   mDatabase->SetActorAlive();
 
   if (!factory->SendPBackgroundIDBDatabaseConstructor(
-          mDatabase.unsafeGetRawPtr(), spec, this)) {
+          mDatabase.unsafeGetRawPtr(), spec, WrapNotNull(this))) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }

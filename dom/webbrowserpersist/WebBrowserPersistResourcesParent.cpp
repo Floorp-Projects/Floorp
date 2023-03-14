@@ -56,10 +56,11 @@ mozilla::ipc::IPCResult WebBrowserPersistResourcesParent::RecvVisitResource(
 }
 
 mozilla::ipc::IPCResult WebBrowserPersistResourcesParent::RecvVisitDocument(
-    PWebBrowserPersistDocumentParent* aSubDocument) {
+    NotNull<PWebBrowserPersistDocumentParent*> aSubDocument) {
   // Don't expose the subdocument to the visitor until it's ready
   // (until the actor isn't in START state).
-  static_cast<WebBrowserPersistDocumentParent*>(aSubDocument)->SetOnReady(this);
+  static_cast<WebBrowserPersistDocumentParent*>(aSubDocument.get())
+      ->SetOnReady(this);
   return IPC_OK();
 }
 
