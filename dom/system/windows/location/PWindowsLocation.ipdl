@@ -28,7 +28,7 @@ child:
 
 parent:
   // Update geolocation with new position information.
-  async Update(nullable nsIDOMGeoPosition aPosition);
+  async Update(nsIDOMGeoPosition aPosition);
 
   // The geolocation API has reported an error.
   async Failed(uint16_t aError);

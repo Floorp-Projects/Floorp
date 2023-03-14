@@ -77,9 +77,6 @@ class TypeVisitor:
     def visitUniquePtrType(self, m, *args):
         m.basetype.accept(self, *args)
 
-    def visitNotNullType(self, m, *args):
-        m.basetype.accept(self, *args)
-
     def visitShmemType(self, s, *args):
         pass
 
@@ -124,11 +121,6 @@ class Type:
         return False
 
     def isRefcounted(self):
-        return False
-
-    # Should this type be wrapped in `NotNull<T>` unless marked `nullable`?
-
-    def supportsNullable(self):
         return False
 
     def typename(self):
@@ -210,9 +202,6 @@ class ImportedCxxType(Type):
     def isRefcounted(self):
         return self.refcounted
 
-    def supportsNullable(self):
-        return self.refcounted
-
     def isSendMoveOnly(self):
         return self.sendmoveonly
 
@@ -255,9 +244,6 @@ class IPDLType(Type):
         return False
 
     def isUniquePtr(self):
-        return False
-
-    def isNotNull(self):
         return False
 
     def isAtom(self):
@@ -466,17 +452,15 @@ class ProtocolType(SendSemanticsType):
 
 
 class ActorType(IPDLType):
-    def __init__(self, protocol):
+    def __init__(self, protocol, nullable=False):
         self.protocol = protocol
+        self.nullable = nullable
 
     def isActor(self):
         return True
 
     def isRefcounted(self):
         return self.protocol.isRefcounted()
-
-    def supportsNullable(self):
-        return True
 
     def name(self):
         return self.protocol.name()
@@ -698,26 +682,6 @@ class UniquePtrType(IPDLType):
 
     def fullname(self):
         return "mozilla::UniquePtr<" + self.basetype.fullname() + ">"
-
-
-class NotNullType(IPDLType):
-    def __init__(self, basetype):
-        self.basetype = basetype
-
-    def isAtom(self):
-        return False
-
-    def isNotNull(self):
-        return True
-
-    def hasBaseType(self):
-        return True
-
-    def name(self):
-        return "NotNull<" + self.basetype.name() + ">"
-
-    def fullname(self):
-        return "mozilla::NotNull<" + self.basetype.fullname() + ">"
 
 
 def iteractortypes(t, visited=None):
@@ -1480,18 +1444,13 @@ class GatherDecls(TcheckVisitor):
 
     def _canonicalType(self, itype, typespec):
         loc = typespec.loc
-        if typespec.uniqueptr:
-            itype = UniquePtrType(itype)
+        if itype.isIPDL():
+            if itype.isProtocol():
+                itype = ActorType(itype, nullable=typespec.nullable)
 
-        if itype.isIPDL() and itype.isProtocol():
-            itype = ActorType(itype)
-
-        if itype.supportsNullable():
-            if not typespec.nullable:
-                itype = NotNullType(itype)
-        elif typespec.nullable:
+        if typespec.nullable and not (itype.isIPDL() and itype.isActor()):
             self.error(
-                loc, "`nullable' qualifier for type `%s' is unsupported", itype.name()
+                loc, "`nullable' qualifier for type `%s' makes no sense", itype.name()
             )
 
         if typespec.array:
@@ -1499,6 +1458,9 @@ class GatherDecls(TcheckVisitor):
 
         if typespec.maybe:
             itype = MaybeType(itype)
+
+        if typespec.uniqueptr:
+            itype = UniquePtrType(itype)
 
         return itype
 

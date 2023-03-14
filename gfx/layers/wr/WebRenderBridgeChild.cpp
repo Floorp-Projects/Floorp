@@ -391,7 +391,7 @@ void WebRenderBridgeChild::ReleaseCompositable(
 }
 
 bool WebRenderBridgeChild::DestroyInTransaction(PTextureChild* aTexture) {
-  return AddOpDestroy(OpDestroy(WrapNotNull(aTexture)));
+  return AddOpDestroy(OpDestroy(aTexture));
 }
 
 bool WebRenderBridgeChild::DestroyInTransaction(
@@ -413,7 +413,7 @@ void WebRenderBridgeChild::RemoveTextureFromCompositable(
 
   AddWebRenderParentCommand(CompositableOperation(
       aCompositable->GetIPCHandle(),
-      OpRemoveTexture(WrapNotNull(aTexture->GetIPDLActor()))));
+      OpRemoveTexture(nullptr, aTexture->GetIPDLActor())));
 }
 
 void WebRenderBridgeChild::UseTextures(
@@ -434,9 +434,9 @@ void WebRenderBridgeChild::UseTextures(
                        GetIPCChannel());
     bool readLocked = t.mTextureClient->OnForwardedToHost();
 
-    textures.AppendElement(TimedTexture(
-        WrapNotNull(t.mTextureClient->GetIPDLActor()), t.mTimeStamp,
-        t.mPictureRect, t.mFrameID, t.mProducerID, readLocked));
+    textures.AppendElement(
+        TimedTexture(nullptr, t.mTextureClient->GetIPDLActor(), t.mTimeStamp,
+                     t.mPictureRect, t.mFrameID, t.mProducerID, readLocked));
     GetCompositorBridgeChild()->HoldUntilCompositableRefReleasedIfNecessary(
         t.mTextureClient);
   }

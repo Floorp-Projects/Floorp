@@ -108,12 +108,25 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   }
   mLoadingContext = loadingContext;
 
+  DocumentChannelCreationArgs args;
+
+  args.loadState() = mLoadState;
+  args.cacheKey() = mCacheKey;
+  args.channelId() = mChannelId;
+  args.asyncOpenTime() = TimeStamp::Now();
+  args.parentInitiatedNavigationEpoch() =
+      loadingContext->GetParentInitiatedNavigationEpoch();
+
   Maybe<IPCClientInfo> ipcClientInfo;
   if (mInitialClientInfo.isSome()) {
     ipcClientInfo.emplace(mInitialClientInfo.ref().ToIPC());
   }
+  args.initialClientInfo() = ipcClientInfo;
 
-  DocumentChannelElementCreationArgs ipcElementCreationArgs;
+  if (mTiming) {
+    args.timing() = Some(mTiming);
+  }
+
   switch (mLoadInfo->GetExternalContentPolicyType()) {
     case ExtContentPolicy::TYPE_DOCUMENT:
     case ExtContentPolicy::TYPE_SUBDOCUMENT: {
@@ -121,7 +134,7 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
       docArgs.uriModified() = mUriModified;
       docArgs.isXFOError() = mIsXFOError;
 
-      ipcElementCreationArgs = docArgs;
+      args.elementCreationArgs() = docArgs;
       break;
     }
 
@@ -132,7 +145,7 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
       objectArgs.contentPolicyType() = mLoadInfo->InternalContentPolicyType();
       objectArgs.isUrgentStart() = UserActivation::IsHandlingUserInput();
 
-      ipcElementCreationArgs = objectArgs;
+      args.elementCreationArgs() = objectArgs;
       break;
     }
 
@@ -151,11 +164,6 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
     default:
       break;
   }
-
-  DocumentChannelCreationArgs args(
-      mozilla::WrapNotNull(mLoadState), TimeStamp::Now(), mChannelId, mCacheKey,
-      mTiming, ipcClientInfo, ipcElementCreationArgs,
-      loadingContext->GetParentInitiatedNavigationEpoch());
 
   gNeckoChild->SendPDocumentChannelConstructor(this, loadingContext, args);
 

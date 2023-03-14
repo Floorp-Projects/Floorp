@@ -72,7 +72,7 @@ struct RemoteWorkerData
 
   IPCClientInfo? clientInfo;
 
-  nullable nsIReferrerInfo referrerInfo;
+  nsIReferrerInfo referrerInfo;
 
   StorageAccess storageAccess;
 

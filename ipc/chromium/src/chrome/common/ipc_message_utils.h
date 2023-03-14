@@ -8,7 +8,6 @@
 #define CHROME_COMMON_IPC_MESSAGE_UTILS_H_
 
 #include <cstdint>
-#include <iterator>
 #include <map>
 #include <unordered_map>
 #include <string>
@@ -208,156 +207,6 @@ class MOZ_STACK_CLASS MessageReader final {
   mozilla::ipc::IProtocol* actor_;
 };
 
-namespace detail {
-
-// Helper for checking `T::kHasDeprecatedReadParamPrivateConstructor` using a
-// fallback when the member isn't defined.
-template <typename T>
-inline constexpr auto HasDeprecatedReadParamPrivateConstructor(int)
-    -> decltype(T::kHasDeprecatedReadParamPrivateConstructor) {
-  return T::kHasDeprecatedReadParamPrivateConstructor;
-}
-
-template <typename T>
-inline constexpr bool HasDeprecatedReadParamPrivateConstructor(...) {
-  return false;
-}
-
-}  // namespace detail
-
-/**
- * Result type returned from some `ParamTraits<T>::Read` implementations, and
- * from `IPC::ReadParam<T>(MessageReader*)`. Either contains the value or
- * indicates a failure to deserialize.
- *
- * This type can be thought of as a variant on `Maybe<T>`, except that it
- * unconditionally constructs the underlying value if it is default
- * constructible. This helps keep code size down, especially when calling
- * outparameter-based ReadParam implementations (bug 1815177).
- */
-template <typename T,
-          bool = std::is_default_constructible_v<T> ||
-                 detail::HasDeprecatedReadParamPrivateConstructor<T>(0)>
-class ReadResult {
- public:
-  ReadResult() = default;
-
-  template <typename U, std::enable_if_t<std::is_convertible_v<U, T>, int> = 0>
-  MOZ_IMPLICIT ReadResult(U&& aData)
-      : mIsOk(true), mData(std::forward<U>(aData)) {}
-
-  template <typename... Args>
-  explicit ReadResult(std::in_place_t, Args&&... aArgs)
-      : mIsOk(true), mData(std::forward<Args>(aArgs)...) {}
-
-  ReadResult(const ReadResult&) = default;
-  ReadResult(ReadResult&&) = default;
-
-  template <typename U, std::enable_if_t<std::is_convertible_v<U, T>, int> = 0>
-  MOZ_IMPLICIT ReadResult& operator=(U&& aData) {
-    mIsOk = true;
-    mData = std::forward<U>(aData);
-    return *this;
-  }
-
-  ReadResult& operator=(const ReadResult&) = default;
-  ReadResult& operator=(ReadResult&&) noexcept = default;
-
-  // Check if the ReadResult contains a valid value.
-  explicit operator bool() const { return isOk(); }
-  bool isOk() const { return mIsOk; }
-
-  // Get the data from this ReadResult.
-  T& get() {
-    MOZ_ASSERT(mIsOk);
-    return mData;
-  }
-  const T& get() const {
-    MOZ_ASSERT(mIsOk);
-    return mData;
-  }
-
-  T& operator*() { return get(); }
-  const T& operator*() const { return get(); }
-
-  T* operator->() { return &get(); }
-  const T* operator->() const { return &get(); }
-
-  // Try to extract a `Maybe<T>` from this ReadResult.
-  mozilla::Maybe<T> TakeMaybe() {
-    if (mIsOk) {
-      mIsOk = false;
-      return mozilla::Some(std::move(mData));
-    }
-    return mozilla::Nothing();
-  }
-
-  // Get the underlying data from this ReadResult, even if not OK.
-  //
-  // This is only available for types which are default constructible, and is
-  // used to optimize old-style `ReadParam` calls.
-  T& GetStorage() { return mData; }
-
-  // Compliment to `GetStorage` used to set the ReadResult into an OK state
-  // without constructing the underlying value.
-  void SetOk(bool aIsOk) { mIsOk = aIsOk; }
-
- private:
-  bool mIsOk = false;
-  T mData{};
-};
-
-template <typename T>
-class ReadResult<T, false> {
- public:
-  ReadResult() = default;
-
-  template <typename U, std::enable_if_t<std::is_convertible_v<U, T>, int> = 0>
-  MOZ_IMPLICIT ReadResult(U&& aData)
-      : mData(std::in_place, std::forward<U>(aData)) {}
-
-  template <typename... Args>
-  explicit ReadResult(std::in_place_t, Args&&... aArgs)
-      : mData(std::in_place, std::forward<Args>(aArgs)...) {}
-
-  ReadResult(const ReadResult&) = default;
-  ReadResult(ReadResult&&) = default;
-
-  template <typename U, std::enable_if_t<std::is_convertible_v<U, T>, int> = 0>
-  MOZ_IMPLICIT ReadResult& operator=(U&& aData) {
-    mData.reset();
-    mData.emplace(std::forward<U>(aData));
-    return *this;
-  }
-
-  ReadResult& operator=(const ReadResult&) = default;
-  ReadResult& operator=(ReadResult&&) noexcept = default;
-
-  // Check if the ReadResult contains a valid value.
-  explicit operator bool() const { return isOk(); }
-  bool isOk() const { return mData.isSome(); }
-
-  // Get the data from this ReadResult.
-  T& get() { return mData.ref(); }
-  const T& get() const { return mData.ref(); }
-
-  T& operator*() { return get(); }
-  const T& operator*() const { return get(); }
-
-  T* operator->() { return &get(); }
-  const T* operator->() const { return &get(); }
-
-  // Try to extract a `Maybe<T>` from this ReadResult.
-  mozilla::Maybe<T> TakeMaybe() { return std::move(mData); }
-
-  // These methods are only available if the type is default constructible.
-  T& GetStorage() = delete;
-  void SetOk(bool aIsOk) = delete;
-
- private:
-  mozilla::Maybe<T> mData;
-};
-
 //-----------------------------------------------------------------------------
 // An iterator class for reading the fields contained within a Message.
 
@@ -463,24 +312,33 @@ template <typename P>
 inline bool WARN_UNUSED_RESULT ReadParam(MessageReader* reader, P* p) {
   if constexpr (!detail::ParamTraitsReadUsesOutParam<P>()) {
     auto maybe = ParamTraits<P>::Read(reader);
-    if (maybe) {
-      *p = std::move(*maybe);
-      return true;
+    if (maybe.isNothing()) {
+      return false;
     }
-    return false;
+    *p = maybe.extract();
+    return true;
   } else {
     return ParamTraits<P>::Read(reader, p);
   }
 }
 
 template <typename P>
-inline ReadResult<P> WARN_UNUSED_RESULT ReadParam(MessageReader* reader) {
+inline mozilla::Maybe<P> WARN_UNUSED_RESULT ReadParam(MessageReader* reader) {
   if constexpr (!detail::ParamTraitsReadUsesOutParam<P>()) {
     return ParamTraits<P>::Read(reader);
-  } else {
-    ReadResult<P> p;
-    p.SetOk(ParamTraits<P>::Read(reader, &p.GetStorage()));
+  } else if constexpr (std::is_default_constructible_v<P>) {
+    mozilla::Maybe<P> p{std::in_place};
+    if (!ParamTraits<P>::Read(reader, p.ptr())) {
+      p.reset();
+    }
     return p;
+  } else {
+    static_assert(P::kHasDeprecatedReadParamPrivateConstructor);
+    P p{};
+    if (!ParamTraits<P>::Read(reader, &p)) {
+      return mozilla::Nothing();
+    }
+    return mozilla::Some(std::move(p));
   }
 }
 
@@ -596,8 +454,29 @@ void WriteSequenceParam(MessageWriter* writer, std::remove_reference_t<P>* data,
   }
 }
 
-template <typename P>
-bool ReadSequenceParamImpl(MessageReader* reader, P* data, uint32_t length) {
+/**
+ * Helper for reading a contiguous sequence (such as a string or array) into a
+ * message which was previously written using `WriteSequenceParam`.
+ *
+ * The function argument `allocator` will be called with the length of the
+ * sequence, and must return a pointer to the memory region which the sequence
+ * should be read into.
+ */
+template <typename F,
+          typename P = std::remove_reference_t<
+              decltype(*std::declval<F>()(std::declval<uint32_t>()))>>
+auto WARN_UNUSED_RESULT ReadSequenceParam(MessageReader* reader, F&& allocator)
+    -> std::enable_if_t<
+        std::is_same_v<P*, std::remove_reference_t<
+                               decltype(allocator(std::declval<uint32_t>()))>>,
+        bool> {
+  uint32_t length = 0;
+  if (!reader->ReadUInt32(&length)) {
+    reader->FatalError("failed to read byte length in ReadSequenceParam");
+    return false;
+  }
+
+  P* data = allocator(length);
   if (length == 0) {
     return true;
   }
@@ -624,57 +503,6 @@ bool ReadSequenceParamImpl(MessageReader* reader, P* data, uint32_t length) {
     }
     return true;
   }
-}
-
-template <typename P, typename I>
-bool ReadSequenceParamImpl(MessageReader* reader, mozilla::Maybe<I>&& data,
-                           uint32_t length) {
-  static_assert(!kUseWriteBytes<P>,
-                "Cannot return an output iterator if !kUseWriteBytes<P>");
-  static_assert(
-      std::is_base_of_v<std::output_iterator_tag,
-                        typename std::iterator_traits<I>::iterator_category>,
-      "must be Maybe<output iterator>");
-  if (length == 0) {
-    return true;
-  }
-  if (!data) {
-    reader->FatalError("allocation failed in ReadSequenceParam");
-    return false;
-  }
-
-  for (uint32_t i = 0; i < length; ++i) {
-    auto elt = ReadParam<P>(reader);
-    if (!elt) {
-      return false;
-    }
-    *data.ref() = std::move(*elt);
-    ++data.ref();
-  }
-  return true;
-}
-
-/**
- * Helper for reading a contiguous sequence (such as a string or array) into a
- * message which was previously written using `WriteSequenceParam`.
- *
- * The function argument `allocator` will be called with the length of the
- * sequence, and must return either a pointer to the memory region which the
- * sequence should be read into, or a Maybe of a C++ output iterator which will
- * infallibly accept length elements, and append them to the output sequence.
- *
- * If the type satisfies kUseWriteBytes, output iterators are not supported.
- */
-template <typename P, typename F>
-bool WARN_UNUSED_RESULT ReadSequenceParam(MessageReader* reader,
-                                          F&& allocator) {
-  uint32_t length = 0;
-  if (!reader->ReadUInt32(&length)) {
-    reader->FatalError("failed to read byte length in ReadSequenceParam");
-    return false;
-  }
-
-  return ReadSequenceParamImpl<P>(reader, allocator(length), length);
 }
 
 // Temporary fallback class to allow types to declare serialization using the
@@ -855,7 +683,7 @@ struct ParamTraitsStd<std::basic_string<T>> {
     WriteSequenceParam<const T&>(writer, p.data(), p.size());
   }
   static bool Read(MessageReader* reader, param_type* r) {
-    return ReadSequenceParam<T>(reader, [&](uint32_t length) -> T* {
+    return ReadSequenceParam(reader, [&](uint32_t length) -> T* {
       r->resize(length);
       return r->data();
     });
@@ -1052,25 +880,6 @@ struct ParamTraitsMozilla<nsCOMPtr<T>> {
     }
     *r = std::move(refptr);
     return true;
-  }
-};
-
-template <class T>
-struct ParamTraitsMozilla<mozilla::NotNull<T>> {
-  static void Write(MessageWriter* writer, const mozilla::NotNull<T>& p) {
-    ParamTraits<T>::Write(writer, p.get());
-  }
-
-  static ReadResult<mozilla::NotNull<T>> Read(MessageReader* reader) {
-    auto ptr = ReadParam<T>(reader);
-    if (!ptr) {
-      return {};
-    }
-    if (!*ptr) {
-      reader->FatalError("unexpected null value");
-      return {};
-    }
-    return mozilla::WrapNotNull(std::move(*ptr));
   }
 };
 

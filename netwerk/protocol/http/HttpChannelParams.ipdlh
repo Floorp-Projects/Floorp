@@ -27,8 +27,8 @@ namespace net {
 
 struct HttpChannelOnStartRequestArgs
 {
-  nullable nsITransportSecurityInfo securityInfo;
-  nullable nsIReferrerInfo overrideReferrerInfo;
+  nsITransportSecurityInfo securityInfo;
+  nsIReferrerInfo overrideReferrerInfo;
   uint64_t cacheEntryId;
   int64_t altDataLength;
   nsCString altDataType;

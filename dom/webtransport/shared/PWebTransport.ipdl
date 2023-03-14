@@ -11,8 +11,8 @@ using mozilla::TimeStamp from "mozilla/TimeStamp.h";
 namespace mozilla {
 namespace dom {
 struct BidirectionalStream {
-  nullable DataPipeReceiver inStream;
-  nullable DataPipeSender outStream;
+  DataPipeReceiver inStream;
+  DataPipeSender outStream;
 };
 
 union BidirectionalStreamResponse {
@@ -28,7 +28,7 @@ async protocol PWebTransport
    */
   async Close(uint32_t code, nsCString reason);
   async CreateUnidirectionalStream(int64_t? sendOrder)
-      returns(nullable DataPipeSender sender);
+      returns(DataPipeSender sender);
   async CreateBidirectionalStream(int64_t? sendOrder)
       returns(BidirectionalStreamResponse response);
 
@@ -42,8 +42,8 @@ async protocol PWebTransport
 
  child:
 
-  async IncomingUnidirectionalStream(nullable DataPipeReceiver receive);
-  async IncomingBidirectionalStream(nullable DataPipeReceiver receive, nullable DataPipeSender send);
+  async IncomingUnidirectionalStream(DataPipeReceiver receive);
+  async IncomingBidirectionalStream(DataPipeReceiver receive, DataPipeSender send);
 
   /**
   * IPC for receiving webtransport datagrams

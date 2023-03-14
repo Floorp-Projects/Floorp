@@ -27,7 +27,7 @@ async protocol PWebSocket
 
 parent:
   // Forwarded methods corresponding to methods on nsIWebSocketChannel
-  async AsyncOpen(nullable nsIURI aURI,
+  async AsyncOpen(nsIURI aURI,
                   nsCString aOrigin,
                   OriginAttributes aOriginAttributes,
                   uint64_t aInnerWindowID,

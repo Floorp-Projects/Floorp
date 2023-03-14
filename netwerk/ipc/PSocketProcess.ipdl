@@ -123,8 +123,8 @@ parent:
                             nsCString aExtraStringData);
   async InitBackground(Endpoint<PBackgroundStarterParent> aEndpoint);
   async PAltService();
-  async PProxyConfigLookup(nullable nsIURI aUri, uint32_t aFlags);
-  async CachePushCheck(nullable nsIURI aPushedURL,
+  async PProxyConfigLookup(nsIURI aUri, uint32_t aFlags);
+  async CachePushCheck(nsIURI aPushedURL,
                        OriginAttributes aOriginAttributes,
                        nsCString aRequestString)
     returns (bool aAccepted);

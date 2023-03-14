@@ -28,7 +28,7 @@ struct WebBrowserPersistDocumentAttrs {
   nsCString contentType;
   nsCString characterSet;
   nsString title;
-  nullable nsIReferrerInfo referrerInfo;
+  nsIReferrerInfo referrerInfo;
   CookieJarSettingsArgs cookieJarSettings;
   nsString contentDisposition;
   uint32_t sessionHistoryCacheKey;

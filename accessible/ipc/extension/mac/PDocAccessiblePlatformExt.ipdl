@@ -19,7 +19,7 @@ namespace a11y {
 struct TextAttributesRun {
   nsString Text;
   uint64_t ContainerID;
-  nullable AccAttributes TextAttributes;
+  AccAttributes TextAttributes;
 };
 
 

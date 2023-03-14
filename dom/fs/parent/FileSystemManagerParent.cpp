@@ -216,8 +216,7 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetWritable(
   }
 
   auto writableFileStreamParent =
-      MakeNotNull<RefPtr<FileSystemWritableFileStreamParent>>(
-          this, aRequest.entryId());
+      MakeRefPtr<FileSystemWritableFileStreamParent>(this, aRequest.entryId());
 
   QM_TRY_UNWRAP(
       nsCOMPtr<nsIRandomAccessStream> stream,
@@ -243,8 +242,8 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetWritable(
     return IPC_OK();
   }
 
-  aResolver(FileSystemWritableFileStreamProperties(std::move(streamParams),
-                                                   writableFileStreamParent));
+  aResolver(FileSystemWritableFileStreamProperties(
+      std::move(streamParams), writableFileStreamParent, nullptr));
 
   return IPC_OK();
 }

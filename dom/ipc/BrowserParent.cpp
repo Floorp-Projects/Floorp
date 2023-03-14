@@ -871,7 +871,7 @@ void BrowserParent::LoadURL(nsDocShellLoadState* aLoadState) {
     return;
   }
 
-  Unused << SendLoadURL(WrapNotNull(aLoadState), GetShowInfo());
+  Unused << SendLoadURL(aLoadState, GetShowInfo());
 }
 
 void BrowserParent::ResumeLoad(uint64_t aPendingSwitchID) {

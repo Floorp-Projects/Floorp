@@ -74,8 +74,7 @@ nsresult TCPServerSocketParent::SendCallbackAccept(TCPSocketParent* socket) {
       // successfully, otherwise |socket| could be leaked.
       socket->AddIPDLReference();
 
-      mozilla::Unused << PTCPServerSocketParent::SendCallbackAccept(
-          WrapNotNull(socket));
+      mozilla::Unused << PTCPServerSocketParent::SendCallbackAccept(socket);
     } else {
       NS_ERROR("Sending data from PTCPSocketParent was failed.");
     }

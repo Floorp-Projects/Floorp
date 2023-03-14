@@ -122,8 +122,8 @@ struct WebProgressData
 
 struct RequestData
 {
-  nullable nsIURI requestURI;
-  nullable nsIURI originalRequestURI;
+  nsIURI requestURI;
+  nsIURI originalRequestURI;
   nsCString matchedList;
 };
 
@@ -136,7 +136,7 @@ struct WebProgressStateChangeData
   // this struct is |nsIWebProgress.STATE_STOP|.
   nsString contentType;
   nsString charset;
-  nullable nsIURI documentURI;
+  nsIURI documentURI;
 };
 
 struct WebProgressLocationChangeData
@@ -147,11 +147,11 @@ struct WebProgressLocationChangeData
   nsString contentType;
   nsString title;
   nsString charset;
-  nullable nsIURI documentURI;
-  nullable nsIPrincipal contentPrincipal;
-  nullable nsIPrincipal contentPartitionedPrincipal;
-  nullable nsIContentSecurityPolicy csp;
-  nullable nsIReferrerInfo referrerInfo;
+  nsIURI documentURI;
+  nsIPrincipal contentPrincipal;
+  nsIPrincipal contentPartitionedPrincipal;
+  nsIContentSecurityPolicy csp;
+  nsIReferrerInfo referrerInfo;
   uint64_t? requestContextID;
 };
 
@@ -531,8 +531,8 @@ parent:
 
     async AccessKeyNotHandled(WidgetKeyboardEvent event);
 
-    async RegisterProtocolHandler(nsString scheme, nullable nsIURI handlerURI, nsString title,
-                                  nullable nsIURI documentURI);
+    async RegisterProtocolHandler(nsString scheme, nsIURI handlerURI, nsString title,
+                                  nsIURI documentURI);
 
     async OnStateChange(WebProgressData aWebProgressData,
                         RequestData aRequestData, uint32_t aStateFlags,
@@ -540,7 +540,7 @@ parent:
                         WebProgressStateChangeData? aStateChangeData);
 
     async OnLocationChange(WebProgressData aWebProgressData,
-                           RequestData aRequestData, nullable nsIURI aLocation,
+                           RequestData aRequestData, nsIURI aLocation,
                            uint32_t aFlags, bool aCanGoBack,
                            bool aCanGoForward,
                            WebProgressLocationChangeData? aLocationChangeData);
@@ -632,8 +632,7 @@ parent:
                             BigBuffer? visualData,
                             uint32_t stride, SurfaceFormat format,
                             LayoutDeviceIntRect dragRect,
-                            nullable nsIPrincipal principal,
-                            nullable nsIContentSecurityPolicy csp,
+                            nsIPrincipal principal, nsIContentSecurityPolicy csp,
                             CookieJarSettingsArgs cookieJarSettings,
                             MaybeDiscardedWindowContext sourceWindowContext,
                             MaybeDiscardedWindowContext sourceTopWindowContext);
@@ -696,8 +695,8 @@ child:
 
     async LoadURL(nsDocShellLoadState loadState, ParentShowInfo info);
 
-    async CreateAboutBlankContentViewer(nullable nsIPrincipal principal,
-                                        nullable nsIPrincipal partitionedPrincipal);
+    async CreateAboutBlankContentViewer(nsIPrincipal principal,
+                                        nsIPrincipal partitionedPrincipal);
 
     async ResumeLoad(uint64_t pendingSwitchID, ParentShowInfo info);
 
@@ -845,8 +844,8 @@ child:
      * don't need support RealDragEvent with input priority.
      */
     async RealDragEvent(WidgetDragEvent aEvent, uint32_t aDragAction,
-                        uint32_t aDropEffect, nullable nsIPrincipal aPrincipal,
-                        nullable nsIContentSecurityPolicy csp);
+                        uint32_t aDropEffect, nsIPrincipal aPrincipal,
+                        nsIContentSecurityPolicy csp);
 
     [Priority=input] async CompositionEvent(WidgetCompositionEvent event);
     async NormalPriorityCompositionEvent(WidgetCompositionEvent event);
@@ -866,7 +865,7 @@ child:
      */
     async PasteTransferable(IPCDataTransfer aDataTransfer,
                             bool aIsPrivateData,
-                            nullable nsIPrincipal aRequestingPrincipal,
+                            nsIPrincipal aRequestingPrincipal,
                             nsContentPolicyType aContentPolicyType);
 
     async LoadRemoteScript(nsString aURL, bool aRunInGlobalScope);
@@ -1004,10 +1003,10 @@ parent:
     async IsWindowSupportingWebVR(uint64_t aOuterWindowID) returns(bool isSupported);
 
     /** Records a history visit. */
-    async VisitURI(nullable nsIURI aURI, nullable nsIURI aLastVisitedURI, uint32_t aFlags, uint64_t aBrowserId);
+    async VisitURI(nsIURI aURI, nsIURI aLastVisitedURI, uint32_t aFlags, uint64_t aBrowserId);
 
     /** Fetches the visited status for an array of URIs (Android-only). */
-    async QueryVisitedState(nullable nsIURI[] aURIs);
+    async QueryVisitedState(nsIURI[] aURIs);
 
     /** Create a session store for a browser child. */
     async PSessionStore();

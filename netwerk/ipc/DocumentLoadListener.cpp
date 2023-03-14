@@ -2099,7 +2099,7 @@ DocumentLoadListener::RedirectToRealChannel(
                           aLoadFlags, cp, std::move(ehArgs));
     if (mTiming) {
       mTiming->Anonymize(args.uri());
-      args.timing() = std::move(mTiming);
+      args.timing() = Some(std::move(mTiming));
     }
 
     auto loadInfo = args.loadInfo();

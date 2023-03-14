@@ -36,16 +36,16 @@ protocol PExtensions
 
     async DocumentChange(MaybeDiscardedBrowsingContext bc,
                          FrameTransitionData transitionData,
-                         nullable nsIURI location);
+                         nsIURI location);
 
     async HistoryChange(MaybeDiscardedBrowsingContext bc,
                         FrameTransitionData transitionData,
-                        nullable nsIURI location,
+                        nsIURI location,
                         bool isHistoryStateUpdated,
                         bool isReferenceFragmentUpdated);
 
     async StateChange(MaybeDiscardedBrowsingContext bc,
-                      nullable nsIURI requestURI,
+                      nsIURI requestURI,
                       nsresult status,
                       uint32_t stateFlags);
 
@@ -54,7 +54,7 @@ protocol PExtensions
                                   nsCString url);
 
     async DOMContentLoaded(MaybeDiscardedBrowsingContext bc,
-                           nullable nsIURI documentURI);
+                           nsIURI documentURI);
 };
 
 } // namespace extensions

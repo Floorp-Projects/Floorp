@@ -958,7 +958,7 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
       MOZ_DIAGNOSTIC_ASSERT(id);
       DocAccessibleChild* ipcDoc = childDoc->IPCDoc();
       if (ipcDoc) {
-        parentIPCDoc->SendBindChildDoc(WrapNotNull(ipcDoc), id);
+        parentIPCDoc->SendBindChildDoc(ipcDoc, id);
         continue;
       }
 

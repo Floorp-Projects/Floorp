@@ -123,13 +123,14 @@ nsresult HttpTransactionParent::Init(
   Maybe<H2PushedStreamArg> pushedStreamArg;
   if (aTransWithPushedStream && aPushedStreamId) {
     MOZ_ASSERT(aTransWithPushedStream->AsHttpTransactionParent());
-    pushedStreamArg.emplace(
-        WrapNotNull(aTransWithPushedStream->AsHttpTransactionParent()),
-        aPushedStreamId);
+    pushedStreamArg.emplace();
+    pushedStreamArg.ref().transWithPushedStreamParent() =
+        aTransWithPushedStream->AsHttpTransactionParent();
+    pushedStreamArg.ref().pushedStreamId() = aPushedStreamId;
   }
 
   nsCOMPtr<nsIThrottledInputChannel> throttled = do_QueryInterface(mEventsink);
-  Maybe<NotNull<PInputChannelThrottleQueueParent*>> throttleQueue;
+  Maybe<PInputChannelThrottleQueueParent*> throttleQueue;
   if (throttled) {
     nsCOMPtr<nsIInputChannelThrottleQueue> queue;
     nsresult rv = throttled->GetThrottleQueue(getter_AddRefs(queue));
@@ -139,7 +140,7 @@ nsresult HttpTransactionParent::Init(
             queue.get()));
       RefPtr<InputChannelThrottleQueueParent> tqParent = do_QueryObject(queue);
       MOZ_ASSERT(tqParent);
-      throttleQueue.emplace(WrapNotNull(tqParent.get()));
+      throttleQueue.emplace(tqParent.get());
     }
   }
 

@@ -148,8 +148,7 @@ nsresult HttpConnectionMgrParent::AddTransaction(HttpTransactionShell* aTrans,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  Unused << SendAddTransaction(WrapNotNull(aTrans->AsHttpTransactionParent()),
-                               aPriority);
+  Unused << SendAddTransaction(aTrans->AsHttpTransactionParent(), aPriority);
   return NS_OK;
 }
 
@@ -163,8 +162,8 @@ nsresult HttpConnectionMgrParent::AddTransactionWithStickyConn(
   }
 
   Unused << SendAddTransactionWithStickyConn(
-      WrapNotNull(aTrans->AsHttpTransactionParent()), aPriority,
-      WrapNotNull(aTransWithStickyConn->AsHttpTransactionParent()));
+      aTrans->AsHttpTransactionParent(), aPriority,
+      aTransWithStickyConn->AsHttpTransactionParent());
   return NS_OK;
 }
 
@@ -176,8 +175,8 @@ nsresult HttpConnectionMgrParent::RescheduleTransaction(
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  Unused << SendRescheduleTransaction(
-      WrapNotNull(aTrans->AsHttpTransactionParent()), aPriority);
+  Unused << SendRescheduleTransaction(aTrans->AsHttpTransactionParent(),
+                                      aPriority);
   return NS_OK;
 }
 
@@ -190,7 +189,7 @@ void HttpConnectionMgrParent::UpdateClassOfServiceOnTransaction(
   }
 
   Unused << SendUpdateClassOfServiceOnTransaction(
-      WrapNotNull(aTrans->AsHttpTransactionParent()), aClassOfService);
+      aTrans->AsHttpTransactionParent(), aClassOfService);
 }
 
 nsresult HttpConnectionMgrParent::CancelTransaction(
@@ -201,8 +200,7 @@ nsresult HttpConnectionMgrParent::CancelTransaction(
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  Unused << SendCancelTransaction(
-      WrapNotNull(aTrans->AsHttpTransactionParent()), aReason);
+  Unused << SendCancelTransaction(aTrans->AsHttpTransactionParent(), aReason);
   return NS_OK;
 }
 
@@ -250,9 +248,9 @@ nsresult HttpConnectionMgrParent::SpeculativeConnect(
   auto task = [self, connInfo{std::move(connInfo)},
                overriderArgs{std::move(overriderArgs)}, aCaps,
                trans{std::move(trans)}, aFetchHTTPSRR]() {
-    Maybe<NotNull<AltSvcTransactionParent*>> maybeTrans;
+    Maybe<AltSvcTransactionParent*> maybeTrans;
     if (trans) {
-      maybeTrans.emplace(WrapNotNull(trans.get()));
+      maybeTrans.emplace(trans.get());
     }
     Unused << self->SendSpeculativeConnect(connInfo, overriderArgs, aCaps,
                                            maybeTrans, aFetchHTTPSRR);
@@ -303,8 +301,7 @@ nsresult HttpConnectionMgrParent::CompleteUpgrade(
   // We need to link the id and the upgrade listener here, so
   // WebSocketConnectionParent can connect to the listener correctly later.
   uint32_t id = AddHttpUpgradeListenerToMap(aUpgradeListener);
-  Unused << SendStartWebSocketConnection(
-      WrapNotNull(aTrans->AsHttpTransactionParent()), id);
+  Unused << SendStartWebSocketConnection(aTrans->AsHttpTransactionParent(), id);
   return NS_OK;
 }
 

@@ -507,7 +507,7 @@ already_AddRefed<ReadStream> ReadStream::Create(
   // The parameter may or may not be for a Cache created stream.  The way we
   // tell is by looking at the stream control actor.  If the actor exists,
   // then we know the Cache created it.
-  if (!aReadStream.control()) {
+  if (!aReadStream.controlChild() && !aReadStream.controlParent()) {
     return nullptr;
   }
 
@@ -518,13 +518,13 @@ already_AddRefed<ReadStream> ReadStream::Create(
   // Control is guaranteed to survive this method as ActorDestroy() cannot
   // run on this thread until we complete.
   StreamControl* control;
-  if (aReadStream.control().IsChild()) {
+  if (aReadStream.controlChild()) {
     auto actor =
-        static_cast<CacheStreamControlChild*>(aReadStream.control().AsChild());
+        static_cast<CacheStreamControlChild*>(aReadStream.controlChild());
     control = actor;
   } else {
-    auto actor = static_cast<CacheStreamControlParent*>(
-        aReadStream.control().AsParent());
+    auto actor =
+        static_cast<CacheStreamControlParent*>(aReadStream.controlParent());
     control = actor;
   }
   MOZ_DIAGNOSTIC_ASSERT(control);

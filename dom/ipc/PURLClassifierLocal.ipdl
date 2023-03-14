@@ -20,7 +20,7 @@ namespace dom {
 
 struct URLClassifierLocalResult
 {
-  nullable nsIURI uri;
+  nsIURI uri;
   nsCString featureName;
   nsCString matchingList;
 };
