@@ -20,8 +20,6 @@ using class mozilla::net::nsHttpHeaderArray from "nsHttpHeaderArray.h";
 using mozilla::net::NetAddr from "mozilla/net/DNS.h";
 using mozilla::net::ClassOfService from "mozilla/net/ClassOfService.h";
 [RefCounted] using class nsITransportSecurityInfo from "nsITransportSecurityInfo.h";
-using mozilla::net::TRRSkippedReason from "nsITRRSkipReason.h";
-using nsIRequest::TRRMode from "nsIRequest.h";
 
 namespace mozilla {
 namespace net {
@@ -35,8 +33,6 @@ struct NetworkAddressArg {
   NetAddr selfAddr;
   NetAddr peerAddr;
   bool resolvedByTRR;
-  TRRMode mode;
-  TRRSkippedReason trrSkipReason;
   bool echConfigUsed;
 };
 
@@ -56,9 +52,7 @@ parent:
                        bool                       dataToChildProcess,
                        bool                       restarted,
                        uint32_t                   HTTPSSVCReceivedStage,
-                       bool                       supportsHttp3,
-                       TRRMode trrMode,
-                       TRRSkippedReason trrSkipReason);
+                       bool                       supportsHttp3);
   async OnTransportStatus(nsresult status,
                           int64_t progress,
                           int64_t progressMax,
