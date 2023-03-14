@@ -148,7 +148,7 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
       accessible->Description(description);
 
       cacheData.AppendElement(BatchData(
-          OriginDocument(accessible->Document()->IPCDoc()),
+          OriginDocument(WrapNotNull(accessible->Document()->IPCDoc())),
           UNIQUE_ID(accessible), accessible->State(), accessible->Bounds(),
           accessible->ActionCount(), name, textValue, nodeID, description,
           UnspecifiedNaN<double>(), UnspecifiedNaN<double>(),
@@ -186,7 +186,8 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
         // In that case, just throw away this update. We will get a new one soon
         // enough.
         ipcDoc->GetPlatformExtension()->SendSetPivotBoundaries(
-            firstDoc, UNIQUE_ID(first), lastDoc, UNIQUE_ID(last));
+            WrapNotNull(firstDoc), UNIQUE_ID(first), WrapNotNull(lastDoc),
+            UNIQUE_ID(last));
       }
     } else if (RefPtr<SessionAccessibility> sessionAcc =
                    SessionAccessibility::GetInstanceFor(docAcc)) {
@@ -256,11 +257,11 @@ void DocAccessibleWrap::CacheFocusPath(AccessibleWrap* aAccessible) {
       nsAutoString description;
       acc->Description(description);
       RefPtr<AccAttributes> attributes = acc->Attributes();
-      cacheData.AppendElement(
-          BatchData(OriginDocument(acc->Document()->IPCDoc()), UNIQUE_ID(acc),
-                    acc->State(), acc->Bounds(), acc->ActionCount(), name,
-                    textValue, nodeID, description, acc->CurValue(),
-                    acc->MinValue(), acc->MaxValue(), acc->Step(), attributes));
+      cacheData.AppendElement(BatchData(
+          OriginDocument(WrapNotNull(acc->Document()->IPCDoc())),
+          UNIQUE_ID(acc), acc->State(), acc->Bounds(), acc->ActionCount(), name,
+          textValue, nodeID, description, acc->CurValue(), acc->MinValue(),
+          acc->MaxValue(), acc->Step(), attributes));
       mFocusPath.InsertOrUpdate(acc->UniqueID(), RefPtr{acc});
     }
 
@@ -298,7 +299,7 @@ void DocAccessibleWrap::UpdateFocusPathBounds() {
       }
 
       boundsData.AppendElement(BatchData(
-          OriginDocument(accessible->Document()->IPCDoc()),
+          OriginDocument(WrapNotNull(accessible->Document()->IPCDoc())),
           UNIQUE_ID(accessible), 0, accessible->Bounds(), 0, nsString(),
           nsString(), nsString(), nsString(), UnspecifiedNaN<double>(),
           UnspecifiedNaN<double>(), UnspecifiedNaN<double>(),

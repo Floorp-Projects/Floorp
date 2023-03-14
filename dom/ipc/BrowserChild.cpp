@@ -714,8 +714,8 @@ BrowserChild::ProvideWindow(nsIOpenWindowInfo* aOpenWindowInfo,
   // code back to our caller.
   ContentChild* cc = ContentChild::GetSingleton();
   return cc->ProvideWindowCommon(
-      this, aOpenWindowInfo, aChromeFlags, aCalledFromJS, aURI, aName,
-      aFeatures, aForceNoOpener, aForceNoReferrer, aIsPopupRequested,
+      WrapNotNull(this), aOpenWindowInfo, aChromeFlags, aCalledFromJS, aURI,
+      aName, aFeatures, aForceNoOpener, aForceNoReferrer, aIsPopupRequested,
       aLoadState, aWindowIsNew, aReturn);
 }
 

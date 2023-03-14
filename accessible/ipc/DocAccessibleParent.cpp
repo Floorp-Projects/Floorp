@@ -801,7 +801,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvRoleChangedEvent(
 }
 
 mozilla::ipc::IPCResult DocAccessibleParent::RecvBindChildDoc(
-    PDocAccessibleParent* aChildDoc, const uint64_t& aID) {
+    NotNull<PDocAccessibleParent*> aChildDoc, const uint64_t& aID) {
   ACQUIRE_ANDROID_LOCK
   // One document should never directly be the child of another.
   // We should always have at least an outer doc accessible in between.
@@ -814,7 +814,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvBindChildDoc(
 
   MOZ_ASSERT(CheckDocTree());
 
-  auto childDoc = static_cast<DocAccessibleParent*>(aChildDoc);
+  auto childDoc = static_cast<DocAccessibleParent*>(aChildDoc.get());
   childDoc->Unbind();
   ipc::IPCResult result = AddChildDoc(childDoc, aID, false);
   MOZ_ASSERT(result);
@@ -1249,7 +1249,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvBatch(
   nsTArray<RemoteAccessible*> proxies(aData.Length());
   for (size_t i = 0; i < aData.Length(); i++) {
     DocAccessibleParent* doc = static_cast<DocAccessibleParent*>(
-        aData.ElementAt(i).Document().get_PDocAccessible().AsParent());
+        aData.ElementAt(i).Document().get_PDocAccessible().AsParent().get());
     MOZ_ASSERT(doc);
 
     if (doc->IsShutdown()) {

@@ -53,7 +53,7 @@ WebBrowserPersistResourcesChild::VisitDocument(
   // state that causes a document's parent actor to be exposed to
   // XPCOM (for both parent->child and child->parent construction),
   // which simplifies the lifetime management.
-  SendVisitDocument(subActor);
+  SendVisitDocument(WrapNotNull(subActor));
   subActor->Start(aSubDocument);
   return NS_OK;
 }
