@@ -86,17 +86,19 @@ void MFCDMChild::Shutdown() {
   mUpdateSessionRequest.DisconnectIfExists();
   mCloseSessionRequest.DisconnectIfExists();
 
-  mRemotePromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
-  mCapabilitiesPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
-  mInitPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
-  mCreateSessionPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
-  mLoadSessionPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
-  mUpdateSessionPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
-  mCloseSessionPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
-
   if (mState == NS_OK) {
-    mManagerThread->Dispatch(NS_NewRunnableFunction(
-        __func__, [self = RefPtr{this}, this]() { Send__delete__(this); }));
+    mManagerThread->Dispatch(
+        NS_NewRunnableFunction(__func__, [self = RefPtr{this}, this]() {
+          mRemotePromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
+          mCapabilitiesPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
+          mInitPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
+          mCreateSessionPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
+          mLoadSessionPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
+          mUpdateSessionPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
+          mCloseSessionPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
+
+          Send__delete__(this);
+        }));
   }
 }
 
