@@ -46,8 +46,9 @@ parent:
   async Redirect2Verify(nsresult result, RequestHeaderTuples changedHeaders,
                         uint32_t sourceRequestBlockingReason,
                         ChildLoadInfoForwarderArgs? targetLoadInfoForwarder,
-                        uint32_t loadFlags, nsIReferrerInfo referrerInfo,
-                        nsIURI apiRedirectTo,
+                        uint32_t loadFlags,
+                        nullable nsIReferrerInfo referrerInfo,
+                        nullable nsIURI apiRedirectTo,
                         CorsPreflightArgs? corsPreflightArgs);
 
   // For document loads we keep this protocol open after child's
@@ -57,7 +58,7 @@ parent:
 
   // Child has detected a CORS check failure, so needs to tell the parent
   // to remove any matching entry from the CORS preflight cache.
-  async RemoveCorsPreflightCacheEntry(nsIURI uri,
+  async RemoveCorsPreflightCacheEntry(nullable nsIURI uri,
                                       PrincipalInfo requestingPrincipal,
                                       OriginAttributes originAttributes);
 
@@ -89,12 +90,12 @@ child:
   // Called to initiate content channel redirect, starts talking to sinks
   // on the content process and reports result via Redirect2Verify above
   async Redirect1Begin(uint32_t           registrarId,
-                       nsIURI             newOriginalUri,
+                       nullable nsIURI    newOriginalUri,
                        uint32_t           newLoadFlags,
                        uint32_t           redirectFlags,
                        ParentLoadInfoForwarderArgs loadInfoForwarder,
                        nsHttpResponseHead responseHead,
-                       nsITransportSecurityInfo securityInfo,
+                       nullable nsITransportSecurityInfo securityInfo,
                        uint64_t           channelId,
                        NetAddr            oldPeerAddr,
                        ResourceTimingStructArgs timing);

@@ -34,11 +34,11 @@ namespace net {
 parent:
   [Nested=inside_cpow] async SetCookies(nsCString baseDomain,
                                         OriginAttributes attrs,
-                                        nsIURI host,
+                                        nullable nsIURI host,
                                         bool fromHttp,
                                         CookieStruct[] cookies);
 
-  async PrepareCookieList(nsIURI host,
+  async PrepareCookieList(nullable nsIURI host,
                           bool isForeign,
                           bool isThirdPartyTrackingResource,
                           bool isThirdPartySocialTrackingResource,

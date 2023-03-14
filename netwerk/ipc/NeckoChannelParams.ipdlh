@@ -181,7 +181,7 @@ struct LoadInfoArgs
   bool                        isMetaRefresh;
   CrossOriginEmbedderPolicy   loadingEmbedderPolicy;
   bool                        originTrialCoepCredentiallessEnabledForTopLevel;
-  nsIURI                      unstrippedURI;
+  nullable nsIURI             unstrippedURI;
   InterceptionInfoArg?        interceptionInfo;
 };
 
@@ -253,7 +253,7 @@ struct ParentLoadInfoForwarderArgs
 
   bool isInThirdPartyContext;
 
-  nsIURI unstrippedURI;
+  nullable nsIURI unstrippedURI;
 
   // IMPORTANT: when you add new properites here you must also update
   // LoadInfoToParentLoadInfoForwarder and MergeParentLoadInfoForwarder
@@ -292,15 +292,15 @@ struct CorsPreflightArgs
 
 struct HttpChannelOpenArgs
 {
-  nsIURI                      uri;
+  nullable nsIURI             uri;
   // - TODO: bug 571161: unclear if any HTTP channel clients ever
   // set originalURI != uri (about:credits?); also not clear if
   // chrome channel would ever need to know.  Get rid of next arg?
-  nsIURI                      original;
-  nsIURI                      doc;
-  nsIReferrerInfo             referrerInfo;
-  nsIURI                      apiRedirectTo;
-  nsIURI                      topWindowURI;
+  nullable nsIURI             original;
+  nullable nsIURI             doc;
+  nullable nsIReferrerInfo    referrerInfo;
+  nullable nsIURI             apiRedirectTo;
+  nullable nsIURI             topWindowURI;
   RequestHeaderTuples         requestHeaders;
   PreferredAlternativeDataTypeParams[] preferredAlternativeTypes;
   TimeStamp                   launchServiceWorkerStart;
@@ -453,11 +453,11 @@ union DocumentChannelElementCreationArgs {
 };
 
 struct DocumentChannelCreationArgs {
-  nsDocShellLoadState loadState;
+  nullable nsDocShellLoadState loadState;
   TimeStamp asyncOpenTime;
   uint64_t channelId;
   uint32_t cacheKey;
-  nsDOMNavigationTiming? timing;
+  nullable nsDOMNavigationTiming? timing;
   IPCClientInfo? initialClientInfo;
   DocumentChannelElementCreationArgs elementCreationArgs;
   uint64_t parentInitiatedNavigationEpoch;
@@ -470,23 +470,23 @@ struct EarlyHintConnectArgs {
 
 struct RedirectToRealChannelArgs {
   uint32_t registrarId;
-  nsIURI uri;
+  nullable nsIURI uri;
   uint32_t newLoadFlags;
   ReplacementChannelConfigInit? init;
   LoadInfoArgs? loadInfo;
   uint64_t channelId;
-  nsIURI originalURI;
+  nullable nsIURI originalURI;
   uint32_t redirectMode;
   uint32_t redirectFlags;
   uint32_t? contentDisposition;
   nsString? contentDispositionFilename;
-  nsIPropertyBag2 properties;
+  nullable nsIPropertyBag2 properties;
   uint32_t loadStateExternalLoadFlags;
   uint32_t loadStateInternalLoadFlags;
   uint32_t loadStateLoadType;
-  nsDOMNavigationTiming? timing;
+  nullable nsDOMNavigationTiming? timing;
   nsString srcdocData;
-  nsIURI baseUri;
+  nullable nsIURI baseUri;
   LoadingSessionHistoryInfo? loadingSessionHistoryInfo;
   uint64_t loadIdentifier;
   nsCString? originalUriString;
@@ -595,7 +595,7 @@ union GIOChannelCreationArgs
 };
 
 struct RemoteStreamInfo {
-  nsIInputStream inputStream;
+  nullable nsIInputStream inputStream;
   nsCString contentType;
   int64_t contentLength;
 };
