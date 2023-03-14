@@ -7,6 +7,7 @@
 #include "js/experimental/JSStencil.h"  // JS::Stencil, JS::CompileModuleScriptToStencil, JS::InstantiateModuleStencil
 #include "js/loader/ModuleLoadRequest.h"
 #include "mozilla/dom/WorkerLoadContext.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/workerinternals/ScriptLoader.h"
 #include "WorkerModuleLoader.h"
 
@@ -31,6 +32,11 @@ WorkerModuleLoader::WorkerModuleLoader(WorkerScriptLoader* aScriptLoader,
                                        nsIGlobalObject* aGlobalObject,
                                        nsISerialEventTarget* aEventTarget)
     : ModuleLoaderBase(aScriptLoader, aGlobalObject, aEventTarget) {}
+
+nsIURI* WorkerModuleLoader::GetBaseURI() const {
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+  return workerPrivate->GetBaseURI();
+}
 
 already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateStaticImport(
     nsIURI* aURI, ModuleLoadRequest* aParent) {

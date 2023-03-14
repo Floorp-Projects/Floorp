@@ -744,7 +744,7 @@ ResolveResult ModuleLoaderBase::ResolveModuleSpecifier(
   if (aScript) {
     baseURL = aScript->BaseURL();
   } else {
-    baseURL = mLoader->GetBaseURI();
+    baseURL = GetBaseURI();
   }
 
   rv = NS_NewURI(getter_AddRefs(uri), aSpecifier, nullptr, baseURL);
