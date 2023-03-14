@@ -238,7 +238,6 @@ def check_misspelled_pings(
 def check_tags_required(
     metric_or_ping: Union[metrics.Metric, pings.Ping], parser_config: Dict[str, Any]
 ) -> LintGenerator:
-
     if parser_config.get("require_tags", False) and not len(
         metric_or_ping.metadata.get("tags", [])
     ):
@@ -248,7 +247,6 @@ def check_tags_required(
 def check_user_lifetime_expiration(
     metric: metrics.Metric, parser_config: Dict[str, Any]
 ) -> LintGenerator:
-
     if metric.lifetime == metrics.Lifetime.user and metric.expires != "never":
         yield (
             "Metrics with 'user' lifetime cannot have an expiration date. "
@@ -390,9 +388,9 @@ def _lint_pings(
 ) -> List[GlinterNit]:
     nits: List[GlinterNit] = []
 
-    for (ping_name, ping) in sorted(list(category.items())):
+    for ping_name, ping in sorted(list(category.items())):
         assert isinstance(ping, pings.Ping)
-        for (check_name, (check_func, check_type)) in PING_CHECKS.items():
+        for check_name, (check_func, check_type) in PING_CHECKS.items():
             new_nits = list(check_func(ping, parser_config))
             if len(new_nits):
                 if check_name not in ping.no_lint:
@@ -433,7 +431,7 @@ def lint_metrics(
 
     nits: List[GlinterNit] = []
     valid_tag_names = [tag for tag in objs.get("tags", [])]
-    for (category_name, category) in sorted(list(objs.items())):
+    for category_name, category in sorted(list(objs.items())):
         if category_name == "pings":
             nits.extend(_lint_pings(category, parser_config, valid_tag_names))
             continue
@@ -449,7 +447,7 @@ def lint_metrics(
             if isinstance(metric, metrics.Metric)
         )
 
-        for (cat_check_name, (cat_check_func, check_type)) in CATEGORY_CHECKS.items():
+        for cat_check_name, (cat_check_func, check_type) in CATEGORY_CHECKS.items():
             if any(
                 cat_check_name in metric.no_lint for metric in category_metrics.values()
             ):
@@ -459,8 +457,8 @@ def lint_metrics(
                 for msg in cat_check_func(category_name, category_metrics.values())
             )
 
-        for (_metric_name, metric) in sorted(list(category_metrics.items())):
-            for (check_name, (check_func, check_type)) in METRIC_CHECKS.items():
+        for _metric_name, metric in sorted(list(category_metrics.items())):
+            for check_name, (check_func, check_type) in METRIC_CHECKS.items():
                 new_nits = list(check_func(metric, parser_config))
                 if len(new_nits):
                     if check_name not in metric.no_lint:
@@ -534,7 +532,7 @@ def lint_yaml_files(
 
     if len(nits):
         print("Sorry, Glean found some glinter nits:", file=file)
-        for (path, p) in nits:
+        for path, p in nits:
             print(f"{path} ({p.line}:{p.column}) - {p.message}", file=file)
         print("", file=file)
         print("Please fix the above nits to continue.", file=file)

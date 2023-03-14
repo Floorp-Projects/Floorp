@@ -182,7 +182,7 @@ def _instantiate_metrics(
     global_tags = content.get("$tags", [])
     assert isinstance(global_tags, list)
 
-    for category_key, category_val in content.items():
+    for category_key, category_val in sorted(content.items()):
         if category_key.startswith("$"):
             continue
         if category_key == "no_lint":
@@ -200,7 +200,7 @@ def _instantiate_metrics(
         if not isinstance(category_val, dict):
             raise TypeError(f"Invalid content for {category_key}")
 
-        for metric_key, metric_val in category_val.items():
+        for metric_key, metric_val in sorted(category_val.items()):
             try:
                 metric_obj = Metric.make_metric(
                     category_key, metric_key, metric_val, validated=True, config=config
@@ -268,7 +268,7 @@ def _instantiate_pings(
     global_no_lint = content.get("no_lint", [])
     assert isinstance(global_no_lint, list)
 
-    for ping_key, ping_val in content.items():
+    for ping_key, ping_val in sorted(content.items()):
         if ping_key.startswith("$"):
             continue
         if ping_key == "no_lint":
@@ -328,7 +328,7 @@ def _instantiate_tags(
     global_no_lint = content.get("no_lint", [])
     assert isinstance(global_no_lint, list)
 
-    for tag_key, tag_val in content.items():
+    for tag_key, tag_val in sorted(content.items()):
         if tag_key.startswith("$"):
             continue
         if tag_key == "no_lint":
