@@ -632,11 +632,11 @@ NS_IMETHODIMP IPCFuzzController::IPCFuzzLoop::Run() {
   IPCFuzzController::instance().useLastActor = 0;
   IPCFuzzController::instance().useLastPortName = false;
 
-  for (int i = 0; i < 16; ++i) {
-    if (!buffer.initLengthUninitialized(maxMsgSize)) {
-      MOZ_REALLY_CRASH(__LINE__);
-    }
+  if (!buffer.initLengthUninitialized(maxMsgSize)) {
+    MOZ_FUZZING_NYX_ABORT("ERROR: Failed to initialize buffer!\n");
+  }
 
+  for (int i = 0; i < 16; ++i) {
     // Grab enough data to potentially fill our everything except the footer.
     uint32_t bufsize =
         Nyx::instance().get_data((uint8_t*)buffer.begin(), buffer.length());
