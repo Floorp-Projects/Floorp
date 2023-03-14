@@ -20,6 +20,7 @@
 #endif
 
 #include "mozilla/Telemetry.h"
+#include "mozilla/TelemetryIPC.h"
 
 #if defined(XP_WIN)
 #  include "mozilla/WinDllServices.h"
@@ -145,6 +146,45 @@ mozilla::ipc::IPCResult RDDChild::RecvUpdateMediaCodecsSupported(
     const media::MediaCodecsSupported& aSupported) {
   dom::ContentParent::BroadcastMediaCodecsSupportedUpdate(
       RemoteDecodeIn::RddProcess, aSupported);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult RDDChild::RecvAccumulateChildHistograms(
+    nsTArray<HistogramAccumulation>&& aAccumulations) {
+  TelemetryIPC::AccumulateChildHistograms(Telemetry::ProcessID::Rdd,
+                                          aAccumulations);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult RDDChild::RecvAccumulateChildKeyedHistograms(
+    nsTArray<KeyedHistogramAccumulation>&& aAccumulations) {
+  TelemetryIPC::AccumulateChildKeyedHistograms(Telemetry::ProcessID::Rdd,
+                                               aAccumulations);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult RDDChild::RecvUpdateChildScalars(
+    nsTArray<ScalarAction>&& aScalarActions) {
+  TelemetryIPC::UpdateChildScalars(Telemetry::ProcessID::Rdd, aScalarActions);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult RDDChild::RecvUpdateChildKeyedScalars(
+    nsTArray<KeyedScalarAction>&& aScalarActions) {
+  TelemetryIPC::UpdateChildKeyedScalars(Telemetry::ProcessID::Rdd,
+                                        aScalarActions);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult RDDChild::RecvRecordChildEvents(
+    nsTArray<mozilla::Telemetry::ChildEventData>&& aEvents) {
+  TelemetryIPC::RecordChildEvents(Telemetry::ProcessID::Rdd, aEvents);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult RDDChild::RecvRecordDiscardedData(
+    const mozilla::Telemetry::DiscardedData& aDiscardedData) {
+  TelemetryIPC::RecordDiscardedData(Telemetry::ProcessID::Rdd, aDiscardedData);
   return IPC_OK();
 }
 

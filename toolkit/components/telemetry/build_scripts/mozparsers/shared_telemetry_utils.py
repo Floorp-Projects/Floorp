@@ -19,6 +19,7 @@ KNOWN_PROCESS_FLAGS = {
     "main": "Main",
     "content": "Content",
     "gpu": "Gpu",
+    "rdd": "Rdd",
     "socket": "Socket",
     "utility": "Utility",
     # Historical Values

@@ -1,0 +1,25 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(12f7d302-5368-412d-bdc9-26d151518e6c)]
+interface nsIRddProcessTest : nsISupports
+{
+  /**
+   * ** Test-only Method **
+   *
+   * Sending Telemetry probes
+   */
+  [implicit_jscontext]
+  Promise testTelemetryProbes();
+
+  /**
+   * ** Test-only Method **
+   *
+   * Stop existing RDD process
+   */
+  void stopProcess();
+};

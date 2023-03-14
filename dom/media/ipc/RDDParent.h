@@ -64,6 +64,8 @@ class RDDParent final : public PRDDParent {
   mozilla::ipc::IPCResult RecvTestTriggerMetrics(
       TestTriggerMetricsResolver&& aResolve);
 
+  mozilla::ipc::IPCResult RecvTestTelemetryProbes();
+
  private:
   const TimeStamp mLaunchTime;
   RefPtr<ChildProfilerController> mProfilerController;

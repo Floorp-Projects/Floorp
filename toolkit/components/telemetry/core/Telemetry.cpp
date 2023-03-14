@@ -1127,7 +1127,7 @@ already_AddRefed<nsITelemetry> TelemetryImpl::CreateTelemetryInstance() {
   bool useTelemetry = false;
 #ifndef FUZZING
   if (XRE_IsParentProcess() || XRE_IsContentProcess() || XRE_IsGPUProcess() ||
-      XRE_IsSocketProcess() || XRE_IsUtilityProcess()) {
+      XRE_IsRDDProcess() || XRE_IsSocketProcess() || XRE_IsUtilityProcess()) {
     useTelemetry = true;
   }
 #endif

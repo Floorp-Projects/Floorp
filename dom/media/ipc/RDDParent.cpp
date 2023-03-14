@@ -285,6 +285,13 @@ mozilla::ipc::IPCResult RDDParent::RecvTestTriggerMetrics(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult RDDParent::RecvTestTelemetryProbes() {
+  const uint32_t kExpectedUintValue = 42;
+  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_RDD_ONLY_UINT,
+                       kExpectedUintValue);
+  return IPC_OK();
+}
+
 void RDDParent::ActorDestroy(ActorDestroyReason aWhy) {
   if (AbnormalShutdown == aWhy) {
     NS_WARNING("Shutting down RDD process early due to a crash!");

@@ -405,6 +405,11 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
         "audioipc_server_ffi_generated.h", inputs=["/third_party/rust/audioipc-server"]
     )
 
+if CONFIG["ENABLE_TESTS"]:
+    DIRS += [
+        "test/rdd_process_xpcom",
+    ]
+
 include("/ipc/chromium/chromium-config.mozbuild")
 
 # Suppress some GCC warnings being treated as errors:
