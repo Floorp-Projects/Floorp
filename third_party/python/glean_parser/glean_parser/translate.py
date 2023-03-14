@@ -71,7 +71,7 @@ def transform_metrics(objects):
     """
     counters = {}
     numerators_by_denominator: Dict[str, Any] = {}
-    for (category_name, category_val) in objects.items():
+    for category_name, category_val in objects.items():
         if category_name == "tags":
             continue
         for metric in category_val.values():

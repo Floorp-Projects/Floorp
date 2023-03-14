@@ -94,9 +94,9 @@ fluent.syntax==0.18.1 \
 giturlparse==0.10.0; python_version >= "3.6" \
     --hash=sha256:04ba1a3a099c3093fa8d24a422913c6a9b2c2cd22bcffc939cf72e3e98f672d7 \
     --hash=sha256:2595ab291d30717cda8474b874c9fd509f1b9802ad7f6968c36a45e4b13eb337
-glean-parser==7.0.0 \
-    --hash=sha256:c9df09b8cbe149e840125153e0ffebda264f45cd9e51805dbc0288bf203c54ab \
-    --hash=sha256:c48960dd6fc0dc506f54e1229ff92ed10766cc65e598e9b9c8b798be81a4ccd5
+glean-parser==7.1.0 \
+    --hash=sha256:3ed7befcb71cb2ac63414944c9e113916e96a45fd9d01d7fc9b51fdde836d70c \
+    --hash=sha256:22005a2d54d5178a46902e44299bcb69aed4e8bc32dabff18addc4dba91611ab
 idna==2.10; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.5.0" or python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.4.0" and python_version >= "3.6" \
     --hash=sha256:b97d804b1e9b523befed77c48dacec60e6dcb0b5391d57af6a65a312a90648c0 \
     --hash=sha256:b307872f855b18632ce0c21c5e45be78c0ea7ae4c15c828c20788b26921eb3f6
