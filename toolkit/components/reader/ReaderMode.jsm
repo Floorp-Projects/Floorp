@@ -42,11 +42,10 @@ ChromeUtils.defineModuleGetter(
   "ReaderWorker",
   "resource://gre/modules/reader/ReaderWorker.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "LanguageDetector",
-  "resource://gre/modules/translation/LanguageDetector.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  LanguageDetector:
+    "resource://gre/modules/translation/LanguageDetector.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "Readerable",

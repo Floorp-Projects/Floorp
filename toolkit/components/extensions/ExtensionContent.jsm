@@ -16,10 +16,14 @@ const { AppConstants } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  LanguageDetector:
+    "resource://gre/modules/translation/LanguageDetector.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExtensionProcessScript: "resource://gre/modules/ExtensionProcessScript.jsm",
   ExtensionTelemetry: "resource://gre/modules/ExtensionTelemetry.jsm",
-  LanguageDetector: "resource://gre/modules/translation/LanguageDetector.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",
   WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
 });
