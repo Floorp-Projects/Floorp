@@ -59,6 +59,7 @@ DevToolsModules(
     "target-configuration.js",
     "thread-configuration.js",
     "thread.js",
+    "tracer.js",
     "watcher.js",
     "webbrowser.js",
     "webconsole.js",

@@ -8,10 +8,12 @@ const {
   workerTargetSpec,
 } = require("resource://devtools/shared/specs/targets/worker.js");
 
-const { ThreadActor } = require("resource://devtools/server/actors/thread.js");
 const {
   WebConsoleActor,
 } = require("resource://devtools/server/actors/webconsole.js");
+const { ThreadActor } = require("resource://devtools/server/actors/thread.js");
+const { TracerActor } = require("resource://devtools/server/actors/tracer.js");
+
 const Targets = require("resource://devtools/server/actors/targets/index.js");
 
 const makeDebuggerUtil = require("resource://devtools/server/actors/utils/make-debugger.js");
@@ -63,8 +65,11 @@ class WorkerTargetActor extends BaseTargetActor {
     // needed by the thread actor to communicate with the console when evaluating logpoints.
     this._consoleActor = new WebConsoleActor(this.conn, this);
 
+    this.tracerActor = new TracerActor(this.conn, this);
+
     this.manage(this.threadActor);
     this.manage(this._consoleActor);
+    this.manage(this.tracerActor);
   }
 
   // Expose the worker URL to the thread actor.
@@ -76,8 +81,11 @@ class WorkerTargetActor extends BaseTargetActor {
   form() {
     return {
       actor: this.actorID,
-      threadActor: this.threadActor?.actorID,
+
       consoleActor: this._consoleActor?.actorID,
+      threadActor: this.threadActor?.actorID,
+      tracerActor: this.tracerActor?.actorID,
+
       id: this._workerDebuggerData.id,
       type: this._workerDebuggerData.type,
       url: this._workerDebuggerData.url,

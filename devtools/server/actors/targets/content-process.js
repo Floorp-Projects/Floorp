@@ -48,6 +48,12 @@ loader.lazyRequireGetter(
   "resource://devtools/server/actors/memory.js",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "TracerActor",
+  "resource://devtools/server/actors/tracer.js",
+  true
+);
 
 class ContentProcessTargetActor extends BaseTargetActor {
   constructor(conn, { isXpcShellTarget = false, sessionContext } = {}) {
@@ -149,15 +155,21 @@ class ContentProcessTargetActor extends BaseTargetActor {
       this.memoryActor = new MemoryActor(this.conn, this);
       this.manage(this.memoryActor);
     }
+    if (!this.tracerActor) {
+      this.tracerActor = new TracerActor(this.conn, this);
+      this.manage(this.tracerActor);
+    }
 
     return {
       actor: this.actorID,
-      consoleActor: this._consoleActor.actorID,
       isXpcShellTarget: this.isXpcShellTarget,
-      memoryActor: this.memoryActor.actorID,
       processID: Services.appinfo.processID,
       remoteType: Services.appinfo.remoteType,
+
+      consoleActor: this._consoleActor.actorID,
+      memoryActor: this.memoryActor.actorID,
       threadActor: this.threadActor.actorID,
+      tracerActor: this.tracerActor.actorID,
 
       traits: {
         networkMonitor: false,

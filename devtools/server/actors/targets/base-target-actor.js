@@ -93,5 +93,22 @@ class BaseTargetActor extends Actor {
       resource => (resource.browsingContextID = browsingContextID)
     );
   }
+
+  /**
+   * Try to return any target scoped actor instance, if it exists.
+   * They are lazily instantiated and so will only be available
+   * if the client called at least one of their method.
+   *
+   * @param {String} prefix
+   *        Prefix for the actor we would like to retrieve.
+   *        Defined in devtools/server/actors/utils/actor-registry.js
+   */
+  getTargetScopedActor(prefix) {
+    if (this.isDestroyed()) {
+      return null;
+    }
+    const form = this.form();
+    return this.conn._getOrCreateActor(form[prefix + "Actor"]);
+  }
 }
 exports.BaseTargetActor = BaseTargetActor;

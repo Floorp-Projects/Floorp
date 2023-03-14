@@ -201,6 +201,7 @@ function getWatcherSupportedResources(type) {
     [Resources.TYPES.THREAD_STATE]: true,
     [Resources.TYPES.SERVER_SENT_EVENT]: true,
     [Resources.TYPES.WEBSOCKET]: true,
+    [Resources.TYPES.TRACING_STATE]: true,
     [Resources.TYPES.LAST_PRIVATE_CONTEXT_EXIT]: true,
   };
 }

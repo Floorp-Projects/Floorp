@@ -34,6 +34,7 @@ DevToolsModules(
     "storage-session-storage.js",
     "stylesheets.js",
     "thread-states.js",
+    "tracing-state.js",
     "websockets.js",
 )
 

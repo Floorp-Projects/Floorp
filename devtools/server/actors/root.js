@@ -136,6 +136,9 @@ class RootActor extends Actor {
             "dom.worker.console.dispatch_events_to_main_thread"
           )
         : true,
+      // @backward-compat { version 112 } Fx 112 started implementing JS tracing.
+      // The trait can be removed once this version is released.
+      supportsJavascriptTracing: true,
     };
   }
 

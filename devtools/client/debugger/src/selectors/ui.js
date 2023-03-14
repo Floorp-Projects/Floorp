@@ -53,3 +53,7 @@ export function getInlinePreview(state) {
 export function getEditorWrapping(state) {
   return state.ui.editorWrappingEnabled;
 }
+
+export function getSupportsJavascriptTracing(state) {
+  return state.ui.supportsJavascriptTracing;
+}

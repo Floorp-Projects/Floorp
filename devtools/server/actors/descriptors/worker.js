@@ -63,8 +63,11 @@ class WorkerDescriptorActor extends Actor {
   form() {
     const form = {
       actor: this.actorID,
+
       consoleActor: this._consoleActor,
       threadActor: this._threadActor,
+      tracerActor: this._tracerActor,
+
       id: this._dbg.id,
       url: this._dbg.url,
       traits: {},
@@ -115,8 +118,10 @@ class WorkerDescriptorActor extends Actor {
     if (this._threadActor !== null) {
       return {
         type: "connected",
-        threadActor: this._threadActor,
+
         consoleActor: this._consoleActor,
+        threadActor: this._threadActor,
+        tracerActor: this._tracerActor,
       };
     }
 
@@ -130,14 +135,19 @@ class WorkerDescriptorActor extends Actor {
         }
       );
 
-      this._threadActor = workerTargetForm.threadActor;
       this._consoleActor = workerTargetForm.consoleActor;
+      this._threadActor = workerTargetForm.threadActor;
+      this._tracerActor = workerTargetForm.tracerActor;
+
       this._transport = transport;
 
       return {
         type: "connected",
-        threadActor: this._threadActor,
+
         consoleActor: this._consoleActor,
+        threadActor: this._threadActor,
+        tracerActor: this._tracerActor,
+
         url: this._dbg.url,
       };
     } catch (error) {

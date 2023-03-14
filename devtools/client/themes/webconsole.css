@@ -311,6 +311,12 @@
   stroke: var(--theme-graphs-purple);
 }
 
+.message > .icon.logtrace {
+  background-image: url(chrome://devtools/content/debugger/images/trace.svg);
+  -moz-context-properties: fill, stroke;
+  fill: var(--theme-icon-checked-color);
+}
+
 .message.network-message-blocked > .icon {
   color: var(--theme-icon-error-color);
   background-image: url(chrome://devtools/skin/images/blocked.svg);

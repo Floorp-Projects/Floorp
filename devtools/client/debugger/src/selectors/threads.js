@@ -50,3 +50,7 @@ export function getMainThreadHost(state) {
 export function getThread(state, threadActor) {
   return getAllThreads(state).find(thread => thread.actor === threadActor);
 }
+
+export function getIsThreadCurrentlyTracing(state, thread) {
+  return state.threads.mutableTracingThreads.has(thread);
+}

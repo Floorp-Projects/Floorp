@@ -249,6 +249,7 @@ devtools.jar:
     content/debugger/images/stepIn.svg (debugger/images/stepIn.svg)
     content/debugger/images/stepOut.svg (debugger/images/stepOut.svg)
     content/debugger/images/tab.svg (debugger/images/tab.svg)
+    content/debugger/images/trace.svg (debugger/images/trace.svg)
     content/debugger/images/webconsole-logpoint.svg (debugger/images/webconsole-logpoint.svg)
     content/debugger/images/whole-word-match.svg (debugger/images/whole-word-match.svg)
     content/debugger/images/window.svg (debugger/images/window.svg)

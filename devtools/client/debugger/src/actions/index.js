@@ -20,6 +20,7 @@ import * as tabs from "./tabs";
 import * as threads from "./threads";
 import * as toolbox from "./toolbox";
 import * as preview from "./preview";
+import * as tracing from "./tracing";
 
 import { objectInspector } from "devtools/client/shared/components/reps/index";
 
@@ -43,4 +44,5 @@ export default {
   ...threads,
   ...toolbox,
   ...preview,
+  ...tracing,
 };

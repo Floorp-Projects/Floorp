@@ -11,7 +11,7 @@
 
 import { prefs, features } from "../utils/prefs";
 
-export const initialUIState = () => ({
+export const initialUIState = ({ supportsJavascriptTracing = false } = {}) => ({
   selectedPrimaryPaneTab: "sources",
   activeSearch: null,
   startPanelCollapsed: prefs.startPanelCollapsed,
@@ -26,6 +26,7 @@ export const initialUIState = () => ({
   inlinePreviewEnabled: features.inlinePreview,
   editorWrappingEnabled: prefs.editorWrapping,
   javascriptEnabled: true,
+  supportsJavascriptTracing,
 });
 
 function update(state = initialUIState(), action) {

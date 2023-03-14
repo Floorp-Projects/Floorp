@@ -81,6 +81,9 @@ export async function onConnect(_commands, _resourceCommand, _actions, store) {
   await resourceCommand.watchResources([resourceCommand.TYPES.THREAD_STATE], {
     onAvailable: onThreadStateAvailable,
   });
+  await resourceCommand.watchResources([resourceCommand.TYPES.TRACING_STATE], {
+    onAvailable: onTracingStateAvailable,
+  });
 
   await resourceCommand.watchResources([resourceCommand.TYPES.ERROR_MESSAGE], {
     onAvailable: actions.addExceptionFromResources,
@@ -103,6 +106,9 @@ export function onDisconnect() {
   });
   resourceCommand.unwatchResources([resourceCommand.TYPES.THREAD_STATE], {
     onAvailable: onThreadStateAvailable,
+  });
+  resourceCommand.unwatchResources([resourceCommand.TYPES.TRACING_STATE], {
+    onAvailable: onTracingStateAvailable,
   });
   resourceCommand.unwatchResources([resourceCommand.TYPES.ERROR_MESSAGE], {
     onAvailable: actions.addExceptionFromResources,
@@ -170,6 +176,16 @@ async function onThreadStateAvailable(resources) {
     } else if (resource.state == "resumed") {
       await actions.resumed(threadFront.actorID);
     }
+  }
+}
+
+async function onTracingStateAvailable(resources) {
+  for (const resource of resources) {
+    if (resource.targetFront.isDestroyed()) {
+      continue;
+    }
+    const threadFront = await resource.targetFront.getFront("thread");
+    await actions.tracingToggled(threadFront.actor, resource.enabled);
   }
 }
 
