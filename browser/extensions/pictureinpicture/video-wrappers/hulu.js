@@ -24,6 +24,9 @@ class PictureInPictureVideoWrapper {
       muteButton.click();
     }
   }
+  setCurrentTime(video, position) {
+    this.player.currentTime = position;
+  }
   setCaptionContainerObserver(video, updateCaptionsFunction) {
     let container = document.querySelector(".ClosedCaption");
 
