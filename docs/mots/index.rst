@@ -3336,10 +3336,9 @@ The UI component controlling browser tabs.
         | `Dão Gottwald (dao) <https://people.mozilla.org/s?query=dao>`__
     * - Peer(s)
       -
-        | `Dão Gottwald (dao) <https://people.mozilla.org/s?query=dao>`__
-        | `Jared Wein (jaws) <https://people.mozilla.org/s?query=jaws>`__
         | `Marco Bonardo (mak) <https://people.mozilla.org/s?query=mak>`__
-        | `Matthew N (MattN) <https://people.mozilla.org/s?query=MattN>`__
+    * - Peer(s) Emeritus
+      - Jared Wein, Matthew N
     * - Includes
       -
         | `browser/base/content/tabbrowser\* <https://searchfox.org/mozilla-central/search?q=&path=browser/base/content/tabbrowser\*>`__
