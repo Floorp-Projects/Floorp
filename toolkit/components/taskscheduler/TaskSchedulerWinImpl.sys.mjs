@@ -3,17 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["WinImpl"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -35,7 +26,7 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
  * Not intended for external use, this is in a separate module to ship the code only
  * on Windows, and to expose for testing.
  */
-var WinImpl = {
+export var WinImpl = {
   registerTask(id, command, intervalSeconds, options) {
     // The folder might not yet exist.
     this._createFolderIfNonexistent();

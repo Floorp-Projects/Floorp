@@ -9,12 +9,12 @@ with Files("**"):
 
 XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
 
-EXTRA_JS_MODULES += ["TaskScheduler.jsm"]
+EXTRA_JS_MODULES += ["TaskScheduler.sys.mjs"]
 
 # This whole component is currently Windows-only, but a Mac implementation is planned.
 # Only the Windows C++ interface is an XPCOM component.
 if CONFIG["OS_TARGET"] == "WINNT":
-    EXTRA_JS_MODULES += ["TaskSchedulerWinImpl.jsm"]
+    EXTRA_JS_MODULES += ["TaskSchedulerWinImpl.sys.mjs"]
     XPCOM_MANIFESTS += ["components.conf"]
     XPIDL_MODULE = "taskscheduler"
     XPIDL_SOURCES += ["nsIWinTaskSchedulerService.idl"]
@@ -24,6 +24,6 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["UNICODE"] = True
 
 if CONFIG["OS_TARGET"] == "Darwin":
-    EXTRA_JS_MODULES += ["TaskSchedulerMacOSImpl.jsm"]
+    EXTRA_JS_MODULES += ["TaskSchedulerMacOSImpl.sys.mjs"]
 
 FINAL_LIBRARY = "xul"

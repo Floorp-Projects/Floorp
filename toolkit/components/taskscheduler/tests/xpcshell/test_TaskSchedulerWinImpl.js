@@ -10,12 +10,12 @@ const { updateAppInfo } = ChromeUtils.importESModule(
 );
 updateAppInfo();
 
-const { TaskScheduler } = ChromeUtils.import(
-  "resource://gre/modules/TaskScheduler.jsm"
+const { TaskScheduler } = ChromeUtils.importESModule(
+  "resource://gre/modules/TaskScheduler.sys.mjs"
 );
 
-const { WinImpl } = ChromeUtils.import(
-  "resource://gre/modules/TaskSchedulerWinImpl.jsm"
+const { WinImpl } = ChromeUtils.importESModule(
+  "resource://gre/modules/TaskSchedulerWinImpl.sys.mjs"
 );
 
 const WinSvc = Cc["@mozilla.org/win-task-scheduler-service;1"].getService(
