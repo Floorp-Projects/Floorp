@@ -95,21 +95,21 @@ const parseSubsidiary = distinguishedNames => {
   };
 
   distinguishedNames.forEach(dn => {
-    const name = strings.names[dn.type];
+    const distinguishedName = strings.names[dn.type];
     const value = dn.value.valueBlock.value;
 
-    if (name === undefined) {
+    if (distinguishedName === undefined) {
       subsidiary.dn.push(`OID.${dn.type}=${value}`);
       subsidiary.entries.push([`OID.${dn.type}`, value]);
-    } else if (name.short === undefined) {
+    } else if (distinguishedName.short === undefined) {
       subsidiary.dn.push(`OID.${dn.type}=${value}`);
-      subsidiary.entries.push([name.long, value]);
+      subsidiary.entries.push([distinguishedName.long, value]);
     } else {
-      subsidiary.dn.push(`${name.short}=${value}`);
-      subsidiary.entries.push([name.long, value]);
+      subsidiary.dn.push(`${distinguishedName.short}=${value}`);
+      subsidiary.entries.push([distinguishedName.long, value]);
 
       // add the common name for tab display
-      if (name.short === "cn") {
+      if (distinguishedName.short === "cn") {
         subsidiary.cn = value;
       }
     }
@@ -299,7 +299,7 @@ const getCertificatePolicies = (x509, criticalExtensions) => {
   if (cp && cp.hasOwnProperty("certificatePolicies")) {
     cp = cp.certificatePolicies.map(x => {
       let id = x.policyIdentifier;
-      let name = strings.cps.hasOwnProperty(id)
+      let certName = strings.cps.hasOwnProperty(id)
         ? strings.cps[id].name
         : undefined;
       let qualifiers = undefined;
@@ -311,14 +311,14 @@ const getCertificatePolicies = (x509, criticalExtensions) => {
       if (id.startsWith("2.16.840.")) {
         value = id;
         id = "2.16.840";
-        name = strings.cps["2.16.840"].name;
+        certName = strings.cps["2.16.840"].name;
       }
 
       // statement identifiers
       if (id.startsWith("1.3.6.1.4.1")) {
         value = id;
         id = "1.3.6.1.4.1";
-        name = strings.cps["1.3.6.1.4.1"].name;
+        certName = strings.cps["1.3.6.1.4.1"].name;
       }
 
       if (x.hasOwnProperty("policyQualifiers")) {
@@ -350,7 +350,7 @@ const getCertificatePolicies = (x509, criticalExtensions) => {
 
       return {
         id,
-        name,
+        name: certName,
         qualifiers,
         value,
       };

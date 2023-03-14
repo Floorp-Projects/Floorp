@@ -86,13 +86,13 @@ export class MozLitElement extends LitElement {
     super();
     let { queries } = this.constructor;
     if (queries) {
-      for (let [name, selector] of Object.entries(queries)) {
+      for (let [selectorName, selector] of Object.entries(queries)) {
         if (selector.all) {
-          Object.defineProperty(this, name, {
+          Object.defineProperty(this, selectorName, {
             get: queryAll(this, selector.all),
           });
         } else {
-          Object.defineProperty(this, name, {
+          Object.defineProperty(this, selectorName, {
             get: query(this, selector),
           });
         }
