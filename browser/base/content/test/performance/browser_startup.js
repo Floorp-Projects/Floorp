@@ -117,7 +117,7 @@ if (
   ) == "default-theme@mozilla.org"
 ) {
   startupPhases["before profile selection"].allowlist.modules.add(
-    "resource://gre/modules/XULStore.jsm"
+    "resource://gre/modules/XULStore.sys.mjs"
   );
 }
 
