@@ -11,6 +11,22 @@ ChromeUtils.defineESModuleGetters(lazy, {
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
 });
 
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "FormHistory",
+  "resource://gre/modules/FormHistory.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "FormHistoryClient",
+  "resource://gre/modules/FormAutoComplete.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "FormAutoCompleteResult",
+  "resource://gre/modules/FormAutoComplete.jsm"
+);
+
 const DEFAULT_FORM_HISTORY_PARAM = "searchbar-history";
 const HTTP_OK = 200;
 const BROWSER_SUGGEST_PREF = "browser.search.suggest.enabled";
@@ -333,61 +349,41 @@ export class SearchSuggestionController {
   }
 
   #context;
-  #formHistoryResult;
 
-  #fetchFormHistory(context) {
-    return new Promise(resolve => {
-      let acSearchObserver = {
-        // Implements nsIAutoCompleteSearch
-        onSearchResult: (search, result) => {
-          context.awaitingLocalResults = false;
-          this.#formHistoryResult = result;
+  async #fetchFormHistory(context) {
+    // We don't cache these results as we assume that the in-memory SQL cache is
+    // good enough in performance.
+    let params = {
+      fieldname: this.formHistoryParam || DEFAULT_FORM_HISTORY_PARAM,
+    };
 
-          switch (result.searchResult) {
-            case Ci.nsIAutoCompleteResult.RESULT_SUCCESS:
-            case Ci.nsIAutoCompleteResult.RESULT_NOMATCH:
-              if (result.searchString !== context.searchString) {
-                resolve(
-                  "Unexpected response, searchString does not match form history response"
-                );
-                return;
-              }
-              let fhEntries = [];
-              for (let i = 0; i < result.matchCount; ++i) {
-                fhEntries.push(result.getValueAt(i));
-              }
-              resolve({
-                result: fhEntries,
-                formHistoryResult: result,
-              });
-              break;
-            case Ci.nsIAutoCompleteResult.RESULT_FAILURE:
-            case Ci.nsIAutoCompleteResult.RESULT_IGNORED:
-              resolve("Form History returned RESULT_FAILURE or RESULT_IGNORED");
-              break;
-          }
-        },
-      };
+    if (context.restrictToEngine) {
+      params.source = context.engine.name;
+    }
 
-      let formHistory = Cc[
-        "@mozilla.org/autocomplete/search;1?name=form-history"
-      ].createInstance(Ci.nsIAutoCompleteSearch);
-      let params = this.formHistoryParam || DEFAULT_FORM_HISTORY_PARAM;
-      let options = null;
-      if (context.restrictToEngine) {
-        options = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
-          Ci.nsIWritablePropertyBag2
-        );
-        options.setPropertyAsAUTF8String("source", context.engine.name);
-      }
-      formHistory.startSearch(
-        context.searchString,
-        params,
-        this.#formHistoryResult,
-        acSearchObserver,
-        options
-      );
+    // Needed to keep the legacy autocomplete happy, including removing items.
+    let client = new lazy.FormHistoryClient({
+      formField: null,
+      inputName: params.fieldname,
     });
+    let formHistoryResult = new lazy.FormAutoCompleteResult(
+      client,
+      [],
+      params.fieldname,
+      context.searchString
+    );
+    let results = await lazy.FormHistory.getAutoCompleteResults(
+      context.searchString,
+      params
+    );
+
+    context.awaitingLocalResults = false;
+
+    formHistoryResult.entries = results;
+    return {
+      formHistoryResult,
+      result: results.map(r => r.text),
+    };
   }
 
   /**

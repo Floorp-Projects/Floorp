@@ -381,32 +381,6 @@ add_task(async function fetch_twice_in_a_row() {
   assertLatencyHistogram(histogram, true);
 });
 
-add_task(async function fetch_twice_subset_reuse_formHistoryResult() {
-  // This tests if we mess up re-using the cached form history result.
-  // Two entries since the first will match the first fetch but not the second.
-  await updateSearchHistory("bump", "delay local");
-  await updateSearchHistory("bump", "delayed local");
-
-  let controller = new SearchSuggestionController();
-  let result = await controller.fetch("delay", false, getEngine);
-  Assert.equal(result.term, "delay");
-  Assert.equal(result.local.length, 2);
-  Assert.equal(result.local[0].value, "delay local");
-  Assert.equal(result.local[1].value, "delayed local");
-  Assert.equal(result.remote.length, 1);
-  Assert.equal(result.remote[0].value, "delay");
-
-  // Remove the entry from the DB but it should remain in the cached formHistoryResult.
-  await updateSearchHistory("remove", "delayed local");
-
-  let result2 = await controller.fetch("delayed ", false, getEngine);
-  Assert.equal(result2.term, "delayed ");
-  Assert.equal(result2.local.length, 1);
-  Assert.equal(result2.local[0].value, "delayed local");
-  Assert.equal(result2.remote.length, 1);
-  Assert.equal(result2.remote[0].value, "delayed ");
-});
-
 add_task(async function both_identical_with_more_than_max_results() {
   // Add letters A through Z to form history which will match the server
   for (
