@@ -5285,7 +5285,7 @@ var gCSSProperties = {
       "counters(foo, '.', symbols('*'))",
       "counters(foo, '.', symbols(numeric '0' '1'))",
       "image-set(url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==))",
-    ],
+    ].concat(validNonUrlImageValues),
     invalid_values: [
       "counter(foo, none)",
       "counters(bar, '.', none)",
@@ -5300,7 +5300,7 @@ var gCSSProperties = {
       "-moz-alt-content 'foo'",
       "'foo' -moz-alt-content",
       "counter(one, two, three) 'foo'",
-    ],
+    ].concat(invalidNonUrlImageValues),
   },
   "counter-increment": {
     domProp: "counterIncrement",

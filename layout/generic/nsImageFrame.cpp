@@ -630,8 +630,6 @@ void nsImageFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     UpdateXULImage();
   } else {
     const StyleImage* image = GetImageFromStyle();
-    MOZ_ASSERT(mKind == Kind::ListStyleImage || image->IsImageRequestType(),
-               "Content image should only parse url() type");
     if (image->IsImageRequestType()) {
       if (imgRequestProxy* proxy = image->GetImageRequest()) {
         proxy->Clone(mListener, pc->Document(), getter_AddRefs(mOwnedRequest));
@@ -2449,14 +2447,14 @@ void nsImageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
     nsCOMPtr<imgIRequest> currentRequest = GetCurrentRequest();
 
+    const bool isImageFromStyle =
+        mKind != Kind::ImageLoadingContent && mKind != Kind::XULImage;
     const bool drawAltFeedback = [&] {
       if (!imageOK) {
         return true;
       }
-      // If we're a list-style-image gradient, we don't need to draw alt
-      // feedback.
-      if (mKind == Kind::ListStyleImage &&
-          !GetImageFromStyle()->IsImageRequestType()) {
+      // If we're a gradient, we don't need to draw alt feedback.
+      if (isImageFromStyle && !GetImageFromStyle()->IsImageRequestType()) {
         return false;
       }
       // XXX(seth): The SizeIsAvailable check here should not be necessary - the
@@ -2488,7 +2486,7 @@ void nsImageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       if (mImage) {
         aLists.Content()->AppendNewToTop<nsDisplayImage>(aBuilder, this, mImage,
                                                          mPrevImage);
-      } else if (mKind == Kind::ListStyleImage) {
+      } else if (isImageFromStyle) {
         aLists.Content()->AppendNewToTop<nsDisplayGradient>(aBuilder, this);
       }
 
