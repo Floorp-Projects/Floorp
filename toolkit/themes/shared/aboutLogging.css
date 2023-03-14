@@ -22,16 +22,24 @@ body {
   padding: 1em;
 }
 
-div.page-section {
+.page-section {
   padding: 0.5em;
 }
 
-div.page-section > div {
+.page-section > div {
   padding-inline-start: 0.5em;
   padding-bottom: 2em;
 }
 
-div.page-section > div.radio-entry {
+.radio-entry {
+  /* Center the labels with their checkboxes */
+  display: flex;
+  align-items: center;
+  margin: 0.3em 0;
+}
+
+.page-section > .radio-entry {
+  /* override the padding to all divs that is set above. */
   padding-bottom: 0;
 }
 
@@ -57,10 +65,6 @@ input[type=text] {
   width: 100%;
   font-family: monospace;
   padding-inline-start: 0;
-}
-
-input[type=radio] {
-  vertical-align: middle;
 }
 
 .info-box {
