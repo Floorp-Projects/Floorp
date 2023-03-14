@@ -47,12 +47,12 @@ class RemoteWorkerChild final
   friend class PRemoteWorkerChild;
   friend class ServiceWorkerOp;
 
+  ~RemoteWorkerChild();
+
  public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(RemoteWorkerChild)
+  NS_INLINE_DECL_REFCOUNTING(RemoteWorkerChild, final)
 
   explicit RemoteWorkerChild(const RemoteWorkerData& aData);
-
-  ~RemoteWorkerChild();
 
   nsISerialEventTarget* GetOwningEventTarget() const;
 

@@ -70,9 +70,11 @@ namespace mozilla::ipc {
 using mozilla::dom::UDPSocketChild;
 using mozilla::net::PUDPSocketChild;
 
+using mozilla::dom::PRemoteWorkerChild;
 using mozilla::dom::PServiceWorkerChild;
 using mozilla::dom::PServiceWorkerContainerChild;
 using mozilla::dom::PServiceWorkerRegistrationChild;
+using mozilla::dom::RemoteWorkerChild;
 using mozilla::dom::StorageDBChild;
 using mozilla::dom::cache::PCacheChild;
 using mozilla::dom::cache::PCacheStreamControlChild;
@@ -280,10 +282,9 @@ bool BackgroundChildImpl::DeallocPBackgroundStorageChild(
   return true;
 }
 
-dom::PRemoteWorkerChild* BackgroundChildImpl::AllocPRemoteWorkerChild(
-    const RemoteWorkerData& aData) {
-  RefPtr<dom::RemoteWorkerChild> agent = new dom::RemoteWorkerChild(aData);
-  return agent.forget().take();
+already_AddRefed<PRemoteWorkerChild>
+BackgroundChildImpl::AllocPRemoteWorkerChild(const RemoteWorkerData& aData) {
+  return MakeAndAddRef<RemoteWorkerChild>(aData);
 }
 
 IPCResult BackgroundChildImpl::RecvPRemoteWorkerConstructor(
@@ -291,13 +292,6 @@ IPCResult BackgroundChildImpl::RecvPRemoteWorkerConstructor(
   dom::RemoteWorkerChild* actor = static_cast<dom::RemoteWorkerChild*>(aActor);
   actor->ExecWorker(aData);
   return IPC_OK();
-}
-
-bool BackgroundChildImpl::DeallocPRemoteWorkerChild(
-    dom::PRemoteWorkerChild* aActor) {
-  RefPtr<dom::RemoteWorkerChild> actor =
-      dont_AddRef(static_cast<dom::RemoteWorkerChild*>(aActor));
-  return true;
 }
 
 dom::PRemoteWorkerControllerChild*

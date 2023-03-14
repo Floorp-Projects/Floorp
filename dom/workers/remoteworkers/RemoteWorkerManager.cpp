@@ -469,9 +469,9 @@ void RemoteWorkerManager::LaunchInternal(
         SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
   }
 
-  RemoteWorkerParent* workerActor = static_cast<RemoteWorkerParent*>(
-      aTargetActor->Manager()->SendPRemoteWorkerConstructor(aData));
-  if (NS_WARN_IF(!workerActor)) {
+  RefPtr<RemoteWorkerParent> workerActor = MakeAndAddRef<RemoteWorkerParent>();
+  if (!aTargetActor->Manager()->SendPRemoteWorkerConstructor(workerActor,
+                                                             aData)) {
     AsyncCreationFailed(aController);
     return;
   }
