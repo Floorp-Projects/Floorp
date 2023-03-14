@@ -204,6 +204,8 @@ class ModuleLoaderBase : public nsISupports {
   // Called to break cycles during shutdown to prevent memory leaks.
   void Shutdown();
 
+  virtual nsIURI* GetBaseURI() const { return mLoader->GetBaseURI(); };
+
   using LoadedScript = JS::loader::LoadedScript;
   using ScriptFetchOptions = JS::loader::ScriptFetchOptions;
   using ScriptLoadRequest = JS::loader::ScriptLoadRequest;

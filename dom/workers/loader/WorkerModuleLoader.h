@@ -44,6 +44,8 @@ class WorkerModuleLoader : public JS::loader::ModuleLoaderBase {
 
   WorkerScriptLoader* GetScriptLoader();
 
+  nsIURI* GetBaseURI() const override;
+
   already_AddRefed<ModuleLoadRequest> CreateStaticImport(
       nsIURI* aURI, ModuleLoadRequest* aParent) override;
 
