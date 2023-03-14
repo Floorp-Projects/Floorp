@@ -93,6 +93,7 @@
 #include "mozilla/dom/quota/PQuotaRequestParent.h"
 #include "mozilla/dom/quota/PQuotaUsageRequest.h"
 #include "mozilla/dom/quota/PQuotaUsageRequestParent.h"
+#include "mozilla/dom/quota/QuotaManagerService.h"
 #include "mozilla/dom/quota/QuotaManagerImpl.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/dom/quota/ScopedLogExtraInfo.h"
@@ -130,6 +131,7 @@
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIOutputStream.h"
+#include "nsIQuotaRequests.h"
 #include "nsIPlatformInfo.h"
 #include "nsIPrincipal.h"
 #include "nsIRunnable.h"
@@ -295,6 +297,7 @@ constexpr auto kSQLiteSuffix = u".sqlite"_ns;
 const int32_t kLocalStorageArchiveVersion = 4;
 
 const char kProfileDoChangeTopic[] = "profile-do-change";
+const char kPrivateBrowsingObserverTopic[] = "last-pb-context-exited";
 
 const int32_t kCacheVersion = 2;
 
@@ -2548,6 +2551,20 @@ bool RecvShutdownQuotaManager() {
   return true;
 }
 
+nsCString QuotaManager::StorageId::Serialize(const nsACString& aOrigin,
+                                             PersistenceType aPType,
+                                             Client::Type aCType) {
+  nsAutoCString str;
+
+  str.AppendInt(aPType);
+  str.Append('*');
+  str.Append(aOrigin);
+  str.Append('*');
+  str.AppendInt(aCType);
+
+  return str;
+}
+
 QuotaManager::Observer* QuotaManager::Observer::sInstance = nullptr;
 
 // static
@@ -2610,9 +2627,18 @@ nsresult QuotaManager::Observer::Init() {
 
   rv = obs->AddObserver(this, NS_WIDGET_WAKE_OBSERVER_TOPIC, false);
   if (NS_WARN_IF(NS_FAILED(rv))) {
+    obs->RemoveObserver(this, PROFILE_BEFORE_CHANGE_QM_OBSERVER_ID);
     obs->RemoveObserver(this, kProfileDoChangeTopic);
     obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+    return rv;
+  }
+
+  rv = obs->AddObserver(this, kPrivateBrowsingObserverTopic, false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    obs->RemoveObserver(this, NS_WIDGET_WAKE_OBSERVER_TOPIC);
     obs->RemoveObserver(this, PROFILE_BEFORE_CHANGE_QM_OBSERVER_ID);
+    obs->RemoveObserver(this, kProfileDoChangeTopic);
+    obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
     return rv;
   }
 
@@ -2627,6 +2653,7 @@ nsresult QuotaManager::Observer::Shutdown() {
     return NS_ERROR_FAILURE;
   }
 
+  MOZ_ALWAYS_SUCCEEDS(obs->RemoveObserver(this, kPrivateBrowsingObserverTopic));
   MOZ_ALWAYS_SUCCEEDS(obs->RemoveObserver(this, NS_WIDGET_WAKE_OBSERVER_TOPIC));
   MOZ_ALWAYS_SUCCEEDS(
       obs->RemoveObserver(this, PROFILE_BEFORE_CHANGE_QM_OBSERVER_ID));
@@ -2742,6 +2769,22 @@ QuotaManager::Observer::Observe(nsISupports* aSubject, const char* aTopic,
     gBuildId = nullptr;
 
     Telemetry::SetEventRecordingEnabled("dom.quota.try"_ns, false);
+
+    return NS_OK;
+  }
+
+  if (!strcmp(aTopic, kPrivateBrowsingObserverTopic)) {
+    auto* const quotaManagerService = QuotaManagerService::GetOrCreate();
+    if (NS_WARN_IF(!quotaManagerService)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIQuotaRequest> request;
+    rv = quotaManagerService->ClearStoragesForOriginAttributesPattern(
+        u"{ \"privateBrowsingId\": 1 }"_ns, nsGetterAddRefs(request));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     return NS_OK;
   }
