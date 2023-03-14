@@ -399,20 +399,6 @@ bool BackgroundParentImpl::DeallocPBackgroundLSSimpleRequestParent(
   return mozilla::dom::DeallocPBackgroundLSSimpleRequestParent(aActor);
 }
 
-mozilla::ipc::IPCResult BackgroundParentImpl::RecvLSClearPrivateBrowsing() {
-  AssertIsInMainOrSocketProcess();
-  AssertIsOnBackgroundThread();
-
-  if (BackgroundParent::IsOtherProcessActor(this)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  if (!mozilla::dom::RecvLSClearPrivateBrowsing()) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  return IPC_OK();
-}
-
 BackgroundParentImpl::PBackgroundLocalStorageCacheParent*
 BackgroundParentImpl::AllocPBackgroundLocalStorageCacheParent(
     const PrincipalInfo& aPrincipalInfo, const nsACString& aOriginKey,

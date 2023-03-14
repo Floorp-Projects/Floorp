@@ -100,8 +100,6 @@ class BackgroundParentImpl : public PBackgroundParent {
   bool DeallocPBackgroundLSSimpleRequestParent(
       PBackgroundLSSimpleRequestParent* aActor) override;
 
-  mozilla::ipc::IPCResult RecvLSClearPrivateBrowsing() override;
-
   PBackgroundLocalStorageCacheParent* AllocPBackgroundLocalStorageCacheParent(
       const PrincipalInfo& aPrincipalInfo, const nsACString& aOriginKey,
       const uint32_t& aPrivateBrowsingId) override;
