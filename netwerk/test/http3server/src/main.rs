@@ -69,8 +69,9 @@ struct Http3TestServer {
     responses: HashMap<Http3OrWebTransportStream, Vec<u8>>,
     current_connection_hash: u64,
     sessions_to_close: HashMap<Instant, Vec<WebTransportRequest>>,
-    sessions_to_create_stream: Vec<(WebTransportRequest, StreamType)>,
+    sessions_to_create_stream: Vec<(WebTransportRequest, StreamType, bool)>,
     webtransport_bidi_stream: HashSet<Http3OrWebTransportStream>,
+    webtransport_uni_stream: Vec<Http3OrWebTransportStream>,
 }
 
 impl ::std::fmt::Display for Http3TestServer {
@@ -89,6 +90,7 @@ impl Http3TestServer {
             sessions_to_close: HashMap::new(),
             sessions_to_create_stream: Vec::new(),
             webtransport_bidi_stream: HashSet::new(),
+            webtransport_uni_stream: Vec::new(),
         }
     }
 
@@ -150,10 +152,25 @@ impl Http3TestServer {
         let mut session = tuple.0;
         let mut wt_server_stream = session.create_stream(tuple.1).unwrap();
         if tuple.1 == StreamType::UniDi {
-            let content = b"0123456789".to_vec();
-            wt_server_stream.send_data(&content).unwrap();
+            if tuple.2 {
+                wt_server_stream.send_data(b"qwerty").unwrap();
+                wt_server_stream.stream_close_send().unwrap();
+            } else {
+                // relaying Http3ServerEvent::Data to uni streams
+                // slows down netwerk/test/unit/test_webtransport_simple.js
+                // to the point of failure. Only do so when necessary.
+                self.webtransport_uni_stream.push(wt_server_stream);
+            }
         } else {
-            self.webtransport_bidi_stream.insert(wt_server_stream);
+            if tuple.2 {
+                wt_server_stream.send_data(b"asdfg").unwrap();
+                wt_server_stream.stream_close_send().unwrap();
+                wt_server_stream
+                    .stream_stop_sending(Error::HttpNoError.code())
+                    .unwrap();
+            } else {
+                self.webtransport_bidi_stream.insert(wt_server_stream);
+            }
         }
     }
 }
@@ -366,10 +383,24 @@ impl HttpServer for Http3TestServer {
                     data,
                     fin,
                 } => {
-                    if self.webtransport_bidi_stream.contains(&stream) {
-                        self.new_response(stream, data);
+                    // echo bidirectional input back to client
+                    if stream.stream_id().is_bidi() {
+                        if self.webtransport_bidi_stream.contains(&stream) {
+                            self.new_response(stream, data);
+                        }
                         break;
                     }
+
+                    // echo unidirectional input to back to client
+                    if stream.stream_id().is_uni() {
+                        if !self.webtransport_uni_stream.is_empty() {
+                            let mut s = self.webtransport_uni_stream.pop().unwrap();
+                            s.send_data(&data).unwrap();
+                            s.stream_close_send().unwrap();
+                        }
+                        break;
+                    }
+
                     if let Some(r) = self.posts.get_mut(&stream) {
                         *r += data.len();
                     }
@@ -445,6 +476,11 @@ impl HttpServer for Http3TestServer {
                                 session
                                     .response(&WebTransportSessionAcceptAction::Accept)
                                     .unwrap();
+                                let now = Instant::now();
+                                if !self.sessions_to_close.contains_key(&now) {
+                                    self.sessions_to_close.insert(now, Vec::new());
+                                }
+                                self.sessions_to_close.get_mut(&now).unwrap().push(session);
                             } else if path == "/closeafter100ms" {
                                 session
                                     .response(&WebTransportSessionAcceptAction::Accept)
@@ -458,17 +494,48 @@ impl HttpServer for Http3TestServer {
                                     .unwrap()
                                     .push(session);
                             } else if path == "/create_unidi_stream" {
+                                // keeping the sever state as small as possible
+                                // seems to reduce racing in dom tests
+                                self.webtransport_uni_stream.clear();
                                 session
                                     .response(&WebTransportSessionAcceptAction::Accept)
                                     .unwrap();
-                                self.sessions_to_create_stream
-                                    .push((session, StreamType::UniDi));
+                                self.sessions_to_create_stream.push((
+                                    session,
+                                    StreamType::UniDi,
+                                    false,
+                                ));
+                            } else if path == "/create_unidi_stream_and_hello" {
+                                // keeping the sever state as small as possible
+                                // seems to reduce racing in dom tests
+                                self.webtransport_uni_stream.clear();
+                                session
+                                    .response(&WebTransportSessionAcceptAction::Accept)
+                                    .unwrap();
+                                self.sessions_to_create_stream.push((
+                                    session,
+                                    StreamType::UniDi,
+                                    true,
+                                ));
                             } else if path == "/create_bidi_stream" {
                                 session
                                     .response(&WebTransportSessionAcceptAction::Accept)
                                     .unwrap();
-                                self.sessions_to_create_stream
-                                    .push((session, StreamType::BiDi));
+                                self.sessions_to_create_stream.push((
+                                    session,
+                                    StreamType::BiDi,
+                                    false,
+                                ));
+                            } else if path == "/create_bidi_stream_and_hello" {
+                                self.webtransport_bidi_stream.clear();
+                                session
+                                    .response(&WebTransportSessionAcceptAction::Accept)
+                                    .unwrap();
+                                self.sessions_to_create_stream.push((
+                                    session,
+                                    StreamType::BiDi,
+                                    true,
+                                ));
                             } else {
                                 session
                                     .response(&WebTransportSessionAcceptAction::Accept)
@@ -487,7 +554,7 @@ impl HttpServer for Http3TestServer {
                 Http3ServerEvent::WebTransport(WebTransportServerEvent::SessionClosed {
                     session,
                     reason,
-                    headers: _
+                    headers: _,
                 }) => {
                     qdebug!(
                         "WebTransportServerEvent::SessionClosed {:?} {:?}",
@@ -496,8 +563,12 @@ impl HttpServer for Http3TestServer {
                     );
                 }
                 Http3ServerEvent::WebTransport(WebTransportServerEvent::NewStream(stream)) => {
+                    // new stream could be from client-outgoing unidirectional
+                    // or bidirectional, only need to relay echo back with bidi
                     if !stream.stream_info.is_http() {
-                        self.webtransport_bidi_stream.insert(stream);
+                        if stream.stream_id().is_bidi() {
+                            self.webtransport_bidi_stream.insert(stream);
+                        }
                     }
                 }
                 Http3ServerEvent::WebTransport(WebTransportServerEvent::Datagram {
