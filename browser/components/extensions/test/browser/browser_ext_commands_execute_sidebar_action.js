@@ -16,6 +16,9 @@ add_task(async function test_execute_sidebar_action() {
         default_panel: "sidebar.html",
       },
     },
+    // We want to confirm that sidebar is not shown on every extension start,
+    // so we use an explicit APP_STARTUP.
+    startupReason: "APP_STARTUP",
     files: {
       "sidebar.html": `
         <!DOCTYPE html>
@@ -42,11 +45,9 @@ add_task(async function test_execute_sidebar_action() {
 
   await extension.startup();
   await SimpleTest.promiseFocus(window);
-  // Since we didn't set useAddonManager, the sidebar will not be automatically
-  // opened for this test.
   ok(
     document.getElementById("sidebar-box").hidden,
-    "sidebar box is not visible"
+    `Sidebar box is not visible after "not-first" startup.`
   );
   // Send the key to open the sidebar.
   EventUtils.synthesizeKey("j", { altKey: true, shiftKey: true });
