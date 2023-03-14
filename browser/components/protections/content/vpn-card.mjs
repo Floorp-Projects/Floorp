@@ -5,8 +5,8 @@
 /* eslint-env mozilla/remote-page */
 
 export default class VPNCard {
-  constructor(document) {
-    this.doc = document;
+  constructor(doc) {
+    this.doc = doc;
   }
 
   init() {

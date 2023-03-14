@@ -22,7 +22,7 @@ const openMenu = e => {
     .toggle(e);
 };
 
-const Template = ({ open, items }) =>
+const Template = ({ isOpen, items }) =>
   html`
     <style>
       panel-item[icon="passwords"]::part(button) {
@@ -50,7 +50,7 @@ const Template = ({ open, items }) =>
       class="ghost-button icon-button bottom end"
       @click=${openMenu}
     ></button>
-    <panel-list ?stay-open=${open} ?open=${open}>
+    <panel-list ?stay-open=${isOpen} ?open=${isOpen}>
       ${items.map(i =>
         i == "<hr>"
           ? html`
@@ -72,7 +72,7 @@ const Template = ({ open, items }) =>
 
 export const Simple = Template.bind({});
 Simple.args = {
-  open: false,
+  isOpen: false,
   items: [
     "Item One",
     { text: "Item Two (accesskey w)", accesskey: "w" },
@@ -85,7 +85,7 @@ Simple.args = {
 
 export const Icons = Template.bind({});
 Icons.args = {
-  open: false,
+  isOpen: false,
   items: [
     { text: "Passwords", icon: "passwords" },
     { text: "Settings", icon: "settings" },
@@ -95,5 +95,5 @@ Icons.args = {
 export const Open = Template.bind({});
 Open.args = {
   ...Simple.args,
-  open: true,
+  isOpen: true,
 };

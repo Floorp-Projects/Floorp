@@ -17,11 +17,11 @@ window.MozXULElement = {
 
   // For some reason Storybook doesn't watch the static folder. By creating a
   // method with a dynamic import we can pull the desired files into the bundle.
-  async importCss(name) {
+  async importCss(resourceName) {
     // eslint-disable-next-line no-unsanitized/method
     let file = await import(
       /* webpackInclude: /.*[\/\\].*\.css$/ */
-      `browser/themes/shared/${name}`
+      `browser/themes/shared/${resourceName}`
     );
     return file;
   },

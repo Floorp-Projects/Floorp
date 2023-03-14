@@ -13,9 +13,9 @@ export default {
 
 window.MozXULElement.insertFTLIfNeeded("browser/aboutLogins.ftl");
 
-const Template = ({ history }) =>
+const Template = ({ historyItems }) =>
   html`
-    <login-timeline .history=${history}></login-timeline>
+    <login-timeline .history=${historyItems}></login-timeline>
   `;
 
 const ACTION_ID_CREATED = "login-item-timeline-action-created";
@@ -24,12 +24,12 @@ const ACTION_ID_USED = "login-item-timeline-action-used";
 
 export const EmptyTimeline = Template.bind({});
 EmptyTimeline.args = {
-  history: [],
+  historyItems: [],
 };
 
 export const TypicalTimeline = Template.bind({});
 TypicalTimeline.args = {
-  history: [
+  historyItems: [
     { actionId: ACTION_ID_CREATED, time: 1463526500267 },
     { actionId: ACTION_ID_UPDATED, time: 1653621219569 },
     { actionId: ACTION_ID_USED, time: 1561813190300 },
@@ -38,7 +38,7 @@ TypicalTimeline.args = {
 
 export const AllSameDayTimeline = Template.bind({});
 AllSameDayTimeline.args = {
-  history: [
+  historyItems: [
     { actionId: ACTION_ID_CREATED, time: 1463526500267 },
     { actionId: ACTION_ID_UPDATED, time: 1463526500267 },
     { actionId: ACTION_ID_USED, time: 1463526500267 },

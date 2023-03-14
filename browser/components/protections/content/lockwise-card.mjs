@@ -9,8 +9,8 @@ const HOW_IT_WORKS_URL_PREF = RPMGetFormatURLPref(
 );
 
 export default class LockwiseCard {
-  constructor(document) {
-    this.doc = document;
+  constructor(doc) {
+    this.doc = doc;
   }
 
   /**

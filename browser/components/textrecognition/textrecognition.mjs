@@ -114,13 +114,13 @@ class TextRecognitionModal {
 
   /**
    * After the results are shown, measure how long a user interacts with the modal.
-   * @param {number} length
+   * @param {number} textLength
    */
-  static recordTextLengthTelemetry(length) {
+  static recordTextLengthTelemetry(textLength) {
     const histogram = Services.telemetry.getHistogramById(
       "TEXT_RECOGNITION_TEXT_LENGTH"
     );
-    histogram.add(length);
+    histogram.add(textLength);
   }
 
   setupCloseHandler() {

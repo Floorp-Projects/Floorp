@@ -193,7 +193,7 @@ window.addEventListener("AboutLoginsRemoveAllLoginsDialog", () => {
   }
 });
 
-window.addEventListener("AboutLoginsExportPasswordsDialog", async event => {
+window.addEventListener("AboutLoginsExportPasswordsDialog", async () => {
   recordTelemetryEvent({
     object: "export",
     method: "mgmt_menu_item_used",

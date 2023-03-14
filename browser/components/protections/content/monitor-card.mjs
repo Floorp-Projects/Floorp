@@ -23,8 +23,8 @@ const MONITOR_HOME_PAGE_URL = RPMGetFormatURLPref(
 );
 
 export default class MonitorClass {
-  constructor(document) {
-    this.doc = document;
+  constructor(doc) {
+    this.doc = doc;
   }
 
   init() {
