@@ -125,6 +125,27 @@ nsresult nsMIMEHeaderParamImpl::GetParameterHTTP(const nsACString& aHeaderVal,
                         false, nullptr, aResult);
 }
 
+/* static */
+// detects any non-null characters pass null
+bool nsMIMEHeaderParamImpl::ContainsTrailingCharPastNull(
+    const nsACString& aVal) {
+  nsACString::const_iterator first;
+  aVal.BeginReading(first);
+  nsACString::const_iterator end;
+  aVal.EndReading(end);
+
+  if (FindCharInReadable(L'\0', first, end)) {
+    while (first != end) {
+      if (*first != '\0') {
+        // contains trailing characters past the null character
+        return true;
+      }
+      ++first;
+    }
+  }
+  return false;
+}
+
 // XXX : aTryLocaleCharset is not yet effective.
 /* static */
 nsresult nsMIMEHeaderParamImpl::DoGetParameter(
@@ -138,9 +159,8 @@ nsresult nsMIMEHeaderParamImpl::DoGetParameter(
   // aDecoding (5987 being a subset of 2231) and return charset.)
   nsCString med;
   nsCString charset;
-  rv = DoParameterInternal(PromiseFlatCString(aHeaderVal).get(), aParamName,
-                           aDecoding, getter_Copies(charset), aLang,
-                           getter_Copies(med));
+  rv = DoParameterInternal(aHeaderVal, aParamName, aDecoding,
+                           getter_Copies(charset), aLang, getter_Copies(med));
   if (NS_FAILED(rv)) return rv;
 
   // convert to UTF-8 after charset conversion and RFC 2047 decoding
@@ -375,7 +395,7 @@ bool IsValidOctetSequenceForCharset(const nsACString& aCharset,
 // The format of these header lines  is
 // <token> [ ';' <token> '=' <token-or-quoted-string> ]*
 NS_IMETHODIMP
-nsMIMEHeaderParamImpl::GetParameterInternal(const char* aHeaderValue,
+nsMIMEHeaderParamImpl::GetParameterInternal(const nsACString& aHeaderValue,
                                             const char* aParamName,
                                             char** aCharset, char** aLang,
                                             char** aResult) {
@@ -385,9 +405,23 @@ nsMIMEHeaderParamImpl::GetParameterInternal(const char* aHeaderValue,
 
 /* static */
 nsresult nsMIMEHeaderParamImpl::DoParameterInternal(
-    const char* aHeaderValue, const char* aParamName, ParamDecoding aDecoding,
-    char** aCharset, char** aLang, char** aResult) {
-  if (!aHeaderValue || !*aHeaderValue || !aResult) return NS_ERROR_INVALID_ARG;
+    const nsACString& aHeaderValue, const char* aParamName,
+    ParamDecoding aDecoding, char** aCharset, char** aLang, char** aResult) {
+  if (aHeaderValue.IsEmpty() || !aResult) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (ContainsTrailingCharPastNull(aHeaderValue)) {
+    // See Bug 1784348
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  const nsCString& flat = PromiseFlatCString(aHeaderValue);
+  const char* str = flat.get();
+
+  if (!*str) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   *aResult = nullptr;
 
@@ -399,8 +433,6 @@ nsresult nsMIMEHeaderParamImpl::DoParameterInternal(
   // change to (aDecoding != HTTP_FIELD_ENCODING) when we want to disable
   // them for HTTP header fields later on, see bug 776324
   bool acceptContinuations = true;
-
-  const char* str = aHeaderValue;
 
   // skip leading white space.
   for (; *str && nsCRT::IsAsciiSpace(*str); ++str) {
