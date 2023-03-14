@@ -1068,6 +1068,7 @@ if CONFIG["MOZ_WEBRTC"]:
         "RTCRtpSender.webidl",
         "RTCRtpSources.webidl",
         "RTCRtpTransceiver.webidl",
+        "RTCSctpTransport.webidl",
         "RTCSessionDescription.webidl",
         "RTCStatsReport.webidl",
         "WebrtcGlobalInformation.webidl",

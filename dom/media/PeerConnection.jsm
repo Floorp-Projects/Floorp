@@ -1655,6 +1655,10 @@ class RTCPeerConnection {
     return this._auto(onSucc, onErr, () => this._pc.getStats(selector));
   }
 
+  get sctp() {
+    return this._pc.sctp;
+  }
+
   createDataChannel(
     label,
     {

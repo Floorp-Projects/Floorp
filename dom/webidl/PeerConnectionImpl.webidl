@@ -116,6 +116,8 @@ interface PeerConnectionImpl  {
   attribute DOMString peerIdentity;
   readonly attribute boolean privacyRequested;
 
+  readonly attribute RTCSctpTransport? sctp;
+
   /* Data channels */
   [Throws]
   RTCDataChannel createDataChannel(DOMString label, DOMString protocol,
