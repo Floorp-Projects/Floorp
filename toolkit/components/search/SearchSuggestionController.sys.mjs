@@ -649,7 +649,7 @@ export class SearchSuggestionController {
     };
 
     for (let resultData of suggestResults) {
-      if (typeof result === "string") {
+      if (typeof resultData === "string") {
         // Failure message
         console.error(
           "SearchSuggestionController found an unexpected string value: " +
