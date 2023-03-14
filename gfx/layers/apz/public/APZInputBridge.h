@@ -102,6 +102,14 @@ struct APZEventResult {
   // depending on |aTarget|.
   void SetStatusAsConsumeDoDefault(
       const RefPtr<AsyncPanZoomController>& aTarget);
+
+  // Set mStatus to nsEventStatus_eConsumeDoDefault, unlike above
+  // SetStatusAsConsumeDoDefault(const RefPtr<AsyncPanZoomController>&) this
+  // function doesn't mutate mHandledResult.
+  void SetStatusAsConsumeDoDefault() {
+    mStatus = nsEventStatus_eConsumeDoDefault;
+  }
+
   // Set mStatus to nsEventStatus_eConsumeDoDefault and set mHandledResult
   // depending on |aBlock|'s target APZC.
   void SetStatusAsConsumeDoDefault(const InputBlockState& aBlock);
