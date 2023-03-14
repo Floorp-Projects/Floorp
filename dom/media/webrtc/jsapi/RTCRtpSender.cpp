@@ -557,21 +557,13 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
       const auto& newEncoding = paramsCopy.mEncodings[i];
       if (oldEncoding.mRid != newEncoding.mRid) {
         nsCString error("Cannot change rid, or reorder encodings");
-        if (!mAllowOldSetParameters) {
-          if (!mHaveFailedBecauseRidChange) {
-            mHaveFailedBecauseRidChange = true;
-            mozilla::glean::rtcrtpsender_setparameters::fail_rid_changed
-                .AddToNumerator(1);
-          }
-          p->MaybeRejectWithInvalidModificationError(error);
-          return p.forget();
-        }
-        if (!mHaveWarnedBecauseRidChange) {
-          mHaveWarnedBecauseRidChange = true;
-          mozilla::glean::rtcrtpsender_setparameters::warn_rid_changed
+        if (!mHaveFailedBecauseRidChange) {
+          mHaveFailedBecauseRidChange = true;
+          mozilla::glean::rtcrtpsender_setparameters::fail_rid_changed
               .AddToNumerator(1);
         }
-        WarnAboutBadSetParameters(error);
+        p->MaybeRejectWithInvalidModificationError(error);
+        return p.forget();
       }
     }
   }

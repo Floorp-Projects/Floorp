@@ -175,7 +175,6 @@ class RTCRtpSender : public nsISupports,
   // TODO(bug 1803388): Remove the glean warnings once they are no longer needed
   bool mHaveWarnedBecauseNoGetParameters = false;
   bool mHaveWarnedBecauseEncodingCountChange = false;
-  bool mHaveWarnedBecauseRidChange = false;
   bool mHaveWarnedBecauseNoTransactionId = false;
   bool mHaveWarnedBecauseStaleTransactionId = false;
   // TODO(bug 1803389): Remove the glean errors once they are no longer needed.
