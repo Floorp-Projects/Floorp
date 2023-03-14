@@ -235,12 +235,11 @@
                 webpanobject = null
             } 
             if (webpanobject == null) {
-                document.getElementById("sidebar2-box").appendChild(window.MozXULElement.parseXULToFragment(`
+                let webpanelElem = window.MozXULElement.parseXULToFragment(`
               <browser 
                 id="webpanel${webpanel_id}"
                 class="webpanels${isFloorp ? " isFloorp" : (isTST ? " isTST" : " isWeb")}"
                 flex="1"
-                src="${webpanelURL}"
                 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
                 disablehistory="true"
                 disablefullscreen="true"
@@ -252,7 +251,7 @@
                 initialBrowsingContextGroupId="40"
                 ${isWeb ? `
                 usercontextid="${wibpanel_usercontext}"
-                changeuseragent="${String(webpanel_userAgent)}"
+                changeuseragent="${(typeof webpanel_userAgent) == "number" ? String(webpanel_userAgent) : "0"}"
                 ` :""}
                 ${isWeb || isTST ? `
                 webextension-view-type="sidebar"
@@ -264,7 +263,9 @@
                   : (isTST ? `context="contentAreaContextMenu"` : "")
                 }
                  />
-              `));
+              `)
+                webpanelElem.firstChild.setAttribute("src", webpanelURL);
+                document.getElementById("sidebar2-box").appendChild(webpanelElem);
             } else {
                 webpanobject.setAttribute("src", webpanelURL);
             }

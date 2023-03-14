@@ -3,7 +3,7 @@ const browser_ = window.wrappedJSObject.browser;
 
 if (browser_.runtime.id == "{506e023c-7f2b-40a3-8066-bc5deb40aebe}") {
   let gesturefyController = {
-    "commandsId": ["open-tree-style-tab","open-bookmarks-sidebar","open-history-sidebar","open-synctabs-sidebar","close-sidebar","open-browser-manager-sidebar","close-browser-manager-sidebar","toggle-browser-manager-sidebar","show-statusbar","hide-statusbar","toggle-statusbar","open-extension-sidebar"],
+    "commandsId": ["open-tree-style-tab","open-bookmarks-sidebar","open-history-sidebar","open-synctabs-sidebar","open-extension-sidebar","close-sidebar","open-browser-manager-sidebar","close-browser-manager-sidebar","toggle-browser-manager-sidebar","show-statusbar","hide-statusbar","toggle-statusbar"],
     "commandSettings":{"open-extension-sidebar":{"UI":function(){
       let extensionList = ""
       let valueJSON = JSON.parse(document.querySelector("#gesturePopupCommandSelect").getAttribute("value") ?? `{"settings":{"extensionId":""}}`)

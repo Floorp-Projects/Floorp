@@ -276,6 +276,9 @@ bsb-history-sidebar =
 bsb-download-sidebar =
   .label = { sidebar2-download-sidebar }
 
+bsb-notes-sidebar =
+  .label = { sidebar2-notes-sidebar }
+
 bsb-TST-sidebar =
   .label = { sidebar2-TST-sidebar }
 
@@ -336,7 +339,7 @@ newtab-background-not-background =
 newtab-background-selected-image =
     .label = Use Images from a Selected Folder
 
-newtab-background-folder = Selected Folder
+newtab-background-folder = Selected Folder (May not be available depending on the location of the folder)
 
 newtab-background-folder-reload = 
   .label = Reload Images
@@ -499,6 +502,11 @@ sidebar2-download-sidebar = Download
 show-download-sidebar =
   .tooltiptext = Show { sidebar2-download-sidebar } Sidebar
 
+sidebar2-notes-sidebar = Notes
+
+show-notes-sidebar =
+  .tooltiptext = Show { sidebar2-notes-sidebar } Sidebar
+
 sidebar2-TST-sidebar = Tree Style Tab
 
 show-TST-sidebar =
@@ -644,7 +652,7 @@ gf-floorp-toggle-statusbar-description = Show or Hide Status Bar
 gf-floorp-open-extension-sidebar-name = [Floorp] Open selected add-on of Sidebar
 gf-floorp-open-extension-sidebar-description = Open selected add-on of Sidebar
 gf-floorp-open-extension-sidebar-settings-addons-id = Add-on of Sidebar
-gf-floorp-open-extension-sidebar-settings-addons-id-description = The extension ID of the add-on open of sidebar
+gf-floorp-open-extension-sidebar-settings-addons-id-description = The extension of the add-on open of sidebar
 gf-floorp-open-extension-sidebar-settings-list-default = Please select add-on
 gf-floorp-open-extension-sidebar-settings-list-unknwon = Unknwon add-on
 ##################################################################### Floorp System Update Portable Version ###############################################################
