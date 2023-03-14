@@ -6,22 +6,39 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
+const lazy = {};
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  AboutWelcomeParent: "resource:///actors/AboutWelcomeParent.jsm",
+  ASRouter: "resource://activity-stream/lib/ASRouter.jsm",
+  PageEventManager: "resource://activity-stream/lib/PageEventManager.jsm",
+});
+
 const TRANSITION_MS = 500;
 const CONTAINER_ID = "root";
+const BUNDLE_SRC =
+  "resource://activity-stream/aboutwelcome/aboutwelcome.bundle.js";
 
 /**
- * Feature Callout fetches messages relevant to a given source and displays them in
- * the parent page pointing to the element they describe.
- * @param {Window} Window in which messages will be rendered
- * @param {String} Name of the pref used to track progress through a given feature tour
- * @param {String} Optional string to pass as the page when checking for messages to show,
- * in the case of the browser chrome the string "chrome" is used.
- * @param {Browser} browser
-
+ * Feature Callout fetches messages relevant to a given source and displays them
+ * in the parent page pointing to the element they describe.
  */
 export class FeatureCallout {
-  constructor({ win, prefName, page, browser }) {
-    this.win = win || window;
+  /**
+   * @typedef {Object} FeatureCalloutOptions
+   * @property {Window} win window in which messages will be rendered
+   * @property {string} prefName name of the pref used to track progress through
+   *   a given feature tour, e.g. "browser.pdfjs.feature-tour"
+   * @property {string} [page] string to pass as the page when requesting
+   *   messages from ASRouter and sending telemetry. for browser chrome, the
+   *   string "chrome" is used
+   * @property {MozBrowser} [browser] <browser> element responsible for the
+   *   feature callout. for content pages, this is the browser element that the
+   *   callout is being shown in. for chrome, this is the active browser
+   */
+
+  /** @param {FeatureCalloutOptions} options */
+  constructor({ win, prefName, page, browser } = {}) {
+    this.win = win;
     this.doc = win.document;
     this.browser = browser || this.win.docShell.chromeEventHandler;
     this.config = null;
@@ -59,23 +76,25 @@ export class FeatureCallout {
     );
     this.featureTourProgress; // Load initial value of progress pref
 
-    XPCOMUtils.defineLazyModuleGetters(this, {
-      AboutWelcomeParent: "resource:///actors/AboutWelcomeParent.jsm",
-      ASRouter: "resource://activity-stream/lib/ASRouter.jsm",
-      PageEventManager: "resource://activity-stream/lib/PageEventManager.jsm",
-    });
-
-    XPCOMUtils.defineLazyGetter(this, "pageEventManager", () => {
-      this.win.pageEventManager = new this.PageEventManager(this.doc);
-      return this.win.pageEventManager;
-    });
-
-    // When the window is focused, ensure tour is synced with tours in
-    // any other instances of the parent page. This does not apply when
-    // the Callout is shown in the browser chrome.
+    // When the window is focused, ensure tour is synced with tours in any other
+    // instances of the parent page. This does not apply when the Callout is
+    // shown in the browser chrome.
     if (this.page !== "chrome") {
       this.win.addEventListener("visibilitychange", this);
     }
+  }
+
+  /**
+   * Get the page event manager and instantiate it if necessary. Only used by
+   * _attachPageEventListeners, since we don't want to do this unnecessary work
+   * if a message with page event listeners hasn't loaded. Other consumers
+   * should use `this._pageEventManager?.property` instead.
+   */
+  get _loadPageEventManager() {
+    if (!this._pageEventManager) {
+      this._pageEventManager = new lazy.PageEventManager(this.doc);
+    }
+    return this._pageEventManager;
   }
 
   _addPositionListeners() {
@@ -132,12 +151,13 @@ export class FeatureCallout {
       this.ready = false;
       const container = this.doc.getElementById(CONTAINER_ID);
       container?.classList.add("hidden");
-      this.win.pageEventManager?.clear();
+      this._pageEventManager?.clear();
       // wait for fade out transition
       this.win.setTimeout(async () => {
         await this._loadConfig();
         container?.remove();
         this._removePositionListeners();
+        this.doc.querySelector(`[src="${BUNDLE_SRC}"]`)?.remove();
         await this._renderCallout();
       }, TRANSITION_MS);
     }
@@ -640,17 +660,17 @@ export class FeatureCallout {
     container.classList.remove("hidden");
   }
 
+  /** Expose top level functions expected by the aboutwelcome bundle. */
   _setupWindowFunctions() {
     if (this.AWSetup) {
       return;
     }
-    const AWParent = new this.AboutWelcomeParent();
+    const AWParent = new lazy.AboutWelcomeParent();
     this.win.addEventListener("unload", () => {
       AWParent.didDestroy();
     });
     const receive = name => data =>
       AWParent.onContentMessage(`AWPage:${name}`, data, this.doc);
-    // Expose top level functions expected by the bundle.
     this.win.AWGetFeatureConfig = () => this.config;
     this.win.AWGetSelectedTheme = receive("GET_SELECTED_THEME");
     // Do not send telemetry if message config sets metrics as 'block'.
@@ -667,6 +687,7 @@ export class FeatureCallout {
     this.AWSetup = true;
   }
 
+  /** Clean up the functions defined above. */
   _clearWindowFunctions() {
     const windowFuncs = [
       "AWGetFeatureConfig",
@@ -687,7 +708,7 @@ export class FeatureCallout {
       passive: true,
     });
     this.win.removeEventListener("keypress", this, { capture: true });
-    this.win.pageEventManager?.clear();
+    this._pageEventManager?.clear();
 
     // We're deleting featureTourProgress here to ensure that the
     // reference is freed for garbage collection. This prevents errors
@@ -703,6 +724,8 @@ export class FeatureCallout {
       () => {
         container?.remove();
         this.renderObserver?.disconnect();
+        this._removePositionListeners();
+        this.doc.querySelector(`[src="${BUNDLE_SRC}"]`)?.remove();
         // Put the focus back to the last place the user focused outside of the
         // featureCallout windows.
         if (this.savedActiveElement) {
@@ -751,9 +774,9 @@ export class FeatureCallout {
       await getDomReady();
     }
     // Load the bundle to render the content as configured.
+    this.doc.querySelector(`[src="${BUNDLE_SRC}"]`)?.remove();
     let bundleScript = this.doc.createElement("script");
-    bundleScript.src =
-      "resource://activity-stream/aboutwelcome/aboutwelcome.bundle.js";
+    bundleScript.src = BUNDLE_SRC;
     this.doc.head.appendChild(bundleScript);
   }
 
@@ -761,13 +784,21 @@ export class FeatureCallout {
     this.renderObserver?.observe(container, { childList: true });
   }
 
+  /**
+   * Request a message from ASRouter, targeting the `browser` and `page` values
+   * passed to the constructor. The message content is stored in this.config,
+   * which is returned by AWGetFeatureConfig. The aboutwelcome bundle will use
+   * that function to get the content. It will only be called when the bundle
+   * loads, so the bundle must be reloaded for a new message to be rendered.
+   * @returns {Promise<boolean>} true if a message is loaded, false if not.
+   */
   async _loadConfig() {
     if (this.loadingConfig) {
       return false;
     }
     this.loadingConfig = true;
-    await this.ASRouter.waitForInitialized;
-    let result = await this.ASRouter.sendTriggerMessage({
+    await lazy.ASRouter.waitForInitialized;
+    let result = await lazy.ASRouter.sendTriggerMessage({
       browser: this.browser,
       // triggerId and triggerContext
       id: "featureCalloutCheck",
@@ -792,7 +823,7 @@ export class FeatureCallout {
 
     // Only add an impression if we actually have a message to impress
     if (Object.keys(result.message).length) {
-      this.ASRouter.addImpression(result.message);
+      lazy.ASRouter.addImpression(result.message);
     }
 
     this.currentScreen = newScreen;
@@ -834,7 +865,7 @@ export class FeatureCallout {
    */
   _attachPageEventListeners(listeners) {
     listeners?.forEach(({ params, action }) =>
-      this.pageEventManager[params.options?.once ? "once" : "on"](
+      this._loadPageEventManager[params.options?.once ? "once" : "on"](
         params,
         event => {
           this._handlePageEventAction(action, event);
@@ -943,7 +974,7 @@ export class FeatureCallout {
       }
     });
 
-    this.win.pageEventManager?.clear();
+    this._pageEventManager?.clear();
     this.ready = false;
     const container = this.doc.getElementById(CONTAINER_ID);
     container?.remove();
