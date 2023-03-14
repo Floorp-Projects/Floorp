@@ -243,6 +243,7 @@ dependencies {
     implementation FocusDependencies.androidx_recyclerview
     implementation FocusDependencies.androidx_savedstate
     implementation FocusDependencies.androidx_splashscreen
+    implementation FocusDependencies.androidx_tracing
     implementation FocusDependencies.androidx_transition
     implementation FocusDependencies.androidx_work_ktx
 
@@ -361,7 +362,6 @@ dependencies {
     testImplementation FocusDependencies.androidx_test_rules
 
     androidTestImplementation FocusDependencies.androidx_test_core_ktx
-    androidTestImplementation FocusDependencies.androidx_tracing
     androidTestImplementation FocusDependencies.androidx_junit_ktx
     androidTestImplementation FocusDependencies.androidx_uiautomator
     androidTestImplementation FocusDependencies.androidx_test_runner

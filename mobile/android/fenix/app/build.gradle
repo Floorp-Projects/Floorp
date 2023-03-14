@@ -606,9 +606,11 @@ dependencies {
     implementation FenixDependencies.androidx_lifecycle_livedata
     implementation FenixDependencies.androidx_lifecycle_process
     implementation FenixDependencies.androidx_lifecycle_runtime
+    
     implementation FenixDependencies.androidx_lifecycle_viewmodel
     implementation FenixDependencies.androidx_core
     implementation FenixDependencies.androidx_core_ktx
+    implementation FenixDependencies.androidx_tracing
     implementation FenixDependencies.androidx_transition
     implementation FenixDependencies.androidx_work_ktx
     implementation FenixDependencies.androidx_datastore
@@ -660,7 +662,6 @@ dependencies {
 
     androidTestImplementation FenixDependencies.androidx_junit
     androidTestImplementation FenixDependencies.androidx_test_extensions
-    androidTestImplementation FenixDependencies.androidx_tracing
     androidTestImplementation FenixDependencies.androidx_work_testing
     androidTestImplementation FenixDependencies.androidx_benchmark_junit4
     androidTestImplementation FenixDependencies.mockwebserver
