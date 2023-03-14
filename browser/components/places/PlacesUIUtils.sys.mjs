@@ -1116,10 +1116,8 @@ export var PlacesUIUtils = {
    * @param {object} view
    *          The current view that contains the node or nodes selected for
    *          opening
-   * @param {Function=} [updateTelemetryFn]
-   *          Optional function to call if telemetry needs to be updated
    */
-  openMultipleLinksInTabs(nodeOrNodes, event, view, updateTelemetryFn = null) {
+  openMultipleLinksInTabs(nodeOrNodes, event, view) {
     let window = view.ownerWindow;
     let urlsToOpen = [];
 
@@ -1137,8 +1135,8 @@ export var PlacesUIUtils = {
       }
     }
     if (lazy.OpenInTabsUtils.confirmOpenInTabs(urlsToOpen.length, window)) {
-      if (updateTelemetryFn) {
-        updateTelemetryFn(urlsToOpen);
+      if (window.updateTelemetry) {
+        window.updateTelemetry(urlsToOpen);
       }
       this.openTabset(urlsToOpen, event, window);
     }
@@ -1226,6 +1224,9 @@ export var PlacesUIUtils = {
         private: aPrivate,
         userContextId,
       });
+      if (aWindow.updateTelemetry) {
+        aWindow.updateTelemetry([aNode]);
+      }
     }
   },
 
@@ -1460,7 +1461,7 @@ export var PlacesUIUtils = {
     return guidsToSelect;
   },
 
-  onSidebarTreeClick(event, updateTelemetryFn = null) {
+  onSidebarTreeClick(event) {
     // right-clicks are not handled here
     if (event.button == 2) {
       return;
@@ -1499,12 +1500,7 @@ export var PlacesUIUtils = {
       event.originalTarget.localName == "treechildren"
     ) {
       tree.view.selection.select(cell.row);
-      this.openMultipleLinksInTabs(
-        tree.selectedNode,
-        event,
-        tree,
-        updateTelemetryFn
-      );
+      this.openMultipleLinksInTabs(tree.selectedNode, event, tree);
     } else if (
       !mouseInGutter &&
       !isContainer &&
@@ -1514,21 +1510,15 @@ export var PlacesUIUtils = {
       // do this *before* attempting to load the link since openURL uses
       // selection as an indication of which link to load.
       tree.view.selection.select(cell.row);
-      if (updateTelemetryFn) {
-        updateTelemetryFn([tree.selectedNode]);
-      }
       this.openNodeWithEvent(tree.selectedNode, event);
     }
   },
 
-  onSidebarTreeKeyPress(event, updateTelemetryFn = null) {
+  onSidebarTreeKeyPress(event) {
     let node = event.target.selectedNode;
     if (node) {
       if (event.keyCode == event.DOM_VK_RETURN) {
         PlacesUIUtils.openNodeWithEvent(node, event);
-        if (updateTelemetryFn) {
-          updateTelemetryFn([node]);
-        }
       }
     }
   },
@@ -1737,7 +1727,7 @@ export var PlacesUIUtils = {
       event.target.getAttribute("data-usercontextid")
     );
     let triggerNode = this.lastContextMenuTriggerNode;
-    let isManaged = !!triggerNode.closest("#managed-bookmarks");
+    let isManaged = !!triggerNode?.closest("#managed-bookmarks");
     if (isManaged) {
       let window = triggerNode.ownerGlobal;
       window.openTrustedLinkIn(triggerNode.link, "tab", { userContextId });

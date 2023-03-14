@@ -89,6 +89,100 @@ add_task(async function test_click_multiple_history_entries() {
       "history",
       4
     );
+
+    let parentNode = tree.selectedNode;
+    if (!parentNode.containerOpen) {
+      // Only need to open/expand container node on first run
+      synthesizeClickOnSelectedTreeCell(tree);
+    }
+    if (parentNode.title == "Today" && parentNode.hasChildren) {
+      info(`Selecting node with title ${parentNode?.getChild(0)?.title}`);
+      tree.selectNode(parentNode.getChild(0));
+    }
+
+    synthesizeClickOnSelectedTreeCell(tree, {
+      button: 2,
+      type: "contextmenu",
+    });
+
+    TelemetryTestUtils.assertScalarUnset(
+      TelemetryTestUtils.getProcessScalars("parent", true, true),
+      "sidebar.link"
+    );
+
+    let openNewTabOption = document.getElementById("placesContext_open:newtab");
+    openNewTabOption.click();
+
+    TelemetryTestUtils.assertKeyedScalar(
+      TelemetryTestUtils.getProcessScalars("parent", true, true),
+      "sidebar.link",
+      "history",
+      1
+    );
+
+    if (parentNode.title == "Today" && parentNode.hasChildren) {
+      tree.selectNode(parentNode.getChild(0));
+    }
+
+    let newWinOpened = BrowserTestUtils.waitForNewWindow();
+
+    synthesizeClickOnSelectedTreeCell(tree, {
+      button: 2,
+      type: "contextmenu",
+    });
+
+    TelemetryTestUtils.assertScalarUnset(
+      TelemetryTestUtils.getProcessScalars("parent", true, true),
+      "sidebar.link"
+    );
+
+    let openNewWindowOption = document.getElementById(
+      "placesContext_open:newwindow"
+    );
+    openNewWindowOption.click();
+
+    let newWin = await newWinOpened;
+
+    TelemetryTestUtils.assertKeyedScalar(
+      TelemetryTestUtils.getProcessScalars("parent", true, true),
+      "sidebar.link",
+      "history",
+      1
+    );
+
+    await BrowserTestUtils.closeWindow(newWin);
+
+    if (parentNode.title == "Today" && parentNode.hasChildren) {
+      tree.selectNode(parentNode.getChild(0));
+    }
+
+    let newPrivateWinOpened = BrowserTestUtils.waitForNewWindow();
+
+    synthesizeClickOnSelectedTreeCell(tree, {
+      button: 2,
+      type: "contextmenu",
+    });
+
+    TelemetryTestUtils.assertScalarUnset(
+      TelemetryTestUtils.getProcessScalars("parent", true, true),
+      "sidebar.link"
+    );
+
+    let openNewPrivateWindowOption = document.getElementById(
+      "placesContext_open:newprivatewindow"
+    );
+    openNewPrivateWindowOption.click();
+
+    let newPrivateWin = await newPrivateWinOpened;
+
+    TelemetryTestUtils.assertKeyedScalar(
+      TelemetryTestUtils.getProcessScalars("parent", true, true),
+      "sidebar.link",
+      "history",
+      1
+    );
+
+    await BrowserTestUtils.closeWindow(newPrivateWin);
   });
 
   await SpecialPowers.popPrefEnv();
