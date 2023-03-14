@@ -106,6 +106,13 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
 
   void Save() override;
   void Restore() override;
+
+  void Reset() {
+    // reset the rendering context to its default state
+    // Userland polyfill is `c2d.width = c2d.width;`
+    SetDimensions(GetWidth(), GetHeight());
+  }
+
   void Scale(double aX, double aY, mozilla::ErrorResult& aError) override;
   void Rotate(double aAngle, mozilla::ErrorResult& aError) override;
   void Translate(double aX, double aY, mozilla::ErrorResult& aError) override;
