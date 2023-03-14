@@ -192,14 +192,14 @@
     </style>
 
     <style name="DialogButtonStyleLight" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
-        <item name="android:background">?android:attr/selectableItemBackgroundBorderless</item>
+        <item name="android:background">@drawable/ripple_button</item>
         <item name="android:textColor">?accentBright</item>
         <item name="android:textFontWeight" tools:ignore="NewApi">@integer/font_weight_medium</item>
         <item name="android:fontWeight" tools:ignore="NewApi">@integer/font_weight_medium</item>
     </style>
 
     <style name="DialogButtonStyleDark" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
-        <item name="android:background">?android:attr/selectableItemBackgroundBorderless</item>
+        <item name="android:background">@drawable/ripple_button_dark</item>
         <item name="android:textColor">?accentHighContrast</item>
         <item name="android:textFontWeight" tools:ignore="NewApi">@integer/font_weight_medium</item>
         <item name="android:fontWeight" tools:ignore="NewApi">@integer/font_weight_medium</item>    </style>

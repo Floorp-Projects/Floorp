@@ -45,7 +45,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:background="@drawable/ripple_button_dark"
             android:letterSpacing="0.05"
             android:minWidth="48dp"
             android:minHeight="48dp"
