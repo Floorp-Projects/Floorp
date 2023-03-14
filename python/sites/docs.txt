@@ -47,7 +47,7 @@ pypi:sphinxcontrib-applehelp==1.0.2
 pypi:sphinxcontrib-devhelp==1.0.2
 pypi:sphinxcontrib-htmlhelp==2.0.0
 pypi:sphinxcontrib-jsmath==1.0.1
-pypi:sphinxcontrib-mermaid==0.7.1
+pypi:sphinxcontrib-mermaid==0.8.1
 pypi:sphinxcontrib-qthelp==1.0.3
 pypi:sphinxcontrib-serializinghtml==1.1.5
 pypi:tornado==6.0.4
