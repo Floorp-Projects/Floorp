@@ -2,6 +2,111 @@
 Installation Attribution
 ========================
 
+*Installation Attribution* is a system that allows us to do a few things:
+
+- Gauge the success of marketing campaigns
+- Determine (roughly) the origin of an installer that a user ran
+- Support the Return to AMO workflow.
+
+We accomplish these things by adding an *attribution code* to Firefox installers which generally contains information supplied by www.mozilla.org (Bedrock and related services). This information is read by Firefox during and after installation, and sent back to Mozilla through Firefox Telemetry.
+
+The following information is supported by this system:
+
+* Traditional `UTM parameters <https://en.wikipedia.org/wiki/UTM_parameters>`_ (*source*, *medium*, *campaign*, and *content*)
+* *experiment*
+* *variation*
+* *ua*
+* *dltoken*
+* *dlsource*
+* *msstoresignedin*
+
+Descriptions of each of these can be found in :ref:`the Telemetry Environment documentation <environment>`.
+
+--------------------------
+Firefox Windows Installers
+--------------------------
+
+Installs done with either the stub or full NSIS installer are capable of being attributed. When these installers are created, they are given initial attribution data of *dlsource=mozillaci*. Users who download their installer via www.mozilla.org will typically have this attribution data overwritten (unless they have Do-not-track (DNT) enabled), with *dlsource=mozillaci*, a *dltoken*, and whatever UTM parameters Bedrock deems appropriate.
+
+An additional complication here is that the attribution system is used (or abused, depending on your view) to support the Return to AMO workflow -- forcing the *campaign* and *content* UTM parameters to specific values.
+
+The below diagram illustrates the flow of the cases above:
+
+.. mermaid::
+
+    flowchart TD
+        subgraph Legend
+            direction LR
+            start1[ ] --->|"(1) Bedrock, Do-Not-Track enabled"| stop1[ ]
+            start2[ ] --->|"(2) Bedrock, Do-Not-Track disabled"| stop2[ ]
+            start3[ ] --->|"(3) Bedrock via Search Engine"| stop3[ ]
+            start4[ ] --->|"(4) Bedrock via Return to AMO flow"| stop4[ ]
+            start5[ ] --->|"(5) Direct download from CDN Origin"| stop5[ ]
+            start6[ ] --->|"Common Paths"| stop6[ ]
+
+            %% Legend colours
+            linkStyle 0 stroke-width:2px,fill:none,stroke:blue;
+            linkStyle 1 stroke-width:2px,fill:none,stroke:green;
+            linkStyle 2 stroke-width:2px,fill:none,stroke:red;
+            linkStyle 3 stroke-width:2px,fill:none,stroke:purple;
+            linkStyle 4 stroke-width:2px,fill:none,stroke:pink;
+        end
+
+        subgraph Download Flow
+            User([User])
+            Search[Search Engine]
+            AMO[AMO<br>addons.mozilla.org]
+            Bedrock[Bedrock<br>mozilla.org]
+            Bouncer[Bouncer<br>download.mozilla.org]
+            CDNOrigin[CDN Origin<br>archive.mozilla.org]
+            CDN[CDN<br>download-installer.cdn.mozilla.net]
+            Attr[Attribution Service<br>stubdownloader.services.mozilla.net]
+            AttrCDN[Attribution CDN<br>cdn.stubdownloader.services.mozilla.net]
+            Inst([Installer Downloaded])
+
+            %% Case 1: Bedrock, DNT enabled
+            User ----> Bedrock
+            Bedrock ---->|"No attribution data set"| Bouncer
+            Bouncer ----> CDN
+            CDN ---->|"Contains static attribution data:<br><i>dlsource</i>: mozillaci"| Inst
+
+            linkStyle 6,7,8,9 stroke-width:2px,fill:none,stroke:blue;
+
+            %% Case 2: Bedrock, DNT disabled
+            User ---> Bedrock
+
+            linkStyle 10 stroke-width:2px,fill:none,stroke:green;
+
+            %% Case 3: Bedrock via Search Engine
+            User ----> Search
+            Search ---->|"Sets UTM parameters"| Bedrock
+
+            linkStyle 11,12 stroke-width:2px,fill:none,stroke:red;
+
+            %% Case 4: Bedrock via Return to AMO flow
+            User ---->|"Initiates Return-to-AMO request"| AMO
+            AMO ---->|"Sets <i>campaign</i> and<br><i>content</i> UTM parameters"| Bedrock
+
+            linkStyle 13,14 stroke-width:2px,fill:none,stroke:purple;
+
+            %% Case 5: Direct download from CDN
+            User --> CDNOrigin
+            CDNOrigin -->|"Contains static attribution data:<br><i>dlsource</i>: mozillaci"| Inst
+
+            linkStyle 15,16 stroke-width:2px,fill:none,stroke:pink;
+
+            %% Common links for cases 2, 3, and 4
+            Bedrock ---->|"Attribution data forwarded:<br><i>dlsource</i>: mozorg<br><i>dltoken</i>: present<br>any UTM parameters set"| Bouncer
+            Bouncer ---->|"Forwards attribution data"| Attr
+            Attr <---->|"Fetches installer"| CDN
+            Attr ---->|"Places modified installer<br>on Attribution CDN"| AttrCDN
+            AttrCDN ---->|"Contains dynamic attribution data:<br><i>dlsource</i>: mozorg<br><i>dltoken</i>: present<br>any UTM parameters set"| Inst
+
+            %% Common links for everything
+            CDN <---->|"Fetches installer"| CDNOrigin
+        end
+
+
 ---------------
 Microsoft Store
 ---------------
