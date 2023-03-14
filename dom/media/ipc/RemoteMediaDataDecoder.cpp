@@ -46,6 +46,8 @@ RefPtr<MediaDataDecoder::InitPromise> RemoteMediaDataDecoder::Init() {
                                                   __func__);
             }
             mDescription = mChild->GetDescriptionName();
+            mProcessName = mChild->GetProcessName();
+            mCodecName = mChild->GetCodecName();
             mIsHardwareAccelerated =
                 mChild->IsHardwareAccelerated(mHardwareAcceleratedReason);
             mConversion = mChild->NeedsConversion();
@@ -136,5 +138,11 @@ MediaDataDecoder::ConversionRequired RemoteMediaDataDecoder::NeedsConversion()
 nsCString RemoteMediaDataDecoder::GetDescriptionName() const {
   return mDescription;
 }
+
+nsCString RemoteMediaDataDecoder::GetProcessName() const {
+  return mProcessName;
+}
+
+nsCString RemoteMediaDataDecoder::GetCodecName() const { return mCodecName; }
 
 }  // namespace mozilla

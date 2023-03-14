@@ -44,6 +44,7 @@ class GMPVideoDecoder : public MediaDataDecoder,
   nsCString GetDescriptionName() const override {
     return "gmp video decoder"_ns;
   }
+  nsCString GetCodecName() const override;
   ConversionRequired NeedsConversion() const override {
     return mConvertToAnnexB ? ConversionRequired::kNeedAnnexB
                             : ConversionRequired::kNeedAVCC;

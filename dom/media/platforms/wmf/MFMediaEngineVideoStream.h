@@ -31,6 +31,8 @@ class MFMediaEngineVideoStream final : public MFMediaEngineStream {
     return "media engine video stream"_ns;
   }
 
+  nsCString GetCodecName() const override;
+
   TrackInfo::TrackType TrackType() override {
     return TrackInfo::TrackType::kVideoTrack;
   }

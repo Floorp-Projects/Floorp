@@ -102,6 +102,17 @@ nsCString ChromiumCDMVideoDecoder::GetDescriptionName() const {
   return "chromium cdm video decoder"_ns;
 }
 
+nsCString ChromiumCDMVideoDecoder::GetCodecName() const {
+  if (MP4Decoder::IsH264(mConfig.mMimeType)) {
+    return "h264"_ns;
+  } else if (VPXDecoder::IsVP8(mConfig.mMimeType)) {
+    return "vp8"_ns;
+  } else if (VPXDecoder::IsVP9(mConfig.mMimeType)) {
+    return "vp9"_ns;
+  }
+  return "unknown"_ns;
+}
+
 MediaDataDecoder::ConversionRequired ChromiumCDMVideoDecoder::NeedsConversion()
     const {
   return mConvertToAnnexB ? ConversionRequired::kNeedAnnexB

@@ -69,6 +69,14 @@ nsCString AudioTrimmer::GetDescriptionName() const {
   return mDecoder->GetDescriptionName();
 }
 
+nsCString AudioTrimmer::GetProcessName() const {
+  return mDecoder->GetProcessName();
+}
+
+nsCString AudioTrimmer::GetCodecName() const {
+  return mDecoder->GetCodecName();
+}
+
 bool AudioTrimmer::IsHardwareAccelerated(nsACString& aFailureReason) const {
   return mDecoder->IsHardwareAccelerated(aFailureReason);
 }

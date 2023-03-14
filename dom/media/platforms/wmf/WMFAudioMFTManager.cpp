@@ -132,6 +132,15 @@ WMFAudioMFTManager::Input(MediaRawData* aSample) {
                          aSample->mDuration.ToMicroseconds());
 }
 
+nsCString WMFAudioMFTManager::GetCodecName() const {
+  if (mStreamType == WMFStreamType::AAC) {
+    return "aac"_ns;
+  } else if (mStreamType == WMFStreamType::MP3) {
+    return "mp3"_ns;
+  }
+  return "unknown"_ns;
+}
+
 HRESULT
 WMFAudioMFTManager::UpdateOutputType() {
   HRESULT hr;

@@ -64,8 +64,10 @@ mozilla::ipc::IPCResult RemoteDecoderParent::RecvInit(
           bool hardwareAccelerated =
               self->mDecoder->IsHardwareAccelerated(hardwareReason);
           resolver(InitCompletionIPDL{
-              track, self->mDecoder->GetDescriptionName(), hardwareAccelerated,
-              hardwareReason, self->mDecoder->NeedsConversion()});
+              track, self->mDecoder->GetDescriptionName(),
+              self->mDecoder->GetProcessName(), self->mDecoder->GetCodecName(),
+              hardwareAccelerated, hardwareReason,
+              self->mDecoder->NeedsConversion()});
         }
       });
   return IPC_OK();

@@ -31,6 +31,7 @@ class DAV1DDecoder : public MediaDataDecoder,
   nsCString GetDescriptionName() const override {
     return "av1 libdav1d video decoder"_ns;
   }
+  nsCString GetCodecName() const override { return "av1"_ns; }
 
   void ReleaseDataBuffer(const uint8_t* buf);
 

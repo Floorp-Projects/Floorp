@@ -195,6 +195,9 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
                      AV_FUNC_AVUTIL_58)
   AV_FUNC(av_strerror,
           AV_FUNC_AVUTIL_58 | AV_FUNC_AVUTIL_59 | AV_FUNC_AVUTIL_60)
+  AV_FUNC(avcodec_descriptor_get, AV_FUNC_53 | AV_FUNC_55 | AV_FUNC_56 |
+                                      AV_FUNC_57 | AV_FUNC_58 | AV_FUNC_59 |
+                                      AV_FUNC_60)
 
 #ifdef MOZ_WAYLAND
   AV_FUNC_OPTION_SILENT(avcodec_get_hw_config,

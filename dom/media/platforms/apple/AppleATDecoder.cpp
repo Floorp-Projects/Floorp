@@ -120,6 +120,17 @@ void AppleATDecoder::ProcessShutdown() {
   }
 }
 
+nsCString AppleATDecoder::GetCodecName() const {
+  switch (mFormatID) {
+    case kAudioFormatMPEGLayer3:
+      return "mp3"_ns;
+    case kAudioFormatMPEG4AAC:
+      return "aac"_ns;
+    default:
+      return "unknown"_ns;
+  }
+}
+
 struct PassthroughUserData {
   UInt32 mChannels;
   UInt32 mDataSize;

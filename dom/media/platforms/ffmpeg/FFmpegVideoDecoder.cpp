@@ -783,6 +783,14 @@ void FFmpegVideoDecoder<LIBAV_VER>::InitCodecContext() {
 #endif
 }
 
+nsCString FFmpegVideoDecoder<LIBAV_VER>::GetCodecName() const {
+#if LIBAVCODEC_VERSION_MAJOR > 53
+  return nsCString(mLib->avcodec_descriptor_get(mCodecID)->name);
+#else
+  return nsLiteralCString("FFmpegAudioDecoder");
+#endif
+}
+
 #ifdef MOZ_WAYLAND_USE_VAAPI
 void FFmpegVideoDecoder<LIBAV_VER>::InitVAAPICodecContext() {
   mCodecContext->width = mInfo.mImage.width;

@@ -10,6 +10,7 @@
 #include "VideoUtils.h"
 #include "BufferReader.h"
 #include "mozilla/StaticPrefs_media.h"
+#include "mozilla/Telemetry.h"
 
 namespace mozilla {
 
@@ -395,6 +396,14 @@ AVCodecID FFmpegAudioDecoder<LIBAV_VER>::GetCodecId(
   }
 
   return AV_CODEC_ID_NONE;
+}
+
+nsCString FFmpegAudioDecoder<LIBAV_VER>::GetCodecName() const {
+#if LIBAVCODEC_VERSION_MAJOR > 53
+  return nsCString(mLib->avcodec_descriptor_get(mCodecID)->name);
+#else
+  return "unknown"_ns;
+#endif
 }
 
 FFmpegAudioDecoder<LIBAV_VER>::~FFmpegAudioDecoder() {

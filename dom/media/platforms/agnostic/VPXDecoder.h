@@ -32,6 +32,7 @@ class VPXDecoder : public MediaDataDecoder,
   nsCString GetDescriptionName() const override {
     return "libvpx video decoder"_ns;
   }
+  nsCString GetCodecName() const override;
 
   enum Codec : uint8_t {
     VP8 = 1 << 0,

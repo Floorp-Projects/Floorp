@@ -33,6 +33,7 @@ class OpusDataDecoder : public MediaDataDecoder,
   nsCString GetDescriptionName() const override {
     return "opus audio decoder"_ns;
   }
+  nsCString GetCodecName() const override { return "opus"_ns; }
 
   // Return true if mimetype is Opus
   static bool IsOpus(const nsACString& aMimeType);

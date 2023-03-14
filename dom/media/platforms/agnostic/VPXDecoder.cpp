@@ -310,6 +310,17 @@ MediaResult VPXDecoder::DecodeAlpha(vpx_image_t** aImgAlpha,
   return NS_OK;
 }
 
+nsCString VPXDecoder::GetCodecName() const {
+  switch (mCodec) {
+    case Codec::VP8:
+      return "vp8"_ns;
+    case Codec::VP9:
+      return "vp9"_ns;
+    default:
+      return "unknown"_ns;
+  }
+}
+
 /* static */
 bool VPXDecoder::IsVPX(const nsACString& aMimeType, uint8_t aCodecMask) {
   return ((aCodecMask & VPXDecoder::VP8) &&

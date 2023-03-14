@@ -37,6 +37,8 @@ class WMFAudioMFTManager : public MFTManager {
     return "wmf audio decoder"_ns;
   }
 
+  nsCString GetCodecName() const override;
+
  private:
   HRESULT UpdateOutputType();
 

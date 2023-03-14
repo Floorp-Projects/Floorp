@@ -65,6 +65,8 @@ class AppleVTDecoder : public MediaDataDecoder,
                                   : "apple software VT decoder"_ns;
   }
 
+  nsCString GetCodecName() const override;
+
   ConversionRequired NeedsConversion() const override {
     return ConversionRequired::kNeedAVCC;
   }

@@ -39,6 +39,8 @@ class RemoteDecoderChild : public ShmemRecycleAllocator<RemoteDecoderChild>,
   RefPtr<mozilla::ShutdownPromise> Shutdown();
   bool IsHardwareAccelerated(nsACString& aFailureReason) const;
   nsCString GetDescriptionName() const;
+  nsCString GetProcessName() const;
+  nsCString GetCodecName() const;
   void SetSeekThreshold(const media::TimeUnit& aTime);
   MediaDataDecoder::ConversionRequired NeedsConversion() const;
   void DestroyIPDL();
@@ -75,6 +77,8 @@ class RemoteDecoderChild : public ShmemRecycleAllocator<RemoteDecoderChild>,
 
   nsCString mHardwareAcceleratedReason;
   nsCString mDescription;
+  nsCString mProcessName;
+  nsCString mCodecName;
   bool mIsHardwareAccelerated = false;
   bool mRemoteDecoderCrashed = false;
   MediaDataDecoder::ConversionRequired mConversion =

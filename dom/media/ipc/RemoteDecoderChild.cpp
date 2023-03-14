@@ -109,6 +109,9 @@ RefPtr<MediaDataDecoder::InitPromise> RemoteDecoderChild::Init() {
             mDescription.Append(RemoteDecodeInToStr(GetManager()->Location()));
             mDescription.Append(" remote)");
 
+            mProcessName = initResponse.decoderProcessName();
+            mCodecName = initResponse.decoderCodecName();
+
             mIsHardwareAccelerated = initResponse.hardware();
             mHardwareAcceleratedReason = initResponse.hardwareReason();
             mConversion = initResponse.conversion();
@@ -275,6 +278,16 @@ bool RemoteDecoderChild::IsHardwareAccelerated(
 nsCString RemoteDecoderChild::GetDescriptionName() const {
   AssertOnManagerThread();
   return mDescription;
+}
+
+nsCString RemoteDecoderChild::GetProcessName() const {
+  AssertOnManagerThread();
+  return mProcessName;
+}
+
+nsCString RemoteDecoderChild::GetCodecName() const {
+  AssertOnManagerThread();
+  return mCodecName;
 }
 
 void RemoteDecoderChild::SetSeekThreshold(const media::TimeUnit& aTime) {

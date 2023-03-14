@@ -97,6 +97,22 @@ already_AddRefed<MediaData> MFMediaEngineAudioStream::OutputDataInternal() {
   return output.forget();
 }
 
+nsCString MFMediaEngineAudioStream::GetCodecName() const {
+  WMFStreamType type = GetStreamTypeFromMimeType(mAudioInfo.mMimeType);
+  switch (type) {
+    case WMFStreamType::MP3:
+      return "mp3"_ns;
+    case WMFStreamType::AAC:
+      return "aac"_ns;
+    case WMFStreamType::OPUS:
+      return "opus"_ns;
+    case WMFStreamType::VORBIS:
+      return "vorbis"_ns;
+    default:
+      return "unknown"_ns;
+  }
+}
+
 bool MFMediaEngineAudioStream::IsEncrypted() const {
   return mAudioInfo.mCrypto.IsEncrypted();
 }

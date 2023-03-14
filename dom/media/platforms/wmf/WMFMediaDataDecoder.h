@@ -58,6 +58,8 @@ class MFTManager {
 
   virtual nsCString GetDescriptionName() const = 0;
 
+  virtual nsCString GetCodecName() const = 0;
+
   virtual void SetSeekThreshold(const media::TimeUnit& aTime) {
     if (aTime.IsValid()) {
       mSeekTargetThreshold = Some(aTime);
@@ -108,7 +110,11 @@ class WMFMediaDataDecoder
   bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
 
   nsCString GetDescriptionName() const override {
-    return mMFTManager ? mMFTManager->GetDescriptionName() : ""_ns;
+    return mMFTManager ? mMFTManager->GetDescriptionName() : "unknown"_ns;
+  }
+
+  nsCString GetCodecName() const override {
+    return mMFTManager ? mMFTManager->GetCodecName() : ""_ns;
   }
 
   ConversionRequired NeedsConversion() const override {

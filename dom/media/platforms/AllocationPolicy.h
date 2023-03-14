@@ -145,6 +145,10 @@ class AllocationWrapper : public MediaDataDecoder {
   nsCString GetDescriptionName() const override {
     return mDecoder->GetDescriptionName();
   }
+  nsCString GetProcessName() const override {
+    return mDecoder->GetProcessName();
+  }
+  nsCString GetCodecName() const override { return mDecoder->GetCodecName(); }
   void SetSeekThreshold(const media::TimeUnit& aTime) override {
     mDecoder->SetSeekThreshold(aTime);
   }
