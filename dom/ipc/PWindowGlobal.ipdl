@@ -104,9 +104,9 @@ parent:
   // BrowsingContext. aTargetBC must be in the same BrowsingContextGroup as this
   // window global.
   async LoadURI(MaybeDiscardedBrowsingContext aTargetBC,
-                nullable nsDocShellLoadState aLoadState, bool aSetNavigating);
+                nsDocShellLoadState aLoadState, bool aSetNavigating);
 
-  async InternalLoad(nullable nsDocShellLoadState aLoadState);
+  async InternalLoad(nsDocShellLoadState aLoadState);
 
   /// Update the URI of the document in this WindowGlobal.
   [LazySend] async UpdateDocumentURI(nullable nsIURI aUri);
