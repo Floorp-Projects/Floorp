@@ -13,8 +13,10 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.os.Build;
 import android.os.TransactionTooLargeException;
 import android.text.TextUtils;
@@ -467,7 +469,12 @@ public class BasicSelectionActionDelegate
       return;
     }
 
-    mSelection.screenRect.roundOut(outRect);
+    // outRect has to convert to current window coordinate.
+    final Matrix matrix = new Matrix();
+    mSession.getScreenToWindowManagerOffsetMatrix(matrix);
+    final RectF transformedRect = new RectF();
+    matrix.mapRect(transformedRect, mSelection.screenRect);
+    transformedRect.roundOut(outRect);
   }
 
   @TargetApi(Build.VERSION_CODES.M)
