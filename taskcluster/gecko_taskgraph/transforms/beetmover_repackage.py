@@ -86,6 +86,7 @@ def make_task_description(config, jobs):
         msix_signing_name = "repackage-signing-shippable-l10n-msix"
         mar_signing_name = "mar-signing"
         attribution_name = "attribution"
+        repackage_deb_name = "repackage-deb"
         if job.get("locale"):
             signing_name = "shippable-l10n-signing"
             build_name = "shippable-l10n"
@@ -109,6 +110,8 @@ def make_task_description(config, jobs):
             dependencies["repackage-signing"] = upstream_deps[repackage_signing_name]
         if attribution_name in upstream_deps:
             dependencies[attribution_name] = upstream_deps[attribution_name]
+        if repackage_deb_name in upstream_deps:
+            dependencies[repackage_deb_name] = upstream_deps[repackage_deb_name]
 
         attributes = copy_attributes_from_dependent_job(dep_job)
         attributes.update(job.get("attributes", {}))
