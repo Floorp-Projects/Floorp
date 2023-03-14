@@ -6208,6 +6208,23 @@ exports.CSS_PROPERTIES = {
       "url"
     ]
   },
+  "content-visibility": {
+    "isInherited": false,
+    "subproperties": [
+      "content-visibility"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "hidden",
+      "inherit",
+      "initial",
+      "revert",
+      "revert-layer",
+      "unset",
+      "visible"
+    ]
+  },
   "counter-increment": {
     "isInherited": false,
     "subproperties": [
