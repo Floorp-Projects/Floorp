@@ -177,6 +177,8 @@ void Nyx::release(uint32_t iterations) {
     _exit(1);
   }
 
+  MOZ_FUZZING_NYX_DEBUG("[DEBUG] Nyx::release() called.\n");
+
   nyx_release(iterations);
 }
 
