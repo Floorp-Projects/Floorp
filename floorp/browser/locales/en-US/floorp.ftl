@@ -76,7 +76,7 @@ bookmarks-bottom-mode =
 
 nav-bar-settings = Navigation Bar Settings
 show-nav-bar-bottom =
- .label = Show the Navigation bar at the Bottom of { -brand-short-name }
+ .label = Show the navigation bar at the bottom of { -brand-short-name }
 
 material-effect =
  .label = Allow Mica for Everyone to modify the browser design
@@ -190,13 +190,13 @@ WebRTC =
 ## download mgr
 download-notification-preferences = Download Notification
 start-always-notify =
- .label = Notify Only at Start
+ .label = Notify only at start
 finish-always-notify = 
- .label = Notify Only when Finished
+ .label = Notify only when finished
 always-notify =
- .label = Notify Both at Start and End
+ .label = Notify both at start and end
 do-not-notify =
- .label = Do not Enable Notifications
+ .label = Do not enable notifications
 
 floorp-translater = Translation Function Settings
 click-to-option =
