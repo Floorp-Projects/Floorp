@@ -552,6 +552,7 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect, BorderStyle aBor
   [mWindow setCollectionBehavior:newBehavior];
 
   [mWindow setContentMinSize:NSMakeSize(60, 60)];
+  [mWindow disableCursorRects];
 
   // Make the window use CoreAnimation from the start, so that we don't
   // switch from a non-CA window to a CA-window in the middle.
