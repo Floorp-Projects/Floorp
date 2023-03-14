@@ -1590,6 +1590,23 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     * Indicates if juno onboarding feature is enabled.
+     */
+    var junoOnboardingEnabled by lazyFeatureFlagPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_juno_onboarding_enabled),
+        default = { FxNimbus.features.junoOnboarding.value().enabled },
+        featureFlag = FeatureFlags.junoOnboardingEnabled,
+    )
+
+    /**
+     * Indicates if the juno onboarding has been shown to the user.
+     */
+    var isJunoOnboardingShown by booleanPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_is_juno_onboarding_shown),
+        default = false,
+    )
+
+    /**
      * Get the current mode for how https-only is enabled.
      */
     fun getHttpsOnlyMode(): HttpsOnlyMode {

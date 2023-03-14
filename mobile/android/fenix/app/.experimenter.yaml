@@ -31,6 +31,14 @@ homescreen:
     sections-enabled:
       type: json
       description: "This property provides a lookup table of whether or not the given section should be enabled. If the section is enabled, it should be toggleable in the settings screen, and on by default."
+juno-onboarding:
+  description: A feature that shows juno onboarding flow.
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    enabled:
+      type: boolean
+      description: "if true, juno onboarding is shown to the user."
 messaging:
   description: "Configuration for the messaging system.\n\nIn practice this is a set of growable lookup tables for the\nmessage controller to piece together.\n"
   hasExposure: true

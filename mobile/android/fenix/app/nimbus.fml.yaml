@@ -186,6 +186,14 @@ features:
         type: Boolean
         default: true
 
+  juno-onboarding:
+    description: A feature that shows juno onboarding flow.
+    variables:
+      enabled:
+        description: if true, juno onboarding is shown to the user.
+        type: Boolean
+        default: false
+
   onboarding:
     description: "A feature that configures the new user onboarding page.
     Note that onboarding is a **first run** feature, and should only be modified by first run experiments."
