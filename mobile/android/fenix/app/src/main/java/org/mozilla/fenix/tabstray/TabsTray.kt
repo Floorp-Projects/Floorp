@@ -27,7 +27,6 @@ import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.compose.Divider
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.Theme
 
 /**
  * Top-level UI for displaying the Tabs Tray feature.
@@ -76,16 +75,14 @@ fun TabsTray(
             ) { position ->
                 when (Page.positionToPage(position)) {
                     Page.NormalTabs -> {
-                        FirefoxTheme(theme = Theme.getTheme(allowPrivateTheme = false)) {
-                            if (displayTabsInGrid) {
-                                TabGrid(
-                                    tabs = normalTabs,
-                                )
-                            } else {
-                                TabList(
-                                    tabs = normalTabs,
-                                )
-                            }
+                        if (displayTabsInGrid) {
+                            TabGrid(
+                                tabs = normalTabs,
+                            )
+                        } else {
+                            TabList(
+                                tabs = normalTabs,
+                            )
                         }
                     }
                     Page.PrivateTabs -> {
