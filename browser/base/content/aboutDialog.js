@@ -85,14 +85,15 @@ function init() {
   if (AppConstants.MOZ_UPDATER) {
     gAppUpdater = new appUpdater({ buttonAutoFocus: true });
 
-    let channelLabel = document.getElementById("currentChannel");
-    let currentChannelText = document.getElementById("currentChannelText");
-    channelLabel.value = UpdateUtils.UpdateChannel;
+    let channelLabel = document.getElementById("currentChannelText");
+    let channelAttrs = document.l10n.getAttributes(channelLabel);
+    let channel = UpdateUtils.UpdateChannel;
+    document.l10n.setAttributes(channelLabel, channelAttrs.id, { channel });
     if (
-      /^release($|\-)/.test(channelLabel.value) ||
+      /^release($|\-)/.test(channel) ||
       Services.sysinfo.getProperty("isPackagedApp")
     ) {
-      currentChannelText.hidden = true;
+      channelLabel.hidden = true;
     }
   }
 
