@@ -13,6 +13,7 @@
 #include "mozilla/ipc/PBackgroundParent.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/Services.h"
+#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "nsIObserverService.h"
@@ -58,53 +59,39 @@ StaticRefPtr<RemoteWorkerService> sRemoteWorkerService;
  * RemoteWorkers think they should still be alive, it's possible that this
  * blocker could expose the relevant logic error in the parent process if no
  * attempt is made to shutdown the RemoteWorker.
+ *
+ * ## Major Implementation Note: This is not actually an nsIAsyncShutdownClient
+ *
+ * Until https://bugzilla.mozilla.org/show_bug.cgi?id=1760855 provides us with a
+ * non-JS implementation of nsIAsyncShutdownService, this implementation
+ * actually uses event loop spinning.  The patch on
+ * https://bugzilla.mozilla.org/show_bug.cgi?id=1775784 that changed us to use
+ * this hack can be reverted when the time is right.
+ *
+ * Event loop spinning is handled by `RemoteWorkerService::Observe` and it calls
+ * our exposed `ShouldBlockShutdown()` to know when to stop spinning.
  */
-class RemoteWorkerServiceShutdownBlocker final
-    : public nsIAsyncShutdownBlocker {
+class RemoteWorkerServiceShutdownBlocker final {
   ~RemoteWorkerServiceShutdownBlocker() = default;
 
  public:
-  RemoteWorkerServiceShutdownBlocker(RemoteWorkerService* aService,
-                                     nsIAsyncShutdownClient* aShutdownClient)
-      : mService(aService), mShutdownClient(aShutdownClient) {
-    nsAutoString blockerName;
-    MOZ_ALWAYS_SUCCEEDS(GetName(blockerName));
-
-    MOZ_ALWAYS_SUCCEEDS(mShutdownClient->AddBlocker(
-        this, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__, blockerName));
-  }
+  explicit RemoteWorkerServiceShutdownBlocker(RemoteWorkerService* aService)
+      : mService(aService), mBlockShutdown(true) {}
 
   void RemoteWorkersAllGoneAllowShutdown() {
-    mShutdownClient->RemoveBlocker(this);
-    mShutdownClient = nullptr;
-
     mService->FinishShutdown();
     mService = nullptr;
+
+    mBlockShutdown = false;
   }
 
-  NS_IMETHOD
-  GetName(nsAString& aNameOut) override {
-    aNameOut = nsLiteralString(
-        u"RemoteWorkerService: waiting for RemoteWorkers to shutdown");
-    return NS_OK;
-  }
+  bool ShouldBlockShutdown() { return mBlockShutdown; }
 
-  NS_IMETHOD
-  BlockShutdown(nsIAsyncShutdownClient* aClient) override {
-    mService->BeginShutdown();
-    return NS_OK;
-  }
-
-  NS_IMETHOD
-  GetState(nsIPropertyBag**) override { return NS_OK; }
-
-  NS_DECL_ISUPPORTS
+  NS_INLINE_DECL_REFCOUNTING(RemoteWorkerServiceShutdownBlocker);
 
   RefPtr<RemoteWorkerService> mService;
-  nsCOMPtr<nsIAsyncShutdownClient> mShutdownClient;
+  bool mBlockShutdown;
 };
-
-NS_IMPL_ISUPPORTS(RemoteWorkerServiceShutdownBlocker, nsIAsyncShutdownBlocker)
 
 RemoteWorkerServiceKeepAlive::RemoteWorkerServiceKeepAlive(
     RemoteWorkerServiceShutdownBlocker* aBlocker)
@@ -137,49 +124,14 @@ void RemoteWorkerService::Initialize() {
   // ## Content Process Initialization Case
   //
   // We are being told to initialize now that we know what our remote type is.
-  // But if we want to register with the JS-based AsyncShutdown mechanism, it's
-  // too early to do this, so we must delay using a runnable.
-  //
-  // ### Additional Details
-  //
-  // In content processes, we will be invoked by ContentChild::RecvRemoteType
-  // after specializing the content process, which was approximately the
-  // appropriate time to register when this was written.  A new complication is
-  // that the async shutdown service is implemented in JS and currently
-  // ContentParent::InitInternal calls SendRemoteType immediately before calling
-  // ScriptPreloader::InitContentChild which will call
-  // SendPScriptCacheConstructor.  If we try and load JS before
-  // RecvPScriptCacheConstructor happens, we will fail to load the AsyncShutdown
-  // service.
-  //
-  // There are notifications generated when RecvPScriptCacheConstructor is
-  // called; it will call NS_CreateServicesFromCategory with
-  // "content-process-ready-for-script" as both the category to enumerate to
-  // call do_GetService on and then to generate an observer notification with
-  // that same name on the service as long as it directly implements
-  // nsIObserver.  (It does not generate a general observer notification because
-  // the code reasonably assumes that the code would be using the category
-  // manager to start itself up.)
-  //
-  // TODO: Convert this into an XPCOM service that could leverage the category
-  // service.  For now, we just schedule a runnable to initialize the
-  // service once we get to the event loop.  This should largely be okay because
-  // we need the main thread event loop to be spinning for this to work.  This
-  // could move latencies attribution around slightly so that metrics see a
-  // longer time to have a content process spawn a worker in and less time for
-  // the first spawn in that process.  In the event PBackground is janky, this
-  // could introduce new latencies that aren't just changes in attribution,
-  // however.
+  // Now is a fine time to call InitializeOnMainThread.
   if (!XRE_IsParentProcess()) {
-    sRemoteWorkerService = service;
+    nsresult rv = service->InitializeOnMainThread();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
 
-    nsCOMPtr<nsIRunnable> r =
-        NS_NewRunnableFunction(__func__, [initService = std::move(service)] {
-          nsresult rv = initService->InitializeOnMainThread();
-          Unused << NS_WARN_IF(NS_FAILED(rv));
-        });
-    MOZ_ALWAYS_SUCCEEDS(
-        SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
+    sRemoteWorkerService = service;
     return;
   }
   // ## Parent Process Initialization Case
@@ -240,34 +192,21 @@ nsresult RemoteWorkerService::InitializeOnMainThread() {
     return rv;
   }
 
-  nsCOMPtr<nsIAsyncShutdownService> shutdownSvc =
-      services::GetAsyncShutdownService();
-  if (NS_WARN_IF(!shutdownSvc)) {
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (NS_WARN_IF(!obs)) {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIAsyncShutdownClient> phase;
-  // Register a blocker that will ensure that the Worker Launcher thread does
-  // not go away until all of its RemoteWorkerChild instances have let their
-  // workers shutdown.  This is necessary for sanity and should add a minimal
-  // shutdown delay.
-  //
-  // (Previously we shutdown at "xpcom-shutdown", but the service currently only
-  // provides "xpcom-will-shutdown".  This is arguably beneficial since many
-  // things on "xpcom-shutdown" may spin event loops whereas we and the other
-  // blockers can operate in parallel and avoid being delayed by those serial
-  // blockages.)
-  MOZ_ALWAYS_SUCCEEDS(shutdownSvc->GetXpcomWillShutdown(getter_AddRefs(phase)));
-  if (NS_WARN_IF(!phase)) {
-    return NS_ERROR_FAILURE;
+  rv = obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
-  RefPtr<RemoteWorkerServiceShutdownBlocker> blocker =
-      new RemoteWorkerServiceShutdownBlocker(this, phase);
+  mShutdownBlocker = new RemoteWorkerServiceShutdownBlocker(this);
 
   {
     RefPtr<RemoteWorkerServiceKeepAlive> keepAlive =
-        new RemoteWorkerServiceKeepAlive(blocker);
+        new RemoteWorkerServiceKeepAlive(mShutdownBlocker);
 
     auto lockedKeepAlive = mKeepAlive.Lock();
     *lockedKeepAlive = std::move(keepAlive);
@@ -328,6 +267,32 @@ void RemoteWorkerService::CloseActorOnTargetThread() {
 NS_IMETHODIMP
 RemoteWorkerService::Observe(nsISupports* aSubject, const char* aTopic,
                              const char16_t* aData) {
+  if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+    MOZ_ASSERT(mThread);
+
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    if (obs) {
+      obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+    }
+
+    // Note that nsObserverList::NotifyObservers will hold a strong reference to
+    // our instance throughout the entire duration of this call, so it is not
+    // necessary for us to hold a kungFuDeathGrip here.
+
+    // Drop our keep-alive.  This could immediately result in our blocker saying
+    // it's okay for us to shutdown.  SpinEventLoopUntil checks the predicate
+    // before spinning, so in the ideal case we will not spin the loop at all.
+    BeginShutdown();
+
+    MOZ_ALWAYS_TRUE(SpinEventLoopUntil(
+        "RemoteWorkerService::Observe"_ns,
+        [&]() { return !mShutdownBlocker->ShouldBlockShutdown(); }));
+
+    mShutdownBlocker = nullptr;
+
+    return NS_OK;
+  }
+
   MOZ_ASSERT(!strcmp(aTopic, "profile-after-change"));
   MOZ_ASSERT(XRE_IsParentProcess());
 
