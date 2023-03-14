@@ -38,14 +38,8 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   void OnRtcpBye() override;
   void OnRtcpTimeout() override;
 
-  void SetTransportActive(bool aActive) override {
-    mTransportActive = aActive;
-    if (!aActive) {
-      mReceiverRtpEventListener.DisconnectIfExists();
-      mReceiverRtcpEventListener.DisconnectIfExists();
-      mSenderRtcpEventListener.DisconnectIfExists();
-    }
-  }
+  void SetTransportActive(bool aActive) override;
+
   MediaEventSourceExc<MediaPacket>& SenderRtpSendEvent() override {
     return mSenderRtpSendEvent;
   }
@@ -57,33 +51,18 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   }
   void ConnectReceiverRtpEvent(
       MediaEventSourceExc<MediaPacket, webrtc::RTPHeader>& aEvent) override {
-    // Hold a strong-ref to `this` for safety, since we'll be disconnecting
-    // off-target.
-    mReceiverRtpEventListener = aEvent.Connect(
-        mCallThread, [this, self = RefPtr<WebrtcAudioConduit>(this)](
-                         MediaPacket aPacket, webrtc::RTPHeader aHeader) {
-          OnRtpReceived(std::move(aPacket), std::move(aHeader));
-        });
+    mReceiverRtpEventListener =
+        aEvent.Connect(mCallThread, this, &WebrtcAudioConduit::OnRtpReceived);
   }
   void ConnectReceiverRtcpEvent(
       MediaEventSourceExc<MediaPacket>& aEvent) override {
-    // Hold a strong-ref to `this` for safety, since we'll be disconnecting
-    // off-target.
-    mReceiverRtcpEventListener = aEvent.Connect(
-        mCallThread,
-        [this, self = RefPtr<WebrtcAudioConduit>(this)](MediaPacket aPacket) {
-          OnRtcpReceived(std::move(aPacket));
-        });
+    mReceiverRtcpEventListener =
+        aEvent.Connect(mCallThread, this, &WebrtcAudioConduit::OnRtcpReceived);
   }
   void ConnectSenderRtcpEvent(
       MediaEventSourceExc<MediaPacket>& aEvent) override {
-    // Hold a strong-ref to `this` for safety, since we'll be disconnecting
-    // off-target.
-    mSenderRtcpEventListener = aEvent.Connect(
-        mCallThread,
-        [this, self = RefPtr<WebrtcAudioConduit>(this)](MediaPacket aPacket) {
-          OnRtcpReceived(std::move(aPacket));
-        });
+    mSenderRtcpEventListener =
+        aEvent.Connect(mCallThread, this, &WebrtcAudioConduit::OnRtcpReceived);
   }
 
   Maybe<uint16_t> RtpSendBaseSeqFor(uint32_t aSsrc) const override;
