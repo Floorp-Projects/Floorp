@@ -213,7 +213,9 @@ nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
 
   // Update the principal of the worker and its base URI if we just loaded the
   // worker's primary script.
-  if (loadContext->IsTopLevel()) {
+  bool isDynamic = loadContext->mRequest->IsModuleRequest() &&
+                   loadContext->mRequest->AsModuleRequest()->IsDynamicImport();
+  if (loadContext->IsTopLevel() && !isDynamic) {
     // Take care of the base URI first.
     mWorkerRef->Private()->SetBaseURI(finalURI);
 

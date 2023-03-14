@@ -498,7 +498,7 @@ WorkerScriptLoader::WorkerScriptLoader(
   if (!StaticPrefs::dom_workers_modules_enabled()) {
     return;
   }
-  if (aWorkerPrivate->WorkerType() == WorkerType::Module) {
+  if (!aWorkerPrivate->IsServiceWorker()) {
     InitModuleLoader();
   }
 }
@@ -517,10 +517,8 @@ void WorkerScriptLoader::InitModuleLoader() {
   if (GetGlobal()->GetModuleLoader(nullptr)) {
     return;
   }
-
   RefPtr<WorkerModuleLoader> moduleLoader =
       new WorkerModuleLoader(this, GetGlobal(), mSyncLoopTarget.get());
-
   if (mWorkerScriptType == WorkerScript) {
     mWorkerRef->Private()->GlobalScope()->InitModuleLoader(moduleLoader);
     return;
@@ -569,6 +567,11 @@ nsTArray<RefPtr<ThreadSafeRequestHandle>> WorkerScriptLoader::GetLoadingList() {
     list.AppendElement(handle.forget());
   }
   return list;
+}
+
+bool WorkerScriptLoader::IsDynamicImport(ScriptLoadRequest* aRequest) {
+  return aRequest->IsModuleRequest() &&
+         aRequest->AsModuleRequest()->IsDynamicImport();
 }
 
 nsContentPolicyType WorkerScriptLoader::GetContentPolicyType(
@@ -841,6 +844,7 @@ nsresult WorkerScriptLoader::LoadScript(
   AssertIsOnMainThread();
 
   WorkerLoadContext* loadContext = aRequestHandle->GetContext();
+  ScriptLoadRequest* request = aRequestHandle->GetRequest();
   MOZ_ASSERT_IF(loadContext->IsTopLevel(), !IsDebuggerScript());
 
   // The URL passed to us for loading was invalid, stop loading at this point.
@@ -908,7 +912,6 @@ nsresult WorkerScriptLoader::LoadScript(
   if (!channel) {
     nsCOMPtr<nsIReferrerInfo> referrerInfo;
     uint32_t secFlags;
-    ScriptLoadRequest* request = aRequestHandle->GetRequest();
     if (request->IsModuleRequest()) {
       referrerInfo =
           new ReferrerInfo(request->mReferrer, request->ReferrerPolicy());
@@ -959,7 +962,8 @@ nsresult WorkerScriptLoader::LoadScript(
   // should have occured prior that processed the headers.
   if (!IsDebuggerScript()) {
     headerProcessor = MakeRefPtr<ScriptResponseHeaderProcessor>(
-        mWorkerRef->Private(), loadContext->IsTopLevel());
+        mWorkerRef->Private(),
+        loadContext->IsTopLevel() && !IsDynamicImport(request));
   }
 
   nsCOMPtr<nsIStreamLoader> loader;
@@ -1055,6 +1059,7 @@ nsresult WorkerScriptLoader::FillCompileOptionsForRequest(
 bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
                                         ScriptLoadRequest* aRequest) {
   mWorkerRef->Private()->AssertIsOnWorkerThread();
+  MOZ_ASSERT(!IsDynamicImport(aRequest));
 
   WorkerLoadContext* loadContext = aRequest->GetWorkerLoadContext();
 
@@ -1088,6 +1093,7 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
     if (!request->mModuleScript) {
       return false;
     }
+
     // Implements To fetch a worklet/module worker script graph
     // Step 5. Fetch the descendants of and link result.
     if (!request->InstantiateModuleGraph()) {
@@ -1454,7 +1460,7 @@ void ScriptLoaderRunnable::DispatchProcessPendingRequests() {
         Span<RefPtr<ThreadSafeRequestHandle>>{maybeRangeToExecute->first,
                                               maybeRangeToExecute->second});
 
-    if (!runnable->Dispatch()) {
+    if (!runnable->Dispatch() && mScriptLoader->mSyncLoopTarget) {
       MOZ_ASSERT(false, "This should never fail!");
     }
   }
@@ -1483,7 +1489,7 @@ bool ScriptExecutorRunnable::PreRun(WorkerPrivate* aWorkerPrivate) {
       mScriptLoader->mSyncLoopTarget == mSyncLoopTarget,
       "Unexpected SyncLoopTarget. Check if the sync loop was closed early");
 
-  if (!mLoadedRequests.begin()->get()->GetContext()->IsTopLevel()) {
+  if (!mLoadedRequests[0]->GetContext()->IsTopLevel()) {
     return true;
   }
 
@@ -1503,7 +1509,8 @@ bool ScriptExecutorRunnable::ProcessModuleScript(
       return true;
     }
 
-    const auto& requestHandle = mLoadedRequests.begin()->get();
+    MOZ_ASSERT(mLoadedRequests.Length() == 1);
+    const auto& requestHandle = mLoadedRequests[0];
     // The request must be valid.
     MOZ_ASSERT(!requestHandle->IsEmpty());
 
@@ -1518,15 +1525,21 @@ bool ScriptExecutorRunnable::ProcessModuleScript(
 
   WorkerLoadContext* loadContext = request->GetWorkerLoadContext();
   ModuleLoadRequest* moduleRequest = request->AsModuleRequest();
+
+  moduleRequest->OnFetchComplete(loadContext->mLoadResult);
+
   if (NS_FAILED(loadContext->mLoadResult)) {
-    if (!moduleRequest->IsTopLevel()) {
+    if (moduleRequest->IsDynamicImport()) {
+      if (request->isInList()) {
+        moduleRequest->CancelDynamicImport(loadContext->mLoadResult);
+        mScriptLoader->TryShutdown();
+      }
+    } else if (!moduleRequest->IsTopLevel()) {
       moduleRequest->Cancel();
     } else {
       moduleRequest->LoadFailed();
     }
   }
-
-  moduleRequest->OnFetchComplete(loadContext->mLoadResult);
   return true;
 }
 
@@ -1562,7 +1575,7 @@ bool ScriptExecutorRunnable::WorkerRun(JSContext* aCx,
       mScriptLoader->mSyncLoopTarget == mSyncLoopTarget,
       "Unexpected SyncLoopTarget. Check if the sync loop was closed early");
 
-  if (aWorkerPrivate->WorkerType() == WorkerType::Module) {
+  if (mLoadedRequests.begin()->get()->GetRequest()->IsModuleRequest()) {
     return ProcessModuleScript(aCx, aWorkerPrivate);
   }
 
