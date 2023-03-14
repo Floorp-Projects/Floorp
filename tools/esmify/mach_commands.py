@@ -95,6 +95,7 @@ excluded_from_imports_prefix = list(
             "js/xpconnect/tests/chrome/test_bug732665_meta.js",
             "js/xpconnect/tests/mochitest/class_static_worker.js",
             "js/xpconnect/tests/unit/bug451678_subscript.js",
+            "js/xpconnect/tests/unit/error_other.sys.mjs",
             "js/xpconnect/tests/unit/es6module_parse_error.js",
             "js/xpconnect/tests/unit/recursive_importA.jsm",
             "js/xpconnect/tests/unit/recursive_importB.jsm",
