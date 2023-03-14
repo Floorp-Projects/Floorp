@@ -32,12 +32,13 @@ function getIconElement(level, type, title) {
   title = title || l10n.getStr(l10nLevels[level] || level);
   const classnames = ["icon"];
 
-  if (type && type === "logPoint") {
+  if (type === "logPoint") {
     title = l10n.getStr("logpoint.title");
     classnames.push("logpoint");
-  }
-
-  if (type && type === "blockedReason") {
+  } else if (type === "logTrace") {
+    title = l10n.getStr("logtrace.title");
+    classnames.push("logtrace");
+  } else if (type === "blockedReason") {
     title = l10n.getStr("blockedrequest.label");
   }
 

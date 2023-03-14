@@ -101,6 +101,7 @@ class WorkerDescriptorFront extends DescriptorMixin(
       // Set the console and thread actor IDs on the form so it is accessible by TargetMixin.getFront
       this.targetForm.consoleActor = workerTargetForm.consoleActor;
       this.targetForm.threadActor = workerTargetForm.threadActor;
+      this.targetForm.tracerActor = workerTargetForm.tracerActor;
 
       if (this.isDestroyedOrBeingDestroyed()) {
         return this;

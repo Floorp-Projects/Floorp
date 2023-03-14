@@ -779,7 +779,7 @@ function findSourceMatches(sourceId, content, queryText, modifiers) {
 
 const startRegex = /([ !@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/g; // Similarly, find
 
-const endRegex = new RegExp(["([ !@#$%^&*()_+-=[]{};':\"\\|,.<>/?])", '[^ !@#$%^&*()_+-=[]{};\':"\\|,.<>/?]*$"/'].join("")); // For texts over 100 characterss this truncates the text (for display)
+const endRegex = new RegExp(["([ !@#$%^&*()_+-=[]{};':\"\\|,.<>/?])", '[^ !@#$%^&*()_+-=[]{};\':"\\|,.<>/?]*$"/'].join("")); // For texts over 100 characters this truncates the text (for display)
 // around the context of the matched text.
 
 function truncateLine(text, column) {

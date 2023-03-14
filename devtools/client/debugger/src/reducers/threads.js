@@ -10,6 +10,10 @@
 export function initialThreadsState() {
   return {
     threads: [],
+
+    // List of thread actor IDs which are current tracing.
+    // i.e. where JavaScript tracing is enabled.
+    mutableTracingThreads: new Set(),
   };
 }
 
@@ -28,17 +32,36 @@ export default function update(state = initialThreadsState(), action) {
           thread => action.threadActorID != thread.actor
         ),
       };
+
     case "UPDATE_SERVICE_WORKER_STATUS":
-      const { thread, status } = action;
       return {
         ...state,
         threads: state.threads.map(t => {
-          if (t.actor == thread) {
-            return { ...t, serviceWorkerStatus: status };
+          if (t.actor == action.thread) {
+            return { ...t, serviceWorkerStatus: action.status };
           }
           return t;
         }),
       };
+
+    case "TRACING_TOGGLED":
+      const { mutableTracingThreads } = state;
+      const sizeBefore = mutableTracingThreads.size;
+      if (action.enabled) {
+        mutableTracingThreads.add(action.thread);
+      } else {
+        mutableTracingThreads.delete(action.thread);
+      }
+      // We may receive toggle events when we change the logging method
+      // while we are already tracing, but the list of tracing thread stays the same.
+      const changed = mutableTracingThreads.size != sizeBefore;
+      if (changed) {
+        return {
+          ...state,
+          mutableTracingThreads,
+        };
+      }
+      return state;
 
     default:
       return state;

@@ -52,3 +52,10 @@
 .devtools-button.debugger-settings-menu-button::before {
   background-image: url("chrome://devtools/skin/images/settings.svg");
 }
+
+.devtools-button.debugger-trace-menu-button::before {
+  background-image: url(chrome://devtools/content/debugger/images/trace.svg);
+}
+.devtools-button.debugger-trace-menu-button.active::before {
+  fill: var(--theme-icon-checked-color);
+}

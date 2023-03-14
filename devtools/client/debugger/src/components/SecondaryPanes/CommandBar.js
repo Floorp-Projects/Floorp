@@ -15,12 +15,15 @@ import {
   isTopFrameSelected,
   getThreadContext,
   getIsCurrentThreadPaused,
+  getIsThreadCurrentlyTracing,
+  getSupportsJavascriptTracing,
 } from "../../selectors";
 import { formatKeyShortcut } from "../../utils/text";
 import actions from "../../actions";
 import { debugBtn } from "../shared/Button/CommandBarButton";
 import AccessibleImage from "../shared/AccessibleImage";
 import "./CommandBar.css";
+import { showMenu } from "../../context-menu/menu";
 
 const MenuButton = require("devtools/client/shared/components/menu/MenuButton");
 const MenuItem = require("devtools/client/shared/components/menu/MenuItem");
@@ -54,6 +57,11 @@ const KEYS = {
   },
 };
 
+const LOG_METHODS = {
+  CONSOLE: "console",
+  STDOUT: "stdout",
+};
+
 function getKey(action) {
   return getKeyForOS(Services.appinfo.OS, action);
 }
@@ -75,6 +83,13 @@ function formatKey(action) {
 }
 
 class CommandBar extends Component {
+  constructor() {
+    super();
+
+    this.state = {
+      logMethod: LOG_METHODS.CONSOLE,
+    };
+  }
   static get propTypes() {
     return {
       breakOnNext: PropTypes.func.isRequired,
@@ -83,6 +98,7 @@ class CommandBar extends Component {
       isPaused: PropTypes.bool.isRequired,
       isWaitingOnBreak: PropTypes.bool.isRequired,
       javascriptEnabled: PropTypes.bool.isRequired,
+      trace: PropTypes.func.isRequired,
       resume: PropTypes.func.isRequired,
       skipPausing: PropTypes.bool.isRequired,
       stepIn: PropTypes.func.isRequired,
@@ -94,6 +110,7 @@ class CommandBar extends Component {
       toggleSkipPausing: PropTypes.any.isRequired,
       toggleSourceMapsEnabled: PropTypes.func.isRequired,
       topFrameSelected: PropTypes.bool.isRequired,
+      toggleTracing: PropTypes.func.isRequired,
     };
   }
 
@@ -142,6 +159,7 @@ class CommandBar extends Component {
     const isDisabled = !isPaused;
 
     return [
+      this.renderTraceButton(),
       this.renderPauseButton(),
       debugBtn(
         () => this.props.stepOver(),
@@ -169,6 +187,63 @@ class CommandBar extends Component {
 
   resume() {
     this.props.resume();
+  }
+
+  renderTraceButton() {
+    if (!features.javascriptTracing || !this.props.supportsJavascriptTracing) {
+      return null;
+    }
+    // Display a button which:
+    // - on left click, would toggle on/off javascript tracing
+    // - on right click, would display a context menu allowing to choose the loggin output (console or stdout)
+    return (
+      <button
+        className={`devtools-button command-bar-button debugger-trace-menu-button ${
+          this.props.isTracingEnabled ? "active" : ""
+        }`}
+        title={
+          this.props.isTracingEnabled
+            ? L10N.getStr("stopTraceButtonTooltip")
+            : L10N.getFormatStr("startTraceButtonTooltip", this.state.logMethod)
+        }
+        onClick={event => {
+          this.props.toggleTracing(this.state.logMethod);
+        }}
+        onContextMenu={event => {
+          event.preventDefault();
+          event.stopPropagation();
+
+          // Avoid showing the menu to avoid having to support chaging tracing config "live"
+          if (this.props.isTracingEnabled) {
+            return;
+          }
+
+          const items = [
+            {
+              id: "debugger-trace-menu-item-console",
+              label: L10N.getStr("traceInWebConsole"),
+              checked: this.state.logMethod == LOG_METHODS.CONSOLE,
+              click: () => {
+                this.setState({
+                  logMethod: LOG_METHODS.CONSOLE,
+                });
+              },
+            },
+            {
+              id: "debugger-trace-menu-item-stdout",
+              label: L10N.getStr("traceInStdout"),
+              checked: this.state.logMethod == LOG_METHODS.STDOUT,
+              click: () => {
+                this.setState({
+                  logMethod: LOG_METHODS.STDOUT,
+                });
+              },
+            },
+          ];
+          showMenu(event, items);
+        }}
+      />
+    );
   }
 
   renderPauseButton() {
@@ -313,9 +388,12 @@ const mapStateToProps = state => ({
   topFrameSelected: isTopFrameSelected(state, getCurrentThread(state)),
   javascriptEnabled: state.ui.javascriptEnabled,
   isPaused: getIsCurrentThreadPaused(state),
+  isTracingEnabled: getIsThreadCurrentlyTracing(state, getCurrentThread(state)),
+  supportsJavascriptTracing: getSupportsJavascriptTracing(state),
 });
 
 export default connect(mapStateToProps, {
+  toggleTracing: actions.toggleTracing,
   resume: actions.resume,
   stepIn: actions.stepIn,
   stepOut: actions.stepOut,

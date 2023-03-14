@@ -250,6 +250,11 @@ const ActorRegistry = {
       constructor: "ScreenshotContentActor",
       type: { target: true },
     });
+    this.registerModule("devtools/server/actors/tracer", {
+      prefix: "tracer",
+      constructor: "TracerActor",
+      type: { target: true },
+    });
   },
 
   /**

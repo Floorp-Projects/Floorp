@@ -18,6 +18,7 @@ import {
 
 import { initialBreakpointsState } from "./reducers/breakpoints";
 import { initialSourcesState } from "./reducers/sources";
+import { initialUIState } from "./reducers/ui";
 const { sanitizeBreakpoints } = require("devtools/client/shared/thread-utils");
 
 async function syncBreakpoints() {
@@ -54,7 +55,7 @@ function setPauseOnExceptions() {
   );
 }
 
-async function loadInitialState() {
+async function loadInitialState(commands) {
   const pendingBreakpoints = sanitizeBreakpoints(
     await asyncStore.pendingBreakpoints
   );
@@ -64,6 +65,10 @@ async function loadInitialState() {
   const eventListenerBreakpoints = await asyncStore.eventListenerBreakpoints;
   const breakpoints = initialBreakpointsState(xhrBreakpoints);
   const sources = initialSourcesState({ blackboxedRanges });
+  const ui = initialUIState({
+    supportsJavascriptTracing:
+      commands.client.mainRoot.traits.supportsJavascriptTracing,
+  });
 
   return {
     pendingBreakpoints,
@@ -71,6 +76,7 @@ async function loadInitialState() {
     breakpoints,
     eventListenerBreakpoints,
     sources,
+    ui,
   };
 }
 
@@ -83,7 +89,7 @@ export async function bootstrap({
 }) {
   verifyPrefSchema();
 
-  const initialState = await loadInitialState();
+  const initialState = await loadInitialState(commands);
   const workers = bootstrapWorkers(panelWorkers);
 
   const { store, actions, selectors } = bootstrapStore(
