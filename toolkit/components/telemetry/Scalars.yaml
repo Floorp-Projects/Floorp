@@ -2770,6 +2770,24 @@ media:
     record_in_processes:
       - 'content'
 
+  audio_process_per_codec_name:
+    bug_numbers:
+      - 1804249
+    description: >
+      Process where audio decoding happens and codec name
+    expires: "122"
+    kind: uint
+    keyed: true
+    notification_emails:
+      - media-alerts@mozilla.com
+      - alissy@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - "firefox"
+    record_in_processes:
+      - "all"
+    release_channel_collection: opt-out
+
   video_hardware_decoding_support:
     bug_numbers:
       - 1733722
