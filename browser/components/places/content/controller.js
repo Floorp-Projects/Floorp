@@ -716,10 +716,7 @@ PlacesController.prototype = {
     PlacesUIUtils.openMultipleLinksInTabs(
       node ? node : nodes,
       aEvent,
-      this._view,
-      this._view.id == "placesList"
-        ? PlacesSearchBox.updateHistorySearchTelemetry
-        : null
+      this._view
     );
   },
 
