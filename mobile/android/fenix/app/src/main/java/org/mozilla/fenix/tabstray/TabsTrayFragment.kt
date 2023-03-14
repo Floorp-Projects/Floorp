@@ -208,6 +208,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                 FirefoxTheme {
                     TabsTray(
                         tabsTrayStore = tabsTrayStore,
+                        displayTabsInGrid = requireContext().settings().gridTabView,
                     )
                 }
             }
