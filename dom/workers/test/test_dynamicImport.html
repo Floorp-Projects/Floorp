@@ -1,0 +1,75 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests of Worker Dynamic Import (Bug 1540913)
+Ensure that the script loader doesn't accidentally reorder events due to async work
+done by dynamic import
+-->
+<head>
+  <title>Test for Worker Dynamic Import (Bug 1540913)</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1540913">Worker Dynamic Import
+ Bug 1540913</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+  const workers = [
+    new Worker("dynamicImport_worker.js", {type: "classic"}),
+    new Worker("dynamicImport_worker.js", {type: "module"})
+  ]
+
+  let successCount = 0;
+
+  for (const worker of workers) {
+    const events = [];
+    worker.onmessage = function(event) {
+      switch (event.data) {
+        case "first":
+          ok(events.length === 2 && events.join(",") === "third,second",
+             "first dynamic import returned");
+          events.push(event.data);
+          successCount++;
+          // Cheap way to make sure we only finish successfully after
+          // both the module and classic test is finished.
+          if (successCount == 2) {
+            SimpleTest.finish();
+          }
+          break;
+        case "second":
+          ok(events.length === 1 && events[0] === "third",
+             "second dynamic import returned");
+          events.push(event.data);
+          break;
+        case "third":
+          ok(events.length === 0, "third dynamic import returned");
+          events.push(event.data);
+          break;
+        default:
+          ok(false, "Unexpected message:" + event.data);
+          SimpleTest.finish();
+      }
+    };
+
+    worker.onerror = function(event) {
+      ok(false, "Worker had an error:" + event.message);
+      SimpleTest.finish();
+    }
+
+    worker.postMessage("start");
+  }
+
+  SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>
