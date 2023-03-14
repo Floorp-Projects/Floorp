@@ -13,6 +13,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "src/enc/vp8i_enc.h"
 #include "src/dsp/dsp.h"
@@ -148,6 +149,7 @@ static int EncodeAlphaInternal(const uint8_t* const data, int width, int height,
       }
     } else {
       VP8LBitWriterWipeOut(&tmp_bw);
+      memset(&result->bw, 0, sizeof(result->bw));
       return 0;
     }
   }
@@ -162,7 +164,7 @@ static int EncodeAlphaInternal(const uint8_t* const data, int width, int height,
   header = method | (filter << 2);
   if (reduce_levels) header |= ALPHA_PREPROCESSED_LEVELS << 4;
 
-  VP8BitWriterInit(&result->bw, ALPHA_HEADER_LEN + output_size);
+  if (!VP8BitWriterInit(&result->bw, ALPHA_HEADER_LEN + output_size)) ok = 0;
   ok = ok && VP8BitWriterAppend(&result->bw, &header, ALPHA_HEADER_LEN);
   ok = ok && VP8BitWriterAppend(&result->bw, output, output_size);
 
