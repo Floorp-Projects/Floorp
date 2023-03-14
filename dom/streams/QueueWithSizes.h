@@ -7,10 +7,10 @@
 #ifndef mozilla_dom_QueueWithSizes_h
 #define mozilla_dom_QueueWithSizes_h
 
+#include <cmath>
 #include "js/TypeDecls.h"
 #include "js/Value.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/FloatingPoint.h"
 #include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
 
@@ -42,7 +42,7 @@ using QueueWithSizes = AutoCleanLinkedList<ValueWithSize>;
 inline bool IsNonNegativeNumber(double v) {
   // Step 1. Implicit.
   // Step 2.
-  if (mozilla::IsNaN(v)) {
+  if (std::isnan(v)) {
     return false;
   }
 
@@ -55,24 +55,29 @@ template <class QueueContainingClass>
 inline void EnqueueValueWithSize(QueueContainingClass aContainer,
                                  JS::Handle<JS::Value> aValue, double aSize,
                                  ErrorResult& aRv) {
-  // Step 1. Implicit by template instantiation.
-  // Step 2.
+  // Step 1. Assert: container has [[queue]] and [[queueTotalSize]] internal
+  // slots. (Implicit by template instantiation.)
+  // Step 2. If ! IsNonNegativeNumber(size) is false, throw a RangeError
+  // exception.
   if (!IsNonNegativeNumber(aSize)) {
     aRv.ThrowRangeError("invalid size");
     return;
   }
 
-  // Step 3.
-  if (mozilla::IsInfinite(aSize)) {
+  // Step 3. If size is +∞, throw a RangeError exception.
+  if (std::isinf(aSize)) {
     aRv.ThrowRangeError("Infinite queue size");
     return;
   }
 
-  // Step 4. See the comment on QueueWithSizes for the lifetime reasoning
-  //         around this allocation.
+  // Step 4. Append a new value-with-size with value value and size size to
+  // container.[[queue]].
+  // (See the comment on QueueWithSizes for the lifetime reasoning around this
+  // allocation.)
   ValueWithSize* valueWithSize = new ValueWithSize(aValue, aSize);
   aContainer->Queue().insertBack(valueWithSize);
-  // Step 5.
+  // Step 5. Set container.[[queueTotalSize]] to container.[[queueTotalSize]] +
+  // size.
   aContainer->SetQueueTotalSize(aContainer->QueueTotalSize() + aSize);
 }
 

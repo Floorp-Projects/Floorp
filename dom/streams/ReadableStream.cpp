@@ -20,7 +20,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CycleCollectedJSContext.h"
-#include "mozilla/FloatingPoint.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/BindingCallContext.h"
