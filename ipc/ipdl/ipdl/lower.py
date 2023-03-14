@@ -238,9 +238,13 @@ def _flatTypeName(ipdltype):
     # be constructed; e.g., Foo[][] is disallowed.  needs to be kept in
     # sync with grammar.
     if ipdltype.isIPDL() and ipdltype.isArray():
-        return "ArrayOf" + ipdltype.basetype.name()
+        return "ArrayOf" + _flatTypeName(ipdltype.basetype)
     if ipdltype.isIPDL() and ipdltype.isMaybe():
-        return "Maybe" + ipdltype.basetype.name()
+        return "Maybe" + _flatTypeName(ipdltype.basetype)
+    # NotNull types just assume the underlying variant name to avoid unnecessary
+    # noise, as a NotNull<T> and T should never exist in the same union.
+    if ipdltype.isIPDL() and ipdltype.isNotNull():
+        return _flatTypeName(ipdltype.basetype)
     return ipdltype.name()
 
 
@@ -306,6 +310,16 @@ def _cxxArrayType(basetype, const=False, ref=False):
 def _cxxMaybeType(basetype, const=False, ref=False):
     return Type(
         "mozilla::Maybe",
+        T=basetype,
+        const=const,
+        ref=ref,
+        hasimplicitcopyctor=basetype.hasimplicitcopyctor,
+    )
+
+
+def _cxxNotNullType(basetype, const=False, ref=False):
+    return Type(
+        "mozilla::NotNull",
         T=basetype,
         const=const,
         ref=ref,
@@ -538,6 +552,10 @@ class _ConvertToCxxType(TypeVisitor):
     def visitUniquePtrType(self, s):
         return Type(self.typename(s))
 
+    def visitNotNullType(self, n):
+        basecxxtype = n.basetype.accept(self)
+        return _cxxNotNullType(basecxxtype)
+
     def visitProtocolType(self, p):
         assert 0
 
@@ -565,6 +583,12 @@ def _cxxConstRefType(ipdltype, side):
     if ipdltype.isIPDL() and ipdltype.isShmem():
         t.ref = True
         return t
+    if ipdltype.isIPDL() and ipdltype.isNotNull():
+        # If the inner type chooses to use a raw pointer, wrap that instead.
+        inner = _cxxConstRefType(ipdltype.basetype, side)
+        if inner.ptr:
+            t = _cxxNotNullType(inner)
+            return t
     if ipdltype.isIPDL() and ipdltype.hasBaseType():
         # Keep same constness as inner type.
         inner = _cxxConstRefType(ipdltype.basetype, side)
@@ -701,6 +725,12 @@ def _cxxInType(ipdltype, side):
     t = _cxxBareType(ipdltype, side)
     if ipdltype.isIPDL() and ipdltype.isActor():
         return t
+    if ipdltype.isIPDL() and ipdltype.isNotNull():
+        # If the inner type chooses to use a raw pointer, wrap that instead.
+        inner = _cxxInType(ipdltype.basetype, side)
+        if inner.ptr:
+            t = _cxxNotNullType(inner)
+            return t
     if _cxxTypeNeedsMoveForSend(ipdltype):
         t.rvalref = True
         return t
@@ -1175,9 +1205,13 @@ class MessageDecl(ipdl.ast.MessageDecl):
             # We don't std::move() RefPtr<T> types because current Recv*()
             # implementors take these parameters as T*, and
             # std::move(RefPtr<T>) doesn't coerce to T*.
+            # We also don't move NotNull, as it has no move constructor.
             cxxargs.extend(
                 [
-                    p.var() if p.ipdltype.isRefcounted() else ExprMove(p.var())
+                    p.var()
+                    if p.ipdltype.isRefcounted()
+                    or (p.ipdltype.isIPDL() and p.ipdltype.isNotNull())
+                    else ExprMove(p.var())
                     for p in self.params
                 ]
             )
@@ -1931,17 +1965,6 @@ class _ParamTraits:
         assert sentinelKey
         block = Block()
 
-        # Assert we aren't serializing a null non-nullable actor
-        if (
-            ipdltype
-            and ipdltype.isIPDL()
-            and ipdltype.isActor()
-            and not ipdltype.nullable
-        ):
-            block.addstmt(
-                _abortIfFalse(var, "NULL actor value passed to non-nullable param")
-            )
-
         block.addstmts(
             [
                 StmtExpr(cls.write(var, writervar, ipdltype)),
@@ -2040,17 +2063,6 @@ class _ParamTraits:
             errfn=errfn(*paramtype),
             var=var,
         )
-
-        # Check if we got a null non-nullable actor
-        if (
-            ipdltype
-            and ipdltype.isIPDL()
-            and ipdltype.isActor()
-            and not ipdltype.nullable
-        ):
-            ifnull = StmtIf(ExprNot(var))
-            ifnull.addifstmts(errfn(*paramtype))
-            block.addstmt(ifnull)
 
         block.addstmts(
             cls.readSentinel(readervar, sentinelKey, errfnSentinel(*paramtype))
