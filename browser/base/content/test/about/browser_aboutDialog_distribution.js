@@ -16,11 +16,6 @@ add_task(async function verify_distribution_info_hides() {
 
   let aboutDialog = await waitForAboutDialog();
 
-  await TestUtils.waitForCondition(
-    () => aboutDialog.document.getElementById("currentChannel").value != "",
-    "Waiting for init to complete"
-  );
-
   let distroIdField = aboutDialog.document.getElementById("distributionId");
   let distroField = aboutDialog.document.getElementById("distribution");
 
@@ -48,11 +43,6 @@ add_task(async function verify_distribution_info_displays() {
   defaultBranch.setCharPref("distribution.about", "About Text");
 
   let aboutDialog = await waitForAboutDialog();
-
-  await TestUtils.waitForCondition(
-    () => aboutDialog.document.getElementById("currentChannel").value != "",
-    "Waiting for init to complete"
-  );
 
   let distroIdField = aboutDialog.document.getElementById("distributionId");
 
