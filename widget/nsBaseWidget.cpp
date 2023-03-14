@@ -2317,7 +2317,8 @@ WidgetWheelEvent nsBaseWidget::MayStartSwipeForAPZ(
         // the swipe now.
         TrackScrollEventAsSwipe(aPanInput, swipeInfo.allowedDirections,
                                 aApzResult.mInputBlockId);
-      } else {
+      } else if (!aApzResult.GetHandledResult() ||
+                 !aApzResult.GetHandledResult()->IsHandledByRoot()) {
         // We don't know whether this event can start a swipe, so we need
         // to queue up events and wait for a call to ReportSwipeStarted.
         // APZ might already have started scrolling in response to the
