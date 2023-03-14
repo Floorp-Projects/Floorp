@@ -1070,7 +1070,6 @@ if CONFIG["MOZ_WEBRTC"]:
         "RTCRtpTransceiver.webidl",
         "RTCSessionDescription.webidl",
         "RTCStatsReport.webidl",
-        "WebrtcDeprecated.webidl",
         "WebrtcGlobalInformation.webidl",
     ]
 
