@@ -219,10 +219,10 @@ add_task(async function test_generate_randomization_key() {
     ],
   });
 
-  for (let private of [true, false]) {
+  for (let testPrivateWin of [true, false]) {
     let win = window;
 
-    if (private) {
+    if (testPrivateWin) {
       win = await BrowserTestUtils.openNewBrowserWindow({
         private: true,
       });
@@ -297,7 +297,7 @@ add_task(async function test_generate_randomization_key() {
     BrowserTestUtils.removeTab(tabOne);
     BrowserTestUtils.removeTab(tabTwo);
     BrowserTestUtils.removeTab(tabAnother);
-    if (private) {
+    if (testPrivateWin) {
       await BrowserTestUtils.closeWindow(win);
     }
   }
