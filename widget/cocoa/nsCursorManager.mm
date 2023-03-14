@@ -37,11 +37,6 @@ static constexpr nsCursor kCustomCursor = eCursorCount;
   return gInstance;
 }
 
-+ (void)dispose {
-  [gInstance release];
-  gInstance = nil;
-}
-
 + (NSCursor*)freshCursorWithType:(enum nsCursor)aCursor {
   switch (aCursor) {
     case eCursor_standard:
