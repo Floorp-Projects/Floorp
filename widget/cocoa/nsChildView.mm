@@ -50,7 +50,7 @@
 
 #include "nsDragService.h"
 #include "nsClipboard.h"
-#include "MOZDynamicCursor.h"
+#include "nsCursorManager.h"
 #include "nsWindowMap.h"
 #include "nsCocoaFeatures.h"
 #include "nsCocoaUtils.h"
@@ -618,12 +618,12 @@ void nsChildView::SetCursor(const Cursor& aCursor) {
 
   nsBaseWidget::SetCursor(aCursor);
 
-  if (NS_SUCCEEDED([MOZDynamicCursor.sharedInstance setCustomCursor:aCursor
-                                                  widgetScaleFactor:BackingScaleFactor()])) {
+  if (NS_SUCCEEDED([[nsCursorManager sharedInstance] setCustomCursor:aCursor
+                                                   widgetScaleFactor:BackingScaleFactor()])) {
     return;
   }
 
-  [MOZDynamicCursor.sharedInstance setNonCustomCursor:aCursor];
+  [[nsCursorManager sharedInstance] setNonCustomCursor:aCursor];
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
@@ -4109,10 +4109,6 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
   NS_OBJC_END_TRY_BLOCK_RETURN(NSDragOperationNone);
 }
 
-- (void)resetCursorRects {
-  [self addCursorRect:self.bounds cursor:MOZDynamicCursor.sharedInstance];
-}
-
 // NSDraggingDestination
 - (NSDragOperation)draggingEntered:(id<NSDraggingInfo>)sender {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
@@ -4833,7 +4829,7 @@ void ChildViewMouseTracker::ReEvaluateMouseEnterState(NSEvent* aEvent, ChildView
     [oldView sendMouseEnterOrExitEvent:aEvent enter:NO exitFrom:exitFrom];
     // After the cursor exits the window set it to a visible regular arrow cursor.
     if (exitFrom == WidgetMouseEvent::ePlatformTopLevel) {
-      [MOZDynamicCursor.sharedInstance setNonCustomCursor:nsIWidget::Cursor{eCursor_standard}];
+      [[nsCursorManager sharedInstance] setNonCustomCursor:nsIWidget::Cursor{eCursor_standard}];
     }
     [sLastMouseEventView sendMouseEnterOrExitEvent:aEvent enter:YES exitFrom:exitFrom];
   }
