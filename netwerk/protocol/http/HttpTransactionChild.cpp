@@ -470,25 +470,12 @@ HttpTransactionChild::OnStartRequest(nsIRequest* aRequest) {
   int32_t proxyConnectResponseCode =
       mTransaction->GetProxyConnectResponseCode();
 
-  nsIRequest::TRRMode mode = nsIRequest::TRR_DEFAULT_MODE;
-  TRRSkippedReason reason = nsITRRSkipReason::TRR_UNSET;
-  {
-    NetAddr selfAddr;
-    NetAddr peerAddr;
-    bool isTrr = false;
-    bool echConfigUsed = false;
-    if (mTransaction) {
-      mTransaction->GetNetworkAddresses(selfAddr, peerAddr, isTrr, mode, reason,
-                                        echConfigUsed);
-    }
-  }
-
   Unused << SendOnStartRequest(
       status, optionalHead, securityInfo, mTransaction->ProxyConnectFailed(),
       ToTimingStructArgs(mTransaction->Timings()), proxyConnectResponseCode,
       dataForSniffer, optionalAltSvcUsed, !!mDataBridgeParent,
       mTransaction->TakeRestartedState(), mTransaction->HTTPSSVCReceivedStage(),
-      mTransaction->GetSupportsHTTP3(), mode, reason);
+      mTransaction->GetSupportsHTTP3());
   return NS_OK;
 }
 
@@ -595,10 +582,8 @@ HttpTransactionChild::OnTransportStatus(nsITransport* aTransport,
     NetAddr peerAddr;
     bool isTrr = false;
     bool echConfigUsed = false;
-    nsIRequest::TRRMode mode = nsIRequest::TRR_DEFAULT_MODE;
-    TRRSkippedReason reason = nsITRRSkipReason::TRR_UNSET;
     if (mTransaction) {
-      mTransaction->GetNetworkAddresses(selfAddr, peerAddr, isTrr, mode, reason,
+      mTransaction->GetNetworkAddresses(selfAddr, peerAddr, isTrr,
                                         echConfigUsed);
     } else {
       nsCOMPtr<nsISocketTransport> socketTransport =
@@ -607,12 +592,10 @@ HttpTransactionChild::OnTransportStatus(nsITransport* aTransport,
         socketTransport->GetSelfAddr(&selfAddr);
         socketTransport->GetPeerAddr(&peerAddr);
         socketTransport->ResolvedByTRR(&isTrr);
-        socketTransport->GetEffectiveTRRMode(&mode);
-        socketTransport->GetTrrSkipReason(&reason);
         socketTransport->GetEchConfigUsed(&echConfigUsed);
       }
     }
-    arg.emplace(selfAddr, peerAddr, isTrr, mode, reason, echConfigUsed);
+    arg.emplace(selfAddr, peerAddr, isTrr, echConfigUsed);
   }
 
   Unused << SendOnTransportStatus(aStatus, aProgress, aProgressMax, arg);

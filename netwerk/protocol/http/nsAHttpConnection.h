@@ -11,7 +11,6 @@
 #include "nsAHttpTransaction.h"
 #include "Http3WebTransportSession.h"
 #include "HttpTrafficAnalyzer.h"
-#include "nsIRequest.h"
 
 class nsIAsyncInputStream;
 class nsIAsyncOutputStream;
@@ -169,8 +168,6 @@ class nsAHttpConnection : public nsISupports {
   virtual nsresult GetSelfAddr(NetAddr* addr) = 0;
   virtual nsresult GetPeerAddr(NetAddr* addr) = 0;
   virtual bool ResolvedByTRR() = 0;
-  virtual nsIRequest::TRRMode EffectiveTRRMode() = 0;
-  virtual nsITRRSkipReason::value TRRSkipReason() = 0;
   virtual bool GetEchConfigUsed() = 0;
   virtual PRIntervalTime LastWriteTime() = 0;
 };
@@ -265,14 +262,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpConnection, NS_AHTTPCONNECTION_IID)
   }                                                                          \
   bool ResolvedByTRR() override {                                            \
     return (!(fwdObject)) ? false : (fwdObject)->ResolvedByTRR();            \
-  }                                                                          \
-  nsIRequest::TRRMode EffectiveTRRMode() override {                          \
-    return (!(fwdObject)) ? nsIRequest::TRR_DEFAULT_MODE                     \
-                          : (fwdObject)->EffectiveTRRMode();                 \
-  }                                                                          \
-  nsITRRSkipReason::value TRRSkipReason() override {                         \
-    return (!(fwdObject)) ? nsITRRSkipReason::TRR_UNSET                      \
-                          : (fwdObject)->TRRSkipReason();                    \
   }                                                                          \
   bool GetEchConfigUsed() override {                                         \
     return (!(fwdObject)) ? false : (fwdObject)->GetEchConfigUsed();         \

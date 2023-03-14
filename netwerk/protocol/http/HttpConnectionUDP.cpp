@@ -77,8 +77,6 @@ nsresult HttpConnectionUDP::Init(nsHttpConnectionInfo* info,
     return NS_ERROR_FAILURE;
   }
   dnsAddrRecord->IsTRR(&mResolvedByTRR);
-  dnsAddrRecord->GetEffectiveTRRMode(&mEffectiveTRRMode);
-  dnsAddrRecord->GetTrrSkipReason(&mTRRSkipReason);
   NetAddr peerAddr;
   nsresult rv = dnsAddrRecord->GetNextAddr(mConnInfo->GetRoutedHost().IsEmpty()
                                                ? mConnInfo->OriginPort()
@@ -676,12 +674,6 @@ nsresult HttpConnectionUDP::GetPeerAddr(NetAddr* addr) {
 }
 
 bool HttpConnectionUDP::ResolvedByTRR() { return mResolvedByTRR; }
-
-nsIRequest::TRRMode HttpConnectionUDP::EffectiveTRRMode() {
-  return mEffectiveTRRMode;
-}
-
-TRRSkippedReason HttpConnectionUDP::TRRSkipReason() { return mTRRSkipReason; }
 
 }  // namespace net
 }  // namespace mozilla

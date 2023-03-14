@@ -143,8 +143,6 @@ class HttpConnectionBase : public nsSupportsWeakReference {
   virtual nsresult GetSelfAddr(NetAddr* addr) = 0;
   virtual nsresult GetPeerAddr(NetAddr* addr) = 0;
   virtual bool ResolvedByTRR() = 0;
-  virtual nsIRequest::TRRMode EffectiveTRRMode() = 0;
-  virtual TRRSkippedReason TRRSkipReason() = 0;
   virtual bool GetEchConfigUsed() = 0;
   virtual PRIntervalTime LastWriteTime() = 0;
 

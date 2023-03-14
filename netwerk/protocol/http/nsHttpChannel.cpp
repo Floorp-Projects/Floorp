@@ -6455,7 +6455,8 @@ nsresult nsHttpChannel::MaybeStartDNSPrefetch() {
     mDNSPrefetch =
         new nsDNSPrefetch(mURI, originAttributes, nsIRequest::GetTRRMode(),
                           this, LoadTimingEnabled());
-    nsIDNSService::DNSFlags dnsFlags = nsIDNSService::RESOLVE_DEFAULT_FLAGS;
+    nsIDNSService::DNSFlags dnsFlags =
+        nsIDNSService::RESOLVE_WANT_RECORD_ON_ERROR;
     if (mCaps & NS_HTTP_REFRESH_DNS) {
       dnsFlags |= nsIDNSService::RESOLVE_BYPASS_CACHE;
     }
@@ -7111,12 +7112,6 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
 
     StoreLoadedBySocketProcess(mTransaction->AsHttpTransactionParent() !=
                                nullptr);
-
-    bool isTrr;
-    bool echConfigUsed;
-    mTransaction->GetNetworkAddresses(mSelfAddr, mPeerAddr, isTrr,
-                                      mEffectiveTRRMode, mTRRSkipReason,
-                                      echConfigUsed);
   }
 
   // don't enter this block if we're reading from the cache...
@@ -8171,7 +8166,6 @@ nsHttpChannel::OnTransportStatus(nsITransport* trans, nsresult status,
     bool echConfigUsed = false;
     if (mTransaction) {
       mTransaction->GetNetworkAddresses(mSelfAddr, mPeerAddr, isTrr,
-                                        mEffectiveTRRMode, mTRRSkipReason,
                                         echConfigUsed);
     } else {
       nsCOMPtr<nsISocketTransport> socketTransport = do_QueryInterface(trans);
@@ -8179,12 +8173,9 @@ nsHttpChannel::OnTransportStatus(nsITransport* trans, nsresult status,
         socketTransport->GetSelfAddr(&mSelfAddr);
         socketTransport->GetPeerAddr(&mPeerAddr);
         socketTransport->ResolvedByTRR(&isTrr);
-        MOZ_ALWAYS_SUCCEEDS(
-            socketTransport->GetEffectiveTRRMode(&mEffectiveTRRMode));
         socketTransport->GetEchConfigUsed(&echConfigUsed);
       }
     }
-
     StoreResolvedByTRR(isTrr);
     StoreEchConfigUsed(echConfigUsed);
   }
@@ -8705,6 +8696,11 @@ NS_IMETHODIMP
 nsHttpChannel::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
                                 nsresult status) {
   MOZ_ASSERT(NS_IsMainThread(), "Expecting DNS callback on main thread.");
+
+  if (nsCOMPtr<nsIDNSAddrRecord> r = do_QueryInterface(rec)) {
+    r->GetEffectiveTRRMode(&mEffectiveTRRMode);
+    r->GetTrrSkipReason(&mTRRSkipReason);
+  }
 
   LOG(
       ("nsHttpChannel::OnLookupComplete [this=%p] prefetch complete%s: "
