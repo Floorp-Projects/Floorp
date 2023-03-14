@@ -748,18 +748,6 @@ class nsIFrame : public nsQueryFrame {
   nsIContent* GetContent() const { return mContent; }
 
   /**
-   * @brief Get the closest native anonymous subtree root if the content is in a
-   * native anonymous subtree.
-   *
-   * @return The root of native anonymous subtree which the content belongs to.
-   * Otherwise, nullptr.
-   */
-  nsIContent* GetClosestNativeAnonymousSubtreeRoot() const {
-    return mContent ? mContent->GetClosestNativeAnonymousSubtreeRoot()
-                    : nullptr;
-  }
-
-  /**
    * Get the frame that should be the parent for the frames of child elements
    * May return nullptr during reflow
    */
