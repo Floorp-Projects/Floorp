@@ -30,6 +30,7 @@ FINAL_TARGET_FILES.features["pictureinpicture@mozilla.org"]["lib"] += [
 FINAL_TARGET_FILES.features["pictureinpicture@mozilla.org"]["video-wrappers"] += [
     "video-wrappers/airmozilla.js",
     "video-wrappers/bbc.js",
+    "video-wrappers/cbc.js",
     "video-wrappers/dailymotion.js",
     "video-wrappers/disneyplus.js",
     "video-wrappers/hbomax.js",
