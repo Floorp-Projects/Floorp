@@ -55,17 +55,8 @@
 ::slotted([slot="buttons"]) {
   grid-column: 1 / 4;
   grid-row-start: 3;
-  display: flex;
-  justify-content: flex-end;
   border-top: 1px solid var(--in-content-border-color);
   padding-top: 12px;
-  gap: 10px;
-}
-
-button {
-  min-width: 170px;
-  min-height: 30px;
-  margin: 0;
 }
 
 .dialog-body {
