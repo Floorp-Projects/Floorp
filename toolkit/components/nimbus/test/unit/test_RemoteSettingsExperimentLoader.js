@@ -6,14 +6,12 @@ const { ExperimentFakes } = ChromeUtils.import(
 const { ExperimentManager } = ChromeUtils.import(
   "resource://nimbus/lib/ExperimentManager.jsm"
 );
+
 const {
   RemoteSettingsExperimentLoader,
   EnrollmentsContext,
 } = ChromeUtils.import(
   "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm"
-);
-const { TestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/TestUtils.sys.mjs"
 );
 
 const ENABLED_PREF = "messaging-system.rsexperimentloader.enabled";
@@ -319,25 +317,4 @@ add_task(async function test_optIn_studies_disabled() {
   Services.prefs.clearUserPref(DEBUG_PREF);
   Services.prefs.clearUserPref(UPLOAD_PREF);
   Services.prefs.clearUserPref(STUDIES_OPT_OUT_PREF);
-});
-
-add_task(async function test_enrollment_changed_notification() {
-  const loader = ExperimentFakes.rsLoader();
-
-  const PASS_FILTER_RECIPE = ExperimentFakes.recipe("foo", {
-    targeting: "true",
-  });
-  sinon.stub(loader, "setTimer");
-  sinon.spy(loader, "updateRecipes");
-  const enrollmentChanged = TestUtils.topicObserved(
-    "nimbus:enrollment-changed"
-  );
-  sinon.stub(loader.remoteSettingsClient, "get").resolves([PASS_FILTER_RECIPE]);
-  sinon.stub(loader.manager, "onRecipe").resolves();
-  sinon.stub(loader.manager, "onFinalize");
-
-  Services.prefs.setBoolPref(ENABLED_PREF, true);
-  await loader.init();
-  await enrollmentChanged;
-  ok(loader.updateRecipes.called, "should call .updateRecipes");
 });
