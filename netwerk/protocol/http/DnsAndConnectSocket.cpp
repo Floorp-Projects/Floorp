@@ -420,6 +420,16 @@ DnsAndConnectSocket::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
   LOG(("DnsAndConnectSocket::OnLookupComplete: this=%p status %" PRIx32 ".",
        this, static_cast<uint32_t>(status)));
 
+  if (nsCOMPtr<nsIDNSAddrRecord> addrRecord = do_QueryInterface((rec))) {
+    nsIRequest::TRRMode effectivemode = nsIRequest::TRR_DEFAULT_MODE;
+    addrRecord->GetEffectiveTRRMode(&effectivemode);
+    nsITRRSkipReason::value skipReason = nsITRRSkipReason::TRR_UNSET;
+    addrRecord->GetTrrSkipReason(&skipReason);
+    if (mTransaction) {
+      mTransaction->SetTRRInfo(effectivemode, skipReason);
+    }
+  }
+
   MOZ_DIAGNOSTIC_ASSERT(request);
   RefPtr<DnsAndConnectSocket> deleteProtector(this);
 
@@ -1281,11 +1291,12 @@ nsresult DnsAndConnectSocket::TransportSetup::ResolveHost(
 
   nsresult rv = NS_OK;
   do {
-    rv = dns->AsyncResolveNative(mHost, nsIDNSService::RESOLVE_TYPE_DEFAULT,
-                                 mDnsFlags, nullptr, dnsAndSock,
-                                 gSocketTransportService,
-                                 dnsAndSock->mConnInfo->GetOriginAttributes(),
-                                 getter_AddRefs(mDNSRequest));
+    rv = dns->AsyncResolveNative(
+        mHost, nsIDNSService::RESOLVE_TYPE_DEFAULT,
+        mDnsFlags | nsIDNSService::RESOLVE_WANT_RECORD_ON_ERROR, nullptr,
+        dnsAndSock, gSocketTransportService,
+        dnsAndSock->mConnInfo->GetOriginAttributes(),
+        getter_AddRefs(mDNSRequest));
   } while (NS_FAILED(rv) && ShouldRetryDNS());
 
   if (NS_FAILED(rv)) {

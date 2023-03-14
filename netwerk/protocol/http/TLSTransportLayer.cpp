@@ -535,6 +535,22 @@ TLSTransportLayer::ResolvedByTRR(bool* aResolvedByTRR) {
   return mSocketTransport->ResolvedByTRR(aResolvedByTRR);
 }
 
+NS_IMETHODIMP TLSTransportLayer::GetEffectiveTRRMode(
+    nsIRequest::TRRMode* aEffectiveTRRMode) {
+  if (!mSocketTransport) {
+    return NS_ERROR_FAILURE;
+  }
+  return mSocketTransport->GetEffectiveTRRMode(aEffectiveTRRMode);
+}
+
+NS_IMETHODIMP TLSTransportLayer::GetTrrSkipReason(
+    nsITRRSkipReason::value* aTrrSkipReason) {
+  if (!mSocketTransport) {
+    return NS_ERROR_FAILURE;
+  }
+  return mSocketTransport->GetTrrSkipReason(aTrrSkipReason);
+}
+
 #define FWD_TS_PTR(fx, ts)                          \
   NS_IMETHODIMP                                     \
   TLSTransportLayer::fx(ts* arg) {                  \
