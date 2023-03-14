@@ -50,6 +50,8 @@ class ServiceWorkerOp : public RemoteWorkerChild::Op {
   bool MaybeStart(RemoteWorkerChild* aOwner,
                   RemoteWorkerChild::State& aState) final;
 
+  void StartOnMainThread(RefPtr<RemoteWorkerChild>& aOwner) final;
+
   void Cancel() final;
 
  protected:
