@@ -37,13 +37,13 @@
         <div id="current-log-modules"></div>
         <div id="no-log-modules" data-l10n-id="about-logging-no-log-modules"></div>
       </div>
-      <div class="page-subsection">
+      <form id="log-modules-form" class="page-subsection">
         <label for="log-modules" data-l10n-id="about-logging-new-log-modules"></label>
         <input type="text" name="log-modules" id="log-modules" value="">
         <div class="button-row">
-          <button id="set-log-modules-button" data-l10n-id="about-logging-set-log-modules"></button>
+          <button type="submit" id="set-log-modules-button" data-l10n-id="about-logging-set-log-modules"></button>
         </div>
-      </div>
+      </form>
       <div id=preset-selector-section class="page-subsection">
         <label for="logging-preset-dropdown" data-l10n-id="about-logging-logging-preset-selector-text"></label>
         <select name="logging-preset-dropdown" id=logging-preset-dropdown></select>
@@ -66,7 +66,7 @@
           <span hidden id="buttons-disabled" data-l10n-id="about-logging-buttons-disabled"></span>
         </div>
       </div>
-      <div id="log-file-configuration" class="page-subsection">
+      <form id="log-file-configuration" class="page-subsection">
         <div>
           <span data-l10n-id="about-logging-current-log-file"></span>
           <span id="current-log-file"></span>
@@ -76,11 +76,11 @@
           <label for="log-file" data-l10n-id="about-logging-new-log-file"></label>
           <input type="text" name="log-file" id="log-file">
           <div class="button-row">
-            <button id="open-log-file-button" data-l10n-id="about-logging-open-log-file-dir"></button>
-            <button id="set-log-file-button" data-l10n-id="about-logging-set-log-file"></button>
+            <button type="button" id="open-log-file-button" data-l10n-id="about-logging-open-log-file-dir"></button>
+            <button type="submit" id="set-log-file-button" data-l10n-id="about-logging-set-log-file"></button>
           </div>
         </div>
-      </div>
+      </form>
       <div class="page-subsection">
         <p id="log-tutorial" data-l10n-id="about-logging-log-tutorial">
           <a data-l10n-name="logging" href="https://firefox-source-docs.mozilla.org/networking/http/logging.html"></a>
