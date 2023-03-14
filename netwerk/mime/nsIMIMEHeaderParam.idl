@@ -132,7 +132,7 @@ interface nsIMIMEHeaderParam : nsISupports {
    */
 
   [noscript]
-  string getParameterInternal(in string aHeaderVal,
+  string getParameterInternal(in ACString aHeaderVal,
                               in string aParamName,
                               out string aCharset,
                               out string aLang);
