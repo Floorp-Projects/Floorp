@@ -1,5 +1,5 @@
-const { ForgetAboutSite } = ChromeUtils.import(
-  "resource://gre/modules/ForgetAboutSite.jsm"
+const { ForgetAboutSite } = ChromeUtils.importESModule(
+  "resource://gre/modules/ForgetAboutSite.sys.mjs"
 );
 const { SiteDataTestUtils } = ChromeUtils.import(
   "resource://testing-common/SiteDataTestUtils.jsm"
