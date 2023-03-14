@@ -149,10 +149,6 @@ startup-restore-warn-on-quit =
 disable-extension =
     .label = Disable Extension
 
-preferences-data-migration-header = Import Browser Data
-preferences-data-migration-description = Import bookmarks, passwords, history and autofill data from a different browser or a password manager into { -brand-short-name }.
-preferences-data-migration-button = Import Data
-
 tabs-group-header = Tabs
 
 ctrl-tab-recently-used-order =
