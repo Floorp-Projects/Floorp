@@ -102,7 +102,7 @@ function assertTelemetryEvents(expectedEvents) {
   });
 }
 
-add_setup(async function setup() {
+add_task(async function setup() {
   Services.prefs.setBoolPref(ExtensionStorageIDB.BACKEND_ENABLED_PREF, true);
 
   await promiseStartupManager();
@@ -437,9 +437,6 @@ add_task(async function test_extensionId_trimmed_in_telemetry_event() {
       },
     },
     background,
-    // We don't want the (default) startupReason ADDON_INSTALL because
-    // that automatically sets the migrated pref and skips migration.
-    startupReason: "APP_STARTUP",
   });
 
   await extension.startup();
@@ -524,9 +521,6 @@ add_task(async function test_storage_local_corrupted_data_migration() {
       },
     },
     background,
-    // We don't want the (default) startupReason ADDON_INSTALL because
-    // that automatically sets the migrated pref and skips migration.
-    startupReason: "APP_STARTUP",
   });
 
   await extension.startup();
@@ -618,9 +612,6 @@ add_task(async function test_storage_local_data_migration_failure() {
       },
     },
     background,
-    // We don't want the (default) startupReason ADDON_INSTALL because
-    // that automatically sets the migrated pref and skips migration.
-    startupReason: "APP_STARTUP",
   });
 
   await extension.startup();
@@ -674,9 +665,6 @@ add_task(async function test_migration_aborted_on_shutdown() {
         },
       },
     },
-    // We don't want the (default) startupReason ADDON_INSTALL because
-    // that automatically sets the migrated pref and skips migration.
-    startupReason: "APP_STARTUP",
   });
 
   await extension.startup();
@@ -766,9 +754,6 @@ async function test_quota_exceeded_while_migrating_data() {
 
       browser.test.sendMessage("bg-page:ready");
     },
-    // We don't want the (default) startupReason ADDON_INSTALL because
-    // that automatically sets the migrated pref and skips migration.
-    startupReason: "APP_STARTUP",
   });
 
   await extension.startup();
