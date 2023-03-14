@@ -424,17 +424,33 @@ let FormAutofillPrompter = {
     }
   },
 
-  async promptToSaveAddress(browser, storage, record, flowId) {
+  /**
+   * Show save or update address doorhanger
+   *
+   * @param {Element<browser>} browser  Browser to show the save/update address prompt
+   * @param {object} storage Address storage
+   * @param {object} newRecord Address record to save
+   * @param {string} flowId Unique GUID to record a series of the same user action
+   * @param {object} options
+   * @param {object} [options.mergeableRecord] Record to be merged
+   * @param {Array}  [options.mergeableFields] List of field name that can be merged
+   */
+  async promptToSaveAddress(
+    browser,
+    storage,
+    newRecord,
+    flowId,
+    { mergeableRecord, mergeableFields }
+  ) {
     // Overwrite the guid if there is a duplicate
     let doorhangerType;
-    const duplicateRecord = (await storage.getDuplicateRecords(record).next())
-      .value;
-    if (duplicateRecord) {
+    if (mergeableRecord) {
       doorhangerType = "updateAddress";
+    } else if (FormAutofill.isAutofillAddressesCaptureV2Enabled) {
+      doorhangerType = "addAddress";
     } else {
       doorhangerType = "addFirstTimeUse";
-
-      this._updateStorageAfterInteractWithPrompt("save", storage, record);
+      this._updateStorageAfterInteractWithPrompt("save", storage, newRecord);
 
       // Show first time use doorhanger
       if (FormAutofill.isAutofillAddressesFirstTimeUse) {
@@ -447,9 +463,9 @@ let FormAutofillPrompter = {
       }
     }
 
-    const description = FormAutofillUtils.getAddressLabel(record);
-    const additionalDescription = duplicateRecord
-      ? FormAutofillUtils.getAddressLabel(duplicateRecord)
+    const description = FormAutofillUtils.getAddressLabel(newRecord);
+    const additionalDescription = mergeableRecord
+      ? FormAutofillUtils.getAddressLabel(mergeableRecord)
       : null;
 
     const state = await FormAutofillPrompter._showCCorAddressCaptureDoorhanger(
@@ -470,8 +486,8 @@ let FormAutofillPrompter = {
     this._updateStorageAfterInteractWithPrompt(
       state,
       storage,
-      record,
-      duplicateRecord?.guid
+      newRecord,
+      mergeableRecord?.guid
     );
   },
 
@@ -644,7 +660,6 @@ let FormAutofillPrompter = {
           DESCRIPTION_ID,
           description
         );
-
         if (additionalDescription) {
           this._updateDescription(
             notificationContent,

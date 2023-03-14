@@ -76,6 +76,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
 });
 
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  FormAutofillNameUtils: "resource://autofill/FormAutofillNameUtils.jsm",
+});
+
 let AddressDataLoader = {
   // Status of address data loading. We'll load all the countries with basic level 1
   // information while requesting conutry information, and set country to true.
@@ -353,6 +357,15 @@ FormAutofillUtils = {
         address["street-address"]
       );
     }
+
+    if (!("name" in address)) {
+      address.name = lazy.FormAutofillNameUtils.joinNameParts({
+        given: address["given-name"],
+        middle: address["additional-name"],
+        family: address["family-name"],
+      });
+    }
+
     for (const fieldName of fieldOrder) {
       let string = address[fieldName];
       if (string) {
@@ -1061,6 +1074,24 @@ FormAutofillUtils = {
    */
   strCompare(a = "", b = "", collators) {
     return collators.some(collator => !collator.compare(a, b));
+  },
+
+  /**
+   * Determine whether one string(b) may be found within another string(a)
+   *
+   * @param   {string} a
+   * @param   {string} b
+   * @param   {Array} collators
+   * @returns {boolean} True if the string is found
+   */
+  strInclude(a = "", b = "", collators) {
+    const len = a.length - b.length;
+    for (let i = 0; i <= len; i++) {
+      if (this.strCompare(a.substring(i, i + b.length), b, collators)) {
+        return true;
+      }
+    }
+    return false;
   },
 
   /**

@@ -29,6 +29,8 @@ const ENABLED_AUTOFILL_ADDRESSES_PREF =
   "extensions.formautofill.addresses.enabled";
 const ENABLED_AUTOFILL_ADDRESSES_CAPTURE_PREF =
   "extensions.formautofill.addresses.capture.enabled";
+const ENABLED_AUTOFILL_ADDRESSES_CAPTURE_V2_PREF =
+  "extensions.formautofill.addresses.capture.v2.enabled";
 const ENABLED_AUTOFILL_ADDRESSES_SUPPORTED_COUNTRIES_PREF =
   "extensions.formautofill.addresses.supportedCountries";
 const ENABLED_AUTOFILL_CREDITCARDS_PREF =
@@ -70,6 +72,7 @@ function debug() {
 var FormAutofill = {
   ENABLED_AUTOFILL_ADDRESSES_PREF,
   ENABLED_AUTOFILL_ADDRESSES_CAPTURE_PREF,
+  ENABLED_AUTOFILL_ADDRESSES_CAPTURE_V2_PREF,
   ENABLED_AUTOFILL_CREDITCARDS_PREF,
   ENABLED_AUTOFILL_CREDITCARDS_REAUTH_PREF,
   ADDRESSES_FIRST_TIME_USE_PREF,
@@ -203,6 +206,11 @@ XPCOMUtils.defineLazyPreferenceGetter(
   FormAutofill,
   "isAutofillAddressesCaptureEnabled",
   ENABLED_AUTOFILL_ADDRESSES_CAPTURE_PREF
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofill,
+  "isAutofillAddressesCaptureV2Enabled",
+  ENABLED_AUTOFILL_ADDRESSES_CAPTURE_V2_PREF
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   FormAutofill,

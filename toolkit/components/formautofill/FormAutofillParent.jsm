@@ -48,6 +48,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
+  AddressComparison: "resource://autofill/AddressComponent.jsm",
+  AddressComponent: "resource://autofill/AddressComponent.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   FormAutofillPreferences: "resource://autofill/FormAutofillPreferences.jsm",
   FormAutofillPrompter: "resource://autofill/FormAutofillPrompter.jsm",
@@ -478,18 +480,48 @@ class FormAutofillParent extends JSWindowActorParent {
 
   async _onAddressSubmit(address, browser) {
     const storage = lazy.gFormAutofillStorage.addresses;
+
     // Make sure record is normalized before comparing with records in the storage
     storage._normalizeRecord(address.record);
 
-    // If the record alreay exists in the storage, don't bother showing the prompt
-    const matchRecord = (await storage.getMatchRecords(address.record).next())
-      .value;
-    if (matchRecord) {
-      storage.notifyUsed(matchRecord.guid);
-      return false;
+    const newAddress = new lazy.AddressComponent(address.record);
+
+    let mergeableRecord = null;
+    let mergeableFields = [];
+
+    // Exams all stored record to determine whether to show the prompt or not.
+    for (const record of await storage.getAll()) {
+      const oldAddress = new lazy.AddressComponent(record);
+      const result = new lazy.AddressComparison(newAddress, oldAddress);
+
+      // If the record alreay exists in the storage, don't bother showing the prompt
+      if (result.isDuplicate()) {
+        lazy.log.debug(
+          "A duplicated address record is found, do not show the prompt"
+        );
+        storage.notifyUsed(record.guid);
+        return false;
+      } else if (result.isMergeable()) {
+        lazy.log.debug(
+          "A mergeable address record is found, show the update prompt"
+        );
+        // If we find multiple mergeable records, choose the record with fewest mergeable
+        // fields.
+        // TODO: Add a testcase
+        if (
+          !mergeableFields.length ||
+          mergeableFields.length > result.getMergeableFields().length
+        ) {
+          mergeableRecord = record;
+          mergeableFields = result.getMergeableFields();
+        }
+      }
     }
 
-    if (!FormAutofill.isAutofillAddressesCaptureEnabled) {
+    if (
+      !FormAutofill.isAutofillAddressesCaptureEnabled &&
+      !FormAutofill.isAutofillAddressesCaptureV2Enabled
+    ) {
       return false;
     }
 
@@ -498,7 +530,8 @@ class FormAutofillParent extends JSWindowActorParent {
         browser,
         storage,
         address.record,
-        address.flowId
+        address.flowId,
+        { mergeableRecord, mergeableFields }
       );
     };
   }
