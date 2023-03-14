@@ -829,6 +829,24 @@ void SVGImageFrame::NotifySVGChanged(uint32_t aFlags) {
              "Invalidation logic may need adjusting");
 }
 
+SVGBBox SVGImageFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
+                                           uint32_t aFlags) {
+  if (aToBBoxUserspace.IsSingular()) {
+    // XXX ReportToConsole
+    return {};
+  }
+
+  if ((aFlags & SVGUtils::eForGetClientRects) &&
+      aToBBoxUserspace.PreservesAxisAlignedRectangles()) {
+    Rect rect = NSRectToRect(mRect, AppUnitsPerCSSPixel());
+    return aToBBoxUserspace.TransformBounds(rect);
+  }
+
+  auto* element = static_cast<SVGImageElement*>(GetContent());
+
+  return element->GeometryBounds(aToBBoxUserspace);
+}
+
 //----------------------------------------------------------------------
 // SVGImageListener implementation
 

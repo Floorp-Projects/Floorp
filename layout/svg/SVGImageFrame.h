@@ -60,6 +60,8 @@ class SVGImageFrame final : public SVGGeometryFrame, public nsIReflowCallback {
   nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) override;
   void ReflowSVG() override;
   void NotifySVGChanged(uint32_t aFlags) override;
+  SVGBBox GetBBoxContribution(const Matrix& aToBBoxUserspace,
+                              uint32_t aFlags) override;
 
   // SVGGeometryFrame methods:
   uint16_t GetHitTestFlags() override;

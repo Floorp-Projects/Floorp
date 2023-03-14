@@ -73,7 +73,10 @@ class SVGImageElement final : public SVGImageElementBase,
   bool GetGeometryBounds(
       Rect* aBounds, const StrokeOptions& aStrokeOptions,
       const Matrix& aToBoundsSpace,
-      const Matrix* aToNonScalingStrokeSpace = nullptr) override;
+      const Matrix* aToNonScalingStrokeSpace = nullptr) override {
+    *aBounds = GeometryBounds(aToBoundsSpace);
+    return true;
+  }
   already_AddRefed<Path> BuildPath(PathBuilder* aBuilder) override;
 
   // SVGSVGElement methods:
@@ -99,6 +102,8 @@ class SVGImageElement final : public SVGImageElementBase,
   already_AddRefed<Promise> Decode(ErrorResult& aRv);
 
   static nsCSSPropertyID GetCSSPropertyIdForAttrEnum(uint8_t aAttrEnum);
+
+  gfx::Rect GeometryBounds(const gfx::Matrix& aToBoundsSpace);
 
  protected:
   nsresult LoadSVGImage(bool aForce, bool aNotify);
