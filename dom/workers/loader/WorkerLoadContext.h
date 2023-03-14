@@ -90,6 +90,7 @@ class WorkerLoadContext : public JS::loader::LoadContextBase {
     // only
     // be a Module script.
     StaticImport,
+    DynamicImport,
     // We have an attached debugger, and these should be treated specially and
     // not like a main script (regardless of their type). This is not part of
     // the specification.

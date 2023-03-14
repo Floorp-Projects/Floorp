@@ -78,8 +78,47 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateDynamicImport(
     JSContext* aCx, nsIURI* aURI, LoadedScript* aMaybeActiveScript,
     JS::Handle<JS::Value> aReferencingPrivate, JS::Handle<JSString*> aSpecifier,
     JS::Handle<JSObject*> aPromise) {
-  // TODO: Implement for Dedicated workers. Not supported for Service Workers.
-  return nullptr;
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+
+  CreateDynamicImportLoader();
+
+  // Not supported for Service Workers.
+  if (workerPrivate->IsServiceWorker()) {
+    return nullptr;
+  }
+  MOZ_ASSERT(aSpecifier);
+  MOZ_ASSERT(aPromise);
+
+  RefPtr<ScriptFetchOptions> options;
+  nsIURI* baseURL = nullptr;
+  if (aMaybeActiveScript) {
+    options = aMaybeActiveScript->GetFetchOptions();
+    baseURL = aMaybeActiveScript->BaseURL();
+  } else {
+    ReferrerPolicy referrerPolicy = workerPrivate->GetReferrerPolicy();
+    options =
+        new ScriptFetchOptions(CORSMode::CORS_NONE, referrerPolicy, nullptr);
+    baseURL = workerPrivate->GetBaseURI();
+  }
+
+  Maybe<ClientInfo> clientInfo = GetGlobalObject()->GetClientInfo();
+
+  RefPtr<WorkerLoadContext> context =
+      new WorkerLoadContext(WorkerLoadContext::Kind::DynamicImport, clientInfo,
+                            GetCurrentScriptLoader());
+
+  RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
+      aURI, options, SRIMetadata(), baseURL, context, true,
+      /* is top level */ true, /* is dynamic import */
+      this, ModuleLoadRequest::NewVisitedSetForTopLevelImport(aURI), nullptr);
+
+  request->mDynamicReferencingPrivate = aReferencingPrivate;
+  request->mDynamicSpecifier = aSpecifier;
+  request->mDynamicPromise = aPromise;
+
+  HoldJSObjects(request.get());
+
+  return request.forget();
 }
 
 bool WorkerModuleLoader::CanStartLoad(ModuleLoadRequest* aRequest,
@@ -137,8 +176,15 @@ void WorkerModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {
     if (NS_WARN_IF(!jsapi.Init(GetGlobalObject()))) {
       return;
     }
-    GetScriptLoaderFor(aRequest)->MaybeMoveToLoadedList(aRequest);
-    GetScriptLoaderFor(aRequest)->ProcessPendingRequests(jsapi.cx());
+    RefPtr<WorkerScriptLoader> requestScriptLoader =
+        GetScriptLoaderFor(aRequest);
+    if (aRequest->IsDynamicImport()) {
+      aRequest->ProcessDynamicImport();
+      requestScriptLoader->TryShutdown();
+    } else {
+      requestScriptLoader->MaybeMoveToLoadedList(aRequest);
+      requestScriptLoader->ProcessPendingRequests(jsapi.cx());
+    }
   }
 }
 
