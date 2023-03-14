@@ -426,7 +426,14 @@ APZEventResult InputQueue::ReceivePanGestureInput(
   }
 
   PanGestureInput event = aEvent;
-  result.SetStatusAsConsumeDoDefault(aTarget);
+
+  // Below `SetStatusAsConsumeDoDefault()` preserves `mHandledResult` of
+  // `result` which was set in the ctor of APZEventResult at the top of this
+  // function based on `aFlag` so that the `mHandledResult` value is reliable to
+  // tell whether the event will be handled by the root content APZC at least
+  // for swipe-navigation stuff. E.g. if a pan-start event scrolled the root
+  // scroll container, we don't need to anything for swipe-navigation.
+  result.SetStatusAsConsumeDoDefault();
 
   if (!block || block->WasInterrupted()) {
     if (event.mType == PanGestureInput::PANGESTURE_MOMENTUMSTART ||
