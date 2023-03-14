@@ -98,7 +98,7 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateDynamicImport(
     ReferrerPolicy referrerPolicy = workerPrivate->GetReferrerPolicy();
     options =
         new ScriptFetchOptions(CORSMode::CORS_NONE, referrerPolicy, nullptr);
-    baseURL = workerPrivate->GetBaseURI();
+    baseURL = GetBaseURI();
   }
 
   Maybe<ClientInfo> clientInfo = GetGlobalObject()->GetClientInfo();

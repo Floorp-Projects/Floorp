@@ -567,9 +567,12 @@ nsresult CacheLoadHandler::DataReceivedFromCache(
                                     "EmptyWorkerSourceWarning");
   }
 
+  nsCOMPtr<nsIURI> finalURI;
+  rv = NS_NewURI(getter_AddRefs(finalURI), loadContext->mFullURL);
+  if (!loadContext->mRequest->mBaseURL) {
+    loadContext->mRequest->mBaseURL = finalURI;
+  }
   if (loadContext->IsTopLevel()) {
-    nsCOMPtr<nsIURI> finalURI;
-    rv = NS_NewURI(getter_AddRefs(finalURI), loadContext->mFullURL);
     if (NS_SUCCEEDED(rv)) {
       mWorkerRef->Private()->SetBaseURI(finalURI);
     }

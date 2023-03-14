@@ -178,19 +178,17 @@ nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
                                     "EmptyWorkerSourceWarning");
   }
 
-  if (loadContext->mRequest->IsModuleRequest()) {
-    // For modules, we need to store the base URI on the module request object,
-    // rather than on the worker private (as we do for classic scripts). This is
-    // because module loading is shared across multiple components, with
-    // ScriptLoadRequests being the common structure among them. This specific
-    // use of the base url is used when resolving the module specifier for child
-    // modules.
-    nsCOMPtr<nsIURI> uri;
-    rv = channel->GetOriginalURI(getter_AddRefs(uri));
-    NS_ENSURE_SUCCESS(rv, rv);
+  // For modules, we need to store the base URI on the module request object,
+  // rather than on the worker private (as we do for classic scripts). This is
+  // because module loading is shared across multiple components, with
+  // ScriptLoadRequests being the common structure among them. This specific
+  // use of the base url is used when resolving the module specifier for child
+  // modules.
+  nsCOMPtr<nsIURI> uri;
+  rv = channel->GetOriginalURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    channel->GetURI(getter_AddRefs(loadContext->mRequest->mBaseURL));
-  }
+  channel->GetURI(getter_AddRefs(loadContext->mRequest->mBaseURL));
 
   // Figure out what we actually loaded.
   nsCOMPtr<nsIURI> finalURI;

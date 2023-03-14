@@ -32,6 +32,7 @@
 #include "js/CompilationAndEvaluation.h"
 #include "js/Exception.h"
 #include "js/SourceText.h"
+#include "js/TypeDecls.h"
 #include "nsError.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentSecurityManager.h"
@@ -456,13 +457,24 @@ class ScriptExecutorRunnable final : public MainThreadWorkerSyncRunnable {
 template <typename Unit>
 static bool EvaluateSourceBuffer(JSContext* aCx,
                                  const JS::CompileOptions& aOptions,
+                                 JS::loader::ClassicScript* aClassicScript,
                                  JS::SourceText<Unit>& aSourceBuffer) {
   static_assert(std::is_same<Unit, char16_t>::value ||
                     std::is_same<Unit, Utf8Unit>::value,
                 "inferred units must be UTF-8 or UTF-16");
 
+  JS::Rooted<JSScript*> script(aCx, JS::Compile(aCx, aOptions, aSourceBuffer));
+
+  if (!script) {
+    return false;
+  }
+
+  if (aClassicScript) {
+    aClassicScript->AssociateWithScript(script);
+  }
+
   JS::Rooted<JS::Value> unused(aCx);
-  return Evaluate(aCx, aOptions, aSourceBuffer, &unused);
+  return JS_ExecuteScript(aCx, script, &unused);
 }
 
 WorkerScriptLoader::WorkerScriptLoader(
@@ -1127,11 +1139,27 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
     return false;
   }
 
+  RefPtr<JS::loader::ClassicScript> classicScript = nullptr;
+  if (StaticPrefs::dom_workers_modules_enabled() &&
+      !mWorkerRef->Private()->IsServiceWorker()) {
+    // We need a LoadedScript to be associated with the JSScript in order to
+    // correctly resolve the referencing private for dynamic imports. In turn
+    // this allows us to correctly resolve the BaseURL.
+    //
+    // Dynamic import is disallowed on service workers.  Additionally, causes
+    // crashes because the life cycle isn't completed for service workers.  To
+    // keep things simple, we don't create a classic script for ServiceWorkers.
+    // If this changes then we will need to ensure that the reference that is
+    // held is released appropriately.
+    classicScript = new JS::loader::ClassicScript(aRequest->mFetchOptions,
+                                                  aRequest->mBaseURL);
+  }
+
   bool successfullyEvaluated =
       aRequest->IsUTF8Text()
-          ? EvaluateSourceBuffer(aCx, options,
+          ? EvaluateSourceBuffer(aCx, options, classicScript,
                                  maybeSource.ref<JS::SourceText<Utf8Unit>>())
-          : EvaluateSourceBuffer(aCx, options,
+          : EvaluateSourceBuffer(aCx, options, classicScript,
                                  maybeSource.ref<JS::SourceText<char16_t>>());
 
   if (aRequest->IsCanceled()) {
