@@ -1272,13 +1272,8 @@ pref("browser.bookmarks.editDialog.firstEditField", "namePicker");
 // The number of recently selected folders in the edit bookmarks dialog.
 pref("browser.bookmarks.editDialog.maxRecentFolders", 7);
 
-// By default the Edit Bookmark dialog is instant-apply. This feature pref will allow to
-// just save on Accept, once the project is complete.
-#ifdef NIGHTLY_BUILD
-  pref("browser.bookmarks.editDialog.delayedApply.enabled", true);
-#else
-  pref("browser.bookmarks.editDialog.delayedApply.enabled", false);
-#endif
+// Whether the Edit Bookmark dialog is delayed-apply.
+pref("browser.bookmarks.editDialog.delayedApply.enabled", true);
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   // This controls the strength of the Windows content process sandbox for
