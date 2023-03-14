@@ -7,7 +7,7 @@
 BROWSER_CHROME_MANIFESTS += ["tests/browser.ini"]
 
 EXTRA_JS_MODULES += [
-    "TooltipTextProvider.jsm",
+    "TooltipTextProvider.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [
