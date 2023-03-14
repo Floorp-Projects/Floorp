@@ -1,5 +1,8 @@
 
 var sr = new ShadowRealm();
+var resolve;
+
+var allSettled = new Promise((resolved) => { resolve = resolved });
 
 self.onmessage = async function (e) {
   try {
@@ -49,18 +52,25 @@ self.onmessage = async function (e) {
 
       }
 
-      if (importValue_worked == import_worked && importValue_worked == importNested_worked) {
-        postMessage(`PASS: importValue, import, and nested import all ${importValue_worked ? "worked" : "failed"} `);
+      if (importValue_worked == importNested_worked) {
+        postMessage(`PASS: import in workers ${
+          import_worked ? "worked" : "failed"
+        }. importValue, and nested import all ${
+          importValue_worked ? "worked" : "failed"
+        } `);
+        resolve();
         return;
       }
 
       postMessage(`FAIL: importValue ${importValue_worked}, import ${import_worked}, importNested ${importNested_worked}`);
+      resolve();
       return;
     }
 
 
     // Reply back with finish
     if (e.data == 'finish') {
+      await allSettled;
       postMessage("finish");
       return;
     }
