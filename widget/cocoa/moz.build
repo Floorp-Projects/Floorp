@@ -48,7 +48,6 @@ UNIFIED_SOURCES += [
     "nsDeviceContextSpecX.mm",
     "nsFilePicker.mm",
     "nsLookAndFeel.mm",
-    "nsMacCursor.mm",
     "nsMacDockSupport.mm",
     "nsMacFinderProgress.mm",
     "nsMacSharingService.mm",

@@ -5,9 +5,9 @@
 #ifndef nsCursorManager_h_
 #define nsCursorManager_h_
 
-#import <Foundation/Foundation.h>
+#import <Cocoa/Cocoa.h>
+
 #include "nsIWidget.h"
-#include "nsMacCursor.h"
 
 /*! @class      nsCursorManager
     @abstract   Singleton service provides access to all cursors available in the application.
@@ -20,7 +20,8 @@
 @interface nsCursorManager : NSObject {
  @private
   NSMutableDictionary* mCursors;
-  nsMacCursor* mCurrentMacCursor;
+  NSCursor* mCurrentCursor;
+  nsCursor mCurrentCursorType;
 }
 
 /*! @method     setCursor:
