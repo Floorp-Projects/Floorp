@@ -456,6 +456,8 @@ class WorkerPrivate final
     return mCancelAllPendingRunnables;
   }
 
+  void ShutdownModuleLoader();
+
   void ClearMainEventQueue(WorkerRanOrNot aRanOrNot);
 
   void ClearDebuggerEventQueue();

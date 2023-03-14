@@ -2046,6 +2046,8 @@ WorkerThreadPrimaryRunnable::Run() {
           MOZ_ASSERT(!JS_IsExceptionPending(cx));
         }
 
+        mWorkerPrivate->ShutdownModuleLoader();
+
         mWorkerPrivate->RunShutdownTasks();
 
         BackgroundChild::CloseForCurrentThread();

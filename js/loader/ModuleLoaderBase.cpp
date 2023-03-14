@@ -993,6 +993,7 @@ ModuleLoaderBase::~ModuleLoaderBase() {
 }
 
 void ModuleLoaderBase::Shutdown() {
+  CancelAndClearDynamicImports();
   MOZ_ASSERT(mFetchingModules.IsEmpty());
 
   for (const auto& entry : mFetchedModules) {

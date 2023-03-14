@@ -3899,6 +3899,23 @@ WorkerPrivate::ProcessAllControlRunnablesLocked() {
   return result;
 }
 
+void WorkerPrivate::ShutdownModuleLoader() {
+  AssertIsOnWorkerThread();
+
+  WorkerGlobalScope* globalScope = GlobalScope();
+  if (globalScope) {
+    if (globalScope->GetModuleLoader(nullptr)) {
+      globalScope->GetModuleLoader(nullptr)->Shutdown();
+    }
+  }
+  WorkerDebuggerGlobalScope* debugGlobalScope = DebuggerGlobalScope();
+  if (debugGlobalScope) {
+    if (debugGlobalScope->GetModuleLoader(nullptr)) {
+      debugGlobalScope->GetModuleLoader(nullptr)->Shutdown();
+    }
+  }
+}
+
 void WorkerPrivate::ClearMainEventQueue(WorkerRanOrNot aRanOrNot) {
   AssertIsOnWorkerThread();
 
