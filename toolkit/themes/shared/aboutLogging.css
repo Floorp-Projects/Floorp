@@ -4,18 +4,10 @@
 
 @import url("chrome://global/skin/in-content/common.css");
 
-html {
-  height: 100%;
-}
-
-body {
-  height: 100%;
-}
-
 /** Content area **/
-
 .main-content {
-  flex: 1;
+  width: min(90%, 1024px);
+  margin: auto;
 }
 
 .page-subsection {
