@@ -351,12 +351,27 @@ class ScreenshotsHelper {
    */
   getContentDimensions() {
     return SpecialPowers.spawn(this.browser, [], async function() {
-      let doc = content.document.documentElement;
+      let { innerWidth, innerHeight, scrollMaxX, scrollMaxY } = content.window;
+      let width = innerWidth + scrollMaxX;
+      let height = innerHeight + scrollMaxY;
+
+      const scrollbarHeight = {};
+      const scrollbarWidth = {};
+      content.window.windowUtils.getScrollbarSize(
+        false,
+        scrollbarWidth,
+        scrollbarHeight
+      );
+      width -= scrollbarWidth.value;
+      height -= scrollbarHeight.value;
+      innerWidth -= scrollbarWidth.value;
+      innerHeight -= scrollbarHeight.value;
+
       return {
-        clientHeight: doc.clientHeight,
-        clientWidth: doc.clientWidth,
-        scrollHeight: doc.scrollHeight,
-        scrollWidth: doc.scrollWidth,
+        clientHeight: innerHeight,
+        clientWidth: innerWidth,
+        scrollHeight: height,
+        scrollWidth: width,
       };
     });
   }
@@ -370,6 +385,29 @@ class ScreenshotsHelper {
 
       return screenshotsChild._overlay.screenshotsContainer.getSelectionLayerDimensions();
     });
+  }
+
+  async waitForSelectionLayerDimensionChange(oldWidth, oldHeight) {
+    await ContentTask.spawn(
+      this.browser,
+      [oldWidth, oldHeight],
+      async ([prevWidth, prevHeight]) => {
+        let screenshotsChild = content.windowGlobalChild.getActor(
+          "ScreenshotsComponent"
+        );
+
+        await ContentTaskUtils.waitForCondition(() => {
+          let dimensions = screenshotsChild._overlay.screenshotsContainer.getSelectionLayerDimensions();
+          info(
+            `old height: ${prevHeight}. new height: ${dimensions.scrollHeight}.\nold width: ${prevWidth}. new width: ${dimensions.scrollWidth}`
+          );
+          return (
+            dimensions.scrollHeight !== prevHeight &&
+            dimensions.scrollWidth !== prevWidth
+          );
+        }, "Wait for selection box width change");
+      }
+    );
   }
 
   getSelectionBoxDimensions() {
