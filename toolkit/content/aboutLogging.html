@@ -15,40 +15,43 @@
 <link rel="localization"  href="toolkit/about/aboutLogging.ftl">
 </head>
 <body id="body">
-<div class="main-content">
-  <div id="logging">
+  <main class="main-content">
     <h1 id="title" data-l10n-id="about-logging-page-title"></h1>
-    <div class=page-section>
-      <div hidden id=error class=info-box>
+    <section>
+      <div hidden id=error class="page-subsection info-box">
         <div class=info-box-label data-l10n-id="about-logging-error"></div>
         <div id=error-description></div>
         <div data-l10n-id="about-logging-configuration-url-ignored"></div>
       </div>
-      <div hidden id=some-elements-unavailable class=info-box>
+      <div hidden id=some-elements-unavailable class="page-subsection info-box">
         <div class=info-box-label data-l10n-id="about-logging-info"></div>
         <div data-l10n-id="about-logging-some-elements-disabled"></div>
       </div>
+    </section>
+    <div class="button-row">
+      <button id="toggle-logging-button" data-l10n-id="about-logging-start-logging"></button>
     </div>
-    <button id="toggle-logging-button" data-l10n-id="about-logging-start-logging"></button>
-    <div id=log-module-selection class=page-section>
+    <section id=log-module-selection>
       <h2 data-l10n-id="about-logging-log-modules-selection"></h2>
-      <div>
+      <div class="page-subsection">
         <label for="current-log-modules" data-l10n-id="about-logging-currently-enabled-log-modules"></label>
         <div id="current-log-modules"></div>
         <span id="no-log-modules" data-l10n-id="about-logging-no-log-modules"></span>
       </div>
-      <div>
+      <div class="page-subsection">
         <label for="log-modules" data-l10n-id="about-logging-new-log-modules"></label>
         <input type="text" name="log-modules" id="log-modules" value="">
-        <button id="set-log-modules-button" data-l10n-id="about-logging-set-log-modules"></button>
+        <div class="button-row">
+          <button id="set-log-modules-button" data-l10n-id="about-logging-set-log-modules"></button>
+        </div>
       </div>
-      <div id=preset-selector-section>
+      <div id=preset-selector-section class="page-subsection">
         <label for="logging-preset-dropdown" data-l10n-id="about-logging-logging-preset-selector-text"></label>
         <select name="logging-preset-dropdown" id=logging-preset-dropdown></select>
         <div id="logging-preset-description"></div>
       </div>
-    </div>
-    <div id=logging-output class=page-section>
+    </section>
+    <section id=logging-output>
       <div>
         <span hidden id="buttons-disabled" data-l10n-id="about-logging-buttons-disabled"></span>
       </div>
@@ -64,26 +67,27 @@
           <span hidden id="buttons-disabled" data-l10n-id="about-logging-buttons-disabled"></span>
         </div>
       </div>
-      <div id="log-file-configuration">
+      <div id="log-file-configuration" class="page-subsection">
         <div>
-          <label for="current-log-file" data-l10n-id="about-logging-current-log-file"></label>
-          <div id="current-log-file"></div>
+          <span data-l10n-id="about-logging-current-log-file"></span>
+          <span id="current-log-file"></span>
           <span id="no-log-file" data-l10n-id="about-logging-no-log-file"></span>
         </div>
         <div>
           <label for="log-file" data-l10n-id="about-logging-new-log-file"></label>
           <input type="text" name="log-file" id="log-file">
-          <button id="open-log-file-button" data-l10n-id="about-logging-open-log-file-dir"></button>
-          <button id="set-log-file-button" data-l10n-id="about-logging-set-log-file"></button>
+          <div class="button-row">
+            <button id="open-log-file-button" data-l10n-id="about-logging-open-log-file-dir"></button>
+            <button id="set-log-file-button" data-l10n-id="about-logging-set-log-file"></button>
+          </div>
         </div>
       </div>
-      <div>
+      <div class="page-subsection">
         <p id="log-tutorial" data-l10n-id="about-logging-log-tutorial">
           <a data-l10n-name="logging" href="https://firefox-source-docs.mozilla.org/networking/http/logging.html"></a>
         </p>
       </div>
-    </div>
-  </div>
-</div>
+    </section>
+  </main>
 </body>
 </html>
