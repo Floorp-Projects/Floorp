@@ -46,6 +46,7 @@ tasktype_map:
     mar-signing: signing
     partials-signing: signing
     repackage: repackage
+    repackage-deb: repackage
     repackage-signing: repackage
     repackage-signing-msi: repackage
     repackage-signing-shippable-l10n-msix: signing
@@ -382,6 +383,19 @@ mapping:
         update_balrog_manifest: true
         destinations:
             - ${version}-candidates/build${build_number}/update/${path_platform}
+    target.deb:
+        <<: *default
+        description: "Firefox as a .deb package"
+        only_for_platforms:
+            - linux-shippable
+            - linux64-shippable
+            - linux-devedition
+            - linux64-devedition
+        pretty_name: firefox-${version}.deb
+        checksums_path: ${path_platform}/${locale}/firefox-${version}.deb
+        from:
+            - repackage-deb
+        update_balrog_manifest: false
     ${partial}:
         <<: *default
         description: "Partials MAR files to serve as updates"
