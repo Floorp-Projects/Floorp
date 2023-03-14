@@ -57,10 +57,10 @@ excluded_from_imports_prefix = list(
             # Vendored or auto-generated files.
             "browser/components/pocket/content/panels/js/vendor.bundle.js",
             "devtools/client/debugger/dist/parser-worker.js",
-            "devtools/client/debugger/packages/devtools-source-map/src/tests/fixtures/bundle.js",
             "devtools/client/debugger/test/mochitest/examples/react/build/main.js",
             "devtools/client/debugger/test/mochitest/examples/sourcemapped/polyfill-bundle.js",
             "devtools/client/inspector/markup/test/shadowdom_open_debugger.min.js",
+            "devtools/client/shared/source-map-loader/test/browser/fixtures/bundle.js",
             "layout/style/test/property_database.js",
             "services/fxaccounts/FxAccountsPairingChannel.js",
             "testing/talos/talos/tests/devtools/addon/content/pages/custom/debugger/static/js/main.js",  # noqa E501
