@@ -14,11 +14,11 @@ const { updateAppInfo } = ChromeUtils.importESModule(
 );
 updateAppInfo();
 
-const { TaskScheduler } = ChromeUtils.import(
-  "resource://gre/modules/TaskScheduler.jsm"
+const { TaskScheduler } = ChromeUtils.importESModule(
+  "resource://gre/modules/TaskScheduler.sys.mjs"
 );
-const { MacOSImpl } = ChromeUtils.import(
-  "resource://gre/modules/TaskSchedulerMacOSImpl.jsm"
+const { MacOSImpl } = ChromeUtils.importESModule(
+  "resource://gre/modules/TaskSchedulerMacOSImpl.sys.mjs"
 );
 
 function getFirefoxExecutableFilename() {

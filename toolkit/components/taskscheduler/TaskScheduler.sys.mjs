@@ -3,19 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["TaskScheduler"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  WinImpl: "resource://gre/modules/TaskSchedulerWinImpl.jsm",
-  MacOSImpl: "resource://gre/modules/TaskSchedulerMacOSImpl.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  WinImpl: "resource://gre/modules/TaskSchedulerWinImpl.sys.mjs",
+  MacOSImpl: "resource://gre/modules/TaskSchedulerMacOSImpl.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "gImpl", () => {
@@ -35,10 +30,6 @@ XPCOMUtils.defineLazyGetter(lazy, "gImpl", () => {
   };
 });
 
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-
 /**
  * Interface to a system task scheduler, capable of running a command line at an interval
  * independent of the application.
@@ -57,7 +48,7 @@ const { AppConstants } = ChromeUtils.importESModule(
  * - On macOS the native tasks are labeled like "<macOS bundle ID>.<install path hash>.<id>",
  *   e.g. "org.mozilla.nightly.308046B0AF4A39CB.Task Identifier".
  */
-var TaskScheduler = {
+export var TaskScheduler = {
   MIN_INTERVAL_SECONDS: 1800,
 
   /**

@@ -14,8 +14,8 @@ const { updateAppInfo } = ChromeUtils.importESModule(
 );
 updateAppInfo();
 
-const { TaskScheduler } = ChromeUtils.import(
-  "resource://gre/modules/TaskScheduler.jsm"
+const { TaskScheduler } = ChromeUtils.importESModule(
+  "resource://gre/modules/TaskScheduler.sys.mjs"
 );
 
 registerCleanupFunction(async () => {

@@ -13,13 +13,13 @@ ChromeUtils.defineESModuleGetters(lazy, {
   BackgroundTasksUtils: "resource://gre/modules/BackgroundTasksUtils.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
+  TaskScheduler: "resource://gre/modules/TaskScheduler.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.jsm",
-  TaskScheduler: "resource://gre/modules/TaskScheduler.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {

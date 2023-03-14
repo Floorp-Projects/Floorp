@@ -8,9 +8,12 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  TaskScheduler: "resource://gre/modules/TaskScheduler.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Normandy: "resource://normandy/Normandy.jsm",
-  TaskScheduler: "resource://gre/modules/TaskScheduler.jsm",
 });
 
 const PREF_TIMEOUT = "first-startup.timeout";
