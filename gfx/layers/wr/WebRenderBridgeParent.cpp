@@ -964,14 +964,9 @@ void WebRenderBridgeParent::BeginRecording(const TimeStamp& aRecordingStart) {
   mApi->BeginRecording(aRecordingStart, mPipelineId);
 }
 
-RefPtr<wr::WebRenderAPI::WriteCollectedFramesPromise>
-WebRenderBridgeParent::WriteCollectedFrames() {
-  return mApi->WriteCollectedFrames();
-}
-
-RefPtr<wr::WebRenderAPI::GetCollectedFramesPromise>
-WebRenderBridgeParent::GetCollectedFrames() {
-  return mApi->GetCollectedFrames();
+RefPtr<wr::WebRenderAPI::EndRecordingPromise>
+WebRenderBridgeParent::EndRecording() {
+  return mApi->EndRecording();
 }
 
 void WebRenderBridgeParent::AddPendingScrollPayload(

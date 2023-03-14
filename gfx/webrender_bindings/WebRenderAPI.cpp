@@ -700,66 +700,33 @@ void WebRenderAPI::BeginRecording(const TimeStamp& aRecordingStart,
   RunOnRenderThread(std::move(event));
 }
 
-RefPtr<WebRenderAPI::WriteCollectedFramesPromise>
-WebRenderAPI::WriteCollectedFrames() {
-  class WriteCollectedFramesEvent final : public RendererEvent {
+RefPtr<WebRenderAPI::EndRecordingPromise> WebRenderAPI::EndRecording() {
+  class EndRecordingEvent final : public RendererEvent {
    public:
-    explicit WriteCollectedFramesEvent() {
-      MOZ_COUNT_CTOR(WriteCollectedFramesEvent);
-    }
+    explicit EndRecordingEvent() { MOZ_COUNT_CTOR(EndRecordingEvent); }
 
-    MOZ_COUNTED_DTOR(WriteCollectedFramesEvent)
+    MOZ_COUNTED_DTOR(EndRecordingEvent);
 
     void Run(RenderThread& aRenderThread, WindowId aWindowId) override {
-      aRenderThread.WriteCollectedFramesForWindow(aWindowId);
-      mPromise.Resolve(true, __func__);
-    }
+      Maybe<layers::FrameRecording> recording =
+          aRenderThread.EndRecordingForWindow(aWindowId);
 
-    RefPtr<WebRenderAPI::WriteCollectedFramesPromise> GetPromise() {
-      return mPromise.Ensure(__func__);
-    }
-
-   private:
-    MozPromiseHolder<WebRenderAPI::WriteCollectedFramesPromise> mPromise;
-  };
-
-  auto event = MakeUnique<WriteCollectedFramesEvent>();
-  auto promise = event->GetPromise();
-
-  RunOnRenderThread(std::move(event));
-  return promise;
-}
-
-RefPtr<WebRenderAPI::GetCollectedFramesPromise>
-WebRenderAPI::GetCollectedFrames() {
-  class GetCollectedFramesEvent final : public RendererEvent {
-   public:
-    explicit GetCollectedFramesEvent() {
-      MOZ_COUNT_CTOR(GetCollectedFramesEvent);
-    }
-
-    MOZ_COUNTED_DTOR(GetCollectedFramesEvent);
-
-    void Run(RenderThread& aRenderThread, WindowId aWindowId) override {
-      Maybe<layers::CollectedFrames> frames =
-          aRenderThread.GetCollectedFramesForWindow(aWindowId);
-
-      if (frames) {
-        mPromise.Resolve(std::move(*frames), __func__);
+      if (recording) {
+        mPromise.Resolve(recording.extract(), __func__);
       } else {
         mPromise.Reject(NS_ERROR_UNEXPECTED, __func__);
       }
     }
 
-    RefPtr<WebRenderAPI::GetCollectedFramesPromise> GetPromise() {
+    RefPtr<WebRenderAPI::EndRecordingPromise> GetPromise() {
       return mPromise.Ensure(__func__);
     }
 
    private:
-    MozPromiseHolder<WebRenderAPI::GetCollectedFramesPromise> mPromise;
+    MozPromiseHolder<WebRenderAPI::EndRecordingPromise> mPromise;
   };
 
-  auto event = MakeUnique<GetCollectedFramesEvent>();
+  auto event = MakeUnique<EndRecordingEvent>();
   auto promise = event->GetPromise();
 
   RunOnRenderThread(std::move(event));

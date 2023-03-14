@@ -2,18 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+using mozilla::TimeStamp from "mozilla/TimeStamp.h";
+[MoveOnly] using class mozilla::ipc::BigBuffer from "mozilla/ipc/BigBuffer.h";
+
 namespace mozilla {
 namespace layers {
 
-struct CollectedFrameParams {
-  double timeOffset;
+struct RecordedFrameData {
+  TimeStamp timeOffset;
   uint32_t length;
 };
 
-struct CollectedFramesParams {
-  double recordingStart;
-  CollectedFrameParams[] frames;
-  Shmem buffer;
+struct FrameRecording {
+  TimeStamp startTime;
+  RecordedFrameData[] frames;
+  BigBuffer bytes;
 };
 
 }  // namespace layers
