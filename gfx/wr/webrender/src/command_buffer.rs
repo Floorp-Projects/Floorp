@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use api::units::PictureRect;
 use crate::{spatial_tree::SpatialNodeIndex, render_task_graph::RenderTaskId, surface::SurfaceTileDescriptor, picture::TileKey, renderer::GpuBufferAddress, FastHashMap, prim_store::PrimitiveInstanceIndex, gpu_cache::GpuCacheAddress};
 use crate::gpu_types::TransformPaletteId;
 use crate::segment::EdgeAaSegmentMask;
@@ -20,9 +21,9 @@ impl Command {
     /// Draw a complex (3d-split) primitive, that has multiple GPU cache addresses.
     const CMD_DRAW_COMPLEX_PRIM: u32 = 0x20000000;
     /// Draw a primitive, that has a single GPU buffer addresses.
-    const CMD_DRAW_INSTANCE: u32 = 0x40000000;
+    const CMD_DRAW_INSTANCE: u32 = 0x30000000;
     /// Draw a generic quad primitive
-    const CMD_DRAW_QUAD: u32 = 0x80000000;
+    const CMD_DRAW_QUAD: u32 = 0x40000000;
 
     /// Bitmask for command bits of the command.
     const CMD_MASK: u32 = 0xf0000000;
@@ -63,7 +64,7 @@ bitflags! {
     #[repr(transparent)]
     #[cfg_attr(feature = "capture", derive(Serialize))]
     #[cfg_attr(feature = "replay", derive(Deserialize))]
-    pub struct QuadFlags : u32 {
+    pub struct QuadFlags : u8 {
         const IS_OPAQUE = 1 << 0;
     }
 }
@@ -195,7 +196,7 @@ impl CommandBuffer {
                 self.commands.push(Command::draw_quad(prim_instance_index));
                 self.commands.push(Command::data((gpu_buffer_address.u as u32) << 16 | gpu_buffer_address.v as u32));
                 self.commands.push(Command::data(transform_id.0));
-                self.commands.push(Command::data(quad_flags.bits << 16 | edge_flags.bits() as u32));
+                self.commands.push(Command::data((quad_flags.bits as u32) << 16 | edge_flags.bits() as u32));
             }
         }
     }
@@ -239,7 +240,7 @@ impl CommandBuffer {
                     let data = cmd_iter.next().unwrap();
                     let transform_id = TransformPaletteId(cmd_iter.next().unwrap().0);
                     let bits = cmd_iter.next().unwrap().0;
-                    let quad_flags = QuadFlags::from_bits(bits >> 16).unwrap();
+                    let quad_flags = QuadFlags::from_bits((bits >> 16) as u8).unwrap();
                     let edge_flags = EdgeAaSegmentMask::from_bits((bits & 0xff) as u8).unwrap();
                     let gpu_buffer_address = GpuBufferAddress {
                         u: (data.0 >> 16) as u16,
@@ -290,6 +291,7 @@ pub enum CommandBufferBuilderKind {
     Simple {
         render_task_id: RenderTaskId,
         root_task_id: Option<RenderTaskId>,
+        dirty_rect: PictureRect,
     },
     Invalid,
 }
@@ -342,11 +344,13 @@ impl CommandBufferBuilder {
         render_task_id: RenderTaskId,
         establishes_sub_graph: bool,
         root_task_id: Option<RenderTaskId>,
+        dirty_rect: PictureRect,
     ) -> Self {
         CommandBufferBuilder {
             kind: CommandBufferBuilderKind::Simple {
                 render_task_id,
                 root_task_id,
+                dirty_rect,
             },
             establishes_sub_graph,
             resolve_source: None,
