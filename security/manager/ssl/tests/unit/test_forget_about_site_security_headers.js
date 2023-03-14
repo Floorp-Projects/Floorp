@@ -9,8 +9,8 @@
 // Ensures that HSTS (HTTP Strict Transport Security) information is cleared
 // when using "Forget About This Site".
 
-const { ForgetAboutSite } = ChromeUtils.import(
-  "resource://gre/modules/ForgetAboutSite.jsm"
+const { ForgetAboutSite } = ChromeUtils.importESModule(
+  "resource://gre/modules/ForgetAboutSite.sys.mjs"
 );
 
 do_get_profile(); // must be done before instantiating nsIX509CertDB

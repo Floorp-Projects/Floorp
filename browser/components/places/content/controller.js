@@ -83,11 +83,9 @@ function PlacesController(aView) {
     "places.forgetThisSite.clearByBaseDomain",
     false
   );
-  ChromeUtils.defineModuleGetter(
-    this,
-    "ForgetAboutSite",
-    "resource://gre/modules/ForgetAboutSite.jsm"
-  );
+  ChromeUtils.defineESModuleGetters(this, {
+    ForgetAboutSite: "resource://gre/modules/ForgetAboutSite.sys.mjs",
+  });
 }
 
 PlacesController.prototype = {

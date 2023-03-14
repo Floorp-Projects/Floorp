@@ -227,7 +227,7 @@ the main clearing logic in `nsIClearDataService`.
 
 -   Source
 
-    -   [ForgetAboutSite.jsm](https://searchfox.org/mozilla-central/source/toolkit/components/forgetaboutsite/ForgetAboutSite.jsm)
+    -   [ForgetAboutSite.sys.mjs](https://searchfox.org/mozilla-central/source/toolkit/components/forgetaboutsite/ForgetAboutSite.sys.mjs)
 
     -   [nsIClearDataService flags
         used](https://searchfox.org/mozilla-central/rev/fbb1e8462ad82b0e76b5c13dd0d6280cfb69e68d/toolkit/components/cleardata/nsIClearDataService.idl#302-307)

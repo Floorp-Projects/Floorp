@@ -9,8 +9,8 @@ const { PromptTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/PromptTestUtils.sys.mjs"
 );
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
-const { ForgetAboutSite } = ChromeUtils.import(
-  "resource://gre/modules/ForgetAboutSite.jsm"
+const { ForgetAboutSite } = ChromeUtils.importESModule(
+  "resource://gre/modules/ForgetAboutSite.sys.mjs"
 );
 
 const TEST_URIs = [

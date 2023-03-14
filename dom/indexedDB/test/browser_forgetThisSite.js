@@ -3,8 +3,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-let { ForgetAboutSite } = ChromeUtils.import(
-  "resource://gre/modules/ForgetAboutSite.jsm"
+let { ForgetAboutSite } = ChromeUtils.importESModule(
+  "resource://gre/modules/ForgetAboutSite.sys.mjs"
 );
 
 const domains = ["mochi.test:8888", "www.example.com"];
