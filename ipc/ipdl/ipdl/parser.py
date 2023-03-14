@@ -596,7 +596,7 @@ def p_Param(p):
 
 def p_Type(p):
     """Type : MaybeNullable BasicType"""
-    # only actor types are nullable; we check this in the type checker
+    # only some types are nullable; we check this in the type checker
     p[2].nullable = p[1]
     p[0] = p[2]
 
