@@ -77,6 +77,10 @@ devtools-tests:
     worker:
         docker-image: {in-tree: "lint"}
         max-run-time: 1800
+        artifacts:
+            - type: file
+              name: public/code-review/issues.json
+              path: /builds/worker/issues.json
     run:
         using: run-task
         cache-dotcache: true
@@ -89,7 +93,7 @@ devtools-tests:
             ln -s ../tools/lint/eslint/eslint-plugin-mozilla node_modules &&
             ln -s ../tools/lint/eslint/eslint-plugin-spidermonkey-js node_modules &&
             cd devtools/client/bin/ &&
-            node devtools-node-test-runner.js --suite=all
+            node devtools-node-test-runner.js --suite=all --artifact=/builds/worker/issues.json
     when:
         files-changed:
             - 'devtools/client/**'
