@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function TooltipTextProvider() {}
+export function TooltipTextProvider() {}
 
 TooltipTextProvider.prototype = {
   getNodeText(tipElement, textOut, directionOut) {
@@ -170,5 +170,3 @@ TooltipTextProvider.prototype = {
   classID: Components.ID("{f376627f-0bbc-47b8-887e-fc92574cc91f}"),
   QueryInterface: ChromeUtils.generateQI(["nsITooltipTextProvider"]),
 };
-
-var EXPORTED_SYMBOLS = ["TooltipTextProvider"];
