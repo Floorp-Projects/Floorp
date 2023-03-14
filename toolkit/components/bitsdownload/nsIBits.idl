@@ -25,7 +25,7 @@ typedef long nsBitsErrorStage;
  * It would be preferable for the functions in this interface to return
  * Promises, but this interface is implemented in Rust, which does not yet have
  * support for Promises. There is a JS wrapper around this class that should be
- * preferred over using this interface directly, located in Bits.jsm.
+ * preferred over using this interface directly, located in Bits.sys.mjs.
  *
  * Methods of this class that take a nsIBitsNewRequestCallback do not return or
  * throw errors. All errors will be reported through the callback. The only
@@ -274,7 +274,7 @@ interface nsIBitsNewRequestCallback : nsISupports
  * It would be preferable for the functions in this interface to return
  * Promises, but this interface is implemented in Rust, which does not yet have
  * support for Promises. There is a JS wrapper around this class that should be
- * preferred over using this interface directly, located in Bits.jsm.
+ * preferred over using this interface directly, located in Bits.sys.mjs.
  *
  * Methods of this class that take a nsIBitsCallback do not return or throw
  * errors. All errors will be reported through the callback. The only
