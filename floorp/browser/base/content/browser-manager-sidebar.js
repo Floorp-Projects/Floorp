@@ -386,6 +386,7 @@
              bmsController.controllFunctions.visibleWebpanel()
          })
          Services.obs.addObserver(bmsController.eventFunctions.servicesObs, "obs-panel-re")
+         Services.obs.addObserver(bmsController.controllFunctions.changeVisibleWenpanel, "floorp-change-panel-show")
          let addbutton = document.getElementById("add-button")
          addbutton.ondragover = bmsController.eventFunctions.sidebarItemMouse.dragOver
          addbutton.ondragleave = bmsController.eventFunctions.sidebarItemMouse.dragLeave
@@ -399,6 +400,7 @@
          if (!(sidebarsplit2.getAttribute("hidden") == "true")) {
             bmsController.controllFunctions.changeVisibleWenpanel();
          }
+         window.bmsController = bmsController
  
          // Set TST URL
          window.setTimeout(async () => {

@@ -29,19 +29,21 @@ this.floorpActions = class extends ExtensionAPI {
         },
         async openBrowserManagerSidebar() {
           let window = await this._getCurrentWindow();
-          if (window.document.getElementById("sidebar-splitter2").getAttribute("hidden") == "true") {
-            window.changeSidebarVisibility();
+          if (window.document.getElementById("sidebar-splitter2").getAttribute("hidden") == "true" && Services.prefs.getStringPref("floorp.browser.sidebar2.page", "") != "") {
+            window.bmsController.controllFunctions.changeVisibleWenpanel();
           }
         },
         async closeBrowserManagerSidebar() {
           let window = await this._getCurrentWindow();
-          if (window.document.getElementById("sidebar-splitter2").getAttribute("hidden") == "false") {
-            window.changeSidebarVisibility();
+          if (window.document.getElementById("sidebar-splitter2").getAttribute("hidden") == "false" && Services.prefs.getStringPref("floorp.browser.sidebar2.page", "") != "") {
+            window.bmsController.controllFunctions.changeVisibleWenpanel();
           }
         },
         async changeBrowserManagerSidebarVisibility() {
           let window = await this._getCurrentWindow();
-          window.changeSidebarVisibility();
+          if(Services.prefs.getStringPref("floorp.browser.sidebar2.page", "") != ""){
+            window.bmsController.controllFunctions.changeVisibleWenpanel();
+          }
         },
         async showStatusbar() {
           Services.prefs.setBoolPref("browser.display.statusbar", true);
