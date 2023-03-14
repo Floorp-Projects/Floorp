@@ -21,7 +21,7 @@ class RemoteWorkerManager;
 class RemoteWorkerServiceParent final : public PRemoteWorkerServiceParent {
  public:
   RemoteWorkerServiceParent();
-  ~RemoteWorkerServiceParent();
+  NS_INLINE_DECL_REFCOUNTING(RemoteWorkerServiceParent, override);
 
   void ActorDestroy(mozilla::ipc::IProtocol::ActorDestroyReason) override;
 
@@ -30,6 +30,8 @@ class RemoteWorkerServiceParent final : public PRemoteWorkerServiceParent {
   nsCString GetRemoteType() const { return mRemoteType; }
 
  private:
+  ~RemoteWorkerServiceParent();
+
   RefPtr<RemoteWorkerManager> mManager;
   nsCString mRemoteType = NOT_REMOTE_TYPE;
 };

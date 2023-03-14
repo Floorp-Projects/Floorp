@@ -311,20 +311,6 @@ bool BackgroundChildImpl::DeallocPRemoteWorkerControllerChild(
   return true;
 }
 
-dom::PRemoteWorkerServiceChild*
-BackgroundChildImpl::AllocPRemoteWorkerServiceChild() {
-  RefPtr<dom::RemoteWorkerServiceChild> agent =
-      new dom::RemoteWorkerServiceChild();
-  return agent.forget().take();
-}
-
-bool BackgroundChildImpl::DeallocPRemoteWorkerServiceChild(
-    dom::PRemoteWorkerServiceChild* aActor) {
-  RefPtr<dom::RemoteWorkerServiceChild> actor =
-      dont_AddRef(static_cast<dom::RemoteWorkerServiceChild*>(aActor));
-  return true;
-}
-
 dom::PSharedWorkerChild* BackgroundChildImpl::AllocPSharedWorkerChild(
     const dom::RemoteWorkerData& aData, const uint64_t& aWindowID,
     const dom::MessagePortIdentifier& aPortIdentifier) {

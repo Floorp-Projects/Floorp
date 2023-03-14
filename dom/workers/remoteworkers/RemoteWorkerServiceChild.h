@@ -21,7 +21,7 @@ class RemoteWorkerData;
  */
 class RemoteWorkerServiceChild final : public PRemoteWorkerServiceChild {
  public:
-  NS_INLINE_DECL_REFCOUNTING(RemoteWorkerServiceChild)
+  NS_INLINE_DECL_REFCOUNTING(RemoteWorkerServiceChild, final)
 
   RemoteWorkerServiceChild();
 
