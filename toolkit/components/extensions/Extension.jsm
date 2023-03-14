@@ -3123,7 +3123,72 @@ class Extension extends ExtensionData {
       }
 
       await this.clearCache(this.startupReason);
-      this._setupStartupPermissions();
+
+      // We automatically add permissions to system/built-in extensions.
+      // Extensions expliticy stating not_allowed will never get permission.
+      let isAllowed = this.permissions.has(PRIVATE_ALLOWED_PERMISSION);
+      if (this.manifest.incognito === "not_allowed") {
+        // If an extension previously had permission, but upgrades/downgrades to
+        // a version that specifies "not_allowed" in manifest, remove the
+        // permission.
+        if (isAllowed) {
+          lazy.ExtensionPermissions.remove(this.id, {
+            permissions: [PRIVATE_ALLOWED_PERMISSION],
+            origins: [],
+          });
+          this.permissions.delete(PRIVATE_ALLOWED_PERMISSION);
+        }
+      } else if (
+        !isAllowed &&
+        this.isPrivileged &&
+        !this.temporarilyInstalled
+      ) {
+        // Add to EP so it is preserved after ADDON_INSTALL.  We don't wait on the add here
+        // since we are pushing the value into this.permissions.  EP will eventually save.
+        lazy.ExtensionPermissions.add(this.id, {
+          permissions: [PRIVATE_ALLOWED_PERMISSION],
+          origins: [],
+        });
+        this.permissions.add(PRIVATE_ALLOWED_PERMISSION);
+      }
+
+      // Allow other extensions to access static themes in private browsing windows
+      // (See Bug 1790115).
+      if (this.type === "theme") {
+        this.permissions.add(PRIVATE_ALLOWED_PERMISSION);
+      }
+
+      // We only want to update the SVG_CONTEXT_PROPERTIES_PERMISSION during install and
+      // upgrade/downgrade startups.
+      if (INSTALL_AND_UPDATE_STARTUP_REASONS.has(this.startupReason)) {
+        if (isMozillaExtension(this)) {
+          // Add to EP so it is preserved after ADDON_INSTALL.  We don't wait on the add here
+          // since we are pushing the value into this.permissions.  EP will eventually save.
+          lazy.ExtensionPermissions.add(this.id, {
+            permissions: [SVG_CONTEXT_PROPERTIES_PERMISSION],
+            origins: [],
+          });
+          this.permissions.add(SVG_CONTEXT_PROPERTIES_PERMISSION);
+        } else {
+          lazy.ExtensionPermissions.remove(this.id, {
+            permissions: [SVG_CONTEXT_PROPERTIES_PERMISSION],
+            origins: [],
+          });
+          this.permissions.delete(SVG_CONTEXT_PROPERTIES_PERMISSION);
+        }
+      }
+
+      // Ensure devtools permission is set
+      if (
+        this.manifest.devtools_page &&
+        !this.manifest.optional_permissions.includes("devtools")
+      ) {
+        lazy.ExtensionPermissions.add(this.id, {
+          permissions: ["devtools"],
+          origins: [],
+        });
+        this.permissions.add("devtools");
+      }
 
       GlobalManager.init(this);
 
@@ -3225,70 +3290,6 @@ class Extension extends ExtensionData {
       // Mark readyPromise as resolved in case it has not happened before,
       // e.g. due to an early return or an error.
       resolveReadyPromise(null);
-    }
-  }
-
-  _setupStartupPermissions() {
-    // We automatically add permissions to system/built-in extensions.
-    // Extensions expliticy stating not_allowed will never get permission.
-    let isAllowed = this.permissions.has(PRIVATE_ALLOWED_PERMISSION);
-    if (this.manifest.incognito === "not_allowed") {
-      // If an extension previously had permission, but upgrades/downgrades to
-      // a version that specifies "not_allowed" in manifest, remove the
-      // permission.
-      if (isAllowed) {
-        lazy.ExtensionPermissions.remove(this.id, {
-          permissions: [PRIVATE_ALLOWED_PERMISSION],
-          origins: [],
-        });
-        this.permissions.delete(PRIVATE_ALLOWED_PERMISSION);
-      }
-    } else if (!isAllowed && this.isPrivileged && !this.temporarilyInstalled) {
-      // Add to EP so it is preserved after ADDON_INSTALL.  We don't wait on the add here
-      // since we are pushing the value into this.permissions.  EP will eventually save.
-      lazy.ExtensionPermissions.add(this.id, {
-        permissions: [PRIVATE_ALLOWED_PERMISSION],
-        origins: [],
-      });
-      this.permissions.add(PRIVATE_ALLOWED_PERMISSION);
-    }
-
-    // Allow other extensions to access static themes in private browsing windows
-    // (See Bug 1790115).
-    if (this.type === "theme") {
-      this.permissions.add(PRIVATE_ALLOWED_PERMISSION);
-    }
-
-    // We only want to update the SVG_CONTEXT_PROPERTIES_PERMISSION during install and
-    // upgrade/downgrade startups.
-    if (INSTALL_AND_UPDATE_STARTUP_REASONS.has(this.startupReason)) {
-      if (isMozillaExtension(this)) {
-        // Add to EP so it is preserved after ADDON_INSTALL.  We don't wait on the add here
-        // since we are pushing the value into this.permissions.  EP will eventually save.
-        lazy.ExtensionPermissions.add(this.id, {
-          permissions: [SVG_CONTEXT_PROPERTIES_PERMISSION],
-          origins: [],
-        });
-        this.permissions.add(SVG_CONTEXT_PROPERTIES_PERMISSION);
-      } else {
-        lazy.ExtensionPermissions.remove(this.id, {
-          permissions: [SVG_CONTEXT_PROPERTIES_PERMISSION],
-          origins: [],
-        });
-        this.permissions.delete(SVG_CONTEXT_PROPERTIES_PERMISSION);
-      }
-    }
-
-    // Ensure devtools permission is set
-    if (
-      this.manifest.devtools_page &&
-      !this.manifest.optional_permissions.includes("devtools")
-    ) {
-      lazy.ExtensionPermissions.add(this.id, {
-        permissions: ["devtools"],
-        origins: [],
-      });
-      this.permissions.add("devtools");
     }
   }
 
