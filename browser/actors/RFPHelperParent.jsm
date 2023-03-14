@@ -8,10 +8,14 @@ var EXPORTED_SYMBOLS = ["RFPHelperParent"];
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
+const lazy = {};
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "RFPHelper",
+  "resource://gre/modules/RFPHelper.jsm"
+);
 
 const kPrefLetterboxing = "privacy.resistFingerprinting.letterboxing";
-
-const lazy = {};
 
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
@@ -28,7 +32,7 @@ class RFPHelperParent extends JSWindowActorParent {
     ) {
       let browser = this.browsingContext.top.embedderElement;
       let window = browser.ownerGlobal;
-      window.RFPHelper.contentSizeUpdated(window);
+      lazy.RFPHelper.contentSizeUpdated(window);
     }
   }
 }
