@@ -7,7 +7,7 @@
 document.addEventListener("MozReftestInvalidate", runtest, false);
 
 function runtest() {
-  document.getElementById('b').style.height = '100px';
+  document.getElementById('b').style.minHeight = '100px';
 
   var scrollbox = document.getElementById('s');
   scrollbox.scrollTo(0, 1000);
@@ -19,9 +19,9 @@ function runtest() {
 
   <scrollbox id="s" style="height: 200px; overflow: scroll;">
     <vbox>
-      <vbox style="height: 150px; width: 200px; background: red;" id="b"/>
-      <vbox style="height: 150px; width: 200px; background: green;"/>
-      <vbox style="height: 150px; width: 200px; background: blue;"/>
+      <vbox style="min-height: 150px; min-width: 200px; background: red;" id="b"/>
+      <vbox style="min-height: 150px; min-width: 200px; background: green;"/>
+      <vbox style="min-height: 150px; min-width: 200px; background: blue;"/>
       <label value="a"/>
     </vbox>
   </scrollbox>
