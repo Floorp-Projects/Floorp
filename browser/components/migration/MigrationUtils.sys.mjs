@@ -949,6 +949,9 @@ class MigrationUtils {
 
     /** Migration is being started from the Bookmarks Toolbar */
     BOOKMARKS_TOOLBAR: 8,
+
+    /** Migration is being started from about:preferences */
+    PREFERENCES: 9,
   });
 
   /**
