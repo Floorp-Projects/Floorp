@@ -13,7 +13,6 @@ namespace dom {
 // Simple protocol to register any active RemoteWorkerService running on any
 // process.  Initialization/registration is delayed for preallocated processes
 // until the process takes on its final remoteType.
-[ManualDealloc]
 protocol PRemoteWorkerService
 {
   manager PBackground;

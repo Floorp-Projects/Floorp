@@ -114,19 +114,21 @@ void RemoteWorkerService::InitializeOnTargetThread() {
   MOZ_ASSERT(mThread);
   MOZ_ASSERT(mThread->IsOnCurrentThread());
 
-  PBackgroundChild* actorChild = BackgroundChild::GetOrCreateForCurrentThread();
-  if (NS_WARN_IF(!actorChild)) {
+  PBackgroundChild* backgroundActor =
+      BackgroundChild::GetOrCreateForCurrentThread();
+  if (NS_WARN_IF(!backgroundActor)) {
     return;
   }
 
-  RemoteWorkerServiceChild* actor = static_cast<RemoteWorkerServiceChild*>(
-      actorChild->SendPRemoteWorkerServiceConstructor());
-  if (NS_WARN_IF(!actor)) {
+  RefPtr<RemoteWorkerServiceChild> serviceActor =
+      MakeAndAddRef<RemoteWorkerServiceChild>();
+  if (NS_WARN_IF(!backgroundActor->SendPRemoteWorkerServiceConstructor(
+          serviceActor))) {
     return;
   }
 
   // Now we are ready!
-  mActor = actor;
+  mActor = serviceActor;
 }
 
 void RemoteWorkerService::CloseActorOnTargetThread() {

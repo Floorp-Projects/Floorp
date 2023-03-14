@@ -536,9 +536,9 @@ bool BackgroundParentImpl::DeallocPRemoteWorkerControllerParent(
   return true;
 }
 
-mozilla::dom::PRemoteWorkerServiceParent*
+already_AddRefed<dom::PRemoteWorkerServiceParent>
 BackgroundParentImpl::AllocPRemoteWorkerServiceParent() {
-  return new mozilla::dom::RemoteWorkerServiceParent();
+  return MakeAndAddRef<dom::RemoteWorkerServiceParent>();
 }
 
 IPCResult BackgroundParentImpl::RecvPRemoteWorkerServiceConstructor(
@@ -555,12 +555,6 @@ IPCResult BackgroundParentImpl::RecvPRemoteWorkerServiceConstructor(
     actor->Initialize(parent->GetRemoteType());
   }
   return IPC_OK();
-}
-
-bool BackgroundParentImpl::DeallocPRemoteWorkerServiceParent(
-    mozilla::dom::PRemoteWorkerServiceParent* aActor) {
-  delete aActor;
-  return true;
 }
 
 mozilla::dom::PSharedWorkerParent*
