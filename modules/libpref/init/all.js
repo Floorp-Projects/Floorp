@@ -4130,6 +4130,8 @@ pref("extensions.formautofill.available", "detect");
 pref("extensions.formautofill.addresses.supported", "detect");
 pref("extensions.formautofill.addresses.enabled", true);
 pref("extensions.formautofill.addresses.capture.enabled", false);
+// This preference should be removed entirely once address capture v2 developing is finished
+pref("extensions.formautofill.addresses.capture.v2.enabled", false);
 pref("extensions.formautofill.addresses.ignoreAutocompleteOff", true);
 // Supported countries need to follow ISO 3166-1 to align with "browser.search.region"
 pref("extensions.formautofill.addresses.supportedCountries", "US,CA");

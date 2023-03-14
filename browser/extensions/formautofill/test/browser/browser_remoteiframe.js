@@ -67,7 +67,7 @@ add_task(async function test_iframe_autocomplete() {
 
   // Check that the tel number was updated properly.
   let addresses = await getAddresses();
-  is(addresses.length, 3, "Still 1 address in storage");
+  is(addresses.length, 3, "Still 3 address in storage");
   is(addresses[1].tel, "+16172535702", "Verify the tel field");
 
   // Fill in the details again and then clear the form from the dropdown.
