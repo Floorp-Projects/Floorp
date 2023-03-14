@@ -94,6 +94,7 @@ def make_task_description(config, jobs):
             repackage_signing_name = "repackage-signing-l10n"
             mar_signing_name = "mar-signing-l10n"
             attribution_name = "attribution-l10n"
+            repackage_deb_name = "repackage-deb-l10n"
         dependencies = {
             "build": upstream_deps[build_name],
             "repackage": upstream_deps[repackage_name],
