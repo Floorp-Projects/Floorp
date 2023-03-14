@@ -3580,32 +3580,6 @@ class NormalTransactionOp : public TransactionDatabaseOperationBase,
       const PreprocessResponse& aResponse) final;
 };
 
-}  // namespace
-
-Maybe<CipherKey> IndexedDBCipherKeyManager::Get(const nsACString& aKeyId) {
-  auto lockedCipherKeys = mCipherKeys.Lock();
-
-  return lockedCipherKeys->MaybeGet(aKeyId);
-}
-
-CipherKey IndexedDBCipherKeyManager::Ensure(const nsACString& aKeyId) {
-  auto lockedCipherKeys = mCipherKeys.Lock();
-
-  return lockedCipherKeys->LookupOrInsertWith(aKeyId, [] {
-    // Generate a new key if one corresponding to keyStoreId does not exist
-    // already.
-
-    QM_TRY_RETURN(IndexedDBCipherStrategy::GenerateKey(), [](const auto&) {
-      // Bug1800110 Propagate the error to the caller rather than asserting.
-      MOZ_RELEASE_ASSERT(false);
-
-      return CipherKey{};
-    })
-  });
-}
-
-namespace {
-
 class ObjectStoreAddOrPutRequestOp final : public NormalTransactionOp {
   friend class TransactionBase;
 
