@@ -387,12 +387,16 @@
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s poskuša samodejno zavrniti vse zahteve za shranjevanje piškotkov na spletnih mestih, ki so podprta.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Pasice s piškotki, izginite!</string>
+    <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_title">Dovolite %1$su, da zavrača pasice s piškotki?</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Samodejno zavrni zahteve za shranjevanje piškotkov, kadar je to mogoče. V nasprotnem primeru sprejmi vse piškotke in skrij pasico.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Samodejno zavrni zahteve za shranjevanje piškotkov, kadar je mogoče.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_2" moz:RemovedIn="112" tools:ignore="UnusedResources">Dovolite %1$su, da samodejno zavrne zahteve za shranjevanje piškotkov, kadar je mogoče?</string>
+    <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_body">%1$s lahko samodejno zavrne številne zahteve za shranjevanje piškotkov.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Ne zdaj</string>
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
@@ -1236,8 +1240,14 @@
 
     <!-- Title A shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_A_title">Brskajte brez sledu</string>
+    <!-- Text A shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_A_text">Zasebno brskanje v %1$su ne shranjuje vaših podatkov.</string>
     <!-- Title B shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_B_title">Začnite svoje prvo iskanje</string>
+
+    <!-- Text B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_text">Poiščite nekaj v bližini. Ali odkrijte kaj zabavnega.</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
@@ -1459,6 +1469,8 @@
     <string name="preference_enhanced_tracking_protection_explanation_title">Brskajte brez sledenja</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation">Obdržite svoje podatke zase. %s vas ščiti pred številnimi najpogostejšimi sledilci, ki sledijo vašemu brskanju po spletu.</string>
+    <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">%s vas ščiti pred številnimi najpogostejšimi sledilci, ki sledijo vašemu brskanju po spletu.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Več o tem</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->

@@ -391,12 +391,16 @@
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s peut essayer de refuser automatiquement les demandes de dépôt de cookies sur les sites compatibles.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Fini les bannières de cookies !</string>
+    <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_title">Autoriser %1$s à refuser les bannières de cookies ?</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Rejette automatiquement les demandes de cookies, lorsque cela est possible. Sinon, accepte tous les cookies pour supprimer les bannières de cookies.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Rejette automatiquement les demandes de cookies, lorsque cela est possible.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_2" moz:RemovedIn="112" tools:ignore="UnusedResources">Autoriser %1$s à rejeter automatiquement les demandes de cookies, lorsque cela est possible ?</string>
+    <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_body">%1$s peut refuser automatiquement les demandes de dépôt de cookies.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Plus tard</string>
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
@@ -1481,6 +1485,8 @@
     <string name="preference_enhanced_tracking_protection_explanation_title">Naviguez sans être suivi·e</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation">Gardez vos données pour vous. %s vous protège de la plupart des traqueurs les plus courants qui suivent ce que vous faites en ligne.</string>
+    <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">%s vous protège de la plupart des traqueurs les plus courants qui pistent vos activités en ligne.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">En savoir plus</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->

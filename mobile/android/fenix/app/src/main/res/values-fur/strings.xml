@@ -12,8 +12,10 @@
     <string name="content_description_private_browsing_button">Abilite la navigazion privade</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">Disabilite la navigazion privade</string>
-    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
     <string name="search_hint">Cîr o inserìs une direzion</string>
+    <!-- Placeholder text shown in the search bar before a user enters text for a general engine -->
+    <string name="search_hint_general_engine">Cîr tal web</string>
     <!-- Placeholder text shown in search bar when using history search -->
     <string name="history_search_hint">Cîr te cronologjie</string>
     <!-- Placeholder text shown in search bar when using bookmarks search -->
@@ -379,36 +381,43 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s al cîr di refudâ in automatic dutis lis richiestis dai cookies sui sîts supuartâts.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_title">Vonde strissons pai cookies!</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Vonde strissons pai cookies!</string>
+    <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_title">Permeti a %1$s di refudâ i strissons dai cookies?</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Refude in automatic lis richiestis dai cookies, se pussibil. In câs contrari, acete ducj i cookies par sierâ il strisson dai cookies.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Refude in automatic lis richiestis dai cookies, se pussibil.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_2">Permeti a %1$s di refudâ in automatic, se pussibil, lis richiestis dai cookies?</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_2" moz:RemovedIn="112" tools:ignore="UnusedResources">Permeti a %1$s di refudâ in automatic, se pussibil, lis richiestis dai cookies?</string>
+    <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_body">%1$s al pues refudâ in automatic tantis richiestis dai strissons dai cookies.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">No cumò</string>
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button">Siere i strissons</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Siere i strissons</string>
     <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
     <string name="reduce_cookie_banner_dialog_snackbar_text">Tu viodarâs mancul richiestis di cookies</string>
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">Viôt mancul ricuadris a comparse pai cookies</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Viôt mancul ricuadris a comparse pai cookies</string>
 
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Rispuint in automatic ai ricuadris a comparse pai cookies par vê une navigazion libare da lis distrazions. %1$s al refudarà dutis lis richiestis se pussibil, o lis acetarà dutis in câs contrari.</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1">Rispuint in automatic ai ricuadris a comparse dai cookies par vê une navigazion cence distrazions. %1$s al refudarà dutis lis richiestis, se pussibil.</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Rispuint in automatic ai ricuadris a comparse dai cookies par vê une navigazion cence distrazions. %1$s al refudarà dutis lis richiestis, se pussibil.</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Siere i ricuadris a comparse</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Siere i ricuadris a comparse</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Riduzion strissons pai cookies</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Riduzion strissons pai cookies</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Permeti a %1$s di refudâ la richieste di consens pai cookies de bande di un sît opûr acetâ l’acès ai cooki se chest nol fos pussibil?</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1">Permeti %1$s di refudâ, se pussibil, la richieste di consens dai cookies de bande di un sît?</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Permeti %1$s di refudâ, se pussibil, la richieste di consens dai cookies de bande di un sît?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">Permet</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Permet</string>
+
+    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
+    <string name="reduce_cookie_banner_dialog_change_setting_button">Permet</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Al cîr di conetisi in automatic ai sîts doprant il protocol di cifradure HTTPS par vê une sigurece miorade.</string>
@@ -1224,6 +1233,16 @@
     %1$s is a placeholder that will be replaced by the app name. -->
     <string name="notification_re_engagement_text">Navighe cence salvâ cookies o cronologjie in %1$s</string>
 
+    <!-- Title A shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_A_title">Navighe cence lassâ olmis</string>
+    <!-- Text A shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_A_text">La navigazion privade in %1$s no salve lis tôs informazions.</string>
+    <!-- Title B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_title">Scomence la tô prime ricercje</string>
+    <!-- Text B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_text">Cjate alc tai contors. O scuvierç alc di divertent.</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Racuelte eliminade</string>
@@ -1442,20 +1461,28 @@
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">Navighe cence vê nissun che ti stâ daûr</string>
 
+    <!-- Preference summary for enhanced tracking protection settings on/off switch -->
+    <string name="preference_enhanced_tracking_protection_summary" tools:ignore="UnusedResources">Cumò cu la Protezion Totâl dai Cookies, fin cumò la nestre bariere plui potente cuintri lis spiis inter-sît.</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation">Ten i tiei dâts par to cont. %s ti protêç di tantis des plui comuns spiis che ti stan daûr a ce che tu fasis in rêt.</string>
+    <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">%s ti protêç des tantis e plui comunis spiis che a cirin di stâti daûr a ce che tu fasis in rêt.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Plui informazions</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standard (predefinide)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_4">Belançade tra riservatece e prestazions. Lis pagjinis a vignaran cjamadis normalmentri.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_5" tools:ignore="UnusedResources">Lis pagjinis a vignaran cjariadis in mût normâl, ma a vignaran blocadis mancul spiis.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Elements blocâts de protezion standard da lis spiis</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Restritive</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_3">Al bloche plui spiis, duncje lis pagjinis si cjariaran plui sveltis, ma al è pussibil che cualchi funzionalitât te pagjine no funzioni.</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_4" tools:ignore="UnusedResources">Protezion da lis spiis plui fuarte e prestazions plui sveltis, ma al è pussibil che cualchi sît nol funzioni ben.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Elements blocâts de protezion restritive da lis spiis</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->

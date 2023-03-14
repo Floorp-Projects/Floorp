@@ -12,8 +12,10 @@
     <string name="content_description_private_browsing_button">Priveenavigaasje ynskeakelje</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">Priveenavigaasje útskeakelje</string>
-    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
     <string name="search_hint">Fier sykterm of adres yn</string>
+    <!-- Placeholder text shown in the search bar before a user enters text for a general engine -->
+    <string name="search_hint_general_engine">Sykje op it web</string>
     <!-- Placeholder text shown in search bar when using history search -->
     <string name="history_search_hint">Skiednis trochsykje</string>
     <!-- Placeholder text shown in search bar when using bookmarks search -->
@@ -386,36 +388,43 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s probearret alle cookiefersiken op stipe websites automatysk te wegerjen.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_title">Farwel cookiebanners!</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Farwel cookiebanners!</string>
+    <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_title">%1$s tastean om cookiebanners te wegerjen?</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Wegerje automatysk cookiefersiken, wannear mooglik. Akseptearje oars alle cookies om cookiebanners fuort te heljen.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Cookiefersiken automatysk wegerje, wannear mooglik.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_2">%1$s tastean om cookiefersiken wannear mooglik automatysk te wegerjen?</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_2" moz:RemovedIn="112" tools:ignore="UnusedResources">%1$s tastean om cookiefersiken wannear mooglik automatysk te wegerjen?</string>
+    <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_body">%1$s kin in protte cookiebannerfersiken automatysk wegerje.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">No net</string>
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button">Banners fuorthelje</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Banners fuorthelje</string>
     <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
     <string name="reduce_cookie_banner_dialog_snackbar_text">Jo sille minder cookie-oanfragen sjen</string>
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">Sjoch minder cookie-pop-ups</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Sjoch minder cookie-pop-ups</string>
 
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Beäntwurdzje automatysk cookie-pop-ups foar navigearjen sûnder ôflieding. %1$s sil wannear mooglik alle fersiken ôfwize, of akseptearret se allegearre as dit net kin.</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1">Beäntwurdzje automatysk cookie-pop-ups foar navigearjen sûnder ôflieding. %1$s sil wannear mooglik alle fersiken ôf.</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Beäntwurdzje automatysk cookie-pop-ups foar navigearjen sûnder ôflieding. %1$s sil wannear mooglik alle fersiken ôf.</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Pop-ups slute</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Pop-ups slute</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Reduksje fan cookiebanners</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Reduksje fan cookiebanners</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s tastean om it tastimmingfersyk foar cookies fan in website wannear mooglik te wegerjen of om cookie-tagong te akseptearjen wannear dit net mooglik is?</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1">%1$s tastean it tastimmingfersyk foar cookies fan in website te wegerjen, wannear mooglik?</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">%1$s tastean it tastimmingfersyk foar cookies fan in website te wegerjen, wannear mooglik?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">Tastean</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Tastean</string>
+
+    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
+    <string name="reduce_cookie_banner_dialog_change_setting_button">Tastean</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Probearret foar in bettere befeiliging automatysk mei it HTTPS-fersiferingsprotokol ferbining te meitsjen mei websites.</string>
@@ -1218,6 +1227,16 @@
     %1$s is a placeholder that will be replaced by the app name. -->
     <string name="notification_re_engagement_text">Sneupje sûnder bewarre cookies of skiednis yn %1$s</string>
 
+    <!-- Title A shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_A_title">Sneup sûnder spoaren efter te litten</string>
+    <!-- Text A shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_A_text">Priveenavigaasje yn %1$s slacht jo gegevens net op.</string>
+    <!-- Title B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_title">Start jo earste sykopdracht</string>
+    <!-- Text B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_text">Sykje wat yn de buert. Of ûntdek wat aardichs.</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Kolleksje fuortmsiten</string>
@@ -1432,20 +1451,28 @@
     <string name="preference_enhanced_tracking_protection">Ferbettere beskerming tsjin folgjen</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">Sneup sûnder folge te wurden</string>
+    <!-- Preference summary for enhanced tracking protection settings on/off switch -->
+    <string name="preference_enhanced_tracking_protection_summary" tools:ignore="UnusedResources">No mei Totale cookiebeskerming, ús krêftichste barriêre oant no ta tsjin cross-sitetrackers.</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation">Hâld jo gegevens foar josels. %s beskermet jo tsjin in protte fan de meast foarkommende trackers dy’t folgje wat jo online dogge.</string>
+    <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">%s beskermet jo tsjin in protte fan de meast foarkommende trackers dy\’t folgje wat jo online dogge.  </string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Mear ynfo</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standert (standert)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_4">Balansearre foar privacy en prestaasjes. Siden lade normaal.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_5" tools:ignore="UnusedResources">Siden wurde normaal laden, mar der wurde minder trackers blokkearre.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Wat wurdt blokkearre troch standert beskerming tsjin folgjen</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Strang</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_3">Blokkearret mear trackers, sadat siden rapper laden wurde, mar guon funksjonaliteit op in side wurket mooglik net.</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_4" tools:ignore="UnusedResources">Sterkere beskerming tsjin folgjen en fluggere prestaasjes, mar guon websites wurkje mooglik net goed.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Wat wurdt blokkearre troch strange beskerming tsjin folgjen</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->

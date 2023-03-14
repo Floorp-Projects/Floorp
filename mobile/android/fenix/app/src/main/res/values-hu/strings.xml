@@ -13,8 +13,10 @@
     <string name="content_description_private_browsing_button">Privát böngészés engedélyezése</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">Privát böngészés letiltása</string>
-    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
     <string name="search_hint">Keressen, vagy adjon meg címet</string>
+    <!-- Placeholder text shown in the search bar before a user enters text for a general engine -->
+    <string name="search_hint_general_engine">Keresés a weben</string>
     <!-- Placeholder text shown in search bar when using history search -->
     <string name="history_search_hint">Keresés előzményei</string>
     <!-- Placeholder text shown in search bar when using bookmarks search -->
@@ -386,35 +388,42 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">A %1$s automatikusan megpróbálja elutasítani az összes sütikérést a támogatott oldalakon.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_title">Elég a sütibannerekből!</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Elég a sütibannerekből!</string>
+    <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_title">Engedélyezi a %1$s számára a sütibannerek elutasítását?</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Automatikusan elutasítja a sütikéréseket, ha az lehetséges. Ellenkező esetben elfogad minden sütit a sütibannerek eltüntetéséhez.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">A sütikérések automatikus elutasítása, ha lehetséges.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_2">Engedélyezi, hogy a %1$s automatikusan elutasítsa a sütikéréseket, ha lehetséges?</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_2" moz:RemovedIn="112" tools:ignore="UnusedResources">Engedélyezi, hogy a %1$s automatikusan elutasítsa a sütikéréseket, ha lehetséges?</string>
+    <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_body">A %1$s automatikusan elutasíthat számos sütibanneres kérést.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Most nem</string>
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button">Bannerek eltüntetése</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Bannerek eltüntetése</string>
     <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
     <string name="reduce_cookie_banner_dialog_snackbar_text">Kevesebb sütikérést fog látni</string>
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">Lásson kevesebb sütikkel kapcsolatos felugró ablakot</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Lásson kevesebb sütikkel kapcsolatos felugró ablakot</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Automatikusan megválaszolja a sütik felugró ablakait a zavaró tényezőktől mentes böngészés érdekében. A %1$s elutasítja az összes kérést, ha az lehetséges, vagy elfogadja az összeset, ha nem.</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1">Automatikusan megválaszolja a sütik felugró ablakait a zavaró tényezőktől mentes böngészés érdekében. A %1$s elutasítja az összes kérést, ha az lehetséges.</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Automatikusan megválaszolja a sütik felugró ablakait a zavaró tényezőktől mentes böngészés érdekében. A %1$s elutasítja az összes kérést, ha az lehetséges.</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Felugró ablakok eltüntetése</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Felugró ablakok eltüntetése</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Sütibannerek számának csökkentése</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Sütibannerek számának csökkentése</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Engedélyezi a %1$s számára, hogy ha lehetséges, akkor elutasítsa a webhelyek sütikhez való hozzájárulási kéréseit, vagy elfogadja azokat, ha ez nem lehetséges?</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1">Engedélyezi a %1$s számára, hogy elutasítsa egy webhely sütikérését, ha lehetséges?</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Engedélyezi a %1$s számára, hogy elutasítsa egy webhely sütikérését, ha lehetséges?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">Engedélyezés</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Engedélyezés</string>
+
+    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
+    <string name="reduce_cookie_banner_dialog_change_setting_button">Engedélyezés</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Automatikusan HTTPS titkosítási protokoll használatával próbál meg csatlakozni a webhelyekhez a fokozott biztonság érdekében.</string>
@@ -496,6 +505,12 @@
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Hivatkozások megnyitása alkalmazásokban</string>
 
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">Mindig</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">Kérdés megnyitás előtt</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">Soha</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Külső letöltéskezelő</string>
     <!-- Preference for add_ons -->
@@ -1210,18 +1225,28 @@
     <string name="notification_pbm_delete_text_2">Privát lapok bezárása</string>
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Marketing</string>
-    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_title">A %1$s gyors és privát</string>
-    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_text">A %1$s alapértelmezett böngészővé tétele</string>
 
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_title" tools:ignore="UnusedResources">A Firefox gyors és privát</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_text" tools:ignore="UnusedResources">A Firefox alapértelmezett böngészővé tétele</string>
     <!-- Title shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_title">Próbálja ki a privát böngészést</string>
     <!-- Text shown in the notification that pops up to re-engage the user.
     %1$s is a placeholder that will be replaced by the app name. -->
     <string name="notification_re_engagement_text">Böngésszen mentett sütik vagy előzmények nélkül a %1$sban</string>
+
+    <!-- Title A shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_A_title">Böngésszen nyom nélkül</string>
+    <!-- Text A shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_A_text">A %1$s privát böngészése nem menti el az adatait.</string>
+    <!-- Title B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_title">Kezdje el az első keresést</string>
+    <!-- Text B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_text">Keressen valamit a közelben. Vagy fedezzen fel valami szórakoztatót.</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
@@ -1440,20 +1465,28 @@
     <string name="preference_enhanced_tracking_protection">Fokozott követés elleni védelem</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">Böngésszen anélkül, hogy követnék</string>
+    <!-- Preference summary for enhanced tracking protection settings on/off switch -->
+    <string name="preference_enhanced_tracking_protection_summary" tools:ignore="UnusedResources">Mostantól Teljes sütivédelem funkcióval, amely az eddigi legerősebb akadály a webhelyek közti nyomkövetők ellen.</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation">Tartsa meg az adatait. A %s megvédi a leggyakoribb nyomkövetőktől, amelyek követik az online tevékenységét.</string>
+    <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">A %s megvédi a leggyakoribb nyomkövetőktől, amelyek követik az online tevékenységét.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">További tudnivalók</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Normál (alapértelmezett)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_4">Kiegyensúlyozott adatvédelem és teljesítmény. Az oldalak normálisan fognak betölteni.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_5" tools:ignore="UnusedResources">A lapok normálisan betöltenek, de néhány nyomkövető blokkolása.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Mit blokkol a szokásos követésvédelem</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Szigorú</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_3">Több nyomkövetőt blokkol, így az oldalak gyorsabban töltenek be, de egyes oldalfunkciók meghibásodhatnak.</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_4" tools:ignore="UnusedResources">Erősebb követésvédelem és jobb teljesítmény, de előfordulhat, hogy egyes oldalak nem fognak megfelelően működni.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Mit blokkol a szigorú követésvédelem</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
