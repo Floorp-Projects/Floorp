@@ -39,6 +39,7 @@ struct nsStyleSVG;
 struct nsRect;
 
 namespace mozilla {
+class nsPaintedDisplayItem;
 class SVGAnimatedEnumeration;
 class SVGAnimatedLength;
 class SVGContextPaint;
@@ -260,6 +261,24 @@ class SVGUtils final {
    */
   static nsIFrame* HitTestChildren(SVGDisplayContainerFrame* aFrame,
                                    const gfxPoint& aPoint);
+
+  /**
+   * Hit testing for display lists.
+   * @param aRect the point or rect being tested, relative to aFrame.
+   * If the width and height are both 1 app unit, it indicates we're
+   * hit testing a point, not a rect.
+   * @param aOutFrames each item appends the frame(s) in this display item that
+   * the rect is considered over (if any) to aOutFrames.
+   */
+  static void HitTest(nsDisplayListBuilder* aBuilder,
+                      const nsPaintedDisplayItem* aDisplayItem,
+                      const nsRect& aRect, nsTArray<nsIFrame*>* aOutFrames);
+
+  /**
+   * Paint the frame to some rendering context.
+   */
+  static void Paint(nsDisplayListBuilder* aBuilder,
+                    const nsPaintedDisplayItem* aDisplayItem, gfxContext* aCtx);
 
   /*
    * Returns the CanvasTM of the indicated frame, whether it's a

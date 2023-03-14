@@ -2689,65 +2689,29 @@ class DisplaySVGText final : public nsPaintedDisplayItem {
     MOZ_COUNT_CTOR(DisplaySVGText);
     MOZ_ASSERT(aFrame, "Must have a frame!");
   }
-#ifdef NS_BUILD_REFCNT_LOGGING
+
   MOZ_COUNTED_DTOR_OVERRIDE(DisplaySVGText)
-#endif
 
   NS_DISPLAY_DECL_NAME("DisplaySVGText", TYPE_SVG_TEXT)
 
-  virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
-                       HitTestState* aState,
-                       nsTArray<nsIFrame*>* aOutFrames) override;
-  void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
+  void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
+               HitTestState* aState, nsTArray<nsIFrame*>* aOutFrames) override {
+    SVGUtils::HitTest(aBuilder, this, aRect, aOutFrames);
+  }
+  void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override {
+    SVGUtils::Paint(aBuilder, this, aCtx);
+  }
   nsDisplayItemGeometry* AllocateGeometry(
       nsDisplayListBuilder* aBuilder) override {
     return new nsDisplayItemGenericGeometry(this, aBuilder);
   }
 
-  virtual nsRect GetComponentAlphaBounds(
+  nsRect GetComponentAlphaBounds(
       nsDisplayListBuilder* aBuilder) const override {
     bool snap;
     return GetBounds(aBuilder, &snap);
   }
 };
-
-void DisplaySVGText::HitTest(nsDisplayListBuilder* aBuilder,
-                             const nsRect& aRect, HitTestState* aState,
-                             nsTArray<nsIFrame*>* aOutFrames) {
-  SVGTextFrame* frame = static_cast<SVGTextFrame*>(mFrame);
-  nsPoint pointRelativeToReferenceFrame = aRect.Center();
-  // ToReferenceFrame() includes frame->GetPosition(), our user space position.
-  nsPoint userSpacePtInAppUnits = pointRelativeToReferenceFrame -
-                                  (ToReferenceFrame() - frame->GetPosition());
-
-  gfxPoint userSpacePt =
-      gfxPoint(userSpacePtInAppUnits.x, userSpacePtInAppUnits.y) /
-      AppUnitsPerCSSPixel();
-
-  nsIFrame* target = frame->GetFrameForPoint(userSpacePt);
-  if (target) {
-    aOutFrames->AppendElement(target);
-  }
-}
-
-void DisplaySVGText::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
-  uint32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
-
-  // ToReferenceFrame includes our mRect offset, but painting takes
-  // account of that too. To avoid double counting, we subtract that
-  // here.
-  nsPoint offset = ToReferenceFrame() - mFrame->GetPosition();
-
-  gfxPoint devPixelOffset =
-      nsLayoutUtils::PointToGfxPoint(offset, appUnitsPerDevPixel);
-
-  gfxMatrix tm = SVGUtils::GetCSSPxToDevPxMatrix(mFrame) *
-                 gfxMatrix::Translation(devPixelOffset);
-
-  gfxContext* ctx = aCtx;
-  imgDrawingParams imgParams(aBuilder->GetImageDecodeFlags());
-  static_cast<SVGTextFrame*>(mFrame)->PaintSVG(*ctx, tm, imgParams);
-}
 
 // ---------------------------------------------------------------------
 // nsQueryFrame methods
