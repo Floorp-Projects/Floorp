@@ -134,6 +134,13 @@ class DataChannelConnection final : public net::NeckoTargetHolder
 
     // Called when a new DataChannel has been opened by the other side.
     virtual void NotifyDataChannel(already_AddRefed<DataChannel> channel) = 0;
+
+    // Called when a DataChannel transitions to state open
+    virtual void NotifyDataChannelOpen(DataChannel* aChannel) = 0;
+
+    // Called when a DataChannel (that was open at some point in the past)
+    // transitions to state closed
+    virtual void NotifyDataChannelClosed(DataChannel* aChannel) = 0;
   };
 
   // Create a new DataChannel Connection
@@ -556,6 +563,8 @@ class DataChannel {
   void WithTrafficCounters(const std::function<void(TrafficCounters&)>&);
 
   RefPtr<DataChannelConnection> mConnection;
+  // mainthread only
+  bool mEverOpened = false;
   nsCString mLabel;
   nsCString mProtocol;
   // This is mainthread only
