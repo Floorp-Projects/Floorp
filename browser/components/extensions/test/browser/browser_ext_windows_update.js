@@ -273,13 +273,21 @@ add_task(async function testPositionBoundaryCheck() {
         left: screen.availWidth * 100,
         top: screen.availHeight * 100,
       });
-      await browser.test.sendMessage("too-large");
+      await browser.test.sendMessage("too-large-coordinates");
       await waitMessage();
       await browser.windows.update(win.id, {
         left: -screen.availWidth * 100,
         top: -screen.availHeight * 100,
       });
-      await browser.test.sendMessage("too-small");
+      await browser.test.sendMessage("too-small-coordinates");
+      await waitMessage();
+      await browser.windows.update(win.id, {
+        left: 0,
+        top: 0,
+        width: screen.availWidth + 10,
+        height: screen.availHeight + 10,
+      });
+      await browser.test.sendMessage("too-large-size");
     },
   });
 
@@ -348,16 +356,24 @@ add_task(async function testPositionBoundaryCheck() {
   };
 
   extension.sendMessage("continue");
-  await extension.awaitMessage("too-large");
+  await extension.awaitMessage("too-large-coordinates");
   actualRect.right = win.screenX + win.outerWidth;
   actualRect.bottom = win.screenY + win.outerHeight;
 
   extension.sendMessage("continue");
-  await extension.awaitMessage("too-small");
+  await extension.awaitMessage("too-small-coordinates");
   actualRect.top = win.screenY;
   actualRect.left = win.screenX;
 
   isRectContained(actualRect, maxRect);
+
+  extension.sendMessage("continue");
+  await extension.awaitMessage("too-large-size");
+  is(
+    `${win.screenX},${win.screenY}`,
+    "0,0",
+    "window larger than available area of the screen is aligned at top-left of the screen"
+  );
 
   await extension.unload();
   await BrowserTestUtils.closeWindow(win);
