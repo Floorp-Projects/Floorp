@@ -10,7 +10,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -51,6 +50,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.ClickableSubstringLink
+import org.mozilla.fenix.compose.ext.debouncedClickable
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.wallpapers.Wallpaper
 
@@ -300,7 +300,7 @@ private fun WallpaperThumbnailItem(
             .fillMaxWidth()
             .aspectRatio(aspectRatio)
             .then(border)
-            .clickable { onSelect(wallpaper) }
+            .debouncedClickable { onSelect(wallpaper) }
             .then(contentDescriptionModifier),
     ) {
         bitmap?.let {
