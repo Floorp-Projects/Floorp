@@ -1253,8 +1253,9 @@ let BrowserUsageTelemetry = {
       return;
     }
 
+    let provenanceExtra = {};
     try {
-      await lazy.ProvenanceData.submitProvenanceTelemetry();
+      provenanceExtra = await lazy.ProvenanceData.submitProvenanceTelemetry();
     } catch (ex) {
       console.warn(
         "reportInstallationTelemetry - submitProvenanceTelemetry failed",
@@ -1390,6 +1391,13 @@ let BrowserUsageTelemetry = {
       installer_type,
       null,
       extra
+    );
+    Services.telemetry.recordEvent(
+      "installation",
+      "first_seen_prov_ext",
+      installer_type,
+      null,
+      provenanceExtra
     );
   },
 
