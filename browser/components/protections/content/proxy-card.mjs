@@ -10,8 +10,8 @@ const PROXY_EXTENSION_URL = RPMGetStringPref(
 );
 
 export default class ProxyCard {
-  constructor(document) {
-    this.doc = document;
+  constructor(doc) {
+    this.doc = doc;
   }
 
   init() {

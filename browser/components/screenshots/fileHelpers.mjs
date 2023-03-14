@@ -213,15 +213,15 @@ function appendFiltersForContentType(
  * @param aFpP
  *        A structure (see definition in internalSave(...) method)
  *        containing all the data used within this method.
- * @param window
+ * @param win
  *        The window used for opening the file picker
  * @return Promise
  * @resolve a boolean. When true, it indicates that the file picker dialog
  *          is accepted.
  */
-function promiseTargetFile(aFpP, window) {
+function promiseTargetFile(aFpP, win) {
   return (async function() {
-    let downloadLastDir = new lazy.DownloadLastDir(window);
+    let downloadLastDir = new lazy.DownloadLastDir(win);
 
     // Default to the user's default downloads directory configured
     // through download prefs.
@@ -249,7 +249,7 @@ function promiseTargetFile(aFpP, window) {
     let fp = makeFilePicker();
     let titleKey = aFpP.fpTitleKey;
     fp.init(
-      window,
+      win,
       ContentAreaUtils.stringBundle.GetStringFromName(titleKey),
       Ci.nsIFilePicker.modeSave
     );

@@ -51,13 +51,13 @@ function* generateBundles() {
   yield* [storybookBundle];
 }
 
-export async function insertFTLIfNeeded(name) {
-  if (loadedResources.has(name)) {
+export async function insertFTLIfNeeded(fileName) {
+  if (loadedResources.has(fileName)) {
     return;
   }
 
   // This should be browser, locales-preview or toolkit.
-  let [root, ...rest] = name.split("/");
+  let [root, ...rest] = fileName.split("/");
   let ftlContents;
 
   // TODO(mstriemer): These seem like they could be combined but I don't want
@@ -66,14 +66,14 @@ export async function insertFTLIfNeeded(name) {
     // eslint-disable-next-line no-unsanitized/method
     let imported = await import(
       /* webpackInclude: /.*[\/\\].*\.ftl$/ */
-      `toolkit/locales/en-US/${name}`
+      `toolkit/locales/en-US/${fileName}`
     );
     ftlContents = imported.default;
   } else if (root == "browser") {
     // eslint-disable-next-line no-unsanitized/method
     let imported = await import(
       /* webpackInclude: /.*[\/\\].*\.ftl$/ */
-      `browser/locales/en-US/${name}`
+      `browser/locales/en-US/${fileName}`
     );
     ftlContents = imported.default;
   } else if (root == "locales-preview") {
@@ -92,7 +92,7 @@ export async function insertFTLIfNeeded(name) {
     ftlContents = imported.default;
   }
 
-  if (loadedResources.has(name)) {
+  if (loadedResources.has(fileName)) {
     // Seems possible we've attempted to load this twice before the first call
     // resolves, so once the first load is complete we can abandon the others.
     return;
@@ -100,6 +100,6 @@ export async function insertFTLIfNeeded(name) {
 
   let ftlResource = new FluentResource(ftlContents);
   storybookBundle.addResource(ftlResource);
-  loadedResources.set(name, ftlResource);
+  loadedResources.set(fileName, ftlResource);
   document.l10n.translateRoots();
 }

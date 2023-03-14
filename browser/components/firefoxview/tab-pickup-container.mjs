@@ -116,10 +116,10 @@ class TabPickupContainer extends HTMLDetailsElement {
           break;
         }
         case "view0-sync-disconnected-action": {
-          const window = event.target.ownerGlobal;
+          const win = event.target.ownerGlobal;
           const {
             switchToTabHavingURI,
-          } = window.docShell.chromeEventHandler.ownerGlobal;
+          } = win.docShell.chromeEventHandler.ownerGlobal;
           switchToTabHavingURI(
             "about:preferences?action=choose-what-to-sync#sync",
             true,
