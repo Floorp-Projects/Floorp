@@ -23,9 +23,9 @@ struct WindowGlobalInit
   WindowContextInitializer context;
 
   // Private fields only shared with the parent process.
-  nsIPrincipal principal;
-  nsIPrincipal storagePrincipal;
-  nsIURI documentURI;
+  nullable nsIPrincipal principal;
+  nullable nsIPrincipal storagePrincipal;
+  nullable nsIURI documentURI;
 
   bool isInitialDocument;
   bool blockAllMixedContent;
@@ -33,7 +33,7 @@ struct WindowGlobalInit
   uint32_t sandboxFlags;
   CookieJarSettingsArgs cookieJarSettings;
   uint32_t httpsOnlyStatus;
-  nsITransportSecurityInfo securityInfo;
+  nullable nsITransportSecurityInfo securityInfo;
 };
 
 } // namespace dom

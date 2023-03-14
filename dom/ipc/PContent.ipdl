@@ -240,10 +240,10 @@ union FileDescOrError {
 struct DomainPolicyClone
 {
     bool        active;
-    nsIURI[] blocklist;
-    nsIURI[] allowlist;
-    nsIURI[] superBlocklist;
-    nsIURI[] superAllowlist;
+    nullable nsIURI[] blocklist;
+    nullable nsIURI[] allowlist;
+    nullable nsIURI[] superBlocklist;
+    nullable nsIURI[] superAllowlist;
 };
 
 struct AndroidSystemInfo
@@ -276,7 +276,7 @@ struct BlobURLRegistrationData
 {
   nsCString url;
   IPCBlob blob;
-  nsIPrincipal principal;
+  nullable nsIPrincipal principal;
   nsID? agentClusterId;
   bool revoked;
 };
@@ -360,7 +360,7 @@ struct XPCOMInitData
     nsCString[] dictionaries;
     ClipboardCapabilities clipboardCaps;
     DomainPolicyClone domainPolicy;
-    nsIURI userContentSheetURL;
+    nullable nsIURI userContentSheetURL;
     GfxVarUpdate[] gfxNonDefaultVarUpdates;
     ContentDeviceData contentDeviceData;
     GfxInfoFeatureStatus[] gfxFeatureStatus;
@@ -375,7 +375,7 @@ struct XPCOMInitData
 
 struct VisitedQueryResult
 {
-    nsIURI uri;
+    nullable nsIURI uri;
     bool visited;
 };
 
@@ -416,10 +416,10 @@ struct PostMessageData
     MaybeDiscardedBrowsingContext source;
     nsString origin;
     nsString targetOrigin;
-    nsIURI targetOriginURI;
-    nsIPrincipal callerPrincipal;
-    nsIPrincipal subjectPrincipal;
-    nsIURI callerURI;
+    nullable nsIURI targetOriginURI;
+    nullable nsIPrincipal callerPrincipal;
+    nullable nsIPrincipal subjectPrincipal;
+    nullable nsIURI callerURI;
     bool isFromPrivateWindow;
     nsCString scriptLocation;
     uint64_t innerWindowId;
@@ -646,13 +646,13 @@ child:
                          OverrideMapping[] overrides, nsCString locale, bool reset);
     async RegisterChromeItem(ChromeRegistryItem item);
 
-    async ClearImageCacheFromPrincipal(nsIPrincipal aPrincipal);
+    async ClearImageCacheFromPrincipal(nullable nsIPrincipal aPrincipal);
 
     async ClearImageCacheFromBaseDomain(nsCString aBaseDomain);
 
     async ClearImageCache(bool privateLoader, bool chrome);
 
-    async ClearStyleSheetCache(nsIPrincipal? aForPrincipal,
+    async ClearStyleSheetCache(nullable nsIPrincipal? aForPrincipal,
                                nsCString? aBaseDomain);
 
     async SetOffline(bool offline);
@@ -678,7 +678,7 @@ child:
 
     async NotifyAlertsObserver(nsCString topic, nsString data);
 
-    async GeolocationUpdate(nsIDOMGeoPosition aPosition);
+    async GeolocationUpdate(nullable nsIDOMGeoPosition aPosition);
 
     async GeolocationError(uint16_t errorCode);
 
@@ -807,8 +807,8 @@ child:
     /**
      * Used to manage nsIStyleSheetService across processes.
      */
-    async LoadAndRegisterSheet(nsIURI uri, uint32_t type);
-    async UnregisterSheet(nsIURI uri, uint32_t type);
+    async LoadAndRegisterSheet(nullable nsIURI uri, uint32_t type);
+    async UnregisterSheet(nullable nsIURI uri, uint32_t type);
 
     /**
      * Notify idle observers in the child
@@ -824,7 +824,7 @@ child:
                          uint32_t aKeyModifiers,
                          uint32_t aDropEffect);
 
-    async DomainSetChanged(uint32_t aSetType, uint32_t aChangeType, nsIURI aDomain);
+    async DomainSetChanged(uint32_t aSetType, uint32_t aChangeType, nullable nsIURI aDomain);
 
     /**
      * Notify the child that it will soon be asked to shutdown.
@@ -854,23 +854,23 @@ child:
     /**
      * Send a `push` event without data to a service worker in the child.
      */
-    async Push(nsCString scope, nsIPrincipal principal, nsString messageId);
+    async Push(nsCString scope, nullable nsIPrincipal principal, nsString messageId);
 
     /**
      * Send a `push` event with data to a service worker in the child.
      */
-    async PushWithData(nsCString scope, nsIPrincipal principal,
+    async PushWithData(nsCString scope, nullable nsIPrincipal principal,
                        nsString messageId, uint8_t[] data);
 
     /**
      * Send a `pushsubscriptionchange` event to a service worker in the child.
      */
-    async PushSubscriptionChange(nsCString scope, nsIPrincipal principal);
+    async PushSubscriptionChange(nsCString scope, nullable nsIPrincipal principal);
 
     async GetFilesResponse(nsID aID, GetFilesResponseResult aResult);
 
     async BlobURLRegistration(nsCString aURI, IPCBlob aBlob,
-                              nsIPrincipal aPrincipal,
+                              nullable nsIPrincipal aPrincipal,
                               nsID? aAgentClusterId);
 
     async BlobURLUnregistration(nsCString aURI);
@@ -995,10 +995,10 @@ child:
     async InitSandboxTesting(Endpoint<PSandboxTestingChild> aEndpoint);
 #endif
 
-    async LoadURI(MaybeDiscardedBrowsingContext aContext, nsDocShellLoadState aLoadState, bool aSetNavigating)
+    async LoadURI(MaybeDiscardedBrowsingContext aContext, nullable nsDocShellLoadState aLoadState, bool aSetNavigating)
         returns (bool aSuccess);
 
-    async InternalLoad(nsDocShellLoadState aLoadState);
+    async InternalLoad(nullable nsDocShellLoadState aLoadState);
 
     async DisplayLoadError(MaybeDiscardedBrowsingContext aContext, nsString aURI);
 
@@ -1028,7 +1028,7 @@ child:
                                       nsID aChangeID);
 
     async GetLayoutHistoryState(MaybeDiscardedBrowsingContext aContext)
-        returns (nsILayoutHistoryState aState, Wireframe? aWireframe);
+        returns (nullable nsILayoutHistoryState aState, Wireframe? aWireframe);
 
     async DispatchLocationChangeEvent(MaybeDiscardedBrowsingContext aContext);
 
@@ -1054,7 +1054,7 @@ child:
 parent:
 
     async SynchronizeLayoutHistoryState(MaybeDiscardedBrowsingContext aContext,
-                                        nsILayoutHistoryState aState);
+                                        nullable nsILayoutHistoryState aState);
 
     async SessionHistoryEntryTitle(MaybeDiscardedBrowsingContext aContext,
                                    nsString aTitle);
@@ -1089,10 +1089,10 @@ parent:
 
     async InitCrashReporter(NativeThreadId tid);
 
-    sync IsSecureURI(nsIURI aURI, OriginAttributes aOriginAttributes)
+    sync IsSecureURI(nullable nsIURI aURI, OriginAttributes aOriginAttributes)
         returns (bool isSecureURI);
 
-    async AccumulateMixedContentHSTS(nsIURI aURI, bool aActive,
+    async AccumulateMixedContentHSTS(nullable nsIURI aURI, bool aActive,
                                      OriginAttributes aOriginAttributes);
 
     [Nested=inside_cpow] async PHal();
@@ -1113,12 +1113,12 @@ parent:
 
     async CreateAudioIPCConnection() returns (FileDescOrError fd);
 
-    sync PURLClassifier(nsIPrincipal principal)
+    sync PURLClassifier(nullable nsIPrincipal principal)
         returns (bool success);
 
-    async PURLClassifierLocal(nsIURI uri, IPCURLClassifierFeature[] features);
+    async PURLClassifierLocal(nullable nsIURI uri, IPCURLClassifierFeature[] features);
 
-    async PLoginReputation(nsIURI formURI);
+    async PLoginReputation(nullable nsIURI formURI);
 
     async PSessionStorageObserver();
 
@@ -1126,12 +1126,12 @@ parent:
 
     // Services remoting
 
-    async StartVisitedQueries(nsIURI[] uri);
-    async SetURITitle(nsIURI uri, nsString title);
+    async StartVisitedQueries(nullable nsIURI[] uri);
+    async SetURITitle(nullable nsIURI uri, nsString title);
 
-    async LoadURIExternal(nsIURI uri,
-                          nsIPrincipal triggeringPrincipal,
-                          nsIPrincipal redirectPrincipal,
+    async LoadURIExternal(nullable nsIURI uri,
+                          nullable nsIPrincipal triggeringPrincipal,
+                          nullable nsIPrincipal redirectPrincipal,
                           MaybeDiscardedBrowsingContext browsingContext,
                           bool wasExternallyTriggered,
                           bool hasValidUserGestureActivation);
@@ -1143,13 +1143,13 @@ parent:
     sync SyncMessage(nsString aMessage, ClonedMessageData aData)
       returns (StructuredCloneData[] retval);
 
-    async ShowAlert(nsIAlertNotification alert);
+    async ShowAlert(nullable nsIAlertNotification alert);
 
     async CloseAlert(nsString name, bool contextClosed);
 
-    async DisableNotifications(nsIPrincipal principal);
+    async DisableNotifications(nullable nsIPrincipal principal);
 
-    async OpenNotificationSettings(nsIPrincipal principal);
+    async OpenNotificationSettings(nullable nsIPrincipal principal);
 
     async AddSecurityState(MaybeDiscardedWindowContext aContext, uint32_t aStateFlags);
 
@@ -1187,7 +1187,7 @@ parent:
     // nsIMIMEInfo and other such influences.
     // Pass true for aShouldCloseWindow to specify that aContext was opened specifically
     // for this load, and should be closed once we've handled it.
-    async PExternalHelperApp(nsIURI uri,
+    async PExternalHelperApp(nullable nsIURI uri,
                              LoadInfoArgs? loadInfoArgs,
                              nsCString aMimeContentType,
                              nsCString aContentDisposition,
@@ -1196,7 +1196,7 @@ parent:
                              bool aForceSave,
                              int64_t aContentLength,
                              bool aWasFileChannel,
-                             nsIURI aReferrer,
+                             nullable nsIURI aReferrer,
                              MaybeDiscardedBrowsingContext aContext,
                              bool aShouldCloseWindow);
 
@@ -1215,7 +1215,7 @@ parent:
     // Places the items within dataTransfer on the clipboard.
     async SetClipboard(IPCDataTransfer aDataTransfer,
                        bool aIsPrivateData,
-                       nsIPrincipal aRequestingPrincipal,
+                       nullable nsIPrincipal aRequestingPrincipal,
                        nsContentPolicyType aContentPolicyType,
                        int32_t aWhichClipboard);
 
@@ -1245,7 +1245,7 @@ parent:
 
     // 'Play', 'Beep' and 'PlayEventSound' are the only nsISound methods used in
     // the content process.
-    [Compress] async PlaySound(nsIURI aURL);
+    [Compress] async PlaySound(nullable nsIURI aURL);
     [Compress] async Beep();
     [Compress] async PlayEventSound(uint32_t aEventId);
 
@@ -1257,7 +1257,7 @@ parent:
 
     async DeviceReset();
 
-    async CopyFavicon(nsIURI oldURI, nsIURI newURI, bool isPrivate);
+    async CopyFavicon(nullable nsIURI oldURI, nullable nsIURI newURI, bool isPrivate);
 
     async FindImageText(IPCImage image, nsCString[] languages)
         returns (TextRecognitionResultOrError result);
@@ -1330,8 +1330,8 @@ parent:
      *       provided.
      */
     async PContentPermissionRequest(PermissionRequest[] aRequests,
-                                    nsIPrincipal aPrincipal,
-                                    nsIPrincipal aTopLevelPrincipal,
+                                    nullable nsIPrincipal aPrincipal,
+                                    nullable nsIPrincipal aTopLevelPrincipal,
                                     bool aIsHandlingUserInput,
                                     bool aMaybeUnsafePermissionDelegate,
                                     TabId tabId);
@@ -1551,7 +1551,7 @@ parent:
      * @param aLoaded
      *   Returns the size in bytes of the resource.
      */
-    sync GetHyphDict(nsIURI aURI) returns (SharedMemoryHandle aHandle, uint32_t aSize);
+    sync GetHyphDict(nullable nsIURI aURI) returns (SharedMemoryHandle aHandle, uint32_t aSize);
 
     async CreateWindow(PBrowser aThisTab,
                        MaybeDiscardedBrowsingContext aParent,
@@ -1560,11 +1560,11 @@ parent:
                        bool aCalledFromJS,
                        bool aForPrinting,
                        bool aForWindowDotPrint,
-                       nsIURI aURIToLoad,
+                       nullable nsIURI aURIToLoad,
                        nsCString aFeatures,
-                       nsIPrincipal aTriggeringPrincipal,
-                       nsIContentSecurityPolicy aCsp,
-                       nsIReferrerInfo aReferrerInfo,
+                       nullable nsIPrincipal aTriggeringPrincipal,
+                       nullable nsIContentSecurityPolicy aCsp,
+                       nullable nsIReferrerInfo aReferrerInfo,
                        OriginAttributes aOriginAttributes)
         returns (CreatedWindowInfo window);
 
@@ -1573,15 +1573,15 @@ parent:
       MaybeDiscardedBrowsingContext aParent,
       uint32_t aChromeFlags,
       bool aCalledFromJS,
-      nsIURI aURIToLoad,
+      nullable nsIURI aURIToLoad,
       nsCString aFeatures,
       nsString aName,
-      nsIPrincipal aTriggeringPrincipal,
-      nsIContentSecurityPolicy aCsp,
-      nsIReferrerInfo aReferrerInfo,
+      nullable nsIPrincipal aTriggeringPrincipal,
+      nullable nsIContentSecurityPolicy aCsp,
+      nullable nsIReferrerInfo aReferrerInfo,
       OriginAttributes aOriginAttributes);
 
-    sync RemovePermission(nsIPrincipal principal, nsCString permissionType) returns (nsresult rv);
+    sync RemovePermission(nullable nsIPrincipal principal, nsCString permissionType) returns (nsresult rv);
 
     /**
      * Tell the parent that a decoder's' benchmark has been completed.
@@ -1592,29 +1592,29 @@ parent:
     /**
      * Notify `push-message` observers without data in the parent.
      */
-    async NotifyPushObservers(nsCString scope, nsIPrincipal principal,
+    async NotifyPushObservers(nsCString scope, nullable nsIPrincipal principal,
                               nsString messageId);
 
     /**
      * Notify `push-message` observers with data in the parent.
      */
-    async NotifyPushObserversWithData(nsCString scope, nsIPrincipal principal,
+    async NotifyPushObserversWithData(nsCString scope, nullable nsIPrincipal principal,
                                       nsString messageId, uint8_t[] data);
 
     /**
      * Notify `push-subscription-change` observers in the parent.
      */
     async NotifyPushSubscriptionChangeObservers(nsCString scope,
-                                                nsIPrincipal principal);
+                                                nullable nsIPrincipal principal);
 
      async GetFilesRequest(nsID aID, nsString aDirectory, bool aRecursiveFlag);
      async DeleteGetFilesRequest(nsID aID);
 
      async StoreAndBroadcastBlobURLRegistration(nsCString url, IPCBlob blob,
-                                                nsIPrincipal principal,
+                                                nullable nsIPrincipal principal,
                                                 nsID? aAgentClusterId);
 
-     async UnstoreAndBroadcastBlobURLUnregistration(nsCString url, nsIPrincipal principal);
+     async UnstoreAndBroadcastBlobURLUnregistration(nsCString url, nullable nsIPrincipal principal);
 
     /**
      * Messages for communicating child Glean data to the parent process
@@ -1644,7 +1644,7 @@ parent:
     /*
      * Adds a certificate exception for the given hostname and port.
      */
-    async AddCertException(nsIX509Cert aCert, nsCString aHostName,
+    async AddCertException(nullable nsIX509Cert aCert, nsCString aHostName,
                            int32_t aPort, OriginAttributes aOriginAttributes,
                            bool aIsTemporary)
           returns (nsresult success);
@@ -1653,7 +1653,7 @@ parent:
      * Determines whether storage access can be granted automatically by the
      * storage access API without showing a user prompt.
      */
-    async AutomaticStorageAccessPermissionCanBeGranted(nsIPrincipal aPrincipal)
+    async AutomaticStorageAccessPermissionCanBeGranted(nullable nsIPrincipal aPrincipal)
           returns (bool success);
 
     /*
@@ -1662,7 +1662,7 @@ parent:
      */
     async StorageAccessPermissionGrantedForOrigin(uint64_t aTopLevelWindowId,
                                                   MaybeDiscardedBrowsingContext aParentContext,
-                                                  nsIPrincipal aTrackingPrincipal,
+                                                  nullable nsIPrincipal aTrackingPrincipal,
                                                   nsCString aTrackingOrigin,
                                                   int aAllowMode,
                                                   StorageAccessPermissionGrantedReason? aReason)
@@ -1670,29 +1670,29 @@ parent:
 
     async CompleteAllowAccessFor(MaybeDiscardedBrowsingContext aParentContext,
                                  uint64_t aTopLevelWindowId,
-                                 nsIPrincipal aTrackingPrincipal,
+                                 nullable nsIPrincipal aTrackingPrincipal,
                                  nsCString aTrackingOrigin,
                                  uint32_t aCookieBehavior,
                                  StorageAccessPermissionGrantedReason aReason)
           returns (StorageAccessPromptChoices? choice);
 
     async SetAllowStorageAccessRequestFlag(
-                                 nsIPrincipal aEmbeddingPrincipal,
-                                 nsIURI aEmbeddedOrigin)
+                                 nullable nsIPrincipal aEmbeddingPrincipal,
+                                 nullable nsIURI aEmbeddedOrigin)
           returns (bool success);
 
     async TestAllowStorageAccessRequestFlag(
-                                 nsIPrincipal aEmbeddedPrincipal,
-                                 nsIURI aEmbeddingOrigin)
+                                 nullable nsIPrincipal aEmbeddedPrincipal,
+                                 nullable nsIURI aEmbeddingOrigin)
           returns (bool success);
 
-    async StoreUserInteractionAsPermission(nsIPrincipal aPrincipal);
+    async StoreUserInteractionAsPermission(nullable nsIPrincipal aPrincipal);
 
     async TestCookiePermissionDecided(MaybeDiscardedBrowsingContext aContext,
-                         nsIPrincipal aPrincipal)
+                         nullable nsIPrincipal aPrincipal)
           returns (bool? allowed);
 
-    async TestStorageAccessPermission(nsIPrincipal aEmbeddingPrincipal,
+    async TestStorageAccessPermission(nullable nsIPrincipal aEmbeddingPrincipal,
                          nsCString aEmbeddedOrigin)
           returns (bool? allowed);
 
@@ -1804,7 +1804,7 @@ parent:
 
     async NotifyOnHistoryReload(MaybeDiscardedBrowsingContext aContext,
                                 bool aForceReload)
-            returns (bool canReload, nsDocShellLoadState? loadState,
+            returns (bool canReload, nullable nsDocShellLoadState? loadState,
                      bool? reloadActiveEntry);
 
     async HistoryCommit(MaybeDiscardedBrowsingContext aContext,
@@ -1817,8 +1817,8 @@ parent:
                     bool aUserActivation) returns(int32_t? requestedIndex);
 
     async BlobURLDataRequest(nsCString aBlobURL,
-                             nsIPrincipal aTriggeringPrincipal,
-                             nsIPrincipal aLoadingPrincipal,
+                             nullable nsIPrincipal aTriggeringPrincipal,
+                             nullable nsIPrincipal aLoadingPrincipal,
                              OriginAttributes aOriginAttributes,
                              uint64_t aInnerWindowId,
                              nsID? aAgentClusterId)
@@ -1870,13 +1870,13 @@ both:
      * Notify `push-subscription-modified` observers in the parent and child.
      */
     async NotifyPushSubscriptionModifiedObservers(nsCString scope,
-                                                  nsIPrincipal principal);
+                                                  nullable nsIPrincipal principal);
 
     /**
      * Send a Push error message to all service worker clients in the parent or
      * child.
      */
-    async PushError(nsCString scope, nsIPrincipal principal, nsString message,
+    async PushError(nsCString scope, nullable nsIPrincipal principal, nsString message,
                     uint32_t flags);
 
     /**
@@ -1969,12 +1969,12 @@ child:
 
 parent:
     async SetContainerFeaturePolicy(MaybeDiscardedBrowsingContext aContainerContext,
-                                    FeaturePolicy aContainerFeaturePolicy);
+                                    nullable FeaturePolicy aContainerFeaturePolicy);
 
     // Obtain an icon from the system widget toolkit, in nsIconDecoder
     // format.  Not supported (or needed) on all platforms; see the
     // implementation in ContentParent::RecvGetSystemIcon for details.
-    async GetSystemIcon(nsIURI aURI) returns (nsresult aResult, ByteBuf? aData);
+    async GetSystemIcon(nullable nsIURI aURI) returns (nsresult aResult, ByteBuf? aData);
 
 #ifdef FUZZING_SNAPSHOT
     // Used by the child process to signal that it is ready to start fuzzing.

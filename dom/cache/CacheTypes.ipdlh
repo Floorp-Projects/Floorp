@@ -81,7 +81,7 @@ struct CacheResponse
   HeadersEntry[] headers;
   HeadersGuardEnum headersGuard;
   CacheReadStream? body;
-  nsITransportSecurityInfo securityInfo;
+  nullable nsITransportSecurityInfo securityInfo;
   PrincipalInfo? principalInfo;
   uint32_t paddingInfo;
   int64_t paddingSize;

@@ -194,7 +194,7 @@ parent:
    */
   async CreateWebTransportParent(
       nsString aURL,
-      nsIPrincipal aPrincipal,
+      nullable nsIPrincipal aPrincipal,
       bool aDedicated,
       bool aRequireUnreliable,
       uint32_t aCongestionControl,
