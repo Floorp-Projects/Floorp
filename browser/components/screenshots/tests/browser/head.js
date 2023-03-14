@@ -183,6 +183,26 @@ class ScreenshotsHelper {
     );
   }
 
+  /**
+   * This will drag an overlay starting at the given startX and startY coordinates and ending
+   * at the given endX and endY coordinates.
+   *
+   * endY should be at least 70px from the bottom of window and endX should be at least
+   * 265px from the left of the window. If these requirements are not met then the
+   * overlay buttons (cancel, copy, download) will be positioned different from the default
+   * and the methods to click the overlay buttons will not work unless the updated
+   * position coordinates are supplied.
+   * See https://searchfox.org/mozilla-central/rev/af78418c4b5f2c8721d1a06486cf4cf0b33e1e8d/browser/components/screenshots/ScreenshotsOverlayChild.sys.mjs#1789,1798
+   * for how the overlay buttons are positioned when the overlay rect is near the bottom or
+   * left edge of the window.
+   *
+   * Note: The distance of the rect should be greater than 40 to enter in the "dragging" state.
+   * See https://searchfox.org/mozilla-central/rev/af78418c4b5f2c8721d1a06486cf4cf0b33e1e8d/browser/components/screenshots/ScreenshotsOverlayChild.sys.mjs#809
+   * @param {Number} startX The starting X coordinate. The left edge of the overlay rect.
+   * @param {Number} startY The starting Y coordinate. The top edge of the overlay rect.
+   * @param {Number} endX The end X coordinate. The right edge of the overlay rect.
+   * @param {Number} endY The end Y coordinate. The bottom edge of the overlay rect.
+   */
   async dragOverlay(startX, startY, endX, endY) {
     await this.waitForStateChange("crosshairs");
     let state = await this.getOverlayState();
