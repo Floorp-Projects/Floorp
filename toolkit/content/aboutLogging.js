@@ -316,11 +316,15 @@ function init() {
   populatePresets();
   parseURL();
 
-  let setLogButton = $("#set-log-file-button");
-  setLogButton.addEventListener("click", setLogFile);
+  $("#log-file-configuration").addEventListener("submit", e => {
+    e.preventDefault();
+    setLogFile();
+  });
 
-  let setModulesButton = $("#set-log-modules-button");
-  setModulesButton.addEventListener("click", setLogModules);
+  $("#log-modules-form").addEventListener("submit", e => {
+    e.preventDefault();
+    setLogModules();
+  });
 
   let toggleLoggingButton = $("#toggle-logging-button");
   toggleLoggingButton.addEventListener("click", startStopLogging);
@@ -373,7 +377,8 @@ function init() {
   // If we can't set the file and the modules at runtime,
   // the start and stop buttons wouldn't really do anything.
   if (
-    (setLogButton.disabled || setModulesButton.disabled) &&
+    ($("#set-log-file-button").disabled ||
+      $("#set-log-modules-button").disabled) &&
     moduleEnvVarPresent()
   ) {
     $("#buttons-disabled").hidden = false;
