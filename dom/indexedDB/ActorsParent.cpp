@@ -3076,7 +3076,6 @@ class FactoryOp
   const CommonFactoryRequestParams mCommonParams;
   OriginMetadata mOriginMetadata;
   nsCString mDatabaseId;
-  nsCString mStorageId;
   nsString mDatabaseFilePath;
   int64_t mDirectoryLockId;
   State mState;
@@ -3087,8 +3086,6 @@ class FactoryOp
   FlippedOnce<false> mInPrivateBrowsing;
 
  public:
-  const nsACString& StorageId() const { return mStorageId; }
-
   const nsACString& Origin() const {
     AssertIsOnOwningThread();
 
@@ -3583,125 +3580,28 @@ class NormalTransactionOp : public TransactionDatabaseOperationBase,
       const PreprocessResponse& aResponse) final;
 };
 
-// XXX Maybe we can avoid a mutex here by moving all accesses to the background
-// thread.
-StaticAutoPtr<IndexedDBCipherKeyManager> gIndexedDBCipherKeyManager;
-
 }  // namespace
 
-Maybe<CipherKey> IndexedDBCipherKeyManager::Get(const nsACString& aStorageId,
-                                                const nsAString& aDatabaseName,
-                                                const nsACString& keyStoreId) {
-  const auto& keyId = GenerateKeyId(aStorageId, aDatabaseName);
-  {
-    MutexAutoLock l{mMutex};
+Maybe<CipherKey> IndexedDBCipherKeyManager::Get(const nsACString& aKeyId) {
+  auto lockedCipherKeys = mCipherKeys.Lock();
 
-    auto dbKeyStore = mPrivateBrowsingInfoHashTable.Lookup(keyId);
-    if (!dbKeyStore) {
-      return Nothing();
-    }
-
-    return dbKeyStore->MaybeGet(keyStoreId);
-  }
+  return lockedCipherKeys->MaybeGet(aKeyId);
 }
 
-CipherKey IndexedDBCipherKeyManager::Ensure(const nsACString& aStorageId,
-                                            const nsAString& aDatabaseName,
-                                            const nsACString& keyStoreId) {
-  const auto& keyId = GenerateKeyId(aStorageId, aDatabaseName);
-  {
-    MutexAutoLock l{mMutex};
+CipherKey IndexedDBCipherKeyManager::Ensure(const nsACString& aKeyId) {
+  auto lockedCipherKeys = mCipherKeys.Lock();
 
-    auto& dbKeyStore = mPrivateBrowsingInfoHashTable.LookupOrInsert(keyId);
+  return lockedCipherKeys->LookupOrInsertWith(aKeyId, [] {
+    // Generate a new key if one corresponding to keyStoreId does not exist
+    // already.
 
-    return dbKeyStore.LookupOrInsertWith(keyStoreId, [&] {
-      // Generate a new key if one corresponding to keyStoreID
-      // does not exists already.
-      auto keyOrErr = IndexedDBCipherStrategy::GenerateKey();
-
+    QM_TRY_RETURN(IndexedDBCipherStrategy::GenerateKey(), [](const auto&) {
       // Bug1800110 Propagate the error to the caller rather than asserting.
-      MOZ_RELEASE_ASSERT(keyOrErr.isOk());
+      MOZ_RELEASE_ASSERT(false);
 
-      // Add keyId against this aStorageId such that we could pull all the
-      // keyIds against a storageId later on.
-      auto& keyIds = mStorageIdAndKeyIdHashMap.LookupOrInsert(
-          aStorageId, nsTHashSet<nsCString>{});
-      keyIds.EnsureInserted(keyId);
-
-      return keyOrErr.unwrap();
-    });
-  }
-}
-
-bool IndexedDBCipherKeyManager::RemoveKey(const nsACString& aStorageId,
-                                          const nsAString& aDatabaseName) {
-  const auto& keyId = GenerateKeyId(aStorageId, aDatabaseName);
-  {
-    MutexAutoLock l{mMutex};
-
-    auto keyIds = mStorageIdAndKeyIdHashMap.Lookup(aStorageId);
-    if (keyIds) {
-      // In case, we are deleting a database;
-      // we need to remove it's keyId from it's storageId.
-      keyIds->Remove(keyId);
-    }
-
-    if (!mPrivateBrowsingInfoHashTable.Remove(keyId)) {
-      return false;
-    }
-
-    // we should remove this aStorageId from secondary cache if this was the
-    // only keyId in it.
-    if (keyIds->Count() == 0) {
-      mStorageIdAndKeyIdHashMap.Remove(aStorageId);
-    }
-
-    return true;
-  }
-}
-
-bool IndexedDBCipherKeyManager::RemoveAllKeysWithStorageId(
-    const nsACString& aStorageId) {
-  AssertIsOnIOThread();
-
-  {
-    MutexAutoLock l{mMutex};
-
-    const auto& keyIds = mStorageIdAndKeyIdHashMap.Lookup(aStorageId);
-    if (!keyIds) {
-      return false;
-    }
-
-    for (const auto& keyId : keyIds.Data()) {
-      mPrivateBrowsingInfoHashTable.Remove(keyId);
-    }
-
-    // origin is gone; we should remove it from secondary cache along with it's
-    // keyIds.
-    mStorageIdAndKeyIdHashMap.Remove(aStorageId);
-  }
-
-  return true;
-}
-
-uint32_t IndexedDBCipherKeyManager::Count() {
-  MutexAutoLock l{mMutex};
-  return mPrivateBrowsingInfoHashTable.Count();
-}
-
-nsCString IndexedDBCipherKeyManager::GenerateKeyId(
-    const nsACString& aStorageId, const nsAString& aDatabaseName) {
-  nsCString keyId;
-
-  keyId.Append(aStorageId);
-  keyId.Append("*");
-  keyId.Append(NS_ConvertUTF16toUTF8(aDatabaseName));
-
-  return keyId;
-}
-
-IndexedDBCipherKeyManager* GetIndexedDBCipherKeyManager() {
-  return gIndexedDBCipherKeyManager;
+      return CipherKey{};
+    })
+  });
 }
 
 namespace {
@@ -3853,18 +3753,17 @@ void ObjectStoreAddOrPutRequestOp::StoredFileInfo::AssertInvariants() const {
 
 void ObjectStoreAddOrPutRequestOp::StoredFileInfo::EnsureCipherKey() {
   const auto& fileInfo = GetFileInfo();
-  const auto& fileMgr = fileInfo.Manager();
+  const auto& fileManager = fileInfo.Manager();
 
-  // no need to generate cipher keys if we are not in PBM
-  if (!fileMgr.IsInPrivateBrowsingMode()) return;
+  // No need to generate cipher keys if we are not in PBM
+  if (!fileManager.IsInPrivateBrowsingMode()) {
+    return;
+  }
 
   nsCString keyId;
   keyId.AppendInt(fileInfo.Id());
 
-  const auto& storageId = QuotaManager::StorageId::Serialize(
-      fileMgr.Origin(), fileMgr.Type(), Client::IDB);
-
-  gIndexedDBCipherKeyManager->Ensure(storageId, fileMgr.DatabaseName(), keyId);
+  fileManager.MutableCipherKeyManagerRef().Ensure(keyId);
 }
 
 ObjectStoreAddOrPutRequestOp::StoredFileInfo::StoredFileInfo(
@@ -5511,15 +5410,11 @@ RefPtr<BlobImpl> CreateFileBlobImpl(const Database& aDatabase,
                                     const nsCOMPtr<nsIFile>& aNativeFile,
                                     const DatabaseFileInfo::IdType aId) {
   if (aDatabase.IsInPrivateBrowsing()) {
-    nsCString cipherKeyId;
-    cipherKeyId.AppendInt(aId);
+    nsCString keyId;
+    keyId.AppendInt(aId);
 
-    const auto& originMetadata = aDatabase.OriginMetadata();
-
-    const auto& storageID = QuotaManager::StorageId::Serialize(
-        originMetadata.mOrigin, originMetadata.mPersistenceType, Client::IDB);
-    const auto& key = gIndexedDBCipherKeyManager->Get(
-        storageID, aDatabase.GetFileManager().DatabaseName(), cipherKeyId);
+    const auto& key =
+        aDatabase.GetFileManager().MutableCipherKeyManagerRef().Get(keyId);
 
     MOZ_RELEASE_ASSERT(key.isSome());
     return MakeRefPtr<EncryptedFileBlobImpl>(aNativeFile, aId, *key);
@@ -11809,6 +11704,8 @@ nsresult DatabaseFileManager::Init(nsIFile* aDirectory,
         return Ok{};
       }));
 
+  mInitialized.Flip();
+
   return NS_OK;
 }
 
@@ -12510,17 +12407,6 @@ void QuotaClient::OnOriginClearCompleted(PersistenceType aPersistenceType,
 
   if (IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get()) {
     mgr->InvalidateFileManagers(aPersistenceType, aOrigin);
-  }
-
-  // Delete any cipher keys for this origin.
-  if (gIndexedDBCipherKeyManager != nullptr) {
-    const auto& storageId = QuotaManager::StorageId::Serialize(
-        aOrigin, aPersistenceType, GetType());
-
-    DebugOnly<bool> ret =
-        gIndexedDBCipherKeyManager->RemoveAllKeysWithStorageId(storageId);
-
-    MOZ_ASSERT(ret);
   }
 }
 
@@ -14761,12 +14647,8 @@ nsresult FactoryOp::Open() {
 
   const DatabaseMetadata& metadata = mCommonParams.metadata();
 
-  // mDatabaseId is specifically more qualified than mStorageId.
-  // mStorageId identifies origin uniquely whereas mDatabaseId
-  // uniquely identifies databases uniquely within an origin.
-  mDatabaseId =
-      (mStorageId = QuotaManager::StorageId::Serialize(
-           mOriginMetadata.mOrigin, metadata.persistenceType(), Client::IDB));
+  QuotaManager::GetStorageId(metadata.persistenceType(),
+                             mOriginMetadata.mOrigin, Client::IDB, mDatabaseId);
 
   mDatabaseId.Append('*');
   mDatabaseId.Append(NS_ConvertUTF16toUTF8(metadata.name()));
@@ -15089,15 +14971,6 @@ nsresult FactoryOp::FinishOpen() {
   QuotaManager* const quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  if (mInPrivateBrowsing) {
-    if (gIndexedDBCipherKeyManager == nullptr) {
-      gIndexedDBCipherKeyManager = new IndexedDBCipherKeyManager();
-    }
-
-    gIndexedDBCipherKeyManager->Ensure(mStorageId,
-                                       mCommonParams.metadata().name());
-  }
-
   // Need to get database file path before opening the directory.
   // XXX: For what reason?
   QM_TRY_UNWRAP(mDatabaseFilePath,
@@ -15379,10 +15252,22 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
       CloneFileAndAppend(*dbDirectory, databaseFilenameBase +
                                            kFileManagerDirectoryNameSuffix));
 
+  IndexedDatabaseManager* const idm = IndexedDatabaseManager::Get();
+  MOZ_ASSERT(idm);
+
+  SafeRefPtr<DatabaseFileManager> fileManager = idm->GetFileManager(
+      persistenceType, mOriginMetadata.mOrigin, databaseName);
+
+  if (!fileManager) {
+    fileManager = MakeSafeRefPtr<DatabaseFileManager>(
+        persistenceType, mOriginMetadata, databaseName, mDatabaseId,
+        mEnforcingQuota, mInPrivateBrowsing);
+  }
+
   Maybe<const CipherKey> maybeKey =
-      mInPrivateBrowsing ? gIndexedDBCipherKeyManager->Get(
-                               mStorageId, mCommonParams.metadata().name())
-                         : Nothing();
+      mInPrivateBrowsing
+          ? Some(fileManager->MutableCipherKeyManagerRef().Ensure())
+          : Nothing();
 
   MOZ_RELEASE_ASSERT(mInPrivateBrowsing == maybeKey.isSome());
 
@@ -15415,28 +15300,13 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
   QM_TRY(OkIf(mMetadata->mCommonMetadata.version() <= mRequestedVersion),
          NS_ERROR_DOM_INDEXEDDB_VERSION_ERR);
 
-  QM_TRY_UNWRAP(
-      mFileManager,
-      ([this, persistenceType, &databaseName, &fmDirectory, &connection]()
-           -> mozilla::Result<SafeRefPtr<DatabaseFileManager>, nsresult> {
-        IndexedDatabaseManager* const mgr = IndexedDatabaseManager::Get();
-        MOZ_ASSERT(mgr);
+  if (!fileManager->Initialized()) {
+    QM_TRY(MOZ_TO_RESULT(fileManager->Init(fmDirectory, *connection)));
 
-        SafeRefPtr<DatabaseFileManager> fileManager = mgr->GetFileManager(
-            persistenceType, mOriginMetadata.mOrigin, databaseName);
+    idm->AddFileManager(fileManager.clonePtr());
+  }
 
-        if (!fileManager) {
-          fileManager = MakeSafeRefPtr<DatabaseFileManager>(
-              persistenceType, mOriginMetadata, databaseName, mDatabaseId,
-              mEnforcingQuota, mInPrivateBrowsing);
-
-          QM_TRY(MOZ_TO_RESULT(fileManager->Init(fmDirectory, *connection)));
-
-          mgr->AddFileManager(fileManager.clonePtr());
-        }
-
-        return fileManager;
-      }()));
+  mFileManager = std::move(fileManager);
 
   // Must close connection before dispatching otherwise we might race with the
   // connection thread which needs to open the same database.
@@ -16089,8 +15959,7 @@ void OpenDatabaseOp::EnsureDatabaseActor() {
   }
 
   Maybe<const CipherKey> maybeKey =
-      mInPrivateBrowsing ? gIndexedDBCipherKeyManager->Get(
-                               mStorageId, mCommonParams.metadata().name())
+      mInPrivateBrowsing ? mFileManager->MutableCipherKeyManagerRef().Get()
                          : Nothing();
 
   MOZ_RELEASE_ASSERT(mInPrivateBrowsing == maybeKey.isSome());
@@ -16397,10 +16266,26 @@ void DeleteDatabaseOp::LoadPreviousVersion(nsIFile& aDatabaseFile) {
     return;
   }
 
-  const auto maybeKey = mInPrivateBrowsing
-                            ? gIndexedDBCipherKeyManager->Get(
-                                  mStorageId, mCommonParams.metadata().name())
-                            : Nothing();
+  IndexedDatabaseManager* const idm = IndexedDatabaseManager::Get();
+  MOZ_ASSERT(idm);
+
+  const PersistenceType persistenceType =
+      mCommonParams.metadata().persistenceType();
+  const nsAString& databaseName = mCommonParams.metadata().name();
+
+  SafeRefPtr<DatabaseFileManager> fileManager = idm->GetFileManager(
+      persistenceType, mOriginMetadata.mOrigin, databaseName);
+
+  if (!fileManager) {
+    fileManager = MakeSafeRefPtr<DatabaseFileManager>(
+        persistenceType, mOriginMetadata, databaseName, mDatabaseId,
+        mEnforcingQuota, mInPrivateBrowsing);
+  }
+
+  const auto maybeKey =
+      mInPrivateBrowsing
+          ? Some(fileManager->MutableCipherKeyManagerRef().Ensure())
+          : Nothing();
 
   MOZ_RELEASE_ASSERT(mInPrivateBrowsing == maybeKey.isSome());
 
@@ -16648,8 +16533,6 @@ nsresult DeleteDatabaseOp::VersionChangeOp::RunOnIOThread() {
   const PersistenceType& persistenceType =
       mDeleteDatabaseOp->mCommonParams.metadata().persistenceType();
 
-  const auto& databaseName = mDeleteDatabaseOp->mCommonParams.metadata().name();
-
   QuotaManager* quotaManager =
       mDeleteDatabaseOp->mEnforcingQuota ? QuotaManager::Get() : nullptr;
 
@@ -16668,12 +16551,6 @@ nsresult DeleteDatabaseOp::VersionChangeOp::RunOnIOThread() {
       mDeleteDatabaseOp->mCommonParams.metadata().name());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
-  }
-
-  if (mDeleteDatabaseOp->mInPrivateBrowsing) {
-    DebugOnly<bool> ok = gIndexedDBCipherKeyManager->RemoveKey(
-        mDeleteDatabaseOp->mStorageId, databaseName);
-    MOZ_ASSERT(ok);
   }
 
   rv = mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL);
@@ -18811,6 +18688,7 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
           }
 
           const DatabaseFileInfo& fileInfo = storedFileInfo.GetFileInfo();
+          const DatabaseFileManager& fileManager = fileInfo.Manager();
 
           const auto file = fileHelper->GetFile(fileInfo);
           QM_TRY(OkIf(file), NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR,
@@ -18823,40 +18701,30 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
           nsCString fileKeyId;
           fileKeyId.AppendInt(fileInfo.Id());
 
-          const auto& storageId = QuotaManager::StorageId::Serialize(
-              mOriginMetadata.mOrigin, mOriginMetadata.mPersistenceType,
-              Client::IDB);
-
           const auto maybeKey =
-              Transaction()
-                      .GetDatabase()
-                      .GetFileManager()
-                      .IsInPrivateBrowsingMode()
-                  ? gIndexedDBCipherKeyManager->Get(
-                        storageId, fileInfo.Manager().DatabaseName(), fileKeyId)
+              fileManager.IsInPrivateBrowsingMode()
+                  ? fileManager.MutableCipherKeyManagerRef().Get(fileKeyId)
                   : Nothing();
 
-          QM_TRY(
-              MOZ_TO_RESULT(fileHelper->CreateFileFromStream(
-                                *file, *journalFile, *inputStream,
-                                storedFileInfo.ShouldCompress(), maybeKey))
-                  .mapErr([](const nsresult rv) {
-                    if (NS_ERROR_GET_MODULE(rv) !=
-                        NS_ERROR_MODULE_DOM_INDEXEDDB) {
-                      IDB_REPORT_INTERNAL_ERR();
-                      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-                    }
-                    return rv;
-                  }),
-              QM_PROPAGATE,
-              ([this, &file = *file, &journalFile = *journalFile](const auto) {
-                // Try to remove the file if the copy failed.
-                QM_TRY(MOZ_TO_RESULT(Transaction()
-                                         .GetDatabase()
-                                         .GetFileManager()
-                                         .SyncDeleteFile(file, journalFile)),
-                       QM_VOID);
-              }));
+          QM_TRY(MOZ_TO_RESULT(fileHelper->CreateFileFromStream(
+                                   *file, *journalFile, *inputStream,
+                                   storedFileInfo.ShouldCompress(), maybeKey))
+                     .mapErr([](const nsresult rv) {
+                       if (NS_ERROR_GET_MODULE(rv) !=
+                           NS_ERROR_MODULE_DOM_INDEXEDDB) {
+                         IDB_REPORT_INTERNAL_ERR();
+                         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+                       }
+                       return rv;
+                     }),
+                 QM_PROPAGATE,
+                 ([&fileManager, &file = *file,
+                   &journalFile = *journalFile](const auto) {
+                   // Try to remove the file if the copy failed.
+                   QM_TRY(MOZ_TO_RESULT(
+                              fileManager.SyncDeleteFile(file, journalFile)),
+                          QM_VOID);
+                 }));
 
           storedFileInfo.NotifyWriteSucceeded();
         }

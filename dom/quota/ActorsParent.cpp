@@ -2551,20 +2551,6 @@ bool RecvShutdownQuotaManager() {
   return true;
 }
 
-nsCString QuotaManager::StorageId::Serialize(const nsACString& aOrigin,
-                                             PersistenceType aPType,
-                                             Client::Type aCType) {
-  nsAutoCString str;
-
-  str.AppendInt(aPType);
-  str.Append('*');
-  str.Append(aOrigin);
-  str.Append('*');
-  str.AppendInt(aCType);
-
-  return str;
-}
-
 QuotaManager::Observer* QuotaManager::Observer::sInstance = nullptr;
 
 // static
