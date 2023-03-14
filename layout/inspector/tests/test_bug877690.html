@@ -8,7 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=877690
 <title>Test for InspectorUtils.getCSSValuesForProperty</title>
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-<script type="application/javascript">
+<script>
 
 /** Test for InspectorUtils.getCSSValuesForProperty **/
 
@@ -18,6 +18,9 @@ const InspectorUtils = SpecialPowers.InspectorUtils;
 function testValues(values, expected) {
   values.sort();
   expected.sort();
+
+  info(JSON.stringify([...values]));
+  info(JSON.stringify(expected));
 
   if (values.length !== expected.length) {
     return false;
@@ -219,9 +222,10 @@ function do_test() {
   var expected = [ "normal", "none", "counter", "counters",
                    "attr", "open-quote", "close-quote", "no-open-quote",
                    "no-close-quote", "inherit", "initial", "unset", "revert",
-                   "revert-layer", "-moz-alt-content", "image-set", "url" ];
+                   "revert-layer", "-moz-alt-content", "-moz-label-content", "image-set", "url", "-moz-element", "-moz-image-rect" ]
+    .concat(allGradients);
   var values = InspectorUtils.getCSSValuesForProperty("content");
-  ok(testValues(values, expected), "property counter's values");
+  ok(testValues(values, expected), "property content's values");
 
   // Regression test for bug 1255369.
   var expected = ["none", "decimal", "decimal-leading-zero", "arabic-indic", "armenian",
