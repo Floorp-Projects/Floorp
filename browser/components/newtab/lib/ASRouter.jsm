@@ -97,7 +97,7 @@ const JEXL_PROVIDER_CACHE = new Set(["snippets"]);
 
 // To observe the app locale change notification.
 const TOPIC_INTL_LOCALE_CHANGED = "intl:app-locales-changed";
-const TOPIC_EXPERIMENT_ENROLLMENT_CHANGED = "nimbus:enrollments-updated";
+const TOPIC_EXPERIMENT_FORCE_ENROLLED = "nimbus:force-enroll";
 // To observe the pref that controls if ASRouter should use the remote Fluent files for l10n.
 const USE_REMOTE_L10N_PREF =
   "browser.newtabpage.activity-stream.asrouter.useRemoteL10n";
@@ -627,7 +627,7 @@ class _ASRouter {
     this.isUnblockedMessage = this.isUnblockedMessage.bind(this);
     this.unblockAll = this.unblockAll.bind(this);
     this.forceWNPanel = this.forceWNPanel.bind(this);
-    this._onExperimentEnrollmentsUpdated = this._onExperimentEnrollmentsUpdated.bind(
+    this._onExperimentForceEnrolled = this._onExperimentForceEnrolled.bind(
       this
     );
     this.forcePBWindow = this.forcePBWindow.bind(this);
@@ -1046,8 +1046,8 @@ class _ASRouter {
     lazy.SpecialMessageActions.blockMessageById = this.blockMessageById;
     Services.obs.addObserver(this._onLocaleChanged, TOPIC_INTL_LOCALE_CHANGED);
     Services.obs.addObserver(
-      this._onExperimentEnrollmentsUpdated,
-      TOPIC_EXPERIMENT_ENROLLMENT_CHANGED
+      this._onExperimentForceEnrolled,
+      TOPIC_EXPERIMENT_FORCE_ENROLLED
     );
     Services.prefs.addObserver(USE_REMOTE_L10N_PREF, this);
     // sets .initialized to true and resolves .waitForInitialized promise
@@ -1079,8 +1079,8 @@ class _ASRouter {
       TOPIC_INTL_LOCALE_CHANGED
     );
     Services.obs.removeObserver(
-      this._onExperimentEnrollmentsUpdated,
-      TOPIC_EXPERIMENT_ENROLLMENT_CHANGED
+      this._onExperimentForceEnrolled,
+      TOPIC_EXPERIMENT_FORCE_ENROLLED
     );
     Services.prefs.removeObserver(USE_REMOTE_L10N_PREF, this);
     // If we added any CFR recommendations, they need to be removed
@@ -2029,13 +2029,14 @@ class _ASRouter {
     await lazy.ToolbarPanelHub._hideToolbarButton(win);
   }
 
-  async _onExperimentEnrollmentsUpdated() {
+  async _onExperimentForceEnrolled(subject, topic, slug) {
     const experimentProvider = this.state.providers.find(
       p => p.id === "messaging-experiments"
     );
-    if (!experimentProvider?.enabled) {
+    if (!experimentProvider.enabled) {
       return;
     }
+
     await this.loadMessagesFromAllProviders([experimentProvider]);
   }
 
