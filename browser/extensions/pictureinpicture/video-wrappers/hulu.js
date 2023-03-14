@@ -33,7 +33,7 @@ class PictureInPictureVideoWrapper {
     if (container) {
       updateCaptionsFunction("");
       const callback = function(mutationsList, observer) {
-        let text = container.querySelector(".CaptionBox").innerText;
+        let text = container.innerText;
         updateCaptionsFunction(text);
       };
 
