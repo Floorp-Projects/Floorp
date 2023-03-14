@@ -21,6 +21,7 @@ CombinedStacks::CombinedStacks() : CombinedStacks(kMaxChromeStacksKept) {}
 CombinedStacks::CombinedStacks(size_t aMaxStacksCount)
     : mNextIndex(0), mMaxStacksCount(aMaxStacksCount) {}
 
+size_t CombinedStacks::GetMaxStacksCount() const { return mMaxStacksCount; }
 size_t CombinedStacks::GetModuleCount() const { return mModules.size(); }
 
 const Telemetry::ProcessedStack::Module& CombinedStacks::GetModule(

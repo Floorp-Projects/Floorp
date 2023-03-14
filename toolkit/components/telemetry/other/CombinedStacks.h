@@ -40,6 +40,7 @@ class CombinedStacks {
   size_t GetStackCount() const;
   size_t SizeOfExcludingThis() const;
   void RemoveStack(unsigned aIndex);
+  size_t GetMaxStacksCount() const;
 
   /** Clears the contents of vectors and resets the index. */
   void Clear();
