@@ -201,6 +201,102 @@ add_task(async function test_library_history_telemetry() {
   TelemetryTestUtils.assertHistogram(cumulativeSearchesHistogram, 4, 1);
   info("Cumulative search telemetry looks right");
 
+  synthesizeClickOnSelectedTreeCell(gLibrary.ContentTree.view, {
+    button: 2,
+    type: "contextmenu",
+  });
+
+  TelemetryTestUtils.assertScalarUnset(
+    TelemetryTestUtils.getProcessScalars("parent", true, true),
+    "library.link"
+  );
+
+  let openOption = document.getElementById("placesContext_open");
+  openOption.click();
+
+  TelemetryTestUtils.assertKeyedScalar(
+    TelemetryTestUtils.getProcessScalars("parent", true, true),
+    "library.link",
+    "history",
+    1
+  );
+
+  synthesizeClickOnSelectedTreeCell(gLibrary.ContentTree.view, {
+    button: 2,
+    type: "contextmenu",
+  });
+
+  TelemetryTestUtils.assertScalarUnset(
+    TelemetryTestUtils.getProcessScalars("parent", true, true),
+    "library.link"
+  );
+
+  let openNewTabOption = document.getElementById("placesContext_open:newtab");
+  openNewTabOption.click();
+
+  TelemetryTestUtils.assertKeyedScalar(
+    TelemetryTestUtils.getProcessScalars("parent", true, true),
+    "library.link",
+    "history",
+    1
+  );
+
+  let newWinOpened = BrowserTestUtils.waitForNewWindow();
+
+  synthesizeClickOnSelectedTreeCell(gLibrary.ContentTree.view, {
+    button: 2,
+    type: "contextmenu",
+  });
+
+  TelemetryTestUtils.assertScalarUnset(
+    TelemetryTestUtils.getProcessScalars("parent", true, true),
+    "library.link"
+  );
+
+  let openNewWindowOption = document.getElementById(
+    "placesContext_open:newwindow"
+  );
+  openNewWindowOption.click();
+
+  let newWin = await newWinOpened;
+
+  TelemetryTestUtils.assertKeyedScalar(
+    TelemetryTestUtils.getProcessScalars("parent", true, true),
+    "library.link",
+    "history",
+    1
+  );
+
+  await BrowserTestUtils.closeWindow(newWin);
+
+  let newPrivateWinOpened = BrowserTestUtils.waitForNewWindow();
+
+  synthesizeClickOnSelectedTreeCell(gLibrary.ContentTree.view, {
+    button: 2,
+    type: "contextmenu",
+  });
+
+  TelemetryTestUtils.assertScalarUnset(
+    TelemetryTestUtils.getProcessScalars("parent", true, true),
+    "library.link"
+  );
+
+  let openNewPrivateWindowOption = document.getElementById(
+    "placesContext_open:newprivatewindow"
+  );
+  openNewPrivateWindowOption.click();
+
+  let newPrivateWin = await newPrivateWinOpened;
+
+  TelemetryTestUtils.assertKeyedScalar(
+    TelemetryTestUtils.getProcessScalars("parent", true, true),
+    "library.link",
+    "history",
+    1
+  );
+
+  await BrowserTestUtils.closeWindow(newPrivateWin);
+
   cumulativeSearchesHistogram.clear();
   await promiseLibraryClosed(gLibrary);
   await SpecialPowers.popPrefEnv();
