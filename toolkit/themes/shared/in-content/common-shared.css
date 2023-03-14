@@ -436,19 +436,25 @@ xul|tab:focus-visible > .tab-middle > .tab-text {
 
 html|select:not([size], [multiple]) {
   background-image: url("chrome://global/skin/icons/arrow-down-12.svg");
-  background-position: right 3px center;
+  background-position: right 19px center;
   background-repeat: no-repeat;
   background-size: auto 12px;
   -moz-context-properties: fill;
   fill: currentColor;
-  font-size: inherit;
-  line-height: 2.1;
-  padding-inline: 5px 24px;
+  font: inherit;
+  font-weight: 600;
+
+  /* The following padding matches how a menulist is internally spaced.
+   * 15px is the menulist's standard padding-inline, 3px is for
+   * the internal label margin, 12px is the dropmarker's width
+   * and 4px is the dropmarker's margin-inline-end. */
+  padding-inline-start: calc(15px + 3px);
+  padding-inline-end: calc(15px + 12px + 4px);
   text-overflow: ellipsis;
 }
 
 html|select:not([size], [multiple]):dir(rtl) {
-  background-position-x: left 3px;
+  background-position-x: left 19px;
 }
 
 html|select:not([size], [multiple]) > html|option {
