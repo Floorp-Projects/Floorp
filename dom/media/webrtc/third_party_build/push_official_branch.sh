@@ -24,6 +24,8 @@ source dom/media/webrtc/third_party_build/use_config_env.sh
 # * o pipefail: All stages of all pipes should succeed.
 set -eEo pipefail
 
+cd $MOZ_LIBWEBRTC_SRC
+
 echo "Creating branch '$MOZ_LIBWEBRTC_OFFICIAL_BRANCH'"
 git branch $MOZ_LIBWEBRTC_OFFICIAL_BRANCH
 echo "Pushing the branch to https://github.com/mozilla/libwebrtc"
