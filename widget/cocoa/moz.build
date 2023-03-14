@@ -33,6 +33,7 @@ EXPORTS += [
 UNIFIED_SOURCES += [
     "AppearanceOverride.mm",
     "GfxInfo.mm",
+    "MOZDynamicCursor.mm",
     "MOZIconHelper.mm",
     "MOZMenuOpeningCoordinator.mm",
     "NativeKeyBindings.mm",
@@ -44,7 +45,6 @@ UNIFIED_SOURCES += [
     "nsCocoaUtils.mm",
     "nsCocoaWindow.mm",
     "nsColorPicker.mm",
-    "nsCursorManager.mm",
     "nsDeviceContextSpecX.mm",
     "nsFilePicker.mm",
     "nsLookAndFeel.mm",

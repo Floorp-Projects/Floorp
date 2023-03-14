@@ -4,18 +4,18 @@
 
 #include "imgIContainer.h"
 #include "nsCocoaUtils.h"
-#include "nsCursorManager.h"
+#include "MOZDynamicCursor.h"
 #include "nsObjCExceptions.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIFile.h"
 #include <math.h>
 
-static nsCursorManager* gInstance;
+static MOZDynamicCursor* gInstance;
 static CGFloat sCurrentCursorScaleFactor = 0.0f;
 static nsIWidget::Cursor sCurrentCursor;
 static constexpr nsCursor kCustomCursor = eCursorCount;
 
-@interface nsCursorManager (PrivateMethods)
+@interface MOZDynamicCursor (PrivateMethods)
 + (NSCursor*)freshCursorWithType:(nsCursor)aCursor;
 - (NSCursor*)cursorWithType:(nsCursor)aCursor;
 
@@ -28,11 +28,17 @@ static constexpr nsCursor kCustomCursor = eCursorCount;
 + (NSCursor*)cursorWithImageNamed:(NSString*)imageName hotSpot:(NSPoint)aPoint;
 @end
 
-@implementation nsCursorManager
+@interface NSCursor (Undocumented)
+// busyButClickableCursor is an undocumented NSCursor API, but has been in use since
+// at least OS X 10.4 and through 10.9.
++ (NSCursor*)busyButClickableCursor;
+@end
 
-+ (nsCursorManager*)sharedInstance {
+@implementation MOZDynamicCursor
+
++ (MOZDynamicCursor*)sharedInstance {
   if (!gInstance) {
-    gInstance = [[nsCursorManager alloc] init];
+    gInstance = [[MOZDynamicCursor alloc] init];
   }
   return gInstance;
 }
@@ -150,11 +156,10 @@ static constexpr nsCursor kCustomCursor = eCursorCount;
     mCurrentCursorType = aType;
   }
 
-  if (mCurrentCursor != aMacCursor || [NSCursor currentCursor] != mCurrentCursor) {
-    [aMacCursor retain];
-    [aMacCursor set];
+  if (mCurrentCursor != aMacCursor) {
     [mCurrentCursor release];
-    mCurrentCursor = aMacCursor;
+    mCurrentCursor = [aMacCursor retain];
+    [mCurrentCursor set];
   }
 }
 
@@ -162,10 +167,6 @@ static constexpr nsCursor kCustomCursor = eCursorCount;
           widgetScaleFactor:(CGFloat)scaleFactor {
   // As the user moves the mouse, this gets called repeatedly with the same aCursorImage
   if (sCurrentCursor == aCursor && sCurrentCursorScaleFactor == scaleFactor && mCurrentCursor) {
-    // Native dragging can unset our cursor apparently (see bug 1739352).
-    if (MOZ_UNLIKELY([NSCursor currentCursor] != mCurrentCursor)) {
-      [mCurrentCursor set];
-    }
     return NS_OK;
   }
 
@@ -207,10 +208,17 @@ static constexpr nsCursor kCustomCursor = eCursorCount;
 - (NSCursor*)cursorWithType:(enum nsCursor)aCursor {
   NSCursor* result = [mCursors objectForKey:[NSNumber numberWithInt:aCursor]];
   if (!result) {
-    result = [nsCursorManager freshCursorWithType:aCursor];
+    result = [MOZDynamicCursor freshCursorWithType:aCursor];
     [mCursors setObject:result forKey:[NSNumber numberWithInt:aCursor]];
   }
   return result;
+}
+
+// This method gets called by ChildView's cursor rect (or rather its underlying
+// NSTrackingArea) whenever the mouse enters it, for example after a dragging
+// operation, after a menu closes, or when the mouse enters a window.
+- (void)set {
+  [mCurrentCursor set];
 }
 
 - (void)dealloc {

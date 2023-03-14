@@ -2,14 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsCursorManager_h_
-#define nsCursorManager_h_
+#ifndef MOZDynamicCursor_h_
+#define MOZDynamicCursor_h_
 
 #import <Cocoa/Cocoa.h>
 
 #include "nsIWidget.h"
 
-@interface nsCursorManager : NSObject {
+// MOZDynamicCursor.sharedInstance is a singleton NSCursor object whose
+// underlying cursor can be changed at runtime.
+// It can be used in an NSView cursorRect so that the system will call
+// -[NSCursor set] on it at the right moments, for example when the
+// mouse moves into a window or when the cursor needs to be set after
+// a drag operation or when a context menu closes.
+@interface MOZDynamicCursor : NSCursor {
  @private
   NSMutableDictionary* mCursors;
   NSCursor* mCurrentCursor;
@@ -25,13 +31,7 @@
 // a custom cursor did not succeed.
 - (void)setNonCustomCursor:(const nsIWidget::Cursor&)aCursor;
 
-+ (nsCursorManager*)sharedInstance;
++ (MOZDynamicCursor*)sharedInstance;
 @end
 
-@interface NSCursor (Undocumented)
-// busyButClickableCursor is an undocumented NSCursor API, but has been in use since
-// at least OS X 10.4 and through 10.9.
-+ (NSCursor*)busyButClickableCursor;
-@end
-
-#endif  // nsCursorManager_h_
+#endif  // MOZDynamicCursor_h_
