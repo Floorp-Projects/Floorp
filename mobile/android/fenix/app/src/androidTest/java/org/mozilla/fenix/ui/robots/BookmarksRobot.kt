@@ -32,8 +32,17 @@ import org.hamcrest.Matchers.containsString
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithDescriptionExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
+import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
@@ -90,13 +99,17 @@ class BookmarksRobot {
 
     fun verifyCopySnackBarText() = assertSnackBarText("URL copied")
 
-    fun verifyEditBookmarksView() = assertEditBookmarksView()
-
-    fun verifyBookmarkNameEditBox() = assertBookmarkNameEditBox()
-
-    fun verifyBookmarkURLEditBox() = assertBookmarkURLEditBox()
-
-    fun verifyParentFolderSelector() = assertBookmarkFolderSelector()
+    fun verifyEditBookmarksView() {
+        assertItemWithDescriptionExists(itemWithDescription("Navigate up"))
+        assertItemContainingTextExists(itemWithText(getStringResource(R.string.edit_bookmark_fragment_title)))
+        assertItemWithResIdExists(
+            itemWithResId("$packageName:id/delete_bookmark_button"),
+            itemWithResId("$packageName:id/save_bookmark_button"),
+            itemWithResId("$packageName:id/bookmarkNameEdit"),
+            itemWithResId("$packageName:id/bookmarkUrlEdit"),
+            itemWithResId("$packageName:id/bookmarkParentFolderSelector"),
+        )
+    }
 
     fun verifyKeyboardHidden() = assertKeyboardVisibility(isExpectedToBeVisible = false)
 
@@ -265,6 +278,24 @@ class BookmarksRobot {
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
         }
+
+        fun closeEditBookmarkSection(interact: BookmarksRobot.() -> Unit): BookmarksRobot.Transition {
+            goBackButton().click()
+
+            BookmarksRobot().interact()
+            return BookmarksRobot.Transition()
+        }
+
+        fun openBookmarkWithTitle(bookmarkTitle: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            itemWithResIdAndText("$packageName:id/title", bookmarkTitle)
+                .also {
+                    it.waitForExists(waitingTime)
+                    it.clickAndWaitForNewWindow(waitingTimeShort)
+                }
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
     }
 }
 
@@ -394,21 +425,6 @@ private fun assertUndoDeleteSnackBarButton() =
 
 private fun assertSnackBarText(text: String) =
     snackBarText().check(matches(withText(containsString(text))))
-
-private fun assertEditBookmarksView() = onView(withText("Edit bookmark"))
-    .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-
-private fun assertBookmarkNameEditBox() =
-    onView(withId(R.id.bookmarkNameEdit))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-
-private fun assertBookmarkFolderSelector() =
-    onView(withId(R.id.bookmarkParentFolderSelector))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-
-private fun assertBookmarkURLEditBox() =
-    onView(withId(R.id.bookmarkUrlEdit))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun assertKeyboardVisibility(isExpectedToBeVisible: Boolean) =
     assertEquals(

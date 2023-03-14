@@ -75,7 +75,7 @@ class ContextMenusTest {
             verifyLinkContextMenuItems(genericURL.url)
             clickContextOpenLinkInNewTab()
             verifySnackBarText("New tab opened")
-            snackBarButtonClick()
+            clickSnackbarButton("SWITCH")
             verifyUrl(genericURL.url.toString())
         }.openTabDrawer {
             verifyNormalModeSelected()
@@ -99,7 +99,7 @@ class ContextMenusTest {
             verifyLinkContextMenuItems(genericURL.url)
             clickContextOpenLinkInPrivateTab()
             verifySnackBarText("New private tab opened")
-            snackBarButtonClick()
+            clickSnackbarButton("SWITCH")
             verifyUrl(genericURL.url.toString())
         }.openTabDrawer {
             verifyPrivateModeSelected()
@@ -179,7 +179,7 @@ class ContextMenusTest {
             verifyLinkImageContextMenuItems(imageResource.url)
             clickContextOpenImageNewTab()
             verifySnackBarText("New tab opened")
-            snackBarButtonClick()
+            clickSnackbarButton("SWITCH")
             verifyUrl(imageResource.url.toString())
         }
     }

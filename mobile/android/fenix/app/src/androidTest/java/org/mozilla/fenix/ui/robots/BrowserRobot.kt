@@ -395,15 +395,12 @@ class BrowserRobot {
         searchText.click()
     }
 
-    fun snackBarButtonClick() {
-        val switchButton =
-            mDevice.findObject(
-                UiSelector()
-                    .resourceId("$packageName:id/snackbar_btn"),
-            )
-        switchButton.waitForExists(waitingTime)
-        switchButton.clickAndWaitForNewWindow(waitingTime)
-    }
+    fun clickSnackbarButton(expectedText: String) =
+        itemWithResIdAndText("$packageName:id/snackbar_btn", expectedText)
+            .also {
+                it.waitForExists(waitingTime)
+                it.click()
+            }
 
     fun clickSubmitLoginButton() = clickPageObject(webPageItemWithResourceId("submit"))
 

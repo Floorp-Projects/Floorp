@@ -43,7 +43,7 @@ class BookmarksTest {
     private val bookmarksFolderName = "New Folder"
     private val testBookmark = object {
         var title: String = "Bookmark title"
-        var url: String = "https://www.test.com"
+        var url: String = "https://www.example.com"
     }
 
     @get:Rule
@@ -171,28 +171,53 @@ class BookmarksTest {
 
     @SmokeTest
     @Test
+    fun cancelEditBookmarkTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+        }.openThreeDotMenu {
+        }.bookmarkPage {
+            clickSnackbarButton("EDIT")
+        }
+        bookmarksMenu {
+            verifyEditBookmarksView()
+            changeBookmarkTitle(testBookmark.title)
+            changeBookmarkUrl(testBookmark.url)
+        }.closeEditBookmarkSection {
+        }
+        browserScreen {
+        }.openThreeDotMenu {
+        }.openBookmarks {
+            verifyBookmarkTitle(defaultWebPage.title)
+            verifyBookmarkedURL(defaultWebPage.url.toString())
+        }
+    }
+
+    @SmokeTest
+    @Test
     fun editBookmarkTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         browserScreen {
             createBookmark(defaultWebPage.url)
         }.openThreeDotMenu {
+        }.editBookmarkPage {
+            verifyEditBookmarksView()
+            changeBookmarkTitle(testBookmark.title)
+            changeBookmarkUrl(testBookmark.url)
+            saveEditBookmark()
+        }
+        browserScreen {
+        }.openThreeDotMenu {
         }.openBookmarks {
             registerAndCleanupIdlingResources(
                 RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list), 2),
             ) {}
-        }.openThreeDotMenu(defaultWebPage.url) {
-        }.clickEdit {
-            verifyEditBookmarksView()
-            verifyBookmarkNameEditBox()
-            verifyBookmarkURLEditBox()
-            verifyParentFolderSelector()
-            changeBookmarkTitle(testBookmark.title)
-            changeBookmarkUrl(testBookmark.url)
-            saveEditBookmark()
             verifyBookmarkTitle(testBookmark.title)
             verifyBookmarkedURL(testBookmark.url)
-            verifyKeyboardHidden()
+        }.openBookmarkWithTitle(testBookmark.title) {
+            verifyUrl("example.com")
         }
     }
 

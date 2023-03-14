@@ -181,12 +181,12 @@ class SearchTest {
         }.submitQuery(queryString) {
             longClickLink("Link 1")
             clickContextOpenLinkInNewTab()
-            snackBarButtonClick()
+            clickSnackbarButton("SWITCH")
             waitForPageToLoad()
             pressBack()
             longClickLink("Link 2")
             clickContextOpenLinkInNewTab()
-            snackBarButtonClick()
+            clickSnackbarButton("SWITCH")
             waitForPageToLoad()
         }.openTabDrawer {
         }.openTabsListThreeDotMenu {
@@ -219,22 +219,22 @@ class SearchTest {
         }.submitQuery(queryString) {
             longClickLink("Link 1")
             clickContextOpenLinkInNewTab()
-            snackBarButtonClick()
+            clickSnackbarButton("SWITCH")
             waitForPageToLoad()
             pressBack()
             longClickLink("Link 1")
             clickContextOpenLinkInNewTab()
-            snackBarButtonClick()
+            clickSnackbarButton("SWITCH")
             waitForPageToLoad()
             pressBack()
             longClickLink("Link 2")
             clickContextOpenLinkInNewTab()
-            snackBarButtonClick()
+            clickSnackbarButton("SWITCH")
             waitForPageToLoad()
             pressBack()
             longClickLink("Link 1")
             clickContextOpenLinkInNewTab()
-            snackBarButtonClick()
+            clickSnackbarButton("SWITCH")
             waitForPageToLoad()
         }.openTabDrawer {
         }.openTabsListThreeDotMenu {
@@ -339,12 +339,12 @@ class SearchTest {
         }.submitQuery(queryString) {
             longClickLink("Link 1")
             clickContextOpenLinkInNewTab()
-            snackBarButtonClick()
+            clickSnackbarButton("SWITCH")
             waitForPageToLoad()
             mDevice.pressBack()
             longClickLink("Link 2")
             clickContextOpenLinkInNewTab()
-            snackBarButtonClick()
+            clickSnackbarButton("SWITCH")
             waitForPageToLoad()
         }.openTabDrawer {
         }.openTabsListThreeDotMenu {
@@ -386,12 +386,12 @@ class SearchTest {
         }.submitQuery(queryString) {
             longClickLink("Link 1")
             clickContextOpenLinkInNewTab()
-            snackBarButtonClick()
+            clickSnackbarButton("SWITCH")
             waitForPageToLoad()
             mDevice.pressBack()
             longClickLink("Link 2")
             clickContextOpenLinkInNewTab()
-            snackBarButtonClick()
+            clickSnackbarButton("SWITCH")
             waitForPageToLoad()
         }.openTabDrawer {
         }.openTabsListThreeDotMenu {
@@ -434,12 +434,12 @@ class SearchTest {
         }.submitQuery(queryString) {
             longClickLink("Link 1")
             clickContextOpenLinkInNewTab()
-            snackBarButtonClick()
+            clickSnackbarButton("SWITCH")
             waitForPageToLoad()
             mDevice.pressBack()
             longClickLink("Link 2")
             clickContextOpenLinkInNewTab()
-            snackBarButtonClick()
+            clickSnackbarButton("SWITCH")
             waitForPageToLoad()
         }.openTabDrawer {
         }.openTabsListThreeDotMenu {
@@ -487,12 +487,12 @@ class SearchTest {
         }.submitQuery(queryString) {
             longClickLink("Link 1")
             clickContextOpenLinkInNewTab()
-            snackBarButtonClick()
+            clickSnackbarButton("SWITCH")
             waitForPageToLoad()
             mDevice.pressBack()
             longClickLink("Link 2")
             clickContextOpenLinkInNewTab()
-            snackBarButtonClick()
+            clickSnackbarButton("SWITCH")
             waitForPageToLoad()
         }.openTabDrawer {
         }.openTabsListThreeDotMenu {
