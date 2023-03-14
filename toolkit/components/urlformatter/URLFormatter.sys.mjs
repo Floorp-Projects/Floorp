@@ -13,12 +13,9 @@
  *   http[s]://%SERVICE%.mozilla.[com|org]/%LOCALE%/
  */
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const PREF_APP_DISTRIBUTION = "distribution.id";
 const PREF_APP_DISTRIBUTION_VERSION = "distribution.version";
@@ -30,7 +27,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
 });
 
-function nsURLFormatterService() {
+export function nsURLFormatterService() {
   XPCOMUtils.defineLazyGetter(this, "ABI", function UFS_ABI() {
     let ABI = "default";
     try {
@@ -197,5 +194,3 @@ nsURLFormatterService.prototype = {
       : aMsg;
   },
 };
-
-var EXPORTED_SYMBOLS = ["nsURLFormatterService"];
