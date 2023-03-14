@@ -3,19 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["PromptParent"];
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   PromptUtils: "resource://gre/modules/PromptUtils.sys.mjs",
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
 });
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
@@ -31,7 +25,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-XPCOMUtils.defineLazyGetter(lazy, "gTabBrowserLocalization", () => {
+XPCOMUtils.defineLazyGetter(lazy, "gTabBrowserLocalization", function() {
   return new Localization(["browser/tabbrowser.ftl"], true);
 });
 
@@ -52,7 +46,7 @@ XPCOMUtils.defineLazyGetter(lazy, "gTabBrowserLocalization", () => {
  */
 let gBrowserPrompts = new WeakMap();
 
-class PromptParent extends JSWindowActorParent {
+export class PromptParent extends JSWindowActorParent {
   didDestroy() {
     // In the event that the subframe or tab crashed, make sure that
     // we close any active Prompts.
@@ -137,7 +131,7 @@ class PromptParent extends JSWindowActorParent {
     let id = args._remoteId;
 
     switch (message.name) {
-      case "Prompt:Open": {
+      case "Prompt:Open":
         if (
           (args.modalType === Ci.nsIPrompt.MODAL_TYPE_CONTENT &&
             !lazy.contentPromptSubDialog) ||
@@ -148,7 +142,6 @@ class PromptParent extends JSWindowActorParent {
           return this.openContentPrompt(args, id);
         }
         return this.openPromptWithTabDialogBox(args);
-      }
     }
 
     return undefined;

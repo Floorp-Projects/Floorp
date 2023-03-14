@@ -691,7 +691,7 @@ let JSWINDOWACTORS = {
 
   Prompt: {
     parent: {
-      moduleURI: "resource:///actors/PromptParent.jsm",
+      esModuleURI: "resource:///actors/PromptParent.sys.mjs",
     },
     includeChrome: true,
     allFrames: true,
@@ -774,7 +774,7 @@ let JSWINDOWACTORS = {
 
   SwitchDocumentDirection: {
     child: {
-      moduleURI: "resource:///actors/SwitchDocumentDirectionChild.jsm",
+      esModuleURI: "resource:///actors/SwitchDocumentDirectionChild.sys.mjs",
     },
 
     allFrames: true,
