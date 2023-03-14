@@ -12,10 +12,6 @@
 # a new PR will be created to update the GV version and increment the
 # A-C version.
 #
-# When the PR lands, the create-release workflow triggers, which will
-# tag a release, which ultimately results in a full A-C build and push
-# to Maven.
-#
 
 name: "AC - Update GeckoView"
 
