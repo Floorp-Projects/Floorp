@@ -10,14 +10,19 @@
 #include "nsCocoaUtils.h"
 #include "DocAccessibleParent.h"
 
+#include "mozilla/StaticPrefs_accessibility.h"
+
 using namespace mozilla::a11y;
 
 // Generic Rotor Rule
 
-RotorRule::RotorRule(Accessible* aDirectDescendantsFrom)
-    : mDirectDescendantsFrom(aDirectDescendantsFrom) {}
+RotorRule::RotorRule(Accessible* aDirectDescendantsFrom,
+                     const nsString& aSearchText)
+    : mDirectDescendantsFrom(aDirectDescendantsFrom),
+      mSearchText(aSearchText) {}
 
-RotorRule::RotorRule() : mDirectDescendantsFrom(nullptr) {}
+RotorRule::RotorRule(const nsString& aSearchText)
+    : mDirectDescendantsFrom(nullptr), mSearchText(aSearchText) {}
 
 uint16_t RotorRule::Match(Accessible* aAcc) {
   uint16_t result = nsIAccessibleTraversalRule::FILTER_IGNORE;
@@ -34,15 +39,51 @@ uint16_t RotorRule::Match(Accessible* aAcc) {
     result |= nsIAccessibleTraversalRule::FILTER_MATCH;
   }
 
+  if ((result & nsIAccessibleTraversalRule::FILTER_MATCH) &&
+      !mSearchText.IsEmpty()) {
+    // If we have a non-empty search text, there are some roles
+    // we can safely ignore.
+    switch (aAcc->Role()) {
+      case roles::LANDMARK:
+      case roles::COMBOBOX:
+      case roles::LISTITEM:
+      case roles::COMBOBOX_LIST:
+      case roles::MENUBAR:
+      case roles::MENUPOPUP:
+      case roles::DOCUMENT:
+      case roles::APPLICATION:
+        // XXX: These roles either have AXTitle/AXDescription overridden as
+        // empty, or should never be returned in search text results. This
+        // should be better mapped somewhere.
+        result &= ~nsIAccessibleTraversalRule::FILTER_MATCH;
+        break;
+      default:
+        if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+          // If caching is enabled and we have a non-empty search text,
+          // we can query the cached name to do furhter filtering. If
+          // the cache is disabled this will happen in the post-filter stage
+          // where we send a sync message to content.
+          nsAutoString name;
+          aAcc->Name(name);
+          if (!CaseInsensitiveFindInReadable(mSearchText, name)) {
+            result &= ~nsIAccessibleTraversalRule::FILTER_MATCH;
+          }
+        }
+        break;
+    }
+  }
+
   return result;
 }
 
 // Rotor Role Rule
 
-RotorRoleRule::RotorRoleRule(role aRole, Accessible* aDirectDescendantsFrom)
-    : RotorRule(aDirectDescendantsFrom), mRole(aRole){};
+RotorRoleRule::RotorRoleRule(role aRole, Accessible* aDirectDescendantsFrom,
+                             const nsString& aSearchText)
+    : RotorRule(aDirectDescendantsFrom, aSearchText), mRole(aRole){};
 
-RotorRoleRule::RotorRoleRule(role aRole) : RotorRule(), mRole(aRole){};
+RotorRoleRule::RotorRoleRule(role aRole, const nsString& aSearchText)
+    : RotorRule(aSearchText), mRole(aRole){};
 
 uint16_t RotorRoleRule::Match(Accessible* aAcc) {
   uint16_t result = RotorRule::Match(aAcc);
@@ -62,13 +103,15 @@ uint16_t RotorRoleRule::Match(Accessible* aAcc) {
 // Rotor Mac Role Rule
 
 RotorMacRoleRule::RotorMacRoleRule(NSString* aMacRole,
-                                   Accessible* aDirectDescendantsFrom)
-    : RotorRule(aDirectDescendantsFrom), mMacRole(aMacRole) {
+                                   Accessible* aDirectDescendantsFrom,
+                                   const nsString& aSearchText)
+    : RotorRule(aDirectDescendantsFrom, aSearchText), mMacRole(aMacRole) {
   [mMacRole retain];
 };
 
-RotorMacRoleRule::RotorMacRoleRule(NSString* aMacRole)
-    : RotorRule(), mMacRole(aMacRole) {
+RotorMacRoleRule::RotorMacRoleRule(NSString* aMacRole,
+                                   const nsString& aSearchText)
+    : RotorRule(aSearchText), mMacRole(aMacRole) {
   [mMacRole retain];
 };
 
@@ -93,10 +136,12 @@ uint16_t RotorMacRoleRule::Match(Accessible* aAcc) {
 
 // Rotor Control Rule
 
-RotorControlRule::RotorControlRule(Accessible* aDirectDescendantsFrom)
-    : RotorRule(aDirectDescendantsFrom){};
+RotorControlRule::RotorControlRule(Accessible* aDirectDescendantsFrom,
+                                   const nsString& aSearchText)
+    : RotorRule(aDirectDescendantsFrom, aSearchText){};
 
-RotorControlRule::RotorControlRule() : RotorRule(){};
+RotorControlRule::RotorControlRule(const nsString& aSearchText)
+    : RotorRule(aSearchText){};
 
 uint16_t RotorControlRule::Match(Accessible* aAcc) {
   uint16_t result = RotorRule::Match(aAcc);
@@ -165,10 +210,12 @@ uint16_t RotorControlRule::Match(Accessible* aAcc) {
 
 // Rotor TextEntry Rule
 
-RotorTextEntryRule::RotorTextEntryRule(Accessible* aDirectDescendantsFrom)
-    : RotorRule(aDirectDescendantsFrom){};
+RotorTextEntryRule::RotorTextEntryRule(Accessible* aDirectDescendantsFrom,
+                                       const nsString& aSearchText)
+    : RotorRule(aDirectDescendantsFrom, aSearchText){};
 
-RotorTextEntryRule::RotorTextEntryRule() : RotorRule(){};
+RotorTextEntryRule::RotorTextEntryRule(const nsString& aSearchText)
+    : RotorRule(aSearchText){};
 
 uint16_t RotorTextEntryRule::Match(Accessible* aAcc) {
   uint16_t result = RotorRule::Match(aAcc);
@@ -188,10 +235,12 @@ uint16_t RotorTextEntryRule::Match(Accessible* aAcc) {
 
 // Rotor Link Rule
 
-RotorLinkRule::RotorLinkRule(Accessible* aDirectDescendantsFrom)
-    : RotorRule(aDirectDescendantsFrom){};
+RotorLinkRule::RotorLinkRule(Accessible* aDirectDescendantsFrom,
+                             const nsString& aSearchText)
+    : RotorRule(aDirectDescendantsFrom, aSearchText){};
 
-RotorLinkRule::RotorLinkRule() : RotorRule(){};
+RotorLinkRule::RotorLinkRule(const nsString& aSearchText)
+    : RotorRule(aSearchText){};
 
 uint16_t RotorLinkRule::Match(Accessible* aAcc) {
   uint16_t result = RotorRule::Match(aAcc);
@@ -210,10 +259,12 @@ uint16_t RotorLinkRule::Match(Accessible* aAcc) {
   return result;
 }
 
-RotorVisitedLinkRule::RotorVisitedLinkRule() : RotorLinkRule() {}
+RotorVisitedLinkRule::RotorVisitedLinkRule(const nsString& aSearchText)
+    : RotorLinkRule(aSearchText) {}
 
-RotorVisitedLinkRule::RotorVisitedLinkRule(Accessible* aDirectDescendantsFrom)
-    : RotorLinkRule(aDirectDescendantsFrom) {}
+RotorVisitedLinkRule::RotorVisitedLinkRule(Accessible* aDirectDescendantsFrom,
+                                           const nsString& aSearchText)
+    : RotorLinkRule(aDirectDescendantsFrom, aSearchText) {}
 
 uint16_t RotorVisitedLinkRule::Match(Accessible* aAcc) {
   uint16_t result = RotorLinkRule::Match(aAcc);
@@ -228,11 +279,12 @@ uint16_t RotorVisitedLinkRule::Match(Accessible* aAcc) {
   return result;
 }
 
-RotorUnvisitedLinkRule::RotorUnvisitedLinkRule() : RotorLinkRule() {}
+RotorUnvisitedLinkRule::RotorUnvisitedLinkRule(const nsString& aSearchText)
+    : RotorLinkRule(aSearchText) {}
 
 RotorUnvisitedLinkRule::RotorUnvisitedLinkRule(
-    Accessible* aDirectDescendantsFrom)
-    : RotorLinkRule(aDirectDescendantsFrom) {}
+    Accessible* aDirectDescendantsFrom, const nsString& aSearchText)
+    : RotorLinkRule(aDirectDescendantsFrom, aSearchText) {}
 
 uint16_t RotorUnvisitedLinkRule::Match(Accessible* aAcc) {
   uint16_t result = RotorLinkRule::Match(aAcc);
@@ -250,11 +302,13 @@ uint16_t RotorUnvisitedLinkRule::Match(Accessible* aAcc) {
 // Match Not Rule
 
 RotorNotMacRoleRule::RotorNotMacRoleRule(NSString* aMacRole,
-                                         Accessible* aDirectDescendantsFrom)
-    : RotorMacRoleRule(aMacRole, aDirectDescendantsFrom) {}
+                                         Accessible* aDirectDescendantsFrom,
+                                         const nsString& aSearchText)
+    : RotorMacRoleRule(aMacRole, aDirectDescendantsFrom, aSearchText) {}
 
-RotorNotMacRoleRule::RotorNotMacRoleRule(NSString* aMacRole)
-    : RotorMacRoleRule(aMacRole) {}
+RotorNotMacRoleRule::RotorNotMacRoleRule(NSString* aMacRole,
+                                         const nsString& aSearchText)
+    : RotorMacRoleRule(aMacRole, aSearchText) {}
 
 uint16_t RotorNotMacRoleRule::Match(Accessible* aAcc) {
   uint16_t result = RotorRule::Match(aAcc);
@@ -274,10 +328,12 @@ uint16_t RotorNotMacRoleRule::Match(Accessible* aAcc) {
 
 // Rotor Static Text Rule
 
-RotorStaticTextRule::RotorStaticTextRule(Accessible* aDirectDescendantsFrom)
-    : RotorRule(aDirectDescendantsFrom){};
+RotorStaticTextRule::RotorStaticTextRule(Accessible* aDirectDescendantsFrom,
+                                         const nsString& aSearchText)
+    : RotorRule(aDirectDescendantsFrom, aSearchText){};
 
-RotorStaticTextRule::RotorStaticTextRule() : RotorRule(){};
+RotorStaticTextRule::RotorStaticTextRule(const nsString& aSearchText)
+    : RotorRule(aSearchText){};
 
 uint16_t RotorStaticTextRule::Match(Accessible* aAcc) {
   uint16_t result = RotorRule::Match(aAcc);
@@ -299,11 +355,14 @@ uint16_t RotorStaticTextRule::Match(Accessible* aAcc) {
 // Rotor Heading Level Rule
 
 RotorHeadingLevelRule::RotorHeadingLevelRule(int32_t aLevel,
-                                             Accessible* aDirectDescendantsFrom)
-    : RotorRoleRule(roles::HEADING, aDirectDescendantsFrom), mLevel(aLevel){};
+                                             Accessible* aDirectDescendantsFrom,
+                                             const nsString& aSearchText)
+    : RotorRoleRule(roles::HEADING, aDirectDescendantsFrom, aSearchText),
+      mLevel(aLevel){};
 
-RotorHeadingLevelRule::RotorHeadingLevelRule(int32_t aLevel)
-    : RotorRoleRule(roles::HEADING), mLevel(aLevel){};
+RotorHeadingLevelRule::RotorHeadingLevelRule(int32_t aLevel,
+                                             const nsString& aSearchText)
+    : RotorRoleRule(roles::HEADING, aSearchText), mLevel(aLevel){};
 
 uint16_t RotorHeadingLevelRule::Match(Accessible* aAcc) {
   uint16_t result = RotorRoleRule::Match(aAcc);
@@ -332,29 +391,5 @@ uint16_t RotorLiveRegionRule::Match(Accessible* aAcc) {
       result &= ~nsIAccessibleTraversalRule::FILTER_MATCH;
     }
   }
-  return result;
-}
-
-// Outline Rule
-
-OutlineRule::OutlineRule() : RotorRule(){};
-
-uint16_t OutlineRule::Match(Accessible* aAcc) {
-  uint16_t result = RotorRule::Match(aAcc);
-
-  // if a match was found in the base-class's Match function,
-  // it is valid to consider that match again here.
-  if (result & nsIAccessibleTraversalRule::FILTER_MATCH) {
-    if (aAcc->Role() == roles::OUTLINE) {
-      // if the match is an outline, we ignore all children here
-      // and unmatch the outline itself
-      result &= ~nsIAccessibleTraversalRule::FILTER_MATCH;
-      result |= nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
-    } else if (aAcc->Role() != roles::OUTLINEITEM) {
-      // if the match is not an outline item, we unmatch here
-      result &= ~nsIAccessibleTraversalRule::FILTER_MATCH;
-    }
-  }
-
   return result;
 }

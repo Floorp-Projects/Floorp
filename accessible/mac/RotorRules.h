@@ -16,12 +16,14 @@ using namespace mozilla::a11y;
  */
 class RotorRule : public PivotRule {
  public:
-  explicit RotorRule(Accessible* aDirectDescendantsFrom);
-  explicit RotorRule();
+  explicit RotorRule(Accessible* aDirectDescendantsFrom,
+                     const nsString& aSearchText);
+  explicit RotorRule(const nsString& aSearchText);
   uint16_t Match(Accessible* aAcc) override;
 
  private:
   Accessible* mDirectDescendantsFrom;
+  const nsString& mSearchText;
 };
 
 /**
@@ -29,8 +31,9 @@ class RotorRule : public PivotRule {
  */
 class RotorRoleRule : public RotorRule {
  public:
-  explicit RotorRoleRule(role aRole, Accessible* aDirectDescendantsFrom);
-  explicit RotorRoleRule(role aRole);
+  explicit RotorRoleRule(role aRole, Accessible* aDirectDescendantsFrom,
+                         const nsString& aSearchText);
+  explicit RotorRoleRule(role aRole, const nsString& aSearchText);
   uint16_t Match(Accessible* aAcc) override;
 
  private:
@@ -39,9 +42,9 @@ class RotorRoleRule : public RotorRule {
 
 class RotorMacRoleRule : public RotorRule {
  public:
-  explicit RotorMacRoleRule(NSString* aRole);
-  explicit RotorMacRoleRule(NSString* aRole,
-                            Accessible* aDirectDescendantsFrom);
+  explicit RotorMacRoleRule(NSString* aRole, const nsString& aSearchText);
+  explicit RotorMacRoleRule(NSString* aRole, Accessible* aDirectDescendantsFrom,
+                            const nsString& aSearchText);
   ~RotorMacRoleRule();
   virtual uint16_t Match(Accessible* aAcc) override;
 
@@ -51,40 +54,45 @@ class RotorMacRoleRule : public RotorRule {
 
 class RotorControlRule final : public RotorRule {
  public:
-  explicit RotorControlRule(Accessible* aDirectDescendantsFrom);
-  explicit RotorControlRule();
+  explicit RotorControlRule(Accessible* aDirectDescendantsFrom,
+                            const nsString& aSearchText);
+  explicit RotorControlRule(const nsString& aSearchText);
 
   virtual uint16_t Match(Accessible* aAcc) override;
 };
 
 class RotorTextEntryRule final : public RotorRule {
  public:
-  explicit RotorTextEntryRule(Accessible* aDirectDescendantsFrom);
-  explicit RotorTextEntryRule();
+  explicit RotorTextEntryRule(Accessible* aDirectDescendantsFrom,
+                              const nsString& aSearchText);
+  explicit RotorTextEntryRule(const nsString& aSearchText);
 
   virtual uint16_t Match(Accessible* aAcc) override;
 };
 
 class RotorLinkRule : public RotorRule {
  public:
-  explicit RotorLinkRule();
-  explicit RotorLinkRule(Accessible* aDirectDescendantsFrom);
+  explicit RotorLinkRule(const nsString& aSearchText);
+  explicit RotorLinkRule(Accessible* aDirectDescendantsFrom,
+                         const nsString& aSearchText);
 
   virtual uint16_t Match(Accessible* aAcc) override;
 };
 
 class RotorVisitedLinkRule final : public RotorLinkRule {
  public:
-  explicit RotorVisitedLinkRule();
-  explicit RotorVisitedLinkRule(Accessible* aDirectDescendantsFrom);
+  explicit RotorVisitedLinkRule(const nsString& aSearchText);
+  explicit RotorVisitedLinkRule(Accessible* aDirectDescendantsFrom,
+                                const nsString& aSearchText);
 
   virtual uint16_t Match(Accessible* aAcc) override;
 };
 
 class RotorUnvisitedLinkRule final : public RotorLinkRule {
  public:
-  explicit RotorUnvisitedLinkRule();
-  explicit RotorUnvisitedLinkRule(Accessible* aDirectDescendantsFrom);
+  explicit RotorUnvisitedLinkRule(const nsString& aSearchText);
+  explicit RotorUnvisitedLinkRule(Accessible* aDirectDescendantsFrom,
+                                  const nsString& aSearchText);
 
   virtual uint16_t Match(Accessible* aAcc) override;
 };
@@ -96,24 +104,27 @@ class RotorUnvisitedLinkRule final : public RotorLinkRule {
 class RotorNotMacRoleRule : public RotorMacRoleRule {
  public:
   explicit RotorNotMacRoleRule(NSString* aMacRole,
-                               Accessible* aDirectDescendantsFrom);
-  explicit RotorNotMacRoleRule(NSString* aMacRole);
+                               Accessible* aDirectDescendantsFrom,
+                               const nsString& aSearchText);
+  explicit RotorNotMacRoleRule(NSString* aMacRole, const nsString& aSearchText);
   uint16_t Match(Accessible* aAcc) override;
 };
 
 class RotorStaticTextRule : public RotorRule {
  public:
-  explicit RotorStaticTextRule();
-  explicit RotorStaticTextRule(Accessible* aDirectDescendantsFrom);
+  explicit RotorStaticTextRule(const nsString& aSearchText);
+  explicit RotorStaticTextRule(Accessible* aDirectDescendantsFrom,
+                               const nsString& aSearchText);
 
   virtual uint16_t Match(Accessible* aAcc) override;
 };
 
 class RotorHeadingLevelRule : public RotorRoleRule {
  public:
-  explicit RotorHeadingLevelRule(int32_t aLevel);
+  explicit RotorHeadingLevelRule(int32_t aLevel, const nsString& aSearchText);
   explicit RotorHeadingLevelRule(int32_t aLevel,
-                                 Accessible* aDirectDescendantsFrom);
+                                 Accessible* aDirectDescendantsFrom,
+                                 const nsString& aSearchText);
 
   virtual uint16_t Match(Accessible* aAcc) override;
 
@@ -123,20 +134,11 @@ class RotorHeadingLevelRule : public RotorRoleRule {
 
 class RotorLiveRegionRule : public RotorRule {
  public:
-  explicit RotorLiveRegionRule(Accessible* aDirectDescendantsFrom)
-      : RotorRule(aDirectDescendantsFrom) {}
-  explicit RotorLiveRegionRule() : RotorRule() {}
+  explicit RotorLiveRegionRule(Accessible* aDirectDescendantsFrom,
+                               const nsString& aSearchText)
+      : RotorRule(aDirectDescendantsFrom, aSearchText) {}
+  explicit RotorLiveRegionRule(const nsString& aSearchText)
+      : RotorRule(aSearchText) {}
 
-  uint16_t Match(Accessible* aAcc) override;
-};
-
-/**
- * This rule matches all accessibles with roles::OUTLINEITEM. If
- * outlines are nested, it ignores the nested subtree and returns
- * only items which are descendants of the primary outline.
- */
-class OutlineRule : public RotorRule {
- public:
-  explicit OutlineRule();
   uint16_t Match(Accessible* aAcc) override;
 };
