@@ -4,33 +4,35 @@
 
 <!DOCTYPE html>
 <html>
+
 <head>
-<meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'">
-<meta name="color-scheme" content="light dark">
-<title data-l10n-id="about-logging-title"></title>
-<link rel="stylesheet" href="chrome://global/skin/aboutLogging.css">
-<script src="chrome://global/content/aboutLogging.js"></script>
-<link rel="localization"  href="toolkit/about/aboutLogging.ftl">
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'" />
+  <meta name="color-scheme" content="light dark" />
+  <title data-l10n-id="about-logging-title"></title>
+  <link rel="stylesheet" href="chrome://global/skin/aboutLogging.css" />
+  <script src="chrome://global/content/aboutLogging.js"></script>
+  <link rel="localization" href="toolkit/about/aboutLogging.ftl" />
 </head>
+
 <body id="body">
   <main class="main-content">
     <h1 id="title" data-l10n-id="about-logging-page-title"></h1>
     <section>
-      <div hidden id=error class="page-subsection info-box">
-        <div class=info-box-label data-l10n-id="about-logging-error"></div>
-        <div id=error-description></div>
+      <div hidden id="error" class="page-subsection info-box">
+        <div class="info-box-label" data-l10n-id="about-logging-error"></div>
+        <div id="error-description"></div>
         <div data-l10n-id="about-logging-configuration-url-ignored"></div>
       </div>
-      <div hidden id=some-elements-unavailable class="page-subsection info-box">
-        <div class=info-box-label data-l10n-id="about-logging-info"></div>
+      <div hidden id="some-elements-unavailable" class="page-subsection info-box">
+        <div class="info-box-label" data-l10n-id="about-logging-info"></div>
         <div data-l10n-id="about-logging-some-elements-disabled"></div>
       </div>
     </section>
     <div class="button-row">
       <button id="toggle-logging-button" data-l10n-id="about-logging-start-logging"></button>
     </div>
-    <section id=log-module-selection>
+    <section id="log-module-selection">
       <h2 data-l10n-id="about-logging-log-modules-selection"></h2>
       <div class="page-subsection">
         <label for="current-log-modules" data-l10n-id="about-logging-currently-enabled-log-modules"></label>
@@ -39,28 +41,28 @@
       </div>
       <form id="log-modules-form" class="page-subsection">
         <label for="log-modules" data-l10n-id="about-logging-new-log-modules"></label>
-        <input type="text" name="log-modules" id="log-modules" value="">
+        <input type="text" name="log-modules" id="log-modules" value="" />
         <div class="button-row">
           <button type="submit" id="set-log-modules-button" data-l10n-id="about-logging-set-log-modules"></button>
         </div>
       </form>
-      <div id=preset-selector-section class="page-subsection">
+      <div id="preset-selector-section" class="page-subsection">
         <label for="logging-preset-dropdown" data-l10n-id="about-logging-logging-preset-selector-text"></label>
-        <select name="logging-preset-dropdown" id=logging-preset-dropdown></select>
+        <select name="logging-preset-dropdown" id="logging-preset-dropdown"></select>
         <div id="logging-preset-description"></div>
       </div>
     </section>
-    <section id=logging-output>
+    <section id="logging-output">
       <div>
         <span hidden id="buttons-disabled" data-l10n-id="about-logging-buttons-disabled"></span>
       </div>
       <h2 data-l10n-id="about-logging-logging-output-selection"></h2>
-      <div id=logging-output-profiler class="radio-entry">
-        <input type="radio" id="radio-logging-profiler" name="logging-output" value="profiler" checked>
+      <div id="logging-output-profiler" class="radio-entry">
+        <input type="radio" id="radio-logging-profiler" name="logging-output" value="profiler" checked />
         <label for="radio-logging-profiler" data-l10n-id="about-logging-logging-to-profiler"></label>
       </div>
-      <div id=logging-output-file class="radio-entry">
-        <input type="radio" id="radio-logging-file" name="logging-output" value="file">
+      <div id="logging-output-file" class="radio-entry">
+        <input type="radio" id="radio-logging-file" name="logging-output" value="file" />
         <label for="radio-logging-file" data-l10n-id="about-logging-logging-to-file"></label>
         <div>
           <span hidden id="buttons-disabled" data-l10n-id="about-logging-buttons-disabled"></span>
@@ -74,7 +76,7 @@
         </div>
         <div>
           <label for="log-file" data-l10n-id="about-logging-new-log-file"></label>
-          <input type="text" name="log-file" id="log-file">
+          <input type="text" name="log-file" id="log-file" />
           <div class="button-row">
             <button type="button" id="open-log-file-button" data-l10n-id="about-logging-open-log-file-dir"></button>
             <button type="submit" id="set-log-file-button" data-l10n-id="about-logging-set-log-file"></button>
@@ -89,4 +91,5 @@
     </section>
   </main>
 </body>
+
 </html>
