@@ -1,7 +1,12 @@
+[RefCounted] using class nsIURI from "nsIURI.h";
+
 union Union {
     nullable PNullable;
     nullable PNullable[];
     nullable PNullable?;
+    nullable nsIURI;
+    nullable nsIURI[];
+    nullable nsIURI?;
 };
 
 protocol PNullable {
@@ -9,5 +14,8 @@ child:
     async Msg(nullable PNullable n);
     async Msg2(nullable PNullable[] N);
     async Msg3(nullable PNullable? n);
-    async Msg4(Union u);
+    async Msg4(nullable nsIURI u);
+    async Msg5(nullable nsIURI[] u);
+    async Msg6(nullable nsIURI? u);
+    async Msg7(Union u);
 };
