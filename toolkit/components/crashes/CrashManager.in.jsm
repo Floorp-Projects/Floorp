@@ -4,6 +4,9 @@
 
 "use strict";
 
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
 const { PromiseUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/PromiseUtils.sys.mjs"
 );
@@ -757,7 +760,12 @@ CrashManager.prototype = Object.freeze({
     // Filter the remaining annotations to remove privacy-sensitive ones
     reportMeta = this._filterAnnotations(reportMeta);
 
-    this._submitGleanCrashPing(reason, type, date, reportMeta);
+    // Glean crash pings should not be sent on Android: they are handled
+    // separately in lib-crash for Fenix (and potentially other GeckoView
+    // users).
+    if (AppConstants.platform !== "android") {
+      this._submitGleanCrashPing(reason, type, date, reportMeta);
+    }
 
     if (onlyGlean) {
       return;
