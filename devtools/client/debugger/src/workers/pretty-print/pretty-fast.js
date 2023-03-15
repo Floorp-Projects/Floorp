@@ -4,74 +4,7 @@
 
 var acorn = require("acorn");
 var sourceMap = require("source-map");
-var SourceNode = sourceMap.SourceNode;
-
-/**
- * prettyFast is using SourceNode so we can generate a source map.
- * A SourceNode instance can have multiple children, which may be other SourceNodes or strings.
- * This means that to generate the source map, we need to traverse all the nodes recursively.
- * Furthermore, even adding a child SourceNode to a parent can be slower as some checks are
- * done on the argument (which can be a string, an array or a SourceNode)
- * These can be slow when we have a lot of mappings to handle (e.g. for big files).
- *
- * We are using SourceNode in a much more constrained way:
- * - we only have a root node
- * - which only has SourceNode children
- * - and those children SourceNode only have 1 string child
- *
- * So here we can build custom classes based on SourceNode, overriding expensive methods
- * which are much more straightforward ones given our constraints.
- */
-class RootSourceNode extends SourceNode {
-  /**
-   * Add a LeafSourceNode to the children list
-   *
-   * @override
-   * @param {LeafSourceNode} leafSourceNode
-   */
-  add(leafSourceNode) {
-    this.children.push(leafSourceNode);
-  }
-
-  /**
-   * Iterate through the node children
-   *
-   * @override
-   * @param {Function} func
-   */
-  walk(func) {
-    for (let i = 0, len = this.children.length; i < len; i++) {
-      const child = this.children[i];
-      func(child.str, child);
-    }
-  }
-
-  /**
-   * @override
-   */
-  walkSourceContents() {
-    // this.sourceContents is never set, so don't do anything (the original method does
-    // iterate over children and sourcesContents, which is wasteful in our case).
-  }
-}
-
-// We don't extend SourceNode as the constructor initializes an array and calls `add`,
-// which we don't need in our case.
-class LeafSourceNode {
-  /**
-   * @param {Integer} line
-   * @param {Integer} column
-   * @param {String} source
-   * @param {String} str
-   */
-  constructor(line, column, source, str) {
-    this.str = str;
-    this.line = line;
-    this.column = column;
-    this.source = source;
-    this.name = null;
-  }
-}
+const NEWLINE_CODE = 10;
 
 // If any of these tokens are seen before a "[" token, we know that "[" token
 // is the start of an array literal, rather than a property access.
@@ -342,7 +275,7 @@ function isLineDelimiter(token, stack) {
  */
 function appendNewline(token, write, stack) {
   if (isLineDelimiter(token, stack)) {
-    write("\n", token.loc.start.line, token.loc.start.column);
+    write("\n");
     return true;
   }
   return false;
@@ -515,7 +448,7 @@ function needsLineBreakBeforeClosingCurlyBracket(tokenTypeLabel) {
  *        printed code. This only happens if an inline comment was printed
  *        since the last token.
  * @param Function write
- *        The function to write pretty printed code to the result SourceNode.
+ *        The function to write pretty printed code.
  * @param Object options
  *        The options object.
  * @param Number indentLevel
@@ -548,10 +481,10 @@ function prependWhiteSpace(
       (ttk == "while" && stack.at(-1) == "do") ||
       needsSpaceBeforeClosingCurlyBracket(ttk)
     ) {
-      write(" ", lastToken.loc.start.line, lastToken.loc.start.column);
+      write(" ");
       spaceAdded = true;
     } else if (needsLineBreakBeforeClosingCurlyBracket(ttl)) {
-      write("\n", lastToken.loc.start.line, lastToken.loc.start.column);
+      write("\n");
       newlineAdded = true;
     }
   }
@@ -560,18 +493,18 @@ function prependWhiteSpace(
     (ttl == ":" && stack.at(-1) == "?") ||
     (ttl == "}" && stack.at(-1) == "${")
   ) {
-    write(" ", lastToken.loc.start.line, lastToken.loc.start.column);
+    write(" ");
     spaceAdded = true;
   }
 
   if (lastToken && ltt != "}" && ltt != "." && ttk == "else") {
-    write(" ", lastToken.loc.start.line, lastToken.loc.start.column);
+    write(" ");
     spaceAdded = true;
   }
 
   function ensureNewline() {
     if (!newlineAdded) {
-      write("\n", lastToken.loc.start.line, lastToken.loc.start.column);
+      write("\n");
       newlineAdded = true;
     }
   }
@@ -586,20 +519,12 @@ function prependWhiteSpace(
 
   if (newlineAdded) {
     if (ttk == "case" || ttk == "default") {
-      write(
-        options.indent.repeat(indentLevel - 1),
-        token.loc.start.line,
-        token.loc.start.column
-      );
+      write(options.indent.repeat(indentLevel - 1));
     } else {
-      write(
-        options.indent.repeat(indentLevel),
-        token.loc.start.line,
-        token.loc.start.column
-      );
+      write(options.indent.repeat(indentLevel));
     }
   } else if (!spaceAdded && needsSpaceAfter(token, lastToken)) {
-    write(" ", lastToken.loc.start.line, lastToken.loc.start.column);
+    write(" ");
     spaceAdded = true;
   }
 }
@@ -649,20 +574,22 @@ function sanitize(str) {
  * @param Object token
  *        The token to add.
  * @param Function write
- *        The function to write pretty printed code to the result SourceNode.
+ *        The function to write pretty printed code.
  */
 function addToken(token, write) {
   if (token.type.label == "string") {
     write(
       `'${sanitize(token.value)}'`,
       token.loc.start.line,
-      token.loc.start.column
+      token.loc.start.column,
+      true
     );
   } else if (token.type.label == "regexp") {
     write(
       String(token.value.value),
       token.loc.start.line,
-      token.loc.start.column
+      token.loc.start.column,
+      true
     );
   } else {
     let value;
@@ -674,7 +601,7 @@ function addToken(token, write) {
     } else {
       value = token.type.label;
     }
-    write(String(value), token.loc.start.line, token.loc.start.column);
+    write(String(value), token.loc.start.line, token.loc.start.column, true);
   }
 }
 
@@ -740,7 +667,7 @@ function incrementsIndent(token) {
  * Add a comment to the pretty printed code.
  *
  * @param Function write
- *        The function to write pretty printed code to the result SourceNode.
+ *        The function to write pretty printed code.
  * @param Number indentLevel
  *        The number of indents deep we are.
  * @param Object options
@@ -770,32 +697,22 @@ function addComment(
   nextToken
 ) {
   const indentString = options.indent.repeat(indentLevel);
-  let needNewline = true;
+  const needNewLineAfter =
+    !block || !(nextToken && nextToken.loc.start.line == line);
 
-  write(indentString, line, column);
   if (block) {
-    write("/*");
-    // We must pass ignoreNewline in case the comment happens to be "\n".
+    const commentLinesText = text
+      .split(new RegExp(`/\n${indentString}/`, "g"))
+      .join(`\n${indentString}`);
+
     write(
-      text
-        .split(new RegExp(`/\n${indentString}/`, "g"))
-        .join(`\n${indentString}`),
-      null,
-      null,
-      true
+      `${indentString}/*${commentLinesText}*/${needNewLineAfter ? "\n" : " "}`
     );
-    write("*/");
-    needNewline = !(nextToken && nextToken.loc.start.line == line);
   } else {
-    write("//");
-    write(text);
+    write(`${indentString}//${text}\n`);
   }
-  if (needNewline) {
-    write("\n");
-  } else {
-    write(" ");
-  }
-  return needNewline;
+
+  return needNewLineAfter;
 }
 
 /**
@@ -814,22 +731,23 @@ function addComment(
  *            - code: The pretty printed code string.
  *            - map: A SourceMapGenerator instance.
  */
-export function prettyFast(input, options) {
+export function prettyFast(input, options = {}) {
   // The level of indents deep we are.
   let indentLevel = 0;
 
-  // We will accumulate the pretty printed code in this RootSourceNode.
-  const rootNode = new RootSourceNode();
+  // We will handle mappings between ugly and pretty printed code in this SourceMapGenerator.
+  const { url: file } = options;
+  const sourceMapGenerator = new sourceMap.SourceMapGenerator({
+    file,
+  });
+
+  let currentCode = "";
+  let currentLine = 1;
+  let currentColumn = 0;
 
   /**
-   * Write a pretty printed string to the result SourceNode.
-   *
-   * We buffer our writes so that we only create one mapping for each line in
-   * the source map. This enhances performance by avoiding extraneous mapping
-   * serialization, and flattening the tree that
-   * `SourceNode#toStringWithSourceMap` will have to recursively walk. When
-   * timing how long it takes to pretty print jQuery, this optimization
-   * brought the time down from ~390 ms to ~190ms!
+   * Write a pretty printed string to the prettified string and for tokens, add their
+   * mapping to the SourceMapGenerator.
    *
    * @param String str
    *        The string to be added to the result.
@@ -837,36 +755,38 @@ export function prettyFast(input, options) {
    *        The line number the string came from in the ugly source.
    * @param Number column
    *        The column number the string came from in the ugly source.
-   * @param Boolean ignoreNewline
-   *        If true, a single "\n" won't result in an additional mapping.
+   * @param Boolean isToken
+   *        Set to true when writing tokens, so we can differentiate them from the
+   *        whitespace we add.
    */
-  const write = (function() {
-    const buffer = [];
-    let bufferLine = -1;
-    let bufferColumn = -1;
-    return function innerWrite(str, line, column, ignoreNewline) {
-      if (line != null && bufferLine === -1) {
-        bufferLine = line;
-      }
-      if (column != null && bufferColumn === -1) {
-        bufferColumn = column;
-      }
-      buffer.push(str);
+  const write = (str, line, column, isToken) => {
+    currentCode += str;
+    if (isToken) {
+      sourceMapGenerator.addMapping({
+        source: file,
+        // We need to swap original and generated locations, as the prettified text should
+        // be seen by the sourcemap service as the "original" one.
+        generated: {
+          line,
+          column,
+        },
+        original: {
+          line: currentLine,
+          column: currentColumn,
+        },
+        name: null,
+      });
+    }
 
-      if (str == "\n" && !ignoreNewline) {
-        let lineStr = "";
-        for (let i = 0, len = buffer.length; i < len; i++) {
-          lineStr += buffer[i];
-        }
-        rootNode.add(
-          new LeafSourceNode(bufferLine, bufferColumn, options.url, lineStr)
-        );
-        buffer.splice(0, buffer.length);
-        bufferLine = -1;
-        bufferColumn = -1;
+    for (let idx = 0, length = str.length; idx < length; idx++) {
+      if (str.charCodeAt(idx) === NEWLINE_CODE) {
+        currentLine++;
+        currentColumn = 0;
+      } else {
+        currentColumn++;
       }
-    };
-  })();
+    }
+  };
 
   // Whether or not we added a newline on after we added the last token.
   let addedNewline = false;
@@ -921,7 +841,7 @@ export function prettyFast(input, options) {
   //     [ foo, '// a', '// b', bar]
   const tokenQueue = getTokens(input, options);
 
-  for (let i = 0; i < tokenQueue.length; i++) {
+  for (let i = 0, len = tokenQueue.length; i < len; i++) {
     const token = tokenQueue[i];
     const nextToken = tokenQueue[i + 1];
 
@@ -1029,7 +949,7 @@ export function prettyFast(input, options) {
     lastToken.isArrayLiteral = token.isArrayLiteral;
   }
 
-  return rootNode.toStringWithSourceMap({ file: options.url });
+  return { code: currentCode, map: sourceMapGenerator };
 }
 
 /**
