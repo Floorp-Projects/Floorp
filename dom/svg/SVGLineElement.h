@@ -30,9 +30,6 @@ class SVGLineElement final : public SVGLineElementBase {
   void MaybeAdjustForZeroLength(float aX1, float aY1, float& aX2, float aY2);
 
  public:
-  // nsIContent interface
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* name) const override;
-
   // SVGGeometryElement methods:
   bool IsMarkable() override { return true; }
   void GetMarkPoints(nsTArray<SVGMark>* aMarks) override;

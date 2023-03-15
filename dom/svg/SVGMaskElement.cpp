@@ -100,18 +100,4 @@ SVGElement::EnumAttributesInfo SVGMaskElement::GetEnumInfo() {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo, ArrayLength(sEnumInfo));
 }
 
-//----------------------------------------------------------------------
-// nsIContent methods
-
-NS_IMETHODIMP_(bool)
-SVGMaskElement::IsAttributeMapped(const nsAtom* name) const {
-  static const MappedAttributeEntry* const map[] = {
-      sColorMap,    sFEFloodMap, sFiltersMap, sGradientStopMap,
-      sGraphicsMap, sMarkersMap, sMaskMap,    sTextContentElementsMap,
-      sViewportsMap};
-
-  return FindAttributeDependence(name, map) ||
-         SVGMaskElementBase::IsAttributeMapped(name);
-}
-
 }  // namespace mozilla::dom

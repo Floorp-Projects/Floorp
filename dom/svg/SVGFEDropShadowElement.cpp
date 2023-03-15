@@ -117,17 +117,6 @@ void SVGFEDropShadowElement::GetSourceImageNames(
 }
 
 //----------------------------------------------------------------------
-// nsIContent methods
-
-NS_IMETHODIMP_(bool)
-SVGFEDropShadowElement::IsAttributeMapped(const nsAtom* name) const {
-  static const MappedAttributeEntry* const map[] = {sFEFloodMap};
-
-  return FindAttributeDependence(name, map) ||
-         SVGFEDropShadowElementBase::IsAttributeMapped(name);
-}
-
-//----------------------------------------------------------------------
 // SVGElement methods
 
 SVGElement::NumberAttributesInfo SVGFEDropShadowElement::GetNumberInfo() {

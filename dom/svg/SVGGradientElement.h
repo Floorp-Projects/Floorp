@@ -42,10 +42,8 @@ class SVGGradientElement : public SVGGradientElementBase {
                      JS::Handle<JSObject*> aGivenProto) override = 0;
 
  public:
-  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override = 0;
-
   // nsIContent
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override = 0;
 
   virtual SVGAnimatedTransformList* GetAnimatedTransformList(
       uint32_t aFlags = 0) override;

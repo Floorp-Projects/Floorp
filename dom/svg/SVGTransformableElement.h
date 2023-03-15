@@ -34,8 +34,6 @@ class SVGTransformableElement : public SVGElement {
   already_AddRefed<DOMSVGAnimatedTransformList> Transform();
 
   // nsIContent interface
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
-
   nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
                                       int32_t aModType) const override;
 
