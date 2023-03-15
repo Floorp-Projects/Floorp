@@ -562,13 +562,14 @@ addAccessibleTask(
   async function(browser, docAcc) {
     const input = findAccessibleChildByID(docAcc, "input", [nsIAccessibleText]);
     info("Setting caret and focusing input");
-    let focused = waitForEvent(EVENT_FOCUS, input);
+    let caretMoved = waitForEvent(EVENT_TEXT_CARET_MOVED, input);
     await invokeContentTask(browser, [], () => {
       const inputDom = content.document.getElementById("input");
       inputDom.selectionStart = inputDom.selectionEnd = 1;
       inputDom.focus();
     });
-    await focused;
+    await caretMoved;
+    is(input.caretOffset, 1, "input caretOffset is 1");
     let expectedX = {};
     let expectedY = {};
     let expectedW = {};
