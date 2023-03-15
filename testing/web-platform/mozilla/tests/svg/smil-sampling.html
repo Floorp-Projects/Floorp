@@ -1,0 +1,44 @@
+<!doctype html>
+<meta charset="utf-8">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<svg width="100" height="100">
+  <rect width="100" height="100" fill="blue">
+    <animate attributeName="fill" from="brown" to="red" dur="1000s"/>
+  </rect>
+</svg>
+<script>
+function isSampling() {
+  return SpecialPowers.wrap(window).windowUtils.refreshDriverHasPendingTick;
+}
+function tick() {
+  return new Promise(r => {
+    requestAnimationFrame(() => requestAnimationFrame(r));
+  });
+}
+
+// See comment in layout/base/tests/test_bug1756118.html about why the timeouts
+// etc.
+async function expectTicksToStop() {
+  for (let i = 0; i < 100; i++) {
+    await new Promise(r => setTimeout(r, 8));
+    if(!isSampling()) {
+      break;
+    }
+  }
+  assert_false(isSampling(), "refresh driver should have eventually stopped ticking");
+}
+
+promise_test(async function(t) {
+  await tick();
+  assert_true(isSampling(), "Animation should be running");
+  let svg = document.querySelector("svg");
+  svg.remove();
+  await tick();
+  await expectTicksToStop();
+
+  document.body.appendChild(svg);
+  await tick();
+  assert_true(isSampling(), "Animation should be running again");
+});
+</script>
