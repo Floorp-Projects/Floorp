@@ -9,4 +9,3 @@ root:
       end: [ 200, 0 ]
       stops: [ 0.0, red, 0.177, red, 0.177, yellow, 0.50, yellow, 0.50, red ]
       slice: [ 50 ]
-      outset: 0
