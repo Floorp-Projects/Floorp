@@ -181,7 +181,7 @@ with Files("tests/cors/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
 
 with Files("tests/credential-management/**"):
-    BUG_COMPONENT = ("Core", "DOM: Security")
+    BUG_COMPONENT = ("Core", "DOM: Credential Management")
 
 with Files("tests/css/**"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
