@@ -28,10 +28,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
+import mozilla.components.support.ktx.kotlin.MAX_URI_LENGTH
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.ThumbnailCard
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.ext.toShortUrl
+import org.mozilla.fenix.tabstray.ext.toDisplayTitle
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -91,7 +93,7 @@ fun TabListItem(
                 .weight(weight = 1f),
         ) {
             Text(
-                text = tab.content.title,
+                text = tab.toDisplayTitle().take(MAX_URI_LENGTH),
                 fontSize = 16.sp,
                 maxLines = 2,
                 color = FirefoxTheme.colors.textPrimary,

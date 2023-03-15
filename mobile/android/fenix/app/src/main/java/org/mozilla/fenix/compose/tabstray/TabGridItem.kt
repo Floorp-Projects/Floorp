@@ -42,12 +42,14 @@ import androidx.compose.ui.unit.sp
 import androidx.core.text.BidiFormatter
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
+import mozilla.components.support.ktx.kotlin.MAX_URI_LENGTH
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.Divider
 import org.mozilla.fenix.compose.Favicon
 import org.mozilla.fenix.compose.HorizontalFadingEdgeBox
 import org.mozilla.fenix.compose.ThumbnailCard
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
+import org.mozilla.fenix.tabstray.ext.toDisplayTitle
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -135,7 +137,7 @@ fun TabGridItem(
                         isContentRtl = BidiFormatter.getInstance().isRtl(tab.content.title),
                     ) {
                         Text(
-                            text = tab.content.title,
+                            text = tab.toDisplayTitle().take(MAX_URI_LENGTH),
                             fontSize = 14.sp,
                             maxLines = 1,
                             softWrap = false,
