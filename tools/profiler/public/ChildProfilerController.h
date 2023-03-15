@@ -13,6 +13,7 @@
 #include "mozilla/RefPtr.h"
 #include "nsISupportsImpl.h"
 #include "nsStringFwd.h"
+#include "ProfileAdditionalInformation.h"
 
 namespace mozilla {
 
@@ -31,18 +32,21 @@ class ChildProfilerController final {
   static already_AddRefed<ChildProfilerController> Create(
       mozilla::ipc::Endpoint<PProfilerChild>&& aEndpoint);
 
-  [[nodiscard]] nsCString GrabShutdownProfileAndShutdown();
+  [[nodiscard]] ProfileAndAdditionalInformation
+  GrabShutdownProfileAndShutdown();
   void Shutdown();
 
  private:
   ChildProfilerController();
   ~ChildProfilerController();
   void Init(mozilla::ipc::Endpoint<PProfilerChild>&& aEndpoint);
-  void ShutdownAndMaybeGrabShutdownProfileFirst(nsCString* aOutShutdownProfile);
+  void ShutdownAndMaybeGrabShutdownProfileFirst(
+      ProfileAndAdditionalInformation* aOutShutdownProfileInformation);
 
   // Called on mThread:
   void SetupProfilerChild(mozilla::ipc::Endpoint<PProfilerChild>&& aEndpoint);
-  void ShutdownProfilerChild(nsCString* aOutShutdownProfile);
+  void ShutdownProfilerChild(
+      ProfileAndAdditionalInformation* aOutShutdownProfileInformation);
 
   RefPtr<ProfilerChild> mProfilerChild;  // only accessed on mThread
   DataMutex<RefPtr<nsIThread>> mThread;
