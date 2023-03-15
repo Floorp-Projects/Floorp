@@ -34,7 +34,7 @@ child:
 
   // The returned shmem may contain an empty string (unavailable), an error
   // message starting with '*', or a profile as a stringified JSON object.
-  async GatherProfile() returns (Shmem profile);
+  async GatherProfile() returns (IPCProfileAndAdditionalInformation profileAndAdditionalInformation);
   async GetGatherProfileProgress() returns (GatherProfileProgress progress);
 
   async ClearAllPages();
