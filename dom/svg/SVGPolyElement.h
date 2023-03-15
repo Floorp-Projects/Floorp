@@ -28,9 +28,6 @@ class SVGPolyElement : public SVGPolyElementBase {
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(SVGPolyElement, SVGPolyElementBase)
 
-  // nsIContent interface
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* name) const override;
-
   SVGAnimatedPointList* GetAnimatedPointList() override { return &mPoints; }
   nsStaticAtom* GetPointListAttrName() const override {
     return nsGkAtoms::points;

@@ -47,8 +47,6 @@ class SVGSwitchElement final : public SVGSwitchElementBase {
   void RemoveChildNode(nsIContent* aKid, bool aNotify) override;
 
   // nsIContent
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
-
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
  private:

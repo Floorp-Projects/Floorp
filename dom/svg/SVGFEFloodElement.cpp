@@ -53,14 +53,6 @@ FilterPrimitiveDescription SVGFEFloodElement::GetPrimitiveDescription(
 //----------------------------------------------------------------------
 // nsIContent methods
 
-NS_IMETHODIMP_(bool)
-SVGFEFloodElement::IsAttributeMapped(const nsAtom* name) const {
-  static const MappedAttributeEntry* const map[] = {sColorMap, sFEFloodMap};
-
-  return FindAttributeDependence(name, map) ||
-         SVGFEFloodElementBase::IsAttributeMapped(name);
-}
-
 nsresult SVGFEFloodElement::BindToTree(BindContext& aCtx, nsINode& aParent) {
   if (aCtx.InComposedDoc()) {
     aCtx.OwnerDoc().SetUseCounter(eUseCounter_custom_feFlood);

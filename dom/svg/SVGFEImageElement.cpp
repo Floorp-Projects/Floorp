@@ -101,14 +101,6 @@ void SVGFEImageElement::AsyncEventRunning(AsyncEventDispatcher* aEvent) {
 //----------------------------------------------------------------------
 // nsIContent methods:
 
-NS_IMETHODIMP_(bool)
-SVGFEImageElement::IsAttributeMapped(const nsAtom* name) const {
-  static const MappedAttributeEntry* const map[] = {sGraphicsMap};
-
-  return FindAttributeDependence(name, map) ||
-         SVGFEImageElementBase::IsAttributeMapped(name);
-}
-
 nsresult SVGFEImageElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                          const nsAttrValue* aValue,
                                          const nsAttrValue* aOldValue,

@@ -111,13 +111,7 @@ bool SVGForeignObjectElement::HasValidDimensions() const {
 
 NS_IMETHODIMP_(bool)
 SVGForeignObjectElement::IsAttributeMapped(const nsAtom* name) const {
-  static const MappedAttributeEntry* const map[] = {
-      sFEFloodMap,         sFiltersMap, sGradientStopMap,
-      sLightingEffectsMap, sMarkersMap, sTextContentElementsMap,
-      sViewportsMap};
-
   return IsInLengthInfo(name, sLengthInfo) ||
-         FindAttributeDependence(name, map) ||
          SVGGraphicsElement::IsAttributeMapped(name);
 }
 

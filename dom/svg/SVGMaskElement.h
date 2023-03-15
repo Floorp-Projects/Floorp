@@ -36,7 +36,6 @@ class SVGMaskElement final : public SVGMaskElementBase {
  public:
   // nsIContent interface
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
   // SVGSVGElement methods:
   bool HasValidDimensions() const override;

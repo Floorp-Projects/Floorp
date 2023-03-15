@@ -259,12 +259,7 @@ void SVGImageElement::DestroyContent() {
 
 NS_IMETHODIMP_(bool)
 SVGImageElement::IsAttributeMapped(const nsAtom* name) const {
-  static const MappedAttributeEntry* const map[] = {
-      sViewportsMap,
-  };
-
   return IsInLengthInfo(name, sLengthInfo) ||
-         FindAttributeDependence(name, map) ||
          SVGImageElementBase::IsAttributeMapped(name);
 }
 

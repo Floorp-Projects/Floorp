@@ -28,8 +28,6 @@ class SVGStopElement final : public SVGStopElementBase {
 
  public:
   // nsIContent interface
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
-
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // WebIDL

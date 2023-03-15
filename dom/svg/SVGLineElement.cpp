@@ -77,17 +77,6 @@ already_AddRefed<DOMSVGAnimatedLength> SVGLineElement::Y2() {
 }
 
 //----------------------------------------------------------------------
-// nsIContent methods
-
-NS_IMETHODIMP_(bool)
-SVGLineElement::IsAttributeMapped(const nsAtom* name) const {
-  static const MappedAttributeEntry* const map[] = {sMarkersMap};
-
-  return FindAttributeDependence(name, map) ||
-         SVGLineElementBase::IsAttributeMapped(name);
-}
-
-//----------------------------------------------------------------------
 // SVGElement methods
 
 SVGElement::LengthAttributesInfo SVGLineElement::GetLengthInfo() {
