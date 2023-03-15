@@ -40,37 +40,6 @@ class SharedLibrary {
         mVersion(aVersion),
         mArch(aArch) {}
 
-  SharedLibrary(const SharedLibrary& aEntry)
-      : mStart(aEntry.mStart),
-        mEnd(aEntry.mEnd),
-        mOffset(aEntry.mOffset),
-        mBreakpadId(aEntry.mBreakpadId),
-        mCodeId(aEntry.mCodeId),
-        mModuleName(aEntry.mModuleName),
-        mModulePath(aEntry.mModulePath),
-        mDebugName(aEntry.mDebugName),
-        mDebugPath(aEntry.mDebugPath),
-        mVersion(aEntry.mVersion),
-        mArch(aEntry.mArch) {}
-
-  SharedLibrary& operator=(const SharedLibrary& aEntry) {
-    // Gracefully handle self assignment
-    if (this == &aEntry) return *this;
-
-    mStart = aEntry.mStart;
-    mEnd = aEntry.mEnd;
-    mOffset = aEntry.mOffset;
-    mBreakpadId = aEntry.mBreakpadId;
-    mCodeId = aEntry.mCodeId;
-    mModuleName = aEntry.mModuleName;
-    mModulePath = aEntry.mModulePath;
-    mDebugName = aEntry.mDebugName;
-    mDebugPath = aEntry.mDebugPath;
-    mVersion = aEntry.mVersion;
-    mArch = aEntry.mArch;
-    return *this;
-  }
-
   bool operator==(const SharedLibrary& other) const {
     return (mStart == other.mStart) && (mEnd == other.mEnd) &&
            (mOffset == other.mOffset) && (mModuleName == other.mModuleName) &&
@@ -135,8 +104,6 @@ class SharedLibraryInfo {
  public:
   static SharedLibraryInfo GetInfoForSelf();
   static void Initialize();
-
-  SharedLibraryInfo() {}
 
   void AddSharedLibrary(SharedLibrary entry) { mEntries.push_back(entry); }
 
