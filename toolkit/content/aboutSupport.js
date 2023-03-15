@@ -1611,9 +1611,17 @@ Serializer.prototype = {
           // queued up from querySelectorAll earlier.
           this._appendText(rowHeading + ": ");
         } else {
-          this._appendText(
-            rowHeading + ": " + this._nodeText(children[1]).trim()
-          );
+          this._appendText(rowHeading + ": ");
+          for (let k = 1; k < children.length; k++) {
+            let l = this._nodeText(children[k]).trim();
+            if (l == "") {
+              continue;
+            }
+            if (k < children.length - 1) {
+              l += ", ";
+            }
+            this._appendText(l);
+          }
         }
       }
       this._startNewLine();
