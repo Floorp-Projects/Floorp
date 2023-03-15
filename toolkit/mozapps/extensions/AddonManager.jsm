@@ -2214,22 +2214,10 @@ var AddonManagerInternal = {
           install.addon.enable();
         }
 
-        let needsRestart =
-          install.addon.pendingOperations != AddonManager.PENDING_NONE;
-
-        if (!needsRestart) {
-          let subject = {
-            wrappedJSObject: { target: browser, addon: install.addon },
-          };
-          Services.obs.notifyObservers(subject, "webextension-install-notify");
-        } else {
-          self.installNotifyObservers(
-            "addon-install-complete",
-            browser,
-            url,
-            install
-          );
-        }
+        let subject = {
+          wrappedJSObject: { target: browser, addon: install.addon },
+        };
+        Services.obs.notifyObservers(subject, "webextension-install-notify");
       },
     };
 

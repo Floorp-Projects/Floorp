@@ -453,7 +453,6 @@ var gXPInstallObserver = {
   // IDs of addon install related notifications
   NOTIFICATION_IDS: [
     "addon-install-blocked",
-    "addon-install-complete",
     "addon-install-confirmation",
     "addon-install-failed",
     "addon-install-origin-blocked",
@@ -990,36 +989,6 @@ var gXPInstallObserver = {
           }
         }
         showNotification();
-        break;
-      }
-      case "addon-install-complete": {
-        let secondaryActions = null;
-        let numAddons = installInfo.installs.length;
-
-        if (numAddons == 1) {
-          messageString = gNavigatorBundle.getFormattedString(
-            "addonInstalled",
-            [installInfo.installs[0].name]
-          );
-        } else {
-          messageString = gNavigatorBundle.getString("addonsGenericInstalled");
-          messageString = PluralForm.get(numAddons, messageString);
-          messageString = messageString.replace("#1", numAddons);
-        }
-        action = null;
-
-        options.removeOnDismissal = true;
-        options.persistent = false;
-
-        PopupNotifications.show(
-          browser,
-          notificationID,
-          messageString,
-          gUnifiedExtensions.getPopupAnchorID(browser, window),
-          action,
-          secondaryActions,
-          options
-        );
         break;
       }
     }
