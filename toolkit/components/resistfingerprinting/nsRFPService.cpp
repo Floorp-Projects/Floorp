@@ -691,6 +691,13 @@ void nsRFPService::UpdateRFPPref() {
       StaticPrefs::javascript_options_use_fdlibm_for_sin_cos_tan() ||
       resistFingerprinting);
 
+  // The JavaScript engine can already set the timezone per realm/global,
+  // but we think there are still other users of libc that rely
+  // on the TZ environment variable.
+  if (!StaticPrefs::privacy_resistFingerprinting_testing_setTZtoUTC()) {
+    return;
+  }
+
   if (resistFingerprinting) {
     PR_SetEnv("TZ=UTC");
   } else if (sInitialized) {
