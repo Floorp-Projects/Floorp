@@ -8899,7 +8899,7 @@
 # Enable experimental enhanced color CSS color spaces. (lab(), lch(), oklab(), oklch(), color())
 - name: layout.css.more_color_4.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
   rust: true
 
