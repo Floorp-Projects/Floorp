@@ -41,6 +41,10 @@
   list-style-image: url(chrome://browser/skin/notification-icons/microphone.svg);
 }
 
+.speaker-icon {
+  list-style-image: url(chrome://global/skin/media/audio.svg);
+}
+
 .desktop-notification-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/desktop-notification.svg);
 }
