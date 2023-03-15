@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsURILoader.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIURIContentListener.h"
 #include "nsIContentHandler.h"
 #include "nsILoadGroup.h"
@@ -70,7 +71,8 @@ nsDocumentOpenInfo::nsDocumentOpenInfo(nsIInterfaceRequestor* aWindowContext,
       mFlags(aFlags),
       mURILoader(aURILoader),
       mDataConversionDepthLimit(
-          StaticPrefs::general_document_open_conversion_depth_limit()) {}
+          mozilla::StaticPrefs::
+              general_document_open_conversion_depth_limit()) {}
 
 nsDocumentOpenInfo::nsDocumentOpenInfo(uint32_t aFlags,
                                        bool aAllowListenerConversions)
@@ -78,7 +80,7 @@ nsDocumentOpenInfo::nsDocumentOpenInfo(uint32_t aFlags,
       mFlags(aFlags),
       mURILoader(nullptr),
       mDataConversionDepthLimit(
-          StaticPrefs::general_document_open_conversion_depth_limit()),
+          mozilla::StaticPrefs::general_document_open_conversion_depth_limit()),
       mAllowListenerConversions(aAllowListenerConversions) {}
 
 nsDocumentOpenInfo::~nsDocumentOpenInfo() {}
@@ -269,7 +271,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest* request) {
   LOG(("  forceExternalHandling: %s", forceExternalHandling ? "yes" : "no"));
 
   if (forceExternalHandling &&
-      StaticPrefs::browser_download_open_pdf_attachments_inline()) {
+      mozilla::StaticPrefs::browser_download_open_pdf_attachments_inline()) {
     // Check if this is a PDF which should be opened internally. We also handle
     // octet-streams that look like they might be PDFs based on their extension.
     bool isPDF = mContentType.LowerCaseEqualsASCII(APPLICATION_PDF);
