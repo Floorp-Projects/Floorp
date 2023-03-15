@@ -346,6 +346,6 @@ async function do_backgroundtask_crash(
 }
 
 // Import binary APIs via js-ctypes.
-var { CrashTestUtils } = ChromeUtils.import(
-  "resource://test/CrashTestUtils.jsm"
+var { CrashTestUtils } = ChromeUtils.importESModule(
+  "resource://test/CrashTestUtils.sys.mjs"
 );
