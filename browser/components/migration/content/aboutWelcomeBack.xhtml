@@ -20,6 +20,7 @@
     <link rel="localization" href="browser/aboutSessionRestore.ftl"/>
     <link rel="localization" href="branding/brand.ftl"/>
     <script src="chrome://browser/content/aboutSessionRestore.js"/>
+     <script type="module" src="chrome://global/content/elements/moz-support-link.mjs"/>
   </head>
 
   <body>
@@ -34,10 +35,9 @@
         <div class="description">
 
           <p data-l10n-id="welcome-back-page-info"></p>
-          <!-- Note a href in the anchor below is added by JS -->
-          <p data-l10n-id="welcome-back-page-info-link"><a id="linkMoreTroubleshooting" target="_blank" data-l10n-name="link-more"></a></p>
-
+          <p data-l10n-id="welcome-back-page-info-link"><a is="moz-support-link" id="linkMoreTroubleshooting" target="_blank" data-l10n-name="link-more" support-page="troubleshooting"/></p>
           <div>
+
             <label class="radioRestoreContainer radio-container-with-text">
               <input class="radioRestoreButton" id="radioRestoreAll" type="radio"
                      name="restore" checked="checked"/>
