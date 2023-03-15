@@ -7,8 +7,6 @@ const { AddonTestUtils } = ChromeUtils.import(
 );
 
 AddonTestUtils.initMochitest(this);
-
-hookExtensionsTelemetry();
 AddonTestUtils.hookAMTelemetryEvents();
 
 const ID_PERMS = "update_perms@tests.mozilla.org";
