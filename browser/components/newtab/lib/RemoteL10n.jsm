@@ -203,7 +203,7 @@ class _RemoteL10n {
     return new DOMLocalization(
       [
         "browser/newtab/asrouter.ftl",
-        "browser/branding/brandings.ftl",
+        "toolkit/branding/brandings.ftl",
         "browser/branding/sync-brand.ftl",
         "branding/brand.ftl",
         "browser/defaultBrowserNotification.ftl",

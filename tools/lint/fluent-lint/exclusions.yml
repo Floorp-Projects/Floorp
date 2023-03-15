@@ -139,7 +139,6 @@ ID02:
 CO01:
     messages:
         # browser/branding/official/locales/en-US/brand.ftl
-        # browser/locales/en-US/browser/branding/brandings.ftl
         - trademarkInfo
         # toolkit/locales/en-US/toolkit/neterror/certError.ftl
         - cert-error-mitm-mozilla
