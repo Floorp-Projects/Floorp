@@ -24,17 +24,15 @@ namespace mozilla::glean_pings {
 constexpr glean::impl::Ping NotBaseline(1);
 
 /*
- * Generated from not-metrics.
+ * Generated from not-deletion-request.
  *
- * The `metrics` ping is intended for all of the metrics that are explicitly set
- * by the application or are included in the application's `metrics.yaml` file
- * (except events). The reported data is tied to the ping's *measurement window*,
- * which is the time between the collection of two `metrics` ping. Ideally, this
- * window is expected to be about 24 hours, given that the collection is scheduled
- * daily at 4AM. Data in the `ping_info` section of the ping can be used to infer
- * the length of this window.
+ * This ping is submitted when a user opts out of sending technical and
+ * interaction data to Mozilla. This ping is intended to communicate to the Data
+ * Pipeline that the user wishes to have their reported Telemetry data deleted. As
+ * such it attempts to send itself at the moment the user opts out of data
+ * collection.
  */
-constexpr glean::impl::Ping NotMetrics(2);
+constexpr glean::impl::Ping NotDeletionRequest(2);
 
 /*
  * Generated from not-events.
@@ -46,15 +44,17 @@ constexpr glean::impl::Ping NotMetrics(2);
 constexpr glean::impl::Ping NotEvents(3);
 
 /*
- * Generated from not-deletion-request.
+ * Generated from not-metrics.
  *
- * This ping is submitted when a user opts out of sending technical and
- * interaction data to Mozilla. This ping is intended to communicate to the Data
- * Pipeline that the user wishes to have their reported Telemetry data deleted. As
- * such it attempts to send itself at the moment the user opts out of data
- * collection.
+ * The `metrics` ping is intended for all of the metrics that are explicitly set
+ * by the application or are included in the application's `metrics.yaml` file
+ * (except events). The reported data is tied to the ping's *measurement window*,
+ * which is the time between the collection of two `metrics` ping. Ideally, this
+ * window is expected to be about 24 hours, given that the collection is scheduled
+ * daily at 4AM. Data in the `ping_info` section of the ping can be used to infer
+ * the length of this window.
  */
-constexpr glean::impl::Ping NotDeletionRequest(4);
+constexpr glean::impl::Ping NotMetrics(4);
 
 
 }  // namespace mozilla::glean_pings
