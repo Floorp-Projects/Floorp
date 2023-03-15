@@ -7766,7 +7766,7 @@ const DSSource = ({
   } // If we are not a spoc, and can display a time to read value.
 
 
-  if (timeToRead) {
+  if (source && timeToRead) {
     return /*#__PURE__*/external_React_default().createElement("p", {
       className: "source clamp time-to-read"
     }, /*#__PURE__*/external_React_default().createElement(FluentOrText, {
