@@ -27,6 +27,9 @@ const { setTimeout, setInterval, clearTimeout, clearInterval } = ChromeUtils.imp
 const { CustomizableUI } = ChromeUtils.import(
     "resource:///modules/CustomizableUI.jsm"
 );
+const { FileUtils } = ChromeUtils.import(
+    "resource://gre/modules/FileUtils.jsm"
+);
 
 // Check information about startup.
 let isFirstRun = false;
@@ -232,6 +235,11 @@ try {
 
 // Load OpenLinkInExternal feature
 try {
+    // Disable it in the Flatpak version because it does not work.
+    // https://gitlab.gnome.org/GNOME/gtk/-/blob/4300a5c609306ce77cbc8a3580c19201dccd8d13/gdk/gdk.c#L472
+    if (AppConstants.platform === "linux" && FileUtils.File("/.flatpak-info").exists()) {
+        Services.prefs.lockPref("floorp.openLinkInExternal.enabled");
+    }
     if (AppConstants.platform === "win" || AppConstants.platform === "linux") {
         if (Services.prefs.getBoolPref("floorp.openLinkInExternal.enabled", false)) {
             ChromeUtils.import("resource:///modules/OpenLinkInExternal.jsm");

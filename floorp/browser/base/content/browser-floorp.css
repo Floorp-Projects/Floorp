@@ -247,7 +247,8 @@
     list-style-image: var(--BMSIcon,url("chrome://devtools/skin/images/globe.svg"));
   }
   
-  :root[sizemode="fullscreen"] :is(#sidebar-select-box){
+  :root[inDOMFullscreen] :is(#sidebar-select-box),
+  :root[inFullscreen]:not([macOSNativeFullscreen]) :is(#sidebar-select-box) {
     display: none;
   }
 

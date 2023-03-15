@@ -76,7 +76,7 @@ bookmarks-bottom-mode =
 
 nav-bar-settings = Navigation Bar Settings
 show-nav-bar-bottom =
- .label = Show the Navigation bar at the Bottom of { -brand-short-name }
+ .label = Show the navigation bar at the bottom of { -brand-short-name } (experimental)
 
 material-effect =
  .label = Allow Mica for Everyone to modify the browser design
@@ -190,13 +190,13 @@ WebRTC =
 ## download mgr
 download-notification-preferences = Download Notification
 start-always-notify =
- .label = Notify Only at Start
+ .label = Notify only at start
 finish-always-notify = 
- .label = Notify Only when Finished
+ .label = Notify only when finished
 always-notify =
- .label = Notify Both at Start and End
+ .label = Notify both at start and end
 do-not-notify =
- .label = Do not Enable Notifications
+ .label = Do not enable notifications
 
 floorp-translater = Translation Function Settings
 click-to-option =
@@ -222,7 +222,7 @@ macOS-chrome-useragent-mode =
 linux-chrome-useragent-mode =
  .label = Spoof Chrome on Linux
 mobile-chrome-useragent-mode =
- .label = Impersonate Moblie
+ .label = Spoof Chrome on iOS
 use-custom-useragent-mode =
  .label = Use Custom User Agent
 custom-useragent-value =
@@ -275,6 +275,9 @@ bsb-history-sidebar =
 
 bsb-download-sidebar =
   .label = { sidebar2-download-sidebar }
+
+bsb-notes-sidebar =
+  .label = { sidebar2-notes-sidebar }
 
 bsb-TST-sidebar =
   .label = { sidebar2-TST-sidebar }
@@ -336,7 +339,7 @@ newtab-background-not-background =
 newtab-background-selected-image =
     .label = Use Images from a Selected Folder
 
-newtab-background-folder = Selected Folder
+newtab-background-folder = Selected Folder (May not be available depending on the location of the folder)
 
 newtab-background-folder-reload = 
   .label = Reload Images
@@ -499,6 +502,11 @@ sidebar2-download-sidebar = Download
 show-download-sidebar =
   .tooltiptext = Show { sidebar2-download-sidebar } Sidebar
 
+sidebar2-notes-sidebar = Notes
+
+show-notes-sidebar =
+  .tooltiptext = Show { sidebar2-notes-sidebar } Sidebar
+
 sidebar2-TST-sidebar = Tree Style Tab
 
 show-TST-sidebar =
@@ -641,6 +649,12 @@ gf-floorp-hide-statusbar-description = Hide Status Bar
 gf-floorp-toggle-statusbar-name = [Floorp] Toggle Status Bar
 gf-floorp-toggle-statusbar-description = Show or Hide Status Bar
 
+gf-floorp-open-extension-sidebar-name = [Floorp] Open selected add-on of Sidebar
+gf-floorp-open-extension-sidebar-description = Open selected add-on of Sidebar
+gf-floorp-open-extension-sidebar-settings-addons-id = Add-on of Sidebar
+gf-floorp-open-extension-sidebar-settings-addons-id-description = The extension of the add-on open of sidebar
+gf-floorp-open-extension-sidebar-settings-list-default = Please select add-on
+gf-floorp-open-extension-sidebar-settings-list-unknwon = Unknwon add-on
 ##################################################################### Floorp System Update Portable Version ###############################################################
 
 update-portable-notification-found-title = Updates found!

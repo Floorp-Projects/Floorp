@@ -47,6 +47,8 @@ FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["API"] += [
     "API/downloadFile.json",
     "API/IOFile.js",
     "API/IOFile.json",
+    "API/sidebar.js",
+    "API/sidebar.json",
 ]
 
 FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["icons"] += [

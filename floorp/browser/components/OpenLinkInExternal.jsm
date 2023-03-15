@@ -356,7 +356,7 @@ let documentObserver = {
                 (async () => {
                     let tabContextMenu = document_.querySelector("#tabContextMenu");
                     let openLinkInExternal = document_.createXULElement("menuitem");
-                    openLinkInExternal.id = "open-link-in-external";
+                    openLinkInExternal.id = "context_openLinkInExternal";
                     openLinkInExternal.label = await L10N.formatValue("open-link-in-external-tab-context-menu");
                     openLinkInExternal.addEventListener("command", function(e) {
                         let window_ = e.currentTarget.ownerGlobal;
@@ -364,10 +364,31 @@ let documentObserver = {
                     });
                     tabContextMenu.addEventListener("popupshowing", function(e) {
                         let window_ = e.currentTarget.ownerGlobal;
-                        let scheme = window_.TabContextMenu.contextTab.linkedBrowser.currentURI.scheme;
-                        e.currentTarget.querySelector("#open-link-in-external").hidden = !/https?/.test(scheme);
+                        let scheme = window_?.TabContextMenu?.contextTab?.linkedBrowser?.currentURI?.scheme || "";
+                        e.currentTarget.querySelector("#context_openLinkInExternal").hidden = !/^https?$/.test(scheme);
                     });
                     tabContextMenu.querySelector("#context_sendTabToDevice")
+                        .insertAdjacentElement("afterend", openLinkInExternal);
+                })();
+                (async () => {
+                    let contextMenu = document_.querySelector("#contentAreaContextMenu");
+                    let openLinkInExternal = document_.createXULElement("menuitem");
+                    openLinkInExternal.id = "context-openlinkinexternal";
+                    openLinkInExternal.label = await L10N.formatValue("open-link-in-external-tab-context-menu");
+                    openLinkInExternal.addEventListener("command", function(e) {
+                        let window_ = e.currentTarget.ownerGlobal;
+                        OpenLinkInExternal(window_.gContextMenu.linkURL);
+                    });
+                    contextMenu.addEventListener("popupshowing", function(e) {
+                        let window_ = e.currentTarget.ownerGlobal;
+                        let scheme = window_?.gContextMenu?.linkURI?.scheme || "";
+                        e.currentTarget.querySelector("#context-openlinkinexternal").hidden =
+                            !(
+                                window_.gContextMenu.onSaveableLink ||
+                                window_.gContextMenu.onPlainTextLink
+                            ) || !/^https?$/.test(scheme);
+                    });
+                    contextMenu.querySelector("#context-sendlinktodevice")
                         .insertAdjacentElement("afterend", openLinkInExternal);
                 })();
             } else if (window_.location.href.startsWith("chrome://browser/content/preferences/preferences.xhtml") ||
@@ -406,7 +427,7 @@ let documentObserver = {
 
                     // Triggers a command event and updates the display.
                     options.querySelector(
-                        `[value="${Services.prefs.getStringPref("floorp.openLinkInExternal.browserId", "")}"]`
+                        `[value="${Services.prefs.getStringPref("floorp.openLinkInExternal.browserId", "").replaceAll(`"`, `\\"`)}"]`
                     ).dispatchEvent(new Event("command"));
                 }, { once: true });
             }
