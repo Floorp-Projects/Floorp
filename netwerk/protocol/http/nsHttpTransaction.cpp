@@ -579,6 +579,8 @@ void nsHttpTransaction::OnTransportStatus(nsITransport* transport,
       mConnection->GetSelfAddr(&mSelfAddr);
       mConnection->GetPeerAddr(&mPeerAddr);
       mResolvedByTRR = mConnection->ResolvedByTRR();
+      mEffectiveTRRMode = mConnection->EffectiveTRRMode();
+      mTRRSkipReason = mConnection->TRRSkipReason();
       mEchConfigUsed = mConnection->GetEchConfigUsed();
     }
   }
@@ -2953,13 +2955,16 @@ nsHttpTransaction::OnOutputStreamReady(nsIAsyncOutputStream* out) {
   return NS_OK;
 }
 
-void nsHttpTransaction::GetNetworkAddresses(NetAddr& self, NetAddr& peer,
-                                            bool& aResolvedByTRR,
-                                            bool& aEchConfigUsed) {
+void nsHttpTransaction::GetNetworkAddresses(
+    NetAddr& self, NetAddr& peer, bool& aResolvedByTRR,
+    nsIRequest::TRRMode& aEffectiveTRRMode, TRRSkippedReason& aSkipReason,
+    bool& aEchConfigUsed) {
   MutexAutoLock lock(mLock);
   self = mSelfAddr;
   peer = mPeerAddr;
   aResolvedByTRR = mResolvedByTRR;
+  aEffectiveTRRMode = mEffectiveTRRMode;
+  aSkipReason = mTRRSkipReason;
   aEchConfigUsed = mEchConfigUsed;
 }
 

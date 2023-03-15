@@ -185,6 +185,15 @@ class FakeSocketTransportProvider : public nsISocketTransport {
     MOZ_ASSERT(false);
     return NS_OK;
   }
+  NS_IMETHOD GetEffectiveTRRMode(
+      nsIRequest::TRRMode* aEffectiveTRRMode) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+  NS_IMETHOD GetTrrSkipReason(nsITRRSkipReason::value* aSkipReason) override {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
   NS_IMETHOD GetRetryDnsIfPossible(bool* aRetryDns) override {
     MOZ_ASSERT(false);
     return NS_OK;

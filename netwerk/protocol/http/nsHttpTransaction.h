@@ -92,6 +92,12 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   void SetIsHttp2Websocket(bool h2ws) override { mIsHttp2Websocket = h2ws; }
   bool IsHttp2Websocket() override { return mIsHttp2Websocket; }
 
+  void SetTRRInfo(nsIRequest::TRRMode aMode,
+                  TRRSkippedReason aSkipReason) override {
+    mEffectiveTRRMode = aMode;
+    mTRRSkipReason = aSkipReason;
+  }
+
   bool WaitingForHTTPSRR() const { return mCaps & NS_HTTP_FORCE_WAIT_HTTP_RR; }
   void MakeDontWaitHTTPSRR() { mCaps &= ~NS_HTTP_FORCE_WAIT_HTTP_RR; }
 
@@ -530,6 +536,9 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   NetAddr mSelfAddr;
   NetAddr mPeerAddr;
   bool mResolvedByTRR{false};
+  Atomic<nsIRequest::TRRMode, Relaxed> mEffectiveTRRMode{
+      nsIRequest::TRR_DEFAULT_MODE};
+  Atomic<TRRSkippedReason, Relaxed> mTRRSkipReason{nsITRRSkipReason::TRR_UNSET};
   bool mEchConfigUsed = false;
 
   bool m0RTTInProgress{false};
