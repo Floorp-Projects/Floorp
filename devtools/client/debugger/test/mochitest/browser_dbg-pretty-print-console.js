@@ -34,7 +34,7 @@ add_task(async function() {
   const formattedLink = await waitForConsoleLink(
     dbg,
     "arithmetic",
-    "math.min.js:formatted:22"
+    "math.min.js:formatted:22:18"
   );
   ok(true, "Message location was updated as expected");
 
