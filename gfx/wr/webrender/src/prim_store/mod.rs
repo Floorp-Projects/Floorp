@@ -902,7 +902,6 @@ pub struct NinePatchDescriptor {
     pub fill: bool,
     pub repeat_horizontal: RepeatMode,
     pub repeat_vertical: RepeatMode,
-    pub outset: SideOffsetsKey,
     pub widths: SideOffsetsKey,
 }
 

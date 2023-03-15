@@ -381,7 +381,7 @@ fn test_struct_sizes() {
     assert_eq!(mem::size_of::<NormalBorderPrim>(), 84, "NormalBorderPrim size changed");
     assert_eq!(mem::size_of::<NormalBorderTemplate>(), 216, "NormalBorderTemplate size changed");
     assert_eq!(mem::size_of::<NormalBorderKey>(), 104, "NormalBorderKey size changed");
-    assert_eq!(mem::size_of::<ImageBorder>(), 84, "ImageBorder size changed");
+    assert_eq!(mem::size_of::<ImageBorder>(), 68, "ImageBorder size changed");
     assert_eq!(mem::size_of::<ImageBorderTemplate>(), 104, "ImageBorderTemplate size changed");
-    assert_eq!(mem::size_of::<ImageBorderKey>(), 104, "ImageBorderKey size changed");
+    assert_eq!(mem::size_of::<ImageBorderKey>(), 88, "ImageBorderKey size changed");
 }
