@@ -44,6 +44,8 @@ fun TabsTray(
         .observeAsComposableState { state -> state.mode }.value ?: TabsTrayState.Mode.Normal
     val normalTabs = tabsTrayStore
         .observeAsComposableState { state -> state.normalTabs }.value ?: emptyList()
+    val privateTabs = tabsTrayStore
+        .observeAsComposableState { state -> state.privateTabs }.value ?: emptyList()
     val pagerState = rememberPagerState(initialPage = 0)
     val scope = rememberCoroutineScope()
     val animateScrollToPage: ((Page) -> Unit) = { page ->
@@ -86,12 +88,15 @@ fun TabsTray(
                         }
                     }
                     Page.PrivateTabs -> {
-                        Text(
-                            text = "Private tabs",
-                            modifier = Modifier.padding(all = 16.dp),
-                            color = FirefoxTheme.colors.textPrimary,
-                            style = FirefoxTheme.typography.body1,
-                        )
+                        if (displayTabsInGrid) {
+                            TabGrid(
+                                tabs = privateTabs,
+                            )
+                        } else {
+                            TabList(
+                                tabs = privateTabs,
+                            )
+                        }
                     }
                     Page.SyncedTabs -> {
                         Text(
@@ -113,6 +118,10 @@ private fun TabsTrayPreview() {
     val store = TabsTrayStore(
         initialState = TabsTrayState(
             normalTabs = generateFakeTabsList(),
+            privateTabs = generateFakeTabsList(
+                tabCount = 7,
+                isPrivate = true,
+            ),
         ),
     )
 
@@ -142,13 +151,13 @@ private fun TabsTrayMultiSelectPreview() {
     }
 }
 
-private fun generateFakeTabsList(tabCount: Int = 10): List<TabSessionState> {
-    val fakeTab = TabSessionState(
-        id = "tabId",
-        content = ContentState(
-            url = "www.mozilla.com",
-        ),
-    )
-
-    return List(tabCount) { fakeTab }
-}
+private fun generateFakeTabsList(tabCount: Int = 10, isPrivate: Boolean = false): List<TabSessionState> =
+    List(tabCount) { index ->
+        TabSessionState(
+            id = "tabId$index-$isPrivate",
+            content = ContentState(
+                url = "www.mozilla.com",
+                private = isPrivate,
+            ),
+        )
+    }
