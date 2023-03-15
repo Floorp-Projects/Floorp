@@ -131,7 +131,6 @@ var Harness = {
       Services.obs.addObserver(this, "addon-install-origin-blocked");
       Services.obs.addObserver(this, "addon-install-blocked");
       Services.obs.addObserver(this, "addon-install-failed");
-      Services.obs.addObserver(this, "addon-install-complete");
 
       // For browser_auth tests which trigger auth dialogs.
       Services.obs.addObserver(this, "tabmodal-dialog-loaded");
@@ -157,7 +156,6 @@ var Harness = {
         Services.obs.removeObserver(self, "addon-install-origin-blocked");
         Services.obs.removeObserver(self, "addon-install-blocked");
         Services.obs.removeObserver(self, "addon-install-failed");
-        Services.obs.removeObserver(self, "addon-install-complete");
 
         Services.obs.removeObserver(self, "tabmodal-dialog-loaded");
         Services.obs.removeObserver(self, "common-dialog-loaded");
@@ -524,34 +522,6 @@ var Harness = {
           ok(
             aInstall.error != 0 || aInstall.addon.appDisabled,
             "Failed installs should have an error or be appDisabled"
-          );
-
-          this.runningInstalls.splice(
-            this.runningInstalls.indexOf(aInstall),
-            1
-          );
-        }, this);
-        break;
-      case "addon-install-complete":
-        installInfo.installs.forEach(function(aInstall) {
-          isnot(
-            this.runningInstalls.indexOf(aInstall),
-            -1,
-            "Should only see completed events for started installs"
-          );
-
-          is(aInstall.error, 0, "Completed installs should have no error");
-          ok(
-            !aInstall.appDisabled,
-            "Completed installs should not be appDisabled"
-          );
-
-          // Complete installs are either in the INSTALLED or CANCELLED state
-          // since the test may cancel installs the moment they complete.
-          ok(
-            aInstall.state == AddonManager.STATE_INSTALLED ||
-              aInstall.state == AddonManager.STATE_CANCELLED,
-            "Completed installs should be in the right state"
           );
 
           this.runningInstalls.splice(
