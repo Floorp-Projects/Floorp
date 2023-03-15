@@ -1268,14 +1268,17 @@ bool WrapObject(JSContext* cx, const WindowProxyHolder& p,
   return ToJSValue(cx, p, rval);
 }
 
-static int ComparePropertyInfosAtIndices(const void* aElement1,
-                                         const void* aElement2,
-                                         void* aClosure) {
+static int CompareIdsAtIndices(const void* aElement1, const void* aElement2,
+                               void* aClosure) {
   const uint16_t index1 = *static_cast<const uint16_t*>(aElement1);
   const uint16_t index2 = *static_cast<const uint16_t*>(aElement2);
   const PropertyInfo* infos = static_cast<PropertyInfo*>(aClosure);
 
-  return PropertyInfo::Compare(infos[index1], infos[index2]);
+  uintptr_t rawBits1 = infos[index1].Id().asRawBits();
+  uintptr_t rawBits2 = infos[index2].Id().asRawBits();
+  MOZ_ASSERT(rawBits1 != rawBits2);
+
+  return rawBits1 < rawBits2 ? -1 : 1;
 }
 
 // {JSPropertySpec,JSFunctionSpec} use {JSPropertySpec,JSFunctionSpec}::Name
@@ -1348,11 +1351,10 @@ static bool InitPropertyInfos(JSContext* cx,
   for (unsigned int i = 0; i < nativeProperties->propertyInfoCount; ++i) {
     indices[i] = i;
   }
-  // ComparePropertyInfosAtIndices() doesn't actually modify the PropertyInfo
-  // array, so the const_cast here is OK in spite of the signature of
-  // NS_QuickSort().
+  // CompareIdsAtIndices() doesn't actually modify the PropertyInfo array, so
+  // the const_cast here is OK in spite of the signature of NS_QuickSort().
   NS_QuickSort(indices, nativeProperties->propertyInfoCount, sizeof(uint16_t),
-               ComparePropertyInfosAtIndices,
+               CompareIdsAtIndices,
                const_cast<PropertyInfo*>(nativeProperties->PropertyInfos()));
 
   return true;
@@ -1474,40 +1476,23 @@ static JSObject* XrayCreateFunction(JSContext* cx,
 struct IdToIndexComparator {
   // The id we're searching for.
   const jsid& mId;
-  // Whether we're searching for static operations.
-  const bool mStatic;
   // The list of ids we're searching in.
   const PropertyInfo* mInfos;
 
-  IdToIndexComparator(const jsid& aId, DOMObjectType aType,
-                      const PropertyInfo* aInfos)
-      : mId(aId), mStatic(aType == eInterface), mInfos(aInfos) {}
+  explicit IdToIndexComparator(const jsid& aId, const PropertyInfo* aInfos)
+      : mId(aId), mInfos(aInfos) {}
   int operator()(const uint16_t aIndex) const {
-    const PropertyInfo& info = mInfos[aIndex];
-    if (mId.asRawBits() == info.Id().asRawBits()) {
-      if (info.type != eMethod && info.type != eStaticMethod) {
-        return 0;
-      }
-
-      if (mStatic == info.IsStaticMethod()) {
-        // We're looking for static properties and we've found a static one for
-        // the right name.
-        return 0;
-      }
-
-      // Static operations are sorted before others by PropertyInfo::Compare.
-      return mStatic ? -1 : 1;
+    if (mId.asRawBits() == mInfos[aIndex].Id().asRawBits()) {
+      return 0;
     }
-
-    return mId.asRawBits() < info.Id().asRawBits() ? -1 : 1;
+    return mId.asRawBits() < mInfos[aIndex].Id().asRawBits() ? -1 : 1;
   }
 };
 
 static const PropertyInfo* XrayFindOwnPropertyInfo(
-    JSContext* cx, DOMObjectType type, JS::Handle<jsid> id,
+    JSContext* cx, JS::Handle<jsid> id,
     const NativeProperties* nativeProperties) {
-  if ((type == eInterfacePrototype || type == eGlobalInstance) &&
-      MOZ_UNLIKELY(nativeProperties->iteratorAliasMethodIndex >= 0) &&
+  if (MOZ_UNLIKELY(nativeProperties->iteratorAliasMethodIndex >= 0) &&
       id.isWellKnownSymbol(JS::SymbolCode::iterator)) {
     return nativeProperties->MethodPropertyInfos() +
            nativeProperties->iteratorAliasMethodIndex;
@@ -1520,7 +1505,7 @@ static const PropertyInfo* XrayFindOwnPropertyInfo(
 
   if (BinarySearchIf(sortedPropertyIndices, 0,
                      nativeProperties->propertyInfoCount,
-                     IdToIndexComparator(id, type, propertyInfos), &idx)) {
+                     IdToIndexComparator(id, propertyInfos), &idx)) {
     return propertyInfos + sortedPropertyIndices[idx];
   }
 
@@ -1752,11 +1737,11 @@ static bool ResolvePrototypeOrConstructor(
   const PropertyInfo* found = nullptr;
 
   if ((nativeProperties = nativePropertiesHolder.regular)) {
-    found = XrayFindOwnPropertyInfo(cx, type, id, nativeProperties);
+    found = XrayFindOwnPropertyInfo(cx, id, nativeProperties);
   }
   if (!found && (nativeProperties = nativePropertiesHolder.chromeOnly) &&
       xpc::AccessCheck::isChrome(JS::GetCompartment(wrapper))) {
-    found = XrayFindOwnPropertyInfo(cx, type, id, nativeProperties);
+    found = XrayFindOwnPropertyInfo(cx, id, nativeProperties);
   }
 
   if (IsInstance(type)) {
