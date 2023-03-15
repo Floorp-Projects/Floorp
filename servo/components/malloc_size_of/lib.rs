@@ -725,8 +725,8 @@ where
                 selector.size_of(ops)
             },
             Component::Is(ref list) |
-            Component::Where(ref list) |
-            Component::Has(ref list) => list.size_of(ops),
+            Component::Where(ref list) => list.size_of(ops),
+            Component::Has(ref relative_selectors) => relative_selectors.size_of(ops),
             Component::NthOf(ref nth_of_data) => nth_of_data.size_of(ops),
             Component::PseudoElement(ref pseudo) => (*pseudo).size_of(ops),
             Component::Combinator(..) |
