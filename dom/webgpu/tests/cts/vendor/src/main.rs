@@ -158,99 +158,97 @@ fn run(args: CliArgs) -> miette::Result<()> {
 
     log::info!("making a vendored copy of checked-in files from {cts_ckt}…",);
     gecko_ckt.regen_file(
-            join_path([&*cts_dir, "checkout_commit.txt".as_ref()]),
-            |checkout_commit_file| {
-                let mut git_status_porcelain_cmd = EasyCommand::new(&git_bin, |cmd| {
-                    cmd.args(["status", "--porcelain"])
-                        .envs([
-                        ("GIT_DIR", &*cts_ckt_git_dir),
-                        ("GIT_WORK_TREE", &*cts_ckt),
-                        ])
-                });
-                log::info!(
-                    "  …ensuring the working tree and index are clean with \
+        join_path([&*cts_dir, "checkout_commit.txt".as_ref()]),
+        |checkout_commit_file| {
+            let mut git_status_porcelain_cmd = EasyCommand::new(&git_bin, |cmd| {
+                cmd.args(["status", "--porcelain"])
+                    .envs([("GIT_DIR", &*cts_ckt_git_dir), ("GIT_WORK_TREE", &*cts_ckt)])
+            });
+            log::info!(
+                "  …ensuring the working tree and index are clean with \
                     {git_status_porcelain_cmd}…"
-                );
-                let git_status_porcelain_output = git_status_porcelain_cmd.just_stdout_utf8()?;
-                ensure!(
-                    git_status_porcelain_output.is_empty(),
-                    "expected a clean CTS working tree and index, but {}'s output was not empty; \
+            );
+            let git_status_porcelain_output = git_status_porcelain_cmd.just_stdout_utf8()?;
+            ensure!(
+                git_status_porcelain_output.is_empty(),
+                "expected a clean CTS working tree and index, but {}'s output was not empty; \
                     for reference, it was:\n\n{}",
-                    git_status_porcelain_cmd,
-                    git_status_porcelain_output,
-                );
+                git_status_porcelain_cmd,
+                git_status_porcelain_output,
+            );
 
-                gecko_ckt.regen_dir(&cts_vendor_dir.join("checkout"), |vendored_ckt_dir| {
-                    log::info!("  …copying files tracked by Git to {vendored_ckt_dir}…");
-                    let files_to_vendor = {
-                        let mut git_ls_files_cmd = EasyCommand::new(&git_bin, |cmd| {
-                            cmd.arg("ls-files").env("GIT_DIR", &cts_ckt_git_dir)
-                        });
-                        log::debug!("  …getting files to vendor from {git_ls_files_cmd}…");
-                        let output = git_ls_files_cmd.just_stdout_utf8()?;
-                        let mut files = output
-                            .split_terminator('\n')
-                            .map(PathBuf::from)
-                            .collect::<BTreeSet<_>>();
-                        log::trace!("  …files from {git_ls_files_cmd}: {files:#?}");
+            gecko_ckt.regen_dir(&cts_vendor_dir.join("checkout"), |vendored_ckt_dir| {
+                log::info!("  …copying files tracked by Git to {vendored_ckt_dir}…");
+                let files_to_vendor = {
+                    let mut git_ls_files_cmd = EasyCommand::new(&git_bin, |cmd| {
+                        cmd.arg("ls-files").env("GIT_DIR", &cts_ckt_git_dir)
+                    });
+                    log::debug!("  …getting files to vendor from {git_ls_files_cmd}…");
+                    let output = git_ls_files_cmd.just_stdout_utf8()?;
+                    let mut files = output
+                        .split_terminator('\n')
+                        .map(PathBuf::from)
+                        .collect::<BTreeSet<_>>();
+                    log::trace!("  …files from {git_ls_files_cmd}: {files:#?}");
 
-                        log::trace!("  …validating that files from Git repo still exist…");
-                        let files_not_found = files
-                            .iter()
-                            .filter(|p| !cts_ckt.child(p).exists())
-                            .collect::<Vec<_>>();
-                        ensure!(
+                    log::trace!("  …validating that files from Git repo still exist…");
+                    let files_not_found = files
+                        .iter()
+                        .filter(|p| !cts_ckt.child(p).exists())
+                        .collect::<Vec<_>>();
+                    ensure!(
                         files_not_found.is_empty(),
-                        "the following files were returned by `git ls-files`, but do not exist on disk: \
-                        {:#?}",
+                        "the following files were returned by `git ls-files`, but do not \
+                        exist on disk: {:#?}",
                         files_not_found,
                     );
 
-                        log::trace!("  …stripping files we actually don't want to vendor…");
-                        let files_to_actually_not_vendor = [
-                            // There's no reason to bring this over, and lots of reasons to not bring in
-                            // security-sensitive content unless we have to.
-                            "deploy_key.enc",
-                        ]
-                        .map(Path::new);
-                        log::trace!("    …files we don't want: {files_to_actually_not_vendor:?}");
-                        for path in files_to_actually_not_vendor {
-                            ensure!(
-                                files.remove(path),
-                                "failed to remove {} from list of files to vendor; does it still exist?",
-                                cts_ckt.child(path)
-                            );
-                        }
-                        files
-                    };
-
-                    log::debug!("  …now doing the copying…");
-                    for path in files_to_vendor {
-                        let vendor_from_path = cts_ckt.child(&path);
-                        let vendor_to_path = vendored_ckt_dir.child(&path);
-                        if let Some(parent) = vendor_to_path.parent() {
-                            create_dir_all(vendored_ckt_dir.child(parent))?;
-                        }
-                        log::trace!("    …copying {vendor_from_path} to {vendor_to_path}…");
-                        fs::copy(&vendor_from_path, &vendor_to_path)?;
+                    log::trace!("  …stripping files we actually don't want to vendor…");
+                    let files_to_actually_not_vendor = [
+                        // There's no reason to bring this over, and lots of reasons to not bring in
+                        // security-sensitive content unless we have to.
+                        "deploy_key.enc",
+                    ]
+                    .map(Path::new);
+                    log::trace!("    …files we don't want: {files_to_actually_not_vendor:?}");
+                    for path in files_to_actually_not_vendor {
+                        ensure!(
+                            files.remove(path),
+                            "failed to remove {} from list of files to vendor; does it still \
+                                exist?",
+                            cts_ckt.child(path)
+                        );
                     }
+                    files
+                };
 
-                    Ok(())
-                })?;
+                log::debug!("  …now doing the copying…");
+                for path in files_to_vendor {
+                    let vendor_from_path = cts_ckt.child(&path);
+                    let vendor_to_path = vendored_ckt_dir.child(&path);
+                    if let Some(parent) = vendor_to_path.parent() {
+                        create_dir_all(vendored_ckt_dir.child(parent))?;
+                    }
+                    log::trace!("    …copying {vendor_from_path} to {vendor_to_path}…");
+                    fs::copy(&vendor_from_path, &vendor_to_path)?;
+                }
 
-                log::info!("  …writing commit ref pointed to by `HEAD` to {checkout_commit_file}…");
-                let mut git_rev_parse_head_cmd = EasyCommand::new(&git_bin, |cmd| {
-                    cmd.args(["rev-parse", "HEAD"])
-                        .env("GIT_DIR", &cts_ckt_git_dir)
-                });
-                log::trace!("    …getting output of {git_rev_parse_head_cmd}…");
-                fs::write(
-                    checkout_commit_file,
-                    git_rev_parse_head_cmd.just_stdout_utf8()?,
-                )
-                .wrap_err_with(|| format!("failed to write HEAD ref to {checkout_commit_file}"))
-            },
-        )?;
+                Ok(())
+            })?;
+
+            log::info!("  …writing commit ref pointed to by `HEAD` to {checkout_commit_file}…");
+            let mut git_rev_parse_head_cmd = EasyCommand::new(&git_bin, |cmd| {
+                cmd.args(["rev-parse", "HEAD"])
+                    .env("GIT_DIR", &cts_ckt_git_dir)
+            });
+            log::trace!("    …getting output of {git_rev_parse_head_cmd}…");
+            fs::write(
+                checkout_commit_file,
+                git_rev_parse_head_cmd.just_stdout_utf8()?,
+            )
+            .wrap_err_with(|| format!("failed to write HEAD ref to {checkout_commit_file}"))
+        },
+    )?;
 
     set_current_dir(&*cts_ckt)
         .into_diagnostic()

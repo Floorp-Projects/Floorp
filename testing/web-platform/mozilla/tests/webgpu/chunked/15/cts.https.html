@@ -1,0 +1,59 @@
+<!-- AUTO-GENERATED - DO NOT EDIT. See WebGPU CTS: tools/gen_wpt_cts_html. -->
+<!--
+    This test suite is built from the TypeScript sources at:
+    https://github.com/gpuweb/cts
+
+    If you are debugging WebGPU conformance tests, it's highly recommended that
+    you use the standalone interactive runner in that repository, which
+    provides tools for easier debugging and editing (source maps, debug
+    logging, warn/skip functionality, etc.)
+
+    NOTE:
+    The WPT version of this file is generated with *one variant per test spec
+    file*. If your harness needs more fine-grained suppressions, you'll need to
+    generate your own variants list from your suppression list.
+    See `tools/gen_wpt_cts_html` to do this.
+
+    When run under browser CI, the original cts.https.html should be skipped, and
+    this alternate version should be run instead, under a non-exported WPT test
+    directory (e.g. Chromium's wpt_internal).
+-->
+
+<!doctype html>
+<title>WebGPU CTS</title>
+<meta charset=utf-8>
+<link rel=help href='https://gpuweb.github.io/gpuweb/'>
+
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script>
+    const loadWebGPUExpectations = undefined;
+    const shouldWebGPUCTSFailOnWarnings = undefined;
+</script>
+<script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
+
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,clearBuffer:offset_alignment:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,clearBuffer:overflow:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,clearBuffer:out_of_bounds:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,compute_pass:set_pipeline:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,compute_pass:pipeline,device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,compute_pass:dispatch_sizes:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,compute_pass:indirect_dispatch_buffer_state:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,compute_pass:indirect_dispatch_buffer,device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,compute_pass:indirect_dispatch_buffer,usage:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,copyBufferToBuffer:buffer_state:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,copyBufferToBuffer:buffer,device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,copyBufferToBuffer:buffer_usage:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,copyBufferToBuffer:copy_size_alignment:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,copyBufferToBuffer:copy_offset_alignment:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,copyBufferToBuffer:copy_overflow:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,copyBufferToBuffer:copy_out_of_bounds:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,copyBufferToBuffer:copy_within_same_buffer:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,copyTextureToTexture:copy_with_invalid_or_destroyed_texture:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,copyTextureToTexture:texture,device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,copyTextureToTexture:mipmap_level:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,copyTextureToTexture:texture_usage:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,copyTextureToTexture:sample_count:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,copyTextureToTexture:multisampled_copy_restrictions:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,copyTextureToTexture:texture_format_compatibility:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,copyTextureToTexture:depth_stencil_copy_restrictions:*'>

@@ -1,0 +1,59 @@
+<!-- AUTO-GENERATED - DO NOT EDIT. See WebGPU CTS: tools/gen_wpt_cts_html. -->
+<!--
+    This test suite is built from the TypeScript sources at:
+    https://github.com/gpuweb/cts
+
+    If you are debugging WebGPU conformance tests, it's highly recommended that
+    you use the standalone interactive runner in that repository, which
+    provides tools for easier debugging and editing (source maps, debug
+    logging, warn/skip functionality, etc.)
+
+    NOTE:
+    The WPT version of this file is generated with *one variant per test spec
+    file*. If your harness needs more fine-grained suppressions, you'll need to
+    generate your own variants list from your suppression list.
+    See `tools/gen_wpt_cts_html` to do this.
+
+    When run under browser CI, the original cts.https.html should be skipped, and
+    this alternate version should be run instead, under a non-exported WPT test
+    directory (e.g. Chromium's wpt_internal).
+-->
+
+<!doctype html>
+<title>WebGPU CTS</title>
+<meta charset=utf-8>
+<link rel=help href='https://gpuweb.github.io/gpuweb/'>
+
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script>
+    const loadWebGPUExpectations = undefined;
+    const shouldWebGPUCTSFailOnWarnings = undefined;
+</script>
+<script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
+
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createTexture,2d,uncompressed_format:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createTexture,2d,compressed_format:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createView,2d,uncompressed_format:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createView,2d,compressed_format:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createSampler:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createBindGroupLayout:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createBindGroup:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createPipelineLayout:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createShaderModule:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createComputePipeline:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createRenderPipeline:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createCommandEncoder:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createRenderBundleEncoder:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createQuerySet:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:command,copyBufferToBuffer:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:command,copyBufferToTexture:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:command,copyTextureToBuffer:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:command,copyTextureToTexture:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:command,clearBuffer:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:command,writeTimestamp:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:command,resolveQuerySet:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:command,computePass,dispatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:command,renderPass,draw:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:command,renderPass,renderBundle:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:queue,writeBuffer:*'>

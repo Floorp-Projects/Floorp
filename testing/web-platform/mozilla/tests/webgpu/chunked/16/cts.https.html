@@ -1,0 +1,59 @@
+<!-- AUTO-GENERATED - DO NOT EDIT. See WebGPU CTS: tools/gen_wpt_cts_html. -->
+<!--
+    This test suite is built from the TypeScript sources at:
+    https://github.com/gpuweb/cts
+
+    If you are debugging WebGPU conformance tests, it's highly recommended that
+    you use the standalone interactive runner in that repository, which
+    provides tools for easier debugging and editing (source maps, debug
+    logging, warn/skip functionality, etc.)
+
+    NOTE:
+    The WPT version of this file is generated with *one variant per test spec
+    file*. If your harness needs more fine-grained suppressions, you'll need to
+    generate your own variants list from your suppression list.
+    See `tools/gen_wpt_cts_html` to do this.
+
+    When run under browser CI, the original cts.https.html should be skipped, and
+    this alternate version should be run instead, under a non-exported WPT test
+    directory (e.g. Chromium's wpt_internal).
+-->
+
+<!doctype html>
+<title>WebGPU CTS</title>
+<meta charset=utf-8>
+<link rel=help href='https://gpuweb.github.io/gpuweb/'>
+
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script>
+    const loadWebGPUExpectations = undefined;
+    const shouldWebGPUCTSFailOnWarnings = undefined;
+</script>
+<script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
+
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,copyTextureToTexture:copy_ranges:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,copyTextureToTexture:copy_within_same_texture:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,copyTextureToTexture:copy_aspects:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,copyTextureToTexture:copy_ranges_with_compressed_texture_formats:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,debug:debug_group_balanced:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,debug:debug_group:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,debug:debug_marker:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,index_access:out_of_bounds:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,index_access:out_of_bounds_zero_sized_index_buffer:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,draw:unused_buffer_bound:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,draw:index_buffer_OOB:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,draw:vertex_buffer_OOB:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,draw:buffer_binding_overlap:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,draw:last_buffer_setting_take_account:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,draw:max_draw_count:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,dynamic_state:setViewport,x_y_width_height_nonnegative:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,dynamic_state:setViewport,xy_rect_contained_in_attachment:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,dynamic_state:setViewport,depth_rangeAndOrder:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,dynamic_state:setScissorRect,x_y_width_height_nonnegative:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,dynamic_state:setScissorRect,xy_rect_contained_in_attachment:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,dynamic_state:setBlendConstant:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,dynamic_state:setStencilReference:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,indirect_draw:indirect_buffer_state:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,indirect_draw:indirect_buffer,device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,indirect_draw:indirect_buffer_usage:*'>
