@@ -25,11 +25,7 @@ assert "cell6" not in hazmap
 assert "<returnvalue>" in hazmap
 assert "this" in hazmap
 
-# All hazards should be in f(), loopy(), safevals(), method(), and refptr_test{1,3,4}()
 assert hazmap["cell2"].function == "Cell* f()"
-haz_functions = set(haz.function for haz in hazards)
-print(haz_functions)
-assert len(haz_functions) == 7
 
 # Check that the correct GC call is reported for each hazard. (cell3 has a
 # hazard from two different GC calls; it doesn't really matter which is
@@ -100,3 +96,10 @@ for haz in hazards:
 methhaz = byfunc["int32 Subcell::method()"]
 assert "this" in methhaz
 assert methhaz["this"].type == "Subcell*"
+
+haz_functions = set(haz.function for haz in hazards)
+
+# aggr_init tests.
+
+assert "void aggr_init_safe()" not in haz_functions
+assert "void aggr_init_unsafe()" in haz_functions

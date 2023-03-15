@@ -53,6 +53,12 @@ class AutoSuppressGC {
   AutoSuppressGC() {}
 };
 
+class AutoCheckCannotGC {
+ public:
+  AutoCheckCannotGC() {}
+  ~AutoCheckCannotGC() { asm(""); }
+} ANNOTATE("Invalidated by GC");
+
 extern void GC() ANNOTATE("GC Call");
 extern void invisible();
 
@@ -462,4 +468,24 @@ Cell* refptr_test5() {
   static Cell cell;
   RefPtr<int> r;
   return nullptr;  // returning immobile value, so no hazard
+}
+
+std::pair<bool, AutoCheckCannotGC> pair_returning_function() {
+  return std::make_pair(true, AutoCheckCannotGC());
+}
+
+void aggr_init_unsafe() {
+  // nogc will be live after the call, so across the GC.
+  auto [ok, nogc] = pair_returning_function();
+  GC();
+}
+
+void aggr_init_safe() {
+  // The analysis should be able to tell that nogc is only live after the call,
+  // not before. (This is to check for a problem where the return value was
+  // getting stored into a different temporary than the local nogc variable,
+  // and so its initialization was never seen and so it was assumed to be live
+  // throughout the function.)
+  GC();
+  auto [ok, nogc] = pair_returning_function();
 }
