@@ -1051,6 +1051,22 @@ export var UrlbarTestUtils = {
 
     return doCleanup;
   },
+
+  /**
+   * Simulate that user clicks URLBar and inputs text into it.
+   *
+   * @param {object} win
+   *   The browser window containing target gURLBar.
+   * @param {string} text
+   *   The text to be input.
+   */
+  async inputIntoURLBar(win, text) {
+    this.EventUtils.synthesizeMouseAtCenter(win.gURLBar.inputField, {}, win);
+    await lazy.BrowserTestUtils.waitForCondition(
+      () => win.document.activeElement === win.gURLBar.inputField
+    );
+    this.EventUtils.sendString(text, win);
+  },
 };
 
 UrlbarTestUtils.formHistory = {

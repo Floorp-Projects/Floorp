@@ -81,7 +81,8 @@ const anotherHeuristicProvider = new AnotherHeuristicProvider({
 
 add_task(async function engagement_before_showing_results() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.searchTips.test.ignoreShowLimits", true]],
+    // Avoid showing search tip.
+    set: [["browser.urlbar.tipShownCount.searchTip_onboard", 999]],
   });
 
   // Update chunkResultsDelayMs to delay the call to notifyResults.
@@ -104,7 +105,7 @@ add_task(async function engagement_before_showing_results() {
 
   await doTest(async browser => {
     // Try to show the results.
-    const onPopupOpened = openPopup("exam");
+    await UrlbarTestUtils.inputIntoURLBar(window, "exam");
 
     // Wait until starting the query and filling expected results.
     const context = await anotherHeuristicProvider.onQueryStarted();
@@ -132,10 +133,8 @@ add_task(async function engagement_before_showing_results() {
       },
     ]);
 
-    // Clear the pending query to resolve the popup promise.
+    // Clear the pending query.
     noResponseProvider.done();
-    // Search tips will be shown since no results were added.
-    await onPopupOpened;
   });
 
   await SpecialPowers.popPrefEnv();
