@@ -735,8 +735,20 @@ public class GeckoSession {
             final EventCallback callback) {
 
           if ("GeckoView:DotPrintRequest".equals(event)) {
-            // Event and JS Module will be implemented in Bug 1659818 for window.print() support
-            Log.w(LOGTAG, "Event GeckoView:DotPrintRequest is not implemented.");
+            final Long cbcId = message.getLong("canonicalBrowsingContextId");
+            final GeckoResult<InputStream> pdfResult = saveAsPdfByBrowsingContext(cbcId);
+            pdfResult
+                .accept(
+                    pdfStream -> {
+                      delegate.onPrint(pdfStream);
+                      mEventDispatcher.dispatch("GeckoView:DotPrintFinish", null);
+                    })
+                .exceptionally(
+                    e -> {
+                      mEventDispatcher.dispatch("GeckoView:DotPrintFinish", null);
+                      Log.e(LOGTAG, "Could not complete DotPrintRequest.", e);
+                      return null;
+                    });
           }
         }
       };
@@ -1243,6 +1255,9 @@ public class GeckoSession {
 
     @WrapForJNI(dispatchTo = "proxy")
     public native void printToPdf(GeckoResult<InputStream> geckoResult);
+
+    @WrapForJNI(dispatchTo = "proxy")
+    private native void printToPdf(GeckoResult<InputStream> geckoResult, long browserContextId);
 
     @WrapForJNI(calledFrom = "gecko")
     private synchronized void onReady(final @Nullable NativeQueue queue) {
@@ -6780,6 +6795,19 @@ public class GeckoSession {
    */
   @AnyThread
   public @NonNull GeckoResult<InputStream> saveAsPdf() {
+    return saveAsPdfByBrowsingContext(null);
+  }
+
+  /**
+   * Saves a PDF of the specified browsing context. Use null if the browsing context is unknown or
+   * to print the main page.
+   *
+   * @param browsingContextId the browsing context id of the item to print
+   * @return A GeckoResult with an InputStream containing the PDF.
+   */
+  @AnyThread
+  private @NonNull GeckoResult<InputStream> saveAsPdfByBrowsingContext(
+      final @Nullable Long browsingContextId) {
     final GeckoResult<InputStream> geckoResult = new GeckoResult<>();
     final GeckoSession self = this;
     this.isPdfJs()
@@ -6788,7 +6816,11 @@ public class GeckoSession {
               @Override
               public GeckoResult<Void> onValue(final Boolean isPdfJs) {
                 if (!isPdfJs) {
-                  self.mWindow.printToPdf(geckoResult);
+                  if (browsingContextId == null) {
+                    self.mWindow.printToPdf(geckoResult);
+                  } else {
+                    self.mWindow.printToPdf(geckoResult, browsingContextId);
+                  }
                 } else {
                   geckoResult.completeFrom(
                       self.getPdfFileSaver()

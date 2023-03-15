@@ -131,6 +131,7 @@ class GeckoViewNavigation extends GeckoViewModule {
       "GeckoView:Reload",
       "GeckoView:Stop",
       "GeckoView:PurgeHistory",
+      "GeckoView:DotPrintFinish",
     ]);
 
     this._initialAboutBlank = true;
@@ -289,6 +290,11 @@ class GeckoViewNavigation extends GeckoViewModule {
       case "GeckoView:PurgeHistory":
         this.browser.purgeSessionHistory();
         break;
+      case "GeckoView:DotPrintFinish":
+        this.moduleManager
+          .getActor("GeckoViewPrintDelegate")
+          .clearStaticClone();
+        break;
     }
   }
 
@@ -434,7 +440,7 @@ class GeckoViewNavigation extends GeckoViewModule {
                                        name=${aName}`;
 
     if (aWhere === Ci.nsIBrowserDOMWindow.OPEN_PRINT_BROWSER) {
-      return this.moduleManager.onNewPrintWindow(aParams);
+      return this.window.moduleManager.onPrintWindow(aParams);
     }
 
     if (

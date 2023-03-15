@@ -4,10 +4,18 @@
 
 package org.mozilla.geckoview.test
 
+import android.app.UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Color
+import android.graphics.Color.rgb
+import android.os.Handler
+import android.os.Looper
+import android.view.accessibility.AccessibilityEvent.TYPE_VIEW_SCROLLED
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
+import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -16,12 +24,14 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.Autofill
+import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.PrintDelegate
 import org.mozilla.geckoview.GeckoView.ActivityContextDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
 import kotlin.math.roundToInt
+
 @RunWith(AndroidJUnit4::class)
 @LargeTest
 class PrintDelegateTest : BaseSessionTest() {
@@ -30,9 +40,8 @@ class PrintDelegateTest : BaseSessionTest() {
     private var deviceWidth = 0
     private var scaledHeight = 0
     private var scaledWidth = 12
-//    See Bug 1812692:
-//    private val instrumentation = InstrumentationRegistry.getInstrumentation()
-//    private val uiAutomation = instrumentation.uiAutomation
+    private val instrumentation = InstrumentationRegistry.getInstrumentation()
+    private val uiAutomation = instrumentation.getUiAutomation(FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES)
 
     @get:Rule
     override val rules: RuleChain = RuleChain.outerRule(activityRule).around(sessionRule)
@@ -45,7 +54,6 @@ class PrintDelegateTest : BaseSessionTest() {
                     return it
                 }
             }
-            it.view.setSession(mainSession)
             // An activity delegate is required for printing
             it.view.activityContextDelegate = PrintTestActivityDelegate()
             deviceHeight = it.resources.displayMetrics.heightPixels
@@ -57,7 +65,7 @@ class PrintDelegateTest : BaseSessionTest() {
     @After
     fun cleanup() {
         activityRule.scenario.onActivity {
-            it.view.releaseSession()
+            uiAutomation.setOnAccessibilityEventListener {}
         }
     }
 
@@ -78,28 +86,136 @@ class PrintDelegateTest : BaseSessionTest() {
             assertTrue("Android print delegate called once.", delegateCalled == 1)
         }
     }
-    /**
-     *  ToDo: Bug 1812692 - Device screenshot method needs to be reconfigured before reopening test.
-     *  The UIAutomation retrieval was causing intermittent failures in TextInputDelegateTest
-     @NullDelegate(Autofill.Delegate::class)
-     @Test
-     fun printPreviewRendered() {
-     activityRule.scenario.onActivity { activity ->
-     // CSS rules render this blue on screen and orange on print
-     mainSession.loadTestPath(COLOR_ORANGE_BACKGROUND_HTML_PATH)
-     mainSession.waitForPageStop()
-     // Setting to the default delegate (test rules changed it)
-     mainSession.printDelegate = activity.view.printDelegate
-     mainSession.printPageContent()
-     // Wait for Print UI
-     mainSession.waitForJS("new Promise(resolve => window.setTimeout(resolve, 1000))")
-     val bitmap = uiAutomation.takeScreenshot()
-     val scaled = Bitmap.createScaledBitmap(bitmap, scaledWidth, scaledHeight, false)
-     val centerPixel = scaled.getPixel(scaledWidth / 2, scaledHeight / 2)
-     // Only renders orange in print
-     val orange = rgb(255, 113, 57)
-     assertTrue("Android print opened and rendered.", centerPixel == orange)
-     }
-     }
-     */
+
+    @NullDelegate(Autofill.Delegate::class)
+    @Test
+    fun windowDotPrintAvailableTest() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.enable_window_print" to true))
+        activityRule.scenario.onActivity {
+            mainSession.loadTestPath(COLOR_ORANGE_BACKGROUND_HTML_PATH)
+            mainSession.waitForPageStop()
+            val response = mainSession.waitForJS("window.print();")
+            assertTrue("Window.print(); is available.", response == null)
+        }
+    }
+
+    // Returns the center pixel color of the the print preview's screenshot
+    private fun printCenterPixelColor(): GeckoResult<Int> {
+        val pixelResult = GeckoResult<Int>()
+        // Listening for Android Print Activity
+        uiAutomation.setOnAccessibilityEventListener { event ->
+            if (event.packageName == "com.android.printspooler" &&
+                event.eventType == TYPE_VIEW_SCROLLED
+            ) {
+                uiAutomation.setOnAccessibilityEventListener {}
+                // Delaying the screenshot to give time for preview to load
+                Handler(Looper.getMainLooper()).postDelayed({
+                    val bitmap = uiAutomation.takeScreenshot()
+                    val scaled = Bitmap.createScaledBitmap(bitmap, scaledWidth, scaledHeight, false)
+                    pixelResult.complete(scaled.getPixel(scaledWidth / 2, scaledHeight / 2))
+                }, 1500)
+            }
+        }
+        return pixelResult
+    }
+
+    @NullDelegate(Autofill.Delegate::class)
+    @Test
+    fun printPreviewRendered() {
+        activityRule.scenario.onActivity { activity ->
+            // CSS rules render this blue on screen and orange on print
+            mainSession.loadTestPath(PRINT_CONTENT_CHANGE)
+            mainSession.waitForPageStop()
+            // Setting to the default delegate (test rules changed it)
+            mainSession.printDelegate = activity.view.printDelegate
+            mainSession.printPageContent()
+            val orange = rgb(255, 113, 57)
+            val centerPixel = printCenterPixelColor()
+            assertTrue(
+                "Android print opened and rendered.",
+                sessionRule.waitForResult(centerPixel) == orange
+            )
+        }
+    }
+
+    @NullDelegate(Autofill.Delegate::class)
+    @Test
+    fun basicWindowDotPrintTest() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.enable_window_print" to true))
+        activityRule.scenario.onActivity { activity ->
+            // CSS rules render this blue on screen and orange on print
+            mainSession.loadTestPath(PRINT_CONTENT_CHANGE)
+            mainSession.waitForPageStop()
+            // Setting to the default delegate (test rules changed it)
+            mainSession.printDelegate = activity.view.printDelegate
+            mainSession.evaluateJS("window.print();")
+            val centerPixel = printCenterPixelColor()
+            val orange = rgb(255, 113, 57)
+            assertTrue(
+                "Android print opened and rendered.",
+                sessionRule.waitForResult(centerPixel) == orange
+            )
+        }
+    }
+
+    @NullDelegate(Autofill.Delegate::class)
+    @Test
+    fun staticContextWindowDotPrintTest() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.enable_window_print" to true))
+        activityRule.scenario.onActivity { activity ->
+            // CSS rules render this blue on screen and orange on print
+            // Print button removes content after printing to test if it froze a static page for printing
+            mainSession.loadTestPath(PRINT_CONTENT_CHANGE)
+            mainSession.waitForPageStop()
+            // Setting to the default delegate (test rules changed it)
+            mainSession.printDelegate = activity.view.printDelegate
+            mainSession.evaluateJS("document.getElementById('print-button').click();")
+            val centerPixel = printCenterPixelColor()
+            val orange = rgb(255, 113, 57)
+            assertTrue(
+                "Android print opened and rendered static page.",
+                sessionRule.waitForResult(centerPixel) == orange
+            )
+        }
+    }
+
+    @NullDelegate(Autofill.Delegate::class)
+    @Test
+    fun iframeWindowDotPrintTest() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.enable_window_print" to true))
+        activityRule.scenario.onActivity { activity ->
+            // Main frame CSS rules render red on screen and green on print
+            // iframe CSS rules render blue on screen and orange on print
+            mainSession.loadTestPath(PRINT_IFRAME)
+            mainSession.waitForPageStop()
+            // Setting to the default delegate (test rules changed it)
+            mainSession.printDelegate = activity.view.printDelegate
+            // iframe window.print button
+            mainSession.evaluateJS("document.getElementById('iframe').contentDocument.getElementById('print-button').click();")
+            val centerPixelIframe = printCenterPixelColor()
+            val orange = rgb(255, 113, 57)
+            sessionRule.waitForResult(centerPixelIframe).let { it ->
+                assertTrue("The iframe should not print green. (Printed containing page instead of iframe.)", it != Color.GREEN)
+                assertTrue("Printed the iframe correctly.", it == orange)
+            }
+        }
+    }
+
+    @NullDelegate(Autofill.Delegate::class)
+    @Test
+    fun contentIframeWindowDotPrintTest() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.enable_window_print" to true))
+        activityRule.scenario.onActivity { activity ->
+            // Main frame CSS rules render red on screen and green on print
+            // iframe CSS rules render blue on screen and orange on print
+            mainSession.loadTestPath(PRINT_IFRAME)
+            mainSession.waitForPageStop()
+            // Setting to the default delegate (test rules changed it)
+            mainSession.printDelegate = activity.view.printDelegate
+            // Main page window.print button
+            mainSession.evaluateJS("document.getElementById('print-button-page').click();")
+            val centerPixelContent = printCenterPixelColor()
+            assertTrue("Printed the main content correctly.", sessionRule.waitForResult(centerPixelContent) == Color.GREEN)
+        }
+    }
 }

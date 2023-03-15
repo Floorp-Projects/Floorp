@@ -19,6 +19,8 @@ FINAL_TARGET_FILES.actors += [
     "GeckoViewPermissionParent.jsm",
     "GeckoViewPermissionProcessChild.jsm",
     "GeckoViewPermissionProcessParent.jsm",
+    "GeckoViewPrintDelegateChild.jsm",
+    "GeckoViewPrintDelegateParent.jsm",
     "GeckoViewPromptChild.jsm",
     "GeckoViewPrompterChild.jsm",
     "GeckoViewPrompterParent.jsm",
