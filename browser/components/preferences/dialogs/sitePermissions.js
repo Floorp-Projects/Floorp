@@ -196,23 +196,10 @@ var gSitePermissionsManager = {
     } else if (data == "changed") {
       let p = this._permissions.get(permission.principal.origin);
       p.capability = permission.capability;
-      this._handleCapabilityChange(p);
       this.buildPermissionsList();
     } else if (data == "deleted") {
       this._removePermissionFromList(permission.principal.origin);
     }
-  },
-
-  _handleCapabilityChange(perm) {
-    let permissionlistitem = document.getElementsByAttribute(
-      "origin",
-      perm.origin
-    )[0];
-    let menulist = permissionlistitem.getElementsByTagName("menulist")[0];
-    menulist.selectedItem = menulist.getElementsByAttribute(
-      "value",
-      perm.capability
-    )[0];
   },
 
   _handleCheckboxUIUpdates() {
