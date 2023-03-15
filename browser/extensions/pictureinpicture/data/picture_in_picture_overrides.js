@@ -177,10 +177,6 @@ let AVAILABLE_PIP_OVERRIDES;
       },
     },
 
-    reddit: {
-      "https://*.reddit.com/*": { policy: TOGGLE_POLICIES.ONE_QUARTER },
-    },
-
     sonyliv: {
       "https://*.sonyliv.com/*": {
         videoWrapperScriptPath: "video-wrappers/videojsWrapper.js",
