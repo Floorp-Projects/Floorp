@@ -406,7 +406,7 @@ nsProfiler::GetProfileDataAsync(double aSinceTime, JSContext* aCx,
   StartGathering(aSinceTime)
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
-          [promise](nsCString aResult) {
+          [promise](const mozilla::ProfileAndAdditionalInformation& aResult) {
             AutoJSAPI jsapi;
             if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
               // We're really hosed if we can't get a JS context for some
@@ -420,7 +420,7 @@ nsProfiler::GetProfileDataAsync(double aSinceTime, JSContext* aCx,
             // Now parse the JSON so that we resolve with a JS Object.
             JS::Rooted<JS::Value> val(cx);
             {
-              NS_ConvertUTF8toUTF16 js_string(aResult);
+              NS_ConvertUTF8toUTF16 js_string(aResult.mProfile);
               if (!JS_ParseJSON(cx,
                                 static_cast<const char16_t*>(js_string.get()),
                                 js_string.Length(), &val)) {
@@ -472,7 +472,7 @@ nsProfiler::GetProfileDataAsArrayBuffer(double aSinceTime, JSContext* aCx,
   StartGathering(aSinceTime)
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
-          [promise](nsCString aResult) {
+          [promise](const mozilla::ProfileAndAdditionalInformation& aResult) {
             AutoJSAPI jsapi;
             if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
               // We're really hosed if we can't get a JS context for some
@@ -483,8 +483,8 @@ nsProfiler::GetProfileDataAsArrayBuffer(double aSinceTime, JSContext* aCx,
 
             JSContext* cx = jsapi.cx();
             JSObject* typedArray = dom::ArrayBuffer::Create(
-                cx, aResult.Length(),
-                reinterpret_cast<const uint8_t*>(aResult.Data()));
+                cx, aResult.mProfile.Length(),
+                reinterpret_cast<const uint8_t*>(aResult.mProfile.Data()));
             if (typedArray) {
               JS::Rooted<JS::Value> val(cx, JS::ObjectValue(*typedArray));
               promise->MaybeResolve(val);
@@ -567,7 +567,7 @@ nsProfiler::GetProfileDataAsGzippedArrayBuffer(double aSinceTime,
   StartGathering(aSinceTime)
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
-          [promise](nsCString aResult) {
+          [promise](const mozilla::ProfileAndAdditionalInformation& aResult) {
             AutoJSAPI jsapi;
             if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
               // We're really hosed if we can't get a JS context for some
@@ -577,7 +577,7 @@ nsProfiler::GetProfileDataAsGzippedArrayBuffer(double aSinceTime,
             }
 
             FallibleTArray<uint8_t> outBuff;
-            nsresult result = CompressString(aResult, outBuff);
+            nsresult result = CompressString(aResult.mProfile, outBuff);
 
             if (result != NS_OK) {
               promise->MaybeReject(result);
@@ -630,8 +630,9 @@ nsProfiler::DumpProfileToFileAsync(const nsACString& aFilename,
   StartGathering(aSinceTime)
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
-          [filename, promise](const nsCString& aResult) {
-            if (aResult.Length() >=
+          [filename,
+           promise](const mozilla::ProfileAndAdditionalInformation& aResult) {
+            if (aResult.mProfile.Length() >=
                 size_t(std::numeric_limits<std::streamsize>::max())) {
               promise->MaybeReject(NS_ERROR_FILE_TOO_BIG);
               return;
@@ -644,7 +645,8 @@ nsProfiler::DumpProfileToFileAsync(const nsACString& aFilename,
               return;
             }
 
-            stream.write(aResult.get(), std::streamsize(aResult.Length()));
+            stream.write(aResult.mProfile.get(),
+                         std::streamsize(aResult.mProfile.Length()));
             stream.close();
 
             promise->MaybeResolveWithUndefined();
@@ -1025,8 +1027,10 @@ nsProfiler::PendingProfile* nsProfiler::GetPendingProfile(
   return nullptr;
 }
 
-void nsProfiler::GatheredOOPProfile(base::ProcessId aChildPid,
-                                    const nsACString& aProfile) {
+void nsProfiler::GatheredOOPProfile(
+    base::ProcessId aChildPid, const nsACString& aProfile,
+    mozilla::Maybe<ProfileGenerationAdditionalInformation>&&
+        aAdditionalInformation) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   if (!profiler_is_active()) {
@@ -1042,6 +1046,12 @@ void nsProfiler::GatheredOOPProfile(base::ProcessId aChildPid,
 
   MOZ_RELEASE_ASSERT(mWriter.isSome(),
                      "Should always have a writer if mGathering is true");
+
+  // Combine all the additional information into a single struct.
+  if (aAdditionalInformation.isSome()) {
+    mProfileGenerationAdditionalInformation->Append(
+        std::move(*aAdditionalInformation));
+  }
 
   if (!aProfile.IsEmpty()) {
     if (mWriter->ChunkedWriteFunc().Length() + aProfile.Length() <
@@ -1086,9 +1096,9 @@ nsProfiler::GetProfileDataAsGzippedArrayBufferAndroid(double aSinceTime) {
   return StartGathering(aSinceTime)
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
-          [](const nsCString& profileResult) {
+          [](const mozilla::ProfileAndAdditionalInformation& aResult) {
             FallibleTArray<uint8_t> outBuff;
-            nsresult result = CompressString(profileResult, outBuff);
+            nsresult result = CompressString(aResult.mProfile, outBuff);
             if (result != NS_OK) {
               return GatheringPromiseAndroid::CreateAndReject(result, __func__);
             }
@@ -1120,6 +1130,10 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
     mGatheringTimer->Cancel();
     mGatheringTimer = nullptr;
   }
+
+  // Start building shared library info starting from the current process.
+  mProfileGenerationAdditionalInformation.emplace(
+      SharedLibraryInfo::GetInfoForSelf());
 
   // Request profiles from the other processes. This will trigger asynchronous
   // calls to ProfileGatherer::GatheredOOPProfile as the profiles arrive.
@@ -1259,7 +1273,9 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
               const nsDependentCSubstring profileString(
                   profileShmem.get<char>(), profileShmem.Size<char>() - 1);
               if (profileString.IsEmpty() || profileString[0] != '*') {
-                self->GatheredOOPProfile(childPid, profileString);
+                self->GatheredOOPProfile(
+                    childPid, profileString,
+                    std::move(aResult.additionalInformation()));
               } else {
                 self->LogEvent([&](Json::Value& aEvent) {
                   aEvent.append(Json::StaticString{
@@ -1267,7 +1283,7 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
                   aEvent.append(Json::Value::UInt64(childPid));
                   aEvent.append(profileString.Data() + 1);
                 });
-                self->GatheredOOPProfile(childPid, ""_ns);
+                self->GatheredOOPProfile(childPid, ""_ns, Nothing());
               }
             } else {
               // This can happen if the child failed to allocate
@@ -1276,7 +1292,7 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
                 aEvent.append(Json::StaticString{"Got failure from pid:"});
                 aEvent.append(Json::Value::UInt64(childPid));
               });
-              self->GatheredOOPProfile(childPid, ""_ns);
+              self->GatheredOOPProfile(childPid, ""_ns, Nothing());
             }
           },
           [self = RefPtr<nsProfiler>(this),
@@ -1292,7 +1308,7 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
               aEvent.append(Json::Value::UInt64(childPid));
               aEvent.append(Json::Value::UInt{static_cast<unsigned>(aReason)});
             });
-            self->GatheredOOPProfile(childPid, ""_ns);
+            self->GatheredOOPProfile(childPid, ""_ns, Nothing());
           });
     }
   } else {
@@ -1348,6 +1364,7 @@ void nsProfiler::FinishGathering() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(mWriter.isSome());
   MOZ_RELEASE_ASSERT(mPromiseHolder.isSome());
+  MOZ_RELEASE_ASSERT(mProfileGenerationAdditionalInformation.isSome());
 
   // Close the "processes" array property.
   mWriter->EndArray();
@@ -1425,7 +1442,12 @@ void nsProfiler::FinishGathering() {
   MOZ_ASSERT(*(result.Data() + len) == '\0',
              "We still expected a null at the end of the string buffer");
 
-  mPromiseHolder->Resolve(std::move(result), __func__);
+  mProfileGenerationAdditionalInformation->FinishGathering();
+  mPromiseHolder->Resolve(
+      ProfileAndAdditionalInformation{
+          std::move(result),
+          std::move(*mProfileGenerationAdditionalInformation)},
+      __func__);
 
   ResetGathering(NS_ERROR_UNEXPECTED);
 }
@@ -1446,4 +1468,5 @@ void nsProfiler::ResetGathering(nsresult aPromiseRejectionIfPending) {
   }
   mWriter.reset();
   mFailureLatchSource.reset();
+  mProfileGenerationAdditionalInformation.reset();
 }
