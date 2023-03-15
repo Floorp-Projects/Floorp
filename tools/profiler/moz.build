@@ -160,6 +160,7 @@ EXPORTS += [
     "public/ChildProfilerController.h",
     "public/GeckoProfiler.h",
     "public/MicroGeckoProfiler.h",
+    "public/ProfileAdditionalInformation.h",
     "public/ProfilerBindings.h",
     "public/ProfilerControl.h",
     "public/ProfilerParent.h",

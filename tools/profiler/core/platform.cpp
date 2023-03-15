@@ -2604,11 +2604,10 @@ static void AddSharedLibraryInfoToStream(JSONWriter& aWriter,
   aWriter.EndObject();
 }
 
-void AppendSharedLibraries(JSONWriter& aWriter) {
-  SharedLibraryInfo info = SharedLibraryInfo::GetInfoForSelf();
-  info.SortByAddress();
-  for (size_t i = 0; i < info.GetSize(); i++) {
-    AddSharedLibraryInfoToStream(aWriter, info.GetEntry(i));
+void AppendSharedLibraries(JSONWriter& aWriter,
+                           const SharedLibraryInfo& aInfo) {
+  for (size_t i = 0; i < aInfo.GetSize(); i++) {
+    AddSharedLibraryInfoToStream(aWriter, aInfo.GetEntry(i));
   }
 }
 
@@ -3162,7 +3161,8 @@ profiler_code_address_service_for_presymbolication() {
   return preSymbolicate ? MakeUnique<ProfilerCodeAddressService>() : nullptr;
 }
 
-static ProfilerResult<Ok> locked_profiler_stream_json_for_this_process(
+static ProfilerResult<ProfileGenerationAdditionalInformation>
+locked_profiler_stream_json_for_this_process(
     PSLockRef aLock, SpliceableJSONWriter& aWriter, double aSinceTime,
     const PreRecordedMetaInformation& aPreRecordedMetaInformation,
     bool aIsShuttingDown, ProfilerCodeAddressService* aService,
@@ -3251,7 +3251,9 @@ static ProfilerResult<Ok> locked_profiler_stream_json_for_this_process(
 
   // Put shared library info
   aWriter.StartArrayProperty("libs");
-  AppendSharedLibraries(aWriter);
+  SharedLibraryInfo sharedLibraryInfo = SharedLibraryInfo::GetInfoForSelf();
+  sharedLibraryInfo.SortByAddress();
+  AppendSharedLibraries(aWriter, sharedLibraryInfo);
   aWriter.EndArray();
   aProgressLogger.SetLocalProgress(4_pc, "Wrote library information");
 
@@ -3442,11 +3444,12 @@ static ProfilerResult<Ok> locked_profiler_stream_json_for_this_process(
   }
 #endif  // DEBUG
 
-  return Ok{};
+  return ProfileGenerationAdditionalInformation{std::move(sharedLibraryInfo)};
 }
 
 // Keep this internal function non-static, so it may be used by tests.
-ProfilerResult<Ok> do_profiler_stream_json_for_this_process(
+ProfilerResult<ProfileGenerationAdditionalInformation>
+do_profiler_stream_json_for_this_process(
     SpliceableJSONWriter& aWriter, double aSinceTime, bool aIsShuttingDown,
     ProfilerCodeAddressService* aService,
     mozilla::ProgressLogger aProgressLogger) {
@@ -3468,33 +3471,38 @@ ProfilerResult<Ok> do_profiler_stream_json_for_this_process(
     return Err(ProfilerError::IsInactive);
   }
 
-  MOZ_TRY(locked_profiler_stream_json_for_this_process(
-      lock, aWriter, aSinceTime, preRecordedMetaInformation, aIsShuttingDown,
-      aService,
-      aProgressLogger.CreateSubLoggerFromTo(
-          3_pc, "locked_profiler_stream_json_for_this_process started", 100_pc,
-          "locked_profiler_stream_json_for_this_process done")));
+  ProfileGenerationAdditionalInformation additionalInfo;
+  MOZ_TRY_VAR(
+      additionalInfo,
+      locked_profiler_stream_json_for_this_process(
+          lock, aWriter, aSinceTime, preRecordedMetaInformation,
+          aIsShuttingDown, aService,
+          aProgressLogger.CreateSubLoggerFromTo(
+              3_pc, "locked_profiler_stream_json_for_this_process started",
+              100_pc, "locked_profiler_stream_json_for_this_process done")));
 
   if (aWriter.Failed()) {
     return Err(ProfilerError::JsonGenerationFailed);
   }
-  return Ok{};
+  return additionalInfo;
 }
 
-ProfilerResult<Ok> profiler_stream_json_for_this_process(
-    SpliceableJSONWriter& aWriter, double aSinceTime, bool aIsShuttingDown,
-    ProfilerCodeAddressService* aService,
-    mozilla::ProgressLogger aProgressLogger) {
+ProfilerResult<ProfileGenerationAdditionalInformation>
+profiler_stream_json_for_this_process(SpliceableJSONWriter& aWriter,
+                                      double aSinceTime, bool aIsShuttingDown,
+                                      ProfilerCodeAddressService* aService,
+                                      mozilla::ProgressLogger aProgressLogger) {
   MOZ_RELEASE_ASSERT(
       !XRE_IsParentProcess() || NS_IsMainThread(),
       "In the parent process, profiles should only be generated from the main "
       "thread, otherwise they will be incomplete.");
 
-  MOZ_TRY(do_profiler_stream_json_for_this_process(aWriter, aSinceTime,
-                                                   aIsShuttingDown, aService,
-                                                   std::move(aProgressLogger)));
+  ProfileGenerationAdditionalInformation additionalInfo;
+  MOZ_TRY_VAR(additionalInfo, do_profiler_stream_json_for_this_process(
+                                  aWriter, aSinceTime, aIsShuttingDown,
+                                  aService, std::move(aProgressLogger)));
 
-  return Ok{};
+  return additionalInfo;
 }
 
 // END saving/streaming code

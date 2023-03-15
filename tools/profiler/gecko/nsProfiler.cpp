@@ -313,7 +313,9 @@ nsProfiler::GetSharedLibraries(JSContext* aCx,
     JSONStringWriteFunc<nsCString> buffer;
     JSONWriter w(buffer, JSONWriter::SingleLineStyle);
     w.StartArrayElement();
-    AppendSharedLibraries(w);
+    SharedLibraryInfo sharedLibraryInfo = SharedLibraryInfo::GetInfoForSelf();
+    sharedLibraryInfo.SortByAddress();
+    AppendSharedLibraries(w, sharedLibraryInfo);
     w.EndArray();
     NS_ConvertUTF8toUTF16 buffer16(buffer.StringCRef());
     MOZ_ALWAYS_TRUE(JS_ParseJSON(aCx,
