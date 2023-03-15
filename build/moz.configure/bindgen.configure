@@ -123,6 +123,7 @@ option(
     clang_search_path,
     target,
     target_sysroot.path,
+    android_version,
 )
 @checking("for clang for bindgen", lambda x: x.path if x else "not found")
 def bindgen_clang_compiler(
@@ -133,6 +134,7 @@ def bindgen_clang_compiler(
     clang_search_path,
     target,
     sysroot_path,
+    android_version,
 ):
     # When the target compiler is clang, use that, including flags.
     if cxx_compiler.type == "clang":
@@ -172,14 +174,18 @@ def bindgen_clang_compiler(
     flags = []
     if sysroot_path:
         flags.extend(("--sysroot", sysroot_path))
-    info = check_compiler(configure_cache, [clang_path] + flags, "C++", target)
+    info = check_compiler(
+        configure_cache, [clang_path] + flags, "C++", target, android_version
+    )
     # Usually, one check_compiler pass would be enough, but when cross-compiling
     # and the host and target don't use the same default C++ standard, we don't
     # get the --std flag, so try again. This is the same thing as valid_compiler()
     # does in toolchain.configure.
     if info.flags:
         flags += info.flags
-        info = check_compiler(configure_cache, [clang_path] + flags, "C++", target)
+        info = check_compiler(
+            configure_cache, [clang_path] + flags, "C++", target, android_version
+        )
     return namespace(
         path=clang_path,
         flags=flags + info.flags,

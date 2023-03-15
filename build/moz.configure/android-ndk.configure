@@ -121,84 +121,50 @@ set_config("ANDROID_NDK_MAJOR_VERSION", ndk_version.major)
 set_config("ANDROID_NDK_MINOR_VERSION", ndk_version.minor)
 
 
-@depends(target, android_version, ndk)
-@checking("for android platform directory")
 @imports(_from="os.path", _import="isdir")
-def android_platform(target, android_version, ndk):
-    if target.os != "Android":
-        return
+@imports(_from="mozbuild.shellutil", _import="quote")
+def host_dir(host, base_dir):
+    dir_format = "%s/%s-%s"
+    host_kernel = "windows" if host.kernel == "WINNT" else host.kernel.lower()
 
-    if "aarch64" == target.cpu:
-        target_dir_name = "arm64"
-    else:
-        target_dir_name = target.cpu
-
-    # Not all Android releases have their own platform release. We use
-    # the next lower platform version in these cases.
-    if android_version in (11, 10):
-        platform_version = 9
-    elif android_version in (20, 22):
-        platform_version = android_version - 1
-    else:
-        platform_version = android_version
-
-    platform_dir = os.path.join(
-        ndk, "platforms", "android-%s" % platform_version, "arch-%s" % target_dir_name
-    )
-
-    if not isdir(platform_dir):
-        die(
-            "Android platform directory not found. With the current "
-            "configuration, it should be in %s" % platform_dir
-        )
-
-    return platform_dir
+    dir = dir_format % (base_dir, host_kernel, host.cpu)
+    log.debug("Trying %s" % quote(dir))
+    if not isdir(dir) and host.cpu == "x86_64":
+        dir = dir_format % (base_dir, host_kernel, "x86")
+        log.debug("Trying %s" % quote(dir))
+    if not isdir(dir) and host.kernel == "Darwin" and host.cpu == "aarch64":
+        dir = dir_format % (base_dir, host_kernel, "x86_64")
+        log.debug("Trying %s" % quote(dir))
+    if isdir(dir):
+        return dir
 
 
-@depends(ndk, target)
+@depends(ndk, target, host)
 @checking("for android sysroot directory")
 @imports(_from="os.path", _import="isdir")
-def android_sysroot(ndk, target):
+def android_sysroot(ndk, target, host):
     if target.os != "Android":
         return
 
     search_dirs = [
-        # (<if this directory exists>, <return this directory>)
-        (os.path.join(ndk, "sysroot"), os.path.join(ndk, "sysroot")),
+        os.path.join(
+            host_dir(host, os.path.join(ndk, "toolchains", "llvm", "prebuilt")),
+            "sysroot",
+        ),
     ]
 
-    for test_dir, sysroot_dir in search_dirs:
-        if isdir(test_dir):
+    for sysroot_dir in search_dirs:
+        if isdir(sysroot_dir):
             return sysroot_dir
 
     die(
         "Android sysroot directory not found in %s."
-        % str([sysroot_dir for test_dir, sysroot_dir in search_dirs])
+        % str([sysroot_dir for sysroot_dir in search_dirs])
     )
-
-
-@depends(ndk, target)
-@checking("for android system directory")
-@imports(_from="os.path", _import="isdir")
-def android_system(ndk, target):
-    if target.os != "Android":
-        return
-
-    search_dirs = [
-        os.path.join(ndk, "sysroot", "usr", "include", target.toolchain),
-    ]
-
-    for system_dir in search_dirs:
-        if isdir(system_dir):
-            return system_dir
-
-    die("Android system directory not found in %s." % str(search_dirs))
 
 
 @depends(target, host, ndk, "--with-android-toolchain")
 @checking("for the Android toolchain directory", lambda x: x or "not found")
-@imports(_from="os.path", _import="isdir")
-@imports(_from="mozbuild.shellutil", _import="quote")
 def android_toolchain(target, host, ndk, toolchain):
     if not ndk:
         return
@@ -216,18 +182,8 @@ def android_toolchain(target, host, ndk, toolchain):
         else:
             die("Target cpu is not supported.")
 
-        toolchain_format = "%s/toolchains/%s-4.9/prebuilt/%s-%s"
-        host_kernel = "windows" if host.kernel == "WINNT" else host.kernel.lower()
-
-        toolchain = toolchain_format % (ndk, target_base, host_kernel, host.cpu)
-        log.debug("Trying %s" % quote(toolchain))
-        if not isdir(toolchain) and host.cpu == "x86_64":
-            toolchain = toolchain_format % (ndk, target_base, host_kernel, "x86")
-            log.debug("Trying %s" % quote(toolchain))
-        if not isdir(toolchain) and host.kernel == "Darwin" and host.cpu == "aarch64":
-            toolchain = toolchain_format % (ndk, target_base, host_kernel, "x86_64")
-            log.debug("Trying %s" % quote(toolchain))
-        if isdir(toolchain):
+        toolchain = host_dir(host, "%s/toolchains/%s-4.9/prebuilt" % (ndk, target_base))
+        if toolchain:
             return toolchain
         die("You have to specify --with-android-toolchain=" "/path/to/ndk/toolchain.")
 
@@ -282,106 +238,33 @@ set_config("ANDROID_LLDB_SERVER", android_lldb_server)
 
 
 option(
-    env="STLPORT_CPPFLAGS",
-    nargs=1,
-    help="Options compiler should pass for standard C++ library",
-)
-
-
-@depends("STLPORT_CPPFLAGS", ndk)
-@imports(_from="os.path", _import="isdir")
-def stlport_cppflags(value, ndk):
-    if value and len(value):
-        return value.split()
-    if not ndk:
-        return
-
-    ndk_base = os.path.join(ndk, "sources", "cxx-stl")
-    cxx_base = os.path.join(ndk_base, "llvm-libc++")
-    cxx_include = os.path.join(cxx_base, "libcxx", "include")
-    cxxabi_base = os.path.join(ndk_base, "llvm-libc++abi")
-    cxxabi_include = os.path.join(cxxabi_base, "libcxxabi", "include")
-
-    if not isdir(cxx_include):
-        # NDK r13 removes the inner "libcxx" directory.
-        cxx_include = os.path.join(cxx_base, "include")
-        if not isdir(cxx_include):
-            die("Couldn't find path to libc++ includes in the android ndk")
-
-    if not isdir(cxxabi_include):
-        # NDK r13 removes the inner "libcxxabi" directory.
-        cxxabi_include = os.path.join(cxxabi_base, "include")
-        if not isdir(cxxabi_include):
-            die("Couldn't find path to libc++abi includes in the android ndk")
-
-    # Add android/support/include/ for prototyping long double math
-    # functions, locale-specific C library functions, multibyte support,
-    # etc.
-    return [
-        # You'd think we'd want to use -stdlib=libc++, but this doesn't work
-        # (cf. https://bugzilla.mozilla.org/show_bug.cgi?id=1510897#c2)
-        # Using -stdlib=libc++ and removing some of the -I below also doesn't
-        # work because not everything that is in cxx_include comes in the C++
-        # header directory that comes with clang.
-        "-stdlib=libstdc++",
-        "-I%s" % cxx_include,
-        "-I%s" % os.path.join(ndk, "sources", "android", "support", "include"),
-        "-I%s" % cxxabi_include,
-    ]
-
-
-add_old_configure_assignment("stlport_cppflags", stlport_cppflags)
-
-
-option(
     env="STLPORT_LIBS",
     nargs=1,
     help="Options linker should pass for standard C++ library",
 )
 
 
-@depends("STLPORT_LIBS", ndk, android_cpu_arch)
+@depends("STLPORT_LIBS", ndk)
 @imports(_from="os.path", _import="isfile")
-def stlport_libs(value, ndk, android_cpu_arch):
+def stlport_libs(value, ndk):
     if value and len(value):
         return value.split()
     if not ndk:
         return
 
-    cxx_libs = os.path.join(
-        ndk, "sources", "cxx-stl", "llvm-libc++", "libs", android_cpu_arch
-    )
-    if not isfile(os.path.join(cxx_libs, "libc++_static.a")):
-        die("Couldn't find path to llvm-libc++ in the android ndk")
-
-    libs = [
-        "-L%s" % cxx_libs,
-        "-lc++_static",
-    ]
-
-    for lib in ("c++abi", "unwind", "android_support"):
-        if isfile(os.path.join(cxx_libs, "lib%s.a" % lib)):
-            libs.append("-l%s" % lib)
-
-    return libs
+    return ["-static-libstdc++"]
 
 
 set_config("STLPORT_LIBS", stlport_libs)
 
 
-@depends(android_system, android_sysroot, android_toolchain, android_version)
-def extra_toolchain_flags(
-    android_system, android_sysroot, toolchain_dir, android_version
-):
+@depends(android_sysroot, android_toolchain)
+def extra_toolchain_flags(android_sysroot, toolchain_dir):
     if not android_sysroot:
         return []
     flags = [
-        "-isystem",
-        android_system,
-        "-isystem",
-        os.path.join(android_sysroot, "usr", "include"),
+        "--sysroot={}".format(android_sysroot),
         "--gcc-toolchain={}".format(toolchain_dir),
-        "-D__ANDROID_API__=%d" % android_version,
     ]
     return flags
 
@@ -389,12 +272,9 @@ def extra_toolchain_flags(
 add_old_configure_assignment("extra_android_flags", extra_toolchain_flags)
 
 
-@depends(extra_toolchain_flags, stlport_cppflags)
-def bindgen_cflags_android(toolchain_flags, stlport_flags):
-    if not toolchain_flags:
-        return
-
-    return toolchain_flags + stlport_flags
+@depends(extra_toolchain_flags)
+def bindgen_cflags_android(toolchain_flags):
+    return toolchain_flags
 
 
 @depends("--with-android-googlevr-sdk", target)
