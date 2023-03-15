@@ -11,8 +11,10 @@
 #include "nsNSSComponent.h"
 #include "secerr.h"
 #include "SharedCertVerifier.h"
+#include "NSSCertDBTrustDomain.h"
 #include "SSLServerCertVerification.h"
 #include "nsNSSIOLayer.h"
+#include "nsISocketProvider.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/Unused.h"
 

@@ -54,17 +54,56 @@ namespace ct {
 
 // Reads a TLS-encoded variable length unsigned integer from |in|.
 // The integer is expected to be in big-endian order, which is used by TLS.
-// Note: checks if the output parameter overflows while reading.
+// Note: does not check if the output parameter overflows while reading.
 // |length| indicates the size (in bytes) of the serialized integer.
+inline static pkix::Result UncheckedReadUint(size_t length, pkix::Reader& in,
+                                             uint64_t& out) {
+  uint64_t result = 0;
+  for (size_t i = 0; i < length; ++i) {
+    uint8_t value;
+    pkix::Result rv = in.Read(value);
+    if (rv != pkix::Success) {
+      return rv;
+    }
+    result = (result << 8) | value;
+  }
+  out = result;
+  return pkix::Success;
+}
+
+// Performs overflow sanity checks and calls UncheckedReadUint.
 template <size_t length, typename T>
-mozilla::pkix::Result ReadUint(mozilla::pkix::Reader& in, T& out);
+pkix::Result ReadUint(pkix::Reader& in, T& out) {
+  uint64_t value;
+  static_assert(std::is_unsigned<T>::value, "T must be unsigned");
+  static_assert(length <= 8, "At most 8 byte integers can be read");
+  static_assert(sizeof(T) >= length, "T must be able to hold <length> bytes");
+  pkix::Result rv = UncheckedReadUint(length, in, value);
+  if (rv != pkix::Success) {
+    return rv;
+  }
+  out = static_cast<T>(value);
+  return pkix::Success;
+}
+
+// Reads |length| bytes from |in|.
+static inline pkix::Result ReadFixedBytes(size_t length, pkix::Reader& in,
+                                          pkix::Input& out) {
+  return in.Skip(length, out);
+}
 
 // Reads a length-prefixed variable amount of bytes from |in|, updating |out|
 // on success. |prefixLength| indicates the number of bytes needed to represent
 // the length.
 template <size_t prefixLength>
-mozilla::pkix::Result ReadVariableBytes(mozilla::pkix::Reader& in,
-                                        mozilla::pkix::Input& out);
+pkix::Result ReadVariableBytes(pkix::Reader& in, pkix::Input& out) {
+  size_t length;
+  pkix::Result rv = ReadUint<prefixLength>(in, length);
+  if (rv != pkix::Success) {
+    return rv;
+  }
+  return ReadFixedBytes(length, in, out);
+}
 
 }  // namespace ct
 }  // namespace mozilla

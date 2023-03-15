@@ -8,6 +8,8 @@
 #include "nsClientAuthRemember.h"
 #include "nsComponentManagerUtils.h"
 #include "nsICertOverrideService.h"
+#include "mozilla/OriginAttributes.h"
+#include "nsNSSComponent.h"
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
 #include "nsThreadUtils.h"

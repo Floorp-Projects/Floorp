@@ -8,6 +8,15 @@
 
 #include "ssl.h"
 #include "sslexp.h"
+#include "nsISocketProvider.h"
+#include "secerr.h"
+#include "mozilla/Base64.h"
+#include "nsNSSCallbacks.h"
+
+using namespace mozilla;
+using namespace mozilla::psm;
+
+extern LazyLogModule gPIPNSSLog;
 
 NSSSocketControl::NSSSocketControl(const nsCString& aHostName, int32_t aPort,
                                    SharedSSLState& aState,

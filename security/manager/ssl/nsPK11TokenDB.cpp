@@ -10,6 +10,7 @@
 #include "ScopedNSSTypes.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Unused.h"
+#include "mozilla/Logging.h"
 #include "nsISupports.h"
 #include "nsNSSCertHelper.h"
 #include "nsNSSComponent.h"

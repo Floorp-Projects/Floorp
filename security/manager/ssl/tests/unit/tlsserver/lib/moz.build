@@ -46,5 +46,3 @@ if not CONFIG["MOZ_SYSTEM_NSS"]:
         USE_LIBS += ["nssutil3"]
 
 Library("tlsserver")
-
-REQUIRES_UNIFIED_BUILD = True

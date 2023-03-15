@@ -38,64 +38,10 @@ static const size_t kTbsCertificateLengthBytes = 3;
 static const size_t kSCTListLengthBytes = 2;
 static const size_t kSerializedSCTLengthBytes = 2;
 
-// Length of sha256RootHash buffer of SignedTreeHead
-static const size_t kSthRootHashLength = 32;
-
 enum class SignatureType {
   CertificateTimestamp = 0,
   TreeHash = 1,
 };
-
-// Reads a TLS-encoded variable length unsigned integer from |in|.
-// The integer is expected to be in big-endian order, which is used by TLS.
-// Note: does not check if the output parameter overflows while reading.
-// |length| indicates the size (in bytes) of the serialized integer.
-static Result UncheckedReadUint(size_t length, Reader& in, uint64_t& out) {
-  uint64_t result = 0;
-  for (size_t i = 0; i < length; ++i) {
-    uint8_t value;
-    Result rv = in.Read(value);
-    if (rv != Success) {
-      return rv;
-    }
-    result = (result << 8) | value;
-  }
-  out = result;
-  return Success;
-}
-
-// Performs overflow sanity checks and calls UncheckedReadUint.
-template <size_t length, typename T>
-Result ReadUint(Reader& in, T& out) {
-  uint64_t value;
-  static_assert(std::is_unsigned<T>::value, "T must be unsigned");
-  static_assert(length <= 8, "At most 8 byte integers can be read");
-  static_assert(sizeof(T) >= length, "T must be able to hold <length> bytes");
-  Result rv = UncheckedReadUint(length, in, value);
-  if (rv != Success) {
-    return rv;
-  }
-  out = static_cast<T>(value);
-  return Success;
-}
-
-// Reads |length| bytes from |in|.
-static Result ReadFixedBytes(size_t length, Reader& in, Input& out) {
-  return in.Skip(length, out);
-}
-
-// Reads a length-prefixed variable amount of bytes from |in|, updating |out|
-// on success. |prefixLength| indicates the number of bytes needed to represent
-// the length.
-template <size_t prefixLength>
-Result ReadVariableBytes(Reader& in, Input& out) {
-  size_t length;
-  Result rv = ReadUint<prefixLength>(in, length);
-  if (rv != Success) {
-    return rv;
-  }
-  return ReadFixedBytes(length, in, out);
-}
 
 // Reads a serialized hash algorithm.
 static Result ReadHashAlgorithm(Reader& in,

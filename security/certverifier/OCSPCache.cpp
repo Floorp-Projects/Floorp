@@ -28,6 +28,7 @@
 
 #include "NSSCertDBTrustDomain.h"
 #include "pk11pub.h"
+#include "mozilla/Logging.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozpkix/pkixnss.h"
 #include "ScopedNSSTypes.h"

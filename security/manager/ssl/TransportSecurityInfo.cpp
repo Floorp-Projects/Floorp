@@ -20,8 +20,11 @@
 #include "nsServiceManagerUtils.h"
 #include "nsStringStream.h"
 #include "nsXULAppAPI.h"
+#include "nsIX509Cert.h"
 #include "secerr.h"
 #include "ssl.h"
+
+#include "mozilla/ipc/IPDLParamTraits.h"
 
 // nsITransportSecurityInfo should not be created via do_CreateInstance. This
 // stub prevents that.

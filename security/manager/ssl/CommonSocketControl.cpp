@@ -17,6 +17,7 @@
 #include "nsITlsHandshakeListener.h"
 #include "nsNSSComponent.h"
 #include "nsNSSHelper.h"
+#include "secerr.h"
 #include "ssl.h"
 #include "sslt.h"
 
@@ -254,23 +255,23 @@ CommonSocketControl::IsAcceptableForHost(const nsACString& hostname,
   // CertVerifier::VerifySSLServerCert. We are doing the same hostname-specific
   // checks here. If any hostname-specific checks are added to
   // CertVerifier::VerifySSLServerCert we need to add them here too.
-  Input serverCertInput;
+  pkix::Input serverCertInput;
   mozilla::pkix::Result rv =
       serverCertInput.Init(certDER.Elements(), certDER.Length());
-  if (rv != Success) {
+  if (rv != pkix::Success) {
     return NS_OK;
   }
 
-  Input hostnameInput;
+  pkix::Input hostnameInput;
   rv = hostnameInput.Init(
       BitwiseCast<const uint8_t*, const char*>(hostname.BeginReading()),
       hostname.Length());
-  if (rv != Success) {
+  if (rv != pkix::Success) {
     return NS_OK;
   }
 
   rv = CheckCertHostname(serverCertInput, hostnameInput);
-  if (rv != Success) {
+  if (rv != pkix::Success) {
     return NS_OK;
   }
 
@@ -286,7 +287,7 @@ CommonSocketControl::IsAcceptableForHost(const nsACString& hostname,
   }
   bool chainHasValidPins;
   nsresult nsrv = mozilla::psm::PublicKeyPinningService::ChainHasValidPins(
-      derCertSpanList, PromiseFlatCString(hostname).BeginReading(), Now(),
+      derCertSpanList, PromiseFlatCString(hostname).BeginReading(), pkix::Now(),
       mIsBuiltCertChainRootBuiltInRoot, chainHasValidPins, nullptr);
   if (NS_FAILED(nsrv)) {
     return NS_OK;
@@ -459,13 +460,15 @@ CommonSocketControl::GetSecurityInfo(nsITransportSecurityInfo** aSecurityInfo) {
   if (NS_FAILED(rv)) {
     return rv;
   }
-  nsCOMPtr<nsITransportSecurityInfo> securityInfo(new TransportSecurityInfo(
-      mSecurityState, mErrorCode, mFailedCertChain.Clone(), mServerCert,
-      mSucceededCertChain.Clone(), mCipherSuite, mKeaGroupName,
-      mSignatureSchemeName, mProtocolVersion, mCertificateTransparencyStatus,
-      mIsAcceptedEch, mIsDelegatedCredential, mOverridableErrorCategory,
-      mMadeOCSPRequests, mUsedPrivateDNS, mIsEV, mNPNCompleted, mNegotiatedNPN,
-      mResumed, mIsBuiltCertChainRootBuiltInRoot, mPeerId));
+  nsCOMPtr<nsITransportSecurityInfo> securityInfo(
+      new psm::TransportSecurityInfo(
+          mSecurityState, mErrorCode, mFailedCertChain.Clone(), mServerCert,
+          mSucceededCertChain.Clone(), mCipherSuite, mKeaGroupName,
+          mSignatureSchemeName, mProtocolVersion,
+          mCertificateTransparencyStatus, mIsAcceptedEch,
+          mIsDelegatedCredential, mOverridableErrorCategory, mMadeOCSPRequests,
+          mUsedPrivateDNS, mIsEV, mNPNCompleted, mNegotiatedNPN, mResumed,
+          mIsBuiltCertChainRootBuiltInRoot, mPeerId));
   securityInfo.forget(aSecurityInfo);
   return NS_OK;
 }
