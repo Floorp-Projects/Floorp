@@ -457,12 +457,6 @@ to a match expression.
 [[audits.cssparser-macros]]
 who = "Tiaan Louw <tlouw@mozilla.com>"
 criteria = "safe-to-deploy"
-delta = "0.6.0 -> 0.6.0@git:45bc47e2bcb846f1efb5aea156be5fe7d18624bf"
-notes = "Latest version of changes to the cssparser pulled from master branch."
-
-[[audits.cssparser-macros]]
-who = "Tiaan Louw <tlouw@mozilla.com>"
-criteria = "safe-to-deploy"
 delta = "0.6.0 -> 0.6.0@git:722b30d2f1634714befab967ecae627813fa4cf0"
 notes = "We are pulling this package from a non crates.io source until the changes are published. No changes were made to the code."
 
