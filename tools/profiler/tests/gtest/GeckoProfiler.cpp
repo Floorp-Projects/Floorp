@@ -3823,7 +3823,8 @@ TEST(GeckoProfiler, StreamJSONForThisProcess)
 // Internal version of profiler_stream_json_for_this_process, which allows being
 // called from a non-main thread of the parent process, at the risk of getting
 // an incomplete profile.
-ProfilerResult<Ok> do_profiler_stream_json_for_this_process(
+ProfilerResult<ProfileGenerationAdditionalInformation>
+do_profiler_stream_json_for_this_process(
     SpliceableJSONWriter& aWriter, double aSinceTime, bool aIsShuttingDown,
     ProfilerCodeAddressService* aService,
     mozilla::ProgressLogger aProgressLogger);

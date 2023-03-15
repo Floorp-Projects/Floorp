@@ -22,6 +22,7 @@
 // including only the needed headers instead of this one, to reduce compilation
 // dependencies.
 #include "BaseProfiler.h"
+#include "ProfileAdditionalInformation.h"
 #include "mozilla/ProfilerCounts.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/ProfilerMarkers.h"
@@ -29,6 +30,8 @@
 #include "mozilla/ProfilerThreadSleep.h"
 #include "mozilla/ProfilerThreadState.h"
 #include "mozilla/ProgressLogger.h"
+#include "mozilla/Result.h"
+#include "mozilla/ResultVariant.h"
 
 #ifndef MOZ_GECKO_PROFILER
 
@@ -378,7 +381,8 @@ mozilla::UniquePtr<char[]> profiler_get_profile(double aSinceTime = 0,
 
 // Write the profile for this process (excluding subprocesses) into aWriter.
 // Returns a failed result if the profiler is inactive.
-ProfilerResult<mozilla::Ok> profiler_stream_json_for_this_process(
+ProfilerResult<ProfileGenerationAdditionalInformation>
+profiler_stream_json_for_this_process(
     mozilla::baseprofiler::SpliceableJSONWriter& aWriter, double aSinceTime = 0,
     bool aIsShuttingDown = false,
     ProfilerCodeAddressService* aService = nullptr,
