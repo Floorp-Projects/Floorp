@@ -9,6 +9,7 @@ import classnames from "classnames";
 import actions from "../actions";
 
 import { getEditor } from "../utils/editor";
+import { createLocation } from "../utils/location";
 
 import { statusType } from "../reducers/project-text-search";
 import { getRelativePath } from "../utils/sources-tree/utils";
@@ -118,11 +119,14 @@ export class ProjectSearch extends Component {
   isProjectSearchEnabled = () => this.props.activeSearch === "project";
 
   selectMatchItem = matchItem => {
-    this.props.selectSpecificLocation(this.props.cx, {
-      sourceId: matchItem.sourceId,
-      line: matchItem.line,
-      column: matchItem.column,
-    });
+    this.props.selectSpecificLocation(
+      this.props.cx,
+      createLocation({
+        sourceId: matchItem.sourceId,
+        line: matchItem.line,
+        column: matchItem.column,
+      })
+    );
     this.props.doSearchForHighlight(
       this.state.inputValue,
       getEditor(),

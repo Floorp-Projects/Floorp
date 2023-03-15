@@ -12,6 +12,7 @@ const classnames = require("classnames");
 import { containsPosition, positionAfter } from "../../utils/ast";
 import { copyToTheClipboard } from "../../utils/clipboard";
 import { findFunctionText } from "../../utils/function";
+import { createLocation } from "../../utils/location";
 
 import actions from "../../actions";
 import {
@@ -130,11 +131,14 @@ export class Outline extends Component {
       return;
     }
 
-    selectLocation(cx, {
-      sourceId: selectedSource.id,
-      line: selectedItem.location.start.line,
-      column: selectedItem.location.start.column,
-    });
+    selectLocation(
+      cx,
+      createLocation({
+        sourceId: selectedSource.id,
+        line: selectedItem.location.start.line,
+        column: selectedItem.location.start.column,
+      })
+    );
 
     this.setState({ focusedItem: selectedItem });
   }

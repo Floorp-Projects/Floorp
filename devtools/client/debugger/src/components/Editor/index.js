@@ -10,6 +10,7 @@ import { connect } from "../../utils/connect";
 import classnames from "classnames";
 
 import { getLineText } from "./../../utils/source";
+import { createLocation } from "./../../utils/location";
 import { features } from "../../utils/prefs";
 import { getIndentation } from "../../utils/indentation";
 
@@ -432,7 +433,7 @@ class Editor extends PureComponent {
       return;
     }
 
-    const location = { line, column: undefined, sourceId };
+    const location = createLocation({ line, column: undefined, sourceId });
 
     if (target.classList.contains("CodeMirror-linenumber")) {
       const lineText = getLineText(

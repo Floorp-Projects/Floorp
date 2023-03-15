@@ -44,6 +44,7 @@ describe("breakpoints", () => {
     const { dispatch, getState, cx } = createStore(mockClient({ "2": [1] }));
     const loc1 = {
       sourceId: "a",
+      sourceActorId: null,
       line: 2,
       column: 1,
       sourceUrl: "http://localhost:8000/examples/a",
@@ -73,6 +74,7 @@ describe("breakpoints", () => {
     const { dispatch, getState, cx } = createStore(mockClient({ "5": [1] }));
     const loc1 = {
       sourceId: "a",
+      sourceActorId: null,
       line: 5,
       column: 1,
       sourceUrl: "http://localhost:8000/examples/a",
@@ -98,6 +100,7 @@ describe("breakpoints", () => {
     const { dispatch, getState, cx } = createStore(mockClient({ "5": [1] }));
     const loc1 = {
       sourceId: "a",
+      sourceActorId: null,
       line: 5,
       column: 1,
       sourceUrl: "http://localhost:8000/examples/a",
@@ -129,6 +132,7 @@ describe("breakpoints", () => {
     const { dispatch, getState, cx } = createStore(mockClient({ "5": [1] }));
     const loc1 = {
       sourceId: "a",
+      sourceActorId: null,
       line: 5,
       column: 1,
       sourceUrl: "http://localhost:8000/examples/a",

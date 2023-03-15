@@ -9,6 +9,7 @@ import {
   makeSource,
 } from "../../utils/test-head";
 const { getSelectedSource, getSourceTabs } = selectors;
+import { createLocation } from "../../utils/location";
 
 import { mockCommandClient } from "./helpers/mockCommandClient";
 
@@ -19,7 +20,12 @@ describe("closing tabs", () => {
     const fooSource = await dispatch(
       actions.newGeneratedSource(makeSource("foo.js"))
     );
-    await dispatch(actions.selectLocation(cx, { sourceId: "foo.js", line: 1 }));
+    await dispatch(
+      actions.selectLocation(
+        cx,
+        createLocation({ sourceId: "foo.js", line: 1 })
+      )
+    );
     dispatch(actions.closeTab(cx, fooSource));
 
     expect(getSelectedSource(getState())).toBe(undefined);
@@ -33,8 +39,18 @@ describe("closing tabs", () => {
       actions.newGeneratedSource(makeSource("foo.js"))
     );
     await dispatch(actions.newGeneratedSource(makeSource("bar.js")));
-    await dispatch(actions.selectLocation(cx, { sourceId: "foo.js", line: 1 }));
-    await dispatch(actions.selectLocation(cx, { sourceId: "bar.js", line: 1 }));
+    await dispatch(
+      actions.selectLocation(
+        cx,
+        createLocation({ sourceId: "foo.js", line: 1 })
+      )
+    );
+    await dispatch(
+      actions.selectLocation(
+        cx,
+        createLocation({ sourceId: "bar.js", line: 1 })
+      )
+    );
     dispatch(actions.closeTab(cx, fooSource));
 
     const selected = getSelectedSource(getState());
@@ -48,7 +64,12 @@ describe("closing tabs", () => {
     const fooSource = await dispatch(
       actions.newGeneratedSource(makeSource("foo.js"))
     );
-    await dispatch(actions.selectLocation(cx, { sourceId: "foo.js", line: 1 }));
+    await dispatch(
+      actions.selectLocation(
+        cx,
+        createLocation({ sourceId: "foo.js", line: 1 })
+      )
+    );
     dispatch(actions.closeTab(cx, fooSource));
 
     expect(getSelectedSource(getState())).toBe(undefined);
@@ -62,8 +83,18 @@ describe("closing tabs", () => {
     const barSource = await dispatch(
       actions.newGeneratedSource(makeSource("bar.js"))
     );
-    await dispatch(actions.selectLocation(cx, { sourceId: "foo.js", line: 1 }));
-    await dispatch(actions.selectLocation(cx, { sourceId: "bar.js", line: 1 }));
+    await dispatch(
+      actions.selectLocation(
+        cx,
+        createLocation({ sourceId: "foo.js", line: 1 })
+      )
+    );
+    await dispatch(
+      actions.selectLocation(
+        cx,
+        createLocation({ sourceId: "bar.js", line: 1 })
+      )
+    );
     await dispatch(actions.closeTab(cx, barSource));
 
     const selected = getSelectedSource(getState());
@@ -77,10 +108,23 @@ describe("closing tabs", () => {
     await dispatch(actions.newGeneratedSource(makeSource("foo.js")));
     await dispatch(actions.newGeneratedSource(makeSource("bar.js")));
     await dispatch(actions.newGeneratedSource(makeSource("bazz.js")));
-    await dispatch(actions.selectLocation(cx, { sourceId: "foo.js", line: 1 }));
-    await dispatch(actions.selectLocation(cx, { sourceId: "bar.js", line: 1 }));
     await dispatch(
-      actions.selectLocation(cx, { sourceId: "bazz.js", line: 1 })
+      actions.selectLocation(
+        cx,
+        createLocation({ sourceId: "foo.js", line: 1 })
+      )
+    );
+    await dispatch(
+      actions.selectLocation(
+        cx,
+        createLocation({ sourceId: "bar.js", line: 1 })
+      )
+    );
+    await dispatch(
+      actions.selectLocation(
+        cx,
+        createLocation({ sourceId: "bazz.js", line: 1 })
+      )
     );
 
     const tabs = [
@@ -100,10 +144,23 @@ describe("closing tabs", () => {
     await dispatch(actions.newGeneratedSource(makeSource("foo.js")));
     await dispatch(actions.newGeneratedSource(makeSource("bar.js")));
     await dispatch(actions.newGeneratedSource(makeSource("bazz.js")));
-    await dispatch(actions.selectLocation(cx, { sourceId: "foo.js", line: 1 }));
-    await dispatch(actions.selectLocation(cx, { sourceId: "bar.js", line: 1 }));
     await dispatch(
-      actions.selectLocation(cx, { sourceId: "bazz.js", line: 1 })
+      actions.selectLocation(
+        cx,
+        createLocation({ sourceId: "foo.js", line: 1 })
+      )
+    );
+    await dispatch(
+      actions.selectLocation(
+        cx,
+        createLocation({ sourceId: "bar.js", line: 1 })
+      )
+    );
+    await dispatch(
+      actions.selectLocation(
+        cx,
+        createLocation({ sourceId: "bazz.js", line: 1 })
+      )
     );
     const tabs = [
       "http://localhost:8000/examples/bar.js",
@@ -121,8 +178,18 @@ describe("closing tabs", () => {
 
     await dispatch(actions.newGeneratedSource(makeSource("foo.js")));
     await dispatch(actions.newGeneratedSource(makeSource("bar.js")));
-    await dispatch(actions.selectLocation(cx, { sourceId: "foo.js", line: 1 }));
-    await dispatch(actions.selectLocation(cx, { sourceId: "bar.js", line: 1 }));
+    await dispatch(
+      actions.selectLocation(
+        cx,
+        createLocation({ sourceId: "foo.js", line: 1 })
+      )
+    );
+    await dispatch(
+      actions.selectLocation(
+        cx,
+        createLocation({ sourceId: "bar.js", line: 1 })
+      )
+    );
     await dispatch(
       actions.closeTabs(cx, [
         "http://localhost:8000/examples/foo.js",

@@ -9,6 +9,7 @@ Array [
         "generatedLocation": Object {
           "column": 1,
           "line": 2,
+          "sourceActorId": null,
           "sourceId": "a",
           "sourceUrl": "http://localhost:8000/examples/a",
         },
@@ -16,6 +17,7 @@ Array [
         "location": Object {
           "column": 1,
           "line": 2,
+          "sourceActorId": null,
           "sourceId": "a",
           "sourceUrl": "http://localhost:8000/examples/a",
         },
@@ -58,6 +60,7 @@ Array [
         "generatedLocation": Object {
           "column": 1,
           "line": 5,
+          "sourceActorId": null,
           "sourceId": "a",
           "sourceUrl": "http://localhost:8000/examples/a",
         },
@@ -65,6 +68,7 @@ Array [
         "location": Object {
           "column": 1,
           "line": 5,
+          "sourceActorId": null,
           "sourceId": "a",
           "sourceUrl": "http://localhost:8000/examples/a",
         },

@@ -10,6 +10,7 @@ import {
 import assert from "../../utils/assert";
 import { recordEvent } from "../../utils/telemetry";
 import { updateBreakpointsForNewPrettyPrintedSource } from "../breakpoints";
+import { createLocation } from "../../utils/location";
 
 import {
   getPrettySourceURL,
@@ -112,7 +113,10 @@ function selectPrettyLocation(cx, prettySource) {
       location = await getOriginalLocation(location, thunkArgs);
 
       return dispatch(
-        selectSpecificLocation(cx, { ...location, sourceId: prettySource.id })
+        selectSpecificLocation(
+          cx,
+          createLocation({ ...location, sourceId: prettySource.id })
+        )
       );
     }
 

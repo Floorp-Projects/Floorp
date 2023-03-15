@@ -4,6 +4,7 @@
 
 import { isOriginalId } from "devtools/client/shared/source-map-loader/index";
 import { getSource, getLocationSource } from "../selectors";
+import { createLocation } from "./location";
 
 /**
  * For any location, return the matching generated location.
@@ -24,7 +25,7 @@ export async function getGeneratedLocation(location, thunkArgs) {
   }
 
   const { sourceMapLoader, getState } = thunkArgs;
-  const { line, sourceId, column } = await sourceMapLoader.getGeneratedLocation(
+  const { sourceId, line, column } = await sourceMapLoader.getGeneratedLocation(
     location
   );
 
@@ -33,12 +34,12 @@ export async function getGeneratedLocation(location, thunkArgs) {
     throw new Error(`Could not find generated source ${sourceId}`);
   }
 
-  return {
-    line,
+  return createLocation({
     sourceId,
-    column: column === 0 ? undefined : column,
     sourceUrl: generatedSource.url,
-  };
+    line,
+    column: column === 0 ? undefined : column,
+  });
 }
 
 export async function getOriginalLocation(generatedLocation, thunkArgs) {
@@ -46,7 +47,10 @@ export async function getOriginalLocation(generatedLocation, thunkArgs) {
     return location;
   }
   const { sourceMapLoader } = thunkArgs;
-  return sourceMapLoader.getOriginalLocation(generatedLocation);
+  const originalLocation = await sourceMapLoader.getOriginalLocation(
+    generatedLocation
+  );
+  return createLocation(originalLocation);
 }
 
 export async function getMappedLocation(location, thunkArgs) {

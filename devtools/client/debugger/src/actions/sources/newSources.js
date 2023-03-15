@@ -139,12 +139,17 @@ function checkSelectedSource(cx, sourceId) {
       }
 
       await dispatch(
-        selectLocation(cx, {
-          sourceId: source.id,
-          line:
-            typeof pendingLocation.line === "number" ? pendingLocation.line : 0,
-          column: pendingLocation.column,
-        })
+        selectLocation(
+          cx,
+          createLocation({
+            sourceId: source.id,
+            line:
+              typeof pendingLocation.line === "number"
+                ? pendingLocation.line
+                : 0,
+            column: pendingLocation.column,
+          })
+        )
       );
     }
   };
