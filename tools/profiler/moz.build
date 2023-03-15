@@ -141,6 +141,7 @@ if CONFIG["MOZ_GECKO_PROFILER"]:
 
 UNIFIED_SOURCES += [
     "core/MicroGeckoProfiler.cpp",
+    "core/ProfileAdditionalInformation.cpp",
     "core/ProfilerBindings.cpp",
     "core/ProfilerThreadRegistration.cpp",
     "core/ProfilerThreadRegistrationData.cpp",
