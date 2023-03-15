@@ -83,7 +83,6 @@ pref("browser.display.statusbar", false);
 
 pref("floorp.browser.sidebar.right", true);// サイドバーの右側を表示
 pref("floorp.browser.sidebar.enable", true);// サイドバーを表示
-pref("floorp.browser.sidebar2.page", "");//サイドバーで開いているページ
 
 // url:URL width:幅 userAgent:userAgent usercontext:コンテナタブ
 pref("floorp.browser.sidebar2.data", '{"data":{},"index":[]}');

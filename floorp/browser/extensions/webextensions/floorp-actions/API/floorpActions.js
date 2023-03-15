@@ -29,19 +29,19 @@ this.floorpActions = class extends ExtensionAPI {
         },
         async openBrowserManagerSidebar() {
           let window = await this._getCurrentWindow();
-          if (window.document.getElementById("sidebar-splitter2").getAttribute("hidden") == "true" && Services.prefs.getStringPref("floorp.browser.sidebar2.page", "") != "") {
+          if (window.document.getElementById("sidebar-splitter2").getAttribute("hidden") == "true" && window.bmsController.nowPage != null) {
             window.bmsController.controllFunctions.changeVisibleWenpanel();
           }
         },
         async closeBrowserManagerSidebar() {
           let window = await this._getCurrentWindow();
-          if (window.document.getElementById("sidebar-splitter2").getAttribute("hidden") == "false" && Services.prefs.getStringPref("floorp.browser.sidebar2.page", "") != "") {
+          if (window.document.getElementById("sidebar-splitter2").getAttribute("hidden") == "false" && window.bmsController.nowPage != null) {
             window.bmsController.controllFunctions.changeVisibleWenpanel();
           }
         },
         async changeBrowserManagerSidebarVisibility() {
           let window = await this._getCurrentWindow();
-          if(Services.prefs.getStringPref("floorp.browser.sidebar2.page", "") != ""){
+          if(window.bmsController.nowPage != null){
             window.bmsController.controllFunctions.changeVisibleWenpanel();
           }
         },

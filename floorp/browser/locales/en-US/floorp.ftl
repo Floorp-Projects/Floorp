@@ -632,7 +632,7 @@ gf-floorp-close-sidebar-description = Close Sidebar
 
 
 gf-floorp-open-browser-manager-sidebar-name = [Floorp] Open BMS
-gf-floorp-open-browser-manager-sidebar-description = Open Browser Manager Sidebar
+gf-floorp-open-browser-manager-sidebar-description = If Webpanel of Browser Manager Sidebar has loaded, Open Browser Manager Sidebar
 
 gf-floorp-close-browser-manager-sidebar-name = [Floorp] Close BMS
 gf-floorp-close-browser-manager-sidebar-description = Close Browser Manager Sidebar
