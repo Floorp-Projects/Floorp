@@ -52,9 +52,6 @@ add_setup(async function() {
     set: [
       ["browser.urlbar.bestMatch.blockingEnabled", true],
       ["browser.urlbar.quicksuggest.blockingEnabled", true],
-      // Disable the result menu so it doesn't interfere with whether blocking
-      // is enabled (bug 1822338).
-      ["browser.urlbar.resultMenu", false],
     ],
   });
 
