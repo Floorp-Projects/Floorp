@@ -13,6 +13,7 @@ root:
           image-width: 96
           image-height: 96
           slice: [ 32 ]
+          outset: 0
           repeat-vertical: round
           repeat-horizontal: round
         # The pattern has to be stretched to fit.
@@ -24,6 +25,7 @@ root:
           image-width: 96
           image-height: 96
           slice: [ 32 ]
+          outset: 0
           repeat-vertical: round
           repeat-horizontal: round
         # The pattern has to be shrunk to fit.
@@ -35,5 +37,6 @@ root:
           image-width: 96
           image-height: 96
           slice: [ 32 ]
+          outset: 0
           repeat-vertical: round
           repeat-horizontal: round

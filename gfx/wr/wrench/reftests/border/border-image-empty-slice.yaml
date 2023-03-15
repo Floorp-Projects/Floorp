@@ -12,6 +12,7 @@ root:
           image-width: 96
           image-height: 96
           slice: [ 32, 0, 32, 0 ]
+          outset: 0
           repeat-vertical: round
           repeat-horizontal: round
         - type: border
@@ -22,6 +23,7 @@ root:
           image-width: 96
           image-height: 96
           slice: [ 0, 32, 0, 32 ]
+          outset: 0
           repeat-vertical: round
           repeat-horizontal: round
         - type: border
@@ -32,6 +34,7 @@ root:
           image-width: 96
           image-height: 96
           slice: [ 32, 0, 0, 32 ]
+          outset: 0
           repeat-vertical: round
           repeat-horizontal: round
         - type: border
@@ -42,5 +45,6 @@ root:
           image-width: 96
           image-height: 96
           slice: [ 0, 32, 32, 0 ]
+          outset: 0
           repeat-vertical: round
           repeat-horizontal: round

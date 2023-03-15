@@ -1082,6 +1082,10 @@ impl YamlFrameReader {
                         vec![widths.top as u32, widths.left as u32, widths.bottom as u32, widths.right as u32]
                     };
 
+                    let outset = item["outset"]
+                        .as_vec_f32()
+                        .expect("border must have outset");
+                    let outset = broadcast(&outset, 4);
                     let repeat_horizontal = match item["repeat-horizontal"]
                         .as_str()
                         .unwrap_or("stretch")
@@ -1132,6 +1136,7 @@ impl YamlFrameReader {
                         fill,
                         repeat_horizontal,
                         repeat_vertical,
+                        outset: SideOffsets2D::new(outset[0], outset[1], outset[2], outset[3]),
                     }))
                 }
                 _ => {
