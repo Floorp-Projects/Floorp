@@ -234,6 +234,34 @@ nsresult nsFileStreamBase::Flush(void) {
   return NS_OK;
 }
 
+nsresult nsFileStreamBase::StreamStatus() {
+  switch (mState) {
+    case eUnitialized:
+      MOZ_CRASH("This should not happen.");
+      return NS_ERROR_FAILURE;
+
+    case eDeferredOpen:
+      return NS_OK;
+
+    case eOpened:
+      MOZ_ASSERT(mFD);
+      if (NS_WARN_IF(!mFD)) {
+        return NS_ERROR_FAILURE;
+      }
+      return NS_OK;
+
+    case eClosed:
+      MOZ_ASSERT(!mFD);
+      return NS_BASE_STREAM_CLOSED;
+
+    case eError:
+      return mErrorValue;
+  }
+
+  MOZ_CRASH("Invalid mState value.");
+  return NS_ERROR_FAILURE;
+}
+
 nsresult nsFileStreamBase::Write(const char* buf, uint32_t count,
                                  uint32_t* result) {
   nsresult rv = DoPendingOpen();

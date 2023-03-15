@@ -20,6 +20,11 @@ NS_IMETHODIMP
 GeckoViewOutputStream::Flush() { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
+GeckoViewOutputStream::StreamStatus() {
+  return mStream->IsStreamClosed() ? NS_BASE_STREAM_CLOSED : NS_OK;
+}
+
+NS_IMETHODIMP
 GeckoViewOutputStream::Write(const char* buf, uint32_t count,
                              uint32_t* retval) {
   jni::ByteArray::LocalRef buffer = jni::ByteArray::New(

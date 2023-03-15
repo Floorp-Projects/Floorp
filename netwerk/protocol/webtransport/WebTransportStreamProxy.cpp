@@ -314,6 +314,11 @@ NS_IMETHODIMP WebTransportStreamProxy::AsyncOutputStreamWrapper::Flush() {
   return mStream->Flush();
 }
 
+NS_IMETHODIMP
+WebTransportStreamProxy::AsyncOutputStreamWrapper::StreamStatus() {
+  return mStream->StreamStatus();
+}
+
 NS_IMETHODIMP WebTransportStreamProxy::AsyncOutputStreamWrapper::Write(
     const char* aBuf, uint32_t aCount, uint32_t* aResult) {
   return mStream->Write(aBuf, aCount, aResult);

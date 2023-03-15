@@ -81,6 +81,12 @@ NS_IMETHODIMP
 FixedBufferOutputStream::Flush() { return NS_OK; }
 
 NS_IMETHODIMP
+FixedBufferOutputStream::StreamStatus() {
+  MutexAutoLock autoLock(mMutex);
+  return mClosed ? NS_BASE_STREAM_CLOSED : NS_OK;
+}
+
+NS_IMETHODIMP
 FixedBufferOutputStream::Write(const char* aBuf, uint32_t aCount,
                                uint32_t* _retval) {
   return WriteSegments(NS_CopyBufferToSegment, const_cast<char*>(aBuf), aCount,

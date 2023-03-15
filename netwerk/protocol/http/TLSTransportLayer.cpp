@@ -192,6 +192,12 @@ TLSTransportLayer::OutputStreamWrapper::Flush() {
   return mSocketOut->Flush();
 }
 
+NS_IMETHODIMP
+TLSTransportLayer::OutputStreamWrapper::StreamStatus() {
+  LOG(("TLSTransportLayerOutputStream::StreamStatus [this=%p]\n", this));
+  return mSocketOut->StreamStatus();
+}
+
 nsresult TLSTransportLayer::OutputStreamWrapper::WriteDirectly(
     const char* buf, uint32_t count, uint32_t* countWritten) {
   LOG(

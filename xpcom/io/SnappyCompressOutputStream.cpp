@@ -77,6 +77,14 @@ SnappyCompressOutputStream::Flush() {
 }
 
 NS_IMETHODIMP
+SnappyCompressOutputStream::StreamStatus() {
+  if (!mBaseStream) {
+    return NS_BASE_STREAM_CLOSED;
+  }
+  return mBaseStream->StreamStatus();
+}
+
+NS_IMETHODIMP
 SnappyCompressOutputStream::Write(const char* aBuf, uint32_t aCount,
                                   uint32_t* aResultOut) {
   return WriteSegments(NS_CopyBufferToSegment, const_cast<char*>(aBuf), aCount,

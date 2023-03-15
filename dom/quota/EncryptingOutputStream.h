@@ -94,6 +94,7 @@ class EncryptingOutputStream final : public EncryptingOutputStreamBase {
  public:
   NS_IMETHOD Close() override;
   NS_IMETHOD Flush() override;
+  NS_IMETHOD StreamStatus() override;
   NS_IMETHOD WriteSegments(nsReadSegmentFun aReader, void* aClosure,
                            uint32_t aCount, uint32_t* _retval) override;
 };

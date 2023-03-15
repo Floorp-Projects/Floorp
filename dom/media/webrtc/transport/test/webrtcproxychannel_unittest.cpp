@@ -417,6 +417,10 @@ nsresult WebrtcTCPSocketTestOutputStream::Close() { return NS_OK; }
 
 nsresult WebrtcTCPSocketTestOutputStream::Flush() { return NS_OK; }
 
+nsresult WebrtcTCPSocketTestOutputStream::StreamStatus() {
+  return mMustFail ? NS_ERROR_FAILURE : NS_OK;
+}
+
 nsresult WebrtcTCPSocketTestOutputStream::Write(const char* aBuffer,
                                                 uint32_t aCount,
                                                 uint32_t* aWrote) {

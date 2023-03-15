@@ -169,6 +169,16 @@ import org.mozilla.gecko.mozglue.JNIObject;
   }
 
   /**
+   * Called by native code to check if the stream is open.
+   *
+   * @return true if the stream is closed
+   */
+  @WrapForJNI(calledFrom = "gecko")
+  /* package */ synchronized boolean isStreamClosed() {
+    return mClosed || mEOF;
+  }
+
+  /**
    * Called by native code to provide data for this stream.
    *
    * @param buf the bytes

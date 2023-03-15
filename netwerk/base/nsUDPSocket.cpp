@@ -126,6 +126,10 @@ NS_IMETHODIMP nsUDPOutputStream::Close() {
 
 NS_IMETHODIMP nsUDPOutputStream::Flush() { return NS_OK; }
 
+NS_IMETHODIMP nsUDPOutputStream::StreamStatus() {
+  return mIsClosed ? NS_BASE_STREAM_CLOSED : NS_OK;
+}
+
 NS_IMETHODIMP nsUDPOutputStream::Write(const char* aBuf, uint32_t aCount,
                                        uint32_t* _retval) {
   if (mIsClosed) return NS_BASE_STREAM_CLOSED;

@@ -79,6 +79,18 @@ CacheFileOutputStream::Flush() {
 }
 
 NS_IMETHODIMP
+CacheFileOutputStream::StreamStatus() {
+  CacheFileAutoLock lock(mFile);
+  mFile->AssertOwnsLock();  // For thread-safety analysis
+
+  LOG(("CacheFileOutputStream::Close() [this=%p]", this));
+  if (mClosed) {
+    return NS_FAILED(mStatus) ? mStatus : NS_BASE_STREAM_CLOSED;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 CacheFileOutputStream::Write(const char* aBuf, uint32_t aCount,
                              uint32_t* _retval) {
   CacheFileAutoLock lock(mFile);

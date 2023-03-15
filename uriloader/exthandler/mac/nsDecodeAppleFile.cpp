@@ -132,6 +132,10 @@ NS_IMETHODIMP nsDecodeAppleFile::Close(void) {
 
 NS_IMETHODIMP nsDecodeAppleFile::Flush(void) { return m_output->Flush(); }
 
+NS_IMETHODIMP nsDecodeAppleFile::StreamStatus(void) {
+  return m_output->StreamStatus();
+}
+
 NS_IMETHODIMP nsDecodeAppleFile::WriteFrom(nsIInputStream* inStr,
                                            uint32_t count, uint32_t* _retval) {
   return m_output->WriteFrom(inStr, count, _retval);

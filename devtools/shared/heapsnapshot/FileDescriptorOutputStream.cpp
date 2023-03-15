@@ -36,6 +36,11 @@ FileDescriptorOutputStream::Close() {
 }
 
 NS_IMETHODIMP
+FileDescriptorOutputStream::StreamStatus() {
+  return fd ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
 FileDescriptorOutputStream::Write(const char* buf, uint32_t count,
                                   uint32_t* retval) {
   if (NS_WARN_IF(!fd)) return NS_ERROR_FAILURE;

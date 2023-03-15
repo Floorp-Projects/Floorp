@@ -528,6 +528,11 @@ NS_IMETHODIMP DataPipeSender::Close() {
 
 NS_IMETHODIMP DataPipeSender::Flush() { return NS_OK; }
 
+NS_IMETHODIMP DataPipeSender::StreamStatus() {
+  data_pipe_detail::DataPipeAutoLock lock(*mMutex);
+  return CheckStatus(lock);
+}
+
 NS_IMETHODIMP DataPipeSender::Write(const char* aBuf, uint32_t aCount,
                                     uint32_t* aWriteCount) {
   return WriteSegments(NS_CopyBufferToSegment, (void*)aBuf, aCount,

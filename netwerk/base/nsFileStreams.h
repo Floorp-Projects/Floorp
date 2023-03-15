@@ -48,6 +48,7 @@ class nsFileStreamBase : public nsISeekableStream, public nsIFileMetadata {
                         uint32_t aCount, uint32_t* _retval);
   nsresult IsNonBlocking(bool* aNonBlocking);
   nsresult Flush();
+  nsresult StreamStatus();
   nsresult Write(const char* aBuf, uint32_t aCount, uint32_t* result);
   nsresult WriteFrom(nsIInputStream* aFromStream, uint32_t aCount,
                      uint32_t* _retval);
@@ -268,6 +269,9 @@ class nsFileRandomAccessStream : public nsFileStreamBase,
   // Can't use NS_FORWARD_NSIOUTPUTSTREAM due to overlapping methods
   // Close() and IsNonBlocking()
   NS_IMETHOD Flush() override { return nsFileStreamBase::Flush(); }
+  NS_IMETHOD StreamStatus() override {
+    return nsFileStreamBase::StreamStatus();
+  }
   NS_IMETHOD Write(const char* aBuf, uint32_t aCount,
                    uint32_t* _retval) override {
     return nsFileStreamBase::Write(aBuf, aCount, _retval);

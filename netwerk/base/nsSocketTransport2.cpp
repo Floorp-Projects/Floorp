@@ -536,6 +536,12 @@ NS_IMETHODIMP
 nsSocketOutputStream::Flush() { return NS_OK; }
 
 NS_IMETHODIMP
+nsSocketOutputStream::StreamStatus() {
+  MutexAutoLock lock(mTransport->mLock);
+  return mCondition;
+}
+
+NS_IMETHODIMP
 nsSocketOutputStream::Write(const char* buf, uint32_t count,
                             uint32_t* countWritten) {
   SOCKET_LOG(("nsSocketOutputStream::Write [this=%p count=%u]\n", this, count));

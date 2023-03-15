@@ -145,6 +145,15 @@ NS_IMETHODIMP
 nsStorageStream::Flush() { return NS_OK; }
 
 NS_IMETHODIMP
+nsStorageStream::StreamStatus() {
+  MutexAutoLock lock(mMutex);
+  if (!mSegmentedBuffer) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsStorageStream::Write(const char* aBuffer, uint32_t aCount,
                        uint32_t* aNumWritten) {
   if (NS_WARN_IF(!aNumWritten) || NS_WARN_IF(!aBuffer)) {
