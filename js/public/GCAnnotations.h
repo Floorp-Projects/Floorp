@@ -21,6 +21,11 @@
 // MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS.
 #  define JS_HAZ_GC_POINTER __attribute__((annotate("GC Pointer")))
 
+// Same as JS_HAZ_GC_POINTER, except additionally treat pointers to these
+// as GC pointers themselves in order to check references to them, since
+// the analysis cannot distinguish between pointers and references.
+#  define JS_HAZ_GC_REF __attribute__((annotate("GC Pointer or Reference")))
+
 // Mark a type as a rooted pointer, suitable for use on the stack (eg all
 // Rooted<T> instantiations should have this.) "Inherited" by templatized types
 // with MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS.
@@ -78,6 +83,7 @@
 #  define JS_EXPECT_HAZARDS
 #  define JS_HAZ_GC_THING
 #  define JS_HAZ_GC_POINTER
+#  define JS_HAZ_GC_REF
 #  define JS_HAZ_ROOTED
 #  define JS_HAZ_GC_INVALIDATED
 #  define JS_HAZ_ROOTED_BASE

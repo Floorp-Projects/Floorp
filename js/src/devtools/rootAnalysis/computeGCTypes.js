@@ -18,6 +18,7 @@ var typeInfo = {
     'GCPointers': [],
     'GCThings': [],
     'GCInvalidated': [],
+    'GCRefs': [],
     'NonGCTypes': {}, // unused
     'NonGCPointers': {},
     'RootedGCThings': {},
@@ -48,8 +49,7 @@ var rootedPointers = {};
 // Accumulate the base GC types before propagating info through the type graph,
 // so that we can include edges from types processed later
 // (eg MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS).
-var pendingGCTypes = [];
-var pendingGCPointers = [];
+var pendingGCTypes = []; // array of [name, reason, ptrdness]
 
 function processCSU(csu, body)
 {
@@ -61,6 +61,8 @@ function processCSU(csu, body)
             typeInfo.GCPointers.push(csu);
         else if (tag == 'Invalidated by GC')
             typeInfo.GCInvalidated.push(csu);
+        else if (tag == 'GC Pointer or Reference')
+            typeInfo.GCRefs.push(csu);
         else if (tag == 'GC Thing')
             typeInfo.GCThings.push(csu);
         else if (tag == 'Suppressed GC Pointer')
@@ -411,13 +413,10 @@ function addGCType(typeName, child, why, depth, fieldPtrLevel)
 
 function addGCPointer(typeName)
 {
-    pendingGCPointers.push([typeName, '<pointer-annotation>', '(annotation)', 1, 0]);
+    pendingGCTypes.push([typeName, '<pointer-annotation>', '(annotation)', 1, 0]);
 }
 
 for (const pending of pendingGCTypes) {
-    markGCType(...pending);
-}
-for (const pending of pendingGCPointers) {
     markGCType(...pending);
 }
 

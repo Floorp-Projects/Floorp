@@ -1131,7 +1131,7 @@ class JS_PUBLIC_API AutoCheckCannotGC : public AutoRequireNoGC {
   explicit AutoCheckCannotGC(JSContext* cx = nullptr) {}
   AutoCheckCannotGC(const AutoCheckCannotGC& other) : AutoCheckCannotGC() {}
 #endif
-} JS_HAZ_GC_INVALIDATED;
+} JS_HAZ_GC_INVALIDATED JS_HAZ_GC_REF;
 
 extern JS_PUBLIC_API void SetLowMemoryState(JSContext* cx, bool newState);
 

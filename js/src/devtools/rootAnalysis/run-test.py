@@ -45,17 +45,19 @@ parser.add_argument(
     action="store_true",
     help="Display verbose output, including commands executed",
 )
+ALL_TESTS = [
+    "sixgill-tree",
+    "suppression",
+    "hazards",
+    "exceptions",
+    "virtual",
+    "graph",
+    "types",
+]
 parser.add_argument(
     "tests",
     nargs="*",
-    default=[
-        "sixgill-tree",
-        "suppression",
-        "hazards",
-        "exceptions",
-        "virtual",
-        "graph",
-    ],
+    default=ALL_TESTS,
     help="tests to run",
 )
 
@@ -104,9 +106,19 @@ make_dir(outroot)
 
 os.environ["HAZARD_RUN_INTERNAL_TESTS"] = "1"
 
+exclude = []
+tests = []
+for t in cfg.tests:
+    if t.startswith("!"):
+        exclude.append(t[1:])
+    else:
+        tests.append(t)
+if len(tests) == 0:
+    tests = filter(lambda t: t not in exclude, ALL_TESTS)
+
 failed = set()
 passed = set()
-for name in cfg.tests:
+for name in tests:
     name = os.path.basename(name)
     indir = os.path.join(testdir, name)
     outdir = os.path.join(outroot, name)

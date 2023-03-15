@@ -10,6 +10,11 @@
 
 var TRACING = false;
 
+// When edge.Kind == "Pointer", these are the meanings of the edge.Reference field.
+var PTR_POINTER = 0;
+var PTR_REFERENCE = 1;
+var PTR_RVALUE_REF = 2;
+
 // Find all points (positions within the code) of the body given by the list of
 // bodies and the blockId to match (which will specify an outer function or a
 // loop within it), recursing into loops if needed.
@@ -335,6 +340,11 @@ function isImmobileValue(exp) {
     return false;
 }
 
+// Returns whether decl is a body.DefineVariable[] entry for a non-temporary reference.
+function isReferenceDecl(decl) {
+    return decl.Type.Kind == "Pointer" && decl.Type.Reference != PTR_POINTER && decl.Variable.Kind != "Temp";
+}
+
 function expressionIsVariableAddress(exp, variable)
 {
     while (exp.Kind == "Fld")
@@ -452,22 +462,29 @@ function isReturningImmobileValue(edge, variable)
 // start looking at the final point in the function, not one point back from
 // that, since that would skip over the GCing call.
 //
-// Note that this returns true only if the variable's incoming value is used.
-// So this would return false for 'obj':
+// Certain references may be annotated to be live to the end of the function
+// as well (eg AutoCheckCannotGC&& parameters).
+//
+// Note that this returns a nonzero value only if the variable's incoming value is used.
+// So this would return 0 for 'obj':
 //
 //     obj = someFunction();
 //
-// but these would return true:
+// but these would return a positive value:
 //
 //     obj = someFunction(obj);
 //     obj->foo = someFunction();
 //
-function edgeUsesVariable(edge, variable, body)
+function edgeUsesVariable(edge, variable, body, liveToEnd=false)
 {
     if (ignoreEdgeUse(edge, variable, body))
         return 0;
 
-    if (variable.Kind == "Return" && body.Index[1] == edge.Index[1] && body.BlockId.Kind == "Function") {
+    if (variable.Kind == "Return") {
+        liveToEnd = true;
+    }
+
+    if (liveToEnd && body.Index[1] == edge.Index[1] && body.BlockId.Kind == "Function") {
         // The last point in the function body is treated as using the return
         // value. This is the only time the destination point is returned
         // rather than the source point.
@@ -543,19 +560,39 @@ function edgeUsesVariable(edge, variable, body)
     }
 }
 
+// If `decl` is the body.DefineVariable[] declaration of a reference type, then
+// return the expression without the outer dereference. Otherwise, return the
+// original expression.
+function maybeDereference(exp, decl) {
+    if (exp.Kind == "Drf" && exp.Exp[0].Kind == "Var") {
+        if (isReferenceDecl(decl)) {
+            return exp.Exp[0];
+        }
+    }
+    return exp;
+}
+
 function expressionIsVariable(exp, variable)
 {
     return exp.Kind == "Var" && sameVariable(exp.Variable, variable);
 }
 
-function expressionIsMethodOnVariable(exp, variable)
+// Similar to the above, except treat uses of a reference as if they were uses
+// of the dereferenced contents. This requires knowing the type of the
+// variable, and so takes its declaration rather than the variable itself.
+function expressionIsDeclaredVariable(exp, decl)
+{
+    exp = maybeDereference(exp, decl);
+    return expressionIsVariable(exp, decl.Variable);
+}
+
+function expressionIsMethodOnVariableDecl(exp, decl)
 {
     // This might be calling a method on a base class, in which case exp will
     // be an unnamed field of the variable instead of the variable itself.
     while (exp.Kind == "Fld" && exp.Field.Name[0].startsWith("field:"))
         exp = exp.Exp[0];
-
-    return exp.Kind == "Var" && sameVariable(exp.Variable, variable);
+    return expressionIsDeclaredVariable(exp, decl);
 }
 
 // Return whether the edge starts the live range of a variable's value, by setting
@@ -626,6 +663,21 @@ function edgeStartsValueLiveRange(edge, variable)
     return false;
 }
 
+// Match an optional <namespace>:: followed by the class name,
+// and then an optional template parameter marker.
+//
+// Example: mozilla::dom::UniquePtr<...
+//
+function parseTypeName(typeName) {
+    const m = typeName.match(/^(((?:\w|::)+::)?(\w+))\b(\<)?/);
+    if (!m) {
+        return undefined;
+    }
+    const [, type, raw_namespace, classname, is_specialized] = m;
+    const namespace = raw_namespace === null ? "" : raw_namespace;
+    return { type, namespace, classname, is_specialized }
+}
+
 // Return whether an edge "clears out" a variable's value. A simple example
 // would be
 //
@@ -673,12 +725,14 @@ function edgeEndsValueLiveRange(edge, variable, body)
         return true;
     }
 
+    const decl = lookupVariable(body, variable);
+
     if (edge.Type.Kind == 'Function' &&
         edge.Exp[0].Kind == 'Var' &&
         edge.Exp[0].Variable.Kind == 'Func' &&
         edge.Exp[0].Variable.Name[1] == 'move' &&
         edge.Exp[0].Variable.Name[0].includes('std::move(') &&
-        expressionIsVariable(edge.PEdgeCallArguments.Exp[0], variable) &&
+        expressionIsDeclaredVariable(edge.PEdgeCallArguments.Exp[0], decl) &&
         edge.Exp[1].Kind == 'Var' &&
         edge.Exp[1].Variable.Kind == 'Temp')
     {
@@ -721,16 +775,25 @@ function edgeEndsValueLiveRange(edge, variable, body)
     if (edge.Type.Kind == 'Function' &&
         edge.Type.TypeFunctionCSU &&
         edge.PEdgeCallInstance &&
-        expressionIsMethodOnVariable(edge.PEdgeCallInstance.Exp, variable))
+        expressionIsMethodOnVariableDecl(edge.PEdgeCallInstance.Exp, decl))
     {
         const typeName = edge.Type.TypeFunctionCSU.Type.Name;
-        const m = typeName.match(/^(((\w|::)+?)(\w+))</);
-        if (m) {
-            const [, type, namespace,, classname] = m;
+
+        // Synthesize a zero-arg constructor name like
+        // mozilla::dom::UniquePtr<T>::UniquePtr(). Note that the `<T>` is
+        // literal -- the pretty name from sixgill will render the actual
+        // constructor name as something like
+        //
+        //   UniquePtr<T>::UniquePtr() [where T = int]
+        //
+        const parsed = parseTypeName(typeName);
+        if (parsed) {
+            const { type, namespace, classname, is_specialized } = parsed;
 
             // special-case: the initial constructor that doesn't provide a value.
             // Useful for things like Maybe<T>.
-            const ctorName = `${namespace}${classname}<T>::${classname}()`;
+            const template = is_specialized ? '<T>' : '';
+            const ctorName = `${namespace}${classname}${template}::${classname}()`;
             if (callee.Kind == 'Var' &&
                 typesWithSafeConstructors.has(type) &&
                 callee.Variable.Name[0].includes(ctorName))
@@ -769,7 +832,17 @@ function edgeEndsValueLiveRange(edge, variable, body)
     return false;
 }
 
-function edgeMovesVariable(edge, variable)
+// Look up a variable in the list of declarations for this body.
+function lookupVariable(body, variable) {
+    for (const decl of (body.DefineVariable || [])) {
+        if (sameVariable(decl.Variable, variable)) {
+            return decl;
+        }
+    }
+    return undefined;
+}
+
+function edgeMovesVariable(edge, variable, body)
 {
     if (edge.Kind != 'Call')
         return false;
@@ -778,10 +851,25 @@ function edgeMovesVariable(edge, variable)
         callee.Variable.Kind == 'Func')
     {
         const { Variable: { Name: [ fullname, shortname ] } } = callee;
-        const [ mangled, unmangled ] = splitFunction(fullname);
-        // Match a UniquePtr move constructor.
-        if (unmangled.match(/::UniquePtr<[^>]*>::UniquePtr\((\w+::)*UniquePtr<[^>]*>&&/))
-            return true;
+
+        // Match an rvalue parameter.
+
+        if (!edge || !edge.PEdgeCallArguments || !edge.PEdgeCallArguments.Exp) {
+            return false;
+        }
+
+        for (const arg of edge.PEdgeCallArguments.Exp) {
+            if (arg.Kind != 'Drf') continue;
+            const val = arg.Exp[0];
+            if (val.Kind == 'Var' && sameVariable(val.Variable, variable)) {
+                // This argument is the variable we're looking for. Return true
+                // if it is passed as an rvalue reference.
+                const type = lookupVariable(body, variable).Type;
+                if (type.Kind == "Pointer" && type.Reference == PTR_RVALUE_REF) {
+                    return true;
+                }
+            }
+        }
     }
 
     return false;
@@ -802,7 +890,7 @@ function basicBlockEatsVariable(variable, body, startpoint)
         }
         const edge = edges[0];
 
-        if (edgeMovesVariable(edge, variable)) {
+        if (edgeMovesVariable(edge, variable, body)) {
             return true;
         }
 
