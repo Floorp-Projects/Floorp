@@ -8,9 +8,6 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 :root {
-  /* ::::: Variables ::::: */
-  --panel-description-color: hsl(0,0%,50%);
-
   /* ::::: Styles ::::: */
   appearance: auto;
   -moz-default-appearance: dialog;

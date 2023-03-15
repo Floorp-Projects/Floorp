@@ -75,28 +75,6 @@ const toolkitVariableMap = [
     "--arrowpanel-color",
     {
       lwtProperty: "popup_text",
-      processColor(rgbaChannels, element) {
-        const disabledColorVariable = "--panel-disabled-color";
-        const descriptionColorVariable = "--panel-description-color";
-
-        if (!rgbaChannels) {
-          element.style.removeProperty(disabledColorVariable);
-          element.style.removeProperty(descriptionColorVariable);
-          return null;
-        }
-
-        let { r, g, b, a } = rgbaChannels;
-
-        element.style.setProperty(
-          disabledColorVariable,
-          `rgba(${r}, ${g}, ${b}, 0.5)`
-        );
-        element.style.setProperty(
-          descriptionColorVariable,
-          `rgba(${r}, ${g}, ${b}, 0.7)`
-        );
-        return `rgba(${r}, ${g}, ${b}, ${a})`;
-      },
     },
   ],
   [

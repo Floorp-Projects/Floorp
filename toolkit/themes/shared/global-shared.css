@@ -30,8 +30,8 @@
   --arrowpanel-dimmed: color-mix(in srgb, currentColor 17%, transparent);
   --arrowpanel-dimmed-further: color-mix(in srgb, currentColor 30%, transparent);
 
-  --panel-description-color: GrayText;
-  --panel-disabled-color: GrayText;
+  --panel-description-color: color-mix(in srgb, currentColor 60%, transparent);;
+  --panel-disabled-color: color-mix(in srgb, currentColor 40%, transparent);;
 
   --popup-notification-body-width: calc(31em - calc(2 * var(--arrowpanel-padding)));
 
@@ -56,6 +56,9 @@
 @media (prefers-contrast) {
   :root:not(:-moz-lwtheme) {
     --toolbarbutton-disabled-opacity: 0.3;
+
+    --panel-description-color: inherit;
+    --panel-disabled-color: GrayText;
   }
 }
 
