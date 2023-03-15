@@ -493,9 +493,10 @@ nsCString ProfilerChild::GrabShutdownProfile() {
   FailureLatchSource failureLatch;
   SpliceableChunkedJSONWriter writer{failureLatch};
   writer.Start();
-  if (!profiler_stream_json_for_this_process(writer, /* aSinceTime */ 0,
-                                             /* aIsShuttingDown */ true,
-                                             service.get(), ProgressLogger{})) {
+  auto rv = profiler_stream_json_for_this_process(
+      writer, /* aSinceTime */ 0,
+      /* aIsShuttingDown */ true, service.get(), ProgressLogger{});
+  if (rv.isErr()) {
     const char* failure = writer.GetFailure();
     return nsPrintfCString("*Profile unavailable for pid %u%s%s",
                            unsigned(profiler_current_process_id().ToNumber()),

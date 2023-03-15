@@ -129,6 +129,14 @@ class SpliceableJSONWriter;
 }  // namespace mozilla
 class nsIURI;
 
+enum class ProfilerError {
+  IsInactive,
+  JsonGenerationFailed,
+};
+
+template <typename T>
+using ProfilerResult = mozilla::Result<T, ProfilerError>;
+
 //---------------------------------------------------------------------------
 // Give information to the profiler
 //---------------------------------------------------------------------------
@@ -369,8 +377,8 @@ mozilla::UniquePtr<char[]> profiler_get_profile(double aSinceTime = 0,
                                                 bool aIsShuttingDown = false);
 
 // Write the profile for this process (excluding subprocesses) into aWriter.
-// Returns false if the profiler is inactive.
-bool profiler_stream_json_for_this_process(
+// Returns a failed result if the profiler is inactive.
+ProfilerResult<mozilla::Ok> profiler_stream_json_for_this_process(
     mozilla::baseprofiler::SpliceableJSONWriter& aWriter, double aSinceTime = 0,
     bool aIsShuttingDown = false,
     ProfilerCodeAddressService* aService = nullptr,

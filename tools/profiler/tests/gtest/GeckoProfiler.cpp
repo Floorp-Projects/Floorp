@@ -2755,7 +2755,7 @@ TEST(GeckoProfiler, Markers)
 
   SpliceableChunkedJSONWriter w{FailureLatchInfallibleSource::Singleton()};
   w.Start();
-  EXPECT_TRUE(::profiler_stream_json_for_this_process(w));
+  EXPECT_TRUE(::profiler_stream_json_for_this_process(w).isOk());
   w.End();
 
   EXPECT_FALSE(w.Failed());
@@ -3554,7 +3554,7 @@ TEST(GeckoProfiler, Markers)
   // This last marker shouldn't get streamed.
   SpliceableChunkedJSONWriter w2{FailureLatchInfallibleSource::Singleton()};
   w2.Start();
-  EXPECT_TRUE(::profiler_stream_json_for_this_process(w2));
+  EXPECT_TRUE(::profiler_stream_json_for_this_process(w2).isOk());
   w2.End();
   EXPECT_FALSE(w2.Failed());
   UniquePtr<char[]> profile2 = w2.ChunkedWriteFunc().CopyData();
@@ -3793,7 +3793,7 @@ TEST(GeckoProfiler, StreamJSONForThisProcess)
   MOZ_RELEASE_ASSERT(&std::as_const(w).SourceFailureLatch() ==
                      &mozilla::FailureLatchInfallibleSource::Singleton());
 
-  ASSERT_TRUE(!::profiler_stream_json_for_this_process(w));
+  ASSERT_TRUE(::profiler_stream_json_for_this_process(w).isErr());
   MOZ_RELEASE_ASSERT(!w.ChunkedWriteFunc().Failed());
   MOZ_RELEASE_ASSERT(!w.ChunkedWriteFunc().GetFailure());
   MOZ_RELEASE_ASSERT(!w.Failed());
@@ -3803,7 +3803,7 @@ TEST(GeckoProfiler, StreamJSONForThisProcess)
                  filters, MOZ_ARRAY_LENGTH(filters), 0);
 
   w.Start();
-  ASSERT_TRUE(::profiler_stream_json_for_this_process(w));
+  ASSERT_TRUE(::profiler_stream_json_for_this_process(w).isOk());
   w.End();
 
   MOZ_RELEASE_ASSERT(!w.ChunkedWriteFunc().Failed());
@@ -3817,13 +3817,13 @@ TEST(GeckoProfiler, StreamJSONForThisProcess)
 
   profiler_stop();
 
-  ASSERT_TRUE(!::profiler_stream_json_for_this_process(w));
+  ASSERT_TRUE(::profiler_stream_json_for_this_process(w).isErr());
 }
 
 // Internal version of profiler_stream_json_for_this_process, which allows being
 // called from a non-main thread of the parent process, at the risk of getting
 // an incomplete profile.
-bool do_profiler_stream_json_for_this_process(
+ProfilerResult<Ok> do_profiler_stream_json_for_this_process(
     SpliceableJSONWriter& aWriter, double aSinceTime, bool aIsShuttingDown,
     ProfilerCodeAddressService* aService,
     mozilla::ProgressLogger aProgressLogger);
@@ -3855,7 +3855,7 @@ TEST(GeckoProfiler, StreamJSONForThisProcessThreaded)
   MOZ_RELEASE_ASSERT(&std::as_const(w).SourceFailureLatch() ==
                      &mozilla::FailureLatchInfallibleSource::Singleton());
 
-  ASSERT_TRUE(!::profiler_stream_json_for_this_process(w));
+  ASSERT_TRUE(::profiler_stream_json_for_this_process(w).isErr());
   MOZ_RELEASE_ASSERT(!w.ChunkedWriteFunc().Failed());
   MOZ_RELEASE_ASSERT(!w.ChunkedWriteFunc().GetFailure());
   MOZ_RELEASE_ASSERT(!w.Failed());
@@ -3872,10 +3872,11 @@ TEST(GeckoProfiler, StreamJSONForThisProcessThreaded)
           [&]() {
             w.Start();
             ASSERT_TRUE(::do_profiler_stream_json_for_this_process(
-                w, /* double aSinceTime */ 0.0,
-                /* bool aIsShuttingDown */ false,
-                /* ProfilerCodeAddressService* aService */ nullptr,
-                mozilla::ProgressLogger{}));
+                            w, /* double aSinceTime */ 0.0,
+                            /* bool aIsShuttingDown */ false,
+                            /* ProfilerCodeAddressService* aService */ nullptr,
+                            mozilla::ProgressLogger{})
+                            .isOk());
             w.End();
           }),
       NS_DISPATCH_SYNC);
@@ -3896,17 +3897,18 @@ TEST(GeckoProfiler, StreamJSONForThisProcessThreaded)
           "GeckoProfiler_StreamJSONForThisProcessThreaded_Test::TestBody",
           [&]() {
             profiler_stop();
-            ASSERT_TRUE(!::do_profiler_stream_json_for_this_process(
-                w, /* double aSinceTime */ 0.0,
-                /* bool aIsShuttingDown */ false,
-                /* ProfilerCodeAddressService* aService */ nullptr,
-                mozilla::ProgressLogger{}));
+            ASSERT_TRUE(::do_profiler_stream_json_for_this_process(
+                            w, /* double aSinceTime */ 0.0,
+                            /* bool aIsShuttingDown */ false,
+                            /* ProfilerCodeAddressService* aService */ nullptr,
+                            mozilla::ProgressLogger{})
+                            .isErr());
           }),
       NS_DISPATCH_SYNC);
   thread->Shutdown();
 
   // Call profiler_stream_json_for_this_process on the main thread.
-  ASSERT_TRUE(!::profiler_stream_json_for_this_process(w));
+  ASSERT_TRUE(::profiler_stream_json_for_this_process(w).isErr());
 }
 
 TEST(GeckoProfiler, ProfilingStack)
@@ -4955,13 +4957,13 @@ TEST(GeckoProfiler, FailureHandling)
   ASSERT_FALSE(w.GetFailure());
 
   // The marker will cause a failure during this function call.
-  EXPECT_FALSE(::profiler_stream_json_for_this_process(w));
+  EXPECT_FALSE(::profiler_stream_json_for_this_process(w).isOk());
   EXPECT_TRUE(w.Failed());
   ASSERT_TRUE(w.GetFailure());
   EXPECT_EQ(strcmp(w.GetFailure(), "boom!"), 0);
 
   // Already failed, check that we don't crash or reset the failure.
-  EXPECT_FALSE(::profiler_stream_json_for_this_process(w));
+  EXPECT_FALSE(::profiler_stream_json_for_this_process(w).isOk());
   EXPECT_TRUE(w.Failed());
   ASSERT_TRUE(w.GetFailure());
   EXPECT_EQ(strcmp(w.GetFailure(), "boom!"), 0);
