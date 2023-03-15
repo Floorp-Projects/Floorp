@@ -60,6 +60,81 @@ add_task(async function test_discarded() {
   BrowserTestUtils.removeTab(testTab);
 });
 
+// Regression test for Bug 1819794.
+add_task(async function test_create_discarded_with_cookieStoreId() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["contextualIdentities", "cookies"],
+    },
+    async background() {
+      const [{ cookieStoreId }] = await browser.contextualIdentities.query({});
+      browser.test.assertEq(
+        "firefox-container-1",
+        cookieStoreId,
+        "Got expected cookieStoreId"
+      );
+      await browser.tabs.create({
+        url: `http://example.com/#${cookieStoreId}`,
+        cookieStoreId,
+        discarded: true,
+      });
+      await browser.tabs.create({
+        url: `http://example.com/#no-container`,
+        discarded: true,
+      });
+    },
+    // Needed by ExtensionSettingsStore (as a side-effect of contextualIdentities permission).
+    useAddonManager: "temporary",
+  });
+
+  const tabContainerPromise = BrowserTestUtils.waitForEvent(
+    window,
+    "TabOpen",
+    false,
+    evt => {
+      return evt.target.getAttribute("usercontextid", "1");
+    }
+  ).then(evt => evt.target);
+  const tabDefaultPromise = BrowserTestUtils.waitForEvent(
+    window,
+    "TabOpen",
+    false,
+    evt => {
+      return !evt.target.hasAttribute("usercontextid");
+    }
+  ).then(evt => evt.target);
+
+  await extension.startup();
+
+  const tabContainer = await tabContainerPromise;
+  ok(
+    tabContainer.hasAttribute("pending"),
+    "new container tab should be discarded"
+  );
+  const tabContainerState = SessionStore.getTabState(tabContainer);
+  is(
+    JSON.parse(tabContainerState).userContextId,
+    1,
+    `Expect a userContextId associated to the new discarded container tab: ${tabContainerState}`
+  );
+
+  const tabDefault = await tabDefaultPromise;
+  ok(
+    tabDefault.hasAttribute("pending"),
+    "new non-container tab should be discarded"
+  );
+  const tabDefaultState = SessionStore.getTabState(tabDefault);
+  is(
+    JSON.parse(tabDefaultState).userContextId,
+    0,
+    `Expect userContextId 0 associated to the new discarded non-container tab: ${tabDefaultState}`
+  );
+
+  BrowserTestUtils.removeTab(tabContainer);
+  BrowserTestUtils.removeTab(tabDefault);
+  await extension.unload();
+});
+
 // If discard is called immediately after creating a new tab, the new tab may not have loaded,
 // and the sessionstore for that tab is not ready for discarding.  The result was a corrupted
 // sessionstore for the tab, which when the tab was activated, resulted in a tab with partial
