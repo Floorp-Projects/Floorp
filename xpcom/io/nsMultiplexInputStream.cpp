@@ -370,6 +370,12 @@ nsMultiplexInputStream::Available(uint64_t* aResult) {
 }
 
 NS_IMETHODIMP
+nsMultiplexInputStream::StreamStatus() {
+  MutexAutoLock lock(mLock);
+  return mStatus;
+}
+
+NS_IMETHODIMP
 nsMultiplexInputStream::Read(char* aBuf, uint32_t aCount, uint32_t* aResult) {
   MutexAutoLock lock(mLock);
   // It is tempting to implement this method in terms of ReadSegments, but

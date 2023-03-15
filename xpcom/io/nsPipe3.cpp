@@ -1317,6 +1317,12 @@ nsPipeInputStream::Available(uint64_t* aResult) {
 }
 
 NS_IMETHODIMP
+nsPipeInputStream::StreamStatus() {
+  ReentrantMonitorAutoEnter mon(mPipe->mReentrantMonitor);
+  return mReadState.mAvailable ? NS_OK : Status(mon);
+}
+
+NS_IMETHODIMP
 nsPipeInputStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
                                 uint32_t aCount, uint32_t* aReadCount) {
   LOG(("III ReadSegments [this=%p count=%u]\n", this, aCount));

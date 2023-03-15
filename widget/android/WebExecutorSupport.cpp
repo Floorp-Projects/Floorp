@@ -92,6 +92,9 @@ class ByteBufferStream final : public nsIInputStream {
   }
 
   NS_IMETHOD
+  StreamStatus() override { return mClosed ? NS_BASE_STREAM_CLOSED : NS_OK; }
+
+  NS_IMETHOD
   Read(char* aBuf, uint32_t aCount, uint32_t* aCountRead) override {
     if (mClosed) {
       return NS_BASE_STREAM_CLOSED;

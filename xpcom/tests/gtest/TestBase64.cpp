@@ -130,6 +130,11 @@ FakeInputStream::Available(uint64_t* aAvailable) {
 }
 
 NS_IMETHODIMP
+FakeInputStream::StreamStatus() {
+  return mClosed ? NS_BASE_STREAM_CLOSED : NS_OK;
+}
+
+NS_IMETHODIMP
 FakeInputStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aOut) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

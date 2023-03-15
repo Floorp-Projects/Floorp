@@ -54,6 +54,9 @@ ShortReadWrapper::Available(uint64_t* aAvailable) {
 }
 
 NS_IMETHODIMP
+ShortReadWrapper::StreamStatus() { return mBaseStream->StreamStatus(); }
+
+NS_IMETHODIMP
 ShortReadWrapper::Read(char* aBuf, uint32_t aCount, uint32_t* _retval) {
   if (mShortReadIter != mShortReadEnd) {
     aCount = std::min(*mShortReadIter, aCount);

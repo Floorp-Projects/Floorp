@@ -266,6 +266,12 @@ nsStringInputStream::Available(uint64_t* aLength) {
 }
 
 NS_IMETHODIMP
+nsStringInputStream::StreamStatus() {
+  ReentrantMonitorAutoEnter lock(mMon);
+  return Closed() ? NS_BASE_STREAM_CLOSED : NS_OK;
+}
+
+NS_IMETHODIMP
 nsStringInputStream::Read(char* aBuf, uint32_t aCount, uint32_t* aReadCount) {
   NS_ASSERTION(aBuf, "null ptr");
   return ReadSegments(NS_CopySegmentToBuffer, aBuf, aCount, aReadCount);

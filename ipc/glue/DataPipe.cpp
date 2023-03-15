@@ -612,6 +612,11 @@ NS_IMETHODIMP DataPipeReceiver::Available(uint64_t* _retval) {
   return NS_OK;
 }
 
+NS_IMETHODIMP DataPipeReceiver::StreamStatus() {
+  data_pipe_detail::DataPipeAutoLock lock(*mMutex);
+  return CheckStatus(lock);
+}
+
 NS_IMETHODIMP DataPipeReceiver::Read(char* aBuf, uint32_t aCount,
                                      uint32_t* aReadCount) {
   return ReadSegments(NS_CopySegmentToBuffer, aBuf, aCount, aReadCount);

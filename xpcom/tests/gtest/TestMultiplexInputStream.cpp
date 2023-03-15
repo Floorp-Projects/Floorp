@@ -415,6 +415,9 @@ class ClosedStream final : public nsIInputStream {
   Available(uint64_t* aLength) override { return NS_BASE_STREAM_CLOSED; }
 
   NS_IMETHOD
+  StreamStatus() override { return NS_BASE_STREAM_CLOSED; }
+
+  NS_IMETHOD
   Read(char* aBuffer, uint32_t aCount, uint32_t* aReadCount) override {
     MOZ_CRASH("This should not be called!");
     return NS_OK;
@@ -452,6 +455,11 @@ class AsyncStream final : public nsIAsyncInputStream {
   NS_IMETHOD
   Available(uint64_t* aLength) override {
     *aLength = mState == eBlocked ? 0 : mSize;
+    return mState == eClosed ? NS_BASE_STREAM_CLOSED : NS_OK;
+  }
+
+  NS_IMETHOD
+  StreamStatus() override {
     return mState == eClosed ? NS_BASE_STREAM_CLOSED : NS_OK;
   }
 
@@ -507,6 +515,9 @@ class BlockingStream final : public nsIInputStream {
 
   NS_IMETHOD
   Available(uint64_t* aLength) override { return NS_BASE_STREAM_CLOSED; }
+
+  NS_IMETHOD
+  StreamStatus() override { return NS_BASE_STREAM_CLOSED; }
 
   NS_IMETHOD
   Read(char* aBuffer, uint32_t aCount, uint32_t* aReadCount) override {
@@ -608,6 +619,9 @@ class NonBufferableStringStream final : public nsIInputStream {
 
   NS_IMETHOD
   Available(uint64_t* aLength) override { return mStream->Available(aLength); }
+
+  NS_IMETHOD
+  StreamStatus() override { return mStream->StreamStatus(); }
 
   NS_IMETHOD
   Read(char* aBuffer, uint32_t aCount, uint32_t* aReadCount) override {

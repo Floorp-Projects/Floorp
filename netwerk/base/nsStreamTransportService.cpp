@@ -166,6 +166,9 @@ nsInputStreamTransport::Available(uint64_t* result) {
 }
 
 NS_IMETHODIMP
+nsInputStreamTransport::StreamStatus() { return mSource->StreamStatus(); }
+
+NS_IMETHODIMP
 nsInputStreamTransport::Read(char* buf, uint32_t count, uint32_t* result) {
   nsresult rv = mSource->Read(buf, count, result);
 

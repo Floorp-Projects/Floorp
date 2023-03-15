@@ -46,6 +46,8 @@ class ReadStream::Inner final : public ReadStream::Controllable {
 
   nsresult Available(uint64_t* aNumAvailableOut);
 
+  nsresult StreamStatus();
+
   nsresult Read(char* aBuf, uint32_t aCount, uint32_t* aNumReadOut);
 
   nsresult ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
@@ -257,6 +259,21 @@ nsresult ReadStream::Inner::Available(uint64_t* aNumAvailableOut) {
   {
     MutexAutoLock lock(mMutex);
     rv = EnsureStream()->Available(aNumAvailableOut);
+  }
+
+  if (NS_FAILED(rv)) {
+    Close();
+  }
+
+  return rv;
+}
+
+nsresult ReadStream::Inner::StreamStatus() {
+  // stream ops can happen on any thread
+  nsresult rv = NS_OK;
+  {
+    MutexAutoLock lock(mMutex);
+    rv = EnsureStream()->StreamStatus();
   }
 
   if (NS_FAILED(rv)) {
@@ -580,6 +597,9 @@ NS_IMETHODIMP
 ReadStream::Available(uint64_t* aNumAvailableOut) {
   return mInner->Available(aNumAvailableOut);
 }
+
+NS_IMETHODIMP
+ReadStream::StreamStatus() { return mInner->StreamStatus(); }
 
 NS_IMETHODIMP
 ReadStream::Read(char* aBuf, uint32_t aCount, uint32_t* aNumReadOut) {

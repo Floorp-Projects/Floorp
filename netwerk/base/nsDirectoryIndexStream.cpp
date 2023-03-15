@@ -151,6 +151,9 @@ nsDirectoryIndexStream::Available(uint64_t* aLength) {
 }
 
 NS_IMETHODIMP
+nsDirectoryIndexStream::StreamStatus() { return mStatus; }
+
+NS_IMETHODIMP
 nsDirectoryIndexStream::Read(char* aBuf, uint32_t aCount,
                              uint32_t* aReadCount) {
   if (mStatus == NS_BASE_STREAM_CLOSED) {

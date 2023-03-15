@@ -120,6 +120,9 @@ AsyncStringStream::Available(uint64_t* aLength) {
 }
 
 NS_IMETHODIMP
+AsyncStringStream::StreamStatus() { return mStream->StreamStatus(); }
+
+NS_IMETHODIMP
 AsyncStringStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aReadCount) {
   return mStream->Read(aBuffer, aCount, aReadCount);
 }

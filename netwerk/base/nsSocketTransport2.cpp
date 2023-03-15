@@ -354,6 +354,14 @@ nsSocketInputStream::Available(uint64_t* avail) {
 }
 
 NS_IMETHODIMP
+nsSocketInputStream::StreamStatus() {
+  SOCKET_LOG(("nsSocketInputStream::StreamStatus [this=%p]\n", this));
+
+  MutexAutoLock lock(mTransport->mLock);
+  return mCondition;
+}
+
+NS_IMETHODIMP
 nsSocketInputStream::Read(char* buf, uint32_t count, uint32_t* countRead) {
   SOCKET_LOG(("nsSocketInputStream::Read [this=%p count=%u]\n", this, count));
 

@@ -77,6 +77,15 @@ ThrottleInputStream::Available(uint64_t* aResult) {
 }
 
 NS_IMETHODIMP
+ThrottleInputStream::StreamStatus() {
+  if (NS_FAILED(mClosedStatus)) {
+    return mClosedStatus;
+  }
+
+  return mStream->StreamStatus();
+}
+
+NS_IMETHODIMP
 ThrottleInputStream::Read(char* aBuf, uint32_t aCount, uint32_t* aResult) {
   if (NS_FAILED(mClosedStatus)) {
     return mClosedStatus;

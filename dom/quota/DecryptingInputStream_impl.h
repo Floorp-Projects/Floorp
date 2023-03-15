@@ -105,6 +105,11 @@ NS_IMETHODIMP DecryptingInputStream<CipherStrategy>::Available(
 }
 
 template <typename CipherStrategy>
+NS_IMETHODIMP DecryptingInputStream<CipherStrategy>::StreamStatus() {
+  return mBaseStream ? NS_OK : NS_BASE_STREAM_CLOSED;
+}
+
+template <typename CipherStrategy>
 NS_IMETHODIMP DecryptingInputStream<CipherStrategy>::ReadSegments(
     nsWriteSegmentFun aWriter, void* aClosure, uint32_t aCount,
     uint32_t* aBytesReadOut) {

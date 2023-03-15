@@ -227,6 +227,10 @@ NS_IMETHODIMP nsMIMEInputStream::Available(uint64_t* _retval) {
   INITSTREAMS;
   return mStream->Available(_retval);
 }
+NS_IMETHODIMP nsMIMEInputStream::StreamStatus() {
+  INITSTREAMS;
+  return mStream->StreamStatus();
+}
 NS_IMETHODIMP nsMIMEInputStream::Read(char* buf, uint32_t count,
                                       uint32_t* _retval) {
   INITSTREAMS;

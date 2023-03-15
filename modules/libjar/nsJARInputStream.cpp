@@ -173,6 +173,11 @@ nsJARInputStream::Available(uint64_t* _retval) {
 }
 
 NS_IMETHODIMP
+nsJARInputStream::StreamStatus() {
+  return mMode == MODE_CLOSED ? NS_BASE_STREAM_CLOSED : NS_OK;
+}
+
+NS_IMETHODIMP
 nsJARInputStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytesRead) {
   NS_ENSURE_ARG_POINTER(aBuffer);
   NS_ENSURE_ARG_POINTER(aBytesRead);

@@ -262,6 +262,10 @@ NS_IMETHODIMP WebTransportStreamProxy::AsyncInputStreamWrapper::Available(
   return mStream->Available(aAvailable);
 }
 
+NS_IMETHODIMP WebTransportStreamProxy::AsyncInputStreamWrapper::StreamStatus() {
+  return mStream->StreamStatus();
+}
+
 NS_IMETHODIMP WebTransportStreamProxy::AsyncInputStreamWrapper::Read(
     char* aBuf, uint32_t aCount, uint32_t* aResult) {
   LOG(("WebTransportStreamProxy::AsyncInputStreamWrapper::Read %p", this));

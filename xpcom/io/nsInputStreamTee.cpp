@@ -216,6 +216,14 @@ nsInputStreamTee::Available(uint64_t* aAvail) {
 }
 
 NS_IMETHODIMP
+nsInputStreamTee::StreamStatus() {
+  if (NS_WARN_IF(!mSource)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  return mSource->StreamStatus();
+}
+
+NS_IMETHODIMP
 nsInputStreamTee::Read(char* aBuf, uint32_t aCount, uint32_t* aBytesRead) {
   if (NS_WARN_IF(!mSource)) {
     return NS_ERROR_NOT_INITIALIZED;
