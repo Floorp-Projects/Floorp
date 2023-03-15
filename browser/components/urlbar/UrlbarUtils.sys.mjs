@@ -1318,7 +1318,7 @@ export var UrlbarUtils = {
    */
   searchEngagementTelemetryType(result, selType = null) {
     if (!result) {
-      return selType === "oneoff" ? "search_shortcut_button" : "unknown";
+      return selType === "oneoff" ? "search_shortcut_button" : "input_field";
     }
 
     if (
