@@ -2333,6 +2333,9 @@ nsresult nsHttpHandler::SpeculativeConnectInternal(
 
   // Construct connection info object
   if (aURI->SchemeIs("https") && !mSpeculativeConnectEnabled) {
+    glean::networking::speculative_connect_outcome
+        .Get("aborted_https_not_enabled"_ns)
+        .Add(1);
     return NS_ERROR_UNEXPECTED;
   }
 

@@ -25,6 +25,7 @@
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/net/DNS.h"
 #include "mozilla/net/DashboardTypes.h"
 #include "nsCOMPtr.h"
@@ -3529,12 +3530,21 @@ void nsHttpConnectionMgr::DoSpeculativeConnectionInternal(
                                                   isFromPredictor, false,
                                                   allow1918, nullptr);
     if (NS_FAILED(rv)) {
+      glean::networking::speculative_connect_outcome
+          .Get("aborted_socket_fail"_ns)
+          .Add(1);
       LOG(
           ("DoSpeculativeConnectionInternal Transport socket creation "
            "failure: %" PRIx32 "\n",
            static_cast<uint32_t>(rv)));
+    } else {
+      glean::networking::speculative_connect_outcome.Get("successful"_ns)
+          .Add(1);
     }
   } else {
+    glean::networking::speculative_connect_outcome
+        .Get("aborted_socket_limit"_ns)
+        .Add(1);
     LOG(
         ("DoSpeculativeConnectionInternal Transport "
          "not created due to existing connection count:%d",
