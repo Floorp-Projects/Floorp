@@ -134,7 +134,7 @@ export class Outline extends Component {
     selectLocation(
       cx,
       createLocation({
-        sourceId: selectedSource.id,
+        source: selectedSource,
         line: selectedItem.location.start.line,
         column: selectedItem.location.start.column,
       })

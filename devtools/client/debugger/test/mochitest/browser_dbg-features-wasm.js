@@ -47,7 +47,7 @@ add_task(async function() {
   // as we aren't fetching any source.
   await dbg.actions.selectLocation(
     getContext(dbg),
-    createLocation({ sourceId: source.id }),
+    createLocation({ source }),
     { keepContext: false }
   );
   is(getCM(dbg).getValue(), `Please refresh to debug this module`);
@@ -112,7 +112,7 @@ add_task(async function() {
   // (getSymbols(source) selector will be false)
   await dbg.actions.selectLocation(
     getContext(dbg),
-    createLocation({ sourceId: binarySource.id }),
+    createLocation({ source: binarySource }),
     { keepContext: false }
   );
 
@@ -130,7 +130,7 @@ add_task(async function() {
   info("Reselect the binary source");
   await dbg.actions.selectLocation(
     getContext(dbg),
-    createLocation({ sourceId: binarySource.id }),
+    createLocation({ source: binarySource }),
     { keepContext: false }
   );
 

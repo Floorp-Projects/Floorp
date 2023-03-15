@@ -71,7 +71,11 @@ describe("Outline", () => {
       line: startLine,
       column: undefined,
       sourceId,
-      sourceActorId: null,
+      source: {
+        id: sourceId,
+      },
+      sourceActor: null,
+      sourceActorId: undefined,
       sourceUrl: "",
     });
   });
@@ -208,7 +212,11 @@ describe("Outline", () => {
         line: 24,
         column: undefined,
         sourceId,
-        sourceActorId: null,
+        source: {
+          id: sourceId,
+        },
+        sourceActor: null,
+        sourceActorId: undefined,
         sourceUrl: "",
       });
     });

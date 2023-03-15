@@ -16,6 +16,7 @@ import {
 } from "../../tests/helpers/mockCommandClient";
 import { getBreakpointsList } from "../../../selectors";
 import { isFulfilled, isRejected } from "../../../utils/async-value";
+import { createLocation } from "../../../utils/location";
 
 describe("loadGeneratedSourceText", () => {
   it("should load source text", async () => {
@@ -36,10 +37,13 @@ describe("loadGeneratedSourceText", () => {
       })
     );
 
-    const foo1Content = selectors.getSettledSourceTextContent(getState(), {
-      sourceId: foo1Source.id,
-      sourceActorId: foo1SourceActor.actor,
-    });
+    const foo1Content = selectors.getSettledSourceTextContent(
+      getState(),
+      createLocation({
+        source: foo1Source,
+        sourceActor: foo1SourceActor,
+      })
+    );
 
     expect(
       foo1Content &&
@@ -64,87 +68,19 @@ describe("loadGeneratedSourceText", () => {
       })
     );
 
-    const foo2Content = selectors.getSettledSourceTextContent(getState(), {
-      sourceId: foo2Source.id,
-      sourceActorId: foo2SourceActor.actor,
-    });
+    const foo2Content = selectors.getSettledSourceTextContent(
+      getState(),
+      createLocation({
+        source: foo2Source,
+        sourceActor: foo2SourceActor,
+      })
+    );
 
     expect(
       foo2Content &&
         isFulfilled(foo2Content) &&
         foo2Content.value.type === "text"
         ? foo2Content.value.value.indexOf("return foo2")
-        : -1
-    ).not.toBe(-1);
-  });
-
-  it("should load source text for a specific source actor", async () => {
-    const mockContents = {
-      "testSource1-0-actor": "const test1 = 500;",
-      "testSource2-0-actor": "const test2 = 442;",
-    };
-
-    const store = createStore({
-      ...mockCommandClient,
-      sourceContents: ({ actor }) => {
-        return new Promise(resolve => {
-          resolve(createSource(actor, mockContents[actor]));
-        });
-      },
-    });
-    const { dispatch, getState, cx } = store;
-
-    const testSource1 = await dispatch(
-      actions.newGeneratedSource(makeSource("testSource1"))
-    );
-
-    // Load the source text for the specific source actor
-    // specified.
-    await dispatch(
-      actions.loadGeneratedSourceText({
-        cx,
-        sourceActor: { actor: "testSource2-0-actor", source: testSource1.id },
-      })
-    );
-
-    const testSource1Content = selectors.getSettledSourceTextContent(
-      getState(),
-      { sourceId: testSource1.id, sourceActorId: "testSource2-0-actor" }
-    );
-
-    expect(
-      testSource1Content &&
-        isFulfilled(testSource1Content) &&
-        testSource1Content.value.type === "text"
-        ? testSource1Content.value.value.indexOf(
-            mockContents["testSource2-0-actor"]
-          )
-        : -1
-    ).not.toBe(-1);
-
-    // Load the new source text when a different source actor is specified
-    await dispatch(
-      actions.loadGeneratedSourceText({
-        cx,
-        sourceActor: { actor: "testSource1-0-actor" },
-      })
-    );
-
-    const testSource1ContentAfterThirdLoad = selectors.getSettledSourceTextContent(
-      getState(),
-      {
-        sourceId: testSource1.id,
-        sourceActorId: "testSource1-0-actor",
-      }
-    );
-
-    expect(
-      testSource1ContentAfterThirdLoad &&
-        isFulfilled(testSource1ContentAfterThirdLoad) &&
-        testSource1ContentAfterThirdLoad.value.type === "text"
-        ? testSource1ContentAfterThirdLoad.value.value.indexOf(
-            mockContents["testSource1-0-actor"]
-          )
         : -1
     ).not.toBe(-1);
   });
@@ -206,11 +142,11 @@ describe("loadGeneratedSourceText", () => {
     await dispatch(
       actions.addBreakpoint(
         cx,
-        {
-          sourceId: fooOrigSources1[0].id,
+        createLocation({
+          source: fooOrigSources1[0],
           line: 1,
           column: 0,
-        },
+        }),
         {}
       )
     );
@@ -250,11 +186,11 @@ describe("loadGeneratedSourceText", () => {
     await dispatch(
       actions.addBreakpoint(
         cx,
-        {
-          sourceId: fooGenSource2.id,
+        createLocation({
+          source: fooGenSource2,
           line: 1,
           column: 0,
-        },
+        }),
         {}
       )
     );
@@ -315,10 +251,13 @@ describe("loadGeneratedSourceText", () => {
     await loading;
     expect(count).toEqual(1);
 
-    const content = selectors.getSettledSourceTextContent(getState(), {
-      sourceId: id,
-      sourceActorId: sourceActor.actor,
-    });
+    const content = selectors.getSettledSourceTextContent(
+      getState(),
+      createLocation({
+        source,
+        sourceActor,
+      })
+    );
     expect(
       content &&
         isFulfilled(content) &&
@@ -365,10 +304,13 @@ describe("loadGeneratedSourceText", () => {
     await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
     expect(count).toEqual(1);
 
-    const content = selectors.getSettledSourceTextContent(getState(), {
-      sourceId: id,
-      sourceActorId: sourceActor.actor,
-    });
+    const content = selectors.getSettledSourceTextContent(
+      getState(),
+      createLocation({
+        source,
+        sourceActor,
+      })
+    );
     expect(
       content &&
         isFulfilled(content) &&
@@ -419,10 +361,13 @@ describe("loadGeneratedSourceText", () => {
     );
 
     const wasLoading = watchForState(store, state => {
-      return !selectors.getSettledSourceTextContent(state, {
-        sourceId: "foo2",
-        sourceActorId: sourceActor.actor,
-      });
+      return !selectors.getSettledSourceTextContent(
+        state,
+        createLocation({
+          source,
+          sourceActor,
+        })
+      );
     });
     await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
 
@@ -443,10 +388,13 @@ describe("loadGeneratedSourceText", () => {
     const badSource = selectors.getSource(getState(), "bad-id");
 
     const content = badSource
-      ? selectors.getSettledSourceTextContent(getState(), {
-          sourceId: badSource.id,
-          sourceActorId: sourceActor.actor,
-        })
+      ? selectors.getSettledSourceTextContent(
+          getState(),
+          createLocation({
+            source: badSource,
+            sourceActor: sourceActor,
+          })
+        )
       : null;
     expect(
       content && isRejected(content) && typeof content.value === "string"

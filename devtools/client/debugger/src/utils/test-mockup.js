@@ -14,6 +14,7 @@ import * as asyncValue from "./async-value";
 import { initialState } from "../reducers/index";
 
 import { getDisplayURL } from "./sources-tree/getURL";
+import { createLocation } from "./location";
 
 function makeMockSource(url = "url", id = "source", thread = "FakeThread") {
   return {
@@ -157,7 +158,7 @@ function makeMockFrame(
   displayName = `display-${id}`,
   index = 0
 ) {
-  const location = { sourceId: source.id, line };
+  const location = createLocation({ source, line });
   return {
     id,
     thread: "FakeThread",

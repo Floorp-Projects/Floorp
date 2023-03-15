@@ -6,6 +6,7 @@ import {
   actions,
   selectors,
   createStore,
+  createSourceObject,
   makeFrame,
   makeSource,
   makeSourceURL,
@@ -27,7 +28,7 @@ import { mockCommandClient } from "../../tests/helpers/mockCommandClient";
 process.on("unhandledRejection", (reason, p) => {});
 
 function initialLocation(sourceId) {
-  return { sourceId, line: 1 };
+  return createLocation({ source: createSourceObject(sourceId), line: 1 });
 }
 
 describe("sources", () => {
@@ -39,7 +40,9 @@ describe("sources", () => {
 
     const frame = makeFrame({ id: "1", sourceId: "foo1" });
 
-    await dispatch(actions.newGeneratedSource(makeSource("foo1")));
+    const baseSource = await dispatch(
+      actions.newGeneratedSource(makeSource("foo1"))
+    );
     await dispatch(
       actions.paused({
         thread: "FakeThread",
@@ -53,7 +56,7 @@ describe("sources", () => {
     await dispatch(
       actions.selectLocation(
         cx,
-        createLocation({ sourceId: "foo1", line: 1, column: 5 })
+        createLocation({ source: baseSource, line: 1, column: 5 })
       )
     );
 
@@ -219,50 +222,13 @@ describe("sources", () => {
     await dispatch(
       actions.selectLocation(
         cx,
-        createLocation({ sourceId: baseSource.id, line: 1 })
+        createLocation({ source: baseSource, line: 1 })
       )
     );
 
     const selected = getSelectedSource(getState());
     expect(selected && selected.id).toBe(baseSource.id);
     await waitForState(store, state => getSymbols(state, baseSource));
-  });
-
-  it("should keep the original the viewing context", async () => {
-    const { dispatch, getState, cx } = createStore(
-      mockCommandClient,
-      {},
-      {
-        getOriginalLocation: async location => ({ ...location, line: 12 }),
-        getOriginalLocations: async items => items,
-        getGeneratedLocation: async location => ({ ...location, line: 12 }),
-        getOriginalSourceText: async () => ({ text: "" }),
-        getGeneratedRangesForOriginal: async () => [],
-      }
-    );
-
-    const baseSource = await dispatch(
-      actions.newGeneratedSource(makeSource("base.js"))
-    );
-
-    const originalBaseSources = await dispatch(
-      actions.newOriginalSources([makeOriginalSource(baseSource)])
-    );
-
-    await dispatch(actions.selectSource(cx, originalBaseSources[0]));
-
-    const fooSource = await dispatch(
-      actions.newGeneratedSource(makeSource("foo.js"))
-    );
-    await dispatch(
-      actions.selectLocation(
-        cx,
-        createLocation({ sourceId: fooSource.id, line: 1 })
-      )
-    );
-
-    const selected = getSelectedLocation(getState());
-    expect(selected && selected.line).toBe(12);
   });
 
   it("should change the original the viewing context", async () => {
@@ -290,7 +256,7 @@ describe("sources", () => {
       actions.selectSpecificLocation(
         cx,
         createLocation({
-          sourceId: baseSources[0].id,
+          source: baseSources[0],
           line: 1,
         })
       )

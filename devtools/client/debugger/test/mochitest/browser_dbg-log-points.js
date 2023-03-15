@@ -25,7 +25,7 @@ add_task(async function() {
 
   await dbg.actions.addBreakpoint(
     getContext(dbg),
-    createLocation({ line: 8, sourceId: source.id }),
+    createLocation({ line: 8, source }),
     { logValue: "'a', 'b', 'c'" }
   );
 

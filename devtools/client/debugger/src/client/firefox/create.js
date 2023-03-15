@@ -41,10 +41,10 @@ export async function createFrame(thread, frame, index = 0) {
   );
 
   const location = createLocation({
-    sourceId: sourceActor.source,
+    source: sourceActor.sourceObject,
+    sourceActor,
     line: frame.where.line,
     column: frame.where.column,
-    sourceActorId: sourceActor.actor,
   });
 
   return {

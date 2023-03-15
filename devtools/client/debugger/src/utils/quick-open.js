@@ -74,6 +74,7 @@ export function formatSourceForList(
       : `result-item-icon ${getSourceClassnames(source, null, isBlackBoxed)}`,
     id: source.id,
     url: source.url,
+    source,
   };
 }
 

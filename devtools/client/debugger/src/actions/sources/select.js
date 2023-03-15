@@ -25,7 +25,6 @@ import { getRelatedMapLocation } from "../../utils/source-maps";
 
 import {
   getSource,
-  getSourceActor,
   getFirstSourceActorForGeneratedSource,
   getSourceByURL,
   getPrettySource,
@@ -77,7 +76,7 @@ export function selectSourceURL(cx, url, options) {
       return dispatch(setPendingSelectedLocation(cx, url, options));
     }
 
-    const location = createLocation({ ...options, sourceId: source.id });
+    const location = createLocation({ ...options, source });
     return dispatch(selectLocation(cx, location));
   };
 }
@@ -98,9 +97,7 @@ export function selectSource(cx, source, sourceActor) {
   return async ({ dispatch }) => {
     // `createLocation` requires a source object, but we may use selectSource to close the last tab,
     // where source will be null and the location will be an empty object.
-    const location = source
-      ? createLocation({ sourceId: source.id, sourceActorId: sourceActor?.id })
-      : {};
+    const location = source ? createLocation({ source, sourceActor }) : {};
 
     return dispatch(selectSpecificLocation(cx, location));
   };
@@ -167,15 +164,13 @@ export function selectLocation(cx, location, { keepContext = true } = {}) {
       source = getLocationSource(getState(), location);
     }
 
-    let sourceActor;
-    if (!location.sourceActorId) {
+    let sourceActor = location.sourceActor;
+    if (!sourceActor) {
       sourceActor = getFirstSourceActorForGeneratedSource(
         getState(),
         source.id
       );
-      location.sourceActorId = sourceActor ? sourceActor.actor : null;
-    } else {
-      sourceActor = getSourceActor(getState(), location.sourceActorId);
+      location = createLocation({ ...location, sourceActor });
     }
 
     if (!tabExists(getState(), source.id)) {

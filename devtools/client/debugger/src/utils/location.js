@@ -9,19 +9,27 @@ export function comparePosition(a, b) {
 }
 
 export function createLocation({
-  sourceId,
+  source,
+  sourceActor = null,
+
   // Line 0 represents no specific line chosen for action
   line = 0,
   column,
+
   sourceUrl = "",
-  sourceActorId = null,
 }) {
   return {
-    sourceId,
+    source,
+    sourceActor,
+    // Alias which should probably be migrate to query source and sourceActor?
+    sourceId: source.id,
+    sourceActorId: sourceActor?.id,
+
     line,
     column,
+
+    // Is this still used anywhere??
     sourceUrl,
-    sourceActorId,
   };
 }
 

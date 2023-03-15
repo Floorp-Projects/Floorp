@@ -35,6 +35,9 @@ function generateDefaults(editor, overrides) {
 
 function createLocation(line) {
   return {
+    source: {
+      id: "foo",
+    },
     sourceId: "foo",
     line,
     column: 2,

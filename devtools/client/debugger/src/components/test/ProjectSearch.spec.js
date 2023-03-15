@@ -30,43 +30,66 @@ const context = { shortcuts };
 
 const testResults = [
   {
-    filepath: "testFilePath1",
+    location: {
+      source: {
+        url: "testFilePath1",
+      },
+    },
     type: "RESULT",
     matches: [
       {
         match: "match1",
         value: "some thing match1",
-        column: 30,
+        location: {
+          source: {},
+          column: 30,
+        },
         type: "MATCH",
       },
       {
         match: "match2",
         value: "some thing match2",
-        column: 60,
+        location: {
+          source: {},
+          column: 60,
+        },
         type: "MATCH",
       },
       {
         match: "match3",
         value: "some thing match3",
-        column: 90,
+        location: {
+          source: {},
+          column: 90,
+        },
         type: "MATCH",
       },
     ],
   },
   {
-    filepath: "testFilePath2",
+    location: {
+      source: {
+        url: "testFilePath2",
+      },
+    },
     type: "RESULT",
     matches: [
       {
         match: "match4",
         value: "some thing match4",
-        column: 80,
+        location: {
+          source: {},
+          column: 80,
+        },
         type: "MATCH",
       },
       {
         match: "match5",
         value: "some thing match5",
-        column: 40,
+        location: {
+          source: {},
+          column: 40,
+        },
         type: "MATCH",
       },
     ],
@@ -78,8 +101,13 @@ const testMatch = {
   match: "match1",
   value: "some thing match1",
   sourceId: "some-target/source42",
-  line: 3,
-  column: 30,
+  location: {
+    source: {
+      id: "some-target/source42",
+    },
+    line: 3,
+    column: 30,
+  },
 };
 
 function render(overrides = {}, mounted = false) {
@@ -226,9 +254,9 @@ describe("ProjectSearch", () => {
     component.instance().state.focusedItem = { ...testMatch };
     shortcuts.dispatch("Enter");
     expect(selectSpecificLocation).toHaveBeenCalledWith(mockcx, {
-      sourceId: "some-target/source42",
-      sourceActorId: null,
-      sourceUrl: "",
+      source: {
+        id: "some-target/source42",
+      },
       line: 3,
       column: 30,
     });
