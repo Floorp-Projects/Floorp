@@ -403,7 +403,8 @@ bool js::intl_defaultTimeZone(JSContext* cx, unsigned argc, Value* vp) {
   MOZ_ASSERT(args.length() == 0);
 
   FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> timeZone(cx);
-  auto result = DateTimeInfo::timeZoneId(timeZone);
+  auto result =
+      DateTimeInfo::timeZoneId(DateTimeInfo::shouldRFP(cx->realm()), timeZone);
   if (result.isErr()) {
     intl::ReportInternalError(cx, result.unwrapErr());
     return false;
@@ -422,7 +423,8 @@ bool js::intl_defaultTimeZoneOffset(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 0);
 
-  auto offset = DateTimeInfo::getRawOffsetMs();
+  auto offset =
+      DateTimeInfo::getRawOffsetMs(DateTimeInfo::shouldRFP(cx->realm()));
   if (offset.isErr()) {
     intl::ReportInternalError(cx, offset.unwrapErr());
     return false;
@@ -445,7 +447,8 @@ bool js::intl_isDefaultTimeZone(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> chars(cx);
-  auto result = DateTimeInfo::timeZoneId(chars);
+  auto result =
+      DateTimeInfo::timeZoneId(DateTimeInfo::shouldRFP(cx->realm()), chars);
   if (result.isErr()) {
     intl::ReportInternalError(cx, result.unwrapErr());
     return false;

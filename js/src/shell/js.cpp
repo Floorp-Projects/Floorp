@@ -6707,6 +6707,13 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
     if (v.isBoolean()) {
       creationOptions.setDefineSharedArrayBufferConstructor(v.toBoolean());
     }
+
+    if (!JS_GetProperty(cx, opts, "shouldResistFingerprinting", &v)) {
+      return false;
+    }
+    if (v.isBoolean()) {
+      behaviors.setShouldResistFingerprinting(v.toBoolean());
+    }
   }
 
   if (!CheckRealmOptions(cx, options, principals.get())) {
