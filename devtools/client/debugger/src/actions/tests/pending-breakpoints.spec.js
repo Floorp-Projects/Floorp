@@ -442,11 +442,7 @@ describe("adding sources", () => {
         },
       ],
       getOriginalSourceText: async () => ({ text: "" }),
-      getGeneratedLocation: async location => ({
-        line: location.line,
-        column: location.column,
-        sourceId: location.sourceId,
-      }),
+      getGeneratedLocation: async location => location,
       getOriginalLocation: async location => location,
       getGeneratedRangesForOriginal: async () => [
         { start: { line: 0, column: 0 }, end: { line: 10, column: 10 } },

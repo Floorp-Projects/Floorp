@@ -24,7 +24,7 @@ add_task(async function() {
 
   await dbg.actions.addBreakpoint(
     getContext(dbg),
-    createLocation({ line: 5, sourceId: source.id }),
+    createLocation({ line: 5, source }),
     { logValue: "`value: ${JSON.stringify(test)}`", requiresMapping: true }
   );
   await waitForBreakpoint(dbg, "test.js", 5);

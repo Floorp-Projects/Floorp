@@ -49,7 +49,7 @@ export function continueToHere(cx, location) {
         addHiddenBreakpoint(
           cx,
           createLocation({
-            sourceId: selectedSource.id,
+            source: selectedSource,
             line: pauseLocation.line,
             column: pauseLocation.column,
           })

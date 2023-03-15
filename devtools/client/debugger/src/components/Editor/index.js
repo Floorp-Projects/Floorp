@@ -433,7 +433,11 @@ class Editor extends PureComponent {
       return;
     }
 
-    const location = createLocation({ line, column: undefined, sourceId });
+    const location = createLocation({
+      line,
+      column: undefined,
+      source: selectedSource,
+    });
 
     if (target.classList.contains("CodeMirror-linenumber")) {
       const lineText = getLineText(

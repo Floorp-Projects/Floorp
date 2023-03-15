@@ -264,7 +264,7 @@ class DebuggerPanel {
     }
 
     const generatedLocation = createLocation({
-      sourceId: generatedSource.id,
+      source: generatedSource,
       line: generatedLine,
       column: generatedColumn,
     });
@@ -273,7 +273,9 @@ class DebuggerPanel {
     // if the location can't be mapped to any original source.
     // So that we may open either regular source or original sources here.
     const originalLocation = await getOriginalLocation(generatedLocation, {
+      // Reproduce a minimal thunkArgs for getOriginalLocation.
       sourceMapLoader: this.toolbox.sourceMapLoader,
+      getState: this._store.getState,
     });
 
     // view-source module only forced the load of debugger in the background.

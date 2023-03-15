@@ -115,7 +115,7 @@ function selectPrettyLocation(cx, prettySource) {
       return dispatch(
         selectSpecificLocation(
           cx,
-          createLocation({ ...location, sourceId: prettySource.id })
+          createLocation({ ...location, source: prettySource })
         )
       );
     }

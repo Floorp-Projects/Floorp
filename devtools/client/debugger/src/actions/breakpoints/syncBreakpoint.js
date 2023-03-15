@@ -65,7 +65,7 @@ export function syncBreakpoint(cx, sourceId, pendingBreakpoint) {
     const { location, generatedLocation } = pendingBreakpoint;
     const sourceGeneratedLocation = createLocation({
       ...generatedLocation,
-      sourceId: generatedSourceId,
+      source: generatedSource,
     });
 
     if (
@@ -93,7 +93,7 @@ export function syncBreakpoint(cx, sourceId, pendingBreakpoint) {
 
     const originalLocation = createLocation({
       ...location,
-      sourceId,
+      source,
     });
 
     const newPosition = await findBreakpointPosition(

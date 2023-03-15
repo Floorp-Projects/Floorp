@@ -230,7 +230,7 @@ export function toggleBreakpointAtLine(cx, line) {
       addBreakpoint(
         cx,
         createLocation({
-          sourceId: selectedSource.id,
+          source: selectedSource,
           sourceUrl: selectedSource.url,
           line,
         })
@@ -253,7 +253,7 @@ export function addBreakpointAtLine(
       return null;
     }
     const breakpointLocation = createLocation({
-      sourceId: source.id,
+      source,
       sourceUrl: source.url,
       column: undefined,
       line,

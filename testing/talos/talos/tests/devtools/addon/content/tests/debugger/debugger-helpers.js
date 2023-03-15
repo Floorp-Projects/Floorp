@@ -183,7 +183,7 @@ function selectSource(dbg, url) {
   const line = 1;
   const source = findSource(dbg, url);
   const cx = dbg.selectors.getContext(dbg.getState());
-  dbg.actions.selectLocation(cx, createLocation({ sourceId: source.id, line }));
+  dbg.actions.selectLocation(cx, createLocation({ source, line }));
   return waitForState(
     dbg,
     state => {
@@ -261,7 +261,7 @@ async function addBreakpoint(dbg, line, url) {
   dump(`add breakpoint\n`);
   const source = findSource(dbg, url);
   const location = createLocation({
-    sourceId: source.id,
+    source,
     line,
   });
 

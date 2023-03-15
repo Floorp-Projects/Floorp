@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import {
+  getSource,
   getFrames,
   getBlackBoxRanges,
   getLocationSource,
@@ -73,7 +74,7 @@ function isWasmOriginalSourceFrame(frame, getState) {
   return Boolean(generatedSource?.isWasm);
 }
 
-async function expandFrames(frames, sourceMapLoader, getState) {
+async function expandFrames(frames, { getState, sourceMapLoader }) {
   const result = [];
   for (let i = 0; i < frames.length; ++i) {
     const frame = frames[i];
@@ -107,7 +108,12 @@ async function expandFrames(frames, sourceMapLoader, getState) {
       result.push({
         id,
         displayName: originalFrame.displayName,
-        location: createLocation(originalFrame.location),
+        // SourceMapLoader doesn't known about debugger's source objects
+        // so that we have to fetch it from here
+        location: createLocation({
+          ...originalFrame.location,
+          source: getSource(getState(), originalFrame.location.sourceId),
+        }),
         index: frame.index,
         source: null,
         thread: frame.thread,
@@ -138,7 +144,7 @@ async function expandFrames(frames, sourceMapLoader, getState) {
  */
 export function mapFrames(cx) {
   return async function(thunkArgs) {
-    const { dispatch, getState, sourceMapLoader } = thunkArgs;
+    const { dispatch, getState } = thunkArgs;
     const frames = getFrames(getState(), cx.thread);
     if (!frames) {
       return;
@@ -146,7 +152,7 @@ export function mapFrames(cx) {
 
     let mappedFrames = await updateFrameLocations(frames, thunkArgs);
 
-    mappedFrames = await expandFrames(mappedFrames, sourceMapLoader, getState);
+    mappedFrames = await expandFrames(mappedFrames, thunkArgs);
 
     const selectedFrameId = getSelectedFrameId(
       getState(),

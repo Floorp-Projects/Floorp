@@ -25,32 +25,54 @@ export async function getGeneratedLocation(location, thunkArgs) {
   }
 
   const { sourceMapLoader, getState } = thunkArgs;
-  const { sourceId, line, column } = await sourceMapLoader.getGeneratedLocation(
+  const generatedLocation = await sourceMapLoader.getGeneratedLocation(
     location
   );
+  // Avoid re-creating a new location if the SourceMapLoader returned the same location.
+  // We can't compare location objects as the worker always return new objects, even if their content is the same.
+  if (generatedLocation.sourceId == location.sourceId) {
+    return location;
+  }
 
-  const generatedSource = getSource(getState(), sourceId);
+  const generatedSource = getSource(getState(), generatedLocation.sourceId);
   if (!generatedSource) {
-    throw new Error(`Could not find generated source ${sourceId}`);
+    throw new Error(
+      `Could not find generated source ${generatedLocation.sourceId}`
+    );
   }
 
   return createLocation({
-    sourceId,
+    source: generatedSource,
     sourceUrl: generatedSource.url,
-    line,
-    column: column === 0 ? undefined : column,
+    line: generatedLocation.line,
+    column:
+      generatedLocation.column === 0 ? undefined : generatedLocation.column,
   });
 }
 
-export async function getOriginalLocation(generatedLocation, thunkArgs) {
-  if (isOriginalId(generatedLocation.sourceId)) {
+export async function getOriginalLocation(location, thunkArgs) {
+  if (isOriginalId(location.sourceId)) {
     return location;
   }
-  const { sourceMapLoader } = thunkArgs;
-  const originalLocation = await sourceMapLoader.getOriginalLocation(
-    generatedLocation
-  );
-  return createLocation(originalLocation);
+  const { getState, sourceMapLoader } = thunkArgs;
+  const originalLocation = await sourceMapLoader.getOriginalLocation(location);
+  // Avoid re-creating a new location if this isn't mapped and it returned the generated location.
+  // We can't compare location objects as the worker always return new objects, even if their content is the same.
+  if (originalLocation.sourceId == location.sourceId) {
+    return location;
+  }
+  // SourceMapLoader doesn't known about debugger's source objects
+  // so that we have to fetch it from here
+  const originalSource = getSource(getState(), originalLocation.sourceId);
+  if (!originalSource) {
+    throw new Error(
+      `Could not find original source ${originalLocation.sourceId}`
+    );
+  }
+  return createLocation({
+    ...originalLocation,
+    source: originalSource,
+  });
 }
 
 export async function getMappedLocation(location, thunkArgs) {

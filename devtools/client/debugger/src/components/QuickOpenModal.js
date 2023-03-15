@@ -261,7 +261,7 @@ export class QuickOpenModal extends Component {
 
     if (this.isGotoSourceQuery()) {
       const location = parseLineColumn(this.props.query);
-      this.gotoLocation({ ...location, sourceId: item.id });
+      this.gotoLocation({ ...location, source: item.source });
       return;
     }
 
@@ -273,7 +273,7 @@ export class QuickOpenModal extends Component {
       return;
     }
 
-    this.gotoLocation({ sourceId: item.id, line: 0 });
+    this.gotoLocation({ source: item.source, line: 0 });
   };
 
   onSelectResultItem = item => {
@@ -311,11 +311,10 @@ export class QuickOpenModal extends Component {
     const { cx, selectSpecificLocation, selectedSource } = this.props;
 
     if (location != null) {
-      const selectedSourceId = selectedSource ? selectedSource.id : "";
       selectSpecificLocation(
         cx,
         createLocation({
-          sourceId: location.sourceId || selectedSourceId,
+          source: location.source || selectedSource,
           line: location.line,
           column: location.column,
         })

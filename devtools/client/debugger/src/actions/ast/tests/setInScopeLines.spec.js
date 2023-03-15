@@ -42,13 +42,15 @@ describe("getInScopeLine", () => {
     const frame = makeMockFrame("scopes-4", source);
     client.getFrames = async () => [frame];
 
-    await dispatch(actions.newGeneratedSource(makeSource("scopes.js")));
+    const baseSource = await dispatch(
+      actions.newGeneratedSource(makeSource("scopes.js"))
+    );
 
     await dispatch(
       actions.selectLocation(
         selectors.getContext(getState()),
         createLocation({
-          sourceId: "scopes.js",
+          source: baseSource,
           line: 5,
         })
       )

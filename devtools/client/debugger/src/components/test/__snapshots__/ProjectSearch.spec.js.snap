@@ -56,22 +56,35 @@ exports[`ProjectSearch found search results 1`] = `
   results={
     Array [
       Object {
-        "filepath": "testFilePath1",
+        "location": Object {
+          "source": Object {
+            "url": "testFilePath1",
+          },
+        },
         "matches": Array [
           Object {
-            "column": 30,
+            "location": Object {
+              "column": 30,
+              "source": Object {},
+            },
             "match": "match1",
             "type": "MATCH",
             "value": "some thing match1",
           },
           Object {
-            "column": 60,
+            "location": Object {
+              "column": 60,
+              "source": Object {},
+            },
             "match": "match2",
             "type": "MATCH",
             "value": "some thing match2",
           },
           Object {
-            "column": 90,
+            "location": Object {
+              "column": 90,
+              "source": Object {},
+            },
             "match": "match3",
             "type": "MATCH",
             "value": "some thing match3",
@@ -80,16 +93,26 @@ exports[`ProjectSearch found search results 1`] = `
         "type": "RESULT",
       },
       Object {
-        "filepath": "testFilePath2",
+        "location": Object {
+          "source": Object {
+            "url": "testFilePath2",
+          },
+        },
         "matches": Array [
           Object {
-            "column": 80,
+            "location": Object {
+              "column": 80,
+              "source": Object {},
+            },
             "match": "match4",
             "type": "MATCH",
             "value": "some thing match4",
           },
           Object {
-            "column": 40,
+            "location": Object {
+              "column": 40,
+              "source": Object {},
+            },
             "match": "match5",
             "type": "MATCH",
             "value": "some thing match5",
@@ -300,22 +323,35 @@ exports[`ProjectSearch found search results 1`] = `
                 isExpandable={true}
                 item={
                   Object {
-                    "filepath": "testFilePath1",
+                    "location": Object {
+                      "source": Object {
+                        "url": "testFilePath1",
+                      },
+                    },
                     "matches": Array [
                       Object {
-                        "column": 30,
+                        "location": Object {
+                          "column": 30,
+                          "source": Object {},
+                        },
                         "match": "match1",
                         "type": "MATCH",
                         "value": "some thing match1",
                       },
                       Object {
-                        "column": 60,
+                        "location": Object {
+                          "column": 60,
+                          "source": Object {},
+                        },
                         "match": "match2",
                         "type": "MATCH",
                         "value": "some thing match2",
                       },
                       Object {
-                        "column": 90,
+                        "location": Object {
+                          "column": 90,
+                          "source": Object {},
+                        },
                         "match": "match3",
                         "type": "MATCH",
                         "value": "some thing match3",
@@ -378,7 +414,10 @@ exports[`ProjectSearch found search results 1`] = `
                 isExpandable={false}
                 item={
                   Object {
-                    "column": 30,
+                    "location": Object {
+                      "column": 30,
+                      "source": Object {},
+                    },
                     "match": "match1",
                     "type": "MATCH",
                     "value": "some thing match1",
@@ -446,7 +485,10 @@ exports[`ProjectSearch found search results 1`] = `
                 isExpandable={false}
                 item={
                   Object {
-                    "column": 60,
+                    "location": Object {
+                      "column": 60,
+                      "source": Object {},
+                    },
                     "match": "match2",
                     "type": "MATCH",
                     "value": "some thing match2",
@@ -514,7 +556,10 @@ exports[`ProjectSearch found search results 1`] = `
                 isExpandable={false}
                 item={
                   Object {
-                    "column": 90,
+                    "location": Object {
+                      "column": 90,
+                      "source": Object {},
+                    },
                     "match": "match3",
                     "type": "MATCH",
                     "value": "some thing match3",
@@ -582,16 +627,26 @@ exports[`ProjectSearch found search results 1`] = `
                 isExpandable={true}
                 item={
                   Object {
-                    "filepath": "testFilePath2",
+                    "location": Object {
+                      "source": Object {
+                        "url": "testFilePath2",
+                      },
+                    },
                     "matches": Array [
                       Object {
-                        "column": 80,
+                        "location": Object {
+                          "column": 80,
+                          "source": Object {},
+                        },
                         "match": "match4",
                         "type": "MATCH",
                         "value": "some thing match4",
                       },
                       Object {
-                        "column": 40,
+                        "location": Object {
+                          "column": 40,
+                          "source": Object {},
+                        },
                         "match": "match5",
                         "type": "MATCH",
                         "value": "some thing match5",
@@ -654,7 +709,10 @@ exports[`ProjectSearch found search results 1`] = `
                 isExpandable={false}
                 item={
                   Object {
-                    "column": 80,
+                    "location": Object {
+                      "column": 80,
+                      "source": Object {},
+                    },
                     "match": "match4",
                     "type": "MATCH",
                     "value": "some thing match4",
@@ -722,7 +780,10 @@ exports[`ProjectSearch found search results 1`] = `
                 isExpandable={false}
                 item={
                   Object {
-                    "column": 40,
+                    "location": Object {
+                      "column": 40,
+                      "source": Object {},
+                    },
                     "match": "match5",
                     "type": "MATCH",
                     "value": "some thing match5",

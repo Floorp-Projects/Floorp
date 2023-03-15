@@ -21,10 +21,7 @@ describe("closing tabs", () => {
       actions.newGeneratedSource(makeSource("foo.js"))
     );
     await dispatch(
-      actions.selectLocation(
-        cx,
-        createLocation({ sourceId: "foo.js", line: 1 })
-      )
+      actions.selectLocation(cx, createLocation({ source: fooSource, line: 1 }))
     );
     dispatch(actions.closeTab(cx, fooSource));
 
@@ -38,18 +35,14 @@ describe("closing tabs", () => {
     const fooSource = await dispatch(
       actions.newGeneratedSource(makeSource("foo.js"))
     );
-    await dispatch(actions.newGeneratedSource(makeSource("bar.js")));
-    await dispatch(
-      actions.selectLocation(
-        cx,
-        createLocation({ sourceId: "foo.js", line: 1 })
-      )
+    const barSource = await dispatch(
+      actions.newGeneratedSource(makeSource("bar.js"))
     );
     await dispatch(
-      actions.selectLocation(
-        cx,
-        createLocation({ sourceId: "bar.js", line: 1 })
-      )
+      actions.selectLocation(cx, createLocation({ source: fooSource, line: 1 }))
+    );
+    await dispatch(
+      actions.selectLocation(cx, createLocation({ source: barSource, line: 1 }))
     );
     dispatch(actions.closeTab(cx, fooSource));
 
@@ -65,10 +58,7 @@ describe("closing tabs", () => {
       actions.newGeneratedSource(makeSource("foo.js"))
     );
     await dispatch(
-      actions.selectLocation(
-        cx,
-        createLocation({ sourceId: "foo.js", line: 1 })
-      )
+      actions.selectLocation(cx, createLocation({ source: fooSource, line: 1 }))
     );
     dispatch(actions.closeTab(cx, fooSource));
 
@@ -79,21 +69,17 @@ describe("closing tabs", () => {
   it("closing the active tab", async () => {
     const { dispatch, getState, cx } = createStore(mockCommandClient);
 
-    await dispatch(actions.newGeneratedSource(makeSource("foo.js")));
+    const fooSource = await dispatch(
+      actions.newGeneratedSource(makeSource("foo.js"))
+    );
     const barSource = await dispatch(
       actions.newGeneratedSource(makeSource("bar.js"))
     );
     await dispatch(
-      actions.selectLocation(
-        cx,
-        createLocation({ sourceId: "foo.js", line: 1 })
-      )
+      actions.selectLocation(cx, createLocation({ source: fooSource, line: 1 }))
     );
     await dispatch(
-      actions.selectLocation(
-        cx,
-        createLocation({ sourceId: "bar.js", line: 1 })
-      )
+      actions.selectLocation(cx, createLocation({ source: barSource, line: 1 }))
     );
     await dispatch(actions.closeTab(cx, barSource));
 
@@ -105,25 +91,25 @@ describe("closing tabs", () => {
   it("closing many inactive tabs", async () => {
     const { dispatch, getState, cx } = createStore(mockCommandClient);
 
-    await dispatch(actions.newGeneratedSource(makeSource("foo.js")));
-    await dispatch(actions.newGeneratedSource(makeSource("bar.js")));
-    await dispatch(actions.newGeneratedSource(makeSource("bazz.js")));
+    const fooSource = await dispatch(
+      actions.newGeneratedSource(makeSource("foo.js"))
+    );
+    const barSource = await dispatch(
+      actions.newGeneratedSource(makeSource("bar.js"))
+    );
+    const bazzSource = await dispatch(
+      actions.newGeneratedSource(makeSource("bazz.js"))
+    );
     await dispatch(
-      actions.selectLocation(
-        cx,
-        createLocation({ sourceId: "foo.js", line: 1 })
-      )
+      actions.selectLocation(cx, createLocation({ source: fooSource, line: 1 }))
+    );
+    await dispatch(
+      actions.selectLocation(cx, createLocation({ source: barSource, line: 1 }))
     );
     await dispatch(
       actions.selectLocation(
         cx,
-        createLocation({ sourceId: "bar.js", line: 1 })
-      )
-    );
-    await dispatch(
-      actions.selectLocation(
-        cx,
-        createLocation({ sourceId: "bazz.js", line: 1 })
+        createLocation({ source: bazzSource, line: 1 })
       )
     );
 
@@ -141,25 +127,25 @@ describe("closing tabs", () => {
   it("closing many tabs including the active tab", async () => {
     const { dispatch, getState, cx } = createStore(mockCommandClient);
 
-    await dispatch(actions.newGeneratedSource(makeSource("foo.js")));
-    await dispatch(actions.newGeneratedSource(makeSource("bar.js")));
-    await dispatch(actions.newGeneratedSource(makeSource("bazz.js")));
+    const fooSource = await dispatch(
+      actions.newGeneratedSource(makeSource("foo.js"))
+    );
+    const barSource = await dispatch(
+      actions.newGeneratedSource(makeSource("bar.js"))
+    );
+    const bazzSource = await dispatch(
+      actions.newGeneratedSource(makeSource("bazz.js"))
+    );
     await dispatch(
-      actions.selectLocation(
-        cx,
-        createLocation({ sourceId: "foo.js", line: 1 })
-      )
+      actions.selectLocation(cx, createLocation({ source: fooSource, line: 1 }))
+    );
+    await dispatch(
+      actions.selectLocation(cx, createLocation({ source: barSource, line: 1 }))
     );
     await dispatch(
       actions.selectLocation(
         cx,
-        createLocation({ sourceId: "bar.js", line: 1 })
-      )
-    );
-    await dispatch(
-      actions.selectLocation(
-        cx,
-        createLocation({ sourceId: "bazz.js", line: 1 })
+        createLocation({ source: bazzSource, line: 1 })
       )
     );
     const tabs = [
@@ -176,19 +162,17 @@ describe("closing tabs", () => {
   it("closing all the tabs", async () => {
     const { dispatch, getState, cx } = createStore(mockCommandClient);
 
-    await dispatch(actions.newGeneratedSource(makeSource("foo.js")));
-    await dispatch(actions.newGeneratedSource(makeSource("bar.js")));
-    await dispatch(
-      actions.selectLocation(
-        cx,
-        createLocation({ sourceId: "foo.js", line: 1 })
-      )
+    const fooSource = await dispatch(
+      actions.newGeneratedSource(makeSource("foo.js"))
+    );
+    const barSource = await dispatch(
+      actions.newGeneratedSource(makeSource("bar.js"))
     );
     await dispatch(
-      actions.selectLocation(
-        cx,
-        createLocation({ sourceId: "bar.js", line: 1 })
-      )
+      actions.selectLocation(cx, createLocation({ source: fooSource, line: 1 }))
+    );
+    await dispatch(
+      actions.selectLocation(cx, createLocation({ source: barSource, line: 1 }))
     );
     await dispatch(
       actions.closeTabs(cx, [

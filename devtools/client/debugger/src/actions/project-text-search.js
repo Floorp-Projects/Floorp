@@ -31,11 +31,12 @@ export function addOngoingSearch(cx, ongoingSearch) {
   return { type: "ADD_ONGOING_SEARCH", cx, ongoingSearch };
 }
 
-export function addSearchResult(cx, sourceId, filepath, matches) {
+export function addSearchResult(cx, location, matches) {
   return {
     type: "ADD_SEARCH_RESULT",
     cx,
-    result: { sourceId, filepath, matches },
+    location,
+    matches,
   };
 }
 
@@ -143,8 +144,8 @@ export function searchSource(cx, source, sourceActor, query) {
     }
     const state = getState();
     const location = createLocation({
-      sourceId: source.id,
-      sourceActorId: sourceActor ? sourceActor.actor : null,
+      source,
+      sourceActor,
     });
 
     const modifiers = getTextSearchModifiers(state);
@@ -153,7 +154,6 @@ export function searchSource(cx, source, sourceActor, query) {
 
     if (content && isFulfilled(content) && content.value.type === "text") {
       matches = await searchWorker.findSourceMatches(
-        source.id,
         content.value,
         query,
         modifiers
@@ -162,6 +162,6 @@ export function searchSource(cx, source, sourceActor, query) {
     if (!matches.length) {
       return;
     }
-    dispatch(addSearchResult(cx, source.id, source.url, matches));
+    dispatch(addSearchResult(cx, location, matches));
   };
 }

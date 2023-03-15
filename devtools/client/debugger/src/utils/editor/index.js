@@ -195,12 +195,11 @@ export function getSourceLocationFromMouseEvent({ codeMirror }, source, e) {
     left: e.clientX,
     top: e.clientY,
   });
-  const sourceId = source.id;
 
   return createLocation({
-    sourceId,
-    line: fromEditorLine(sourceId, line, isWasm(sourceId)),
-    column: isWasm(sourceId) ? 0 : ch + 1,
+    source,
+    line: fromEditorLine(source.id, line, isWasm(source.id)),
+    column: isWasm(source.id) ? 0 : ch + 1,
   });
 }
 

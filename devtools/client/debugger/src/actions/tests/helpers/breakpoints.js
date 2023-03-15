@@ -8,12 +8,21 @@ export function mockPendingBreakpoint(overrides = {}) {
   const { sourceUrl, line, column, condition, disabled, hidden } = overrides;
   return {
     location: createLocation({
+      source: {
+        id: "",
+        url: sourceUrl || "http://localhost:8000/examples/bar.js",
+      },
       sourceId: "",
       sourceUrl: sourceUrl || "http://localhost:8000/examples/bar.js",
       line: line || 5,
       column: column || 1,
     }),
     generatedLocation: createLocation({
+      source: {
+        id: "",
+        url: sourceUrl || "http://localhost:8000/examples/bar.js",
+      },
+      sourceId: "",
       sourceUrl: sourceUrl || "http://localhost:8000/examples/bar.js",
       line: line || 5,
       column: column || 1,
@@ -39,12 +48,20 @@ export function generateBreakpoint(filename, line = 5, column = 0) {
     originalText: "",
     text: "",
     location: createLocation({
+      source: {
+        url: `http://localhost:8000/examples/${filename}`,
+        id: filename,
+      },
       sourceUrl: `http://localhost:8000/examples/${filename}`,
-      sourceId: `${filename}`,
+      sourceId: filename,
       line,
       column,
     }),
     generatedLocation: createLocation({
+      source: {
+        url: `http://localhost:8000/examples/${filename}`,
+        id: filename,
+      },
       sourceUrl: `http://localhost:8000/examples/${filename}`,
       sourceId: filename,
       line,

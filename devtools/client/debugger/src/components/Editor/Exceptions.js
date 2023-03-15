@@ -38,7 +38,7 @@ class Exceptions extends Component {
             exception={exc}
             doc={doc}
             key={`${exc.sourceActorId}:${exc.lineNumber}`}
-            selectedSourceId={selectedSource.id}
+            selectedSource={selectedSource}
           />
         ))}
       </>

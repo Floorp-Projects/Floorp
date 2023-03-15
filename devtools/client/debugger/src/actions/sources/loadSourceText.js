@@ -54,7 +54,7 @@ async function loadOriginalSource(
     const content = getSettledSourceTextContent(
       getState(),
       createLocation({
-        sourceId: generatedSource.id,
+        source: generatedSource,
       })
     );
 
@@ -129,8 +129,8 @@ async function onSourceTextContentAvailable(
   const content = getSettledSourceTextContent(
     getState(),
     createLocation({
-      sourceId: source.id,
-      sourceActorId: sourceActor?.id,
+      source,
+      sourceActor,
     })
   );
 
@@ -169,8 +169,8 @@ export const loadGeneratedSourceText = memoizeableAction(
       const sourceTextContent = getSourceTextContent(
         getState(),
         createLocation({
-          sourceId: sourceActor.source,
-          sourceActorId: sourceActor.actor,
+          source: sourceActor.sourceObject,
+          sourceActor,
         })
       );
 
@@ -208,7 +208,7 @@ export const loadOriginalSourceText = memoizeableAction(
       const sourceTextContent = getSourceTextContent(
         getState(),
         createLocation({
-          sourceId: source.id,
+          source,
         })
       );
       if (!sourceTextContent || sourceTextContent.state === "pending") {

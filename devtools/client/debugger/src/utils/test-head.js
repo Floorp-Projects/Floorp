@@ -86,7 +86,7 @@ function makeFrame({ id, sourceId, thread }, opts = {}) {
   return {
     id,
     scope: { bindings: { variables: {}, arguments: [] } },
-    location: createLocation({ sourceId, line: 4 }),
+    location: createLocation({ source: createSourceObject(sourceId), line: 4 }),
     thread: thread || "FakeThread",
     ...opts,
   };
