@@ -17,6 +17,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityManager
+import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.annotation.CallSuper
 import androidx.annotation.VisibleForTesting
@@ -1442,12 +1443,8 @@ abstract class BaseBrowserFragment :
         if (inFullScreen) {
             // Close find in page bar if opened
             findInPageIntegration.onBackPressed()
-            FenixSnackbar.make(
-                view = binding.dynamicSnackbarContainer,
-                duration = Snackbar.LENGTH_SHORT,
-                isDisplayedWithBrowserToolbar = false,
-            )
-                .setText(getString(R.string.full_screen_notification))
+            Toast
+                .makeText(requireContext(), R.string.full_screen_notification, Toast.LENGTH_SHORT)
                 .show()
             activity?.enterToImmersiveMode()
             (view as? SwipeGestureLayout)?.isSwipeEnabled = false

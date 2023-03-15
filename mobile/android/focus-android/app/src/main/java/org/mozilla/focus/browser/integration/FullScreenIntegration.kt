@@ -7,9 +7,9 @@ package org.mozilla.focus.browser.integration
 import android.app.Activity
 import android.os.Build
 import android.view.View
+import android.widget.Toast
 import androidx.annotation.VisibleForTesting
 import androidx.core.view.isVisible
-import com.google.android.material.snackbar.Snackbar
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.engine.EngineView
@@ -24,7 +24,6 @@ import org.mozilla.focus.ext.disableDynamicBehavior
 import org.mozilla.focus.ext.enableDynamicBehavior
 import org.mozilla.focus.ext.hide
 import org.mozilla.focus.ext.showAsFixed
-import org.mozilla.focus.utils.FocusSnackbarDelegate
 import org.mozilla.focus.utils.Settings
 
 class FullScreenIntegration(
@@ -60,11 +59,9 @@ class FullScreenIntegration(
             enterBrowserFullscreen()
             statusBar.isVisible = false
 
-            FocusSnackbarDelegate(toolbarView).show(
-                toolbarView,
-                R.string.full_screen_notification,
-                Snackbar.LENGTH_SHORT,
-            )
+            Toast
+                .makeText(activity, R.string.full_screen_notification, Toast.LENGTH_SHORT)
+                .show()
 
             switchToImmersiveMode()
         } else {

@@ -9,7 +9,6 @@ import android.content.res.Resources
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
-import android.widget.FrameLayout
 import androidx.core.view.isVisible
 import mozilla.components.browser.engine.gecko.GeckoEngineView
 import mozilla.components.browser.toolbar.BrowserToolbar
@@ -17,6 +16,7 @@ import mozilla.components.feature.session.FullScreenFeature
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertNotNull
 import org.junit.Test
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.runner.RunWith
@@ -32,7 +32,9 @@ import org.mozilla.focus.ext.enableDynamicBehavior
 import org.mozilla.focus.ext.hide
 import org.mozilla.focus.ext.showAsFixed
 import org.mozilla.focus.utils.Settings
+import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.shadows.ShadowToast
 
 @RunWith(RobolectricTestRunner::class)
 internal class FullScreenIntegrationTest {
@@ -289,24 +291,12 @@ internal class FullScreenIntegrationTest {
 
     @Test
     fun `WHEN entering fullscreen THEN put browser in fullscreen, hide system bars and enter immersive mode`() {
-        // Without this the calls regarding the snackbar would throw
-        // "Caused by: java.lang.IllegalArgumentException:
-        // The style on this component requires your app theme to be Theme.AppCompat (or a descendant)"
-        testContext.setTheme(R.style.AppTheme)
-        val layoutParent = FrameLayout(testContext)
         val toolbar = BrowserToolbar(testContext)
-        layoutParent.addView(toolbar)
         val engineView: GeckoEngineView = mock()
         doReturn(mock<View>()).`when`(engineView).asView()
         val settings: Settings = mock()
         doReturn(false).`when`(settings).isAccessibilityEnabled()
-        val resources: Resources = mock()
-        val activityWindow: Window = mock()
-        val decorView: View = mock()
-        val activity: Activity = mock()
-        doReturn(activityWindow).`when`(activity).window
-        doReturn(decorView).`when`(activityWindow).decorView
-        doReturn(resources).`when`(activity).resources
+        val activity = Robolectric.buildActivity(Activity::class.java).get()
         val statusBar: View = mock()
         val integration = spy(
             FullScreenIntegration(
@@ -326,6 +316,13 @@ internal class FullScreenIntegrationTest {
         verify(integration).enterBrowserFullscreen()
         verify(integration).switchToImmersiveMode()
         verify(statusBar).isVisible = false
+
+        val toast = ShadowToast.getTextOfLatestToast()
+        assertNotNull(toast)
+        assertEquals(
+            testContext.getString(R.string.full_screen_notification),
+            toast,
+        )
     }
 
     @Test
