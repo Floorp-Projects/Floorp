@@ -261,16 +261,12 @@ class ProviderQuickSuggest extends UrlbarProvider {
       // Show the result as a best match. Best match titles don't include the
       // `full_keyword`, and the user's search string is highlighted.
       payload.title = [suggestion.title, UrlbarUtils.HIGHLIGHT.TYPED];
-      payload.isBlockable =
-        lazy.UrlbarPrefs.get("bestMatchBlockingEnabled") ||
-        lazy.UrlbarPrefs.get("resultMenu");
+      payload.isBlockable = lazy.UrlbarPrefs.get("bestMatchBlockingEnabled");
     } else {
       // Show the result as a usual quick suggest. Include the `full_keyword`
       // and highlight the parts that aren't in the search string.
       payload.title = suggestion.title;
-      payload.isBlockable =
-        lazy.UrlbarPrefs.get("quickSuggestBlockingEnabled") ||
-        lazy.UrlbarPrefs.get("resultMenu");
+      payload.isBlockable = lazy.UrlbarPrefs.get("quickSuggestBlockingEnabled");
       payload.qsSuggestion = [
         suggestion.full_keyword,
         UrlbarUtils.HIGHLIGHT.SUGGESTED,
@@ -350,7 +346,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
    */
   blockResult(queryContext, result) {
     if (
-      lazy.UrlbarPrefs.get("resultMenu") ||
       (!result.isBestMatch &&
         !lazy.UrlbarPrefs.get("quickSuggestBlockingEnabled")) ||
       (result.isBestMatch && !lazy.UrlbarPrefs.get("bestMatchBlockingEnabled"))
