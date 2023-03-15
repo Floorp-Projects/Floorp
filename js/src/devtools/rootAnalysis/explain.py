@@ -5,8 +5,12 @@
 
 
 import argparse
+import json
+import pathlib
 import re
-from collections import defaultdict
+from html import escape
+
+SRCDIR = pathlib.Path(__file__).parent.parent.parent.absolute()
 
 parser = argparse.ArgumentParser(description="Process some integers.")
 parser.add_argument("rootingHazards", nargs="?", default="rootingHazards.txt")
@@ -14,6 +18,7 @@ parser.add_argument("gcFunctions", nargs="?", default="gcFunctions.txt")
 parser.add_argument("hazards", nargs="?", default="hazards.txt")
 parser.add_argument("extra", nargs="?", default="unnecessary.txt")
 parser.add_argument("refs", nargs="?", default="refs.txt")
+parser.add_argument("html", nargs="?", default="hazards.html")
 args = parser.parse_args()
 
 
@@ -25,6 +30,90 @@ def splitfunc(full):
     return (full[0:idx], full[idx + 1 :])
 
 
+def print_header(outfh):
+    print(
+        """\
+<!DOCTYPE html>
+<head>
+<meta charset="utf-8">
+<style>
+input {
+  position: absolute;
+  opacity: 0;
+  z-index: -1;
+}
+tt {
+  background: #eee;
+}
+.tab-label {
+  cursor: s-resize;
+}
+.tab-label a {
+  color: #222;
+}
+.tab-label:hover {
+  background: #eee;
+}
+.tab-label::after {
+  content: " \\25B6";
+  width: 1em;
+  height: 1em;
+  color: #75f;
+  text-align: center;
+  transition: all 0.35s;
+}
+.accorntent {
+  max-height: 0;
+  padding: 0 1em;
+  color: #2c3e50;
+  overflow: hidden;
+  background: white;
+  transition: all 0.35s;
+}
+
+input:checked + .tab-label::after {
+  transform: rotate(90deg);
+  content: " \\25BC";
+}
+input:checked + .tab-label {
+  cursor: n-resize;
+}
+input:checked ~ .accorntent {
+  max-height: 100vh;
+}
+</style>
+</head>
+<body>""",
+        file=outfh,
+    )
+
+
+def print_footer(outfh):
+    print("</ol></body>", file=outfh)
+
+
+def sourcelink(symbol=None, loc=None, range=None):
+    if symbol:
+        return f"https://searchfox.org/mozilla-central/search?q=symbol:{symbol}"
+    elif range:
+        filename, lineno = loc.split(":")
+        [f0, l0] = range[0]
+        [f1, l1] = range[1]
+        if f0 == f1 and l1 > l0:
+            return f"../{filename}?L={l0}-{l1 - 1}#{l0}"
+        else:
+            return f"../{filename}?L={l0}#{l0}"
+    elif loc:
+        filename, lineno = loc.split(":")
+        return f"../{filename}?L={lineno}#{lineno}"
+    else:
+        raise Exception("missing argument to sourcelink()")
+
+
+def quoted_dict(d):
+    return {k: escape(v) for k, v in d.items() if type(v) == str}
+
+
 num_hazards = 0
 num_refs = 0
 num_missing = 0
@@ -32,124 +121,175 @@ num_missing = 0
 try:
     with open(args.rootingHazards) as rootingHazards, open(
         args.hazards, "w"
-    ) as hazards, open(args.extra, "w") as extra, open(args.refs, "w") as refs:
+    ) as hazards, open(args.extra, "w") as extra, open(args.refs, "w") as refs, open(
+        args.html, "w"
+    ) as html:
         current_gcFunction = None
 
-        # Map from a GC function name to the list of hazards resulting from
-        # that GC function
-        hazardousGCFunctions = defaultdict(list)
+        hazardousGCFunctions = set()
 
-        # List of tuples (gcFunction, index of hazard) used to maintain the
-        # ordering of the hazards
-        hazardOrder = []
+        results = json.load(rootingHazards)
+        print_header(html)
 
-        # Map from a hazardous GC function to the filename containing it.
-        fileOfFunction = {}
+        when = min((r for r in results if r["record"] == "time"), key=lambda r: r["t"])[
+            "iso"
+        ]
+        line = f"Time: {when}"
+        print(line, file=hazards)
+        print(line, file=extra)
+        print(line, file=refs)
 
-        for line in rootingHazards:
-            m = re.match(r"^Time: (.*)", line)
-            mm = re.match(r"^Run on:", line)
-            if m or mm:
-                print(line, file=hazards)
-                print(line, file=extra)
-                print(line, file=refs)
-                continue
+        checkboxCounter = 0
+        hazard_results = []
+        seen_time = False
+        for result in results:
+            if result["record"] == "unrooted":
+                hazard_results.append(result)
+                gccall_mangled, _ = splitfunc(result["gccall"])
+                hazardousGCFunctions.add(gccall_mangled)
+                if not result.get("expected"):
+                    num_hazards += 1
 
-            m = re.match(r"^Function.*has unnecessary root", line)
-            if m:
-                print(line, file=extra)
-                continue
-
-            m = re.match(r"^Function.*takes unsafe address of unrooted", line)
-            if m:
-                num_refs += 1
-                print(line, file=refs)
-                continue
-
-            m = re.match(
-                r"^Function.*has unrooted.*of type.*live across GC call '(.*?)' at (\S+):\d+$",
-                line,
-            )  # NOQA: E501
-            if m:
-                # Replace mangled$unmangled with just the unmangled part in the output.
-                current_gcFunction = m.group(1)
-                _, readable = splitfunc(current_gcFunction)
-                hazardousGCFunctions[current_gcFunction].append(
-                    line.replace(current_gcFunction, readable)
+            elif result["record"] == "unnecessary":
+                print(
+                    "\nFunction '{mangled}' has unnecessary root '{variable}' of type {type} at {loc}".format(
+                        **result
+                    ),
+                    file=extra,
                 )
-                hazardOrder.append(
+
+            elif result["record"] == "address":
+                print(
                     (
-                        current_gcFunction,
-                        len(hazardousGCFunctions[current_gcFunction]) - 1,
-                    )
+                        "\nFunction '{functionName}'"
+                        " takes unsafe address of unrooted '{variable}'"
+                        " at {loc}"
+                    ).format(**result),
+                    file=refs,
                 )
-                num_hazards += 1
-                fileOfFunction[current_gcFunction] = m.group(2)
-                continue
+                num_refs += 1
 
-            m = re.match(r"Function.*expected hazard.*but none were found", line)
-            if m:
+            elif result["record"] == "missing":
+                print(
+                    "\nFunction '{functionName}' expected hazard(s) but none were found at {loc}".format(
+                        **result
+                    ),
+                    file=hazards,
+                )
                 num_missing += 1
-                print(line + "\n", file=hazards)
-                continue
 
-            if current_gcFunction:
-                if not line.strip():
-                    # Blank line => end of this hazard
-                    current_gcFunction = None
-                else:
-                    hazardousGCFunctions[current_gcFunction][-1] += line
-
-        mangled2full = {}
+        readable2mangled = {}
         with open(args.gcFunctions) as gcFunctions:
             gcExplanations = {}  # gcFunction => stack showing why it can GC
 
             current_func = None
-            explanation = None
+            explanation = []
             for line in gcFunctions:
-                m = re.match(r"^GC Function: (.*)", line)
-                if m:
+                if m := re.match(r"^GC Function: (.*)", line):
                     if current_func:
-                        gcExplanations[current_func] = explanation
-                    current_func = m.group(1)
-                    mangled, _ = splitfunc(current_func)
-                    mangled2full[mangled] = current_func
-                    explanation = line
+                        gcExplanations[splitfunc(current_func)[0]] = explanation
+                    functionName = m.group(1)
+                    mangled, readable = splitfunc(functionName)
+                    if mangled not in hazardousGCFunctions:
+                        current_func = None
+                        continue
+                    current_func = functionName
+                    if readable != mangled:
+                        readable2mangled[readable] = mangled
+                    # TODO: store the mangled name here, and change
+                    # gcFunctions.txt -> gcFunctions.json and key off of the mangled name.
+                    explanation = [readable]
                 elif current_func:
-                    explanation += line
+                    explanation.append(line.strip())
             if current_func:
-                gcExplanations[current_func] = explanation
+                gcExplanations[splitfunc(current_func)[0]] = explanation
 
-        for gcFunction, index in hazardOrder:
-            gcHazards = hazardousGCFunctions[gcFunction]
+        print(
+            "Found %d hazards, %d unsafe references, %d missing."
+            % (num_hazards, num_refs, num_missing),
+            file=html,
+        )
+        print("<ol>", file=html)
 
-            if gcFunction in gcExplanations:
-                key = gcFunction
+        for result in hazard_results:
+            (result["gccall_mangled"], result["gccall_readable"]) = splitfunc(
+                result["gccall"]
+            )
+            # Attempt to extract out the function name. Won't handle `Foo<int, Bar<int>>::Foo()`.
+            if m := re.search(r"((?:\w|:|<[^>]*?>)+)\(", result["gccall_readable"]):
+                result["gccall_short"] = m.group(1) + "()"
             else:
-                # Mangled constructor/destructor names can map to multiple
-                # unmangled names. We have both here, and the unmangled name
-                # seen here in the caller may not match the unmangled name in
-                # the callee, so if we don't find the full function then key
-                # off of the mangled name instead.
-                #
-                # Normally the analysis tries to use the mangled name for
-                # identity comparison, but here we're processing human-readable
-                # output. Perhaps a better solution might be to treat the
-                # rootingHazards.txt input here as internal and only list
-                # mangled names, expanding them to unmangled names when
-                # producing hazards.txt and the other output files.
-                mangled, _ = splitfunc(gcFunction)
-
-                # Note that we will also get indirect calls (calls through a
-                # function pointer) here, which will not be in the mangled2full
-                # table. For those, fall back to the mangled name, which will
-                # be identical to the unmangled name.
-                key = mangled2full.get(mangled, mangled)
-
-            if key in gcExplanations:
-                print(gcHazards[index] + gcExplanations[key], file=hazards)
+                result["gccall_short"] = result["gccall_readable"]
+            if result.get("expected"):
+                print("\nThis is expected, but ", end="", file=hazards)
             else:
-                print(gcHazards[index], file=hazards)
+                print("\nFunction ", end="", file=hazards)
+            print(
+                "'{readable}' has unrooted '{variable}'"
+                " of type '{type}' live across GC call '{gccall_readable}' at {loc}".format(
+                    **result
+                ),
+                file=hazards,
+            )
+            for edge in result["trace"]:
+                print("    {lineText}: {edgeText}".format(**edge), file=hazards)
+            explanation = gcExplanations.get(result["gccall_mangled"])
+            explanation = explanation or gcExplanations.get(
+                readable2mangled.get(
+                    result["gccall_readable"], result["gccall_readable"]
+                ),
+                [],
+            )
+            if explanation:
+                print("GC Function: " + explanation[0], file=hazards)
+                for func in explanation[1:]:
+                    print("   " + func, file=hazards)
+            print(file=hazards)
+
+            if result.get("expected"):
+                continue
+
+            cfgid = f"CFG_{checkboxCounter}"
+            gcid = f"GC_{checkboxCounter}"
+            checkboxCounter += 1
+            print(
+                (
+                    "<li><ul>\n"
+                    "<li>Function <a href='{symbol_url}'>{readable}</a>\n"
+                    "<li>has unrooted <tt>{variable}</tt> of type '<tt>{type}</tt>'\n"
+                    "<li><input type='checkbox' id='{cfgid}'><label class='tab-label' for='{cfgid}'>"
+                    "live across GC call to"
+                    "</label>\n"
+                    "<div class='accorntent'>\n"
+                ).format(
+                    **quoted_dict(result),
+                    symbol_url=sourcelink(symbol=result["mangled"]),
+                    cfgid=cfgid,
+                ),
+                file=html,
+            )
+            for edge in result["trace"]:
+                print(
+                    "<pre>    {lineText}: {edgeText}</pre>".format(**quoted_dict(edge)),
+                    file=html,
+                )
+            print("</div>", file=html)
+            print(
+                "<li><input type='checkbox' id='{gcid}'><label class='tab-label' for='{gcid}'>"
+                "<a href='{loc_url}'><tt>{gccall_short}</tt></a> at {loc}"
+                "</label>\n"
+                "<div class='accorntent'>".format(
+                    **quoted_dict(result),
+                    loc_url=sourcelink(range=result["gcrange"], loc=result["loc"]),
+                    gcid=gcid,
+                ),
+                file=html,
+            )
+            for func in explanation:
+                print(f"<pre>{escape(func)}</pre>", file=html)
+            print("</div><hr></ul>", file=html)
+
+        print_footer(html)
 
 except IOError as e:
     print("Failed: %s" % str(e))
@@ -157,6 +297,7 @@ except IOError as e:
 print("Wrote %s" % args.hazards)
 print("Wrote %s" % args.extra)
 print("Wrote %s" % args.refs)
+print("Wrote %s" % args.html)
 print(
     "Found %d hazards %d unsafe references %d missing"
     % (num_hazards, num_refs, num_missing)

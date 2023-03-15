@@ -166,20 +166,26 @@ JOBS = {
         "redirect-output": "rootingHazards.{i}.of.{n}",
     },
     "gather-hazards": {
-        "command": ["cat", MultiInput("{hazards}")],
-        "redirect-output": "rootingHazards.txt",
+        "command": [
+            "{js}",
+            "{analysis_scriptdir}/mergeJSON.js",
+            MultiInput("{hazards}"),
+            Output("all_hazards"),
+        ],
+        "outputs": ["rootingHazards.json"],
     },
     "explain": {
         "command": [
             sys.executable,
             "{analysis_scriptdir}/explain.py",
-            "{gather-hazards}",
+            "{all_hazards}",
             "{gcFunctions}",
             Output("explained_hazards"),
             Output("unnecessary"),
             Output("refs"),
+            Output("html"),
         ],
-        "outputs": ["hazards.txt", "unnecessary.txt", "refs.txt"],
+        "outputs": ["hazards.txt", "unnecessary.txt", "refs.txt", "hazards.html"],
     },
     "heapwrites": {
         "command": ["{js}", "{analysis_scriptdir}/analyzeHeapWrites.js"],
