@@ -121,6 +121,8 @@
       is(selector.children[1].value, "some-browser-1");
 
       let resourceTypeList = gShadowRoot.querySelector("#resource-type-list");
+      let details = gShadowRoot.querySelector("details");
+      ok(details.open, "Details should be open");
 
       // Test that the resource type checkboxes are shown or hidden depending on
       // which resourceTypes are included with the MigratorProfileInstance.
@@ -144,7 +146,6 @@
 
       let selectAll = gShadowRoot.querySelector("#select-all");
       let summary = gShadowRoot.querySelector("summary");
-      let details = gShadowRoot.querySelector("details");
       ok(isHidden(selectAll), "Selection for select-all should be hidden.");
       ok(isHidden(summary), "Summary should be hidden.");
       ok(!isHidden(details), "Details should be shown.");
@@ -167,6 +168,10 @@
 
       let resourceTypeList = gShadowRoot.querySelector("#resource-type-list");
 
+      let details = gShadowRoot.querySelector("details");
+      ok(!details.open, "Details should be closed");
+      details.open = true;
+
       // Test that the resource type checkboxes are shown or hidden depending on
       // which resourceTypes are included with the MigratorProfileInstance.
       for (let migratorInstance of MIGRATOR_PROFILE_INSTANCES) {
@@ -189,7 +194,6 @@
 
       let selectAll = gShadowRoot.querySelector("#select-all");
       let summary = gShadowRoot.querySelector("summary");
-      let details = gShadowRoot.querySelector("details");
       ok(!isHidden(selectAll), "Selection for select-all should be shown.");
       ok(selectAll.control.checked, "Checkbox for select-all should be checked.");
       ok(!isHidden(summary), "Summary should be shown.");

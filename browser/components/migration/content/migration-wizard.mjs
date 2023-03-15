@@ -43,7 +43,7 @@ export class MigrationWizard extends HTMLElement {
             <h3 data-l10n-id="migration-wizard-selection-header"></h3>
             <select id="browser-profile-selector">
             </select>
-            <details class="resource-selection-details" open="true">
+            <details class="resource-selection-details">
               <summary>
                 <div class="selected-data-header" data-l10n-id="migration-all-available-data-label"></div>
                 <div class="selected-data deemphasized-text">&nbsp;</div>
@@ -280,7 +280,10 @@ export class MigrationWizard extends HTMLElement {
     let selectionPage = this.#shadowRoot.querySelector(
       "div[name='page-selection']"
     );
+
+    let details = this.#shadowRoot.querySelector("details");
     selectionPage.toggleAttribute("show-import-all", state.showImportAll);
+    details.open = !state.showImportAll;
 
     for (let migrator of state.migrators) {
       let opt = document.createElement("option");
