@@ -35,6 +35,10 @@ MOZ_CAN_RUN_SCRIPT static already_AddRefed<Promise> PromisifyAlgorithm(
     aFunc(aRv);
   }
 
+  if (aRv.IsUncatchableException()) {
+    return nullptr;
+  }
+
   if (aRv.Failed()) {
     return Promise::CreateRejectedWithErrorResult(aGlobal, aRv);
   }
