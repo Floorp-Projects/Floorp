@@ -396,6 +396,7 @@
 
 .urlbarView-row[type=tip] {
   padding-block: 18px;
+  border-radius: 0;
 }
 
 .urlbarView-row[type=tip]:not(:last-child) {
