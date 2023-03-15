@@ -9054,12 +9054,13 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
           ("Moving the loading entry to the active entry on nsDocShell %p to "
            "%s",
            this, mLoadingEntry->mInfo.GetURI()->GetSpecOrDefault().get()));
-      bool hadActiveEntry = !!mActiveEntry;
 
       nsCOMPtr<nsILayoutHistoryState> currentLayoutHistoryState;
       if (mActiveEntry) {
         currentLayoutHistoryState = mActiveEntry->GetLayoutHistoryState();
       }
+
+      UniquePtr<SessionHistoryInfo> previousActiveEntry(mActiveEntry.release());
       mActiveEntry = MakeUnique<SessionHistoryInfo>(mLoadingEntry->mInfo);
       if (currentLayoutHistoryState) {
         // Restore the existing nsILayoutHistoryState object, since it is
@@ -9076,7 +9077,8 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
       // does require a non-null uri if this is for a refresh load of the same
       // URI, but in that case mCurrentURI won't be null here.
       mBrowsingContext->SessionHistoryCommit(
-          *mLoadingEntry, mLoadType, mCurrentURI, hadActiveEntry, true, true,
+          *mLoadingEntry, mLoadType, mCurrentURI, previousActiveEntry.get(),
+          true, true,
           /* No expiration update on the same document loads*/
           false, cacheKey);
       // FIXME Need to set postdata.
@@ -13725,8 +13727,7 @@ void nsDocShell::MoveLoadingToActiveEntry(bool aPersist, bool aExpired,
   MOZ_LOG(gSHLog, LogLevel::Debug,
           ("nsDocShell %p MoveLoadingToActiveEntry", this));
 
-  bool hadActiveEntry = !!mActiveEntry;
-  mActiveEntry = nullptr;
+  UniquePtr<SessionHistoryInfo> previousActiveEntry(mActiveEntry.release());
   mozilla::UniquePtr<mozilla::dom::LoadingSessionHistoryInfo> loadingEntry;
   mActiveEntryIsLoadingFromSessionHistory =
       mLoadingEntry && mLoadingEntry->mLoadIsFromSessionHistory;
@@ -13762,8 +13763,8 @@ void nsDocShell::MoveLoadingToActiveEntry(bool aPersist, bool aExpired,
       // does require a non-null uri if this is for a refresh load of the same
       // URI, but in that case mCurrentURI won't be null here.
       mBrowsingContext->SessionHistoryCommit(
-          *loadingEntry, loadType, aPreviousURI, hadActiveEntry, aPersist,
-          false, aExpired, aCacheKey);
+          *loadingEntry, loadType, aPreviousURI, previousActiveEntry.get(),
+          aPersist, false, aExpired, aCacheKey);
     }
   }
 }

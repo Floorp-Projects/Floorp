@@ -158,6 +158,8 @@ class SessionHistoryInfo {
 
   void SetSaveLayoutStateFlag(bool aSaveLayoutStateFlag);
 
+  bool GetPersist() const { return mPersist; }
+
  private:
   friend class SessionHistoryEntry;
   friend struct mozilla::ipc::IPDLParamTraits<SessionHistoryInfo>;
