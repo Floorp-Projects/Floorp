@@ -162,17 +162,6 @@ void SVGAElement::UnbindFromTree(bool aNullParent) {
   SVGAElementBase::UnbindFromTree(aNullParent);
 }
 
-NS_IMETHODIMP_(bool)
-SVGAElement::IsAttributeMapped(const nsAtom* name) const {
-  static const MappedAttributeEntry* const map[] = {
-      sFEFloodMap,         sFiltersMap, sGradientStopMap,
-      sLightingEffectsMap, sMarkersMap, sTextContentElementsMap,
-      sViewportsMap};
-
-  return FindAttributeDependence(name, map) ||
-         SVGAElementBase::IsAttributeMapped(name);
-}
-
 int32_t SVGAElement::TabIndexDefault() { return 0; }
 
 bool SVGAElement::IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) {

@@ -943,107 +943,78 @@ SVGElement::IsAttributeMapped(const nsAtom* name) const {
   if (name == nsGkAtoms::lang) {
     return true;
   }
-  return SVGElementBase::IsAttributeMapped(name);
+
+  if (IsSVGAnimationElement()) {
+    return SVGElementBase::IsAttributeMapped(name);
+  }
+
+  static const MappedAttributeEntry attributes[] = {
+      // Properties that we don't support are commented out.
+      // { nsGkAtoms::alignment_baseline },
+      // { nsGkAtoms::baseline_shift },
+      {nsGkAtoms::clip},
+      {nsGkAtoms::clip_path},
+      {nsGkAtoms::clip_rule},
+      {nsGkAtoms::color},
+      {nsGkAtoms::colorInterpolation},
+      {nsGkAtoms::colorInterpolationFilters},
+      {nsGkAtoms::cursor},
+      {nsGkAtoms::direction},
+      {nsGkAtoms::display},
+      {nsGkAtoms::dominant_baseline},
+      {nsGkAtoms::fill},
+      {nsGkAtoms::fill_opacity},
+      {nsGkAtoms::fill_rule},
+      {nsGkAtoms::filter},
+      {nsGkAtoms::flood_color},
+      {nsGkAtoms::flood_opacity},
+      {nsGkAtoms::font_family},
+      {nsGkAtoms::font_size},
+      {nsGkAtoms::font_size_adjust},
+      {nsGkAtoms::font_stretch},
+      {nsGkAtoms::font_style},
+      {nsGkAtoms::font_variant},
+      {nsGkAtoms::fontWeight},
+      {nsGkAtoms::image_rendering},
+      {nsGkAtoms::letter_spacing},
+      {nsGkAtoms::lighting_color},
+      {nsGkAtoms::marker_end},
+      {nsGkAtoms::marker_mid},
+      {nsGkAtoms::marker_start},
+      {nsGkAtoms::mask},
+      {nsGkAtoms::mask_type},
+      {nsGkAtoms::opacity},
+      {nsGkAtoms::overflow},
+      {nsGkAtoms::paint_order},
+      {nsGkAtoms::pointer_events},
+      {nsGkAtoms::shape_rendering},
+      {nsGkAtoms::stop_color},
+      {nsGkAtoms::stop_opacity},
+      {nsGkAtoms::stroke},
+      {nsGkAtoms::stroke_dasharray},
+      {nsGkAtoms::stroke_dashoffset},
+      {nsGkAtoms::stroke_linecap},
+      {nsGkAtoms::stroke_linejoin},
+      {nsGkAtoms::stroke_miterlimit},
+      {nsGkAtoms::stroke_opacity},
+      {nsGkAtoms::stroke_width},
+      {nsGkAtoms::text_anchor},
+      {nsGkAtoms::text_decoration},
+      {nsGkAtoms::text_rendering},
+      {nsGkAtoms::transform_origin},
+      {nsGkAtoms::unicode_bidi},
+      {nsGkAtoms::vector_effect},
+      {nsGkAtoms::visibility},
+      {nsGkAtoms::white_space},
+      {nsGkAtoms::word_spacing},
+      {nsGkAtoms::writing_mode},
+      {nullptr}};
+
+  static const MappedAttributeEntry* const map[] = {attributes};
+
+  return FindAttributeDependence(name, map) ||
+         SVGElementBase::IsAttributeMapped(name);
 }
-
-// PresentationAttributes-Graphics
-/* static */
-const Element::MappedAttributeEntry SVGElement::sGraphicsMap[] = {
-    {nsGkAtoms::clip_path},
-    {nsGkAtoms::clip_rule},
-    {nsGkAtoms::colorInterpolation},
-    {nsGkAtoms::cursor},
-    {nsGkAtoms::display},
-    {nsGkAtoms::fill},
-    {nsGkAtoms::fill_opacity},
-    {nsGkAtoms::fill_rule},
-    {nsGkAtoms::filter},
-    {nsGkAtoms::image_rendering},
-    {nsGkAtoms::mask},
-    {nsGkAtoms::opacity},
-    {nsGkAtoms::paint_order},
-    {nsGkAtoms::pointer_events},
-    {nsGkAtoms::shape_rendering},
-    {nsGkAtoms::stroke},
-    {nsGkAtoms::stroke_dasharray},
-    {nsGkAtoms::stroke_dashoffset},
-    {nsGkAtoms::stroke_linecap},
-    {nsGkAtoms::stroke_linejoin},
-    {nsGkAtoms::stroke_miterlimit},
-    {nsGkAtoms::stroke_opacity},
-    {nsGkAtoms::stroke_width},
-    {nsGkAtoms::text_rendering},
-    {nsGkAtoms::transform_origin},
-    {nsGkAtoms::vector_effect},
-    {nsGkAtoms::visibility},
-    {nullptr}};
-
-// PresentationAttributes-TextContentElements
-/* static */
-const Element::MappedAttributeEntry SVGElement::sTextContentElementsMap[] = {
-    // Properties that we don't support are commented out.
-    // { nsGkAtoms::alignment_baseline },
-    // { nsGkAtoms::baseline_shift },
-    {nsGkAtoms::direction},
-    {nsGkAtoms::dominant_baseline},
-    {nsGkAtoms::font_family},
-    {nsGkAtoms::font_size},
-    {nsGkAtoms::font_size_adjust},
-    {nsGkAtoms::font_stretch},
-    {nsGkAtoms::font_style},
-    {nsGkAtoms::font_variant},
-    {nsGkAtoms::fontWeight},
-    {nsGkAtoms::letter_spacing},
-    {nsGkAtoms::text_anchor},
-    {nsGkAtoms::text_decoration},
-    {nsGkAtoms::unicode_bidi},
-    {nsGkAtoms::white_space},
-    {nsGkAtoms::word_spacing},
-    {nsGkAtoms::writing_mode},
-    {nullptr}};
-
-// PresentationAttributes-GradientStop
-/* static */
-const Element::MappedAttributeEntry SVGElement::sGradientStopMap[] = {
-    {nsGkAtoms::stop_color}, {nsGkAtoms::stop_opacity}, {nullptr}};
-
-// PresentationAttributes-Viewports
-/* static */
-const Element::MappedAttributeEntry SVGElement::sViewportsMap[] = {
-    {nsGkAtoms::overflow}, {nsGkAtoms::clip}, {nullptr}};
-
-// PresentationAttributes-Markers
-/* static */
-const Element::MappedAttributeEntry SVGElement::sMarkersMap[] = {
-    {nsGkAtoms::marker_end},
-    {nsGkAtoms::marker_mid},
-    {nsGkAtoms::marker_start},
-    {nullptr}};
-
-// PresentationAttributes-Color
-/* static */
-const Element::MappedAttributeEntry SVGElement::sColorMap[] = {
-    {nsGkAtoms::color}, {nullptr}};
-
-// PresentationAttributes-Filters
-/* static */
-const Element::MappedAttributeEntry SVGElement::sFiltersMap[] = {
-    {nsGkAtoms::colorInterpolationFilters}, {nullptr}};
-
-// PresentationAttributes-feFlood
-/* static */
-const Element::MappedAttributeEntry SVGElement::sFEFloodMap[] = {
-    {nsGkAtoms::flood_color}, {nsGkAtoms::flood_opacity}, {nullptr}};
-
-// PresentationAttributes-LightingEffects
-/* static */
-const Element::MappedAttributeEntry SVGElement::sLightingEffectsMap[] = {
-    {nsGkAtoms::lighting_color}, {nullptr}};
-
-// PresentationAttributes-mask
-/* static */
-const Element::MappedAttributeEntry SVGElement::sMaskMap[] = {
-    {nsGkAtoms::mask_type}, {nullptr}};
 
 //----------------------------------------------------------------------
 // Element methods

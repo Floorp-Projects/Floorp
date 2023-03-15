@@ -3233,8 +3233,7 @@ nsresult PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
     }
 
     // If the target is an animation element, activate the animation
-    if (nsCOMPtr<SVGAnimationElement> animationElement =
-            do_QueryInterface(target)) {
+    if (auto* animationElement = SVGAnimationElement::FromNode(target.get())) {
       animationElement->ActivateByHyperlink();
     }
 

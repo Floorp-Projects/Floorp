@@ -127,17 +127,6 @@ class SVGElement : public SVGElementBase  // nsIContent
 
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
-  static const MappedAttributeEntry sGraphicsMap[];
-  static const MappedAttributeEntry sTextContentElementsMap[];
-  static const MappedAttributeEntry sGradientStopMap[];
-  static const MappedAttributeEntry sViewportsMap[];
-  static const MappedAttributeEntry sMarkersMap[];
-  static const MappedAttributeEntry sColorMap[];
-  static const MappedAttributeEntry sFiltersMap[];
-  static const MappedAttributeEntry sFEFloodMap[];
-  static const MappedAttributeEntry sLightingEffectsMap[];
-  static const MappedAttributeEntry sMaskMap[];
-
   NS_IMPL_FROMNODE(SVGElement, kNameSpaceID_SVG)
 
   // Gets the element that establishes the rectangular viewport against which
