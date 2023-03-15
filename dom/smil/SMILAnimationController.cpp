@@ -34,17 +34,10 @@ namespace mozilla {
 // ctors, dtors, factory methods
 
 SMILAnimationController::SMILAnimationController(Document* aDoc)
-    : mAvgTimeBetweenSamples(0),
-      mResampleNeeded(false),
-      mDeferredStartSampling(false),
-      mRunningSample(false),
-      mRegisteredWithRefreshDriver(false),
-      mMightHavePendingStyleUpdates(false),
-      mDocument(aDoc) {
+    : mDocument(aDoc) {
   MOZ_ASSERT(aDoc, "need a non-null document");
 
-  nsRefreshDriver* refreshDriver = GetRefreshDriver();
-  if (refreshDriver) {
+  if (nsRefreshDriver* refreshDriver = GetRefreshDriver()) {
     mStartTime = refreshDriver->MostRecentRefresh();
   } else {
     mStartTime = mozilla::TimeStamp::Now();
@@ -79,24 +72,19 @@ void SMILAnimationController::Disconnect() {
 
 void SMILAnimationController::Pause(uint32_t aType) {
   SMILTimeContainer::Pause(aType);
-
-  if (mPauseState) {
-    mDeferredStartSampling = false;
-    StopSampling(GetRefreshDriver());
-  }
+  UpdateSampling();
 }
 
 void SMILAnimationController::Resume(uint32_t aType) {
-  bool wasPaused = (mPauseState != 0);
+  bool wasPaused = !!mPauseState;
   // Update mCurrentSampleTime so that calls to GetParentTime--used for
   // calculating parent offsets--are accurate
   mCurrentSampleTime = mozilla::TimeStamp::Now();
 
   SMILTimeContainer::Resume(aType);
 
-  if (wasPaused && !mPauseState && !mChildContainerTable.IsEmpty()) {
-    MaybeStartSampling(GetRefreshDriver());
-    Sample();  // Run the first sample manually
+  if (wasPaused && !mPauseState) {
+    UpdateSampling();
   }
 }
 
@@ -162,23 +150,19 @@ void SMILAnimationController::WillRefresh(mozilla::TimeStamp aTime) {
 
 void SMILAnimationController::RegisterAnimationElement(
     SVGAnimationElement* aAnimationElement) {
+  const bool wasEmpty = mAnimationElementTable.IsEmpty();
   mAnimationElementTable.PutEntry(aAnimationElement);
-  if (mDeferredStartSampling) {
-    mDeferredStartSampling = false;
-    if (!mChildContainerTable.IsEmpty()) {
-      // mAnimationElementTable was empty, but now we've added its 1st element
-      MOZ_ASSERT(mAnimationElementTable.Count() == 1,
-                 "we shouldn't have deferred sampling if we already had "
-                 "animations registered");
-      StartSampling(GetRefreshDriver());
-      Sample();  // Run the first sample manually
-    }  // else, don't sample until a time container is registered (via AddChild)
+  if (wasEmpty) {
+    UpdateSampling();
   }
 }
 
 void SMILAnimationController::UnregisterAnimationElement(
     SVGAnimationElement* aAnimationElement) {
   mAnimationElementTable.RemoveEntry(aAnimationElement);
+  if (mAnimationElementTable.IsEmpty()) {
+    UpdateSampling();
+  }
 }
 
 //----------------------------------------------------------------------
@@ -213,36 +197,43 @@ void SMILAnimationController::Unlink() { mLastCompositorTable = nullptr; }
 
 void SMILAnimationController::NotifyRefreshDriverCreated(
     nsRefreshDriver* aRefreshDriver) {
-  if (!mPauseState && !mChildContainerTable.IsEmpty()) {
-    MaybeStartSampling(aRefreshDriver);
-  }
+  UpdateSampling();
 }
 
 void SMILAnimationController::NotifyRefreshDriverDestroying(
     nsRefreshDriver* aRefreshDriver) {
-  if (!mPauseState && !mDeferredStartSampling) {
-    StopSampling(aRefreshDriver);
-  }
+  StopSampling(aRefreshDriver);
 }
 
 //----------------------------------------------------------------------
 // Timer-related implementation helpers
 
-void SMILAnimationController::StartSampling(nsRefreshDriver* aRefreshDriver) {
-  NS_ASSERTION(mPauseState == 0, "Starting sampling but controller is paused");
-  NS_ASSERTION(!mDeferredStartSampling,
-               "Started sampling but the deferred start flag is still set");
-  if (aRefreshDriver) {
-    MOZ_ASSERT(!mRegisteredWithRefreshDriver,
-               "Redundantly registering with refresh driver");
-    MOZ_ASSERT(!GetRefreshDriver() || aRefreshDriver == GetRefreshDriver(),
-               "Starting sampling with wrong refresh driver");
+bool SMILAnimationController::ShouldSample() const {
+  return !mPauseState && !mAnimationElementTable.IsEmpty() &&
+         !mChildContainerTable.IsEmpty();
+}
+
+void SMILAnimationController::UpdateSampling() {
+  const bool shouldSample = ShouldSample();
+  const bool isSampling = mRegisteredWithRefreshDriver;
+  if (shouldSample == isSampling) {
+    return;
+  }
+
+  nsRefreshDriver* driver = GetRefreshDriver();
+  if (!driver) {
+    return;
+  }
+
+  if (shouldSample) {
     // We're effectively resuming from a pause so update our current sample time
     // or else it will confuse our "average time between samples" calculations.
     mCurrentSampleTime = mozilla::TimeStamp::Now();
-    aRefreshDriver->AddRefreshObserver(this, FlushType::Style,
-                                       "SMIL animations");
+    driver->AddRefreshObserver(this, FlushType::Style, "SMIL animations");
     mRegisteredWithRefreshDriver = true;
+    Sample();  // Run the first sample manually.
+  } else {
+    StopSampling(driver);
   }
 }
 
@@ -254,21 +245,6 @@ void SMILAnimationController::StopSampling(nsRefreshDriver* aRefreshDriver) {
                "Stopping sampling with wrong refresh driver");
     aRefreshDriver->RemoveRefreshObserver(this, FlushType::Style);
     mRegisteredWithRefreshDriver = false;
-  }
-}
-
-void SMILAnimationController::MaybeStartSampling(
-    nsRefreshDriver* aRefreshDriver) {
-  if (mDeferredStartSampling) {
-    // We've received earlier 'MaybeStartSampling' calls, and we're
-    // deferring until we get a registered animation.
-    return;
-  }
-
-  if (mAnimationElementTable.Count()) {
-    StartSampling(aRefreshDriver);
-  } else {
-    mDeferredStartSampling = true;
   }
 }
 
@@ -685,22 +661,19 @@ bool SMILAnimationController::PreTraverseInSubtree(Element* aRoot) {
 // Add/remove child time containers
 
 nsresult SMILAnimationController::AddChild(SMILTimeContainer& aChild) {
+  const bool wasEmpty = mChildContainerTable.IsEmpty();
   TimeContainerPtrKey* key = mChildContainerTable.PutEntry(&aChild);
   NS_ENSURE_TRUE(key, NS_ERROR_OUT_OF_MEMORY);
-
-  if (!mPauseState && mChildContainerTable.Count() == 1) {
-    MaybeStartSampling(GetRefreshDriver());
-    Sample();  // Run the first sample manually
+  if (wasEmpty) {
+    UpdateSampling();
   }
-
   return NS_OK;
 }
 
 void SMILAnimationController::RemoveChild(SMILTimeContainer& aChild) {
   mChildContainerTable.RemoveEntry(&aChild);
-
-  if (!mPauseState && mChildContainerTable.IsEmpty()) {
-    StopSampling(GetRefreshDriver());
+  if (mChildContainerTable.IsEmpty()) {
+    UpdateSampling();
   }
 }
 

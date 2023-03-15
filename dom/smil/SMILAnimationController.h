@@ -123,7 +123,9 @@ class SMILAnimationController final : public SMILTimeContainer,
   nsRefreshDriver* GetRefreshDriver();
 
   // Methods for controlling whether we're sampling
-  void StartSampling(nsRefreshDriver* aRefreshDriver);
+  void UpdateSampling();
+  bool ShouldSample() const;
+
   void StopSampling(nsRefreshDriver* aRefreshDriver);
 
   // Wrapper for StartSampling that defers if no animations are registered.
@@ -179,20 +181,16 @@ class SMILAnimationController final : public SMILTimeContainer,
   // This behaviour does not affect pausing (since we're not *expecting* any
   // samples then) nor seeking (where the SMIL model behaves somewhat
   // differently such as not dispatching events).
-  SMILTime mAvgTimeBetweenSamples;
+  SMILTime mAvgTimeBetweenSamples = 0;
 
-  bool mResampleNeeded;
-  // If we're told to start sampling but there are no animation elements we just
-  // record the time, set the following flag, and then wait until we have an
-  // animation element. Then we'll reset this flag and actually start sampling.
-  bool mDeferredStartSampling;
-  bool mRunningSample;
+  bool mResampleNeeded = false;
+  bool mRunningSample = false;
 
   // Are we registered with our document's refresh driver?
-  bool mRegisteredWithRefreshDriver;
+  bool mRegisteredWithRefreshDriver = false;
 
   // Have we updated animated values without adding them to the restyle tracker?
-  bool mMightHavePendingStyleUpdates;
+  bool mMightHavePendingStyleUpdates = false;
 
   // Store raw ptr to mDocument.  It owns the controller, so controller
   // shouldn't outlive it
