@@ -76,7 +76,6 @@ browsertime-tp6m:
         mozharness:
             extra-options:
                 - --chimera
-                - --extra-summary-methods=mean
                 - --extra-summary-methods=geomean
         tier:
             by-app:
