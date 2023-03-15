@@ -27,6 +27,7 @@
 
 #include "desktop_device_info.h"
 #include "mozilla/DataMutex.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
 #include "PerformanceRecorder.h"
@@ -226,8 +227,8 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
   // TODO(Bug 1806646): Drive capture with vsync instead.
   nsCOMPtr<nsITimer> mCaptureTimer;
   // Interval between captured frames, based on the framerate in
-  // mRequestedCapability.
-  mozilla::TimeDuration mRequestedCaptureInterval;
+  // mRequestedCapability. mCaptureThread only.
+  mozilla::Maybe<mozilla::TimeDuration> mRequestedCaptureInterval;
   // Used to make sure incoming timestamp is increasing for every frame.
   // mCaptureThread only.
   webrtc::Timestamp mNextFrameMinimumTime;
