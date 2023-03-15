@@ -381,7 +381,7 @@ const AbuseReporter = {
    * @returns {Window?}
    */
   getOpenDialog() {
-    return Services.ww.getWindowByName(DIALOG_WINDOW_NAME, null);
+    return Services.ww.getWindowByName(DIALOG_WINDOW_NAME);
   },
 
   /**

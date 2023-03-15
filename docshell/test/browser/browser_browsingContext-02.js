@@ -107,12 +107,14 @@ add_task(async function() {
           // wish to confirm that targeting is able to find
           // appropriate browsing contexts.
 
-          // BrowsingContext.findWithName requires access checks, which
-          // can only be performed in the process of the accessor BC's
-          // docShell.
+          // WindowGlobalChild.findBrowsingContextWithName requires access
+          // checks, which can only be performed in the process of the accessor
+          // WindowGlobalChild.
           function findWithName(bc, name) {
-            return content.SpecialPowers.spawn(bc, [bc, name], (bc, name) => {
-              return bc.findWithName(name);
+            return content.SpecialPowers.spawn(bc, [name], name => {
+              return content.windowGlobalChild.findBrowsingContextWithName(
+                name
+              );
             });
           }
 

@@ -137,18 +137,17 @@ interface nsIWindowWatcher : nsISupports {
   nsIWebBrowserChrome getChromeForWindow(in mozIDOMWindowProxy aWindow);
 
   /**
-      Retrieve an existing window (or frame).
+      Retrieve an existing chrome window (or frame).
       @param aTargetName the window name
-      @param aCurrentWindow a starting point in the window hierarchy to
-                            begin the search.  If null, each toplevel window
-                            will be searched.
+
+      Note: This method will not consider special names like "_blank", "_top",
+      "_self", or "_parent", as there is no reference window.
 
       Note: This method will search all open windows for any window or
       frame with the given window name. Make sure you understand the
       security implications of this before using this method!
   */
-  mozIDOMWindowProxy getWindowByName(in AString aTargetName,
-                                     in mozIDOMWindowProxy aCurrentWindow);
+  mozIDOMWindowProxy getWindowByName(in AString aTargetName);
 
   /**
       Retrieves the active window from the focus manager.
