@@ -258,7 +258,8 @@ void TextTrackManager::UpdateCueDisplay() {
     return;
   }
 
-  nsPIDOMWindowInner* window = mMediaElement->OwnerDoc()->GetInnerWindow();
+  RefPtr<nsPIDOMWindowInner> window =
+      mMediaElement->OwnerDoc()->GetInnerWindow();
   if (!window) {
     WEBVTT_LOG("Abort UpdateCueDisplay, because of no window.");
   }
@@ -273,7 +274,14 @@ void TextTrackManager::UpdateCueDisplay() {
                      showingCues.Length(),
                      static_cast<void*>(showingCues.Elements()));
   nsCOMPtr<nsIContent> controls = videoFrame->GetVideoControls();
-  sParserWrapper->ProcessCues(window, jsCues, overlay, controls);
+
+  nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
+      "TextTrackManager::UpdateCueDisplay",
+      [window, jsCues, overlay, controls]() {
+        if (sParserWrapper) {
+          sParserWrapper->ProcessCues(window, jsCues, overlay, controls);
+        }
+      }));
 }
 
 void TextTrackManager::NotifyCueAdded(TextTrackCue& aCue) {
