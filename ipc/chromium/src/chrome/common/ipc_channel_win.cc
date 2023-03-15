@@ -25,6 +25,10 @@
 #include "mozilla/RandomNum.h"
 #include "nsThreadUtils.h"
 
+#ifdef FUZZING
+#  include "mozilla/ipc/Faulty.h"
+#endif
+
 using namespace mozilla::ipc;
 
 namespace IPC {
@@ -159,6 +163,11 @@ bool Channel::ChannelImpl::Send(mozilla::UniquePtr<Message> message) {
   DLOG(INFO) << "sending message @" << message.get() << " on channel @" << this
              << " with type " << message->type() << " ("
              << output_queue_.Count() << " in queue)";
+#endif
+
+#ifdef FUZZING
+  message = mozilla::ipc::Faulty::instance().MutateIPCMessage(
+      "Channel::ChannelImpl::Send", std::move(message));
 #endif
 
   if (pipe_ == INVALID_HANDLE_VALUE) {
