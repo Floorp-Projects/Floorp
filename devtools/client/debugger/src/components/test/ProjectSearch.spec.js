@@ -227,6 +227,8 @@ describe("ProjectSearch", () => {
     shortcuts.dispatch("Enter");
     expect(selectSpecificLocation).toHaveBeenCalledWith(mockcx, {
       sourceId: "some-target/source42",
+      sourceActorId: null,
+      sourceUrl: "",
       line: 3,
       column: 30,
     });

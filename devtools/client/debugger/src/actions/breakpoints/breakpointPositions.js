@@ -18,6 +18,7 @@ import {
 import { makeBreakpointId } from "../../utils/breakpoint";
 import { memoizeableAction } from "../../utils/memoizableAction";
 import { fulfilled } from "../../utils/async-value";
+import { createLocation } from "../../utils/location";
 
 async function mapLocations(generatedLocations, { sourceMapLoader }) {
   if (!generatedLocations.length) {
@@ -29,7 +30,7 @@ async function mapLocations(generatedLocations, { sourceMapLoader }) {
   );
 
   return originalLocations.map((location, index) => ({
-    location,
+    location: createLocation(location),
     generatedLocation: generatedLocations[index],
   }));
 }
@@ -68,12 +69,14 @@ function convertToList(results, source) {
 
   for (const line in results) {
     for (const column of results[line]) {
-      positions.push({
-        line: Number(line),
-        column,
-        sourceId: id,
-        sourceUrl: url,
-      });
+      positions.push(
+        createLocation({
+          line: Number(line),
+          column,
+          sourceId: id,
+          sourceUrl: url,
+        })
+      );
     }
   }
 

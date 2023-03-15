@@ -8,6 +8,7 @@ import {
   getClosestBreakpointPosition,
   getBreakpoint,
 } from "../../selectors";
+import { createLocation } from "../../utils/location";
 import { addHiddenBreakpoint } from "../breakpoints";
 import { setBreakpointPositions } from "../breakpoints/breakpointPositions";
 
@@ -45,11 +46,14 @@ export function continueToHere(cx, location) {
     // at the closest position
     if (!getBreakpoint(getState(), pauseLocation)) {
       await dispatch(
-        addHiddenBreakpoint(cx, {
-          sourceId: selectedSource.id,
-          line: pauseLocation.line,
-          column: pauseLocation.column,
-        })
+        addHiddenBreakpoint(
+          cx,
+          createLocation({
+            sourceId: selectedSource.id,
+            line: pauseLocation.line,
+            column: pauseLocation.column,
+          })
+        )
       );
     }
 

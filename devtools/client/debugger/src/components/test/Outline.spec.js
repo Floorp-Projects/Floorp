@@ -69,7 +69,10 @@ describe("Outline", () => {
     listItem.simulate("click");
     expect(selectLocation).toHaveBeenCalledWith(mockcx, {
       line: startLine,
+      column: undefined,
       sourceId,
+      sourceActorId: null,
+      sourceUrl: "",
     });
   });
 
@@ -203,7 +206,10 @@ describe("Outline", () => {
 
       expect(props.selectLocation).toHaveBeenCalledWith(mockcx, {
         line: 24,
+        column: undefined,
         sourceId,
+        sourceActorId: null,
+        sourceUrl: "",
       });
     });
 

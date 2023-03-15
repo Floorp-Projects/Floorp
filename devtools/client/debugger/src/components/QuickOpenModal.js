@@ -7,6 +7,7 @@ import PropTypes from "prop-types";
 import { connect } from "../utils/connect";
 import fuzzyAldrin from "fuzzaldrin-plus";
 import { basename } from "../utils/path";
+import { createLocation } from "../utils/location";
 
 const { throttle } = require("devtools/shared/throttle");
 
@@ -285,12 +286,11 @@ export class QuickOpenModal extends Component {
       return;
     }
 
-    highlightLineRange({
-      ...(item.location != null
+    highlightLineRange(
+      item.location != null
         ? { start: item.location.start.line, end: item.location.end.line }
-        : {}),
-      sourceId: selectedSource.id,
-    });
+        : {}
+    );
   };
 
   traverseResults = e => {
@@ -312,12 +312,14 @@ export class QuickOpenModal extends Component {
 
     if (location != null) {
       const selectedSourceId = selectedSource ? selectedSource.id : "";
-      const sourceId = location.sourceId ? location.sourceId : selectedSourceId;
-      selectSpecificLocation(cx, {
-        sourceId,
-        line: location.line,
-        column: location.column,
-      });
+      selectSpecificLocation(
+        cx,
+        createLocation({
+          sourceId: location.sourceId || selectedSourceId,
+          line: location.line,
+          column: location.column,
+        })
+      );
       this.closeModal();
     }
   };

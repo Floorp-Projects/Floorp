@@ -13,6 +13,7 @@ import { isFrameBlackBoxed } from "../../utils/source";
 
 import assert from "../../utils/assert";
 import { getOriginalLocation } from "../../utils/source-maps";
+import { createLocation } from "../../utils/location";
 
 import { isGeneratedId } from "devtools/client/shared/source-map-loader/index";
 
@@ -106,7 +107,7 @@ async function expandFrames(frames, sourceMapLoader, getState) {
       result.push({
         id,
         displayName: originalFrame.displayName,
-        location: originalFrame.location,
+        location: createLocation(originalFrame.location),
         index: frame.index,
         source: null,
         thread: frame.thread,

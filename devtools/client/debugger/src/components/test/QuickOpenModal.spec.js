@@ -339,6 +339,8 @@ describe("QuickOpenModal", () => {
         column: 12,
         line: 34,
         sourceId: "",
+        sourceActorId: null,
+        sourceUrl: "",
       });
     });
 
@@ -362,6 +364,8 @@ describe("QuickOpenModal", () => {
         column: 12,
         line: 34,
         sourceId,
+        sourceActorId: null,
+        sourceUrl: "",
       });
     });
 
@@ -470,6 +474,8 @@ describe("QuickOpenModal", () => {
         column: undefined,
         sourceId: id,
         line: 0,
+        sourceActorId: null,
+        sourceUrl: "",
       });
       expect(props.setQuickOpenQuery).not.toHaveBeenCalled();
     });
@@ -500,6 +506,8 @@ describe("QuickOpenModal", () => {
         column: undefined,
         line: 0,
         sourceId: "",
+        sourceActorId: null,
+        sourceUrl: "",
       });
       expect(props.setQuickOpenQuery).not.toHaveBeenCalled();
     });
@@ -530,6 +538,8 @@ describe("QuickOpenModal", () => {
         column: 4,
         line: 3,
         sourceId: id,
+        sourceActorId: null,
+        sourceUrl: "",
       });
       expect(props.setQuickOpenQuery).not.toHaveBeenCalled();
     });
@@ -632,7 +642,6 @@ describe("QuickOpenModal", () => {
       expect(wrapper.state().selectedIndex).toEqual(0);
       expect(props.highlightLineRange).toHaveBeenCalledWith({
         end: 3,
-        sourceId,
         start: 1,
       });
     });
@@ -688,9 +697,7 @@ describe("QuickOpenModal", () => {
       wrapper.find("SearchInput").simulate("keydown", event);
       expect(event.preventDefault).toHaveBeenCalled();
       expect(wrapper.state().selectedIndex).toEqual(0);
-      expect(props.highlightLineRange).toHaveBeenCalledWith({
-        sourceId: "sourceId",
-      });
+      expect(props.highlightLineRange).toHaveBeenCalledWith({});
     });
 
     it(

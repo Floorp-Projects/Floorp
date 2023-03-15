@@ -20,6 +20,7 @@ import {
   getSelectedLocation,
   getSymbols,
 } from "../../../selectors/";
+import { createLocation } from "../../../utils/location";
 
 import { mockCommandClient } from "../../tests/helpers/mockCommandClient";
 
@@ -50,7 +51,10 @@ describe("sources", () => {
 
     const cx = selectors.getThreadContext(getState());
     await dispatch(
-      actions.selectLocation(cx, { sourceId: "foo1", line: 1, column: 5 })
+      actions.selectLocation(
+        cx,
+        createLocation({ sourceId: "foo1", line: 1, column: 5 })
+      )
     );
 
     const selectedSource = getSelectedSource(getState());
@@ -213,7 +217,10 @@ describe("sources", () => {
     );
 
     await dispatch(
-      actions.selectLocation(cx, { sourceId: baseSource.id, line: 1 })
+      actions.selectLocation(
+        cx,
+        createLocation({ sourceId: baseSource.id, line: 1 })
+      )
     );
 
     const selected = getSelectedSource(getState());
@@ -248,7 +255,10 @@ describe("sources", () => {
       actions.newGeneratedSource(makeSource("foo.js"))
     );
     await dispatch(
-      actions.selectLocation(cx, { sourceId: fooSource.id, line: 1 })
+      actions.selectLocation(
+        cx,
+        createLocation({ sourceId: fooSource.id, line: 1 })
+      )
     );
 
     const selected = getSelectedLocation(getState());
@@ -277,10 +287,13 @@ describe("sources", () => {
     await dispatch(actions.selectSource(cx, baseSources[0]));
 
     await dispatch(
-      actions.selectSpecificLocation(cx, {
-        sourceId: baseSources[0].id,
-        line: 1,
-      })
+      actions.selectSpecificLocation(
+        cx,
+        createLocation({
+          sourceId: baseSources[0].id,
+          line: 1,
+        })
+      )
     );
 
     const selected = getSelectedLocation(getState());

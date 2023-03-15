@@ -170,7 +170,6 @@ describe("pause", () => {
             column: 0,
             line: 1,
             sourceId: "foo",
-            sourceActorId: "foo-1-actor",
           },
           id: mockFrameId,
           location: {
@@ -178,6 +177,7 @@ describe("pause", () => {
             line: 1,
             sourceId: "foo",
             sourceActorId: "foo-1-actor",
+            sourceUrl: "",
           },
           originalDisplayName: "foo",
           scope: {
@@ -255,6 +255,7 @@ describe("pause", () => {
             line: 3,
             sourceActorId: "foo-original-1-actor",
             sourceId: "foo-original",
+            sourceUrl: "",
           },
           originalDisplayName: "fooOriginal",
           scope: { bindings: { arguments: [], variables: {} } },
@@ -333,6 +334,7 @@ describe("pause", () => {
             line: 1,
             sourceActorId: "foo-wasm-1-actor",
             sourceId: "foo-wasm/originalSource",
+            sourceUrl: "",
           },
           originalDisplayName: "fooBar",
           originalVariables: undefined,
@@ -352,7 +354,9 @@ describe("pause", () => {
           location: {
             column: 14,
             line: 2,
+            sourceActorId: null,
             sourceId: "foo-wasm/originalSource",
+            sourceUrl: "",
           },
           originalDisplayName: "barZoo",
           originalVariables: undefined,

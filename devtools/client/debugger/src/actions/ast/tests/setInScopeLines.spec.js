@@ -13,6 +13,7 @@ import {
   makeSource,
   waitForState,
 } from "../../../utils/test-head";
+import { createLocation } from "../../../utils/location";
 
 const { getInScopeLines } = selectors;
 
@@ -44,10 +45,13 @@ describe("getInScopeLine", () => {
     await dispatch(actions.newGeneratedSource(makeSource("scopes.js")));
 
     await dispatch(
-      actions.selectLocation(selectors.getContext(getState()), {
-        sourceId: "scopes.js",
-        line: 5,
-      })
+      actions.selectLocation(
+        selectors.getContext(getState()),
+        createLocation({
+          sourceId: "scopes.js",
+          line: 5,
+        })
+      )
     );
 
     await dispatch(

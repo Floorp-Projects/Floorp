@@ -86,6 +86,9 @@ module.exports = async function() {
   await evaluateInBrowserToolbox(consoleFront, [TEST_URL], async function(
     testUrl
   ) {
+    const {
+      createLocation,
+    } = require("devtools/client/debugger/src/utils/location");
     dump("Wait for debugger to initialize\n");
     const panel = await gToolbox.selectTool("jsdebugger");
     const { dbg } = panel.panelWin;
@@ -94,7 +97,10 @@ module.exports = async function() {
 
     dump("Select this source\n");
     const cx = dbg.selectors.getContext(dbg.store.getState());
-    dbg.actions.selectLocation(cx, { sourceId: source.id, line: 1 });
+    dbg.actions.selectLocation(
+      cx,
+      createLocation({ sourceId: source.id, line: 1 })
+    );
     await waitFor(() => {
       const source = dbg.selectors.getSelectedSource(dbg.store.getState());
       if (!source) {

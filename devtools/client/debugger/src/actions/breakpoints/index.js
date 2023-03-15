@@ -9,6 +9,7 @@
 
 import { PROMISE } from "../utils/middleware/promise";
 import { asyncStore } from "../../utils/prefs";
+import { createLocation } from "../../utils/location";
 import {
   getBreakpointsList,
   getXHRBreakpoints,
@@ -226,11 +227,14 @@ export function toggleBreakpointAtLine(cx, line) {
       return dispatch(removeBreakpoint(cx, bp));
     }
     return dispatch(
-      addBreakpoint(cx, {
-        sourceId: selectedSource.id,
-        sourceUrl: selectedSource.url,
-        line,
-      })
+      addBreakpoint(
+        cx,
+        createLocation({
+          sourceId: selectedSource.id,
+          sourceUrl: selectedSource.url,
+          line,
+        })
+      )
     );
   };
 }
@@ -248,12 +252,12 @@ export function addBreakpointAtLine(
     if (!source) {
       return null;
     }
-    const breakpointLocation = {
+    const breakpointLocation = createLocation({
       sourceId: source.id,
       sourceUrl: source.url,
       column: undefined,
       line,
-    };
+    });
 
     const options = {};
     if (shouldLog) {
