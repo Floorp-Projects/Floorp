@@ -6690,6 +6690,23 @@ networking:
     record_in_processes:
       - 'main'
 
+  speculative_connect_outcome:
+    bug_numbers:
+      - 909865
+    description: >
+      Counts the occurrence of each outcome of a speculative connection
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - necko@mozilla.com
+      - acreskey@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
 blocklist:
   lastModified_rs_addons:
     bug_numbers:
