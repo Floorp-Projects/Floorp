@@ -22,8 +22,8 @@ var protocolHandler = Services.io
   .QueryInterface(Ci.nsIResProtocolHandler);
 var curDirURI = Services.io.newFileURI(cwd);
 protocolHandler.setSubstitution("test", curDirURI);
-const { CrashTestUtils } = ChromeUtils.import(
-  "resource://test/CrashTestUtils.jsm"
+const { CrashTestUtils } = ChromeUtils.importESModule(
+  "resource://test/CrashTestUtils.sys.mjs"
 );
 var crashType = CrashTestUtils.CRASH_INVALID_POINTER_DEREF;
 var shouldDelay = false;

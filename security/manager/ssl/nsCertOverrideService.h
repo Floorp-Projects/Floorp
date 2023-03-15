@@ -11,6 +11,7 @@
 
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/OriginAttributes.h"
 #include "mozilla/TaskQueue.h"
 #include "nsIAsyncShutdown.h"
 #include "nsICertOverrideService.h"
@@ -30,7 +31,7 @@ class nsCertOverride final : public nsICertOverride {
 
   nsCString mAsciiHost;
   int32_t mPort;
-  OriginAttributes mOriginAttributes;
+  mozilla::OriginAttributes mOriginAttributes;
   bool mIsTemporary;  // true: session only, false: stored on disk
   nsCString mFingerprint;
   nsCString mDBKey;
@@ -105,7 +106,7 @@ class nsCertOverrideService final : public nsICertOverrideService,
 
   // Concatenates host name, port number, and origin attributes.
   static void GetKeyString(const nsACString& aHostName, int32_t aPort,
-                           const OriginAttributes& aOriginAttributes,
+                           const mozilla::OriginAttributes& aOriginAttributes,
                            nsACString& aRetval);
 
   void AssertOnTaskQueue() const {
@@ -128,14 +129,14 @@ class nsCertOverrideService final : public nsICertOverrideService,
   nsresult Read(const mozilla::MutexAutoLock& aProofOfLock);
   nsresult Write(const mozilla::MutexAutoLock& aProofOfLock);
   nsresult AddEntryToList(const nsACString& host, int32_t port,
-                          const OriginAttributes& aOriginAttributes,
+                          const mozilla::OriginAttributes& aOriginAttributes,
                           nsIX509Cert* aCert, const bool aIsTemporary,
                           const nsACString& fingerprint,
                           const nsACString& dbKey,
                           const mozilla::MutexAutoLock& aProofOfLock);
   already_AddRefed<nsCertOverride> GetOverrideFor(
       const nsACString& aHostName, int32_t aPort,
-      const OriginAttributes& aOriginAttributes);
+      const mozilla::OriginAttributes& aOriginAttributes);
 
   // Set in constructor only
   RefPtr<mozilla::TaskQueue> mWriterTaskQueue;

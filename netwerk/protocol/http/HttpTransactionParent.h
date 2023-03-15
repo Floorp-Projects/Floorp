@@ -54,7 +54,8 @@ class HttpTransactionParent final : public PHttpTransactionParent,
       const int32_t& aProxyConnectResponseCode,
       nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed,
       const bool& aDataToChildProcess, const bool& aRestarted,
-      const uint32_t& aHTTPSSVCReceivedStage, const bool& aSupportsHttp3);
+      const uint32_t& aHTTPSSVCReceivedStage, const bool& aSupportsHttp3,
+      const nsIRequest::TRRMode& aMode, const TRRSkippedReason& aSkipReason);
   mozilla::ipc::IPCResult RecvOnTransportStatus(
       const nsresult& aStatus, const int64_t& aProgress,
       const int64_t& aProgressMax,
@@ -103,7 +104,8 @@ class HttpTransactionParent final : public PHttpTransactionParent,
       const int32_t& aProxyConnectResponseCode,
       nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed,
       const bool& aDataToChildProcess, const bool& aRestarted,
-      const uint32_t& aHTTPSSVCReceivedStage, const bool& aSupportsHttp3);
+      const uint32_t& aHTTPSSVCReceivedStage, const bool& aSupportsHttp3,
+      const nsIRequest::TRRMode& aMode, const TRRSkippedReason& aSkipReason);
   void DoOnDataAvailable(const nsCString& aData, const uint64_t& aOffset,
                          const uint32_t& aCount);
   void DoOnStopRequest(
@@ -143,6 +145,8 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   bool mOnStartRequestCalled{false};
   bool mOnStopRequestCalled{false};
   bool mResolvedByTRR{false};
+  nsIRequest::TRRMode mEffectiveTRRMode{nsIRequest::TRR_DEFAULT_MODE};
+  TRRSkippedReason mTRRSkipReason{nsITRRSkipReason::TRR_UNSET};
   bool mEchConfigUsed = false;
   int32_t mProxyConnectResponseCode{0};
   uint64_t mChannelId{0};

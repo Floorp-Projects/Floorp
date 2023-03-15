@@ -4,15 +4,13 @@
 
 let reportURL;
 
-const { CrashReports } = ChromeUtils.import(
-  "resource://gre/modules/CrashReports.jsm"
+const { CrashReports } = ChromeUtils.importESModule(
+  "resource://gre/modules/CrashReports.sys.mjs"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "CrashSubmit",
-  "resource://gre/modules/CrashSubmit.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  CrashSubmit: "resource://gre/modules/CrashSubmit.sys.mjs",
+});
 
 document.addEventListener("DOMContentLoaded", () => {
   populateReportLists();

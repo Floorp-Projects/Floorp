@@ -13,12 +13,16 @@
 #include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
 #include "mozilla/PodOperations.h"
+#include "mozpkix/pkixder.h"
+#include "mozpkix/pkixtypes.h"
+#include "mozpkix/pkixutil.h"
+
 #include "nsDependentString.h"
 #include "nsString.h"
 #include "pk11pub.h"
-#include "mozpkix/pkixtypes.h"
 
 namespace mozilla {
+
 namespace psm {
 
 struct EVInfo {
@@ -1171,14 +1175,14 @@ static const struct EVInfo kEVInfos[] = {
     // clang-format on
 };
 
-static CertPolicyId sEVInfoIds[ArrayLength(kEVInfos)];
+static pkix::CertPolicyId sEVInfoIds[ArrayLength(kEVInfos)];
 static_assert(
     ArrayLength(sEVInfoIds) == ArrayLength(kEVInfos),
     "These arrays are used in parallel and must have the same length.");
-static CertPolicyId sCABForumEVId = {};
+static pkix::CertPolicyId sCABForumEVId = {};
 
 bool CertIsAuthoritativeForEVPolicy(const nsTArray<uint8_t>& certBytes,
-                                    const mozilla::pkix::CertPolicyId& policy) {
+                                    const pkix::CertPolicyId& policy) {
   nsTArray<uint8_t> fingerprint;
   nsresult rv = Digest::DigestBuf(SEC_OID_SHA256, certBytes.Elements(),
                                   certBytes.Length(), fingerprint);
@@ -1216,7 +1220,7 @@ nsresult LoadExtendedValidationInfo() {
       SECSuccess) {
     return NS_ERROR_FAILURE;
   }
-  if (cabforumOIDItem.len > CertPolicyId::MAX_BYTES) {
+  if (cabforumOIDItem.len > pkix::CertPolicyId::MAX_BYTES) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -1289,7 +1293,7 @@ nsresult LoadExtendedValidationInfo() {
     if (srv != SECSuccess) {
       return NS_ERROR_FAILURE;
     }
-    if (evOIDItem.len > CertPolicyId::MAX_BYTES) {
+    if (evOIDItem.len > pkix::CertPolicyId::MAX_BYTES) {
       return NS_ERROR_UNEXPECTED;
     }
     sEVInfoIds[i].numBytes = evOIDItem.len;
@@ -1301,72 +1305,73 @@ nsresult LoadExtendedValidationInfo() {
 
 // Helper function for GetKnownEVPolicies(): reads an EV Policy if there is one,
 // and appends it to the given list of CertPolicyIds.
-void FindMatchingEVPolicy(Reader& idReader,
-                          nsTArray<mozilla::pkix::CertPolicyId>& policies) {
-  Input cabForumEVIdBytes;
-  Result rv =
+void FindMatchingEVPolicy(pkix::Reader& idReader,
+                          nsTArray<pkix::CertPolicyId>& policies) {
+  pkix::Input cabForumEVIdBytes;
+  pkix::Result rv =
       cabForumEVIdBytes.Init(sCABForumEVId.bytes, sCABForumEVId.numBytes);
-  if (rv == Success && idReader.MatchRest(cabForumEVIdBytes)) {
+  if (rv == pkix::Success && idReader.MatchRest(cabForumEVIdBytes)) {
     policies.AppendElement(sCABForumEVId);
     return;
   }
 
-  for (const CertPolicyId& id : sEVInfoIds) {
-    Input idBytes;
+  for (const pkix::CertPolicyId& id : sEVInfoIds) {
+    pkix::Input idBytes;
     rv = idBytes.Init(id.bytes, id.numBytes);
-    if (rv == Success && idReader.MatchRest(idBytes)) {
+    if (rv == pkix::Success && idReader.MatchRest(idBytes)) {
       policies.AppendElement(id);
       return;
     }
   }
 }
 
-void GetKnownEVPolicies(
-    const nsTArray<uint8_t>& certBytes,
-    /*out*/ nsTArray<mozilla::pkix::CertPolicyId>& policies) {
-  Input certInput;
-  Result rv = certInput.Init(certBytes.Elements(), certBytes.Length());
-  if (rv != Success) {
+void GetKnownEVPolicies(const nsTArray<uint8_t>& certBytes,
+                        /*out*/ nsTArray<pkix::CertPolicyId>& policies) {
+  pkix::Input certInput;
+  pkix::Result rv = certInput.Init(certBytes.Elements(), certBytes.Length());
+  if (rv != pkix::Success) {
     return;
   }
   // we don't use the certificate for path building, so this parameter
   // doesn't matter
-  EndEntityOrCA notUsedForPaths = EndEntityOrCA::MustBeEndEntity;
-  BackCert cert(certInput, notUsedForPaths, nullptr);
+  pkix::EndEntityOrCA notUsedForPaths = pkix::EndEntityOrCA::MustBeEndEntity;
+  pkix::BackCert cert(certInput, notUsedForPaths, nullptr);
   rv = cert.Init();
-  if (rv != Success) {
+  if (rv != pkix::Success) {
     return;
   }
 
-  const Input* extensionInput = cert.GetCertificatePolicies();
+  const pkix::Input* extensionInput = cert.GetCertificatePolicies();
   if (!extensionInput) {
     return;
   }
 
-  Reader extension(*extensionInput);
-  Reader certificatePolicies;
+  pkix::Reader extension(*extensionInput);
+  pkix::Reader certificatePolicies;
   // certificatePolicies ::= SEQUENCE SIZE (1..MAX) OF PolicyInformation
   // PolicyInformation ::= SEQUENCE {
   //   policyIdentifier   CertPolicyId,
   //   ...
   // }
   // CertPolicyId ::= OBJECT IDENTIFIER
-  rv = der::ExpectTagAndGetValue(extension, der::SEQUENCE, certificatePolicies);
-  if (rv != Success || !extension.AtEnd()) {
+  rv = pkix::der::ExpectTagAndGetValue(extension, pkix::der::SEQUENCE,
+                                       certificatePolicies);
+  if (rv != pkix::Success || !extension.AtEnd()) {
     return;
   }
 
   do {
-    Reader policyInformation;
-    rv = der::ExpectTagAndGetValue(certificatePolicies, der::SEQUENCE,
-                                   policyInformation);
-    if (rv != Success) {
+    pkix::Reader policyInformation;
+    rv = pkix::der::ExpectTagAndGetValue(
+        certificatePolicies, pkix::der::SEQUENCE, policyInformation);
+    if (rv != pkix::Success) {
       return;
     }
 
-    Reader policyOid;
-    rv = der::ExpectTagAndGetValue(policyInformation, der::OIDTag, policyOid);
-    if (rv != Success) {
+    pkix::Reader policyOid;
+    rv = pkix::der::ExpectTagAndGetValue(policyInformation, pkix::der::OIDTag,
+                                         policyOid);
+    if (rv != pkix::Success) {
       return;
     }
 

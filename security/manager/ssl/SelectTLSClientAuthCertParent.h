@@ -7,6 +7,7 @@
 #ifndef SECURITY_MANAGER_SSL_SELECTTLSCLIENTAUTHCERTPARENT_H_
 #define SECURITY_MANAGER_SSL_SELECTTLSCLIENTAUTHCERTPARENT_H_
 
+#include "mozilla/OriginAttributes.h"
 #include "mozilla/psm/PSelectTLSClientAuthCertParent.h"
 
 namespace mozilla {

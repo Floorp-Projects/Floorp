@@ -6,6 +6,8 @@
 
 #include "common.h"
 
+#include "EventLog.h"
+
 #include <windows.h>
 
 ULONGLONG GetCurrentTimestamp() {

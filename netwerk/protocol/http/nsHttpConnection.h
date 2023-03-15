@@ -184,7 +184,8 @@ class nsHttpConnection final : public HttpConnectionBase,
   nsresult GetPeerAddr(NetAddr* addr) override;
   bool ResolvedByTRR() override;
   bool GetEchConfigUsed() override;
-
+  nsIRequest::TRRMode EffectiveTRRMode() override;
+  TRRSkippedReason TRRSkipReason() override;
   bool IsForWebSocket() { return mForWebSocket; }
 
   // The following functions are related to setting up a tunnel.

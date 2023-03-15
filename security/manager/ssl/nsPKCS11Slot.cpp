@@ -16,6 +16,7 @@
 #include "nsNSSComponent.h"
 #include "nsPK11TokenDB.h"
 #include "nsPromiseFlatString.h"
+#include "nsComponentManagerUtils.h"
 #include "secmod.h"
 
 using mozilla::LogLevel;

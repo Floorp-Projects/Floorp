@@ -94,14 +94,14 @@ static inline Maybe<TimerToStampMutex::AutoLock> GetTimerIdToStartsLock() {
 
 static Maybe<HistogramID> HistogramIdForMetric(uint32_t aId) {
   switch(aId) {
-    case 12: { // test.timing_distribution_metric
-      return Some(HistogramID::SOME_TIME_HISTOGRAM_MS);
+    case 3: { // test.custom_distribution_metric
+      return Some(HistogramID::SOME_LINEAR_HISTOGRAM);
     }
-    case 13: { // test.memory_distribution_metric
+    case 10: { // test.memory_distribution_metric
       return Some(HistogramID::SOME_MEM_HISTOGRAM_KB);
     }
-    case 14: { // test.custom_distribution_metric
-      return Some(HistogramID::SOME_LINEAR_HISTOGRAM);
+    case 14: { // test.timing_distribution_metric
+      return Some(HistogramID::SOME_TIME_HISTOGRAM_MS);
     }
     default: {
       return Nothing();

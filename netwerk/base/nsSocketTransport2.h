@@ -326,6 +326,8 @@ class nsSocketTransport final : public nsASocketHandler,
   nsCString mEchConfig;
   bool mEchConfigUsed = false;
   bool mResolvedByTRR{false};
+  nsIRequest::TRRMode mEffectiveTRRMode{nsIRequest::TRR_DEFAULT_MODE};
+  nsITRRSkipReason::value mTRRSkipReason{nsITRRSkipReason::TRR_UNSET};
 
   // mNetAddr/mSelfAddr is valid from GetPeerAddr()/GetSelfAddr() once we have
   // reached STATE_TRANSFERRING. It must not change after that.

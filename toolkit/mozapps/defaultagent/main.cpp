@@ -8,12 +8,14 @@
 #include <shlwapi.h>
 #include <objbase.h>
 #include <string.h>
+#include <iostream>
 
 #include "nsAutoRef.h"
 #include "nsWindowsHelpers.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 
 #include "common.h"
+#include "Policy.h"
 #include "DefaultBrowser.h"
 #include "DefaultPDF.h"
 #include "EventLog.h"

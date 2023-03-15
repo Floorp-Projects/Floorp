@@ -6,7 +6,9 @@
 
 #include "nsISupports.idl"
 
-%{C++
+%{ C++
+#include "mozilla/OriginAttributes.h"
+
 #define NS_CLIENTAUTHREMEMBERSERVICE_CONTRACTID "@mozilla.org/security/clientAuthRememberService;1"
 %}
 

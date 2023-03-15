@@ -181,6 +181,16 @@ Http2StreamTunnel::ResolvedByTRR(bool* aResolvedByTRR) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP Http2StreamTunnel::GetEffectiveTRRMode(
+    nsIRequest::TRRMode* aEffectiveTRRMode) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP Http2StreamTunnel::GetTrrSkipReason(
+    nsITRRSkipReason::value* aTrrSkipReason) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP
 Http2StreamTunnel::IsAlive(bool* aAlive) {
   RefPtr<Http2Session> session = Session();

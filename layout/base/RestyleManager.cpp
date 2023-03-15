@@ -3362,6 +3362,23 @@ void RestyleManager::ElementStateChanged(Element* aElement,
   ServoElementSnapshot& snapshot = SnapshotFor(*aElement);
   ElementState previousState = aElement->StyleState() ^ aChangedBits;
   snapshot.AddState(previousState);
+
+  MaybeRestyleForNthOfState(*StyleSet(), aElement, aChangedBits);
+}
+
+void RestyleManager::MaybeRestyleForNthOfState(ServoStyleSet& aStyleSet,
+                                               Element* aChild,
+                                               ElementState aChangedBits) {
+  const auto* parentNode = aChild->GetParentNode();
+  MOZ_ASSERT(parentNode);
+  const auto parentFlags = parentNode->GetFlags();
+  if (!(parentFlags & NODE_HAS_SLOW_SELECTOR_NTH_OF)) {
+    return;
+  }
+
+  if (aStyleSet.HasNthOfStateDependency(*aChild, aChangedBits)) {
+    RestyleSiblings(aChild, parentFlags);
+  }
 }
 
 static inline bool AttributeInfluencesOtherPseudoClassState(
@@ -3492,6 +3509,8 @@ void RestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
 
   changeHint |= aElement->GetAttributeChangeHint(aAttribute, aModType);
 
+  MaybeRestyleForNthOfAttribute(aElement, aAttribute, aOldValue);
+
   if (aAttribute == nsGkAtoms::style) {
     restyleHint |= RestyleHint::RESTYLE_STYLE_ATTRIBUTE;
   } else if (AttributeChangeRequiresSubtreeRestyle(*aElement, aAttribute)) {
@@ -3536,6 +3555,59 @@ void RestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
     // If we change attributes, we have to mark this to be true, so we will
     // increase the animation generation for the new created transition if any.
     mHaveNonAnimationRestyles = true;
+  }
+}
+
+void RestyleManager::RestyleSiblings(
+    Element* aChild, nsBaseContentList::FlagsType aParentFlags) {
+  const DebugOnly<nsINode*> parentNode = aChild->GetParentNode();
+  MOZ_ASSERT(parentNode->IsElement() || parentNode->IsShadowRoot());
+
+  DebugOnly<bool> restyledSiblings = false;
+  // NODE_HAS_SLOW_SELECTOR typically indicates restyling the parent, but since
+  // we know we're restyling for :nth-last-child(.. of <selector>), we can
+  // restyle only previous siblings without under-invalidating.
+  if (aParentFlags & NODE_HAS_SLOW_SELECTOR) {
+    RestylePreviousSiblings(aChild->GetPreviousSibling());
+    restyledSiblings = true;
+  }
+  if (aParentFlags & NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS) {
+    RestyleSiblingsStartingWith(aChild->GetNextSibling());
+    restyledSiblings = true;
+  }
+  MOZ_ASSERT(restyledSiblings,
+             "How can we restyle siblings without a slow selector flag?");
+}
+
+void RestyleManager::MaybeRestyleForNthOfAttribute(
+    Element* aChild, nsAtom* aAttribute, const nsAttrValue* aOldValue) {
+  const auto* parentNode = aChild->GetParentNode();
+  MOZ_ASSERT(parentNode);
+  const auto parentFlags = parentNode->GetFlags();
+  if (!(parentFlags & NODE_HAS_SLOW_SELECTOR_NTH_OF)) {
+    return;
+  }
+  if (!aChild->HasServoData()) {
+    return;
+  }
+
+  bool mightHaveNthOfDependency;
+  auto& styleSet = *StyleSet();
+  if (aAttribute == nsGkAtoms::id) {
+    auto* const oldAtom = aOldValue->Type() == nsAttrValue::eAtom
+                              ? aOldValue->GetAtomValue()
+                              : nullptr;
+    mightHaveNthOfDependency =
+        styleSet.MightHaveNthOfIDDependency(*aChild, oldAtom, aChild->GetID());
+  } else if (aAttribute == nsGkAtoms::_class) {
+    mightHaveNthOfDependency = styleSet.MightHaveNthOfClassDependency(*aChild);
+  } else {
+    mightHaveNthOfDependency =
+        styleSet.MightHaveNthOfAttributeDependency(*aChild, aAttribute);
+  }
+
+  if (mightHaveNthOfDependency) {
+    RestyleSiblings(aChild, parentFlags);
   }
 }
 

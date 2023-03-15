@@ -2869,6 +2869,10 @@
                 ),
               },
             ],
+            // Make sure to store the userContextId associated to the lazy tab
+            // otherwise it would be created as a default tab when recreated on a
+            // session restore (See Bug 1819794).
+            userContextId,
           });
         } else {
           this._insertBrowser(t, true);

@@ -110,5 +110,3 @@ if CONFIG["ENABLE_TESTS"]:
 
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Default Browser Agent")
-
-REQUIRES_UNIFIED_BUILD = True

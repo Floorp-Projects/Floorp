@@ -79,7 +79,7 @@ void nsHtml5Tokenizer::StartPlainText() {
 }
 
 void nsHtml5Tokenizer::EnableViewSource(nsHtml5Highlighter* aHighlighter) {
-  mViewSource = WrapUnique(aHighlighter);
+  mViewSource = mozilla::WrapUnique(aHighlighter);
 }
 
 bool nsHtml5Tokenizer::ShouldFlushViewSource() {

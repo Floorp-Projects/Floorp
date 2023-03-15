@@ -55,9 +55,11 @@ DEFINES["SHARED_LIBRARY"] = "%s%s%s" % (
     CONFIG["DLL_SUFFIX"],
 )
 
-TEST_HARNESS_FILES.xpcshell.toolkit.crashreporter.test.unit += ["CrashTestUtils.jsm"]
+TEST_HARNESS_FILES.xpcshell.toolkit.crashreporter.test.unit += [
+    "CrashTestUtils.sys.mjs"
+]
 TEST_HARNESS_FILES.xpcshell.toolkit.crashreporter.test.unit_ipc += [
-    "CrashTestUtils.jsm"
+    "CrashTestUtils.sys.mjs"
 ]
 
 include("/toolkit/crashreporter/crashreporter.mozbuild")

@@ -33,5 +33,3 @@ USE_LIBS += [
 ]
 
 FINAL_LIBRARY = "xul"
-
-REQUIRES_UNIFIED_BUILD = True

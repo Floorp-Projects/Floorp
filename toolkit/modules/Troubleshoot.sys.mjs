@@ -1008,8 +1008,8 @@ var dataProviders = {
 
 if (AppConstants.MOZ_CRASHREPORTER) {
   dataProviders.crashes = function crashes(done) {
-    const { CrashReports } = ChromeUtils.import(
-      "resource://gre/modules/CrashReports.jsm"
+    const { CrashReports } = ChromeUtils.importESModule(
+      "resource://gre/modules/CrashReports.sys.mjs"
     );
     let reports = CrashReports.getReports();
     let now = new Date();

@@ -10,6 +10,7 @@
 #include <shlwapi.h>
 
 #include "common.h"
+#include "EventLog.h"
 #include "UtfConvert.h"
 
 #include "mozilla/Buffer.h"

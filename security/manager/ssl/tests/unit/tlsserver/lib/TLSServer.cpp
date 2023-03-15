@@ -686,8 +686,6 @@ int StartServer(int argc, char* argv[], SSLSNISocketConfig sniSocketConfig,
         PR_Accept(serverSocket.get(), &clientAddr, PR_INTERVAL_NO_TIMEOUT);
     HandleConnection(clientSocket, modelSocket);
   }
-
-  return 0;
 }
 
 }  // namespace test

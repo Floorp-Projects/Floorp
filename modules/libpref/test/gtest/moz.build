@@ -21,5 +21,3 @@ if CONFIG["CC_TYPE"] == "clang":
     CXXFLAGS += ["-Wno-inconsistent-missing-override"]
 
 FINAL_LIBRARY = "xul-gtest"
-
-REQUIRES_UNIFIED_BUILD = True

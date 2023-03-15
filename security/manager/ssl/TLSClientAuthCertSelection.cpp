@@ -26,6 +26,7 @@
 
 #include "TLSClientAuthCertSelection.h"
 #include "cert_storage/src/cert_storage.h"
+#include "mozilla/Logging.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/PBackgroundChild.h"
@@ -33,9 +34,25 @@
 #include "mozilla/psm/SelectTLSClientAuthCertParent.h"
 #include "nsArray.h"
 #include "nsArrayUtils.h"
+#include "nsNSSComponent.h"
 #include "nsIClientAuthDialogs.h"
 #include "nsIMutableArray.h"
+#include "nsINSSComponent.h"
+#include "NSSCertDBTrustDomain.h"
+#include "nsIClientAuthRememberService.h"
 #include "nsIX509CertDB.h"
+#include "nsNSSHelper.h"
+#include "mozpkix/pkixnss.h"
+#include "mozpkix/pkixutil.h"
+#include "mozpkix/pkix.h"
+#include "secerr.h"
+#include "sslerr.h"
+
+using namespace mozilla;
+using namespace mozilla::pkix;
+using namespace mozilla::psm;
+
+extern LazyLogModule gPIPNSSLog;
 
 // Possible behaviors for choosing a cert for client auth.
 enum class UserCertChoice {
@@ -169,71 +186,74 @@ class ClientAuthCertNonverifyingTrustDomain final : public TrustDomain {
         mThirdPartyCertificates(thirdPartyCertificates) {}
 
   virtual mozilla::pkix::Result GetCertTrust(
-      EndEntityOrCA endEntityOrCA, const CertPolicyId& policy,
-      Input candidateCertDER,
-      /*out*/ TrustLevel& trustLevel) override;
-  virtual mozilla::pkix::Result FindIssuer(Input encodedIssuerName,
+      pkix::EndEntityOrCA endEntityOrCA, const pkix::CertPolicyId& policy,
+      pkix::Input candidateCertDER,
+      /*out*/ pkix::TrustLevel& trustLevel) override;
+  virtual mozilla::pkix::Result FindIssuer(pkix::Input encodedIssuerName,
                                            IssuerChecker& checker,
-                                           Time time) override;
+                                           pkix::Time time) override;
 
   virtual mozilla::pkix::Result CheckRevocation(
-      EndEntityOrCA endEntityOrCA, const CertID& certID, Time time,
+      EndEntityOrCA endEntityOrCA, const pkix::CertID& certID, Time time,
       mozilla::pkix::Duration validityDuration,
       /*optional*/ const Input* stapledOCSPresponse,
       /*optional*/ const Input* aiaExtension,
       /*optional*/ const Input* sctExtension) override {
-    return Success;
+    return pkix::Success;
   }
 
   virtual mozilla::pkix::Result IsChainValid(
-      const DERArray& certChain, Time time,
-      const CertPolicyId& requiredPolicy) override;
+      const pkix::DERArray& certChain, pkix::Time time,
+      const pkix::CertPolicyId& requiredPolicy) override;
 
   virtual mozilla::pkix::Result CheckSignatureDigestAlgorithm(
-      DigestAlgorithm digestAlg, EndEntityOrCA endEntityOrCA,
-      Time notBefore) override {
-    return Success;
+      pkix::DigestAlgorithm digestAlg, pkix::EndEntityOrCA endEntityOrCA,
+      pkix::Time notBefore) override {
+    return pkix::Success;
   }
   virtual mozilla::pkix::Result CheckRSAPublicKeyModulusSizeInBits(
-      EndEntityOrCA endEntityOrCA, unsigned int modulusSizeInBits) override {
-    return Success;
+      pkix::EndEntityOrCA endEntityOrCA,
+      unsigned int modulusSizeInBits) override {
+    return pkix::Success;
   }
   virtual mozilla::pkix::Result VerifyRSAPKCS1SignedData(
-      Input data, DigestAlgorithm, Input signature,
-      Input subjectPublicKeyInfo) override {
-    return Success;
+      pkix::Input data, pkix::DigestAlgorithm, pkix::Input signature,
+      pkix::Input subjectPublicKeyInfo) override {
+    return pkix::Success;
   }
   virtual mozilla::pkix::Result VerifyRSAPSSSignedData(
-      Input data, DigestAlgorithm, Input signature,
-      Input subjectPublicKeyInfo) override {
-    return Success;
+      pkix::Input data, pkix::DigestAlgorithm, pkix::Input signature,
+      pkix::Input subjectPublicKeyInfo) override {
+    return pkix::Success;
   }
   virtual mozilla::pkix::Result CheckECDSACurveIsAcceptable(
-      EndEntityOrCA endEntityOrCA, NamedCurve curve) override {
-    return Success;
+      pkix::EndEntityOrCA endEntityOrCA, pkix::NamedCurve curve) override {
+    return pkix::Success;
   }
   virtual mozilla::pkix::Result VerifyECDSASignedData(
-      Input data, DigestAlgorithm, Input signature,
-      Input subjectPublicKeyInfo) override {
-    return Success;
+      pkix::Input data, pkix::DigestAlgorithm, pkix::Input signature,
+      pkix::Input subjectPublicKeyInfo) override {
+    return pkix::Success;
   }
   virtual mozilla::pkix::Result CheckValidityIsAcceptable(
-      Time notBefore, Time notAfter, EndEntityOrCA endEntityOrCA,
-      KeyPurposeId keyPurpose) override {
-    return Success;
+      pkix::Time notBefore, pkix::Time notAfter,
+      pkix::EndEntityOrCA endEntityOrCA,
+      pkix::KeyPurposeId keyPurpose) override {
+    return pkix::Success;
   }
   virtual mozilla::pkix::Result NetscapeStepUpMatchesServerAuth(
-      Time notBefore,
+      pkix::Time notBefore,
       /*out*/ bool& matches) override {
     matches = true;
-    return Success;
+    return pkix::Success;
   }
-  virtual void NoteAuxiliaryExtension(AuxiliaryExtension extension,
-                                      Input extensionData) override {}
-  virtual mozilla::pkix::Result DigestBuf(Input item, DigestAlgorithm digestAlg,
+  virtual void NoteAuxiliaryExtension(pkix::AuxiliaryExtension extension,
+                                      pkix::Input extensionData) override {}
+  virtual mozilla::pkix::Result DigestBuf(pkix::Input item,
+                                          pkix::DigestAlgorithm digestAlg,
                                           /*out*/ uint8_t* digestBuf,
                                           size_t digestBufLen) override {
-    return DigestBufNSS(item, digestAlg, digestBuf, digestBufLen);
+    return pkix::DigestBufNSS(item, digestAlg, digestBuf, digestBufLen);
   }
 
   nsTArray<nsTArray<uint8_t>> TakeBuiltChain() {
@@ -248,18 +268,18 @@ class ClientAuthCertNonverifyingTrustDomain final : public TrustDomain {
 };
 
 mozilla::pkix::Result ClientAuthCertNonverifyingTrustDomain::GetCertTrust(
-    EndEntityOrCA endEntityOrCA, const CertPolicyId& policy,
-    Input candidateCertDER,
-    /*out*/ TrustLevel& trustLevel) {
+    pkix::EndEntityOrCA endEntityOrCA, const pkix::CertPolicyId& policy,
+    pkix::Input candidateCertDER,
+    /*out*/ pkix::TrustLevel& trustLevel) {
   // If the server did not specify any CA names, all client certificates are
   // acceptable.
   if (mCANames.Length() == 0) {
-    trustLevel = TrustLevel::TrustAnchor;
-    return Success;
+    trustLevel = pkix::TrustLevel::TrustAnchor;
+    return pkix::Success;
   }
   BackCert cert(candidateCertDER, endEntityOrCA, nullptr);
   mozilla::pkix::Result rv = cert.Init();
-  if (rv != Success) {
+  if (rv != pkix::Success) {
     return rv;
   }
   // If this certificate's issuer distinguished name is in the set of acceptable
@@ -269,22 +289,22 @@ mozilla::pkix::Result ClientAuthCertNonverifyingTrustDomain::GetCertTrust(
   // the case where client certificates that have the id-kp-OCSPSigning EKU
   // can't be trust anchors according to mozilla::pkix, and thus we may be
   // looking directly at the issuer.
-  Input issuer(cert.GetIssuer());
-  Input subject(cert.GetSubject());
+  pkix::Input issuer(cert.GetIssuer());
+  pkix::Input subject(cert.GetSubject());
   for (const auto& caName : mCANames) {
-    Input caNameInput;
+    pkix::Input caNameInput;
     rv = caNameInput.Init(caName.Elements(), caName.Length());
-    if (rv != Success) {
+    if (rv != pkix::Success) {
       continue;  // probably too big
     }
     if (InputsAreEqual(issuer, caNameInput) ||
         InputsAreEqual(subject, caNameInput)) {
-      trustLevel = TrustLevel::TrustAnchor;
-      return Success;
+      trustLevel = pkix::TrustLevel::TrustAnchor;
+      return pkix::Success;
     }
   }
-  trustLevel = TrustLevel::InheritsTrust;
-  return Success;
+  trustLevel = pkix::TrustLevel::InheritsTrust;
+  return pkix::Success;
 }
 
 // In theory this implementation should only need to consider intermediate
@@ -297,10 +317,10 @@ mozilla::pkix::Result ClientAuthCertNonverifyingTrustDomain::GetCertTrust(
 // certificates directly. These issuers could be roots, so we have to consider
 // roots here.
 mozilla::pkix::Result ClientAuthCertNonverifyingTrustDomain::FindIssuer(
-    Input encodedIssuerName, IssuerChecker& checker, Time time) {
+    pkix::Input encodedIssuerName, IssuerChecker& checker, pkix::Time time) {
   // First try all relevant certificates known to Gecko, which avoids calling
   // CERT_CreateSubjectCertList, because that can be expensive.
-  Vector<Input> geckoCandidates;
+  Vector<pkix::Input> geckoCandidates;
   if (!mCertStorage) {
     return mozilla::pkix::Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
@@ -313,9 +333,9 @@ mozilla::pkix::Result ClientAuthCertNonverifyingTrustDomain::FindIssuer(
     return mozilla::pkix::Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
   for (auto& cert : certs) {
-    Input certDER;
+    pkix::Input certDER;
     mozilla::pkix::Result rv = certDER.Init(cert.Elements(), cert.Length());
-    if (rv != Success) {
+    if (rv != pkix::Success) {
       continue;  // probably too big
     }
     if (!geckoCandidates.append(certDER)) {
@@ -324,10 +344,10 @@ mozilla::pkix::Result ClientAuthCertNonverifyingTrustDomain::FindIssuer(
   }
 
   for (const auto& thirdPartyCertificate : mThirdPartyCertificates) {
-    Input thirdPartyCertificateInput;
+    pkix::Input thirdPartyCertificateInput;
     mozilla::pkix::Result rv = thirdPartyCertificateInput.Init(
         thirdPartyCertificate.Elements(), thirdPartyCertificate.Length());
-    if (rv != Success) {
+    if (rv != pkix::Success) {
       continue;  // probably too big
     }
     if (!geckoCandidates.append(thirdPartyCertificateInput)) {
@@ -336,30 +356,31 @@ mozilla::pkix::Result ClientAuthCertNonverifyingTrustDomain::FindIssuer(
   }
 
   bool keepGoing = true;
-  for (Input candidate : geckoCandidates) {
+  for (pkix::Input candidate : geckoCandidates) {
     mozilla::pkix::Result rv = checker.Check(candidate, nullptr, keepGoing);
-    if (rv != Success) {
+    if (rv != pkix::Success) {
       return rv;
     }
     if (!keepGoing) {
-      return Success;
+      return pkix::Success;
     }
   }
 
-  SECItem encodedIssuerNameItem = UnsafeMapInputToSECItem(encodedIssuerName);
+  SECItem encodedIssuerNameItem =
+      pkix::UnsafeMapInputToSECItem(encodedIssuerName);
   // NSS seems not to differentiate between "no potential issuers found" and
   // "there was an error trying to retrieve the potential issuers." We assume
   // there was no error if CERT_CreateSubjectCertList returns nullptr.
   UniqueCERTCertList candidates(CERT_CreateSubjectCertList(
       nullptr, CERT_GetDefaultCertDB(), &encodedIssuerNameItem, 0, false));
-  Vector<Input> nssCandidates;
+  Vector<pkix::Input> nssCandidates;
   if (candidates) {
     for (CERTCertListNode* n = CERT_LIST_HEAD(candidates);
          !CERT_LIST_END(n, candidates); n = CERT_LIST_NEXT(n)) {
-      Input certDER;
+      pkix::Input certDER;
       mozilla::pkix::Result rv =
           certDER.Init(n->cert->derCert.data, n->cert->derCert.len);
-      if (rv != Success) {
+      if (rv != pkix::Success) {
         continue;  // probably too big
       }
       if (!nssCandidates.append(certDER)) {
@@ -368,26 +389,26 @@ mozilla::pkix::Result ClientAuthCertNonverifyingTrustDomain::FindIssuer(
     }
   }
 
-  for (Input candidate : nssCandidates) {
+  for (pkix::Input candidate : nssCandidates) {
     mozilla::pkix::Result rv = checker.Check(candidate, nullptr, keepGoing);
-    if (rv != Success) {
+    if (rv != pkix::Success) {
       return rv;
     }
     if (!keepGoing) {
-      return Success;
+      return pkix::Success;
     }
   }
-  return Success;
+  return pkix::Success;
 }
 
 mozilla::pkix::Result ClientAuthCertNonverifyingTrustDomain::IsChainValid(
-    const DERArray& certArray, Time, const CertPolicyId&) {
+    const pkix::DERArray& certArray, pkix::Time, const pkix::CertPolicyId&) {
   mBuiltChain.Clear();
 
   size_t numCerts = certArray.GetLength();
   for (size_t i = 0; i < numCerts; ++i) {
     nsTArray<uint8_t> certBytes;
-    const Input* certInput = certArray.GetDER(i);
+    const pkix::Input* certInput = certArray.GetDER(i);
     MOZ_ASSERT(certInput != nullptr);
     if (!certInput) {
       return mozilla::pkix::Result::FATAL_ERROR_LIBRARY_FAILURE;
@@ -397,7 +418,7 @@ mozilla::pkix::Result ClientAuthCertNonverifyingTrustDomain::IsChainValid(
     mBuiltChain.AppendElement(std::move(certBytes));
   }
 
-  return Success;
+  return pkix::Success;
 }
 
 void ClientAuthCertificateSelectedBase::SetSelectedClientAuthData(
@@ -455,7 +476,7 @@ SelectClientAuthCertificate::Run() {
   if (mSelectedCertBytes.Length() > 0) {
     nsTArray<nsTArray<uint8_t>> selectedCertChainBytes;
     if (BuildChainForCertificate(mSelectedCertBytes, selectedCertChainBytes) !=
-        Success) {
+        pkix::Success) {
       selectedCertChainBytes.Clear();
     }
     mContinuation->SetSelectedClientAuthData(std::move(mSelectedCertBytes),
@@ -480,17 +501,17 @@ mozilla::pkix::Result SelectClientAuthCertificate::BuildChainForCertificate(
     nsTArray<uint8_t>& certBytes, nsTArray<nsTArray<uint8_t>>& certChainBytes) {
   ClientAuthCertNonverifyingTrustDomain trustDomain(mCANames,
                                                     mEnterpriseCertificates);
-  Input certDER;
+  pkix::Input certDER;
   mozilla::pkix::Result result =
       certDER.Init(certBytes.Elements(), certBytes.Length());
-  if (result != Success) {
+  if (result != pkix::Success) {
     return result;
   }
   // Client certificates shouldn't be CAs, but for interoperability reasons we
   // attempt to build a path with each certificate as an end entity and then as
   // a CA if that fails.
-  const EndEntityOrCA kEndEntityOrCAParams[] = {EndEntityOrCA::MustBeEndEntity,
-                                                EndEntityOrCA::MustBeCA};
+  const pkix::EndEntityOrCA kEndEntityOrCAParams[] = {
+      pkix::EndEntityOrCA::MustBeEndEntity, pkix::EndEntityOrCA::MustBeCA};
   // mozilla::pkix rejects certificates with id-kp-OCSPSigning unless it is
   // specifically required. A client certificate should never have this EKU.
   // Unfortunately, there are some client certificates in private PKIs that
@@ -498,17 +519,18 @@ mozilla::pkix::Result SelectClientAuthCertificate::BuildChainForCertificate(
   // restriction in mozilla::pkix by first building the certificate chain with
   // no particular EKU required and then again with id-kp-OCSPSigning required
   // if that fails.
-  const KeyPurposeId kKeyPurposeIdParams[] = {KeyPurposeId::anyExtendedKeyUsage,
-                                              KeyPurposeId::id_kp_OCSPSigning};
+  const pkix::KeyPurposeId kKeyPurposeIdParams[] = {
+      pkix::KeyPurposeId::anyExtendedKeyUsage,
+      pkix::KeyPurposeId::id_kp_OCSPSigning};
   for (const auto& endEntityOrCAParam : kEndEntityOrCAParams) {
     for (const auto& keyPurposeIdParam : kKeyPurposeIdParams) {
-      mozilla::pkix::Result result =
-          BuildCertChain(trustDomain, certDER, Now(), endEntityOrCAParam,
-                         KeyUsage::noParticularKeyUsageRequired,
-                         keyPurposeIdParam, CertPolicyId::anyPolicy, nullptr);
-      if (result == Success) {
+      mozilla::pkix::Result result = BuildCertChain(
+          trustDomain, certDER, Now(), endEntityOrCAParam,
+          KeyUsage::noParticularKeyUsageRequired, keyPurposeIdParam,
+          pkix::CertPolicyId::anyPolicy, nullptr);
+      if (result == pkix::Success) {
         certChainBytes = trustDomain.TakeBuiltChain();
-        return Success;
+        return pkix::Success;
       }
     }
   }
@@ -550,7 +572,7 @@ void SelectClientAuthCertificate::DoSelectClientAuthCertificate() {
     certBytes.AppendElements(n->cert->derCert.data, n->cert->derCert.len);
     mozilla::pkix::Result result =
         BuildChainForCertificate(certBytes, unusedBuiltChain);
-    if (result != Success) {
+    if (result != pkix::Success) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
               ("removing cert '%s'", n->cert->subjectName));
       CERTCertListNode* toRemove = n;

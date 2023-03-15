@@ -7,10 +7,12 @@
 #include "RemoteSettings.h"
 
 #include <iostream>
+#include <string>
 #include <windows.h>
 #include <shlwapi.h>
 
 #include "common.h"
+#include "EventLog.h"
 #include "Registry.h"
 
 #include "mozilla/Maybe.h"

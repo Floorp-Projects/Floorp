@@ -85,8 +85,8 @@ if CONFIG["MOZ_CRASHREPORTER"]:
         ]
 
     EXTRA_JS_MODULES += [
-        "CrashReports.jsm",
-        "CrashSubmit.jsm",
+        "CrashReports.sys.mjs",
+        "CrashSubmit.sys.mjs",
     ]
 
     include("/ipc/chromium/chromium-config.mozbuild")

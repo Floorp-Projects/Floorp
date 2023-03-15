@@ -7,6 +7,7 @@
 #include "nsHtml5Parser.h"
 
 #include "mozilla/AutoRestore.h"
+#include "mozilla/UniquePtr.h"
 #include "nsCRT.h"
 #include "nsContentUtils.h"  // for kLoadAsData
 #include "nsHtml5AtomTable.h"
@@ -410,10 +411,11 @@ nsresult nsHtml5Parser::Parse(const nsAString& aSourceBuffer, void* aKey,
       if (!mDocWriteSpeculativeTreeBuilder) {
         // Lazily initialize if uninitialized
         mDocWriteSpeculativeTreeBuilder =
-            MakeUnique<nsHtml5TreeBuilder>(nullptr, executor->GetStage(), true);
+            mozilla::MakeUnique<nsHtml5TreeBuilder>(nullptr,
+                                                    executor->GetStage(), true);
         mDocWriteSpeculativeTreeBuilder->setScriptingEnabled(
             mTreeBuilder->isScriptingEnabled());
-        mDocWriteSpeculativeTokenizer = MakeUnique<nsHtml5Tokenizer>(
+        mDocWriteSpeculativeTokenizer = mozilla::MakeUnique<nsHtml5Tokenizer>(
             mDocWriteSpeculativeTreeBuilder.get(), false);
         mDocWriteSpeculativeTokenizer->setInterner(&mAtomTable);
         mDocWriteSpeculativeTokenizer->start();

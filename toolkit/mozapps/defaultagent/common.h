@@ -7,6 +7,8 @@
 #ifndef __DEFAULT_BROWSER_AGENT_COMMON_H__
 #define __DEFAULT_BROWSER_AGENT_COMMON_H__
 
+#include "mozilla/WinHeaderOnlyUtils.h"
+
 #define AGENT_REGKEY_NAME \
   L"SOFTWARE\\" MOZ_APP_VENDOR "\\" MOZ_APP_BASENAME "\\Default Browser Agent"
 

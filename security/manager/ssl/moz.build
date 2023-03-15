@@ -276,5 +276,3 @@ for header, array_name, cert in headers_arrays_certs:
     GeneratedFile(
         header, script="gen_cert_header.py", entry_point=array_name, inputs=[cert]
     )
-
-REQUIRES_UNIFIED_BUILD = True
