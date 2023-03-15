@@ -148,6 +148,28 @@ class SharedLibraryInfo {
     std::sort(mEntries.begin(), mEntries.end(), CompareAddresses);
   }
 
+  // Remove duplicate entries from the vector.
+  //
+  // We purposefully don't use the operator== implementation of SharedLibrary
+  // because it compares all the fields including mStart, mEnd and mOffset which
+  // are not the same across different processes.
+  void DeduplicateEntries() {
+    static auto cmpSort = [](const SharedLibrary& a, const SharedLibrary& b) {
+      return std::tie(a.GetModuleName(), a.GetBreakpadId()) <
+             std::tie(b.GetModuleName(), b.GetBreakpadId());
+    };
+    static auto cmpEqual = [](const SharedLibrary& a, const SharedLibrary& b) {
+      return std::tie(a.GetModuleName(), a.GetBreakpadId()) ==
+             std::tie(b.GetModuleName(), b.GetBreakpadId());
+    };
+    // std::unique requires the vector to be sorted first. It can only remove
+    // consecutive duplicate elements.
+    std::sort(mEntries.begin(), mEntries.end(), cmpSort);
+    // Remove the duplicates since it's sorted now.
+    mEntries.erase(std::unique(mEntries.begin(), mEntries.end(), cmpEqual),
+                   mEntries.end());
+  }
+
   void Clear() { mEntries.clear(); }
 
   size_t SizeOf() const {

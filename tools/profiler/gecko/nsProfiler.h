@@ -20,6 +20,7 @@
 #include "nsITimer.h"
 #include "nsServiceManagerUtils.h"
 #include "ProfilerCodeAddressService.h"
+#include "ProfileAdditionalInformation.h"
 
 namespace Json {
 class Value;
@@ -43,15 +44,19 @@ class nsProfiler final : public nsIProfiler {
  private:
   ~nsProfiler();
 
-  typedef mozilla::MozPromise<FallibleTArray<uint8_t>, nsresult, true>
-      GatheringPromiseAndroid;
-  typedef mozilla::MozPromise<nsCString, nsresult, false> GatheringPromise;
-  typedef mozilla::MozPromise<mozilla::SymbolTable, nsresult, true>
-      SymbolTablePromise;
+  using GatheringPromiseAndroid =
+      mozilla::MozPromise<FallibleTArray<uint8_t>, nsresult, true>;
+  using GatheringPromise =
+      mozilla::MozPromise<mozilla::ProfileAndAdditionalInformation, nsresult,
+                          false>;
+  using SymbolTablePromise =
+      mozilla::MozPromise<mozilla::SymbolTable, nsresult, true>;
 
   RefPtr<GatheringPromise> StartGathering(double aSinceTime);
-  void GatheredOOPProfile(base::ProcessId aChildPid,
-                          const nsACString& aProfile);
+  void GatheredOOPProfile(
+      base::ProcessId aChildPid, const nsACString& aProfile,
+      mozilla::Maybe<mozilla::ProfileGenerationAdditionalInformation>&&
+          aAdditionalInformation);
   void FinishGathering();
   void ResetGathering(nsresult aPromiseRejectionIfPending);
   static void GatheringTimerCallback(nsITimer* aTimer, void* aClosure);
@@ -99,6 +104,8 @@ class nsProfiler final : public nsIProfiler {
   nsCOMPtr<nsIThread> mSymbolTableThread;
   mozilla::Maybe<mozilla::FailureLatchSource> mFailureLatchSource;
   mozilla::Maybe<SpliceableChunkedJSONWriter> mWriter;
+  mozilla::Maybe<mozilla::ProfileGenerationAdditionalInformation>
+      mProfileGenerationAdditionalInformation;
   mozilla::Vector<PendingProfile> mPendingProfiles;
   bool mGathering;
   nsCOMPtr<nsITimer> mGatheringTimer;

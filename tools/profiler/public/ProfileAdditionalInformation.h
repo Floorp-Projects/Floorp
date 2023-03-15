@@ -27,7 +27,19 @@ namespace mozilla {
 // This structure contains additional information gathered while generating the
 // profile json and iterating the buffer.
 struct ProfileGenerationAdditionalInformation {
+  ProfileGenerationAdditionalInformation() = default;
+  explicit ProfileGenerationAdditionalInformation(
+      const SharedLibraryInfo&& aSharedLibraries)
+      : mSharedLibraries(aSharedLibraries) {}
+
   size_t SizeOf() const { return mSharedLibraries.SizeOf(); }
+
+  void Append(ProfileGenerationAdditionalInformation&& aOther) {
+    mSharedLibraries.AddAllSharedLibraries(aOther.mSharedLibraries);
+  }
+
+  void FinishGathering() { mSharedLibraries.DeduplicateEntries(); }
+
   SharedLibraryInfo mSharedLibraries;
 };
 
