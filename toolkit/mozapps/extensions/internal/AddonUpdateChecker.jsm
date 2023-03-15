@@ -50,10 +50,6 @@ const LOGGER_ID = "addons.update-checker";
 // (Requires AddonManager.jsm)
 var logger = Log.repository.getLogger(LOGGER_ID);
 
-const updateTypeHistogram = Services.telemetry.getHistogramById(
-  "EXTENSION_UPDATE_TYPE"
-);
-
 /**
  * Sanitizes the update URL in an update item, as returned by
  * parseRDFManifest and parseJSONManifest. Ensures that:
@@ -337,7 +333,6 @@ UpdateParser.prototype = {
     try {
       let json = JSON.parse(request.responseText);
       results = parseJSONManifest(this.id, request, json);
-      updateTypeHistogram.add("JSON");
     } catch (e) {
       logger.warn("onUpdateCheckComplete failed to parse update manifest", e);
       this.notifyError(lazy.AddonManager.ERROR_PARSE_ERROR);
