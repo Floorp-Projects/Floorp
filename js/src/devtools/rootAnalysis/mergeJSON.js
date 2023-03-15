@@ -7,10 +7,18 @@
 var infiles = [...scriptArgs];
 var outfile = infiles.pop();
 
-const output = {};
+let output;
 for (const filename of infiles) {
     const data = JSON.parse(os.file.readFile(filename));
-    Object.assign(output, data);
+    if (!output) {
+        output = data;
+    } else if (Array.isArray(data) != Array.isArray(output)) {
+        throw new Error('mismatched types');
+    } else if (Array.isArray(output)) {
+        output.push(...data);
+    } else {
+        Object.assign(output, data);
+    }
 }
 
 var origOut = os.file.redirect(outfile);

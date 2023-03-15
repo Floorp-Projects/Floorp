@@ -221,7 +221,7 @@ sixgill_bin = '{bindir}'
                 return HazardSummary(*info)
             return None
 
-        return self.load_text_file("rootingHazards.txt", extract=grab_hazard)
+        return self.load_text_file("hazards.txt", extract=grab_hazard)
 
     def process_body(self, body):
         return Body(body)
