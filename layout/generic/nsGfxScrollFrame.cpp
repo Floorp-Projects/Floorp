@@ -3466,6 +3466,7 @@ void ScrollFrameHelper::ScrollToImpl(
 
   ScheduleSyntheticMouseMove();
 
+  nsAutoScriptBlocker scriptBlocker;
   PresShell::AutoAssertNoFlush noFlush(*mOuter->PresShell());
 
   {  // scope the AutoScrollbarRepaintSuppression
