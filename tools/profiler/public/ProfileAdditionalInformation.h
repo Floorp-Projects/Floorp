@@ -16,6 +16,13 @@
 
 #include "shared-libraries.h"
 
+namespace IPC {
+class MessageReader;
+class MessageWriter;
+template <typename T>
+struct ParamTraits;
+}  // namespace IPC
+
 namespace mozilla {
 // This structure contains additional information gathered while generating the
 // profile json and iterating the buffer.
@@ -47,5 +54,15 @@ struct ProfileAndAdditionalInformation {
   Maybe<ProfileGenerationAdditionalInformation> mAdditionalInformation;
 };
 }  // namespace mozilla
+
+namespace IPC {
+template <>
+struct ParamTraits<mozilla::ProfileGenerationAdditionalInformation> {
+  typedef mozilla::ProfileGenerationAdditionalInformation paramType;
+
+  static void Write(MessageWriter* aWriter, const paramType& aParam);
+  static bool Read(MessageReader* aReader, paramType* aResult);
+};
+}  // namespace IPC
 
 #endif  // ProfileAdditionalInformation_h

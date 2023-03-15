@@ -21,6 +21,13 @@
 #include <string>
 #include <vector>
 
+namespace IPC {
+class MessageReader;
+class MessageWriter;
+template <typename T>
+struct ParamTraits;
+}  // namespace IPC
+
 class SharedLibrary {
  public:
   SharedLibrary(uintptr_t aStart, uintptr_t aEnd, uintptr_t aOffset,
@@ -75,9 +82,9 @@ class SharedLibrary {
            mVersion.Length() + mArch.size();
   }
 
- private:
   SharedLibrary() : mStart{0}, mEnd{0}, mOffset{0} {}
 
+ private:
   uintptr_t mStart;
   uintptr_t mEnd;
   uintptr_t mOffset;
@@ -99,6 +106,8 @@ class SharedLibrary {
   nsString mDebugPath;
   nsCString mVersion;
   std::string mArch;
+
+  friend struct IPC::ParamTraits<SharedLibrary>;
 };
 
 static bool CompareAddresses(const SharedLibrary& first,
@@ -153,6 +162,26 @@ class SharedLibraryInfo {
 
  private:
   std::vector<SharedLibrary> mEntries;
+
+  friend struct IPC::ParamTraits<SharedLibraryInfo>;
 };
+
+namespace IPC {
+template <>
+struct ParamTraits<SharedLibrary> {
+  typedef SharedLibrary paramType;
+
+  static void Write(MessageWriter* aWriter, const paramType& aParam);
+  static bool Read(MessageReader* aReader, paramType* aResult);
+};
+
+template <>
+struct ParamTraits<SharedLibraryInfo> {
+  typedef SharedLibraryInfo paramType;
+
+  static void Write(MessageWriter* aWriter, const paramType& aParam);
+  static bool Read(MessageReader* aReader, paramType* aResult);
+};
+}  // namespace IPC
 
 #endif
