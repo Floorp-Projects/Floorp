@@ -64,12 +64,11 @@ const sitePermissionsConfig = {
   },
 };
 
-function Permission(principal, type, capability, l10nId) {
+function Permission(principal, type, capability) {
   this.principal = principal;
   this.origin = principal.origin;
   this.type = type;
   this.capability = capability;
-  this.l10nId = l10nId;
 }
 
 const PERMISSION_STATES = [
@@ -197,10 +196,6 @@ var gSitePermissionsManager = {
     } else if (data == "changed") {
       let p = this._permissions.get(permission.principal.origin);
       p.capability = permission.capability;
-      p.l10nId = this._getCapabilityString(
-        permission.type,
-        permission.capability
-      );
       this._handleCapabilityChange(p);
       this.buildPermissionsList();
     } else if (data == "deleted") {
@@ -325,8 +320,7 @@ var gSitePermissionsManager = {
     ) {
       return;
     }
-    let l10nId = this._getCapabilityString(perm.type, perm.capability);
-    let p = new Permission(perm.principal, perm.type, perm.capability, l10nId);
+    let p = new Permission(perm.principal, perm.type, perm.capability);
     this._permissions.set(p.origin, p);
   },
 
@@ -454,7 +448,6 @@ var gSitePermissionsManager = {
       return;
     }
     p.capability = capability;
-    p.l10nId = this._getCapabilityString(perm.type, perm.capability);
     this._permissionsToChange.set(p.origin, p);
 
     // enable "remove all" button as needed
