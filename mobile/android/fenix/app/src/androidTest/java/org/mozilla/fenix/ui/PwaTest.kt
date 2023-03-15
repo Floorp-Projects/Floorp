@@ -79,7 +79,7 @@ class PwaTest {
             clickAddAutomaticallyButton()
         }.openHomeScreenShortcut(shortcutTitle) {
             clickLinkMatchingText("Telephone link")
-            clickOpenInAppPromptButton()
+            confirmOpenLinkInAnotherApp()
             assertNativeAppOpens(PHONE_APP, phoneLink)
         }
     }
