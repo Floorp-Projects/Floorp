@@ -1774,7 +1774,12 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "postMessage", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "print", insecureContext: true, android: false },
+  {
+    name: "print",
+    insecureContext: true,
+    android: false,
+    nightlyAndroid: true,
+  },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "prompt", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
