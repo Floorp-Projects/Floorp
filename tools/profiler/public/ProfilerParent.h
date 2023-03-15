@@ -38,7 +38,8 @@ class ProfilerParent final : public PProfilerParent {
 
 #ifdef MOZ_GECKO_PROFILER
   using SingleProcessProfilePromise =
-      MozPromise<Shmem, ResponseRejectReason, true>;
+      MozPromise<IPCProfileAndAdditionalInformation, ResponseRejectReason,
+                 true>;
 
   struct SingleProcessProfilePromiseAndChildPid {
     RefPtr<SingleProcessProfilePromise> profilePromise;

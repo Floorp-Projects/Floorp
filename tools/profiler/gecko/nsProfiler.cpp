@@ -1241,22 +1241,23 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
       });
       profile.profilePromise->Then(
           GetMainThreadSerialEventTarget(), __func__,
-          [self = RefPtr<nsProfiler>(this),
-           childPid = profile.childPid](mozilla::ipc::Shmem&& aResult) {
+          [self = RefPtr<nsProfiler>(this), childPid = profile.childPid](
+              IPCProfileAndAdditionalInformation&& aResult) {
             PendingProfile* pendingProfile = self->GetPendingProfile(childPid);
+            mozilla::ipc::Shmem profileShmem = aResult.profileShmem();
             LOG("GatherProfile(%u) response: %u bytes (%u were pending, %s %u)",
-                unsigned(childPid), unsigned(aResult.Size<char>()),
+                unsigned(childPid), unsigned(profileShmem.Size<char>()),
                 unsigned(self->mPendingProfiles.length()),
                 pendingProfile ? "including" : "excluding", unsigned(childPid));
-            if (aResult.IsReadable()) {
+            if (profileShmem.IsReadable()) {
               self->LogEvent([&](Json::Value& aEvent) {
                 aEvent.append(
                     Json::StaticString{"Got profile from pid, with size:"});
                 aEvent.append(Json::Value::UInt64(childPid));
-                aEvent.append(Json::Value::UInt64{aResult.Size<char>()});
+                aEvent.append(Json::Value::UInt64{profileShmem.Size<char>()});
               });
               const nsDependentCSubstring profileString(
-                  aResult.get<char>(), aResult.Size<char>() - 1);
+                  profileShmem.get<char>(), profileShmem.Size<char>() - 1);
               if (profileString.IsEmpty() || profileString[0] != '*') {
                 self->GatheredOOPProfile(childPid, profileString);
               } else {
