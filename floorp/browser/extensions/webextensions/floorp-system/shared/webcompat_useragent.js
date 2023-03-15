@@ -21,7 +21,7 @@
         },
         {
             "matches": [
-                "*://bing.com/*", // This make Bing search engine's chat work.
+                "*://*.bing.com/*", // This make Bing search engine's chat work.
             ],
             "ua": MSEDGE_STABLE_UA,
         },
