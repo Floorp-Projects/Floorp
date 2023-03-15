@@ -1,7 +1,9 @@
-add_task(async function invalidArgument() {
-  const arguments = [undefined, null, 42, "foo"];
+"use strict";
 
-  for (const argument of arguments) {
+add_task(async function invalidArgument() {
+  const args = [undefined, null, 42, "foo"];
+
+  for (const argument of args) {
     let hadException = false;
     try {
       ChromeUtils.isDOMObject(argument);
@@ -13,7 +15,7 @@ add_task(async function invalidArgument() {
 });
 
 add_task(async function NoUnwrap() {
-  const arguments = [
+  const args = [
     window.document,
     window.document.childNodes,
     new DocumentFragment(),
@@ -21,7 +23,7 @@ add_task(async function NoUnwrap() {
     new URL("https://example.com"),
   ];
 
-  for (const argument of arguments) {
+  for (const argument of args) {
     ok(
       ChromeUtils.isDOMObject(argument, false),
       `${ChromeUtils.getClassName(
@@ -39,7 +41,7 @@ add_task(async function NoUnwrap() {
 });
 
 add_task(async function DOMObjects() {
-  const arguments = [
+  const args = [
     window,
     window.document,
     window.document.childNodes,
@@ -48,7 +50,7 @@ add_task(async function DOMObjects() {
     new URL("https://example.com"),
   ];
 
-  for (const argument of arguments) {
+  for (const argument of args) {
     ok(
       ChromeUtils.isDOMObject(argument),
       `${ChromeUtils.getClassName(argument)} to be a DOM object`
@@ -57,9 +59,9 @@ add_task(async function DOMObjects() {
 });
 
 add_task(async function nonDOMObjects() {
-  const arguments = [new Object(), {}, []];
+  const args = [new Object(), {}, []];
 
-  for (const argument of arguments) {
+  for (const argument of args) {
     ok(
       !ChromeUtils.isDOMObject(argument),
       `${ChromeUtils.getClassName(argument)} not to be a DOM object`
@@ -75,7 +77,7 @@ add_task(async function DOMObjects_contentProcess() {
     },
     async function(browser) {
       await SpecialPowers.spawn(browser, [], async () => {
-        const arguments = [
+        const args = [
           content,
           content.document,
           content.document.querySelector("div"),
@@ -84,7 +86,7 @@ add_task(async function DOMObjects_contentProcess() {
           new content.URL("https://example.com"),
         ];
 
-        for (const argument of arguments) {
+        for (const argument of args) {
           ok(
             ChromeUtils.isDOMObject(argument),
             `${ChromeUtils.getClassName(
@@ -99,7 +101,7 @@ add_task(async function DOMObjects_contentProcess() {
         );
 
         // unwrap=false
-        for (const argument of arguments) {
+        for (const argument of args) {
           ok(
             !ChromeUtils.isDOMObject(argument, false),
             `${ChromeUtils.getClassName(
