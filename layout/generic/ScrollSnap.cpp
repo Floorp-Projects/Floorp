@@ -124,18 +124,10 @@ CalcSnapPoints::CalcSnapPoints(ScrollUnit aUnit, ScrollSnapFlags aSnapFlags,
 
 SnapTarget CalcSnapPoints::GetBestEdge() const {
   return SnapTarget{
-      nsPoint(
-          mTrackerOnX.mEdgeFound ? mTrackerOnX.mBestEdge.mPosition
-          // In the case of IntendedEndPosition (i.e. the destination point is
-          // explicitely specied, e.g. scrollTo) use the destination point if we
-          // didn't find any candidates.
-          : !(mSnapFlags & ScrollSnapFlags::IntendedDirection) ? mDestination.x
-                                                               : mStartPos.x,
-          mTrackerOnY.mEdgeFound ? mTrackerOnY.mBestEdge.mPosition
-          // Same as above X axis case, use the destination point if we didn't
-          // find any candidates.
-          : !(mSnapFlags & ScrollSnapFlags::IntendedDirection) ? mDestination.y
-                                                               : mStartPos.y),
+      nsPoint(mTrackerOnX.mEdgeFound ? mTrackerOnX.mBestEdge.mPosition
+                                     : mStartPos.x,
+              mTrackerOnY.mEdgeFound ? mTrackerOnY.mBestEdge.mPosition
+                                     : mStartPos.y),
       ScrollSnapTargetIds{mTrackerOnX.mTargetIds, mTrackerOnY.mTargetIds}};
 }
 
