@@ -567,6 +567,9 @@ nsFileInputStream::Available(uint64_t* aResult) {
   return nsFileStreamBase::Available(aResult);
 }
 
+NS_IMETHODIMP
+nsFileInputStream::StreamStatus() { return nsFileStreamBase::StreamStatus(); }
+
 void nsFileInputStream::SerializedComplexity(uint32_t aMaxSize,
                                              uint32_t* aSizeUsed,
                                              uint32_t* aPipes,

@@ -117,6 +117,21 @@ CacheFileInputStream::Available(uint64_t* _retval) {
 }
 
 NS_IMETHODIMP
+CacheFileInputStream::StreamStatus() {
+  CacheFileAutoLock lock(mFile);
+
+  if (mClosed) {
+    LOG(
+        ("CacheFileInputStream::StreamStatus() - Stream is closed. [this=%p, "
+         "status=0x%08" PRIx32 "]",
+         this, static_cast<uint32_t>(mStatus)));
+    return NS_FAILED(mStatus) ? mStatus : NS_BASE_STREAM_CLOSED;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 CacheFileInputStream::Read(char* aBuf, uint32_t aCount, uint32_t* _retval) {
   LOG(("CacheFileInputStream::Read() [this=%p, count=%d]", this, aCount));
   return ReadSegments(NS_CopySegmentToBuffer, aBuf, aCount, _retval);

@@ -195,6 +195,11 @@ NonBlockingAsyncInputStream::Available(uint64_t* aLength) {
 }
 
 NS_IMETHODIMP
+NonBlockingAsyncInputStream::StreamStatus() {
+  return mInputStream->StreamStatus();
+}
+
+NS_IMETHODIMP
 NonBlockingAsyncInputStream::Read(char* aBuffer, uint32_t aCount,
                                   uint32_t* aReadCount) {
   return mInputStream->Read(aBuffer, aCount, aReadCount);

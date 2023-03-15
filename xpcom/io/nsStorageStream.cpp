@@ -431,6 +431,9 @@ nsStorageInputStream::Available(uint64_t* aAvailable) {
 }
 
 NS_IMETHODIMP
+nsStorageInputStream::StreamStatus() { return mStatus; }
+
+NS_IMETHODIMP
 nsStorageInputStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aNumRead) {
   return ReadSegments(NS_CopySegmentToBuffer, aBuffer, aCount, aNumRead);
 }

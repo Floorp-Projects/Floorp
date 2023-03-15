@@ -122,6 +122,16 @@ nsSyncStreamListener::Available(uint64_t* result) {
 }
 
 NS_IMETHODIMP
+nsSyncStreamListener::StreamStatus() {
+  if (NS_FAILED(mStatus)) {
+    return mStatus;
+  }
+
+  mStatus = mPipeIn->StreamStatus();
+  return mStatus;
+}
+
+NS_IMETHODIMP
 nsSyncStreamListener::Read(char* buf, uint32_t bufLen, uint32_t* result) {
   if (mStatus == NS_BASE_STREAM_CLOSED) {
     *result = 0;

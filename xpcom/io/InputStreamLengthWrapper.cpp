@@ -139,6 +139,12 @@ InputStreamLengthWrapper::Available(uint64_t* aLength) {
 }
 
 NS_IMETHODIMP
+InputStreamLengthWrapper::StreamStatus() {
+  NS_ENSURE_STATE(mInputStream);
+  return mInputStream->StreamStatus();
+}
+
+NS_IMETHODIMP
 InputStreamLengthWrapper::Read(char* aBuffer, uint32_t aCount,
                                uint32_t* aReadCount) {
   NS_ENSURE_STATE(mInputStream);

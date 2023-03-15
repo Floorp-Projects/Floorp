@@ -329,6 +329,8 @@ nsresult WebrtcTCPSocketTestInputStream::Available(uint64_t* aAvailable) {
   return NS_OK;
 }
 
+nsresult WebrtcTCPSocketTestInputStream::StreamStatus() { return NS_OK; }
+
 nsresult WebrtcTCPSocketTestInputStream::Read(char* aBuffer, uint32_t aCount,
                                               uint32_t* aRead) {
   std::lock_guard<std::mutex> guard(mDataMutex);

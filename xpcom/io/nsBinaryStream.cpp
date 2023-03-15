@@ -387,6 +387,14 @@ nsBinaryInputStream::Available(uint64_t* aResult) {
 }
 
 NS_IMETHODIMP
+nsBinaryInputStream::StreamStatus() {
+  if (NS_WARN_IF(!mInputStream)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  return mInputStream->StreamStatus();
+}
+
+NS_IMETHODIMP
 nsBinaryInputStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aNumRead) {
   if (NS_WARN_IF(!mInputStream)) {
     return NS_ERROR_UNEXPECTED;

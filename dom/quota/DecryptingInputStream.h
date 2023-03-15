@@ -107,6 +107,7 @@ class DecryptingInputStream final : public DecryptingInputStreamBase {
 
   NS_IMETHOD Close() override;
   NS_IMETHOD Available(uint64_t* _retval) override;
+  NS_IMETHOD StreamStatus() override;
   NS_IMETHOD ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
                           uint32_t aCount, uint32_t* _retval) override;
 

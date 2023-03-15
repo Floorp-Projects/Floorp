@@ -331,6 +331,36 @@ RemoteLazyInputStream::Available(uint64_t* aLength) {
 }
 
 NS_IMETHODIMP
+RemoteLazyInputStream::StreamStatus() {
+  nsCOMPtr<nsIAsyncInputStream> stream;
+  {
+    MutexAutoLock lock(mMutex);
+
+    // We don't have a remoteStream yet: let's return 0.
+    if (mState == eInit || mState == ePending) {
+      return NS_OK;
+    }
+
+    if (mState == eClosed) {
+      return NS_BASE_STREAM_CLOSED;
+    }
+
+    MOZ_ASSERT(mState == eRunning);
+    MOZ_ASSERT(mInnerStream || mAsyncInnerStream);
+
+    nsresult rv = EnsureAsyncRemoteStream();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    stream = mAsyncInnerStream;
+  }
+
+  MOZ_ASSERT(stream);
+  return stream->StreamStatus();
+}
+
+NS_IMETHODIMP
 RemoteLazyInputStream::Read(char* aBuffer, uint32_t aCount,
                             uint32_t* aReadCount) {
   nsCOMPtr<nsIAsyncInputStream> stream;

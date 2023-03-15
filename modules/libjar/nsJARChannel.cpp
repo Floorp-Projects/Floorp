@@ -155,6 +155,11 @@ nsJARInputThunk::Available(uint64_t* avail) {
 }
 
 NS_IMETHODIMP
+nsJARInputThunk::StreamStatus() {
+  return mJarStream->StreamStatus();
+}
+
+NS_IMETHODIMP
 nsJARInputThunk::Read(char* buf, uint32_t count, uint32_t* countRead) {
   return mJarStream->Read(buf, count, countRead);
 }

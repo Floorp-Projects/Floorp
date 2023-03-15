@@ -55,6 +55,9 @@ nsBaseContentStream::Available(uint64_t* result) {
 }
 
 NS_IMETHODIMP
+nsBaseContentStream::StreamStatus() { return mStatus; }
+
+NS_IMETHODIMP
 nsBaseContentStream::Read(char* buf, uint32_t count, uint32_t* result) {
   return ReadSegments(NS_CopySegmentToBuffer, buf, count, result);
 }

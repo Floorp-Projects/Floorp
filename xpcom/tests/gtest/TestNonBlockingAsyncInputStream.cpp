@@ -263,6 +263,7 @@ class QIInputStream final : public nsIInputStream,
   // nsIInputStream
   NS_IMETHOD Close() override { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD Available(uint64_t*) override { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD StreamStatus() override { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD Read(char*, uint32_t, uint32_t*) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }

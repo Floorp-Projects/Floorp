@@ -59,6 +59,9 @@ class NonSeekableStringStream final : public nsIAsyncInputStream {
   Available(uint64_t* aLength) override { return mStream->Available(aLength); }
 
   NS_IMETHOD
+  StreamStatus() override { return mStream->StreamStatus(); }
+
+  NS_IMETHOD
   Read(char* aBuffer, uint32_t aCount, uint32_t* aReadCount) override {
     return mStream->Read(aBuffer, aCount, aReadCount);
   }

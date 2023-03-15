@@ -75,6 +75,8 @@ class LengthStream final : public nsIInputStreamLength,
     return NS_OK;
   }
 
+  NS_IMETHOD StreamStatus() override { return NS_OK; }
+
  private:
   ~LengthStream() = default;
 

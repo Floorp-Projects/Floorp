@@ -178,6 +178,21 @@ SlicedInputStream::Available(uint64_t* aLength) {
 }
 
 NS_IMETHODIMP
+SlicedInputStream::StreamStatus() {
+  NS_ENSURE_STATE(mInputStream);
+
+  if (mClosed) {
+    return NS_BASE_STREAM_CLOSED;
+  }
+
+  nsresult rv = mInputStream->StreamStatus();
+  if (rv == NS_BASE_STREAM_CLOSED) {
+    mClosed = true;
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
 SlicedInputStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aReadCount) {
   *aReadCount = 0;
 

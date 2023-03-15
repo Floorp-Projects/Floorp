@@ -30,6 +30,8 @@ class TestStream final : public nsIInputStream {
     return NS_OK;
   }
 
+  NS_IMETHOD StreamStatus() override { return NS_OK; }
+
   NS_IMETHOD Read(char* aBuffer, uint32_t aCount,
                   uint32_t* aReadCount) override {
     MOZ_CRASH("This should not be called");

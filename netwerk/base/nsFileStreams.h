@@ -138,6 +138,7 @@ class nsFileInputStream : public nsFileStreamBase,
   NS_IMETHOD Close() override;
   NS_IMETHOD Tell(int64_t* aResult) override;
   NS_IMETHOD Available(uint64_t* _retval) override;
+  NS_IMETHOD StreamStatus() override;
   NS_IMETHOD Read(char* aBuf, uint32_t aCount, uint32_t* _retval) override;
   NS_IMETHOD ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
                           uint32_t aCount, uint32_t* _retval) override {
@@ -269,9 +270,6 @@ class nsFileRandomAccessStream : public nsFileStreamBase,
   // Can't use NS_FORWARD_NSIOUTPUTSTREAM due to overlapping methods
   // Close() and IsNonBlocking()
   NS_IMETHOD Flush() override { return nsFileStreamBase::Flush(); }
-  NS_IMETHOD StreamStatus() override {
-    return nsFileStreamBase::StreamStatus();
-  }
   NS_IMETHOD Write(const char* aBuf, uint32_t aCount,
                    uint32_t* _retval) override {
     return nsFileStreamBase::Write(aBuf, aCount, _retval);

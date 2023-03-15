@@ -70,7 +70,27 @@ NS_IMETHODIMP BlobURLInputStream::Available(uint64_t* aLength) {
     return mAsyncInputStream->Available(aLength);
   }
 
-  return NS_BASE_STREAM_WOULD_BLOCK;
+  return NS_OK;
+}
+
+NS_IMETHODIMP BlobURLInputStream::StreamStatus() {
+  MutexAutoLock lock(mStateMachineMutex);
+
+  if (mState == State::ERROR) {
+    MOZ_ASSERT(NS_FAILED(mError));
+    return mError;
+  }
+
+  if (mState == State::CLOSED) {
+    return NS_BASE_STREAM_CLOSED;
+  }
+
+  if (mState == State::READY) {
+    MOZ_ASSERT(mAsyncInputStream);
+    return mAsyncInputStream->StreamStatus();
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP BlobURLInputStream::Read(char* aBuffer, uint32_t aCount,

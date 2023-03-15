@@ -621,6 +621,12 @@ nsGIOInputStream::Available(uint64_t* aResult) {
 }
 
 /**
+ * Return the status of the input stream
+ */
+NS_IMETHODIMP
+nsGIOInputStream::StreamStatus() { return mStatus; }
+
+/**
  * Trying to read from stream. When location is not available it tries to mount
  * it.
  * @param aBuf buffer to put read data

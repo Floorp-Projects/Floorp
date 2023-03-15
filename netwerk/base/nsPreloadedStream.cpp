@@ -44,6 +44,9 @@ nsPreloadedStream::Available(uint64_t* _retval) {
 }
 
 NS_IMETHODIMP
+nsPreloadedStream::StreamStatus() { return mStream->StreamStatus(); }
+
+NS_IMETHODIMP
 nsPreloadedStream::Read(char* aBuf, uint32_t aCount, uint32_t* _retval) {
   if (!mLen) return mStream->Read(aBuf, aCount, _retval);
 

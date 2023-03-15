@@ -74,6 +74,11 @@ ArrayBufferInputStream::Available(uint64_t* aCount) {
 }
 
 NS_IMETHODIMP
+ArrayBufferInputStream::StreamStatus() {
+  return mClosed ? NS_BASE_STREAM_CLOSED : NS_OK;
+}
+
+NS_IMETHODIMP
 ArrayBufferInputStream::Read(char* aBuf, uint32_t aCount,
                              uint32_t* aReadCount) {
   return ReadSegments(NS_CopySegmentToBuffer, aBuf, aCount, aReadCount);

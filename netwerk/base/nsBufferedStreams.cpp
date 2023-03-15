@@ -401,6 +401,19 @@ nsBufferedInputStream::Available(uint64_t* result) {
 }
 
 NS_IMETHODIMP
+nsBufferedInputStream::StreamStatus() {
+  if (!mStream) {
+    return NS_OK;
+  }
+
+  if (mFillPoint - mCursor) {
+    return NS_OK;
+  }
+
+  return Source()->StreamStatus();
+}
+
+NS_IMETHODIMP
 nsBufferedInputStream::Read(char* buf, uint32_t count, uint32_t* result) {
   if (mBufferDisabled) {
     if (!mStream) {

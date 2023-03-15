@@ -560,6 +560,13 @@ InputStreamTunnel::Available(uint64_t* avail) {
 }
 
 NS_IMETHODIMP
+InputStreamTunnel::StreamStatus() {
+  LOG(("InputStreamTunnel::StreamStatus [this=%p]\n", this));
+
+  return mCondition;
+}
+
+NS_IMETHODIMP
 InputStreamTunnel::Read(char* buf, uint32_t count, uint32_t* countRead) {
   LOG(("InputStreamTunnel::Read [this=%p count=%u]\n", this, count));
 
