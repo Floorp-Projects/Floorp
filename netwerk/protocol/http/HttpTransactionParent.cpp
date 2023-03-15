@@ -266,12 +266,15 @@ void HttpTransactionParent::SetDNSWasRefreshed() {
   Unused << SendSetDNSWasRefreshed();
 }
 
-void HttpTransactionParent::GetNetworkAddresses(NetAddr& self, NetAddr& peer,
-                                                bool& aResolvedByTRR,
-                                                bool& aEchConfigUsed) {
+void HttpTransactionParent::GetNetworkAddresses(
+    NetAddr& self, NetAddr& peer, bool& aResolvedByTRR,
+    nsIRequest::TRRMode& aEffectiveTRRMode, TRRSkippedReason& aSkipReason,
+    bool& aEchConfigUsed) {
   self = mSelfAddr;
   peer = mPeerAddr;
   aResolvedByTRR = mResolvedByTRR;
+  aEffectiveTRRMode = mEffectiveTRRMode;
+  aSkipReason = mTRRSkipReason;
   aEchConfigUsed = mEchConfigUsed;
 }
 
@@ -410,19 +413,21 @@ mozilla::ipc::IPCResult HttpTransactionParent::RecvOnStartRequest(
     const TimingStructArgs& aTimings, const int32_t& aProxyConnectResponseCode,
     nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed,
     const bool& aDataToChildProcess, const bool& aRestarted,
-    const uint32_t& aHTTPSSVCReceivedStage, const bool& aSupportsHttp3) {
+    const uint32_t& aHTTPSSVCReceivedStage, const bool& aSupportsHttp3,
+    const nsIRequest::TRRMode& aMode, const TRRSkippedReason& aTrrSkipReason) {
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
-      this, [self = UnsafePtr<HttpTransactionParent>(this), aStatus,
-             aResponseHead, securityInfo = nsCOMPtr{aSecurityInfo},
-             aProxyConnectFailed, aTimings, aProxyConnectResponseCode,
-             aDataForSniffer = CopyableTArray{std::move(aDataForSniffer)},
-             aAltSvcUsed, aDataToChildProcess, aRestarted,
-             aHTTPSSVCReceivedStage, aSupportsHttp3]() mutable {
+      this,
+      [self = UnsafePtr<HttpTransactionParent>(this), aStatus, aResponseHead,
+       securityInfo = nsCOMPtr{aSecurityInfo}, aProxyConnectFailed, aTimings,
+       aProxyConnectResponseCode,
+       aDataForSniffer = CopyableTArray{std::move(aDataForSniffer)},
+       aAltSvcUsed, aDataToChildProcess, aRestarted, aHTTPSSVCReceivedStage,
+       aSupportsHttp3, aMode, aTrrSkipReason]() mutable {
         self->DoOnStartRequest(
             aStatus, aResponseHead, securityInfo, aProxyConnectFailed, aTimings,
             aProxyConnectResponseCode, std::move(aDataForSniffer), aAltSvcUsed,
             aDataToChildProcess, aRestarted, aHTTPSSVCReceivedStage,
-            aSupportsHttp3);
+            aSupportsHttp3, aMode, aTrrSkipReason);
       }));
   return IPC_OK();
 }
@@ -451,7 +456,8 @@ void HttpTransactionParent::DoOnStartRequest(
     const TimingStructArgs& aTimings, const int32_t& aProxyConnectResponseCode,
     nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed,
     const bool& aDataToChildProcess, const bool& aRestarted,
-    const uint32_t& aHTTPSSVCReceivedStage, const bool& aSupportsHttp3) {
+    const uint32_t& aHTTPSSVCReceivedStage, const bool& aSupportsHttp3,
+    const nsIRequest::TRRMode& aMode, const TRRSkippedReason& aSkipReason) {
   LOG(("HttpTransactionParent::DoOnStartRequest [this=%p aStatus=%" PRIx32
        "]\n",
        this, static_cast<uint32_t>(aStatus)));
@@ -466,6 +472,8 @@ void HttpTransactionParent::DoOnStartRequest(
   mDataSentToChildProcess = aDataToChildProcess;
   mHTTPSSVCReceivedStage = aHTTPSSVCReceivedStage;
   mSupportsHTTP3 = aSupportsHttp3;
+  mEffectiveTRRMode = aMode;
+  mTRRSkipReason = aSkipReason;
 
   mSecurityInfo = aSecurityInfo;
 
@@ -505,6 +513,8 @@ mozilla::ipc::IPCResult HttpTransactionParent::RecvOnTransportStatus(
     mSelfAddr = aNetworkAddressArg->selfAddr();
     mPeerAddr = aNetworkAddressArg->peerAddr();
     mResolvedByTRR = aNetworkAddressArg->resolvedByTRR();
+    mEffectiveTRRMode = aNetworkAddressArg->mode();
+    mTRRSkipReason = aNetworkAddressArg->trrSkipReason();
     mEchConfigUsed = aNetworkAddressArg->echConfigUsed();
   }
   mEventsink->OnTransportStatus(nullptr, aStatus, aProgress, aProgressMax);

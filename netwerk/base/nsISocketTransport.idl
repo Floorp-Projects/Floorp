@@ -5,6 +5,7 @@
 
 #include "nsITransport.idl"
 #include "nsIRequest.idl"
+#include "nsITRRSkipReason.idl"
 
 interface nsIInterfaceRequestor;
 interface nsINetAddr;
@@ -344,6 +345,16 @@ interface nsISocketTransport : nsITransport
      * IP address resolved using TRR.
      */
     bool resolvedByTRR();
+
+    /**
+     * Returns the effectiveTRRMode used for the DNS resolution.
+     */
+    readonly attribute nsIRequest_TRRMode effectiveTRRMode;
+
+    /**
+     * Returns the TRR skip reason used for the DNS resolution.
+     */
+    readonly attribute nsITRRSkipReason_value trrSkipReason;
 
     /**
      * Indicate whether this socket is created from a private window. If yes,
