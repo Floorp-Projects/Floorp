@@ -42,6 +42,10 @@ const sitePermissionsL10n = {
     disableLabel: "permissions-site-microphone-disable-label",
     disableDescription: "permissions-site-microphone-disable-desc",
   },
+  speaker: {
+    window: "permissions-site-speaker-window",
+    description: "permissions-site-speaker-desc",
+  },
   "autoplay-media": {
     window: "permissions-site-autoplay-window2",
     description: "permissions-site-autoplay-desc",

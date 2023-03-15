@@ -833,6 +833,25 @@
       </hbox>
     </hbox>
 
+    <hbox id="speakerSettingsRow" align="center" role="group" aria-labelledby="speakerPermissionsLabel">
+      <description flex="1">
+        <image class="speaker-icon permission-icon" />
+        <label id="speakerPermissionsLabel" data-l10n-id="permissions-speaker"/>
+      </description>
+      <hbox pack="end">
+        <button id="speakerSettingsButton"
+                is="highlightable-button"
+                class="accessory-button"
+                data-l10n-id="permissions-speaker-settings"
+                search-l10n-ids="
+                  permissions-remove.label,
+                  permissions-remove-all.label,
+                  permissions-site-speaker-window.title,
+                  permissions-site-speaker-desc,
+                " />
+      </hbox>
+    </hbox>
+
     <hbox id="notificationSettingsRow" align="center" role="group" aria-labelledby="notificationPermissionsLabel">
       <description flex="1">
         <image class="desktop-notification-icon permission-icon" />

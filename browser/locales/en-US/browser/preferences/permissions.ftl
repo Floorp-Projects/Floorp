@@ -188,3 +188,12 @@ permissions-site-microphone-desc = The following websites have requested to acce
 permissions-site-microphone-disable-label =
     .label = Block new requests asking to access your microphone
 permissions-site-microphone-disable-desc = This will prevent any websites not listed above from requesting permission to access your microphone. Blocking access to your microphone may break some website features.
+
+## Site Permissions - Speaker
+##
+## "Speaker" refers to an audio output device.
+
+permissions-site-speaker-window =
+    .title = Settings - Speaker Permissions
+    .style = { permissions-window2.style }
+permissions-site-speaker-desc = The following websites have requested to select an audio output device. You can specify which websites are allowed to select an audio output device.

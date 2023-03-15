@@ -655,6 +655,14 @@ var gPrivacyPane = {
       "command",
       gPrivacyPane.showMicrophoneExceptions
     );
+    document.getElementById(
+      "speakerSettingsRow"
+    ).hidden = !Services.prefs.getBoolPref("media.setsinkid.enabled", false);
+    setEventListener(
+      "speakerSettingsButton",
+      "command",
+      gPrivacyPane.showSpeakerExceptions
+    );
     setEventListener(
       "popupPolicyButton",
       "command",
@@ -2263,6 +2271,22 @@ var gPrivacyPane = {
    */
   showMicrophoneExceptions() {
     let params = { permissionType: "microphone" };
+
+    gSubDialog.open(
+      "chrome://browser/content/preferences/dialogs/sitePermissions.xhtml",
+      { features: "resizable=yes" },
+      params
+    );
+  },
+
+  // SPEAKER
+
+  /**
+   * Displays the speaker exceptions dialog where specific site speaker
+   * preferences can be set.
+   */
+  showSpeakerExceptions() {
+    let params = { permissionType: "speaker" };
 
     gSubDialog.open(
       "chrome://browser/content/preferences/dialogs/sitePermissions.xhtml",
