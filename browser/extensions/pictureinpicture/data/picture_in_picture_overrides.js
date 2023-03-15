@@ -67,6 +67,11 @@ let AVAILABLE_PIP_OVERRIDES;
         videoWrapperScriptPath: "video-wrappers/videojsWrapper.js",
       },
     },
+    cbc: {
+      "https://*.cbc.ca/*": {
+        videoWrapperScriptPath: "video-wrappers/cbc.js",
+      },
+    },
 
     dailymotion: {
       "https://*.dailymotion.com/*": {
