@@ -525,10 +525,6 @@ pub struct NinePatchBorder {
     /// Determines what happens if the vertical side parts of the 9-part
     /// image have a different size than the vertical parts of the border.
     pub repeat_vertical: RepeatMode,
-
-    /// The outset for the border.
-    /// TODO(mrobinson): This should be removed and handled by the client.
-    pub outset: LayoutSideOffsets, // TODO: what unit is this in?
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize, PeekPoke)]
