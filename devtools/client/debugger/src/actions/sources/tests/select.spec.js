@@ -242,7 +242,7 @@ describe("sources", () => {
       actions.newOriginalSources([makeOriginalSource(baseSource)])
     );
 
-    await dispatch(actions.selectSource(cx, originalBaseSources[0].id));
+    await dispatch(actions.selectSource(cx, originalBaseSources[0]));
 
     const fooSource = await dispatch(
       actions.newGeneratedSource(makeSource("foo.js"))
@@ -274,7 +274,7 @@ describe("sources", () => {
     const baseSources = await dispatch(
       actions.newOriginalSources([makeOriginalSource(baseGenSource)])
     );
-    await dispatch(actions.selectSource(cx, baseSources[0].id));
+    await dispatch(actions.selectSource(cx, baseSources[0]));
 
     await dispatch(
       actions.selectSpecificLocation(cx, {

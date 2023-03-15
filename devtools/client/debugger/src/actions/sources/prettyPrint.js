@@ -116,7 +116,7 @@ function selectPrettyLocation(cx, prettySource) {
       );
     }
 
-    return dispatch(selectSource(cx, prettySource.id));
+    return dispatch(selectSource(cx, prettySource));
   };
 }
 

@@ -204,7 +204,7 @@ class Tab extends PureComponent {
     function handleTabClick(e) {
       e.preventDefault();
       e.stopPropagation();
-      return selectSource(cx, sourceId, sourceActor?.actor);
+      return selectSource(cx, source, sourceActor);
     }
 
     const className = classnames("source-tab", {

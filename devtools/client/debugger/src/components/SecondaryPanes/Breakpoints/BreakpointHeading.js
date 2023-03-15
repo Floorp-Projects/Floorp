@@ -43,7 +43,7 @@ class BreakpointHeading extends PureComponent {
       <div
         className="breakpoint-heading"
         title={getFileURL(source, false)}
-        onClick={() => selectSource(cx, source.id)}
+        onClick={() => selectSource(cx, source)}
         onContextMenu={this.onContextMenu}
       >
         <SourceIcon

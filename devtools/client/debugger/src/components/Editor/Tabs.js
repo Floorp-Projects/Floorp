@@ -165,7 +165,7 @@ class Tabs extends PureComponent {
     const { cx, selectSource } = this.props;
     const filename = getFilename(source);
 
-    const onClick = () => selectSource(cx, source.id);
+    const onClick = () => selectSource(cx, source);
     return (
       <li key={source.id} onClick={onClick} title={getFileURL(source, false)}>
         <AccessibleImage
