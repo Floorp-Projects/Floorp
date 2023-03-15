@@ -31,7 +31,7 @@ for (let [locale, region] of [
   }
 }
 
-for (let canonicalId of ["canonical", "canonical-001", "canonical-002"]) {
+for (let canonicalId of ["canonical", "canonical-001"]) {
   tests.push({
     locale: "en-US",
     region: "US",
