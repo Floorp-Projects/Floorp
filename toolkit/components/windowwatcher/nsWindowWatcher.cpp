@@ -71,6 +71,7 @@
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/BrowserHost.h"
 #include "mozilla/dom/DocGroup.h"
+#include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/dom/SessionStorageManager.h"
 #include "nsIAppWindow.h"
 #include "nsIXULBrowserWindow.h"
@@ -696,8 +697,35 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     return NS_ERROR_ABORT;
   }
 
+  // If no parent, consider it chrome when running in the parent process.
+  bool hasChromeParent = !XRE_IsContentProcess();
+  if (aParent) {
+    // Check if the parent document has chrome privileges.
+    hasChromeParent = parentDoc && nsContentUtils::IsChromeDoc(parentDoc);
+  }
+
+  bool isCallerChrome = nsContentUtils::LegacyIsCallerChromeOrNativeCode();
+
   // try to find an extant browsing context with the given name
-  targetBC = GetBrowsingContextByName(name, aForceNoOpener, parentBC);
+  if (!name.IsEmpty() &&
+      (!aForceNoOpener || nsContentUtils::IsSpecialName(name))) {
+    if (parentInnerWin && parentInnerWin->GetWindowGlobalChild()) {
+      // If we have a parent window, perform the look-up relative to the parent
+      // inner window.
+      targetBC =
+          parentInnerWin->GetWindowGlobalChild()->FindBrowsingContextWithName(
+              name);
+    } else if (hasChromeParent && isCallerChrome &&
+               !nsContentUtils::IsSpecialName(name)) {
+      // Otherwise, if this call is from chrome, perform the lookup relative
+      // to the system group.
+      nsCOMPtr<mozIDOMWindowProxy> chromeWindow;
+      MOZ_ALWAYS_SUCCEEDS(GetWindowByName(name, getter_AddRefs(chromeWindow)));
+      if (chromeWindow) {
+        targetBC = nsPIDOMWindowOuter::From(chromeWindow)->GetBrowsingContext();
+      }
+    }
+  }
 
   // Do sandbox checks here, instead of waiting until nsIDocShell::LoadURI.
   // The state of the window can change before this call and if we are blocked
@@ -713,15 +741,6 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   }
 
   // no extant window? make a new one.
-
-  // If no parent, consider it chrome when running in the parent process.
-  bool hasChromeParent = !XRE_IsContentProcess();
-  if (aParent) {
-    // Check if the parent document has chrome privileges.
-    hasChromeParent = parentDoc && nsContentUtils::IsChromeDoc(parentDoc);
-  }
-
-  bool isCallerChrome = nsContentUtils::LegacyIsCallerChromeOrNativeCode();
 
   CSSToDesktopScale cssToDesktopScale(1.0);
   if (nsCOMPtr<nsIBaseWindow> win = do_QueryInterface(parentDocShell)) {
@@ -1694,7 +1713,6 @@ nsWindowWatcher::GetChromeForWindow(mozIDOMWindowProxy* aWindow,
 
 NS_IMETHODIMP
 nsWindowWatcher::GetWindowByName(const nsAString& aTargetName,
-                                 mozIDOMWindowProxy* aCurrentWindow,
                                  mozIDOMWindowProxy** aResult) {
   if (!aResult) {
     return NS_ERROR_INVALID_ARG;
@@ -1702,17 +1720,22 @@ nsWindowWatcher::GetWindowByName(const nsAString& aTargetName,
 
   *aResult = nullptr;
 
-  BrowsingContext* currentContext =
-      aCurrentWindow
-          ? nsPIDOMWindowOuter::From(aCurrentWindow)->GetBrowsingContext()
-          : nullptr;
+  // We won't be able to find any windows with a special or empty name.
+  if (aTargetName.IsEmpty() || nsContentUtils::IsSpecialName(aTargetName)) {
+    return NS_OK;
+  }
 
-  RefPtr<BrowsingContext> context =
-      GetBrowsingContextByName(aTargetName, false, currentContext);
-
-  if (context) {
-    *aResult = do_AddRef(context->GetDOMWindow()).take();
-    MOZ_ASSERT(*aResult);
+  // Search each toplevel in the chrome BrowsingContextGroup for a window with
+  // the given name.
+  for (const RefPtr<BrowsingContext>& toplevel :
+       BrowsingContextGroup::GetChromeGroup()->Toplevels()) {
+    BrowsingContext* context =
+        toplevel->FindWithNameInSubtree(aTargetName, nullptr);
+    if (context) {
+      *aResult = do_AddRef(context->GetDOMWindow()).take();
+      MOZ_ASSERT(*aResult);
+      return NS_OK;
+    }
   }
 
   return NS_OK;
@@ -2027,36 +2050,6 @@ uint32_t nsWindowWatcher::CalculateChromeFlagsForSystem(
    */
 
   return chromeFlags;
-}
-
-already_AddRefed<BrowsingContext> nsWindowWatcher::GetBrowsingContextByName(
-    const nsAString& aName, bool aForceNoOpener,
-    BrowsingContext* aCurrentContext) {
-  if (aName.IsEmpty()) {
-    return nullptr;
-  }
-
-  if (aForceNoOpener && !nsContentUtils::IsSpecialName(aName)) {
-    // Ignore all other names in the noopener case.
-    return nullptr;
-  }
-
-  RefPtr<BrowsingContext> foundContext;
-  if (aCurrentContext) {
-    foundContext = aCurrentContext->FindWithName(aName);
-  } else if (!nsContentUtils::IsSpecialName(aName)) {
-    // If we are looking for an item and we don't have a docshell we are
-    // checking on, let's just look in the chrome browsing context group!
-    for (RefPtr<BrowsingContext> toplevel :
-         BrowsingContextGroup::GetChromeGroup()->Toplevels()) {
-      foundContext = toplevel->FindWithNameInSubtree(aName, *toplevel);
-      if (foundContext) {
-        break;
-      }
-    }
-  }
-
-  return foundContext.forget();
 }
 
 // public static

@@ -1194,104 +1194,15 @@ void BrowsingContext::GetAllBrowsingContextsInSubtree(
   });
 }
 
-// FindWithName follows the rules for choosing a browsing context,
-// with the exception of sandboxing for iframes. The implementation
-// for arbitrarily choosing between two browsing contexts with the
-// same name is as follows:
-//
-// 1) The start browsing context, i.e. 'this'
-// 2) Descendants in insertion order
-// 3) The parent
-// 4) Siblings and their children, both in insertion order
-// 5) After this we iteratively follow the parent chain, repeating 3
-//    and 4 until
-// 6) If there is no parent, consider all other top level browsing
-//    contexts and their children, both in insertion order
-//
-// See
-// https://html.spec.whatwg.org/multipage/browsers.html#the-rules-for-choosing-a-browsing-context-given-a-browsing-context-name
-BrowsingContext* BrowsingContext::FindWithName(
-    const nsAString& aName, bool aUseEntryGlobalForAccessCheck) {
-  RefPtr<BrowsingContext> requestingContext = this;
-  if (aUseEntryGlobalForAccessCheck) {
-    if (nsGlobalWindowInner* caller = nsContentUtils::EntryInnerWindow()) {
-      if (caller->GetBrowsingContextGroup() == Group()) {
-        requestingContext = caller->GetBrowsingContext();
-      } else {
-        MOZ_RELEASE_ASSERT(caller->GetPrincipal()->IsSystemPrincipal(),
-                           "caller must be either same-group or system");
-      }
-    }
-  }
-  MOZ_ASSERT(requestingContext, "must have a requestingContext");
-
-  BrowsingContext* found = nullptr;
-  if (aName.IsEmpty()) {
-    // You can't find a browsing context with an empty name.
-    found = nullptr;
-  } else if (aName.LowerCaseEqualsLiteral("_blank")) {
-    // Just return null. Caller must handle creating a new window with
-    // a blank name.
-    found = nullptr;
-  } else if (nsContentUtils::IsSpecialName(aName)) {
-    found = FindWithSpecialName(aName, *requestingContext);
-  } else if (BrowsingContext* child =
-                 FindWithNameInSubtree(aName, *requestingContext)) {
-    found = child;
-  } else {
-    BrowsingContext* current = this;
-
-    do {
-      Span<RefPtr<BrowsingContext>> siblings;
-      BrowsingContext* parent = current->GetParent();
-
-      if (!parent) {
-        // We've reached the root of the tree, consider browsing
-        // contexts in the same browsing context group.
-        siblings = mGroup->Toplevels();
-      } else if (parent->NameEquals(aName) &&
-                 requestingContext->CanAccess(parent) &&
-                 parent->IsTargetable()) {
-        found = parent;
-        break;
-      } else {
-        siblings = parent->NonSyntheticChildren();
-      }
-
-      for (BrowsingContext* sibling : siblings) {
-        if (sibling == current) {
-          continue;
-        }
-
-        if (BrowsingContext* relative =
-                sibling->FindWithNameInSubtree(aName, *requestingContext)) {
-          found = relative;
-          // Breaks the outer loop
-          parent = nullptr;
-          break;
-        }
-      }
-
-      current = parent;
-    } while (current);
-  }
-
-  // Helpers should perform access control checks, which means that we
-  // only need to assert that we can access found.
-  MOZ_DIAGNOSTIC_ASSERT(!found || requestingContext->CanAccess(found));
-
-  return found;
-}
-
 BrowsingContext* BrowsingContext::FindChildWithName(
-    const nsAString& aName, BrowsingContext& aRequestingContext) {
+    const nsAString& aName, WindowGlobalChild& aRequestingWindow) {
   if (aName.IsEmpty()) {
     // You can't find a browsing context with the empty name.
     return nullptr;
   }
 
   for (BrowsingContext* child : NonSyntheticChildren()) {
-    if (child->NameEquals(aName) && aRequestingContext.CanAccess(child) &&
+    if (child->NameEquals(aName) && aRequestingWindow.CanNavigate(child) &&
         child->IsTargetable()) {
       return child;
     }
@@ -1301,7 +1212,7 @@ BrowsingContext* BrowsingContext::FindChildWithName(
 }
 
 BrowsingContext* BrowsingContext::FindWithSpecialName(
-    const nsAString& aName, BrowsingContext& aRequestingContext) {
+    const nsAString& aName, WindowGlobalChild& aRequestingWindow) {
   // TODO(farre): Neither BrowsingContext nor nsDocShell checks if the
   // browsing context pointed to by a special name is active. Should
   // it be? See Bug 1527913.
@@ -1311,7 +1222,7 @@ BrowsingContext* BrowsingContext::FindWithSpecialName(
 
   if (aName.LowerCaseEqualsLiteral("_parent")) {
     if (BrowsingContext* parent = GetParent()) {
-      return aRequestingContext.CanAccess(parent) ? parent : nullptr;
+      return aRequestingWindow.CanNavigate(parent) ? parent : nullptr;
     }
     return this;
   }
@@ -1319,71 +1230,30 @@ BrowsingContext* BrowsingContext::FindWithSpecialName(
   if (aName.LowerCaseEqualsLiteral("_top")) {
     BrowsingContext* top = Top();
 
-    return aRequestingContext.CanAccess(top) ? top : nullptr;
+    return aRequestingWindow.CanNavigate(top) ? top : nullptr;
   }
 
   return nullptr;
 }
 
 BrowsingContext* BrowsingContext::FindWithNameInSubtree(
-    const nsAString& aName, BrowsingContext& aRequestingContext) {
+    const nsAString& aName, WindowGlobalChild* aRequestingWindow) {
   MOZ_DIAGNOSTIC_ASSERT(!aName.IsEmpty());
 
-  if (NameEquals(aName) && aRequestingContext.CanAccess(this) &&
+  if (NameEquals(aName) &&
+      (!aRequestingWindow || aRequestingWindow->CanNavigate(this)) &&
       IsTargetable()) {
     return this;
   }
 
   for (BrowsingContext* child : NonSyntheticChildren()) {
     if (BrowsingContext* found =
-            child->FindWithNameInSubtree(aName, aRequestingContext)) {
+            child->FindWithNameInSubtree(aName, aRequestingWindow)) {
       return found;
     }
   }
 
   return nullptr;
-}
-
-// For historical context, see:
-//
-// Bug 13871:   Prevent frameset spoofing
-// Bug 103638:  Targets with same name in different windows open in wrong
-//              window with javascript
-// Bug 408052:  Adopt "ancestor" frame navigation policy
-// Bug 1570207: Refactor logic to rely on BrowsingContextGroups to enforce
-//              origin attribute isolation.
-bool BrowsingContext::CanAccess(BrowsingContext* aTarget,
-                                bool aConsiderOpener) {
-  MOZ_ASSERT(
-      mDocShell,
-      "CanAccess() may only be called in the process of the accessing window");
-  MOZ_ASSERT(aTarget, "Must have a target");
-
-  MOZ_DIAGNOSTIC_ASSERT(
-      Group() == aTarget->Group(),
-      "A BrowsingContext should never see a context from a different group");
-
-  // A frame can navigate itself and its own root.
-  if (aTarget == this || aTarget == Top()) {
-    return true;
-  }
-
-  // A frame can navigate any frame with a same-origin ancestor.
-  for (BrowsingContext* bc = aTarget; bc; bc = bc->GetParent()) {
-    if (bc->mDocShell && nsDocShell::ValidateOrigin(this, bc)) {
-      return true;
-    }
-  }
-
-  // If the target is a top-level document, a frame can navigate it if it can
-  // navigate its opener.
-  if (aConsiderOpener && !aTarget->GetParent()) {
-    if (RefPtr<BrowsingContext> opener = aTarget->GetOpener()) {
-      return CanAccess(opener, false);
-    }
-  }
-
-  return false;
 }
 
 bool BrowsingContext::IsSandboxedFrom(BrowsingContext* aTarget) {
@@ -2070,13 +1940,12 @@ nsresult BrowsingContext::LoadURI(nsDocShellLoadState* aLoadState,
 
   MOZ_DIAGNOSTIC_ASSERT(!sourceBC || sourceBC->Group() == Group());
   if (sourceBC && sourceBC->IsInProcess()) {
-    if (!sourceBC->CanAccess(this)) {
-      return NS_ERROR_DOM_PROP_ACCESS_DENIED;
-    }
-
     nsCOMPtr<nsPIDOMWindowOuter> win(sourceBC->GetDOMWindow());
     if (WindowGlobalChild* wgc =
             win->GetCurrentInnerWindow()->GetWindowGlobalChild()) {
+      if (!wgc->CanNavigate(this)) {
+        return NS_ERROR_DOM_PROP_ACCESS_DENIED;
+      }
       wgc->SendLoadURI(this, aLoadState, aSetNavigating);
     }
   } else if (XRE_IsParentProcess()) {
@@ -2175,15 +2044,14 @@ nsresult BrowsingContext::InternalLoad(nsDocShellLoadState* aLoadState) {
     MOZ_DIAGNOSTIC_ASSERT(sourceBC);
     MOZ_DIAGNOSTIC_ASSERT(sourceBC->Group() == Group());
 
-    if (!sourceBC->CanAccess(this)) {
-      return NS_ERROR_DOM_PROP_ACCESS_DENIED;
-    }
-
     nsCOMPtr<nsPIDOMWindowOuter> win(sourceBC->GetDOMWindow());
     WindowGlobalChild* wgc =
         win->GetCurrentInnerWindow()->GetWindowGlobalChild();
     if (!wgc || !wgc->CanSend()) {
       return NS_ERROR_FAILURE;
+    }
+    if (!wgc->CanNavigate(this)) {
+      return NS_ERROR_DOM_PROP_ACCESS_DENIED;
     }
 
     MOZ_ALWAYS_SUCCEEDS(

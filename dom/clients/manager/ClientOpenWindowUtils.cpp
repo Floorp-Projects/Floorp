@@ -17,6 +17,7 @@
 #include "nsFocusManager.h"
 #include "nsIBrowserDOMWindow.h"
 #include "nsIDocShell.h"
+#include "nsIDocShellTreeOwner.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIURI.h"
 #include "nsIBrowser.h"
@@ -327,23 +328,27 @@ void GeckoViewOpenWindow(const ClientOpenWindowArgsParsed& aArgsValidated,
   promiseResult->Then(
       GetMainThreadSerialEventTarget(), __func__,
       [aArgsValidated, promise](nsString sessionId) {
-        nsresult rv;
-        nsCOMPtr<nsIWindowWatcher> wwatch =
-            do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          promise->Reject(rv, __func__);
-          return rv;
-        }
-
         // Retrieve the browsing context by using the GeckoSession ID. The
         // window is named the same as the ID of the GeckoSession it is
         // associated with.
-        RefPtr<BrowsingContext> browsingContext =
-            static_cast<nsWindowWatcher*>(wwatch.get())
-                ->GetBrowsingContextByName(sessionId, false, nullptr);
-        if (NS_WARN_IF(!browsingContext)) {
-          promise->Reject(NS_ERROR_FAILURE, __func__);
-          return NS_ERROR_FAILURE;
+        RefPtr<BrowsingContext> browsingContext;
+        nsresult rv = [&sessionId, &browsingContext]() -> nsresult {
+          nsresult rv;
+          nsCOMPtr<nsIWindowWatcher> wwatch =
+              do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
+          NS_ENSURE_SUCCESS(rv, rv);
+          nsCOMPtr<mozIDOMWindowProxy> chromeWindow;
+          rv = wwatch->GetWindowByName(sessionId, getter_AddRefs(chromeWindow));
+          NS_ENSURE_SUCCESS(rv, rv);
+          NS_ENSURE_TRUE(chromeWindow, NS_ERROR_FAILURE);
+          browsingContext =
+              nsPIDOMWindowOuter::From(chromeWindow)->GetBrowsingContext();
+          NS_ENSURE_TRUE(browsingContext, NS_ERROR_FAILURE);
+          return NS_OK;
+        }();
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          promise->Reject(rv, __func__);
+          return rv;
         }
 
         WaitForLoad(aArgsValidated, browsingContext, promise);

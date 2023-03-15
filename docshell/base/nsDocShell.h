@@ -558,11 +558,6 @@ class nsDocShell final : public nsDocLoader,
   nsDocShell(mozilla::dom::BrowsingContext* aBrowsingContext,
              uint64_t aContentWindowID);
 
-  // Security check to prevent frameset spoofing. See comments at
-  // implementation site.
-  static bool ValidateOrigin(mozilla::dom::BrowsingContext* aOrigin,
-                             mozilla::dom::BrowsingContext* aTarget);
-
   static inline uint32_t PRTimeToSeconds(PRTime aTimeUsec) {
     return uint32_t(aTimeUsec / PR_USEC_PER_SEC);
   }
