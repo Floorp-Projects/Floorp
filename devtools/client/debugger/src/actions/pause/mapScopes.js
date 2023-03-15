@@ -5,7 +5,6 @@
 import {
   getSelectedFrameId,
   getSource,
-  getLocationSource,
   getSettledSourceTextContent,
   isMapScopesEnabled,
   getSelectedFrame,
@@ -135,12 +134,9 @@ export function mapScopes(cx, scopes, frame) {
 export function getMappedScopes(cx, scopes, frame) {
   return async function(thunkArgs) {
     const { getState, dispatch } = thunkArgs;
-    const generatedSource = getLocationSource(
-      getState(),
-      frame.generatedLocation
-    );
+    const generatedSource = frame.generatedLocation.source;
 
-    const source = getLocationSource(getState(), frame.location);
+    const source = frame.location.source;
 
     if (
       !isMapScopesEnabled(getState()) ||

@@ -6,7 +6,6 @@ import {
   getSource,
   getFrames,
   getBlackBoxRanges,
-  getLocationSource,
   getSelectedFrame,
 } from "../../selectors";
 
@@ -22,20 +21,12 @@ function getSelectedFrameId(state, thread, frames) {
   let selectedFrame = getSelectedFrame(state, thread);
   const blackboxedRanges = getBlackBoxRanges(state);
 
-  if (
-    selectedFrame &&
-    !isFrameBlackBoxed(
-      selectedFrame,
-      getLocationSource(state, selectedFrame.location),
-      blackboxedRanges
-    )
-  ) {
+  if (selectedFrame && !isFrameBlackBoxed(selectedFrame, blackboxedRanges)) {
     return selectedFrame.id;
   }
 
   selectedFrame = frames.find(frame => {
-    const frameSource = getLocationSource(state, frame.location);
-    return !isFrameBlackBoxed(frame, frameSource, blackboxedRanges);
+    return !isFrameBlackBoxed(frame, blackboxedRanges);
   });
   return selectedFrame?.id;
 }
@@ -66,12 +57,8 @@ function isWasmOriginalSourceFrame(frame, getState) {
   if (isGeneratedId(frame.location.sourceId)) {
     return false;
   }
-  const generatedSource = getLocationSource(
-    getState(),
-    frame.generatedLocation
-  );
 
-  return Boolean(generatedSource?.isWasm);
+  return Boolean(frame.generatedLocation?.source.isWasm);
 }
 
 async function expandFrames(frames, { getState, sourceMapLoader }) {

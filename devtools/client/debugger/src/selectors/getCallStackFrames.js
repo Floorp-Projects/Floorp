@@ -42,7 +42,7 @@ export function formatCallStackFrames(
   const formattedFrames = frames
     .filter(frame => getSourceForFrame(sourcesMap, frame))
     .map(frame => appendSource(sourcesMap, frame, selectedSource))
-    .filter(frame => !isFrameBlackBoxed(frame, frame.source, blackboxedRanges));
+    .filter(frame => !isFrameBlackBoxed(frame, blackboxedRanges));
 
   return annotateFrames(formattedFrames);
 }

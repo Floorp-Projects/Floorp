@@ -65,20 +65,18 @@ export function shouldBlackbox(source) {
  *
  * @param {Object}  frame
  *                  The current frame
- * @param {Object}  source
- *                  The source related to the frame
  * @param {Object}  blackboxedRanges
  *                  The currently blackboxedRanges for all the sources.
  * @param {Boolean} isFrameBlackBoxed
  *                  If the frame is within the blackboxed range
  *                  or not.
  */
-export function isFrameBlackBoxed(frame, source, blackboxedRanges) {
+export function isFrameBlackBoxed(frame, blackboxedRanges) {
   return (
-    source &&
-    !!blackboxedRanges[source.url] &&
-    (!blackboxedRanges[source.url].length ||
-      !!findBlackBoxRange(source, blackboxedRanges, {
+    frame.source &&
+    !!blackboxedRanges[frame.source.url] &&
+    (!blackboxedRanges[frame.source.url].length ||
+      !!findBlackBoxRange(frame.source, blackboxedRanges, {
         start: frame.location.line,
         end: frame.location.line,
       }))

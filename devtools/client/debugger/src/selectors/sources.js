@@ -42,10 +42,6 @@ export function getSourceFromId(state, id) {
   return source;
 }
 
-export function getLocationSource(state, location) {
-  return getSource(state, location.sourceId);
-}
-
 export function getSourceByActorId(state, actorId) {
   if (!hasSourceActor(state, actorId)) {
     return null;
@@ -242,7 +238,7 @@ export function canPrettyPrintSource(state, location) {
 }
 
 export function getPrettyPrintMessage(state, location) {
-  const source = getSource(state, location.sourceId);
+  const source = location.source;
   if (!source) {
     return L10N.getStr("sourceTabs.prettyPrint");
   }

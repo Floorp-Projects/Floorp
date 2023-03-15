@@ -110,21 +110,21 @@ function sortByStart(a, b) {
  * Returns an array of locations that are considered out of scope for the given
  * location.
  */
-function findOutOfScopeLocations(sourceId, position) {
-  const { functions, comments } = findSymbols(sourceId);
+function findOutOfScopeLocations(location) {
+  const { functions, comments } = findSymbols(location.source.id);
   const commentLocations = comments.map(c => c.location);
   const locations = functions
     .map(getLocation)
     .concat(commentLocations)
     .sort(sortByStart);
 
-  const innerLocations = getInnerLocations(locations, position);
+  const innerLocations = getInnerLocations(locations, location);
   const outerLocations = locations.filter(loc => {
     if (innerLocations.includes(loc)) {
       return false;
     }
 
-    return !containsPosition(loc, position);
+    return !containsPosition(loc, location);
   });
   return removeOverlaps(outerLocations);
 }

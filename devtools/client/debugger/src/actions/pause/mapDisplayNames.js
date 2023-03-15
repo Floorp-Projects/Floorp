@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { getFrames, getSymbols, getLocationSource } from "../../selectors";
+import { getFrames, getSymbols } from "../../selectors";
 
 import { findClosestFunction } from "../../utils/ast";
 
@@ -11,13 +11,11 @@ function mapDisplayName(frame, { getState }) {
     return frame;
   }
 
-  const source = getLocationSource(getState(), frame.location);
-
-  if (!source) {
+  if (!frame.location.source) {
     return frame;
   }
 
-  const symbols = getSymbols(getState(), source);
+  const symbols = getSymbols(getState(), frame.location.source);
 
   if (!symbols || !symbols.functions) {
     return frame;

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { getLocationSource, getSourceActorsForSource } from "../../selectors";
+import { getSourceActorsForSource } from "../../selectors";
 import { isGenerated } from "../source";
 import { sortSelectedLocations } from "../location";
 import assert from "../assert";
@@ -30,7 +30,7 @@ export function makePendingLocationId(location) {
 }
 
 export function makeBreakpointLocation(state, location) {
-  const source = getLocationSource(state, location);
+  const source = location.source;
   if (!source) {
     throw new Error("no source");
   }

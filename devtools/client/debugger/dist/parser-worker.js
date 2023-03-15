@@ -44246,20 +44246,20 @@ function sortByStart(a, b) {
  */
 
 
-function findOutOfScopeLocations(sourceId, position) {
+function findOutOfScopeLocations(location) {
   const {
     functions,
     comments
-  } = findSymbols(sourceId);
+  } = findSymbols(location.source.id);
   const commentLocations = comments.map(c => c.location);
   const locations = functions.map(getLocation).concat(commentLocations).sort(sortByStart);
-  const innerLocations = getInnerLocations(locations, position);
+  const innerLocations = getInnerLocations(locations, location);
   const outerLocations = locations.filter(loc => {
     if (innerLocations.includes(loc)) {
       return false;
     }
 
-    return !(0, _contains.containsPosition)(loc, position);
+    return !(0, _contains.containsPosition)(loc, location);
   });
   return removeOverlaps(outerLocations);
 }
