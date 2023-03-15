@@ -141,6 +141,9 @@ interface TestFunctions {
   undefined testDictWithAllowShared(optional DictWithAllowSharedBufferSource buffer = {});
   undefined testUnionOfBuffferSource((ArrayBuffer or ArrayBufferView or DOMString) foo);
   undefined testUnionOfAllowSharedBuffferSource(([AllowShared] ArrayBuffer or [AllowShared] ArrayBufferView) foo);
+
+  boolean staticAndNonStaticOverload();
+  static boolean staticAndNonStaticOverload(optional unsigned long foo);
 };
 
 dictionary DictWithAllowSharedBufferSource {
