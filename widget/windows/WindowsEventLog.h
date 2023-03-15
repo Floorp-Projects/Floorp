@@ -48,8 +48,9 @@ static void WriteWindowsEventLogErrorBuffer(const wchar_t* eventSourceName,
   DeregisterEventSource(source);
 }
 
-void WriteWindowsEventLogHresult(const wchar_t* eventSourceName, HRESULT hr,
-                                 const char* sourceFile, int sourceLine) {
+inline void WriteWindowsEventLogHresult(const wchar_t* eventSourceName,
+                                        HRESULT hr, const char* sourceFile,
+                                        int sourceLine) {
   const wchar_t* format = L"0x%X in %S:%d";
   int bufferSize = _scwprintf(format, hr, sourceFile, sourceLine);
   ++bufferSize;  // Extra character for terminating null
@@ -63,10 +64,10 @@ void WriteWindowsEventLogHresult(const wchar_t* eventSourceName, HRESULT hr,
 }
 
 MOZ_FORMAT_WPRINTF(1, 4)
-void WriteWindowsEventLogErrorMessage(const wchar_t* eventSourceName,
-                                      const wchar_t* messageFormat,
-                                      const char* sourceFile, int sourceLine,
-                                      ...) {
+inline void WriteWindowsEventLogErrorMessage(const wchar_t* eventSourceName,
+                                             const wchar_t* messageFormat,
+                                             const char* sourceFile,
+                                             int sourceLine, ...) {
   // First assemble the passed message
   va_list ap;
   va_start(ap, sourceLine);
