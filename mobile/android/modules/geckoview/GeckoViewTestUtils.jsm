@@ -51,6 +51,15 @@ const GeckoViewTabUtil = {
     }
 
     const window = await windowPromise;
+
+    // Immediately load the URI in the browser after creating the new tab to
+    // load into. This isn't done from the Java side to align with the
+    // ServiceWorkerOpenWindow infrastructure which this is built on top of.
+    window.browser.fixupAndLoadURIString(url, {
+      flags: Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
+
     return window.tab;
   },
 };
