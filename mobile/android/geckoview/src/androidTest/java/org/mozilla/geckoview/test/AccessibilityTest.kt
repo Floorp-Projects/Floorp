@@ -1738,7 +1738,7 @@ class AccessibilityTest : BaseSessionTest() {
         val firstListFirstItem = createNodeInfo(firstList.getChildId(0))
         if (Build.VERSION.SDK_INT >= 19) {
             assertThat("Item has collectionItemInfo", firstListFirstItem.collectionItemInfo, notNullValue())
-            assertThat("Item has collectionItemInfo", firstListFirstItem.collectionItemInfo.rowIndex, equalTo(1))
+            assertThat("Item has correct rowIndex", firstListFirstItem.collectionItemInfo.rowIndex, equalTo(0))
         }
 
         val secondList = createNodeInfo(rootNode.getChildId(1))
