@@ -10,6 +10,7 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   BackgroundUpdate: "resource://gre/modules/BackgroundUpdate.sys.mjs",
+  MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
 });
 
 // Constants & Enumeration Values
@@ -471,6 +472,11 @@ var gMainPane = {
       "browserContainersSettings",
       "command",
       gMainPane.showContainerSettings
+    );
+    setEventListener(
+      "data-migration",
+      "command",
+      gMainPane.onMigrationButtonCommand
     );
 
     // For media control toggle button, we support it on Windows 8.1+ (NT6.3),
@@ -1711,6 +1717,26 @@ var gMainPane = {
         }
       }
     })().catch(console.error);
+  },
+
+  onMigrationButtonCommand(command) {
+    // When browser.migrate.content-modal.enabled is enabled by default,
+    // the event handler can just call showMigrationWizardDialog directly,
+    // but for now, we delegate to MigrationUtils to open the native modal
+    // in case that's the dialog we're still using.
+    //
+    // Enabling the pref by default will be part of bug 1822156.
+    const browser = window.docShell.chromeEventHandler;
+    const browserWindow = browser.ownerGlobal;
+
+    // showMigrationWizard blocks on some platforms. We'll dispatch the request
+    // to open to a runnable on the main thread so that we don't have to block
+    // this function call.
+    Services.tm.dispatchToMainThread(() => {
+      MigrationUtils.showMigrationWizard(browserWindow, {
+        entrypoint: MigrationUtils.MIGRATION_ENTRYPOINTS.PREFERENCES,
+      });
+    });
   },
 
   /**
