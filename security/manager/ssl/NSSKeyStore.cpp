@@ -6,8 +6,11 @@
 
 #include "NSSKeyStore.h"
 
+#include "mozilla/AbstractThread.h"
 #include "mozilla/Base64.h"
+#include "mozilla/Logging.h"
 #include "mozilla/SyncRunnable.h"
+#include "nsIThread.h"
 #include "nsNSSComponent.h"
 #include "nsPK11TokenDB.h"
 #include "nsXULAppAPI.h"

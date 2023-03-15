@@ -6,8 +6,8 @@
 
 #include "DataStorage.h"
 
-#include "mozilla/Assertions.h"
 #include "mozilla/AppShutdown.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/Preferences.h"
@@ -22,9 +22,10 @@
 #include "nsIFileStreams.h"
 #include "nsIMemoryReporter.h"
 #include "nsIObserverService.h"
+#include "nsISafeOutputStream.h"
 #include "nsISerialEventTarget.h"
-#include "nsITimer.h"
 #include "nsIThread.h"
+#include "nsITimer.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
 #include "nsStreamUtils.h"

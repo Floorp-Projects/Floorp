@@ -60,6 +60,7 @@
 #include "sslexp.h"
 #include "sslproto.h"
 
+using namespace mozilla;
 using namespace mozilla::psm;
 using namespace mozilla::ipc;
 

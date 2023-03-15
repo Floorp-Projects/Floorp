@@ -17,6 +17,7 @@
 #include "nsIX509CertValidity.h"
 #include "nsNSSCertHelper.h"
 #include "nsNSSCertificate.h"
+#include "nsComponentManagerUtils.h"
 #include "nsNSSCertificateDB.h"
 #include "nsNSSHelper.h"
 #include "nsReadableUtils.h"

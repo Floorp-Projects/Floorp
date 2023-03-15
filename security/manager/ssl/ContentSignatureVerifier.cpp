@@ -6,12 +6,14 @@
 
 #include "ContentSignatureVerifier.h"
 
+#include "AppTrustDomain.h"
 #include "CryptoTask.h"
 #include "ScopedNSSTypes.h"
 #include "SharedCertVerifier.h"
 #include "cryptohi.h"
 #include "keyhi.h"
 #include "mozilla/Base64.h"
+#include "mozilla/Logging.h"
 #include "mozilla/dom/Promise.h"
 #include "nsCOMPtr.h"
 #include "nsPromiseFlatString.h"

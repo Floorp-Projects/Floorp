@@ -9,6 +9,7 @@
 #include "ScopedNSSTypes.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Services.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Promise.h"

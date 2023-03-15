@@ -10,6 +10,7 @@
 #include "NSSSocketControl.h"
 #include "nsIX509Cert.h"
 #include "nsNSSIOLayer.h"
+#include "nsThreadUtils.h"
 #include "ssl.h"
 
 // NSS callback to select a client authentication certificate. See documentation
