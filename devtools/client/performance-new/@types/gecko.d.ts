@@ -148,6 +148,15 @@ declare namespace MockedExports {
     arch: string;
   }
 
+  interface ProfileGenerationAdditionalInformation {
+    sharedLibraries: SharedLibrary[];
+  }
+
+  interface ProfileAndAdditionalInformation {
+    profile: ArrayBuffer;
+    additionalInformation?: ProfileGenerationAdditionalInformation;
+  }
+
   type Services = {
     env: {
       set: (name: string, value: string) => void;
@@ -176,7 +185,7 @@ declare namespace MockedExports {
       getProfileDataAsArrayBuffer: (sinceTime?: number) => Promise<ArrayBuffer>;
       getProfileDataAsGzippedArrayBuffer: (
         sinceTime?: number
-      ) => Promise<ArrayBuffer>;
+      ) => Promise<ProfileAndAdditionalInformation>;
       IsActive: () => boolean;
       sharedLibraries: SharedLibrary[];
     };

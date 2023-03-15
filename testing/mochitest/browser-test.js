@@ -861,8 +861,10 @@ Tester.prototype = {
           let path = Services.env.get("MOZ_UPLOAD_DIR");
           let profilePath = PathUtils.join(path, filename);
           try {
-            let profileData = await Services.profiler.getProfileDataAsGzippedArrayBuffer();
-            await IOUtils.write(profilePath, new Uint8Array(profileData));
+            const {
+              profile,
+            } = await Services.profiler.getProfileDataAsGzippedArrayBuffer();
+            await IOUtils.write(profilePath, new Uint8Array(profile));
             this.currentTest.addResult(
               new testResult({
                 name:

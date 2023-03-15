@@ -339,7 +339,7 @@ async function captureProfile(pageContext) {
   const profileCaptureResult = await Services.profiler
     .getProfileDataAsGzippedArrayBuffer()
     .then(
-      profile => ({ type: "SUCCESS", profile }),
+      ({ profile }) => ({ type: "SUCCESS", profile }),
       error => {
         console.error(error);
         return { type: "ERROR", error };
