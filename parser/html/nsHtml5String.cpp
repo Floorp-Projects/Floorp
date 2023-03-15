@@ -150,7 +150,8 @@ nsHtml5String nsHtml5String::FromLiteral(const char* aLiteral) {
     MOZ_CRASH("Out of memory.");
   }
   char16_t* data = reinterpret_cast<char16_t*>(buffer->Data());
-  ConvertAsciitoUtf16(Span(aLiteral, length), Span(data, length));
+  ConvertAsciitoUtf16(mozilla::Span(aLiteral, length),
+                      mozilla::Span(data, length));
   data[length] = 0;
   return nsHtml5String(reinterpret_cast<uintptr_t>(buffer.forget().take()) |
                        eStringBuffer);
