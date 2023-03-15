@@ -1,0 +1,59 @@
+<!-- AUTO-GENERATED - DO NOT EDIT. See WebGPU CTS: tools/gen_wpt_cts_html. -->
+<!--
+    This test suite is built from the TypeScript sources at:
+    https://github.com/gpuweb/cts
+
+    If you are debugging WebGPU conformance tests, it's highly recommended that
+    you use the standalone interactive runner in that repository, which
+    provides tools for easier debugging and editing (source maps, debug
+    logging, warn/skip functionality, etc.)
+
+    NOTE:
+    The WPT version of this file is generated with *one variant per test spec
+    file*. If your harness needs more fine-grained suppressions, you'll need to
+    generate your own variants list from your suppression list.
+    See `tools/gen_wpt_cts_html` to do this.
+
+    When run under browser CI, the original cts.https.html should be skipped, and
+    this alternate version should be run instead, under a non-exported WPT test
+    directory (e.g. Chromium's wpt_internal).
+-->
+
+<!doctype html>
+<title>WebGPU CTS</title>
+<meta charset=utf-8>
+<link rel=help href='https://gpuweb.github.io/gpuweb/'>
+
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script>
+    const loadWebGPUExpectations = undefined;
+    const shouldWebGPUCTSFailOnWarnings = undefined;
+</script>
+<script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
+
+<meta name=variant content='?q=webgpu:api,validation,error_scope:balanced_nesting:*'>
+<meta name=variant content='?q=webgpu:api,validation,getBindGroupLayout:index_range,explicit_layout:*'>
+<meta name=variant content='?q=webgpu:api,validation,getBindGroupLayout:index_range,auto_layout:*'>
+<meta name=variant content='?q=webgpu:api,validation,getBindGroupLayout:unique_js_object,auto_layout:*'>
+<meta name=variant content='?q=webgpu:api,validation,getBindGroupLayout:unique_js_object,explicit_layout:*'>
+<meta name=variant content='?q=webgpu:api,validation,image_copy,buffer_related:buffer_state:*'>
+<meta name=variant content='?q=webgpu:api,validation,image_copy,buffer_related:buffer,device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,image_copy,buffer_related:usage:*'>
+<meta name=variant content='?q=webgpu:api,validation,image_copy,buffer_related:bytes_per_row_alignment:*'>
+<meta name=variant content='?q=webgpu:api,validation,image_copy,buffer_texture_copies:depth_stencil_format,copy_usage_and_aspect:*'>
+<meta name=variant content='?q=webgpu:api,validation,image_copy,buffer_texture_copies:depth_stencil_format,copy_buffer_size:*'>
+<meta name=variant content='?q=webgpu:api,validation,image_copy,buffer_texture_copies:depth_stencil_format,copy_buffer_offset:*'>
+<meta name=variant content='?q=webgpu:api,validation,image_copy,buffer_texture_copies:sample_count:*'>
+<meta name=variant content='?q=webgpu:api,validation,image_copy,buffer_texture_copies:texture_buffer_usages:*'>
+<meta name=variant content='?q=webgpu:api,validation,image_copy,buffer_texture_copies:device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,image_copy,layout_related:bound_on_rows_per_image:*'>
+<meta name=variant content='?q=webgpu:api,validation,image_copy,layout_related:copy_end_overflows_u64:*'>
+<meta name=variant content='?q=webgpu:api,validation,image_copy,layout_related:required_bytes_in_copy:*'>
+<meta name=variant content='?q=webgpu:api,validation,image_copy,layout_related:rows_per_image_alignment:*'>
+<meta name=variant content='?q=webgpu:api,validation,image_copy,layout_related:offset_alignment:*'>
+<meta name=variant content='?q=webgpu:api,validation,image_copy,layout_related:bound_on_bytes_per_row:*'>
+<meta name=variant content='?q=webgpu:api,validation,image_copy,layout_related:bound_on_offset:*'>
+<meta name=variant content='?q=webgpu:api,validation,image_copy,texture_related:valid:*'>
+<meta name=variant content='?q=webgpu:api,validation,image_copy,texture_related:texture,device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,image_copy,texture_related:usage:*'>

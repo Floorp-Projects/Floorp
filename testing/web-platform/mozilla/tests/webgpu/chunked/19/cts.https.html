@@ -1,0 +1,59 @@
+<!-- AUTO-GENERATED - DO NOT EDIT. See WebGPU CTS: tools/gen_wpt_cts_html. -->
+<!--
+    This test suite is built from the TypeScript sources at:
+    https://github.com/gpuweb/cts
+
+    If you are debugging WebGPU conformance tests, it's highly recommended that
+    you use the standalone interactive runner in that repository, which
+    provides tools for easier debugging and editing (source maps, debug
+    logging, warn/skip functionality, etc.)
+
+    NOTE:
+    The WPT version of this file is generated with *one variant per test spec
+    file*. If your harness needs more fine-grained suppressions, you'll need to
+    generate your own variants list from your suppression list.
+    See `tools/gen_wpt_cts_html` to do this.
+
+    When run under browser CI, the original cts.https.html should be skipped, and
+    this alternate version should be run instead, under a non-exported WPT test
+    directory (e.g. Chromium's wpt_internal).
+-->
+
+<!doctype html>
+<title>WebGPU CTS</title>
+<meta charset=utf-8>
+<link rel=help href='https://gpuweb.github.io/gpuweb/'>
+
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script>
+    const loadWebGPUExpectations = undefined;
+    const shouldWebGPUCTSFailOnWarnings = undefined;
+</script>
+<script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
+
+<meta name=variant content='?q=webgpu:api,validation,encoding,queries,begin_end:occlusion_query,disjoint_queries_with_same_query_index:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,queries,begin_end:nesting:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,queries,general:occlusion_query,query_type:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,queries,general:occlusion_query,invalid_query_set:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,queries,general:occlusion_query,query_index:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,queries,general:timestamp_query,query_type_and_index:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,queries,general:timestamp_query,invalid_query_set:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,queries,general:timestamp_query,device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,queries,resolveQuerySet:queryset_and_destination_buffer_state:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,queries,resolveQuerySet:first_query_and_query_count:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,queries,resolveQuerySet:destination_buffer_usage:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,queries,resolveQuerySet:destination_offset_alignment:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,queries,resolveQuerySet:resolve_buffer_oob:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,queries,resolveQuerySet:query_set_buffer,device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,render_bundle:empty_bundle_list:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,render_bundle:device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,render_bundle:color_formats_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,render_bundle:depth_stencil_formats_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,render_bundle:depth_stencil_readonly_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,render_bundle:sample_count_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,error_scope:simple:*'>
+<meta name=variant content='?q=webgpu:api,validation,error_scope:empty:*'>
+<meta name=variant content='?q=webgpu:api,validation,error_scope:parent_scope:*'>
+<meta name=variant content='?q=webgpu:api,validation,error_scope:current_scope:*'>
+<meta name=variant content='?q=webgpu:api,validation,error_scope:balanced_siblings:*'>

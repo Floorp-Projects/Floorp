@@ -1,0 +1,59 @@
+<!-- AUTO-GENERATED - DO NOT EDIT. See WebGPU CTS: tools/gen_wpt_cts_html. -->
+<!--
+    This test suite is built from the TypeScript sources at:
+    https://github.com/gpuweb/cts
+
+    If you are debugging WebGPU conformance tests, it's highly recommended that
+    you use the standalone interactive runner in that repository, which
+    provides tools for easier debugging and editing (source maps, debug
+    logging, warn/skip functionality, etc.)
+
+    NOTE:
+    The WPT version of this file is generated with *one variant per test spec
+    file*. If your harness needs more fine-grained suppressions, you'll need to
+    generate your own variants list from your suppression list.
+    See `tools/gen_wpt_cts_html` to do this.
+
+    When run under browser CI, the original cts.https.html should be skipped, and
+    this alternate version should be run instead, under a non-exported WPT test
+    directory (e.g. Chromium's wpt_internal).
+-->
+
+<!doctype html>
+<title>WebGPU CTS</title>
+<meta charset=utf-8>
+<link rel=help href='https://gpuweb.github.io/gpuweb/'>
+
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script>
+    const loadWebGPUExpectations = undefined;
+    const shouldWebGPUCTSFailOnWarnings = undefined;
+</script>
+<script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
+
+<meta name=variant content='?q=webgpu:api,validation,capability_checks,features,texture_formats:texture_descriptor_view_formats:*'>
+<meta name=variant content='?q=webgpu:api,validation,capability_checks,features,texture_formats:texture_view_descriptor:*'>
+<meta name=variant content='?q=webgpu:api,validation,capability_checks,features,texture_formats:canvas_configuration:*'>
+<meta name=variant content='?q=webgpu:api,validation,capability_checks,features,texture_formats:canvas_configuration_view_formats:*'>
+<meta name=variant content='?q=webgpu:api,validation,capability_checks,features,texture_formats:depth_stencil_state:*'>
+<meta name=variant content='?q=webgpu:api,validation,capability_checks,features,texture_formats:render_bundle_encoder_descriptor_depth_stencil_format:*'>
+<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:basic:*'>
+<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:shader_module,invalid:*'>
+<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:shader_module,compute:*'>
+<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:shader_module,device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:pipeline_layout,device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:limits,workgroup_storage_size:*'>
+<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:limits,invocations_per_workgroup:*'>
+<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:limits,invocations_per_workgroup,each_component:*'>
+<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:overrides,identifier:*'>
+<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:overrides,uninitialized:*'>
+<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:overrides,value,type_error:*'>
+<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:overrides,value,validation_error:*'>
+<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:overrides,value,validation_error,f16:*'>
+<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:overrides,workgroup_size:*'>
+<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:overrides,workgroup_size,limits:*'>
+<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:overrides,workgroup_size,limits,workgroup_storage_size:*'>
+<meta name=variant content='?q=webgpu:api,validation,createBindGroup:binding_count_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,createBindGroup:binding_must_be_present_in_layout:*'>
+<meta name=variant content='?q=webgpu:api,validation,createBindGroup:binding_must_contain_resource_defined_in_layout:*'>
