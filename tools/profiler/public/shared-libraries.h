@@ -113,6 +113,11 @@ class SharedLibraryInfo {
 
   void AddSharedLibrary(SharedLibrary entry) { mEntries.push_back(entry); }
 
+  void AddAllSharedLibraries(const SharedLibraryInfo& sharedLibraryInfo) {
+    mEntries.insert(mEntries.end(), sharedLibraryInfo.mEntries.begin(),
+                    sharedLibraryInfo.mEntries.end());
+  }
+
   const SharedLibrary& GetEntry(size_t i) const { return mEntries[i]; }
 
   SharedLibrary& GetMutableEntry(size_t i) { return mEntries[i]; }
