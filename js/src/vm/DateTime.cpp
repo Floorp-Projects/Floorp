@@ -35,6 +35,14 @@
 
 #include "util/Text.h"
 #include "vm/MutexIDs.h"
+#include "vm/Realm.h"
+
+/* static */
+js::DateTimeInfo::ShouldRFP js::DateTimeInfo::shouldRFP(JS::Realm* realm) {
+  return realm->behaviors().shouldResistFingerprinting()
+             ? DateTimeInfo::ShouldRFP::Yes
+             : DateTimeInfo::ShouldRFP::No;
+}
 
 static bool ComputeLocalTime(time_t local, struct tm* ptm) {
   // Neither localtime_s nor localtime_r are required to act as if tzset has
@@ -225,7 +233,8 @@ void js::DateTimeInfo::updateTimeZone() {
   }
 }
 
-js::DateTimeInfo::DateTimeInfo() {
+js::DateTimeInfo::DateTimeInfo(bool shouldResistFingerprinting)
+    : shouldResistFingerprinting_(shouldResistFingerprinting) {
   // Set the time zone status into the invalid state, so we compute the actual
   // defaults on first access. We don't yet want to initialize neither <ctime>
   // nor ICU's time zone classes, because that may cause I/O operations slowing
@@ -475,11 +484,17 @@ bool js::DateTimeInfo::internalTimeZoneDisplayName(char16_t* buf, size_t buflen,
 
 mozilla::intl::TimeZone* js::DateTimeInfo::timeZone() {
   if (!timeZone_) {
-    auto timeZone = mozilla::intl::TimeZone::TryCreate();
+    // For resist finger printing mode we always use the UTC time zone.
+    mozilla::Maybe<mozilla::Span<const char16_t>> timeZoneOverride;
+    if (shouldResistFingerprinting_) {
+      timeZoneOverride = mozilla::Some(mozilla::MakeStringSpan(u"UTC"));
+    }
 
-    // Creating the default time zone should never fail. If it should fail
-    // nonetheless for some reason, just crash because we don't have a way to
-    // propagate any errors.
+    auto timeZone = mozilla::intl::TimeZone::TryCreate(timeZoneOverride);
+
+    // Creating the default or UTC time zone should never fail. If it should
+    // fail nonetheless for some reason, just crash because we don't have a way
+    // to propagate any errors.
     MOZ_RELEASE_ASSERT(timeZone.isOk());
 
     timeZone_ = timeZone.unwrap();
@@ -491,13 +506,17 @@ mozilla::intl::TimeZone* js::DateTimeInfo::timeZone() {
 #endif /* JS_HAS_INTL_API */
 
 /* static */ js::ExclusiveData<js::DateTimeInfo>* js::DateTimeInfo::instance;
+/* static */ js::ExclusiveData<js::DateTimeInfo>* js::DateTimeInfo::instanceRFP;
 
 bool js::InitDateTimeState() {
-  MOZ_ASSERT(!DateTimeInfo::instance, "we should be initializing only once");
+  MOZ_ASSERT(!DateTimeInfo::instance && !DateTimeInfo::instanceRFP,
+             "we should be initializing only once");
 
   DateTimeInfo::instance =
-      js_new<ExclusiveData<DateTimeInfo>>(mutexid::DateTimeInfoMutex);
-  return !!DateTimeInfo::instance;
+      js_new<ExclusiveData<DateTimeInfo>>(mutexid::DateTimeInfoMutex, false);
+  DateTimeInfo::instanceRFP =
+      js_new<ExclusiveData<DateTimeInfo>>(mutexid::DateTimeInfoMutex, true);
+  return DateTimeInfo::instance && DateTimeInfo::instanceRFP;
 }
 
 /* static */
@@ -731,6 +750,15 @@ static bool ReadTimeZoneLink(std::string_view tz,
 
 void js::DateTimeInfo::internalResyncICUDefaultTimeZone() {
 #if JS_HAS_INTL_API
+  // In the future we should not be setting a default ICU time zone at all,
+  // instead all accesses should go through the appropriate DateTimeInfo
+  // instance depending on the resist fingerprinting status. For now we return
+  // early to prevent overwriting the default time zone with the UTC time zone
+  // used by RFP.
+  if (shouldResistFingerprinting_) {
+    return;
+  }
+
   if (const char* tzenv = std::getenv("TZ")) {
     std::string_view tz(tzenv);
 
