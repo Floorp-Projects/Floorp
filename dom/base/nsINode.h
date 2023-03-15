@@ -832,7 +832,6 @@ class nsINode : public mozilla::dom::EventTarget {
     return IsSVGElement() && IsNodeInternal(aFirst, aArgs...);
   }
 
-  virtual bool IsSVGAnimationElement() const { return false; }
   virtual bool IsSVGGraphicsElement() const { return false; }
 
   inline bool IsXULElement() const {

@@ -258,7 +258,10 @@ bool SVGPathElement::HasValidDimensions() const {
 
 NS_IMETHODIMP_(bool)
 SVGPathElement::IsAttributeMapped(const nsAtom* name) const {
-  return (StaticPrefs::layout_css_d_property_enabled() &&
+  static const MappedAttributeEntry* const map[] = {sMarkersMap};
+
+  return FindAttributeDependence(name, map) ||
+         (StaticPrefs::layout_css_d_property_enabled() &&
           name == nsGkAtoms::d) ||
          SVGPathElementBase::IsAttributeMapped(name);
 }

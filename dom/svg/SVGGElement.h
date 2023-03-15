@@ -24,6 +24,8 @@ class SVGGElement final : public SVGGraphicsElement {
 
  public:
   // nsIContent
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
+
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 };
 

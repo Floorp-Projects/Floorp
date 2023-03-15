@@ -610,7 +610,13 @@ SVGUseFrame* SVGUseElement::GetFrame() const {
 
 NS_IMETHODIMP_(bool)
 SVGUseElement::IsAttributeMapped(const nsAtom* name) const {
+  static const MappedAttributeEntry* const map[] = {
+      sFEFloodMap,         sFiltersMap, sGradientStopMap,
+      sLightingEffectsMap, sMarkersMap, sTextContentElementsMap,
+      sViewportsMap};
+
   return name == nsGkAtoms::x || name == nsGkAtoms::y ||
+         FindAttributeDependence(name, map) ||
          SVGUseElementBase::IsAttributeMapped(name);
 }
 

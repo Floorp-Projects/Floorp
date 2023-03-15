@@ -39,6 +39,8 @@ class SVGFEFloodElement final : public SVGFEFloodElementBase {
   }
 
   // nsIContent interface
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
+
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   nsresult BindToTree(BindContext& aCtx, nsINode& aParent) override;

@@ -26,6 +26,14 @@ SVGTransformableElement::Transform() {
 //----------------------------------------------------------------------
 // nsIContent methods
 
+NS_IMETHODIMP_(bool)
+SVGTransformableElement::IsAttributeMapped(const nsAtom* name) const {
+  static const MappedAttributeEntry* const map[] = {sColorMap, sGraphicsMap};
+
+  return FindAttributeDependence(name, map) ||
+         SVGElement::IsAttributeMapped(name);
+}
+
 nsChangeHint SVGTransformableElement::GetAttributeChangeHint(
     const nsAtom* aAttribute, int32_t aModType) const {
   nsChangeHint retval =

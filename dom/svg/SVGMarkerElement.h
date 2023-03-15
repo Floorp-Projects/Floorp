@@ -44,6 +44,9 @@ class SVGMarkerElement final : public SVGMarkerElementBase {
   JSObject* WrapNode(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
 
  public:
+  // nsIContent interface
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* name) const override;
+
   // SVGSVGElement methods:
   bool HasValidDimensions() const override;
 

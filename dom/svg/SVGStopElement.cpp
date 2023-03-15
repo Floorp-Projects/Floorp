@@ -44,4 +44,16 @@ SVGElement::NumberAttributesInfo SVGStopElement::GetNumberInfo() {
   return NumberAttributesInfo(&mOffset, &sNumberInfo, 1);
 }
 
+//----------------------------------------------------------------------
+// nsIContent methods
+
+NS_IMETHODIMP_(bool)
+SVGStopElement::IsAttributeMapped(const nsAtom* name) const {
+  static const MappedAttributeEntry* const map[] = {sColorMap,
+                                                    sGradientStopMap};
+
+  return FindAttributeDependence(name, map) ||
+         SVGStopElementBase::IsAttributeMapped(name);
+}
+
 }  // namespace mozilla::dom
