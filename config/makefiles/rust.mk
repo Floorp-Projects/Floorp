@@ -428,7 +428,6 @@ ifeq (WASI,$(OS_ARCH))
 force-cargo-library-build: CARGO_RUSTCFLAGS += -C target-feature=-crt-static
 endif
 
-
 # Assume any system libraries rustc links against are already in the target's LIBS.
 #
 # We need to run cargo unconditionally, because cargo is the only thing that
@@ -438,34 +437,7 @@ force-cargo-library-build:
 	$(REPORT_BUILD)
 	$(call CARGO_BUILD) --lib $(cargo_target_flag) $(rust_features_flag) -- $(cargo_rustc_flags)
 
-# RUST_OBJ_DEPENDENCIES(RUST_OBJ,REBUILD_RULE)
-# Generates a rule suitable to rebuild RUST_OBJ with REBUILD_RULE only if its
-# dependencies are obsolete.
-#
-# It relies on the fact that upon build, cargo generates a dependency file named
-# `$(RUST_OBJ).d'. Unfortunately the lhs of the rule has an absolute path,
-# so we extract it under the name $(RUST_OBJ)_deps below.
-#
-# If the dependencies are empty, the file was not created so we force a rebuild.
-# Otherwise we add it to the dependency list.
-#
-# $(patsubst %.a,%,$(1)).d is used to extract the dependency name, the pattern
-# used by rust is:
-# 	- program_name -> program_name.d
-# 	- library_name.a -> library_name.d
-#
-# The actual rule is a bit tricky. The `+' prefix allow for recursive parallel
-# make, and it's skipped (`:') if we already triggered a rebuild as part of the
-# dependency chain.
-#
-define RUST_OBJ_DEPENDENCIES
-$(1)_deps := $(wordlist 2, 10000000, $(file < $(patsubst %.a,%,$(1)).d))
-$(1): $(CARGO_FILE) $(call resfile,module) $(if $$($(1)_deps),$$($(1)_deps),$(2))
-	$(if $$($(1)_deps),+$(MAKE) $(2),:)
-endef
-
-$(eval $(call RUST_OBJ_DEPENDENCIES,$(RUST_LIBRARY_FILE),force-cargo-library-build))
-
+$(RUST_LIBRARY_FILE): force-cargo-library-build
 # When we are building in --enable-release mode; we add an additional check to confirm
 # that we are not importing any networking-related functions in rust code. This reduces
 # the chance of proxy bypasses originating from rust code.
@@ -546,7 +518,7 @@ force-cargo-program-build: $(call resfile,module)
 	$(REPORT_BUILD)
 	$(call CARGO_BUILD) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(cargo_target_flag) -- $(addprefix -C link-arg=$(CURDIR)/,$(call resfile,module)) $(CARGO_RUSTCFLAGS)
 
-$(foreach RUST_PROGRAM,$(RUST_PROGRAMS), $(eval $(call RUST_PROGRAM_DEPENDENCIES,$(RUST_PROGRAM),force-cargo-program-build)))
+$(RUST_PROGRAMS): force-cargo-program-build ;
 
 ifndef CARGO_NO_AUTO_ARG
 force-cargo-program-%:
