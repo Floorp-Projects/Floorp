@@ -585,14 +585,29 @@ nsProfiler::GetProfileDataAsGzippedArrayBuffer(double aSinceTime,
             }
 
             JSContext* cx = jsapi.cx();
+            // Get the profile typedArray.
             JSObject* typedArray = dom::ArrayBuffer::Create(
                 cx, outBuff.Length(), outBuff.Elements());
-            if (typedArray) {
-              JS::Rooted<JS::Value> val(cx, JS::ObjectValue(*typedArray));
-              promise->MaybeResolve(val);
-            } else {
+            if (!typedArray) {
               promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
+              return;
             }
+            JS::Rooted<JS::Value> typedArrayValue(cx,
+                                                  JS::ObjectValue(*typedArray));
+            // Get the additional information object.
+            JS::Rooted<JS::Value> additionalInfoVal(cx);
+            if (aResult.mAdditionalInformation.isSome()) {
+              aResult.mAdditionalInformation->ToJSValue(cx, &additionalInfoVal);
+            } else {
+              additionalInfoVal.setUndefined();
+            }
+
+            // Create the return object.
+            JS::Rooted<JSObject*> resultObj(cx, JS_NewPlainObject(cx));
+            JS_SetProperty(cx, resultObj, "profile", typedArrayValue);
+            JS_SetProperty(cx, resultObj, "additionalInformation",
+                           additionalInfoVal);
+            promise->MaybeResolve(resultObj);
           },
           [promise](nsresult aRv) { promise->MaybeReject(aRv); });
 

@@ -15,6 +15,7 @@
 #define ProfileAdditionalInformation_h
 
 #include "shared-libraries.h"
+#include "js/Value.h"
 
 namespace IPC {
 class MessageReader;
@@ -39,6 +40,8 @@ struct ProfileGenerationAdditionalInformation {
   }
 
   void FinishGathering() { mSharedLibraries.DeduplicateEntries(); }
+
+  void ToJSValue(JSContext* aCx, JS::MutableHandle<JS::Value> aRetVal) const;
 
   SharedLibraryInfo mSharedLibraries;
 };
