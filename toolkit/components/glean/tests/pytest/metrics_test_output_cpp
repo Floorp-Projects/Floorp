@@ -29,13 +29,31 @@ namespace test {
     constexpr impl::BooleanMetric boolean_metric(1);
 
     /**
+     * generated from test.counter_metric
+     */
+    /**
+     * A multi-line
+     * description
+     */
+    constexpr impl::CounterMetric counter_metric(2);
+
+    /**
+     * generated from test.custom_distribution_metric
+     */
+    /**
+     * A multi-line
+     * description
+     */
+    constexpr impl::CustomDistributionMetric custom_distribution_metric(3);
+
+    /**
      * generated from test.labeled_boolean_metric
      */
     /**
      * A multi-line
      * description
      */
-    constexpr impl::Labeled<impl::BooleanMetric> labeled_boolean_metric(2);
+    constexpr impl::Labeled<impl::BooleanMetric> labeled_boolean_metric(4);
 
     /**
      * generated from test.labeled_boolean_metric_labels
@@ -44,16 +62,7 @@ namespace test {
      * A multi-line
      * description
      */
-    constexpr impl::Labeled<impl::BooleanMetric> labeled_boolean_metric_labels(3);
-
-    /**
-     * generated from test.counter_metric
-     */
-    /**
-     * A multi-line
-     * description
-     */
-    constexpr impl::CounterMetric counter_metric(4);
+    constexpr impl::Labeled<impl::BooleanMetric> labeled_boolean_metric_labels(5);
 
     /**
      * generated from test.labeled_counter_metric
@@ -62,7 +71,7 @@ namespace test {
      * A multi-line
      * description
      */
-    constexpr impl::Labeled<impl::CounterMetric> labeled_counter_metric(5);
+    constexpr impl::Labeled<impl::CounterMetric> labeled_counter_metric(6);
 
     /**
      * generated from test.labeled_counter_metric_labels
@@ -71,16 +80,7 @@ namespace test {
      * A multi-line
      * description
      */
-    constexpr impl::Labeled<impl::CounterMetric> labeled_counter_metric_labels(6);
-
-    /**
-     * generated from test.string_metric
-     */
-    /**
-     * A multi-line
-     * description
-     */
-    constexpr impl::StringMetric string_metric(7);
+    constexpr impl::Labeled<impl::CounterMetric> labeled_counter_metric_labels(7);
 
     /**
      * generated from test.labeled_string_metric
@@ -101,13 +101,31 @@ namespace test {
     constexpr impl::Labeled<impl::StringMetric> labeled_string_metric_labels(9);
 
     /**
+     * generated from test.memory_distribution_metric
+     */
+    /**
+     * A multi-line
+     * description
+     */
+    constexpr impl::MemoryDistributionMetric memory_distribution_metric(10);
+
+    /**
      * generated from test.string_list_metric
      */
     /**
      * A multi-line
      * description
      */
-    constexpr impl::StringListMetric string_list_metric(10);
+    constexpr impl::StringListMetric string_list_metric(11);
+
+    /**
+     * generated from test.string_metric
+     */
+    /**
+     * A multi-line
+     * description
+     */
+    constexpr impl::StringMetric string_metric(12);
 
     /**
      * generated from test.timespan_metric
@@ -116,7 +134,7 @@ namespace test {
      * A multi-line
      * description
      */
-    constexpr impl::TimespanMetric timespan_metric(11);
+    constexpr impl::TimespanMetric timespan_metric(13);
 
     /**
      * generated from test.timing_distribution_metric
@@ -125,37 +143,10 @@ namespace test {
      * A multi-line
      * description
      */
-    constexpr impl::TimingDistributionMetric timing_distribution_metric(12);
-
-    /**
-     * generated from test.memory_distribution_metric
-     */
-    /**
-     * A multi-line
-     * description
-     */
-    constexpr impl::MemoryDistributionMetric memory_distribution_metric(13);
-
-    /**
-     * generated from test.custom_distribution_metric
-     */
-    /**
-     * A multi-line
-     * description
-     */
-    constexpr impl::CustomDistributionMetric custom_distribution_metric(14);
+    constexpr impl::TimingDistributionMetric timing_distribution_metric(14);
 
 }
 namespace test_nested {
-    /**
-     * generated from test.nested.uuid_metric
-     */
-    /**
-     * A multi-line
-     * description
-     */
-    constexpr impl::UuidMetric uuid_metric(15);
-
     /**
      * generated from test.nested.datetime_metric
      */
@@ -163,7 +154,7 @@ namespace test_nested {
      * A multi-line
      * description
      */
-    constexpr impl::DatetimeMetric datetime_metric(16);
+    constexpr impl::DatetimeMetric datetime_metric(15);
 
     /**
      * generated from test.nested.event_metric
@@ -172,7 +163,7 @@ namespace test_nested {
      * A multi-line
      * description
      */
-    constexpr impl::EventMetric<NoExtraKeys> event_metric(17);
+    constexpr impl::EventMetric<NoExtraKeys> event_metric(16);
 
     /**
      * generated from test.nested.event_metric_with_extra
@@ -199,7 +190,16 @@ namespace test_nested {
      * A multi-line
      * description
      */
-    constexpr impl::EventMetric<EventMetricWithExtraExtra> event_metric_with_extra(18);
+    constexpr impl::EventMetric<EventMetricWithExtraExtra> event_metric_with_extra(17);
+
+    /**
+     * generated from test.nested.external_denominator
+     */
+    /**
+     * A multi-line
+     * description
+     */
+    constexpr impl::DenominatorMetric external_denominator(18);
 
     /**
      * generated from test.nested.quantity_metric
@@ -229,13 +229,13 @@ namespace test_nested {
     constexpr impl::NumeratorMetric rate_with_external_denominator(21);
 
     /**
-     * generated from test.nested.external_denominator
+     * generated from test.nested.uuid_metric
      */
     /**
      * A multi-line
      * description
      */
-    constexpr impl::DenominatorMetric external_denominator(22);
+    constexpr impl::UuidMetric uuid_metric(22);
 
 }
 
