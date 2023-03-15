@@ -97,11 +97,12 @@ add_task(async function engagement_before_showing_results() {
   // Add a provider that add a result immediately as usual.
   UrlbarProvidersManager.registerProvider(anotherHeuristicProvider);
 
-  registerCleanupFunction(function() {
+  const cleanup = () => {
     UrlbarProvidersManager.unregisterProvider(noResponseProvider);
     UrlbarProvidersManager.unregisterProvider(anotherHeuristicProvider);
     UrlbarProvidersManager._chunkResultsDelayMs = originalChuldResultDelayMs;
-  });
+  };
+  registerCleanupFunction(cleanup);
 
   await doTest(async browser => {
     // Try to show the results.
@@ -137,5 +138,46 @@ add_task(async function engagement_before_showing_results() {
     noResponseProvider.done();
   });
 
+  cleanup();
   await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function engagement_after_closing_results() {
+  const TRIGGERS = [
+    () => EventUtils.synthesizeKey("KEY_Escape"),
+    () =>
+      EventUtils.synthesizeMouseAtCenter(
+        document.getElementById("customizableui-special-spring2"),
+        {}
+      ),
+  ];
+
+  for (const trigger of TRIGGERS) {
+    await doTest(async browser => {
+      await openPopup("test");
+      await UrlbarTestUtils.promisePopupClose(window, () => {
+        trigger();
+      });
+      Assert.equal(
+        gURLBar.value,
+        "test",
+        "The inputted text remains even if closing the results"
+      );
+      // The tested trigger should not record abandonment event.
+      assertAbandonmentTelemetry([]);
+
+      // Endgagement.
+      await doEnter();
+
+      assertEngagementTelemetry([
+        {
+          selected_result: "input_field",
+          selected_result_subtype: "",
+          provider: undefined,
+          results: "",
+          groups: "",
+        },
+      ]);
+    });
+  }
 });

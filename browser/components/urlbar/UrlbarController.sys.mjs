@@ -1094,31 +1094,29 @@ class TelemetryEvent {
     );
     const search_mode = this.#getSearchMode(searchMode);
     const currentResults = queryContext?.view?.visibleResults ?? [];
-    const numResults = currentResults.length;
-    const groups = currentResults
+    let numResults = currentResults.length;
+    let groups = currentResults
       .map(r => lazy.UrlbarUtils.searchEngagementTelemetryGroup(r))
       .join(",");
-    const results = currentResults
+    let results = currentResults
       .map(r => lazy.UrlbarUtils.searchEngagementTelemetryType(r))
       .join(",");
 
     let eventInfo;
     if (method === "engagement") {
-      let selected_result;
-      let selected_result_subtype;
-      if (numResults) {
-        const selectedResult = currentResults[selIndex];
-        selected_result = lazy.UrlbarUtils.searchEngagementTelemetryType(
-          selectedResult,
-          selType
-        );
-        selected_result_subtype = lazy.UrlbarUtils.searchEngagementTelemetrySubtype(
-          selectedResult,
-          selectedElement
-        );
-      } else {
-        selected_result = "input_field";
-        selected_result_subtype = "";
+      const selected_result = lazy.UrlbarUtils.searchEngagementTelemetryType(
+        currentResults[selIndex],
+        selType
+      );
+      const selected_result_subtype = lazy.UrlbarUtils.searchEngagementTelemetrySubtype(
+        currentResults[selIndex],
+        selectedElement
+      );
+
+      if (selected_result === "input_field" && !queryContext?.view?.isOpen) {
+        numResults = 0;
+        groups = "";
+        results = "";
       }
 
       eventInfo = {
