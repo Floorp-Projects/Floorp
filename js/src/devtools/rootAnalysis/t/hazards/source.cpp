@@ -430,8 +430,12 @@ class Subcell : public Cell {
 template <typename T>
 struct RefPtr {
   ~RefPtr() { GC(); }
-  void forget() {}
+  bool forget() { return true; }
+  bool use() { return true; }
+  void assign_with_AddRef(T* aRawPtr) { asm(""); }
 };
+
+extern bool flipcoin();
 
 Cell* refptr_test1() {
   static Cell cell;
@@ -468,6 +472,59 @@ Cell* refptr_test5() {
   static Cell cell;
   RefPtr<int> r;
   return nullptr;  // returning immobile value, so no hazard
+}
+
+float somefloat = 1.2;
+
+Cell* refptr_test6() {
+  static Cell cell;
+  RefPtr<float> v6;
+  Cell* ref_unsafe6 = &cell;
+  // v6 can be used without an intervening forget() before the end of the
+  // function, even though forget() will be called at least once.
+  v6.forget();
+  if (x) {
+    v6.forget();
+    v6.assign_with_AddRef(&somefloat);
+  }
+  return ref_unsafe6;
+}
+
+Cell* refptr_test7() {
+  static Cell cell;
+  RefPtr<float> v7;
+  Cell* ref_unsafe7 = &cell;
+  // Similar to above, but with a loop.
+  while (flipcoin()) {
+    v7.forget();
+    v7.assign_with_AddRef(&somefloat);
+  }
+  return ref_unsafe7;
+}
+
+Cell* refptr_test8() {
+  static Cell cell;
+  RefPtr<float> v8;
+  Cell* ref_unsafe8 = &cell;
+  // If the loop is traversed, forget() will be called. But that doesn't
+  // matter, because even on the last iteration v8.use() will have been called
+  // (and potentially dropped the refcount or whatever.)
+  while (v8.use()) {
+    v8.forget();
+  }
+  return ref_unsafe8;
+}
+
+Cell* refptr_test9() {
+  static Cell cell;
+  RefPtr<float> v9;
+  Cell* ref_safe9 = &cell;
+  // Even when not going through the loop, forget() will be called and so the
+  // dtor will not Release.
+  while (v9.forget()) {
+    v9.assign_with_AddRef(&somefloat);
+  }
+  return ref_safe9;
 }
 
 std::pair<bool, AutoCheckCannotGC> pair_returning_function() {

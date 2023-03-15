@@ -44,6 +44,9 @@ assert returnval_hazards == set(
         "Cell* refptr_test1()",
         "Cell* refptr_test3()",
         "Cell* refptr_test4()",
+        "Cell* refptr_test6()",
+        "Cell* refptr_test7()",
+        "Cell* refptr_test8()",
     ]
 )
 
@@ -98,6 +101,19 @@ assert "this" in methhaz
 assert methhaz["this"].type == "Subcell*"
 
 haz_functions = set(haz.function for haz in hazards)
+
+# RefPtr<T> tests.
+
+haz_functions = set(haz.function for haz in hazards)
+assert "Cell* refptr_test1()" in haz_functions
+assert "Cell* refptr_test2()" not in haz_functions
+assert "Cell* refptr_test3()" in haz_functions
+assert "Cell* refptr_test4()" in haz_functions
+assert "Cell* refptr_test5()" not in haz_functions
+assert "Cell* refptr_test6()" in haz_functions
+assert "Cell* refptr_test7()" in haz_functions
+assert "Cell* refptr_test8()" in haz_functions
+assert "Cell* refptr_test9()" not in haz_functions
 
 # aggr_init tests.
 
