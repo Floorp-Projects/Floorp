@@ -18,5 +18,3 @@ Library("dummy")
 UNIFIED_SOURCES += ["test1.c"]
 
 DisableCompilerWarnings()
-
-REQUIRES_UNIFIED_BUILD = True
