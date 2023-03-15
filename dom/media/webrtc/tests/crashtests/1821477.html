@@ -1,0 +1,16 @@
+<html class="reftest-wait">
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  SpecialPowers.wrap(document).notifyUserGestureActivation();
+  try {
+    (await navigator.mediaDevices.getDisplayMedia({
+      "video": {
+        "frameRate": 2147483647,
+      },
+    })).stop();
+  } finally {
+    document.documentElement.removeAttribute("class");
+  }
+});
+</script>
+</html>
