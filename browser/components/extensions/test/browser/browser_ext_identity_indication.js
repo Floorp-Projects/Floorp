@@ -24,6 +24,17 @@ function confirmDefaults() {
   );
 }
 
+async function waitForIndentityBoxMutation({ expectExtensionIcon }) {
+  const el = document.getElementById("identity-box");
+  await BrowserTestUtils.waitForMutationCondition(
+    el,
+    {
+      attributeFilter: ["class"],
+    },
+    () => el.classList.contains("extensionPage") == expectExtensionIcon
+  );
+}
+
 function confirmExtensionPage() {
   let identityIconEl = document.getElementById("identity-icon");
 
@@ -66,11 +77,20 @@ add_task(async function testIdentityIndication() {
   confirmDefaults();
 
   let url = await extension.awaitMessage("url");
+
+  const promiseIdentityBoxExtension = waitForIndentityBoxMutation({
+    expectExtensionIcon: true,
+  });
   await BrowserTestUtils.withNewTab({ gBrowser, url }, async function() {
+    await promiseIdentityBoxExtension;
     confirmExtensionPage();
   });
 
+  const promiseIdentityBoxDefault = waitForIndentityBoxMutation({
+    expectExtensionIcon: false,
+  });
   await extension.unload();
+  await promiseIdentityBoxDefault;
 
   confirmDefaults();
 });
@@ -102,12 +122,20 @@ add_task(async function testIdentityIndicationNewTab() {
   confirmDefaults();
 
   let url = await extension.awaitMessage("url");
+  const promiseIdentityBoxExtension = waitForIndentityBoxMutation({
+    expectExtensionIcon: true,
+  });
   await BrowserTestUtils.withNewTab({ gBrowser, url }, async function() {
+    await promiseIdentityBoxExtension;
     confirmExtensionPage();
     is(gURLBar.value, "", "The URL bar is blank");
   });
 
+  const promiseIdentityBoxDefault = waitForIndentityBoxMutation({
+    expectExtensionIcon: false,
+  });
   await extension.unload();
+  await promiseIdentityBoxDefault;
 
   confirmDefaults();
 });
