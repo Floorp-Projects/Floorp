@@ -84,6 +84,18 @@ already_AddRefed<DOMSVGAnimatedString> SVGGradientElement::Href() {
              : mStringAttributes[XLINK_HREF].ToDOMAnimatedString(this);
 }
 
+//----------------------------------------------------------------------
+// nsIContent methods
+
+NS_IMETHODIMP_(bool)
+SVGGradientElement::IsAttributeMapped(const nsAtom* name) const {
+  static const MappedAttributeEntry* const map[] = {sColorMap,
+                                                    sGradientStopMap};
+
+  return FindAttributeDependence(name, map) ||
+         SVGGradientElementBase::IsAttributeMapped(name);
+}
+
 //---------------------Linear Gradients------------------------
 
 JSObject* SVGLinearGradientElement::WrapNode(

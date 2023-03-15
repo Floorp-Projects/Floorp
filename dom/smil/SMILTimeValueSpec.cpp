@@ -215,7 +215,7 @@ void SMILTimeValueSpec::UnregisterFromReferencedElement(Element* aElement) {
 }
 
 SMILTimedElement* SMILTimeValueSpec::GetTimedElement(Element* aElement) {
-  auto* animationElement = SVGAnimationElement::FromNodeOrNull(aElement);
+  nsCOMPtr<SVGAnimationElement> animationElement = do_QueryInterface(aElement);
   return animationElement ? &animationElement->TimedElement() : nullptr;
 }
 

@@ -35,6 +35,17 @@ already_AddRefed<DOMSVGPointList> SVGPolyElement::AnimatedPoints() {
 }
 
 //----------------------------------------------------------------------
+// nsIContent methods
+
+NS_IMETHODIMP_(bool)
+SVGPolyElement::IsAttributeMapped(const nsAtom* name) const {
+  static const MappedAttributeEntry* const map[] = {sMarkersMap};
+
+  return FindAttributeDependence(name, map) ||
+         SVGPolyElementBase::IsAttributeMapped(name);
+}
+
+//----------------------------------------------------------------------
 // SVGElement methods
 
 /* virtual */
