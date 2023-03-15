@@ -32,7 +32,6 @@
 #include "modules/desktop_capture/desktop_frame.h"
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/video_capture/video_capture.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/TaskQueue.h"
@@ -695,9 +694,8 @@ void DesktopCaptureImpl::InitOnThread(int aFramerate) {
   mCapturer->Start(this);
 
   mCaptureTimer = NS_NewTimer();
-  mRequestedCaptureInterval =
-      TimeDuration::FromSeconds(1. / static_cast<double>(aFramerate));
-  MOZ_ASSERT(!mRequestedCaptureInterval.IsZero());
+  mRequestedCaptureInterval = mozilla::Some(
+      TimeDuration::FromSeconds(1. / static_cast<double>(aFramerate)));
 
   CaptureFrameOnThread();
 }
@@ -708,7 +706,7 @@ void DesktopCaptureImpl::ShutdownOnThread() {
     mCaptureTimer->Cancel();
     mCaptureTimer = nullptr;
   }
-  mRequestedCaptureInterval = mozilla::TimeDuration();
+  mRequestedCaptureInterval = mozilla::Nothing();
 }
 
 void DesktopCaptureImpl::CaptureFrameOnThread() {
@@ -720,7 +718,7 @@ void DesktopCaptureImpl::CaptureFrameOnThread() {
 
   // Calculate next capture time.
   const auto duration = end - start;
-  const auto timeUntilRequestedCapture = mRequestedCaptureInterval - duration;
+  const auto timeUntilRequestedCapture = *mRequestedCaptureInterval - duration;
 
   // Use at most x% CPU or limit framerate
   constexpr float sleepTimeFactor =
