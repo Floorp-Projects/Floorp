@@ -10,6 +10,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/dom/Comment.h"
 #include "mozilla/dom/CustomElementRegistry.h"
+#include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/LinkStyle.h"
