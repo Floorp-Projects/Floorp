@@ -59,7 +59,7 @@ async function pause(store, client) {
     actions.newGeneratedSource(makeSource("base.js"))
   );
 
-  await dispatch(actions.selectSource(cx, base.id));
+  await dispatch(actions.selectSource(cx, base));
   await waitForState(store, state => selectors.getSymbols(state, base));
 
   const { thread } = cx;
@@ -84,7 +84,7 @@ describe("preview", () => {
       actions.newGeneratedSource(makeSource("base.js"))
     );
 
-    await dispatch(actions.selectSource(cx, base.id));
+    await dispatch(actions.selectSource(cx, base));
     await waitForState(store, state => selectors.getSymbols(state, base));
     const frames = [makeFrame({ id: "f1", sourceId: base.id })];
 

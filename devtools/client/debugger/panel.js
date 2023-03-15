@@ -328,7 +328,7 @@ class DebuggerPanel {
       threadActorID
     );
     const cx = this._selectors.getContext(this._getState());
-    await this._actions.selectSource(cx, source.id, sourceActor.id);
+    await this._actions.selectSource(cx, source, sourceActor);
   }
 
   selectThread(threadActorID) {

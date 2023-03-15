@@ -150,11 +150,7 @@ class SourcesTree extends Component {
   }
 
   selectSourceItem = item => {
-    this.props.selectSource(
-      this.props.cx,
-      item.source.id,
-      item.sourceActor.actor
-    );
+    this.props.selectSource(this.props.cx, item.source, item.sourceActor);
   };
 
   onFocus = item => {

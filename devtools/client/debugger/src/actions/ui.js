@@ -116,7 +116,7 @@ export function showSource(cx, sourceId) {
 
     dispatch(setPrimaryPaneTab("sources"));
 
-    dispatch(selectSource(cx, source.id));
+    dispatch(selectSource(cx, source));
   };
 }
 

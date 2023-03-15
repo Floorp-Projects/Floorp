@@ -88,18 +88,20 @@ export function selectSourceURL(cx, url, options) {
  * the precise generated/original source passed as argument.
  *
  * @param {Object} cx
- * @param {String} sourceId
+ * @param {String} source
  *        The precise source to select.
- * @param {String} sourceActorId
+ * @param {String} sourceActor
  *        The specific source actor of the source to
  *        select the source text. This is optional.
- * @param {Object} location
- *        Optional precise location to select, if we need to select
- *        a precise line/column.
  */
-export function selectSource(cx, sourceId, sourceActorId, location = {}) {
+export function selectSource(cx, source, sourceActor) {
   return async ({ dispatch }) => {
-    location = createLocation({ ...location, sourceId, sourceActorId });
+    // `createLocation` requires a source object, but we may use selectSource to close the last tab,
+    // where source will be null and the location will be an empty object.
+    const location = source
+      ? createLocation({ sourceId: source.id, sourceActorId: sourceActor?.id })
+      : {};
+
     return dispatch(selectSpecificLocation(cx, location));
   };
 }

@@ -47,16 +47,16 @@ export function hasPrettyTab(state, sourceUrl) {
  * 2. if it is gone, the next available tab to the left should be active
  * 3. if the first tab is active and closed, select the second tab
  */
-export function getNewSelectedSourceId(state, tabList) {
+export function getNewSelectedSource(state, tabList) {
   const { selectedLocation } = state.sources;
   const availableTabs = state.tabs.tabs;
   if (!selectedLocation) {
-    return "";
+    return null;
   }
 
   const selectedTab = getLocationSource(state, selectedLocation);
   if (!selectedTab) {
-    return "";
+    return null;
   }
 
   const matchingTab = availableTabs.find(tab =>
@@ -66,7 +66,7 @@ export function getNewSelectedSourceId(state, tabList) {
   if (matchingTab) {
     const { sources } = state.sources;
     if (!sources) {
-      return "";
+      return null;
     }
 
     const selectedSource = getSpecificSourceByURL(
@@ -76,10 +76,10 @@ export function getNewSelectedSourceId(state, tabList) {
     );
 
     if (selectedSource) {
-      return selectedSource.id;
+      return selectedSource;
     }
 
-    return "";
+    return null;
   }
 
   const tabUrls = tabList.map(tab => tab.url);
@@ -96,9 +96,9 @@ export function getNewSelectedSourceId(state, tabList) {
     );
 
     if (tabSource) {
-      return tabSource.id;
+      return tabSource;
     }
   }
 
-  return "";
+  return null;
 }
