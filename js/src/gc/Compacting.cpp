@@ -455,10 +455,11 @@ void Zone::prepareForCompacting() {
 }
 
 void GCRuntime::sweepZoneAfterCompacting(MovingTracer* trc, Zone* zone) {
-  MOZ_ASSERT(zone->isCollecting());
-  traceWeakFinalizationObserverEdges(trc, zone);
+  MOZ_ASSERT(zone->isGCCompacting());
 
   zone->traceWeakMaps(trc);
+
+  traceWeakFinalizationObserverEdges(trc, zone);
 
   for (auto* cache : zone->weakCaches()) {
     cache->traceWeak(trc, nullptr);
