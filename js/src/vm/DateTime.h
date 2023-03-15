@@ -15,9 +15,8 @@
 #include "threading/ExclusiveData.h"
 
 #if JS_HAS_INTL_API
-namespace mozilla::intl {
-class TimeZone;
-}
+#  include "mozilla/intl/ICU4CGlue.h"
+#  include "mozilla/intl/TimeZone.h"
 #endif
 
 namespace js {
@@ -61,15 +60,6 @@ enum class ResetTimeZoneMode : bool {
  * time zone data.
  */
 extern void ResetTimeZoneInternal(ResetTimeZoneMode mode);
-
-/**
- * ICU's default time zone, used for various date/time formatting operations
- * that include the local time in the representation, is allowed to go stale
- * for unfortunate performance reasons.  Call this function when an up-to-date
- * default time zone is required, to resync ICU's default time zone with
- * reality.
- */
-extern void ResyncICUDefaultTimeZone();
 
 /**
  * Stores date/time information, particularly concerning the current local
@@ -186,6 +176,16 @@ class DateTimeInfo {
     return guard->internalTimeZoneDisplayName(buf, buflen, utcMilliseconds,
                                               locale);
   }
+
+  /**
+   * Copy the identifier for the current time zone to the provided resizable
+   * buffer.
+   */
+  template <typename B>
+  static mozilla::intl::ICUResult timeZoneId(B& buffer) {
+    auto guard = acquireLockWithValidTimeZone();
+    return guard->timeZone()->GetId(buffer);
+  }
 #else
   /**
    * Return the local time zone adjustment (ES2019 20.3.1.7) as computed by
@@ -197,19 +197,12 @@ class DateTimeInfo {
 #endif /* JS_HAS_INTL_API */
 
  private:
-  // The two methods below should only be called via js::ResetTimeZoneInternal()
-  // and js::ResyncICUDefaultTimeZone().
+  // The method below should only be called via js::ResetTimeZoneInternal().
   friend void js::ResetTimeZoneInternal(ResetTimeZoneMode);
-  friend void js::ResyncICUDefaultTimeZone();
 
   static void resetTimeZone(ResetTimeZoneMode mode) {
     auto guard = instance->lock();
     guard->internalResetTimeZone(mode);
-  }
-
-  static void resyncICUDefaultTimeZone() {
-    auto guard = acquireLockWithValidTimeZone();
-    (void)guard;
   }
 
   struct RangeCache {

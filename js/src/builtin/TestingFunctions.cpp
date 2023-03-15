@@ -107,6 +107,7 @@
 #include "util/Text.h"
 #include "vm/BooleanObject.h"
 #include "vm/DateObject.h"
+#include "vm/DateTime.h"
 #include "vm/ErrorObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/HelperThreads.h"
@@ -7959,7 +7960,7 @@ static bool GetICUOptions(JSContext* cx, unsigned argc, Value* vp) {
 
   intl::FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> buf(cx);
 
-  if (auto ok = mozilla::intl::TimeZone::GetDefaultTimeZone(buf); ok.isErr()) {
+  if (auto ok = DateTimeInfo::timeZoneId(buf); ok.isErr()) {
     intl::ReportInternalError(cx, ok.unwrapErr());
     return false;
   }
