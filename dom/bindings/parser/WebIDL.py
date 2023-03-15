@@ -283,6 +283,9 @@ class IDLScope(IDLObject):
             self._dict[identifier.name] = replacement
             return
 
+        self.addNewIdentifier(identifier, object)
+
+    def addNewIdentifier(self, identifier, object):
         assert object
 
         self._dict[identifier.name] = object
@@ -727,6 +730,15 @@ def globalNameSetToExposureSet(globalScope, nameSet, exposureSet):
         exposureSet.update(globalScope.globalNameMapping[name])
 
 
+# Because WebIDL allows static and regular operations with the same identifier
+# we use a special class to be able to store them both in the scope for the
+# same identifier.
+class IDLOperations:
+    def __init__(self, static=None, regular=None):
+        self.static = static
+        self.regular = regular
+
+
 class IDLInterfaceOrInterfaceMixinOrNamespace(IDLObjectWithScope, IDLExposureMixins):
     def __init__(self, location, parentScope, name):
         assert isinstance(parentScope, IDLScope)
@@ -756,14 +768,51 @@ class IDLInterfaceOrInterfaceMixinOrNamespace(IDLObjectWithScope, IDLExposureMix
             self.addExtendedAttributes(partial.propagatedExtendedAttrs)
             self.members.extend(partial.members)
 
+    def addNewIdentifier(self, identifier, object):
+        if isinstance(object, IDLMethod):
+            if object.isStatic():
+                object = IDLOperations(static=object)
+            else:
+                object = IDLOperations(regular=object)
+
+        IDLScope.addNewIdentifier(self, identifier, object)
+
     def resolveIdentifierConflict(self, scope, identifier, originalObject, newObject):
         assert isinstance(scope, IDLScope)
-        assert isinstance(originalObject, IDLInterfaceMember)
         assert isinstance(newObject, IDLInterfaceMember)
+
+        if isinstance(newObject, IDLMethod):
+            assert isinstance(originalObject, IDLOperations)
+
+            originalOperations = originalObject
+            if newObject.isStatic():
+                if originalOperations.static is None:
+                    originalOperations.static = newObject
+                    return originalOperations
+
+                originalObject = originalOperations.static
+            else:
+                if originalOperations.regular is None:
+                    originalOperations.regular = newObject
+                    return originalOperations
+
+                originalObject = originalOperations.regular
+
+            assert isinstance(originalObject, IDLMethod)
+        else:
+            assert isinstance(originalObject, IDLInterfaceMember)
 
         retval = IDLScope.resolveIdentifierConflict(
             self, scope, identifier, originalObject, newObject
         )
+
+        if isinstance(newObject, IDLMethod):
+            if newObject.isStatic():
+                originalOperations.static = retval
+            else:
+                originalOperations.regular = retval
+
+            retval = originalOperations
 
         # Might be a ctor, which isn't in self.members
         if newObject in self.members:
@@ -995,7 +1044,7 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
             self.location, "constructor", allowForbidden=True
         )
         try:
-            return self._lookupIdentifier(identifier)
+            return self._lookupIdentifier(identifier).static
         except Exception:
             return None
 
