@@ -12,7 +12,6 @@ add_task(async () => {
   let positionPolicies = [
     TOGGLE_POLICIES.TOP,
     TOGGLE_POLICIES.ONE_QUARTER,
-    TOGGLE_POLICIES.MIDDLE,
     TOGGLE_POLICIES.THREE_QUARTERS,
     TOGGLE_POLICIES.BOTTOM,
   ];

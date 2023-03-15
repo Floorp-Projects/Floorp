@@ -58,26 +58,6 @@
   display: none;
 }
 
-.pip-wrapper[policy="top"] {
-  top: 0%
-}
-
-.pip-wrapper[policy="one-quarter"] {
-  top: 25%
-}
-
-.pip-wrapper[policy="middle"] {
-  top: 50%
-}
-
-.pip-wrapper[policy="three-quarters"] {
-  top: 75%
-}
-
-.pip-wrapper[policy="bottom"] {
-  top: 100%
-}
-
 .pip-wrapper[medium-video] > .pip-expanded > .pip-icon-label > .pip-label {
   font-size: 13px;
 }
