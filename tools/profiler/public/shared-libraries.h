@@ -68,6 +68,12 @@ class SharedLibrary {
   const nsString& GetDebugPath() const { return mDebugPath; }
   const nsCString& GetVersion() const { return mVersion; }
   const std::string& GetArch() const { return mArch; }
+  size_t SizeOf() const {
+    return sizeof *this + mBreakpadId.Length() + mCodeId.Length() +
+           mModuleName.Length() * 2 + mModulePath.Length() * 2 +
+           mDebugName.Length() * 2 + mDebugPath.Length() * 2 +
+           mVersion.Length() + mArch.size();
+  }
 
  private:
   SharedLibrary() : mStart{0}, mEnd{0}, mOffset{0} {}
@@ -129,6 +135,16 @@ class SharedLibraryInfo {
   }
 
   void Clear() { mEntries.clear(); }
+
+  size_t SizeOf() const {
+    size_t size = 0;
+
+    for (const auto& item : mEntries) {
+      size += item.SizeOf();
+    }
+
+    return size;
+  }
 
  private:
   std::vector<SharedLibrary> mEntries;

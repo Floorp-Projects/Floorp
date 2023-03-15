@@ -381,7 +381,7 @@ mozilla::UniquePtr<char[]> profiler_get_profile(double aSinceTime = 0,
 
 // Write the profile for this process (excluding subprocesses) into aWriter.
 // Returns a failed result if the profiler is inactive.
-ProfilerResult<ProfileGenerationAdditionalInformation>
+ProfilerResult<mozilla::ProfileGenerationAdditionalInformation>
 profiler_stream_json_for_this_process(
     mozilla::baseprofiler::SpliceableJSONWriter& aWriter, double aSinceTime = 0,
     bool aIsShuttingDown = false,

@@ -13,6 +13,7 @@
 #include "mozilla/ProfileBufferControlledChunkManager.h"
 #include "mozilla/ProgressLogger.h"
 #include "mozilla/RefPtr.h"
+#include "ProfileAdditionalInformation.h"
 
 class nsIThread;
 struct PRThread;
@@ -33,7 +34,7 @@ class ProfilerChild final : public PProfilerChild,
   // This method can be used to grab a profile just before PProfiler is torn
   // down. The collected profile should then be sent through a different
   // message channel that is guaranteed to stay open long enough.
-  nsCString GrabShutdownProfile();
+  ProfileAndAdditionalInformation GrabShutdownProfile();
 
   void Destroy();
 
