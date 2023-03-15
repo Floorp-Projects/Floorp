@@ -24,7 +24,6 @@ import {
   getThreadContext,
   getPauseReason,
   getShouldBreakpointsPaneOpenOnPause,
-  getLocationSource,
   getSkipPausing,
   shouldLogEventBreakpoints,
 } from "../../selectors";
@@ -524,7 +523,7 @@ const mapStateToProps = state => {
     workers: getThreads(state),
     skipPausing: getSkipPausing(state),
     logEventBreakpoints: shouldLogEventBreakpoints(state),
-    source: selectedFrame && getLocationSource(state, selectedFrame.location),
+    source: selectedFrame && selectedFrame.location.source,
     pauseReason: pauseReason?.type ?? "",
     shouldBreakpointsPaneOpenOnPause,
     thread,

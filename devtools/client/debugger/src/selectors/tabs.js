@@ -6,11 +6,7 @@ import { createSelector } from "reselect";
 import { shallowEqual } from "../utils/shallow-equal";
 import { getPrettySourceURL } from "../utils/source";
 
-import {
-  getLocationSource,
-  getSpecificSourceByURL,
-  getSourcesMap,
-} from "./sources";
+import { getSpecificSourceByURL, getSourcesMap } from "./sources";
 import { isOriginalId } from "devtools/client/shared/source-map-loader/index";
 import { isSimilarTab } from "../utils/tabs";
 
@@ -54,13 +50,13 @@ export function getNewSelectedSource(state, tabList) {
     return null;
   }
 
-  const selectedTab = getLocationSource(state, selectedLocation);
-  if (!selectedTab) {
+  const selectedSource = selectedLocation.source;
+  if (!selectedSource) {
     return null;
   }
 
   const matchingTab = availableTabs.find(tab =>
-    isSimilarTab(tab, selectedTab.url, isOriginalId(selectedLocation.sourceId))
+    isSimilarTab(tab, selectedSource.url, isOriginalId(selectedSource.id))
   );
 
   if (matchingTab) {
@@ -69,21 +65,24 @@ export function getNewSelectedSource(state, tabList) {
       return null;
     }
 
-    const selectedSource = getSpecificSourceByURL(
+    const specificSelectedSource = getSpecificSourceByURL(
       state,
-      selectedTab.url,
-      selectedTab.isOriginal
+      selectedSource.url,
+      selectedSource.isOriginal
     );
 
-    if (selectedSource) {
-      return selectedSource;
+    if (specificSelectedSource) {
+      return specificSelectedSource;
     }
 
     return null;
   }
 
   const tabUrls = tabList.map(tab => tab.url);
-  const leftNeighborIndex = Math.max(tabUrls.indexOf(selectedTab.url) - 1, 0);
+  const leftNeighborIndex = Math.max(
+    tabUrls.indexOf(selectedSource.url) - 1,
+    0
+  );
   const lastAvailbleTabIndex = availableTabs.length - 1;
   const newSelectedTabIndex = Math.min(leftNeighborIndex, lastAvailbleTabIndex);
   const availableTab = availableTabs[newSelectedTabIndex];

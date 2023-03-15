@@ -19,7 +19,8 @@ function formatLines(actual) {
 describe("Parser.findOutOfScopeLocations", () => {
   it("should exclude non-enclosing function blocks", () => {
     const source = populateSource("outOfScope");
-    const actual = findOutOfScopeLocations(source.id, {
+    const actual = findOutOfScopeLocations({
+      source,
       line: 5,
       column: 5,
     });
@@ -29,7 +30,8 @@ describe("Parser.findOutOfScopeLocations", () => {
 
   it("should roll up function blocks", () => {
     const source = populateSource("outOfScope");
-    const actual = findOutOfScopeLocations(source.id, {
+    const actual = findOutOfScopeLocations({
+      source,
       line: 24,
       column: 0,
     });
@@ -39,7 +41,8 @@ describe("Parser.findOutOfScopeLocations", () => {
 
   it("should exclude function for locations on declaration", () => {
     const source = populateSource("outOfScope");
-    const actual = findOutOfScopeLocations(source.id, {
+    const actual = findOutOfScopeLocations({
+      source,
       line: 3,
       column: 12,
     });
@@ -49,7 +52,8 @@ describe("Parser.findOutOfScopeLocations", () => {
 
   it("should treat comments as out of scope", () => {
     const source = populateSource("outOfScopeComment");
-    const actual = findOutOfScopeLocations(source.id, {
+    const actual = findOutOfScopeLocations({
+      source,
       line: 3,
       column: 2,
     });
@@ -61,7 +65,8 @@ describe("Parser.findOutOfScopeLocations", () => {
 
   it("should not exclude in-scope inner locations", () => {
     const source = populateSource("outOfScope");
-    const actual = findOutOfScopeLocations(source.id, {
+    const actual = findOutOfScopeLocations({
+      source,
       line: 61,
       column: 0,
     });

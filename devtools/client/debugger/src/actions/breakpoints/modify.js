@@ -11,7 +11,6 @@ import {
   getBreakpoint,
   getBreakpointPositionsForLocation,
   getFirstBreakpointPosition,
-  getLocationSource,
   getSettledSourceTextContent,
   getBreakpointsList,
   getPendingBreakpointList,
@@ -64,7 +63,7 @@ async function clientSetBreakpoint(
   );
   const shouldMapBreakpointExpressions =
     isMapScopesEnabled(getState()) &&
-    getLocationSource(getState(), breakpoint.location).isOriginal &&
+    breakpoint.location.source.isOriginal &&
     (breakpoint.options.logValue || breakpoint.options.condition);
 
   if (shouldMapBreakpointExpressions) {
@@ -107,14 +106,15 @@ export function addBreakpoint(
     const { dispatch, getState, client } = thunkArgs;
     recordEvent("add_breakpoint");
 
-    const { column, line } = initialLocation;
-    const initialSource = getLocationSource(getState(), initialLocation);
-
     await dispatch(
-      setBreakpointPositions({ cx, sourceId: initialSource.id, line })
+      setBreakpointPositions({
+        cx,
+        sourceId: initialLocation.source.id,
+        line: initialLocation.line,
+      })
     );
 
-    const position = column
+    const position = initialLocation.column
       ? getBreakpointPositionsForLocation(getState(), initialLocation)
       : getFirstBreakpointPosition(getState(), initialLocation);
 
@@ -126,23 +126,20 @@ export function addBreakpoint(
 
     const { location, generatedLocation } = position;
 
-    const source = getLocationSource(getState(), location);
-    const generatedSource = getLocationSource(getState(), generatedLocation);
-
-    if (!source || !generatedSource) {
+    if (!location.source || !generatedLocation.source) {
       return null;
     }
 
     const originalContent = getSettledSourceTextContent(getState(), location);
     const originalText = getTextAtPosition(
-      source.id,
+      location.source.id,
       originalContent,
       location
     );
 
     const content = getSettledSourceTextContent(getState(), generatedLocation);
     const text = getTextAtPosition(
-      generatedSource.id,
+      generatedLocation.source.id,
       content,
       generatedLocation
     );
@@ -150,7 +147,7 @@ export function addBreakpoint(
     const id = makeBreakpointId(location);
     const breakpoint = createBreakpoint({
       id,
-      thread: generatedSource.thread,
+      thread: generatedLocation.source.thread,
       disabled,
       options,
       location,

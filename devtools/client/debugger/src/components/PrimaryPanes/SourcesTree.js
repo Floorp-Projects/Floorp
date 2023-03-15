@@ -19,8 +19,6 @@ import {
   getContext,
   getGeneratedSourceByURL,
   getBlackBoxRanges,
-  getSourceActor,
-  getSource,
 } from "../../selectors";
 
 // Actions
@@ -32,6 +30,7 @@ import ManagedTree from "../shared/ManagedTree";
 
 // Utils
 import { getRawSourceURL } from "../../utils/source";
+import { createLocation } from "../../utils/location";
 
 function shouldAutoExpand(item, mainThreadHost) {
   // There is only one case where we want to force auto expand,
@@ -126,12 +125,12 @@ class SourcesTree extends Component {
     // We might fail to find the source if its thread is registered late,
     // so that we should re-search the selected source if highlightItems is empty.
     if (
-      nextProps.selectedTreeLocation.source &&
-      (nextProps.selectedTreeLocation.source != selectedTreeLocation.source ||
+      nextProps.selectedTreeLocation?.source &&
+      (nextProps.selectedTreeLocation.source != selectedTreeLocation?.source ||
         (nextProps.selectedTreeLocation.source ===
-          selectedTreeLocation.source &&
+          selectedTreeLocation?.source &&
           nextProps.selectedTreeLocation.sourceActor !=
-            selectedTreeLocation.sourceActor) ||
+            selectedTreeLocation?.sourceActor) ||
         !this.state.highlightItems?.length)
     ) {
       let parentDirectory = getDirectoryForSource(
@@ -375,17 +374,24 @@ class SourcesTree extends Component {
 }
 
 function getTreeLocation(state, location) {
-  let source = location ? getSource(state, location.sourceId) : null;
-  const sourceActor = location
-    ? getSourceActor(state, location.sourceActorId)
-    : null;
-
-  if (source && source.isPrettyPrinted) {
-    source =
-      getGeneratedSourceByURL(state, getRawSourceURL(source.url)) || null;
+  // In the SourceTree, we never show the pretty printed sources and only
+  // the minified version, so if we are selecting a pretty file, fake selecting
+  // the minified version.
+  if (location?.source.isPrettyPrinted) {
+    const source = getGeneratedSourceByURL(
+      state,
+      getRawSourceURL(location.source.url)
+    );
+    if (source) {
+      return createLocation({
+        source,
+        // A source actor is required by getDirectoryForSource
+        // in order to know in which thread this source relates to.
+        sourceActor: location.sourceActor,
+      });
+    }
   }
-
-  return { source, sourceActor };
+  return location;
 }
 
 const mapStateToProps = state => {

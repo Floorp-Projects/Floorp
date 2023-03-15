@@ -33,7 +33,6 @@ import {
   getSelectedSource,
   canPrettyPrintSource,
   getIsCurrentThreadPaused,
-  getLocationSource,
   getSourceTextContent,
   tabExists,
 } from "../../selectors";
@@ -131,7 +130,7 @@ export function selectLocation(cx, location, { keepContext = true } = {}) {
       return;
     }
 
-    let source = getLocationSource(getState(), location);
+    let source = location.source;
 
     if (!source) {
       // If there is no source we deselect the current selected source
@@ -161,7 +160,7 @@ export function selectLocation(cx, location, { keepContext = true } = {}) {
       // getRelatedMapLocation will just convert to the related generated/original location.
       // i.e if the original location is passed, the related generated location will be returned and vice versa.
       location = await getRelatedMapLocation(location, thunkArgs);
-      source = getLocationSource(getState(), location);
+      source = location.source;
     }
 
     let sourceActor = location.sourceActor;
