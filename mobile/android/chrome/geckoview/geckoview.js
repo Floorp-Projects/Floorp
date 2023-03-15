@@ -125,8 +125,26 @@ var ModuleManager = {
     MODULES_INIT_PROBE.finish();
   },
 
-  onNewPrintWindow(aParams) {
-    return PrintUtils.handleStaticCloneCreatedForPrint(aParams.openWindowInfo);
+  onPrintWindow(aParams) {
+    if (!aParams.openWindowInfo.isForWindowDotPrint) {
+      return PrintUtils.handleStaticCloneCreatedForPrint(
+        aParams.openWindowInfo
+      );
+    }
+    const printActor = this.window.moduleManager.getActor(
+      "GeckoViewPrintDelegate"
+    );
+    // Prevents continually making new static browsers
+    if (printActor.browserStaticClone != null) {
+      throw new Error("A prior window.print is still in progress.");
+    }
+    const staticBrowser = PrintUtils.createParentBrowserForStaticClone(
+      aParams.openWindowInfo.parent,
+      aParams.openWindowInfo
+    );
+    printActor.browserStaticClone = staticBrowser;
+    printActor.printRequest();
+    return staticBrowser;
   },
 
   get window() {
@@ -798,6 +816,22 @@ function startup() {
             },
             allFrames: true,
             includeChrome: true,
+          },
+        },
+      },
+    },
+    {
+      name: "GeckoViewPrintDelegate",
+      onInit: {
+        actors: {
+          GeckoViewPrintDelegate: {
+            parent: {
+              moduleURI: "resource:///actors/GeckoViewPrintDelegateParent.jsm",
+            },
+            child: {
+              moduleURI: "resource:///actors/GeckoViewPrintDelegateChild.jsm",
+            },
+            allFrames: true,
           },
         },
       },

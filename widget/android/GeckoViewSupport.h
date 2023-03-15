@@ -55,6 +55,9 @@ class GeckoViewSupport final
   nsCOMPtr<nsPIDOMWindowOuter> mDOMWindow;
   bool mIsReady{false};
   RefPtr<dom::CanonicalBrowsingContext> GetContentCanonicalBrowsingContext();
+  MOZ_CAN_RUN_SCRIPT void CreatePdf(
+      jni::LocalRef<mozilla::java::GeckoResult> aGeckoResult,
+      RefPtr<dom::CanonicalBrowsingContext> aCbc);
 
  public:
   // Create and attach a window.
@@ -107,6 +110,10 @@ class GeckoViewSupport final
     RefPtr<Runnable> disposer(aDisposer);
     disposer->Run();
   }
+
+  MOZ_CAN_RUN_SCRIPT void PrintToPdf(
+      const java::GeckoSession::Window::LocalRef& inst,
+      jni::Object::Param aStream, int64_t aBcId);
 
   MOZ_CAN_RUN_SCRIPT void PrintToPdf(
       const java::GeckoSession::Window::LocalRef& inst,
