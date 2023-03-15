@@ -39,7 +39,7 @@ bool RemoteAccessible::GetCOMInterface(void** aOutAccessible) const {
   // methods here in RemoteAccessible, causing infinite recursion.
   MOZ_ASSERT(!StaticPrefs::accessibility_cache_enabled_AtStartup());
   if (!mCOMProxy && mSafeToRecurse) {
-    RemoteAccessible* thisPtr = const_cast<RemoteAccessible*>(this);
+    WeakPtr<RemoteAccessible> thisPtr = const_cast<RemoteAccessible*>(this);
     // See if we can lazily obtain a COM proxy
     MsaaAccessible* msaa = MsaaAccessible::GetFrom(thisPtr);
     bool isDefunct = false;
@@ -49,7 +49,12 @@ bool RemoteAccessible::GetCOMInterface(void** aOutAccessible) const {
     VARIANT realId = {{{VT_I4}}};
     realId.ulVal = msaa->GetExistingID();
     MOZ_DIAGNOSTIC_ASSERT(realId.ulVal != CHILDID_SELF);
-    thisPtr->mCOMProxy = msaa->GetIAccessibleFor(realId, &isDefunct);
+    RefPtr<IAccessible> proxy = msaa->GetIAccessibleFor(realId, &isDefunct);
+    if (!thisPtr) {
+      *aOutAccessible = nullptr;
+      return false;
+    }
+    thisPtr->mCOMProxy = proxy;
   }
 
   RefPtr<IAccessible> addRefed = mCOMProxy;
