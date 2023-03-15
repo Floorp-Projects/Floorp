@@ -293,6 +293,34 @@ function test() {
   isnot(typeof Object.getOwnPropertyDescriptor(win.Node.prototype, "ELEMENT_NODE"), "undefined",
         "Should see constant property on prototype objects");
 
+  // Interfaces can have both static and non-static properties with the same name.
+  isnot(typeof win.TestFunctions.staticAndNonStaticOverload, "undefined",
+        "Should see static property on interface objects (even with non-static property with the same name)");
+  isnot(typeof Object.getOwnPropertyDescriptor(win.TestFunctions, "staticAndNonStaticOverload"), "undefined",
+        "Should see static property on interface objects (even with non-static property with the same name)");
+  isnot(Object.getOwnPropertyNames(win.TestFunctions).indexOf("staticAndNonStaticOverload"), -1,
+        "Should see static property on interface objects (even with non-static property with the same name)");
+  isnot(typeof (new win.TestFunctions("")).staticAndNonStaticOverload, "undefined",
+        "Should see non-static property on prototype objects (even with static property with the same name)");
+  let testFunctions = new win.TestFunctions();
+  is(Object.getOwnPropertyDescriptor(testFunctions, "staticAndNonStaticOverload"), undefined,
+     "Shouldn't see non-static property on instances (even with static property with the same name)");
+  ok(!testFunctions.staticAndNonStaticOverload(),
+     "Should call the non-static overload on the instance");
+  ok(win.TestFunctions.staticAndNonStaticOverload(),
+     "Should call the static overload on the interface object");
+  isnot(typeof Object.getOwnPropertyDescriptor(win.TestFunctions.prototype, "staticAndNonStaticOverload"), "undefined",
+        "Should see non-static property on prototype objects (even with static property with the same name)");
+  is(Object.getOwnPropertyDescriptor(win.TestFunctions, "staticAndNonStaticOverload").value,
+     Object.getOwnPropertyDescriptor(win.TestFunctions, "staticAndNonStaticOverload").value,
+     "Should get the same value when getting the static property twice");
+  is(Object.getOwnPropertyDescriptor(win.TestFunctions.prototype, "staticAndNonStaticOverload").value,
+     Object.getOwnPropertyDescriptor(win.TestFunctions.prototype, "staticAndNonStaticOverload").value,
+     "Should get the same value when getting the non-static property twice");
+  isnot(Object.getOwnPropertyDescriptor(win.TestFunctions, "staticAndNonStaticOverload").value,
+        Object.getOwnPropertyDescriptor(win.TestFunctions.prototype, "staticAndNonStaticOverload").value,
+        "Should get different values for static and non-static properties with the same name");
+
   // Adopting nodes should not lose expandos.
   elem = document.createElement("span");
   elem.expando = 5;
@@ -331,7 +359,10 @@ function test() {
 }
 
 SimpleTest.waitForExplicitFinish();
-addLoadEvent(test);
+addLoadEvent(() => {
+  SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]},
+                            test);
+});
 
 </script>
 </pre>

@@ -221,6 +221,25 @@ struct PropertyInfo {
     mIdBits = aId.asRawBits();
   }
   MOZ_ALWAYS_INLINE jsid Id() const { return jsid::fromRawBits(mIdBits); }
+
+  bool IsStaticMethod() const { return type == eStaticMethod; }
+
+  static int Compare(const PropertyInfo& aInfo1, const PropertyInfo& aInfo2) {
+    // IdToIndexComparator needs to be updated if the order here is changed!
+    if (MOZ_UNLIKELY(aInfo1.mIdBits == aInfo2.mIdBits)) {
+      MOZ_ASSERT((aInfo1.type == eMethod || aInfo1.type == eStaticMethod) &&
+                 (aInfo2.type == eMethod || aInfo2.type == eStaticMethod));
+
+      bool isStatic1 = aInfo1.IsStaticMethod();
+
+      MOZ_ASSERT(isStatic1 != aInfo2.IsStaticMethod(),
+                 "We shouldn't have 2 static methods with the same name!");
+
+      return isStatic1 ? -1 : 1;
+    }
+
+    return aInfo1.mIdBits < aInfo2.mIdBits ? -1 : 1;
+  }
 };
 
 static_assert(
