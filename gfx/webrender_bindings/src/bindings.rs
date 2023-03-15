@@ -3404,6 +3404,7 @@ pub struct WrBorderImage {
     height: i32,
     fill: bool,
     slice: DeviceIntSideOffsets,
+    outset: LayoutSideOffsets,
     repeat_horizontal: RepeatMode,
     repeat_vertical: RepeatMode,
 }
@@ -3424,6 +3425,7 @@ pub extern "C" fn wr_dp_push_border_image(
         height: params.height,
         slice: params.slice,
         fill: params.fill,
+        outset: params.outset,
         repeat_horizontal: params.repeat_horizontal,
         repeat_vertical: params.repeat_vertical,
     });
@@ -3459,6 +3461,7 @@ pub extern "C" fn wr_dp_push_border_gradient(
     stops: *const GradientStop,
     stops_count: usize,
     extend_mode: ExtendMode,
+    outset: LayoutSideOffsets,
 ) {
     debug_assert!(unsafe { is_in_main_thread() });
 
@@ -3476,6 +3479,7 @@ pub extern "C" fn wr_dp_push_border_gradient(
         height,
         slice,
         fill,
+        outset,
         repeat_horizontal: RepeatMode::Stretch,
         repeat_vertical: RepeatMode::Stretch,
     });
@@ -3509,6 +3513,7 @@ pub extern "C" fn wr_dp_push_border_radial_gradient(
     stops: *const GradientStop,
     stops_count: usize,
     extend_mode: ExtendMode,
+    outset: LayoutSideOffsets,
 ) {
     debug_assert!(unsafe { is_in_main_thread() });
 
@@ -3533,6 +3538,7 @@ pub extern "C" fn wr_dp_push_border_radial_gradient(
         height: rect.height() as i32,
         slice,
         fill,
+        outset,
         repeat_horizontal: RepeatMode::Stretch,
         repeat_vertical: RepeatMode::Stretch,
     });
@@ -3566,6 +3572,7 @@ pub extern "C" fn wr_dp_push_border_conic_gradient(
     stops: *const GradientStop,
     stops_count: usize,
     extend_mode: ExtendMode,
+    outset: LayoutSideOffsets,
 ) {
     debug_assert!(unsafe { is_in_main_thread() });
 
@@ -3590,6 +3597,7 @@ pub extern "C" fn wr_dp_push_border_conic_gradient(
         height: rect.height() as i32,
         slice,
         fill,
+        outset,
         repeat_horizontal: RepeatMode::Stretch,
         repeat_vertical: RepeatMode::Stretch,
     });

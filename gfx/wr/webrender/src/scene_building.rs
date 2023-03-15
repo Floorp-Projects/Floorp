@@ -3093,6 +3093,7 @@ impl<'a> SceneBuilder<'a> {
                     fill: border.fill,
                     repeat_horizontal: border.repeat_horizontal,
                     repeat_vertical: border.repeat_vertical,
+                    outset: border.outset.into(),
                     widths: border_item.widths.into(),
                 };
 

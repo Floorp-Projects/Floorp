@@ -3587,11 +3587,17 @@ ImgDrawResult nsCSSBorderImageRenderer::CreateWebRenderCommands(
 
   float widths[4];
   float slice[4];
+  float outset[4];
   const int32_t appUnitsPerDevPixel =
       aForFrame->PresContext()->AppUnitsPerDevPixel();
   for (const auto i : mozilla::AllPhysicalSides()) {
     slice[i] = (float)(mSlice.Side(i)) / appUnitsPerDevPixel;
     widths[i] = (float)(mWidths.Side(i)) / appUnitsPerDevPixel;
+
+    // The outset is already taken into account by the adjustments to mArea
+    // in our constructor. We use mArea as our dest rect so we can just supply
+    // zero outsets to WebRender.
+    outset[i] = 0.0f;
   }
 
   LayoutDeviceRect destRect =
@@ -3682,6 +3688,7 @@ ImgDrawResult nsCSSBorderImageRenderer::CreateWebRenderCommands(
           mImageSize.height / appUnitsPerDevPixel,
           mFill,
           wr::ToDeviceIntSideOffsets(slice[0], slice[1], slice[2], slice[3]),
+          wr::ToLayoutSideOffsets(outset[0], outset[1], outset[2], outset[3]),
           wr::ToRepeatMode(mRepeatModeHorizontal),
           wr::ToRepeatMode(mRepeatModeVertical)};
 
@@ -3717,20 +3724,26 @@ ImgDrawResult nsCSSBorderImageRenderer::CreateWebRenderCommands(
             (float)(mImageSize.height) / appUnitsPerDevPixel, mFill,
             wr::ToDeviceIntSideOffsets(slice[0], slice[1], slice[2], slice[3]),
             wr::ToLayoutPoint(startPoint), wr::ToLayoutPoint(endPoint), stops,
-            extendMode);
+            extendMode,
+            wr::ToLayoutSideOffsets(outset[0], outset[1], outset[2],
+                                    outset[3]));
       } else if (gradient.IsRadial()) {
         aBuilder.PushBorderRadialGradient(
             dest, clip, !aItem->BackfaceIsHidden(),
             wr::ToBorderWidths(widths[0], widths[1], widths[2], widths[3]),
             mFill, wr::ToLayoutPoint(lineStart),
-            wr::ToLayoutSize(gradientRadius), stops, extendMode);
+            wr::ToLayoutSize(gradientRadius), stops, extendMode,
+            wr::ToLayoutSideOffsets(outset[0], outset[1], outset[2],
+                                    outset[3]));
       } else {
         MOZ_ASSERT(gradient.IsConic());
         aBuilder.PushBorderConicGradient(
             dest, clip, !aItem->BackfaceIsHidden(),
             wr::ToBorderWidths(widths[0], widths[1], widths[2], widths[3]),
             mFill, wr::ToLayoutPoint(gradientCenter), gradientAngle, stops,
-            extendMode);
+            extendMode,
+            wr::ToLayoutSideOffsets(outset[0], outset[1], outset[2],
+                                    outset[3]));
       }
       break;
     }
