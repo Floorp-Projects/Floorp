@@ -81,42 +81,53 @@ var typeInfo = loadTypeInfo(options.typeInfo);
 var gcEdges = JSON.parse(os.file.readFile(options.gcEdges));
 
 var match;
-var gcThings = {};
-var gcPointers = {};
+var gcThings = new Set();
+var gcPointers = new Set();
+var gcRefs = new Set(typeInfo.GCRefs);
 
 text = snarf(options.gcTypes).split("\n");
 for (var line of text) {
     if (match = /^GCThing: (.*)/.exec(line))
-        gcThings[match[1]] = true;
+        gcThings.add(match[1]);
     if (match = /^GCPointer: (.*)/.exec(line))
-        gcPointers[match[1]] = true;
+        gcPointers.add(match[1]);
 }
 text = null;
+
+function isGCRef(type)
+{
+    if (type.Kind == "CSU")
+        return gcRefs.has(type.Name);
+    return false;
+}
 
 function isGCType(type)
 {
     if (type.Kind == "CSU")
-        return type.Name in gcThings;
+        return gcThings.has(type.Name);
     else if (type.Kind == "Array")
         return isGCType(type.Type);
     return false;
 }
 
-function isUnrootedType(type)
+function isUnrootedPointerDeclType(decl)
 {
-    if (type.Kind == "Pointer")
+    // Treat non-temporary T& references as if they were the underlying type T.
+    // For now, restrict this to only the types specifically annotated with JS_HAZ_GC_REF
+    // to avoid lots of false positives with other types.
+    let type = isReferenceDecl(decl) && isGCRef(decl.Type.Type) ? decl.Type.Type : decl.Type;
+
+    while (type.Kind == "Array") {
+        type = type.Type;
+    }
+
+    if (type.Kind == "Pointer") {
         return isGCType(type.Type);
-    else if (type.Kind == "Array") {
-        if (!type.Type) {
-            printErr("Received Array Kind with no Type");
-            printErr(JSON.stringify(type));
-            printErr(getBacktrace({args: true, locals: true}));
-        }
-        return isUnrootedType(type.Type);
-    } else if (type.Kind == "CSU")
-        return type.Name in gcPointers;
-    else
+    } else if (type.Kind == "CSU") {
+        return gcPointers.has(type.Name);
+    } else {
         return false;
+    }
 }
 
 function edgeCanGC(edge)
@@ -500,7 +511,7 @@ function findGCBeforeValueUse(start_body, start_point, suppressed_bits, variable
     return BFS_upwards(start_body, start_point, functionBodies, visitor, new Path()) || bestPathWithAnyUse;
 }
 
-function variableLiveAcrossGC(suppressed, variable)
+function variableLiveAcrossGC(suppressed, variable, liveToEnd=false)
 {
     // A variable is live across a GC if (1) it is used by an edge (as in, it
     // was at least initialized), and (2) it is used after a GC in a successor
@@ -541,7 +552,7 @@ function variableLiveAcrossGC(suppressed, variable)
             if (edgeEndsValueLiveRange(edge, variable, body))
                 continue;
 
-            var usePoint = edgeUsesVariable(edge, variable, body);
+            var usePoint = edgeUsesVariable(edge, variable, body, liveToEnd);
             if (usePoint) {
                 var call = findGCBeforeValueUse(body, usePoint, suppressed, variable);
                 if (!call)
@@ -690,8 +701,10 @@ function printEntryTrace(functionName, entry)
     }
 }
 
-function isRootedType(type)
+function isRootedDeclType(decl)
 {
+    // Treat non-temporary T& references as if they were the underlying type T.
+    const type = isReferenceDecl(decl) ? decl.Type.Type : decl.Type;
     return type.Kind == "CSU" && ((type.Name in typeInfo.RootedPointers) ||
                                   (type.Name in typeInfo.RootedGCThings));
 }
@@ -775,20 +788,31 @@ function processBodies(functionName, wholeBodyAttrs)
         }
     }
 
-    for (const variable of functionBodies[0].DefineVariable) {
+    for (let decl of functionBodies[0].DefineVariable) {
         var name;
-        if (variable.Variable.Kind == "This")
+        if (decl.Variable.Kind == "This")
             name = "this";
-        else if (variable.Variable.Kind == "Return")
+        else if (decl.Variable.Kind == "Return")
             name = "<returnvalue>";
         else
-            name = variable.Variable.Name[0];
+            name = decl.Variable.Name[0];
 
         if (ignoreVars.has(name))
             continue;
 
-        if (isRootedType(variable.Type)) {
-            if (!variableLiveAcrossGC(suppressed, variable.Variable)) {
+        let liveToEnd = false;
+        if (decl.Variable.Kind == "Arg" && isReferenceDecl(decl) && decl.Type.Reference == 2) {
+            // References won't run destructors, so they would normally not be
+            // considered live at the end of the function. In order to handle
+            // the pattern of moving a GC-unsafe value into a function (eg an
+            // AutoCheckCannotGC&&), assume all argument rvalue references live to the
+            // end of the function unless their liveness is terminated by
+            // calling reset() or moving them into another function call.
+            liveToEnd = true;
+        }
+
+        if (isRootedDeclType(decl)) {
+            if (!variableLiveAcrossGC(suppressed, decl.Variable)) {
                 // The earliest use of the variable should be its constructor.
                 var lineText;
                 for (var body of functionBodies) {
@@ -801,28 +825,28 @@ function processBodies(functionName, wholeBodyAttrs)
                 print("\nFunction '" + functionName + "'" +
                       " has unnecessary root '" + name + "' at " + lineText);
             }
-        } else if (isUnrootedType(variable.Type)) {
-            var result = variableLiveAcrossGC(suppressed, variable.Variable);
+        } else if (isUnrootedPointerDeclType(decl)) {
+            var result = variableLiveAcrossGC(suppressed, decl.Variable, liveToEnd);
             if (result) {
                 assert(result.gcInfo);
                 var lineText = findLocation(result.gcInfo.body, result.gcInfo.ppoint);
                 if (annotations.has('Expect Hazards')) {
                     print("\nThis is expected, but '" + functionName + "'" +
                           " has unrooted '" + name + "'" +
-                          " of type '" + typeDesc(variable.Type) + "'" +
+                          " of type '" + typeDesc(decl.Type) + "'" +
                           " live across GC call " + result.gcInfo.name +
                           " at " + lineText);
                     missingExpectedHazard = false;
                 } else {
                     print("\nFunction '" + functionName + "'" +
                           " has unrooted '" + name + "'" +
-                          " of type '" + typeDesc(variable.Type) + "'" +
+                          " of type '" + typeDesc(decl.Type) + "'" +
                           " live across GC call " + result.gcInfo.name +
                           " at " + lineText);
                 }
                 printEntryTrace(functionName, result);
             }
-            result = unsafeVariableAddressTaken(suppressed, variable.Variable);
+            result = unsafeVariableAddressTaken(suppressed, decl.Variable);
             if (result) {
                 var lineText = findLocation(result.body, result.ppoint);
                 print("\nFunction '" + functionName + "'" +

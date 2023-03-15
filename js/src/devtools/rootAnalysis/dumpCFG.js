@@ -62,13 +62,13 @@ function str_Type(type) {
   try {
     const {Kind, Type, Name, TypeFunctionArguments} = type;
     if (Kind == 'Pointer')
-      return str_Type(Type) + "*";
+      return str_Type(Type) + ["*", "&", "&&"][type.Reference];
     else if (Kind == 'CSU')
       return Name;
     else if (Kind == 'Array')
       return str_Type(Type) + "[]";
-
-    return Kind;
+    else
+      return Kind;
   } catch(e) {
     badFormat("type", type);
   }

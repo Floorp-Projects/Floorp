@@ -85,7 +85,7 @@ class Test(object):
         )
         return json.loads(output)
 
-    def run_analysis_script(self, startPhase, upto=None):
+    def run_analysis_script(self, startPhase="gcTypes", upto=None):
         open("defaults.py", "w").write(
             """\
 analysis_scriptdir = '{scriptdir}'
