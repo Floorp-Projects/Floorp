@@ -576,11 +576,6 @@ renaming_overrides_prefixing = true
   static inline StyleAbsoluteColor FromColor(nscolor);
 
   /**
-   * Convert this color into the given color space.
-   */
-  StyleAbsoluteColor ToColorSpace(StyleColorSpace aColorSpace) const;
-
-  /**
    * Convert this color to an nscolor. The color will be converted to sRGB first
    * if required.
    */

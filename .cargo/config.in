@@ -122,7 +122,7 @@ replace-with = "vendored-sources"
 
 [source."https://github.com/servo/rust-cssparser"]
 git = "https://github.com/servo/rust-cssparser"
-rev = "45bc47e2bcb846f1efb5aea156be5fe7d18624bf"
+rev = "b196a164dcbb317016d4aa6c58c13147e6045ebb"
 replace-with = "vendored-sources"
 
 

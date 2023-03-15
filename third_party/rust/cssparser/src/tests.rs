@@ -592,19 +592,19 @@ fn serialize_current_color() {
 
 #[test]
 fn serialize_rgb_full_alpha() {
-    let c = Color::Rgba(RGBA::new(Some(255), Some(230), Some(204), Some(1.0)));
+    let c = Color::Rgba(RGBA::new(255, 230, 204, 1.0));
     assert_eq!(c.to_css_string(), "rgb(255, 230, 204)");
 }
 
 #[test]
 fn serialize_rgba() {
-    let c = Color::Rgba(RGBA::new(Some(26), Some(51), Some(77), Some(0.125)));
+    let c = Color::Rgba(RGBA::new(26, 51, 77, 0.125));
     assert_eq!(c.to_css_string(), "rgba(26, 51, 77, 0.125)");
 }
 
 #[test]
 fn serialize_rgba_two_digit_float_if_roundtrips() {
-    let c = Color::Rgba(RGBA::from_floats(Some(0.), Some(0.), Some(0.), Some(0.5)));
+    let c = Color::Rgba(RGBA::from_floats(0., 0., 0., 0.5));
     assert_eq!(c.to_css_string(), "rgba(0, 0, 0, 0.5)");
 }
 
@@ -900,8 +900,6 @@ impl ToJson for Color {
             Color::Rgba(ref rgba) => {
                 json!([rgba.red, rgba.green, rgba.blue, rgba.alpha])
             }
-            Color::Hsl(ref c) => json!([c.hue, c.saturation, c.lightness, c.alpha]),
-            Color::Hwb(ref c) => json!([c.hue, c.whiteness, c.blackness, c.alpha]),
             Color::Lab(ref c) => json!([c.lightness, c.a, c.b, c.alpha]),
             Color::Lch(ref c) => json!([c.lightness, c.chroma, c.hue, c.alpha]),
             Color::Oklab(ref c) => json!([c.lightness, c.a, c.b, c.alpha]),
@@ -1518,20 +1516,12 @@ fn generic_parser() {
     #[derive(Debug, PartialEq)]
     enum OutputType {
         CurrentColor,
-        Rgba(Option<u8>, Option<u8>, Option<u8>, Option<f32>),
-        Hsl(Option<f32>, Option<f32>, Option<f32>, Option<f32>),
-        Hwb(Option<f32>, Option<f32>, Option<f32>, Option<f32>),
-        Lab(Option<f32>, Option<f32>, Option<f32>, Option<f32>),
-        Lch(Option<f32>, Option<f32>, Option<f32>, Option<f32>),
-        Oklab(Option<f32>, Option<f32>, Option<f32>, Option<f32>),
-        Oklch(Option<f32>, Option<f32>, Option<f32>, Option<f32>),
-        ColorFunction(
-            PredefinedColorSpace,
-            Option<f32>,
-            Option<f32>,
-            Option<f32>,
-            Option<f32>,
-        ),
+        Rgba(u8, u8, u8, f32),
+        Lab(f32, f32, f32, f32),
+        Lch(f32, f32, f32, f32),
+        Oklab(f32, f32, f32, f32),
+        Oklch(f32, f32, f32, f32),
+        ColorFunction(PredefinedColorSpace, f32, f32, f32, f32),
     }
 
     impl FromParsedColor for OutputType {
@@ -1539,124 +1529,102 @@ fn generic_parser() {
             OutputType::CurrentColor
         }
 
-        fn from_rgba(
-            red: Option<u8>,
-            green: Option<u8>,
-            blue: Option<u8>,
-            alpha: Option<f32>,
-        ) -> Self {
+        fn from_rgba(red: u8, green: u8, blue: u8, alpha: f32) -> Self {
             OutputType::Rgba(red, green, blue, alpha)
         }
 
-        fn from_hsl(
-            hue: Option<f32>,
-            saturation: Option<f32>,
-            lightness: Option<f32>,
-            alpha: Option<f32>,
-        ) -> Self {
-            OutputType::Hsl(hue, saturation, lightness, alpha)
-        }
-
-        fn from_hwb(
-            hue: Option<f32>,
-            blackness: Option<f32>,
-            whiteness: Option<f32>,
-            alpha: Option<f32>,
-        ) -> Self {
-            OutputType::Hwb(hue, blackness, whiteness, alpha)
-        }
-
-        fn from_lab(
-            lightness: Option<f32>,
-            a: Option<f32>,
-            b: Option<f32>,
-            alpha: Option<f32>,
-        ) -> Self {
+        fn from_lab(lightness: f32, a: f32, b: f32, alpha: f32) -> Self {
             OutputType::Lab(lightness, a, b, alpha)
         }
 
-        fn from_lch(
-            lightness: Option<f32>,
-            chroma: Option<f32>,
-            hue: Option<f32>,
-            alpha: Option<f32>,
-        ) -> Self {
+        fn from_lch(lightness: f32, chroma: f32, hue: f32, alpha: f32) -> Self {
             OutputType::Lch(lightness, chroma, hue, alpha)
         }
 
-        fn from_oklab(
-            lightness: Option<f32>,
-            a: Option<f32>,
-            b: Option<f32>,
-            alpha: Option<f32>,
-        ) -> Self {
+        fn from_oklab(lightness: f32, a: f32, b: f32, alpha: f32) -> Self {
             OutputType::Oklab(lightness, a, b, alpha)
         }
 
-        fn from_oklch(
-            lightness: Option<f32>,
-            chroma: Option<f32>,
-            hue: Option<f32>,
-            alpha: Option<f32>,
-        ) -> Self {
+        fn from_oklch(lightness: f32, chroma: f32, hue: f32, alpha: f32) -> Self {
             OutputType::Oklch(lightness, chroma, hue, alpha)
         }
 
         fn from_color_function(
             color_space: PredefinedColorSpace,
-            c1: Option<f32>,
-            c2: Option<f32>,
-            c3: Option<f32>,
-            alpha: Option<f32>,
+            c1: f32,
+            c2: f32,
+            c3: f32,
+            alpha: f32,
         ) -> Self {
             OutputType::ColorFunction(color_space, c1, c2, c3, alpha)
         }
     }
 
-    struct TestColorParser;
-    impl<'i> ColorParser<'i> for TestColorParser {
+    struct ComponentParser;
+    impl<'i> ColorParser<'i> for ComponentParser {
         type Output = OutputType;
         type Error = ();
     }
 
-    #[rustfmt::skip]
     const TESTS: &[(&str, OutputType)] = &[
-        ("currentColor",                OutputType::CurrentColor),
-        ("rgb(1, 2, 3)",                OutputType::Rgba(Some(1), Some(2), Some(3), Some(1.0))),
-        ("rgba(1, 2, 3, 0.4)",          OutputType::Rgba(Some(1), Some(2), Some(3), Some(0.4))),
-        ("rgb(none none none / none)",  OutputType::Rgba(None, None, None, None)),
-        ("rgb(1 none 3 / none)",        OutputType::Rgba(Some(1), None, Some(3), None)),
-
-        ("hsla(45deg, 20%, 30%, 0.4)",  OutputType::Hsl(Some(45.0), Some(0.2), Some(0.3), Some(0.4))),
-        ("hsl(45deg none none)",        OutputType::Hsl(Some(45.0), None, None, Some(1.0))),
-        ("hsl(none 10% none / none)",   OutputType::Hsl(None, Some(0.1), None, None)),
-        ("hsl(120 100.0% 50.0%)",       OutputType::Hsl(Some(120.0), Some(1.0), Some(0.5), Some(1.0))),
-
-        ("hwb(45deg 20% 30% / 0.4)",    OutputType::Hwb(Some(45.0), Some(0.2), Some(0.3), Some(0.4))),
-
-        ("lab(100 20 30 / 0.4)",        OutputType::Lab(Some(100.0), Some(20.0), Some(30.0), Some(0.4))),
-        ("lch(100 20 30 / 0.4)",        OutputType::Lch(Some(100.0), Some(20.0), Some(30.0), Some(0.4))),
-
-        ("oklab(100 20 30 / 0.4)",      OutputType::Oklab(Some(100.0), Some(20.0), Some(30.0), Some(0.4))),
-        ("oklch(100 20 30 / 0.4)",      OutputType::Oklch(Some(100.0), Some(20.0), Some(30.0), Some(0.4))),
-
-        ("color(srgb 0.1 0.2 0.3 / 0.4)",           OutputType::ColorFunction(PredefinedColorSpace::Srgb, Some(0.1), Some(0.2), Some(0.3), Some(0.4))),
-        ("color(srgb none none none)",              OutputType::ColorFunction(PredefinedColorSpace::Srgb, None, None, None, Some(1.0))),
-        ("color(srgb none none none / none)",       OutputType::ColorFunction(PredefinedColorSpace::Srgb, None, None, None, None)),
-        ("color(srgb-linear 0.1 0.2 0.3 / 0.4)",    OutputType::ColorFunction(PredefinedColorSpace::SrgbLinear, Some(0.1), Some(0.2), Some(0.3), Some(0.4))),
-        ("color(display-p3 0.1 0.2 0.3 / 0.4)",     OutputType::ColorFunction(PredefinedColorSpace::DisplayP3, Some(0.1), Some(0.2), Some(0.3), Some(0.4))),
-        ("color(a98-rgb 0.1 0.2 0.3 / 0.4)",        OutputType::ColorFunction(PredefinedColorSpace::A98Rgb, Some(0.1), Some(0.2), Some(0.3), Some(0.4))),
-        ("color(prophoto-rgb 0.1 0.2 0.3 / 0.4)",   OutputType::ColorFunction(PredefinedColorSpace::ProphotoRgb, Some(0.1), Some(0.2), Some(0.3), Some(0.4))),
-        ("color(rec2020 0.1 0.2 0.3 / 0.4)",        OutputType::ColorFunction(PredefinedColorSpace::Rec2020, Some(0.1), Some(0.2), Some(0.3), Some(0.4))),
-        ("color(xyz-d50 0.1 0.2 0.3 / 0.4)",        OutputType::ColorFunction(PredefinedColorSpace::XyzD50, Some(0.1), Some(0.2), Some(0.3), Some(0.4))),
-        ("color(xyz-d65 0.1 0.2 0.3 / 0.4)",        OutputType::ColorFunction(PredefinedColorSpace::XyzD65, Some(0.1), Some(0.2), Some(0.3), Some(0.4))),
+        ("currentColor", OutputType::CurrentColor),
+        ("rgb(1, 2, 3)", OutputType::Rgba(1, 2, 3, 1.0)),
+        ("rgba(1, 2, 3, 0.4)", OutputType::Rgba(1, 2, 3, 0.4)),
+        (
+            "lab(100 20 30 / 0.4)",
+            OutputType::Lab(100.0, 20.0, 30.0, 0.4),
+        ),
+        (
+            "lch(100 20 30 / 0.4)",
+            OutputType::Lch(100.0, 20.0, 30.0, 0.4),
+        ),
+        (
+            "oklab(100 20 30 / 0.4)",
+            OutputType::Oklab(100.0, 20.0, 30.0, 0.4),
+        ),
+        (
+            "oklch(100 20 30 / 0.4)",
+            OutputType::Oklch(100.0, 20.0, 30.0, 0.4),
+        ),
+        (
+            "color(srgb 0.1 0.2 0.3 / 0.4)",
+            OutputType::ColorFunction(PredefinedColorSpace::Srgb, 0.1, 0.2, 0.3, 0.4),
+        ),
+        (
+            "color(srgb-linear 0.1 0.2 0.3 / 0.4)",
+            OutputType::ColorFunction(PredefinedColorSpace::SrgbLinear, 0.1, 0.2, 0.3, 0.4),
+        ),
+        (
+            "color(display-p3 0.1 0.2 0.3 / 0.4)",
+            OutputType::ColorFunction(PredefinedColorSpace::DisplayP3, 0.1, 0.2, 0.3, 0.4),
+        ),
+        (
+            "color(a98-rgb 0.1 0.2 0.3 / 0.4)",
+            OutputType::ColorFunction(PredefinedColorSpace::A98Rgb, 0.1, 0.2, 0.3, 0.4),
+        ),
+        (
+            "color(prophoto-rgb 0.1 0.2 0.3 / 0.4)",
+            OutputType::ColorFunction(PredefinedColorSpace::ProphotoRgb, 0.1, 0.2, 0.3, 0.4),
+        ),
+        (
+            "color(rec2020 0.1 0.2 0.3 / 0.4)",
+            OutputType::ColorFunction(PredefinedColorSpace::Rec2020, 0.1, 0.2, 0.3, 0.4),
+        ),
+        (
+            "color(xyz-d50 0.1 0.2 0.3 / 0.4)",
+            OutputType::ColorFunction(PredefinedColorSpace::XyzD50, 0.1, 0.2, 0.3, 0.4),
+        ),
+        (
+            "color(xyz-d65 0.1 0.2 0.3 / 0.4)",
+            OutputType::ColorFunction(PredefinedColorSpace::XyzD65, 0.1, 0.2, 0.3, 0.4),
+        ),
     ];
 
     for (input, expected) in TESTS {
         let mut input = ParserInput::new(*input);
         let mut input = Parser::new(&mut input);
 
-        let actual: OutputType = parse_color_with(&TestColorParser, &mut input).unwrap();
+        let actual: OutputType = parse_color_with(&ComponentParser, &mut input).unwrap();
         assert_eq!(actual, *expected);
     }
 }
