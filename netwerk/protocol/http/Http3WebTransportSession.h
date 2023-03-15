@@ -99,8 +99,8 @@ class Http3WebTransportSession final : public Http3StreamBase,
   enum SendStreamState {
     PREPARING_HEADERS,
     WAITING_TO_ACTIVATE,
-    WAITING_DATAGRAM,
-    WRITING_DATAGRAM,
+    PROCESSING_DATAGRAM,
+    SEND_DONE,
   } mSendState{PREPARING_HEADERS};
 
   nsCString mFlatHttpRequestHeaders;
