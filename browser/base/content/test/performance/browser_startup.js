@@ -123,7 +123,7 @@ if (
 
 if (AppConstants.MOZ_CRASHREPORTER) {
   startupPhases["before handling user events"].denylist.modules.add(
-    "resource://gre/modules/CrashSubmit.jsm"
+    "resource://gre/modules/CrashSubmit.sys.mjs"
   );
 }
 

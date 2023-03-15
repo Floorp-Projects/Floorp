@@ -57,9 +57,16 @@ add_task(async function testBreakableLinesOverReloads() {
 
   info("Assert breakable lines of the simple first load of script.js");
   await assertBreakablePositions(dbg, "script.js", 3, [
-    { line: 1, columns: [] },
+    { line: 1, columns: [0, 8] },
     { line: 3, columns: [] },
   ]);
+
+  info("Pretty print first load of script.js and assert breakable lines");
+  await prettyPrint(dbg);
+  await assertBreakablePositions(dbg, "script.js:formatted", 3, [
+    { line: 1, columns: [0, 8] },
+  ]);
+  await closeTab(dbg, "script.js:formatted");
 
   info(
     "Reload the page, wait for sources and assert that breakable lines get updated"
@@ -69,7 +76,7 @@ add_task(async function testBreakableLinesOverReloads() {
 
   info("Assert breakable lines of the more complex second load of script.js");
   await assertBreakablePositions(dbg, "script.js", 23, [
-    { line: 2, columns: [] },
+    { line: 2, columns: [0, 8] },
     { line: 13, columns: [4, 12] },
     { line: 14, columns: [] },
     { line: 15, columns: [] },
@@ -82,6 +89,23 @@ add_task(async function testBreakableLinesOverReloads() {
     { line: 22, columns: [] },
     { line: 23, columns: [] },
   ]);
+
+  info("Pretty print first load of script.js and assert breakable lines");
+  await prettyPrint(dbg);
+  await assertBreakablePositions(dbg, "script.js:formatted", 23, [
+    { line: 2, columns: [0, 8] },
+    { line: 13, columns: [4, 12] },
+    { line: 14, columns: [] },
+    { line: 15, columns: [] },
+    { line: 16, columns: [] },
+    { line: 17, columns: [] },
+    { line: 18, columns: [2, 10] },
+    { line: 19, columns: [] },
+    { line: 20, columns: [] },
+    { line: 21, columns: [] },
+    { line: 22, columns: [] },
+  ]);
+  await closeTab(dbg, "script.js:formatted");
 
   info("Assert breakable lines of the second html page load");
   await assertBreakablePositions(dbg, "index.html", 33, [
@@ -168,7 +192,9 @@ async function assertBreakablePositions(
       );
       ok(
         columns.includes(selPos.location.column),
-        `Selector breakable column has an expected column (${selPos.location.column} vs ${columns})`
+        `Selector breakable column has an expected column (${
+          selPos.location.column
+        } in ${JSON.stringify(columns)}) for line ${line}`
       );
       is(
         selPos.location.sourceId,
@@ -182,7 +208,8 @@ async function assertBreakablePositions(
       );
     }
 
-    const lineElement = await getTokenFromPosition(dbg, { line, ch: -1 });
+    const tokenElement = await getTokenFromPosition(dbg, { line, ch: -1 });
+    const lineElement = tokenElement.closest(".CodeMirror-line");
     // Those are the breakpoint chevron we click on to set a breakpoint on a given column
     const columnMarkers = [
       ...lineElement.querySelectorAll(".column-breakpoint"),

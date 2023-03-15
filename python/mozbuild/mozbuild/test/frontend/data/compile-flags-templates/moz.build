@@ -25,5 +25,3 @@ UNIFIED_SOURCES += ["test1.c"]
 
 DisableStlWrapping()
 NoVisibilityFlags()
-
-REQUIRES_UNIFIED_BUILD = True

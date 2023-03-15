@@ -8,11 +8,17 @@
 
 #include "MainThreadUtils.h"
 #include "cert_storage/src/cert_storage.h"
+// FIXME: these two must be included before certdb.h {
+#include "seccomon.h"
+#include "certt.h"
+// }
 #include "certdb.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozpkix/pkixnss.h"
+#include "NSSCertDBTrustDomain.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsIContentSignatureVerifier.h"
@@ -87,16 +93,17 @@ nsresult AppTrustDomain::SetTrustedRoot(AppTrustedRoot trustedRoot) {
   return NS_OK;
 }
 
-Result AppTrustDomain::FindIssuer(Input encodedIssuerName,
-                                  IssuerChecker& checker, Time) {
+pkix::Result AppTrustDomain::FindIssuer(Input encodedIssuerName,
+                                        IssuerChecker& checker, Time) {
   MOZ_ASSERT(!mTrustedRoot.IsEmpty());
   if (mTrustedRoot.IsEmpty()) {
-    return Result::FATAL_ERROR_INVALID_STATE;
+    return pkix::Result::FATAL_ERROR_INVALID_STATE;
   }
 
   nsTArray<Input> candidates;
   Input rootInput;
-  Result rv = rootInput.Init(mTrustedRoot.Elements(), mTrustedRoot.Length());
+  pkix::Result rv =
+      rootInput.Init(mTrustedRoot.Elements(), mTrustedRoot.Length());
   // This should never fail, since the possible roots are all hard-coded and
   // they should never be too long.
   if (rv != Success) {
@@ -146,7 +153,8 @@ Result AppTrustDomain::FindIssuer(Input encodedIssuerName,
     for (CERTCertListNode* n = CERT_LIST_HEAD(nssCandidates);
          !CERT_LIST_END(n, nssCandidates); n = CERT_LIST_NEXT(n)) {
       Input certDER;
-      Result rv = certDER.Init(n->cert->derCert.data, n->cert->derCert.len);
+      pkix::Result rv =
+          certDER.Init(n->cert->derCert.data, n->cert->derCert.len);
       if (rv != Success) {
         continue;  // probably too big
       }
@@ -166,17 +174,17 @@ Result AppTrustDomain::FindIssuer(Input encodedIssuerName,
   return Success;
 }
 
-Result AppTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
-                                    const CertPolicyId& policy,
-                                    Input candidateCertDER,
-                                    /*out*/ TrustLevel& trustLevel) {
+pkix::Result AppTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
+                                          const CertPolicyId& policy,
+                                          Input candidateCertDER,
+                                          /*out*/ TrustLevel& trustLevel) {
   MOZ_ASSERT(policy.IsAnyPolicy());
   MOZ_ASSERT(!mTrustedRoot.IsEmpty());
   if (!policy.IsAnyPolicy()) {
-    return Result::FATAL_ERROR_INVALID_ARGS;
+    return pkix::Result::FATAL_ERROR_INVALID_ARGS;
   }
   if (mTrustedRoot.IsEmpty()) {
-    return Result::FATAL_ERROR_INVALID_STATE;
+    return pkix::Result::FATAL_ERROR_INVALID_STATE;
   }
 
   nsTArray<uint8_t> issuerBytes;
@@ -184,7 +192,7 @@ Result AppTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
   nsTArray<uint8_t> subjectBytes;
   nsTArray<uint8_t> pubKeyBytes;
 
-  Result result =
+  pkix::Result result =
       BuildRevocationCheckArrays(candidateCertDER, endEntityOrCA, issuerBytes,
                                  serialBytes, subjectBytes, pubKeyBytes);
   if (result != Success) {
@@ -195,11 +203,11 @@ Result AppTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
   nsresult nsrv = mCertBlocklist->GetRevocationState(
       issuerBytes, serialBytes, subjectBytes, pubKeyBytes, &revocationState);
   if (NS_FAILED(nsrv)) {
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    return pkix::Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
   if (revocationState == nsICertStorage::STATE_ENFORCE) {
-    return Result::ERROR_REVOKED_CERTIFICATE;
+    return pkix::Result::ERROR_REVOKED_CERTIFICATE;
   }
 
   // mTrustedRoot is the only trust anchor for this validation.
@@ -214,67 +222,65 @@ Result AppTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
   return Success;
 }
 
-Result AppTrustDomain::DigestBuf(Input item, DigestAlgorithm digestAlg,
-                                 /*out*/ uint8_t* digestBuf,
-                                 size_t digestBufLen) {
+pkix::Result AppTrustDomain::DigestBuf(Input item, DigestAlgorithm digestAlg,
+                                       /*out*/ uint8_t* digestBuf,
+                                       size_t digestBufLen) {
   return DigestBufNSS(item, digestAlg, digestBuf, digestBufLen);
 }
 
-Result AppTrustDomain::CheckRevocation(EndEntityOrCA, const CertID&, Time,
-                                       Duration,
-                                       /*optional*/ const Input*,
-                                       /*optional*/ const Input*,
-                                       /*optional*/ const Input*) {
+pkix::Result AppTrustDomain::CheckRevocation(EndEntityOrCA, const CertID&, Time,
+                                             Duration,
+                                             /*optional*/ const Input*,
+                                             /*optional*/ const Input*,
+                                             /*optional*/ const Input*) {
   // We don't currently do revocation checking. If we need to distrust an Apps
   // certificate, we will use the active distrust mechanism.
   return Success;
 }
 
-Result AppTrustDomain::IsChainValid(const DERArray& certChain, Time time,
-                                    const CertPolicyId& requiredPolicy) {
+pkix::Result AppTrustDomain::IsChainValid(const DERArray& certChain, Time time,
+                                          const CertPolicyId& requiredPolicy) {
   MOZ_ASSERT(requiredPolicy.IsAnyPolicy());
   return Success;
 }
 
-Result AppTrustDomain::CheckSignatureDigestAlgorithm(DigestAlgorithm digestAlg,
-                                                     EndEntityOrCA, Time) {
+pkix::Result AppTrustDomain::CheckSignatureDigestAlgorithm(
+    DigestAlgorithm digestAlg, EndEntityOrCA, Time) {
   switch (digestAlg) {
     case DigestAlgorithm::sha256:  // fall through
     case DigestAlgorithm::sha384:  // fall through
     case DigestAlgorithm::sha512:
       return Success;
     case DigestAlgorithm::sha1:
-      return Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED;
+      return pkix::Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED;
   }
-  return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  return pkix::Result::FATAL_ERROR_LIBRARY_FAILURE;
 }
 
-Result AppTrustDomain::CheckRSAPublicKeyModulusSizeInBits(
+pkix::Result AppTrustDomain::CheckRSAPublicKeyModulusSizeInBits(
     EndEntityOrCA /*endEntityOrCA*/, unsigned int modulusSizeInBits) {
   if (modulusSizeInBits < 2048u) {
-    return Result::ERROR_INADEQUATE_KEY_SIZE;
+    return pkix::Result::ERROR_INADEQUATE_KEY_SIZE;
   }
   return Success;
 }
 
-Result AppTrustDomain::VerifyRSAPKCS1SignedData(Input data,
-                                                DigestAlgorithm digestAlgorithm,
-                                                Input signature,
-                                                Input subjectPublicKeyInfo) {
+pkix::Result AppTrustDomain::VerifyRSAPKCS1SignedData(
+    Input data, DigestAlgorithm digestAlgorithm, Input signature,
+    Input subjectPublicKeyInfo) {
   // TODO: We should restrict signatures to SHA-256 or better.
   return VerifyRSAPKCS1SignedDataNSS(data, digestAlgorithm, signature,
                                      subjectPublicKeyInfo, nullptr);
 }
 
-Result AppTrustDomain::VerifyRSAPSSSignedData(Input data,
-                                              DigestAlgorithm digestAlgorithm,
-                                              Input signature,
-                                              Input subjectPublicKeyInfo) {
+pkix::Result AppTrustDomain::VerifyRSAPSSSignedData(
+    Input data, DigestAlgorithm digestAlgorithm, Input signature,
+    Input subjectPublicKeyInfo) {
   return VerifyRSAPSSSignedDataNSS(data, digestAlgorithm, signature,
                                    subjectPublicKeyInfo, nullptr);
 }
 
-Result AppTrustDomain::CheckECDSACurveIsAcceptable(
+pkix::Result AppTrustDomain::CheckECDSACurveIsAcceptable(
     EndEntityOrCA /*endEntityOrCA*/, NamedCurve curve) {
   switch (curve) {
     case NamedCurve::secp256r1:  // fall through
@@ -283,25 +289,25 @@ Result AppTrustDomain::CheckECDSACurveIsAcceptable(
       return Success;
   }
 
-  return Result::ERROR_UNSUPPORTED_ELLIPTIC_CURVE;
+  return pkix::Result::ERROR_UNSUPPORTED_ELLIPTIC_CURVE;
 }
 
-Result AppTrustDomain::VerifyECDSASignedData(Input data,
-                                             DigestAlgorithm digestAlgorithm,
-                                             Input signature,
-                                             Input subjectPublicKeyInfo) {
+pkix::Result AppTrustDomain::VerifyECDSASignedData(
+    Input data, DigestAlgorithm digestAlgorithm, Input signature,
+    Input subjectPublicKeyInfo) {
   return VerifyECDSASignedDataNSS(data, digestAlgorithm, signature,
                                   subjectPublicKeyInfo, nullptr);
 }
 
-Result AppTrustDomain::CheckValidityIsAcceptable(
+pkix::Result AppTrustDomain::CheckValidityIsAcceptable(
     Time /*notBefore*/, Time /*notAfter*/, EndEntityOrCA /*endEntityOrCA*/,
     KeyPurposeId /*keyPurpose*/) {
   return Success;
 }
 
-Result AppTrustDomain::NetscapeStepUpMatchesServerAuth(Time /*notBefore*/,
-                                                       /*out*/ bool& matches) {
+pkix::Result AppTrustDomain::NetscapeStepUpMatchesServerAuth(
+    Time /*notBefore*/,
+    /*out*/ bool& matches) {
   matches = false;
   return Success;
 }

@@ -15,8 +15,8 @@ export async function runBackgroundTask(commandLine) {
   var curDirURI = Services.io.newFileURI(cwd);
   protocolHandler.setSubstitution("test", curDirURI);
 
-  const { CrashTestUtils } = ChromeUtils.import(
-    "resource://test/CrashTestUtils.jsm"
+  const { CrashTestUtils } = ChromeUtils.importESModule(
+    "resource://test/CrashTestUtils.sys.mjs"
   );
 
   // Get the temp dir.

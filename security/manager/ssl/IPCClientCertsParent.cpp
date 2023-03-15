@@ -6,6 +6,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "IPCClientCertsParent.h"
+#include "ScopedNSSTypes.h"
+#include "nsNSSComponent.h"
+#include "nsNSSIOLayer.h"
 
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/ipc/BackgroundParent.h"

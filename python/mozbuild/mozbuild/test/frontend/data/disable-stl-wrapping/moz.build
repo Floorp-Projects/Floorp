@@ -19,5 +19,3 @@ def DisableStlWrapping():
 UNIFIED_SOURCES += ["test1.c"]
 
 DisableStlWrapping()
-
-REQUIRES_UNIFIED_BUILD = True

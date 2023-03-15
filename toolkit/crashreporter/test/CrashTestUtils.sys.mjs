@@ -1,9 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var EXPORTED_SYMBOLS = ["CrashTestUtils"];
-
-var CrashTestUtils = {
+export var CrashTestUtils = {
   // These will be defined using ctypes APIs below.
   crash: null,
   dumpHasStream: null,

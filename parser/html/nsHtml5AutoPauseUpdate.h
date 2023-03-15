@@ -7,6 +7,8 @@
 #ifndef nsHtml5AutoPauseUpdate_h
 #define nsHtml5AutoPauseUpdate_h
 
+#include "nsHtml5DocumentBuilder.h"
+
 class MOZ_RAII nsHtml5AutoPauseUpdate final {
  private:
   RefPtr<nsHtml5DocumentBuilder> mBuilder;

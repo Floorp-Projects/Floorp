@@ -626,8 +626,9 @@ static nsresult GenerateType3Msg(const nsString& domain,
 
     NTLM_Hash(password, ntlmHash);
 
-    HMAC ntlmv2HashHmac;
-    rv = ntlmv2HashHmac.Begin(SEC_OID_MD5, Span(ntlmHash, NTLM_HASH_LEN));
+    mozilla::HMAC ntlmv2HashHmac;
+    rv = ntlmv2HashHmac.Begin(SEC_OID_MD5,
+                              mozilla::Span(ntlmHash, NTLM_HASH_LEN));
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -650,8 +651,8 @@ static nsresult GenerateType3Msg(const nsString& domain,
     uint8_t client_random[NTLM_CHAL_LEN];
     PK11_GenerateRandom(client_random, NTLM_CHAL_LEN);
 
-    HMAC lmv2ResponseHmac;
-    rv = lmv2ResponseHmac.Begin(SEC_OID_MD5, Span(ntlmv2Hash));
+    mozilla::HMAC lmv2ResponseHmac;
+    rv = lmv2ResponseHmac.Begin(SEC_OID_MD5, mozilla::Span(ntlmv2Hash));
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -688,8 +689,8 @@ static nsresult GenerateType3Msg(const nsString& domain,
     mozilla::LittleEndian::writeUint64(&ntlmv2_blob1[8], nt_time);
     PK11_GenerateRandom(&ntlmv2_blob1[16], NTLM_CHAL_LEN);
 
-    HMAC ntlmv2ResponseHmac;
-    rv = ntlmv2ResponseHmac.Begin(SEC_OID_MD5, Span(ntlmv2Hash));
+    mozilla::HMAC ntlmv2ResponseHmac;
+    rv = ntlmv2ResponseHmac.Begin(SEC_OID_MD5, mozilla::Span(ntlmv2Hash));
     if (NS_FAILED(rv)) {
       return rv;
     }

@@ -37,6 +37,7 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsINestedURI.h"
+#include "nsIHttpChannel.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptError.h"
 #include "nsIScriptGlobalObject.h"
@@ -221,7 +222,7 @@ nsHtml5TreeOpExecutor::DidBuildModel(bool aTerminated) {
     // Gather telemetry only for top-level content navigations in order to
     // avoid noise from ad iframes.
     bool topLevel = false;
-    if (BrowsingContext* bc = mDocument->GetBrowsingContext()) {
+    if (mozilla::dom::BrowsingContext* bc = mDocument->GetBrowsingContext()) {
       topLevel = bc->IsTopContent();
     }
 

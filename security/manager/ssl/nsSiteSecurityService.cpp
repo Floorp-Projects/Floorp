@@ -206,8 +206,6 @@ SiteHSTSState::GetOriginAttributes(
   return NS_OK;
 }
 
-const uint64_t kSixtyDaysInSeconds = 60 * 24 * 60 * 60;
-
 nsSiteSecurityService::nsSiteSecurityService()
     : mUsePreloadList(true), mPreloadListTimeOffset(0), mDafsa(kDafsa) {}
 

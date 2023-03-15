@@ -16,6 +16,7 @@
 #include "mozilla/TextUtils.h"
 #include "mozilla/Tokenizer.h"
 #include "mozilla/Unused.h"
+#include "mozilla/dom/ToJSValue.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsCRT.h"
 #include "nsILineInputStream.h"

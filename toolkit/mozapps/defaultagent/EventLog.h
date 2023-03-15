@@ -7,6 +7,8 @@
 #ifndef __DEFAULT_BROWSER_AGENT_EVENT_LOG_H__
 #define __DEFAULT_BROWSER_AGENT_EVENT_LOG_H__
 
+#include "mozilla/Types.h"
+
 MOZ_BEGIN_EXTERN_C
 
 extern MOZ_EXPORT const wchar_t* gWinEventLogSourceName;

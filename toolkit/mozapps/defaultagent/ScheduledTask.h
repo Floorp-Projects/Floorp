@@ -8,6 +8,7 @@
 #define __DEFAULT_BROWSER_AGENT_SCHEDULED_TASK_H__
 
 #include <windows.h>
+#include <wtypes.h>
 
 // uniqueToken should be a string unique to the installation, so that a
 // separate task can be created for each installation. Typically this will be

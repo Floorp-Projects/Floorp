@@ -11,6 +11,7 @@
 #include <shlobj.h>
 
 #include "EventLog.h"
+#include "Registry.h"
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/RefPtr.h"

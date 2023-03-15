@@ -163,41 +163,48 @@ enum {
   // child's later siblings must also be restyled.
   NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS = NODE_FLAG_BIT(9),
 
+  // A child of this node might be matched by :nth-child(.. of <selector>) or
+  // :nth-last-child(.. of <selector>). If a DOM mutation may have caused the
+  // selector to either match or no longer match that child, the child's
+  // siblings are restyled.
+  NODE_HAS_SLOW_SELECTOR_NTH_OF = NODE_FLAG_BIT(10),
+
   NODE_ALL_SELECTOR_FLAGS = NODE_HAS_EMPTY_SELECTOR | NODE_HAS_SLOW_SELECTOR |
                             NODE_HAS_EDGE_CHILD_SELECTOR |
-                            NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS,
+                            NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS |
+                            NODE_HAS_SLOW_SELECTOR_NTH_OF,
 
   // This node needs to go through frame construction to get a frame (or
   // undisplayed entry).
-  NODE_NEEDS_FRAME = NODE_FLAG_BIT(10),
+  NODE_NEEDS_FRAME = NODE_FLAG_BIT(11),
 
   // At least one descendant in the flattened tree has NODE_NEEDS_FRAME set.
   // This should be set on every node on the flattened tree path between the
   // node(s) with NODE_NEEDS_FRAME and the root content.
-  NODE_DESCENDANTS_NEED_FRAMES = NODE_FLAG_BIT(11),
+  NODE_DESCENDANTS_NEED_FRAMES = NODE_FLAG_BIT(12),
 
   // Set if the node has the accesskey attribute set.
-  NODE_HAS_ACCESSKEY = NODE_FLAG_BIT(12),
+  NODE_HAS_ACCESSKEY = NODE_FLAG_BIT(13),
 
   // Set if the node has right-to-left directionality
-  NODE_HAS_DIRECTION_RTL = NODE_FLAG_BIT(13),
+  NODE_HAS_DIRECTION_RTL = NODE_FLAG_BIT(14),
 
   // Set if the node has left-to-right directionality
-  NODE_HAS_DIRECTION_LTR = NODE_FLAG_BIT(14),
+  NODE_HAS_DIRECTION_LTR = NODE_FLAG_BIT(15),
 
   NODE_ALL_DIRECTION_FLAGS = NODE_HAS_DIRECTION_LTR | NODE_HAS_DIRECTION_RTL,
 
-  NODE_HAS_BEEN_IN_UA_WIDGET = NODE_FLAG_BIT(15),
+  NODE_HAS_BEEN_IN_UA_WIDGET = NODE_FLAG_BIT(16),
 
   // Set if the node has a nonce value and a header delivered CSP.
-  NODE_HAS_NONCE_AND_HEADER_CSP = NODE_FLAG_BIT(16),
+  NODE_HAS_NONCE_AND_HEADER_CSP = NODE_FLAG_BIT(17),
 
-  NODE_KEEPS_DOMARENA = NODE_FLAG_BIT(17),
+  NODE_KEEPS_DOMARENA = NODE_FLAG_BIT(18),
 
-  NODE_MAY_HAVE_ELEMENT_CHILDREN = NODE_FLAG_BIT(18),
+  NODE_MAY_HAVE_ELEMENT_CHILDREN = NODE_FLAG_BIT(19),
 
   // Remaining bits are node type specific.
-  NODE_TYPE_SPECIFIC_BITS_OFFSET = 19
+  NODE_TYPE_SPECIFIC_BITS_OFFSET = 20
 };
 
 // Make sure we have space for our bits

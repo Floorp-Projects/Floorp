@@ -33,6 +33,7 @@ use style::font_face::{self, FontFaceSourceFormat, FontFaceSourceListComponent, 
 use style::gecko::data::{GeckoStyleSheet, PerDocumentStyleData, PerDocumentStyleDataImpl};
 use style::gecko::restyle_damage::GeckoRestyleDamage;
 use style::gecko::selector_parser::{NonTSPseudoClass, PseudoElement};
+use style::gecko::snapshot_helpers::classes_changed;
 use style::gecko::traversal::RecalcStyleOnly;
 use style::gecko::url;
 use style::gecko::wrapper::{GeckoElement, GeckoNode};
@@ -6776,6 +6777,62 @@ pub extern "C" fn Servo_StyleSet_MightHaveAttributeDependency(
 }
 
 #[no_mangle]
+pub extern "C" fn Servo_StyleSet_MightHaveNthOfIDDependency(
+    raw_data: &RawServoStyleSet,
+    element: &RawGeckoElement,
+    old_id: *mut nsAtom,
+    new_id: *mut nsAtom,
+) -> bool {
+    let data = PerDocumentStyleData::from_ffi(raw_data).borrow();
+    let element = GeckoElement(element);
+
+    data.stylist.any_applicable_rule_data(element, |data| {
+        [old_id, new_id]
+            .iter()
+            .filter(|id| !id.is_null())
+            .any(|id| unsafe {
+                AtomIdent::with(*id, |atom| data.might_have_nth_of_id_dependency(atom))
+            }) ||
+            data.might_have_nth_of_attribute_dependency(&AtomIdent(atom!("id")))
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_StyleSet_MightHaveNthOfClassDependency(
+    raw_data: &RawServoStyleSet,
+    element: &RawGeckoElement,
+    snapshots: &ServoElementSnapshotTable,
+) -> bool {
+    let data = PerDocumentStyleData::from_ffi(raw_data).borrow();
+    let element = GeckoElement(element);
+
+    data.stylist.any_applicable_rule_data(element, |data| {
+        classes_changed(&element, snapshots)
+            .iter()
+            .any(|atom| data.might_have_nth_of_class_dependency(atom)) ||
+            data.might_have_nth_of_attribute_dependency(&AtomIdent(atom!("class")))
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_StyleSet_MightHaveNthOfAttributeDependency(
+    raw_data: &RawServoStyleSet,
+    element: &RawGeckoElement,
+    local_name: *mut nsAtom,
+) -> bool {
+    let data = PerDocumentStyleData::from_ffi(raw_data).borrow();
+    let element = GeckoElement(element);
+
+    unsafe {
+        AtomIdent::with(local_name, |atom| {
+            data.stylist.any_applicable_rule_data(element, |data| {
+                data.might_have_nth_of_attribute_dependency(atom)
+            })
+        })
+    }
+}
+
+#[no_mangle]
 pub extern "C" fn Servo_StyleSet_HasStateDependency(
     raw_data: &RawServoStyleSet,
     element: &RawGeckoElement,
@@ -6788,6 +6845,21 @@ pub extern "C" fn Servo_StyleSet_HasStateDependency(
 
     data.stylist
         .any_applicable_rule_data(element, |data| data.has_state_dependency(state))
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_StyleSet_HasNthOfStateDependency(
+    raw_data: &RawServoStyleSet,
+    element: &RawGeckoElement,
+    state: u64,
+) -> bool {
+    let element = GeckoElement(element);
+
+    let state = ElementState::from_bits_truncate(state);
+    let data = PerDocumentStyleData::from_ffi(raw_data).borrow();
+
+    data.stylist
+        .any_applicable_rule_data(element, |data| data.has_nth_of_state_dependency(state))
 }
 
 #[no_mangle]

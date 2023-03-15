@@ -2326,6 +2326,22 @@ bool nsHttpConnection::ResolvedByTRR() {
   return val;
 }
 
+nsIRequest::TRRMode nsHttpConnection::EffectiveTRRMode() {
+  nsIRequest::TRRMode mode = nsIRequest::TRR_DEFAULT_MODE;
+  if (mSocketTransport) {
+    mSocketTransport->GetEffectiveTRRMode(&mode);
+  }
+  return mode;
+}
+
+TRRSkippedReason nsHttpConnection::TRRSkipReason() {
+  TRRSkippedReason reason = nsITRRSkipReason::TRR_UNSET;
+  if (mSocketTransport) {
+    mSocketTransport->GetTrrSkipReason(&reason);
+  }
+  return reason;
+}
+
 bool nsHttpConnection::GetEchConfigUsed() {
   bool val = false;
   if (mSocketTransport) {

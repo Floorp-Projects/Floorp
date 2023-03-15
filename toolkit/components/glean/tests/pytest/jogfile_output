@@ -11,6 +11,30 @@
         false
       ],
       [
+        "counter",
+        "counter_metric",
+        [
+          "metrics"
+        ],
+        "application",
+        false
+      ],
+      [
+        "custom_distribution",
+        "custom_distribution_metric",
+        [
+          "metrics"
+        ],
+        "application",
+        false,
+        {
+          "bucket_count": 100,
+          "histogram_type": "linear",
+          "range_max": 100,
+          "range_min": 0
+        }
+      ],
+      [
         "labeled_boolean",
         "labeled_boolean_metric",
         [
@@ -22,15 +46,6 @@
       [
         "labeled_boolean",
         "labeled_boolean_metric_labels",
-        [
-          "metrics"
-        ],
-        "application",
-        false
-      ],
-      [
-        "counter",
-        "counter_metric",
         [
           "metrics"
         ],
@@ -56,15 +71,6 @@
         false
       ],
       [
-        "string",
-        "string_metric",
-        [
-          "metrics"
-        ],
-        "application",
-        false
-      ],
-      [
         "labeled_string",
         "labeled_string_metric",
         [
@@ -83,8 +89,29 @@
         false
       ],
       [
+        "memory_distribution",
+        "memory_distribution_metric",
+        [
+          "metrics"
+        ],
+        "application",
+        false,
+        {
+          "memory_unit": "kilobyte"
+        }
+      ],
+      [
         "string_list",
         "string_list_metric",
+        [
+          "metrics"
+        ],
+        "application",
+        false
+      ],
+      [
+        "string",
+        "string_metric",
         [
           "metrics"
         ],
@@ -114,45 +141,9 @@
         {
           "time_unit": "nanosecond"
         }
-      ],
-      [
-        "memory_distribution",
-        "memory_distribution_metric",
-        [
-          "metrics"
-        ],
-        "application",
-        false,
-        {
-          "memory_unit": "kilobyte"
-        }
-      ],
-      [
-        "custom_distribution",
-        "custom_distribution_metric",
-        [
-          "metrics"
-        ],
-        "application",
-        false,
-        {
-          "bucket_count": 100,
-          "histogram_type": "linear",
-          "range_max": 100,
-          "range_min": 0
-        }
       ]
     ],
     "test.nested": [
-      [
-        "uuid",
-        "uuid_metric",
-        [
-          "metrics"
-        ],
-        "application",
-        false
-      ],
       [
         "datetime",
         "datetime_metric",
@@ -193,6 +184,29 @@
         }
       ],
       [
+        "denominator",
+        "external_denominator",
+        [
+          "metrics"
+        ],
+        "ping",
+        false,
+        {
+          "numerators": [
+            [
+              "rate_with_external_denominator",
+              "test.nested",
+              [
+                "metrics"
+              ],
+              "ping",
+              false,
+              null
+            ]
+          ]
+        }
+      ],
+      [
         "quantity",
         "quantity_metric",
         [
@@ -220,27 +234,13 @@
         false
       ],
       [
-        "denominator",
-        "external_denominator",
+        "uuid",
+        "uuid_metric",
         [
           "metrics"
         ],
-        "ping",
-        false,
-        {
-          "numerators": [
-            [
-              "rate_with_external_denominator",
-              "test.nested",
-              [
-                "metrics"
-              ],
-              "ping",
-              false,
-              null
-            ]
-          ]
-        }
+        "application",
+        false
       ]
     ]
   },
@@ -256,16 +256,10 @@
       ]
     ],
     [
-      "not-metrics",
+      "not-deletion-request",
       true,
-      false,
-      [
-        "overdue",
-        "reschedule",
-        "today",
-        "tomorrow",
-        "upgrade"
-      ]
+      true,
+      []
     ],
     [
       "not-events",
@@ -278,10 +272,16 @@
       ]
     ],
     [
-      "not-deletion-request",
+      "not-metrics",
       true,
-      true,
-      []
+      false,
+      [
+        "overdue",
+        "reschedule",
+        "today",
+        "tomorrow",
+        "upgrade"
+      ]
     ]
   ]
 }

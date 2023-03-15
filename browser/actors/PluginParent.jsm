@@ -16,11 +16,9 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CrashSubmit",
-  "resource://gre/modules/CrashSubmit.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  CrashSubmit: "resource://gre/modules/CrashSubmit.sys.mjs",
+});
 
 XPCOMUtils.defineLazyGetter(lazy, "gNavigatorBundle", function() {
   const url = "chrome://browser/locale/browser.properties";

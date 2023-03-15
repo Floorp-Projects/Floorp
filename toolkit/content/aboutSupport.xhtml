@@ -30,35 +30,35 @@
   </head>
 
   <body class="wide-container">
+    <h1 data-l10n-id="page-title"/>
+    <div class="header-flex">
+      <div class="content-flex">
+        <div class="page-subtitle" data-l10n-id="page-subtitle">
+          <a id="supportLink" data-l10n-name="support-link"></a>
+        </div>
+        <div>
+          <button id="copy-raw-data-to-clipboard" data-l10n-id="copy-raw-data-to-clipboard-label"/>
+          <button id="copy-to-clipboard" data-l10n-id="copy-text-to-clipboard-label"/>
+        </div>
+      </div>
 
 #ifndef ANDROID
-    <div class="action-box">
-      <div id="reset-box">
-        <h3 data-l10n-id="refresh-profile"/>
-        <button id="reset-box-button" data-l10n-id="refresh-profile-button"/>
+      <div class="action-box">
+        <div id="reset-box">
+          <h3 data-l10n-id="refresh-profile"/>
+          <button id="reset-box-button" data-l10n-id="refresh-profile-button"/>
+        </div>
+        <div id="safe-mode-box">
+          <h3 data-l10n-id="troubleshoot-mode-title"/>
+          <button id="restart-in-safe-mode-button" data-l10n-id="restart-in-troubleshoot-mode-label"/>
+        </div>
+        <div id="clear-startup-cache-box">
+          <h3 data-l10n-id="clear-startup-cache-title"/>
+          <button id="clear-startup-cache-button" data-l10n-id="clear-startup-cache-label"/>
+        </div>
       </div>
-      <div id="safe-mode-box">
-        <h3 data-l10n-id="troubleshoot-mode-title"/>
-        <button id="restart-in-safe-mode-button" data-l10n-id="restart-in-troubleshoot-mode-label"/>
-      </div>
-      <div id="clear-startup-cache-box">
-        <h3 data-l10n-id="clear-startup-cache-title"/>
-        <button id="clear-startup-cache-button" data-l10n-id="clear-startup-cache-label"/>
-      </div>
-    </div>
 #endif
-
-    <h1 data-l10n-id="page-title"/>
-
-    <div class="page-subtitle" data-l10n-id="page-subtitle">
-      <a id="supportLink" data-l10n-name="support-link"></a>
     </div>
-
-    <div>
-      <button id="copy-raw-data-to-clipboard" data-l10n-id="copy-raw-data-to-clipboard-label"/>
-      <button id="copy-to-clipboard" data-l10n-id="copy-text-to-clipboard-label"/>
-    </div>
-
     <div id="contents">
 
       <!-- - - - - - - - - - - - - - - - - - - - - -->

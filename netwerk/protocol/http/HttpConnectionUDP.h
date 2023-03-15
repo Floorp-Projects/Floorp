@@ -84,6 +84,8 @@ class HttpConnectionUDP final : public HttpConnectionBase,
   nsresult GetSelfAddr(NetAddr* addr) override;
   nsresult GetPeerAddr(NetAddr* addr) override;
   bool ResolvedByTRR() override;
+  nsIRequest::TRRMode EffectiveTRRMode() override;
+  TRRSkippedReason TRRSkipReason() override;
   bool GetEchConfigUsed() override { return false; }
 
  private:
@@ -116,6 +118,8 @@ class HttpConnectionUDP final : public HttpConnectionBase,
   nsCOMPtr<nsINetAddr> mSelfAddr;
   nsCOMPtr<nsINetAddr> mPeerAddr;
   bool mResolvedByTRR = false;
+  nsIRequest::TRRMode mEffectiveTRRMode = nsIRequest::TRR_DEFAULT_MODE;
+  TRRSkippedReason mTRRSkipReason = nsITRRSkipReason::TRR_UNSET;
 
  private:
   // Http3
