@@ -9,6 +9,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.advanceUntilIdle
+import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
@@ -60,9 +61,9 @@ class MessagingMiddlewareTest {
 
         coEvery { messagingStorage.getMessages() } returns listOf(message)
 
-        store.dispatch(Restore)
+        store.dispatch(Restore).joinBlocking()
         store.waitUntilIdle()
-        advanceUntilIdle()
+        coroutineScope.advanceUntilIdle()
 
         assertEquals(listOf(message), store.state.messaging.messages)
     }
@@ -92,7 +93,7 @@ class MessagingMiddlewareTest {
 
         assertEquals(0, store.state.messaging.messageToShow.size)
 
-        store.dispatch(Evaluate(MessageSurfaceId.HOMESCREEN))
+        store.dispatch(Evaluate(MessageSurfaceId.HOMESCREEN)).joinBlocking()
         store.waitUntilIdle()
 
         // UpdateMessageToShow to causes messageToShow to append
@@ -115,7 +116,7 @@ class MessagingMiddlewareTest {
 
         assertEquals(message, store.state.messaging.messages.first())
 
-        store.dispatch(MessageClicked(message))
+        store.dispatch(MessageClicked(message)).joinBlocking()
         store.waitUntilIdle()
 
         assertTrue(store.state.messaging.messages.isEmpty())
@@ -136,7 +137,7 @@ class MessagingMiddlewareTest {
                 MessagingMiddleware(messagingStorage, controller, coroutineScope),
             ),
         )
-        store.dispatch(MessageDismissed(message))
+        store.dispatch(MessageDismissed(message)).joinBlocking()
         store.waitUntilIdle()
 
         assertTrue(store.state.messaging.messages.isEmpty())
@@ -160,7 +161,7 @@ class MessagingMiddlewareTest {
             ),
         )
 
-        store.dispatch(MessageDismissed(message))
+        store.dispatch(MessageDismissed(message)).joinBlocking()
         store.waitUntilIdle()
 
         // removeMessages causes messages size to be 0
@@ -186,7 +187,7 @@ class MessagingMiddlewareTest {
             ),
         )
 
-        store.dispatch(MessageClicked(message))
+        store.dispatch(MessageClicked(message)).joinBlocking()
         store.waitUntilIdle()
 
         assertTrue(store.state.messaging.messages.isEmpty())
@@ -249,7 +250,7 @@ class MessagingMiddlewareTest {
             )
         } returns message1
 
-        store.dispatch(Evaluate(MessageSurfaceId.HOMESCREEN))
+        store.dispatch(Evaluate(MessageSurfaceId.HOMESCREEN)).joinBlocking()
         store.waitUntilIdle()
 
         assertEquals(messageDisplayed1, store.state.messaging.messages[0])
@@ -281,7 +282,7 @@ class MessagingMiddlewareTest {
             )
         } returns message
 
-        store.dispatch(Evaluate(MessageSurfaceId.HOMESCREEN))
+        store.dispatch(Evaluate(MessageSurfaceId.HOMESCREEN)).joinBlocking()
         store.waitUntilIdle()
 
         assertEquals(messageDisplayed.metadata.displayCount, store.state.messaging.messages[0].metadata.displayCount)
@@ -311,7 +312,7 @@ class MessagingMiddlewareTest {
             )
         } returns message
 
-        store.dispatch(Evaluate(MessageSurfaceId.HOMESCREEN))
+        store.dispatch(Evaluate(MessageSurfaceId.HOMESCREEN)).joinBlocking()
         store.waitUntilIdle()
 
         assertEquals(0, store.state.messaging.messages.size)
