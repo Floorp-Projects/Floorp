@@ -753,12 +753,11 @@ WebTransportSessionProxy::OnIncomingStreamAvailableInternal(
          this, mState, mListener.get()));
     if (mState == WebTransportSessionProxyState::ACTIVE) {
       listener = mListener;
-    } else {
-      MOZ_ASSERT(false, "mState is not ACTIVE");
     }
   }
 
   if (!listener) {
+    // Session can be already closed.
     return NS_OK;
   }
 
@@ -955,6 +954,15 @@ void WebTransportSessionProxy::NotifyDatagramReceived(
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(mTarget->IsOnCurrentThread());
 
+    if (!mStopRequestCalled) {
+      CopyableTArray<uint8_t> copied(aData);
+      mPendingEvents.AppendElement(
+          [self = RefPtr{this}, data = std::move(copied)]() mutable {
+            self->NotifyDatagramReceived(std::move(data));
+          });
+      return;
+    }
+
     if (mState != WebTransportSessionProxyState::ACTIVE || !mListener) {
       return;
     }
@@ -993,6 +1001,13 @@ void WebTransportSessionProxy::OnMaxDatagramSizeInternal(uint64_t aSize) {
   {
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(mTarget->IsOnCurrentThread());
+
+    if (!mStopRequestCalled) {
+      mPendingEvents.AppendElement([self = RefPtr{this}, size(aSize)]() {
+        self->OnMaxDatagramSizeInternal(size);
+      });
+      return;
+    }
 
     if (mState != WebTransportSessionProxyState::ACTIVE || !mListener) {
       return;
