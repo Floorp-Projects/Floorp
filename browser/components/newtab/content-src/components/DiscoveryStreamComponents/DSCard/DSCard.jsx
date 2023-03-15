@@ -55,7 +55,7 @@ export const DSSource = ({
   }
 
   // If we are not a spoc, and can display a time to read value.
-  if (timeToRead) {
+  if (source && timeToRead) {
     return (
       <p className="source clamp time-to-read">
         <FluentOrText

@@ -575,6 +575,18 @@ saveToPocket:
       type: boolean
       fallbackPref: extensions.pocket.refresh.hideRecentSaves.enabled
       description: Hides the recently saved section in the home panel.
+    bffRecentSaves:
+      type: boolean
+      fallbackPref: "extensions.pocket.bffRecentSaves"
+      description: Use the new BFF Proxy Service instead of the legacy Pocket Service for Recent Saves
+    bffApi:
+      type: string
+      fallbackPref: "extensions.pocket.bffApi"
+      description: BFF Proxy Service domain
+    oAuthConsumerKeyBff:
+      type: string
+      fallbackPref: "extensions.pocket.oAuthConsumerKeyBff"
+      description: BFF Proxy Service OAuth Consumer Key
 
 password-autocomplete:
   description: A special autocomplete UI for password fields.
