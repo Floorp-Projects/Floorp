@@ -513,7 +513,10 @@ class BrowserActionBase extends PanelActionBase {
       extension.manifest.browser_action || extension.manifest.action;
     super(options, tabContext, extension);
 
-    let default_area = options.default_area || "menupanel";
+    let default_area =
+      Services.policies.getExtensionSettings(extension.id)?.default_area ||
+      options.default_area ||
+      "menupanel";
 
     this.defaults = {
       ...this.defaults,
