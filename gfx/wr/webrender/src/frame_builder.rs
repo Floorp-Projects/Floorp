@@ -7,7 +7,7 @@ use api::units::*;
 use plane_split::BspSplitter;
 use crate::batch::{BatchBuilder, AlphaBatchBuilder, AlphaBatchContainer};
 use crate::clip::{ClipStore, ClipTree};
-use crate::command_buffer::{PrimitiveCommand, CommandBufferList, CommandBufferIndex};
+use crate::command_buffer::CommandBufferList;
 use crate::spatial_tree::{SpatialTree, SpatialNodeIndex};
 use crate::composite::{CompositorKind, CompositeState, CompositeStatePreallocator};
 use crate::debug_item::DebugItem;
@@ -187,19 +187,6 @@ impl<'a> FrameBuildingState<'a> {
     /// Pop the top dirty region from the stack.
     pub fn pop_dirty_region(&mut self) {
         self.dirty_region_stack.pop().unwrap();
-    }
-
-    /// Push a primitive command to a set of command buffers
-    pub fn push_prim(
-        &mut self,
-        cmd: &PrimitiveCommand,
-        spatial_node_index: SpatialNodeIndex,
-        targets: &[CommandBufferIndex],
-    ) {
-        for cmd_buffer_index in targets {
-            let cmd_buffer = self.cmd_buffers.get_mut(*cmd_buffer_index);
-            cmd_buffer.add_prim(cmd, spatial_node_index);
-        }
     }
 }
 

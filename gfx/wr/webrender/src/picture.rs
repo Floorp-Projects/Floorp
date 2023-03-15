@@ -1643,11 +1643,6 @@ impl SubSliceIndex {
     pub fn is_primary(&self) -> bool {
         self.0 == 0
     }
-
-    /// Get an array index for this sub-slice
-    pub fn as_usize(&self) -> usize {
-        self.0 as usize
-    }
 }
 
 /// Wrapper struct around an external surface descriptor with a little more information
@@ -3434,6 +3429,7 @@ impl TileCacheInstance {
 
         prim_instance.vis.state = VisibilityState::Visible {
             vis_flags,
+            tile_rect: TileRect::new(p0, p1),
             sub_slice_index: SubSliceIndex::new(sub_slice_index),
         };
     }
@@ -4567,6 +4563,7 @@ impl PicturePrimitive {
                 let tile_cache = tile_caches.get_mut(&slice_id).unwrap();
                 let mut debug_info = SliceDebugInfo::new();
                 let mut surface_render_tasks = FastHashMap::default();
+                let mut surface_dirty_rects = Vec::new();
                 let mut surface_local_dirty_rect = PictureRect::zero();
                 let device_pixel_scale = frame_state
                     .surfaces[surface_index.0]
@@ -4958,7 +4955,6 @@ impl PicturePrimitive {
                                         SurfaceTileDescriptor {
                                             current_task_id: render_task_id,
                                             composite_task_id: Some(composite_task_id),
-                                            dirty_rect: tile.local_dirty_rect,
                                         },
                                     );
                                 } else {
@@ -4992,10 +4988,11 @@ impl PicturePrimitive {
                                         SurfaceTileDescriptor {
                                             current_task_id: render_task_id,
                                             composite_task_id: None,
-                                            dirty_rect: tile.local_dirty_rect,
                                         },
                                     );
                                 }
+
+                                surface_dirty_rects.push(tile.local_dirty_rect);
                             }
 
                             if frame_context.fb_config.testing {
@@ -5150,7 +5147,10 @@ impl PicturePrimitive {
                         );
                 }
 
-                let descriptor = SurfaceDescriptor::new_tiled(surface_render_tasks);
+                let descriptor = SurfaceDescriptor::new_tiled(
+                    surface_render_tasks,
+                    surface_dirty_rects,
+                );
 
                 frame_state.surface_builder.push_surface(
                     surface_index,
@@ -5763,25 +5763,20 @@ impl PicturePrimitive {
             );
 
             // Add the child prims to the relevant command buffers
-            let mut cmd_buffer_targets = Vec::new();
             for child in list {
                 let child_prim_instance = &prim_instances[child.anchor.instance_index.0 as usize];
 
-                if frame_state.surface_builder.get_cmd_buffer_targets_for_prim(
-                    &child_prim_instance.vis,
-                    &mut cmd_buffer_targets,
-                ) {
-                    let prim_cmd = PrimitiveCommand::complex(
-                        child.anchor.instance_index,
-                        child.gpu_address
-                    );
+                let prim_cmd = PrimitiveCommand::complex(
+                    child.anchor.instance_index,
+                    child.gpu_address
+                );
 
-                    frame_state.push_prim(
-                        &prim_cmd,
-                        child.anchor.spatial_node_index,
-                        &cmd_buffer_targets,
-                    );
-                }
+                frame_state.surface_builder.push_prim(
+                    &prim_cmd,
+                    child.anchor.spatial_node_index,
+                    &child_prim_instance.vis,
+                    frame_state.cmd_buffers,
+                );
             }
         }
 
