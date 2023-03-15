@@ -87,20 +87,6 @@ void SVGSwitchElement::RemoveChildNode(nsIContent* aKid, bool aNotify) {
 }
 
 //----------------------------------------------------------------------
-// nsIContent methods
-
-NS_IMETHODIMP_(bool)
-SVGSwitchElement::IsAttributeMapped(const nsAtom* name) const {
-  static const MappedAttributeEntry* const map[] = {
-      sFEFloodMap,         sFiltersMap, sGradientStopMap,
-      sLightingEffectsMap, sMarkersMap, sTextContentElementsMap,
-      sViewportsMap};
-
-  return FindAttributeDependence(name, map) ||
-         SVGSwitchElementBase::IsAttributeMapped(name);
-}
-
-//----------------------------------------------------------------------
 // Implementation Helpers:
 
 nsIContent* SVGSwitchElement::FindActiveChild() const {

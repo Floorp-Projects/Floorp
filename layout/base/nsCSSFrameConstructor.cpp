@@ -119,7 +119,6 @@
 #undef NOISY_FIRST_LETTER
 
 #include "nsMathMLParts.h"
-#include "mozilla/dom/SVGAnimationElement.h"
 #include "mozilla/dom/SVGFilters.h"
 #include "mozilla/dom/SVGTests.h"
 #include "mozilla/SVGGradientFrame.h"
@@ -4930,8 +4929,7 @@ nsCSSFrameConstructor::FindSVGData(const Element& aElement,
   }
 
   // We don't need frames for animation elements
-  if (nsCOMPtr<SVGAnimationElement> animationElement =
-          do_QueryInterface(const_cast<Element*>(&aElement))) {
+  if (aElement.IsSVGAnimationElement()) {
     return &sSuppressData;
   }
 
