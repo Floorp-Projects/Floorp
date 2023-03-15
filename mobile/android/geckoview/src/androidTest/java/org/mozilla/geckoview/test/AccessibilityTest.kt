@@ -1750,6 +1750,62 @@ class AccessibilityTest : BaseSessionTest() {
         }
     }
 
+    @Test fun testNavigateListItems() {
+        loadTestPage("test-collection")
+        waitForInitialFocus()
+        var nodeId = View.NO_ID
+
+        provider.performAction(
+            nodeId,
+            AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT,
+            null
+        )
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat(
+                    "Accessibility focus on text leaf",
+                    node.text as String,
+                    startsWith("One")
+                )
+                if (Build.VERSION.SDK_INT >= 19) {
+                    assertThat(
+                        "first item is a text leaf",
+                        node.extras.getCharSequence("AccessibilityNodeInfo.geckoRole")!!.toString(),
+                        equalTo("text leaf")
+                    )
+                }
+            }
+        })
+
+        provider.performAction(
+            nodeId,
+            AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT,
+            null
+        )
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat(
+                    "Accessibility focus on link",
+                    node.contentDescription as String,
+                    startsWith("Two")
+                )
+                if (Build.VERSION.SDK_INT >= 19) {
+                    assertThat(
+                        "second item is a link",
+                        node.extras.getCharSequence("AccessibilityNodeInfo.geckoRole")!!.toString(),
+                        equalTo("link")
+                    )
+                }
+            }
+        })
+    }
+
     @Setting(key = Setting.Key.FULL_ACCESSIBILITY_TREE, value = "true")
     @Test
     fun testRange() {

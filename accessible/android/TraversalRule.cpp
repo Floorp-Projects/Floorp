@@ -251,12 +251,6 @@ uint16_t TraversalRule::DefaultMatch(Accessible* aAccessible) {
                nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
       }
       break;
-    case roles::LISTITEM:
-      if (IsFlatSubtree(aAccessible) || IsSingleLineage(aAccessible)) {
-        return nsIAccessibleTraversalRule::FILTER_MATCH |
-               nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
-      }
-      break;
     case roles::LABEL:
       if (IsFlatSubtree(aAccessible)) {
         // Match if this is a label with text but no nested controls.
