@@ -93,6 +93,7 @@ class NotificationsDelegate(
         notification: Notification,
         onPermissionGranted: OnPermissionGranted = { },
         onPermissionRejected: OnPermissionRejected = { },
+        showPermissionRationale: Boolean = false,
     ) {
         if (hasPostNotificationsPermission()) {
             notificationManagerCompat.notify(notificationTag, notificationId, notification)
@@ -109,6 +110,7 @@ class NotificationsDelegate(
                         onPermissionGranted.invoke()
                     },
                     onPermissionRejected = onPermissionRejected,
+                    showPermissionRationale = showPermissionRationale,
                 )
             } else {
                 // this means we cannot show standard notifications without user changing it from OS Settings
@@ -128,6 +130,7 @@ class NotificationsDelegate(
     fun requestNotificationPermission(
         onPermissionGranted: OnPermissionGranted = { },
         onPermissionRejected: OnPermissionRejected = { },
+        showPermissionRationale: Boolean = false,
     ) {
         // some clients might request notification permission when it is already granted,
         // so we should check first.
@@ -143,9 +146,26 @@ class NotificationsDelegate(
             throw UnboundHandlerException("You must bind the NotificationPermissionHandler to an activity")
         }
 
+        if (showPermissionRationale) {
+            showPermissionRationale(onPermissionGranted, onPermissionRejected)
+        } else {
+            notificationPermissionHandler.entries.firstOrNull {
+                it.key.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
+            }?.value?.launch(POST_NOTIFICATIONS)
+        }
+    }
 
-        notificationPermissionHandler.entries.firstOrNull {
-            it.key.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
-        }?.value?.launch(POST_NOTIFICATIONS)
+    /**
+     * Handles displaying a notification pre permission prompt.
+     *
+     * @param onPermissionGranted optional callback for handling permission acceptance.
+     * @param onPermissionRejected optional callback for handling permission refusal.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    private fun showPermissionRationale(
+        onPermissionGranted: OnPermissionGranted,
+        onPermissionRejected: OnPermissionRejected,
+    ) {
+        // Content to be decided. Could follow existing NotificationPermissionDialogScreen.
     }
 }

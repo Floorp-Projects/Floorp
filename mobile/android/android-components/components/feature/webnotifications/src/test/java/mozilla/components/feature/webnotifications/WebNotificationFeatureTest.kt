@@ -140,6 +140,7 @@ class WebNotificationFeatureTest {
             any(),
             any(),
             any(),
+            eq(false),
         )
     }
 
@@ -213,6 +214,7 @@ class WebNotificationFeatureTest {
             any(),
             any(),
             any(),
+            eq(false),
         )
     }
 }
