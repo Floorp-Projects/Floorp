@@ -98,10 +98,15 @@ add_task(async function test_confirm_unblock_download() {
       "DOWNLOADS_USER_ACTION_ON_BLOCKED_DOWNLOAD"
     );
     info(`Unblock ${error} download`);
+    let promise = new Promise(r => (download.onchange = r));
     await download.unblock();
     // The environment is not set up properly for performing a real download, cancel
     // the unblocked download so it doesn't affect the next testcase.
     await download.cancel();
+    await promise;
+    if (error == Downloads.Error.BLOCK_VERDICT_INSECURE) {
+      Assert.ok(!download.error, "Ensure we didn't set download.error");
+    }
 
     TelemetryTestUtils.assertKeyedHistogramValue(histogram, error, 2, 1);
   }
