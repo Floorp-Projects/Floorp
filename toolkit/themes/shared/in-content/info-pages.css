@@ -163,12 +163,20 @@ td {
 }
 
 .action-box {
-  float: inline-end;
   background-color: var(--in-content-table-background);
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 4px;
   padding: 16px;
-  margin-top: 2em;
-  margin-inline-start: 20px;
-  width: 30%;
+  flex: 1 1 25%;
+}
+
+.header-flex {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.content-flex {
+  flex: 1 1 65%;
 }
