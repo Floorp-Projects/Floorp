@@ -701,7 +701,9 @@ class Descriptor(DescriptorProvider):
                 if binaryName:
                     assert isinstance(binaryName, list)
                     assert len(binaryName) == 1
-                    self._binaryNames.setdefault(member.identifier.name, binaryName[0])
+                    self._binaryNames.setdefault(
+                        (member.identifier.name, member.isStatic()), binaryName[0]
+                    )
 
             for member in self.interface.members:
                 if not member.isAttr() and not member.isMethod():
@@ -713,8 +715,8 @@ class Descriptor(DescriptorProvider):
                 maybeAddBinaryName(ctor)
 
             # Some default binary names for cases when nothing else got set.
-            self._binaryNames.setdefault("__legacycaller", "LegacyCall")
-            self._binaryNames.setdefault("__stringifier", "Stringify")
+            self._binaryNames.setdefault(("__legacycaller", False), "LegacyCall")
+            self._binaryNames.setdefault(("__stringifier", False), "Stringify")
 
             # Build the prototype chain.
             self.prototypeChain = []
@@ -733,8 +735,8 @@ class Descriptor(DescriptorProvider):
 
         self.hasOrdinaryObjectPrototype = desc.get("hasOrdinaryObjectPrototype", False)
 
-    def binaryNameFor(self, name):
-        return self._binaryNames.get(name, name)
+    def binaryNameFor(self, name, isStatic):
+        return self._binaryNames.get((name, isStatic), name)
 
     @property
     def prototypeNameChain(self):
