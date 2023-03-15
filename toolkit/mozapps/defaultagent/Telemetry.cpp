@@ -11,11 +11,16 @@
 
 #include <windows.h>
 
+#include <knownfolders.h>
+#include <shlobj_core.h>
+
 #include "common.h"
+#include "Cache.h"
 #include "EventLog.h"
 #include "Notification.h"
 #include "Policy.h"
 #include "UtfConvert.h"
+#include "Registry.h"
 
 #include "json/json.h"
 #include "mozilla/ArrayUtils.h"
