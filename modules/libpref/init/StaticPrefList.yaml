@@ -12962,6 +12962,13 @@
   value: 480
   mirror: always
 
+# Setting TZ=UTC ensures that even libc functions use the spoofed time zone.
+# We want to remove that override as soon as possible however.
+- name: privacy.resistFingerprinting.testing.setTZtoUTC
+  type: bool
+  value: false
+  mirror: always
+
 # Bitfield for selectively disabling RFP
 #   0 for no new behavior
 #   1 for disabling RFP if it's a WebExtension
