@@ -1392,36 +1392,33 @@ void DisplayListBuilder::PushBorderGradient(
     const int32_t aWidth, const int32_t aHeight, bool aFill,
     const wr::DeviceIntSideOffsets& aSlice, const wr::LayoutPoint& aStartPoint,
     const wr::LayoutPoint& aEndPoint, const nsTArray<wr::GradientStop>& aStops,
-    wr::ExtendMode aExtendMode, const wr::LayoutSideOffsets& aOutset) {
-  wr_dp_push_border_gradient(mWrState, aBounds, MergeClipLeaf(aClip),
-                             aIsBackfaceVisible, &mCurrentSpaceAndClipChain,
-                             aWidths, aWidth, aHeight, aFill, aSlice,
-                             aStartPoint, aEndPoint, aStops.Elements(),
-                             aStops.Length(), aExtendMode, aOutset);
+    wr::ExtendMode aExtendMode) {
+  wr_dp_push_border_gradient(
+      mWrState, aBounds, MergeClipLeaf(aClip), aIsBackfaceVisible,
+      &mCurrentSpaceAndClipChain, aWidths, aWidth, aHeight, aFill, aSlice,
+      aStartPoint, aEndPoint, aStops.Elements(), aStops.Length(), aExtendMode);
 }
 
 void DisplayListBuilder::PushBorderRadialGradient(
     const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
     bool aIsBackfaceVisible, const wr::LayoutSideOffsets& aWidths, bool aFill,
     const wr::LayoutPoint& aCenter, const wr::LayoutSize& aRadius,
-    const nsTArray<wr::GradientStop>& aStops, wr::ExtendMode aExtendMode,
-    const wr::LayoutSideOffsets& aOutset) {
+    const nsTArray<wr::GradientStop>& aStops, wr::ExtendMode aExtendMode) {
   wr_dp_push_border_radial_gradient(
       mWrState, aBounds, MergeClipLeaf(aClip), aIsBackfaceVisible,
       &mCurrentSpaceAndClipChain, aWidths, aFill, aCenter, aRadius,
-      aStops.Elements(), aStops.Length(), aExtendMode, aOutset);
+      aStops.Elements(), aStops.Length(), aExtendMode);
 }
 
 void DisplayListBuilder::PushBorderConicGradient(
     const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
     bool aIsBackfaceVisible, const wr::LayoutSideOffsets& aWidths, bool aFill,
     const wr::LayoutPoint& aCenter, const float aAngle,
-    const nsTArray<wr::GradientStop>& aStops, wr::ExtendMode aExtendMode,
-    const wr::LayoutSideOffsets& aOutset) {
+    const nsTArray<wr::GradientStop>& aStops, wr::ExtendMode aExtendMode) {
   wr_dp_push_border_conic_gradient(
       mWrState, aBounds, MergeClipLeaf(aClip), aIsBackfaceVisible,
       &mCurrentSpaceAndClipChain, aWidths, aFill, aCenter, aAngle,
-      aStops.Elements(), aStops.Length(), aExtendMode, aOutset);
+      aStops.Elements(), aStops.Length(), aExtendMode);
 }
 
 void DisplayListBuilder::PushText(const wr::LayoutRect& aBounds,

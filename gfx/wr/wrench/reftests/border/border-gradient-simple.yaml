@@ -11,4 +11,3 @@ root:
           start: [ 25, 0 ]
           end: [ 25, 50 ]
           stops: [ 0.0, red, 1.0, green ]
-          outset: [ 0, 0, 0, 0 ]

@@ -12,7 +12,6 @@ root:
           image-width: 32
           image-height: 32
           slice: [ 3, 0, 1, 36 ]
-          outset: 0
           repeat-vertical: stretch
           repeat-horizontal: stretch
           fill: true

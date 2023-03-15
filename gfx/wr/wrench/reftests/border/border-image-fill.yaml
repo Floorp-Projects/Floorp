@@ -12,7 +12,6 @@ root:
           image-width: 96
           image-height: 96
           slice: [ 32 ]
-          outset: 0
           repeat-vertical: repeat
           repeat-horizontal: repeat
           fill: true
@@ -24,7 +23,6 @@ root:
           image-width: 96
           image-height: 96
           slice: [ 32 ]
-          outset: 0
           repeat-vertical: stretch
           repeat-horizontal: repeat
           fill: true
@@ -36,7 +34,6 @@ root:
           image-width: 96
           image-height: 96
           slice: [ 32 ]
-          outset: 0
           repeat-vertical: repeat
           repeat-horizontal: stretch
           fill: true
@@ -48,7 +45,6 @@ root:
           image-width: 96
           image-height: 96
           slice: [ 32 ]
-          outset: 0
           repeat-vertical: stretch
           repeat-horizontal: stretch
           fill: true
