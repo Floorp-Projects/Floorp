@@ -19,6 +19,10 @@
 #include "mozilla/ipc/ScopedPort.h"
 #include "nsTArray.h"
 
+#ifdef FUZZING
+#  include "mozilla/ipc/Faulty.h"
+#endif
+
 namespace mozilla {
 
 #ifdef FUZZING_SNAPSHOT
@@ -43,6 +47,9 @@ class Channel;
 class Message;
 class MessageReader;
 class MessageWriter;
+#ifdef FUZZING
+class Faulty;
+#endif
 struct LogData;
 
 class Message : public mojo::core::ports::UserMessage, public Pickle {
@@ -354,6 +361,9 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
   friend class Channel;
   friend class MessageReplyDeserializer;
   friend class SyncMessage;
+#ifdef FUZZING
+  friend class mozilla::ipc::Faulty;
+#endif
   friend class mozilla::ipc::MiniTransceiver;
 
 #if !defined(OS_MACOSX) && !defined(FUZZING_SNAPSHOT)

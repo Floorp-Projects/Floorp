@@ -17,6 +17,9 @@
 #include "mozilla/BufferList.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/TimeStamp.h"
+#ifdef FUZZING
+#  include "mozilla/ipc/Faulty.h"
+#endif
 #if !defined(FUZZING) && (!defined(RELEASE_OR_BETA) || defined(DEBUG))
 #  define MOZ_PICKLE_SENTINEL_CHECKING
 #endif
