@@ -422,13 +422,7 @@ bool js::intl_defaultTimeZoneOffset(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 0);
 
-  auto timeZone = mozilla::intl::TimeZone::TryCreate();
-  if (timeZone.isErr()) {
-    intl::ReportInternalError(cx, timeZone.unwrapErr());
-    return false;
-  }
-
-  auto offset = timeZone.unwrap()->GetRawOffsetMs();
+  auto offset = DateTimeInfo::getRawOffsetMs();
   if (offset.isErr()) {
     intl::ReportInternalError(cx, offset.unwrapErr());
     return false;

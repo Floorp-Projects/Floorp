@@ -186,6 +186,14 @@ class DateTimeInfo {
     auto guard = acquireLockWithValidTimeZone();
     return guard->timeZone()->GetId(buffer);
   }
+
+  /**
+   * A number indicating the raw offset from GMT in milliseconds.
+   */
+  static mozilla::Result<int32_t, mozilla::intl::ICUError> getRawOffsetMs() {
+    auto guard = acquireLockWithValidTimeZone();
+    return guard->timeZone()->GetRawOffsetMs();
+  }
 #else
   /**
    * Return the local time zone adjustment (ES2019 20.3.1.7) as computed by
