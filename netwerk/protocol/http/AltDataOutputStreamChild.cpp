@@ -96,6 +96,14 @@ AltDataOutputStreamChild::Flush() {
 }
 
 NS_IMETHODIMP
+AltDataOutputStreamChild::StreamStatus() {
+  if (!mIPCOpen) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  return mError;
+}
+
+NS_IMETHODIMP
 AltDataOutputStreamChild::Write(const char* aBuf, uint32_t aCount,
                                 uint32_t* _retval) {
   if (!mIPCOpen) {

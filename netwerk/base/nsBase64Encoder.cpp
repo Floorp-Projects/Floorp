@@ -15,6 +15,9 @@ NS_IMETHODIMP
 nsBase64Encoder::Flush() { return NS_OK; }
 
 NS_IMETHODIMP
+nsBase64Encoder::StreamStatus() { return NS_OK; }
+
+NS_IMETHODIMP
 nsBase64Encoder::Write(const char* aBuf, uint32_t aCount, uint32_t* _retval) {
   mData.Append(aBuf, aCount);
   *_retval = aCount;

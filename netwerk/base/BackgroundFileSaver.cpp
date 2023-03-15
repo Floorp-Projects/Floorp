@@ -873,6 +873,11 @@ NS_IMETHODIMP
 BackgroundFileSaverOutputStream::Flush() { return mPipeOutputStream->Flush(); }
 
 NS_IMETHODIMP
+BackgroundFileSaverOutputStream::StreamStatus() {
+  return mPipeOutputStream->StreamStatus();
+}
+
+NS_IMETHODIMP
 BackgroundFileSaverOutputStream::Write(const char* aBuf, uint32_t aCount,
                                        uint32_t* _retval) {
   return mPipeOutputStream->Write(aBuf, aCount, _retval);
@@ -1077,6 +1082,9 @@ DigestOutputStream::Close() { return mOutputStream->Close(); }
 
 NS_IMETHODIMP
 DigestOutputStream::Flush() { return mOutputStream->Flush(); }
+
+NS_IMETHODIMP
+DigestOutputStream::StreamStatus() { return mOutputStream->StreamStatus(); }
 
 NS_IMETHODIMP
 DigestOutputStream::Write(const char* aBuf, uint32_t aCount, uint32_t* retval) {

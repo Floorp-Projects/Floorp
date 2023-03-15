@@ -114,6 +114,14 @@ NS_IMETHODIMP EncryptingOutputStream<CipherStrategy>::Flush() {
 }
 
 template <typename CipherStrategy>
+NS_IMETHODIMP EncryptingOutputStream<CipherStrategy>::StreamStatus() {
+  if (!mBaseStream) {
+    return NS_BASE_STREAM_CLOSED;
+  }
+  return (*mBaseStream)->StreamStatus();
+}
+
+template <typename CipherStrategy>
 NS_IMETHODIMP EncryptingOutputStream<CipherStrategy>::WriteSegments(
     nsReadSegmentFun aReader, void* aClosure, uint32_t aCount,
     uint32_t* aBytesWrittenOut) {

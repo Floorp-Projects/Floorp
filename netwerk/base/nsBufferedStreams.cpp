@@ -892,6 +892,11 @@ nsBufferedOutputStream::Close() {
 }
 
 NS_IMETHODIMP
+nsBufferedOutputStream::StreamStatus() {
+  return mStream ? Sink()->StreamStatus() : NS_BASE_STREAM_CLOSED;
+}
+
+NS_IMETHODIMP
 nsBufferedOutputStream::Write(const char* buf, uint32_t count,
                               uint32_t* result) {
   nsresult rv = NS_OK;

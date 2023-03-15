@@ -55,6 +55,7 @@ interface nsIOutputStream : nsISupports
 {
     /**
      * Close the stream. Forces the output stream to flush any buffered data.
+     * Any subsequent calls to StreamStatus should throw NS_BASE_STREAM_CLOSED.
      *
      * @throws NS_BASE_STREAM_WOULD_BLOCK if unable to flush without blocking
      *   the calling thread (non-blocking mode only)
@@ -68,6 +69,23 @@ interface nsIOutputStream : nsISupports
      *   the calling thread (non-blocking mode only)
      */
     void flush();
+
+    /**
+     * Check the current status of the stream.  A stream that is closed will
+     * throw an exception when this method is called.  That enables the caller
+     * to know the condition of the stream before attempting to write into it.
+     *
+     * This method will not throw NS_BASE_STREAM_WOULD_BLOCK, even if the stream
+     * is a non-blocking stream with no available space. A non-blocking stream
+     * which has not been closed, but has no available room should return NS_OK.
+     *
+     * NOTE: This method should not block the calling thread (e.g. to query the
+     * state of a file descriptor), even when called on a blocking stream.
+     *
+     * @throws NS_BASE_STREAM_CLOSED if the stream closed normally
+     * @throws <other-error> if the stream closed with a different status
+     */
+    void streamStatus();
 
     /**
      * Write data into the stream.

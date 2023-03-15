@@ -69,6 +69,12 @@ WebBrowserPersistSerializeChild::Flush() {
 }
 
 NS_IMETHODIMP
+WebBrowserPersistSerializeChild::StreamStatus() {
+  // XXX: This stream doesn't appear to have a closed state.
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 WebBrowserPersistSerializeChild::Write(const char* aBuf, uint32_t aCount,
                                        uint32_t* aWritten) {
   // Normally an nsIOutputStream would have to be thread-safe, but

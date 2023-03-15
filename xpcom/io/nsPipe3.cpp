@@ -1719,9 +1719,15 @@ nsPipeOutputStream::Write(const char* aFromBuf, uint32_t aBufLen,
 }
 
 NS_IMETHODIMP
-nsPipeOutputStream::Flush(void) {
+nsPipeOutputStream::Flush() {
   // nothing to do
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPipeOutputStream::StreamStatus() {
+  ReentrantMonitorAutoEnter mon(mPipe->mReentrantMonitor);
+  return mPipe->mStatus;
 }
 
 NS_IMETHODIMP
