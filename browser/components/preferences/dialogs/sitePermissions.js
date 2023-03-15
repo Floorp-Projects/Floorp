@@ -275,23 +275,36 @@ var gSitePermissionsManager = {
     }
   },
 
-  _getCapabilityString(type, capability) {
+  _getCapabilityL10nId(element, type, capability) {
     if (
       type in sitePermissionsConfig &&
       sitePermissionsConfig[type]._getCapabilityString
     ) {
       return sitePermissionsConfig[type]._getCapabilityString(capability);
     }
-
-    switch (capability) {
-      case Services.perms.ALLOW_ACTION:
-        return "permissions-capabilities-allow";
-      case Services.perms.DENY_ACTION:
-        return "permissions-capabilities-block";
-      case Services.perms.PROMPT_ACTION:
-        return "permissions-capabilities-prompt";
+    switch (element.tagName) {
+      case "menuitem":
+        switch (capability) {
+          case Services.perms.ALLOW_ACTION:
+            return "permissions-capabilities-allow";
+          case Services.perms.DENY_ACTION:
+            return "permissions-capabilities-block";
+          case Services.perms.PROMPT_ACTION:
+            return "permissions-capabilities-prompt";
+          default:
+            throw new Error(`Unknown capability: ${capability}`);
+        }
+      case "label":
+        switch (capability) {
+          case Services.perms.ALLOW_ACTION:
+            return "permissions-capabilities-listitem-allow";
+          case Services.perms.DENY_ACTION:
+            return "permissions-capabilities-listitem-block";
+          default:
+            throw new Error(`Unexpected capability: ${capability}`);
+        }
       default:
-        throw new Error(`Unknown capability: ${capability}`);
+        throw new Error(`Unexpected tag: ${element.tagName}`);
     }
   },
 
@@ -345,36 +358,53 @@ var gSitePermissionsManager = {
     hbox.setAttribute("style", `flex: 3 3`);
     hbox.appendChild(website);
 
-    let menulist = document.createXULElement("menulist");
-    menulist.setAttribute("style", `flex: 1; width: ${width}`);
-    menulist.setAttribute("class", "website-status");
-    let states = SitePermissions.getAvailableStates(permission.type);
-    for (let state of states) {
-      // Work around the (rare) edge case when a user has changed their
-      // default permission type back to UNKNOWN while still having a
-      // PROMPT permission set for an origin.
-      if (
-        state == SitePermissions.UNKNOWN &&
-        permission.capability == SitePermissions.PROMPT
-      ) {
-        state = SitePermissions.PROMPT;
-      } else if (state == SitePermissions.UNKNOWN) {
-        continue;
+    let states = SitePermissions.getAvailableStates(permission.type).flatMap(
+      state => {
+        // Work around the (rare) edge case when a user has changed their
+        // default permission type back to UNKNOWN while still having a
+        // PROMPT permission set for an origin.
+        if (
+          state == SitePermissions.UNKNOWN &&
+          permission.capability == SitePermissions.PROMPT
+        ) {
+          return SitePermissions.PROMPT;
+        }
+        if (state == SitePermissions.UNKNOWN) {
+          return [];
+        }
+        return state;
       }
-      let m = menulist.appendItem(undefined, state);
+    );
+    let siteStatus;
+    if (states.length == 1) {
+      // Only a single state is available.  Show a label.
+      siteStatus = document.createXULElement("hbox");
+      let label = document.createXULElement("label");
+      siteStatus.appendChild(label);
       document.l10n.setAttributes(
-        m,
-        this._getCapabilityString(permission.type, state)
+        label,
+        this._getCapabilityL10nId(label, permission.type, permission.capability)
       );
+    } else {
+      // Multiple states are available.  Show a menulist.
+      siteStatus = document.createXULElement("menulist");
+      for (let state of states) {
+        let m = siteStatus.appendItem(undefined, state);
+        document.l10n.setAttributes(
+          m,
+          this._getCapabilityL10nId(m, permission.type, state)
+        );
+      }
+      siteStatus.addEventListener("select", () => {
+        this.onPermissionChange(permission, Number(siteStatus.value));
+      });
     }
-    menulist.value = permission.capability;
-
-    menulist.addEventListener("select", () => {
-      this.onPermissionChange(permission, Number(menulist.value));
-    });
+    siteStatus.setAttribute("style", `flex: 1; width: ${width}`);
+    siteStatus.setAttribute("class", "website-status");
+    siteStatus.value = permission.capability;
 
     row.appendChild(hbox);
-    row.appendChild(menulist);
+    row.appendChild(siteStatus);
     richlistitem.appendChild(row);
     return richlistitem;
   },
@@ -504,7 +534,7 @@ var gSitePermissionsManager = {
       let m = menulist.appendItem(undefined, state);
       document.l10n.setAttributes(
         m,
-        this._getCapabilityString("autoplay-media", state)
+        this._getCapabilityL10nId(m, "autoplay-media", state)
       );
     }
 
@@ -550,8 +580,8 @@ var gSitePermissionsManager = {
       case "statusCol":
         sortFunc = (a, b) => {
           return (
-            parseInt(a.querySelector("menulist").value) >
-            parseInt(b.querySelector("menulist").value)
+            parseInt(a.querySelector(".website-status").value) >
+            parseInt(b.querySelector(".website-status").value)
           );
         };
         break;

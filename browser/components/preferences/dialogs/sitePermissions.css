@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.website-name {
+.website-name,
+hbox.website-status {
   overflow: hidden; /* Allows equal sizing combined with width="0" */
   padding-inline-start: 7px;
   align-items: center;
@@ -19,7 +20,7 @@
   min-height: 35px;
 }
 
-.website-status {
+menulist.website-status {
   margin: 1px;
   margin-inline-end: 5px;
 }
