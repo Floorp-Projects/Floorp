@@ -111,7 +111,8 @@ add_task(async function search_for_password_show_passwordGroup() {
       child.id == "weavePrefsDeck" ||
       child.id == "header-searchResults" ||
       child.id == "certSelection" ||
-      child.id == "connectionGroup"
+      child.id == "connectionGroup" ||
+      child.id == "dataMigrationGroup"
     ) {
       is_element_visible(child, "Should be in search results");
     } else if (child.id) {
@@ -151,6 +152,7 @@ add_task(async function search_for_password_show_passwordGroup() {
     "performanceCategory",
     "browsingCategory",
     "networkProxyCategory",
+    "dataMigrationGroup",
   ];
   // Only visible for non-MSIX builds
   if (
