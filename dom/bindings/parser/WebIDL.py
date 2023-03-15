@@ -1234,7 +1234,11 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
         for mixin in sorted(self.includedMixins, key=lambda x: x.identifier.name):
             for mixinMember in mixin.members:
                 for member in self.members:
-                    if mixinMember.identifier.name == member.identifier.name:
+                    if mixinMember.identifier.name == member.identifier.name and (
+                        not mixinMember.isMethod()
+                        or not member.isMethod()
+                        or mixinMember.isStatic() == member.isStatic()
+                    ):
                         raise WebIDLError(
                             "Multiple definitions of %s on %s coming from 'includes' statements"
                             % (member.identifier.name, self),
