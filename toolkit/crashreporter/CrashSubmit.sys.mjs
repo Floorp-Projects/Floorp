@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { FileUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/FileUtils.sys.mjs"
-);
-
-var EXPORTED_SYMBOLS = ["CrashSubmit"];
+import { FileUtils } from "resource://gre/modules/FileUtils.sys.mjs";
 
 const SUCCESS = "success";
 const FAILED = "failed";
@@ -416,7 +412,7 @@ Submitter.prototype = {
 
 // ===================================
 // External API goes here
-var CrashSubmit = {
+export var CrashSubmit = {
   // A set of strings representing how a user subnmitted a given crash
   SUBMITTED_FROM_AUTO: "Auto",
   SUBMITTED_FROM_INFOBAR: "Infobar",
