@@ -807,7 +807,7 @@ mozilla::java::GeckoBundle::LocalRef SessionAccessibility::ToBundle(
     if (rowIndex) {
       GECKOBUNDLE_START(collectionItemInfo);
       GECKOBUNDLE_PUT(collectionItemInfo, "rowIndex",
-                      java::sdk::Integer::ValueOf(*rowIndex));
+                      java::sdk::Integer::ValueOf(*rowIndex - 1));
       GECKOBUNDLE_PUT(collectionItemInfo, "columnIndex",
                       java::sdk::Integer::ValueOf(0));
       GECKOBUNDLE_PUT(collectionItemInfo, "rowSpan",
@@ -980,7 +980,7 @@ void SessionAccessibility::PopulateNodeInfo(
         attributes->GetAttribute<int32_t>(nsGkAtoms::posinset);
     if (rowIndex) {
       mSessionAccessibility->PopulateNodeCollectionItemInfo(aNodeInfo,
-                                                            *rowIndex, 1, 0, 1);
+                                                            *rowIndex - 1, 1, 0, 1);
     }
 
     Maybe<int32_t> rowCount =
