@@ -415,13 +415,7 @@ static GeckoTextMarkerRange TextMarkerSubrange(Accessible* aAccessible,
 
   NSRange r = [aRange rangeValue];
   start.Offset() += r.location;
-  end.Offset() = start.Offset() + r.length;
-
-  // Clamp range to text length
-  int32_t textLength =
-      static_cast<int32_t>(nsAccUtils::TextLength(aAccessible));
-  start.Offset() = std::min(start.Offset(), textLength);
-  end.Offset() = std::min(end.Offset(), textLength);
+  end.Offset() = start.Offset() + r.location + r.length;
 
   return GeckoTextMarkerRange(start, end);
 }
