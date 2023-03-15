@@ -424,7 +424,7 @@
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
     <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">Ativade</string>
     <!-- Summary of https only preference if https only is set to off -->
-    <string name="preferences_https_only_off">Disativave</string>
+    <string name="preferences_https_only_off">Disativade</string>
     <!-- Summary of https only preference if https only is set to on in all tabs -->
     <string name="preferences_https_only_on_all">Ativade in dutis lis schedis</string>
     <!-- Summary of https only preference if https only is set to on in private tabs only -->

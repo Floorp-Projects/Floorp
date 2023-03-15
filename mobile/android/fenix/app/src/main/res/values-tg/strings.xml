@@ -1238,6 +1238,12 @@
     <!-- Title A shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_A_title">Тамошокунӣ дар Интернет бе пайгирӣ</string>
 
+    <!-- Text A shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_A_text">Тамошокунии хусусӣ дар «%1$s» маълумоти шуморо нигоҳ намедорад.</string>
+    <!-- Title B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_title">Ҷустуҷӯи аввалини худро оғоз кунед</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Маҷмуа нест карда шуд</string>

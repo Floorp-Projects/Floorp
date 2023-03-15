@@ -377,6 +377,11 @@
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">ፍቀድ</string>
 
+    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
+    <string name="reduce_cookie_banner_dialog_change_setting_button">ፍቀድ</string>
+
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preferences_https_only_summary">ለበለጠ ደህንነት HTTPS ምስጠራ ፕሮቶኮልን በመጠቀም ከድረ-ገፆች ጋር በራስ-ሰር ለመገናኘት ይሞክራል።</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
     <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">በርቷል</string>
     <!-- Summary of https only preference if https only is set to off -->
@@ -395,12 +400,16 @@
     <string name="errorpage_httpsonly_title">ደህንነቱ የተጠበቀ ድረ-ገፅ የለም</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
     <string name="errorpage_httpsonly_message_title">ምናልባት፣ ድረ-ገጹ በቀላሉ HTTPSን አይደግፍም።</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">ሆኖም፣ አጥቂው ተሳታፊ ሊሆን ይችላል። ወደ ድረ-ገጹ ከቀጠሉ ምንም አይነት ጥንቃቄ የሚሻ መረጃ ማስገባት የለብዎትም። ከቀጠሉ HTTPS-ብቻ ሁነታ ለጊዜው ለድረ-ገጹ ይጠፋል።</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">ተደራሽነት</string>
     <!-- Preference to override the Firefox Account server -->
     <string name="preferences_override_fxa_server">ብጁ የፋየርፎክስ መለያ አገልጋይ</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">ብጁ የማመሳሰል አገልጋይ</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">የፋየርፎክስ መለያ/አመሳስል አገልጋይ ተቀይሯል። ለውጦችን ለማካተት መተግበሪያውን በማቆም ላይ…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">መለያ</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -478,6 +487,12 @@
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">የስብስብ ባለቤት (የተጠቃሚ መታወቂያ)</string>
 
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">የተጨማሪ ስብስብ ተለውጧል። ለውጦችን ለማካተት መተግበሪያውን በማቆም ላይ…</string>
+
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">መልሰው ይዝለሉ</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
     <string name="customize_toggle_recent_bookmarks">የቅርብ ጊዜ እልባቶች</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
@@ -497,6 +512,11 @@
     <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
     <string name="wallpaper_learn_more">ተጨማሪ ይወቁ</string>
 
+    <!-- Account Preferences -->
+    <!-- Preference for triggering sync -->
+    <string name="preferences_sync_now">አሁን አመሳስል</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">ምን እንደሚመሳሰል ይምረጡ</string>
     <!-- Preference for syncing history -->
     <string name="preferences_sync_history">ታሪክ</string>
     <!-- Preference for syncing bookmarks -->
@@ -559,6 +579,9 @@
     <!-- Summary for studies preferences -->
     <string name="preference_experiments_summary_2">ሞዚላ ጥናቶችን እንዲጭን እና እንዲያሄድ ይፈቅዳል</string>
 
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Sync and save your data preference view -->
+    <string name="preferences_sync_2">ያመሳስሉ እና ውሂብዎን ያስቀምጡ</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">ዳግም ለመገናኘት ይግቡ</string>
     <!-- Preference for removing FxA account -->
@@ -1097,6 +1120,11 @@
     <!-- Title shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_title">የግል አሰሳ ይሞክሩ</string>
 
+    <!-- Title B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_title">የመጀመሪያ ፍለጋዎን ይጀምሩ</string>
+    <!-- Text B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_text">በአቅራቢያ የሆነ ነገር ያግኙ። ወይም የሆነ አስደሳች ነገር ያግኙ።</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">ስብስብ ተሰርዟል</string>
@@ -1191,6 +1219,8 @@
     <!-- Radio button in the delete browsing data dialog to delete all history. -->
     <string name="delete_history_prompt_button_everything">ሁሉም ነገር</string>
 
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">%s የተመረጠውን የአሰሳ ውሂብ ይሰርዛል።</string>
     <!-- Text for the cancel button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_cancel">ተወው</string>
     <!-- Text for the allow button for the data deletion dialog -->
@@ -1645,6 +1675,8 @@
     <string name="confirm_clear_permissions_on_all_sites">እርግጠኛ ነዎት በሁሉም ድረ-ገፆች ላይ ያሉትን ሁሉንም ፈቃዶች ማጽዳት ይፈልጋሉ?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
     <string name="confirm_clear_permissions_site">እርግጠኛ ነዎት የዚህ ድረ-ገፅ ሁሉንም ፈቃዶች ማጽዳት ይፈልጋሉ?</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">እርግጠኛ ነዎት ይህን እልባት መሰረዝ ይፈልጋሉ?</string>
     <!-- Browser menu button that adds a shortcut to the home fragment -->
     <string name="browser_menu_add_to_shortcuts">ወደ አቋራጭ ጨምር</string>
     <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -1664,6 +1696,10 @@
     <string name="dialog_delete_negative">ተወው</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">የመግቢያ አማራጮች</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">ለመግቢያው የድር አድራሻ ሊስተካከል የሚችል የጽሑፍ መስክ።</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">ለመግቢያው የተጠቃሚ ስም ሊስተካከል የሚችል የጽሑፍ መስክ።</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">ለመግቢያው የይለፍ ቃል ሊስተካከል የሚችል የጽሑፍ መስክ።</string>
     <!--  The button description to save changes to an edited login. -->

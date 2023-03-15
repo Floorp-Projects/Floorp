@@ -119,6 +119,24 @@
     <string name="shortcut_erase_and_open_long_label">Stoo tsi kuna %1$s</string>
 
 
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Focus is hard coded since we can't use variables in this context.
+         Do not translate or transliterate Focus.-->
+    <string name="text_selection_search_action_focus">Nduku nu Focus </string>
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+             Klar is hard coded since we can't use variables in this context.
+             Do not translate or transliterate Klar.-->
+    <string name="text_selection_search_action_klar">Nduku nu Klar</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+            Focus Beta is hard coded since we can't use variables in this context.
+            Do not translate or transliterate Focus Beta.-->
+    <string name="text_selection_search_action_focus_beta">Nduku tsi Focus Beta</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+          Focus Nightly is hard coded since we can't use variables in this context.
+          Do not translate or transliterate Focus Nightly.-->
+    <string name="text_selection_search_action_focus_nightly">Nduku tsi Focus Nightly</string>
+
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Ña i\'í tsi Ña kunka vai</string>
 
@@ -459,7 +477,17 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">Kasi</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">A nikitsau nu %1$s</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">Kanta</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Saa kanu ña sèè</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Nduku sèè ña kunu. Kasi tu\'un va\'a tsi siin ñaa va\'a sa\'a kue pagina.</string>
@@ -597,6 +625,17 @@
     <!-- Preference for site permissions -->
     <string name="preference_site_permissions">Kuna sitio</string>
 
+    <!--  Preference summary for the cookie banner. If the cookie banner option is not disabled. -->
+    <string name="preferences_cookie_banner_summary_on">Kuna</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is disabled. -->
+    <string name="preferences_cookie_banner_summary_off">Kasi</string>
+
+    <!-- CFR for Cookie Banner (Banner Info Message). This text should be the same as the settings text from "cfr_for_cookie_banner". The text should be underlined and should redirect the user to the cookie banner settings screen. -->
+    <string name="cfr_for_cookie_banner_underline_settings" moz:RemovedIn="111" tools:ignore="UnusedResources">Ndasama</string>
+    <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
+    <string name="cfr_cookie_banner_link">Ndasama</string>
+
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Ndatu´un</string>
 
@@ -656,6 +695,9 @@
 
     <!-- Preference for studies -->
     <string name="preference_studies">Skua</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">Firefox ku tyikai la skua ya kunu.</string>
 
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Skua´a kuakaa</string>
@@ -805,7 +847,7 @@
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Tatyu´un ña inka nu kaa ndusu ku</string>
 
-    <!-- Sessions List -->
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Kasi xikua</string>
 

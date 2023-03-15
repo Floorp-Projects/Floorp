@@ -12,8 +12,10 @@
     <string name="content_description_private_browsing_button">Permite sa navigatzione privada</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">Disativa sa navigatzione privada</string>
-    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
     <string name="search_hint">Chirca o inserta·nche un’indiritzu</string>
+    <!-- Placeholder text shown in the search bar before a user enters text for a general engine -->
+    <string name="search_hint_general_engine">Chirca in sa rete</string>
     <!-- Placeholder text shown in search bar when using history search -->
     <string name="history_search_hint">Chirca in sa cronologia</string>
     <!-- Placeholder text shown in search bar when using bookmarks search -->
@@ -50,6 +52,11 @@
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s est prodotu dae Mozilla.</string>
 
+    <!-- Private Browsing -->
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description_2">
+        %1$s lìmpiat sa cronologia de chirca e de navigatzione tuas dae is ischedas privadas cando ddas serras o essis de s’aplicatzione. Non ti faghet abarrare in anònimu pro is sitos web e su frunidore de servìtzios de internet tuo, però t’agiudat a cunservare in privadu su chi ses faghende in lìnia dae àtera gente chi imperat custu dispositivu.</string>
     <string name="private_browsing_common_myths">
        Mitos fitianos subra de sa navigatzione privada
     </string>
@@ -329,7 +336,7 @@
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Immoe nono</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">Permite</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Permite</string>
 
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
     <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">Ativu</string>

@@ -12,8 +12,10 @@
     <string name="content_description_private_browsing_button">Aktiver privat browsing</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">Deaktiver privat browsing</string>
-    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
     <string name="search_hint">Søg eller indtast adresse</string>
+    <!-- Placeholder text shown in the search bar before a user enters text for a general engine -->
+    <string name="search_hint_general_engine">Søg på nettet</string>
     <!-- Placeholder text shown in search bar when using history search -->
     <string name="history_search_hint">Søg i historik</string>
     <!-- Placeholder text shown in search bar when using bookmarks search -->
@@ -384,35 +386,42 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s forsøger automatisk at afvise alle cookie-anmodninger på understøttede websteder.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_title">Slut med cookie-bannere!</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Slut med cookie-bannere!</string>
+    <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_title">Tillad %1$s at afvise cookie-bannere?</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Afvis automatisk cookie-anmodninger, når det er muligt. Ellers skal du acceptere alle cookies for at lukke cookie-bannere.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Afvis automatisk cookie-anmodninger, når det er muligt.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_2">Tillad %1$s at automatisk afvise cookie-anmodninger, når det er muligt?</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_2" moz:RemovedIn="112" tools:ignore="UnusedResources">Tillad %1$s at automatisk afvise cookie-anmodninger, når det er muligt?</string>
+    <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_body">%1$s kan automatisk afvise mange cookie-banner-anmodninger.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Ikke nu</string>
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button">Avis bannere</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Avis bannere</string>
     <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
     <string name="reduce_cookie_banner_dialog_snackbar_text">Du vil få vist færre cookie-anmodninger</string>
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">Se færre pop op-beskeder om cookies</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Se færre pop op-beskeder om cookies</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Besvar automatisk cookie pop op-beskeder, så du kan surfe uden forstyrrelser. %1$s vil afvise alle forespørgsler, når det er muligt eller acceptere alle, hvis det ikke er muligt.</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1">Besvar automatisk cookie pop op-beskeder, så du kan surfe uden forstyrrelser. %1$s vil afvise alle forespørgsler, når det er muligt.</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Besvar automatisk cookie pop op-beskeder, så du kan surfe uden forstyrrelser. %1$s vil afvise alle forespørgsler, når det er muligt.</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Afvis pop op-beskeder om cookies</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Afvis pop op-beskeder om cookies</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Reduktion af cookie-bannere</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Reduktion af cookie-bannere</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Tillad %1$s at afvise et websteds anmodning om samtykke til anvendelse af cookies, hvis det er muligt - eller at acceptere cookies, når det ikke er muligt?</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1">Tillad %1$s at afvise et websteds anmodning om samtykke til anvendelse af cookies, når det er muligt?</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Tillad %1$s at afvise et websteds anmodning om samtykke til anvendelse af cookies, når det er muligt?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">Tillad</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Tillad</string>
+
+    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
+    <string name="reduce_cookie_banner_dialog_change_setting_button">Tillad</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Forsøger automatisk at oprette forbindelse til websteder ved hjælp af krypteringsprotokollen HTTPS for øget sikkerhed.</string>
@@ -1213,6 +1222,16 @@
     %1$s is a placeholder that will be replaced by the app name. -->
     <string name="notification_re_engagement_text">Surf på nettet uden at cookies eller historik gemmes i %1$s</string>
 
+    <!-- Title A shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_A_title">Brug nettet uden at efterlade spor</string>
+    <!-- Text A shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_A_text">Privat browsing i %1$s gemmer ikke dine oplysninger.</string>
+    <!-- Title B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_title">Start din første søgning</string>
+    <!-- Text B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_text">Find noget i nærheden. Eller opdag noget sjovt.</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Samling slettet</string>
@@ -1369,7 +1388,7 @@
     <!-- Text for the privacy notice onboarding card description. -->
     <string name="onboarding_privacy_notice_description">Firefox giver dig kontrol over, hvad du deler på nettet - og hvad du deler med os.</string>
     <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Læs vores privatlivspolitik</string>
+    <string name="onboarding_privacy_notice_read_button">Læs vores privatlivserklæring</string>
 
     <!-- Text for the conclusion onboarding message -->
     <string name="onboarding_conclusion_header">Klar til at åbne op for et fantastisk internet?</string>
@@ -1426,20 +1445,28 @@
     <string name="preference_enhanced_tracking_protection">Udvidet beskyttelse mod sporing</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">Brug nettet uden at blive overvåget</string>
+    <!-- Preference summary for enhanced tracking protection settings on/off switch -->
+    <string name="preference_enhanced_tracking_protection_summary" tools:ignore="UnusedResources">Nu med Komplet Cookiebeskyttelse, vores hidtil stærkeste barriere mod sporing på tværs af websteder.</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation">Dine data tilhører dig. %s beskytter dig mod mange af de mest almindelige sporings-teknologier, der følger med i, hvad du laver på nettet.</string>
+    <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">%s beskytter dig mod mange af de mest almindelige sporings-teknologier, der følger med i, hvad du laver på nettet.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Læs mere</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standard</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_4">Balanceret mellem privatliv og ydelse. Sider indlæses som normalt.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_5" tools:ignore="UnusedResources">Sider indlæses normalt, men færre sporings-teknologier blokeres.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Hvad der bliver blokeret af standard-opsætningen af beskyttelse mod sporing</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Striks</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_3">Blokerer flere sporings-mekanismer. Sider indlæses hurtigere, men noget funktionalitet virker måske ikke.</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_4" tools:ignore="UnusedResources">Stærkere beskyttelse mod sporing og hurtigere ydelse, men nogle websteder virker måske ikke ordentligt.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Hvad der bliver blokeret af striks beskyttelse mod sporing</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1533,7 +1560,7 @@
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
     <string name="about_crashes">Nedbrud</string>
     <!-- About page link text to open privacy notice link -->
-    <string name="about_privacy_notice">Privatlivspolitik</string>
+    <string name="about_privacy_notice">Privatlivserklæring</string>
     <!-- About page link text to open know your rights link -->
     <string name="about_know_your_rights">Kend dine rettigheder</string>
     <!-- About page link text to open licensing information link -->
