@@ -118,7 +118,7 @@ async function gInit(perfFront, traits, pageContext, openAboutProfiling) {
     "branding/brand.ftl",
     // Needed for the onboarding UI
     "devtools/client/toolbox-options.ftl",
-    "browser/branding/brandings.ftl",
+    "toolkit/branding/brandings.ftl",
   ]);
 
   // Do some initialization, especially with privileged things that are part of the

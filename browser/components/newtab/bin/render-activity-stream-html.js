@@ -60,7 +60,7 @@ function templateHTML(options) {
     <title data-l10n-id="newtab-page-title"></title>
     <link rel="icon" type="image/png" href="chrome://branding/content/icon32.png"/>
     <link rel="localization" href="branding/brand.ftl" />
-    <link rel="localization" href="browser/branding/brandings.ftl" />
+    <link rel="localization" href="toolkit/branding/brandings.ftl" />
     <link rel="localization" href="browser/newtab/newtab.ftl" />
     <link rel="stylesheet" href="chrome://browser/content/contentSearchUI.css" />
     <link rel="stylesheet" href="chrome://activity-stream/content/css/activity-stream.css" />

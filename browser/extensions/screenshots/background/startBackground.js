@@ -23,7 +23,7 @@ const startTime = Date.now();
 
   link = document.createElement("link");
   link.setAttribute("rel", "localization");
-  link.setAttribute("href", "browser/branding/brandings.ftl");
+  link.setAttribute("href", "toolkit/branding/brandings.ftl");
   document.head.appendChild(link);
 })();
 

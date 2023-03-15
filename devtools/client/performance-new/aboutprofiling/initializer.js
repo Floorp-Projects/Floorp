@@ -92,7 +92,7 @@ async function gInit(
       // For -brand-shorter-name used in some profiler preset descriptions.
       "branding/brand.ftl",
       // Needed for the onboarding UI
-      "browser/branding/brandings.ftl",
+      "toolkit/branding/brandings.ftl",
     ],
     {
       setAttributesOnDocument: true,

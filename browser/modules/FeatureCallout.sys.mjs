@@ -257,7 +257,7 @@ export class FeatureCallout {
       "browser/newtab/onboarding.ftl",
       "browser/spotlight.ftl",
       "branding/brand.ftl",
-      "browser/branding/brandings.ftl",
+      "toolkit/branding/brandings.ftl",
       "browser/newtab/asrouter.ftl",
       "browser/featureCallout.ftl",
     ]);

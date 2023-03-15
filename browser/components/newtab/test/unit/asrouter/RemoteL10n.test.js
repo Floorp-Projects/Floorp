@@ -79,7 +79,7 @@ describe("RemoteL10n", () => {
       assert.equal(args.length, 2);
       assert.deepEqual(args[0], [
         "browser/newtab/asrouter.ftl",
-        "browser/branding/brandings.ftl",
+        "toolkit/branding/brandings.ftl",
         "browser/branding/sync-brand.ftl",
         "branding/brand.ftl",
         "browser/defaultBrowserNotification.ftl",
@@ -101,7 +101,7 @@ describe("RemoteL10n", () => {
       assert.equal(args.length, 2);
       assert.deepEqual(args[0], [
         "browser/newtab/asrouter.ftl",
-        "browser/branding/brandings.ftl",
+        "toolkit/branding/brandings.ftl",
         "browser/branding/sync-brand.ftl",
         "branding/brand.ftl",
         "browser/defaultBrowserNotification.ftl",
