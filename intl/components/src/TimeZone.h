@@ -106,23 +106,7 @@ class TimeZone final {
     mTimeZone->getDisplayName(static_cast<bool>(aDaylightSavings),
                               icu::TimeZone::LONG, icu::Locale(aLocale),
                               displayName);
-
-    int32_t length = displayName.length();
-    if (!aBuffer.reserve(AssertedCast<size_t>(length))) {
-      return Err(ICUError::OutOfMemory);
-    }
-
-    // Copy the display name.
-    UErrorCode status = U_ZERO_ERROR;
-    int32_t written = displayName.extract(aBuffer.data(), length, status);
-    if (!ICUSuccessForStringSpan(status)) {
-      return Err(ToICUError(status));
-    }
-    MOZ_ASSERT(written == length);
-
-    aBuffer.written(written);
-
-    return Ok{};
+    return FillBuffer(displayName, aBuffer);
 #else
     return FillBufferWithICUCall(
         aBuffer, [&](UChar* target, int32_t length, UErrorCode* status) {
@@ -130,6 +114,23 @@ class TimeZone final {
               static_cast<bool>(aDaylightSavings) ? UCAL_DST : UCAL_STANDARD;
           return ucal_getTimeZoneDisplayName(mCalendar, type, aLocale, target,
                                              length, status);
+        });
+#endif
+  }
+
+  /**
+   * Return the identifier for this time zone.
+   */
+  template <typename B>
+  ICUResult GetId(B& aBuffer) {
+#if MOZ_INTL_USE_ICU_CPP_TIMEZONE
+    icu::UnicodeString id;
+    mTimeZone->getID(id);
+    return FillBuffer(id, aBuffer);
+#else
+    return FillBufferWithICUCall(
+        aBuffer, [&](UChar* target, int32_t length, UErrorCode* status) {
+          return ucal_getTimeZoneID(mCalendar, target, length, status);
         });
 #endif
   }
@@ -225,6 +226,25 @@ class TimeZone final {
   static Result<SpanEnumeration<char>, ICUError> GetAvailableTimeZones();
 
  private:
+  template <typename B>
+  static ICUResult FillBuffer(const icu::UnicodeString& aString, B& aBuffer) {
+    int32_t length = aString.length();
+    if (!aBuffer.reserve(AssertedCast<size_t>(length))) {
+      return Err(ICUError::OutOfMemory);
+    }
+
+    UErrorCode status = U_ZERO_ERROR;
+    int32_t written = aString.extract(aBuffer.data(), length, status);
+    if (!ICUSuccessForStringSpan(status)) {
+      return Err(ToICUError(status));
+    }
+    MOZ_ASSERT(written == length);
+
+    aBuffer.written(written);
+
+    return Ok{};
+  }
+
 #if MOZ_INTL_USE_ICU_CPP_TIMEZONE
   UniquePtr<icu::TimeZone> mTimeZone = nullptr;
 #else

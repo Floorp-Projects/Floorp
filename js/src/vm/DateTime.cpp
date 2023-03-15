@@ -729,10 +729,6 @@ static bool ReadTimeZoneLink(std::string_view tz,
 #  endif /* defined(XP_WIN) */
 #endif   /* JS_HAS_INTL_API */
 
-void js::ResyncICUDefaultTimeZone() {
-  js::DateTimeInfo::resyncICUDefaultTimeZone();
-}
-
 void js::DateTimeInfo::internalResyncICUDefaultTimeZone() {
 #if JS_HAS_INTL_API
   if (const char* tzenv = std::getenv("TZ")) {
