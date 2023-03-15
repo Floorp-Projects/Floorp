@@ -24,19 +24,19 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  LegacyHeartbeat: "resource://normandy/lib/LegacyHeartbeat.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   RemoteSettingsClient:
     "resource://services-settings/RemoteSettingsClient.sys.mjs",
+  TargetingContext: "resource://messaging-system/targeting/Targeting.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
-  LegacyHeartbeat: "resource://normandy/lib/LegacyHeartbeat.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Storage: "resource://normandy/lib/Storage.jsm",
   FilterExpressions:
     "resource://gre/modules/components-utils/FilterExpressions.jsm",
-  TargetingContext: "resource://messaging-system/targeting/Targeting.jsm",
   Normandy: "resource://normandy/Normandy.jsm",
   NormandyApi: "resource://normandy/lib/NormandyApi.jsm",
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",

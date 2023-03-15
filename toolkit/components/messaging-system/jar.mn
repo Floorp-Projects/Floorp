@@ -5,4 +5,4 @@
 toolkit.jar:
 % resource messaging-system %res/messaging-system/
   res/messaging-system/lib/ (./lib/*)
-  res/messaging-system/targeting/Targeting.jsm (./targeting/Targeting.jsm)
+  res/messaging-system/targeting/Targeting.sys.mjs (./targeting/Targeting.sys.mjs)

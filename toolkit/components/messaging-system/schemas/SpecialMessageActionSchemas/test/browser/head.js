@@ -8,11 +8,10 @@ const { JsonSchema } = ChromeUtils.importESModule(
   "resource://gre/modules/JsonSchema.sys.mjs"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "SpecialMessageActions",
-  "resource://messaging-system/lib/SpecialMessageActions.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  SpecialMessageActions:
+    "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
+});
 
 XPCOMUtils.defineLazyGetter(this, "fetchSMASchema", async () => {
   const response = await fetch(

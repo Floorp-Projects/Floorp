@@ -3,8 +3,8 @@
 const { OnboardingMessageProvider } = ChromeUtils.import(
   "resource://activity-stream/lib/OnboardingMessageProvider.jsm"
 );
-const { SpecialMessageActions } = ChromeUtils.import(
-  "resource://messaging-system/lib/SpecialMessageActions.jsm"
+const { SpecialMessageActions } = ChromeUtils.importESModule(
+  "resource://messaging-system/lib/SpecialMessageActions.sys.mjs"
 );
 const {
   assertFirefoxViewTabSelected,
