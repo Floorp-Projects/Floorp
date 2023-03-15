@@ -205,10 +205,10 @@ struct Engine {
 
     MOZ_UNROLL(2)
     for (unsigned i = 0; i < aSize * 2;
-         i += 2 * xsimd::batch<std::complex<float>>::size) {
-      auto in1 = xsimd::batch<std::complex<float>>::load_aligned(
+         i += 2 * xsimd::batch<std::complex<float>, Arch>::size) {
+      auto in1 = xsimd::batch<std::complex<float>, Arch>::load_aligned(
           reinterpret_cast<const std::complex<float>*>(&aInput[i]));
-      auto in2 = xsimd::batch<std::complex<float>>::load_aligned(
+      auto in2 = xsimd::batch<std::complex<float>, Arch>::load_aligned(
           reinterpret_cast<const std::complex<float>*>(&aScale[i]));
       auto out = in1 * in2;
       out.store_aligned(reinterpret_cast<std::complex<float>*>(&aOutput[i]));
