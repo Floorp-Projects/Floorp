@@ -5,8 +5,8 @@ const { ASRouterTriggerListeners } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouterTriggerListeners.jsm"
 );
 
-const { SpecialMessageActions } = ChromeUtils.import(
-  "resource://messaging-system/lib/SpecialMessageActions.jsm"
+const { SpecialMessageActions } = ChromeUtils.importESModule(
+  "resource://messaging-system/lib/SpecialMessageActions.sys.mjs"
 );
 
 add_task(async function cfr_firefoxview_should_show() {

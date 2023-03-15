@@ -2,14 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -26,8 +21,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ClientEnvironmentBase:
     "resource://gre/modules/components-utils/ClientEnvironment.jsm",
 });
-
-var EXPORTED_SYMBOLS = ["TargetingContext"];
 
 const TARGETING_EVENT_CATEGORY = "messaging_experiments";
 const TARGETING_EVENT_METHOD = "targeting";
@@ -72,7 +65,7 @@ const TargetingEnvironment = {
   },
 };
 
-class TargetingContext {
+export class TargetingContext {
   #telemetrySource = null;
 
   constructor(customContext, options = { source: null }) {

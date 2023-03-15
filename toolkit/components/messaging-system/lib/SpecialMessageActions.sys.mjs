@@ -1,13 +1,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-const EXPORTED_SYMBOLS = ["SpecialMessageActions"];
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const DOH_DOORHANGER_DECISION_PREF = "doh-rollout.doorhanger-decision";
 const NETWORK_TRR_MODE_PREF = "network.trr.mode";
 
@@ -25,7 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ColorwayClosetOpener: "resource:///modules/ColorwayClosetOpener.jsm",
 });
 
-const SpecialMessageActions = {
+export const SpecialMessageActions = {
   // This is overridden by ASRouter.init
   blockMessageById() {
     throw new Error("ASRouter not intialized yet");

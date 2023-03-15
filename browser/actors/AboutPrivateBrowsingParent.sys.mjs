@@ -25,12 +25,9 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
   SpecialMessageActions:
-    "resource://messaging-system/lib/SpecialMessageActions.jsm",
+    "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
 });
 
 // We only show the private search banner once per browser session.

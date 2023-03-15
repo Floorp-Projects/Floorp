@@ -12,8 +12,8 @@ const { PanelTestProvider } = ChromeUtils.import(
 const { BrowserWindowTracker } = ChromeUtils.import(
   "resource:///modules/BrowserWindowTracker.jsm"
 );
-const { SpecialMessageActions } = ChromeUtils.import(
-  "resource://messaging-system/lib/SpecialMessageActions.jsm"
+const { SpecialMessageActions } = ChromeUtils.importESModule(
+  "resource://messaging-system/lib/SpecialMessageActions.sys.mjs"
 );
 
 async function waitForClick(selector, win) {

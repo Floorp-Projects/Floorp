@@ -19,19 +19,19 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   JsonSchema: "resource://gre/modules/JsonSchema.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
+  TargetingContext: "resource://messaging-system/targeting/Targeting.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.jsm",
-  TargetingContext: "resource://messaging-system/targeting/Targeting.jsm",
   ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
   CleanupManager: "resource://normandy/lib/CleanupManager.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {
-  const { Logger } = ChromeUtils.import(
-    "resource://messaging-system/lib/Logger.jsm"
+  const { Logger } = ChromeUtils.importESModule(
+    "resource://messaging-system/lib/Logger.sys.mjs"
   );
   return new Logger("RSLoader");
 });
