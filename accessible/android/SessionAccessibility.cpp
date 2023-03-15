@@ -979,8 +979,8 @@ void SessionAccessibility::PopulateNodeInfo(
     Maybe<int32_t> rowIndex =
         attributes->GetAttribute<int32_t>(nsGkAtoms::posinset);
     if (rowIndex) {
-      mSessionAccessibility->PopulateNodeCollectionItemInfo(aNodeInfo,
-                                                            *rowIndex - 1, 1, 0, 1);
+      mSessionAccessibility->PopulateNodeCollectionItemInfo(
+          aNodeInfo, *rowIndex - 1, 1, 0, 1);
     }
 
     Maybe<int32_t> rowCount =
