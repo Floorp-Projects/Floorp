@@ -57,13 +57,11 @@ nscolor StyleColor::CalcColor(const nsIFrame* aFrame) const {
   return ResolveColor(aFrame->StyleText()->mColor).ToColor();
 }
 
-StyleAbsoluteColor StyleAbsoluteColor::ToColorSpace(
-    StyleColorSpace aColorSpace) const {
-  return Servo_ConvertColorSpace(this, aColorSpace);
-}
-
 nscolor StyleAbsoluteColor::ToColor() const {
-  auto srgb = ToColorSpace(StyleColorSpace::Srgb);
+  auto srgb = *this;
+  if (color_space != StyleColorSpace::Srgb) {
+    srgb = Servo_ConvertColorSpace(this, StyleColorSpace::Srgb);
+  }
 
   // TODO(tlouw): Needs gamut mapping here. Right now we just hard clip the
   //              components to [0..1], which will yield invalid colors.
