@@ -339,6 +339,20 @@ void nsHttpChannel::ReleaseMainThreadOnlyReferences() {
   arrayToRelease.AppendElement(mPreflightChannel.forget());
   arrayToRelease.AppendElement(mDNSPrefetch.forget());
 
+  MOZ_DIAGNOSTIC_ASSERT(
+      !mEarlyHintObserver,
+      "Early hint observer should have been released in ReleaseListeners()");
+  arrayToRelease.AppendElement(mEarlyHintObserver.forget());
+  MOZ_DIAGNOSTIC_ASSERT(
+      !mChannelClassifier,
+      "Channel classifier should have been released in ReleaseListeners()");
+  arrayToRelease.AppendElement(
+      mChannelClassifier.forget().downcast<nsIURIClassifierCallback>());
+  MOZ_DIAGNOSTIC_ASSERT(
+      !mWarningReporter,
+      "Warning reporter should have been released in ReleaseListeners()");
+  arrayToRelease.AppendElement(mWarningReporter.forget());
+
   NS_DispatchToMainThread(new ProxyReleaseRunnable(std::move(arrayToRelease)));
 }
 
