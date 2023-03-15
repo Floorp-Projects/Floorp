@@ -462,6 +462,26 @@ class ServoStyleSet {
                                     nsAtom* aAttribute) const;
 
   /**
+   * Returns true if a modification to an attribute with the specified local
+   * name might require us to restyle the element's siblings.
+   */
+  bool MightHaveNthOfAttributeDependency(const dom::Element&,
+                                         nsAtom* aAttribute) const;
+
+  /**
+   * Returns true if a modification to a class might require us to restyle the
+   * element's siblings.
+   */
+  bool MightHaveNthOfClassDependency(const dom::Element&);
+
+  /**
+   * Returns true if a modification to an ID might require us to restyle the
+   * element's siblings.
+   */
+  bool MightHaveNthOfIDDependency(const dom::Element&, nsAtom* aOldID,
+                                  nsAtom* aNewID) const;
+
+  /**
    * Returns true if a change in event state on an element might require
    * us to restyle the element.
    *
@@ -470,6 +490,12 @@ class ServoStyleSet {
    * in a style sheet.
    */
   bool HasStateDependency(const dom::Element&, dom::ElementState) const;
+
+  /**
+   * Returns true if a change in event state on an element might require
+   * us to restyle the element's siblings.
+   */
+  bool HasNthOfStateDependency(const dom::Element&, dom::ElementState) const;
 
   /**
    * Returns true if a change in document state might require us to restyle the
