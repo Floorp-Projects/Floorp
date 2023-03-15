@@ -11,7 +11,7 @@ use api::{BoxShadowClipMode, BorderStyle, ClipMode};
 use api::units::*;
 use euclid::Scale;
 use smallvec::SmallVec;
-use crate::command_buffer::{PrimitiveCommand, QuadFlags, CommandBufferIndex};
+use crate::command_buffer::{PrimitiveCommand, QuadFlags};
 use crate::image_tiling::{self, Repetition};
 use crate::border::{get_max_scale_for_border, build_border_instances};
 use crate::clip::{ClipStore};
@@ -54,8 +54,6 @@ pub fn prepare_primitives(
     prim_instances: &mut Vec<PrimitiveInstance>,
 ) {
     profile_scope!("prepare_primitives");
-    let mut cmd_buffer_targets = Vec::new();
-
     for cluster in &mut prim_list.clusters {
         if !cluster.flags.contains(ClusterFlags::IS_VISIBLE) {
             continue;
@@ -67,10 +65,7 @@ pub fn prepare_primitives(
         );
 
         for prim_instance_index in cluster.prim_range() {
-            if frame_state.surface_builder.get_cmd_buffer_targets_for_prim(
-                &prim_instances[prim_instance_index].vis,
-                &mut cmd_buffer_targets,
-            ) {
+            if frame_state.surface_builder.is_prim_visible_and_in_dirty_region(&prim_instances[prim_instance_index].vis) {
                 let plane_split_anchor = PlaneSplitAnchor::new(
                     cluster.spatial_node_index,
                     PrimitiveInstanceIndex(prim_instance_index as u32),
@@ -89,11 +84,21 @@ pub fn prepare_primitives(
                     scratch,
                     tile_caches,
                     prim_instances,
-                    &cmd_buffer_targets,
                 );
 
-                frame_state.num_visible_primitives += 1;
-                continue;
+                if !scratch.prim_cmds.is_empty() {
+                    for prim_cmd in scratch.prim_cmds.drain(..) {
+                        frame_state.surface_builder.push_prim(
+                            &prim_cmd,
+                            cluster.spatial_node_index,
+                            &prim_instances[prim_instance_index].vis,
+                            frame_state.cmd_buffers,
+                        );
+                    }
+
+                    frame_state.num_visible_primitives += 1;
+                    continue;
+                }
             }
 
             // TODO(gw): Technically no need to clear visibility here, since from this point it
@@ -117,9 +122,9 @@ fn prepare_prim_for_render(
     scratch: &mut PrimitiveScratchBuffer,
     tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
     prim_instances: &mut Vec<PrimitiveInstance>,
-    targets: &[CommandBufferIndex],
 ) {
     profile_scope!("prepare_prim_for_render");
+    debug_assert!(scratch.prim_cmds.is_empty());
 
     // If we have dependencies, we need to prepare them first, in order
     // to know the actual rect of this primitive.
@@ -232,7 +237,6 @@ fn prepare_prim_for_render(
         frame_state,
         data_stores,
         scratch,
-        targets,
     )
 }
 
@@ -250,7 +254,6 @@ fn prepare_interned_prim_for_render(
     frame_state: &mut FrameBuildingState,
     data_stores: &mut DataStores,
     scratch: &mut PrimitiveScratchBuffer,
-    targets: &[CommandBufferIndex],
 ) {
     let prim_spatial_node_index = cluster.spatial_node_index;
     let device_pixel_scale = frame_state.surfaces[pic_context.surface_index.0].device_pixel_scale;
@@ -617,19 +620,15 @@ fn prepare_interned_prim_for_render(
                     frame_context.spatial_tree,
                 );
 
-                frame_state.push_prim(
-                    &PrimitiveCommand::quad(
+                scratch.prim_cmds.push(
+                    PrimitiveCommand::quad(
                         prim_instance_index,
                         prim_address,
                         transform_id,
                         quad_flags,
                         aa_flags,
-                    ),
-                    prim_spatial_node_index,
-                    targets,
+                    )
                 );
-
-                return;
             }
         }
         PrimitiveInstanceKind::YuvImage { data_handle, segment_instance_index, .. } => {
@@ -741,12 +740,7 @@ fn prepare_interned_prim_for_render(
 
             // TODO(gw): Consider whether it's worth doing segment building
             //           for gradient primitives.
-            frame_state.push_prim(
-                &PrimitiveCommand::instance(prim_instance_index, stops_address),
-                prim_spatial_node_index,
-                targets,
-            );
-            return;
+            scratch.prim_cmds.push(PrimitiveCommand::instance(prim_instance_index, stops_address));
         }
         PrimitiveInstanceKind::CachedLinearGradient { data_handle, ref mut visible_tiles_range, .. } => {
             profile_scope!("CachedLinearGradient");
@@ -920,18 +914,8 @@ fn prepare_interned_prim_for_render(
         }
     }
 
-    match prim_instance.vis.state {
-        VisibilityState::Unset => {
-            panic!("bug: invalid vis state");
-        }
-        VisibilityState::Visible { .. } => {
-            frame_state.push_prim(
-                &PrimitiveCommand::simple(prim_instance_index),
-                prim_spatial_node_index,
-                targets,
-            );
-        }
-        VisibilityState::PassThrough | VisibilityState::Culled => {}
+    if scratch.prim_cmds.is_empty() {
+        scratch.prim_cmds.push(PrimitiveCommand::simple(prim_instance_index));
     }
 }
 
