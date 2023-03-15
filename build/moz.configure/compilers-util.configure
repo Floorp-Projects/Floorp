@@ -105,7 +105,6 @@ def compiler_class(compiler, host_or_target):
                 self,
                 dependable(flags),
                 extra_toolchain_flags,
-                stlport_cppflags,
                 dependable(header),
                 onerror,
                 configure_cache,
@@ -116,7 +115,6 @@ def compiler_class(compiler, host_or_target):
                 compiler,
                 flags,
                 extra_flags,
-                stlport_flags,
                 header,
                 onerror,
                 configure_cache,
@@ -124,8 +122,6 @@ def compiler_class(compiler, host_or_target):
                 flags = list(flags or [])
                 if is_target:
                     flags += extra_flags or []
-                    if compiler.language == "C++":
-                        flags += stlport_flags or []
                 header = header or ""
                 if isinstance(header, (list, tuple)):
                     header = "\n".join(header)
