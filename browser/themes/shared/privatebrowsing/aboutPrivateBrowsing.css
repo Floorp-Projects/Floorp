@@ -401,7 +401,7 @@ p {
 /* The colors for .promo-cta .primary must be kept in sync with the dark mode
    primary button colors from common-shared.cs */
 .promo-cta .primary {
-  padding-block: 11px;
+  padding: 0.54em 1.15em;
   margin: 8px 0;
   font-weight: 600;
   cursor: pointer;
