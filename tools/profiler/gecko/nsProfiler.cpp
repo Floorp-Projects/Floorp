@@ -1142,9 +1142,10 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
 
   // Start building up the JSON result and grab the profile from this process.
   mWriter->Start();
-  if (!profiler_stream_json_for_this_process(*mWriter, aSinceTime,
-                                             /* aIsShuttingDown */ false,
-                                             service.get())) {
+  auto rv = profiler_stream_json_for_this_process(*mWriter, aSinceTime,
+                                                  /* aIsShuttingDown */ false,
+                                                  service.get());
+  if (rv.isErr()) {
     // The profiler is inactive. This either means that it was inactive even
     // at the time that ProfileGatherer::Start() was called, or that it was
     // stopped on a different thread since that call. Either way, we need to
