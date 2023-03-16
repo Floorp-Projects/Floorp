@@ -46,8 +46,8 @@ jobs:
 
     firefox:
         bouncer-products-per-alias:
-            by-project:
-                mozilla-beta:
+            by-release-type:
+                beta:
                     firefox-beta-latest-ssl: installer-ssl
                     firefox-beta-latest: installer
                     firefox-beta-stub: stub-installer
@@ -55,7 +55,7 @@ jobs:
                     firefox-beta-msix-latest-ssl: msix
                     firefox-beta-pkg-latest-ssl: pkg
                     firefox-beta-langpack-latest-ssl: langpack
-                mozilla-release:
+                release.*:
                     firefox-latest-ssl: installer-ssl
                     firefox-latest: installer
                     firefox-stub: stub-installer
@@ -63,7 +63,7 @@ jobs:
                     firefox-msix-latest-ssl: msix
                     firefox-pkg-latest-ssl: pkg
                     firefox-langpack-latest-ssl: langpack
-                mozilla-esr102:
+                esr102:
                     # when there is one ESR branch both sets of aliases work
                     # when there are two ESR branches ...
                     # ... these always point to the older branch
@@ -73,7 +73,7 @@ jobs:
                     firefox-esr-msix-latest-ssl: msix
                     firefox-esr-pkg-latest-ssl: pkg
                     firefox-esr-langpack-latest-ssl: langpack
-                mozilla-esrXXX:  # XXX - to update when we branch next ESR
+                esrXXX:  # XXX - to update when we branch next ESR
                     # ... these point to the newer branch
                     firefox-esr-next-latest-ssl: installer-ssl
                     firefox-esr-next-latest: installer
@@ -81,24 +81,13 @@ jobs:
                     firefox-esr-next-msix-latest-ssl: msix
                     firefox-esr-next-pkg-latest-ssl: pkg
                     firefox-esr-next-langpack-latest-ssl: langpack
-                birch:
-                    firefox-latest-ssl: installer-ssl
-                    firefox-latest: installer
-                    firefox-stub: stub-installer
-                jamun:
-                    firefox-esr-latest-ssl: installer-ssl
-                    firefox-esr-latest: installer
-                maple:
-                    firefox-beta-latest-ssl: installer-ssl
-                    firefox-beta-latest: installer
-                    firefox-beta-stub: stub-installer
                 default: {}
         partner-bouncer-products-per-alias:
-            by-project:
-                mozilla-beta:
+            by-release-type:
+                beta:
                     partner-firefox-beta-PARTNER-latest: installer
                     partner-firefox-beta-PARTNER-stub: stub-installer
-                mozilla-release:
+                release.*:
                     partner-firefox-release-PARTNER-latest: installer
                     partner-firefox-release-PARTNER-stub: stub-installer
                 default: {}
