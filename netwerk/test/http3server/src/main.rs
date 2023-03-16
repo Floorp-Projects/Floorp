@@ -24,14 +24,21 @@ use std::io;
 use std::path::PathBuf;
 use std::process::exit;
 use std::rc::Rc;
-use std::sync::mpsc::{channel, Receiver, TryRecvError};
 use std::thread;
 use std::time::{Duration, Instant};
 
+use cfg_if::cfg_if;
 use core::fmt::Display;
-use hyper::body::HttpBody;
-use hyper::header::{HeaderName, HeaderValue};
-use hyper::{Body, Client, Method, Request};
+
+cfg_if! {
+    if #[cfg(not(target_os = "android"))] {
+        use std::sync::mpsc::{channel, Receiver, TryRecvError};
+        use hyper::body::HttpBody;
+        use hyper::header::{HeaderName, HeaderValue};
+        use hyper::{Body, Client, Method, Request};
+    }
+}
+
 use mio::net::UdpSocket;
 use mio::{Events, Poll, PollOpt, Ready, Token};
 use mio_extras::timer::{Builder, Timeout, Timer};
@@ -563,7 +570,9 @@ struct Http3ProxyServer {
     server_port: i32,
     request_header: HashMap<StreamId, Vec<Header>>,
     request_body: HashMap<StreamId, Vec<u8>>,
+    #[cfg(not(target_os = "android"))]
     stream_map: HashMap<StreamId, Http3OrWebTransportStream>,
+    #[cfg(not(target_os = "android"))]
     response_to_send: HashMap<StreamId, Receiver<(Vec<Header>, Vec<u8>)>>,
 }
 
@@ -581,11 +590,14 @@ impl Http3ProxyServer {
             server_port,
             request_header: HashMap::new(),
             request_body: HashMap::new(),
+            #[cfg(not(target_os = "android"))]
             stream_map: HashMap::new(),
+            #[cfg(not(target_os = "android"))]
             response_to_send: HashMap::new(),
         }
     }
 
+    #[cfg(not(target_os = "android"))]
     fn new_response(&mut self, mut stream: Http3OrWebTransportStream, mut data: Vec<u8>) {
         if data.len() == 0 {
             let _ = stream.stream_close_send();
@@ -624,6 +636,7 @@ impl Http3ProxyServer {
         }
     }
 
+    #[cfg(not(target_os = "android"))]
     async fn fetch_url(
         request: hyper::Request<Body>,
         out_header: &mut Vec<Header>,
@@ -654,6 +667,7 @@ impl Http3ProxyServer {
         Ok(())
     }
 
+    #[cfg(not(target_os = "android"))]
     fn fetch(
         &mut self,
         mut stream: Http3OrWebTransportStream,
@@ -725,6 +739,17 @@ impl Http3ProxyServer {
         self.stream_map.insert(stream.stream_id(), stream);
     }
 
+    #[cfg(target_os = "android")]
+    fn fetch(
+        &mut self,
+        mut _stream: Http3OrWebTransportStream,
+        _request_headers: &Vec<Header>,
+        _request_body: Vec<u8>,
+    ) {
+        // do nothing
+    }
+
+    #[cfg(not(target_os = "android"))]
     fn maybe_process_response(&mut self) {
         let mut data_to_send = HashMap::new();
         self.response_to_send
@@ -756,6 +781,7 @@ impl HttpServer for Http3ProxyServer {
     }
 
     fn process_events(&mut self) {
+        #[cfg(not(target_os = "android"))]
         self.maybe_process_response();
         while let Some(event) = self.server.next_event() {
             qtrace!("Event: {:?}", event);
