@@ -216,6 +216,10 @@
       },
       "additionalProperties": true,
       "dependentRequired": {
+        "id": [
+          "content",
+          "template"
+        ],
         "content": [
           "id",
           "template"
