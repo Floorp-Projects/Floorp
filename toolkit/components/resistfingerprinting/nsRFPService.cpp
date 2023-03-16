@@ -84,14 +84,10 @@ static mozilla::LazyLogModule gResistFingerprintingLog(
     "nsResistFingerprinting");
 
 #define RESIST_FINGERPRINTING_PREF "privacy.resistFingerprinting"
-#define RFP_TIMER_PREF "privacy.reduceTimerPrecision"
-#define RFP_TIMER_UNCONDITIONAL_PREF \
-  "privacy.reduceTimerPrecision.unconditional"
+#define RESIST_FINGERPRINTINGLITE_PREF "privacy.resistFingerprintingLite"
+#define RESIST_FINGERPRINTINGLITE_OVERRIDE_PREF \
+  "privacy.resistFingerprintingLite.overrides"
 #define RFP_TIMER_UNCONDITIONAL_VALUE 20
-#define RFP_TIMER_VALUE_PREF \
-  "privacy.resistFingerprinting.reduceTimerPrecision.microseconds"
-#define RFP_JITTER_VALUE_PREF \
-  "privacy.resistFingerprinting.reduceTimerPrecision.jitter"
 #define PROFILE_INITIALIZED_TOPIC "profile-initial-state"
 #define LAST_PB_SESSION_EXITED_TOPIC "last-pb-context-exited"
 
@@ -100,6 +96,8 @@ static constexpr uint32_t kVideoDroppedRatio = 5;
 
 #define RFP_DEFAULT_SPOOFING_KEYBOARD_LANG KeyboardLang::EN
 #define RFP_DEFAULT_SPOOFING_KEYBOARD_REGION KeyboardRegion::US
+
+static nsTArray<mozilla::RFPTarget> sRFPLiteTargets = {RFPTarget::Unknown};
 
 // ============================================================================
 // ============================================================================
@@ -110,6 +108,8 @@ NS_IMPL_ISUPPORTS(nsRFPService, nsIObserver)
 
 static StaticRefPtr<nsRFPService> sRFPService;
 static bool sInitialized = false;
+static nsTArray<mozilla::RFPTarget> sTargetOverrideAdditions;
+static nsTArray<mozilla::RFPTarget> sTargetOverrideSubtractions;
 
 /* static */
 nsRFPService* nsRFPService::GetOrCreate() {
@@ -130,9 +130,10 @@ nsRFPService* nsRFPService::GetOrCreate() {
 }
 
 static const char* gCallbackPrefs[] = {
-    RESIST_FINGERPRINTING_PREF,   RFP_TIMER_PREF,
-    RFP_TIMER_UNCONDITIONAL_PREF, RFP_TIMER_VALUE_PREF,
-    RFP_JITTER_VALUE_PREF,        nullptr,
+    RESIST_FINGERPRINTING_PREF,
+    RESIST_FINGERPRINTINGLITE_PREF,
+    RESIST_FINGERPRINTINGLITE_OVERRIDE_PREF,
+    nullptr,
 };
 
 nsresult nsRFPService::Init() {
@@ -169,8 +170,31 @@ nsresult nsRFPService::Init() {
 
   // Call Update here to cache the values of the prefs and set the timezone.
   UpdateRFPPref();
+  UpdateRFPLiteOverrideList();
 
   return rv;
+}
+
+/* static */
+bool nsRFPService::IsRFPEnabledFor(RFPTarget aTarget) {
+  if (StaticPrefs::privacy_resistFingerprinting_DoNotUseDirectly()) {
+    return true;
+  }
+
+  if (StaticPrefs::privacy_resistFingerprintingLite_DoNotUseDirectly()) {
+    if (sTargetOverrideAdditions.Contains(aTarget)) {
+      return true;
+    }
+    if (sTargetOverrideSubtractions.Contains(aTarget)) {
+      return false;
+    }
+    if (sRFPLiteTargets.Contains(aTarget)) {
+      return true;
+    }
+    return false;
+  }
+
+  return false;
 }
 
 // This function updates every fingerprinting item necessary except
@@ -258,6 +282,61 @@ void nsRFPService::UpdateRFPPref() {
   }
 }
 
+void nsRFPService::UpdateRFPLiteOverrideList() {
+  nsAutoString targetOverrides;
+  nsresult rv = Preferences::GetString(RESIST_FINGERPRINTINGLITE_OVERRIDE_PREF,
+                                       targetOverrides);
+  if (!NS_SUCCEEDED(rv) || targetOverrides.IsEmpty()) {
+    MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
+            ("Could not map any values"));
+    return;
+  }
+
+  sTargetOverrideAdditions.Clear();
+  sTargetOverrideSubtractions.Clear();
+  for (const nsAString& each : targetOverrides.Split(',')) {
+    Maybe<RFPTarget> mappedValue =
+        nsRFPService::TextToRFPTarget(Substring(each, 1, each.Length() - 1));
+    if (mappedValue.isSome()) {
+      if (each[0] == '+') {
+        sTargetOverrideAdditions.AppendElement(mappedValue.value());
+        MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
+                ("Mapped value %s (%X), to an addition, now we have %zu",
+                 NS_ConvertUTF16toUTF8(each).get(), mappedValue.value(),
+                 sTargetOverrideAdditions.Length()));
+      } else if (each[0] == '-') {
+        sTargetOverrideSubtractions.AppendElement(mappedValue.value());
+        MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
+                ("Mapped value %s (%X) to a subtraction, now we have %zu",
+                 NS_ConvertUTF16toUTF8(each).get(), mappedValue.value(),
+                 sTargetOverrideSubtractions.Length()));
+      } else {
+        MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
+                ("Mapped value %s (%X) to an RFPTarget Enum, but the first "
+                 "character wasn't + or -",
+                 NS_ConvertUTF16toUTF8(each).get(), mappedValue.value()));
+      }
+    } else {
+      MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
+              ("Could not map the value %s to an RFPTarget Enum",
+               NS_ConvertUTF16toUTF8(each).get()));
+    }
+  }
+}
+
+/* static */
+Maybe<RFPTarget> nsRFPService::TextToRFPTarget(const nsAString& aText) {
+#define ITEM_VALUE(name, value)     \
+  if (aText.EqualsLiteral(#name)) { \
+    return Some(RFPTarget::name);   \
+  }
+
+#include "RFPTargets.inc"
+#undef ITEM_VALUE
+
+  return Nothing();
+}
+
 void nsRFPService::StartShutdown() {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -294,6 +373,8 @@ void nsRFPService::PrefChanged(const char* aPref) {
       _tzset();
     }
 #endif
+  } else if (pref.EqualsLiteral(RESIST_FINGERPRINTINGLITE_OVERRIDE_PREF)) {
+    UpdateRFPLiteOverrideList();
   }
 }
 
