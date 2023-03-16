@@ -2849,13 +2849,16 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowState& aState) {
     if (canBreakForPageNames && (!aState.mReflowInput.mFlags.mIsTopOfPage ||
                                  !aState.IsAdjacentWithBStart())) {
       const nsIFrame* const frame = line->mFirstChild;
-      if (const nsIFrame* const prevFrame = frame->GetPrevSibling()) {
-        if (!frame->IsPlaceholderFrame() && !prevFrame->IsPlaceholderFrame()) {
-          nextPageName = frame->GetStartPageValue();
-          if (nextPageName != prevFrame->GetEndPageValue()) {
-            shouldBreakForPageName = true;
-            line->MarkDirty();
-          }
+      if (!frame->IsPlaceholderFrame()) {
+        nextPageName = frame->GetStartPageValue();
+        // Walk back to the last frame that isn't a placeholder.
+        const nsIFrame* prevFrame = frame->GetPrevSibling();
+        while (prevFrame && prevFrame->IsPlaceholderFrame()) {
+          prevFrame = prevFrame->GetPrevSibling();
+        }
+        if (prevFrame && prevFrame->GetStartPageValue() != nextPageName) {
+          shouldBreakForPageName = true;
+          line->MarkDirty();
         }
       }
     }
