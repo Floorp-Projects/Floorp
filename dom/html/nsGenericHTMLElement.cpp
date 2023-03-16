@@ -3176,18 +3176,7 @@ void nsGenericHTMLElement::ShowPopover(ErrorResult& aRv) {
 
 // https://html.spec.whatwg.org/#dom-hidepopover
 void nsGenericHTMLElement::HidePopover(ErrorResult& aRv) {
-  if (!CheckPopoverValidity(PopoverVisibilityState::Hidden, aRv)) {
-    return;
-  }
-
-  // TODO: Run auto popover steps.
-  // TODO: Fire beforetoggle event and re-check popover validity.
-  // TODO: Remove from Top Layer.
-
-  PopoverPseudoStateUpdate(false, true);
-  GetPopoverData()->SetPopoverVisibilityState(PopoverVisibilityState::Hidden);
-
-  // TODO: Queue popover toggle event task.
+  OwnerDoc()->HidePopover(*this, true, true, aRv);
 }
 
 // https://html.spec.whatwg.org/multipage/popover.html#dom-togglepopover
