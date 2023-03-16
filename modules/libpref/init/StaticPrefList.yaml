@@ -13528,8 +13528,40 @@
 
 # WebAuthn CTAP2 support
 - name: security.webauthn.ctap2
-  type: bool
+  type: RelaxedAtomicBool
   value: true
+  mirror: always
+
+# Dispatch WebAuthn requests to the software CTAP1 token.
+# (mutually exclusive with webauthn_enable_android_fido2,
+# and webauthn_enable_usbtoken)
+- name: security.webauth.webauthn_enable_softtoken
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# Dispatch WebAuthn requests to the Android platform API
+- name: security.webauth.webauthn_enable_android_fido2
+  type: RelaxedAtomicBool
+  value: @IS_ANDROID@
+  mirror: always
+
+# Dispatch WebAuthn requests to authenticator-rs
+- name: security.webauth.webauthn_enable_usbtoken
+  type: RelaxedAtomicBool
+  value: @IS_NOT_ANDROID@
+  mirror: always
+
+# Skip direct attestation consent prompts (for tests).
+- name: security.webauth.webauthn_testing_allow_direct_attestation
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# Global counter for U2F soft token operations
+- name: security.webauth.softtoken_counter
+  type: RelaxedAtomicUint32
+  value: 0
   mirror: always
 
 # Block Worker/SharedWorker scripts with wrong MIME type.

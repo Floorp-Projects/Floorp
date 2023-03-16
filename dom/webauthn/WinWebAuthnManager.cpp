@@ -12,6 +12,7 @@
 #include "nsTextFormatter.h"
 #include "nsWindowsHelpers.h"
 #include "WebAuthnEnumStrings.h"
+#include "WebAuthnTransportIdentifiers.h"
 #include "winwebauthn/webauthn.h"
 #include "WinWebAuthnManager.h"
 
@@ -333,16 +334,16 @@ void WinWebAuthnManager::Register(
   for (auto& cred : aInfo.ExcludeList()) {
     uint8_t transports = cred.transports();
     DWORD winTransports = 0;
-    if (transports & U2F_AUTHENTICATOR_TRANSPORT_USB) {
+    if (transports & MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_USB) {
       winTransports |= WEBAUTHN_CTAP_TRANSPORT_USB;
     }
-    if (transports & U2F_AUTHENTICATOR_TRANSPORT_NFC) {
+    if (transports & MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_NFC) {
       winTransports |= WEBAUTHN_CTAP_TRANSPORT_NFC;
     }
-    if (transports & U2F_AUTHENTICATOR_TRANSPORT_BLE) {
+    if (transports & MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_BLE) {
       winTransports |= WEBAUTHN_CTAP_TRANSPORT_BLE;
     }
-    if (transports & CTAP_AUTHENTICATOR_TRANSPORT_INTERNAL) {
+    if (transports & MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_INTERNAL) {
       winTransports |= WEBAUTHN_CTAP_TRANSPORT_INTERNAL;
     }
 
@@ -611,16 +612,16 @@ void WinWebAuthnManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
   for (auto& cred : aInfo.AllowList()) {
     uint8_t transports = cred.transports();
     DWORD winTransports = 0;
-    if (transports & U2F_AUTHENTICATOR_TRANSPORT_USB) {
+    if (transports & MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_USB) {
       winTransports |= WEBAUTHN_CTAP_TRANSPORT_USB;
     }
-    if (transports & U2F_AUTHENTICATOR_TRANSPORT_NFC) {
+    if (transports & MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_NFC) {
       winTransports |= WEBAUTHN_CTAP_TRANSPORT_NFC;
     }
-    if (transports & U2F_AUTHENTICATOR_TRANSPORT_BLE) {
+    if (transports & MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_BLE) {
       winTransports |= WEBAUTHN_CTAP_TRANSPORT_BLE;
     }
-    if (transports & CTAP_AUTHENTICATOR_TRANSPORT_INTERNAL) {
+    if (transports & MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_INTERNAL) {
       winTransports |= WEBAUTHN_CTAP_TRANSPORT_INTERNAL;
     }
 
