@@ -334,9 +334,7 @@ void RenderThread::RemoveRenderer(wr::WindowId aWindowId) {
   auto windows = mWindowInfos.Lock();
   auto it = windows->find(AsUint64(aWindowId));
   MOZ_ASSERT(it != windows->end());
-  WindowInfo* toDelete = it->second;
   windows->erase(it);
-  delete toDelete;
 }
 
 RendererOGL* RenderThread::GetRenderer(wr::WindowId aWindowId) {
@@ -428,7 +426,7 @@ void RenderThread::HandleFrameOneDocInner(wr::WindowId aWindowId, bool aRender,
       return;
     }
 
-    WindowInfo* info = it->second;
+    WindowInfo* info = it->second.get();
     PendingFrameInfo& frameInfo = info->mPendingFrames.front();
     frameInfo.mFrameNeedsRender |= aRender;
     render = frameInfo.mFrameNeedsRender;
@@ -692,7 +690,7 @@ bool RenderThread::TooManyPendingFrames(wr::WindowId aWindowId) {
     MOZ_ASSERT(false);
     return true;
   }
-  WindowInfo* info = it->second;
+  WindowInfo* info = it->second.get();
 
   if (info->PendingCount() > maxFrameCount) {
     return true;
@@ -742,7 +740,7 @@ void RenderThread::DecPendingFrameBuildCount(wr::WindowId aWindowId) {
     MOZ_ASSERT(false);
     return;
   }
-  WindowInfo* info = it->second;
+  WindowInfo* info = it->second.get();
   MOZ_RELEASE_ASSERT(info->mPendingFrameBuild >= 1);
   info->mPendingFrameBuild--;
 }
@@ -754,7 +752,7 @@ void RenderThread::DecPendingFrameCount(wr::WindowId aWindowId) {
     MOZ_ASSERT(false);
     return;
   }
-  WindowInfo* info = it->second;
+  WindowInfo* info = it->second.get();
   info->mPendingFrames.pop();
 }
 
