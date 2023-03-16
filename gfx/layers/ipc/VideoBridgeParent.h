@@ -28,6 +28,7 @@ class VideoBridgeParent final : public PVideoBridgeParent,
   static void Open(Endpoint<PVideoBridgeParent>&& aEndpoint,
                    VideoBridgeSource aSource);
   static void Shutdown();
+  static void UnregisterExternalImages();
 
   TextureHost* LookupTexture(uint64_t aSerial);
 
@@ -61,12 +62,15 @@ class VideoBridgeParent final : public PVideoBridgeParent,
 
   bool DeallocShmem(ipc::Shmem& aShmem) override;
 
+  void OnChannelError() override;
+
  private:
   explicit VideoBridgeParent(VideoBridgeSource aSource);
   void Bind(Endpoint<PVideoBridgeParent>&& aEndpoint);
 
   void ActorDealloc() override;
   void ReleaseCompositorThread();
+  void DoUnregisterExternalImages();
 
   // This keeps us alive until ActorDestroy(), at which point we do a
   // deferred destruction of ourselves.

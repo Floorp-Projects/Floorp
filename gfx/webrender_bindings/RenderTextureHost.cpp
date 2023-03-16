@@ -61,5 +61,9 @@ std::pair<gfx::Point, gfx::Point> RenderTextureHost::GetUvCoords(
                                    static_cast<float>(aTextureSize.height)));
 }
 
+void RenderTextureHost::Destroy() {
+  MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+}
+
 }  // namespace wr
 }  // namespace mozilla

@@ -14,6 +14,7 @@
 #include "mozilla/layers/CanvasTranslator.h"
 #include "mozilla/layers/CompositorManagerParent.h"
 #include "mozilla/layers/ImageBridgeParent.h"
+#include "mozilla/layers/VideoBridgeParent.h"
 #include "mozilla/media/MediaSystemResourceService.h"
 #include "nsThread.h"
 #include "nsThreadUtils.h"
@@ -137,6 +138,7 @@ void CompositorThreadHolder::Shutdown() {
            RefPtr<CompositorThreadHolder>(sCompositorThreadHolder),
        backgroundHangMonitor = UniquePtr<mozilla::BackgroundHangMonitor>(
            sBackgroundHangMonitor)]() {
+        VideoBridgeParent::UnregisterExternalImages();
         nsCOMPtr<nsIThread> thread = NS_GetCurrentThread();
         static_cast<nsThread*>(thread.get())->SetUseHangMonitor(false);
       }));
