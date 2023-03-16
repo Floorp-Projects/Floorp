@@ -981,7 +981,7 @@ pub fn glean_test_destroy_glean(clear_stores: bool, data_path: Option<String>) {
         INITIALIZE_CALLED.store(false, Ordering::SeqCst);
     } else if clear_stores {
         if let Some(data_path) = data_path {
-            let _ = std::fs::remove_dir_all(data_path).ok();
+            let _ = remove_dir_all::remove_dir_all(data_path).ok();
         } else {
             log::warn!("Asked to clear stores before initialization, but no data path given.");
         }
