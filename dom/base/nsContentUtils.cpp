@@ -357,6 +357,7 @@
 #include "nsPresContext.h"
 #include "nsQueryFrame.h"
 #include "nsQueryObject.h"
+#include "nsRFPService.h"
 #include "nsRange.h"
 #include "nsRefPtrHashtable.h"
 #include "nsSandboxFlags.h"
@@ -738,8 +739,6 @@ class nsContentUtils::UserInteractionObserver final
 
 static constexpr nsLiteralCString kRfpPrefs[] = {
     "privacy.resistFingerprinting"_ns,
-    "privacy.resistFingerprintingLite"_ns,
-    "privacy.resistFingerprintingLite.overrides"_ns,
     "privacy.resistFingerprinting.testGranularityMask"_ns,
 };
 
@@ -751,11 +750,9 @@ static void RecomputeResistFingerprintingAllDocs(const char*, void*) {
     bcGroup->GetDocGroups(docGroups);
     for (auto* docGroup : docGroups) {
       for (Document* doc : *docGroup) {
-        const bool old =
-            doc->ShouldResistFingerprinting(RFPTarget::PrecomputeIsEnabled);
+        const bool old = doc->ShouldResistFingerprinting();
         doc->RecomputeResistFingerprinting();
-        if (old !=
-            doc->ShouldResistFingerprinting(RFPTarget::PrecomputeIsEnabled)) {
+        if (old != doc->ShouldResistFingerprinting()) {
           if (auto* pc = doc->GetPresContext()) {
             pc->MediaFeatureValuesChanged(
                 {MediaFeatureChangeReason::PreferenceChange},
@@ -2149,19 +2146,17 @@ bool nsContentUtils::IsCallerChromeOrElementTransformGettersEnabled(
 // Older Should RFP Functions ----------------------------------
 
 /* static */
-bool nsContentUtils::ShouldResistFingerprinting(
-    RFPTarget aTarget /* = RFPTarget::Unknown */) {
-  return nsRFPService::IsRFPEnabledFor(aTarget);
+bool nsContentUtils::ShouldResistFingerprinting() {
+  return StaticPrefs::privacy_resistFingerprinting_DoNotUseDirectly();
 }
 
 /* static */
 bool nsContentUtils::ShouldResistFingerprinting(
-    nsIGlobalObject* aGlobalObject,
-    RFPTarget aTarget /* = RFPTarget::Unknown */) {
+    nsIGlobalObject* aGlobalObject) {
   if (!aGlobalObject) {
-    return ShouldResistFingerprinting(aTarget);
+    return ShouldResistFingerprinting();
   }
-  return aGlobalObject->ShouldResistFingerprinting(aTarget);
+  return aGlobalObject->ShouldResistFingerprinting();
 }
 
 // Newer Should RFP Functions ----------------------------------
@@ -2201,44 +2196,40 @@ const char* kExemptedDomainsPrefName =
     "privacy.resistFingerprinting.exemptedDomains";
 
 /* static */
-bool nsContentUtils::ShouldResistFingerprinting(
-    const char* aJustification, RFPTarget aTarget /* = RFPTarget::Unknown */) {
+bool nsContentUtils::ShouldResistFingerprinting(const char* aJustification) {
   // See comment in header file for information about usage
-  return ShouldResistFingerprinting(aTarget);
+  return ShouldResistFingerprinting();
 }
 
 /* static */
 bool nsContentUtils::ShouldResistFingerprinting(
-    CallerType aCallerType, nsIGlobalObject* aGlobalObject,
-    RFPTarget aTarget /* = RFPTarget::Unknown */) {
+    CallerType aCallerType, nsIGlobalObject* aGlobalObject) {
   if (aCallerType == CallerType::System) {
     return false;
   }
-  return ShouldResistFingerprinting(aGlobalObject, aTarget);
+  return ShouldResistFingerprinting(aGlobalObject);
 }
 
-bool nsContentUtils::ShouldResistFingerprinting(
-    nsIDocShell* aDocShell, RFPTarget aTarget /* = RFPTarget::Unknown */) {
+bool nsContentUtils::ShouldResistFingerprinting(nsIDocShell* aDocShell) {
   if (!aDocShell) {
     MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
             ("Called nsContentUtils::ShouldResistFingerprinting(nsIDocShell*) "
              "with NULL docshell"));
-    return ShouldResistFingerprinting(aTarget);
+    return ShouldResistFingerprinting();
   }
   Document* doc = aDocShell->GetDocument();
   if (!doc) {
     MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
             ("Called nsContentUtils::ShouldResistFingerprinting(nsIDocShell*) "
              "with NULL doc"));
-    return ShouldResistFingerprinting(aTarget);
+    return ShouldResistFingerprinting();
   }
-  return doc->ShouldResistFingerprinting(aTarget);
+  return doc->ShouldResistFingerprinting();
 }
 
 /* static */
-bool nsContentUtils::ShouldResistFingerprinting(
-    nsIChannel* aChannel, RFPTarget aTarget /* = RFPTarget::Unknown */) {
-  if (!ShouldResistFingerprinting("Legacy quick-check", aTarget)) {
+bool nsContentUtils::ShouldResistFingerprinting(nsIChannel* aChannel) {
+  if (!ShouldResistFingerprinting("Legacy quick-check")) {
     return false;
   }
 
@@ -2307,18 +2298,18 @@ bool nsContentUtils::ShouldResistFingerprinting(
 #endif
 
     return ShouldResistFingerprinting_dangerous(
-        channelURI, loadInfo->GetOriginAttributes(), "Internal Call", aTarget);
+        channelURI, loadInfo->GetOriginAttributes(), "Internal Call");
   }
 
   // Case 2: Subresource Load
-  return ShouldResistFingerprinting(loadInfo, aTarget);
+  return ShouldResistFingerprinting(loadInfo);
 }
 
 /* static */
 bool nsContentUtils::ShouldResistFingerprinting_dangerous(
     nsIURI* aURI, const mozilla::OriginAttributes& aOriginAttributes,
-    const char* aJustification, RFPTarget aTarget /* = RFPTarget::Unknown */) {
-  if (!ShouldResistFingerprinting("Legacy quick-check", aTarget)) {
+    const char* aJustification) {
+  if (!ShouldResistFingerprinting("Legacy quick-check")) {
     return false;
   }
 
@@ -2363,14 +2354,13 @@ bool nsContentUtils::ShouldResistFingerprinting_dangerous(
 }
 
 /* static */
-bool nsContentUtils::ShouldResistFingerprinting(
-    nsILoadInfo* aLoadInfo, RFPTarget aTarget /* = RFPTarget::Unknown */) {
+bool nsContentUtils::ShouldResistFingerprinting(nsILoadInfo* aLoadInfo) {
   MOZ_ASSERT(aLoadInfo->GetExternalContentPolicyType() !=
                  ExtContentPolicy::TYPE_DOCUMENT &&
              aLoadInfo->GetExternalContentPolicyType() !=
                  ExtContentPolicy::TYPE_SUBDOCUMENT);
 
-  if (!ShouldResistFingerprinting("Legacy quick-check", aTarget)) {
+  if (!ShouldResistFingerprinting("Legacy quick-check")) {
     return false;
   }
 
@@ -2388,15 +2378,13 @@ bool nsContentUtils::ShouldResistFingerprinting(
 
   MOZ_ASSERT(BasePrincipal::Cast(principal)->OriginAttributesRef() ==
              aLoadInfo->GetOriginAttributes());
-  return ShouldResistFingerprinting_dangerous(principal, "Internal Call",
-                                              aTarget);
+  return ShouldResistFingerprinting_dangerous(principal, "Internal Call");
 }
 
 /* static */
 bool nsContentUtils::ShouldResistFingerprinting_dangerous(
-    nsIPrincipal* aPrincipal, const char* aJustification,
-    RFPTarget aTarget /* = RFPTarget::Unknown */) {
-  if (!ShouldResistFingerprinting("Legacy quick-check", aTarget)) {
+    nsIPrincipal* aPrincipal, const char* aJustification) {
+  if (!ShouldResistFingerprinting("Legacy quick-check")) {
     return false;
   }
 

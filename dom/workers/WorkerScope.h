@@ -119,8 +119,7 @@ class WorkerGlobalScopeBase : public DOMEventTargetHelper,
 
   bool IsSharedMemoryAllowed() const final;
 
-  bool ShouldResistFingerprinting(
-      RFPTarget aTarget = RFPTarget::Unknown) const final;
+  bool ShouldResistFingerprinting() const final;
 
   OriginTrials Trials() const final;
 

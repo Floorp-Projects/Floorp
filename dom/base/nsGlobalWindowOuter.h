@@ -233,8 +233,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   }
 
   // nsIGlobalObject
-  bool ShouldResistFingerprinting(
-      RFPTarget aTarget = RFPTarget::Unknown) const final;
+  bool ShouldResistFingerprinting() const final;
   mozilla::OriginTrials Trials() const final;
   mozilla::dom::FontFaceSet* Fonts() final;
 
