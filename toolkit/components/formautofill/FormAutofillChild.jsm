@@ -12,11 +12,11 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AutoCompleteChild: "resource://gre/actors/AutoCompleteChild.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AutoCompleteChild: "resource://gre/actors/AutoCompleteChild.jsm",
   FormAutofill: "resource://autofill/FormAutofill.jsm",
   FormAutofillContent: "resource://autofill/FormAutofillContent.jsm",
   FormAutofillUtils: "resource://autofill/FormAutofillUtils.jsm",
