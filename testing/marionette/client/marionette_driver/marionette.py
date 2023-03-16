@@ -389,6 +389,32 @@ class ShadowRoot(object):
         # pylint --py3k: W1641
         return hash(self.id)
 
+    def find_element(self, method, target):
+        """Returns an ``HTMLElement`` instance that matches the specified
+        method and target, relative to the current shadow root.
+
+        For more details on this function, see the
+        :func:`~marionette_driver.marionette.Marionette.find_element` method
+        in the Marionette class.
+        """
+        body = {"shadowRoot": self.id, "value": target, "using": method}
+        return self.marionette._send_message(
+            "WebDriver:FindElementFromShadowRoot", body, key="value"
+        )
+
+    def find_elements(self, method, target):
+        """Returns a list of all ``HTMLElement`` instances that match the
+         specified method and target in the current shadow root.
+
+        For more details on this function, see the
+        :func:`~marionette_driver.marionette.Marionette.find_elements` method
+        in the Marionette class.
+        """
+        body = {"shadowRoot": self.id, "value": target, "using": method}
+        return self.marionette._send_message(
+            "WebDriver:FindElementsFromShadowRoot", body
+        )
+
     @classmethod
     def _from_json(cls, json, marionette):
         if isinstance(json, dict):
