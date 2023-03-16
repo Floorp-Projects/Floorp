@@ -3283,6 +3283,162 @@ async function doTest() {
     document.removeEventListener("drop", onDrop);
   })();
 
+  await (async function test_dragend_when_left_half_of_text_node_dragged_into_textarea() {
+    const description = "dragging left half of text in contenteditable into <textarea>";
+    container.innerHTML = "<div contenteditable><p>abcdef</p></div><textarea></textarea>";
+    const editingHost = container.querySelector("[contenteditable]");
+    const textNode = editingHost.querySelector("p").firstChild;
+    const textarea = container.querySelector("textarea");
+    selection.setBaseAndExtent(textNode, 0, textNode, textNode.length / 2);
+    beforeinputEvents = [];
+    inputEvents = [];
+    dragEvents = [];
+    const onDragEnd = aEvent => dragEvents.push(aEvent);
+    document.addEventListener("dragend", onDragEnd, {capture: true});
+    if (
+      await trySynthesizePlainDragAndDrop(
+        description,
+        {
+          srcSelection: selection,
+          destElement: textarea,
+        }
+      )
+    ) {
+      ok(
+        textNode.isConnected,
+        `${description}: the text node part of whose text is dragged should not be removed`
+      );
+      is(
+        dragEvents.length,
+        1,
+        `${description}: only one "dragend" event should be fired`
+      );
+      is(
+        dragEvents[0]?.target,
+        textNode,
+        `${description}: "dragend" should be fired on the text node which the mouse button down on`
+      );
+    }
+    document.removeEventListener("dragend", onDragEnd, {capture: true});
+  })();
+
+  await (async function test_dragend_when_right_half_of_text_node_dragged_into_textarea() {
+    const description = "dragging right half of text in contenteditable into <textarea>";
+    container.innerHTML = "<div contenteditable><p>abcdef</p></div><textarea></textarea>";
+    const editingHost = container.querySelector("[contenteditable]");
+    const textNode = editingHost.querySelector("p").firstChild;
+    const textarea = container.querySelector("textarea");
+    selection.setBaseAndExtent(textNode, textNode.length / 2, textNode, textNode.length);
+    beforeinputEvents = [];
+    inputEvents = [];
+    dragEvents = [];
+    const onDragEnd = aEvent => dragEvents.push(aEvent);
+    document.addEventListener("dragend", onDragEnd, {capture: true});
+    if (
+      await trySynthesizePlainDragAndDrop(
+        description,
+        {
+          srcSelection: selection,
+          destElement: textarea,
+        }
+      )
+    ) {
+      ok(
+        textNode.isConnected,
+        `${description}: the text node part of whose text is dragged should not be removed`
+      );
+      is(
+        dragEvents.length,
+        1,
+        `${description}: only one "dragend" event should be fired`
+      );
+      is(
+        dragEvents[0]?.target,
+        textNode,
+        `${description}: "dragend" should be fired on the text node which the mouse button down on`
+      );
+    }
+    document.removeEventListener("dragend", onDragEnd, {capture: true});
+  })();
+
+  await (async function test_dragend_when_middle_part_of_text_node_dragged_into_textarea() {
+    const description = "dragging middle of text in contenteditable into <textarea>";
+    container.innerHTML = "<div contenteditable><p>abcdef</p></div><textarea></textarea>";
+    const editingHost = container.querySelector("[contenteditable]");
+    const textNode = editingHost.querySelector("p").firstChild;
+    const textarea = container.querySelector("textarea");
+    selection.setBaseAndExtent(textNode, "ab".length, textNode, "abcd".length);
+    beforeinputEvents = [];
+    inputEvents = [];
+    dragEvents = [];
+    const onDragEnd = aEvent => dragEvents.push(aEvent);
+    document.addEventListener("dragend", onDragEnd, {capture: true});
+    if (
+      await trySynthesizePlainDragAndDrop(
+        description,
+        {
+          srcSelection: selection,
+          destElement: textarea,
+        }
+      )
+    ) {
+      ok(
+        textNode.isConnected,
+        `${description}: the text node part of whose text is dragged should not be removed`
+      );
+      is(
+        dragEvents.length,
+        1,
+        `${description}: only one "dragend" event should be fired`
+      );
+      is(
+        dragEvents[0]?.target,
+        textNode,
+        `${description}: "dragend" should be fired on the text node which the mouse button down on`
+      );
+    }
+    document.removeEventListener("dragend", onDragEnd, {capture: true});
+  })();
+
+  await (async function test_dragend_when_all_of_text_node_dragged_into_textarea() {
+    const description = "dragging all of text in contenteditable into <textarea>";
+    container.innerHTML = "<div contenteditable><p>abcdef</p></div><textarea></textarea>";
+    const editingHost = container.querySelector("[contenteditable]");
+    const textNode = editingHost.querySelector("p").firstChild;
+    const textarea = container.querySelector("textarea");
+    selection.setBaseAndExtent(textNode, 0, textNode, textNode.length);
+    beforeinputEvents = [];
+    inputEvents = [];
+    dragEvents = [];
+    const onDragEnd = aEvent => dragEvents.push(aEvent);
+    document.addEventListener("dragend", onDragEnd, {capture: true});
+    if (
+      await trySynthesizePlainDragAndDrop(
+          description,
+          {
+            srcSelection: selection,
+            destElement: textarea,
+          }
+        )
+    ) {
+      ok(
+        !textNode.isConnected,
+        `${description}: the text node whose all text is dragged should've been removed from the contenteditable`
+      );
+      is(
+        dragEvents.length,
+        1,
+        `${description}: only one "dragend" event should be fired`
+      );
+      is(
+        dragEvents[0]?.target,
+        editingHost,
+        `${description}: "dragend" should be fired on the editing host which is parent of the removed text node`
+      );
+    }
+    document.removeEventListener("dragend", onDragEnd, {capture: true});
+  })();
+
   document.removeEventListener("beforeinput", onBeforeinput);
   document.removeEventListener("input", onInput);
   SimpleTest.finish();
