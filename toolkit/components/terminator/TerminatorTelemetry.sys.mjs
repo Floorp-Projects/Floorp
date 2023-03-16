@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /**
  * Read the data saved by nsTerminator during shutdown and feed it to the
  * relevant telemetry histograms.
@@ -18,7 +16,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
-function nsTerminatorTelemetry() {
+export function nsTerminatorTelemetry() {
   this._wasNotified = false;
   this._deferred = lazy.PromiseUtils.defer();
 
@@ -120,5 +118,3 @@ nsTerminatorTelemetry.prototype = {
 };
 
 // Module
-
-var EXPORTED_SYMBOLS = ["nsTerminatorTelemetry"];
