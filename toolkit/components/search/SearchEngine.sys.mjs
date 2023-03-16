@@ -582,12 +582,6 @@ export class SearchEngine {
   #cachedSearchForm = null;
   // Whether or not to send an attribution request to the server.
   _sendAttributionRequest = false;
-  // The number of days between update checks for new versions
-  _updateInterval = null;
-  // The url to check at for a new update
-  _updateURL = null;
-  // The url to check for a new icon
-  _iconUpdateURL = null;
   // The extension ID if added by an extension.
   _extensionID = null;
   // The locale, or "DEFAULT", if required.
@@ -1118,9 +1112,6 @@ export class SearchEngine {
     this._queryCharset =
       json.queryCharset || lazy.SearchUtils.DEFAULT_QUERY_CHARSET;
     this.#cachedSearchForm = json.__searchForm;
-    this._updateInterval = json._updateInterval || null;
-    this._updateURL = json._updateURL || null;
-    this._iconUpdateURL = json._iconUpdateURL || null;
     this._iconURI = lazy.SearchUtils.makeURI(json._iconURL);
     this._iconMapObj = json._iconMapObj || null;
     this._metaData = json._metaData || {};
@@ -1165,9 +1156,6 @@ export class SearchEngine {
       "_urls",
       "_orderHint",
       "_telemetryId",
-      "_updateInterval",
-      "_updateURL",
-      "_iconUpdateURL",
       "_filePath",
       "_extensionID",
       "_locale",
