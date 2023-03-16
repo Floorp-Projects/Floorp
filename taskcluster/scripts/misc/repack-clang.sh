@@ -9,15 +9,14 @@ cd $MOZ_FETCHES_DIR
 
 # We have a clang toolchain in $MOZ_FETCHES_DIR/clang
 # We have some compiler-rts in $MOZ_FETCHES_DIR/compiler-rt*
-# We have some libunwinds in $MOZ_FETCHES_DIR/libunwind*
 # We copy everything from the compiler-rts into clang/lib/clang/$version
 clang_dir=$(echo clang/lib/clang/*/include)
 clang_dir=${clang_dir%/include}
-[ -n "$clang_dir" ] && for c in compiler-rt* libunwind*; do
+[ -n "$clang_dir" ] && for c in compiler-rt*; do
   find $c -mindepth 1 -type d | while read d; do
-    mkdir -p "$clang_dir/${d#$c/}"
+    mkdir -p "$clang_dir/${d#compiler-rt-*/}"
     find $d -mindepth 1 -maxdepth 1 -not -type d | while read f; do
-      target_file="$clang_dir/${f#$c/}"
+      target_file="$clang_dir/${f#compiler-rt-*/}"
       case $d in
       compiler-rt-*/lib/darwin)
         if [ -f "$target_file" ]; then

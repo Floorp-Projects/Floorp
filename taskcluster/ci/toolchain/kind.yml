@@ -36,7 +36,6 @@ jobs-from:
     - geckodriver.yml
     - gn.yml
     - grcov.yml
-    - libunwind.yml
     - llvm-symbolizer.yml
     - macos-sdk.yml
     - mingw.yml
