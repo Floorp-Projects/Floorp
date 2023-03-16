@@ -230,6 +230,11 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
       case LayoutFrameType::Canvas:         // FALLTHROUGH
       case LayoutFrameType::FlexContainer:  // FALLTHROUGH
       case LayoutFrameType::GridContainer:
+        if (mFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
+          // Never allow breakpoints inside of out-of-flow frames.
+          mFlags.mCanHaveClassABreakpoints = false;
+          break;
+        }
         // This frame type can have class A breakpoints, inherit this flag
         // from the parent (this is done for all flags during construction).
         // This also includes Canvas frames, as each PageContent frame always
