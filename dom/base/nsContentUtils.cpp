@@ -357,7 +357,6 @@
 #include "nsPresContext.h"
 #include "nsQueryFrame.h"
 #include "nsQueryObject.h"
-#include "nsRFPService.h"
 #include "nsRange.h"
 #include "nsRefPtrHashtable.h"
 #include "nsSandboxFlags.h"
