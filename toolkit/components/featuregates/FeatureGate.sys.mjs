@@ -2,22 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FeatureGateImplementation",
-  "resource://featuregates/FeatureGateImplementation.jsm"
-);
-
-var EXPORTED_SYMBOLS = ["FeatureGate"];
+ChromeUtils.defineESModuleGetters(lazy, {
+  FeatureGateImplementation:
+    "resource://featuregates/FeatureGateImplementation.sys.mjs",
+});
 
 XPCOMUtils.defineLazyGetter(lazy, "gFeatureDefinitionsPromise", async () => {
   const url = "resource://featuregates/feature_definitions.json";
@@ -51,7 +43,7 @@ let featureGatePrefObserver = {
 const kFeatureGateCache = new Map();
 
 /** A high level control for turning features on and off. */
-class FeatureGate {
+export class FeatureGate {
   /*
    * This is structured as a class with static methods to that sphinx-js can
    * easily document it. This constructor is required for sphinx-js to detect

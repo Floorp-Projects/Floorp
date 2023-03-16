@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { FeatureGate } = ChromeUtils.import(
-  "resource://featuregates/FeatureGate.jsm"
+const { FeatureGate } = ChromeUtils.importESModule(
+  "resource://featuregates/FeatureGate.sys.mjs"
 );
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 const { AppConstants } = ChromeUtils.importESModule(
