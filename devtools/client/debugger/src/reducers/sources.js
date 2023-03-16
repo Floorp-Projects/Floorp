@@ -17,7 +17,7 @@ export function initialSourcesState(state) {
      *
      * See create.js: `createSourceObject` method for the description of stored objects.
      */
-    sources: new Map(),
+    mutableSources: new Map(),
 
     /**
      * All sources associated with a given URL. When using source maps, multiple
@@ -169,9 +169,8 @@ function addSources(state, sources) {
     urls: { ...state.urls },
   };
 
-  const newSourceMap = new Map(state.sources);
   for (const source of sources) {
-    newSourceMap.set(source.id, source);
+    state.mutableSources.set(source.id, source);
 
     // Update the source url map
     const existing = state.urls[source.url] || [];
@@ -187,7 +186,6 @@ function addSources(state, sources) {
       state.originalSources[generatedSourceId].push(source.id);
     }
   }
-  state.sources = newSourceMap;
 
   return state;
 }
@@ -199,8 +197,6 @@ function removeSourcesAndActors(state, threadActorID) {
     actors: { ...state.actors },
     originalSources: { ...state.originalSources },
   };
-
-  const newSourceMap = new Map(state.sources);
 
   for (const sourceId in state.actors) {
     let i = state.actors[sourceId].length;
@@ -216,7 +212,7 @@ function removeSourcesAndActors(state, threadActorID) {
     if (!state.actors[sourceId].length) {
       delete state.actors[sourceId];
 
-      const source = newSourceMap.get(sourceId);
+      const source = state.mutableSources.get(sourceId);
       if (source.url) {
         // urls
         if (state.urls[source.url]) {
@@ -229,17 +225,16 @@ function removeSourcesAndActors(state, threadActorID) {
         }
       }
 
-      newSourceMap.delete(sourceId);
+      state.mutableSources.delete(sourceId);
 
       // Also remove any original sources related to this generated source
       const originalSourceIds = state.originalSources[sourceId];
       if (originalSourceIds && originalSourceIds.length) {
-        originalSourceIds.forEach(id => newSourceMap.delete(id));
+        originalSourceIds.forEach(id => state.mutableSources.delete(id));
         delete state.originalSources[sourceId];
       }
     }
   }
-  state.sources = newSourceMap;
   return state;
 }
 
