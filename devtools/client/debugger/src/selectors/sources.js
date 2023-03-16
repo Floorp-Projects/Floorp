@@ -109,7 +109,7 @@ export function getPrettySource(state, id) {
   return getOriginalSourceByURL(state, getPrettySourceURL(source.url));
 }
 
-// This is only used externaly by tabs and breakpointSources selectors
+// This is only used externaly by tabs selectors
 export function getSourcesMap(state) {
   return state.sources.sources;
 }
@@ -137,13 +137,12 @@ export function getSelectedLocation(state) {
 
 export const getSelectedSource = createSelector(
   getSelectedLocation,
-  getSourcesMap,
-  (selectedLocation, sourcesMap) => {
+  selectedLocation => {
     if (!selectedLocation) {
       return undefined;
     }
 
-    return sourcesMap.get(selectedLocation.sourceId);
+    return selectedLocation.source;
   }
 );
 

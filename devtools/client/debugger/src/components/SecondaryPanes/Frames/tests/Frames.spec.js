@@ -203,14 +203,8 @@ describe("Frames", () => {
         source2: [],
       };
 
-      const sources = new Map([
-        [source1.id, source1],
-        [source2.id, source2],
-      ]);
-
       const processedFrames = formatCallStackFrames(
         frames,
-        sources,
         source1,
         blackboxedRanges
       );
