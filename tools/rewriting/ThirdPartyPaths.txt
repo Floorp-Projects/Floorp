@@ -52,7 +52,6 @@ dom/tests/mochitest/dom-level2-html/
 dom/u2f/tests/pkijs/
 dom/webauthn/cbor-cpp/
 dom/webauthn/tests/pkijs/
-dom/webgpu/tests/cts/checkout/
 editor/libeditor/tests/browserscope/lib/richtext/
 editor/libeditor/tests/browserscope/lib/richtext2/
 extensions/spellcheck/hunspell/src/
@@ -162,7 +161,6 @@ testing/talos/talos/tests/kraken/
 testing/talos/talos/tests/v8_7/
 testing/web-platform/tests/resources/webidl2/
 testing/web-platform/tests/tools/third_party/
-testing/web-platform/mozilla/tests/webgpu/
 testing/xpcshell/dns-packet/
 testing/xpcshell/node-ip/
 testing/xpcshell/node-http2/

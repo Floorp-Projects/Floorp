@@ -44,15 +44,15 @@ web-platform-tests:
         by-test-platform:
             android.*/debug: 32
             android.*: 24
-            linux.*64-tsan-qr/opt: 36
-            linux.*64-asan(-qr)?/opt: 26
-            linux.*64-ccov.*/opt: 24
-            linux.*/debug: 24
+            linux.*64-tsan-qr/opt: 32
+            linux.*64-asan(-qr)?/opt: 22
+            linux.*64-ccov.*/opt: 20
+            linux.*/debug: 16
             macosx.*/debug: 18
             windows.*32.*/opt: 12
-            windows.*/debug: 24
-            windows.*-ccov.*/opt: 24
-            default: 14
+            windows.*/debug: 14
+            windows.*-ccov.*/opt: 14
+            default: 10
     max-run-time:
         by-test-platform:
             .*-ccov.*/.*: 10800
