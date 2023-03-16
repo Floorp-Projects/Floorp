@@ -1749,12 +1749,30 @@ color::ColorProfileDesc DCLayerTree::QueryOutputColorProfile() {
 
   const auto qcmsProfile = qcms_profile_from_memory(
       outputProfileData.Elements(), outputProfileData.Length());
-  MOZ_ASSERT(qcmsProfile);
-  const auto release =
-      MakeScopeExit([&]() { qcms_profile_release(qcmsProfile); });
+  const auto release = MakeScopeExit([&]() {
+    if (qcmsProfile) {
+      qcms_profile_release(qcmsProfile);
+    }
+  });
 
-  const auto ret = color::ColorProfileDesc::From(*qcmsProfile);
-  bool print = gfxEnv::MOZ_GL_SPEW();
+  const bool print = gfxEnv::MOZ_GL_SPEW();
+
+  const auto ret = [&]() {
+    if (qcmsProfile) {
+      return color::ColorProfileDesc::From(*qcmsProfile);
+    }
+    if (print) {
+      printf_stderr(
+          "Missing or failed to load display color profile, defaulting to "
+          "sRGB.\n");
+    }
+    const auto MISSING_PROFILE_DEFAULT_SPACE = color::ColorspaceDesc{
+        color::Chromaticities::Srgb(),
+        color::PiecewiseGammaDesc::Srgb(),
+    };
+    return color::ColorProfileDesc::From(MISSING_PROFILE_DEFAULT_SPACE);
+  }();
+
   if (print) {
     const auto gammaGuess = color::GuessGamma(ret.linearFromTf.r);
     printf_stderr(
