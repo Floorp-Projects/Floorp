@@ -12727,24 +12727,6 @@
       "last_modified": 1666727866353
     },
     {
-      "schema": 1666727422744,
-      "derHash": "FUxDPEkZKcXvaG6DjjI2ZKAOag2CLMyVj7TasD5JoI8=",
-      "subject": "CN=DigiCert SHA2 Secure Server CA,O=DigiCert Inc,C=US",
-      "subjectDN": "ME0xCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxJzAlBgNVBAMTHkRpZ2lDZXJ0IFNIQTIgU2VjdXJlIFNlcnZlciBDQQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "2243aecd6936cfcb0b2508e8f42b06f31a4950982b0c91e3d4965cdd8da03fb4",
-        "size": 1646,
-        "filename": "5kJvNEMw0KjrCAu7eXY5HZdvyCS13BbA0VJG1RSP91w=.pem",
-        "location": "security-state-staging/intermediates/17691b06-48fb-4385-a9ab-05f0ad126518.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "5kJvNEMw0KjrCAu7eXY5HZdvyCS13BbA0VJG1RSP91w=",
-      "crlite_enrolled": false,
-      "id": "987746d9-41a0-4c53-a6d5-6d8cab9cb559",
-      "last_modified": 1666727866339
-    },
-    {
       "schema": 1666727330386,
       "derHash": "l6BzlXxYEnJXV2cvIiaQZVoUB9cQEe38iy+txRKJEdo=",
       "subject": "CN=DigiCert G5 TLS ECC SHA384 2021 CA1,O=DigiCert\\, Inc.,C=US",
@@ -13553,24 +13535,6 @@
       "crlite_enrolled": false,
       "id": "f1968ec8-bf26-495e-99a2-2fa3c73f81e6",
       "last_modified": 1666727865652
-    },
-    {
-      "schema": 1666727424777,
-      "derHash": "RYRGunXZMukU8jwrV7fRku3bwhgdlY4Rga1SUXR6Hug=",
-      "subject": "CN=DigiCert ECC Secure Server CA,O=DigiCert Inc,C=US",
-      "subjectDN": "MEwxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxJjAkBgNVBAMTHURpZ2lDZXJ0IEVDQyBTZWN1cmUgU2VydmVyIENB",
-      "whitelist": false,
-      "attachment": {
-        "hash": "a08faded51b3b3920af25497e34885fc9fd376487470bebe6e0fd0db256b786a",
-        "size": 1333,
-        "filename": "PZXN3lRAy-8tBKk2Ox6F7jIlnzr2Yzmwqc3JnyfXoCw=.pem",
-        "location": "security-state-staging/intermediates/7f8f54d6-880c-4f5e-90c5-43950f09297f.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "PZXN3lRAy+8tBKk2Ox6F7jIlnzr2Yzmwqc3JnyfXoCw=",
-      "crlite_enrolled": false,
-      "id": "bb0f20bc-ccc7-4c44-bd16-0b2a94e64928",
-      "last_modified": 1666727865640
     },
     {
       "schema": 1666727432527,
@@ -15983,24 +15947,6 @@
       "crlite_enrolled": false,
       "id": "e5406e58-cea2-4e83-bf5b-5707b41137af",
       "last_modified": 1664326624918
-    },
-    {
-      "schema": 1664326193930,
-      "derHash": "lNTs4u2aVFe5aaE7JgSJ6aX+R5CgQfJ6PrQSbIRBjvk=",
-      "subject": "CN=DigiCert Secure Server CA,O=DigiCert Inc,C=US",
-      "subjectDN": "MEgxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxIjAgBgNVBAMTGURpZ2lDZXJ0IFNlY3VyZSBTZXJ2ZXIgQ0E=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "bec9cb08be3aa288fb4998e6e9c6dc9b1663aa11bdbb71f81585d4a5a2b0b828",
-        "size": 1642,
-        "filename": "v2OX1FzmsvhGRs3vKv7P5R4N-Aly9A_qKXxfEauTwao=.pem",
-        "location": "security-state-staging/intermediates/bf9b04aa-1962-494b-b2f3-412c59ec9e7d.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "v2OX1FzmsvhGRs3vKv7P5R4N+Aly9A/qKXxfEauTwao=",
-      "crlite_enrolled": false,
-      "id": "9d6a47bb-9ab0-4f77-b52f-493e7af27c1e",
-      "last_modified": 1664326624895
     },
     {
       "schema": 1664326193057,
@@ -27361,5 +27307,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1677855423522
+  "timestamp": 1678287423458
 }
