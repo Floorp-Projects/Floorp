@@ -3426,22 +3426,8 @@ class AllocInfo {
 
     if (chunk != aPtr) {
       MOZ_DIAGNOSTIC_ASSERT(chunk->arena->mMagic == ARENA_MAGIC);
-
       size_t pageind = (((uintptr_t)aPtr - (uintptr_t)chunk) >> gPageSize2Pow);
-      size_t mapbits = chunk->map[pageind].bits;
-      MOZ_DIAGNOSTIC_ASSERT((mapbits & CHUNK_MAP_ALLOCATED) != 0);
-
-      size_t size;
-      if ((mapbits & CHUNK_MAP_LARGE) == 0) {
-        arena_run_t* run = (arena_run_t*)(mapbits & ~gPageSizeMask);
-        MOZ_DIAGNOSTIC_ASSERT(run->mMagic == ARENA_RUN_MAGIC);
-        size = run->mBin->mSizeClass;
-      } else {
-        size = mapbits & ~gPageSizeMask;
-        MOZ_DIAGNOSTIC_ASSERT(size != 0);
-      }
-
-      return AllocInfo(size, chunk);
+      return GetInChunk(aPtr, chunk, pageind);
     }
 
     extent_node_t key;
@@ -3454,6 +3440,26 @@ class AllocInfo {
       return AllocInfo();
     }
     return AllocInfo(node->mSize, node);
+  }
+
+  // Get the allocation information for a pointer we know is within a chunk
+  // (Small or large, not huge).
+  static inline AllocInfo GetInChunk(const void* aPtr, arena_chunk_t* aChunk,
+                                     size_t pageind) {
+    size_t mapbits = aChunk->map[pageind].bits;
+    MOZ_DIAGNOSTIC_ASSERT((mapbits & CHUNK_MAP_ALLOCATED) != 0);
+
+    size_t size;
+    if ((mapbits & CHUNK_MAP_LARGE) == 0) {
+      arena_run_t* run = (arena_run_t*)(mapbits & ~gPageSizeMask);
+      MOZ_DIAGNOSTIC_ASSERT(run->mMagic == ARENA_RUN_MAGIC);
+      size = run->mBin->mSizeClass;
+    } else {
+      size = mapbits & ~gPageSizeMask;
+      MOZ_DIAGNOSTIC_ASSERT(size != 0);
+    }
+
+    return AllocInfo(size, aChunk);
   }
 
   // Validate ptr before assuming that it points to an allocation.  Currently,
@@ -3494,6 +3500,8 @@ class AllocInfo {
     MOZ_RELEASE_ASSERT(mNode->mArenaId == mNode->mArena->mId);
     return mNode->mArena;
   }
+
+  bool IsValid() const { return !!mSize; }
 
  private:
   size_t mSize;
@@ -3647,8 +3655,6 @@ arena_chunk_t* arena_t::DallocSmall(arena_chunk_t* aChunk, void* aPtr,
   MOZ_DIAGNOSTIC_ASSERT(uintptr_t(aPtr) >=
                         uintptr_t(run) + bin->mRunFirstRegionOffset);
 
-  MaybePoison(aPtr, size);
-
   arena_run_reg_dalloc(run, bin, aPtr, size);
   run->mNumFree++;
   arena_chunk_t* dealloc_chunk = nullptr;
@@ -3711,7 +3717,6 @@ arena_chunk_t* arena_t::DallocLarge(arena_chunk_t* aChunk, void* aPtr) {
   size_t pageind = (uintptr_t(aPtr) - uintptr_t(aChunk)) >> gPageSize2Pow;
   size_t size = aChunk->map[pageind].bits & ~gPageSizeMask;
 
-  MaybePoison(aPtr, size);
   mStats.allocated_large -= size;
 
   return DallocRun((arena_run_t*)aPtr, true);
@@ -3728,11 +3733,17 @@ static inline void arena_dalloc(void* aPtr, size_t aOffset, arena_t* aArena) {
   MOZ_DIAGNOSTIC_ASSERT(arena->mMagic == ARENA_MAGIC);
   MOZ_RELEASE_ASSERT(!aArena || arena == aArena);
 
+  size_t pageind = aOffset >> gPageSize2Pow;
+  if (opt_poison) {
+    AllocInfo info = AllocInfo::GetInChunk(aPtr, chunk, pageind);
+    MOZ_ASSERT(info.IsValid());
+    MaybePoison(aPtr, info.Size());
+  }
+
   arena_chunk_t* chunk_dealloc_delay = nullptr;
 
   {
     MutexAutoLock lock(arena->mLock);
-    size_t pageind = aOffset >> gPageSize2Pow;
     arena_chunk_map_t* mapelm = &chunk->map[pageind];
     MOZ_RELEASE_ASSERT((mapelm->bits & CHUNK_MAP_DECOMMITTED) == 0,
                        "Freeing in decommitted page.");
