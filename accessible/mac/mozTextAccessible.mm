@@ -415,13 +415,9 @@ static GeckoTextMarkerRange TextMarkerSubrange(Accessible* aAccessible,
 
   NSRange r = [aRange rangeValue];
   start.Offset() += r.location;
-  end.Offset() = start.Offset() + r.length;
+  end.Offset() = start.Offset() + r.location + r.length;
 
-  textMarkerRange = GeckoTextMarkerRange(start, end);
-  // Crop range to accessible
-  textMarkerRange.Crop(aAccessible);
-
-  return textMarkerRange;
+  return GeckoTextMarkerRange(start, end);
 }
 
 - (NSString*)moxStringForRange:(NSValue*)range {
