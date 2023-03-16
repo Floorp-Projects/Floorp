@@ -77,13 +77,19 @@ async function testBookmarks(migratorKey, subDirs) {
   await IOUtils.remove(target.path, { ignoreAbsent: true });
 
   let bookmarksData = {
-    roots: { bookmark_bar: { children: [] }, other: { children: [] } },
+    roots: {
+      bookmark_bar: { children: [] },
+      other: { children: [] },
+      synced: { children: [] },
+    },
   };
   const MAX_BMS = 100;
   let barKids = bookmarksData.roots.bookmark_bar.children;
   let menuKids = bookmarksData.roots.other.children;
+  let syncedKids = bookmarksData.roots.synced.children;
   let currentMenuKids = menuKids;
   let currentBarKids = barKids;
+  let currentSyncedKids = syncedKids;
   for (let i = 0; i < MAX_BMS; i++) {
     currentBarKids.push({
       url: "https://www.chrome-bookmark-bar-bookmark" + i + ".com",
@@ -93,6 +99,11 @@ async function testBookmarks(migratorKey, subDirs) {
     currentMenuKids.push({
       url: "https://www.chrome-menu-bookmark" + i + ".com",
       name: "bookmark for menu " + i,
+      type: "url",
+    });
+    currentSyncedKids.push({
+      url: "https://www.chrome-synced-bookmark" + i + ".com",
+      name: "bookmark for synced " + i,
       type: "url",
     });
     if (i % 20 == 19) {
@@ -111,6 +122,14 @@ async function testBookmarks(migratorKey, subDirs) {
       };
       currentMenuKids.push(nextFolder);
       currentMenuKids = nextFolder.children;
+
+      nextFolder = {
+        name: "synced folder " + Math.ceil(i / 20),
+        type: "folder",
+        children: [],
+      };
+      currentSyncedKids.push(nextFolder);
+      currentSyncedKids = nextFolder.children;
     }
   }
 
