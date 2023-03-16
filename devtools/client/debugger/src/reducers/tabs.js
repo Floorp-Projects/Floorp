@@ -54,7 +54,7 @@ function update(state = initialTabState(), action) {
 }
 
 function matchesSource(tab, source) {
-  return tab.sourceId === source.id || matchesUrl(tab, source);
+  return tab.source?.id === source.id || matchesUrl(tab, source);
 }
 
 function matchesUrl(tab, source) {
@@ -62,7 +62,7 @@ function matchesUrl(tab, source) {
 }
 
 function addVisibleTabs(state, sourceActors) {
-  const tabCount = state.tabs.filter(({ sourceId }) => sourceId).length;
+  const tabCount = state.tabs.filter(({ source }) => source?.id).length;
   const tabs = state.tabs
     .map(tab => {
       const sourceActor = sourceActors.find(actor =>
@@ -73,12 +73,11 @@ function addVisibleTabs(state, sourceActors) {
       }
       return {
         ...tab,
-        sourceId: sourceActor.source,
-        threadActorId: sourceActor.thread,
-        sourceActorId: sourceActor.actor,
+        source: sourceActor.sourceObject,
+        sourceActor,
       };
     })
-    .filter(tab => tab.sourceId);
+    .filter(tab => tab.source);
 
   if (tabs.length == tabCount) {
     return state;
@@ -108,7 +107,9 @@ function removeSourcesFromTabList(state, { sources }) {
 }
 
 function resetTabsForThread(state, threadActorID) {
-  const newTabs = state.tabs.filter(tab => tab.threadActorId !== threadActorID);
+  const newTabs = state.tabs.filter(
+    tab => tab.sourceActor?.thread !== threadActorID
+  );
   if (newTabs.length == state.tabs.length) {
     return state;
   }
@@ -132,10 +133,9 @@ function updateTabList(state, source, sourceActor) {
   if (currentIndex === -1) {
     const newTab = {
       url,
-      sourceId: source.id,
+      source,
       isOriginal,
-      threadActorId: sourceActor?.thread,
-      sourceActorId: sourceActor?.actor,
+      sourceActor,
     };
     // New tabs are added first in the list
     tabs = [newTab, ...tabs];
@@ -154,7 +154,7 @@ function moveTabInList(state, { url, tabIndex: newIndex }) {
 
 function moveTabInListBySourceId(state, { sourceId, tabIndex: newIndex }) {
   const { tabs } = state;
-  const currentIndex = tabs.findIndex(tab => tab.sourceId == sourceId);
+  const currentIndex = tabs.findIndex(tab => tab.source?.id == sourceId);
   return moveTab(tabs, currentIndex, newIndex);
 }
 
