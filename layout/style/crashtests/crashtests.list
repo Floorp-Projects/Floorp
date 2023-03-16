@@ -320,3 +320,4 @@ pref(layout.css.constructable-stylesheets.enabled,true) load 1616407.html
 load 1639533.html
 pref(layout.accessiblecaret.enabled,true) load 1640040.html
 load 1806189-1.html
+pref(layout.css.scroll-driven-animations.enabled,true) load 1821416.html
