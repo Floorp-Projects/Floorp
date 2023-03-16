@@ -19,6 +19,7 @@ glean_parser==7.1.0
 importlib-metadata==1.7.0
 jsmin==3.0.0
 json-e==2.7.0
+jsonschema==4.17.3
 looseversion==1.0.1
 mozilla-repo-urls==0.1.1
 mozilla-version==0.3.4
