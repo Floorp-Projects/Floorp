@@ -1,3 +1,5 @@
+// |jit-test| skip-if: getBuildConfiguration()["android"]
+
 try {
     var z = "1";
     try {
