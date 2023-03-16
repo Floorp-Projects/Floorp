@@ -4,6 +4,9 @@
 
 #include <jni.h>
 
+#ifdef MOZ_AV1
+#  include "AOMDecoder.h"
+#endif
 #include "MediaInfo.h"
 #include "OpusDecoder.h"
 #include "RemoteDataDecoder.h"
@@ -168,6 +171,15 @@ media::DecodeSupportSet AndroidDecoderModule::Supports(
   if (support == media::DecodeSupport::Unsupported) {
     return support;
   }
+
+#ifdef MOZ_AV1
+  // For AV1, only allow HW decoder.
+  if (AOMDecoder::IsAV1(aParams.MimeType()) &&
+      (!StaticPrefs::media_av1_enabled() ||
+       !support.contains(media::DecodeSupport::HardwareDecode))) {
+    return media::DecodeSupport::Unsupported;
+  }
+#endif
 
   // Check 10-bit video.
   const TrackInfo& trackInfo = aParams.mConfig;
