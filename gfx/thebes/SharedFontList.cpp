@@ -39,11 +39,24 @@ static double WSSDistance(const Face* aFace, const gfxFontStyle& aStyle) {
          weightDist * kWeightFactor;
 }
 
-void* Pointer::ToPtr(FontList* aFontList) const {
+void* Pointer::ToPtr(FontList* aFontList) const MOZ_NO_THREAD_SAFETY_ANALYSIS {
   if (IsNull()) {
     return nullptr;
   }
+
+  // Ensure the list doesn't get replaced out from under us. Font-list rebuild
+  // happens on the main thread, so only non-main-thread callers need to lock
+  // it here.
+  bool isMainThread = NS_IsMainThread();
+  if (!isMainThread) {
+    gfxPlatformFontList::PlatformFontList()->Lock();
+  }
+
+  // On failure, we'll return null; callers need to handle this appropriately
+  // (e.g. via fallback).
+  void* result = nullptr;
   uint32_t block = Block();
+
   // If the Pointer refers to a block we have not yet mapped in this process,
   // we first need to retrieve new block handle(s) from the parent and update
   // our mBlocks list.
@@ -51,7 +64,7 @@ void* Pointer::ToPtr(FontList* aFontList) const {
   if (block >= blocks.Length()) {
     if (XRE_IsParentProcess()) {
       // Shouldn't happen! A content process tried to pass a bad Pointer?
-      return nullptr;
+      goto cleanup;
     }
     // UpdateShmBlocks can fail, if the parent has replaced the font list with
     // a new generation. In that case we just return null, and whatever font
@@ -61,8 +74,8 @@ void* Pointer::ToPtr(FontList* aFontList) const {
     // failure of this font will be forgotten.
     // We also return null if we're not on the main thread, as we cannot safely
     // do the IPC messaging needed here.
-    if (!NS_IsMainThread() || !aFontList->UpdateShmBlocks()) {
-      return nullptr;
+    if (!isMainThread || !aFontList->UpdateShmBlocks()) {
+      goto cleanup;
     }
     MOZ_ASSERT(block < blocks.Length(), "failure in UpdateShmBlocks?");
     // This is wallpapering bug 1667977; it's unclear if we will always survive
@@ -72,10 +85,17 @@ void* Pointer::ToPtr(FontList* aFontList) const {
     // font list is being rebuilt by the parent; content will then be notified
     // that the list has changed, and should refresh everything successfully.
     if (block >= blocks.Length()) {
-      return nullptr;
+      goto cleanup;
     }
   }
-  return static_cast<char*>(blocks[block]->Memory()) + Offset();
+  result = static_cast<char*>(blocks[block]->Memory()) + Offset();
+
+cleanup:
+  if (!isMainThread) {
+    gfxPlatformFontList::PlatformFontList()->Unlock();
+  }
+
+  return result;
 }
 
 void String::Assign(const nsACString& aString, FontList* aList) {
