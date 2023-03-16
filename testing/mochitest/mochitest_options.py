@@ -505,6 +505,15 @@ class MochitestArguments(ArgumentContainer):
             },
         ],
         [
+            ["--use-http3-server"],
+            {
+                "dest": "useHttp3Server",
+                "default": False,
+                "help": "Whether to use the Http3 server",
+                "action": "store_true",
+            },
+        ],
+        [
             ["--setpref"],
             {
                 "action": "append",

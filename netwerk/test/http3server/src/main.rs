@@ -1004,11 +1004,16 @@ impl ServersRunner {
     }
 
     pub fn init(&mut self) {
-        self.add_new_socket(0, ServerType::Http3);
-        self.add_new_socket(1, ServerType::Http3Fail);
-        self.add_new_socket(2, ServerType::Http3Ech);
-        self.add_new_socket(3, ServerType::Http3Proxy);
-        self.add_new_socket(5, ServerType::Http3NoResponse);
+        self.add_new_socket(0, ServerType::Http3, 0);
+        self.add_new_socket(1, ServerType::Http3Fail, 0);
+        self.add_new_socket(2, ServerType::Http3Ech, 0);
+
+        let proxy_port = match env::var("MOZ_HTTP3_PROXY_PORT") {
+            Ok(val) => val.parse::<u16>().unwrap(),
+            _ => 0,
+        };
+        self.add_new_socket(3, ServerType::Http3Proxy, proxy_port);
+        self.add_new_socket(5, ServerType::Http3NoResponse, 0);
 
         println!(
             "HTTP3 server listening on ports {}, {}, {}, {} and {}. EchConfig is @{}@",
@@ -1024,8 +1029,8 @@ impl ServersRunner {
             .unwrap();
     }
 
-    fn add_new_socket(&mut self, count: usize, server_type: ServerType) -> u16 {
-        let addr = "127.0.0.1:0".parse().unwrap();
+    fn add_new_socket(&mut self, count: usize, server_type: ServerType, port: u16) -> u16 {
+        let addr = format!("127.0.0.1:{}", port).parse().unwrap();
 
         let socket = match UdpSocket::bind(&addr) {
             Err(err) => {
