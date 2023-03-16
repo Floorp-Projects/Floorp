@@ -1398,21 +1398,15 @@ def compiler(
                 )
 
         if host_or_target.os == "Android":
-            # Need at least clang 8 for support for __ANDROID_API__ and versioned
-            # library directories from the NDK.
-            if info.type == "clang" and info.version < "8.0":
+            # Need at least clang 13 for compiler-rt/libunwind being the default.
+            if info.type == "clang" and info.version < "13.0":
                 raise FatalCheckError(
-                    "Only clang/llvm 8.0 or newer is supported for %s (found version %s)."
+                    "Only clang/llvm 13.0 or newer is supported for %s (found version %s)."
                     % (host_or_target.alias, info.version)
                 )
 
         if info.flags:
             raise FatalCheckError("Unknown compiler or compiler not supported.")
-
-        # Recent clang defaults to compiler-rt, but we want libgcc for compat
-        # with the older NDKs we use.
-        if host_or_target.os == "Android":
-            flags.append("--rtlib=libgcc")
 
         return namespace(
             wrapper=wrapper,
