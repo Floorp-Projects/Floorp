@@ -14516,11 +14516,6 @@
 #endif
   mirror: always
 
-- name: webgl.all-angle-options
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 - name: webgl.angle.force-d3d11
   type: RelaxedAtomicBool
   value: false
