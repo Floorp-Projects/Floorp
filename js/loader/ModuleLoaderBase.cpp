@@ -318,10 +318,7 @@ bool ModuleLoaderBase::HostImportModuleDynamically(
       aCx, uri, script, aReferencingPrivate, specifierString, aPromise);
 
   if (!request) {
-    // Throws TypeError if CreateDynamicImport returns nullptr.
-    JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr,
-                              JSMSG_DYNAMIC_IMPORT_NOT_SUPPORTED);
-
+    JS_ReportErrorASCII(aCx, "Dynamic import not supported in this context");
     return false;
   }
 
