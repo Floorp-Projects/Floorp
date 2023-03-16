@@ -23,7 +23,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 project('dav1d', ['c'],
-    version: '1.0.0',
+    version: '1.1.0',
     default_options: ['c_std=c99',
                       'warning_level=2',
                       'buildtype=release',
@@ -89,7 +89,7 @@ test_args = []
 optional_arguments = []
 optional_link_arguments = []
 
-if host_machine.system() in ['linux', 'gnu']
+if host_machine.system() in ['linux', 'gnu', 'emscripten']
     test_args += '-D_GNU_SOURCE'
     add_project_arguments('-D_GNU_SOURCE', language: 'c')
 endif
@@ -134,7 +134,7 @@ if host_machine.system() == 'windows'
     rc_data.set('API_VERSION_MAJOR', dav1d_api_version_major)
     rc_data.set('API_VERSION_MINOR', dav1d_api_version_minor)
     rc_data.set('API_VERSION_REVISION', dav1d_api_version_revision)
-    rc_data.set('COPYRIGHT_YEARS', '2022')
+    rc_data.set('COPYRIGHT_YEARS', '2018-2023')
 else
     thread_dependency = dependency('threads')
     thread_compat_dep = []
@@ -253,6 +253,9 @@ pthread_np_prefix = '''
 '''
 if cc.has_function('pthread_getaffinity_np', prefix : pthread_np_prefix, args : test_args, dependencies : thread_dependency)
     cdata.set('HAVE_PTHREAD_GETAFFINITY_NP', 1)
+endif
+if cc.has_function('pthread_setaffinity_np', prefix : pthread_np_prefix, args : test_args, dependencies : thread_dependency)
+    cdata.set('HAVE_PTHREAD_SETAFFINITY_NP', 1)
 endif
 
 if cc.compiles('int x = _Generic(0, default: 0);', name: '_Generic', args: test_args)
