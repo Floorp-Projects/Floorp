@@ -2,6 +2,10 @@
  * Once allocated, a string or value cannot ever be changed or re-used
  */
 
+
+ITEM_VALUE(TouchEvents, 0x0001)
+
+
 /*
  * In certain cases, we precompute the vaqlue of ShouldRFP for e.g. a Document.
  * (This saves us more computation and casting later.)  This document will still need
