@@ -11,9 +11,9 @@
 
 [package]
 edition = "2021"
-rust-version = "1.62"
+rust-version = "1.60"
 name = "glean"
-version = "52.4.2"
+version = "52.3.0"
 authors = [
     "Jan-Erik Rediger <jrediger@mozilla.com>",
     "The Glean Team <glean-team@mozilla.com>",
@@ -43,7 +43,7 @@ features = ["serde"]
 version = "0.5"
 
 [dependencies.glean-core]
-version = "52.4.2"
+version = "52.3.0"
 
 [dependencies.inherent]
 version = "1"
