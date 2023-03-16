@@ -34,7 +34,6 @@ import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.ext.DEFAULT_ACTIVE_DAYS
 import org.mozilla.fenix.ext.potentialInactiveTabs
 import org.mozilla.fenix.home.HomeFragment
-import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.tabstray.browser.InactiveTabsController
 import org.mozilla.fenix.tabstray.browser.TabsTrayFabController
 import org.mozilla.fenix.tabstray.ext.isActiveDownload
@@ -120,12 +119,10 @@ interface TabsTrayController : SyncedTabsController, InactiveTabsController, Tab
      * Handles a user's tab click while in multi select mode.
      *
      * @param tab [TabSessionState] that was clicked.
-     * @param holder [SelectionHolder] used to access the current selection of tabs.
      * @param source App feature from which the tab was clicked.
      */
     fun handleMultiSelectClicked(
         tab: TabSessionState,
-        holder: SelectionHolder<TabSessionState>,
         source: String?,
     )
 
@@ -133,12 +130,8 @@ interface TabsTrayController : SyncedTabsController, InactiveTabsController, Tab
      * Adds the provided tab to the current selection of tabs.
      *
      * @param tab [TabSessionState] that was long clicked.
-     * @param holder [SelectionHolder] used to access the current selection of tabs.
      */
-    fun handleTabLongClick(
-        tab: TabSessionState,
-        holder: SelectionHolder<TabSessionState>,
-    ): Boolean
+    fun handleTabLongClick(tab: TabSessionState): Boolean
 
     /**
      * Adds the provided tab to the current selection of tabs.
@@ -399,12 +392,8 @@ class DefaultTabsTrayController(
         )
     }
 
-    override fun handleMultiSelectClicked(
-        tab: TabSessionState,
-        holder: SelectionHolder<TabSessionState>,
-        source: String?,
-    ) {
-        val selected = holder.selectedItems
+    override fun handleMultiSelectClicked(tab: TabSessionState, source: String?) {
+        val selected = tabsTrayStore.state.mode.selectedTabs
         when {
             selected.isEmpty() && tabsTrayStore.state.mode.isSelect().not() -> {
                 handleTabSelected(tab, source)
@@ -414,11 +403,8 @@ class DefaultTabsTrayController(
         }
     }
 
-    override fun handleTabLongClick(
-        tab: TabSessionState,
-        holder: SelectionHolder<TabSessionState>,
-    ): Boolean {
-        return if (holder.selectedItems.isEmpty()) {
+    override fun handleTabLongClick(tab: TabSessionState): Boolean {
+        return if (tabsTrayStore.state.mode.selectedTabs.isEmpty()) {
             Collections.longPress.record(NoExtras())
             tabsTrayStore.dispatch(TabsTrayAction.AddSelectTab(tab))
             true

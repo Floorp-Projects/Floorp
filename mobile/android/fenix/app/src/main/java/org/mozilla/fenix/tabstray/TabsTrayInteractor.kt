@@ -7,7 +7,6 @@ package org.mozilla.fenix.tabstray
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.storage.sync.Tab
 import mozilla.components.browser.tabstray.TabsTray
-import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.tabstray.browser.InactiveTabsInteractor
 import org.mozilla.fenix.tabstray.browser.TabsTrayFabInteractor
 
@@ -78,12 +77,10 @@ interface TabsTrayInteractor :
      * Invoked when tabs are clicked when multi-selection is enabled.
      *
      * @param tab [TabSessionState] that was clicked.
-     * @param holder [SelectionHolder] used to access the current selection of tabs.
      * @param source App feature from which the tab was clicked.
      */
     fun onMultiSelectClicked(
         tab: TabSessionState,
-        holder: SelectionHolder<TabSessionState>,
         source: String?,
     )
 
@@ -91,12 +88,8 @@ interface TabsTrayInteractor :
      * Invoked when a tab is long clicked.
      *
      * @param tab [TabSessionState] that was clicked.
-     * @param holder [SelectionHolder] used to access the current selection of tabs.
      */
-    fun onTabLongClicked(
-        tab: TabSessionState,
-        holder: SelectionHolder<TabSessionState>,
-    ): Boolean
+    fun onTabLongClicked(tab: TabSessionState): Boolean
 
     /**
      * Invoked when the back button is pressed.
@@ -180,16 +173,12 @@ class DefaultTabsTrayInteractor(
         controller.handleMediaClicked(tab)
     }
 
-    override fun onMultiSelectClicked(
-        tab: TabSessionState,
-        holder: SelectionHolder<TabSessionState>,
-        source: String?,
-    ) {
-        controller.handleMultiSelectClicked(tab, holder, source)
+    override fun onMultiSelectClicked(tab: TabSessionState, source: String?) {
+        controller.handleMultiSelectClicked(tab, source)
     }
 
-    override fun onTabLongClicked(tab: TabSessionState, holder: SelectionHolder<TabSessionState>): Boolean {
-        return controller.handleTabLongClick(tab, holder)
+    override fun onTabLongClicked(tab: TabSessionState): Boolean {
+        return controller.handleTabLongClick(tab)
     }
 
     override fun onTabUnselected(tab: TabSessionState) {

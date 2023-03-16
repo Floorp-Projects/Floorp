@@ -211,11 +211,11 @@ abstract class AbstractBrowserTabViewHolder(
         interactor: TabsTrayInteractor,
     ) {
         itemView.setOnClickListener {
-            interactor.onMultiSelectClicked(item, holder, featureName)
+            interactor.onMultiSelectClicked(item, featureName)
         }
 
         itemView.setOnLongClickListener {
-            interactor.onTabLongClicked(item, holder)
+            interactor.onTabLongClicked(item)
         }
         setDragInteractor(item, holder, interactor)
     }

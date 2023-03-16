@@ -86,7 +86,6 @@ class BrowserTabsAdapter(
                 ComposeListViewHolder(
                     interactor = interactor,
                     tabsTrayStore = store,
-                    selectionHolder = selectionHolder,
                     composeItemView = ComposeView(parent.context),
                     featureName = featureName,
                     viewLifecycleOwner = viewLifecycleOwner,
@@ -95,7 +94,6 @@ class BrowserTabsAdapter(
                 ComposeGridViewHolder(
                     interactor = interactor,
                     store = store,
-                    selectionHolder = selectionHolder,
                     composeItemView = ComposeView(parent.context),
                     featureName = featureName,
                     viewLifecycleOwner = viewLifecycleOwner,

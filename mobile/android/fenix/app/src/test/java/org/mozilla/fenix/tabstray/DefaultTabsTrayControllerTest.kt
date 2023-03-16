@@ -58,7 +58,6 @@ import org.mozilla.fenix.ext.maxActiveTime
 import org.mozilla.fenix.ext.potentialInactiveTabs
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.HomeFragment
-import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.utils.Settings
 import java.util.concurrent.TimeUnit
 
@@ -554,9 +553,6 @@ class DefaultTabsTrayControllerTest {
     @Test
     fun `GIVEN no tabs selected and the user is not in multi select mode WHEN the user long taps a tab THEN that tab will become selected`() {
         trayStore = TabsTrayStore()
-        val selectionHolder: SelectionHolder<TabSessionState> = mockk {
-            every { selectedItems } returns emptySet()
-        }
         val controller = spyk(createController())
         val tab1 = TabSessionState(
             id = "1",
@@ -573,10 +569,10 @@ class DefaultTabsTrayControllerTest {
         trayStore.dispatch(TabsTrayAction.ExitSelectMode)
         trayStore.waitUntilIdle()
 
-        controller.handleMultiSelectClicked(tab1, selectionHolder, "Tabs tray")
+        controller.handleMultiSelectClicked(tab1, "Tabs tray")
         verify(exactly = 1) { controller.handleTabSelected(tab1, "Tabs tray") }
 
-        controller.handleMultiSelectClicked(tab2, selectionHolder, "Tabs tray")
+        controller.handleMultiSelectClicked(tab2, "Tabs tray")
         verify(exactly = 1) { controller.handleTabSelected(tab2, "Tabs tray") }
     }
 
@@ -595,25 +591,22 @@ class DefaultTabsTrayControllerTest {
                 url = "www.google.com",
             ),
         )
-        val selectionHolder: SelectionHolder<TabSessionState> = mockk {
-            every { selectedItems } returns setOf(tab1, tab2)
-        }
         val controller = spyk(createController())
         trayStore.dispatch(TabsTrayAction.EnterSelectMode)
+        trayStore.dispatch(TabsTrayAction.AddSelectTab(tab1))
+        trayStore.dispatch(TabsTrayAction.AddSelectTab(tab2))
         trayStore.waitUntilIdle()
 
-        controller.handleMultiSelectClicked(tab1, selectionHolder, "Tabs tray")
+        controller.handleMultiSelectClicked(tab1, "Tabs tray")
         verify(exactly = 1) { controller.handleTabUnselected(tab1) }
 
-        controller.handleMultiSelectClicked(tab2, selectionHolder, "Tabs tray")
+        controller.handleMultiSelectClicked(tab2, "Tabs tray")
         verify(exactly = 1) { controller.handleTabUnselected(tab2) }
     }
 
     @Test
     fun `GIVEN at least a tab is selected and the user is in multi select mode WHEN the user taps a tab THEN that tab will become selected`() {
         trayStore = spyk(TabsTrayStore())
-        trayStore.dispatch(TabsTrayAction.EnterSelectMode)
-        trayStore.waitUntilIdle()
         val controller = spyk(createController())
         val tab1 = TabSessionState(
             id = "1",
@@ -621,9 +614,6 @@ class DefaultTabsTrayControllerTest {
                 url = "www.mozilla.com",
             ),
         )
-        val selectionHolder: SelectionHolder<TabSessionState> = mockk {
-            every { selectedItems } returns setOf(tab1)
-        }
         val tab2 = TabSessionState(
             id = "2",
             content = ContentState(
@@ -631,7 +621,11 @@ class DefaultTabsTrayControllerTest {
             ),
         )
 
-        controller.handleMultiSelectClicked(tab2, selectionHolder, "Tabs tray")
+        trayStore.dispatch(TabsTrayAction.EnterSelectMode)
+        trayStore.dispatch(TabsTrayAction.AddSelectTab(tab1))
+        trayStore.waitUntilIdle()
+
+        controller.handleMultiSelectClicked(tab2, "Tabs tray")
 
         verify(exactly = 1) { trayStore.dispatch(TabsTrayAction.AddSelectTab(tab2)) }
     }
