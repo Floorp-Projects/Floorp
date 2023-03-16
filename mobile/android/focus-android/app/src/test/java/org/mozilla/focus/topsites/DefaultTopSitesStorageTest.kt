@@ -14,12 +14,9 @@ import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
 
 @ExperimentalCoroutinesApi
-@RunWith(RobolectricTestRunner::class)
 class DefaultTopSitesStorageTest {
 
     private val pinnedSitesStorage: PinnedSiteStorage = mock()

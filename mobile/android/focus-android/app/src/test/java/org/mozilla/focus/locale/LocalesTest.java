@@ -6,14 +6,11 @@
 package org.mozilla.focus.locale;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.robolectric.RobolectricTestRunner;
 
 import java.util.Locale;
 
 import static org.junit.Assert.assertEquals;
 
-@RunWith(RobolectricTestRunner.class)
 public class LocalesTest {
     @Test
     public void testLanguage() {

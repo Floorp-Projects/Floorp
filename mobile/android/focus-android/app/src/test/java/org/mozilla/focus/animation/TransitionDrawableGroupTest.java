@@ -7,13 +7,10 @@ package org.mozilla.focus.animation;
 import android.graphics.drawable.TransitionDrawable;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.robolectric.RobolectricTestRunner;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-@RunWith(RobolectricTestRunner.class)
 public class TransitionDrawableGroupTest {
     @Test
     public void testStartIsCalledOnAllItems() {
