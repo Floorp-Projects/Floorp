@@ -694,13 +694,6 @@ add_task(function test_WebReference_fromJSON_malformed() {
   Assert.throws(() => WebReference.fromJSON(null), /InvalidArgumentError/);
 });
 
-add_task(function test_WebReference_fromUUID() {
-  const domWebEl = WebReference.fromUUID("bar");
-
-  ok(domWebEl instanceof WebElement);
-  equal(domWebEl.uuid, "bar");
-});
-
 add_task(function test_WebReference_isReference() {
   for (let t of [42, true, "foo", [], {}]) {
     ok(!WebReference.isReference(t));
@@ -733,6 +726,15 @@ add_task(function test_WebElement_fromJSON() {
   equal(el.uuid, "foo");
 
   Assert.throws(() => WebElement.fromJSON({}), /InvalidArgumentError/);
+});
+
+add_task(function test_WebElement_fromUUID() {
+  const domWebEl = WebElement.fromUUID("bar");
+
+  ok(domWebEl instanceof WebElement);
+  equal(domWebEl.uuid, "bar");
+
+  Assert.throws(() => WebElement.fromUUID(), /InvalidArgumentError/);
 });
 
 add_task(function test_WebWindow_toJSON() {

@@ -1445,28 +1445,6 @@ export class WebReference {
   }
 
   /**
-   * Constructs a {@link WebElement} from a string <var>uuid</var>.
-   *
-   * This whole function is a workaround for the fact that clients
-   * to Marionette occasionally pass <code>{id: <uuid>}</code> JSON
-   * Objects instead of web element representations.
-   *
-   * @param {string} uuid
-   *     UUID to be associated with the web reference.
-   *
-   * @return {WebElement}
-   *     The web element reference.
-   *
-   * @throws {InvalidArgumentError}
-   *     If <var>uuid</var> is not a string.
-   */
-  static fromUUID(uuid) {
-    lazy.assert.string(uuid);
-
-    return new WebElement(uuid);
-  }
-
-  /**
    * Checks if <var>obj<var> is a {@link WebReference} reference.
    *
    * @param {Object.<string, string>} obj
@@ -1511,6 +1489,26 @@ export class WebElement extends WebReference {
     }
 
     let uuid = json[Identifier];
+    return new WebElement(uuid);
+  }
+
+  /**
+   * Constructs a {@link WebElement} from a string <var>uuid</var>.
+   *
+   * This whole function is a workaround for the fact that clients
+   * to Marionette occasionally pass <code>{id: <uuid>}</code> JSON
+   * Objects instead of web element representations.
+   *
+   * @param {string} uuid
+   *     UUID to be associated with the web reference.
+   *
+   * @return {WebElement}
+   *     The web element reference.
+   *
+   * @throws {InvalidArgumentError}
+   *     If <var>uuid</var> is not a string.
+   */
+  static fromUUID(uuid) {
     return new WebElement(uuid);
   }
 }
