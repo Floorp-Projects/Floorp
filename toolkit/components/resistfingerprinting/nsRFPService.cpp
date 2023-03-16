@@ -267,7 +267,6 @@ void nsRFPService::UpdateRFPPref() {
     nsJSUtils::ResetTimeZone();
   }
 
-
   // If and only if the time zone was changed above, propagate the change to the
   // <time.h> functions and the JS runtime.
   if (resistFingerprinting || sInitialized) {
