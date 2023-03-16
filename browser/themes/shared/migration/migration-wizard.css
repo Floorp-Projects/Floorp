@@ -71,6 +71,10 @@ div[name="page-selection"][show-import-all] #select-all  {
   display: flex;
 }
 
+div[name="page-selection"][show-import-all] .resource-selection-preamble {
+  display:none;
+}
+
 details[open] .dropdown-icon {
   background-image: url("chrome://browser/skin/zoom-out.svg");
 }

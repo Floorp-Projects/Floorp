@@ -43,6 +43,7 @@ export class MigrationWizard extends HTMLElement {
             <h3 data-l10n-id="migration-wizard-selection-header"></h3>
             <select id="browser-profile-selector">
             </select>
+            <div data-l10n-id="migration-wizard-selection-list" class="resource-selection-preamble deemphasized-text"></div>
             <details class="resource-selection-details">
               <summary>
                 <div class="selected-data-header" data-l10n-id="migration-all-available-data-label"></div>
