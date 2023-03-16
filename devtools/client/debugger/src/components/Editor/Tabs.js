@@ -9,8 +9,6 @@ import { connect } from "../../utils/connect";
 
 import {
   getSourceTabs,
-  getSourceActor,
-  getSource,
   getSelectedSource,
   getSourcesForTabs,
   getIsPaused,
@@ -318,14 +316,7 @@ const mapStateToProps = state => {
     cx: getContext(state),
     selectedSource: getSelectedSource(state),
     tabSources: getSourcesForTabs(state),
-    tabs: getSourceTabs(state)
-      .map(tab => {
-        return {
-          source: getSource(state, tab.sourceId),
-          sourceActor: getSourceActor(state, tab.sourceActorId),
-        };
-      })
-      .filter(tab => tab.source),
+    tabs: getSourceTabs(state),
     blackBoxRanges: getBlackBoxRanges(state),
     isPaused: getIsPaused(state, getCurrentThread(state)),
   };
