@@ -295,6 +295,12 @@ extern "C" const char* __tsan_default_suppressions() {
          // It is never joined with the main thread, but this is being re-evaluated.
          "thread:glean::initialize\n"
 
+         // Bug 1822605 - permanent
+         // A race exists in libvulkan_lvp.so.  This was previously addressed in bug
+         // 1816713. However, libvulkan_lvp.so is unloaded so a called_from_lib
+         // suppression cannot be used.
+         "race:libvulkan_lvp.so\n"
+
       // End of suppressions.
       ;  // Please keep this semicolon.
 }
