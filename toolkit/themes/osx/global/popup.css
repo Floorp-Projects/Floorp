@@ -46,18 +46,21 @@ panel[titlebar] {
 
 :is(panel, menupopup)::part(content) {
   display: flex;
-  /* TODO: Remove -moz-box-flex once bug 1809084 lands */
-  -moz-box-flex: 1;
   -moz-font-smoothing-background-color: var(--panel-background, -moz-mac-menupopup);
   background: var(--panel-background);
   color: var(--panel-color);
-  border-radius: var(--panel-border-radius);
   box-shadow: var(--panel-shadow);
   padding: var(--panel-padding);
   width: var(--panel-width);
+  border-radius: var(--panel-border-radius);
+  border: 1px solid var(--panel-border-color);
+
   min-width: 0;
   min-height: 0;
-  border: 1px solid var(--panel-border-color);
+
+  /* Makes popup constraints work */
+  max-height: calc(100% - 2 * var(--panel-shadow-margin));
+  max-width: calc(100% - 2 * var(--panel-shadow-margin));
 }
 
 :is(panel, menupopup)[orient=vertical]::part(content) {

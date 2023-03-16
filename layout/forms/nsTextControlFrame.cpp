@@ -247,12 +247,9 @@ LogicalSize nsTextControlFrame::CalcIntrinsicSize(
   if (IsTextArea()) {
     nsIScrollableFrame* scrollableFrame = GetScrollTargetFrame();
     NS_ASSERTION(scrollableFrame, "Child must be scrollable");
-
     if (scrollableFrame) {
-      LogicalMargin scrollbarSizes(
-          aWM, scrollableFrame->GetDesiredScrollbarSizes(PresContext(),
-                                                         aRenderingContext));
-
+      LogicalMargin scrollbarSizes(aWM,
+                                   scrollableFrame->GetDesiredScrollbarSizes());
       intrinsicSize.ISize(aWM) += scrollbarSizes.IStartEnd(aWM);
       intrinsicSize.BSize(aWM) += scrollbarSizes.BStartEnd(aWM);
     }

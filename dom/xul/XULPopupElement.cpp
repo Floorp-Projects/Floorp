@@ -6,10 +6,12 @@
 
 #include "XULMenuParentElement.h"
 #include "nsCOMPtr.h"
+#include "nsICSSDeclaration.h"
 #include "nsIContent.h"
 #include "nsNameSpaceManager.h"
 #include "nsGkAtoms.h"
 #include "nsMenuPopupFrame.h"
+#include "nsStringFwd.h"
 #include "nsView.h"
 #include "mozilla/AppUnits.h"
 #include "mozilla/AsyncEventDispatcher.h"
@@ -197,8 +199,7 @@ void XULPopupElement::ActivateItem(Element& aItemElement,
 }
 
 void XULPopupElement::MoveTo(int32_t aLeft, int32_t aTop) {
-  nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(GetPrimaryFrame());
-  if (menuPopupFrame) {
+  if (nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(GetPrimaryFrame())) {
     menuPopupFrame->MoveTo(CSSIntPoint(aLeft, aTop), true);
   }
 }
@@ -214,20 +215,16 @@ void XULPopupElement::MoveToAnchor(Element* aAnchorElement,
 }
 
 void XULPopupElement::SizeTo(int32_t aWidth, int32_t aHeight) {
-  nsAutoString width, height;
+  nsAutoCString width;
+  nsAutoCString height;
   width.AppendInt(aWidth);
+  width.AppendLiteral("px");
   height.AppendInt(aHeight);
+  height.AppendLiteral("px");
 
-  nsCOMPtr<nsIContent> kungFuDeathGrip = this;  // keep a reference
-
-  // We only want to pass aNotify=true to SetAttr once, but must make sure
-  // we pass it when a value is being changed.  Thus, we check if the height
-  // is the same and if so, pass true when setting the width.
-  bool heightSame =
-      AttrValueIs(kNameSpaceID_None, nsGkAtoms::height, height, eCaseMatters);
-
-  SetAttr(kNameSpaceID_None, nsGkAtoms::width, width, heightSame);
-  SetAttr(kNameSpaceID_None, nsGkAtoms::height, height, true);
+  nsCOMPtr<nsICSSDeclaration> style = Style();
+  style->SetProperty("width"_ns, width, ""_ns, IgnoreErrors());
+  style->SetProperty("height"_ns, height, ""_ns, IgnoreErrors());
 
   // If the popup is open, force a reposition of the popup after resizing it
   // with notifications set to true so that the popuppositioned event is fired.
@@ -317,7 +314,7 @@ void XULPopupElement::SetConstraintRect(dom::DOMRectReadOnly& aRect) {
   nsMenuPopupFrame* menuPopupFrame =
       do_QueryFrame(GetPrimaryFrame(FlushType::Frames));
   if (menuPopupFrame) {
-    menuPopupFrame->SetOverrideConstraintRect(LayoutDeviceIntRect::Truncate(
+    menuPopupFrame->SetOverrideConstraintRect(CSSIntRect::Truncate(
         aRect.Left(), aRect.Top(), aRect.Width(), aRect.Height()));
   }
 }
