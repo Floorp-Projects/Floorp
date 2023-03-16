@@ -24,6 +24,7 @@ import org.mozilla.fenix.home.recenttabs.controller.RecentTabController
 import org.mozilla.fenix.home.recentvisits.controller.RecentVisitsController
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
+import org.mozilla.fenix.home.toolbar.ToolbarController
 import org.mozilla.fenix.onboarding.controller.OnboardingController
 
 class SessionControlInteractorTest {
@@ -34,6 +35,7 @@ class SessionControlInteractorTest {
     private val recentBookmarksController: RecentBookmarksController = mockk(relaxed = true)
     private val pocketStoriesController: PocketStoriesController = mockk(relaxed = true)
     private val onboardingController: OnboardingController = mockk(relaxed = true)
+    private val toolbarController: ToolbarController = mockk(relaxed = true)
 
     // Note: the recent visits tests are handled in [RecentVisitsInteractorTest] and [RecentVisitsControllerTest]
     private val recentVisitsController: RecentVisitsController = mockk(relaxed = true)
@@ -50,6 +52,7 @@ class SessionControlInteractorTest {
             recentVisitsController,
             pocketStoriesController,
             onboardingController,
+            toolbarController,
         )
     }
 
@@ -137,19 +140,19 @@ class SessionControlInteractorTest {
     @Test
     fun onPaste() {
         interactor.onPaste("text")
-        verify { controller.handlePaste("text") }
+        verify { toolbarController.handlePaste("text") }
     }
 
     @Test
     fun onPasteAndGo() {
         interactor.onPasteAndGo("text")
-        verify { controller.handlePasteAndGo("text") }
+        verify { toolbarController.handlePasteAndGo("text") }
     }
 
     @Test
     fun onNavigateSearch() {
         interactor.onNavigateSearch()
-        verify { controller.handleNavigateSearch() }
+        verify { toolbarController.handleNavigateSearch() }
     }
 
     @Test

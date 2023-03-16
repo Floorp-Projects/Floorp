@@ -974,67 +974,6 @@ class DefaultSessionControlControllerTest {
     }
 
     @Test
-    fun handlePasteAndGo() {
-        assertNull(Events.enteredUrl.testGetValue())
-        assertNull(Events.performedSearch.testGetValue())
-
-        createController().handlePasteAndGo("text")
-
-        verify {
-            activity.openToBrowserAndLoad(
-                searchTermOrURL = "text",
-                newTab = true,
-                from = BrowserDirection.FromHome,
-                engine = searchEngine,
-            )
-        }
-
-        assertNotNull(Events.performedSearch.testGetValue())
-
-        createController().handlePasteAndGo("https://mozilla.org")
-        verify {
-            activity.openToBrowserAndLoad(
-                searchTermOrURL = "https://mozilla.org",
-                newTab = true,
-                from = BrowserDirection.FromHome,
-                engine = searchEngine,
-            )
-        }
-        assertNotNull(Events.enteredUrl.testGetValue())
-    }
-
-    @Test
-    fun handlePaste() {
-        createController().handlePaste("text")
-
-        verify {
-            navController.navigate(
-                match<NavDirections> { it.actionId == R.id.action_global_search_dialog },
-                null,
-            )
-        }
-    }
-
-    @Test
-    fun handleNavigateSearch() {
-        assertNull(Events.searchBarTapped.testGetValue())
-
-        createController().handleNavigateSearch()
-
-        assertNotNull(Events.searchBarTapped.testGetValue())
-        val recordedEvents = Events.searchBarTapped.testGetValue()!!
-        assertEquals(1, recordedEvents.size)
-        assertEquals("HOME", recordedEvents.single().extra?.getValue("source"))
-
-        verify {
-            navController.navigate(
-                match<NavDirections> { it.actionId == R.id.action_global_search_dialog },
-                any<NavOptions>(),
-            )
-        }
-    }
-
-    @Test
     fun handleRemoveCollectionsPlaceholder() {
         createController().handleRemoveCollectionsPlaceholder()
 

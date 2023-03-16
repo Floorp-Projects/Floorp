@@ -20,6 +20,7 @@ import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHigh
 import org.mozilla.fenix.home.recentvisits.controller.RecentVisitsController
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
+import org.mozilla.fenix.home.toolbar.ToolbarController
 import org.mozilla.fenix.onboarding.controller.OnboardingController
 
 class RecentVisitsInteractorTest {
@@ -31,6 +32,7 @@ class RecentVisitsInteractorTest {
     private val pocketStoriesController: PocketStoriesController = mockk(relaxed = true)
     private val recentVisitsController: RecentVisitsController = mockk(relaxed = true)
     private val onboardingController: OnboardingController = mockk(relaxed = true)
+    private val toolbarController: ToolbarController = mockk(relaxed = true)
 
     private lateinit var interactor: SessionControlInteractor
 
@@ -44,6 +46,7 @@ class RecentVisitsInteractorTest {
             recentVisitsController,
             pocketStoriesController,
             onboardingController,
+            toolbarController,
         )
     }
 

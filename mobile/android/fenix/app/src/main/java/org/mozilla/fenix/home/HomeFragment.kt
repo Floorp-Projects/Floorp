@@ -119,6 +119,7 @@ import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
 import org.mozilla.fenix.home.sessioncontrol.SessionControlView
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionHeaderViewHolder
+import org.mozilla.fenix.home.toolbar.DefaultToolbarController
 import org.mozilla.fenix.home.topsites.DefaultTopSitesView
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.onboarding.FenixOnboarding
@@ -426,6 +427,11 @@ class HomeFragment : Fragment() {
             onboardingController = DefaultOnboardingController(
                 activity = activity,
                 hideOnboarding = ::hideOnboardingAndOpenSearch,
+            ),
+            toolbarController = DefaultToolbarController(
+                activity = activity,
+                store = components.core.store,
+                navController = findNavController(),
             ),
         )
 

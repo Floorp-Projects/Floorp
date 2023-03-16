@@ -27,6 +27,7 @@ import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGrou
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
 import org.mozilla.fenix.home.recentvisits.controller.RecentVisitsController
 import org.mozilla.fenix.home.recentvisits.interactor.RecentVisitsInteractor
+import org.mozilla.fenix.home.toolbar.ToolbarController
 import org.mozilla.fenix.home.toolbar.ToolbarInteractor
 import org.mozilla.fenix.onboarding.controller.OnboardingController
 import org.mozilla.fenix.onboarding.interactor.OnboardingInteractor
@@ -233,6 +234,7 @@ class SessionControlInteractor(
     private val recentVisitsController: RecentVisitsController,
     private val pocketStoriesController: PocketStoriesController,
     private val onboardingController: OnboardingController,
+    private val toolbarController: ToolbarController,
 ) : CollectionInteractor,
     OnboardingInteractor,
     TopSiteInteractor,
@@ -329,15 +331,15 @@ class SessionControlInteractor(
     }
 
     override fun onPasteAndGo(clipboardText: String) {
-        controller.handlePasteAndGo(clipboardText)
+        toolbarController.handlePasteAndGo(clipboardText)
     }
 
     override fun onPaste(clipboardText: String) {
-        controller.handlePaste(clipboardText)
+        toolbarController.handlePaste(clipboardText)
     }
 
     override fun onNavigateSearch() {
-        controller.handleNavigateSearch()
+        toolbarController.handleNavigateSearch()
     }
 
     override fun onRemoveCollectionsPlaceholder() {

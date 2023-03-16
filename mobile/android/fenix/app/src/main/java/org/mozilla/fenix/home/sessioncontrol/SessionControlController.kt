@@ -27,11 +27,9 @@ import mozilla.components.feature.tab.collections.ext.invoke
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.support.ktx.android.view.showKeyboard
-import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.Collections
-import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.HomeScreen
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.Pocket
@@ -147,21 +145,6 @@ interface SessionControlController {
      * @see [CollectionInteractor.onToggleCollectionExpanded]
      */
     fun handleToggleCollectionExpanded(collection: TabCollection, expand: Boolean)
-
-    /**
-     * @see [ToolbarInteractor.onPasteAndGo]
-     */
-    fun handlePasteAndGo(clipboardText: String)
-
-    /**
-     * @see [ToolbarInteractor.onPaste]
-     */
-    fun handlePaste(clipboardText: String)
-
-    /**
-     * @see [ToolbarInteractor.onNavigateSearch]
-     */
-    fun handleNavigateSearch()
 
     /**
      * @see [CollectionInteractor.onAddTabsToCollectionTapped]
@@ -557,51 +540,6 @@ class DefaultSessionControlController(
             data = data.toTypedArray(),
         )
         navController.nav(R.id.homeFragment, directions)
-    }
-
-    override fun handlePasteAndGo(clipboardText: String) {
-        val searchEngine = store.state.search.selectedOrDefaultSearchEngine
-
-        activity.openToBrowserAndLoad(
-            searchTermOrURL = clipboardText,
-            newTab = true,
-            from = BrowserDirection.FromHome,
-            engine = searchEngine,
-        )
-
-        if (clipboardText.isUrl() || searchEngine == null) {
-            Events.enteredUrl.record(Events.EnteredUrlExtra(autocomplete = false))
-        } else {
-            val searchAccessPoint = MetricsUtils.Source.ACTION
-            MetricsUtils.recordSearchMetrics(
-                searchEngine,
-                searchEngine == store.state.search.selectedOrDefaultSearchEngine,
-                searchAccessPoint,
-            )
-        }
-    }
-
-    override fun handlePaste(clipboardText: String) {
-        val directions = HomeFragmentDirections.actionGlobalSearchDialog(
-            sessionId = null,
-            pastedText = clipboardText,
-        )
-        navController.nav(R.id.homeFragment, directions)
-    }
-
-    override fun handleNavigateSearch() {
-        val directions =
-            HomeFragmentDirections.actionGlobalSearchDialog(
-                sessionId = null,
-            )
-
-        navController.nav(
-            R.id.homeFragment,
-            directions,
-            BrowserAnimator.getToolbarNavOptions(activity),
-        )
-
-        Events.searchBarTapped.record(Events.SearchBarTappedExtra("HOME"))
     }
 
     override fun handleMessageClicked(message: Message) {
