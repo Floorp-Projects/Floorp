@@ -428,13 +428,17 @@ const nsCString& GetDesktopEnvironmentIdentifier() {
   MOZ_ASSERT(NS_IsMainThread());
   static const nsDependentCString sIdentifier = [] {
     nsCString ident = [] {
-      if (const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP")) {
+      auto Env = [](const char* aKey) -> const char* {
+        const char* v = getenv(aKey);
+        return v && *v ? v : nullptr;
+      };
+      if (const char* currentDesktop = Env("XDG_CURRENT_DESKTOP")) {
         return nsCString(currentDesktop);
       }
       if (auto wm = GetWindowManagerName(); !wm.IsEmpty()) {
         return wm;
       }
-      if (const char* sessionDesktop = getenv("XDG_SESSION_DESKTOP")) {
+      if (const char* sessionDesktop = Env("XDG_SESSION_DESKTOP")) {
         // This is not really standardized in freedesktop.org, but it is
         // documented here, and should be set in systemd systems.
         // https://www.freedesktop.org/software/systemd/man/pam_systemd.html#%24XDG_SESSION_DESKTOP
@@ -455,7 +459,7 @@ const nsCString& GetDesktopEnvironmentIdentifier() {
       if (getenv("LXQT_SESSION_CONFIG")) {
         return nsCString("lxqt"_ns);
       }
-      if (const char* desktopSession = getenv("DESKTOP_SESSION")) {
+      if (const char* desktopSession = Env("DESKTOP_SESSION")) {
         // Try the legacy DESKTOP_SESSION as a last resort.
         return nsCString(desktopSession);
       }
