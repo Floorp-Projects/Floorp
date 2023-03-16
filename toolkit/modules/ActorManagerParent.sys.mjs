@@ -108,11 +108,11 @@ let JSWINDOWACTORS = {
 
   AudioPlayback: {
     parent: {
-      moduleURI: "resource://gre/actors/AudioPlaybackParent.jsm",
+      esModuleURI: "resource://gre/actors/AudioPlaybackParent.sys.mjs",
     },
 
     child: {
-      moduleURI: "resource://gre/actors/AudioPlaybackChild.jsm",
+      esModuleURI: "resource://gre/actors/AudioPlaybackChild.sys.mjs",
       observers: ["audio-playback"],
     },
 
@@ -121,7 +121,7 @@ let JSWINDOWACTORS = {
 
   AutoComplete: {
     parent: {
-      moduleURI: "resource://gre/actors/AutoCompleteParent.jsm",
+      esModuleURI: "resource://gre/actors/AutoCompleteParent.sys.mjs",
       // These two messages are also used, but are currently synchronous calls
       // through the per-process message manager.
       // "FormAutoComplete:GetSelectedIndex",
@@ -129,7 +129,7 @@ let JSWINDOWACTORS = {
     },
 
     child: {
-      moduleURI: "resource://gre/actors/AutoCompleteChild.jsm",
+      esModuleURI: "resource://gre/actors/AutoCompleteChild.sys.mjs",
     },
 
     allFrames: true,
@@ -137,11 +137,11 @@ let JSWINDOWACTORS = {
 
   Autoplay: {
     parent: {
-      moduleURI: "resource://gre/actors/AutoplayParent.jsm",
+      esModuleURI: "resource://gre/actors/AutoplayParent.sys.mjs",
     },
 
     child: {
-      moduleURI: "resource://gre/actors/AutoplayChild.jsm",
+      esModuleURI: "resource://gre/actors/AutoplayChild.sys.mjs",
       events: {
         GloballyAutoplayBlocked: {},
       },
@@ -152,11 +152,11 @@ let JSWINDOWACTORS = {
 
   AutoScroll: {
     parent: {
-      moduleURI: "resource://gre/actors/AutoScrollParent.jsm",
+      esModuleURI: "resource://gre/actors/AutoScrollParent.sys.mjs",
     },
 
     child: {
-      moduleURI: "resource://gre/actors/AutoScrollChild.jsm",
+      esModuleURI: "resource://gre/actors/AutoScrollChild.sys.mjs",
       events: {
         mousedown: { capture: true, mozSystemGroup: true },
       },
@@ -167,7 +167,7 @@ let JSWINDOWACTORS = {
 
   BackgroundThumbnails: {
     child: {
-      moduleURI: "resource://gre/actors/BackgroundThumbnailsChild.jsm",
+      esModuleURI: "resource://gre/actors/BackgroundThumbnailsChild.sys.mjs",
       events: {
         DOMDocElementInserted: { capture: true },
       },
@@ -177,11 +177,11 @@ let JSWINDOWACTORS = {
 
   BrowserElement: {
     parent: {
-      moduleURI: "resource://gre/actors/BrowserElementParent.jsm",
+      esModuleURI: "resource://gre/actors/BrowserElementParent.sys.mjs",
     },
 
     child: {
-      moduleURI: "resource://gre/actors/BrowserElementChild.jsm",
+      esModuleURI: "resource://gre/actors/BrowserElementChild.sys.mjs",
       events: {
         DOMWindowClose: {},
       },
@@ -204,10 +204,10 @@ let JSWINDOWACTORS = {
 
   Controllers: {
     parent: {
-      moduleURI: "resource://gre/actors/ControllersParent.jsm",
+      esModuleURI: "resource://gre/actors/ControllersParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource://gre/actors/ControllersChild.jsm",
+      esModuleURI: "resource://gre/actors/ControllersChild.sys.mjs",
     },
 
     allFrames: true,
@@ -235,11 +235,11 @@ let JSWINDOWACTORS = {
 
   DateTimePicker: {
     parent: {
-      moduleURI: "resource://gre/actors/DateTimePickerParent.jsm",
+      esModuleURI: "resource://gre/actors/DateTimePickerParent.sys.mjs",
     },
 
     child: {
-      moduleURI: "resource://gre/actors/DateTimePickerChild.jsm",
+      esModuleURI: "resource://gre/actors/DateTimePickerChild.sys.mjs",
       events: {
         MozOpenDateTimePicker: {},
         MozUpdateDateTimePicker: {},
@@ -252,7 +252,7 @@ let JSWINDOWACTORS = {
 
   ExtFind: {
     child: {
-      moduleURI: "resource://gre/actors/ExtFindChild.jsm",
+      esModuleURI: "resource://gre/actors/ExtFindChild.sys.mjs",
     },
 
     allFrames: true,
@@ -260,10 +260,10 @@ let JSWINDOWACTORS = {
 
   FindBar: {
     parent: {
-      moduleURI: "resource://gre/actors/FindBarParent.jsm",
+      esModuleURI: "resource://gre/actors/FindBarParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource://gre/actors/FindBarChild.jsm",
+      esModuleURI: "resource://gre/actors/FindBarChild.sys.mjs",
       events: {
         keypress: { mozSystemGroup: true },
       },
@@ -277,7 +277,7 @@ let JSWINDOWACTORS = {
   // searches for matches and highlights them.
   Finder: {
     child: {
-      moduleURI: "resource://gre/actors/FinderChild.jsm",
+      esModuleURI: "resource://gre/actors/FinderChild.sys.mjs",
     },
 
     allFrames: true,
@@ -299,11 +299,11 @@ let JSWINDOWACTORS = {
 
   InlineSpellChecker: {
     parent: {
-      moduleURI: "resource://gre/actors/InlineSpellCheckerParent.jsm",
+      esModuleURI: "resource://gre/actors/InlineSpellCheckerParent.sys.mjs",
     },
 
     child: {
-      moduleURI: "resource://gre/actors/InlineSpellCheckerChild.jsm",
+      esModuleURI: "resource://gre/actors/InlineSpellCheckerChild.sys.mjs",
     },
 
     allFrames: true,
@@ -311,7 +311,8 @@ let JSWINDOWACTORS = {
 
   KeyPressEventModelChecker: {
     child: {
-      moduleURI: "resource://gre/actors/KeyPressEventModelCheckerChild.jsm",
+      esModuleURI:
+        "resource://gre/actors/KeyPressEventModelCheckerChild.sys.mjs",
       events: {
         CheckKeyPressEventModel: { capture: true, mozSystemGroup: true },
       },
@@ -403,10 +404,10 @@ let JSWINDOWACTORS = {
 
   PopupBlocking: {
     parent: {
-      moduleURI: "resource://gre/actors/PopupBlockingParent.jsm",
+      esModuleURI: "resource://gre/actors/PopupBlockingParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource://gre/actors/PopupBlockingChild.jsm",
+      esModuleURI: "resource://gre/actors/PopupBlockingChild.sys.mjs",
       events: {
         DOMPopupBlocked: { capture: true },
         // Only listen for the `pageshow` event after the actor has already been
@@ -419,10 +420,10 @@ let JSWINDOWACTORS = {
 
   Printing: {
     parent: {
-      moduleURI: "resource://gre/actors/PrintingParent.jsm",
+      esModuleURI: "resource://gre/actors/PrintingParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource://gre/actors/PrintingChild.jsm",
+      esModuleURI: "resource://gre/actors/PrintingChild.sys.mjs",
       events: {
         PrintingError: { capture: true },
         printPreviewUpdate: { capture: true },
@@ -432,14 +433,14 @@ let JSWINDOWACTORS = {
 
   PrintingSelection: {
     child: {
-      moduleURI: "resource://gre/actors/PrintingSelectionChild.jsm",
+      esModuleURI: "resource://gre/actors/PrintingSelectionChild.sys.mjs",
     },
     allFrames: true,
   },
 
   PurgeSessionHistory: {
     child: {
-      moduleURI: "resource://gre/actors/PurgeSessionHistoryChild.jsm",
+      esModuleURI: "resource://gre/actors/PurgeSessionHistoryChild.sys.mjs",
     },
     allFrames: true,
   },
@@ -489,7 +490,7 @@ let JSWINDOWACTORS = {
 
   Thumbnails: {
     child: {
-      moduleURI: "resource://gre/actors/ThumbnailsChild.jsm",
+      esModuleURI: "resource://gre/actors/ThumbnailsChild.sys.mjs",
     },
   },
 
@@ -513,7 +514,7 @@ let JSWINDOWACTORS = {
 
   UAWidgets: {
     child: {
-      moduleURI: "resource://gre/actors/UAWidgetsChild.jsm",
+      esModuleURI: "resource://gre/actors/UAWidgetsChild.sys.mjs",
       events: {
         UAWidgetSetupOrChange: {},
         UAWidgetTeardown: {},
@@ -525,10 +526,10 @@ let JSWINDOWACTORS = {
 
   UnselectedTabHover: {
     parent: {
-      moduleURI: "resource://gre/actors/UnselectedTabHoverParent.jsm",
+      esModuleURI: "resource://gre/actors/UnselectedTabHoverParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource://gre/actors/UnselectedTabHoverChild.jsm",
+      esModuleURI: "resource://gre/actors/UnselectedTabHoverChild.sys.mjs",
       events: {
         "UnselectedTabHover:Enable": {},
         "UnselectedTabHover:Disable": {},
@@ -546,11 +547,11 @@ let JSWINDOWACTORS = {
 if (!Services.prefs.getBoolPref("browser.pagedata.enabled", false)) {
   JSWINDOWACTORS.ContentMeta = {
     parent: {
-      moduleURI: "resource://gre/actors/ContentMetaParent.jsm",
+      esModuleURI: "resource://gre/actors/ContentMetaParent.sys.mjs",
     },
 
     child: {
-      moduleURI: "resource://gre/actors/ContentMetaChild.jsm",
+      esModuleURI: "resource://gre/actors/ContentMetaChild.sys.mjs",
       events: {
         DOMContentLoaded: {},
         DOMMetaAdded: { createActor: false },
@@ -565,11 +566,11 @@ if (AppConstants.platform != "android") {
   // For GeckoView support see bug 1776829.
   JSWINDOWACTORS.ClipboardReadPaste = {
     parent: {
-      moduleURI: "resource://gre/actors/ClipboardReadPasteParent.jsm",
+      esModuleURI: "resource://gre/actors/ClipboardReadPasteParent.sys.mjs",
     },
 
     child: {
-      moduleURI: "resource://gre/actors/ClipboardReadPasteChild.jsm",
+      esModuleURI: "resource://gre/actors/ClipboardReadPasteChild.sys.mjs",
       events: {
         MozClipboardReadPaste: {},
       },
@@ -583,11 +584,11 @@ if (AppConstants.platform != "android") {
    */
   JSWINDOWACTORS.Select = {
     parent: {
-      moduleURI: "resource://gre/actors/SelectParent.jsm",
+      esModuleURI: "resource://gre/actors/SelectParent.sys.mjs",
     },
 
     child: {
-      moduleURI: "resource://gre/actors/SelectChild.jsm",
+      esModuleURI: "resource://gre/actors/SelectChild.sys.mjs",
       events: {
         mozshowdropdown: {},
         "mozshowdropdown-sourcetouch": {},

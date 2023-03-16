@@ -9,9 +9,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AppInfo: "chrome://remote/content/shared/AppInfo.sys.mjs",
 });
 
-const { RemotePageChild } = ChromeUtils.import(
-  "resource://gre/actors/RemotePageChild.jsm"
-);
+import { RemotePageChild } from "resource://gre/actors/RemotePageChild.sys.mjs";
 
 export class NetErrorChild extends RemotePageChild {
   actorCreated() {

@@ -5,8 +5,8 @@
 
 var EXPORTED_SYMBOLS = ["AboutCertViewerChild"];
 
-const { RemotePageChild } = ChromeUtils.import(
-  "resource://gre/actors/RemotePageChild.jsm"
+const { RemotePageChild } = ChromeUtils.importESModule(
+  "resource://gre/actors/RemotePageChild.sys.mjs"
 );
 
 class AboutCertViewerChild extends RemotePageChild {}
