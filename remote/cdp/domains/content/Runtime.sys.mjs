@@ -115,6 +115,10 @@ export class Runtime extends ContentProcessDomain {
           window: this.content,
           isDefault: true,
         });
+
+        for (const message of lazy.ConsoleAPIStorage.getEvents()) {
+          this.onConsoleLogEvent(message);
+        }
       });
     }
   }

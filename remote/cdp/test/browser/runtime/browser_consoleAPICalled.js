@@ -5,6 +5,8 @@
 
 const PAGE_CONSOLE_EVENTS =
   "https://example.com/browser/remote/cdp/test/browser/runtime/doc_console_events.html";
+const PAGE_CONSOLE_EVENTS_ONLOAD =
+  "https://example.com/browser/remote/cdp/test/browser/runtime/doc_console_events_onload.html";
 
 add_task(async function noEventsWhenRuntimeDomainDisabled({ client }) {
   await runConsoleTest(client, 0, async () => {
@@ -50,6 +52,34 @@ add_task(async function consoleAPI({ client }) {
     context.id,
     "Got event from current execution context"
   );
+});
+
+add_task(async function consoleAPIBeforeEnable({ client }) {
+  const { Runtime } = client;
+  const timeBefore = Date.now();
+
+  const check = async () => {
+    const events = await runConsoleTest(
+      client,
+      1,
+      async () => {
+        await Runtime.enable();
+      },
+      // Set custom before timestamp as the event is before our callback
+      { timeBefore }
+    );
+
+    is(events[0].type, "log", "Got expected type");
+    is(events[0].args[0].value, "foo", "Got expected argument value");
+  };
+
+  // Load the page which runs a log on load
+  await loadURL(PAGE_CONSOLE_EVENTS_ONLOAD);
+  await check();
+
+  // Disable and re-enable Runtime domain, should send event again
+  await Runtime.disable();
+  await check();
 });
 
 add_task(async function consoleAPITypes({ client }) {
@@ -303,6 +333,8 @@ add_task(async function consoleAPIByScriptSubstack({ client }) {
 });
 
 async function runConsoleTest(client, eventCount, callback, options = {}) {
+  let { timeBefore } = options;
+
   const { Runtime } = client;
 
   const EVENT_CONSOLE_API_CALLED = "Runtime.consoleAPICalled";
@@ -315,7 +347,7 @@ async function runConsoleTest(client, eventCount, callback, options = {}) {
       `Received ${EVENT_CONSOLE_API_CALLED} for ${payload.type}`,
   });
 
-  const timeBefore = Date.now();
+  timeBefore ??= Date.now();
   await callback();
 
   const consoleAPIentries = await history.record();
