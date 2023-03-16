@@ -41,14 +41,14 @@ use webdriver::capabilities::BrowserCapabilities;
 use webdriver::command::WebDriverCommand::{
     AcceptAlert, AddCookie, CloseWindow, DeleteCookie, DeleteCookies, DeleteSession, DismissAlert,
     ElementClear, ElementClick, ElementSendKeys, ExecuteAsyncScript, ExecuteScript, Extension,
-    FindElement, FindElementElement, FindElementElements, FindElements, FullscreenWindow, Get,
-    GetActiveElement, GetAlertText, GetCSSValue, GetCookies, GetCurrentUrl, GetElementAttribute,
-    GetElementProperty, GetElementRect, GetElementTagName, GetElementText, GetNamedCookie,
-    GetPageSource, GetShadowRoot, GetTimeouts, GetTitle, GetWindowHandle, GetWindowHandles,
-    GetWindowRect, GoBack, GoForward, IsDisplayed, IsEnabled, IsSelected, MaximizeWindow,
-    MinimizeWindow, NewSession, NewWindow, PerformActions, Print, Refresh, ReleaseActions,
-    SendAlertText, SetTimeouts, SetWindowRect, Status, SwitchToFrame, SwitchToParentFrame,
-    SwitchToWindow, TakeElementScreenshot, TakeScreenshot,
+    FindElement, FindElementElement, FindElementElements, FindElements, FindShadowRootElement,
+    FindShadowRootElements, FullscreenWindow, Get, GetActiveElement, GetAlertText, GetCSSValue,
+    GetCookies, GetCurrentUrl, GetElementAttribute, GetElementProperty, GetElementRect,
+    GetElementTagName, GetElementText, GetNamedCookie, GetPageSource, GetShadowRoot, GetTimeouts,
+    GetTitle, GetWindowHandle, GetWindowHandles, GetWindowRect, GoBack, GoForward, IsDisplayed,
+    IsEnabled, IsSelected, MaximizeWindow, MinimizeWindow, NewSession, NewWindow, PerformActions,
+    Print, Refresh, ReleaseActions, SendAlertText, SetTimeouts, SetWindowRect, Status,
+    SwitchToFrame, SwitchToParentFrame, SwitchToWindow, TakeElementScreenshot, TakeScreenshot,
 };
 use webdriver::command::{
     ActionsParameters, AddCookieParameters, GetNamedCookieParameters, GetParameters,
@@ -655,7 +655,7 @@ impl MarionetteSession {
                 );
                 WebDriverResponse::Cookie(CookieResponse(cookie))
             }
-            FindElement(_) | FindElementElement(_, _) => {
+            FindElement(_) | FindElementElement(_, _) | FindShadowRootElement(_, _) => {
                 let element = self.to_web_element(try_opt!(
                     resp.result.get("value"),
                     ErrorStatus::UnknownError,
@@ -663,7 +663,7 @@ impl MarionetteSession {
                 ))?;
                 WebDriverResponse::Generic(ValueResponse(serde_json::to_value(element)?))
             }
-            FindElements(_) | FindElementElements(_, _) => {
+            FindElements(_) | FindElementElements(_, _) | FindShadowRootElements(_, _) => {
                 let element_vec = try_opt!(
                     resp.result.as_array(),
                     ErrorStatus::UnknownError,
@@ -818,6 +818,26 @@ fn try_convert_to_marionette_message(
             Some(Command::WebDriver(
                 MarionetteWebDriverCommand::FindElementElements {
                     element: e.clone().to_string(),
+                    using: locator.using.clone(),
+                    value: locator.value,
+                },
+            ))
+        }
+        FindShadowRootElement(ref s, ref x) => {
+            let locator = x.to_marionette()?;
+            Some(Command::WebDriver(
+                MarionetteWebDriverCommand::FindShadowRootElement {
+                    shadow_root: s.clone().to_string(),
+                    using: locator.using.clone(),
+                    value: locator.value,
+                },
+            ))
+        }
+        FindShadowRootElements(ref s, ref x) => {
+            let locator = x.to_marionette()?;
+            Some(Command::WebDriver(
+                MarionetteWebDriverCommand::FindShadowRootElements {
+                    shadow_root: s.clone().to_string(),
                     using: locator.using.clone(),
                     value: locator.value,
                 },

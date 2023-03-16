@@ -196,6 +196,20 @@ pub enum Command {
         using: Selector,
         value: String,
     },
+    #[serde(rename = "WebDriver:FindElementFromShadowRoot")]
+    FindShadowRootElement {
+        #[serde(rename = "shadowRoot")]
+        shadow_root: String,
+        using: Selector,
+        value: String,
+    },
+    #[serde(rename = "WebDriver:FindElementsFromShadowRoot")]
+    FindShadowRootElements {
+        #[serde(rename = "shadowRoot")]
+        shadow_root: String,
+        using: Selector,
+        value: String,
+    },
     #[serde(rename = "WebDriver:FullscreenWindow")]
     FullscreenWindow,
     #[serde(rename = "WebDriver:Navigate")]
@@ -449,6 +463,30 @@ mod tests {
                 property: "bar".into(),
             },
             json!({"WebDriver:GetElementCSSValue": {"id": "foo", "propertyName": "bar"}}),
+        );
+    }
+
+    #[test]
+    fn test_json_find_shadow_root_element() {
+        assert_ser_de(
+            &Command::FindShadowRootElement {
+                shadow_root: "foo".into(),
+                using: Selector::Css,
+                value: "bar".into(),
+            },
+            json!({"WebDriver:FindElementFromShadowRoot": {"shadowRoot": "foo", "using": "css selector", "value": "bar"}}),
+        );
+    }
+
+    #[test]
+    fn test_json_find_shadow_root_elements() {
+        assert_ser_de(
+            &Command::FindShadowRootElements {
+                shadow_root: "foo".into(),
+                using: Selector::Css,
+                value: "bar".into(),
+            },
+            json!({"WebDriver:FindElementsFromShadowRoot": {"shadowRoot": "foo", "using": "css selector", "value": "bar"}}),
         );
     }
 }

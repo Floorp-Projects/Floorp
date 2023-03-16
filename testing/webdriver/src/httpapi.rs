@@ -119,18 +119,28 @@ pub fn standard_routes<U: WebDriverExtensionRoute>() -> Vec<(Method, &'static st
         ),
         (
             Method::POST,
-            "/session/{sessionId}/elements",
-            Route::FindElements,
-        ),
-        (
-            Method::POST,
             "/session/{sessionId}/element/{elementId}/element",
             Route::FindElementElement,
         ),
         (
             Method::POST,
+            "/session/{sessionId}/elements",
+            Route::FindElements,
+        ),
+        (
+            Method::POST,
             "/session/{sessionId}/element/{elementId}/elements",
             Route::FindElementElements,
+        ),
+        (
+            Method::POST,
+            "/session/{sessionId}/shadow/{shadowId}/element",
+            Route::FindShadowRootElement,
+        ),
+        (
+            Method::POST,
+            "/session/{sessionId}/shadow/{shadowId}/elements",
+            Route::FindShadowRootElements,
         ),
         (
             Method::GET,
@@ -323,6 +333,8 @@ pub enum Route<U: WebDriverExtensionRoute> {
     FindElements,
     FindElementElement,
     FindElementElements,
+    FindShadowRootElement,
+    FindShadowRootElements,
     GetActiveElement,
     GetShadowRoot,
     IsDisplayed,
