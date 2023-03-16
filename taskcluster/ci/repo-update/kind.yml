@@ -12,10 +12,7 @@ transforms:
 job-defaults:
     worker:
         env:
-            DO_HSTS:
-                by-project:
-                    mozilla-(central|beta|esr.*): "1"
-                    default: ""
+            DO_HSTS: ""
             DO_HPKP:
                 by-project:
                     mozilla-(central|beta|esr.*): "1"
