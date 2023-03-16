@@ -13,22 +13,17 @@ use serde::{Deserialize, Serialize};
 /// The supported metrics' lifetimes.
 ///
 /// A metric's lifetime determines when its stored data gets reset.
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Deserialize, Serialize, Default)]
 #[repr(i32)] // Use i32 to be compatible with our JNA definition
 #[serde(rename_all = "lowercase")]
 pub enum Lifetime {
     /// The metric is reset with each sent ping
+    #[default]
     Ping,
     /// The metric is reset on application restart
     Application,
     /// The metric is reset with each user profile
     User,
-}
-
-impl Default for Lifetime {
-    fn default() -> Self {
-        Lifetime::Ping
-    }
 }
 
 impl Lifetime {

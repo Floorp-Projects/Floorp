@@ -832,9 +832,9 @@ dependencies = [
 
 [[package]]
 name = "glean"
-version = "52.3.0"
+version = "52.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aa4d34f9ae46bd3e68c5bb672762e7391843daedd609506a70b6b35ac6fea051"
+checksum = "e1bd184ec51a21129cb58a1b7380250d5f71de01b3461ab3b81594e0a2322123"
 dependencies = [
  "chrono",
  "crossbeam-channel",
@@ -852,9 +852,9 @@ dependencies = [
 
 [[package]]
 name = "glean-core"
-version = "52.3.0"
+version = "52.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "699ab3d674e2618298111987c0053735ef7a531d09264a3aa7d496f5ac2247d6"
+checksum = "e0e543be303977a73d720ce612a49937d5ba3fac9907d2e13556a32c67293d5e"
 dependencies = [
  "android_logger",
  "bincode",
@@ -864,7 +864,6 @@ dependencies = [
  "log",
  "once_cell",
  "oslog",
- "remove_dir_all",
  "rkv",
  "serde",
  "serde_json",
@@ -1744,15 +1743,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "62f25bc4c7e55e0b0b7a1d43fb893f4fa1361d0abe38b9ce4f323c2adfe6ef42"
 dependencies = [
  "bitflags",
-]
-
-[[package]]
-name = "remove_dir_all"
-version = "0.5.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3acd125665422973a33ac9d3dd2df85edad0f4ae9b00dafb1a05e43a9f5ef8e7"
-dependencies = [
- "winapi",
 ]
 
 [[package]]
