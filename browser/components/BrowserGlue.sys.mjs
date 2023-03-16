@@ -28,6 +28,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource:///modules/DownloadsViewableInternally.sys.mjs",
 
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
+  FeatureGate: "resource://featuregates/FeatureGate.sys.mjs",
   FxAccounts: "resource://gre/modules/FxAccounts.sys.mjs",
   Integration: "resource://gre/modules/Integration.sys.mjs",
   Interactions: "resource:///modules/Interactions.sys.mjs",
@@ -84,7 +85,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   Discovery: "resource:///modules/Discovery.jsm",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
   ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
-  FeatureGate: "resource://featuregates/FeatureGate.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",

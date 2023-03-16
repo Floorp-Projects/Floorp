@@ -2,19 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FeatureGate",
-  "resource://featuregates/FeatureGate.jsm"
-);
-
-var EXPORTED_SYMBOLS = ["FeatureGateImplementation"];
+ChromeUtils.defineESModuleGetters(lazy, {
+  FeatureGate: "resource://featuregates/FeatureGate.sys.mjs",
+});
 
 /** An individual feature gate that can be re-used for more advanced usage. */
-class FeatureGateImplementation {
+export class FeatureGateImplementation {
   // Note that the following comment is *not* a jsdoc. Making it a jsdoc would
   // makes sphinx-js expose it to users. This feature shouldn't be used by
   // users, and so should not be in the docs. Sphinx-js does not respect the

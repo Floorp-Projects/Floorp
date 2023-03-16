@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { FeatureGateImplementation } = ChromeUtils.import(
-  "resource://featuregates/FeatureGateImplementation.jsm"
+const { FeatureGateImplementation } = ChromeUtils.importESModule(
+  "resource://featuregates/FeatureGateImplementation.sys.mjs"
 );
 
 const kDefinitionDefaults = {
