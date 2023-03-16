@@ -256,6 +256,10 @@ mozAccessible* GetEditableNativeFromGeckoAccessible(Accessible* aAcc) {
   mozilla::a11y::GeckoTextMarkerRange range =
       GeckoTextMarkerRange::MarkerRangeFromAXTextMarkerRange(
           mGeckoDocAccessible, textMarkerRange);
+  if (!range.IsValid()) {
+    return @0;
+  }
+
   return @(range.Length());
 }
 
