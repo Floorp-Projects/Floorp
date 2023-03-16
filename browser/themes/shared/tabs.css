@@ -107,6 +107,10 @@
   min-height: var(--tab-min-height);
 }
 
+.tabbrowser-tab[pinned] {
+  flex-shrink: 0;
+}
+
 /* tabbrowser-tab keyboard focus */
 .keyboard-focused-tab > .tab-stack > .tab-background,
 .tabbrowser-tab:focus:not([aria-activedescendant]) > .tab-stack > .tab-background {
