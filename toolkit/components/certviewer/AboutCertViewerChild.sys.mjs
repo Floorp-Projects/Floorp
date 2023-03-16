@@ -3,10 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["AboutCertViewerChild"];
+import { RemotePageChild } from "resource://gre/actors/RemotePageChild.sys.mjs";
 
-const { RemotePageChild } = ChromeUtils.importESModule(
-  "resource://gre/actors/RemotePageChild.sys.mjs"
-);
-
-class AboutCertViewerChild extends RemotePageChild {}
+export class AboutCertViewerChild extends RemotePageChild {}

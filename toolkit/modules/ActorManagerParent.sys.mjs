@@ -62,10 +62,10 @@ let JSPROCESSACTORS = {
 let JSWINDOWACTORS = {
   AboutCertViewer: {
     parent: {
-      moduleURI: "resource://gre/modules/AboutCertViewerParent.jsm",
+      esModuleURI: "resource://gre/modules/AboutCertViewerParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource://gre/modules/AboutCertViewerChild.jsm",
+      esModuleURI: "resource://gre/modules/AboutCertViewerChild.sys.mjs",
 
       events: {
         DOMDocElementInserted: { capture: true },
