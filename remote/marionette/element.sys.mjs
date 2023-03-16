@@ -149,7 +149,13 @@ function find_(
   searchFn,
   { startNode = null, all = false } = {}
 ) {
-  let rootNode = container.frame.document;
+  let rootNode;
+
+  if (element.isShadowRoot(startNode)) {
+    rootNode = startNode.ownerDocument;
+  } else {
+    rootNode = container.frame.document;
+  }
 
   if (!startNode) {
     startNode = rootNode;
@@ -277,7 +283,9 @@ element.findByPartialLinkText = function(startNode, linkText) {
  *     Iterator of link elements matching <var>predicate</var>.
  */
 function* filterLinks(startNode, predicate) {
-  for (let link of startNode.getElementsByTagName("a")) {
+  const links = getLinks(startNode);
+
+  for (const link of links) {
     if (predicate(link)) {
       yield link;
     }
@@ -331,21 +339,25 @@ function findElement(strategy, selector, document, startNode = undefined) {
     case element.Strategy.XPath:
       return element.findByXPath(document, startNode, selector);
 
-    case element.Strategy.LinkText:
-      for (let link of startNode.getElementsByTagName("a")) {
+    case element.Strategy.LinkText: {
+      const links = getLinks(startNode);
+      for (const link of links) {
         if (lazy.atom.getElementText(link).trim() === selector) {
           return link;
         }
       }
       return undefined;
+    }
 
-    case element.Strategy.PartialLinkText:
-      for (let link of startNode.getElementsByTagName("a")) {
+    case element.Strategy.PartialLinkText: {
+      const links = getLinks(startNode);
+      for (const link of links) {
         if (lazy.atom.getElementText(link).includes(selector)) {
           return link;
         }
       }
       return undefined;
+    }
 
     case element.Strategy.Selector:
       try {
@@ -421,6 +433,14 @@ function findElements(strategy, selector, document, startNode = undefined) {
         `No such strategy: ${strategy}`
       );
   }
+}
+
+function getLinks(startNode) {
+  // DocumentFragment doesn't have `getElementsByTagName` so using `querySelectorAll`.
+  if (element.isShadowRoot(startNode)) {
+    return startNode.querySelectorAll("a");
+  }
+  return startNode.getElementsByTagName("a");
 }
 
 /**
@@ -1534,6 +1554,28 @@ export class ShadowRoot extends WebReference {
     }
 
     let uuid = json[Identifier];
+    return new ShadowRoot(uuid);
+  }
+
+  /**
+   * Constructs a {@link ShadowRoot} from a string <var>uuid</var>.
+   *
+   * This whole function is a workaround for the fact that clients
+   * to Marionette occasionally pass <code>{id: <uuid>}</code> JSON
+   * Objects instead of shadow root representations.
+   *
+   * @param {string} uuid
+   *     UUID to be associated with the web reference.
+   *
+   * @return {ShadowRoot}
+   *     The shadow root reference.
+   *
+   * @throws {InvalidArgumentError}
+   *     If <var>uuid</var> is not a string.
+   */
+  static fromUUID(uuid) {
+    lazy.assert.string(uuid);
+
     return new ShadowRoot(uuid);
   }
 }

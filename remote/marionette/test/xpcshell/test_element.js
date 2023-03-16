@@ -4,6 +4,7 @@
 
 const {
   element,
+  ShadowRoot,
   WebElement,
   WebFrame,
   WebReference,
@@ -735,6 +736,35 @@ add_task(function test_WebElement_fromUUID() {
   equal(domWebEl.uuid, "bar");
 
   Assert.throws(() => WebElement.fromUUID(), /InvalidArgumentError/);
+});
+
+add_task(function test_ShadowRoot_toJSON() {
+  const { Identifier } = ShadowRoot;
+
+  const shadowRoot = new ShadowRoot("foo");
+  const json = shadowRoot.toJSON();
+
+  ok(Identifier in json);
+  equal(json[Identifier], "foo");
+});
+
+add_task(function test_ShadowRoot_fromJSON() {
+  const { Identifier } = ShadowRoot;
+
+  const shadowRoot = ShadowRoot.fromJSON({ [Identifier]: "foo" });
+  ok(shadowRoot instanceof ShadowRoot);
+  equal(shadowRoot.uuid, "foo");
+
+  Assert.throws(() => ShadowRoot.fromJSON({}), /InvalidArgumentError/);
+});
+
+add_task(function test_ShadowRoot_fromUUID() {
+  const shadowRoot = ShadowRoot.fromUUID("baz");
+
+  ok(shadowRoot instanceof ShadowRoot);
+  equal(shadowRoot.uuid, "baz");
+
+  Assert.throws(() => ShadowRoot.fromUUID(), /InvalidArgumentError/);
 });
 
 add_task(function test_WebWindow_toJSON() {
