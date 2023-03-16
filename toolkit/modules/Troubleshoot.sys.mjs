@@ -634,7 +634,6 @@ var dataProviders = {
         cleartypeParameters: "clearTypeParameters",
         TargetFrameRate: "targetFrameRate",
         windowProtocol: null,
-        desktopEnvironment: null,
       };
 
       for (let prop in gfxInfoProps) {
