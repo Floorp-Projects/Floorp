@@ -8193,8 +8193,7 @@ nsHttpChannel::OnTransportStatus(nsITransport* trans, nsresult status,
         socketTransport->GetSelfAddr(&mSelfAddr);
         socketTransport->GetPeerAddr(&mPeerAddr);
         socketTransport->ResolvedByTRR(&isTrr);
-        MOZ_ALWAYS_SUCCEEDS(
-            socketTransport->GetEffectiveTRRMode(&mEffectiveTRRMode));
+        socketTransport->GetEffectiveTRRMode(&mEffectiveTRRMode);
         socketTransport->GetEchConfigUsed(&echConfigUsed);
       }
     }
