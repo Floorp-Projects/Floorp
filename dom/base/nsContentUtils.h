@@ -50,6 +50,7 @@
 #include "nsLiteralString.h"
 #include "nsMargin.h"
 #include "nsPIDOMWindow.h"
+#include "nsRFPService.h"
 #include "nsStringFwd.h"
 #include "nsTArray.h"
 #include "nsTLiteralString.h"

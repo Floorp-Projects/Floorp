@@ -10,10 +10,7 @@
 #include "ErrorList.h"
 #include "PLDHashTable.h"
 #include "mozilla/BasicEvents.h"
-#include "nsContentUtils.h"
 #include "nsHashtablesFwd.h"
-#include "nsID.h"
-#include "nsIGlobalObject.h"
 #include "nsIObserver.h"
 #include "nsISupports.h"
 #include "nsStringFwd.h"
@@ -125,6 +122,14 @@ class KeyboardHashKey : public PLDHashEntryHdr {
 };
 
 // ============================================================================
+
+// Reduce Timer Precision (RTP) Caller Type
+enum class RTPCallerType : uint8_t {
+  Normal = 0,
+  SystemPrincipal = (1 << 0),
+  ResistFingerprinting = (1 << 1),
+  CrossOriginIsolated = (1 << 2)
+};
 
 enum TimerPrecisionType {
   DangerouslyNone = 1,
