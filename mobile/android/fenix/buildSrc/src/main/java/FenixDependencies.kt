@@ -18,7 +18,7 @@ object FenixVersions {
     const val leakcanary = "2.10"
     const val osslicenses_plugin = "0.10.4"
     const val detekt = "1.19.0"
-    const val jna = "5.12.1"
+    const val jna = "5.13.0"
 
     const val androidx_compose = "1.3.1"
     const val androidx_compose_compiler = "1.4.3"

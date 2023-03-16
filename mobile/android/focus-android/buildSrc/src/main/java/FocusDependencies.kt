@@ -64,7 +64,7 @@ object FocusVersions {
     }
 
     object ThirdParty {
-        const val jna = "5.12.1"
+        const val jna = "5.13.0"
         const val leakcanary = "2.10"
         const val sentry = "6.15.0"
     }
