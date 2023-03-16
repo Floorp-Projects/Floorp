@@ -853,6 +853,11 @@ function do_throw(error, stack) {
     source_file: filename,
     stack: _format_stack(stack),
   });
+  ChromeUtils.addProfilerMarker(
+    "ERROR",
+    { category: "Test", captureStack: true },
+    _exception_message(error)
+  );
   _abort_failed_test();
 }
 
@@ -946,12 +951,19 @@ function do_report_result(passed, text, stack, todo) {
         message,
         _format_stack(stack)
       );
+      ChromeUtils.addProfilerMarker(
+        "UNEXPECTED-PASS",
+        { category: "Test" },
+        message
+      );
       _abort_failed_test();
     } else {
       _testLogger.testStatus(_TEST_NAME, name, "PASS", "PASS", message);
+      ChromeUtils.addProfilerMarker("PASS", { category: "Test" }, message);
     }
   } else if (todo) {
     _testLogger.testStatus(_TEST_NAME, name, "FAIL", "FAIL", message);
+    ChromeUtils.addProfilerMarker("TODO", { category: "Test" }, message);
   } else {
     _testLogger.testStatus(
       _TEST_NAME,
@@ -961,6 +973,7 @@ function do_report_result(passed, text, stack, todo) {
       message,
       _format_stack(stack)
     );
+    ChromeUtils.addProfilerMarker("FAIL", { category: "Test" }, message);
     _abort_failed_test();
   }
 }
