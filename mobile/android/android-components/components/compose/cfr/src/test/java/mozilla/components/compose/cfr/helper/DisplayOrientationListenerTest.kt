@@ -6,18 +6,26 @@ package mozilla.components.compose.cfr.helper
 
 import android.content.Context
 import android.content.pm.ActivityInfo
+import android.content.res.Configuration
+import android.content.res.Resources
 import android.hardware.display.DisplayManager
+import android.os.Build
 import android.view.Display
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
+import org.robolectric.annotation.Config
 
+@RunWith(AndroidJUnit4::class)
+@Config(sdk = [Build.VERSION_CODES.N])
 class DisplayOrientationListenerTest {
     private val context: Context = mock()
     private val displayManager: DisplayManager = mock()
@@ -28,7 +36,7 @@ class DisplayOrientationListenerTest {
 
         val display: Display = mock()
         doReturn(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT).`when`(display).rotation
-        doReturn(arrayOf(display)).`when`(displayManager).displays
+        doReturn(display).`when`(displayManager).getDisplay(0)
     }
 
     @Test
@@ -94,7 +102,7 @@ class DisplayOrientationListenerTest {
     }
 
     @Test
-    fun `WHEN a display is changed and has a new rotation THEN inform the client and remember the new rotation`() {
+    fun `GIVEN an old Android version WHEN a display is changed and has a new rotation THEN inform the client and remember the new rotation`() {
         var hasRotationChanged = false
         val listener = DisplayOrientationListener(context) { hasRotationChanged = true }
         val display: Display = mock()
@@ -105,5 +113,24 @@ class DisplayOrientationListenerTest {
 
         assertTrue(hasRotationChanged)
         assertEquals(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE, listener.currentOrientation)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.S])
+    fun `GIVEN a new Android version WHEN a display is changed and has a new rotation THEN inform the client and remember the new rotation`() {
+        var hasRotationChanged = false
+        val config = Configuration().apply {
+            orientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        }
+        val resources: Resources = mock()
+        doReturn(config).`when`(resources).configuration
+        doReturn(resources).`when`(context).resources
+        val listener = DisplayOrientationListener(context) { hasRotationChanged = true }
+
+        config.orientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+        listener.onDisplayChanged(1)
+
+        assertTrue(hasRotationChanged)
+        assertEquals(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE, listener.currentOrientation)
     }
 }
