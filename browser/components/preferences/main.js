@@ -1062,7 +1062,7 @@ var gMainPane = {
     for (let i = 0; i < messages.length; i++) {
       let messageContainer = document.createXULElement("hbox");
       messageContainer.classList.add("message-bar-content");
-      messageContainer.setAttribute("flex", "1");
+      messageContainer.style.flex = "1 50%";
       messageContainer.setAttribute("align", "center");
 
       let description = document.createXULElement("description");

@@ -206,7 +206,6 @@ panelview:not([visible]) {
   flex: 100 100;
   max-width: 225px;
   min-width: var(--tab-min-width);
-  width: 0;
   transition: min-width 100ms ease-out,
               max-width 100ms ease-out;
 }
@@ -589,9 +588,8 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 
 #urlbar,
 #searchbar {
-  /* Setting a width and min-width to let the location & search bars maintain
-     a constant width in case they haven't been resized manually. (bug 965772) */
-  width: 1px;
+  /* Setting a min-width to let the location & search bars maintain a constant
+   * width in case they haven't been resized manually. (bug 965772) */
   min-width: 1px;
 }
 
@@ -1209,7 +1207,6 @@ toolbarpaletteitem[place="palette"] > #downloads-button > .toolbarbutton-badge-s
 
 #customization-panelWrapper {
   flex: 1;
-  height: 0; /* Don't let my contents affect ancestors' content-based sizing */
   align-items: end; /* align to the end on the cross-axis (affects arrow) */
 }
 

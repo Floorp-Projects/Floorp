@@ -75,7 +75,7 @@
       <hbox class="popup-notification-header-container"></hbox>
       <hbox align="start" class="popup-notification-body-container">
         <image class="popup-notification-icon"/>
-        <vbox flex="1" pack="start" class="popup-notification-body">
+        <vbox pack="start" class="popup-notification-body">
           <hbox align="start">
             <vbox flex="1">
               <label class="popup-notification-origin header" crop="center"></label>

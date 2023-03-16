@@ -786,4 +786,4 @@ button, image {
 [pack="end"] { justify-content: flex-end !important; }
 
 [flex="0"] { flex: none !important; }
-[flex="1"] { flex-grow: 1 !important; flex-shrink: 1 !important }
+[flex="1"] { flex: 1 !important; }
