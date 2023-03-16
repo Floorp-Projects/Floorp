@@ -481,6 +481,7 @@ export class NetworkObserver {
             statusText,
             bodySize: 0,
             headersSize: 0,
+            transferredSize: 0,
             waitingTime: 0,
           },
           "",

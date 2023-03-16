@@ -19,6 +19,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
  */
 export class NetworkEventRecord {
   #channel;
+  #fromCache;
   #networkListener;
   #redirectCount;
   #requestData;
@@ -38,6 +39,8 @@ export class NetworkEventRecord {
    */
   constructor(networkEvent, channel, networkListener) {
     this.#channel = channel;
+    this.#fromCache = networkEvent.fromCache;
+
     this.#wrappedChannel = ChannelWrapper.get(channel);
 
     this.#networkListener = networkListener;
@@ -115,7 +118,7 @@ export class NetworkEventRecord {
       ...this.#responseData,
       bodySize: response.bodySize,
       bytesReceived: response.transferredSize,
-      fromCache: response.fromCache,
+      fromCache: this.#fromCache || response.fromCache,
       // Note: at this point we only have access to the headers size. Parsed
       // headers will be added in addResponseHeaders.
       headersSize: response.headersSize,
