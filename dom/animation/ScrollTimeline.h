@@ -19,11 +19,9 @@
 class nsIScrollableFrame;
 
 namespace mozilla {
-
+class ElementAnimationData;
 struct NonOwningAnimationTarget;
-
 namespace dom {
-
 class Element;
 
 /**
@@ -70,9 +68,9 @@ class ScrollTimeline final : public AnimationTimeline {
 
  public:
   struct Scroller {
-    // FIXME: Once we support <custom-ident> for <scroller>, we can use
-    // StyleScroller here.
-    // https://drafts.csswg.org/scroll-animations-1/#typedef-scroller
+    // FIXME: Bug 1814444. Add self keyword.
+    // FIXME: Bug 1765211. Perhaps we only need root and a specific element.
+    // This depends on how we fix this bug.
     enum class Type : uint8_t {
       Root,
       Nearest,
@@ -80,6 +78,7 @@ class ScrollTimeline final : public AnimationTimeline {
     };
     Type mType = Type::Root;
     RefPtr<Element> mElement;
+    PseudoStyleType mPseudoType;
 
     // We use the owner doc of the animation target. This may be different from
     // |mDocument| after we implement ScrollTimeline interface for script.
@@ -89,18 +88,22 @@ class ScrollTimeline final : public AnimationTimeline {
       // we always register the ScrollTimeline to the document element (i.e.
       // root element) because the content of the root scroll frame is the root
       // element.
-      return {Type::Root, aOwnerDoc->GetDocumentElement()};
+      return {Type::Root, aOwnerDoc->GetDocumentElement(),
+              PseudoStyleType::NotPseudo};
     }
 
-    static Scroller Nearest(Element* aElement) {
-      return {Type::Nearest, aElement};
+    static Scroller Nearest(Element* aElement, PseudoStyleType aPseudoType) {
+      return {Type::Nearest, aElement, aPseudoType};
     }
 
-    static Scroller Named(Element* aElement) { return {Type::Name, aElement}; }
+    static Scroller Named(Element* aElement, PseudoStyleType aPseudoType) {
+      return {Type::Name, aElement, aPseudoType};
+    }
 
     explicit operator bool() const { return mElement; }
     bool operator==(const Scroller& aOther) const {
-      return mType == aOther.mType && mElement == aOther.mElement;
+      return mType == aOther.mType && mElement == aOther.mElement &&
+             mPseudoType == aOther.mPseudoType;
     }
   };
 
@@ -110,7 +113,7 @@ class ScrollTimeline final : public AnimationTimeline {
 
   static already_AddRefed<ScrollTimeline> MakeNamed(
       Document* aDocument, Element* aReferenceElement,
-      const StyleScrollTimeline& aStyleTimeline);
+      PseudoStyleType aPseudoType, const StyleScrollTimeline& aStyleTimeline);
 
   bool operator==(const ScrollTimeline& aOther) const {
     return mDocument == aOther.mDocument && mSource == aOther.mSource &&
@@ -183,6 +186,7 @@ class ScrollTimeline final : public AnimationTimeline {
   bool ScrollingDirectionIsAvailable() const;
 
   void ReplacePropertiesWith(const Element* aReferenceElement,
+                             PseudoStyleType aPseudoType,
                              const StyleScrollTimeline& aNew);
 
  protected:
@@ -219,45 +223,40 @@ class ScrollTimeline final : public AnimationTimeline {
  * A wrapper around a hashset of ScrollTimeline objects to handle the scheduling
  * of scroll driven animations. This is used for all kinds of progress
  * timelines, i.e. anonymous/named scroll timelines and anonymous/named view
- * timelines.
- *
- * Note:
- * 1. Each ScrollTimeline hooks an dom::Element (as the scroller), and a
- *    dom::Element may be registered by multiple ScrollTimelines.
- * 2. Element holds the ScrollTimelineSet as an element property.
+ * timelines. And this object is owned by the scroll source (See
+ * ElementAnimationData and nsGfxScrollFrame for the usage).
  */
-class ScrollTimelineSet {
+class ProgressTimelineScheduler {
  public:
-  using NonOwningScrollTimelineSet = HashSet<ScrollTimeline*>;
+  ProgressTimelineScheduler() { MOZ_COUNT_CTOR(ProgressTimelineScheduler); }
+  ~ProgressTimelineScheduler() { MOZ_COUNT_DTOR(ProgressTimelineScheduler); }
 
-  ~ScrollTimelineSet() = default;
+  static ProgressTimelineScheduler* Get(const Element* aElement,
+                                        PseudoStyleType aPseudoType);
+  static ProgressTimelineScheduler& Ensure(Element* aElement,
+                                           PseudoStyleType aPseudoType);
+  static void Destroy(const Element* aElement, PseudoStyleType aPseudoType);
 
-  static ScrollTimelineSet* GetScrollTimelineSet(Element* aElement);
-  static ScrollTimelineSet* GetOrCreateScrollTimelineSet(Element* aElement);
-  static void DestroyScrollTimelineSet(Element* aElement);
-
-  void AddScrollTimeline(ScrollTimeline* aScrollTimeline) {
-    Unused << mScrollTimelines.put(aScrollTimeline);
+  void AddTimeline(ScrollTimeline* aScrollTimeline) {
+    Unused << mTimelines.put(aScrollTimeline);
   }
-  void RemoveScrollTimeline(ScrollTimeline* aScrollTimeline) {
-    mScrollTimelines.remove(aScrollTimeline);
+  void RemoveTimeline(ScrollTimeline* aScrollTimeline) {
+    mTimelines.remove(aScrollTimeline);
   }
 
-  bool IsEmpty() const { return mScrollTimelines.empty(); }
+  bool IsEmpty() const { return mTimelines.empty(); }
 
   void ScheduleAnimations() const {
-    for (auto iter = mScrollTimelines.iter(); !iter.done(); iter.next()) {
+    for (auto iter = mTimelines.iter(); !iter.done(); iter.next()) {
       iter.get()->ScheduleAnimations();
     }
   }
 
  private:
-  ScrollTimelineSet() = default;
-
-  // ScrollTimelineSet doesn't own ScrollTimeline. We let Animations own its
-  // scroll timeline if it is anonymous. For named progress timelines, they are
-  // managed by TimelineCollection.
-  NonOwningScrollTimelineSet mScrollTimelines;
+  // We let Animations own its scroll timeline or view timeline if it is
+  // anonymous. For named progress timelines, they are created and destroyed by
+  // TimelineCollection.
+  HashSet<ScrollTimeline*> mTimelines;
 };
 
 }  // namespace dom

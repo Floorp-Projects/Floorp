@@ -26,6 +26,7 @@ void ElementAnimationData::ClearAllAnimationCollections() {
     data->mAnimations = nullptr;
     data->mTransitions = nullptr;
     data->mScrollTimelines = nullptr;
+    data->mProgressTimelineScheduler = nullptr;
   }
 }
 
@@ -73,6 +74,14 @@ ElementAnimationData::PerElementOrPseudoData::DoEnsureScrollTimelines(
   return *mScrollTimelines;
 }
 
+dom::ProgressTimelineScheduler&
+ElementAnimationData::PerElementOrPseudoData::DoEnsureProgressTimelineScheduler(
+    dom::Element& aOwner, PseudoStyleType aType) {
+  MOZ_ASSERT(!mProgressTimelineScheduler);
+  mProgressTimelineScheduler = MakeUnique<dom::ProgressTimelineScheduler>();
+  return *mProgressTimelineScheduler;
+}
+
 void ElementAnimationData::PerElementOrPseudoData::DoClearEffectSet() {
   MOZ_ASSERT(mEffectSet);
   mEffectSet = nullptr;
@@ -91,6 +100,12 @@ void ElementAnimationData::PerElementOrPseudoData::DoClearAnimations() {
 void ElementAnimationData::PerElementOrPseudoData::DoClearScrollTimelines() {
   MOZ_ASSERT(mScrollTimelines);
   mScrollTimelines = nullptr;
+}
+
+void ElementAnimationData::PerElementOrPseudoData::
+    DoClearProgressTimelineScheduler() {
+  MOZ_ASSERT(mProgressTimelineScheduler);
+  mProgressTimelineScheduler = nullptr;
 }
 
 }  // namespace mozilla

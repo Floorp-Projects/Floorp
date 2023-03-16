@@ -8488,12 +8488,22 @@ void ScrollFrameHelper::ScheduleScrollAnimations() {
   MOZ_ASSERT(content && content->IsElement(),
              "The nsIScrollableFrame should have the element.");
 
-  const auto* set =
-      ScrollTimelineSet::GetScrollTimelineSet(content->AsElement());
-  if (!set) {
+  const Element* elementOrPseudo = content->AsElement();
+  PseudoStyleType pseudo = elementOrPseudo->GetPseudoElementType();
+  if (pseudo != PseudoStyleType::NotPseudo &&
+      !AnimationUtils::IsSupportedPseudoForAnimations(pseudo)) {
+    // This is not an animatable pseudo element, and so we don't generate
+    // scroll-timeline for it.
+    return;
+  }
+
+  const auto [element, type] =
+      AnimationUtils::GetElementPseudoPair(elementOrPseudo);
+  const auto* scheduler = ProgressTimelineScheduler::Get(element, type);
+  if (!scheduler) {
     // We don't have scroll timelines associated with this frame.
     return;
   }
 
-  set->ScheduleAnimations();
+  scheduler->ScheduleAnimations();
 }
