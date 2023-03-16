@@ -54,6 +54,7 @@ from manifestparser.filters import (
 )
 from manifestparser.util import normsep
 from mozgeckoprofiler import symbolicate_profile_json, view_gecko_profile
+from mozserve import DoHServer, Http3Server
 
 try:
     from marionette_driver.addons import Addons
@@ -90,6 +91,13 @@ except ImportError:
 import six
 from six.moves.urllib.parse import quote_plus as encodeURIComponent
 from six.moves.urllib_request import urlopen
+
+try:
+    from mozbuild.base import MozbuildObject
+
+    build = MozbuildObject.from_environment(cwd=SCRIPT_DIR)
+except ImportError:
+    build = None
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -1369,6 +1377,56 @@ class MochitestDesktop(object):
                 break
         return is_webrtc_tag_present and options.subsuite in ["media"]
 
+    def startHttp3Server(self, options):
+        """
+        Start a Http3 test server.
+        """
+        http3ServerPath = os.path.join(
+            options.utilityPath, "http3server" + mozinfo.info["bin_suffix"]
+        )
+        serverOptions = {}
+        serverOptions["http3ServerPath"] = http3ServerPath
+        serverOptions["profilePath"] = options.profilePath
+        serverOptions["isMochitest"] = True
+        serverOptions["isWin"] = mozinfo.isWin
+        serverOptions["proxyPort"] = options.http3ServerPort
+        env = test_environment(xrePath=options.xrePath, log=self.log)
+        self.http3Server = Http3Server(serverOptions, env, self.log)
+        self.http3Server.start()
+
+        port = self.http3Server.ports().get("MOZHTTP3_PORT_PROXY")
+        if int(port) != options.http3ServerPort:
+            self.http3Server = None
+            raise RuntimeError("Error: Unable to start Http/3 server")
+
+    def startDoHServer(self, options):
+        """
+        Start a DoH test server.
+        """
+        # We try to find the node executable in the path given to us by the user in
+        # the MOZ_NODE_PATH environment variable
+        nodeBin = os.getenv("MOZ_NODE_PATH", None)
+        self.log.info("Use MOZ_NODE_PATH at %s" % (nodeBin))
+        if not nodeBin and build:
+            nodeBin = build.substs.get("NODEJS")
+            self.log.info("Use build node at %s" % (nodeBin))
+
+        serverOptions = {}
+        serverOptions["serverPath"] = os.path.join(
+            SCRIPT_DIR, "DoHServer", "doh_server.js"
+        )
+        serverOptions["nodeBin"] = nodeBin
+        serverOptions["dstServerPort"] = options.http3ServerPort
+        serverOptions["isWin"] = mozinfo.isWin
+        serverOptions["port"] = options.dohServerPort
+        env = test_environment(xrePath=options.xrePath, log=self.log)
+        self.dohServer = DoHServer(serverOptions, env, self.log)
+        self.dohServer.start()
+
+        port = self.dohServer.port()
+        if port != options.dohServerPort:
+            raise RuntimeError("Error: Unable to start DoH server")
+
     def startServers(self, options, debuggerInfo, public=None):
         # start servers and set ports
         # TODO: pass these values, don't set on `self`
@@ -1403,6 +1461,13 @@ class MochitestDesktop(object):
         if self.server is not None:
             self.server.ensureReady(self.SERVER_STARTUP_TIMEOUT)
 
+        self.log.info("use http3 server: %d" % options.useHttp3Server)
+        self.http3Server = None
+        self.dohServer = None
+        if options.useHttp3Server:
+            self.startHttp3Server(options)
+            self.startDoHServer(options)
+
     def stopServers(self):
         """Servers are no longer needed, and perhaps more importantly, anything they
         might spew to console might confuse things."""
@@ -1434,6 +1499,16 @@ class MochitestDesktop(object):
                 self.log.info("Stopping websocket/process bridge")
             except Exception:
                 self.log.critical("Exception stopping websocket/process bridge")
+        if self.http3Server is not None:
+            try:
+                self.http3Server.stop()
+            except Exception:
+                self.log.critical("Exception stopping http3 server")
+        if self.dohServer is not None:
+            try:
+                self.dohServer.stop()
+            except Exception:
+                self.log.critical("Exception stopping doh server")
 
         if hasattr(self, "gstForV4l2loopbackProcess"):
             try:
@@ -2149,6 +2224,12 @@ toolbar#nav-bar {
         os.unlink(pwfilePath)
         return 0
 
+    def findFreePort(self, type):
+        with closing(socket.socket(socket.AF_INET, type)) as s:
+            s.bind(("127.0.0.1", 0))
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            return s.getsockname()[1]
+
     def proxy(self, options):
         # proxy
         # use SSL port for legacy compatibility; see
@@ -2156,12 +2237,20 @@ toolbar#nav-bar {
         # - https://bugzilla.mozilla.org/show_bug.cgi?id=899221
         # - https://github.com/mozilla/mozbase/commit/43f9510e3d58bfed32790c82a57edac5f928474d
         #             'ws': str(self.webSocketPort)
-        return {
+        proxyOptions = {
             "remote": options.webServer,
             "http": options.httpPort,
             "https": options.sslPort,
             "ws": options.sslPort,
         }
+
+        if options.useHttp3Server:
+            options.dohServerPort = self.findFreePort(socket.SOCK_STREAM)
+            options.http3ServerPort = self.findFreePort(socket.SOCK_DGRAM)
+            proxyOptions["dohServerPort"] = options.dohServerPort
+            self.log.info("use doh server at port: %d" % options.dohServerPort)
+            self.log.info("use http3 server at port: %d" % options.http3ServerPort)
+        return proxyOptions
 
     def merge_base_profiles(self, options, category):
         """Merge extra profile data from testing/profiles."""
