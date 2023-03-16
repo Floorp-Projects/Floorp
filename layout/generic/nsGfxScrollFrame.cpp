@@ -1626,34 +1626,34 @@ void nsXULScrollFrame::ScrollbarActivityStopped() const {
   }
 }
 
-nsMargin ScrollFrameHelper::GetDesiredScrollbarSizes(nsBoxLayoutState* aState) {
-  NS_ASSERTION(aState && aState->GetRenderingContext(),
-               "Must have rendering context in layout state for size "
-               "computations");
-
-  nsMargin result(0, 0, 0, 0);
-  ScrollStyles styles = GetScrollStylesFromFrame();
-
-  const auto& style = *nsLayoutUtils::StyleForScrollbar(mOuter);
-  if (style.StyleUIReset()->ScrollbarWidth() == StyleScrollbarWidth::None) {
+nsMargin ScrollFrameHelper::GetDesiredScrollbarSizes() const {
+  nsPresContext* pc = mOuter->PresContext();
+  if (pc->UseOverlayScrollbars()) {
     return {};
   }
 
-  if (mVScrollbarBox && styles.mVertical != StyleOverflow::Hidden) {
-    nsSize size = mVScrollbarBox->GetXULPrefSize(*aState);
-    nsIFrame::AddXULMargin(mVScrollbarBox, size);
-    if (IsScrollbarOnRight())
-      result.left = size.width;
-    else
-      result.right = size.width;
+  const auto& style = *nsLayoutUtils::StyleForScrollbar(mOuter);
+  const auto scrollbarWidth = style.StyleUIReset()->ScrollbarWidth();
+  if (scrollbarWidth == StyleScrollbarWidth::None) {
+    return {};
   }
 
-  if (mHScrollbarBox && styles.mHorizontal != StyleOverflow::Hidden) {
-    nsSize size = mHScrollbarBox->GetXULPrefSize(*aState);
-    nsIFrame::AddXULMargin(mHScrollbarBox, size);
+  ScrollStyles styles = GetScrollStylesFromFrame();
+  nsMargin result(0, 0, 0, 0);
+
+  auto size = pc->DevPixelsToAppUnits(
+      pc->Theme()->GetScrollbarSize(pc, scrollbarWidth, nsITheme::Overlay::No));
+  if (styles.mVertical != StyleOverflow::Hidden) {
+    if (IsScrollbarOnRight())
+      result.left = size;
+    else
+      result.right = size;
+  }
+
+  if (styles.mHorizontal != StyleOverflow::Hidden) {
     // We don't currently support any scripts that would require a scrollbar
     // at the top. (Are there any?)
-    result.bottom = size.height;
+    result.bottom = size;
   }
 
   return result;

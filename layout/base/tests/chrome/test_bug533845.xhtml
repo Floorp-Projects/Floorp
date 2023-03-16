@@ -9,7 +9,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533845
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="doTest()">
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-<panel id="panel" width="500" height="500">
+<panel id="panel" style="width: 500px; height: 500px">
   <iframe type="content" id="contentFrame" src="data:text/html,&lt;html&gt;&lt;body onclick='document.body.textContent=1'&gt;This is a panel!&lt;/body&gt;&lt;/html&gt;" width="500" height="500"/>
 </panel>
 <body xmlns="http://www.w3.org/1999/xhtml">

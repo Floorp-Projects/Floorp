@@ -241,8 +241,7 @@ nscoord nsListControlFrame::GetPrefISize(gfxContext* aRenderingContext) {
   Maybe<nscoord> containISize = ContainIntrinsicISize();
   result = containISize ? *containISize
                         : GetScrolledFrame()->GetPrefISize(aRenderingContext);
-  LogicalMargin scrollbarSize(
-      wm, GetDesiredScrollbarSizes(PresContext(), aRenderingContext));
+  LogicalMargin scrollbarSize(wm, GetDesiredScrollbarSizes());
   result = NSCoordSaturatingAdd(result, scrollbarSize.IStartEnd(wm));
   return result;
 }
@@ -259,8 +258,7 @@ nscoord nsListControlFrame::GetMinISize(gfxContext* aRenderingContext) {
   Maybe<nscoord> containISize = ContainIntrinsicISize();
   result = containISize ? *containISize
                         : GetScrolledFrame()->GetMinISize(aRenderingContext);
-  LogicalMargin scrollbarSize(
-      wm, GetDesiredScrollbarSizes(PresContext(), aRenderingContext));
+  LogicalMargin scrollbarSize(wm, GetDesiredScrollbarSizes());
   result += scrollbarSize.IStartEnd(wm);
 
   return result;
