@@ -49,6 +49,7 @@ import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.searchEngines
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
@@ -162,6 +163,24 @@ class HomeFragment : Fragment() {
                 binding.sessionControlRecyclerView.adapter?.notifyDataSetChanged()
             }
             showRenamedSnackbar()
+        }
+
+        override fun onTabsAdded(tabCollection: TabCollection, sessions: List<TabSessionState>) {
+            view?.let {
+                val message = if (sessions.size == 1) {
+                    R.string.create_collection_tab_saved
+                } else {
+                    R.string.create_collection_tabs_saved
+                }
+                FenixSnackbar.make(
+                    view = it,
+                    duration = Snackbar.LENGTH_LONG,
+                    isDisplayedWithBrowserToolbar = false,
+                )
+                    .setText(it.context.getString(message))
+                    .setAnchorView(snackbarAnchorView)
+                    .show()
+            }
         }
     }
 
