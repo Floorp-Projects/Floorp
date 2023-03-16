@@ -68,10 +68,9 @@ const sitePermissionsConfig = {
   },
 };
 
-function Permission(principal, type, capability) {
+function Permission(principal, capability) {
   this.principal = principal;
   this.origin = principal.origin;
-  this.type = type;
   this.capability = capability;
 }
 
@@ -324,7 +323,7 @@ var gSitePermissionsManager = {
     ) {
       return;
     }
-    let p = new Permission(perm.principal, perm.type, perm.capability);
+    let p = new Permission(perm.principal, perm.capability);
     this._permissions.set(p.origin, p);
   },
 
@@ -362,7 +361,7 @@ var gSitePermissionsManager = {
     hbox.setAttribute("style", `flex: 3 3`);
     hbox.appendChild(website);
 
-    let states = SitePermissions.getAvailableStates(permission.type).flatMap(
+    let states = SitePermissions.getAvailableStates(this._type).flatMap(
       state => {
         // Work around the (rare) edge case when a user has changed their
         // default permission type back to UNKNOWN while still having a
@@ -387,7 +386,7 @@ var gSitePermissionsManager = {
       siteStatus.appendChild(label);
       document.l10n.setAttributes(
         label,
-        this._getCapabilityL10nId(label, permission.type, permission.capability)
+        this._getCapabilityL10nId(label, this._type, permission.capability)
       );
     } else {
       // Multiple states are available.  Show a menulist.
@@ -396,7 +395,7 @@ var gSitePermissionsManager = {
         let m = siteStatus.appendItem(undefined, state);
         document.l10n.setAttributes(
           m,
-          this._getCapabilityL10nId(m, permission.type, state)
+          this._getCapabilityL10nId(m, this._type, state)
         );
       }
       siteStatus.addEventListener("select", () => {
@@ -482,11 +481,11 @@ var gSitePermissionsManager = {
     this.uninit();
 
     for (let p of this._permissionsToChange.values()) {
-      SitePermissions.setForPrincipal(p.principal, p.type, p.capability);
+      SitePermissions.setForPrincipal(p.principal, this._type, p.capability);
     }
 
     for (let p of this._permissionsToDelete.values()) {
-      SitePermissions.removeFromPrincipal(p.principal, p.type);
+      SitePermissions.removeFromPrincipal(p.principal, this._type);
     }
 
     if (this._checkbox.checked) {
