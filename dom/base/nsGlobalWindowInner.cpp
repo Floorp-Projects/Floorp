@@ -1628,15 +1628,13 @@ bool nsGlobalWindowInner::IsBlackForCC(bool aTracingNeeded) {
 // nsGlobalWindowInner::nsIScriptGlobalObject
 //*****************************************************************************
 
-bool nsGlobalWindowInner::ShouldResistFingerprinting(
-    RFPTarget aTarget /* = RFPTarget::Unknown */) const {
+bool nsGlobalWindowInner::ShouldResistFingerprinting() const {
   if (mDoc) {
-    return mDoc->ShouldResistFingerprinting(aTarget);
+    return mDoc->ShouldResistFingerprinting();
   }
   return nsContentUtils::ShouldResistFingerprinting(
       "If we do not have a document then we do not have any context"
-      "to make an informed RFP choice, so we fall back to the global pref",
-      aTarget);
+      "to make an informed RFP choice, so we fall back to the global pref");
 }
 
 OriginTrials nsGlobalWindowInner::Trials() const {

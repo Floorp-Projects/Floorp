@@ -87,9 +87,8 @@ bool WorkletGlobalScope::IsSharedMemoryAllowed() const {
   return mImpl->IsSharedMemoryAllowed();
 }
 
-bool WorkletGlobalScope::ShouldResistFingerprinting(
-    RFPTarget aTarget /* = RFPTarget::Unknown */) const {
-  return mImpl->ShouldResistFingerprinting(aTarget);
+bool WorkletGlobalScope::ShouldResistFingerprinting() const {
+  return mImpl->ShouldResistFingerprinting();
 }
 
 void WorkletGlobalScope::Dump(const Optional<nsAString>& aString) const {

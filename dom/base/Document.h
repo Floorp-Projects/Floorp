@@ -4148,7 +4148,9 @@ class Document : public nsINode,
    */
   class HighlightRegistry& HighlightRegistry();
 
-  bool ShouldResistFingerprinting(RFPTarget aTarget = RFPTarget::Unknown) const;
+  bool ShouldResistFingerprinting() const {
+    return mShouldResistFingerprinting;
+  }
 
   void RecomputeResistFingerprinting();
 

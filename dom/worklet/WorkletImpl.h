@@ -13,7 +13,6 @@
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/OriginTrials.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
-#include "nsRFPService.h"
 
 class nsPIDOMWindowInner;
 class nsIPrincipal;
@@ -50,8 +49,6 @@ class WorkletLoadInfo {
  * collected.
  */
 class WorkletImpl {
-  using RFPTarget = mozilla::RFPTarget;
-
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WorkletImpl);
 
@@ -83,10 +80,8 @@ class WorkletImpl {
 
   bool IsSharedMemoryAllowed() const { return mSharedMemoryAllowed; }
   bool IsSystemPrincipal() const { return mPrincipal->IsSystemPrincipal(); }
-  bool ShouldResistFingerprinting(
-      RFPTarget aTarget = RFPTarget::Unknown) const {
-    return mShouldResistFingerprinting &&
-           nsRFPService::IsRFPEnabledFor(aTarget);
+  bool ShouldResistFingerprinting() const {
+    return mShouldResistFingerprinting;
   }
 
   virtual void OnAddModuleStarted() const {

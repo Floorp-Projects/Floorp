@@ -392,7 +392,7 @@ mozilla::Result<bool, nsresult> nsIGlobalObject::HasEqualStorageKey(
   return mozilla::ipc::StorageKeysEqual(storageKey, aStorageKey);
 }
 
-mozilla::RTPCallerType nsIGlobalObject::GetRTPCallerType() const {
+RTPCallerType nsIGlobalObject::GetRTPCallerType() const {
   if (PrincipalOrNull() && PrincipalOrNull()->IsSystemPrincipal()) {
     return RTPCallerType::SystemPrincipal;
   }
@@ -408,9 +408,6 @@ mozilla::RTPCallerType nsIGlobalObject::GetRTPCallerType() const {
   return RTPCallerType::Normal;
 }
 
-bool nsIGlobalObject::ShouldResistFingerprinting(
-    CallerType aCallerType,
-    RFPTarget aTarget /* = RFPTarget::Unknown */) const {
-  return aCallerType != CallerType::System &&
-         ShouldResistFingerprinting(aTarget);
+bool nsIGlobalObject::ShouldResistFingerprinting(CallerType aCallerType) const {
+  return aCallerType != CallerType::System && ShouldResistFingerprinting();
 }

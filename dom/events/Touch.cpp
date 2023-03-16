@@ -131,8 +131,8 @@ EventTarget* Touch::GetOriginalTarget() const {
 }
 
 int32_t Touch::ScreenX(CallerType aCallerType) const {
-  if (nsContentUtils::ShouldResistFingerprinting(aCallerType, GetParentObject(),
-                                                 RFPTarget::TouchEvents)) {
+  if (nsContentUtils::ShouldResistFingerprinting(aCallerType,
+                                                 GetParentObject())) {
     return ClientX();
   }
 
@@ -140,8 +140,8 @@ int32_t Touch::ScreenX(CallerType aCallerType) const {
 }
 
 int32_t Touch::ScreenY(CallerType aCallerType) const {
-  if (nsContentUtils::ShouldResistFingerprinting(aCallerType, GetParentObject(),
-                                                 RFPTarget::TouchEvents)) {
+  if (nsContentUtils::ShouldResistFingerprinting(aCallerType,
+                                                 GetParentObject())) {
     return ClientY();
   }
 
@@ -149,8 +149,8 @@ int32_t Touch::ScreenY(CallerType aCallerType) const {
 }
 
 int32_t Touch::RadiusX(CallerType aCallerType) const {
-  if (nsContentUtils::ShouldResistFingerprinting(aCallerType, GetParentObject(),
-                                                 RFPTarget::TouchEvents)) {
+  if (nsContentUtils::ShouldResistFingerprinting(aCallerType,
+                                                 GetParentObject())) {
     return 0;
   }
 
@@ -158,8 +158,8 @@ int32_t Touch::RadiusX(CallerType aCallerType) const {
 }
 
 int32_t Touch::RadiusY(CallerType aCallerType) const {
-  if (nsContentUtils::ShouldResistFingerprinting(aCallerType, GetParentObject(),
-                                                 RFPTarget::TouchEvents)) {
+  if (nsContentUtils::ShouldResistFingerprinting(aCallerType,
+                                                 GetParentObject())) {
     return 0;
   }
 
@@ -167,8 +167,8 @@ int32_t Touch::RadiusY(CallerType aCallerType) const {
 }
 
 float Touch::RotationAngle(CallerType aCallerType) const {
-  if (nsContentUtils::ShouldResistFingerprinting(aCallerType, GetParentObject(),
-                                                 RFPTarget::TouchEvents)) {
+  if (nsContentUtils::ShouldResistFingerprinting(aCallerType,
+                                                 GetParentObject())) {
     return 0.0f;
   }
 
@@ -176,8 +176,8 @@ float Touch::RotationAngle(CallerType aCallerType) const {
 }
 
 float Touch::Force(CallerType aCallerType) const {
-  if (nsContentUtils::ShouldResistFingerprinting(aCallerType, GetParentObject(),
-                                                 RFPTarget::TouchEvents)) {
+  if (nsContentUtils::ShouldResistFingerprinting(aCallerType,
+                                                 GetParentObject())) {
     return 0.0f;
   }
 

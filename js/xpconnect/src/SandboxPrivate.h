@@ -97,12 +97,10 @@ class SandboxPrivate : public nsIGlobalObject,
     return 0;
   }
 
-  bool ShouldResistFingerprinting(
-      RFPTarget aTarget = RFPTarget::Unknown) const override {
+  bool ShouldResistFingerprinting() const override {
     return nsContentUtils::ShouldResistFingerprinting(
         "Presently we don't have enough context to make an informed decision"
-        "on JS Sandboxes. See 1782853",
-        aTarget);
+        "on JS Sandboxes. See 1782853");
   }
 
  private:
