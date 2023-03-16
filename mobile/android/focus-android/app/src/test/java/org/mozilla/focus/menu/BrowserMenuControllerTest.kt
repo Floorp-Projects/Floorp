@@ -9,19 +9,19 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.top.sites.TopSitesUseCases
+import mozilla.components.support.test.any
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.Mockito
+import org.mockito.Mockito.doNothing
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.MockitoAnnotations
 import org.mockito.Spy
 import org.mozilla.focus.browser.integration.BrowserMenuController
 import org.mozilla.focus.state.AppStore
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
 class BrowserMenuControllerTest {
     private lateinit var browserMenuController: BrowserMenuController
 
@@ -65,19 +65,23 @@ class BrowserMenuControllerTest {
         sessionUseCases = SessionUseCases(store)
         MockitoAnnotations.openMocks(this)
 
-        browserMenuController = BrowserMenuController(
-            sessionUseCases,
-            appStore,
-            store,
-            topSitesUseCases,
-            currentTabId,
-            shareCallback,
-            requestDesktopCallback,
-            addToHomeScreenCallback,
-            showFindInPageCallback,
-            openInCallback,
-            openInBrowser,
+        browserMenuController = spy(
+            BrowserMenuController(
+                sessionUseCases,
+                appStore,
+                store,
+                topSitesUseCases,
+                currentTabId,
+                shareCallback,
+                requestDesktopCallback,
+                addToHomeScreenCallback,
+                showFindInPageCallback,
+                openInCallback,
+                openInBrowser,
+            ),
         )
+
+        doNothing().`when`(browserMenuController).recordBrowserMenuTelemetry(any())
     }
 
     @Test

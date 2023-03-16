@@ -57,8 +57,6 @@ class BrowserMenuController(
             )
             is ToolbarMenu.Item.Reload, ToolbarMenu.CustomTabItem.Reload -> {
                 sessionUseCases.reload(currentTabId)
-
-                TelemetryWrapper.menuReloadEvent()
             }
             is ToolbarMenu.Item.Stop, ToolbarMenu.CustomTabItem.Stop -> sessionUseCases.stopLoading(
                 currentTabId,
@@ -95,7 +93,8 @@ class BrowserMenuController(
     }
 
     @Suppress("LongMethod")
-    private fun recordBrowserMenuTelemetry(item: ToolbarMenu.Item) {
+    @VisibleForTesting
+    internal fun recordBrowserMenuTelemetry(item: ToolbarMenu.Item) {
         when (item) {
             is ToolbarMenu.Item.Back -> BrowserMenu.navigationToolbarAction.record(
                 BrowserMenu.NavigationToolbarActionExtra("back"),
@@ -103,9 +102,13 @@ class BrowserMenuController(
             is ToolbarMenu.Item.Forward -> BrowserMenu.navigationToolbarAction.record(
                 BrowserMenu.NavigationToolbarActionExtra("forward"),
             )
-            is ToolbarMenu.Item.Reload -> BrowserMenu.navigationToolbarAction.record(
-                BrowserMenu.NavigationToolbarActionExtra("reload"),
-            )
+            is ToolbarMenu.Item.Reload -> {
+                BrowserMenu.navigationToolbarAction.record(
+                    BrowserMenu.NavigationToolbarActionExtra("reload"),
+                )
+
+                TelemetryWrapper.menuReloadEvent()
+            }
             is ToolbarMenu.Item.Stop -> BrowserMenu.navigationToolbarAction.record(
                 BrowserMenu.NavigationToolbarActionExtra("stop"),
             )
@@ -155,9 +158,13 @@ class BrowserMenuController(
                 CustomTabsToolbar.NavigationToolbarActionExtra("stop"),
             )
 
-            ToolbarMenu.CustomTabItem.Reload -> CustomTabsToolbar.navigationToolbarAction.record(
-                CustomTabsToolbar.NavigationToolbarActionExtra("reload"),
-            )
+            ToolbarMenu.CustomTabItem.Reload -> {
+                CustomTabsToolbar.navigationToolbarAction.record(
+                    CustomTabsToolbar.NavigationToolbarActionExtra("reload"),
+                )
+
+                TelemetryWrapper.menuReloadEvent()
+            }
 
             ToolbarMenu.CustomTabItem.AddToHomeScreen -> CustomTabsToolbar.browserMenuAction.record(
                 CustomTabsToolbar.BrowserMenuActionExtra("add_to_home_screen"),
