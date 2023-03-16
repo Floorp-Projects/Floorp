@@ -16,7 +16,7 @@ UNIFIED_SOURCES += [
 
 FINAL_LIBRARY = "xul"
 
-EXPORTS += ["nsRFPService.h"]
+EXPORTS += ["nsRFPService.h", "RFPTargets.inc"]
 EXPORTS.mozilla += [
     "RelativeTimeline.h",
 ]

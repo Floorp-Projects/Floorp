@@ -12905,8 +12905,13 @@
 #
 # The variables will, however, be read often (specifically .microseconds on
 # each timer rounding) so performance is important.
-
 - name: privacy.resistFingerprinting
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  do_not_use_directly: true
+
+- name: privacy.resistFingerprintingLite
   type: RelaxedAtomicBool
   value: false
   mirror: always
