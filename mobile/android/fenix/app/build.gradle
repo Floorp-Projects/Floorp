@@ -589,6 +589,8 @@ dependencies {
 
     debugImplementation FenixDependencies.leakcanary
 
+    implementation FenixDependencies.androidx_activity_compose
+    implementation FenixDependencies.androidx_activity_ktx
     implementation FenixDependencies.androidx_annotation
     implementation FenixDependencies.androidx_compose_ui
     implementation FenixDependencies.androidx_compose_ui_tooling

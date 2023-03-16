@@ -20,6 +20,7 @@ object FenixVersions {
     const val detekt = "1.19.0"
     const val jna = "5.13.0"
 
+    const val androidx_activity = "1.6.1"
     const val androidx_compose = "1.3.1"
     const val androidx_compose_compiler = "1.4.3"
     const val androidx_appcompat = "1.3.0"
@@ -88,6 +89,8 @@ object FenixDependencies {
     const val androidx_profileinstaller = "androidx.profileinstaller:profileinstaller:${FenixVersions.androidx_profileinstaller}"
     const val androidx_biometric = "androidx.biometric:biometric:${FenixVersions.androidx_biometric}"
     const val androidx_fragment = "androidx.fragment:fragment-ktx:${FenixVersions.androidx_fragment}"
+    const val androidx_activity_compose = "androidx.activity:activity-compose:${FenixVersions.androidx_activity}"
+    const val androidx_activity_ktx = "androidx.activity:activity-ktx:${FenixVersions.androidx_activity}"
     const val androidx_appcompat = "androidx.appcompat:appcompat:${FenixVersions.androidx_appcompat}"
     const val androidx_coordinatorlayout = "androidx.coordinatorlayout:coordinatorlayout:${FenixVersions.androidx_coordinator_layout}"
     const val androidx_constraintlayout = "androidx.constraintlayout:constraintlayout:${FenixVersions.androidx_constraint_layout}"
