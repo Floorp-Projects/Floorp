@@ -39,7 +39,6 @@ object Versions {
     // zxing 3.4+ requires a minimum API of 24 or higher
     const val zxing = "3.3.3"
 
-    const val jna = "5.13.0"
     const val disklrucache = "2.0.2"
     const val leakcanary = "2.10"
 
@@ -197,7 +196,6 @@ object ComponentsDependencies {
     const val thirdparty_okhttp_urlconnection = "com.squareup.okhttp3:okhttp-urlconnection:${Versions.okhttp}"
     const val thirdparty_sentry_latest = "io.sentry:sentry-android:${Versions.sentry_latest}"
     const val thirdparty_zxing = "com.google.zxing:core:${Versions.zxing}"
-    const val thirdparty_jna = "net.java.dev.jna:jna:${Versions.jna}@jar"
     const val thirdparty_disklrucache = "com.jakewharton:disklrucache:${Versions.disklrucache}"
 
     const val firebase_messaging = "com.google.firebase:firebase-messaging:${Versions.Firebase.messaging}"

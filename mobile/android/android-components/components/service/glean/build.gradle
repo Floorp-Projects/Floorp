@@ -23,23 +23,6 @@ android {
     namespace 'mozilla.components.service.glean'
 }
 
-configurations {
-    // There's an interaction between Gradle's resolution of dependencies with different types
-    // (@jar, @aar) for `implementation` and `testImplementation` and with Android Studio's built-in
-    // JUnit test runner.  The runtime classpath in the built-in JUnit test runner gets the
-    // dependency from the `implementation`, which is type @aar, and therefore the JNA dependency
-    // doesn't provide the JNI dispatch libraries in the correct Java resource directories.  I think
-    // what's happening is that @aar type in `implementation` resolves to the @jar type in
-    // `testImplementation`, and that it wins the dependency resolution battle.
-    //
-    // A workaround is to add a new configuration which depends on the @jar type and to reference
-    // the underlying JAR file directly in `testImplementation`.  This JAR file doesn't resolve to
-    // the @aar type in `implementation`.  This works when invoked via `gradle`, but also sets the
-    // correct runtime classpath when invoked with Android Studio's built-in JUnit test runner.
-    // Success!
-    jnaForTest
-}
-
 // Define library names and version constants.
 String GLEAN_LIBRARY = "org.mozilla.telemetry:glean:${Versions.mozilla_glean}"
 String GLEAN_LIBRARY_FORUNITTESTS = "org.mozilla.telemetry:glean-native-forUnitTests:${Versions.mozilla_glean}"

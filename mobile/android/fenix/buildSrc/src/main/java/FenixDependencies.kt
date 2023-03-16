@@ -18,7 +18,6 @@ object FenixVersions {
     const val leakcanary = "2.10"
     const val osslicenses_plugin = "0.10.4"
     const val detekt = "1.19.0"
-    const val jna = "5.13.0"
 
     const val androidx_activity = "1.6.1"
     const val androidx_compose = "1.3.1"
@@ -122,8 +121,6 @@ object FenixDependencies {
 
     const val adjust = "com.adjust.sdk:adjust-android:${FenixVersions.adjust}"
     const val installreferrer = "com.android.installreferrer:installreferrer:${FenixVersions.installreferrer}"
-
-    const val jna = "net.java.dev.jna:jna:${FenixVersions.jna}@jar"
 
     const val junit = "junit:junit:${FenixVersions.junit}"
     const val mockk = "io.mockk:mockk:${FenixVersions.mockk}"

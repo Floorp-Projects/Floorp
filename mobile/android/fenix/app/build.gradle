@@ -458,23 +458,6 @@ nimbus {
     experimenterManifest = ".experimenter.yaml"
 }
 
-configurations {
-    // There's an interaction between Gradle's resolution of dependencies with different types
-    // (@jar, @aar) for `implementation` and `testImplementation` and with Android Studio's built-in
-    // JUnit test runner.  The runtime classpath in the built-in JUnit test runner gets the
-    // dependency from the `implementation`, which is type @aar, and therefore the JNA dependency
-    // doesn't provide the JNI dispatch libraries in the correct Java resource directories.  I think
-    // what's happening is that @aar type in `implementation` resolves to the @jar type in
-    // `testImplementation`, and that it wins the dependency resolution battle.
-    //
-    // A workaround is to add a new configuration which depends on the @jar type and to reference
-    // the underlying JAR file directly in `testImplementation`.  This JAR file doesn't resolve to
-    // the @aar type in `implementation`.  This works when invoked via `gradle`, but also sets the
-    // correct runtime classpath when invoked with Android Studio's built-in JUnit test runner.
-    // Success!
-    jnaForTest
-}
-
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
     kotlinOptions {
         freeCompilerArgs += "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
@@ -482,9 +465,6 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
 }
 
 dependencies {
-    jnaForTest FenixDependencies.jna
-    testImplementation files(configurations.jnaForTest.copyRecursive().files)
-
     implementation project(':browser-engine-gecko')
 
     implementation FenixDependencies.kotlin_coroutines
