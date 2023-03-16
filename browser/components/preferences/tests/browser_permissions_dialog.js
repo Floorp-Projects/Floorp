@@ -645,22 +645,37 @@ add_task(async function addSpeakerPermission() {
     0,
     "Number of permission items is 0 initially"
   );
-
-  // Add a deny permission for a website.
-  PermissionTestUtils.add(URI, "speaker", Services.perms.DENY_ACTION);
+  // Add an allow permission for a device.
+  let deviceId = "DEVICE-ID";
+  let devicePermissionId = `speaker^${deviceId}`;
+  PermissionTestUtils.add(URI, devicePermissionId, Services.perms.ALLOW_ACTION);
 
   // Observe the added permission changes in the dialog UI.
-  Assert.equal(richlistbox.itemCount, 1, "itemCount with deny");
+  Assert.equal(richlistbox.itemCount, 1, "itemCount with allow");
   let richlistitem = richlistbox.itemChildren[0];
   let label = richlistitem.getElementsByTagName("label")[0];
   Assert.equal(label.value, URL, "label.value");
   let siteStatus = richlistitem.querySelector(".website-status");
-  Assert.equal(siteStatus.value, Services.perms.DENY_ACTION, "website status");
+  Assert.equal(siteStatus.value, Services.perms.ALLOW_ACTION, "website status");
   // The website status element is not a menulist because all-device allow is
   // not an option.
   Assert.equal(siteStatus.tagName, "hbox");
   Assert.equal(siteStatus.firstElementChild.tagName, "label");
 
+  // Check that an all-device deny permission overrides the device-specific
+  // allow permission.
+  PermissionTestUtils.add(URI, "speaker", Services.perms.DENY_ACTION);
+
+  Assert.equal(richlistbox.itemCount, 1, "itemCount with deny and allow");
+  richlistitem = richlistbox.itemChildren[0];
+  siteStatus = richlistitem.querySelector(".website-status");
+  Assert.equal(
+    siteStatus.value,
+    Services.perms.DENY_ACTION,
+    "website status with deny and allow"
+  );
+
+  PermissionTestUtils.remove(URI, devicePermissionId);
   PermissionTestUtils.remove(URI, "speaker");
 
   doc
