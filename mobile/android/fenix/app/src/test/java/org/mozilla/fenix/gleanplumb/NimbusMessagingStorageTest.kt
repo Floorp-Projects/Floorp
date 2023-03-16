@@ -193,10 +193,17 @@ class NimbusMessagingStorageTest {
                     id = "shown-many-times-message",
                     displayCount = 10,
                 ),
+                "shown-two-times-message" to Message.Metadata(
+                    id = "shown-two-times-message",
+                    displayCount = 2,
+                ),
                 "normal-message" to Message.Metadata(id = "normal-message", displayCount = 0),
             )
             val messages = mapOf(
                 "shown-many-times-message" to createMessageData(
+                    style = "high-priority",
+                ),
+                "shown-two-times-message" to createMessageData(
                     style = "high-priority",
                 ),
                 "normal-message" to createMessageData(style = "high-priority"),
