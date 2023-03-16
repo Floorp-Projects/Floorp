@@ -1000,7 +1000,8 @@ function makeDReportMap(aJSONReports, aForgetIsolation) {
     // Strip PIDs:
     // - pid 123
     // - pid=123
-    let pidRegex = /pid([ =])\d+/g;
+    // - pid: 123
+    let pidRegex = /pid([ =]|: )\d+/g;
     let pidSubst = "pid$1NNN";
     let process = jr.process.replace(pidRegex, pidSubst);
     let path = jr.path.replace(pidRegex, pidSubst);
