@@ -12,6 +12,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   executeSoon: "chrome://remote/content/shared/Sync.sys.mjs",
+  isChromeFrame: "chrome://remote/content/shared/Stack.sys.mjs",
   ExecutionContext:
     "chrome://remote/content/cdp/domains/content/runtime/ExecutionContext.sys.mjs",
 });
@@ -307,7 +308,7 @@ export class Runtime extends ContentProcessDomain {
     return this.__debugger;
   }
 
-  _buildStackTrace(stack) {
+  _buildExceptionStackTrace(stack) {
     const callFrames = [];
 
     while (
@@ -324,6 +325,24 @@ export class Runtime extends ContentProcessDomain {
       });
       stack = stack.parent || stack.asyncParent;
     }
+
+    return {
+      callFrames,
+    };
+  }
+
+  _buildConsoleStackTrace(stack = []) {
+    const callFrames = stack
+      .filter(frame => !lazy.isChromeFrame(frame))
+      .map(frame => {
+        return {
+          functionName: frame.functionName,
+          scriptId: frame.sourceId.toString(),
+          url: frame.filename,
+          lineNumber: frame.lineNumber - 1,
+          columnNumber: frame.columnNumber - 1,
+        };
+      });
 
     return {
       callFrames,
@@ -413,7 +432,7 @@ export class Runtime extends ContentProcessDomain {
       executionContextId: context?.id || 0,
       timestamp: payload.timestamp,
       type: payload.type,
-      stackTrace: this._buildStackTrace(payload.stack),
+      stackTrace: this._buildConsoleStackTrace(payload.stack),
     });
   }
 
@@ -437,7 +456,7 @@ export class Runtime extends ContentProcessDomain {
         lineNumber: payload.lineNumber,
         columnNumber: payload.columnNumber,
         url: payload.url,
-        stackTrace: this._buildStackTrace(payload.stack),
+        stackTrace: this._buildExceptionStackTrace(payload.stack),
         executionContextId: context?.id || undefined,
       },
     });
@@ -572,8 +591,14 @@ export class Runtime extends ContentProcessDomain {
   }
 
   onConsoleLogEvent(message) {
-    let entry = fromConsoleAPI(message);
-    this._emitConsoleAPICalled(entry);
+    // From sendConsoleAPIMessage (toolkit/modules/Console.sys.mjs)
+    this._emitConsoleAPICalled({
+      arguments: message.arguments,
+      innerWindowId: message.innerID,
+      stack: message.stacktrace,
+      timestamp: message.timeStamp,
+      type: CONSOLE_API_LEVEL_MAP[message.level] || message.level,
+    });
   }
 
   // nsIObserver
@@ -598,18 +623,6 @@ export class Runtime extends ContentProcessDomain {
   get QueryInterface() {
     return ChromeUtils.generateQI(["nsIConsoleListener"]);
   }
-}
-
-function fromConsoleAPI(message) {
-  // From sendConsoleAPIMessage (toolkit/modules/Console.sys.mjs)
-  return {
-    arguments: message.arguments,
-    innerWindowId: message.innerID,
-    // TODO: Fetch the stack (Bug 1679981)
-    stack: undefined,
-    timestamp: message.timeStamp,
-    type: CONSOLE_API_LEVEL_MAP[message.level] || message.level,
-  };
 }
 
 function fromScriptError(error) {
