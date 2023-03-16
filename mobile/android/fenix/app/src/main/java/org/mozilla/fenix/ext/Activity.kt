@@ -69,10 +69,12 @@ fun Activity.breadcrumb(
  *
  * @param from fallback direction in case, couldn't open the setting.
  * @param flags fallback flags for when opening the Sumo article page.
+ * @param useCustomTab fallback to open the Sumo article in a custom tab.
  */
 fun Activity.openSetDefaultBrowserOption(
     from: BrowserDirection = BrowserDirection.FromSettings,
     flags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none(),
+    useCustomTab: Boolean = false,
 ) {
     when {
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
@@ -94,15 +96,22 @@ fun Activity.openSetDefaultBrowserOption(
             navigateToDefaultBrowserAppsSettings()
         }
         else -> {
-            (this as HomeActivity).openToBrowserAndLoad(
-                searchTermOrURL = SupportUtils.getSumoURLForTopic(
-                    this,
-                    SupportUtils.SumoTopic.SET_AS_DEFAULT_BROWSER,
-                ),
-                newTab = true,
-                from = from,
-                flags = flags,
+            val sumoDefaultBrowserUrl = SupportUtils.getSumoURLForTopic(
+                context = this,
+                topic = SupportUtils.SumoTopic.SET_AS_DEFAULT_BROWSER,
             )
+            if (useCustomTab) {
+                startActivity(
+                    SupportUtils.createCustomTabIntent(context = this, url = sumoDefaultBrowserUrl),
+                )
+            } else {
+                (this as HomeActivity).openToBrowserAndLoad(
+                    searchTermOrURL = sumoDefaultBrowserUrl,
+                    newTab = true,
+                    from = from,
+                    flags = flags,
+                )
+            }
         }
     }
 }
