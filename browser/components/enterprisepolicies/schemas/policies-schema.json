@@ -566,6 +566,10 @@
             },
             "updates_disabled": {
               "type": "boolean"
+            },
+            "default_area": {
+              "type": "string",
+              "enum": ["navbar", "menupanel"]
             }
           }
         }

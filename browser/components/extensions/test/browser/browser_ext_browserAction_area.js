@@ -52,3 +52,75 @@ add_task(async function testBrowserActionInTabStrip() {
 add_task(async function testBrowserActionInPersonalToolbar() {
   await testInArea("personaltoolbar");
 });
+
+add_task(async function testPolicyOverridesBrowserActionToNavbar() {
+  const { EnterprisePolicyTesting } = ChromeUtils.importESModule(
+    "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
+  );
+  await EnterprisePolicyTesting.setupPolicyEngineWithJson({
+    policies: {
+      ExtensionSettings: {
+        "policyBrowserActionAreaNavBarTest@mozilla.com": {
+          default_area: "navbar",
+        },
+      },
+    },
+  });
+  let manifest = {
+    browser_action: {},
+    browser_specific_settings: {
+      gecko: {
+        id: "policyBrowserActionAreaNavBarTest@mozilla.com",
+      },
+    },
+  };
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest,
+  });
+  await extension.startup();
+  let widget = getBrowserActionWidget(extension);
+  let placement = CustomizableUI.getPlacementOfWidget(widget.id);
+  is(
+    placement && placement.area,
+    CustomizableUI.AREA_NAVBAR,
+    `widget located in nav bar`
+  );
+  await extension.unload();
+});
+
+add_task(async function testPolicyOverridesBrowserActionToMenuPanel() {
+  const { EnterprisePolicyTesting } = ChromeUtils.importESModule(
+    "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
+  );
+  await EnterprisePolicyTesting.setupPolicyEngineWithJson({
+    policies: {
+      ExtensionSettings: {
+        "policyBrowserActionAreaMenuPanelTest@mozilla.com": {
+          default_area: "menupanel",
+        },
+      },
+    },
+  });
+  let manifest = {
+    browser_action: {
+      default_area: "navbar",
+    },
+    browser_specific_settings: {
+      gecko: {
+        id: "policyBrowserActionAreaMenuPanelTest@mozilla.com",
+      },
+    },
+  };
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest,
+  });
+  await extension.startup();
+  let widget = getBrowserActionWidget(extension);
+  let placement = CustomizableUI.getPlacementOfWidget(widget.id);
+  is(
+    placement && placement.area,
+    getCustomizableUIPanelID(),
+    `widget located in extensions menu`
+  );
+  await extension.unload();
+});
