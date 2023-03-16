@@ -3,7 +3,6 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { createSelector } from "reselect";
-import { shallowEqual } from "../utils/shallow-equal";
 
 import {
   getPrettySourceURL,
@@ -109,26 +108,18 @@ export function getPrettySource(state, id) {
   return getOriginalSourceByURL(state, getPrettySourceURL(source.url));
 }
 
-// This is only used externaly by tabs selectors
-export function getSourcesMap(state) {
-  return state.sources.sources;
-}
-
 function getUrls(state) {
   return state.sources.urls;
 }
 
-export const getSourceList = createSelector(
-  getSourcesMap,
-  sourcesMap => {
-    return [...sourcesMap.values()];
-  },
-  { equalityCheck: shallowEqual, resultEqualityCheck: shallowEqual }
-);
+// This is only used by Project Search and tests.
+export function getSourceList(state) {
+  return [...state.sources.sources.values()];
+}
 
-// This is only used by tests
+// This is only used by tests and create.js
 export function getSourceCount(state) {
-  return getSourcesMap(state).size;
+  return state.sources.sources.size;
 }
 
 export function getSelectedLocation(state) {

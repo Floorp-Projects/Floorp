@@ -8,7 +8,7 @@ import {
   hasSource,
   hasSourceActor,
   getSourceActor,
-  getSourcesMap,
+  getSourcesCount,
 } from "../../selectors";
 import { features } from "../../utils/prefs";
 import { isUrlExtension } from "../../utils/source";
@@ -106,7 +106,7 @@ export async function waitForSourceToBeRegisteredInStore(sourceId) {
     let currentSize = null;
     function check() {
       const previousSize = currentSize;
-      currentSize = getSourcesMap(store.getState()).size;
+      currentSize = getSourcesCount(store.getState());
       // For perf reason, avoid any extra computation if sources did not change
       if (previousSize == currentSize) {
         return;
