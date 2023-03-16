@@ -84,6 +84,7 @@ class nsIGlobalObject : public nsISupports,
 
  public:
   using RTPCallerType = mozilla::RTPCallerType;
+  using RFPTarget = mozilla::RFPTarget;
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IGLOBALOBJECT_IID)
 
   /**
@@ -248,10 +249,12 @@ class nsIGlobalObject : public nsISupports,
    * Check whether we should avoid leaking distinguishing information to JS/CSS.
    * https://w3c.github.io/fingerprinting-guidance/
    */
-  virtual bool ShouldResistFingerprinting() const = 0;
+  virtual bool ShouldResistFingerprinting(
+      RFPTarget aTarget = RFPTarget::Unknown) const = 0;
 
   // CallerType::System callers never have to resist fingerprinting.
-  bool ShouldResistFingerprinting(mozilla::dom::CallerType aCallerType) const;
+  bool ShouldResistFingerprinting(mozilla::dom::CallerType aCallerType,
+                                  RFPTarget aTarget = RFPTarget::Unknown) const;
 
   RTPCallerType GetRTPCallerType() const;
 
