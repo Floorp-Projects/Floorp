@@ -393,22 +393,20 @@ static void ResolveMidpoints(nsTArray<ColorStop>& stops) {
           (newStop.mPosition - offset1) / (offset2 - offset1);
       const float multiplier = powf(relativeOffset, logf(.5f) / logf(midpoint));
 
-      MOZ_ASSERT(color1.color_space == StyleColorSpace::Srgb,
-                 "should be in sRGB");
-      MOZ_ASSERT(color2.color_space == StyleColorSpace::Srgb,
-                 "should be in sRGB");
+      auto srgb1 = color1.ToColorSpace(StyleColorSpace::Srgb);
+      auto srgb2 = color2.ToColorSpace(StyleColorSpace::Srgb);
 
       const float red =
-          color1.components._0 +
-          multiplier * (color2.components._0 - color1.components._0);
+          srgb1.components._0 +
+          multiplier * (srgb2.components._0 - srgb1.components._0);
       const float green =
-          color1.components._1 +
-          multiplier * (color2.components._1 - color1.components._1);
+          srgb1.components._1 +
+          multiplier * (srgb2.components._1 - srgb1.components._1);
       const float blue =
-          color1.components._2 +
-          multiplier * (color2.components._2 - color1.components._2);
+          srgb1.components._2 +
+          multiplier * (srgb2.components._2 - srgb1.components._2);
       const float alpha =
-          color1.alpha + multiplier * (color2.alpha - color1.alpha);
+          srgb1.alpha + multiplier * (srgb2.alpha - srgb1.alpha);
 
       newStop.mColor = StyleAbsoluteColor::Srgb(red, green, blue, alpha);
     }
