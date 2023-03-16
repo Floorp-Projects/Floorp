@@ -338,6 +338,12 @@ class RAPL {
   void Sample() {
     constexpr uint64_t kSupportedVersion = 1;
 
+    // If we failed to allocate the memory for package energy statistics, we
+    // have nothing to sample.
+    if (MOZ_UNLIKELY(!mPkes)) {
+      return;
+    }
+
     // Write an unsupported version number into pkes_version so that the check
     // below cannot succeed by dumb luck.
     mPkes->pkes_version = kSupportedVersion - 1;
