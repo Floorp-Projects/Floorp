@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-migration-wizard-selection-header = Import Data from Another Browser
+migration-wizard-selection-header = Import Browser Data
 
 # Shown in the new migration wizard's dropdown selector for choosing the browser
 # to import from. This variant is shown when the selected browser doesn't support
@@ -113,3 +113,8 @@ migration-wizard-progress-success-history =
         [one] { $quantity } visit
        *[other] { $quantity } visits
     }
+
+migration-wizard-safari-permissions-sub-header = To import Safari bookmarks and browsing history:
+migration-wizard-safari-instructions-continue = Select “Continue”
+migration-wizard-safari-instructions-folder = Select Safari folder in the list and click “Open”
+migration-wizard-safari-select-button = Select File
