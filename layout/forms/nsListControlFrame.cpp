@@ -281,7 +281,7 @@ void nsListControlFrame::Reflow(nsPresContext* aPresContext,
   // If all the content and frames are here
   // then initialize it before reflow
   if (mIsAllContentHere && !mHasBeenInitialized) {
-    if (false == mIsAllFramesHere) {
+    if (!mIsAllFramesHere) {
       CheckIfAllFramesHere();
     }
     if (mIsAllFramesHere && !mHasBeenInitialized) {
@@ -672,17 +672,6 @@ void nsListControlFrame::SetInitialChildList(ChildListID aListID,
     }
   }
   nsHTMLScrollFrame::SetInitialChildList(aListID, std::move(aChildList));
-
-  // If all the content is here now check
-  // to see if all the frames have been created
-  /*if (mIsAllContentHere) {
-    // If all content and frames are here
-    // the reset/initialize
-    if (CheckIfAllFramesHere()) {
-      ResetList(aPresContext);
-      mHasBeenInitialized = true;
-    }
-  }*/
 }
 
 HTMLSelectElement& nsListControlFrame::Select() const {
@@ -706,19 +695,11 @@ void nsListControlFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 }
 
 dom::HTMLOptionsCollection* nsListControlFrame::GetOptions() const {
-  dom::HTMLSelectElement* select =
-      dom::HTMLSelectElement::FromNodeOrNull(mContent);
-  NS_ENSURE_TRUE(select, nullptr);
-
-  return select->Options();
+  return Select().Options();
 }
 
 dom::HTMLOptionElement* nsListControlFrame::GetOption(uint32_t aIndex) const {
-  dom::HTMLSelectElement* select =
-      dom::HTMLSelectElement::FromNodeOrNull(mContent);
-  NS_ENSURE_TRUE(select, nullptr);
-
-  return select->Item(aIndex);
+  return Select().Item(aIndex);
 }
 
 NS_IMETHODIMP
@@ -966,6 +947,23 @@ nsListControlFrame::OnSetSelectedIndex(int32_t aOldIndex, int32_t aNewIndex) {
 // End nsISelectControlFrame
 //----------------------------------------------------------------------
 
+class AsyncReset final : public Runnable {
+ public:
+  AsyncReset(nsListControlFrame* aFrame, bool aScroll)
+      : Runnable("AsyncReset"), mFrame(aFrame), mScroll(aScroll) {}
+
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
+    if (mFrame.IsAlive()) {
+      static_cast<nsListControlFrame*>(mFrame.GetFrame())->ResetList(mScroll);
+    }
+    return NS_OK;
+  }
+
+ private:
+  WeakFrame mFrame;
+  bool mScroll;
+};
+
 nsresult nsListControlFrame::SetFormProperty(nsAtom* aName,
                                              const nsAString& aValue) {
   if (nsGkAtoms::selected == aName) {
@@ -990,16 +988,17 @@ void nsListControlFrame::DidReflow(nsPresContext* aPresContext,
 
   if (mNeedToReset && !wasInterrupted) {
     mNeedToReset = false;
-    // Suppress scrolling to the selected element if we restored
-    // scroll history state AND the list contents have not changed
-    // since we loaded all the children AND nothing else forced us
-    // to scroll by calling ResetList(true). The latter two conditions
-    // are folded into mPostChildrenLoadedReset.
+    // Suppress scrolling to the selected element if we restored scroll
+    // history state AND the list contents have not changed since we loaded
+    // all the children AND nothing else forced us to scroll by calling
+    // ResetList(true). The latter two conditions are folded into
+    // mPostChildrenLoadedReset.
     //
     // The idea is that we want scroll history restoration to trump ResetList
     // scrolling to the selected element, when the ResetList was probably only
     // caused by content loading normally.
-    ResetList(!DidHistoryRestore() || mPostChildrenLoadedReset);
+    const bool scroll = !DidHistoryRestore() || mPostChildrenLoadedReset;
+    nsContentUtils::AddScriptRunner(new AsyncReset(this, scroll));
   }
 
   mHasPendingInterruptAtStartOfReflow = false;
@@ -1014,10 +1013,9 @@ nsresult nsListControlFrame::GetFrameName(nsAString& aResult) const {
 nscoord nsListControlFrame::GetBSizeOfARow() { return BSizeOfARow(); }
 
 bool nsListControlFrame::IsOptionInteractivelySelectable(int32_t aIndex) const {
-  if (HTMLSelectElement* sel = HTMLSelectElement::FromNode(mContent)) {
-    if (HTMLOptionElement* item = sel->Item(aIndex)) {
-      return IsOptionInteractivelySelectable(sel, item);
-    }
+  auto& select = Select();
+  if (HTMLOptionElement* item = select.Item(aIndex)) {
+    return IsOptionInteractivelySelectable(&select, item);
   }
   return false;
 }
