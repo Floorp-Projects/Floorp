@@ -261,12 +261,20 @@ class ProviderQuickSuggest extends UrlbarProvider {
       // Show the result as a best match. Best match titles don't include the
       // `full_keyword`, and the user's search string is highlighted.
       payload.title = [suggestion.title, UrlbarUtils.HIGHLIGHT.TYPED];
-      payload.isBlockable = lazy.UrlbarPrefs.get("bestMatchBlockingEnabled");
+      payload.isBlockable =
+        lazy.UrlbarPrefs.get("bestMatchBlockingEnabled") ||
+        // For Nimbus, we enable blocking when the result menu is enabled. We
+        // don't do this in automation so we can test all pref combinations.
+        (lazy.UrlbarPrefs.get("resultMenu") && !Cu.isInAutomation);
     } else {
       // Show the result as a usual quick suggest. Include the `full_keyword`
       // and highlight the parts that aren't in the search string.
       payload.title = suggestion.title;
-      payload.isBlockable = lazy.UrlbarPrefs.get("quickSuggestBlockingEnabled");
+      payload.isBlockable =
+        lazy.UrlbarPrefs.get("quickSuggestBlockingEnabled") ||
+        // For Nimbus, we enable blocking when the result menu is enabled. We
+        // don't do this in automation so we can test all pref combinations.
+        (lazy.UrlbarPrefs.get("resultMenu") && !Cu.isInAutomation);
       payload.qsSuggestion = [
         suggestion.full_keyword,
         UrlbarUtils.HIGHLIGHT.SUGGESTED,
@@ -346,6 +354,9 @@ class ProviderQuickSuggest extends UrlbarProvider {
    */
   blockResult(queryContext, result) {
     if (
+      // For Nimbus, we enable blocking when the result menu is enabled. We
+      // don't do this in automation so we can test all pref combinations.
+      (lazy.UrlbarPrefs.get("resultMenu") && !Cu.isInAutomation) ||
       (!result.isBestMatch &&
         !lazy.UrlbarPrefs.get("quickSuggestBlockingEnabled")) ||
       (result.isBestMatch && !lazy.UrlbarPrefs.get("bestMatchBlockingEnabled"))
