@@ -5,7 +5,7 @@
 
 do_get_profile(); // must be done before instantiating nsIX509CertDB
 
-const SECS_IN_A_WEEK = 7 * 24 * 60 * 60 * 1000;
+const SECS_IN_A_WEEK = 7 * 24 * 60 * 60;
 const TESTCASES = [
   {
     hostname: "a.pinning.example.com",

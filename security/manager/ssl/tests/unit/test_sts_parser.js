@@ -87,6 +87,9 @@ function run_test() {
   );
   testSuccess('max-age=100; unrelated="quoted \\"thingy\\""', 100, false);
 
+  // Test a max-age greater than 100 years. It will be capped at 100 years.
+  testSuccess("max-age=4294967296", 60 * 60 * 24 * 365 * 100, false);
+
   // SHOULD FAIL:
   // invalid max-ages
   testFailure("max-age");
