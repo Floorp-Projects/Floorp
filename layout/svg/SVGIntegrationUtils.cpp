@@ -1209,7 +1209,11 @@ already_AddRefed<gfxDrawable> SVGIntegrationUtils::DrawableFromPaintServer(
     gfxRect overrideBounds(0, 0, aPaintServerSize.width,
                            aPaintServerSize.height);
     overrideBounds.Scale(1.0 / aFrame->PresContext()->AppUnitsPerDevPixel());
-    imgDrawingParams imgParams(aFlags);
+    uint32_t imgFlags = imgIContainer::FLAG_ASYNC_NOTIFY;
+    if (aFlags & SVGIntegrationUtils::FLAG_SYNC_DECODE_IMAGES) {
+      imgFlags |= imgIContainer::FLAG_SYNC_DECODE;
+    }
+    imgDrawingParams imgParams(imgFlags);
     RefPtr<gfxPattern> pattern = server->GetPaintServerPattern(
         aTarget, aDrawTarget, aContextMatrix, &nsStyleSVG::mFill, 1.0,
         imgParams, &overrideBounds);
