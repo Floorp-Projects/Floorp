@@ -349,8 +349,11 @@ add_task(async function test_track_ad_on_DOMContentLoaded() {
     ) + "slow_loading_page_with_ads.html";
 
   let observeAdPreviouslyRecorded = TestUtils.consoleMessageObserved(msg => {
-    return msg.wrappedJSObject.arguments[0].includes(
-      "Ad was previously reported for browser with URI"
+    return (
+      typeof msg.wrappedJSObject.arguments?.[0] == "string" &&
+      msg.wrappedJSObject.arguments[0].includes(
+        "Ad was previously reported for browser with URI"
+      )
     );
   });
 
