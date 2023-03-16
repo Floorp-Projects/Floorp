@@ -55,10 +55,12 @@ class ShadowRealmGlobalScope : public nsIGlobalObject, public nsWrapperCache {
 
   JS::loader::ModuleLoaderBase* GetModuleLoader(JSContext* aCx) override;
 
-  bool ShouldResistFingerprinting() const override {
+  bool ShouldResistFingerprinting(
+      RFPTarget aTarget = RFPTarget::Unknown) const override {
     return nsContentUtils::ShouldResistFingerprinting(
         "Presently we don't have enough context to make an informed decision"
-        "on JS Sandboxes. See 1782853");
+        "on JS Sandboxes. See 1782853",
+        aTarget);
   }
 
  private:
