@@ -6,6 +6,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 import {
   element,
+  ShadowRoot,
   WebElement,
 } from "chrome://remote/content/marionette/element.sys.mjs";
 
@@ -1459,6 +1460,9 @@ GeckoDriver.prototype.releaseActions = async function() {
  * @param {string} value
  *     Value the client is looking for.
  *
+ * @return {WebElement}
+ *     Return the found element.
+ *
  * @throws {NoSuchElementError}
  *     If element represented by reference <var>element</var> is unknown.
  * @throws {NoSuchWindowError}
@@ -1477,6 +1481,7 @@ GeckoDriver.prototype.findElement = async function(cmd) {
     );
   }
 
+  lazy.assert.defined(value);
   lazy.assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
@@ -1495,6 +1500,54 @@ GeckoDriver.prototype.findElement = async function(cmd) {
 };
 
 /**
+ * Find an element within shadow root using the indicated search strategy.
+ *
+ * @param {string} shadowRoot
+ *     Shadow root reference ID.
+ * @param {string} using
+ *     Indicates which search method to use.
+ * @param {string} value
+ *     Value the client is looking for.
+ *
+ * @return {WebElement}
+ *     Return the found element.
+ *
+ * @throws {DetachedShadowRootError}
+ *     If shadow root represented by reference <var>id</var> is
+ *     no longer attached to the DOM.
+ * @throws {NoSuchElementError}
+ *     If the element which is looked for with <var>value</var> was
+ *     not found.
+ * @throws {NoSuchShadowRoot}
+ *     If shadow root represented by reference <var>shadowRoot</var> is unknown.
+ * @throws {NoSuchWindowError}
+ *     Browsing context has been discarded.
+ * @throws {UnexpectedAlertOpenError}
+ *     A modal dialog is open, blocking this operation.
+ */
+GeckoDriver.prototype.findElementFromShadowRoot = async function(cmd) {
+  const { shadowRoot, using, value } = cmd.parameters;
+
+  if (!SUPPORTED_STRATEGIES.has(using)) {
+    throw new lazy.error.InvalidSelectorError(
+      `Strategy not supported: ${using}`
+    );
+  }
+
+  lazy.assert.defined(value);
+  lazy.assert.open(this.getBrowsingContext());
+  await this._handleUserPrompts();
+
+  const opts = {
+    all: false,
+    startNode: ShadowRoot.fromUUID(shadowRoot).toJSON(),
+    timeout: this.currentSession.timeouts.implicit,
+  };
+
+  return this.getActor().findElement(using, value, opts);
+};
+
+/**
  * Find elements using the indicated search strategy.
  *
  * @param {string=} element
@@ -1503,6 +1556,9 @@ GeckoDriver.prototype.findElement = async function(cmd) {
  *     Indicates which search method to use.
  * @param {string} value
  *     Value the client is looking for.
+ *
+ * @return {Array<WebElement>}
+ *     Return the array of found elements.
  *
  * @throws {NoSuchElementError}
  *     If element represented by reference <var>element</var> is unknown.
@@ -1522,6 +1578,7 @@ GeckoDriver.prototype.findElements = async function(cmd) {
     );
   }
 
+  lazy.assert.defined(value);
   lazy.assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
@@ -1534,6 +1591,51 @@ GeckoDriver.prototype.findElements = async function(cmd) {
     startNode,
     timeout: this.currentSession.timeouts.implicit,
     all: true,
+  };
+
+  return this.getActor().findElements(using, value, opts);
+};
+
+/**
+ * Find elements within shadow root using the indicated search strategy.
+ *
+ * @param {string} shadowRoot
+ *     Shadow root reference ID.
+ * @param {string} using
+ *     Indicates which search method to use.
+ * @param {string} value
+ *     Value the client is looking for.
+ *
+ * @return {Array<WebElement>}
+ *     Return the array of found elements.
+ *
+ * @throws {DetachedShadowRootError}
+ *     If shadow root represented by reference <var>id</var> is
+ *     no longer attached to the DOM.
+ * @throws {NoSuchShadowRoot}
+ *     If shadow root represented by reference <var>shadowRoot</var> is unknown.
+ * @throws {NoSuchWindowError}
+ *     Browsing context has been discarded.
+ * @throws {UnexpectedAlertOpenError}
+ *     A modal dialog is open, blocking this operation.
+ */
+GeckoDriver.prototype.findElementsFromShadowRoot = async function(cmd) {
+  const { shadowRoot, using, value } = cmd.parameters;
+
+  if (!SUPPORTED_STRATEGIES.has(using)) {
+    throw new lazy.error.InvalidSelectorError(
+      `Strategy not supported: ${using}`
+    );
+  }
+
+  lazy.assert.defined(value);
+  lazy.assert.open(this.getBrowsingContext());
+  await this._handleUserPrompts();
+
+  const opts = {
+    all: true,
+    startNode: ShadowRoot.fromUUID(shadowRoot).toJSON(),
+    timeout: this.currentSession.timeouts.implicit,
   };
 
   return this.getActor().findElements(using, value, opts);
@@ -3144,7 +3246,11 @@ GeckoDriver.prototype.commands = {
   "WebDriver:ExecuteAsyncScript": GeckoDriver.prototype.executeAsyncScript,
   "WebDriver:ExecuteScript": GeckoDriver.prototype.executeScript,
   "WebDriver:FindElement": GeckoDriver.prototype.findElement,
+  "WebDriver:FindElementFromShadowRoot":
+    GeckoDriver.prototype.findElementFromShadowRoot,
   "WebDriver:FindElements": GeckoDriver.prototype.findElements,
+  "WebDriver:FindElementsFromShadowRoot":
+    GeckoDriver.prototype.findElementsFromShadowRoot,
   "WebDriver:Forward": GeckoDriver.prototype.goForward,
   "WebDriver:FullscreenWindow": GeckoDriver.prototype.fullscreenWindow,
   "WebDriver:GetActiveElement": GeckoDriver.prototype.getActiveElement,

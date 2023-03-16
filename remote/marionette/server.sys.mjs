@@ -309,6 +309,7 @@ export class TCPConnection {
     const commandsNoValueResponse = [
       "Marionette:Quit",
       "WebDriver:FindElements",
+      "WebDriver:FindElementsFromShadowRoot",
       "WebDriver:CloseChromeWindow",
       "WebDriver:CloseWindow",
       "WebDriver:FullscreenWindow",
