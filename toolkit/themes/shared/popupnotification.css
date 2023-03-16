@@ -49,6 +49,7 @@ popupnotificationcontent {
 
 .popup-notification-body {
   width: var(--popup-notification-body-width);
+  flex: 1 auto;
 }
 
 .popup-notification-closebutton {

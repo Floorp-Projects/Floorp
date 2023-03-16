@@ -215,7 +215,7 @@
   <hbox id="fontSettings">
     <hbox align="center" flex="1">
       <label control="defaultFont" data-l10n-id="default-font"/>
-      <menulist id="defaultFont" flex="1" delayprefsave="true"/>
+      <menulist id="defaultFont" delayprefsave="true"/>
       <label id="defaultFontSizeLabel" control="defaultFontSize" data-l10n-id="default-font-size"></label>
       <menulist id="defaultFontSize" delayprefsave="true">
         <menupopup>
@@ -429,10 +429,10 @@
   <listheader id="handlersViewHeader">
     <treecol id="typeColumn" data-l10n-id="applications-type-column" value="type"
              persist="sortDirection"
-             flex="1" sortDirection="ascending"/>
+             style="flex: 1 50%" sortDirection="ascending"/>
     <treecol id="actionColumn" data-l10n-id="applications-action-column" value="action"
              persist="sortDirection"
-             flex="1"/>
+             style="flex: 1 50%"/>
   </listheader>
   <richlistbox id="handlersView"
                preference="pref.downloads.disable_button.edit_actions"/>

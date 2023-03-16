@@ -283,9 +283,9 @@ SimpleTest.waitForFocus(runTests);
   </tooltip>
 
   <hbox id="splitterbox" style="margin-top: 5px;" onmousedown="this.setCapture()">
-    <hbox id="leftbox" style="width: 100px" flex="1"/>
+    <hbox id="leftbox" style="width: 100px; flex: 1 auto"/>
     <splitter id="splitter" style="width: 5px; height: 5px"/>
-    <hbox id="rightbox" style="width: 100px" flex="1"/>
+    <hbox id="rightbox" style="width: 100px; flex: 1 auto"/>
   </hbox>
 
   <vbox id="custom"  style="width: 10px; height: 10px" onmousedown="this.setCapture(); cachedMouseDown = event;"/>
