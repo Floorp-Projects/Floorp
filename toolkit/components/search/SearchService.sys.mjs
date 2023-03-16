@@ -3338,7 +3338,7 @@ export class SearchService {
 
     this._settings.removeObservers();
 
-    lazy.NimbusFeatures.search.off(this.#nimbusSearchUpdatedFun);
+    lazy.NimbusFeatures.search.offUpdate(this.#nimbusSearchUpdatedFun);
 
     Services.obs.removeObserver(this, lazy.SearchUtils.TOPIC_ENGINE_MODIFIED);
     Services.obs.removeObserver(this, QUIT_APPLICATION_TOPIC);

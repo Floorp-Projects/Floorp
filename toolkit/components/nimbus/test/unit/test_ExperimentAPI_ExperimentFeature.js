@@ -263,6 +263,12 @@ add_task(async function test_onUpdate_before_store_ready() {
     "Called on startup after loading experiments from disk"
   );
   Assert.equal(
+    stub.firstCall.args[0],
+    `featureUpdate:${feature.featureId}`,
+    "Called for correct feature"
+  );
+
+  Assert.equal(
     stub.firstCall.args[1],
     "feature-experiment-loaded",
     "Called for the expected reason"
@@ -301,7 +307,9 @@ add_task(async function test_ExperimentFeature_test_ready_late() {
 
   await featureInstance.ready();
 
-  Assert.ok(stub.notCalled, "We register too late to catch any events");
+  Assert.ok(stub.calledOnce, "Callback called");
+  Assert.equal(stub.firstCall.args[0], "featureUpdate:test-feature");
+  Assert.equal(stub.firstCall.args[1], "rollout-updated");
 
   setDefaultBranch(TEST_FALLBACK_PREF, JSON.stringify({ foo: true }));
 

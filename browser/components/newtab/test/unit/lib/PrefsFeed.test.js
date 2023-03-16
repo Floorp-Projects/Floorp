@@ -198,15 +198,15 @@ describe("PrefsFeed", () => {
 
   it("should remove all events on removeListeners", () => {
     feed.geo = "";
-    sandbox.spy(global.NimbusFeatures.pocketNewtab, "off");
-    sandbox.spy(global.NimbusFeatures.newtab, "off");
+    sandbox.spy(global.NimbusFeatures.pocketNewtab, "offUpdate");
+    sandbox.spy(global.NimbusFeatures.newtab, "offUpdate");
     feed.removeListeners();
     assert.calledWith(
-      global.NimbusFeatures.pocketNewtab.off,
+      global.NimbusFeatures.pocketNewtab.offUpdate,
       feed.onPocketExperimentUpdated
     );
     assert.calledWith(
-      global.NimbusFeatures.newtab.off,
+      global.NimbusFeatures.newtab.offUpdate,
       feed.onExperimentUpdated
     );
     assert.calledWith(
