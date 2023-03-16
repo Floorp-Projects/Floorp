@@ -401,19 +401,14 @@ var gSitePermissionsManager = {
   },
 
   _createPermissionListItem(permissionGroup) {
-    let width = "75px";
     let richlistitem = document.createXULElement("richlistitem");
     richlistitem.setAttribute("origin", permissionGroup.origin);
     let row = document.createXULElement("hbox");
-    row.setAttribute("style", "flex: 1");
 
     let hbox = document.createXULElement("hbox");
     let website = document.createXULElement("label");
     website.setAttribute("value", permissionGroup.origin);
-    // TODO(bug 1802993): Seems this could be on the hbox instead or something?
-    website.setAttribute("style", `width: ${width}`);
     hbox.setAttribute("class", "website-name");
-    hbox.setAttribute("style", `flex: 3 3`);
     hbox.appendChild(website);
 
     let states = SitePermissions.getAvailableStates(this._type).flatMap(
@@ -457,7 +452,6 @@ var gSitePermissionsManager = {
         this.onPermissionChange(permissionGroup, Number(siteStatus.value));
       });
     }
-    siteStatus.setAttribute("style", `flex: 1; width: ${width}`);
     siteStatus.setAttribute("class", "website-status");
     siteStatus.value = permissionGroup.capability;
 

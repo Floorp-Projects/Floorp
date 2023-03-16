@@ -20,6 +20,34 @@ hbox.website-status {
   min-height: 35px;
 }
 
+#permissionsBox > richlistitem > hbox {
+  flex: 1;
+}
+
+#siteCol {
+  flex: 3 3 auto;
+}
+
+.website-name {
+  flex: 3 3;
+}
+
+#statusCol {
+  flex: 1 auto;
+}
+
+.website-status {
+  flex: 1;
+}
+
+/* TODO(bug 1802993): Seems this could be on .website-name instead of label? */
+#siteCol,
+#statusCol,
+.website-name > label,
+.website-status {
+  width: 75px;
+}
+
 menulist.website-status {
   margin: 1px;
   margin-inline-end: 5px;
