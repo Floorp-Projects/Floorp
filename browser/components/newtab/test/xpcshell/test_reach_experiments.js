@@ -55,9 +55,7 @@ function assertContains(haystack, needle) {
 }
 
 add_task(function test_reach_experiment_dependentRequired() {
-  info(
-    "Testing that if id is present then content and template are not required"
-  );
+  info("Testing that if id is present then content and template are required");
 
   {
     const message = {
@@ -66,10 +64,12 @@ add_task(function test_reach_experiment_dependentRequired() {
     };
 
     const result = EXPERIMENT_VALIDATOR.validate(message);
-    Assert.ok(result.valid, "message should validate");
+    Assert.ok(!result.valid, "message should not validate");
+
+    assertContains(result.errors, depError("id", "content"));
+    assertContains(result.errors, depError("id", "template"));
   }
 
-  info("Testing that if content is present then id and template are required");
   {
     const message = {
       ...MESSAGES[0],
@@ -82,7 +82,6 @@ add_task(function test_reach_experiment_dependentRequired() {
     assertContains(result.errors, depError("content", "template"));
   }
 
-  info("Testing that if template is present then id and content are required");
   {
     const message = {
       ...MESSAGES[0],
