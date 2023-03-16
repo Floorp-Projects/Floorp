@@ -1,0 +1,15 @@
+[package]
+name = "authrs_bridge"
+version = "0.1.0"
+edition = "2021"
+authors = ["Martin Sirringhaus", "John Schanck"]
+
+[dependencies]
+authenticator = { version = "0.4.0-alpha.10", features = ["gecko"] }
+log = "0.4"
+moz_task = { path = "../../../xpcom/rust/moz_task" }
+nserror = { path = "../../../xpcom/rust/nserror" }
+nsstring = { path = "../../../xpcom/rust/nsstring" }
+serde_cbor = "0.11"
+thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
+xpcom = { path = "../../../xpcom/rust/xpcom" }

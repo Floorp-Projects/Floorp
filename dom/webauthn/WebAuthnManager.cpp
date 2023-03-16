@@ -10,6 +10,7 @@
 #include "nsThreadUtils.h"
 #include "WebAuthnCoseIdentifiers.h"
 #include "WebAuthnEnumStrings.h"
+#include "WebAuthnTransportIdentifiers.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/AuthenticatorAssertionResponse.h"
 #include "mozilla/dom/AuthenticatorAttestationResponse.h"
@@ -565,16 +566,16 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
         static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
         for (const nsAString& str : s.mTransports.Value()) {
           if (str.EqualsLiteral(MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_USB)) {
-            transports |= U2F_AUTHENTICATOR_TRANSPORT_USB;
+            transports |= MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_USB;
           } else if (str.EqualsLiteral(
                          MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_NFC)) {
-            transports |= U2F_AUTHENTICATOR_TRANSPORT_NFC;
+            transports |= MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_NFC;
           } else if (str.EqualsLiteral(
                          MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_BLE)) {
-            transports |= U2F_AUTHENTICATOR_TRANSPORT_BLE;
+            transports |= MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_BLE;
           } else if (str.EqualsLiteral(
                          MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_INTERNAL)) {
-            transports |= CTAP_AUTHENTICATOR_TRANSPORT_INTERNAL;
+            transports |= MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_INTERNAL;
           }
         }
         c.transports() = transports;

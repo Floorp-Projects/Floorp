@@ -9,7 +9,7 @@ with Files("**"):
 
 IPDL_SOURCES += ["PWebAuthnTransaction.ipdl"]
 
-XPIDL_SOURCES += ["nsIU2FTokenManager.idl"]
+XPIDL_SOURCES += ["nsIU2FTokenManager.idl", "nsIWebAuthnController.idl"]
 
 XPIDL_MODULE = "dom_webauthn"
 
@@ -17,13 +17,13 @@ EXPORTS.mozilla.dom += [
     "AuthenticatorAssertionResponse.h",
     "AuthenticatorAttestationResponse.h",
     "AuthenticatorResponse.h",
-    "CTAPHIDTokenManager.h",
     "PublicKeyCredential.h",
     "U2FHIDTokenManager.h",
     "U2FSoftTokenManager.h",
     "U2FTokenManager.h",
     "U2FTokenTransport.h",
     "WebAuthnCBORUtil.h",
+    "WebAuthnController.h",
     "WebAuthnManager.h",
     "WebAuthnManagerBase.h",
     "WebAuthnTransactionChild.h",
@@ -36,14 +36,18 @@ UNIFIED_SOURCES += [
     "AuthenticatorAssertionResponse.cpp",
     "AuthenticatorAttestationResponse.cpp",
     "AuthenticatorResponse.cpp",
+    "AuthrsTransport.cpp",
     "cbor-cpp/src/encoder.cpp",
     "cbor-cpp/src/output_dynamic.cpp",
-    "CTAPHIDTokenManager.cpp",
+    "CtapArgs.cpp",
+    "CtapResults.cpp",
     "PublicKeyCredential.cpp",
     "U2FHIDTokenManager.cpp",
     "U2FSoftTokenManager.cpp",
+    "U2FSoftTokenTransport.cpp",
     "U2FTokenManager.cpp",
     "WebAuthnCBORUtil.cpp",
+    "WebAuthnController.cpp",
     "WebAuthnManager.cpp",
     "WebAuthnManagerBase.cpp",
     "WebAuthnTransactionChild.cpp",

@@ -37,19 +37,6 @@ pref("security.remember_cert_checkbox_default_setting", true);
 // x_11_x: COSE is required, PKCS#7 disabled (fail when present)
 pref("security.signed_app_signatures.policy", 2);
 
-// Only one of ["enable_softtoken", "enable_usbtoken",
-// "webauthn_enable_android_fido2"] should be true at a time, as the
-// softtoken will override the other two. Note android's pref is set in
-// mobile.js / geckoview-prefs.js
-pref("security.webauth.webauthn_enable_softtoken", false);
-
-#ifdef MOZ_WIDGET_ANDROID
-  // the Rust usbtoken support does not function on Android
-  pref("security.webauth.webauthn_enable_usbtoken", false);
-#else
-  pref("security.webauth.webauthn_enable_usbtoken", true);
-#endif
-
 pref("security.xfocsp.errorReporting.enabled", true);
 pref("security.xfocsp.errorReporting.automatic", false);
 
