@@ -1,3 +1,5 @@
+// |jit-test| skip-if: getBuildConfiguration()["android"]
+
 try {
   a = {};
   for (b = 0; b < 24; b++)
