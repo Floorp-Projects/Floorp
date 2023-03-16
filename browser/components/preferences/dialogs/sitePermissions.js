@@ -68,10 +68,47 @@ const sitePermissionsConfig = {
   },
 };
 
-function Permission(principal, capability) {
-  this.principal = principal;
-  this.origin = principal.origin;
-  this.capability = capability;
+// A set of permissions for a single origin.  One PermissionGroup instance
+// corresponds to one row in the gSitePermissionsManager._list richlistbox.
+// Permissions may be single or double keyed, but the primary key of all
+// permissions matches the permission type of the dialog.
+class PermissionGroup {
+  #changedCapability;
+
+  constructor(perm) {
+    this.principal = perm.principal;
+    this.origin = perm.principal.origin;
+    this.perms = [perm];
+  }
+  addPermission(perm) {
+    this.perms.push(perm);
+  }
+  removePermission(perm) {
+    this.perms = this.perms.filter(p => p.type != perm.type);
+  }
+  set capability(cap) {
+    this.#changedCapability = cap;
+  }
+  get capability() {
+    if (this.#changedCapability) {
+      return this.#changedCapability;
+    }
+    // This logic to present a single capability for permissions of different
+    // keys and capabilities caters for speaker-selection, where a block
+    // permission may be set for all devices with no second key, which would
+    // override any device-specific double-keyed allow permissions.
+    let cap;
+    for (let perm of this.perms) {
+      let [type] = perm.type.split(SitePermissions.PERM_KEY_DELIMITER);
+      if (type == perm.type) {
+        // No second key.  This overrides double-keyed perms.
+        return perm.capability;
+      }
+      // Double-keyed perms are not expected to have different capabilities.
+      cap = perm.capability;
+    }
+    return cap;
+  }
 }
 
 const PERMISSION_STATES = [
@@ -90,7 +127,7 @@ const AUTOPLAY_PREF = "media.autoplay.default";
 var gSitePermissionsManager = {
   _type: "",
   _isObserving: false,
-  _permissions: new Map(),
+  _permissionGroups: new Map(),
   _permissionsToChange: new Map(),
   _permissionsToDelete: new Map(),
   _list: null,
@@ -184,10 +221,11 @@ var gSitePermissionsManager = {
     }
 
     let permission = subject.QueryInterface(Ci.nsIPermission);
+    let [type] = permission.type.split(SitePermissions.PERM_KEY_DELIMITER);
 
     // Ignore unrelated permission types and permissions with unknown states.
     if (
-      permission.type !== this._type ||
+      type !== this._type ||
       !PERMISSION_STATES.includes(permission.capability)
     ) {
       return;
@@ -195,14 +233,25 @@ var gSitePermissionsManager = {
 
     if (data == "added") {
       this._addPermissionToList(permission);
-      this.buildPermissionsList();
-    } else if (data == "changed") {
-      let p = this._permissions.get(permission.principal.origin);
-      p.capability = permission.capability;
-      this.buildPermissionsList();
-    } else if (data == "deleted") {
-      this._removePermissionFromList(permission.principal.origin);
+    } else {
+      let group = this._permissionGroups.get(permission.principal.origin);
+      if (!group) {
+        // already moved to _permissionsToDelete
+        // or private browsing session permission
+        return;
+      }
+      if (data == "changed") {
+        group.removePermission(permission);
+        group.addPermission(permission);
+      } else if (data == "deleted") {
+        group.removePermission(permission);
+        if (!group.perms.length) {
+          this._removePermissionFromList(permission.principal.origin);
+          return;
+        }
+      }
     }
+    this.buildPermissionsList();
   },
 
   _handleCheckboxUIUpdates() {
@@ -312,9 +361,10 @@ var gSitePermissionsManager = {
   },
 
   _addPermissionToList(perm) {
+    let [type] = perm.type.split(SitePermissions.PERM_KEY_DELIMITER);
     // Ignore unrelated permission types and permissions with unknown states.
     if (
-      perm.type !== this._type ||
+      type !== this._type ||
       !PERMISSION_STATES.includes(perm.capability) ||
       // Skip private browsing session permissions
       (perm.principal.privateBrowsingId !==
@@ -323,12 +373,17 @@ var gSitePermissionsManager = {
     ) {
       return;
     }
-    let p = new Permission(perm.principal, perm.capability);
-    this._permissions.set(p.origin, p);
+    let group = this._permissionGroups.get(perm.principal.origin);
+    if (group) {
+      group.addPermission(perm);
+    } else {
+      group = new PermissionGroup(perm);
+      this._permissionGroups.set(group.origin, group);
+    }
   },
 
   _removePermissionFromList(origin) {
-    this._permissions.delete(origin);
+    this._permissionGroups.delete(origin);
     let permissionlistitem = document.getElementsByAttribute(
       "origin",
       origin
@@ -345,16 +400,16 @@ var gSitePermissionsManager = {
     }
   },
 
-  _createPermissionListItem(permission) {
+  _createPermissionListItem(permissionGroup) {
     let width = "75px";
     let richlistitem = document.createXULElement("richlistitem");
-    richlistitem.setAttribute("origin", permission.origin);
+    richlistitem.setAttribute("origin", permissionGroup.origin);
     let row = document.createXULElement("hbox");
     row.setAttribute("style", "flex: 1");
 
     let hbox = document.createXULElement("hbox");
     let website = document.createXULElement("label");
-    website.setAttribute("value", permission.origin);
+    website.setAttribute("value", permissionGroup.origin);
     // TODO(bug 1802993): Seems this could be on the hbox instead or something?
     website.setAttribute("style", `width: ${width}`);
     hbox.setAttribute("class", "website-name");
@@ -368,7 +423,7 @@ var gSitePermissionsManager = {
         // PROMPT permission set for an origin.
         if (
           state == SitePermissions.UNKNOWN &&
-          permission.capability == SitePermissions.PROMPT
+          permissionGroup.capability == SitePermissions.PROMPT
         ) {
           return SitePermissions.PROMPT;
         }
@@ -386,7 +441,7 @@ var gSitePermissionsManager = {
       siteStatus.appendChild(label);
       document.l10n.setAttributes(
         label,
-        this._getCapabilityL10nId(label, this._type, permission.capability)
+        this._getCapabilityL10nId(label, this._type, permissionGroup.capability)
       );
     } else {
       // Multiple states are available.  Show a menulist.
@@ -399,12 +454,12 @@ var gSitePermissionsManager = {
         );
       }
       siteStatus.addEventListener("select", () => {
-        this.onPermissionChange(permission, Number(siteStatus.value));
+        this.onPermissionChange(permissionGroup, Number(siteStatus.value));
       });
     }
     siteStatus.setAttribute("style", `flex: 1; width: ${width}`);
     siteStatus.setAttribute("class", "website-status");
-    siteStatus.value = permission.capability;
+    siteStatus.value = permissionGroup.capability;
 
     row.appendChild(hbox);
     row.appendChild(siteStatus);
@@ -441,18 +496,18 @@ var gSitePermissionsManager = {
   onPermissionDelete() {
     let richlistitem = this._list.selectedItem;
     let origin = richlistitem.getAttribute("origin");
-    let permission = this._permissions.get(origin);
+    let permissionGroup = this._permissionGroups.get(origin);
 
     this._removePermissionFromList(origin);
-    this._permissionsToDelete.set(permission.origin, permission);
+    this._permissionsToDelete.set(permissionGroup.origin, permissionGroup);
 
     this._setRemoveButtonState();
   },
 
   onAllPermissionsDelete() {
-    for (let permission of this._permissions.values()) {
-      this._removePermissionFromList(permission.origin);
-      this._permissionsToDelete.set(permission.origin, permission);
+    for (let permissionGroup of this._permissionGroups.values()) {
+      this._removePermissionFromList(permissionGroup.origin);
+      this._permissionsToDelete.set(permissionGroup.origin, permissionGroup);
     }
 
     this._setRemoveButtonState();
@@ -463,12 +518,12 @@ var gSitePermissionsManager = {
   },
 
   onPermissionChange(perm, capability) {
-    let p = this._permissions.get(perm.origin);
-    if (p.capability == capability) {
+    let group = this._permissionGroups.get(perm.origin);
+    if (group.capability == capability) {
       return;
     }
-    p.capability = capability;
-    this._permissionsToChange.set(p.origin, p);
+    group.capability = capability;
+    this._permissionsToChange.set(group.origin, group);
 
     // enable "remove all" button as needed
     this._setRemoveButtonState();
@@ -480,12 +535,18 @@ var gSitePermissionsManager = {
     // to update the UI
     this.uninit();
 
-    for (let p of this._permissionsToChange.values()) {
-      SitePermissions.setForPrincipal(p.principal, this._type, p.capability);
+    for (let group of this._permissionsToChange.values()) {
+      SitePermissions.setForPrincipal(
+        group.principal,
+        this._type,
+        group.capability
+      );
     }
 
-    for (let p of this._permissionsToDelete.values()) {
-      SitePermissions.removeFromPrincipal(p.principal, this._type);
+    for (let group of this._permissionsToDelete.values()) {
+      for (let perm of group.perms) {
+        SitePermissions.removeFromPrincipal(perm.principal, perm.type);
+      }
     }
 
     if (this._checkbox.checked) {
@@ -509,15 +570,15 @@ var gSitePermissionsManager = {
     }
     let frag = document.createDocumentFragment();
 
-    let permissions = Array.from(this._permissions.values());
+    let permissionGroups = Array.from(this._permissionGroups.values());
 
     let keyword = this._searchBox.value.toLowerCase().trim();
-    for (let permission of permissions) {
-      if (keyword && !permission.origin.includes(keyword)) {
+    for (let permissionGroup of permissionGroups) {
+      if (keyword && !permissionGroup.origin.includes(keyword)) {
         continue;
       }
 
-      let richlistitem = this._createPermissionListItem(permission);
+      let richlistitem = this._createPermissionListItem(permissionGroup);
       frag.appendChild(richlistitem);
     }
 
