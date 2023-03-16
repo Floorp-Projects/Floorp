@@ -1232,6 +1232,14 @@
     %1$s is a placeholder that will be replaced by the app name. -->
     <string name="notification_re_engagement_text">%1$s ile çerezleriniz ve geçmişiniz kaydedilmeden gezin</string>
 
+    <!-- Title A shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_A_title">İz bırakmadan gezinin</string>
+    <!-- Text A shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_A_text">%1$s, gizli gezintide bilgilerinizi kaydetmez.</string>
+    <!-- Title B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_title">Aramaya başlayın</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Koleksiyon silindi</string>
@@ -1449,18 +1457,24 @@
     <string name="preference_enhanced_tracking_protection_explanation_title">Takip edilmeden gezinin</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation">Verileriniz sizde kalsın. %s, internette ne yaptığınızı öğrenmeye çalışan takipçilerin çoğundan sizi korur.</string>
+    <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">%s, internette ne yaptığınızı öğrenmeye çalışan takipçilerin çoğundan sizi korur.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Daha fazla bilgi al</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standart (varsayılan)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_4">Dengeli gizlilik ve performans. Sayfalar normal şekilde yüklenir.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_5" tools:ignore="UnusedResources">Sayfalar normal şekilde yüklenecek ama daha az takipçi engellenecek.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Standart izlenme korumasında neler engellenir?</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Sıkı</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_3">Sayfaların daha hızlı yüklenmesi için daha fazla takipçiyi engeller ancak bazı sayfa işlevleri bozulabilir.</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_4" tools:ignore="UnusedResources">Daha güçlü izlenme koruması ve daha hızlı performans, ancak bazı siteler düzgün çalışmayabilir.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Sıkı izlenme korumasında neler engellenir?</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->

@@ -120,8 +120,21 @@
 
 
     <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">Хосусый эзләү</string>
+         Focus is hard coded since we can't use variables in this context.
+         Do not translate or transliterate Focus.-->
+    <string name="text_selection_search_action_focus">Focus эченнән эзләү</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+             Klar is hard coded since we can't use variables in this context.
+             Do not translate or transliterate Klar.-->
+    <string name="text_selection_search_action_klar">Klar эченнән эзләү</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+            Focus Beta is hard coded since we can't use variables in this context.
+            Do not translate or transliterate Focus Beta.-->
+    <string name="text_selection_search_action_focus_beta">Focus Beta эченнән эзләү</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+          Focus Nightly is hard coded since we can't use variables in this context.
+          Do not translate or transliterate Focus Nightly.-->
+    <string name="text_selection_search_action_focus_nightly">Focus Nightly эченнән эзләү</string>
 
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Хосусыйлык &amp; Хәвефсезлек</string>
@@ -283,10 +296,12 @@
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Кушымтаны ачу өчен бармак эзен куллану</string>
+
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
-        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_security_biometric_summary">Сезнең бармак эзегез, кушымтада бер URL сылтама инде ачык булганда, %1$s\'ны ача ала. Stealth-режим кабыначак.</string>
+        %s will be replaced by the app name (e.g. Firefox Focus)
+        Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
+    <string name="preference_security_biometric_summary2">Ярлыклар өстәгән булсагыз яки вебсайт %s браузерында инде ачылган булса, бармак эзен кулланып ачыгыз.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
@@ -348,10 +363,6 @@
     <string name="preference_search_add3">Башка бер эзләү системасын өстәү</string>
     <!-- Explanation text above the list of search engines-->
     <string name="preference_select_preferred_engine">Үзегез теләгән эзләү системасын сайлагыз:</string>
-
-    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
-     a user first launches the app. -->
-    <string name="preference_homescreen_tips">Өй экранында киңәшләр күрсәтү</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Эзләү системасын өстәү</string>
@@ -478,25 +489,35 @@
 
 
 
-  <!-- Onboarding: Title -->
+  <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">Ябу</string>
+
+    <!-- New Onboarding flow first screen title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">%1$s-ка рәхим итегез!</string>
+    <string name="onboarding_first_screen_title">%1$s кушымтасына рәхим итегез</string>
 
-    <!-- Onboarding: Description -->
-    <string name="onboarding_description">Киләсе дәрәҗәдәге хосусый гизү, Сез теләгән вакытта</string>
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">Тиз. Хосусый. Бүлдерүләрсез.</string>
 
-    <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">Инкогнито режимы күзгә күренмәс режим белән очрашканда</string>
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">Башлау</string>
 
-    <!-- Onboarding: Incognito Description -->
-    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">%s — хосусыйлыкны беренче урынга куючы браузер. Ул күзәтелүдән һәм кукилардан иң югары дәрәҗә саклауга ия.</string>
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s башка браузерлар кебек түгел</string>
 
-    <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">Һич эз калдырмыйча гизегез</string>
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">Өстәмә хосусыйлык өчен кушымтаны япканда, без тарихыгызны чистартабыз.</string>
 
-    <!-- Onboarding: History Description -->
-    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Бер басу сезнең гизү тарихын һәм кукиларны бетерә — һәм рекламалар Сезне эзәрлекләмәз.</string>
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">Һәр сылтаманы ачканда да мәгълүматыгыз саклансын өчен %1$s браузерын төп браузер итеп билгеләгез.</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">Төп браузер итеп билгеләү</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">Калдырып тору</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Хосусыйлыгызны көчәйтегез</string>
@@ -635,6 +656,64 @@
     <!-- Preference for site permissions -->
     <string name="preference_site_permissions">Сайт рөхсәтләре</string>
 
+    <!--  Preference for cookie banner. The name of the item from settings screen and the title of the cookie banner screen. -->
+    <string name="preferences_cookie_banner">Cookie баннерларын киметү</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is not disabled. -->
+    <string name="preferences_cookie_banner_summary_on">Кабынган</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is disabled. -->
+    <string name="preferences_cookie_banner_summary_off">Сүнгән</string>
+
+    <!--  Title preference inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_title"> Cookie баннерларын киметү</string>
+
+    <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_summary">Мөмкинлек булганда cookie сорауларын автоматик рәвештә кире кагып, баннерларны азрак күрегез.</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically, this is shown as part of the protections panel with the tracking protection toggle. -->--&gt;
+    <string name="cookie_banner_exception_item_title">Cookie баннерларын киметү</string>
+
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle. -->
+    <string name="cookie_banner_exception_item_description_state_on">Бу сайт өчен кабынган</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle. -->
+    <string name="cookie_banner_exception_item_description_state_off">Бу сайт өчен cүнгән</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically, this is shown when the user enters in details after he clicks on the item from protection panel. -->
+    <string name="cookie_banner_exception_panel_switch_title">Cookie баннерларын киметү</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown when the user enters in details after he clicks on the item from protection panel. -->
+    <string name="cookie_banner_exception_panel_switch_state_off">Бу сайт өчен cүнгән</string>
+
+    <!-- Text for indicating cookie banner handling is on this site, this is shown when the user enters in details after he clicks on the item from protection panel. -->
+    <string name="cookie_banner_exception_panel_switch_state_on">Бу сайт өчен кабынган</string>
+
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site. -->
+    <string name="cookie_banner_exception_panel_title_state_on_for_site">%1$s өчен cookie баннерлары киметелсенме?</string>
+
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site. -->
+    <string name="cookie_banner_exception_panel_title_state_off_for_site">%1$s өчен cookie баннерлары киметелмәсенме?</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
+    <string name="cookie_banner_exception_panel_description_state_on_for_site">%1$s бу сайтның cookie файлларын чистартып, битне яңартачак. Барлык cookie-ларны да чистарту сайттан чыгуга яки сайттагы алыш-биреш кәрзинегезнең бушавына китерә ала.</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
+    <string name="cookie_banner_exception_panel_description_state_off_for_site" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s cookie сорауларын автоматик рәвештә кире кагарга тырыша ала. Әгәр кире кагу мөмкинлеге булмаса, %1$s баннерны ябу өчен барлык cookie файлларын да кабул итәргә мөмкин.</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
+    <string name="cookie_banner_exception_panel_description_state_off_for_site2">%1$s cookie сорауларын автоматик рәвештә кире кагарга тырышып карый ала.</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Cookie Banner (Banner Info Message). The placeholder will be updated with the app name. -->
+    <string name="cfr_for_cookie_banner" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s, туйдырып бетерүчу куки баннерларын яшерү өчен куки үтенечләрен кире кагарга тырыша.\n\nКуки баннерларына кагылышлы опцияләрне көйләүләрдә үзгәртә аласыз.</string>
+    <!-- CFR for Cookie Banner (Banner Info Message). %1$s will be replaced by the app name, %2$s will be an active link using the string cfr_cookie_banner_link as text. -->
+    <string name="cfr_cookie_banner">%1$s, туйдырып бетерүчу куки баннерларын яшерү өчен куки үтенечләрен кире кагарга тырыша.\n\nКуки баннерларына кагылышлы опцияләрне %2$s үзгәртә аласыз.</string>
+    <!-- CFR for Cookie Banner (Banner Info Message). This text should be the same as the settings text from "cfr_for_cookie_banner". The text should be underlined and should redirect the user to the cookie banner settings screen. -->
+    <string name="cfr_for_cookie_banner_underline_settings" moz:RemovedIn="111" tools:ignore="UnusedResources">көйләүләр</string>
+    <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
+    <string name="cfr_cookie_banner_link">көйләүләр</string>
+
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Автоуйнату</string>
 
@@ -673,17 +752,6 @@
 
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">USB/Wi-Fi аркылы хаталарны ерактан төзәтү</string>
-
-    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     %1$s is replaced with the app name -->
-    <string name="biometric_auth_title">%1$s\'ны ачу</string>
-
-    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string name="biometric_auth_description">Дәвам итү өчен, бармак эзен укучы сенсорга басыгыз.</string>
-
-    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string name="biometric_auth_new_session">Яңа утырыш</string>
 
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
@@ -725,11 +793,6 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Сайт көтелгәнчә эшләмиме?\nКүзәтүчеләрдән саклауны сүндереп карагыз</string>
 
-    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
-The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection3">Сайтта нидер төшеп калган яки сәер кебекме?\n
-    Күзәтүдән көчәйтелгән сакны сүндереп карагыз</string>
-
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[Иң еш кулланылган сайтларга бер орыну белән күчү өчен%1$s Меню > Өй экранга өстәү]]></string>
@@ -747,28 +810,8 @@ The new line here must be kept as the second half of the string is clickable for
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">Сылтаманы яңа биттә ачу өчен\nСылтамага озак итеп басып торыгыз</string>
 
-    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
-      %1$s is a placeholder for the app name. -->
-    <string name="tip_request_desktop2">Сайтның тулы версиясен күрәсегез киләме?\n
-        %1$s менюдан сайтның компьютер версиясенә күчү</string>
-
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Өй экрандагы киңәшләрне сүндерү</string>
-
-    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
-     "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist3">Ышанычлы сайт өчен Күзәтүдән көчәйтелгән сакны сүндерәсез киләме?\n
-        Аны көйләүләрдә рөхсәт ителгән сайтлар исемлегенә өстәгез
-    </string>
-
-    <!-- Tip displayed on the home view about the changes in the new release.
-    %1$s is a placeholder for the app name -->
-    <string name="tip_fresh_look">Нишләп булмасын, чынлап та безнең төс-кыяфәтебез үзгәрде! %1$s кушымтасындагы бу һәм башка яңартулар турында күбрәк укыгыз.</string>
-
-    <!-- Tip displayed on the home view about shortcuts
-    %1$s is a placeholder for the app name -->
-    <string name="tip_about_shortcuts">Сез иң күп караган сайтларга ярлыклар булдырыгыз:\n
-    %1$s менюсыннан &quot;Ярлыкларга өстәү&quot;не сайлагыз</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Яңа таб ачылды</string>
@@ -779,8 +822,6 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for switching to a new tab immediately after opening -->
     <string name="preference_open_new_tab">Яңа табтагы сылтамага шундук күчү</string>
 
-    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string moz:removedIn="97" name="preference_category_safe_browsing">Хәвефсез гизү</string>
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">Куркыныч булырга мөмкин һәм ялган сайтларны блоклау</string>
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
@@ -877,5 +918,7 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Табны ябу</string>
+
+    <!-- Promote SearchWidget Dialog -->
 
     </resources>

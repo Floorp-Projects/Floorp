@@ -246,6 +246,12 @@
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Выкарыстоўвайце адбіткі пальцаў для разблакіравання праграмы</string>
 
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %s will be replaced by the app name (e.g. Firefox Focus)
+        Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
+    <string name="preference_security_biometric_summary2">Разблакіроўка з дапамогай адбітка пальца, калі вы дадалі цэтлікі або калі вэб-сайт ужо адкрыты ў %s.</string>
+
     <string name="preference_category_security">Бяспека</string>
 
     <string name="preference_category_performance">Прадукцыйнасць</string>
@@ -347,6 +353,10 @@
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Дадаткова</string>
 
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
+    on home screen-->
+    <string name="indicator_content_description_menu">Кнопка дадатковых налад</string>
+
     <!-- Content description (not visible, for screen readers etc.): Reload current website -->
     <string name="content_description_reload">Перазагрузіць сайт</string>
 
@@ -397,6 +407,11 @@
 
     <!-- First run tour (Search): Title -->
     <string name="firstrun_search_title">Шукайце па-свойму</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">Дадайце цэтлікі на хатні экран</string>
+    <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_shortcut_text">Хутка вярніцеся да сваіх улюбёных сайтаў у %1$s. Проста выберыце \&quot;Дадаць на хатні экран\&quot; у меню %1$s.</string>
 
     <string name="firstrun_close_button">OK, зразумела!</string>
     <string name="firstrun_skip_button">Прапусціць</string>
@@ -644,6 +659,13 @@
 
     <!-- Tips displayed on the home view -->
 
+    <!-- Tip displayed on home view explaining how to add sites to homescreen
+    Argument 1 will be replaced with a line break in the application.-->
+    <string name="tip_add_to_homescreen"><![CDATA[Хуткі доступ да ўлюбёных сайтаў%1$s Меню > Дадаць на хатні экран]]></string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
+    <string name="tip_disable_tips2">Выключыць парады на стартавым экране</string>
+
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Адкрыта новая картка</string>
 
@@ -754,4 +776,11 @@
     <!-- Banner Info Message than will appear when user first enters in the app. The location is at the toolbar. -->
     <string name="cfr_for_start_browsing">Пачніце сеанс прыватнага аглядання і мы будзем блакіраваць трэкеры і іншыя непажаданыя элементы.</string>
 
-    </resources>
+    <!-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. -->
+    <string name="promote_search_widget_button_text">Дадаць віджэт на хатні экран</string>
+
+    <!-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. -->
+    <string name="promote_search_widget_snackbar_message">Віджэт дададзены на хатні экран</string>
+</resources>
