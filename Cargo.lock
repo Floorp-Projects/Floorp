@@ -2601,6 +2601,7 @@ version = "0.1.1"
 dependencies = [
  "base64",
  "bindgen 0.63.0",
+ "cfg-if 1.0.0",
  "http",
  "hyper",
  "log",
