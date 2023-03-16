@@ -57,11 +57,6 @@ export function getNewSelectedSource(state, tabList) {
   );
 
   if (matchingTab) {
-    const { sources } = state.sources;
-    if (!sources) {
-      return null;
-    }
-
     const specificSelectedSource = getSpecificSourceByURL(
       state,
       selectedSource.url,

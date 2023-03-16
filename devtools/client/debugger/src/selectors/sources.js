@@ -26,11 +26,11 @@ import {
 import { getSourceTextContent } from "./sources-content";
 
 export function hasSource(state, id) {
-  return state.sources.sources.has(id);
+  return state.sources.mutableSources.has(id);
 }
 
 export function getSource(state, id) {
-  return state.sources.sources.get(id);
+  return state.sources.mutableSources.get(id);
 }
 
 export function getSourceFromId(state, id) {
@@ -114,12 +114,12 @@ function getUrls(state) {
 
 // This is only used by Project Search and tests.
 export function getSourceList(state) {
-  return [...state.sources.sources.values()];
+  return [...state.sources.mutableSources.values()];
 }
 
 // This is only used by tests and create.js
 export function getSourceCount(state) {
-  return state.sources.sources.size;
+  return state.sources.mutableSources.size;
 }
 
 export function getSelectedLocation(state) {
