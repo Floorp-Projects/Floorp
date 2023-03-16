@@ -22,6 +22,7 @@
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "mozilla/layers/CompositionRecorder.h"
 #include "mozilla/layers/SynchronousTask.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/VsyncDispatcher.h"
 
 #include <list>
@@ -353,7 +354,7 @@ class RenderThread final {
     bool mIsDestroyed = false;
   };
 
-  DataMutex<std::unordered_map<uint64_t, WindowInfo*>> mWindowInfos;
+  DataMutex<std::unordered_map<uint64_t, UniquePtr<WindowInfo>>> mWindowInfos;
 
   struct ExternalImageIdHashFn {
     std::size_t operator()(const wr::ExternalImageId& aId) const {
