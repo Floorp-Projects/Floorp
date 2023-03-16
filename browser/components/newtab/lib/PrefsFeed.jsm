@@ -220,8 +220,8 @@ class PrefsFeed {
 
   removeListeners() {
     this._prefs.ignoreBranch(this);
-    lazy.NimbusFeatures.newtab.off(this.onExperimentUpdated);
-    lazy.NimbusFeatures.pocketNewtab.off(this.onPocketExperimentUpdated);
+    lazy.NimbusFeatures.newtab.offUpdate(this.onExperimentUpdated);
+    lazy.NimbusFeatures.pocketNewtab.offUpdate(this.onPocketExperimentUpdated);
     if (this.geo === "") {
       Services.obs.removeObserver(this, lazy.Region.REGION_TOPIC);
     }

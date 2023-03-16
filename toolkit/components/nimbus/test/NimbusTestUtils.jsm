@@ -191,12 +191,10 @@ const ExperimentFakes = {
       isParent: true,
     });
   },
-  waitForExperimentUpdate(ExperimentAPI, options) {
-    if (!options) {
-      throw new Error("Must specify an expected recipe update");
-    }
-
-    return new Promise(resolve => ExperimentAPI.on("update", options, resolve));
+  waitForExperimentUpdate(ExperimentAPI, slug) {
+    return new Promise(resolve =>
+      ExperimentAPI._store.once(`update:${slug}`, resolve)
+    );
   },
   async enrollWithRollout(
     featureConfig,

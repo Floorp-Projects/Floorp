@@ -113,7 +113,7 @@ describe("Top Sites Feed", () => {
       newtab: {
         getVariable: sinon.stub(),
         onUpdate: sinon.stub(),
-        off: sinon.stub(),
+        offUpdate: sinon.stub(),
       },
       pocketNewtab: {
         getVariable: sinon.stub(),

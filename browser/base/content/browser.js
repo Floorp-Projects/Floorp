@@ -9789,7 +9789,7 @@ var FirefoxViewHandler = {
   uninit() {
     CustomizableUI.removeListener(this);
     Services.obs.removeObserver(this, "firefoxview-notification-dot-update");
-    NimbusFeatures.majorRelease2022.off(this._updateEnabledState);
+    NimbusFeatures.majorRelease2022.offUpdate(this._updateEnabledState);
   },
   _updateEnabledState() {
     this._enabled = NimbusFeatures.majorRelease2022.getVariable("firefoxView");

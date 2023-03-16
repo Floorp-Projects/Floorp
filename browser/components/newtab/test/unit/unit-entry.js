@@ -572,8 +572,6 @@ const TEST_GLOBAL = {
     getExperiment() {},
     getExperimentMetaData() {},
     getRolloutMetaData() {},
-    on: () => {},
-    off: () => {},
   },
   NimbusFeatures: {
     glean: {
@@ -583,13 +581,13 @@ const TEST_GLOBAL = {
       getVariable() {},
       getAllVariables() {},
       onUpdate() {},
-      off() {},
+      offUpdate() {},
     },
     pocketNewtab: {
       getVariable() {},
       getAllVariables() {},
       onUpdate() {},
-      off() {},
+      offUpdate() {},
     },
     cookieBannerHandling: {
       getVariable() {},
