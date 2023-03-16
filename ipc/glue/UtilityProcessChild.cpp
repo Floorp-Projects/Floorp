@@ -301,6 +301,12 @@ void UtilityProcessChild::ActorDestroy(ActorDestroyReason aWhy) {
     timeout = 10 * 1000;
   }
 
+  mJSOracleInstance = nullptr;
+
+#  ifdef XP_WIN
+  mWindowsUtilsInstance = nullptr;
+#  endif
+
   // Wait until all RemoteDecoderManagerParent have closed.
   // It is still possible some may not have clean up yet, and we might hit
   // timeout. Our xpcom-shutdown listener should take care of cleaning the

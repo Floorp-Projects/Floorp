@@ -45,6 +45,10 @@ implementing the trivial example visible in `EmptyUtil
   - Handle reception of ``StartEmptyUtilService`` on the child side of
     ``UtilityProcess`` within ``RecvStartEmptyUtilService()``
 
+  - In ``UtilityProcessChild::ActorDestroy``, release any resources that
+    you stored a reference to in ``RecvStartEmptyUtilService()``.  This
+    will probably include a reference to the ``EmptyUtilChild``.
+
   - The specific sandboxing requirements can be implemented by tracking
     ``SandboxingKind``, and it starts within `UtilityProcessSandboxing header
     <https://searchfox.org/mozilla-central/source/ipc/glue/UtilityProcessSandboxing.h>`_
