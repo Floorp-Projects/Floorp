@@ -60,6 +60,8 @@ class VideoBridgeParent final : public PVideoBridgeParent,
 
   bool DeallocShmem(ipc::Shmem& aShmem) override;
 
+  void OnChannelError() override;
+
  private:
   explicit VideoBridgeParent(VideoBridgeSource aSource);
   void Bind(Endpoint<PVideoBridgeParent>&& aEndpoint);
