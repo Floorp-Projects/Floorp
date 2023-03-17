@@ -10,9 +10,6 @@ commands_list = [
         r"wget -nv -O - https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.cache.level-3.toolchains.v3.linux64-liblowercase.latest/artifacts/public%2Fbuild%2Fliblowercase.tar.zst | tar --zstd -xv -C $RUNNER_USERDIR/win-crosstool"
     ],
     [
-        r"wget -nv -O - https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.cache.level-3.toolchains.v3.linux64-clang-15.latest/artifacts/public%2Fbuild%2Fclang.tar.zst | tar --zstd -xv -C $RUNNER_USERDIR/win-crosstool"
-    ],
-    [
         r"sudo apt install -y msitools python3-pip",
         r"pip install six zstandard pyyaml",
         r"cp third_party/python/vsdownload/vsdownload.py vsdownload.py",
