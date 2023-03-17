@@ -17,6 +17,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
+  KeyValueService: "resource://gre/modules/kvstore.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -27,12 +28,6 @@ XPCOMUtils.defineLazyGetter(
   lazy,
   "StartupCache",
   () => lazy.ExtensionParent.StartupCache
-);
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "KeyValueService",
-  "resource://gre/modules/kvstore.jsm"
 );
 
 XPCOMUtils.defineLazyGetter(

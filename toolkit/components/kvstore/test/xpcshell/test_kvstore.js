@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { KeyValueService } = ChromeUtils.import(
-  "resource://gre/modules/kvstore.jsm"
+const { KeyValueService } = ChromeUtils.importESModule(
+  "resource://gre/modules/kvstore.sys.mjs"
 );
 
 function run_test() {

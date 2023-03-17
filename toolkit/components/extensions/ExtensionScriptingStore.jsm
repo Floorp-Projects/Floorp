@@ -13,20 +13,13 @@ const { ExtensionParent } = ChromeUtils.import(
   "resource://gre/modules/ExtensionParent.jsm"
 );
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-
 const { StartupCache } = ExtensionParent;
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  KeyValueService: "resource://gre/modules/kvstore.jsm",
+  KeyValueService: "resource://gre/modules/kvstore.sys.mjs",
 });
 
 class Store {

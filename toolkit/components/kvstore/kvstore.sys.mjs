@@ -2,13 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 const gKeyValueService = Cc["@mozilla.org/key-value-service;1"].getService(
   Ci.nsIKeyValueService
 );
-
-const EXPORTED_SYMBOLS = ["KeyValueService"];
 
 function promisify(fn, ...args) {
   return new Promise((resolve, reject) => {
@@ -30,7 +26,7 @@ function promisify(fn, ...args) {
  * for key/value storage.
  */
 
-class KeyValueService {
+export class KeyValueService {
   static async getOrCreate(dir, name) {
     return new KeyValueDatabase(
       await promisify(gKeyValueService.getOrCreate, dir, name)
