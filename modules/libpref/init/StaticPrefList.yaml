@@ -8581,7 +8581,7 @@
 # Before enabling everywhere, make sure blockers of bug 1808229 are fixed.
 - name: layout.css.nth-child-of.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
