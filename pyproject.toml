@@ -5,6 +5,7 @@ select = [
   "E", "W",    # pycodestyle
   "F",         # pyflakes
   "I",         # isort
+  "PL",        # pylint
 ]
 ignore = [
   # These should be triaged and either fixed or moved to the list below.
@@ -100,6 +101,7 @@ exclude = [
 
 [tool.ruff.per-file-ignores]
 # These paths are intentionally excluded.
+"dom/bindings/Configuration.py" = ["PLC3002"]
 "ipc/ipdl/*" = ["F403", "F405"]
 "layout/tools/reftest/selftest/conftest.py" = ["F811"]
 # cpp_eclipse has a lot of multi-line embedded XML which exceeds line length
@@ -108,6 +110,7 @@ exclude = [
 "testing/marionette/**/__init__.py" = ["F401"]
 "testing/mochitest/tests/python/conftest.py" = ["F811"]
 "testing/mozbase/manifestparser/tests/test_filters.py" = ["E731"]
+"testing/mozbase/mozinfo/mozinfo/mozinfo.py" = ["PLE0605"]
 "testing/mozbase/mozlog/tests/test_formatters.py" = ["E501"]
 "testing/mozharness/configs/*" = ["E501"]
 "**/*.configure" = ["F821"]

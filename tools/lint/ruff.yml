@@ -11,7 +11,7 @@ ruff:
         - "**/pyproject.toml"
         - "tools/lint/python/ruff.py"
     # Rules that should result in warnings rather than errors.
-    warning-rules: []
+    warning-rules: [PLR, PLW]
     type: external
     payload: python.ruff:lint
     setup: python.ruff:setup

@@ -3,7 +3,6 @@ file-whitespace:
     description: File content sanity check
     include:
         - .
-        - tools/lint/python/pylint_requirements.txt
         - tools/lint/python/black_requirements.txt
         - tools/lint/python/ruff_requirements.txt
         - tools/lint/rst/requirements.txt
