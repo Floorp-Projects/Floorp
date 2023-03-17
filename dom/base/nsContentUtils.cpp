@@ -7326,8 +7326,6 @@ void nsContentUtils::GetSelectionInTextControl(Selection* aSelection,
   // firstChild is either text or a <br> (hence an element).
   MOZ_ASSERT_IF(firstChild, firstChild->IsText() || firstChild->IsElement());
 #endif
-  // Testing IsElement() is faster than testing IsNodeOfType(), since it's
-  // non-virtual.
   if (!firstChild || firstChild->IsElement()) {
     // No text node, so everything is 0
     startOffset = endOffset = 0;

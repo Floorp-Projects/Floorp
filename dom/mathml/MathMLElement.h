@@ -64,8 +64,7 @@ class MathMLElement final : public MathMLElementBase,
   MOZ_CAN_RUN_SCRIPT
   nsresult PostHandleEvent(mozilla::EventChainPostVisitor& aVisitor) override;
   nsresult Clone(mozilla::dom::NodeInfo*, nsINode** aResult) const override;
-  virtual mozilla::dom::ElementState IntrinsicState() const override;
-  virtual bool IsNodeOfType(uint32_t aFlags) const override;
+  mozilla::dom::ElementState IntrinsicState() const override;
 
   // Set during reflow as necessary. Does a style change notification,
   // aNotify must be true.

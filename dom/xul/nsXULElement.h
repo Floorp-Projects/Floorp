@@ -371,9 +371,7 @@ class nsXULElement : public nsStyledElement {
   MOZ_CAN_RUN_SCRIPT void ClickWithInputSource(uint16_t aInputSource,
                                                bool aIsTrustedEvent);
 
-  virtual bool IsNodeOfType(uint32_t aFlags) const override;
-  virtual bool IsFocusableInternal(int32_t* aTabIndex,
-                                   bool aWithMouse) override;
+  bool IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) override;
 
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 

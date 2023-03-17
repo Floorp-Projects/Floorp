@@ -41,13 +41,11 @@ class nsTextNode : public mozilla::dom::Text {
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsINode
-  virtual bool IsNodeOfType(uint32_t aFlags) const override;
-
-  virtual already_AddRefed<CharacterData> CloneDataNode(
+  already_AddRefed<CharacterData> CloneDataNode(
       mozilla::dom::NodeInfo* aNodeInfo, bool aCloneText) const override;
 
-  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  virtual void UnbindFromTree(bool aNullParent = true) override;
+  nsresult BindToTree(BindContext&, nsINode& aParent) override;
+  void UnbindFromTree(bool aNullParent = true) override;
 
   nsresult AppendTextForNormalize(const char16_t* aBuffer, uint32_t aLength,
                                   bool aNotify, nsIContent* aNextSibling);

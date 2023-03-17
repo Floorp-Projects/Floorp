@@ -1087,8 +1087,6 @@ void nsXULElement::DoCommand() {
   }
 }
 
-bool nsXULElement::IsNodeOfType(uint32_t aFlags) const { return false; }
-
 nsresult nsXULElement::AddPopupListener(nsAtom* aName) {
   // Add a popup listener to the element
   bool isContext =

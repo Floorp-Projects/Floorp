@@ -3883,7 +3883,7 @@ nsDOMWindowUtils::IsNodeDisabledForEvents(nsINode* aNode, bool* aRetVal) {
   *aRetVal = false;
   nsINode* node = aNode;
   while (node) {
-    if (node->IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) {
+    if (node->IsHTMLFormControlElement()) {
       nsGenericHTMLElement* element = nsGenericHTMLElement::FromNode(node);
       WidgetEvent event(true, eVoidEvent);
       if (element && element->IsDisabledForEvents(&event)) {

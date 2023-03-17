@@ -2191,8 +2191,6 @@ bool Element::ShouldBlur(nsIContent* aContent) {
   return false;
 }
 
-bool Element::IsNodeOfType(uint32_t aFlags) const { return false; }
-
 /* static */
 nsresult Element::DispatchEvent(nsPresContext* aPresContext,
                                 WidgetEvent* aEvent, nsIContent* aTarget,

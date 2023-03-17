@@ -1073,8 +1073,6 @@ class Element : public FragmentOrElement {
    */
   uint32_t GetAttrCount() const { return mAttrs.AttrCount(); }
 
-  virtual bool IsNodeOfType(uint32_t aFlags) const override;
-
   /**
    * Get the class list of this element (this corresponds to the value of the
    * class attribute).  This may be null if there are no classes, but that's not

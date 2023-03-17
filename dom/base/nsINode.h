@@ -389,24 +389,6 @@ class nsINode : public mozilla::dom::EventTarget {
 
   virtual ~nsINode();
 
-  /**
-   * Bit-flags to pass (or'ed together) to IsNodeOfType()
-   */
-  enum {
-    /** form control elements */
-    eHTML_FORM_CONTROL = 1 << 6,
-  };
-
-  /**
-   * API for doing a quick check if a content is of a given
-   * type, such as Text, Document, Comment ...  Use this when you can instead of
-   * checking the tag.
-   *
-   * @param aFlags what types you want to test for (see above)
-   * @return whether the content matches ALL flags passed in
-   */
-  virtual bool IsNodeOfType(uint32_t aFlags) const = 0;
-
   bool IsContainerNode() const {
     return IsElement() || IsDocument() || IsDocumentFragment();
   }
@@ -440,6 +422,8 @@ class nsINode : public mozilla::dom::EventTarget {
   bool IsDocumentFragment() const {
     return NodeType() == DOCUMENT_FRAGMENT_NODE;
   }
+
+  virtual bool IsHTMLFormControlElement() const { return false; }
 
   /**
    * https://dom.spec.whatwg.org/#concept-tree-inclusive-descendant
