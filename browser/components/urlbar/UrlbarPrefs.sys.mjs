@@ -405,6 +405,12 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // mode or when the user initially opens the urlbar without selecting
   // an engine.
   ["trending.requireSearchMode", true],
+
+  // The maximum number of trending results to show in search mode.
+  ["trending.maxResultsSearchMode", 10],
+
+  // The maximum number of trending results to show while not in search mode.
+  ["trending.maxResultsNoSearchMode", 10],
 ]);
 
 const PREF_OTHER_DEFAULTS = new Map([

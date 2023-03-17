@@ -342,6 +342,24 @@ class ProviderSearchSuggestions extends UrlbarProvider {
       ? queryContext.maxResults + 1
       : 0;
 
+    if (allowRemote && this.#shouldFetchTrending(queryContext)) {
+      if (
+        queryContext.searchMode &&
+        lazy.UrlbarPrefs.get("trending.maxResultsSearchMode") != -1
+      ) {
+        this._suggestionsController.maxRemoteResults = lazy.UrlbarPrefs.get(
+          "trending.maxResultsSearchMode"
+        );
+      } else if (
+        !queryContext.searchMode &&
+        lazy.UrlbarPrefs.get("trending.maxResultsNoSearchMode") != -1
+      ) {
+        this._suggestionsController.maxRemoteResults = lazy.UrlbarPrefs.get(
+          "trending.maxResultsNoSearchMode"
+        );
+      }
+    }
+
     this._suggestionsFetchCompletePromise = this._suggestionsController.fetch(
       searchString,
       queryContext.isPrivate,
