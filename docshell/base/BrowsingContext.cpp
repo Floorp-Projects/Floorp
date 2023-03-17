@@ -3281,7 +3281,7 @@ void BrowsingContext::DidSet(FieldIndex<IDX_AuthorStyleDisabledDefault>) {
              "Should only set AuthorStyleDisabledDefault in the top "
              "browsing context");
 
-  // We don't need to handle changes to this field, since PageStyleChild.jsm
+  // We don't need to handle changes to this field, since PageStyleChild.sys.mjs
   // will respond to the PageStyle:Disable message in all content processes.
   //
   // But we store the state here on the top BrowsingContext so that the

@@ -632,10 +632,10 @@ let JSWINDOWACTORS = {
 
   PageStyle: {
     parent: {
-      moduleURI: "resource:///actors/PageStyleParent.jsm",
+      esModuleURI: "resource:///actors/PageStyleParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource:///actors/PageStyleChild.jsm",
+      esModuleURI: "resource:///actors/PageStyleChild.sys.mjs",
       events: {
         pageshow: { createActor: false },
       },

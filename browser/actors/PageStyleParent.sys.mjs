@@ -1,11 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-var EXPORTED_SYMBOLS = ["PageStyleParent"];
-
-class PageStyleParent extends JSWindowActorParent {
+export class PageStyleParent extends JSWindowActorParent {
   // This has the most recent information about the content stylesheets for
   // that actor. It's populated via the PageStyle:Add and PageStyle:Clear
   // messages from the content process. It has the following structure:
