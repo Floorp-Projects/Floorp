@@ -104,6 +104,8 @@ class RenderTextureHost {
 
   virtual bool IsWrappingAsyncRemoteTexture() { return false; }
 
+  virtual void Destroy();
+
  protected:
   virtual ~RenderTextureHost();
 

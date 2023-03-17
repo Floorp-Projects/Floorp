@@ -48,6 +48,8 @@ class RenderBufferTextureHost final : public RenderTextureHostSWGL {
 
   void UnmapPlanes() override;
 
+  void Destroy() override;
+
  private:
   virtual ~RenderBufferTextureHost();
 
@@ -69,6 +71,8 @@ class RenderBufferTextureHost final : public RenderTextureHostSWGL {
   gfx::DataSourceSurface::MappedSurface mCrMap;
 
   bool mLocked;
+
+  bool mDestroyed = false;
 };
 
 }  // namespace wr

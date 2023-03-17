@@ -10,6 +10,7 @@
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/VideoBridgeUtils.h"
+#include "mozilla/webrender/RenderThread.h"
 
 namespace mozilla {
 namespace layers {
@@ -199,6 +200,28 @@ bool VideoBridgeParent::IsSameProcess() const {
 
 void VideoBridgeParent::NotifyNotUsed(PTextureParent* aTexture,
                                       uint64_t aTransactionId) {}
+
+void VideoBridgeParent::OnChannelError() {
+  bool shutdown = sVideoBridgeParentShutDown;
+  if (!shutdown) {
+    // Destory RenderBufferTextureHosts. Shmems of ShmemTextureHosts are going
+    // to be destroyed
+    std::vector<wr::ExternalImageId> ids;
+    auto& ptextures = ManagedPTextureParent();
+    for (const auto& ptexture : ptextures) {
+      RefPtr<TextureHost> texture = TextureHost::AsTextureHost(ptexture);
+      if (texture && texture->AsShmemTextureHost() &&
+          texture->GetMaybeExternalImageId().isSome()) {
+        ids.emplace_back(texture->GetMaybeExternalImageId().ref());
+      }
+    }
+    if (!ids.empty()) {
+      wr::RenderThread::Get()->DestroyExternalImagesSyncWait(std::move(ids));
+    }
+  }
+
+  PVideoBridgeParent::OnChannelError();
+}
 
 }  // namespace layers
 }  // namespace mozilla
