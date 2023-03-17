@@ -1187,8 +1187,6 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
                         referrerPolicy);
   request->GetScriptLoadContext()->mIsInline = true;
   request->GetScriptLoadContext()->mLineNo = aElement->GetScriptLineNumber();
-  request->GetScriptLoadContext()->mColumnNo =
-      aElement->GetScriptColumnNumber();
   request->mFetchSourceOnly = true;
   request->SetTextSource();
   TRACE_FOR_TEST_BOOL(request->GetScriptLoadContext()->GetScriptElement(),
@@ -1997,15 +1995,6 @@ nsresult ScriptLoader::FillCompileOptionsForRequest(
                                         aIntroductionScript);
   aOptions->setFileAndLine(aRequest->mURL.get(),
                            aRequest->GetScriptLoadContext()->mLineNo);
-  // The column is only relevant for inline scripts in order for SpiderMonkey to
-  // properly compute offsets relatively to the script position within the HTML
-  // file. injectedScript are not concerned and are always considered to start
-  // at column 0.
-  if (aRequest->GetScriptLoadContext()->mIsInline &&
-      aRequest->GetScriptLoadContext()->GetParserCreated() ==
-          FROM_PARSER_NETWORK) {
-    aOptions->setColumn(aRequest->GetScriptLoadContext()->mColumnNo);
-  }
   aOptions->setIsRunOnce(true);
   aOptions->setNoScriptRval(true);
   if (aRequest->mSourceMapURL) {

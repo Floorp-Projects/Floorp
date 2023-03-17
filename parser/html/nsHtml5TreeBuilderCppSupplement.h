@@ -220,9 +220,8 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                 NS_ERROR_OUT_OF_MEMORY);
             return nullptr;
           }
-          opSetScriptLineAndColumnNumberAndFreeze operation(
-              content, tokenizer->getLineNumber(),
-              tokenizer->getColumnNumber());
+          opSetScriptLineNumberAndFreeze operation(content,
+                                                   tokenizer->getLineNumber());
           treeOp->Init(mozilla::AsVariant(operation));
 
           nsHtml5String url =
@@ -409,9 +408,8 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                 NS_ERROR_OUT_OF_MEMORY);
             return nullptr;
           }
-          opSetScriptLineAndColumnNumberAndFreeze operation(
-              content, tokenizer->getLineNumber(),
-              tokenizer->getColumnNumber());
+          opSetScriptLineNumberAndFreeze operation(content,
+                                                   tokenizer->getLineNumber());
           treeOp->Init(mozilla::AsVariant(operation));
 
           nsHtml5String url =
@@ -463,8 +461,8 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
         MarkAsBrokenAndRequestSuspensionWithoutBuilder(NS_ERROR_OUT_OF_MEMORY);
         return nullptr;
       }
-      opSetScriptLineAndColumnNumberAndFreeze operation(
-          content, tokenizer->getLineNumber(), tokenizer->getColumnNumber());
+      opSetScriptLineNumberAndFreeze operation(content,
+                                               tokenizer->getLineNumber());
       treeOp->Init(mozilla::AsVariant(operation));
       if (aNamespace == kNameSpaceID_XHTML) {
         mCurrentHtmlScriptIsAsyncOrDefer =
