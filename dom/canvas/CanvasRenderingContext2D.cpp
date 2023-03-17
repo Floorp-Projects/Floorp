@@ -1333,18 +1333,19 @@ void CanvasRenderingContext2D::RestoreClipsAndTransformToTarget() {
   }
 
   for (auto& style : mStyleStack) {
-    for (auto& clipOrTransform : style.clipsAndTransforms) {
-      if (clipOrTransform.IsClip()) {
+    for (auto clipOrTransform = style.clipsAndTransforms.begin();
+         clipOrTransform != style.clipsAndTransforms.end(); clipOrTransform++) {
+      if (clipOrTransform->IsClip()) {
         if (mClipsNeedConverting) {
           // We have possibly changed backends, so we need to convert the clips
           // in case they are no longer compatible with mTarget.
           RefPtr<PathBuilder> pathBuilder = mTarget->CreatePathBuilder();
-          clipOrTransform.clip->StreamToSink(pathBuilder);
-          clipOrTransform.clip = pathBuilder->Finish();
+          clipOrTransform->clip->StreamToSink(pathBuilder);
+          clipOrTransform->clip = pathBuilder->Finish();
         }
-        mTarget->PushClip(clipOrTransform.clip);
+        mTarget->PushClip(clipOrTransform->clip);
       } else {
-        mTarget->SetTransform(clipOrTransform.transform);
+        mTarget->SetTransform(clipOrTransform->transform);
       }
     }
   }
