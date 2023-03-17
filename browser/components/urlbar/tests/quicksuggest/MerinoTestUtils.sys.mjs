@@ -296,9 +296,7 @@ class _MerinoTestUtils {
     await this.server.start();
     this.server.response.body.suggestions = [WEATHER_SUGGESTION];
 
-    lazy.QuickSuggest.weather._test_setFetchIntervalMs(
-      WEATHER_FETCH_INTERVAL_MS
-    );
+    lazy.QuickSuggest.weather._test_fetchIntervalMs = WEATHER_FETCH_INTERVAL_MS;
 
     // Enabling weather will trigger a fetch. Wait for it to finish so the
     // suggestion is ready when this function returns.
@@ -316,7 +314,7 @@ class _MerinoTestUtils {
     this.registerCleanupFunction?.(async () => {
       lazy.UrlbarPrefs.clear("weather.featureGate");
       lazy.UrlbarPrefs.clear("suggest.weather");
-      lazy.QuickSuggest.weather._test_setFetchIntervalMs(-1);
+      lazy.QuickSuggest.weather._test_fetchIntervalMs = -1;
     });
   }
 

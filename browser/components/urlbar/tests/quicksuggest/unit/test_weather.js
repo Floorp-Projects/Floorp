@@ -20,6 +20,7 @@ add_task(async function init() {
   UrlbarPrefs.set("quicksuggest.enabled", true);
 
   await MerinoTestUtils.initWeather();
+  QuickSuggest.weather._test_cameOnlineDelayMs = 100;
 });
 
 // The feature should be properly uninitialized when it's disabled and then
@@ -1039,6 +1040,386 @@ async function doMatchingQuickSuggestTest(pref, isSponsored) {
   UrlbarPrefs.clear(pref);
 }
 
+// Simulates wake 100ms before the start of the next fetch period. A new fetch
+// should not start.
+add_task(async function wakeBeforeNextFetchPeriod() {
+  await doWakeTest({
+    sleepIntervalMs: QuickSuggest.weather._test_fetchIntervalMs - 100,
+    shouldFetchOnWake: false,
+    fetchTimerMsOnWake: 100,
+  });
+});
+
+// Simulates wake 100ms after the start of the next fetch period. A new fetch
+// should start.
+add_task(async function wakeAfterNextFetchPeriod() {
+  await doWakeTest({
+    sleepIntervalMs: QuickSuggest.weather._test_fetchIntervalMs + 100,
+    shouldFetchOnWake: true,
+  });
+});
+
+// Simulates wake after many fetch periods + 100ms. A new fetch should start.
+add_task(async function wakeAfterManyFetchPeriods() {
+  await doWakeTest({
+    sleepIntervalMs: 100 * QuickSuggest.weather._test_fetchIntervalMs + 100,
+    shouldFetchOnWake: true,
+  });
+});
+
+async function doWakeTest({
+  sleepIntervalMs,
+  shouldFetchOnWake,
+  fetchTimerMsOnWake,
+}) {
+  // Make `Date.now()` return a value under our control, doesn't matter what it
+  // is. This is the time the first fetch period will start.
+  let nowOnStart = 100;
+  let sandbox = sinon.createSandbox();
+  let dateNowStub = sandbox.stub(
+    Cu.getGlobalForObject(QuickSuggest.weather).Date,
+    "now"
+  );
+  dateNowStub.returns(nowOnStart);
+
+  // Start the first fetch period.
+  info("Starting first fetch period");
+  await QuickSuggest.weather._test_fetch();
+  Assert.equal(
+    QuickSuggest.weather._test_lastFetchTimeMs,
+    nowOnStart,
+    "Last fetch time should be updated after fetch"
+  );
+  Assert.equal(
+    QuickSuggest.weather._test_fetchTimerMs,
+    QuickSuggest.weather._test_fetchIntervalMs,
+    "Timer period should be full fetch interval"
+  );
+
+  let timer = QuickSuggest.weather._test_fetchTimer;
+
+  // Advance the clock and simulate wake.
+  info("Sending wake notification");
+  let nowOnWake = nowOnStart + sleepIntervalMs;
+  dateNowStub.returns(nowOnWake);
+  QuickSuggest.weather.observe(null, "wake_notification", "");
+
+  if (shouldFetchOnWake) {
+    // Since the wake should have triggered a fetch, the fetch should have
+    // started and the fetch timer should have been recreated with the full
+    // fetch interval.
+    Assert.equal(
+      QuickSuggest.weather._test_pendingFetchCount,
+      1,
+      "After wake, fetch should have started"
+    );
+    Assert.equal(
+      QuickSuggest.weather._test_lastFetchTimeMs,
+      nowOnWake,
+      "After wake, last fetch time should be updated"
+    );
+    Assert.equal(
+      QuickSuggest.weather._test_fetchTimerMs,
+      QuickSuggest.weather._test_fetchIntervalMs,
+      "After wake, timer period should be the full fetch interval"
+    );
+  } else {
+    // Since the wake should not have triggered a fetch, the next fetch
+    // shouldn't have started yet, and the fetch timer should have been
+    // recreated with the remaining time before the start of the next period.
+    Assert.equal(
+      QuickSuggest.weather._test_pendingFetchCount,
+      0,
+      "After wake, next fetch should not have started"
+    );
+    Assert.equal(
+      QuickSuggest.weather._test_lastFetchTimeMs,
+      nowOnStart,
+      "After wake, last fetch time should be unchanged"
+    );
+    Assert.equal(
+      QuickSuggest.weather._test_fetchTimerMs,
+      fetchTimerMsOnWake,
+      "After wake, timer period should be the remaining interval"
+    );
+  }
+
+  Assert.notEqual(
+    QuickSuggest.weather._test_fetchTimer,
+    0,
+    "After wake, the timer should exist (be non-zero)"
+  );
+  Assert.notEqual(
+    QuickSuggest.weather._test_fetchTimer,
+    timer,
+    "After wake, a new timer should have been created"
+  );
+
+  // Wait for the fetch. If the wake didn't trigger it, then the caller should
+  // have passed in a `sleepIntervalMs` that will make it start soon.
+  info("Waiting for fetch after wake");
+  await QuickSuggest.weather.waitForFetches();
+
+  Assert.equal(
+    QuickSuggest.weather._test_fetchTimerMs,
+    QuickSuggest.weather._test_fetchIntervalMs,
+    "After post-wake fetch, timer period should remain full fetch interval"
+  );
+  Assert.equal(
+    QuickSuggest.weather._test_pendingFetchCount,
+    0,
+    "After post-wake fetch, no more fetches should be pending"
+  );
+
+  dateNowStub.restore();
+}
+
+// When network:link-status-changed is observed and the suggestion is non-null,
+// a fetch should not start.
+add_task(async function networkLinkStatusChanged_nonNull() {
+  // See nsINetworkLinkService for possible data values.
+  await doOnlineTestWithSuggestion({
+    topic: "network:link-status-changed",
+    dataValues: [
+      "down",
+      "up",
+      "changed",
+      "unknown",
+      "this is not a valid data value",
+    ],
+  });
+});
+
+// When network:offline-status-changed is observed and the suggestion is
+// non-null, a fetch should not start.
+add_task(async function networkOfflineStatusChanged_nonNull() {
+  // See nsIIOService for possible data values.
+  await doOnlineTestWithSuggestion({
+    topic: "network:offline-status-changed",
+    dataValues: ["offline", "online", "this is not a valid data value"],
+  });
+});
+
+// When captive-portal-login-success is observed and the suggestion is non-null,
+// a fetch should not start.
+add_task(async function captivePortalLoginSuccess_nonNull() {
+  // See nsIIOService for possible data values.
+  await doOnlineTestWithSuggestion({
+    topic: "captive-portal-login-success",
+    dataValues: [""],
+  });
+});
+
+async function doOnlineTestWithSuggestion({ topic, dataValues }) {
+  info("Starting fetch period");
+  await QuickSuggest.weather._test_fetch();
+  Assert.ok(
+    QuickSuggest.weather.suggestion,
+    "Suggestion should have been fetched"
+  );
+
+  let timer = QuickSuggest.weather._test_fetchTimer;
+
+  for (let data of dataValues) {
+    info("Sending notification: " + JSON.stringify({ topic, data }));
+    QuickSuggest.weather.observe(null, topic, data);
+
+    Assert.equal(
+      QuickSuggest.weather._test_pendingFetchCount,
+      0,
+      "Fetch should not have started"
+    );
+    Assert.equal(
+      QuickSuggest.weather._test_fetchTimer,
+      timer,
+      "Timer should not have been recreated"
+    );
+    Assert.equal(
+      QuickSuggest.weather._test_fetchTimerMs,
+      QuickSuggest.weather._test_fetchIntervalMs,
+      "Timer period should be the full fetch interval"
+    );
+  }
+}
+
+// When network:link-status-changed is observed and the suggestion is null, a
+// fetch should start unless the data indicates the status is offline.
+add_task(async function networkLinkStatusChanged_null() {
+  // See nsINetworkLinkService for possible data values.
+  await doOnlineTestWithNullSuggestion({
+    topic: "network:link-status-changed",
+    offlineData: "down",
+    otherDataValues: [
+      "up",
+      "changed",
+      "unknown",
+      "this is not a valid data value",
+    ],
+  });
+});
+
+// When network:offline-status-changed is observed and the suggestion is null, a
+// fetch should start unless the data indicates the status is offline.
+add_task(async function networkOfflineStatusChanged_null() {
+  // See nsIIOService for possible data values.
+  await doOnlineTestWithNullSuggestion({
+    topic: "network:offline-status-changed",
+    offlineData: "offline",
+    otherDataValues: ["online", "this is not a valid data value"],
+  });
+});
+
+// When captive-portal-login-success is observed and the suggestion is null, a
+// fetch should start.
+add_task(async function captivePortalLoginSuccess_null() {
+  // See nsIIOService for possible data values.
+  await doOnlineTestWithNullSuggestion({
+    topic: "captive-portal-login-success",
+    otherDataValues: [""],
+  });
+});
+
+async function doOnlineTestWithNullSuggestion({
+  topic,
+  otherDataValues,
+  offlineData = "",
+}) {
+  QuickSuggest.weather._test_setSuggestionToNull();
+  Assert.ok(!QuickSuggest.weather.suggestion, "Suggestion should be null");
+
+  let timer = QuickSuggest.weather._test_fetchTimer;
+
+  // First, send the notification with the offline data value. Nothing should
+  // happen.
+  if (offlineData) {
+    info("Sending notification: " + JSON.stringify({ topic, offlineData }));
+    QuickSuggest.weather.observe(null, topic, offlineData);
+
+    Assert.ok(
+      !QuickSuggest.weather.suggestion,
+      "Suggestion should remain null"
+    );
+    Assert.equal(
+      QuickSuggest.weather._test_pendingFetchCount,
+      0,
+      "Fetch should not have started"
+    );
+    Assert.equal(
+      QuickSuggest.weather._test_fetchTimer,
+      timer,
+      "Timer should not have been recreated"
+    );
+    Assert.equal(
+      QuickSuggest.weather._test_fetchTimerMs,
+      QuickSuggest.weather._test_fetchIntervalMs,
+      "Timer period should be the full fetch interval"
+    );
+  }
+
+  // Now send it with all other data values. Fetches should be triggered.
+  for (let data of otherDataValues) {
+    QuickSuggest.weather._test_setSuggestionToNull();
+    Assert.ok(!QuickSuggest.weather.suggestion, "Suggestion should be null");
+
+    info("Sending notification: " + JSON.stringify({ topic, data }));
+    QuickSuggest.weather.observe(null, topic, data);
+
+    Assert.equal(
+      QuickSuggest.weather._test_pendingFetchCount,
+      0,
+      "Fetch should not have started yet"
+    );
+    Assert.notEqual(
+      QuickSuggest.weather._test_fetchTimer,
+      0,
+      "Timer should exist"
+    );
+    Assert.notEqual(
+      QuickSuggest.weather._test_fetchTimer,
+      timer,
+      "A new timer should have been created"
+    );
+    Assert.equal(
+      QuickSuggest.weather._test_fetchTimerMs,
+      QuickSuggest.weather._test_cameOnlineDelayMs,
+      "Timer ms should be cameOnlineDelayMs"
+    );
+
+    timer = QuickSuggest.weather._test_fetchTimer;
+
+    info("Waiting for fetch after notification");
+    await QuickSuggest.weather.waitForFetches();
+
+    Assert.equal(
+      QuickSuggest.weather._test_pendingFetchCount,
+      0,
+      "Fetch should not be pending"
+    );
+    Assert.notEqual(
+      QuickSuggest.weather._test_fetchTimer,
+      0,
+      "Timer should exist"
+    );
+    Assert.notEqual(
+      QuickSuggest.weather._test_fetchTimer,
+      timer,
+      "A new timer should have been created"
+    );
+    Assert.equal(
+      QuickSuggest.weather._test_fetchTimerMs,
+      QuickSuggest.weather._test_fetchIntervalMs,
+      "Timer period should be full fetch interval"
+    );
+
+    timer = QuickSuggest.weather._test_fetchTimer;
+  }
+}
+
+// When many online notifications are received at once, only one fetch should
+// start.
+add_task(async function manyOnlineNotifications() {
+  // Clear the server's list of received requests.
+  MerinoTestUtils.server.reset();
+
+  // Set the suggestion to null so the notifications will trigger a fetch.
+  QuickSuggest.weather._test_setSuggestionToNull();
+  Assert.ok(!QuickSuggest.weather.suggestion, "Suggestion should be null");
+
+  info("Sending notifications");
+  QuickSuggest.weather.observe(null, "network:link-status-changed", "changed");
+  QuickSuggest.weather.observe(null, "network:link-status-changed", "up");
+  QuickSuggest.weather.observe(
+    null,
+    "network:offline-status-changed",
+    "online"
+  );
+
+  info("Waiting for fetch after notifications");
+  await QuickSuggest.weather.waitForFetches();
+
+  Assert.equal(
+    QuickSuggest.weather._test_pendingFetchCount,
+    0,
+    "Fetch should not be pending"
+  );
+  Assert.notEqual(
+    QuickSuggest.weather._test_fetchTimer,
+    0,
+    "Timer should exist"
+  );
+  Assert.equal(
+    QuickSuggest.weather._test_fetchTimerMs,
+    QuickSuggest.weather._test_fetchIntervalMs,
+    "Timer period should be full fetch interval"
+  );
+
+  Assert.equal(
+    MerinoTestUtils.server.requests.length,
+    1,
+    "Merino should have received only one request"
+  );
+});
+
 function assertEnabled({ message, hasSuggestion, pendingFetchCount }) {
   info("Asserting feature is enabled");
   if (message) {
@@ -1051,9 +1432,9 @@ function assertEnabled({ message, hasSuggestion, pendingFetchCount }) {
     "Suggestion is null or non-null as expected"
   );
   Assert.notEqual(
-    QuickSuggest.weather._test_fetchInterval,
+    QuickSuggest.weather._test_fetchTimer,
     0,
-    "Fetch interval is non-zero"
+    "Fetch timer is non-zero"
   );
   Assert.ok(QuickSuggest.weather._test_merino, "Merino client is non-null");
   Assert.equal(
@@ -1075,9 +1456,9 @@ function assertDisabled({ message, pendingFetchCount }) {
     "Suggestion is null"
   );
   Assert.strictEqual(
-    QuickSuggest.weather._test_fetchInterval,
+    QuickSuggest.weather._test_fetchTimer,
     0,
-    "Fetch interval is zero"
+    "Fetch timer is zero"
   );
   Assert.strictEqual(
     QuickSuggest.weather._test_merino,
