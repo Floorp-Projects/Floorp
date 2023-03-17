@@ -99,14 +99,11 @@ add_task(async function testProjectRoot() {
 });
 
 async function setProjectRoot(dbg, treeNode) {
-  const onContextMenu = waitForContextMenu(dbg);
-  rightClickEl(dbg, treeNode);
-  const menupopup = await onContextMenu;
-  const onHidden = new Promise(resolve => {
-    menupopup.addEventListener("popuphidden", resolve, { once: true });
-  });
-  selectContextMenuItem(dbg, "#node-set-directory-root");
-  await onHidden;
+  return triggerSourceTreeContextMenu(
+    dbg,
+    treeNode,
+    "#node-set-directory-root"
+  );
 }
 
 function assertRootLabel(dbg, label) {

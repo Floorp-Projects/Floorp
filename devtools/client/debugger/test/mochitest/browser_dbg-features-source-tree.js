@@ -109,7 +109,11 @@ add_task(async function testSimpleSourcesWithManualClickExpand() {
 
   info("Test the copy to clipboard context menu");
   const mathMinTreeNode = findSourceNodeWithText(dbg, "math.min.js");
-  await triggerCopySourceContextMenu(dbg, mathMinTreeNode);
+  await triggerSourceTreeContextMenu(
+    dbg,
+    mathMinTreeNode,
+    "#node-menu-copy-source"
+  );
   const clipboardData = SpecialPowers.getClipboardData("text/plain");
   is(
     clipboardData,
@@ -127,7 +131,11 @@ add_task(async function testSimpleSourcesWithManualClickExpand() {
   MockFilePicker.setFiles([nsiFile]);
   const path = nsiFile.path;
 
-  await triggerDownloadFileContextMenu(dbg, mathMinTreeNode);
+  await triggerSourceTreeContextMenu(
+    dbg,
+    mathMinTreeNode,
+    "#node-menu-download-file"
+  );
 
   info("Wait for the downloaded file to be fully saved to disk");
   await BrowserTestUtils.waitForCondition(() => IOUtils.exists(path));
@@ -481,26 +489,4 @@ function assertBreakpointHeading(dbg, label, index) {
   const breakpointHeading = findAllElements(dbg, "breakpointHeadings")[index]
     .innerText;
   is(breakpointHeading, label, `Breakpoint heading is ${label}`);
-}
-
-async function triggerCopySourceContextMenu(dbg, treeNode) {
-  const onContextMenu = waitForContextMenu(dbg);
-  rightClickEl(dbg, treeNode);
-  const menupopup = await onContextMenu;
-  const onHidden = new Promise(resolve => {
-    menupopup.addEventListener("popuphidden", resolve, { once: true });
-  });
-  selectContextMenuItem(dbg, "#node-menu-copy-source");
-  await onHidden;
-}
-
-async function triggerDownloadFileContextMenu(dbg, treeNode) {
-  const onContextMenu = waitForContextMenu(dbg);
-  rightClickEl(dbg, treeNode);
-  const menupopup = await onContextMenu;
-  const onHidden = new Promise(resolve => {
-    menupopup.addEventListener("popuphidden", resolve, { once: true });
-  });
-  selectContextMenuItem(dbg, "#node-menu-download-file");
-  await onHidden;
 }

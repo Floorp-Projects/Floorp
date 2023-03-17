@@ -55,7 +55,7 @@ function setPauseOnExceptions() {
   );
 }
 
-async function loadInitialState(commands) {
+async function loadInitialState(commands, toolbox) {
   const pendingBreakpoints = sanitizeBreakpoints(
     await asyncStore.pendingBreakpoints
   );
@@ -64,7 +64,12 @@ async function loadInitialState(commands) {
   const blackboxedRanges = await asyncStore.blackboxedRanges;
   const eventListenerBreakpoints = await asyncStore.eventListenerBreakpoints;
   const breakpoints = initialBreakpointsState(xhrBreakpoints);
-  const sources = initialSourcesState({ blackboxedRanges });
+  const sources = initialSourcesState({
+    blackboxedRanges,
+    // @backward-compat { version 112 } Checks if the server supports override
+    // Remove once fully supported
+    isOverridesSupported: toolbox.target.getTrait("isOverridesSupported"),
+  });
   const ui = initialUIState({
     supportsJavascriptTracing:
       commands.client.mainRoot.traits.supportsJavascriptTracing,
@@ -89,7 +94,7 @@ export async function bootstrap({
 }) {
   verifyPrefSchema();
 
-  const initialState = await loadInitialState(commands);
+  const initialState = await loadInitialState(commands, panel.toolbox);
   const workers = bootstrapWorkers(panelWorkers);
 
   const { store, actions, selectors } = bootstrapStore(
