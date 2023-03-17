@@ -242,20 +242,6 @@ mscom-init:
             - '**/*.h'
             - 'tools/lint/mscom-init.yml'
 
-py-flake8:
-    description: flake8 run over the gecko codebase
-    treeherder:
-        symbol: py(f8)
-    run:
-        mach: lint -v -l flake8 -f treeherder -f json:/builds/worker/mozlint.json *
-    when:
-        files-changed:
-            - '**/*.py'
-            - '**/.flake8'
-            - 'tools/lint/flake8.yml'
-            # moz.configure files are also Python files.
-            - '**/*.configure'
-
 py-black:
     description: black run over the gecko codebase
     treeherder:
@@ -271,6 +257,22 @@ py-black:
             - '**/*.mozbuild'
             - 'pyproject.toml'
             - 'tools/lint/black.yml'
+
+py-ruff:
+    description: Run ruff over the gecko codebase
+    treeherder:
+        symbol: py(ruff)
+    run:
+        mach: lint -v -l ruff -f treeherder -f json:/builds/worker/mozlint.json *
+    when:
+        files-changed:
+            - '**/*.py'
+            - '**/*.configure'
+            - '**/.ruff.toml'
+            - 'pyproject.toml'
+            - 'tools/lint/ruff.yml'
+            - 'tools/lint/python/ruff.py'
+            - 'tools/lint/python/ruff_requirements.txt'
 
 py-pylint:
     description: pylint run over the gecko codebase
