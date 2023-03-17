@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+  <meta charset=utf-8>
+  <title>Tests for nsIScriptError</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <div id="log"></div>
+
+  <!-- Verify that column is correct, even for inline scripts with HTML on the same line -->
+  <span>some html</span> <script>var inlineScriptStack = new Error().stack;</script>
+  <script>
+    function waitForError (expectedMessage){
+      return new Promise(resolve => {
+        const listener = {
+          QueryInterface: ChromeUtils.generateQI(["nsIConsoleListener"])
+        };
+
+        listener.observe = function(message) {
+          if (message.message.includes(expectedMessage)) {
+            message.QueryInterface(Ci.nsIScriptError);
+            resolve(message);
+            Services.console.unregisterListener(listener);
+          }
+        };
+
+        Services.console.registerListener(listener);
+      });
+    }
+
+    var onInlineScriptError = waitForError("doThrow");
+    var onModuleError = waitForError("doThrowInModule");
+    SimpleTest.expectUncaughtException();
+  </script>
+  <span>some more html</span><script>doThrow() // eslint-disable-line no-undef</script>
+  <script>var b;</script><hr><script type="module">SimpleTest.expectUncaughtException();doThrowInModule() // eslint-disable-line no-undef</script>
+  <script>
+    add_task(async () => {
+        info("Check line and column information in Error#stack");
+        const { groups } = inlineScriptStack.match(/(?<line>\d+):(?<column>\d+)/);
+        is(groups.line, "9", "line of Error#stack in inline script is correct");
+        is(groups.column, "58", "column of Error#stack in inline script is correct");
+
+        info("Check line and column information Error message in inline script");
+        const errorMessage = await onInlineScriptError;
+        is(errorMessage.lineNumber, 33, "The exception line is correct");
+        is(errorMessage.columnNumber, 38, "The exception column is correct");
+
+        info("Check line and column information Error message in inline module");
+        const errorMessageInModule = await onModuleError;
+        is(errorMessageInModule.lineNumber, 34, "The module exception line is correct");
+        is(errorMessageInModule.columnNumber, 89, "The module exception column is correct");
+    });
+  </script>
+</html>
