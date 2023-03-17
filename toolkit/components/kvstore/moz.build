@@ -8,7 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Storage")
 
 EXTRA_JS_MODULES += [
-    "kvstore.jsm",
+    "kvstore.sys.mjs",
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]

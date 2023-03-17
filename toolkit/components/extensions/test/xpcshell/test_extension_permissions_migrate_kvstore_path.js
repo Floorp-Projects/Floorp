@@ -13,8 +13,8 @@ const { FileTestUtils } = ChromeUtils.importESModule(
 const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs"
 );
-const { KeyValueService } = ChromeUtils.import(
-  "resource://gre/modules/kvstore.jsm"
+const { KeyValueService } = ChromeUtils.importESModule(
+  "resource://gre/modules/kvstore.sys.mjs"
 );
 
 add_setup(async () => {

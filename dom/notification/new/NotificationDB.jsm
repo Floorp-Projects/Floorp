@@ -15,12 +15,8 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  KeyValueService: "resource://gre/modules/kvstore.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "KeyValueService",
-  "resource://gre/modules/kvstore.jsm"
-);
 
 const kMessages = [
   "Notification:Save",
