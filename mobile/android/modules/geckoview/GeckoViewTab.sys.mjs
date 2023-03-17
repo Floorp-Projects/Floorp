@@ -2,16 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { GeckoViewModule } from "resource://gre/modules/GeckoViewModule.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["GeckoViewTab", "GeckoViewTabBridge"];
-
-const { GeckoViewModule } = ChromeUtils.importESModule(
-  "resource://gre/modules/GeckoViewModule.sys.mjs"
-);
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const { ExtensionUtils } = ChromeUtils.import(
   "resource://gre/modules/ExtensionUtils.jsm"
 );
@@ -53,7 +46,7 @@ class Tab {
 // we choose a value that is unlikely to overlap with Fennec's tab IDs.
 const TAB_ID_BASE = 10000;
 
-const GeckoViewTabBridge = {
+export const GeckoViewTabBridge = {
   /**
    * Converts windowId to tabId as in GeckoView every browser window has exactly one tab.
    *
@@ -206,7 +199,7 @@ const GeckoViewTabBridge = {
   },
 };
 
-class GeckoViewTab extends GeckoViewModule {
+export class GeckoViewTab extends GeckoViewModule {
   onInit() {
     const { window } = this;
     if (!window.tab) {

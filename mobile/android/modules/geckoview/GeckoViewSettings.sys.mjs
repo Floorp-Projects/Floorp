@@ -2,17 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["GeckoViewSettings"];
-
-const { GeckoViewModule } = ChromeUtils.importESModule(
-  "resource://gre/modules/GeckoViewModule.sys.mjs"
-);
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { GeckoViewModule } from "resource://gre/modules/GeckoViewModule.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -45,11 +36,12 @@ const DISPLAY_MODE_STANDALONE = 2;
 const DISPLAY_MODE_FULLSCREEN = 3;
 
 // This needs to match GeckoSessionSettings.java
+// eslint-disable-next-line no-unused-vars
 const VIEWPORT_MODE_MOBILE = 0;
 const VIEWPORT_MODE_DESKTOP = 1;
 
 // Handles GeckoSession settings.
-class GeckoViewSettings extends GeckoViewModule {
+export class GeckoViewSettings extends GeckoViewModule {
   onInit() {
     debug`onInit`;
     this._userAgentMode = USER_AGENT_MODE_MOBILE;

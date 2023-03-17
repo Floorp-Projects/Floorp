@@ -2,16 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["GeckoViewNavigation"];
-
-const { GeckoViewModule } = ChromeUtils.importESModule(
-  "resource://gre/modules/GeckoViewModule.sys.mjs"
-);
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { GeckoViewModule } from "resource://gre/modules/GeckoViewModule.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -44,6 +36,7 @@ const FORBIDDEN_HEADER_CHARACTERS = ["\n", "\r"];
 
 // Keep in sync with GeckoSession.java
 const HEADER_FILTER_CORS_SAFELISTED = 1;
+// eslint-disable-next-line no-unused-vars
 const HEADER_FILTER_UNRESTRICTED_UNSAFE = 2;
 
 // Create default ReferrerInfo instance for the given referrer URI string.
@@ -95,7 +88,7 @@ function convertFlags(aFlags) {
 // Dispatches GeckoView:LocationChange to the GeckoView on location change when
 // active.
 // Implements nsIBrowserDOMWindow.
-class GeckoViewNavigation extends GeckoViewModule {
+export class GeckoViewNavigation extends GeckoViewModule {
   onInitBrowser() {
     this.window.browserDOMWindow = this;
 

@@ -4,14 +4,9 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
+  GeckoViewTabBridge: "resource://gre/modules/GeckoViewTab.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "GeckoViewTabBridge",
-  "resource://gre/modules/GeckoViewTab.jsm"
-);
 
 ChromeUtils.defineModuleGetter(
   this,
