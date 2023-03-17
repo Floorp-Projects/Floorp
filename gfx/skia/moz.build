@@ -454,8 +454,6 @@ if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES['skia/src/opts/SkOpts_sse42.cpp'].flags += ['-msse4.2']
     SOURCES['skia/src/opts/SkOpts_avx.cpp'].flags += ['-mavx']
     SOURCES['skia/src/opts/SkOpts_hsw.cpp'].flags += ['-mavx2', '-mf16c', '-mfma']
-elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += CONFIG['NEON_FLAGS']
 elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     SOURCES['skia/src/opts/SkOpts_crc32.cpp'].flags += ['-march=armv8-a+crc']
 
