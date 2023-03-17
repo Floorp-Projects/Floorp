@@ -153,21 +153,6 @@ class PathBuilderRecording final : public PathBuilder {
   void Arc(const Point& aOrigin, float aRadius, float aStartAngle,
            float aEndAngle, bool aAntiClockwise) final;
 
-  /* Point the current subpath is at - or where the next subpath will start
-   * if there is no active subpath.
-   */
-  Point CurrentPoint() const final { return mPathBuilder->CurrentPoint(); }
-
-  Point BeginPoint() const final { return mPathBuilder->BeginPoint(); }
-
-  void SetCurrentPoint(const Point& aPoint) final {
-    mPathBuilder->SetCurrentPoint(aPoint);
-  }
-
-  void SetBeginPoint(const Point& aPoint) final {
-    mPathBuilder->SetBeginPoint(aPoint);
-  }
-
   already_AddRefed<Path> Finish() final;
 
   BackendType GetBackendType() const final { return BackendType::RECORDING; }
@@ -182,7 +167,7 @@ class PathRecording final : public Path {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathRecording, override)
 
-  PathRecording(Path* aPath, PathOps&& aOps, FillRule aFillRule,
+  PathRecording(RefPtr<PathBuilder>&& aPath, PathOps&& aOps, FillRule aFillRule,
                 const Point& aCurrentPoint, const Point& aBeginPoint);
 
   ~PathRecording();
@@ -193,26 +178,35 @@ class PathRecording final : public Path {
       const Matrix& aTransform, FillRule aFillRule) const final;
   bool ContainsPoint(const Point& aPoint,
                      const Matrix& aTransform) const final {
+    EnsurePath();
     return mPath->ContainsPoint(aPoint, aTransform);
   }
   bool StrokeContainsPoint(const StrokeOptions& aStrokeOptions,
                            const Point& aPoint,
                            const Matrix& aTransform) const final {
+    EnsurePath();
     return mPath->StrokeContainsPoint(aStrokeOptions, aPoint, aTransform);
   }
 
   Rect GetBounds(const Matrix& aTransform = Matrix()) const final {
+    EnsurePath();
     return mPath->GetBounds(aTransform);
   }
 
   Rect GetStrokedBounds(const StrokeOptions& aStrokeOptions,
                         const Matrix& aTransform = Matrix()) const final {
+    EnsurePath();
     return mPath->GetStrokedBounds(aStrokeOptions, aTransform);
   }
 
-  Maybe<Rect> AsRect() const final { return mPath->AsRect(); }
+  Maybe<Rect> AsRect() const final {
+    EnsurePath();
+    return mPath->AsRect();
+  }
 
-  void StreamToSink(PathSink* aSink) const final { mPath->StreamToSink(aSink); }
+  void StreamToSink(PathSink* aSink) const final {
+    mPathOps.StreamToSink(*aSink);
+  }
 
   FillRule GetFillRule() const final { return mFillRule; }
 
@@ -221,7 +215,10 @@ class PathRecording final : public Path {
   friend class DrawTargetRecording;
   friend class RecordedPathCreation;
 
-  RefPtr<Path> mPath;
+  void EnsurePath() const;
+
+  mutable RefPtr<PathBuilder> mPathBuilder;
+  mutable RefPtr<Path> mPath;
   PathOps mPathOps;
   FillRule mFillRule;
   Point mCurrentPoint;
