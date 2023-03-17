@@ -78,6 +78,104 @@ struct DOMMatrix2DInit;
 class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
                                  public nsWrapperCache,
                                  public BasicRenderingContext2D {
+  // Container for either a single element of type T, or an nsTArray<T>.
+  // Provides a minimal subset of nsTArray's API, just enough to support use
+  // by ContextState for the clipsAndTransforms list.
+  // Using this instead of a simple nsTArray avoids an extra allocation in the
+  // common case where no more than one element is ever added to the list.
+  // Unlike an AutoTArray<..., 1>, this class is memmovable and therefore can
+  // be used in ContextState without breaking its movability.
+  template <typename T>
+  class ElementOrArray {
+    union {
+      T mElement;
+      nsTArray<T> mArray;
+    };
+    enum class Tag : uint8_t {
+      Element,
+      Array,
+    } mTag;
+
+   public:
+    // Construct as an empty array.
+    ElementOrArray() : mTag(Tag::Array) { new (&mArray) nsTArray<T>(); }
+
+    // For now, don't support copy/move.
+    ElementOrArray(const ElementOrArray&) = delete;
+    ElementOrArray(ElementOrArray&&) = delete;
+
+    ElementOrArray& operator=(const ElementOrArray&) = delete;
+    ElementOrArray& operator=(ElementOrArray&&) = delete;
+
+    // Destroy the appropriate variant.
+    ~ElementOrArray() {
+      switch (mTag) {
+        case Tag::Element:
+          mElement.~T();
+          break;
+        case Tag::Array:
+          mArray.~nsTArray();
+          break;
+      }
+    }
+
+    size_t Length() const { return mTag == Tag::Element ? 1 : mArray.Length(); }
+
+    T* AppendElement(const T& aElement) {
+      switch (mTag) {
+        case Tag::Element: {
+          // Move the existing element into an array, then append the new one.
+          T temp = std::move(mElement);
+          mElement.~T();
+          mTag = Tag::Array;
+          new (&mArray) nsTArray<T>();
+          mArray.AppendElement(std::move(temp));
+          return mArray.AppendElement(aElement);
+        }
+        case Tag::Array: {
+          // If currently empty, just store the element directly.
+          if (mArray.IsEmpty()) {
+            mArray.~nsTArray();
+            mTag = Tag::Element;
+            new (&mElement) T(aElement);
+            return &mElement;
+          }
+          // Otherwise, append it to the array.
+          return mArray.AppendElement(aElement);
+        }
+      }
+    }
+
+    const T& LastElement() const {
+      return mTag == Tag::Element ? mElement : mArray.LastElement();
+    }
+
+    T& LastElement() {
+      return mTag == Tag::Element ? mElement : mArray.LastElement();
+    }
+
+    bool IsEmpty() const {
+      return mTag == Tag::Element ? false : mArray.IsEmpty();
+    }
+
+    // Simple iterators to support range-for loops.
+    const T* begin() const {
+      return mTag == Tag::Array ? mArray.IsEmpty() ? nullptr : &*mArray.begin()
+                                : &mElement;
+    }
+    T* begin() {
+      return mTag == Tag::Array ? mArray.IsEmpty() ? nullptr : &*mArray.begin()
+                                : &mElement;
+    }
+
+    const T* end() const {
+      return mTag == Tag::Array ? begin() + mArray.Length() : &mElement + 1;
+    }
+    T* end() {
+      return mTag == Tag::Array ? begin() + mArray.Length() : &mElement + 1;
+    }
+  };
+
  protected:
   virtual ~CanvasRenderingContext2D();
 
@@ -943,7 +1041,7 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
       return std::min(SIGMA_MAX, shadowBlur / 2.0f);
     }
 
-    nsTArray<ClipState> clipsAndTransforms;
+    ElementOrArray<ClipState> clipsAndTransforms;
 
     RefPtr<gfxFontGroup> fontGroup;
     RefPtr<nsAtom> fontLanguage;
