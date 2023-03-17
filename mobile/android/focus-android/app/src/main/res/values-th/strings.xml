@@ -164,7 +164,7 @@
     <string name="preference_mozilla_summary">เกี่ยวกับ %1$s, ช่วยเหลือ</string>
 
     <!-- Preference category for ad blocking and enhanced tracking protection settings -->
-    <string name="preference_category_tracking_protection3">การป้องกันการติดตามที่มากขึ้น</string>
+    <string name="preference_category_tracking_protection3">การป้องกันการติดตามแบบพิเศษ</string>
 
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">เนื้อหาเว็บ</string>
@@ -575,7 +575,7 @@
 
     <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
          let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
-    <string name="dialog_addtohomescreen_tracking_protection2">ทางลัดจะเปิดพร้อมปิดใช้งานการป้องกันการติดตามที่มากขึ้น</string>
+    <string name="dialog_addtohomescreen_tracking_protection2">ทางลัดจะเปิดพร้อมปิดใช้งานการป้องกันการติดตามแบบพิเศษ</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -961,11 +961,11 @@
     <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
     <string name="analytics">การวิเคราะห์</string>
     <!-- Preference title for enhanced tracking protection settings -->
-    <string name="enhanced_tracking_protection">การป้องกันการติดตามที่มากขึ้น</string>
+    <string name="enhanced_tracking_protection">การป้องกันการติดตามแบบพิเศษ</string>
     <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
-    <string name="enhanced_tracking_protection_state_off">การป้องกันถูก ปิด สำหรับไซต์นี้</string>
+    <string name="enhanced_tracking_protection_state_off">การป้องกันปิดอยู่สำหรับไซต์นี้</string>
     <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
-    <string name="enhanced_tracking_protection_state_on">การป้องกันถูก เปิด สำหรับไซต์นี้</string>
+    <string name="enhanced_tracking_protection_state_on">การป้องกันเปิดอยู่สำหรับไซต์นี้</string>
     <!-- Label that indicates a site is using a secure connection -->
     <string name="secure_connection">การเชื่อมต่อปลอดภัย</string>
     <!-- Label that indicates a site is using a insecure connection -->
