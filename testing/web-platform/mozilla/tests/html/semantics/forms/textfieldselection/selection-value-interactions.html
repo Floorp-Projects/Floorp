@@ -163,10 +163,17 @@ for (var data of elemData) {
       assert_equals(el.selectionEnd, el.value.length,
                     `Cursor end should be at end of ${data.desc}`);
     } else {
-      assert_equals(el.selectionStart, 1,
-                    "Shouldn't have moved selection start");
-      assert_equals(el.selectionEnd, shorttext.length,
-                    "Should have adjusted selection end");
+      if (el.tagName.toLowerCase() === "textarea") {
+        assert_equals(el.selectionStart, 0,
+                      "Selection should be collapsed to the beginning");
+        assert_equals(el.selectionEnd, 0,
+                      "Selection should be collapsed to the beginning");
+      } else {
+        assert_equals(el.selectionStart, 1,
+          "Shouldn't have moved selection start");
+        assert_equals(el.selectionEnd, shorttext.length,
+          "Should have adjusted selection end");
+      }
     }
   }, `selection location after defaultValue set to shorter than selectionEnd of ${data.desc}`);
 }
@@ -192,10 +199,17 @@ for (var data of elemData) {
       assert_equals(el.selectionEnd, el.value.length,
                     `Cursor end should be at end of ${data.desc}`);
     } else {
-      assert_equals(el.selectionStart, shorttext.length,
-                    "Should have adjusted selection start");
-      assert_equals(el.selectionEnd, shorttext.length,
-                    "Should have adjusted selection end");
+      if (el.tagName.toLowerCase() === "textarea") {
+        assert_equals(el.selectionStart,0,
+                      "Selection should be collapsed to the beginning");
+        assert_equals(el.selectionEnd, 0,
+                      "Selection should be collapsed to the beginning");
+      } else {
+        assert_equals(el.selectionStart, shorttext.length,
+          "Should have adjusted selection start");
+        assert_equals(el.selectionEnd, shorttext.length,
+          "Should have adjusted selection end");
+      }
     }
   }, `selection location after defaultValue set to shorter than selectionStart of ${data.desc}`);
 }
