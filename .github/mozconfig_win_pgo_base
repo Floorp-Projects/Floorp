@@ -1,3 +1,9 @@
+export CC="$RUNNER_USERDIR/.mozbuild/clang/bin/clang-cl"
+export CXX="$RUNNER_USERDIR/.mozbuild/clang/bin/clang-cl"
+export HOST_CC="$RUNNER_USERDIR/.mozbuild/clang/bin/clang"
+export HOST_CXX="$RUNNER_USERDIR/.mozbuild/clang/bin/clang++"
+export CFLAGS="-Wno-int-conversion"
+
 ac_add_options --with-app-name=floorp
 ac_add_options --with-app-basename=Floorp
 ac_add_options --disable-crashreporter
