@@ -15,13 +15,15 @@ import {
   getGeneratedSourceByURL,
   getContext,
   getFirstSourceActorForGeneratedSource,
+  isSourceOverridden,
+  getOverridesSupport,
 } from "../../selectors";
 import actions from "../../actions";
 
 import { shouldBlackbox, sourceTypes } from "../../utils/source";
 import { copyToTheClipboard } from "../../utils/clipboard";
 import { features } from "../../utils/prefs";
-import { downloadFile } from "../../utils/utils";
+import { saveAsLocalFile } from "../../utils/utils";
 
 class SourceTreeItem extends Component {
   static get propTypes() {
@@ -46,6 +48,10 @@ class SourceTreeItem extends Component {
       toggleBlackBox: PropTypes.func.isRequired,
       isSourceBlackBoxed: PropTypes.bool.isRequired,
       getParent: PropTypes.func.isRequired,
+      setOverrideSource: PropTypes.func.isRequired,
+      removeOverrideSource: PropTypes.func.isRequired,
+      isOverridden: PropTypes.bool,
+      isOverridesSupported: PropTypes.bool,
     };
   }
 
@@ -77,7 +83,7 @@ class SourceTreeItem extends Component {
 
     const menuOptions = [];
 
-    const { item } = this.props;
+    const { item, isOverridden, isOverridesSupported } = this.props;
     if (item.type == "source") {
       const { source } = item;
       const copySourceUri2 = {
@@ -89,14 +95,11 @@ class SourceTreeItem extends Component {
       };
 
       const { cx } = this.props;
+      const ignoreStr = this.props.isSourceBlackBoxed ? "unignore" : "ignore";
       const blackBoxMenuItem = {
         id: "node-menu-blackbox",
-        label: this.props.isSourceBlackBoxed
-          ? L10N.getStr("ignoreContextItem.unignore")
-          : L10N.getStr("ignoreContextItem.ignore"),
-        accesskey: this.props.isSourceBlackBoxed
-          ? L10N.getStr("ignoreContextItem.unignore.accesskey")
-          : L10N.getStr("ignoreContextItem.ignore.accesskey"),
+        label: L10N.getStr(`ignoreContextItem.${ignoreStr}`),
+        accesskey: L10N.getStr(`ignoreContextItem.${ignoreStr}.accesskey`),
         disabled: !shouldBlackbox(source),
         click: () => this.props.toggleBlackBox(cx, source),
       };
@@ -105,9 +108,27 @@ class SourceTreeItem extends Component {
         label: L10N.getStr("downloadFile.label"),
         accesskey: L10N.getStr("downloadFile.accesskey"),
         disabled: false,
-        click: () => this.handleDownloadFile(cx, source),
+        click: () => this.saveLocalFile(cx, source),
       };
+      const overrideStr = !isOverridden ? "override" : "removeOverride";
+
+      const overridesItem = {
+        id: "node-menu-overrides",
+        label: L10N.getStr(`overridesContextItem.${overrideStr}`),
+        accesskey: L10N.getStr(`overridesContextItem.${overrideStr}.accesskey`),
+        disabled: !!source.isHTML,
+        click: () => this.handleLocalOverride(cx, source, isOverridden),
+      };
+
       menuOptions.push(copySourceUri2, blackBoxMenuItem, downloadFileItem);
+
+      // Show the overrides context menu item if the server
+      // does not support overrides
+      // @backward-compat { version 112 } isOverridesSupported can be
+      // removed.
+      if (isOverridesSupported) {
+        menuOptions.push(overridesItem);
+      }
     }
 
     // All other types other than source are folder-like
@@ -146,16 +167,27 @@ class SourceTreeItem extends Component {
     showMenu(event, menuOptions);
   };
 
-  handleDownloadFile = async (cx, source) => {
+  saveLocalFile = async (cx, source) => {
     if (!source) {
-      return;
+      return null;
     }
 
     const data = await this.props.loadSourceText(cx, source);
     if (!data) {
-      return;
+      return null;
     }
-    downloadFile(data.value, source.displayURL.filename);
+    return saveAsLocalFile(data.value, source.displayURL.filename);
+  };
+
+  handleLocalOverride = async (cx, source, isOverridden) => {
+    if (!isOverridden) {
+      const localPath = await this.saveLocalFile(cx, source);
+      if (localPath) {
+        this.props.setOverrideSource(cx, source, localPath);
+      }
+    } else {
+      this.props.removeOverrideSource(cx, source);
+    }
   };
 
   addBlackboxAllOption = (menuOptions, item) => {
@@ -281,13 +313,16 @@ class SourceTreeItem extends Component {
       return (
         <SourceIcon
           source={source}
-          modifier={icon =>
+          modifier={icon => {
             // In the SourceTree, extension files should use the file-extension based icon,
             // whereas we use the extension icon in other Components (eg. source tabs and breakpoints pane).
-            icon === "extension"
-              ? sourceTypes[source.displayURL.fileExtension] || "javascript"
-              : icon
-          }
+            if (icon === "extension") {
+              return (
+                sourceTypes[source.displayURL.fileExtension] || "javascript"
+              );
+            }
+            return icon + (this.props.isOverridden ? " override" : "");
+          }}
         />
       );
     }
@@ -384,12 +419,17 @@ const mapStateToProps = (state, props) => {
       hasMatchingGeneratedSource: getHasMatchingGeneratedSource(state, source),
       getFirstSourceActorForGeneratedSource: (sourceId, threadId) =>
         getFirstSourceActorForGeneratedSource(state, sourceId, threadId),
+      isOverridden: isSourceOverridden(state, source),
+      // @backward-compat { version 112 } Remove after full support for overrides on server
+      isOverridesSupported: getOverridesSupport(state),
     };
   }
   return {
     cx: getContext(state),
     getFirstSourceActorForGeneratedSource: (sourceId, threadId) =>
       getFirstSourceActorForGeneratedSource(state, sourceId, threadId),
+    // @backward-compat { version 112 } Remove after full support for overrides on server
+    isOverridesSupported: getOverridesSupport(state),
   };
 };
 
@@ -400,4 +440,6 @@ export default connect(mapStateToProps, {
   loadSourceText: actions.loadSourceText,
   blackBoxSources: actions.blackBoxSources,
   setBlackBoxAllOutside: actions.setBlackBoxAllOutside,
+  setOverrideSource: actions.setOverrideSource,
+  removeOverrideSource: actions.removeOverrideSource,
 })(SourceTreeItem);

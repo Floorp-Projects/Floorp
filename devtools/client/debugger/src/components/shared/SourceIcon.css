@@ -73,6 +73,21 @@
   -moz-context-properties: fill;
 }
 
+.img.override::after {
+  content: "";
+  display: block;
+  height: 5px;
+  width: 5px;
+  background-color: var(--purple-30);
+  border-radius: 100%;
+  outline: 1px solid 	var(--theme-sidebar-background);
+  translate: 12px 10px;
+}
+
+.node.focused .img.override::after {
+  outline-color: var(--theme-selection-background);
+}
+
 .img.jquery {
   mask-image: url(chrome://devtools/content/debugger/images/sources/jquery.svg);
 }

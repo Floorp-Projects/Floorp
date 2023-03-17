@@ -792,6 +792,8 @@ exports.openFileStream = function(filePath) {
  *        An array of object of the following shape:
  *          - pattern: A pattern for accepted files (example: "*.js")
  *          - label: The label that will be displayed in the save file dialog.
+ * @return {String|null}
+ *        The path to the local saved file, if saved.
  */
 exports.saveAs = async function(
   parentWindow,
@@ -807,12 +809,14 @@ exports.saveAs = async function(
       filters
     );
   } catch (ex) {
-    return;
+    return null;
   }
 
   await IOUtils.write(returnFile.path, dataArray, {
     tmpPath: returnFile.path + ".tmp",
   });
+
+  return returnFile.path;
 };
 
 /**

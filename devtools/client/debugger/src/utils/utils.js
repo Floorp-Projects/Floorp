@@ -49,11 +49,11 @@ export function waitForMs(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export function downloadFile(content, fileName) {
+export async function saveAsLocalFile(content, fileName) {
   if (content.type !== "text") {
-    return;
+    return null;
   }
 
   const data = new TextEncoder().encode(content.value);
-  DevToolsUtils.saveAs(window, data, fileName);
+  return DevToolsUtils.saveAs(window, data, fileName);
 }

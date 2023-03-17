@@ -9,3 +9,34 @@ export * from "./newSources";
 export * from "./prettyPrint";
 export * from "./select";
 export { setSymbols } from "./symbols";
+
+export function setOverrideSource(cx, source, path) {
+  return ({ client, dispatch }) => {
+    if (!source || !source.url) {
+      return;
+    }
+    const { url } = source;
+    client.setOverride(url, path);
+    dispatch({
+      type: "SET_OVERRIDE",
+      cx,
+      url,
+      path,
+    });
+  };
+}
+
+export function removeOverrideSource(cx, source) {
+  return ({ client, dispatch }) => {
+    if (!source || !source.url) {
+      return;
+    }
+    const { url } = source;
+    client.removeOverride(url);
+    dispatch({
+      type: "REMOVE_OVERRIDE",
+      cx,
+      url,
+    });
+  };
+}

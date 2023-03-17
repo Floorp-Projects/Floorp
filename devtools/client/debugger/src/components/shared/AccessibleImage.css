@@ -142,7 +142,11 @@ html[dir="rtl"] .img.more-tabs {
 }
 
 .img.prettyPrint {
-  mask-image: url(chrome://devtools/content/debugger/images/prettyPrint.svg);
+  background-image: url(chrome://devtools/content/debugger/images/prettyPrint.svg);
+  background-size: 14px 14px;
+  background-color: transparent !important;
+  fill: var(--theme-icon-color);
+  -moz-context-properties: fill;
 }
 
 .img.removeAll {

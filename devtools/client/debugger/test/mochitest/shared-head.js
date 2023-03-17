@@ -755,6 +755,53 @@ function getThreadContext(dbg) {
   return dbg.selectors.getThreadContext();
 }
 
+/*
+ * Selects the source node for a specific source
+ * from the source tree.
+ *
+ * @param {Object} dbg
+ * @param {String} filename - The filename for the specific source
+ * @param {Number} sourcePosition - The source node postion in the tree
+ * @param {String} message - The info message to display
+ */
+async function selectSourceFromSourceTree(
+  dbg,
+  fileName,
+  sourcePosition,
+  message
+) {
+  info(message);
+  await clickElement(dbg, "sourceNode", sourcePosition);
+  await waitForSelectedSource(dbg, fileName);
+  await waitFor(
+    () => getCM(dbg).getValue() !== `Loading…`,
+    "Wait for source to completely load"
+  );
+}
+
+/*
+ * Trigger a context menu in the debugger source tree
+ *
+ * @param {Object} dbg
+ * @param {Obejct} sourceTreeNode - The node in the source tree which the context menu
+ *                                  item needs to be triggered on.
+ * @param {String} contextMenuItem - The id for the context menu item to be selected
+ */
+async function triggerSourceTreeContextMenu(
+  dbg,
+  sourceTreeNode,
+  contextMenuItem
+) {
+  const onContextMenu = waitForContextMenu(dbg);
+  rightClickEl(dbg, sourceTreeNode);
+  const menupopup = await onContextMenu;
+  const onHidden = new Promise(resolve => {
+    menupopup.addEventListener("popuphidden", resolve, { once: true });
+  });
+  selectContextMenuItem(dbg, contextMenuItem);
+  await onHidden;
+}
+
 /**
  * Selects the source.
  *
@@ -1172,14 +1219,7 @@ async function expandSourceTree(dbg) {
 }
 
 async function expandAllSourceNodes(dbg, treeNode) {
-  const onContextMenu = waitForContextMenu(dbg);
-  rightClickEl(dbg, treeNode);
-  const menupopup = await onContextMenu;
-  const onHidden = new Promise(resolve => {
-    menupopup.addEventListener("popuphidden", resolve, { once: true });
-  });
-  selectContextMenuItem(dbg, "#node-menu-expand-all");
-  await onHidden;
+  return triggerSourceTreeContextMenu(dbg, treeNode, "#node-menu-expand-all");
 }
 
 /**
