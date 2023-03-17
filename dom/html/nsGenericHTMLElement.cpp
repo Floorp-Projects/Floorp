@@ -2520,18 +2520,9 @@ nsIContent::IMEState nsGenericHTMLFormControlElement::GetDesiredIMEState() {
   return state;
 }
 
-nsresult nsGenericHTMLFormControlElement::BindToTree(BindContext& aContext,
-                                                     nsINode& aParent) {
-  nsresult rv = nsGenericHTMLFormElement::BindToTree(aContext, aParent);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
 void nsGenericHTMLFormControlElement::UnbindFromTree(bool aNullParent) {
   // Save state before doing anything
   SaveState();
-
   nsGenericHTMLFormElement::UnbindFromTree(aNullParent);
 }
 
