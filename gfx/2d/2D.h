@@ -2033,6 +2033,9 @@ class GFX2D_API Factory {
                                                        const IntSize& aSize,
                                                        SurfaceFormat aFormat);
 
+  static already_AddRefed<PathBuilder> CreatePathBuilder(
+      BackendType aBackend, FillRule aFillRule = FillRule::FILL_WINDING);
+
   /**
    * Create a simple PathBuilder, which uses SKIA backend.
    */

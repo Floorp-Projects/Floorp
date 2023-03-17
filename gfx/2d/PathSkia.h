@@ -37,6 +37,8 @@ class PathBuilderSkia : public PathBuilder {
 
   BackendType GetBackendType() const override { return BackendType::SKIA; }
 
+  static already_AddRefed<PathBuilder> Create(FillRule aFillRule);
+
  private:
   friend class PathSkia;
 

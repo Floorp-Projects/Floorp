@@ -13,6 +13,33 @@
 namespace mozilla {
 namespace gfx {
 
+already_AddRefed<PathBuilder> PathBuilderD2D::Create(FillRule aFillRule) {
+  RefPtr<ID2D1PathGeometry> path;
+  HRESULT hr =
+      DrawTargetD2D1::factory()->CreatePathGeometry(getter_AddRefs(path));
+
+  if (FAILED(hr)) {
+    gfxWarning() << "Failed to create Direct2D Path Geometry. Code: "
+                 << hexa(hr);
+    return nullptr;
+  }
+
+  RefPtr<ID2D1GeometrySink> sink;
+  hr = path->Open(getter_AddRefs(sink));
+  if (FAILED(hr)) {
+    gfxWarning() << "Failed to access Direct2D Path Geometry. Code: "
+                 << hexa(hr);
+    return nullptr;
+  }
+
+  if (aFillRule == FillRule::FILL_WINDING) {
+    sink->SetFillMode(D2D1_FILL_MODE_WINDING);
+  }
+
+  return MakeAndAddRef<PathBuilderD2D>(sink, path, aFillRule,
+                                       BackendType::DIRECT2D1_1);
+}
+
 // This class exists as a wrapper for ID2D1SimplifiedGeometry sink, it allows
 // a geometry to be duplicated into a geometry sink, while removing the final
 // figure end and thus allowing a figure that was implicitly closed to be

@@ -1682,11 +1682,6 @@ void DrawTargetCairo::PopLayer() {
   SetPermitSubpixelAA(layer.mWasPermittingSubpixelAA);
 }
 
-already_AddRefed<PathBuilder> DrawTargetCairo::CreatePathBuilder(
-    FillRule aFillRule /* = FillRule::FILL_WINDING */) const {
-  return MakeAndAddRef<PathBuilderCairo>(aFillRule);
-}
-
 void DrawTargetCairo::ClearSurfaceForUnboundedSource(
     const CompositionOp& aOperator) {
   if (aOperator != CompositionOp::OP_SOURCE) return;

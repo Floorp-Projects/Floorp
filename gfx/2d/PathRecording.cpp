@@ -198,15 +198,14 @@ void PathBuilderRecording::Arc(const Point& aOrigin, float aRadius,
 }
 
 already_AddRefed<Path> PathBuilderRecording::Finish() {
-  return MakeAndAddRef<PathRecording>(std::move(mPathBuilder),
-                                      std::move(mPathOps), mFillRule,
-                                      mBeginPoint, mCurrentPoint);
+  return MakeAndAddRef<PathRecording>(mBackendType, std::move(mPathOps),
+                                      mFillRule, mBeginPoint, mCurrentPoint);
 }
 
-PathRecording::PathRecording(RefPtr<PathBuilder>&& aPathBuilder, PathOps&& aOps,
+PathRecording::PathRecording(BackendType aBackend, PathOps&& aOps,
                              FillRule aFillRule, const Point& aCurrentPoint,
                              const Point& aBeginPoint)
-    : mPathBuilder(std::move(aPathBuilder)),
+    : mBackendType(aBackend),
       mPathOps(std::move(aOps)),
       mFillRule(aFillRule),
       mCurrentPoint(aCurrentPoint),
@@ -223,22 +222,23 @@ void PathRecording::EnsurePath() const {
   if (mPath) {
     return;
   }
-  MOZ_ASSERT(!!mPathBuilder);
-  if (!mPathOps.StreamToSink(*mPathBuilder)) {
-    MOZ_ASSERT(false, "Failed to stream PathOps to PathBuilder");
+  if (RefPtr<PathBuilder> pathBuilder =
+          Factory::CreatePathBuilder(mBackendType, mFillRule)) {
+    if (!mPathOps.StreamToSink(*pathBuilder)) {
+      MOZ_ASSERT(false, "Failed to stream PathOps to PathBuilder");
+    } else {
+      mPath = pathBuilder->Finish();
+      MOZ_ASSERT(!!mPath, "Failed finishing Path from PathBuilder");
+    }
   } else {
-    mPath = mPathBuilder->Finish();
-    MOZ_ASSERT(!!mPath, "Failed finishing Path from PathBuilder");
+    MOZ_ASSERT(false, "Failed to create PathBuilder for PathRecording");
   }
-  mPathBuilder = nullptr;
 }
 
 already_AddRefed<PathBuilder> PathRecording::CopyToBuilder(
     FillRule aFillRule) const {
-  EnsurePath();
-  RefPtr<PathBuilder> pathBuilder = mPath->CopyToBuilder(aFillRule);
   RefPtr<PathBuilderRecording> recording =
-      new PathBuilderRecording(pathBuilder, mPathOps, aFillRule);
+      new PathBuilderRecording(mBackendType, PathOps(mPathOps), aFillRule);
   recording->SetCurrentPoint(mCurrentPoint);
   recording->SetBeginPoint(mBeginPoint);
   return recording.forget();
@@ -246,15 +246,10 @@ already_AddRefed<PathBuilder> PathRecording::CopyToBuilder(
 
 already_AddRefed<PathBuilder> PathRecording::TransformedCopyToBuilder(
     const Matrix& aTransform, FillRule aFillRule) const {
-  EnsurePath();
-  RefPtr<PathBuilder> pathBuilder =
-      mPath->TransformedCopyToBuilder(aTransform, aFillRule);
   RefPtr<PathBuilderRecording> recording = new PathBuilderRecording(
-      pathBuilder, mPathOps.TransformedCopy(aTransform), aFillRule);
-
+      mBackendType, mPathOps.TransformedCopy(aTransform), aFillRule);
   recording->SetCurrentPoint(aTransform.TransformPoint(mCurrentPoint));
   recording->SetBeginPoint(aTransform.TransformPoint(mBeginPoint));
-
   return recording.forget();
 }
 

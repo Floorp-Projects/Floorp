@@ -1181,33 +1181,6 @@ RefPtr<DrawTarget> DrawTargetD2D1::CreateClippedDrawTarget(
   return result;
 }
 
-already_AddRefed<PathBuilder> DrawTargetD2D1::CreatePathBuilder(
-    FillRule aFillRule) const {
-  RefPtr<ID2D1PathGeometry> path;
-  HRESULT hr = factory()->CreatePathGeometry(getter_AddRefs(path));
-
-  if (FAILED(hr)) {
-    gfxWarning() << *this << ": Failed to create Direct2D Path Geometry. Code: "
-                 << hexa(hr);
-    return nullptr;
-  }
-
-  RefPtr<ID2D1GeometrySink> sink;
-  hr = path->Open(getter_AddRefs(sink));
-  if (FAILED(hr)) {
-    gfxWarning() << *this << ": Failed to access Direct2D Path Geometry. Code: "
-                 << hexa(hr);
-    return nullptr;
-  }
-
-  if (aFillRule == FillRule::FILL_WINDING) {
-    sink->SetFillMode(D2D1_FILL_MODE_WINDING);
-  }
-
-  return MakeAndAddRef<PathBuilderD2D>(sink, path, aFillRule,
-                                       BackendType::DIRECT2D1_1);
-}
-
 already_AddRefed<GradientStops> DrawTargetD2D1::CreateGradientStops(
     GradientStop* rawStops, uint32_t aNumStops, ExtendMode aExtendMode) const {
   if (aNumStops == 0) {

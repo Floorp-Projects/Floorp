@@ -122,7 +122,9 @@ class DrawTargetD2D1 : public DrawTarget {
       const Rect& aBounds, SurfaceFormat aFormat) override;
 
   virtual already_AddRefed<PathBuilder> CreatePathBuilder(
-      FillRule aFillRule = FillRule::FILL_WINDING) const override;
+      FillRule aFillRule = FillRule::FILL_WINDING) const override {
+    return PathBuilderD2D::Create(aFillRule);
+  }
 
   virtual already_AddRefed<GradientStops> CreateGradientStops(
       GradientStop* aStops, uint32_t aNumStops,

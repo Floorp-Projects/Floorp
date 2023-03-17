@@ -14,6 +14,10 @@
 namespace mozilla {
 namespace gfx {
 
+already_AddRefed<PathBuilder> PathBuilderCairo::Create(FillRule aFillRule) {
+  return MakeAndAddRef<PathBuilderCairo>(aFillRule);
+}
+
 PathBuilderCairo::PathBuilderCairo(FillRule aFillRule) : mFillRule(aFillRule) {}
 
 void PathBuilderCairo::MoveTo(const Point& aPoint) {
