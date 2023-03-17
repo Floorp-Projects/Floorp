@@ -20,6 +20,7 @@ text { font: 20px monospace; }
   <use id="use1" href="#use-test" x="100" y="50" fill="yellow"/>
   <text id="text1" x="25" y="25">abc</text>
   <text id="text1a" x="85" y="25" stroke="black" stroke-width="4">abc</text>
+  <text id="text1b" x="25" y="25" style="text-shadow: 5px 5px 3em rgba(0, 0, 0, 0.98);">abc</text>
   <rect id="rect1" x="50" y="50" width="50" height="50" fill="green"/>
   <rect id="rect1a" x="50" y="50" width="50" height="50" fill="none" stroke-width="4" stroke="yellow"/>
   <text id="text2" x="125" y="25">abc</text>

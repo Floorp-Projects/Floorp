@@ -181,12 +181,17 @@ function runTest() {
   isfuzzy(rect4aBounds.height, rect.height, 0.1, "rect4a.getBoundingClientRect().height");
 
   var text1a = doc.getElementById("text1a");
-
   var text1aBounds = text1a.getBoundingClientRect();
+
+  var text1b = doc.getElementById("text1b");
+  var text1bBounds = text1b.getBoundingClientRect();
+
   var text2aBounds = doc.getElementById("text2a").getBoundingClientRect();
 
   isfuzzy(text1aBounds.left, 82, 1, "text1a.getBoundingClientRect().left");
   is(text1aBounds.width, text1Bounds.width + 4, "text1a.getBoundingClientRect().width");
+  is(text1bBounds.width, text1Bounds.width, "text1b.getBoundingClientRect().width");
+  isfuzzy(text1bBounds.height, 196, 5, "text1b.getBoundingClientRect().height");
 
   is(text2aBounds.left, text1aBounds.left + 100 - 3, "text2a.getBoundingClientRect().left");
   isfuzzy(text2aBounds.width, text1aBounds.width + 6, 0.1, "text2a.getBoundingClientRect().width");
