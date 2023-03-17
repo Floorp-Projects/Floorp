@@ -187,7 +187,7 @@ class nsTextControlFrame : public nsContainerFrame,
    */
   bool TextEquals(const nsAString& aText) const;
 
-  nsresult PeekOffset(nsPeekOffsetStruct* aPos) override;
+  nsresult PeekOffset(mozilla::PeekOffsetStruct* aPos) override;
 
   NS_DECL_QUERYFRAME
 

@@ -125,7 +125,6 @@ class nsViewManager;
 class nsWindowSizes;
 
 struct nsBoxLayoutMetrics;
-struct nsPeekOffsetStruct;
 struct CharacterDataChangeInfo;
 
 namespace mozilla {
@@ -144,6 +143,8 @@ class LazyLogModule;
 class PresShell;
 class WidgetGUIEvent;
 class WidgetMouseEvent;
+
+struct PeekOffsetStruct;
 
 namespace layers {
 class Layer;
@@ -3809,13 +3810,14 @@ class nsIFrame : public nsQueryFrame {
    *
    * @param aPos is defined in nsFrameSelection
    */
-  virtual nsresult PeekOffset(nsPeekOffsetStruct* aPos);
+  virtual nsresult PeekOffset(mozilla::PeekOffsetStruct* aPos);
 
  private:
-  nsresult PeekOffsetForCharacter(nsPeekOffsetStruct* aPos, int32_t aOffset);
-  nsresult PeekOffsetForWord(nsPeekOffsetStruct* aPos, int32_t aOffset);
-  nsresult PeekOffsetForLine(nsPeekOffsetStruct* aPos);
-  nsresult PeekOffsetForLineEdge(nsPeekOffsetStruct* aPos);
+  nsresult PeekOffsetForCharacter(mozilla::PeekOffsetStruct* aPos,
+                                  int32_t aOffset);
+  nsresult PeekOffsetForWord(mozilla::PeekOffsetStruct* aPos, int32_t aOffset);
+  nsresult PeekOffsetForLine(mozilla::PeekOffsetStruct* aPos);
+  nsresult PeekOffsetForLineEdge(mozilla::PeekOffsetStruct* aPos);
 
   /**
    * Search for the first paragraph boundary before or after the given position
@@ -3824,7 +3826,7 @@ class nsIFrame : public nsQueryFrame {
    *              Input: mDirection
    *              Output: mResultContent, mContentOffset
    */
-  nsresult PeekOffsetForParagraph(nsPeekOffsetStruct* aPos);
+  nsresult PeekOffsetForParagraph(mozilla::PeekOffsetStruct* aPos);
 
  public:
   // given a frame five me the first/last leaf available
@@ -3861,7 +3863,7 @@ class nsIFrame : public nsQueryFrame {
     };
 
     /** Transfers frame and offset info for PeekOffset() result */
-    void TransferTo(nsPeekOffsetStruct& aPos) const;
+    void TransferTo(mozilla::PeekOffsetStruct& aPos) const;
     bool Failed() { return !mFrame; }
 
     explicit SelectablePeekReport(nsIFrame* aFrame = nullptr,
@@ -3886,7 +3888,8 @@ class nsIFrame : public nsQueryFrame {
                                              bool aScrollViewStop,
                                              bool aForceEditableRegion);
 
-  SelectablePeekReport GetFrameFromDirection(const nsPeekOffsetStruct& aPos);
+  SelectablePeekReport GetFrameFromDirection(
+      const mozilla::PeekOffsetStruct& aPos);
 
   /**
    * Return:
