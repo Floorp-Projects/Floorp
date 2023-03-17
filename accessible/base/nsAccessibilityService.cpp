@@ -1321,7 +1321,7 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
 
   if (!newAcc) {
     if (content->IsSVGElement()) {
-      if (content->IsNodeOfType(nsINode::eSHAPE) ||
+      if (content->IsSVGGeometryElement() ||
           content->IsSVGElement(nsGkAtoms::image)) {
         // Shape elements: rect, circle, ellipse, line, path, polygon,
         // and polyline. 'use' and 'text' graphic elements require

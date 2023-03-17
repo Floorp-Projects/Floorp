@@ -1234,7 +1234,7 @@ bool SVGUtils::CanOptimizeOpacity(const nsIFrame* aFrame) {
     return false;
   }
   auto* content = aFrame->GetContent();
-  if (!content->IsNodeOfType(nsINode::eSHAPE) &&
+  if (!content->IsSVGGeometryElement() &&
       !content->IsSVGElement(nsGkAtoms::image)) {
     return false;
   }

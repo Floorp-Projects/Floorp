@@ -180,11 +180,7 @@ SVGGeometryElement* SVGMPathElement::GetReferencedPath() {
     return nullptr;
   }
 
-  nsIContent* genericTarget = mPathTracker.get();
-  if (genericTarget && genericTarget->IsNodeOfType(nsINode::eSHAPE)) {
-    return static_cast<SVGGeometryElement*>(genericTarget);
-  }
-  return nullptr;
+  return SVGGeometryElement::FromNodeOrNull(mPathTracker.get());
 }
 
 //----------------------------------------------------------------------

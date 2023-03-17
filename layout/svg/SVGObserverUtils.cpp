@@ -1451,10 +1451,8 @@ SVGGeometryElement* SVGObserverUtils::GetAndObserveTextPathsPath(
     }
   }
 
-  Element* element = property->GetAndObserveReferencedElement();
-  return (element && element->IsNodeOfType(nsINode::eSHAPE))
-             ? static_cast<SVGGeometryElement*>(element)
-             : nullptr;
+  return SVGGeometryElement::FromNodeOrNull(
+      property->GetAndObserveReferencedElement());
 }
 
 void SVGObserverUtils::InitiateResourceDocLoads(nsIFrame* aFrame) {
