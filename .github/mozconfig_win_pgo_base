@@ -1,7 +1,3 @@
-export CC="$RUNNER_USERDIR/win-crosstool/clang/bin/clang-cl"
-export CXX="$RUNNER_USERDIR/win-crosstool/clang/bin/clang-cl"
-export HOST_CC="$RUNNER_USERDIR/win-crosstool/clang/bin/clang"
-export HOST_CXX="$RUNNER_USERDIR/win-crosstool/clang/bin/clang++"
 export CFLAGS="-Wno-int-conversion"
 
 ac_add_options --with-app-name=floorp
