@@ -1138,11 +1138,11 @@ class nsGenericHTMLFormControlElement : public nsGenericHTMLFormElement,
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMPL_FROMNODE_HELPER(nsGenericHTMLFormControlElement,
-                          IsNodeOfType(nsINode::eHTML_FORM_CONTROL))
+                          IsHTMLFormControlElement())
 
   // nsINode
   nsINode* GetScopeChainParent() const override;
-  virtual bool IsNodeOfType(uint32_t aFlags) const override;
+  bool IsHTMLFormControlElement() const final { return true; }
 
   // nsIContent
   void SaveSubtreeState() override;

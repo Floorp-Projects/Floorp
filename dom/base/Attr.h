@@ -67,8 +67,7 @@ class Attr final : public nsINode {
   nsresult SetOwnerDocument(Document* aDocument);
 
   // nsINode interface
-  virtual bool IsNodeOfType(uint32_t aFlags) const override;
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
   nsIURI* GetBaseURI(bool aTryUseXHRDocBaseURI = false) const override;
 
   static void Initialize();

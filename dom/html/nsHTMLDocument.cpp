@@ -611,7 +611,7 @@ void nsHTMLDocument::GetSupportedNames(nsTArray<nsString>& aNames) {
 
 bool nsHTMLDocument::MatchFormControls(Element* aElement, int32_t aNamespaceID,
                                        nsAtom* aAtom, void* aData) {
-  return aElement->IsNodeOfType(nsIContent::eHTML_FORM_CONTROL);
+  return aElement->IsHTMLFormControlElement();
 }
 
 nsresult nsHTMLDocument::Clone(dom::NodeInfo* aNodeInfo,

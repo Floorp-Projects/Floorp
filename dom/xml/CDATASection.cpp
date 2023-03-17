@@ -17,8 +17,6 @@ JSObject* CDATASection::WrapNode(JSContext* aCx,
   return CDATASection_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-bool CDATASection::IsNodeOfType(uint32_t aFlags) const { return false; }
-
 already_AddRefed<CharacterData> CDATASection::CloneDataNode(
     mozilla::dom::NodeInfo* aNodeInfo, bool aCloneText) const {
   RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;

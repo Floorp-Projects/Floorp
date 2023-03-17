@@ -333,8 +333,7 @@ struct MOZ_STACK_CLASS BidiParagraphData {
        */
       for (nsIContent* content = aBlockFrame->GetContent(); content;
            content = content->GetParent()) {
-        if (content->IsNodeOfType(nsINode::eHTML_FORM_CONTROL) ||
-            content->IsXULElement()) {
+        if (content->IsXULElement() || content->IsHTMLFormControlElement()) {
           mIsVisual = false;
           break;
         }

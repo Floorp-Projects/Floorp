@@ -34,12 +34,11 @@ class DocumentType final : public CharacterData {
   NS_INLINE_DECL_REFCOUNTING_INHERITED(DocumentType, CharacterData)
 
   // nsINode
-  virtual bool IsNodeOfType(uint32_t aFlags) const override;
-  virtual void GetNodeValueInternal(nsAString& aNodeValue) override {
+  void GetNodeValueInternal(nsAString& aNodeValue) override {
     SetDOMStringToNull(aNodeValue);
   }
-  virtual void SetNodeValueInternal(const nsAString& aNodeValue,
-                                    mozilla::ErrorResult& aError) override {}
+  void SetNodeValueInternal(const nsAString& aNodeValue,
+                            mozilla::ErrorResult& aError) override {}
 
   // nsIContent overrides
   virtual const nsTextFragment* GetText() override;

@@ -55,8 +55,6 @@ DocumentType::DocumentType(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
 
 DocumentType::~DocumentType() = default;
 
-bool DocumentType::IsNodeOfType(uint32_t aFlags) const { return false; }
-
 const nsTextFragment* DocumentType::GetText() { return nullptr; }
 
 void DocumentType::GetName(nsAString& aName) const { aName = NodeName(); }

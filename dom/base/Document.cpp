@@ -7135,8 +7135,6 @@ Element* Document::GetEmbedderElement() const {
   return nullptr;
 }
 
-bool Document::IsNodeOfType(uint32_t aFlags) const { return false; }
-
 Element* Document::GetRootElement() const {
   return (mCachedRootElement && mCachedRootElement->GetParentNode() == this)
              ? mCachedRootElement

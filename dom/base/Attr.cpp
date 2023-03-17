@@ -202,8 +202,6 @@ void Attr::SetTextContentInternal(const nsAString& aTextContent,
   SetNodeValueInternal(aTextContent, aError);
 }
 
-bool Attr::IsNodeOfType(uint32_t aFlags) const { return false; }
-
 void Attr::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   aVisitor.mCanHandle = true;
 }

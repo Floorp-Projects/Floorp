@@ -90,8 +90,6 @@ JSObject* nsTextNode::WrapNode(JSContext* aCx,
   return Text_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-bool nsTextNode::IsNodeOfType(uint32_t aFlags) const { return false; }
-
 already_AddRefed<CharacterData> nsTextNode::CloneDataNode(
     mozilla::dom::NodeInfo* aNodeInfo, bool aCloneText) const {
   RefPtr<nsTextNode> it =

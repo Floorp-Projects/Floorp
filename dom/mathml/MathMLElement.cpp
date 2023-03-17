@@ -622,8 +622,6 @@ ElementState MathMLElement::IntrinsicState() const {
                                 : ElementState());
 }
 
-bool MathMLElement::IsNodeOfType(uint32_t aFlags) const { return false; }
-
 void MathMLElement::SetIncrementScriptLevel(bool aIncrementScriptLevel,
                                             bool aNotify) {
   if (aIncrementScriptLevel == mIncrementScriptLevel) return;
