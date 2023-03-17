@@ -11,8 +11,9 @@ import sys
 from multiprocessing import cpu_count
 
 from mach.decorators import Command
-from mozbuild.base import BinaryNotFoundException, MozbuildObject
+from mozbuild.base import BinaryNotFoundException
 from mozbuild.base import MachCommandConditions as conditions
+from mozbuild.base import MozbuildObject
 from mozlog import structured
 from xpcshellcommandline import parser_desktop, parser_remote
 

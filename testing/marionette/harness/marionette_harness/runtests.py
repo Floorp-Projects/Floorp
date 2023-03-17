@@ -6,7 +6,6 @@ import sys
 
 import mozlog
 from marionette_driver import __version__ as driver_version
-
 from marionette_harness import (
     BaseMarionetteArguments,
     BaseMarionetteTestRunner,

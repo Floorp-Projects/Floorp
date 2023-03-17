@@ -8,7 +8,6 @@ import pathlib
 
 import yaml
 from mozversioncontrol import get_repository_object
-
 from perfdocs.logger import PerfDocLogger
 
 logger = PerfDocLogger()

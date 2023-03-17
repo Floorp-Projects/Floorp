@@ -430,7 +430,7 @@ class List(list):
             raise ValueError("List can only be created from other list instances.")
 
         self._kwargs = kwargs
-        super(List, self).__init__(iterable)
+        return super(List, self).__init__(iterable)
 
     def extend(self, l):
         if not isinstance(l, list):

@@ -7,7 +7,6 @@ import unittest
 
 import mozunit
 import six
-
 from mozpack.errors import AccumulatedErrors, ErrorMessage, errors
 
 

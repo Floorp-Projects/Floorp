@@ -10,7 +10,6 @@ import webdriver
 from mozprocess import ProcessHandler
 from mozprofile import Profile
 from mozrunner import FirefoxRunner
-
 from support.network import get_free_port
 
 

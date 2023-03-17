@@ -9,7 +9,6 @@ import platform
 import gdb
 import gdb.types
 from gdb.FrameDecorator import FrameDecorator
-
 from mozilla.JSObject import get_function_name, get_function_script
 from mozilla.prettyprinters import TypeCache
 

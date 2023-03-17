@@ -7,7 +7,6 @@
 import re
 
 import gdb
-
 import mozilla.prettyprinters as prettyprinters
 from mozilla.CellHeader import get_header_ptr
 from mozilla.jsval import JSValue

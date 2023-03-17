@@ -1,0 +1,15 @@
+---
+flake8:
+    description: Python linter
+    # Excludes should be added to topsrcdir/.flake8.
+    exclude: []
+    # The configure option is used by the build system
+    extensions: ['configure', 'py']
+    support-files:
+        - '**/.flake8'
+        - 'tools/lint/python/flake8*'
+    # Rules that should result in warnings rather than errors.
+    warning-rules: []
+    type: external
+    payload: python.flake8:lint
+    setup: python.flake8:setup

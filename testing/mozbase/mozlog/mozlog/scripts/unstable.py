@@ -7,7 +7,6 @@ import json
 from collections import defaultdict
 
 import six
-
 from mozlog import reader
 
 

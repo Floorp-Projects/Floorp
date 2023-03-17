@@ -11,7 +11,6 @@ import time
 import mozinfo
 import six
 from mozprocess import ProcessHandler
-
 from mozproxy.backends.base import Playback
 from mozproxy.recordings import RecordingFile
 from mozproxy.utils import (

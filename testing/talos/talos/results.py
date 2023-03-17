@@ -14,7 +14,6 @@ import os
 import re
 
 import six
-
 from talos import filter, output, utils
 
 

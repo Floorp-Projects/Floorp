@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette_harness import BaseMarionetteTestRunner
-
 from telemetry_harness.testcase import TelemetryTestCase
 
 SERVER_URL = "http://localhost:8000"

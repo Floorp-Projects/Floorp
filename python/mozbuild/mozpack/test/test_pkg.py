@@ -6,9 +6,8 @@ from pathlib import Path
 from string import Template
 from unittest.mock import patch
 
-import mozunit
-
 import mozpack.pkg
+import mozunit
 from mozpack.pkg import (
     create_bom,
     create_payload,

@@ -14,7 +14,6 @@ import psutil
 import six
 from mozlog import get_proxy_logger
 from mozprocess import ProcessHandler
-
 from talos.utils import TalosError
 
 LOG = get_proxy_logger()

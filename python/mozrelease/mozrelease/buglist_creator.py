@@ -10,6 +10,7 @@ from operator import itemgetter
 
 import requests
 from mozilla_version.gecko import GeckoVersion
+
 from taskcluster import Notify, optionsFromEnvironment
 
 BUGLIST_TEMPLATE = "* [Bugs since previous changeset]({url})\n"

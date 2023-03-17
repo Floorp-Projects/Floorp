@@ -7,7 +7,6 @@ import tempfile
 import unittest
 
 import responses
-
 from condprof import client
 from condprof.client import ROOT_URL, TC_SERVICE
 from condprof.main import main
