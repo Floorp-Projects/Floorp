@@ -3160,7 +3160,7 @@ AttachDecision GetNameIRGenerator::tryAttachGlobalNameGetter(ObjOperandId objId,
   return AttachDecision::Attach;
 }
 
-static bool NeedEnvironmentShapeGuard(JSObject* envObj) {
+static bool NeedEnvironmentShapeGuard(JSContext* cx, JSObject* envObj) {
   if (!envObj->is<CallObject>()) {
     return true;
   }
@@ -3171,7 +3171,8 @@ static bool NeedEnvironmentShapeGuard(JSObject* envObj) {
   // and we pessimistically create the guard.
   CallObject* callObj = &envObj->as<CallObject>();
   JSFunction* fun = &callObj->callee();
-  if (!fun->hasBaseScript() || fun->baseScript()->funHasExtensibleScope()) {
+  if (!fun->hasBaseScript() || fun->baseScript()->funHasExtensibleScope() ||
+      DebugEnvironments::hasDebugEnvironment(cx, *callObj)) {
     return true;
   }
 
@@ -3236,7 +3237,7 @@ AttachDecision GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
   ObjOperandId lastObjId = objId;
   env = env_;
   while (env) {
-    if (NeedEnvironmentShapeGuard(env)) {
+    if (NeedEnvironmentShapeGuard(cx_, env)) {
       writer.guardShape(lastObjId, env->shape());
     }
 
@@ -3381,7 +3382,7 @@ AttachDecision BindNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
   ObjOperandId lastObjId = objId;
   env = env_;
   while (env) {
-    if (NeedEnvironmentShapeGuard(env) && !env->is<GlobalObject>()) {
+    if (NeedEnvironmentShapeGuard(cx_, env) && !env->is<GlobalObject>()) {
       writer.guardShape(lastObjId, env->shape());
     }
 
