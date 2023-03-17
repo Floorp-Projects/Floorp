@@ -101,6 +101,10 @@ enum class PeekOffsetOption : uint8_t {
   // If true, the offset has to end up in an editable node, otherwise we'll keep
   // searching.
   ForceEditableRegion,
+
+  // If set, the result's native anonymous subtree root may be different from
+  // the scan start content's root.
+  AllowContentInDifferentNativeAnonymousSubtreeRoot,
 };
 
 using PeekOffsetOptions = EnumSet<PeekOffsetOption>;
