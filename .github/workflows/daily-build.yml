@@ -102,7 +102,7 @@ jobs:
         echo "DISPLAY_VERSION=$DISPLAY_VERSION" >> $GITHUB_ENV
         echo "UPDATE_CHANNEL=$UPDATE_CHANNEL" >> $GITHUB_ENV
         
-        cp $RUNNER_USERDIR/win-crosstool/clang/lib/clang/14.0.4/lib/windows/clang_rt.profile-x86_64.lib $RUNNER_USERDIR/win-crosstool/vs2017/vc/tools/msvc/${VCTOOL_VERSION}/lib/x64/clang_rt.profile-x86_64.lib
+        echo "export LIB=\"$(cd $RUNNER_USERDIR/.mozbuild/clang/lib/clang/* && cd lib/windows && pwd)\"" >> mozconfig
 
     - name: Set Display Version
       run: |
@@ -293,7 +293,7 @@ jobs:
         echo "DISPLAY_VERSION=$DISPLAY_VERSION" >> $GITHUB_ENV
         echo "UPDATE_CHANNEL=$UPDATE_CHANNEL" >> $GITHUB_ENV
         
-        cp $RUNNER_USERDIR/win-crosstool/clang/lib/clang/14.0.4/lib/windows/clang_rt.profile-x86_64.lib $RUNNER_USERDIR/win-crosstool/vs2017/vc/tools/msvc/${VCTOOL_VERSION}/lib/x64/clang_rt.profile-x86_64.lib
+        echo "export LIB=\"$(cd $RUNNER_USERDIR/.mozbuild/clang/lib/clang/* && cd lib/windows && pwd)\"" >> mozconfig
 
     - name: Set Display Version
       run: |
