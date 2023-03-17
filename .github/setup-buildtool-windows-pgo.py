@@ -10,7 +10,7 @@ commands_list = [
         r"wget -nv -O - https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.cache.level-3.toolchains.v3.linux64-liblowercase.latest/artifacts/public%2Fbuild%2Fliblowercase.tar.zst | tar --zstd -xv -C $RUNNER_USERDIR/win-crosstool"
     ],
     [
-        r"wget -nv -O - https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.cache.level-3.toolchains.v3.win64-clang-14.pushdate.2022.11.03.20221103155535/artifacts/public%2Fbuild%2Fclang.tar.zst | tar --zstd -xv -C $RUNNER_USERDIR/win-crosstool"
+        r"wget -nv -O - https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.cache.level-3.toolchains.v3.linux64-clang-15.latest/artifacts/public%2Fbuild%2Fclang.tar.zst | tar --zstd -xv -C $RUNNER_USERDIR/win-crosstool"
     ],
     [
         r"wget -nv -O - https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.cache.level-3.toolchains.v3.linux64-rust-windows-1.64.pushdate.2022.11.03.20221103201615/artifacts/public%2Fbuild%2Frustc.tar.zst | tar --zstd -xv -C $RUNNER_USERDIR/win-crosstool"
