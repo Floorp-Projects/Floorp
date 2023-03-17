@@ -977,10 +977,12 @@ nsPrevNextBidiLevels nsFrameSelection::GetPrevNextBidiLevels(
     return levels;
   }
 
+  PeekOffsetOptions peekOffsetOptions{PeekOffsetOption::ScrollViewStop};
+  if (aJumpLines) {
+    peekOffsetOptions += PeekOffsetOption::JumpLines;
+  }
   nsIFrame* newFrame =
-      currentFrame
-          ->GetFrameFromDirection(direction, false, aJumpLines, true, false)
-          .mFrame;
+      currentFrame->GetFrameFromDirection(direction, peekOffsetOptions).mFrame;
 
   FrameBidiData currentBidi = currentFrame->GetBidiData();
   mozilla::intl::BidiEmbeddingLevel currentLevel = currentBidi.embeddingLevel;
