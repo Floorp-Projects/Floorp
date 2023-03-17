@@ -53,10 +53,6 @@ nsresult SVGGeometryElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
       aNamespaceID, aName, aValue, aOldValue, aSubjectPrincipal, aNotify);
 }
 
-bool SVGGeometryElement::IsNodeOfType(uint32_t aFlags) const {
-  return !(aFlags & ~eSHAPE);
-}
-
 bool SVGGeometryElement::AttributeDefinesGeometry(const nsAtom* aName) {
   if (aName == nsGkAtoms::pathLength) {
     return true;
