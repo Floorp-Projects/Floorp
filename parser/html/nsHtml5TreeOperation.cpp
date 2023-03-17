@@ -165,8 +165,7 @@ nsHtml5TreeOperation::~nsHtml5TreeOperation() {
 
     void operator()(const opSetStyleLineNumber& aOperation) {}
 
-    void operator()(const opSetScriptLineAndColumnNumberAndFreeze& aOperation) {
-    }
+    void operator()(const opSetScriptLineNumberAndFreeze& aOperation) {}
 
     void operator()(const opSvgLoad& aOperation) {}
 
@@ -1025,13 +1024,11 @@ nsresult nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       return NS_OK;
     }
 
-    nsresult operator()(
-        const opSetScriptLineAndColumnNumberAndFreeze& aOperation) {
+    nsresult operator()(const opSetScriptLineNumberAndFreeze& aOperation) {
       nsIContent* node = *(aOperation.mContent);
       nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(node);
       if (sele) {
         sele->SetScriptLineNumber(aOperation.mLineNumber);
-        sele->SetScriptColumnNumber(aOperation.mColumnNumber);
         sele->FreezeExecutionAttrs(node->OwnerDoc());
       } else {
         MOZ_ASSERT(nsNameSpaceManager::GetInstance()->mSVGDisabled,
