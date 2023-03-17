@@ -47,6 +47,8 @@ class BiometricAuthenticationFragment : Fragment(), AuthenticationDelegate {
                     BiometricPromptContent(biometricErrorText) {
                         showBiometricPrompt(
                             biometricPromptAuth.get(),
+                            getString(R.string.biometric_prompt_title),
+                            getString(R.string.biometric_prompt_subtitle),
                         )
                     }
                 }
@@ -72,13 +74,15 @@ class BiometricAuthenticationFragment : Fragment(), AuthenticationDelegate {
     }
 
     @VisibleForTesting
-    internal fun showBiometricPrompt(biometricPromptAuth: BiometricPromptAuth?) {
+    internal fun showBiometricPrompt(
+        biometricPromptAuth: BiometricPromptAuth?,
+        title: String,
+        subtitle: String,
+    ) {
         if (context?.canUseBiometricFeature() == true) {
             biometricPromptAuth?.requestAuthentication(
-                title = getString(R.string.biometric_prompt_title),
-                subtitle = getString(
-                    R.string.biometric_prompt_subtitle,
-                ),
+                title = title,
+                subtitle = subtitle,
             )
         }
     }

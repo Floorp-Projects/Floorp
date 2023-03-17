@@ -4,6 +4,7 @@
 
 package org.mozilla.focus.biometrics
 
+import android.content.Context
 import android.os.Build
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
@@ -11,28 +12,23 @@ import androidx.fragment.app.FragmentTransaction
 import mozilla.components.lib.auth.AuthenticationDelegate
 import mozilla.components.lib.auth.BiometricPromptAuth
 import mozilla.components.support.test.mock
-import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.mozilla.focus.R
-import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-@RunWith(RobolectricTestRunner::class)
 class BiometricAuthenticationFragmentTest {
     private lateinit var biometricPromptAuth: BiometricPromptAuth
     private lateinit var fragment: BiometricAuthenticationFragment
     private val activity: FragmentActivity = mock()
+    private val testContext: Context = mock()
+
     private val fragmentManger: FragmentManager = mock()
     private val fragmentTransaction: FragmentTransaction = mock()
-    private lateinit var titleBiometric: String
-    private lateinit var subTitleBiometric: String
 
     @Before
     fun setup() {
@@ -55,17 +51,14 @@ class BiometricAuthenticationFragmentTest {
                 },
             ),
         )
-
-        titleBiometric = testContext.getString(R.string.biometric_prompt_title)
-        subTitleBiometric = testContext.getString(R.string.biometric_prompt_subtitle)
     }
 
     @Config(sdk = [Build.VERSION_CODES.LOLLIPOP])
     @Test
     fun `GIVEN biometric authentication fragment WHEN show biometric prompt is called and can use feature returns false THEN request authentication is not called`() {
-        fragment.showBiometricPrompt(biometricPromptAuth)
+        fragment.showBiometricPrompt(biometricPromptAuth, "title", "subtitle")
 
-        verify(biometricPromptAuth, never()).requestAuthentication(titleBiometric, subTitleBiometric)
+        verify(biometricPromptAuth, never()).requestAuthentication("title", "subtitle")
     }
 
     @Test
