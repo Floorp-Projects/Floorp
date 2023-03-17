@@ -181,3 +181,38 @@ add_task(async function engagement_after_closing_results() {
     });
   }
 });
+
+add_task(async function enter_to_reload_current_url() {
+  await doTest(async browser => {
+    // Open a URL once.
+    await openPopup("https://example.com");
+    await doEnter();
+
+    // Focus the urlbar.
+    EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {});
+    await BrowserTestUtils.waitForCondition(
+      () => window.document.activeElement === gURLBar.inputField
+    );
+    await UrlbarTestUtils.promiseSearchComplete(window);
+
+    // Press Enter key to reload the page without selecting any suggestions.
+    await doEnter();
+
+    assertEngagementTelemetry([
+      {
+        selected_result: "url",
+        selected_result_subtype: "",
+        provider: "HeuristicFallback",
+        results: "url",
+        groups: "heuristic",
+      },
+      {
+        selected_result: "input_field",
+        selected_result_subtype: "",
+        provider: undefined,
+        results: "action",
+        groups: "suggested_index",
+      },
+    ]);
+  });
+});
