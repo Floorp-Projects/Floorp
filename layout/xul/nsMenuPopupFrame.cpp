@@ -1425,23 +1425,24 @@ auto nsMenuPopupFrame::GetRects(const nsSize& aPrefSize) const -> Rects {
       // If we can't reach a root pres context, don't bother continuing.
       return result;
     }
-    // If anchored to a rectangle, use that rectangle. Otherwise, determine the
-    // rectangle from the anchor.
-    if (mAnchorType == MenuPopupAnchorType_Rect) {
-      result.mAnchorRect = mScreenRect;
-    } else {
+
+    result.mAnchorRect = result.mUntransformedAnchorRect = [&] {
+      // If anchored to a rectangle, use that rectangle. Otherwise, determine
+      // the rectangle from the anchor.
+      if (mAnchorType == MenuPopupAnchorType_Rect) {
+        return mScreenRect;
+      }
       // if the frame is not specified, use the anchor node passed to OpenPopup.
       // If that wasn't specified either, use the root frame. Note that
       // mAnchorContent might be a different document so its presshell must be
       // used.
       nsIFrame* anchorFrame = GetAnchorFrame();
       if (!anchorFrame) {
-        result.mAnchorRect = result.mUntransformedAnchorRect = rootScreenRect;
-      } else {
-        result.mAnchorRect = result.mUntransformedAnchorRect =
-            ComputeAnchorRect(rootPc, anchorFrame);
+        return rootScreenRect;
       }
-    }
+      return ComputeAnchorRect(rootPc, anchorFrame);
+    }();
+
     // if we are anchored, there are certain things we don't want to do when
     // repositioning the popup to fit on the screen, such as end up positioned
     // over the anchor, for instance a popup appearing over the menu label.
