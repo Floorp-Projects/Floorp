@@ -19,7 +19,7 @@ with Files("LightweightThemeChild.jsm"):
 with Files("PageInfoChild.sys.mjs"):
     BUG_COMPONENT = ("Firefox", "Page Info Window")
 
-with Files("PageStyleChild.jsm"):
+with Files("PageStyleChild.sys.mjs"):
     BUG_COMPONENT = ("Firefox", "Menus")
 
 with Files("PluginChild.jsm"):
@@ -68,8 +68,8 @@ FINAL_TARGET_FILES.actors += [
     "LinkHandlerChild.jsm",
     "LinkHandlerParent.jsm",
     "PageInfoChild.sys.mjs",
-    "PageStyleChild.jsm",
-    "PageStyleParent.jsm",
+    "PageStyleChild.sys.mjs",
+    "PageStyleParent.sys.mjs",
     "PluginChild.jsm",
     "PluginParent.jsm",
     "PointerLockChild.sys.mjs",

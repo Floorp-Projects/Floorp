@@ -6856,7 +6856,7 @@ already_AddRefed<PresShell> Document::CreatePresShell(
   MarkUserFontSetDirty();
 
   // Take the author style disabled state from the top browsing cvontext.
-  // (PageStyleChild.jsm ensures this is up to date.)
+  // (PageStyleChild.sys.mjs ensures this is up to date.)
   if (BrowsingContext* bc = GetBrowsingContext()) {
     presShell->SetAuthorStyleDisabled(bc->Top()->AuthorStyleDisabledDefault());
   }
