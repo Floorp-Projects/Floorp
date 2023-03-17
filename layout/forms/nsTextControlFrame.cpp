@@ -1312,7 +1312,7 @@ nsTextControlFrame::RestoreState(PresState* aState) {
   return NS_OK;
 }
 
-nsresult nsTextControlFrame::PeekOffset(PeekOffsetStruct* aPos) {
+nsresult nsTextControlFrame::PeekOffset(nsPeekOffsetStruct* aPos) {
   return NS_ERROR_FAILURE;
 }
 
