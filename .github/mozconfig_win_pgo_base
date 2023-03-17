@@ -1,3 +1,5 @@
+export CFLAGS="-Wno-int-conversion"
+
 ac_add_options --with-app-name=floorp
 ac_add_options --with-app-basename=Floorp
 ac_add_options --disable-crashreporter
@@ -28,8 +30,6 @@ export DIA_SDK_PATH="$RUNNER_USERDIR/win-crosstool/vs2017/dia sdk"
 export MIDL="$RUNNER_USERDIR/win-crosstool/wine/bin/widl"
 export WINE="$RUNNER_USERDIR/win-crosstool/wine/bin/wine64"
 export WINEDEBUG=-all
-
-export RUSTC="$RUNNER_USERDIR/win-crosstool/rustc/bin/rustc"
 
 mk_add_options "export LD_PRELOAD=$RUNNER_USERDIR/win-crosstool/liblowercase/liblowercase.so"
 mk_add_options "export LOWERCASE_DIRS=$RUNNER_USERDIR/win-crosstool"
