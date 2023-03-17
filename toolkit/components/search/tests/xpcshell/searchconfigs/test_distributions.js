@@ -54,6 +54,26 @@ for (let canonicalId of ["canonical", "canonical-001"]) {
 }
 
 tests.push({
+  locale: "en-US",
+  region: "US",
+  distribution: "canonical-002",
+  test: engines =>
+    hasParams(engines, "Google", "searchbar", "client=ubuntu-sn") &&
+    hasParams(engines, "Google", "searchbar", "channel=fs") &&
+    hasTelemetryId(engines, "Google", "google-ubuntu-sn"),
+});
+
+tests.push({
+  locale: "en-US",
+  region: "GB",
+  distribution: "canonical-002",
+  test: engines =>
+    hasParams(engines, "Google", "searchbar", "client=ubuntu-sn") &&
+    hasParams(engines, "Google", "searchbar", "channel=fs") &&
+    hasTelemetryId(engines, "Google", "google-ubuntu-sn"),
+});
+
+tests.push({
   locale: "zh-CN",
   region: "CN",
   distribution: "MozillaOnline",
