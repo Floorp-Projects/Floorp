@@ -32,7 +32,7 @@ const known_scripts = {
 
     // Browser front-end
     "resource:///actors/AboutReaderChild.sys.mjs",
-    "resource:///actors/LinkHandlerChild.jsm",
+    "resource:///actors/LinkHandlerChild.sys.mjs",
     "resource:///actors/SearchSERPTelemetryChild.sys.mjs",
     "resource://gre/actors/ContentMetaChild.sys.mjs",
     "resource://gre/modules/Readerable.jsm",
