@@ -7,19 +7,27 @@ import { BaseFeature } from "resource:///modules/urlbar/private/BaseFeature.sys.
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  clearInterval: "resource://gre/modules/Timer.sys.mjs",
+  clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   MerinoClient: "resource:///modules/MerinoClient.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
-  setInterval: "resource://gre/modules/Timer.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
 });
 
+const CAME_ONLINE_DELAY_MS = 3000; // 3s
 const FETCH_INTERVAL_MS = 30 * 60 * 1000; // 30 minutes
 const MERINO_PROVIDER = "accuweather";
 const MERINO_TIMEOUT_MS = 5000; // 5s
 
 const HISTOGRAM_LATENCY = "FX_URLBAR_MERINO_LATENCY_WEATHER_MS";
 const HISTOGRAM_RESPONSE = "FX_URLBAR_MERINO_RESPONSE_WEATHER";
+
+const NOTIFICATIONS = {
+  CAPTIVE_PORTAL_LOGIN: "captive-portal-login-success",
+  LINK_STATUS_CHANGED: "network:link-status-changed",
+  OFFLINE_STATUS_CHANGED: "network:offline-status-changed",
+  WAKE: "wake_notification",
+};
 
 /**
  * A feature that periodically fetches weather suggestions from Merino.
@@ -85,23 +93,21 @@ export class Weather extends BaseFeature {
 
   #init() {
     this.#merino = new lazy.MerinoClient(this.constructor.name);
-
-    this.#fetchInterval = lazy.setInterval(
-      () => this.#fetch(),
-      this.#fetchIntervalMs
-    );
-
-    // `#fetch()` is async but there's no need to await it here.
     this.#fetch();
-
     this.#updateKeywords();
+    for (let notif of Object.values(NOTIFICATIONS)) {
+      Services.obs.addObserver(this, notif);
+    }
   }
 
   #uninit() {
+    for (let notif of Object.values(NOTIFICATIONS)) {
+      Services.obs.removeObserver(this, notif);
+    }
+    lazy.clearTimeout(this.#fetchTimer);
     this.#merino = null;
     this.#suggestion = null;
-    lazy.clearInterval(this.#fetchInterval);
-    this.#fetchInterval = 0;
+    this.#fetchTimer = 0;
     this.#keywords = null;
   }
 
@@ -109,13 +115,17 @@ export class Weather extends BaseFeature {
     this.logger.info("Fetching suggestion");
 
     // This `Weather` instance may be uninitialized while awaiting the fetch or
-    // even uninitialized and re-initialized a number of times. Discard the
-    // fetched suggestion if the `#merino` after the fetch isn't the same as the
-    // one before.
+    // even uninitialized and re-initialized a number of times. Multiple fetches
+    // may also happen at once. Ignore the fetch below if `#merino` changes or
+    // another fetch happens in the meantime.
     let merino = this.#merino;
+    let instance = (this.#fetchInstance = {});
+
+    this.#restartFetchTimer();
+    this.#lastFetchTimeMs = Date.now();
+    this.#pendingFetchCount++;
 
     let suggestions;
-    this.#pendingFetchCount++;
     try {
       suggestions = await merino.fetch({
         query: "",
@@ -136,8 +146,8 @@ export class Weather extends BaseFeature {
     // to keep it ticking in the meantime.
     merino.resetSession();
 
-    if (merino != this.#merino) {
-      this.logger.info("Fetch canceled, discarding fetched suggestion, if any");
+    if (merino != this.#merino || instance != this.#fetchInstance) {
+      this.logger.info("Fetch finished but is out of date, ignoring");
     } else {
       let suggestion = suggestions?.[0];
       if (!suggestion) {
@@ -153,6 +163,63 @@ export class Weather extends BaseFeature {
     if (!this.#pendingFetchCount) {
       this.#waitForFetchesDeferred?.resolve();
       this.#waitForFetchesDeferred = null;
+    }
+  }
+
+  #restartFetchTimer(ms = this.#fetchIntervalMs) {
+    this.logger.debug(
+      "Restarting fetch timer: " +
+        JSON.stringify({ ms, fetchIntervalMs: this.#fetchIntervalMs })
+    );
+
+    lazy.clearTimeout(this.#fetchTimer);
+    this.#fetchTimer = lazy.setTimeout(() => {
+      this.logger.debug("Fetch timer fired");
+      this.#fetch();
+    }, ms);
+    this._test_fetchTimerMs = ms;
+  }
+
+  #onMaybeCameOnline() {
+    this.logger.debug("Maybe came online");
+
+    // If the suggestion is null, we were offline the last time we tried to
+    // fetch, at the start of the current fetch period. Otherwise the suggestion
+    // was fetched successfully at the start of the current fetch period and is
+    // therefore still fresh.
+    if (!this.suggestion) {
+      // Multiple notifications can occur at once when the network comes online,
+      // and we don't want to do separate fetches for each. Start the timer with
+      // a small timeout. If another notification happens in the meantime, we'll
+      // start it again.
+      this.#restartFetchTimer(this.#cameOnlineDelayMs);
+    }
+  }
+
+  #onWake() {
+    // Calculate the elapsed time between the last fetch and now, and the
+    // remaining interval in the current fetch period.
+    let elapsedMs = Date.now() - this.#lastFetchTimeMs;
+    let remainingIntervalMs = this.#fetchIntervalMs - elapsedMs;
+    this.logger.debug(
+      "Wake: " +
+        JSON.stringify({
+          elapsedMs,
+          remainingIntervalMs,
+          fetchIntervalMs: this.#fetchIntervalMs,
+        })
+    );
+
+    // Regardless of the elapsed time, we need to restart the fetch period
+    // because the fetch timer did not tick while the computer was asleep.
+    if (remainingIntervalMs <= 0) {
+      // The elapsed time is >= the fetch interval. Fetch now and restart the
+      // fetch period with the full interval.
+      this.#fetch();
+    } else {
+      // The elapsed time is < the fetch interval. The suggestion is fresh so no
+      // need to fetch, but restart the fetch period with the remaining time.
+      this.#restartFetchTimer(remainingIntervalMs);
     }
   }
 
@@ -176,12 +243,59 @@ export class Weather extends BaseFeature {
     }
   }
 
-  get _test_merino() {
-    return this.#merino;
+  observe(subject, topic, data) {
+    this.logger.debug(
+      "Observed notification: " + JSON.stringify({ topic, data })
+    );
+
+    switch (topic) {
+      case NOTIFICATIONS.CAPTIVE_PORTAL_LOGIN:
+        this.#onMaybeCameOnline();
+        break;
+      case NOTIFICATIONS.LINK_STATUS_CHANGED:
+        // This notificaton means the user's connection status changed. See
+        // nsINetworkLinkService.
+        if (data != "down") {
+          this.#onMaybeCameOnline();
+        }
+        break;
+      case NOTIFICATIONS.OFFLINE_STATUS_CHANGED:
+        // This notificaton means the user toggled the "Work Offline" pref.
+        // See nsIIOService.
+        if (data != "offline") {
+          this.#onMaybeCameOnline();
+        }
+        break;
+      case NOTIFICATIONS.WAKE:
+        this.#onWake();
+        break;
+    }
   }
 
-  get _test_fetchInterval() {
-    return this.#fetchInterval;
+  get _test_cameOnlineDelayMs() {
+    return this.#cameOnlineDelayMs;
+  }
+  set _test_cameOnlineDelayMs(ms) {
+    this.#cameOnlineDelayMs = ms < 0 ? CAME_ONLINE_DELAY_MS : ms;
+  }
+
+  get _test_fetchIntervalMs() {
+    return this.#fetchIntervalMs;
+  }
+  set _test_fetchIntervalMs(ms) {
+    this.#fetchIntervalMs = ms < 0 ? FETCH_INTERVAL_MS : ms;
+  }
+
+  get _test_fetchTimer() {
+    return this.#fetchTimer;
+  }
+
+  get _test_lastFetchTimeMs() {
+    return this.#lastFetchTimeMs;
+  }
+
+  get _test_merino() {
+    return this.#merino;
   }
 
   get _test_pendingFetchCount() {
@@ -192,20 +306,23 @@ export class Weather extends BaseFeature {
     await this.#fetch();
   }
 
-  _test_setFetchIntervalMs(ms) {
-    this.#fetchIntervalMs = ms < 0 ? FETCH_INTERVAL_MS : ms;
+  _test_setSuggestionToNull() {
+    this.#suggestion = null;
   }
 
   _test_setTimeoutMs(ms) {
     this.#timeoutMs = ms < 0 ? MERINO_TIMEOUT_MS : ms;
   }
 
-  #merino = null;
-  #suggestion = null;
-  #fetchInterval = 0;
+  #cameOnlineDelayMs = CAME_ONLINE_DELAY_MS;
+  #fetchInstance = null;
   #fetchIntervalMs = FETCH_INTERVAL_MS;
+  #fetchTimer = 0;
+  #keywords = null;
+  #lastFetchTimeMs = 0;
+  #merino = null;
+  #pendingFetchCount = 0;
+  #suggestion = null;
   #timeoutMs = MERINO_TIMEOUT_MS;
   #waitForFetchesDeferred = null;
-  #pendingFetchCount = 0;
-  #keywords = null;
 }
