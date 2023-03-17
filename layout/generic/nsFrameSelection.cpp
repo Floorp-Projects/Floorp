@@ -129,7 +129,7 @@ static void printRange(nsRange* aDomRange);
 #endif  // PRINT_RANGE
 
 /******************************************************************************
- * nsPeekOffsetStruct
+ * mozilla::PeekOffsetStruct
  ******************************************************************************/
 
 // #define DEBUG_SELECTION // uncomment for printf describing every collapse and
@@ -137,28 +137,25 @@ static void printRange(nsRange* aDomRange);
 
 // #define DEBUG_TABLE_SELECTION 1
 
-nsPeekOffsetStruct::nsPeekOffsetStruct(
-    nsSelectionAmount aAmount, nsDirection aDirection, int32_t aStartOffset,
-    nsPoint aDesiredCaretPos, bool aJumpLines, bool aScrollViewStop,
-    bool aIsKeyboardSelect, bool aVisual, bool aExtend,
-    ForceEditableRegion aForceEditableRegion,
-    EWordMovementType aWordMovementType, bool aTrimSpaces)
+namespace mozilla {
+
+PeekOffsetStruct::PeekOffsetStruct(nsSelectionAmount aAmount,
+                                   nsDirection aDirection, int32_t aStartOffset,
+                                   nsPoint aDesiredCaretPos,
+                                   const PeekOffsetOptions aOptions,
+                                   EWordMovementType aWordMovementType)
     : mAmount(aAmount),
       mDirection(aDirection),
       mStartOffset(aStartOffset),
       mDesiredCaretPos(aDesiredCaretPos),
       mWordMovementType(aWordMovementType),
-      mJumpLines(aJumpLines),
-      mTrimSpaces(aTrimSpaces),
-      mScrollViewStop(aScrollViewStop),
-      mIsKeyboardSelect(aIsKeyboardSelect),
-      mVisual(aVisual),
-      mExtend(aExtend),
-      mForceEditableRegion(aForceEditableRegion == ForceEditableRegion::Yes),
+      mOptions(aOptions),
       mResultContent(),
       mResultFrame(nullptr),
       mContentOffset(0),
       mAttach(CARET_ASSOCIATE_BEFORE) {}
+
+}  // namespace mozilla
 
 // Array which contains index of each SelecionType in Selection::mDOMSelections.
 // For avoiding using if nor switch to retrieve the index, this needs to have
@@ -800,11 +797,11 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
   CaretAssociateHint tHint(mCaret.mHint);  // temporary variable so we dont set
                                            // mCaret.mHint until it is necessary
 
-  Result<nsPeekOffsetStruct, nsresult> result = PeekOffsetForCaretMove(
+  Result<PeekOffsetStruct, nsresult> result = PeekOffsetForCaretMove(
       direction, aContinueSelection, aAmount, aMovementStyle, desiredPos);
   nsresult rv;
   if (result.isOk() && result.inspect().mResultContent) {
-    const nsPeekOffsetStruct& pos = result.inspect();
+    const PeekOffsetStruct& pos = result.inspect();
     nsIFrame* theFrame;
     int32_t currentOffset, frameStart, frameEnd;
 
@@ -893,7 +890,7 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
   return rv;
 }
 
-Result<nsPeekOffsetStruct, nsresult> nsFrameSelection::PeekOffsetForCaretMove(
+Result<PeekOffsetStruct, nsresult> nsFrameSelection::PeekOffsetForCaretMove(
     nsDirection aDirection, bool aContinueSelection,
     const nsSelectionAmount aAmount, CaretMovementStyle aMovementStyle,
     const nsPoint& aDesiredCaretPos) const {
@@ -913,17 +910,25 @@ Result<nsPeekOffsetStruct, nsresult> nsFrameSelection::PeekOffsetForCaretMove(
     return Err(NS_ERROR_FAILURE);
   }
 
-  const auto kForceEditableRegion =
-      selection->IsEditorSelection()
-          ? nsPeekOffsetStruct::ForceEditableRegion::Yes
-          : nsPeekOffsetStruct::ForceEditableRegion::No;
-
   // set data using mLimiters.mLimiter to stop on scroll views.  If we have a
   // limiter then we stop peeking when we hit scrollable views.  If no limiter
   // then just let it go ahead
-  nsPeekOffsetStruct pos(aAmount, aDirection, offsetused, aDesiredCaretPos,
-                         true, !!mLimiters.mLimiter, true, visualMovement,
-                         aContinueSelection, kForceEditableRegion);
+  PeekOffsetOptions options{PeekOffsetOption::JumpLines,
+                            PeekOffsetOption::IsKeyboardSelect};
+  if (mLimiters.mLimiter) {
+    options += PeekOffsetOption::ScrollViewStop;
+  }
+  if (visualMovement) {
+    options += PeekOffsetOption::Visual;
+  }
+  if (aContinueSelection) {
+    options += PeekOffsetOption::Extend;
+  }
+  if (selection->IsEditorSelection()) {
+    options += PeekOffsetOption::ForceEditableRegion;
+  }
+  PeekOffsetStruct pos(aAmount, aDirection, offsetused, aDesiredCaretPos,
+                       options);
   nsresult rv = frame->PeekOffset(&pos);
   if (NS_FAILED(rv)) {
     return Err(rv);
@@ -1173,21 +1178,23 @@ void nsFrameSelection::MaintainedRange::AdjustContentOffsets(
     nsIFrame* frame = GetFrameForNodeOffset(aOffsets.content, aOffsets.offset,
                                             CARET_ASSOCIATE_AFTER, &offset);
 
+    PeekOffsetOptions peekOffsetOptions{};
+    if (aScrollViewStop) {
+      peekOffsetOptions += PeekOffsetOption::ScrollViewStop;
+    }
     if (frame && amount == eSelectWord && direction == eDirPrevious) {
       // To avoid selecting the previous word when at start of word,
       // first move one character forward.
-      nsPeekOffsetStruct charPos(eSelectCharacter, eDirNext, offset,
-                                 nsPoint(0, 0), false, aScrollViewStop, false,
-                                 false, false);
+      PeekOffsetStruct charPos(eSelectCharacter, eDirNext, offset,
+                               nsPoint(0, 0), peekOffsetOptions);
       if (NS_SUCCEEDED(frame->PeekOffset(&charPos))) {
         frame = charPos.mResultFrame;
         offset = charPos.mContentOffset;
       }
     }
 
-    nsPeekOffsetStruct pos(amount, direction, offset, nsPoint(0, 0), false,
-                           aScrollViewStop, false, false, false);
-
+    PeekOffsetStruct pos(amount, direction, offset, nsPoint(0, 0),
+                         peekOffsetOptions);
     if (frame && NS_SUCCEEDED(frame->PeekOffset(&pos)) && pos.mResultContent) {
       aOffsets.content = pos.mResultContent;
       aOffsets.offset = pos.mContentOffset;
@@ -2196,12 +2203,12 @@ nsFrameSelection::CreateRangeExtendedToSomewhere(
   if (!firstRange || !firstRange->IsPositioned()) {
     return Err(NS_ERROR_FAILURE);
   }
-  Result<nsPeekOffsetStruct, nsresult> result = PeekOffsetForCaretMove(
+  Result<PeekOffsetStruct, nsresult> result = PeekOffsetForCaretMove(
       aDirection, true, aAmount, aMovementStyle, nsPoint(0, 0));
   if (result.isErr()) {
     return Err(NS_ERROR_FAILURE);
   }
-  const nsPeekOffsetStruct& pos = result.inspect();
+  const PeekOffsetStruct& pos = result.inspect();
   RefPtr<RangeType> range;
   if (NS_WARN_IF(!pos.mResultContent)) {
     return range;
