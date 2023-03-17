@@ -696,6 +696,7 @@ nsSocketTransport::nsSocketTransport()
 }
 
 nsSocketTransport::~nsSocketTransport() {
+  MOZ_RELEASE_ASSERT(!mAttached);
   SOCKET_LOG(("destroying nsSocketTransport @%p\n", this));
 }
 
