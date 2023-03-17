@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["LinkHandlerParent"];
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -14,7 +10,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 let gTestListeners = new Set();
 
-class LinkHandlerParent extends JSWindowActorParent {
+export class LinkHandlerParent extends JSWindowActorParent {
   static addListenerForTests(listener) {
     gTestListeners.add(listener);
   }

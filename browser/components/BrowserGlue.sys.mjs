@@ -581,10 +581,10 @@ let JSWINDOWACTORS = {
 
   LinkHandler: {
     parent: {
-      moduleURI: "resource:///actors/LinkHandlerParent.jsm",
+      esModuleURI: "resource:///actors/LinkHandlerParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource:///actors/LinkHandlerChild.jsm",
+      esModuleURI: "resource:///actors/LinkHandlerChild.sys.mjs",
       events: {
         DOMHeadElementParsed: {},
         DOMLinkAdded: {},

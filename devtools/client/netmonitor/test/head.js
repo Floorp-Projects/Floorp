@@ -22,8 +22,8 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-const { LinkHandlerParent } = ChromeUtils.import(
-  "resource:///actors/LinkHandlerParent.jsm"
+const { LinkHandlerParent } = ChromeUtils.importESModule(
+  "resource:///actors/LinkHandlerParent.sys.mjs"
 );
 
 const {
