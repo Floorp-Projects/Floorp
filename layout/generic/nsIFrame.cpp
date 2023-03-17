@@ -9523,19 +9523,19 @@ Result<bool, nsresult> nsIFrame::IsLogicallyAtLineEdge(
 }
 
 nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
-    nsDirection aDirection, bool aVisual, bool aJumpLines, bool aScrollViewStop,
-    bool aForceEditableRegion) {
+    nsDirection aDirection, const PeekOffsetOptions& aOptions) {
   SelectablePeekReport result;
 
   nsPresContext* presContext = PresContext();
-  bool needsVisualTraversal = aVisual && presContext->BidiEnabled();
+  const bool needsVisualTraversal =
+      aOptions.contains(PeekOffsetOption::Visual) && presContext->BidiEnabled();
   nsCOMPtr<nsIFrameEnumerator> frameTraversal;
-  MOZ_TRY(NS_NewFrameTraversal(getter_AddRefs(frameTraversal), presContext,
-                               this, eLeaf, needsVisualTraversal,
-                               aScrollViewStop,
-                               true,  // aFollowOOFs
-                               false  // aSkipPopupChecks
-                               ));
+  MOZ_TRY(NS_NewFrameTraversal(
+      getter_AddRefs(frameTraversal), presContext, this, eLeaf,
+      needsVisualTraversal, aOptions.contains(PeekOffsetOption::ScrollViewStop),
+      true,  // aFollowOOFs
+      false  // aSkipPopupChecks
+      ));
 
   // Find the prev/next selectable frame
   bool selectable = false;
@@ -9544,8 +9544,8 @@ nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
   const nsIContent* const nativeAnonymousSubtreeContent =
       GetClosestNativeAnonymousSubtreeRoot();
   while (!selectable) {
-    auto [blockFrame, lineFrame] =
-        traversedFrame->GetContainingBlockForLine(aScrollViewStop);
+    auto [blockFrame, lineFrame] = traversedFrame->GetContainingBlockForLine(
+        aOptions.contains(PeekOffsetOption::ScrollViewStop));
     if (!blockFrame) {
       return result;
     }
@@ -9564,7 +9564,7 @@ nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
             : traversedFrame->IsLogicallyAtLineEdge(it, thisLine, aDirection));
     if (atLineEdge) {
       result.mJumpedLine = true;
-      if (!aJumpLines) {
+      if (!aOptions.contains(PeekOffsetOption::JumpLines)) {
         return result;  // we are done. cannot jump lines
       }
       int32_t lineToCheckWrap =
@@ -9580,19 +9580,24 @@ nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
       return result;
     }
 
-    auto IsSelectable = [aForceEditableRegion, nativeAnonymousSubtreeContent](
-                            const nsIFrame* aFrame) {
-      if (!aFrame->IsSelectable(nullptr)) {
-        return false;
-      }
-      // If the new frame is in a native anonymous subtree, we should treat it
-      // as not selectable unless the frame and found frame are in same subtree.
-      if (aFrame->GetClosestNativeAnonymousSubtreeRoot() !=
-          nativeAnonymousSubtreeContent) {
-        return false;
-      }
-      return !aForceEditableRegion || aFrame->GetContent()->IsEditable();
-    };
+    auto IsSelectable =
+        [aOptions, nativeAnonymousSubtreeContent](const nsIFrame* aFrame) {
+          if (!aFrame->IsSelectable(nullptr)) {
+            return false;
+          }
+          // If the new frame is in a native anonymous subtree, we should treat
+          // it as not selectable unless the frame and found frame are in same
+          // subtree.
+          if (!aOptions.contains(
+                  PeekOffsetOption::
+                      AllowContentInDifferentNativeAnonymousSubtreeRoot) &&
+              aFrame->GetClosestNativeAnonymousSubtreeRoot() !=
+                  nativeAnonymousSubtreeContent) {
+            return false;
+          }
+          return !aOptions.contains(PeekOffsetOption::ForceEditableRegion) ||
+                 aFrame->GetContent()->IsEditable();
+        };
 
     // Skip br frames, but only if we can select something before hitting the
     // end of the line or a non-selectable region.
@@ -9623,7 +9628,8 @@ nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
 
   result.mOffset = (aDirection == eDirNext) ? 0 : -1;
 
-  if (aVisual && nsBidiPresUtils::IsReversedDirectionFrame(traversedFrame)) {
+  if (aOptions.contains(PeekOffsetOption::Visual) &&
+      nsBidiPresUtils::IsReversedDirectionFrame(traversedFrame)) {
     // The new frame is reverse-direction, go to the other end
     result.mOffset = -1 - result.mOffset;
   }
@@ -9633,11 +9639,7 @@ nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
 
 nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
     const PeekOffsetStruct& aPos) {
-  return GetFrameFromDirection(
-      aPos.mDirection, aPos.mOptions.contains(PeekOffsetOption::Visual),
-      aPos.mOptions.contains(PeekOffsetOption::JumpLines),
-      aPos.mOptions.contains(PeekOffsetOption::ScrollViewStop),
-      aPos.mOptions.contains(PeekOffsetOption::ForceEditableRegion));
+  return GetFrameFromDirection(aPos.mDirection, aPos.mOptions);
 }
 
 nsView* nsIFrame::GetClosestView(nsPoint* aOffset) const {
