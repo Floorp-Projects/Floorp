@@ -687,9 +687,9 @@ void dav1d_refmvs_tile_sbrow_init(refmvs_tile *const rt, const refmvs_frame *con
     rt->tile_col.end = imin(tile_col_end4, rf->iw4);
 }
 
-void dav1d_refmvs_load_tmvs(const refmvs_frame *const rf, int tile_row_idx,
-                            const int col_start8, const int col_end8,
-                            const int row_start8, int row_end8)
+static void load_tmvs_c(const refmvs_frame *const rf, int tile_row_idx,
+                        const int col_start8, const int col_end8,
+                        const int row_start8, int row_end8)
 {
     if (rf->n_tile_threads == 1) tile_row_idx = 0;
     assert(row_start8 >= 0);
@@ -760,22 +760,14 @@ void dav1d_refmvs_load_tmvs(const refmvs_frame *const rf, int tile_row_idx,
     }
 }
 
-void dav1d_refmvs_save_tmvs(const refmvs_tile *const rt,
-                            const int col_start8, int col_end8,
-                            const int row_start8, int row_end8)
+static void save_tmvs_c(refmvs_temporal_block *rp, const ptrdiff_t stride,
+                        refmvs_block *const *const rr,
+                        const uint8_t *const ref_sign,
+                        const int col_end8, const int row_end8,
+                        const int col_start8, const int row_start8)
 {
-    const refmvs_frame *const rf = rt->rf;
-
-    assert(row_start8 >= 0);
-    assert((unsigned) (row_end8 - row_start8) <= 16U);
-    row_end8 = imin(row_end8, rf->ih8);
-    col_end8 = imin(col_end8, rf->iw8);
-
-    const ptrdiff_t stride = rf->rp_stride;
-    const uint8_t *const ref_sign = rf->mfmv_sign;
-    refmvs_temporal_block *rp = &rf->rp[row_start8 * stride];
     for (int y = row_start8; y < row_end8; y++) {
-        const refmvs_block *const b = rt->r[6 + (y & 15) * 2];
+        const refmvs_block *const b = rr[(y & 15) * 2];
 
         for (int x = col_start8; x < col_end8;) {
             const refmvs_block *const cand_b = &b[x * 2 + 1];
@@ -794,8 +786,10 @@ void dav1d_refmvs_save_tmvs(const refmvs_tile *const rt,
                     rp[x] = (refmvs_temporal_block) { .mv = cand_b->mv.mv[0],
                                                       .ref = cand_b->ref.ref[0] };
             } else {
-                for (int n = 0; n < bw8; n++, x++)
+                for (int n = 0; n < bw8; n++, x++) {
+                    rp[x].mv.n = 0;
                     rp[x].ref = 0; // "invalid"
+                }
             }
         }
         rp += stride;
@@ -932,6 +926,8 @@ static void splat_mv_c(refmvs_block **rr, const refmvs_block *const rmv,
 
 COLD void dav1d_refmvs_dsp_init(Dav1dRefmvsDSPContext *const c)
 {
+    c->load_tmvs = load_tmvs_c;
+    c->save_tmvs = save_tmvs_c;
     c->splat_mv = splat_mv_c;
 
 #if HAVE_ASM

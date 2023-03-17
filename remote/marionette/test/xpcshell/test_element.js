@@ -4,6 +4,7 @@
 
 const {
   element,
+  ShadowRoot,
   WebElement,
   WebFrame,
   WebReference,
@@ -694,13 +695,6 @@ add_task(function test_WebReference_fromJSON_malformed() {
   Assert.throws(() => WebReference.fromJSON(null), /InvalidArgumentError/);
 });
 
-add_task(function test_WebReference_fromUUID() {
-  const domWebEl = WebReference.fromUUID("bar");
-
-  ok(domWebEl instanceof WebElement);
-  equal(domWebEl.uuid, "bar");
-});
-
 add_task(function test_WebReference_isReference() {
   for (let t of [42, true, "foo", [], {}]) {
     ok(!WebReference.isReference(t));
@@ -733,6 +727,44 @@ add_task(function test_WebElement_fromJSON() {
   equal(el.uuid, "foo");
 
   Assert.throws(() => WebElement.fromJSON({}), /InvalidArgumentError/);
+});
+
+add_task(function test_WebElement_fromUUID() {
+  const domWebEl = WebElement.fromUUID("bar");
+
+  ok(domWebEl instanceof WebElement);
+  equal(domWebEl.uuid, "bar");
+
+  Assert.throws(() => WebElement.fromUUID(), /InvalidArgumentError/);
+});
+
+add_task(function test_ShadowRoot_toJSON() {
+  const { Identifier } = ShadowRoot;
+
+  const shadowRoot = new ShadowRoot("foo");
+  const json = shadowRoot.toJSON();
+
+  ok(Identifier in json);
+  equal(json[Identifier], "foo");
+});
+
+add_task(function test_ShadowRoot_fromJSON() {
+  const { Identifier } = ShadowRoot;
+
+  const shadowRoot = ShadowRoot.fromJSON({ [Identifier]: "foo" });
+  ok(shadowRoot instanceof ShadowRoot);
+  equal(shadowRoot.uuid, "foo");
+
+  Assert.throws(() => ShadowRoot.fromJSON({}), /InvalidArgumentError/);
+});
+
+add_task(function test_ShadowRoot_fromUUID() {
+  const shadowRoot = ShadowRoot.fromUUID("baz");
+
+  ok(shadowRoot instanceof ShadowRoot);
+  equal(shadowRoot.uuid, "baz");
+
+  Assert.throws(() => ShadowRoot.fromUUID(), /InvalidArgumentError/);
 });
 
 add_task(function test_WebWindow_toJSON() {

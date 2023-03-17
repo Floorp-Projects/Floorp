@@ -11,8 +11,8 @@ BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
 MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.ini"]
 
 EXTRA_JS_MODULES += [
-    "AboutCertViewerChild.jsm",
-    "AboutCertViewerParent.jsm",
+    "AboutCertViewerChild.sys.mjs",
+    "AboutCertViewerParent.sys.mjs",
 ]
 
 with Files("**"):

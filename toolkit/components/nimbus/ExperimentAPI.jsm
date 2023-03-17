@@ -210,37 +210,6 @@ const ExperimentAPI = {
   },
 
   /**
-   * Registers an event listener.
-   * The following event names are used:
-   * `update` - an experiment is updated, for example it is no longer active
-   *
-   * @param {string} eventName must follow the pattern `event:slug-name`
-   * @param {{slug?: string, featureId: string?}} options
-   * @param {function} callback
-
-   * @returns {void}
-   */
-  on(eventName, options, callback) {
-    if (!options) {
-      throw new Error("Please include an experiment slug or featureId");
-    }
-    let fullEventName = `${eventName}:${options.slug || options.featureId}`;
-
-    if (this._store._isReady) {
-      let experiment = this.getExperiment(options);
-      // Only if we have an experiment that matches what the caller requested
-      if (experiment) {
-        // If the store already has the experiment in the store then we should
-        // notify. This covers the startup scenario or cases where listeners
-        // are attached later than the `update` events.
-        callback(fullEventName, experiment);
-      }
-    }
-
-    this._store.on(fullEventName, callback);
-  },
-
-  /**
    * Deregisters an event listener.
    * @param {string} eventName
    * @param {function} callback
@@ -494,7 +463,7 @@ class _ExperimentFeature {
     ExperimentAPI._store._onFeatureUpdate(this.featureId, callback);
   }
 
-  off(callback) {
+  offUpdate(callback) {
     ExperimentAPI._store._offFeatureUpdate(this.featureId, callback);
   }
 

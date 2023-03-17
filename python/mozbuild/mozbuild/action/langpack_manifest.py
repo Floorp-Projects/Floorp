@@ -19,6 +19,7 @@ import logging
 import os
 import re
 import sys
+import time
 
 import fluent.syntax.ast as FTL
 import mozpack.path as mozpath
@@ -38,9 +39,17 @@ def write_file(path, content):
 pushlog_api_url = "{0}/json-rev/{1}"
 
 
+def get_build_date():
+    """Return the current date or SOURCE_DATE_EPOCH, if set."""
+    return datetime.datetime.utcfromtimestamp(
+        int(os.environ.get("SOURCE_DATE_EPOCH", time.time()))
+    )
+
+
 ###
-# Retrievers a UTC datetime of the push for the current commit
-# from a mercurial clone directory.
+# Retrieves a UTC datetime of the push for the current commit from a
+# mercurial clone directory. The SOURCE_DATE_EPOCH environment
+# variable is honored, for reproducibility.
 #
 # Args:
 #    path (str) - path to a directory
@@ -56,7 +65,7 @@ def get_dt_from_hg(path):
     with mozversioncontrol.get_repository_object(path=path) as repo:
         phase = repo._run("log", "-r", ".", "-T" "{phase}")
         if phase.strip() != "public":
-            return datetime.datetime.utcnow()
+            return get_build_date()
         repo_url = repo._run("paths", "default")
         repo_url = repo_url.strip().replace("ssh://", "https://")
         repo_url = repo_url.replace("hg://", "https://")
@@ -107,7 +116,7 @@ def get_timestamp_for_locale(path):
         dt = get_dt_from_hg(path)
 
     if dt is None:
-        dt = datetime.datetime.utcnow()
+        dt = get_build_date()
 
     dt = dt.replace(microsecond=0)
     return dt.strftime("%Y%m%d%H%M%S")

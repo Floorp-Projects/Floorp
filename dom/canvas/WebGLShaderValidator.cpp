@@ -70,73 +70,7 @@ static ShCompileOptions ChooseValidatorCompileOptions(
     }
   }
 
-  if (StaticPrefs::webgl_all_angle_options()) {
-    // NOTE: The following attempts exhaustively set every member of
-    // `ShCompileOptions`, following the order of members defined in
-    // `ShaderLang.h`.
-    options.objectCode = true;
-    options.variables = true;
-    options.sourcePath = false;
-    options.intermediateTree = false;
-    options.validateAST = true;
-    options.validateLoopIndexing = true;
-    options.lineDirectives = false;
-    options.removeInvariantAndCentroidForESSL3 = false;
-    options.emulateAbsIntFunction = true;
-    options.enforcePackingRestrictions = true;
-    options.clampIndirectArrayBounds = true;
-    options.limitExpressionComplexity = false;
-    options.limitCallStackDepth = false;
-    options.initGLPosition = true;
-    options.unfoldShortCircuit = true;
-    options.initOutputVariables = true;
-    options.scalarizeVecAndMatConstructorArgs = true;
-    options.regenerateStructNames = true;
-    options.rewriteDoWhileLoops = true;
-    options.expandSelectHLSLIntegerPowExpressions = false;
-    options.flattenPragmaSTDGLInvariantAll = true;
-    options.HLSLGetDimensionsIgnoresBaseLevel = false;
-    options.rewriteTexelFetchOffsetToTexelFetch = true;
-    options.addAndTrueToLoopCondition = true;
-    options.rewriteIntegerUnaryMinusOperator = true;
-    options.emulateIsnanFloatFunction = true;
-    options.useUnusedStandardSharedBlocks = true;
-    options.rewriteFloatUnaryMinusOperator = true;
-    options.emulateAtan2FloatFunction = true;
-    options.initializeUninitializedLocals = true;
-    options.initializeBuiltinsForInstancedMultiview = true;
-    options.selectViewInNvGLSLVertexShader = true;
-    options.clampPointSize = true;
-    options.addAdvancedBlendEquationsEmulation = true;
-    options.dontUseLoopsToInitializeVariables = true;
-    options.skipD3DConstantRegisterZero = true;
-    options.clampFragDepth = true;
-    options.rewriteRepeatedAssignToSwizzled = true;
-    options.emulateGLDrawID = true;
-    options.initSharedVariables = true;
-    options.forceAtomicValueResolution = true;
-    options.emulateGLBaseVertexBaseInstance = true;
-    options.emulateSeamfulCubeMapSampling = true;
-    options.takeVideoTextureAsExternalOES = true;
-    options.addBaseVertexToVertexID = true;
-    options.removeDynamicIndexingOfSwizzledVector = true;
-    options.allowTranslateUniformBlockToStructuredBuffer = true;
-    options.addVulkanYUVLayoutQualifier = true;
-    options.disableARBTextureRectangle = true;
-    options.rewriteRowMajorMatrices = true;
-    options.ignorePrecisionQualifiers = true;
-    options.addVulkanDepthCorrection = true;
-    options.forceShaderPrecisionHighpToMediump = true;
-    options.useSpecializationConstant = true;
-    options.addVulkanXfbEmulationSupportCode = true;
-    options.addVulkanXfbExtensionSupportCode = true;
-    options.initFragmentOutputVariables = true;
-    options.generateSpirvThroughGlslang = true;
-    options.addExplicitBoolCasts = true;
-    options.roundOutputAfterDithering = true;
-    options.precisionSafeDivision = true;
-    options.passHighpToPackUnormSnormBuiltins = true;
-  }
+  // -
 
   if (resources.MaxExpressionComplexity > 0) {
     options.limitExpressionComplexity = true;

@@ -22,6 +22,7 @@ menuitem,
 menucaption {
   appearance: auto;
   -moz-default-appearance: menuitem;
+  flex-shrink: 0;
   align-items: center;
   list-style-image: none;
 }

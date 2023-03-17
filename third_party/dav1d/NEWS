@@ -1,4 +1,20 @@
-Changes for 1.0.0 'Peregrine falcon':
+Changes for 1.1.0 'Arctic Peregrine Falcon':
+-------------------------------------------
+
+1.1.0 is an important release of dav1d, fixing numerous bugs, and adding SIMD
+
+- New function dav1d_get_frame_delay to query the decoder frame delay
+- Numerous fixes for strict conformity to the specs and samples
+- NEON and AVX-512 misc fixes and improvements
+- Partial AVX2 12bpc transform implementations
+- AVX-512 high bit-depth cdef_filter, loopfilter, itx
+- NEON z1/z3 optimization for 8bpc
+- SSSE3 z1 optimization for 8bpc
+
+ "From VideoLAN with love"
+
+
+Changes for 1.0.0 'Peregrine Falcon':
 -------------------------------------
 
 1.0.0 is a major release of dav1d, adding important features and bug fixes.
@@ -66,7 +82,7 @@ Details:
  - New API to signal events happening during the decoding process
 
 
-Changes for 0.8.2 'Eurasian hobby':
+Changes for 0.8.2 'Eurasian Hobby':
 -----------------------------------
 
 0.8.2 is a middle-size update of the 0.8.0 branch:
@@ -87,7 +103,7 @@ Changes for 0.8.2 'Eurasian hobby':
  - Add a xxh3 muxer in the dav1d application
 
 
-Changes for 0.8.1 'Eurasian hobby':
+Changes for 0.8.1 'Eurasian Hobby':
 -----------------------------------
 
 0.8.1 is a minor update on 0.8.0:
@@ -99,7 +115,7 @@ Changes for 0.8.1 'Eurasian hobby':
  - x86 optimizations for wiener in SSE2/SSSE3/AVX2
 
 
-Changes for 0.8.0 'Eurasian hobby':
+Changes for 0.8.0 'Eurasian Hobby':
 -----------------------------------
 
 0.8.0 is a major update for dav1d:

@@ -22,12 +22,8 @@
   --arrowpanel-menuitem-padding-inline: 8px;
   --arrowpanel-menuitem-padding: var(--arrowpanel-menuitem-padding-block) var(--arrowpanel-menuitem-padding-inline);
   --arrowpanel-menuitem-border-radius: 4px;
-  --arrowpanel-header-back-icon-padding: 8px;
-  --arrowpanel-header-back-icon-full-width: calc(16px + (2 * var(--arrowpanel-header-back-icon-padding)));
   --arrowpanel-header-info-icon-padding: 4px;
-  --arrowpanel-header-info-icon-margin-inline-end: 4px;
   --arrowpanel-header-info-icon-full-width: calc(16px + (2 * var(--arrowpanel-header-info-icon-padding)));
-  --arrowpanel-header-height: calc(16px + (var(--arrowpanel-header-back-icon-padding) * 2) + (var(--panel-separator-margin-horizontal) * 2));
   --panel-separator-margin-vertical: 4px;
   --panel-separator-margin-horizontal: 8px;
   --panel-separator-margin: var(--panel-separator-margin-vertical) var(--panel-separator-margin-horizontal);
@@ -45,10 +41,30 @@
 :root[uidensity=compact] {
   --arrowpanel-menuitem-margin-inline: 4px;
   --arrowpanel-menuitem-padding-block: 0px;
-  --arrowpanel-header-back-icon-padding: 4px;
-  --arrowpanel-header-info-icon-margin-inline-end: 0px;
   --panel-separator-margin-horizontal: 4px;
   --panel-subview-body-padding-block: 4px;
+}
+
+/* The vars in this rule are not on the :root above so that they would
+ * work in conjunction with when touchmode attribute is set on the panels. */
+panel,
+menupopup {
+  /* The value for the header back icon padding is selected in a way that the
+   * height of the header and its separator will be equal to the panel inner
+   * top padding plus standard menuitem, so that the header's separator will
+   * be located excatly where a normal toolbarseparator would be located after
+   * the first menuitem, in a menu without a header. */
+  --arrowpanel-header-back-icon-padding: 6px;
+  --arrowpanel-header-back-icon-full-width: calc(16px + (2 * var(--arrowpanel-header-back-icon-padding)));
+  /* The min-height is calculated with the separator's horizontal margin rather
+   * than the vertical, to let the back icon have even spacing all around
+   * while being aligned with the separator. */
+  --arrowpanel-header-min-height: calc(var(--arrowpanel-header-back-icon-full-width)
+                                       + (var(--panel-separator-margin-horizontal) * 2));
+}
+
+:root[uidensity=compact] :is(panel, menupopup):not([touchmode]) {
+  --arrowpanel-header-back-icon-padding: 4px;
 }
 
 #PanelUI-menu-button[badge-status] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
@@ -655,12 +671,9 @@ toolbarbutton[constrain-size="true"][cui-areatype="panel"] > .toolbarbutton-badg
 
 #fxa-manage-account-button > vbox > label,
 #PanelUI-fxa-menu-syncnow-button > hbox > label,
-#PanelUI-remotetabs-syncnow > hbox > label {
-  margin-inline-start: 0;
-}
-
+#PanelUI-remotetabs-syncnow > hbox > label,
 #appMenu-fxa-label2 > vbox > label {
-  margin-inline: 0;
+  margin: 0;
 }
 
 .syncNowBtn {
@@ -1582,7 +1595,7 @@ radiogroup:focus-visible > .subviewradio[focused="true"] > .radio-label-box {
   padding: var(--arrowpanel-menuitem-margin-inline);
   /* Calculate the header's height assuming it includes an icon even if it doesn't,
      to make sure all headers are the same height (assuming their text is a one liner). */
-  min-height: var(--arrowpanel-header-height);
+  min-height: var(--arrowpanel-header-min-height);
 }
 
 .panel-header + toolbarseparator {
@@ -1596,13 +1609,9 @@ radiogroup:focus-visible > .subviewradio[focused="true"] > .radio-label-box {
   margin: 0;
 }
 
-.panel-header.panel-header-with-info-button > .panel-info-button {
-  margin-inline-end: var(--arrowpanel-header-info-icon-margin-inline-end);
-}
-
 .panel-header.panel-header-with-info-button > h1 {
   /* Add the size of the info button to center properly. */
-  margin-inline-start: calc(var(--arrowpanel-header-info-icon-full-width) + var(--arrowpanel-header-info-icon-margin-inline-end));
+  margin-inline-start: var(--arrowpanel-header-info-icon-full-width);
 }
 
 .panel-header:not(.panel-header-with-info-button) > .subviewbutton-back + h1 {
@@ -1613,8 +1622,7 @@ radiogroup:focus-visible > .subviewradio[focused="true"] > .radio-label-box {
 .panel-header.panel-header-with-info-button > .subviewbutton-back + h1 {
   margin-inline-start: 0;
   margin-inline-end: calc(var(--arrowpanel-header-back-icon-full-width)
-                          - var(--arrowpanel-header-info-icon-full-width)
-                          - var(--arrowpanel-header-info-icon-margin-inline-end));
+                          - var(--arrowpanel-header-info-icon-full-width));
 }
 
 .panel-header > h1 > span {

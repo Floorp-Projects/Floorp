@@ -6,30 +6,27 @@ import { createSelector } from "reselect";
 import { shallowEqual } from "../utils/shallow-equal";
 import { getPrettySourceURL } from "../utils/source";
 
-import { getSpecificSourceByURL, getSourcesMap } from "./sources";
+import { getSpecificSourceByURL } from "./sources";
 import { isOriginalId } from "devtools/client/shared/source-map-loader/index";
 import { isSimilarTab } from "../utils/tabs";
 
 export const getTabs = state => state.tabs.tabs;
 
-export const getSourceTabs = createSelector(
-  state => state.tabs,
-  ({ tabs }) => tabs.filter(tab => tab.sourceId)
+// Return the list of tabs which relates to an active source
+export const getSourceTabs = createSelector(getTabs, tabs =>
+  tabs.filter(tab => tab.source)
 );
 
 export const getSourcesForTabs = createSelector(
-  getSourcesMap,
   getSourceTabs,
-  (sourcesMap, sourceTabs) => {
-    return sourceTabs
-      .map(tab => sourcesMap.get(tab.sourceId))
-      .filter(source => source);
+  sourceTabs => {
+    return sourceTabs.map(tab => tab.source);
   },
   { equalityCheck: shallowEqual, resultEqualityCheck: shallowEqual }
 );
 
 export function tabExists(state, sourceId) {
-  return !!getSourceTabs(state).find(tab => tab.sourceId == sourceId);
+  return !!getSourceTabs(state).find(tab => tab.source.id == sourceId);
 }
 
 export function hasPrettyTab(state, sourceUrl) {
@@ -45,7 +42,7 @@ export function hasPrettyTab(state, sourceUrl) {
  */
 export function getNewSelectedSource(state, tabList) {
   const { selectedLocation } = state.sources;
-  const availableTabs = state.tabs.tabs;
+  const availableTabs = getTabs(state);
   if (!selectedLocation) {
     return null;
   }
@@ -60,11 +57,6 @@ export function getNewSelectedSource(state, tabList) {
   );
 
   if (matchingTab) {
-    const { sources } = state.sources;
-    if (!sources) {
-      return null;
-    }
-
     const specificSelectedSource = getSpecificSourceByURL(
       state,
       selectedSource.url,

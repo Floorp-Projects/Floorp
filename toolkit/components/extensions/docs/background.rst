@@ -7,10 +7,10 @@ regular content cannot -- WebExtensions APIs bridge this gap by exposing
 browser features to extensions in a way preserves safety, reliability,
 and performance.
 The implementation of a WebExtension API runs with
-`chrome privileges <https://developer.mozilla.org/en-US/docs/Security/Firefox_Security_Basics_For_Developers>`_.
+:doc:`chrome privileges </dom/scriptSecurity/index>`.
 Browser internals are accessed using
-`XPCOM <https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM>`_
-or `ChromeOnly WebIDL features <https://developer.mozilla.org/en-US/docs/Mozilla/WebIDL_bindings#ChromeOnly>`_.
+:ref:`XPCOM`
+or :doc:`ChromeOnly WebIDL features </dom/webIdlBindings/index>`.
 
 The rest of this documentation covers how API implementations interact
 with the implementation of WebExtensions.

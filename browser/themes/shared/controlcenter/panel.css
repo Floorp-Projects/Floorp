@@ -144,8 +144,7 @@
    * used to center it even if the header includes a info button. See .panel-header-with-info-button */
   max-width: calc(var(--popup-width)
                   - var(--arrowpanel-menuitem-margin-inline) * 2
-                  - var(--arrowpanel-header-info-icon-full-width) * 2
-                  - var(--arrowpanel-header-info-icon-margin-inline-end) * 2);
+                  - var(--arrowpanel-header-info-icon-full-width) * 2);
 }
 
 #identity-popup .panel-header > .subviewbutton-back + h1 > span {

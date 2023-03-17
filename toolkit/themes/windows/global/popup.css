@@ -78,8 +78,6 @@ menupopup > menu > menupopup {
 
 :is(panel, menupopup)::part(content) {
   display: flex;
-  /* TODO: Remove -moz-box-flex once bug 1809084 lands */
-  -moz-box-flex: 1;
   padding: var(--panel-padding);
   margin: var(--panel-shadow-margin);
   box-shadow: var(--panel-shadow);
@@ -90,6 +88,10 @@ menupopup > menu > menupopup {
   width: var(--panel-width);
   min-width: 0;
   min-height: 0;
+
+  /* Makes popup constraints work */
+  max-height: calc(100% - 2 * var(--panel-shadow-margin));
+  max-width: calc(100% - 2 * var(--panel-shadow-margin));
 }
 
 :is(panel, menupopup)[orient=vertical]::part(content) {

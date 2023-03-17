@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { getSourcesMap, getSelectedSource } from "./sources";
+import { getSelectedSource } from "./sources";
 import { getBlackBoxRanges } from "./source-blackbox";
 import { getCurrentThreadFrames } from "./pause";
 import { annotateFrames } from "../utils/pause/frames";
@@ -15,23 +15,21 @@ function getLocation(frame, isGeneratedSource) {
     : frame.location;
 }
 
-function getSourceForFrame(sourcesMap, frame, isGeneratedSource) {
-  const sourceId = getLocation(frame, isGeneratedSource).sourceId;
-  return sourcesMap.get(sourceId);
+function getSourceForFrame(frame, isGeneratedSource) {
+  return getLocation(frame, isGeneratedSource).source;
 }
 
-function appendSource(sourcesMap, frame, selectedSource) {
+function appendSource(frame, selectedSource) {
   const isGeneratedSource = selectedSource && !selectedSource.isOriginal;
   return {
     ...frame,
     location: getLocation(frame, isGeneratedSource),
-    source: getSourceForFrame(sourcesMap, frame, isGeneratedSource),
+    source: getSourceForFrame(frame, isGeneratedSource),
   };
 }
 
 export function formatCallStackFrames(
   frames,
-  sourcesMap,
   selectedSource,
   blackboxedRanges
 ) {
@@ -40,8 +38,8 @@ export function formatCallStackFrames(
   }
 
   const formattedFrames = frames
-    .filter(frame => getSourceForFrame(sourcesMap, frame))
-    .map(frame => appendSource(sourcesMap, frame, selectedSource))
+    .filter(frame => getSourceForFrame(frame))
+    .map(frame => appendSource(frame, selectedSource))
     .filter(frame => !isFrameBlackBoxed(frame, blackboxedRanges));
 
   return annotateFrames(formattedFrames);
@@ -50,7 +48,6 @@ export function formatCallStackFrames(
 // eslint-disable-next-line
 export const getCallStackFrames = (createSelector)(
   getCurrentThreadFrames,
-  getSourcesMap,
   getSelectedSource,
   getBlackBoxRanges,
   formatCallStackFrames

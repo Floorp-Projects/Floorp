@@ -43,9 +43,10 @@ add_task(async function test_double_feature_enrollment() {
   let recipe1 = getRecipe("foo" + Math.random());
   let recipe2 = getRecipe("foo" + Math.random());
 
-  let enrollPromise1 = ExperimentFakes.waitForExperimentUpdate(ExperimentAPI, {
-    slug: recipe1.slug,
-  });
+  let enrollPromise1 = ExperimentFakes.waitForExperimentUpdate(
+    ExperimentAPI,
+    recipe1.slug
+  );
 
   ExperimentManager.enroll(recipe1, "test_double_feature_enrollment");
   await enrollPromise1;

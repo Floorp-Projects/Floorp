@@ -4210,6 +4210,11 @@ bool Element::IsAutoPopover() const {
   return htmlElement && htmlElement->GetPopoverState() == PopoverState::Auto;
 }
 
+bool Element::IsPopoverOpen() const {
+  const auto* htmlElement = nsGenericHTMLElement::FromNode(this);
+  return htmlElement && htmlElement->PopoverOpen();
+}
+
 ElementAnimationData& Element::CreateAnimationData() {
   MOZ_ASSERT(!GetAnimationData());
   SetMayHaveAnimations();

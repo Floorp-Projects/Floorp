@@ -115,8 +115,7 @@ export function persistTabs(tabs) {
     .filter(tab => tab.url)
     .map(tab => ({
       ...tab,
-      sourceId: null,
-      threadActorId: null,
-      sourceActorId: null,
+      source: null,
+      sourceActor: null,
     }));
 }

@@ -4,6 +4,6 @@
 
 toolkit.jar:
 % resource featuregates %featuregates/
-  featuregates/FeatureGate.jsm (./FeatureGate.jsm)
-  featuregates/FeatureGateImplementation.jsm (./FeatureGateImplementation.jsm)
+  featuregates/FeatureGate.sys.mjs (./FeatureGate.sys.mjs)
+  featuregates/FeatureGateImplementation.sys.mjs (./FeatureGateImplementation.sys.mjs)
   featuregates/feature_definitions.json (./feature_definitions.json)

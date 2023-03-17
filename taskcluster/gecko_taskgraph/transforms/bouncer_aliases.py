@@ -43,14 +43,14 @@ def make_task_worker(config, jobs):
             job,
             "bouncer-products-per-alias",
             item_name=job["name"],
-            project=config.params["project"],
+            **{"release-type": config.params["release_type"]},
         )
         if "partner-bouncer-products-per-alias" in job:
             resolve_keyed_by(
                 job,
                 "partner-bouncer-products-per-alias",
                 item_name=job["name"],
-                project=config.params["project"],
+                **{"release-type": config.params["release_type"]},
             )
 
         job["worker"]["entries"] = craft_bouncer_entries(config, job)

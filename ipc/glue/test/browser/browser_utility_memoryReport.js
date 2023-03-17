@@ -29,7 +29,7 @@ add_task(async () => {
       aAmount,
       aDescription
     ) {
-      const expectedProcess = `Utility (pid: ${utilityPid}, sandboxingKind: ${kGenericUtilitySandbox})`;
+      const expectedProcess = `Utility (pid ${utilityPid}, sandboxingKind ${kGenericUtilitySandbox})`;
       if (aProcess !== expectedProcess) {
         return;
       }

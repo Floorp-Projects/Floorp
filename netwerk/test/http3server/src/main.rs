@@ -14,7 +14,8 @@ use neqo_http3::{
 };
 use neqo_transport::server::Server;
 use neqo_transport::{
-    ConnectionEvent, ConnectionParameters, Output, RandomConnectionIdGenerator, StreamType,
+    ConnectionEvent, ConnectionParameters, Output, RandomConnectionIdGenerator, StreamId,
+    StreamType,
 };
 use std::env;
 
@@ -26,7 +27,18 @@ use std::rc::Rc;
 use std::thread;
 use std::time::{Duration, Instant};
 
+use cfg_if::cfg_if;
 use core::fmt::Display;
+
+cfg_if! {
+    if #[cfg(not(target_os = "android"))] {
+        use std::sync::mpsc::{channel, Receiver, TryRecvError};
+        use hyper::body::HttpBody;
+        use hyper::header::{HeaderName, HeaderValue};
+        use hyper::{Body, Client, Method, Request};
+    }
+}
+
 use mio::net::UdpSocket;
 use mio::{Events, Poll, PollOpt, Ready, Token};
 use mio_extras::timer::{Builder, Timeout, Timer};
@@ -487,7 +499,7 @@ impl HttpServer for Http3TestServer {
                 Http3ServerEvent::WebTransport(WebTransportServerEvent::SessionClosed {
                     session,
                     reason,
-                    headers: _
+                    headers: _,
                 }) => {
                     qdebug!(
                         "WebTransportServerEvent::SessionClosed {:?} {:?}",
@@ -552,6 +564,320 @@ impl HttpServer for Server {
     }
 }
 
+struct Http3ProxyServer {
+    server: Http3Server,
+    responses: HashMap<Http3OrWebTransportStream, Vec<u8>>,
+    server_port: i32,
+    request_header: HashMap<StreamId, Vec<Header>>,
+    request_body: HashMap<StreamId, Vec<u8>>,
+    #[cfg(not(target_os = "android"))]
+    stream_map: HashMap<StreamId, Http3OrWebTransportStream>,
+    #[cfg(not(target_os = "android"))]
+    response_to_send: HashMap<StreamId, Receiver<(Vec<Header>, Vec<u8>)>>,
+}
+
+impl ::std::fmt::Display for Http3ProxyServer {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        write!(f, "{}", self.server)
+    }
+}
+
+impl Http3ProxyServer {
+    pub fn new(server: Http3Server, server_port: i32) -> Self {
+        Self {
+            server,
+            responses: HashMap::new(),
+            server_port,
+            request_header: HashMap::new(),
+            request_body: HashMap::new(),
+            #[cfg(not(target_os = "android"))]
+            stream_map: HashMap::new(),
+            #[cfg(not(target_os = "android"))]
+            response_to_send: HashMap::new(),
+        }
+    }
+
+    #[cfg(not(target_os = "android"))]
+    fn new_response(&mut self, mut stream: Http3OrWebTransportStream, mut data: Vec<u8>) {
+        if data.len() == 0 {
+            let _ = stream.stream_close_send();
+            return;
+        }
+        match stream.send_data(&data) {
+            Ok(sent) => {
+                if sent < data.len() {
+                    self.responses.insert(stream, data.split_off(sent));
+                } else {
+                    stream.stream_close_send().unwrap();
+                }
+            }
+            Err(e) => {
+                eprintln!("error is {:?}", e);
+            }
+        }
+    }
+
+    fn handle_stream_writable(&mut self, mut stream: Http3OrWebTransportStream) {
+        if let Some(data) = self.responses.get_mut(&stream) {
+            match stream.send_data(&data) {
+                Ok(sent) => {
+                    if sent < data.len() {
+                        let new_d = (*data).split_off(sent);
+                        *data = new_d;
+                    } else {
+                        stream.stream_close_send().unwrap();
+                        self.responses.remove(&stream);
+                    }
+                }
+                Err(_) => {
+                    eprintln!("Unexpected error");
+                }
+            }
+        }
+    }
+
+    #[cfg(not(target_os = "android"))]
+    async fn fetch_url(
+        request: hyper::Request<Body>,
+        out_header: &mut Vec<Header>,
+        out_body: &mut Vec<u8>,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let client = Client::new();
+        let mut resp = client.request(request).await?;
+        out_header.push(Header::new(":status", resp.status().as_str()));
+        for (key, value) in resp.headers() {
+            out_header.push(Header::new(
+                key.as_str().to_ascii_lowercase(),
+                match value.to_str() {
+                    Ok(str) => str,
+                    _ => "",
+                },
+            ));
+        }
+
+        while let Some(chunk) = resp.body_mut().data().await {
+            match chunk {
+                Ok(data) => {
+                    out_body.append(&mut data.to_vec());
+                }
+                _ => {}
+            }
+        }
+
+        Ok(())
+    }
+
+    #[cfg(not(target_os = "android"))]
+    fn fetch(
+        &mut self,
+        mut stream: Http3OrWebTransportStream,
+        request_headers: &Vec<Header>,
+        request_body: Vec<u8>,
+    ) {
+        let mut request: hyper::Request<Body> = Request::default();
+        let mut path = String::new();
+        for hdr in request_headers.iter() {
+            match hdr.name() {
+                ":method" => {
+                    *request.method_mut() = Method::from_bytes(hdr.value().as_bytes()).unwrap();
+                }
+                ":scheme" => {}
+                ":authority" => {
+                    request.headers_mut().insert(
+                        hyper::header::HOST,
+                        HeaderValue::from_str(hdr.value()).unwrap(),
+                    );
+                }
+                ":path" => {
+                    path = String::from(hdr.value());
+                }
+                _ => {
+                    if let Ok(hdr_name) = HeaderName::from_lowercase(hdr.name().as_bytes()) {
+                        request
+                            .headers_mut()
+                            .insert(hdr_name, HeaderValue::from_str(hdr.value()).unwrap());
+                    }
+                }
+            }
+        }
+        *request.body_mut() = Body::from(request_body);
+        *request.uri_mut() =
+            match format!("http://127.0.0.1:{}{}", self.server_port.to_string(), path).parse() {
+                Ok(uri) => uri,
+                _ => {
+                    eprintln!("invalid uri: {}", path);
+                    stream
+                        .send_headers(&[
+                            Header::new(":status", "400"),
+                            Header::new("cache-control", "no-cache"),
+                            Header::new("content-length", "0"),
+                        ])
+                        .unwrap();
+                    return;
+                }
+            };
+        qtrace!("request header: {:?}", request);
+
+        let (sender, receiver) = channel();
+        thread::spawn(move || {
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            let mut h: Vec<Header> = Vec::new();
+            let mut data: Vec<u8> = Vec::new();
+            let _ = rt.block_on(Self::fetch_url(request, &mut h, &mut data));
+            qtrace!("response headers: {:?}", h);
+            qtrace!("res data: {:02X?}", data);
+
+            match sender.send((h, data)) {
+                Ok(()) => {}
+                _ => {
+                    eprintln!("sender.send failed");
+                }
+            }
+        });
+
+        self.response_to_send.insert(stream.stream_id(), receiver);
+        self.stream_map.insert(stream.stream_id(), stream);
+    }
+
+    #[cfg(target_os = "android")]
+    fn fetch(
+        &mut self,
+        mut _stream: Http3OrWebTransportStream,
+        _request_headers: &Vec<Header>,
+        _request_body: Vec<u8>,
+    ) {
+        // do nothing
+    }
+
+    #[cfg(not(target_os = "android"))]
+    fn maybe_process_response(&mut self) {
+        let mut data_to_send = HashMap::new();
+        self.response_to_send
+            .retain(|id, receiver| match receiver.try_recv() {
+                Ok((headers, body)) => {
+                    data_to_send.insert(*id, (headers.clone(), body.clone()));
+                    false
+                }
+                Err(TryRecvError::Empty) => true,
+                Err(TryRecvError::Disconnected) => false,
+            });
+        while let Some(id) = data_to_send.keys().next().cloned() {
+            let mut stream = self.stream_map.remove(&id).unwrap();
+            let (header, data) = data_to_send.remove(&id).unwrap();
+            qtrace!("response headers: {:?}", header);
+            match stream.send_headers(&header) {
+                Ok(()) => {
+                    self.new_response(stream, data);
+                }
+                _ => {}
+            }
+        }
+    }
+}
+
+impl HttpServer for Http3ProxyServer {
+    fn process(&mut self, dgram: Option<Datagram>) -> Output {
+        self.server.process(dgram, Instant::now())
+    }
+
+    fn process_events(&mut self) {
+        #[cfg(not(target_os = "android"))]
+        self.maybe_process_response();
+        while let Some(event) = self.server.next_event() {
+            qtrace!("Event: {:?}", event);
+            match event {
+                Http3ServerEvent::Headers {
+                    mut stream,
+                    headers,
+                    fin: _,
+                } => {
+                    qtrace!("Headers {:?}", headers);
+                    if self.server_port != -1 {
+                        let method_hdr = headers.iter().find(|&h| h.name() == ":method");
+                        match method_hdr {
+                            Some(method) => match method.value() {
+                                "POST" => {
+                                    let content_length =
+                                        headers.iter().find(|&h| h.name() == "content-length");
+                                    if let Some(length_str) = content_length {
+                                        if let Ok(len) = length_str.value().parse::<u32>() {
+                                            if len > 0 {
+                                                self.request_header
+                                                    .insert(stream.stream_id(), headers);
+                                                self.request_body
+                                                    .insert(stream.stream_id(), Vec::new());
+                                            } else {
+                                                self.fetch(stream, &headers, b"".to_vec());
+                                            }
+                                        }
+                                    }
+                                }
+                                _ => {
+                                    self.fetch(stream, &headers, b"".to_vec());
+                                }
+                            },
+                            _ => {}
+                        }
+                    } else {
+                        let path_hdr = headers.iter().find(|&h| h.name() == ":path");
+                        match path_hdr {
+                            Some(ph) if !ph.value().is_empty() => {
+                                let path = ph.value();
+                                match &path[..6] {
+                                    "/port?" => {
+                                        let port = path[6..].parse::<i32>();
+                                        if let Ok(port) = port {
+                                            qtrace!("got port {}", port);
+                                            self.server_port = port;
+                                        }
+                                    }
+                                    _ => {}
+                                }
+                            }
+                            _ => {}
+                        }
+                        stream
+                            .send_headers(&[
+                                Header::new(":status", "200"),
+                                Header::new("cache-control", "no-cache"),
+                                Header::new("content-length", "0"),
+                            ])
+                            .unwrap();
+                    }
+                }
+                Http3ServerEvent::Data {
+                    stream,
+                    mut data,
+                    fin,
+                } => {
+                    if let Some(d) = self.request_body.get_mut(&stream.stream_id()) {
+                        d.append(&mut data);
+                    }
+                    if fin {
+                        if let Some(d) = self.request_body.remove(&stream.stream_id()) {
+                            let headers = self.request_header.remove(&stream.stream_id()).unwrap();
+                            self.fetch(stream, &headers, d);
+                        }
+                    }
+                }
+                Http3ServerEvent::DataWritable { stream } => self.handle_stream_writable(stream),
+                Http3ServerEvent::StateChange { .. } | Http3ServerEvent::PriorityUpdate { .. } => {}
+                Http3ServerEvent::StreamReset { stream, error } => {
+                    qtrace!("Http3ServerEvent::StreamReset {:?} {:?}", stream, error);
+                }
+                Http3ServerEvent::StreamStopSending { stream, error } => {
+                    qtrace!(
+                        "Http3ServerEvent::StreamStopSending {:?} {:?}",
+                        stream,
+                        error
+                    );
+                }
+                Http3ServerEvent::WebTransport(_) => {}
+            }
+        }
+    }
+}
+
 #[derive(Default)]
 struct NonRespondingServer {}
 
@@ -605,6 +931,9 @@ fn process(
             }
 
             qinfo!("Setting timeout of {:?} for {}", new_timeout, server);
+            if new_timeout > Duration::from_secs(1) {
+                new_timeout = Duration::from_secs(1);
+            }
             *svr_timeout = Some(timer.set_timeout(new_timeout, inx));
             false
         }
@@ -646,6 +975,7 @@ enum ServerType {
     Http3Fail,
     Http3NoResponse,
     Http3Ech,
+    Http3Proxy,
 }
 
 struct ServersRunner {
@@ -674,17 +1004,24 @@ impl ServersRunner {
     }
 
     pub fn init(&mut self) {
-        self.add_new_socket(0, ServerType::Http3);
-        self.add_new_socket(1, ServerType::Http3Fail);
-        self.add_new_socket(2, ServerType::Http3Ech);
-        self.add_new_socket(4, ServerType::Http3NoResponse);
+        self.add_new_socket(0, ServerType::Http3, 0);
+        self.add_new_socket(1, ServerType::Http3Fail, 0);
+        self.add_new_socket(2, ServerType::Http3Ech, 0);
+
+        let proxy_port = match env::var("MOZ_HTTP3_PROXY_PORT") {
+            Ok(val) => val.parse::<u16>().unwrap(),
+            _ => 0,
+        };
+        self.add_new_socket(3, ServerType::Http3Proxy, proxy_port);
+        self.add_new_socket(5, ServerType::Http3NoResponse, 0);
 
         println!(
-            "HTTP3 server listening on ports {}, {}, {} and {}. EchConfig is @{}@",
+            "HTTP3 server listening on ports {}, {}, {}, {} and {}. EchConfig is @{}@",
             self.hosts[0].port(),
             self.hosts[1].port(),
             self.hosts[2].port(),
             self.hosts[3].port(),
+            self.hosts[4].port(),
             base64::encode(&self.ech_config)
         );
         self.poll
@@ -692,8 +1029,8 @@ impl ServersRunner {
             .unwrap();
     }
 
-    fn add_new_socket(&mut self, count: usize, server_type: ServerType) -> u16 {
-        let addr = "127.0.0.1:0".parse().unwrap();
+    fn add_new_socket(&mut self, count: usize, server_type: ServerType, port: u16) -> u16 {
+        let addr = format!("127.0.0.1:{}", port).parse().unwrap();
 
         let socket = match UdpSocket::bind(&addr) {
             Err(err) => {
@@ -788,6 +1125,34 @@ impl ServersRunner {
                 self.ech_config = Vec::from(unboxed_server.ech_config());
                 server
             }
+            ServerType::Http3Proxy => {
+                let server_config = if env::var("MOZ_HTTP3_MOCHITEST").is_ok() {
+                    ("mochitest-cert", 8888)
+                } else {
+                    (" HTTP2 Test Cert", -1)
+                };
+                let server = Box::new(Http3ProxyServer::new(
+                    Http3Server::new(
+                        Instant::now(),
+                        &[server_config.0],
+                        PROTOCOLS,
+                        anti_replay,
+                        cid_mgr,
+                        Http3Parameters::default()
+                            .max_table_size_encoder(MAX_TABLE_SIZE)
+                            .max_table_size_decoder(MAX_TABLE_SIZE)
+                            .max_blocked_streams(MAX_BLOCKED_STREAMS)
+                            .webtransport(true)
+                            .connection_parameters(
+                                ConnectionParameters::default().datagram_size(1200),
+                            ),
+                        None,
+                    )
+                    .expect("We cannot make a server!"),
+                    server_config.1,
+                ));
+                server
+            }
         }
     }
 
@@ -874,10 +1239,10 @@ impl ServersRunner {
                 if event.token() == TIMER_TOKEN {
                     self.process_timeout()?;
                 } else {
-                    if !event.readiness().is_readable() {
-                        continue;
-                    }
-                    self.process_datagrams_and_events(event.token().0, true)?;
+                    self.process_datagrams_and_events(
+                        event.token().0,
+                        event.readiness().is_readable(),
+                    )?;
                 }
             }
             self.process_active_conns()?;

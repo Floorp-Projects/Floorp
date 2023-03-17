@@ -397,6 +397,7 @@ static int output_picture_ready(Dav1dContext *const c, const int drain) {
 
 static int drain_picture(Dav1dContext *const c, Dav1dPicture *const out) {
     unsigned drain_count = 0;
+    int drained = 0;
     do {
         const unsigned next = c->frame_thread.next;
         Dav1dFrameContext *const f = &c->fc[next];
@@ -406,17 +407,23 @@ static int drain_picture(Dav1dContext *const c, Dav1dPicture *const out) {
                               &f->task_thread.ttd->lock);
         Dav1dThreadPicture *const out_delayed =
             &c->frame_thread.out_delayed[next];
+        if (out_delayed->p.data[0] || atomic_load(&f->task_thread.error)) {
+            unsigned first = atomic_load(&c->task_thread.first);
+            if (first + 1U < c->n_fc)
+                atomic_fetch_add(&c->task_thread.first, 1U);
+            else
+                atomic_store(&c->task_thread.first, 0);
+            atomic_compare_exchange_strong(&c->task_thread.reset_task_cur,
+                                           &first, UINT_MAX);
+            if (c->task_thread.cur && c->task_thread.cur < c->n_fc)
+                c->task_thread.cur--;
+            drained = 1;
+        } else if (drained) {
+            pthread_mutex_unlock(&c->task_thread.lock);
+            break;
+        }
         if (++c->frame_thread.next == c->n_fc)
             c->frame_thread.next = 0;
-        unsigned first = atomic_load(&c->task_thread.first);
-        if (first + 1U < c->n_fc)
-            atomic_fetch_add(&c->task_thread.first, 1U);
-        else
-            atomic_store(&c->task_thread.first, 0);
-        atomic_compare_exchange_strong(&c->task_thread.reset_task_cur,
-                                       &first, UINT_MAX);
-        if (c->task_thread.cur && c->task_thread.cur < c->n_fc)
-            c->task_thread.cur--;
         pthread_mutex_unlock(&c->task_thread.lock);
         const int error = f->task_thread.retval;
         if (error) {

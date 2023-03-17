@@ -70,7 +70,7 @@ add_task(async function test_event_updates_main() {
 
   // Set update cb
   store.on(
-    `update:${experiment.branch.features[0].featureId}`,
+    `featureUpdate:${experiment.branch.features[0].featureId}`,
     updateEventCbStub
   );
 
@@ -83,13 +83,18 @@ add_task(async function test_event_updates_main() {
     "Should be called twice: add, update"
   );
   Assert.equal(
-    updateEventCbStub.secondCall.args[1].active,
-    false,
+    updateEventCbStub.firstCall.args[1],
+    "experiment-updated",
+    "Should be called with updated experiment status"
+  );
+  Assert.equal(
+    updateEventCbStub.secondCall.args[1],
+    "experiment-updated",
     "Should be called with updated experiment status"
   );
 
   store.off(
-    `update:${experiment.branch.features[0].featureId}`,
+    `featureUpdate:${experiment.branch.features[0].featureId}`,
     updateEventCbStub
   );
 });
@@ -516,7 +521,7 @@ add_task(async function test_remoteRollout() {
   let updatePromise = new Promise(resolve =>
     store.on(`update:${rollout.slug}`, resolve)
   );
-  store.on("update:aboutwelcome", featureUpdateStub);
+  store.on("featureUpdate:aboutwelcome", featureUpdateStub);
 
   await store.init();
   store.addEnrollment(rollout);

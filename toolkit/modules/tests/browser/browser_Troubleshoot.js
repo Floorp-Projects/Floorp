@@ -11,8 +11,8 @@ const { Troubleshoot } = ChromeUtils.importESModule(
 );
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
-const { FeatureGate } = ChromeUtils.import(
-  "resource://featuregates/FeatureGate.jsm"
+const { FeatureGate } = ChromeUtils.importESModule(
+  "resource://featuregates/FeatureGate.sys.mjs"
 );
 const { PreferenceExperiments } = ChromeUtils.import(
   "resource://normandy/lib/PreferenceExperiments.jsm"

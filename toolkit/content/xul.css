@@ -363,6 +363,8 @@ panel,
 tooltip {
   position: fixed;
   -moz-top-layer: top;
+  width: fit-content;
+  height: fit-content;
   /* Popups can't have overflow */
   contain: paint;
   z-index: 2147483647;
@@ -374,8 +376,6 @@ tooltip {
   -moz-default-appearance: tooltip;
   -moz-font-smoothing-background-color: -moz-mac-tooltip;
 
-  /* TODO: Switch to flex-direction: column once bug 1809084 lands */
-  -moz-box-orient: vertical;
   white-space: pre-wrap;
 
   background-color: InfoBackground;

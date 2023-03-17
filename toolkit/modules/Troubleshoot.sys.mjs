@@ -8,9 +8,7 @@ const { AddonManager } = ChromeUtils.import(
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { E10SUtils } from "resource://gre/modules/E10SUtils.sys.mjs";
 
-const { FeatureGate } = ChromeUtils.import(
-  "resource://featuregates/FeatureGate.jsm"
-);
+import { FeatureGate } from "resource://featuregates/FeatureGate.sys.mjs";
 
 const lazy = {};
 
@@ -634,7 +632,6 @@ var dataProviders = {
         cleartypeParameters: "clearTypeParameters",
         TargetFrameRate: "targetFrameRate",
         windowProtocol: null,
-        desktopEnvironment: null,
       };
 
       for (let prop in gfxInfoProps) {

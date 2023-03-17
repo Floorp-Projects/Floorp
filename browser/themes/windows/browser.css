@@ -443,6 +443,16 @@ panel[touchmode],
 menupopup[touchmode] {
   --arrowpanel-menuitem-padding-block: 12px;
   --arrowpanel-menuitem-padding: var(--arrowpanel-menuitem-padding-block) var(--arrowpanel-menuitem-padding-inline);
+  /* The value for the header back icon padding is selected in a way that the
+   * height of the header and its separator will be equal to the panel inner
+   * top padding plus standard menuitem, so that the header's separator will
+   * be located excatly where a normal toolbarseparator would be located after
+   * the first menuitem, in a menu without a header. */
+  --arrowpanel-header-back-icon-padding: 10px;
+}
+
+:root[uidensity="compact"] panel[touchmode] {
+  --arrowpanel-header-back-icon-padding: 12px;
 }
 
 menupopup[touchmode] :is(menu, menuitem, menucaption) {

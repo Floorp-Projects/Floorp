@@ -22,7 +22,7 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES += [
-    "TerminatorTelemetry.jsm",
+    "TerminatorTelemetry.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [

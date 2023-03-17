@@ -237,7 +237,7 @@ avoid-blacklist-and-whitelist:
         - testing/raptor/raptor/control_server.py
         - testing/talos/talos/tests/devtools/addon/content/pages/custom/debugger/static/js/main.js
         - testing/web-platform/tests/tools/manifest/tests/test_manifest.py
-        - toolkit/actors/RemotePageChild.jsm
+        - toolkit/actors/RemotePageChild.sys.mjs
         - toolkit/actors/WebChannelChild.sys.mjs
         - toolkit/components/antitracking/test/browser/browser_socialtracking_save_image.js
         - toolkit/components/remotepagemanager/RemotePageManagerParent.sys.mjs

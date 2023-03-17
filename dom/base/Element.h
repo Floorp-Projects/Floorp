@@ -581,6 +581,7 @@ class Element : public FragmentOrElement {
   }
 
   bool IsAutoPopover() const;
+  bool IsPopoverOpen() const;
 
   ElementAnimationData* GetAnimationData() const {
     if (!MayHaveAnimations()) {

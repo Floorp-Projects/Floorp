@@ -55,17 +55,6 @@ class U2FTokenManager final : public nsIU2FTokenManager {
     return Nothing();
   }
 
-  Maybe<uint64_t> GetCurrentBrowsingCtxId() {
-    if (mPendingRegisterInfo.isSome()) {
-      return Some(mPendingRegisterInfo.value().BrowsingContextId());
-    }
-
-    if (mPendingSignInfo.isSome()) {
-      return Some(mPendingSignInfo.value().BrowsingContextId());
-    }
-    return Nothing();
-  }
-
   uint64_t GetCurrentTransactionId() { return mLastTransactionId; }
 
   bool CurrentTransactionIsRegister() { return mPendingRegisterInfo.isSome(); }
@@ -77,13 +66,6 @@ class U2FTokenManager final : public nsIU2FTokenManager {
   void SendPromptNotification(const char16_t* aFormat, T... aArgs);
   // The main thread runnable function for "SendPromptNotification".
   void RunSendPromptNotification(const nsString& aJSON);
-
-  struct StatusUpdateResFreePolicy {
-    void operator()(rust_ctap2_status_update_res* p);
-  };
-  UniquePtr<rust_ctap2_status_update_res,
-            U2FTokenManager::StatusUpdateResFreePolicy>
-      status_update_result = nullptr;
 
  private:
   U2FTokenManager();

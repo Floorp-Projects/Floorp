@@ -6,7 +6,8 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 import {
   element,
-  WebReference,
+  ShadowRoot,
+  WebElement,
 } from "chrome://remote/content/marionette/element.sys.mjs";
 
 const lazy = {};
@@ -1351,7 +1352,7 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
   // Bug 1495063: Elements should be passed as WebReference reference
   let byFrame;
   if (typeof el == "string") {
-    byFrame = WebReference.fromUUID(el).toJSON();
+    byFrame = WebElement.fromUUID(el).toJSON();
   } else if (el) {
     byFrame = el;
   }
@@ -1393,7 +1394,7 @@ GeckoDriver.prototype.singleTap = async function(cmd) {
   lazy.assert.open(this.getBrowsingContext());
 
   let { id, x, y } = cmd.parameters;
-  let webEl = WebReference.fromUUID(id).toJSON();
+  let webEl = WebElement.fromUUID(id).toJSON();
 
   await this.getActor().singleTap(
     webEl,
@@ -1459,6 +1460,9 @@ GeckoDriver.prototype.releaseActions = async function() {
  * @param {string} value
  *     Value the client is looking for.
  *
+ * @return {WebElement}
+ *     Return the found element.
+ *
  * @throws {NoSuchElementError}
  *     If element represented by reference <var>element</var> is unknown.
  * @throws {NoSuchWindowError}
@@ -1477,18 +1481,67 @@ GeckoDriver.prototype.findElement = async function(cmd) {
     );
   }
 
+  lazy.assert.defined(value);
   lazy.assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
   let startNode;
   if (typeof el != "undefined") {
-    startNode = WebReference.fromUUID(el).toJSON();
+    startNode = WebElement.fromUUID(el).toJSON();
   }
 
   let opts = {
     startNode,
     timeout: this.currentSession.timeouts.implicit,
     all: false,
+  };
+
+  return this.getActor().findElement(using, value, opts);
+};
+
+/**
+ * Find an element within shadow root using the indicated search strategy.
+ *
+ * @param {string} shadowRoot
+ *     Shadow root reference ID.
+ * @param {string} using
+ *     Indicates which search method to use.
+ * @param {string} value
+ *     Value the client is looking for.
+ *
+ * @return {WebElement}
+ *     Return the found element.
+ *
+ * @throws {DetachedShadowRootError}
+ *     If shadow root represented by reference <var>id</var> is
+ *     no longer attached to the DOM.
+ * @throws {NoSuchElementError}
+ *     If the element which is looked for with <var>value</var> was
+ *     not found.
+ * @throws {NoSuchShadowRoot}
+ *     If shadow root represented by reference <var>shadowRoot</var> is unknown.
+ * @throws {NoSuchWindowError}
+ *     Browsing context has been discarded.
+ * @throws {UnexpectedAlertOpenError}
+ *     A modal dialog is open, blocking this operation.
+ */
+GeckoDriver.prototype.findElementFromShadowRoot = async function(cmd) {
+  const { shadowRoot, using, value } = cmd.parameters;
+
+  if (!SUPPORTED_STRATEGIES.has(using)) {
+    throw new lazy.error.InvalidSelectorError(
+      `Strategy not supported: ${using}`
+    );
+  }
+
+  lazy.assert.defined(value);
+  lazy.assert.open(this.getBrowsingContext());
+  await this._handleUserPrompts();
+
+  const opts = {
+    all: false,
+    startNode: ShadowRoot.fromUUID(shadowRoot).toJSON(),
+    timeout: this.currentSession.timeouts.implicit,
   };
 
   return this.getActor().findElement(using, value, opts);
@@ -1503,6 +1556,9 @@ GeckoDriver.prototype.findElement = async function(cmd) {
  *     Indicates which search method to use.
  * @param {string} value
  *     Value the client is looking for.
+ *
+ * @return {Array<WebElement>}
+ *     Return the array of found elements.
  *
  * @throws {NoSuchElementError}
  *     If element represented by reference <var>element</var> is unknown.
@@ -1522,18 +1578,64 @@ GeckoDriver.prototype.findElements = async function(cmd) {
     );
   }
 
+  lazy.assert.defined(value);
   lazy.assert.open(this.getBrowsingContext());
   await this._handleUserPrompts();
 
   let startNode;
   if (typeof el != "undefined") {
-    startNode = WebReference.fromUUID(el).toJSON();
+    startNode = WebElement.fromUUID(el).toJSON();
   }
 
   let opts = {
     startNode,
     timeout: this.currentSession.timeouts.implicit,
     all: true,
+  };
+
+  return this.getActor().findElements(using, value, opts);
+};
+
+/**
+ * Find elements within shadow root using the indicated search strategy.
+ *
+ * @param {string} shadowRoot
+ *     Shadow root reference ID.
+ * @param {string} using
+ *     Indicates which search method to use.
+ * @param {string} value
+ *     Value the client is looking for.
+ *
+ * @return {Array<WebElement>}
+ *     Return the array of found elements.
+ *
+ * @throws {DetachedShadowRootError}
+ *     If shadow root represented by reference <var>id</var> is
+ *     no longer attached to the DOM.
+ * @throws {NoSuchShadowRoot}
+ *     If shadow root represented by reference <var>shadowRoot</var> is unknown.
+ * @throws {NoSuchWindowError}
+ *     Browsing context has been discarded.
+ * @throws {UnexpectedAlertOpenError}
+ *     A modal dialog is open, blocking this operation.
+ */
+GeckoDriver.prototype.findElementsFromShadowRoot = async function(cmd) {
+  const { shadowRoot, using, value } = cmd.parameters;
+
+  if (!SUPPORTED_STRATEGIES.has(using)) {
+    throw new lazy.error.InvalidSelectorError(
+      `Strategy not supported: ${using}`
+    );
+  }
+
+  lazy.assert.defined(value);
+  lazy.assert.open(this.getBrowsingContext());
+  await this._handleUserPrompts();
+
+  const opts = {
+    all: true,
+    startNode: ShadowRoot.fromUUID(shadowRoot).toJSON(),
+    timeout: this.currentSession.timeouts.implicit,
   };
 
   return this.getActor().findElements(using, value, opts);
@@ -1572,7 +1674,7 @@ GeckoDriver.prototype.getShadowRoot = async function(cmd) {
     cmd.parameters.id,
     lazy.pprint`Expected "id" to be a string, got ${cmd.parameters.id}`
   );
-  let webEl = WebReference.fromUUID(id).toJSON();
+  let webEl = WebElement.fromUUID(id).toJSON();
 
   return this.getActor().getShadowRoot(webEl);
 };
@@ -1624,7 +1726,7 @@ GeckoDriver.prototype.clickElement = async function(cmd) {
   await this._handleUserPrompts();
 
   let id = lazy.assert.string(cmd.parameters.id);
-  let webEl = WebReference.fromUUID(id).toJSON();
+  let webEl = WebElement.fromUUID(id).toJSON();
 
   const actor = this.getActor();
 
@@ -1675,7 +1777,7 @@ GeckoDriver.prototype.getElementAttribute = async function(cmd) {
 
   const id = lazy.assert.string(cmd.parameters.id);
   const name = lazy.assert.string(cmd.parameters.name);
-  const webEl = WebReference.fromUUID(id).toJSON();
+  const webEl = WebElement.fromUUID(id).toJSON();
 
   return this.getActor().getElementAttribute(webEl, name);
 };
@@ -1708,7 +1810,7 @@ GeckoDriver.prototype.getElementProperty = async function(cmd) {
 
   const id = lazy.assert.string(cmd.parameters.id);
   const name = lazy.assert.string(cmd.parameters.name);
-  const webEl = WebReference.fromUUID(id).toJSON();
+  const webEl = WebElement.fromUUID(id).toJSON();
 
   return this.getActor().getElementProperty(webEl, name);
 };
@@ -1739,7 +1841,7 @@ GeckoDriver.prototype.getElementText = async function(cmd) {
   await this._handleUserPrompts();
 
   let id = lazy.assert.string(cmd.parameters.id);
-  let webEl = WebReference.fromUUID(id).toJSON();
+  let webEl = WebElement.fromUUID(id).toJSON();
 
   return this.getActor().getElementText(webEl);
 };
@@ -1769,7 +1871,7 @@ GeckoDriver.prototype.getElementTagName = async function(cmd) {
   await this._handleUserPrompts();
 
   let id = lazy.assert.string(cmd.parameters.id);
-  let webEl = WebReference.fromUUID(id).toJSON();
+  let webEl = WebElement.fromUUID(id).toJSON();
 
   return this.getActor().getElementTagName(webEl);
 };
@@ -1797,7 +1899,7 @@ GeckoDriver.prototype.isElementDisplayed = async function(cmd) {
   await this._handleUserPrompts();
 
   let id = lazy.assert.string(cmd.parameters.id);
-  let webEl = WebReference.fromUUID(id).toJSON();
+  let webEl = WebElement.fromUUID(id).toJSON();
 
   return this.getActor().isElementDisplayed(
     webEl,
@@ -1833,7 +1935,7 @@ GeckoDriver.prototype.getElementValueOfCssProperty = async function(cmd) {
 
   let id = lazy.assert.string(cmd.parameters.id);
   let prop = lazy.assert.string(cmd.parameters.propertyName);
-  let webEl = WebReference.fromUUID(id).toJSON();
+  let webEl = WebElement.fromUUID(id).toJSON();
 
   return this.getActor().getElementValueOfCssProperty(webEl, prop);
 };
@@ -1863,7 +1965,7 @@ GeckoDriver.prototype.isElementEnabled = async function(cmd) {
   await this._handleUserPrompts();
 
   let id = lazy.assert.string(cmd.parameters.id);
-  let webEl = WebReference.fromUUID(id).toJSON();
+  let webEl = WebElement.fromUUID(id).toJSON();
 
   return this.getActor().isElementEnabled(
     webEl,
@@ -1894,7 +1996,7 @@ GeckoDriver.prototype.isElementSelected = async function(cmd) {
   await this._handleUserPrompts();
 
   let id = lazy.assert.string(cmd.parameters.id);
-  let webEl = WebReference.fromUUID(id).toJSON();
+  let webEl = WebElement.fromUUID(id).toJSON();
 
   return this.getActor().isElementSelected(
     webEl,
@@ -1919,7 +2021,7 @@ GeckoDriver.prototype.getElementRect = async function(cmd) {
   await this._handleUserPrompts();
 
   let id = lazy.assert.string(cmd.parameters.id);
-  let webEl = WebReference.fromUUID(id).toJSON();
+  let webEl = WebElement.fromUUID(id).toJSON();
 
   return this.getActor().getElementRect(webEl);
 };
@@ -1949,7 +2051,7 @@ GeckoDriver.prototype.sendKeysToElement = async function(cmd) {
 
   let id = lazy.assert.string(cmd.parameters.id);
   let text = lazy.assert.string(cmd.parameters.text);
-  let webEl = WebReference.fromUUID(id).toJSON();
+  let webEl = WebElement.fromUUID(id).toJSON();
 
   return this.getActor().sendKeysToElement(
     webEl,
@@ -1980,7 +2082,7 @@ GeckoDriver.prototype.clearElement = async function(cmd) {
   await this._handleUserPrompts();
 
   let id = lazy.assert.string(cmd.parameters.id);
-  let webEl = WebReference.fromUUID(id).toJSON();
+  let webEl = WebElement.fromUUID(id).toJSON();
 
   await this.getActor().clearElement(webEl);
 };
@@ -2333,7 +2435,7 @@ GeckoDriver.prototype.takeScreenshot = async function(cmd) {
   full = typeof full == "undefined" ? true : full;
   scroll = typeof scroll == "undefined" ? true : scroll;
 
-  let webEl = id ? WebReference.fromUUID(id).toJSON() : null;
+  let webEl = id ? WebElement.fromUUID(id).toJSON() : null;
 
   // Only consider full screenshot if no element has been specified
   full = webEl ? false : full;
@@ -3144,7 +3246,11 @@ GeckoDriver.prototype.commands = {
   "WebDriver:ExecuteAsyncScript": GeckoDriver.prototype.executeAsyncScript,
   "WebDriver:ExecuteScript": GeckoDriver.prototype.executeScript,
   "WebDriver:FindElement": GeckoDriver.prototype.findElement,
+  "WebDriver:FindElementFromShadowRoot":
+    GeckoDriver.prototype.findElementFromShadowRoot,
   "WebDriver:FindElements": GeckoDriver.prototype.findElements,
+  "WebDriver:FindElementsFromShadowRoot":
+    GeckoDriver.prototype.findElementsFromShadowRoot,
   "WebDriver:Forward": GeckoDriver.prototype.goForward,
   "WebDriver:FullscreenWindow": GeckoDriver.prototype.fullscreenWindow,
   "WebDriver:GetActiveElement": GeckoDriver.prototype.getActiveElement,

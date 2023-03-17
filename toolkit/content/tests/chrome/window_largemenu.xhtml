@@ -335,7 +335,8 @@ function testPopupMovement()
   var marginLeft = parseFloat(getComputedStyle(popup).marginLeft);
   var marginTop = parseFloat(getComputedStyle(popup).marginTop);
 
-  var overlapOSChrome = !platformIsMac();
+  var panelIsTop = SpecialPowers.getBoolPref("ui.panel.default_level_parent");
+  var overlapOSChrome = !platformIsMac() && (!isPanelTest || panelIsTop);
   popup.moveTo(1, 1);
   [screenX, screenY] = getScreenXY(popup);
 
@@ -348,28 +349,16 @@ function testPopupMovement()
   is(screenY, expectedy, gTests[gTestIndex] + " (1, 1) y");
 
   popup.moveTo(100, 8000);
-  if (isPanelTest) {
-    expectedy = 8000;
-  }
-  else {
-    expectedy = (overlapOSChrome ? screen.height + screen.top : screen.availHeight + screen.availTop) -
-                Math.round(rect.height) - marginBottom;
-  }
-
+  expectedy = (overlapOSChrome ? screen.height + screen.top : screen.availHeight + screen.availTop) -
+              Math.round(rect.height) - marginBottom;
   [screenX, screenY] = getScreenXY(popup);
   is(screenX, 100, gTests[gTestIndex] + " (100, 8000) x");
   is(screenY, expectedy, gTests[gTestIndex] + " (100, 8000) y");
 
   popup.moveTo(6000, 100);
 
-  if (isPanelTest) {
-    expectedx = 6000;
-  }
-  else {
-    expectedx = (overlapOSChrome ? screen.width + screen.left : screen.availWidth + screen.availLeft) -
+  expectedx = (overlapOSChrome ? screen.width + screen.left : screen.availWidth + screen.availLeft) -
                 Math.round(rect.width) - marginLeft;
-  }
-
   [screenX, screenY] = getScreenXY(popup);
   is(screenX, expectedx, gTests[gTestIndex] + " (6000, 100) x");
   is(screenY, 100, gTests[gTestIndex] + " (6000, 100) y");

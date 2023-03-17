@@ -241,7 +241,7 @@ devtools-no-eft:
 
 wmf-media-engine:
     description: "{description} with Windows Media Foundation media engine enabled"
-    component: "Core::Audio/Video:Playback"
+    component: "Core::Audio/Video: Playback"
     expiration: "2023-04-10"
     when:
         $eval: '"windows1" in task["test-platform"]'

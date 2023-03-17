@@ -32,8 +32,8 @@ async function openSelectPopup(
 function hideSelectPopup(mode = "enter", win = window) {
   let browser = win.gBrowser.selectedBrowser;
   let selectClosedPromise = SpecialPowers.spawn(browser, [], async function() {
-    let { SelectContentHelper } = ChromeUtils.import(
-      "resource://gre/actors/SelectChild.jsm"
+    let { SelectContentHelper } = ChromeUtils.importESModule(
+      "resource://gre/actors/SelectChild.sys.mjs"
     );
     return ContentTaskUtils.waitForCondition(() => !SelectContentHelper.open);
   });

@@ -23,11 +23,9 @@ ChromeUtils.defineModuleGetter(
   "FormAutofillParent",
   "resource://autofill/FormAutofillParent.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "AutoCompleteParent",
-  "resource://gre/actors/AutoCompleteParent.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  AutoCompleteParent: "resource://gre/actors/AutoCompleteParent.sys.mjs",
+});
 
 XPCOMUtils.defineLazyServiceGetter(
   this,

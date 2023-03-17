@@ -7550,7 +7550,6 @@ var WebAuthnPromptHelper = {
   },
 
   observe(aSubject, aTopic, aData) {
-    let mgr = aSubject.QueryInterface(Ci.nsIU2FTokenManager);
     let data = JSON.parse(aData);
 
     // If we receive a cancel, it might be a WebAuthn prompt starting in another
@@ -7558,6 +7557,7 @@ var WebAuthnPromptHelper = {
     // cancellations, so any cancel action we get should prompt us to cancel.
     if (data.action == "cancel") {
       this.cancel(data);
+      return;
     }
 
     if (
@@ -7566,6 +7566,10 @@ var WebAuthnPromptHelper = {
       // Must belong to some other window.
       return;
     }
+
+    let mgr = aSubject.QueryInterface(
+      data.is_ctap2 ? Ci.nsIWebAuthnController : Ci.nsIU2FTokenManager
+    );
 
     if (data.action == "register") {
       this.register(mgr, data);
@@ -7631,7 +7635,7 @@ var WebAuthnPromptHelper = {
         label: unescape(decodeURIComponent(usernames[i])),
         accessKey: i.toString(),
         callback(aState) {
-          mgr.resumeWithSelectedSignResult(tid, i);
+          mgr.signatureSelectionCallback(tid, i);
         },
       });
     }
@@ -7657,7 +7661,7 @@ var WebAuthnPromptHelper = {
       aPassword
     );
     if (res) {
-      mgr.pinCallback(aPassword.value);
+      mgr.pinCallback(tid, aPassword.value);
     } else {
       mgr.cancel(tid);
     }
@@ -9785,7 +9789,7 @@ var FirefoxViewHandler = {
   uninit() {
     CustomizableUI.removeListener(this);
     Services.obs.removeObserver(this, "firefoxview-notification-dot-update");
-    NimbusFeatures.majorRelease2022.off(this._updateEnabledState);
+    NimbusFeatures.majorRelease2022.offUpdate(this._updateEnabledState);
   },
   _updateEnabledState() {
     this._enabled = NimbusFeatures.majorRelease2022.getVariable("firefoxView");

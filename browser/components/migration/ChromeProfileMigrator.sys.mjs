@@ -234,6 +234,18 @@ export class ChromeProfileMigrator extends MigratorBase {
       _keychainMockPassphrase = null,
     } = this;
 
+    let countQuery = `SELECT COUNT(*) FROM logins WHERE blacklisted_by_user = 0`;
+
+    let countRows = await MigrationUtils.getRowsFromDBWithoutLocks(
+      loginPath,
+      "Chrome passwords",
+      countQuery
+    );
+
+    if (!countRows[0].getResultByName("COUNT(*)")) {
+      return null;
+    }
+
     return {
       type: MigrationUtils.resourceTypes.PASSWORDS,
 
@@ -393,7 +405,16 @@ async function GetBookmarksResource(aProfileFolder, aBrowserKey) {
   if (!(await IOUtils.exists(bookmarksPath))) {
     return null;
   }
+  // check to read JSON bookmarks structure and see if any bookmarks exist else return null
+  // Parse Chrome bookmark file that is JSON format
+  let bookmarkJSON = await IOUtils.readJSON(bookmarksPath);
+  let other = bookmarkJSON.roots.other.children.length;
+  let bookmarkBar = bookmarkJSON.roots.bookmark_bar.children.length;
+  let synced = bookmarkJSON.roots.synced.children.length;
 
+  if (!other && !bookmarkBar && !synced) {
+    return null;
+  }
   return {
     type: MigrationUtils.resourceTypes.BOOKMARKS,
 
@@ -434,8 +455,6 @@ async function GetBookmarksResource(aProfileFolder, aBrowserKey) {
           }
         }
 
-        // Parse Chrome bookmark file that is JSON format
-        let bookmarkJSON = await IOUtils.readJSON(bookmarksPath);
         let roots = bookmarkJSON.roots;
         let bookmarkURLAccumulator = new Set();
 
@@ -502,7 +521,16 @@ async function GetHistoryResource(aProfileFolder) {
   if (!(await IOUtils.exists(historyPath))) {
     return null;
   }
+  let countQuery = "SELECT COUNT(*) FROM urls WHERE hidden = 0";
 
+  let countRows = await MigrationUtils.getRowsFromDBWithoutLocks(
+    historyPath,
+    "Chrome history",
+    countQuery
+  );
+  if (!countRows[0].getResultByName("COUNT(*)")) {
+    return null;
+  }
   return {
     type: MigrationUtils.resourceTypes.HISTORY,
 

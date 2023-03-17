@@ -55,7 +55,7 @@ add_task(async function test_experimentEnrollment() {
 
   let waitForExperimentEnrollment = ExperimentFakes.waitForExperimentUpdate(
     ExperimentAPI,
-    { slug: recipe.slug }
+    recipe.slug
   );
   RemoteSettingsExperimentLoader.updateRecipes("mochitest");
 
@@ -69,7 +69,7 @@ add_task(async function test_experimentEnrollment() {
 
   let waitForExperimentUnenrollment = ExperimentFakes.waitForExperimentUpdate(
     ExperimentAPI,
-    { slug: recipe.slug }
+    recipe.slug
   );
   ExperimentManager.unenroll(recipe.slug, "mochitest-cleanup");
 

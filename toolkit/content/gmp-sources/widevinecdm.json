@@ -27,7 +27,9 @@
           "alias": "Linux_x86_64-gcc3"
         },
         "WINNT_aarch64-msvc-aarch64": {
-          "alias": "WINNT_x86-msvc"
+          "fileUrl": "https://redirector.gvt1.com/edgedl/widevine-cdm/4.10.2557.0-win-arm64.zip",
+          "filesize": 7780530,
+          "hashValue": "5fba54f885efd82976011bd6de2ac191fced96a7184b829e975418c36b2bcdaa78af0733f4e41200933f5e81ddac996b9632b62c10e1e42bcb0bff8faa7ffa55"
         },
         "WINNT_x86-msvc": {
           "fileUrl": "https://redirector.gvt1.com/edgedl/widevine-cdm/4.10.2557.0-win-x86.zip",

@@ -1,0 +1,219 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIU2FTokenManager.idl"
+
+typedef long COSEAlgorithmIdentifier;
+
+// The nsICtapRegisterArgs interface encapsulates the arguments to the CTAP
+// authenticatorMakeCredential command as defined in
+//   https://fidoalliance.org/specs/fido-v2.0-ps-20190130/fido-client-to-authenticator-protocol-v2.0-ps-20190130.html#authenticatorMakeCredential
+// It is essentially a shim that allows data to be copied from an IPDL-defined
+// WebAuthnMakeCredentialInfo C++ struct to an authenticator-rs defined
+// RegisterArgsCtap2 Rust struct.
+//
+[uuid(2fc8febe-a277-11ed-bda2-8f6495a5e75c)]
+interface nsICtapRegisterArgs : nsISupports {
+    // TODO(Bug 1820035) The origin is only used for prompt callbacks. Refactor and remove.
+    readonly attribute AString origin;
+
+    // TODO(Bug 1820037) The spec only has `clientDataHash` here. We could refactor
+    // authenticator-rs to remove clientDataJSON
+    // readonly attribute Array<octet> clientDataHash;
+    readonly attribute ACString clientDataJSON;
+    // The challenge field of clientDataJSON. Can be removed if we refactor
+    // authenticators to only require clientDataHash.
+    readonly attribute Array<octet> challenge;
+
+    // A PublicKeyCredentialRpEntity
+    readonly attribute AString rpId;
+    [must_use] readonly attribute AString rpName;
+
+    // A PublicKeyCredentialUserEntity
+    [must_use] readonly attribute Array<octet> userId;
+    [must_use] readonly attribute AString userName;
+    [must_use] readonly attribute AString userDisplayName;
+
+    // The spec defines this as a sequence<PublicKeyCredentialParameters>.
+    // We require type = "public-key" and only serialize the alg fields.
+    [must_use] readonly attribute Array<COSEAlgorithmIdentifier> coseAlgs;
+
+    // The spec defines this as a sequence<PublicKeyCredentialDescriptor>.
+    // We only include the ID field, as the transport field is optional and we
+    // can assume that the type is "public-key".
+    readonly attribute Array<Array<octet> > excludeList;
+
+    // CTAP2 passes extensions in a CBOR map of extension identifier ->
+    // WebAuthn AuthenticationExtensionsClientInputs. That's not feasible here.
+    // So we define a getter for each supported extension input and use the
+    // return code to signal presence.
+    [must_use] readonly attribute bool hmacCreateSecret;
+
+    // Options.
+    [must_use] readonly attribute bool requireResidentKey;
+    [must_use] readonly attribute AString userVerification;
+    [must_use] readonly attribute AString authenticatorAttachment;
+
+    // This is the WebAuthn PublicKeyCredentialCreationOptions timeout.
+    // Arguably we don't need to pass it through since WebAuthnController can
+    // cancel transactions.
+    readonly attribute uint32_t timeoutMS;
+
+    // This is the WebAuthn PublicKeyCredentialCreationOptions attestation.
+    // We might overwrite the provided value with "none" if the user declines the
+    // consent popup.
+    [must_use] readonly attribute AString attestationConveyancePreference;
+};
+
+// The nsICtapSignArgs interface encapsulates the arguments to the CTAP
+// authenticatorGetAssertion command as defined in
+//   https://fidoalliance.org/specs/fido-v2.0-ps-20190130/fido-client-to-authenticator-protocol-v2.0-ps-20190130.html#authenticatorGetAssertion
+// It is essentially a shim that allows data to be copied from an IPDL-defined
+// WebAuthnGetAssertionInfo C++ struct to an authenticator-rs defined
+// SignArgsCtap2 Rust struct.
+//
+[uuid(2e621cf4-a277-11ed-ae00-bf41a54ef553)]
+interface nsICtapSignArgs : nsISupports {
+    // TODO(Bug 1820035) The origin is only used for prompt callbacks. Refactor and remove.
+    readonly attribute AString origin;
+
+    // The spec only asks for the ID field of a PublicKeyCredentialRpEntity here
+    readonly attribute AString rpId;
+
+    // TODO(Bug 1820037) The spec only has `clientDataHash` here. We could refactor
+    // authenticator-rs to remove clientDataJSON
+    // readonly attribute Array<octet> clientDataHash;
+    readonly attribute ACString clientDataJSON;
+    // The challenge field of clientDataJSON. Can be removed if we refactor
+    // authenticators to only require clientDataHash.
+    readonly attribute Array<octet> challenge;
+
+    // The spec defines this as a sequence<PublicKeyCredentialDescriptor>.
+    // We only include the ID field, as the transport field is optional and we
+    // can assume that the type is "public-key".
+    readonly attribute Array<Array<octet> > allowList;
+
+    // CTAP2 passes extensions in a CBOR map of extension identifier ->
+    // WebAuthn AuthenticationExtensionsClientInputs. That's not feasible here.
+    // So we define a getter for each supported extension input and use the
+    // return code to signal presence.
+    [must_use] readonly attribute bool hmacCreateSecret;
+    [must_use] readonly attribute AString appId;
+    [must_use] readonly attribute Array<octet> appIdHash;
+
+    // Options
+    [must_use] readonly attribute AString userVerification;
+
+    // This is the WebAuthn PublicKeyCredentialCreationOptions timeout.
+    // Arguably we don't need to pass it through since WebAuthnController can
+    // cancel transactions.
+    readonly attribute unsigned long timeoutMS;
+};
+
+// The nsICtapRegisterResult interface is used to construct IPDL-defined
+// WebAuthnMakeCredentialResult from either Rust or C++.
+//
+[uuid(0567c384-a728-11ed-85f7-030324a370f0)]
+interface nsICtapRegisterResult : nsISupports {
+    readonly attribute nsresult status;
+
+    readonly attribute ACString clientDataJSON;
+
+    // The serialied attestation object as defined in
+    // https://www.w3.org/TR/webauthn-2/#sctn-attestation
+    // Includes the format, the attestation statement, and
+    // the authenticator data.
+    readonly attribute Array<octet> attestationObject;
+
+    // The Credential ID field of the Attestation Object's Attested
+    // Credential Data. This is used to construct the rawID field of a
+    // WebAuthn PublicKeyCredential without having to parse the
+    // attestationObject.
+    readonly attribute Array<octet> credentialId;
+
+    // Bug 1536155
+    // readonly attribute Array<AString> transports;
+
+    // Bug 1816519
+    // readonly attribute Array<octet> authenticatorData;
+
+    // Bug 1816520
+    // readonly attribute Array<octet> publicKey
+    // readonly attribute COSEAlgorithmIdentifier publicKeyAlgorithm;
+
+    // bug 1593571
+    // readonly attribute bool hmacCreateSecret;
+};
+
+
+// The nsICtapSignResult interface is used to construct IPDL-defined
+// WebAuthnGetAssertionResult from either Rust or C++.
+//
+[uuid(05fff816-a728-11ed-b9ac-ff38cc2c8c28)]
+interface nsICtapSignResult : nsISupports {
+    readonly attribute nsresult status;
+
+    // The ID field of the PublicKeyCredentialDescriptor returned
+    // from authenticatorGetAssertion.
+    readonly attribute Array<octet> credentialId;
+
+    // The authData field of the authenticatorGetAssertion response
+    readonly attribute Array<octet> authenticatorData;
+
+    // The signature field of the authenticatorGetAssertion response
+    readonly attribute Array<octet> signature;
+
+    // The ID field of the PublicKeyCredentialUserEntity returned from
+    // authenticatorGetAssertion. (Optional)
+    [must_use] readonly attribute Array<octet> userHandle;
+
+    // The displayName field of the PublicKeyCredentialUserEntity
+    // returned from authenticatorGetAssertion. (Optional)
+    [must_use] readonly attribute ACString userName;
+
+    // The SHA-256 hash of the RP ID of the requester. Used to
+    // implement the FIDO AppID extension.
+    readonly attribute Array<octet> rpIdHash;
+
+    // bug 1593571
+    // readonly attribute bool hmacCreateSecret;
+};
+
+// The nsIWebAuthnController interface coordinates interactions between the user
+// and the authenticator to drive a WebAuthn transaction forward.
+// It allows an nsIWebAuthnTransport to
+//      1) prompt the user for input,
+//      2) receive a callback from a prompt, and
+//      3) return results to the content process.
+//
+[scriptable, uuid(c0744f48-ad64-11ed-b515-cf5149f4d6a6)]
+interface nsIWebAuthnController : nsIU2FTokenManager
+{
+    // Prompt callbacks
+    void pinCallback(in uint64_t aTransactionId, in ACString aPin);
+    void signatureSelectionCallback(in uint64_t aTransactionId, in uint64_t aIndex);
+
+    // Authenticator callbacks
+    [noscript] void sendPromptNotificationPreformatted(in uint64_t aTransactionId, in ACString aJSON);
+    [noscript] void finishRegister(in uint64_t aTransactionId, in nsICtapRegisterResult aResult);
+    [noscript] void finishSign(in uint64_t aTransactionId, in ACString aClientDataJson, in Array<nsICtapSignResult> aResult);
+};
+
+// The nsIWebAuthnTransport interface allows a C++ implemented nsIWebAuthnController to interact
+// with authenticators written in both Rust and C++
+[uuid(e236a9b4-a26f-11ed-b6cc-07a9834e19b1)]
+interface nsIWebAuthnTransport : nsISupports
+{
+    attribute nsIWebAuthnController controller;
+
+    void makeCredential(in uint64_t aTransactionId, in uint64_t browsingContextId, in nsICtapRegisterArgs args);
+    void getAssertion(in uint64_t aTransactionId, in uint64_t browsingContextId, in nsICtapSignArgs args);
+
+    // These are prompt callbacks but they're not intended to be called directly from
+    // JavaScript---they are proxied through the nsIWebAuthnController first.
+    [noscript] void pinCallback(in uint64_t aTransactionId, in ACString aPin);
+    [noscript] void cancel();
+};

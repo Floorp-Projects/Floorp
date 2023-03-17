@@ -400,6 +400,9 @@ void nsHtml5Tokenizer::addAttributeWithValue() {
 void nsHtml5Tokenizer::start() {
   initializeWithoutStarting();
   tokenHandler->startTokenization(this);
+  line = 0;
+  col = 1;
+  nextCharOnNewLine = true;
 }
 
 bool nsHtml5Tokenizer::tokenizeBuffer(nsHtml5UTF16Buffer* buffer) {

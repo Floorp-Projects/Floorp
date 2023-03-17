@@ -3338,7 +3338,7 @@ export class SearchService {
 
     this._settings.removeObservers();
 
-    lazy.NimbusFeatures.search.off(this.#nimbusSearchUpdatedFun);
+    lazy.NimbusFeatures.search.offUpdate(this.#nimbusSearchUpdatedFun);
 
     Services.obs.removeObserver(this, lazy.SearchUtils.TOPIC_ENGINE_MODIFIED);
     Services.obs.removeObserver(this, QUIT_APPLICATION_TOPIC);
@@ -3554,11 +3554,6 @@ var engineUpdateService = {
     let testEngine = null;
     let updateURI = engine._updateURI;
     if (updateURI) {
-      if (engine.isAppProvided && !updateURI.schemeIs("https")) {
-        lazy.logConsole.debug("Invalid scheme for default engine update");
-        return;
-      }
-
       lazy.logConsole.debug("updating", engine.name, updateURI.spec);
       testEngine = new lazy.OpenSearchEngine();
       testEngine._engineToUpdate = engine;

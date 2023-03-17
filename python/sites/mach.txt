@@ -38,6 +38,7 @@ pth:testing/mozbase/mozprocess
 pth:testing/mozbase/mozprofile
 pth:testing/mozbase/mozproxy
 pth:testing/mozbase/mozrunner
+pth:testing/mozbase/mozserve
 pth:testing/mozbase/mozsystemmonitor
 pth:testing/mozbase/mozscreenshot
 pth:testing/mozbase/moztest
@@ -80,6 +81,7 @@ vendored:third_party/python/giturlparse
 vendored:third_party/python/gyp/pylib
 vendored:third_party/python/idna
 vendored:third_party/python/importlib_metadata
+vendored:third_party/python/importlib_resources
 vendored:third_party/python/Jinja2
 vendored:third_party/python/jinxed
 vendored:third_party/python/jsmin
@@ -95,6 +97,7 @@ vendored:third_party/python/packaging
 vendored:third_party/python/pathspec
 vendored:third_party/python/pip
 vendored:third_party/python/pip_tools
+vendored:third_party/python/pkgutil_resolve_name
 vendored:third_party/python/ply
 vendored:third_party/python/pyasn1
 vendored:third_party/python/pyasn1_modules

@@ -265,10 +265,10 @@ menupopup::part(drop-indicator-container) {
    * probably simplify this substantially, by making the indicator position:
    * absolute or so (which was never properly supported in XUL). The container
    * should become completely unnecessary then. */
-  /* TODO: Remove -moz-box-flex altogether when bug 1809084 lands */
-  -moz-box-flex: 1;
   min-width: 0;
   min-height: 0;
+  max-width: 100%;
+  max-height: 100%;
 }
 
 menupopup::part(drop-indicator-bar) {

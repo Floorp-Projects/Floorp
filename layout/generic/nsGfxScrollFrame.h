@@ -400,7 +400,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
   nsMargin GetActualScrollbarSizes(
       nsIScrollableFrame::ScrollbarSizesOptions aOptions =
           nsIScrollableFrame::ScrollbarSizesOptions::NONE) const;
-  nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState);
+  nsMargin GetDesiredScrollbarSizes() const;
   bool IsPhysicalLTR() const {
     return mOuter->GetWritingMode().IsPhysicalLTR();
   }
@@ -1064,13 +1064,8 @@ class nsHTMLScrollFrame : public nsContainerFrame,
           nsIScrollableFrame::ScrollbarSizesOptions::NONE) const final {
     return mHelper.GetActualScrollbarSizes(aOptions);
   }
-  nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState) final {
-    return mHelper.GetDesiredScrollbarSizes(aState);
-  }
-  nsMargin GetDesiredScrollbarSizes(nsPresContext* aPresContext,
-                                    gfxContext* aRC) final {
-    nsBoxLayoutState bls(aPresContext, aRC, 0);
-    return GetDesiredScrollbarSizes(&bls);
+  nsMargin GetDesiredScrollbarSizes() const final {
+    return mHelper.GetDesiredScrollbarSizes();
   }
   nsSize GetLayoutSize() const final { return mHelper.GetLayoutSize(); }
   nsRect GetScrolledRect() const final { return mHelper.GetScrolledRect(); }
@@ -1555,13 +1550,8 @@ class nsXULScrollFrame final : public nsBoxFrame,
           nsIScrollableFrame::ScrollbarSizesOptions::NONE) const final {
     return mHelper.GetActualScrollbarSizes(aOptions);
   }
-  nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState) final {
-    return mHelper.GetDesiredScrollbarSizes(aState);
-  }
-  nsMargin GetDesiredScrollbarSizes(nsPresContext* aPresContext,
-                                    gfxContext* aRC) final {
-    nsBoxLayoutState bls(aPresContext, aRC, 0);
-    return GetDesiredScrollbarSizes(&bls);
+  nsMargin GetDesiredScrollbarSizes() const final {
+    return mHelper.GetDesiredScrollbarSizes();
   }
   nsSize GetLayoutSize() const final { return mHelper.GetLayoutSize(); }
   nsRect GetScrolledRect() const final { return mHelper.GetScrolledRect(); }

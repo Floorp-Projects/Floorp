@@ -803,9 +803,12 @@ Framework for embedding Gecko into Android applications
         | `owlish <https://people.mozilla.org/s?query=owlish>`__
     * - Peer(s)
       -
+        | `Cathy Lu (calu) <https://people.mozilla.org/s?query=calu>`__
+        | `Jonathan Almeida (jonalmeida) <https://people.mozilla.org/s?query=jonalmeida>`__
         | `Makoto Kato (m_kato) <https://people.mozilla.org/s?query=m_kato>`__
+        | `Olivia Hall (ohall) <https://people.mozilla.org/s?query=ohall>`__
     * - Owner(s) Emeritus
-      - James Willcox
+      - James Willcox, Agi Sferro
     * - Peer(s) Emeritus
       - Dylan Roeh, Eugen Sawin, Aaron Klotz, Jim Chen, Randall E. Barker
     * - Includes

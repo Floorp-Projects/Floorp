@@ -67,6 +67,12 @@ function ENSURE_WARN(assertion, message, resultCode) {
 export class OpenSearchEngine extends SearchEngine {
   // The data describing the engine, in the form of an XML document element.
   _data = null;
+  // The number of days between update checks for new versions
+  _updateInterval = null;
+  // The url to check at for a new update
+  _updateURL = null;
+  // The url to check for a new icon
+  _iconUpdateURL = null;
 
   /**
    * Creates a OpenSearchEngine.
@@ -89,9 +95,25 @@ export class OpenSearchEngine extends SearchEngine {
 
     if (options.json) {
       this._initWithJSON(options.json);
+      this._updateInterval = options.json._updateInterval ?? null;
+      this._updateURL = options.json._updateURL ?? null;
+      this._iconUpdateURL = options.json._iconUpdateURL ?? null;
     }
 
     this._shouldPersist = options.shouldPersist ?? true;
+  }
+  /**
+   * Creates a JavaScript object that represents this engine.
+   *
+   * @returns {object}
+   *   An object suitable for serialization as JSON.
+   */
+  toJSON() {
+    let json = super.toJSON();
+    json._updateInterval = this._updateInterval;
+    json._updateURL = this._updateURL;
+    json._iconUpdateURL = this._iconUpdateURL;
+    return json;
   }
 
   /**

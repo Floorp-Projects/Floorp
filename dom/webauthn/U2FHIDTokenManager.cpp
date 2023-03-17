@@ -104,8 +104,7 @@ void U2FHIDTokenManager::Drop() {
 // *      attestation signature
 //
 RefPtr<U2FRegisterPromise> U2FHIDTokenManager::Register(
-    const WebAuthnMakeCredentialInfo& aInfo, bool aForceNoneAttestation,
-    void _status_callback(rust_ctap2_status_update_res*)) {
+    const WebAuthnMakeCredentialInfo& aInfo, bool aForceNoneAttestation) {
   mozilla::ipc::AssertIsOnBackgroundThread();
 
   uint64_t registerFlags = 0;
@@ -207,8 +206,7 @@ RefPtr<U2FRegisterPromise> U2FHIDTokenManager::Register(
 //  *     Signature
 //
 RefPtr<U2FSignPromise> U2FHIDTokenManager::Sign(
-    const WebAuthnGetAssertionInfo& aInfo,
-    void _status_callback(rust_ctap2_status_update_res*)) {
+    const WebAuthnGetAssertionInfo& aInfo) {
   mozilla::ipc::AssertIsOnBackgroundThread();
 
   CryptoBuffer rpIdHash, clientDataHash;

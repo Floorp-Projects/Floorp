@@ -123,12 +123,11 @@ class U2FHIDTokenManager final : public U2FTokenTransport {
   explicit U2FHIDTokenManager();
 
   virtual RefPtr<U2FRegisterPromise> Register(
-      const WebAuthnMakeCredentialInfo& aInfo, bool aForceNoneAttestation,
-      void _status_callback(rust_ctap2_status_update_res*)) override;
+      const WebAuthnMakeCredentialInfo& aInfo,
+      bool aForceNoneAttestation) override;
 
   virtual RefPtr<U2FSignPromise> Sign(
-      const WebAuthnGetAssertionInfo& aInfo,
-      void _status_callback(rust_ctap2_status_update_res*)) override;
+      const WebAuthnGetAssertionInfo& aInfo) override;
 
   void Cancel() override;
   void Drop() override;
