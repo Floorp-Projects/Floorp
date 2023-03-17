@@ -5,11 +5,12 @@
 import os
 import re
 
-import mozpack.path as mozpath
 import six
+from six.moves.urllib.parse import urlparse
+
+import mozpack.path as mozpath
 from mozpack.chrome.flags import Flags
 from mozpack.errors import errors
-from six.moves.urllib.parse import urlparse
 
 
 class ManifestEntry(object):

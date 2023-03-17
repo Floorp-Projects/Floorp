@@ -11,6 +11,9 @@ import os
 import platform
 import ssl
 
+from six.moves import urllib
+from six.moves.urllib.parse import ParseResult, urlparse
+
 from mozharness.base.errors import BaseErrorList
 from mozharness.base.log import FATAL, WARNING
 from mozharness.base.python import (
@@ -28,8 +31,6 @@ from mozharness.mozilla.testing.verify_tools import (
     verify_config_options,
 )
 from mozharness.mozilla.tooltool import TooltoolMixin
-from six.moves import urllib
-from six.moves.urllib.parse import ParseResult, urlparse
 
 INSTALLER_SUFFIXES = (
     ".apk",  # Android

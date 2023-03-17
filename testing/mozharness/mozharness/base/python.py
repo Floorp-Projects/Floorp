@@ -23,6 +23,8 @@ try:
 except ImportError:
     import urllib.parse as urlparse
 
+from six import string_types
+
 import mozharness
 from mozharness.base.errors import VirtualenvErrorList
 from mozharness.base.log import FATAL, WARNING
@@ -32,7 +34,6 @@ from mozharness.base.script import (
     PreScriptAction,
     ScriptMixin,
 )
-from six import string_types
 
 external_tools_path = os.path.join(
     os.path.abspath(os.path.dirname(os.path.dirname(mozharness.__file__))),

@@ -16,6 +16,7 @@ from ctypes import (
 from ctypes.wintypes import DWORD, HANDLE, LONG, LPCSTR, LPCWSTR, LPSTR
 
 import six
+
 from talos.cmanager_base import CounterManager
 from talos.utils import TalosError
 

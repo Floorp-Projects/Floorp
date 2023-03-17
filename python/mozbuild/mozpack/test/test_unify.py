@@ -7,13 +7,13 @@ import sys
 from io import StringIO
 
 import mozunit
+
+from mozbuild.util import ensureParentDir
 from mozpack.errors import AccumulatedErrors, ErrorMessage, errors
 from mozpack.files import FileFinder
 from mozpack.mozjar import JarWriter
 from mozpack.test.test_files import MockDest, TestWithTmpDir
 from mozpack.unify import UnifiedBuildFinder, UnifiedFinder
-
-from mozbuild.util import ensureParentDir
 
 
 class TestUnified(TestWithTmpDir):

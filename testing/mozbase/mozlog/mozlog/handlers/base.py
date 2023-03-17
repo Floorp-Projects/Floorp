@@ -8,6 +8,7 @@ import locale
 from threading import Lock
 
 import six
+
 from mozlog.handlers.messagehandler import MessageHandler
 from mozlog.structuredlog import log_levels
 

@@ -5,9 +5,10 @@
 import unittest
 from itertools import chain
 
-import mozpack.path as mozpath
 import mozunit
 import six
+
+import mozpack.path as mozpath
 from mozpack.chrome.manifest import (
     ManifestBinaryComponent,
     ManifestComponent,

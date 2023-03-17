@@ -1,5 +1,6 @@
 import mozunit
 import pytest
+
 from talos.test import Test, TsBase, register_test, test_dict, ts_paint
 
 

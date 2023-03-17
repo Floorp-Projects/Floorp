@@ -5,6 +5,7 @@
 import os
 
 import mozunit
+
 from mozpack.copier import FileCopier, FileRegistry
 from mozpack.manifests import InstallManifest, UnreadableInstallManifest
 from mozpack.test.test_files import TestWithTmpDir

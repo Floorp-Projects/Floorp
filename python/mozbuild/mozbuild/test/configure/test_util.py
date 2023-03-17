@@ -11,11 +11,11 @@ import unittest
 
 import six
 from buildconfig import topsrcdir
-from common import ConfigureTestSandbox
 from mozpack import path as mozpath
 from mozunit import main
 from six import StringIO
 
+from common import ConfigureTestSandbox
 from mozbuild.configure import ConfigureSandbox
 from mozbuild.configure.util import (
     ConfigureOutputHandler,

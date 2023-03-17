@@ -5,8 +5,9 @@
 import json
 from contextlib import contextmanager
 
-import mozpack.path as mozpath
 import six
+
+import mozpack.path as mozpath
 
 from .files import (
     AbsoluteSymlinkFile,

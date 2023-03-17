@@ -6,6 +6,7 @@ import os
 import unittest
 
 import mozunit
+
 from mozpack.path import (
     basedir,
     basename,

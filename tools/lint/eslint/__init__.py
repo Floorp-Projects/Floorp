@@ -11,9 +11,10 @@ import subprocess
 import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "eslint"))
-from eslint import setup_helper
 from mozbuild.nodeutil import find_node_executable
 from mozlint import result
+
+from eslint import setup_helper
 
 ESLINT_ERROR_MESSAGE = """
 An error occurred running eslint. Please check the following error messages:

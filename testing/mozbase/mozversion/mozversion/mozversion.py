@@ -9,8 +9,9 @@ import sys
 import zipfile
 
 import mozlog
-from mozversion import errors
 from six.moves import configparser
+
+from mozversion import errors
 
 INI_DATA_MAPPING = (("application", "App"), ("platform", "Build"))
 

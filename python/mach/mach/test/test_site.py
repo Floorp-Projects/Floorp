@@ -5,7 +5,7 @@
 import os
 from unittest import mock
 
-import pytest as pytest
+import pytest
 from buildconfig import topsrcdir
 from mozunit import main
 

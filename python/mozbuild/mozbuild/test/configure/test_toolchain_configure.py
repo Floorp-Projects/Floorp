@@ -6,13 +6,13 @@ import logging
 import os
 
 import six
-from common import BaseConfigureTest
 from mozboot.util import MINIMUM_RUST_VERSION
 from mozpack import path as mozpath
 from mozunit import main
 from six import StringIO
 from test_toolchain_helpers import CompilerResult, FakeCompiler, PrependFlags
 
+from common import BaseConfigureTest
 from mozbuild.configure.util import Version
 from mozbuild.util import ReadOnlyNamespace, memoize
 

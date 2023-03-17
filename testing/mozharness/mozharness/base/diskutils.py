@@ -33,8 +33,9 @@ import logging
 import os
 import sys
 
-from mozharness.base.log import INFO, numeric_log_level
 from six import string_types
+
+from mozharness.base.log import INFO, numeric_log_level
 
 # use mozharness log
 log = logging.getLogger(__name__)
