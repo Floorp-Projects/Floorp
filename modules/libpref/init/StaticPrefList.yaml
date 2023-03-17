@@ -10501,7 +10501,7 @@
 
 - name: media.videocontrols.lock-video-orientation
   type: bool
-  value: @IS_ANDROID@
+  value: false
   mirror: always
 
 # Media Seamless Looping
