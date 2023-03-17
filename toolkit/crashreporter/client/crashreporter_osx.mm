@@ -379,7 +379,7 @@ static bool RestartApplication() {
       [checkbox setFrame:frame];
     }
     // keep existing spacing on left side, + 20 px spare on right
-    float neededWidth = frame.origin.x + frame.size.width + 20;
+    float neededWidth = frame.origin.x + checkbox.intrinsicContentSize.width + 20;
     if (neededWidth > windowFrame.size.width) {
       windowFrame.size.width = neededWidth;
       [mWindow setFrame:windowFrame display:true animate:NO];
