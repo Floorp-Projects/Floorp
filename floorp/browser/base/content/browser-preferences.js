@@ -43,6 +43,7 @@ switch (BROWSER_CHROME_SYSTEM_COLOR){
 3: Chrome (Linux)
 4: Chrome (iOS)
 */
+Services.scriptloader.loadSubScript("chrome://browser/content/ua_data.js", this);
 const BROWSER_SETED_USERAGENT_PREF = "floorp.browser.UserAgent";
 const GENERAL_USERAGENT_OVERRIDE_PREF = "general.useragent.override";
 {
@@ -52,13 +53,13 @@ const GENERAL_USERAGENT_OVERRIDE_PREF = "general.useragent.override";
         Services.prefs.clearUserPref(GENERAL_USERAGENT_OVERRIDE_PREF);
         break;
       case 1:
-        Services.prefs.setStringPref(GENERAL_USERAGENT_OVERRIDE_PREF, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36");
+        Services.prefs.setStringPref(GENERAL_USERAGENT_OVERRIDE_PREF, CHROME_STABLE_UA["win"]);
         break;
       case 2:
-        Services.prefs.setStringPref(GENERAL_USERAGENT_OVERRIDE_PREF, "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36");
+        Services.prefs.setStringPref(GENERAL_USERAGENT_OVERRIDE_PREF, CHROME_STABLE_UA["mac"]);
         break;
       case 3:
-        Services.prefs.setStringPref(GENERAL_USERAGENT_OVERRIDE_PREF, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36");
+        Services.prefs.setStringPref(GENERAL_USERAGENT_OVERRIDE_PREF, CHROME_STABLE_UA["linux"]);
         break;
       case 4:
         Services.prefs.setStringPref(GENERAL_USERAGENT_OVERRIDE_PREF, "Mozilla/5.0 (iPhone; CPU iPhone OS 16_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/110.0.5481.83 Mobile/15E148 Safari/604.1");

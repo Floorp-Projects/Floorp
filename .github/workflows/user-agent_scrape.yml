@@ -140,6 +140,7 @@ jobs:
     - name: Commit & Push
       run: |
         cp ~/ua_data.js floorp/browser/extensions/webextensions/floorp-system/shared/ua_data.js
+        cp ~/ua_data.js floorp/browser/base/content/ua_data.js
         if [ "$(git diff HEAD)" != "" ]; then
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
