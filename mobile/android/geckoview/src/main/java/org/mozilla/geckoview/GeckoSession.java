@@ -3575,13 +3575,13 @@ public class GeckoSession {
 
   public interface SelectionActionDelegate {
     /** The selection is collapsed at a single position. */
-    final int FLAG_IS_COLLAPSED = 1;
+    final int FLAG_IS_COLLAPSED = 1 << 0;
     /**
      * The selection is inside editable content such as an input element or contentEditable node.
      */
-    final int FLAG_IS_EDITABLE = 2;
+    final int FLAG_IS_EDITABLE = 1 << 1;
     /** The selection is inside a password field. */
-    final int FLAG_IS_PASSWORD = 4;
+    final int FLAG_IS_PASSWORD = 1 << 2;
 
     /** Hide selection actions and cause {@link #onHideAction} to be called. */
     final String ACTION_HIDE = "org.mozilla.geckoview.HIDE";
