@@ -90,6 +90,7 @@ update {
 
 #historyItems {
   height: 200px;
+  flex: 1 auto;
   margin: 1px 5px 5px 5px;
 }
 
