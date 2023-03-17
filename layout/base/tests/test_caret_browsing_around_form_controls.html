@@ -1,0 +1,379 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script>
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set:[
+      ["accessibility.browsewithcaret", true],
+    ],
+  });
+  (function test_move_caret_from_before_input_text() {
+    info("Starting test_move_caret_from_before_input_text...");
+    document.body.innerHTML = '<div>abc<input value="def">ghi</div>';
+    const input = document.querySelector("input");
+    const textBefore = input.previousSibling;
+    getSelection().collapse(textBefore, textBefore.length);
+    synthesizeKey("KEY_ArrowRight");
+    ok(
+      getSelection().isCollapsed,
+      "test_move_caret_from_before_input_text: selection should be collapsed after moving caret"
+    );
+    is(
+      getSelection().focusNode,
+      input.nextSibling,
+      "test_move_caret_from_before_input_text: caret should be moved to text node after the <input>"
+    );
+    is(
+      getSelection().focusOffset,
+      0,
+      "test_move_caret_from_before_input_text: caret should be moved to start of the text node"
+    );
+  })();
+  (function test_move_caret_from_after_input_text() {
+    info("Starting test_move_caret_from_after_input_text...");
+    document.body.innerHTML = '<div>abc<input value="def">ghi</div>';
+    const input = document.querySelector("input");
+    getSelection().collapse(input.nextSibling, 0);
+    synthesizeKey("KEY_ArrowLeft");
+    ok(
+      getSelection().isCollapsed,
+      "test_move_caret_from_after_input_text: selection should be collapsed after moving caret"
+    );
+    is(
+      getSelection().focusNode,
+      input.previousSibling,
+      "test_move_caret_from_after_input_text: caret should be moved to text node before the <input>"
+    );
+    is(
+      getSelection().focusOffset,
+      input.previousSibling.length,
+      "test_move_caret_from_after_input_text: caret should be moved to end of the text node"
+    );
+  })();
+  (function test_move_caret_from_before_double_input_text() {
+    info("Starting test_move_caret_from_before_double_input_text...");
+    document.body.innerHTML = '<div>abc<input value="def"><input value="ghi">jkl</div>';
+    const firstInput = document.querySelector("input");
+    const secondInput = firstInput.nextSibling;
+    const textBefore = firstInput.previousSibling;
+    getSelection().collapse(textBefore, textBefore.length);
+    synthesizeKey("KEY_ArrowRight");
+    ok(
+      getSelection().isCollapsed,
+      "test_move_caret_from_before_double_input_text: selection should be collapsed after moving caret"
+    );
+    is(
+      getSelection().focusNode,
+      secondInput.nextSibling,
+      "test_move_caret_from_before_double_input_text: caret should be moved to text node after the second <input> (container)"
+    );
+    is(
+      getSelection().focusOffset,
+      0,
+      "test_move_caret_from_before_double_input_text: caret should be moved to text node after the second <input> (offset)"
+    );
+  })();
+  (function test_move_caret_from_after_double_input_text() {
+    info("Starting test_move_caret_from_after_double_input_text...");
+    document.body.innerHTML = '<div>abc<input value="def"><input value="ghi">jkl</div>';
+    const firstInput = document.querySelector("input");
+    const secondInput = firstInput.nextSibling;
+    getSelection().collapse(secondInput.nextSibling, 0);
+    synthesizeKey("KEY_ArrowLeft");
+    ok(
+      getSelection().isCollapsed,
+      "test_move_caret_from_after_double_input_text: selection should be collapsed after moving caret"
+    );
+    is(
+      getSelection().focusNode,
+      firstInput.previousSibling,
+      "test_move_caret_from_after_double_input_text: caret should be moved to text node before the first <input> (container)"
+    );
+    is(
+      getSelection().focusOffset,
+      firstInput.previousSibling.length,
+      "test_move_caret_from_after_double_input_text: caret should be moved to text node before the first <input> (offset)"
+    );
+  })();
+
+  (function test_move_caret_from_before_input_button() {
+    info("Starting test_move_caret_from_before_input_button...");
+    document.body.innerHTML = '<div>abc<input type="button" value="def">ghi</div>';
+    const input = document.querySelector("input");
+    const textBefore = input.previousSibling;
+    getSelection().collapse(textBefore, textBefore.length);
+    synthesizeKey("KEY_ArrowRight");
+    ok(
+      getSelection().isCollapsed,
+      "test_move_caret_from_before_input_button: selection should be collapsed after moving caret"
+    );
+    is(
+      getSelection().focusNode,
+      input.nextSibling,
+      "test_move_caret_from_before_input_button: caret should be moved to text node after the <input>"
+    );
+    is(
+      getSelection().focusOffset,
+      0,
+      "test_move_caret_from_before_input_button: caret should be moved to start of the text node"
+    );
+  })();
+  (function test_move_caret_from_after_input_button() {
+    info("Starting test_move_caret_from_after_input_button...");
+    document.body.innerHTML = '<div>abc<input type="button" value="def">ghi</div>';
+    const input = document.querySelector("input");
+    getSelection().collapse(input.nextSibling, 0);
+    synthesizeKey("KEY_ArrowLeft");
+    ok(
+      getSelection().isCollapsed,
+      "test_move_caret_from_after_input_button: selection should be collapsed after moving caret"
+    );
+    is(
+      getSelection().focusNode,
+      input.previousSibling,
+      "test_move_caret_from_after_input_button: caret should be moved to text node before the <input>"
+    );
+    is(
+      getSelection().focusOffset,
+      input.previousSibling.length,
+      "test_move_caret_from_after_input_button: caret should be moved to end of the text node"
+    );
+  })();
+  (function test_move_caret_from_before_double_input_button() {
+    info("Starting test_move_caret_from_before_double_input_button...");
+    document.body.innerHTML = '<div>abc<input type="button" value="def"><input type="button" value="ghi">jkl</div>';
+    const firstInput = document.querySelector("input");
+    const secondInput = firstInput.nextSibling;
+    const textBefore = firstInput.previousSibling;
+    getSelection().collapse(textBefore, textBefore.length);
+    synthesizeKey("KEY_ArrowRight");
+    ok(
+      getSelection().isCollapsed,
+      "test_move_caret_from_before_double_input_button: selection should be collapsed after moving caret"
+    );
+    is(
+      getSelection().focusNode,
+      secondInput.nextSibling,
+      "test_move_caret_from_before_double_input_button: caret should be moved to text node after the second <input> (container)"
+    );
+    is(
+      getSelection().focusOffset,
+      0,
+      "test_move_caret_from_before_double_input_button: caret should be moved to text node after the second <input> (offset)"
+    );
+  })();
+  (function test_move_caret_from_after_double_input_button() {
+    info("Starting test_move_caret_from_after_double_input_button...");
+    document.body.innerHTML = '<div>abc<input type="button" value="def"><input type="button" value="ghi">jkl</div>';
+    const firstInput = document.querySelector("input");
+    const secondInput = firstInput.nextSibling;
+    getSelection().collapse(secondInput.nextSibling, 0);
+    synthesizeKey("KEY_ArrowLeft");
+    ok(
+      getSelection().isCollapsed,
+      "test_move_caret_from_after_double_input_button: selection should be collapsed after moving caret"
+    );
+    is(
+      getSelection().focusNode,
+      firstInput.previousSibling,
+      "test_move_caret_from_after_double_input_button: caret should be moved to text node before the first <input> (container)"
+    );
+    is(
+      getSelection().focusOffset,
+      firstInput.previousSibling.length,
+      "test_move_caret_from_after_double_input_button: caret should be moved to text node before the first <input> (offset)"
+    );
+  })();
+
+  (function test_move_caret_from_before_button() {
+    info("Starting test_move_caret_from_before_button...");
+    document.body.innerHTML = '<div>abc<button>def</button>ghi</div>';
+    const button = document.querySelector("button");
+    const textBefore = button.previousSibling;
+    getSelection().collapse(textBefore, textBefore.length);
+    synthesizeKey("KEY_ArrowRight");
+    ok(
+      getSelection().isCollapsed,
+      "test_move_caret_from_before_button: selection should be collapsed after moving caret"
+    );
+    is(
+      getSelection().focusNode,
+      button.nextSibling,
+      "test_move_caret_from_before_button: caret should be moved to text node after the <button>"
+    );
+    is(
+      getSelection().focusOffset,
+      0,
+      "test_move_caret_from_before_button: caret should be moved to start of the text node"
+    );
+  })();
+  (function test_move_caret_from_after_button() {
+    info("Starting test_move_caret_from_after_button...");
+    document.body.innerHTML = '<div>abc<button>def</button>ghi</div>';
+    const button = document.querySelector("button");
+    getSelection().collapse(button.nextSibling, 0);
+    synthesizeKey("KEY_ArrowLeft");
+    ok(
+      getSelection().isCollapsed,
+      "test_move_caret_from_after_button: selection should be collapsed after moving caret"
+    );
+    is(
+      getSelection().focusNode,
+      button.previousSibling,
+      "test_move_caret_from_after_button: caret should be moved to text node before the <button>"
+    );
+    is(
+      getSelection().focusOffset,
+      button.previousSibling.length,
+      "test_move_caret_from_after_button: caret should be moved to end of the text node"
+    );
+  })();
+  (function test_move_caret_from_before_double_button() {
+    info("Starting test_move_caret_from_before_double_button...");
+    document.body.innerHTML = '<div>abc<button>def</button><button>ghi</button>jkl</div>';
+    const firstButton = document.querySelector("button");
+    const secondButton = firstButton.nextSibling;
+    const textBefore = firstButton.previousSibling;
+    getSelection().collapse(textBefore, textBefore.length);
+    synthesizeKey("KEY_ArrowRight");
+    ok(
+      getSelection().isCollapsed,
+      "test_move_caret_from_before_double_button: selection should be collapsed after moving caret"
+    );
+    is(
+      getSelection().focusNode,
+      secondButton.nextSibling,
+      "test_move_caret_from_before_double_button: caret should be moved to text node after the second <button> (container)"
+    );
+    is(
+      getSelection().focusOffset,
+      0,
+      "test_move_caret_from_before_double_button: caret should be moved to text node after the second <button> (offset)"
+    );
+  })();
+  (function test_move_caret_from_after_double_button() {
+    info("Starting test_move_caret_from_after_double_button...");
+    document.body.innerHTML = '<div>abc<button>def</button><button>ghi</button>jkl</div>';
+    const firstButton = document.querySelector("button");
+    const secondButton = firstButton.nextSibling;
+    getSelection().collapse(secondButton.nextSibling, 0);
+    synthesizeKey("KEY_ArrowLeft");
+    ok(
+      getSelection().isCollapsed,
+      "test_move_caret_from_after_double_button: selection should be collapsed after moving caret"
+    );
+    is(
+      getSelection().focusNode,
+      firstButton.previousSibling,
+      "test_move_caret_from_after_double_button: caret should be moved to text node before the first <button> (container)"
+    );
+    is(
+      getSelection().focusOffset,
+      firstButton.previousSibling.length,
+      "test_move_caret_from_after_double_button: caret should be moved to text node before the first <button> (offset)"
+    );
+  })();
+
+  (function test_move_caret_from_before_textarea() {
+    info("Starting test_move_caret_from_before_textarea...");
+    document.body.innerHTML = '<div>abc<textarea>def</textarea>ghi</div>';
+    const textarea = document.querySelector("textarea");
+    const textBefore = textarea.previousSibling;
+    getSelection().collapse(textBefore, textBefore.length);
+    synthesizeKey("KEY_ArrowRight");
+    ok(
+      getSelection().isCollapsed,
+      "test_move_caret_from_before_textarea: selection should be collapsed after moving caret"
+    );
+    is(
+      getSelection().focusNode,
+      textarea.nextSibling,
+      "test_move_caret_from_before_textarea: caret should be moved to text node after the <textarea>"
+    );
+    is(
+      getSelection().focusOffset,
+      0,
+      "test_move_caret_from_before_textarea: caret should be moved to start of the text node"
+    );
+  })();
+  (function test_move_caret_from_after_textarea() {
+    info("Starting test_move_caret_from_after_textarea...");
+    document.body.innerHTML = '<div>abc<textarea>def</textarea>ghi</div>';
+    const textarea = document.querySelector("textarea");
+    getSelection().collapse(textarea.nextSibling, 0);
+    synthesizeKey("KEY_ArrowLeft");
+    ok(
+      getSelection().isCollapsed,
+      "test_move_caret_from_after_textarea: selection should be collapsed after moving caret"
+    );
+    is(
+      getSelection().focusNode,
+      textarea.previousSibling,
+      "test_move_caret_from_after_textarea: caret should be moved to text node before the <textarea>"
+    );
+    is(
+      getSelection().focusOffset,
+      textarea.previousSibling.length,
+      "test_move_caret_from_after_textarea: caret should be moved to end of the text node"
+    );
+  })();
+  (function test_move_caret_from_before_double_textarea() {
+    info("Starting test_move_caret_from_before_double_textarea...");
+    document.body.innerHTML = '<div>abc<textarea>def</textarea><textarea>ghi</textarea>jkl</div>';
+    const firstTextarea = document.querySelector("textarea");
+    const secondTextarea = firstTextarea.nextSibling;
+    const textBefore = firstTextarea.previousSibling;
+    getSelection().collapse(textBefore, textBefore.length);
+    synthesizeKey("KEY_ArrowRight");
+    ok(
+      getSelection().isCollapsed,
+      "test_move_caret_from_before_double_textarea: selection should be collapsed after moving caret"
+    );
+    is(
+      getSelection().focusNode,
+      secondTextarea.nextSibling,
+      "test_move_caret_from_before_double_textarea: caret should be moved to text node after the second <textarea> (container)"
+    );
+    is(
+      getSelection().focusOffset,
+      0,
+      "test_move_caret_from_before_double_textarea: caret should be moved to text node after the second <textarea> (offset)"
+    );
+  })();
+  (function test_move_caret_from_after_double_textarea() {
+    info("Starting test_move_caret_from_after_double_textarea...");
+    document.body.innerHTML = '<div>abc<textarea>def</textarea><textarea>ghi</textarea>jkl</div>';
+    const firstTextarea = document.querySelector("textarea");
+    const secondTextarea = firstTextarea.nextSibling;
+    getSelection().collapse(secondTextarea.nextSibling, 0);
+    synthesizeKey("KEY_ArrowLeft");
+    ok(
+      getSelection().isCollapsed,
+      "test_move_caret_from_after_double_textarea: selection should be collapsed after moving caret"
+    );
+    is(
+      getSelection().focusNode,
+      firstTextarea.previousSibling,
+      "test_move_caret_from_after_double_textarea: caret should be moved to text node before the first <textarea> (container)"
+    );
+    is(
+      getSelection().focusOffset,
+      firstTextarea.previousSibling.length,
+      "test_move_caret_from_after_double_textarea: caret should be moved to text node before the first <textarea> (offset)"
+    );
+  })();
+
+  SimpleTest.finish();
+});
+</script>
+</head>
+<body></body>
+</html>
