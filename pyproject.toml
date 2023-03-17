@@ -4,6 +4,7 @@ line-length = 99
 select = [
   "E", "W",    # pycodestyle
   "F",         # pyflakes
+  "I",         # isort
 ]
 ignore = [
   # These should be triaged and either fixed or moved to the list below.
