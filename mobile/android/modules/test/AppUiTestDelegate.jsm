@@ -14,11 +14,11 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   EventDispatcher: "resource://gre/modules/Messaging.sys.mjs",
+  GeckoViewTabBridge: "resource://gre/modules/GeckoViewTab.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   mobileWindowTracker: "resource://gre/modules/GeckoViewWebExtension.jsm",
-  GeckoViewTabBridge: "resource://gre/modules/GeckoViewTab.jsm",
 });
 
 const TEST_SUPPORT_EXTENSION_ID = "test-runner-support@tests.mozilla.org";

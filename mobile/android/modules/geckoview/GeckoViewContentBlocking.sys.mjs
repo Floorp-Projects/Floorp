@@ -2,15 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { GeckoViewModule } from "resource://gre/modules/GeckoViewModule.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["GeckoViewContentBlocking"];
-
-const { GeckoViewModule } = ChromeUtils.importESModule(
-  "resource://gre/modules/GeckoViewModule.sys.mjs"
-);
-
-class GeckoViewContentBlocking extends GeckoViewModule {
+export class GeckoViewContentBlocking extends GeckoViewModule {
   onEnable() {
     const flags = Ci.nsIWebProgress.NOTIFY_CONTENT_BLOCKING;
     this.progressFilter = Cc[

@@ -31,6 +31,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   EventDispatcher: "resource://gre/modules/Messaging.sys.mjs",
+  GeckoViewTabBridge: "resource://gre/modules/GeckoViewTab.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
@@ -39,7 +40,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   Extension: "resource://gre/modules/Extension.jsm",
   ExtensionData: "resource://gre/modules/Extension.jsm",
   ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.jsm",
-  GeckoViewTabBridge: "resource://gre/modules/GeckoViewTab.jsm",
   Management: "resource://gre/modules/Extension.jsm",
 });
 

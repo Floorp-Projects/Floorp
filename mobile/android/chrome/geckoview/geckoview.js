@@ -15,6 +15,7 @@ ChromeUtils.defineESModuleGetters(this, {
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   EventDispatcher: "resource://gre/modules/Messaging.sys.mjs",
   GeckoViewActorManager: "resource://gre/modules/GeckoViewActorManager.sys.mjs",
+  GeckoViewSettings: "resource://gre/modules/GeckoViewSettings.sys.mjs",
   GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.sys.mjs",
   RemoteSecuritySettings:
     "resource://gre/modules/psm/RemoteSecuritySettings.sys.mjs",
@@ -22,7 +23,6 @@ ChromeUtils.defineESModuleGetters(this, {
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Blocklist: "resource://gre/modules/Blocklist.jsm",
-  GeckoViewSettings: "resource://gre/modules/GeckoViewSettings.jsm",
   HistogramStopwatch: "resource://gre/modules/GeckoViewTelemetry.jsm",
   InitializationTracker: "resource://gre/modules/GeckoViewTelemetry.jsm",
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
@@ -425,7 +425,7 @@ class ModuleInfo {
       return;
     }
 
-    const exports = ChromeUtils.import(aPhase.resource);
+    const exports = ChromeUtils.importESModule(aPhase.resource);
     this._impl = new exports[this._name](this);
   }
 
@@ -565,7 +565,7 @@ function startup() {
     {
       name: "GeckoViewContent",
       onInit: {
-        resource: "resource://gre/modules/GeckoViewContent.jsm",
+        resource: "resource://gre/modules/GeckoViewContent.sys.mjs",
         actors: {
           GeckoViewContent: {
             parent: {
@@ -612,19 +612,19 @@ function startup() {
     {
       name: "GeckoViewNavigation",
       onInit: {
-        resource: "resource://gre/modules/GeckoViewNavigation.jsm",
+        resource: "resource://gre/modules/GeckoViewNavigation.sys.mjs",
       },
     },
     {
       name: "GeckoViewProcessHangMonitor",
       onInit: {
-        resource: "resource://gre/modules/GeckoViewProcessHangMonitor.jsm",
+        resource: "resource://gre/modules/GeckoViewProcessHangMonitor.sys.mjs",
       },
     },
     {
       name: "GeckoViewProgress",
       onEnable: {
-        resource: "resource://gre/modules/GeckoViewProgress.jsm",
+        resource: "resource://gre/modules/GeckoViewProgress.sys.mjs",
         actors: {
           ProgressDelegate: {
             parent: {
@@ -665,7 +665,7 @@ function startup() {
     {
       name: "GeckoViewSelectionAction",
       onEnable: {
-        resource: "resource://gre/modules/GeckoViewSelectionAction.jsm",
+        resource: "resource://gre/modules/GeckoViewSelectionAction.sys.mjs",
         actors: {
           SelectionActionDelegate: {
             parent: {
@@ -688,7 +688,7 @@ function startup() {
     {
       name: "GeckoViewSettings",
       onInit: {
-        resource: "resource://gre/modules/GeckoViewSettings.jsm",
+        resource: "resource://gre/modules/GeckoViewSettings.sys.mjs",
         actors: {
           GeckoViewSettings: {
             child: {
@@ -701,13 +701,13 @@ function startup() {
     {
       name: "GeckoViewTab",
       onInit: {
-        resource: "resource://gre/modules/GeckoViewTab.jsm",
+        resource: "resource://gre/modules/GeckoViewTab.sys.mjs",
       },
     },
     {
       name: "GeckoViewContentBlocking",
       onInit: {
-        resource: "resource://gre/modules/GeckoViewContentBlocking.jsm",
+        resource: "resource://gre/modules/GeckoViewContentBlocking.sys.mjs",
       },
     },
     {
@@ -763,7 +763,7 @@ function startup() {
     {
       name: "GeckoViewMediaControl",
       onEnable: {
-        resource: "resource://gre/modules/GeckoViewMediaControl.jsm",
+        resource: "resource://gre/modules/GeckoViewMediaControl.sys.mjs",
         actors: {
           MediaControlDelegate: {
             parent: {
