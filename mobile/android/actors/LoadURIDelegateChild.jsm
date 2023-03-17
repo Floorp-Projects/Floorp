@@ -9,46 +9,10 @@ const { LoadURIDelegate } = ChromeUtils.import(
   "resource://gre/modules/LoadURIDelegate.jsm"
 );
 
-const lazy = {};
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
-});
-
 var EXPORTED_SYMBOLS = ["LoadURIDelegateChild"];
 
 // Implements nsILoadURIDelegate.
 class LoadURIDelegateChild extends GeckoViewActorChild {
-  // nsILoadURIDelegate.
-  loadURI(aUri, aWhere, aFlags, aTriggeringPrincipal) {
-    debug`loadURI: uri=${aUri && aUri.spec}
-                    where=${aWhere} flags=0x${aFlags.toString(16)}
-                    tp=${aTriggeringPrincipal && aTriggeringPrincipal.spec}`;
-
-    // Ignore any load going to the extension process
-    // TODO: Remove workaround after Bug 1619798 and Bug 1535365.
-    if (
-      WebExtensionPolicy.useRemoteWebExtensions &&
-      lazy.E10SUtils.getRemoteTypeForURIObject(aUri, {
-        multiProcess: true,
-        remoteSubFrames: false,
-        preferredRemoteType: Services.appinfo.remoteType,
-      }) == lazy.E10SUtils.EXTENSION_REMOTE_TYPE
-    ) {
-      debug`Bypassing load delegate in the Extension process.`;
-      return false;
-    }
-
-    return LoadURIDelegate.load(
-      this.contentWindow,
-      this.eventDispatcher,
-      aUri,
-      aWhere,
-      aFlags,
-      aTriggeringPrincipal
-    );
-  }
-
   // nsILoadURIDelegate.
   handleLoadError(aUri, aError, aErrorModule) {
     debug`handleLoadError: uri=${aUri && aUri.spec}
