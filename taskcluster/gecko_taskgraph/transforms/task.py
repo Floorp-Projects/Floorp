@@ -17,7 +17,6 @@ import time
 
 import attr
 from mozbuild.util import memoize
-from taskcluster.utils import fromNow
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.keyed_by import evaluate_keyed_by
 from taskgraph.util.schema import (
@@ -41,6 +40,7 @@ from gecko_taskgraph.util.partners import get_partners_to_be_published
 from gecko_taskgraph.util.scriptworker import BALROG_ACTIONS, get_release_config
 from gecko_taskgraph.util.signed_artifacts import get_signed_artifacts
 from gecko_taskgraph.util.workertypes import get_worker_type, worker_type_implementation
+from taskcluster.utils import fromNow
 
 RUN_TASK = os.path.join(GECKO, "taskcluster", "scripts", "run-task")
 

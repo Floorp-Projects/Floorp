@@ -26,7 +26,6 @@ except ImportError:
 
 from mozlog import get_proxy_logger
 from mozprocess import ProcessHandler
-
 from mozproxy import mozbase_dir, mozharness_dir
 
 LOG = get_proxy_logger(component="mozproxy")

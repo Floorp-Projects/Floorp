@@ -7,10 +7,9 @@ import tempfile
 import unittest
 
 import responses
-from mozprofile.prefs import Preferences
-
 from condprof.client import ROOT_URL, TC_SERVICE, get_profile
 from condprof.util import _DEFAULT_SERVER
+from mozprofile.prefs import Preferences
 
 PROFILE = re.compile(ROOT_URL + "/.*/.*tgz")
 PROFILE_FOR_TESTS = os.path.join(os.path.dirname(__file__), "profile")

@@ -15,8 +15,6 @@ import sys
 import tempfile
 from shutil import copyfile, rmtree
 
-from six import string_types
-
 import mozharness
 from mozharness.base.errors import PythonErrorList
 from mozharness.base.log import CRITICAL, DEBUG, ERROR, INFO, OutputParser
@@ -35,6 +33,7 @@ from mozharness.mozilla.testing.codecoverage import (
 )
 from mozharness.mozilla.testing.errors import HarnessErrorList, TinderBoxPrintRe
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
+from six import string_types
 
 scripts_path = os.path.abspath(os.path.dirname(os.path.dirname(mozharness.__file__)))
 external_tools_path = os.path.join(scripts_path, "external_tools")

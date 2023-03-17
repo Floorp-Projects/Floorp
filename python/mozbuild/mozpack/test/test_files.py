@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from mozbuild.util import ensure_bytes, ensureParentDir
 from mozpack.errors import ErrorMessage, errors
 from mozpack.files import (
     AbsoluteSymlinkFile,
@@ -25,6 +24,8 @@ from mozpack.files import (
     TarFinder,
 )
 
+from mozbuild.util import ensure_bytes, ensureParentDir
+
 # We don't have hglib installed everywhere.
 try:
     import hglib
@@ -41,10 +42,9 @@ from io import BytesIO
 from tempfile import mkdtemp
 
 import mozfile
+import mozpack.path as mozpath
 import mozunit
 import six
-
-import mozpack.path as mozpath
 from mozpack.chrome.manifest import (
     ManifestContent,
     ManifestLocale,

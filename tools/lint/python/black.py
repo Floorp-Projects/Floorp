@@ -88,7 +88,7 @@ def parse_issues(config, output, paths, *, log):
             results.append(result.from_config(config, **res))
             continue
 
-        log.debug(f"Unhandled line: {line}")
+        log.debug("Unhandled line", line)
     return results
 
 

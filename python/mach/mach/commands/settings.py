@@ -7,7 +7,6 @@ from textwrap import TextWrapper
 from mach.config import TYPE_CLASSES
 from mach.decorators import Command, CommandArgument
 
-
 # Interact with settings for mach.
 
 # Currently, we only provide functionality to view what settings are

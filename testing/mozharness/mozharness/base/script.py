@@ -38,9 +38,6 @@ from io import BytesIO
 
 import mozinfo
 import six
-from mozprocess import ProcessHandler
-from six import binary_type
-
 from mozharness.base.config import BaseConfig
 from mozharness.base.log import (
     DEBUG,
@@ -54,6 +51,8 @@ from mozharness.base.log import (
     OutputParser,
     SimpleFileLogger,
 )
+from mozprocess import ProcessHandler
+from six import binary_type
 
 try:
     import httplib

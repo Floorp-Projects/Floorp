@@ -16,10 +16,9 @@ from subprocess import PIPE, Popen
 import mozlog
 import requests
 import yaml
+from condprof import progress
 from requests.exceptions import ConnectionError
 from requests.packages.urllib3.util.retry import Retry
-
-from condprof import progress
 
 TASK_CLUSTER = "TASK_ID" in os.environ.keys()
 DOWNLOAD_TIMEOUT = 30

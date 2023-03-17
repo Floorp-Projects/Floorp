@@ -4,8 +4,6 @@
 
 import codecs
 
-from six.moves.urllib.parse import urlparse
-
 import mozpack.path as mozpath
 from mozpack.chrome.manifest import (
     ManifestEntryWithRelPath,
@@ -18,6 +16,7 @@ from mozpack.files import BaseFinder, DeflatedFile, FileFinder, ManifestFile
 from mozpack.mozjar import JarReader
 from mozpack.packager import SimplePackager
 from mozpack.packager.formats import FlatFormatter
+from six.moves.urllib.parse import urlparse
 
 
 class UnpackFinder(BaseFinder):

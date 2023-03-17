@@ -8,10 +8,8 @@ import os
 import re
 from collections import deque
 
-import six
-
 import mozpack.path as mozpath
-from mozbuild.preprocessor import Preprocessor
+import six
 from mozpack.chrome.manifest import (
     Manifest,
     ManifestBinaryComponent,
@@ -21,6 +19,8 @@ from mozpack.chrome.manifest import (
     parse_manifest,
 )
 from mozpack.errors import errors
+
+from mozbuild.preprocessor import Preprocessor
 
 
 class Component(object):

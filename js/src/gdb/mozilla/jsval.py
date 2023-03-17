@@ -8,7 +8,6 @@ import struct
 
 import gdb
 import gdb.types
-
 import mozilla.prettyprinters
 from mozilla.prettyprinters import pretty_printer
 

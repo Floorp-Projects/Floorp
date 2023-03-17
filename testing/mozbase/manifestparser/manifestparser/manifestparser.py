@@ -13,8 +13,9 @@ import types
 
 from six import StringIO, string_types
 
-from .filters import DEFAULT_FILTERS, enabled, filterlist
+from .filters import DEFAULT_FILTERS, enabled
 from .filters import exists as _exists
+from .filters import filterlist
 from .ini import read_ini
 
 __all__ = ["ManifestParser", "TestManifest", "convert"]

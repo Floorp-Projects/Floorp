@@ -11,8 +11,6 @@ import tempfile
 import unittest
 
 import pytest
-from mozunit import main
-
 from mozpack.archive import (
     DEFAULT_MTIME,
     create_tar_bz2_from_files,
@@ -20,6 +18,7 @@ from mozpack.archive import (
     create_tar_gz_from_files,
 )
 from mozpack.files import GeneratedFile
+from mozunit import main
 
 MODE_STANDARD = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH
 

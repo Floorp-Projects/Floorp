@@ -32,12 +32,9 @@ from mach.decorators import (
 from voluptuous import All, Boolean, Required, Schema
 
 import mozbuild.settings  # noqa need @SettingsProvider hook to execute
-from mozbuild.base import (
-    BinaryNotFoundException,
-    BuildEnvironmentNotFoundException,
-    MozbuildObject,
-)
+from mozbuild.base import BinaryNotFoundException, BuildEnvironmentNotFoundException
 from mozbuild.base import MachCommandConditions as conditions
+from mozbuild.base import MozbuildObject
 from mozbuild.util import MOZBUILD_METRICS_PATH
 
 here = os.path.abspath(os.path.dirname(__file__))

@@ -5,7 +5,6 @@
 # Pretty-printers for GCCellPtr values.
 
 import gdb
-
 import mozilla.prettyprinters
 from mozilla.prettyprinters import pretty_printer
 

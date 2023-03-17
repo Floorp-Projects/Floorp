@@ -15,8 +15,9 @@ import sys
 
 from mach.decorators import Command
 from mach.util import get_state_dir
-from mozbuild.base import BinaryNotFoundException, MozbuildObject
+from mozbuild.base import BinaryNotFoundException
 from mozbuild.base import MachCommandConditions as Conditions
+from mozbuild.base import MozbuildObject
 
 HERE = os.path.dirname(os.path.realpath(__file__))
 

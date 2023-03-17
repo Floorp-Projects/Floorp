@@ -18,17 +18,17 @@ from itertools import chain, takewhile
 from tarfile import TarFile, TarInfo
 from tempfile import NamedTemporaryFile, mkstemp
 
+import mozpack.path as mozpath
 import six
 from jsmin import JavascriptMinify
-
-import mozbuild.makeutil as makeutil
-import mozpack.path as mozpath
-from mozbuild.preprocessor import Preprocessor
-from mozbuild.util import FileAvoidWrite, ensure_unicode, memoize
 from mozpack.chrome.manifest import ManifestEntry, ManifestInterfaces
 from mozpack.errors import ErrorMessage, errors
 from mozpack.executables import elfhack, is_executable, may_elfhack, may_strip, strip
 from mozpack.mozjar import JarReader
+
+import mozbuild.makeutil as makeutil
+from mozbuild.preprocessor import Preprocessor
+from mozbuild.util import FileAvoidWrite, ensure_unicode, memoize
 
 try:
     import hglib

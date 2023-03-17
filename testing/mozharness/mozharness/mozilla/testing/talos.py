@@ -19,9 +19,8 @@ import shutil
 import subprocess
 import sys
 
-import six
-
 import mozharness
+import six
 from mozharness.base.config import parse_config_file
 from mozharness.base.errors import PythonErrorList
 from mozharness.base.log import CRITICAL, DEBUG, ERROR, INFO, WARNING, OutputParser
