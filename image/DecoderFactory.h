@@ -48,6 +48,9 @@ class DecoderFactory {
   /// @return the type of decoder which is appropriate for @aMimeType.
   static DecoderType GetDecoderType(const char* aMimeType);
 
+  /// @return the default flags to use when creating a decoder of @aType.
+  static DecoderFlags GetDefaultDecoderFlagsForType(DecoderType aType);
+
   /**
    * Creates and initializes a decoder for non-animated images of type @aType.
    * (If the image *is* animated, only the first frame will be decoded.) The
@@ -128,7 +131,7 @@ class DecoderFactory {
    *                      from.
    */
   static already_AddRefed<IDecodingTask> CreateMetadataDecoder(
-      DecoderType aType, NotNull<RasterImage*> aImage,
+      DecoderType aType, NotNull<RasterImage*> aImage, DecoderFlags aFlags,
       NotNull<SourceBuffer*> aSourceBuffer);
 
   /**

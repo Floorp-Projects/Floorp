@@ -200,12 +200,14 @@ AVIFParser::~AVIFParser() {
 }
 
 Mp4parseStatus AVIFParser::Create(const Mp4parseIo* aIo, ByteStream* aBuffer,
-                                  UniquePtr<AVIFParser>& aParserOut) {
+                                  UniquePtr<AVIFParser>& aParserOut,
+                                  bool aAllowSequences,
+                                  bool aAnimateAVIFMajor) {
   MOZ_ASSERT(aIo);
   MOZ_ASSERT(!aParserOut);
 
   UniquePtr<AVIFParser> p(new AVIFParser(aIo));
-  Mp4parseStatus status = p->Init(aBuffer);
+  Mp4parseStatus status = p->Init(aBuffer, aAllowSequences, aAnimateAVIFMajor);
 
   if (status == MP4PARSE_STATUS_OK) {
     MOZ_ASSERT(p->mParser);
@@ -308,7 +310,8 @@ static Mp4parseStatus CreateSampleIterator(
   return MP4PARSE_STATUS_OK;
 }
 
-Mp4parseStatus AVIFParser::Init(ByteStream* aBuffer) {
+Mp4parseStatus AVIFParser::Init(ByteStream* aBuffer, bool aAllowSequences,
+                                bool aAnimateAVIFMajor) {
 #define CHECK_MP4PARSE_STATUS(v)     \
   do {                               \
     if ((v) != MP4PARSE_STATUS_OK) { \
@@ -333,26 +336,21 @@ Mp4parseStatus AVIFParser::Init(ByteStream* aBuffer) {
   status = mp4parse_avif_get_info(mParser.get(), &mInfo);
   CHECK_MP4PARSE_STATUS(status);
 
-  bool shouldAnimate = mInfo.has_sequence;
-
-  // Disable animation if the specified major brand is avif or avis is preffed
-  // off.
-  if (shouldAnimate) {
-    if (!StaticPrefs::image_avif_sequence_enabled()) {
-      shouldAnimate = false;
+  bool useSequence = mInfo.has_sequence;
+  if (useSequence) {
+    if (!aAllowSequences) {
       MOZ_LOG(sAVIFLog, LogLevel::Debug,
               ("[this=%p] AVIF sequences disabled", this));
-    } else if (shouldAnimate &&
-               !StaticPrefs::
-                   image_avif_sequence_animate_avif_major_branded_images() &&
-               !memcmp(mInfo.major_brand, "avif", sizeof(mInfo.major_brand))) {
-      shouldAnimate = false;
+      useSequence = false;
+    } else if (!aAnimateAVIFMajor &&
+               !!memcmp(mInfo.major_brand, "avis", sizeof(mInfo.major_brand))) {
+      useSequence = false;
       MOZ_LOG(sAVIFLog, LogLevel::Debug,
               ("[this=%p] AVIF prefers still image", this));
     }
   }
 
-  if (shouldAnimate) {
+  if (useSequence) {
     status = CreateSampleIterator(parser, aBuffer, mInfo.color_track_id,
                                   mColorSampleIter);
     CHECK_MP4PARSE_STATUS(status);
@@ -1202,11 +1200,14 @@ LexerResult nsAVIFDecoder::DoDecode(SourceBufferIterator& aIterator,
       return LexerResult(Yield::NEED_MORE_DATA);
     }
     if (r == NonDecoderResult::OutputAvailable) {
+      MOZ_ASSERT(HasSize());
       return LexerResult(Yield::OUTPUT_AVAILABLE);
     }
-    return r == NonDecoderResult::Complete
-               ? LexerResult(TerminalState::SUCCESS)
-               : LexerResult(TerminalState::FAILURE);
+    if (r == NonDecoderResult::Complete) {
+      MOZ_ASSERT(HasSize());
+      return LexerResult(TerminalState::SUCCESS);
+    }
+    return LexerResult(TerminalState::FAILURE);
   }
 
   MOZ_ASSERT(result.is<Dav1dResult>() || result.is<AOMResult>() ||
@@ -1226,8 +1227,11 @@ Mp4parseStatus nsAVIFDecoder::CreateParser() {
   if (!mParser) {
     Mp4parseIo io = {nsAVIFDecoder::ReadSource, this};
     mBufferStream = new AVIFDecoderStream(&mBufferedData);
-    Mp4parseStatus status =
-        AVIFParser::Create(&io, mBufferStream.get(), mParser);
+
+    Mp4parseStatus status = AVIFParser::Create(
+        &io, mBufferStream.get(), mParser,
+        bool(GetDecoderFlags() & DecoderFlags::AVIF_SEQUENCES_ENABLED),
+        bool(GetDecoderFlags() & DecoderFlags::AVIF_ANIMATE_AVIF_MAJOR));
 
     if (status != MP4PARSE_STATUS_OK) {
       return status;
