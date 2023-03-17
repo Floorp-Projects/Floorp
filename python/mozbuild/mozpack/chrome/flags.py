@@ -6,8 +6,9 @@ import re
 from collections import OrderedDict
 
 import six
-from mozpack.errors import errors
 from packaging.version import Version
+
+from mozpack.errors import errors
 
 
 class Flag(object):

@@ -5,10 +5,10 @@
 import os
 
 from buildconfig import topsrcdir
-from common import BaseConfigureTest
 from mozpack import path as mozpath
 from mozunit import MockedOpen, main
 
+from common import BaseConfigureTest
 from mozbuild.configure.options import InvalidOptionError
 
 

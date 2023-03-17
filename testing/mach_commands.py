@@ -538,7 +538,7 @@ def run_desktop_test(
 
 
 def run_android_test(command_context, tests, symbols_path, manifest_path, log):
-    import remotecppunittests as remotecppunittests
+    import remotecppunittests
     from mozlog import commandline
 
     parser = remotecppunittests.RemoteCPPUnittestOptions()

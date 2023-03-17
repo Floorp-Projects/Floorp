@@ -8,6 +8,7 @@ import subprocess
 import sys
 
 import six
+
 from mozlog.formatters import base
 
 DEFAULT_MOVE_UP_CODE = u"\x1b[A"

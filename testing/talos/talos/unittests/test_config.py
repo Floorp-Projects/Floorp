@@ -6,6 +6,7 @@ import conftest
 import mozunit
 import pytest
 import six
+
 from talos.config import (
     DEFAULTS,
     ConfigurationError,

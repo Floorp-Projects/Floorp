@@ -5,9 +5,12 @@
 import os
 import unittest
 
-import mozpack.path as mozpath
 import mozunit
 from buildconfig import topobjdir
+from mozunit import MockedOpen
+
+import mozpack.path as mozpath
+from mozbuild.preprocessor import Preprocessor
 from mozpack.chrome.manifest import (
     ManifestBinaryComponent,
     ManifestContent,
@@ -22,9 +25,6 @@ from mozpack.packager import (
     SimplePackager,
     preprocess_manifest,
 )
-from mozunit import MockedOpen
-
-from mozbuild.preprocessor import Preprocessor
 
 MANIFEST = """
 bar/*

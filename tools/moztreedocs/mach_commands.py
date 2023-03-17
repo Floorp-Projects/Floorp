@@ -150,6 +150,7 @@ def build_docs(
     import webbrowser
 
     from livereload import Server
+
     from moztreedocs.package import create_tarball
 
     unique_id = "%s/%s" % (project(), str(uuid.uuid1()))

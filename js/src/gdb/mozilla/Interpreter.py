@@ -5,6 +5,7 @@
 # Pretty-printers for InterpreterRegs.
 
 import gdb
+
 import mozilla.prettyprinters as prettyprinters
 
 prettyprinters.clear_module_printers(__name__)

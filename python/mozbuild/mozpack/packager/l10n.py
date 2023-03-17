@@ -10,9 +10,10 @@ directory.
 import json
 import os
 
-import mozpack.path as mozpath
 import six
 from createprecomplete import generate_precomplete
+
+import mozpack.path as mozpath
 from mozpack.chrome.manifest import (
     Manifest,
     ManifestChrome,

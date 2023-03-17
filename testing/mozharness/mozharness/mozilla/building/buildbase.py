@@ -21,6 +21,8 @@ from datetime import datetime
 
 import six
 import yaml
+from yaml import YAMLError
+
 from mozharness.base.config import DEFAULT_CONFIG_PATH, BaseConfig, parse_config_file
 from mozharness.base.errors import MakefileErrorList
 from mozharness.base.log import ERROR, FATAL, OutputParser
@@ -37,7 +39,6 @@ from mozharness.mozilla.automation import (
     AutomationMixin,
 )
 from mozharness.mozilla.secrets import SecretsMixin
-from yaml import YAMLError
 
 AUTOMATION_EXIT_CODES = sorted(EXIT_STATUS_DICT.values())
 

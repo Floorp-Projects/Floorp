@@ -9,9 +9,9 @@ from collections import OrderedDict
 from io import BytesIO, UnsupportedOperation
 from zipfile import ZIP_DEFLATED, ZIP_STORED
 
-import mozpack.path as mozpath
 import six
 
+import mozpack.path as mozpath
 from mozbuild.util import ensure_bytes
 
 JAR_STORED = ZIP_STORED

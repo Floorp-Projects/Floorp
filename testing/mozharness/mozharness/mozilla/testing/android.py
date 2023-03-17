@@ -18,6 +18,7 @@ import time
 from threading import Timer
 
 import six
+
 from mozharness.base.script import PostScriptAction, PreScriptAction
 from mozharness.mozilla.automation import EXIT_STATUS_DICT, TBPL_RETRY
 

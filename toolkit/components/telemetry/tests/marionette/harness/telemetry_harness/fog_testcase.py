@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import mozlog
+
 from telemetry_harness.fog_ping_server import FOGPingServer
 from telemetry_harness.testcase import TelemetryTestCase
 

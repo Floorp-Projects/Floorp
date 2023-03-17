@@ -147,7 +147,7 @@ class NegativeOptionValue(OptionValue):
         return super(NegativeOptionValue, cls).__new__(cls, origin=origin)
 
     def __init__(self, origin="unknown"):
-        return super(NegativeOptionValue, self).__init__(origin=origin)
+        super(NegativeOptionValue, self).__init__(origin=origin)
 
 
 class InvalidOptionError(Exception):

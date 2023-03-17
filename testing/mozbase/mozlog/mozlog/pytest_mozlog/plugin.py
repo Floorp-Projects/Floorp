@@ -4,9 +4,10 @@
 
 import time
 
-import mozlog
 import pytest
 import six
+
+import mozlog
 
 
 def pytest_addoption(parser):

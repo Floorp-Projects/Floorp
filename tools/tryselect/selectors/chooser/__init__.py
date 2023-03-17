@@ -7,6 +7,7 @@ import webbrowser
 from threading import Timer
 
 from gecko_taskgraph.target_tasks import filter_by_uncommon_try_tasks
+
 from tryselect.cli import BaseTryParser
 from tryselect.push import (
     check_working_directory,
