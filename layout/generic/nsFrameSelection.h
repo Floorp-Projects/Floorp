@@ -7,11 +7,9 @@
 #ifndef nsFrameSelection_h___
 #define nsFrameSelection_h___
 
-#include <stdint.h>
 #include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/EnumSet.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/Result.h"
@@ -68,54 +66,19 @@ class PresShell;
  *  that are passed to nsIFrame::PeekOffset(). See below for the description of
  *  individual arguments.
  */
+struct MOZ_STACK_CLASS nsPeekOffsetStruct {
+  enum class ForceEditableRegion {
+    No,
+    Yes,
+  };
 
-namespace mozilla {
-
-enum class PeekOffsetOption : uint8_t {
-  // Whether to allow jumping across line boundaries.
-  //
-  // Used with: eSelectCharacter, eSelectWord.
-  JumpLines,
-
-  // Whether we should preserve or trim spaces at begin/end of content
-  PreserveSpaces,
-
-  // Whether to stop when reaching a scroll view boundary.
-  //
-  // Used with: eSelectCharacter, eSelectWord, eSelectLine.
-  ScrollViewStop,
-
-  // Whether the peeking is done in response to a keyboard action.
-  //
-  // Used with: eSelectWord.
-  IsKeyboardSelect,
-
-  // Whether bidi caret behavior is visual (set) or logical (unset).
-  //
-  // Used with: eSelectCharacter, eSelectWord, eSelectBeginLine, eSelectEndLine.
-  Visual,
-
-  // Whether the selection is being extended or moved.
-  Extend,
-
-  // If true, the offset has to end up in an editable node, otherwise we'll keep
-  // searching.
-  ForceEditableRegion,
-
-  // If set, the result's native anonymous subtree root may be different from
-  // the scan start content's root.
-  AllowContentInDifferentNativeAnonymousSubtreeRoot,
-};
-
-using PeekOffsetOptions = EnumSet<PeekOffsetOption>;
-
-struct MOZ_STACK_CLASS PeekOffsetStruct {
-  PeekOffsetStruct(nsSelectionAmount aAmount, nsDirection aDirection,
-                   int32_t aStartOffset, nsPoint aDesiredCaretPos,
-                   // Passing by value here is intentional because EnumSet
-                   // is optimized as uint*_t in opt builds.
-                   const PeekOffsetOptions aOptions,
-                   EWordMovementType aWordMovementType = eDefaultBehavior);
+  nsPeekOffsetStruct(
+      nsSelectionAmount aAmount, nsDirection aDirection, int32_t aStartOffset,
+      nsPoint aDesiredCaretPos, bool aJumpLines, bool aScrollViewStop,
+      bool aIsKeyboardSelect, bool aVisual, bool aExtend,
+      ForceEditableRegion = ForceEditableRegion::No,
+      mozilla::EWordMovementType aWordMovementType = mozilla::eDefaultBehavior,
+      bool aTrimSpaces = true);
 
   // Note: Most arguments (input and output) are only used with certain values
   // of mAmount. These values are indicated for each argument below.
@@ -153,11 +116,39 @@ struct MOZ_STACK_CLASS PeekOffsetStruct {
   const nsPoint mDesiredCaretPos;
 
   // An enum that determines whether to prefer the start or end of a word or to
-  // use the default behavior, which is a combination of direction and the
+  // use the default beahvior, which is a combination of direction and the
   // platform-based pref "layout.word_select.eat_space_to_next_word"
-  EWordMovementType mWordMovementType;
+  mozilla::EWordMovementType mWordMovementType;
 
-  PeekOffsetOptions mOptions;
+  // Whether to allow jumping across line boundaries.
+  //
+  // Used with: eSelectCharacter, eSelectWord.
+  const bool mJumpLines;
+
+  // mTrimSpaces: Whether we should trim spaces at begin/end of content
+  const bool mTrimSpaces;
+
+  // Whether to stop when reaching a scroll view boundary.
+  //
+  // Used with: eSelectCharacter, eSelectWord, eSelectLine.
+  const bool mScrollViewStop;
+
+  // Whether the peeking is done in response to a keyboard action.
+  //
+  // Used with: eSelectWord.
+  const bool mIsKeyboardSelect;
+
+  // Whether bidi caret behavior is visual (true) or logical (false).
+  //
+  // Used with: eSelectCharacter, eSelectWord, eSelectBeginLine, eSelectEndLine.
+  const bool mVisual;
+
+  // Whether the selection is being extended or moved.
+  const bool mExtend;
+
+  // If true, the offset has to end up in an editable node, otherwise we'll keep
+  // searching.
+  const bool mForceEditableRegion;
 
   /*** Output arguments ***/
 
@@ -178,10 +169,8 @@ struct MOZ_STACK_CLASS PeekOffsetStruct {
   // logically after the caret".
   //
   // Used with: eSelectLine, eSelectBeginLine, eSelectEndLine.
-  CaretAssociationHint mAttach;
+  mozilla::CaretAssociationHint mAttach;
 };
-
-}  // namespace mozilla
 
 struct nsPrevNextBidiLevels {
   void SetData(nsIFrame* aFrameBefore, nsIFrame* aFrameAfter,
@@ -917,7 +906,7 @@ class nsFrameSelection final {
    * PeekOffsetForCaretMove() only peek offset for caret move.  I.e., won't
    * change selection ranges nor bidi information.
    */
-  mozilla::Result<mozilla::PeekOffsetStruct, nsresult> PeekOffsetForCaretMove(
+  mozilla::Result<nsPeekOffsetStruct, nsresult> PeekOffsetForCaretMove(
       nsDirection aDirection, bool aContinueSelection,
       const nsSelectionAmount aAmount, CaretMovementStyle aMovementStyle,
       const nsPoint& aDesiredCaretPos) const;
@@ -1075,7 +1064,7 @@ class nsFrameSelection final {
         mozilla::dom::Selection& aNormalSelection) const;
 
     /**
-     * @param aScrollViewStop see `PeekOffsetOption::ScrollViewStop`.
+     * @param aScrollViewStop see `nsPeekOffsetStruct::mScrollViewStop`.
      */
     void AdjustContentOffsets(nsIFrame::ContentOffsets& aOffsets,
                               bool aScrollViewStop) const;
