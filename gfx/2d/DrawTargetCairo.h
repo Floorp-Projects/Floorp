@@ -139,7 +139,9 @@ class DrawTargetCairo final : public DrawTarget {
   virtual void PopLayer() override;
 
   virtual already_AddRefed<PathBuilder> CreatePathBuilder(
-      FillRule aFillRule = FillRule::FILL_WINDING) const override;
+      FillRule aFillRule = FillRule::FILL_WINDING) const override {
+    return PathBuilderCairo::Create(aFillRule);
+  }
 
   virtual already_AddRefed<SourceSurface> CreateSourceSurfaceFromData(
       unsigned char* aData, const IntSize& aSize, int32_t aStride,

@@ -12,6 +12,10 @@
 
 namespace mozilla::gfx {
 
+already_AddRefed<PathBuilder> PathBuilderSkia::Create(FillRule aFillRule) {
+  return MakeAndAddRef<PathBuilderSkia>(aFillRule);
+}
+
 PathBuilderSkia::PathBuilderSkia(const Matrix& aTransform, const SkPath& aPath,
                                  FillRule aFillRule)
     : mPath(aPath) {

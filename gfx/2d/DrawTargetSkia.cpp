@@ -1851,7 +1851,7 @@ void* DrawTargetSkia::GetNativeSurface(NativeSurfaceType aType) {
 
 already_AddRefed<PathBuilder> DrawTargetSkia::CreatePathBuilder(
     FillRule aFillRule) const {
-  return MakeAndAddRef<PathBuilderSkia>(aFillRule);
+  return PathBuilderSkia::Create(aFillRule);
 }
 
 void DrawTargetSkia::ClearRect(const Rect& aRect) {

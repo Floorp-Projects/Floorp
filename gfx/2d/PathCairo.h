@@ -34,6 +34,8 @@ class PathBuilderCairo : public PathBuilder {
 
   BackendType GetBackendType() const override { return BackendType::CAIRO; }
 
+  static already_AddRefed<PathBuilder> Create(FillRule aFillRule);
+
  private:  // data
   friend class PathCairo;
 

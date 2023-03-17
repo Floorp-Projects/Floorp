@@ -9,6 +9,7 @@
 
 #ifdef USE_CAIRO
 #  include "DrawTargetCairo.h"
+#  include "PathCairo.h"
 #  include "SourceSurfaceCairo.h"
 #endif
 
@@ -42,6 +43,7 @@
 
 #ifdef WIN32
 #  include "DrawTargetD2D1.h"
+#  include "PathD2D.h"
 #  include "ScaledFontDWrite.h"
 #  include "NativeFontResourceDWrite.h"
 #  include "UnscaledFontDWrite.h"
@@ -412,8 +414,29 @@ already_AddRefed<DrawTarget> Factory::CreateDrawTarget(BackendType aBackend,
   return retVal.forget();
 }
 
+already_AddRefed<PathBuilder> Factory::CreatePathBuilder(BackendType aBackend,
+                                                         FillRule aFillRule) {
+  switch (aBackend) {
+#ifdef WIN32
+    case BackendType::DIRECT2D1_1:
+      return PathBuilderD2D::Create(aFillRule);
+#endif
+    case BackendType::SKIA:
+    case BackendType::WEBGL:
+      return PathBuilderSkia::Create(aFillRule);
+#ifdef USE_CAIRO
+    case BackendType::CAIRO:
+      return PathBuilderCairo::Create(aFillRule);
+#endif
+    default:
+      gfxCriticalNote << "Invalid PathBuilder type specified: "
+                      << (int)aBackend;
+      return nullptr;
+  }
+}
+
 already_AddRefed<PathBuilder> Factory::CreateSimplePathBuilder() {
-  return MakeAndAddRef<PathBuilderSkia>(FillRule::FILL_WINDING);
+  return CreatePathBuilder(BackendType::SKIA);
 }
 
 already_AddRefed<DrawTarget> Factory::CreateRecordingDrawTarget(

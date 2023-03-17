@@ -659,8 +659,8 @@ DrawTargetRecording::CreateSimilarDrawTargetForFilter(
 
 already_AddRefed<PathBuilder> DrawTargetRecording::CreatePathBuilder(
     FillRule aFillRule) const {
-  RefPtr<PathBuilder> builder = mFinalDT->CreatePathBuilder(aFillRule);
-  return MakeAndAddRef<PathBuilderRecording>(builder, aFillRule);
+  return MakeAndAddRef<PathBuilderRecording>(mFinalDT->GetBackendType(),
+                                             aFillRule);
 }
 
 already_AddRefed<GradientStops> DrawTargetRecording::CreateGradientStops(
@@ -690,9 +690,8 @@ already_AddRefed<PathRecording> DrawTargetRecording::EnsurePathStored(
   } else {
     MOZ_ASSERT(!mRecorder->HasStoredObject(aPath));
     FillRule fillRule = aPath->GetFillRule();
-    RefPtr<PathBuilder> builder = mFinalDT->CreatePathBuilder(fillRule);
     RefPtr<PathBuilderRecording> builderRecording =
-        new PathBuilderRecording(builder, fillRule);
+        new PathBuilderRecording(mFinalDT->GetBackendType(), fillRule);
     aPath->StreamToSink(builderRecording);
     pathRecording = builderRecording->Finish().downcast<PathRecording>();
   }
