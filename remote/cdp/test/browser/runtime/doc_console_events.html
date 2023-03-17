@@ -8,11 +8,24 @@
       let foo = {};
       foo.click();
     }
+
+    function runLogParent() {
+      function runLogCaller() {
+        console.trace("foo");
+      }
+
+      function runLogChild() {
+        runLogCaller();
+      }
+
+      runLogChild();
+    }
   </script>
 </head>
 <body>
   <a id="console-log" href="javascript:console.log('foo')">console.log()</a><br/>
   <a id="console-error" href="javascript:console.error('foo')">console.error()</a><br/>
   <a id="js-error" onclick="throwError()">Javascript Error</a><br/>
+  <a id="log-wrapper" onclick="runLogParent()">console.log() in function wrappers</a><br/>
 </body>
 </html>

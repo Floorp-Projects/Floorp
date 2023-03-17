@@ -8899,7 +8899,7 @@
 # Enable experimental enhanced color CSS color spaces. (lab(), lch(), oklab(), oklch(), color())
 - name: layout.css.more_color_4.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
   rust: true
 
@@ -10419,7 +10419,7 @@
 #elif defined(XP_MACOSX)
   value: true
 #elif defined(MOZ_WIDGET_ANDROID)
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
 #elif defined(XP_UNIX)
   value: true
 #else
@@ -12360,6 +12360,13 @@
   value: false
   mirror: always
 
+# Whether to use HTTPS RR and ignore NS_HTTP_DISALLOW_HTTPS_RR
+# This pref is only set when running tests
+- name: network.dns.force_use_https_rr
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: network.cache.frecency_array_check_enabled
   type: RelaxedAtomicBool
   value: @IS_EARLY_BETA_OR_EARLIER@
@@ -13521,8 +13528,40 @@
 
 # WebAuthn CTAP2 support
 - name: security.webauthn.ctap2
-  type: bool
+  type: RelaxedAtomicBool
   value: true
+  mirror: always
+
+# Dispatch WebAuthn requests to the software CTAP1 token.
+# (mutually exclusive with webauthn_enable_android_fido2,
+# and webauthn_enable_usbtoken)
+- name: security.webauth.webauthn_enable_softtoken
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# Dispatch WebAuthn requests to the Android platform API
+- name: security.webauth.webauthn_enable_android_fido2
+  type: RelaxedAtomicBool
+  value: @IS_ANDROID@
+  mirror: always
+
+# Dispatch WebAuthn requests to authenticator-rs
+- name: security.webauth.webauthn_enable_usbtoken
+  type: RelaxedAtomicBool
+  value: @IS_NOT_ANDROID@
+  mirror: always
+
+# Skip direct attestation consent prompts (for tests).
+- name: security.webauth.webauthn_testing_allow_direct_attestation
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# Global counter for U2F soft token operations
+- name: security.webauth.softtoken_counter
+  type: RelaxedAtomicUint32
+  value: 0
   mirror: always
 
 # Block Worker/SharedWorker scripts with wrong MIME type.
@@ -14514,11 +14553,6 @@
 #else
   value: false
 #endif
-  mirror: always
-
-- name: webgl.all-angle-options
-  type: RelaxedAtomicBool
-  value: false
   mirror: always
 
 - name: webgl.angle.force-d3d11

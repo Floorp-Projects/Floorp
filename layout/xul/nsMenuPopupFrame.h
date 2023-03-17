@@ -19,10 +19,9 @@
 #include "nsGkAtoms.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMEventListener.h"
-#include "nsIReflowCallback.h"
 #include "nsXULPopupManager.h"
 
-#include "nsBoxFrame.h"
+#include "nsBlockFrame.h"
 
 #include "Units.h"
 
@@ -130,7 +129,7 @@ class nsXULPopupShownEvent final : public mozilla::Runnable,
   const RefPtr<nsPresContext> mPresContext;
 };
 
-class nsMenuPopupFrame final : public nsBoxFrame, public nsIReflowCallback {
+class nsMenuPopupFrame final : public nsBlockFrame {
   using PopupLevel = mozilla::widget::PopupLevel;
   using PopupType = mozilla::widget::PopupType;
 
@@ -143,7 +142,7 @@ class nsMenuPopupFrame final : public nsBoxFrame, public nsIReflowCallback {
 
   // as popups are opened asynchronously, the popup pending state is used to
   // prevent multiple requests from attempting to open the same popup twice
-  nsPopupState PopupState() { return mPopupState; }
+  nsPopupState PopupState() const { return mPopupState; }
   void SetPopupState(nsPopupState);
 
   /*
@@ -166,6 +165,8 @@ class nsMenuPopupFrame final : public nsBoxFrame, public nsIReflowCallback {
 
   mozilla::dom::XULPopupElement& PopupElement() const;
 
+  nscoord GetPrefISize(gfxContext*) final;
+  nscoord GetMinISize(gfxContext*) final;
   void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
               const ReflowInput& aReflowInput,
               nsReflowStatus& aStatus) override;
@@ -173,11 +174,11 @@ class nsMenuPopupFrame final : public nsBoxFrame, public nsIReflowCallback {
   nsIWidget* GetWidget() const;
 
   // Overridden methods
-  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
-                    nsIFrame* aPrevInFlow) override;
+  void Init(nsIContent* aContent, nsContainerFrame* aParent,
+            nsIFrame* aPrevInFlow) override;
 
-  virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-                                    int32_t aModType) override;
+  nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                            int32_t aModType) override;
 
   // FIXME: This shouldn't run script (this can end up calling HidePopup).
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void DestroyFrom(
@@ -211,13 +212,14 @@ class nsMenuPopupFrame final : public nsBoxFrame, public nsIReflowCallback {
 
   // layout, position and display the popup as needed
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void LayoutPopup(nsBoxLayoutState& aState);
+  void LayoutPopup(nsPresContext*, ReflowOutput&, const ReflowInput&,
+                   nsReflowStatus&);
 
   // Set the position of the popup relative to the anchor content, anchored at a
   // rectangle, or at a specific point if a screen position is set. The popup
   // will be adjusted so that it is on screen. If aIsMove is true, then the
   // popup is being moved, and should not be flipped.
-  nsresult SetPopupPosition(bool aIsMove);
+  void SetPopupPosition(bool aIsMove);
 
   // Called when the Enter key is pressed while the popup is open. This will
   // just pass the call down to the current menu, if any.
@@ -266,7 +268,7 @@ class nsMenuPopupFrame final : public nsBoxFrame, public nsIReflowCallback {
 
   // returns true if the popup is in a content shell, or false for a popup in
   // a chrome shell
-  bool IsInContentShell() { return mInContentShell; }
+  bool IsInContentShell() const { return mInContentShell; }
 
   // the Initialize methods are used to set the anchor position for
   // each way of opening a popup.
@@ -323,38 +325,46 @@ class nsMenuPopupFrame final : public nsBoxFrame, public nsIReflowCallback {
   void MoveToAnchor(nsIContent* aAnchorContent, const nsAString& aPosition,
                     int32_t aXPos, int32_t aYPos, bool aAttributesOverride);
 
-  nsIScrollableFrame* GetScrollFrame(nsIFrame* aStart);
+  nsIScrollableFrame* GetScrollFrame() const;
 
-  void SetOverrideConstraintRect(mozilla::LayoutDeviceIntRect aRect) {
-    mOverrideConstraintRect = ToAppUnits(aRect, mozilla::AppUnitsPerCSSPixel());
+  void SetOverrideConstraintRect(const mozilla::CSSIntRect& aRect) {
+    mOverrideConstraintRect = mozilla::CSSIntRect::ToAppUnits(aRect);
   }
 
-  // For a popup that should appear anchored at the given rect, determine
-  // the screen area that it is constrained by. This will be the available
-  // area of the screen the popup should be displayed on. Content popups,
-  // however, will also be constrained by the content area, given by
-  // aRootScreenRect. All coordinates are in app units.
+  struct Rects {
+    // For anchored popups, the anchor rectangle. For non-anchored popups, the
+    // size will be 0.
+    nsRect mAnchorRect;
+    // mAnchorRect before accounting for flipping / resizing / intersecting with
+    // the screen. This is needed for Wayland, which flips / resizes at the
+    // widget level.
+    nsRect mUntransformedAnchorRect;
+    // The final used rect we want to occupy.
+    nsRect mUsedRect;
+    // The alignment offset for sliding the panel, see
+    // nsMenuPopupFrame::mAlignmentOffset.
+    nscoord mAlignmentOffset = 0;
+    bool mHFlip = false;
+    bool mVFlip = false;
+    // The client offset of our widget.
+    mozilla::LayoutDeviceIntPoint mClientOffset;
+    nsPoint mViewPoint;
+  };
+
+  // For a popup that should appear anchored at the given rect, gets the anchor
+  // and constraint rects for that popup.
+  // This will be the available area of the screen the popup should be displayed
+  // on. Content popups, however, will also be constrained by the content area.
+  //
   // For non-toplevel popups (which will always be panels), we will also
   // constrain them to the available screen rect, ie they will not fall
   // underneath the taskbar, dock or other fixed OS elements.
-  // This operates in device pixels.
+  Rects GetRects(const nsSize& aPrefSize) const;
   mozilla::LayoutDeviceIntRect GetConstraintRect(
       const mozilla::LayoutDeviceIntRect& aAnchorRect,
       const mozilla::LayoutDeviceIntRect& aRootScreenRect,
-      PopupLevel aPopupLevel);
-
-  // Determines whether the given edges of the popup may be moved, where
-  // aHorizontalSide and aVerticalSide are one of the enum Side constants.
-  // aChange is the distance to move on those sides. If will be reset to 0
-  // if the side cannot be adjusted at all in that direction. For example, a
-  // popup cannot be moved if it is anchored on a particular side.
-  //
-  // Later, when bug 357725 is implemented, we can make this adjust aChange by
-  // the amount that the side can be resized, so that minimums and maximums
-  // can be taken into account.
-  void CanAdjustEdges(mozilla::Side aHorizontalSide,
-                      mozilla::Side aVerticalSide,
-                      mozilla::LayoutDeviceIntPoint& aChange);
+      PopupLevel aPopupLevel) const;
+  void PerformMove(const Rects&);
 
   // Return true if the popup is positioned relative to an anchor.
   bool IsAnchored() const { return mAnchorType != MenuPopupAnchorType_Point; }
@@ -401,18 +411,10 @@ class nsMenuPopupFrame final : public nsBoxFrame, public nsIReflowCallback {
 
   void WillDispatchPopupPositioned() { mPendingPositionedEvent = false; }
 
-  // nsIReflowCallback
-  virtual bool ReflowFinished() override;
-  virtual void ReflowCallbackCanceled() override;
-
  protected:
   // returns the popup's level.
   PopupLevel GetPopupLevel(bool aIsNoAutoHide) const;
-
-  void ConstrainSizeForWayland(nsSize&) const;
-
-  // redefine to tell the box system not to move the views.
-  ReflowChildFlags GetXULLayoutFlags() override;
+  void TweakMinPrefISize(nscoord&);
 
   void InitPositionFromAnchorAlign(const nsAString& aAnchor,
                                    const nsAString& aAlign);
@@ -420,12 +422,14 @@ class nsMenuPopupFrame final : public nsBoxFrame, public nsIReflowCallback {
   // return the position where the popup should be, when it should be
   // anchored at anchorRect. aHFlip and aVFlip will be set if the popup may be
   // flipped in that direction if there is not enough space available.
-  nsPoint AdjustPositionForAnchorAlign(nsRect& anchorRect, FlipStyle& aHFlip,
-                                       FlipStyle& aVFlip);
+  nsPoint AdjustPositionForAnchorAlign(nsRect& aAnchorRect,
+                                       const nsSize& aPrefSize,
+                                       FlipStyle& aHFlip,
+                                       FlipStyle& aVFlip) const;
 
   // For popups that are going to align to their selected item, get the frame of
   // the selected item.
-  nsIFrame* GetSelectedItemForAlignment();
+  nsIFrame* GetSelectedItemForAlignment() const;
 
   // check if the popup will fit into the available space and resize it. This
   // method handles only one axis at a time so is called twice, once for
@@ -445,7 +449,7 @@ class nsMenuPopupFrame final : public nsBoxFrame, public nsIReflowCallback {
                        nscoord aScreenBegin, nscoord aScreenEnd,
                        nscoord aAnchorBegin, nscoord aAnchorEnd,
                        nscoord aMarginBegin, nscoord aMarginEnd,
-                       FlipStyle aFlip, bool aIsOnEnd, bool* aFlipSide);
+                       FlipStyle aFlip, bool aIsOnEnd, bool* aFlipSide) const;
 
   // check if the popup can fit into the available space by "sliding" (i.e.,
   // by having the anchor arrow slide along one axis and only resizing if that
@@ -463,12 +467,12 @@ class nsMenuPopupFrame final : public nsBoxFrame, public nsIReflowCallback {
   // as aSize, unless aSize is greater than the screen width/height.
   nscoord SlideOrResize(nscoord& aScreenPoint, nscoord aSize,
                         nscoord aScreenBegin, nscoord aScreenEnd,
-                        nscoord* aOffset);
+                        nscoord* aOffset) const;
 
   // Given an anchor frame, compute the anchor rectangle relative to the screen,
   // using the popup frame's app units, and taking into account transforms.
   nsRect ComputeAnchorRect(nsPresContext* aRootPresContext,
-                           nsIFrame* aAnchorFrame);
+                           nsIFrame* aAnchorFrame) const;
 
   // Move the popup to the position specified in its |left| and |top|
   // attributes.
@@ -487,7 +491,7 @@ class nsMenuPopupFrame final : public nsBoxFrame, public nsIReflowCallback {
   // is no longer visible, or a parent deck page is changed, the popup hides
   // as well. The second variation also sets the anchor rectangle, relative to
   // the popup frame.
-  bool ShouldFollowAnchor();
+  bool ShouldFollowAnchor() const;
 
   nsIFrame* GetAnchorFrame() const;
 
@@ -533,24 +537,24 @@ class nsMenuPopupFrame final : public nsBoxFrame, public nsIReflowCallback {
   // was clicked. It will be cleared when the popup is hidden.
   nsCOMPtr<nsIContent> mTriggerContent;
 
-  nsView* mView;
+  nsView* mView = nullptr;
 
   RefPtr<nsXULPopupShownEvent> mPopupShownDispatcher;
 
   // The popup's screen rectangle in app units.
-  nsIntRect mUsedScreenRect;
+  nsRect mUsedScreenRect;
 
   // A popup's preferred size may be different than its actual size stored in
   // mRect in the case where the popup was resized because it was too large
   // for the screen. The preferred size mPrefSize holds the full size the popup
   // would be before resizing. Computations are performed using this size.
-  nsSize mPrefSize;
+  nsSize mPrefSize{-1, -1};
 
   // The position of the popup, in CSS pixels.
   // The screen coordinates, if set to values other than -1,
   // override mXPos and mYPos.
-  int32_t mXPos;
-  int32_t mYPos;
+  int32_t mXPos = 0;
+  int32_t mYPos = 0;
   nsRect mScreenRect;
   // Used for store rectangle which the popup is going to be anchored to, we
   // need that for Wayland. It's important that this rect is unflipped, and
@@ -558,60 +562,41 @@ class nsMenuPopupFrame final : public nsBoxFrame, public nsIReflowCallback {
   // flip etc. on Wayland.
   nsRect mUntransformedAnchorRect;
 
-  // Whether we were moved by the move-to-rect Wayland callback. In that case,
-  // we stop updating the anchor so that we can end up with a stable position.
-  bool mPositionedByMoveToRect = false;
-
   // If the panel prefers to "slide" rather than resize, then the arrow gets
   // positioned at this offset (along either the x or y axis, depending on
   // mPosition)
-  nscoord mAlignmentOffset;
+  nscoord mAlignmentOffset = 0;
 
   // The value of the client offset of our widget the last time we positioned
   // ourselves. We store this so that we can detect when it changes but the
   // position of our widget didn't change.
   mozilla::LayoutDeviceIntPoint mLastClientOffset;
 
-  PopupType mPopupType;      // type of popup
-  nsPopupState mPopupState;  // open state of the popup
+  PopupType mPopupType = PopupType::Panel;  // type of popup
+  nsPopupState mPopupState = ePopupClosed;  // open state of the popup
 
   // popup alignment relative to the anchor node
-  int8_t mPopupAlignment;
-  int8_t mPopupAnchor;
-  int8_t mPosition;
+  int8_t mPopupAlignment = POPUPALIGNMENT_NONE;
+  int8_t mPopupAnchor = POPUPALIGNMENT_NONE;
+  int8_t mPosition = POPUPPOSITION_UNKNOWN;
 
-  FlipType mFlip;  // Whether to flip
+  FlipType mFlip = FlipType_Default;  // Whether to flip
 
-  struct ReflowCallbackData {
-    ReflowCallbackData() = default;
-    void MarkPosted(bool aIsOpenChanged) {
-      mPosted = true;
-      mIsOpenChanged = aIsOpenChanged;
-    }
-    void Clear() {
-      mPosted = false;
-      mIsOpenChanged = false;
-    }
-    bool mPosted = false;
-    bool mIsOpenChanged = false;
-  };
-  ReflowCallbackData mReflowCallbackData;
+  // Whether we were moved by the move-to-rect Wayland callback. In that case,
+  // we stop updating the anchor so that we can end up with a stable position.
+  bool mPositionedByMoveToRect = false;
+  // true if the open state changed since the last layout.
+  bool mIsOpenChanged = false;
+  // true for context menus and their submenus.
+  bool mIsContextMenu = false;
+  // true for the topmost context menu.
+  bool mIsTopLevelContextMenu = false;
+  // true if the popup is in a content shell.
+  bool mInContentShell = true;
 
-  bool mIsOpenChanged;  // true if the open state changed since the last layout
-  bool mIsContextMenu = false;  // true for context menus and their submenus.
-  bool mIsTopLevelContextMenu = false;  // true for the topmost context menu.
-
-  bool mMenuCanOverlapOSBar;  // can we appear over the taskbar/menubar?
-  bool mInContentShell;       // True if the popup is in a content shell
-
-  // True if this popup has been offset due to moving off / near the edge of the
-  // screen. (This is useful for ensuring that a move, which can't offset the
-  // popup, doesn't undo a previously set offset.)
-  bool mIsOffset;
-
-  // the flip modes that were used when the popup was opened
-  bool mHFlip;
-  bool mVFlip;
+  // The flip modes that were used when the popup was opened
+  bool mHFlip = false;
+  bool mVFlip = false;
 
   // Whether the most recent initialization of this menupopup happened via
   // InitializePopupAsNativeContextMenu.
@@ -628,10 +613,11 @@ class nsMenuPopupFrame final : public nsBoxFrame, public nsIReflowCallback {
   // that the original selected item was. This needs to be used in case the
   // popup gets changed so that we can keep the popup at the same vertical
   // offset.
-  nscoord mPositionedOffset;
+  // TODO(emilio): try to make this not mutable.
+  mutable nscoord mPositionedOffset = 0;
 
   // How the popup is anchored.
-  MenuPopupAnchorType mAnchorType;
+  MenuPopupAnchorType mAnchorType = MenuPopupAnchorType_Node;
 
   nsRect mOverrideConstraintRect;
 

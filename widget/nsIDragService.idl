@@ -10,6 +10,7 @@
 #include "nsIContentPolicy.idl"
 
 webidl DragEvent;
+webidl Element;
 webidl Node;
 webidl Selection;
 
@@ -192,6 +193,13 @@ interface nsIDragService : nsISupports
 
   [notxpcom, nostdcall] boolean maybeAddChildProcess(in ContentParentPtr aChild);
   [notxpcom, nostdcall] boolean removeAllChildProcesses();
+
+  /**
+   * Called when HTMLEditor maybe deleted the source node from the document.
+   *
+   * @param aEditingHost    The editing host when the editor deletes selection.
+   */
+  [noscript] void maybeEditorDeletedSourceNode(in Element aEditingHost);
 };
 
 

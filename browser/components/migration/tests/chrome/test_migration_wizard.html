@@ -115,6 +115,9 @@
         showImportAll: false,
       });
 
+      let preamble = gShadowRoot.querySelector(".resource-selection-preamble");
+      ok(!isHidden(preamble), "preamble should shown.");
+
       let selector = gShadowRoot.querySelector("#browser-profile-selector");
       is(selector.childElementCount, 2, "Should have two child elements");
       is(selector.children[0].value, "some-browser-0");
@@ -160,6 +163,9 @@
         migrators: MIGRATOR_PROFILE_INSTANCES,
         showImportAll: true,
       });
+
+      let preamble = gShadowRoot.querySelector(".resource-selection-preamble");
+      ok(isHidden(preamble), "preamble should be hidden.");
 
       let selector = gShadowRoot.querySelector("#browser-profile-selector");
       is(selector.childElementCount, 2, "Should have two child elements");

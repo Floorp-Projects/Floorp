@@ -43,6 +43,7 @@ export class MigrationWizard extends HTMLElement {
             <h3 data-l10n-id="migration-wizard-selection-header"></h3>
             <select id="browser-profile-selector">
             </select>
+            <div data-l10n-id="migration-wizard-selection-list" class="resource-selection-preamble deemphasized-text"></div>
             <details class="resource-selection-details">
               <summary>
                 <div class="selected-data-header" data-l10n-id="migration-all-available-data-label"></div>
@@ -108,7 +109,16 @@ export class MigrationWizard extends HTMLElement {
           </div>
 
           <div name="page-safari-permission">
-            <h3>TODO: Safari permission page</h3>
+            <h3 data-l10n-id="migration-wizard-selection-header"></h3>
+            <div data-l10n-id="migration-wizard-safari-permissions-sub-header"></div>
+            <ol>
+              <li data-l10n-id="migration-wizard-safari-instructions-continue"></li>
+              <li data-l10n-id="migration-wizard-safari-instructions-folder"></li>
+            </ol>
+            <moz-button-group class="buttons">
+              <button class="cancel-close" data-l10n-id="migration-cancel-button-label"></button>
+              <button id="safari-request-permissions" class="primary" data-l10n-id="migration-wizard-safari-select-button"></button>
+            </moz-button-group>
           </div>
 
           <div name="page-no-browsers-found">

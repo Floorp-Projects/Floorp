@@ -273,9 +273,12 @@ RefPtr<SessionAccessibility> SessionAccessibility::GetInstanceFor(
       return GetInstanceFor(doc->GetPresShell());
     }
   } else {
+    DocAccessibleParent* remoteDoc = aAccessible->AsRemote()->Document();
+    if (remoteDoc->mSessionAccessibility) {
+      return remoteDoc->mSessionAccessibility;
+    }
     dom::CanonicalBrowsingContext* cbc =
-        static_cast<dom::BrowserParent*>(
-            aAccessible->AsRemote()->Document()->Manager())
+        static_cast<dom::BrowserParent*>(remoteDoc->Manager())
             ->GetBrowsingContext()
             ->Top();
     dom::BrowserParent* bp = cbc->GetBrowserParent();
@@ -286,7 +289,10 @@ RefPtr<SessionAccessibility> SessionAccessibility::GetInstanceFor(
     if (auto element = bp->GetOwnerElement()) {
       if (auto doc = element->OwnerDoc()) {
         if (nsPresContext* presContext = doc->GetPresContext()) {
-          return GetInstanceFor(presContext->PresShell());
+          RefPtr<SessionAccessibility> sessionAcc =
+              GetInstanceFor(presContext->PresShell());
+          remoteDoc->mSessionAccessibility = sessionAcc;
+          return sessionAcc;
         }
       } else {
         MOZ_ASSERT_UNREACHABLE(
@@ -1080,6 +1086,7 @@ void SessionAccessibility::UnregisterAccessible(Accessible* aAccessible) {
   }
 
   RefPtr<SessionAccessibility> sessionAcc = GetInstanceFor(aAccessible);
+  MOZ_ASSERT(sessionAcc, "Need SessionAccessibility to unregister Accessible!");
   if (sessionAcc) {
     Accessible* registeredAcc =
         sessionAcc->mIDToAccessibleMap.Get(virtualViewID);

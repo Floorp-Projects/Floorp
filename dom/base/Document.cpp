@@ -14826,6 +14826,67 @@ nsTArray<Element*> Document::GetTopLayer() const {
   return elements;
 }
 
+void Document::HideAllPopoversUntil(nsINode& aEndpoint,
+                                    bool aFocusPreviousElement,
+                                    bool aFireEvents) {
+  auto closeAllOpenPopovers = [&aFocusPreviousElement, &aFireEvents,
+                               this]() MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
+    while (RefPtr<Element> topmost = GetTopmostAutoPopover()) {
+      HidePopover(*topmost, aFocusPreviousElement, aFireEvents, IgnoreErrors());
+    }
+  };
+
+  if (&aEndpoint == this) {
+    closeAllOpenPopovers();
+    return;
+  }
+
+  RefPtr<const Element> lastToHide = nullptr;
+  bool foundEndpoint = false;
+  for (const Element* popover : AutoPopoverList()) {
+    if (popover == &aEndpoint) {
+      foundEndpoint = true;
+    } else if (foundEndpoint) {
+      lastToHide = popover;
+      break;
+    }
+  }
+
+  if (!foundEndpoint) {
+    closeAllOpenPopovers();
+    return;
+  }
+
+  while (lastToHide && lastToHide->IsPopoverOpen()) {
+    RefPtr<Element> topmost = GetTopmostAutoPopover();
+    if (!topmost) {
+      break;
+    }
+    HidePopover(*topmost, aFocusPreviousElement, aFireEvents, IgnoreErrors());
+  }
+}
+
+void Document::HidePopover(Element& aPopover, bool aFocusPreviousElement,
+                           bool aFireEvents, ErrorResult& aRv) {
+  auto* popoverHTMLEl = nsGenericHTMLElement::FromNode(aPopover);
+  NS_ASSERTION(popoverHTMLEl, "Not a HTML element");
+
+  if (!popoverHTMLEl->CheckPopoverValidity(PopoverVisibilityState::Hidden,
+                                           aRv)) {
+    return;
+  }
+
+  // TODO: Run auto popover steps.
+  // TODO: Fire beforetoggle event and re-check popover validity.
+  // TODO: Remove from Top Layer.
+
+  popoverHTMLEl->PopoverPseudoStateUpdate(false, true);
+  popoverHTMLEl->GetPopoverData()->SetPopoverVisibilityState(
+      PopoverVisibilityState::Hidden);
+
+  // TODO: Queue popover toggle event task.
+}
+
 nsTArray<Element*> Document::AutoPopoverList() const {
   nsTArray<Element*> elements;
   for (const nsWeakPtr& ptr : mTopLayer) {

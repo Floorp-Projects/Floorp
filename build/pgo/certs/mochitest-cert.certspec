@@ -1,0 +1,5 @@
+issuer: Mochitest Test CA
+subject: Mochitest Test Cert
+validity:20220101-20320101
+extension:extKeyUsage:serverAuth
+extension:subjectAlternativeName:mochi.test,example.com,example.org

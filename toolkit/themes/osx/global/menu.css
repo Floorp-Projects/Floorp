@@ -12,6 +12,7 @@ menucaption {
   appearance: auto;
   -moz-default-appearance: menuitem;
   -moz-font-smoothing-background-color: -moz-mac-menuitem;
+  flex-shrink: 0;
   align-items: center;
   list-style-image: none;
   padding: 2px 21px;

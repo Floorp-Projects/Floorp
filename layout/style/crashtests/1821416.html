@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<style>
+*, *::after {
+  scroll-timeline: tl;
+}
+</style>
+<script>
+window.addEventListener("load", () => {
+  let a = document.createElement("ul")
+  let b = document.createElement("li")
+  let c = document.createElement("div")
+  let d = document.createElement("del")
+  d.appendChild(document.createElement("q"))
+  c.appendChild(d)
+  b.appendChild(c)
+  a.appendChild(b)
+  document.documentElement.appendChild(a);
+  a.scrollBy(32767, 256);
+  a.type = "square";
+})
+</script>

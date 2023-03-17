@@ -1,8 +1,6 @@
 {
   "type": "object",
-  "required": [
-    "webExtension"
-  ],
+  "required": ["webExtension"],
   "properties": {
     "default": {
       "$ref": "#/definitions/default"
@@ -54,10 +52,7 @@
           "items": {
             "type": "string",
             "pattern": "^[a-z]{0,100}$",
-            "enum": [
-              "",
-              "firefox"
-            ]
+            "enum": ["", "firefox"]
           },
           "uniqueItems": true
         },
@@ -68,14 +63,7 @@
           "items": {
             "type": "string",
             "pattern": "^[a-z]{0,100}$",
-            "enum": [
-              "default",
-              "nightly",
-              "aurora",
-              "beta",
-              "release",
-              "esr"
-            ]
+            "enum": ["default", "nightly", "aurora", "beta", "release", "esr"]
           },
           "uniqueItems": true
         },
@@ -118,22 +106,14 @@
       "title": "Default Status",
       "pattern": "^[a-z-]{0,20}$",
       "description": "Whether or not this engine should be default.",
-      "enum": [
-        "yes",
-        "yes-if-no-other",
-        "no"
-      ]
+      "enum": ["yes", "yes-if-no-other", "no"]
     },
     "defaultPrivate": {
       "type": "string",
       "title": "Default Status (PBM)",
       "pattern": "^[a-z-]{0,20}$",
       "description": "Whether or not this engine should be default in private browsing mode.",
-      "enum": [
-        "yes",
-        "yes-if-no-other",
-        "no"
-      ]
+      "enum": ["yes", "yes-if-no-other", "no"]
     },
     "extraParams": {
       "type": "array",
@@ -153,10 +133,7 @@
             "title": "Condition",
             "pattern": "^[a-z]{0,10}$",
             "description": "The type of parameter (pref or purpose)",
-            "enum": [
-              "pref",
-              "purpose"
-            ]
+            "enum": ["pref", "purpose"]
           },
           "purpose": {
             "type": "string",
@@ -333,7 +310,7 @@
               "type": "string",
               "title": "query",
               "description": "The query parameters to send in a trending suggestions request",
-              "pattern": "^[a-zA-Z0-9.-]{0,100}$"
+              "pattern": "^[a-zA-Z0-9.={}&-]{0,100}$"
             }
           }
         }
@@ -387,7 +364,7 @@
           "description": "Set to true to signify that this is included everywhere."
         },
         "regions": {
-          "$ref" : "#/definitions/regionDetails"
+          "$ref": "#/definitions/regionDetails"
         },
         "locales": {
           "$ref": "#/definitions/localeDetails"
@@ -400,7 +377,7 @@
       "description": "The locations to which this section applies. Note: Regions and Locales are 'and'ed together.",
       "properties": {
         "regions": {
-          "$ref" : "#/definitions/regionDetails"
+          "$ref": "#/definitions/regionDetails"
         },
         "locales": {
           "$ref": "#/definitions/localeDetails"

@@ -148,7 +148,7 @@ var gSearchPane = {
     updateCheckboxEnabled();
 
     window.addEventListener("unload", () => {
-      NimbusFeatures.urlbar.off(onNimbus);
+      NimbusFeatures.urlbar.offUpdate(onNimbus);
     });
   },
 

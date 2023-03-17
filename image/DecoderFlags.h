@@ -31,6 +31,17 @@ enum class DecoderFlags : uint8_t {
    * set.
    */
   CANNOT_SUBSTITUTE = 1 << 4,
+
+#ifdef MOZ_AV1
+  // The flags below are stored in RasterImage to allow a decoded image to
+  // remain consistent in whether it is animated or not.
+
+  // Set according to the "image.avif.sequence.enabled" preference.
+  AVIF_SEQUENCES_ENABLED = 1 << 5,
+  // Set according to the
+  // "image.avif.sequence.animate_avif_major_branded_images" preference.
+  AVIF_ANIMATE_AVIF_MAJOR = 1 << 6,
+#endif
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(DecoderFlags)
 

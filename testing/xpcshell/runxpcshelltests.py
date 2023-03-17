@@ -29,6 +29,7 @@ from threading import Event, Thread, Timer, current_thread
 
 import mozdebug
 import six
+from mozserve import Http3Server
 
 try:
     import psutil
@@ -976,7 +977,7 @@ class XPCShellTests(object):
         self.log = log
         self.harness_timeout = HARNESS_TIMEOUT
         self.nodeProc = {}
-        self.http3ServerProc = {}
+        self.http3Server = None
         self.conditioned_profile_dir = None
 
     def getTestManifest(self, manifest):
@@ -1415,8 +1416,7 @@ class XPCShellTests(object):
         binSuffix = ""
         if sys.platform == "win32":
             binSuffix = ".exe"
-
-        http3ServerPath = self.http3server
+        http3ServerPath = self.http3ServerPath
         if not http3ServerPath:
             http3ServerPath = os.path.join(
                 SCRIPT_DIR, "http3server", "http3server" + binSuffix
@@ -1425,88 +1425,25 @@ class XPCShellTests(object):
                 http3ServerPath = os.path.join(
                     build.topobjdir, "dist", "bin", "http3server" + binSuffix
                 )
-
-        if not os.path.exists(http3ServerPath):
-            self.log.warning(
-                "Http3 server not found at "
-                + http3ServerPath
-                + ". Tests requiring http/3 will fail."
-            )
-            return
-
-        # OK, we found our server, let's try to get it running
-        self.log.info("Found %s" % (http3ServerPath))
-        try:
-            dbPath = os.path.join(SCRIPT_DIR, "http3server", "http3serverDB")
-            if build:
-                dbPath = os.path.join(
-                    build.topsrcdir, "netwerk", "test", "http3serverDB"
-                )
-            self.log.info("Using %s" % (dbPath))
-            # We pipe stdin to the server because it will exit when its stdin
-            # reaches EOF
-            with popenCleanupHack():
-                process = Popen(
-                    [http3ServerPath, dbPath],
-                    stdin=PIPE,
-                    stdout=PIPE,
-                    stderr=PIPE,
-                    env=self.env,
-                    cwd=os.getcwd(),
-                    universal_newlines=True,
-                )
-            self.http3ServerProc["http3Server"] = process
-
-            # Check to make sure the server starts properly by waiting for it to
-            # tell us it's started
-            msg = process.stdout.readline()
-            if "server listening" in msg:
-                searchObj = re.search(
-                    r"HTTP3 server listening on ports ([0-9]+), ([0-9]+), ([0-9]+) and ([0-9]+)."
-                    " EchConfig is @([\x00-\x7F]+)@",
-                    msg,
-                    0,
-                )
-                if searchObj:
-                    self.env["MOZHTTP3_PORT"] = searchObj.group(1)
-                    self.env["MOZHTTP3_PORT_FAILED"] = searchObj.group(2)
-                    self.env["MOZHTTP3_PORT_ECH"] = searchObj.group(3)
-                    self.env["MOZHTTP3_PORT_NO_RESPONSE"] = searchObj.group(4)
-                    self.env["MOZHTTP3_ECH"] = searchObj.group(5)
-        except OSError as e:
-            # This occurs if the subprocess couldn't be started
-            self.log.error("Could not run the http3 server: %s" % (str(e)))
+        dbPath = os.path.join(SCRIPT_DIR, "http3server", "http3serverDB")
+        if build:
+            dbPath = os.path.join(build.topsrcdir, "netwerk", "test", "http3serverDB")
+        options = {}
+        options["http3ServerPath"] = http3ServerPath
+        options["profilePath"] = dbPath
+        options["isMochitest"] = False
+        options["isWin"] = sys.platform == "win32"
+        self.http3Server = Http3Server(options, self.env, self.log)
+        self.http3Server.start()
+        for key, value in self.http3Server.ports().items():
+            self.env[key] = value
+        self.env["MOZHTTP3_ECH"] = self.http3Server.echConfig()
 
     def shutdownHttp3Server(self):
-        """
-        Shutdown our http3Server process, if it exists
-        """
-        for name, proc in six.iteritems(self.http3ServerProc):
-            self.log.info("%s server shutting down ..." % name)
-            if proc.poll() is not None:
-                self.log.info("Http3 server %s already dead %s" % (name, proc.poll()))
-            else:
-                proc.terminate()
-                retries = 0
-                while proc.poll() is None:
-                    time.sleep(0.1)
-                    retries += 1
-                    if retries > 40:
-                        self.log.info("Killing proc")
-                        proc.kill()
-                        break
-
-            def dumpOutput(fd, label):
-                firstTime = True
-                for msg in fd:
-                    if firstTime:
-                        firstTime = False
-                        self.log.info("Process %s" % label)
-                    self.log.info(msg)
-
-            dumpOutput(proc.stdout, "stdout")
-            dumpOutput(proc.stderr, "stderr")
-        self.http3ServerProc = {}
+        if self.http3Server is None:
+            return
+        self.http3Server.stop()
+        self.http3Server = None
 
     def buildXpcsRunArgs(self):
         """
@@ -1746,7 +1683,7 @@ class XPCShellTests(object):
 
         self.app_binary = options.get("app_binary")
         self.xpcshell = options.get("xpcshell")
-        self.http3server = options.get("http3server")
+        self.http3ServerPath = options.get("http3server")
         self.xrePath = options.get("xrePath")
         self.utility_path = options.get("utility_path")
         self.appPath = options.get("appPath")

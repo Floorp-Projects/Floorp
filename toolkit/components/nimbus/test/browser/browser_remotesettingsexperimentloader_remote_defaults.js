@@ -346,6 +346,19 @@ add_task(async function test_finalizeRemoteConfigs_cleanup() {
   featureBar.onUpdate(stubBar);
   let cleanupPromise = new Promise(resolve => featureBar.onUpdate(resolve));
 
+  // stubFoo and stubBar will be called because the store is ready. We are not interested in these calls.
+  // Reset call history and check calls stats after cleanup.
+  Assert.ok(
+    stubFoo.called,
+    "feature foo update triggered becuase store is ready"
+  );
+  Assert.ok(
+    stubBar.called,
+    "feature bar update triggered because store is ready"
+  );
+  stubFoo.resetHistory();
+  stubBar.resetHistory();
+
   Services.prefs.setStringPref(
     `${SYNC_DEFAULTS_PREF_BRANCH}foo`,
     JSON.stringify({ foo: true, branch: { feature: { featureId: "foo" } } })

@@ -406,6 +406,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "authrs_bridge"
+version = "0.1.0"
+dependencies = [
+ "authenticator",
+ "log",
+ "moz_task",
+ "nserror",
+ "nsstring",
+ "serde_cbor",
+ "thin-vec",
+ "xpcom",
+]
+
+[[package]]
 name = "autocfg"
 version = "1.1.0"
 
@@ -1104,7 +1118,7 @@ dependencies = [
 [[package]]
 name = "cssparser"
 version = "0.30.0"
-source = "git+https://github.com/servo/rust-cssparser?rev=b196a164dcbb317016d4aa6c58c13147e6045ebb#b196a164dcbb317016d4aa6c58c13147e6045ebb"
+source = "git+https://github.com/servo/rust-cssparser?rev=45bc47e2bcb846f1efb5aea156be5fe7d18624bf#45bc47e2bcb846f1efb5aea156be5fe7d18624bf"
 dependencies = [
  "cssparser-macros",
  "dtoa-short",
@@ -1119,7 +1133,7 @@ dependencies = [
 [[package]]
 name = "cssparser-macros"
 version = "0.6.0"
-source = "git+https://github.com/servo/rust-cssparser?rev=b196a164dcbb317016d4aa6c58c13147e6045ebb#b196a164dcbb317016d4aa6c58c13147e6045ebb"
+source = "git+https://github.com/servo/rust-cssparser?rev=45bc47e2bcb846f1efb5aea156be5fe7d18624bf#45bc47e2bcb846f1efb5aea156be5fe7d18624bf"
 dependencies = [
  "quote",
  "syn",
@@ -2195,7 +2209,7 @@ dependencies = [
  "audioipc-server",
  "audioipc2-client",
  "audioipc2-server",
- "authenticator",
+ "authrs_bridge",
  "binary_http",
  "bitsdownload",
  "bookmark_sync",
@@ -2601,6 +2615,9 @@ version = "0.1.1"
 dependencies = [
  "base64",
  "bindgen 0.63.0",
+ "cfg-if 1.0.0",
+ "http",
+ "hyper",
  "log",
  "mio 0.6.23",
  "mio-extras",
@@ -2609,6 +2626,7 @@ dependencies = [
  "neqo-http3",
  "neqo-qpack",
  "neqo-transport",
+ "tokio 1.17.0",
 ]
 
 [[package]]
@@ -4973,6 +4991,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43b2853a4d09f215c24cc5489c992ce46052d359b5109343cbafbf26bc62f8a3"
 
 [[package]]
+name = "signal-hook-registry"
+version = "1.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8229b473baa5980ac72ef434c4415e70c4b5e71b423043adb4ba059f89c99a1"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "siphasher"
 version = "0.3.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5467,7 +5494,10 @@ dependencies = [
  "memchr",
  "mio 0.8.0",
  "num_cpus",
+ "once_cell",
+ "parking_lot 0.12.999",
  "pin-project-lite",
+ "signal-hook-registry",
  "socket2",
  "tokio-macros",
  "winapi",

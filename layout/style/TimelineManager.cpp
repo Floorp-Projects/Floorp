@@ -6,7 +6,6 @@
 
 #include "TimelineManager.h"
 
-#include "mozilla/AnimationUtils.h"
 #include "mozilla/ElementAnimationData.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScrollTimeline.h"
@@ -88,11 +87,11 @@ static auto BuildTimelines(nsPresContext* aPresContext, Element* aElement,
 
     RefPtr<TimelineType> dest =
         PopExistingTimeline(timeline.GetName(), aCollection);
-    Element* e = AnimationUtils::GetElementForRestyle(aElement, aPseudoType);
     if (dest) {
-      dest->ReplacePropertiesWith(e, timeline);
+      dest->ReplacePropertiesWith(aElement, aPseudoType, timeline);
     } else {
-      dest = TimelineType::MakeNamed(aPresContext->Document(), e, timeline);
+      dest = TimelineType::MakeNamed(aPresContext->Document(), aElement,
+                                     aPseudoType, timeline);
     }
     MOZ_ASSERT(dest);
 

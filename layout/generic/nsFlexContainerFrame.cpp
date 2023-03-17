@@ -3964,7 +3964,6 @@ void nsFlexContainerFrame::GenerateFlexLines(
   AddOrRemoveStateBits(NS_STATE_FLEX_NORMAL_FLOW_CHILDREN_IN_CSS_ORDER,
                        iter.ItemsAreAlreadyInOrder());
 
-  bool prevItemRequestedBreakAfter = false;
   const bool useMozBoxCollapseBehavior =
       StyleVisibility()->UseLegacyCollapseBehavior();
 
@@ -3974,15 +3973,6 @@ void nsFlexContainerFrame::GenerateFlexLines(
     if (childFrame->IsPlaceholderFrame()) {
       aPlaceholders.AppendElement(childFrame);
       continue;
-    }
-
-    // If we're multi-line and current line isn't empty, create a new flex line
-    // to satisfy the previous flex item's request or to honor "break-before".
-    if (!isSingleLine && !curLine->IsEmpty() &&
-        (prevItemRequestedBreakAfter ||
-         childFrame->StyleDisplay()->BreakBefore())) {
-      curLine = ConstructNewFlexLine();
-      prevItemRequestedBreakAfter = false;
     }
 
     const bool collapsed = childFrame->StyleVisibility()->IsCollapse();
@@ -4034,12 +4024,6 @@ void nsFlexContainerFrame::GenerateFlexLines(
 
     // Update the line's bookkeeping about how large its items collectively are.
     curLine->AddLastItemToMainSizeTotals();
-
-    // Honor "break-after" if we're multi-line. If we have more children, we
-    // will create a new flex line in the next iteration.
-    if (!isSingleLine && childFrame->StyleDisplay()->BreakAfter()) {
-      prevItemRequestedBreakAfter = true;
-    }
     itemIdxInContainer++;
   }
 }

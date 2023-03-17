@@ -133,14 +133,7 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * be visible due to overflowing content, are. This can be called during
    * reflow of the scrolled contents.
    */
-  virtual nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState) = 0;
-  /**
-   * Return the sizes of all scrollbars assuming that any scrollbars that could
-   * be visible due to overflowing content, are. This can be called during
-   * reflow of the scrolled contents.
-   */
-  virtual nsMargin GetDesiredScrollbarSizes(nsPresContext* aPresContext,
-                                            gfxContext* aRC) = 0;
+  virtual nsMargin GetDesiredScrollbarSizes() const = 0;
   /**
    * Return the width for non-disappearing scrollbars.
    */

@@ -5,9 +5,7 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { RemotePageChild } = ChromeUtils.import(
-  "resource://gre/actors/RemotePageChild.jsm"
-);
+import { RemotePageChild } from "resource://gre/actors/RemotePageChild.sys.mjs";
 
 const lazy = {};
 

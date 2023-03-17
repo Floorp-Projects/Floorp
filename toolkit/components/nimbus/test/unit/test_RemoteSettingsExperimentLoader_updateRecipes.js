@@ -120,7 +120,7 @@ add_task(async function test_updateRecipes_invalidFeatureValue() {
           {
             featureId: "spotlight",
             value: {
-              id: "test-spotlight-invalid-1",
+              template: "spotlight",
             },
           },
         ],
@@ -132,7 +132,7 @@ add_task(async function test_updateRecipes_invalidFeatureValue() {
           {
             featureId: "spotlight",
             value: {
-              id: "test-spotlight-invalid-2",
+              template: "spotlight",
             },
           },
         ],

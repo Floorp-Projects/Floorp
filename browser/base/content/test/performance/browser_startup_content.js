@@ -34,7 +34,7 @@ const known_scripts = {
     "resource:///actors/AboutReaderChild.sys.mjs",
     "resource:///actors/LinkHandlerChild.jsm",
     "resource:///actors/SearchSERPTelemetryChild.sys.mjs",
-    "resource://gre/actors/ContentMetaChild.jsm",
+    "resource://gre/actors/ContentMetaChild.sys.mjs",
     "resource://gre/modules/Readerable.jsm",
 
     // Telemetry

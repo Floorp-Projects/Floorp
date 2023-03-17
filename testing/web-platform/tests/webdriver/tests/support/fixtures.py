@@ -245,7 +245,8 @@ def get_test_page(iframe, inline):
         as_frame=False,
         frame_doc=None,
         shadow_doc=None,
-        nested_shadow_dom=False
+        nested_shadow_dom=False,
+        shadow_root_mode="open"
     ):
         if frame_doc is None:
             frame_doc = """<div id="in-frame"><input type="checkbox"/></div>"""
@@ -260,7 +261,7 @@ def get_test_page(iframe, inline):
                     class extends HTMLElement {{
                         constructor() {{
                             super();
-                            this.attachShadow({{mode: "open"}}).innerHTML = `
+                            this.attachShadow({{mode: "{shadow_root_mode}"}}).innerHTML = `
                                 {shadow_doc}
                             `;
                         }}
@@ -308,7 +309,11 @@ def get_test_page(iframe, inline):
                     class extends HTMLElement {{
                         constructor() {{
                             super();
-                            this.attachShadow({{mode: "open"}}).innerHTML = `{shadow_doc}`;
+                            const shadowRoot = this.attachShadow({{mode: "{shadow_root_mode}"}});
+                            shadowRoot.innerHTML = `{shadow_doc}`;
+
+                            // Save shadow root on window to access it in case of `closed` mode.
+                            window._shadowRoot = shadowRoot;
                         }}
                     }}
                 );

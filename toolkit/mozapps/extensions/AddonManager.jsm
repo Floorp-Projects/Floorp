@@ -3376,7 +3376,7 @@ var AddonManagerInternal = {
       // Throw an appropriate error if the given URL is not valid
       // as an installation source.  Return silently if it is okay.
       function checkInstallUri(uri) {
-        if (!Services.policies.allowedInstallSource(uri)) {
+        if (Services.policies && !Services.policies.allowedInstallSource(uri)) {
           // eslint-disable-next-line no-throw-literal
           return {
             success: false,

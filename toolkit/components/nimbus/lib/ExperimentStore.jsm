@@ -244,7 +244,7 @@ class ExperimentStore extends SharedDataMap {
   async init() {
     await super.init();
 
-    this.getAllActiveExperiments().forEach(({ branch, featureIds }) => {
+    this.getAllActiveExperiments().forEach(({ slug, branch, featureIds }) => {
       (featureIds || getAllBranchFeatureIds(branch)).forEach(featureId =>
         this._emitFeatureUpdate(featureId, "feature-experiment-loaded")
       );
@@ -341,6 +341,20 @@ class ExperimentStore extends SharedDataMap {
   }
 
   /**
+   * Check if an active rollout already exists for a feature.
+   * Does not active the experiment (send an exposure event).
+   *
+   * @param {string} featureId
+   * @returns {boolean} Does an active rollout exist for that feature?
+   */
+  hasRolloutForFeature(featureId) {
+    if (!featureId) {
+      return false;
+    }
+    return !!this.getRolloutForFeature(featureId);
+  }
+
+  /**
    * Remove inactive enrollments older than 6 months
    */
   _cleanupOldRecipes() {
@@ -360,15 +374,15 @@ class ExperimentStore extends SharedDataMap {
 
   _emitUpdates(enrollment) {
     this.emit(`update:${enrollment.slug}`, enrollment);
-    (
-      enrollment.featureIds || getAllBranchFeatureIds(enrollment.branch)
-    ).forEach(featureId => {
-      this.emit(`update:${featureId}`, enrollment);
-      this._emitFeatureUpdate(
-        featureId,
-        enrollment.isRollout ? "rollout-updated" : "experiment-updated"
-      );
-    });
+    const featureIds =
+      enrollment.featureIds || getAllBranchFeatureIds(enrollment.branch);
+    const reason = enrollment.isRollout
+      ? "rollout-updated"
+      : "experiment-updated";
+
+    for (const featureId of featureIds) {
+      this._emitFeatureUpdate(featureId, reason);
+    }
   }
 
   _emitFeatureUpdate(featureId, reason) {
@@ -376,6 +390,16 @@ class ExperimentStore extends SharedDataMap {
   }
 
   _onFeatureUpdate(featureId, callback) {
+    if (this._isReady) {
+      const hasExperiment = this.hasExperimentForFeature(featureId);
+      if (hasExperiment || this.hasRolloutForFeature(featureId)) {
+        callback(
+          `featureUpdate:${featureId}`,
+          hasExperiment ? "experiment-updated" : "rollout-updated"
+        );
+      }
+    }
+
     this.on(`featureUpdate:${featureId}`, callback);
   }
 

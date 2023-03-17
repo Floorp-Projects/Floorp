@@ -1341,12 +1341,11 @@ class ExtensionData {
         isPrivileged && manifest.permissions.includes("mozillaAddons")
       );
 
-      // Privileged and temporary extensions can opt out of originControls.
-      if (
-        (isPrivileged || this.temporarilyInstalled) &&
-        manifest.granted_host_permissions
-      ) {
-        result.originControls = false;
+      // Privileged and temporary extensions still get OriginControls, but
+      // can have host permissions automatically granted during install.
+      // For all other cases, ensure granted_host_permissions is false.
+      if (!isPrivileged && !this.temporarilyInstalled) {
+        manifest.granted_host_permissions = false;
       }
 
       let host_permissions = manifest.host_permissions ?? [];
@@ -3228,7 +3227,15 @@ class Extension extends ExtensionData {
     }
   }
 
+  // Setup initial permissions on extension startup based on manifest
+  // and potentially previous manifest and permissions values. None of
+  // the ExtensionPermissions.add/remove() calls are are awaited here
+  // because we update the in-memory representation at the same time.
   _setupStartupPermissions() {
+    // If we add/remove permissions conditionally based on startupReason,
+    // we need to update the cache, or changes will be lost after restart.
+    let updateCache = false;
+
     // We automatically add permissions to system/built-in extensions.
     // Extensions expliticy stating not_allowed will never get permission.
     let isAllowed = this.permissions.has(PRIVATE_ALLOWED_PERMISSION);
@@ -3244,8 +3251,7 @@ class Extension extends ExtensionData {
         this.permissions.delete(PRIVATE_ALLOWED_PERMISSION);
       }
     } else if (!isAllowed && this.isPrivileged && !this.temporarilyInstalled) {
-      // Add to EP so it is preserved after ADDON_INSTALL.  We don't wait on the add here
-      // since we are pushing the value into this.permissions.  EP will eventually save.
+      // Add to EP so it is preserved after ADDON_INSTALL.
       lazy.ExtensionPermissions.add(this.id, {
         permissions: [PRIVATE_ALLOWED_PERMISSION],
         origins: [],
@@ -3259,12 +3265,11 @@ class Extension extends ExtensionData {
       this.permissions.add(PRIVATE_ALLOWED_PERMISSION);
     }
 
-    // We only want to update the SVG_CONTEXT_PROPERTIES_PERMISSION during install and
-    // upgrade/downgrade startups.
+    // We only want to update the SVG_CONTEXT_PROPERTIES_PERMISSION during
+    // install and upgrade/downgrade startups.
     if (INSTALL_AND_UPDATE_STARTUP_REASONS.has(this.startupReason)) {
       if (isMozillaExtension(this)) {
-        // Add to EP so it is preserved after ADDON_INSTALL.  We don't wait on the add here
-        // since we are pushing the value into this.permissions.  EP will eventually save.
+        // Add to EP so it is preserved after ADDON_INSTALL.
         lazy.ExtensionPermissions.add(this.id, {
           permissions: [SVG_CONTEXT_PROPERTIES_PERMISSION],
           origins: [],
@@ -3277,9 +3282,10 @@ class Extension extends ExtensionData {
         });
         this.permissions.delete(SVG_CONTEXT_PROPERTIES_PERMISSION);
       }
+      updateCache = true;
     }
 
-    // Ensure devtools permission is set
+    // Ensure devtools permission is set.
     if (
       this.manifest.devtools_page &&
       !this.manifest.optional_permissions.includes("devtools")
@@ -3289,6 +3295,26 @@ class Extension extends ExtensionData {
         origins: [],
       });
       this.permissions.add("devtools");
+    }
+
+    if (
+      this.originControls &&
+      this.manifest.granted_host_permissions &&
+      this.startupReason === "ADDON_INSTALL"
+    ) {
+      let origins = this.getManifestOrigins();
+      lazy.ExtensionPermissions.add(this.id, { permissions: [], origins });
+      updateCache = true;
+
+      let allowed = this.allowedOrigins.patterns.map(p => p.pattern);
+      this.allowedOrigins = new MatchPatternSet(origins.concat(allowed), {
+        restrictSchemes: this.restrictSchemes,
+        ignorePath: true,
+      });
+    }
+
+    if (updateCache) {
+      this.cachePermissions();
     }
   }
 

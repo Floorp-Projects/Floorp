@@ -2849,13 +2849,16 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowState& aState) {
     if (canBreakForPageNames && (!aState.mReflowInput.mFlags.mIsTopOfPage ||
                                  !aState.IsAdjacentWithBStart())) {
       const nsIFrame* const frame = line->mFirstChild;
-      if (const nsIFrame* const prevFrame = frame->GetPrevSibling()) {
-        if (!frame->IsPlaceholderFrame() && !prevFrame->IsPlaceholderFrame()) {
-          nextPageName = frame->GetStartPageValue();
-          if (nextPageName != prevFrame->GetEndPageValue()) {
-            shouldBreakForPageName = true;
-            line->MarkDirty();
-          }
+      if (!frame->IsPlaceholderFrame()) {
+        nextPageName = frame->GetStartPageValue();
+        // Walk back to the last frame that isn't a placeholder.
+        const nsIFrame* prevFrame = frame->GetPrevSibling();
+        while (prevFrame && prevFrame->IsPlaceholderFrame()) {
+          prevFrame = prevFrame->GetPrevSibling();
+        }
+        if (prevFrame && prevFrame->GetStartPageValue() != nextPageName) {
+          shouldBreakForPageName = true;
+          line->MarkDirty();
         }
       }
     }
@@ -3462,6 +3465,8 @@ nsIFrame* nsBlockFrame::PullFrameFrom(nsLineBox* aLine,
   MOZ_ASSERT(fromLine, "bad line to pull from");
   MOZ_ASSERT(fromLine->GetChildCount(), "empty line");
   MOZ_ASSERT(aLine->GetChildCount(), "empty line");
+  MOZ_ASSERT(!HasProperty(LineIteratorProperty()),
+             "Shouldn't have line iterators mid-reflow");
 
   NS_ASSERTION(fromLine->IsBlock() == fromLine->mFirstChild->IsBlockOutside(),
                "Disagreement about whether it's a block or not");
@@ -3477,8 +3482,8 @@ nsIFrame* nsBlockFrame::PullFrameFrom(nsLineBox* aLine,
   nsIFrame* newFirstChild = frame->GetNextSibling();
 
   if (aFromContainer != this) {
-    // The frame is being pulled from a next-in-flow; therefore we
-    // need to add it to our sibling list.
+    // The frame is being pulled from a next-in-flow; therefore we need to add
+    // it to our sibling list.
     MOZ_ASSERT(aLine == mLines.back());
     MOZ_ASSERT(aFromLine == aFromContainer->mLines.begin(),
                "should only pull from first line");

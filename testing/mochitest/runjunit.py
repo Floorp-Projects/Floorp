@@ -48,6 +48,8 @@ class JUnitTestRunner(MochitestDesktop):
     def __init__(self, log, options):
         self.log = log
         self.verbose = False
+        self.http3Server = None
+        self.dohServer = None
         if (
             options.log_tbpl_level == "debug"
             or options.log_mach_level == "debug"
@@ -126,10 +128,12 @@ class JUnitTestRunner(MochitestDesktop):
         self.options.webServer = self.options.remoteWebServer
         self.options.webSocketPort = "9988"
         self.options.httpdPath = None
+        self.options.http3ServerPath = None
         self.options.keep_open = False
         self.options.pidFile = ""
         self.options.subsuite = None
         self.options.xrePath = None
+        self.options.useHttp3Server = False
         if build_obj and "MOZ_HOST_BIN" in os.environ:
             self.options.xrePath = os.environ["MOZ_HOST_BIN"]
             if not self.options.utilityPath:

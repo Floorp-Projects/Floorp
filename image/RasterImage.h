@@ -416,6 +416,12 @@ class RasterImage final : public ImageResource,
 
   TimeStamp mDrawStartTime;
 
+  // This field is set according to the DecoderType of this image once when
+  // initialized so that a decoder's flags can be set according to any
+  // preferences that affect its behavior in a way that would otherwise cause
+  // errors, such as enabling or disabling animation.
+  DecoderFlags mDefaultDecoderFlags = DefaultDecoderFlags();
+
   //////////////////////////////////////////////////////////////////////////////
   // Scaling.
   //////////////////////////////////////////////////////////////////////////////

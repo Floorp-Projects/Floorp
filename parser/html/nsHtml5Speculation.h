@@ -16,7 +16,7 @@
 class nsHtml5Speculation final : public nsAHtml5TreeOpSink {
  public:
   nsHtml5Speculation(nsHtml5OwningUTF16Buffer* aBuffer, int32_t aStart,
-                     int32_t aStartLineNumber,
+                     int32_t aStartLineNumber, int32_t aStartColumnNumber,
                      nsAHtml5TreeBuilderState* aSnapshot);
 
   ~nsHtml5Speculation();
@@ -26,6 +26,8 @@ class nsHtml5Speculation final : public nsAHtml5TreeOpSink {
   int32_t GetStart() { return mStart; }
 
   int32_t GetStartLineNumber() { return mStartLineNumber; }
+
+  int32_t GetStartColumnNumber() { return mStartColumnNumber; }
 
   nsAHtml5TreeBuilderState* GetSnapshot() { return mSnapshot.get(); }
 
@@ -53,6 +55,11 @@ class nsHtml5Speculation final : public nsAHtml5TreeOpSink {
    * The current line number at the start of the speculation
    */
   int32_t mStartLineNumber;
+
+  /**
+   * The current line number at the start of the speculation.
+   */
+  int32_t mStartColumnNumber;
 
   mozilla::UniquePtr<nsAHtml5TreeBuilderState> mSnapshot;
 

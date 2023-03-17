@@ -87,17 +87,31 @@ void dav1d_default_picture_release(Dav1dPicture *const p, void *const cookie) {
 }
 
 struct pic_ctx_context {
+    struct Dav1dRef *plane_ref[3]; /* MUST BE FIRST */
+    enum Dav1dPixelLayout layout;
+    void *extra_ptr; /* MUST BE AT THE END */
+};
+
+struct plane_ctx_context {
     Dav1dPicAllocator allocator;
     Dav1dPicture pic;
-    void *extra_ptr; /* MUST BE AT THE END */
 };
 
 static void free_buffer(const uint8_t *const data, void *const user_data) {
     struct pic_ctx_context *pic_ctx = user_data;
+    const int planes = pic_ctx->layout != DAV1D_PIXEL_LAYOUT_I400 ? 3 : 1;
 
-    pic_ctx->allocator.release_picture_callback(&pic_ctx->pic,
-                                                pic_ctx->allocator.cookie);
+    for (int i = 0; i < planes; i++)
+        dav1d_ref_dec(&pic_ctx->plane_ref[i]);
     free(pic_ctx);
+}
+
+static void free_plane_buffer(const uint8_t *const data, void *const user_data) {
+    struct plane_ctx_context *plane_ctx = user_data;
+
+    plane_ctx->allocator.release_picture_callback(&plane_ctx->pic,
+                                                  plane_ctx->allocator.cookie);
+    free(plane_ctx);
 }
 
 static int picture_alloc_with_edges(Dav1dContext *const c,
@@ -122,6 +136,7 @@ static int picture_alloc_with_edges(Dav1dContext *const c,
     struct pic_ctx_context *pic_ctx = malloc(extra + sizeof(struct pic_ctx_context));
     if (pic_ctx == NULL)
         return DAV1D_ERR(ENOMEM);
+    memset(pic_ctx, 0, sizeof(struct pic_ctx_context));
 
     p->p.w = w;
     p->p.h = h;
@@ -139,14 +154,38 @@ static int picture_alloc_with_edges(Dav1dContext *const c,
         return res;
     }
 
-    pic_ctx->allocator = *p_allocator;
-    pic_ctx->pic = *p;
+    pic_ctx->layout = p->p.layout;
 
     if (!(p->ref = dav1d_ref_wrap(p->data[0], free_buffer, pic_ctx))) {
         p_allocator->release_picture_callback(p, p_allocator->cookie);
         free(pic_ctx);
         dav1d_log(c, "Failed to wrap picture: %s\n", strerror(errno));
         return DAV1D_ERR(ENOMEM);
+    }
+
+    struct plane_ctx_context *plane_ctx = malloc(sizeof(struct plane_ctx_context));
+    if (plane_ctx == NULL){
+        dav1d_ref_dec(&p->ref);
+        p_allocator->release_picture_callback(p, p_allocator->cookie);
+        return DAV1D_ERR(ENOMEM);
+    }
+
+    plane_ctx->allocator = *p_allocator;
+    plane_ctx->pic = *p;
+
+    pic_ctx->plane_ref[0] = dav1d_ref_wrap(p->data[0], free_plane_buffer, plane_ctx);
+    if (!pic_ctx->plane_ref[0]) {
+        dav1d_ref_dec(&p->ref);
+        p_allocator->release_picture_callback(p, p_allocator->cookie);
+        free(plane_ctx);
+        dav1d_log(c, "Failed to wrap picture plane: %s\n", strerror(errno));
+        return DAV1D_ERR(ENOMEM);
+    }
+
+    const int planes = p->p.layout != DAV1D_PIXEL_LAYOUT_I400 ? 3 : 1;
+    for (int i = 1; i < planes; i++) {
+        pic_ctx->plane_ref[i] = pic_ctx->plane_ref[0];
+        dav1d_ref_inc(pic_ctx->plane_ref[i]);
     }
 
     p->seq_hdr_ref = seq_hdr_ref;
@@ -214,13 +253,14 @@ int dav1d_picture_alloc_copy(Dav1dContext *const c, Dav1dPicture *const dst, con
                              const Dav1dPicture *const src)
 {
     struct pic_ctx_context *const pic_ctx = src->ref->user_data;
+    struct plane_ctx_context *const plane_ctx = pic_ctx->plane_ref[0]->user_data;
     const int res = picture_alloc_with_edges(c, dst, w, src->p.h,
                                              src->seq_hdr, src->seq_hdr_ref,
                                              src->frame_hdr, src->frame_hdr_ref,
                                              src->content_light, src->content_light_ref,
                                              src->mastering_display, src->mastering_display_ref,
                                              src->itut_t35, src->itut_t35_ref,
-                                             src->p.bpc, &src->m, &pic_ctx->allocator,
+                                             src->p.bpc, &src->m, &plane_ctx->allocator,
                                              0, NULL);
     return res;
 }

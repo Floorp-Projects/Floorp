@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-03-14T17:18:27.541885'
+updated_at: '2023-03-15T14:56:45.077565'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -188,6 +188,10 @@ people:
   - bmo_id: 129968
     name: Justin Wood
     nick: Callek
+  - &calu
+    bmo_id: 693351
+    name: Cathy Lu
+    nick: calu
   - &canova
     bmo_id: 525693
     name: Nazım Can Altınova
@@ -497,6 +501,10 @@ people:
     bmo_id: 522029
     name: Johann Hofmann
     nick: johannh
+  - &jonalmeida
+    bmo_id: 541581
+    name: Jonathan Almeida
+    nick: jonalmeida
   - &jonco
     bmo_id: 443194
     name: Jon Coppeard
@@ -743,6 +751,10 @@ people:
     bmo_id: 283262
     name: Alexandre Poirot
     nick: ochameau
+  - &ohall
+    bmo_id: 694341
+    name: Olivia Hall
+    nick: ohall
   - &owlish
     bmo_id: 579431
     name: ''
@@ -1577,6 +1589,7 @@ modules:
     meta:
       owners_emeritus:
         - James Willcox
+        - Agi Sferro
       peers_emeritus:
         - Dylan Roeh
         - Eugen Sawin
@@ -1589,7 +1602,10 @@ modules:
     owners:
       - *owlish
     peers:
+      - *calu
+      - *jonalmeida
       - *mkato
+      - *ohall
     machine_name: core_geckoview
 
   - name: 'Core: Global Key Bindings'
@@ -4053,5 +4069,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 97b9cdbe53ecd86c1356a2ceb45b2e11e866f9db
-  export: d31a34cda0263c9544bf6e7c9fb369273ce2961d
+  config: 9d274b9df34ee8d6af1a0e230bab2de0d4622e89
+  export: 970fd50b07f70478cab94d43c061aa137e993f38

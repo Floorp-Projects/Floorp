@@ -3039,15 +3039,43 @@ function synthesizeDrop(
   }
 }
 
+function _getFlattenedTreeParentNode(aNode) {
+  return _EU_maybeUnwrap(_EU_maybeWrap(aNode).flattenedTreeParentNode);
+}
+
+function _getInclusiveFlattenedTreeParentElement(aNode) {
+  for (
+    let inclusiveAncestor = aNode;
+    inclusiveAncestor;
+    inclusiveAncestor = _getFlattenedTreeParentNode(inclusiveAncestor)
+  ) {
+    if (inclusiveAncestor.nodeType == Node.ELEMENT_NODE) {
+      return inclusiveAncestor;
+    }
+  }
+  return null;
+}
+
+function _nodeIsFlattenedTreeDescendantOf(
+  aPossibleDescendant,
+  aPossibleAncestor
+) {
+  do {
+    if (aPossibleDescendant == aPossibleAncestor) {
+      return true;
+    }
+    aPossibleDescendant = _getFlattenedTreeParentNode(aPossibleDescendant);
+  } while (aPossibleDescendant);
+  return false;
+}
+
 function _computeSrcElementFromSrcSelection(aSrcSelection) {
   let srcElement = aSrcSelection.focusNode;
   while (_EU_maybeWrap(srcElement).isNativeAnonymous) {
-    srcElement = _EU_maybeUnwrap(
-      _EU_maybeWrap(srcElement).flattenedTreeParentNode
-    );
+    srcElement = _getFlattenedTreeParentNode(srcElement);
   }
-  if (srcElement.nodeType !== Node.NODE_TYPE_ELEMENT) {
-    srcElement = srcElement.parentElement;
+  if (srcElement.nodeType !== Node.ELEMENT_NODE) {
+    srcElement = _getInclusiveFlattenedTreeParentElement(srcElement);
   }
   return srcElement;
 }
@@ -3177,6 +3205,29 @@ async function synthesizePlainDragAndDrop(aParams) {
     _EU_Ci.nsIDragService
   );
 
+  const editingHost = (() => {
+    if (!srcElement.matches(":read-write")) {
+      return null;
+    }
+    let lastEditableElement = srcElement;
+    for (
+      let inclusiveAncestor = _getInclusiveFlattenedTreeParentElement(
+        srcElement
+      );
+      inclusiveAncestor;
+      inclusiveAncestor = _getInclusiveFlattenedTreeParentElement(
+        _getFlattenedTreeParentNode(inclusiveAncestor)
+      )
+    ) {
+      if (inclusiveAncestor.matches(":read-write")) {
+        lastEditableElement = inclusiveAncestor;
+        if (lastEditableElement == srcElement.ownerDocument.body) {
+          break;
+        }
+      }
+    }
+    return lastEditableElement;
+  })();
   try {
     _getDOMWindowUtils(srcWindow).disableNonTestMouseEvents(true);
 
@@ -3186,11 +3237,18 @@ async function synthesizePlainDragAndDrop(aParams) {
     function onMouseDown(aEvent) {
       mouseDownEvent = aEvent;
       if (logFunc) {
-        logFunc(`"${aEvent.type}" event is fired`);
+        logFunc(
+          `"${aEvent.type}" event is fired on ${
+            aEvent.target
+          } (composedTarget: ${_EU_maybeUnwrap(
+            _EU_maybeWrap(aEvent).composedTarget
+          )}`
+        );
       }
       if (
-        !srcElement.contains(
-          _EU_maybeUnwrap(_EU_maybeWrap(aEvent).composedTarget)
+        !_nodeIsFlattenedTreeDescendantOf(
+          _EU_maybeUnwrap(_EU_maybeWrap(aEvent).composedTarget),
+          srcElement
         )
       ) {
         // If srcX and srcY does not point in one of rects in srcElement,
@@ -3230,8 +3288,9 @@ async function synthesizePlainDragAndDrop(aParams) {
         logFunc(`"${aEvent.type}" event is fired`);
       }
       if (
-        !srcElement.contains(
-          _EU_maybeUnwrap(_EU_maybeWrap(aEvent).composedTarget)
+        !_nodeIsFlattenedTreeDescendantOf(
+          _EU_maybeUnwrap(_EU_maybeWrap(aEvent).composedTarget),
+          srcElement
         )
       ) {
         // If srcX and srcY does not point in one of rects in srcElement,
@@ -3416,8 +3475,9 @@ async function synthesizePlainDragAndDrop(aParams) {
             logFunc(`"${aEvent.type}" event is fired`);
           }
           if (
-            !destElement.contains(
-              _EU_maybeUnwrap(_EU_maybeWrap(aEvent).composedTarget)
+            !_nodeIsFlattenedTreeDescendantOf(
+              _EU_maybeUnwrap(_EU_maybeWrap(aEvent).composedTarget),
+              destElement
             )
           ) {
             throw new Error(
@@ -3470,9 +3530,11 @@ async function synthesizePlainDragAndDrop(aParams) {
           logFunc(`"${aEvent.type}" event is fired`);
         }
         if (
-          !srcElement.contains(
-            _EU_maybeUnwrap(_EU_maybeWrap(aEvent).composedTarget)
-          )
+          !_nodeIsFlattenedTreeDescendantOf(
+            _EU_maybeUnwrap(_EU_maybeWrap(aEvent).composedTarget),
+            srcElement
+          ) &&
+          _EU_maybeUnwrap(_EU_maybeWrap(aEvent).composedTarget) != editingHost
         ) {
           throw new Error(
             'event target of "dragend" is not srcElement nor its descendant'

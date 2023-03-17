@@ -1,8 +1,8 @@
 defaults pref(layout.css.named-pages.enabled,true)
 
 == page-name-abspos-001.html page-name-abspos-001-ref.html
-fails == page-name-abspos-002.html page-name-abspos-002-ref.html # bug 1816570
-fails == page-name-abspos-003.html page-name-abspos-003-ref.html # bug 1816570
+== page-name-abspos-002.html page-name-abspos-002-ref.html
+== page-name-abspos-003.html page-name-abspos-003-ref.html
 == page-name-canvas-001.html page-name-canvas-001-ref.html
 == page-name-canvas-002.html page-name-canvas-002-ref.html
 == page-name-canvas-003.html page-name-canvas-003-ref.html
@@ -16,7 +16,7 @@ fails == page-name-abspos-003.html page-name-abspos-003-ref.html # bug 1816570
 # still expect this to behave the same with break-after and page name breaks.
 == page-name-flex-004.html page-name-flex-004-ref.html
 == page-name-float-001.html page-name-float-001-ref.html
-fails == page-name-float-002.html page-name-float-002-ref.html # bug 1816570
+== page-name-float-002.html page-name-float-002-ref.html
 == page-name-img-001.html page-name-img-001-ref.html
 == page-name-img-002.html page-name-img-002-ref.html
 == page-name-img-003.html page-name-img-003-ref.html
@@ -32,6 +32,8 @@ fails == page-name-float-002.html page-name-float-002-ref.html # bug 1816570
 == page-name-orthogonal-writing-004.html page-name-orthogonal-writing-004-ref.html
 == page-name-propagated-001.html page-name-propagated-001-ref.html
 == page-name-propagated-002.html page-name-propagated-002-ref.html
+# This is affected by https://bugzilla.mozilla.org/1818596, though that bug
+# affects both the ref and the test case in the same way.
 == page-name-propagated-003.html page-name-propagated-003-ref.html
 == page-name-propagated-004.html page-name-propagated-004-ref.html
 == page-name-propagated-005.html page-name-propagated-005-ref.html

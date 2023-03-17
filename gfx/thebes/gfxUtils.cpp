@@ -1752,17 +1752,11 @@ DeviceColor ToDeviceColor(nscolor aColor) {
 }
 
 DeviceColor ToDeviceColor(const StyleAbsoluteColor& aColor) {
-  // TODO(tlouw): aColor might not be in sRGB.
-  MOZ_ASSERT(aColor.color_space == StyleColorSpace::Srgb,
-             "color should be in sRGB");
-
   return ToDeviceColor(aColor.ToColor());
 }
 
 sRGBColor ToSRGBColor(const StyleAbsoluteColor& aColor) {
-  // TODO(tlouw): aColor might not be in sRGB.
-  MOZ_ASSERT(aColor.color_space == StyleColorSpace::Srgb,
-             "color should be in sRGB");
+  auto srgb = aColor.ToColorSpace(StyleColorSpace::Srgb);
 
   const auto ToComponent = [](float aF) -> float {
     float component = std::min(std::max(0.0f, aF), 1.0f);
@@ -1771,8 +1765,8 @@ sRGBColor ToSRGBColor(const StyleAbsoluteColor& aColor) {
     }
     return component;
   };
-  return {ToComponent(aColor.components._0), ToComponent(aColor.components._1),
-          ToComponent(aColor.components._2), ToComponent(aColor.alpha)};
+  return {ToComponent(srgb.components._0), ToComponent(srgb.components._1),
+          ToComponent(srgb.components._2), ToComponent(srgb.alpha)};
 }
 
 }  // namespace gfx

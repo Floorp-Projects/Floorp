@@ -156,8 +156,8 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   bool CheckPopoverValidity(mozilla::dom::PopoverVisibilityState aExpectedState,
                             ErrorResult& aRv);
   void ShowPopover(ErrorResult& aRv);
-  void HidePopover(ErrorResult& aRv);
-  void TogglePopover(bool force, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void HidePopover(ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void TogglePopover(bool force, ErrorResult& aRv);
 
   void SetNonce(const nsAString& aNonce) {
     SetProperty(nsGkAtoms::nonce, new nsString(aNonce),
