@@ -1,4 +1,0 @@
-[flake8]
-max-line-length=110
-ignore=
-    F401

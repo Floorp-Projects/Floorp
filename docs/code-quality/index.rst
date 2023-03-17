@@ -90,11 +90,11 @@ In this document, we try to list these all tools.
      - Meta bug
      - More info
      - Upstream
-   * - Flake8
-     - Yes (with `autopep8 <https://github.com/hhatto/autopep8>`_)
-     - `bug 1155970 <https://bugzilla.mozilla.org/show_bug.cgi?id=1155970>`__
-     - :ref:`Flake8`
-     - http://flake8.pycqa.org/
+   * - ruff
+     - Yes
+     - `bug 1811850 <https://bugzilla.mozilla.org/show_bug.cgi?id=1811850>`__
+     - :ref:`ruff`
+     - https://github.com/charliermarsh/ruff
    * - black
      - Yes
      - `bug 1555560 <https://bugzilla.mozilla.org/show_bug.cgi?id=1555560>`__
@@ -105,12 +105,6 @@ In this document, we try to list these all tools.
      - `bug 1623024 <https://bugzilla.mozilla.org/show_bug.cgi?id=1623024>`__
      - :ref:`pylint`
      - https://www.pylint.org/
-   * - Python 2/3 compatibility check
-     -
-     - `bug 1496527 <https://bugzilla.mozilla.org/show_bug.cgi?id=1496527>`__
-     - :ref:`Python 2/3 compatibility check`
-     -
-
 
 .. list-table:: Rust
    :widths: 20 20 20 20 20
