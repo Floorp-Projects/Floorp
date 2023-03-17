@@ -112,6 +112,33 @@ class ContileTopSitesProviderTest {
         }
 
     @Test
+    fun `GIVEN a set of top sites is cached WHEN checking the server specified cache max age THEN max age is calculated correctly`() =
+        runTest {
+            val client = prepareClient()
+            val provider = spy(ContileTopSitesProvider(testContext, client))
+            val file = mock<File>() {
+                whenever(exists()).thenReturn(true)
+                whenever(lastModified()).thenReturn(Date().time)
+            }
+
+            whenever(provider.readFromDiskCache()).thenReturn(
+                ContileTopSitesProvider.CachedData(
+                    300000,
+                    mock(),
+                ),
+            )
+            whenever(provider.getBaseCacheFile()).thenReturn(file)
+
+            assertFalse(provider.isCacheExpired(shouldUseServerMaxAge = true))
+
+            provider.cacheState = provider.cacheState.invalidate()
+            whenever(file.lastModified()).thenReturn(Date().time - 300000)
+            whenever(provider.getBaseCacheFile()).thenReturn(file)
+
+            assertTrue(provider.isCacheExpired(shouldUseServerMaxAge = true))
+        }
+
+    @Test
     fun `GIVEN a cache max age is specified WHEN top sites are fetched THEN the cache max age is correctly set`() =
         runTest {
             val jsonResponse = loadResourceAsString("/contile/contile.json")

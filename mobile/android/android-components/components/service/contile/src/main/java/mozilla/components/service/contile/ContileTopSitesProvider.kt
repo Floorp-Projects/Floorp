@@ -198,7 +198,7 @@ class ContileTopSitesProvider(
                 cacheState.computeMaxAges(
                     file.lastModified(),
                     maxCacheAgeInSeconds * DateUtils.SECOND_IN_MILLIS,
-                    (readFromDiskCache()?.validFor ?: 0L) * DateUtils.SECOND_IN_MILLIS,
+                    (readFromDiskCache()?.validFor ?: 0L),
                 )
             } else {
                 cacheState.invalidate()
@@ -248,7 +248,12 @@ class ContileTopSitesProvider(
             this.copy(isCacheValid = false, localCacheMaxAge = null, serverCacheMaxAge = null)
 
         /**
-         * Update local and server max age values
+         * Update local and server max age values.
+         *
+         * @param lastModified Unix timestamp when the cache was last modified.
+         * @param localMaxAge Validity of local cache in milliseconds.
+         * @param serverMaxAge Server specified validity in milliseconds. To be used as fallback
+         * when local max age is exceeded and a server outage is detected.
          */
         fun computeMaxAges(lastModified: Long, localMaxAge: Long, serverMaxAge: Long): CacheState =
             this.copy(
