@@ -141,10 +141,15 @@ def lint(paths, config, log, **lintargs):
 
     process_kwargs = {"processStderrLine": lambda line: log.debug(line)}
 
+    warning_rules = set(config.get("warning-rules", []))
     if lintargs.get("fix"):
         # Do a first pass with --fix-only as the json format doesn't return the
         # number of fixed issues.
-        output = run_process(config, args + ["--fix-only"], **process_kwargs)
+        fix_args = args + ["--fix-only"]
+
+        # Don't fix warnings to limit unrelated changes sneaking into patches.
+        fix_args.append(f"--extend-ignore={','.join(warning_rules)}")
+        output = run_process(config, fix_args, **process_kwargs)
         matches = re.match(r"Fixed (\d+) errors?.", output)
         if matches:
             fixed = int(matches[1])
@@ -159,7 +164,6 @@ def lint(paths, config, log, **lintargs):
         log.error(f"could not parse output: {output}")
         return []
 
-    warning_rules = set(config.get("warning-rules", []))
     for issue in issues:
         res = {
             "path": issue["filename"],
@@ -168,8 +172,11 @@ def lint(paths, config, log, **lintargs):
             "lineoffset": issue["end_location"]["row"] - issue["location"]["row"],
             "message": issue["message"],
             "rule": issue["code"],
-            "level": "warning" if issue["code"] in warning_rules else "error",
+            "level": "error",
         }
+        if any(issue["code"].startswith(w) for w in warning_rules):
+            res["level"] = "warning"
+
         if issue["fix"]:
             res["hint"] = issue["fix"]["message"]
 
