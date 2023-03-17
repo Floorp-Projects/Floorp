@@ -353,6 +353,13 @@ void HTMLTextAreaElement::GetDefaultValue(nsAString& aDefaultValue,
 
 void HTMLTextAreaElement::SetDefaultValue(const nsAString& aDefaultValue,
                                           ErrorResult& aError) {
+  // setting the value of an textarea element using `.defaultValue = "foo"`
+  // must be interpreted as a two-step operation:
+  // 1. clearing all child nodes
+  // 2. adding a new text node with the new content
+  // Step 1 must therefore collapse the Selection to 0.
+  // Calling `SetNodeTextContent()` with an empty string will do that for us.
+  nsContentUtils::SetNodeTextContent(this, EmptyString(), true);
   nsresult rv = nsContentUtils::SetNodeTextContent(this, aDefaultValue, true);
   if (NS_SUCCEEDED(rv) && !mValueChanged) {
     Reset();
@@ -848,6 +855,24 @@ void HTMLTextAreaElement::ContentRemoved(nsIContent* aChild,
 void HTMLTextAreaElement::ContentChanged(nsIContent* aContent) {
   if (!mValueChanged && mDoneAddingChildren &&
       nsContentUtils::IsInSameAnonymousTree(this, aContent)) {
+    if (mState->IsSelectionCached()) {
+      // In case the content is *replaced*, i.e. by calling
+      // `.textContent = "foo";`,
+      // firstly the old content is removed, then the new content is added.
+      // As per wpt, this must collapse the selection to 0.
+      // Removing and adding of an element is routed through here, but due to
+      // the script runner `Reset()` is only invoked after the append operation.
+      // Therefore, `Reset()` would adjust the Selection to the new value, not
+      // to 0.
+      // By forcing a selection update here, the selection is reset in order to
+      // comply with the wpt.
+      auto& props = mState->GetSelectionProperties();
+      nsAutoString resetVal;
+      GetDefaultValue(resetVal, IgnoreErrors());
+      props.SetMaxLength(resetVal.Length());
+      props.SetStart(props.GetStart());
+      props.SetEnd(props.GetEnd());
+    }
     // We should wait all ranges finish handling the mutation before updating
     // the anonymous subtree with a call of Reset.
     nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
