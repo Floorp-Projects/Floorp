@@ -13,7 +13,7 @@ const CONFIG_DEFAULT = [
     urls: {
       trending: {
         fullPath:
-          "http://mochi.test:8888/browser/browser/components/urlbar/tests/browser/searchSuggestionEngine.sjs",
+          "https://example.com/browser/browser/components/search/test/browser/trendingSuggestionEngine.sjs",
         query: "",
       },
     },
@@ -96,6 +96,20 @@ add_task(async function test_trending_results() {
     searchMode: "@private ",
     expectedResults: 0,
   });
+
+  // Check we can configure the maximum number of results.
+  await check_results({
+    featureEnabled: true,
+    searchMode: "@basic ",
+    maxResultsSearchMode: 5,
+    expectedResults: 5,
+  });
+  await check_results({
+    featureEnabled: true,
+    requireSearchModeEnabled: false,
+    maxResultsNoSearchMode: 5,
+    expectedResults: 5,
+  });
 });
 
 async function check_results({
@@ -103,9 +117,16 @@ async function check_results({
   requireSearchModeEnabled = true,
   searchMode = "",
   expectedResults = 0,
+  maxResultsSearchMode = 2,
+  maxResultsNoSearchMode = 2,
 }) {
   await SpecialPowers.pushPrefEnv({
     set: [
+      ["browser.urlbar.trending.maxResultsSearchMode", maxResultsSearchMode],
+      [
+        "browser.urlbar.trending.maxResultsNoSearchMode",
+        maxResultsNoSearchMode,
+      ],
       ["browser.urlbar.trending.featureGate", featureEnabled],
       ["browser.urlbar.trending.requireSearchMode", requireSearchModeEnabled],
     ],
