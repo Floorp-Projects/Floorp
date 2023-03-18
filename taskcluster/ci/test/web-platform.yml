@@ -50,7 +50,7 @@ web-platform-tests:
             linux.*/debug: 16
             macosx.*/debug: 18
             windows.*32.*/opt: 12
-            windows.*/debug: 14
+            windows.*/debug: 16
             windows.*-ccov.*/opt: 14
             default: 10
     max-run-time:
