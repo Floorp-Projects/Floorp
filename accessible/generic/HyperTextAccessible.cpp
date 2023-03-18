@@ -531,14 +531,11 @@ uint32_t HyperTextAccessible::FindOffset(uint32_t aOffset,
   childFrame->GetChildFrameContainingOffset(
       innerContentOffset, true, &unusedOffsetInFrame, &frameAtOffset);
 
-  const bool kIsJumpLinesOk = true;       // okay to jump lines
-  const bool kIsScrollViewAStop = false;  // do not stop at scroll views
-  const bool kIsKeyboardSelect = true;    // is keyboard selection
-  const bool kIsVisualBidi = false;       // use visual order for bidi text
-  nsPeekOffsetStruct pos(
-      aAmount, aDirection, innerContentOffset, nsPoint(0, 0), kIsJumpLinesOk,
-      kIsScrollViewAStop, kIsKeyboardSelect, kIsVisualBidi, false,
-      nsPeekOffsetStruct::ForceEditableRegion::No, aWordMovementType, false);
+  PeekOffsetStruct pos(
+      aAmount, aDirection, innerContentOffset, nsPoint(0, 0),
+      {PeekOffsetOption::JumpLines, PeekOffsetOption::IsKeyboardSelect,
+       PeekOffsetOption::PreserveSpaces},
+      aWordMovementType);
   nsresult rv = frameAtOffset->PeekOffset(&pos);
 
   // PeekOffset fails on last/first lines of the text in certain cases.
