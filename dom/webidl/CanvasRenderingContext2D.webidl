@@ -46,6 +46,7 @@ interface CanvasRenderingContext2D {
   // image smoothing mode -- if disabled, images won't be smoothed
   // if scaled.
   [Deprecated="PrefixedImageSmoothingEnabled",
+   Pref="dom.mozImageSmoothingEnabled.enabled",
    BinaryName="imageSmoothingEnabled"]
   attribute boolean mozImageSmoothingEnabled;
 
