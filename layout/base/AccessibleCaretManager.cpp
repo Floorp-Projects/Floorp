@@ -1160,8 +1160,9 @@ bool AccessibleCaretManager::RestrictCaretDraggingOffsets(
 
   // Move one character (in the direction of dir) from the inactive caret's
   // position. This is the limit for the active caret's new position.
-  nsPeekOffsetStruct limit(eSelectCluster, dir, offset, nsPoint(0, 0), true,
-                           true, false, false, false);
+  PeekOffsetStruct limit(
+      eSelectCluster, dir, offset, nsPoint(0, 0),
+      {PeekOffsetOption::JumpLines, PeekOffsetOption::ScrollViewStop});
   nsresult rv = frame->PeekOffset(&limit);
   if (NS_FAILED(rv)) {
     limit.mResultContent = content;
