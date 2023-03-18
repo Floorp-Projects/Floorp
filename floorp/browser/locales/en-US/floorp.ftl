@@ -339,7 +339,7 @@ newtab-background-not-background =
 newtab-background-selected-image =
     .label = Use Images from a Selected Folder
 
-newtab-background-folder = Selected Folder (May not be available depending on the location of the folder)
+newtab-background-folder = Selected Folder
 
 newtab-background-folder-reload = 
   .label = Reload Images

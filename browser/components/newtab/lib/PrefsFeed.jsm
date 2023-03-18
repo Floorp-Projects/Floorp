@@ -44,7 +44,7 @@ this.PrefsFeed = class PrefsFeed {
           data: { name, value },
         })
       );
-      if(name == "floorp.background.type" && value == 3){
+      if (name == "floorp.background.type" && value == 3) {
         this.getImage()
       }
     }
@@ -213,37 +213,55 @@ this.PrefsFeed = class PrefsFeed {
         },
       })
     );
-      Services.prefs.addObserver("browser.newtabpage.activity-stream.floorp.background.images.folder",this.getImage.bind(this))
-      Services.prefs.addObserver("browser.newtabpage.activity-stream.floorp.background.images.extensions",this.getImage.bind(this))
-      Services.obs.addObserver(this.getImage.bind(this), "floorp-newtab-background-update");
+    Services.prefs.addObserver("browser.newtabpage.activity-stream.floorp.background.images.folder", this.getImage.bind(this))
+    Services.prefs.addObserver("browser.newtabpage.activity-stream.floorp.background.images.extensions", this.getImage.bind(this))
+    Services.obs.addObserver(this.getImage.bind(this), "floorp-newtab-background-update");
     this.getImage()
   }
 
-  async getImage(){
-    if(Services.prefs.getIntPref("browser.newtabpage.activity-stream.floorp.background.type") == 3){
-    let tPath = OS.Path.join(Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.folder","") || OS.Path.join(OS.Constants.Path.profileDir,"chrome", "newtabImages"),"a").slice( 0, -1 )
-    let folderExists = await IOUtils.exists(tPath)
-    if(folderExists){
-      let imagesPath = await IOUtils.getChildren(tPath)
-      let str = new RegExp(`\\.(${Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.extensions","").split(",").join("|")})+$`)
-      let imagesDataPath = []
-      if(imagesPath != 0){
-        for(let elem of imagesPath){
-          if(!str.test(elem)) continue
-          let filePath = Services.io.newFileURI(FileUtils.File(elem)).asciiSpec
-          imagesDataPath.push(filePath)
-        }
+  async getImage() {
+    if (Services.prefs.getIntPref("browser.newtabpage.activity-stream.floorp.background.type") == 3) {
+      let tPath = OS.Path.join(Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.folder", "") || OS.Path.join(OS.Constants.Path.profileDir, "chrome", "newtabImages"), "a").slice(0, -1)
+      let folderExists = await IOUtils.exists(tPath)
+      if (folderExists) {
+        let imagesPath = await IOUtils.getChildren(tPath)
+        let str = new RegExp(`\\.(${Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.extensions", "").split(",").join("|")})+$`)
+        let imagesDataPath = {data:{},urls:[]}
         
+        this.store.dispatch(
+          ac.BroadcastToContent({
+            type: at.PREF_CHANGED,
+            data: { name: "backgroundPaths", value: {data:{},urls:[]} },
+          })
+        );
+        if (imagesPath != 0) {
+          for (let elem of imagesPath) {
+            if (!str.test(elem)) continue
+            let filePath = Services.io.newFileURI(FileUtils.File(elem)).asciiSpec
+            imagesDataPath.urls.push(filePath)
+            imagesDataPath.data[filePath] = {}
+
+            let blobData = await (await fetch(filePath)).blob()
+            imagesDataPath.data[filePath].type = blobData.type
+            let promise = new Promise(resolve => {
+              const fr = new FileReader()
+              fr.onload = e => resolve(e.target.result)
+              fr.readAsArrayBuffer(blobData)
+            })
+            imagesDataPath.data[filePath].data = await promise
+          }
+
+        }
+        console.log(imagesDataPath)
+        this.store.dispatch(
+          ac.BroadcastToContent({
+            type: at.PREF_CHANGED,
+            data: { name: "backgroundPaths", value: imagesDataPath },
+          })
+        );
+
       }
-      this.store.dispatch(
-        ac.BroadcastToContent({
-          type: at.PREF_CHANGED,
-          data: { name:"backgroundPaths", value:imagesDataPath  },
-        })
-      );
-      
     }
-  }
   }
 
   uninit() {
