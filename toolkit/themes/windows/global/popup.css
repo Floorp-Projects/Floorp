@@ -78,6 +78,7 @@ menupopup > menu > menupopup {
 
 :is(panel, menupopup)::part(content) {
   display: flex;
+  box-sizing: border-box;
   padding: var(--panel-padding);
   margin: var(--panel-shadow-margin);
   box-shadow: var(--panel-shadow);

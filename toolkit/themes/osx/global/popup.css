@@ -46,11 +46,13 @@ panel[titlebar] {
 
 :is(panel, menupopup)::part(content) {
   display: flex;
+  box-sizing: border-box;
   -moz-font-smoothing-background-color: var(--panel-background, -moz-mac-menupopup);
   background: var(--panel-background);
   color: var(--panel-color);
   box-shadow: var(--panel-shadow);
   padding: var(--panel-padding);
+  margin: var(--panel-shadow-margin);
   width: var(--panel-width);
   border-radius: var(--panel-border-radius);
   border: 1px solid var(--panel-border-color);
