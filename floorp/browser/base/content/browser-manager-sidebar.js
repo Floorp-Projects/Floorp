@@ -11,7 +11,7 @@
  
  const STATIC_SIDEBAR_DATA = BrowserManagerSidebar.STATIC_SIDEBAR_DATA
  let BROWSER_SIDEBAR_DATA = JSON.parse(Services.prefs.getStringPref(`floorp.browser.sidebar2.data`, undefined))
- const sidebar_icons = ["sidebar2-back", "sidebar2-forward", "sidebar2-reload"]
+ const sidebar_icons = ["sidebar2-back", "sidebar2-forward", "sidebar2-reload", "sidebar2-go-index"]
  
  const bmsController = {
      eventFunctions:{
@@ -29,7 +29,7 @@
                      webpanel.reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE) /* Reload */
                      break;
                  case 3:
-                     webpanel.gotoIndex() /* Goto Index */
+                     webpanel.gotoIndex();
                      break
              }
          },
