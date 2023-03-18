@@ -498,18 +498,27 @@ function getBlockedReason(channel) {
   } catch (err) {
     // "cancelledByExtension" doesn't have to be available.
   }
-
-  const blockList = [
-    // This is emitted when a host is not found
-    "NS_ERROR_UNKNOWN_HOST",
+  // These are platform errors which are not exposed to the users,
+  // usually the requests (with these errors) might be displayed with various
+  // other status codes.
+  const ignoreList = [
+    // This is emited when the request is already in the cache.
+    "NS_ERROR_PARSED_DATA_CACHED",
+    // This is emited when there is some issues around images e.g When the img.src
+    // links to a non existent url. This is typically shown as a 404 request.
+    "NS_IMAGELIB_ERROR_FAILURE",
+    // This is emited when there is a redirect. They are shown as 301 requests.
+    "NS_BINDING_REDIRECTED",
+    // E.g Emited by send beacon requests.
+    "NS_ERROR_ABORT",
   ];
 
-  // If the request is not already blocked (by a web extension) but has a failed status, check if
-  // the error matches any on the block list.
+  // If the request has not failed or is not blocked by a web extension, check for
+  // any errors not on the ignore list. e.g When a host is not found (NS_ERROR_UNKNOWN_HOST).
   if (
     blockedReason == 0 &&
     !Components.isSuccessCode(status) &&
-    blockList.includes(ChromeUtils.getXPCOMErrorName(status))
+    !ignoreList.includes(ChromeUtils.getXPCOMErrorName(status))
   ) {
     blockedReason = ChromeUtils.getXPCOMErrorName(status);
   }
