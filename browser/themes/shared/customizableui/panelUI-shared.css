@@ -982,6 +982,7 @@ panelview .toolbarbutton-1,
   padding: var(--arrowpanel-menuitem-padding);
   border-radius: var(--arrowpanel-menuitem-border-radius);
   background-color: transparent;
+  flex-shrink: 0;
 }
 
 .subview-subheader {
