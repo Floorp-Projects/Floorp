@@ -116,6 +116,9 @@ pref("floorp.browser.note.enabled", false);
 
 //Clock
 pref("floorp.browser.clock.enabled", false);
+
+//BMS Search
+pref("browser.search.useDefault.enabled", false);
 /*----------------------------------------------------------------------------------------------------------------------------------*/
 
 //検索エンジン
