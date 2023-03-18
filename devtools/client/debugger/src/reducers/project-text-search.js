@@ -9,7 +9,6 @@
  * @module reducers/project-text-search
  */
 
-import { prefs } from "../utils/prefs";
 import { createLocation } from "../utils/location";
 
 export const statusType = {
@@ -26,11 +25,6 @@ export function initialProjectTextSearchState() {
     results: [],
     ongoingSearch: null,
     status: statusType.initial,
-    modifiers: {
-      caseSensitive: prefs.projectSearchCaseSensitive,
-      wholeWord: prefs.projectSearchWholeWord,
-      regexMatch: prefs.projectSearchRegexMatch,
-    },
   };
 }
 
@@ -75,30 +69,6 @@ function update(state = initialProjectTextSearchState(), action) {
 
     case "ADD_ONGOING_SEARCH":
       return { ...state, ongoingSearch: action.ongoingSearch };
-
-    case "TOGGLE_PROJECT_SEARCH_MODIFIER": {
-      const currentModifierValue = !state.modifiers[action.modifier];
-
-      if (action.modifier == "caseSensitive") {
-        prefs.projectSearchCaseSensitive = currentModifierValue;
-      }
-
-      if (action.modifier == "wholeWord") {
-        prefs.projectSearchWholeWord = currentModifierValue;
-      }
-
-      if (action.modifier == "regexMatch") {
-        prefs.projectSearchRegexMatch = currentModifierValue;
-      }
-
-      return {
-        ...state,
-        modifiers: {
-          ...state.modifiers,
-          [action.modifier]: currentModifierValue,
-        },
-      };
-    }
 
     case "CLEAR_SEARCH":
     case "CLOSE_PROJECT_SEARCH":

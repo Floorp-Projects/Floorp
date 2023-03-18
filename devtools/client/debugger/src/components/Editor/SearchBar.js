@@ -12,7 +12,6 @@ import {
   getSelectedLocation,
   getSettledSourceTextContent,
   getFileSearchQuery,
-  getFileSearchModifiers,
   getFileSearchResults,
   getContext,
 } from "../../selectors";
@@ -56,7 +55,6 @@ class SearchBar extends Component {
       selectedContentLoaded: PropTypes.bool.isRequired,
       selectedSource: PropTypes.object.isRequired,
       setActiveSearch: PropTypes.func.isRequired,
-      toggleFileSearchModifier: PropTypes.func.isRequired,
       traverseResults: PropTypes.func.isRequired,
     };
   }
@@ -222,7 +220,6 @@ class SearchBar extends Component {
     const {
       searchResults: { count },
       searchOn,
-      modifiers,
     } = this.props;
 
     if (!searchOn) {
@@ -249,11 +246,8 @@ class SearchBar extends Component {
           showClose={true}
           handleClose={this.closeSearch}
           showSearchModifiers={true}
-          modifiers={modifiers}
-          onToggleSearchModifier={value => {
-            this.props.toggleFileSearchModifier(this.props.cx, value);
-            this.doSearch(this.state.query);
-          }}
+          searchKey="file-search"
+          onToggleSearchModifier={() => this.doSearch(this.state.query)}
         />
       </div>
     );
@@ -276,13 +270,11 @@ const mapStateToProps = (state, p) => {
       ? !!getSettledSourceTextContent(state, selectedLocation)
       : false,
     query: getFileSearchQuery(state),
-    modifiers: getFileSearchModifiers(state),
     searchResults: getFileSearchResults(state),
   };
 };
 
 export default connect(mapStateToProps, {
-  toggleFileSearchModifier: actions.toggleFileSearchModifier,
   setFileSearchQuery: actions.setFileSearchQuery,
   setActiveSearch: actions.setActiveSearch,
   closeFileSearch: actions.closeFileSearch,

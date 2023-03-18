@@ -4,11 +4,7 @@
 
 import { createStore, selectors, actions } from "../../utils/test-head";
 
-const {
-  getFileSearchQuery,
-  getFileSearchModifiers,
-  getFileSearchResults,
-} = selectors;
+const { getFileSearchQuery, getFileSearchResults } = selectors;
 
 describe("file text search", () => {
   it("should update search results", () => {
@@ -41,15 +37,6 @@ describe("file text search", () => {
     dispatch(actions.setFileSearchQuery(cx, "foobar"));
     fileSearchQueryState = getFileSearchQuery(getState());
     expect(fileSearchQueryState).toBe("foobar");
-  });
-
-  it("should toggle a file search modifier", () => {
-    const { dispatch, getState, cx } = createStore();
-    let fileSearchModState = getFileSearchModifiers(getState());
-    expect(fileSearchModState.caseSensitive).toBe(false);
-    dispatch(actions.toggleFileSearchModifier(cx, "caseSensitive"));
-    fileSearchModState = getFileSearchModifiers(getState());
-    expect(fileSearchModState.caseSensitive).toBe(true);
   });
 
   it("should toggle a file search query cleaning", () => {

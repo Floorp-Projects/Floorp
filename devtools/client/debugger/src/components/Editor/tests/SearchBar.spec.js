@@ -3,6 +3,9 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React from "react";
+import { Provider } from "react-redux";
+import configureStore from "redux-mock-store";
+
 import { shallow } from "enzyme";
 import SearchBar from "../SearchBar";
 import "../../../workers/search";
@@ -58,10 +61,19 @@ function generateDefaults() {
 
 function render(overrides = {}) {
   const defaults = generateDefaults();
-  const props = { ...defaults, ...overrides };
-  const component = shallow(<SearchBarComponent {...props} />, {
-    disableLifecycleMethods: true,
+  const mockStore = configureStore([]);
+  const store = mockStore({
+    ui: { mutableSearchOptions: { "foo-search": {} } },
   });
+  const props = { ...defaults, ...overrides };
+  const component = shallow(
+    <Provider store={store}>
+      <SearchBarComponent {...props} />
+    </Provider>,
+    {
+      disableLifecycleMethods: true,
+    }
+  ).dive();
   return { component, props };
 }
 
@@ -76,7 +88,7 @@ describe("doSearch", () => {
   it("should complete a search", async () => {
     const { component, props } = render();
     component
-      .find("SearchInput")
+      .find("Connect(SearchInput)")
       .simulate("change", { target: { value: "query" } });
 
     const doSearchArgs = props.doSearch.mock.calls[0][1];

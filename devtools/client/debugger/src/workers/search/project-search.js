@@ -6,7 +6,7 @@
 
 import getMatches from "./get-matches";
 
-export function findSourceMatches(content, queryText, modifiers) {
+export function findSourceMatches(content, queryText, options) {
   if (queryText == "") {
     return [];
   }
@@ -14,7 +14,7 @@ export function findSourceMatches(content, queryText, modifiers) {
   const text = content.value;
   const lines = text.split("\n");
 
-  return getMatches(queryText, text, modifiers).map(({ line, ch, match }) => {
+  return getMatches(queryText, text, options).map(({ line, ch, match }) => {
     const { value, matchIndex } = truncateLine(lines[line], ch);
     return {
       line: line + 1,

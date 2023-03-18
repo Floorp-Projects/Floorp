@@ -3,6 +3,10 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React from "react";
+import { Provider } from "react-redux";
+import configureStore from "redux-mock-store";
+import PropTypes from "prop-types";
+
 import { mount, shallow } from "enzyme";
 import { ProjectSearch } from "../ProjectSearch";
 import { statusType } from "../../reducers/project-text-search";
@@ -111,6 +115,10 @@ const testMatch = {
 };
 
 function render(overrides = {}, mounted = false) {
+  const mockStore = configureStore([]);
+  const store = mockStore({
+    ui: { mutableSearchOptions: { "foo-search": {} } },
+  });
   const props = {
     cx: mockcx,
     status: "DONE",
@@ -128,9 +136,21 @@ function render(overrides = {}, mounted = false) {
     ...overrides,
   };
 
-  return mounted
-    ? mount(<ProjectSearch {...props} />, { context })
-    : shallow(<ProjectSearch {...props} />, { context });
+  if (mounted) {
+    return mount(
+      <Provider store={store}>
+        <ProjectSearch {...props} />
+      </Provider>,
+      { context, childContextTypes: { shortcuts: PropTypes.object } }
+    ).childAt(0);
+  }
+
+  return shallow(
+    <Provider store={store}>
+      <ProjectSearch {...props} />
+    </Provider>,
+    { context }
+  ).dive();
 }
 
 describe("ProjectSearch", () => {

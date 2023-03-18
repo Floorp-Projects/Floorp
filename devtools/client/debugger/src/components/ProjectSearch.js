@@ -19,7 +19,6 @@ import {
   getProjectSearchStatus,
   getProjectSearchQuery,
   getContext,
-  getTextSearchModifiers,
 } from "../selectors";
 
 import ManagedTree from "./shared/ManagedTree";
@@ -281,13 +280,7 @@ export class ProjectSearch extends Component {
   }
 
   renderInput() {
-    const {
-      cx,
-      closeProjectSearch,
-      status,
-      modifiers,
-      toggleProjectSearchModifier,
-    } = this.props;
+    const { closeProjectSearch, status } = this.props;
 
     return (
       <SearchInput
@@ -307,11 +300,8 @@ export class ProjectSearch extends Component {
         handleClose={closeProjectSearch}
         ref="searchInput"
         showSearchModifiers={true}
-        modifiers={modifiers}
-        onToggleSearchModifier={value => {
-          toggleProjectSearchModifier(cx, value);
-          this.doSearch(this.state.inputValue);
-        }}
+        searchKey="project-search"
+        onToggleSearchModifier={() => this.doSearch(this.state.inputValue)}
       />
     );
   }
@@ -342,7 +332,6 @@ const mapStateToProps = state => ({
   results: getProjectSearchResults(state),
   query: getProjectSearchQuery(state),
   status: getProjectSearchStatus(state),
-  modifiers: getTextSearchModifiers(state),
 });
 
 export default connect(mapStateToProps, {
@@ -352,5 +341,4 @@ export default connect(mapStateToProps, {
   selectSpecificLocation: actions.selectSpecificLocation,
   setActiveSearch: actions.setActiveSearch,
   doSearchForHighlight: actions.doSearchForHighlight,
-  toggleProjectSearchModifier: actions.toggleProjectSearchModifier,
 })(ProjectSearch);

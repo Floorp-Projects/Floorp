@@ -4,14 +4,20 @@
 
 import React from "react";
 import { shallow } from "enzyme";
+import configureStore from "redux-mock-store";
 
 import SearchInput from "../SearchInput";
 
 describe("SearchInput", () => {
   // !! wrapper is defined outside test scope
   // so it will keep values between tests
+  const mockStore = configureStore([]);
+  const store = mockStore({
+    ui: { mutableSearchOptions: { "foo-search": {} } },
+  });
   const wrapper = shallow(
     <SearchInput
+      store={store}
       query=""
       count={5}
       placeholder="A placeholder"
@@ -20,11 +26,13 @@ describe("SearchInput", () => {
       isLoading={false}
       onChange={() => {}}
       onKeyDown={() => {}}
+      searchKey="foo-search"
       showSearchModifiers={false}
       showClose={true}
       handleClose={jest.fn()}
+      setSearchOptions={jest.fn()}
     />
-  );
+  ).dive();
 
   it("renders", () => expect(wrapper).toMatchSnapshot());
 

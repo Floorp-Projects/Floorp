@@ -13,13 +13,13 @@ import {
   getSourceList,
   getSettledSourceTextContent,
   isSourceBlackBoxed,
+  getSearchOptions,
 } from "../selectors";
 import { createLocation } from "../utils/location";
 import { loadSourceText } from "./sources/loadSourceText";
 import {
   getProjectSearchOperation,
   getProjectSearchStatus,
-  getTextSearchModifiers,
 } from "../selectors/project-text-search";
 import { statusType } from "../reducers/project-text-search";
 
@@ -69,10 +69,6 @@ export function stopOngoingSearch(cx) {
       dispatch(updateSearchStatus(cx, statusType.cancelled));
     }
   };
-}
-
-export function toggleProjectSearchModifier(cx, modifier) {
-  return { type: "TOGGLE_PROJECT_SEARCH_MODIFIER", cx, modifier };
 }
 
 export function searchSources(cx, query) {
@@ -148,7 +144,7 @@ export function searchSource(cx, source, sourceActor, query) {
       sourceActor,
     });
 
-    const modifiers = getTextSearchModifiers(state);
+    const options = getSearchOptions(state, "project-search");
     const content = getSettledSourceTextContent(state, location);
     let matches = [];
 
@@ -156,7 +152,7 @@ export function searchSource(cx, source, sourceActor, query) {
       matches = await searchWorker.findSourceMatches(
         content.value,
         query,
-        modifiers
+        options
       );
     }
     if (!matches.length) {

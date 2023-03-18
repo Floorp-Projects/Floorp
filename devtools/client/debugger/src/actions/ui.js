@@ -225,6 +225,10 @@ export function setOrientation(orientation) {
   return { type: "SET_ORIENTATION", orientation };
 }
 
+export function setSearchOptions(searchKey, searchOptions) {
+  return { type: "SET_SEARCH_OPTIONS", searchKey, searchOptions };
+}
+
 export function copyToClipboard(location) {
   return ({ dispatch, getState }) => {
     const content = getSourceContent(getState(), location);

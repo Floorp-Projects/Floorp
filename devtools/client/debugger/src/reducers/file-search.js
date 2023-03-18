@@ -7,8 +7,6 @@
  * @module reducers/fileSearch
  */
 
-import { prefs } from "../utils/prefs";
-
 const emptySearchResults = Object.freeze({
   matches: Object.freeze([]),
   matchIndex: -1,
@@ -19,11 +17,6 @@ const emptySearchResults = Object.freeze({
 export const initialFileSearchState = () => ({
   query: "",
   searchResults: emptySearchResults,
-  modifiers: {
-    caseSensitive: prefs.fileSearchCaseSensitive,
-    wholeWord: prefs.fileSearchWholeWord,
-    regexMatch: prefs.fileSearchRegexMatch,
-  },
 });
 
 function update(state = initialFileSearchState(), action) {
@@ -34,27 +27,6 @@ function update(state = initialFileSearchState(), action) {
 
     case "UPDATE_SEARCH_RESULTS": {
       return { ...state, searchResults: action.results };
-    }
-
-    case "TOGGLE_FILE_SEARCH_MODIFIER": {
-      const actionVal = !state.modifiers[action.modifier];
-
-      if (action.modifier == "caseSensitive") {
-        prefs.fileSearchCaseSensitive = actionVal;
-      }
-
-      if (action.modifier == "wholeWord") {
-        prefs.fileSearchWholeWord = actionVal;
-      }
-
-      if (action.modifier == "regexMatch") {
-        prefs.fileSearchRegexMatch = actionVal;
-      }
-
-      return {
-        ...state,
-        modifiers: { ...state.modifiers, [action.modifier]: actionVal },
-      };
     }
 
     case "NAVIGATE": {

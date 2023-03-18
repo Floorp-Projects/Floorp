@@ -15,7 +15,7 @@ import { renderWasmText } from "../utils/wasm";
 import {
   getSelectedSourceId,
   getSelectedSourceTextContent,
-  getFileSearchModifiers,
+  getSearchOptions,
   getFileSearchQuery,
   getFileSearchResults,
 } from "../selectors";
@@ -58,10 +58,6 @@ export function setFileSearchQuery(cx, query) {
   };
 }
 
-export function toggleFileSearchModifier(cx, modifier) {
-  return { type: "TOGGLE_FILE_SEARCH_MODIFIER", cx, modifier };
-}
-
 export function updateSearchResults(cx, characterIndex, line, matches) {
   const matchIndex = matches.findIndex(
     elm => elm.line === line && elm.ch === characterIndex
@@ -81,7 +77,7 @@ export function updateSearchResults(cx, characterIndex, line, matches) {
 
 export function searchContents(cx, query, editor, focusFirstResult = true) {
   return async ({ getState, dispatch, searchWorker }) => {
-    const modifiers = getFileSearchModifiers(getState());
+    const modifiers = getSearchOptions(getState(), "file-search");
     const sourceTextContent = getSelectedSourceTextContent(getState());
 
     if (
@@ -124,7 +120,7 @@ export function searchContents(cx, query, editor, focusFirstResult = true) {
 
 export function searchContentsForHighlight(query, editor, line, ch) {
   return async ({ getState, dispatch }) => {
-    const modifiers = getFileSearchModifiers(getState());
+    const modifiers = getSearchOptions(getState(), "file-search");
     const sourceTextContent = getSelectedSourceTextContent(getState());
 
     if (!query || !editor || !sourceTextContent || !modifiers) {
@@ -145,7 +141,7 @@ export function traverseResults(cx, rev, editor) {
     const ctx = { ed: editor, cm: editor.codeMirror };
 
     const query = getFileSearchQuery(getState());
-    const modifiers = getFileSearchModifiers(getState());
+    const modifiers = getSearchOptions(getState(), "file-search");
     const { matches } = getFileSearchResults(getState());
 
     if (query === "") {
