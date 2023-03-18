@@ -5,11 +5,11 @@
 import assert from "../../utils/assert";
 import buildQuery from "../../utils/build-query";
 
-export default function getMatches(query, text, modifiers) {
-  if (!query || !text || !modifiers) {
+export default function getMatches(query, text, options) {
+  if (!query || !text || !options) {
     return [];
   }
-  const regexQuery = buildQuery(query, modifiers, {
+  const regexQuery = buildQuery(query, options, {
     isGlobal: true,
   });
   const matchedLocations = [];

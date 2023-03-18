@@ -57,3 +57,7 @@ export function getEditorWrapping(state) {
 export function getSupportsJavascriptTracing(state) {
   return state.ui.supportsJavascriptTracing;
 }
+
+export function getSearchOptions(state, searchKey) {
+  return state.ui.mutableSearchOptions[searchKey];
+}

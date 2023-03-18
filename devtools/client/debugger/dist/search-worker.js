@@ -525,12 +525,12 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-function getMatches(query, text, modifiers) {
-  if (!query || !text || !modifiers) {
+function getMatches(query, text, options) {
+  if (!query || !text || !options) {
     return [];
   }
 
-  const regexQuery = (0, _buildQuery.default)(query, modifiers, {
+  const regexQuery = (0, _buildQuery.default)(query, options, {
     isGlobal: true
   });
   const matchedLocations = [];
@@ -749,14 +749,14 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 // Maybe reuse file search's functions?
-function findSourceMatches(content, queryText, modifiers) {
+function findSourceMatches(content, queryText, options) {
   if (queryText == "") {
     return [];
   }
 
   const text = content.value;
   const lines = text.split("\n");
-  return (0, _getMatches.default)(queryText, text, modifiers).map(({
+  return (0, _getMatches.default)(queryText, text, options).map(({
     line,
     ch,
     match

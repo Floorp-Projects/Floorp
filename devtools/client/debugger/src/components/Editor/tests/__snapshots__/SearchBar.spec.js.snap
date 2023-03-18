@@ -4,20 +4,12 @@ exports[`SearchBar should render 1`] = `
 <div
   className="search-bar"
 >
-  <SearchInput
+  <Connect(SearchInput)
     count={0}
-    expanded={false}
     handleClose={[Function]}
     handleNext={[Function]}
     handlePrev={[Function]}
-    hasPrefix={false}
     isLoading={false}
-    modifiers={
-      Object {
-        "get": [MockFunction],
-        "toJS": [Function],
-      }
-    }
     onBlur={[Function]}
     onChange={[Function]}
     onFocus={[Function]}
@@ -26,12 +18,11 @@ exports[`SearchBar should render 1`] = `
     onToggleSearchModifier={[Function]}
     placeholder="Find in file…"
     query=""
-    selectedItemId=""
+    searchKey="file-search"
     shouldFocus={false}
     showClose={true}
     showErrorEmoji={false}
     showSearchModifiers={true}
-    size=""
     summaryMsg=""
   />
 </div>
@@ -43,20 +34,12 @@ exports[`showErrorEmoji false if no query + no results 1`] = `
 <div
   className="search-bar"
 >
-  <SearchInput
+  <Connect(SearchInput)
     count={0}
-    expanded={false}
     handleClose={[Function]}
     handleNext={[Function]}
     handlePrev={[Function]}
-    hasPrefix={false}
     isLoading={false}
-    modifiers={
-      Object {
-        "get": [MockFunction],
-        "toJS": [Function],
-      }
-    }
     onBlur={[Function]}
     onChange={[Function]}
     onFocus={[Function]}
@@ -65,12 +48,11 @@ exports[`showErrorEmoji false if no query + no results 1`] = `
     onToggleSearchModifier={[Function]}
     placeholder="Find in file…"
     query=""
-    selectedItemId=""
+    searchKey="file-search"
     shouldFocus={false}
     showClose={true}
     showErrorEmoji={false}
     showSearchModifiers={true}
-    size=""
     summaryMsg=""
   />
 </div>
@@ -80,20 +62,12 @@ exports[`showErrorEmoji false if query + results 1`] = `
 <div
   className="search-bar"
 >
-  <SearchInput
+  <Connect(SearchInput)
     count={10}
-    expanded={false}
     handleClose={[Function]}
     handleNext={[Function]}
     handlePrev={[Function]}
-    hasPrefix={false}
     isLoading={false}
-    modifiers={
-      Object {
-        "get": [MockFunction],
-        "toJS": [Function],
-      }
-    }
     onBlur={[Function]}
     onChange={[Function]}
     onFocus={[Function]}
@@ -102,12 +76,11 @@ exports[`showErrorEmoji false if query + results 1`] = `
     onToggleSearchModifier={[Function]}
     placeholder="Find in file…"
     query="test"
-    selectedItemId=""
+    searchKey="file-search"
     shouldFocus={false}
     showClose={true}
     showErrorEmoji={false}
     showSearchModifiers={true}
-    size=""
     summaryMsg="NaN of 10 results"
   />
 </div>
@@ -117,20 +90,12 @@ exports[`showErrorEmoji true if query + no results 1`] = `
 <div
   className="search-bar"
 >
-  <SearchInput
+  <Connect(SearchInput)
     count={0}
-    expanded={false}
     handleClose={[Function]}
     handleNext={[Function]}
     handlePrev={[Function]}
-    hasPrefix={false}
     isLoading={false}
-    modifiers={
-      Object {
-        "get": [MockFunction],
-        "toJS": [Function],
-      }
-    }
     onBlur={[Function]}
     onChange={[Function]}
     onFocus={[Function]}
@@ -139,12 +104,11 @@ exports[`showErrorEmoji true if query + no results 1`] = `
     onToggleSearchModifier={[Function]}
     placeholder="Find in file…"
     query="test"
-    selectedItemId=""
+    searchKey="file-search"
     shouldFocus={false}
     showClose={true}
     showErrorEmoji={true}
     showSearchModifiers={true}
-    size=""
     summaryMsg="No results found"
   />
 </div>

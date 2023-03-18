@@ -17,7 +17,3 @@ export function getProjectSearchStatus(state) {
 export function getProjectSearchQuery(state) {
   return state.projectTextSearch.query;
 }
-
-export function getTextSearchModifiers(state) {
-  return state.projectTextSearch.modifiers;
-}

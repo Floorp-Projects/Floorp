@@ -464,6 +464,7 @@ export class QuickOpenModal extends Component {
           handleClose={this.closeModal}
           expanded={expanded}
           showClose={false}
+          searchKey="quickopen-search"
           showSearchModifiers={false}
           selectedItemId={
             expanded && items[selectedIndex] ? items[selectedIndex].id : ""

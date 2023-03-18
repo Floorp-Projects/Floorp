@@ -56,10 +56,14 @@ class SearchModifiers extends Component {
     return button(
       {
         className: `${className} ${modifiers?.[value] ? "active" : ""}`,
-        onMouseDown: () => onToggleSearchModifier(value),
+        onMouseDown: () => {
+          modifiers[value] = !modifiers[value];
+          onToggleSearchModifier(modifiers);
+        },
         onKeyDown: e => {
           if (e.key === "Enter") {
-            onToggleSearchModifier(value);
+            modifiers[value] = !modifiers[value];
+            onToggleSearchModifier(modifiers);
           }
         },
         title: tooltip,

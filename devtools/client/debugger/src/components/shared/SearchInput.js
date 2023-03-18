@@ -4,12 +4,14 @@
 
 import React, { Component } from "react";
 import PropTypes from "prop-types";
-
+import { connect } from "../../utils/connect";
 import { CloseButton } from "./Button";
 
 import AccessibleImage from "./AccessibleImage";
 import classnames from "classnames";
+import actions from "../../actions";
 import "./SearchInput.css";
+import { getSearchOptions } from "../../selectors";
 
 const SearchModifiers = require("devtools/client/shared/components/SearchModifiers");
 
@@ -29,7 +31,7 @@ const arrowBtn = (onClick, type, className, tooltip) => {
   );
 };
 
-class SearchInput extends Component {
+export class SearchInput extends Component {
   static defaultProps = {
     expanded: false,
     hasPrefix: false,
@@ -69,10 +71,10 @@ class SearchInput extends Component {
       showErrorEmoji: PropTypes.bool.isRequired,
       size: PropTypes.string,
       summaryMsg: PropTypes.string,
-
-      // Search modifiers
+      searchKey: PropTypes.string.isRequired,
+      searchOptions: PropTypes.object,
+      setSearchOptions: PropTypes.func,
       showSearchModifiers: PropTypes.bool.isRequired,
-      modifiers: PropTypes.object,
       onToggleSearchModifier: PropTypes.func,
     };
   }
@@ -214,11 +216,13 @@ class SearchInput extends Component {
   }
 
   renderSearchModifiers() {
-    const { modifiers, onToggleSearchModifier } = this.props;
     return (
       <SearchModifiers
-        modifiers={modifiers}
-        onToggleSearchModifier={onToggleSearchModifier}
+        modifiers={this.props.searchOptions}
+        onToggleSearchModifier={updatedOptions => {
+          this.props.setSearchOptions(this.props.searchKey, updatedOptions);
+          this.props.onToggleSearchModifier();
+        }}
       />
     );
   }
@@ -285,5 +289,10 @@ class SearchInput extends Component {
     );
   }
 }
+const mapStateToProps = (state, props) => ({
+  searchOptions: getSearchOptions(state, props.searchKey),
+});
 
-export default SearchInput;
+export default connect(mapStateToProps, {
+  setSearchOptions: actions.setSearchOptions,
+})(SearchInput);
