@@ -81,9 +81,6 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">ยกเลิก</string>
 
-    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
-    <string name="cfr_dismiss_button_default_content_description" moz:removedIn="110" tools:ignore="UnusedResources">ยกเลิก</string>
-
     <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
     <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
     <string name="tcp_cfr_message">คุณลักษณะความเป็นส่วนตัวที่ทรงพลังที่สุดของเราแยกตัวติดตามข้ามไซต์</string>
@@ -360,8 +357,6 @@
     <string name="reduce_cookie_banner_option_off">ปิด</string>
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
     <string name="reduce_cookie_banner_option_on">เปิด</string>
-    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox จะพยายามปฏิเสธคำขอคุกกี้บนแบนเนอร์คุกกี้โดยอัตโนมัติ หากไม่มีตัวเลือกปฏิเสธ Firefox อาจยอมรับคุกกี้ทั้งหมดเพื่อปิดแบนเนอร์</string>
 
     <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
     <string name="reduce_cookie_banner_summary_1">%1$s จะพยายามปฏิเสธคำขอคุกกี้บนแบนเนอร์คุกกี้โดยอัตโนมัติ</string>
@@ -378,8 +373,6 @@
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">ต้องการปิดการลดแบนเนอร์คุกกี้สำหรับ %1$s หรือไม่?</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s จะล้างคุกกี้ของไซต์นี้และรีเฟรชหน้า การล้างคุกกี้ทั้งหมดอาจนำคุณออกจากระบบหรือล้างรถเข็นช็อปปิ้ง</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s สามารถพยายามปฏิเสธคำขอคุกกี้โดยอัตโนมัติได้ หากไม่มีตัวเลือกปฏิเสธ %2$s อาจยอมรับคุกกี้ทั้งหมดเพื่อปิดแบนเนอร์</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s สามารถพยายามปฏิเสธคำขอคุกกี้โดยอัตโนมัติได้</string>
@@ -389,8 +382,6 @@
     <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">เอาแบนเนอร์คุกกี้ออกไปให้พ้น!</string>
     <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_dialog_title">อนุญาตให้ %1$s ปฏิเสธแบนเนอร์คุกกี้หรือไม่?</string>
-    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">ปฏิเสธคำขอคุกกี้โดยอัตโนมัติเมื่อเป็นไปได้ หรือไม่ก็ยอมรับคุกกี้ทั้งหมดเพื่อปิดแบนเนอร์คุกกี้</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">ปฏิเสธคำขอคุกกี้โดยอัตโนมัติเมื่อเป็นไปได้</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
@@ -407,15 +398,11 @@
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">เห็นป๊อปอัปคุกกี้น้อยลง</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">ตอบป๊อปอัปคุกกี้โดยอัตโนมัติเพื่อให้คุณท่องเว็บโดยปราศจากสิ่งรบกวน %1$s จะปฏิเสธคำขอทั้งหมดเมื่อเป็นไปได้ หรือยอมรับทั้งหมดเมื่อเป็นไปไม่ได้</string>
-    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">ตอบป๊อปอัปคุกกี้โดยอัตโนมัติเพื่อให้คุณท่องเว็บโดยปราศจากสิ่งรบกวน %1$s จะปฏิเสธคำขอทั้งหมดเมื่อเป็นไปได้</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">ปิดป๊อปอัป</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">การลดแบนเนอร์คุกกี้</string>
-    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">อนุญาตให้ %1$s ปฏิเสธคำขอยินยอมคุกกี้ของไซต์เมื่อเป็นไปได้ หรือยอมรับการเข้าถึงคุกกี้เมื่อเป็นไปไม่ได้หรือไม่?</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">อนุญาตให้ %1$s ปฏิเสธคำขอยินยอมคุกกี้ของไซต์เมื่อเป็นไปได้หรือไม่?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
@@ -1239,6 +1226,15 @@
     <!-- Text B shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_B_text">ค้นหาสิ่งที่อยู่ใกล้ๆ หรือค้นพบอะไรสนุกๆ</string>
 
+    <!-- Survey -->
+    <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_survey_message_text" tools:ignore="UnusedResources">โปรดช่วยทำให้ Firefox ดีขึ้นโดยการทำแบบสำรวจสั้นๆ</string>
+    <!-- Preference for taking the short survey. -->
+    <string name="preferences_take_survey" tools:ignore="UnusedResources">ทำแบบสำรวจ</string>
+    <!-- Preference for not taking the short survey. -->
+    <string name="preferences_not_take_survey" tools:ignore="UnusedResources">ไม่ ขอบคุณ</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">ลบชุดสะสมแล้ว</string>
@@ -1371,7 +1367,7 @@
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
     <string name="onboarding_manual_sign_in_description">ซิงค์แท็บและรหัสผ่านระหว่างอุปกรณ์เพื่อการสลับหน้าจอที่ราบรื่น</string>
     <!-- Text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in">เข้าสู่ระบบ</string>
+    <string name="onboarding_firefox_account_sign_in">ลงชื่อเข้า</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync เปิดอยู่</string>
     <!-- Text for the tracking protection onboarding card header -->

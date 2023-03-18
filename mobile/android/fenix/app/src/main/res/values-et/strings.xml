@@ -14,7 +14,7 @@
     <string name="content_description_private_browsing_button">Luba privaatne veebilehitsemine</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">Keela privaatne veebilehitsemine</string>
-    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
     <string name="search_hint">Otsi või sisesta aadress</string>
     <!-- Placeholder text shown in the search bar when using application search engines -->
     <string name="application_search_hint">Sisesta otsitav fraas</string>
@@ -39,11 +39,6 @@
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Valitud</string>
 
-    <!-- Home - Recently saved bookmarks -->
-    <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">Hiljutised järjehoidjad</string>
-    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Kuva kõiki</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Kuva kõiki järjehoidjaid</string>
 
@@ -60,12 +55,7 @@
  %1$s kustutab privaatsete kaartide otsimise ja lehitsemise ajaloo, kui väljud rakendusest või sulged privaatsed kaardid. Kuigi see ei muuda sind külastatavate veebilehtede või internetiteenuse pakkuja ees anonüümseks, kaitseb see siiski sinu privaatsust teiste selle seadme kasutajate eest.</string>
     <string name="private_browsing_common_myths">Levinumad müüdid privaatse veebilehitsemise kohta</string>
 
-    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message -->
-    <string name="cfr_message">Lisa avaekraanile otsetee privaatsete kaartide avamiseks</string>
-    <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Lisa otsetee</string>
-    <!-- Text for the negative button -->
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Tänan, ei soovi</string>
 
 
@@ -120,13 +110,6 @@
     <string name="recent_tabs_show_all">Kuva kõiki</string>
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string name="recent_tabs_show_all_content_description_2">Kõigi hiljutiste kaartide kuvamise nupp</string>
-
-    <!-- Title for showing a group item in the 'Jump back in' section of the new tab
-        The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string name="recent_tabs_search_term">Sinu otsing fraasile \&quot;%1$s\&quot;</string>
-    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
-        %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">%d saiti</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">Kuva kõiki sünkroniseeritud kaarte</string>
@@ -248,28 +231,6 @@
     <!-- Menu option in the search selector menu to open the search settings -->
     <string name="search_settings_menu_item">Otsingusätted</string>
 
-    <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_title_3">Mis on uut %1$sis</string>
-    <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">Nüüd on lihtsam jätkata sealt, kus pooleli jäi.</string>
-
-    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_section_home_title_3">Isikupärastatud %1$si avaleht</string>
-    <!-- Onboarding home screen dialog description text for the home section. -->
-    <string name="onboarding_home_screen_section_home_description_2">Liigu oma avatud kaartide, järjehoidjate ja lehitsemise ajaloo juurde.</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Puhtad, korrastatud kaardid</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">Vabane kaartide segadusest täiustatud paigutuse ja automaatselt sulguvate kaartide abil.</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_title_2">Hiljutised otsingud</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_description_2">Külasta oma viimaseid otsinguid uuesti avalehelt või kaartidelt.</string>
-
-    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Isikupärastatud Firefoxi avaleht teeb lihtsamaks jätkamise sealt, kus pooleli jäi. Leia oma hiljutised kaardid, järjehoidjad ja otsingutulemused.</string>
-
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Ava uus kaart %1$sis</string>
@@ -321,11 +282,12 @@
 
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Ainult HTTPS-režiim</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Kõrgendatud turvalisuse nimel üritatakse saitidega ühenduda ainult HTTPSi krüptitud protokolli vahendusel.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on">Sees</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">Sees</string>
+    <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Väljas</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">Rohkem teavet</string>
@@ -358,9 +320,7 @@
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">Žestid</string>
     <!-- Preference for settings related to visual options -->
-    <string name="preferences_customize">Kohanda</string>
-    <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">Sünkroniseeri järjehoidjad, ajalugu ja muud asjad oma Firefoxi kontoga</string>
+    <string name="preferences_customize">Kohandamine</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefoxi konto</string>
 
@@ -396,6 +356,12 @@
     <string name="preferences_enable_autocomplete_urls">URLid lõpetatakse automaatselt</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Lingid avatakse äppides</string>
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">Alati</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">Küsitakse enne avamist</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">Mitte kunagi</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Kasutatakse välist allalaadimishaldurit</string>
     <!-- Preference for add_ons -->
@@ -403,6 +369,11 @@
 
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Teavitused</string>
+
+    <!-- Summary for notification preference indicating notifications are allowed -->
+    <string name="notifications_allowed_summary">Lubatud</string>
+    <!-- Summary for notification preference indicating notifications are not allowed -->
+    <string name="notifications_not_allowed_summary">Keelatud</string>
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
@@ -427,8 +398,6 @@
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Hiljuti külastatud</string>
-    <!-- Title for the customize home screen section with Pocket. -->
-    <string name="customize_toggle_pocket">Pocket</string>
     <!-- Title for the customize home screen section with sponsored Pocket stories. -->
     <string name="customize_toggle_pocket_sponsored">Sponsitud lood</string>
     <!-- Title for the opening wallpaper settings screen -->
@@ -443,11 +412,6 @@
     <string name="wallpaper_updated_snackbar_message">Taustpilt uuendatud!</string>
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Vaata</string>
-    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">Taustapildi muutmiseks puuduta Firefoxi logo avalehel</string>
-    <!-- This is the accessibility content description for the wallpapers functionality. Users are
-    able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string name="wallpaper_logo_content_description">Firefoxi logo - taustapildi muutmise nupp</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -533,10 +497,6 @@
     <!-- Summary for studies preferences -->
     <string name="preference_experiments_summary_2">Võimaldab Mozillal paigaldada ja käivitada uuringuid</string>
 
-    <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">Lülita Sync sisse</string>
-
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Uue ühenduse loomiseks logi sisse</string>
     <!-- Preference for removing FxA account -->
@@ -595,12 +555,15 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Sulge</string>
 
+    <!-- Dialog button text for canceling open all tabs -->
+    <string name="open_all_warning_cancel">Loobu</string>
+
     <!-- Text to show users they have one site in the history group section of the History fragment.
     %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_site">%d sait</string>
+    <string name="history_search_group_site" moz:RemovedIn="111" tools:ignore="UnusedResources">%d sait</string>
     <!-- Text to show users they have multiple sites in the history group section of the History fragment.
     %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_sites">%d saiti</string>
+    <string name="history_search_group_sites" moz:RemovedIn="111" tools:ignore="UnusedResources">%d saiti</string>
 
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Hiljuti suletud kaardid</string>
@@ -625,10 +588,6 @@
     <string name="tab_view_list">Nimekiri</string>
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Võre</string>
-    <!-- Option for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups">Otsing grupeeritakse</string>
-    <!-- Summary text for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups_summary">Seotud saidid grupeeritakse</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Kaartide sulgemine</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -732,8 +691,6 @@
     <string name="open_tabs_menu">Ava kaartide menüü</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Salvesta kaardid kollektsiooni</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Kaartide menüü</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Kustuta kollektsioon</string>
     <!-- Text for the menu button to rename a collection -->
@@ -751,8 +708,6 @@
     <string name="delete_from_history">Kustuta ajaloost</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (privaatne režiim)</string>
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">Teised kaardid</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -781,11 +736,6 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Ajalugu puudub</string>
 
-
-    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string name="history_synced_from_other_devices">Sünkroniseeritud teistest seadmetest</string>
-    <!-- The page title for browsing history coming from other devices. -->
-    <string name="history_from_other_devices">Teistest seadmetest</string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -930,9 +880,13 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Erandid</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">Sees</string>
+    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">Sees</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Väljas</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to strict -->
+    <string name="tracking_protection_strict">Range</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to custom -->
+    <string name="tracking_protection_custom">Kohandatud</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Heli ja video on lubatud</string>
     <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
@@ -1015,6 +969,10 @@
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Jaga</string>
+    <!-- Text for the Save to PDF feature in the share menu -->
+    <string name="share_save_to_pdf">Salvesta PDFina</string>
+    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <string name="unable_to_save_to_pdf_error">PDFi loomine pole võimalik</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Edasta seadmele</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1025,11 +983,9 @@
     <string name="share_copy_link_to_clipboard">Kopeeri vahemällu</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Kopeeriti vahemällu</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string name="sync_menu_sign_in">Sünkimiseks logi sisse</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Sünkroniseerimise alustamiseks logi sisse</string>
-    <!-- An option from the share dialog to send link to all other sync devices -->
+     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Edasta kõigisse seadmetesse</string>
     <!-- An option from the share dialog to reconnect to sync -->
     <string name="sync_reconnect">Ühendu Synciga uuesti</string>
@@ -1059,12 +1015,6 @@
 
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Turundus</string>
-    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_title">%1$s on kiire ja privaatne</string>
-    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_text">Määra %1$s oma vaikebrauseriks</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
@@ -1079,8 +1029,6 @@
     <string name="snackbar_tabs_closed">Kaardid suleti</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Järjehoidjad salvestati!</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">Lisati top saitide hulka!</string>
     <!-- Text shown in snackbar when user adds a site to shortcuts -->
     <string name="snackbar_added_to_shortcuts">Lisatud otseteedesse!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1158,8 +1106,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Välju</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">See kustutab kõik sinu lehitsemise andmed</string>
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s kustutab valitud lehitsemise andmed.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1171,8 +1117,6 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Lehitsemisandmete kustutamine…</string>
 
-    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
-    <string name="delete_history_group_prompt_message">See kustutab kõik asjad.</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">Loobu</string>
     <!-- Text for the allow button for the history group dialog -->
@@ -1180,24 +1124,9 @@
     <!-- Text for the snackbar confirmation that the history group was deleted -->
     <string name="delete_history_group_snackbar">Grupp kustutatud</string>
 
-    <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_header">Tere tulemast %si!</string>
-
-    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string name="onboarding_account_sign_in_header_1">Sünkroniseeri Firefox seadmete vahel</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string name="onboarding_manual_sign_in_description_2">Too järjehoidjad, ajalugu ja paroolid %1$si selles seadmes.</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in_1">Registreeru</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync on sisse lülitatud</string>
 
-    <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_3">Alati sisse lülitatud privaatsus</string>
-    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_4">%1$s takistab automaatselt ettevõtetel sinu salajase jälitamise.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Tavaline (vaikimisi)</string>
     <!-- text for standard blocking option button description -->
@@ -1208,13 +1137,6 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">Blokib rohkem jälitajaid ning lehed laadivad kiiremini, aga mõned lehtedel olevad funktsionaalsused võivad katki minna.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Vali oma tööriistariba asukoht</string>
-    <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description_1">Aseta tööriistariba käeulatusse. Hoia seda all või liiguta üles.</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header">Sinu privaatsus</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string name="onboarding_privacy_notice_description2">Me oleme %si loonud nii, et sulle jääks võimalus otsustada, mida sa jagad võrgus ja mida sa jagad meiega.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Loe meie privaatsuspoliitikat</string>
 
@@ -1590,8 +1512,6 @@
     <string name="addresses_edit_address">Aadressi muutmine</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Aadressi haldamine</string>
-    <!-- The header for the full name of an address -->
-    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Täisnimi</string>
     <!-- The header for the first name of an address -->
     <string name="addresses_first_name">Eesnimi</string>
     <!-- The header for the middle name of an address -->
@@ -1653,7 +1573,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Kasutatav otsingustring</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string formatted="false" name="search_add_custom_engine_search_string_example">Päringu asendamiseks kasuta “%s”. Näiteks \nhttps://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">Päringu asendamiseks kasuta “%s”. Näiteks \nhttps://www.google.com/search?q=%s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Kohandatud otsingumootori üksikasjad</string>
 
@@ -1701,10 +1621,6 @@
     <string name="no_site_exceptions">Saidil puuduvad erandid</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Kas oled kindel, et soovid selle järjehoidja kustutada?</string>
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">Lisa top saitide hulka</string>
-    <!-- Browser menu button that removes a top site from the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">Eemalda top saitide seast</string>
     <!-- Browser menu button that adds a shortcut to the home fragment -->
     <string name="browser_menu_add_to_shortcuts">Lisa otseteedesse</string>
     <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -1778,12 +1694,8 @@
     <string name="synced_tabs_collapse_group">Ahenda sünkroniseeritud kaartide grupp</string>
 
     <!-- Top Sites -->
-    <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">Top saitide limiit on täis</string>
     <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
     <string name="shortcut_max_limit_title">Otseteede limiit on täis</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">Uue top saidi lisamiseks tuleb üks olemasolev eemaldada. Puuduta ja hoia saidil pikemalt, seejärel vali eemaldamine.</string>
     <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
     <string name="shortcut_max_limit_content">Uue otsetee lisamiseks tuleb üks olemasolev eemaldada. Puuduta ja hoia saidil pikemalt, seejärel vali eemaldamine.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
@@ -1792,8 +1704,6 @@
     <string name="top_sites_toggle_top_recent_sites_4">Otseteed</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Nimi</string>
-	<!-- Hint for renaming title of a top site -->
-	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">Top saidi nimi</string>
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">Otsetee nimi</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
@@ -1850,8 +1760,6 @@
     <string name="pocket_stories_categories_header">Lood teemade kaupa</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">Avasta veel</string>
-    <!-- Title of an app feature. Smaller than a heading.-->
-    <string name="pocket_stories_feature_title">Toodud sinuni Pocketi poolt.</string>
     <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
     <string name="pocket_stories_feature_caption">Osa Firefoxi perekonnast. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
@@ -1864,4 +1772,5 @@
     <string name="experiments_snackbar">Andmete saatmiseks luba telemeetria.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Mine sätetesse</string>
-</resources>
+
+    </resources>

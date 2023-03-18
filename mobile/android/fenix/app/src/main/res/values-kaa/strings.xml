@@ -85,9 +85,6 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Jabıw</string>
 
-    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
-    <string name="cfr_dismiss_button_default_content_description" moz:removedIn="110" tools:ignore="UnusedResources">Jabıw</string>
-
     <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
     <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
     <string name="tcp_cfr_message">Biziń eń kúshli jeke qorǵaw funkciyasımız saytlar aralıq baqlawlardı ajıratadı.</string>
@@ -357,8 +354,6 @@
     <string name="reduce_cookie_banner_option_off">Óshirilgen</string>
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
     <string name="reduce_cookie_banner_option_on">Qosıwlı</string>
-    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Cookiedı ornatıw haqqındaǵı xabarlamalar kórsetilgende, Firefox olardı avtomatikalıq biykar etiwge háreket etedi. Eger de biykar etiw múmkinshiligi bolmasa, Firefox xabarlamalardı jasırıw ushın hámme cookielardı qabıllawı múmkin.</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
     <string name="reduce_cookie_banner_summary_1">%1$s cookie haqqındaǵı xabarlamalardaǵı cookie sorawlardı avtomatikalıq biykarlawǵa háreket etedi.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -373,17 +368,12 @@
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">%1$s ushın cookie haqqındaǵı xabarlamalardı qısqartıwdı óshireyik pe?</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s bul sayttıń cookieların óshiredi hám betti jańalaydı. Barlıq cookielardı óshiriw sizdi sistemadan shıǵarıwı yamasa sawda islew sebetińizdi bosatıwı múmkin.</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s cookiedı qollanıw haqqındaǵı sorawlardı avtomatikalıq biykar etiwi múmkin.
-Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarlamalardı jasırıw ushın hámme cookielardı qabıllawı múmkin.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s kuki sorawların avtomatikalıq biykarlawǵa háreket qılıwı múmkin.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s qollap-quwatlanǵan saytlardaǵı barlıq cookie sorawların avtomatikalıq biykarlawǵa háreket etedi.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Cookie haqqındaǵı xabarlamalar joq bolıp ketti!</string>
-    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Múmkinshilik bolsa cookie haqqındaǵı hámme sorawlardı avtomatikalıq biykar etiw. Bolmasa xabarlamalardı jasırıw ushın hámme cookielardı qabıllaw.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Imkanı bolǵanda, cookie sorawların avtomatikalıq biykarlaw.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
@@ -398,15 +388,11 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarlamalardı jasırıw ushı
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Qalqıp shıǵıwshı cookie aynaların azıraq kóriw</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Kóriwden alań bolmaw ushın, cookie haqqındaǵı qalqıp shıǵıwshı aynalarǵa avtomatikalıq juwap beriw. %1$s múmkinshiligi bolsa hámme sorawlardı bırkarlaydı, bolmasa hámmesin qabıllaydı.</string>
-    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Kóriwden alań bolmaw ushın, cookie haqqındaǵı qalqıp shıǵıwshı aynalarǵa avtomatikalıq juwap beriw. %1$s múmkinshiligi bolsa hámme sorawlardı bırkarlaydı.</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Qalqıp turıwshı aynalardı ótkerip jiberiw</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Cookie haqqındaǵı xabarlamalardı qısqartıw</string>
-    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$sqa sayttıń cookie haqqındaǵı sorawların biykar etiwge ruqsat beriw, múmkinshilik bolmasa cookielerge ruqsat beriw kerek pe?</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Múmkinshiligi bolsa, %1$sǵa sayttıń cookielerge ruqsat beriw haqqındaǵı sorawların biykarlawǵa ruqsat berilsin be?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
@@ -1225,6 +1211,9 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarlamalardı jasırıw ushı
     <!-- Text shown in the notification that pops up to re-engage the user.
     %1$s is a placeholder that will be replaced by the app name. -->
     <string name="notification_re_engagement_text">%1$sda saqlanǵan cookielarsız yamasa tariyxsız kóriw</string>
+
+    <!-- Preference for not taking the short survey. -->
+    <string name="preferences_not_take_survey" tools:ignore="UnusedResources">Yaq, raxmet</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->

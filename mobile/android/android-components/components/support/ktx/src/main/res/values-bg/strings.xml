@@ -6,4 +6,6 @@
     <string name="mozac_support_ktx_menu_email_with">Имейл чрез…</string>
     <string name="mozac_support_ktx_menu_share_with">Споделяне с …</string>
     <string name="mozac_support_ktx_share_dialog_title">Споделяне чрез</string>
+    <!-- Text for confirmation "snackbar" shown after copying an image to the clipboard. -->
+    <string name="mozac_support_ktx_snackbar_delegate_image_copied">Изображението е копирано</string>
 </resources>

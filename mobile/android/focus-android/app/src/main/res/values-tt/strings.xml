@@ -136,6 +136,19 @@
           Do not translate or transliterate Focus Nightly.-->
     <string name="text_selection_search_action_focus_nightly">Focus Nightly эченнән эзләү</string>
 
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s дилбегәне Сезнең кулга тапшыра.</p>
+<p>Аны хосусый браузер буларак кулланып, түбәндәгеләрне эшләп була:
+  <ul>
+    <li>Турыдан-туры кушымта эчендә эзләү һәм пәрәвездә гизү</li>
+    <li>Күзәтүче-трекерларны блоклау (яисә, көйләүләрне яңартып, аларны рөхсәт итү)</li>
+    <li>Кукиларны, эзләү һәм гизү тарихларын җиңел генә бетереп ату</li>
+  </ul>
+</p>
+<p>%1$s Mozilla тарафыннан җитештерелә. Безнең миссиябез — сәламәт һәм ачык Интернетны үстерү.<br/>
+<a href="%2$s">Күбрәк белү</a></p>]]></string>
+
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Хосусыйлык &amp; Хәвефсезлек</string>
 
@@ -597,6 +610,22 @@
     %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
     <string name="your_rights_content2"><![CDATA[%1$s Сезгә <a href="%2$s">Mozilla Public License</a> һәм башка ачык чыганак лицензияләренең шартлары белән тәкъдим ителә.]]></string>
 
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[Сезгә Mozilla Foundation-ның яисә башка тарафларның һичбер теркәлгән сәүдә билгеләренә, шул исәптән Mozilla, Firefox яисә %1$s исемнәре яки логотипларына бернинди дә хокуклар я лицензияләр бирелми. Өстәмә мәгълүматны <a href="%2$s">монда</a> табып була.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[%1$s өчен өстәмә чыганак кодлары башка берничә ирекле һәм ачык чыганак <a href="%2$s">лицензияләләре</a> астында нәшер ителә.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[Моннан тыш, %1$s, аерым һәм бәйсез әсәрләр буларак, Disconnect, Inc. тәэмин иткән блоклау исемлекләрен куллана. Аларны <a href="%2$s">GNU General Public License v3</a> шартлары белән һәм түләүсез <a href="%3$s">монда</a> табып була.]]></string>
+
     <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">Кулланучы исеме</string>
     <string name="gv_prompt_password_hint">Серсүз</string>
@@ -717,6 +746,48 @@
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Автоуйнату</string>
 
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Рөхсәт итү өчен:</string>
+
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Android көйләүләренә керегез</string>
+
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. <b>Рөхсәтләр</b>гә басыгыз]]></string>
+
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Көйләүләргә күчү</string>
+
+    <!-- Third step for allowing a permission. The placeholder will be updated by, for example, "Camera" -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. <b>%1$s</b> көйләвен кабызыгыз]]></string>
+
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">Камера</string>
+
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Микрофон</string>
+
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">Урнашу</string>
+
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Искәртү</string>
+
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">DRM белән идарә ителгән эчтәлек</string>
+
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Рөхсәт соралсын</string>
+
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Тыелган</string>
+
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Рөхсәт ителгән</string>
+
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Android тарафыннан тыелган</string>
+
     <!-- Preference for allow autoplay audio and video-->
     <string name="preference_allow_audio_video_autoplay">Аудио һәм видеоны рөхсәт итү</string>
 
@@ -752,6 +823,15 @@
 
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">USB/Wi-Fi аркылы хаталарны ерактан төзәтү</string>
+
+    <!-- Text Button for show biometric prompt -->
+    <string name="show_biometric_button_text">Ачу</string>
+
+    <!-- Title text for biometric prompt pop-up -->
+    <string name="biometric_prompt_title">Бармак эзегезне кулланып раслау</string>
+
+    <!-- Subtitle text for biometric prompt pop-up -->
+    <string name="biometric_prompt_subtitle">Хәзерге кушымта сессиясен дәвам итү өчен бармак эзегезне куллана аласыз.</string>
 
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
@@ -819,6 +899,9 @@
     <!-- Label for the button in the snackbar that switches to the newly opened tab -->
     <string name="open_new_tab_snackbar">Күчү</string>
 
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">Тулы экран режимына күчү</string>
+
     <!-- Preference for switching to a new tab immediately after opening -->
     <string name="preference_open_new_tab">Яңа табтагы сылтамага шундук күчү</string>
 
@@ -829,6 +912,9 @@
 
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Тик-HTTPS режимы</string>
+
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary3">Хәвефсезлекне арттыру өчен сайтларга автоматик рәвештә HTTPS шифрлау протоколын кулланып тоташырга тырыша.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Чыгармалар</string>
@@ -915,10 +1001,84 @@
     <string name="preference_follow_device_theme">Җиһаз темасына иярү</string>
 
 
-    <!-- Sessions List -->
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">Сез сораган сайт HTTPS кулланмый</string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">Бу сайт HTTPS кулланмый</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">Башкасы әйтелмәгән булса, %1$s хәвефсезлекне арттыру өчен сайтларга HTTPS кулланып тоташырга тырыша. Бу көйләнүне үзгәртү яки күбрәк белү өчен Көйләүләр &gt; Хосусыйлык һәм Хәвефсезлек &gt; Хәвефсезлек бүлегенә күчегез.</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s күбрәк хәвефсезлек өчен мөмкин булганда HTTPS бәйләнешен кулланырга тырыша.
+    <a href="%2$s">Күбрәк белү</a><br/><br/>
+    Бу көйләнүне үзгәртү өчен Көйләүләр > Хосусыйлык һәм Хәвефсезлек > Хәвефсезлек бүлегенә күчегез.]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Бәйләнеш хәвефсез түгел</string>
+
+     <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+    Бу сервер көйләүләрендәге хата белән бәйле булырга мөмкин, яисә кемдер Сезгә кирәкле серверны икенче бере белән алыштырырга тырыша.<br/><br/>
+    Моңа кадәр бу серверга уңышлы тоташа торган булсагыз, бу хата вакытлыча гына булырга мөмкин.
+    ]]></string>
+
+    <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+    <label>Кемдер үзенең сайтын бу сайт дип күрсәтергә тырыша кебек, шунлыктан дәвам итү куркыныч булырга мөмкин.</label>
+     <br><br>
+     <label>%1$s кушымтасы <b>%2$s</b> сайтына ышанмый, чөнки сертификатын бастыручу я билгесез, я ул үзлегеннән имзаланган, я сервер дөрес арадашчы сертификатлар җибәрми.</label>
+    ]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Табны ябу</string>
 
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon2">Тотылдылар! Без бу сайтны Сезне күзәтүдән тыйдык. Ниләр блоклаганганын һәрвакыт калканга басып күреп була.</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
+    <string name="cfr_close_button_description">Калыкмә тәрәзәне ябу</string>
+
+    <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
+    <!-- Tool Tip Title -->
+    <string name="tool_tip_title">Сез саклангансыз!</string>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">Бу стандарт көйләүләр көчле саклану тәэмин итә. Әмма ихтыяҗларыгыз башкачарак булса, аларны үзгәртү җиңел.</string>
+    <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
+    <string name="tool_tip_dismiss_button_content_description">Ябу</string>
+
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon2">Тарих, сookie файллары, аслында һәрнәрсәне дә бетереп, яңа табта яңа тормыш башлар өчен монда басыгыз.</string>
+
     <!-- Promote SearchWidget Dialog -->
 
-    </resources>
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. -->
+    <string name="promote_search_widget_dialog_content_description">Ябу</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. -->
+    <string name="promote_search_widget_dialog_picture_content_description">Эзләү виджеты</string>
+
+    <!-- This is the title of promote search widget dialog. -->
+    <string name="promote_search_widget_dialog_title">Гизү тарихы чистартылды! 🎉</string>
+
+    <!-- Banner Info Message than will appear when user first enters in the app. The location is at the toolbar. -->
+    <string name="cfr_for_start_browsing">Хосусый гизү сеансын башлап җибәрегез, без исә трекерларны һәм башка начар нәрсәләрне блокларбыз.</string>
+
+    <!-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. "Focus") -->
+    <string name="promote_search_widget_dialog_subtitle">Хосусый режимда дәвам итәрсез, әмма %1$s виджетын Өй экранына куйсагыз, киләчәктә хосусый режимга тизрәк керә алачаксыз.</string>
+
+    <!-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. -->
+    <string name="promote_search_widget_button_text">Виджетны өй экранына өстәү</string>
+
+    <!-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. -->
+    <string name="promote_search_widget_snackbar_message">Виджет өй экранына өстәлде</string>
+</resources>

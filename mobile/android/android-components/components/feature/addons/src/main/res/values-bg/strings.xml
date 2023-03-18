@@ -38,6 +38,10 @@
     <string name="mozac_feature_addons_permissions_clipboard_read_description">Взимане данни от системния буфер</string>
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Поставяне на данни в системния буфер</string>
+    <!-- Description for declarativeNetRequest permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_description">Спиране на съдържание на всяка страница</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">Четене на историята на разглеждане</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Изтегляне на файлове, четене и промяна историята на изтеглянията</string>
     <!-- Description for downloads_open permission. -->
