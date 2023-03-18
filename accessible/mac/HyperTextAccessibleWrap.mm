@@ -730,7 +730,8 @@ TextPoint HyperTextAccessibleWrap::FindTextPoint(
   PeekOffsetStruct pos(
       aAmount, aDirection, innerContentOffset, nsPoint(0, 0),
       {PeekOffsetOption::JumpLines, PeekOffsetOption::IsKeyboardSelect,
-       PeekOffsetOption::PreserveSpaces},
+       PeekOffsetOption::PreserveSpaces,
+       PeekOffsetOption::AllowContentInDifferentNativeAnonymousSubtreeRoot},
       aWordMovementType);
   nsresult rv = frameAtOffset->PeekOffset(&pos);
 
