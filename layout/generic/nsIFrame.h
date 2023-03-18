@@ -55,6 +55,7 @@
 #include "mozilla/AspectRatio.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Baseline.h"
+#include "mozilla/EnumSet.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RelativeTo.h"
@@ -129,6 +130,7 @@ struct CharacterDataChangeInfo;
 
 namespace mozilla {
 
+enum class PeekOffsetOption : uint8_t;
 enum class PseudoStyleType : uint8_t;
 enum class TableSelectionMode : uint32_t;
 
@@ -3877,17 +3879,14 @@ class nsIFrame : public nsQueryFrame {
    * Called to find the previous/next non-anonymous selectable leaf frame.
    *
    * @param aDirection the direction to move in (eDirPrevious or eDirNext)
-   * @param aVisual whether bidi caret behavior is visual (true) or logical
-   * (false)
-   * @param aJumpLines whether to allow jumping across line boundaries
-   * @param aScrollViewStop whether to stop when reaching a scroll frame
-   * boundary
+   * @param aOptions the other options which is same as
+   * PeekOffsetStruct::mOptions.
+   * FIXME: Due to the include hell, we cannot use the alias, PeekOffsetOptions
+   * is not available in this header file.
    */
-  SelectablePeekReport GetFrameFromDirection(nsDirection aDirection,
-                                             bool aVisual, bool aJumpLines,
-                                             bool aScrollViewStop,
-                                             bool aForceEditableRegion);
-
+  SelectablePeekReport GetFrameFromDirection(
+      nsDirection aDirection,
+      const mozilla::EnumSet<mozilla::PeekOffsetOption>& aOptions);
   SelectablePeekReport GetFrameFromDirection(
       const mozilla::PeekOffsetStruct& aPos);
 
