@@ -180,7 +180,7 @@ add_task(async function test_dynamic_rules_count_limits() {
             { ...DUMMY_RULE, id: MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES + 1 },
           ],
         }),
-        /updateDynamicRules request is exceeding MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES limit \(\d+\)/,
+        `Number of rules in ruleset "_dynamic" exceeds MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES.`,
         "Got the expected rejection of exceeding the number of dynamic rules allowed"
       );
 
@@ -229,7 +229,7 @@ add_task(async function test_dynamic_rules_count_limits() {
         updateDynamicRulesTooMany?.status === "rejected"
           ? Promise.reject(updateDynamicRulesTooMany.reason)
           : Promise.resolve(),
-        /updateDynamicRules request is exceeding MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES limit \(\d+\)/,
+        `Number of rules in ruleset "_dynamic" exceeds MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES.`,
         "Got the expected rejection on the second call exceeding the number of dynamic rules allowed"
       );
 

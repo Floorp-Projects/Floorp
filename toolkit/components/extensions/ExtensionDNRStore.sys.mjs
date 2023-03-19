@@ -531,13 +531,23 @@ class RulesetsStore {
    * for the enabled static ruleset ids listed in the store file.
    *
    * @param {Extension} extension
-   * @param {Array<string>} [enabledRulesetIds]
+   * @param {object} [options]
+   * @param {Array<string>} [options.enabledRulesetIds]
    *        An optional array of enabled ruleset ids to be loaded
    *        (used to load a specific group of static rulesets,
    *        either when the list of static rules needs to be recreated based
    *        on the enabled rulesets, or when the extension is
    *        changing the enabled rulesets using the `updateEnabledRulesets`
    *        API method).
+   * @param {boolean} [options.isUpdateEnabledRulesets]
+   *        Whether this is a call by updateEnabledRulesets. When true,
+   *        `enabledRulesetIds` contains the IDs of disabled rulesets that
+   *        should be enabled. Already-enabled rulesets are not included in
+   *        `enabledRulesetIds`.
+   * @param {RuleQuotaCounter} [options.ruleQuotaCounter]
+   *        The counter of already-enabled rules that are not part of
+   *        `enabledRulesetIds`. Set when `isUpdateEnabledRulesets` is true.
+   *        This method may mutate its internal counters.
    * @returns {Promise<Map<ruleset_id, EnabledStaticRuleset>>}
    *          map of the enabled static rulesets by ruleset_id.
    */
@@ -545,9 +555,8 @@ class RulesetsStore {
     extension,
     {
       enabledRulesetIds = null,
-      availableStaticRuleCount = lazy.ExtensionDNRLimits
-        .GUARANTEED_MINIMUM_STATIC_RULES,
       isUpdateEnabledRulesets = false,
+      ruleQuotaCounter,
     } = {}
   ) {
     // Map<ruleset_id, EnabledStaticRuleset>}
@@ -557,6 +566,12 @@ class RulesetsStore {
       extension.manifest.declarative_net_request?.rule_resources;
     if (!Array.isArray(ruleResources)) {
       return rulesets;
+    }
+
+    if (!isUpdateEnabledRulesets) {
+      ruleQuotaCounter = new lazy.ExtensionDNR.RuleQuotaCounter(
+        /* isStaticRulesets */ true
+      );
     }
 
     const {
@@ -633,23 +648,21 @@ class RulesetsStore {
       // only the valid rules will be actually be loaded. Reconsider if
       // we should instead also account for the rules that have been
       // ignored as invalid.
-      if (availableStaticRuleCount - validatedRules.length < 0) {
+      try {
+        ruleQuotaCounter.tryAddRules(id, validatedRules);
+      } catch (e) {
+        // If this is an API call (updateEnabledRulesets), just propagate the
+        // error. Otherwise we are intializing the extension and should just
+        // ignore the ruleset while reporting the error.
         if (isUpdateEnabledRulesets) {
-          throw new ExtensionError(
-            "updateEnabledRulesets request is exceeding the available static rule count"
-          );
+          throw e;
         }
-
         // TODO(Bug 1803363): consider collect telemetry.
         Cu.reportError(
-          `Ignoring static ruleset exceeding the available static rule count: ruleset_id "${id}" (extension: "${extension.id}")`
+          `Ignoring static ruleset "${id}" in extension "${extension.id}" because: ${e.message}`
         );
-        // TODO: currently ignoring the current ruleset but would load the one that follows if it
-        // fits in the available rule count when loading the rule on extension startup,
-        // should it stop loading additional rules instead?
         continue;
       }
-      availableStaticRuleCount -= validatedRules.length;
 
       rulesets.set(id, { idx, rules: validatedRules });
     }
@@ -1077,14 +1090,9 @@ class RulesetsStore {
       throw new ExtensionError(failures[0].message);
     }
 
-    const { MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES } = lazy.ExtensionDNRLimits;
     const validatedRules = ruleValidator.getValidatedRules();
-
-    if (validatedRules.length > MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES) {
-      throw new ExtensionError(
-        `updateDynamicRules request is exceeding MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES limit (${MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES})`
-      );
-    }
+    let ruleQuotaCounter = new lazy.ExtensionDNR.RuleQuotaCounter();
+    ruleQuotaCounter.tryAddRules("_dynamic", validatedRules);
 
     this._data.get(extension.uuid).setDynamicRuleset(validatedRules);
     await this.save(extension);
@@ -1144,10 +1152,7 @@ class RulesetsStore {
       }
     }
 
-    const {
-      MAX_NUMBER_OF_ENABLED_STATIC_RULESETS,
-      GUARANTEED_MINIMUM_STATIC_RULES,
-    } = lazy.ExtensionDNRLimits;
+    const { MAX_NUMBER_OF_ENABLED_STATIC_RULESETS } = lazy.ExtensionDNRLimits;
 
     const maxNewRulesetsCount =
       MAX_NUMBER_OF_ENABLED_STATIC_RULESETS - updatedEnabledRulesets.size;
@@ -1159,16 +1164,20 @@ class RulesetsStore {
       );
     }
 
-    const availableStaticRuleCount =
-      GUARANTEED_MINIMUM_STATIC_RULES -
-      Array.from(updatedEnabledRulesets.values()).reduce(
-        (acc, ruleset) => acc + ruleset.rules.length,
-        0
-      );
+    // At this point, every item in |updatedEnabledRulesets| is an enabled
+    // ruleset with already-valid rules. In order to not exceed the rule quota
+    // when previously-disabled rulesets are enabled, we need to count what we
+    // already have.
+    let ruleQuotaCounter = new lazy.ExtensionDNR.RuleQuotaCounter(
+      /* isStaticRulesets */ true
+    );
+    for (let [rulesetId, ruleset] of updatedEnabledRulesets) {
+      ruleQuotaCounter.tryAddRules(rulesetId, ruleset.rules);
+    }
 
     const newRulesets = await this.#getManifestStaticRulesets(extension, {
       enabledRulesetIds: Array.from(enableIds),
-      availableStaticRuleCount,
+      ruleQuotaCounter,
       isUpdateEnabledRulesets: true,
     });
 

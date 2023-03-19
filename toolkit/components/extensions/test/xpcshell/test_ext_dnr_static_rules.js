@@ -951,6 +951,25 @@ add_task(async function test_getAvailableStaticRulesCountAndLimits() {
   await extension.startup();
   await extension.awaitMessage("bgpage:ready");
 
+  async function updateEnabledRulesets({ expectedErrorMessage, ...options }) {
+    // Note: options = { disableRulesetIds, enableRulesetIds }
+    extension.sendMessage("updateEnabledRulesets", options);
+    let [result] = await extension.awaitMessage("updateEnabledRulesets:done");
+    if (expectedErrorMessage) {
+      Assert.deepEqual(
+        result,
+        { rejectedWithErrorMessage: expectedErrorMessage },
+        "updateEnabledRulesets() should reject with the given error"
+      );
+    } else {
+      Assert.deepEqual(
+        result,
+        undefined,
+        "updateEnabledRulesets() should resolve without error"
+      );
+    }
+  }
+
   const expectedEnabledRulesets = {};
   expectedEnabledRulesets.ruleset_0 = getSchemaNormalizedRules(
     extension,
@@ -969,10 +988,10 @@ add_task(async function test_getAvailableStaticRulesCountAndLimits() {
   );
 
   // Try to enable ruleset_1 again from the API method.
-  extension.sendMessage("updateEnabledRulesets", {
+  await updateEnabledRulesets({
     enableRulesetIds: ["ruleset_1"],
+    expectedErrorMessage: `Number of rules across all enabled static rulesets exceeds GUARANTEED_MINIMUM_STATIC_RULES if ruleset "ruleset_1" were to be enabled.`,
   });
-  await extension.awaitMessage("updateEnabledRulesets:done");
 
   info(
     "Expect ruleset_1 to not be enabled because still exceeded the static rules count limit"
@@ -986,11 +1005,10 @@ add_task(async function test_getAvailableStaticRulesCountAndLimits() {
     "Got the available static rule count on ruleset_0 still the only one enabled"
   );
 
-  extension.sendMessage("updateEnabledRulesets", {
+  await updateEnabledRulesets({
     disableRulesetIds: ["ruleset_0"],
     enableRulesetIds: ["ruleset_1"],
   });
-  await extension.awaitMessage("updateEnabledRulesets:done");
 
   info("Expect ruleset_1 to be enabled along with disabling ruleset_0");
   await assertDNRGetEnabledRulesets(extension, ["ruleset_1"]);
@@ -1015,10 +1033,10 @@ add_task(async function test_getAvailableStaticRulesCountAndLimits() {
   info(
     "Expect ruleset_disabled to stay disabled because along with ruleset_1 exceeeds the limits"
   );
-  extension.sendMessage("updateEnabledRulesets", {
+  await updateEnabledRulesets({
     enableRulesetIds: ["ruleset_disabled"],
+    expectedErrorMessage: `Number of rules across all enabled static rulesets exceeds GUARANTEED_MINIMUM_STATIC_RULES if ruleset "ruleset_disabled" were to be enabled.`,
   });
-  await extension.awaitMessage("updateEnabledRulesets:done");
   await assertDNRGetEnabledRulesets(extension, ["ruleset_1"]);
   await assertDNRStoreData(dnrStore, extension, expectedEnabledRulesets, {
     // Assert total amount of expected rules and only the first and last rule
@@ -1033,10 +1051,9 @@ add_task(async function test_getAvailableStaticRulesCountAndLimits() {
   );
 
   info("Expect ruleset_empty to be enabled despite having reached the limit");
-  extension.sendMessage("updateEnabledRulesets", {
+  await updateEnabledRulesets({
     enableRulesetIds: ["ruleset_empty"],
   });
-  await extension.awaitMessage("updateEnabledRulesets:done");
   await assertDNRGetEnabledRulesets(extension, ["ruleset_1", "ruleset_empty"]);
   await assertDNRStoreData(
     dnrStore,
@@ -1057,11 +1074,10 @@ add_task(async function test_getAvailableStaticRulesCountAndLimits() {
   );
 
   info("Expect invalid rules to not be counted towards the limits");
-  extension.sendMessage("updateEnabledRulesets", {
+  await updateEnabledRulesets({
     disableRulesetIds: ["ruleset_1", "ruleset_empty"],
     enableRulesetIds: ["ruleset_withInvalid"],
   });
-  await extension.awaitMessage("updateEnabledRulesets:done");
   await assertDNRGetEnabledRulesets(extension, ["ruleset_withInvalid"]);
   await assertDNRStoreData(dnrStore, extension, {
     // Only the valid rule has been actually loaded, and the invalid one
