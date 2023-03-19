@@ -158,7 +158,7 @@ Name[wo]=Palanteer bu bees
 Name[xh]=Ifestile entsha
 Name[zh-CN]=新建窗口
 Name[zh-TW]=開新視窗
-Exec=/app/bin/floorp --new-window %u
+Exec=floorp --new-window %u
 
 [Desktop Action new-private-window]
 Name=Open a New Private Window
@@ -266,9 +266,9 @@ Name[wo]=Panlanteeru biir bu bees
 Name[xh]=Ifestile yangasese entsha
 Name[zh-CN]=新建隐私浏览窗口
 Name[zh-TW]=新增隱私視窗
-Exec=/app/bin/floorp --private-window %u
+Exec=floorp --private-window %u
 
 [Desktop Action profile-manager-window]
 Name=Open the Profile Manager
 Name[cs]=Správa profilů
-Exec=/app/bin/floorp --ProfileManager
+Exec=floorp --ProfileManager
