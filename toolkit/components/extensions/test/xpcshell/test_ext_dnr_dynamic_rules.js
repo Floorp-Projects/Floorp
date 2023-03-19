@@ -257,6 +257,10 @@ add_task(async function test_dynamic_rules_count_limits() {
         "Expect the number of dynamic rules to be still allowed, despite the session rule added"
       );
 
+      // NOTE: In this test we do not exceed the quota of session rules. The
+      // updateSessionRules call here is to verify that the quota of session and
+      // dynamic rules are separate. The limits for session rules are tested
+      // by session_rules_total_rule_limit in test_ext_dnr_session_rules.js.
       browser.test.assertDeepEq(
         updateSessionResult,
         { status: "fulfilled", value: undefined },
