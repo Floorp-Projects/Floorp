@@ -221,6 +221,6 @@ curl -v https://api.github.com/repos/Floorp-Projects/Floorp/releases/latest
 ```
 Place the completed xml in 
 
-Windows：https://floorp-update.ablaze.one/browser/<Floorp version>/WINNT/x86_64/update.xml
+Windows：`https://floorp-update.ablaze.one/browser/<Floorp version>/WINNT/x86_64/update.xml`
 
 This completes the release
