@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const PREF_APP_UPDATE_LASTUPDATETIME_FMT = "app.update.lastUpdateTime.%ID%";
 const PREF_APP_UPDATE_TIMERMINIMUMDELAY = "app.update.timerMinimumDelay";
@@ -41,9 +39,10 @@ function LOG(string, alwaysLog = false) {
  *  (e.g. days, weeks, months).
  *  @constructor
  */
-function TimerManager() {
+export function TimerManager() {
   Services.obs.addObserver(this, "profile-before-change");
 }
+
 TimerManager.prototype = {
   /**
    * nsINamed
@@ -439,5 +438,3 @@ TimerManager.prototype = {
     "nsIUpdateTimerManager",
   ]),
 };
-
-var EXPORTED_SYMBOLS = ["TimerManager"];

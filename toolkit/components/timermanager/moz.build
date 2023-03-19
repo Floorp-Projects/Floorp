@@ -13,7 +13,7 @@ XPIDL_SOURCES += [
 ]
 
 EXTRA_JS_MODULES += [
-    "UpdateTimerManager.jsm",
+    "UpdateTimerManager.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [
