@@ -33,10 +33,11 @@ using namespace js;
 using namespace gc;
 
 template <AllowGC allowGC /* = CanGC */>
-JSObject* gc::detail::AllocateObject(JSContext* cx, AllocKind kind,
-                                     size_t nDynamicSlots, gc::InitialHeap heap,
-                                     const JSClass* clasp,
-                                     AllocSite* site /* = nullptr */) {
+JSObject* gc::CellAllocator::AllocateObject(JSContext* cx, AllocKind kind,
+                                            size_t nDynamicSlots,
+                                            gc::InitialHeap heap,
+                                            const JSClass* clasp,
+                                            AllocSite* site /* = nullptr */) {
   MOZ_ASSERT(!cx->isHelperThreadContext());
   MOZ_ASSERT(IsObjectAllocKind(kind));
   size_t thingSize = Arena::thingSize(kind);
@@ -81,10 +82,10 @@ JSObject* gc::detail::AllocateObject(JSContext* cx, AllocKind kind,
   return GCRuntime::tryNewTenuredObject<allowGC>(cx, kind, thingSize,
                                                  nDynamicSlots);
 }
-template JSObject* gc::detail::AllocateObject<NoGC>(
+template JSObject* gc::CellAllocator::AllocateObject<NoGC>(
     JSContext* cx, gc::AllocKind kind, size_t nDynamicSlots,
     gc::InitialHeap heap, const JSClass* clasp, gc::AllocSite* site);
-template JSObject* gc::detail::AllocateObject<CanGC>(
+template JSObject* gc::CellAllocator::AllocateObject<CanGC>(
     JSContext* cx, gc::AllocKind kind, size_t nDynamicSlots,
     gc::InitialHeap heap, const JSClass* clasp, gc::AllocSite* site);
 
