@@ -967,20 +967,17 @@ class RulesetsStore {
         data.dynamicRuleset
       );
 
-      const {
-        MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES,
-      } = lazy.ExtensionDNRLimits;
-
-      if (
-        validatedDynamicRules.length > MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES
-      ) {
+      let ruleQuotaCounter = new lazy.ExtensionDNR.RuleQuotaCounter();
+      try {
+        ruleQuotaCounter.tryAddRules("_dynamic", validatedDynamicRules);
+      } catch (e) {
+        // This should not happen in practice, because updateDynamicRules
+        // rejects quota errors. If we get here, the data on disk may have been
+        // tampered with, or the limit was lowered in a browser update.
         Cu.reportError(
-          `Ignoring dynamic rules exceeding rule count limits while loading DNR store data for ${extension.id}`
+          `Ignoring dynamic ruleset in extension "${extension.id}" because: ${e.message}`
         );
-        data.dynamicRuleset = validatedDynamicRules.slice(
-          0,
-          MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES
-        );
+        data.dynamicRuleset = [];
       }
     }
     return new StoreData(data);

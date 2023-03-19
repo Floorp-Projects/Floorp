@@ -376,14 +376,14 @@ add_task(async function test_stored_dynamic_rules_exceeding_limits() {
   });
 
   await callTestMessageHandler(extension, "assertGetDynamicRulesCount", {
-    expectedRulesCount: expectedDynamicRules.length,
+    expectedRulesCount: 0,
   });
 
   AddonTestUtils.checkMessages(messages, {
     expected: [
       {
         message: new RegExp(
-          `Ignoring dynamic rules exceeding rule count limits while loading DNR store data for ${extension.id}`
+          `Ignoring dynamic ruleset in extension "${extension.id}" because: Number of rules in ruleset "_dynamic" exceeds MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES`
         ),
       },
     ],
