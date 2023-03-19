@@ -112,7 +112,7 @@ add_task(async function() {
   ns = ChromeUtils.importESModule("resource://test/es6module_dynamic_import.js");
   const e = await ns.result;
   checkException(e, {
-    type: "Error",
+    type: "TypeError",
     message: "not supported",
     fileName: "resource://test/es6module_dynamic_import.js",
     lineNumber: 5,

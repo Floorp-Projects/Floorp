@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test import() should throw a TypeError for Worklets</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="common.js"></script>
+</head>
+<body>
+
+<script type="application/javascript">
+const WORKLET_SCRIPT = "dynamic_import.js";
+
+function configureTest() {
+  const ConsoleAPIStorage = SpecialPowers.Cc[
+    "@mozilla.org/consoleAPI-storage;1"
+  ].getService(SpecialPowers.Ci.nsIConsoleAPIStorage);
+
+  // We use console API to check if a TypeError has been thrown, as worklets
+  // have limitations to post the result back to the main document:
+  // Worklets have a different global, and they don't have postMessage() APIs,
+  // and static import SimpleTest.js in worklets also don't work.
+  function consoleListener() {
+    this.observe = this.observe.bind(this);
+    ConsoleAPIStorage.addLogEventListener(this.observe, SpecialPowers.wrap(document).nodePrincipal);
+  }
+
+  consoleListener.prototype  = {
+    observe(aSubject) {
+      var obj = aSubject.wrappedJSObject;
+      info("Got console message:" + obj.arguments[0]);
+      is(TypeError.name + ": Success", obj.arguments[0], "import() should throw");
+
+      ConsoleAPIStorage.removeLogEventListener(this.observe);
+      SimpleTest.finish();
+    }
+  }
+
+  var cl = new consoleListener();
+
+  return SpecialPowers.pushPrefEnv(
+    {"set": [["dom.audioworklet.enabled", true],
+             ["dom.worklet.enabled", true]]});
+}
+
+// This function is called into an iframe.
+function runTestInIframe() {
+  var audioContext = new AudioContext();
+  audioContext.audioWorklet.addModule(WORKLET_SCRIPT);
+}
+
+</script>
+</body>
+</html>
