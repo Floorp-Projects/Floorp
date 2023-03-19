@@ -1244,6 +1244,9 @@
 
     <!-- Title A shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_A_title">Naviguez sans laisser de traces</string>
+    <!-- Text A shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_A_text">En navigation privée avec %1$s, aucune de vos informations n’est enregistrée.</string>
     <!-- Title B shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_B_title">Effectuez votre première recherche</string>
     <!-- Text B shown in the notification that pops up to re-engage the user -->

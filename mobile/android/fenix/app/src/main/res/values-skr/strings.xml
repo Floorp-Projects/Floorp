@@ -1229,6 +1229,8 @@
     <!-- Title B shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_B_title">آپݨی پہلی ڳول شروع کرو</string>
 
+    <!-- Preference for taking the short survey. -->
+    <string name="preferences_take_survey" tools:ignore="UnusedResources">سروے وچ حصہ گھنو</string>
     <!-- Preference for not taking the short survey. -->
     <string name="preferences_not_take_survey" tools:ignore="UnusedResources">کو، شکریہ</string>
 

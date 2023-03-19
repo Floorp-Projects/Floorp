@@ -387,6 +387,14 @@
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s nitikïr nutojtob\'ej yeruxutuj pa ruyonil ronojel ri kik\'utuxik taq kuki pa koch\'el taq ruxaq.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Xek\'is ri taq kib\'aner koki!</string>
+    <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_title">¿La niya\' q\'ij chi %1$s yeruxutuj ri kik\'utuxik taq kuki? </string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Keruxutüx pa ruyonil ri kik\'utuxik kuki toq ke ri\'.</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_2" moz:RemovedIn="112" tools:ignore="UnusedResources">¿La niya\' q\'ij chi ri %1$s pa ruyonil yeruxutuj ri kik\'utuxik kuki toq ke ri\' nrajo\'?</string>
+    <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_body">%1$s nitikïr yeruxutuj pa ruyonil k\'ïy kik\'utuxik taq kuki.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Wakami mani</string>
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->

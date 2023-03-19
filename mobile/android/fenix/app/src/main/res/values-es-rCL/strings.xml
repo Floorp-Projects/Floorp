@@ -83,9 +83,6 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Ocultar</string>
 
-    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
-    <string name="cfr_dismiss_button_default_content_description" moz:removedIn="110" tools:ignore="UnusedResources">Ocultar</string>
-
     <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
     <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
     <string name="tcp_cfr_message">Nuestra función de privacidad más poderosa hasta ahora aísla a los rastreadores de sitios cruzados.</string>
@@ -360,8 +357,6 @@
     <string name="reduce_cookie_banner_option_off">No</string>
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
     <string name="reduce_cookie_banner_option_on">Sí</string>
-    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox intenta rechazar automáticamente las solicitudes de cookies en los anuncios de cookies. Si una opción de rechazo no está disponible, Firefox podría aceptar todas las cookies para cerrar el anuncio.</string>
 
     <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
     <string name="reduce_cookie_banner_summary_1">%1$s intenta rechazar automáticamente las solicitudes de cookies en los anuncios de cookies.</string>
@@ -377,8 +372,6 @@
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">¿Desactivar la reducción de anuncios de cookies para %1$s?</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s borrará las cookies de este sitio y recargará la página. Borrar todas las cookies puede cerrar tu sesión o vaciar los carritos de compras.</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s puede intentar rechazar automáticamente las solicitudes de cookies. Si una opción de rechazo no está disponible, %2$s podría aceptar todas las cookies para cerrar el anuncio.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s puede intentar rechazar automáticamente las solicitudes de cookies.</string>
@@ -388,8 +381,6 @@
     <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">¡Se acabaron los anuncios de cookies!</string>
     <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_dialog_title">¿Permitir que %1$s rechace los anuncios de cookies?</string>
-    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Rechaza automáticamente las solicitudes de cookies, cuando sea posible. De lo contrario, acepta todas las cookies para descartar los anuncios de cookies.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Rechaza automáticamente las solicitudes de cookies, cuando sea posible.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
@@ -405,15 +396,11 @@
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Ver menos ventanas emergentes de cookies</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Responde automáticamente las ventanas emergentes de cookies para navegar sin distracciones. %1$s rechazará todas las solicitudes si es posible, o aceptará todas si no.</string>
-    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Responde automáticamente las ventanas emergentes de cookies para navegar sin distracciones. %1$s rechazará todas las solicitudes si es posible.</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Descartar ventanas emergentes</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Reducción de anuncios de cookies</string>
-    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">¿Permitir que %1$s rechace la solicitud de consentimiento de cookies de un sitio si es posible o acepte las cookies cuando no sea posible?</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">¿Permitir que %1$s rechace la solicitud de consentimiento de cookies de un sitio si es posible?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
@@ -1237,6 +1224,15 @@
     <string name="notification_re_engagement_B_title">Inicia tu primera búsqueda</string>
     <!-- Text B shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_B_text">Encuentra algo cerca. O descubre algo divertido.</string>
+
+    <!-- Survey -->
+    <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_survey_message_text" tools:ignore="UnusedResources">Ayuda a mejorar Firefox respondiendo una breve encuesta.</string>
+    <!-- Preference for taking the short survey. -->
+    <string name="preferences_take_survey" tools:ignore="UnusedResources">Responder encuesta</string>
+    <!-- Preference for not taking the short survey. -->
+    <string name="preferences_not_take_survey" tools:ignore="UnusedResources">No, gracias</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->

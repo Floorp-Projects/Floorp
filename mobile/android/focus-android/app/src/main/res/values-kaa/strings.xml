@@ -112,6 +112,9 @@
 
     <string name="preference_category_search">Izlew</string>
 
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">Aldınnan ornatılǵan</string>
+
     <!-- This label is shown above the currently selected search engine in settings -->
     <string name="preference_search_engine_label">Izlew sisteması</string>
 

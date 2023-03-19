@@ -86,9 +86,6 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Ignorer</string>
 
-    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
-    <string name="cfr_dismiss_button_default_content_description" moz:removedIn="110" tools:ignore="UnusedResources">Ignorer</string>
-
     <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
     <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
     <string name="tcp_cfr_message">Vår kraftigaste personvernfunksjon til no isolerer sporarar på tvers av nettstadar.</string>
@@ -365,8 +362,6 @@
     <string name="reduce_cookie_banner_option_off">Av</string>
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
     <string name="reduce_cookie_banner_option_on">På</string>
-    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox prøver automatisk å avvise infokapselførespurnadar på infoskapselbanner. Dersom eit avvisningsalternativ ikkje er tilgjengeleg, kan Firefox godta alle infokapslar for å avvise banneret.</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
     <string name="reduce_cookie_banner_summary_1">%1$s prøver automatisk å avvise infokapselførespurnadar på infoskapselbanner.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -382,8 +377,6 @@
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">Vil du deaktivere reduksjon av infokapselbanner for %1$s?</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s vill slette infokapslar og oppdatere sida. Sletting av alle infokapslar kan føre til at du blir logga ut eller at handlekorger vert tømde.</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s kan prøve å automatisk avslå infokapselførespurnadar. Dersom avslag ikkje er eit alternativ, kan %2$s godta alle infokapslar for å fjerne banneret.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s kan prøve å automatisk avvise infokapselførespurnadar.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
@@ -392,8 +385,6 @@
     <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Fjern infoskapselbanner!</string>
     <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_dialog_title">Tilate %1$s å avvise infokapselbanner?</string>
-    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Avvis automatisk førespurnadar om infokapslar, når det er muleg. Elles godta alle infokapslar for å avvise infoskapselbanner.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Avvis automatisk førespurnadar om infokapslar, når det er muleg.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
@@ -409,15 +400,11 @@
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Sjå færre sprettoppvindauge for infokapslar</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Svar automatisk på sprettoppvindauge for infokapslar for distraksjonsfri surfing. %1$s vil avvise alle førespurnadar dersom muleg, eller godta alle dersom ikkje.</string>
-    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Svar automatisk på sprettoppvindauge for infokapslar for distraksjonsfri surfing. %1$s vil avvise alle førespunadar dersom muleg.</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Avvis sprettoppvindauge</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Redusering av infoskapselbanner</string>
-    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Vil du tillate %1$s å avslå førespurnad frå ein nettstad om samtykke for infokapslar dersom muleg, eller godta tilgang til infokapslar når det ikkje er muleg?</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Vil du tillate %1$s å avslå førespurnad til ein nettstad om samtykke for infokapslar dersom muleg?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
@@ -1250,6 +1237,15 @@
     <string name="notification_re_engagement_B_title">Start det første søket ditt</string>
     <!-- Text B shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_B_text">Finn noko nær deg. Eller oppdag noko artig.</string>
+
+    <!-- Survey -->
+    <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_survey_message_text" tools:ignore="UnusedResources">Bidra til å gjere Firefox betre ved å ta ei kort spørjeundersøkjing.</string>
+    <!-- Preference for taking the short survey. -->
+    <string name="preferences_take_survey" tools:ignore="UnusedResources">Ver med på undersøkinga</string>
+    <!-- Preference for not taking the short survey. -->
+    <string name="preferences_not_take_survey" tools:ignore="UnusedResources">Nei takk</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->

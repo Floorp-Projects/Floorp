@@ -78,9 +78,6 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">አሰናብት</string>
 
-    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
-    <string name="cfr_dismiss_button_default_content_description" moz:removedIn="110" tools:ignore="UnusedResources">አሰናብት</string>
-
     <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
     <string name="tcp_cfr_learn_more">ስለ አጠቃላይ የኩኪ ጥበቃ ይወቁ</string>
 
@@ -349,8 +346,6 @@
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">ለ%1$s የኩኪ ሰሌዳ ቅነሳ ይጥፋ?</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s የዚህን ድረ-ገፅ ኩኪዎች ያፀዳ እና ገጹን ያድሳል። ሁሉንም ኩኪዎች ማጽዳት እርስዎን ሊያስወጣዎት ወይም የግዢ ጋሪዎችን ባዶ ሊያደርግ ይችላል።</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s የኩኪ ጥያቄዎችን በራስ ሰር ውድቅ ለማድረግ መሞከር ይችላል። ውድቅ የማድረግ አማራጭ ከሌለ %2$s ሰሌዳውን ለማሰናበት ሁሉንም ኩኪዎች ሊቀበል ይችላል።</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s የኩኪ ጥያቄዎችን በራስ ሰር ውድቅ ለማድረግ መሞከር ይችላል።</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
@@ -512,6 +507,15 @@
     <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
     <string name="wallpaper_learn_more">ተጨማሪ ይወቁ</string>
 
+    <!-- Text for limited edition wallpapers title. -->
+    <string name="wallpaper_limited_edition_title">የተወሰነ ስሪት</string>
+    <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
+    <string name="wallpaper_limited_edition_description_with_learn_more">አዲሱ ገለልተኛ ድምጾች ስብስብ። %s</string>
+    <!-- Description text for the limited edition wallpapers. -->
+    <string name="wallpaper_limited_edition_description">አዲሱ ገለልተኛ ድምጾች ስብስብ።</string>
+    <!-- Wallpaper onboarding dialog header text. -->
+    <string name="wallpapers_onboarding_dialog_title_text">የቀለም ነጠብጣብ ይሞክሩ</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">አሁን አመሳስል</string>
@@ -574,6 +578,8 @@
 
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">የአጠቃቀም እና ቴክኒካዊ ውሂብ</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">የግብይት ውሂብ</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">ጥናቶች</string>
     <!-- Summary for studies preferences -->
@@ -729,6 +735,8 @@
     <string name="studies_remove">አስወግድ</string>
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">ንቁ</string>
+    <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
+    <string name="studies_description_2">%1$s ከጊዜ ወደ ጊዜ ጥናቶችን ሊጭን እና ሊያሄድ ይችላል።</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">ተጨማሪ ይወቁ</string>
     <!-- Dialog message shown after removing a study -->
@@ -1095,6 +1103,8 @@
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">ሌላ መሳሪያ ያገናኙ</string>
 
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">ትር ለመላክ ቢያንስ በአንድ ሌላ መሳሪያ ወደ Firefox ይግቡ።</string>
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">ገባኝ</string>
     <!-- Share error message -->
@@ -1111,6 +1121,8 @@
     <!-- Notifications -->
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">የግል ትሮችን ዝጋ</string>
+    <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_marketing_channel_name">ግብይት</string>
     <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
     The app name is in the text, due to limitations with localizing Nimbus experiments -->
     <string name="nimbus_notification_default_browser_title" tools:ignore="UnusedResources">Firefox ፈጣን እና ግላዊ ነው</string>

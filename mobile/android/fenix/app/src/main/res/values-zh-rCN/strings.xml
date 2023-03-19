@@ -87,9 +87,6 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">知道了</string>
 
-    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
-    <string name="cfr_dismiss_button_default_content_description" moz:removedIn="110" tools:ignore="UnusedResources">知道了</string>
-
     <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
     <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
     <string name="tcp_cfr_message">我们最强大的隐私功能：隔离跨站跟踪器。</string>
@@ -370,8 +367,6 @@
     <string name="reduce_cookie_banner_option_off">关</string>
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
     <string name="reduce_cookie_banner_option_on">开</string>
-    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox 会自动尝试点击 Cookie 横幅上的“拒绝”按钮。若网站未提供拒绝选项，则可能会接受所有 Cookie 以关闭横幅。</string>
 
     <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
     <string name="reduce_cookie_banner_summary_1">%1$s 会尝试自动拒绝 Cookie 横幅的 Cookie 请求。</string>
@@ -388,8 +383,6 @@
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s 将清除此网站的 Cookie 并刷新页面。清除 Cookie 可能会导致您退出登录，或清空购物车。</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s 会自动尝试拒绝 Cookie 请求。若网站未提供拒绝选项，%2$s 可能会接受所有 Cookie 以关闭横幅。</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s 会尝试自动拒绝 Cookie 请求。</string>
@@ -399,8 +392,6 @@
     <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">消失吧，Cookie 横幅！</string>
     <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_dialog_title">要允许 %1$s 拒绝 Cookie 横幅吗？</string>
-    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">尽可能自动拒绝 Cookie 请求，如果无法拒绝则接受所有 Cookie 以关闭 Cookie 横幅。</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">尽可能自动拒绝 Cookie 请求。</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
@@ -416,15 +407,11 @@
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">减少 Cookie 弹窗</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">自动回应 Cookie 弹窗，实现无干扰浏览。%1$s 将尽可能拒绝所有请求，如果无法拒绝则接受所有请求。</string>
-    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">自动回应 Cookie 弹窗，实现无干扰浏览。%1$s 将尽可能拒绝所有请求。</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">关闭弹窗</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">减少 Cookie 横幅</string>
-    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">要允许 %1$s 尽可能拒绝网站的 Cookie 请求，并在无法拒绝时接受 Cookie 请求吗？</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">要允许 %1$s 尽可能拒绝网站的 Cookie 请求吗？</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
@@ -1276,6 +1263,13 @@
     <string name="notification_re_engagement_B_title">开始您的搜索之旅吧</string>
     <!-- Text B shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_B_text">搜索周边物，探索新鲜事。</string>
+
+    <!-- Survey -->
+    <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_survey_message_text" tools:ignore="UnusedResources">请填写这份简短的问卷，帮助 Firefox 变得更好。</string>
+    <!-- Preference for not taking the short survey. -->
+    <string name="preferences_not_take_survey" tools:ignore="UnusedResources">不了，谢谢</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
