@@ -299,7 +299,7 @@ template JS::BigInt* gc::CellAllocator::AllocateBigInt<CanGC>(
     JSContext* cx, gc::InitialHeap heap);
 
 template <AllowGC allowGC /* = CanGC */>
-TenuredCell* gc::detail::AllocateTenuredImpl(JSContext* cx, gc::AllocKind kind,
+TenuredCell* gc::detail::AllocateTenuredCell(JSContext* cx, gc::AllocKind kind,
                                              size_t size) {
   MOZ_ASSERT(!cx->isHelperThreadContext());
   MOZ_ASSERT(!IsNurseryAllocable(kind));
@@ -315,9 +315,9 @@ TenuredCell* gc::detail::AllocateTenuredImpl(JSContext* cx, gc::AllocKind kind,
   return GCRuntime::tryNewTenuredThing<allowGC>(cx, kind, size);
 }
 
-template TenuredCell* gc::detail::AllocateTenuredImpl<NoGC>(JSContext*,
+template TenuredCell* gc::detail::AllocateTenuredCell<NoGC>(JSContext*,
                                                             AllocKind, size_t);
-template TenuredCell* gc::detail::AllocateTenuredImpl<CanGC>(JSContext*,
+template TenuredCell* gc::detail::AllocateTenuredCell<CanGC>(JSContext*,
                                                              AllocKind, size_t);
 
 template <AllowGC allowGC>

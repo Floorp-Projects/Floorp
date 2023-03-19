@@ -97,11 +97,11 @@ namespace detail {
 //
 // The parameters will be passed to a type-specific function or constructor. For
 // nursery-allocatable types, see eg AllocateString, AllocateObject, and
-// AllocateBigInt below. For all other types, the parameters will be
-// forwarded to the constructor.
+// AllocateBigInt in the CellAllocator class. For all other types, the
+// parameters will be forwarded to the constructor.
 
 template <AllowGC allowGC = CanGC>
-gc::TenuredCell* AllocateTenuredImpl(JSContext* cx, gc::AllocKind kind,
+gc::TenuredCell* AllocateTenuredCell(JSContext* cx, gc::AllocKind kind,
                                      size_t size);
 
 }  // namespace detail
@@ -109,30 +109,43 @@ gc::TenuredCell* AllocateTenuredImpl(JSContext* cx, gc::AllocKind kind,
 
 // This is the entry point for all allocation, though callers should still not
 // use this directly. Use cx->newCell<T>(...) instead.
+//
+// After a successful allocation the caller must fully initialize the thing
+// before calling any function that can potentially trigger GC. This will
+// ensure that GC tracing never sees junk values stored in the partially
+// initialized thing.
 template <typename T, AllowGC allowGC, typename... Args>
 T* gc::CellAllocator::NewCell(JSContext* cx, Args&&... args) {
   static_assert(std::is_base_of_v<gc::Cell, T>);
-  if constexpr (std::is_base_of_v<JSString, T> &&
-                !std::is_base_of_v<JSAtom, T> &&
-                !std::is_base_of_v<JSExternalString, T>) {
-    return AllocateString<T, allowGC>(cx, std::forward<Args>(args)...);
-  } else if constexpr (std::is_base_of_v<JS::BigInt, T>) {
-    return AllocateBigInt<allowGC>(cx, std::forward<Args>(args)...);
-  } else if constexpr (std::is_base_of_v<JSObject, T>) {
+
+  // Objects. See the valid parameter list in AllocateObject, above.
+  if constexpr (std::is_base_of_v<JSObject, T>) {
     return static_cast<T*>(
         AllocateObject<allowGC>(cx, std::forward<Args>(args)...));
-  } else {
+  }
+
+  // BigInt
+  else if constexpr (std::is_base_of_v<JS::BigInt, T>) {
+    return AllocateBigInt<allowGC>(cx, std::forward<Args>(args)...);
+  }
+
+  // "Normal" strings (all of which can be nursery allocated). Atoms and
+  // external strings will fall through to the generic code below. All other
+  // strings go through AllocateString, which will forward the arguments to the
+  // appropriate string class's constructor.
+  else if constexpr (std::is_base_of_v<JSString, T> &&
+                     !std::is_base_of_v<JSAtom, T> &&
+                     !std::is_base_of_v<JSExternalString, T>) {
+    return AllocateString<T, allowGC>(cx, std::forward<Args>(args)...);
+  }
+
+  else {
     // Allocate a new tenured GC thing that's not nursery-allocatable. Use
-    // cx->newCell<T>(...), where the parameters are prefixed with a cx
-    // parameter and forwarded to the type's constructor.
-    //
-    // After a successful allocation the caller must fully initialize the thing
-    // before calling any function that can potentially trigger GC. This will
-    // ensure that GC tracing never sees junk values stored in the partially
-    // initialized thing.
+    // cx->newCell<T>(...), where the parameters are forwarded to the type's
+    // constructor.
     gc::AllocKind kind = gc::MapTypeToAllocKind<T>::kind;
     gc::TenuredCell* cell =
-        gc::detail::AllocateTenuredImpl<allowGC>(cx, kind, sizeof(T));
+        gc::detail::AllocateTenuredCell<allowGC>(cx, kind, sizeof(T));
     if (!cell) {
       return nullptr;
     }
