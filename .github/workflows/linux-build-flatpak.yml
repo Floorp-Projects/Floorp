@@ -113,6 +113,7 @@ jobs:
         'exec /app/lib/floorp/floorp "$@"'
         )
         for line in "${launch_script[@]}" ; do echo $line >> ./flatpak_build/tmp/bin/floorp ; done
+        chmod +x ./flatpak_build/tmp/bin/floorp
 
         mkdir -p ./flatpak_build/tmp/share/applications
         cp ./.github/flatpak-one.ablaze.floorp.desktop ./flatpak_build/tmp/share/applications/one.ablaze.floorp.desktop
