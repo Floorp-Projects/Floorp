@@ -88,15 +88,45 @@ jobs:
         export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ja-KA ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
         for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
         AB_CD=multi ./mach package
-        export WORKDIR=`pwd`
+
         export DISPVER=`cat browser/config/version_display.txt`
-        mkdir flatpak_build && cd flatpak_build
-        mkdir tmp public && cd tmp
-        wget https://sda1.net/storage/floorp/basefiles.tar.xz && tar -xf basefiles.tar.xz && rm basefiles.tar.xz
-        tar -xjvf $WORKDIR/obj-x86_64-pc-linux-gnu/dist/floorp-$DISPVER.en-US.linux-x86_64.tar.bz2
-        ls
-        tar -Jcf flatpak-$DISPVER.tar.xz * && mv flatpak-$DISPVER.tar.xz ../public && cd ..
-        ls
+
+        sudo apt install flatpak
+        flatpak remote-add --user --if-not-exists --from flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+        flatpak install --user -y flathub org.mozilla.firefox.BaseApp//22.08 --no-deps
+        
+        mkdir ./flatpak_build
+        mkdir ./flatpak_build/tmp
+        mkdir ./flatpak_build/public
+
+        cp -r ~/.local/share/flatpak/app/org.mozilla.firefox.BaseApp/current/active/files/* ./flatpak_build/tmp/
+        rm ./flatpak_build/tmp/manifest.json
+        ls ./flatpak_build/tmp
+
+        mkdir -p ./flatpak_build/tmp/lib
+        tar -xvf ./obj-x86_64-pc-linux-gnu/dist/floorp-$DISPVER.en-US.linux-x86_64.tar.bz2 -C ./flatpak_build/tmp/lib
+        ls ./flatpak_build/tmp/lib/floorp
+
+        launch_script=(
+        '#!/bin/bash'
+        'export TMPDIR=$XDG_CACHE_HOME/tmp'
+        'exec /app/lib/floorp/floorp "$@"'
+        )
+        for line in "${launch_script[@]}" ; do echo $line >> ./flatpak_build/tmp/bin/floorp ; done
+
+        mkdir -p ./flatpak_build/tmp/share/applications
+        cp ./.github/flatpak-one.ablaze.floorp.desktop ./flatpak_build/tmp/share/applications/one.ablaze.floorp.desktop
+
+        for size in 16 32 48 64 128; do
+          mkdir -p "./flatpak_build/tmp/share/icons/hicolor/${size}x${size}/apps"
+          ln -s "../../../../../lib/floorp/browser/chrome/icons/default/default${size}.png" "./flatpak_build/tmp/share/icons/hicolor/${size}x${size}/apps/one.ablaze.floorp.png"
+        done
+
+        cd ./flatpak_build/tmp
+        tar -Jcf flatpak-base-$DISPVER.tar.xz *
+        mv flatpak-base-$DISPVER.tar.xz ../public/
+        cd ../..
+        ls ./flatpak_build/public
 
     - name: Publish 🎁
       uses: actions/upload-artifact@v1
