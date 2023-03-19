@@ -224,8 +224,8 @@ template Cell* gc::CellAllocator::AllocateStringCell<CanGC>(JSContext*,
 // Attempt to allocate a new BigInt out of the nursery. If there is not enough
 // room in the nursery or there is an OOM, this method will return nullptr.
 template <AllowGC allowGC>
-JS::BigInt* GCRuntime::tryNewNurseryBigInt(JSContext* cx, size_t thingSize,
-                                           AllocKind kind) {
+Cell* GCRuntime::tryNewNurseryBigIntCell(JSContext* cx, size_t thingSize,
+                                         AllocKind kind) {
   MOZ_ASSERT(IsNurseryAllocable(kind));
   MOZ_ASSERT(cx->isNurseryAllocAllowed());
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
@@ -233,7 +233,7 @@ JS::BigInt* GCRuntime::tryNewNurseryBigInt(JSContext* cx, size_t thingSize,
   AllocSite* site = cx->zone()->unknownAllocSite();
   Cell* cell = cx->nursery().allocateBigInt(site, thingSize);
   if (cell) {
-    return JS::BigInt::emplace(cell);
+    return cell;
   }
 
   if (allowGC && !cx->suppressGC) {
@@ -244,7 +244,7 @@ JS::BigInt* GCRuntime::tryNewNurseryBigInt(JSContext* cx, size_t thingSize,
     if (cx->nursery().isEnabled() && cx->zone()->allocNurseryBigInts) {
       Cell* cell = cx->nursery().allocateBigInt(site, thingSize);
       if (cell) {
-        return JS::BigInt::emplace(cell);
+        return cell;
       }
     }
   }
@@ -252,7 +252,7 @@ JS::BigInt* GCRuntime::tryNewNurseryBigInt(JSContext* cx, size_t thingSize,
 }
 
 template <AllowGC allowGC /* = CanGC */>
-JS::BigInt* gc::detail::AllocateBigInt(JSContext* cx, InitialHeap heap) {
+static Cell* AllocateBigIntCell(JSContext* cx, InitialHeap heap) {
   MOZ_ASSERT(!cx->isHelperThreadContext());
 
   AllocKind kind = MapTypeToAllocKind<JS::BigInt>::kind;
@@ -266,9 +266,9 @@ JS::BigInt* gc::detail::AllocateBigInt(JSContext* cx, InitialHeap heap) {
 
   if (cx->nursery().isEnabled() && heap != TenuredHeap &&
       cx->nursery().canAllocateBigInts() && cx->zone()->allocNurseryBigInts) {
-    auto* bi = rt->gc.tryNewNurseryBigInt<allowGC>(cx, size, kind);
-    if (bi) {
-      return bi;
+    Cell* cell = rt->gc.tryNewNurseryBigIntCell<allowGC>(cx, size, kind);
+    if (cell) {
+      return cell;
     }
 
     // Our most common non-jit allocation path is NoGC; thus, if we fail the
@@ -276,22 +276,26 @@ JS::BigInt* gc::detail::AllocateBigInt(JSContext* cx, InitialHeap heap) {
     // will do a CanGC allocation to clear the nursery. Failing to do so will
     // cause all allocations on this path to land in Tenured, and we will not
     // get the benefit of the nursery.
-    if (!allowGC) {
+    if constexpr (!allowGC) {
       return nullptr;
     }
   }
 
-  TenuredCell* cell = GCRuntime::tryNewTenuredThing<allowGC>(cx, kind, size);
-  if (!cell) {
-    return nullptr;
-  }
-
-  return JS::BigInt::emplace(cell);
+  return GCRuntime::tryNewTenuredThing<allowGC>(cx, kind, size);
 }
-template JS::BigInt* gc::detail::AllocateBigInt<NoGC>(JSContext* cx,
-                                                      gc::InitialHeap heap);
-template JS::BigInt* gc::detail::AllocateBigInt<CanGC>(JSContext* cx,
-                                                       gc::InitialHeap heap);
+
+template <AllowGC allowGC /* = CanGC */>
+JS::BigInt* gc::CellAllocator::AllocateBigInt(JSContext* cx, InitialHeap heap) {
+  Cell* cell = AllocateBigIntCell<allowGC>(cx, heap);
+  if (cell) {
+    return new (mozilla::KnownNotNull, cell) JS::BigInt();
+  }
+  return nullptr;
+}
+template JS::BigInt* gc::CellAllocator::AllocateBigInt<NoGC>(
+    JSContext* cx, gc::InitialHeap heap);
+template JS::BigInt* gc::CellAllocator::AllocateBigInt<CanGC>(
+    JSContext* cx, gc::InitialHeap heap);
 
 template <AllowGC allowGC /* = CanGC */>
 TenuredCell* gc::detail::AllocateTenuredImpl(JSContext* cx, gc::AllocKind kind,

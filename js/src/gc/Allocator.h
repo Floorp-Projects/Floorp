@@ -64,6 +64,10 @@ class CellAllocator {
         StringT(std::forward<Args>(args)...);
   }
 
+  // Use for nursery-allocatable BigInt.
+  template <AllowGC allowGC = CanGC>
+  static JS::BigInt* AllocateBigInt(JSContext* cx, gc::InitialHeap heap);
+
  public:
   template <typename T, js::AllowGC allowGC = CanGC, typename... Args>
   static T* NewCell(JSContext* cx, Args&&... args);
@@ -98,12 +102,6 @@ JSObject* AllocateObject(JSContext* cx, gc::AllocKind kind,
                          size_t nDynamicSlots, gc::InitialHeap heap,
                          const JSClass* clasp, gc::AllocSite* site = nullptr);
 
-// Allocate a BigInt. Use cx->newCell<BigInt>(heap).
-//
-// Use for nursery-allocatable BigInt.
-template <AllowGC allowGC = CanGC>
-JS::BigInt* AllocateBigInt(JSContext* cx, gc::InitialHeap heap);
-
 }  // namespace detail
 }  // namespace gc
 
@@ -117,7 +115,7 @@ T* gc::CellAllocator::NewCell(JSContext* cx, Args&&... args) {
                 !std::is_base_of_v<JSExternalString, T>) {
     return AllocateString<T, allowGC>(cx, std::forward<Args>(args)...);
   } else if constexpr (std::is_base_of_v<JS::BigInt, T>) {
-    return gc::detail::AllocateBigInt<allowGC>(cx, args...);
+    return AllocateBigInt<allowGC>(cx, std::forward<Args>(args)...);
   } else if constexpr (std::is_base_of_v<JSObject, T>) {
     return static_cast<T*>(
         gc::detail::AllocateObject<allowGC>(cx, std::forward<Args>(args)...));
