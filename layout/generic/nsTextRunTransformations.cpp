@@ -123,24 +123,24 @@ void MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
                               const bool* aCharsToMerge,
                               const bool* aDeletedChars) {
   MOZ_ASSERT(!aDest->TrailingGlyphRun(), "unexpected glyphRuns in aDest!");
-  gfxTextRun::GlyphRunIterator iter(aSrc, gfxTextRun::Range(aSrc));
   uint32_t offset = 0;
   AutoTArray<gfxTextRun::DetailedGlyph, 2> glyphs;
   const gfxTextRun::CompressedGlyph continuationGlyph =
       gfxTextRun::CompressedGlyph::MakeComplex(false, false);
   const gfxTextRun::CompressedGlyph* srcGlyphs = aSrc->GetCharacterGlyphs();
   gfxTextRun::CompressedGlyph* destGlyphs = aDest->GetCharacterGlyphs();
-  while (iter.NextRun()) {
-    const gfxTextRun::GlyphRun* run = iter.GetGlyphRun();
+  for (gfxTextRun::GlyphRunIterator iter(aSrc, gfxTextRun::Range(aSrc));
+       !iter.AtEnd(); iter.NextRun()) {
+    const gfxTextRun::GlyphRun* run = iter.GlyphRun();
     aDest->AddGlyphRun(run->mFont, run->mMatchType, offset, false,
                        run->mOrientation, run->mIsCJK);
 
     bool anyMissing = false;
-    uint32_t mergeRunStart = iter.GetStringStart();
+    uint32_t mergeRunStart = iter.StringStart();
     // Initialize to a copy of the first source glyph in the merge run.
     gfxTextRun::CompressedGlyph mergedGlyph = srcGlyphs[mergeRunStart];
-    uint32_t stringEnd = iter.GetStringEnd();
-    for (uint32_t k = iter.GetStringStart(); k < stringEnd; ++k) {
+    uint32_t stringEnd = iter.StringEnd();
+    for (uint32_t k = iter.StringStart(); k < stringEnd; ++k) {
       const gfxTextRun::CompressedGlyph g = srcGlyphs[k];
       if (g.IsSimpleGlyph()) {
         if (!anyMissing) {
@@ -159,7 +159,7 @@ void MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
         }
       }
 
-      if (k + 1 < iter.GetStringEnd() && aCharsToMerge[k + 1]) {
+      if (k + 1 < iter.StringEnd() && aCharsToMerge[k + 1]) {
         // next char is supposed to merge with current, so loop without
         // writing current merged glyph to the destination
         continue;

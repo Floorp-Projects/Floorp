@@ -26,6 +26,7 @@
 
 class gfxASurface;
 class gfxDrawable;
+class gfxTextRun;
 struct gfxQuad;
 class nsIInputStream;
 class nsIGfxInfo;
@@ -437,7 +438,7 @@ class ElementOrArray {
   } mTag;
 
   // gfxTextRun::SortGlyphRuns and SanitizeGlyphRuns directly access the array.
-  friend class gfxTextRun;
+  friend class ::gfxTextRun;
   nsTArray<T>& Array() {
     MOZ_DIAGNOSTIC_ASSERT(mTag == Tag::Array);
     return mArray;

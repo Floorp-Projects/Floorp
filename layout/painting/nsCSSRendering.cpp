@@ -4058,15 +4058,15 @@ void nsCSSRendering::PaintDecorationLine(
   // (For runs we do process, CreateTextBlob will update the position.)
   auto currentGlyphRunAdvance = [&]() {
     return textRun->GetAdvanceWidth(
-               gfxTextRun::Range(iter.GetStringStart(), iter.GetStringEnd()),
+               gfxTextRun::Range(iter.StringStart(), iter.StringEnd()),
                aParams.provider) /
            appUnitsPerDevPixel;
   };
 
-  while (iter.NextRun()) {
-    if (iter.GetGlyphRun()->mOrientation ==
+  for (; !iter.AtEnd(); iter.NextRun()) {
+    if (iter.GlyphRun()->mOrientation ==
             mozilla::gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_UPRIGHT ||
-        (iter.GetGlyphRun()->mIsCJK &&
+        (iter.GlyphRun()->mIsCJK &&
          skipInk == mozilla::StyleTextDecorationSkipInk::Auto)) {
       // We don't support upright text in vertical modes currently
       // (see https://bugzilla.mozilla.org/show_bug.cgi?id=1572294),
@@ -4080,7 +4080,7 @@ void nsCSSRendering::PaintDecorationLine(
       continue;
     }
 
-    gfxFont* font = iter.GetGlyphRun()->mFont;
+    gfxFont* font = iter.GlyphRun()->mFont;
     // Don't try to apply skip-ink to 'sbix' fonts like Apple Color Emoji,
     // because old macOS (10.9) may crash trying to retrieve glyph paths
     // that don't exist.
@@ -4100,7 +4100,7 @@ void nsCSSRendering::PaintDecorationLine(
     // textPos.fX with the advance of the glyphs.
     sk_sp<const SkTextBlob> textBlob =
         CreateTextBlob(textRun, characterGlyphs, skiafont, spacing.Elements(),
-                       iter.GetStringStart(), iter.GetStringEnd(),
+                       iter.StringStart(), iter.StringEnd(),
                        (float)appUnitsPerDevPixel, textPos, spacingOffset);
 
     if (!textBlob) {
