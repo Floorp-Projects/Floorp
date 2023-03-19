@@ -1,0 +1,11 @@
+---
+root:
+  items:
+    - image: checkerboard(2,16,16)
+      bounds: [50, 50, 262, 262]
+    - type: stacking-context
+      filters: [opacity(0.5)]
+      items:
+        - type: rect
+          bounds: [100, 100, 162, 162]
+          color: green
