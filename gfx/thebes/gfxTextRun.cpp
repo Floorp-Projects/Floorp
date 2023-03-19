@@ -1377,24 +1377,28 @@ void gfxTextRun::SortGlyphRuns() {
   runs.Sort(GlyphRunOffsetComparator());
 
   // Coalesce adjacent glyph runs that have the same properties.
-  GlyphRun* prevRun = &runs[0];
-  for (uint32_t i = 1; i < runs.Length(); /* Don't advance if coalescing */) {
-    GlyphRun* run = &runs[i];
-    // A GlyphRun with the same font and orientation as the previous can just
-    // be skipped, as the preceding GlyphRun will cover its character range.
-    if (prevRun->Matches(run->mFont, run->mOrientation, run->mIsCJK,
-                         run->mMatchType)) {
-      runs.RemoveElementAt(i);
-      continue;
+  GlyphRun* prevRun = nullptr;
+  runs.RemoveElementsBy([&prevRun](GlyphRun& aRun) -> bool {
+    // First run is always retained.
+    if (!prevRun) {
+      prevRun = &aRun;
+      return false;
     }
-    // If two font runs have the same character offset, Sort() will have
-    // randomized their order!
-    MOZ_ASSERT(prevRun->mCharacterOffset < run->mCharacterOffset,
+    // Remove any run whose properties match its predecessor.
+    if (prevRun->Matches(aRun.mFont, aRun.mOrientation, aRun.mIsCJK,
+                         aRun.mMatchType)) {
+      return true;
+    }
+    MOZ_ASSERT(prevRun->mCharacterOffset < aRun.mCharacterOffset,
                "Two fonts for the same run, glyph indices unreliable");
-    prevRun = run;
-    ++i;
-  }
+    // We're keeping another run, so update prevRun pointer to refer to it (in
+    // its new position).
+    ++prevRun;
+    return false;
+  });
+  MOZ_ASSERT(prevRun == &runs.LastElement(), "lost track of prevRun!");
 
+  MOZ_ASSERT(!runs.IsEmpty());
   if (runs.Length() == 1) {
     mGlyphRuns.ConvertToElement();
   }
@@ -1431,8 +1435,8 @@ void gfxTextRun::SanitizeGlyphRuns() {
     }
   }
 
-  MOZ_ASSERT(!mGlyphRuns.IsEmpty());
-  if (mGlyphRuns.Length() == 1) {
+  MOZ_ASSERT(!glyphRuns.IsEmpty());
+  if (glyphRuns.Length() == 1) {
     mGlyphRuns.ConvertToElement();
   }
 }
