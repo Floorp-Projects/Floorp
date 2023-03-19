@@ -35,6 +35,10 @@ namespace JS {
 class JS_PUBLIC_API BigInt;
 
 class BigInt final : public js::gc::CellWithLengthAndFlags {
+  friend class js::gc::CellAllocator;
+
+  BigInt() = default;
+
  public:
   using Digit = uintptr_t;
 
@@ -64,10 +68,6 @@ class BigInt final : public js::gc::CellWithLengthAndFlags {
 
  public:
   static const JS::TraceKind TraceKind = JS::TraceKind::BigInt;
-
-  static BigInt* emplace(js::gc::Cell* cell) {
-    return new (mozilla::KnownNotNull, cell) BigInt();
-  }
 
   void fixupAfterMovingGC() {}
 
@@ -435,10 +435,6 @@ class BigInt final : public js::gc::CellWithLengthAndFlags {
 
  private:
   friend class js::TenuringTracer;
-
- protected:
-  // For calling by emplace().
-  BigInt() = default;
 };
 
 static_assert(

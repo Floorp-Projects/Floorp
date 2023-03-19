@@ -626,8 +626,8 @@ class GCRuntime {
   Cell* tryNewNurseryStringCell(JSContext* cx, size_t thingSize,
                                 AllocKind kind);
   template <AllowGC allowGC>
-  JS::BigInt* tryNewNurseryBigInt(JSContext* cx, size_t thingSize,
-                                  AllocKind kind);
+  Cell* tryNewNurseryBigIntCell(JSContext* cx, size_t thingSize,
+                                AllocKind kind);
   static TenuredCell* refillFreeListInGC(Zone* zone, AllocKind thingKind);
 
   // Delayed marking.
