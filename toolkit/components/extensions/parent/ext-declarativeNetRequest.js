@@ -67,7 +67,10 @@ this.declarativeNetRequest = class extends ExtensionAPI {
           if (failures.length) {
             throw new ExtensionError(failures[0].message);
           }
-          ruleManager.setSessionRules(ruleValidator.getValidatedRules());
+          let validatedRules = ruleValidator.getValidatedRules();
+          let ruleQuotaCounter = new ExtensionDNR.RuleQuotaCounter();
+          ruleQuotaCounter.tryAddRules("_session", validatedRules);
+          ruleManager.setSessionRules(validatedRules);
         },
 
         async getEnabledRulesets() {
