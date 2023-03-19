@@ -4,10 +4,6 @@
 
 "use strict";
 
-/* import-globals-from head_servers.js */
-
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-
 let h2Port;
 let h3Port;
 let trrServer;
