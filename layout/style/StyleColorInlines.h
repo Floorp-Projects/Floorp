@@ -25,7 +25,7 @@ inline StyleAbsoluteColor StyleAbsoluteColor::FromColor(nscolor aColor) {
 inline StyleAbsoluteColor StyleAbsoluteColor::Srgb(float red, float green,
                                                    float blue, float alpha) {
   return StyleAbsoluteColor{StyleColorComponents{red, green, blue}, alpha,
-                            StyleColorSpace::Srgb, StyleSerializationFlags{0}};
+                            StyleColorSpace::Srgb, StyleColorFlags{0}};
 }
 
 inline StyleAbsoluteColor StyleAbsoluteColor::Transparent() {
