@@ -61,39 +61,34 @@ extern uint32_t gGlyphExtentsSetupLazyTight;
 extern uint32_t gGlyphExtentsSetupFallBackToTight;
 #endif
 
-bool gfxTextRun::GlyphRunIterator::NextRun() {
-  int32_t glyphRunCount;
-  if (mTextRun->mHasGlyphRunArray) {
-    glyphRunCount = mTextRun->mGlyphRunArray.Length();
-    if (mNextIndex >= glyphRunCount || mNextIndex < 0) {
-      return false;
+void gfxTextRun::GlyphRunIterator::NextRun() {
+  if (mReverse) {
+    if (mGlyphRun == mTextRun->mGlyphRuns.begin()) {
+      mGlyphRun = nullptr;
+      return;
     }
-    mGlyphRun = &mTextRun->mGlyphRunArray[mNextIndex];
+    --mGlyphRun;
   } else {
-    if (mNextIndex != 0 || !mTextRun->mSingleGlyphRun.mFont) {
-      return false;
+    MOZ_DIAGNOSTIC_ASSERT(mGlyphRun != mTextRun->mGlyphRuns.end());
+    ++mGlyphRun;
+    if (mGlyphRun == mTextRun->mGlyphRuns.end()) {
+      mGlyphRun = nullptr;
+      return;
     }
-    glyphRunCount = 1;
-    mGlyphRun = &mTextRun->mSingleGlyphRun;
   }
-
   if (mGlyphRun->mCharacterOffset >= mEndOffset) {
-    return false;
+    mGlyphRun = nullptr;
+    return;
   }
-
-  uint32_t glyphRunEndOffset =
-      mNextIndex + 1 < (int32_t)glyphRunCount
-          ? mTextRun->mGlyphRunArray[mNextIndex + 1].mCharacterOffset
-          : mTextRun->GetLength();
-
-  if (glyphRunEndOffset <= mStartOffset) {
-    return false;
+  uint32_t glyphRunEndOffset = mGlyphRun == mTextRun->mGlyphRuns.end() - 1
+                                   ? mTextRun->GetLength()
+                                   : (mGlyphRun + 1)->mCharacterOffset;
+  if (glyphRunEndOffset < mStartOffset) {
+    mGlyphRun = nullptr;
+    return;
   }
-
   mStringEnd = std::min(mEndOffset, glyphRunEndOffset);
   mStringStart = std::max(mStartOffset, mGlyphRun->mCharacterOffset);
-  mNextIndex += mDirection;
-  return true;
 }
 
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
@@ -117,10 +112,8 @@ bool gfxTextRun::NeedsGlyphExtents() const {
   if (GetFlags() & gfx::ShapedTextFlags::TEXT_NEED_BOUNDING_BOX) {
     return true;
   }
-  uint32_t numRuns;
-  const GlyphRun* glyphRuns = GetGlyphRuns(&numRuns);
-  for (uint32_t i = 0; i < numRuns; ++i) {
-    if (glyphRuns[i].mFont->GetFontEntry()->IsUserFont()) {
+  for (const auto& run : mGlyphRuns) {
+    if (run.mFont->GetFontEntry()->IsUserFont()) {
       return true;
     }
   }
@@ -165,13 +158,11 @@ gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters* aParams,
                        gfx::ShapedTextFlags aFlags,
                        nsTextFrameUtils::Flags aFlags2)
     : gfxShapedText(aLength, aFlags, aParams->mAppUnitsPerDevUnit),
-      mSingleGlyphRun(),
       mUserData(aParams->mUserData),
       mFontGroup(aFontGroup),
       mFlags2(aFlags2),
       mReleasedFontGroup(false),
       mReleasedFontGroupSkippedDrawing(false),
-      mHasGlyphRunArray(false),
       mShapingState(eShapingState_Normal) {
   NS_ASSERTION(mAppUnitsPerDevUnit > 0, "Invalid app unit scale");
   NS_ADDREF(mFontGroup);
@@ -206,12 +197,6 @@ gfxTextRun::~gfxTextRun() {
   mFlags = ~gfx::ShapedTextFlags();
   mFlags2 = ~nsTextFrameUtils::Flags();
 #endif
-
-  if (mHasGlyphRunArray) {
-    mGlyphRunArray.~nsTArray<GlyphRun>();
-  } else {
-    mSingleGlyphRun.mFont = nullptr;
-  }
 
   // The cached ellipsis textrun (if any) in a fontgroup will have already
   // been told to release its reference to the group, so we mustn't do that
@@ -648,13 +633,12 @@ void gfxTextRun::Draw(const Range aRange, const gfx::Point aPt,
   }
   params.allowGDI = aParams.allowGDI;
 
-  GlyphRunIterator iter(this, aRange);
   gfxFloat advance = 0.0;
   gfx::Point pt = aPt;
 
-  while (iter.NextRun()) {
-    gfxFont* font = iter.GetGlyphRun()->mFont;
-    Range runRange(iter.GetStringStart(), iter.GetStringEnd());
+  for (GlyphRunIterator iter(this, aRange); !iter.AtEnd(); iter.NextRun()) {
+    gfxFont* font = iter.GlyphRun()->mFont;
+    Range runRange(iter.StringStart(), iter.StringEnd());
 
     bool needToRestore = false;
     if (mayNeedBuffering && HasSyntheticBoldOrColor(font)) {
@@ -693,16 +677,16 @@ void gfxTextRun::Draw(const Range aRange, const gfx::Point aPt,
     if (drawPartial) {
       DrawPartialLigature(font, Range(runRange.start, ligatureRange.start), &pt,
                           aParams.provider, params,
-                          iter.GetGlyphRun()->mOrientation);
+                          iter.GlyphRun()->mOrientation);
     }
 
     DrawGlyphs(font, ligatureRange, &pt, aParams.provider, ligatureRange,
-               params, iter.GetGlyphRun()->mOrientation);
+               params, iter.GlyphRun()->mOrientation);
 
     if (drawPartial) {
       DrawPartialLigature(font, Range(ligatureRange.end, runRange.end), &pt,
                           aParams.provider, params,
-                          iter.GetGlyphRun()->mOrientation);
+                          iter.GlyphRun()->mOrientation);
     }
 
     if (params.isVerticalRun) {
@@ -739,11 +723,10 @@ void gfxTextRun::DrawEmphasisMarks(gfxContext* aContext, gfxTextRun* aMark,
   float& inlineCoord = params.isVertical ? aPt.y.value : aPt.x.value;
   float direction = params.direction;
 
-  GlyphRunIterator iter(this, aRange);
-  while (iter.NextRun()) {
-    gfxFont* font = iter.GetGlyphRun()->mFont;
-    uint32_t start = iter.GetStringStart();
-    uint32_t end = iter.GetStringEnd();
+  for (GlyphRunIterator iter(this, aRange); !iter.AtEnd(); iter.NextRun()) {
+    gfxFont* font = iter.GlyphRun()->mFont;
+    uint32_t start = iter.StringStart();
+    uint32_t end = iter.StringEnd();
     Range ligatureRange(start, end);
     bool adjusted = ShrinkToLigatureBoundaries(&ligatureRange);
 
@@ -822,19 +805,18 @@ gfxTextRun::Metrics gfxTextRun::MeasureText(
   NS_ASSERTION(aRange.end <= GetLength(), "Substring out of range");
 
   Metrics accumulatedMetrics;
-  GlyphRunIterator iter(this, aRange);
-  while (iter.NextRun()) {
-    gfxFont* font = iter.GetGlyphRun()->mFont;
-    uint32_t start = iter.GetStringStart();
-    uint32_t end = iter.GetStringEnd();
+  for (GlyphRunIterator iter(this, aRange); !iter.AtEnd(); iter.NextRun()) {
+    gfxFont* font = iter.GlyphRun()->mFont;
+    uint32_t start = iter.StringStart();
+    uint32_t end = iter.StringEnd();
     Range ligatureRange(start, end);
     bool adjusted = ShrinkToLigatureBoundaries(&ligatureRange);
 
     if (adjusted) {
-      AccumulatePartialLigatureMetrics(
-          font, Range(start, ligatureRange.start), aBoundingBoxType,
-          aRefDrawTarget, aProvider, iter.GetGlyphRun()->mOrientation,
-          &accumulatedMetrics);
+      AccumulatePartialLigatureMetrics(font, Range(start, ligatureRange.start),
+                                       aBoundingBoxType, aRefDrawTarget,
+                                       aProvider, iter.GlyphRun()->mOrientation,
+                                       &accumulatedMetrics);
     }
 
     // XXX This sucks. We have to get glyph extents just so we can detect
@@ -842,14 +824,14 @@ gfxTextRun::Metrics gfxTextRun::MeasureText(
     // even though in almost all cases we could get correct results just
     // by getting some ascent/descent from the font and using our stored
     // advance widths.
-    AccumulateMetricsForRun(
-        font, ligatureRange, aBoundingBoxType, aRefDrawTarget, aProvider,
-        ligatureRange, iter.GetGlyphRun()->mOrientation, &accumulatedMetrics);
+    AccumulateMetricsForRun(font, ligatureRange, aBoundingBoxType,
+                            aRefDrawTarget, aProvider, ligatureRange,
+                            iter.GlyphRun()->mOrientation, &accumulatedMetrics);
 
     if (adjusted) {
       AccumulatePartialLigatureMetrics(
           font, Range(ligatureRange.end, end), aBoundingBoxType, aRefDrawTarget,
-          aProvider, iter.GetGlyphRun()->mOrientation, &accumulatedMetrics);
+          aProvider, iter.GlyphRun()->mOrientation, &accumulatedMetrics);
     }
   }
 
@@ -859,12 +841,11 @@ gfxTextRun::Metrics gfxTextRun::MeasureText(
 void gfxTextRun::GetLineHeightMetrics(Range aRange, gfxFloat& aAscent,
                                       gfxFloat& aDescent) const {
   Metrics accumulatedMetrics;
-  GlyphRunIterator iter(this, aRange);
-  while (iter.NextRun()) {
-    gfxFont* font = iter.GetGlyphRun()->mFont;
+  for (GlyphRunIterator iter(this, aRange); !iter.AtEnd(); iter.NextRun()) {
+    gfxFont* font = iter.GlyphRun()->mFont;
     auto metrics =
         font->Measure(this, 0, 0, gfxFont::LOOSE_INK_EXTENTS, nullptr, nullptr,
-                      iter.GetGlyphRun()->mOrientation);
+                      iter.GlyphRun()->mOrientation);
     accumulatedMetrics.CombineWith(metrics, false);
   }
   aAscent = accumulatedMetrics.mAscent;
@@ -1308,59 +1289,54 @@ bool gfxTextRun::SetLineBreaks(Range aRange, bool aLineBreakBefore,
   return false;
 }
 
-uint32_t gfxTextRun::FindFirstGlyphRunContaining(uint32_t aOffset) const {
-  NS_ASSERTION(aOffset <= GetLength(), "Bad offset looking for glyphrun");
-  NS_ASSERTION(GetLength() == 0 ||
-                   (!mHasGlyphRunArray && mSingleGlyphRun.mFont) ||
-                   (mHasGlyphRunArray && mGlyphRunArray.Length() > 0),
-               "non-empty text but no glyph runs present!");
-  if (!mHasGlyphRunArray) {
-    return 0;
+const gfxTextRun::GlyphRun* gfxTextRun::FindFirstGlyphRunContaining(
+    uint32_t aOffset) const {
+  MOZ_ASSERT(aOffset <= GetLength(), "Bad offset looking for glyphrun");
+  MOZ_ASSERT(GetLength() == 0 || !mGlyphRuns.IsEmpty(),
+             "non-empty text but no glyph runs present!");
+  if (mGlyphRuns.Length() <= 1) {
+    return mGlyphRuns.begin();
   }
   if (aOffset == GetLength()) {
-    return mGlyphRunArray.Length();
+    return mGlyphRuns.end() - 1;
   }
-  uint32_t start = 0;
-  uint32_t end = mGlyphRunArray.Length();
-  while (end - start > 1) {
-    uint32_t mid = (start + end) / 2;
-    if (mGlyphRunArray[mid].mCharacterOffset <= aOffset) {
+  const auto* start = mGlyphRuns.begin();
+  const auto* limit = mGlyphRuns.end();
+  while (limit - start > 1) {
+    const auto* mid = start + (limit - start) / 2;
+    if (mid->mCharacterOffset <= aOffset) {
       start = mid;
     } else {
-      end = mid;
+      limit = mid;
     }
   }
-  NS_ASSERTION(mGlyphRunArray[start].mCharacterOffset <= aOffset,
-               "Hmm, something went wrong, aOffset should have been found");
+  MOZ_ASSERT(start->mCharacterOffset <= aOffset,
+             "Hmm, something went wrong, aOffset should have been found");
   return start;
 }
 
 void gfxTextRun::AddGlyphRun(gfxFont* aFont, FontMatchType aMatchType,
                              uint32_t aUTF16Offset, bool aForceNewRun,
                              gfx::ShapedTextFlags aOrientation, bool aIsCJK) {
-  NS_ASSERTION(aFont, "adding glyph run for null font!");
-  NS_ASSERTION(aOrientation != gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_MIXED,
-               "mixed orientation should have been resolved");
+  MOZ_ASSERT(aFont, "adding glyph run for null font!");
+  MOZ_ASSERT(aOrientation != gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_MIXED,
+             "mixed orientation should have been resolved");
   if (!aFont) {
     return;
   }
-  if (!mHasGlyphRunArray) {
-    // We don't currently have an array.
-    if (!mSingleGlyphRun.mFont) {
-      // This is the first glyph run: just store it directly.
-      mSingleGlyphRun.SetProperties(aFont, aOrientation, aIsCJK, aMatchType);
-      mSingleGlyphRun.mCharacterOffset = aUTF16Offset;
-      return;
-    }
-  }
-  uint32_t numGlyphRuns = mHasGlyphRunArray ? mGlyphRunArray.Length() : 1;
-  if (!aForceNewRun && numGlyphRuns > 0) {
-    GlyphRun* lastGlyphRun = mHasGlyphRunArray
-                                 ? &mGlyphRunArray[numGlyphRuns - 1]
-                                 : &mSingleGlyphRun;
 
-    NS_ASSERTION(lastGlyphRun->mCharacterOffset <= aUTF16Offset,
-                 "Glyph runs out of order (and run not forced)");
+  if (mGlyphRuns.IsEmpty()) {
+    mGlyphRuns.AppendElement(
+        GlyphRun{aFont, aUTF16Offset, aOrientation, aMatchType, aIsCJK});
+    return;
+  }
+
+  uint32_t numGlyphRuns = mGlyphRuns.Length();
+  if (!aForceNewRun) {
+    GlyphRun* lastGlyphRun = &mGlyphRuns.LastElement();
+
+    MOZ_ASSERT(lastGlyphRun->mCharacterOffset <= aUTF16Offset,
+               "Glyph runs out of order (and run not forced)");
 
     // Don't append a run if the font is already the one we want
     if (lastGlyphRun->Matches(aFont, aOrientation, aIsCJK, aMatchType)) {
@@ -1373,12 +1349,9 @@ void gfxTextRun::AddGlyphRun(gfxFont* aFont, FontMatchType aMatchType,
       // ...except that if the run before the last entry had the same
       // font as the new one wants, merge with it instead of creating
       // adjacent runs with the same font
-      if (numGlyphRuns > 1 && mGlyphRunArray[numGlyphRuns - 2].Matches(
+      if (numGlyphRuns > 1 && mGlyphRuns[numGlyphRuns - 2].Matches(
                                   aFont, aOrientation, aIsCJK, aMatchType)) {
-        mGlyphRunArray.TruncateLength(numGlyphRuns - 1);
-        if (mGlyphRunArray.Length() == 1) {
-          ConvertFromGlyphRunArray();
-        }
+        mGlyphRuns.TruncateLength(numGlyphRuns - 1);
         return;
       }
 
@@ -1387,55 +1360,43 @@ void gfxTextRun::AddGlyphRun(gfxFont* aFont, FontMatchType aMatchType,
     }
   }
 
-  NS_ASSERTION(
+  MOZ_ASSERT(
       aForceNewRun || numGlyphRuns > 0 || aUTF16Offset == 0,
       "First run doesn't cover the first character (and run not forced)?");
 
-  if (!mHasGlyphRunArray) {
-    ConvertToGlyphRunArray();
-  }
-
-  GlyphRun* glyphRun = mGlyphRunArray.AppendElement();
-  glyphRun->SetProperties(aFont, aOrientation, aIsCJK, aMatchType);
-  glyphRun->mCharacterOffset = aUTF16Offset;
+  mGlyphRuns.AppendElement(
+      GlyphRun{aFont, aUTF16Offset, aOrientation, aMatchType, aIsCJK});
 }
 
 void gfxTextRun::SortGlyphRuns() {
-  if (!mHasGlyphRunArray) {
+  if (mGlyphRuns.Length() < 2) {
     return;
   }
 
-  // We should never have an empty or one-element array here; if there's only
-  // one glyphrun, it should be stored directly in the textrun without using
-  // an array at all.
-  MOZ_ASSERT(mGlyphRunArray.Length() > 1);
+  auto& runs = mGlyphRuns.Array();
+  runs.Sort(GlyphRunOffsetComparator());
 
-  AutoTArray<GlyphRun, 16> runs(std::move(mGlyphRunArray));
-  GlyphRunOffsetComparator comp;
-  runs.Sort(comp);
-
-  // Now copy back, coalescing adjacent glyph runs that have the same
-  // properties.
-  mGlyphRunArray.Clear();
-  GlyphRun* prevRun = nullptr;
-  for (auto& run : runs) {
-    // A GlyphRun with the same font and orientation as the previous can
-    // just be skipped; the last GlyphRun will cover its character range.
-    MOZ_ASSERT(run.mFont != nullptr);
-    if (!prevRun || !prevRun->Matches(run.mFont, run.mOrientation, run.mIsCJK,
-                                      run.mMatchType)) {
-      // If two font runs have the same character offset, Sort() will have
-      // randomized their order!
-      MOZ_ASSERT(prevRun == nullptr ||
-                     prevRun->mCharacterOffset < run.mCharacterOffset,
-                 "Two fonts for the same run, glyph indices unreliable");
-      prevRun = mGlyphRunArray.AppendElement(std::move(run));
+  // Coalesce adjacent glyph runs that have the same properties.
+  GlyphRun* prevRun = &runs[0];
+  for (uint32_t i = 1; i < runs.Length(); /* Don't advance if coalescing */) {
+    GlyphRun* run = &runs[i];
+    // A GlyphRun with the same font and orientation as the previous can just
+    // be skipped, as the preceding GlyphRun will cover its character range.
+    if (prevRun->Matches(run->mFont, run->mOrientation, run->mIsCJK,
+                         run->mMatchType)) {
+      runs.RemoveElementAt(i);
+      continue;
     }
+    // If two font runs have the same character offset, Sort() will have
+    // randomized their order!
+    MOZ_ASSERT(prevRun->mCharacterOffset < run->mCharacterOffset,
+               "Two fonts for the same run, glyph indices unreliable");
+    prevRun = run;
+    ++i;
   }
 
-  MOZ_ASSERT(mGlyphRunArray.Length() > 0);
-  if (mGlyphRunArray.Length() == 1) {
-    ConvertFromGlyphRunArray();
+  if (runs.Length() == 1) {
+    mGlyphRuns.ConvertToElement();
   }
 }
 
@@ -1443,45 +1404,43 @@ void gfxTextRun::SortGlyphRuns() {
 // therefore we only call it once, at the end of textrun construction,
 // NOT incrementally as each glyph run is added (bug 680402).
 void gfxTextRun::SanitizeGlyphRuns() {
-  if (!mHasGlyphRunArray) {
+  if (mGlyphRuns.Length() < 2) {
     return;
   }
-
-  MOZ_ASSERT(mGlyphRunArray.Length() > 1);
 
   // If any glyph run starts with ligature-continuation characters, we need to
   // advance it to the first "real" character to avoid drawing partial ligature
   // glyphs from wrong font (seen with U+FEFF in reftest 474417-1, as Core Text
   // eliminates the glyph, which makes it appear as if a ligature has been
   // formed)
-  int32_t i, lastRunIndex = mGlyphRunArray.Length() - 1;
+  auto& glyphRuns = mGlyphRuns.Array();
+  int32_t i, lastRunIndex = glyphRuns.Length() - 1;
   const CompressedGlyph* charGlyphs = mCharacterGlyphs;
   for (i = lastRunIndex; i >= 0; --i) {
-    GlyphRun& run = mGlyphRunArray[i];
+    GlyphRun& run = glyphRuns[i];
     while (charGlyphs[run.mCharacterOffset].IsLigatureContinuation() &&
            run.mCharacterOffset < GetLength()) {
       run.mCharacterOffset++;
     }
     // if the run has become empty, eliminate it
     if ((i < lastRunIndex &&
-         run.mCharacterOffset >= mGlyphRunArray[i + 1].mCharacterOffset) ||
+         run.mCharacterOffset >= glyphRuns[i + 1].mCharacterOffset) ||
         (i == lastRunIndex && run.mCharacterOffset == GetLength())) {
-      mGlyphRunArray.RemoveElementAt(i);
+      glyphRuns.RemoveElementAt(i);
       --lastRunIndex;
     }
   }
 
-  MOZ_ASSERT(mGlyphRunArray.Length() > 0);
-  if (mGlyphRunArray.Length() == 1) {
-    ConvertFromGlyphRunArray();
+  MOZ_ASSERT(!mGlyphRuns.IsEmpty());
+  if (mGlyphRuns.Length() == 1) {
+    mGlyphRuns.ConvertToElement();
   }
 }
 
 void gfxTextRun::CopyGlyphDataFrom(gfxShapedWord* aShapedWord,
                                    uint32_t aOffset) {
   uint32_t wordLen = aShapedWord->GetLength();
-  NS_ASSERTION(aOffset + wordLen <= GetLength(),
-               "word overruns end of textrun!");
+  MOZ_ASSERT(aOffset + wordLen <= GetLength(), "word overruns end of textrun");
 
   CompressedGlyph* charGlyphs = GetCharacterGlyphs();
   const CompressedGlyph* wordGlyphs = aShapedWord->GetCharacterGlyphs();
@@ -1502,10 +1461,10 @@ void gfxTextRun::CopyGlyphDataFrom(gfxShapedWord* aShapedWord,
 
 void gfxTextRun::CopyGlyphDataFrom(gfxTextRun* aSource, Range aRange,
                                    uint32_t aDest) {
-  NS_ASSERTION(aRange.end <= aSource->GetLength(),
-               "Source substring out of range");
-  NS_ASSERTION(aDest + aRange.Length() <= GetLength(),
-               "Destination substring out of range");
+  MOZ_ASSERT(aRange.end <= aSource->GetLength(),
+             "Source substring out of range");
+  MOZ_ASSERT(aDest + aRange.Length() <= GetLength(),
+             "Destination substring out of range");
 
   if (aSource->mDontSkipDrawing) {
     mDontSkipDrawing = true;
@@ -1538,22 +1497,21 @@ void gfxTextRun::CopyGlyphDataFrom(gfxTextRun* aSource, Range aRange,
   }
 
   // Copy glyph runs
-  GlyphRunIterator iter(aSource, aRange);
 #ifdef DEBUG
   GlyphRun* prevRun = nullptr;
 #endif
-  while (iter.NextRun()) {
-    gfxFont* font = iter.GetGlyphRun()->mFont;
-    MOZ_ASSERT(!prevRun || !prevRun->Matches(iter.GetGlyphRun()->mFont,
-                                             iter.GetGlyphRun()->mOrientation,
-                                             iter.GetGlyphRun()->mIsCJK,
+  for (GlyphRunIterator iter(aSource, aRange); !iter.AtEnd(); iter.NextRun()) {
+    gfxFont* font = iter.GlyphRun()->mFont;
+    MOZ_ASSERT(!prevRun || !prevRun->Matches(iter.GlyphRun()->mFont,
+                                             iter.GlyphRun()->mOrientation,
+                                             iter.GlyphRun()->mIsCJK,
                                              FontMatchType::Kind::kUnspecified),
                "Glyphruns not coalesced?");
 #ifdef DEBUG
-    prevRun = const_cast<GlyphRun*>(iter.GetGlyphRun());
-    uint32_t end = iter.GetStringEnd();
+    prevRun = const_cast<GlyphRun*>(iter.GlyphRun());
+    uint32_t end = iter.StringEnd();
 #endif
-    uint32_t start = iter.GetStringStart();
+    uint32_t start = iter.StringStart();
 
     // These used to be NS_ASSERTION()s, but WARNING is more appropriate.
     // Although it's unusual (and not desirable), it's possible for us to assign
@@ -1570,9 +1528,8 @@ void gfxTextRun::CopyGlyphDataFrom(gfxTextRun* aSource, Range aRange,
         end == aSource->GetLength() || aSource->IsClusterStart(end),
         "Ended font run in the middle of a cluster");
 
-    AddGlyphRun(font, iter.GetGlyphRun()->mMatchType,
-                start - aRange.start + aDest, false,
-                iter.GetGlyphRun()->mOrientation, iter.GetGlyphRun()->mIsCJK);
+    AddGlyphRun(font, iter.GlyphRun()->mMatchType, start - aRange.start + aDest,
+                false, iter.GlyphRun()->mOrientation, iter.GlyphRun()->mIsCJK);
   }
 }
 
@@ -1710,11 +1667,7 @@ void gfxTextRun::FetchGlyphExtents(DrawTarget* aRefDrawTarget) const {
 }
 
 size_t gfxTextRun::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) {
-  // The second arg is how much gfxTextRun::AllocateStorage would have
-  // allocated.
-  size_t total = mHasGlyphRunArray
-                     ? mGlyphRunArray.ShallowSizeOfExcludingThis(aMallocSizeOf)
-                     : 0;
+  size_t total = mGlyphRuns.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
   if (mDetailedGlyphs) {
     total += mDetailedGlyphs->SizeOfIncludingThis(aMallocSizeOf);
@@ -1794,17 +1747,15 @@ void gfxTextRun::Dump(FILE* out) {
   fprintf(out, "gfxTextRun@%p (length %u) [%s] [%s] [%s]\n", this, mLength,
           flagsString.get(), flags2String.get(), lang.get());
 
-  uint32_t numGlyphRuns;
-  const GlyphRun* glyphRuns = GetGlyphRuns(&numGlyphRuns);
   fprintf(out, "  Glyph runs:\n");
-  for (uint32_t i = 0; i < numGlyphRuns; ++i) {
-    gfxFont* font = glyphRuns[i].mFont;
+  for (const auto& run : mGlyphRuns) {
+    gfxFont* font = run.mFont;
     const gfxFontStyle* style = font->GetStyle();
     nsAutoCString styleString;
     style->style.ToString(styleString);
-    fprintf(out, "    [%d] offset=%d %s %f/%g/%s\n", i,
-            glyphRuns[i].mCharacterOffset, font->GetName().get(), style->size,
-            style->weight.ToFloat(), styleString.get());
+    fprintf(out, "    offset=%d %s %f/%g/%s\n", run.mCharacterOffset,
+            font->GetName().get(), style->size, style->weight.ToFloat(),
+            styleString.get());
   }
 
   fprintf(out, "  Glyphs:\n");

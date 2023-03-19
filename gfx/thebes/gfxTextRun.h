@@ -17,6 +17,7 @@
 #include "gfxPlatform.h"
 #include "gfxPlatformFontList.h"
 #include "gfxUserFontSet.h"
+#include "gfxUtils.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/intl/UnicodeScriptCodes.h"
@@ -553,26 +554,35 @@ class gfxTextRun : public gfxShapedText {
     GlyphRunIterator(const gfxTextRun* aTextRun, Range aRange,
                      bool aReverse = false)
         : mTextRun(aTextRun),
-          mDirection(aReverse ? -1 : 1),
           mStartOffset(aRange.start),
-          mEndOffset(aRange.end) {
-      mNextIndex = mTextRun->FindFirstGlyphRunContaining(
+          mEndOffset(aRange.end),
+          mReverse(aReverse) {
+      mGlyphRun = mTextRun->FindFirstGlyphRunContaining(
           aReverse ? aRange.end - 1 : aRange.start);
+      if (!mGlyphRun) {
+        mStringEnd = mStringStart = mStartOffset;
+        return;
+      }
+      uint32_t glyphRunEndOffset = mGlyphRun == mTextRun->mGlyphRuns.end() - 1
+                                       ? mTextRun->GetLength()
+                                       : (mGlyphRun + 1)->mCharacterOffset;
+      mStringEnd = std::min(mEndOffset, glyphRunEndOffset);
+      mStringStart = std::max(mStartOffset, mGlyphRun->mCharacterOffset);
     }
-    bool NextRun();
-    const GlyphRun* GetGlyphRun() const { return mGlyphRun; }
-    uint32_t GetStringStart() const { return mStringStart; }
-    uint32_t GetStringEnd() const { return mStringEnd; }
+    void NextRun();
+    bool AtEnd() const { return mGlyphRun == nullptr; }
+    const struct GlyphRun* GlyphRun() const { return mGlyphRun; }
+    uint32_t StringStart() const { return mStringStart; }
+    uint32_t StringEnd() const { return mStringEnd; }
 
    private:
     const gfxTextRun* mTextRun;
-    MOZ_INIT_OUTSIDE_CTOR const GlyphRun* mGlyphRun;
-    MOZ_INIT_OUTSIDE_CTOR uint32_t mStringStart;
-    MOZ_INIT_OUTSIDE_CTOR uint32_t mStringEnd;
-    const int32_t mDirection;
-    int32_t mNextIndex;
+    const struct GlyphRun* mGlyphRun;
+    uint32_t mStringStart;
+    uint32_t mStringEnd;
     uint32_t mStartOffset;
     uint32_t mEndOffset;
+    bool mReverse;
   };
 
   class GlyphRunOffsetComparator {
@@ -585,9 +595,6 @@ class gfxTextRun : public gfxShapedText {
       return a.mCharacterOffset < b.mCharacterOffset;
     }
   };
-
-  friend class GlyphRunIterator;
-  friend class FontSelector;
 
   // API for setting up the textrun glyphs. Should only be called by
   // things that construct textruns.
@@ -607,17 +614,7 @@ class gfxTextRun : public gfxShapedText {
   void AddGlyphRun(gfxFont* aFont, FontMatchType aMatchType,
                    uint32_t aUTF16Offset, bool aForceNewRun,
                    mozilla::gfx::ShapedTextFlags aOrientation, bool aIsCJK);
-  void ResetGlyphRuns() {
-    if (mHasGlyphRunArray) {
-      MOZ_ASSERT(mGlyphRunArray.Length() > 1);
-      // Discard all but the first GlyphRun...
-      mGlyphRunArray.TruncateLength(1);
-      // ...and then convert to the single-run representation.
-      ConvertFromGlyphRunArray();
-    }
-    // Clear out the one remaining GlyphRun.
-    mSingleGlyphRun.mFont = nullptr;
-  }
+  void ResetGlyphRuns() { mGlyphRuns.Clear(); }
   void SortGlyphRuns();
   void SanitizeGlyphRuns();
 
@@ -680,30 +677,20 @@ class gfxTextRun : public gfxShapedText {
   void FetchGlyphExtents(DrawTarget* aRefDrawTarget) const;
 
   const GlyphRun* GetGlyphRuns(uint32_t* aNumGlyphRuns) const {
-    if (mHasGlyphRunArray) {
-      *aNumGlyphRuns = mGlyphRunArray.Length();
-      return mGlyphRunArray.Elements();
-    } else {
-      *aNumGlyphRuns = mSingleGlyphRun.mFont ? 1 : 0;
-      return &mSingleGlyphRun;
-    }
+    *aNumGlyphRuns = mGlyphRuns.Length();
+    return mGlyphRuns.begin();
   }
 
-  uint32_t GlyphRunCount() const {
-    return mHasGlyphRunArray       ? mGlyphRunArray.Length()
-           : mSingleGlyphRun.mFont ? 1
-                                   : 0;
-  }
+  uint32_t GlyphRunCount() const { return mGlyphRuns.Length(); }
 
   const GlyphRun* TrailingGlyphRun() const {
-    uint32_t count;
-    const GlyphRun* runs = GetGlyphRuns(&count);
-    return count ? runs + count - 1 : nullptr;
+    return mGlyphRuns.IsEmpty() ? nullptr : mGlyphRuns.end() - 1;
   }
 
-  // Returns the index of the GlyphRun containing the given offset.
-  // Returns mGlyphRuns.Length() when aOffset is mCharacterCount.
-  uint32_t FindFirstGlyphRunContaining(uint32_t aOffset) const;
+  // Returns the GlyphRun containing the given offset.
+  // (Returns mGlyphRuns.end()-1 when aOffset is mCharacterCount; returns
+  // nullptr if textrun is empty and no glyph runs are present.)
+  const GlyphRun* FindFirstGlyphRunContaining(uint32_t aOffset) const;
 
   // Copy glyph data from a ShapedWord into this textrun.
   void CopyGlyphDataFrom(gfxShapedWord* aSource, uint32_t aStart);
@@ -879,29 +866,8 @@ class gfxTextRun : public gfxShapedText {
                   TextRunDrawParams& aParams,
                   mozilla::gfx::ShapedTextFlags aOrientation) const;
 
-  // The textrun holds either a single GlyphRun -or- an array;
-  // the flag mHasGlyphRunArray tells us which is present.
-  union {
-    GlyphRun mSingleGlyphRun;
-    nsTArray<GlyphRun> mGlyphRunArray;
-  };
-
-  void ConvertToGlyphRunArray() {
-    MOZ_ASSERT(!mHasGlyphRunArray && mSingleGlyphRun.mFont);
-    GlyphRun tmp = std::move(mSingleGlyphRun);
-    mSingleGlyphRun.~GlyphRun();
-    new (&mGlyphRunArray) nsTArray<GlyphRun>(2);
-    mGlyphRunArray.AppendElement(std::move(tmp));
-    mHasGlyphRunArray = true;
-  }
-
-  void ConvertFromGlyphRunArray() {
-    MOZ_ASSERT(mHasGlyphRunArray && mGlyphRunArray.Length() == 1);
-    GlyphRun tmp = std::move(mGlyphRunArray[0]);
-    mGlyphRunArray.~nsTArray<GlyphRun>();
-    new (&mSingleGlyphRun) GlyphRun(std::move(tmp));
-    mHasGlyphRunArray = false;
-  }
+  // The textrun holds either a single GlyphRun -or- an array.
+  mozilla::ElementOrArray<GlyphRun> mGlyphRuns;
 
   void* mUserData;
 
@@ -922,8 +888,6 @@ class gfxTextRun : public gfxShapedText {
                                           // mFontGroup, so don't do it again
   bool mReleasedFontGroupSkippedDrawing;  // whether our old mFontGroup value
                                           // was set to skip drawing
-  bool mHasGlyphRunArray;                 // whether we're using an array or
-                                          // just storing a single glyphrun
 
   // shaping state for handling variant fallback features
   // such as subscript/superscript variant glyphs
