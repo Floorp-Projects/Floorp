@@ -7,6 +7,8 @@
 //
 // The match_regexFilter task of test_ext_dnr_testMatchOutcome.js verifies that
 // regexFilter is evaluated correctly in testMatchOutcome.
+//
+// The quota on regexFilter is verified in test_ext_dnr_regexFilter_limits.js.
 
 add_setup(() => {
   Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
