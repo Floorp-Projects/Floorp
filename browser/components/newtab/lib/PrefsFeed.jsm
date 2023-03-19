@@ -221,7 +221,7 @@ this.PrefsFeed = class PrefsFeed {
 
   async getImage() {
     if (Services.prefs.getIntPref("browser.newtabpage.activity-stream.floorp.background.type") == 3) {
-      let tPath = OS.Path.join(Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.folder", "") || OS.Path.join(OS.Constants.Path.profileDir, "chrome", "newtabImages"), "a").slice(0, -1)
+      let tPath = OS.Path.join(Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.folder", "") || OS.Path.join(OS.Constants.Path.profileDir, "newtabImages"), "a").slice(0, -1)
       let folderExists = await IOUtils.exists(tPath)
       if (folderExists) {
         let imagesPath = await IOUtils.getChildren(tPath)

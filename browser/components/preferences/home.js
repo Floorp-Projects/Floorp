@@ -793,7 +793,7 @@ var gHomePane = {
   },
 
   imagesFolderInputSet(){
-    let folderPath = OS.Path.join(Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.folder","") || OS.Path.join(OS.Constants.Path.profileDir,"chrome", "newtabImages"),"a").slice( 0, -1 )
+    let folderPath = OS.Path.join(Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.folder","") || OS.Path.join(OS.Constants.Path.profileDir, "newtabImages"),"a").slice( 0, -1 )
     document.querySelector("#pictureFolder").value = folderPath
     document.querySelector("#pictureFolder").style.backgroundImage = `url(moz-icon://${Services.io.newFileURI(FileUtils.File(folderPath)).asciiSpec})`
     document.querySelector("#pictureExtensions").value = Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.extensions","")
