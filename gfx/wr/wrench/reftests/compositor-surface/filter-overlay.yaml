@@ -1,0 +1,15 @@
+# Verify that an off-screen surface that is placed over top
+# of a compositor surface selects the correct sub-slice when
+# adding to command buffers.
+---
+root:
+  items:
+    - image: checkerboard(2,16,16)
+      bounds: [50, 50, 262, 262]
+      prefer-compositor-surface: true
+    - type: stacking-context
+      filters: [opacity(0.5)]
+      items:
+        - type: rect
+          bounds: [100, 100, 162, 162]
+          color: green
