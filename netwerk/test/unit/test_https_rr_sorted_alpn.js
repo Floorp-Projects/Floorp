@@ -4,8 +4,6 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-
 let trrServer;
 
 const { TestUtils } = ChromeUtils.importESModule(

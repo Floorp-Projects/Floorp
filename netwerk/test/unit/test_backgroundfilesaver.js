@@ -12,11 +12,6 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "NetUtil",
-  "resource://gre/modules/NetUtil.jsm"
-);
 ChromeUtils.defineESModuleGetters(this, {
   FileTestUtils: "resource://testing-common/FileTestUtils.sys.mjs",
 });

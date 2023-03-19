@@ -4,8 +4,6 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-
 trr_test_setup();
 registerCleanupFunction(async () => {
   trr_clear_prefs();
