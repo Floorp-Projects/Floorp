@@ -82,6 +82,11 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ExtensionDNRStore: "resource://gre/modules/ExtensionDNRStore.sys.mjs",
 });
 
+const { ExtensionUtils } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionUtils.jsm"
+);
+const { ExtensionError } = ExtensionUtils;
+
 // As documented above:
 // Ruleset precedence: session > dynamic > static (order from manifest.json).
 const PRECEDENCE_SESSION_RULESET = 1;
@@ -1160,6 +1165,36 @@ class RuleValidator {
   }
 }
 
+class RuleQuotaCounter {
+  constructor(isStaticRulesets) {
+    this.isStaticRulesets = isStaticRulesets;
+    this.ruleLimitName = isStaticRulesets
+      ? "GUARANTEED_MINIMUM_STATIC_RULES"
+      : "MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES";
+    this.ruleLimitRemaining = lazy.ExtensionDNRLimits[this.ruleLimitName];
+  }
+
+  tryAddRules(rulesetId, rules) {
+    if (rules.length > this.ruleLimitRemaining) {
+      this.#throwQuotaError(rulesetId, "rules", this.ruleLimitName);
+    }
+
+    // Update counters only when there are no quota errors.
+    this.ruleLimitRemaining -= rules.length;
+  }
+
+  #throwQuotaError(rulesetId, what, limitName) {
+    if (this.isStaticRulesets) {
+      throw new ExtensionError(
+        `Number of ${what} across all enabled static rulesets exceeds ${limitName} if ruleset "${rulesetId}" were to be enabled.`
+      );
+    }
+    throw new ExtensionError(
+      `Number of ${what} in ruleset "${rulesetId}" exceeds ${limitName}.`
+    );
+  }
+}
+
 /**
  * Compares two rules to determine the relative order of precedence.
  * Rules are only comparable if they are from the same extension!
@@ -2164,6 +2199,7 @@ async function updateDynamicRules(extension, updateRuleOptions) {
 // exports used by the DNR API implementation.
 export const ExtensionDNR = {
   RuleValidator,
+  RuleQuotaCounter,
   clearRuleManager,
   ensureInitialized,
   getMatchedRulesForRequest,
