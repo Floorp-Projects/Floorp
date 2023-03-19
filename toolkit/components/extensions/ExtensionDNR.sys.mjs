@@ -1172,15 +1172,27 @@ class RuleQuotaCounter {
       ? "GUARANTEED_MINIMUM_STATIC_RULES"
       : "MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES";
     this.ruleLimitRemaining = lazy.ExtensionDNRLimits[this.ruleLimitName];
+    this.regexRemaining = lazy.ExtensionDNRLimits.MAX_NUMBER_OF_REGEX_RULES;
   }
 
   tryAddRules(rulesetId, rules) {
     if (rules.length > this.ruleLimitRemaining) {
       this.#throwQuotaError(rulesetId, "rules", this.ruleLimitName);
     }
+    let regexCount = 0;
+    for (let rule of rules) {
+      if (rule.condition.regexFilter && ++regexCount > this.regexRemaining) {
+        this.#throwQuotaError(
+          rulesetId,
+          "regexFilter rules",
+          "MAX_NUMBER_OF_REGEX_RULES"
+        );
+      }
+    }
 
     // Update counters only when there are no quota errors.
     this.ruleLimitRemaining -= rules.length;
+    this.regexRemaining -= regexCount;
   }
 
   #throwQuotaError(rulesetId, what, limitName) {
