@@ -480,7 +480,7 @@ class VirtualenvMixin(object):
                 / "python"
                 / "_venv"
                 / "wheels"
-                / "pip-21.2.3-py3-none-any.whl"
+                / "pip-23.0.1-py3-none-any.whl"
             )
             setuptools_wheel_path = (
                 src_dir
