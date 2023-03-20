@@ -356,6 +356,20 @@ class HTMLElement(object):
             "WebDriver:GetShadowRoot", {"id": self.id}, key="value"
         )
 
+    @property
+    def computed_label(self):
+        """Gets the computed accessibility label of the current element"""
+        return self.marionette._send_message(
+            "WebDriver:GetComputedLabel", {"id": self.id}, key="value"
+        )
+
+    @property
+    def computed_role(self):
+        """Gets the computed accessibility role of the current element"""
+        return self.marionette._send_message(
+            "WebDriver:GetComputedRole", {"id": self.id}, key="value"
+        )
+
     @classmethod
     def _from_json(cls, json, marionette):
         if isinstance(json, dict):
