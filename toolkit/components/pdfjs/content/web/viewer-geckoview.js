@@ -3343,7 +3343,7 @@ const defaultOptions = {
     kind: OptionKind.WORKER
   },
   workerSrc: {
-    value: "../build/pdf.worker.js",
+    value: "resource://pdf.js/build/pdf.worker.js",
     kind: OptionKind.WORKER
   }
 };
@@ -4340,17 +4340,19 @@ function normalize(text) {
       return p4;
     }
     if (p5) {
-      positions.push([i - shift + 1, 1 + shift]);
+      const len = p5.length - 2;
+      positions.push([i - shift + len, 1 + shift]);
       shift += 1;
       shiftOrigin += 1;
       eol += 1;
-      return p5.charAt(0);
+      return p5.slice(0, -2);
     }
     if (p6) {
-      positions.push([i - shift + 1, shift]);
+      const len = p6.length - 1;
+      positions.push([i - shift + len, shift]);
       shiftOrigin += 1;
       eol += 1;
-      return p6.charAt(0);
+      return p6.slice(0, -1);
     }
     if (p7) {
       positions.push([i - shift + 1, shift - 1]);
@@ -6028,7 +6030,7 @@ class PDFViewer {
   #onVisibilityChange = null;
   #scaleTimeoutId = null;
   constructor(options) {
-    const viewerVersion = '3.5.34';
+    const viewerVersion = '3.5.73';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -7260,43 +7262,51 @@ class PDFViewer {
     this.currentPageNumber = Math.max(currentPageNumber - advance, 1);
     return true;
   }
-  increaseScale(options = null) {
+  increaseScale({
+    drawingDelay,
+    scaleFactor,
+    steps
+  } = {}) {
     if (!this.pdfDocument) {
       return;
     }
-    options ||= Object.create(null);
     let newScale = this._currentScale;
-    if (options.scaleFactor > 1) {
-      newScale = Math.min(_ui_utils.MAX_SCALE, Math.round(newScale * options.scaleFactor * 100) / 100);
+    if (scaleFactor > 1) {
+      newScale = Math.min(_ui_utils.MAX_SCALE, Math.round(newScale * scaleFactor * 100) / 100);
     } else {
-      let steps = options.steps ?? 1;
+      steps ??= 1;
       do {
         newScale = (newScale * _ui_utils.DEFAULT_SCALE_DELTA).toFixed(2);
-        newScale = Math.ceil(newScale * 10) / 10;
-        newScale = Math.min(_ui_utils.MAX_SCALE, newScale);
+        newScale = Math.min(_ui_utils.MAX_SCALE, Math.ceil(newScale * 10) / 10);
       } while (--steps > 0 && newScale < _ui_utils.MAX_SCALE);
     }
-    options.noScroll = false;
-    this._setScale(newScale, options);
+    this._setScale(newScale, {
+      noScroll: false,
+      drawingDelay
+    });
   }
-  decreaseScale(options = null) {
+  decreaseScale({
+    drawingDelay,
+    scaleFactor,
+    steps
+  } = {}) {
     if (!this.pdfDocument) {
       return;
     }
-    options ||= Object.create(null);
     let newScale = this._currentScale;
-    if (options.scaleFactor > 0 && options.scaleFactor < 1) {
-      newScale = Math.max(_ui_utils.MIN_SCALE, Math.round(newScale * options.scaleFactor * 100) / 100);
+    if (scaleFactor > 0 && scaleFactor < 1) {
+      newScale = Math.max(_ui_utils.MIN_SCALE, Math.round(newScale * scaleFactor * 100) / 100);
     } else {
-      let steps = options.steps ?? 1;
+      steps ??= 1;
       do {
         newScale = (newScale / _ui_utils.DEFAULT_SCALE_DELTA).toFixed(2);
-        newScale = Math.floor(newScale * 10) / 10;
-        newScale = Math.max(_ui_utils.MIN_SCALE, newScale);
+        newScale = Math.max(_ui_utils.MIN_SCALE, Math.floor(newScale * 10) / 10);
       } while (--steps > 0 && newScale > _ui_utils.MIN_SCALE);
     }
-    options.noScroll = false;
-    this._setScale(newScale, options);
+    this._setScale(newScale, {
+      noScroll: false,
+      drawingDelay
+    });
   }
   #updateContainerHeightCss(height = this.container.clientHeight) {
     if (height !== this.#previousContainerHeight) {
@@ -8147,8 +8157,9 @@ class PDFPageView {
     canvas.setAttribute("role", "presentation");
     canvas.hidden = true;
     let isCanvasHidden = true;
-    const showCanvas = function () {
-      if (isCanvasHidden) {
+    const hasHCM = !!(this.pageColors?.background && this.pageColors?.foreground);
+    const showCanvas = function (isLastShow) {
+      if (isCanvasHidden && (!hasHCM || isLastShow)) {
         canvas.hidden = false;
         isCanvasHidden = false;
       }
@@ -8199,7 +8210,7 @@ class PDFPageView {
     };
     const renderTask = this.pdfPage.render(renderContext);
     renderTask.onContinue = function (cont) {
-      showCanvas();
+      showCanvas(false);
       if (result.onRenderContinue) {
         result.onRenderContinue(cont);
       } else {
@@ -8207,11 +8218,11 @@ class PDFPageView {
       }
     };
     renderTask.promise.then(function () {
-      showCanvas();
+      showCanvas(true);
       renderCapability.resolve();
     }, function (error) {
       if (!(error instanceof _pdfjsLib.RenderingCancelledException)) {
-        showCanvas();
+        showCanvas(true);
       }
       renderCapability.reject(error);
     });
@@ -9436,8 +9447,8 @@ var _ui_utils = __webpack_require__(4);
 var _app_options = __webpack_require__(6);
 var _pdf_link_service = __webpack_require__(8);
 var _app = __webpack_require__(3);
-const pdfjsVersion = '3.5.34';
-const pdfjsBuild = 'a0ef5a4ae';
+const pdfjsVersion = '3.5.73';
+const pdfjsBuild = '3903391f3';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;

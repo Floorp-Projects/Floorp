@@ -101,7 +101,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = '3.5.34';
+    const workerVersion = '3.5.73';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -630,7 +630,7 @@ if (typeof window === "undefined" && !_is_node.isNodeJS && typeof self !== "unde
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.VerbosityLevel = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.RenderingIntentFlag = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.PageActionEventType = exports.OPS = exports.MissingPDFException = exports.LINE_FACTOR = exports.LINE_DESCENT_FACTOR = exports.InvalidPDFException = exports.ImageKind = exports.IDENTITY_MATRIX = exports.FormatError = exports.FeatureTest = exports.FONT_IDENTITY_MATRIX = exports.DocumentActionEventType = exports.CMapCompressionType = exports.BaseException = exports.BASELINE_FACTOR = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMode = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationEditorType = exports.AnnotationEditorPrefix = exports.AnnotationEditorParamsType = exports.AnnotationBorderStyleType = exports.AnnotationActionEventType = exports.AbortException = void 0;
+exports.VerbosityLevel = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.RenderingIntentFlag = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.PageActionEventType = exports.OPS = exports.MissingPDFException = exports.MAX_IMAGE_SIZE_TO_CACHE = exports.LINE_FACTOR = exports.LINE_DESCENT_FACTOR = exports.InvalidPDFException = exports.ImageKind = exports.IDENTITY_MATRIX = exports.FormatError = exports.FeatureTest = exports.FONT_IDENTITY_MATRIX = exports.DocumentActionEventType = exports.CMapCompressionType = exports.BaseException = exports.BASELINE_FACTOR = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMode = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationEditorType = exports.AnnotationEditorPrefix = exports.AnnotationEditorParamsType = exports.AnnotationBorderStyleType = exports.AnnotationActionEventType = exports.AbortException = void 0;
 exports.assert = assert;
 exports.bytesToString = bytesToString;
 exports.createPromiseCapability = createPromiseCapability;
@@ -656,6 +656,8 @@ const IDENTITY_MATRIX = [1, 0, 0, 1, 0, 0];
 exports.IDENTITY_MATRIX = IDENTITY_MATRIX;
 const FONT_IDENTITY_MATRIX = [0.001, 0, 0, 0.001, 0, 0];
 exports.FONT_IDENTITY_MATRIX = FONT_IDENTITY_MATRIX;
+const MAX_IMAGE_SIZE_TO_CACHE = 10e6;
+exports.MAX_IMAGE_SIZE_TO_CACHE = MAX_IMAGE_SIZE_TO_CACHE;
 const LINE_FACTOR = 1.35;
 exports.LINE_FACTOR = LINE_FACTOR;
 const LINE_DESCENT_FACTOR = 0.35;
@@ -3187,7 +3189,6 @@ class Page {
       const opList = new _operator_list.OperatorList(intent, sink);
       handler.send("StartRenderPage", {
         transparency: partialEvaluator.hasBlendModes(this.resources, this.nonBlendModesSet),
-        isOffscreenCanvasSupported: this.evaluatorOptions.isOffscreenCanvasSupported,
         pageIndex: this.pageIndex,
         cacheKey
       });
@@ -33536,8 +33537,13 @@ class PostScriptEvaluator {
           }
           break;
         case "atan":
+          b = stack.pop();
           a = stack.pop();
-          stack.push(Math.atan(a));
+          a = Math.atan2(a, b) / Math.PI * 180;
+          if (a < 0) {
+            a += 360;
+          }
+          stack.push(a);
           break;
         case "bitshift":
           b = stack.pop();
@@ -33558,7 +33564,7 @@ class PostScriptEvaluator {
           break;
         case "cos":
           a = stack.pop();
-          stack.push(Math.cos(a));
+          stack.push(Math.cos(a % 360 / 180 * Math.PI));
           break;
         case "cvi":
           a = stack.pop() | 0;
@@ -33681,7 +33687,7 @@ class PostScriptEvaluator {
           break;
         case "sin":
           a = stack.pop();
-          stack.push(Math.sin(a));
+          stack.push(Math.sin(a % 360 / 180 * Math.PI));
           break;
         case "sqrt":
           a = stack.pop();
@@ -34392,7 +34398,7 @@ class GlobalImageCache {
     return (0, _util.shadow)(this, "MIN_IMAGES_TO_CACHE", 10);
   }
   static get MAX_BYTE_SIZE() {
-    return (0, _util.shadow)(this, "MAX_BYTE_SIZE", 40e6);
+    return (0, _util.shadow)(this, "MAX_BYTE_SIZE", 5 * _util.MAX_IMAGE_SIZE_TO_CACHE);
   }
   constructor() {
     this._refCache = new _primitives.RefSetCache();
@@ -53009,8 +53015,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
   }
 }));
 var _worker = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.5.34';
-const pdfjsBuild = 'a0ef5a4ae';
+const pdfjsVersion = '3.5.73';
+const pdfjsBuild = '3903391f3';
 })();
 
 /******/ 	return __webpack_exports__;
