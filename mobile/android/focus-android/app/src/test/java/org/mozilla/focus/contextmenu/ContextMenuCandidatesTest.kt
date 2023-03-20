@@ -4,15 +4,21 @@
 
 package org.mozilla.focus.contextmenu
 
+import android.content.Context
 import mozilla.components.support.test.mock
-import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
+import org.mockito.ArgumentMatchers.anyInt
 
-@RunWith(RobolectricTestRunner::class)
 class ContextMenuCandidatesTest {
+    private val testContext: Context = mock()
+
+    @Before
+    fun setUp() {
+        whenever(testContext.getString(anyInt())).thenReturn("dummy label")
+    }
 
     @Test
     fun `WHEN the tab is a custom tab THEN the proper context candidates are created `() {
