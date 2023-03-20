@@ -453,11 +453,11 @@ union DocumentChannelElementCreationArgs {
 };
 
 struct DocumentChannelCreationArgs {
-  nullable nsDocShellLoadState loadState;
+  nsDocShellLoadState loadState;
   TimeStamp asyncOpenTime;
   uint64_t channelId;
   uint32_t cacheKey;
-  nullable nsDOMNavigationTiming? timing;
+  nullable nsDOMNavigationTiming timing;
   IPCClientInfo? initialClientInfo;
   DocumentChannelElementCreationArgs elementCreationArgs;
   uint64_t parentInitiatedNavigationEpoch;
@@ -484,7 +484,7 @@ struct RedirectToRealChannelArgs {
   uint32_t loadStateExternalLoadFlags;
   uint32_t loadStateInternalLoadFlags;
   uint32_t loadStateLoadType;
-  nullable nsDOMNavigationTiming? timing;
+  nullable nsDOMNavigationTiming timing;
   nsString srcdocData;
   nullable nsIURI baseUri;
   LoadingSessionHistoryInfo? loadingSessionHistoryInfo;

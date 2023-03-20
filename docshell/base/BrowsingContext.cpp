@@ -1946,7 +1946,7 @@ nsresult BrowsingContext::LoadURI(nsDocShellLoadState* aLoadState,
       if (!wgc->CanNavigate(this)) {
         return NS_ERROR_DOM_PROP_ACCESS_DENIED;
       }
-      wgc->SendLoadURI(this, aLoadState, aSetNavigating);
+      wgc->SendLoadURI(this, mozilla::WrapNotNull(aLoadState), aSetNavigating);
     }
   } else if (XRE_IsParentProcess()) {
     if (Canonical()->LoadInParent(aLoadState, aSetNavigating)) {
@@ -1969,7 +1969,7 @@ nsresult BrowsingContext::LoadURI(nsDocShellLoadState* aLoadState,
       // load. Normally we'd expect a PDocumentChannel actor to have been
       // created to claim the load identifier by that time. If not, then it
       // won't be coming, so make sure we clean up and deregister.
-      cp->SendLoadURI(this, aLoadState, aSetNavigating)
+      cp->SendLoadURI(this, mozilla::WrapNotNull(aLoadState), aSetNavigating)
           ->Then(GetMainThreadSerialEventTarget(), __func__,
                  [loadIdentifier](
                      const PContentParent::LoadURIPromise::ResolveOrRejectValue&
@@ -2039,7 +2039,7 @@ nsresult BrowsingContext::InternalLoad(nsDocShellLoadState* aLoadState) {
 
     MOZ_ALWAYS_SUCCEEDS(
         SetCurrentLoadIdentifier(Some(aLoadState->GetLoadIdentifier())));
-    Unused << cp->SendInternalLoad(aLoadState);
+    Unused << cp->SendInternalLoad(mozilla::WrapNotNull(aLoadState));
   } else {
     MOZ_DIAGNOSTIC_ASSERT(sourceBC);
     MOZ_DIAGNOSTIC_ASSERT(sourceBC->Group() == Group());
@@ -2056,7 +2056,7 @@ nsresult BrowsingContext::InternalLoad(nsDocShellLoadState* aLoadState) {
 
     MOZ_ALWAYS_SUCCEEDS(
         SetCurrentLoadIdentifier(Some(aLoadState->GetLoadIdentifier())));
-    wgc->SendInternalLoad(aLoadState);
+    wgc->SendInternalLoad(mozilla::WrapNotNull(aLoadState));
   }
 
   return NS_OK;
