@@ -56,7 +56,7 @@ struct FormData {
 };
 
 struct DocShellRestoreState {
-  nsIURI URI;
+  nullable nsIURI URI;
   nsCString docShellCaps;
 };
 
