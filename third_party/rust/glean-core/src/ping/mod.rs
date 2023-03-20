@@ -358,7 +358,7 @@ impl PingMaker {
     pub fn clear_pending_pings(&self, data_path: &Path) -> Result<()> {
         let pings_dir = self.get_pings_dir(data_path, None)?;
 
-        remove_dir_all::remove_dir_all(&pings_dir)?;
+        std::fs::remove_dir_all(&pings_dir)?;
         create_dir_all(&pings_dir)?;
 
         log::debug!("All pending pings deleted");

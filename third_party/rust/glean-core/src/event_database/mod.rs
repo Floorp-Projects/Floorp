@@ -584,7 +584,7 @@ impl EventDatabase {
 
         // safe unwrap, only error case is poisoning
         let _lock = self.file_lock.write().unwrap();
-        remove_dir_all::remove_dir_all(&self.path)?;
+        std::fs::remove_dir_all(&self.path)?;
         create_dir_all(&self.path)?;
 
         Ok(())
