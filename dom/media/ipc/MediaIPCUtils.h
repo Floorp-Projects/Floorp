@@ -16,7 +16,6 @@
 #include "mozilla/EnumSet.h"
 #include "mozilla/GfxMessageUtils.h"
 #include "mozilla/gfx/Rect.h"
-#include "mozilla/dom/MFCDMSerializers.h"
 
 namespace IPC {
 template <>
@@ -41,7 +40,6 @@ struct ParamTraits<mozilla::VideoInfo> {
     WriteParam(aWriter, aParam.mTransferFunction);
     WriteParam(aWriter, aParam.mColorRange);
     WriteParam(aWriter, aParam.HasAlpha());
-    WriteParam(aWriter, aParam.mCrypto);
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
@@ -60,8 +58,7 @@ struct ParamTraits<mozilla::VideoInfo> {
         ReadParam(aReader, &aResult->mColorPrimaries) &&
         ReadParam(aReader, &aResult->mTransferFunction) &&
         ReadParam(aReader, &aResult->mColorRange) &&
-        ReadParam(aReader, &alphaPresent) &&
-        ReadParam(aReader, &aResult->mCrypto)) {
+        ReadParam(aReader, &alphaPresent)) {
       aResult->SetAlpha(alphaPresent);
       return true;
     }
@@ -185,7 +182,6 @@ struct ParamTraits<mozilla::AudioInfo> {
     WriteParam(aWriter, aParam.mProfile);
     WriteParam(aWriter, aParam.mExtendedProfile);
     WriteParam(aWriter, aParam.mCodecSpecificConfig);
-    WriteParam(aWriter, aParam.mCrypto);
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
@@ -196,8 +192,7 @@ struct ParamTraits<mozilla::AudioInfo> {
         ReadParam(aReader, &aResult->mBitDepth) &&
         ReadParam(aReader, &aResult->mProfile) &&
         ReadParam(aReader, &aResult->mExtendedProfile) &&
-        ReadParam(aReader, &aResult->mCodecSpecificConfig) &&
-        ReadParam(aReader, &aResult->mCrypto)) {
+        ReadParam(aReader, &aResult->mCodecSpecificConfig)) {
       return true;
     }
     return false;
@@ -347,19 +342,6 @@ struct ParamTraits<mozilla::TrackingId> {
     return ReadParam(aReader, &aResult->mSource) &&
            ReadParam(aReader, &aResult->mProcId) &&
            ReadParam(aReader, &aResult->mUniqueInProcId);
-  }
-};
-
-template <>
-struct ParamTraits<mozilla::CryptoTrack> {
-  typedef mozilla::CryptoTrack paramType;
-
-  static void Write(MessageWriter* aWriter, const paramType& aParam) {
-    WriteParam(aWriter, aParam.mCryptoScheme);
-  }
-
-  static bool Read(MessageReader* aReader, paramType* aResult) {
-    return ReadParam(aReader, &aResult->mCryptoScheme);
   }
 };
 

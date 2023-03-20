@@ -337,8 +337,8 @@ void MFMediaEngineWrapper::NotifyEndOfStream(TrackInfo::TrackType aType) {
 }
 
 void MFMediaEngineWrapper::SetMediaInfo(const MediaInfo& aInfo) {
-  WLOG("SetMediaInfo, hasAudio=%d, hasVideo=%d, encrypted=%d", aInfo.HasAudio(),
-       aInfo.HasVideo(), aInfo.IsEncrypted());
+  WLOG("SetMediaInfo, hasAudio=%d, hasVideo=%d", aInfo.HasAudio(),
+       aInfo.HasVideo());
   MOZ_ASSERT(IsInited());
   Unused << ManagerThread()->Dispatch(NS_NewRunnableFunction(
       "MFMediaEngineWrapper::SetMediaInfo", [engine = mEngine, aInfo] {
