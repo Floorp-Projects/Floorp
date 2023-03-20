@@ -361,11 +361,22 @@ async function pageload_test(context, commands) {
   let dismissPrompt = context.options.browsertime.dismiss_cookie_prompt || "";
   context.log.info(context.options.browsertime);
 
+  // Wait for browser to settle
+  await commands.wait.byTime(1000);
+
   // If the user has RAPTOR_LOGINS configured correctly, a local login pageload
   // test can be attempted. Otherwise if attempting it in CI, only sites with the
   // associated MOZ_SCM_LEVEL will be attempted (e.g. Try = 1, autoland = 3)
   if (context.options.browsertime.login) {
-    if (
+    if (context.options.browsertime.manual_login) {
+      // Perform a manual login using the value given in manual_login
+      // as the amount of time to wait
+      await commands.navigate(testUrl);
+      context.log.info(
+        `Waiting ${context.options.browsertime.manual_login}ms for login...`
+      );
+      await commands.wait.byTime(context.options.browsertime.manual_login);
+    } else if (
       process.env.RAPTOR_LOGINS ||
       process.env.MOZ_SCM_LEVEL == 3 ||
       SCM_1_LOGIN_SITES.includes(testName)
@@ -378,11 +389,13 @@ async function pageload_test(context, commands) {
         );
         context.log.info("Error:" + err);
       }
+    } else {
+      context.log.info(`
+        NOTE: This is a login test but a manual login was not requested, and
+        we cannot find any logins defined in RAPTOR_LOGINS.
+      `);
     }
   }
-
-  // Wait for browser to settle
-  await commands.wait.byTime(1000);
 
   await commands.measure.start(testUrl);
   await commands.wait.byTime(40000);

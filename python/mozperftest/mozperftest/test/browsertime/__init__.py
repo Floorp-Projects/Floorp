@@ -14,6 +14,6 @@ def add_option(env, name, value, overwrite=False):
     env.set_arg("browsertime-extra-options", options)
 
 
-def add_options(env, options):
-    for name, value in options:
-        add_option(env, name, value)
+def add_options(env, options, overwrite=False):
+    for i, (name, value) in enumerate(options):
+        add_option(env, name, value, overwrite=overwrite and i == 0)
