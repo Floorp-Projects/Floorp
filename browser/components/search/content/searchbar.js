@@ -751,18 +751,15 @@
 
           // Ensure the panel has a meaningful initial size and doesn't grow
           // unconditionally.
-          requestAnimationFrame(() => {
-            let { width } = window.windowUtils.getBoundsWithoutFlushing(this);
-            if (popup.oneOffButtons) {
-              // We have a min-width rule on search-panel-one-offs to show at
-              // least 4 buttons, so take that into account here.
-              width = Math.max(width, popup.oneOffButtons.buttonWidth * 4);
-            }
-            popup.style.setProperty("--panel-width", width + "px");
-          });
+          let { width } = window.windowUtils.getBoundsWithoutFlushing(this);
+          if (popup.oneOffButtons) {
+            // We have a min-width rule on search-panel-one-offs to show at
+            // least 4 buttons, so take that into account here.
+            width = Math.max(width, popup.oneOffButtons.buttonWidth * 4);
+          }
 
+          popup.style.setProperty("--panel-width", width + "px");
           popup._invalidate();
-
           popup.openPopup(this, "after_start");
         }
       };
