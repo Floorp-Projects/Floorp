@@ -347,11 +347,22 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal(
               streamStats = Some(kv->second);
             }
 
-            if (!streamStats ||
-                streamStats->rtp_stats.first_packet_time_ms == -1) {
+            if (!streamStats) {
               // By spec: "The lifetime of all RTP monitored objects starts
               // when the RTP stream is first used: When the first RTP packet
               // is sent or received on the SSRC it represents"
+              return;
+            }
+
+            aConduit->GetAssociatedLocalRtxSSRC(ssrc).apply(
+                [&](const auto rtxSsrc) {
+                  auto kv = videoStats->substreams.find(rtxSsrc);
+                  if (kv != videoStats->substreams.end()) {
+                    streamStats->rtp_stats.Add(kv->second.rtp_stats);
+                  }
+                });
+
+            if (streamStats->rtp_stats.first_packet_time_ms == -1) {
               return;
             }
 

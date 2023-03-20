@@ -150,6 +150,7 @@ class WebrtcVideoConduit
   MediaConduitErrorCode Init();
 
   Ssrcs GetLocalSSRCs() const override;
+  Maybe<Ssrc> GetAssociatedLocalRtxSSRC(Ssrc aSsrc) const override;
   Maybe<Ssrc> GetRemoteSSRC() const override;
 
   // Call thread.

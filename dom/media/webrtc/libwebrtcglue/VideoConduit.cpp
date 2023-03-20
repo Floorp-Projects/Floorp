@@ -835,6 +835,18 @@ std::vector<unsigned int> WebrtcVideoConduit::GetLocalSSRCs() const {
   return mSendStreamConfig.rtp.ssrcs;
 }
 
+Maybe<Ssrc> WebrtcVideoConduit::GetAssociatedLocalRtxSSRC(Ssrc aSsrc) const {
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
+  for (size_t i = 0; i < mSendStreamConfig.rtp.ssrcs.size() &&
+                     i < mSendStreamConfig.rtp.rtx.ssrcs.size();
+       ++i) {
+    if (mSendStreamConfig.rtp.ssrcs[i] == aSsrc) {
+      return Some(mSendStreamConfig.rtp.rtx.ssrcs[i]);
+    }
+  }
+  return Nothing();
+}
+
 void WebrtcVideoConduit::DeleteSendStream() {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   mMutex.AssertCurrentThreadOwns();
