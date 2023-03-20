@@ -103,7 +103,7 @@ struct ParamTraits<nsTSubstring<T>> {
       return true;
     }
 
-    return ReadSequenceParam(aReader, [&](uint32_t aLength) -> T* {
+    return ReadSequenceParam<T>(aReader, [&](uint32_t aLength) -> T* {
       T* data = nullptr;
       aResult->GetMutableData(&data, aLength);
       return data;
@@ -169,8 +169,13 @@ struct ParamTraits<nsTArray<E>> {
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
-    return ReadSequenceParam(aReader, [&](uint32_t aLength) -> E* {
-      return aResult->AppendElements(aLength);
+    return ReadSequenceParam<E>(aReader, [&](uint32_t aLength) {
+      if constexpr (std::is_trivially_default_constructible_v<E>) {
+        return aResult->AppendElements(aLength);
+      } else {
+        aResult->SetCapacity(aLength);
+        return mozilla::Some(MakeBackInserter(*aResult));
+      }
     });
   }
 };
@@ -191,10 +196,42 @@ struct ParamTraits<FallibleTArray<E>> {
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
-    return ReadSequenceParam(aReader, [&](uint32_t aLength) -> E* {
-      return aResult->AppendElements(aLength, mozilla::fallible);
+    return ReadSequenceParam<E>(aReader, [&](uint32_t aLength) {
+      if constexpr (std::is_trivially_default_constructible_v<E>) {
+        return aResult->AppendElements(aLength, mozilla::fallible);
+      } else {
+        if (!aResult->SetCapacity(aLength, mozilla::fallible)) {
+          return mozilla::Maybe<BackInserter>{};
+        }
+        return mozilla::Some(BackInserter{.mArray = aResult});
+      }
     });
   }
+
+ private:
+  struct BackInserter {
+    using iterator_category = std::output_iterator_tag;
+    using value_type = void;
+    using difference_type = void;
+    using pointer = void;
+    using reference = void;
+
+    struct Proxy {
+      paramType& mArray;
+
+      template <typename U>
+      void operator=(U&& aValue) {
+        // This won't fail because we've reserved capacity earlier.
+        MOZ_ALWAYS_TRUE(mArray.AppendElement(aValue, mozilla::fallible));
+      }
+    };
+    Proxy operator*() { return Proxy{.mArray = *mArray}; }
+
+    BackInserter& operator++() { return *this; }
+    BackInserter& operator++(int) { return *this; }
+
+    paramType* mArray = nullptr;
+  };
 };
 
 template <typename E, size_t N>
@@ -222,7 +259,7 @@ struct ParamTraits<mozilla::Vector<E, N, AP>> {
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
-    return ReadSequenceParam(aReader, [&](uint32_t aLength) -> E* {
+    return ReadSequenceParam<E>(aReader, [&](uint32_t aLength) -> E* {
       if (!aResult->resize(aLength)) {
         // So that OOM failure shows up as OOM crash instead of IPC FatalError.
         NS_ABORT_OOM(aLength * sizeof(E));
@@ -244,9 +281,14 @@ struct ParamTraits<std::vector<E>> {
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
-    return ReadSequenceParam(aReader, [&](uint32_t aLength) -> E* {
-      aResult->resize(aLength);
-      return aResult->data();
+    return ReadSequenceParam<E>(aReader, [&](uint32_t aLength) {
+      if constexpr (std::is_trivially_default_constructible_v<E>) {
+        aResult->resize(aLength);
+        return aResult->data();
+      } else {
+        aResult->reserve(aLength);
+        return mozilla::Some(std::back_inserter(*aResult));
+      }
     });
   }
 };
