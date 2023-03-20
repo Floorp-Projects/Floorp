@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MFCDMSession.h"
+
+#include <limits>
 #include <vcruntime.h>
 #include <winerror.h>
 
@@ -104,7 +106,10 @@ MFCDMSession* MFCDMSession::Create(KeySystemConfig::SessionType aSessionType,
 MFCDMSession::MFCDMSession(IMFContentDecryptionModuleSession* aSession,
                            SessionCallbacks* aCallback,
                            nsISerialEventTarget* aManagerThread)
-    : mSession(aSession), mManagerThread(aManagerThread) {
+    : mSession(aSession),
+      mManagerThread(aManagerThread),
+      mExpiredTimeMilliSecondsSinceEpoch(
+          std::numeric_limits<double>::quiet_NaN()) {
   MOZ_ASSERT(aSession);
   MOZ_ASSERT(aCallback);
   MOZ_ASSERT(aManagerThread);
@@ -273,7 +278,9 @@ HRESULT MFCDMSession::UpdateExpirationIfNeeded() {
   double newExpiredEpochTimeMs = 0.0;
   RETURN_IF_FAILED(mSession->GetExpiration(&newExpiredEpochTimeMs));
 
-  if (newExpiredEpochTimeMs == mExpiredTimeMilliSecondsSinceEpoch) {
+  if (newExpiredEpochTimeMs == mExpiredTimeMilliSecondsSinceEpoch ||
+      (std::isnan(newExpiredEpochTimeMs) &&
+       std::isnan(mExpiredTimeMilliSecondsSinceEpoch))) {
     return S_OK;
   }
 

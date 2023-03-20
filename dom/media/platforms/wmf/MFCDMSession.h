@@ -83,7 +83,9 @@ class MFCDMSession final {
   // the session gets created.
   Maybe<nsString> mSessionId;
 
-  double mExpiredTimeMilliSecondsSinceEpoch = 0.0;
+  // NaN when the CDM doesn't explicitly define the time or the time never
+  // expires.
+  double mExpiredTimeMilliSecondsSinceEpoch;
 };
 
 }  // namespace mozilla
