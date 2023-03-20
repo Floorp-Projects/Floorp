@@ -495,8 +495,7 @@ interface nsILoadInfo : nsISupports
   const unsigned long HTTPS_ONLY_DO_NOT_LOG_TO_CONSOLE = (1 << 6);
 
   /**
-   * This flag indicates that the request should not be logged to the
-   * console.
+   * This flag indicates that the request was upgraded by https-first mode.
    */
   const unsigned long HTTPS_ONLY_UPGRADED_HTTPS_FIRST = (1 << 7);
 

@@ -27,6 +27,7 @@
 SimpleTest.waitForExplicitFinish();
 
 const REQUEST_URL = "http://example.com/tests/dom/security/test/https-only/file_fragment.html";
+const EXPECT_URL = REQUEST_URL.replace("http://", "https://");
 let winTest = null;
 let checkButtonClicked = false;
 
@@ -35,7 +36,7 @@ async function receiveMessage(event) {
   // checks if click was successful
   if (!checkButtonClicked){
     // expected window location ( expected URL)
-    ok(data.result == "https://example.com/tests/dom/security/test/https-only/file_fragment.html", "location is correct");
+    ok(data.result == EXPECT_URL, "location is correct");
     ok(data.button, "button is clicked");
     // checks if loading was successful
     ok(data.info == "onload", "Onloading worked");
@@ -46,9 +47,10 @@ async function receiveMessage(event) {
   // if Button was clicked once -> test finished
   // check if hash exist and if hash of location is correct
   ok(data.button, "button is clicked");
-  ok(data.result == "#foo", "location (hash) is correct");
+  ok(data.result == EXPECT_URL + "#foo", "location (hash) is correct");
   // check that page is scrolled not reloaded
   ok(data.info == "scrolled-to-foo","Scrolled successfully without reloading!");
+  is(data.documentURI, EXPECT_URL + "#foo", "Document URI is correct");
   // complete test and close window
   window.removeEventListener("message",receiveMessage);
   winTest.close();
