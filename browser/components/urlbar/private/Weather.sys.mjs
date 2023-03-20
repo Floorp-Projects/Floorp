@@ -14,7 +14,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
 });
 
-const CAME_ONLINE_DELAY_MS = 3000; // 3s
+const FETCH_DELAY_AFTER_COMING_ONLINE_MS = 3000; // 3s
 const FETCH_INTERVAL_MS = 30 * 60 * 1000; // 30 minutes
 const MERINO_PROVIDER = "accuweather";
 const MERINO_TIMEOUT_MS = 5000; // 5s
@@ -192,7 +192,7 @@ export class Weather extends BaseFeature {
       // and we don't want to do separate fetches for each. Start the timer with
       // a small timeout. If another notification happens in the meantime, we'll
       // start it again.
-      this.#restartFetchTimer(this.#cameOnlineDelayMs);
+      this.#restartFetchTimer(this.#fetchDelayAfterComingOnlineMs);
     }
   }
 
@@ -210,17 +210,17 @@ export class Weather extends BaseFeature {
         })
     );
 
-    // Regardless of the elapsed time, we need to restart the fetch period
-    // because the fetch timer did not tick while the computer was asleep.
+    // Regardless of the elapsed time, we need to restart the fetch timer
+    // because it didn't tick while the computer was asleep. If the elapsed time
+    // >= the fetch interval, the remaining interval will be negative and we
+    // need to fetch now, but do it after a brief delay in case other
+    // notifications occur soon when the network comes online. If the elapsed
+    // time < the fetch interval, the suggestion is still fresh so there's no
+    // need to fetch. Just restart the timer with the remaining interval.
     if (remainingIntervalMs <= 0) {
-      // The elapsed time is >= the fetch interval. Fetch now and restart the
-      // fetch period with the full interval.
-      this.#fetch();
-    } else {
-      // The elapsed time is < the fetch interval. The suggestion is fresh so no
-      // need to fetch, but restart the fetch period with the remaining time.
-      this.#restartFetchTimer(remainingIntervalMs);
+      remainingIntervalMs = this.#fetchDelayAfterComingOnlineMs;
     }
+    this.#restartFetchTimer(remainingIntervalMs);
   }
 
   #updateKeywords() {
@@ -272,11 +272,12 @@ export class Weather extends BaseFeature {
     }
   }
 
-  get _test_cameOnlineDelayMs() {
-    return this.#cameOnlineDelayMs;
+  get _test_fetchDelayAfterComingOnlineMs() {
+    return this.#fetchDelayAfterComingOnlineMs;
   }
-  set _test_cameOnlineDelayMs(ms) {
-    this.#cameOnlineDelayMs = ms < 0 ? CAME_ONLINE_DELAY_MS : ms;
+  set _test_fetchDelayAfterComingOnlineMs(ms) {
+    this.#fetchDelayAfterComingOnlineMs =
+      ms < 0 ? FETCH_DELAY_AFTER_COMING_ONLINE_MS : ms;
   }
 
   get _test_fetchIntervalMs() {
@@ -314,7 +315,7 @@ export class Weather extends BaseFeature {
     this.#timeoutMs = ms < 0 ? MERINO_TIMEOUT_MS : ms;
   }
 
-  #cameOnlineDelayMs = CAME_ONLINE_DELAY_MS;
+  #fetchDelayAfterComingOnlineMs = FETCH_DELAY_AFTER_COMING_ONLINE_MS;
   #fetchInstance = null;
   #fetchIntervalMs = FETCH_INTERVAL_MS;
   #fetchTimer = 0;
