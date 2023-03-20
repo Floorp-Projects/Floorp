@@ -1,0 +1,28 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - 'Core :: Widget: Cocoa'
+
+startup:
+  is_restored_by_macos:
+    type: boolean
+    description: >
+      Recorded on every launch of a Firefox install on macOS, with a boolean
+      value indicating whether Firefox was restored by macOS or if it was
+      manually launched by a user.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=639707
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=639707
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - spohl@mozilla.com
+    expires: 116
