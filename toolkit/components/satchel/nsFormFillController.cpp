@@ -737,7 +737,7 @@ nsFormFillController::StartSearch(const nsAString& aSearchString,
     mLastListener = aListener;
 
     nsCOMPtr<nsIAutoCompleteResult> datalistResult;
-    if (mFocusedInput) {
+    if (IsTextControl(mFocusedInput)) {
       rv = PerformInputListAutoComplete(aSearchString,
                                         getter_AddRefs(datalistResult));
       NS_ENSURE_SUCCESS(rv, rv);
