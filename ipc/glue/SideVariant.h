@@ -161,16 +161,24 @@ struct ParamTraits<mozilla::ipc::SideVariant<ParentSide, ChildSide>> {
     }
   }
 
-  static mozilla::Maybe<paramType> Read(IPC::MessageReader* aReader) {
+  static ReadResult<paramType> Read(IPC::MessageReader* aReader) {
     if (!aReader->GetActor()) {
       aReader->FatalError("actor required to deserialize this type");
-      return mozilla::Nothing();
+      return {};
     }
 
     if (aReader->GetActor()->GetSide() == mozilla::ipc::ParentSide) {
-      return ReadParam<ParentSide>(aReader);
+      auto parentSide = ReadParam<ParentSide>(aReader);
+      if (!parentSide) {
+        return {};
+      }
+      return std::move(*parentSide);
     }
-    return ReadParam<ChildSide>(aReader);
+    auto childSide = ReadParam<ChildSide>(aReader);
+    if (!childSide) {
+      return {};
+    }
+    return std::move(*childSide);
   }
 };
 

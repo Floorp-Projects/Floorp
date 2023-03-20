@@ -22,14 +22,17 @@ namespace IPC {
 class Message;
 class MessageReader;
 class MessageWriter;
-template <typename P>
-inline mozilla::Maybe<P> ReadParam(MessageReader*);
+template <typename T, bool>
+class ReadResult;
 }  // namespace IPC
 
 // TODO(bug 1812271): Remove users of this macro.
 #define ALLOW_DEPRECATED_READPARAM                           \
+ public:                                                     \
   enum { kHasDeprecatedReadParamPrivateConstructor = true }; \
-  template <typename P>                                      \
-  friend mozilla::Maybe<P> IPC::ReadParam(IPC::MessageReader*);
+  template <typename, bool>                                  \
+  friend class IPC::ReadResult;                              \
+                                                             \
+ private:
 
 #endif

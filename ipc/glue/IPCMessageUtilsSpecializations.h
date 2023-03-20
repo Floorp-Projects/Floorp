@@ -458,7 +458,7 @@ struct ParamTraits<mozilla::Maybe<T>> {
       return false;
     }
     if (isSome) {
-      mozilla::Maybe<T> tmp = ReadParam<T>(reader);
+      mozilla::Maybe<T> tmp = ReadParam<T>(reader).TakeMaybe();
       if (!tmp) {
         return false;
       }

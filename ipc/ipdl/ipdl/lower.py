@@ -317,6 +317,16 @@ def _cxxMaybeType(basetype, const=False, ref=False):
     )
 
 
+def _cxxReadResultType(basetype, const=False, ref=False):
+    return Type(
+        "IPC::ReadResult",
+        T=basetype,
+        const=const,
+        ref=ref,
+        hasimplicitcopyctor=basetype.hasimplicitcopyctor,
+    )
+
+
 def _cxxNotNullType(basetype, const=False, ref=False):
     return Type(
         "mozilla::NotNull",
@@ -460,6 +470,10 @@ def _destroyMethod():
 
 def errfnUnreachable(msg):
     return [_logicError(msg)]
+
+
+def readResultError():
+    return ExprCode("{}")
 
 
 class _DestroyReason:
@@ -2016,14 +2030,14 @@ class _ParamTraits:
         ifbad = StmtIf(ExprNot(readbytes))
         errmsg = "Error bulk reading fields from %s" % first.ipdltype.name()
         ifbad.addifstmts(
-            [cls.fatalError(cls.readervar, errmsg), StmtReturn(ExprNothing())]
+            [cls.fatalError(cls.readervar, errmsg), StmtReturn(readResultError())]
         )
         block.addstmt(ifbad)
         block.addstmts(
             cls.readSentinel(
                 cls.readervar,
                 cls.bulkSentinelKey(fields),
-                errfnSentinel(ExprNothing())(errmsg),
+                errfnSentinel(readResultError())(errmsg),
             )
         )
 
@@ -2074,7 +2088,7 @@ class _ParamTraits:
     @classmethod
     def _checkedRead(cls, ipdltype, cxxtype, var, sentinelKey, what):
         def errfn(msg):
-            return [cls.fatalError(cls.readervar, msg), StmtReturn(ExprNothing())]
+            return [cls.fatalError(cls.readervar, msg), StmtReturn(readResultError())]
 
         return cls.checkedRead(
             ipdltype,
@@ -2084,7 +2098,7 @@ class _ParamTraits:
             errfn=errfn,
             paramtype=what,
             sentinelKey=sentinelKey,
-            errfnSentinel=errfnSentinel(ExprNothing()),
+            errfnSentinel=errfnSentinel(readResultError()),
         )
 
     @classmethod
@@ -2119,15 +2133,14 @@ class _ParamTraits:
         writemthd.addstmts(write)
         pt.addstmt(writemthd)
 
-        # static Maybe<T> Read(MessageReader*);
-        outtype = Type("paramType", ptr=True)
+        # static ReadResult<T> Read(MessageReader*);
         readmthd = MethodDefn(
             MethodDecl(
                 "Read",
                 params=[
                     Decl(Type("IPC::MessageReader", ptr=True), cls.readervar.name),
                 ],
-                ret=Type("mozilla::Maybe<paramType>"),
+                ret=Type("IPC::ReadResult<paramType>"),
                 methodspec=MethodSpec.STATIC,
             )
         )
@@ -2185,9 +2198,12 @@ class _ParamTraits:
             MOZ_RELEASE_ASSERT(
                 ${readervar}->GetActor(),
                 "Cannot deserialize managed actors without an actor");
-            return ${readervar}->GetActor()
-              ->ReadActor(${readervar}, true, ${actortype}, ${protocolid})
-              .map([](mozilla::ipc::IProtocol* actor) { return static_cast<${cxxtype}>(actor); });
+            mozilla::Maybe<mozilla::ipc::IProtocol*> actor = ${readervar}->GetActor()
+              ->ReadActor(${readervar}, true, ${actortype}, ${protocolid});
+            if (actor.isSome()) {
+                return static_cast<${cxxtype}>(actor.ref());
+            }
+            return {};
             """,
             readervar=cls.readervar,
             actortype=ExprLiteral.String(actortype.name()),
@@ -2249,7 +2265,7 @@ class _ParamTraits:
         resultvar = ExprVar("result__")
         read.append(
             StmtDecl(
-                Decl(_cxxMaybeType(Type("paramType")), resultvar.name),
+                Decl(_cxxReadResultType(Type("paramType")), resultvar.name),
                 initargs=[ExprVar("std::in_place")] + ctorargs,
             )
         )
@@ -2333,7 +2349,7 @@ class _ParamTraits:
                         origenum,
                         "variant " + origenum + " of union " + uniontype.name(),
                     ),
-                    StmtReturn(ExprSome(ExprMove(tmpvar))),
+                    StmtReturn(ExprMove(tmpvar)),
                 ]
             )
             readswitch.addcase(caselabel, readcase)
@@ -2357,7 +2373,7 @@ class _ParamTraits:
                     cls.fatalError(
                         cls.readervar, "unknown variant of union " + uniontype.name()
                     ),
-                    StmtReturn(ExprNothing()),
+                    StmtReturn(readResultError()),
                 ]
             ),
         )
