@@ -131,15 +131,26 @@ async function waitForTestMigration(
  *   An array of resource type strings from
  *   MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.
  */
-function selectResourceTypesAndStartMigration(wizard, selectedResourceTypes) {
+async function selectResourceTypesAndStartMigration(
+  wizard,
+  selectedResourceTypes
+) {
   let shadow = wizard.openOrClosedShadowRoot;
 
   // First, select the InternalTestingProfileMigrator browser.
   let selector = shadow.querySelector("#browser-profile-selector");
-  selector.value = InternalTestingProfileMigrator.key;
-  // Apparently we have to dispatch our own "change" events for <select>
-  // dropdowns.
-  selector.dispatchEvent(new CustomEvent("change", { bubbles: true }));
+  selector.click();
+
+  await new Promise(resolve => {
+    wizard
+      .querySelector("panel-list")
+      .addEventListener("shown", resolve, { once: true });
+  });
+
+  let panelItem = wizard.querySelector(
+    `panel-item[key="${InternalTestingProfileMigrator.key}"]`
+  );
+  panelItem.click();
 
   // And then check the right checkboxes for the resource types.
   let resourceTypeList = shadow.querySelector("#resource-type-list");

@@ -51,6 +51,11 @@ const MigrationDialog = {
       args.onResize();
     });
     observer.observe(this._wiz);
+
+    let panelList = this._wiz.querySelector("panel-list");
+    let panel = document.createXULElement("panel");
+    panel.appendChild(panelList);
+    this._wiz.appendChild(panel);
     this._wiz.requestState();
   },
 
