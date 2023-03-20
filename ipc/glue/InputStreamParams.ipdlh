@@ -48,12 +48,12 @@ struct SlicedInputStreamParams
 
 struct RemoteLazyInputStreamParams
 {
-  RemoteLazyInputStream stream;
+  nullable RemoteLazyInputStream stream;
 };
 
 struct DataPipeReceiverStreamParams
 {
-  DataPipeReceiver pipe;
+  nullable DataPipeReceiver pipe;
 };
 
 union InputStreamParams

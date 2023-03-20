@@ -52,7 +52,7 @@ struct IPCWebShareData
 {
   nsCString title;
   nsCString text;
-  nsIURI url;
+  nullable nsIURI url;
 };
 
 /**
@@ -88,12 +88,12 @@ child:
    */
   async ResetScalingZoom();
 
-  async SetContainerFeaturePolicy(FeaturePolicy aContainerFeaturePolicy);
+  async SetContainerFeaturePolicy(nullable FeaturePolicy aContainerFeaturePolicy);
 
   async RestoreDocShellState(DocShellRestoreState aState)
     returns (bool success);
 
-  async RestoreTabContent(SessionStoreRestoreData aData) returns (bool success);
+  async RestoreTabContent(nullable SessionStoreRestoreData aData) returns (bool success);
 
 both:
   async RawMessage(JSActorMessageMeta aMetadata, ClonedMessageData? aData,
@@ -104,19 +104,19 @@ parent:
   // BrowsingContext. aTargetBC must be in the same BrowsingContextGroup as this
   // window global.
   async LoadURI(MaybeDiscardedBrowsingContext aTargetBC,
-                nsDocShellLoadState aLoadState, bool aSetNavigating);
+                nullable nsDocShellLoadState aLoadState, bool aSetNavigating);
 
-  async InternalLoad(nsDocShellLoadState aLoadState);
+  async InternalLoad(nullable nsDocShellLoadState aLoadState);
 
   /// Update the URI of the document in this WindowGlobal.
-  [LazySend] async UpdateDocumentURI(nsIURI aUri);
+  [LazySend] async UpdateDocumentURI(nullable nsIURI aUri);
 
   // We expose frameAncestors to web-extensions and they extract URIs from the
   // principals collected. In order to be compatible with that API, we need to
   // update the document's principal. This is only allowed if the principals are
   // `equals` to each other.
-  [LazySend] async UpdateDocumentPrincipal(nsIPrincipal aPrincipal,
-                                           nsIPrincipal aStoragePrincipal);
+  [LazySend] async UpdateDocumentPrincipal(nullable nsIPrincipal aPrincipal,
+                                           nullable nsIPrincipal aStoragePrincipal);
 
   // Update document's `documentHasLoaded` bit in this WindowGlobal.
   [LazySend] async UpdateDocumentHasLoaded(bool aDocumentHasLoaded);
@@ -136,7 +136,7 @@ parent:
   // Update the title of the document in this WindowGlobal.
   [LazySend] async UpdateDocumentTitle(nsString aTitle);
 
-  [LazySend] async UpdateDocumentSecurityInfo(nsITransportSecurityInfo aSecurityInfo);
+  [LazySend] async UpdateDocumentSecurityInfo(nullable nsITransportSecurityInfo aSecurityInfo);
 
   // Update the document's HTTPS-Only Mode flags in this WindowGlobal.
   [LazySend] async UpdateHttpsOnlyStatus(uint32_t aHttpsOnlyStatus);
@@ -196,7 +196,7 @@ parent:
    */
   async SetSingleChannelId(uint64_t? singleChannelId);
 
-  async SetDocumentDomain(nsIURI aDomain);
+  async SetDocumentDomain(nullable nsIURI aDomain);
 
   async Destroy();
 

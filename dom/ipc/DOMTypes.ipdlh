@@ -50,7 +50,6 @@ using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingCont
 [RefCounted] using class nsIReferrerInfo from "nsIReferrerInfo.h";
 [RefCounted] using class nsIVariant from "nsIVariant.h";
 using mozilla::TimeStamp from "mozilla/TimeStamp.h";
-[RefCounted] using class mozilla::dom::BrowsingContext from "mozilla/dom/BrowsingContext.h";
 [RefCounted] using class mozilla::RemoteLazyInputStream from "mozilla/RemoteLazyInputStream.h";
 [MoveOnly] using class mozilla::ipc::BigBuffer from "mozilla/ipc/BigBuffer.h";
 
@@ -192,9 +191,9 @@ struct FeaturePolicyInfo
   nsString[]   inheritedDeniedFeatureNames;
   nsString[]   attributeEnabledFeatureNames;
   nsString     declaredString;
-  nsIPrincipal defaultOrigin;
-  nsIPrincipal selfOrigin;
-  nsIPrincipal srcOrigin;
+  nullable nsIPrincipal defaultOrigin;
+  nullable nsIPrincipal selfOrigin;
+  nullable nsIPrincipal srcOrigin;
 };
 
 /**
@@ -272,24 +271,24 @@ struct PerformanceInfo
 
 struct DocShellLoadStateInit
 {
-  nsIURI URI;
-  nsIURI OriginalURI;
-  nsIURI ResultPrincipalURI;
-  nsIPrincipal TriggeringPrincipal;
-  nsIReferrerInfo ReferrerInfo;
-  nsIPrincipal PrincipalToInherit;
-  nsIPrincipal PartitionedPrincipalToInherit;
-  nsIURI BaseURI;
+  nullable nsIURI URI;
+  nullable nsIURI OriginalURI;
+  nullable nsIURI ResultPrincipalURI;
+  nullable nsIPrincipal TriggeringPrincipal;
+  nullable nsIReferrerInfo ReferrerInfo;
+  nullable nsIPrincipal PrincipalToInherit;
+  nullable nsIPrincipal PartitionedPrincipalToInherit;
+  nullable nsIURI BaseURI;
   // The Content Security Policy of the load, that is, the CSP of the entity
   // responsible for causing the load to occur. Most likely this is the CSP
   // of the document that started the load. In case the entity starting the
   // load did not use a CSP, then Csp can be null. Please note that this is
   // also the CSP that will be applied to the load in case the load
   // encounters a server side redirect.
-  nsIContentSecurityPolicy Csp;
-  nsIInputStream PostDataStream;
-  nsIInputStream HeadersStream;
-  nsIURI UnstrippedURI;
+  nullable nsIContentSecurityPolicy Csp;
+  nullable nsIInputStream PostDataStream;
+  nullable nsIInputStream HeadersStream;
+  nullable nsIURI UnstrippedURI;
   uint64_t LoadIdentifier;
   nsString Target;
   nsCString TypeHint;
@@ -318,7 +317,6 @@ struct DocShellLoadStateInit
   // responsible for causing the load to occur.
   uint32_t TriggeringSandboxFlags;
   int32_t? CancelContentJSEpoch;
-
 
   bool ResultPrincipalURIIsSome;
   bool KeepResultPrincipalURIIfSet;
@@ -375,9 +373,9 @@ struct ReplacementChannelConfigInit
   ClassOfService classOfService;
   bool? privateBrowsing;
   nsCString? method;
-  nsIReferrerInfo referrerInfo;
+  nullable nsIReferrerInfo referrerInfo;
   TimedChannelInfo? timedChannelInfo;
-  RemoteLazyInputStream uploadStream;
+  nullable RemoteLazyInputStream uploadStream;
   uint64_t uploadStreamLength;
   bool uploadStreamHasHeaders;
   nsCString? contentType;
@@ -397,8 +395,8 @@ union IPDLVariantValue
   nsID;
   nsString;
   nsCString;
-  nsIURI;
-  nsIPrincipal;
+  nullable nsIURI;
+  nullable nsIPrincipal;
 };
 
 struct IDPLVariant
@@ -411,7 +409,7 @@ struct IDPLVariant
 struct IPDLProperty
 {
   nsString name;
-  nsIVariant value;
+  nullable nsIVariant value;
 };
 
 // Struct with information to show a frame from the parent process.

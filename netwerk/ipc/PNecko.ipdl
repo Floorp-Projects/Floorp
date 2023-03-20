@@ -80,7 +80,7 @@ parent:
   async PWebSocket(nullable PBrowser browser, SerializedLoadContext loadContext,
                    uint32_t aSerialID);
   async PTCPServerSocket(uint16_t localPort, uint16_t backlog, bool useArrayBuffers);
-  async PUDPSocket(nsIPrincipal principal, nsCString filter);
+  async PUDPSocket(nullable nsIPrincipal principal, nsCString filter);
 
   async PDNSRequest(nsCString hostName, nsCString trrServer, int32_t port,
                     uint16_t type, OriginAttributes originAttributes,
@@ -92,14 +92,14 @@ parent:
   async PWebSocketEventListener(uint64_t aInnerWindowID);
 
   /* Predictor Methods */
-  async PredPredict(nsIURI targetURI, nsIURI sourceURI,
+  async PredPredict(nullable nsIURI targetURI, nullable nsIURI sourceURI,
                     uint32_t reason, OriginAttributes originAttributes,
                     bool hasVerifier);
-  async PredLearn(nsIURI targetURI, nsIURI sourceURI,
+  async PredLearn(nullable nsIURI targetURI, nullable nsIURI sourceURI,
                   uint32_t reason, OriginAttributes originAttributes);
   async PredReset();
 
-  async SpeculativeConnect(nsIURI uri, nsIPrincipal principal, bool anonymous);
+  async SpeculativeConnect(nullable nsIURI uri, nullable nsIPrincipal principal, bool anonymous);
   async HTMLDNSPrefetch(nsString hostname, bool isHttps,
                         OriginAttributes originAttributes, DNSFlags flags);
   async CancelHTMLDNSPrefetch(nsString hostname, bool isHttps,
@@ -131,8 +131,8 @@ parent:
   /**
    * WebExtension-specific remote resource loading
    */
-  async GetExtensionStream(nsIURI uri) returns (nsIInputStream stream);
-  async GetExtensionFD(nsIURI uri) returns (FileDescriptor fd);
+  async GetExtensionStream(nullable nsIURI uri) returns (nullable nsIInputStream stream);
+  async GetExtensionFD(nullable nsIURI uri) returns (FileDescriptor fd);
 
   async InitSocketProcessBridge()
     returns (Endpoint<PSocketProcessBridgeChild> endpoint);
@@ -144,14 +144,14 @@ parent:
   /**
    * Page thumbnails remote resource loading
    */
-  async GetPageThumbStream(nsIURI uri, LoadInfoArgs? loadInfo) returns (RemoteStreamInfo? info);
-  async GetPageIconStream(nsIURI uri, LoadInfoArgs? loadInfo) returns (RemoteStreamInfo? info);
+  async GetPageThumbStream(nullable nsIURI uri, LoadInfoArgs? loadInfo) returns (RemoteStreamInfo? info);
+  async GetPageIconStream(nullable nsIURI uri, LoadInfoArgs? loadInfo) returns (RemoteStreamInfo? info);
 
 child:
   /* Predictor Methods */
-  async PredOnPredictPrefetch(nsIURI uri, uint32_t httpStatus);
-  async PredOnPredictPreconnect(nsIURI uri);
-  async PredOnPredictDNS(nsIURI uri);
+  async PredOnPredictPrefetch(nullable nsIURI uri, uint32_t httpStatus);
+  async PredOnPredictPreconnect(nullable nsIURI uri);
+  async PredOnPredictDNS(nullable nsIURI uri);
 
   async SpeculativeConnectRequest();
 
