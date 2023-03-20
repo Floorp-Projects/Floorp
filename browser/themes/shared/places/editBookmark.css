@@ -11,6 +11,7 @@
 #editBMPanel_tagsSelector {
   margin: 0;
   height: 12.5em;
+  flex: 1 auto;
   border: 1px solid ThreeDShadow;
   border-radius: 4px;
 }

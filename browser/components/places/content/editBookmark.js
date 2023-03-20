@@ -1235,7 +1235,6 @@ XPCOMUtils.defineLazyGetter(gEditItemOverlay, "_folderTree", () => {
   gEditItemOverlay._element("folderTreeRow").prepend(
     MozXULElement.parseXULToFragment(`
     <tree id="editBMPanel_folderTree"
-          flex="1"
           class="placesTree"
           is="places-tree"
           editable="true"
