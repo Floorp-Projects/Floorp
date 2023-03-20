@@ -3,11 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :root{
+  --in-content-page-background: #ffffff !important;
   --search-bms-box-bg-color: #f5f5f5;
   --search-bms-box-shadow-color-share: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 @media (prefers-color-scheme: dark) {
   :root{
+    --in-content-page-background: #171717 !important;
     --search-bms-box-bg-color: #2b2b2b;
     --search-bms-box-shadow-color-share: 0 2px 6px rgba(0, 0, 0, 0.15);
   }
@@ -21,6 +23,7 @@ html, body {
   border: 0 !important;
   overflow: hidden;
   display: inline-block !important;
+  background-color: var(--in-content-page-background);
 }
 
 #searchBox {
@@ -52,6 +55,10 @@ html, body {
   font-size: 15px;
   margin: auto;
   color: inherit;
+}
+
+#searchHistoryHeader {
+  margin-top: 0px;
 }
 
 #searchBmsBrowser {

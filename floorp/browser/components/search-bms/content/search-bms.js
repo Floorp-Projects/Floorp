@@ -61,7 +61,11 @@ document.addEventListener("DOMContentLoaded", function(){
     showSearchResult();
     } else {
       let URL = "https://freasearch.org/search?q=" + text;
+      if(searchResult.getAttribute("src") == URL) {
+        searchResult.reload();
+      } else {
       searchResult.setAttribute("src", URL);
+      }
       document.getElementById("searchBox").value = "";
       showSearchResult();
     }
