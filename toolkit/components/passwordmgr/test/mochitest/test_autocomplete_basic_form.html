@@ -170,7 +170,7 @@ add_task(async function test_form1_menuitems() {
   await SimpleTest.promiseFocus(window);
   // Trigger autocomplete popup
   restoreForm();
-  const autocompleteItems = await openAutocompletePopup();
+  const autocompleteItems = await popupByArrowDown();
 
   let popupState = await getPopupState();
   is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
@@ -200,7 +200,7 @@ add_task(async function test_form1_first_entry() {
   await SimpleTest.promiseFocus(window);
   // Trigger autocomplete popup
   restoreForm();
-  await openAutocompletePopup();
+  await popupByArrowDown();
 
   let popupState = await getPopupState();
   is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
@@ -216,7 +216,7 @@ add_task(async function test_form1_first_entry() {
 add_task(async function test_form1_second_entry() {
   // Trigger autocomplete popup
   restoreForm();
-  await openAutocompletePopup();
+  await popupByArrowDown();
 
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_ArrowDown"); // second
@@ -229,7 +229,7 @@ add_task(async function test_form1_second_entry() {
 add_task(async function test_form1_third_entry() {
   // Trigger autocomplete popup
   restoreForm();
-  await openAutocompletePopup();
+  await popupByArrowDown();
 
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_ArrowDown"); // second
@@ -243,7 +243,7 @@ add_task(async function test_form1_third_entry() {
 add_task(async function test_form1_fourth_entry() {
   // Trigger autocomplete popup
   restoreForm();
-  await openAutocompletePopup();
+  await popupByArrowDown();
 
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_ArrowDown"); // second
@@ -259,7 +259,7 @@ add_task(async function test_form1_wraparound_first_entry() {
   // Trigger autocomplete popup
   restoreForm();
   await spinEventLoop(); // let focus happen
-  await openAutocompletePopup();
+  await popupByArrowDown();
 
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_ArrowDown"); // second
@@ -277,7 +277,7 @@ add_task(async function test_form1_wraparound_first_entry() {
 add_task(async function test_form1_wraparound_up_last_entry() {
   // Trigger autocomplete popup
   restoreForm();
-  await openAutocompletePopup();
+  await popupByArrowDown();
 
   synthesizeKey("KEY_ArrowUp"); // footer
   synthesizeKey("KEY_ArrowUp"); // last (fourth)
@@ -290,7 +290,7 @@ add_task(async function test_form1_wraparound_up_last_entry() {
 add_task(async function test_form1_wraparound_down_up_up() {
   // Trigger autocomplete popup
   restoreForm();
-  await openAutocompletePopup();
+  await popupByArrowDown();
 
   synthesizeKey("KEY_ArrowDown"); // select first entry
   synthesizeKey("KEY_ArrowUp"); // selects nothing!
@@ -304,7 +304,7 @@ add_task(async function test_form1_wraparound_down_up_up() {
 
 add_task(async function test_form1_wraparound_up_last() {
   restoreForm();
-  await openAutocompletePopup();
+  await popupByArrowDown();
 
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_ArrowUp"); // deselects
@@ -324,7 +324,7 @@ add_task(async function test_form1_wraparound_up_last() {
 
 add_task(async function test_form1_fill_username_without_autofill_right() {
   restoreForm();
-  await openAutocompletePopup();
+  await popupByArrowDown();
 
   // Set first entry w/o triggering autocomplete
   synthesizeKey("KEY_ArrowDown"); // first
@@ -335,7 +335,7 @@ add_task(async function test_form1_fill_username_without_autofill_right() {
 
 add_task(async function test_form1_fill_username_without_autofill_left() {
   restoreForm();
-  await openAutocompletePopup();
+  await popupByArrowDown();
 
   // Set first entry w/o triggering autocomplete
   synthesizeKey("KEY_ArrowDown"); // first
@@ -346,7 +346,7 @@ add_task(async function test_form1_fill_username_without_autofill_left() {
 
 add_task(async function test_form1_pageup_first() {
   restoreForm();
-  await openAutocompletePopup();
+  await popupByArrowDown();
 
   // Check first entry (page up)
   synthesizeKey("KEY_ArrowDown"); // first
@@ -360,7 +360,7 @@ add_task(async function test_form1_pageup_first() {
 
 add_task(async function test_form1_pagedown_last() {
   restoreForm();
-  await openAutocompletePopup();
+  await popupByArrowDown();
 
   /* test 13 */
   // Check last entry (page down)
@@ -387,7 +387,7 @@ add_task(async function test_form1_untrusted_event() {
 
 add_task(async function test_form1_delete() {
   restoreForm();
-  await openAutocompletePopup();
+  await popupByArrowDown();
 
   // XXX tried sending character "t" before/during dropdown to test
   // filtering, but had no luck. Seemed like the character was getting lost.
@@ -418,7 +418,7 @@ add_task(async function test_form1_delete() {
 
 add_task(async function test_form1_first_after_deletion() {
   restoreForm();
-  await openAutocompletePopup();
+  await popupByArrowDown();
 
   // Check the new first entry (of 3)
   synthesizeKey("KEY_ArrowDown");
@@ -430,7 +430,7 @@ add_task(async function test_form1_first_after_deletion() {
 
 add_task(async function test_form1_delete_second() {
   restoreForm();
-  await openAutocompletePopup();
+  await popupByArrowDown();
 
   // Delete the second entry (of 3), "testuser3"
   synthesizeKey("KEY_ArrowDown");
@@ -447,7 +447,7 @@ add_task(async function test_form1_delete_second() {
 
 add_task(async function test_form1_first_after_deletion2() {
   restoreForm();
-  await openAutocompletePopup();
+  await popupByArrowDown();
 
   // Check the new first entry (of 2)
   synthesizeKey("KEY_ArrowDown");
@@ -459,7 +459,7 @@ add_task(async function test_form1_first_after_deletion2() {
 
 add_task(async function test_form1_delete_last() {
   restoreForm();
-  await openAutocompletePopup();
+  await popupByArrowDown();
 
   /* test 54 */
   // Delete the last entry (of 2), "zzzuser4"
@@ -478,7 +478,7 @@ add_task(async function test_form1_delete_last() {
 
 add_task(async function test_form1_first_after_3_deletions() {
   restoreForm();
-  await openAutocompletePopup();
+  await popupByArrowDown();
 
   // Check the only remaining entry
   synthesizeKey("KEY_ArrowDown");
@@ -490,7 +490,7 @@ add_task(async function test_form1_first_after_3_deletions() {
 
 add_task(async function test_form1_check_only_entry_remaining() {
   restoreForm();
-  await openAutocompletePopup();
+  await popupByArrowDown();
 
   /* test 56 */
   // Delete the only remaining entry, "testuser2"
@@ -526,7 +526,7 @@ add_task(async function test_form2() {
   checkLoginForm(uname, "singleuser5", pword, "singlepass5");
 
   restoreForm();
-  await openAutocompletePopup();
+  await popupByArrowDown();
 
   // Check first entry
   synthesizeKey("KEY_ArrowDown");
@@ -549,7 +549,7 @@ add_task(async function test_form3() {
   pword = getFormElementByName(3, "pword");
   checkLoginForm(uname, "singleuser5", pword, "singlepass5");
   restoreForm();
-  await openAutocompletePopup();
+  await popupByArrowDown();
 
   // Check first entry
   synthesizeKey("KEY_ArrowDown");
@@ -572,7 +572,7 @@ add_task(async function test_form4() {
   pword = getFormElementByName(4, "pword");
   checkLoginForm(uname, "singleuser5", pword, "singlepass5");
   restoreForm();
-  await openAutocompletePopup();
+  await popupByArrowDown();
 
   // Check first entry
   synthesizeKey("KEY_ArrowDown");
@@ -595,7 +595,7 @@ add_task(async function test_form5() {
   pword = getFormElementByName(5, "pword");
   checkLoginForm(uname, "singleuser5", pword, "singlepass5");
   restoreForm();
-  await openAutocompletePopup();
+  await popupByArrowDown();
 
   // Check first entry
   synthesizeKey("KEY_ArrowDown");
@@ -675,7 +675,7 @@ add_task(async function test_form7() {
 add_task(async function test_form7_2() {
   restoreForm();
 
-  const autocompleteItems = await openAutocompletePopup();;
+  const autocompleteItems = await popupByArrowDown();
   checkAutoCompleteResults(autocompleteItems,
                            ["form7user1"],
                            window.location.host,
@@ -755,20 +755,16 @@ add_task(async function test_form9_filtering() {
     </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: ""});
 
   // Turn our attention to form9 to test the dropdown - bug 497541
-  let shownPromise = promiseACShown();
   uname = getFormElementByName(9, "uname");
   pword = getFormElementByName(9, "pword");
-  uname.focus();
-  let results = await shownPromise;
+  let results = await popupBy(() => uname.focus());
   checkAutoCompleteResults(results,
                            ["form9userAAB", "form9userAB"],
                            window.location.host,
                            "Check dropdown is showing all logins while field is blank");
   synthesizeKey("KEY_Escape"); // Need to close the popup so we can get another popupshown after sending the string below.
 
-  shownPromise = promiseACShown();
-  sendString("form9userAB");
-  results = await shownPromise;
+  results = await popupBy(() => sendString("form9userAB"));
   checkAutoCompleteResults(results,
                            ["form9userAB"],
                            window.location.host,
@@ -777,9 +773,7 @@ add_task(async function test_form9_filtering() {
   checkLoginForm(uname, "form9userAB", pword, "");
   uname.focus();
   synthesizeKey("KEY_ArrowLeft");
-  shownPromise = promiseACShown();
-  synthesizeKey("A", {shiftKey: true});
-  results = await shownPromise;
+  results = await popupBy(() => synthesizeKey("A", {shiftKey: true}));
 
   checkLoginForm(uname, "form9userAAB", pword, "");
   checkAutoCompleteResults(results, ["form9userAAB"],
@@ -833,7 +827,7 @@ add_task(async function test_form11_formless() {
   pword = getFormElementByName(11, "pword");
   restoreForm();
   checkLoginForm(uname, "", pword, "");
-  await openAutocompletePopup();
+  await popupByArrowDown();
 
   // Trigger autocomplete
   synthesizeKey("KEY_ArrowDown");
@@ -861,10 +855,10 @@ add_task(async function test_form11_open_on_trusted_focus() {
       resolve();
     });
   });
-  const shownPromise = promiseACShown();
-  synthesizeMouseAtCenter(uname, {});
-  await firePrivEventPromise;
-  await shownPromise;
+  await popupBy(async () => {
+    synthesizeMouseAtCenter(uname, {});
+    await firePrivEventPromise;
+  });
   synthesizeKey("KEY_ArrowDown");
   const processedPromise = promiseFormsProcessedInSameProcess();
   synthesizeKey("KEY_Enter");
@@ -905,7 +899,7 @@ add_task(async function test_form12_recipes() {
   await promiseFormsProcessedInSameProcess();
   restoreForm();
   checkLoginForm(uname, "", pword, "");
-  await openAutocompletePopup();
+  await popupByArrowDown();
 
   synthesizeKey("KEY_ArrowDown");
   checkLoginForm(uname, "", pword, ""); // value shouldn't update
@@ -939,9 +933,7 @@ add_task(async function test_form13_stays_open_upon_empty_search() {
   checkLoginForm(uname, "prefilled", pword, "prefilled");
 
   uname.scrollIntoView();
-  let shownPromise = promiseACShown();
-  synthesizeMouseAtCenter(uname, {});
-  await shownPromise;
+  await popupBy(() => synthesizeMouseAtCenter(uname, {}));
   uname.select();
   synthesizeKey("KEY_Delete");
 
@@ -955,9 +947,7 @@ add_task(async function test_form13_stays_open_upon_empty_search() {
   pword.select();
   popupState = await getPopupState();
   is(popupState.open, false, "Check popup closed since password field isn't empty");
-  shownPromise = promiseACShown();
-  synthesizeKey("KEY_Delete");
-  await shownPromise;
+  await popupBy(() => synthesizeKey("KEY_Delete"));
   checkLoginForm(uname, "", pword, "");
 
   // ensure the popup is closed for the next test
@@ -982,7 +972,7 @@ add_task(async function test_form14_username_only() {
   pword = {value: ""};
   checkLoginForm(uname, "prefilled", pword, "");
   restoreForm();
-  await openAutocompletePopup();
+  await popupByArrowDown();
 
   // Check first entry
   synthesizeKey("KEY_ArrowDown");

@@ -144,7 +144,7 @@ async function testResultOfTabInteractions(testData) {
   SpecialPowers.wrap(uname).setUserInput("");
 
   info("Placing focus in the password field");
-  const shownPromise = promiseACShown();
+  const shownPromise = popupBy();
   pword.focus();
   await synthesizeKey("KEY_Tab", { shiftKey: true }); // blur pw, focus un
   await new Promise(resolve => SimpleTest.executeSoon(resolve));

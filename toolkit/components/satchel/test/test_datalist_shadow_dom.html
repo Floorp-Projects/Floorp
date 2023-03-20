@@ -29,7 +29,7 @@ host.attachShadow({ mode: "open" }).innerHTML = `
 `;
 
 add_task(async function fill_in_shadow() {
-  const input = await openPopupOn(host.shadowRoot.querySelector("input"));
+  const { input } = await openPopupOn(host.shadowRoot.querySelector("input"));
   assertAutocompleteItems("First", "Second", "Secomundo");
   assertValueAfterKeys(
     input,
@@ -38,7 +38,7 @@ add_task(async function fill_in_shadow() {
 });
 
 add_task(async function filter_and_fill_in_shadow() {
-  const input = await openPopupOn(host.shadowRoot.querySelector("input"));
+  const { input } = await openPopupOn(host.shadowRoot.querySelector("input"));
   sendString("Sec");
   await notifyMenuChanged(2);
   assertAutocompleteItems("Second", "Secomundo");

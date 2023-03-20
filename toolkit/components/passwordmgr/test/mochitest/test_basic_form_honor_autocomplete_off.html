@@ -86,9 +86,7 @@ async function autoCompleteFieldsFromFirstMatch(form) {
   // trigger autocomplete from the username field
   await SimpleTest.promiseFocus(form.ownerGlobal);
   let uname = form.querySelector("[name='uname']");
-  let shownPromise = promiseACShown();
-  uname.focus();
-  await shownPromise;
+  await popupBy(() => uname.focus());
 
   let formFilled = promiseFormsProcessedInSameProcess();
   await synthesizeKey("KEY_ArrowDown"); // open

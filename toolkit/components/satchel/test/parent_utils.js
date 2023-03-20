@@ -66,8 +66,8 @@ var ParentUtils = {
     );
   },
 
-  checkRowCount(expectedCount, expectedFirstValue = null) {
-    ContentTaskUtils.waitForCondition(() => {
+  async checkRowCount(expectedCount, expectedFirstValue = null) {
+    await ContentTaskUtils.waitForCondition(() => {
       // This may be called before gAutocompletePopup has initialised
       // which causes it to throw
       try {
@@ -80,23 +80,17 @@ var ParentUtils = {
       } catch (e) {
         return false;
       }
-    }, "Waiting for row count change: " + expectedCount + " First value: " + expectedFirstValue).then(
-      () => {
-        let results = this.getMenuEntries();
-        sendAsyncMessage("gotMenuChange", { results });
-      }
-    );
+    }, `Waiting for row count change to ${expectedCount}, first value: ${expectedFirstValue}.`);
+    return this.getMenuEntries();
   },
 
-  checkSelectedIndex(expectedIndex) {
-    ContentTaskUtils.waitForCondition(() => {
-      return (
+  async checkSelectedIndex(expectedIndex) {
+    await ContentTaskUtils.waitForCondition(
+      () =>
         gAutocompletePopup.popupOpen &&
-        gAutocompletePopup.selectedIndex === expectedIndex
-      );
-    }, "Checking selected index").then(() => {
-      sendAsyncMessage("gotSelectedIndex");
-    });
+        gAutocompletePopup.selectedIndex === expectedIndex,
+      "Checking selected index"
+    );
   },
 
   // Tests using this function need to flip pref for exceptional use of
@@ -175,14 +169,13 @@ addMessageListener("countEntries", ({ name, value }) => {
 
 addMessageListener(
   "waitForMenuChange",
-  ({ expectedCount, expectedFirstValue }) => {
-    ParentUtils.checkRowCount(expectedCount, expectedFirstValue);
-  }
+  ({ expectedCount, expectedFirstValue }) =>
+    ParentUtils.checkRowCount(expectedCount, expectedFirstValue)
 );
 
-addMessageListener("waitForSelectedIndex", ({ expectedIndex }) => {
-  ParentUtils.checkSelectedIndex(expectedIndex);
-});
+addMessageListener("waitForSelectedIndex", ({ expectedIndex }) =>
+  ParentUtils.checkSelectedIndex(expectedIndex)
+);
 addMessageListener("waitForMenuEntryTest", ({ index, statement }) => {
   ParentUtils.testMenuEntry(index, statement);
 });

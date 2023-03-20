@@ -19,12 +19,7 @@ Form History test: Test for keydown handler submitting the form
   </form>
 </div>
 
-<pre id="test">
-<script class="testbody">
-var form = document.getElementById("form1");
-var input = getFormElementByName(1, "field1");
-var expectedValue = "value1";
-var beforeInputFired = false;
+<script>
 
 add_setup(async () => {
    await updateFormHistory([
@@ -34,6 +29,10 @@ add_setup(async () => {
 });
 
 add_task(async function submitOnKeydownEnter() {
+   const form = document.querySelector("#form1");
+   const input = form.querySelector("input");
+   const expectedValue = "value1";
+   let beforeInputFired = false;
    const submitTested = new Promise(resolve => {
 
       function handleBeforeInput(aEvent) {
@@ -56,23 +55,18 @@ add_task(async function submitOnKeydownEnter() {
             'getTargetRanges() of "beforeinput" event should return empty array');
       }
 
-      function handleInput(aEvent) {
+      function handleInput(e) {
          info("Input");
          ok(beforeInputFired, '"beforeinput" event should have been fired');
          is(input.value, expectedValue, "Check input value");
-         ok(aEvent instanceof InputEvent,
+         ok(e instanceof InputEvent,
             '"input" event should be dispatched with InputEvent interface');
-         is(aEvent.cancelable, false,
-            '"input" event should be never cancelable');
-         is(aEvent.bubbles, true,
-            '"input" event should always bubble');
-         is(aEvent.inputType, "insertReplacementText",
-            'inputType of "input" event should be "insertReplacementText"');
-         is(aEvent.data, expectedValue,
-            `data of "input" event should be "${expectedValue}"`);
-         is(aEvent.dataTransfer, null,
-            'dataTransfer of "input" event should be null');
-         is(aEvent.getTargetRanges().length, 0,
+         is(e.cancelable, false, '"input" event should be never cancelable');
+         is(e.bubbles, true, '"input" event should always bubble');
+         is(e.inputType, "insertReplacementText", 'inputType of "input" event');
+         is(e.data, expectedValue, "data of input event");
+         is(e.dataTransfer, null, 'dataTransfer of "input" event');
+         is(e.getTargetRanges().length, 0,
             'getTargetRanges() of "input" event should return empty array');
          removeEventListeners();
          resolve();
@@ -101,16 +95,7 @@ add_task(async function submitOnKeydownEnter() {
       }, { once: true });
    });
 
-   const autocompleteShown = promiseACShown();
-
-   // Focus the input before adjusting.value so that the caret goes to the end
-   // (since OS X doesn't show the dropdown otherwise).
-   input.focus();
-   input.value = "value";
-   input.focus();
-   synthesizeKey("KEY_ArrowDown");
-
-   await autocompleteShown;
+   await openPopupOn(input, { inputValue: "value" });
 
    synthesizeKey("KEY_ArrowDown");
    synthesizeKey("KEY_Enter"); // select the first entry in the popup
@@ -119,6 +104,5 @@ add_task(async function submitOnKeydownEnter() {
 });
 
 </script>
-</pre>
 </body>
 </html>

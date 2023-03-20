@@ -81,7 +81,7 @@ add_task(async function test_form1_initial_empty() {
 add_task(async function test_form_related_domain_menuitems() {
   await SimpleTest.promiseFocus(window);
   restoreForm();
-  const autocompleteItems = await openAutocompletePopup();
+  const autocompleteItems = await popupByArrowDown();
   let popupState = await getPopupState();
   is(popupState.selectedIndex, -1, "Check no entires are selected upon opening");
 
@@ -107,7 +107,7 @@ add_task(async function test_form_related_domain_menuitems() {
 
   restoreForm();
 
-  await openAutocompletePopup();
+  await popupByArrowDown();
 
   synthesizeKey("KEY_ArrowDown"); // first item
   synthesizeKey("KEY_ArrowDown"); // second item

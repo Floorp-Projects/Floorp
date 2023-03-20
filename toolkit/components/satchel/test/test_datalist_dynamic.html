@@ -12,11 +12,8 @@
   <option value="ab1">
   <option value="ab2">
 </datalist>
-<pre id="test">
-<script class="testbody">
+<script>
 const { TestUtils } = SpecialPowers.Cu.import("resource://testing-common/TestUtils.jsm");
-const input = document.querySelector("input");
-const datalist = document.querySelector("datalist");
 
 const DATALIST_DATA = {
   "a": ["a1", "a2", "ab1", "ab2"],
@@ -25,16 +22,12 @@ const DATALIST_DATA = {
   "abcd": ["abcd1", "abcd2", "abcde1", "abcde2", "abcde3"]
 };
 
-var resolvePopupShownListener;
-registerPopupShownListener(() => resolvePopupShownListener());
-
-function waitPopup() {
-  return new Promise(resolve => { resolvePopupShownListener = resolve; });
-}
-
 add_task(async function() {
+  const input = document.querySelector("input");
+  const datalist = document.querySelector("datalist");
+
   async function inputHandler() {
-    let options = DATALIST_DATA[input.value] || [];
+    const options = DATALIST_DATA[input.value] || [];
 
     await TestUtils.waitForTick();
 
@@ -42,8 +35,8 @@ add_task(async function() {
       datalist.firstChild.remove();
     }
 
-    for (let option of options) {
-      let element = document.createElement("option");
+    for (const option of options) {
+      const element = document.createElement("option");
       element.setAttribute("value", option);
       datalist.appendChild(element);
     }
@@ -58,9 +51,7 @@ add_task(async function() {
   synthesizeKey("b");
   synthesizeKey("c");
   is(input.value, "abc", "<input>'s value has to be abc for initial data");
-  synthesizeKey("KEY_ArrowDown");
-  await waitPopup();
-
+  await notifyMenuChanged(4);
   let values = getMenuEntries();
   is(values.length, 4, "expected count of datalist popup");
   for (let i = 0; i < values.length; i++) {
@@ -86,5 +77,4 @@ add_task(async function() {
   input.removeEventListener("input", inputHandler);
 });
 </script>
-</pre>
 </html>

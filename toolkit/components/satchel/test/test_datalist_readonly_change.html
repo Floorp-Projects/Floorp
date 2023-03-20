@@ -17,20 +17,17 @@
     <option value="Secomundo"></option>
   </datalist>
 <script>
-function oneTick() {
-  return new Promise(resolve => SimpleTest.executeSoon(resolve));
-}
 
 add_task(async function readonly() {
-  let input = await openPopupOn("input", { expectPopup: false });
+  const { input } = await openPopupOn("input", { expectPopup: false });
   ok(input.readOnly, "Input should be readonly");
 
   input.removeAttribute("readonly");
-  await oneTick();
+  await new Promise(resolve => SimpleTest.executeSoon(resolve));
   // AttributeChanged takes control of the input again off a runnable...
   ok(!input.readOnly, "Input should not be readonly");
   is(document.activeElement, input, "Should still be focused");
-  input = await openPopupOn("input");
+  await openPopupOn(input);
   assertAutocompleteItems("First", "Second", "Secomundo");
   assertValueAfterKeys(
     input,

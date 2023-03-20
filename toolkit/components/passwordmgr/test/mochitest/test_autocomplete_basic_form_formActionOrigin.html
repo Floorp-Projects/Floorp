@@ -70,7 +70,7 @@ add_task(async function test_form1_menu_shows_logins_for_different_formActionOri
   await SimpleTest.promiseFocus(window);
   // Trigger autocomplete popup
   restoreForm();
-  const autocompleteItems = await openAutocompletePopup();
+  const autocompleteItems = await popupByArrowDown();
 
   let popupState = await getPopupState();
   is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");

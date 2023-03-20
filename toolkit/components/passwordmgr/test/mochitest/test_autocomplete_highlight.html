@@ -42,7 +42,7 @@ add_task(async function test_field_highlight_on_autocomplete() {
   let username = document.getElementById("uname");
   let password = document.getElementById("pword");
 
-  await openAutocompletePopup(username);
+  await openPopupOn(username);
   synthesizeKey("KEY_ArrowDown");
   await synthesizeKey("KEY_Enter");
 
@@ -72,7 +72,7 @@ add_task(async function test_field_highlight_on_autocomplete() {
   password.value = "";
 
   // Test password field autocomplete.
-  await openAutocompletePopup(password);
+  await openPopupOn(password);
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
 

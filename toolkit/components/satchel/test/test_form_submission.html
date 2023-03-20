@@ -263,8 +263,7 @@
   </form>
 
 </div>
-<pre id="test">
-<script class="testbody" type="text/javascript">
+<script>
 /* eslint-disable complexity */
 
 const ccNumbers = {
@@ -352,11 +351,7 @@ async function checkSubmitSaves(formNumber, inputName, interactiveValue, savedVa
   is(historyEntriesCount, 1, form.getAttribute("purpose"));
 }
 
-// This will prevent endless loop of tests
-for (const form of document.forms) {
-  /* eslint-disable-next-line mozilla/balanced-listeners */
-  form.addEventListener("submit", e => e.preventDefault());
-}
+preventSubmitOnForms();
 
 add_setup(async () => {
   await updateFormHistory([
@@ -403,7 +398,7 @@ add_task(async function form7_does_not_save() {
 
 add_task(async function form8_does_not_save() {
   // Form 8 has an input with no name or input attribute.
-  let input = SpecialPowers.wrap(document.getElementById("form8").elements[0]);
+  const input = SpecialPowers.wrap(document.getElementById("form8").elements[0]);
   is(input.type, "text", "checking we got unidentified input");
   input.setUserInput("dontSaveThis");
   await checkSubmitDoesNotSave(8);
@@ -443,7 +438,7 @@ add_task(async function form13_does_not_save() {
 });
 
 add_task(async function form14_does_not_save() {
-  let input = SpecialPowers.wrap(document.getElementById("form14").elements[0]);
+  const input = SpecialPowers.wrap(document.getElementById("form14").elements[0]);
   input.type  = "password";
   input.setUserInput("dontSaveThis");
   // Set it back to type=text to simulate a password visibility toggle.
@@ -599,6 +594,5 @@ add_task(async function form109_saves() {
 });
 
 </script>
-</pre>
 </body>
 </html>

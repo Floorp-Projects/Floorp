@@ -20,8 +20,7 @@ Test for Form History Autocomplete Untrusted Events: Bug 511615
   </form>
 </div>
 
-<pre id="test">
-<script class="testbody" type="text/javascript">
+<script>
 /**
  * Indicates the time to wait before checking that the state of the autocomplete
  * popup, including whether it is open, has not changed in response to events.
@@ -37,55 +36,33 @@ Test for Form History Autocomplete Untrusted Events: Bug 511615
  */
 const POPUP_RESPONSE_WAIT_TIME_MS = 200;
 
-SimpleTest.requestFlakyTimeout("Must ensure that an event does not happen.");
-
-/**
- * Checks that the popup does not open in response to the given function.
- *
- * @param {Function} triggerFn - function that triggers an event
- * @returns {Promise}
- */
-function expectPopupDoesNotOpen(triggerFn) {
-  const popupShown = promiseACShown();
-  triggerFn();
-  return Promise.race([
-    popupShown.then(() => Promise.reject("Popup opened unexpectedly.")),
-    new Promise(resolve => setTimeout(resolve, POPUP_RESPONSE_WAIT_TIME_MS)),
-  ]);
-}
-
 /**
  * Checks that the selected index in the popup still matches the given value.
  *
  * @param {number} expectedIndex
  * @returns {Promise}
  */
-function checkSelectedIndexAfterResponseTime(expectedIndex) {
-  return new Promise(resolve => {
+async function checkSelectedIndexAfterResponseTime(expectedIndex) {
+  const popupState = await new Promise(resolve => {
     setTimeout(() => getPopupState(resolve), POPUP_RESPONSE_WAIT_TIME_MS);
-  }).then(popupState => {
-    is(popupState.open, true, "Popup should still be open.");
-    is(popupState.selectedIndex, expectedIndex, "Selected index should match.");
   });
+  is(popupState.open, true, "Popup should still be open.");
+  is(popupState.selectedIndex, expectedIndex, "Selected index should match.");
 }
 
-const input = getFormElementByName(1, "field1");
+const input = document.querySelector("#form1 > input");
 
 function doKeyUnprivileged(key) {
-  let keyName = "DOM_VK_" + key.toUpperCase();
+  const keyName = "DOM_VK_" + key.toUpperCase();
   let keycode, charcode, alwaysval;
 
   if (key.length == 1) {
-    keycode = 0;
-    charcode = key.charCodeAt(0);
-    alwaysval = charcode;
+    [keycode, charcode, alwaysval] = [0, key.charCodeAt(0), charcode];
   } else {
-    keycode = KeyEvent[keyName];
+    [keycode, charcode, alwaysval] = [KeyEvent[keyName], 0, keycode];
     if (!keycode) {
       throw new Error("invalid keyname in test");
     }
-    charcode = 0;
-    alwaysval = keycode;
   }
 
   const dnEvent = new KeyboardEvent("keydown", {
@@ -161,13 +138,11 @@ add_task(async function test_untrusted_events_ignored() {
   ]) {
     // We must wait for the entire timeout for each individual test, because the
     // next event in the list might prevent the popup from opening.
-    await expectPopupDoesNotOpen(triggerFn);
+    await noPopupBy(triggerFn);
   }
 
   // A privileged key press will actually open the popup.
-  const promisePopupShown = promiseACShown();
-  synthesizeKey("KEY_ArrowDown");
-  await promisePopupShown;
+  await openPopupOn(input);
 
   // The selected autocomplete item should not change from untrusted events.
   for (let triggerFn of [
@@ -179,7 +154,7 @@ add_task(async function test_untrusted_events_ignored() {
   }
 
   // A privileged key press will actually change the selected index.
-  const indexChanged = new Promise(resolve => notifySelectedIndex(0, resolve));
+  const indexChanged = notifySelectedIndex(0);
   synthesizeKey("KEY_ArrowDown");
   await indexChanged;
 
@@ -198,10 +173,7 @@ add_task(async function test_untrusted_events_ignored() {
     await checkSelectedIndexAfterResponseTime(0);
     is(input.value, "", "The selected item should not have been used.");
   }
-  input.blur(); // Close popup
-
 });
 </script>
-</pre>
 </body>
 </html>

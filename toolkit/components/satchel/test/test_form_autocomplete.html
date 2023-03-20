@@ -188,7 +188,7 @@ add_setup(async () => {
 });
 
 add_task(async function use_1st_item() {
-  const input = await openPopupOn("#form1 input");
+  const { input } = await openPopupOn("#form1 > input");
 
   assertAutocompleteItems("value1", "value2", "value3", "value4");
   assertValueAfterKeys(input, "KEY_ArrowDown", "");
@@ -196,7 +196,7 @@ add_task(async function use_1st_item() {
 });
 
 add_task(async function use_2nd_item() {
-  const input = await openPopupOn("#form1 input");
+  const { input } = await openPopupOn("#form1 > input");
   assertValueAfterKeys(
     input,
     ["KEY_ArrowDown", "KEY_ArrowDown", "KEY_Enter"],
@@ -204,7 +204,7 @@ add_task(async function use_2nd_item() {
 });
 
 add_task(async function use_3rd_item() {
-  const input = await openPopupOn("#form1 input");
+  const { input } = await openPopupOn("#form1 > input");
   assertValueAfterKeys(
     input,
     ["KEY_ArrowDown", "KEY_ArrowDown", "KEY_ArrowDown", "KEY_Enter"],
@@ -212,7 +212,7 @@ add_task(async function use_3rd_item() {
 });
 
 add_task(async function use_4th_item() {
-  const input = await openPopupOn("#form1 input");
+  const { input } = await openPopupOn("#form1 > input");
   assertValueAfterKeys(
     input,
     ["KEY_ArrowDown", "KEY_ArrowDown", "KEY_ArrowDown", "KEY_ArrowDown", "KEY_Enter"],
@@ -220,7 +220,7 @@ add_task(async function use_4th_item() {
 });
 
 add_task(async function use_1st_item_wrap_around() {
-  const input = await openPopupOn("#form1 input");
+  const { input } = await openPopupOn("#form1 > input");
   assertValueAfterKeys(
     input,
     ["KEY_ArrowDown", "KEY_ArrowDown", "KEY_ArrowDown", "KEY_ArrowDown",
@@ -229,7 +229,7 @@ add_task(async function use_1st_item_wrap_around() {
 });
 
 add_task(async function use_last_item_via_arrow_up() {
-  const input = await openPopupOn("#form1 input");
+  const { input } = await openPopupOn("#form1 > input");
   assertValueAfterKeys(
     input,
     ["KEY_ArrowUp", "KEY_Enter"],
@@ -237,7 +237,7 @@ add_task(async function use_last_item_via_arrow_up() {
 });
 
 add_task(async function use_last_item_via_arrow_up_from_selected_1st() {
-  const input = await openPopupOn("#form1 input");
+  const { input } = await openPopupOn("#form1 > input");
   assertValueAfterKeys(
     input,
     ["KEY_ArrowDown", "KEY_ArrowUp", "KEY_ArrowUp", "KEY_Enter"],
@@ -245,7 +245,7 @@ add_task(async function use_last_item_via_arrow_up_from_selected_1st() {
 });
 
 add_task(async function test9() {
-  const input = await openPopupOn("#form1 input");
+  const { input } = await openPopupOn("#form1 > input");
   assertValueAfterKeys(
     input,
     ["KEY_ArrowDown", "KEY_ArrowUp", "KEY_ArrowUp", "KEY_ArrowUp", "KEY_ArrowUp",
@@ -254,7 +254,7 @@ add_task(async function test9() {
 });
 
 add_task(async function select_1st_item_without_autocomplete() {
-  const input = await openPopupOn("#form1 input");
+  const { input } = await openPopupOn("#form1 > input");
   assertValueAfterKeys(
     input,
     ["KEY_ArrowDown", "KEY_ArrowRight"],
@@ -262,7 +262,7 @@ add_task(async function select_1st_item_without_autocomplete() {
 });
 
 add_task(async function set_first_item_without_autocomplete() {
-  const input = await openPopupOn("#form1 input");
+  const { input } = await openPopupOn("#form1 > input");
   assertValueAfterKeys(
     input,
     ["KEY_ArrowDown", "KEY_ArrowLeft"],
@@ -270,7 +270,7 @@ add_task(async function set_first_item_without_autocomplete() {
 });
 
 add_task(async function use_1st_item_with_page_up() {
-  const input = await openPopupOn("#form1 input");
+  const { input } = await openPopupOn("#form1 > input");
   assertValueAfterKeys(
     input,
     ["KEY_ArrowDown", "KEY_ArrowDown", "KEY_PageUp", "KEY_Enter"],
@@ -278,7 +278,7 @@ add_task(async function use_1st_item_with_page_up() {
 });
 
 add_task(async function use_last_item_with_page_down() {
-  const input = await openPopupOn("#form1 input");
+  const { input } = await openPopupOn("#form1 > input");
   assertValueAfterKeys(
     input,
     ["KEY_ArrowDown", "KEY_PageDown", "KEY_Enter"],
@@ -288,7 +288,7 @@ add_task(async function use_last_item_with_page_down() {
 add_task(async function delete_1st_item() {
   assertAutocompleteItems("value1", "value2", "value3", "value4");
 
-  const input = await openPopupOn("#form1 input", { inputValue: "value" });
+  const { input } = await openPopupOn("#form1 > input", { inputValue: "value" });
   synthesizeKey("KEY_ArrowDown");
 
   // Tests that on OS X shift-backspace didn't delete the last character
@@ -304,7 +304,7 @@ add_task(async function delete_1st_item() {
 });
 
 add_task(async function use_1st_item_of_3() {
-  const input = await openPopupOn("#form1 input");
+  const { input } = await openPopupOn("#form1 > input");
   assertValueAfterKeys(
     input,
     ["KEY_ArrowDown", "KEY_Enter"],
@@ -312,7 +312,7 @@ add_task(async function use_1st_item_of_3() {
 });
 
 add_task(async function delete_2nd_item() {
-  const input = await openPopupOn("#form1 input");
+  const { input } = await openPopupOn("#form1 > input");
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_ArrowDown");
   deleteSelectedAutocompleteItem();
@@ -324,7 +324,7 @@ add_task(async function delete_2nd_item() {
 });
 
 add_task(async function use_1st_item_of_2() {
-  const input = await openPopupOn("#form1 input");
+  const { input } = await openPopupOn("#form1 > input");
   assertValueAfterKeys(
     input,
     ["KEY_ArrowDown", "KEY_Enter"],
@@ -332,7 +332,7 @@ add_task(async function use_1st_item_of_2() {
 });
 
 add_task(async function delete_last_item_of_2() {
-  const input = await openPopupOn("#form1 input");
+  const { input } = await openPopupOn("#form1 > input");
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_ArrowDown");
   deleteSelectedAutocompleteItem();
@@ -344,7 +344,7 @@ add_task(async function delete_last_item_of_2() {
 });
 
 add_task(async function use_1st_item_of_1() {
-  const input = await openPopupOn("#form1 input");
+  const { input } = await openPopupOn("#form1 > input");
   assertValueAfterKeys(
     input,
     ["KEY_ArrowDown", "KEY_Enter"],
@@ -352,7 +352,7 @@ add_task(async function use_1st_item_of_1() {
 });
 
 add_task(async function delete_only_item() {
-  const input = await openPopupOn("#form1 input");
+  const { input } = await openPopupOn("#form1 > input");
   synthesizeKey("KEY_ArrowDown");
   deleteSelectedAutocompleteItem();
   await notifyMenuChanged(0);
@@ -361,7 +361,7 @@ add_task(async function delete_only_item() {
 });
 
 add_task(async function form2_fills() {
-  const input = await openPopupOn("#form2 input");
+  const { input } = await openPopupOn("#form2 > input");
   assertValueAfterKeys(
     input,
     ["KEY_ArrowDown", "KEY_Enter"],
@@ -383,7 +383,7 @@ add_task(async function form3_autocomplete_off() {
       resolve();
     }, false);
   });
-  const input = await openPopupOn("#form3 input", { expectPopup: false });
+  const { input } = await openPopupOn("#form3 > input", { expectPopup: false });
   await scroll;
   // Ensure there's no autocomplete dropdown (autocomplete=off is present)
   assertValueAfterKeys(
@@ -393,7 +393,7 @@ add_task(async function form3_autocomplete_off() {
 });
 
 add_task(async function form4_autocomplete_off() {
-  const input = await openPopupOn("#form4 input", { expectPopup: false });
+  const { input } = await openPopupOn("#form4 > input", { expectPopup: false });
   await notifyMenuChanged(0);
 
   // Ensure there's no autocomplete dropdown (autocomplete=off is present)
@@ -404,7 +404,7 @@ add_task(async function form4_autocomplete_off() {
 });
 
 add_task(async function filtering_form5() {
-  const input = await openPopupOn("#form5 input");
+  const { input } = await openPopupOn("#form5 > input");
   sendChar("a");
   await notifyMenuChanged(5);
   assertAutocompleteItems("a", "aa", "aaz", "aa\xe6", "az");
@@ -448,7 +448,7 @@ add_task(async function filtering_form5() {
 });
 
 add_task(async function filtering_form6_part1() {
-  await openPopupOn("#form6 input");
+  await openPopupOn("#form6 > input");
   sendChar("a");
   await notifyMenuChanged(3);
 
@@ -464,7 +464,7 @@ add_task(async function filtering_form6_part1() {
 });
 
 add_task(async function filtering_form6_part2() {
-  await openPopupOn("#form6 input");
+  await openPopupOn("#form6 > input");
   sendChar("b");
   await notifyMenuChanged(1, "bc d\xe6");
   assertAutocompleteItems("bc d\xe6");
@@ -490,27 +490,27 @@ add_task(async function filtering_form6_part2() {
 });
 
 add_task(async function input_maxLength() {
-  let input = await openPopupOn("#form7 input");
+  let { input } = await openPopupOn("#form7 > input");
   await notifyMenuChanged(4);
   assertAutocompleteItems("1", "12", "123", "1234");
 
   input.maxLength = 4;
-  input = await openPopupOn("#form7 input");
+  input = (await openPopupOn("#form7 > input")).input;
   await notifyMenuChanged(4);
   assertAutocompleteItems("1", "12", "123", "1234");
 
   input.maxLength = 3;
-  input = await openPopupOn("#form7 input");
+  input = (await openPopupOn("#form7 > input")).input;
   await notifyMenuChanged(3);
   assertAutocompleteItems("1", "12", "123");
 
   input.maxLength = 2;
-  input = await openPopupOn("#form7 input");
+  input = (await openPopupOn("#form7 > input")).input;
   await notifyMenuChanged(2);
   assertAutocompleteItems("1", "12");
 
   input.maxLength = 1;
-  input = await openPopupOn("#form7 input");
+  input = (await openPopupOn("#form7 > input")).input;
   await notifyMenuChanged(1);
   assertAutocompleteItems("1");
 
@@ -524,21 +524,21 @@ add_task(async function input_maxLength() {
 });
 
 add_task(async function input_maxLength_with_character_typed() {
-  let input = await openPopupOn("#form7 input");
+  let { input } = await openPopupOn("#form7 > input");
   sendChar("1");
   await notifyMenuChanged(4);
   assertAutocompleteItems("1", "12", "123", "1234");
 
   input.maxLength = 3;
-  input = await openPopupOn("#form7 input");
+  input = (await openPopupOn("#form7 > input")).input;
   assertAutocompleteItems("1", "12", "123");
 
   input.maxLength = 2;
-  input = await openPopupOn("#form7 input");
+  input = (await openPopupOn("#form7 > input")).input;
   assertAutocompleteItems("1", "12");
 
   input.maxLength = 1;
-  input = await openPopupOn("#form7 input");
+  input = (await openPopupOn("#form7 > input")).input;
   assertAutocompleteItems("1");
 
   input.maxLength = 0;
@@ -550,14 +550,14 @@ add_task(async function input_maxLength_with_character_typed() {
 
 for (const formId of ["form8", "form9", "form10", "form11"]) {
   add_named_task(formId, async () => {
-    const input = await openPopupOn(`#${formId} input`);
+    const { input } = await openPopupOn(`#${formId} > input`);
     assertAutocompleteItems("value");
     assertValueAfterKeys(input, ["KEY_ArrowDown", "KEY_Enter"], "value");
   });
 }
 
 add_task(async function form12() {
-  const input = await openPopupOn("#form12 input");
+  const { input } = await openPopupOn("#form12 > input");
   assertAutocompleteItems("42");
   assertValueAfterKeys(
     input,
@@ -566,7 +566,7 @@ add_task(async function form12() {
 });
 
 add_task(async function form14() {
-  const input = await openPopupOn("#form14 input", { expectPopup: false });
+  const { input } = await openPopupOn("#form14 > input", { expectPopup: false });
   await notifyMenuChanged(0);
   // type=date with it's own control frame does not have a dropdown menu
   assertAutocompleteItems();
@@ -574,7 +574,7 @@ add_task(async function form14() {
 });
 
 add_task(async function form15() {
-  const input = await openPopupOn("#form15 input", { expectPopup: false });
+  const { input } = await openPopupOn("#form15 > input", { expectPopup: false });
   await notifyMenuChanged(0);
   // type=time with it's own control frame does not have a dropdown menu
   assertAutocompleteItems();
@@ -582,7 +582,7 @@ add_task(async function form15() {
 });
 
 add_task(async function form16() {
-  const input = await openPopupOn("#form16 input", { expectPopup: false });
+  const { input } = await openPopupOn("#form16 > input", { expectPopup: false });
   await notifyMenuChanged(0);
   // type=range does not have a dropdown menu
   assertAutocompleteItems();
@@ -591,7 +591,7 @@ add_task(async function form16() {
 });
 
 add_task(async function form17() {
-  const input = await openPopupOn("#form17 input", { expectPopup: false });
+  const { input } = await openPopupOn("#form17 > input", { expectPopup: false });
   await notifyMenuChanged(0);
   // type=color does not have a dropdown menu
   assertAutocompleteItems();
@@ -600,7 +600,7 @@ add_task(async function form17() {
 });
 
 add_task(async function form18() {
-  const input = await openPopupOn("#form18 input");
+  const { input } = await openPopupOn("#form18 > input");
   assertAutocompleteItems("2016-08");
   assertValueAfterKeys(
     input,
@@ -609,7 +609,7 @@ add_task(async function form18() {
 });
 
 add_task(async function form19() {
-  const input = await openPopupOn("#form19 input");
+  const { input } = await openPopupOn("#form19 > input");
   assertAutocompleteItems("2016-W32");
   assertValueAfterKeys(
     input,
@@ -618,7 +618,7 @@ add_task(async function form19() {
 });
 
 add_task(async function form20() {
-  const input = await openPopupOn("#form20 input", { expectPopup: false });
+  const { input } = await openPopupOn("#form20 > input", { expectPopup: false });
   await notifyMenuChanged(0);
   // type=datetime-local with it's own control frame does not have a dropdown menu
   assertAutocompleteItems();
@@ -627,7 +627,7 @@ add_task(async function form20() {
 
 add_task(async function input_event_fired() {
   await addEntry("field1", "value1");
-  const input = await openPopupOn("#form1 input");
+  const { input } = await openPopupOn("#form1 > input");
 
   let beforeInputFired = false;
   input.addEventListener("beforeinput", (e) => {
@@ -667,7 +667,7 @@ add_task(async function input_event_fired() {
 });
 
 add_task(async function cancelling_beforeinput_cancels_autocompletion() {
-  const input = await openPopupOn("#form1 input");
+  const { input } = await openPopupOn("#form1 > input");
   await SpecialPowers.pushPrefEnv({
     set: [["dom.input_event.allow_to_cancel_set_user_input", true]],
   });
@@ -686,7 +686,7 @@ add_task(async function cancelling_beforeinput_cancels_autocompletion() {
 });
 
 add_task(async function no_autocomplete_for_searchbar_history() {
-  await openPopupOn("#form13 input", { expectPopup: false });
+  await openPopupOn("#form13 > input", { expectPopup: false });
   await notifyMenuChanged(0);
   assertAutocompleteItems();
 });

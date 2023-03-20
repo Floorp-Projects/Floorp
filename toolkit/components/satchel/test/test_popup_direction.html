@@ -20,8 +20,7 @@ Test for Popup Direction
   </form>
 </div>
 
-<pre id="test">
-<script class="testbody" type="text/javascript">
+<script>
 
 add_setup(async () => {
   await updateFormHistory([
@@ -32,22 +31,14 @@ add_setup(async () => {
 });
 
 add_task(async function test_popup_direction() {
-  let input = getFormElementByName(1, "field1");
-
-  for (let direction of ["ltr", "rtl"]) {
+  for (const direction of ["ltr", "rtl"]) {
     document.getElementById("content").style.direction = direction;
-
-    await openAutocompletePopup(input);
-
-    let popupState = await getPopupState();
+    await openPopupOn("#form1 > input");
+    const popupState = await getPopupState();
     is(popupState.direction, direction, "Direction should match.");
-
-    // Close the popup.
-    input.blur();
   }
 });
 
 </script>
-</pre>
 </body>
 </html>
