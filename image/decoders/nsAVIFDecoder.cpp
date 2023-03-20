@@ -1612,9 +1612,22 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
 
     // See comment on AVIFDecodedData
     if (parsedInfo.icc_colour_information.data) {
-      const auto& icc = parsedInfo.icc_colour_information;
-      mInProfile = qcms_profile_from_memory(icc.data, icc.length);
+      // same profile for every frame of image, only create it once
+      if (!mInProfile) {
+        const auto& icc = parsedInfo.icc_colour_information;
+        mInProfile = qcms_profile_from_memory(icc.data, icc.length);
+      }
     } else {
+      // potentially different profile every frame, destroy the old one
+      if (mInProfile) {
+        if (mTransform) {
+          qcms_transform_release(mTransform);
+          mTransform = nullptr;
+        }
+        qcms_profile_release(mInProfile);
+        mInProfile = nullptr;
+      }
+
       const auto& cp = decodedData->mColourPrimaries;
       const auto& tc = decodedData->mTransferCharacteristics;
 
@@ -1649,7 +1662,7 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
             ("[this=%p] CMSMode::Off, skipping color profile", this));
   }
 
-  if (mInProfile && GetCMSOutputProfile()) {
+  if (mInProfile && GetCMSOutputProfile() && !mTransform) {
     auto intent = static_cast<qcms_intent>(gfxPlatform::GetRenderingIntent());
     qcms_data_type inType;
     qcms_data_type outType;
