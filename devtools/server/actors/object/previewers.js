@@ -1085,6 +1085,7 @@ previewers.Object = [
       filename: hooks.createValueGrip(rawObj.filename),
       lineNumber: hooks.createValueGrip(rawObj.lineNumber),
       columnNumber: hooks.createValueGrip(rawObj.columnNumber),
+      stack: hooks.createValueGrip(rawObj.stack),
     };
 
     return true;
