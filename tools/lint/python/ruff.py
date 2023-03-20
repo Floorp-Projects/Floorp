@@ -96,7 +96,6 @@ class RuffProcess(ProcessHandler):
         self.stderr = []
         kwargs["stream"] = False
         kwargs["universal_newlines"] = True
-        kwargs["processStderrLine"] = lambda line: print(line, file=sys.stderr)
         ProcessHandler.__init__(self, *args, **kwargs)
 
     def run(self, *args, **kwargs):
@@ -105,8 +104,8 @@ class RuffProcess(ProcessHandler):
         signal.signal(signal.SIGINT, orig)
 
 
-def run_process(config, cmd):
-    proc = RuffProcess(config, cmd)
+def run_process(config, cmd, **kwargs):
+    proc = RuffProcess(config, cmd, **kwargs)
     proc.run()
     try:
         proc.wait()
@@ -140,15 +139,17 @@ def lint(paths, config, log, **lintargs):
     if config["exclude"]:
         args.append(f"--extend-exclude={','.join(config['exclude'])}")
 
+    process_kwargs = {"processStderrLine": lambda line: log.debug(line)}
+
     if lintargs.get("fix"):
         # Do a first pass with --fix-only as the json format doesn't return the
         # number of fixed issues.
-        output = run_process(config, args + ["--fix-only"])
+        output = run_process(config, args + ["--fix-only"], **process_kwargs)
         matches = re.match(r"Fixed (\d+) errors?.", output)
         if matches:
             fixed = int(matches[1])
 
-    output = run_process(config, args + ["--format=json"])
+    output = run_process(config, args + ["--format=json"], **process_kwargs)
     if not output:
         return []
 
