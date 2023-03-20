@@ -39,7 +39,11 @@ static struct {
 #endif
 
 using namespace mozilla::ipc;
-using namespace mozilla;
+using mozilla::DebugOnly;
+using mozilla::Maybe;
+using mozilla::MutexAutoLock;
+using mozilla::Nothing;
+using mozilla::Some;
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsBufferedStream
@@ -64,7 +68,6 @@ nsresult nsBufferedStream::Init(nsISupports* aStream, uint32_t bufferSize) {
   mCursor = 0;
   nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mStream);
   mSeekable = seekable;
-  RecursiveMutexAutoLock lock(mBufferMutex);
   mBuffer = new (mozilla::fallible) char[bufferSize];
   if (mBuffer == nullptr) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -75,7 +78,6 @@ nsresult nsBufferedStream::Init(nsISupports* aStream, uint32_t bufferSize) {
 void nsBufferedStream::Close() {
   // Drop the reference from nsBufferedStream::Init()
   mStream = nullptr;
-  RecursiveMutexAutoLock lock(mBufferMutex);
   if (mBuffer) {
     delete[] mBuffer;
     mBuffer = nullptr;
@@ -430,7 +432,6 @@ nsBufferedInputStream::ReadSegments(nsWriteSegmentFun writer, void* closure,
   }
 
   nsresult rv = NS_OK;
-  RecursiveMutexAutoLock lock(mBufferMutex);
   while (count > 0) {
     uint32_t amt = std::min(count, mFillPoint - mCursor);
     if (amt > 0) {
@@ -470,8 +471,6 @@ nsBufferedInputStream::Fill() {
   }
   NS_ENSURE_TRUE(mStream, NS_ERROR_NOT_INITIALIZED);
 
-  RecursiveMutexAutoLock lock(mBufferMutex);
-
   nsresult rv;
   int32_t rem = int32_t(mFillPoint - mCursor);
   if (rem > 0) {
@@ -509,7 +508,6 @@ nsBufferedInputStream::GetBuffer(uint32_t aLength, uint32_t aAlignMask) {
     return nullptr;
   }
 
-  RecursiveMutexAutoLock lock(mBufferMutex);
   char* buf = mBuffer + mCursor;
   uint32_t rem = mFillPoint - mCursor;
   if (rem == 0) {
@@ -719,8 +717,6 @@ NS_IMETHODIMP
 nsBufferedInputStream::GetCloneable(bool* aCloneable) {
   *aCloneable = false;
 
-  RecursiveMutexAutoLock lock(mBufferMutex);
-
   // If we don't have the buffer, the inputStream has been already closed.
   // If mBufferStartOffset is not 0, the stream has been seeked or read.
   // In both case the cloning is not supported.
@@ -738,8 +734,6 @@ nsBufferedInputStream::GetCloneable(bool* aCloneable) {
 
 NS_IMETHODIMP
 nsBufferedInputStream::Clone(nsIInputStream** aResult) {
-  RecursiveMutexAutoLock lock(mBufferMutex);
-
   if (!mBuffer || mBufferStartOffset) {
     return NS_ERROR_FAILURE;
   }
@@ -913,7 +907,6 @@ nsBufferedOutputStream::Write(const char* buf, uint32_t count,
     return NS_BASE_STREAM_CLOSED;
   }
 
-  RecursiveMutexAutoLock lock(mBufferMutex);
   while (count > 0) {
     uint32_t amt = std::min(count, mBufferSize - mCursor);
     if (amt > 0) {
@@ -950,7 +943,6 @@ nsBufferedOutputStream::Flush() {
   if (mFillPoint == 0) {
     return NS_OK;
   }
-  RecursiveMutexAutoLock lock(mBufferMutex);
   rv = Sink()->Write(mBuffer, mFillPoint, &amt);
   if (NS_FAILED(rv)) {
     return rv;
@@ -1025,7 +1017,6 @@ nsBufferedOutputStream::WriteSegments(nsReadSegmentFun reader, void* closure,
                                       uint32_t count, uint32_t* _retval) {
   *_retval = 0;
   nsresult rv;
-  RecursiveMutexAutoLock lock(mBufferMutex);
   while (count > 0) {
     uint32_t left = std::min(count, mBufferSize - mCursor);
     if (left == 0) {
@@ -1070,7 +1061,6 @@ nsBufferedOutputStream::GetBuffer(uint32_t aLength, uint32_t aAlignMask) {
     return nullptr;
   }
 
-  RecursiveMutexAutoLock lock(mBufferMutex);
   char* buf = mBuffer + mCursor;
   uint32_t rem = mBufferSize - mCursor;
   if (rem == 0) {
