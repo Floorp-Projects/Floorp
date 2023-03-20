@@ -337,10 +337,13 @@ function deleteSelectedAutocompleteItem() {
 }
 
 async function openPopupOn(
-  inputSelector,
+  inputOrSelector,
   { inputValue = "", expectPopup = true } = {}
 ) {
-  const input = document.querySelector(inputSelector);
+  const input =
+    typeof inputOrSelector == "string"
+      ? document.querySelector(inputOrSelector)
+      : inputOrSelector;
   input.value = inputValue;
   input.focus();
   await (expectPopup ? popupAfterArrowDown() : noPopupAfterArrowDown());
