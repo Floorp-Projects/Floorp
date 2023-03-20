@@ -140,33 +140,11 @@ TimerManager.prototype = {
     // skipped and will be done later.
     var now = Math.round(Date.now() / 1000);
 
-    var callbackToFire = null;
-    var earliestIntendedTime = null;
-    var skippedFirings = false;
-    var lastUpdateTime = null;
-    var timerIDToFire = null;
+    var callbacksToFire = [];
     function tryFire(timerID, callback, intendedTime) {
-      var selected = false;
       if (intendedTime <= now) {
-        if (
-          intendedTime < earliestIntendedTime ||
-          earliestIntendedTime === null
-        ) {
-          timerIDToFire = timerID;
-          callbackToFire = callback;
-          earliestIntendedTime = intendedTime;
-          selected = true;
-        } else if (earliestIntendedTime !== null) {
-          skippedFirings = true;
-        }
-      }
-      // We do not need to updateNextDelay for the timer that actually fires;
-      // we'll update right after it fires, with the proper intended time.
-      // Note that we might select one, then select another later (with an
-      // earlier intended time); it is still ok that we did not update for
-      // the first one, since if we have skipped firings, the next delay
-      // will be the minimum delay anyhow.
-      if (!selected) {
+        callbacksToFire.push({ timerID, callback, intendedTime });
+      } else {
         updateNextDelay(intendedTime - now);
       }
     }
@@ -208,42 +186,40 @@ TimerManager.prototype = {
       );
       // Initialize the last update time to 0 when the preference isn't set so
       // the timer will be notified soon after a new profile's first use.
-      lastUpdateTime = Services.prefs.getIntPref(prefLastUpdate, 0);
+      let lastUpdateTime = Services.prefs.getIntPref(prefLastUpdate, 0);
 
       // If the last update time is greater than the current time then reset
       // it to 0 and the timer manager will correct the value when it fires
       // next for this consumer.
       if (lastUpdateTime > now) {
         lastUpdateTime = 0;
-      }
-
-      if (lastUpdateTime == 0) {
         Services.prefs.setIntPref(prefLastUpdate, lastUpdateTime);
       }
 
       tryFire(
         timerID,
         function() {
-          try {
-            let startTime = Cu.now();
-            Cc[cid][method](Ci.nsITimerCallback).notify(timer);
-            ChromeUtils.addProfilerMarker(
-              "UpdateTimer",
-              { category: "Timer", startTime },
-              timerID
-            );
-            LOG("TimerManager:notify - notified " + cid);
-          } catch (e) {
-            LOG(
-              "TimerManager:notify - error notifying component id: " +
-                cid +
-                " ,error: " +
-                e
-            );
-          }
-          lastUpdateTime = now;
-          Services.prefs.setIntPref(prefLastUpdate, lastUpdateTime);
-          updateNextDelay(lastUpdateTime + interval - now);
+          ChromeUtils.idleDispatch(() => {
+            try {
+              let startTime = Cu.now();
+              Cc[cid][method](Ci.nsITimerCallback).notify(timer);
+              ChromeUtils.addProfilerMarker(
+                "UpdateTimer",
+                { category: "Timer", startTime },
+                timerID
+              );
+              LOG("TimerManager:notify - notified " + cid);
+            } catch (e) {
+              LOG(
+                "TimerManager:notify - error notifying component id: " +
+                  cid +
+                  " ,error: " +
+                  e
+              );
+            }
+          });
+          Services.prefs.setIntPref(prefLastUpdate, now);
+          updateNextDelay(interval);
         },
         lastUpdateTime + interval
       );
@@ -288,35 +264,33 @@ TimerManager.prototype = {
               `TimerManager:notify - timerID: ${timerID} doesn't implement nsITimerCallback - skipping`
             );
           }
-          lastUpdateTime = now;
-          timerData.lastUpdateTime = lastUpdateTime;
+          timerData.lastUpdateTime = now;
           let prefLastUpdate = PREF_APP_UPDATE_LASTUPDATETIME_FMT.replace(
             /%ID%/,
             timerID
           );
-          Services.prefs.setIntPref(prefLastUpdate, lastUpdateTime);
-          updateNextDelay(timerData.lastUpdateTime + timerData.interval - now);
+          Services.prefs.setIntPref(prefLastUpdate, now);
+          updateNextDelay(timerData.interval);
         },
         timerData.lastUpdateTime + timerData.interval
       );
     }
 
-    if (callbackToFire) {
-      LOG(
-        `TimerManager:notify - fire timerID: ${timerIDToFire} ` +
-          `intended time: ${earliestIntendedTime} (${new Date(
-            earliestIntendedTime * 1000
-          ).toISOString()})`
-      );
-      callbackToFire();
+    if (callbacksToFire.length) {
+      callbacksToFire.sort((a, b) => a.intendedTime - b.intendedTime);
+      for (let { intendedTime, timerID, callback } of callbacksToFire) {
+        LOG(
+          `TimerManager:notify - fire timerID: ${timerID} ` +
+            `intended time: ${intendedTime} (${new Date(
+              intendedTime * 1000
+            ).toISOString()})`
+        );
+        callback();
+      }
     }
 
     if (nextDelay !== null) {
-      if (skippedFirings) {
-        timer.delay = this._timerMinimumDelay;
-      } else {
-        timer.delay = Math.max(nextDelay * 1000, this._timerMinimumDelay);
-      }
+      timer.delay = Math.max(nextDelay * 1000, this._timerMinimumDelay);
       this.lastTimerReset = Date.now();
     } else {
       this._cancelTimer();
