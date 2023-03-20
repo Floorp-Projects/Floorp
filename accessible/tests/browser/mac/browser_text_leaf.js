@@ -65,7 +65,7 @@ addAccessibleTask(
       NSRange(3, 6)
     );
 
-    is(str, "lo, this ", "AXStringForRange matches.");
+    is(str, "lo, th", "AXStringForRange matches.");
 
     let smallBounds = textLeaf.getParameterizedAttributeValue(
       "AXBoundsForRange",
