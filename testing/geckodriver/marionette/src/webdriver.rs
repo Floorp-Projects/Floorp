@@ -218,6 +218,10 @@ pub enum Command {
     GetActiveElement,
     #[serde(rename = "WebDriver:GetAlertText")]
     GetAlertText,
+    #[serde(rename = "WebDriver:GetComputedLabel")]
+    GetComputedLabel { id: String },
+    #[serde(rename = "WebDriver:GetComputedRole")]
+    GetComputedRole { id: String },
     #[serde(rename = "WebDriver:GetCookies")]
     GetCookies,
     #[serde(rename = "WebDriver:GetElementCSSValue")]
@@ -452,6 +456,22 @@ mod tests {
                 value: "bar".into(),
             },
             json!({"WebDriver:FindElement": {"element": "foo", "using": "xpath", "value": "bar" }}),
+        );
+    }
+
+    #[test]
+    fn test_json_get_computed_label_command() {
+        assert_ser_de(
+            &Command::GetComputedLabel { id: "foo".into() },
+            json!({"WebDriver:GetComputedLabel": {"id": "foo"}}),
+        );
+    }
+
+    #[test]
+    fn test_json_get_computed_role_command() {
+        assert_ser_de(
+            &Command::GetComputedRole { id: "foo".into() },
+            json!({"WebDriver:GetComputedRole": {"id": "foo"}}),
         );
     }
 

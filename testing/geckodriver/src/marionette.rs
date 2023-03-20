@@ -43,12 +43,13 @@ use webdriver::command::WebDriverCommand::{
     ElementClear, ElementClick, ElementSendKeys, ExecuteAsyncScript, ExecuteScript, Extension,
     FindElement, FindElementElement, FindElementElements, FindElements, FindShadowRootElement,
     FindShadowRootElements, FullscreenWindow, Get, GetActiveElement, GetAlertText, GetCSSValue,
-    GetCookies, GetCurrentUrl, GetElementAttribute, GetElementProperty, GetElementRect,
-    GetElementTagName, GetElementText, GetNamedCookie, GetPageSource, GetShadowRoot, GetTimeouts,
-    GetTitle, GetWindowHandle, GetWindowHandles, GetWindowRect, GoBack, GoForward, IsDisplayed,
-    IsEnabled, IsSelected, MaximizeWindow, MinimizeWindow, NewSession, NewWindow, PerformActions,
-    Print, Refresh, ReleaseActions, SendAlertText, SetTimeouts, SetWindowRect, Status,
-    SwitchToFrame, SwitchToParentFrame, SwitchToWindow, TakeElementScreenshot, TakeScreenshot,
+    GetComputedLabel, GetComputedRole, GetCookies, GetCurrentUrl, GetElementAttribute,
+    GetElementProperty, GetElementRect, GetElementTagName, GetElementText, GetNamedCookie,
+    GetPageSource, GetShadowRoot, GetTimeouts, GetTitle, GetWindowHandle, GetWindowHandles,
+    GetWindowRect, GoBack, GoForward, IsDisplayed, IsEnabled, IsSelected, MaximizeWindow,
+    MinimizeWindow, NewSession, NewWindow, PerformActions, Print, Refresh, ReleaseActions,
+    SendAlertText, SetTimeouts, SetWindowRect, Status, SwitchToFrame, SwitchToParentFrame,
+    SwitchToWindow, TakeElementScreenshot, TakeScreenshot,
 };
 use webdriver::command::{
     ActionsParameters, AddCookieParameters, GetNamedCookieParameters, GetParameters,
@@ -438,6 +439,8 @@ impl MarionetteSession {
             | GetCSSValue(_, _)
             | GetElementText(_)
             | GetElementTagName(_)
+            | GetComputedLabel(_)
+            | GetComputedRole(_)
             | IsEnabled(_)
             | ExecuteScript(_)
             | ExecuteAsyncScript(_)
@@ -853,6 +856,16 @@ fn try_convert_to_marionette_message(
             MarionetteWebDriverCommand::GetActiveElement,
         )),
         GetAlertText => Some(Command::WebDriver(MarionetteWebDriverCommand::GetAlertText)),
+        GetComputedLabel(ref e) => Some(Command::WebDriver(
+            MarionetteWebDriverCommand::GetComputedLabel {
+                id: e.clone().to_string(),
+            },
+        )),
+        GetComputedRole(ref e) => Some(Command::WebDriver(
+            MarionetteWebDriverCommand::GetComputedRole {
+                id: e.clone().to_string(),
+            },
+        )),
         GetCookies | GetNamedCookie(_) => {
             Some(Command::WebDriver(MarionetteWebDriverCommand::GetCookies))
         }
