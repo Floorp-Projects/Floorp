@@ -10,8 +10,8 @@ hbox.website-status {
 }
 
 #permissionsBox {
-  min-height: 18em;
-  contain: size;
+  flex: 1 auto;
+  height: 18em;
 }
 
 #siteCol,
