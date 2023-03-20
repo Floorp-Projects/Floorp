@@ -101,9 +101,9 @@ jobs:
 
         cp -r ~/.local/share/flatpak/app/org.mozilla.firefox.BaseApp/current/active/files/* ./flatpak_build/tmp/
         rm ./flatpak_build/tmp/manifest.json
+        mkdir -p ./flatpak_build/tmp/lib/ffmpeg
         ls ./flatpak_build/tmp
 
-        mkdir -p ./flatpak_build/tmp/lib
         tar -xvf ./obj-x86_64-pc-linux-gnu/dist/floorp-$DISPVER.en-US.linux-x86_64.tar.bz2 -C ./flatpak_build/tmp/lib
         ls ./flatpak_build/tmp/lib/floorp
 
@@ -120,7 +120,7 @@ jobs:
 
         for size in 16 32 48 64 128; do
           mkdir -p "./flatpak_build/tmp/share/icons/hicolor/${size}x${size}/apps"
-          ln -s "../../../../../lib/floorp/browser/chrome/icons/default/default${size}.png" "./flatpak_build/tmp/share/icons/hicolor/${size}x${size}/apps/one.ablaze.floorp.png"
+          cp "./flatpak_build/tmp/lib/floorp/browser/chrome/icons/default/default${size}.png" "./flatpak_build/tmp/share/icons/hicolor/${size}x${size}/apps/one.ablaze.floorp.png"
         done
 
         cd ./flatpak_build/tmp
