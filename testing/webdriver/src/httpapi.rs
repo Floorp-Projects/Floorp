@@ -184,6 +184,16 @@ pub fn standard_routes<U: WebDriverExtensionRoute>() -> Vec<(Method, &'static st
         ),
         (
             Method::GET,
+            "/session/{sessionId}/element/{elementId}/computedlabel",
+            Route::GetComputedLabel,
+        ),
+        (
+            Method::GET,
+            "/session/{sessionId}/element/{elementId}/computedrole",
+            Route::GetComputedRole,
+        ),
+        (
+            Method::GET,
             "/session/{sessionId}/element/{elementId}/name",
             Route::GetElementTagName,
         ),
@@ -343,6 +353,8 @@ pub enum Route<U: WebDriverExtensionRoute> {
     GetElementProperty,
     GetCSSValue,
     GetElementText,
+    GetComputedLabel,
+    GetComputedRole,
     GetElementTagName,
     GetElementRect,
     IsEnabled,

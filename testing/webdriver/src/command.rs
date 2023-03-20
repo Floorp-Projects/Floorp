@@ -44,6 +44,8 @@ pub enum WebDriverCommand<T: WebDriverExtensionCommand> {
     FindShadowRootElement(ShadowRoot, LocatorParameters),
     FindShadowRootElements(ShadowRoot, LocatorParameters),
     GetActiveElement,
+    GetComputedLabel(WebElement),
+    GetComputedRole(WebElement),
     GetShadowRoot(WebElement),
     IsDisplayed(WebElement),
     IsSelected(WebElement),
@@ -202,6 +204,24 @@ impl<U: WebDriverExtensionRoute> WebDriverMessage<U> {
                 );
                 let element = WebElement(element_id.as_str().into());
                 WebDriverCommand::GetShadowRoot(element)
+            }
+            Route::GetComputedLabel => {
+                let element_id = try_opt!(
+                    params.get("elementId"),
+                    ErrorStatus::InvalidArgument,
+                    "Missing elementId parameter"
+                );
+                let element = WebElement(element_id.as_str().into());
+                WebDriverCommand::GetComputedLabel(element)
+            }
+            Route::GetComputedRole => {
+                let element_id = try_opt!(
+                    params.get("elementId"),
+                    ErrorStatus::InvalidArgument,
+                    "Missing elementId parameter"
+                );
+                let element = WebElement(element_id.as_str().into());
+                WebDriverCommand::GetComputedRole(element)
             }
             Route::IsDisplayed => {
                 let element_id = try_opt!(
