@@ -21,8 +21,9 @@ export const TOGGLE_POLICIES = {
   HIDDEN: 2,
   TOP: 3,
   ONE_QUARTER: 4,
-  THREE_QUARTERS: 5,
-  BOTTOM: 6,
+  MIDDLE: 5,
+  THREE_QUARTERS: 6,
+  BOTTOM: 7,
 };
 
 // These strings are used in the videocontrols.css stylesheet as
@@ -33,6 +34,7 @@ export const TOGGLE_POLICY_STRINGS = {
   [TOGGLE_POLICIES.HIDDEN]: "hidden",
   [TOGGLE_POLICIES.TOP]: "top",
   [TOGGLE_POLICIES.ONE_QUARTER]: "one-quarter",
+  [TOGGLE_POLICIES.MIDDLE]: "middle",
   [TOGGLE_POLICIES.THREE_QUARTERS]: "three-quarters",
   [TOGGLE_POLICIES.BOTTOM]: "bottom",
 };
