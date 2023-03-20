@@ -21,22 +21,16 @@
 
 </div>
 
-<pre id="test">
-<script class="testbody" type="text/javascript">
-
-const { TestUtils } = SpecialPowers.ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
-);
-
-const input = document.getElementById("input");
+<script>
 
 add_task(async function test_dropdown_shown_when_type_attribute_changed() {
+  const input = document.getElementById("input");
   input.addEventListener("click", () => input.setAttribute("type", "text"));
 
   is(input.type, "button", "Input type is initially button.");
 
-  synthesizeMouseAtCenter(input, {button: input, type: "mousedown"}, window);
-  synthesizeMouseAtCenter(input, {button: input, type: "mouseup"}, window);
+  synthesizeMouseAtCenter(input, { button: input, type: "mousedown" }, window);
+  synthesizeMouseAtCenter(input, { button: input, type: "mouseup" }, window);
 
   await SimpleTest.promiseWaitForCondition(() => input.type === "text", "Input type changed to text.");
 
@@ -45,18 +39,15 @@ add_task(async function test_dropdown_shown_when_type_attribute_changed() {
   // We decided to refer fixing this to a later bug,  This is tracked in Bug 1788698.
   // ok(input.matches(":focus-visible"), "Outer focus ring is shown.");
 
-  // We should wait until the next tick/frame, otherwise the popup is not shown.
-  await TestUtils.waitForTick();
-  const promisePopupShown = promiseACShown();
-  synthesizeKey("KEY_ArrowDown");
-  await promisePopupShown;
+  await openPopupOn(input);
 
-  isDeeply(getMenuEntries(), ["Mozilla", "Firefox", "Thunderbird"], "Datalist shown after changing input type from button to text.");
+  isDeeply(
+    getMenuEntries(),
+    ["Mozilla", "Firefox", "Thunderbird"],
+    "Datalist shown after changing input type from button to text.");
   input.removeEventListener("click", () => input.setAttribute("type", "text"));
-
 });
 
 </script>
-</pre>
 </body>
 </html>

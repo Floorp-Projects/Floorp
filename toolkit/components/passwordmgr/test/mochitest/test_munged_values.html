@@ -266,7 +266,7 @@ add_task(async function test_no_autofill_munged_username_matching_password() {
   });
 
   // we shouldn't get the save password doorhanger...
-  let popupShownPromise = promiseNoUnexpectedPopupShown();
+  let popupShownPromise = noPopupBy();
 
   // Check data sent via PasswordManager:onFormSubmit
   let processedPromise = getSubmitMessage();
@@ -329,7 +329,7 @@ add_task(async function test_autofill_munged_username_matching_password() {
   });
 
   // we shouldn't get the save/update password doorhanger as it didn't change
-  let popupShownPromise =  promiseNoUnexpectedPopupShown();
+  let popupShownPromise = noPopupBy();
 
   // Check data sent via PasswordManager:onFormSubmit
   let processedPromise = getSubmitMessage();

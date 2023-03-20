@@ -85,11 +85,11 @@ add_task(async function test_reopened_after_edit_not_matching_saved() {
   await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
     this.content.document.getElementById("form-basic-username").value = "nam";
   });
-  let shownPromise = promiseACShown();
-  await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
-    this.content.document.getElementById("form-basic-username").focus();
+  await popupBy(async () => {
+    await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
+      this.content.document.getElementById("form-basic-username").focus();
+    });
   });
-  await shownPromise;
   await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
     this.content.document.getElementById("form-basic-submit").focus();
   });

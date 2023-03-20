@@ -36,7 +36,7 @@ add_setup(async () => {
 });
 
 add_task(async function datalist_with_caching() {
-  const input = await openPopupOn("#form1 input");
+  const { input } = await openPopupOn("#form1 > input");
   assertAutocompleteItems("Sec", "First", "Second", "Secomundo");
   assertValueAfterKeys(
     input,
@@ -45,7 +45,7 @@ add_task(async function datalist_with_caching() {
 });
 
 add_task(async function filtering_datalist_with_caching() {
-  const input = await openPopupOn("#form1 input");
+  const { input } = await openPopupOn("#form1 > input");
   sendString("Sec");
   await notifyMenuChanged(3);
   assertAutocompleteItems("Sec", "Second", "Secomundo");

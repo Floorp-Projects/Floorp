@@ -35,7 +35,7 @@ add_setup(async () => {
 
 add_task(async function datalist_with_caching() {
    const kSetUserInputCancelable = SpecialPowers.getBoolPref("dom.input_event.allow_to_cancel_set_user_input");
-   const input = await openPopupOn("input[name=field1]");
+   const { input } = await openPopupOn("input[name=field1]");
    synthesizeKey("KEY_Escape");
 
    let beforeInputFired = false;
@@ -60,7 +60,7 @@ add_task(async function datalist_with_caching() {
    ok(beforeInputFired, "'beforeinput' event fired at typing 'e'");
    ok(inputFired, "'input' event fired at typing 'e'");
 
-   await promiseACShown();
+   await notifyMenuChanged(2);
    inputFired = false;
    beforeInputFired = false;
    input.addEventListener("beforeinput", e => {
@@ -91,7 +91,7 @@ add_task(async function datalist_with_caching() {
    inputFired = false;
    beforeInputFired = false;
    synthesizeKey("KEY_Backspace");
-   await promiseACShown();
+   await notifyMenuChanged(2);
    synthesizeKey("KEY_ArrowDown");
    synthesizeKey("KEY_ArrowDown");
    input.addEventListener("beforeinput", e => {

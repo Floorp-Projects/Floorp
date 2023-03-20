@@ -136,36 +136,16 @@ function updateFormHistory(changes, then = null) {
   });
 }
 
-function notifyMenuChanged(expectedCount, expectedFirstValue, then = null) {
-  return new Promise(resolve => {
-    gChromeScript.sendAsyncMessage("waitForMenuChange", {
-      expectedCount,
-      expectedFirstValue,
-    });
-    gChromeScript.addMessageListener("gotMenuChange", function changed({
-      results,
-    }) {
-      gChromeScript.removeMessageListener("gotMenuChange", changed);
-      gLastAutoCompleteResults = results;
-      if (then) {
-        then(results);
-      }
-      resolve(results);
-    });
-  });
+async function notifyMenuChanged(expectedCount, expectedFirstValue) {
+  gLastAutoCompleteResults = await gChromeScript.sendQuery(
+    "waitForMenuChange",
+    { expectedCount, expectedFirstValue }
+  );
+  return gLastAutoCompleteResults;
 }
 
-function notifySelectedIndex(expectedIndex, then = null) {
-  return new Promise(resolve => {
-    gChromeScript.sendAsyncMessage("waitForSelectedIndex", { expectedIndex });
-    gChromeScript.addMessageListener("gotSelectedIndex", function changed() {
-      gChromeScript.removeMessageListener("gotSelectedIndex", changed);
-      if (then) {
-        then();
-      }
-      resolve();
-    });
-  });
+function notifySelectedIndex(expectedIndex) {
+  return gChromeScript.sendQuery("waitForSelectedIndex", { expectedIndex });
 }
 
 function testMenuEntry(index, statement) {
@@ -202,55 +182,44 @@ function listenForUnexpectedPopupShown() {
   };
 }
 
-async function promiseNoUnexpectedPopupShown() {
-  gPopupShownExpected = false;
-  listenForUnexpectedPopupShown();
-  SimpleTest.requestFlakyTimeout(
-    "Giving a chance for an unexpected popupshown to occur"
-  );
-  await new Promise(resolve => setTimeout(resolve, 1000));
-}
-
-/**
- * Resolve at the next popupshown event for the autocomplete popup
- *
- * @returns {Promise} with the results
- */
-function promiseACShown() {
+async function popupBy(triggerFn) {
   gPopupShownExpected = true;
-  return new Promise(resolve => {
+  const promise = new Promise(resolve => {
     gPopupShownListener = ({ results }) => {
       gPopupShownExpected = false;
       resolve(results);
     };
   });
+  if (triggerFn) {
+    triggerFn();
+  }
+  return promise;
 }
 
-async function popupAfterArrowDown() {
-  const promise = promiseACShown();
-  synthesizeKey("KEY_Escape"); // in case popup is already open
-  synthesizeKey("KEY_ArrowDown");
-  await promise;
+async function noPopupBy(triggerFn) {
+  gPopupShownExpected = false;
+  listenForUnexpectedPopupShown();
+  SimpleTest.requestFlakyTimeout(
+    "Giving a chance for an unexpected popupshown to occur"
+  );
+  if (triggerFn) {
+    await triggerFn();
+  }
+  await new Promise(resolve => setTimeout(resolve, 500));
 }
 
-async function noPopupAfterArrowDown() {
-  const promise = promiseNoUnexpectedPopupShown();
-  synthesizeKey("KEY_Escape"); // in case popup is already open
-  synthesizeKey("KEY_ArrowDown");
-  await promise;
+async function popupByArrowDown() {
+  return popupBy(() => {
+    synthesizeKey("KEY_Escape"); // in case popup is already open
+    synthesizeKey("KEY_ArrowDown");
+  });
 }
 
-/**
- * Open autocomplete popup on a field (if it exists) and wait for it to be shown
- *
- * @param {HTMLInputElement} input - input field to open autocomplete popup on
- * @returns {Promise} of autocomplete items shown
- */
-function openAutocompletePopup(input) {
-  input?.focus();
-  const promisePopupShown = promiseACShown();
-  synthesizeKey("KEY_ArrowDown");
-  return promisePopupShown;
+async function noPopupByArrowDown() {
+  await noPopupBy(() => {
+    synthesizeKey("KEY_Escape"); // in case popup is already open
+    synthesizeKey("KEY_ArrowDown");
+  });
 }
 
 function checkACTelemetryEvent(actualEvent, input, augmentedExtra) {
@@ -346,8 +315,8 @@ async function openPopupOn(
       : inputOrSelector;
   input.value = inputValue;
   input.focus();
-  await (expectPopup ? popupAfterArrowDown() : noPopupAfterArrowDown());
-  return input;
+  const items = await (expectPopup ? popupByArrowDown() : noPopupByArrowDown());
+  return { input, items };
 }
 
 satchelCommonSetup();

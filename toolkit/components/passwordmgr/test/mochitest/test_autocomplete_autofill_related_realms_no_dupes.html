@@ -75,10 +75,10 @@ add_setup(async () => {
 add_task(async function test_no_duplicates_autocomplete_autofill() {
   await promiseFormsProcessedInSameProcess();
   await SimpleTest.promiseFocus(window);
-  let shownPromise = promiseACShown();
-  checkLoginForm(uname, "exactUser1", pword, "exactPass1")
-  restoreForm();
-  let results = await shownPromise;
+  let results = await popupBy(() => {
+    checkLoginForm(uname, "exactUser1", pword, "exactPass1")
+    restoreForm();
+  });
 
   let popupState = await getPopupState();
   is(popupState.selectedIndex, -1, "Check no entires are selected upon opening");

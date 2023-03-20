@@ -12,7 +12,7 @@
 
   <!-- normal, basic form -->
   <form id="form1" onsubmit="return false;">
-    <input   list="suggest" type="text" name="field1" id="field1">
+    <input list="suggest" type="text" name="field1" id="field1">
     <button type="submit">Submit</button>
     <datalist id="suggest">
       <option value="Mozilla">
@@ -23,46 +23,33 @@
 
 </div>
 
-<pre id="test">
-<script class="testbody" type="text/javascript">
-const input = document.getElementById("field1");
+<script>
 
 add_setup(async () => {
-  await new Promise(resolve => updateFormHistory([
+  await updateFormHistory([
     { op: "add", fieldname: "field1", value: "Mozilla" },
     { op: "add", fieldname: "field1", value: "Firefox" },
     { op: "add", fieldname: "field1", value: "Relay" },
-  ], resolve));
+  ]);
 });
 
-
 add_task(async function test_all_entries_are_unique_and_ordered() {
-    await triggerAutofillAndCheckEntriesValue("",["Relay", "Mozilla", "Firefox", "Relay is awesome"]);
+  await triggerAutofillAndCheckEntriesValue("",["Relay", "Mozilla", "Firefox", "Relay is awesome"]);
 });
 
 add_task(async function test_duplicate_entries_are_shown_once() {
-    await triggerAutofillAndCheckEntriesValue("f", ["Firefox"]);
+  await triggerAutofillAndCheckEntriesValue("f", ["Firefox"]);
 });
 
 add_task(async function test_non_duplicate_entries_are_shown_once() {
-    await triggerAutofillAndCheckEntriesValue("rel",["Relay", "Relay is awesome"]);
+  await triggerAutofillAndCheckEntriesValue("rel",["Relay", "Relay is awesome"]);
 });
 
-
-
-
 async function triggerAutofillAndCheckEntriesValue(inputValue, expectedValues) {
-  SpecialPowers.wrap(input).setUserInput(inputValue);
-  input.focus();
-  const promisePopupShown = promiseACShown();
-  synthesizeKey("KEY_ArrowDown");
-  await promisePopupShown;
+  await openPopupOn("#form1 > input", { inputValue });
   isDeeply(getMenuEntries(), expectedValues, "Matching deduplicated autocomplete list entries with expected values.");
-  input.blur(); // Close popup
-
 }
 
 </script>
-</pre>
 </body>
 </html>
