@@ -499,7 +499,7 @@ class MigrationUtils {
    *   optional; the window that asks to open the wizard.
    * @param {object} [aOptions=null]
    *   optional named arguments for the migration wizard.
-   * @param {number} [aOptions.entrypoint=undefined]
+   * @param {string} [aOptions.entrypoint=undefined]
    *   migration entry point constant. See MIGRATION_ENTRYPOINTS.
    * @param {string} [aOptions.migratorKey=undefined]
    *   The key for which migrator to use automatically. This is the key that is exposed
@@ -522,6 +522,12 @@ class MigrationUtils {
     if (
       Services.prefs.getBoolPref("browser.migrate.content-modal.enabled", false)
     ) {
+      let entrypoint =
+        aOptions.entrypoint || this.MIGRATION_ENTRYPOINTS.UNKNOWN;
+      Services.telemetry
+        .getHistogramById("FX_MIGRATION_ENTRY_POINT_CATEGORICAL")
+        .add(entrypoint);
+
       let openStandaloneWindow = () => {
         const FEATURES = "dialog,centerscreen,resizable=no";
         const win = Services.ww.openWindow(
@@ -924,34 +930,34 @@ class MigrationUtils {
    */
   #MIGRATION_ENTRYPOINTS_ENUM = Object.freeze({
     /** The entrypoint was not supplied */
-    UNKNOWN: 0,
+    UNKNOWN: "unknown",
 
     /** Migration is occurring at startup */
-    FIRSTRUN: 1,
+    FIRSTRUN: "firstrun",
 
     /** Migration is occurring at after a profile refresh */
-    FXREFRESH: 2,
+    FXREFRESH: "fxrefresh",
 
     /** Migration is being started from the Library window */
-    PLACES: 3,
+    PLACES: "places",
 
     /** Migration is being started from our password management UI */
-    PASSWORDS: 4,
+    PASSWORDS: "passwords",
 
     /** Migration is being started from the default about:home/about:newtab */
-    NEWTAB: 5,
+    NEWTAB: "newtab",
 
     /** Migration is being started from the File menu */
-    FILE_MENU: 6,
+    FILE_MENU: "file_menu",
 
     /** Migration is being started from the Help menu */
-    HELP_MENU: 7,
+    HELP_MENU: "help_menu",
 
     /** Migration is being started from the Bookmarks Toolbar */
-    BOOKMARKS_TOOLBAR: 8,
+    BOOKMARKS_TOOLBAR: "bookmarks_toolbar",
 
     /** Migration is being started from about:preferences */
-    PREFERENCES: 9,
+    PREFERENCES: "preferences",
   });
 
   /**
@@ -962,6 +968,52 @@ class MigrationUtils {
    */
   get MIGRATION_ENTRYPOINTS() {
     return this.#MIGRATION_ENTRYPOINTS_ENUM;
+  }
+
+  /**
+   * Translates an entrypoint string into the proper numeric value for the legacy
+   * FX_MIGRATION_ENTRY_POINT histogram.
+   *
+   * @param {string} entrypoint
+   *   The entrypoint to translate from MIGRATION_ENTRYPOINTS.
+   * @returns {number}
+   *   The numeric value for the legacy FX_MIGRATION_ENTRY_POINT histogram.
+   */
+  getLegacyMigrationEntrypoint(entrypoint) {
+    switch (entrypoint) {
+      case this.MIGRATION_ENTRYPOINTS.FIRSTRUN: {
+        return 1;
+      }
+      case this.MIGRATION_ENTRYPOINTS.FXREFRESH: {
+        return 2;
+      }
+      case this.MIGRATION_ENTRYPOINTS.PLACES: {
+        return 3;
+      }
+      case this.MIGRATION_ENTRYPOINTS.PASSWORDS: {
+        return 4;
+      }
+      case this.MIGRATION_ENTRYPOINTS.NEWTAB: {
+        return 5;
+      }
+      case this.MIGRATION_ENTRYPOINTS.FILE_MENU: {
+        return 6;
+      }
+      case this.MIGRATION_ENTRYPOINTS.HELP_MENU: {
+        return 7;
+      }
+      case this.MIGRATION_ENTRYPOINTS.BOOKMARKS_TOOLBAR: {
+        return 8;
+      }
+      case this.MIGRATION_ENTRYPOINTS.PREFERENCES: {
+        return 9;
+      }
+      case this.MIGRATION_ENTRYPOINTS.UNKNOWN:
+      // Intentional fall-through
+      default: {
+        return 0; // Unknown
+      }
+    }
   }
 
   /**

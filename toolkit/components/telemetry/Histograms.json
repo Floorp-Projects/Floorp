@@ -8414,6 +8414,28 @@
     "releaseChannelCollection": "opt-out",
     "description": "Where the migration wizard was entered from. 0=Other/catch-all, 1=first-run, 2=refresh-firefox, 3=Places window, 4=Password manager, 5=New tab, 6=File menu, 7=Help menu, 8=Bookmarks toolbar"
   },
+  "FX_MIGRATION_ENTRY_POINT_CATEGORICAL": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "bug_numbers": [1822692],
+    "alert_emails": ["mconley@mozilla.com", "gijs@mozilla.com", "mak@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "labels": [
+      "unknown",
+      "firstrun",
+      "fxrefresh",
+      "places",
+      "passwords",
+      "newtab",
+      "file_menu",
+      "help_menu",
+      "bookmarks_toolbar",
+      "preferences"
+    ],
+    "releaseChannelCollection": "opt-out",
+    "description": "Where the migration wizard was entered from."
+  },
   "FX_MIGRATION_SOURCE_BROWSER": {
     "record_in_processes": ["main"],
     "products": ["firefox"],

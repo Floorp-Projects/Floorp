@@ -52,13 +52,23 @@ var MigrationWizard = {
     this._wiz = document.querySelector("wizard");
 
     let args = window.arguments[0]?.wrappedJSObject || {};
-    let entryPointId =
+    let entrypoint =
       args.entrypoint || MigrationUtils.MIGRATION_ENTRYPOINTS.UNKNOWN;
+    Services.telemetry
+      .getHistogramById("FX_MIGRATION_ENTRY_POINT_CATEGORICAL")
+      .add(entrypoint);
+
+    // The legacy entrypoint Histogram wasn't categorical, so we translate to the right
+    // numeric value before writing it. We'll keep this Histogram around to ensure a
+    // smooth transition to the new FX_MIGRATION_ENTRY_POINT_CATEGORICAL categorical
+    // histogram.
+    let entryPointId = MigrationUtils.getLegacyMigrationEntrypoint(entrypoint);
     Services.telemetry
       .getHistogramById("FX_MIGRATION_ENTRY_POINT")
       .add(entryPointId);
+
     this.isInitialMigration =
-      entryPointId == MigrationUtils.MIGRATION_ENTRYPOINTS.FIRSTRUN;
+      entrypoint == MigrationUtils.MIGRATION_ENTRYPOINTS.FIRSTRUN;
 
     // Record that the uninstaller requested a profile refresh
     if (Services.env.get("MOZ_UNINSTALLER_PROFILE_REFRESH")) {
