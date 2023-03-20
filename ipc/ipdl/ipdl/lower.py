@@ -2539,17 +2539,6 @@ def _generateCxxStruct(sd):
 
     constreftype = Type(sd.name, const=True, ref=True)
 
-    def fieldsAsParamList():
-        return [
-            Decl(
-                f.forceMoveType()
-                if _cxxTypeNeedsMoveForData(f.ipdltype)
-                else f.constRefType(),
-                f.argVar().name,
-            )
-            for f in sd.fields_ipdl_order()
-        ]
-
     # If this is an empty struct (no fields), then the default ctor
     # and "create-with-fields" ctors are equivalent.  So don't bother
     # with the default ctor.
@@ -2571,7 +2560,19 @@ def _generateCxxStruct(sd):
 
     # Struct(const field1& _f1, ...)
     valctor = ConstructorDefn(
-        ConstructorDecl(sd.name, params=fieldsAsParamList(), force_inline=True)
+        ConstructorDecl(
+            sd.name,
+            params=[
+                Decl(
+                    f.forceMoveType()
+                    if _cxxTypeNeedsMoveForData(f.ipdltype)
+                    else f.constRefType(),
+                    f.argVar().name,
+                )
+                for f in sd.fields_ipdl_order()
+            ],
+            force_inline=True,
+        )
     )
     valctor.memberinits = []
     for f in sd.fields_member_order():
@@ -2581,6 +2582,38 @@ def _generateCxxStruct(sd):
         valctor.memberinits.append(ExprMemberInit(f.memberVar(), args=[arg]))
 
     struct.addstmts([valctor, Whitespace.NL])
+
+    # If a constructor which moves each argument would be different from the
+    # `const T&` version, also generate that constructor.
+    if not all(
+        _cxxTypeNeedsMoveForData(f.ipdltype) or not _cxxTypeCanMove(f.ipdltype)
+        for f in sd.fields_ipdl_order()
+    ):
+        # Struct(field1&& _f1, ...)
+        valmovector = ConstructorDefn(
+            ConstructorDecl(
+                sd.name,
+                params=[
+                    Decl(
+                        f.forceMoveType()
+                        if _cxxTypeCanMove(f.ipdltype)
+                        else f.constRefType(),
+                        f.argVar().name,
+                    )
+                    for f in sd.fields_ipdl_order()
+                ],
+                force_inline=True,
+            )
+        )
+
+        valmovector.memberinits = []
+        for f in sd.fields_member_order():
+            arg = f.argVar()
+            if _cxxTypeCanMove(f.ipdltype):
+                arg = ExprMove(arg)
+            valmovector.memberinits.append(ExprMemberInit(f.memberVar(), args=[arg]))
+
+        struct.addstmts([valmovector, Whitespace.NL])
 
     # The default copy, move, and assignment constructors, and the default
     # destructor, will do the right thing.
