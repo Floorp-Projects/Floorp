@@ -84,6 +84,7 @@ export class nsContentDispatchChooser {
           throw error;
         }
       }
+      return;
     }
 
     let shouldOpenHandler = false;
