@@ -435,6 +435,7 @@ class BrowsertimeRunner(NodeRunner):
                 if name == "browsertime.login" and value:
                     is_login_site = True
 
+                self.info(f"Adding extra browsertime argument: --{name} {value}")
                 args += ["--" + name, value]
 
         if self.get_arg("android"):
