@@ -9,14 +9,18 @@ class PictureInPictureVideoWrapper {
     let playPauseButton = document.querySelector(
       "#transportControls #playButton"
     );
-    playPauseButton?.click();
+    if (video.paused) {
+      playPauseButton?.click();
+    }
   }
 
   pause(video) {
     let playPauseButton = document.querySelector(
       "#transportControls #playButton"
     );
-    playPauseButton?.click();
+    if (!video.paused) {
+      playPauseButton?.click();
+    }
   }
 
   setMuted(video, shouldMute) {
