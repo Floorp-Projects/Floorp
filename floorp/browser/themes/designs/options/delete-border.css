@@ -33,3 +33,8 @@
   #statusBar {
     border-top: none !important;
   }
+
+  #nav-bar:-moz-lwtheme {
+    box-shadow: none !important;
+  }
+  
