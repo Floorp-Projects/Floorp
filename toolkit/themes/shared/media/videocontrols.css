@@ -39,6 +39,8 @@
   --pip-toggle-padding: 5px;
   --control-focus-outline: 2px solid #00DDFF;
   --control-focus-outline-offset: -2px;
+  --pip-toggle-icon-width-height: 16px;
+  --pip-toggle-translate-x: calc(100% - var(--pip-toggle-icon-width-height) - 2 * var(--pip-toggle-padding));
 
   color: #fff;
 }
