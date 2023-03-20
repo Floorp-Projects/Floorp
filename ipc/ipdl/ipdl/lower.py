@@ -1488,6 +1488,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         for su in tu.structsAndUnions:
             typedeps = _ComputeTypeDeps(su.decl.type, typesToIncludes)
             if isinstance(su, ipdl.ast.StructDecl):
+                aggregateTypeIncludes.add("mozilla/ipc/IPDLStructMember.h")
                 for f in su.fields:
                     f.ipdltype.accept(typedeps)
             elif isinstance(su, ipdl.ast.UnionDecl):
@@ -2529,64 +2530,43 @@ def _generateCxxStruct(sd):
 
     constreftype = Type(sd.name, const=True, ref=True)
 
+    # Struct()
+    # We want the default constructor to be declared if it is available, but
+    # some of our members may not be default-constructible. Silence the
+    # warning which clang generates in that case.
+    #
+    # Members which need value initialization will be handled by wrapping
+    # the member in a template type when declaring them.
+    struct.addcode(
+        """
+        #ifdef __clang__
+        #  pragma clang diagnostic push
+        #  if __has_warning("-Wdefaulted-function-deleted")
+        #    pragma clang diagnostic ignored "-Wdefaulted-function-deleted"
+        #  endif
+        #endif
+        ${name}() = default;
+        #ifdef __clang__
+        #  pragma clang diagnostic pop
+        #endif
+
+        """,
+        name=sd.name,
+    )
+
     # If this is an empty struct (no fields), then the default ctor
-    # and "create-with-fields" ctors are equivalent.  So don't bother
-    # with the default ctor.
+    # and "create-with-fields" ctors are equivalent.
     if len(sd.fields):
         assert len(sd.fields) == len(sd.packed_field_order)
 
-        # Struct()
-        defctor = ConstructorDefn(ConstructorDecl(sd.name, force_inline=True))
-
-        # We want to explicitly default-construct every member of the struct.
-        # This will initialize all primitives which wouldn't be initialized
-        # normally to their default values, and will initialize any actor member
-        # pointers to the correct default value of `nullptr`. Other C++ types
-        # with custom constructors must also provide a default constructor.
-        defctor.memberinits = [
-            ExprMemberInit(f.memberVar()) for f in sd.fields_member_order()
-        ]
-        struct.addstmts([defctor, Whitespace.NL])
-
-    # Struct(const field1& _f1, ...)
-    valctor = ConstructorDefn(
-        ConstructorDecl(
-            sd.name,
-            params=[
-                Decl(
-                    f.forceMoveType()
-                    if _cxxTypeNeedsMoveForData(f.ipdltype)
-                    else f.constRefType(),
-                    f.argVar().name,
-                )
-                for f in sd.fields_ipdl_order()
-            ],
-            force_inline=True,
-        )
-    )
-    valctor.memberinits = []
-    for f in sd.fields_member_order():
-        arg = f.argVar()
-        if _cxxTypeNeedsMoveForData(f.ipdltype):
-            arg = ExprMove(arg)
-        valctor.memberinits.append(ExprMemberInit(f.memberVar(), args=[arg]))
-
-    struct.addstmts([valctor, Whitespace.NL])
-
-    # If a constructor which moves each argument would be different from the
-    # `const T&` version, also generate that constructor.
-    if not all(
-        _cxxTypeNeedsMoveForData(f.ipdltype) or not _cxxTypeCanMove(f.ipdltype)
-        for f in sd.fields_ipdl_order()
-    ):
-        # Struct(field1&& _f1, ...)
-        valmovector = ConstructorDefn(
+        # Struct(const field1& _f1, ...)
+        valctor = ConstructorDefn(
             ConstructorDecl(
                 sd.name,
                 params=[
                     Decl(
                         f.forceMoveType()
-                        if _cxxTypeCanMove(f.ipdltype)
+                        if _cxxTypeNeedsMoveForData(f.ipdltype)
                         else f.constRefType(),
                         f.argVar().name,
                     )
@@ -2595,15 +2575,48 @@ def _generateCxxStruct(sd):
                 force_inline=True,
             )
         )
-
-        valmovector.memberinits = []
+        valctor.memberinits = []
         for f in sd.fields_member_order():
             arg = f.argVar()
-            if _cxxTypeCanMove(f.ipdltype):
+            if _cxxTypeNeedsMoveForData(f.ipdltype):
                 arg = ExprMove(arg)
-            valmovector.memberinits.append(ExprMemberInit(f.memberVar(), args=[arg]))
+            valctor.memberinits.append(ExprMemberInit(f.memberVar(), args=[arg]))
 
-        struct.addstmts([valmovector, Whitespace.NL])
+        struct.addstmts([valctor, Whitespace.NL])
+
+        # If a constructor which moves each argument would be different from the
+        # `const T&` version, also generate that constructor.
+        if not all(
+            _cxxTypeNeedsMoveForData(f.ipdltype) or not _cxxTypeCanMove(f.ipdltype)
+            for f in sd.fields_ipdl_order()
+        ):
+            # Struct(field1&& _f1, ...)
+            valmovector = ConstructorDefn(
+                ConstructorDecl(
+                    sd.name,
+                    params=[
+                        Decl(
+                            f.forceMoveType()
+                            if _cxxTypeCanMove(f.ipdltype)
+                            else f.constRefType(),
+                            f.argVar().name,
+                        )
+                        for f in sd.fields_ipdl_order()
+                    ],
+                    force_inline=True,
+                )
+            )
+
+            valmovector.memberinits = []
+            for f in sd.fields_member_order():
+                arg = f.argVar()
+                if _cxxTypeCanMove(f.ipdltype):
+                    arg = ExprMove(arg)
+                valmovector.memberinits.append(
+                    ExprMemberInit(f.memberVar(), args=[arg])
+                )
+
+            struct.addstmts([valmovector, Whitespace.NL])
 
     # The default copy, move, and assignment constructors, and the default
     # destructor, will do the right thing.
@@ -2697,7 +2710,7 @@ def _effectiveMemberType(f):
     # class of CopyableTArray<T>.
     if effective_type.name == "nsTArray":
         effective_type.name = "CopyableTArray"
-    return effective_type
+    return Type("::mozilla::ipc::IPDLStructMember", T=[effective_type])
 
 
 # --------------------------------------------------
