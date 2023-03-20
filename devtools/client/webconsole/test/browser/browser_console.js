@@ -121,6 +121,9 @@ async function testMessages() {
   console.error(error);
   Cu.nukeSandbox(sandbox);
 
+  const componentsException = new Components.Exception("Components.Exception");
+  console.error(componentsException);
+
   // Check privileged error message from a content process
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     (async function() {
@@ -270,6 +273,8 @@ async function testMessages() {
     ".warn"
   );
 
+  await checkComponentExceptionMessage(hud, componentsException);
+
   await resetFilters(hud);
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
@@ -280,4 +285,31 @@ async function testMessages() {
   chromeWorker.terminate();
   info("Close the Browser Console");
   await safeCloseBrowserConsole();
+}
+
+async function checkComponentExceptionMessage(hud, exception) {
+  const msgNode = await checkUniqueMessageExists(
+    hud,
+    "Components.Exception",
+    ".error"
+  );
+  const framesNode = await waitFor(() => msgNode.querySelector(".pane.frames"));
+  ok(framesNode, "The Components.Exception stack is displayed right away");
+
+  const frameNodes = framesNode.querySelectorAll(".frame");
+  ok(frameNodes.length > 1, "Got at least one frame in the stack");
+  is(
+    frameNodes[0].querySelector(".line").textContent,
+    String(exception.lineNumber),
+    "The stack displayed by default refers to Components.Exception passed as argument"
+  );
+
+  const [, line] = msgNode
+    .querySelector(".frame-link-line")
+    .textContent.split(":");
+  is(
+    line,
+    String(exception.lineNumber + 1),
+    "The link on the top right refers to the console.error callsite"
+  );
 }

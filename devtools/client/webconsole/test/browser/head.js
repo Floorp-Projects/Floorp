@@ -397,13 +397,14 @@ async function checkUniqueMessageExists(hud, msg, typeSelector) {
     });
   } catch (e) {
     ok(false, `Message "${msg}" wasn't logged\n`);
-    return;
+    return null;
   }
 
   is(messages.length, 1, `"${msg}" was logged once`);
   const [messageEl] = messages;
   const repeatNode = messageEl.querySelector(".message-repeats");
   is(repeatNode, null, `"${msg}" wasn't repeated`);
+  return messageEl;
 }
 
 /**

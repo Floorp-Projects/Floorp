@@ -35,6 +35,7 @@ const ERROR_CLASSNAMES = new Set([
   "DebuggeeWouldRun",
   "LinkError",
   "RuntimeError",
+  "Exception", // This related to Components.Exception()
 ]);
 const ARRAY_LIKE_CLASSNAMES = new Set([
   "DOMStringList",
