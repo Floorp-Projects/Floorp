@@ -1148,3 +1148,13 @@ migrationWizard:
       description: True if the "Variant 2" of the Migration Wizard browser / profile selection UI should be used. This is only meaningful in the new Migration Wizard.
       type: boolean
       setPref: browser.migrate.content-modal.import-all.enabled
+
+mixedContentUpgrading:
+  description: Prefs to control whether we upgrade mixed passive content (images, audio, video) from http to https
+  owner: fbraun@mozilla.com
+  hasExposure: false
+  variables:
+    boolean:
+      description: True if the mixed content upgrading pref is enabled
+      type: boolean
+      setPref: security.mixed_content.upgrade_display_content
