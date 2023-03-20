@@ -108,9 +108,9 @@ void ImageBridgeChild::UseTextures(
 
     bool readLocked = t.mTextureClient->OnForwardedToHost();
 
-    textures.AppendElement(
-        TimedTexture(nullptr, t.mTextureClient->GetIPDLActor(), t.mTimeStamp,
-                     t.mPictureRect, t.mFrameID, t.mProducerID, readLocked));
+    textures.AppendElement(TimedTexture(t.mTextureClient->GetIPDLActor(),
+                                        t.mTimeStamp, t.mPictureRect,
+                                        t.mFrameID, t.mProducerID, readLocked));
 
     // Wait end of usage on host side if TextureFlags::RECYCLE is set
     HoldUntilCompositableRefReleasedIfNecessary(t.mTextureClient);
@@ -871,9 +871,9 @@ void ImageBridgeChild::RemoveTextureFromCompositable(
     return;
   }
 
-  mTxn->AddNoSwapEdit(CompositableOperation(
-      aCompositable->GetIPCHandle(),
-      OpRemoveTexture(nullptr, aTexture->GetIPDLActor())));
+  mTxn->AddNoSwapEdit(
+      CompositableOperation(aCompositable->GetIPCHandle(),
+                            OpRemoveTexture(aTexture->GetIPDLActor())));
 }
 
 bool ImageBridgeChild::IsSameProcess() const {

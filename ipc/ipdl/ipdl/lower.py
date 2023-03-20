@@ -496,6 +496,14 @@ class _ConvertToCxxType(TypeVisitor):
         return Type(self.typename(b))
 
     def visitActorType(self, a):
+        if self.side is None:
+            return Type(
+                "::mozilla::ipc::SideVariant",
+                T=[
+                    _cxxBareType(a, "parent", self.fq),
+                    _cxxBareType(a, "child", self.fq),
+                ],
+            )
         return Type(_actorName(self.typename(a.protocol), self.side), ptr=True)
 
     def visitStructType(self, s):
@@ -670,7 +678,7 @@ def _cxxForceMoveRefType(ipdltype, side):
 
 def _cxxPtrToType(ipdltype, side):
     t = _cxxBareType(ipdltype, side)
-    if ipdltype.isIPDL() and ipdltype.isActor():
+    if ipdltype.isIPDL() and ipdltype.isActor() and side is not None:
         t.ptr = False
         t.ptrptr = True
         return t
@@ -680,7 +688,7 @@ def _cxxPtrToType(ipdltype, side):
 
 def _cxxConstPtrToType(ipdltype, side):
     t = _cxxBareType(ipdltype, side)
-    if ipdltype.isIPDL() and ipdltype.isActor():
+    if ipdltype.isIPDL() and ipdltype.isActor() and side is not None:
         t.ptr = False
         t.ptrconstptr = True
         return t
@@ -788,34 +796,27 @@ class HasFQName:
 
 
 class _CompoundTypeComponent(_HybridDecl):
-    def __init__(self, ipdltype, name, side, ct):
-        _HybridDecl.__init__(self, ipdltype, name)
-        self.side = side
-        self.special = _hasVisibleActor(ipdltype)
-
-    # @override the following methods to pass |self.side| instead of
-    # forcing the caller to remember which side we're declared to
-    # represent.
+    # @override the following methods to make the side argument optional.
     def bareType(self, side=None, fq=False):
-        return _HybridDecl.bareType(self, self.side, fq=fq)
+        return _HybridDecl.bareType(self, side, fq=fq)
 
     def refType(self, side=None):
-        return _HybridDecl.refType(self, self.side)
+        return _HybridDecl.refType(self, side)
 
     def constRefType(self, side=None):
-        return _HybridDecl.constRefType(self, self.side)
+        return _HybridDecl.constRefType(self, side)
 
     def ptrToType(self, side=None):
-        return _HybridDecl.ptrToType(self, self.side)
+        return _HybridDecl.ptrToType(self, side)
 
     def constPtrToType(self, side=None):
-        return _HybridDecl.constPtrToType(self, self.side)
+        return _HybridDecl.constPtrToType(self, side)
 
     def inType(self, side=None):
-        return _HybridDecl.inType(self, self.side)
+        return _HybridDecl.inType(self, side)
 
     def forceMoveType(self, side=None):
-        return _HybridDecl.forceMoveType(self, self.side)
+        return _HybridDecl.forceMoveType(self, side)
 
 
 class StructDecl(ipdl.ast.StructDecl, HasFQName):
@@ -836,14 +837,10 @@ class StructDecl(ipdl.ast.StructDecl, HasFQName):
 
 
 class _StructField(_CompoundTypeComponent):
-    def __init__(self, ipdltype, name, sd, side=None):
+    def __init__(self, ipdltype, name, sd):
         self.basename = name
-        fname = name
-        special = _hasVisibleActor(ipdltype)
-        if special:
-            fname += side.title()
 
-        _CompoundTypeComponent.__init__(self, ipdltype, fname, side, sd)
+        _CompoundTypeComponent.__init__(self, ipdltype, name)
 
     def getMethod(self, thisexpr=None, sel="."):
         meth = self.var()
@@ -888,19 +885,11 @@ class _UnionMember(_CompoundTypeComponent):
     """Not in the AFL sense, but rather a member (e.g. |int;|) of an
     IPDL union type."""
 
-    def __init__(self, ipdltype, ud, side=None, other=None):
+    def __init__(self, ipdltype, ud):
         flatname = _flatTypeName(ipdltype)
-        special = _hasVisibleActor(ipdltype)
-        if special:
-            flatname += side.title()
 
-        _CompoundTypeComponent.__init__(self, ipdltype, "V" + flatname, side, ud)
+        _CompoundTypeComponent.__init__(self, ipdltype, "V" + flatname)
         self.flattypename = flatname
-        if special:
-            if other is not None:
-                self.other = other
-            else:
-                self.other = _UnionMember(ipdltype, ud, _otherSide(side), self)
 
         # To create a finite object with a mutually recursive type, a union must
         # be present somewhere in the recursive loop. Because of that we only
@@ -946,8 +935,6 @@ class _UnionMember(_CompoundTypeComponent):
 
         if expr is None:
             args = None
-        elif self.ipdltype.isIPDL() and self.ipdltype.isActor():
-            args = [ExprCast(expr, self.bareType(), const=True)]
         elif (
             self.ipdltype.isIPDL()
             and self.ipdltype.isArray()
@@ -958,12 +945,10 @@ class _UnionMember(_CompoundTypeComponent):
             args = [expr]
 
         if self.recursive:
-            return ExprAssn(
-                self.callGetPtr(), ExprNew(self.bareType(self.side), args=args)
-            )
+            return ExprAssn(self.callGetPtr(), ExprNew(self.bareType(), args=args))
         else:
             return ExprNew(
-                self.bareType(self.side),
+                self.bareType(),
                 args=args,
                 newargs=[ExprVar("mozilla::KnownNotNull"), self.callGetPtr()],
             )
@@ -1413,18 +1398,7 @@ class _DecorateWithCxxStuff(ipdl.ast.Visitor):
 
     def visitStructDecl(self, sd):
         if not isinstance(sd, StructDecl):
-            sd.decl.special = False
-            newfields = []
-            for f in sd.fields:
-                ftype = f.decl.type
-                if _hasVisibleActor(ftype):
-                    sd.decl.special = True
-                    # if ftype has a visible actor, we need both
-                    # |ActorParent| and |ActorChild| fields
-                    newfields.append(_StructField(ftype, f.name, sd, side="parent"))
-                    newfields.append(_StructField(ftype, f.name, sd, side="child"))
-                else:
-                    newfields.append(_StructField(ftype, f.name, sd))
+            newfields = [_StructField(f.decl.type, f.name, sd) for f in sd.fields]
 
             # Compute a permutation of the fields for in-memory storage such
             # that the memory layout of the structure will be well-packed.
@@ -1442,18 +1416,7 @@ class _DecorateWithCxxStuff(ipdl.ast.Visitor):
             StructDecl.upgrade(sd)
 
     def visitUnionDecl(self, ud):
-        ud.decl.special = False
-        newcomponents = []
-        for ctype in ud.decl.type.components:
-            if _hasVisibleActor(ctype):
-                ud.decl.special = True
-                # if ctype has a visible actor, we need both
-                # |ActorParent| and |ActorChild| union members
-                newcomponents.append(_UnionMember(ctype, ud, side="parent"))
-                newcomponents.append(_UnionMember(ctype, ud, side="child"))
-            else:
-                newcomponents.append(_UnionMember(ctype, ud))
-        ud.components = newcomponents
+        ud.components = [_UnionMember(ctype, ud) for ctype in ud.decl.type.components]
         UnionDecl.upgrade(ud)
 
     def visitDecl(self, decl):
@@ -1523,7 +1486,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
 
         aggregateTypeIncludes = set()
         for su in tu.structsAndUnions:
-            typedeps = _ComputeTypeDeps(su.decl.type, True)
+            typedeps = _ComputeTypeDeps(su.decl.type, typesToIncludes)
             if isinstance(su, ipdl.ast.StructDecl):
                 for f in su.fields:
                     f.ipdltype.accept(typedeps)
@@ -1531,9 +1494,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
                 for c in su.components:
                     c.ipdltype.accept(typedeps)
 
-            for typename in [t.fromtype.name for t in typedeps.usingTypedefs]:
-                if typename in typesToIncludes:
-                    aggregateTypeIncludes.add(typesToIncludes[typename])
+            aggregateTypeIncludes.update(typedeps.includeHeaders)
 
         if len(aggregateTypeIncludes) != 0:
             hf.addthing(Whitespace.NL)
@@ -2257,29 +2218,6 @@ class _ParamTraits:
         def get(f, var):
             return ExprCall(f.getMethod(thisexpr=var, sel="."))
 
-        # If any field is special, make sure we have an actor
-        for f in sd.fields_ipdl_order():
-            if not f.special:
-                continue
-
-            noactorerror = (
-                "'%s' (%s) member of '%s' must be sent over an IPDL actor"
-                % (f.getMethod().name, f.ipdltype.name(), structtype.name())
-            )
-            write.append(
-                _abortIfFalse(
-                    ExprCode("${writervar}->GetActor()", writervar=cls.writervar),
-                    noactorerror,
-                )
-            )
-            read.append(
-                _abortIfFalse(
-                    ExprCode("${readervar}->GetActor()", readervar=cls.readervar),
-                    noactorerror,
-                )
-            )
-            break
-
         for (size, fields) in itertools.groupby(
             sd.fields_member_order(), lambda f: pod_size(f.ipdltype)
         ):
@@ -2295,7 +2233,7 @@ class _ParamTraits:
                     )
                     readfield = cls._checkedRead(
                         f.ipdltype,
-                        f.bareType(f.side, fq=True),
+                        f.bareType(fq=True),
                         get(f, readparam),
                         f.basename,
                         "'"
@@ -2310,17 +2248,9 @@ class _ParamTraits:
                         varIsMaybe=False,
                     )
 
-                    # Wrap the read/write in a side check if the field is special.
-                    if f.special:
-                        writefield = cls.ifsideis(cls.writervar, f.side, writefield)
-                        readfield = cls.ifsideis(cls.readervar, f.side, readfield)
-
                     write.append(writefield)
                     read.append(readfield)
             else:
-                for f in fields:
-                    assert not f.special
-
                 writefield = cls.checkedBulkWrite(writeparam, size, fields)
                 readfield = cls.checkedBulkRead(readparam, size, fields)
 
@@ -2377,12 +2307,6 @@ class _ParamTraits:
             caselabel = CaseLabel(alias + "::" + c.enum())
             origenum = c.enum()
 
-            if c.special:
-                noactorerror = (
-                    "variant '%s' of '%s' must be sent over an IPDL actor"
-                    % (origenum, uniontype.name())
-                )
-
             writecase = StmtBlock()
             wstmt = cls.checkedWrite(
                 c.ipdltype,
@@ -2390,56 +2314,10 @@ class _ParamTraits:
                 cls.writervar,
                 sentinelKey=c.enum(),
             )
-            if c.special:
-                writecase.addstmts(
-                    [
-                        _abortIfFalse(
-                            ExprCode(
-                                "${writervar}->GetActor()", writervar=cls.writervar
-                            ),
-                            noactorerror,
-                        ),
-                        # Report an error if the type is special and the side is wrong
-                        cls.ifsideis(
-                            cls.writervar,
-                            c.side,
-                            wstmt,
-                            els=cls.fatalError(cls.writervar, "wrong side!"),
-                        ),
-                        StmtReturn(),
-                    ]
-                )
-            else:
-                writecase.addstmts([wstmt, StmtReturn()])
+            writecase.addstmts([wstmt, StmtReturn()])
             writeswitch.addcase(caselabel, writecase)
 
             readcase = StmtBlock()
-            if c.special:
-                # The type comes across flipped from what the actor will be on
-                # this side; i.e. child->parent messages will have PFooChild
-                # when received on the parent side. Report an error if the sides
-                # match, and handle c.other instead.
-                readcase.addstmts(
-                    [
-                        _abortIfFalse(
-                            ExprCode(
-                                "${readervar}->GetActor()", readervar=cls.readervar
-                            ),
-                            noactorerror,
-                        ),
-                        cls.ifsideis(
-                            cls.readervar,
-                            c.side,
-                            StmtBlock(
-                                [
-                                    cls.fatalError(cls.readervar, "wrong side!"),
-                                    StmtReturn(ExprNothing()),
-                                ]
-                            ),
-                        ),
-                    ]
-                )
-                c = c.other
             tmpvar = ExprVar("tmp")
             ct = _cxxMaybeType(c.bareType(fq=True))
             readcase.addstmts(
@@ -2496,18 +2374,21 @@ class _ComputeTypeDeps(TypeVisitor):
     stmt; (iii) IPDL structs or unions which must be fully declared
     before this struct.  Some types generate multiple kinds."""
 
-    def __init__(self, fortype, unqualifiedTypedefs=False):
+    def __init__(self, fortype, typesToIncludes=None):
         ipdl.type.TypeVisitor.__init__(self)
         self.usingTypedefs = []
         self.forwardDeclStmts = []
         self.fullDeclTypes = []
+        self.includeHeaders = set()
         self.fortype = fortype
-        self.unqualifiedTypedefs = unqualifiedTypedefs
+        self.typesToIncludes = typesToIncludes
 
     def maybeTypedef(self, fqname, name, templateargs=[]):
         assert fqname.startswith("::")
-        if fqname != name or self.unqualifiedTypedefs:
+        if fqname != name:
             self.usingTypedefs.append(Typedef(Type(fqname), name, templateargs))
+        if self.typesToIncludes is not None and fqname in self.typesToIncludes:
+            self.includeHeaders.add(self.typesToIncludes[fqname])
 
     def visitImportedCxxType(self, t):
         if t in self.visited:
@@ -2522,6 +2403,7 @@ class _ComputeTypeDeps(TypeVisitor):
 
         fqname, name = t.fullname(), t.name()
 
+        self.includeHeaders.add("mozilla/ipc/SideVariant.h")
         self.maybeTypedef(_actorName(fqname, "Parent"), _actorName(name, "Parent"))
         self.maybeTypedef(_actorName(fqname, "Child"), _actorName(name, "Child"))
 
@@ -3123,6 +3005,16 @@ def _generateCxxUnion(ud):
     # Union& operator= methods
     rhsvar = ExprVar("aRhs")
     for c in ud.components:
+
+        def opeqBody(rhs):
+            return [
+                # might need to placement-delete old value first
+                maybeDestroy(),
+                StmtExpr(c.callCtor(rhs)),
+                StmtExpr(ExprAssn(mtypevar, c.enumvar())),
+                StmtReturn(ExprDeref(ExprVar.THIS)),
+            ]
+
         if not _cxxTypeNeedsMoveForData(c.ipdltype):
             # Union& operator=(const T&)
             opeq = MethodDefn(
@@ -3132,15 +3024,7 @@ def _generateCxxUnion(ud):
                     ret=refClsType,
                 )
             )
-            opeq.addstmts(
-                [
-                    # might need to placement-delete old value first
-                    maybeDestroy(),
-                    StmtExpr(c.callCtor(rhsvar)),
-                    StmtExpr(ExprAssn(mtypevar, c.enumvar())),
-                    StmtReturn(ExprDeref(ExprVar.THIS)),
-                ]
-            )
+            opeq.addstmts(opeqBody(rhsvar))
             cls.addstmts([opeq, Whitespace.NL])
 
         # Union& operator=(T&&)
@@ -3154,15 +3038,7 @@ def _generateCxxUnion(ud):
                 ret=refClsType,
             )
         )
-        opeq.addstmts(
-            [
-                # might need to placement-delete old value first
-                maybeDestroy(),
-                StmtExpr(c.callCtor(ExprMove(rhsvar))),
-                StmtExpr(ExprAssn(mtypevar, c.enumvar())),
-                StmtReturn(ExprDeref(ExprVar.THIS)),
-            ]
-        )
+        opeq.addstmts(opeqBody(ExprMove(rhsvar)))
         cls.addstmts([opeq, Whitespace.NL])
 
     # Union& operator=(const Union&)
