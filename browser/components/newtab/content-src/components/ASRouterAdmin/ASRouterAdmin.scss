@@ -235,9 +235,15 @@
     display: flex;
     background: $black-10;
     border-radius: 3px;
+    align-items: center;
 
     a {
       text-decoration: underline;
+    }
+
+    .icon {
+      min-width: 18px;
+      min-height: 18px;
     }
   }
 

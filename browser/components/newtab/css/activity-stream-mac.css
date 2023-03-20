@@ -2443,9 +2443,14 @@ main.has-snippet {
   display: flex;
   background: rgba(0, 0, 0, 0.1);
   border-radius: 3px;
+  align-items: center;
 }
 .asrouter-admin .helpLink a {
   text-decoration: underline;
+}
+.asrouter-admin .helpLink .icon {
+  min-width: 18px;
+  min-height: 18px;
 }
 .asrouter-admin .ds-component {
   margin-bottom: 20px;

@@ -10,6 +10,7 @@ import { ASRouterUtils } from "../../asrouter/asrouter-utils";
 import { connect } from "react-redux";
 import React from "react";
 import { SimpleHashRouter } from "./SimpleHashRouter";
+import { CopyButton } from "./CopyButton";
 
 const Row = props => (
   <tr className="message-item" {...props}>
@@ -850,6 +851,9 @@ export class ASRouterAdminInner extends React.PureComponent {
       : 0;
     const isCollapsed = this.state.collapsedMessages.includes(msg.id);
     const isModified = this.state.modifiedMessages.includes(msg.id);
+    const aboutMessagePreviewSupported = ["infobar", "spotlight"].includes(
+      msg.template
+    );
 
     let itemClassName = "message-item";
     if (isBlocked) {
@@ -905,6 +909,17 @@ export class ASRouterAdminInner extends React.PureComponent {
               Modify
             </button>
           )}
+          {aboutMessagePreviewSupported ? (
+            <CopyButton
+              transformer={text =>
+                `about:messagepreview?json=${encodeURIComponent(btoa(text))}`
+              }
+              label="Share"
+              copiedLabel="Copied!"
+              inputSelector={`#${msg.id}-textarea`}
+              className={"button share"}
+            />
+          ) : null}
           <br />({impressions} impressions)
         </td>
         <td className="message-summary">
@@ -1077,7 +1092,9 @@ export class ASRouterAdminInner extends React.PureComponent {
           <span className="icon icon-small-spacer icon-info" />{" "}
           <span>
             To modify a message, change the JSON and click 'Modify' to see your
-            changes. Click 'Reset' to restore the JSON to the original.
+            changes. Click 'Reset' to restore the JSON to the original. Click
+            'Share' to copy a link to the clipboard that can be used to preview
+            the message by opening the link in Nightly/local builds.
           </span>
         </p>
         <table>
