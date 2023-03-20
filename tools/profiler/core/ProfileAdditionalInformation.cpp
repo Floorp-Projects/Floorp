@@ -12,7 +12,9 @@
 #include "js/Value.h"
 #include "mozilla/JSONStringWriteFuncs.h"
 #include "mozilla/ipc/IPDLParamTraits.h"
-#include "platform.h"
+
+#ifdef MOZ_GECKO_PROFILER
+#  include "platform.h"
 
 void mozilla::ProfileGenerationAdditionalInformation::ToJSValue(
     JSContext* aCx, JS::MutableHandle<JS::Value> aRetVal) const {
@@ -34,9 +36,11 @@ void mozilla::ProfileGenerationAdditionalInformation::ToJSValue(
   JS_SetProperty(aCx, additionalInfoObj, "sharedLibraries", sharedLibrariesVal);
   aRetVal.setObject(*additionalInfoObj);
 }
+#endif  // MOZ_GECKO_PROFILER
 
 namespace IPC {
 
+#ifdef MOZ_GECKO_PROFILER
 void IPC::ParamTraits<SharedLibrary>::Write(MessageWriter* aWriter,
                                             const paramType& aParam) {
   WriteParam(aWriter, aParam.mStart);
@@ -77,15 +81,22 @@ bool IPC::ParamTraits<SharedLibraryInfo>::Read(MessageReader* aReader,
                                                paramType* aResult) {
   return ReadParam(aReader, &aResult->mEntries);
 }
+#endif  // MOZ_GECKO_PROFILER
 
 void IPC::ParamTraits<mozilla::ProfileGenerationAdditionalInformation>::Write(
     MessageWriter* aWriter, const paramType& aParam) {
+#ifdef MOZ_GECKO_PROFILER
   WriteParam(aWriter, aParam.mSharedLibraries);
+#endif  // MOZ_GECKO_PROFILER
 }
 
 bool IPC::ParamTraits<mozilla::ProfileGenerationAdditionalInformation>::Read(
     MessageReader* aReader, paramType* aResult) {
+#ifdef MOZ_GECKO_PROFILER
   return ReadParam(aReader, &aResult->mSharedLibraries);
+#else
+  return true;
+#endif  // MOZ_GECKO_PROFILER
 }
 
 }  // namespace IPC
