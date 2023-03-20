@@ -210,6 +210,9 @@ class ImportedCxxType(Type):
     def isRefcounted(self):
         return self.refcounted
 
+    def supportsNullable(self):
+        return self.refcounted
+
     def isSendMoveOnly(self):
         return self.sendmoveonly
 
