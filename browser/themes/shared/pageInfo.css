@@ -222,7 +222,6 @@ treechildren::-moz-tree-cell-text(broken) {
 
 .permission {
   padding: 6px 7px;
-  min-height: 25px;
   border-bottom: 1px dotted ThreeDShadow;
 }
 
