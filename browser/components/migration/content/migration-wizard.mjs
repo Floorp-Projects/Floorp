@@ -42,13 +42,20 @@ export class MigrationWizard extends HTMLElement {
 
           <div name="page-selection">
             <h3 data-l10n-id="migration-wizard-selection-header"></h3>
-            <button id="browser-profile-selector">This is some placeholder text</button>
+            <button id="browser-profile-selector">
+              <span class="migrator-icon"></span>
+              <div class="migrator-description">
+                <div class="migrator-name">&nbsp;</div>
+                <div class="profile-name deemphasized-text"></div>
+              </div>
+              <span class="dropdown-icon"></span>
+            </button>
             <div data-l10n-id="migration-wizard-selection-list" class="resource-selection-preamble deemphasized-text"></div>
             <details class="resource-selection-details">
               <summary>
                 <div class="selected-data-header" data-l10n-id="migration-all-available-data-label"></div>
                 <div class="selected-data deemphasized-text">&nbsp;</div>
-                <span class="dropdown-icon" role="img"></span>
+                <span class="expand-collapse-icon" role="img"></span>
               </summary>
               <fieldset id="resource-type-list">
                 <label id="select-all">
@@ -270,6 +277,12 @@ export class MigrationWizard extends HTMLElement {
    *  @param {Element} panelItem the selected <oabel-item>
    */
   #onBrowserProfileSelectionChanged(panelItem) {
+    this.#browserProfileSelector.selectedPanelItem = panelItem;
+    this.#browserProfileSelector.querySelector(".migrator-name").textContent =
+      panelItem.displayName;
+    this.#browserProfileSelector.querySelector(".profile-name").textContent =
+      panelItem.profile?.name || "";
+
     let resourceTypes = panelItem.resourceTypes;
     for (let child of this.#resourceTypeList.children) {
       child.hidden = true;
@@ -316,6 +329,7 @@ export class MigrationWizard extends HTMLElement {
       let opt = document.createElement("panel-item");
       opt.setAttribute("key", migrator.key);
       opt.profile = migrator.profile;
+      opt.displayName = migrator.displayName;
       opt.resourceTypes = migrator.resourceTypes;
 
       if (migrator.profile) {

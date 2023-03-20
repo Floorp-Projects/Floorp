@@ -158,6 +158,25 @@
           ok(panelItem, "Should find panel-item.");
           panelItem.click();
 
+          is(
+            selector.querySelector(".migrator-name").textContent,
+            migratorInstance.displayName,
+            "Selector should show display name"
+          );
+          let profileName = selector.querySelector(".profile-name");
+
+          if (migratorInstance.profile) {
+            ok(!isHidden(profileName), "Profile name element should be displayed.");
+            is(
+              profileName.textContent,
+              migratorInstance.profile.name,
+              "Selector should show profile name"
+            );
+          } else {
+            ok(isHidden(profileName), "Profile name element should be hidden.");
+            is(profileName.textContent, "");
+          }
+
           for (let resourceType in MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES) {
             let node = resourceTypeList.querySelector(
               `label[data-resource-type="${resourceType}"]`

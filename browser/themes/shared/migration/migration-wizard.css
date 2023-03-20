@@ -58,6 +58,52 @@ button {
   margin-block-end: 0;
 }
 
+#wizard-deck > div {
+  display: flex;
+  flex-direction: column;
+}
+
+#browser-profile-selector {
+  display: flex;
+  border: 0;
+  padding: 8px;
+  font-weight: unset;
+}
+
+.migrator-icon {
+  content: url(chrome://global/skin/icons/defaultFavicon.svg);
+  height: 32px;
+  width: 32px;
+}
+
+.migrator-icon,
+.migrator-description,
+.dropdown-icon {
+  pointer-events: none;
+}
+
+.dropdown-icon {
+  content: url("chrome://global/skin/icons/arrow-down.svg");
+  -moz-context-properties: fill;
+  fill: var(--in-content-icon-color);
+  height: 16px;
+  width: 16px;
+  align-self: center;
+}
+
+.migrator-description {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  align-items: start;
+  margin-inline-start: 11px;
+}
+
+.profile-name:empty {
+  display: none;
+}
+
 div[name="page-selection"]:not([show-import-all]) #select-all,
 div[name="page-selection"]:not([show-import-all]) summary {
   display: none;
@@ -72,14 +118,14 @@ div[name="page-selection"][show-import-all] #select-all  {
 }
 
 div[name="page-selection"][show-import-all] .resource-selection-preamble {
-  display:none;
+  display: none;
 }
 
-details[open] .dropdown-icon {
+details[open] .expand-collapse-icon {
   background-image: url("chrome://browser/skin/zoom-out.svg");
 }
 
-.dropdown-icon {
+.expand-collapse-icon {
   display: inline-block;
   width: 16px;
   height: 16px;
