@@ -965,15 +965,6 @@ static bool RecomputePosition(nsIFrame* aFrame) {
   return false;
 }
 
-static bool HasBoxAncestor(nsIFrame* aFrame) {
-  for (nsIFrame* f = aFrame; f; f = f->GetParent()) {
-    if (f->IsXULBoxFrame()) {
-      return true;
-    }
-  }
-  return false;
-}
-
 /**
  * Return true if aFrame's subtree has placeholders for out-of-flow content
  * that would be affected due to the change to
@@ -1284,11 +1275,6 @@ static void StyleChangeReflow(nsIFrame* aFrame, nsChangeHint aHint) {
                  NS_FRAME_DESCENDANT_INTRINSIC_ISIZE_DEPENDS_ON_BSIZE)) {
     dirtyType = IntrinsicDirty::FrameAncestorsAndDescendants;
   } else if (aHint & nsChangeHint_ClearAncestorIntrinsics) {
-    dirtyType = IntrinsicDirty::FrameAndAncestors;
-  } else if ((aHint & nsChangeHint_UpdateComputedBSize) &&
-             HasBoxAncestor(aFrame)) {
-    // The frame's computed BSize is changing, and we have a box ancestor
-    // whose cached intrinsic height may need to be updated.
     dirtyType = IntrinsicDirty::FrameAndAncestors;
   } else {
     dirtyType = IntrinsicDirty::None;

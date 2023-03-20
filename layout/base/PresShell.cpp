@@ -11513,28 +11513,18 @@ PresShell::WindowSizeConstraints PresShell::GetWindowSizeConstraints() {
   if (!rootFrame || !mPresContext) {
     return {minSize, maxSize};
   }
-  if (rootFrame->IsXULBoxFrame()) {
-    UniquePtr<gfxContext> rcx(CreateReferenceRenderingContext());
-    if (!rcx) {
-      return {minSize, maxSize};
-    }
-    nsBoxLayoutState state(mPresContext, rcx.get());
-    minSize = rootFrame->GetXULMinSize(state);
-    maxSize = rootFrame->GetXULMaxSize(state);
-  } else {
-    const auto* pos = rootFrame->StylePosition();
-    if (pos->mMinWidth.ConvertsToLength()) {
-      minSize.width = pos->mMinWidth.ToLength();
-    }
-    if (pos->mMinHeight.ConvertsToLength()) {
-      minSize.height = pos->mMinHeight.ToLength();
-    }
-    if (pos->mMaxWidth.ConvertsToLength()) {
-      maxSize.width = pos->mMaxWidth.ToLength();
-    }
-    if (pos->mMaxHeight.ConvertsToLength()) {
-      maxSize.height = pos->mMaxHeight.ToLength();
-    }
+  const auto* pos = rootFrame->StylePosition();
+  if (pos->mMinWidth.ConvertsToLength()) {
+    minSize.width = pos->mMinWidth.ToLength();
+  }
+  if (pos->mMinHeight.ConvertsToLength()) {
+    minSize.height = pos->mMinHeight.ToLength();
+  }
+  if (pos->mMaxWidth.ConvertsToLength()) {
+    maxSize.width = pos->mMaxWidth.ToLength();
+  }
+  if (pos->mMaxHeight.ConvertsToLength()) {
+    maxSize.height = pos->mMaxHeight.ToLength();
   }
   return {minSize, maxSize};
 }
