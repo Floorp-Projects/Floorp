@@ -444,6 +444,8 @@ static uint32_t ConvertImageRendererToDrawFlags(uint32_t aImageRendererFlags) {
   uint32_t drawFlags = imgIContainer::FLAG_ASYNC_NOTIFY;
   if (aImageRendererFlags & nsImageRenderer::FLAG_SYNC_DECODE_IMAGES) {
     drawFlags |= imgIContainer::FLAG_SYNC_DECODE;
+  } else {
+    drawFlags |= imgIContainer::FLAG_SYNC_DECODE_IF_FAST;
   }
   if (aImageRendererFlags & (nsImageRenderer::FLAG_PAINTING_TO_WINDOW |
                              nsImageRenderer::FLAG_HIGH_QUALITY_SCALING)) {
