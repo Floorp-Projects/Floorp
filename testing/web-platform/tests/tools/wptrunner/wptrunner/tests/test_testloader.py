@@ -118,7 +118,10 @@ def test_loader_filter_tags():
     }
     manifest = WPTManifest.from_json("/", manifest_json)
 
-    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as metadata_path:
+    tmpdir_kwargs = {}
+    if sys.version_info.major >= 3 and sys.version_info.minor >= 10:
+        tmpdir_kwargs["ignore_cleanup_errors"] = True
+    with tempfile.TemporaryDirectory(**tmpdir_kwargs) as metadata_path:
         a_path = os.path.join(metadata_path, "a")
         os.makedirs(a_path)
         with open(os.path.join(a_path, "bar.html.ini"), "w") as f:
