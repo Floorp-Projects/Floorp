@@ -42,6 +42,7 @@ import mozilla.components.feature.pwa.ext.hasLargeIcons
 import mozilla.components.feature.pwa.ext.installableManifest
 import mozilla.components.support.images.decoder.AndroidImageDecoder
 import mozilla.components.support.utils.PendingIntentUtils
+import java.util.UUID
 
 private val pwaIconMemoryCache = IconMemoryCache()
 
@@ -142,7 +143,7 @@ class WebAppShortcutManager(
         val fallback = fallbackLabel
         val fixedLabel = shortLabel.ifBlank { fallback }
 
-        val builder = ShortcutInfoCompat.Builder(context, session.content.url)
+        val builder = ShortcutInfoCompat.Builder(context, UUID.randomUUID().toString())
             .setShortLabel(fixedLabel)
             .setIntent(shortcutIntent)
 
