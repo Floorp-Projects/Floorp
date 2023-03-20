@@ -13,588 +13,402 @@ Form History test: form field autocomplete
 
 <!-- we presumably can't hide the content for this test. -->
 <div id="content">
-
-  <!-- normal, basic form -->
-  <form id="form1" onsubmit="return false;">
-    <input list="suggest" type="text" name="field1">
-    <button type="submit">Submit</button>
-  </form>
-
-  <!-- form with autocomplete=off on input -->
-  <form id="form3" onsubmit="return false;">
-    <input list="suggest" type="text" name="field2" autocomplete="off">
-    <button type="submit">Submit</button>
-  </form>
-
-  <!-- form with autocomplete=off on form -->
-  <form id="form4" autocomplete="off" onsubmit="return false;">
-    <input list="suggest" type="text" name="field2">
-    <button type="submit">Submit</button>
-  </form>
-
-  <!-- yet another normal, basic form, with 2 history entries -->
-  <form id="form5" onsubmit="return false;">
-    <input list="suggest" type="text" name="field3">
-    <button type="submit">Submit</button>
-  </form>
-
   <datalist id="suggest">
     <option value="Google" label="PASS1">FAIL</option>
     <option value="Reddit">PASS2</option>
     <option value="final"></option>
   </datalist>
+
+  <!-- normal, basic form -->
+  <form id="form1">
+    <input list="suggest" type="text" name="field1">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- form with autocomplete=off on input -->
+  <form id="form3">
+    <input list="suggest" type="text" name="field2" autocomplete="off">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- form with autocomplete=off on form -->
+  <form id="form4" autocomplete="off">
+    <input list="suggest" type="text" name="field2">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- yet another normal, basic form, with 2 history entries -->
+  <form id="form5">
+    <input list="suggest" type="text" name="field3">
+    <button type="submit">Submit</button>
+  </form>
+
+  <form id="show_datalist_for_text_inputs_only">
+    <input list="suggest" type="button" popup="false" />
+    <input list="suggest" type="checkbox" popup="false" />
+    <input list="suggest" type="color" popup="false" />
+    <input list="suggest" type="date" popup="false" />
+    <input list="suggest" type="datetime-local" popup="false" />
+    <input list="suggest" type="email" popup="true" />
+    <input list="suggest" type="file" popup="false" />
+    <input list="suggest" type="image" popup="false" />
+    <input list="suggest" type="month" popup="true" />
+    <input list="suggest" type="number" popup="false" />
+    <input list="suggest" type="password" popup="true" />
+    <input list="suggest" type="radio" popup="false" />
+    <input list="suggest" type="range" popup="false" />
+    <input list="suggest" type="reset" popup="false" />
+    <input list="suggest" type="search" popup="true" />
+    <input list="suggest" type="submit" popup="false" />
+    <input list="suggest" type="tel" popup="true" />
+    <input list="suggest" type="text" popup="true" />
+    <input list="suggest" type="time" popup="false" />
+    <input list="suggest" type="url" popup="true" />
+    <input list="suggest" type="week" popup="true" />
+  </form>
 </div>
 
-<pre id="test">
-<script class="testbody" type="text/javascript">
-/* eslint-disable complexity */
+<script>
 
-/** Test for Form History autocomplete */
+preventSubmitOnForms();
 
-var input = getFormElementByName(1, "field1");
-
-function setupFormHistory(aCallback) {
-  updateFormHistory([
+add_setup(async () => {
+  await updateFormHistory([
     { op: "remove" },
     { op: "add", fieldname: "field1", value: "historyvalue" },
     { op: "add", fieldname: "field2", value: "othervalue" },
     { op: "add", fieldname: "field3", value: "history1" },
     { op: "add", fieldname: "field3", value: "history2" },
-  ], aCallback);
-}
+  ]);
+});
 
-function setForm(value) {
-  input.value = value;
-  input.focus();
-}
+add_task(async function no_changes_when_opening_popup(){
+  const input = await openPopupOn("#form1 input");
+  assertValueAfterKeys(input, [], "");
+});
 
-// Restore the form to the default state.
-function restoreForm() {
-  setForm("");
-}
+add_task(async function use_1st_entry() {
+  const input = await openPopupOn("#form1 input");
+  assertAutocompleteItems("historyvalue", "PASS1", "PASS2", "final");
+  assertValueAfterKeys(
+    input,
+    ["KEY_ArrowDown", "KEY_Enter"],
+    "historyvalue");
+});
 
-// Check for expected form data.
-function checkForm(expectedValue) {
-  let formID = input.parentNode.id;
-  is(input.value, expectedValue, "Checking " + formID + " input");
-}
+add_task(async function use_2nd_entry(){
+  const input = await openPopupOn("#form1 input");
+  assertValueAfterKeys(
+    input,
+    ["KEY_ArrowDown", "KEY_ArrowDown", "KEY_Enter"],
+    "Google");
+});
 
-var testNum = 0;
-var prevValue;
-var expectingPopup = false;
-var kSetUserInputCancelable = SpecialPowers.getBoolPref("dom.input_event.allow_to_cancel_set_user_input");
+add_task(async function use_3rd_entry(){
+  const input = await openPopupOn("#form1 input");
+  assertValueAfterKeys(
+    input,
+    ["KEY_ArrowDown", "KEY_ArrowDown", "KEY_ArrowDown", "KEY_Enter"],
+    "Reddit");
+});
 
-function expectPopup() {
-  info("expecting popup for test " + testNum);
-  expectingPopup = true;
-}
+add_task(async function use_4th_entry(){
+  const input = await openPopupOn("#form1 input");
+  assertValueAfterKeys(
+    input,
+    ["KEY_ArrowDown", "KEY_ArrowDown", "KEY_ArrowDown", "KEY_ArrowDown", "KEY_Enter"],
+    "final");
+});
 
-function popupShownListener() {
-  info("popup shown for test " + testNum);
-  if (expectingPopup) {
-    expectingPopup = false;
-    SimpleTest.executeSoon(runTest);
-  } else {
-    ok(false, "Autocomplete popup not expected during test " + testNum);
-  }
-}
+add_task(async function delete_1st_entry(){
+  const input = await openPopupOn("#form1 input");
+  assertValueAfterKeys(input, "KEY_ArrowDown", "");
+  deleteSelectedAutocompleteItem();
+  await notifyMenuChanged(3);
+  is(await countEntries("field1", "historyvalue"), 0, "item is absent");
+});
 
-registerPopupShownListener(popupShownListener);
+add_task(async function can_use_next_item_after_deletion(){
+  const input = await openPopupOn("#form1 input");
+  assertAutocompleteItems("PASS1", "PASS2", "final");
+  assertValueAfterKeys(input, ["KEY_ArrowDown", "KEY_Enter"], "Google");
+});
 
-/*
-* Main section of test...
-*
-* This is a bit hacky, as many operations happen asynchronously.
-* Various mechanisms call runTests as a result of operations:
-*   - set expectingPopup to true, and the next test will occur when the autocomplete popup is shown
-*   - call waitForMenuChange(x) to run the next test when the autocomplete popup
-*     to have x items in it
-*/
-async function runTest() {
-  testNum++;
-  let datalist;
+add_task(async function autocomplete_on_datalist_with_cached_results(){
+  const input = await openPopupOn("#form1 input");
+  sendString("PAS");
+  await notifyMenuChanged(2);
+  sendString("S1");
+  await notifyMenuChanged(1);
+  assertValueAfterKeys(
+    input,
+    ["KEY_ArrowDown", "KEY_Enter"],
+    "Google");
+});
 
-  info("Starting test #" + testNum);
+add_task(async function fills_with_autocomplete_off_on_form(){
+  const input = await openPopupOn("#form4 input");
+  assertValueAfterKeys(
+    input,
+    ["KEY_ArrowDown", "KEY_Enter"],
+    "Google");
+  assertAutocompleteItems("PASS1", "PASS2", "final");
+});
 
-  switch (testNum) {
-    case 1:
-      // Make sure initial form is empty.
-      checkForm("");
-      // Trigger autocomplete popup
-      expectPopup();
-      restoreForm();
-      synthesizeKey("KEY_ArrowDown");
-      break;
-    case 2:
-      checkMenuEntries(["historyvalue", "PASS1", "PASS2", "final"], testNum);
-      // Check first entry
-      synthesizeKey("KEY_ArrowDown");
-      checkForm(""); // value shouldn't update
-      synthesizeKey("KEY_Enter");
-      checkForm("historyvalue");
+add_task(async function use_1st_entry_with_autocomplete_off_on_form(){
+  const input = await openPopupOn("#form4 input");
+  assertValueAfterKeys(
+    input,
+    ["KEY_ArrowDown", "KEY_Enter"],
+    "Google");
+});
 
-      // Trigger autocomplete popup
-      expectPopup();
-      restoreForm();
-      synthesizeKey("KEY_ArrowDown");
-      break;
+add_task(async function use_2nd_entry_with_autocomplete_off_on_form(){
+  const input = await openPopupOn("#form4 input");
+  assertValueAfterKeys(
+    input,
+    ["KEY_ArrowDown", "KEY_ArrowDown", "KEY_Enter"],
+    "Reddit");
+});
 
-    case 3:
-      // Check second entry
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_Enter");
-      checkForm("Google");
+add_task(async function use_3rd_entry_with_autocomplete_off_on_form(){
+  const input = await openPopupOn("#form4 input");
+  assertValueAfterKeys(
+    input,
+    ["KEY_ArrowDown", "KEY_ArrowDown", "KEY_ArrowDown", "KEY_Enter"],
+    "final");
+});
 
-      // Trigger autocomplete popup
-      expectPopup();
-      restoreForm();
-      synthesizeKey("KEY_ArrowDown");
-      break;
+add_task(async function fills_with_autocomplete_off_on_input(){
+  const input = await openPopupOn("#form3 input");
+  assertValueAfterKeys(
+    input,
+    ["KEY_ArrowDown", "KEY_Enter"],
+    "Google");
+  assertAutocompleteItems("PASS1", "PASS2", "final");
+});
 
-    case 4:
-      // Check third entry
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_Enter");
-      checkForm("Reddit");
+add_task(async function use_1st_entry_with_autocomplete_off_on_input(){
+  const input = await openPopupOn("#form3 input");
+  assertValueAfterKeys(
+    input,
+    ["KEY_ArrowDown", "KEY_Enter"],
+    "Google");
+});
 
-      // Trigger autocomplete popup
-      expectPopup();
-      restoreForm();
-      synthesizeKey("KEY_ArrowDown");
-      break;
+add_task(async function use_2nd_entry_with_autocomplete_off_on_input(){
+  const input = await openPopupOn("#form3 input");
+  assertValueAfterKeys(
+    input,
+    ["KEY_ArrowDown", "KEY_ArrowDown", "KEY_Enter"],
+    "Reddit");
+});
 
-    case 5:
-      // Check fourth entry
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_Enter");
-      checkForm("final");
-      expectPopup();
-      restoreForm();
-      synthesizeKey("KEY_ArrowDown");
-      break;
+add_task(async function use_3rd_entry_with_autocomplete_off_on_input(){
+  const input = await openPopupOn("#form3 input");
+  assertValueAfterKeys(
+    input,
+    ["KEY_ArrowDown", "KEY_ArrowDown", "KEY_ArrowDown", "KEY_Enter"],
+    "final");
+});
 
-    case 6:
-      // Delete the first entry (of 3)
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_Delete", {shiftKey: true});
-      waitForMenuChange(3);
-      break;
+add_task(async function remove_item_from_datalist(){
+  // When there is an update of the list, the selection is lost so we need to
+  // go down like if we were at the beginning of the list again.
+  //
+  // Removing the second element while on the first then going down and
+  // push enter. Value should be one from the third suggesion.
+  const input = await openPopupOn("#form3 input");
+  synthesizeKey("KEY_ArrowDown");
+  const datalist = document.getElementById("suggest");
+  const toRemove = datalist.children[1];
+  datalist.removeChild(toRemove);
 
-    case 7:
-      checkForm("");
-      countEntries("field1", "historyvalue",
-                   function(num) {
-                     ok(!num, testNum + " checking that form history value was deleted");
-                     runTest();
-                   });
-      break;
+  assertValueAfterKeys(
+    input,
+    ["KEY_ArrowDown", "KEY_ArrowDown", "KEY_Enter"],
+    "final");
 
-    case 8:
-      synthesizeKey("KEY_Enter");
-      checkForm("Google");
+  // Restore the element.
+  datalist.insertBefore(toRemove, datalist.children[1]);
+});
 
-      // Trigger autocomplete popup
-      expectPopup();
-      restoreForm();
-      synthesizeKey("KEY_ArrowDown");
-      break;
+add_task(async function add_item_to_datalist(){
+  const input = await openPopupOn("#form3 input");
+  const datalist = document.getElementById("suggest");
 
-    case 9:
-      // Test deletion
-      checkMenuEntries(["PASS1", "PASS2", "final"], testNum);
-      // Check the new first entry (of 3)
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_Enter");
-      checkForm("Google");
+  // Adding an attribute after the first one while on the first then going
+  // down and push enter. Value should be the on from the new suggestion.
+  synthesizeKey("KEY_ArrowDown");
+  datalist.insertBefore(new Option("New value"), datalist.children[1]);
+  await notifyMenuChanged(4);
+  assertValueAfterKeys(
+    input,
+    ["KEY_ArrowDown", "KEY_ArrowDown", "KEY_Enter"],
+    "New value");
+});
 
-      expectPopup();
-      restoreForm();
-      synthesizeKey("KEY_ArrowDown");
-      break;
+add_task(async function change_datalist_option_value(){
+  const datalist = document.getElementById("suggest");
 
-    case 10:
-      // Test autocompletion of datalists with cached results.
-      sendString("PAS");
-      waitForMenuChange(2);
-      break;
+  // Remove the element.
+  datalist.removeChild(datalist.children[1]);
+  await notifyMenuChanged(0);
 
-    case 11:
-      // Continuation of test 10
-      sendString("S1");
-      waitForMenuChange(1);
-      break;
+  // Change the first element value attribute.
+  let prevValue = datalist.children[0].value;
+  datalist.children[0].value = "foo";
 
-    case 12:
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_Enter");
-      checkForm("Google");
+  const input = await openPopupOn("#form3 input");
+  assertValueAfterKeys(
+    input,
+    ["KEY_ArrowDown", "KEY_Enter"],
+    "foo");
 
-      // Trigger autocomplete popup
-      // Look at form 3, try to trigger autocomplete popup
-      input.value = "";
-      input = getFormElementByName(3, "field2");
-      testNum = 99;
-      expectPopup();
-      restoreForm();
-      synthesizeKey("KEY_ArrowDown");
-      break;
+  datalist.children[0].value = prevValue;
+  await notifyMenuChanged(0);
+});
 
-    case 100:
-      checkMenuEntries(["PASS1", "PASS2", "final"], testNum);
-      // Check first entry
-      synthesizeKey("KEY_ArrowDown");
-      checkForm(""); // value shouldn't update
-      synthesizeKey("KEY_Enter");
-      checkForm("Google");
+add_task(async function change_datalist_option_text_content(){
+  const datalist = document.getElementById("suggest");
+  const prevValue = datalist.children[0].getAttribute("value");
+  datalist.children[0].removeAttribute("value");
+  datalist.children[0].textContent = "foobar";
+  const input = await openPopupOn("#form3 input");
 
-      // Trigger autocomplete popup
-      expectPopup();
-      restoreForm();
-      synthesizeKey("KEY_ArrowDown");
-      break;
+  assertValueAfterKeys(
+    input,
+    ["KEY_ArrowDown", "KEY_Enter"],
+    "foobar");
 
-    case 101:
-      // Check second entry
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_Enter");
-      checkForm("Reddit");
+  datalist.children[0].setAttribute("value", prevValue);
+  await notifyMenuChanged(0);
+});
 
-      // Trigger autocomplete popup
-      expectPopup();
-      restoreForm();
-      synthesizeKey("KEY_ArrowDown");
-      break;
+add_task(async function filters_with_1st_letter(){
+  const input = await openPopupOn("#form3 input");
+  sendString("f");
+  assertValueAfterKeys(
+    input,
+    ["KEY_ArrowDown", "KEY_ArrowDown", "KEY_ArrowDown", "KEY_Enter"],
+    "final");
+});
 
-    case 102:
-      // Check third entry
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_Enter");
-      checkForm("final");
+add_task(async function filters_with_letter_in_the_middle(){
+  const input = await openPopupOn("#form3 input");
+  sendString("in");
+  assertValueAfterKeys(
+    input,
+    ["KEY_ArrowDown", "KEY_ArrowDown", "KEY_ArrowDown", "KEY_Enter"],
+    "final");
+});
 
-      // Trigger autocomplete popup
-      expectPopup();
-      restoreForm();
-      synthesizeKey("KEY_ArrowDown");
-      break;
+add_task(async function no_filtering_when_mozNoFilter(){
+  const input = await openPopupOn("#form3 input");
+  input.setAttribute("mozNoFilter", "true");
+  sendString("f");
+  await notifyMenuChanged(3);
+  assertValueAfterKeys(
+    input,
+    ["KEY_ArrowDown", "KEY_Enter"],
+    "Google");
+  input.removeAttribute("mozNoFilter");
+});
 
-    case 103:
-      checkMenuEntries(["PASS1", "PASS2", "final"], testNum);
-      // Check first entry
-      synthesizeKey("KEY_ArrowDown");
-      checkForm(""); // value shouldn't update
-      synthesizeKey("KEY_Enter");
-      checkForm("Google");
+add_task(async function input_events(){
+  const input = await openPopupOn("#form3 input");
 
-      // Trigger autocomplete popup
-      expectPopup();
-      restoreForm();
-      synthesizeKey("KEY_ArrowDown");
-      break;
+  let beforeInputFired = false;
+  input.addEventListener("beforeinput", (event) => {
+    beforeInputFired = true;
+    ok(event instanceof InputEvent, "beforeinput event has InputEvent interface");
+    ok(event.bubbles, "beforeinput event should bubble");
+    is(
+      event.cancelable,
+      SpecialPowers.getBoolPref("dom.input_event.allow_to_cancel_set_user_input"),
+      "beforeinput event for insertReplacementText should be cancelable if not suppressed");
+    is(event.inputType, "insertReplacementText", "inputType of beforeinput event should be insertReplacementText");
+    is(event.data, "Google", "data of beforeinput event should be Google");
+    is(event.dataTransfer, null, "dataTransfer of beforeinput event should be null");
+    is(event.getTargetRanges().length, 0, "getTargetRanges() of beforeinput event should be empty array");
+  }, { once: true });
 
-    case 104:
-      // Check second entry
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_Enter");
-      checkForm("Reddit");
+  let inputFired = false;
+  input.addEventListener("input", function(event) {
+    inputFired = true;
+    ok(event instanceof InputEvent,
+        "input event should be dispatched with InputEvent interface");
+    ok(event.bubbles, "input event should bubble");
+    ok(!event.cancelable, "input event should be cancelable");
+    is(event.inputType, "insertReplacementText", "inputType of input event should be insertReplacementText");
+    is(event.data, "Google", "data of input event should be Google");
+    is(event.dataTransfer, null, "dataTransfer of input event should be null");
+    is(event.getTargetRanges().length, 0, "getTargetRanges() of input event should be empty array");
+  }, { once: true });
 
-      // Trigger autocomplete popup
-      expectPopup();
-      restoreForm();
-      synthesizeKey("KEY_ArrowDown");
-      break;
+  assertValueAfterKeys(input, ["KEY_ArrowDown", "KEY_Enter"], "Google");
+  ok(beforeInputFired, "beforeinput event should've been fired");
+  ok(inputFired, "input event should've been fired");
+});
 
-    case 105:
-      // Check third entry
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_Enter");
-      checkForm("final");
+add_task(async function cancelled_beforeinput_event(){
+  const input = await openPopupOn("#form3 input");
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.input_event.allow_to_cancel_set_user_input", true]],
+  });
+  input.addEventListener("beforeinput", e => e.preventDefault(), { once: true });
+  let inputFired = false;
+  input.addEventListener("input", () => inputFired = true, { once: true });
 
-      testNum = 199;
-      expectPopup();
-      restoreForm();
-      synthesizeKey("KEY_ArrowDown");
-      break;
+  assertValueAfterKeys(input, "KEY_ArrowDown", "");
+  assertValueAfterKeys(input, "KEY_Enter", "");
+  ok(!inputFired, "no input event when beforeinput is canceled");
 
-    // Test dynamic updates.
-    // For some reasons, when there is an update of the list, the selection is
-    // lost so we need to go down like if we were at the beginning of the list
-    // again.
-    case 200:
-      // Removing the second element while on the first then going down and
-      // push enter. Value should be one from the third suggesion.
-      synthesizeKey("KEY_ArrowDown");
-      datalist = document.getElementById("suggest");
-      let toRemove = datalist.children[1];
-      datalist.removeChild(toRemove);
+  input.blur();
+  await SpecialPowers.pushPrefEnv({
+    clear: [["dom.input_event.allow_to_cancel_set_user_input"]],
+  });
+});
 
-      SimpleTest.executeSoon(function() {
-        synthesizeKey("KEY_ArrowDown");
-        synthesizeKey("KEY_ArrowDown");
-        synthesizeKey("KEY_Enter");
-        checkForm("final");
+add_task(async function attempt_to_delete_datalist_entries(){
+  const input = await openPopupOn("#form5 input");
+  assertAutocompleteItems("history1", "history2", "PASS1", "PASS2", "final");
 
-        // Restore the element.
-        datalist.insertBefore(toRemove, datalist.children[1]);
-        expectPopup();
-        restoreForm();
-        synthesizeKey("KEY_ArrowDown");
-      });
-      break;
+  assertValueAfterKeys(
+    input,
+    ["KEY_ArrowDown", "KEY_ArrowDown", "KEY_ArrowDown"],
+    "");
 
-    case 201:
-      // Adding an attribute after the first one while on the first then going
-      // down and push enter. Value should be the on from the new suggestion.
-      synthesizeKey("KEY_ArrowDown");
-      datalist = document.getElementById("suggest");
-      let added = new Option("Foo");
-      datalist.insertBefore(added, datalist.children[1]);
-      waitForMenuChange(4);
-      break;
+  deleteSelectedAutocompleteItem();
+  synthesizeKey("KEY_ArrowUp");
+  deleteSelectedAutocompleteItem();
+  await notifyMenuChanged(4);
+  assertAutocompleteItems("history1", "PASS1", "PASS2", "final");
+  // Delete the second entry, that is the 1st entry of datalist.
+  // This has no effect.
+  deleteSelectedAutocompleteItem();
 
-    case 202:
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_Enter");
-      checkForm("Foo");
+  // Delete the first entry, that is the 1nd entry of history.
+  synthesizeKey("KEY_ArrowUp");
+  deleteSelectedAutocompleteItem();
+  await notifyMenuChanged(3);
 
-      // Remove the element.
-      datalist = document.getElementById("suggest");
-      datalist.removeChild(datalist.children[1]);
-      waitForMenuChange(0);
-      break;
+  assertAutocompleteItems("PASS1", "PASS2", "final");
+  assertValueAfterKeys(input, "KEY_Enter", "Google");
+});
 
-    case 203:
-      // Change the first element value attribute.
-      restoreForm();
-      datalist = document.getElementById("suggest");
-      prevValue = datalist.children[0].value;
-      datalist.children[0].value = "foo";
-      expectPopup();
-      break;
-
-    case 204:
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_Enter");
-      checkForm("foo");
-
-      datalist = document.getElementById("suggest");
-      datalist.children[0].value = prevValue;
-      waitForMenuChange(0);
-      break;
-
-    case 205:
-      // Change the textContent to update the value attribute.
-      restoreForm();
-      datalist = document.getElementById("suggest");
-      prevValue = datalist.children[0].getAttribute("value");
-      datalist.children[0].removeAttribute("value");
-      datalist.children[0].textContent = "foobar";
-      expectPopup();
-      break;
-
-    case 206:
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_Enter");
-      checkForm("foobar");
-
-      datalist = document.getElementById("suggest");
-      datalist.children[0].setAttribute("value", prevValue);
-      testNum = 299;
-      waitForMenuChange(0);
-      break;
-
-    // Tests for filtering (or not).
-    case 300:
-      // Filters with first letter of the word.
-      restoreForm();
-      sendString("f");
-      expectPopup();
-      break;
-
-    case 301:
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_Enter");
-      checkForm("final");
-      expectPopup();
-      restoreForm();
-      synthesizeKey("KEY_ArrowDown");
-      break;
-
-    case 302:
-      // Filter with a letter in the middle of the word.
-      sendString("in");
-      waitForMenuChange(1);
-      break;
-
-    case 303:
-      // Continuation of test 302.
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_Enter");
-      checkForm("final");
-      expectPopup();
-      restoreForm();
-      synthesizeKey("KEY_ArrowDown");
-      break;
-
-    case 304:
-      // Filter is disabled with mozNoFilter.
-      input.setAttribute("mozNoFilter", "true");
-      sendString("f");
-      waitForMenuChange(3); // no change
-      break;
-
-    case 305:
-      // Continuation of test 304.
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_Enter");
-      checkForm("Google");
-      input.removeAttribute("mozNoFilter");
-      testNum = 399;
-      expectPopup();
-      restoreForm();
-      synthesizeKey("KEY_ArrowDown");
-      break;
-
-    case 400: {
-      let beforeInputFired = false;
-      input.addEventListener("beforeinput", (event) => {
-        beforeInputFired = true;
-        ok(event instanceof InputEvent,
-           `${testNum} "beforeinput" event should be dispatched with InputEvent interface`);
-        ok(event.bubbles, `${testNum} "beforeinput" event should bubble`);
-        is(event.cancelable, kSetUserInputCancelable, `${testNum} "beforeinput" event for "insertReplacementText" should be cancelable unless it's suppressed`);
-        is(event.inputType, "insertReplacementText", `${testNum} inputType of "beforeinput" event should be "insertReplacementText"`);
-        is(event.data, "Google", `${testNum} data of "beforeinput" event should be "Google"`);
-        is(event.dataTransfer, null, `${testNum} dataTransfer of "beforeinput" event should be null`);
-        is(event.getTargetRanges().length, 0, `${testNum} getTargetRanges() of "beforeinput" event should be empty array`);
-      }, {once: true});
-      let inputFired = false;
-      input.addEventListener("input", function(event) {
-        inputFired = true;
-        ok(event instanceof InputEvent,
-           `${testNum} "input" event should be dispatched with InputEvent interface`);
-        ok(event.bubbles, `${testNum} "input" event should bubble`);
-        ok(!event.cancelable, `${testNum} "input" event should be cancelable`);
-        is(event.inputType, "insertReplacementText", `${testNum} inputType of "input" event should be "insertReplacementText"`);
-        is(event.data, "Google", `${testNum} data of "input" event should be "Google"`);
-        is(event.dataTransfer, null, `${testNum} dataTransfer of "input" event should be null`);
-        is(event.getTargetRanges().length, 0, `${testNum} getTargetRanges() of "input" event should be empty array`);
-        checkForm("Google");
-      }, {once: true});
-
-      synthesizeKey("KEY_ArrowDown");
-      checkForm("");
-      synthesizeKey("KEY_Enter");
-      ok(beforeInputFired, `${testNum} "beforeinput" event should've been fired`);
-      ok(inputFired, `${testNum} "input" event should've been fired`);
-
-      expectPopup();
-      restoreForm();
-      synthesizeKey("KEY_ArrowDown");
-      break;
+for (const input of document
+  .querySelectorAll("form#show_datalist_for_text_inputs_only input")) {
+  const expectPopup = input.getAttribute("popup") == "true";
+  add_named_task(
+    `datalist_is_${expectPopup ? "" : "not_"}shown_for_${input.type}_input`,
+    async () => {
+      input.focus();
+      is(document.activeElement, input, "Input is focused.");
+      await (expectPopup ? popupAfterArrowDown() : noPopupAfterArrowDown());
     }
-
-    case 401: {
-      await SpecialPowers.pushPrefEnv({
-        set: [["dom.input_event.allow_to_cancel_set_user_input", true]],
-      });
-      input.addEventListener("beforeinput", (event) => { event.preventDefault(); }, {once: true});
-      let inputFired = false;
-      input.addEventListener("input", () => { inputFired = true; }, {once: true});
-
-      restoreForm();
-      synthesizeKey("KEY_ArrowDown");
-      checkForm("");
-      synthesizeKey("KEY_Enter");
-      ok(!inputFired, `${testNum} "input" event should not have been fired since "beforeinput" was canceled`);
-      checkForm("");
-
-      input.blur();
-      await SpecialPowers.pushPrefEnv({
-        clear: [["dom.input_event.allow_to_cancel_set_user_input"]],
-      });
-
-      testNum = 499;
-      input = getFormElementByName(5, "field3");
-      checkForm("");
-      expectPopup();
-      restoreForm();
-      synthesizeKey("KEY_ArrowDown");
-      break;
-    }
-
-    case 500:
-      checkMenuEntries(["history1", "history2", "PASS1", "PASS2", "final"],
-                       testNum);
-
-      // Delete the third entry, that is the 1st entry of datalist.
-      // This has no effect.
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_ArrowDown");
-      synthesizeKey("KEY_Delete", {shiftKey: true});
-
-      // Delete the second entry, that is the 2nd entry of history.
-      synthesizeKey("KEY_ArrowUp");
-      synthesizeKey("KEY_Delete", {shiftKey: true});
-      waitForMenuChange(4);
-      break;
-
-    case 501:
-      checkMenuEntries(["history1", "PASS1", "PASS2", "final"], testNum);
-
-      // Delete the second entry, that is the 1st entry of datalist.
-      // This has no effect.
-      synthesizeKey("KEY_Delete", {shiftKey: true});
-
-      // Delete the first entry, that is the 1nd entry of history.
-      synthesizeKey("KEY_ArrowUp");
-      synthesizeKey("KEY_Delete", {shiftKey: true});
-      waitForMenuChange(3);
-      break;
-
-    case 502:
-      checkMenuEntries(["PASS1", "PASS2", "final"], testNum);
-      synthesizeKey("KEY_Enter");
-      checkForm("Google");
-
-      SimpleTest.finish();
-      break;
-
-    default:
-      ok(false, "Unexpected invocation of test #" + testNum);
-      SimpleTest.finish();
-  }
+  );
 }
-
-function waitForMenuChange(expectedCount) {
-  notifyMenuChanged(expectedCount, null, runTest);
-}
-
-function checkMenuEntries(expectedValues, testNumber) {
-  let actualValues = getMenuEntries();
-  is(actualValues.length, expectedValues.length, testNumber + " Checking length of expected menu");
-  for (let i = 0; i < expectedValues.length; i++) {
-    is(actualValues[i], expectedValues[i], testNumber + " Checking menu entry #" + i);
-  }
-}
-
-window.onload = () => setupFormHistory(runTest);
-
-SimpleTest.waitForExplicitFinish();
 </script>
-</pre>
 </body>
 </html>
