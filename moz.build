@@ -35,6 +35,9 @@ with Files("docs/**"):
 with Files("mach*"):
     BUG_COMPONENT = ("Firefox Build System", "Mach Core")
 
+with Files("pyproject.toml"):
+    BUG_COMPONENT = ("Developer Infrastructure", "Lint and Formatting")
+
 with Files("*moz*"):
     BUG_COMPONENT = ("Firefox Build System", "General")
 
