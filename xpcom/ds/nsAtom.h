@@ -277,9 +277,21 @@ class nsAtomString : public nsString {
   explicit nsAtomString(const nsAtom* aAtom) { aAtom->ToString(*this); }
 };
 
+class nsAutoAtomString : public nsAutoString {
+ public:
+  explicit nsAutoAtomString(const nsAtom* aAtom) { aAtom->ToString(*this); }
+};
+
 class nsAtomCString : public nsCString {
  public:
   explicit nsAtomCString(const nsAtom* aAtom) { aAtom->ToUTF8String(*this); }
+};
+
+class nsAutoAtomCString : public nsAutoCString {
+ public:
+  explicit nsAutoAtomCString(const nsAtom* aAtom) {
+    aAtom->ToUTF8String(*this);
+  }
 };
 
 class nsDependentAtomString : public nsDependentString {
