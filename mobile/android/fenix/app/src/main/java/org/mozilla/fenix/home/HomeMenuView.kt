@@ -75,6 +75,13 @@ class HomeMenuView(
     }
 
     /**
+     * Dismisses the menu.
+     */
+    fun dismissMenu() {
+        menuButton.get()?.dismissMenu()
+    }
+
+    /**
      * Callback invoked when a menu item is tapped on.
      */
     @Suppress("LongMethod", "ComplexMethod")

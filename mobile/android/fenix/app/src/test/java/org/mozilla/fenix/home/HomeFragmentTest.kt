@@ -10,7 +10,6 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.verify
-import mozilla.components.browser.menu.view.MenuButton
 import mozilla.components.browser.state.state.SearchState
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.feature.top.sites.TopSite
@@ -97,12 +96,13 @@ class HomeFragmentTest {
     }
 
     @Test
-    fun `WHEN configuration changed menu is dismissed`() {
-        val menuButton: MenuButton = mockk(relaxed = true)
-        homeFragment.getMenuButton = { menuButton }
+    fun `WHEN configuration changed THEN menu is dismissed`() {
+        val homeMenuView: HomeMenuView = mockk(relaxed = true)
+        homeFragment.homeMenuView = homeMenuView
+
         homeFragment.onConfigurationChanged(mockk(relaxed = true))
 
-        verify(exactly = 1) { menuButton.dismissMenu() }
+        verify(exactly = 1) { homeMenuView.dismissMenu() }
     }
 
     fun `GIVEN the user is in normal mode WHEN checking if should enable wallpaper THEN return true`() {

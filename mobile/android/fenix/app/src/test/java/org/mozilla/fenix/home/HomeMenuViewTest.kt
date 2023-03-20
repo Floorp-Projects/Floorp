@@ -9,6 +9,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.spyk
 import io.mockk.verify
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.menu.view.MenuButton
@@ -46,7 +47,7 @@ class HomeMenuViewTest {
     private lateinit var lifecycleOwner: LifecycleOwner
     private lateinit var homeActivity: HomeActivity
     private lateinit var navController: NavController
-    private lateinit var menuButton: WeakReference<MenuButton>
+    private lateinit var menuButton: MenuButton
     private lateinit var homeMenuView: HomeMenuView
 
     @Before
@@ -54,8 +55,9 @@ class HomeMenuViewTest {
         view = mockk(relaxed = true)
         lifecycleOwner = mockk(relaxed = true)
         homeActivity = mockk(relaxed = true)
-        menuButton = mockk(relaxed = true)
         navController = mockk(relaxed = true)
+
+        menuButton = spyk(MenuButton(testContext))
 
         homeMenuView = HomeMenuView(
             view = view,
@@ -63,9 +65,18 @@ class HomeMenuViewTest {
             lifecycleOwner = lifecycleOwner,
             homeActivity = homeActivity,
             navController = navController,
-            menuButton = menuButton,
+            menuButton = WeakReference(menuButton),
             hideOnboardingIfNeeded = {},
         )
+    }
+
+    @Test
+    fun `WHEN dismiss menu is called THEN the menu is dismissed`() {
+        homeMenuView.dismissMenu()
+
+        verify {
+            menuButton.dismissMenu()
+        }
     }
 
     @Test
