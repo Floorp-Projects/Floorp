@@ -720,6 +720,9 @@ class TopSitesFeed {
             // Actual position can shift based on other content.
             // We send the intended position in the ping.
             pos: positionIndex,
+            // Set this so that SPOC topsites won't be shown in the URL bar.
+            // See Bug 1822027. Note that `sponsored_position` is 1-based.
+            sponsored_position: positionIndex + 1,
           };
           sponsored.push(link);
         }

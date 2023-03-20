@@ -645,6 +645,7 @@ describe("Top Sites Feed", () => {
         const result = await feed.getLinksWithDefaults();
         assert.equal(result[1].type, "SPOC");
         assert.equal(result[1].title, "test spoc");
+        assert.equal(result[1].sponsored_position, 2);
         assert.equal(result[1].url, "https://test-spoc.com");
       });
     });
