@@ -115,6 +115,6 @@ class BrowsingContext(BidiModule):
         return params
 
     @print.result
-    def _print(self, result: Mapping[str, Any]) -> bytes:
+    def _print(self, result: Mapping[str, Any]) -> Any:
         assert result["data"] is not None
         return result["data"]
