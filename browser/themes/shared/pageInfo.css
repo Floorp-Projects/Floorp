@@ -184,7 +184,7 @@ html|input:disabled {
 #mediaSplitter {
   background: none;
   appearance: none;
-  font-style: none;
+  border-style: none;
 }
 
 @media not (-moz-platform: macos) {
