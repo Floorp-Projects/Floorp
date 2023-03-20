@@ -217,7 +217,6 @@ add_setup(async function enableHtmlViews() {
 });
 
 add_task(async function testOpenDetailView() {
-  Services.telemetry.clearEvents();
   let id = "test@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -291,45 +290,9 @@ add_task(async function testOpenDetailView() {
   await closeView(win);
   await extension.unload();
   await extension2.unload();
-
-  assertAboutAddonsTelemetryEvents([
-    ["addonsManager", "view", "aboutAddons", "list", { type: "extension" }],
-    [
-      "addonsManager",
-      "view",
-      "aboutAddons",
-      "detail",
-      { type: "extension", addonId: id },
-    ],
-    ["addonsManager", "view", "aboutAddons", "list", { type: "extension" }],
-    [
-      "addonsManager",
-      "view",
-      "aboutAddons",
-      "detail",
-      { type: "extension", addonId: id },
-    ],
-    ["addonsManager", "view", "aboutAddons", "list", { type: "extension" }],
-    [
-      "addonsManager",
-      "view",
-      "aboutAddons",
-      "detail",
-      { type: "extension", addonId: id2 },
-    ],
-    ["addonsManager", "view", "aboutAddons", "list", { type: "extension" }],
-    [
-      "addonsManager",
-      "view",
-      "aboutAddons",
-      "detail",
-      { type: "extension", addonId: id2 },
-    ],
-  ]);
 });
 
 add_task(async function testDetailOperations() {
-  Services.telemetry.clearEvents();
   let id = "test@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -431,57 +394,9 @@ add_task(async function testDetailOperations() {
 
   await closeView(win);
   await extension.unload();
-
-  assertAboutAddonsTelemetryEvents([
-    ["addonsManager", "view", "aboutAddons", "list", { type: "extension" }],
-    [
-      "addonsManager",
-      "view",
-      "aboutAddons",
-      "detail",
-      { type: "extension", addonId: id },
-    ],
-    [
-      "addonsManager",
-      "action",
-      "aboutAddons",
-      null,
-      { type: "extension", addonId: id, action: "disable", view: "detail" },
-    ],
-    [
-      "addonsManager",
-      "action",
-      "aboutAddons",
-      null,
-      { type: "extension", addonId: id, action: "enable" },
-    ],
-    [
-      "addonsManager",
-      "action",
-      "aboutAddons",
-      "cancelled",
-      { type: "extension", addonId: id, action: "uninstall", view: "detail" },
-    ],
-    [
-      "addonsManager",
-      "action",
-      "aboutAddons",
-      "accepted",
-      { type: "extension", addonId: id, action: "uninstall", view: "detail" },
-    ],
-    ["addonsManager", "view", "aboutAddons", "list", { type: "extension" }],
-    [
-      "addonsManager",
-      "action",
-      "aboutAddons",
-      null,
-      { type: "extension", addonId: id, action: "undo", view: "list" },
-    ],
-  ]);
 });
 
 add_task(async function testFullDetails() {
-  Services.telemetry.clearEvents();
   let id = "addon1@mochi.test";
   let headingId = "addon1_mochi_test-heading";
   let win = await loadInitialView("extension");
@@ -660,28 +575,9 @@ add_task(async function testFullDetails() {
   is(rows.length, 0, "There are no more rows left");
 
   await closeView(win);
-
-  assertAboutAddonsTelemetryEvents([
-    ["addonsManager", "view", "aboutAddons", "list", { type: "extension" }],
-    [
-      "addonsManager",
-      "view",
-      "aboutAddons",
-      "detail",
-      { type: "extension", addonId: id },
-    ],
-    [
-      "addonsManager",
-      "action",
-      "aboutAddons",
-      null,
-      { type: "extension", addonId: id, action: "contribute", view: "detail" },
-    ],
-  ]);
 });
 
 add_task(async function testFullDetailsShowMoreButton() {
-  Services.telemetry.clearEvents();
   const id = "addon3@mochi.test";
   const win = await loadInitialView("extension");
 
@@ -912,7 +808,6 @@ add_task(async function testSitePermission() {
 });
 
 add_task(async function testPrivateBrowsingExtension() {
-  Services.telemetry.clearEvents();
   let id = "pb@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -1008,60 +903,6 @@ add_task(async function testPrivateBrowsingExtension() {
 
   await closeView(win);
   await extension.unload();
-
-  assertAboutAddonsTelemetryEvents([
-    ["addonsManager", "view", "aboutAddons", "list", { type: "extension" }],
-    [
-      "addonsManager",
-      "view",
-      "aboutAddons",
-      "detail",
-      { type: "extension", addonId: id },
-    ],
-    [
-      "addonsManager",
-      "action",
-      "aboutAddons",
-      "on",
-      {
-        type: "extension",
-        addonId: id,
-        action: "privateBrowsingAllowed",
-        view: "detail",
-      },
-    ],
-    [
-      "addonsManager",
-      "action",
-      "aboutAddons",
-      null,
-      { type: "extension", addonId: id, action: "disable" },
-    ],
-    [
-      "addonsManager",
-      "action",
-      "aboutAddons",
-      "off",
-      {
-        type: "extension",
-        addonId: id,
-        action: "privateBrowsingAllowed",
-        view: "detail",
-      },
-    ],
-    [
-      "addonsManager",
-      "action",
-      "aboutAddons",
-      "on",
-      {
-        type: "extension",
-        addonId: id,
-        action: "privateBrowsingAllowed",
-        view: "detail",
-      },
-    ],
-  ]);
 });
 
 add_task(async function testInvalidExtension() {

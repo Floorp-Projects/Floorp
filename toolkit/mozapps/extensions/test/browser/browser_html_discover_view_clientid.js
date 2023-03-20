@@ -88,8 +88,6 @@ add_task(async function clientid_enabled() {
     "Moz-Client-Id should be set when telemetry & discovery are enabled"
   );
 
-  Services.telemetry.clearEvents();
-
   let tabbrowser = win.windowRoot.ownerGlobal.gBrowser;
   let expectedUrl = `${serverBaseUrl}sumo/personalized-addons`;
   let tabPromise = BrowserTestUtils.waitForNewTab(tabbrowser, expectedUrl);
@@ -101,19 +99,6 @@ add_task(async function clientid_enabled() {
   BrowserTestUtils.removeTab(tab);
 
   await closeView(win);
-
-  assertAboutAddonsTelemetryEvents(
-    [
-      [
-        "addonsManager",
-        "link",
-        "aboutAddons",
-        "disconotice",
-        { view: "discover" },
-      ],
-    ],
-    { methods: ["link"] }
-  );
 });
 
 // Test that the clientid is not sent when disabled via prefs.

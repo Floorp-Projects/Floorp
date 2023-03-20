@@ -138,11 +138,6 @@ async function hasPrivateAllowed(id) {
   return perms.permissions.includes("internal:privateBrowsingAllowed");
 }
 
-add_task(function clearInitialTelemetry() {
-  // Clear out any telemetry data that existed before this file is run.
-  Services.telemetry.clearEvents();
-});
-
 add_task(async function test_badge_and_toggle_incognito() {
   let addons = new Map([
     [
@@ -251,39 +246,6 @@ add_task(async function test_badge_and_toggle_incognito() {
   for (let extension of extensions) {
     await extension.unload();
   }
-
-  const expectedExtras = {
-    action: "privateBrowsingAllowed",
-    view: "detail",
-    type: "extension",
-  };
-
-  assertAboutAddonsTelemetryEvents(
-    [
-      [
-        "addonsManager",
-        "action",
-        "aboutAddons",
-        "on",
-        { ...expectedExtras, addonId: "@test-default" },
-      ],
-      [
-        "addonsManager",
-        "action",
-        "aboutAddons",
-        "off",
-        { ...expectedExtras, addonId: "@test-override" },
-      ],
-      [
-        "addonsManager",
-        "action",
-        "aboutAddons",
-        "off",
-        { ...expectedExtras, addonId: "@test-override-permanent" },
-      ],
-    ],
-    { methods: ["action"] }
-  );
 });
 
 add_task(async function test_addon_preferences_button() {

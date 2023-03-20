@@ -14,15 +14,6 @@ ChromeUtils.defineModuleGetter(
 const { EnterprisePolicyTesting } = ChromeUtils.importESModule(
   "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
 );
-const { TelemetryTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/TelemetryTestUtils.sys.mjs"
-);
-
-const TELEMETRY_EVENTS_FILTERS = {
-  category: "addonsManager",
-  method: "action",
-};
-
 loadTestSubscript("head_unified_extensions.js");
 
 // We expect this rejection when the abuse report dialog window is
@@ -222,8 +213,6 @@ add_task(
 );
 
 add_task(async function test_manage_extension() {
-  Services.telemetry.clearEvents();
-
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:robots" },
     async () => {
@@ -254,17 +243,6 @@ add_task(async function test_manage_extension() {
       BrowserTestUtils.removeTab(aboutAddonsTab);
 
       await extension.unload();
-
-      TelemetryTestUtils.assertEvents(
-        [
-          {
-            object: "unifiedExtensions",
-            value: null,
-            extra: { addonId: extension.id, action: "manage" },
-          },
-        ],
-        TELEMETRY_EVENTS_FILTERS
-      );
     }
   );
 });
@@ -324,8 +302,6 @@ add_task(async function test_report_extension() {
 });
 
 add_task(async function test_remove_extension() {
-  Services.telemetry.clearEvents();
-
   const [extension] = createExtensions([{ name: "an extension" }]);
   await extension.startup();
 
@@ -362,22 +338,9 @@ add_task(async function test_remove_extension() {
   await extension.unload();
   // Restore prompt service.
   Services.prompt = prompt;
-
-  TelemetryTestUtils.assertEvents(
-    [
-      {
-        object: "unifiedExtensions",
-        value: "accepted",
-        extra: { addonId: extension.id, action: "uninstall" },
-      },
-    ],
-    TELEMETRY_EVENTS_FILTERS
-  );
 });
 
 add_task(async function test_remove_extension_cancelled() {
-  Services.telemetry.clearEvents();
-
   const [extension] = createExtensions([{ name: "an extension" }]);
   await extension.startup();
 
@@ -423,17 +386,6 @@ add_task(async function test_remove_extension_cancelled() {
   await extension.unload();
   // Restore prompt service.
   Services.prompt = prompt;
-
-  TelemetryTestUtils.assertEvents(
-    [
-      {
-        object: "unifiedExtensions",
-        value: "cancelled",
-        extra: { addonId: extension.id, action: "uninstall" },
-      },
-    ],
-    TELEMETRY_EVENTS_FILTERS
-  );
 });
 
 add_task(async function test_open_context_menu_on_click() {

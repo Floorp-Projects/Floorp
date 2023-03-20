@@ -41,11 +41,6 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   lazy,
-  "AMTelemetry",
-  "resource://gre/modules/AddonManager.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
   "DragPositionManager",
   "resource:///modules/DragPositionManager.jsm"
 );
@@ -1404,19 +1399,11 @@ CustomizeMode.prototype = {
   },
 
   openAddonsManagerThemes() {
-    lazy.AMTelemetry.recordLinkEvent({
-      object: "customize",
-      value: "manageThemes",
-    });
     this.window.BrowserOpenAddonsMgr("addons://list/theme");
   },
 
   getMoreThemes(aEvent) {
     aEvent.target.parentNode.parentNode.hidePopup();
-    lazy.AMTelemetry.recordLinkEvent({
-      object: "customize",
-      value: "getThemes",
-    });
     let getMoreURL = Services.urlFormatter.formatURLPref(
       "lightweightThemes.getMoreURL"
     );

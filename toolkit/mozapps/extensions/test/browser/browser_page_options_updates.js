@@ -18,7 +18,6 @@ const PREF_UPDATE_ENABLED = "extensions.update.enabled";
 const PREF_AUTOUPDATE_DEFAULT = "extensions.update.autoUpdateDefault";
 
 add_task(async function testUpdateAutomaticallyButton() {
-  Services.telemetry.clearEvents();
   SpecialPowers.pushPrefEnv({
     set: [
       [PREF_UPDATE_ENABLED, true],
@@ -52,26 +51,6 @@ add_task(async function testUpdateAutomaticallyButton() {
   toggleAutomaticButton.click();
   ok(AddonManager.autoUpdateDefault, "Auto updates are enabled again");
   ok(AddonManager.updateEnabled, "Updates are enabled");
-
-  assertAboutAddonsTelemetryEvents(
-    [
-      [
-        "addonsManager",
-        "action",
-        "aboutAddons",
-        "enabled",
-        { action: "setUpdatePolicy", view: "list" },
-      ],
-      [
-        "addonsManager",
-        "action",
-        "aboutAddons",
-        "default,enabled",
-        { action: "setUpdatePolicy", view: "list" },
-      ],
-    ],
-    { methods: ["action"] }
-  );
 
   await closeView(win);
 });
@@ -138,26 +117,6 @@ add_task(async function testResetUpdateStates() {
     win.document.l10n.getAttributes(resetStateButton).id,
     "addon-updates-reset-updates-to-manual",
     "The reset button label says it resets to manual"
-  );
-
-  assertAboutAddonsTelemetryEvents(
-    [
-      [
-        "addonsManager",
-        "action",
-        "aboutAddons",
-        null,
-        { action: "resetUpdatePolicy", view: "list" },
-      ],
-      [
-        "addonsManager",
-        "action",
-        "aboutAddons",
-        null,
-        { action: "resetUpdatePolicy", view: "list" },
-      ],
-    ],
-    { methods: ["action"] }
   );
 
   await closeView(win);
