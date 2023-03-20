@@ -509,8 +509,8 @@ class nsDocShell final : public nsDocLoader,
   already_AddRefed<nsIInputStream> GetPostDataFromCurrentEntry() const;
   mozilla::Maybe<uint32_t> GetCacheKeyFromCurrentEntry() const;
 
-  // Loading and/or active entries are only set when pref
-  // fission.sessionHistoryInParent is on.
+  // Loading and/or active entries are only set when session history
+  // in the parent is on.
   bool FillLoadStateFromCurrentEntry(nsDocShellLoadState& aLoadState);
 
   static bool ShouldAddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel);

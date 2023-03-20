@@ -5087,11 +5087,11 @@
   value: true
   mirror: always
 
-# Store the session history in the parent process, and access it over IPC
-# from the child processes.
-- name: fission.sessionHistoryInParent
+# Disable storing the session history in the parent process, and accessing it
+# over IPC from the child processes.
+- name: fission.disableSessionHistoryInParent
   type: bool
-  value: false
+  value: @IS_ANDROID@
   mirror: once
   do_not_use_directly: true
 
