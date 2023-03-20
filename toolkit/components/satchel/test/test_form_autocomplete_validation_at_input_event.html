@@ -21,82 +21,63 @@
   </form>
 </div>
 
-<pre id="test">
-<script class="testbody" type="text/javascript">
+<script>
 
-SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(async () => {
-  function promiseInitFormHistory() {
-    return new Promise(resolve => {
-      updateFormHistory([
-        { op: "remove" },
-        { op: "add", fieldname: "field1", value: "1234" },
-        { op: "add", fieldname: "field1", value: "12345" },
-      ], resolve);
-    });
-  }
-  await promiseInitFormHistory();
-
-  let input = document.querySelector("input[name=field1]");
-  input.focus();
-
-  let resolver;
-  function onPopup() {
-    if (resolver) {
-      resolver();
-    }
-  }
-  registerPopupShownListener(onPopup);
-
-  function promiseOpenPopup() {
-    return new Promise(resolve => {
-      resolver = resolve;
-    });
-  }
-  let waitForOpenPopup = promiseOpenPopup();
-  let inputFired = false;
-  ok(true, "Typing first character to open popup...");
-  input.addEventListener("input", (aEvent) => {
-    inputFired = true;
-    is(aEvent.inputType, "insertText", 'Typing "1" should cause an "input" event whose inputType is "insertText"');
-    is(input.validity.valid, false, 'Typing "1" should mark it as "invalid"');
-    is(input.matches(":invalid"), true, 'Typing "1" should cause matching with ":invalid" pseudo-class');
-  }, {once: true, capture: true});
-  synthesizeKey("1");
-  ok(inputFired, 'Typing "1" should cause one "input" event');
-  await waitForOpenPopup;
-
-  inputFired = false;
-  input.addEventListener("input", (aEvent) => {
-    inputFired = true;
-    is(aEvent.inputType, "insertReplacementText", 'Selecting valid value should cause an "input" event whose inputType is "insertReplacementText"');
-    is(input.validity.valid, true, 'Selecting valid value should mark it as "valid"');
-    is(input.matches(":invalid"), false, 'Selecting valid value should cause not matching with ":invalid" pseudo-class');
-  }, {once:true, capture:true});
-  synthesizeKey("KEY_ArrowDown");
-  synthesizeKey("KEY_Enter");
-  ok(inputFired, 'Selecting valid item should cause an "input" event');
-
-  ok(true, "Reopening popup...");
-  waitForOpenPopup = promiseOpenPopup();
-  synthesizeKey("KEY_ArrowDown");
-  await waitForOpenPopup;
-
-  inputFired = false;
-  input.addEventListener("input", (aEvent) => {
-    inputFired = true;
-    is(aEvent.inputType, "insertReplacementText", 'Selecting invalid value should cause an "input" event whose inputType is "insertReplacementText"');
-    is(input.validity.valid, false, 'Selecting invalid value should mark it as "invalid"');
-    is(input.matches(":invalid"), true, 'Selecting invalid value should cause matching with ":invalid" pseudo-class');
-  }, {once:true, capture:true});
-  synthesizeKey("KEY_ArrowDown");
-  synthesizeKey("KEY_ArrowDown");
-  synthesizeKey("KEY_Enter");
-  ok(inputFired, 'Selecting invalid item should cause an "input" event');
-
-  SimpleTest.finish();
+add_setup(async () => {
+  await updateFormHistory([
+    { op: "remove" },
+    { op: "add", fieldname: "field1", value: "1234" },
+    { op: "add", fieldname: "field1", value: "12345" },
+  ]);
 });
+
+add_task(async function input_events() {
+  const input = await openPopupOn("input[name=field1]");
+  synthesizeKey("KEY_Escape");
+
+  let inputFired = false;
+  info("Typing first character to open popup...");
+  input.addEventListener("input", e => {
+    inputFired = true;
+    is(e.inputType, "insertText", "Typing '1' produces 'input' event with inputType='insertText'");
+    is(input.validity.valid, false, "Typing '1' marks it as 'invalid'");
+    is(input.matches(":invalid"), true, "Typing '1' causes matching with ':invalid' pseudo-class");
+  }, { once: true, capture: true });
+  synthesizeKey("1");
+  ok(inputFired, "Typing '1' causes one 'input' event");
+});
+
+add_task(async function input_events_for_valid_selection() {
+  const input = await openPopupOn("input[name=field1]");
+
+  let inputFired = false;
+  input.addEventListener("input", e => {
+    inputFired = true;
+    is(e.inputType, "insertReplacementText", "Selecting valid value causes an 'input' event with inputType='insertReplacementText'");
+    is(input.validity.valid, true, "Selecting valid value marks it as 'valid'");
+    is(input.matches(":invalid"), false, "Selecting valid value causes not matching with ':invalid' pseudo-class");
+  }, { once: true, capture: true });
+  synthesizeKey("KEY_ArrowDown");
+  synthesizeKey("KEY_Enter");
+  ok(inputFired, "Selecting valid item causes an 'input' event");
+});
+
+add_task(async function input_events_for_invalid_selection() {
+  const input = await openPopupOn("input[name=field1]");
+
+  let inputFired = false;
+  input.addEventListener("input", e => {
+    inputFired = true;
+    is(e.inputType, "insertReplacementText", "Selecting invalid value causes an 'input' event with inputType='insertReplacementText'");
+    is(input.validity.valid, false, "Selecting invalid value marks it as 'invalid'");
+    is(input.matches(":invalid"), true, "Selecting invalid value causes matching with ':invalid' pseudo-class");
+  }, { once: true, capture: true });
+  synthesizeKey("KEY_ArrowDown");
+  synthesizeKey("KEY_ArrowDown");
+  synthesizeKey("KEY_Enter");
+  ok(inputFired, "Selecting invalid item should cause an 'input' event");
+});
+
 </script>
-</pre>
 </body>
 </html>
