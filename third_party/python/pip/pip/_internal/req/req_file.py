@@ -8,7 +8,17 @@ import re
 import shlex
 import urllib.parse
 from optparse import Values
-from typing import TYPE_CHECKING, Any, Callable, Dict, Iterator, List, Optional, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Generator,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+)
 
 from pip._internal.cli import cmdoptions
 from pip._internal.exceptions import InstallationError, RequirementsFileParseError
@@ -25,20 +35,20 @@ if TYPE_CHECKING:
 
     from pip._internal.index.package_finder import PackageFinder
 
-__all__ = ['parse_requirements']
+__all__ = ["parse_requirements"]
 
-ReqFileLines = Iterator[Tuple[int, str]]
+ReqFileLines = Iterable[Tuple[int, str]]
 
 LineParser = Callable[[str], Tuple[str, Values]]
 
-SCHEME_RE = re.compile(r'^(http|https|file):', re.I)
-COMMENT_RE = re.compile(r'(^|\s+)#.*$')
+SCHEME_RE = re.compile(r"^(http|https|file):", re.I)
+COMMENT_RE = re.compile(r"(^|\s+)#.*$")
 
 # Matches environment variable-style values in '${MY_VARIABLE_1}' with the
 # variable name consisting of only uppercase letters, digits or the '_'
 # (underscore). This follows the POSIX standard defined in IEEE Std 1003.1,
 # 2013 Edition.
-ENV_VAR_RE = re.compile(r'(?P<var>\$\{(?P<name>[A-Z0-9_]+)\})')
+ENV_VAR_RE = re.compile(r"(?P<var>\$\{(?P<name>[A-Z0-9_]+)\})")
 
 SUPPORTED_OPTIONS: List[Callable[..., optparse.Option]] = [
     cmdoptions.index_url,
@@ -119,7 +129,7 @@ def parse_requirements(
     finder: Optional["PackageFinder"] = None,
     options: Optional[optparse.Values] = None,
     constraint: bool = False,
-) -> Iterator[ParsedRequirement]:
+) -> Generator[ParsedRequirement, None, None]:
     """Parse a requirements file and yield ParsedRequirement instances.
 
     :param filename:    Path or url of requirements file.
@@ -134,10 +144,7 @@ def parse_requirements(
 
     for parsed_line in parser.parse(filename, constraint):
         parsed_req = handle_line(
-            parsed_line,
-            options=options,
-            finder=finder,
-            session=session
+            parsed_line, options=options, finder=finder, session=session
         )
         if parsed_req is not None:
             yield parsed_req
@@ -161,8 +168,10 @@ def handle_requirement_line(
 ) -> ParsedRequirement:
 
     # preserve for the nested code path
-    line_comes_from = '{} {} (line {})'.format(
-        '-c' if line.constraint else '-r', line.filename, line.lineno,
+    line_comes_from = "{} {} (line {})".format(
+        "-c" if line.constraint else "-r",
+        line.filename,
+        line.lineno,
     )
 
     assert line.is_requirement
@@ -177,17 +186,13 @@ def handle_requirement_line(
             constraint=line.constraint,
         )
     else:
-        if options:
-            # Disable wheels if the user has specified build options
-            cmdoptions.check_install_build_global(options, line.opts)
-
         # get the options that apply to requirements
         req_options = {}
         for dest in SUPPORTED_OPTIONS_REQ_DEST:
             if dest in line.opts.__dict__ and line.opts.__dict__[dest]:
                 req_options[dest] = line.opts.__dict__[dest]
 
-        line_source = f'line {line.lineno} of {line.filename}'
+        line_source = f"line {line.lineno} of {line.filename}"
         return ParsedRequirement(
             requirement=line.requirement,
             is_editable=line.is_editable,
@@ -213,19 +218,20 @@ def handle_option_line(
             options.require_hashes = opts.require_hashes
         if opts.features_enabled:
             options.features_enabled.extend(
-                f for f in opts.features_enabled
-                if f not in options.features_enabled
+                f for f in opts.features_enabled if f not in options.features_enabled
             )
 
     # set finder options
     if finder:
         find_links = finder.find_links
         index_urls = finder.index_urls
-        if opts.index_url:
-            index_urls = [opts.index_url]
+        no_index = finder.search_scope.no_index
         if opts.no_index is True:
+            no_index = True
             index_urls = []
-        if opts.extra_index_urls:
+        if opts.index_url and not no_index:
+            index_urls = [opts.index_url]
+        if opts.extra_index_urls and not no_index:
             index_urls.extend(opts.extra_index_urls)
         if opts.find_links:
             # FIXME: it would be nice to keep track of the source
@@ -245,6 +251,7 @@ def handle_option_line(
         search_scope = SearchScope(
             find_links=find_links,
             index_urls=index_urls,
+            no_index=no_index,
         )
         finder.search_scope = search_scope
 
@@ -256,7 +263,7 @@ def handle_option_line(
 
         if session:
             for host in opts.trusted_hosts or []:
-                source = f'line {lineno} of {filename}'
+                source = f"line {lineno} of {filename}"
                 session.add_trusted_host(host, source=source)
 
 
@@ -313,18 +320,18 @@ class RequirementsFileParser:
         self._session = session
         self._line_parser = line_parser
 
-    def parse(self, filename: str, constraint: bool) -> Iterator[ParsedLine]:
-        """Parse a given file, yielding parsed lines.
-        """
+    def parse(
+        self, filename: str, constraint: bool
+    ) -> Generator[ParsedLine, None, None]:
+        """Parse a given file, yielding parsed lines."""
         yield from self._parse_and_recurse(filename, constraint)
 
     def _parse_and_recurse(
         self, filename: str, constraint: bool
-    ) -> Iterator[ParsedLine]:
+    ) -> Generator[ParsedLine, None, None]:
         for line in self._parse_file(filename, constraint):
-            if (
-                not line.is_requirement and
-                (line.opts.requirements or line.opts.constraints)
+            if not line.is_requirement and (
+                line.opts.requirements or line.opts.constraints
             ):
                 # parse a nested requirements file
                 if line.opts.requirements:
@@ -342,14 +349,17 @@ class RequirementsFileParser:
                 elif not SCHEME_RE.search(req_path):
                     # do a join so relative paths work
                     req_path = os.path.join(
-                        os.path.dirname(filename), req_path,
+                        os.path.dirname(filename),
+                        req_path,
                     )
 
                 yield from self._parse_and_recurse(req_path, nested_constraint)
             else:
                 yield line
 
-    def _parse_file(self, filename: str, constraint: bool) -> Iterator[ParsedLine]:
+    def _parse_file(
+        self, filename: str, constraint: bool
+    ) -> Generator[ParsedLine, None, None]:
         _, content = get_file_content(filename, self._session)
 
         lines_enum = preprocess(content)
@@ -359,7 +369,7 @@ class RequirementsFileParser:
                 args_str, opts = self._line_parser(line)
             except OptionParsingError as e:
                 # add offending line
-                msg = f'Invalid requirement: {line}\n{e.msg}'
+                msg = f"Invalid requirement: {line}\n{e.msg}"
                 raise RequirementsFileParseError(msg)
 
             yield ParsedLine(
@@ -383,7 +393,12 @@ def get_line_parser(finder: Optional["PackageFinder"]) -> LineParser:
 
         args_str, options_str = break_args_options(line)
 
-        opts, _ = parser.parse_args(shlex.split(options_str), defaults)
+        try:
+            options = shlex.split(options_str)
+        except ValueError as e:
+            raise OptionParsingError(f"Could not split options: {options_str}") from e
+
+        opts, _ = parser.parse_args(options, defaults)
 
         return args_str, opts
 
@@ -395,16 +410,16 @@ def break_args_options(line: str) -> Tuple[str, str]:
     (and then optparse) the options, not the args.  args can contain markers
     which are corrupted by shlex.
     """
-    tokens = line.split(' ')
+    tokens = line.split(" ")
     args = []
     options = tokens[:]
     for token in tokens:
-        if token.startswith('-') or token.startswith('--'):
+        if token.startswith("-") or token.startswith("--"):
             break
         else:
             args.append(token)
             options.pop(0)
-    return ' '.join(args), ' '.join(options)
+    return " ".join(args), " ".join(options)
 
 
 class OptionParsingError(Exception):
@@ -427,6 +442,7 @@ def build_parser() -> optparse.OptionParser:
     # that in our own exception.
     def parser_exit(self: Any, msg: str) -> "NoReturn":
         raise OptionParsingError(msg)
+
     # NOTE: mypy disallows assigning to a method
     #       https://github.com/python/mypy/issues/2427
     parser.exit = parser_exit  # type: ignore
@@ -441,26 +457,26 @@ def join_lines(lines_enum: ReqFileLines) -> ReqFileLines:
     primary_line_number = None
     new_line: List[str] = []
     for line_number, line in lines_enum:
-        if not line.endswith('\\') or COMMENT_RE.match(line):
+        if not line.endswith("\\") or COMMENT_RE.match(line):
             if COMMENT_RE.match(line):
                 # this ensures comments are always matched later
-                line = ' ' + line
+                line = " " + line
             if new_line:
                 new_line.append(line)
                 assert primary_line_number is not None
-                yield primary_line_number, ''.join(new_line)
+                yield primary_line_number, "".join(new_line)
                 new_line = []
             else:
                 yield line_number, line
         else:
             if not new_line:
                 primary_line_number = line_number
-            new_line.append(line.strip('\\'))
+            new_line.append(line.strip("\\"))
 
     # last line contains \
     if new_line:
         assert primary_line_number is not None
-        yield primary_line_number, ''.join(new_line)
+        yield primary_line_number, "".join(new_line)
 
     # TODO: handle space after '\'.
 
@@ -470,7 +486,7 @@ def ignore_comments(lines_enum: ReqFileLines) -> ReqFileLines:
     Strips comments and filter empty lines.
     """
     for line_number, line in lines_enum:
-        line = COMMENT_RE.sub('', line)
+        line = COMMENT_RE.sub("", line)
         line = line.strip()
         if line:
             yield line_number, line
@@ -514,15 +530,15 @@ def get_file_content(url: str, session: PipSession) -> Tuple[str, str]:
     scheme = get_url_scheme(url)
 
     # Pip has special support for file:// URLs (LocalFSAdapter).
-    if scheme in ['http', 'https', 'file']:
+    if scheme in ["http", "https", "file"]:
         resp = session.get(url)
         raise_for_status(resp)
         return resp.url, resp.text
 
     # Assume this is a bare path.
     try:
-        with open(url, 'rb') as f:
+        with open(url, "rb") as f:
             content = auto_decode(f.read())
     except OSError as exc:
-        raise InstallationError(f'Could not open requirements file: {exc}')
+        raise InstallationError(f"Could not open requirements file: {exc}")
     return url, content
