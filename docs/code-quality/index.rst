@@ -100,11 +100,6 @@ In this document, we try to list these all tools.
      - `bug 1555560 <https://bugzilla.mozilla.org/show_bug.cgi?id=1555560>`__
      - :ref:`black`
      - https://black.readthedocs.io/en/stable
-   * - pylint
-     -
-     - `bug 1623024 <https://bugzilla.mozilla.org/show_bug.cgi?id=1623024>`__
-     - :ref:`pylint`
-     - https://www.pylint.org/
 
 .. list-table:: Rust
    :widths: 20 20 20 20 20

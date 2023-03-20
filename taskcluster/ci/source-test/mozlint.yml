@@ -274,19 +274,6 @@ py-ruff:
             - 'tools/lint/python/ruff.py'
             - 'tools/lint/python/ruff_requirements.txt'
 
-py-pylint:
-    description: pylint run over the gecko codebase
-    treeherder:
-        symbol: py(pylint)
-    run:
-        mach: lint -v -l pylint -f treeherder -f json:/builds/worker/mozlint.json *
-    when:
-        files-changed:
-            - '**/*.py'
-            - 'tools/lint/pylint.yml'
-            # moz.configure files are also Python files
-            # However, pylint has some hard time dealing with it
-
 test-manifest:
     description: lint test manifests
     treeherder:
