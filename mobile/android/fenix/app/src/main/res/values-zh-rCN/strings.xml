@@ -1268,6 +1268,8 @@
     <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
     The app name is in the text, due to limitations with localizing Nimbus experiments -->
     <string name="nimbus_survey_message_text" tools:ignore="UnusedResources">请填写这份简短的问卷，帮助 Firefox 变得更好。</string>
+    <!-- Preference for taking the short survey. -->
+    <string name="preferences_take_survey" tools:ignore="UnusedResources">问卷调查</string>
     <!-- Preference for not taking the short survey. -->
     <string name="preferences_not_take_survey" tools:ignore="UnusedResources">不了，谢谢</string>
 
@@ -1779,7 +1781,7 @@
     <!-- The label for the expiration date year of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_year">到期年份</string>
     <!-- The header for the name on the credit card -->
-    <string name="credit_cards_name_on_card">卡上姓名</string>
+    <string name="credit_cards_name_on_card">持卡人姓名</string>
     <!-- The text for the "Delete card" menu item for deleting a credit card -->
     <string name="credit_cards_menu_delete_card">删除卡片</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->

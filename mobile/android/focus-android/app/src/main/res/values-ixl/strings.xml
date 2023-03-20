@@ -775,6 +775,10 @@
     <!-- Subtitle text for biometric prompt pop-up -->
     <string name="biometric_prompt_subtitle">La uch ab’anb’et u vi’ aq’ab’e’ aq’al uva’ la yakeb’ axh ti’ ab’anb’et u vaa’.</string>
 
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">La jaj uma’t atinb’al aq’al uva’ la xe’t axh aq’onvoj tu uma’t ak’ atinb’al</string>
+
     <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
     <string name="biometric_auth_image_description">Texhlal u vi\' q\'ab\'e\'</string>
 

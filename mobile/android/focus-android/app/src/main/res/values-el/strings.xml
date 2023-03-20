@@ -689,7 +689,7 @@
     <string name="preference_site_permissions">Άδειες ιστοτόπων</string>
 
     <!--  Preference for cookie banner. The name of the item from settings screen and the title of the cookie banner screen. -->
-    <string name="preferences_cookie_banner">Μείωση μπάνερ cookie</string>
+    <string name="preferences_cookie_banner">Μείωση μηνυμάτων για cookies</string>
 
     <!--  Preference summary for the cookie banner. If the cookie banner option is not disabled. -->
     <string name="preferences_cookie_banner_summary_on">Ενεργή</string>
@@ -698,13 +698,13 @@
     <string name="preferences_cookie_banner_summary_off">Ανενεργή</string>
 
     <!--  Title preference inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
-    <string name="cookie_banner_reject_all_option_title">Μείωση μπάνερ cookie</string>
+    <string name="cookie_banner_reject_all_option_title">Μείωση μηνυμάτων για cookies</string>
 
     <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
-    <string name="cookie_banner_reject_all_option_summary">Δείτε λιγότερα μπάνερ με αυτόματη απόρριψη αιτημάτων cookie, όταν είναι δυνατό.</string>
+    <string name="cookie_banner_reject_all_option_summary">Δείτε λιγότερα μηνύματα με αυτόματη απόρριψη αιτημάτων για cookies, όταν αυτό είναι δυνατό.</string>
 
     <!-- Preference for removing cookie/consent banners from sites automatically, this is shown as part of the protections panel with the tracking protection toggle. -->--&gt;
-    <string name="cookie_banner_exception_item_title">Μείωση μπάνερ cookie</string>
+    <string name="cookie_banner_exception_item_title">Μείωση μηνυμάτων για cookies</string>
 
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle. -->
     <string name="cookie_banner_exception_item_description_state_on">ΕΝΕΡΓΗ για αυτόν τον ιστότοπο</string>
@@ -713,7 +713,7 @@
     <string name="cookie_banner_exception_item_description_state_off">ΑΝΕΝΕΡΓΗ για αυτόν τον ιστότοπο</string>
 
     <!-- Preference for removing cookie/consent banners from sites automatically, this is shown when the user enters in details after he clicks on the item from protection panel. -->
-    <string name="cookie_banner_exception_panel_switch_title">Μείωση μπάνερ cookie</string>
+    <string name="cookie_banner_exception_panel_switch_title">Μείωση μηνυμάτων για cookies</string>
 
     <!-- Text for indicating cookie banner handling is off this site, this is shown when the user enters in details after he clicks on the item from protection panel. -->
     <string name="cookie_banner_exception_panel_switch_state_off">ΑΝΕΝΕΡΓΗ για αυτόν τον ιστότοπο</string>
@@ -722,26 +722,26 @@
     <string name="cookie_banner_exception_panel_switch_state_on">ΕΝΕΡΓΗ για αυτόν τον ιστότοπο</string>
 
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site. -->
-    <string name="cookie_banner_exception_panel_title_state_on_for_site">Ενεργοποίηση μείωσης banner cookie για το %1$s;</string>
+    <string name="cookie_banner_exception_panel_title_state_on_for_site">Ενεργοποίηση μείωσης μηνυμάτων για cookies στο %1$s;</string>
 
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site. -->
-    <string name="cookie_banner_exception_panel_title_state_off_for_site">Απενεργοποίηση μείωσης banner cookie για το %1$s;</string>
+    <string name="cookie_banner_exception_panel_title_state_off_for_site">Απενεργοποίηση μείωσης μηνυμάτων για cookies στο %1$s;</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
     <string name="cookie_banner_exception_panel_description_state_on_for_site">Το %1$s θα απαλείψει τα cookies του ιστοτόπου και θα ανανεώσει τη σελίδα. Η απαλοιφή όλων των cookies ενδέχεται να σας αποσυνδέσει ή να αδειάσει τα καλάθια αγορών.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
-    <string name="cookie_banner_exception_panel_description_state_off_for_site" moz:RemovedIn="111" tools:ignore="UnusedResources">Το %1$s προσπαθεί αυτόματα να απορρίψει τα αιτήματα cookie. Εάν δεν διατίθεται επιλογή απόρριψης, το %1$s μπορεί να αποδεχτεί όλα τα cookies για να απορρίψει το μπάνερ.</string>
+    <string name="cookie_banner_exception_panel_description_state_off_for_site" moz:RemovedIn="111" tools:ignore="UnusedResources">Το %1$s προσπαθεί αυτόματα να απορρίψει τα αιτήματα για cookies. Εάν δεν διατίθεται επιλογή απόρριψης, το %1$s μπορεί να αποδεχτεί όλα τα cookies για να απορρίψει το μήνυμα.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
-    <string name="cookie_banner_exception_panel_description_state_off_for_site2">Το %1$s προσπαθεί να απορρίπτει αυτόματα τα αιτήματα cookie.</string>
+    <string name="cookie_banner_exception_panel_description_state_off_for_site2">Το %1$s προσπαθεί να απορρίπτει αυτόματα τα αιτήματα για cookies.</string>
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Cookie Banner (Banner Info Message). The placeholder will be updated with the app name. -->
-    <string name="cfr_for_cookie_banner" moz:RemovedIn="111" tools:ignore="UnusedResources">Το %1$s προσπαθεί να απορρίψει τα αιτήματα cookie για να κλείσει τα ενοχλητικά μπάνερ cookie.\n\nΔιαχειριστείτε τις προτιμήσεις για τα μπάνερ cookie στις ρυθμίσεις.</string>
+    <string name="cfr_for_cookie_banner" moz:RemovedIn="111" tools:ignore="UnusedResources">Το %1$s προσπαθεί να απορρίψει τα αιτήματα για cookies, ώστε να κλείσει τα ενοχλητικά μηνύματα για cookies.\n\nΔιαχειριστείτε τις προτιμήσεις των μηνυμάτων για cookies στις ρυθμίσεις.</string>
 
     <!-- CFR for Cookie Banner (Banner Info Message). %1$s will be replaced by the app name, %2$s will be an active link using the string cfr_cookie_banner_link as text. -->
-    <string name="cfr_cookie_banner">Το %1$s προσπαθεί να απορρίψει τα αιτήματα cookie για να κλείσει τα ενοχλητικά μπάνερ cookie.\n\nΔιαχειριστείτε τις προτιμήσεις για τα μπάνερ cookie στις %2$s.</string>
+    <string name="cfr_cookie_banner">Το %1$s προσπαθεί να απορρίψει τα αιτήματα για cookies, ώστε να κλείσει τα ενοχλητικά μηνύματα για cookies.\n\nΔιαχειριστείτε τις προτιμήσεις των μηνυμάτων για cookies στις %2$s.</string>
     <!-- CFR for Cookie Banner (Banner Info Message). This text should be the same as the settings text from "cfr_for_cookie_banner". The text should be underlined and should redirect the user to the cookie banner settings screen. -->
     <string name="cfr_for_cookie_banner_underline_settings" moz:RemovedIn="111" tools:ignore="UnusedResources">ρυθμίσεις</string>
 

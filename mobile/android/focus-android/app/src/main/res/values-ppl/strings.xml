@@ -1033,13 +1033,56 @@
     <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
         <label>Se akaj anka kiejekua tashijshikua mukwepa ne sitioj wan asu tipanu weli tesajsay.</label>
         <br><br>
-        <label>%1$s tesu kichiwa confianzaj tik <b>%2$s</b> ika ne emisor pal ne certificadoj tesu mumati, ne certificadoj kijkwiluj ne ifirmaj iel wan ne servidor tesu kititania ne yejyek cejcertificadoj intermedios.</label>
+        <label>%1$s tesu kichiwa confianzaj tik <b>%2$s</b> ika ne emisor pal ne certificadoj tesu mumati, ne certificadoj kijkwiluj ne ifirmaj isel wan ne servidor tesu kititania ne yejyek cejcertificadoj intermedios.</label>
     ]]></string>
 
      <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Shiktzakwa ne itzun</string>
 
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon2">Tikinhitzket! Tikinhitzket te ma metzishpelwikan. Shikpachu ne chimal keman tikneki pal tikita tay tikitzket.</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
+    <string name="cfr_close_button_description">Shiktzakwa tentzin nejnesi.</string>
+
+    <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
+    <!-- Tool Tip Title -->
+    <string name="tool_tip_title">Timutajpishtuk!</string>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">Tiweli tikajshitia ini ken achtutalijtuk pal timutajpia yek. Wan te uij titajshitia pal tichiwa tay timuneki.</string>
+    <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
+    <string name="tool_tip_dismiss_button_content_description">Shikishti</string>
+
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon2">Shikpachu nikan pal tikmima muchi — historial, cookies, muchi — wan shipewa uksenpa tik uksé itzun.</string>
+
     <!-- Promote SearchWidget Dialog -->
 
-    </resources>
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. -->
+    <string name="promote_search_widget_dialog_content_description">Shiktzakwa</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. -->
+    <string name="promote_search_widget_dialog_picture_content_description">Widget tatemua</string>
+
+    <!-- This is the title of promote search widget dialog. -->
+    <string name="promote_search_widget_dialog_title">Muhistorial mupupujtuka!🎉</string>
+
+    <!-- Banner Info Message than will appear when user first enters in the app. The location is at the toolbar. -->
+    <string name="cfr_for_start_browsing">Shikpewalti musesión tajtachialis ichtaka, wan tejemet tiu tiktentzakwa ne tapajpachiwiani wan seuk te yejyek kwak tipashalua.</string>
+
+    <!-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. "Focus") -->
+    <string name="promote_search_widget_dialog_subtitle">Tejemet timetzajkawiliat iwan ne tajtachialis ichtaka wan shipewa talul uksenpa iwan ne widget ipal %1$s tik ne achtu iswat.</string>
+
+    <!-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. -->
+    <string name="promote_search_widget_button_text">Shiktali se widget tik ne achtu iswat</string>
+
+    <!-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. -->
+    <string name="promote_search_widget_snackbar_message">Ne widget mutalijtuk tik ne achtu iswat</string>
+</resources>
