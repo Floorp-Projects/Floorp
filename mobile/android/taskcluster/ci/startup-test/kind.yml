@@ -35,7 +35,7 @@ task-defaults:
               json: true
     run-on-tasks-for: []
     attributes:
-        build-type: nightly
+        build-type: nightly-firebase
         shipping-product: fenix
         # cannot safely run this in Firebase
         # turning off til we can safely run test in taskcluster
