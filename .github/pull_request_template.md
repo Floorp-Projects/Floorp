@@ -1,4 +1,4 @@
-### Check list
+### Checklist
 - [ ] Referenced all related issues
 - [ ] Have tested the modifications
 
