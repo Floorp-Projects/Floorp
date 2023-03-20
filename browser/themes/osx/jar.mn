@@ -8,7 +8,6 @@ browser.jar:
   skin/classic/browser/sanitizeDialog.css
   skin/classic/browser/browser.css
   skin/classic/browser/browser-custom-colors.css     (../shared/browser-custom-colors.css)
-  skin/classic/browser/pageInfo.css
   skin/classic/browser/customizableui/panelUI.css    (customizableui/panelUI.css)
   skin/classic/browser/downloads/allDownloadsView.css (downloads/allDownloadsView.css)
   skin/classic/browser/downloads/downloads.css              (downloads/downloads.css)
