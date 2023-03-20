@@ -230,7 +230,7 @@ elif CONFIG["JS_CODEGEN_RISCV64"]:
     UNIFIED_SOURCES += [
         "riscv64/Architecture-riscv64.cpp",
         "riscv64/Assembler-riscv64.cpp",
-        "riscv64/AssemblerMatInt.cpp.cpp",
+        "riscv64/AssemblerMatInt.cpp",
         "riscv64/CodeGenerator-riscv64.cpp",
         "riscv64/constant/Base-constant-riscv.cpp",
         "riscv64/disasm/Disasm-riscv64.cpp",

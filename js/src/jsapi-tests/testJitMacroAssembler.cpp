@@ -24,8 +24,7 @@ using namespace js::jit;
 using mozilla::NegativeInfinity;
 using mozilla::PositiveInfinity;
 
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || \
-    defined(JS_CODEGEN_RISCV64s)
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
 
 BEGIN_TEST(testJitMacroAssembler_flexibleDivMod) {
   TempAllocator tempAlloc(&cx->tempLifoAlloc());
