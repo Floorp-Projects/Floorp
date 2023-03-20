@@ -155,6 +155,14 @@ add_task(async function setup() {
     libNoPDBHandle = ctypes.open(libNoPDBFile);
   }
 
+  // Pretend the untrustedmodules ping has already been sent now to get it out
+  // of the way and avoid confusing the test with our PingServer receiving two
+  // pings during our test.
+  Services.prefs.setIntPref(
+    "app.update.lastUpdateTime.telemetry_untrustedmodules_ping",
+    Math.round(Date.now() / 1000)
+  );
+
   // Force the timer to fire (using a small interval).
   Cc["@mozilla.org/updates/timer-manager;1"]
     .getService(Ci.nsIObserver)
