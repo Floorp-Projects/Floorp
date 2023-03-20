@@ -309,7 +309,8 @@ bool SVGImageFrame::TransformContextForPainting(gfxContext* aGfxContext,
 }
 
 //----------------------------------------------------------------------
-// ISVGDisplayableFrame methods:
+// ISVGDisplayableFrame methods
+
 void SVGImageFrame::PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
                              imgDrawingParams& aImgParams,
                              const nsIntRect* aDirtyRect) {
@@ -436,6 +437,27 @@ void SVGImageFrame::PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
     }
     // gfxContextAutoSaveRestore goes out of scope & cleans up our gfxContext
   }
+}
+
+void SVGImageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                                     const nsDisplayListSet& aLists) {
+  if (!static_cast<const SVGElement*>(GetContent())->HasValidDimensions()) {
+    return;
+  }
+
+  if (aBuilder->IsForPainting()) {
+    if (!IsVisibleForPainting()) {
+      return;
+    }
+    if (StyleEffects()->mOpacity == 0.0f) {
+      return;
+    }
+    aBuilder->BuildCompositorHitTestInfoIfNeeded(this,
+                                                 aLists.BorderBackground());
+  }
+
+  DisplayOutline(aBuilder, aLists);
+  aLists.Content()->AppendNewToTop<DisplaySVGGeometry>(aBuilder, this);
 }
 
 bool SVGImageFrame::CreateWebRenderCommands(
