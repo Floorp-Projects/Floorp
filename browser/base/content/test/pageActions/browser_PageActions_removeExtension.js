@@ -1,10 +1,5 @@
 "use strict";
 
-const TELEMETRY_EVENTS_FILTERS = {
-  category: "addonsManager",
-  method: "action",
-};
-
 // Initialization. Must run first.
 add_setup(async function() {
   // The page action urlbar button, and therefore the panel, is only shown when
@@ -26,8 +21,6 @@ add_setup(async function() {
 });
 
 add_task(async function contextMenu_removeExtension_panel() {
-  Services.telemetry.clearEvents();
-
   // We use an extension that shows a page action so that we can test the
   // "remove extension" item in the context menu.
   let extension = ExtensionTestUtils.loadExtension({
@@ -94,24 +87,11 @@ add_task(async function contextMenu_removeExtension_panel() {
   // Done, clean up.
   await extension.unload();
 
-  TelemetryTestUtils.assertEvents(
-    [
-      {
-        object: "pageAction",
-        value: "accepted",
-        extra: { addonId: extension.id, action: "uninstall" },
-      },
-    ],
-    TELEMETRY_EVENTS_FILTERS
-  );
-
   await promiseStableResize(originalOuterWidth, win);
   await BrowserTestUtils.closeWindow(win);
 });
 
 add_task(async function contextMenu_removeExtension_urlbar() {
-  Services.telemetry.clearEvents();
-
   // We use an extension that shows a page action so that we can test the
   // "remove extension" item in the context menu.
   let extension = ExtensionTestUtils.loadExtension({
@@ -164,17 +144,6 @@ add_task(async function contextMenu_removeExtension_urlbar() {
 
   // Done, clean up.
   await extension.unload();
-
-  TelemetryTestUtils.assertEvents(
-    [
-      {
-        object: "pageAction",
-        value: "cancelled",
-        extra: { addonId: extension.id, action: "uninstall" },
-      },
-    ],
-    TELEMETRY_EVENTS_FILTERS
-  );
 
   // urlbar tests that run after this one can break if the mouse is left over
   // the area where the urlbar popup appears, which seems to happen due to the

@@ -1159,13 +1159,6 @@ var BrowserAddonUI = {
 
     let { remove, report } = await this.promptRemoveExtension(addon);
 
-    AMTelemetry.recordActionEvent({
-      object: eventObject,
-      action: "uninstall",
-      value: remove ? "accepted" : "cancelled",
-      extra: { addonId },
-    });
-
     if (remove) {
       // Leave the extension in pending uninstall if we are also reporting the
       // add-on.
@@ -1184,11 +1177,6 @@ var BrowserAddonUI = {
     }
 
     BrowserOpenAddonsMgr("addons://detail/" + encodeURIComponent(addon.id));
-    AMTelemetry.recordActionEvent({
-      object: eventObject,
-      action: "manage",
-      extra: { addonId: addon.id },
-    });
   },
 };
 

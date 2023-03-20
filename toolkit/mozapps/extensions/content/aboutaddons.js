@@ -20,7 +20,6 @@ ChromeUtils.defineESModuleGetters(this, {
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
-  AMTelemetry: "resource://gre/modules/AddonManager.jsm",
   ColorwayClosetOpener: "resource:///modules/ColorwayClosetOpener.jsm",
   ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
   ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
@@ -673,15 +672,6 @@ class SearchAddons extends HTMLElement {
     let browser = getBrowserElement();
     let chromewin = browser.ownerGlobal;
     chromewin.openWebLinkIn(url, "tab");
-
-    AMTelemetry.recordLinkEvent({
-      object: "aboutAddons",
-      value: "search",
-      extra: {
-        type: this.closest("addon-page-header").getAttribute("type"),
-        view: getTelemetryViewName(this),
-      },
-    });
   }
 }
 customElements.define("search-addons", SearchAddons);
@@ -1054,14 +1044,7 @@ class AddonPageOptions extends HTMLElement {
         break;
       case "install-from-file":
         if (XPINSTALL_ENABLED) {
-          installAddonsFromFilePicker().then(installs => {
-            for (let install of installs) {
-              this.recordActionEvent({
-                action: "installFromFile",
-                value: install.installId,
-              });
-            }
-          });
+          installAddonsFromFilePicker();
         }
         break;
       case "debug-addons":
@@ -1080,7 +1063,6 @@ class AddonPageOptions extends HTMLElement {
   }
 
   async checkForUpdates(e) {
-    this.recordActionEvent({ action: "checkForUpdates" });
     let message = document.getElementById("updates-message");
     message.state = "updating";
     message.hidden = false;
@@ -1096,7 +1078,6 @@ class AddonPageOptions extends HTMLElement {
 
   openAboutDebugging() {
     let mainWindow = window.windowRoot.ownerGlobal;
-    this.recordLinkEvent({ value: "about:debugging" });
     if ("switchToTabHavingURI" in mainWindow) {
       let principal = Services.scriptSecurityManager.getSystemPrincipal();
       mainWindow.switchToTabHavingURI(
@@ -1126,18 +1107,6 @@ class AddonPageOptions extends HTMLElement {
       // Toggle the auto pref to false, but don't touch the enabled check.
       AddonManager.autoUpdateDefault = false;
     }
-    // Record telemetry for changing the update policy.
-    let updatePolicy = [];
-    if (AddonManager.autoUpdateDefault) {
-      updatePolicy.push("default");
-    }
-    if (AddonManager.updateEnabled) {
-      updatePolicy.push("enabled");
-    }
-    this.recordActionEvent({
-      action: "setUpdatePolicy",
-      value: updatePolicy.join(","),
-    });
   }
 
   async resetAutomaticUpdates() {
@@ -1147,31 +1116,6 @@ class AddonPageOptions extends HTMLElement {
         addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DEFAULT;
       }
     }
-    this.recordActionEvent({ action: "resetUpdatePolicy" });
-  }
-
-  getTelemetryViewName() {
-    return getTelemetryViewName(document.getElementById("page-header"));
-  }
-
-  recordActionEvent({ action, value }) {
-    AMTelemetry.recordActionEvent({
-      object: "aboutAddons",
-      view: this.getTelemetryViewName(),
-      action,
-      addon: this.addon,
-      value,
-    });
-  }
-
-  recordLinkEvent({ value }) {
-    AMTelemetry.recordLinkEvent({
-      object: "aboutAddons",
-      value,
-      extra: {
-        view: this.getTelemetryViewName(),
-      },
-    });
   }
 
   /**
@@ -1477,13 +1421,6 @@ class SidebarFooter extends HTMLElement {
       labelL10nId: "addons-settings-button",
       onClick: e => {
         e.preventDefault();
-        AMTelemetry.recordLinkEvent({
-          object: "aboutAddons",
-          value: "about:preferences",
-          extra: {
-            view: getTelemetryViewName(this),
-          },
-        });
         windowRoot.ownerGlobal.switchToTabHavingURI("about:preferences", true, {
           ignoreFragment: "whenComparing",
           triggeringPrincipal: systemPrincipal,
@@ -1501,15 +1438,6 @@ class SidebarFooter extends HTMLElement {
       },
       titleL10nId: "sidebar-help-button-title",
       labelL10nId: "help-button",
-      onClick: e => {
-        AMTelemetry.recordLinkEvent({
-          object: "aboutAddons",
-          value: "support",
-          extra: {
-            view: getTelemetryViewName(this),
-          },
-        });
-      },
     });
 
     list.append(prefsItem, supportItem);
@@ -2188,12 +2116,6 @@ class AddonDetails extends HTMLElement {
     if (e.type == "view-changed" && e.target == this.deck) {
       switch (this.deck.selectedViewName) {
         case "release-notes":
-          AMTelemetry.recordActionEvent({
-            object: "aboutAddons",
-            view: getTelemetryViewName(this),
-            action: "releaseNotes",
-            addon: this.addon,
-          });
           let releaseNotes = this.querySelector("update-release-notes");
           let uri = this.releaseNotesUri;
           if (uri) {
@@ -2614,7 +2536,6 @@ class AddonCard extends HTMLElement {
     if (e.type == "click") {
       switch (action) {
         case "toggle-disabled":
-          this.recordActionEvent(addon.userDisabled ? "enable" : "disable");
           // Keep the checked state the same until the add-on's state changes.
           e.target.checked = !addon.userDisabled;
           if (addon.userDisabled) {
@@ -2628,15 +2549,12 @@ class AddonCard extends HTMLElement {
           }
           break;
         case "always-activate":
-          this.recordActionEvent("enable");
           addon.userDisabled = false;
           break;
         case "never-activate":
-          this.recordActionEvent("disable");
           addon.userDisabled = true;
           break;
         case "update-check": {
-          this.recordActionEvent("checkForUpdate");
           let { found } = await checkForUpdate(addon);
           if (!found) {
             this.sendEvent("no-update");
@@ -2677,15 +2595,12 @@ class AddonCard extends HTMLElement {
           this.updateInstall = null;
           break;
         case "contribute":
-          this.recordActionEvent("contribute");
           windowRoot.ownerGlobal.openWebLinkIn(addon.contributionURL, "tab");
           break;
         case "preferences":
           if (getOptionsType(addon) == "tab") {
-            this.recordActionEvent("preferences", "external");
             openOptionsInTab(addon.optionsURL);
           } else if (getOptionsType(addon) == "inline") {
-            this.recordActionEvent("preferences", "inline");
             gViewController.loadView(`detail/${this.addon.id}/preferences`);
           }
           break;
@@ -2700,8 +2615,6 @@ class AddonCard extends HTMLElement {
             let { remove, report } = await BrowserAddonUI.promptRemoveExtension(
               addon
             );
-            let value = remove ? "accepted" : "cancelled";
-            this.recordActionEvent("uninstall", value);
             if (remove) {
               await addon.uninstall(true);
               this.sendEvent("remove");
@@ -2745,19 +2658,6 @@ class AddonCard extends HTMLElement {
           ) {
             e.preventDefault();
             gViewController.loadView(`detail/${this.addon.id}`);
-          } else if (
-            e.target.localName == "a" &&
-            e.target.getAttribute("data-telemetry-name")
-          ) {
-            let value = e.target.getAttribute("data-telemetry-name");
-            AMTelemetry.recordLinkEvent({
-              object: "aboutAddons",
-              addon,
-              value,
-              extra: {
-                view: getTelemetryViewName(this),
-              },
-            });
           }
           break;
       }
@@ -2768,12 +2668,9 @@ class AddonCard extends HTMLElement {
       this.setAddonPermission(permission, type, fname);
     } else if (e.type == "change") {
       let { name } = e.target;
-      let telemetryValue = e.target.getAttribute("data-telemetry-value");
       if (name == "autoupdate") {
-        this.recordActionEvent("setAddonUpdate", telemetryValue);
         addon.applyBackgroundUpdates = e.target.value;
       } else if (name == "private-browsing") {
-        this.recordActionEvent("privateBrowsingAllowed", telemetryValue);
         let policy = WebExtensionPolicy.getByID(addon.id);
         let extension = policy && policy.extension;
 
@@ -3080,16 +2977,6 @@ class AddonCard extends HTMLElement {
 
   sendEvent(name, detail) {
     this.dispatchEvent(new CustomEvent(name, { detail }));
-  }
-
-  recordActionEvent(action, value) {
-    AMTelemetry.recordActionEvent({
-      object: "aboutAddons",
-      view: getTelemetryViewName(this),
-      action,
-      addon: this.addon,
-      value,
-    });
   }
 
   /**
@@ -3465,35 +3352,11 @@ class RecommendedAddonCard extends HTMLElement {
     let action = event.target.getAttribute("action");
     switch (action) {
       case "install-addon":
-        AMTelemetry.recordActionEvent({
-          object: "aboutAddons",
-          view: getTelemetryViewName(this),
-          action: "installFromRecommendation",
-          addon: this.discoAddon,
-        });
         this.installDiscoAddon();
         break;
       case "manage-addon":
-        AMTelemetry.recordActionEvent({
-          object: "aboutAddons",
-          view: getTelemetryViewName(this),
-          action: "manage",
-          addon: this.discoAddon,
-        });
         gViewController.loadView(`detail/${this.addonId}`);
         break;
-      default:
-        if (event.target.matches(".disco-addon-author a[href]")) {
-          AMTelemetry.recordLinkEvent({
-            object: "aboutAddons",
-            // Note: This is not "author" nor "homepage", because the link text
-            // is the author name, but the link URL the add-on's listing URL.
-            value: "discohome",
-            extra: {
-              view: getTelemetryViewName(this),
-            },
-          });
-        }
     }
   }
 
@@ -3684,12 +3547,6 @@ class AddonList extends HTMLElement {
     const undo = document.createElement("button");
     undo.setAttribute("action", "undo");
     undo.addEventListener("click", () => {
-      AMTelemetry.recordActionEvent({
-        object: "aboutAddons",
-        view: getTelemetryViewName(this),
-        action: "undo",
-        addon,
-      });
       addon.cancelUninstall();
     });
 
@@ -4271,18 +4128,7 @@ class TaarMessageBar extends HTMLElement {
   }
 
   handleEvent(e) {
-    if (
-      e.type == "click" &&
-      e.target.getAttribute("action") == "notice-learn-more"
-    ) {
-      AMTelemetry.recordLinkEvent({
-        object: "aboutAddons",
-        value: "disconotice",
-        extra: {
-          view: getTelemetryViewName(this),
-        },
-      });
-    } else if (e.type == "message-bar:user-dismissed") {
+    if (e.type == "message-bar:user-dismissed") {
       Services.prefs.setBoolPref(PREF_RECOMMENDATION_HIDE_NOTICE, true);
     }
   }
@@ -4637,30 +4483,9 @@ gViewController.defineView("shortcuts", async () => {
 });
 
 /**
- * The name of the view for an element, used for telemetry.
- *
- * @param {Element} el The element to find the view from. A parent of the
- *                     element must define a current-view property.
- * @returns {string} The current view name.
- */
-function getTelemetryViewName(el) {
-  let root =
-    el.closest("[current-view]") || document.querySelector("[current-view]");
-  return root.getAttribute("current-view");
-}
-
-/**
  * @param {Element} el The button element.
  */
 function openAmoInTab(el, path) {
-  // The element is a button but opens a URL, so record as link.
-  AMTelemetry.recordLinkEvent({
-    object: "aboutAddons",
-    value: "discomore",
-    extra: {
-      view: getTelemetryViewName(el),
-    },
-  });
   let amoUrl = Services.urlFormatter.formatURLPref(
     "extensions.getAddons.link.url"
   );

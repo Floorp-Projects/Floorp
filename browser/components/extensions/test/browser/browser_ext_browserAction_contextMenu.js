@@ -2,10 +2,6 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const { TelemetryTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/TelemetryTestUtils.sys.mjs"
-);
-
 ChromeUtils.defineModuleGetter(
   this,
   "AbuseReporter",
@@ -68,28 +64,12 @@ if (AppConstants.platform == "macosx") {
   contextMenuItems["context-navigation"] = "hidden";
 }
 
-const type = "extension";
-
 const TOOLBAR_CONTEXT_MENU = "toolbar-context-menu";
 const UNIFIED_CONTEXT_MENU = "unified-extensions-context-menu";
-
-async function assertTelemetryMatches(events) {
-  events = events.map(([method, object, value, extra]) => {
-    return { method, object, value, extra };
-  });
-  // Wait a tick for telemetry
-  await Promise.resolve().then();
-  TelemetryTestUtils.assertEvents(events, {
-    category: "addonsManager",
-    method: /^(action|link|view)$/,
-  });
-}
 
 loadTestSubscript("head_unified_extensions.js");
 
 add_task(async function test_setup() {
-  // Clear any previosuly collected telemetry event.
-  Services.telemetry.clearEvents();
   CustomizableUI.addWidgetToArea("home-button", "nav-bar");
   registerCleanupFunction(() =>
     CustomizableUI.removeWidgetFromArea("home-button")
@@ -372,18 +352,8 @@ async function browseraction_contextmenu_manage_extension_helper() {
   info("Run tests in normal mode");
   await main(false);
 
-  await assertTelemetryMatches([
-    ["action", "browserAction", null, { action: "manage", addonId: id }],
-    ["view", "aboutAddons", "detail", { addonId: id, type }],
-  ]);
-
   info("Run tests in customize mode");
   await main(true);
-
-  await assertTelemetryMatches([
-    ["action", "browserAction", null, { action: "manage", addonId: id }],
-    ["view", "aboutAddons", "detail", { addonId: id, type }],
-  ]);
 
   info("Close the dummy tab and finish");
   gBrowser.removeTab(dummyTab);
@@ -505,23 +475,6 @@ async function browseraction_contextmenu_remove_extension_helper() {
     testContextMenu,
   });
 
-  // The first uninstall event comes from the toolbar context menu, and the
-  // next via the unified extension context menu.
-  await assertTelemetryMatches([
-    [
-      "action",
-      "browserAction",
-      "cancelled",
-      { action: "uninstall", addonId: id },
-    ],
-    [
-      "action",
-      "unifiedExtensions",
-      "cancelled",
-      { action: "uninstall", addonId: id },
-    ],
-  ]);
-
   info("Run tests in customize mode");
   await runTestContextMenu({
     id,
@@ -536,14 +489,6 @@ async function browseraction_contextmenu_remove_extension_helper() {
     "Should record a second removal event when browserAction " +
       "becomes available in customize mode."
   );
-  await assertTelemetryMatches([
-    [
-      "action",
-      "browserAction",
-      "cancelled",
-      { action: "uninstall", addonId: id },
-    ],
-  ]);
 
   let addon = await AddonManager.getAddonByID(id);
   ok(addon, "Addon is still installed");
@@ -560,15 +505,6 @@ async function browseraction_contextmenu_remove_extension_helper() {
   });
   await testContextMenu(TOOLBAR_CONTEXT_MENU, false);
   await uninstalled;
-
-  await assertTelemetryMatches([
-    [
-      "action",
-      "browserAction",
-      "accepted",
-      { action: "uninstall", addonId: id },
-    ],
-  ]);
 
   addon = await AddonManager.getAddonByID(id);
   ok(!addon, "Addon has been uninstalled");
@@ -742,8 +678,6 @@ async function test_no_toolbar_pinning_on_builtin_helper() {
 }
 
 add_task(async function test_unified_extensions_ui() {
-  Services.telemetry.clearEvents();
-
   await browseraction_popup_contextmenu_helper();
   await browseraction_popup_contextmenu_hidden_items_helper();
   await browseraction_popup_image_contextmenu_helper();

@@ -544,24 +544,12 @@ var ExtensionsUI = {
           origins: [],
         };
 
-        let value;
         // The checkbox has been changed at this point, otherwise we would
         // have exited early above.
         if (checkbox.checked) {
           await lazy.ExtensionPermissions.add(addon.id, incognitoPermission);
-          value = "on";
         } else if (hasIncognito) {
           await lazy.ExtensionPermissions.remove(addon.id, incognitoPermission);
-          value = "off";
-        }
-        if (value !== undefined) {
-          lazy.AMTelemetry.recordActionEvent({
-            addon,
-            object: "doorhanger",
-            action: "privateBrowsingAllowed",
-            view: "postInstall",
-            value,
-          });
         }
         // Reload the extension if it is already enabled.  This ensures any change
         // on the private browsing permission is properly handled.
