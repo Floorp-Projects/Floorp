@@ -111,7 +111,8 @@ WheelHandlingUtils::GetDisregardedWheelScrollDirection(const nsIFrame* aFrame) {
 /* mozilla::WheelTransaction                                      */
 /******************************************************************/
 
-AutoWeakFrame WheelTransaction::sTargetFrame(nullptr);
+AutoWeakFrame WheelTransaction::sScrollTargetFrame(nullptr);
+AutoWeakFrame WheelTransaction::sEventTargetFrame(nullptr);
 uint32_t WheelTransaction::sTime = 0;
 uint32_t WheelTransaction::sMouseMoved = 0;
 nsITimer* WheelTransaction::sTimer = nullptr;
@@ -128,13 +129,28 @@ bool WheelTransaction::OutOfTime(uint32_t aBaseTime, uint32_t aThreshold) {
 void WheelTransaction::OwnScrollbars(bool aOwn) { sOwnScrollbars = aOwn; }
 
 /* static */
-void WheelTransaction::BeginTransaction(nsIFrame* aTargetFrame,
+void WheelTransaction::BeginTransaction(nsIFrame* aScrollTargetFrame,
+                                        nsIFrame* aEventTargetFrame,
                                         const WidgetWheelEvent* aEvent) {
-  NS_ASSERTION(!sTargetFrame, "previous transaction is not finished!");
+  NS_ASSERTION(!sScrollTargetFrame && !sEventTargetFrame,
+               "previous transaction is not finished!");
   MOZ_ASSERT(aEvent->mMessage == eWheel,
              "Transaction must be started with a wheel event");
+
   ScrollbarsForWheel::OwnWheelTransaction(false);
-  sTargetFrame = aTargetFrame;
+  sScrollTargetFrame = aScrollTargetFrame;
+
+  // Only set the static event target if wheel event groups are enabled.
+  if (StaticPrefs::dom_event_wheel_event_groups_enabled()) {
+    // Set a static event target for the wheel transaction. This will be used
+    // to override the event target frame when computing the event target from
+    // input coordinates. When this preference is not set or there is no stored
+    // event target for the current wheel transaction, the event target will
+    // not be overridden by the current wheel transaction, but will be computed
+    // from the input coordinates.
+    sEventTargetFrame = aEventTargetFrame;
+  }
+
   sScrollSeriesCounter = 0;
   if (!UpdateTransaction(aEvent)) {
     NS_ERROR("BeginTransaction is called even cannot scroll the frame");
@@ -144,7 +160,7 @@ void WheelTransaction::BeginTransaction(nsIFrame* aTargetFrame,
 
 /* static */
 bool WheelTransaction::UpdateTransaction(const WidgetWheelEvent* aEvent) {
-  nsIFrame* scrollToFrame = GetTargetFrame();
+  nsIFrame* scrollToFrame = GetScrollTargetFrame();
   nsIScrollableFrame* scrollableFrame = scrollToFrame->GetScrollTargetFrame();
   if (scrollableFrame) {
     scrollToFrame = do_QueryFrame(scrollableFrame);
@@ -188,7 +204,8 @@ void WheelTransaction::EndTransaction() {
   if (sTimer) {
     sTimer->Cancel();
   }
-  sTargetFrame = nullptr;
+  sScrollTargetFrame = nullptr;
+  sEventTargetFrame = nullptr;
   sScrollSeriesCounter = 0;
   if (sOwnScrollbars) {
     sOwnScrollbars = false;
@@ -199,13 +216,16 @@ void WheelTransaction::EndTransaction() {
 
 /* static */
 bool WheelTransaction::WillHandleDefaultAction(
-    WidgetWheelEvent* aWheelEvent, AutoWeakFrame& aTargetWeakFrame) {
-  nsIFrame* lastTargetFrame = GetTargetFrame();
+    WidgetWheelEvent* aWheelEvent, AutoWeakFrame& aScrollTargetWeakFrame,
+    AutoWeakFrame& aEventTargetWeakFrame) {
+  nsIFrame* lastTargetFrame = GetScrollTargetFrame();
   if (!lastTargetFrame) {
-    BeginTransaction(aTargetWeakFrame.GetFrame(), aWheelEvent);
-  } else if (lastTargetFrame != aTargetWeakFrame.GetFrame()) {
+    BeginTransaction(aScrollTargetWeakFrame.GetFrame(),
+                     aEventTargetWeakFrame.GetFrame(), aWheelEvent);
+  } else if (lastTargetFrame != aScrollTargetWeakFrame.GetFrame()) {
     EndTransaction();
-    BeginTransaction(aTargetWeakFrame.GetFrame(), aWheelEvent);
+    BeginTransaction(aScrollTargetWeakFrame.GetFrame(),
+                     aEventTargetWeakFrame.GetFrame(), aWheelEvent);
   } else {
     UpdateTransaction(aWheelEvent);
   }
@@ -214,7 +234,7 @@ bool WheelTransaction::WillHandleDefaultAction(
   // UpdateTransaction() fires MozMouseScrollFailed event which is for
   // automated testing.  In the event handler, the target frame might be
   // destroyed.  Then, the caller shouldn't try to handle the default action.
-  if (!aTargetWeakFrame.IsAlive()) {
+  if (!aScrollTargetWeakFrame.IsAlive()) {
     EndTransaction();
     return false;
   }
@@ -224,7 +244,7 @@ bool WheelTransaction::WillHandleDefaultAction(
 
 /* static */
 void WheelTransaction::OnEvent(WidgetEvent* aEvent) {
-  if (!sTargetFrame) {
+  if (!sScrollTargetFrame) {
     return;
   }
 
@@ -255,12 +275,16 @@ void WheelTransaction::OnEvent(WidgetEvent* aEvent) {
         // terminate the scrollwheel transaction.
         LayoutDeviceIntPoint pt = GetScreenPoint(mouseEvent);
         auto r = LayoutDeviceIntRect::FromAppUnitsToNearest(
-            sTargetFrame->GetScreenRectInAppUnits(),
-            sTargetFrame->PresContext()->AppUnitsPerDevPixel());
+            sScrollTargetFrame->GetScreenRectInAppUnits(),
+            sScrollTargetFrame->PresContext()->AppUnitsPerDevPixel());
         if (!r.Contains(pt)) {
           EndTransaction();
           return;
         }
+
+        // For mouse move events where the wheel transaction is still valid, the
+        // stored event target should be reset.
+        sEventTargetFrame = nullptr;
 
         // If the cursor is moving inside the frame, and it is less than
         // ignoremovedelay milliseconds since the last scroll operation, ignore
@@ -292,34 +316,54 @@ void WheelTransaction::OnEvent(WidgetEvent* aEvent) {
 }
 
 /* static */
+void WheelTransaction::OnRemoveElement(nsIContent* aContent) {
+  // If dom.event.wheel-event-groups.enabled is not set or we have no current
+  // wheel event transaction there is no internal state to be updated.
+  if (!sEventTargetFrame) {
+    return;
+  }
+
+  if (sEventTargetFrame->GetContent() == aContent) {
+    // Only invalidate the wheel transaction event target frame when the
+    // remove target is the event target of the wheel event group. The
+    // scroll target frame of the wheel event group may still be valid.
+    //
+    // With the stored event target unset, the target for any following
+    // events will be the frame found using the input coordinates.
+    sEventTargetFrame = nullptr;
+  }
+}
+
+/* static */
 void WheelTransaction::Shutdown() { NS_IF_RELEASE(sTimer); }
 
 /* static */
 void WheelTransaction::OnFailToScrollTarget() {
-  MOZ_ASSERT(sTargetFrame, "We don't have mouse scrolling transaction");
+  MOZ_ASSERT(sScrollTargetFrame, "We don't have mouse scrolling transaction");
 
   if (StaticPrefs::test_mousescroll()) {
     // This event is used for automated tests, see bug 442774.
     nsContentUtils::DispatchEventOnlyToChrome(
-        sTargetFrame->GetContent()->OwnerDoc(), sTargetFrame->GetContent(),
-        u"MozMouseScrollFailed"_ns, CanBubble::eYes, Cancelable::eYes);
+        sScrollTargetFrame->GetContent()->OwnerDoc(),
+        sScrollTargetFrame->GetContent(), u"MozMouseScrollFailed"_ns,
+        CanBubble::eYes, Cancelable::eYes);
   }
   // The target frame might be destroyed in the event handler, at that time,
   // we need to finish the current transaction
-  if (!sTargetFrame) {
+  if (!sScrollTargetFrame) {
     EndTransaction();
   }
 }
 
 /* static */
 void WheelTransaction::OnTimeout(nsITimer* aTimer, void* aClosure) {
-  if (!sTargetFrame) {
+  if (!sScrollTargetFrame) {
     // The transaction target was destroyed already
     EndTransaction();
     return;
   }
-  // Store the sTargetFrame, the variable becomes null in EndTransaction.
-  nsIFrame* frame = sTargetFrame;
+  // Store the sScrollTargetFrame, the variable becomes null in EndTransaction.
+  nsIFrame* frame = sScrollTargetFrame;
   // We need to finish current transaction before DOM event firing. Because
   // the next DOM event might create strange situation for us.
   MayEndTransaction();
@@ -388,7 +432,7 @@ double WheelTransaction::ComputeAcceleratedWheelDelta(double aDelta,
 /* static */
 DeltaValues WheelTransaction::OverrideSystemScrollSpeed(
     WidgetWheelEvent* aEvent) {
-  MOZ_ASSERT(sTargetFrame, "We don't have mouse scrolling transaction");
+  MOZ_ASSERT(sScrollTargetFrame, "We don't have mouse scrolling transaction");
 
   // If the event doesn't scroll to both X and Y, we don't need to do anything
   // here.
@@ -446,7 +490,7 @@ void ScrollbarsForWheel::SetActiveScrollTarget(
 
 /* static */
 void ScrollbarsForWheel::MayInactivate() {
-  if (!sOwnWheelTransaction && WheelTransaction::GetTargetFrame()) {
+  if (!sOwnWheelTransaction && WheelTransaction::GetScrollTargetFrame()) {
     WheelTransaction::OwnScrollbars(true);
   } else {
     Inactivate();
