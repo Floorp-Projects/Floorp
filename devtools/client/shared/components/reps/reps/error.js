@@ -320,7 +320,11 @@ define(function(require, exports, module) {
 
   // Registration
   function supportsObject(object) {
-    return object?.isError || object?.class === "DOMException";
+    return (
+      object?.isError ||
+      object?.class === "DOMException" ||
+      object?.class === "Exception"
+    );
   }
 
   // Exports from this module
