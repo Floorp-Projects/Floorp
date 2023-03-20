@@ -216,7 +216,8 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetWritable(
   }
 
   auto writableFileStreamParent =
-      MakeRefPtr<FileSystemWritableFileStreamParent>(this, aRequest.entryId());
+      MakeNotNull<RefPtr<FileSystemWritableFileStreamParent>>(
+          this, aRequest.entryId());
 
   QM_TRY_UNWRAP(
       nsCOMPtr<nsIRandomAccessStream> stream,

@@ -109,7 +109,7 @@ nsresult HttpTransactionChild::InitInternal(
   uint32_t pushedStreamId = 0;
   if (aPushedStreamArg) {
     HttpTransactionChild* transChild = static_cast<HttpTransactionChild*>(
-        aPushedStreamArg.ref().transWithPushedStream().AsChild());
+        aPushedStreamArg.ref().transWithPushedStream().AsChild().get());
     transWithPushedStream = transChild->GetHttpTransaction();
     pushedStreamId = aPushedStreamArg.ref().pushedStreamId();
   }

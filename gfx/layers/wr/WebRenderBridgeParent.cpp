@@ -1691,7 +1691,7 @@ void WebRenderBridgeParent::MaybeCaptureScreenPixels() {
 #endif
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvGetSnapshot(
-    PTextureParent* aTexture, bool* aNeedsYFlip) {
+    NotNull<PTextureParent*> aTexture, bool* aNeedsYFlip) {
   *aNeedsYFlip = false;
   CompositorBridgeParent* cbp = GetRootCompositorBridgeParent();
   if (mDestroyed || !cbp || cbp->IsPaused()) {

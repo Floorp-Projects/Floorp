@@ -135,7 +135,7 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
   mozilla::ipc::IPCResult RecvParentCommands(
       const wr::IdNamespace& aIdNamespace,
       nsTArray<WebRenderParentCommand>&& commands) override;
-  mozilla::ipc::IPCResult RecvGetSnapshot(PTextureParent* aTexture,
+  mozilla::ipc::IPCResult RecvGetSnapshot(NotNull<PTextureParent*> aTexture,
                                           bool* aNeedsYFlip) override;
 
   mozilla::ipc::IPCResult RecvSetLayersObserverEpoch(

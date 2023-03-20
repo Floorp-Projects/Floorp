@@ -432,15 +432,12 @@ RefPtr<ClientOpPromise> ClientManagerService::Navigate(
   PClientManagerParent* manager = source->Manager();
   MOZ_DIAGNOSTIC_ASSERT(manager);
 
-  ClientNavigateOpConstructorArgs args;
-  args.url() = aArgs.url();
-  args.baseURL() = aArgs.baseURL();
-
   // This is safe to do because the ClientSourceChild cannot directly delete
   // itself.  Instead it sends a Teardown message to the parent which then
   // calls delete.  That means we can be sure that we are not racing with
   // source destruction here.
-  args.target() = source;
+  ClientNavigateOpConstructorArgs args(WrapNotNull(source), aArgs.url(),
+                                       aArgs.baseURL());
 
   RefPtr<ClientOpPromise::Private> promise =
       new ClientOpPromise::Private(__func__);

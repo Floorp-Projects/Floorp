@@ -2549,7 +2549,7 @@ HttpChannelChild::OpenAlternativeOutputStream(const nsACString& aType,
   stream->AddIPDLReference();
 
   if (!gNeckoChild->SendPAltDataOutputStreamConstructor(
-          stream, nsCString(aType), aPredictedSize, this)) {
+          stream, nsCString(aType), aPredictedSize, WrapNotNull(this))) {
     return NS_ERROR_FAILURE;
   }
 
