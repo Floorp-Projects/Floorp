@@ -31,8 +31,8 @@ FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(FFmpegLibWrapper* aLib,
   }
 
   if (mCodecID == AV_CODEC_ID_MP3) {
-    MOZ_DIAGNOSTIC_ASSERT(
-        aConfig.mCodecSpecificConfig.is<Mp3CodecSpecificData>());
+    // Downgraded from diagnostic assert due to BMO 1776524 on Android.
+    MOZ_ASSERT(aConfig.mCodecSpecificConfig.is<Mp3CodecSpecificData>());
     // Gracefully handle bad data. If don't hit the preceding assert once this
     // has been shipped for awhile, we can remove it and make the following code
     // non-conditional.
