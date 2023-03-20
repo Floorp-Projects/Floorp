@@ -26,7 +26,8 @@ bool FissionAutostart();
 // Returns whether or not we are currently enrolled in the fission experiment.
 bool FissionExperimentEnrolled();
 
-// Returns true if fission.sessionHistoryInParent or FissionAutostart() is true.
+// Returns true if FissionAutostart() is true or
+// fission.disableSessionHistoryInParent is false.
 bool SessionHistoryInParent();
 
 // Returns true if SessionHistoryInParent() returns true and
