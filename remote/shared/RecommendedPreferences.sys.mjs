@@ -205,6 +205,13 @@ const COMMON_PREFERENCES = new Map([
   // Disable popup-blocker
   ["dom.disable_open_during_load", false],
 
+  // Bug 1821733:
+  // Do not bind wheel event targets to the current wheel transaction. This
+  // can interfere with tests that run wheel events on different targets
+  // within a short period of time and without another action between wheel
+  // actions.
+  ["dom.event.wheel-event-groups.enabled", false],
+
   // Enabling the support for File object creation in the content process
   ["dom.file.createInChild", true],
 
