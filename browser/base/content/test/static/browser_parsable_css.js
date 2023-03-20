@@ -299,12 +299,16 @@ function neverMatches(mediaList) {
     android: ["(-moz-platform: android)"],
   };
   for (let platform in perPlatformMediaQueryMap) {
-    if (platform === AppConstants.platform) {
-      continue;
-    }
-    if (perPlatformMediaQueryMap[platform].includes(mediaList.mediaText)) {
-      // This query only matches on another platform that isn't ours.
-      return true;
+    const inThisPlatform = platform === AppConstants.platform;
+    for (const media of perPlatformMediaQueryMap[platform]) {
+      if (inThisPlatform && mediaList.mediaText == "not " + media) {
+        // This query can't match on this platform.
+        return true;
+      }
+      if (!inThisPlatform && mediaList.mediaText == media) {
+        // This query only matches on another platform that isn't ours.
+        return true;
+      }
     }
   }
   return false;
