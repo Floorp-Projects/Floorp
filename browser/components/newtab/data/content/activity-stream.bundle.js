@@ -750,8 +750,38 @@ class SimpleHashRouter extends (external_React_default()).PureComponent {
   }
 
 }
-;// CONCATENATED MODULE: ./content-src/components/ASRouterAdmin/ASRouterAdmin.jsx
+;// CONCATENATED MODULE: ./content-src/components/ASRouterAdmin/CopyButton.jsx
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const CopyButton = ({
+  className,
+  label,
+  copiedLabel,
+  inputSelector,
+  transformer,
+  ...props
+}) => {
+  const [copied, setCopied] = (0,external_React_namespaceObject.useState)(false);
+  const timeout = (0,external_React_namespaceObject.useRef)(null);
+  const onClick = (0,external_React_namespaceObject.useCallback)(() => {
+    let text = document.querySelector(inputSelector).value;
+    if (transformer) text = transformer(text);
+    navigator.clipboard.writeText(text);
+    clearTimeout(timeout.current);
+    setCopied(true);
+    timeout.current = setTimeout(() => setCopied(false), 1500);
+  }, [inputSelector, transformer]);
+  return /*#__PURE__*/external_React_default().createElement("button", _extends({
+    className: className,
+    onClick: e => onClick()
+  }, props), copied && copiedLabel || label);
+};
+;// CONCATENATED MODULE: ./content-src/components/ASRouterAdmin/ASRouterAdmin.jsx
+function ASRouterAdmin_extends() { ASRouterAdmin_extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return ASRouterAdmin_extends.apply(this, arguments); }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -762,7 +792,8 @@ function _extends() { _extends = Object.assign || function (target) { for (var i
 
 
 
-const Row = props => /*#__PURE__*/external_React_default().createElement("tr", _extends({
+
+const Row = props => /*#__PURE__*/external_React_default().createElement("tr", ASRouterAdmin_extends({
   className: "message-item"
 }, props), props.children);
 
@@ -1502,6 +1533,7 @@ class ASRouterAdminInner extends (external_React_default()).PureComponent {
     const impressions = this.state.messageImpressions[msg.id] ? this.state.messageImpressions[msg.id].length : 0;
     const isCollapsed = this.state.collapsedMessages.includes(msg.id);
     const isModified = this.state.modifiedMessages.includes(msg.id);
+    const aboutMessagePreviewSupported = ["infobar", "spotlight"].includes(msg.template);
     let itemClassName = "message-item";
 
     if (isBlocked) {
@@ -1534,7 +1566,13 @@ class ASRouterAdminInner extends (external_React_default()).PureComponent {
       className: "button modify" // eslint-disable-next-line react/jsx-no-bind
       ,
       onClick: e => this.modifyJson(msg)
-    }, "Modify"), /*#__PURE__*/external_React_default().createElement("br", null), "(", impressions, " impressions)"), /*#__PURE__*/external_React_default().createElement("td", {
+    }, "Modify"), aboutMessagePreviewSupported ? /*#__PURE__*/external_React_default().createElement(CopyButton, {
+      transformer: text => `about:messagepreview?json=${encodeURIComponent(btoa(text))}`,
+      label: "Share",
+      copiedLabel: "Copied!",
+      inputSelector: `#${msg.id}-textarea`,
+      className: "button share"
+    }) : null, /*#__PURE__*/external_React_default().createElement("br", null), "(", impressions, " impressions)"), /*#__PURE__*/external_React_default().createElement("td", {
       className: "message-summary"
     }, isBlocked && /*#__PURE__*/external_React_default().createElement("tr", null, "Block reason:", isBlockedByGroup && " Blocked by group", isProviderExcluded && " Excluded by provider", isMessageBlocked && " Message blocked"), /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("pre", {
       className: isCollapsed ? "collapsed" : "expanded"
@@ -1652,7 +1690,7 @@ class ASRouterAdminInner extends (external_React_default()).PureComponent {
       className: "helpLink"
     }, /*#__PURE__*/external_React_default().createElement("span", {
       className: "icon icon-small-spacer icon-info"
-    }), " ", /*#__PURE__*/external_React_default().createElement("span", null, "To modify a message, change the JSON and click 'Modify' to see your changes. Click 'Reset' to restore the JSON to the original.")), /*#__PURE__*/external_React_default().createElement("table", null, /*#__PURE__*/external_React_default().createElement("tbody", null, messagesToShow.map(msg => this.renderMessageItem(msg)))));
+    }), " ", /*#__PURE__*/external_React_default().createElement("span", null, "To modify a message, change the JSON and click 'Modify' to see your changes. Click 'Reset' to restore the JSON to the original. Click 'Share' to copy a link to the clipboard that can be used to preview the message by opening the link in Nightly/local builds.")), /*#__PURE__*/external_React_default().createElement("table", null, /*#__PURE__*/external_React_default().createElement("tbody", null, messagesToShow.map(msg => this.renderMessageItem(msg)))));
   }
 
   renderMessagesByGroup() {
@@ -2141,7 +2179,7 @@ class CollapseToggle extends (external_React_default()).PureComponent {
       onClick: this.renderAdmin ? this.onCollapseToggle : null
     }, /*#__PURE__*/external_React_default().createElement("span", {
       className: "icon icon-devtools"
-    })), renderAdmin ? /*#__PURE__*/external_React_default().createElement(ASRouterAdminInner, _extends({}, props, {
+    })), renderAdmin ? /*#__PURE__*/external_React_default().createElement(ASRouterAdminInner, ASRouterAdmin_extends({}, props, {
       collapsed: this.state.collapsed
     })) : null);
   }
