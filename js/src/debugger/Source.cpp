@@ -619,7 +619,6 @@ static JSScript* ReparseSource(JSContext* cx, Handle<ScriptSourceObject*> sso) {
   JS::CompileOptions options(cx);
   options.setHideScriptFromDebugger(true);
   options.setFileAndLine(ss->filename(), ss->startLine());
-  options.setColumn(ss->startColumn());
 
   UncompressedSourceCache::AutoHoldEntry holder;
 
