@@ -727,11 +727,24 @@ decorate_task(
       Services.prefs.setIntPref(timerLastUpdatePref, lastUpdateTime);
     }
 
-    // Set a timer interval as small as possible so that the UpdateTimerManager
-    // will pick the recipe runner as the most imminent timer to run on `notify()`.
-    Services.prefs.setIntPref("app.normandy.run_interval_seconds", 1);
+    // Give our timer a short duration so that it executes quickly.
+    // This needs to be more than 1 second as we will call UpdateTimerManager's
+    // notify method twice in a row and verify that our timer is only called
+    // once, but because the timestamps are rounded to seconds, just a few
+    // additional ms could result in a higher value that would cause the timer
+    // to be called again almost immediately if our timer duration was only 1s.
+    const kTimerDuration = 2;
+    Services.prefs.setIntPref(
+      "app.normandy.run_interval_seconds",
+      kTimerDuration
+    );
     // This will refresh the timer interval.
     RecipeRunner.unregisterTimer();
+    // Ensure our timer is ready to run now.
+    Services.prefs.setIntPref(
+      "app.update.lastUpdateTime.recipe-client-addon-run",
+      Math.round(Date.now() / 1000) - kTimerDuration
+    );
     RecipeRunner.registerTimer();
 
     is(runSpy.callCount, 0, "run() shouldn't have run yet");
