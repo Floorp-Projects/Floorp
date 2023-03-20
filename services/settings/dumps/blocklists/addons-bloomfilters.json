@@ -3,6 +3,26 @@
     {
       "stash": {
         "blocked": [
+          "pad.firefox@microsoft.com:2.0.9",
+          "pad.firefox@microsoft.com:2.0",
+          "pad.firefox@microsoft.com:2.0.2",
+          "pad.firefox@microsoft.com:2.0.12",
+          "pad.firefox@microsoft.com:2.0.1",
+          "pad.firefox@microsoft.com:2.0.10",
+          "pad.firefox@microsoft.com:2.0.11",
+          "pad.firefox@microsoft.com:2.0.7"
+        ],
+        "unblocked": []
+      },
+      "schema": 1678819036238,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1679013307051,
+      "id": "ae2225d4-9a79-438e-9067-8d24330eb533",
+      "last_modified": 1679013443657
+    },
+    {
+      "stash": {
+        "blocked": [
           "{682a4d95-858c-4f5f-a8c2-a28f872a9421}:1.0.0"
         ],
         "unblocked": []
@@ -1103,5 +1123,5 @@
       "last_modified": 1673354326131
     }
   ],
-  "timestamp": 1678819036174
+  "timestamp": 1679013443657
 }
