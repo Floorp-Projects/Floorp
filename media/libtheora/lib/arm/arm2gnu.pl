@@ -25,6 +25,8 @@ $n=0;
 $thumb = 0;     # ARM mode by default, not Thumb.
 @proc_stack = ();
 
+printf ("    .syntax unified\n");
+
 LINE:
 while (<>) {
 
