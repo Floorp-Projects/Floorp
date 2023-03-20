@@ -700,18 +700,96 @@ add_task(async function test_ruleset_validation() {
         },
       ],
     },
+    {
+      description: "invalid ruleset JSON - unexpected comments",
+      rule_resources: [
+        {
+          id: "invalid_ruleset_with_comments",
+          path: "invalid_ruleset_with_comments.json",
+          enabled: true,
+        },
+      ],
+      files: {
+        "invalid_ruleset_with_comments.json":
+          "/* an unexpected inline comment */\n[]",
+      },
+      expectInstallFailed: false,
+      expected: [
+        {
+          message: /Reading declarative_net_request .*invalid_ruleset_with_comments\.json: JSON.parse: unexpected character/,
+        },
+      ],
+    },
+    {
+      description: "invalid ruleset JSON - empty string",
+      rule_resources: [
+        {
+          id: "invalid_ruleset_emptystring",
+          path: "invalid_ruleset_emptystring.json",
+          enabled: true,
+        },
+      ],
+      files: {
+        "invalid_ruleset_emptystring.json": JSON.stringify(""),
+      },
+      expectInstallFailed: false,
+      expected: [
+        {
+          message: /Reading declarative_net_request .*invalid_ruleset_emptystring\.json: rules file must contain an Array/,
+        },
+      ],
+    },
+    {
+      description: "invalid ruleset JSON - object",
+      rule_resources: [
+        {
+          id: "invalid_ruleset_object",
+          path: "invalid_ruleset_object.json",
+          enabled: true,
+        },
+      ],
+      files: {
+        "invalid_ruleset_object.json": JSON.stringify({}),
+      },
+      expectInstallFailed: false,
+      expected: [
+        {
+          message: /Reading declarative_net_request .*invalid_ruleset_object\.json: rules file must contain an Array/,
+        },
+      ],
+    },
+    {
+      description: "invalid ruleset JSON - null",
+      rule_resources: [
+        {
+          id: "invalid_ruleset_null",
+          path: "invalid_ruleset_null.json",
+          enabled: true,
+        },
+      ],
+      files: {
+        "invalid_ruleset_null.json": JSON.stringify(null),
+      },
+      expectInstallFailed: false,
+      expected: [
+        {
+          message: /Reading declarative_net_request .*invalid_ruleset_null\.json: rules file must contain an Array/,
+        },
+      ],
+    },
   ];
 
   for (const {
     description,
     declarative_net_request,
     rule_resources,
+    files,
     expected,
     expectInstallFailed = true,
   } of invalidRulesetIdCases) {
     info(`Test manifest validation: ${description}`);
     let extension = ExtensionTestUtils.loadExtension(
-      getDNRExtension({ rule_resources, declarative_net_request })
+      getDNRExtension({ rule_resources, declarative_net_request, files })
     );
 
     const { messages } = await AddonTestUtils.promiseConsoleOutput(async () => {

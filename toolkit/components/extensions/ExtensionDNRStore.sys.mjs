@@ -582,9 +582,6 @@ class RulesetsStore {
     } = lazy.ExtensionDNRLimits;
 
     for (let [idx, { id, enabled, path }] of ruleResources.entries()) {
-      // Retrieve the file path from the normalized path.
-      path = Services.io.newURI(path).filePath;
-
       // If passed enabledRulesetIds is used to determine if the enabled
       // rules in the manifest should be overridden from the list of
       // enabled static rulesets stored on disk.
@@ -615,13 +612,15 @@ class RulesetsStore {
 
       const rawRules =
         enabled &&
-        (await extension.readJSON(path).catch(err => {
-          Cu.reportError(err);
-          enabled = false;
-          extension.packagingError(
-            `Reading declarative_net_request static rules file ${path}: ${err.message}`
-          );
-        }));
+        (await fetch(path)
+          .then(res => res.json())
+          .catch(err => {
+            Cu.reportError(err);
+            enabled = false;
+            extension.packagingError(
+              `Reading declarative_net_request static rules file ${path}: ${err.message}`
+            );
+          }));
 
       // Skip rulesets that are not enabled or can't be enabled (e.g. if we got error on loading or
       // parsing the rules JSON file).
