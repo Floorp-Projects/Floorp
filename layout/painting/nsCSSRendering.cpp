@@ -2029,8 +2029,7 @@ void nsCSSRendering::GetImageLayerClip(
     /* out */ ImageLayerClipState* aClipState) {
   StyleGeometryBox layerClip = ComputeBoxValue(aForFrame, aLayer.mClip);
   if (IsSVGStyleGeometryBox(layerClip)) {
-    MOZ_ASSERT(aForFrame->IsFrameOfType(nsIFrame::eSVG) &&
-               !aForFrame->IsSVGOuterSVGFrame());
+    MOZ_ASSERT(aForFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT));
 
     // The coordinate space of clipArea is svg user space.
     nsRect clipArea = nsLayoutUtils::ComputeGeometryBox(aForFrame, layerClip);
@@ -2069,8 +2068,7 @@ void nsCSSRendering::GetImageLayerClip(
     return;
   }
 
-  MOZ_ASSERT(!aForFrame->IsFrameOfType(nsIFrame::eSVG) ||
-             aForFrame->IsSVGOuterSVGFrame());
+  MOZ_ASSERT(!aForFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT));
 
   // Compute the outermost boundary of the area that might be painted.
   // Same coordinate space as aBorderArea.
@@ -2671,8 +2669,7 @@ nsRect nsCSSRendering::ComputeImageLayerPositioningArea(
   StyleGeometryBox layerOrigin = ComputeBoxValue(aForFrame, aLayer.mOrigin);
 
   if (IsSVGStyleGeometryBox(layerOrigin)) {
-    MOZ_ASSERT(aForFrame->IsFrameOfType(nsIFrame::eSVG) &&
-               !aForFrame->IsSVGOuterSVGFrame());
+    MOZ_ASSERT(aForFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT));
     *aAttachedToFrame = aForFrame;
 
     positionArea = nsLayoutUtils::ComputeGeometryBox(aForFrame, layerOrigin);
@@ -2688,8 +2685,7 @@ nsRect nsCSSRendering::ComputeImageLayerPositioningArea(
     return nsRect(toStrokeBoxOffset, positionArea.Size());
   }
 
-  MOZ_ASSERT(!aForFrame->IsFrameOfType(nsIFrame::eSVG) ||
-             aForFrame->IsSVGOuterSVGFrame());
+  MOZ_ASSERT(!aForFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT));
 
   LayoutFrameType frameType = aForFrame->Type();
   nsIFrame* geometryFrame = aForFrame;

@@ -307,8 +307,6 @@ gfxRect SVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(
   // CSS box model rules.
   NS_ASSERTION(!aNonSVGFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT),
                "Frames with SVG layout should not get here");
-  MOZ_ASSERT(!aNonSVGFrame->IsFrameOfType(nsIFrame::eSVG) ||
-             aNonSVGFrame->IsSVGOuterSVGFrame());
 
   nsIFrame* firstFrame =
       nsLayoutUtils::FirstContinuationOrIBSplitSibling(aNonSVGFrame);
