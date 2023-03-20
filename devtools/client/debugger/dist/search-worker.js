@@ -548,7 +548,8 @@ function getMatches(query, text, modifiers) {
 
       matchedLocations.push({
         line: i,
-        ch: singleMatch.index
+        ch: singleMatch.index,
+        match: singleMatch[0]
       }); // When the match is an empty string the regexQuery.lastIndex will not
       // change resulting in an infinite loop so we need to check for this and
       // increment it manually in that case.  See issue #7023
@@ -757,7 +758,8 @@ function findSourceMatches(sourceId, content, queryText, modifiers) {
   const lines = text.split("\n");
   return (0, _getMatches.default)(queryText, text, modifiers).map(({
     line,
-    ch
+    ch,
+    match
   }) => {
     const {
       value,
@@ -768,7 +770,7 @@ function findSourceMatches(sourceId, content, queryText, modifiers) {
       line: line + 1,
       column: ch,
       matchIndex,
-      match: queryText,
+      match,
       value
     };
   });
@@ -777,7 +779,8 @@ function findSourceMatches(sourceId, content, queryText, modifiers) {
 
 const startRegex = /([ !@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/g; // Similarly, find
 
-const endRegex = new RegExp(["([ !@#$%^&*()_+-=[]{};':\"\\|,.<>/?])", '[^ !@#$%^&*()_+-=[]{};\':"\\|,.<>/?]*$"/'].join(""));
+const endRegex = new RegExp(["([ !@#$%^&*()_+-=[]{};':\"\\|,.<>/?])", '[^ !@#$%^&*()_+-=[]{};\':"\\|,.<>/?]*$"/'].join("")); // For texts over 100 characters this truncates the text (for display)
+// around the context of the matched text.
 
 function truncateLine(text, column) {
   if (text.length < 100) {
