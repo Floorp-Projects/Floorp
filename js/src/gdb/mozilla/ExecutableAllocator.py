@@ -9,6 +9,7 @@ allocated by the Jits.
 """
 
 import gdb
+
 import mozilla.prettyprinters
 from mozilla.prettyprinters import pretty_printer, ptr_pretty_printer
 

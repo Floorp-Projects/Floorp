@@ -10,12 +10,12 @@ from collections import OrderedDict
 from tempfile import mkstemp
 
 import buildconfig
+
 import mozpack.path as mozpath
+from mozbuild.util import hexdump
 from mozpack.errors import errors
 from mozpack.executables import MACHO_SIGNATURES
 from mozpack.files import BaseFile, BaseFinder, ExecutableFile, GeneratedFile
-
-from mozbuild.util import hexdump
 
 # Regular expressions for unifying install.rdf
 FIND_TARGET_PLATFORM = re.compile(

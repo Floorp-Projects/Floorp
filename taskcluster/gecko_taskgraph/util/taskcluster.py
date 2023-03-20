@@ -7,6 +7,7 @@ import logging
 import os
 
 import taskcluster_urls as liburls
+from taskcluster import Hooks
 from taskgraph.util import taskcluster as tc_util
 from taskgraph.util.taskcluster import (
     _do_request,
@@ -15,8 +16,6 @@ from taskgraph.util.taskcluster import (
     get_task_definition,
     get_task_url,
 )
-
-from taskcluster import Hooks
 
 logger = logging.getLogger(__name__)
 

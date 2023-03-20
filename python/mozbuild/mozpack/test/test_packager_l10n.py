@@ -6,6 +6,7 @@ import unittest
 
 import mozunit
 import six
+
 from mozpack.chrome.manifest import Manifest, ManifestContent, ManifestLocale
 from mozpack.copier import FileRegistry
 from mozpack.files import GeneratedFile, ManifestFile

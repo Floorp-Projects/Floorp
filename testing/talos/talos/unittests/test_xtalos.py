@@ -1,6 +1,7 @@
 import re
 
 import mozunit
+
 from talos.xtalos.etlparser import NAME_SUBSTITUTIONS
 
 

@@ -15,6 +15,7 @@ sys.path.pop(0)
 import unittest
 
 import mozunit
+
 from xpidl import header, xpidl
 
 

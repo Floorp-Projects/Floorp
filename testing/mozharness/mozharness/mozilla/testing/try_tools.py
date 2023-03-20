@@ -11,6 +11,7 @@ import re
 from collections import defaultdict
 
 import six
+
 from mozharness.base.script import PostScriptAction
 from mozharness.base.transfer import TransferMixin
 

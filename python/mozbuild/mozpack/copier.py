@@ -9,8 +9,9 @@ import stat
 import sys
 from collections import Counter, OrderedDict, defaultdict
 
-import mozpack.path as mozpath
 import six
+
+import mozpack.path as mozpath
 from mozpack.errors import errors
 from mozpack.files import BaseFile, Dest
 

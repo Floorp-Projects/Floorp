@@ -6,6 +6,7 @@ import pathlib
 import re
 
 import jsonschema
+
 from perfdocs.gatherer import Gatherer
 from perfdocs.logger import PerfDocLogger
 from perfdocs.utils import read_file, read_yaml
@@ -550,7 +551,7 @@ class Verifier(object):
                 valid = True
                 break
         if not valid:
-            logger.warning(
+            logger.warning(  # noqa: PLE1205
                 "Cannot find a '{documentation}' entry in the given index file",
                 rst_path,
             )

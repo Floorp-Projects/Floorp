@@ -9,6 +9,7 @@ from mach.decorators import Command, CommandArgument
 from mozbuild.shellutil import quote as shell_quote
 from mozbuild.shellutil import split as shell_split
 
+
 # Instropection commands.
 
 

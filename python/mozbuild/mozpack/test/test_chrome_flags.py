@@ -5,6 +5,7 @@
 import unittest
 
 import mozunit
+
 from mozpack.chrome.flags import Flag, Flags, StringFlag, VersionFlag
 from mozpack.errors import ErrorMessage
 

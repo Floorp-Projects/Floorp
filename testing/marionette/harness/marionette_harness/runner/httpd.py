@@ -16,9 +16,8 @@ import sys
 import time
 
 from six.moves.urllib import parse as urlparse
-from wptserve import handlers, request
+from wptserve import handlers, request, server
 from wptserve import routes as default_routes
-from wptserve import server
 
 root = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 default_doc_root = os.path.join(root, "www")
