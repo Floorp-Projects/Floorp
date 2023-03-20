@@ -375,7 +375,7 @@ mozilla::ipc::IPCResult MFMediaEngineParent::RecvNotifyMediaInfo(
 
   auto errorExit = MakeScopeExit([&] {
     MediaResult error(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                      "Failed to setup media source");
+                      "Failed to create media source");
     DestroyEngineIfExists(Some(error));
   });
 
@@ -384,30 +384,59 @@ mozilla::ipc::IPCResult MFMediaEngineParent::RecvNotifyMediaInfo(
       SUCCEEDED(MakeAndInitialize<MFMediaSource>(
           &mMediaSource, aInfo.audioInfo(), aInfo.videoInfo(), mManagerThread)),
       IPC_OK());
-  mMediaEngineExtension->SetMediaSource(mMediaSource.Get());
 
-  // We use the source scheme in order to let the media engine to load our
-  // custom source.
-  NS_ENSURE_TRUE(
-      SUCCEEDED(mMediaEngine->SetSource(SysAllocString(L"MFRendererSrc"))),
-      IPC_OK());
-
+  const bool isEncryted = mMediaSource->IsEncrypted();
+  ENGINE_MARKER("MFMediaEngineParent,CreatedMediaSource");
   nsPrintfCString message(
-      "Finished setup our custom media source to the media engine, audio=%s, "
-      "video=%s, encrypted-audio=%s, encrypted-video=%s",
+      "Created the media source, audio=%s, video=%s, encrypted-audio=%s, "
+      "encrypted-video=%s, isEncrypted=%d",
       aInfo.audioInfo() ? aInfo.audioInfo()->mMimeType.BeginReading() : "none",
       aInfo.videoInfo() ? aInfo.videoInfo()->mMimeType.BeginReading() : "none",
       aInfo.audioInfo() && aInfo.audioInfo()->mCrypto.IsEncrypted() ? "yes"
                                                                     : "no",
       aInfo.videoInfo() && aInfo.videoInfo()->mCrypto.IsEncrypted() ? "yes"
-                                                                    : "no");
+                                                                    : "no",
+      isEncryted);
   LOG("%s", message.get());
-  ENGINE_MARKER_TEXT("MFMediaEngineParent,FinishedSetupMediaSource", message);
+
   mRequestSampleListener = mMediaSource->RequestSampleEvent().Connect(
       mManagerThread, this, &MFMediaEngineParent::HandleRequestSample);
-
   errorExit.release();
+
+  if (isEncryted && !mContentProtectionManager) {
+    // We will set the source later when the CDM proxy is ready.
+    return IPC_OK();
+  }
+
+  if (isEncryted && mContentProtectionManager) {
+    auto* proxy = mContentProtectionManager->GetCDMProxy();
+    MOZ_ASSERT(proxy);
+    mMediaSource->SetCDMProxy(proxy);
+  }
+  SetMediaSourceOnEngine();
   return IPC_OK();
+}
+
+void MFMediaEngineParent::SetMediaSourceOnEngine() {
+  AssertOnManagerThread();
+  MOZ_ASSERT(mMediaSource);
+
+  auto errorExit = MakeScopeExit([&] {
+    MediaResult error(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                      "Failed to set media source");
+    DestroyEngineIfExists(Some(error));
+  });
+
+  mMediaEngineExtension->SetMediaSource(mMediaSource.Get());
+
+  // We use the source scheme in order to let the media engine to load our
+  // custom source.
+  RETURN_VOID_IF_FAILED(
+      mMediaEngine->SetSource(SysAllocString(L"MFRendererSrc")));
+
+  LOG("Finished setup our custom media source to the media engine");
+  ENGINE_MARKER("MFMediaEngineParent,FinishedSetupMediaSource");
+  errorExit.release();
 }
 
 mozilla::ipc::IPCResult MFMediaEngineParent::RecvPlay() {
@@ -492,6 +521,7 @@ mozilla::ipc::IPCResult MFMediaEngineParent::RecvSetCDMProxyId(
   // handle that as well.
   if (mMediaSource) {
     mMediaSource->SetCDMProxy(proxy);
+    SetMediaSourceOnEngine();
   }
   LOG("Set CDM Proxy successfully on the media engine!");
 #endif

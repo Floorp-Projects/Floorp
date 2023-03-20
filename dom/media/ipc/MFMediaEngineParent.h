@@ -86,6 +86,8 @@ class MFMediaEngineParent final : public PMFMediaEngineParent {
 
   void UpdateStatisticsData();
 
+  void SetMediaSourceOnEngine();
+
   // This generates unique id for each MFMediaEngineParent instance, and it
   // would be increased monotonically.
   static inline uint64_t sMediaEngineIdx = 0;

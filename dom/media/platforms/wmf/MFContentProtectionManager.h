@@ -62,6 +62,8 @@ class MFContentProtectionManager
 
   HRESULT SetCDMProxy(MFCDMProxy* aCDMProxy);
 
+  MFCDMProxy* GetCDMProxy() const { return mCDMProxy; }
+
  private:
   HRESULT SetPMPServer(
       ABI::Windows::Media::Protection::IMediaProtectionPMPServer* aPMPServer);
