@@ -3204,6 +3204,45 @@ GeckoDriver.prototype.setPermission = async function(cmd) {
   lazy.permissions.set(descriptor, state, oneRealm);
 };
 
+/**
+ * Determines the Accessibility label for this element.
+ *
+ * @param {string} id
+ *     Web element reference ID to the element for which the accessibility label
+ *     will be returned.
+ *
+ * @return {string}
+ *     The Accessibility label for this element
+ */
+GeckoDriver.prototype.getComputedLabel = async function(cmd) {
+  lazy.assert.open(this.getBrowsingContext());
+  await this._handleUserPrompts();
+
+  let id = lazy.assert.string(cmd.parameters.id);
+  let webEl = WebElement.fromUUID(id).toJSON();
+
+  return this.getActor().getComputedLabel(webEl);
+};
+
+/**
+ * Determines the Accessibility role for this element.
+ *
+ * @param {string} id
+ *     Web element reference ID to the element for which the accessibility role
+ *     will be returned.
+ *
+ * @return {string}
+ *     The Accessibility role for this element
+ */
+GeckoDriver.prototype.getComputedRole = async function(cmd) {
+  lazy.assert.open(this.getBrowsingContext());
+  await this._handleUserPrompts();
+
+  let id = lazy.assert.string(cmd.parameters.id);
+  let webEl = WebElement.fromUUID(id).toJSON();
+  return this.getActor().getComputedRole(webEl);
+};
+
 GeckoDriver.prototype.commands = {
   // Marionette service
   "Marionette:AcceptConnections": GeckoDriver.prototype.acceptConnections,
@@ -3256,6 +3295,8 @@ GeckoDriver.prototype.commands = {
   "WebDriver:GetActiveElement": GeckoDriver.prototype.getActiveElement,
   "WebDriver:GetAlertText": GeckoDriver.prototype.getTextFromDialog,
   "WebDriver:GetCapabilities": GeckoDriver.prototype.getSessionCapabilities,
+  "WebDriver:GetComputedLabel": GeckoDriver.prototype.getComputedLabel,
+  "WebDriver:GetComputedRole": GeckoDriver.prototype.getComputedRole,
   "WebDriver:GetCookies": GeckoDriver.prototype.getCookies,
   "WebDriver:GetCurrentURL": GeckoDriver.prototype.getCurrentUrl,
   "WebDriver:GetElementAttribute": GeckoDriver.prototype.getElementAttribute,

@@ -238,7 +238,7 @@ action.Chain.prototype.singleTap = async function(
   }
 
   let a11y = lazy.accessibility.get(capabilities["moz:accessibilityChecks"]);
-  let acc = await a11y.getAccessible(el, true);
+  let acc = await a11y.assertAccessible(el, true);
   a11y.assertVisible(acc, el, visible);
   a11y.assertActionable(acc, el);
   if (!doc.createTouch) {
