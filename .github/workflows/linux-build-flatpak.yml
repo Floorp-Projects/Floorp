@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Setup Disk & Swap Space 💿
       run: |
         echo Before:
@@ -130,7 +130,7 @@ jobs:
         ls ./flatpak_build/public
 
     - name: Publish 🎁
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v3
       with:
         name: floorp-linux-flatpak-x64
         path: flatpak_build/public
