@@ -1169,7 +1169,7 @@ void MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
                                             const nsAString& aMappedAttrValue) {
   // Get the nsCSSPropertyID ID for our mapped attribute.
   nsCSSPropertyID propertyID =
-      nsCSSProps::LookupProperty(nsAtomCString(aMappedAttrName));
+      nsCSSProps::LookupProperty(nsAutoAtomCString(aMappedAttrName));
   if (propertyID != eCSSProperty_UNKNOWN) {
     bool changed = false;  // outparam for ParseProperty.
     NS_ConvertUTF16toUTF8 value(aMappedAttrValue);
@@ -1204,7 +1204,8 @@ void MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
 
 void MappedAttrParser::TellStyleAlreadyParsedResult(
     nsAtom const* aAtom, SVGAnimatedLength const& aLength) {
-  nsCSSPropertyID propertyID = nsCSSProps::LookupProperty(nsAtomCString(aAtom));
+  nsCSSPropertyID propertyID =
+      nsCSSProps::LookupProperty(nsAutoAtomCString(aAtom));
   SVGElement::UpdateDeclarationBlockFromLength(EnsureDeclarationBlock(),
                                                propertyID, aLength,
                                                SVGElement::ValToUse::Base);
