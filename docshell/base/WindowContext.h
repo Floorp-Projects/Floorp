@@ -51,6 +51,7 @@ class BrowsingContextGroup;
   /* Whether this window's channel has been marked as a third-party      \
    * tracking resource */                                                \
   FIELD(IsThirdPartyTrackingResourceWindow, bool)                        \
+  FIELD(ShouldResistFingerprinting, bool)                                \
   FIELD(IsSecureContext, bool)                                           \
   FIELD(IsOriginalFrameSource, bool)                                     \
   /* Mixed-Content: If the corresponding documentURI is https,           \
@@ -126,6 +127,10 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   bool HasBeforeUnload() const { return GetHasBeforeUnload(); }
 
   bool IsLocalIP() const { return GetIsLocalIP(); }
+
+  bool ShouldResistFingerprinting() const {
+    return GetShouldResistFingerprinting();
+  }
 
   nsGlobalWindowInner* GetInnerWindow() const;
   Document* GetDocument() const;
@@ -261,6 +266,8 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   bool CanSet(FieldIndex<IDX_IsThirdPartyTrackingResourceWindow>,
               const bool& aIsThirdPartyTrackingResourceWindow,
               ContentParent* aSource);
+  bool CanSet(FieldIndex<IDX_ShouldResistFingerprinting>,
+              const bool& aShouldResistFingerprinting, ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_IsSecureContext>, const bool& aIsSecureContext,
               ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_IsOriginalFrameSource>,
