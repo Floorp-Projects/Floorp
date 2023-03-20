@@ -32,6 +32,8 @@ interface WindowContext {
   // True if the principal of this window is for a local ip address.
   readonly attribute boolean isLocalIP;
 
+  readonly attribute boolean shouldResistFingerprinting;
+
   /**
    * Partially determines whether script execution is allowed in this
    * BrowsingContext. Script execution will be permitted only if this

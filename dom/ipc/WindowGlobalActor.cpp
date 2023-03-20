@@ -100,6 +100,7 @@ WindowGlobalInit WindowGlobalActor::WindowInitializer(
   fields.mIsThirdPartyWindow = doc->HasThirdPartyChannel();
   fields.mIsThirdPartyTrackingResourceWindow =
       nsContentUtils::IsThirdPartyTrackingResourceWindow(aWindow);
+  fields.mShouldResistFingerprinting = doc->ShouldResistFingerprinting();
   fields.mIsSecureContext = aWindow->IsSecureContext();
 
   // Initialze permission fields

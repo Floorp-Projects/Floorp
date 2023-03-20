@@ -227,6 +227,12 @@ bool WindowContext::CanSet(FieldIndex<IDX_IsThirdPartyTrackingResourceWindow>,
   return CheckOnlyOwningProcessCanSet(aSource);
 }
 
+bool WindowContext::CanSet(FieldIndex<IDX_ShouldResistFingerprinting>,
+                           const bool& aShouldResistFingerprinting,
+                           ContentParent* aSource) {
+  return CheckOnlyOwningProcessCanSet(aSource);
+}
+
 bool WindowContext::CanSet(FieldIndex<IDX_IsSecureContext>,
                            const bool& aIsSecureContext,
                            ContentParent* aSource) {
