@@ -6,9 +6,10 @@ import os
 import stat
 import unittest
 
-import mozpack.path as mozpath
 import mozunit
 import six
+
+import mozpack.path as mozpath
 from mozpack.copier import FileCopier, FileRegistry, FileRegistrySubtree, Jarrer
 from mozpack.errors import ErrorMessage
 from mozpack.files import ExistingFile, GeneratedFile

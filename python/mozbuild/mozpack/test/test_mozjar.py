@@ -6,9 +6,10 @@ import os
 import unittest
 from collections import OrderedDict
 
-import mozpack.path as mozpath
 import mozunit
 import six
+
+import mozpack.path as mozpath
 from mozpack.files import FileFinder
 from mozpack.mozjar import (
     Deflater,

@@ -23,6 +23,7 @@ import mozcrash
 import mozfile
 import six
 from mozlog import get_proxy_logger
+
 from talos import results, talosconfig, utils
 from talos.cmanager import CounterManagement
 from talos.ffsetup import FFSetup

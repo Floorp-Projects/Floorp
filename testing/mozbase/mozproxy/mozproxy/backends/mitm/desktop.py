@@ -6,6 +6,7 @@ import os
 import sys
 
 import mozinfo
+
 from mozproxy.backends.mitm.mitm import Mitmproxy
 from mozproxy.utils import LOG
 

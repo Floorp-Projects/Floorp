@@ -12,6 +12,8 @@ import tarfile
 import tempfile
 import time
 
+from mozprofile.prefs import Preferences
+
 from condprof import progress
 from condprof.changelog import Changelog
 from condprof.util import (
@@ -21,7 +23,6 @@ from condprof.util import (
     download_file,
     logger,
 )
-from mozprofile.prefs import Preferences
 
 TC_SERVICE = "https://firefox-ci-tc.services.mozilla.com"
 ROOT_URL = TC_SERVICE + "/api/index"

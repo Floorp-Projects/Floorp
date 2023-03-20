@@ -7,6 +7,7 @@ import os
 import random
 
 from arsenic.errors import UnknownArsenicError, UnknownError
+
 from condprof.helpers import TabSwitcher, execute_async_script, is_mobile
 from condprof.util import get_credentials, logger
 

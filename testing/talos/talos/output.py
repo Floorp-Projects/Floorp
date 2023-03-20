@@ -6,6 +6,7 @@
 # NOTE: we have a circular dependency with output.py when we import results
 import simplejson as json
 from mozlog import get_proxy_logger
+
 from talos import filter, utils
 
 LOG = get_proxy_logger()

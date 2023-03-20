@@ -14,6 +14,7 @@ import uuid
 import zipfile
 
 import mozinfo
+
 from mozharness.base.script import PostScriptAction, PreScriptAction
 from mozharness.mozilla.testing.per_test_base import SingleTestMixin
 

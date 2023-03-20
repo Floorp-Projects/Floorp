@@ -9,6 +9,7 @@ import sys
 from subprocess import PIPE
 
 import mozinfo
+
 from mozproxy.backends.mitm.mitm import Mitmproxy
 from mozproxy.utils import LOG, download_file_from_url, tooltool_download
 
