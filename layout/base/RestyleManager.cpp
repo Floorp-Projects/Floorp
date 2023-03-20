@@ -1133,8 +1133,7 @@ static void DoApplyRenderingChangeToTree(nsIFrame* aFrame,
       needInvalidatingPaint = true;
       aFrame->InvalidateFrameSubtree();
       if ((aChange & nsChangeHint_UpdateEffects) &&
-          aFrame->IsFrameOfType(nsIFrame::eSVG) &&
-          !aFrame->IsSVGOuterSVGFrame()) {
+          aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
         // Need to update our overflow rects:
         SVGUtils::ScheduleReflowSVG(aFrame);
       }
@@ -1681,8 +1680,7 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
     }
     if ((hint & nsChangeHint_InvalidateRenderingObservers) ||
         ((hint & nsChangeHint_UpdateOpacityLayer) &&
-         frame->IsFrameOfType(nsIFrame::eSVG) &&
-         !frame->IsSVGOuterSVGFrame())) {
+         frame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT))) {
       SVGObserverUtils::InvalidateRenderingObservers(frame);
       frame->SchedulePaint();
     }

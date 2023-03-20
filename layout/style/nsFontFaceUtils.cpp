@@ -141,8 +141,8 @@ static void ScheduleReflow(PresShell* aPresShell, nsIFrame* aFrame) {
             // FrameNeedsReflow again, then.
             return;
           }
-          if (f->IsSVGOuterSVGFrame() || !(f->IsFrameOfType(nsIFrame::eSVG) ||
-                                           SVGUtils::IsInSVGTextSubtree(f))) {
+          if (!f->HasAnyStateBits(NS_FRAME_SVG_LAYOUT) ||
+              !SVGUtils::IsInSVGTextSubtree(f)) {
             break;
           }
           f->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
