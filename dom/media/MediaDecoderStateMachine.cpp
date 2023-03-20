@@ -999,7 +999,9 @@ class MediaDecoderStateMachine::LoopingDecodingState
         "]",
         AudioQueue().GetOffset().ToMicroseconds(),
         mMaster->mAudioTrackDecodedDuration->ToMicroseconds());
-    RequestDataFromStartPosition(TrackInfo::TrackType::kAudioTrack);
+    if (!IsRequestingDataFromStartPosition(MediaData::Type::AUDIO_DATA)) {
+      RequestDataFromStartPosition(TrackInfo::TrackType::kAudioTrack);
+    }
     ProcessSamplesWaitingAdjustmentIfAny();
   }
 
@@ -1021,7 +1023,9 @@ class MediaDecoderStateMachine::LoopingDecodingState
         "]",
         VideoQueue().GetOffset().ToMicroseconds(),
         mMaster->mVideoTrackDecodedDuration->ToMicroseconds());
-    RequestDataFromStartPosition(TrackInfo::TrackType::kVideoTrack);
+    if (!IsRequestingDataFromStartPosition(MediaData::Type::VIDEO_DATA)) {
+      RequestDataFromStartPosition(TrackInfo::TrackType::kVideoTrack);
+    }
     ProcessSamplesWaitingAdjustmentIfAny();
   }
 
@@ -1532,6 +1536,15 @@ class MediaDecoderStateMachine::LoopingDecodingState
     MOZ_DIAGNOSTIC_ASSERT(aType == MediaData::Type::VIDEO_DATA);
     return mMaster->IsWaitingVideoData() ||
            IsDataWaitingForTimestampAdjustment(MediaData::Type::VIDEO_DATA);
+  }
+
+  bool IsRequestingDataFromStartPosition(MediaData::Type aType) const {
+    MOZ_DIAGNOSTIC_ASSERT(aType == MediaData::Type::AUDIO_DATA ||
+                          aType == MediaData::Type::VIDEO_DATA);
+    if (aType == MediaData::Type::AUDIO_DATA) {
+      return mAudioSeekRequest.Exists() || mAudioDataRequest.Exists();
+    }
+    return mVideoSeekRequest.Exists() || mVideoDataRequest.Exists();
   }
 
   bool mIsReachingAudioEOS;
