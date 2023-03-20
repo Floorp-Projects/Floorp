@@ -986,8 +986,7 @@
 .pdfViewer.scrollHorizontal,
 .pdfViewer.scrollWrapped,
 .spread {
-  margin-left: 3.5px;
-  margin-right: 3.5px;
+  margin-inline: 3.5px;
   text-align: center;
 }
 
@@ -998,8 +997,7 @@
 
 .pdfViewer.scrollHorizontal .spread,
 .pdfViewer.scrollWrapped .spread {
-  margin-left: 0;
-  margin-right: 0;
+  margin-inline: 0;
 }
 
 .spread .page,
@@ -1015,8 +1013,7 @@
 .spread .page,
 .pdfViewer.scrollHorizontal .page,
 .pdfViewer.scrollWrapped .page {
-  margin-left: var(--spreadHorizontalWrapped-margin-LR);
-  margin-right: var(--spreadHorizontalWrapped-margin-LR);
+  margin-inline: var(--spreadHorizontalWrapped-margin-LR);
 }
 
 .pdfViewer .page canvas {
