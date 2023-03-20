@@ -4,7 +4,11 @@
 
 package org.mozilla.fenix.onboarding.controller
 
+import androidx.navigation.NavController
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.onboarding.FenixOnboarding
+import org.mozilla.fenix.onboarding.OnboardingFragmentDirections
 import org.mozilla.fenix.onboarding.interactor.OnboardingInteractor
 import org.mozilla.fenix.settings.SupportUtils
 
@@ -13,9 +17,9 @@ import org.mozilla.fenix.settings.SupportUtils
  */
 interface OnboardingController {
     /**
-     * @see [OnboardingInteractor.onStartBrowsingClicked]
+     * @see [OnboardingInteractor.onFinishOnboarding]
      */
-    fun handleStartBrowsingClicked()
+    fun handleFinishOnboarding(focusOnAddressBar: Boolean)
 
     /**
      * @see [OnboardingInteractor.onReadPrivacyNoticeClicked]
@@ -28,11 +32,20 @@ interface OnboardingController {
  */
 class DefaultOnboardingController(
     private val activity: HomeActivity,
-    private val hideOnboarding: () -> Unit,
+    private val navController: NavController,
+    private val onboarding: FenixOnboarding,
 ) : OnboardingController {
 
-    override fun handleStartBrowsingClicked() {
-        hideOnboarding()
+    override fun handleFinishOnboarding(focusOnAddressBar: Boolean) {
+        onboarding.finish()
+
+        navController.navigate(
+            OnboardingFragmentDirections.actionHome(focusOnAddressBar = focusOnAddressBar),
+        )
+
+        if (focusOnAddressBar) {
+            Events.searchBarTapped.record(Events.SearchBarTappedExtra("HOME"))
+        }
     }
 
     override fun handleReadPrivacyNoticeClicked() {

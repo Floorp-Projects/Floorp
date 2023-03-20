@@ -6,10 +6,10 @@ package org.mozilla.fenix.search.toolbar
 
 import androidx.navigation.NavController
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator
 import org.mozilla.fenix.ext.nav
-import org.mozilla.fenix.home.HomeFragmentDirections
 
 /**
  * An interface that handles the view manipulation of the search selector menu.
@@ -34,12 +34,12 @@ class DefaultSearchSelectorController(
             SearchSelectorMenu.Item.SearchSettings -> {
                 navController.nav(
                     R.id.homeFragment,
-                    HomeFragmentDirections.actionGlobalSearchEngineFragment(),
+                    NavGraphDirections.actionGlobalSearchEngineFragment(),
                 )
             }
 
             is SearchSelectorMenu.Item.SearchEngine -> {
-                val directions = HomeFragmentDirections.actionGlobalSearchDialog(
+                val directions = NavGraphDirections.actionGlobalSearchDialog(
                     sessionId = null,
                     searchEngine = item.searchEngine.id,
                 )

@@ -5,6 +5,7 @@
 package org.mozilla.fenix.home
 
 import androidx.navigation.NavController
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
@@ -24,6 +25,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.StartOnHome
+import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
@@ -69,6 +71,8 @@ class TabCounterViewTest {
 
     @Test
     fun `WHEN tab counter is clicked THEN navigate to tabs tray and record metrics`() {
+        every { navController.currentDestination?.id } returns R.id.homeFragment
+
         assertNull(StartOnHome.openTabsTray.testGetValue())
 
         tabCounter.performClick()
@@ -78,7 +82,7 @@ class TabCounterViewTest {
         verify {
             navController.nav(
                 R.id.homeFragment,
-                HomeFragmentDirections.actionGlobalTabsTrayFragment(),
+                NavGraphDirections.actionGlobalTabsTrayFragment(),
             )
         }
     }

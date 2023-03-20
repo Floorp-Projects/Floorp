@@ -182,7 +182,6 @@ class HomeFragment : Fragment() {
     private var sessionControlView: SessionControlView? = null
     private var tabCounterView: TabCounterView? = null
     private var toolbarView: ToolbarView? = null
-    private var appBarLayout: AppBarLayout? = null
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var homeMenuView: HomeMenuView? = null
@@ -412,8 +411,6 @@ class HomeFragment : Fragment() {
 
         updateSessionControlView()
 
-        appBarLayout = binding.homeAppBar
-
         disableAppBarDragging()
 
         activity.themeManager.applyStatusBarTheme(activity)
@@ -519,7 +516,6 @@ class HomeFragment : Fragment() {
             homeActivity = activity as HomeActivity,
             navController = findNavController(),
             menuButton = WeakReference(binding.menuButton),
-            hideOnboardingIfNeeded = ::hideOnboardingIfNeeded,
         ).also { it.build() }
 
         tabCounterView = TabCounterView(
@@ -534,7 +530,7 @@ class HomeFragment : Fragment() {
         PrivateBrowsingButtonView(binding.privateBrowsingButton, browsingModeManager) { newMode ->
             sessionControlInteractor.onPrivateModeButtonClicked(
                 newMode,
-                requireComponents.fenixOnboarding.userHasBeenOnboarded(),
+                userHasBeenOnboarded = true,
             )
         }
 
@@ -689,7 +685,6 @@ class HomeFragment : Fragment() {
         sessionControlView = null
         tabCounterView = null
         toolbarView = null
-        appBarLayout = null
         _binding = null
 
         bundleArgs.clear()
@@ -846,24 +841,6 @@ class HomeFragment : Fragment() {
                 }
             }
         }
-    }
-
-    private fun hideOnboardingIfNeeded() {
-        if (!requireComponents.fenixOnboarding.userHasBeenOnboarded()) {
-            requireComponents.fenixOnboarding.finish()
-            requireContext().components.appStore.dispatch(
-                AppAction.ModeChange(
-                    mode = Mode.fromBrowsingMode(browsingModeManager.mode),
-                ),
-            )
-        }
-    }
-
-    @Suppress("UnusedPrivateMember")
-    private fun hideOnboardingAndOpenSearch() {
-        hideOnboardingIfNeeded()
-        appBarLayout?.setExpanded(true, true)
-        sessionControlInteractor.onNavigateSearch()
     }
 
     private fun subscribeToTabCollections(): Observer<List<TabCollection>> {

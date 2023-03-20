@@ -11,11 +11,10 @@ import mozilla.components.support.ktx.kotlin.isUrl
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.R
+import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.browser.BrowserAnimator
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.ext.nav
-import org.mozilla.fenix.home.HomeFragmentDirections
 
 /**
  * An interface that handles the view manipulation of the home screen toolbar.
@@ -67,21 +66,21 @@ class DefaultToolbarController(
         }
     }
     override fun handlePaste(clipboardText: String) {
-        val directions = HomeFragmentDirections.actionGlobalSearchDialog(
+        val directions = NavGraphDirections.actionGlobalSearchDialog(
             sessionId = null,
             pastedText = clipboardText,
         )
-        navController.nav(R.id.homeFragment, directions)
+        navController.nav(navController.currentDestination?.id, directions)
     }
 
     override fun handleNavigateSearch() {
         val directions =
-            HomeFragmentDirections.actionGlobalSearchDialog(
+            NavGraphDirections.actionGlobalSearchDialog(
                 sessionId = null,
             )
 
         navController.nav(
-            R.id.homeFragment,
+            navController.currentDestination?.id,
             directions,
             BrowserAnimator.getToolbarNavOptions(activity),
         )

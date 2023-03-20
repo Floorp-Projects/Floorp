@@ -67,7 +67,6 @@ class HomeMenuViewTest {
             homeActivity = homeActivity,
             navController = navController,
             menuButton = WeakReference(menuButton),
-            hideOnboardingIfNeeded = {},
         )
     }
 

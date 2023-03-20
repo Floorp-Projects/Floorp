@@ -53,7 +53,7 @@ class HomeMenuView(
     private val homeActivity: HomeActivity,
     private val navController: NavController,
     private val menuButton: WeakReference<MenuButton>,
-    private val hideOnboardingIfNeeded: () -> Unit,
+    private val hideOnboardingIfNeeded: () -> Unit = {},
     private val fxaEntrypoint: FxAEntryPoint = FenixFxAEntryPoint.HomeMenu,
 ) {
 

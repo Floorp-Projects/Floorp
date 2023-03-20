@@ -20,7 +20,7 @@ class OnboardingFinishViewHolder(
     init {
         val binding = OnboardingFinishBinding.bind(view)
         binding.finishButton.setOnClickListener {
-            interactor.onStartBrowsingClicked()
+            interactor.onFinishOnboarding(focusOnAddressBar = true)
             Onboarding.finish.record(NoExtras())
         }
     }

@@ -44,7 +44,7 @@ class OnboardingFinishViewHolderTest {
         OnboardingFinishViewHolder(binding.root, interactor)
 
         binding.finishButton.performClick()
-        verify { interactor.onStartBrowsingClicked() }
+        verify { interactor.onFinishOnboarding(focusOnAddressBar = true) }
         // Check if the event was recorded
         assertNotNull(Onboarding.finish.testGetValue())
         assertEquals(1, Onboarding.finish.testGetValue()!!.size)
