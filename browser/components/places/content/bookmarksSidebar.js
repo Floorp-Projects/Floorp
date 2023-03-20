@@ -26,6 +26,7 @@ XPCOMUtils.defineLazyScriptGetter(
   "chrome://browser/content/places/controller.js"
 );
 /* End Shared Places Import */
+var gCumulativeSearches = 0;
 
 function init() {
   let uidensity = window.top.document.documentElement.getAttribute("uidensity");
@@ -43,8 +44,33 @@ function searchBookmarks(aSearchString) {
     // eslint-disable-next-line no-self-assign
     tree.place = tree.place;
   } else {
+    Services.telemetry.keyedScalarAdd("sidebar.search", "bookmarks", 1);
+    gCumulativeSearches++;
     tree.applyFilter(aSearchString, PlacesUtils.bookmarks.userContentRoots);
   }
+}
+
+function updateTelemetry(urlsOpened = []) {
+  let searchesHistogram = Services.telemetry.getHistogramById(
+    "PLACES_BOOKMARKS_SEARCHBAR_CUMULATIVE_SEARCHES"
+  );
+  searchesHistogram.add(gCumulativeSearches);
+  clearCumulativeCounter();
+
+  Services.telemetry.keyedScalarAdd(
+    "sidebar.link",
+    "bookmarks",
+    urlsOpened.length
+  );
+}
+
+function clearCumulativeCounter() {
+  gCumulativeSearches = 0;
+}
+
+function unloadBookmarksSidebar() {
+  clearCumulativeCounter();
+  PlacesUIUtils.setMouseoverURL("", window);
 }
 
 window.addEventListener("SidebarFocused", () =>
