@@ -995,10 +995,10 @@ child:
     async InitSandboxTesting(Endpoint<PSandboxTestingChild> aEndpoint);
 #endif
 
-    async LoadURI(MaybeDiscardedBrowsingContext aContext, nullable nsDocShellLoadState aLoadState, bool aSetNavigating)
+    async LoadURI(MaybeDiscardedBrowsingContext aContext, nsDocShellLoadState aLoadState, bool aSetNavigating)
         returns (bool aSuccess);
 
-    async InternalLoad(nullable nsDocShellLoadState aLoadState);
+    async InternalLoad(nsDocShellLoadState aLoadState);
 
     async DisplayLoadError(MaybeDiscardedBrowsingContext aContext, nsString aURI);
 
@@ -1804,7 +1804,7 @@ parent:
 
     async NotifyOnHistoryReload(MaybeDiscardedBrowsingContext aContext,
                                 bool aForceReload)
-            returns (bool canReload, nullable nsDocShellLoadState? loadState,
+            returns (bool canReload, nsDocShellLoadState? loadState,
                      bool? reloadActiveEntry);
 
     async HistoryCommit(MaybeDiscardedBrowsingContext aContext,

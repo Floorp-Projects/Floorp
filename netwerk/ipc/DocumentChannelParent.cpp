@@ -68,19 +68,18 @@ bool DocumentChannelParent::Init(dom::CanonicalBrowsingContext* aContext,
 
       promise = mDocumentLoadListener->OpenDocument(
           loadState, aArgs.cacheKey(), Some(aArgs.channelId()),
-          aArgs.asyncOpenTime(), aArgs.timing().refOr(nullptr),
-          std::move(clientInfo), Some(docArgs.uriModified()),
-          Some(docArgs.isXFOError()), contentParent, &rv);
+          aArgs.asyncOpenTime(), aArgs.timing(), std::move(clientInfo),
+          Some(docArgs.uriModified()), Some(docArgs.isXFOError()),
+          contentParent, &rv);
     } else {
       const ObjectCreationArgs& objectArgs = aArgs.elementCreationArgs();
 
       promise = mDocumentLoadListener->OpenObject(
           loadState, aArgs.cacheKey(), Some(aArgs.channelId()),
-          aArgs.asyncOpenTime(), aArgs.timing().refOr(nullptr),
-          std::move(clientInfo), objectArgs.embedderInnerWindowId(),
-          objectArgs.loadFlags(), objectArgs.contentPolicyType(),
-          objectArgs.isUrgentStart(), contentParent,
-          this /* ObjectUpgradeHandler */, &rv);
+          aArgs.asyncOpenTime(), aArgs.timing(), std::move(clientInfo),
+          objectArgs.embedderInnerWindowId(), objectArgs.loadFlags(),
+          objectArgs.contentPolicyType(), objectArgs.isUrgentStart(),
+          contentParent, this /* ObjectUpgradeHandler */, &rv);
     }
 
     if (NS_FAILED(rv)) {

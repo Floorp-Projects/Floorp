@@ -694,7 +694,7 @@ child:
 
     async CompositorOptionsChanged(CompositorOptions newOptions);
 
-    async LoadURL(nullable nsDocShellLoadState loadState, ParentShowInfo info);
+    async LoadURL(nsDocShellLoadState loadState, ParentShowInfo info);
 
     async CreateAboutBlankContentViewer(nullable nsIPrincipal principal,
                                         nullable nsIPrincipal partitionedPrincipal);
