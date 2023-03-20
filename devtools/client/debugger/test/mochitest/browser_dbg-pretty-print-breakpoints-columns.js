@@ -48,6 +48,7 @@ add_task(async function() {
 
   info("We pause on the first column breakpoint (before `i` init)");
   await waitForPaused(dbg);
+  await waitForInlinePreviews(dbg);
   await assertPausedAtSourceAndLine(
     dbg,
     prettySource.id,
@@ -60,6 +61,7 @@ add_task(async function() {
     "We pause at the second column breakpoint, before the first loop iteration"
   );
   await waitForPaused(dbg);
+  await waitForInlinePreviews(dbg);
   await assertPausedAtSourceAndLine(
     dbg,
     prettySource.id,
@@ -82,6 +84,7 @@ add_task(async function() {
     "We pause at the second column breakpoint, before the second loop iteration"
   );
   await waitForPaused(dbg);
+  await waitForInlinePreviews(dbg);
   await assertPausedAtSourceAndLine(
     dbg,
     prettySource.id,
@@ -95,6 +98,7 @@ add_task(async function() {
     "We pause at the second column breakpoint, before we exit the loop (`items.length` is 2, so the condition will fail)"
   );
   await waitForPaused(dbg);
+  await waitForInlinePreviews(dbg);
   await assertPausedAtSourceAndLine(
     dbg,
     prettySource.id,
