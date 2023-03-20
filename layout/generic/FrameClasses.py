@@ -127,7 +127,6 @@ FRAME_CLASSES = [
     Frame("nsTextFrame", "Text", LEAF),
     Frame("nsTreeBodyFrame", "LeafBox", LEAF),
     Frame("nsVideoFrame", "HTMLVideo", NOT_LEAF),
-    Frame("nsXULScrollFrame", "Scroll", NOT_LEAF),
     Frame("ViewportFrame", "Viewport", NOT_LEAF),
     Frame("WBRFrame", "Wbr", LEAF),
     # Non-concrete classes (for FrameIID use)

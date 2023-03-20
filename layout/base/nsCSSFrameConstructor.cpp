@@ -220,9 +220,6 @@ nsIFrame* NS_NewTreeBodyFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 nsHTMLScrollFrame* NS_NewHTMLScrollFrame(PresShell* aPresShell,
                                          ComputedStyle* aStyle, bool aIsRoot);
 
-nsXULScrollFrame* NS_NewXULScrollFrame(PresShell* aPresShell,
-                                       ComputedStyle* aStyle, bool aIsRoot);
-
 nsIFrame* NS_NewSliderFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
 nsIFrame* NS_NewScrollbarFrame(PresShell* aPresShell, ComputedStyle* aStyle);
@@ -4199,29 +4196,8 @@ already_AddRefed<ComputedStyle> nsCSSFrameConstructor::BeginBuildingScrollFrame(
     nsContainerFrame*& aNewFrame) {
   nsContainerFrame* gfxScrollFrame = aNewFrame;
 
-  nsFrameList anonymousList;
-
   if (!gfxScrollFrame) {
-    const bool useXULScrollFrame = [&] {
-      const auto& disp = *aContentStyle->StyleDisplay();
-      if (disp.DisplayOutside() == StyleDisplayOutside::XUL) {
-        // XXX Should this be emulated?
-        return true;
-      }
-      if (disp.DisplayInside() == StyleDisplayInside::MozBox) {
-        return !aContentStyle->StyleVisibility()->EmulateMozBoxWithFlex();
-      }
-      return false;
-    }();
-    // Build a XULScrollFrame when the child is a box, otherwise an
-    // HTMLScrollFrame
-    if (useXULScrollFrame) {
-      gfxScrollFrame = NS_NewXULScrollFrame(mPresShell, aContentStyle, aIsRoot);
-    } else {
-      gfxScrollFrame =
-          NS_NewHTMLScrollFrame(mPresShell, aContentStyle, aIsRoot);
-    }
-
+    gfxScrollFrame = NS_NewHTMLScrollFrame(mPresShell, aContentStyle, aIsRoot);
     InitAndRestoreFrame(aState, aContent, aParentFrame, gfxScrollFrame);
   }
 
@@ -4237,7 +4213,8 @@ already_AddRefed<ComputedStyle> nsCSSFrameConstructor::BeginBuildingScrollFrame(
   DebugOnly<nsresult> rv =
       GetAnonymousContent(aContent, gfxScrollFrame, scrollNAC);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
-  if (scrollNAC.Length() > 0) {
+  nsFrameList anonymousList;
+  if (!scrollNAC.IsEmpty()) {
     nsFrameConstructorSaveState floatSaveState;
     aState.MaybePushFloatContainingBlock(gfxScrollFrame, floatSaveState);
 
