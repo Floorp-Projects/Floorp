@@ -1190,7 +1190,7 @@ LexerResult nsAVIFDecoder::DoDecode(SourceBufferIterator& aIterator,
   MOZ_LOG(sAVIFLog, LogLevel::Info,
           ("[this=%p] nsAVIFDecoder::DoDecode start", this));
 
-  DecodeResult result = Decode(aIterator, aOnResume);
+  DecodeResult result = DoDecodeInternal(aIterator, aOnResume);
 
   RecordDecodeResultTelemetry(result);
 
@@ -1378,10 +1378,10 @@ static void RecordFrameTelem(bool aAnimated, const Mp4parseAvifInfo& aInfo,
   }
 }
 
-nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
+nsAVIFDecoder::DecodeResult nsAVIFDecoder::DoDecodeInternal(
     SourceBufferIterator& aIterator, IResumable* aOnResume) {
   MOZ_LOG(sAVIFLog, LogLevel::Debug,
-          ("[this=%p] nsAVIFDecoder::DoDecode", this));
+          ("[this=%p] nsAVIFDecoder::DoDecodeInternal", this));
 
   // Since the SourceBufferIterator doesn't guarantee a contiguous buffer,
   // but the current mp4parse-rust implementation requires it, always buffer
