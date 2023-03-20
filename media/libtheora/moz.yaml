@@ -97,6 +97,9 @@ vendoring:
     - lib/config.h
     - update.sh
 
+  patches:
+    - clang-arm.patch
+
   update-actions:
     - action: run-script
       script: '{yaml_dir}/update.sh'
