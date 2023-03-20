@@ -767,7 +767,8 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
                   return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
                 }
 
-                return FileAddInfo{fileActor, StructuredCloneFileBase::eBlob};
+                return FileAddInfo{WrapNotNull(fileActor),
+                                   StructuredCloneFileBase::eBlob};
               }
 
               case StructuredCloneFileBase::eWasmBytecode:
@@ -781,7 +782,7 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
                   return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
                 }
 
-                return FileAddInfo{fileActor, file.Type()};
+                return FileAddInfo{WrapNotNull(fileActor), file.Type()};
               }
 
               default:

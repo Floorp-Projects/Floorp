@@ -99,7 +99,7 @@ class ContentChild final : public PContentChild,
   };
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult ProvideWindowCommon(
-      BrowserChild* aTabOpener, nsIOpenWindowInfo* aOpenWindowInfo,
+      NotNull<BrowserChild*> aTabOpener, nsIOpenWindowInfo* aOpenWindowInfo,
       uint32_t aChromeFlags, bool aCalledFromJS, nsIURI* aURI,
       const nsAString& aName, const nsACString& aFeatures, bool aForceNoOpener,
       bool aForceNoReferrer, bool aIsPopupRequested,

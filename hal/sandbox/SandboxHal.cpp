@@ -40,8 +40,9 @@ void Vibrate(const nsTArray<uint32_t>& pattern, WindowIdentifier&& id) {
 
   WindowIdentifier newID(std::move(id));
   newID.AppendProcessID();
-  Hal()->SendVibrate(pattern, newID.AsArray(),
-                     BrowserChild::GetFrom(newID.GetWindow()));
+  if (BrowserChild* bc = BrowserChild::GetFrom(newID.GetWindow())) {
+    Hal()->SendVibrate(pattern, newID.AsArray(), WrapNotNull(bc));
+  }
 }
 
 void CancelVibrate(WindowIdentifier&& id) {
@@ -49,8 +50,9 @@ void CancelVibrate(WindowIdentifier&& id) {
 
   WindowIdentifier newID(std::move(id));
   newID.AppendProcessID();
-  Hal()->SendCancelVibrate(newID.AsArray(),
-                           BrowserChild::GetFrom(newID.GetWindow()));
+  if (BrowserChild* bc = BrowserChild::GetFrom(newID.GetWindow())) {
+    Hal()->SendCancelVibrate(newID.AsArray(), WrapNotNull(bc));
+  }
 }
 
 void EnableBatteryNotifications() { Hal()->SendEnableBatteryNotifications(); }
@@ -151,7 +153,7 @@ class HalParent : public PHalParent,
 
   virtual mozilla::ipc::IPCResult RecvVibrate(
       nsTArray<unsigned int>&& pattern, nsTArray<uint64_t>&& id,
-      PBrowserParent* browserParent) override {
+      NotNull<PBrowserParent*> browserParent) override {
     // We give all content vibration permission.
     //    BrowserParent *browserParent = BrowserParent::GetFrom(browserParent);
     /* xxxkhuey wtf
@@ -163,7 +165,8 @@ class HalParent : public PHalParent,
   }
 
   virtual mozilla::ipc::IPCResult RecvCancelVibrate(
-      nsTArray<uint64_t>&& id, PBrowserParent* browserParent) override {
+      nsTArray<uint64_t>&& id,
+      NotNull<PBrowserParent*> browserParent) override {
     // BrowserParent *browserParent = BrowserParent::GetFrom(browserParent);
     /* XXXkhuey wtf
     nsCOMPtr<nsIDOMWindow> window =

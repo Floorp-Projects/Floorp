@@ -108,9 +108,9 @@ void ImageBridgeChild::UseTextures(
 
     bool readLocked = t.mTextureClient->OnForwardedToHost();
 
-    textures.AppendElement(TimedTexture(t.mTextureClient->GetIPDLActor(),
-                                        t.mTimeStamp, t.mPictureRect,
-                                        t.mFrameID, t.mProducerID, readLocked));
+    textures.AppendElement(TimedTexture(
+        WrapNotNull(t.mTextureClient->GetIPDLActor()), t.mTimeStamp,
+        t.mPictureRect, t.mFrameID, t.mProducerID, readLocked));
 
     // Wait end of usage on host side if TextureFlags::RECYCLE is set
     HoldUntilCompositableRefReleasedIfNecessary(t.mTextureClient);
@@ -853,7 +853,7 @@ static bool IBCAddOpDestroy(CompositableTransaction* aTxn,
 }
 
 bool ImageBridgeChild::DestroyInTransaction(PTextureChild* aTexture) {
-  return IBCAddOpDestroy(mTxn, OpDestroy(aTexture));
+  return IBCAddOpDestroy(mTxn, OpDestroy(WrapNotNull(aTexture)));
 }
 
 bool ImageBridgeChild::DestroyInTransaction(const CompositableHandle& aHandle) {
@@ -871,9 +871,9 @@ void ImageBridgeChild::RemoveTextureFromCompositable(
     return;
   }
 
-  mTxn->AddNoSwapEdit(
-      CompositableOperation(aCompositable->GetIPCHandle(),
-                            OpRemoveTexture(aTexture->GetIPDLActor())));
+  mTxn->AddNoSwapEdit(CompositableOperation(
+      aCompositable->GetIPCHandle(),
+      OpRemoveTexture(WrapNotNull(aTexture->GetIPDLActor()))));
 }
 
 bool ImageBridgeChild::IsSameProcess() const {

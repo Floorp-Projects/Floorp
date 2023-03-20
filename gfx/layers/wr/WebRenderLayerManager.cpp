@@ -529,7 +529,8 @@ void WebRenderLayerManager::MakeSnapshotIfRequired(LayoutDeviceIntSize aSize) {
 
   IntRect bounds = ToOutsideIntRect(mTarget->GetClipExtents());
   bool needsYFlip = false;
-  if (!WrBridge()->SendGetSnapshot(texture->GetIPDLActor(), &needsYFlip)) {
+  if (!WrBridge()->SendGetSnapshot(WrapNotNull(texture->GetIPDLActor()),
+                                   &needsYFlip)) {
     return;
   }
 

@@ -305,8 +305,8 @@ bool DocAccessibleChild::ConstructChildDocInParentProcess(
   return true;
 }
 
-bool DocAccessibleChild::SendBindChildDoc(DocAccessibleChild* aChildDoc,
-                                          const uint64_t& aNewParentID) {
+bool DocAccessibleChild::SendBindChildDoc(
+    NotNull<DocAccessibleChild*> aChildDoc, const uint64_t& aNewParentID) {
   if (IsConstructedInParentProcess()) {
     return DocAccessibleChildBase::SendBindChildDoc(aChildDoc, aNewParentID);
   }
