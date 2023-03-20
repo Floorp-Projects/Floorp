@@ -144,9 +144,7 @@ const assertDNRStoreData = async (
     // expected number of rules (there are still other tests explicitly
     // asserting all loaded rules).
     if (assertIndividualRules) {
-      info(
-        `Verify the each individual rule loaded for ruleset id "${rulesetId}"`
-      );
+      info(`Verify each individual rule loaded for ruleset id "${rulesetId}"`);
       for (let ruleIdx = 0; ruleIdx < expectedRulesetRules.length; ruleIdx++) {
         assertRuleAtIdx(ruleIdx);
       }
