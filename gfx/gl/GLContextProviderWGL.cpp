@@ -191,7 +191,6 @@ bool WGLLibrary::EnsureInitialized() {
 
   const auto extString = mSymbols.fGetExtensionsStringARB(mRootDc);
   MOZ_ASSERT(extString);
-  MOZ_ASSERT(HasExtension(extString, "WGL_ARB_extensions_string"));
 
   // --
 
