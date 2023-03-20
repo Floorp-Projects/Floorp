@@ -61,6 +61,24 @@ addAccessibleTask(
       [" ", "#000000", "#ffffff", null, null, null, 16, null, null],
       ["test", "#0000ee", "#ffffff", 1, "#0000ee", null, 16, "a2", null],
     ]);
+
+    // Test different NSRange parameters for AXAttributedStringForRange
+    let worldLeaf = findAccessibleChildByID(accDoc, "a1").firstChild;
+    let wordStaticText = worldLeaf.nativeInterface.QueryInterface(
+      Ci.nsIAccessibleMacInterface
+    );
+    attributedText = wordStaticText.getParameterizedAttributeValue(
+      "AXAttributedStringForRange",
+      NSRange(4, 1)
+    );
+    is(attributedText.length, 1, "Last character is in single attribute run");
+    is(attributedText[0].string, "d", "Last character matches");
+
+    attributedText = wordStaticText.getParameterizedAttributeValue(
+      "AXAttributedStringForRange",
+      NSRange(5, 1)
+    );
+    is(attributedText.length, 0, "Range is past accessible bounds");
   }
 );
 

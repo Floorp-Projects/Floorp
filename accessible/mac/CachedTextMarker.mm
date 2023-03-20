@@ -327,6 +327,10 @@ NSAttributedString* CachedTextMarkerRange::AttributedText() const {
     TextLeafPoint attributesNext;
     do {
       attributesNext = start.FindTextAttrsStart(eDirNext, false);
+      if (attributesNext == start) {
+        // XXX: FindTextAttrsStart should not return the same point.
+        break;
+      }
       RefPtr<AccAttributes> attributes = start.GetTextAttributes();
       MOZ_ASSERT(attributes);
       if (attributes && !attributes->Equal(currentRun)) {
