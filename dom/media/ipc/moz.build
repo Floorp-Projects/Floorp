@@ -35,7 +35,6 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.dom += [
     "MediaIPCUtils.h",
-    "MFCDMSerializers.h",
 ]
 
 SOURCES += [
