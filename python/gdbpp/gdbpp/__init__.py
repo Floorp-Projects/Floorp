@@ -20,12 +20,12 @@ class GeckoPrettyPrinter(object):
         return wrapped
 
 
-import gdbpp.enumset  # NOQA: F401
-import gdbpp.linkedlist  # NOQA: F401
-import gdbpp.owningthread  # NOQA: F401
-import gdbpp.smartptr  # NOQA: F401
-import gdbpp.string  # NOQA: F401
-import gdbpp.tarray  # NOQA: F401
-import gdbpp.thashtable  # NOQA: F401
+import gdbpp.enumset  # noqa: F401
+import gdbpp.linkedlist  # noqa: F401
+import gdbpp.owningthread  # noqa: F401
+import gdbpp.smartptr  # noqa: F401
+import gdbpp.string  # noqa: F401
+import gdbpp.tarray  # noqa: F401
+import gdbpp.thashtable  # noqa: F401
 
 gdb.printing.register_pretty_printer(None, GeckoPrettyPrinter.pp)

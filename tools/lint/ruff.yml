@@ -1,0 +1,17 @@
+---
+ruff:
+    description: An extremely fast Python linter, written in Rust
+    # Excludes should be added to topsrcdir/pyproject.toml
+    exclude: []
+    # The configure option is used by the build system
+    extensions: ["configure", "py"]
+    support-files:
+        - "**/.ruff.toml"
+        - "**/ruff.toml"
+        - "**/pyproject.toml"
+        - "tools/lint/python/ruff.py"
+    # Rules that should result in warnings rather than errors.
+    warning-rules: []
+    type: external
+    payload: python.ruff:lint
+    setup: python.ruff:setup
