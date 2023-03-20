@@ -1344,14 +1344,14 @@ class TranslationUnit(ipdl.ast.TranslationUnit):
 # -----------------------------------------------------------------------------
 
 pod_types = {
-    "int8_t": 1,
-    "uint8_t": 1,
-    "int16_t": 2,
-    "uint16_t": 2,
-    "int32_t": 4,
-    "uint32_t": 4,
-    "int64_t": 8,
-    "uint64_t": 8,
+    "::int8_t": 1,
+    "::uint8_t": 1,
+    "::int16_t": 2,
+    "::uint16_t": 2,
+    "::int32_t": 4,
+    "::uint32_t": 4,
+    "::int64_t": 8,
+    "::uint64_t": 8,
     "float": 4,
     "double": 8,
 }
@@ -1362,10 +1362,10 @@ pod_size_sentinel = max_pod_size * 2
 
 
 def pod_size(ipdltype):
-    if not isinstance(ipdltype, ipdl.type.ImportedCxxType):
+    if not ipdltype.isCxx():
         return pod_size_sentinel
 
-    return pod_types.get(ipdltype.name(), pod_size_sentinel)
+    return pod_types.get(ipdltype.fullname(), pod_size_sentinel)
 
 
 class _DecorateWithCxxStuff(ipdl.ast.Visitor):
@@ -1985,7 +1985,7 @@ class _ParamTraits:
         readbytes = ExprCall(
             ExprSelect(cls.readervar, "->", "ReadBytesInto"),
             args=[
-                ExprAddrOf(ExprCall(first.getMethod(thisexpr=var, sel="."))),
+                ExprAddrOf(ExprCall(first.getMethod(thisexpr=var, sel="->"))),
                 ExprLiteral.Int(size * len(fields)),
             ],
         )
@@ -2016,36 +2016,29 @@ class _ParamTraits:
         paramtype,
         sentinelKey,
         errfnSentinel,
-        varIsMaybe=True,
     ):
-        block = StmtBlock()
+        assert isinstance(var, ExprVar)
 
-        # Read the data
-        maybeVar = var
-        if varIsMaybe:
-            block.addcode(
-                """
-                ${var} = IPC::ReadParam<${ty}>(${reader});
-                """,
-                var=var,
-                ty=cxxtype,
-                reader=readervar,
-            )
-        else:
-            block.addcode(
-                """
-                auto tmp = IPC::ReadParam<${ty}>(${reader});
-                """,
-                ty=cxxtype,
-                reader=readervar,
-            )
-            maybeVar = ExprVar("tmp")
-
-        ifbad = StmtIf(ExprNot(maybeVar))
         if not isinstance(paramtype, list):
             paramtype = ["Error deserializing " + paramtype]
-        ifbad.addifstmts(errfn(*paramtype))
-        block.addstmt(ifbad)
+
+        block = Block()
+
+        # Read the data
+        block.addcode(
+            """
+            auto ${maybevar} = IPC::ReadParam<${ty}>(${reader});
+            if (!${maybevar}) {
+                $*{errfn}
+            }
+            auto& ${var} = *${maybevar};
+            """,
+            maybevar=ExprVar("maybe__" + var.name),
+            ty=cxxtype,
+            reader=readervar,
+            errfn=errfn(*paramtype),
+            var=var,
+        )
 
         # Check if we got a null non-nullable actor
         if (
@@ -2054,7 +2047,7 @@ class _ParamTraits:
             and ipdltype.isActor()
             and not ipdltype.nullable
         ):
-            ifnull = StmtIf(ExprNot(ExprDeref(maybeVar)))
+            ifnull = StmtIf(ExprNot(var))
             ifnull.addifstmts(errfn(*paramtype))
             block.addstmt(ifnull)
 
@@ -2062,20 +2055,11 @@ class _ParamTraits:
             cls.readSentinel(readervar, sentinelKey, errfnSentinel(*paramtype))
         )
 
-        # Move the read value into the target.
-        if not varIsMaybe:
-            block.addcode(
-                """
-                ${var} = tmp.extract();
-                """,
-                var=var,
-            )
-
         return block
 
     # Helper wrapper for checkedRead for use within _ParamTraits
     @classmethod
-    def _checkedRead(cls, ipdltype, cxxtype, var, sentinelKey, what, varIsMaybe=True):
+    def _checkedRead(cls, ipdltype, cxxtype, var, sentinelKey, what):
         def errfn(msg):
             return [cls.fatalError(cls.readervar, msg), StmtReturn(ExprNothing())]
 
@@ -2088,7 +2072,6 @@ class _ParamTraits:
             paramtype=what,
             sentinelKey=sentinelKey,
             errfnSentinel=errfnSentinel(ExprNothing()),
-            varIsMaybe=varIsMaybe,
         )
 
     @classmethod
@@ -2210,31 +2193,25 @@ class _ParamTraits:
         write = []
         read = []
 
-        readparam = ExprVar("param")
-        read.append(StmtDecl(Decl(Type("paramType"), readparam.name)))
-
-        writeparam = cls.var
-
-        def get(f, var):
-            return ExprCall(f.getMethod(thisexpr=var, sel="."))
-
-        for (size, fields) in itertools.groupby(
-            sd.fields_member_order(), lambda f: pod_size(f.ipdltype)
-        ):
-            fields = list(fields)
-
-            if size == pod_size_sentinel:
-                for f in fields:
-                    writefield = cls.checkedWrite(
+        # First serialize/deserialize all non-pod data in IPDL order. These need
+        # to be read/written first because they'll be used to invoke the IPDL
+        # struct's constructor.
+        ctorargs = []
+        for f in sd.fields_ipdl_order():
+            if pod_size(f.ipdltype) == pod_size_sentinel:
+                write.append(
+                    cls.checkedWrite(
                         f.ipdltype,
-                        get(f, writeparam),
+                        ExprCall(f.getMethod(thisexpr=cls.var, sel=".")),
                         cls.writervar,
                         sentinelKey=f.basename,
                     )
-                    readfield = cls._checkedRead(
+                )
+                read.append(
+                    cls._checkedRead(
                         f.ipdltype,
                         f.bareType(fq=True),
-                        get(f, readparam),
+                        f.argVar(),
                         f.basename,
                         "'"
                         + f.getMethod().name
@@ -2245,19 +2222,37 @@ class _ParamTraits:
                         + "'"
                         + structtype.name()
                         + "'",
-                        varIsMaybe=False,
                     )
-
-                    write.append(writefield)
-                    read.append(readfield)
+                )
+                if _cxxTypeCanMove(f.ipdltype):
+                    ctorargs.append(ExprMove(f.argVar()))
+                else:
+                    ctorargs.append(f.argVar())
             else:
-                writefield = cls.checkedBulkWrite(writeparam, size, fields)
-                readfield = cls.checkedBulkRead(readparam, size, fields)
+                # We're going to bulk-read in this value later, so we'll just
+                # zero-initialize it for now.
+                ctorargs.append(ExprCode("${type}{0}", type=f.bareType(fq=True)))
 
-                write.append(writefield)
-                read.append(readfield)
+        resultvar = ExprVar("result__")
+        read.append(
+            StmtDecl(
+                Decl(_cxxMaybeType(Type("paramType")), resultvar.name),
+                initargs=[ExprVar("std::in_place")] + ctorargs,
+            )
+        )
 
-        read.append(StmtReturn(ExprSome(ExprMove(readparam))))
+        # After non-pod data, bulk read/write pod data in member order. This has
+        # to be done after the result has been constructed, so that we have
+        # somewhere to read into.
+        for (size, fields) in itertools.groupby(
+            sd.fields_member_order(), lambda f: pod_size(f.ipdltype)
+        ):
+            if size != pod_size_sentinel:
+                fields = list(fields)
+                write.append(cls.checkedBulkWrite(cls.var, size, fields))
+                read.append(cls.checkedBulkRead(resultvar, size, fields))
+
+        read.append(StmtReturn(resultvar))
 
         return cls.generateDecl(
             cxxtype, write, read, needsmove=_cxxTypeNeedsMoveForSend(structtype)
@@ -2289,21 +2284,18 @@ class _ParamTraits:
 
         readswitch = StmtSwitch(typevar)
         read = prelude + [
-            StmtDecl(Decl(Type.INT, typevar.name), init=ExprLiteral.ZERO),
             cls._checkedRead(
                 None,
                 Type.INT,
                 typevar,
                 uniontype.name(),
                 "type of union " + uniontype.name(),
-                varIsMaybe=False,
             ),
             Whitespace.NL,
             readswitch,
         ]
 
         for c in ud.components:
-            ct = c.ipdltype
             caselabel = CaseLabel(alias + "::" + c.enum())
             origenum = c.enum()
 
@@ -2319,10 +2311,8 @@ class _ParamTraits:
 
             readcase = StmtBlock()
             tmpvar = ExprVar("tmp")
-            ct = _cxxMaybeType(c.bareType(fq=True))
             readcase.addstmts(
                 [
-                    StmtDecl(Decl(ct, tmpvar.name)),
                     cls._checkedRead(
                         c.ipdltype,
                         c.bareType(fq=True),
@@ -2330,7 +2320,7 @@ class _ParamTraits:
                         origenum,
                         "variant " + origenum + " of union " + uniontype.name(),
                     ),
-                    StmtReturn(tmpvar),
+                    StmtReturn(ExprSome(ExprMove(tmpvar))),
                 ]
             )
             readswitch.addcase(caselabel, readcase)
@@ -5124,13 +5114,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         if 0 == len(md.params):
             return stmts
 
-        start, decls, reads = 0, [], []
+        start, reads = 0, []
         if isctor:
             # return the raw actor handle so that its ID can be used
             # to construct the "real" actor
             handlevar = self.handlevar
             handletype = Type("ActorHandle")
-            decls = [StmtDecl(Decl(handletype, handlevar.name), initargs=[])]
             reads = [
                 _ParamTraits.checkedRead(
                     None,
@@ -5141,7 +5130,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     "'%s'" % handletype.name,
                     sentinelKey="actor",
                     errfnSentinel=errfnSent,
-                    varIsMaybe=False,
                 )
             ]
             start = 1
@@ -5151,15 +5139,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 return Type("Tainted", T=p.bareType(side))
             return p.bareType(side)
 
-        decls.extend(
-            [
-                StmtDecl(
-                    Decl(maybeTainted(p, side), p.var().name),
-                    initargs=[],
-                )
-                for p in md.params[start:]
-            ]
-        )
         reads.extend(
             [
                 _ParamTraits.checkedRead(
@@ -5171,7 +5150,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     "'%s'" % p.ipdltype.name(),
                     sentinelKey=p.name,
                     errfnSentinel=errfnSent,
-                    varIsMaybe=False,
                 )
                 for p in md.params[start:]
             ]
@@ -5185,7 +5163,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                         initargs=[msgvar, ExprVar.THIS],
                     )
                 ]
-                + decls
                 + [Whitespace.NL]
                 + reads
                 + [StmtCode("${reader}.EndRead();\n", reader=readervar)]
@@ -5249,13 +5226,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             + desresolve
         )
 
-        start, decls, reads = 0, [], []
+        start, reads = 0, []
         if isctor:
             # return the raw actor handle so that its ID can be used
             # to construct the "real" actor
             handlevar = self.handlevar
             handletype = Type("ActorHandle")
-            decls = [StmtDecl(Decl(handletype, handlevar.name), initargs=[])]
             reads = [
                 _ParamTraits.checkedRead(
                     None,
@@ -5266,19 +5242,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     "'%s'" % handletype.name,
                     sentinelKey="actor",
                     errfnSentinel=errfnSent,
-                    varIsMaybe=False,
                 )
             ]
             start = 1
 
         stmts = (
-            decls
-            + [
-                StmtDecl(Decl(p.bareType(side), p.var().name), initargs=[])
-                for p in md.returns
-            ]
-            + [Whitespace.NL]
-            + reads
+            reads
             + [
                 _ParamTraits.checkedRead(
                     p.ipdltype,
@@ -5289,7 +5258,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     "'%s'" % p.ipdltype.name(),
                     sentinelKey=p.name,
                     errfnSentinel=errfnSent,
-                    varIsMaybe=False,
                 )
                 for p in md.returns[start:]
             ]
@@ -5298,9 +5266,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         return resolve, reason, prologue, desrej, stmts
 
-    def deserializeReply(
-        self, md, replyexpr, side, errfn, errfnSentinel, actor=None, decls=False
-    ):
+    def deserializeReply(self, md, replyexpr, side, errfn, errfnSentinel, actor=None):
         stmts = [
             Whitespace.NL,
             self.logMessage(md, replyexpr, "Received reply ", actor, receiving=True),
@@ -5308,13 +5274,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         if 0 == len(md.returns):
             return stmts
 
+        def tempvar(r):
+            return ExprVar(r.var().name + "__reply")
+
         readervar = ExprVar("reader__")
-        declstmts = []
-        if decls:
-            declstmts = [
-                StmtDecl(Decl(p.bareType(side), p.var().name), initargs=[])
-                for p in md.returns
-            ]
         stmts.extend(
             [
                 Whitespace.NL,
@@ -5323,20 +5286,24 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     initargs=[ExprDeref(self.replyvar), ExprVar.THIS],
                 ),
             ]
-            + declstmts
             + [Whitespace.NL]
             + [
                 _ParamTraits.checkedRead(
                     r.ipdltype,
-                    r.bareType(self.side),
-                    ExprDeref(r.var()),
+                    r.bareType(side),
+                    tempvar(r),
                     ExprAddrOf(readervar),
                     errfn,
                     "'%s'" % r.ipdltype.name(),
                     sentinelKey=r.name,
                     errfnSentinel=errfnSentinel,
-                    varIsMaybe=False,
                 )
+                for r in md.returns
+            ]
+            # Move-assign the values out of the variables created with
+            # checkedRead into outparams.
+            + [
+                StmtExpr(ExprAssn(ExprDeref(r.var()), ExprMove(tempvar(r))))
                 for r in md.returns
             ]
             + [StmtCode("${reader}.EndRead();", reader=readervar)]
