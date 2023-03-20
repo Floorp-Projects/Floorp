@@ -49,16 +49,8 @@ async function searchHistory(gLibrary, searchTerm) {
   );
 }
 
-function searchBookmarks(gLibrary, searchTerm) {
-  let searchBox = gLibrary.document.getElementById("searchFilter");
-  searchBox.value = searchTerm;
-  gLibrary.PlacesSearchBox.search(searchBox.value);
-}
-
 add_setup(async function() {
   await PlacesUtils.history.clear();
-  await PlacesUtils.bookmarks.eraseEverything();
-
   // Add some visited pages to history
   let time = Date.now();
   let places = [];
@@ -71,22 +63,8 @@ add_setup(async function() {
   }
   await PlacesTestUtils.addVisits(places);
 
-  await PlacesUtils.bookmarks.insertTree({
-    guid: PlacesUtils.bookmarks.unfiledGuid,
-    children: [
-      {
-        title: "Mozilla",
-        url: "https://www.mozilla.org/",
-      },
-      {
-        title: "Example",
-        url: "https://sidebar.mozilla.org/",
-      },
-    ],
-  });
   await registerCleanupFunction(async () => {
     await PlacesUtils.history.clear();
-    await PlacesUtils.bookmarks.eraseEverything();
   });
 });
 
@@ -322,90 +300,6 @@ add_task(async function test_library_history_telemetry() {
   cumulativeSearchesHistogram.clear();
   await promiseLibraryClosed(gLibrary);
   await SpecialPowers.popPrefEnv();
-
-  while (gBrowser.tabs.length > 1) {
-    BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  }
-});
-
-add_task(async function test_library_bookmarks_telemetry() {
-  Services.telemetry.clearScalars();
-  let cumulativeSearchesHistogram = TelemetryTestUtils.getAndClearHistogram(
-    "PLACES_LIBRARY_CUMULATIVE_BOOKMARK_SEARCHES"
-  );
-
-  let library = await promiseLibrary("AllBookmarks");
-
-  TelemetryTestUtils.assertKeyedScalar(
-    TelemetryTestUtils.getProcessScalars("parent", true, true),
-    "library.opened",
-    "bookmarks",
-    1
-  );
-
-  searchBookmarks(library, "mozilla");
-
-  // reset
-  searchBookmarks(library, "");
-
-  // search again
-  searchBookmarks(library, "moz");
-
-  TelemetryTestUtils.assertKeyedScalar(
-    TelemetryTestUtils.getProcessScalars("parent", true, true),
-    "library.search",
-    "bookmarks",
-    2
-  );
-
-  let firstNode = library.ContentTree.view.view.nodeForTreeIndex(0);
-  library.ContentTree.view.selectNode(firstNode);
-
-  synthesizeClickOnSelectedTreeCell(library.ContentTree.view, {
-    clickCount: 2,
-  });
-
-  TelemetryTestUtils.assertKeyedScalar(
-    TelemetryTestUtils.getProcessScalars("parent", true, true),
-    "library.link",
-    "bookmarks",
-    1
-  );
-
-  TelemetryTestUtils.assertHistogram(cumulativeSearchesHistogram, 2, 1);
-
-  cumulativeSearchesHistogram = TelemetryTestUtils.getAndClearHistogram(
-    "PLACES_LIBRARY_CUMULATIVE_BOOKMARK_SEARCHES"
-  );
-
-  // do another search to make sure everything has been cleared
-  searchBookmarks(library, "moz");
-
-  TelemetryTestUtils.assertKeyedScalar(
-    TelemetryTestUtils.getProcessScalars("parent", true, true),
-    "library.search",
-    "bookmarks",
-    1
-  );
-
-  firstNode = library.ContentTree.view.view.nodeForTreeIndex(0);
-  library.ContentTree.view.selectNode(firstNode);
-
-  synthesizeClickOnSelectedTreeCell(library.ContentTree.view, {
-    clickCount: 2,
-  });
-
-  TelemetryTestUtils.assertKeyedScalar(
-    TelemetryTestUtils.getProcessScalars("parent", true, true),
-    "library.link",
-    "bookmarks",
-    1
-  );
-
-  TelemetryTestUtils.assertHistogram(cumulativeSearchesHistogram, 1, 1);
-
-  cumulativeSearchesHistogram.clear();
-  await promiseLibraryClosed(library);
 
   while (gBrowser.tabs.length > 1) {
     BrowserTestUtils.removeTab(gBrowser.selectedTab);

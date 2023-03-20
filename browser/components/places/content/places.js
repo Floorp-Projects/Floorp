@@ -183,8 +183,6 @@ var PlacesOrganizer = {
         this._places.selectNode(historyNode.getChild(0));
       }
       Services.telemetry.keyedScalarAdd("library.opened", "history", 1);
-    } else {
-      Services.telemetry.keyedScalarAdd("library.opened", "bookmarks", 1);
     }
 
     // clear the back-stack
@@ -827,8 +825,13 @@ var PlacesSearchBox = {
     return document.getElementById("searchFilter");
   },
 
-  cumulativeHistorySearches: 0,
-  cumulativeBookmarkSearches: 0,
+  _cumulativeLibraryHistorySearchCount: 0,
+  get cumulativeSearchCount() {
+    return this._cumulativeLibraryHistorySearchCount;
+  },
+  set cumulativeSearchCount(cumulativeSearches) {
+    this._cumulativeLibraryHistorySearchCount = cumulativeSearches;
+  },
 
   /**
    * Folders to include when searching.
@@ -870,8 +873,6 @@ var PlacesSearchBox = {
     switch (PlacesSearchBox.filterCollection) {
       case "bookmarks":
         currentView.applyFilter(filterString, this.folders);
-        Services.telemetry.keyedScalarAdd("library.search", "bookmarks", 1);
-        this.cumulativeBookmarkSearches++;
         break;
       case "history": {
         let currentOptions = PO.getCurrentOptions();
@@ -892,7 +893,7 @@ var PlacesSearchBox = {
           currentView.applyFilter(filterString, null, true);
           TelemetryStopwatch.finish(HISTORY_LIBRARY_SEARCH_TELEMETRY);
           Services.telemetry.keyedScalarAdd("library.search", "history", 1);
-          this.cumulativeHistorySearches++;
+          this._cumulativeLibraryHistorySearchCount++;
         }
         break;
       }
@@ -997,19 +998,7 @@ function updateTelemetry(urlsOpened) {
     link => !link.isBookmark && !PlacesUtils.nodeIsBookmark(link)
   );
   if (!historyLinks.length) {
-    let searchesHistogram = Services.telemetry.getHistogramById(
-      "PLACES_LIBRARY_CUMULATIVE_BOOKMARK_SEARCHES"
-    );
-    searchesHistogram.add(PlacesSearchBox.cumulativeBookmarkSearches);
-
-    // Clear cumulative search counter
-    PlacesSearchBox.cumulativeBookmarkSearches = 0;
-
-    Services.telemetry.keyedScalarAdd(
-      "library.link",
-      "bookmarks",
-      urlsOpened.length
-    );
+    // TODO (Bug 1819081)
     return;
   }
 
@@ -1017,10 +1006,10 @@ function updateTelemetry(urlsOpened) {
   let searchesHistogram = Services.telemetry.getHistogramById(
     "PLACES_LIBRARY_CUMULATIVE_HISTORY_SEARCHES"
   );
-  searchesHistogram.add(PlacesSearchBox.cumulativeHistorySearches);
+  searchesHistogram.add(PlacesSearchBox.cumulativeSearchCount);
 
   // Clear cumulative search counter
-  PlacesSearchBox.cumulativeHistorySearches = 0;
+  PlacesSearchBox.cumulativeSearchCount = 0;
 
   Services.telemetry.keyedScalarAdd(
     "library.link",
