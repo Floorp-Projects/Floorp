@@ -993,6 +993,10 @@ class MacroAssemblerRiscv64Compat : public MacroAssemblerRiscv64 {
     push(scratch);
   }
   void pushValue(const Address& addr);
+  void pushValue(const BaseIndex& addr, Register scratch) {
+    loadValue(addr, ValueOperand(scratch));
+    pushValue(ValueOperand(scratch));
+  }
 
   void handleFailureWithHandlerTail(Label* profilerExitTail,
                                     Label* bailoutTail);
