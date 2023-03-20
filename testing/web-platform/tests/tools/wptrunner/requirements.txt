@@ -6,7 +6,7 @@ mozprocess==1.3.0
 pillow==8.4.0
 requests==2.27.1
 six==1.16.0
-urllib3[secure]==1.26.14
+urllib3[secure]==1.26.15
 # aioquic 0.9.15 is the last to support Python 3.6, but doesn't have prebuilt
 # wheels for Python 3.10, so use a different version depending on Python.
 aioquic==0.9.15; python_version == '3.6'
