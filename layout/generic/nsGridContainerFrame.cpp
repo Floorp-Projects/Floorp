@@ -5346,31 +5346,9 @@ static nscoord ContentContribution(
       iMinSizeClamp = aMinSizeClamp;
     }
     LogicalSize availableSize(childWM, availISize, availBSize);
-    if (MOZ_UNLIKELY(child->IsXULBoxFrame())) {
-      auto* pc = child->PresContext();
-      // For XUL-in-CSS-Grid (e.g. in our frontend code), we defer to XUL's
-      // GetPrefSize() function (which reports an answer in both axes), instead
-      // of actually reflowing.  It's important to avoid the "measuring + final"
-      // two-pass reflow for XUL, because some XUL layout code may incorrectly
-      // optimize away the second reflow in cases where it's really needed.
-      // XXXdholbert We'll remove this special case in bug 1600542.
-      ReflowInput childRI(pc, *aState.mReflowInput, child, availableSize,
-                          Some(cbSize));
-
-      nsBoxLayoutState state(pc, &aState.mRenderingContext, &childRI,
-                             childRI.mReflowDepth);
-      nsSize physicalPrefSize = child->GetXULPrefSize(state);
-      auto prefSize = LogicalSize(childWM, physicalPrefSize);
-      size = prefSize.BSize(childWM);
-
-      // XXXdholbert This won't have percentage margins resolved.
-      // Hopefully we can just avoid those for XUL-content-in-css-grid?
-      size += childRI.ComputedLogicalMargin(childWM).BStartEnd(childWM);
-    } else {
-      size = ::MeasuringReflow(child, aState.mReflowInput, aRC, availableSize,
-                               cbSize, iMinSizeClamp, bMinSizeClamp);
-      size += child->GetLogicalUsedMargin(childWM).BStartEnd(childWM);
-    }
+    size = ::MeasuringReflow(child, aState.mReflowInput, aRC, availableSize,
+                             cbSize, iMinSizeClamp, bMinSizeClamp);
+    size += child->GetLogicalUsedMargin(childWM).BStartEnd(childWM);
     nscoord overflow = size - aMinSizeClamp;
     if (MOZ_UNLIKELY(overflow > 0)) {
       nscoord contentSize = child->ContentSize(childWM).BSize(childWM);
