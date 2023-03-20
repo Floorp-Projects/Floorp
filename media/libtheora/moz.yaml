@@ -9,7 +9,7 @@ origin:
   description: Video compression format from Xiph
   url: https://www.theora.org/
 
-  release: commit 7180717276af1ebc7da15c83162d6c5d6203aabf (2020-10-27T09:17:42.000-07:00).
+  release: 7180717276af1ebc7da15c83162d6c5d6203aabf (2020-10-27T09:17:42.000-07:00).
   revision: 7180717276af1ebc7da15c83162d6c5d6203aabf
 
   license: BSD-3-Clause-Clear
@@ -41,9 +41,12 @@ vendoring:
     - .travis.yml
     - configure.ac
     - SConstruct
-    - Makefile.*
-    - "*.in"
+    - Makefile.am
+    - "*.pc.in"
+    - "*.spec.in"
     - include/theora/theoraenc.h
+    - include/theora/Makefile.*
+    - include/Makefile.*
     - lib/analyze.c
     - lib/apiwrapper.c
     - lib/apiwrapper.h
@@ -83,6 +86,18 @@ vendoring:
     - lib/x86_vc/x86enc.c
     - lib/x86_vc/x86enc.h
     - lib/x86_vc/x86zigzag.h
+    - lib/Makefile.*
+    - lib/Version_script*
+    - lib/*.awk
+    - lib/*.def
+    - lib/*.exp
 
   keep:
+    - Makefile.in
     - lib/config.h
+    - update.sh
+
+  update-actions:
+    - action: run-script
+      script: '{yaml_dir}/update.sh'
+      cwd: '{yaml_dir}'
