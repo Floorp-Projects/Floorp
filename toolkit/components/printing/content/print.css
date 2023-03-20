@@ -90,9 +90,7 @@ form#print {
 }
 
 select {
-  min-height: auto;
   margin: 0;
-  padding: 0;
 }
 
 select:not([size], [multiple])[iconic] {
