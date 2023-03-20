@@ -86,13 +86,12 @@ class StructuredOutputParser(OutputParser):
         if data is None:
             if self.strict:
                 if not self.prev_was_unstructured:
-                    self.critical(
+                    self.info(
                         "Test harness output was not a valid structured log message"
                     )
                     self.info(line)
                 else:
                     self.info(line)
-                self.update_levels(TBPL_FAILURE, log.CRITICAL)
                 self.prev_was_unstructured = True
             else:
                 self._handle_unstructured_output(line)
