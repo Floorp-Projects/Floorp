@@ -55,8 +55,9 @@ class ChildProfilerController final {
       mozilla::ipc::Endpoint<PProfilerChild>&& aEndpoint) {
     return nullptr;
   }
-  [[nodiscard]] nsCString GrabShutdownProfileAndShutdown() {
-    return EmptyCString();
+  [[nodiscard]] ProfileAndAdditionalInformation
+  GrabShutdownProfileAndShutdown() {
+    return ProfileAndAdditionalInformation(std::move(EmptyCString()));
   }
   void Shutdown() {}
 

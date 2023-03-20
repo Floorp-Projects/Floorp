@@ -14,8 +14,11 @@
 #ifndef ProfileAdditionalInformation_h
 #define ProfileAdditionalInformation_h
 
-#include "shared-libraries.h"
+#ifdef MOZ_GECKO_PROFILER
+#  include "shared-libraries.h"
+#endif
 #include "js/Value.h"
+#include "nsString.h"
 
 namespace IPC {
 class MessageReader;
@@ -28,6 +31,7 @@ namespace mozilla {
 // This structure contains additional information gathered while generating the
 // profile json and iterating the buffer.
 struct ProfileGenerationAdditionalInformation {
+#ifdef MOZ_GECKO_PROFILER
   ProfileGenerationAdditionalInformation() = default;
   explicit ProfileGenerationAdditionalInformation(
       const SharedLibraryInfo&& aSharedLibraries)
@@ -44,6 +48,7 @@ struct ProfileGenerationAdditionalInformation {
   void ToJSValue(JSContext* aCx, JS::MutableHandle<JS::Value> aRetVal) const;
 
   SharedLibraryInfo mSharedLibraries;
+#endif  // MOZ_GECKO_PROFILER
 };
 
 struct ProfileAndAdditionalInformation {
@@ -59,9 +64,11 @@ struct ProfileAndAdditionalInformation {
 
   size_t SizeOf() const {
     size_t size = mProfile.Length();
+#ifdef MOZ_GECKO_PROFILER
     if (mAdditionalInformation.isSome()) {
       size += mAdditionalInformation->SizeOf();
     }
+#endif
     return size;
   }
 
