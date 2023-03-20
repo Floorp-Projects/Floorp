@@ -1108,8 +1108,7 @@ nsIFrame* ReflowInput::GetHypotheticalBoxContainer(nsIFrame* aFrame,
     // produce a bogus negative content-box size.
     aCBIStartEdge = 0;
     aCBSize = aFrame->GetLogicalSize(wm);
-    if (!aCBSize.IsAllZero() ||
-        (!IsXULCollapsedXULFrame(aFrame->GetParent()))) {
+    if (!aCBSize.IsAllZero() || !IsXULCollapsedXULFrame(aFrame->GetParent())) {
       // aFrame is not XUL-collapsed (nor is it a child of a XUL-collapsed
       // frame), so we can go ahead and subtract out border padding.
       LogicalMargin borderPadding = aFrame->GetLogicalUsedBorderAndPadding(wm);
