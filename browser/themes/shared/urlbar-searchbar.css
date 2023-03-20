@@ -641,7 +641,7 @@
 
 #search-container,
 #wrapper-search-container {
-  flex: 175 175 auto;
+  flex: 175 175;
 }
 
 #search-container[width] {
