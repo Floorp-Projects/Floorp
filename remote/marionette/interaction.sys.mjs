@@ -160,7 +160,7 @@ async function webdriverClickElement(el, a11y) {
     throw new lazy.error.ElementClickInterceptedError(containerEl, clickPoint);
   }
 
-  let acc = await a11y.getAccessible(el, true);
+  let acc = await a11y.assertAccessible(el, true);
   a11y.assertVisible(acc, el, true);
   a11y.assertEnabled(acc, el, true);
   a11y.assertActionable(acc, el);
@@ -198,7 +198,7 @@ async function chromeClick(el, a11y) {
     throw new lazy.error.InvalidElementStateError("Element is not enabled");
   }
 
-  let acc = await a11y.getAccessible(el, true);
+  let acc = await a11y.assertAccessible(el, true);
   a11y.assertVisible(acc, el, true);
   a11y.assertEnabled(acc, el, true);
   a11y.assertActionable(acc, el);
@@ -226,7 +226,7 @@ async function seleniumClickElement(el, a11y) {
     throw new lazy.error.InvalidElementStateError("Element is not enabled");
   }
 
-  let acc = await a11y.getAccessible(el, true);
+  let acc = await a11y.assertAccessible(el, true);
   a11y.assertVisible(acc, el, true);
   a11y.assertEnabled(acc, el, true);
   a11y.assertActionable(acc, el);
@@ -632,7 +632,7 @@ async function webdriverSendKeysToElement(
     }
   }
 
-  let acc = await a11y.getAccessible(el, true);
+  let acc = await a11y.assertAccessible(el, true);
   a11y.assertActionable(acc, el);
 
   if (el.type == "file") {
@@ -671,7 +671,7 @@ async function legacySendKeysToElement(el, value, a11y) {
       );
     }
 
-    let acc = await a11y.getAccessible(el, true);
+    let acc = await a11y.assertAccessible(el, true);
     a11y.assertActionable(acc, el);
 
     interaction.moveCaretToEnd(el);
@@ -696,7 +696,7 @@ interaction.isElementDisplayed = function(el, strict = false) {
   let displayed = lazy.atom.isElementDisplayed(el, win);
 
   let a11y = lazy.accessibility.get(strict);
-  return a11y.getAccessible(el).then(acc => {
+  return a11y.assertAccessible(el).then(acc => {
     a11y.assertVisible(acc, el, displayed);
     return displayed;
   });
@@ -734,7 +734,7 @@ interaction.isElementEnabled = function(el, strict = false) {
   }
 
   let a11y = lazy.accessibility.get(strict);
-  return a11y.getAccessible(el).then(acc => {
+  return a11y.assertAccessible(el).then(acc => {
     a11y.assertEnabled(acc, el, enabled);
     return enabled;
   });
@@ -762,7 +762,7 @@ interaction.isElementSelected = function(el, strict = false) {
   let selected = lazy.element.isSelected(el);
 
   let a11y = lazy.accessibility.get(strict);
-  return a11y.getAccessible(el).then(acc => {
+  return a11y.assertAccessible(el).then(acc => {
     a11y.assertSelected(acc, el, selected);
     return selected;
   });

@@ -9,6 +9,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  accessibility: "chrome://remote/content/marionette/accessibility.sys.mjs",
   action: "chrome://remote/content/marionette/action.sys.mjs",
   atom: "chrome://remote/content/marionette/atom.sys.mjs",
   element: "chrome://remote/content/marionette/element.sys.mjs",
@@ -109,6 +110,12 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
           break;
         case "MarionetteCommandsParent:getActiveElement":
           result = await this.getActiveElement();
+          break;
+        case "MarionetteCommandsParent:getComputedLabel":
+          result = await this.getComputedLabel(data);
+          break;
+        case "MarionetteCommandsParent:getComputedRole":
+          result = await this.getComputedRole(data);
           break;
         case "MarionetteCommandsParent:getElementAttribute":
           result = await this.getElementAttribute(data);
@@ -278,6 +285,35 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
     }
 
     return elem;
+  }
+
+  /**
+   * Return the accessible label for a given element.
+   */
+  async getComputedLabel(options = {}) {
+    const { elem } = options;
+
+    const accessible = await lazy.accessibility.getAccessible(elem);
+    if (!accessible) {
+      return null;
+    }
+
+    return accessible.name;
+  }
+
+  /**
+   * Return the accessible role for a given element.
+   */
+  async getComputedRole(options = {}) {
+    const { elem } = options;
+
+    const accessible = await lazy.accessibility.getAccessible(elem);
+    if (!accessible) {
+      return null;
+    }
+
+    // TODO: Bug 1822112. Accessibility service is not returning WAI-ARIA roles.
+    return lazy.accessibility.service.getStringRole(accessible.role);
   }
 
   /**

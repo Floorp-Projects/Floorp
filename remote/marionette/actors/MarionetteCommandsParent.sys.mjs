@@ -98,6 +98,18 @@ export class MarionetteCommandsParent extends JSWindowActorParent {
     return this.sendQuery("MarionetteCommandsParent:getActiveElement");
   }
 
+  async getComputedLabel(webEl) {
+    return this.sendQuery("MarionetteCommandsParent:getComputedLabel", {
+      elem: webEl,
+    });
+  }
+
+  async getComputedRole(webEl) {
+    return this.sendQuery("MarionetteCommandsParent:getComputedRole", {
+      elem: webEl,
+    });
+  }
+
   async getElementAttribute(webEl, name) {
     return this.sendQuery("MarionetteCommandsParent:getElementAttribute", {
       elem: webEl,
