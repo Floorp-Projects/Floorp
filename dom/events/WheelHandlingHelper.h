@@ -118,23 +118,40 @@ class ScrollbarsForWheel {
 
 class WheelTransaction {
  public:
-  static nsIFrame* GetTargetFrame() { return sTargetFrame; }
+  /**
+   * Get the target scroll frame for this wheel transaction. This should
+   * the the scrollable fame that will scroll for all wheel events in
+   * this wheel transaction.
+   */
+  static nsIFrame* GetScrollTargetFrame() { return sScrollTargetFrame; }
+  /*
+   * The event target to use for all wheel events in this wheel transaction.
+   * This should be the event target for all wheel events in this wheel
+   * transaction. Note that this frame will likely be a child of the
+   * scrollable frame.
+   */
+  static nsIFrame* GetEventTargetFrame() { return sEventTargetFrame; }
   static void EndTransaction();
   /**
    * WillHandleDefaultAction() is called before handling aWheelEvent on
-   * aTargetFrame.
+   * aScrollTargetWeakFrame given the event target aEventTargetWeakFrame.
    *
    * @return    false if the caller cannot continue to handle the default
    *            action.  Otherwise, true.
    */
   static bool WillHandleDefaultAction(WidgetWheelEvent* aWheelEvent,
-                                      AutoWeakFrame& aTargetWeakFrame);
+                                      AutoWeakFrame& aScrollTargetWeakFrame,
+                                      AutoWeakFrame& aEventTargetWeakFrame);
   static bool WillHandleDefaultAction(WidgetWheelEvent* aWheelEvent,
-                                      nsIFrame* aTargetFrame) {
-    AutoWeakFrame targetWeakFrame(aTargetFrame);
-    return WillHandleDefaultAction(aWheelEvent, targetWeakFrame);
+                                      nsIFrame* aScrollTargetFrame,
+                                      nsIFrame* aEventTargetFrame) {
+    AutoWeakFrame scrollTargetWeakFrame(aScrollTargetFrame);
+    AutoWeakFrame eventTargetWeakFrame(aEventTargetFrame);
+    return WillHandleDefaultAction(aWheelEvent, scrollTargetWeakFrame,
+                                   eventTargetWeakFrame);
   }
   static void OnEvent(WidgetEvent* aEvent);
+  static void OnRemoveElement(nsIContent* aContent);
   static void Shutdown();
 
   static void OwnScrollbars(bool aOwn);
@@ -142,7 +159,8 @@ class WheelTransaction {
   static DeltaValues AccelerateWheelDelta(WidgetWheelEvent* aEvent);
 
  protected:
-  static void BeginTransaction(nsIFrame* aTargetFrame,
+  static void BeginTransaction(nsIFrame* aScrollTargetFrame,
+                               nsIFrame* aEventTargetFrame,
                                const WidgetWheelEvent* aEvent);
   // Be careful, UpdateTransaction may fire a DOM event, therefore, the target
   // frame might be destroyed in the event handler.
@@ -157,7 +175,23 @@ class WheelTransaction {
   static double ComputeAcceleratedWheelDelta(double aDelta, int32_t aFactor);
   static bool OutOfTime(uint32_t aBaseTime, uint32_t aThreshold);
 
-  static AutoWeakFrame sTargetFrame;
+  /**
+   * The scrollable element the current wheel event group is bound to.
+   */
+  static AutoWeakFrame sScrollTargetFrame;
+  /**
+   * The initial target of the first wheel event in the wheel event group.
+   * This frame is typically a child of the scrollable element. The wheel
+   * event should target the topmost-event-target. For a wheel event
+   * group, we'll use this target for the entire group.
+   *
+   * See https://w3c.github.io/uievents/#topmost-event-target and
+   * https://w3c.github.io/uievents/#event-type-wheel for details.
+   *
+   * Note: this is only populated if dom.event.wheel-event-groups.enabled is
+   * set.
+   */
+  static AutoWeakFrame sEventTargetFrame;
   static uint32_t sTime;        // in milliseconds
   static uint32_t sMouseMoved;  // in milliseconds
   static nsITimer* sTimer;

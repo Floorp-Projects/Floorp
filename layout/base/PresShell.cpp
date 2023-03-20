@@ -7099,6 +7099,11 @@ nsresult PresShell::EventHandler::HandleEventUsingCoordinates(
     return NS_OK;
   }
 
+  // Wheel events only apply to elements. If this is a wheel event, attempt to
+  // update the event target from the current wheel transaction before we
+  // compute the element from the target frame.
+  eventTargetData.UpdateWheelEventTarget(aGUIEvent);
+
   if (!eventTargetData.ComputeElementFromFrame(aGUIEvent)) {
     return NS_OK;
   }
@@ -11811,6 +11816,34 @@ bool PresShell::EventHandler::EventTargetData::ComputeElementFromFrame(
 
   // If we found an element, target it.  Otherwise, target *nothing*.
   return !!mContent;
+}
+
+void PresShell::EventHandler::EventTargetData::UpdateWheelEventTarget(
+    WidgetGUIEvent* aGUIEvent) {
+  MOZ_ASSERT(aGUIEvent);
+
+  if (aGUIEvent->mMessage != eWheel) {
+    return;
+  }
+
+  // If dom.event.wheel-event-groups.enabled is not set or the stored
+  // event target is removed, we will not get a event target frame from the
+  // wheel transaction here.
+  nsIFrame* groupFrame = WheelTransaction::GetEventTargetFrame();
+  if (!groupFrame) {
+    return;
+  }
+
+  // If the browsing context is no longer the same as the context of the
+  // current wheel transaction, do not override the event target.
+  if (!groupFrame->PresContext() || !groupFrame->PresShell() ||
+      groupFrame->PresContext() != GetPresContext()) {
+    return;
+  }
+
+  // If dom.event.wheel-event-groups.enabled is set and whe have a stored
+  // event target from the wheel transaction, override the event target.
+  SetFrameAndComputePresShellAndContent(groupFrame, aGUIEvent);
 }
 
 void PresShell::EventHandler::EventTargetData::UpdateTouchEventTarget(
