@@ -89,10 +89,6 @@ if CONFIG['GNU_AS']:
                     'OC_ARM_ASM_MEDIA',
                     'OC_ARM_ASM_NEON'):
             DEFINES[var] = True
-        # The Android NDK doesn't pre-define anything to indicate the OS it's
-        # on, so do it for them.
-        if CONFIG['OS_TARGET'] == 'Android':
-            DEFINES['__linux__'] = True
 
         SOURCES += [ '!%s.s' % f for f in [
             'armbits-gnu',
@@ -107,8 +103,3 @@ if CONFIG['GNU_AS']:
             '-march=armv7-a',
         ]
         ASFLAGS += CONFIG['NEON_FLAGS']
-
-        if CONFIG['CC_TYPE'] == 'clang':
-            ASFLAGS += [
-                '-no-integrated-as',
-            ]
