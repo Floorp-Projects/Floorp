@@ -126,6 +126,8 @@ class MFMediaSource : public Microsoft::WRL::RuntimeClass<
 
   void ShutdownTaskQueue();
 
+  bool IsEncrypted() const;
+
  private:
   void AssertOnManagerThread() const;
   void AssertOnMFThreadPool() const;
