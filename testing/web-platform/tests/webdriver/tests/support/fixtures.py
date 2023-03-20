@@ -14,11 +14,12 @@ from tests.support.inline import build_inline
 from tests.support.http_request import HTTPRequest
 
 
+SCRIPT_TIMEOUT = 1
+PAGE_LOAD_TIMEOUT = 3
+IMPLICIT_WAIT_TIMEOUT = 0
+
 # The webdriver session can outlive a pytest session
 _current_session = None
-
-
-_custom_session = False
 
 
 def pytest_configure(config):
@@ -63,6 +64,7 @@ def full_configuration():
     host - WebDriver server host.
     port -  WebDriver server port.
     capabilites - Capabilites passed when creating the WebDriver session
+    timeout_multiplier - Multiplier for timeout values
     webdriver - Dict with keys `binary`: path to webdriver binary, and
                 `args`: Additional command line arguments passed to the webdriver
                 binary. This doesn't include all the required arguments e.g. the
@@ -136,6 +138,12 @@ async def session(capabilities, configuration):
     if _current_session.capabilities.get("setWindowRect"):
         _current_session.window.size = defaults.WINDOW_SIZE
         _current_session.window.position = defaults.WINDOW_POSITION
+
+    # Set default timeouts
+    multiplier = configuration["timeout_multiplier"]
+    _current_session.timeouts.implicit = IMPLICIT_WAIT_TIMEOUT * multiplier
+    _current_session.timeouts.page_load = PAGE_LOAD_TIMEOUT * multiplier
+    _current_session.timeouts.script = SCRIPT_TIMEOUT * multiplier
 
     yield _current_session
 
