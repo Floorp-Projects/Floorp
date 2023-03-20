@@ -1,7 +1,7 @@
 "use strict";
 
-let { PluginManager } = ChromeUtils.import(
-  "resource:///actors/PluginParent.jsm"
+let { PluginManager } = ChromeUtils.importESModule(
+  "resource:///actors/PluginParent.sys.mjs"
 );
 
 /**

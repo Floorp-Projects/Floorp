@@ -22,7 +22,7 @@ with Files("PageInfoChild.sys.mjs"):
 with Files("PageStyleChild.sys.mjs"):
     BUG_COMPONENT = ("Firefox", "Menus")
 
-with Files("PluginChild.jsm"):
+with Files("PluginChild.sys.mjs"):
     BUG_COMPONENT = ("Core", "Audio/Video: GMP")
 
 with Files("ScreenshotsComponentChild.sys.mjs"):
@@ -70,8 +70,8 @@ FINAL_TARGET_FILES.actors += [
     "PageInfoChild.sys.mjs",
     "PageStyleChild.sys.mjs",
     "PageStyleParent.sys.mjs",
-    "PluginChild.jsm",
-    "PluginParent.jsm",
+    "PluginChild.sys.mjs",
+    "PluginParent.sys.mjs",
     "PointerLockChild.sys.mjs",
     "PointerLockParent.sys.mjs",
     "PromptParent.sys.mjs",

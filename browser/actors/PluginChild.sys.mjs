@@ -2,12 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["PluginChild"];
-
 // Handle GMP crashes
-class PluginChild extends JSWindowActorChild {
+export class PluginChild extends JSWindowActorChild {
   handleEvent(event) {
     // Ignore events for other frames.
     let eventDoc = event.target.ownerDocument || event.target.document;
