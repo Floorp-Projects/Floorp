@@ -71,7 +71,8 @@ class nsAVIFDecoder final : public Decoder {
       Variant<Mp4parseStatus, NonDecoderResult, Dav1dResult, AOMResult>;
   Mp4parseStatus CreateParser();
   DecodeResult CreateDecoder();
-  DecodeResult Decode(SourceBufferIterator& aIterator, IResumable* aOnResume);
+  DecodeResult DoDecodeInternal(SourceBufferIterator& aIterator,
+                                IResumable* aOnResume);
 
   static bool IsDecodeSuccess(const DecodeResult& aResult);
 
