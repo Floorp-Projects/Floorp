@@ -393,10 +393,10 @@ Here's an example ``JSWindowActor`` registration pulled from ``BrowserGlue.sys.m
    Plugin: {
       kind: "JSWindowActor",
       parent: {
-        moduleURI: "resource:///actors/PluginParent.jsm",
+        esModuleURI: "resource:///actors/PluginParent.sys.mjs",
       },
       child: {
-        moduleURI: "resource:///actors/PluginChild.jsm",
+        esModuleURI: "resource:///actors/PluginChild.sys.mjs",
         events: {
           PluginCrashed: { capture: true },
         },
@@ -414,10 +414,10 @@ Let's examine parent registration:
 .. code-block:: javascript
 
       parent: {
-        moduleURI: "resource:///actors/PluginParent.jsm",
+        esModuleURI: "resource:///actors/PluginParent.sys.mjs",
       },
 
-Here, we're declaring that class ``PluginParent`` (here, a subclass of ``JSWindowActorParent``) is defined and exported from module ``PluginParent.jsm``. That's all we have to say for the parent (main process) side of things.
+Here, we're declaring that class ``PluginParent`` (here, a subclass of ``JSWindowActorParent``) is defined and exported from module ``PluginParent.sys.mjs``. That's all we have to say for the parent (main process) side of things.
 
 .. note::
     It's not sufficient to just add a new .jsm file to the actors subdirectories. You also need to update the ``moz.build`` files in the same directory to get the ``resource://`` linkages set up correctly.
@@ -427,7 +427,7 @@ Let's look at the second chunk:
 .. code-block:: javascript
 
       child: {
-        moduleURI: "resource:///actors/PluginChild.jsm",
+        esModuleURI: "resource:///actors/PluginChild.sys.mjs",
         events: {
           PluginCrashed: { capture: true },
         },

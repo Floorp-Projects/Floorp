@@ -3,16 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["PluginParent", "PluginManager"];
-
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -25,7 +17,7 @@ XPCOMUtils.defineLazyGetter(lazy, "gNavigatorBundle", function() {
   return Services.strings.createBundle(url);
 });
 
-const PluginManager = {
+export const PluginManager = {
   gmpCrashes: new Map(),
 
   observe(subject, topic, data) {
@@ -108,7 +100,7 @@ const PluginManager = {
   },
 };
 
-class PluginParent extends JSWindowActorParent {
+export class PluginParent extends JSWindowActorParent {
   receiveMessage(msg) {
     let browser = this.manager.rootFrameLoader.ownerElement;
     switch (msg.name) {

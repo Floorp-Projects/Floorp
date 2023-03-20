@@ -7,6 +7,8 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
+// Ignore unused lazy property for PluginManager.
+// eslint-disable-next-line mozilla/valid-lazy
 ChromeUtils.defineESModuleGetters(lazy, {
   ActorManagerParent: "resource://gre/modules/ActorManagerParent.sys.mjs",
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.sys.mjs",
@@ -42,6 +44,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PlacesDBUtils: "resource://gre/modules/PlacesDBUtils.sys.mjs",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  PluginManager: "resource:///actors/PluginParent.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   ProvenanceData: "resource:///modules/ProvenanceData.sys.mjs",
   PublicSuffixList:
@@ -118,11 +121,6 @@ if (AppConstants.MOZ_UPDATE_AGENT) {
 }
 
 // PluginManager is used in the listeners object below.
-// eslint-disable-next-line mozilla/valid-lazy
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  PluginManager: "resource:///actors/PluginParent.jsm",
-});
-
 XPCOMUtils.defineLazyServiceGetters(lazy, {
   BrowserHandler: ["@mozilla.org/browser/clh;1", "nsIBrowserHandler"],
   PushService: ["@mozilla.org/push/Service;1", "nsIPushService"],
@@ -658,10 +656,10 @@ let JSWINDOWACTORS = {
   // GMP crash reporting
   Plugin: {
     parent: {
-      moduleURI: "resource:///actors/PluginParent.jsm",
+      esModuleURI: "resource:///actors/PluginParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource:///actors/PluginChild.jsm",
+      esModuleURI: "resource:///actors/PluginChild.sys.mjs",
       events: {
         PluginCrashed: { capture: true },
       },
