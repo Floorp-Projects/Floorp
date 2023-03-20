@@ -148,11 +148,11 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
       accessible->Description(description);
 
       cacheData.AppendElement(BatchData(
-          accessible->Document()->IPCDoc(), UNIQUE_ID(accessible),
-          accessible->State(), accessible->Bounds(), accessible->ActionCount(),
-          name, textValue, nodeID, description, UnspecifiedNaN<double>(),
+          OriginDocument(accessible->Document()->IPCDoc()),
+          UNIQUE_ID(accessible), accessible->State(), accessible->Bounds(),
+          accessible->ActionCount(), name, textValue, nodeID, description,
           UnspecifiedNaN<double>(), UnspecifiedNaN<double>(),
-          UnspecifiedNaN<double>(), nullptr));
+          UnspecifiedNaN<double>(), UnspecifiedNaN<double>(), nullptr));
     }
 
     ipcDoc->SendBatch(eBatch_Viewport, cacheData);
@@ -257,10 +257,10 @@ void DocAccessibleWrap::CacheFocusPath(AccessibleWrap* aAccessible) {
       acc->Description(description);
       RefPtr<AccAttributes> attributes = acc->Attributes();
       cacheData.AppendElement(
-          BatchData(acc->Document()->IPCDoc(), UNIQUE_ID(acc), acc->State(),
-                    acc->Bounds(), acc->ActionCount(), name, textValue, nodeID,
-                    description, acc->CurValue(), acc->MinValue(),
-                    acc->MaxValue(), acc->Step(), attributes));
+          BatchData(OriginDocument(acc->Document()->IPCDoc()), UNIQUE_ID(acc),
+                    acc->State(), acc->Bounds(), acc->ActionCount(), name,
+                    textValue, nodeID, description, acc->CurValue(),
+                    acc->MinValue(), acc->MaxValue(), acc->Step(), attributes));
       mFocusPath.InsertOrUpdate(acc->UniqueID(), RefPtr{acc});
     }
 
@@ -298,10 +298,11 @@ void DocAccessibleWrap::UpdateFocusPathBounds() {
       }
 
       boundsData.AppendElement(BatchData(
-          accessible->Document()->IPCDoc(), UNIQUE_ID(accessible), 0,
-          accessible->Bounds(), 0, nsString(), nsString(), nsString(),
-          nsString(), UnspecifiedNaN<double>(), UnspecifiedNaN<double>(),
-          UnspecifiedNaN<double>(), UnspecifiedNaN<double>(), nullptr));
+          OriginDocument(accessible->Document()->IPCDoc()),
+          UNIQUE_ID(accessible), 0, accessible->Bounds(), 0, nsString(),
+          nsString(), nsString(), nsString(), UnspecifiedNaN<double>(),
+          UnspecifiedNaN<double>(), UnspecifiedNaN<double>(),
+          UnspecifiedNaN<double>(), nullptr));
     }
 
     ipcDoc->SendBatch(eBatch_BoundsUpdate, boundsData);

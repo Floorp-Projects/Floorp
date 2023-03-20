@@ -902,7 +902,7 @@ void BackgroundFactoryRequestChild::HandleResponse(
   mRequest->Reset();
 
   auto* databaseActor =
-      static_cast<BackgroundDatabaseChild*>(aResponse.databaseChild());
+      static_cast<BackgroundDatabaseChild*>(aResponse.database().AsChild());
   MOZ_ASSERT(databaseActor);
 
   IDBDatabase* const database = [this, databaseActor]() -> IDBDatabase* {
@@ -1326,6 +1326,7 @@ BackgroundDatabaseChild::RecvCloseAfterInvalidationComplete() {
 }
 
 /*******************************************************************************
+structs/unions, r=#ipc-reviewers!)
  * BackgroundTransactionBase
  ******************************************************************************/
 

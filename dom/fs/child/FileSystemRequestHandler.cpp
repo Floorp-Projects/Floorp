@@ -251,7 +251,7 @@ void ResolveCallback(FileSystemGetWritableFileStreamResponse&& aResponse,
   auto& properties = aResponse.get_FileSystemWritableFileStreamProperties();
 
   auto* const actor = static_cast<FileSystemWritableFileStreamChild*>(
-      properties.writableFileStreamChild());
+      properties.writableFileStream().AsChild());
 
   mozilla::ipc::RandomAccessStreamParams params =
       std::move(properties.streamParams());

@@ -32,7 +32,7 @@ void AddWorkerRefToStreamChild(const CacheReadStream& aReadStream,
                                const SafeRefPtr<CacheWorkerRef>& aWorkerRef) {
   MOZ_ASSERT_IF(!NS_IsMainThread(), aWorkerRef);
   CacheStreamControlChild* cacheControl =
-      static_cast<CacheStreamControlChild*>(aReadStream.controlChild());
+      static_cast<CacheStreamControlChild*>(aReadStream.control().AsChild());
   if (cacheControl) {
     cacheControl->SetWorkerRef(aWorkerRef.clonePtr());
   }
@@ -139,7 +139,7 @@ mozilla::ipc::IPCResult CacheOpChild::Recv__delete__(
     }
     case CacheOpResult::TStorageOpenResult: {
       auto result = aResult.get_StorageOpenResult();
-      auto actor = static_cast<CacheChild*>(result.actorChild());
+      auto actor = static_cast<CacheChild*>(result.actor().AsChild());
 
       // If we have a success status then we should have an actor.  Gracefully
       // reject instead of crashing, though, if we get a nullptr here.

@@ -124,7 +124,7 @@ nsresult HttpTransactionParent::Init(
   if (aTransWithPushedStream && aPushedStreamId) {
     MOZ_ASSERT(aTransWithPushedStream->AsHttpTransactionParent());
     pushedStreamArg.emplace();
-    pushedStreamArg.ref().transWithPushedStreamParent() =
+    pushedStreamArg.ref().transWithPushedStream() =
         aTransWithPushedStream->AsHttpTransactionParent();
     pushedStreamArg.ref().pushedStreamId() = aPushedStreamId;
   }

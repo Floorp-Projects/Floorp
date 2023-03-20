@@ -1016,7 +1016,8 @@ nsresult BrowserChild::UpdateRemotePrintSettings(
       // everything.
       ([&]() MOZ_CAN_RUN_SCRIPT_BOUNDARY {
         RefPtr<RemotePrintJobChild> printJob =
-            static_cast<RemotePrintJobChild*>(aPrintData.remotePrintJobChild());
+            static_cast<RemotePrintJobChild*>(
+                aPrintData.remotePrintJob().AsChild());
         cv->SetPrintSettingsForSubdocument(printSettings, printJob);
       }());
     } else if (RefPtr<BrowserBridgeChild> remoteChild =
@@ -2411,8 +2412,8 @@ mozilla::ipc::IPCResult BrowserChild::RecvPrint(
   printSettingsSvc->DeserializeToPrintSettings(aPrintData, printSettings);
   {
     IgnoredErrorResult rv;
-    RefPtr printJob =
-        static_cast<RemotePrintJobChild*>(aPrintData.remotePrintJobChild());
+    RefPtr printJob = static_cast<RemotePrintJobChild*>(
+        aPrintData.remotePrintJob().AsChild());
     outerWindow->Print(printSettings, printJob,
                        /* aListener = */ nullptr,
                        /* aWindowToCloneInto = */ nullptr,
