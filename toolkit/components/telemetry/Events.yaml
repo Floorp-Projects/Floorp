@@ -237,8 +237,9 @@ addonsManager:
   install_stats:
     description: >
       These events are recorded at the end of the install flow, but only when
-      the source that originally triggered the add-on installation is "amo" or
-      "disco". The value of an event is the SHA256 hash of the addon_id.
+      the source that originally triggered the add-on installation is "amo",
+      "rtamo" or "disco". The value of an event is the SHA256 hash of the
+      addon_id.
     objects:
       - "extension"
       - "theme"
