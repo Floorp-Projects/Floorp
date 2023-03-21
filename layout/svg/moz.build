@@ -17,6 +17,7 @@ if CONFIG["ENABLE_TESTS"]:
 
 EXPORTS.mozilla += [
     "CSSClipPathInstance.h",
+    "DisplaySVGItem.h",
     "FilterInstance.h",
     "ISVGDisplayableFrame.h",
     "ISVGSVGFrame.h",
@@ -42,6 +43,7 @@ EXPORTS.mozilla += [
 UNIFIED_SOURCES += [
     "CSSClipPathInstance.cpp",
     "CSSFilterInstance.cpp",
+    "DisplaySVGItem.cpp",
     "FilterInstance.cpp",
     "SVGAFrame.cpp",
     "SVGClipPathFrame.cpp",
