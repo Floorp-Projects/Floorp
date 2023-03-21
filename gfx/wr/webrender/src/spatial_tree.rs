@@ -911,6 +911,31 @@ impl SpatialTree {
         });
     }
 
+    pub fn get_last_sampled_scroll_offsets(
+        &self,
+    ) -> FastHashMap<ExternalScrollId, Vec<SampledScrollOffset>> {
+        let mut result = FastHashMap::default();
+        self.visit_nodes(|_, node| {
+            if let SpatialNodeType::ScrollFrame(ref scrolling) = node.node_type {
+                result.insert(scrolling.external_id, scrolling.offsets.clone());
+            }
+        });
+        result
+    }
+
+    pub fn apply_last_sampled_scroll_offsets(
+        &mut self,
+        last_sampled_offsets: FastHashMap<ExternalScrollId, Vec<SampledScrollOffset>>,
+    ) {
+        self.visit_nodes_mut(|_, node| {
+            if let SpatialNodeType::ScrollFrame(ref mut scrolling) = node.node_type {
+                if let Some(offsets) = last_sampled_offsets.get(&scrolling.external_id) {
+                    scrolling.offsets = offsets.clone();
+                }
+            }
+        });
+    }
+
     pub fn get_spatial_node(&self, index: SpatialNodeIndex) -> &SpatialNode {
         &self.spatial_nodes[index.0 as usize]
     }
