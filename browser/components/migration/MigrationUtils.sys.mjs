@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -116,6 +117,15 @@ const MIGRATOR_MODULES = Object.freeze({
  * instance of this class is exported from this module as `MigrationUtils`.
  */
 class MigrationUtils {
+  constructor() {
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "HISTORY_MAX_AGE_IN_DAYS",
+      "browser.migrate.history.maxAgeInDays",
+      180
+    );
+  }
+
   resourceTypes = Object.freeze({
     ALL: 0x0000,
     /* 0x01 used to be used for settings, but was removed. */
@@ -1046,6 +1056,10 @@ class MigrationUtils {
 
   getSourceIdForTelemetry(sourceName) {
     return this.#SOURCE_NAME_TO_ID_MAPPING_ENUM[sourceName] || 0;
+  }
+
+  get HISTORY_MAX_AGE_IN_MILLISECONDS() {
+    return this.HISTORY_MAX_AGE_IN_DAYS * 24 * 60 * 60 * 1000;
   }
 }
 
