@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ExtensionBrowser.h"
+#include "ExtensionAPIRequestForwarder.h"
 
 #include "mozilla/dom/ExtensionBrowserBinding.h"
 #include "mozilla/dom/ExtensionPortBinding.h"  // ExtensionPortDescriptor

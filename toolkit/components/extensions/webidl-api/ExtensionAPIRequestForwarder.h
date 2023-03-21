@@ -11,6 +11,7 @@
 
 #include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/dom/RootedDictionary.h"
+#include "mozilla/dom/SerializedStackHolder.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerPrivate.h"
@@ -20,7 +21,6 @@ namespace mozilla {
 namespace dom {
 class ClientInfoAndState;
 class Function;
-class SerializedStackHolder;
 }  // namespace dom
 namespace extensions {
 

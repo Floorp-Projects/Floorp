@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ExtensionPort.h"
+#include "ExtensionBrowser.h"
 #include "ExtensionEventManager.h"
 
 #include "mozilla/dom/BindingUtils.h"  // SequenceRooter
