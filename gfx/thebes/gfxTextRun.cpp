@@ -1368,75 +1368,79 @@ void gfxTextRun::AddGlyphRun(gfxFont* aFont, FontMatchType aMatchType,
       GlyphRun{aFont, aUTF16Offset, aOrientation, aMatchType, aIsCJK});
 }
 
-void gfxTextRun::SortGlyphRuns() {
-  if (mGlyphRuns.Length() < 2) {
-    return;
-  }
-
-  auto& runs = mGlyphRuns.Array();
-  runs.Sort(GlyphRunOffsetComparator());
-
-  // Coalesce adjacent glyph runs that have the same properties.
-  GlyphRun* prevRun = nullptr;
-  runs.RemoveElementsBy([&prevRun](GlyphRun& aRun) -> bool {
-    // First run is always retained.
-    if (!prevRun) {
-      prevRun = &aRun;
-      return false;
-    }
-    // Remove any run whose properties match its predecessor.
-    if (prevRun->Matches(aRun.mFont, aRun.mOrientation, aRun.mIsCJK,
-                         aRun.mMatchType)) {
-      return true;
-    }
-    MOZ_ASSERT(prevRun->mCharacterOffset < aRun.mCharacterOffset,
-               "Two fonts for the same run, glyph indices unreliable");
-    // We're keeping another run, so update prevRun pointer to refer to it (in
-    // its new position).
-    ++prevRun;
-    return false;
-  });
-  MOZ_ASSERT(prevRun == &runs.LastElement(), "lost track of prevRun!");
-
-  MOZ_ASSERT(!runs.IsEmpty());
-  if (runs.Length() == 1) {
-    mGlyphRuns.ConvertToElement();
-  }
-}
-
-// Note that SanitizeGlyphRuns scans all glyph runs in the textrun;
-// therefore we only call it once, at the end of textrun construction,
-// NOT incrementally as each glyph run is added (bug 680402).
 void gfxTextRun::SanitizeGlyphRuns() {
   if (mGlyphRuns.Length() < 2) {
     return;
   }
 
-  // If any glyph run starts with ligature-continuation characters, we need to
-  // advance it to the first "real" character to avoid drawing partial ligature
-  // glyphs from wrong font (seen with U+FEFF in reftest 474417-1, as Core Text
-  // eliminates the glyph, which makes it appear as if a ligature has been
-  // formed)
-  auto& glyphRuns = mGlyphRuns.Array();
-  int32_t i, lastRunIndex = glyphRuns.Length() - 1;
-  const CompressedGlyph* charGlyphs = mCharacterGlyphs;
-  for (i = lastRunIndex; i >= 0; --i) {
-    GlyphRun& run = glyphRuns[i];
-    while (charGlyphs[run.mCharacterOffset].IsLigatureContinuation() &&
-           run.mCharacterOffset < GetLength()) {
-      run.mCharacterOffset++;
+  auto& runs = mGlyphRuns.Array();
+
+  // The runs are almost certain to be already sorted, so it's worth avoiding
+  // the Sort() call if possible.
+  bool isSorted = true;
+  uint32_t prevOffset = 0;
+  for (const auto& r : runs) {
+    if (r.mCharacterOffset < prevOffset) {
+      isSorted = false;
+      break;
     }
-    // if the run has become empty, eliminate it
-    if ((i < lastRunIndex &&
-         run.mCharacterOffset >= glyphRuns[i + 1].mCharacterOffset) ||
-        (i == lastRunIndex && run.mCharacterOffset == GetLength())) {
-      glyphRuns.RemoveElementAt(i);
-      --lastRunIndex;
-    }
+    prevOffset = r.mCharacterOffset;
+  }
+  if (!isSorted) {
+    runs.Sort(GlyphRunOffsetComparator());
   }
 
-  MOZ_ASSERT(!glyphRuns.IsEmpty());
-  if (glyphRuns.Length() == 1) {
+  // Coalesce adjacent glyph runs that have the same properties, and eliminate
+  // any empty runs.
+  GlyphRun* prevRun = nullptr;
+  const CompressedGlyph* charGlyphs = mCharacterGlyphs;
+
+  runs.RemoveElementsBy([&](GlyphRun& aRun) -> bool {
+    // First run is always retained.
+    if (!prevRun) {
+      prevRun = &aRun;
+      return false;
+    }
+
+    // Merge any run whose properties match its predecessor.
+    if (prevRun->Matches(aRun.mFont, aRun.mOrientation, aRun.mIsCJK,
+                         aRun.mMatchType)) {
+      return true;
+    }
+
+    if (prevRun->mCharacterOffset >= aRun.mCharacterOffset) {
+      // Preceding run is empty (or has become so due to the adjusting for
+      // ligature boundaries), so we will overwrite it with this one, which
+      // will then be discarded.
+      *prevRun = aRun;
+      return true;
+    }
+
+    // If any glyph run starts with ligature-continuation characters, we need to
+    // advance it to the first "real" character to avoid drawing partial
+    // ligature glyphs from wrong font (seen with U+FEFF in reftest 474417-1, as
+    // Core Text eliminates the glyph, which makes it appear as if a ligature
+    // has been formed)
+    while (charGlyphs[aRun.mCharacterOffset].IsLigatureContinuation() &&
+           aRun.mCharacterOffset < GetLength()) {
+      aRun.mCharacterOffset++;
+    }
+
+    // We're keeping another run, so update prevRun pointer to refer to it (in
+    // its new position).
+    ++prevRun;
+    return false;
+  });
+
+  MOZ_ASSERT(prevRun == &runs.LastElement(), "lost track of prevRun!");
+
+  // Drop any trailing empty run.
+  if (runs.Length() > 1 && prevRun->mCharacterOffset == GetLength()) {
+    runs.RemoveLastElement();
+  }
+
+  MOZ_ASSERT(!runs.IsEmpty());
+  if (runs.Length() == 1) {
     mGlyphRuns.ConvertToElement();
   }
 }
@@ -2670,8 +2674,6 @@ void gfxFontGroup::InitTextRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
   // changes (see bug 680402) - we'd end up re-sanitizing all the earlier runs
   // every time a new script subrun is processed.
   aTextRun->SanitizeGlyphRuns();
-
-  aTextRun->SortGlyphRuns();
 }
 
 static inline bool IsPUA(uint32_t aUSV) {
