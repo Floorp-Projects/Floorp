@@ -313,12 +313,12 @@ MCall* MakeCall(TempAllocator& alloc, Undef addUndefined, CallInfo& callInfo,
 
   mozilla::Maybe<DOMObjectKind> objKind;
   if (isDOMCall) {
-    const JSClass* clasp = callInfo.thisArg()->toGuardToClass()->getClass();
-    MOZ_ASSERT(clasp->isDOMClass());
-    if (clasp->isNativeObject()) {
+    const Shape* shape = callInfo.thisArg()->toGuardShape()->shape();
+    MOZ_ASSERT(shape->getObjectClass()->isDOMClass());
+    if (shape->isNative()) {
       objKind.emplace(DOMObjectKind::Native);
     } else {
-      MOZ_ASSERT(clasp->isProxyObject());
+      MOZ_ASSERT(shape->isProxy());
       objKind.emplace(DOMObjectKind::Proxy);
     }
   }
