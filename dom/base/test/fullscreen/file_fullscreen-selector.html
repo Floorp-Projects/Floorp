@@ -145,6 +145,11 @@ function exit0() {
   function listener() {
     if (++count == 3) {
       document.removeEventListener("fullscreenchange", listener);
+      // We bypassed our fullscreenchangeenters count since we didn't
+      // do our requests with a addFullscreenChangeContinuation, so we
+      // fix up the expected value now that we're done with this part
+      // of the test.
+      setFullscreenChangeEnters(1);
       enterAll();
     }
   }

@@ -148,9 +148,10 @@ async function testFullscreenMouseBtn(event, button, next) {
     let evt = fsRequestEvents[i];
     for (let j = 0; j < mouseButtons.length; j++) {
       let mouseButton = mouseButtons[j];
-      let fsDenied = addFullscreenErrorContinuation();
-      requestFullscreenMouseBtn(evt, mouseButton);
-      await fsDenied;
+      await new Promise(resolve => {
+        addFullscreenErrorContinuation(resolve);
+        requestFullscreenMouseBtn(evt, mouseButton);
+      });
       ok(!document.fullscreenElement, `Should not grant request on '${evt}' triggered by mouse button ${mouseButton}`);
     }
   }
