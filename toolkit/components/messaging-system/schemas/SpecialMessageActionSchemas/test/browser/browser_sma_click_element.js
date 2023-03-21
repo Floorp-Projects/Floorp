@@ -82,7 +82,7 @@ add_task(async function test_CLICK_ELEMENT() {
   const sendTriggerStub = sandbox.stub(ASRouter, "sendTriggerMessage");
   sendTriggerStub.resolves(TEST_MESSAGE);
 
-  await withFirefoxView({}, async browser => {
+  await withFirefoxView({ openNewWindow: true }, async browser => {
     const { document } = browser.contentWindow;
     const calloutSelector = "#root.featureCallout";
 

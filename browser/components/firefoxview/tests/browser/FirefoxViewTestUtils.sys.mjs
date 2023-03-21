@@ -27,10 +27,6 @@ async function assertFirefoxViewTabSelected(win) {
 }
 
 async function openFirefoxViewTab(win) {
-  Assert.ok(
-    !win.FirefoxViewHandler.tab,
-    "Firefox View tab doesn't exist prior to clicking the button"
-  );
   await BrowserTestUtils.synthesizeMouseAtCenter(
     "#firefox-view-button",
     { type: "mousedown" },
@@ -55,15 +51,29 @@ function closeFirefoxViewTab(win) {
   );
 }
 
+/**
+ * Run a task with Firefox View open.
+ *
+ * @param {Object} options
+ *   Options object.
+ * @param {boolean} [options.openNewWindow]
+ *   Whether to run the task in a new window. If false, the current window will
+ *   be used.
+ * @param {boolean} [options.resetFlowManager]
+ *   Whether to reset the internal state of TabsSetupFlowManager before running
+ *   the task.
+ * @param {function(MozBrowser)} taskFn
+ *   The task to run. It can be asynchronous.
+ * @returns {any}
+ *   The value returned by the task.
+ */
 async function withFirefoxView(
-  { resetFlowManager = true, win = null },
+  { openNewWindow = false, resetFlowManager = true },
   taskFn
 ) {
-  let shouldCloseWin = false;
-  if (!win) {
-    win = await BrowserTestUtils.openNewBrowserWindow();
-    shouldCloseWin = true;
-  }
+  const win = openNewWindow
+    ? await BrowserTestUtils.openNewBrowserWindow()
+    : Services.wm.getMostRecentBrowserWindow();
   if (resetFlowManager) {
     const { TabsSetupFlowManager } = ChromeUtils.importESModule(
       "resource:///modules/firefox-view-tabs-setup-manager.sys.mjs"
@@ -92,7 +102,7 @@ async function withFirefoxView(
     );
   }
   await win.SpecialPowers.popPrefEnv();
-  if (shouldCloseWin) {
+  if (openNewWindow) {
     await BrowserTestUtils.closeWindow(win);
   }
   return result;
