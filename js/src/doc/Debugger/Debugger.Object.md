@@ -584,6 +584,7 @@ exception.  The `options` object can have the following properties:
   * `text`: String contents of the JavaScript in the source.
   * `url`: URL the resulting source should be associated with.
   * `startLine`: Starting line of the source.
+  * `startColumn`: Starting column of the source.
   * `sourceMapURL`: Optional URL specifying the source's source map URL.
     If not specified, the source map URL can be filled in if specified by
     the source's text.

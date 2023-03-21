@@ -1230,6 +1230,15 @@ bool DebuggerObject::CallData::createSource() {
     return false;
   }
 
+  if (!JS_GetProperty(cx, options, "startColumn", &v)) {
+    return false;
+  }
+
+  uint32_t startColumn;
+  if (!ToUint32(cx, v, &startColumn)) {
+    return false;
+  }
+
   if (!JS_GetProperty(cx, options, "sourceMapURL", &v)) {
     return false;
   }
@@ -1250,6 +1259,7 @@ bool DebuggerObject::CallData::createSource() {
 
   JS::CompileOptions compileOptions(cx);
   compileOptions.lineno = startLine;
+  compileOptions.column = startColumn;
 
   if (!JS::StringHasLatin1Chars(url)) {
     JS_ReportErrorASCII(cx, "URL must be a narrow string");
