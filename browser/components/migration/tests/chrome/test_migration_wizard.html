@@ -284,9 +284,10 @@
         let bookmarks = gShadowRoot.querySelector("#bookmarks");
         let history = gShadowRoot.querySelector("#history");
 
-        let selectedDataUpdated = BrowserTestUtils.waitForCondition(() => {
-          return selectedData.textContent == "Bookmarks and history";
-        });
+        let selectedDataUpdated = BrowserTestUtils.waitForEvent(
+          gWiz,
+          "MigrationWizard:ResourcesUpdated"
+        );
         bookmarks.control.checked = true;
         history.control.checked = true;
         bookmarks.dispatchEvent(new CustomEvent("change"));
@@ -307,6 +308,56 @@
           "migration-all-available-data-label",
           "Testing if selected-data-header reflects the selected resources"
         );
+      });
+
+
+      /**
+       * Tests variant 2 of the migration wizard when there's a single resource
+       * item.
+       */
+      add_task(async function test_selection_variant_2_single_item() {
+        let resourcesUpdated = BrowserTestUtils.waitForEvent(
+          gWiz,
+          "MigrationWizard:ResourcesUpdated"
+        );
+        gWiz.setState({
+          page: MigrationWizardConstants.PAGES.SELECTION,
+          migrators: [{
+            key: "some-browser-0",
+            displayName: "Some Browser 0 with a single resource",
+            resourceTypes: ["HISTORY"],
+            profile: { id: "person-1", name: "Person 1" },
+          }, {
+            key: "some-browser-1",
+            displayName: "Some Browser 1 with a two resources",
+            resourceTypes: ["HISTORY", "BOOKMARKS"],
+            profile: { id: "person-2", name: "Person 2" },
+          }],
+          showImportAll: true,
+        });
+        await resourcesUpdated;
+
+        let selectAll = gShadowRoot.querySelector("#select-all");
+        let summary = gShadowRoot.querySelector("summary");
+        let details = gShadowRoot.querySelector("details");
+        ok(!details.open, "Details should be closed");
+        details.open = true;
+
+        ok(isHidden(selectAll), "Selection for select-all should be hidden.");
+        ok(!isHidden(summary), "Summary should be shown.");
+        ok(!isHidden(details), "Details should be shown.");
+
+        resourcesUpdated = BrowserTestUtils.waitForEvent(
+          gWiz,
+          "MigrationWizard:ResourcesUpdated"
+        );
+        let browser1Item = gWiz.querySelector("panel-item[key='some-browser-1']");
+        browser1Item.click();
+        await resourcesUpdated;
+
+        ok(!isHidden(selectAll), "Selection for select-all should be shown.");
+        ok(!isHidden(summary), "Summary should be shown.");
+        ok(!isHidden(details), "Details should be shown.");
       });
 
       /**

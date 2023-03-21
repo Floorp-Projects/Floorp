@@ -28,7 +28,7 @@ export class MigrationWizard extends HTMLElement {
         <link rel="stylesheet" href="chrome://browser/skin/migration/migration-wizard.css">
         <named-deck id="wizard-deck" selected-view="page-loading" aria-live="polite" aria-busy="true">
           <div name="page-loading">
-            <h3 data-l10n-id="migration-wizard-selection-header"></h3>
+            <h1 data-l10n-id="migration-wizard-selection-header"></h1>
             <div class="loading-block large"></div>
             <div class="loading-block small"></div>
             <div class="loading-block small"></div>
@@ -41,7 +41,7 @@ export class MigrationWizard extends HTMLElement {
           </div>
 
           <div name="page-selection">
-            <h3 data-l10n-id="migration-wizard-selection-header"></h3>
+            <h1 data-l10n-id="migration-wizard-selection-header"></h1>
             <button id="browser-profile-selector">
               <span class="migrator-icon"></span>
               <div class="migrator-description">
@@ -83,7 +83,7 @@ export class MigrationWizard extends HTMLElement {
           </div>
 
           <div name="page-progress">
-            <h3 id="progress-header" data-l10n-id="migration-wizard-progress-header"></h3>
+            <h1 id="progress-header" data-l10n-id="migration-wizard-progress-header"></h1>
             <div class="resource-progress">
               <div data-resource-type="BOOKMARKS" class="resource-progress-group">
                 <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
@@ -116,7 +116,7 @@ export class MigrationWizard extends HTMLElement {
           </div>
 
           <div name="page-safari-permission">
-            <h3 data-l10n-id="migration-wizard-selection-header"></h3>
+            <h1 data-l10n-id="migration-wizard-selection-header"></h1>
             <div data-l10n-id="migration-wizard-safari-permissions-sub-header"></div>
             <ol>
               <li data-l10n-id="migration-wizard-safari-instructions-continue"></li>
@@ -129,7 +129,7 @@ export class MigrationWizard extends HTMLElement {
           </div>
 
           <div name="page-no-browsers-found">
-            <h3 data-l10n-id="migration-wizard-selection-header"></h3>
+            <h1 data-l10n-id="migration-wizard-selection-header"></h1>
             <div class="no-browsers-found">
               <span class="error-icon" role="img"></span>
               <div class="no-browsers-found-message" data-l10n-id="migration-wizard-import-browser-no-browsers"></div>
@@ -564,6 +564,15 @@ export class MigrationWizard extends HTMLElement {
         "migration-all-available-data-label"
       );
     }
+
+    let selectionPage = this.#shadowRoot.querySelector(
+      "div[name='page-selection']"
+    );
+    selectionPage.toggleAttribute("single-item", totalResources == 1);
+
+    this.dispatchEvent(
+      new CustomEvent("MigrationWizard:ResourcesUpdated", { bubbles: true })
+    );
   }
 
   handleEvent(event) {

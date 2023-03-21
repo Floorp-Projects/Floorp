@@ -117,5 +117,5 @@ migration-wizard-progress-success-history =
 
 migration-wizard-safari-permissions-sub-header = To import Safari bookmarks and browsing history:
 migration-wizard-safari-instructions-continue = Select “Continue”
-migration-wizard-safari-instructions-folder = Select Safari folder in the list and click “Open”
+migration-wizard-safari-instructions-folder = Select Safari folder in the list and choose “Open”
 migration-wizard-safari-select-button = Select File
