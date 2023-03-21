@@ -13,13 +13,36 @@ def inline(doc):
     return "data:text/html;charset=utf-8,{}".format(quote(doc))
 
 
+# Each list element represents a window of tabs loaded at
+# some testing URL
+DEFAULT_WINDOWS = set(
+    [
+        # Window 1. Note the comma after the inline call -
+        # this is Python's way of declaring a 1 item tuple.
+        (inline("""<div">Lorem</div>"""),),
+        # Window 2
+        (
+            inline("""<div">ipsum</div>"""),
+            inline("""<div">dolor</div>"""),
+        ),
+        # Window 3
+        (
+            inline("""<div">sit</div>"""),
+            inline("""<div">amet</div>"""),
+        ),
+    ]
+)
+
+
 class SessionStoreTestCase(WindowManagerMixin, MarionetteTestCase):
     def setUp(
         self,
         startup_page=1,
         include_private=True,
+        restore_on_demand=False,
         no_auto_updates=True,
         win_register_restart=False,
+        test_windows=DEFAULT_WINDOWS,
     ):
         super(SessionStoreTestCase, self).setUp()
         self.marionette.set_context("chrome")
@@ -27,25 +50,7 @@ class SessionStoreTestCase(WindowManagerMixin, MarionetteTestCase):
         platform = self.marionette.session_capabilities["platformName"]
         self.accelKey = Keys.META if platform == "mac" else Keys.CONTROL
 
-        # Each list element represents a window of tabs loaded at
-        # some testing URL
-        self.test_windows = set(
-            [
-                # Window 1. Note the comma after the inline call -
-                # this is Python's way of declaring a 1 item tuple.
-                (inline("""<div">Lorem</div>"""),),
-                # Window 2
-                (
-                    inline("""<div">ipsum</div>"""),
-                    inline("""<div">dolor</div>"""),
-                ),
-                # Window 3
-                (
-                    inline("""<div">sit</div>"""),
-                    inline("""<div">amet</div>"""),
-                ),
-            ]
-        )
+        self.test_windows = test_windows
 
         self.private_windows = set(
             [
@@ -67,7 +72,7 @@ class SessionStoreTestCase(WindowManagerMixin, MarionetteTestCase):
                 "browser.startup.page": startup_page,
                 # Make the content load right away instead of waiting for
                 # the user to click on the background tabs
-                "browser.sessionstore.restore_on_demand": False,
+                "browser.sessionstore.restore_on_demand": restore_on_demand,
                 # Avoid race conditions by having the content process never
                 # send us session updates unless the parent has explicitly asked
                 # for them via the TabStateFlusher.
