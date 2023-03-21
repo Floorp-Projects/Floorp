@@ -3171,6 +3171,17 @@ Element* nsINode::GetParentFlexElement() {
   return nullptr;
 }
 
+Element* nsINode::GetNearestInclusiveOpenPopover() {
+  for (nsINode* node = this; node; node = node->GetFlattenedTreeParentNode()) {
+    if (auto* el = Element::FromNode(node)) {
+      if (el->IsAutoPopover() && el->IsPopoverOpen()) {
+        return el;
+      }
+    }
+  }
+  return nullptr;
+}
+
 void nsINode::AddAnimationObserver(nsIAnimationObserver* aAnimationObserver) {
   AddMutationObserver(aAnimationObserver);
   OwnerDoc()->SetMayHaveAnimationObservers();
