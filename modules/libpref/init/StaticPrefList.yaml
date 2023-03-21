@@ -12053,6 +12053,12 @@
   value: ""
   mirror: never
 
+# The URI used for the target DoH server when network.trr.use_ohttp is true
+- name: network.trr.ohttp.uri
+  type: String
+  value: ""
+  mirror: never
+
 # Allow the network changed event to get sent when a network topology or setup
 # change is noticed while running.
 - name: network.notify.changed
