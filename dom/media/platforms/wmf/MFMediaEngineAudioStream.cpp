@@ -68,8 +68,9 @@ HRESULT MFMediaEngineAudioStream::CreateMediaType(const TrackInfo& aInfo,
         MF_MT_USER_DATA, mAACUserData.Elements(), mAACUserData.Length()));
   }
   LOGV("Created audio type, subtype=%s, channel=%" PRIu32 ", rate=%" PRIu32
-       ", bitDepth=%" PRIu64,
-       GUIDToStr(subType), info.mChannels, info.mRate, bitDepth);
+       ", bitDepth=%" PRIu64 ", encrypted=%d",
+       GUIDToStr(subType), info.mChannels, info.mRate, bitDepth,
+       mAudioInfo.mCrypto.IsEncrypted());
 
   *aMediaType = mediaType.Detach();
   return S_OK;
