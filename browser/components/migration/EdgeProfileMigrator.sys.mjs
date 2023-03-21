@@ -129,7 +129,17 @@ EdgeTypedURLMigrator.prototype = {
   migrate(aCallback) {
     let typedURLs = this._typedURLs;
     let pageInfos = [];
+    let now = new Date();
+    let maxDate = new Date(
+      Date.now() - MigrationUtils.HISTORY_MAX_AGE_IN_MILLISECONDS
+    );
+
     for (let [urlString, time] of typedURLs) {
+      let visitDate = time ? lazy.PlacesUtils.toDate(time) : now;
+      if (time && visitDate < maxDate) {
+        continue;
+      }
+
       let url;
       try {
         url = new URL(urlString);
@@ -164,13 +174,15 @@ EdgeTypedURLMigrator.prototype = {
   },
 };
 
-function EdgeTypedURLDBMigrator() {}
+function EdgeTypedURLDBMigrator(dbOverride) {
+  this.dbOverride = dbOverride;
+}
 
 EdgeTypedURLDBMigrator.prototype = {
   type: MigrationUtils.resourceTypes.HISTORY,
 
   get db() {
-    return lazy.gEdgeDatabase;
+    return this.dbOverride || lazy.gEdgeDatabase;
   },
 
   get exists() {
@@ -210,23 +222,21 @@ EdgeTypedURLDBMigrator.prototype = {
     }
 
     let pageInfos = [];
-    // Sometimes the values are bogus (e.g. 0 becomes some date in 1600),
-    // and places will throw *everything* away, not just the bogus ones,
-    // so deal with that by having a cutoff date. Also, there's not much
-    // point importing really old entries. The cut-off date is related to
-    // Edge's launch date.
-    const kDateCutOff = new Date("2016", 0, 1);
+
+    const kDateCutOff = new Date(
+      Date.now() - MigrationUtils.HISTORY_MAX_AGE_IN_MILLISECONDS
+    );
     for (let typedUrlInfo of typedUrls) {
       try {
-        let url = new URL(typedUrlInfo.URL);
-        if (!["http:", "https:", "ftp:"].includes(url.protocol)) {
-          continue;
-        }
-
         let date = typedUrlInfo.AccessDateTimeUTC;
         if (!date) {
           date = kDateCutOff;
         } else if (date < kDateCutOff) {
+          continue;
+        }
+
+        let url = new URL(typedUrlInfo.URL);
+        if (!["http:", "https:", "ftp:"].includes(url.protocol)) {
           continue;
         }
 
@@ -506,6 +516,14 @@ export class EdgeProfileMigrator extends MigratorBase {
 
   getReadingListMigratorForTesting(dbOverride) {
     return new EdgeReadingListMigrator(dbOverride);
+  }
+
+  getHistoryDBMigratorForTesting(dbOverride) {
+    return new EdgeTypedURLDBMigrator(dbOverride);
+  }
+
+  getHistoryRegistryMigratorForTesting() {
+    return new EdgeTypedURLMigrator();
   }
 
   getResources() {

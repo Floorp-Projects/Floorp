@@ -43,6 +43,11 @@ History.prototype = {
     let typedURLs = MSMigrationUtils.getTypedURLs(
       "Software\\Microsoft\\Internet Explorer"
     );
+    let now = new Date();
+    let maxDate = new Date(
+      Date.now() - MigrationUtils.HISTORY_MAX_AGE_IN_MILLISECONDS
+    );
+
     for (let entry of Cc[
       "@mozilla.org/profile/migrator/iehistoryenumerator;1"
     ].createInstance(Ci.nsISimpleEnumerator)) {
@@ -64,8 +69,13 @@ History.prototype = {
       let transition = typedURLs.has(url.spec)
         ? lazy.PlacesUtils.history.TRANSITIONS.LINK
         : lazy.PlacesUtils.history.TRANSITIONS.TYPED;
-      // use the current date if we have no visits for this entry.
+
       let time = entry.get("time");
+
+      let visitDate = time ? lazy.PlacesUtils.toDate(time) : null;
+      if (visitDate && visitDate < maxDate) {
+        continue;
+      }
 
       pageInfos.push({
         url,
@@ -73,9 +83,8 @@ History.prototype = {
         visits: [
           {
             transition,
-            date: time
-              ? lazy.PlacesUtils.toDate(entry.get("time"))
-              : new Date(),
+            // use the current date if we have no visits for this entry.
+            date: visitDate ?? now,
           },
         ],
       });
