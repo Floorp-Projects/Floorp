@@ -88,8 +88,6 @@ class RenderTextureHost {
 
   virtual RenderTextureHostSWGL* AsRenderTextureHostSWGL() { return nullptr; }
 
-  virtual void Destroy();
-
  protected:
   virtual ~RenderTextureHost();
 

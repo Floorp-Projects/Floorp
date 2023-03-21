@@ -29,11 +29,11 @@ using namespace layers;
 
 static StaticAutoPtr<RDDProcessManager> sRDDSingleton;
 
-static bool sRDDProcessShutdown = false;
+static bool sXPCOMShutdown = false;
 
 bool RDDProcessManager::IsShutdown() const {
   MOZ_ASSERT(NS_IsMainThread());
-  return sRDDProcessShutdown || !sRDDSingleton;
+  return sXPCOMShutdown || !sRDDSingleton;
 }
 
 RDDProcessManager* RDDProcessManager::Get() { return sRDDSingleton; }
@@ -44,14 +44,6 @@ void RDDProcessManager::Initialize() {
 }
 
 void RDDProcessManager::Shutdown() { sRDDSingleton = nullptr; }
-
-void RDDProcessManager::RDDProcessShutdown() {
-  MOZ_ASSERT(NS_IsMainThread());
-  sRDDProcessShutdown = true;
-  if (sRDDSingleton) {
-    sRDDSingleton->DestroyProcess();
-  }
-}
 
 RDDProcessManager::RDDProcessManager()
     : mObserver(new Observer(this)), mTaskFactory(this) {
@@ -88,8 +80,10 @@ RDDProcessManager::Observer::Observe(nsISupports* aSubject, const char* aTopic,
 
 void RDDProcessManager::OnXPCOMShutdown() {
   MOZ_ASSERT(NS_IsMainThread());
+  sXPCOMShutdown = true;
   nsContentUtils::UnregisterShutdownObserver(mObserver);
   Preferences::RemoveObserver(mObserver, "");
+  CleanShutdown();
 }
 
 void RDDProcessManager::OnPreferenceChange(const char16_t* aData) {
@@ -257,6 +251,8 @@ void RDDProcessManager::NotifyRemoteActorDestroyed(
   // before the ActorDestroy for PRDDChild.
   OnProcessUnexpectedShutdown(mProcess);
 }
+
+void RDDProcessManager::CleanShutdown() { DestroyProcess(); }
 
 void RDDProcessManager::DestroyProcess() {
   MOZ_ASSERT(NS_IsMainThread());
