@@ -616,12 +616,6 @@ Did you run with --create-virtualenv? Is mozinstall in virtualenv_modules?"""
         cmd = [self.query_python_path("mozinstall")]
         if app:
             cmd.extend(["--app", app])
-        # Remove the below when we no longer need to support mozinstall 0.3
-        self.info("Detecting whether we're running mozinstall >=1.0...")
-        output = self.get_output_from_command(cmd + ["-h"])
-        if "--source" in output:
-            cmd.append("--source")
-        # End remove
         dirs = self.query_abs_dirs()
         if not target_dir:
             target_dir = dirs.get(
