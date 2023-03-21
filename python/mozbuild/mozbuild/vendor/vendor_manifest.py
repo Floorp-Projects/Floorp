@@ -317,6 +317,10 @@ class VendorManifest(MozbuildObject):
             from mozbuild.vendor.host_angle import AngleHost
 
             return AngleHost(self.manifest)
+        elif self.manifest["vendoring"]["source-hosting"] == "codeberg":
+            from mozbuild.vendor.host_codeberg import CodebergHost
+
+            return CodebergHost(self.manifest)
         else:
             raise Exception(
                 "Unknown source host: " + self.manifest["vendoring"]["source-hosting"]
