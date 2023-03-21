@@ -271,6 +271,9 @@ static void SettlePromise(Promise* aSettlingPromise, Promise* aCallbackPromise,
   if (!aSettlingPromise) {
     return;
   }
+  if (aRv.IsUncatchableException()) {
+    return;
+  }
   if (aRv.Failed()) {
     aSettlingPromise->MaybeReject(std::move(aRv));
     return;
