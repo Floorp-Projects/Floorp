@@ -502,6 +502,12 @@ class nsINode : public mozilla::dom::EventTarget {
 
   MOZ_CAN_RUN_SCRIPT mozilla::dom::Element* GetParentFlexElement();
 
+  /*
+   * Returns the nearest inclusive open popover for a given node, see
+   * https://html.spec.whatwg.org/multipage/popover.html#nearest-inclusive-open-popover
+   */
+  mozilla::dom::Element* GetNearestInclusiveOpenPopover();
+
   bool IsNode() const final { return true; }
 
   NS_IMPL_FROMEVENTTARGET_HELPER(nsINode, IsNode())
