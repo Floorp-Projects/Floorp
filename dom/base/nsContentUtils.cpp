@@ -739,6 +739,8 @@ class nsContentUtils::UserInteractionObserver final
 
 static constexpr nsLiteralCString kRfpPrefs[] = {
     "privacy.resistFingerprinting"_ns,
+    "privacy.resistFingerprintingLite"_ns,
+    "privacy.resistFingerprintingLite.overrides"_ns,
     "privacy.resistFingerprinting.testGranularityMask"_ns,
 };
 
