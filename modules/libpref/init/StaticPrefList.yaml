@@ -4887,7 +4887,7 @@
 # true:  Right node will be created (at splitting) and deleted (at joinining)
 - name: editor.join_split_direction.compatible_with_the_other_browsers
   type: bool
-  value: false
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 # Delay to mask last input character in password fields.
