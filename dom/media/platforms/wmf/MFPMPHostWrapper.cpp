@@ -38,7 +38,8 @@ STDMETHODIMP MFPMPHostWrapper::ActivateClassById(LPCWSTR aId, IStream* aStream,
     STATSTG statstg;
     RETURN_IF_FAILED(
         aStream->Stat(&statstg, STATFLAG_NOOPEN | STATFLAG_NONAME));
-    nsTArray<uint8_t> streamBlob(statstg.cbSize.LowPart);
+    nsTArray<uint8_t> streamBlob;
+    streamBlob.SetLength(statstg.cbSize.LowPart);
     unsigned long readSize = 0;
     RETURN_IF_FAILED(
         aStream->Read(&streamBlob[0], streamBlob.Length(), &readSize));
