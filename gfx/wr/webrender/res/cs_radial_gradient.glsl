@@ -4,10 +4,10 @@
 
 #include shared,rect,render_task,gpu_cache,gpu_buffer,gradient
 
-varying vec2 v_pos;
+varying highp vec2 v_pos;
 
 // Start radius. Packed in to a vector to work around bug 1630356.
-flat varying vec2 v_start_radius;
+flat varying highp vec2 v_start_radius;
 
 #ifdef WR_VERTEX_SHADER
 

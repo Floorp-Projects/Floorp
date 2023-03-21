@@ -6,11 +6,11 @@
 
 #include shared,rect,transform,render_task,gpu_buffer
 
-flat varying vec4 v_color;
-flat varying ivec2 v_flags;
+flat varying mediump vec4 v_color;
+flat varying mediump ivec2 v_flags;
 
 #ifndef SWGL_ANTIALIAS
-varying vec2 vLocalPos;
+varying highp vec2 vLocalPos;
 #endif
 
 #ifdef WR_VERTEX_SHADER

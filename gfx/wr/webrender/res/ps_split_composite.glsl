@@ -7,13 +7,13 @@
 #include shared,prim_shared
 
 // interpolated UV coordinates to sample.
-varying vec2 vUv;
+varying highp vec2 vUv;
 
 // Flag to allow perspective interpolation of UV.
 // Packed in to a vector to work around bug 1630356.
-flat varying vec2 vPerspective;
+flat varying mediump vec2 vPerspective;
 
-flat varying vec4 vUvSampleBounds;
+flat varying highp vec4 vUvSampleBounds;
 
 #ifdef WR_VERTEX_SHADER
 struct SplitGeometry {

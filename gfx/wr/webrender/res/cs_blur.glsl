@@ -6,13 +6,13 @@
 
 #include shared,prim_shared
 
-varying vec2 vUv;
-flat varying vec4 vUvRect;
-flat varying vec2 vOffsetScale;
+varying highp vec2 vUv;
+flat varying highp vec4 vUvRect;
+flat varying mediump vec2 vOffsetScale;
 // The number of pixels on each end that we apply the blur filter over.
 // Packed in to vector to work around bug 1630356.
-flat varying ivec2 vSupport;
-flat varying vec2 vGaussCoefficients;
+flat varying mediump ivec2 vSupport;
+flat varying mediump vec2 vGaussCoefficients;
 
 #ifdef WR_VERTEX_SHADER
 // Applies a separable gaussian blur in one direction, as specified

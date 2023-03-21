@@ -8,13 +8,13 @@
 #include shared,prim_shared,brush
 
 // Interpolated UV coordinates to sample.
-varying vec2 v_uv;
+varying highp vec2 v_uv;
 
 // Normalized bounds of the source image in the texture, adjusted to avoid
 // sampling artifacts.
-flat varying vec4 v_uv_sample_bounds;
+flat varying highp vec4 v_uv_sample_bounds;
 
-flat varying vec2 v_opacity_perspective_vec;
+flat varying mediump vec2 v_opacity_perspective_vec;
 #define v_opacity v_opacity_perspective_vec.x
 // Flag to allow perspective interpolation of UV.
 #define v_perspective v_opacity_perspective_vec.y

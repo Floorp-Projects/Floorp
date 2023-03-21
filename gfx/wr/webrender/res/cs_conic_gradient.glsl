@@ -6,13 +6,13 @@
 
 #define PI                  3.141592653589793
 
-varying vec2 v_pos;
+varying highp vec2 v_pos;
 
-flat varying vec2 v_center;
+flat varying highp vec2 v_center;
 
 // x: start offset, y: offset scale, z: angle
 // Packed in to a vector to work around bug 1630356.
-flat varying vec3 v_start_offset_offset_scale_angle_vec;
+flat varying highp vec3 v_start_offset_offset_scale_angle_vec;
 #define v_start_offset v_start_offset_offset_scale_angle_vec.x
 #define v_offset_scale v_start_offset_offset_scale_angle_vec.y
 #define v_angle v_start_offset_offset_scale_angle_vec.z

@@ -13,12 +13,12 @@
 // To keep the code independent of whether the line is horizontal or vertical,
 // vLocalPos.x is always parallel, and .y always perpendicular, to the line
 // being decorated.
-varying vec2 vLocalPos;
+varying highp vec2 vLocalPos;
 
 // Line style. Packed in to a vector to work around bug 1630356.
-flat varying ivec2 vStyle;
+flat varying mediump ivec2 vStyle;
 
-flat varying vec4 vParams;
+flat varying mediump vec4 vParams;
 
 #ifdef WR_VERTEX_SHADER
 
