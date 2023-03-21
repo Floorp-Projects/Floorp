@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=787070
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=787070">Mozilla Bug 787070</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-<iframe id="t"></iframe>
+<iframe id="t" src="http://example.org/tests/dom/bindings/test/file_dom_xrays.html"></iframe>
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -60,11 +60,8 @@ function checkXrayProperty(obj, name, values) {
   } while ((obj = Object.getPrototypeOf(obj)));
 }
 
-function checkWindowXrayProperty(win, name, { windowValue, windowPrototypeValue, namedPropertiesValue, eventTargetPrototypeValue }) {
-  checkXrayProperty(win, name, [ windowValue, windowPrototypeValue, namedPropertiesValue, eventTargetPrototypeValue ]);
-}
-function checkDocumentXrayProperty(doc, name, { documentValue, htmlDocumentPrototypeValue, documentPrototypeValue, nodePrototypeValue, eventTargetPrototypeValue }) {
-  checkXrayProperty(doc, name, [ documentValue, htmlDocumentPrototypeValue, documentPrototypeValue, nodePrototypeValue, eventTargetPrototypeValue ]);
+function checkWindowXrayProperty(obj, name, windowValue, windowPrototypeValue, namedPropertiesValue, eventTargetValue) {
+  checkXrayProperty(obj, name, [ windowValue, windowPrototypeValue, namedPropertiesValue, eventTargetValue ]);
 }
 
 function test() {
@@ -81,33 +78,25 @@ function test() {
   var eventTargetProto = Object.getPrototypeOf(namedPropertiesObject);
   is(eventTargetProto, win.EventTarget.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
 
-  let docProto = Object.getPrototypeOf(doc);
-  is(docProto, win.HTMLDocument.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
-
   // Xrays need to filter expandos.
-  checkDocumentXrayProperty(doc, "expando", {});
-  ok(!("expando" in doc), "Xrays should filter expandos");
+  checkWindowXrayProperty(win, "expando", undefined);
+  ok(!("expando" in win), "Xrays should filter expandos");
 
-  checkDocumentXrayProperty(doc, "shadowedIframe", {});
-  ok(!("shadowedIframe" in doc), "Named properties should not be exposed through Xrays");
+  checkWindowXrayProperty(win, "shadowedIframe", undefined);
+  ok(!("shadowedIframe" in win), "Named properties should not be exposed through Xrays");
 
   // Named properties live on the named properties object for global objects,
   // but are not exposed via Xrays.
-  checkWindowXrayProperty(win, "iframe", {});
+  checkWindowXrayProperty(win, "iframe", undefined, undefined, undefined, undefined);
   ok(!("iframe" in win), "Named properties should not be exposed through Xrays");
 
   // Window properties live on the instance, shadowing the properties of the named property object.
-  checkWindowXrayProperty(win, "document", { windowValue: doc });
+  checkWindowXrayProperty(win, "document", doc, undefined, undefined, undefined);
   ok("document" in win, "WebIDL properties should be exposed through Xrays");
 
   // Unforgeable properties live on the instance, shadowing the properties of the named property object.
-  checkWindowXrayProperty(win, "self", { windowValue: win });
+  checkWindowXrayProperty(win, "self", win, undefined, undefined, undefined);
   ok("self" in win, "WebIDL properties should be exposed through Xrays");
-
-  // Named properties live on the instance for non-global objects, but are not
-  // exposed via Xrays.
-  checkDocumentXrayProperty(doc, "iframe", {});
-  ok(!("iframe" in doc), "Named properties should not be exposed through Xrays");
 
   // Object.prototype is at the end of the prototype chain.
   var obj = win;
@@ -118,17 +107,17 @@ function test() {
   is(obj, win.Object.prototype, "Object.prototype should be at the end of the prototype chain");
 
   // Named properties shouldn't shadow WebIDL- or ECMAScript-defined properties.
-  checkWindowXrayProperty(win, "addEventListener", { eventTargetPrototypeValue: eventTargetProto.addEventListener });
+  checkWindowXrayProperty(win, "addEventListener", undefined, undefined, undefined, eventTargetProto.addEventListener);
   is(win.addEventListener, eventTargetProto.addEventListener, "Named properties shouldn't shadow WebIDL-defined properties");
 
   is(win.toString, win.Object.prototype.toString, "Named properties shouldn't shadow ECMAScript-defined properties");
 
   // WebIDL interface names should be exposed.
   var waivedWin = Cu.waiveXrays(win);
-  checkWindowXrayProperty(win, "Element", { windowValue: Cu.unwaiveXrays(waivedWin.Element) });
+  checkWindowXrayProperty(win, "Element", Cu.unwaiveXrays(waivedWin.Element));
 
   // JS standard classes should be exposed.
-  checkWindowXrayProperty(win, "Array", { windowValue: Cu.unwaiveXrays(waivedWin.Array) });
+  checkWindowXrayProperty(win, "Array", Cu.unwaiveXrays(waivedWin.Array));
 
   // HTMLDocument
   // Unforgeable properties live on the instance.
@@ -304,34 +293,6 @@ function test() {
   isnot(typeof Object.getOwnPropertyDescriptor(win.Node.prototype, "ELEMENT_NODE"), "undefined",
         "Should see constant property on prototype objects");
 
-  // Interfaces can have both static and non-static properties with the same name.
-  isnot(typeof win.TestFunctions.staticAndNonStaticOverload, "undefined",
-        "Should see static property on interface objects (even with non-static property with the same name)");
-  isnot(typeof Object.getOwnPropertyDescriptor(win.TestFunctions, "staticAndNonStaticOverload"), "undefined",
-        "Should see static property on interface objects (even with non-static property with the same name)");
-  isnot(Object.getOwnPropertyNames(win.TestFunctions).indexOf("staticAndNonStaticOverload"), -1,
-        "Should see static property on interface objects (even with non-static property with the same name)");
-  isnot(typeof (new win.TestFunctions("")).staticAndNonStaticOverload, "undefined",
-        "Should see non-static property on prototype objects (even with static property with the same name)");
-  let testFunctions = new win.TestFunctions();
-  is(Object.getOwnPropertyDescriptor(testFunctions, "staticAndNonStaticOverload"), undefined,
-     "Shouldn't see non-static property on instances (even with static property with the same name)");
-  ok(!testFunctions.staticAndNonStaticOverload(),
-     "Should call the non-static overload on the instance");
-  ok(win.TestFunctions.staticAndNonStaticOverload(),
-     "Should call the static overload on the interface object");
-  isnot(typeof Object.getOwnPropertyDescriptor(win.TestFunctions.prototype, "staticAndNonStaticOverload"), "undefined",
-        "Should see non-static property on prototype objects (even with static property with the same name)");
-  is(Object.getOwnPropertyDescriptor(win.TestFunctions, "staticAndNonStaticOverload").value,
-     Object.getOwnPropertyDescriptor(win.TestFunctions, "staticAndNonStaticOverload").value,
-     "Should get the same value when getting the static property twice");
-  is(Object.getOwnPropertyDescriptor(win.TestFunctions.prototype, "staticAndNonStaticOverload").value,
-     Object.getOwnPropertyDescriptor(win.TestFunctions.prototype, "staticAndNonStaticOverload").value,
-     "Should get the same value when getting the non-static property twice");
-  isnot(Object.getOwnPropertyDescriptor(win.TestFunctions, "staticAndNonStaticOverload").value,
-        Object.getOwnPropertyDescriptor(win.TestFunctions.prototype, "staticAndNonStaticOverload").value,
-        "Should get different values for static and non-static properties with the same name");
-
   // Adopting nodes should not lose expandos.
   elem = document.createElement("span");
   elem.expando = 5;
@@ -370,18 +331,7 @@ function test() {
 }
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.requestLongerTimeout(2);
-
-function loadIframeAndTest() {
-  let iframe = document.getElementById("t");
-  iframe.addEventListener("load", test, { once: true });
-  iframe.src = "http://example.org/tests/dom/bindings/test/file_dom_xrays.html";
-}
-
-addLoadEvent(() => {
-  SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]},
-                            loadIframeAndTest);
-});
+addLoadEvent(test);
 
 </script>
 </pre>
