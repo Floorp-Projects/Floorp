@@ -15,13 +15,13 @@ nsresult nsSegmentedBuffer::Init(uint32_t aSegmentSize, uint32_t aMaxSize) {
     return NS_ERROR_FAILURE;  // initialized more than once
   }
   mSegmentSize = aSegmentSize;
-  mMaxSize = aMaxSize;
+  mMaxSegmentCount = aMaxSize / aSegmentSize;
   mSegmentArrayCount = NS_SEGMENTARRAY_INITIAL_COUNT;
   return NS_OK;
 }
 
 char* nsSegmentedBuffer::AppendNewSegment() {
-  if (GetSize() >= mMaxSize) {
+  if (GetSegmentCount() >= mMaxSegmentCount) {
     return nullptr;
   }
 
