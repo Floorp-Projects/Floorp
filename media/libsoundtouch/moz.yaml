@@ -16,5 +16,81 @@ origin:
   url: "http://www.surina.net/soundtouch"
   license: "LGPL-2.1"
 
-  # From https://gitlab.com/soundtouch/soundtouch
-  release: "17a63e99d58053b0fbde8b69d7cc76a38119ce70 (2021-03-03 18:11:45 +0200)"
+  release: 17a63e99d58053b0fbde8b69d7cc76a38119ce70 (2021-03-03T18:11:45+02:00).
+  revision: 17a63e99d58053b0fbde8b69d7cc76a38119ce70
+
+vendoring:
+  url: https://codeberg.org/soundtouch/soundtouch
+  source-hosting: codeberg
+  tracking: commit
+
+  exclude:
+    - bin
+    - bootstrap
+    - config
+    - configure.ac
+    - createsrcpack
+    - Makefile.am
+    - make-win.bat
+    - README.html
+    - readme.md
+    - soundtouch.m4
+    - soundtouch.pc.in
+    - ".*"
+    - "source/Android-lib"
+    - "source/*/*/*"
+    - "source/*/*"
+    - "source/*/.*"
+    - "source/*"
+    - "include/*"
+
+  include:
+    - COPYING.TXT
+    - include/SoundTouch.h
+    - include/FIFOSampleBuffer.h
+    - include/FIFOSamplePipe.h
+    - include/STTypes.h
+    - source/SoundTouch/AAFilter.cpp
+    - source/SoundTouch/AAFilter.h
+    - source/SoundTouch/cpu_detect.h
+    - source/SoundTouch/cpu_detect_x86.cpp
+    - source/SoundTouch/FIFOSampleBuffer.cpp
+    - source/SoundTouch/FIRFilter.cpp
+    - source/SoundTouch/FIRFilter.h
+    - source/SoundTouch/InterpolateLinear.cpp
+    - source/SoundTouch/InterpolateLinear.h
+    - source/SoundTouch/InterpolateCubic.cpp
+    - source/SoundTouch/InterpolateCubic.h
+    - source/SoundTouch/InterpolateShannon.cpp
+    - source/SoundTouch/InterpolateShannon.h
+    - source/SoundTouch/mmx_optimized.cpp
+    - source/SoundTouch/RateTransposer.cpp
+    - source/SoundTouch/RateTransposer.h
+    - source/SoundTouch/SoundTouch.cpp
+    - source/SoundTouch/sse_optimized.cpp
+    - source/SoundTouch/TDStretch.cpp
+    - source/SoundTouch/TDStretch.h
+
+  keep:
+    - AUTHORS
+    - clear-lf.sh
+    - src/SoundTouchFactory.*
+    - src/soundtouch_config.h
+    - src/soundtouch_perms.h
+
+  patches:
+    - moz-libsoundtouch.patch
+
+  update-actions:
+    - action: move-file
+      from: '{vendor_dir}/COPYING.TXT'
+      to: '{vendor_dir}/LICENSE'
+    - action: move-dir
+      from: '{vendor_dir}/source/SoundTouch'
+      to: '{vendor_dir}/src'
+    - action: move-dir
+      from: '{vendor_dir}/include'
+      to: '{vendor_dir}/src'
+    - action: run-script
+      script: '{yaml_dir}/clear-lf.sh'
+      cwd: '{yaml_dir}'
