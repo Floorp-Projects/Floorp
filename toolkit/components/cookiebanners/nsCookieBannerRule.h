@@ -8,6 +8,7 @@
 #include "nsICookieRule.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "mozilla/Logging.h"
 
 class nsIClickRule;
 

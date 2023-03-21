@@ -7,6 +7,7 @@
 #include "mozilla/Logging.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "nsClickRule.h"
 #include "nsCookieRule.h"
 
 namespace mozilla {
