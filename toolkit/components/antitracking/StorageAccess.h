@@ -158,6 +158,11 @@ bool ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
 bool ShouldAllowAccessFor(nsIPrincipal* aPrincipal,
                           nsICookieJarSettings* aCookieJarSettings);
 
+namespace detail {
+uint32_t CheckCookiePermissionForPrincipal(
+    nsICookieJarSettings* aCookieJarSettings, nsIPrincipal* aPrincipal);
+}
+
 }  // namespace mozilla
 
 #endif  // mozilla_StorageAccess_h

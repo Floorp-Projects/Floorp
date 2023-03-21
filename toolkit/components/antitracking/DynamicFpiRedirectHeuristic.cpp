@@ -11,9 +11,11 @@
 #include "StorageAccessAPIHelper.h"
 
 #include "mozilla/net/HttpBaseChannel.h"
+#include "mozilla/net/UrlClassifierCommon.h"
 #include "mozilla/Telemetry.h"
 #include "nsContentUtils.h"
 #include "nsIChannel.h"
+#include "nsICookieJarSettings.h"
 #include "nsICookieService.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsINavHistoryService.h"

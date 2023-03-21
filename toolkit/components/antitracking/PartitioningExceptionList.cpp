@@ -8,6 +8,7 @@
 
 #include "AntiTrackingLog.h"
 #include "nsContentUtils.h"
+#include "nsServiceManagerUtils.h"
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"

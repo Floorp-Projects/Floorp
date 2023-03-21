@@ -9,6 +9,8 @@
 
 #include "nsIObserver.h"
 
+#include <functional>
+
 namespace mozilla {
 
 class SettingsChangeObserver final : public nsIObserver {

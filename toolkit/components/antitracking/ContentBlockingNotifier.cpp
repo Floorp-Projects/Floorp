@@ -12,6 +12,7 @@
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "nsIClassifiedChannel.h"
@@ -24,6 +25,7 @@
 #include "mozIThirdPartyUtil.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 using mozilla::dom::BrowsingContext;
 using mozilla::dom::ContentChild;
 using mozilla::dom::Document;

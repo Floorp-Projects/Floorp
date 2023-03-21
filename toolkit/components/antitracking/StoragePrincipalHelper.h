@@ -9,6 +9,7 @@
 
 #include <cstdint>
 #include "ErrorList.h"
+#include "nsStringFwd.h"
 
 /**
  * StoragePrincipal

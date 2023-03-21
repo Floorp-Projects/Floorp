@@ -7,6 +7,7 @@
 #include "TemporaryAccessGrantObserver.h"
 
 #include "mozilla/PermissionManager.h"
+#include "mozilla/Services.h"
 #include "nsIObserverService.h"
 #include "nsTHashtable.h"
 #include "nsXULAppAPI.h"

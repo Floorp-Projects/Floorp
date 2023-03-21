@@ -22,6 +22,7 @@
 #include "nsEffectiveTLDService.h"
 #include "nsGlobalWindowInner.h"
 #include "nsIChannel.h"
+#include "nsICookieService.h"
 #include "nsIHttpChannel.h"
 #include "nsIPermission.h"
 #include "nsIURI.h"

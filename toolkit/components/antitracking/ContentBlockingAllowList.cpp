@@ -9,11 +9,15 @@
 
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/PermissionManager.h"
 #include "mozilla/ScopeExit.h"
 #include "nsContentUtils.h"
+#include "nsGlobalWindowInner.h"
+#include "nsICookieJarSettings.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
+#include "nsNetUtil.h"
 
 using namespace mozilla;
 

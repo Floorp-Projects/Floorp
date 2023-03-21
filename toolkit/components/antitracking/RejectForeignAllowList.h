@@ -8,6 +8,7 @@
 #define mozilla_RejectForeignAllowList_h
 
 #include "nsIUrlClassifierExceptionListService.h"
+#include "nsIPrincipal.h"
 
 class nsIHttpChannel;
 class nsIURI;

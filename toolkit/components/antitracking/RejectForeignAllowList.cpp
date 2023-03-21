@@ -6,9 +6,13 @@
 
 #include "RejectForeignAllowList.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
+#include "nsIHttpChannel.h"
+#include "nsIURI.h"
 #include "nsNetUtil.h"
+#include "nsScriptSecurityManager.h"
 
 #define REJECTFOREIGNALLOWLIST_PREF "privacy.rejectForeign.allowList"_ns
 #define REJECTFOREIGNALLOWLIST_NAME "RejectForeignAllowList"_ns

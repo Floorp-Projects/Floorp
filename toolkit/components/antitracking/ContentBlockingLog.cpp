@@ -9,6 +9,8 @@
 
 #include "nsIEffectiveTLDService.h"
 #include "nsITrackingDBService.h"
+#include "nsNetCID.h"
+#include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
 #include "mozilla/BasePrincipal.h"
