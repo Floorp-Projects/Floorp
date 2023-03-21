@@ -271,7 +271,7 @@ msix:
     expiration: "never"
     suffix: "msix"
     when:
-        $eval: '"windows1" in task["test-platform"] && "-64" in task["test-platform"] && ("opt" in task["test-platform"] || "debug" in task["test-platform"]) && !("asan" in task["test-platform"]) && !("ccov" in task["test-platform"])'
+        $eval: '"windows1" in task["test-platform"] && "-64" in task["test-platform"] && "opt" in task["test-platform"] && !("asan" in task["test-platform"]) && !("ccov" in task["test-platform"])'
     merge:
         mozharness:
             extra-options:
