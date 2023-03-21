@@ -1678,7 +1678,7 @@ IncrementalProgress GCRuntime::markDuringSweeping(JS::GCContext* gcx,
   MOZ_ASSERT(markTask.isIdle());
 
   if (markOnBackgroundThreadDuringSweeping) {
-    if (!marker().isDrained()) {
+    if (!marker().isDrained() || hasDelayedMarking()) {
       AutoLockHelperThreadState lock;
       MOZ_ASSERT(markTask.isIdle(lock));
       markTask.setBudget(budget);
