@@ -74,6 +74,7 @@ export class nsContentDispatchChooser {
     ) {
       try {
         aHandler.launchWithURI(aURI, aBrowsingContext);
+        return;
       } catch (error) {
         // We are not supposed to ask, but when file not found the user most likely
         // uninstalled the application which handles the uri so we will continue
