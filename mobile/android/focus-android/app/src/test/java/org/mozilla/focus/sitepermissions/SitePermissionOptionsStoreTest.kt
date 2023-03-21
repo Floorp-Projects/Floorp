@@ -5,15 +5,12 @@ package org.mozilla.focus.sitepermissions
 
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
-import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.verify
-import org.mozilla.focus.R
 import org.mozilla.focus.settings.permissions.AutoplayOption
 import org.mozilla.focus.settings.permissions.SitePermissionOption
 import org.mozilla.focus.settings.permissions.permissionoptions.SitePermission
@@ -22,9 +19,7 @@ import org.mozilla.focus.settings.permissions.permissionoptions.SitePermissionOp
 import org.mozilla.focus.settings.permissions.permissionoptions.SitePermissionOptionsScreenStore
 import org.mozilla.focus.settings.permissions.permissionoptions.SitePermissionOptionsStorage
 import org.mozilla.focus.settings.permissions.permissionoptions.SitePermissionOptionsStorageMiddleware
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
 class SitePermissionOptionsStoreTest {
     private lateinit var sitePermissionOptionsStorageMiddleware: SitePermissionOptionsStorageMiddleware
     private lateinit var store: SitePermissionOptionsScreenStore
@@ -38,7 +33,7 @@ class SitePermissionOptionsStoreTest {
 
         doReturn(listOf(SitePermissionOption.AskToAllow(), SitePermissionOption.Blocked())).`when`(storage).getSitePermissionOptions(SitePermission.CAMERA)
         doReturn(SitePermissionOption.AskToAllow()).`when`(storage).permissionSelectedOption(SitePermission.CAMERA)
-        doReturn(testContext.getString(R.string.preference_phone_feature_camera)).`when`(storage).getSitePermissionLabel(SitePermission.CAMERA)
+        doReturn("Camera").`when`(storage).getSitePermissionLabel(SitePermission.CAMERA)
         doReturn(false).`when`(storage).isAndroidPermissionGranted(SitePermission.CAMERA)
 
         store = SitePermissionOptionsScreenStore(sitePermissionState, listOf(sitePermissionOptionsStorageMiddleware))
@@ -65,6 +60,7 @@ class SitePermissionOptionsStoreTest {
 
     @Test
     fun `GIVEN site permission screen store WHEN update site permission options is dispatched THEN site permission options screen state is updated`() {
+        val sitePermissionLabel = "Autoplay"
         store.dispatch(
             SitePermissionOptionsScreenAction.UpdateSitePermissionOptions(
                 listOf(
@@ -73,7 +69,7 @@ class SitePermissionOptionsStoreTest {
                     AutoplayOption.BlockAudioVideo(),
                 ),
                 AutoplayOption.AllowAudioVideo(),
-                testContext.getString(R.string.preference_autoplay),
+                sitePermissionLabel,
                 true,
             ),
         ).joinBlocking()
@@ -88,6 +84,6 @@ class SitePermissionOptionsStoreTest {
             ),
             store.state.sitePermissionOptionList,
         )
-        assertEquals(testContext.getString(R.string.preference_autoplay), store.state.sitePermissionLabel)
+        assertEquals(sitePermissionLabel, store.state.sitePermissionLabel)
     }
 }
