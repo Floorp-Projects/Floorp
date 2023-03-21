@@ -6062,6 +6062,19 @@ HttpBaseChannel::GetEarlyHintPreloaderId(uint64_t* aEarlyHintPreloaderId) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+HttpBaseChannel::SetClassicScriptHintCharset(
+    const nsAString& aClassicScriptHintCharset) {
+  mClassicScriptHintCharset = aClassicScriptHintCharset;
+  return NS_OK;
+}
+
+NS_IMETHODIMP HttpBaseChannel::GetClassicScriptHintCharset(
+    nsAString& aClassicScriptHintCharset) {
+  aClassicScriptHintCharset = mClassicScriptHintCharset;
+  return NS_OK;
+}
+
 void HttpBaseChannel::SetConnectionInfo(nsHttpConnectionInfo* aCI) {
   mConnectionInfo = aCI ? aCI->Clone() : nullptr;
 }
