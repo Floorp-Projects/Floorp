@@ -5532,7 +5532,7 @@ AttachDecision OptimizeSpreadCallIRGenerator::tryAttachArguments() {
 
   Rooted<Shape*> shape(cx_, GlobalObject::getArrayShapeWithDefaultProto(cx_));
   if (!shape) {
-    cx_->recoverFromOutOfMemory();
+    cx_->clearPendingException();
     return AttachDecision::NoAction;
   }
 
