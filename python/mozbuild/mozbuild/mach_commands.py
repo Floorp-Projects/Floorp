@@ -236,11 +236,11 @@ def cargo(
     if cargo_extra_flags is not None:
         cargo_extra_flags = " ".join(cargo_extra_flags)
 
-    if cargo_build_flags:
-        try:
-            command_context.config_environment
-        except BuildEnvironmentNotFoundException:
-            build = command_context._spawn(BuildDriver)
+    try:
+        command_context.config_environment
+    except BuildEnvironmentNotFoundException:
+        build = command_context._spawn(BuildDriver)
+        if cargo_build_flags:
             ret = build.build(
                 command_context.metrics,
                 what=["pre-export", "export"],
@@ -248,8 +248,13 @@ def cargo(
                 verbose=verbose,
                 mach_context=command_context._mach_context,
             )
-            if ret != 0:
-                return ret
+        else:
+            ret = build.configure(
+                command_context.metrics,
+                buildstatus_messages=False,
+            )
+        if ret != 0:
+            return ret
 
     # XXX duplication with `mach vendor rust`
     crates_and_roots = {
