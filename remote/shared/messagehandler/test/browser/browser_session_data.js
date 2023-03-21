@@ -192,7 +192,7 @@ add_task(async function test_sessionDataRootOnlyModule() {
   info("Test that adding SessionData items works the root module");
   // Updating the session data on the root message handler should not cause
   // failures for other message handlers if the module only exists for root.
-  await rootMessageHandler.addSessionData({
+  await rootMessageHandler.addSessionDataItem({
     moduleName: "rootOnly",
     category: "session_data_root_only",
     contextDescriptor: {
@@ -222,7 +222,7 @@ add_task(async function test_sessionDataRootOnlyModule() {
   );
 
   info("Now test that removing items also works on the root module");
-  await rootMessageHandler.removeSessionData({
+  await rootMessageHandler.removeSessionDataItem({
     moduleName: "rootOnly",
     category: "session_data_root_only",
     contextDescriptor: {
