@@ -11,11 +11,9 @@ var { AppConstants } = ChromeUtils.importESModule(
 
 ChromeUtils.defineESModuleGetters(this, {
   Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
+  TestUtils: "resource://testing-common/TestUtils.sys.mjs",
 });
-
-const { TelemetryTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/TelemetryTestUtils.sys.mjs"
-);
 
 const OPEN_HISTOGRAM = "SQLITE_STORE_OPEN";
 const QUERY_HISTOGRAM = "SQLITE_STORE_QUERY";
