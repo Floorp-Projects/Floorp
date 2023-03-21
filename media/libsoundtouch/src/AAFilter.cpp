@@ -42,7 +42,7 @@
 
 using namespace soundtouch;
 
-#define PI       3.14159265358979323846
+#define PI       M_PI
 #define TWOPI    (2 * PI)
 
 // define this to save AA filter coefficients to a file
