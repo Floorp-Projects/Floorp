@@ -9932,8 +9932,8 @@ AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
         writer.loadArgumentDynamicSlot(ArgumentKind::This, argcId, flags);
     ObjOperandId thisObjId = writer.guardToObject(thisValId);
 
-    // Guard on the |this| class to make sure it's the right instance.
-    writer.guardAnyClass(thisObjId, thisval_.toObject().getClass());
+    // Guard on the |this| shape to make sure it's the right instance.
+    writer.guardShape(thisObjId, thisval_.toObject().shape());
 
     // Ensure callee matches this stub's callee
     writer.guardSpecificFunction(calleeObjId, calleeFunc);

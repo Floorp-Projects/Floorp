@@ -291,7 +291,8 @@ MCall* MakeCall(TempAllocator& alloc, Undef addUndefined, CallInfo& callInfo,
 
   DOMObjectKind objKind = DOMObjectKind::Unknown;
   if (isDOMCall) {
-    const JSClass* clasp = callInfo.thisArg()->toGuardToClass()->getClass();
+    const JSClass* clasp =
+        callInfo.thisArg()->toGuardShape()->shape()->getObjectClass();
     MOZ_ASSERT(clasp->isDOMClass());
     if (clasp->isNativeObject()) {
       objKind = DOMObjectKind::Native;
