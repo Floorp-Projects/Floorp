@@ -22,7 +22,7 @@
 #include "mozilla/SVGContextPaint.h"
 #include "mozilla/SVGContentUtils.h"
 #include "mozilla/SVGObserverUtils.h"
-#include "mozilla/SVGUtils.h"
+#include "nsDisplayList.h"
 #include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
 #include "SVGAnimatedTransformList.h"
