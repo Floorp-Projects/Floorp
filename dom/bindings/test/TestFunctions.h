@@ -110,12 +110,6 @@ class TestFunctions : public NonRefcountedDOMObject {
   void TestUnionOfAllowSharedBuffferSource(
       const MaybeSharedArrayBufferOrMaybeSharedArrayBufferView& aUnion);
 
-  bool StaticAndNonStaticOverload() { return false; }
-  static bool StaticAndNonStaticOverload(GlobalObject& aGlobal,
-                                         const Optional<uint32_t>& aLength) {
-    return true;
-  }
-
   static bool ObjectFromAboutBlank(JSContext* aCx, JSObject* aObj);
 
   WrapperCachedNonISupportsTestInterface* WrapperCachedNonISupportsObject();
