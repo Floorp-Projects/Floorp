@@ -1502,10 +1502,6 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JS::GCContext* gcx,
     }
   }
 
-#ifdef JS_GC_ZEAL
-  validateIncrementalMarking();
-#endif
-
 #ifdef DEBUG
   for (auto cell : cellsToAssertNotGray.ref()) {
     JS::AssertCellIsNotGray(cell);
@@ -1520,6 +1516,10 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JS::GCContext* gcx,
     AutoPhase ap(stats(), PhaseKind::UPDATE_ATOMS_BITMAP);
     updateAtomsBitmap();
   }
+
+#ifdef JS_GC_ZEAL
+  validateIncrementalMarking();
+#endif
 
   AutoSetThreadIsSweeping threadIsSweeping;
 
