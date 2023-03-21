@@ -16,10 +16,12 @@
 #include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/PermissionManager.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/Telemetry.h"
 #include "mozIThirdPartyUtil.h"
@@ -37,6 +39,7 @@
 #include "nsIWebProgressListener.h"
 #include "nsScriptSecurityManager.h"
 #include "RejectForeignAllowList.h"
+#include "StorageAccess.h"
 
 namespace mozilla {
 
@@ -450,7 +453,7 @@ StorageAccessAPIHelper::CompleteAllowAccessFor(
       // we'll return to the content process we need to inform when this
       // function is done. So we don't need to create an extra IPC for the case.
       if (aReason != ContentBlockingNotifier::eOpener) {
-        ContentParent* cp = aParentContext->Canonical()->GetContentParent();
+        dom::ContentParent* cp = aParentContext->Canonical()->GetContentParent();
         Unused << cp->SendOnAllowAccessFor(aParentContext, trackingOrigin,
                                            aCookieBehavior, aReason);
       }
@@ -741,7 +744,7 @@ StorageAccessAPIHelper::CheckCookiesPermittedDecidesStorageAccessAPI(
     nsIPrincipal* aRequestingPrincipal) {
   MOZ_ASSERT(aCookieJarSettings);
   MOZ_ASSERT(aRequestingPrincipal);
-  uint32_t cookiePermission = CheckCookiePermissionForPrincipal(
+  uint32_t cookiePermission = detail::CheckCookiePermissionForPrincipal(
       aCookieJarSettings, aRequestingPrincipal);
   if (cookiePermission == nsICookiePermission::ACCESS_ALLOW ||
       cookiePermission == nsICookiePermission::ACCESS_SESSION) {

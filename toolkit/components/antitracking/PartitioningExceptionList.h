@@ -7,8 +7,10 @@
 #ifndef mozilla_PartitioningExceptionList_h
 #define mozilla_PartitioningExceptionList_h
 
+#include "nsCOMPtr.h"
 #include "nsIPartitioningExceptionListService.h"
-#include "nsTArrayForwardDeclare.h"
+#include "nsTArray.h"
+#include "nsString.h"
 
 class nsIChannel;
 class nsIPrincipal;

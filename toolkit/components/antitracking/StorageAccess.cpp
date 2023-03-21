@@ -6,19 +6,32 @@
 
 #include "StorageAccess.h"
 
+#include "mozilla/BasePrincipal.h"
+#include "mozilla/Components.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/net/CookieJarSettings.h"
+#include "mozilla/PermissionManager.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StorageAccess.h"
 #include "nsContentUtils.h"
+#include "nsGlobalWindowInner.h"
 #include "nsICookiePermission.h"
 #include "nsICookieService.h"
 #include "nsICookieJarSettings.h"
+#include "nsIHttpChannel.h"
 #include "nsIPermission.h"
 #include "nsIWebProgressListener.h"
+#include "nsIClassifiedChannel.h"
+#include "nsNetUtil.h"
+#include "nsScriptSecurityManager.h"
 #include "nsSandboxFlags.h"
+#include "AntiTrackingUtils.h"
+#include "AntiTrackingLog.h"
+#include "ContentBlockingAllowList.h"
+#include "mozIThirdPartyUtil.h"
+#include "RejectForeignAllowList.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -26,7 +39,7 @@ using mozilla::net::CookieJarSettings;
 
 // This internal method returns ACCESS_DENY if the access is denied,
 // ACCESS_DEFAULT if unknown, some other access code if granted.
-uint32_t CheckCookiePermissionForPrincipal(
+uint32_t mozilla::detail::CheckCookiePermissionForPrincipal(
     nsICookieJarSettings* aCookieJarSettings, nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(aCookieJarSettings);
   MOZ_ASSERT(aPrincipal);
@@ -45,6 +58,7 @@ uint32_t CheckCookiePermissionForPrincipal(
   // If we have a custom cookie permission, let's use it.
   return cookiePermission;
 }
+
 
 /*
  * Checks if storage for a given principal is permitted by the user's
@@ -470,7 +484,7 @@ bool ShouldAllowAccessFor(nsPIDOMWindowInner* aWindow, nsIURI* aURI,
     return false;
   }
 
-  uint32_t cookiePermission = CheckCookiePermissionForPrincipal(
+  uint32_t cookiePermission = detail::CheckCookiePermissionForPrincipal(
       document->CookieJarSettings(), document->NodePrincipal());
   if (cookiePermission != nsICookiePermission::ACCESS_DEFAULT) {
     LOG(
@@ -651,7 +665,7 @@ bool ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
   }
 
   uint32_t cookiePermission =
-      CheckCookiePermissionForPrincipal(cookieJarSettings, channelPrincipal);
+      detail::CheckCookiePermissionForPrincipal(cookieJarSettings, channelPrincipal);
   if (cookiePermission != nsICookiePermission::ACCESS_DEFAULT) {
     LOG(
         ("CheckCookiePermissionForPrincipal() returned a non-default access "
@@ -869,7 +883,7 @@ bool ApproximateAllowAccessForWithoutChannel(
     return true;
   }
 
-  uint32_t cookiePermission = CheckCookiePermissionForPrincipal(
+  uint32_t cookiePermission = detail::CheckCookiePermissionForPrincipal(
       parentDocument->CookieJarSettings(), parentDocument->NodePrincipal());
   if (cookiePermission != nsICookiePermission::ACCESS_DEFAULT) {
     LOG(

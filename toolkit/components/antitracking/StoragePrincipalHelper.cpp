@@ -7,13 +7,19 @@
 #include "StoragePrincipalHelper.h"
 
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StorageAccess.h"
 #include "nsContentUtils.h"
+#include "nsICookieJarSettings.h"
+#include "nsICookieService.h"
 #include "nsIDocShell.h"
 #include "nsIEffectiveTLDService.h"
+#include "nsIPrivateBrowsingChannel.h"
+#include "AntiTrackingUtils.h"
 
 namespace mozilla {
 
@@ -324,7 +330,7 @@ nsresult StoragePrincipalHelper::GetPrincipal(nsPIDOMWindowInner* aWindow,
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aPrincipal);
 
-  nsCOMPtr<Document> doc = aWindow->GetExtantDoc();
+  nsCOMPtr<dom::Document> doc = aWindow->GetExtantDoc();
   NS_ENSURE_STATE(doc);
 
   nsCOMPtr<nsIPrincipal> outPrincipal;
@@ -369,7 +375,7 @@ bool StoragePrincipalHelper::ShouldUsePartitionPrincipalForServiceWorker(
     return false;
   }
 
-  RefPtr<Document> document = aDocShell->GetExtantDocument();
+  RefPtr<dom::Document> document = aDocShell->GetExtantDocument();
 
   // If we cannot get the document from the docShell, we turn to get its
   // parent's document.
@@ -390,8 +396,8 @@ bool StoragePrincipalHelper::ShouldUsePartitionPrincipalForServiceWorker(
     // If there was no document, we create one cookieJarSettings here in order
     // to get the cookieBehavior.  We don't need a real value for RFP because
     // we are only using this object to check default cookie behavior.
-    cookieJarSettings = CookieJarSettings::Create(
-        CookieJarSettings::eRegular, /* shouldResistFingerpreinting */ false);
+    cookieJarSettings = net::CookieJarSettings::Create(
+        net::CookieJarSettings::eRegular, /* shouldResistFingerpreinting */ false);
   }
 
   // We only support partitioned service workers when dFPI is enabled.
@@ -483,7 +489,7 @@ bool StoragePrincipalHelper::GetOriginAttributes(
 
 // static
 bool StoragePrincipalHelper::GetRegularPrincipalOriginAttributes(
-    Document* aDocument, OriginAttributes& aAttributes) {
+    dom::Document* aDocument, OriginAttributes& aAttributes) {
   aAttributes = mozilla::OriginAttributes();
   if (!aDocument) {
     return false;
@@ -536,7 +542,7 @@ bool StoragePrincipalHelper::GetOriginAttributesForNetworkState(
 
 // static
 void StoragePrincipalHelper::GetOriginAttributesForNetworkState(
-    Document* aDocument, OriginAttributes& aAttributes) {
+    dom::Document* aDocument, OriginAttributes& aAttributes) {
   aAttributes = aDocument->NodePrincipal()->OriginAttributesRef();
 
   if (!StaticPrefs::privacy_partition_network_state()) {

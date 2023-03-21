@@ -11,6 +11,8 @@
 #include "nsCOMPtr.h"
 #include "nsHashKeys.h"
 #include "nsHashtablesFwd.h"
+#include "nsTHashMap.h"
+#include "nsINamed.h"
 #include "nsIObserver.h"
 #include "nsString.h"
 #include "PLDHashTable.h"

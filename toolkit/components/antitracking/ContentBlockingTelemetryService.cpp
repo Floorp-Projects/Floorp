@@ -13,8 +13,10 @@
 #include "mozilla/Telemetry.h"
 
 #include "AntiTrackingLog.h"
+#include "prtime.h"
 
 #include "nsIObserverService.h"
+#include "nsIPermission.h"
 #include "nsTArray.h"
 
 using namespace mozilla;
