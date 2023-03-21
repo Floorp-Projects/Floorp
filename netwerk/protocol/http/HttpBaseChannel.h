@@ -357,6 +357,10 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD GetClassicScriptHintCharset(
       nsAString& aClassicScriptHintCharset) override;
 
+  NS_IMETHOD SetDocumentCharacterSet(
+      const nsAString& aDocumentCharacterSet) override;
+  NS_IMETHOD GetDocumentCharacterSet(nsAString& aDocumentCharacterSet) override;
+
   virtual void SetConnectionInfo(
       mozilla::net::nsHttpConnectionInfo* aCI) override;
 
@@ -820,6 +824,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   uint64_t mEarlyHintPreloaderId = 0;
 
   nsString mClassicScriptHintCharset;
+  nsString mDocumentCharacterSet;
+
   // clang-format off
   MOZ_ATOMIC_BITFIELDS(mAtomicBitfields1, 32, (
     (uint32_t, UpgradeToSecure, 1),

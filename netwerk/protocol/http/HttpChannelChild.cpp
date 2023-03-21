@@ -2271,6 +2271,16 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
   openArgs.earlyHintPreloaderId() = mEarlyHintPreloaderId;
 
   openArgs.classicScriptHintCharset() = mClassicScriptHintCharset;
+
+  RefPtr<Document> doc;
+  mLoadInfo->GetLoadingDocument(getter_AddRefs(doc));
+
+  if (doc) {
+    nsAutoString documentCharacterSet;
+    doc->GetCharacterSet(documentCharacterSet);
+    openArgs.documentCharacterSet() = documentCharacterSet;
+  }
+
   // This must happen before the constructor message is sent. Otherwise messages
   // from the parent could arrive quickly and be delivered to the wrong event
   // target.

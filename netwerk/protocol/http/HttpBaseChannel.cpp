@@ -6075,6 +6075,18 @@ NS_IMETHODIMP HttpBaseChannel::GetClassicScriptHintCharset(
   return NS_OK;
 }
 
+NS_IMETHODIMP HttpBaseChannel::SetDocumentCharacterSet(
+    const nsAString& aDocumentCharacterSet) {
+  mDocumentCharacterSet = aDocumentCharacterSet;
+  return NS_OK;
+}
+
+NS_IMETHODIMP HttpBaseChannel::GetDocumentCharacterSet(
+    nsAString& aDocumentCharacterSet) {
+  aDocumentCharacterSet = mDocumentCharacterSet;
+  return NS_OK;
+}
+
 void HttpBaseChannel::SetConnectionInfo(nsHttpConnectionInfo* aCI) {
   mConnectionInfo = aCI ? aCI->Clone() : nullptr;
 }
