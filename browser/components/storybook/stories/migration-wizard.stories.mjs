@@ -70,7 +70,7 @@ const FAKE_BROWSER_LIST = [
   {
     key: "vivaldi",
     displayName: "Vivaldi",
-    resourceTypes: ["HISTORY", "FORMDATA", "PASSWORDS", "BOOKMARKS"],
+    resourceTypes: ["HISTORY"],
     profile: { id: "Default", name: "Default" },
   },
 ];

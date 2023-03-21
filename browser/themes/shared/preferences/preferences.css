@@ -575,6 +575,10 @@ richlistitem[selected] .actionsMenu:focus-visible {
   visibility: hidden;
 }
 
+html|dialog {
+  padding: 24px;
+}
+
 html|dialog::backdrop,
 .dialogOverlay[topmost="true"] {
   background-color: rgba(0,0,0,0.5);
