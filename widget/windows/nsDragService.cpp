@@ -351,37 +351,52 @@ nsDragService::GetNumDropItems(uint32_t* aNumItems) {
 
   if (IsCollectionObject(mDataObject)) {
     nsDataObjCollection* dataObjCol = GetDataObjCollection(mDataObject);
-    if (dataObjCol) {
-      *aNumItems = dataObjCol->GetNumDataObjects();
-    } else {
-      // If the count cannot be determined just return 0.
-      // This can happen if we have collection data of type
-      // MULTI_MIME ("Mozilla/IDataObjectCollectionFormat") on the clipboard
-      // from another process but we can't obtain an IID_IDataObjCollection
-      // from this process.
-      *aNumItems = 0;
-    }
-  } else {
-    // Next check if we have a file drop. Return the number of files in
-    // the file drop as the number of items we have, pretending like we
-    // actually have > 1 drag item.
-    FORMATETC fe2;
-    SET_FORMATETC(fe2, CF_HDROP, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
-    if (mDataObject->QueryGetData(&fe2) == S_OK) {
-      STGMEDIUM stm;
-      if (mDataObject->GetData(&fe2, &stm) == S_OK) {
-        HDROP hdrop = (HDROP)GlobalLock(stm.hGlobal);
-        *aNumItems = ::DragQueryFileW(hdrop, 0xFFFFFFFF, nullptr, 0);
-        ::GlobalUnlock(stm.hGlobal);
-        ::ReleaseStgMedium(&stm);
-        // Data may be provided later, so assume we have 1 item
-        if (*aNumItems == 0) *aNumItems = 1;
-      } else
-        *aNumItems = 1;
-    } else
-      *aNumItems = 1;
+    // If the count cannot be determined just return 0.
+    // This can happen if we have collection data of type
+    // MULTI_MIME ("Mozilla/IDataObjectCollectionFormat") on the clipboard
+    // from another process but we can't obtain an IID_IDataObjCollection
+    // from this process.
+    *aNumItems = dataObjCol ? dataObjCol->GetNumDataObjects() : 0;
+    return NS_OK;
   }
+  // Next check if we have a file drop. Return the number of files in
+  // the file drop as the number of items we have, pretending like we
+  // actually have > 1 drag item.
+  FORMATETC fe2;
+  SET_FORMATETC(fe2, CF_HDROP, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
+  if (SUCCEEDED(mDataObject->QueryGetData(&fe2))) {
+    STGMEDIUM stm;
+    if (FAILED(mDataObject->GetData(&fe2, &stm))) {
+      *aNumItems = 1;
+      return NS_OK;
+    }
+    HDROP hdrop = static_cast<HDROP>(GlobalLock(stm.hGlobal));
+    MOZ_ASSERT(hdrop != NULL);
+    *aNumItems = ::DragQueryFileW(hdrop, 0xFFFFFFFF, nullptr, 0);
+    ::GlobalUnlock(stm.hGlobal);
+    ::ReleaseStgMedium(&stm);
+    // Data may be provided later, so assume we have 1 item
+    if (*aNumItems == 0) {
+      *aNumItems = 1;
+    }
+    return NS_OK;
+  }
+  // Next check if we have a virtual file drop.
+  SET_FORMATETC(fe2, nsClipboard::GetClipboardFileDescriptorFormatW(), 0,
+                DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
+  STGMEDIUM stm;
 
+  if (SUCCEEDED(mDataObject->GetData(&fe2, &stm))) {
+    LPFILEGROUPDESCRIPTOR pDesc =
+        static_cast<LPFILEGROUPDESCRIPTOR>(GlobalLock(stm.hGlobal));
+    if (pDesc) {
+      *aNumItems = pDesc->cItems;
+    }
+    GlobalUnlock(stm.hGlobal);
+    ReleaseStgMedium(&stm);
+    return NS_OK;
+  }
+  *aNumItems = 1;
   return NS_OK;
 }
 
@@ -413,8 +428,12 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t anItem) {
     } else {
       // It better be a file drop, or else non-zero indexes are invalid!
       FORMATETC fe2;
+      FORMATETC fe3;
       SET_FORMATETC(fe2, CF_HDROP, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
-      if (mDataObject->QueryGetData(&fe2) == S_OK)
+      SET_FORMATETC(fe3, nsClipboard::GetClipboardFileDescriptorFormatW(), 0,
+                    DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
+      if (SUCCEEDED(mDataObject->QueryGetData(&fe2)) ||
+          SUCCEEDED(mDataObject->QueryGetData(&fe3)))
         dataFound = nsClipboard::GetDataFromDataObject(mDataObject, anItem,
                                                        nullptr, aTransferable);
       else
@@ -481,9 +500,9 @@ nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
     format = nsClipboard::GetFormat(aDataFlavor);
     SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1,
                   TYMED_HGLOBAL | TYMED_FILE | TYMED_GDI);
-    if (mDataObject->QueryGetData(&fe) == S_OK)
+    if (mDataObject->QueryGetData(&fe) == S_OK) {
       *_retval = true;  // found it!
-    else {
+    } else {
       // We haven't found the exact flavor the client asked for, but
       // maybe we can still find it from something else that's on the
       // clipboard
@@ -494,8 +513,9 @@ nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
         // the data object.
         SET_FORMATETC(fe, CF_TEXT, 0, DVASPECT_CONTENT, -1,
                       TYMED_HGLOBAL | TYMED_FILE | TYMED_GDI);
-        if (mDataObject->QueryGetData(&fe) == S_OK)
+        if (mDataObject->QueryGetData(&fe) == S_OK) {
           *_retval = true;  // found it!
+        }
       } else if (strcmp(aDataFlavor, kURLMime) == 0) {
         // client asked for a url and it wasn't present, but if we
         // have a file, then we have a URL to give them (the path, or
@@ -503,8 +523,16 @@ nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
         format = nsClipboard::GetFormat(kFileMime);
         SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1,
                       TYMED_HGLOBAL | TYMED_FILE | TYMED_GDI);
-        if (mDataObject->QueryGetData(&fe) == S_OK)
+        if (mDataObject->QueryGetData(&fe) == S_OK) {
           *_retval = true;  // found it!
+        }
+      } else if (format == CF_HDROP) {
+        // if the client wants a file, maybe we find a virtual file
+        format = nsClipboard::GetClipboardFileDescriptorFormatW();
+        SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
+        if (mDataObject->QueryGetData(&fe) == S_OK) {
+          *_retval = true;  // found it!
+        }
       }
     }  // else try again
   }
