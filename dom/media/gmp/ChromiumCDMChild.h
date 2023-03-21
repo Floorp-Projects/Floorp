@@ -73,6 +73,8 @@ class ChromiumCDMChild : public PChromiumCDMChild, public cdm::Host_10 {
 
   bool IsOnMessageLoopThread();
 
+  void ActorDestroy(ActorDestroyReason aReason) override;
+
   ipc::IPCResult RecvGiveBuffer(ipc::Shmem&& aShmem) override;
   ipc::IPCResult RecvPurgeShmems() override;
   void PurgeShmems();
