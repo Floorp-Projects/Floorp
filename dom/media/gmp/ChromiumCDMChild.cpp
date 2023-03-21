@@ -176,6 +176,10 @@ template <typename MethodType, typename... ParamType>
 void ChromiumCDMChild::CallOnMessageLoopThread(const char* const aName,
                                                MethodType aMethod,
                                                ParamType&&... aParams) {
+  if (NS_WARN_IF(!mPlugin)) {
+    return;
+  }
+
   if (IsOnMessageLoopThread()) {
     CallMethod(aMethod, std::forward<ParamType>(aParams)...);
   } else {
@@ -369,6 +373,10 @@ ChromiumCDMChild::~ChromiumCDMChild() {
 
 bool ChromiumCDMChild::IsOnMessageLoopThread() {
   return mPlugin && mPlugin->GMPMessageLoop() == MessageLoop::current();
+}
+
+void ChromiumCDMChild::ActorDestroy(ActorDestroyReason aReason) {
+  mPlugin = nullptr;
 }
 
 void ChromiumCDMChild::PurgeShmems() {
