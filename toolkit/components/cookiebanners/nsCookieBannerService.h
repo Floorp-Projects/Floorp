@@ -12,6 +12,7 @@
 #include "nsTHashSet.h"
 #include "nsIObserver.h"
 #include "nsIWebProgressListener.h"
+#include "nsWeakReference.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
 
