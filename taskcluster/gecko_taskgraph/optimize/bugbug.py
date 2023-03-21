@@ -5,7 +5,6 @@
 
 from collections import defaultdict
 from fnmatch import fnmatch
-from urllib.parse import urlsplit
 
 from taskgraph.optimize.base import OptimizationStrategy, register_strategy, registry
 
@@ -121,7 +120,6 @@ class BugBugPushSchedules(OptimizationStrategy):
 
         current_push_id = int(params["pushlog_id"])
 
-        branch = urlsplit(params["head_repository"]).path.strip("/")
         rev = params["head_rev"]
 
         if self.timedout:
@@ -142,7 +140,7 @@ class BugBugPushSchedules(OptimizationStrategy):
                 rev = push_data[push_id]["changesets"][-1]
 
             try:
-                new_data = push_schedules(branch, rev)
+                new_data = push_schedules(params["project"], rev)
                 merge_bugbug_replies(data, new_data)
             except BugbugTimeoutException:
                 if not self.fallback:
