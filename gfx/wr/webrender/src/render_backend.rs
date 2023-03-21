@@ -854,11 +854,6 @@ impl RenderBackend {
                     Some(txn.frame_stats)
                 };
 
-                // Before updating the spatial tree, save the most recently sampled
-                // scroll offsets (which include async deltas).
-                let last_sampled_scroll_offsets =
-                    doc.spatial_tree.get_last_sampled_scroll_offsets();
-
                 if let Some(updates) = txn.spatial_tree_updates.take() {
                     doc.spatial_tree.apply_updates(updates);
                 }
@@ -878,15 +873,6 @@ impl RenderBackend {
                 if let Some(updates) = txn.interner_updates.take() {
                     doc.data_stores.apply_updates(updates, &mut doc.profile);
                 }
-
-                // Apply the last sampled scroll offsets from the previous scene,
-                // to the current scene. The offsets are identified by scroll ids
-                // which are stable across scenes. This ensures that a hit test,
-                // which could occur in between post-swap hook and the call to
-                // update_document() below, does not observe raw main-thread offsets
-                // from the new scene that don't have async deltas applied to them.
-                doc.spatial_tree
-                    .apply_last_sampled_scroll_offsets(last_sampled_scroll_offsets);
 
                 // Build the hit tester while the APZ lock is held so that its content
                 // is in sync with the gecko APZ tree.
