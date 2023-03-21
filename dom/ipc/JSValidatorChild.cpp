@@ -9,6 +9,7 @@
 #include "mozilla/dom/JSOracleChild.h"
 
 #include "mozilla/Encoding.h"
+#include "mozilla/dom/ScriptDecoding.h"
 #include "mozilla/ipc/Endpoint.h"
 
 #include "js/experimental/JSStencil.h"
@@ -20,6 +21,51 @@
 
 using namespace mozilla::dom;
 using Encoding = mozilla::Encoding;
+
+mozilla::UniquePtr<mozilla::Decoder> TryGetDecoder(
+    const mozilla::Span<const uint8_t>& aSourceBytes,
+    const nsACString& aContentCharset, const nsAString& aHintCharset,
+    const nsAString& aDocumentCharset) {
+  const Encoding* encoding;
+  mozilla::UniquePtr<mozilla::Decoder> unicodeDecoder;
+
+  std::tie(encoding, std::ignore) = Encoding::ForBOM(aSourceBytes);
+  if (encoding) {
+    unicodeDecoder = encoding->NewDecoderWithBOMRemoval();
+  }
+
+  if (!unicodeDecoder) {
+    encoding = Encoding::ForLabel(aContentCharset);
+    if (encoding) {
+      unicodeDecoder = encoding->NewDecoderWithoutBOMHandling();
+    }
+
+    if (!unicodeDecoder) {
+      encoding = Encoding::ForLabel(aHintCharset);
+      if (encoding) {
+        unicodeDecoder = encoding->NewDecoderWithoutBOMHandling();
+      }
+    }
+
+    if (!unicodeDecoder) {
+      encoding = Encoding::ForLabel(aDocumentCharset);
+      if (encoding) {
+        unicodeDecoder = encoding->NewDecoderWithoutBOMHandling();
+      }
+    }
+  }
+
+  if (!unicodeDecoder && !IsUtf8(mozilla::Span(reinterpret_cast<const char*>(
+                                                   aSourceBytes.Elements()),
+                                               aSourceBytes.Length()))) {
+    // Curiously, there are various callers that don't pass aDocument. The
+    // fallback in the old code was ISO-8859-1, which behaved like
+    // windows-1252.
+    unicodeDecoder = WINDOWS_1252_ENCODING->NewDecoderWithoutBOMHandling();
+  }
+
+  return unicodeDecoder;
+}
 
 mozilla::ipc::IPCResult JSValidatorChild::RecvIsOpaqueResponseAllowed(
     IsOpaqueResponseAllowedResolver&& aResolver) {
@@ -46,7 +92,8 @@ mozilla::ipc::IPCResult JSValidatorChild::RecvOnDataAvailable(Shmem&& aData) {
 }
 
 mozilla::ipc::IPCResult JSValidatorChild::RecvOnStopRequest(
-    const nsresult& aReason) {
+    const nsresult& aReason, const nsACString& aContentCharset,
+    const nsAString& aHintCharset, const nsAString& aDocumentCharset) {
   if (!mResolver) {
     return IPC_OK();
   }
@@ -54,7 +101,20 @@ mozilla::ipc::IPCResult JSValidatorChild::RecvOnStopRequest(
   if (NS_FAILED(aReason)) {
     Resolve(ValidatorResult::Failure);
   } else {
-    Resolve(ShouldAllowJS());
+    UniquePtr<Decoder> unicodeDecoder = TryGetDecoder(
+        mSourceBytes, aContentCharset, aHintCharset, aDocumentCharset);
+
+    if (!unicodeDecoder) {
+      Resolve(ShouldAllowJS(mSourceBytes));
+    } else {
+      BufferUniquePtr<Utf8Unit[]> buffer;
+      auto result = GetUTF8EncodedContent(mSourceBytes, buffer, unicodeDecoder);
+      if (result.isErr()) {
+        Resolve(ValidatorResult::Failure);
+      } else {
+        Resolve(ShouldAllowJS(result.unwrap()));
+      }
+    }
   }
 
   return IPC_OK();
@@ -83,12 +143,43 @@ void JSValidatorChild::Resolve(ValidatorResult aResult) {
   mResolver.reset();
 }
 
-JSValidatorChild::ValidatorResult JSValidatorChild::ShouldAllowJS() const {
-  // The empty document parses as JavaScript, so for clarity we have a condition
-  // separately for that.
-  if (mSourceBytes.IsEmpty()) {
-    return ValidatorResult::JavaScript;
+mozilla::Result<mozilla::Span<const char>, nsresult>
+JSValidatorChild::GetUTF8EncodedContent(
+    const mozilla::Span<const uint8_t>& aData,
+    BufferUniquePtr<Utf8Unit[]>& aBuffer, UniquePtr<Decoder>& aDecoder) {
+  MOZ_ASSERT(aDecoder);
+  // We need the output buffer to be UTF8
+  CheckedInt<size_t> bufferLength =
+      ScriptDecoding<Utf8Unit>::MaxBufferLength(aDecoder, aData.Length());
+  if (!bufferLength.isValid()) {
+    return mozilla::Err(NS_ERROR_FAILURE);
   }
+
+  CheckedInt<size_t> bufferByteSize = bufferLength * sizeof(Utf8Unit);
+  if (!bufferByteSize.isValid()) {
+    return mozilla::Err(NS_ERROR_FAILURE);
+  }
+
+  aBuffer.reset(static_cast<Utf8Unit*>(js_malloc(bufferByteSize.value())));
+  if (!aBuffer) {
+    return mozilla::Err(NS_ERROR_FAILURE);
+  }
+
+  size_t written = ScriptDecoding<Utf8Unit>::DecodeInto(
+      aDecoder, aData, Span(aBuffer.get(), bufferLength.value()),
+      /* aEndOfSource = */ true);
+  MOZ_ASSERT(written <= bufferLength.value());
+  MOZ_ASSERT(
+      IsUtf8(Span(reinterpret_cast<const char*>(aBuffer.get()), written)));
+
+  return Span(reinterpret_cast<const char*>(aBuffer.get()), written);
+}
+
+JSValidatorChild::ValidatorResult JSValidatorChild::ShouldAllowJS(
+    const mozilla::Span<const char>& aSpan) const {
+  MOZ_ASSERT(!aSpan.IsEmpty());
+
+  MOZ_DIAGNOSTIC_ASSERT(IsUtf8(aSpan));
 
   JSContext* cx = JSOracleChild::JSContext();
   if (!cx) {
@@ -101,7 +192,7 @@ JSValidatorChild::ValidatorResult JSValidatorChild::ShouldAllowJS() const {
   }
 
   JS::SourceText<Utf8Unit> srcBuf;
-  if (!srcBuf.init(cx, mSourceBytes.BeginReading(), mSourceBytes.Length(),
+  if (!srcBuf.init(cx, aSpan.Elements(), aSpan.Length(),
                    JS::SourceOwnership::Borrowed)) {
     JS_ClearPendingException(cx);
     return ValidatorResult::Failure;
@@ -118,24 +209,22 @@ JSValidatorChild::ValidatorResult JSValidatorChild::ShouldAllowJS() const {
     return ValidatorResult::Other;
   }
 
-  MOZ_ASSERT(!mSourceBytes.IsEmpty());
+  MOZ_ASSERT(!aSpan.IsEmpty());
 
   // Parse to JSON
   JS::Rooted<JS::Value> json(cx);
-  if (IsAscii(mSourceBytes)) {
+  if (IsAscii(aSpan)) {
     // Ascii is a subset of Latin1, and JS_ParseJSON can take Latin1 directly
     if (JS_ParseJSON(cx,
-                     reinterpret_cast<const JS::Latin1Char*>(
-                         mSourceBytes.BeginReading()),
-                     mSourceBytes.Length(), &json)) {
+                     reinterpret_cast<const JS::Latin1Char*>(aSpan.Elements()),
+                     aSpan.Length(), &json)) {
       return ValidatorResult::JSON;
     }
   } else {
-    // The data that the Utility Process receives are utf8 encoded.
     nsString decoded;
     nsresult rv = UTF_8_ENCODING->DecodeWithBOMRemoval(
-        Span(reinterpret_cast<const uint8_t*>(mSourceBytes.BeginReading()),
-             mSourceBytes.Length()),
+        Span(reinterpret_cast<const uint8_t*>(aSpan.Elements()),
+             aSpan.Length()),
         decoded);
     if (NS_FAILED(rv)) {
       return ValidatorResult::Failure;
