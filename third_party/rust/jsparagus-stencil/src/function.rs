@@ -36,19 +36,13 @@ const SELFHOSTLAZY: u16 = 1 << 6;
 #[allow(dead_code)]
 const CONSTRUCTOR: u16 = 1 << 7;
 #[allow(dead_code)]
-const BOUND_FUN: u16 = 1 << 8;
-#[allow(dead_code)]
 const LAMBDA: u16 = 1 << 9;
 #[allow(dead_code)]
 const WASM_JIT_ENTRY: u16 = 1 << 10;
 #[allow(dead_code)]
 const HAS_INFERRED_NAME: u16 = 1 << 11;
 #[allow(dead_code)]
-const ATOM_EXTRA_FLAG: u16 = 1 << 12;
-#[allow(dead_code)]
-const HAS_GUESSED_ATOM: u16 = ATOM_EXTRA_FLAG;
-#[allow(dead_code)]
-const HAS_BOUND_FUNCTION_NAME_PREFIX: u16 = ATOM_EXTRA_FLAG;
+const HAS_GUESSED_ATOM: u16 = 1 << 12;
 #[allow(dead_code)]
 const RESOLVED_NAME: u16 = 1 << 13;
 #[allow(dead_code)]
