@@ -9,7 +9,11 @@ job-defaults:
         by-test-platform:
             android-em-7.*: geckoview-test_runner.apk
             android-hw.*: geckoview-test_runner.apk
-            windows11-64-2009.*:
+            windows10-64-2004(-shippable)?-qr/opt:
+                by-variant:
+                    msix: target.installer.msix
+                    default: null
+            windows11-64-2009(-shippable)?-qr/opt:
                 by-variant:
                     msix: target.installer.msix
                     default: null
@@ -239,7 +243,7 @@ mochitest-browser-chrome:
                     default: []
             msix:
                 by-test-platform:
-                    windows11-64-2009-qr/debug: built-projects
+                    windows10-64-2004(-shippable)?-qr/opt: built-projects
                     windows11-64-2009(-shippable)?-qr/opt: built-projects
                     default: []
             default:
@@ -280,13 +284,6 @@ mochitest-browser-chrome:
     mozharness:
         mochitest-flavor: browser
         chunked: true
-        requires-signed-builds:
-            by-variant:
-                msix:
-                    by-test-platform:
-                        windows11-64-2009.*: true
-                        default: false
-                default: false
     # Bug 1281241: migrating to m3.large instances
     instance-size:
         by-test-platform:
@@ -639,9 +636,10 @@ mochitest-media:
                     default: []
             msix:
                 by-test-platform:
+                    windows10-64-2004-shippable-qr/opt: built-projects
                     windows11-64-2009-shippable-qr/opt: built-projects
+                    windows10-64-2004-qr/opt: ['autoland']
                     windows11-64-2009-qr/opt: ['autoland']
-                    windows11-64-2009-qr/debug: ['autoland']
                     default: []
             default:
                 by-test-platform:
@@ -678,13 +676,6 @@ mochitest-media:
                 default:
                     - --setpref=webgl.out-of-process=false
                     - --setpref=security.sandbox.content.headless=false
-        requires-signed-builds:
-            by-variant:
-                msix:
-                    by-test-platform:
-                        windows11-64-2009.*: true
-                        default: false
-                default: false
     tier:
         by-test-platform:
             .*ccov.*: 2

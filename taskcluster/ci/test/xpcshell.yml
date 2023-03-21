@@ -12,7 +12,11 @@ job-defaults:
     target:
         by-test-platform:
             android-em-7.*: geckoview-test_runner.apk
-            windows11-64-2009.*:
+            windows1.*-shippable-qr/opt:
+                by-variant:
+                    msix: target.installer.msix
+                    default: null
+            windows1.*-qr/opt:
                 by-variant:
                     msix: target.installer.msix
                     default: null
@@ -78,7 +82,6 @@ xpcshell:
             msix:
                 by-test-platform:
                     windows11-64-2009(-shippable)?-qr/opt: built-projects
-                    windows11-64-2009-qr/debug: built-projects
                     default: []
             default:
                 by-test-platform:
