@@ -35,5 +35,3 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
 
 if CONFIG["CC_TYPE"] in ("clang", "clang-cl"):
     CXXFLAGS += ["-Wno-varargs"]
-
-REQUIRES_UNIFIED_BUILD = True
