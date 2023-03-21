@@ -93,6 +93,12 @@ class PermissionGroup {
     if (this.#changedCapability) {
       return this.#changedCapability;
     }
+    return this.savedCapability;
+  }
+  revert() {
+    this.#changedCapability = null;
+  }
+  get savedCapability() {
     // This logic to present a single capability for permissions of different
     // keys and capabilities caters for speaker-selection, where a block
     // permission may be set for all devices with no second key, which would
@@ -384,6 +390,7 @@ var gSitePermissionsManager = {
 
   _removePermissionFromList(origin) {
     this._permissionGroups.delete(origin);
+    this._permissionsToChange.delete(origin);
     let permissionlistitem = document.getElementsByAttribute(
       "origin",
       origin
@@ -411,23 +418,14 @@ var gSitePermissionsManager = {
     hbox.setAttribute("class", "website-name");
     hbox.appendChild(website);
 
-    let states = SitePermissions.getAvailableStates(this._type).flatMap(
-      state => {
-        // Work around the (rare) edge case when a user has changed their
-        // default permission type back to UNKNOWN while still having a
-        // PROMPT permission set for an origin.
-        if (
-          state == SitePermissions.UNKNOWN &&
-          permissionGroup.capability == SitePermissions.PROMPT
-        ) {
-          return SitePermissions.PROMPT;
-        }
-        if (state == SitePermissions.UNKNOWN) {
-          return [];
-        }
-        return state;
-      }
+    let states = SitePermissions.getAvailableStates(this._type).filter(
+      state => state != SitePermissions.UNKNOWN
     );
+    // Handle the cases of a double-keyed ALLOW permission or a PROMPT
+    // permission after the default has been changed back to UNKNOWN.
+    if (!states.includes(permissionGroup.savedCapability)) {
+      states.unshift(permissionGroup.savedCapability);
+    }
     let siteStatus;
     if (states.length == 1) {
       // Only a single state is available.  Show a label.
@@ -516,8 +514,13 @@ var gSitePermissionsManager = {
     if (group.capability == capability) {
       return;
     }
-    group.capability = capability;
-    this._permissionsToChange.set(group.origin, group);
+    if (capability == group.savedCapability) {
+      group.revert();
+      this._permissionsToChange.delete(group.origin);
+    } else {
+      group.capability = capability;
+      this._permissionsToChange.set(group.origin, group);
+    }
 
     // enable "remove all" button as needed
     this._setRemoveButtonState();
@@ -529,18 +532,22 @@ var gSitePermissionsManager = {
     // to update the UI
     this.uninit();
 
+    // Delete even _permissionsToChange to clear out double-keyed permissions
+    for (let group of [
+      ...this._permissionsToDelete.values(),
+      ...this._permissionsToChange.values(),
+    ]) {
+      for (let perm of group.perms) {
+        SitePermissions.removeFromPrincipal(perm.principal, perm.type);
+      }
+    }
+
     for (let group of this._permissionsToChange.values()) {
       SitePermissions.setForPrincipal(
         group.principal,
         this._type,
         group.capability
       );
-    }
-
-    for (let group of this._permissionsToDelete.values()) {
-      for (let perm of group.perms) {
-        SitePermissions.removeFromPrincipal(perm.principal, perm.type);
-      }
     }
 
     if (this._checkbox.checked) {
