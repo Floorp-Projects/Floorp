@@ -70,6 +70,9 @@ TEST_HARNESS_FILES.testing.mochitest.browser.toolkit.crashreporter.test.browser 
 with Files("docs/**"):
     BUG_COMPONENT = ("Toolkit", "General")
 
+with Files("locales-preview/**"):
+    BUG_COMPONENT = ("Toolkit", "General")
+
 with Files("moz.*"):
     BUG_COMPONENT = ("Firefox Build System", "General")
 
