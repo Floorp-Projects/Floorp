@@ -476,7 +476,7 @@ class CCGCScheduler {
 
   // Set when the IdleTaskRunner requests the current task be interrupted.
   // Cleared when the GC slice budget has detected the interrupt request.
-  mozilla::Atomic<bool> mInterruptRequested;
+  js::SliceBudget::InterruptRequestFlag mInterruptRequested;
 
   // When a shrinking GC has been requested but we back-out, if this is true
   // we run a non-shrinking GC.
