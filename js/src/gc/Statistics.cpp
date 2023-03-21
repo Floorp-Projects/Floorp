@@ -1033,7 +1033,7 @@ void Statistics::sendGCTelemetry() {
   size_t markCount = getCount(COUNT_CELLS_MARKED);
   runtime->metrics().GC_PREPARE_MS(prepareTotal);
   runtime->metrics().GC_MARK_MS(markTotal);
-  if (markTotal >= TimeDuration::FromMilliseconds(1)) {
+  if (markTotal >= TimeDuration::FromMicroseconds(1)) {
     double markRate = double(markCount) / t(markTotal);
     runtime->metrics().GC_MARK_RATE_2(uint32_t(markRate));
   }
