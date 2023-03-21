@@ -11,7 +11,7 @@
       "channel": "release",
       "userFacingName": "Android Pre-Permission Prompt Experiment - Release",
       "userFacingDescription": "If we show the pre-permission prompt to opt in to notifications for new users, then users will be more likely to opt in to receiving notifications.",
-      "isEnrollmentPaused": true,
+      "isEnrollmentPaused": false,
       "isRollout": false,
       "bucketConfig": {
         "randomizationUnit": "nimbus_id",
