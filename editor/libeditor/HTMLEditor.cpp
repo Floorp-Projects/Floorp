@@ -4813,6 +4813,7 @@ Result<SplitNodeResult, nsresult> HTMLEditor::SplitNodeWithTransaction(
       !ignoredError.Failed(),
       "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
+  mMaybeHasJoinSplitTransactions = true;
   RefPtr<SplitNodeTransaction> transaction =
       SplitNodeTransaction::Create(*this, aStartOfRightNode);
   nsresult rv = DoTransactionInternal(transaction);
@@ -5278,6 +5279,7 @@ Result<JoinNodesResult, nsresult> HTMLEditor::JoinNodesWithTransaction(
     return Err(NS_ERROR_FAILURE);
   }
 
+  mMaybeHasJoinSplitTransactions = true;
   const nsresult rv = DoTransactionInternal(transaction);
   // FYI: Now, DidJoinNodesTransaction() must have been run if succeeded.
   if (NS_WARN_IF(Destroyed())) {

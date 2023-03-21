@@ -195,6 +195,7 @@ class EditorCommand : public nsIControllerCommand {
       case Command::ToggleObjectResizers:
       case Command::ToggleInlineTableEditor:
       case Command::ToggleAbsolutePositionEditor:
+      case Command::EnableCompatibleJoinSplitNodeDirection:
         return EditorCommandParamType::Bool |
                EditorCommandParamType::StateAttribute;
 
