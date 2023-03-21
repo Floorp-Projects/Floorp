@@ -348,7 +348,7 @@ already_AddRefed<WebRenderAPI> WebRenderAPI::Create(
       &docHandle, aBridge, &backend, &compositor, &maxTextureSize, &useANGLE,
       &useDComp, &useTripleBuffering, &supportsExternalBufferTextures,
       std::move(aWidget), &task, aSize, aWindowKind, &syncHandle, &aError);
-  RenderThread::Get()->RunEvent(aWindowId, std::move(event));
+  RenderThread::Get()->PostEvent(aWindowId, std::move(event));
 
   task.Wait();
 

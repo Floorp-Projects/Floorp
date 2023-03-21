@@ -167,11 +167,11 @@ class RenderThread final {
 
   // RenderNotifier implementation
 
-  /// Automatically forwarded to the render thread. Will trigger a render for
+  /// Forwarded to the render thread. Will trigger a render for
   /// the current pending frame once one call per document in that pending
   /// frame has been received.
-  void HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender,
-                         bool aTrackedFrame);
+  void PostHandleFrameOneDoc(wr::WindowId aWindowId, bool aRender,
+                             bool aTrackedFrame);
 
   /// Automatically forwarded to the render thread.
   void SetClearColor(wr::WindowId aWindowId, wr::ColorF aColor);
@@ -183,8 +183,8 @@ class RenderThread final {
   void PipelineSizeChanged(wr::WindowId aWindowId, uint64_t aPipelineId,
                            float aWidth, float aHeight);
 
-  /// Automatically forwarded to the render thread.
-  void RunEvent(wr::WindowId aWindowId, UniquePtr<RendererEvent> aEvent);
+  /// Post RendererEvent to the render thread.
+  void PostEvent(wr::WindowId aWindowId, UniquePtr<RendererEvent> aEvent);
 
   /// Can only be called from the render thread.
   void UpdateAndRender(wr::WindowId aWindowId, const VsyncId& aStartId,
@@ -315,6 +315,9 @@ class RenderThread final {
   void DeferredRenderTextureHostDestroy();
   void ShutDownTask();
   void InitDeviceTask();
+  void HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender,
+                         bool aTrackedFrame);
+  void RunEvent(wr::WindowId aWindowId, UniquePtr<RendererEvent> aEvent);
   void PostRunnable(already_AddRefed<nsIRunnable> aRunnable);
 
   void DoAccumulateMemoryReport(MemoryReport,
