@@ -575,6 +575,19 @@
   fill-opacity: 1;
 }
 
+/* Picture-in-Picture icon */
+#picture-in-picture-button > .urlbar-icon {
+  list-style-image: url("chrome://global/skin/media/picture-in-picture-open.svg");
+}
+
+#picture-in-picture-button[pipactive] > .urlbar-icon {
+  list-style-image: url("chrome://global/skin/media/picture-in-picture-closed.svg");
+}
+
+#picture-in-picture-button:-moz-locale-dir(rtl) > .urlbar-icon {
+  transform: scaleX(-1);
+}
+
 /* Zoom button */
 
 #urlbar-zoom-button {
