@@ -1032,6 +1032,19 @@ NS_IMETHODIMP nsViewSourceChannel::GetClassicScriptHintCharset(
                              aClassicScriptHintCharset);
 }
 
+NS_IMETHODIMP nsViewSourceChannel::SetDocumentCharacterSet(
+    const nsAString& aDocumentCharacterSet) {
+  return !mHttpChannel
+             ? NS_ERROR_NULL_POINTER
+             : mHttpChannel->SetDocumentCharacterSet(aDocumentCharacterSet);
+}
+
+NS_IMETHODIMP nsViewSourceChannel::GetDocumentCharacterSet(
+    nsAString& aDocumentCharacterSet) {
+  return !mHttpChannel
+             ? NS_ERROR_NULL_POINTER
+             : mHttpChannel->GetDocumentCharacterSet(aDocumentCharacterSet);
+}
 // Have to manually forward SetCorsPreflightParameters since it's [notxpcom]
 void nsViewSourceChannel::SetCorsPreflightParameters(
     const nsTArray<nsCString>& aUnsafeHeaders,
