@@ -865,9 +865,21 @@ void DataChannelConnection::CompleteConnect() {
       if (r < 0) {
         DC_ERROR(("usrsctp_getsockopt failed: %d", r));
       } else {
-        // draft-ietf-rtcweb-data-channel-13 section 5: max initial MTU IPV4
-        // 1200, IPV6 1280
-        paddrparams.spp_pathmtu = 1200;  // safe for either
+        // This field is misnamed. |spp_pathmtu| represents the maximum
+        // _payload_ size in libusrsctp. So:
+        // 1280 (a reasonable IPV6 MTU according to RFC 8831)
+        //  -12 (sctp header)
+        //  -24 (GCM sipher)
+        //  -13 (DTLS record header)
+        //   -8 (UDP header)
+        //   -4 (TURN ChannelData)
+        //  -40 (IPV6 header)
+        // = 1179
+        // We could further restrict this, because RFC 8831 suggests a starting
+        // IPV4 path MTU of 1200, which would lead to a value of 1115.
+        // I suspect that in practice the path MTU for IPV4 is substantially
+        // larger than 1200.
+        paddrparams.spp_pathmtu = 1179;
         paddrparams.spp_flags &= ~SPP_PMTUD_ENABLE;
         paddrparams.spp_flags |= SPP_PMTUD_DISABLE;
         opt_len = (socklen_t)sizeof(struct sctp_paddrparams);
