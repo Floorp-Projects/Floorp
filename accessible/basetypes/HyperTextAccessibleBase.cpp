@@ -215,12 +215,14 @@ LayoutDeviceIntRect HyperTextAccessibleBase::CharBounds(int32_t aOffset,
     return LayoutDeviceIntRect();
   }
   TextLeafPoint point = ToTextLeafPoint(static_cast<int32_t>(offset), false);
-  if (!point.mAcc || !point.mAcc->IsRemote() ||
-      !point.mAcc->AsRemote()->mCachedFields) {
+  if (!point.mAcc) {
     return LayoutDeviceIntRect();
   }
 
   LayoutDeviceIntRect bounds = point.CharBounds();
+  if (!bounds.x && !bounds.y && bounds.IsZeroArea()) {
+    return bounds;
+  }
   nsAccUtils::ConvertScreenCoordsTo(&bounds.x, &bounds.y, aCoordType, Acc());
   return bounds;
 }

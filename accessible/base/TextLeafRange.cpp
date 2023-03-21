@@ -1484,7 +1484,7 @@ LayoutDeviceIntRect TextLeafPoint::ComputeBoundsFromFrame() const {
   // Get the right frame continuation -- not really a child, but a sibling of
   // the primary frame passed in
   nsresult rv = frame->GetChildFrameContainingOffset(
-      contentOffset, false, &contentOffsetInFrame, &frame);
+      contentOffset, true, &contentOffsetInFrame, &frame);
   NS_ENSURE_SUCCESS(rv, LayoutDeviceIntRect());
 
   // Start with this frame's screen rect, which we will shrink based on
@@ -1716,7 +1716,7 @@ LayoutDeviceIntRect TextLeafPoint::CharBounds() {
     }
 
     if (mOffset >= 0 &&
-        static_cast<uint32_t>(mOffset) > nsAccUtils::TextLength(local)) {
+        static_cast<uint32_t>(mOffset) >= nsAccUtils::TextLength(local)) {
       NS_ERROR("Wrong in offset");
       return LayoutDeviceIntRect();
     }
