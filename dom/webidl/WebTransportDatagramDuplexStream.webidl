@@ -11,8 +11,8 @@ interface WebTransportDatagramDuplexStream {
   readonly attribute WritableStream writable;
 
   readonly attribute unsigned long maxDatagramSize;
-  [Throws] attribute unrestricted double incomingMaxAge;
-  [Throws] attribute unrestricted double outgoingMaxAge;
-  [Throws] attribute unrestricted double incomingHighWaterMark;
-  [Throws] attribute unrestricted double outgoingHighWaterMark;
+  attribute double? incomingMaxAge;
+  attribute double? outgoingMaxAge;
+  attribute long incomingHighWaterMark;
+  attribute long outgoingHighWaterMark;
 };

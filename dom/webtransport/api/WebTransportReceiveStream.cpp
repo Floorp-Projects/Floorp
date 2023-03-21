@@ -41,7 +41,7 @@ already_AddRefed<WebTransportReceiveStream> WebTransportReceiveStream::Create(
 
   nsCOMPtr<nsIAsyncInputStream> inputStream = receiver;
   auto algorithms = MakeRefPtr<InputToReadableStreamAlgorithms>(
-      cx, inputStream, (ReadableStream*)stream);
+      inputStream, (ReadableStream*)stream);
 
   stream->SetUpByteNative(cx, *algorithms, Some(0.0), aRv);
   if (aRv.Failed()) {
