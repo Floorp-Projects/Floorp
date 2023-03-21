@@ -18,62 +18,103 @@
 #include "mozilla/StaticPrefs_storage.h"
 
 #include "mozStorageConnection.h"
-#include "mozStoragePrivateHelpers.h"
 #include "mozIStorageStatement.h"
-#include "mozIStorageCompletionCallback.h"
+#include "mozIStorageStatementCallback.h"
 #include "mozIStorageAsyncStatement.h"
 #include "mozIStoragePendingStatement.h"
 #include "mozIStorageError.h"
 #include "mozStorageHelper.h"
 #include "nsXULAppAPI.h"
-#include "xpcpublic.h"
 
 #define OBSERVER_TOPIC_IDLE_DAILY "idle-daily"
+#define OBSERVER_TOPIC_XPCOM_SHUTDOWN "xpcom-shutdown"
 
-// Used to notify the begin and end of a vacuum operation.
-#define OBSERVER_TOPIC_VACUUM_BEGIN "vacuum-begin"
-#define OBSERVER_TOPIC_VACUUM_END "vacuum-end"
-// This notification is sent only in automation when vacuum for a database is
-// skipped, and can thus be used to verify that.
-#define OBSERVER_TOPIC_VACUUM_SKIP "vacuum-skip"
+// Used to notify begin and end of a heavy IO task.
+#define OBSERVER_TOPIC_HEAVY_IO "heavy-io-task"
+#define OBSERVER_DATA_VACUUM_BEGIN u"vacuum-begin"
+#define OBSERVER_DATA_VACUUM_END u"vacuum-end"
 
 // This preferences root will contain last vacuum timestamps (in seconds) for
 // each database.  The database filename is used as a key.
 #define PREF_VACUUM_BRANCH "storage.vacuum.last."
 
 // Time between subsequent vacuum calls for a certain database.
-#define VACUUM_INTERVAL_SECONDS (30 * 86400)  // 30 days.
+#define VACUUM_INTERVAL_SECONDS 30 * 86400  // 30 days.
 
 extern mozilla::LazyLogModule gStorageLog;
 
-namespace mozilla::storage {
+namespace mozilla {
+namespace storage {
 
 namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Vacuumer declaration.
+//// BaseCallback
 
-class Vacuumer final : public mozIStorageCompletionCallback {
+class BaseCallback : public mozIStorageStatementCallback {
  public:
   NS_DECL_ISUPPORTS
-  NS_DECL_MOZISTORAGECOMPLETIONCALLBACK
+  NS_DECL_MOZISTORAGESTATEMENTCALLBACK
+  BaseCallback() {}
+
+ protected:
+  virtual ~BaseCallback() {}
+};
+
+NS_IMETHODIMP
+BaseCallback::HandleError(mozIStorageError* aError) {
+#ifdef DEBUG
+  int32_t result;
+  nsresult rv = aError->GetResult(&result);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsAutoCString message;
+  rv = aError->GetMessage(message);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoCString warnMsg;
+  warnMsg.AppendLiteral("An error occured during async execution: ");
+  warnMsg.AppendInt(result);
+  warnMsg.Append(' ');
+  warnMsg.Append(message);
+  NS_WARNING(warnMsg.get());
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BaseCallback::HandleResult(mozIStorageResultSet* aResultSet) {
+  // We could get results from PRAGMA statements, but we don't mind them.
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BaseCallback::HandleCompletion(uint16_t aReason) {
+  // By default BaseCallback will just be silent on completion.
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(BaseCallback, mozIStorageStatementCallback)
+
+////////////////////////////////////////////////////////////////////////////////
+//// Vacuumer declaration.
+
+class Vacuumer : public BaseCallback {
+ public:
+  NS_DECL_MOZISTORAGESTATEMENTCALLBACK
 
   explicit Vacuumer(mozIStorageVacuumParticipant* aParticipant);
+
   bool execute();
+  nsresult notifyCompletion(bool aSucceeded);
 
  private:
-  nsresult notifyCompletion(bool aSucceeded);
-  ~Vacuumer() = default;
-
   nsCOMPtr<mozIStorageVacuumParticipant> mParticipant;
   nsCString mDBFilename;
-  nsCOMPtr<mozIStorageAsyncConnection> mDBConn;
+  nsCOMPtr<mozIStorageConnection> mDBConn;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Vacuumer implementation.
-
-NS_IMPL_ISUPPORTS(Vacuumer, mozIStorageCompletionCallback)
 
 Vacuumer::Vacuumer(mozIStorageVacuumParticipant* aParticipant)
     : mParticipant(aParticipant) {}
@@ -83,21 +124,30 @@ bool Vacuumer::execute() {
 
   // Get the connection and check its validity.
   nsresult rv = mParticipant->GetDatabaseConnection(getter_AddRefs(mDBConn));
-  if (NS_FAILED(rv) || !mDBConn) return false;
+  NS_ENSURE_SUCCESS(rv, false);
+  bool ready = false;
+  if (!mDBConn || NS_FAILED(mDBConn->GetConnectionReady(&ready)) || !ready) {
+    NS_WARNING("Unable to get a connection to vacuum database");
+    return false;
+  }
 
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  // Ask for the expected page size.  Vacuum can change the page size, unless
+  // the database is using WAL journaling.
+  // TODO Bug 634374: figure out a strategy to fix page size with WAL.
+  int32_t expectedPageSize = 0;
+  rv = mParticipant->GetExpectedDatabasePageSize(&expectedPageSize);
+  if (NS_FAILED(rv) || !Service::pageSizeIsValid(expectedPageSize)) {
+    NS_WARNING("Invalid page size requested for database, will use default ");
+    NS_WARNING(mDBFilename.get());
+    expectedPageSize = Service::kDefaultPageSize;
+  }
 
-  bool inAutomation = xpc::IsInAutomation();
   // Get the database filename.  Last vacuum time is stored under this name
   // in PREF_VACUUM_BRANCH.
   nsCOMPtr<nsIFile> databaseFile;
   mDBConn->GetDatabaseFile(getter_AddRefs(databaseFile));
   if (!databaseFile) {
     NS_WARNING("Trying to vacuum a in-memory database!");
-    if (inAutomation && os) {
-      mozilla::Unused << os->NotifyObservers(
-          nullptr, OBSERVER_TOPIC_VACUUM_SKIP, u":memory:");
-    }
     return false;
   }
   nsAutoString databaseFilename;
@@ -114,11 +164,6 @@ bool Vacuumer::execute() {
   rv = Preferences::GetInt(prefName.get(), &lastVacuum);
   if (NS_SUCCEEDED(rv) && (now - lastVacuum) < VACUUM_INTERVAL_SECONDS) {
     // This database was vacuumed recently, skip it.
-    if (inAutomation && os) {
-      mozilla::Unused << os->NotifyObservers(
-          nullptr, OBSERVER_TOPIC_VACUUM_SKIP,
-          NS_ConvertUTF8toUTF16(mDBFilename).get());
-    }
     return false;
   }
 
@@ -129,48 +174,86 @@ bool Vacuumer::execute() {
   rv = mParticipant->OnBeginVacuum(&vacuumGranted);
   NS_ENSURE_SUCCESS(rv, false);
   if (!vacuumGranted) {
-    if (inAutomation && os) {
-      mozilla::Unused << os->NotifyObservers(
-          nullptr, OBSERVER_TOPIC_VACUUM_SKIP,
-          NS_ConvertUTF8toUTF16(mDBFilename).get());
-    }
     return false;
   }
 
-  // Ask for the expected page size.  Vacuum can change the page size, unless
-  // the database is using WAL journaling.
-  // TODO Bug 634374: figure out a strategy to fix page size with WAL.
-  int32_t expectedPageSize = 0;
-  rv = mParticipant->GetExpectedDatabasePageSize(&expectedPageSize);
-  if (NS_FAILED(rv) || !Service::pageSizeIsValid(expectedPageSize)) {
-    NS_WARNING("Invalid page size requested for database, won't set it. ");
-    NS_WARNING(mDBFilename.get());
-    expectedPageSize = 0;
-  }
-
-  bool incremental = false;
-  mozilla::Unused << mParticipant->GetUseIncrementalVacuum(&incremental);
-
-  // Notify vacuum is about to start.
+  // Notify a heavy IO task is about to start.
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
-    mozilla::Unused << os->NotifyObservers(
-        nullptr, OBSERVER_TOPIC_VACUUM_BEGIN,
-        NS_ConvertUTF8toUTF16(mDBFilename).get());
+    rv = os->NotifyObservers(nullptr, OBSERVER_TOPIC_HEAVY_IO,
+                             OBSERVER_DATA_VACUUM_BEGIN);
+    MOZ_ASSERT(NS_SUCCEEDED(rv), "Should be able to notify");
   }
 
-  rv = mDBConn->AsyncVacuum(this, incremental, expectedPageSize);
-  if (NS_FAILED(rv)) {
-    // The connection is not ready.
-    mozilla::Unused << Complete(rv, nullptr);
-    return false;
-  }
+  // Execute the statements separately, since the pragma may conflict with the
+  // vacuum, if they are executed in the same transaction.
+  nsCOMPtr<mozIStorageAsyncStatement> pageSizeStmt;
+  nsAutoCString pageSizeQuery(MOZ_STORAGE_UNIQUIFY_QUERY_STR
+                              "PRAGMA page_size = ");
+  pageSizeQuery.AppendInt(expectedPageSize);
+  rv = mDBConn->CreateAsyncStatement(pageSizeQuery,
+                                     getter_AddRefs(pageSizeStmt));
+  NS_ENSURE_SUCCESS(rv, false);
+  RefPtr<BaseCallback> callback = new BaseCallback();
+  nsCOMPtr<mozIStoragePendingStatement> ps;
+  rv = pageSizeStmt->ExecuteAsync(callback, getter_AddRefs(ps));
+  NS_ENSURE_SUCCESS(rv, false);
+
+  nsCOMPtr<mozIStorageAsyncStatement> stmt;
+  rv = mDBConn->CreateAsyncStatement("VACUUM"_ns, getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, false);
+  rv = stmt->ExecuteAsync(this, getter_AddRefs(ps));
+  NS_ENSURE_SUCCESS(rv, false);
 
   return true;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+//// mozIStorageStatementCallback
+
 NS_IMETHODIMP
-Vacuumer::Complete(nsresult aStatus, nsISupports* aValue) {
-  if (NS_SUCCEEDED(aStatus)) {
+Vacuumer::HandleError(mozIStorageError* aError) {
+  int32_t result;
+  nsresult rv;
+  nsAutoCString message;
+
+#ifdef DEBUG
+  rv = aError->GetResult(&result);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aError->GetMessage(message);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoCString warnMsg;
+  warnMsg.AppendLiteral("Unable to vacuum database: ");
+  warnMsg.Append(mDBFilename);
+  warnMsg.AppendLiteral(" - ");
+  warnMsg.AppendInt(result);
+  warnMsg.Append(' ');
+  warnMsg.Append(message);
+  NS_WARNING(warnMsg.get());
+#endif
+
+  if (MOZ_LOG_TEST(gStorageLog, LogLevel::Error)) {
+    rv = aError->GetResult(&result);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aError->GetMessage(message);
+    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_LOG(gStorageLog, LogLevel::Error,
+            ("Vacuum failed with error: %d '%s'. Database was: '%s'", result,
+             message.get(), mDBFilename.get()));
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+Vacuumer::HandleResult(mozIStorageResultSet* aResultSet) {
+  MOZ_ASSERT_UNREACHABLE("Got a resultset from a vacuum?");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+Vacuumer::HandleCompletion(uint16_t aReason) {
+  if (aReason == REASON_FINISHED) {
     // Update last vacuum time.
     int32_t now = static_cast<int32_t>(PR_Now() / PR_USEC_PER_SEC);
     MOZ_ASSERT(!mDBFilename.IsEmpty(), "Database filename cannot be empty");
@@ -178,35 +261,18 @@ Vacuumer::Complete(nsresult aStatus, nsISupports* aValue) {
     prefName += mDBFilename;
     DebugOnly<nsresult> rv = Preferences::SetInt(prefName.get(), now);
     MOZ_ASSERT(NS_SUCCEEDED(rv), "Should be able to set a preference");
-    notifyCompletion(true);
-    return NS_OK;
   }
 
-#ifdef DEBUG
-  nsAutoCString warnMsg;
-  warnMsg.AppendLiteral("Unable to vacuum database: ");
-  warnMsg.Append(mDBFilename);
-  warnMsg.AppendLiteral(" - ");
-  warnMsg.AppendInt(NS_ERROR_GET_CODE(aStatus));
-  NS_WARNING(warnMsg.get());
-#endif
+  notifyCompletion(aReason == REASON_FINISHED);
 
-  if (MOZ_LOG_TEST(gStorageLog, LogLevel::Error)) {
-    MOZ_LOG(gStorageLog, LogLevel::Error,
-            ("Vacuum failed with error: %d. Database was: '%s'", aStatus,
-             mDBFilename.get()));
-  }
-
-  notifyCompletion(false);
   return NS_OK;
 }
 
 nsresult Vacuumer::notifyCompletion(bool aSucceeded) {
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
-    mozilla::Unused << os->NotifyObservers(
-        nullptr, OBSERVER_TOPIC_VACUUM_END,
-        NS_ConvertUTF8toUTF16(mDBFilename).get());
+    os->NotifyObservers(nullptr, OBSERVER_TOPIC_HEAVY_IO,
+                        OBSERVER_DATA_VACUUM_END);
   }
 
   nsresult rv = mParticipant->OnEndVacuum(aSucceeded);
@@ -287,4 +353,5 @@ VacuumManager::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-}  // namespace mozilla::storage
+}  // namespace storage
+}  // namespace mozilla

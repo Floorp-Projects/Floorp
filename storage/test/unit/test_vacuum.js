@@ -2,367 +2,325 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// This file tests the Vacuum Manager and asyncVacuum().
+// This file tests the Vacuum Manager.
 
-const { VacuumParticipant } = ChromeUtils.importESModule(
-  "resource://testing-common/VacuumParticipant.sys.mjs"
+const { MockRegistrar } = ChromeUtils.importESModule(
+  "resource://testing-common/MockRegistrar.sys.mjs"
 );
+
+/**
+ * Loads a test component that will register as a vacuum-participant.
+ * If other participants are found they will be unregistered, to avoid conflicts
+ * with the test itself.
+ */
+function load_test_vacuum_component() {
+  const CATEGORY_NAME = "vacuum-participant";
+  const CONTRACT_ID = "@unit.test.com/test-vacuum-participant;1";
+
+  MockRegistrar.registerESM(
+    CONTRACT_ID,
+    "resource://test/VacuumParticipant.sys.mjs",
+    "VacuumParticipant"
+  );
+
+  let { catMan } = Services;
+  // Temporary unregister other participants for this test.
+  for (let { data: entry } of catMan.enumerateCategory(CATEGORY_NAME)) {
+    print("Check if the found category entry (" + entry + ") is expected.");
+    catMan.deleteCategoryEntry("vacuum-participant", entry, false);
+  }
+  catMan.addCategoryEntry(
+    CATEGORY_NAME,
+    "vacuumParticipant",
+    CONTRACT_ID,
+    false,
+    false
+  );
+  print("Check the test entry exists.");
+}
 
 /**
  * Sends a fake idle-daily notification to the VACUUM Manager.
  */
 function synthesize_idle_daily() {
-  Cc["@mozilla.org/storage/vacuum;1"]
-    .getService(Ci.nsIObserver)
-    .observe(null, "idle-daily", null);
+  let vm = Cc["@mozilla.org/storage/vacuum;1"].getService(Ci.nsIObserver);
+  vm.observe(null, "idle-daily", null);
 }
 
 /**
  * Returns a new nsIFile reference for a profile database.
  * @param filename for the database, excluded the .sqlite extension.
  */
-function new_db_file(name = "testVacuum") {
+function new_db_file(name) {
   let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
   file.append(name + ".sqlite");
   return file;
 }
 
-function reset_vacuum_date(name = "testVacuum") {
-  let date = parseInt(Date.now() / 1000 - 31 * 86400);
-  // Set last VACUUM to a date in the past.
-  Services.prefs.setIntPref(`storage.vacuum.last.${name}.sqlite`, date);
-  return date;
-}
+function run_test() {
+  do_test_pending();
 
-function get_vacuum_date(name = "testVacuum") {
-  return Services.prefs.getIntPref(`storage.vacuum.last.${name}.sqlite`, 0);
-}
-
-add_setup(async function() {
-  // turn on Cu.isInAutomation
-  Services.prefs.setBoolPref(
-    "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer",
-    true
-  );
-});
-
-add_task(async function test_common_vacuum() {
-  let last_vacuum_date = reset_vacuum_date();
-  info("Test that a VACUUM correctly happens and all notifications are fired.");
-  let promiseTestVacuumBegin = TestUtils.topicObserved("test-begin-vacuum");
-  let promiseTestVacuumEnd = TestUtils.topicObserved("test-end-vacuum-success");
-  let promiseVacuumBegin = TestUtils.topicObserved("vacuum-begin");
-  let promiseVacuumEnd = TestUtils.topicObserved("vacuum-end");
-
-  let participant = new VacuumParticipant(
-    Services.storage.openDatabase(new_db_file())
-  );
-  await participant.promiseRegistered();
-  synthesize_idle_daily();
-  // Wait for notifications.
-  await Promise.all([
-    promiseTestVacuumBegin,
-    promiseTestVacuumEnd,
-    promiseVacuumBegin,
-    promiseVacuumEnd,
-  ]);
-  Assert.greater(get_vacuum_date(), last_vacuum_date);
-  await participant.dispose();
-});
-
-add_task(async function test_skipped_if_recent_vacuum() {
-  info("Test that a VACUUM is skipped if it was run recently.");
-  Services.prefs.setIntPref(
-    "storage.vacuum.last.testVacuum.sqlite",
-    parseInt(Date.now() / 1000)
-  );
-  // Wait for VACUUM skipped notification.
-  let promiseSkipped = TestUtils.topicObserved("vacuum-skip");
-
-  let participant = new VacuumParticipant(
-    Services.storage.openDatabase(new_db_file())
-  );
-  await participant.promiseRegistered();
-  synthesize_idle_daily();
-
-  // Check that VACUUM has been skipped.
-  await promiseSkipped;
-
-  await participant.dispose();
-});
-
-add_task(async function test_page_size_change() {
-  info("Test that a VACUUM changes page_size");
-  reset_vacuum_date();
-
-  let conn = Services.storage.openDatabase(new_db_file());
-  info("Check initial page size.");
+  // Change initial page size.  Do it immediately since it would require an
+  // additional vacuum op to do it later.  As a bonus this makes the page size
+  // change test really fast since it only has to check results.
+  let conn = getDatabase(new_db_file("testVacuum"));
+  conn.executeSimpleSQL("PRAGMA page_size = 1024");
+  print("Check current page size.");
   let stmt = conn.createStatement("PRAGMA page_size");
-  Assert.ok(stmt.executeStep());
-  Assert.equal(stmt.row.page_size, conn.defaultPageSize);
-  stmt.finalize();
-  await populateFreeList(conn);
-
-  let participant = new VacuumParticipant(conn, { expectedPageSize: 1024 });
-  await participant.promiseRegistered();
-  let promiseVacuumEnd = TestUtils.topicObserved("test-end-vacuum-success");
-  synthesize_idle_daily();
-  await promiseVacuumEnd;
-
-  info("Check that page size was updated.");
-  stmt = conn.createStatement("PRAGMA page_size");
-  Assert.ok(stmt.executeStep());
-  Assert.equal(stmt.row.page_size, 1024);
-  stmt.finalize();
-
-  await participant.dispose();
-});
-
-add_task(async function test_skipped_optout_vacuum() {
-  info("Test that a VACUUM is skipped if the participant wants to opt-out.");
-  reset_vacuum_date();
-
-  let participant = new VacuumParticipant(
-    Services.storage.openDatabase(new_db_file()),
-    { grant: false }
-  );
-  await participant.promiseRegistered();
-  // Wait for VACUUM skipped notification.
-  let promiseSkipped = TestUtils.topicObserved("vacuum-skip");
-
-  synthesize_idle_daily();
-
-  // Check that VACUUM has been skipped.
-  await promiseSkipped;
-
-  await participant.dispose();
-});
-
-add_task(async function test_memory_database_crash() {
-  info("Test that we don't crash trying to vacuum a memory database");
-  reset_vacuum_date();
-
-  let participant = new VacuumParticipant(
-    Services.storage.openSpecialDatabase("memory")
-  );
-  await participant.promiseRegistered();
-  // Wait for VACUUM skipped notification.
-  let promiseSkipped = TestUtils.topicObserved("vacuum-skip");
-
-  synthesize_idle_daily();
-
-  // Check that VACUUM has been skipped.
-  await promiseSkipped;
-
-  await participant.dispose();
-});
-
-add_task(async function test_async_connection() {
-  info("Test we can vacuum an async connection");
-  reset_vacuum_date();
-
-  let conn = await openAsyncDatabase(new_db_file());
-  await populateFreeList(conn);
-  let participant = new VacuumParticipant(conn);
-  await participant.promiseRegistered();
-
-  let promiseVacuumEnd = TestUtils.topicObserved("test-end-vacuum-success");
-  synthesize_idle_daily();
-  await promiseVacuumEnd;
-
-  await participant.dispose();
-});
-
-add_task(async function test_change_to_incremental_vacuum() {
-  info("Test we can change to incremental vacuum");
-  reset_vacuum_date();
-
-  let conn = Services.storage.openDatabase(new_db_file());
-  info("Check initial vacuum.");
-  let stmt = conn.createStatement("PRAGMA auto_vacuum");
-  Assert.ok(stmt.executeStep());
-  Assert.equal(stmt.row.auto_vacuum, 0);
-  stmt.finalize();
-  await populateFreeList(conn);
-
-  let participant = new VacuumParticipant(conn, { useIncrementalVacuum: true });
-  await participant.promiseRegistered();
-  let promiseVacuumEnd = TestUtils.topicObserved("test-end-vacuum-success");
-  synthesize_idle_daily();
-  await promiseVacuumEnd;
-
-  info("Check that auto_vacuum was updated.");
-  stmt = conn.createStatement("PRAGMA auto_vacuum");
-  Assert.ok(stmt.executeStep());
-  Assert.equal(stmt.row.auto_vacuum, 2);
-  stmt.finalize();
-
-  await participant.dispose();
-});
-
-add_task(async function test_change_from_incremental_vacuum() {
-  info("Test we can change from incremental vacuum");
-  reset_vacuum_date();
-
-  let conn = Services.storage.openDatabase(new_db_file());
-  conn.executeSimpleSQL("PRAGMA auto_vacuum = 2");
-  info("Check initial vacuum.");
-  let stmt = conn.createStatement("PRAGMA auto_vacuum");
-  Assert.ok(stmt.executeStep());
-  Assert.equal(stmt.row.auto_vacuum, 2);
-  stmt.finalize();
-  await populateFreeList(conn);
-
-  let participant = new VacuumParticipant(conn, {
-    useIncrementalVacuum: false,
-  });
-  await participant.promiseRegistered();
-  let promiseVacuumEnd = TestUtils.topicObserved("test-end-vacuum-success");
-  synthesize_idle_daily();
-  await promiseVacuumEnd;
-
-  info("Check that auto_vacuum was updated.");
-  stmt = conn.createStatement("PRAGMA auto_vacuum");
-  Assert.ok(stmt.executeStep());
-  Assert.equal(stmt.row.auto_vacuum, 0);
-  stmt.finalize();
-
-  await participant.dispose();
-});
-
-add_task(async function test_attached_vacuum() {
-  info("Test attached database is not a problem");
-  reset_vacuum_date();
-
-  let conn = Services.storage.openDatabase(new_db_file());
-  let conn2 = Services.storage.openDatabase(new_db_file("attached"));
-
-  info("Attach " + conn2.databaseFile.path);
-  conn.executeSimpleSQL(
-    `ATTACH DATABASE '${conn2.databaseFile.path}' AS attached`
-  );
-  await asyncClose(conn2);
-  let stmt = conn.createStatement("PRAGMA database_list");
-  let schemas = [];
-  while (stmt.executeStep()) {
-    schemas.push(stmt.row.name);
+  try {
+    while (stmt.executeStep()) {
+      Assert.equal(stmt.row.page_size, 1024);
+    }
+  } finally {
+    stmt.finalize();
   }
-  Assert.deepEqual(schemas, ["main", "attached"]);
-  stmt.finalize();
 
-  await populateFreeList(conn);
-  await populateFreeList(conn, "attached");
+  load_test_vacuum_component();
 
-  let participant = new VacuumParticipant(conn);
-  await participant.promiseRegistered();
-  let promiseVacuumEnd = TestUtils.topicObserved("test-end-vacuum-success");
-  synthesize_idle_daily();
-  await promiseVacuumEnd;
+  run_next_test();
+}
 
-  await participant.dispose();
-});
+const TESTS = [
+  function test_common_vacuum() {
+    print(
+      "\n*** Test that a VACUUM correctly happens and all notifications are fired."
+    );
+    // Wait for VACUUM begin.
+    let beginVacuumReceived = false;
+    Services.obs.addObserver(function onVacuum(aSubject, aTopic, aData) {
+      Services.obs.removeObserver(onVacuum, aTopic);
+      beginVacuumReceived = true;
+    }, "test-begin-vacuum");
 
-add_task(async function test_vacuum_fail() {
-  info("Test a failed vacuum");
-  reset_vacuum_date();
+    // Wait for heavy IO notifications.
+    let heavyIOTaskBeginReceived = false;
+    let heavyIOTaskEndReceived = false;
+    Services.obs.addObserver(function onVacuum(aSubject, aTopic, aData) {
+      if (heavyIOTaskBeginReceived && heavyIOTaskEndReceived) {
+        Services.obs.removeObserver(onVacuum, aTopic);
+      }
 
-  let conn = Services.storage.openDatabase(new_db_file());
-  // Cannot vacuum in a transaction.
-  conn.beginTransaction();
-  await populateFreeList(conn);
+      if (aData == "vacuum-begin") {
+        heavyIOTaskBeginReceived = true;
+      } else if (aData == "vacuum-end") {
+        heavyIOTaskEndReceived = true;
+      }
+    }, "heavy-io-task");
 
-  let participant = new VacuumParticipant(conn);
-  await participant.promiseRegistered();
-  let promiseVacuumEnd = TestUtils.topicObserved("test-end-vacuum-failure");
-  synthesize_idle_daily();
-  await promiseVacuumEnd;
+    // Wait for VACUUM end.
+    Services.obs.addObserver(function onVacuum(aSubject, aTopic, aData) {
+      Services.obs.removeObserver(onVacuum, aTopic);
+      print("Check we received onBeginVacuum");
+      Assert.ok(beginVacuumReceived);
+      print("Check we received heavy-io-task notifications");
+      Assert.ok(heavyIOTaskBeginReceived);
+      Assert.ok(heavyIOTaskEndReceived);
+      print("Received onEndVacuum");
+      run_next_test();
+    }, "test-end-vacuum");
 
-  conn.commitTransaction();
-  await participant.dispose();
-});
+    synthesize_idle_daily();
+  },
 
-add_task(async function test_async_vacuum() {
-  // Since previous tests already go through most cases, this only checks
-  // the basics of directly calling asyncVacuum().
-  info("Test synchronous connection");
-  let conn = Services.storage.openDatabase(new_db_file());
-  await populateFreeList(conn);
-  let rv = await new Promise(resolve => {
-    conn.asyncVacuum(status => {
-      resolve(status);
+  function test_skipped_if_recent_vacuum() {
+    print("\n*** Test that a VACUUM is skipped if it was run recently.");
+    Services.prefs.setIntPref(
+      "storage.vacuum.last.testVacuum.sqlite",
+      parseInt(Date.now() / 1000)
+    );
+
+    // Wait for VACUUM begin.
+    let vacuumObserver = {
+      gotNotification: false,
+      observe: function VO_observe(aSubject, aTopic, aData) {
+        this.gotNotification = true;
+      },
+      QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
+    };
+    Services.obs.addObserver(vacuumObserver, "test-begin-vacuum");
+
+    // Check after a couple seconds that no VACUUM has been run.
+    do_timeout(2000, function() {
+      print("Check VACUUM did not run.");
+      Assert.ok(!vacuumObserver.gotNotification);
+      Services.obs.removeObserver(vacuumObserver, "test-begin-vacuum");
+      run_next_test();
     });
-  });
-  Assert.ok(Components.isSuccessCode(rv));
-  await asyncClose(conn);
 
-  info("Test asynchronous connection");
-  conn = await openAsyncDatabase(new_db_file());
-  await populateFreeList(conn);
-  rv = await new Promise(resolve => {
-    conn.asyncVacuum(status => {
-      resolve(status);
+    synthesize_idle_daily();
+  },
+
+  function test_page_size_change() {
+    print("\n*** Test that a VACUUM changes page_size");
+
+    // We did setup the database with a small page size, the previous vacuum
+    // should have updated it.
+    print("Check that page size was updated.");
+    let conn = getDatabase(new_db_file("testVacuum"));
+    let stmt = conn.createStatement("PRAGMA page_size");
+    try {
+      while (stmt.executeStep()) {
+        Assert.equal(stmt.row.page_size, conn.defaultPageSize);
+      }
+    } finally {
+      stmt.finalize();
+    }
+
+    run_next_test();
+  },
+
+  function test_skipped_optout_vacuum() {
+    print(
+      "\n*** Test that a VACUUM is skipped if the participant wants to opt-out."
+    );
+    Services.obs.notifyObservers(null, "test-options", "opt-out");
+
+    // Wait for VACUUM begin.
+    let vacuumObserver = {
+      gotNotification: false,
+      observe: function VO_observe(aSubject, aTopic, aData) {
+        this.gotNotification = true;
+      },
+      QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
+    };
+    Services.obs.addObserver(vacuumObserver, "test-begin-vacuum");
+
+    // Check after a couple seconds that no VACUUM has been run.
+    do_timeout(2000, function() {
+      print("Check VACUUM did not run.");
+      Assert.ok(!vacuumObserver.gotNotification);
+      Services.obs.removeObserver(vacuumObserver, "test-begin-vacuum");
+      run_next_test();
     });
-  });
-  Assert.ok(Components.isSuccessCode(rv));
-  await asyncClose(conn);
-});
 
-add_task(async function test_vacuum_growth() {
-  // Tests vacuum doesn't nullify chunked growth.
-  let conn = Services.storage.openDatabase(new_db_file("incremental"));
-  conn.executeSimpleSQL("PRAGMA auto_vacuum = INCREMENTAL");
-  conn.setGrowthIncrement(2 * conn.defaultPageSize, "");
-  await populateFreeList(conn);
-  let stmt = conn.createStatement("PRAGMA freelist_count");
-  let count = 0;
-  Assert.ok(stmt.executeStep());
-  count = stmt.row.freelist_count;
-  stmt.reset();
-  Assert.greater(count, 2, "There's more than 2 page in freelist");
+    synthesize_idle_daily();
+  },
 
-  let rv = await new Promise(resolve => {
-    conn.asyncVacuum(status => {
-      resolve(status);
-    }, true);
-  });
-  Assert.ok(Components.isSuccessCode(rv));
+  /* Changing page size on WAL is not supported till Bug 634374 is properly fixed.
+  function test_page_size_change_with_wal()
+  {
+    print("\n*** Test that a VACUUM changes page_size with WAL mode");
+    Services.obs.notifyObservers(null, "test-options", "wal");
 
-  Assert.ok(stmt.executeStep());
-  Assert.equal(
-    stmt.row.freelist_count,
-    2,
-    "chunked growth space was preserved"
-  );
-  stmt.reset();
+    // Set a small page size.
+    let conn = getDatabase(new_db_file("testVacuum2"));
+    conn.executeSimpleSQL("PRAGMA page_size = 1024");
+    let stmt = conn.createStatement("PRAGMA page_size");
+    try {
+      while (stmt.executeStep()) {
+        do_check_eq(stmt.row.page_size, 1024);
+      }
+    }
+    finally {
+      stmt.finalize();
+    }
 
-  // A full vacuuum should not be executed if there's less free pages than
-  // chunked growth.
-  rv = await new Promise(resolve => {
-    conn.asyncVacuum(status => {
-      resolve(status);
+    // Use WAL journal mode.
+    conn.executeSimpleSQL("PRAGMA journal_mode = WAL");
+    stmt = conn.createStatement("PRAGMA journal_mode");
+    try {
+      while (stmt.executeStep()) {
+        do_check_eq(stmt.row.journal_mode, "wal");
+      }
+    }
+    finally {
+      stmt.finalize();
+    }
+
+    // Wait for VACUUM end.
+    let vacuumObserver = {
+      observe: function VO_observe(aSubject, aTopic, aData) {
+        Services.obs.removeObserver(this, aTopic);
+        print("Check page size has been updated.");
+        let stmt = conn.createStatement("PRAGMA page_size");
+        try {
+          while (stmt.executeStep()) {
+            do_check_eq(stmt.row.page_size, Ci.mozIStorageConnection.DEFAULT_PAGE_SIZE);
+          }
+        }
+        finally {
+          stmt.finalize();
+        }
+
+        print("Check journal mode has been restored.");
+        stmt = conn.createStatement("PRAGMA journal_mode");
+        try {
+          while (stmt.executeStep()) {
+            do_check_eq(stmt.row.journal_mode, "wal");
+          }
+        }
+        finally {
+          stmt.finalize();
+        }
+
+        run_next_test();
+      },
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver])
+    }
+    Services.obs.addObserver(vacuumObserver, "test-end-vacuum", false);
+
+    synthesize_idle_daily();
+  },
+  */
+
+  function test_memory_database_crash() {
+    print("\n*** Test that we don't crash trying to vacuum a memory database");
+    Services.obs.notifyObservers(null, "test-options", "memory");
+
+    // Wait for VACUUM begin.
+    let vacuumObserver = {
+      gotNotification: false,
+      observe: function VO_observe(aSubject, aTopic, aData) {
+        this.gotNotification = true;
+      },
+      QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
+    };
+    Services.obs.addObserver(vacuumObserver, "test-begin-vacuum");
+
+    // Check after a couple seconds that no VACUUM has been run.
+    do_timeout(2000, function() {
+      print("Check VACUUM did not run.");
+      Assert.ok(!vacuumObserver.gotNotification);
+      Services.obs.removeObserver(vacuumObserver, "test-begin-vacuum");
+      run_next_test();
     });
-  });
-  Assert.ok(Components.isSuccessCode(rv));
 
-  Assert.ok(stmt.executeStep());
-  Assert.equal(
-    stmt.row.freelist_count,
-    2,
-    "chunked growth space was preserved"
-  );
-  stmt.finalize();
+    synthesize_idle_daily();
+  },
 
-  await asyncClose(conn);
-});
+  /* Changing page size on WAL is not supported till Bug 634374 is properly fixed.
+  function test_wal_restore_fail()
+  {
+    print("\n*** Test that a failing WAL restoration notifies failure");
+    Services.obs.notifyObservers(null, "test-options", "wal-fail");
 
-async function populateFreeList(conn, schema = "main") {
-  await executeSimpleSQLAsync(conn, `CREATE TABLE ${schema}.test (id TEXT)`);
-  await executeSimpleSQLAsync(
-    conn,
-    `INSERT INTO ${schema}.test
-     VALUES ${Array.from({ length: 3000 }, () => Math.random()).map(
-       v => "('" + v + "')"
-     )}`
-  );
-  await executeSimpleSQLAsync(conn, `DROP TABLE ${schema}.test`);
+    // Wait for VACUUM end.
+    let vacuumObserver = {
+      observe: function VO_observe(aSubject, aTopic, aData) {
+        Services.obs.removeObserver(vacuumObserver, "test-end-vacuum");
+        print("Check WAL restoration failed.");
+        do_check_false(aData);
+        run_next_test();
+      },
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver])
+    }
+    Services.obs.addObserver(vacuumObserver, "test-end-vacuum", false);
+
+    synthesize_idle_daily();
+  },
+  */
+];
+
+function run_next_test() {
+  if (!TESTS.length) {
+    Services.obs.notifyObservers(null, "test-options", "dispose");
+    do_test_finished();
+  } else {
+    // Set last VACUUM to a date in the past.
+    Services.prefs.setIntPref(
+      "storage.vacuum.last.testVacuum.sqlite",
+      parseInt(Date.now() / 1000 - 31 * 86400)
+    );
+    executeSoon(TESTS.shift());
+  }
 }
