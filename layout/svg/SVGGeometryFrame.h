@@ -8,11 +8,14 @@
 #define LAYOUT_SVG_SVGGEOMETRYFRAME_H_
 
 #include "mozilla/Attributes.h"
-#include "mozilla/DisplaySVGItem.h"
 #include "mozilla/ISVGDisplayableFrame.h"
+#include "mozilla/SVGUtils.h"
 #include "gfxMatrix.h"
 #include "gfxRect.h"
+#include "nsDisplayList.h"
 #include "nsIFrame.h"
+#include "nsLiteralString.h"
+#include "nsQueryFrame.h"
 
 namespace mozilla {
 
@@ -144,18 +147,27 @@ class SVGGeometryFrame : public nsIFrame, public ISVGDisplayableFrame {
 //----------------------------------------------------------------------
 // Display list item:
 
-class DisplaySVGGeometry final : public DisplaySVGItem {
+class DisplaySVGGeometry final : public nsPaintedDisplayItem {
   using imgDrawingParams = image::imgDrawingParams;
 
  public:
   DisplaySVGGeometry(nsDisplayListBuilder* aBuilder, SVGGeometryFrame* aFrame)
-      : DisplaySVGItem(aBuilder, aFrame) {
+      : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(DisplaySVGGeometry);
+    MOZ_ASSERT(aFrame, "Must have a frame!");
   }
 
   MOZ_COUNTED_DTOR_OVERRIDE(DisplaySVGGeometry)
 
   NS_DISPLAY_DECL_NAME("DisplaySVGGeometry", TYPE_SVG_GEOMETRY)
+
+  void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
+               HitTestState* aState, nsTArray<nsIFrame*>* aOutFrames) override {
+    SVGUtils::HitTest(aBuilder, this, aRect, aOutFrames);
+  }
+  void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override {
+    SVGUtils::Paint(aBuilder, this, aCtx);
+  }
 
   // Whether this part of the SVG should be natively handled by webrender,
   // potentially becoming an "active layer" inside a blob image.

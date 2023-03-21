@@ -34,7 +34,6 @@
 #include "nsLayoutUtils.h"
 #include "nsFrameSelection.h"
 #include "nsStyleStructInlines.h"
-#include "mozilla/DisplaySVGItem.h"
 #include "mozilla/Likely.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/SVGObserverUtils.h"
@@ -49,6 +48,7 @@
 #include "mozilla/dom/Text.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PatternHelpers.h"
+#include "nsDisplayList.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -2666,17 +2666,25 @@ void SVGTextDrawPathCallbacks::StrokeGeometry() {
 // ----------------------------------------------------------------------------
 // Display list item
 
-class DisplaySVGText final : public DisplaySVGItem {
+class DisplaySVGText final : public nsPaintedDisplayItem {
  public:
   DisplaySVGText(nsDisplayListBuilder* aBuilder, SVGTextFrame* aFrame)
-      : DisplaySVGItem(aBuilder, aFrame) {
+      : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(DisplaySVGText);
+    MOZ_ASSERT(aFrame, "Must have a frame!");
   }
 
   MOZ_COUNTED_DTOR_OVERRIDE(DisplaySVGText)
 
   NS_DISPLAY_DECL_NAME("DisplaySVGText", TYPE_SVG_TEXT)
 
+  void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
+               HitTestState* aState, nsTArray<nsIFrame*>* aOutFrames) override {
+    SVGUtils::HitTest(aBuilder, this, aRect, aOutFrames);
+  }
+  void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override {
+    SVGUtils::Paint(aBuilder, this, aCtx);
+  }
   nsDisplayItemGeometry* AllocateGeometry(
       nsDisplayListBuilder* aBuilder) override {
     return new nsDisplayItemGenericGeometry(this, aBuilder);
