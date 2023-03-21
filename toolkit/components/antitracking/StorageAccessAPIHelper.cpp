@@ -453,7 +453,8 @@ StorageAccessAPIHelper::CompleteAllowAccessFor(
       // we'll return to the content process we need to inform when this
       // function is done. So we don't need to create an extra IPC for the case.
       if (aReason != ContentBlockingNotifier::eOpener) {
-        dom::ContentParent* cp = aParentContext->Canonical()->GetContentParent();
+        dom::ContentParent* cp =
+            aParentContext->Canonical()->GetContentParent();
         Unused << cp->SendOnAllowAccessFor(aParentContext, trackingOrigin,
                                            aCookieBehavior, aReason);
       }

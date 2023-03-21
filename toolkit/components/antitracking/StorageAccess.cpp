@@ -59,7 +59,6 @@ uint32_t mozilla::detail::CheckCookiePermissionForPrincipal(
   return cookiePermission;
 }
 
-
 /*
  * Checks if storage for a given principal is permitted by the user's
  * preferences. If aWindow is non-null, its principal must be passed as
@@ -664,8 +663,8 @@ bool ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
     return false;
   }
 
-  uint32_t cookiePermission =
-      detail::CheckCookiePermissionForPrincipal(cookieJarSettings, channelPrincipal);
+  uint32_t cookiePermission = detail::CheckCookiePermissionForPrincipal(
+      cookieJarSettings, channelPrincipal);
   if (cookiePermission != nsICookiePermission::ACCESS_DEFAULT) {
     LOG(
         ("CheckCookiePermissionForPrincipal() returned a non-default access "
