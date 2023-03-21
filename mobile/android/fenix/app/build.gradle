@@ -592,7 +592,6 @@ dependencies {
     implementation FenixDependencies.androidx_lifecycle_viewmodel
     implementation FenixDependencies.androidx_core
     implementation FenixDependencies.androidx_core_ktx
-    implementation FenixDependencies.androidx_tracing
     implementation FenixDependencies.androidx_transition
     implementation FenixDependencies.androidx_work_ktx
     implementation FenixDependencies.androidx_datastore

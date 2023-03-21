@@ -25,7 +25,6 @@ object FocusVersions {
         const val recyclerview = "1.2.1"
         const val savedstate = "1.2.0"
         const val splashscreen = "1.0.0"
-        const val tracing = "1.0.0"
         const val transition = "1.4.1"
         const val work = "2.7.1"
     }
@@ -101,7 +100,6 @@ object FocusDependencies {
     const val androidx_lifecycle_viewmodel = "androidx.lifecycle:lifecycle-viewmodel-ktx:${FocusVersions.AndroidX.lifecycle}"
     const val androidx_splashscreen = "androidx.core:core-splashscreen:${FocusVersions.AndroidX.splashscreen}"
     const val androidx_savedstate = "androidx.savedstate:savedstate-ktx:${FocusVersions.AndroidX.savedstate}"
-    const val androidx_tracing = "androidx.tracing:tracing:${FocusVersions.AndroidX.tracing}"
     const val androidx_transition = "androidx.transition:transition:${FocusVersions.AndroidX.transition}"
     const val androidx_work_ktx = "androidx.work:work-runtime-ktx:${FocusVersions.AndroidX.work}"
     const val androidx_work_testing = "androidx.work:work-testing:${FocusVersions.AndroidX.work}"

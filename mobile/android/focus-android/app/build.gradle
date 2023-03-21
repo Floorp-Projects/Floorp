@@ -226,7 +226,6 @@ dependencies {
     implementation FocusDependencies.androidx_recyclerview
     implementation FocusDependencies.androidx_savedstate
     implementation FocusDependencies.androidx_splashscreen
-    implementation FocusDependencies.androidx_tracing
     implementation FocusDependencies.androidx_transition
     implementation FocusDependencies.androidx_work_ktx
 
