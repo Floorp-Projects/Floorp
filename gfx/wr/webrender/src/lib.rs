@@ -181,7 +181,7 @@ pub use crate::internal_types::FastHashMap;
 pub use crate::screen_capture::{AsyncScreenshotHandle, RecordedFrameHandle};
 pub use crate::texture_cache::TextureCacheConfig;
 pub use api as webrender_api;
-pub use webrender_build::shader::ProgramSourceDigest;
+pub use webrender_build::shader::{ProgramSourceDigest, ShaderKind};
 pub use crate::picture::{TileDescriptor, TileId, InvalidationReason};
 pub use crate::picture::{PrimitiveCompareResult, CompareHelperResult};
 pub use crate::picture::{TileNode, TileNodeKind, TileOffset};
