@@ -216,6 +216,11 @@ void TRRService::SetDetectedTrrURI(const nsACString& aURI) {
     return;
   }
 
+  if (StaticPrefs::network_trr_use_ohttp()) {
+    LOG(("No autodetection when using OHTTP"));
+    return;
+  }
+
   mURISetByDetection = MaybeSetPrivateURI(aURI);
 }
 
@@ -360,7 +365,7 @@ nsresult TRRService::ReadPrefs(const char* name) {
   }
   if (!name || !strcmp(name, TRR_PREF("uri")) ||
       !strcmp(name, TRR_PREF("default_provider_uri")) ||
-      !strcmp(name, kRolloutURIPref)) {
+      !strcmp(name, kRolloutURIPref) || !strcmp(name, TRR_PREF("ohttp.uri"))) {
     OnTRRURIChange();
   }
   if (!name || !strcmp(name, TRR_PREF("credentials"))) {
