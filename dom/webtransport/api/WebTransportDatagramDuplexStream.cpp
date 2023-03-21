@@ -14,7 +14,7 @@ namespace mozilla::dom {
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebTransportDatagramDuplexStream, mGlobal,
                                       mReadable, mWritable, mWebTransport,
                                       mIncomingAlgorithms, mOutgoingAlgorithms)
-
+// mIncomingDatagramsQueue can't participate in a cycle
 NS_IMPL_CYCLE_COLLECTING_ADDREF(WebTransportDatagramDuplexStream)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(WebTransportDatagramDuplexStream)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebTransportDatagramDuplexStream)
