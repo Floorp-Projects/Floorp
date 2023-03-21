@@ -286,6 +286,10 @@ class ExternalEngineStateMachine final
   bool mHasEnoughVideo = false;
   bool mSentPlaybackEndedEvent = false;
   bool mHasReceivedFirstDecodedVideoFrame = false;
+
+  // Only used if setting CDM happens before the engine finishes initialization.
+  MozPromiseHolder<SetCDMPromise> mSetCDMProxyPromise;
+  MozPromiseRequestHolder<SetCDMPromise> mSetCDMProxyRequest;
 };
 
 class ExternalPlaybackEngine {

@@ -448,6 +448,9 @@ RefPtr<ShutdownPromise> ExternalEngineStateMachine::Shutdown() {
 
   mMetadataManager.Disconnect();
 
+  mSetCDMProxyPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_ABORT_ERR, __func__);
+  mSetCDMProxyRequest.DisconnectIfExists();
+
   mEngine->Shutdown();
 
   auto* state = mState.AsShutdownEngine();
@@ -1030,10 +1033,38 @@ void ExternalEngineStateMachine::UpdateSecondaryVideoContainer() {
 
 RefPtr<SetCDMPromise> ExternalEngineStateMachine::SetCDMProxy(
     CDMProxy* aProxy) {
+  if (mState.IsShutdownEngine()) {
+    return SetCDMPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+  }
+
+  if (mState.IsInitEngine() && mState.AsInitEngine()->mInitPromise) {
+    LOG("SetCDMProxy is called before init");
+    mState.AsInitEngine()->mInitPromise->Then(
+        OwnerThread(), __func__,
+        [self = RefPtr{this}, proxy = RefPtr{aProxy},
+         this](const GenericNonExclusivePromise::ResolveOrRejectValue& aVal) {
+          SetCDMProxy(proxy)
+              ->Then(OwnerThread(), __func__,
+                     [self = RefPtr{this},
+                      this](const SetCDMPromise::ResolveOrRejectValue& aVal) {
+                       mSetCDMProxyRequest.Complete();
+                       if (aVal.IsResolve()) {
+                         mSetCDMProxyPromise.Resolve(true, __func__);
+                       } else {
+                         mSetCDMProxyPromise.Reject(NS_ERROR_DOM_MEDIA_CDM_ERR,
+                                                    __func__);
+                       }
+                     })
+              ->Track(mSetCDMProxyRequest);
+        });
+    return mSetCDMProxyPromise.Ensure(__func__);
+  }
+
   // TODO : set CDM proxy again if we recreate the media engine after crash.
   LOG("SetCDMProxy=%p", aProxy);
   MOZ_DIAGNOSTIC_ASSERT(mEngine);
   if (!mEngine->SetCDMProxy(aProxy)) {
+    LOG("Failed to set CDM proxy on the engine");
     return SetCDMPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_CDM_ERR, __func__);
   }
   return MediaDecoderStateMachineBase::SetCDMProxy(aProxy);
