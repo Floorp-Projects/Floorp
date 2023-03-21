@@ -248,21 +248,9 @@ void IncomingDatagramStreamAlgorithms::NotifyDatagramAvailable() {
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(OutgoingDatagramStreamAlgorithms)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(
-    OutgoingDatagramStreamAlgorithms, UnderlyingSinkAlgorithmsWrapper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDatagrams)
-  for (const auto& entry : tmp->mWaitConnect) {
-    CycleCollectionNoteChild(cb, entry.mWaitConnectPromise.get(),
-                             "mWaitConnect promise");
-  }
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(
-    OutgoingDatagramStreamAlgorithms, UnderlyingSinkAlgorithmsWrapper)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDatagrams)
-  tmp->mWaitConnect.Clear();
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED(OutgoingDatagramStreamAlgorithms,
+                                   UnderlyingSinkAlgorithmsWrapper, mDatagrams,
+                                   mWaitConnectPromise)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(OutgoingDatagramStreamAlgorithms)
 NS_INTERFACE_MAP_END_INHERITING(UnderlyingSinkAlgorithmsWrapper)
@@ -338,8 +326,12 @@ already_AddRefed<Promise> OutgoingDatagramStreamAlgorithms::WriteCallback(
         });
   } else {
     LOG(("Queuing datagram for connect"));
-    // Queue locally until we can send it
-    mWaitConnect.EmplaceBack(new DatagramEntry(data, now), promise);
+    // Queue locally until we can send it.
+    // We should be guaranteed that we don't get called again until the
+    // promise is resolved.
+    MOZ_ASSERT(mWaitConnect == nullptr);
+    mWaitConnect.reset(new DatagramEntry(data, now));
+    mWaitConnectPromise = promise;
   }
 
   // Step 10: return promise
@@ -348,22 +340,21 @@ already_AddRefed<Promise> OutgoingDatagramStreamAlgorithms::WriteCallback(
 
 void OutgoingDatagramStreamAlgorithms::SetChild(WebTransportChild* aChild) {
   mChild = aChild;
-  LOG(("Sending %zu queued datagrams", mWaitConnect.Length()));
-  for (auto& datagramEntry : mWaitConnect) {
+  if (mWaitConnect) {
+    LOG(("Sending queued datagram"));
     mChild->SendOutgoingDatagram(
-        datagramEntry.mDatagram->mBuffer, datagramEntry.mDatagram->mTimeStamp,
-        [promise = datagramEntry.mWaitConnectPromise](nsresult&&) {
+        mWaitConnect->mBuffer, mWaitConnect->mTimeStamp,
+        [promise = mWaitConnectPromise](nsresult&&) {
           LOG_VERBOSE(("Early Datagram was sent"));
           promise->MaybeResolveWithUndefined();
         },
-        [promise = datagramEntry.mWaitConnectPromise](
-            mozilla::ipc::ResponseRejectReason&&) {
+        [promise = mWaitConnectPromise](mozilla::ipc::ResponseRejectReason&&) {
           LOG(("Early Datagram failed"));
           promise->MaybeResolveWithUndefined();
         });
-    datagramEntry.mWaitConnectPromise = nullptr;
+    mWaitConnectPromise = nullptr;
+    mWaitConnect.reset(nullptr);
   }
-  mWaitConnect.Clear();
 }
 
 }  // namespace mozilla::dom
