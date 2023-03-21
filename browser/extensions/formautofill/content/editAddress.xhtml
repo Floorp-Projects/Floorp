@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="chrome://formautofill/content/skin/editDialog.css"/>
   <script src="chrome://formautofill/content/editDialog.js"></script>
   <script src="chrome://formautofill/content/autofillEditForms.js"></script>
+  <script type="module" src="chrome://global/content/elements/moz-button-group.mjs"></script>
 </head>
 <body>
   <form id="form" class="editAddressForm" autocomplete="off">
@@ -77,8 +78,10 @@
   </form>
   <div id="controls-container">
     <span id="country-warning-message" data-l10n-id="autofill-country-warning-message"/>
-    <button id="cancel" data-l10n-id="autofill-cancel-button"/>
-    <button id="save" class="primary" data-l10n-id="autofill-save-button"/>
+    <moz-button-group>
+     <button id="cancel" data-l10n-id="autofill-cancel-button"/>
+     <button id="save" class="primary" data-l10n-id="autofill-save-button"/>
+    </moz-button-group>
   </div>
   <script><![CDATA[
     "use strict";
