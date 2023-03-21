@@ -25,7 +25,7 @@ class JOG {
    *
    * Locates the runtime metrics file and, if present, loads and processes it.
    *
-   * Only does any work at all if mozilla::IsDevelopmentBuild()
+   * Only does any work at all if !mozilla::IsPackagedBuild()
    *
    * **Note:** When this function does something, it is expensive, running
    * synchronous file I/O to ensure that the registration is complete when this
