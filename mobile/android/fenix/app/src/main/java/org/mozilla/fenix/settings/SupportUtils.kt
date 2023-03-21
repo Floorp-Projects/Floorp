@@ -42,7 +42,7 @@ object SupportUtils {
         PRIVATE_BROWSING_MYTHS("common-myths-about-private-browsing"),
         YOUR_RIGHTS("your-rights"),
         TRACKING_PROTECTION("tracking-protection-firefox-android"),
-        TOTAL_COOKIE_PROTECTION("enhanced-tracking-protection-android"),
+        TOTAL_COOKIE_PROTECTION("enhanced-tracking-protection-firefox-android"),
         WHATS_NEW("whats-new-firefox-preview"),
         OPT_OUT_STUDIES("how-opt-out-studies-firefox-android"),
         SEND_TABS("send-tab-preview"),
