@@ -756,6 +756,10 @@ richlistbox {
   min-height: 0;
 }
 
+richlistitem {
+  flex-shrink: 0;
+}
+
 /*********** findbar ************/
 findbar {
   overflow-x: hidden;
