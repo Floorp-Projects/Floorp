@@ -661,6 +661,11 @@ reader-view-enter-button =
 reader-view-close-button =
     .aria-label = Close Reader View
 
+## Picture-in-Picture urlbar button
+
+picture-in-picture-urlbar-button =
+ .tooltiptext = Toggle Picture-in-Picture
+
 ## Full Screen and Pointer Lock UI
 
 # Please ensure that the domain stays in the `<span data-l10n-name="domain">` markup.
