@@ -261,25 +261,16 @@ class ProviderQuickSuggest extends UrlbarProvider {
       // Show the result as a best match. Best match titles don't include the
       // `full_keyword`, and the user's search string is highlighted.
       payload.title = [suggestion.title, UrlbarUtils.HIGHLIGHT.TYPED];
-      payload.isBlockable =
-        lazy.UrlbarPrefs.get("bestMatchBlockingEnabled") ||
-        // For Nimbus, we enable blocking when the result menu is enabled. We
-        // don't do this in automation so we can test all pref combinations.
-        (lazy.UrlbarPrefs.get("resultMenu") && !Cu.isInAutomation);
     } else {
       // Show the result as a usual quick suggest. Include the `full_keyword`
       // and highlight the parts that aren't in the search string.
       payload.title = suggestion.title;
-      payload.isBlockable =
-        lazy.UrlbarPrefs.get("quickSuggestBlockingEnabled") ||
-        // For Nimbus, we enable blocking when the result menu is enabled. We
-        // don't do this in automation so we can test all pref combinations.
-        (lazy.UrlbarPrefs.get("resultMenu") && !Cu.isInAutomation);
       payload.qsSuggestion = [
         suggestion.full_keyword,
         UrlbarUtils.HIGHLIGHT.SUGGESTED,
       ];
     }
+    payload.isBlockable = this.#isBlockingEnabledForResult(isResultBestMatch);
 
     let result = new lazy.UrlbarResult(
       UrlbarUtils.RESULT_TYPE.URL,
@@ -339,6 +330,17 @@ class ProviderQuickSuggest extends UrlbarProvider {
     }
   }
 
+  #isBlockingEnabledForResult(isBestMatch) {
+    return (
+      lazy.UrlbarPrefs.get(
+        isBestMatch ? "bestMatchBlockingEnabled" : "quickSuggestBlockingEnabled"
+      ) ||
+      // For Nimbus, we enable blocking when the result menu is enabled. We
+      // don't do this in automation so we can test all pref combinations.
+      (lazy.UrlbarPrefs.get("resultMenu") && !Cu.isInAutomation)
+    );
+  }
+
   /**
    * Called when the result's block button is picked. If the provider can block
    * the result, it should do so and return true. If the provider cannot block
@@ -353,14 +355,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
    *   Whether the result was blocked.
    */
   blockResult(queryContext, result) {
-    if (
-      // For Nimbus, we enable blocking when the result menu is enabled. We
-      // don't do this in automation so we can test all pref combinations.
-      (lazy.UrlbarPrefs.get("resultMenu") && !Cu.isInAutomation) ||
-      (!result.isBestMatch &&
-        !lazy.UrlbarPrefs.get("quickSuggestBlockingEnabled")) ||
-      (result.isBestMatch && !lazy.UrlbarPrefs.get("bestMatchBlockingEnabled"))
-    ) {
+    if (!this.#isBlockingEnabledForResult(result.isBestMatch)) {
       this.logger.info("Blocking disabled, ignoring block");
       return false;
     }
