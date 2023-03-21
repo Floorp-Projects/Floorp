@@ -26,5 +26,3 @@ FINAL_LIBRARY = "xul"
 
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Application Update")
-
-REQUIRES_UNIFIED_BUILD = True
