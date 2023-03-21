@@ -26,8 +26,6 @@ if (!AppConstants.MOZ_WIDGET_GTK) {
 }
 const WINDOW_TYPE = "Toolkit:PictureInPicture";
 const PIP_ENABLED_PREF = "media.videocontrols.picture-in-picture.enabled";
-const PIP_URLBAR_BUTTON_PREF =
-  "media.videocontrols.picture-in-picture.urlbar-button.enabled";
 const TOGGLE_ENABLED_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.enabled";
 const TOGGLE_POSITION_PREF =
@@ -72,11 +70,6 @@ export class PictureInPictureToggleParent extends JSWindowActorParent {
         let win = browser.ownerGlobal;
         PictureInPicture.openToggleContextMenu(win, aMessage.data);
         break;
-      }
-      case "PictureInPicture:UpdateEligiblePipVideoCount": {
-        let { count } = aMessage.data;
-        PictureInPicture.updateEligiblePipVideoCount(browsingContext, count);
-        PictureInPicture.updateUrlbarToggle(browser);
       }
     }
   }
@@ -171,9 +164,6 @@ export var PictureInPicture = {
 
   // Maps an AppWindow to the number of PiP windows it has
   originatingWinWeakMap: new WeakMap(),
-
-  // Maps a WindowGlobal to count of eligible PiP videos
-  weakGlobalToEligiblePipCount: new WeakMap(),
 
   /**
    * Returns the player window if one exists and if it hasn't yet been closed.
@@ -381,125 +371,6 @@ export var PictureInPicture = {
   },
 
   /**
-   * Updates the count of eligible PiP videos for a respective WindowGlobal.
-   * @param {BrowsingContext} browsingContext The BrowsingContext with eligible videos
-   * @param {Number} count The number of eligible videos for the respective WindowGlobal
-   */
-  updateEligiblePipVideoCount(browsingContext, count) {
-    let windowGlobal = browsingContext.currentWindowGlobal;
-
-    if (windowGlobal) {
-      this.weakGlobalToEligiblePipCount.set(windowGlobal, count);
-    }
-  },
-
-  /**
-   * A generator function that yeilds a WindowGlobal and it's respective PiP count.
-   * @param {Browser} browser The selected browser
-   */
-  *windowGlobalPipCountGenerator(browser) {
-    let contextsToVisit = [browser.browsingContext];
-    while (contextsToVisit.length) {
-      let currentBC = contextsToVisit.pop();
-      let windowGlobal = currentBC.currentWindowGlobal;
-
-      if (!windowGlobal) {
-        continue;
-      }
-
-      let pipCountForGlobal =
-        this.weakGlobalToEligiblePipCount.get(windowGlobal) || 0;
-
-      contextsToVisit.push(...currentBC.children);
-
-      yield { windowGlobal, count: pipCountForGlobal };
-    }
-  },
-
-  /**
-   * Gets the total eligible video count for a given browser.
-   * @param {Browser} browser The selected browser
-   * @returns Total count of eligible PiP videos for the selected broser
-   */
-  getEligiblePipVideoCount(browser) {
-    let totalPipCount = 0;
-
-    for (let { count } of this.windowGlobalPipCountGenerator(browser)) {
-      totalPipCount += count;
-    }
-
-    return totalPipCount;
-  },
-
-  /**
-   * Toggles the visibility of the PiP urlbar button. If the total video count
-   * is 1, then we will show the button. Otherwise the button is hidden.
-   * @param {Browser} browser The selected browser
-   */
-  updateUrlbarToggle(browser) {
-    if (
-      !Services.prefs.getBoolPref(PIP_ENABLED_PREF, false) ||
-      !Services.prefs.getBoolPref(PIP_URLBAR_BUTTON_PREF)
-    ) {
-      return;
-    }
-
-    let win = browser.ownerGlobal;
-    if (win.closed || win.gBrowser?.selectedBrowser !== browser) {
-      return;
-    }
-
-    let totalPipCount = this.getEligiblePipVideoCount(browser);
-
-    let pipToggle = win.document.getElementById("picture-in-picture-button");
-    pipToggle.hidden = !(totalPipCount === 1);
-  },
-
-  /**
-   * Finds the correct WindowGlobal to open the eligible PiP video.
-   * @param {Event} event Event from clicking the PiP urlbar button
-   */
-  toggleUrlbar(event) {
-    let win = event.target.ownerGlobal;
-    let browser = win.gBrowser.selectedBrowser;
-
-    for (let { windowGlobal, count } of this.windowGlobalPipCountGenerator(
-      browser
-    )) {
-      if (count === 1) {
-        let actor = windowGlobal.getActor("PictureInPictureToggle");
-        actor.sendAsyncMessage("PictureInPicture:UrlbarToggle");
-        return;
-      }
-    }
-  },
-
-  /**
-   * Sets the PiP urlbar to an active state. This changes the icon in the
-   * urlbar button to the unpip icon.
-   * @param {Window} win The current Window
-   */
-  setUrlbarPipIconActive(win) {
-    let pipToggle = win.document.getElementById("picture-in-picture-button");
-    pipToggle.toggleAttribute("pipactive", true);
-  },
-
-  /**
-   * Sets the PiP urlbar to an inactive state. This changes the icon in the
-   * urlbar button to the open pip icon.
-   * @param {Window} pipWin The PiP window
-   */
-  setUrlbarPipIconInactive(pipWin) {
-    let browser = this.weakWinToBrowser.get(pipWin);
-    if (!browser) {
-      return;
-    }
-    let win = browser.ownerGlobal;
-    let pipToggle = win.document.getElementById("picture-in-picture-button");
-    pipToggle.toggleAttribute("pipactive", false);
-  },
-
-  /**
    * Remove attribute which enables pip icon in tab
    *
    * @param {Window} window
@@ -617,8 +488,6 @@ export var PictureInPicture = {
     let tab = parentWin.gBrowser.getTabForBrowser(browser);
     tab.setAttribute("pictureinpicture", true);
 
-    this.setUrlbarPipIconActive(parentWin);
-
     tab.addEventListener("TabSwapPictureInPicture", this);
 
     let pipId = gNextWindowID.toString();
@@ -698,7 +567,6 @@ export var PictureInPicture = {
     // Saves the location of the Picture in Picture window
     this.savePosition(window);
     this.clearPipTabIcon(window);
-    this.setUrlbarPipIconInactive(window);
   },
 
   /**
