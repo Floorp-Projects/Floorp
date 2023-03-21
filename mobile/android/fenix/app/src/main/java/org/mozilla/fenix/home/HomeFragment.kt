@@ -7,7 +7,6 @@ package org.mozilla.fenix.home
 import android.annotation.SuppressLint
 import android.content.res.ColorStateList
 import android.content.res.Configuration
-import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
@@ -23,7 +22,6 @@ import androidx.annotation.VisibleForTesting
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toDrawable
-import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -53,7 +51,6 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.searchEngines
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.menu.Orientation
 import mozilla.components.concept.menu.candidate.DrawableMenuIcon
 import mozilla.components.concept.menu.candidate.TextMenuCandidate
 import mozilla.components.concept.storage.FrecencyThresholdOption
@@ -113,6 +110,7 @@ import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
 import org.mozilla.fenix.home.sessioncontrol.SessionControlView
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionHeaderViewHolder
 import org.mozilla.fenix.home.toolbar.DefaultToolbarController
+import org.mozilla.fenix.home.toolbar.SearchSelectorBinding
 import org.mozilla.fenix.home.topsites.DefaultTopSitesView
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.onboarding.FenixOnboarding
@@ -212,6 +210,7 @@ class HomeFragment : Fragment() {
     private val recentSyncedTabFeature = ViewBoundFeatureWrapper<RecentSyncedTabFeature>()
     private val recentBookmarksFeature = ViewBoundFeatureWrapper<RecentBookmarksFeature>()
     private val historyMetadataFeature = ViewBoundFeatureWrapper<RecentVisitsFeature>()
+    private val searchSelectorBinding = ViewBoundFeatureWrapper<SearchSelectorBinding>()
 
     @VisibleForTesting
     internal var getMenuButton: () -> MenuButton? = { binding.menuButton }
@@ -361,27 +360,6 @@ class HomeFragment : Fragment() {
                 owner = viewLifecycleOwner,
                 view = binding.root,
             )
-        }
-
-        requireContext().settings().showUnifiedSearchFeature.let {
-            binding.searchSelectorButton.isVisible = it
-            binding.searchEngineIcon.isGone = it
-        }
-
-        binding.searchSelectorButton.apply {
-            setOnClickListener {
-                val orientation = if (context.settings().shouldUseBottomToolbar) {
-                    Orientation.UP
-                } else {
-                    Orientation.DOWN
-                }
-
-                UnifiedSearch.searchMenuTapped.record(NoExtras())
-                searchSelectorMenu.menuController.show(
-                    anchor = it.findViewById(R.id.search_selector),
-                    orientation = orientation,
-                )
-            }
         }
 
         _sessionControlInteractor = SessionControlInteractor(
@@ -557,7 +535,6 @@ class HomeFragment : Fragment() {
         HomeScreen.homeScreenDisplayed.record(NoExtras())
         HomeScreen.homeScreenViewCount.add()
 
-        observeSearchEngineChanges()
         observeSearchEngineNameChanges()
         observeWallpaperUpdates()
 
@@ -628,6 +605,17 @@ class HomeFragment : Fragment() {
             }
         }
 
+        searchSelectorBinding.set(
+            feature = SearchSelectorBinding(
+                context = view.context,
+                binding = binding,
+                browserStore = requireComponents.core.store,
+                searchSelectorMenu = searchSelectorMenu,
+            ),
+            owner = viewLifecycleOwner,
+            view = binding.root,
+        )
+
         consumeFlow(requireComponents.core.store) { flow ->
             flow.map { state -> state.search }
                 .ifChanged()
@@ -663,31 +651,6 @@ class HomeFragment : Fragment() {
             }
 
         searchSelectorMenu.menuController.submitList(searchSelectorMenu.menuItems(searchEngineList))
-    }
-
-    private fun observeSearchEngineChanges() {
-        consumeFlow(store) { flow ->
-            flow.map { state -> state.search.selectedOrDefaultSearchEngine }
-                .ifChanged()
-                .collect { searchEngine ->
-                    val name = searchEngine?.name
-                    val icon = searchEngine?.let {
-                        // Changing dimensions doesn't not affect the icon size, not sure what the
-                        // code is doing:  https://github.com/mozilla-mobile/fenix/issues/27763
-                        val iconSize =
-                            requireContext().resources.getDimensionPixelSize(R.dimen.preference_icon_drawable_size)
-                        BitmapDrawable(requireContext().resources, searchEngine.icon).apply {
-                            setBounds(0, 0, iconSize, iconSize)
-                        }
-                    }
-
-                    if (requireContext().settings().showUnifiedSearchFeature) {
-                        binding.searchSelectorButton.setIcon(icon, name)
-                    } else {
-                        binding.searchEngineIcon.setImageDrawable(icon)
-                    }
-                }
-        }
     }
 
     /**
