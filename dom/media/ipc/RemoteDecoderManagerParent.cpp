@@ -99,8 +99,10 @@ void RemoteDecoderManagerParent::ShutdownThreads() {
 void RemoteDecoderManagerParent::ShutdownVideoBridge() {
   if (sRemoteDecoderManagerParentThread) {
     RefPtr<Runnable> task = NS_NewRunnableFunction(
-        "RemoteDecoderManagerParent::ShutdownVideoBridge",
-        []() { VideoBridgeChild::Shutdown(); });
+        "RemoteDecoderManagerParent::ShutdownVideoBridge", []() {
+          VideoBridgeParent::Shutdown();
+          VideoBridgeChild::Shutdown();
+        });
     SyncRunnable::DispatchToThread(sRemoteDecoderManagerParentThread, task);
   }
 }

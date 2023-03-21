@@ -681,7 +681,7 @@ void GPUParent::ActorDestroy(ActorDestroyReason aWhy) {
           mVsyncBridge->Shutdown();
           mVsyncBridge = nullptr;
         }
-        VideoBridgeParent::Shutdown();
+        RemoteDecoderManagerParent::ShutdownVideoBridge();
         // This could be running on either the Compositor or the Renderer
         // thread.
         CanvasManagerParent::Shutdown();

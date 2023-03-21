@@ -24,7 +24,6 @@
 #include "mozilla/layers/WebRenderBridgeParent.h"
 #include "mozilla/layers/SharedSurfacesParent.h"
 #include "mozilla/layers/SurfacePool.h"
-#include "mozilla/layers/SynchronousTask.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/webrender/RendererOGL.h"
@@ -730,50 +729,6 @@ void RenderThread::UnregisterExternalImage(
         &RenderThread::DeferredRenderTextureHostDestroy));
   } else {
     mRenderTextures.erase(it);
-  }
-}
-
-void RenderThread::DestroyExternalImagesSyncWait(
-    const std::vector<wr::ExternalImageId>&& aIds) {
-  if (!IsInRenderThread()) {
-    layers::SynchronousTask task("Destroy external images");
-
-    RefPtr<Runnable> runnable = NS_NewRunnableFunction(
-        "RenderThread::DestroyExternalImagesSyncWait::Runnable",
-        [&task, ids = std::move(aIds)]() {
-          layers::AutoCompleteTask complete(&task);
-          RenderThread::Get()->DestroyExternalImages(std::move(ids));
-        });
-
-    PostRunnable(runnable.forget());
-    task.Wait();
-    return;
-  }
-  DestroyExternalImages(std::move(aIds));
-}
-
-void RenderThread::DestroyExternalImages(
-    const std::vector<wr::ExternalImageId>&& aIds) {
-  MOZ_ASSERT(IsInRenderThread());
-
-  std::vector<RefPtr<RenderTextureHost>> hosts;
-  {
-    MutexAutoLock lock(mRenderTextureMapLock);
-    if (mHasShutdown) {
-      return;
-    }
-
-    for (auto& id : aIds) {
-      auto it = mRenderTextures.find(id);
-      if (it == mRenderTextures.end()) {
-        continue;
-      }
-      hosts.emplace_back(it->second);
-    }
-  }
-
-  for (auto& host : hosts) {
-    host->Destroy();
   }
 }
 

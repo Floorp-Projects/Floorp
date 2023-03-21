@@ -405,7 +405,6 @@ void TextureHost::MaybeDestroyRenderTexture() {
   }
   // When TextureHost created RenderTextureHost, delete it here.
   TextureHost::DestroyRenderTexture(mExternalImageId.ref());
-  mExternalImageId = Nothing();
 }
 
 void TextureHost::DestroyRenderTexture(
