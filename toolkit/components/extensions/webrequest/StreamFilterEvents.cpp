@@ -30,8 +30,8 @@ NS_INTERFACE_MAP_END_INHERITING(Event)
 
 /* static */
 already_AddRefed<StreamFilterDataEvent> StreamFilterDataEvent::Constructor(
-    EventTarget* aEventTarget, const nsAString& aType,
-    const StreamFilterDataEventInit& aParam) {
+    dom::EventTarget* aEventTarget, const nsAString& aType,
+    const dom::StreamFilterDataEventInit& aParam) {
   RefPtr<StreamFilterDataEvent> event = new StreamFilterDataEvent(aEventTarget);
 
   bool trusted = event->Init(aEventTarget);
@@ -46,7 +46,7 @@ already_AddRefed<StreamFilterDataEvent> StreamFilterDataEvent::Constructor(
 
 JSObject* StreamFilterDataEvent::WrapObjectInternal(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
-  return StreamFilterDataEvent_Binding::Wrap(aCx, this, aGivenProto);
+  return dom::StreamFilterDataEvent_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 }  // namespace extensions
