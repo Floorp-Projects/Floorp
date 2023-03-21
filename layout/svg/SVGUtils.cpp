@@ -892,51 +892,6 @@ nsIFrame* SVGUtils::HitTestChildren(SVGDisplayContainerFrame* aFrame,
   return result;
 }
 
-void SVGUtils::HitTest(nsDisplayListBuilder* aBuilder,
-                       const nsPaintedDisplayItem* aDisplayItem,
-                       const nsRect& aRect, nsTArray<nsIFrame*>* aOutFrames) {
-  ISVGDisplayableFrame* svgFrame = do_QueryFrame(aDisplayItem->mFrame);
-  MOZ_ASSERT(svgFrame && FrameDoesNotIncludePositionInTM(aDisplayItem->mFrame),
-             "Unexpected frame type");
-
-  nsPoint pointRelativeToReferenceFrame = aRect.Center();
-  // ToReferenceFrame() includes mFrame->GetPosition(), our user
-  // space position.
-  nsPoint userSpacePtInAppUnits =
-      pointRelativeToReferenceFrame -
-      (aDisplayItem->ToReferenceFrame() - aDisplayItem->mFrame->GetPosition());
-  gfxPoint userSpacePt =
-      gfxPoint(userSpacePtInAppUnits.x, userSpacePtInAppUnits.y) /
-      AppUnitsPerCSSPixel();
-  if (auto* target = svgFrame->GetFrameForPoint(userSpacePt)) {
-    aOutFrames->AppendElement(target);
-  }
-}
-
-void SVGUtils::Paint(nsDisplayListBuilder* aBuilder,
-                     const nsPaintedDisplayItem* aDisplayItem,
-                     gfxContext* aCtx) {
-  ISVGDisplayableFrame* svgFrame = do_QueryFrame(aDisplayItem->mFrame);
-  MOZ_ASSERT(svgFrame && FrameDoesNotIncludePositionInTM(aDisplayItem->mFrame),
-             "Unexpected frame type");
-  uint32_t appUnitsPerDevPixel =
-      aDisplayItem->mFrame->PresContext()->AppUnitsPerDevPixel();
-
-  // ToReferenceFrame() includes our mRect offset, but painting takes
-  // account of that too. To avoid double counting, we subtract that
-  // here.
-  nsPoint offset =
-      aDisplayItem->ToReferenceFrame() - aDisplayItem->mFrame->GetPosition();
-
-  gfxPoint devPixelOffset =
-      nsLayoutUtils::PointToGfxPoint(offset, appUnitsPerDevPixel);
-
-  gfxMatrix tm = SVGUtils::GetCSSPxToDevPxMatrix(aDisplayItem->mFrame) *
-                 gfxMatrix::Translation(devPixelOffset);
-  imgDrawingParams imgParams(aBuilder->GetImageDecodeFlags());
-  svgFrame->PaintSVG(*aCtx, tm, imgParams);
-}
-
 nsRect SVGUtils::TransformFrameRectToOuterSVG(const nsRect& aRect,
                                               const gfxMatrix& aMatrix,
                                               nsPresContext* aPresContext) {
