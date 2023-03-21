@@ -17,7 +17,7 @@ add_task(async function() {
   const root = createRootMessageHandler("session-id-event");
 
   info("Add some session data for the command module");
-  await root.addSessionData({
+  await root.addSessionDataItem({
     moduleName: "command",
     category: "testCategory",
     contextDescriptor: contextDescriptorAll,

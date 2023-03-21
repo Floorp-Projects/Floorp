@@ -132,7 +132,7 @@ class ScriptModule extends Module {
 
     this.#preloadScriptMap.set(script, preloadScript);
 
-    await this.messageHandler.addSessionData({
+    await this.messageHandler.addSessionDataItem({
       category: "preload-script",
       moduleName: "script",
       values: [
@@ -526,7 +526,7 @@ class ScriptModule extends Module {
 
     const preloadScript = this.#preloadScriptMap.get(script);
 
-    await this.messageHandler.removeSessionData({
+    await this.messageHandler.removeSessionDataItem({
       category: "preload-script",
       moduleName: "script",
       values: [

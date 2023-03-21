@@ -82,7 +82,7 @@ export class RootMessageHandler extends MessageHandler {
    * RootMessageHandler and propagates the information via a command to existing
    * MessageHandlers.
    */
-  addSessionData(sessionData = {}) {
+  addSessionDataItem(sessionData = {}) {
     sessionData.method = lazy.SessionDataMethod.Add;
     return this.updateSessionData([sessionData]);
   }
@@ -136,7 +136,7 @@ export class RootMessageHandler extends MessageHandler {
    * RootMessageHandler and propagates the information via a command to existing
    * MessageHandlers.
    */
-  removeSessionData(sessionData = {}) {
+  removeSessionDataItem(sessionData = {}) {
     sessionData.method = lazy.SessionDataMethod.Remove;
     return this.updateSessionData([sessionData]);
   }

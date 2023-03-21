@@ -42,7 +42,7 @@ add_task(async function test_session_data_broadcast() {
   root.on("message-handler-event", onRootEvent);
 
   info("Add a new session data item, expect one return value");
-  await root.addSessionData({
+  await root.addSessionDataItem({
     moduleName: "command",
     category: "browser_session_data_browser_element",
     contextDescriptor: {
