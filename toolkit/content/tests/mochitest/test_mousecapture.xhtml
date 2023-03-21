@@ -25,6 +25,16 @@ var cachedMouseDown = null;
 var previousWidth = 0, originalWidth = 0;
 var loadInWindow = false;
 
+/**
+ * We'll make sure to suppress any dragstart events and prevent them
+ * from reaching the widget layer to avoid this assertion:
+ * https://searchfox.org/mozilla-central/rev/47aea2f603cc18144afcedbd604a418f11e90f9b/widget/nsBaseDragService.cpp#341-355
+ */
+addEventListener("dragstart", e => {
+  e.preventDefault();
+  e.stopPropagation();
+});
+
 function splitterCallback(adjustment) {
   var newWidth = parseInt($("leftbox").style.width); // getBoundingClientRect().width;
   var expectedWidth = previousWidth + adjustment;
