@@ -11,9 +11,15 @@ packages = [
     "core-foundation-sys",
     "core-graphics",
     "gl_generator",
+    # Internal dependencies of glsl-lang (only used in wrench) require different versions.
+    "hashbrown",
     # glsl requires 5.1, and xcursor (required by winit) requires 7.1.
     # when a version of glsl depending on 7.1 is published we can update.
     "nom",
+    # glsl-lang requires 0.12.1, and glutin requires 0.11.2
+    "parking_lot",
+    "parking_lot_core",
+    "rand",
     "rand_core",
     # Can be fixed by removing time dependency - see bug 1765324
     "wasi",
