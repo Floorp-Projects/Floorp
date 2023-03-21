@@ -615,7 +615,6 @@ class gfxTextRun : public gfxShapedText {
                    uint32_t aUTF16Offset, bool aForceNewRun,
                    mozilla::gfx::ShapedTextFlags aOrientation, bool aIsCJK);
   void ResetGlyphRuns() { mGlyphRuns.Clear(); }
-  void SortGlyphRuns();
   void SanitizeGlyphRuns();
 
   const CompressedGlyph* GetCharacterGlyphs() const final {
