@@ -4,95 +4,106 @@
 
 // This testing component is used in test_vacuum* tests.
 
-/**
- * Returns a new nsIFile reference for a profile database.
- * @param filename for the database, excluded the .sqlite extension.
- */
-function new_db_file(name) {
-  let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
-  file.append(name + ".sqlite");
-  return file;
-}
+const CAT_NAME = "vacuum-participant";
+const CONTRACT_ID = "@unit.test.com/test-vacuum-participant;1";
 
-/**
- * Opens and returns a connection to the provided database file.
- * @param nsIFile interface to the database file.
- */
-function getDatabase(aFile) {
-  return Services.storage.openDatabase(aFile);
-}
+import { MockRegistrar } from "resource://testing-common/MockRegistrar.sys.mjs";
+import { TestUtils } from "resource://testing-common/TestUtils.sys.mjs";
 
-export function VacuumParticipant() {
-  this._dbConn = getDatabase(new_db_file("testVacuum"));
-  Services.obs.addObserver(this, "test-options");
-}
+export class VacuumParticipant {
+  #dbConn;
+  #expectedPageSize = 0;
+  #useIncrementalVacuum = false;
+  #grant = false;
 
-VacuumParticipant.prototype = {
+  /**
+   * Build a VacuumParticipant instance.
+   * Note: After creation you must await instance.promiseRegistered() to ensure
+   * Category Caches have been updated.
+   *
+   * @param {mozIStorageAsyncConnection} databaseConnection
+   *   The connection to be vacuumed.
+   * @param {Number} [expectedPageSize]
+   *   Used to change the database page size.
+   * @param {boolean} [useIncrementalVacuum]
+   *   Whether to enable incremental vacuum on the database.
+   * @param {boolean} [grant]
+   *   Whether the vacuum operation should be granted.
+   */
+  constructor(
+    databaseConnection,
+    { expectedPageSize = 0, useIncrementalVacuum = false, grant = true } = {}
+  ) {
+    this.#dbConn = databaseConnection;
+
+    // Register as the only participant.
+    this.#unregisterAllParticipants();
+    this.#registerAsParticipant();
+
+    this.#expectedPageSize = expectedPageSize;
+    this.#useIncrementalVacuum = useIncrementalVacuum;
+    this.#grant = grant;
+
+    this.QueryInterface = ChromeUtils.generateQI([
+      "mozIStorageVacuumParticipant",
+    ]);
+  }
+
+  promiseRegistered() {
+    // The category manager dispatches change notifications to the main thread,
+    // so we must wait one tick.
+    return TestUtils.waitForTick();
+  }
+
+  #registerAsParticipant() {
+    MockRegistrar.register(CONTRACT_ID, this);
+    Services.catMan.addCategoryEntry(
+      CAT_NAME,
+      "vacuumParticipant",
+      CONTRACT_ID,
+      false,
+      false
+    );
+  }
+
+  #unregisterAllParticipants() {
+    // First unregister other participants.
+    for (let { data: entry } of Services.catMan.enumerateCategory(CAT_NAME)) {
+      Services.catMan.deleteCategoryEntry("vacuum-participant", entry, false);
+    }
+  }
+
+  async dispose() {
+    this.#unregisterAllParticipants();
+    MockRegistrar.unregister(CONTRACT_ID);
+    await new Promise(resolve => {
+      this.#dbConn.asyncClose(resolve);
+    });
+  }
+
   get expectedDatabasePageSize() {
-    return this._dbConn.defaultPageSize;
-  },
-  get databaseConnection() {
-    return this._dbConn;
-  },
+    return this.#expectedPageSize;
+  }
 
-  _grant: true,
-  onBeginVacuum: function TVP_onBeginVacuum() {
-    if (!this._grant) {
-      this._grant = true;
+  get useIncrementalVacuum() {
+    return this.#useIncrementalVacuum;
+  }
+
+  get databaseConnection() {
+    return this.#dbConn;
+  }
+
+  onBeginVacuum() {
+    if (!this.#grant) {
       return false;
     }
     Services.obs.notifyObservers(null, "test-begin-vacuum");
     return true;
-  },
-  onEndVacuum: function TVP_EndVacuum(aSucceeded) {
-    if (this._stmt) {
-      this._stmt.finalize();
-    }
-    Services.obs.notifyObservers(null, "test-end-vacuum", aSucceeded);
-  },
-
-  observe: function TVP_observe(aSubject, aTopic, aData) {
-    if (aData == "opt-out") {
-      this._grant = false;
-    } else if (aData == "wal") {
-      try {
-        this._dbConn.close();
-      } catch (e) {
-        // Do nothing.
-      }
-      this._dbConn = getDatabase(new_db_file("testVacuum2"));
-    } else if (aData == "wal-fail") {
-      try {
-        this._dbConn.close();
-      } catch (e) {
-        // Do nothing.
-      }
-      this._dbConn = getDatabase(new_db_file("testVacuum3"));
-      // Use WAL journal mode.
-      this._dbConn.executeSimpleSQL("PRAGMA journal_mode = WAL");
-      // Create a not finalized statement.
-      this._stmt = this._dbConn.createStatement("SELECT :test");
-      this._stmt.params.test = 1;
-      this._stmt.executeStep();
-    } else if (aData == "memory") {
-      try {
-        this._dbConn.asyncClose();
-      } catch (e) {
-        // Do nothing.
-      }
-      this._dbConn = Services.storage.openSpecialDatabase("memory");
-    } else if (aData == "dispose") {
-      Services.obs.removeObserver(this, "test-options");
-      try {
-        this._dbConn.asyncClose();
-      } catch (e) {
-        // Do nothing.
-      }
-    }
-  },
-
-  QueryInterface: ChromeUtils.generateQI([
-    "mozIStorageVacuumParticipant",
-    "nsIObserver",
-  ]),
-};
+  }
+  onEndVacuum(succeeded) {
+    Services.obs.notifyObservers(
+      null,
+      succeeded ? "test-end-vacuum-success" : "test-end-vacuum-failure"
+    );
+  }
+}
