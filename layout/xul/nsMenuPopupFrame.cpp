@@ -2170,6 +2170,7 @@ void nsMenuPopupFrame::MoveTo(const CSSPoint& aPos, bool aUpdateAttrs,
     // appUnitsPos.
     mPopupAlignment = POPUPALIGNMENT_TOPLEFT;
     mPopupAnchor = POPUPALIGNMENT_BOTTOMLEFT;
+    mXPos = mYPos = 0;
   } else {
     mAnchorType = MenuPopupAnchorType_Point;
   }
