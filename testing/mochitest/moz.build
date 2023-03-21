@@ -210,6 +210,25 @@ TEST_HARNESS_FILES.testing.mochitest.websocketprocessbridge += [
     "/testing/tools/websocketprocessbridge/websocketprocessbridge_requirements_3.txt",
 ]
 
+TEST_HARNESS_FILES.testing.mochitest.DoHServer.dns_packet += [
+    "../xpcshell/dns-packet/classes.js",
+    "../xpcshell/dns-packet/index.js",
+    "../xpcshell/dns-packet/opcodes.js",
+    "../xpcshell/dns-packet/optioncodes.js",
+    "../xpcshell/dns-packet/package.json",
+    "../xpcshell/dns-packet/rcodes.js",
+    "../xpcshell/dns-packet/test.js",
+    "../xpcshell/dns-packet/types.js",
+]
+
+TEST_HARNESS_FILES.testing.mochitest.DoHServer.node_ip += [
+    "../xpcshell/node_ip/package.json",
+]
+
+TEST_HARNESS_FILES.testing.mochitest.DoHServer.node_ip.lib += [
+    "../xpcshell/node_ip/lib/ip.js",
+]
+
 with Files("**"):
     BUG_COMPONENT = ("Testing", "Mochitest")
     SCHEDULES.exclusive = ["mochitest"]
