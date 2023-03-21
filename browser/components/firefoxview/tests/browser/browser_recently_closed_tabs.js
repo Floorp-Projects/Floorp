@@ -6,10 +6,8 @@
 /**
  * The recently closed tab list is populated on a per-window basis.
  *
- * By default, the withFirefoxView helper opens a new window.
- * When using this helper for the tests in this file, we pass a
- * { win: window } option to skip that step and open fx view in
- * the current window. This ensures that the add_new_tab, close_tab,
+ * By default, the withFirefoxView helper opens fx view in the current window.
+ * This ensures that the add_new_tab, close_tab,
  * and open_then_close functions are creating sessionstore entries
  * associated with the correct window where the tests are run.
  */
@@ -55,7 +53,7 @@ async function dismiss_tab(tab, content) {
 add_task(async function test_empty_list() {
   clearHistory();
 
-  await withFirefoxView({ win: window }, async browser => {
+  await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
     let container = document.querySelector("#collapsible-tabs-container");
     ok(
@@ -133,7 +131,7 @@ add_task(async function test_list_ordering() {
   await close_tab(tab1);
   await closedObjectsChanged();
 
-  await withFirefoxView({ win: window }, async browser => {
+  await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
     const tabsList = document.querySelector("ol.closed-tabs-list");
     await BrowserTestUtils.waitForMutationCondition(
@@ -236,7 +234,7 @@ add_task(async function test_max_list_items() {
   // above.
   let mockMaxTabsLength = 3;
 
-  await withFirefoxView({ win: window }, async browser => {
+  await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
 
     // override this value for testing purposes
@@ -332,43 +330,39 @@ add_task(async function test_time_updates_correctly() {
     "Closed tab count after setting browser state"
   );
 
-  await withFirefoxView(
-    {
-      win: window,
-    },
-    async browser => {
-      const { document } = browser.contentWindow;
-      const numOfListItems = document.querySelector("ol.closed-tabs-list")
-        .children.length;
-      const lastListItem = document.querySelector("ol.closed-tabs-list")
-        .children[numOfListItems - 1];
-      const timeLabel = lastListItem.querySelector("span.closed-tab-li-time");
-      let initialTimeText = timeLabel.textContent;
-      Assert.stringContains(
-        initialTimeText,
-        "Just now",
-        "recently-closed-tabs list item time is 'Just now'"
-      );
+  await withFirefoxView({}, async browser => {
+    const { document } = browser.contentWindow;
+    const numOfListItems = document.querySelector("ol.closed-tabs-list")
+      .children.length;
+    const lastListItem = document.querySelector("ol.closed-tabs-list").children[
+      numOfListItems - 1
+    ];
+    const timeLabel = lastListItem.querySelector("span.closed-tab-li-time");
+    let initialTimeText = timeLabel.textContent;
+    Assert.stringContains(
+      initialTimeText,
+      "Just now",
+      "recently-closed-tabs list item time is 'Just now'"
+    );
 
-      await SpecialPowers.pushPrefEnv({
-        set: [["browser.tabs.firefox-view.updateTimeMs", TAB_UPDATE_TIME_MS]],
-      });
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.tabs.firefox-view.updateTimeMs", TAB_UPDATE_TIME_MS]],
+    });
 
-      await BrowserTestUtils.waitForMutationCondition(
-        timeLabel,
-        { childList: true },
-        () => !timeLabel.textContent.includes("now")
-      );
+    await BrowserTestUtils.waitForMutationCondition(
+      timeLabel,
+      { childList: true },
+      () => !timeLabel.textContent.includes("now")
+    );
 
-      isnot(
-        timeLabel.textContent,
-        initialTimeText,
-        "recently-closed-tabs list item time has updated"
-      );
+    isnot(
+      timeLabel.textContent,
+      initialTimeText,
+      "recently-closed-tabs list item time has updated"
+    );
 
-      await SpecialPowers.popPrefEnv();
-    }
-  );
+    await SpecialPowers.popPrefEnv();
+  });
   // Cleanup recently closed tab data.
   clearHistory();
 });
@@ -393,7 +387,7 @@ add_task(async function test_list_maintains_focus_when_restoring_tab() {
   await open_then_close(URLs[1]);
   await open_then_close(URLs[2]);
 
-  await withFirefoxView({ win: window }, async browser => {
+  await withFirefoxView({}, async browser => {
     let gBrowser = browser.getTabBrowser();
     const { document } = browser.contentWindow;
     const list = document.querySelectorAll(".closed-tab-li");
@@ -414,7 +408,7 @@ add_task(async function test_list_maintains_focus_when_restoring_tab() {
 
   clearHistory();
   await open_then_close(URLs[2]);
-  await withFirefoxView({ win: window }, async browser => {
+  await withFirefoxView({}, async browser => {
     let gBrowser = browser.getTabBrowser();
     const { document } = browser.contentWindow;
     let expectedFocusedElement = document.getElementById(
@@ -443,7 +437,7 @@ add_task(async function test_switch_before_closing() {
 
   const INITIAL_URL = "https://example.org/iwilldisappear";
   const FINAL_URL = "https://example.com/ishouldappear";
-  await withFirefoxView({ win: window }, async function(browser) {
+  await withFirefoxView({}, async function(browser) {
     let gBrowser = browser.getTabBrowser();
     let newTab = await BrowserTestUtils.openNewForegroundTab(
       gBrowser,
@@ -496,7 +490,7 @@ add_task(async function test_alt_click_no_launch() {
 
   await open_then_close(URLs[0]);
 
-  await withFirefoxView({ win: window }, async browser => {
+  await withFirefoxView({}, async browser => {
     let gBrowser = browser.getTabBrowser();
     let originalTabsLength = gBrowser.tabs.length;
     await BrowserTestUtils.synthesizeMouseAtCenter(
@@ -662,7 +656,7 @@ add_task(async function test_dismiss_tab() {
   );
   await clearAllParentTelemetryEvents();
 
-  await withFirefoxView({ win: window }, async browser => {
+  await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
 
     const closedObjectsChanged = () =>
@@ -801,7 +795,7 @@ add_task(async function test_button_role() {
     "Closed tab count after purging session history"
   );
 
-  await withFirefoxView({ win: window }, async browser => {
+  await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
 
     clearHistory();

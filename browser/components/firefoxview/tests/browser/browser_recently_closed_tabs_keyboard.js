@@ -75,7 +75,7 @@ add_task(async function test_keyboard_navigation() {
   setupCompleteStub.returns(true);
   await open_then_close(URLs[0]);
 
-  await withFirefoxView({ win: window }, async browser => {
+  await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
     const list = document.querySelectorAll(".closed-tab-li");
     let summary = document.getElementById(
@@ -109,7 +109,7 @@ add_task(async function test_keyboard_navigation() {
   await open_then_close(URLs[0]);
   await open_then_close(URLs[1]);
 
-  await withFirefoxView({ win: window }, async browser => {
+  await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
     const list = document.querySelectorAll(".closed-tab-li");
     let summary = document.getElementById(
@@ -158,7 +158,7 @@ add_task(async function test_keyboard_navigation() {
   await open_then_close(URLs[1]);
   await open_then_close(URLs[2]);
 
-  await withFirefoxView({ win: window }, async browser => {
+  await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
     const list = document.querySelectorAll(".closed-tab-li");
     let summary = document.getElementById(
@@ -211,7 +211,7 @@ add_task(async function test_dismiss_tab_keyboard() {
     0,
     "Closed tab count after purging session history"
   );
-  await withFirefoxView({ win: window }, async browser => {
+  await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
 
     await open_then_close(URLs[0]);

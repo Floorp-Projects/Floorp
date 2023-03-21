@@ -94,7 +94,7 @@ add_task(async function aria_attributes() {
 });
 
 add_task(async function load_opens_new_tab() {
-  await withFirefoxView({}, async browser => {
+  await withFirefoxView({ openNewWindow: true }, async browser => {
     let win = browser.ownerGlobal;
     ok(win.FirefoxViewHandler.tab.selected, "Firefox View tab is selected");
     win.gURLBar.focus();
@@ -117,7 +117,7 @@ add_task(async function load_opens_new_tab() {
 });
 
 add_task(async function homepage_new_tab() {
-  await withFirefoxView({}, async browser => {
+  await withFirefoxView({ openNewWindow: true }, async browser => {
     let win = browser.ownerGlobal;
     ok(win.FirefoxViewHandler.tab.selected, "Firefox View tab is selected");
     let newTabOpened = BrowserTestUtils.waitForEvent(
@@ -265,7 +265,7 @@ add_task(async function testFirstTabFocusableWhenFxViewOpen() {
 
 // Test that Firefox View tab is not multiselectable
 add_task(async function testFxViewNotMultiselect() {
-  await withFirefoxView({ win: window }, async browser => {
+  await withFirefoxView({}, async browser => {
     let win = browser.ownerGlobal;
     Assert.ok(
       win.FirefoxViewHandler.tab.selected,
