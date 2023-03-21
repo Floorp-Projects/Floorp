@@ -9,6 +9,7 @@ kind-dependencies:
     - build-signing
     - repackage-signing-shippable-l10n-msix
     - repackage-signing-msix
+    - repackage-signing
     - repackage
     - fetch
     - toolchain

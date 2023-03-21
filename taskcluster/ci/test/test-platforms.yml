@@ -193,7 +193,10 @@ windows10-64-shippable-qr/opt:
 # win10-64 2004
 windows10-64-2004-qr/debug:
     build-platform: win64/debug
-    build-signing-label: build-signing-win64/debug
+    build-signing-label:
+        by-variant:
+            msix: repackage-signing-msix-win64/debug
+            default: build-signing-win64/debug
     test-sets:
         - windows10-2004-tests
 
@@ -227,7 +230,10 @@ windows11-64-2009-ccov-qr/opt:
 
 windows11-64-2009-qr/debug:
     build-platform: win64/debug
-    build-signing-label: build-signing-win64/debug
+    build-signing-label:
+        by-variant:
+            msix: repackage-signing-msix-win64/debug
+            default: build-signing-win64/debug
     test-sets:
         - web-platform-tests
         - windows11-2009-tests
