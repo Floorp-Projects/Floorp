@@ -6440,7 +6440,26 @@ first_session:
     metadata:
       tags:
         - Performance
-
+  adjust_attribution_time:
+    type: timing_distribution
+    time_unit: millisecond
+    send_in_pings:
+      - first-session
+    description: >
+      The time that it takes to derive the attribution parameters by
+      the Adjust SDK.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1823492
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/1341#pullrequestreview-1354835757
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 124
+    metadata:
+      tags:
+        - Performance
 browser.search:
   with_ads:
     type: labeled_counter
