@@ -97,7 +97,7 @@ SimpleTest.waitForExplicitFinish();
 // we might end up at the bottom of the page.
 pushPrefs([["general.smoothScroll", false],
            ["mousewheel.transaction.timeout", 100000],
-           ["dom.event.wheel-event-groups", true]])
+           ["dom.event.wheel-event-groups.enabled", true]])
 .then(waitUntilApzStable)
 .then(test)
 .then(SimpleTest.finish, SimpleTest.finishWithFailure);
