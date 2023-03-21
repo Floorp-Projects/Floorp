@@ -1466,6 +1466,7 @@ var gUnifiedExtensions = {
       } else {
         panel.hidden = false;
         PanelMultiView.openPopup(panel, this._button, {
+          position: "bottomright topright",
           triggerEvent: aEvent,
         });
       }
