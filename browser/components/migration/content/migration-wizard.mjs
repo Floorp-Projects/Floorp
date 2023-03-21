@@ -266,6 +266,10 @@ export class MigrationWizard extends HTMLElement {
         "Could not find a <panel-list> under the MigrationWizard during initialization."
       );
     }
+    this.#browserProfileSelectorList.toggleAttribute(
+      "min-width-from-anchor",
+      true
+    );
     this.#browserProfileSelectorList.addEventListener("click", this);
   }
 
