@@ -18,6 +18,7 @@
 #include "nsICloneableInputStream.h"
 #include "nsIInputStreamLength.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/RecursiveMutex.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -41,6 +42,8 @@ class nsBufferedStream : public nsISeekableStream {
 
   uint32_t mBufferSize{0};
   char* mBuffer{nullptr};
+
+  mozilla::RecursiveMutex mBufferMutex{"nsBufferedStream::mBufferMutex"};
 
   // mBufferStartOffset is the offset relative to the start of mStream.
   int64_t mBufferStartOffset{0};
