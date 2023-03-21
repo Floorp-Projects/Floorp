@@ -11,6 +11,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "js/TypeDecls.h"
+
 // clang-format off
 /*
  * [SMDOC] Bytecode Definitions
@@ -1511,7 +1513,8 @@
      * except by `JSOp::InitElemArray` and `JSOp::InitElemInc`.
      *
      * `index` must be an integer, `0 <= index <= INT32_MAX`. If `index` is
-     * `INT32_MAX`, this throws a RangeError.
+     * `INT32_MAX`, this throws a RangeError. Unlike `InitElemArray`, it is not
+     * necessary that the `array` length > `index`.
      *
      * This instruction is used when an array literal contains a
      * *SpreadElement*. In `[a, ...b, c]`, `InitElemArray 0` is used to put
@@ -1892,16 +1895,10 @@
     /*
      * Push the call site object for a tagged template call.
      *
-     * `script->getObject(objectIndex)` is the call site object;
-     * `script->getObject(objectIndex + 1)` is the raw object.
+     * `script->getObject(objectIndex)` is the call site object.
      *
-     * The first time this instruction runs for a given template, it assembles
-     * the final value, defining the `.raw` property on the call site object
-     * and freezing both objects.
-     *
-     * Implements: [GetTemplateObject][1], steps 4 and 12-16.
-     *
-     * [1]: https://tc39.es/ecma262/#sec-gettemplateobject
+     * The call site object will already have the `.raw` property defined on it
+     * and will be frozen.
      *
      *   Category: Functions
      *   Type: Calls
@@ -3164,10 +3161,10 @@
      *
      *   Category: Variables and scopes
      *   Type: Entering and leaving environments
-     *   Operands:
+     *   Operands: uint32_t lexicalScopeIndex
      *   Stack: =>
      */ \
-    MACRO(RecreateLexicalEnv, recreate_lexical_env, NULL, 1, 0, 0, JOF_BYTE) \
+    MACRO(RecreateLexicalEnv, recreate_lexical_env, NULL, 5, 0, 0, JOF_SCOPE) \
     /*
      * Like `JSOp::RecreateLexicalEnv`, but the values of all the bindings are
      * copied from the old block to the new one. This is used for C-style
@@ -3175,10 +3172,10 @@
      *
      *   Category: Variables and scopes
      *   Type: Entering and leaving environments
-     *   Operands:
+     *   Operands: uint32_t lexicalScopeIndex
      *   Stack: =>
      */ \
-    MACRO(FreshenLexicalEnv, freshen_lexical_env, NULL, 1, 0, 0, JOF_BYTE) \
+    MACRO(FreshenLexicalEnv, freshen_lexical_env, NULL, 5, 0, 0, JOF_SCOPE) \
     /*
      * Push a ClassBody environment onto the environment chain.
      *
