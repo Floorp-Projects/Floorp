@@ -392,15 +392,17 @@ mozilla::ipc::IPCResult MFMediaEngineParent::RecvNotifyMediaInfo(
       SUCCEEDED(mMediaEngine->SetSource(SysAllocString(L"MFRendererSrc"))),
       IPC_OK());
 
-  LOG("Finished setup our custom media source to the media engine");
-  ENGINE_MARKER_TEXT(
-      "MFMediaEngineParent,FinishedSetupMediaSource",
-      nsPrintfCString(
-          "audio=%s, video=%s",
-          aInfo.audioInfo() ? aInfo.audioInfo()->mMimeType.BeginReading()
-                            : "none",
-          aInfo.videoInfo() ? aInfo.videoInfo()->mMimeType.BeginReading()
-                            : "none"));
+  nsPrintfCString message(
+      "Finished setup our custom media source to the media engine, audio=%s, "
+      "video=%s, encrypted-audio=%s, encrypted-video=%s",
+      aInfo.audioInfo() ? aInfo.audioInfo()->mMimeType.BeginReading() : "none",
+      aInfo.videoInfo() ? aInfo.videoInfo()->mMimeType.BeginReading() : "none",
+      aInfo.audioInfo() && aInfo.audioInfo()->mCrypto.IsEncrypted() ? "yes"
+                                                                    : "no",
+      aInfo.videoInfo() && aInfo.videoInfo()->mCrypto.IsEncrypted() ? "yes"
+                                                                    : "no");
+  LOG("%s", message.get());
+  ENGINE_MARKER_TEXT("MFMediaEngineParent,FinishedSetupMediaSource", message);
   mRequestSampleListener = mMediaSource->RequestSampleEvent().Connect(
       mManagerThread, this, &MFMediaEngineParent::HandleRequestSample);
 

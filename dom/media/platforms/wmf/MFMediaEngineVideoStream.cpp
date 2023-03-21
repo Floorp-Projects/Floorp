@@ -175,11 +175,11 @@ HRESULT MFMediaEngineVideoStream::CreateMediaType(const TrackInfo& aInfo,
 
   LOGV(
       "Created video type, subtype=%s, image=[%ux%u], display=[%ux%u], "
-      "rotation=%s, tranFuns=%s, primaries=%s",
+      "rotation=%s, tranFuns=%s, primaries=%s, encrypted=%d",
       GUIDToStr(subType), imageWidth, imageHeight, displayWidth, displayHeight,
       MFVideoRotationFormatToStr(rotation),
       MFVideoTransferFunctionToStr(transFunc),
-      MFVideoPrimariesToStr(videoPrimaries));
+      MFVideoPrimariesToStr(videoPrimaries), mIsEncrypted);
   *aMediaType = mediaType.Detach();
   return S_OK;
 }
