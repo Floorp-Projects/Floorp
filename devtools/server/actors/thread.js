@@ -2178,8 +2178,12 @@ class ThreadActor extends Actor {
         const text = script.innerText;
         for (const offset of scriptStartOffsets) {
           if (content.substring(offset, offset + text.length) == text) {
-            const allLineBreaks = content.substring(0, offset).matchAll("\n");
-            const startLine = 1 + [...allLineBreaks].length;
+            const allLineBreaks = [
+              ...content.substring(0, offset).matchAll("\n"),
+            ];
+            const startLine = 1 + allLineBreaks.length;
+            const startColumn = offset - allLineBreaks.at(-1).index - 1;
+
             try {
               const global = this.dbg.getDebuggees()[0];
               this._addSource(
@@ -2187,6 +2191,7 @@ class ThreadActor extends Actor {
                   text,
                   url,
                   startLine,
+                  startColumn,
                   isScriptElement: true,
                 })
               );
