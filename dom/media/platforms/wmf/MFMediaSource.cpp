@@ -581,6 +581,12 @@ void MFMediaSource::SetCDMProxy(MFCDMProxy* aCDMProxy) {
 }
 #endif
 
+bool MFMediaSource::IsEncrypted() const {
+  MutexAutoLock lock(mMutex);
+  return (mAudioStream && mAudioStream->IsEncrypted()) ||
+         (mVideoStream && mVideoStream->IsEncrypted());
+}
+
 void MFMediaSource::AssertOnManagerThread() const {
   MOZ_ASSERT(mManagerThread->IsOnCurrentThread());
 }
