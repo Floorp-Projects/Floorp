@@ -97,7 +97,8 @@ static constexpr uint32_t kVideoDroppedRatio = 5;
 #define RFP_DEFAULT_SPOOFING_KEYBOARD_LANG KeyboardLang::EN
 #define RFP_DEFAULT_SPOOFING_KEYBOARD_REGION KeyboardRegion::US
 
-static nsTArray<mozilla::RFPTarget> sRFPLiteTargets = {RFPTarget::Unknown};
+static nsTArray<mozilla::RFPTarget> sRFPLiteTargets = {
+    RFPTarget::IsAlwaysEnabledForPrecompute, RFPTarget::Unknown};
 
 // ============================================================================
 // ============================================================================
