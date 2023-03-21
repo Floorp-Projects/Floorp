@@ -110,7 +110,7 @@ add_task(async () => {
   await firstClosed;
   info("First PiP closed after closing the first tab");
 
-  await assertVideoIsBeingCloned(secondTab.linkedBrowser, "with-controls");
+  await assertVideoIsBeingCloned(secondTab.linkedBrowser, "#with-controls");
   info("Second PiP is still open after first tab close");
 
   let secondClosed = BrowserTestUtils.domWindowClosed(secondPip);
