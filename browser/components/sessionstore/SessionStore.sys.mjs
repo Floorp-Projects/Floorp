@@ -4654,12 +4654,17 @@ var SessionStoreInternal = {
       tabsDataArray.splice(numTabsInWindow - numTabsToRestore);
     }
 
-    // Let the tab data array have the right number of slots.
-    tabsDataArray.length = numTabsInWindow;
+    // Remove items from aTabData if there is no corresponding tab:
+    if (numTabsInWindow < tabsDataArray.length) {
+      tabsDataArray.length = numTabsInWindow;
+    }
 
-    // Fill out any empty items in the list:
-    let maxPos = Math.max(...aTabs.map(tab => tab._tPos));
-    this._ensureNoNullsInTabDataList(tabbrowser.tabs, tabsDataArray, maxPos);
+    // Ensure the tab data array has items for each of the tabs
+    this._ensureNoNullsInTabDataList(
+      tabbrowser.tabs,
+      tabsDataArray,
+      numTabsInWindow - 1
+    );
 
     if (aSelectTab > 0 && aSelectTab <= aTabs.length) {
       // Update the window state in case we shut down without being notified.
@@ -4735,6 +4740,11 @@ var SessionStoreInternal = {
     // we collect their data for the first time when saving state.
     DirtyWindows.add(window);
 
+    if (!tab.hasOwnProperty("_tPos")) {
+      throw new Error(
+        "Shouldn't be trying to restore a tab that has no position"
+      );
+    }
     // Update the tab state in case we shut down without being notified.
     this._windows[window.__SSi].tabs[tab._tPos] = tabData;
 
