@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -27,7 +23,7 @@ XPCOMUtils.defineLazyGetter(lazy, "logger", () => {
   });
 });
 
-class URLQueryStrippingListService {
+export class URLQueryStrippingListService {
   classId = Components.ID("{afff16f0-3fd2-4153-9ccd-c6d9abd879e4}");
   QueryInterface = ChromeUtils.generateQI(["nsIURLQueryStrippingListService"]);
 
@@ -313,5 +309,3 @@ class URLQueryStrippingListService {
     return this.#isInitialized;
   }
 }
-
-var EXPORTED_SYMBOLS = ["URLQueryStrippingListService"];

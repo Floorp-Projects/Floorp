@@ -2,13 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["PurgeTrackerService"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const THREE_DAYS_MS = 3 * 24 * 60 * 1000;
 
@@ -44,7 +38,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "privacy.purge_trackers.consider_entity_list"
 );
 
-function PurgeTrackerService() {}
+export function PurgeTrackerService() {}
 
 PurgeTrackerService.prototype = {
   classID: Components.ID("{90d1fd17-2018-4e16-b73c-a04a26fa6dd4}"),

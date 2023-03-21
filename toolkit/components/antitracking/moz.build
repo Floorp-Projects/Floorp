@@ -24,12 +24,12 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES += [
-    "ContentBlockingAllowList.jsm",
-    "PartitioningExceptionListService.jsm",
-    "PurgeTrackerService.jsm",
-    "TrackingDBService.jsm",
-    "URLDecorationAnnotationsService.jsm",
-    "URLQueryStrippingListService.jsm",
+    "ContentBlockingAllowList.sys.mjs",
+    "PartitioningExceptionListService.sys.mjs",
+    "PurgeTrackerService.sys.mjs",
+    "TrackingDBService.sys.mjs",
+    "URLDecorationAnnotationsService.sys.mjs",
+    "URLQueryStrippingListService.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [

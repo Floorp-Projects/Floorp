@@ -4,9 +4,12 @@
 
 /* eslint-env mozilla/browser-window */
 
-XPCOMUtils.defineLazyModuleGetters(this, {
+ChromeUtils.defineESModuleGetters(this, {
   ContentBlockingAllowList:
-    "resource://gre/modules/ContentBlockingAllowList.jsm",
+    "resource://gre/modules/ContentBlockingAllowList.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(this, {
   ToolbarPanelHub: "resource://activity-stream/lib/ToolbarPanelHub.jsm",
 });
 
