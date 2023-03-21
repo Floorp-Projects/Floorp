@@ -82,7 +82,8 @@ class OutgoingDatagramStreamAlgorithms final
   RefPtr<WebTransportDatagramDuplexStream> mDatagrams;
   RefPtr<WebTransportChild> mChild;
   // only used for datagrams sent before Ready
-  nsTArray<EarlyDatagram> mWaitConnect;
+  UniquePtr<DatagramEntry> mWaitConnect;
+  RefPtr<Promise> mWaitConnectPromise;
 };
 
 class WebTransportDatagramDuplexStream final : public nsISupports,
