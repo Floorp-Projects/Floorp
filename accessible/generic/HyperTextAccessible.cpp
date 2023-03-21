@@ -1488,6 +1488,14 @@ int32_t HyperTextAccessible::OffsetAtPoint(int32_t aX, int32_t aY,
 LayoutDeviceIntRect HyperTextAccessible::TextBounds(int32_t aStartOffset,
                                                     int32_t aEndOffset,
                                                     uint32_t aCoordType) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    // This isn't strictly related to caching, but this new text implementation
+    // is being developed to make caching feasible. We put it behind this pref
+    // to make it easy to test while it's still under development.
+    return HyperTextAccessibleBase::TextBounds(aStartOffset, aEndOffset,
+                                               aCoordType);
+  }
+
   index_t startOffset = ConvertMagicOffset(aStartOffset);
   index_t endOffset = ConvertMagicOffset(aEndOffset);
   if (!startOffset.IsValid() || !endOffset.IsValid() ||
@@ -1553,6 +1561,22 @@ LayoutDeviceIntRect HyperTextAccessible::TextBounds(int32_t aStartOffset,
   nsAccUtils::ConvertScreenCoordsTo(&boundsX, &boundsY, aCoordType, this);
   bounds.MoveTo(boundsX, boundsY);
   return bounds;
+}
+
+LayoutDeviceIntRect HyperTextAccessible::CharBounds(int32_t aOffset,
+                                                    uint32_t aCoordType) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    // This isn't strictly related to caching, but this new text implementation
+    // is being developed to make caching feasible. We put it behind this pref
+    // to make it easy to test while it's still under development.
+    return HyperTextAccessibleBase::CharBounds(aOffset, aCoordType);
+  }
+
+  index_t startOffset = ConvertMagicOffset(aOffset);
+  int32_t endOffset = startOffset == CharacterCount()
+                          ? static_cast<int32_t>(startOffset)
+                          : static_cast<int32_t>(startOffset) + 1;
+  return TextBounds(static_cast<int32_t>(startOffset), endOffset, aCoordType);
 }
 
 already_AddRefed<EditorBase> HyperTextAccessible::GetEditor() const {
