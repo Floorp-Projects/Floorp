@@ -172,7 +172,7 @@ features:
       enabled:
         description: If true, the re-engagement notification is shown to the inactive user.
         type: Boolean
-        default: true
+        default: false
       type:
         description: The type of re-engagement notification that is shown to the inactive user.
         type: Int
