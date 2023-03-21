@@ -90,16 +90,12 @@
 }
 
 ol {
-  outline-offset: calc(-1 * var(--in-content-focus-outline-offset));
+  outline-offset: var(--in-content-focus-outline-inset);
   margin-block: 0;
   padding-inline-start: 0;
   overflow: hidden auto;
   flex-grow: 1;
   scroll-padding-top: 24px; /* there is the section header that is sticky to the top */
-}
-
-ol:focus-visible {
-  padding-block-start: 2px;
 }
 
 .create-login-button {
@@ -111,7 +107,6 @@ ol:focus-visible {
   -moz-context-properties: fill;
   fill: currentColor;
 }
-
 
 .login-list-item {
   display: flex;
@@ -132,7 +127,7 @@ ol:focus-visible {
   border-bottom: 1px solid var(--in-content-border-color);
   background-color: var(--in-content-box-background);
   margin-block-start: 2px;
-  margin-inline-start: 2px;
+  margin-inline: 2px;
 }
 
 .login-list-item:not(.selected):hover {
