@@ -74,7 +74,6 @@ class MOZ_STACK_CLASS ParallelMarker {
   AtomicCount waitingTaskCount;
 
   GCLockData<size_t> activeTasks;
-  GCLockData<ConditionVariable> activeTasksAvailable;
 };
 
 // A helper thread task that performs parallel marking.
