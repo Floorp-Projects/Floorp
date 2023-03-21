@@ -4,10 +4,10 @@
 
 #include shared,clip_shared
 
-varying vec2 vLocalPos;
-varying vec2 vClipMaskImageUv;
+varying highp vec2 vLocalPos;
+varying highp vec2 vClipMaskImageUv;
 
-flat varying vec4 vClipMaskUvInnerRect;
+flat varying highp vec4 vClipMaskUvInnerRect;
 
 #ifdef WR_VERTEX_SHADER
 

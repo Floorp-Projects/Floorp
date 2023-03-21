@@ -4,7 +4,7 @@
 
 #include base
 
-varying vec4 vData;
+varying highp vec4 vData;
 
 #ifdef WR_VERTEX_SHADER
 in vec4 aValue;

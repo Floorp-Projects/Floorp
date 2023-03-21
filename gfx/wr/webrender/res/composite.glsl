@@ -16,28 +16,28 @@
 #endif
 
 #ifdef WR_FEATURE_YUV
-YUV_PRECISION flat varying vec3 vYcbcrBias;
-YUV_PRECISION flat varying mat3 vRgbFromDebiasedYcbcr;
+flat varying YUV_PRECISION vec3 vYcbcrBias;
+flat varying YUV_PRECISION mat3 vRgbFromDebiasedYcbcr;
 // YUV format. Packed in to vector to avoid bug 1630356.
-flat varying ivec2 vYuvFormat;
+flat varying mediump ivec2 vYuvFormat;
 
 #ifdef SWGL_DRAW_SPAN
-flat varying int vRescaleFactor;
+flat varying mediump int vRescaleFactor;
 #endif
-varying vec2 vUV_y;
-varying vec2 vUV_u;
-varying vec2 vUV_v;
-flat varying vec4 vUVBounds_y;
-flat varying vec4 vUVBounds_u;
-flat varying vec4 vUVBounds_v;
+varying highp vec2 vUV_y;
+varying highp vec2 vUV_u;
+varying highp vec2 vUV_v;
+flat varying highp vec4 vUVBounds_y;
+flat varying highp vec4 vUVBounds_u;
+flat varying highp vec4 vUVBounds_v;
 #else
-varying vec2 vUv;
+varying highp vec2 vUv;
 #ifndef WR_FEATURE_FAST_PATH
-flat varying vec4 vColor;
-flat varying vec4 vUVBounds;
+flat varying mediump vec4 vColor;
+flat varying highp vec4 vUVBounds;
 #endif
 #ifdef WR_FEATURE_TEXTURE_EXTERNAL_ESSL1
-uniform vec2 uTextureSize;
+uniform mediump vec2 uTextureSize;
 #endif
 #endif
 

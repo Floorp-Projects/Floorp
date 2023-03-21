@@ -4,21 +4,21 @@
 
 #include shared,clip_shared,ellipse
 
-varying vec4 vLocalPos;
+varying highp vec4 vLocalPos;
 #ifdef WR_FEATURE_FAST_PATH
-flat varying vec3 vClipParams;      // xy = box size, z = radius
+flat varying mediump vec3 vClipParams;      // xy = box size, z = radius
 #else
-flat varying vec4 vClipCenter_Radius_TL;
-flat varying vec4 vClipCenter_Radius_TR;
-flat varying vec4 vClipCenter_Radius_BL;
-flat varying vec4 vClipCenter_Radius_BR;
-flat varying vec3 vClipPlane_TL;
-flat varying vec3 vClipPlane_TR;
-flat varying vec3 vClipPlane_BL;
-flat varying vec3 vClipPlane_BR;
+flat varying highp vec4 vClipCenter_Radius_TL;
+flat varying highp vec4 vClipCenter_Radius_TR;
+flat varying highp vec4 vClipCenter_Radius_BL;
+flat varying highp vec4 vClipCenter_Radius_BR;
+flat varying highp vec3 vClipPlane_TL;
+flat varying highp vec3 vClipPlane_TR;
+flat varying highp vec3 vClipPlane_BL;
+flat varying highp vec3 vClipPlane_BR;
 #endif
 // Clip mode. Packed in to a vector to work around bug 1630356.
-flat varying vec2 vClipMode;
+flat varying mediump vec2 vClipMode;
 
 #ifdef WR_VERTEX_SHADER
 

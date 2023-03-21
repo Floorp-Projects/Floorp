@@ -5,7 +5,7 @@ fuzzy-if(platform(swgl),3,2) == inset-no-blur-radius.yaml inset-no-blur-radius-r
 platform(linux,mac) == inset-alpha.yaml inset-alpha.png
 platform(linux,mac) == boxshadow-spread-only.yaml boxshadow-spread-only-ref.png
 == box-shadow-clip.yaml box-shadow-clip-ref.yaml
-fuzzy(1,402) fuzzy-if(platform(swgl),2,1208) == inset-large-offset.yaml inset-large-offset-ref.png
+fuzzy(1,402) fuzzy-if(platform(swgl),2,1208) fuzzy-if(env(android,device),6,399) == inset-large-offset.yaml inset-large-offset-ref.png
 platform(linux,mac) == inset-border-radius.yaml inset-border-radius.png
 platform(linux,mac) == inset-offset.yaml inset-offset.png
 platform(linux,mac) == inset-neg-offset.yaml inset-neg-offset.png

@@ -7,23 +7,23 @@
 #include shared,prim_shared,brush
 
 // Interpolated UV coordinates to sample.
-varying vec2 v_uv;
+varying highp vec2 v_uv;
 
 #ifdef WR_FEATURE_ALPHA_PASS
-flat varying vec4 v_color;
-flat varying vec2 v_mask_swizzle;
-flat varying vec2 v_tile_repeat;
+flat varying mediump vec4 v_color;
+flat varying mediump vec2 v_mask_swizzle;
+flat varying mediump vec2 v_tile_repeat;
 #endif
 
 // Normalized bounds of the source image in the texture.
-flat varying vec4 v_uv_bounds;
+flat varying highp vec4 v_uv_bounds;
 // Normalized bounds of the source image in the texture, adjusted to avoid
 // sampling artifacts.
-flat varying vec4 v_uv_sample_bounds;
+flat varying highp vec4 v_uv_sample_bounds;
 
 // Flag to allow perspective interpolation of UV.
 // Packed in to vector to work around bug 1630356.
-flat varying vec2 v_perspective;
+flat varying mediump vec2 v_perspective;
 
 #ifdef WR_VERTEX_SHADER
 

@@ -6,8 +6,8 @@
 
 #include shared,shared_other
 
-varying vec2 vColorTexCoord;
-varying vec4 vColor;
+varying highp vec2 vColorTexCoord;
+varying mediump vec4 vColor;
 
 #ifdef WR_VERTEX_SHADER
 in vec4 aColor;

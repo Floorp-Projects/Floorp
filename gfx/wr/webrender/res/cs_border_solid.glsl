@@ -10,34 +10,34 @@
 
 // For edges, the colors are the same. For corners, these
 // are the colors of each edge making up the corner.
-flat varying vec4 vColor0;
-flat varying vec4 vColor1;
+flat varying mediump vec4 vColor0;
+flat varying mediump vec4 vColor1;
 
 // A point + tangent defining the line where the edge
 // transition occurs. Used for corners only.
-flat varying vec4 vColorLine;
+flat varying mediump vec4 vColorLine;
 
 // A boolean indicating that we should be mixing between edge colors.
 // Packed in to a vector to work around bug 1630356.
-flat varying ivec2 vMixColors;
+flat varying mediump ivec2 vMixColors;
 
 // xy = Local space position of the clip center.
 // zw = Scale the rect origin by this to get the outer
 // corner from the segment rectangle.
-flat varying vec4 vClipCenter_Sign;
+flat varying highp vec4 vClipCenter_Sign;
 
 // An outer and inner elliptical radii for border
 // corner clipping.
-flat varying vec4 vClipRadii;
+flat varying highp vec4 vClipRadii;
 
 // Position, scale, and radii of horizontally and vertically adjacent corner clips.
-flat varying vec4 vHorizontalClipCenter_Sign;
-flat varying vec2 vHorizontalClipRadii;
-flat varying vec4 vVerticalClipCenter_Sign;
-flat varying vec2 vVerticalClipRadii;
+flat varying highp vec4 vHorizontalClipCenter_Sign;
+flat varying highp vec2 vHorizontalClipRadii;
+flat varying highp vec4 vVerticalClipCenter_Sign;
+flat varying highp vec2 vVerticalClipRadii;
 
 // Local space position
-varying vec2 vPos;
+varying highp vec2 vPos;
 
 #define SEGMENT_TOP_LEFT        0
 #define SEGMENT_TOP_RIGHT       1
