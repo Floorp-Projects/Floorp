@@ -220,9 +220,9 @@ bool GMPProcessParent::FillMacSandboxInfo(MacSandboxInfo& aInfo) {
       "resolved plugin dir path: %s",
       resolvedPluginPath.get());
 
-  if (mozilla::IsDevelopmentBuild()) {
+  if (!mozilla::IsPackagedBuild()) {
     GMP_LOG_DEBUG(
-        "GMPProcessParent::FillMacSandboxInfo: IsDevelopmentBuild()=true");
+        "GMPProcessParent::FillMacSandboxInfo: IsPackagedBuild()=false");
 
     // Repo dir
     nsCOMPtr<nsIFile> repoDir;

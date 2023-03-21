@@ -342,7 +342,7 @@ static nsresult GetDirFromBundlePlist(const nsAString& aKey, nsIFile** aDir) {
 
 nsresult nsMacUtilsImpl::GetRepoDir(nsIFile** aRepoDir) {
 #if defined(MOZ_SANDBOX)
-  MOZ_ASSERT(mozilla::IsDevelopmentBuild());
+  MOZ_ASSERT(!mozilla::IsPackagedBuild());
 #endif
   return GetDirFromBundlePlist(NS_LITERAL_STRING_FROM_CSTRING(MAC_DEV_REPO_KEY),
                                aRepoDir);
@@ -350,7 +350,7 @@ nsresult nsMacUtilsImpl::GetRepoDir(nsIFile** aRepoDir) {
 
 nsresult nsMacUtilsImpl::GetObjDir(nsIFile** aObjDir) {
 #if defined(MOZ_SANDBOX)
-  MOZ_ASSERT(mozilla::IsDevelopmentBuild());
+  MOZ_ASSERT(!mozilla::IsPackagedBuild());
 #endif
   return GetDirFromBundlePlist(NS_LITERAL_STRING_FROM_CSTRING(MAC_DEV_OBJ_KEY),
                                aObjDir);

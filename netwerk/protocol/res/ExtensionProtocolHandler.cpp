@@ -632,11 +632,11 @@ Result<bool, nsresult> ExtensionProtocolHandler::AllowExternalResource(
   MOZ_ASSERT(!IsNeckoChild());
 
 #if defined(XP_WIN)
-  // On Windows, dev builds don't use symlinks so we never need to
+  // On Windows, non-package builds don't use symlinks so we never need to
   // allow a resource from outside of the extension dir.
   return false;
 #else
-  if (!mozilla::IsDevelopmentBuild()) {
+  if (mozilla::IsPackagedBuild()) {
     return false;
   }
 
@@ -666,7 +666,7 @@ Result<bool, nsresult> ExtensionProtocolHandler::AllowExternalResource(
 // The |aRequestedFile| argument must already be Normalize()'d
 Result<bool, nsresult> ExtensionProtocolHandler::DevRepoContains(
     nsIFile* aRequestedFile) {
-  MOZ_ASSERT(mozilla::IsDevelopmentBuild());
+  MOZ_ASSERT(!mozilla::IsPackagedBuild());
   MOZ_ASSERT(!IsNeckoChild());
 
   // On the first invocation, set mDevRepo
@@ -691,7 +691,7 @@ Result<bool, nsresult> ExtensionProtocolHandler::DevRepoContains(
 #if !defined(XP_WIN)
 Result<bool, nsresult> ExtensionProtocolHandler::AppDirContains(
     nsIFile* aExtensionDir) {
-  MOZ_ASSERT(mozilla::IsDevelopmentBuild());
+  MOZ_ASSERT(!mozilla::IsPackagedBuild());
   MOZ_ASSERT(!IsNeckoChild());
 
   // On the first invocation, set mAppDir

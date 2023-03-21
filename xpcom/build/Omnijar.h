@@ -162,8 +162,8 @@ class Omnijar {
  * the obj/dist dir. We use this routine to detect when the build dir will
  * use symlinks to the repo and object dir.
  */
-inline bool IsDevelopmentBuild() {
-  return !Omnijar::HasOmnijar(mozilla::Omnijar::GRE);
+inline bool IsPackagedBuild() {
+  return Omnijar::HasOmnijar(mozilla::Omnijar::GRE);
 }
 
 } /* namespace mozilla */

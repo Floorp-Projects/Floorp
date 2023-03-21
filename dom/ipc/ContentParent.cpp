@@ -2564,10 +2564,10 @@ static void CacheSandboxParams(std::vector<std::string>& aCachedParams) {
     info.testingReadPath2 = testingReadPath2.get();
   }
 
-  // TESTING_READ_PATH3, TESTING_READ_PATH4. In development builds,
+  // TESTING_READ_PATH3, TESTING_READ_PATH4. In non-packaged builds,
   // these are used to whitelist the repo dir and object dir respectively.
   nsresult rv;
-  if (mozilla::IsDevelopmentBuild()) {
+  if (!mozilla::IsPackagedBuild()) {
     // Repo dir
     nsCOMPtr<nsIFile> repoDir;
     rv = nsMacUtilsImpl::GetRepoDir(getter_AddRefs(repoDir));
