@@ -4209,6 +4209,7 @@ void WorkerPrivate::RunShutdownTasks() {
   for (auto& task : shutdownTasks) {
     task->TargetShutdown();
   }
+  mWorkerHybridEventTarget->ForgetWorkerPrivate(this);
 }
 
 void WorkerPrivate::CancelAllTimeouts() {
@@ -4787,26 +4788,6 @@ bool WorkerPrivate::NotifyInternal(WorkerStatus aStatus) {
         } else {
           data->mScope->NoteShuttingDown();
         }
-      }
-    }
-
-    // Make sure the hybrid event target stops dispatching runnables
-    // once we reaching the killing state.
-    if (aStatus == Killing) {
-      // To avoid deadlock we always acquire the event target mutex before the
-      // worker private mutex.  (We do it in this order because this is what
-      // workers best for event dispatching.)  To enforce that order here we
-      // need to unlock the worker private mutex before we lock the event target
-      // mutex in ForgetWorkerPrivate.
-      {
-        MutexAutoUnlock unlock(mMutex);
-        mWorkerHybridEventTarget->ForgetWorkerPrivate(this);
-      }
-
-      // Check the status code again in case another NotifyInternal came in
-      // while we were unlocked above.
-      if (mStatus >= aStatus) {
-        return true;
       }
     }
 
