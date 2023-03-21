@@ -505,20 +505,27 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
    * Start a load for aRequest's URI.
    */
   nsresult StartLoad(ScriptLoadRequest* aRequest,
-                     uint64_t aEarlyHintPreloaderId);
+                     uint64_t aEarlyHintPreloaderId,
+                     const Maybe<nsAutoString>& aCharsetForPreload);
   /**
    * Start a load for a classic script URI.
    * Sets up the necessary security flags before calling StartLoadInternal.
    */
   nsresult StartClassicLoad(ScriptLoadRequest* aRequest,
-                            uint64_t aEarlyHintPreloaderId);
+                            uint64_t aEarlyHintPreloaderId,
+                            const Maybe<nsAutoString>& aCharsetForPreload);
 
   /**
    * Start a load for a module script URI.
+   *
+   * aCharsetForPreload is only needed when this load is a preload (via
+   * ScriptLoader::PreloadURI), because ScriptLoadRequest doesn't
+   * have this information.
    */
   nsresult StartLoadInternal(ScriptLoadRequest* aRequest,
                              nsSecurityFlags securityFlags,
-                             uint64_t aEarlyHintPreloaderId);
+                             uint64_t aEarlyHintPreloaderId,
+                             const Maybe<nsAutoString>& aCharsetForPreload);
 
   /**
    * Abort the current stream, and re-start with a new load request from scratch

@@ -2270,6 +2270,7 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
   openArgs.navigationStartTimeStamp() = navigationStartTimeStamp;
   openArgs.earlyHintPreloaderId() = mEarlyHintPreloaderId;
 
+  openArgs.classicScriptHintCharset() = mClassicScriptHintCharset;
   // This must happen before the constructor message is sent. Otherwise messages
   // from the parent could arrive quickly and be delivered to the wrong event
   // target.
