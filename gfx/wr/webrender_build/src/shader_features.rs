@@ -221,7 +221,7 @@ pub fn get_shader_features(flags: ShaderFeatureFlags) -> ShaderFeatures {
 
     shaders.insert("ps_split_composite", vec![base_prim_features.finish()]);
 
-    shaders.insert("ps_quad", vec![base_prim_features.finish()]);
+    shaders.insert("ps_quad_textured", vec![base_prim_features.finish()]);
 
     shaders.insert("ps_clear", vec![base_prim_features.finish()]);
 
