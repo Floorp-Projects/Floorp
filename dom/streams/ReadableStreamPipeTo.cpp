@@ -13,6 +13,7 @@
 #include "mozilla/dom/WritableStream.h"
 #include "mozilla/dom/WritableStreamDefaultWriter.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/Promise-inl.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/ErrorResult.h"
@@ -107,12 +108,12 @@ class PipeToPump final : public AbortFollower {
   MOZ_CAN_RUN_SCRIPT void Read(JSContext* aCx);
 
   MOZ_CAN_RUN_SCRIPT void OnSourceClosed(JSContext* aCx, JS::Handle<JS::Value>);
-  MOZ_CAN_RUN_SCRIPT void OnSourceErrored(JSContext* aCx,
-                                          JS::Handle<JS::Value> aError);
+  MOZ_CAN_RUN_SCRIPT void OnSourceErrored(
+      JSContext* aCx, JS::Handle<JS::Value> aSourceStoredError);
 
   MOZ_CAN_RUN_SCRIPT void OnDestClosed(JSContext* aCx, JS::Handle<JS::Value>);
   MOZ_CAN_RUN_SCRIPT void OnDestErrored(JSContext* aCx,
-                                        JS::Handle<JS::Value> aError);
+                                        JS::Handle<JS::Value> aDestStoredError);
 
   RefPtr<Promise> mPromise;
   RefPtr<ReadableStreamDefaultReader> mReader;
@@ -600,19 +601,37 @@ void PipeToPump::OnReadFulfilled(JSContext* aCx, JS::Handle<JS::Value> aChunk,
     return;
   }
 
-  RefPtr<WritableStreamDefaultWriter> writer = mWriter;
-  mLastWritePromise =
-      WritableStreamDefaultWriterWrite(aCx, writer, aChunk, aRv);
-  if (aRv.Failed()) {
+  // Write asynchronously. Roughly this is like:
+  // `Promise.resolve().then(() => stream.write(chunk));`
+  // XXX: The spec currently does not require asynchronicity, but this still
+  // matches other engines' behavior. See
+  // https://github.com/whatwg/streams/issues/1243.
+  RefPtr<Promise> promise =
+      Promise::CreateInfallible(mWriter->GetParentObject());
+  promise->MaybeResolveWithUndefined();
+  auto result = promise->ThenWithCycleCollectedArgsJS(
+      [](JSContext* aCx, JS::Handle<JS::Value>, ErrorResult& aRv,
+         const RefPtr<PipeToPump>& aSelf,
+         const RefPtr<WritableStreamDefaultWriter>& aWriter,
+         JS::Handle<JS::Value> aChunk)
+          MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION -> already_AddRefed<Promise> {
+            RefPtr<Promise> promise =
+                WritableStreamDefaultWriterWrite(aCx, aWriter, aChunk, aRv);
+
+            // Last read has finished, so it's time to start reading again.
+            aSelf->Read(aCx);
+
+            return promise.forget();
+          },
+      std::make_tuple(RefPtr{this}, mWriter), std::make_tuple(aChunk));
+  if (result.isErr()) {
     mLastWritePromise = nullptr;
     return;
   }
+  mLastWritePromise = result.unwrap();
 
   mLastWritePromise->AppendNativeHandler(
       new PipeToPumpHandler(this, nullptr, &PipeToPump::OnDestErrored));
-
-  // Last read has finished, so it's time to start reading again.
-  Read(aCx);
 }
 
 void PipeToPump::OnWriterReady(JSContext* aCx, JS::Handle<JS::Value>) {
