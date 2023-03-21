@@ -648,6 +648,7 @@ describe("Top Sites Feed", () => {
           assert.equal(link.type, "SPOC");
           assert.equal(link.title, "test spoc");
           assert.equal(link.sponsored_position, i + 1);
+          assert.equal(link.hostname, "test-spoc");
           assert.equal(link.url, "https://test-spoc.com");
         }
       });
