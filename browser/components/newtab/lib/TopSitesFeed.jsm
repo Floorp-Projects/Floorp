@@ -920,16 +920,9 @@ class TopSitesFeed {
         return;
       }
       let index = link.sponsored_position - 1;
-      // For DiscoveryStream spocs, we use a different position property
-      if (link.type === "SPOC") {
-        index = link.pos;
-      }
-      if (index > withPinned.length) {
+      if (index >= withPinned.length) {
         withPinned[index] = link;
-      } else if (
-        link.type === "SPOC" &&
-        withPinned[index].show_sponsored_label
-      ) {
+      } else if (withPinned[index].sponsored_position) {
         // We currently want DiscoveryStream spocs to replace existing spocs.
         withPinned[index] = link;
       } else {
@@ -1310,7 +1303,7 @@ class TopSitesFeed {
       const link = this._linksWithDefaults[i];
       if (
         link &&
-        (link.sponsored_position || link.type === "SPOC") &&
+        link.sponsored_position &&
         this._linksWithDefaults[i]?.url !== site.url
       ) {
         adjustedIndex--;

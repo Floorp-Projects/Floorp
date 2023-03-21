@@ -616,37 +616,40 @@ describe("Top Sites Feed", () => {
       assert.calledWith(feed._fetchScreenshot, sinon.match.object, "custom");
     });
     describe("discoverystream", () => {
-      beforeEach(() => {
-        feed.store.state.DiscoveryStream = {
-          layout: [
-            {
-              components: [
-                {
-                  placement: {
-                    name: "sponsored-topsites",
-                  },
-                  spocs: {
-                    positions: [{ index: 1 }],
-                  },
+      let makeStreamData = index => ({
+        layout: [
+          {
+            components: [
+              {
+                placement: {
+                  name: "sponsored-topsites",
                 },
-              ],
-            },
-          ],
-          spocs: {
-            data: {
-              "sponsored-topsites": {
-                items: [{ title: "test spoc", url: "https://test-spoc.com" }],
+                spocs: {
+                  positions: [{ index }],
+                },
               },
+            ],
+          },
+        ],
+        spocs: {
+          data: {
+            "sponsored-topsites": {
+              items: [{ title: "test spoc", url: "https://test-spoc.com" }],
             },
           },
-        };
+        },
       });
-      it("should add a sponsored topsite from discoverystream", async () => {
-        const result = await feed.getLinksWithDefaults();
-        assert.equal(result[1].type, "SPOC");
-        assert.equal(result[1].title, "test spoc");
-        assert.equal(result[1].sponsored_position, 2);
-        assert.equal(result[1].url, "https://test-spoc.com");
+      it("should add a sponsored topsite from discoverystream to all the valid indices", async () => {
+        for (let i = 0; i < FAKE_LINKS.length; i++) {
+          feed.store.state.DiscoveryStream = makeStreamData(i);
+          const result = await feed.getLinksWithDefaults();
+          const link = result[i];
+
+          assert.equal(link.type, "SPOC");
+          assert.equal(link.title, "test spoc");
+          assert.equal(link.sponsored_position, i + 1);
+          assert.equal(link.url, "https://test-spoc.com");
+        }
       });
     });
   });
