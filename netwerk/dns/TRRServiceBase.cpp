@@ -91,6 +91,11 @@ void TRRServiceBase::ProcessURITemplate(nsACString& aURI) {
 void TRRServiceBase::CheckURIPrefs() {
   mURISetByDetection = false;
 
+  if (StaticPrefs::network_trr_use_ohttp() && !mOHTTPURIPref.IsEmpty()) {
+    MaybeSetPrivateURI(mOHTTPURIPref);
+    return;
+  }
+
   // The user has set a custom URI so it takes precedence.
   if (!mURIPref.IsEmpty()) {
     MaybeSetPrivateURI(mURIPref);
@@ -163,6 +168,7 @@ void TRRServiceBase::OnTRRURIChange() {
   Preferences::GetCString("network.trr.uri", mURIPref);
   Preferences::GetCString(kRolloutURIPref, mRolloutURIPref);
   Preferences::GetCString("network.trr.default_provider_uri", mDefaultURIPref);
+  Preferences::GetCString("network.trr.ohttp.uri", mOHTTPURIPref);
 
   CheckURIPrefs();
 }

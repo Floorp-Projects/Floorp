@@ -39,6 +39,7 @@ async function SetParentalControlEnabled(aEnabled) {
 }
 
 let runningODoHTests = false;
+let runningOHTTPTests = false;
 let h2Port;
 
 function setModeAndURIForODoH(mode, path) {
@@ -50,8 +51,25 @@ function setModeAndURIForODoH(mode, path) {
   Services.prefs.setCharPref("network.trr.odoh.target_path", `${path}`);
 }
 
+function setModeAndURIForOHTTP(mode, path, domain) {
+  Services.prefs.setIntPref("network.trr.mode", mode);
+  if (domain) {
+    Services.prefs.setCharPref(
+      "network.trr.ohttp.uri",
+      `https://${domain}:${h2Port}/${path}`
+    );
+  } else {
+    Services.prefs.setCharPref(
+      "network.trr.ohttp.uri",
+      `https://${TRR_Domain}:${h2Port}/${path}`
+    );
+  }
+}
+
 function setModeAndURI(mode, path, domain) {
-  if (runningODoHTests) {
+  if (runningOHTTPTests) {
+    setModeAndURIForOHTTP(mode, path, domain);
+  } else if (runningODoHTests) {
     setModeAndURIForODoH(mode, path);
   } else {
     Services.prefs.setIntPref("network.trr.mode", mode);
