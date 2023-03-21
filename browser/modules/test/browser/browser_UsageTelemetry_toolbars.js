@@ -170,7 +170,6 @@ add_task(async function widgetPositions() {
 
     "tabbrowser-tabs_pinned_tabs-bar",
     "alltabs-button_pinned_tabs-bar",
-    "unified-extensions-button_pinned_nav-bar-end",
 
     "forward-button_pinned_nav-bar-start",
     "back-button_pinned_nav-bar-start",
@@ -218,7 +217,6 @@ add_task(async function widgetPositions() {
     "downloads-button_pinned_nav-bar-start",
     "back-button_pinned_nav-bar-end",
     "library-button_pinned_nav-bar-end",
-    "unified-extensions-button_pinned_nav-bar-end",
 
     "fxa-toolbar-menu-button_pinned_bookmarks-bar",
     "new-tab-button_pinned_bookmarks-bar",
@@ -261,7 +259,6 @@ add_task(async function customizeMode() {
     "stop-reload-button_pinned_nav-bar-start",
     "home-button_pinned_nav-bar-end",
     "library-button_pinned_nav-bar-end",
-    "unified-extensions-button_pinned_nav-bar-end",
 
     "personal-bookmarks_pinned_bookmarks-bar",
   ]);
@@ -356,7 +353,6 @@ add_task(async function contextMenus() {
     "stop-reload-button_pinned_nav-bar-start",
     "home-button_pinned_nav-bar-end",
     "library-button_pinned_nav-bar-end",
-    "unified-extensions-button_pinned_nav-bar-end",
 
     "personal-bookmarks_pinned_bookmarks-bar",
   ]);
@@ -449,7 +445,6 @@ add_task(async function extensions() {
       "back-button_pinned_nav-bar-start",
 
       "random-addon-example-com_pinned_nav-bar-end",
-      "unified-extensions-button_pinned_nav-bar-end",
 
       "random-addon-example-com_pinned_pageaction-urlbar",
     ]);
@@ -474,7 +469,6 @@ add_task(async function extensions() {
 
       "forward-button_pinned_nav-bar-start",
       "back-button_pinned_nav-bar-start",
-      "unified-extensions-button_pinned_nav-bar-end",
     ]);
 
     await addon.enable();
@@ -498,7 +492,6 @@ add_task(async function extensions() {
       "back-button_pinned_nav-bar-start",
 
       "random-addon-example-com_pinned_nav-bar-end",
-      "unified-extensions-button_pinned_nav-bar-end",
 
       "random-addon-example-com_pinned_pageaction-urlbar",
     ]);
@@ -544,7 +537,6 @@ add_task(async function extensions() {
 
       "forward-button_pinned_nav-bar-start",
       "back-button_pinned_nav-bar-start",
-      "unified-extensions-button_pinned_nav-bar-end",
     ]);
   });
 });
