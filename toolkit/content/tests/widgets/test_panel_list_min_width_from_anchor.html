@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <title>Test Panel List Min-width From Anchor</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="chrome://global/skin/global.css" type="text/css"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+  <button id="anchor-button">This is a button with a long string to act as a wide anchor.</button>
+  <panel-list id="panel-list">
+    <panel-item>one</panel-item>
+    <panel-item>two</panel-item>
+    <panel-item>three</panel-item>
+    <panel-item>four</panel-item>
+    <panel-item>five</panel-item>
+    <panel-item>six</panel-item>
+  </panel-list>
+</div>
+
+<pre id="test">
+
+<script class="testbody" type="application/javascript">
+const {BrowserTestUtils} = ChromeUtils.importESModule("resource://testing-common/BrowserTestUtils.sys.mjs");
+let anchorButton, panelList;
+
+add_setup(function setup() {
+  panelList = document.getElementById("panel-list");
+  anchorButton = document.getElementById("anchor-button");
+  anchorButton.addEventListener("click", e => panelList.toggle(e));
+});
+
+add_task(async function minWidthFromAnchor() {
+  let anchorWidth = anchorButton.getBoundingClientRect().width;
+  let shown = BrowserTestUtils.waitForEvent(panelList, "shown");
+  synthesizeMouseAtCenter(anchorButton, {});
+  await shown;
+
+  let panelWidth = panelList.getBoundingClientRect().width;
+  isnot(anchorWidth, panelWidth, "Without min-width-from-anchor, panel should not have anchor width.");
+
+  let hidden = BrowserTestUtils.waitForEvent(panelList, "hidden");
+  synthesizeKey("Escape", {});
+  await hidden;
+
+  panelList.toggleAttribute("min-width-from-anchor", true);
+
+  shown = BrowserTestUtils.waitForEvent(panelList, "shown");
+  synthesizeMouseAtCenter(anchorButton, {});
+  await shown;
+
+  panelWidth = panelList.getBoundingClientRect().width;
+  is(anchorWidth, panelWidth, "With min-width-from-anchor, panel should have anchor width.");
+
+  hidden = BrowserTestUtils.waitForEvent(panelList, "hidden");
+  synthesizeKey("Escape", {});
+  await hidden;
+});
+
+</script>
+</pre>
+</body>
+</html>
