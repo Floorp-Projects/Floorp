@@ -530,7 +530,11 @@ class MigrationUtils {
    */
   showMigrationWizard(aOpener, aOptions) {
     if (
-      Services.prefs.getBoolPref("browser.migrate.content-modal.enabled", false)
+      Services.prefs.getBoolPref(
+        "browser.migrate.content-modal.enabled",
+        false
+      ) &&
+      !aOptions?.isStartupMigration
     ) {
       let entrypoint =
         aOptions.entrypoint || this.MIGRATION_ENTRYPOINTS.UNKNOWN;
