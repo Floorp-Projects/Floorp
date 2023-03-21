@@ -283,6 +283,9 @@ class IDLScope(IDLObject):
             self._dict[identifier.name] = replacement
             return
 
+        self.addNewIdentifier(identifier, object)
+
+    def addNewIdentifier(self, identifier, object):
         assert object
 
         self._dict[identifier.name] = object
@@ -323,6 +326,9 @@ class IDLScope(IDLObject):
             return originalObject.addOverload(newObject)
 
         # Default to throwing, derived classes can override.
+        raise self.createIdentifierConflictError(identifier, originalObject, newObject)
+
+    def createIdentifierConflictError(self, identifier, originalObject, newObject):
         conflictdesc = "\n\t%s at %s\n\t%s at %s" % (
             originalObject,
             originalObject.location,
@@ -330,7 +336,7 @@ class IDLScope(IDLObject):
             newObject.location,
         )
 
-        raise WebIDLError(
+        return WebIDLError(
             "Multiple unresolvable definitions of identifier '%s' in scope '%s'%s"
             % (identifier.name, str(self), conflictdesc),
             [],
@@ -727,6 +733,15 @@ def globalNameSetToExposureSet(globalScope, nameSet, exposureSet):
         exposureSet.update(globalScope.globalNameMapping[name])
 
 
+# Because WebIDL allows static and regular operations with the same identifier
+# we use a special class to be able to store them both in the scope for the
+# same identifier.
+class IDLOperations:
+    def __init__(self, static=None, regular=None):
+        self.static = static
+        self.regular = regular
+
+
 class IDLInterfaceOrInterfaceMixinOrNamespace(IDLObjectWithScope, IDLExposureMixins):
     def __init__(self, location, parentScope, name):
         assert isinstance(parentScope, IDLScope)
@@ -756,14 +771,65 @@ class IDLInterfaceOrInterfaceMixinOrNamespace(IDLObjectWithScope, IDLExposureMix
             self.addExtendedAttributes(partial.propagatedExtendedAttrs)
             self.members.extend(partial.members)
 
+    def addNewIdentifier(self, identifier, object):
+        if isinstance(object, IDLMethod):
+            if object.isStatic():
+                object = IDLOperations(static=object)
+            else:
+                object = IDLOperations(regular=object)
+
+        IDLScope.addNewIdentifier(self, identifier, object)
+
     def resolveIdentifierConflict(self, scope, identifier, originalObject, newObject):
         assert isinstance(scope, IDLScope)
-        assert isinstance(originalObject, IDLInterfaceMember)
         assert isinstance(newObject, IDLInterfaceMember)
+
+        # The identifier of a regular operation or static operation must not be
+        # the same as the identifier of a constant or attribute.
+        if isinstance(newObject, IDLMethod) != isinstance(
+            originalObject, IDLOperations
+        ):
+            if isinstance(originalObject, IDLOperations):
+                if originalObject.regular is not None:
+                    originalObject = originalObject.regular
+                else:
+                    assert originalObject.static is not None
+                    originalObject = originalObject.static
+
+            raise self.createIdentifierConflictError(
+                identifier, originalObject, newObject
+            )
+
+        if isinstance(newObject, IDLMethod):
+            originalOperations = originalObject
+            if newObject.isStatic():
+                if originalOperations.static is None:
+                    originalOperations.static = newObject
+                    return originalOperations
+
+                originalObject = originalOperations.static
+            else:
+                if originalOperations.regular is None:
+                    originalOperations.regular = newObject
+                    return originalOperations
+
+                originalObject = originalOperations.regular
+
+            assert isinstance(originalObject, IDLMethod)
+        else:
+            assert isinstance(originalObject, IDLInterfaceMember)
 
         retval = IDLScope.resolveIdentifierConflict(
             self, scope, identifier, originalObject, newObject
         )
+
+        if isinstance(newObject, IDLMethod):
+            if newObject.isStatic():
+                originalOperations.static = retval
+            else:
+                originalOperations.regular = retval
+
+            retval = originalOperations
 
         # Might be a ctor, which isn't in self.members
         if newObject in self.members:
@@ -995,7 +1061,7 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
             self.location, "constructor", allowForbidden=True
         )
         try:
-            return self._lookupIdentifier(identifier)
+            return self._lookupIdentifier(identifier).static
         except Exception:
             return None
 
@@ -4568,7 +4634,12 @@ class IDLMaplikeOrSetlikeOrIterableBase(IDLInterfaceMember):
         for member in members:
             # Check that there are no disallowed members
             if member.identifier.name in self.disallowedMemberNames and not (
-                (member.isMethod() and member.isMaplikeOrSetlikeOrIterableMethod())
+                (
+                    member.isMethod()
+                    and (
+                        member.isStatic() or member.isMaplikeOrSetlikeOrIterableMethod()
+                    )
+                )
                 or (member.isAttr() and member.isMaplikeOrSetlikeAttr())
             ):
                 raise WebIDLError(
@@ -4634,9 +4705,7 @@ class IDLMaplikeOrSetlikeOrIterableBase(IDLInterfaceMember):
                 self.disallowedNonMethodNames.append(name)
         # If allowExistingOperations is True, and another operation exists
         # with the same name as the one we're trying to add, don't add the
-        # maplike/setlike operation. However, if the operation is static,
-        # then fail by way of creating the function, which will cause a
-        # naming conflict, per the spec.
+        # maplike/setlike operation.
         if allowExistingOperations:
             for m in members:
                 if m.identifier.name == name and m.isMethod() and not m.isStatic():
