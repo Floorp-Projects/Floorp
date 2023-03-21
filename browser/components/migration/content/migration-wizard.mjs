@@ -336,6 +336,16 @@ export class MigrationWizard extends HTMLElement {
       opt.displayName = migrator.displayName;
       opt.resourceTypes = migrator.resourceTypes;
 
+      // Bug 1823489 - since the panel-list and panel-items are slotted, we
+      // cannot style them directly from migration-wizard.css. We use inline
+      // styles for now to achieve the desired appearance, but bug 1823489
+      // will investigate having MigrationWizard own the <xul:panel>,
+      // <panel-list> and <panel-item>'s so that styling can be done in the
+      // stylesheet instead.
+      let button = opt.shadowRoot.querySelector("button");
+      button.style.minHeight = "40px";
+      button.style.backgroundImage = `url("chrome://global/skin/icons/defaultFavicon.svg")`;
+
       if (migrator.profile) {
         document.l10n.setAttributes(
           opt,

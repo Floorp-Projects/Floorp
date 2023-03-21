@@ -115,6 +115,16 @@ button {
   display: none;
 }
 
+/**
+ * Until we address bug 1823489, it's not that easy to apply styles on
+ * the panel-list. We work around this by setting the CSS variable for
+ * the border instead.
+ */
+slot::slotted(panel-list),
+slot::slotted(panel) {
+  --in-content-box-border-color: transparent;
+}
+
 div[name="page-selection"]:not([show-import-all]) #select-all,
 div[name="page-selection"][show-import-all][single-item] #select-all,
 div[name="page-selection"]:not([show-import-all]) summary {
