@@ -382,13 +382,15 @@ struct opSetStyleLineNumber {
   };
 };
 
-struct opSetScriptLineNumberAndFreeze {
+struct opSetScriptLineAndColumnNumberAndFreeze {
   nsIContent** mContent;
   int32_t mLineNumber;
+  int32_t mColumnNumber;
 
-  explicit opSetScriptLineNumberAndFreeze(nsIContentHandle* aContent,
-                                          int32_t aLineNumber)
-      : mLineNumber(aLineNumber) {
+  explicit opSetScriptLineAndColumnNumberAndFreeze(nsIContentHandle* aContent,
+                                                   int32_t aLineNumber,
+                                                   int32_t aColumnNumber)
+      : mLineNumber(aLineNumber), mColumnNumber(aColumnNumber) {
     mContent = static_cast<nsIContent**>(aContent);
   };
 };
@@ -495,7 +497,7 @@ typedef mozilla::Variant<
     opPreventScriptExecution, opDoneAddingChildren, opDoneCreatingElement,
     opUpdateCharsetSource, opCharsetSwitchTo, opUpdateStyleSheet,
     opProcessOfflineManifest, opMarkMalformedIfScript, opStreamEnded,
-    opSetStyleLineNumber, opSetScriptLineNumberAndFreeze, opSvgLoad,
+    opSetStyleLineNumber, opSetScriptLineAndColumnNumberAndFreeze, opSvgLoad,
     opMaybeComplainAboutCharset, opMaybeComplainAboutDeepTree, opAddClass,
     opAddViewSourceHref, opAddViewSourceBase, opAddErrorType, opAddLineNumberId,
     opStartLayout, opEnableEncodingMenu>
