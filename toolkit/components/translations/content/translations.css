@@ -2,6 +2,31 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+:root {
+  /* Provide defaults for when this page is viewed in "toolkit". */
+  background-color: var(--in-content-page-background, #fff);
+  color: var(--in-content-page-color, #15141a);
+
+  /* Provide backup values for some of the variables used in "browser" so that the styles
+     look nice by default in "toolkit". */
+  --AT-box-background: var(--in-content-box-background, #fff);
+  --AT-box-border-color: var(--in-content-box-border-color, #9e9ea0);
+
+  /* Variables used in the page layout */
+  --AT-page-margin: 20px;
+  --AT-input-padding: 20px;
+  /* This is somewhat arbitrary, but works well for the current design. If the computed
+     header height changes, this will need to be adjusted. */
+  --AT-header-height: 156px;
+  --AT-input-height: calc(min(400px, calc(100vh - var(--AT-header-height))));
+  --AT-select-arrow-inset: 5px;
+}
+
+h1 {
+  /* Provide this style for "toolkit". It is defined in "browser" */
+  font-weight: lighter;
+}
+
 body {
   display: flex;
   justify-content: center;
@@ -19,6 +44,7 @@ body {
 .about-translations-header > * {
   flex: 1;
   display: flex;
+  max-width: 50%;
 }
 
 .about-translations-header-start {
@@ -32,39 +58,36 @@ body {
 /* Increase the selector specificity to override the base `select` styles. */
 select.about-translations-select {
   position: relative;
-  padding-inline: 10px;
+  padding-inline: 10px 20px;
   padding-block: 0px;
   min-width: 50%;
   margin: 5px;
-  --select-arrow-inset: 5px;
-  background-position: right var(--select-arrow-inset) center;
+  background-position: right var(--AT-select-arrow-inset) center;
 }
 
 select.about-translations-select:dir(rtl) {
-  background-position-x: left var(--select-arrow-inset);
+  background-position-x: left var(--AT-select-arrow-inset);
 }
 
 .about-translations-contents {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  width: calc(100% - 40px);
+  width: calc(100% - var(--AT-page-margin) * 2);
   max-width: 1200px;
-  background-color: var(--in-content-box-background);
-  border: 1px solid var(--in-content-box-border-color);
+  background-color: var(--AT-box-background);
+  border: 1px solid var(--AT-box-border-color);
   border-radius: 4px;
 }
 
 .about-translations-input {
   display: flex;
   width: 100%;
-  --input-padding: 20px;
-  --input-height: 400px;
-  border-top: 1px solid var(--in-content-box-border-color)
+  border-top: 1px solid var(--AT-box-border-color);
 }
 
 .about-translations-input-start {
-  border-inline-end: 1px solid var(--in-content-box-border-color)
+  border-inline-end: 1px solid var(--AT-box-border-color);
 }
 
 .about-translations-input > * {
@@ -75,10 +98,10 @@ select.about-translations-select:dir(rtl) {
 .about-translations-input-textarea {
   /* Override user's dragging of the textarea width. */
   width: 100% !important;
-  height: var(--input-height);
+  height: var(--AT-input-height);
   box-sizing: border-box;
   margin: 0;
-  padding: var(--input-padding);
+  padding: var(--AT-input-padding);
   border: 0;
 }
 
@@ -89,7 +112,40 @@ select.about-translations-select:dir(rtl) {
 .about-translations-input-results {
   position: absolute;
   inset: 0;
-  padding: var(--input-padding);
+  padding: var(--AT-input-padding);
   box-sizing: border-box;
   overflow-y: scroll;
+}
+
+@media (max-width: 700px) {
+  :root {
+    --AT-page-margin: 10px;
+  }
+  h1 {
+    margin-top: 15px;
+  }
+  body {
+    padding-bottom: var(--AT-page-margin);
+  }
+  .about-translations-input {
+    flex-direction: column;
+    flex: 1;
+  }
+  .about-translations-input-textarea,
+  .about-translations-input {
+    font-size: 16px;
+  }
+  .about-translations-input > * {
+    width: 100%;
+    flex: 1;
+  }
+  .about-translations-input-end {
+    border-top: 1px solid var(--AT-box-border-color);
+  }
+  .about-translations-input-textarea {
+    height: 100%;
+  }
+  .about-translations-contents {
+    flex: 1;
+  }
 }
