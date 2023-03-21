@@ -90,6 +90,13 @@ export var MockRegistrar = Object.freeze({
     return cid;
   },
 
+  registerESM(contractID, esmPath, symbol) {
+    return this.register(contractID, () => {
+      let exports = ChromeUtils.importESModule(esmPath);
+      return new exports[symbol]();
+    });
+  },
+
   /**
    * Unregister the mock.
    *

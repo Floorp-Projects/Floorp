@@ -8,7 +8,6 @@
 #include "nsIFile.h"
 #include "nsIFileURL.h"
 #include "nsIXPConnect.h"
-#include "mozilla/AppShutdown.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/CondVar.h"
@@ -420,151 +419,6 @@ class CloseListener final : public mozIStorageCompletionCallback {
 
 NS_IMPL_ISUPPORTS(CloseListener, mozIStorageCompletionCallback)
 
-class AsyncVacuumEvent final : public Runnable {
- public:
-  AsyncVacuumEvent(Connection* aConnection,
-                   mozIStorageCompletionCallback* aCallback,
-                   bool aUseIncremental, int32_t aSetPageSize)
-      : Runnable("storage::AsyncVacuum"),
-        mConnection(aConnection),
-        mCallback(aCallback),
-        mUseIncremental(aUseIncremental),
-        mSetPageSize(aSetPageSize),
-        mStatus(NS_ERROR_UNEXPECTED) {}
-
-  NS_IMETHOD Run() override {
-    // This is initially dispatched to the helper thread, then re-dispatched
-    // to the opener thread, where it will callback.
-    if (IsOnCurrentSerialEventTarget(mConnection->eventTargetOpenedOn)) {
-      // Send the completion event.
-      if (mCallback) {
-        mozilla::Unused << mCallback->Complete(mStatus, nullptr);
-      }
-      return NS_OK;
-    }
-
-    // Ensure to invoke the callback regardless of errors.
-    auto guard = MakeScopeExit([&]() {
-      mConnection->mIsStatementOnHelperThreadInterruptible = false;
-      mozilla::Unused << mConnection->eventTargetOpenedOn->Dispatch(
-          this, NS_DISPATCH_NORMAL);
-    });
-
-    // Get list of attached databases.
-    nsCOMPtr<mozIStorageStatement> stmt;
-    nsresult rv = mConnection->CreateStatement(MOZ_STORAGE_UNIQUIFY_QUERY_STR
-                                               "PRAGMA database_list"_ns,
-                                               getter_AddRefs(stmt));
-    NS_ENSURE_SUCCESS(rv, rv);
-    // We must accumulate names and loop through them later, otherwise VACUUM
-    // will see an ongoing statement and bail out.
-    nsTArray<nsCString> schemaNames;
-    bool hasResult = false;
-    while (stmt && NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
-      nsAutoCString name;
-      rv = stmt->GetUTF8String(1, name);
-      if (NS_SUCCEEDED(rv) && !name.EqualsLiteral("temp")) {
-        schemaNames.AppendElement(name);
-      }
-    }
-    mStatus = NS_OK;
-    // Mark this vacuum as an interruptible operation, so it can be interrupted
-    // if the connection closes during shutdown.
-    mConnection->mIsStatementOnHelperThreadInterruptible = true;
-    for (const nsCString& schemaName : schemaNames) {
-      rv = this->Vacuum(schemaName);
-      if (NS_FAILED(rv)) {
-        // This is sub-optimal since it's only keeping the last error reason,
-        // but it will do for now.
-        mStatus = rv;
-      }
-    }
-    return mStatus;
-  }
-
-  nsresult Vacuum(const nsACString& aSchemaName) {
-    // Abort if we're in shutdown.
-    if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
-      return NS_ERROR_ABORT;
-    }
-    int32_t removablePages = mConnection->RemovablePagesInFreeList(aSchemaName);
-    if (!removablePages) {
-      // There's no empty pages to remove, so skip this vacuum for now.
-      return NS_OK;
-    }
-    nsresult rv;
-    bool needsFullVacuum = true;
-
-    if (mSetPageSize) {
-      nsAutoCString query(MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA ");
-      query.Append(aSchemaName);
-      query.AppendLiteral(".page_size = ");
-      query.AppendInt(mSetPageSize);
-      nsCOMPtr<mozIStorageStatement> stmt;
-      rv = mConnection->ExecuteSimpleSQL(query);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    // Check auto_vacuum.
-    {
-      nsAutoCString query(MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA ");
-      query.Append(aSchemaName);
-      query.AppendLiteral(".auto_vacuum");
-      nsCOMPtr<mozIStorageStatement> stmt;
-      rv = mConnection->CreateStatement(query, getter_AddRefs(stmt));
-      NS_ENSURE_SUCCESS(rv, rv);
-      bool hasResult = false;
-      bool changeAutoVacuum = false;
-      if (stmt && NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
-        bool isIncrementalVacuum = stmt->AsInt32(0) == 2;
-        changeAutoVacuum = isIncrementalVacuum != mUseIncremental;
-        if (isIncrementalVacuum && !changeAutoVacuum) {
-          needsFullVacuum = false;
-        }
-      }
-      // Changing auto_vacuum is only supported on the main schema.
-      if (aSchemaName.EqualsLiteral("main") && changeAutoVacuum) {
-        nsAutoCString query(MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA ");
-        query.Append(aSchemaName);
-        query.AppendLiteral(".auto_vacuum = ");
-        query.AppendInt(mUseIncremental ? 2 : 0);
-        rv = mConnection->ExecuteSimpleSQL(query);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-    }
-
-    if (needsFullVacuum) {
-      nsAutoCString query(MOZ_STORAGE_UNIQUIFY_QUERY_STR "VACUUM ");
-      query.Append(aSchemaName);
-      rv = mConnection->ExecuteSimpleSQL(query);
-      // TODO (Bug 1818039): Report failed vacuum telemetry.
-      NS_ENSURE_SUCCESS(rv, rv);
-    } else {
-      nsAutoCString query(MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA ");
-      query.Append(aSchemaName);
-      query.AppendLiteral(".incremental_vacuum(");
-      query.AppendInt(removablePages);
-      query.AppendLiteral(")");
-      rv = mConnection->ExecuteSimpleSQL(query);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    return NS_OK;
-  }
-
-  ~AsyncVacuumEvent() override {
-    NS_ReleaseOnMainThread("AsyncVacuum::mConnection", mConnection.forget());
-    NS_ReleaseOnMainThread("AsyncVacuum::mCallback", mCallback.forget());
-  }
-
- private:
-  RefPtr<Connection> mConnection;
-  nsCOMPtr<mozIStorageCompletionCallback> mCallback;
-  bool mUseIncremental;
-  int32_t mSetPageSize;
-  Atomic<nsresult> mStatus;
-};
-
 }  // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -576,7 +430,6 @@ Connection::Connection(Service* aService, int aFlags,
     : sharedAsyncExecutionMutex("Connection::sharedAsyncExecutionMutex"),
       sharedDBMutex("Connection::sharedDBMutex"),
       eventTargetOpenedOn(WrapNotNull(GetCurrentSerialEventTarget())),
-      mIsStatementOnHelperThreadInterruptible(false),
       mDBConn(nullptr),
       mDefaultTransactionType(mozIStorageConnection::TRANSACTION_DEFERRED),
       mDestroying(false),
@@ -589,8 +442,7 @@ Connection::Connection(Service* aService, int aFlags,
                      aInterruptible),
       mIgnoreLockingMode(aIgnoreLockingMode),
       mAsyncExecutionThreadShuttingDown(false),
-      mConnectionClosed(false),
-      mGrowthChunkSize(0) {
+      mConnectionClosed(false) {
   MOZ_ASSERT(!mIgnoreLockingMode || mFlags & SQLITE_OPEN_READONLY,
              "Can't ignore locking for a non-readonly connection!");
   mStorageService->registerConnection(this);
@@ -1662,17 +1514,6 @@ Connection::AsyncClose(mozIStorageCompletionCallback* aCallback) {
     return NS_OK;
   }
 
-  // If we're closing the connection during shutdown, and there is an
-  // interruptible statement running on the helper thread, issue a
-  // sqlite3_interrupt() to avoid crashing when that statement takes a long
-  // time (for example a vacuum).
-  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed) &&
-      mInterruptible && mIsStatementOnHelperThreadInterruptible) {
-    MOZ_ASSERT(!isClosing(), "Must not be closing, see Interrupt()");
-    DebugOnly<nsresult> rv2 = Interrupt();
-    MOZ_ASSERT(NS_SUCCEEDED(rv2));
-  }
-
   // setClosedState nullifies our connection pointer, so we take a raw pointer
   // off it, to pass it through the close procedure.
   sqlite3* nativeConn = mDBConn;
@@ -1917,36 +1758,6 @@ Connection::Interrupt() {
       ::sqlite3_interrupt(mDBConn);
     }
   }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Connection::AsyncVacuum(mozIStorageCompletionCallback* aCallback,
-                        bool aUseIncremental, int32_t aSetPageSize) {
-  NS_ENSURE_TRUE(NS_IsMainThread(), NS_ERROR_NOT_SAME_THREAD);
-  // Abort if we're shutting down.
-  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
-    return NS_ERROR_ABORT;
-  }
-  // Check if AsyncClose or Close were already invoked.
-  if (!connectionReady()) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  nsresult rv = ensureOperationSupported(ASYNCHRONOUS);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  nsIEventTarget* asyncThread = getAsyncExecutionTarget();
-  if (!asyncThread) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  // Create and dispatch our vacuum event to the background thread.
-  nsCOMPtr<nsIRunnable> vacuumEvent =
-      new AsyncVacuumEvent(this, aCallback, aUseIncremental, aSetPageSize);
-  rv = asyncThread->Dispatch(vacuumEvent, NS_DISPATCH_NORMAL);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -2469,57 +2280,13 @@ Connection::SetGrowthIncrement(int32_t aChunkSize,
     return NS_ERROR_FILE_TOO_BIG;
   }
 
-  int srv = ::sqlite3_file_control(
-      mDBConn,
-      aDatabaseName.Length() ? nsPromiseFlatCString(aDatabaseName).get()
-                             : nullptr,
-      SQLITE_FCNTL_CHUNK_SIZE, &aChunkSize);
-  if (srv == SQLITE_OK) {
-    mGrowthChunkSize = aChunkSize;
-  }
+  (void)::sqlite3_file_control(mDBConn,
+                               aDatabaseName.Length()
+                                   ? nsPromiseFlatCString(aDatabaseName).get()
+                                   : nullptr,
+                               SQLITE_FCNTL_CHUNK_SIZE, &aChunkSize);
 #endif
   return NS_OK;
-}
-
-int32_t Connection::RemovablePagesInFreeList(const nsACString& aSchemaName) {
-  int32_t freeListPagesCount = 0;
-  if (!isConnectionReadyOnThisThread()) {
-    MOZ_ASSERT(false, "Database connection is not ready");
-    return freeListPagesCount;
-  }
-  {
-    nsAutoCString query(MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA ");
-    query.Append(aSchemaName);
-    query.AppendLiteral(".freelist_count");
-    nsCOMPtr<mozIStorageStatement> stmt;
-    DebugOnly<nsresult> rv = CreateStatement(query, getter_AddRefs(stmt));
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    bool hasResult = false;
-    if (stmt && NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
-      freeListPagesCount = stmt->AsInt32(0);
-    }
-  }
-  // If there's no chunk size set, any page is good to be removed.
-  if (mGrowthChunkSize == 0 || freeListPagesCount == 0) {
-    return freeListPagesCount;
-  }
-  int32_t pageSize;
-  {
-    nsAutoCString query(MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA ");
-    query.Append(aSchemaName);
-    query.AppendLiteral(".page_size");
-    nsCOMPtr<mozIStorageStatement> stmt;
-    DebugOnly<nsresult> rv = CreateStatement(query, getter_AddRefs(stmt));
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    bool hasResult = false;
-    if (stmt && NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
-      pageSize = stmt->AsInt32(0);
-    } else {
-      MOZ_ASSERT(false, "Couldn't get page_size");
-      return 0;
-    }
-  }
-  return std::max(0, freeListPagesCount - (mGrowthChunkSize / pageSize));
 }
 
 NS_IMETHODIMP
