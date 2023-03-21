@@ -15,6 +15,7 @@
 #include "nsXPCOM.h"
 #include "nsPromiseFlatString.h"
 #include "nsToolkitCompsCID.h"
+#include "nsComponentManagerUtils.h"
 
 #ifdef MOZ_PLACES
 #  include "nsIFaviconService.h"

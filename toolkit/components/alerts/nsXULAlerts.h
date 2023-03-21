@@ -11,6 +11,7 @@
 #include "nsInterfaceHashtable.h"
 
 #include "mozIDOMWindow.h"
+#include "nsIAlertsService.h"
 #include "nsIObserver.h"
 
 struct PendingAlert {
