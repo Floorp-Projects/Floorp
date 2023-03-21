@@ -557,12 +557,20 @@ WebTransportParent::OnIncomingBidirectionalStreamAvailable(
 
   Unused << aExpirationTime;
 
+  MOZ_ASSERT(!mOutgoingDatagramResolver);
   mOutgoingDatagramResolver = std::move(aResolver);
   // XXX we need to forward the timestamps to the necko stack
   // timestamp should be checked in the necko for expiry
   // See Bug 1818300
   // currently this calls OnOutgoingDatagramOutCome synchronously
-  Unused << mWebTransport->SendDatagram(aData, 0);
+  // Neqo won't call us back if the id == 0!
+  // We don't use the ID for anything currently; rework of the stack
+  // to implement proper HighWatermark buffering will require
+  // changes here anyways.
+  static uint64_t sDatagramId = 1;
+  LOG_VERBOSE(("Sending datagram %" PRIu64 ", length %zu", sDatagramId,
+               aData.Length()));
+  Unused << mWebTransport->SendDatagram(aData, sDatagramId++);
 
   return IPC_OK();
 }
@@ -572,7 +580,7 @@ NS_IMETHODIMP WebTransportParent::OnDatagramReceived(
   // We must be on the Socket Thread
   MOZ_ASSERT(mSocketThread->IsOnCurrentThread());
 
-  LOG(("WebTransportParent received datagram"));
+  LOG(("WebTransportParent received datagram length = %zu", aData.Length()));
 
   TimeStamp ts = TimeStamp::Now();
   Unused << SendIncomingDatagram(aData, ts);
@@ -593,16 +601,19 @@ WebTransportParent::OnOutgoingDatagramOutCome(
   MOZ_ASSERT(mSocketThread->IsOnCurrentThread());
   // XXX - do we need better error mappings for failures?
   nsresult result = NS_ERROR_FAILURE;
+  Unused << result;
   Unused << aId;
 
   if (aOutCome == WebTransportSessionEventListener::DatagramOutcome::SENT) {
     result = NS_OK;
+    LOG(("Sent datagram id= %" PRIu64, aId));
+  } else {
+    LOG(("Didn't send datagram id= %" PRIu64, aId));
   }
 
+  // This assumes the stack is calling us back synchronously!
   MOZ_ASSERT(mOutgoingDatagramResolver);
   mOutgoingDatagramResolver(result);
-
-  // reset the resolver to allow sending remaining datagrams
   mOutgoingDatagramResolver = nullptr;
 
   return NS_OK;
