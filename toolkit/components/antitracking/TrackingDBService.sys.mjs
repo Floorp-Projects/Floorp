@@ -2,14 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { Sqlite } = ChromeUtils.importESModule(
-  "resource://gre/modules/Sqlite.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { Sqlite } from "resource://gre/modules/Sqlite.sys.mjs";
 
 const SCHEMA_VERSION = 1;
 const TRACKERS_BLOCKED_COUNT = "contentblocking.trackers_blocked_count";
@@ -116,7 +110,7 @@ async function removeRecordsSince(db, date) {
   await db.execute(SQL.removeRecordsSince, { date });
 }
 
-function TrackingDBService() {
+export function TrackingDBService() {
   this._initPromise = this._initialize();
 }
 
@@ -376,5 +370,3 @@ TrackingDBService.prototype = {
     return earliestDateInMS || null;
   },
 };
-
-var EXPORTED_SYMBOLS = ["TrackingDBService"];

@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -70,7 +68,7 @@ class Feature {
   }
 }
 
-function PartitioningExceptionListService() {}
+export function PartitioningExceptionListService() {}
 
 PartitioningExceptionListService.prototype = {
   classID: Components.ID("{ab94809d-33f0-4f28-af38-01efbd3baf22}"),
@@ -142,5 +140,3 @@ PartitioningExceptionListService.prototype = {
     this.feature.removeObserver(observer);
   },
 };
-
-var EXPORTED_SYMBOLS = ["PartitioningExceptionListService"];

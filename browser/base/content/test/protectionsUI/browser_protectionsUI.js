@@ -9,11 +9,10 @@ const TRACKING_PAGE =
   // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://tracking.example.org/browser/browser/base/content/test/protectionsUI/trackingPage.html";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "ContentBlockingAllowList",
-  "resource://gre/modules/ContentBlockingAllowList.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  ContentBlockingAllowList:
+    "resource://gre/modules/ContentBlockingAllowList.sys.mjs",
+});
 
 const { CustomizableUITestUtils } = ChromeUtils.import(
   "resource://testing-common/CustomizableUITestUtils.jsm"
