@@ -115,6 +115,7 @@
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_docshell.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_editor.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPrefs_full_screen_api.h"
 #include "mozilla/StaticPrefs_layout.h"
@@ -4966,6 +4967,13 @@ void Document::EnsureInitializeInternalCommandDataHashtable() {
           ExecCommandParam::Boolean,
           SetDocumentStateCommand::GetInstance,
           CommandOnTextEditor::FallThrough));
+  sInternalCommandDataHashtable->InsertOrUpdate(
+      u"enableCompatibleJoinSplitDirection"_ns,
+      InternalCommandData("cmd_enableCompatibleJoinSplitNodeDirection",
+          Command::EnableCompatibleJoinSplitNodeDirection,
+          ExecCommandParam::Boolean,
+          SetDocumentStateCommand::GetInstance,
+          CommandOnTextEditor::FallThrough));
 #if 0
   // with empty string
   sInternalCommandDataHashtable->InsertOrUpdate(
@@ -5354,6 +5362,16 @@ bool Document::ExecCommand(const nsAString& aHTMLCommandName, bool aShowUI,
       return false;
     case Command::SetDocumentReadOnly:
       SetUseCounter(eUseCounter_custom_DocumentExecCommandContentReadOnly);
+      break;
+    case Command::EnableCompatibleJoinSplitNodeDirection:
+      // We don't allow to take the legacy behavior back if the new one is
+      // enabled by default.
+      if (StaticPrefs::
+              editor_join_split_direction_compatible_with_the_other_browsers() &&
+          !adjustedValue.EqualsLiteral("true") &&
+          !aSubjectPrincipal.IsSystemPrincipal()) {
+        return false;
+      }
       break;
     default:
       break;
