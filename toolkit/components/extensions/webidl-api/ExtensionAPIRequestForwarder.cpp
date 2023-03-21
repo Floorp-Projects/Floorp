@@ -5,6 +5,7 @@
 
 #include "ExtensionAPIRequestForwarder.h"
 #include "ExtensionEventListener.h"
+#include "ExtensionAPIBase.h"
 
 #include "js/Promise.h"
 #include "js/PropertyAndElement.h"  // JS_GetElement

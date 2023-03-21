@@ -14,6 +14,8 @@
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerPrivate.h"
 
+#include "ExtensionBrowser.h"
+
 class nsIGlobalObject;
 
 namespace mozilla {

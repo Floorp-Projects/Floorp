@@ -59,7 +59,7 @@ void ExtensionRuntime::GetLastError(JSContext* aCx,
   mExtensionBrowser->GetLastError(aRetval);
 }
 
-void ExtensionRuntime::GetId(DOMString& aRetval) {
+void ExtensionRuntime::GetId(dom::DOMString& aRetval) {
   GetWebExtPropertyAsString(u"id"_ns, aRetval);
 }
 

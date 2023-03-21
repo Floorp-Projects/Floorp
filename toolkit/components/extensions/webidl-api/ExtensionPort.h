@@ -9,6 +9,7 @@
 
 #include "js/TypeDecls.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/WeakPtr.h"
 #include "nsWrapperCache.h"
 
 #include "ExtensionAPIBase.h"

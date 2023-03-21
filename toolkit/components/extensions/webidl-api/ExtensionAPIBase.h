@@ -8,6 +8,7 @@
 #define mozilla_extensions_ExtensionAPIBase_h
 
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/ErrorResult.h"
 

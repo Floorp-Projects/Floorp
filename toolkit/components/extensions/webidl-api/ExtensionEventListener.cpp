@@ -4,9 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ExtensionEventListener.h"
+#include "ExtensionAPIRequestForwarder.h"
 #include "ExtensionPort.h"
 
+#include "mozilla/dom/ClonedErrorHolder.h"
 #include "mozilla/dom/FunctionBinding.h"
+#include "mozilla/dom/Promise.h"
 #include "nsThreadManager.h"  // NS_IsMainThread
 
 namespace mozilla {

@@ -17,6 +17,7 @@
 
 #include "ExtensionAPIBase.h"
 #include "ExtensionBrowser.h"
+#include "ExtensionSetting.h"
 
 class nsIGlobalObject;
 
