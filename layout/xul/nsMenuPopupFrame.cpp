@@ -1697,25 +1697,27 @@ void nsMenuPopupFrame::PerformMove(const Rects& aRects) {
   // window is moved. Popups at the parent level follow the parent window as it
   // is moved and remained anchored, so we want to maintain the anchoring
   // instead.
-  const bool fixPosition = [&] {
-    if (IsNoAutoHide() && (GetPopupLevel() != PopupLevel::Parent ||
-                           mAnchorType == MenuPopupAnchorType_Rect)) {
-      return true;
-    }
-    // Don't reposition anchored popups that shouldn't follow the anchor.
-    if (IsAnchored() && !ShouldFollowAnchor() && !mUsedScreenRect.IsEmpty()) {
-      return true;
-    }
-    return false;
-  }();
-
-  if (fixPosition) {
+  //
+  // FIXME: This suffers from issues like bug 1823552, where constraints imposed
+  // by the anchor are lost, but this is super-old behavior.
+  const bool fixPositionToPoint =
+      IsNoAutoHide() && (GetPopupLevel() != PopupLevel::Parent ||
+                         mAnchorType == MenuPopupAnchorType_Rect);
+  if (fixPositionToPoint) {
     // Account for the margin that will end up being added to the screen
     // coordinate the next time SetPopupPosition is called.
     const auto& margin = GetMargin();
     mAnchorType = MenuPopupAnchorType_Point;
     mScreenRect.x = aRects.mUsedRect.x - margin.left;
     mScreenRect.y = aRects.mUsedRect.y - margin.top;
+  }
+
+  // For anchored popups that shouldn't follow the anchor, fix the original
+  // anchor rect.
+  if (IsAnchored() && !ShouldFollowAnchor() && !mUsedScreenRect.IsEmpty() &&
+      mAnchorType != MenuPopupAnchorType_Rect) {
+    mAnchorType = MenuPopupAnchorType_Rect;
+    mScreenRect = aRects.mUntransformedAnchorRect;
   }
 
   // NOTE(emilio): This call below is kind of a workaround, but we need to do
@@ -2164,6 +2166,10 @@ void nsMenuPopupFrame::MoveTo(const CSSPoint& aPos, bool aUpdateAttrs,
     // This ensures that the anchor width is still honored, to prevent it from
     // changing spuriously.
     mScreenRect.height = 0;
+    // But we still need to make sure that our top left position ends up in
+    // appUnitsPos.
+    mPopupAlignment = POPUPALIGNMENT_TOPLEFT;
+    mPopupAnchor = POPUPALIGNMENT_BOTTOMLEFT;
   } else {
     mAnchorType = MenuPopupAnchorType_Point;
   }
