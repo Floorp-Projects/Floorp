@@ -135,12 +135,25 @@ enum TimerPrecisionType {
 
 // ============================================================================
 
+// NOLINTNEXTLINE(bugprone-macro-parentheses)
+#define ITEM_VALUE(name, val) name = val,
+
+enum RFPTarget {
+#include "RFPTargets.inc"
+};
+
+#undef ITEM_VALUE
+
+// ============================================================================
+
 class nsRFPService final : public nsIObserver {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
   static nsRFPService* GetOrCreate();
+
+  static bool IsRFPEnabledFor(RFPTarget aTarget);
 
   // --------------------------------------------------------------------------
   static double TimerResolution(RTPCallerType aRTPCallerType);
@@ -259,10 +272,13 @@ class nsRFPService final : public nsIObserver {
   nsCString mInitialTZValue;
 
   void UpdateRFPPref();
+  void UpdateRFPLiteOverrideList();
   void StartShutdown();
 
   void PrefChanged(const char* aPref);
   static void PrefChanged(const char* aPref, void* aSelf);
+
+  static Maybe<RFPTarget> TextToRFPTarget(const nsAString& aText);
 
   // --------------------------------------------------------------------------
 
