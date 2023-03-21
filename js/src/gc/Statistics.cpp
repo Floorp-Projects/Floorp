@@ -1118,7 +1118,7 @@ void Statistics::sendGCTelemetry() {
       double utilization = parallelRunTime / (wallTime * threadCount);
       runtime->metrics().GC_PARALLEL_MARK_SPEEDUP(uint32_t(speedup * 100.0));
       runtime->metrics().GC_PARALLEL_MARK_UTILIZATION(
-          uint32_t(utilization * 100.0));
+          std::clamp<uint32_t>(utilization * 100.0, 0, 100));
       runtime->metrics().GC_PARALLEL_MARK_INTERRUPTIONS(
           getCount(COUNT_PARALLEL_MARK_INTERRUPTIONS));
     }
