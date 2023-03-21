@@ -161,8 +161,7 @@ void TRRServiceParent::PrefsChanged(const char* aName, void* aSelf) {
 void TRRServiceParent::prefsChanged(const char* aName) {
   if (!aName || !strcmp(aName, "network.trr.uri") ||
       !strcmp(aName, "network.trr.default_provider_uri") ||
-      !strcmp(aName, kRolloutURIPref) ||
-      !strcmp(aName, "network.trr.ohttp.uri")) {
+      !strcmp(aName, kRolloutURIPref)) {
     OnTRRURIChange();
   }
 

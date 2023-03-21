@@ -89,7 +89,6 @@ async function forwardToTRR(request, response) {
 
 add_setup(async function setup() {
   h2Port = trr_test_setup();
-  runningOHTTPTests = true;
 
   if (mozinfo.socketprocess_networking) {
     Services.dns; // Needed to trigger socket process.
@@ -124,7 +123,6 @@ add_setup(async function setup() {
     Services.prefs.clearUserPref("network.trr.use_ohttp");
     Services.prefs.clearUserPref("network.trr.ohttp.config_uri");
     Services.prefs.clearUserPref("network.trr.ohttp.relay_uri");
-    Services.prefs.clearUserPref("network.trr.ohttp.uri");
     await new Promise((resolve, reject) => {
       httpServer.stop(resolve);
     });
