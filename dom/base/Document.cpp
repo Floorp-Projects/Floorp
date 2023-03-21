@@ -15925,7 +15925,16 @@ void Document::SendPageUseCounters() {
 void Document::RecomputeResistFingerprinting() {
   mShouldResistFingerprinting =
       !nsContentUtils::IsChromeDoc(this) &&
-      nsContentUtils::ShouldResistFingerprinting(mChannel);
+      nsContentUtils::ShouldResistFingerprinting(
+          mChannel, RFPTarget::IsAlwaysEnabledForPrecompute);
+}
+
+bool Document::ShouldResistFingerprinting(
+    RFPTarget aTarget /* = RFPTarget::Unknown */) const {
+  if (aTarget == RFPTarget::IgnoreTargetAndReturnCachedValue) {
+    return mShouldResistFingerprinting;
+  }
+  return mShouldResistFingerprinting && nsRFPService::IsRFPEnabledFor(aTarget);
 }
 
 WindowContext* Document::GetWindowContextForPageUseCounters() const {
