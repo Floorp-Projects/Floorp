@@ -6,8 +6,6 @@
     <!-- ####################################################################################### -->
 
     <!-- Label used for buttons, e.g. in dialogs -->
-    <string name="action_cancel">Shikpulu</string>
-    <!-- Label used for buttons, e.g. in dialogs -->
     <string name="action_ok">Yek nemi</string>
 
     <string name="action_save">Shikana</string>

@@ -89,9 +89,24 @@
     <string name="shortcut_erase_long_label">Tób bí lô góš</string>
 
 
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_and_open_short_label">Tòb bí &amp; mb-šàlɁ</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters.
+         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="shortcut_erase_and_open_long_label">Tòb bí ner mb-šàlɁ %1$s</string>
+
     <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">KwàɁn chán ná</string>
+             Klar is hard coded since we can't use variables in this context.
+             Do not translate or transliterate Klar.-->
+    <string name="text_selection_search_action_klar">KwàɁn léɁn Klar</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+            Focus Beta is hard coded since we can't use variables in this context.
+            Do not translate or transliterate Focus Beta.-->
+    <string name="text_selection_search_action_focus_beta">KwàɁn léɁn Focus Beta</string>
 
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Yent-chó wìʔ</string>
@@ -394,5 +409,7 @@
     <!-- Tips displayed on the home view -->
 
     <!-- Tracking protection bottom sheet -->
+
+     <!-- Promote SearchWidget Dialog -->
 
     </resources>

@@ -297,6 +297,9 @@
     <!-- Enable notification pre permission dialog title
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="onboarding_home_enable_notifications_title">Οι ειδοποιήσεις σάς βοηθούν να κάνετε περισσότερα με το %s</string>
+    <!-- Enable notification pre permission dialog description with rationale
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_description">Συγχρονίστε τις καρτέλες σας με τις συσκευές σας, διαχειριστείτε λήψεις, λάβετε συμβουλές για την αξιοποίηση της προστασίας απορρήτου του %s στο έπακρο και πολλά άλλα.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="onboarding_home_enable_notifications_positive_button">Συνέχεια</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
@@ -1463,20 +1466,28 @@
     <string name="preference_enhanced_tracking_protection">Ενισχυμένη προστασία από καταγραφή</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">Περιήγηση χωρίς παρακολούθηση</string>
+    <!-- Preference summary for enhanced tracking protection settings on/off switch -->
+    <string name="preference_enhanced_tracking_protection_summary" tools:ignore="UnusedResources">Τώρα με Ολική προστασία cookie, η πιο ισχυρή μας φύλαξη ενάντια στους ιχνηλάτες μεταξύ ιστοτόπων.</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation">Κρατήστε τα δεδομένα σας για τον εαυτό σας. Το %s σας προστατεύει από πολλούς από τους πιο συνηθισμένους ιχνηλάτες που ακολουθούν ό,τι κάνετε στο διαδίκτυο.</string>
+    <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">Το %s σάς προστατεύει από τους περισσότερους, συνηθισμένους ιχνηλάτες που ακολουθούν ό,τι κάνετε στο διαδίκτυο.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Μάθετε περισσότερα</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Τυπική (προεπιλογή)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_4">Ισορροπία μεταξύ απορρήτου και επιδόσεων. Οι σελίδες φορτώνονται κανονικά.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_5" tools:ignore="UnusedResources">Οι σελίδες θα φορτώνονται κανονικά, αλλά θα αποκλείονται λιγότεροι ιχνηλάτες.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Τι αποκλείει η τυπική προστασία από καταγραφή</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Αυστηρή</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_3">Φραγή περισσότερων ιχνηλατών για ταχύτερη φόρτωση σελίδων. Ορισμένες λειτουργίες της σελίδας ενδέχεται να δυσλειτουργούν.</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_4" tools:ignore="UnusedResources">Ισχυρότερη προστασία από καταγραφή και καλύτερες επιδόσεις, αλλά ορισμένοι ιστότοποι ενδέχεται να μην λειτουργούν σωστά.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Τι αποκλείει η αυστηρή προστασία από καταγραφή</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->

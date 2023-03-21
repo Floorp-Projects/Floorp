@@ -203,7 +203,7 @@
     <!-- Text shown in a dialog that displays information about the last attempt to update an add-on. This is the title of the dialog. -->
     <string name="mozac_feature_addons_updater_dialog_title">Päivitystiedot</string>
     <!-- Label in the dialog displaying information for the last attempt to update add-ons. It's followed by the date of the last attempt. -->
-    <string name="mozac_feature_addons_updater_dialog_last_attempt">Viimeinen yritys:</string>
+    <string name="mozac_feature_addons_updater_dialog_last_attempt">Viimeisin yritys:</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
     <string name="mozac_feature_addons_updater_dialog_status">Tila:</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
