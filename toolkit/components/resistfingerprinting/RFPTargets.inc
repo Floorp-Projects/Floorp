@@ -2,6 +2,10 @@
  * Once allocated, a string or value cannot ever be changed or re-used
  */
 
+
+ITEM_VALUE(TouchEvents, 0x0001)
+
+
 /*
  * Certain classes (Document, at time of writing) have a cached value for
  * ShouldResistFingerprinting. By adding a Target check into their ShouldRFP
