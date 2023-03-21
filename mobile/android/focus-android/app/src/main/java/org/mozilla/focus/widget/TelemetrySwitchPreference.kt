@@ -47,6 +47,9 @@ internal class TelemetrySwitchPreference(context: Context, attrs: AttributeSet?)
     }
 
     override fun getLearnMoreUrl(): String {
-        return SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.USAGE_DATA)
+        return SupportUtils.getSumoURLForTopic(
+            SupportUtils.getAppVersion(context),
+            SupportUtils.SumoTopic.USAGE_DATA,
+        )
     }
 }

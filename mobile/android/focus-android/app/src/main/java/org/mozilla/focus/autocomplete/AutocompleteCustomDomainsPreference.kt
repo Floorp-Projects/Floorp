@@ -16,5 +16,8 @@ class AutocompleteCustomDomainsPreference(
     context: Context,
     attrs: AttributeSet?,
 ) : LearnMoreSwitchPreference(context, attrs) {
-    override fun getLearnMoreUrl() = SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.AUTOCOMPLETE)
+    override fun getLearnMoreUrl() = SupportUtils.getSumoURLForTopic(
+        SupportUtils.getAppVersion(context),
+        SupportUtils.SumoTopic.AUTOCOMPLETE,
+    )
 }

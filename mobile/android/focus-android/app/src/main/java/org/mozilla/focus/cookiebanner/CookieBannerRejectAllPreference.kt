@@ -12,6 +12,9 @@ class CookieBannerRejectAllPreference(context: Context, attrs: AttributeSet?) :
     LearnMoreSwitchPreference(context, attrs) {
 
     override fun getLearnMoreUrl(): String {
-        return SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.COOKIE_BANNER)
+        return SupportUtils.getSumoURLForTopic(
+            SupportUtils.getAppVersion(context),
+            SupportUtils.SumoTopic.COOKIE_BANNER,
+        )
     }
 }

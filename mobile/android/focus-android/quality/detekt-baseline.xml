@@ -428,7 +428,6 @@
     <ID>UndocumentedPublicFunction:StudiesViewModel.kt$StudiesViewModel$fun setStudiesState(state: Boolean)</ID>
     <ID>UndocumentedPublicFunction:SupportUtils.kt$SupportUtils$// For some reason this URL has a different format than the other SUMO URLs fun getSafeBrowsingURL(): String</ID>
     <ID>UndocumentedPublicFunction:SupportUtils.kt$SupportUtils$fun getGenericSumoURLForTopic(topic: SumoTopic): String</ID>
-    <ID>UndocumentedPublicFunction:SupportUtils.kt$SupportUtils$fun getSumoURLForTopic(context: Context, topic: SumoTopic): String</ID>
     <ID>UndocumentedPublicFunction:SupportUtils.kt$SupportUtils$fun openDefaultBrowserSumoPage(context: Context)</ID>
     <ID>UndocumentedPublicFunction:SupportUtils.kt$SupportUtils$fun openUrlInCustomTab(activity: FragmentActivity, destinationUrl: String)</ID>
     <ID>UndocumentedPublicFunction:TabViewHolder.kt$TabViewHolder$fun bind( tab: TabSessionState, isCurrentSession: Boolean, selectSession: (TabSessionState) -&gt; Unit, closeSession: (TabSessionState) -&gt; Unit, )</ID>

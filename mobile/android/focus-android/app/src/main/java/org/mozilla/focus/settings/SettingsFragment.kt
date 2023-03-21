@@ -78,7 +78,7 @@ class SettingsFragment : BaseSettingsFragment() {
             SupportUtils.SumoTopic.WHATS_NEW_FOCUS
         }
 
-        val url = SupportUtils.getSumoURLForTopic(context, sumoTopic)
+        val url = SupportUtils.getSumoURLForTopic(SupportUtils.getAppVersion(context), sumoTopic)
         requireComponents.tabsUseCases.addTab(
             url,
             source = SessionState.Source.Internal.Menu,

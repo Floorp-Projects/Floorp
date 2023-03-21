@@ -63,9 +63,11 @@ object SupportUtils {
         return "https://support.mozilla.org/$langTag/kb/$escapedTopic"
     }
 
-    fun getSumoURLForTopic(context: Context, topic: SumoTopic): String {
+    /**
+     * Returns the SUMO URL for a specific topic
+     */
+    fun getSumoURLForTopic(appVersion: String, topic: SumoTopic): String {
         val escapedTopic = getEncodedTopicUTF8(topic.topicStr)
-        val appVersion = getAppVersion(context)
         val osTarget = "Android"
         val langTag = Locales.getLanguageTag(Locale.getDefault())
         return "https://support.mozilla.org/1/mobile/$appVersion/$osTarget/$langTag/$escapedTopic"
@@ -85,7 +87,10 @@ object SupportUtils {
         }
     }
 
-    private fun getAppVersion(context: Context): String {
+    /**
+     * Returns the version name of this package.
+     */
+    fun getAppVersion(context: Context): String {
         try {
             return context.packageManager.getPackageInfoCompat(context.packageName, 0).versionName
         } catch (e: PackageManager.NameNotFoundException) {
@@ -122,7 +127,7 @@ object SupportUtils {
         val openCustomTabActivityIntent =
             Intent(activity, CustomTabActivity::class.java).apply {
                 action = Intent.ACTION_VIEW
-                data = getSumoURLForTopic(activity, SumoTopic.ADD_SEARCH_ENGINE).toUri()
+                data = getSumoURLForTopic(getAppVersion(activity), SumoTopic.ADD_SEARCH_ENGINE).toUri()
                 putExtra(CustomTabActivity.CUSTOM_TAB_ID, tabId)
             }
 

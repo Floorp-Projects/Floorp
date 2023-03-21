@@ -78,7 +78,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
     override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
         val openLearnMore = {
             val learnMoreUrl = SupportUtils.getSumoURLForTopic(
-                requireContext(),
+                SupportUtils.getAppVersion(requireContext()),
                 SupportUtils.SumoTopic.ADD_SEARCH_ENGINE,
             )
             SupportUtils.openUrlInCustomTab(requireActivity(), learnMoreUrl)

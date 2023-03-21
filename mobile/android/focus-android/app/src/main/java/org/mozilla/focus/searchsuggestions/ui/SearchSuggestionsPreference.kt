@@ -18,7 +18,10 @@ class SearchSuggestionsPreference(
     attrs: AttributeSet?,
 ) : LearnMoreSwitchPreference(context, attrs) {
     override fun getLearnMoreUrl(): String =
-        SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.SEARCH_SUGGESTIONS)
+        SupportUtils.getSumoURLForTopic(
+            SupportUtils.getAppVersion(context),
+            SupportUtils.SumoTopic.SEARCH_SUGGESTIONS,
+        )
 
     override fun getDescription(): String =
         context.getString(
