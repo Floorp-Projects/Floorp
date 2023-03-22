@@ -34,10 +34,18 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * Top-level UI for displaying a list of tabs.
  *
  * @param tabs The list of [TabSessionState] to display.
+ * @param onTabClose Invoked when the user clicks to close a tab.
+ * @param onTabMediaClick Invoked when the user interacts with a tab's media controls.
+ * @param onTabClick Invoked when the user clicks on a tab.
+ * @param onTabLongClick Invoked when the user long clicks a tab.
  */
 @Composable
 fun TabList(
     tabs: List<TabSessionState>,
+    onTabClose: (TabSessionState) -> Unit,
+    onTabMediaClick: (TabSessionState) -> Unit,
+    onTabClick: (TabSessionState) -> Unit,
+    onTabLongClick: (TabSessionState) -> Unit,
 ) {
     val tabListBottomPadding = dimensionResource(id = R.dimen.tab_tray_list_bottom_padding)
     val state = rememberLazyListState()
@@ -52,10 +60,10 @@ fun TabList(
         ) { tab ->
             TabListItem(
                 tab = tab,
-                onCloseClick = {},
-                onMediaClick = {},
-                onClick = {},
-                onLongClick = {},
+                onCloseClick = onTabClose,
+                onMediaClick = onTabMediaClick,
+                onClick = onTabClick,
+                onLongClick = onTabLongClick,
             )
         }
 
@@ -69,10 +77,18 @@ fun TabList(
  * Top-level UI for displaying a grid of tabs.
  *
  * @param tabs The list of [TabSessionState] to display.
+ * @param onTabClose Invoked when the user clicks to close a tab.
+ * @param onTabMediaClick Invoked when the user interacts with a tab's media controls.
+ * @param onTabClick Invoked when the user clicks on a tab.
+ * @param onTabLongClick Invoked when the user long clicks a tab.
  */
 @Composable
 fun TabGrid(
     tabs: List<TabSessionState>,
+    onTabClose: (tab: TabSessionState) -> Unit,
+    onTabMediaClick: (tab: TabSessionState) -> Unit,
+    onTabClick: (tab: TabSessionState) -> Unit,
+    onTabLongClick: (tab: TabSessionState) -> Unit,
 ) {
     val tabListBottomPadding = dimensionResource(id = R.dimen.tab_tray_list_bottom_padding)
     val state = rememberLazyGridState()
@@ -88,10 +104,10 @@ fun TabGrid(
         ) { tab ->
             TabGridItem(
                 tab = tab,
-                onCloseClick = {},
-                onMediaClick = {},
-                onClick = {},
-                onLongClick = {},
+                onCloseClick = onTabClose,
+                onMediaClick = onTabMediaClick,
+                onClick = onTabClick,
+                onLongClick = onTabLongClick,
             )
         }
 
@@ -112,6 +128,10 @@ private fun TabListPreview() {
         ) {
             TabList(
                 tabs = generateFakeTabsList(),
+                onTabClose = {},
+                onTabMediaClick = {},
+                onTabClick = {},
+                onTabLongClick = {},
             )
         }
     }
@@ -128,6 +148,10 @@ private fun TabGridPreview() {
         ) {
             TabGrid(
                 tabs = generateFakeTabsList(),
+                onTabClose = {},
+                onTabMediaClick = {},
+                onTabClick = {},
+                onTabLongClick = {},
             )
         }
     }

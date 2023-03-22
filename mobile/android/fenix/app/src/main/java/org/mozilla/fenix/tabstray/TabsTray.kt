@@ -33,12 +33,23 @@ import org.mozilla.fenix.theme.FirefoxTheme
  *
  * @param tabsTrayStore [TabsTrayStore] used to listen for changes to [TabsTrayState].
  * @param displayTabsInGrid Whether the normal and private tabs should be displayed in a grid.
+ * @param onTabClose Invoked when the user clicks to close a tab.
+ * @param onTabMediaClick Invoked when the user interacts with a tab's media controls.
+ * @param onTabClick Invoked when the user clicks on a tab.
+ * @param onTabMultiSelectClick Invoked when the user clicks on a tab while in multi-select mode.
+ * @param onTabLongClick Invoked when the user long clicks a tab.
  */
 @OptIn(ExperimentalPagerApi::class, ExperimentalComposeUiApi::class)
+@Suppress("LongMethod", "LongParameterList")
 @Composable
 fun TabsTray(
     tabsTrayStore: TabsTrayStore,
     displayTabsInGrid: Boolean,
+    onTabClose: (TabSessionState) -> Unit,
+    onTabMediaClick: (TabSessionState) -> Unit,
+    onTabClick: (TabSessionState) -> Unit,
+    onTabMultiSelectClick: (TabSessionState) -> Unit,
+    onTabLongClick: (TabSessionState) -> Unit,
 ) {
     val multiselectMode = tabsTrayStore
         .observeAsComposableState { state -> state.mode }.value ?: TabsTrayState.Mode.Normal
@@ -48,9 +59,18 @@ fun TabsTray(
         .observeAsComposableState { state -> state.privateTabs }.value ?: emptyList()
     val pagerState = rememberPagerState(initialPage = 0)
     val scope = rememberCoroutineScope()
+    val isInMultiSelectMode = multiselectMode is TabsTrayState.Mode.Select
+
     val animateScrollToPage: ((Page) -> Unit) = { page ->
         scope.launch {
             pagerState.animateScrollToPage(page.ordinal)
+        }
+    }
+    val handleTabClick: ((TabSessionState) -> Unit) = { tab ->
+        if (isInMultiSelectMode) {
+            onTabMultiSelectClick(tab)
+        } else {
+            onTabClick(tab)
         }
     }
 
@@ -61,7 +81,7 @@ fun TabsTray(
     ) {
         Box(modifier = Modifier.nestedScroll(rememberNestedScrollInteropConnection())) {
             TabsTrayBanner(
-                isInMultiSelectMode = multiselectMode is TabsTrayState.Mode.Select,
+                isInMultiSelectMode = isInMultiSelectMode,
                 onTabPageIndicatorClicked = animateScrollToPage,
             )
         }
@@ -80,10 +100,18 @@ fun TabsTray(
                         if (displayTabsInGrid) {
                             TabGrid(
                                 tabs = normalTabs,
+                                onTabClose = onTabClose,
+                                onTabMediaClick = onTabMediaClick,
+                                onTabClick = handleTabClick,
+                                onTabLongClick = onTabLongClick,
                             )
                         } else {
                             TabList(
                                 tabs = normalTabs,
+                                onTabClose = onTabClose,
+                                onTabMediaClick = onTabMediaClick,
+                                onTabClick = handleTabClick,
+                                onTabLongClick = onTabLongClick,
                             )
                         }
                     }
@@ -91,10 +119,18 @@ fun TabsTray(
                         if (displayTabsInGrid) {
                             TabGrid(
                                 tabs = privateTabs,
+                                onTabClose = onTabClose,
+                                onTabMediaClick = onTabMediaClick,
+                                onTabClick = handleTabClick,
+                                onTabLongClick = onTabLongClick,
                             )
                         } else {
                             TabList(
                                 tabs = privateTabs,
+                                onTabClose = onTabClose,
+                                onTabMediaClick = onTabMediaClick,
+                                onTabClick = handleTabClick,
+                                onTabLongClick = onTabLongClick,
                             )
                         }
                     }
@@ -129,6 +165,11 @@ private fun TabsTrayPreview() {
         TabsTray(
             tabsTrayStore = store,
             displayTabsInGrid = false,
+            onTabClose = {},
+            onTabMediaClick = {},
+            onTabClick = {},
+            onTabMultiSelectClick = {},
+            onTabLongClick = {},
         )
     }
 }
@@ -147,6 +188,11 @@ private fun TabsTrayMultiSelectPreview() {
         TabsTray(
             tabsTrayStore = store,
             displayTabsInGrid = true,
+            onTabClose = {},
+            onTabMediaClick = {},
+            onTabClick = {},
+            onTabMultiSelectClick = {},
+            onTabLongClick = {},
         )
     }
 }

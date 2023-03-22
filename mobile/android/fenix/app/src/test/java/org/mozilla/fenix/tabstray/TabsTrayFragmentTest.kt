@@ -100,6 +100,7 @@ class TabsTrayFragmentTest {
             every { fragment.context } returns testContext // needed for getString()
             every { any<CoroutineScope>().allowUndo(any(), any(), any(), any(), any(), any(), any(), any()) } just Runs
             every { fragment.requireView() } returns view
+            every { testContext.settings().enableTabsTrayToCompose } returns false
 
             fragment.showUndoSnackbarForTab(true)
 
@@ -131,6 +132,7 @@ class TabsTrayFragmentTest {
             every { fragment.context } returns testContext // needed for getString()
             every { any<CoroutineScope>().allowUndo(any(), any(), any(), any(), any(), any(), any(), any()) } just Runs
             every { fragment.requireView() } returns view
+            every { testContext.settings().enableTabsTrayToCompose } returns false
 
             fragment.showUndoSnackbarForTab(true)
 
@@ -163,6 +165,7 @@ class TabsTrayFragmentTest {
             every { fragment.context } returns testContext // needed for getString()
             every { any<CoroutineScope>().allowUndo(any(), any(), any(), any(), any(), any(), any(), any()) } just Runs
             every { fragment.requireView() } returns view
+            every { testContext.settings().enableTabsTrayToCompose } returns false
 
             fragment.showUndoSnackbarForTab(false)
 
@@ -194,6 +197,7 @@ class TabsTrayFragmentTest {
             every { fragment.context } returns testContext // needed for getString()
             every { any<CoroutineScope>().allowUndo(any(), any(), any(), any(), any(), any(), any(), any()) } just Runs
             every { fragment.requireView() } returns view
+            every { testContext.settings().enableTabsTrayToCompose } returns false
 
             fragment.showUndoSnackbarForTab(false)
 

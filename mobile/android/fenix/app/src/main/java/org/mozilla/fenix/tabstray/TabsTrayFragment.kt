@@ -210,6 +210,17 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                     TabsTray(
                         tabsTrayStore = tabsTrayStore,
                         displayTabsInGrid = requireContext().settings().gridTabView,
+                        onTabClose = { tab ->
+                            tabsTrayInteractor.onTabClosed(tab, TABS_TRAY_FEATURE_NAME)
+                        },
+                        onTabMediaClick = tabsTrayInteractor::onMediaClicked,
+                        onTabClick = { tab ->
+                            tabsTrayInteractor.onTabSelected(tab, TABS_TRAY_FEATURE_NAME)
+                        },
+                        onTabMultiSelectClick = { tab ->
+                            tabsTrayInteractor.onMultiSelectClicked(tab, TABS_TRAY_FEATURE_NAME)
+                        },
+                        onTabLongClick = tabsTrayInteractor::onTabLongClicked,
                     )
                 }
             }
@@ -484,22 +495,24 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                 false -> getString(R.string.snackbar_tab_closed)
             }
 
-        lifecycleScope.allowUndo(
-            requireView(),
-            snackbarMessage,
-            getString(R.string.snackbar_deleted_undo),
-            {
-                requireComponents.useCases.tabsUseCases.undo.invoke()
-                tabLayoutMediator.withFeature {
-                    it.selectTabAtPosition(
-                        if (isPrivate) Page.PrivateTabs.ordinal else Page.NormalTabs.ordinal,
-                    )
-                }
-            },
-            operation = { },
-            elevation = ELEVATION,
-            anchorView = if (fabButtonBinding.newTabButton.isVisible) fabButtonBinding.newTabButton else null,
-        )
+        if (!requireContext().settings().enableTabsTrayToCompose) {
+            lifecycleScope.allowUndo(
+                requireView(),
+                snackbarMessage,
+                getString(R.string.snackbar_deleted_undo),
+                {
+                    requireComponents.useCases.tabsUseCases.undo.invoke()
+                    tabLayoutMediator.withFeature {
+                        it.selectTabAtPosition(
+                            if (isPrivate) Page.PrivateTabs.ordinal else Page.NormalTabs.ordinal,
+                        )
+                    }
+                },
+                operation = { },
+                elevation = ELEVATION,
+                anchorView = if (fabButtonBinding.newTabButton.isVisible) fabButtonBinding.newTabButton else null,
+            )
+        }
     }
 
     @VisibleForTesting
@@ -646,5 +659,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
         // Elevation for undo toasts
         @VisibleForTesting
         internal const val ELEVATION = 80f
+
+        private const val TABS_TRAY_FEATURE_NAME = "Tabs tray"
     }
 }
