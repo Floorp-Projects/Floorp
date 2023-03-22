@@ -329,12 +329,17 @@ export class UrlbarInput {
    * @param {boolean} [dontShowSearchTerms]
    *        True if userTypedValue should not be overidden by search terms
    *        and false otherwise.
+   * @param {boolean} [isSameDocument]
+   *        True if the caller of setURI loaded a new document and false
+   *        otherwise (e.g. the location change was from an anchor scroll
+   *        or a pushState event).
    */
   setURI(
     uri = null,
     dueToTabSwitch = false,
     dueToSessionRestore = false,
-    dontShowSearchTerms = false
+    dontShowSearchTerms = false,
+    isSameDocument = false
   ) {
     if (!this.window.gBrowser.userTypedValue) {
       this.window.gBrowser.selectedBrowser.searchTerms = "";
@@ -363,6 +368,12 @@ export class UrlbarInput {
       if (this.window.gBrowser.selectedBrowser.searchTerms) {
         value = this.window.gBrowser.selectedBrowser.searchTerms;
         valid = !dueToSessionRestore;
+        if (!isSameDocument) {
+          Services.telemetry.scalarAdd(
+            "urlbar.persistedsearchterms.view_count",
+            1
+          );
+        }
       } else {
         uri =
           this.window.gBrowser.selectedBrowser.currentAuthPromptURI ||
@@ -767,10 +778,14 @@ export class UrlbarInput {
   maybeHandleRevertFromPopup(anchorElement) {
     if (
       anchorElement?.closest("#urlbar") &&
-      this.window.gBrowser.selectedBrowser.searchTerms
+      this.window.gBrowser.selectedBrowser.searchTerms &&
+      !this.window.gBrowser.userTypedValue
     ) {
       this.handleRevert(true);
-      // TODO: Bug 1815971, add telemetry.
+      Services.telemetry.scalarAdd(
+        "urlbar.persistedsearchterms.revert_by_popup_count",
+        1
+      );
     }
   }
 
