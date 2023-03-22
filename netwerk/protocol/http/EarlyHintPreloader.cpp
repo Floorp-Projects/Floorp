@@ -519,6 +519,7 @@ void EarlyHintPreloader::SetParentChannel() {
 // https://searchfox.org/mozilla-central/rev/b4150d1c6fae0c51c522df2d2c939cf5ad331d4c/netwerk/ipc/DocumentLoadListener.cpp#1311
 void EarlyHintPreloader::InvokeStreamListenerFunctions() {
   AssertIsOnMainThread();
+  RefPtr<EarlyHintPreloader> self(this);
 
   LOG((
       "EarlyHintPreloader::InvokeStreamListenerFunctions [this=%p parent=%p]\n",
