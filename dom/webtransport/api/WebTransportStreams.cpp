@@ -53,7 +53,10 @@ WebTransportIncomingStreamsAlgorithms::PullCallbackImpl(
   RefPtr<WebTransportIncomingStreamsAlgorithms> self(this);
   // The real work of PullCallback()
   // Step 5: Wait until there is an available incoming unidirectional stream.
-  if (mTransport->mUnidirectionalStreams.Length() == 0) {
+  auto length = (mUnidirectional == StreamType::Unidirectional)
+                    ? mTransport->mUnidirectionalStreams.Length()
+                    : mTransport->mBidirectionalStreams.Length();
+  if (length == 0) {
     // We need to wait.
     // Per
     // https://streams.spec.whatwg.org/#readablestreamdefaultcontroller-pulling
