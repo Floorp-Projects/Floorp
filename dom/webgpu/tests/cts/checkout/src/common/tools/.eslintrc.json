@@ -1,0 +1,9 @@
+{
+  "rules": {
+    "no-console": "off",
+    "no-process-exit": "off",
+    "node/no-unpublished-import": "off",
+    "node/no-unpublished-require": "off",
+    "@typescript-eslint/no-var-requires": "off"
+  }
+}
