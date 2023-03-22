@@ -346,9 +346,14 @@ already_AddRefed<PerformanceMark> Performance::Mark(
     if (GetOwner()) {
       innerWindowId = Some(GetOwner()->WindowID());
     }
+    TimeStamp startTimeStamp =
+        CreationTimeStamp() +
+        TimeDuration::FromMilliseconds(performanceMark->UnclampedStartTime());
     profiler_add_marker("UserTiming", geckoprofiler::category::DOM,
-                        MarkerInnerWindowId(innerWindowId), UserTimingMarker{},
-                        aName, /* aIsMeasure */ false, Nothing{}, Nothing{});
+                        MarkerOptions(MarkerTiming::InstantAt(startTimeStamp),
+                                      MarkerInnerWindowId(innerWindowId)),
+                        UserTimingMarker{}, aName, /* aIsMeasure */ false,
+                        Nothing{}, Nothing{});
   }
 
   return performanceMark.forget();
