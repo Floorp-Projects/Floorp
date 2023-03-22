@@ -162,12 +162,7 @@ struct FloatingPoint final : private detail::FloatingPointTrait<T> {
 template <typename T>
 static MOZ_ALWAYS_INLINE bool IsNegative(T aValue) {
   MOZ_ASSERT(!std::isnan(aValue), "NaN does not have a sign");
-
-  /* The sign bit is set if the double is negative. */
-  typedef FloatingPoint<T> Traits;
-  typedef typename Traits::Bits Bits;
-  Bits bits = BitwiseCast<Bits>(aValue);
-  return (bits & Traits::kSignBit) != 0;
+  return std::signbit(aValue);
 }
 
 /** Determines whether a float/double represents -0. */
