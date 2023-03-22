@@ -174,7 +174,7 @@ macro_rules! for_each_operator {
             @mvp I64Const { value: i64 } => visit_i64_const
             @mvp F32Const { value: $crate::Ieee32 } => visit_f32_const
             @mvp F64Const { value: $crate::Ieee64 } => visit_f64_const
-            @reference_types RefNull { ty: $crate::ValType } => visit_ref_null
+            @reference_types RefNull { hty: $crate::HeapType } => visit_ref_null
             @reference_types RefIsNull => visit_ref_is_null
             @reference_types RefFunc { function_index: u32 } => visit_ref_func
             @mvp I32Eqz => visit_i32_eqz
@@ -658,14 +658,14 @@ macro_rules! for_each_operator {
             // Relaxed SIMD operators
             // https://github.com/WebAssembly/relaxed-simd
             @relaxed_simd I8x16RelaxedSwizzle => visit_i8x16_relaxed_swizzle
-            @relaxed_simd I32x4RelaxedTruncSatF32x4S => visit_i32x4_relaxed_trunc_sat_f32x4_s
-            @relaxed_simd I32x4RelaxedTruncSatF32x4U => visit_i32x4_relaxed_trunc_sat_f32x4_u
-            @relaxed_simd I32x4RelaxedTruncSatF64x2SZero => visit_i32x4_relaxed_trunc_sat_f64x2_s_zero
-            @relaxed_simd I32x4RelaxedTruncSatF64x2UZero => visit_i32x4_relaxed_trunc_sat_f64x2_u_zero
-            @relaxed_simd F32x4RelaxedFma => visit_f32x4_relaxed_fma
-            @relaxed_simd F32x4RelaxedFnma => visit_f32x4_relaxed_fnma
-            @relaxed_simd F64x2RelaxedFma => visit_f64x2_relaxed_fma
-            @relaxed_simd F64x2RelaxedFnma => visit_f64x2_relaxed_fnma
+            @relaxed_simd I32x4RelaxedTruncF32x4S => visit_i32x4_relaxed_trunc_f32x4_s
+            @relaxed_simd I32x4RelaxedTruncF32x4U => visit_i32x4_relaxed_trunc_f32x4_u
+            @relaxed_simd I32x4RelaxedTruncF64x2SZero => visit_i32x4_relaxed_trunc_f64x2_s_zero
+            @relaxed_simd I32x4RelaxedTruncF64x2UZero => visit_i32x4_relaxed_trunc_f64x2_u_zero
+            @relaxed_simd F32x4RelaxedMadd => visit_f32x4_relaxed_madd
+            @relaxed_simd F32x4RelaxedNmadd => visit_f32x4_relaxed_nmadd
+            @relaxed_simd F64x2RelaxedMadd => visit_f64x2_relaxed_madd
+            @relaxed_simd F64x2RelaxedNmadd => visit_f64x2_relaxed_nmadd
             @relaxed_simd I8x16RelaxedLaneselect => visit_i8x16_relaxed_laneselect
             @relaxed_simd I16x8RelaxedLaneselect => visit_i16x8_relaxed_laneselect
             @relaxed_simd I32x4RelaxedLaneselect => visit_i32x4_relaxed_laneselect
@@ -675,9 +675,15 @@ macro_rules! for_each_operator {
             @relaxed_simd F64x2RelaxedMin => visit_f64x2_relaxed_min
             @relaxed_simd F64x2RelaxedMax => visit_f64x2_relaxed_max
             @relaxed_simd I16x8RelaxedQ15mulrS => visit_i16x8_relaxed_q15mulr_s
-            @relaxed_simd I16x8DotI8x16I7x16S => visit_i16x8_dot_i8x16_i7x16_s
-            @relaxed_simd I32x4DotI8x16I7x16AddS => visit_i32x4_dot_i8x16_i7x16_add_s
-            @relaxed_simd F32x4RelaxedDotBf16x8AddF32x4 => visit_f32x4_relaxed_dot_bf16x8_add_f32x4
+            @relaxed_simd I16x8RelaxedDotI8x16I7x16S => visit_i16x8_relaxed_dot_i8x16_i7x16_s
+            @relaxed_simd I32x4RelaxedDotI8x16I7x16AddS => visit_i32x4_relaxed_dot_i8x16_i7x16_add_s
+
+            // Typed Function references
+            @function_references CallRef { hty: $crate::HeapType } => visit_call_ref
+            @function_references ReturnCallRef { hty: $crate::HeapType } => visit_return_call_ref
+            @function_references RefAsNonNull => visit_ref_as_non_null
+            @function_references BrOnNull { relative_depth: u32 } => visit_br_on_null
+            @function_references BrOnNonNull { relative_depth: u32 } => visit_br_on_non_null
         }
     };
 }

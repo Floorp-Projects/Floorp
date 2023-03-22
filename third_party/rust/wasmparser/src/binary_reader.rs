@@ -686,21 +686,21 @@ impl<'a> BinaryReader<'a> {
         }
 
         // Check for a block type of form [] -> [t].
-        if let Some(ty) = ValType::from_byte(b) {
-            self.position += 1;
-            return Ok(BlockType::Type(ty));
+        if ValType::is_valtype_byte(b) {
+            return Ok(BlockType::Type(self.read()?));
         }
 
         // Not empty or a singular type, so read the function type index
         let idx = self.read_var_s33()?;
-        if idx < 0 || idx > (std::u32::MAX as i64) {
-            return Err(BinaryReaderError::new(
-                "invalid function type",
-                self.original_position(),
-            ));
+        match u32::try_from(idx) {
+            Ok(idx) => Ok(BlockType::FuncType(idx)),
+            Err(_) => {
+                return Err(BinaryReaderError::new(
+                    "invalid function type",
+                    self.original_position(),
+                ));
+            }
         }
-
-        Ok(BlockType::FuncType(idx as u32))
     }
 
     /// Visit the next available operator with the specified [`VisitOperator`] instance.
@@ -778,6 +778,8 @@ impl<'a> BinaryReader<'a> {
             }
             0x12 => visitor.visit_return_call(self.read_var_u32()?),
             0x13 => visitor.visit_return_call_indirect(self.read_var_u32()?, self.read_var_u32()?),
+            0x14 => visitor.visit_call_ref(self.read()?),
+            0x15 => visitor.visit_return_call_ref(self.read()?),
             0x18 => visitor.visit_delegate(self.read_var_u32()?),
             0x19 => visitor.visit_catch_all(),
             0x1a => visitor.visit_drop(),
@@ -971,6 +973,9 @@ impl<'a> BinaryReader<'a> {
             0xd0 => visitor.visit_ref_null(self.read()?),
             0xd1 => visitor.visit_ref_is_null(),
             0xd2 => visitor.visit_ref_func(self.read_var_u32()?),
+            0xd3 => visitor.visit_ref_as_non_null(),
+            0xd4 => visitor.visit_br_on_null(self.read_var_u32()?),
+            0xd6 => visitor.visit_br_on_non_null(self.read_var_u32()?),
 
             0xfc => self.visit_0xfc_operator(pos, visitor)?,
             0xfd => self.visit_0xfd_operator(pos, visitor)?,
@@ -1347,14 +1352,14 @@ impl<'a> BinaryReader<'a> {
             0xfe => visitor.visit_f64x2_convert_low_i32x4_s(),
             0xff => visitor.visit_f64x2_convert_low_i32x4_u(),
             0x100 => visitor.visit_i8x16_relaxed_swizzle(),
-            0x101 => visitor.visit_i32x4_relaxed_trunc_sat_f32x4_s(),
-            0x102 => visitor.visit_i32x4_relaxed_trunc_sat_f32x4_u(),
-            0x103 => visitor.visit_i32x4_relaxed_trunc_sat_f64x2_s_zero(),
-            0x104 => visitor.visit_i32x4_relaxed_trunc_sat_f64x2_u_zero(),
-            0x105 => visitor.visit_f32x4_relaxed_fma(),
-            0x106 => visitor.visit_f32x4_relaxed_fnma(),
-            0x107 => visitor.visit_f64x2_relaxed_fma(),
-            0x108 => visitor.visit_f64x2_relaxed_fnma(),
+            0x101 => visitor.visit_i32x4_relaxed_trunc_f32x4_s(),
+            0x102 => visitor.visit_i32x4_relaxed_trunc_f32x4_u(),
+            0x103 => visitor.visit_i32x4_relaxed_trunc_f64x2_s_zero(),
+            0x104 => visitor.visit_i32x4_relaxed_trunc_f64x2_u_zero(),
+            0x105 => visitor.visit_f32x4_relaxed_madd(),
+            0x106 => visitor.visit_f32x4_relaxed_nmadd(),
+            0x107 => visitor.visit_f64x2_relaxed_madd(),
+            0x108 => visitor.visit_f64x2_relaxed_nmadd(),
             0x109 => visitor.visit_i8x16_relaxed_laneselect(),
             0x10a => visitor.visit_i16x8_relaxed_laneselect(),
             0x10b => visitor.visit_i32x4_relaxed_laneselect(),
@@ -1364,9 +1369,8 @@ impl<'a> BinaryReader<'a> {
             0x10f => visitor.visit_f64x2_relaxed_min(),
             0x110 => visitor.visit_f64x2_relaxed_max(),
             0x111 => visitor.visit_i16x8_relaxed_q15mulr_s(),
-            0x112 => visitor.visit_i16x8_dot_i8x16_i7x16_s(),
-            0x113 => visitor.visit_i32x4_dot_i8x16_i7x16_add_s(),
-            0x114 => visitor.visit_f32x4_relaxed_dot_bf16x8_add_f32x4(),
+            0x112 => visitor.visit_i16x8_relaxed_dot_i8x16_i7x16_s(),
+            0x113 => visitor.visit_i32x4_relaxed_dot_i8x16_i7x16_add_s(),
 
             _ => bail!(pos, "unknown 0xfd subopcode: 0x{code:x}"),
         })

@@ -119,7 +119,8 @@ impl<T: WasmModuleResources> FuncValidator<T> {
     /// This should be used if the application is already reading local
     /// definitions and there's no need to re-parse the function again.
     pub fn define_locals(&mut self, offset: usize, count: u32, ty: ValType) -> Result<()> {
-        self.validator.define_locals(offset, count, ty)
+        self.validator
+            .define_locals(offset, count, ty, &self.resources)
     }
 
     /// Validates the next operator in a function.
@@ -269,10 +270,24 @@ mod tests {
         fn func_type_at(&self, _type_idx: u32) -> Option<&Self::FuncType> {
             Some(&EmptyFuncType)
         }
+        fn type_index_of_function(&self, _at: u32) -> Option<u32> {
+            todo!()
+        }
         fn type_of_function(&self, _func_idx: u32) -> Option<&Self::FuncType> {
             todo!()
         }
-        fn element_type_at(&self, _at: u32) -> Option<ValType> {
+        fn check_value_type(
+            &self,
+            _t: ValType,
+            _features: &WasmFeatures,
+            _offset: usize,
+        ) -> Result<()> {
+            Ok(())
+        }
+        fn element_type_at(&self, _at: u32) -> Option<crate::RefType> {
+            todo!()
+        }
+        fn matches(&self, _t1: ValType, _t2: ValType) -> bool {
             todo!()
         }
         fn element_count(&self) -> u32 {

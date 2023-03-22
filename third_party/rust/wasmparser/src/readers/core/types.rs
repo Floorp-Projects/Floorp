@@ -30,43 +30,180 @@ pub enum ValType {
     F64,
     /// The value type is v128.
     V128,
-    /// The value type is a function reference.
-    FuncRef,
-    /// The value type is an extern reference.
-    ExternRef,
+    /// The value type is a reference. Which type of reference is decided by
+    /// RefType. This is a change in syntax from the function references proposal,
+    /// which now provides FuncRef and ExternRef as sugar for the generic ref
+    /// construct.
+    Ref(RefType),
+}
+
+/// A reference type. When the function references feature is disabled, this
+/// only represents funcref and externref, using the following format:
+/// RefType { nullable: true, heap_type: Func | Extern })
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[repr(packed)]
+pub struct RefType {
+    /// Whether it's nullable
+    pub nullable: bool,
+    /// The relevant heap type
+    pub heap_type: HeapType,
+}
+
+impl RefType {
+    /// Alias for the wasm `funcref` type.
+    pub const FUNCREF: RefType = RefType {
+        nullable: true,
+        heap_type: HeapType::Func,
+    };
+    /// Alias for the wasm `externref` type.
+    pub const EXTERNREF: RefType = RefType {
+        nullable: true,
+        heap_type: HeapType::Extern,
+    };
+}
+
+impl From<RefType> for ValType {
+    fn from(ty: RefType) -> ValType {
+        ValType::Ref(ty)
+    }
+}
+
+/// Used as a performance optimization in HeapType. Call `.into()` to get the u32
+// A u16 forces 2-byte alignment, which forces HeapType to be 4 bytes,
+// which forces ValType to 5 bytes. This newtype is annotated as unaligned to
+// store the necessary bits compactly
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[repr(packed)]
+pub struct PackedIndex(u16);
+
+impl TryFrom<u32> for PackedIndex {
+    type Error = ();
+
+    fn try_from(idx: u32) -> Result<PackedIndex, ()> {
+        idx.try_into().map(PackedIndex).map_err(|_| ())
+    }
+}
+
+impl From<PackedIndex> for u32 {
+    fn from(x: PackedIndex) -> u32 {
+        x.0 as u32
+    }
+}
+
+/// A heap type from function references. When the proposal is disabled, Index
+/// is an invalid type.
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum HeapType {
+    /// Function type index
+    /// Note: [PackedIndex] may need to be unpacked
+    TypedFunc(PackedIndex),
+    /// From reference types
+    Func,
+    /// From reference types
+    Extern,
 }
 
 impl ValType {
+    /// Alias for the wasm `funcref` type.
+    pub const FUNCREF: ValType = ValType::Ref(RefType::FUNCREF);
+    /// Alias for the wasm `externref` type.
+    pub const EXTERNREF: ValType = ValType::Ref(RefType::EXTERNREF);
+
     /// Returns whether this value type is a "reference type".
     ///
     /// Only reference types are allowed in tables, for example, and with some
     /// instructions. Current reference types include `funcref` and `externref`.
     pub fn is_reference_type(&self) -> bool {
-        matches!(self, ValType::FuncRef | ValType::ExternRef)
+        matches!(self, ValType::Ref(_))
+    }
+    /// Whether the type is defaultable according to function references
+    /// spec. This amounts to whether it's a non-nullable ref
+    pub fn is_defaultable(&self) -> bool {
+        !matches!(
+            self,
+            ValType::Ref(RefType {
+                nullable: false,
+                ..
+            })
+        )
     }
 
-    pub(crate) fn from_byte(byte: u8) -> Option<ValType> {
+    pub(crate) fn is_valtype_byte(byte: u8) -> bool {
         match byte {
-            0x7F => Some(ValType::I32),
-            0x7E => Some(ValType::I64),
-            0x7D => Some(ValType::F32),
-            0x7C => Some(ValType::F64),
-            0x7B => Some(ValType::V128),
-            0x70 => Some(ValType::FuncRef),
-            0x6F => Some(ValType::ExternRef),
-            _ => None,
+            0x7F | 0x7E | 0x7D | 0x7C | 0x7B | 0x70 | 0x6F | 0x6B | 0x6C => true,
+            _ => false,
         }
     }
 }
 
 impl<'a> FromReader<'a> for ValType {
     fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
-        match ValType::from_byte(reader.peek()?) {
-            Some(ty) => {
+        match reader.peek()? {
+            0x7F => {
                 reader.position += 1;
-                Ok(ty)
+                Ok(ValType::I32)
             }
-            None => bail!(reader.original_position(), "invalid value type"),
+            0x7E => {
+                reader.position += 1;
+                Ok(ValType::I64)
+            }
+            0x7D => {
+                reader.position += 1;
+                Ok(ValType::F32)
+            }
+            0x7C => {
+                reader.position += 1;
+                Ok(ValType::F64)
+            }
+            0x7B => {
+                reader.position += 1;
+                Ok(ValType::V128)
+            }
+            0x70 | 0x6F | 0x6B | 0x6C => Ok(ValType::Ref(reader.read()?)),
+            _ => bail!(reader.original_position(), "invalid value type"),
+        }
+    }
+}
+
+impl<'a> FromReader<'a> for RefType {
+    fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
+        match reader.read()? {
+            0x70 => Ok(RefType::FUNCREF),
+            0x6F => Ok(RefType::EXTERNREF),
+            byte @ (0x6B | 0x6C) => Ok(RefType {
+                nullable: byte == 0x6C,
+                heap_type: reader.read()?,
+            }),
+            _ => bail!(reader.original_position(), "malformed reference type"),
+        }
+    }
+}
+
+impl<'a> FromReader<'a> for HeapType {
+    fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
+        match reader.peek()? {
+            0x70 => {
+                reader.position += 1;
+                Ok(HeapType::Func)
+            }
+            0x6F => {
+                reader.position += 1;
+                Ok(HeapType::Extern)
+            }
+            _ => {
+                let idx = match u32::try_from(reader.read_var_s33()?) {
+                    Ok(idx) => idx,
+                    Err(_) => {
+                        bail!(reader.original_position(), "invalid function heap type",);
+                    }
+                };
+                match idx.try_into() {
+                    Ok(packed) => Ok(HeapType::TypedFunc(packed)),
+                    Err(_) => {
+                        bail!(reader.original_position(), "function index too large");
+                    }
+                }
+            }
         }
     }
 }
@@ -142,7 +279,7 @@ impl FuncType {
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct TableType {
     /// The table's element type.
-    pub element_type: ValType,
+    pub element_type: RefType,
     /// Initial size of this table, in elements.
     pub initial: u32,
     /// Optional maximum size of the table, in elements.

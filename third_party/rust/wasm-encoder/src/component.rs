@@ -42,6 +42,12 @@ const INSTANCE_SORT: u8 = 0x05;
 pub trait ComponentSection: Encode {
     /// Gets the section identifier for this section.
     fn id(&self) -> u8;
+
+    /// Appends this section to the specified destination list of bytes.
+    fn append_to_component(&self, dst: &mut Vec<u8>) {
+        dst.push(self.id());
+        self.encode(dst);
+    }
 }
 
 /// Known section identifiers of WebAssembly components.
@@ -101,13 +107,19 @@ pub struct Component {
 }
 
 impl Component {
+    /// The 8-byte header at the beginning of all components.
+    #[rustfmt::skip]
+    pub const HEADER: [u8; 8] = [
+        // Magic
+        0x00, 0x61, 0x73, 0x6D,
+        // Version
+        0x0c, 0x00, 0x01, 0x00,
+    ];
+
     /// Begin writing a new `Component`.
     pub fn new() -> Self {
         Self {
-            bytes: vec![
-                0x00, 0x61, 0x73, 0x6D, // magic (`\0asm`)
-                0x0c, 0x00, 0x01, 0x00, // version
-            ],
+            bytes: Self::HEADER.to_vec(),
         }
     }
 
