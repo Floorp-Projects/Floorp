@@ -336,10 +336,10 @@ Maybe<NumberPartType> GetPartTypeForNumberField(UNumberFormatFields fieldName,
   switch (fieldName) {
     case UNUM_INTEGER_FIELD:
       if (number.isSome()) {
-        if (std::isnan(*number)) {
+        if (IsNaN(*number)) {
           return Some(NumberPartType::Nan);
         }
-        if (!std::isfinite(*number)) {
+        if (!IsFinite(*number)) {
           return Some(NumberPartType::Infinity);
         }
       }

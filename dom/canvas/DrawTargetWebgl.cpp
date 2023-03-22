@@ -2709,8 +2709,8 @@ static Maybe<AAStroke::VertexBuffer> GenerateStrokeVertexBuffer(
                                  ToAAStrokeLineCap(aStrokeOptions->mLineCap),
                                  ToAAStrokeLineJoin(aStrokeOptions->mLineJoin),
                                  aStrokeOptions->mMiterLimit};
-  if (style.width <= 0.0f || !std::isfinite(style.width) ||
-      style.miter_limit <= 0.0f || !std::isfinite(style.miter_limit)) {
+  if (style.width <= 0.0f || !IsFinite(style.width) ||
+      style.miter_limit <= 0.0f || !IsFinite(style.miter_limit)) {
     return Nothing();
   }
   AAStroke::Stroker* s = AAStroke::aa_stroke_new(

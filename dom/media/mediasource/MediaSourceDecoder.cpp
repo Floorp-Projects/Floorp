@@ -88,9 +88,9 @@ media::TimeIntervals MediaSourceDecoder::GetSeekable() {
 
   media::TimeIntervals seekable;
   double duration = mMediaSource->Duration();
-  if (std::isnan(duration)) {
+  if (IsNaN(duration)) {
     // Return empty range.
-  } else if (duration > 0 && std::isinf(duration)) {
+  } else if (duration > 0 && mozilla::IsInfinite(duration)) {
     media::TimeIntervals buffered = GetBuffered();
 
     // 1. If live seekable range is not empty:
@@ -207,7 +207,7 @@ void MediaSourceDecoder::SetInitialDuration(int64_t aDuration) {
   MOZ_ASSERT(NS_IsMainThread());
   // Only use the decoded duration if one wasn't already
   // set.
-  if (!mMediaSource || !std::isnan(ExplicitDuration())) {
+  if (!mMediaSource || !IsNaN(ExplicitDuration())) {
     return;
   }
   double duration = aDuration;
@@ -288,7 +288,7 @@ bool MediaSourceDecoder::CanPlayThroughImpl() {
     return false;
   }
 
-  if (std::isnan(mMediaSource->Duration())) {
+  if (IsNaN(mMediaSource->Duration())) {
     // Don't have any data yet.
     return false;
   }

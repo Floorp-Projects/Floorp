@@ -204,7 +204,7 @@ void MobileViewportManager::SetInitialViewport() {
 CSSToScreenScale MobileViewportManager::ClampZoom(
     const CSSToScreenScale& aZoom, const nsViewportInfo& aViewportInfo) const {
   CSSToScreenScale zoom = aZoom;
-  if (std::isnan(zoom.scale)) {
+  if (IsNaN(zoom.scale)) {
     NS_ERROR("Don't pass NaN to ClampZoom; check caller for 0/0 division");
     zoom = CSSToScreenScale(1.0);
   }

@@ -111,7 +111,7 @@ void SVGMarkerElement::SetOrientToAuto() {
 
 void SVGMarkerElement::SetOrientToAngle(DOMSVGAngle& angle, ErrorResult& rv) {
   float f = angle.Value();
-  if (!std::isfinite(f)) {
+  if (!IsFinite(f)) {
     rv.ThrowTypeError("Unknown or invalid type");
     return;
   }

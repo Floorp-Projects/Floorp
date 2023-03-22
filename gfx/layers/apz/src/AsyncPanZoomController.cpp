@@ -6225,8 +6225,8 @@ void AsyncPanZoomController::UpdateZoomConstraints(
              aConstraints.mMinZoom.scale, aConstraints.mMaxZoom.scale);
   }
 
-  if (std::isnan(aConstraints.mMinZoom.scale) ||
-      std::isnan(aConstraints.mMaxZoom.scale)) {
+  if (IsNaN(aConstraints.mMinZoom.scale) ||
+      IsNaN(aConstraints.mMaxZoom.scale)) {
     NS_WARNING("APZC received zoom constraints with NaN values; dropping...");
     return;
   }

@@ -149,7 +149,7 @@ nsresult SVGNumberListSMILType::ComputeDistance(const SMILValue& aFrom,
     total += delta * delta;
   }
   double distance = sqrt(total);
-  if (!std::isfinite(distance)) {
+  if (!IsFinite(distance)) {
     return NS_ERROR_FAILURE;
   }
   aDistance = distance;

@@ -243,7 +243,7 @@ void RemoteAccessibleBase<Derived>::Value(nsString& aValue) const {
 
     if (HasNumericValue()) {
       double checkValue = CurValue();
-      if (!std::isnan(checkValue)) {
+      if (!IsNaN(checkValue)) {
         aValue.AppendFloat(checkValue);
       }
       return;

@@ -108,7 +108,7 @@ struct TimingParams {
   }
 
   static void ValidateIterations(double aIterations, ErrorResult& aRv) {
-    if (std::isnan(aIterations)) {
+    if (IsNaN(aIterations)) {
       aRv.ThrowTypeError("Iterations must not be NaN");
       return;
     }

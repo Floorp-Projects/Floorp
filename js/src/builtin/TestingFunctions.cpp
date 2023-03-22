@@ -2814,7 +2814,7 @@ static bool SaveStack(JSContext* cx, unsigned argc, Value* vp) {
     if (!ToNumber(cx, args[0], &maxDouble)) {
       return false;
     }
-    if (std::isnan(maxDouble) || maxDouble < 0 || maxDouble > UINT32_MAX) {
+    if (mozilla::IsNaN(maxDouble) || maxDouble < 0 || maxDouble > UINT32_MAX) {
       ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK, args[0],
                        nullptr, "not a valid maximum frame count");
       return false;
@@ -8184,7 +8184,7 @@ static bool FdLibM_Pow(JSContext* cx, unsigned argc, Value* vp) {
 
   // Because C99 and ECMA specify different behavior for pow(), we need to wrap
   // the fdlibm call to make it ECMA compliant.
-  if (!std::isfinite(y) && (x == 1.0 || x == -1.0)) {
+  if (!mozilla::IsFinite(y) && (x == 1.0 || x == -1.0)) {
     args.rval().setNaN();
   } else {
     args.rval().setDouble(fdlibm::pow(x, y));

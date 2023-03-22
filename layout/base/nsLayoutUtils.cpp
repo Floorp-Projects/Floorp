@@ -4067,10 +4067,10 @@ already_AddRefed<nsFontMetrics> nsLayoutUtils::GetFontMetricsForComputedStyle(
   }
 
   nsFont font = styleFont->mFont;
-  MOZ_ASSERT(!std::isnan(float(font.size.ToCSSPixels())),
+  MOZ_ASSERT(!IsNaN(float(font.size.ToCSSPixels())),
              "Style font should never be NaN");
   font.size.ScaleBy(aInflation);
-  if (MOZ_UNLIKELY(std::isnan(float(font.size.ToCSSPixels())))) {
+  if (MOZ_UNLIKELY(IsNaN(float(font.size.ToCSSPixels())))) {
     font.size = {0};
   }
   font.variantWidth = aVariantWidth;

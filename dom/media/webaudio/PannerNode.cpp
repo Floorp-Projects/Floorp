@@ -354,7 +354,7 @@ void PannerNode::SetPanningModel(PanningModelType aPanningModel) {
 static bool SetParamFromDouble(AudioParam* aParam, double aValue,
                                const char (&aParamName)[2], ErrorResult& aRv) {
   float value = static_cast<float>(aValue);
-  if (!std::isfinite(value)) {
+  if (!mozilla::IsFinite(value)) {
     aRv.ThrowTypeError<MSG_NOT_FINITE>(aParamName);
     return false;
   }

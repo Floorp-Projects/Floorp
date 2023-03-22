@@ -48,6 +48,7 @@ using JS::ToInt32;
 using mozilla::CheckedInt;
 using mozilla::DebugOnly;
 using mozilla::IsFloat32Representable;
+using mozilla::IsNaN;
 using mozilla::IsPowerOfTwo;
 using mozilla::Maybe;
 using mozilla::NumbersAreIdentical;
@@ -974,7 +975,7 @@ MConstant* MConstant::New(TempAllocator::Fallible alloc, const Value& v) {
 }
 
 MConstant* MConstant::NewFloat32(TempAllocator& alloc, double d) {
-  MOZ_ASSERT(std::isnan(d) || d == double(float(d)));
+  MOZ_ASSERT(IsNaN(d) || d == double(float(d)));
   return new (alloc) MConstant(float(d));
 }
 
@@ -1327,10 +1328,10 @@ bool MConstant::valueToBoolean(bool* res) const {
       *res = toInt64() != 0;
       return true;
     case MIRType::Double:
-      *res = !std::isnan(toDouble()) && toDouble() != 0.0;
+      *res = !mozilla::IsNaN(toDouble()) && toDouble() != 0.0;
       return true;
     case MIRType::Float32:
-      *res = !std::isnan(toFloat32()) && toFloat32() != 0.0f;
+      *res = !mozilla::IsNaN(toFloat32()) && toFloat32() != 0.0f;
       return true;
     case MIRType::Null:
     case MIRType::Undefined:
@@ -3784,7 +3785,7 @@ MDefinition* MWasmTruncateToInt32::foldsTo(TempAllocator& alloc) {
 
   if (input->type() == MIRType::Double && input->isConstant()) {
     double d = input->toConstant()->toDouble();
-    if (std::isnan(d)) {
+    if (IsNaN(d)) {
       return this;
     }
 
@@ -3799,7 +3800,7 @@ MDefinition* MWasmTruncateToInt32::foldsTo(TempAllocator& alloc) {
 
   if (input->type() == MIRType::Float32 && input->isConstant()) {
     double f = double(input->toConstant()->toFloat32());
-    if (std::isnan(f)) {
+    if (IsNaN(f)) {
       return this;
     }
 
@@ -4268,7 +4269,7 @@ bool MCompare::evaluateConstantOperands(TempAllocator& alloc, bool* result) {
     }
 
     // Optimize comparison against NaN.
-    if (std::isnan(cte)) {
+    if (mozilla::IsNaN(cte)) {
       switch (jsop_) {
         case JSOp::Lt:
         case JSOp::Le:

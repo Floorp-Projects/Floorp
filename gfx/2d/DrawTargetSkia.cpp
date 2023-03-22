@@ -29,7 +29,6 @@
 #include "PathSkia.h"
 #include "Swizzle.h"
 #include <algorithm>
-#include <cmath>
 
 #ifdef MOZ_WIDGET_COCOA
 #  include "BorrowedContext.h"
@@ -524,8 +523,8 @@ static void SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern,
       GradientStopsSkia* stops =
           static_cast<GradientStopsSkia*>(pat.mStops.get());
       if (!stops || stops->mCount < 2 || !pat.mCenter1.IsFinite() ||
-          !std::isfinite(pat.mRadius1) || !pat.mCenter2.IsFinite() ||
-          !std::isfinite(pat.mRadius2) ||
+          !IsFinite(pat.mRadius1) || !pat.mCenter2.IsFinite() ||
+          !IsFinite(pat.mRadius2) ||
           (pat.mCenter1 == pat.mCenter2 && pat.mRadius1 == pat.mRadius2)) {
         aPaint.setColor(SK_ColorTRANSPARENT);
       } else {
@@ -559,7 +558,7 @@ static void SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern,
       GradientStopsSkia* stops =
           static_cast<GradientStopsSkia*>(pat.mStops.get());
       if (!stops || stops->mCount < 2 || !pat.mCenter.IsFinite() ||
-          !std::isfinite(pat.mAngle)) {
+          !IsFinite(pat.mAngle)) {
         aPaint.setColor(SK_ColorTRANSPARENT);
       } else {
         SkMatrix mat;

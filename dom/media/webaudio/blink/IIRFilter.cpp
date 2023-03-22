@@ -108,7 +108,7 @@ void IIRFilter::process(const float* sourceP, float* destP,
     // Avoid introducing a stream of subnormals
     destP[n] = WebCore::DenormalDisabler::flushDenormalFloatToZero(yn);
     MOZ_ASSERT(destP[n] == 0.0 || std::fabs(destP[n]) > FLT_MIN ||
-                   std::isnan(destP[n]),
+                   mozilla::IsNaN(destP[n]),
                "output should not be subnormal, but can be NaN");
   }
 }

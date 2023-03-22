@@ -254,31 +254,31 @@ class GpsdLocationProvider::PollRunnable final : public Runnable {
 #  else
           galt = gpsData.fix.altitude;
 #  endif
-          if (!std::isnan(galt)) {
+          if (!IsNaN(galt)) {
             alt = galt;
           }
           [[fallthrough]];
         case MODE_2D:
-          if (!std::isnan(gpsData.fix.latitude)) {
+          if (!IsNaN(gpsData.fix.latitude)) {
             lat = gpsData.fix.latitude;
           }
-          if (!std::isnan(gpsData.fix.longitude)) {
+          if (!IsNaN(gpsData.fix.longitude)) {
             lon = gpsData.fix.longitude;
           }
-          if (!std::isnan(gpsData.fix.epx) && !std::isnan(gpsData.fix.epy)) {
+          if (!IsNaN(gpsData.fix.epx) && !IsNaN(gpsData.fix.epy)) {
             hError = std::max(gpsData.fix.epx, gpsData.fix.epy);
-          } else if (!std::isnan(gpsData.fix.epx)) {
+          } else if (!IsNaN(gpsData.fix.epx)) {
             hError = gpsData.fix.epx;
-          } else if (!std::isnan(gpsData.fix.epy)) {
+          } else if (!IsNaN(gpsData.fix.epy)) {
             hError = gpsData.fix.epy;
           }
-          if (!std::isnan(gpsData.fix.epv)) {
+          if (!IsNaN(gpsData.fix.epv)) {
             vError = gpsData.fix.epv;
           }
-          if (!std::isnan(gpsData.fix.track)) {
+          if (!IsNaN(gpsData.fix.track)) {
             heading = gpsData.fix.track;
           }
-          if (!std::isnan(gpsData.fix.speed)) {
+          if (!IsNaN(gpsData.fix.speed)) {
             speed = gpsData.fix.speed;
           }
           break;

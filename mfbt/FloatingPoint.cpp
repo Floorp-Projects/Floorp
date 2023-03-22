@@ -14,7 +14,7 @@ namespace mozilla {
 
 bool IsFloat32Representable(double aValue) {
   // NaNs and infinities are representable.
-  if (!std::isfinite(aValue)) {
+  if (!IsFinite(aValue)) {
     return true;
   }
 

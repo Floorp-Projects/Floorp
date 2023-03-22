@@ -122,9 +122,7 @@ class SVGLength {
 
  private:
 #ifdef DEBUG
-  bool IsValid() const {
-    return std::isfinite(mValue) && IsValidUnitType(mUnit);
-  }
+  bool IsValid() const { return IsFinite(mValue) && IsValidUnitType(mUnit); }
 #endif
 
   /**

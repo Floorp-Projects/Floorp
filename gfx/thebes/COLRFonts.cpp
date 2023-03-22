@@ -1646,8 +1646,8 @@ struct PaintVarRotateAroundCenter : public PaintRotateAroundCenter {
 static inline Matrix SkewMatrix(float aSkewX, float aSkewY) {
   float xy = tanf(aSkewX * float(M_PI));
   float yx = tanf(aSkewY * float(M_PI));
-  return std::isnan(xy) || std::isnan(yx) ? Matrix()
-                                          : Matrix(1.0, -yx, xy, 1.0, 0.0, 0.0);
+  return IsNaN(xy) || IsNaN(yx) ? Matrix()
+                                : Matrix(1.0, -yx, xy, 1.0, 0.0, 0.0);
 }
 
 struct PaintSkew : public PaintTransformBase {

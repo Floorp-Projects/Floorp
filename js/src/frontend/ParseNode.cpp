@@ -22,6 +22,8 @@
 using namespace js;
 using namespace js::frontend;
 
+using mozilla::IsFinite;
+
 #ifdef DEBUG
 void ListNode::checkConsistency() const {
   ParseNode* const* tailNode;
@@ -193,7 +195,7 @@ void NumericLiteral::dumpImpl(const ParserAtomsTable* parserAtoms,
   ToCStringBuf cbuf;
   const char* cstr = NumberToCString(&cbuf, value());
   MOZ_ASSERT(cstr);
-  if (!std::isfinite(value())) {
+  if (!IsFinite(value())) {
     out.put("#");
   }
   out.printf("%s", cstr);

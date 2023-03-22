@@ -11,6 +11,7 @@
 #include "mozilla/dom/GeolocationPositionBinding.h"
 
 using mozilla::EqualOrBothNaN;
+using mozilla::IsNaN;
 
 // NaN() is a more convenient function name.
 inline double NaN() { return mozilla::UnspecifiedNaN<double>(); }
@@ -27,7 +28,7 @@ nsGeoPositionCoords::nsGeoPositionCoords(double aLat, double aLong, double aAlt,
       mHError((aHError >= 0) ? aHError : 0)
       // altitudeAccuracy without an altitude doesn't make any sense.
       ,
-      mVError((aVError >= 0 && !std::isnan(aAlt)) ? aVError : NaN())
+      mVError((aVError >= 0 && !IsNaN(aAlt)) ? aVError : NaN())
       // If the hosting device is stationary (i.e. the value of the speed
       // attribute is 0), then the value of the heading attribute must be NaN
       // (or null).

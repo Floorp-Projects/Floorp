@@ -3174,7 +3174,7 @@ void HTMLMediaElement::Seek(double aTime, SeekTarget::Type aSeekType,
   // synchronous errors are returned using aRv, not promise rejections.
 
   // aTime should be non-NaN.
-  MOZ_ASSERT(!std::isnan(aTime));
+  MOZ_ASSERT(!mozilla::IsNaN(aTime));
 
   // Seeking step1, Set the media element's show poster flag to false.
   // https://html.spec.whatwg.org/multipage/media.html#dom-media-seek

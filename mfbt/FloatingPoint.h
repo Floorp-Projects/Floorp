@@ -155,14 +155,56 @@ struct FloatingPoint final : private detail::FloatingPointTrait<T> {
                 "all bits accounted for");
 };
 
+/** Determines whether a float/double is NaN. */
+template <typename T>
+static MOZ_ALWAYS_INLINE bool IsNaN(T aValue) {
+  /*
+   * A float/double is NaN if all exponent bits are 1 and the significand
+   * contains at least one non-zero bit.
+   */
+  typedef FloatingPoint<T> Traits;
+  typedef typename Traits::Bits Bits;
+  return (BitwiseCast<Bits>(aValue) & Traits::kExponentBits) ==
+             Traits::kExponentBits &&
+         (BitwiseCast<Bits>(aValue) & Traits::kSignificandBits) != 0;
+}
+
+/** Determines whether a float/double is +Infinity or -Infinity. */
+template <typename T>
+static MOZ_ALWAYS_INLINE bool IsInfinite(T aValue) {
+  /* Infinities have all exponent bits set to 1 and an all-0 significand. */
+  typedef FloatingPoint<T> Traits;
+  typedef typename Traits::Bits Bits;
+  Bits bits = BitwiseCast<Bits>(aValue);
+  return (bits & ~Traits::kSignBit) == Traits::kExponentBits;
+}
+
+/** Determines whether a float/double is not NaN or infinite. */
+template <typename T>
+static MOZ_ALWAYS_INLINE bool IsFinite(T aValue) {
+  /*
+   * NaN and Infinities are the only non-finite floats/doubles, and both have
+   * all exponent bits set to 1.
+   */
+  typedef FloatingPoint<T> Traits;
+  typedef typename Traits::Bits Bits;
+  Bits bits = BitwiseCast<Bits>(aValue);
+  return (bits & Traits::kExponentBits) != Traits::kExponentBits;
+}
+
 /**
  * Determines whether a float/double is negative or -0.  It is an error
  * to call this method on a float/double which is NaN.
  */
 template <typename T>
 static MOZ_ALWAYS_INLINE bool IsNegative(T aValue) {
-  MOZ_ASSERT(!std::isnan(aValue), "NaN does not have a sign");
-  return std::signbit(aValue);
+  MOZ_ASSERT(!IsNaN(aValue), "NaN does not have a sign");
+
+  /* The sign bit is set if the double is negative. */
+  typedef FloatingPoint<T> Traits;
+  typedef typename Traits::Bits Bits;
+  Bits bits = BitwiseCast<Bits>(aValue);
+  return (bits & Traits::kSignBit) != 0;
 }
 
 /** Determines whether a float/double represents -0. */
@@ -191,7 +233,7 @@ static MOZ_ALWAYS_INLINE bool IsPositiveZero(T aValue) {
  */
 template <typename T>
 static MOZ_ALWAYS_INLINE T ToZeroIfNonfinite(T aValue) {
-  return std::isfinite(aValue) ? aValue : 0;
+  return IsFinite(aValue) ? aValue : 0;
 }
 
 /**
@@ -293,7 +335,7 @@ static MOZ_ALWAYS_INLINE void SpecificNaN(
   BitwiseCast<T>(
       (signbit ? Traits::kSignBit : 0) | Traits::kExponentBits | significand,
       result);
-  MOZ_ASSERT(std::isnan(*result));
+  MOZ_ASSERT(IsNaN(*result));
 }
 
 template <typename T>
@@ -328,7 +370,7 @@ inline bool NumberEqualsSignedInteger(Float aValue, SignedInteger* aInteger) {
   MOZ_MAKE_MEM_UNDEFINED(aInteger, sizeof(*aInteger));
 
   // NaNs and infinities are not integers.
-  if (!std::isfinite(aValue)) {
+  if (!IsFinite(aValue)) {
     return false;
   }
 
@@ -483,8 +525,8 @@ static MOZ_ALWAYS_INLINE T UnspecifiedNaN() {
 template <typename T>
 static inline bool NumbersAreIdentical(T aValue1, T aValue2) {
   using Bits = typename FloatingPoint<T>::Bits;
-  if (std::isnan(aValue1)) {
-    return std::isnan(aValue2);
+  if (IsNaN(aValue1)) {
+    return IsNaN(aValue2);
   }
   return BitwiseCast<Bits>(aValue1) == BitwiseCast<Bits>(aValue2);
 }
@@ -504,8 +546,8 @@ static inline bool NumbersAreBitwiseIdentical(T aValue1, T aValue2) {
  */
 template <typename T>
 static inline bool EqualOrBothNaN(T aValue1, T aValue2) {
-  if (std::isnan(aValue1)) {
-    return std::isnan(aValue2);
+  if (IsNaN(aValue1)) {
+    return IsNaN(aValue2);
   }
   return aValue1 == aValue2;
 }
@@ -516,7 +558,7 @@ static inline bool EqualOrBothNaN(T aValue1, T aValue2) {
  */
 template <typename T>
 static inline T NaNSafeMin(T aValue1, T aValue2) {
-  if (std::isnan(aValue1) || std::isnan(aValue2)) {
+  if (IsNaN(aValue1) || IsNaN(aValue2)) {
     return UnspecifiedNaN<T>();
   }
   return std::min(aValue1, aValue2);
@@ -528,7 +570,7 @@ static inline T NaNSafeMin(T aValue1, T aValue2) {
  */
 template <typename T>
 static inline T NaNSafeMax(T aValue1, T aValue2) {
-  if (std::isnan(aValue1) || std::isnan(aValue2)) {
+  if (IsNaN(aValue1) || IsNaN(aValue2)) {
     return UnspecifiedNaN<T>();
   }
   return std::max(aValue1, aValue2);

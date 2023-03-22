@@ -218,7 +218,8 @@ using namespace mozilla::a11y;
   double min = mGeckoAccessible->MinValue();
   double max = mGeckoAccessible->MaxValue();
 
-  if ((std::isnan(min) || value >= min) && (std::isnan(max) || value <= max)) {
+  if ((mozilla::IsNaN(min) || value >= min) &&
+      (mozilla::IsNaN(max) || value <= max)) {
     if (LocalAccessible* acc = mGeckoAccessible->AsLocal()) {
       acc->SetCurValue(value);
     } else {

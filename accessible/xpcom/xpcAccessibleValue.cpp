@@ -24,7 +24,7 @@ xpcAccessibleValue::GetMaximumValue(double* aValue) {
 
   double value = Intl()->MaxValue();
 
-  if (!std::isnan(value)) *aValue = value;
+  if (!IsNaN(value)) *aValue = value;
 
   return NS_OK;
 }
@@ -42,7 +42,7 @@ xpcAccessibleValue::GetMinimumValue(double* aValue) {
 
   double value = Intl()->MinValue();
 
-  if (!std::isnan(value)) *aValue = value;
+  if (!IsNaN(value)) *aValue = value;
 
   return NS_OK;
 }
@@ -60,7 +60,7 @@ xpcAccessibleValue::GetCurrentValue(double* aValue) {
 
   double value = Intl()->CurValue();
 
-  if (!std::isnan(value)) *aValue = value;
+  if (!IsNaN(value)) *aValue = value;
 
   return NS_OK;
 }
@@ -95,7 +95,7 @@ xpcAccessibleValue::GetMinimumIncrement(double* aValue) {
 
   double value = Intl()->Step();
 
-  if (!std::isnan(value)) *aValue = value;
+  if (!IsNaN(value)) *aValue = value;
 
   return NS_OK;
 }
