@@ -4403,8 +4403,8 @@ RefPtr<GenericPromise> MediaDecoderStateMachine::SetSink(
     const RefPtr<AudioDeviceInfo>& aDevice) {
   MOZ_ASSERT(OnTaskQueue());
   if (mIsMediaSinkSuspended) {
-    // Don't change sink id in a suspended sink.
-    return GenericPromise::CreateAndReject(NS_ERROR_ABORT, __func__);
+    // Don't create a new media sink when suspended.
+    return GenericPromise::CreateAndResolve(false, __func__);
   }
 
   if (mOutputCaptureState != MediaDecoder::OutputCaptureState::None) {
