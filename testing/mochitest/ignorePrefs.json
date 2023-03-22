@@ -10,5 +10,8 @@
     "toolkit.startup.last_success",
     "toolkit.telemetry.cachedClientID",
     "security.webauth.softtoken_counter",
-    "extensions.webextensions.ExtensionStorageIDB.migrated.*"
+    "extensions.webextensions.ExtensionStorageIDB.migrated.*",
+    "app.update.lastUpdateTime.region-update-timer",
+    "app.update.lastUpdateTime.xpi-signature-verification",
+    "browser.bookmarks.restore_default_bookmarks"
   ]
