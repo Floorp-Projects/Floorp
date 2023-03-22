@@ -145,7 +145,7 @@ class UnderlyingSourceAlgorithmsWrapper
       JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
       ErrorResult& aRv) final;
 
-  virtual already_AddRefed<Promise> PullCallbackImpl(
+  MOZ_CAN_RUN_SCRIPT virtual already_AddRefed<Promise> PullCallbackImpl(
       JSContext* aCx, ReadableStreamController& aController, ErrorResult& aRv) {
     // pullAlgorithm is optional, return null by default
     return nullptr;
