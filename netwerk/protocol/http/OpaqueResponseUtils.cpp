@@ -256,7 +256,7 @@ OpaqueResponseBlocker::OnStopRequest(nsIRequest* aRequest,
 
     MOZ_ASSERT(mJSValidator);
     mPendingOnStopRequestStatus = Some(aStatusCode);
-    mJSValidator->OnStopRequest(aStatusCode, *aRequest);
+    mJSValidator->OnStopRequest(aStatusCode);
     return NS_OK;
   }
 

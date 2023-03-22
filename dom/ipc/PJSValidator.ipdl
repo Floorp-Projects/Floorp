@@ -19,11 +19,7 @@ child:
 
   async OnDataAvailable(Shmem aData);
 
-  // aContentCharset, aHintCharset and aDocumentCharset
-  // are needed to determine the decoder for the received data
-  async OnStopRequest(nsresult aReason, nsCString aContentCharset,
-                              nsString aHintCharset,
-                              nsString aDocumentCharset);
+  async OnStopRequest(nsresult aReason);
 
   async __delete__();
 };

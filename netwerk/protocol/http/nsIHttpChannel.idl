@@ -485,8 +485,4 @@ interface nsIHttpChannel : nsIIdentChannel
                              in AString aContentType);
 
     [notxpcom, nostdcall] void setSource(in UniqueProfileChunkedBuffer aSource);
-
-    [must_use] attribute AString classicScriptHintCharset;
-
-    [must_use] attribute AString documentCharacterSet;
 };

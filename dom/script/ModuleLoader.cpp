@@ -107,12 +107,8 @@ nsresult ModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
   securityFlags |= nsILoadInfo::SEC_ALLOW_CHROME;
 
   // Delegate Shared Behavior to base ScriptLoader
-  //
-  // aCharsetForPreload is passed as Nothing() because this is not a preload
-  // and `StartLoadInternal` is able to find the charset by using `aRequest`
-  // for this case.
-  nsresult rv = GetScriptLoader()->StartLoadInternal(
-      aRequest, securityFlags, 0, Nothing() /* aCharsetForPreload */);
+  nsresult rv =
+      GetScriptLoader()->StartLoadInternal(aRequest, securityFlags, 0);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-an-import()-module-script-graph

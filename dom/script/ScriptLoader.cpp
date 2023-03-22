@@ -520,7 +520,7 @@ nsresult ScriptLoader::RestartLoad(ScriptLoadRequest* aRequest) {
   if (aRequest->IsModuleRequest()) {
     rv = aRequest->AsModuleRequest()->RestartModuleLoad();
   } else {
-    rv = StartLoad(aRequest, 0, Nothing());
+    rv = StartLoad(aRequest, 0);
   }
   if (NS_FAILED(rv)) {
     return rv;
@@ -531,19 +531,17 @@ nsresult ScriptLoader::RestartLoad(ScriptLoadRequest* aRequest) {
   return NS_BINDING_RETARGETED;
 }
 
-nsresult ScriptLoader::StartLoad(
-    ScriptLoadRequest* aRequest, uint64_t aEarlyHintPreloaderId,
-    const Maybe<nsAutoString>& aCharsetForPreload) {
+nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest,
+                                 uint64_t aEarlyHintPreloaderId) {
   if (aRequest->IsModuleRequest()) {
     return aRequest->AsModuleRequest()->StartModuleLoad();
   }
 
-  return StartClassicLoad(aRequest, aEarlyHintPreloaderId, aCharsetForPreload);
+  return StartClassicLoad(aRequest, aEarlyHintPreloaderId);
 }
 
-nsresult ScriptLoader::StartClassicLoad(
-    ScriptLoadRequest* aRequest, uint64_t aEarlyHintPreloaderId,
-    const Maybe<nsAutoString>& aCharsetForPreload) {
+nsresult ScriptLoader::StartClassicLoad(ScriptLoadRequest* aRequest,
+                                        uint64_t aEarlyHintPreloaderId) {
   MOZ_ASSERT(aRequest->IsFetching());
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NULL_POINTER);
   aRequest->SetUnknownDataType();
@@ -567,8 +565,8 @@ nsresult ScriptLoader::StartClassicLoad(
 
   securityFlags |= nsILoadInfo::SEC_ALLOW_CHROME;
 
-  nsresult rv = StartLoadInternal(aRequest, securityFlags,
-                                  aEarlyHintPreloaderId, aCharsetForPreload);
+  nsresult rv =
+      StartLoadInternal(aRequest, securityFlags, aEarlyHintPreloaderId);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -585,10 +583,9 @@ static bool IsWebExtensionRequest(ScriptLoadRequest* aRequest) {
   return loader->GetKind() == ModuleLoader::WebExtension;
 }
 
-nsresult ScriptLoader::StartLoadInternal(
-    ScriptLoadRequest* aRequest, nsSecurityFlags securityFlags,
-    uint64_t aEarlyHintPreloaderId,
-    const Maybe<nsAutoString>& aCharsetForPreload) {
+nsresult ScriptLoader::StartLoadInternal(ScriptLoadRequest* aRequest,
+                                         nsSecurityFlags securityFlags,
+                                         uint64_t aEarlyHintPreloaderId) {
   nsContentPolicyType contentPolicyType =
       ScriptLoadRequestToContentPolicyType(aRequest);
   nsCOMPtr<nsINode> context;
@@ -734,18 +731,6 @@ nsresult ScriptLoader::StartLoadInternal(
           aRequest->mIntegrity.GetIntegrityString());
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
-
-    nsAutoString hintCharset;
-    if (!aRequest->GetScriptLoadContext()->IsPreload() &&
-        aRequest->GetScriptLoadContext()->GetScriptElement()) {
-      aRequest->GetScriptLoadContext()->GetScriptElement()->GetScriptCharset(
-          hintCharset);
-    } else if (aCharsetForPreload.isSome()) {
-      hintCharset = aCharsetForPreload.ref();
-    }
-
-    rv = httpChannel->SetClassicScriptHintCharset(hintCharset);
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   mozilla::net::PredictorLearn(
@@ -1044,7 +1029,7 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
     LOG(("ScriptLoadRequest (%p): Created request for external script",
          request.get()));
 
-    nsresult rv = StartLoad(request, 0, Nothing());
+    nsresult rv = StartLoad(request, 0);
     if (NS_FAILED(rv)) {
       ReportErrorToConsole(request, rv);
 
@@ -3580,8 +3565,7 @@ void ScriptLoader::PreloadURI(nsIURI* aURI, const nsAString& aCharset,
          request.get(), url.get()));
   }
 
-  nsAutoString charset(aCharset);
-  nsresult rv = StartLoad(request, aEarlyHintPreloaderId, Some(charset));
+  nsresult rv = StartLoad(request, aEarlyHintPreloaderId);
   if (NS_FAILED(rv)) {
     return;
   }
