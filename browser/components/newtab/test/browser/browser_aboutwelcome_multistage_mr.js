@@ -9,9 +9,7 @@ const {
 } = ChromeUtils.importESModule(
   "resource://testing-common/FirefoxViewTestUtils.sys.mjs"
 );
-const { AboutWelcomeDefaults } = ChromeUtils.import(
-  "resource://activity-stream/aboutwelcome/lib/AboutWelcomeDefaults.jsm"
-);
+
 const { AWScreenUtils } = ChromeUtils.import(
   "resource://activity-stream/lib/AWScreenUtils.jsm"
 );
@@ -89,13 +87,13 @@ add_task(async function test_aboutwelcome_mr_template_content() {
 
   const sandbox = initSandbox();
 
-  const data = await AboutWelcomeDefaults.getDefaults();
-  const defaultMRArray = data.screens.filter(
-    screen => screen.id !== "AW_EASY_SETUP"
-  );
   sandbox
-    .stub(AWScreenUtils, "evaluateTargetingAndRemoveScreens")
-    .resolves(defaultMRArray);
+    .stub(AWScreenUtils, "evaluateScreenTargeting")
+    .resolves(true)
+    .withArgs(
+      "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin"
+    )
+    .resolves(false);
 
   let { cleanup, browser } = await openMRAboutWelcome();
 
@@ -144,13 +142,13 @@ add_task(async function test_aboutwelcome_mr_template_content_pin() {
 
   const sandbox = initSandbox({ isDefault: true });
 
-  const data = await AboutWelcomeDefaults.getDefaults();
-  const defaultMRArray = data.screens.filter(
-    screen => screen.id !== "AW_EASY_SETUP"
-  );
   sandbox
-    .stub(AWScreenUtils, "evaluateTargetingAndRemoveScreens")
-    .resolves(defaultMRArray);
+    .stub(AWScreenUtils, "evaluateScreenTargeting")
+    .resolves(true)
+    .withArgs(
+      "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin"
+    )
+    .resolves(false);
 
   let { browser, cleanup } = await openMRAboutWelcome();
 
@@ -186,16 +184,15 @@ add_task(async function test_aboutwelcome_mr_template_only_default() {
   await pushPrefs(["browser.shell.checkDefaultBrowser", true]);
 
   const sandbox = initSandbox({ pin: false });
-  const data = await AboutWelcomeDefaults.getDefaults();
-  const defaultMRArray = data.screens.filter(
-    screen => screen.id !== "AW_EASY_SETUP"
-  );
   sandbox
-    .stub(AWScreenUtils, "evaluateTargetingAndRemoveScreens")
-    .resolves(defaultMRArray);
+    .stub(AWScreenUtils, "evaluateScreenTargeting")
+    .resolves(true)
+    .withArgs(
+      "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin"
+    )
+    .resolves(false);
 
   let { browser, cleanup } = await openMRAboutWelcome();
-
   //should render set default
   await test_screen_content(
     browser,
@@ -218,13 +215,13 @@ add_task(async function test_aboutwelcome_mr_template_get_started() {
 
   const sandbox = initSandbox({ pin: false, isDefault: true });
 
-  const data = await AboutWelcomeDefaults.getDefaults();
-  const defaultMRArray = data.screens.filter(
-    screen => screen.id !== "AW_EASY_SETUP"
-  );
   sandbox
-    .stub(AWScreenUtils, "evaluateTargetingAndRemoveScreens")
-    .resolves(defaultMRArray);
+    .stub(AWScreenUtils, "evaluateScreenTargeting")
+    .resolves(true)
+    .withArgs(
+      "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin"
+    )
+    .resolves(false);
 
   let { browser, cleanup } = await openMRAboutWelcome();
 

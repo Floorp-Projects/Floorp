@@ -146,8 +146,9 @@ class AboutWelcomeChild extends JSWindowActorChild {
   }
 
   AWEvaluateScreenTargeting(data) {
-    return this.wrapPromise(
-      this.sendQuery("AWPage:EVALUATE_SCREEN_TARGETING", data)
+    return this.sendQueryAndCloneForContent(
+      "AWPage:EVALUATE_SCREEN_TARGETING",
+      data
     );
   }
 
@@ -189,19 +190,12 @@ class AboutWelcomeChild extends JSWindowActorChild {
     // override the default with `null`
     let defaults = lazy.AboutWelcomeDefaults.getDefaults();
 
-    // Removing screens based on their targeting evaluations
-    const filteredScreens = await this.AWEvaluateScreenTargeting(
-      featureConfig.screens ?? defaults.screens
-    );
-
     const content = await lazy.AboutWelcomeDefaults.prepareContentForReact({
       ...attributionData,
       ...experimentMetadata,
       ...defaults,
       ...featureConfig,
-      screens: filteredScreens
-        ? filteredScreens
-        : featureConfig.screens ?? defaults.screens,
+      screens: featureConfig.screens ?? defaults.screens,
       backdrop: featureConfig.backdrop ?? defaults.backdrop,
     });
 
