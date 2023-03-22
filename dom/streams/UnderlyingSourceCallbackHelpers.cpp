@@ -128,7 +128,9 @@ already_AddRefed<Promise> UnderlyingSourceAlgorithmsWrapper::PullCallback(
   nsCOMPtr<nsIGlobalObject> global = aController.GetParentObject();
   return PromisifyAlgorithm(
       global,
-      [&](ErrorResult& aRv) { return PullCallbackImpl(aCx, aController, aRv); },
+      [&](ErrorResult& aRv) MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
+        return PullCallbackImpl(aCx, aController, aRv);
+      },
       aRv);
 }
 

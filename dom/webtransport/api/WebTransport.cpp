@@ -133,6 +133,11 @@ void WebTransport::NewUnidirectionalStream(
   }
 }
 
+void WebTransport::NewDatagramReceived(nsTArray<uint8_t>&& aData,
+                                       const mozilla::TimeStamp& aTimeStamp) {
+  mDatagrams->NewDatagramReceived(std::move(aData), aTimeStamp);
+}
+
 // WebIDL Boilerplate
 
 nsIGlobalObject* WebTransport::GetParentObject() const { return mGlobal; }
@@ -213,6 +218,11 @@ void WebTransport::Init(const GlobalObject& aGlobal, const nsAString& aURL,
   // Step 14: Let datagrams be the result of creating a
   // WebTransportDatagramDuplexStream, its readable set to
   // incomingDatagrams and its writable set to outgoingDatagrams.
+  mDatagrams = new WebTransportDatagramDuplexStream(mGlobal, this);
+  mDatagrams->Init(aError);
+  if (aError.Failed()) {
+    return;
+  }
 
   // XXX TODO
 
@@ -349,6 +359,7 @@ void WebTransport::ResolveWaitingConnection(
   }
 
   mChild = aChild;
+  mDatagrams->SetChild(aChild);
   // Step 17.2: Set transport.[[State]] to "connected".
   mState = WebTransportState::CONNECTED;
   // Step 17.3: Set transport.[[Session]] to session.
@@ -527,9 +538,7 @@ void WebTransport::Close(const WebTransportCloseInfo& aOptions,
 
 already_AddRefed<WebTransportDatagramDuplexStream> WebTransport::GetDatagrams(
     ErrorResult& aError) {
-  LOG(("Datagrams() called"));
-  aError.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
+  return do_AddRef(mDatagrams);
 }
 
 already_AddRefed<Promise> WebTransport::CreateBidirectionalStream(
