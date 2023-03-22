@@ -34,6 +34,15 @@ class TestFocusApplication : FocusApplication() {
     override fun initializeNimbus() = Unit
 }
 
+/**
+ * Empty [FocusApplication] override for unit tests.
+ */
+class EmptyFocusApplication : FocusApplication() {
+    override fun onCreate() {
+        //
+    }
+}
+
 // Borrowed this from AC unit tests. This is something we should consider moving to support-test, so
 // that everyone who needs an Engine in unit tests can use it. It also allows us to enhance this mock
 // and maybe do some actual things that help in tests. :)

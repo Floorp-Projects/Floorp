@@ -21,13 +21,16 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.MockitoAnnotations
+import org.mozilla.focus.TestFocusApplication
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.nimbus.FocusNimbus
 import org.mozilla.focus.nimbus.Onboarding
 import org.mozilla.focus.state.AppStore
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
+@Config(application = TestFocusApplication::class)
 class CfrMiddlewareTest {
     private lateinit var onboardingExperiment: Onboarding
     private val browserStore: BrowserStore = testContext.components.store

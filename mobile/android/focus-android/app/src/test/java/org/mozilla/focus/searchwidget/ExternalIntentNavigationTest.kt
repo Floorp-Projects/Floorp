@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.runner.RunWith
 import org.mozilla.focus.GleanMetrics.SearchWidget
+import org.mozilla.focus.TestFocusApplication
 import org.mozilla.focus.activity.IntentReceiverActivity
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.settings
@@ -38,6 +39,7 @@ import org.robolectric.annotation.Implementation
 import org.robolectric.annotation.Implements
 
 @RunWith(RobolectricTestRunner::class)
+@Config(application = TestFocusApplication::class)
 internal class ExternalIntentNavigationTest {
     @get:Rule
     val gleanTestRule = GleanTestRule(testContext)
