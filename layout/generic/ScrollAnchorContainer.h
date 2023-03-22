@@ -12,12 +12,9 @@
 #include "mozilla/TimeStamp.h"
 
 class nsFrameList;
+class nsHTMLScrollFrame;
 class nsIFrame;
 class nsIScrollableFrame;
-
-namespace mozilla {
-class ScrollFrameHelper;
-}  // namespace mozilla
 
 namespace mozilla::layout {
 
@@ -30,7 +27,7 @@ namespace mozilla::layout {
  */
 class ScrollAnchorContainer final {
  public:
-  explicit ScrollAnchorContainer(ScrollFrameHelper* aScrollFrame);
+  explicit ScrollAnchorContainer(nsHTMLScrollFrame* aScrollFrame);
   ~ScrollAnchorContainer();
 
   /**
@@ -45,11 +42,8 @@ class ScrollAnchorContainer final {
    */
   nsIFrame* AnchorNode() const { return mAnchorNode; }
 
-  /**
-   * Returns the frame that owns this scroll anchor container. This is always
-   * non-null.
-   */
-  nsIFrame* Frame() const;
+  // The owner of this scroll anchor container.
+  nsHTMLScrollFrame* Frame() const;
 
   /**
    * Returns the frame that owns this scroll anchor container as a scrollable
@@ -138,9 +132,6 @@ class ScrollAnchorContainer final {
   // Notes that a given adjustment has happened, and maybe disables scroll
   // anchoring on this scroller altogether based on various prefs.
   void AdjustmentMade(nscoord aAdjustment);
-
-  // The owner of this scroll anchor container.
-  ScrollFrameHelper* ScrollFrame() const;
 
   // The anchor node that we will scroll to keep in the same relative position
   // after reflows. This may be null if we were not able to select a valid

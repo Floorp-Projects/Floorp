@@ -2465,7 +2465,7 @@ nsChangeHint nsStyleDisplay::CalcDifference(
     } else if (isScrollable) {
       if (ScrollbarGenerationChanged(*this, aNewData)) {
         // We might need to reframe in the case of hidden -> non-hidden case
-        // though, since ScrollFrameHelper::CreateAnonymousContent avoids
+        // though, since nsHTMLScrollFrame::CreateAnonymousContent avoids
         // creating scrollbars altogether for overflow: hidden. That seems it
         // could create some interesting perf cliffs...
         hint |= nsChangeHint_ScrollbarChange;
