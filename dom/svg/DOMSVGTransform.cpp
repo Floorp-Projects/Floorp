@@ -214,7 +214,7 @@ void DOMSVGTransform::SetSkewX(float angle, ErrorResult& rv) {
     return;
   }
 
-  if (!std::isfinite(tan(angle * kRadPerDegree))) {
+  if (!IsFinite(tan(angle * kRadPerDegree))) {
     rv.ThrowRangeError<MSG_INVALID_TRANSFORM_ANGLE_ERROR>();
     return;
   }
@@ -235,7 +235,7 @@ void DOMSVGTransform::SetSkewY(float angle, ErrorResult& rv) {
     return;
   }
 
-  if (!std::isfinite(tan(angle * kRadPerDegree))) {
+  if (!IsFinite(tan(angle * kRadPerDegree))) {
     rv.ThrowRangeError<MSG_INVALID_TRANSFORM_ANGLE_ERROR>();
     return;
   }

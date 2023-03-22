@@ -461,7 +461,7 @@ class AudioBufferSourceNodeEngine final : public AudioNodeEngine {
     } else {
       detune = mDetuneTimeline.GetValueAtTime(aTrackPosition);
     }
-    if (playbackRate <= 0 || std::isnan(playbackRate)) {
+    if (playbackRate <= 0 || mozilla::IsNaN(playbackRate)) {
       playbackRate = 1.0f;
     }
 

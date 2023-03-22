@@ -3208,8 +3208,7 @@ static void RoundRectImpl(
         aRadii,
     ErrorResult& aError) {
   // Step 1. If any of x, y, w, or h are infinite or NaN, then return.
-  if (!std::isfinite(aX) || !std::isfinite(aY) || !std::isfinite(aW) ||
-      !std::isfinite(aH)) {
+  if (!IsFinite(aX) || !IsFinite(aY) || !IsFinite(aW) || !IsFinite(aH)) {
     return;
   }
 
@@ -3241,7 +3240,7 @@ static void RoundRectImpl(
       const DOMPointInit& point = radius.GetAsDOMPointInit();
       // Step 5.1.1. If radius["x"] or radius["y"] is infinite or NaN, then
       // return.
-      if (!std::isfinite(point.mX) || !std::isfinite(point.mY)) {
+      if (!IsFinite(point.mX) || !IsFinite(point.mY)) {
         return;
       }
 
@@ -3262,7 +3261,7 @@ static void RoundRectImpl(
     // Step 5.2. If radius is a unrestricted double:
     double r = radius.GetAsUnrestrictedDouble();
     // Step 5.2.1. If radius is infinite or NaN, then return.
-    if (!std::isfinite(r)) {
+    if (!IsFinite(r)) {
       return;
     }
 
@@ -4196,7 +4195,7 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
   // According to spec, the API should return an empty array if maxWidth was
   // provided but is less than or equal to zero or equal to NaN.
   if (aMaxWidth.WasPassed() &&
-      (aMaxWidth.Value() <= 0 || std::isnan(aMaxWidth.Value()))) {
+      (aMaxWidth.Value() <= 0 || IsNaN(aMaxWidth.Value()))) {
     textToDraw.Truncate();
   }
 
@@ -4258,7 +4257,7 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
     return nullptr;
   }
 
-  if (!std::isfinite(aX) || !std::isfinite(aY)) {
+  if (!IsFinite(aX) || !IsFinite(aY)) {
     aError = NS_OK;
     // This may not be correct - what should TextMetrics contain in the case of
     // infinite width or height?

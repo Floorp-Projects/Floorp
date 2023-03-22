@@ -39,6 +39,9 @@ using JS::GenericNaN;
 using JS::ToNumber;
 using mozilla::ExponentComponent;
 using mozilla::FloatingPoint;
+using mozilla::IsFinite;
+using mozilla::IsInfinite;
+using mozilla::IsNaN;
 using mozilla::IsNegative;
 using mozilla::IsNegativeZero;
 using mozilla::Maybe;
@@ -315,7 +318,7 @@ double js::math_max_impl(double x, double y) {
   AutoUnsafeCallWithABI unsafe;
 
   // Math.max(num, NaN) => NaN, Math.max(-0, +0) => +0
-  if (x > y || std::isnan(x) || (x == y && IsNegative(y))) {
+  if (x > y || IsNaN(x) || (x == y && IsNegative(y))) {
     return x;
   }
   return y;
@@ -340,7 +343,7 @@ double js::math_min_impl(double x, double y) {
   AutoUnsafeCallWithABI unsafe;
 
   // Math.min(num, NaN) => NaN, Math.min(-0, +0) => -0
-  if (x < y || std::isnan(x) || (x == y && IsNegativeZero(x))) {
+  if (x < y || IsNaN(x) || (x == y && IsNegativeZero(x))) {
     return x;
   }
   return y;
@@ -440,7 +443,7 @@ double js::ecmaPow(double x, double y) {
    * Because C99 and ECMA specify different behavior for pow(),
    * we need to wrap the libm call to make it ECMA compliant.
    */
-  if (!std::isfinite(y) && (x == 1.0 || x == -1.0)) {
+  if (!IsFinite(y) && (x == 1.0 || x == -1.0)) {
     return GenericNaN();
   }
 
@@ -453,7 +456,7 @@ double js::ecmaPow(double x, double y) {
    * Special case for square roots. Note that pow(x, 0.5) != sqrt(x)
    * when x = -0.0, so we have to guard for this.
    */
-  if (std::isfinite(x) && x != 0.0) {
+  if (IsFinite(x) && x != 0.0) {
     if (y == 0.5) {
       return std::sqrt(x);
     }
@@ -528,7 +531,7 @@ static bool math_random(JSContext* cx, unsigned argc, Value* vp) {
 template <typename T>
 T js::GetBiggestNumberLessThan(T x) {
   MOZ_ASSERT(!IsNegative(x));
-  MOZ_ASSERT(std::isfinite(x));
+  MOZ_ASSERT(IsFinite(x));
   using Bits = typename mozilla::FloatingPoint<T>::Bits;
   Bits bits = mozilla::BitwiseCast<Bits>(x);
   MOZ_ASSERT(bits > 0, "will underflow");
@@ -762,11 +765,13 @@ double js::hypot4(double x, double y, double z, double w) {
   AutoUnsafeCallWithABI unsafe;
 
   // Check for infinities or NaNs so that we can return immediately.
-  if (std::isinf(x) || std::isinf(y) || std::isinf(z) || std::isinf(w)) {
+  if (mozilla::IsInfinite(x) || mozilla::IsInfinite(y) ||
+      mozilla::IsInfinite(z) || mozilla::IsInfinite(w)) {
     return mozilla::PositiveInfinity<double>();
   }
 
-  if (std::isnan(x) || std::isnan(y) || std::isnan(z) || std::isnan(w)) {
+  if (mozilla::IsNaN(x) || mozilla::IsNaN(y) || mozilla::IsNaN(z) ||
+      mozilla::IsNaN(w)) {
     return GenericNaN();
   }
 
@@ -821,8 +826,8 @@ bool js::math_hypot_handle(JSContext* cx, HandleValueArray args,
       return false;
     }
 
-    isInfinite |= std::isinf(x);
-    isNaN |= std::isnan(x);
+    isInfinite |= mozilla::IsInfinite(x);
+    isNaN |= mozilla::IsNaN(x);
     if (isInfinite || isNaN) {
       continue;
     }
@@ -866,7 +871,7 @@ bool js::math_trunc(JSContext* cx, unsigned argc, Value* vp) {
 double js::math_sign_impl(double x) {
   AutoUnsafeCallWithABI unsafe;
 
-  if (std::isnan(x)) {
+  if (mozilla::IsNaN(x)) {
     return GenericNaN();
   }
 

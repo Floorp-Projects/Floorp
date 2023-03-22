@@ -4117,9 +4117,9 @@ static bool SearchElementDense(JSContext* cx, HandleValue val, Iter iterator,
     double dval = val.toNumber();
     // For |includes|, two NaN values are considered equal, so we use a
     // different implementation for NaN.
-    if (Kind == SearchKind::Includes && std::isnan(dval)) {
+    if (Kind == SearchKind::Includes && mozilla::IsNaN(dval)) {
       auto cmp = [](JSContext*, const Value& element, bool* equal) {
-        *equal = (element.isDouble() && std::isnan(element.toDouble()));
+        *equal = (element.isDouble() && mozilla::IsNaN(element.toDouble()));
         return true;
       };
       return iterator(cx, cmp, rval);

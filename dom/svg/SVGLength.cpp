@@ -122,16 +122,16 @@ float SVGLength::GetValueInSpecifiedUnit(uint8_t aUnit,
       SVGLength(0.0f, aUnit).GetUserUnitsPerUnit(aElement, aAxis);
 
   NS_ASSERTION(
-      userUnitsPerCurrentUnit >= 0 || !std::isfinite(userUnitsPerCurrentUnit),
+      userUnitsPerCurrentUnit >= 0 || !IsFinite(userUnitsPerCurrentUnit),
       "bad userUnitsPerCurrentUnit");
-  NS_ASSERTION(userUnitsPerNewUnit >= 0 || !std::isfinite(userUnitsPerNewUnit),
+  NS_ASSERTION(userUnitsPerNewUnit >= 0 || !IsFinite(userUnitsPerNewUnit),
                "bad userUnitsPerNewUnit");
 
   float value = mValue * userUnitsPerCurrentUnit / userUnitsPerNewUnit;
 
   // userUnitsPerCurrentUnit could be infinity, or userUnitsPerNewUnit could
   // be zero.
-  if (std::isfinite(value)) {
+  if (IsFinite(value)) {
     return value;
   }
   return std::numeric_limits<float>::quiet_NaN();

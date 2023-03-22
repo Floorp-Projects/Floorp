@@ -164,15 +164,15 @@ gfx::Matrix SVGViewportElement::GetViewBoxTransform() const {
     viewportHeight = mViewportHeight;
   }
 
-  if (!std::isfinite(viewportWidth) || viewportWidth <= 0.0f ||
-      !std::isfinite(viewportHeight) || viewportHeight <= 0.0f) {
+  if (!IsFinite(viewportWidth) || viewportWidth <= 0.0f ||
+      !IsFinite(viewportHeight) || viewportHeight <= 0.0f) {
     return gfx::Matrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);  // singular
   }
 
   SVGViewBox viewBox = GetViewBoxWithSynthesis(viewportWidth, viewportHeight);
 
-  if (!std::isfinite(viewBox.width) || viewBox.width <= 0.0f ||
-      !std::isfinite(viewBox.height) || viewBox.height <= 0.0f) {
+  if (!IsFinite(viewBox.width) || viewBox.width <= 0.0f ||
+      !IsFinite(viewBox.height) || viewBox.height <= 0.0f) {
     return gfx::Matrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);  // singular
   }
 

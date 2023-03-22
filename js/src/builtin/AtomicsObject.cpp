@@ -633,10 +633,10 @@ static bool DoAtomicsWait(JSContext* cx,
     }
 
     // Step 7.
-    if (!std::isnan(timeout_ms)) {
+    if (!mozilla::IsNaN(timeout_ms)) {
       if (timeout_ms < 0) {
         timeout = mozilla::Some(mozilla::TimeDuration::FromSeconds(0.0));
-      } else if (!std::isinf(timeout_ms)) {
+      } else if (!mozilla::IsInfinite(timeout_ms)) {
         timeout =
             mozilla::Some(mozilla::TimeDuration::FromMilliseconds(timeout_ms));
       }

@@ -4361,7 +4361,7 @@ static bool Sleep_fn(JSContext* cx, unsigned argc, Value* vp) {
     if (!ToNumber(cx, args[0], &t_secs)) {
       return false;
     }
-    if (std::isnan(t_secs)) {
+    if (mozilla::IsNaN(t_secs)) {
       JS_ReportErrorASCII(cx, "sleep interval is not a number");
       return false;
     }
@@ -4519,7 +4519,7 @@ static void CancelExecution(JSContext* cx) {
 }
 
 static bool SetTimeoutValue(JSContext* cx, double t) {
-  if (std::isnan(t)) {
+  if (mozilla::IsNaN(t)) {
     JS_ReportErrorASCII(cx, "timeout is not a number");
     return false;
   }

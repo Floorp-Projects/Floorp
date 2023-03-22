@@ -248,7 +248,7 @@ double MediaSource::Duration() {
 
 void MediaSource::SetDuration(double aDuration, ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
-  if (aDuration < 0 || std::isnan(aDuration)) {
+  if (aDuration < 0 || IsNaN(aDuration)) {
     nsPrintfCString error("Invalid duration value %f", aDuration);
     MSE_API("SetDuration(aDuration=%f, invalid value)", aDuration);
     aRv.ThrowTypeError(error);

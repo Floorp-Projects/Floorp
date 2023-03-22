@@ -70,7 +70,7 @@ bool CoerceDouble(const JS::Value& v, double* d);
 
 /* Float validation stuff */
 #define VALIDATE(_f) \
-  if (!std::isfinite(_f)) return false
+  if (!IsFinite(_f)) return false
 
 inline bool FloatValidate(double f1) {
   VALIDATE(f1);

@@ -51,7 +51,7 @@ double mozToDouble(mozilla::Span<const char> aStr, bool *valid) {
   int length = mozilla::AssertedCast<int>(aStr.Length());
   int processed_char_count; // unused - NO_FLAGS requires the whole string to parse
   double result = converter.StringToDouble(str, length, &processed_char_count);
-  *valid = std::isfinite(result);
+  *valid = mozilla::IsFinite(result);
   return result;
 }
 
@@ -108,3 +108,4 @@ private:
 } // namespace moz_decimal_utils
 
 #endif
+

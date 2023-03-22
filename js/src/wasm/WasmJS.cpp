@@ -750,7 +750,7 @@ static bool EnforceRange(JSContext* cx, HandleValue v, const char* kind,
   }
 
   // Step 6.1.
-  if (!std::isfinite(x)) {
+  if (!mozilla::IsFinite(x)) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_BAD_ENFORCE_RANGE, kind, noun);
     return false;

@@ -86,7 +86,7 @@ class SVGAnimatedNumberPair {
 
     float BaseVal() override { return mVal->GetBaseValue(mIndex); }
     void SetBaseVal(float aValue) override {
-      MOZ_ASSERT(std::isfinite(aValue));
+      MOZ_ASSERT(IsFinite(aValue));
       mVal->SetBaseValue(aValue, mIndex, mSVGElement);
     }
 

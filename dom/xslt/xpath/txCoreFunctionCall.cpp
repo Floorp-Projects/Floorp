@@ -329,7 +329,7 @@ nsresult txCoreFunctionCall::evaluate(txIEvalContext* aContext,
       NS_ENSURE_SUCCESS(rv, rv);
 
       // check for NaN or +/-Inf
-      if (std::isnan(start) || std::isinf(start) ||
+      if (mozilla::IsNaN(start) || mozilla::IsInfinite(start) ||
           start >= src.Length() + 0.5) {
         aContext->recycler()->getEmptyStringResult(aResult);
 
@@ -344,7 +344,7 @@ nsresult txCoreFunctionCall::evaluate(txIEvalContext* aContext,
         NS_ENSURE_SUCCESS(rv, rv);
 
         end += start;
-        if (std::isnan(end) || end < 0) {
+        if (mozilla::IsNaN(end) || end < 0) {
           aContext->recycler()->getEmptyStringResult(aResult);
 
           return NS_OK;
@@ -478,7 +478,7 @@ nsresult txCoreFunctionCall::evaluate(txIEvalContext* aContext,
       rv = evaluateToNumber(mParams[0], aContext, &dbl);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      if (std::isfinite(dbl)) {
+      if (mozilla::IsFinite(dbl)) {
         if (mozilla::IsNegative(dbl) && dbl >= -0.5) {
           dbl *= 0;
         } else {
@@ -493,7 +493,8 @@ nsresult txCoreFunctionCall::evaluate(txIEvalContext* aContext,
       rv = evaluateToNumber(mParams[0], aContext, &dbl);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      if (std::isfinite(dbl) && !mozilla::IsNegativeZero(dbl)) dbl = floor(dbl);
+      if (mozilla::IsFinite(dbl) && !mozilla::IsNegativeZero(dbl))
+        dbl = floor(dbl);
 
       return aContext->recycler()->getNumberResult(dbl, aResult);
     }
@@ -502,7 +503,7 @@ nsresult txCoreFunctionCall::evaluate(txIEvalContext* aContext,
       rv = evaluateToNumber(mParams[0], aContext, &dbl);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      if (std::isfinite(dbl)) {
+      if (mozilla::IsFinite(dbl)) {
         if (mozilla::IsNegative(dbl) && dbl > -1)
           dbl *= 0;
         else

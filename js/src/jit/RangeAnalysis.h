@@ -439,7 +439,7 @@ class Range : public TempObject {
   // function treats negative zero as equal to zero, as >= and <= do. If the
   // range includes zero, it is assumed to include negative zero too.
   static Range* NewDoubleRange(TempAllocator& alloc, double l, double h) {
-    if (std::isnan(l) && std::isnan(h)) {
+    if (mozilla::IsNaN(l) && mozilla::IsNaN(h)) {
       return nullptr;
     }
 
@@ -453,7 +453,7 @@ class Range : public TempObject {
   // makes the strictest possible range containin zero a range which
   // contains one value rather than two.
   static Range* NewDoubleSingletonRange(TempAllocator& alloc, double d) {
-    if (std::isnan(d)) {
+    if (mozilla::IsNaN(d)) {
       return nullptr;
     }
 

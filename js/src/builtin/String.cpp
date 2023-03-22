@@ -67,6 +67,7 @@ using JS::SymbolCode;
 using mozilla::AsciiAlphanumericToNumber;
 using mozilla::CheckedInt;
 using mozilla::IsAsciiHexDigit;
+using mozilla::IsNaN;
 using mozilla::PodCopy;
 using mozilla::RangedPtr;
 using mozilla::SIMD;
@@ -2249,7 +2250,7 @@ static bool str_lastIndexOf(JSContext* cx, unsigned argc, Value* vp) {
       if (!ToNumber(cx, args[1], &d)) {
         return false;
       }
-      if (!std::isnan(d)) {
+      if (!IsNaN(d)) {
         d = JS::ToInteger(d);
         if (d <= 0) {
           start = 0;

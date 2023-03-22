@@ -116,11 +116,11 @@ double txDouble::toDouble(const nsAString& aSrc) {
 void txDouble::toString(double aValue, nsAString& aDest) {
   // check for special cases
 
-  if (std::isnan(aValue)) {
+  if (mozilla::IsNaN(aValue)) {
     aDest.AppendLiteral("NaN");
     return;
   }
-  if (std::isinf(aValue)) {
+  if (mozilla::IsInfinite(aValue)) {
     if (aValue < 0) aDest.Append(char16_t('-'));
     aDest.AppendLiteral("Infinity");
     return;
