@@ -6,16 +6,11 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PreferenceFilters",
-  "resource://gre/modules/components-utils/PreferenceFilters.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Sampling",
-  "resource://gre/modules/components-utils/Sampling.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PreferenceFilters:
+    "resource://gre/modules/components-utils/PreferenceFilters.sys.mjs",
+  Sampling: "resource://gre/modules/components-utils/Sampling.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "mozjexl",

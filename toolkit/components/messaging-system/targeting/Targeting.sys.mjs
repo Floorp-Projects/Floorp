@@ -8,6 +8,10 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ClientEnvironmentBase:
+    "resource://gre/modules/components-utils/ClientEnvironment.sys.mjs",
+  FilterExpressions:
+    "resource://gre/modules/components-utils/FilterExpressions.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
@@ -15,11 +19,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.jsm",
-  FilterExpressions:
-    "resource://gre/modules/components-utils/FilterExpressions.jsm",
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
-  ClientEnvironmentBase:
-    "resource://gre/modules/components-utils/ClientEnvironment.jsm",
 });
 
 const TARGETING_EVENT_CATEGORY = "messaging_experiments";

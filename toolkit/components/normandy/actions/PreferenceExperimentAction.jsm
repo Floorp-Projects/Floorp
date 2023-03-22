@@ -8,11 +8,9 @@ const { BaseStudyAction } = ChromeUtils.import(
   "resource://normandy/actions/BaseStudyAction.jsm"
 );
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Sampling",
-  "resource://gre/modules/components-utils/Sampling.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  Sampling: "resource://gre/modules/components-utils/Sampling.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "ActionSchemas",

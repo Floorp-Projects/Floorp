@@ -1,10 +1,9 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "FilterExpressions",
-  "resource://gre/modules/components-utils/FilterExpressions.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  FilterExpressions:
+    "resource://gre/modules/components-utils/FilterExpressions.sys.mjs",
+});
 
 // Basic JEXL tests
 add_task(async function() {

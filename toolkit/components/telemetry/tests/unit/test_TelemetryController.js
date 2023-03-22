@@ -40,14 +40,10 @@ const { TelemetryArchiveTesting } = ChromeUtils.importESModule(
 );
 
 ChromeUtils.defineESModuleGetters(this, {
+  JsonSchemaValidator:
+    "resource://gre/modules/components-utils/JsonSchemaValidator.sys.mjs",
   jwcrypto: "resource://services-crypto/jwcrypto.sys.mjs",
 });
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "JsonSchemaValidator",
-  "resource://gre/modules/components-utils/JsonSchemaValidator.jsm"
-);
 
 const PING_FORMAT_VERSION = 4;
 const DELETION_REQUEST_PING_TYPE = "deletion-request";

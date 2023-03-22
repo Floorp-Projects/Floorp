@@ -3,8 +3,8 @@
 const { NormandyTestUtils } = ChromeUtils.import(
   "resource://testing-common/NormandyTestUtils.jsm"
 );
-const { Sampling } = ChromeUtils.import(
-  "resource://gre/modules/components-utils/Sampling.jsm"
+const { Sampling } = ChromeUtils.importESModule(
+  "resource://gre/modules/components-utils/Sampling.sys.mjs"
 );
 const { ClientEnvironment } = ChromeUtils.import(
   "resource://normandy/lib/ClientEnvironment.jsm"

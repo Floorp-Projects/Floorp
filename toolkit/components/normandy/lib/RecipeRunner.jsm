@@ -24,6 +24,8 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  FilterExpressions:
+    "resource://gre/modules/components-utils/FilterExpressions.sys.mjs",
   LegacyHeartbeat: "resource://normandy/lib/LegacyHeartbeat.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   RemoteSettingsClient:
@@ -35,8 +37,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Storage: "resource://normandy/lib/Storage.jsm",
-  FilterExpressions:
-    "resource://gre/modules/components-utils/FilterExpressions.jsm",
   Normandy: "resource://normandy/Normandy.jsm",
   NormandyApi: "resource://normandy/lib/NormandyApi.jsm",
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",

@@ -14,6 +14,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   FirstStartup: "resource://gre/modules/FirstStartup.sys.mjs",
+  Sampling: "resource://gre/modules/components-utils/Sampling.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
 });
 
@@ -22,7 +23,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExperimentStore: "resource://nimbus/lib/ExperimentStore.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   NormandyUtils: "resource://normandy/lib/NormandyUtils.jsm",
-  Sampling: "resource://gre/modules/components-utils/Sampling.jsm",
   TelemetryEvents: "resource://normandy/lib/TelemetryEvents.jsm",
   PrefUtils: "resource://normandy/lib/PrefUtils.jsm",
 });

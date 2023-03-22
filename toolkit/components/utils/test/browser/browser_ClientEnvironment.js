@@ -7,8 +7,8 @@
  * This can't be an xpcshell-test because not all applications implement
  * nsIXULAppInfo (e.g. xpcshell doesn't).
  */
-const { ClientEnvironmentBase } = ChromeUtils.import(
-  "resource://gre/modules/components-utils/ClientEnvironment.jsm"
+const { ClientEnvironmentBase } = ChromeUtils.importESModule(
+  "resource://gre/modules/components-utils/ClientEnvironment.sys.mjs"
 );
 
 const { NormandyTestUtils } = ChromeUtils.import(
