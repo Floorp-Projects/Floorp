@@ -1,1 +1,1 @@
-firefox/* usr/lib/${DEB_PKG_NAME}
+firefox/* ${DEB_PKG_INSTALL_PATH}
