@@ -92,9 +92,9 @@ impl<'a> CoreTypeEncoder<'a> {
 
         self.0.push(0x60);
         params.len().encode(self.0);
-        self.0.extend(params.map(u8::from));
+        params.for_each(|p| p.encode(self.0));
         results.len().encode(self.0);
-        self.0.extend(results.map(u8::from));
+        results.for_each(|p| p.encode(self.0));
     }
 
     /// Define a module type.

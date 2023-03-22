@@ -48,6 +48,12 @@ pub(crate) const CORE_TAG_SORT: u8 = 0x04;
 pub trait Section: Encode {
     /// Gets the section identifier for this section.
     fn id(&self) -> u8;
+
+    /// Appends this section to the specified destination list of bytes.
+    fn append_to(&self, dst: &mut Vec<u8>) {
+        dst.push(self.id());
+        self.encode(dst);
+    }
 }
 
 /// Known section identifiers of WebAssembly modules.
@@ -110,16 +116,20 @@ pub struct Module {
 }
 
 impl Module {
+    /// The 8-byte header at the beginning of all core wasm modules.
+    #[rustfmt::skip]
+    pub const HEADER: [u8; 8] = [
+        // Magic
+        0x00, 0x61, 0x73, 0x6D,
+        // Version
+        0x01, 0x00, 0x00, 0x00,
+    ];
+
     /// Begin writing a new `Module`.
     #[rustfmt::skip]
     pub fn new() -> Self {
         Module {
-            bytes: vec![
-                // Magic
-                0x00, 0x61, 0x73, 0x6D,
-                // Version
-                0x01, 0x00, 0x00, 0x00,
-            ],
+            bytes: Self::HEADER.to_vec(),
         }
     }
 
