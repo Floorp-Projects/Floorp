@@ -8713,35 +8713,14 @@ bool nsDocShell::IsSameDocumentNavigation(nsDocShellLoadState* aLoadState,
       // fact that the new URI is currently http), then set mSameExceptHashes to
       // true and only perform a fragment navigation.
       if (!aState.mSameExceptHashes) {
-        if (nsCOMPtr<nsIChannel> docChannel = GetCurrentDocChannel()) {
+        nsCOMPtr<nsIChannel> docChannel = GetCurrentDocChannel();
+        if (docChannel) {
           nsCOMPtr<nsILoadInfo> docLoadInfo = docChannel->LoadInfo();
-          if (!docLoadInfo->GetLoadErrorPage() &&
-              nsHTTPSOnlyUtils::IsEqualURIExceptSchemeAndRef(
-                  currentExposableURI, aLoadState->URI(), docLoadInfo)) {
-            uint32_t status = docLoadInfo->GetHttpsOnlyStatus();
-            if (status & (nsILoadInfo::HTTPS_ONLY_UPGRADED_LISTENER_REGISTERED |
-                          nsILoadInfo::HTTPS_ONLY_UPGRADED_HTTPS_FIRST)) {
-              // At this point the requested URI is for sure a fragment
-              // navigation via HTTP and HTTPS-Only mode or HTTPS-First is
-              // enabled. Also it is not interfering the upgrade order of
-              // https://searchfox.org/mozilla-central/source/netwerk/base/nsNetUtil.cpp#2948-2953.
-              // Since we are on an HTTPS site the fragment
-              // navigation should also be an HTTPS.
-              // For that reason we upgrade the URI to HTTPS.
-              nsCOMPtr<nsIURI> upgradedURI;
-              NS_GetSecureUpgradedURI(aLoadState->URI(),
-                                      getter_AddRefs(upgradedURI));
-              aLoadState->SetURI(upgradedURI);
-
-#ifdef DEBUG
-              bool sameExceptHashes = false;
-              currentExposableURI->EqualsExceptRef(aLoadState->URI(),
-                                                   &sameExceptHashes);
-              MOZ_ASSERT(sameExceptHashes);
-#endif
+          if (!docLoadInfo->GetLoadErrorPage()) {
+            if (nsHTTPSOnlyUtils::IsEqualURIExceptSchemeAndRef(
+                    currentExposableURI, aLoadState->URI(), docLoadInfo)) {
+              aState.mSameExceptHashes = true;
             }
-
-            aState.mSameExceptHashes = true;
           }
         }
       }
