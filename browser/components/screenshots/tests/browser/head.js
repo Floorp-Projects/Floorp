@@ -235,8 +235,38 @@ class ScreenshotsHelper {
   }
 
   async scrollContentWindow(x, y) {
+    let promise = BrowserTestUtils.waitForContentEvent(this.browser, "scroll");
     await ContentTask.spawn(this.browser, [x, y], async ([xPos, yPos]) => {
       content.window.scroll(xPos, yPos);
+
+      await ContentTaskUtils.waitForCondition(() => {
+        return (
+          content.window.scrollX === xPos && content.window.scrollY === yPos
+        );
+      }, `Waiting for window to scroll to ${xPos}, ${yPos}`);
+    });
+    await promise;
+  }
+
+  getWindowPosition() {
+    return ContentTask.spawn(this.browser, [], () => {
+      return {
+        scrollX: content.window.scrollX,
+        scrollY: content.window.scrollY,
+      };
+    });
+  }
+
+  async waitForScrollTo(x, y) {
+    await ContentTask.spawn(this.browser, [x, y], async ([xPos, yPos]) => {
+      await ContentTaskUtils.waitForCondition(() => {
+        info(
+          `Got scrollX: ${content.window.scrollX}. scrollY: ${content.window.scrollY}`
+        );
+        return (
+          content.window.scrollX === xPos && content.window.scrollY === yPos
+        );
+      }, `Waiting for window to scroll to ${xPos}, ${yPos}`);
     });
   }
 
