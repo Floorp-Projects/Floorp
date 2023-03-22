@@ -9,7 +9,6 @@
 // Keep in (case-insensitive) order:
 #include "gfxContext.h"
 #include "gfxPlatform.h"
-#include "mozilla/gfx/2D.h"
 #include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/image/WebRenderImageProvider.h"
 #include "mozilla/layers/RenderRootStateManager.h"
@@ -31,7 +30,6 @@
 #include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/dom/SVGImageElement.h"
 #include "nsIReflowCallback.h"
-#include "mozilla/Unused.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
@@ -144,7 +142,7 @@ void SVGImageFrame::DestroyFrom(nsIFrame* aDestructRoot,
 
 /* virtual */
 void SVGImageFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
-  SVGGeometryFrame::DidSetComputedStyle(aOldStyle);
+  nsIFrame::DidSetComputedStyle(aOldStyle);
 
   if (!mImageContainer || !aOldStyle) {
     return;
@@ -218,7 +216,7 @@ void SVGImageFrame::OnVisibilityChange(
     imageLoader->OnVisibilityChange(aNewVisibility, aNonvisibleAction);
   }
 
-  SVGGeometryFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
+  nsIFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
 }
 
 gfx::Matrix SVGImageFrame::GetRasterImageTransform(int32_t aNativeWidth,
@@ -733,12 +731,6 @@ nsIFrame* SVGImageFrame::GetFrameForPoint(const gfxPoint& aPoint) {
 
   return this;
 }
-
-//----------------------------------------------------------------------
-// SVGGeometryFrame methods:
-
-// Lie about our fill/stroke so that covered region and hit detection work
-// properly
 
 void SVGImageFrame::ReflowSVG() {
   NS_ASSERTION(SVGUtils::OuterSVGIsCallingReflowSVG(this),
