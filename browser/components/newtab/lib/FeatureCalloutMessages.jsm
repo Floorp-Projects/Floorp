@@ -17,7 +17,18 @@ const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
 // id found in a given Feature Callout tour progress preference
 // and the `complete` property being true
 const matchCurrentScreenTargeting = (prefName, screenId) => {
-  return `'${prefName}' | preferenceValue | regExpMatch('(?<=screen\"\:)"(.*)(?=",)')[1] == '${screenId}' && '${prefName}' | preferenceValue | regExpMatch('(?<=complete\"\:)(.*)(?=})')[1] != "true"`;
+  const prefVal = `'${prefName}' | preferenceValue`;
+  //regExpMatch() is a JEXL filter expression. Here we check if 'screen' and 'complete' exist in the pref's value (which is stringified JSON), and return their values. Returns null otherwise
+  const screenRegEx = '(?<=screen":)"(.*)(?=",)';
+  const completeRegEx = '(?<=complete":)(.*)(?=})';
+
+  const screenMatch = `${prefVal}  | regExpMatch('${screenRegEx}')`;
+  const completeMatch = `${prefVal}  | regExpMatch('${completeRegEx}')`;
+  //We are checking the return of regExpMatch() here. If it's truthy, we grab the matched string and compare it to the desired value
+  const screenVal = `(${screenMatch}) ? (${screenMatch}[1] == '${screenId}') : false`;
+  const completeVal = `(${completeMatch}) ? (${completeMatch}[1] != "true") : false`;
+
+  return `(${screenVal}) && (${completeVal})`;
 };
 
 /**
