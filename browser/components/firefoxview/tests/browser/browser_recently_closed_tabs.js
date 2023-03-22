@@ -50,6 +50,13 @@ async function dismiss_tab(tab, content) {
   await closedObjectsChanged();
 }
 
+add_setup(async function setup() {
+  // set updateTimeMs to 0 to prevent unexpected/unrelated DOM mutations during testing
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.tabs.firefox-view.updateTimeMs", 0]],
+  });
+});
+
 add_task(async function test_empty_list() {
   clearHistory();
 

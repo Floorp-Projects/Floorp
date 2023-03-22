@@ -140,6 +140,13 @@ registerCleanupFunction(async function() {
   cleanup_tab_pickup();
 });
 
+add_setup(async function setup() {
+  // set updateTimeMs to 0 to prevent unexpected/unrelated DOM mutations during testing
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.tabs.firefox-view.updateTimeMs", 0]],
+  });
+});
+
 add_task(async function test_tab_list_ordering() {
   const sandbox = setupRecentDeviceListMocks();
   const syncedTabsMock = sandbox.stub(SyncedTabs, "getRecentTabs");
@@ -745,7 +752,19 @@ add_task(async function test_tabs_dont_update_unnecessarily() {
 
     let wasMutated = false;
 
-    const callback = () => {
+    const callback = mutationList => {
+      // some logging so if this starts to fail we have some clues as to why
+      for (const mutation of mutationList) {
+        if (mutation.type === "childList") {
+          info(
+            "A child node has been added or removed:" + mutation.target.nodeName
+          );
+        } else if (mutation.type === "attributes") {
+          info(`The ${mutation.attributeName} attribute was modified.`);
+        } else if (mutation.type === "characterData") {
+          info(`The characterData was modified.`);
+        }
+      }
       wasMutated = true;
     };
 

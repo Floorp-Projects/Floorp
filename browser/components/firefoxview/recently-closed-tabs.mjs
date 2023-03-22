@@ -78,6 +78,10 @@ class RecentlyClosedTabsList extends MozLitElement {
   }
 
   updateTime() {
+    // when pref is 0, avoid the update altogether (used for tests)
+    if (!lazy.timeMsPref) {
+      return;
+    }
     for (let timeEl of this.timeElements) {
       timeEl.textContent = convertTimestamp(
         parseInt(timeEl.getAttribute("data-timestamp")),
