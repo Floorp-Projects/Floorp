@@ -62,6 +62,7 @@ let MAX_DETECT_HEIGHT = 700;
 let MAX_DETECT_WIDTH = 1000;
 
 const REGION_CHANGE_THRESHOLD = 5;
+const SCROLL_BY_EDGE = 20;
 
 const doNotAutoselectTags = {
   H1: true,
@@ -785,6 +786,7 @@ class StateHandler {
    * @param pageY y coordinate
    */
   draggingDrag(pageX, pageY) {
+    this.scrollIfByEdge(pageX, pageY);
     this.#screenshotsContainer.setSelectionBoxDimensions({
       right: pageX,
       bottom: pageY,
@@ -815,6 +817,7 @@ class StateHandler {
    * @param pageY y coordinate
    */
   resizingDrag(pageX, pageY) {
+    this.scrollIfByEdge(pageX, pageY);
     switch (this.#moverId) {
       case "mover-topLeft": {
         this.#screenshotsContainer.setSelectionBoxDimensions({
@@ -1004,11 +1007,41 @@ class StateHandler {
 
     if (this.#state === "selected" && eventType === "resize") {
       this.#screenshotsContainer.shiftSelectionLayerBox();
-    } else if (this.#state && eventType === "scroll") {
+    } else if (
+      this.#state !== "resizing" &&
+      this.#state !== "dragging" &&
+      eventType === "scroll"
+    ) {
       this.#screenshotsContainer.drawButtonsLayer();
       if (this.#state === "crosshairs") {
         this.#screenshotsContainer.handleElementScroll();
       }
+    }
+  }
+
+  scrollIfByEdge(pageX, pageY) {
+    let dimensions = this.#screenshotsContainer.getSelectionLayerDimensions();
+
+    if (pageY - dimensions.scrollY <= SCROLL_BY_EDGE) {
+      // Scroll up
+      this.#screenshotsChild.scrollWindow(0, -SCROLL_BY_EDGE);
+    } else if (
+      dimensions.scrollY + dimensions.clientHeight - pageY <=
+      SCROLL_BY_EDGE
+    ) {
+      // Scroll down
+      this.#screenshotsChild.scrollWindow(0, SCROLL_BY_EDGE);
+    }
+
+    if (pageX - dimensions.scrollX <= SCROLL_BY_EDGE) {
+      // Scroll left
+      this.#screenshotsChild.scrollWindow(-SCROLL_BY_EDGE, 0);
+    } else if (
+      dimensions.scrollX + dimensions.clientWidth - pageX <=
+      SCROLL_BY_EDGE
+    ) {
+      // Scroll right
+      this.#screenshotsChild.scrollWindow(SCROLL_BY_EDGE, 0);
     }
   }
 }

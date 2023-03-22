@@ -126,7 +126,10 @@ add_task(async function test_draggingBoxOffBottomRight() {
       info(JSON.stringify(contentInfo));
       ok(contentInfo, "Got dimensions back from the content");
 
-      await helper.scrollContentWindow(4000, 4000);
+      await helper.scrollContentWindow(
+        contentInfo.scrollWidth - contentInfo.clientWidth,
+        contentInfo.scrollHeight - contentInfo.clientHeight
+      );
 
       helper.triggerUIFromToolbar();
 
@@ -313,6 +316,85 @@ add_task(async function test_scrollingScreenshotsOpen() {
         contentInfo.scrollHeight,
         "The overlay spans the entire height of the page"
       );
+    }
+  );
+});
+
+/**
+ * test scroll if by edge
+ */
+add_task(async function test_scrollIfByEdge() {
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_PAGE,
+    },
+    async browser => {
+      let helper = new ScreenshotsHelper(browser);
+
+      let windowX = 1000;
+      let windowY = 1000;
+
+      await helper.scrollContentWindow(windowX, windowY);
+
+      await TestUtils.waitForTick();
+
+      helper.triggerUIFromToolbar();
+      await helper.waitForOverlay();
+
+      let { scrollX, scrollY } = await helper.getWindowPosition();
+
+      is(scrollX, windowX, "Window x position is 1000");
+      is(scrollY, windowY, "Window y position is 1000");
+
+      let startX = 1100;
+      let startY = 1100;
+      let endX = 1010;
+      let endY = 1010;
+
+      // The window won't scroll if the state is draggingReady so we move to
+      // get into the dragging state and then move again to scroll the window
+      mouse.down(startX, startY);
+      await helper.waitForStateChange("draggingReady");
+      mouse.move(1050, 1050);
+      await helper.waitForStateChange("dragging");
+      mouse.move(endX, endY);
+      mouse.up(endX, endY);
+      await helper.waitForStateChange("selected");
+
+      windowX = 980;
+      windowY = 980;
+      await helper.waitForScrollTo(windowX, windowY);
+
+      ({ scrollX, scrollY } = await helper.getWindowPosition());
+
+      is(scrollX, windowX, "Window x position is 980");
+      is(scrollY, windowY, "Window y position is 980");
+
+      let contentInfo = await helper.getContentDimensions();
+
+      endX = windowX + contentInfo.clientWidth - 10;
+      endY = windowY + contentInfo.clientHeight - 10;
+
+      info(
+        `starting to drag overlay to ${endX}, ${endY} in test\nclientInfo: ${JSON.stringify(
+          contentInfo
+        )}\n`
+      );
+      mouse.down(startX, startY);
+      await helper.waitForStateChange("resizing");
+      mouse.move(endX, endY);
+      mouse.up(endX, endY);
+      await helper.waitForStateChange("selected");
+
+      windowX = 1000;
+      windowY = 1000;
+      await helper.waitForScrollTo(windowX, windowY);
+
+      ({ scrollX, scrollY } = await helper.getWindowPosition());
+
+      is(scrollX, windowX, "Window x position is 1000");
+      is(scrollY, windowY, "Window y position is 1000");
     }
   );
 });
