@@ -3,6 +3,9 @@
 
 "use strict";
 
+// Request a longer timeout as we have many tests which are longer
+requestLongerTimeout(2);
+
 const PAGE_CONSOLE_EVENTS =
   "https://example.com/browser/remote/cdp/test/browser/runtime/doc_console_events.html";
 const PAGE_CONSOLE_EVENTS_ONLOAD =
