@@ -77,6 +77,7 @@
 #include "mozilla/Preferences.h"
 #include "gfxTextRun.h"
 #include "nsFontFaceUtils.h"
+#include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/GlobalStyleSheetCache.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StaticPrefs_bidi.h"
@@ -771,6 +772,12 @@ bool nsPresContext::UpdateFontVisibility() {
   if (isPrivate) {
     int32_t priv = StaticPrefs::layout_css_font_visibility_private();
     level = std::max(std::min(level, priv), int32_t(FontVisibility::Base));
+  }
+
+  // Determine if the user has exempted the domain from tracking protections,
+  // if so, use the standard value.
+  if (ContentBlockingAllowList::Check(mDocument->CookieJarSettings())) {
+    level = StaticPrefs::layout_css_font_visibility_standard();
   }
 
   // Clamp result to the valid range of levels.
