@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/SVGElement.h"
 
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/dom/MutationObservers.h"
 #include "mozilla/dom/CSSRuleBinding.h"
@@ -331,7 +332,6 @@ nsresult SVGElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
   // XXX For some reason incremental mapping doesn't work, so for now
   // just delete the style rule and lazily reconstruct it as needed).
   if (aNamespaceID == kNameSpaceID_None && IsAttributeMapped(aName)) {
-    mContentDeclarationBlock = nullptr;
     OwnerDoc()->ScheduleSVGForPresAttrEvaluation(this);
   }
 
@@ -699,12 +699,6 @@ void SVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsAtom* aName,
   // Maybe consolidate?
 
   if (aNamespaceID == kNameSpaceID_None) {
-    // If this is an svg presentation attribute, remove declaration block to
-    // force an update
-    if (IsAttributeMapped(aName)) {
-      mContentDeclarationBlock = nullptr;
-    }
-
     if (IsEventAttributeName(aName)) {
       EventListenerManager* manager = GetExistingListenerManager();
       if (manager) {
@@ -1115,7 +1109,14 @@ namespace {
 
 class MOZ_STACK_CLASS MappedAttrParser {
  public:
-  explicit MappedAttrParser(SVGElement& aElement) : mElement(aElement) {}
+  explicit MappedAttrParser(SVGElement& aElement,
+                            already_AddRefed<DeclarationBlock> aDecl)
+      : mElement(aElement), mDecl(aDecl) {
+    if (mDecl) {
+      mDecl->AssertMutable();
+      Servo_DeclarationBlock_Clear(mDecl->Raw());
+    }
+  }
   ~MappedAttrParser() {
     MOZ_ASSERT(!mDecl,
                "If mDecl was initialized, it should have been returned via "
@@ -1152,14 +1153,14 @@ class MOZ_STACK_CLASS MappedAttrParser {
   }
 
  private:
+  // For reporting use counters
+  SVGElement& mElement;
+
   // Declaration for storing parsed values (lazily initialized).
   RefPtr<DeclarationBlock> mDecl;
 
   // URL data for parsing stuff. Also lazy.
   RefPtr<URLExtraData> mExtraData;
-
-  // For reporting use counters
-  SVGElement& mElement;
 };
 
 void MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
@@ -1220,10 +1221,7 @@ void MappedAttrParser::TellStyleAlreadyParsedResult(
 // Implementation Helpers:
 
 void SVGElement::UpdateContentDeclarationBlock() {
-  MOZ_ASSERT(!mContentDeclarationBlock,
-             "we already have a content declaration block");
-
-  MappedAttrParser mappedAttrParser(*this);
+  MappedAttrParser mappedAttrParser(*this, mContentDeclarationBlock.forget());
 
   bool lengthAffectsStyle =
       SVGGeometryProperty::ElementMapsLengthsToStyle(this);
@@ -1235,14 +1233,7 @@ void SVGElement::UpdateContentDeclarationBlock() {
       continue;
     }
 
-    // FIXME(emilio): This check is dead, since IsAtom() implies that
-    // NamespaceID() == None.
-    if (attrName->NamespaceID() != kNameSpaceID_None &&
-        !attrName->Equals(nsGkAtoms::lang, kNameSpaceID_XML)) {
-      continue;
-    }
-
-    if (attrName->Equals(nsGkAtoms::lang, kNameSpaceID_None) &&
+    if (attrName->Atom() == nsGkAtoms::lang &&
         HasAttr(kNameSpaceID_XML, nsGkAtoms::lang)) {
       // xml:lang has precedence, and will get set via Gecko_GetXMLLangValue().
       continue;
