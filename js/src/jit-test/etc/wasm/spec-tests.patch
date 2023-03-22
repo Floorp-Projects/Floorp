@@ -755,3 +755,30 @@ TODO Error: globals are of different type
  // ./test/core/local_get.wast:252
  assert_invalid(
    () => instantiate(`(module (func $$uninit (local $$x (ref extern)) (drop (local.get $$x))))`),
+diff --git a/js/src/jit-test/tests/wasm/spec/relaxed-simd/i32x4_relaxed_trunc.wast.js b/js/src/jit-test/tests/wasm/spec/relaxed-simd/i32x4_relaxed_trunc.wast.js
+--- a/js/src/jit-test/tests/wasm/spec/relaxed-simd/i32x4_relaxed_trunc.wast.js
++++ b/js/src/jit-test/tests/wasm/spec/relaxed-simd/i32x4_relaxed_trunc.wast.js
+@@ -92,6 +92,7 @@ assert_return(
+     either(
+       i32x4([0x0, 0x0, 0xffffff00, 0xffffffff]),
+       i32x4([0x0, 0xffffffff, 0xffffff00, 0xffffffff]),
++      i32x4([0x0, 0xffffffff, 0xffffff00, 0x0]),
+     ),
+   ],
+ );
+@@ -122,6 +123,7 @@ assert_return(
+     either(
+       i32x4([0x0, 0x0, 0x0, 0x0]),
+       i32x4([0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff]),
++      i32x4([0x80000000, 0x80000000, 0x80000000, 0x80000000]),
+     ),
+   ],
+ );
+@@ -173,6 +175,7 @@ assert_return(
+     either(
+       i32x4([0x0, 0xffffffff, 0x0, 0x0]),
+       i32x4([0xffffffff, 0xffffffff, 0x0, 0x0]),
++      i32x4([0xfffffffe, 0x0, 0x0, 0x0]),
+     ),
+   ],
+ );
