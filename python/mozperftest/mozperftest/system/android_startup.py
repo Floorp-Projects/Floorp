@@ -216,14 +216,19 @@ class AndroidStartUp(AndroidDevice):
 
     def run_performance_analysis(self, apk_metadata):
         # Installing the application on the device and getting ready to run the tests
+        install_path = apk_metadata[KEY_NAME]
+        if self.custom_apk_exists():
+            install_path = self.custom_apk_path
+
         self.device.uninstall_app(self.package_id)
-        self.info(f"Installing {apk_metadata[KEY_NAME]}...")
-        app_name = self.device.install_app(apk_metadata[KEY_NAME])
+        self.info(f"Installing {install_path}...")
+        app_name = self.device.install_app(install_path)
         if self.device.is_app_installed(app_name):
             self.info(f"Successfully installed {app_name}")
         else:
             raise AndroidStartUpInstallError("The android app was not installed")
         self.apk_name = apk_metadata[KEY_NAME].split(".")[0]
+
         return self.run_tests()
 
     def run_tests(self):
