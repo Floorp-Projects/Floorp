@@ -1405,7 +1405,7 @@ RNaNToZero::RNaNToZero(CompactBufferReader& reader) {}
 
 bool RNaNToZero::recover(JSContext* cx, SnapshotIterator& iter) const {
   double v = iter.read().toNumber();
-  if (mozilla::IsNaN(v) || mozilla::IsNegativeZero(v)) {
+  if (std::isnan(v) || mozilla::IsNegativeZero(v)) {
     v = 0.0;
   }
 

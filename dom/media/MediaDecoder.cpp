@@ -1038,7 +1038,7 @@ void MediaDecoder::DurationChanged() {
     mDuration = mStateMachineDuration.Ref().ref().ToSeconds();
   }
 
-  if (mDuration == oldDuration || IsNaN(mDuration)) {
+  if (mDuration == oldDuration || std::isnan(mDuration)) {
     return;
   }
 
@@ -1194,7 +1194,7 @@ bool MediaDecoder::IsMediaSeekable() {
 media::TimeIntervals MediaDecoder::GetSeekable() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (IsNaN(GetDuration())) {
+  if (std::isnan(GetDuration())) {
     // We do not have a duration yet, we can't determine the seekable range.
     return TimeIntervals();
   }

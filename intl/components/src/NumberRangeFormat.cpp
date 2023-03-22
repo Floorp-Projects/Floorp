@@ -73,10 +73,10 @@ bool NumberRangeFormat::formatInternal(double start, double end) const {
   // ICU incorrectly formats NaN values with the sign bit set, as if they
   // were negative.  Replace all NaNs with a single pattern with sign bit
   // unset ("positive", that is) until ICU is fixed.
-  if (MOZ_UNLIKELY(IsNaN(start))) {
+  if (MOZ_UNLIKELY(std::isnan(start))) {
     start = SpecificNaN<double>(0, 1);
   }
-  if (MOZ_UNLIKELY(IsNaN(end))) {
+  if (MOZ_UNLIKELY(std::isnan(end))) {
     end = SpecificNaN<double>(0, 1);
   }
 

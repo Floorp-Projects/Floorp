@@ -170,7 +170,7 @@ inline TimingParams TimingParamsFromCSSParams(float aDuration, float aDelay,
                                               float aIterationCount,
                                               dom::PlaybackDirection aDirection,
                                               dom::FillMode aFillMode) {
-  MOZ_ASSERT(aIterationCount >= 0.0 && !IsNaN(aIterationCount),
+  MOZ_ASSERT(aIterationCount >= 0.0 && !std::isnan(aIterationCount),
              "aIterations should be nonnegative & finite, as ensured by "
              "CSSParser");
 

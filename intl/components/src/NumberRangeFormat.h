@@ -130,8 +130,8 @@ class NumberRangeFormat final {
       return Err(ICUError::InternalError);
     }
 
-    bool isNegativeStart = !IsNaN(start) && IsNegative(start);
-    bool isNegativeEnd = !IsNaN(end) && IsNegative(end);
+    bool isNegativeStart = !std::isnan(start) && IsNegative(start);
+    bool isNegativeEnd = !std::isnan(end) && IsNegative(end);
 
     return formatResultToParts(Some(start), isNegativeStart, Some(end),
                                isNegativeEnd, parts);

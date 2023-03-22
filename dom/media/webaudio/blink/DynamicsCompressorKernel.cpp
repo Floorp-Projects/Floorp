@@ -37,7 +37,6 @@
 
 using namespace mozilla::dom;  // for WebAudioUtils
 using mozilla::IsInfinite;
-using mozilla::IsNaN;
 using mozilla::MakeUnique;
 using mozilla::PositiveInfinity;
 
@@ -293,7 +292,7 @@ void DynamicsCompressorKernel::process(
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     // Fix gremlins.
-    if (IsNaN(m_detectorAverage)) m_detectorAverage = 1;
+    if (std::isnan(m_detectorAverage)) m_detectorAverage = 1;
     if (IsInfinite(m_detectorAverage)) m_detectorAverage = 1;
 
     float desiredGain = m_detectorAverage;
@@ -327,7 +326,7 @@ void DynamicsCompressorKernel::process(
       m_maxAttackCompressionDiffDb = -1;
 
       // Fix gremlins.
-      if (IsNaN(compressionDiffDb)) compressionDiffDb = -1;
+      if (std::isnan(compressionDiffDb)) compressionDiffDb = -1;
       if (IsInfinite(compressionDiffDb)) compressionDiffDb = -1;
 
       // Adaptive release - higher compression (lower compressionDiffDb)
@@ -355,7 +354,7 @@ void DynamicsCompressorKernel::process(
       // Attack mode - compressionDiffDb should be positive dB
 
       // Fix gremlins.
-      if (IsNaN(compressionDiffDb)) compressionDiffDb = 1;
+      if (std::isnan(compressionDiffDb)) compressionDiffDb = 1;
       if (IsInfinite(compressionDiffDb)) compressionDiffDb = 1;
 
       // As long as we're still in attack mode, use a rate based off
@@ -427,7 +426,7 @@ void DynamicsCompressorKernel::process(
         detectorAverage = std::min(1.0f, detectorAverage);
 
         // Fix gremlins.
-        if (IsNaN(detectorAverage)) detectorAverage = 1;
+        if (std::isnan(detectorAverage)) detectorAverage = 1;
         if (IsInfinite(detectorAverage)) detectorAverage = 1;
 
         // Exponential approach to desired gain.

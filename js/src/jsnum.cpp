@@ -1233,7 +1233,7 @@ static bool num_toFixed(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Step 6.
-  if (mozilla::IsNaN(d)) {
+  if (std::isnan(d)) {
     args.rval().setString(cx->names().NaN);
     return true;
   }
@@ -1305,7 +1305,7 @@ static bool num_toExponential(JSContext* cx, unsigned argc, Value* vp) {
   MOZ_ASSERT_IF(!args.hasDefined(0), prec == 0);
 
   // Step 4.
-  if (mozilla::IsNaN(d)) {
+  if (std::isnan(d)) {
     args.rval().setString(cx->names().NaN);
     return true;
   }
@@ -1368,7 +1368,7 @@ static bool num_toPrecision(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Step 4.
-  if (mozilla::IsNaN(d)) {
+  if (std::isnan(d)) {
     args.rval().setString(cx->names().NaN);
     return true;
   }

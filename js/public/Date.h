@@ -29,7 +29,7 @@
  * of accessor methods to the various aspects of the represented date.
  */
 
-#include "mozilla/FloatingPoint.h"  // mozilla::{IsFinite,IsNaN}, mozilla::UnspecifiedNaN
+#include "mozilla/FloatingPoint.h"  // mozilla::{IsFinite,}, mozilla::UnspecifiedNaN
 #include "mozilla/MathAlgorithms.h"  // mozilla::Abs
 
 #include "js/Conversions.h"  // JS::ToInteger
@@ -90,7 +90,7 @@ class ClippedTime {
 
   double toDouble() const { return t; }
 
-  bool isValid() const { return !mozilla::IsNaN(t); }
+  bool isValid() const { return !std::isnan(t); }
 };
 
 // ES6 20.3.1.15.

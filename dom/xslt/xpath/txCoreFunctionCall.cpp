@@ -329,7 +329,7 @@ nsresult txCoreFunctionCall::evaluate(txIEvalContext* aContext,
       NS_ENSURE_SUCCESS(rv, rv);
 
       // check for NaN or +/-Inf
-      if (mozilla::IsNaN(start) || mozilla::IsInfinite(start) ||
+      if (std::isnan(start) || mozilla::IsInfinite(start) ||
           start >= src.Length() + 0.5) {
         aContext->recycler()->getEmptyStringResult(aResult);
 
@@ -344,7 +344,7 @@ nsresult txCoreFunctionCall::evaluate(txIEvalContext* aContext,
         NS_ENSURE_SUCCESS(rv, rv);
 
         end += start;
-        if (mozilla::IsNaN(end) || end < 0) {
+        if (std::isnan(end) || end < 0) {
           aContext->recycler()->getEmptyStringResult(aResult);
 
           return NS_OK;
