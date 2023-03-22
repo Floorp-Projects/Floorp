@@ -317,6 +317,25 @@ class Connection final : public mozIStorageConnection,
    */
   void RecordQueryStatus(int srv);
 
+  /**
+   * Returns the number of pages in the free list that can be removed.
+   *
+   * A database may use chunked growth to reduce filesystem fragmentation, then
+   * Sqlite will allocate and release multiple pages in chunks. We want to
+   * preserve the chunked space to reduce the likelihood of fragmentation,
+   * releasing free pages only when there's a large amount of them. This can be
+   * used to decide if it's worth vacuuming the database and how many pages can
+   * be vacuumed in case of incremental vacuum.
+   * Note this returns 0, and asserts, in case of errors.
+   */
+  int32_t RemovablePagesInFreeList(const nsACString& aSchemaName);
+
+  /**
+   * Whether the statement currently running on the helper thread can be
+   * interrupted.
+   */
+  Atomic<bool> mIsStatementOnHelperThreadInterruptible;
+
  private:
   ~Connection();
   nsresult initializeInternal();
@@ -483,6 +502,11 @@ class Connection final : public mozIStorageConnection,
    * sharedAsyncExecutionMutex.
    */
   bool mConnectionClosed;
+
+  /**
+   * Stores the growth increment chunk size, set through SetGrowthIncrement().
+   */
+  Atomic<int32_t> mGrowthChunkSize;
 };
 
 /**
