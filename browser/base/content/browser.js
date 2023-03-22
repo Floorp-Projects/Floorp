@@ -5365,6 +5365,8 @@ var XULBrowserWindow = {
 
     AboutReaderParent.updateReaderButton(gBrowser.selectedBrowser);
 
+    PictureInPicture.updateUrlbarToggle(gBrowser.selectedBrowser);
+
     if (!gMultiProcessBrowser) {
       // Bug 1108553 - Cannot rotate images with e10s
       gGestureSupport.restoreRotationState();

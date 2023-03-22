@@ -35,6 +35,24 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "media.videocontrols.picture-in-picture.improved-video-controls.enabled",
   false
 );
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "MIN_VIDEO_LENGTH",
+  "media.videocontrols.picture-in-picture.video-toggle.min-video-secs",
+  45
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "PIP_TOGGLE_ALWAYS_SHOW",
+  "media.videocontrols.picture-in-picture.video-toggle.always-show",
+  false
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "PIP_URLBAR_BUTTON",
+  "media.videocontrols.picture-in-picture.urlbar-button.enabled",
+  false
+);
 
 const TOGGLE_ENABLED_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.enabled";
@@ -260,6 +278,18 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
     Services.prefs.addObserver(TOGGLE_ENABLED_PREF, this.observerFunction);
     Services.prefs.addObserver(PIP_ENABLED_PREF, this.observerFunction);
     Services.cpmm.sharedData.addEventListener("change", this);
+
+    this.eligiblePipVideos = new WeakSet();
+  }
+
+  receiveMessage(message) {
+    switch (message.name) {
+      case "PictureInPicture:UrlbarToggle": {
+        this.urlbarToggle();
+        break;
+      }
+    }
+    return null;
   }
 
   didDestroy() {
@@ -277,6 +307,14 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
     // ensure the sandbox created by the video is destroyed
     this.videoWrapper?.destroy();
     this.videoWrapper = null;
+
+    for (let video of ChromeUtils.nondeterministicGetWeakSetKeys(
+      this.eligiblePipVideos
+    )) {
+      video.removeEventListener("emptied", this);
+      video.removeEventListener("loadedmetadata", this);
+      video.removeEventListener("durationchange", this);
+    }
 
     // ensure we don't access the state
     this.isDestroyed = true;
@@ -476,6 +514,14 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
         this.onPageHide(event);
         break;
       }
+      case "durationchange":
+      // Intentional fall-through
+      case "emptied":
+      // Intentional fall-through
+      case "loadedmetadata": {
+        this.updatePipVideoEligibility(event.target);
+        break;
+      }
     }
   }
 
@@ -498,6 +544,87 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
     }
 
     state.intersectionObserver.observe(video);
+
+    this.updatePipVideoEligibility(video);
+  }
+
+  updatePipVideoEligibility(video) {
+    if (this.isVideoPiPEligible(video)) {
+      if (!this.eligiblePipVideos.has(video)) {
+        this.eligiblePipVideos.add(video);
+
+        let mutationObserver = new this.contentWindow.MutationObserver(
+          mutationList => {
+            this.handleEligiblePipVideoMutation(mutationList);
+          }
+        );
+        mutationObserver.observe(video.parentElement, { childList: true });
+
+        this.sendAsyncMessage("PictureInPicture:UpdateEligiblePipVideoCount", {
+          count: ChromeUtils.nondeterministicGetWeakSetKeys(
+            this.eligiblePipVideos
+          ).length,
+        });
+      }
+    }
+  }
+
+  handleEligiblePipVideoMutation(mutationList) {
+    for (let mutationRecord of mutationList) {
+      let video = mutationRecord.removedNodes[0];
+      this.eligiblePipVideos.delete(video);
+    }
+
+    this.sendAsyncMessage("PictureInPicture:UpdateEligiblePipVideoCount", {
+      count: ChromeUtils.nondeterministicGetWeakSetKeys(this.eligiblePipVideos)
+        .length,
+    });
+  }
+
+  urlbarToggle() {
+    let video = ChromeUtils.nondeterministicGetWeakSetKeys(
+      this.eligiblePipVideos
+    )[0];
+    if (video) {
+      let pipEvent = new this.contentWindow.CustomEvent(
+        "MozTogglePictureInPicture",
+        {
+          bubbles: true,
+        }
+      );
+      video.dispatchEvent(pipEvent);
+    }
+  }
+
+  isVideoPiPEligible(video) {
+    if (!lazy.PIP_URLBAR_BUTTON) {
+      return false;
+    }
+
+    if (lazy.PIP_TOGGLE_ALWAYS_SHOW) {
+      return true;
+    }
+
+    if (isNaN(video.duration)) {
+      video.addEventListener("emptied", this);
+      video.addEventListener("loadedmetadata", this);
+      video.addEventListener("durationchange", this);
+      return false;
+    }
+
+    if (video.duration < lazy.MIN_VIDEO_LENGTH) {
+      return false;
+    }
+
+    const MIN_VIDEO_DIMENSION = 140; // pixels
+    if (
+      video.clientWidth < MIN_VIDEO_DIMENSION ||
+      video.clientHeight < MIN_VIDEO_DIMENSION
+    ) {
+      return false;
+    }
+
+    return true;
   }
 
   /**
