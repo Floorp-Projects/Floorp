@@ -83,7 +83,6 @@ const {
 const {
   isSupportedDebugTargetPane,
   supportsTemporaryExtensionInstaller,
-  supportsTemporaryExtensionAdditionalActions,
 } = require("resource://devtools/client/aboutdebugging/src/modules/debug-target-support.js");
 
 class RuntimePage extends PureComponent {
@@ -227,11 +226,7 @@ class RuntimePage extends PureComponent {
       }),
       this.renderDebugTargetPane({
         actionComponent: InspectAction,
-        additionalActionsComponent: supportsTemporaryExtensionAdditionalActions(
-          runtimeDetails.info.type
-        )
-          ? TemporaryExtensionAdditionalActions
-          : null,
+        additionalActionsComponent: TemporaryExtensionAdditionalActions,
         children: this.renderTemporaryExtensionInstallSection(),
         detailComponent: TemporaryExtensionDetail,
         icon: this.getIconByType(DEBUG_TARGETS.EXTENSION),
