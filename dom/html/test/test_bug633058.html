@@ -22,10 +22,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633058
 
 SimpleTest.waitForExplicitFinish();
 
-// Turn off Spatial Navigation so that the 'keypress' event fires in traditional behavior.
-SimpleTest.waitForFocus(function() {
-  SpecialPowers.pushPrefEnv({"set":[['snav.enabled', false]]}, startTest);
-});
+SimpleTest.waitForFocus(startTest);
+
 function startTest() {
   var nbExpectedKeyDown = 8;
   var nbExpectedKeyPress = 1;

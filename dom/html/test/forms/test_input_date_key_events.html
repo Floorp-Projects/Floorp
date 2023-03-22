@@ -22,12 +22,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1286182
 <script type="application/javascript">
 
 SimpleTest.waitForExplicitFinish();
-// Turn off Spatial Navigation because it hijacks arrow keydown events:
 SimpleTest.waitForFocus(function() {
-  SpecialPowers.pushPrefEnv({"set":[["snav.enabled", false]]}, function() {
-    test();
-    SimpleTest.finish();
-  });
+  test();
+  SimpleTest.finish();
 });
 
 var testData = [

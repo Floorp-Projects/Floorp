@@ -42,7 +42,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=343444
 <script class="testbody" type="text/javascript">
 /** Test for Bug 343444 **/
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set":[["snav.enabled", false]]}, startTest);
+startTest();
 function startTest() {
   document.getElementById("start").focus();
   var count=0;

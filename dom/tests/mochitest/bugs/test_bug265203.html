@@ -96,9 +96,7 @@ function startTest() {
   if (gTestStarted)
     return;
   gTestStarted = true;
-  // Turn off spatial navigation because it hijacks KEY_ArrowRight and KEY_ArrowLeft keydown
-  // events
-  SpecialPowers.pushPrefEnv({"set": [["accessibility.browsewithcaret", true], ["snav.enabled", false]]}, test0);
+  SpecialPowers.pushPrefEnv({"set": [["accessibility.browsewithcaret", true]]}, test0);
 }
 
 SimpleTest.waitForExplicitFinish();
