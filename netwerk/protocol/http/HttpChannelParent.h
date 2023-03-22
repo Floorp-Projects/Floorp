@@ -170,7 +170,8 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
       const TimeStamp& aHandleFetchEventEnd,
       const bool& aForceMainDocumentChannel,
       const TimeStamp& aNavigationStartTimeStamp,
-      const uint64_t& aEarlyHintPreloaderId);
+      const uint64_t& aEarlyHintPreloaderId,
+      const nsAString& aClassicScriptHintCharset);
 
   virtual mozilla::ipc::IPCResult RecvSetPriority(
       const int16_t& priority) override;

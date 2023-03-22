@@ -141,7 +141,7 @@ bool HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs) {
           a.dispatchFetchEventStart(), a.dispatchFetchEventEnd(),
           a.handleFetchEventStart(), a.handleFetchEventEnd(),
           a.forceMainDocumentChannel(), a.navigationStartTimeStamp(),
-          a.earlyHintPreloaderId());
+          a.earlyHintPreloaderId(), a.classicScriptHintCharset());
     }
     case HttpChannelCreationArgs::THttpChannelConnectArgs: {
       const HttpChannelConnectArgs& cArgs = aArgs.get_HttpChannelConnectArgs();
@@ -404,7 +404,8 @@ bool HttpChannelParent::DoAsyncOpen(
     const TimeStamp& aHandleFetchEventEnd,
     const bool& aForceMainDocumentChannel,
     const TimeStamp& aNavigationStartTimeStamp,
-    const uint64_t& aEarlyHintPreloaderId) {
+    const uint64_t& aEarlyHintPreloaderId,
+    const nsAString& aClassicScriptHintCharset) {
   MOZ_ASSERT(aURI, "aURI should not be NULL");
 
   if (aEarlyHintPreloaderId) {
@@ -507,6 +508,7 @@ bool HttpChannelParent::DoAsyncOpen(
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
+  httpChannel->SetClassicScriptHintCharset(aClassicScriptHintCharset);
   if (aAPIRedirectToURI) {
     httpChannel->RedirectTo(aAPIRedirectToURI);
   }
