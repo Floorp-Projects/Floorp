@@ -721,13 +721,11 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 
 /* Define the minimum width based on the style of result rows.
    The order of the min-width rules below must be in increasing order. */
-#PopupAutoComplete[resultstyles~="loginsFooter"],
-#PopupAutoComplete[resultstyles~="insecureWarning"] {
+#PopupAutoComplete:is([resultstyles~="loginsFooter"], [resultstyles~="insecureWarning"])::part(content) {
   min-width: 17em;
 }
 
-#PopupAutoComplete[resultstyles~="importableLogins"],
-#PopupAutoComplete[resultstyles~="generatedPassword"] {
+#PopupAutoComplete:is([resultstyles~="importableLogins"], [resultstyles~="generatedPassword"])::part(content) {
   min-width: 22em;
 }
 
