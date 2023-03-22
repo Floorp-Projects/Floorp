@@ -314,6 +314,9 @@ export function createSourceActor(sourceResource, sourceObject) {
     sourceMapURL: sourceResource.sourceMapURL,
     url: sourceResource.url,
     introductionType: sourceResource.introductionType,
+    sourceStartLine: sourceResource.sourceStartLine,
+    sourceStartColumn: sourceResource.sourceStartColumn,
+    sourceLength: sourceResource.sourceLength,
   };
 }
 

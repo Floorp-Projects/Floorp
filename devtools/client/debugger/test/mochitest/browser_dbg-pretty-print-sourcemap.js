@@ -72,14 +72,10 @@ add_task(async () => {
     "js2.min.js"
   );
 
-  info(" - Test non-javascript source");
+  info(" - Test HTML source");
   const htmlSource = findSource(dbg, "doc-prettyprint-sourcemap.html");
   await selectSource(dbg, htmlSource);
-  assertPrettyPrintButton(
-    dbg,
-    L10N.getStr("sourceFooter.prettyPrint.isNotJavascriptMessage"),
-    true
-  );
+  assertPrettyPrintButton(dbg, L10N.getStr("sourceTabs.prettyPrint"), false);
 
   info(" - Test source with sourceMappingURL but sourcemap does not exist");
   const source1 = findSource(dbg, "js1.min.js");

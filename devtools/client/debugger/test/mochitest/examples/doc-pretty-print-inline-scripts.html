@@ -1,0 +1,44 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+    - License, v. 2.0. If a copy of the MPL was not distributed with this
+    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Debugger test page</title>
+    <!-- Added to check we don't handle non js scripts -->
+    <script id="json-data" type="application/json">
+      { "foo": "bar" }
+    </script>
+
+    <!-- the unusual formatting is wanted to check inline scripts pretty printing -->
+    <script id="inline" type="application/javascript">
+
+
+
+      const userInfo = JSON.parse(document.getElementById("json-data").text);      console.log("User information: %o", userInfo);
+      document.addEventListener("click", function onClick(e){console.log("in inline script");
+                                                             // this is
+  // something
+                                                             e.target;
+      });
+
+
+
+      </script>
+  </head>
+
+  <body>
+    <h1>Minified</h1>
+    <!-- Checking that having empty inline scripts doesn't throw off pretty printing -->
+    <script></script>
+    <!-- Single line "minified" script -->
+    <script id="minified" type="module">for (const x of [42]){                   if(x > 0){console.log(x,"yay")} else {console.log(x,"booh")}   }</script>
+    <!-- Multiple line "minified" script, with content on the first line -->
+    <script>{"use strict";document.querySelector("h1").addEventListener(
+            "mousedown", e => {console.log("mousedown on h1")})
+      }</script>
+    <hr><script>const x = {a:1, b:2};</script><hr><!-- multiple scripts on same line --><script>const y = [1,2,3];y.map(i => i*2)</script>
+  </body>
+</html>

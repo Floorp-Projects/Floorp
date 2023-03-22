@@ -6255,6 +6255,8 @@ exports.prettyFast = prettyFast;
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+/* eslint-disable complexity */
 var acorn = __webpack_require__(1103);
 
 var sourceMap = __webpack_require__(632);
@@ -6780,15 +6782,26 @@ function addComment(write, indentLevel, options, block, text, line, column, next
 /**
  * The main function.
  *
- * @param String input
- *        The ugly JS code we want to pretty print.
- * @param Object options
- *        The options object. Provides configurability of the pretty
- *        printing. Properties:
- *          - url: The URL string of the ugly JS code.
- *          - indent: The string to indent code by.
+ * @param {String} input: The ugly JS code we want to pretty print.
+ * @param {Object} options: Provides configurability of the pretty printing.
+ * @param {String} options.url: The URL string of the ugly JS code.
+ * @param {String} options.indent: The string to indent code by.
+ * @param {SourceMapGenerator} options.sourceMapGenerator: An optional sourceMapGenerator
+ *                             the mappings will be added to.
+ * @param {Boolean} options.prefixWithNewLine: When true, the pretty printed code will start
+ *                  with a line break
+ * @param {Integer} options.originalStartLine: The line the passed script starts at (1-based).
+ *                  This is used for inline scripts where we need to account for the lines
+ *                  before the script tag
+ * @param {Integer} options.originalStartColumn: The column the passed script starts at (1-based).
+ *                  This is used for inline scripts where we need to account for the position
+ *                  of the script tag within the line.
+ * @param {Integer} options.generatedStartLine: The line where the pretty printed script
+ *                  will start at (1-based). This is used for pretty printing HTML file,
+ *                  where we might have handle previous inline scripts that impact the
+ *                  position of this script.
  *
- * @returns Object
+ * @returns {Object}
  *          An object with the following properties:
  *            - code: The pretty printed code string.
  *            - map: A SourceMapGenerator instance.
@@ -6797,17 +6810,24 @@ function addComment(write, indentLevel, options, block, text, line, column, next
 
 function prettyFast(input, options = {}) {
   // The level of indents deep we are.
-  let indentLevel = 0; // We will handle mappings between ugly and pretty printed code in this SourceMapGenerator.
-
+  let indentLevel = 0;
   const {
-    url: file
-  } = options;
-  const sourceMapGenerator = new sourceMap.SourceMapGenerator({
+    url: file,
+    originalStartLine,
+    originalStartColumn,
+    prefixWithNewLine,
+    generatedStartLine
+  } = options; // We will handle mappings between ugly and pretty printed code in this SourceMapGenerator.
+
+  const sourceMapGenerator = options.sourceMapGenerator || new sourceMap.SourceMapGenerator({
     file
   });
   let currentCode = "";
   let currentLine = 1;
   let currentColumn = 0;
+  const hasOriginalStartLine = ("originalStartLine" in options);
+  const hasOriginalStartColumn = ("originalStartColumn" in options);
+  const hasGeneratedStartLine = ("generatedStartLine" in options);
   /**
    * Write a pretty printed string to the prettified string and for tokens, add their
    * mapping to the SourceMapGenerator.
@@ -6832,11 +6852,17 @@ function prettyFast(input, options = {}) {
         // We need to swap original and generated locations, as the prettified text should
         // be seen by the sourcemap service as the "original" one.
         generated: {
-          line,
-          column
+          // originalStartLine is 1-based, and here we just want to offset by a number of
+          // lines, so we need to decrement it
+          line: hasOriginalStartLine ? line + (originalStartLine - 1) : line,
+          // We only need to adjust the column number if we're looking at the first line, to
+          // account for the html text before the opening <script> tag.
+          column: line == 1 && hasOriginalStartColumn ? column + originalStartColumn : column
         },
         original: {
-          line: currentLine,
+          // generatedStartLine is 1-based, and here we just want to offset by a number of
+          // lines, so we need to decrement it.
+          line: hasGeneratedStartLine ? currentLine + (generatedStartLine - 1) : currentLine,
           column: currentColumn
         },
         name: null
@@ -6851,7 +6877,12 @@ function prettyFast(input, options = {}) {
         currentColumn++;
       }
     }
-  }; // Whether or not we added a newline on after we added the last token.
+  }; // Add the initial new line if needed
+
+
+  if (prefixWithNewLine) {
+    write("\n");
+  } // Whether or not we added a newline on after we added the last token.
 
 
   let addedNewline = false; // Whether or not we added a space after we added the last token.
@@ -10530,6 +10561,12 @@ var _prettyFast = __webpack_require__(1105);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+var {
+  SourceMapGenerator
+} = __webpack_require__(632);
+
+const sourceMapGeneratorByTaskId = new Map();
+
 function prettyPrint({
   url,
   indent,
@@ -10540,7 +10577,7 @@ function prettyPrint({
     map: sourceMapGenerator
   } = (0, _prettyFast.prettyFast)(sourceText, {
     url,
-    indent: " ".repeat(indent)
+    indent
   });
   return {
     code,
@@ -10548,8 +10585,86 @@ function prettyPrint({
   };
 }
 
+function prettyPrintInlineScript({
+  taskId,
+  url,
+  indent,
+  sourceText,
+  originalStartLine,
+  originalStartColumn,
+  generatedStartLine
+}) {
+  let taskSourceMapGenerator;
+
+  if (!sourceMapGeneratorByTaskId.has(taskId)) {
+    taskSourceMapGenerator = new SourceMapGenerator({
+      file: url
+    });
+    sourceMapGeneratorByTaskId.set(taskId, taskSourceMapGenerator);
+  } else {
+    taskSourceMapGenerator = sourceMapGeneratorByTaskId.get(taskId);
+  }
+
+  const {
+    code
+  } = (0, _prettyFast.prettyFast)(sourceText, {
+    url,
+    indent,
+    sourceMapGenerator: taskSourceMapGenerator,
+
+    /*
+     * By default prettyPrint will trim the text, and we'd have the pretty text displayed
+     * just after the script tag, e.g.:
+     *
+     * ```
+     * <script>if (true) {
+     *   something()
+     * }
+     * </script>
+     * ```
+     *
+     * We want the text to start on a new line, so prepend a line break, so we get
+     * something like:
+     *
+     * ```
+     * <script>
+     * if (true) {
+     *   something()
+     * }
+     * </script>
+     * ```
+     */
+    prefixWithNewLine: true,
+    originalStartLine,
+    originalStartColumn,
+    generatedStartLine
+  }); // When a taskId was passed, we only return the pretty printed text.
+  // The source map should be retrieved with getSourceMapForTask.
+
+  return code;
+}
+/**
+ * Get the source map for a pretty-print task
+ *
+ * @param {Integer} taskId: The taskId that was used to call prettyPrint
+ * @returns {Object} A source map object
+ */
+
+
+function getSourceMapForTask(taskId) {
+  if (!sourceMapGeneratorByTaskId.has(taskId)) {
+    return null;
+  }
+
+  const taskSourceMapGenerator = sourceMapGeneratorByTaskId.get(taskId);
+  sourceMapGeneratorByTaskId.delete(taskId);
+  return taskSourceMapGenerator.toJSON();
+}
+
 self.onmessage = (0, _workerUtils.workerHandler)({
-  prettyPrint
+  prettyPrint,
+  prettyPrintInlineScript,
+  getSourceMapForTask
 });
 
 /***/ })

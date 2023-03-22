@@ -274,7 +274,13 @@ function insertSourceActors(state, action) {
   for (const sourceActor of sourceActors) {
     state.actors[sourceActor.source] = [
       ...(state.actors[sourceActor.source] || []),
-      { id: sourceActor.id, thread: sourceActor.thread },
+      {
+        id: sourceActor.id,
+        thread: sourceActor.thread,
+        startLine: sourceActor.startLine,
+        column: sourceActor.column,
+        length: sourceActor.length,
+      },
     ];
   }
 

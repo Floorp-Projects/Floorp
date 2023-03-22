@@ -205,6 +205,9 @@ class SourceActor extends Actor {
       sourceMapURL: source.sourceMapURL,
       introductionType,
       isInlineSource: this._isInlineSource,
+      sourceStartLine: source.startLine,
+      sourceStartColumn: source.startColumn,
+      sourceLength: source.text?.length,
     };
   }
 

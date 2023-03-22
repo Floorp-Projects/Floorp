@@ -220,7 +220,10 @@ export function canPrettyPrintSource(state, location) {
   const content = getSourceTextContent(state, location);
   const sourceContent = content && isFulfilled(content) ? content.value : null;
 
-  if (!sourceContent || !isJavaScript(source, sourceContent)) {
+  if (
+    !sourceContent ||
+    (!isJavaScript(source, sourceContent) && !source.isHTML)
+  ) {
     return false;
   }
 
@@ -252,7 +255,7 @@ export function getPrettyPrintMessage(state, location) {
     return L10N.getStr("sourceFooter.prettyPrint.noContentMessage");
   }
 
-  if (!isJavaScript(source, sourceContent)) {
+  if (!isJavaScript(source, sourceContent) && !source.isHTML) {
     return L10N.getStr("sourceFooter.prettyPrint.isNotJavascriptMessage");
   }
 

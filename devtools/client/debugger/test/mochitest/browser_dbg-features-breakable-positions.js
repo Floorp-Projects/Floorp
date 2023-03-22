@@ -40,6 +40,17 @@ add_task(async function testBreakableLinesOverReloads() {
     { line: 36, columns: [] },
   ]);
 
+  info("Pretty print first html page load and assert breakable lines");
+  await prettyPrint(dbg);
+  await assertBreakablePositions(dbg, "index.html:formatted", 80, [
+    { line: 16, columns: [0, 8] },
+    { line: 22, columns: [0, 8, 35] },
+    { line: 27, columns: [0, 8] },
+    { line: 28, columns: [] },
+    { line: 34, columns: [] },
+  ]);
+  await closeTab(dbg, "index.html:formatted");
+
   info("Assert breakable lines of the first original source file, original.js");
   // The length of original.js is longer than the test file
   // because the sourcemap replaces the content of the original file
@@ -112,6 +123,13 @@ add_task(async function testBreakableLinesOverReloads() {
     { line: 25, columns: [6, 14] },
     { line: 27, columns: [] },
   ]);
+
+  info("Pretty print second html page load and assert breakable lines");
+  await prettyPrint(dbg);
+  await assertBreakablePositions(dbg, "index.html:formatted", 33, [
+    { line: 25, columns: [0, 8] },
+  ]);
+  await closeTab(dbg, "index.html:formatted");
 
   info("Assert breakable lines of the second orignal file");
   // See first assertion about original.js,
