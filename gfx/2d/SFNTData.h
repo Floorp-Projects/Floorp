@@ -45,7 +45,7 @@ class SFNTData final {
   bool AddFont(const uint8_t* aFontData, uint32_t aDataLength,
                uint32_t aOffset);
 
-  uint32_t HashHeadTables();
+  uint32_t HashHeadAndCmapTables();
 
   // Internal representation of single font in font file.
   class Font;
