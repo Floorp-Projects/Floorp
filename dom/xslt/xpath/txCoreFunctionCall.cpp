@@ -478,7 +478,7 @@ nsresult txCoreFunctionCall::evaluate(txIEvalContext* aContext,
       rv = evaluateToNumber(mParams[0], aContext, &dbl);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      if (mozilla::IsFinite(dbl)) {
+      if (std::isfinite(dbl)) {
         if (mozilla::IsNegative(dbl) && dbl >= -0.5) {
           dbl *= 0;
         } else {
@@ -493,8 +493,7 @@ nsresult txCoreFunctionCall::evaluate(txIEvalContext* aContext,
       rv = evaluateToNumber(mParams[0], aContext, &dbl);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      if (mozilla::IsFinite(dbl) && !mozilla::IsNegativeZero(dbl))
-        dbl = floor(dbl);
+      if (std::isfinite(dbl) && !mozilla::IsNegativeZero(dbl)) dbl = floor(dbl);
 
       return aContext->recycler()->getNumberResult(dbl, aResult);
     }
@@ -503,7 +502,7 @@ nsresult txCoreFunctionCall::evaluate(txIEvalContext* aContext,
       rv = evaluateToNumber(mParams[0], aContext, &dbl);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      if (mozilla::IsFinite(dbl)) {
+      if (std::isfinite(dbl)) {
         if (mozilla::IsNegative(dbl) && dbl > -1)
           dbl *= 0;
         else

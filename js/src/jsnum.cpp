@@ -1417,7 +1417,7 @@ static const JSFunctionSpec number_methods[] = {
     JS_FS_END};
 
 bool js::IsInteger(double d) {
-  return mozilla::IsFinite(d) && JS::ToInteger(d) == d;
+  return std::isfinite(d) && JS::ToInteger(d) == d;
 }
 
 static const JSFunctionSpec number_static_methods[] = {

@@ -36,6 +36,7 @@
 #include "nsTArray.h"
 #include "WindowRenderer.h"
 #include <algorithm>
+#include <cmath>
 #include <limits>
 
 using namespace mozilla::dom;
@@ -246,7 +247,7 @@ double MediaDecoder::GetDuration() {
 
 bool MediaDecoder::IsInfinite() const {
   MOZ_ASSERT(NS_IsMainThread());
-  return mozilla::IsInfinite<double>(mDuration);
+  return std::isinf(mDuration);
 }
 
 #define INIT_MIRROR(name, val) \

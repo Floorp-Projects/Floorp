@@ -99,7 +99,7 @@ struct BasePoint {
   bool IsFinite() const {
     using FloatType =
         std::conditional_t<std::is_same_v<T, float>, float, double>;
-    return (mozilla::IsFinite(FloatType(x)) && mozilla::IsFinite(FloatType(y)));
+    return (std::isfinite(FloatType(x)) && std::isfinite(FloatType(y)));
     return true;
   }
 

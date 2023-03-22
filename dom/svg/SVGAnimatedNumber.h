@@ -75,7 +75,7 @@ class SVGAnimatedNumber {
 
     float BaseVal() override { return mVal->GetBaseValue(); }
     void SetBaseVal(float aValue) override {
-      MOZ_ASSERT(IsFinite(aValue));
+      MOZ_ASSERT(std::isfinite(aValue));
       mVal->SetBaseValue(aValue, mSVGElement);
     }
 

@@ -339,7 +339,7 @@ Maybe<NumberPartType> GetPartTypeForNumberField(UNumberFormatFields fieldName,
         if (std::isnan(*number)) {
           return Some(NumberPartType::Nan);
         }
-        if (!IsFinite(*number)) {
+        if (!std::isfinite(*number)) {
           return Some(NumberPartType::Infinity);
         }
       }

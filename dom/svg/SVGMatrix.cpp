@@ -155,7 +155,7 @@ already_AddRefed<SVGMatrix> SVGMatrix::FlipY() {
 
 already_AddRefed<SVGMatrix> SVGMatrix::SkewX(float angle, ErrorResult& rv) {
   double ta = tan(angle * radPerDegree);
-  if (!IsFinite(ta)) {
+  if (!std::isfinite(ta)) {
     rv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return nullptr;
   }
@@ -169,7 +169,7 @@ already_AddRefed<SVGMatrix> SVGMatrix::SkewX(float angle, ErrorResult& rv) {
 
 already_AddRefed<SVGMatrix> SVGMatrix::SkewY(float angle, ErrorResult& rv) {
   double ta = tan(angle * radPerDegree);
-  if (!IsFinite(ta)) {
+  if (!std::isfinite(ta)) {
     rv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return nullptr;
   }

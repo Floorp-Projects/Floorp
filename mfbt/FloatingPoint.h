@@ -233,7 +233,7 @@ static MOZ_ALWAYS_INLINE bool IsPositiveZero(T aValue) {
  */
 template <typename T>
 static MOZ_ALWAYS_INLINE T ToZeroIfNonfinite(T aValue) {
-  return IsFinite(aValue) ? aValue : 0;
+  return std::isfinite(aValue) ? aValue : 0;
 }
 
 /**
@@ -370,7 +370,7 @@ inline bool NumberEqualsSignedInteger(Float aValue, SignedInteger* aInteger) {
   MOZ_MAKE_MEM_UNDEFINED(aInteger, sizeof(*aInteger));
 
   // NaNs and infinities are not integers.
-  if (!IsFinite(aValue)) {
+  if (!std::isfinite(aValue)) {
     return false;
   }
 

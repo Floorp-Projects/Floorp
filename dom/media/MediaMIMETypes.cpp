@@ -193,7 +193,7 @@ Maybe<MediaExtendedMIMEType> MakeMediaExtendedMIMEType(
   rv = parser.GetParameter("codecs", codecs);
   bool haveCodecs = NS_SUCCEEDED(rv);
 
-  if (!IsFinite(aConfig.mFramerate) || aConfig.mFramerate <= 0.0) {
+  if (!std::isfinite(aConfig.mFramerate) || aConfig.mFramerate <= 0.0) {
     return Nothing();
   }
 
