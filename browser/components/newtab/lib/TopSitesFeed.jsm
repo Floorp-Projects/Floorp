@@ -924,7 +924,7 @@ class TopSitesFeed {
       let index = link.sponsored_position - 1;
       if (index >= withPinned.length) {
         withPinned[index] = link;
-      } else if (withPinned[index].sponsored_position) {
+      } else if (withPinned[index]?.sponsored_position) {
         // We currently want DiscoveryStream spocs to replace existing spocs.
         withPinned[index] = link;
       } else {
