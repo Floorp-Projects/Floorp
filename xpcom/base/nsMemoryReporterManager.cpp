@@ -43,6 +43,11 @@
 #include "mozilla/ipc/UtilityProcessManager.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
 
+#ifdef MOZ_WIDGET_ANDROID
+#  include "mozilla/java/GeckoAppShellWrappers.h"
+#  include "mozilla/jni/Utils.h"
+#endif
+
 #ifdef XP_WIN
 #  include "mozilla/MemoryInfo.h"
 
@@ -1606,6 +1611,35 @@ NS_IMPL_ISUPPORTS(DMDReporter, nsIMemoryReporter)
 
 #endif  // MOZ_DMD
 
+#ifdef MOZ_WIDGET_ANDROID
+class AndroidMemoryReporter final : public nsIMemoryReporter {
+ public:
+  NS_DECL_ISUPPORTS
+
+  AndroidMemoryReporter() = default;
+
+  NS_IMETHOD
+  CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
+                 bool aAnonymize) override {
+    if (!jni::IsAvailable() || jni::GetAPIVersion() < 23) {
+      return NS_OK;
+    }
+
+    int32_t heap = java::GeckoAppShell::GetMemoryUsage("summary.java-heap"_ns);
+    if (heap > 0) {
+      MOZ_COLLECT_REPORT("java-heap", KIND_OTHER, UNITS_BYTES, heap * 1024,
+                         "The private Java Heap usage");
+    }
+    return NS_OK;
+  }
+
+ private:
+  ~AndroidMemoryReporter() = default;
+};
+
+NS_IMPL_ISUPPORTS(AndroidMemoryReporter, nsIMemoryReporter)
+#endif
+
 /**
  ** nsMemoryReporterManager implementation
  **/
@@ -1693,6 +1727,10 @@ nsMemoryReporterManager::Init() {
 
 #ifdef XP_WIN
   RegisterStrongReporter(new WindowsAddressSpaceReporter());
+#endif
+
+#ifdef MOZ_WIDGET_ANDROID
+  RegisterStrongReporter(new AndroidMemoryReporter());
 #endif
 
 #ifdef XP_UNIX
