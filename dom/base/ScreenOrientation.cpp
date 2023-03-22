@@ -624,16 +624,16 @@ void ScreenOrientation::CleanupFullscreenListener() {
 }
 
 OrientationType ScreenOrientation::DeviceType(CallerType aCallerType) const {
-  if (nsContentUtils::ShouldResistFingerprinting(aCallerType,
-                                                 GetOwnerGlobal())) {
+  if (nsContentUtils::ShouldResistFingerprinting(
+          aCallerType, GetOwnerGlobal(), RFPTarget::ScreenOrientation)) {
     return OrientationType::Landscape_primary;
   }
   return mType;
 }
 
 uint16_t ScreenOrientation::DeviceAngle(CallerType aCallerType) const {
-  if (nsContentUtils::ShouldResistFingerprinting(aCallerType,
-                                                 GetOwnerGlobal())) {
+  if (nsContentUtils::ShouldResistFingerprinting(
+          aCallerType, GetOwnerGlobal(), RFPTarget::ScreenOrientation)) {
     return 0;
   }
   return mAngle;
@@ -641,8 +641,8 @@ uint16_t ScreenOrientation::DeviceAngle(CallerType aCallerType) const {
 
 OrientationType ScreenOrientation::GetType(CallerType aCallerType,
                                            ErrorResult& aRv) const {
-  if (nsContentUtils::ShouldResistFingerprinting(aCallerType,
-                                                 GetOwnerGlobal())) {
+  if (nsContentUtils::ShouldResistFingerprinting(
+          aCallerType, GetOwnerGlobal(), RFPTarget::ScreenOrientation)) {
     return OrientationType::Landscape_primary;
   }
 
@@ -658,8 +658,8 @@ OrientationType ScreenOrientation::GetType(CallerType aCallerType,
 
 uint16_t ScreenOrientation::GetAngle(CallerType aCallerType,
                                      ErrorResult& aRv) const {
-  if (nsContentUtils::ShouldResistFingerprinting(aCallerType,
-                                                 GetOwnerGlobal())) {
+  if (nsContentUtils::ShouldResistFingerprinting(
+          aCallerType, GetOwnerGlobal(), RFPTarget::ScreenOrientation)) {
     return 0;
   }
 
@@ -717,7 +717,7 @@ Document* ScreenOrientation::GetResponsibleDocument() const {
 
 void ScreenOrientation::MaybeChanged() {
   Document* doc = GetResponsibleDocument();
-  if (!doc || doc->ShouldResistFingerprinting()) {
+  if (!doc || doc->ShouldResistFingerprinting(RFPTarget::ScreenOrientation)) {
     return;
   }
 

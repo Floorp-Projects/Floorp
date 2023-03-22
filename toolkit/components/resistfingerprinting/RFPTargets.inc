@@ -4,6 +4,9 @@
 
 
 ITEM_VALUE(TouchEvents, 0x0001)
+// Reserving 2-4 for Keyboard Events and Pointer Events
+
+ITEM_VALUE(ScreenOrientation, 0x0005)
 
 
 /*
