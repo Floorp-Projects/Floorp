@@ -90,9 +90,16 @@ async function openContextMenuForPasswordInput(browser) {
   let passwordInputCoords = await SpecialPowers.spawn(browser, [], async () => {
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
 
+    // The password display field is in the DOM when password input is unfocused.
+    // To get the password input field, ensure it receives focus.
     let passwordInput = loginItem.shadowRoot.querySelector(
+      "input[type='password']"
+    );
+    passwordInput.focus();
+    passwordInput = loginItem.shadowRoot.querySelector(
       "input[name='password']"
     );
+
     passwordInput.focus();
     let passwordRect = passwordInput.getBoundingClientRect();
 

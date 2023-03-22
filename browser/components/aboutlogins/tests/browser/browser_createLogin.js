@@ -239,6 +239,10 @@ add_task(async function test_create_login() {
         "input[name='username']"
       );
       let passwordInput = loginItem.shadowRoot.querySelector(
+        "input[type='password']"
+      );
+      passwordInput.focus();
+      passwordInput = loginItem.shadowRoot.querySelector(
         "input[name='password']"
       );
       usernameInput.value = "testuser2";

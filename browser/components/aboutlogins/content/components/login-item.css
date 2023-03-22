@@ -74,7 +74,7 @@ input[type="url"] {
   text-align: match-parent !important; /* override `all: unset` in the rule below */
 }
 
-input[type="password"]:read-only,
+:host(:not([data-editing])) input[type="password"]:read-only,
 input[type="text"]:read-only,
 input[type="url"]:read-only {
   all: unset;
@@ -212,6 +212,7 @@ input[type = "url"]:focus:-moz-ui-invalid:not(:placeholder-shown) ~ .tooltip-con
 .reveal-password-wrapper {
   display: flex;
   align-items: center;
+  justify-content: space-between;
 }
 
 .detail-grid {
@@ -266,7 +267,8 @@ input[type = "url"]:focus:-moz-ui-invalid:not(:placeholder-shown) ~ .tooltip-con
 }
 
 moz-button-group,
-:host([data-editing]) .detail-cell input:read-write:not([type="checkbox"]) {
+:host([data-editing]) .detail-cell input:read-write:not([type="checkbox"]),
+:host([data-editing]) input[type="password"]:read-only {
   width: 298px;
   box-sizing: border-box;
 }
