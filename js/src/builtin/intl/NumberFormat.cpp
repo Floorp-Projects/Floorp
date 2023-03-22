@@ -1065,7 +1065,7 @@ static bool ToIntlMathematicalValue(JSContext* cx, MutableHandleValue value) {
       }
     } else {
       // If we can't parse the string as a decimal, it must be ±Infinity.
-      MOZ_ASSERT(mozilla::IsInfinite(number));
+      MOZ_ASSERT(std::isinf(number));
       MOZ_ASSERT(StringFindPattern(str, cx->names().Infinity, 0) >= 0);
 
       value.setDouble(number);

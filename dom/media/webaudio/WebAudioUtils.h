@@ -77,7 +77,7 @@ inline float ConvertDecibelToLinear(float aDecibel) {
 }
 
 inline void FixNaN(double& aDouble) {
-  if (std::isnan(aDouble) || IsInfinite(aDouble)) {
+  if (std::isnan(aDouble) || std::isinf(aDouble)) {
     aDouble = 0.0;
   }
 }
