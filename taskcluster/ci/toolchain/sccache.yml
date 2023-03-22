@@ -25,7 +25,9 @@ linux64-sccache:
     run:
         arguments:
             - x86_64-unknown-linux-gnu
-            - all
+            - s3
+            - gcs
+            - azure
             - dist-server
             - openssl/vendored
             - native-zlib
