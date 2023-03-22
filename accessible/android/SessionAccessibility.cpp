@@ -785,13 +785,13 @@ mozilla::java::GeckoBundle::LocalRef SessionAccessibility::ToBundle(
                       java::sdk::Integer::ValueOf(0));  // integer
     }
 
-    if (!IsNaN(aCurVal)) {
+    if (!std::isnan(aCurVal)) {
       GECKOBUNDLE_PUT(rangeInfo, "current", java::sdk::Double::New(aCurVal));
     }
-    if (!IsNaN(aMinVal)) {
+    if (!std::isnan(aMinVal)) {
       GECKOBUNDLE_PUT(rangeInfo, "min", java::sdk::Double::New(aMinVal));
     }
-    if (!IsNaN(aMaxVal)) {
+    if (!std::isnan(aMaxVal)) {
       GECKOBUNDLE_PUT(rangeInfo, "max", java::sdk::Double::New(aMaxVal));
     }
 

@@ -38,11 +38,11 @@ nsresult txNumberExpr::evaluate(txIEvalContext* aContext,
       if (rightDbl == 0) {
 #if defined(XP_WIN)
         /* XXX MSVC miscompiles such that (NaN == 0) */
-        if (mozilla::IsNaN(rightDbl))
+        if (std::isnan(rightDbl))
           result = mozilla::UnspecifiedNaN<double>();
         else
 #endif
-            if (leftDbl == 0 || mozilla::IsNaN(leftDbl))
+            if (leftDbl == 0 || std::isnan(leftDbl))
           result = mozilla::UnspecifiedNaN<double>();
         else if (mozilla::IsNegative(leftDbl) != mozilla::IsNegative(rightDbl))
           result = mozilla::NegativeInfinity<double>();

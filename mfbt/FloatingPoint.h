@@ -198,7 +198,7 @@ static MOZ_ALWAYS_INLINE bool IsFinite(T aValue) {
  */
 template <typename T>
 static MOZ_ALWAYS_INLINE bool IsNegative(T aValue) {
-  MOZ_ASSERT(!IsNaN(aValue), "NaN does not have a sign");
+  MOZ_ASSERT(!std::isnan(aValue), "NaN does not have a sign");
 
   /* The sign bit is set if the double is negative. */
   typedef FloatingPoint<T> Traits;
@@ -335,7 +335,7 @@ static MOZ_ALWAYS_INLINE void SpecificNaN(
   BitwiseCast<T>(
       (signbit ? Traits::kSignBit : 0) | Traits::kExponentBits | significand,
       result);
-  MOZ_ASSERT(IsNaN(*result));
+  MOZ_ASSERT(std::isnan(*result));
 }
 
 template <typename T>
@@ -525,8 +525,8 @@ static MOZ_ALWAYS_INLINE T UnspecifiedNaN() {
 template <typename T>
 static inline bool NumbersAreIdentical(T aValue1, T aValue2) {
   using Bits = typename FloatingPoint<T>::Bits;
-  if (IsNaN(aValue1)) {
-    return IsNaN(aValue2);
+  if (std::isnan(aValue1)) {
+    return std::isnan(aValue2);
   }
   return BitwiseCast<Bits>(aValue1) == BitwiseCast<Bits>(aValue2);
 }
@@ -546,8 +546,8 @@ static inline bool NumbersAreBitwiseIdentical(T aValue1, T aValue2) {
  */
 template <typename T>
 static inline bool EqualOrBothNaN(T aValue1, T aValue2) {
-  if (IsNaN(aValue1)) {
-    return IsNaN(aValue2);
+  if (std::isnan(aValue1)) {
+    return std::isnan(aValue2);
   }
   return aValue1 == aValue2;
 }
@@ -558,7 +558,7 @@ static inline bool EqualOrBothNaN(T aValue1, T aValue2) {
  */
 template <typename T>
 static inline T NaNSafeMin(T aValue1, T aValue2) {
-  if (IsNaN(aValue1) || IsNaN(aValue2)) {
+  if (std::isnan(aValue1) || std::isnan(aValue2)) {
     return UnspecifiedNaN<T>();
   }
   return std::min(aValue1, aValue2);
@@ -570,7 +570,7 @@ static inline T NaNSafeMin(T aValue1, T aValue2) {
  */
 template <typename T>
 static inline T NaNSafeMax(T aValue1, T aValue2) {
-  if (IsNaN(aValue1) || IsNaN(aValue2)) {
+  if (std::isnan(aValue1) || std::isnan(aValue2)) {
     return UnspecifiedNaN<T>();
   }
   return std::max(aValue1, aValue2);

@@ -172,7 +172,7 @@ class nsCSSValue {
 
   float GetFloatValue() const {
     MOZ_ASSERT(eCSSUnit_Number <= mUnit, "not a float value");
-    MOZ_ASSERT(!mozilla::IsNaN(mValue.mFloat));
+    MOZ_ASSERT(!std::isnan(mValue.mFloat));
     return mValue.mFloat;
   }
 

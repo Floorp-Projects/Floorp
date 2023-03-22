@@ -160,7 +160,7 @@ void SourceBuffer::SetAppendWindowEnd(double aAppendWindowEnd,
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
-  if (IsNaN(aAppendWindowEnd) ||
+  if (std::isnan(aAppendWindowEnd) ||
       aAppendWindowEnd <= mCurrentAttributes.GetAppendWindowStart()) {
     aRv.ThrowTypeError("Invalid appendWindowEnd value");
     return;
@@ -306,7 +306,7 @@ void SourceBuffer::PrepareRemove(double aStart, double aEnd, ErrorResult& aRv) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
-  if (IsNaN(mMediaSource->Duration())) {
+  if (std::isnan(mMediaSource->Duration())) {
     aRv.ThrowTypeError("Duration is NaN");
     return;
   }
@@ -314,7 +314,7 @@ void SourceBuffer::PrepareRemove(double aStart, double aEnd, ErrorResult& aRv) {
     aRv.ThrowTypeError("Invalid start value");
     return;
   }
-  if (aEnd <= aStart || IsNaN(aEnd)) {
+  if (aEnd <= aStart || std::isnan(aEnd)) {
     aRv.ThrowTypeError("Invalid end value");
     return;
   }

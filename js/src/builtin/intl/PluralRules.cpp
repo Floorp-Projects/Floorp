@@ -350,13 +350,13 @@ bool js::intl_SelectPluralRuleRange(JSContext* cx, unsigned argc, Value* vp) {
   double y = args[2].toNumber();
 
   // Step 5.
-  if (mozilla::IsNaN(x)) {
+  if (std::isnan(x)) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_NAN_NUMBER_RANGE, "start", "PluralRules",
                               "selectRange");
     return false;
   }
-  if (mozilla::IsNaN(y)) {
+  if (std::isnan(y)) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_NAN_NUMBER_RANGE, "end", "PluralRules",
                               "selectRange");

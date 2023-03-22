@@ -192,7 +192,7 @@ bool DateInputType::ConvertNumberToString(Decimal aValue,
   double month = JS::MonthFromTime(aValue.toDouble());
   double day = JS::DayFromTime(aValue.toDouble());
 
-  if (IsNaN(year) || IsNaN(month) || IsNaN(day)) {
+  if (std::isnan(year) || std::isnan(month) || std::isnan(day)) {
     return false;
   }
 
@@ -485,7 +485,7 @@ bool DateTimeLocalInputType::ConvertNumberToString(
   double month = JS::MonthFromTime(aValue.toDouble());
   double day = JS::DayFromTime(aValue.toDouble());
 
-  if (IsNaN(year) || IsNaN(month) || IsNaN(day)) {
+  if (std::isnan(year) || std::isnan(month) || std::isnan(day)) {
     return false;
   }
 

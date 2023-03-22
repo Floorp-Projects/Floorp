@@ -789,7 +789,7 @@ void GCLocProviderPriv::ConnectLocationResponse(GObject* aObject,
   if (speed < 0) {
     speed = UnspecifiedNaN<double>();
   }
-  if (heading < 0 || IsNaN(speed) || speed == 0) {
+  if (heading < 0 || std::isnan(speed) || speed == 0) {
     heading = UnspecifiedNaN<double>();
   }
 

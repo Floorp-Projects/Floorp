@@ -66,7 +66,6 @@ using mozilla::IsAsciiAlpha;
 using mozilla::IsAsciiDigit;
 using mozilla::IsAsciiLowercaseAlpha;
 using mozilla::IsFinite;
-using mozilla::IsNaN;
 using mozilla::NumbersAreIdentical;
 using mozilla::Relaxed;
 
@@ -714,7 +713,7 @@ static bool date_UTC(JSContext* cx, unsigned argc, Value* vp) {
 
   // Step 8.
   double yr = y;
-  if (!IsNaN(y)) {
+  if (!std::isnan(y)) {
     double yint = ToInteger(y);
     if (0 <= yint && yint <= 99) {
       yr = 1900 + yint;
@@ -1920,7 +1919,7 @@ static bool date_getHours(JSContext* cx, unsigned argc, Value* vp) {
   // int32 or NaN after the call to fillLocalTimeSlots.
   Value yearSeconds = unwrapped->localSecondsIntoYear();
   if (yearSeconds.isDouble()) {
-    MOZ_ASSERT(IsNaN(yearSeconds.toDouble()));
+    MOZ_ASSERT(std::isnan(yearSeconds.toDouble()));
     args.rval().set(yearSeconds);
   } else {
     args.rval().setInt32((yearSeconds.toInt32() / int(SecondsPerHour)) %
@@ -1960,7 +1959,7 @@ static bool date_getMinutes(JSContext* cx, unsigned argc, Value* vp) {
   // int32 or NaN after the call to fillLocalTimeSlots.
   Value yearSeconds = unwrapped->localSecondsIntoYear();
   if (yearSeconds.isDouble()) {
-    MOZ_ASSERT(IsNaN(yearSeconds.toDouble()));
+    MOZ_ASSERT(std::isnan(yearSeconds.toDouble()));
     args.rval().set(yearSeconds);
   } else {
     args.rval().setInt32((yearSeconds.toInt32() / int(SecondsPerMinute)) %
@@ -2001,7 +2000,7 @@ static bool date_getSeconds(JSContext* cx, unsigned argc, Value* vp) {
   // int32 or NaN after the call to fillLocalTimeSlots.
   Value yearSeconds = unwrapped->localSecondsIntoYear();
   if (yearSeconds.isDouble()) {
-    MOZ_ASSERT(IsNaN(yearSeconds.toDouble()));
+    MOZ_ASSERT(std::isnan(yearSeconds.toDouble()));
     args.rval().set(yearSeconds);
   } else {
     args.rval().setInt32(yearSeconds.toInt32() % int(SecondsPerMinute));
@@ -2606,7 +2605,7 @@ static bool date_setUTCMonth(JSContext* cx, unsigned argc, Value* vp) {
 static double ThisLocalTimeOrZero(DateTimeInfo::ShouldRFP shouldRFP,
                                   Handle<DateObject*> dateObj) {
   double t = dateObj->UTCTime().toNumber();
-  if (IsNaN(t)) {
+  if (std::isnan(t)) {
     return +0;
   }
   return LocalTime(shouldRFP, t);
@@ -2614,7 +2613,7 @@ static double ThisLocalTimeOrZero(DateTimeInfo::ShouldRFP shouldRFP,
 
 static double ThisUTCTimeOrZero(Handle<DateObject*> dateObj) {
   double t = dateObj->as<DateObject>().UTCTime().toNumber();
-  return IsNaN(t) ? +0 : t;
+  return std::isnan(t) ? +0 : t;
 }
 
 /* ES5 15.9.5.40. */
@@ -2721,7 +2720,7 @@ static bool date_setYear(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   /* Step 3. */
-  if (IsNaN(y)) {
+  if (std::isnan(y)) {
     unwrapped->setUTCTime(ClippedTime::invalid(), args.rval());
     return true;
   }
@@ -3498,7 +3497,7 @@ static bool DateMultipleArguments(JSContext* cx, const CallArgs& args) {
 
     // Step 3o.
     double yr = y;
-    if (!IsNaN(y)) {
+    if (!std::isnan(y)) {
       double yint = ToInteger(y);
       if (0 <= yint && yint <= 99) {
         yr = 1900 + yint;
@@ -3607,7 +3606,7 @@ JS_PUBLIC_API bool js::DateIsValid(JSContext* cx, HandleObject obj,
     return false;
   }
 
-  *isValid = !IsNaN(unboxed.toNumber());
+  *isValid = !std::isnan(unboxed.toNumber());
   return true;
 }
 

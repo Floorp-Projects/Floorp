@@ -3275,7 +3275,7 @@ bool BigInt::equal(BigInt* lhs, BigInt* rhs) {
 }
 
 int8_t BigInt::compare(BigInt* x, double y) {
-  MOZ_ASSERT(!mozilla::IsNaN(y));
+  MOZ_ASSERT(!std::isnan(y));
 
   constexpr int LessThan = -1, Equal = 0, GreaterThan = 1;
 
@@ -3406,7 +3406,7 @@ int8_t BigInt::compare(BigInt* x, double y) {
 }
 
 bool BigInt::equal(BigInt* lhs, double rhs) {
-  if (mozilla::IsNaN(rhs)) {
+  if (std::isnan(rhs)) {
     return false;
   }
   return compare(lhs, rhs) == 0;
@@ -3462,14 +3462,14 @@ JS::Result<bool> BigInt::looselyEqual(JSContext* cx, HandleBigInt lhs,
 bool BigInt::lessThan(BigInt* x, BigInt* y) { return compare(x, y) < 0; }
 
 Maybe<bool> BigInt::lessThan(BigInt* lhs, double rhs) {
-  if (mozilla::IsNaN(rhs)) {
+  if (std::isnan(rhs)) {
     return Maybe<bool>(Nothing());
   }
   return Some(compare(lhs, rhs) < 0);
 }
 
 Maybe<bool> BigInt::lessThan(double lhs, BigInt* rhs) {
-  if (mozilla::IsNaN(lhs)) {
+  if (std::isnan(lhs)) {
     return Maybe<bool>(Nothing());
   }
   return Some(-compare(rhs, lhs) < 0);

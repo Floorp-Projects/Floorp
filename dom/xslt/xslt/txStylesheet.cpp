@@ -373,9 +373,9 @@ nsresult txStylesheet::addTemplate(txTemplateItem* aTemplate,
   uint32_t unionPos = 1;  // only used when unionPattern is set
   while (simple) {
     double priority = aTemplate->mPrio;
-    if (mozilla::IsNaN(priority)) {
+    if (std::isnan(priority)) {
       priority = simple->getDefaultPriority();
-      NS_ASSERTION(!mozilla::IsNaN(priority),
+      NS_ASSERTION(!std::isnan(priority),
                    "simple pattern without default priority");
     }
 
