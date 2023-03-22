@@ -191,11 +191,13 @@ def _get_build_variables(
         if version.is_nightly
         else f"{version}~build{build_number}"
     )
+    remoting_name = application_ini_data["remoting_name"].lower()
 
     return {
         "DEB_DESCRIPTION": f"{application_ini_data['vendor']} {application_ini_data['display_name']}"
         f"{description_suffix}",
-        "DEB_PKG_NAME": f"{application_ini_data['remoting_name'].lower()}{package_name_suffix}",
+        "DEB_PKG_INSTALL_PATH": f"usr/lib/{remoting_name}",
+        "DEB_PKG_NAME": f"{remoting_name}{package_name_suffix}",
         "DEB_PKG_VERSION": deb_pkg_version,
         "DEB_CHANGELOG_DATE": format_datetime(application_ini_data["timestamp"]),
         "DEB_ARCH_NAME": _DEB_ARCH[arch],

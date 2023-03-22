@@ -81,6 +81,7 @@ def test_extract_application_ini_data_from_directory():
             "",
             {
                 "DEB_DESCRIPTION": "Mozilla Firefox",
+                "DEB_PKG_INSTALL_PATH": "usr/lib/firefox-nightly-try",
                 "DEB_PKG_NAME": "firefox-nightly-try",
                 "DEB_PKG_VERSION": "112.0a1~20230222000000",
             },
@@ -92,6 +93,7 @@ def test_extract_application_ini_data_from_directory():
             " - Language pack for Firefox Nightly for fr",
             {
                 "DEB_DESCRIPTION": "Mozilla Firefox - Language pack for Firefox Nightly for fr",
+                "DEB_PKG_INSTALL_PATH": "usr/lib/firefox-nightly-try",
                 "DEB_PKG_NAME": "firefox-nightly-try-l10n-fr",
                 "DEB_PKG_VERSION": "112.0a1~20230222000000",
             },
@@ -103,6 +105,7 @@ def test_extract_application_ini_data_from_directory():
             "",
             {
                 "DEB_DESCRIPTION": "Mozilla Firefox",
+                "DEB_PKG_INSTALL_PATH": "usr/lib/firefox-nightly-try",
                 "DEB_PKG_NAME": "firefox-nightly-try",
                 "DEB_PKG_VERSION": "112.0b1~build1",
             },
@@ -114,6 +117,7 @@ def test_extract_application_ini_data_from_directory():
             "",
             {
                 "DEB_DESCRIPTION": "Mozilla Firefox",
+                "DEB_PKG_INSTALL_PATH": "usr/lib/firefox-nightly-try",
                 "DEB_PKG_NAME": "firefox-nightly-try",
                 "DEB_PKG_VERSION": "112.0~build2",
             },
