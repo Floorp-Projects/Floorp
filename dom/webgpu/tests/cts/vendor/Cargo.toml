@@ -1,0 +1,20 @@
+[package]
+name = "vendor-webgpu-cts"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = { version = "4.1.6", features = ["derive"] }
+dircpy = "0.3.14"
+dunce = "1.0.3"
+env_logger = "0.10.0"
+format = "0.2.4"
+lets_find_up = "0.0.3"
+log = "0.4.17"
+miette = { version = "5.5.0", features = ["fancy"] }
+regex = "1.7.1"
+shell-words = "1.1.0"
+thiserror = "1.0.38"
+which = "4.4.0"
+
+[workspace]
