@@ -31,8 +31,10 @@ class nsSpeechTask : public nsISpeechTask,
   NS_DECL_NSISPEECHTASK
   NS_DECL_NSIAUDIOCHANNELAGENTCALLBACK
 
-  explicit nsSpeechTask(SpeechSynthesisUtterance* aUtterance, bool aIsChrome);
-  nsSpeechTask(float aVolume, const nsAString& aText, bool aIsChrome);
+  explicit nsSpeechTask(SpeechSynthesisUtterance* aUtterance,
+                        bool aShouldResistFingerprinting);
+  nsSpeechTask(float aVolume, const nsAString& aText,
+               bool aShouldResistFingerprinting);
 
   virtual void Pause();
 
@@ -56,7 +58,7 @@ class nsSpeechTask : public nsISpeechTask,
 
   bool IsPrePaused() { return mPrePaused; }
 
-  bool IsChrome() { return mIsChrome; }
+  bool ShouldResistFingerprinting() { return mShouldResistFingerprinting; }
 
   enum { STATE_PENDING, STATE_SPEAKING, STATE_ENDED };
 
@@ -115,7 +117,7 @@ class nsSpeechTask : public nsISpeechTask,
 
   nsString mChosenVoiceURI;
 
-  bool mIsChrome;
+  bool mShouldResistFingerprinting;
 
   uint32_t mState;
 };

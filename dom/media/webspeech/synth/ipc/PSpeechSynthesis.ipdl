@@ -43,7 +43,7 @@ parent:
     async __delete__();
 
     async PSpeechSynthesisRequest(nsString aText, nsString aUri, nsString aLang,
-                                  float aVolume, float aRate, float aPitch, bool aIsChrome);
+                                  float aVolume, float aRate, float aPitch, bool aShouldResistFingerprinting);
 };
 
 } // namespace dom

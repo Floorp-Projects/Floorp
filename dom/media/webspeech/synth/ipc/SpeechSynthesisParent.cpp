@@ -27,9 +27,9 @@ PSpeechSynthesisRequestParent*
 SpeechSynthesisParent::AllocPSpeechSynthesisRequestParent(
     const nsAString& aText, const nsAString& aLang, const nsAString& aUri,
     const float& aVolume, const float& aRate, const float& aPitch,
-    const bool& aIsChrome) {
+    const bool& aShouldResistFingerprinting) {
   RefPtr<SpeechTaskParent> task =
-      new SpeechTaskParent(aVolume, aText, aIsChrome);
+      new SpeechTaskParent(aVolume, aText, aShouldResistFingerprinting);
   SpeechSynthesisRequestParent* actor = new SpeechSynthesisRequestParent(task);
   return actor;
 }
@@ -44,7 +44,8 @@ mozilla::ipc::IPCResult
 SpeechSynthesisParent::RecvPSpeechSynthesisRequestConstructor(
     PSpeechSynthesisRequestParent* aActor, const nsAString& aText,
     const nsAString& aLang, const nsAString& aUri, const float& aVolume,
-    const float& aRate, const float& aPitch, const bool& aIsChrome) {
+    const float& aRate, const float& aPitch,
+    const bool& aShouldResistFingerprinting) {
   MOZ_ASSERT(aActor);
   SpeechSynthesisRequestParent* actor =
       static_cast<SpeechSynthesisRequestParent*>(aActor);

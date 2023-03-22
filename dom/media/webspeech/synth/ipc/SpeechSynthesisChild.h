@@ -43,7 +43,7 @@ class SpeechSynthesisChild : public PSpeechSynthesisChild {
   PSpeechSynthesisRequestChild* AllocPSpeechSynthesisRequestChild(
       const nsAString& aLang, const nsAString& aUri, const nsAString& aText,
       const float& aVolume, const float& aPitch, const float& aRate,
-      const bool& aIsChrome);
+      const bool& aShouldResistFingerprinting);
   bool DeallocPSpeechSynthesisRequestChild(
       PSpeechSynthesisRequestChild* aActor);
 };
@@ -84,7 +84,7 @@ class SpeechTaskChild : public nsSpeechTask {
 
  public:
   explicit SpeechTaskChild(SpeechSynthesisUtterance* aUtterance,
-                           bool aIsChrome);
+                           bool aShouldResistFingerprinting);
 
   NS_IMETHOD Setup(nsISpeechTaskCallback* aCallback) override;
 
