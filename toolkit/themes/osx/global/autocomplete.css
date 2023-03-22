@@ -28,8 +28,8 @@ panel[type="autocomplete-richlistbox"] {
 
 .ac-type-icon {
   display: none;
-  width: 16px;
-  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
   max-width: 16px;
   max-height: 16px;
   margin-inline-start: 6px;
@@ -38,8 +38,8 @@ panel[type="autocomplete-richlistbox"] {
 
 .ac-site-icon {
   display: none;
-  width: 16px;
-  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
   max-width: 16px;
   max-height: 16px;
   margin-inline-start: 6px;
