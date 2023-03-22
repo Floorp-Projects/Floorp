@@ -3,14 +3,14 @@
 
 "use strict";
 
-const { CrashManager } = ChromeUtils.importESModule(
-  "resource://gre/modules/CrashManager.sys.mjs"
+const { CrashManager } = ChromeUtils.import(
+  "resource://gre/modules/CrashManager.jsm"
 );
 const { TelemetryArchiveTesting } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryArchiveTesting.sys.mjs"
 );
-const { configureLogging, getManager, sleep } = ChromeUtils.importESModule(
-  "resource://testing-common/CrashManagerTest.sys.mjs"
+const { configureLogging, getManager, sleep } = ChromeUtils.import(
+  "resource://testing-common/CrashManagerTest.jsm"
 );
 const { TelemetryEnvironment } = ChromeUtils.importESModule(
   "resource://gre/modules/TelemetryEnvironment.sys.mjs"
