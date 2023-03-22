@@ -27,8 +27,13 @@ extern LazyLogModule sWASLog;
     MOZ_LOG(mozilla::widget::sWASLog, _level, _args)
 #else
 #  include "mozilla/WindowsEventLog.h"
-#  define NOTIFY_LOG(_level, _args) \
-    POST_EXPAND_NOTIFY_LOG(MOZ_LOG_EXPAND_ARGS _args)
+
+bool gVerbose = false;
+
+#  define NOTIFY_LOG(_level, _args)                       \
+    if (gVerbose || _level == mozilla::LogLevel::Error) { \
+      POST_EXPAND_NOTIFY_LOG(MOZ_LOG_EXPAND_ARGS _args);  \
+    }
 #  define POST_EXPAND_NOTIFY_LOG(...) \
     MOZ_WIN_EVENT_LOG_ERROR_MESSAGE(  \
         L"" MOZ_APP_DISPLAYNAME " Notification Server", L"" __VA_ARGS__)
@@ -46,6 +51,7 @@ const wchar_t kLaunchArgProfile[] = L"profile";
 const wchar_t kLaunchArgUrl[] = L"launchUrl";
 const wchar_t kLaunchArgPrivilegedName[] = L"privilegedName";
 const wchar_t kLaunchArgTag[] = L"windowsTag";
+const wchar_t kLaunchArgLogging[] = L"logging";
 const wchar_t kLaunchArgAction[] = L"action";
 
 const DWORD kNotificationServerTimeoutMs = (10 * 1000);
