@@ -4657,6 +4657,13 @@ pub extern "C" fn Servo_DeclarationBlock_CreateEmpty() -> Strong<RawServoDeclara
 }
 
 #[no_mangle]
+pub extern "C" fn Servo_DeclarationBlock_Clear(declarations: &RawServoDeclarationBlock) {
+    write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
+        decls.clear();
+    });
+}
+
+#[no_mangle]
 pub extern "C" fn Servo_DeclarationBlock_Clone(
     declarations: &RawServoDeclarationBlock,
 ) -> Strong<RawServoDeclarationBlock> {
