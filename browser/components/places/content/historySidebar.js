@@ -34,8 +34,6 @@ var gCumulativeSearches = 0;
 var gCumulativeFilterCount = 0;
 
 function HistorySidebarInit() {
-  Services.telemetry.keyedScalarAdd("sidebar.opened", "history", 1);
-
   let uidensity = window.top.document.documentElement.getAttribute("uidensity");
   if (uidensity) {
     document.documentElement.setAttribute("uidensity", uidensity);

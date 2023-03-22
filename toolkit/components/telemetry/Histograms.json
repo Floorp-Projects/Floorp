@@ -7263,6 +7263,17 @@
     "n_values": 20,
     "description": "Cumulative no. of History-specific searches performed before selecting a History link in Library."
   },
+  "PLACES_LIBRARY_CUMULATIVE_BOOKMARK_SEARCHES": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "expires_in_version": "never",
+    "alert_emails": ["firefox-view-engineers@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1819081],
+    "kind": "enumerated",
+    "n_values": 20,
+    "description": "Cumulative no. of Bookmark-specific searches performed before selecting a bookmark link in Library."
+  },
   "PLACES_IDLE_FRECENCY_DECAY_TIME_MS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "thunderbird"],
@@ -16127,6 +16138,17 @@
     "kind": "enumerated",
     "n_values": 20,
     "description": "Cumulative no. of search filters applied performed before selecting a link."
+  },
+  "PLACES_BOOKMARKS_SEARCHBAR_CUMULATIVE_SEARCHES": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "expires_in_version": "never",
+    "alert_emails": ["firefox-view-engineers@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1819081],
+    "kind": "enumerated",
+    "n_values": 20,
+    "description": "Cumulative no. bookmark of searches performed before selecting a link."
   },
   "NOTIFY_OBSERVERS_LATENCY_MS": {
     "record_in_processes": ["main", "content", "gpu"],

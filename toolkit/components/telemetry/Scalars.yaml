@@ -2275,7 +2275,7 @@ library:
     bug_numbers:
       - 1815906
     description: >
-      The number of history items opened from the Library window
+      The number of history or bookmark items opened from the Library window
     expires: never
     kind: uint
     keyed: true
@@ -2290,7 +2290,7 @@ library:
     bug_numbers:
       - 1815906
     description: >
-      The number of times the Library window was opened
+      The number of times the Library window was opened, keyed by 'history' or 'bookmarks'
     expires: never
     kind: uint
     keyed: true
@@ -2305,7 +2305,7 @@ library:
     bug_numbers:
       - 1815906
     description: >
-      The number of history-specific searches made from the Library window
+      The number of history-specific or bookmark-specific searches made from the Library window
     expires: never
     kind: uint
     keyed: true
