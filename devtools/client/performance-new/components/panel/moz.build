@@ -10,4 +10,5 @@ DevToolsModules(
     "OnboardingMessage.js",
     "ProfilerEventHandling.js",
     "RecordingButton.js",
+    "ToolboxHighlightController.js",
 )

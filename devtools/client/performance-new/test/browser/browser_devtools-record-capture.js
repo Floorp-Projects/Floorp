@@ -152,6 +152,12 @@ async function setPresetCaptureAndAssertUrl({
     "Clicking the start recording button sends in a request to start recording."
   );
 
+  is(
+    document.defaultView.gToolbox.isHighlighted("performance"),
+    false,
+    "The Performance panel in not highlighted yet."
+  );
+
   const captureRecording = await getActiveButtonFromText(
     document,
     "Capture recording"
@@ -162,6 +168,13 @@ async function setPresetCaptureAndAssertUrl({
     "recording",
     "Once the Capture recording button is available, the actor has started " +
       "its recording"
+  );
+
+  is(
+    document.defaultView.gToolbox.isHighlighted("performance"),
+    true,
+    "The Performance Panel in the Devtools Tab is highlighted when the profiler " +
+      "is recording"
   );
 
   info("Click the button to capture the recording.");
@@ -178,6 +191,12 @@ async function setPresetCaptureAndAssertUrl({
     getRecordingState(),
     "available-to-record",
     "The profiler is available to record again."
+  );
+
+  is(
+    document.defaultView.gToolbox.isHighlighted("performance"),
+    false,
+    "The Performance panel in not highlighted anymore when the profiler is stopped"
   );
 
   info(
