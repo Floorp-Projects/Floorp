@@ -94,14 +94,16 @@ async function testAddonsOnMockedRemoteClient(
     "Temporary Extension target appeared for the remote runtime"
   );
 
+  // TODO: Bug 1823457 - Allow to remove an extension using a non-local runtime.
   const removeButton = temporaryExtensionTarget.querySelector(
     ".qa-temporary-extension-remove-button"
   );
+  ok(!removeButton, "No remove button expected for the temporary extension");
+
   const reloadButton = temporaryExtensionTarget.querySelector(
     ".qa-temporary-extension-reload-button"
   );
-  ok(!removeButton, "No remove button expected for the temporary extension");
-  ok(!reloadButton, "No reload button expected for the temporary extension");
+  ok(reloadButton, "Reload button expected for the temporary extension");
 
   // The goal here is to check that runtimes addons are only updated when the remote
   // runtime is sending addonListChanged events. The reason for this test is because the
