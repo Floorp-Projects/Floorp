@@ -5,122 +5,122 @@
 [source.crates-io]
 replace-with = "vendored-sources"
 
-[source."https://github.com/FirefoxGraphics/aa-stroke"]
+[source."git+https://github.com/FirefoxGraphics/aa-stroke?rev=07d3c25322518f294300e96246e09b95e118555d"]
 git = "https://github.com/FirefoxGraphics/aa-stroke"
 rev = "07d3c25322518f294300e96246e09b95e118555d"
 replace-with = "vendored-sources"
 
-[source."https://github.com/FirefoxGraphics/wpf-gpu-raster"]
+[source."git+https://github.com/FirefoxGraphics/wpf-gpu-raster?rev=a6514854d4518b02f2805719ff6cd74dae7dfde6"]
 git = "https://github.com/FirefoxGraphics/wpf-gpu-raster"
 rev = "a6514854d4518b02f2805719ff6cd74dae7dfde6"
 replace-with = "vendored-sources"
 
-[source."https://github.com/chris-zen/coremidi.git"]
+[source."git+https://github.com/chris-zen/coremidi.git?rev=fc68464b5445caf111e41f643a2e69ccce0b4f83"]
 git = "https://github.com/chris-zen/coremidi.git"
 rev = "fc68464b5445caf111e41f643a2e69ccce0b4f83"
 replace-with = "vendored-sources"
 
-[source."https://github.com/gfx-rs/d3d12-rs"]
+[source."git+https://github.com/gfx-rs/d3d12-rs?rev=b940b1d71"]
 git = "https://github.com/gfx-rs/d3d12-rs"
 rev = "b940b1d71"
 replace-with = "vendored-sources"
 
-[source."https://github.com/gfx-rs/naga"]
+[source."git+https://github.com/gfx-rs/naga?rev=9742f1616c3e3dd2cc9a5880616fc886c391bb9f"]
 git = "https://github.com/gfx-rs/naga"
 rev = "9742f1616c3e3dd2cc9a5880616fc886c391bb9f"
 replace-with = "vendored-sources"
 
-[source."https://github.com/gfx-rs/wgpu"]
+[source."git+https://github.com/gfx-rs/wgpu?rev=73b4257b17cc62ecc8df6d6aa3730bd9c6cba4b9"]
 git = "https://github.com/gfx-rs/wgpu"
 rev = "73b4257b17cc62ecc8df6d6aa3730bd9c6cba4b9"
 replace-with = "vendored-sources"
 
-[source."https://github.com/glandium/warp"]
+[source."git+https://github.com/glandium/warp?rev=4af45fae95bc98b0eba1ef0db17e1dac471bb23d"]
 git = "https://github.com/glandium/warp"
 rev = "4af45fae95bc98b0eba1ef0db17e1dac471bb23d"
 replace-with = "vendored-sources"
 
-[source."https://github.com/hsivonen/chardetng"]
+[source."git+https://github.com/hsivonen/chardetng?rev=3484d3e3ebdc8931493aa5df4d7ee9360a90e76b"]
 git = "https://github.com/hsivonen/chardetng"
 rev = "3484d3e3ebdc8931493aa5df4d7ee9360a90e76b"
 replace-with = "vendored-sources"
 
-[source."https://github.com/hsivonen/chardetng_c"]
+[source."git+https://github.com/hsivonen/chardetng_c?rev=ed8a4c6f900a90d4dbc1d64b856e61490a1c3570"]
 git = "https://github.com/hsivonen/chardetng_c"
 rev = "ed8a4c6f900a90d4dbc1d64b856e61490a1c3570"
 replace-with = "vendored-sources"
 
-[source."https://github.com/hsivonen/packed_simd"]
+[source."git+https://github.com/hsivonen/packed_simd?rev=412f9a0aa556611de021bde89dee8fefe6e0fbbd"]
 git = "https://github.com/hsivonen/packed_simd"
 rev = "412f9a0aa556611de021bde89dee8fefe6e0fbbd"
 replace-with = "vendored-sources"
 
-[source."https://github.com/jfkthame/mapped_hyph.git"]
+[source."git+https://github.com/jfkthame/mapped_hyph.git?rev=c7651a0cffff41996ad13c44f689bd9cd2192c01"]
 git = "https://github.com/jfkthame/mapped_hyph.git"
 rev = "c7651a0cffff41996ad13c44f689bd9cd2192c01"
 replace-with = "vendored-sources"
 
-[source."https://github.com/kinetiknz/audioipc-2"]
+[source."git+https://github.com/kinetiknz/audioipc-2?rev=73c8a02da8f2ff022723307bfafa3a58a61448da"]
 git = "https://github.com/kinetiknz/audioipc-2"
 rev = "73c8a02da8f2ff022723307bfafa3a58a61448da"
 replace-with = "vendored-sources"
 
-[source."https://github.com/kinetiknz/mio-named-pipes"]
+[source."git+https://github.com/kinetiknz/mio-named-pipes?rev=21c26326f5f45f415c49eac4ba5bc41a2f961321"]
 git = "https://github.com/kinetiknz/mio-named-pipes"
 rev = "21c26326f5f45f415c49eac4ba5bc41a2f961321"
 replace-with = "vendored-sources"
 
-[source."https://github.com/mozilla-spidermonkey/jsparagus"]
+[source."git+https://github.com/mozilla-spidermonkey/jsparagus?rev=64ba08e24749616de2344112f226d1ef4ba893ae"]
 git = "https://github.com/mozilla-spidermonkey/jsparagus"
 rev = "64ba08e24749616de2344112f226d1ef4ba893ae"
 replace-with = "vendored-sources"
 
-[source."https://github.com/mozilla/application-services"]
+[source."git+https://github.com/mozilla/application-services?rev=fe2867dbe82a2aaa85a856648107be94b1534683"]
 git = "https://github.com/mozilla/application-services"
 rev = "fe2867dbe82a2aaa85a856648107be94b1534683"
 replace-with = "vendored-sources"
 
-[source."https://github.com/mozilla/audioipc"]
+[source."git+https://github.com/mozilla/audioipc?rev=fb7a2b12ced3b43e6a268621989c6191d1ed7e39"]
 git = "https://github.com/mozilla/audioipc"
 rev = "fb7a2b12ced3b43e6a268621989c6191d1ed7e39"
 replace-with = "vendored-sources"
 
-[source."https://github.com/mozilla/cubeb-coreaudio-rs"]
+[source."git+https://github.com/mozilla/cubeb-coreaudio-rs?rev=93b5c01a131f65c83c11aeb317f4583405c5eb79"]
 git = "https://github.com/mozilla/cubeb-coreaudio-rs"
 rev = "93b5c01a131f65c83c11aeb317f4583405c5eb79"
 replace-with = "vendored-sources"
 
-[source."https://github.com/mozilla/cubeb-pulse-rs"]
+[source."git+https://github.com/mozilla/cubeb-pulse-rs?rev=cf48897be5cbe147d051ebbbe1eaf5fd8fb6bbc9"]
 git = "https://github.com/mozilla/cubeb-pulse-rs"
 rev = "cf48897be5cbe147d051ebbbe1eaf5fd8fb6bbc9"
 replace-with = "vendored-sources"
 
-[source."https://github.com/mozilla/midir.git"]
+[source."git+https://github.com/mozilla/midir.git?rev=519e651241e867af3391db08f9ae6400bc023e18"]
 git = "https://github.com/mozilla/midir.git"
 rev = "519e651241e867af3391db08f9ae6400bc023e18"
 replace-with = "vendored-sources"
 
-[source."https://github.com/mozilla/mp4parse-rust"]
+[source."git+https://github.com/mozilla/mp4parse-rust?rev=2b572e83608a3d0867b935e076f45d9fe248069d"]
 git = "https://github.com/mozilla/mp4parse-rust"
 rev = "2b572e83608a3d0867b935e076f45d9fe248069d"
 replace-with = "vendored-sources"
 
-[source."https://github.com/mozilla/neqo"]
+[source."git+https://github.com/mozilla/neqo?tag=v0.6.4"]
 git = "https://github.com/mozilla/neqo"
 tag = "v0.6.4"
 replace-with = "vendored-sources"
 
-[source."https://github.com/mozilla/uniffi-rs.git"]
+[source."git+https://github.com/mozilla/uniffi-rs.git?rev=bc7ff8977bf38d0fdd1a458810b14f434d4dc4de"]
 git = "https://github.com/mozilla/uniffi-rs.git"
 rev = "bc7ff8977bf38d0fdd1a458810b14f434d4dc4de"
 replace-with = "vendored-sources"
 
-[source."https://github.com/rust-minidump/minidump-writer.git"]
+[source."git+https://github.com/rust-minidump/minidump-writer.git?rev=7d76616d27b9dc87fe3a94639b8b4f947d52a6aa"]
 git = "https://github.com/rust-minidump/minidump-writer.git"
 rev = "7d76616d27b9dc87fe3a94639b8b4f947d52a6aa"
 replace-with = "vendored-sources"
 
-[source."https://github.com/servo/rust-cssparser"]
+[source."git+https://github.com/servo/rust-cssparser?rev=45bc47e2bcb846f1efb5aea156be5fe7d18624bf"]
 git = "https://github.com/servo/rust-cssparser"
 rev = "45bc47e2bcb846f1efb5aea156be5fe7d18624bf"
 replace-with = "vendored-sources"
