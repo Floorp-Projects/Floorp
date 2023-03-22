@@ -255,6 +255,43 @@ XPCOMUtils.defineLazyGetter(lazy, "Barriers", () => {
   return Barriers;
 });
 
+const VACUUM_CATEGORY = "vacuum-participant";
+const VACUUM_CONTRACTID = "@sqlite.module.js/vacuum-participant;";
+var registeredVacuumParticipants = new Map();
+
+function registerVacuumParticipant(connectionData) {
+  let contractId = VACUUM_CONTRACTID + connectionData._identifier;
+  let factory = {
+    createInstance(iid) {
+      return connectionData.QueryInterface(iid);
+    },
+    QueryInterface: ChromeUtils.generateQI(["nsIFactory"]),
+  };
+  let cid = Services.uuid.generateUUID();
+  Components.manager
+    .QueryInterface(Ci.nsIComponentRegistrar)
+    .registerFactory(cid, contractId, contractId, factory);
+  Services.catMan.addCategoryEntry(
+    VACUUM_CATEGORY,
+    contractId,
+    contractId,
+    false,
+    false
+  );
+  registeredVacuumParticipants.set(contractId, { cid, factory });
+}
+
+function unregisterVacuumParticipant(connectionData) {
+  let contractId = VACUUM_CONTRACTID + connectionData._identifier;
+  let component = registeredVacuumParticipants.get(contractId);
+  if (component) {
+    Components.manager
+      .QueryInterface(Ci.nsIComponentRegistrar)
+      .unregisterFactory(component.cid, component.factory);
+    Services.catMan.deleteCategoryEntry(VACUUM_CATEGORY, contractId, false);
+  }
+}
+
 /**
  * Connection data with methods necessary for closing the connection.
  *
@@ -356,6 +393,33 @@ function ConnectionData(connection, identifier, options = {}) {
   this._timeoutPromise = null;
   // The last timestamp when we should consider using `this._timeoutPromise`.
   this._timeoutPromiseExpires = 0;
+
+  this._useIncrementalVacuum = !!options.incrementalVacuum;
+  if (this._useIncrementalVacuum) {
+    this._log.debug("Set auto_vacuum INCREMENTAL");
+    this.execute("PRAGMA auto_vacuum = 2").catch(ex => {
+      this._log.error("Setting auto_vacuum to INCREMENTAL failed.");
+      console.error(ex);
+    });
+  }
+
+  this._expectedPageSize = options.pageSize ?? 0;
+  if (this._expectedPageSize) {
+    this._log.debug("Set page_size to " + this._expectedPageSize);
+    this.execute("PRAGMA page_size = " + this._expectedPageSize).catch(ex => {
+      this._log.error(`Setting page_size to ${this._expectedPageSize} failed.`);
+      console.error(ex);
+    });
+  }
+
+  this._vacuumOnIdle = options.vacuumOnIdle;
+  if (this._vacuumOnIdle) {
+    this._log.debug("Register as vacuum participant");
+    this.QueryInterface = ChromeUtils.generateQI([
+      Ci.mozIStorageVacuumParticipant,
+    ]);
+    registerVacuumParticipant(this);
+  }
 }
 
 /**
@@ -371,6 +435,35 @@ function ConnectionData(connection, identifier, options = {}) {
 ConnectionData.byId = new Map();
 
 ConnectionData.prototype = Object.freeze({
+  get expectedDatabasePageSize() {
+    return this._expectedPageSize;
+  },
+
+  get useIncrementalVacuum() {
+    return this._useIncrementalVacuum;
+  },
+
+  /**
+   * This should only be used by the VacuumManager component.
+   * @see unsafeRawConnection for an official (but still unsafe) API.
+   */
+  get databaseConnection() {
+    if (this._vacuumOnIdle) {
+      return this._dbConn;
+    }
+    return null;
+  },
+
+  onBeginVacuum() {
+    let granted = !this.transactionInProgress;
+    this._log.debug("Begin Vacuum - " + granted ? "granted" : "denied");
+    return granted;
+  },
+
+  onEndVacuum(succeeded) {
+    this._log.debug("End Vacuum - " + succeeded ? "success" : "failure");
+  },
+
   /**
    * Run a task, ensuring that its execution will not be interrupted by shutdown.
    *
@@ -492,6 +585,11 @@ ConnectionData.prototype = Object.freeze({
 
     this._log.debug("Request to close connection.");
     this._clearIdleShrinkTimer();
+
+    if (this._vacuumOnIdle) {
+      this._log.debug("Unregister as vacuum participant");
+      unregisterVacuumParticipant(this);
+    }
 
     return this._barrier.wait().then(() => {
       if (!this._dbConn) {
@@ -803,8 +901,9 @@ ConnectionData.prototype = Object.freeze({
 
   shrinkMemory() {
     this._log.debug("Shrinking memory usage.");
-    let onShrunk = this._clearIdleShrinkTimer.bind(this);
-    return this.execute("PRAGMA shrink_memory").then(onShrunk, onShrunk);
+    return this.execute("PRAGMA shrink_memory").finally(() => {
+      this._clearIdleShrinkTimer();
+    });
   },
 
   discardCachedStatements() {
@@ -1082,6 +1181,24 @@ ConnectionData.prototype = Object.freeze({
  *       USE WITH EXTREME CAUTION. This mode WILL produce incorrect results or
  *       return "false positive" corruption errors if other connections write
  *       to the DB at the same time.
+ *
+ *   vacuumOnIdle -- (bool) Whether to register this connection to be vacuumed
+ *       on idle by the VacuumManager component.
+ *       If you're vacuum-ing an incremental vacuum database, ensure to also
+ *       set incrementalVacuum to true, otherwise this will try to change it
+ *       to full vacuum mode.
+ *
+ *   incrementalVacuum -- (bool) if set to true auto_vacuum = INCREMENTAL will
+ *       be enabled for the database.
+ *       Changing auto vacuum of an already populated database requires a full
+ *       VACUUM. You can evaluate to enable vacuumOnIdle for that.
+ *
+ *   pageSize -- (integer) This allows to set a custom page size for the
+ *       database. It is usually not necessary to set it, since the default
+ *       value should be good for most consumers.
+ *       Changing the page size of an already populated database requires a full
+ *       VACUUM. You can evaluate to enable vacuumOnIdle for that.
+ *
  *   testDelayedOpenPromise -- (promise) Used by tests to delay the open
  *       callback handling and execute code between asyncOpen and its callback.
  *
@@ -1161,6 +1278,33 @@ function openConnection(options) {
     }
 
     openedOptions.defaultTransactionType = defaultTransactionType;
+  }
+
+  if ("vacuumOnIdle" in options) {
+    if (typeof options.vacuumOnIdle != "boolean") {
+      throw new Error("Invalid vacuumOnIdle: " + options.vacuumOnIdle);
+    }
+    openedOptions.vacuumOnIdle = options.vacuumOnIdle;
+  }
+
+  if ("incrementalVacuum" in options) {
+    if (typeof options.incrementalVacuum != "boolean") {
+      throw new Error(
+        "Invalid incrementalVacuum: " + options.incrementalVacuum
+      );
+    }
+    openedOptions.incrementalVacuum = options.incrementalVacuum;
+  }
+
+  if ("pageSize" in options) {
+    if (
+      ![512, 1024, 2048, 4096, 8192, 16384, 32768, 65536].includes(
+        options.pageSize
+      )
+    ) {
+      throw new Error("Invalid pageSize: " + options.pageSize);
+    }
+    openedOptions.pageSize = options.pageSize;
   }
 
   let identifier = getIdentifierByFileName(PathUtils.filename(path));
