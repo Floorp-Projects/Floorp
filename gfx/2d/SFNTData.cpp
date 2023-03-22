@@ -69,6 +69,17 @@ class SFNTData::Font {
     return {mFontData + dirEntry->offset, dirEntry->length};
   }
 
+  Span<const uint8_t> GetCmapTableBytes() const {
+    const TableDirEntry* dirEntry =
+        GetDirEntry(TRUETYPE_TAG('c', 'm', 'a', 'p'));
+    if (!dirEntry) {
+      gfxWarning() << "Cmap table entry not found.";
+      return {};
+    }
+
+    return {mFontData + dirEntry->offset, dirEntry->length};
+  }
+
  private:
   const TableDirEntry* GetDirEntry(const uint32_t aTag) const {
     const TableDirEntry* foundDirEntry =
@@ -141,7 +152,7 @@ uint64_t SFNTData::GetUniqueKey(const uint8_t* aFontData, uint32_t aDataLength,
   uint64_t hash = 0;
   UniquePtr<SFNTData> sfntData = SFNTData::Create(aFontData, aDataLength);
   if (sfntData) {
-    hash = sfntData->HashHeadTables();
+    hash = sfntData->HashHeadAndCmapTables();
   } else {
     gfxWarning() << "Failed to create SFNTData from data, hashing whole font.";
     hash = HashBytes(aFontData, aDataLength);
@@ -179,14 +190,16 @@ bool SFNTData::AddFont(const uint8_t* aFontData, uint32_t aDataLength,
   return mFonts.append(new Font(offsetTable, aFontData, aDataLength));
 }
 
-uint32_t SFNTData::HashHeadTables() {
-  uint32_t headTableHash = std::accumulate(
+uint32_t SFNTData::HashHeadAndCmapTables() {
+  uint32_t tablesHash = std::accumulate(
       mFonts.begin(), mFonts.end(), 0U, [](uint32_t hash, Font* font) {
         Span<const uint8_t> headBytes = font->GetHeadTableBytes();
-        return AddToHash(hash, HashBytes(headBytes.data(), headBytes.size()));
+        hash = AddToHash(hash, HashBytes(headBytes.data(), headBytes.size()));
+        Span<const uint8_t> cmapBytes = font->GetCmapTableBytes();
+        return AddToHash(hash, HashBytes(cmapBytes.data(), cmapBytes.size()));
       });
 
-  return headTableHash;
+  return tablesHash;
 }
 
 }  // namespace gfx
