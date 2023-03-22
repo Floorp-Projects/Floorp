@@ -251,8 +251,15 @@ void WebTransport::Init(const GlobalObject& aGlobal, const nsAString& aURL,
       PWebTransport::CreateEndpoints(&parentEndpoint, &childEndpoint));
 
   RefPtr<WebTransportChild> child = new WebTransportChild(this);
-  if (!childEndpoint.Bind(child)) {
-    return;
+  if (NS_IsMainThread()) {
+    if (!childEndpoint.Bind(child)) {
+      return;
+    }
+  } else {
+    if (!childEndpoint.Bind(child,
+                            mGlobal->EventTargetFor(TaskCategory::Other))) {
+      return;
+    }
   }
 
   mState = WebTransportState::CONNECTING;
