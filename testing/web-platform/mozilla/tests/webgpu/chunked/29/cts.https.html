@@ -1,0 +1,59 @@
+<!-- AUTO-GENERATED - DO NOT EDIT. See WebGPU CTS: tools/gen_wpt_cts_html. -->
+<!--
+    This test suite is built from the TypeScript sources at:
+    https://github.com/gpuweb/cts
+
+    If you are debugging WebGPU conformance tests, it's highly recommended that
+    you use the standalone interactive runner in that repository, which
+    provides tools for easier debugging and editing (source maps, debug
+    logging, warn/skip functionality, etc.)
+
+    NOTE:
+    The WPT version of this file is generated with *one variant per test spec
+    file*. If your harness needs more fine-grained suppressions, you'll need to
+    generate your own variants list from your suppression list.
+    See `tools/gen_wpt_cts_html` to do this.
+
+    When run under browser CI, the original cts.https.html should be skipped, and
+    this alternate version should be run instead, under a non-exported WPT test
+    directory (e.g. Chromium's wpt_internal).
+-->
+
+<!doctype html>
+<title>WebGPU CTS</title>
+<meta charset=utf-8>
+<link rel=help href='https://gpuweb.github.io/gpuweb/'>
+
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script>
+    const loadWebGPUExpectations = undefined;
+    const shouldWebGPUCTSFailOnWarnings = undefined;
+</script>
+<script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
+
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:queue,writeTexture,2d,uncompressed_format:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:queue,writeTexture,2d,compressed_format:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:queue,copyExternalImageToTexture,canvas:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:queue,copyExternalImageToTexture,imageBitmap:*'>
+<meta name=variant content='?q=webgpu:api,validation,texture,destroy:base:*'>
+<meta name=variant content='?q=webgpu:api,validation,texture,destroy:twice:*'>
+<meta name=variant content='?q=webgpu:api,validation,texture,destroy:submit_a_destroyed_texture_as_attachment:*'>
+<meta name=variant content='?q=webgpu:api,validation,texture,rg11b10ufloat_renderable:create_texture:*'>
+<meta name=variant content='?q=webgpu:api,validation,texture,rg11b10ufloat_renderable:begin_render_pass:*'>
+<meta name=variant content='?q=webgpu:api,validation,texture,rg11b10ufloat_renderable:begin_render_bundle_encoder:*'>
+<meta name=variant content='?q=webgpu:api,validation,texture,rg11b10ufloat_renderable:create_render_pipeline:*'>
+<meta name=variant content='?q=webgpu:examples:test_name:*'>
+<meta name=variant content='?q=webgpu:examples:not_implemented_yet,without_plan:*'>
+<meta name=variant content='?q=webgpu:examples:not_implemented_yet,with_plan:*'>
+<meta name=variant content='?q=webgpu:examples:basic:*'>
+<meta name=variant content='?q=webgpu:examples:basic,async:*'>
+<meta name=variant content='?q=webgpu:examples:basic,plain_cases:*'>
+<meta name=variant content='?q=webgpu:examples:basic,plain_cases_private:*'>
+<meta name=variant content='?q=webgpu:examples:basic,builder_cases:*'>
+<meta name=variant content='?q=webgpu:examples:basic,builder_cases_subcases:*'>
+<meta name=variant content='?q=webgpu:examples:basic,builder_subcases:*'>
+<meta name=variant content='?q=webgpu:examples:basic,builder_subcases_short:*'>
+<meta name=variant content='?q=webgpu:examples:gpu,async:*'>
+<meta name=variant content='?q=webgpu:examples:gpu,buffers:*'>
+<meta name=variant content='?q=webgpu:examples:gpu,with_texture_compression,bc:*'>

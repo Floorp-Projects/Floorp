@@ -1,0 +1,59 @@
+<!-- AUTO-GENERATED - DO NOT EDIT. See WebGPU CTS: tools/gen_wpt_cts_html. -->
+<!--
+    This test suite is built from the TypeScript sources at:
+    https://github.com/gpuweb/cts
+
+    If you are debugging WebGPU conformance tests, it's highly recommended that
+    you use the standalone interactive runner in that repository, which
+    provides tools for easier debugging and editing (source maps, debug
+    logging, warn/skip functionality, etc.)
+
+    NOTE:
+    The WPT version of this file is generated with *one variant per test spec
+    file*. If your harness needs more fine-grained suppressions, you'll need to
+    generate your own variants list from your suppression list.
+    See `tools/gen_wpt_cts_html` to do this.
+
+    When run under browser CI, the original cts.https.html should be skipped, and
+    this alternate version should be run instead, under a non-exported WPT test
+    directory (e.g. Chromium's wpt_internal).
+-->
+
+<!doctype html>
+<title>WebGPU CTS</title>
+<meta charset=utf-8>
+<link rel=help href='https://gpuweb.github.io/gpuweb/'>
+
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script>
+    const loadWebGPUExpectations = undefined;
+    const shouldWebGPUCTSFailOnWarnings = undefined;
+</script>
+<script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
+
+<meta name=variant content='?q=webgpu:api,validation,encoding,createRenderBundleEncoder:attachment_state,limits,maxColorAttachments:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,createRenderBundleEncoder:attachment_state,limits,maxColorAttachmentBytesPerSample,aligned:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,createRenderBundleEncoder:attachment_state,limits,maxColorAttachmentBytesPerSample,unaligned:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,createRenderBundleEncoder:attachment_state,empty_color_formats:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,createRenderBundleEncoder:valid_texture_formats:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,createRenderBundleEncoder:depth_stencil_readonly:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,createRenderBundleEncoder:depth_stencil_readonly_with_undefined_depth:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,encoder_open_state:non_pass_commands:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,encoder_open_state:render_pass_commands:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,encoder_open_state:render_bundle_commands:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,encoder_open_state:compute_pass_commands:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,encoder_state:pass_end_invalid_order:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,encoder_state:call_after_successful_finish:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,encoder_state:pass_end_none:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,encoder_state:pass_end_twice:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,programmable,pipeline_bind_group_compat:bind_groups_and_pipeline_layout_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,programmable,pipeline_bind_group_compat:buffer_binding,render_pipeline:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,programmable,pipeline_bind_group_compat:sampler_binding,render_pipeline:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,programmable,pipeline_bind_group_compat:bgl_binding_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,programmable,pipeline_bind_group_compat:bgl_visibility_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,programmable,pipeline_bind_group_compat:bgl_resource_type_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,programmable,pipeline_bind_group_compat:empty_bind_group_layouts_requires_empty_bind_groups,compute_pass:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,programmable,pipeline_bind_group_compat:empty_bind_group_layouts_requires_empty_bind_groups,render_pass:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,queries,begin_end:occlusion_query,begin_end_balance:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,queries,begin_end:occlusion_query,begin_end_invalid_nesting:*'>

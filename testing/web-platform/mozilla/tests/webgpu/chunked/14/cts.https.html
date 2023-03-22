@@ -1,0 +1,59 @@
+<!-- AUTO-GENERATED - DO NOT EDIT. See WebGPU CTS: tools/gen_wpt_cts_html. -->
+<!--
+    This test suite is built from the TypeScript sources at:
+    https://github.com/gpuweb/cts
+
+    If you are debugging WebGPU conformance tests, it's highly recommended that
+    you use the standalone interactive runner in that repository, which
+    provides tools for easier debugging and editing (source maps, debug
+    logging, warn/skip functionality, etc.)
+
+    NOTE:
+    The WPT version of this file is generated with *one variant per test spec
+    file*. If your harness needs more fine-grained suppressions, you'll need to
+    generate your own variants list from your suppression list.
+    See `tools/gen_wpt_cts_html` to do this.
+
+    When run under browser CI, the original cts.https.html should be skipped, and
+    this alternate version should be run instead, under a non-exported WPT test
+    directory (e.g. Chromium's wpt_internal).
+-->
+
+<!doctype html>
+<title>WebGPU CTS</title>
+<meta charset=utf-8>
+<link rel=help href='https://gpuweb.github.io/gpuweb/'>
+
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script>
+    const loadWebGPUExpectations = undefined;
+    const shouldWebGPUCTSFailOnWarnings = undefined;
+</script>
+<script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
+
+<meta name=variant content='?q=webgpu:api,validation,createTexture:texture_usage:*'>
+<meta name=variant content='?q=webgpu:api,validation,createTexture:viewFormats:*'>
+<meta name=variant content='?q=webgpu:api,validation,createView:format:*'>
+<meta name=variant content='?q=webgpu:api,validation,createView:dimension:*'>
+<meta name=variant content='?q=webgpu:api,validation,createView:aspect:*'>
+<meta name=variant content='?q=webgpu:api,validation,createView:array_layers:*'>
+<meta name=variant content='?q=webgpu:api,validation,createView:mip_levels:*'>
+<meta name=variant content='?q=webgpu:api,validation,createView:cube_faces_square:*'>
+<meta name=variant content='?q=webgpu:api,validation,createView:texture_state:*'>
+<meta name=variant content='?q=webgpu:api,validation,debugMarker:push_pop_call_count_unbalance,command_encoder:*'>
+<meta name=variant content='?q=webgpu:api,validation,debugMarker:push_pop_call_count_unbalance,render_compute_pass:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,beginComputePass:timestampWrites,same_location:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,beginComputePass:timestampWrites,query_set_type:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,beginComputePass:timestampWrites,invalid_query_set:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,beginComputePass:timestampWrites,query_index_count:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,beginComputePass:timestamp_query_set,device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,beginRenderPass:color_attachments,device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,beginRenderPass:depth_stencil_attachment,device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,beginRenderPass:occlusion_query_set,device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,beginRenderPass:timestamp_query_set,device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,clearBuffer:buffer_state:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,clearBuffer:buffer,device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,clearBuffer:default_args:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,clearBuffer:buffer_usage:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,clearBuffer:size_alignment:*'>
