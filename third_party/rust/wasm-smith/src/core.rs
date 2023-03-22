@@ -14,7 +14,7 @@ use std::marker;
 use std::ops::Range;
 use std::rc::Rc;
 use std::str::{self, FromStr};
-use wasm_encoder::{BlockType, ConstExpr, ExportKind, HeapType, RefType, ValType};
+use wasm_encoder::{BlockType, ConstExpr, ExportKind, ValType};
 pub(crate) use wasm_encoder::{GlobalType, MemoryType, TableType};
 
 // NB: these constants are used to control the rate at which various events
@@ -285,7 +285,7 @@ pub(crate) struct TagType {
 #[derive(Debug)]
 struct ElementSegment {
     kind: ElementKind,
-    ty: RefType,
+    ty: ValType,
     items: Elements,
 }
 
@@ -655,7 +655,7 @@ impl Module {
 
                 wasmparser::TypeRef::Table(table_ty) => {
                     let table_ty = TableType {
-                        element_type: convert_reftype(table_ty.element_type),
+                        element_type: convert_type(table_ty.element_type),
                         minimum: table_ty.initial,
                         maximum: table_ty.maximum,
                     };
@@ -879,13 +879,14 @@ impl Module {
                         ValType::F32 => ConstExpr::f32_const(u.arbitrary()?),
                         ValType::F64 => ConstExpr::f64_const(u.arbitrary()?),
                         ValType::V128 => ConstExpr::v128_const(u.arbitrary()?),
-                        ValType::Ref(ty) => {
-                            assert!(ty.nullable);
-                            if ty.heap_type == HeapType::Func && num_funcs > 0 && u.arbitrary()? {
+                        ValType::ExternRef => ConstExpr::ref_null(ValType::ExternRef),
+                        ValType::FuncRef => {
+                            if num_funcs > 0 && u.arbitrary()? {
                                 let func = u.int_in_range(0..=num_funcs - 1)?;
                                 return Ok(GlobalInitExpr::FuncRef(func));
+                            } else {
+                                ConstExpr::ref_null(ValType::FuncRef)
                             }
-                            ConstExpr::ref_null(ty.heap_type)
                         }
                     }))
                 }));
@@ -1072,7 +1073,7 @@ impl Module {
                 continue;
             }
 
-            let dst = if ty.element_type == RefType::FUNCREF {
+            let dst = if ty.element_type == ValType::FuncRef {
                 &mut funcrefs
             } else {
                 &mut externrefs
@@ -1080,7 +1081,7 @@ impl Module {
             let minimum = ty.minimum;
             // If the first table is a funcref table then it's a candidate for
             // the MVP encoding of element segments.
-            if i == 0 && ty.element_type == RefType::FUNCREF {
+            if i == 0 && ty.element_type == ValType::FuncRef {
                 dst.push(Box::new(move |u| {
                     arbitrary_active_elem(u, minimum, None, disallow_traps, ty)
                 }));
@@ -1104,10 +1105,10 @@ impl Module {
 
         let mut choices = Vec::new();
         if !funcrefs.is_empty() {
-            choices.push((&funcrefs, RefType::FUNCREF));
+            choices.push((&funcrefs, ValType::FuncRef));
         }
         if !externrefs.is_empty() {
-            choices.push((&externrefs, RefType::EXTERNREF));
+            choices.push((&externrefs, ValType::ExternRef));
         }
 
         if choices.is_empty() {
@@ -1132,13 +1133,13 @@ impl Module {
                 // Pick whether we're going to use expression elements or
                 // indices. Note that externrefs must use expressions,
                 // and functions without reference types must use indices.
-                let items = if ty == RefType::EXTERNREF
+                let items = if ty == ValType::ExternRef
                     || (self.config.reference_types_enabled() && u.arbitrary()?)
                 {
                     let mut init = vec![];
                     arbitrary_loop(u, self.config.min_elements(), max, |u| {
                         init.push(
-                            if ty == RefType::EXTERNREF || func_max == 0 || u.arbitrary()? {
+                            if ty == ValType::ExternRef || func_max == 0 || u.arbitrary()? {
                                 None
                             } else {
                                 Some(u.int_in_range(0..=func_max - 1)?)
@@ -1380,8 +1381,8 @@ pub(crate) fn configured_valtypes(config: &dyn Config) -> Vec<ValType> {
         valtypes.push(ValType::V128);
     }
     if config.reference_types_enabled() {
-        valtypes.push(ValType::EXTERNREF);
-        valtypes.push(ValType::FUNCREF);
+        valtypes.push(ValType::ExternRef);
+        valtypes.push(ValType::FuncRef);
     }
     valtypes
 }
@@ -1430,9 +1431,9 @@ pub(crate) fn arbitrary_table_type(u: &mut Unstructured, config: &dyn Config) ->
     }
     Ok(TableType {
         element_type: if config.reference_types_enabled() {
-            *u.choose(&[RefType::FUNCREF, RefType::EXTERNREF])?
+            *u.choose(&[ValType::FuncRef, ValType::ExternRef])?
         } else {
-            RefType::FUNCREF
+            ValType::FuncRef
         },
         minimum,
         maximum,
@@ -1633,18 +1634,8 @@ fn convert_type(parsed_type: wasmparser::ValType) -> ValType {
         F32 => ValType::F32,
         F64 => ValType::F64,
         V128 => ValType::V128,
-        Ref(ty) => ValType::Ref(convert_reftype(ty)),
-    }
-}
-
-fn convert_reftype(ty: wasmparser::RefType) -> RefType {
-    wasm_encoder::RefType {
-        nullable: ty.nullable,
-        heap_type: match ty.heap_type {
-            wasmparser::HeapType::Func => wasm_encoder::HeapType::Func,
-            wasmparser::HeapType::Extern => wasm_encoder::HeapType::Extern,
-            wasmparser::HeapType::TypedFunc(i) => wasm_encoder::HeapType::TypedFunc(i.into()),
-        },
+        FuncRef => ValType::FuncRef,
+        ExternRef => ValType::ExternRef,
     }
 }
 

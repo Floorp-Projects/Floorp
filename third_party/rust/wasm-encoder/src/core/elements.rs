@@ -1,4 +1,4 @@
-use crate::{encode_section, ConstExpr, Encode, RefType, Section, SectionId};
+use crate::{encode_section, ConstExpr, Encode, Section, SectionId, ValType};
 
 /// An encoder for the element section.
 ///
@@ -9,12 +9,12 @@ use crate::{encode_section, ConstExpr, Encode, RefType, Section, SectionId};
 /// ```
 /// use wasm_encoder::{
 ///     Elements, ElementSection, Module, TableSection, TableType,
-///     RefType, ConstExpr
+///     ValType, ConstExpr
 /// };
 ///
 /// let mut tables = TableSection::new();
 /// tables.table(TableType {
-///     element_type: RefType::FUNCREF,
+///     element_type: ValType::FuncRef,
 ///     minimum: 128,
 ///     maximum: None,
 /// });
@@ -22,7 +22,7 @@ use crate::{encode_section, ConstExpr, Encode, RefType, Section, SectionId};
 /// let mut elements = ElementSection::new();
 /// let table_index = 0;
 /// let offset = ConstExpr::i32_const(42);
-/// let element_type = RefType::FUNCREF;
+/// let element_type = ValType::FuncRef;
 /// let functions = Elements::Functions(&[
 ///     // Function indices...
 /// ]);
@@ -80,7 +80,7 @@ pub struct ElementSegment<'a> {
     /// The element segment's mode.
     pub mode: ElementMode<'a>,
     /// The element segment's type.
-    pub element_type: RefType,
+    pub element_type: ValType,
     /// This segment's elements.
     pub elements: Elements<'a>,
 }
@@ -171,7 +171,7 @@ impl ElementSection {
         &mut self,
         table_index: Option<u32>,
         offset: &ConstExpr,
-        element_type: RefType,
+        element_type: ValType,
         elements: Elements<'_>,
     ) -> &mut Self {
         self.segment(ElementSegment {
@@ -187,7 +187,7 @@ impl ElementSection {
     /// Encode a passive element segment.
     ///
     /// Passive segments are part of the bulk memory proposal.
-    pub fn passive<'a>(&mut self, element_type: RefType, elements: Elements<'a>) -> &mut Self {
+    pub fn passive<'a>(&mut self, element_type: ValType, elements: Elements<'a>) -> &mut Self {
         self.segment(ElementSegment {
             mode: ElementMode::Passive,
             element_type,
@@ -198,7 +198,7 @@ impl ElementSection {
     /// Encode a declared element segment.
     ///
     /// Declared segments are part of the bulk memory proposal.
-    pub fn declared<'a>(&mut self, element_type: RefType, elements: Elements<'a>) -> &mut Self {
+    pub fn declared<'a>(&mut self, element_type: ValType, elements: Elements<'a>) -> &mut Self {
         self.segment(ElementSegment {
             mode: ElementMode::Declared,
             element_type,

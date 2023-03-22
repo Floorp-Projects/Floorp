@@ -64,8 +64,8 @@ pub(crate) struct ComponentState {
     pub instances: Vec<TypeId>,
     pub components: Vec<TypeId>,
 
-    /// A set of all imports and exports since they share the same namespace.
-    pub externs: IndexMap<KebabString, (Option<Url>, ComponentEntityType, ExternKind)>,
+    pub imports: IndexMap<KebabString, (Option<Url>, ComponentEntityType)>,
+    pub exports: IndexMap<KebabString, (Option<Url>, ComponentEntityType)>,
 
     // Note: URL validation requires unique URLs by byte comparison, so
     // strings are used here and the URLs are not normalized.
@@ -74,20 +74,6 @@ pub(crate) struct ComponentState {
 
     has_start: bool,
     type_size: u32,
-}
-
-pub enum ExternKind {
-    Import,
-    Export,
-}
-
-impl ExternKind {
-    fn desc(&self) -> &'static str {
-        match self {
-            ExternKind::Import => "import",
-            ExternKind::Export => "export",
-        }
-    }
 }
 
 impl ComponentState {
@@ -232,14 +218,13 @@ impl ComponentState {
         self.add_entity(entity, false, offset)?;
         let name = to_kebab_str(import.name, "import", offset)?;
 
-        match self.externs.entry(name.to_owned()) {
+        match self.imports.entry(name.to_owned()) {
             Entry::Occupied(e) => {
                 bail!(
                     offset,
-                    "import name `{name}` conflicts with previous {desc} name `{prev}`",
+                    "import name `{name}` conflicts with previous import name `{prev}`",
                     name = import.name,
-                    prev = e.key(),
-                    desc = e.get().2.desc(),
+                    prev = e.key()
                 );
             }
             Entry::Vacant(e) => {
@@ -251,7 +236,7 @@ impl ComponentState {
                 }
 
                 self.type_size = combine_type_sizes(self.type_size, entity.type_size(), offset)?;
-                e.insert((url, entity, ExternKind::Import));
+                e.insert((url, entity));
             }
         }
 
@@ -304,25 +289,18 @@ impl ComponentState {
         check_limit: bool,
     ) -> Result<()> {
         if check_limit {
-            check_max(
-                self.externs.len(),
-                1,
-                MAX_WASM_EXPORTS,
-                "imports and exports",
-                offset,
-            )?;
+            check_max(self.exports.len(), 1, MAX_WASM_EXPORTS, "exports", offset)?;
         }
         self.add_entity(ty, true, offset)?;
 
         let name = to_kebab_str(name, "export", offset)?;
 
-        match self.externs.entry(name.to_owned()) {
+        match self.exports.entry(name.to_owned()) {
             Entry::Occupied(e) => {
                 bail!(
                     offset,
-                    "export name `{name}` conflicts with previous {desc} name `{prev}`",
-                    prev = e.key(),
-                    desc = e.get().2.desc(),
+                    "export name `{name}` conflicts with previous export name `{prev}`",
+                    prev = e.key()
                 );
             }
             Entry::Vacant(e) => {
@@ -334,7 +312,7 @@ impl ComponentState {
                 }
 
                 self.type_size = combine_type_sizes(self.type_size, ty.type_size(), offset)?;
-                e.insert((url, ty, ExternKind::Export));
+                e.insert((url, ty));
             }
         }
 
@@ -410,7 +388,12 @@ impl ComponentState {
     }
 
     pub fn add_component(&mut self, component: &mut Self, types: &mut TypeAlloc) {
-        let ty = Type::Component(component.take_component_type());
+        let ty = Type::Component(ComponentType {
+            type_size: component.type_size,
+            imports: mem::take(&mut component.imports),
+            exports: mem::take(&mut component.exports),
+        });
+
         let id = types.push_anon(ty);
         self.components.push(id);
     }
@@ -865,9 +848,13 @@ impl ComponentState {
             };
         }
 
-        let mut state = components.pop().unwrap();
+        let state = components.pop().unwrap();
 
-        Ok(state.take_component_type())
+        Ok(ComponentType {
+            type_size: state.type_size,
+            imports: state.imports,
+            exports: state.exports,
+        })
     }
 
     fn create_instance_type(
@@ -902,16 +889,7 @@ impl ComponentState {
 
         Ok(ComponentInstanceType {
             type_size: state.type_size,
-            kind: ComponentInstanceTypeKind::Defined(
-                state
-                    .externs
-                    .into_iter()
-                    .filter_map(|(name, (url, ty, kind))| match kind {
-                        ExternKind::Export => Some((name, (url, ty))),
-                        ExternKind::Import => None,
-                    })
-                    .collect(),
-            ),
+            kind: ComponentInstanceTypeKind::Defined(state.exports),
         })
     }
 
@@ -1156,16 +1134,7 @@ impl ComponentState {
                     )?;
                 }
                 ComponentExternalKind::Type => {
-                    let ty = self.type_at(component_arg.index, false, offset)?;
-                    insert_arg(
-                        component_arg.name,
-                        ComponentEntityType::Type {
-                            referenced: ty,
-                            created: ty,
-                        },
-                        &mut args,
-                        offset,
-                    )?;
+                    // Type arguments are ignored
                 }
             }
         }
@@ -1180,13 +1149,13 @@ impl ComponentState {
                         | (ComponentEntityType::Component(_), ComponentEntityType::Component(_))
                         | (ComponentEntityType::Instance(_), ComponentEntityType::Instance(_))
                         | (ComponentEntityType::Func(_), ComponentEntityType::Func(_))
-                        | (ComponentEntityType::Value(_), ComponentEntityType::Value(_))
-                        | (ComponentEntityType::Type { .. }, ComponentEntityType::Type { .. }) => {}
+                        | (ComponentEntityType::Value(_), ComponentEntityType::Value(_)) => {}
                         _ => {
                             bail!(
                                 offset,
-                                "expected component instantiation argument `{name}` to be a {desc}",
-                                desc = expected.desc()
+                                "expected component instantiation argument \
+                                 `{name}` to be of type `{}`",
+                                expected.desc()
                             )
                         }
                     };
@@ -1194,7 +1163,8 @@ impl ComponentState {
                     if !ComponentEntityType::internal_is_subtype_of(arg, types, expected, types) {
                         bail!(
                             offset,
-                            "type mismatch for component instantiation argument `{name}`"
+                            "{} type mismatch for component instantiation argument `{name}`",
+                            expected.desc(),
                         );
                     }
                 }
@@ -2054,25 +2024,6 @@ impl ComponentState {
             None => bail!(offset, "unknown memory {idx}: memory index out of bounds"),
         }
     }
-
-    fn take_component_type(&mut self) -> ComponentType {
-        let mut ty = ComponentType {
-            type_size: self.type_size,
-            imports: Default::default(),
-            exports: Default::default(),
-        };
-
-        for (name, (url, t, kind)) in mem::take(&mut self.externs) {
-            let map = match kind {
-                ExternKind::Import => &mut ty.imports,
-                ExternKind::Export => &mut ty.exports,
-            };
-            let prev = map.insert(name, (url, t));
-            assert!(prev.is_none());
-        }
-
-        ty
-    }
 }
 
 impl Default for ComponentState {
@@ -2091,9 +2042,10 @@ impl Default for ComponentState {
             values: Default::default(),
             instances: Default::default(),
             components: Default::default(),
-            externs: Default::default(),
-            export_urls: Default::default(),
+            imports: Default::default(),
+            exports: Default::default(),
             import_urls: Default::default(),
+            export_urls: Default::default(),
             has_start: Default::default(),
             type_size: 1,
         }

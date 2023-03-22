@@ -2,8 +2,8 @@
 
 use super::{component::ComponentState, core::Module};
 use crate::{
-    Export, ExternalKind, FuncType, GlobalType, Import, MemoryType, PrimitiveValType, RefType,
-    TableType, TypeRef, ValType,
+    ComponentExport, ComponentImport, Export, ExternalKind, FuncType, GlobalType, Import,
+    MemoryType, PrimitiveValType, TableType, TypeRef, ValType,
 };
 use indexmap::{IndexMap, IndexSet};
 use std::collections::HashMap;
@@ -1477,7 +1477,7 @@ impl<'a> TypesRef<'a> {
     ///
     /// Returns `None` if the type index is out of bounds or the type has not
     /// been parsed yet.
-    pub fn element_at(&self, index: u32) -> Option<RefType> {
+    pub fn element_at(&self, index: u32) -> Option<ValType> {
         match &self.kind {
             TypesRefKind::Module(module) => module.element_types.get(index as usize).copied(),
             TypesRefKind::Component(_) => None,
@@ -1615,12 +1615,29 @@ impl<'a> TypesRef<'a> {
     }
 
     /// Gets the component entity type for the given component import.
-    pub fn component_entity_type_of_extern(&self, name: &str) -> Option<ComponentEntityType> {
+    pub fn component_entity_type_from_import(
+        &self,
+        import: &ComponentImport,
+    ) -> Option<ComponentEntityType> {
         match &self.kind {
             TypesRefKind::Module(_) => None,
             TypesRefKind::Component(component) => {
-                let key = KebabStr::new(name)?;
-                Some(component.externs.get(key)?.1)
+                let key = KebabStr::new(import.name)?;
+                Some(component.imports.get(key)?.1)
+            }
+        }
+    }
+
+    /// Gets the component entity type from the given component export.
+    pub fn component_entity_type_from_export(
+        &self,
+        export: &ComponentExport,
+    ) -> Option<ComponentEntityType> {
+        match &self.kind {
+            TypesRefKind::Module(_) => None,
+            TypesRefKind::Component(component) => {
+                let key = KebabStr::new(export.name)?;
+                Some(component.exports.get(key)?.1)
             }
         }
     }
@@ -1768,11 +1785,8 @@ impl Types {
     /// Gets the type of an element segment at the given element segment index.
     ///
     /// Returns `None` if the index is out of bounds.
-    pub fn element_at(&self, index: u32) -> Option<RefType> {
-        match &self.kind {
-            TypesKind::Module(module) => module.element_types.get(index as usize).copied(),
-            TypesKind::Component(_) => None,
-        }
+    pub fn element_at(&self, index: u32) -> Option<ValType> {
+        self.as_ref().element_at(index)
     }
 
     /// Gets the count of element segments.
@@ -1883,10 +1897,20 @@ impl Types {
         self.as_ref().entity_type_from_export(export)
     }
 
-    /// Gets the component entity type for the given component import or export
-    /// name.
-    pub fn component_entity_type_of_extern(&self, name: &str) -> Option<ComponentEntityType> {
-        self.as_ref().component_entity_type_of_extern(name)
+    /// Gets the component entity type for the given component import.
+    pub fn component_entity_type_from_import(
+        &self,
+        import: &ComponentImport,
+    ) -> Option<ComponentEntityType> {
+        self.as_ref().component_entity_type_from_import(import)
+    }
+
+    /// Gets the component entity type from the given component export.
+    pub fn component_entity_type_from_export(
+        &self,
+        export: &ComponentExport,
+    ) -> Option<ComponentEntityType> {
+        self.as_ref().component_entity_type_from_export(export)
     }
 
     /// Attempts to lookup the type id that `ty` is an alias of.

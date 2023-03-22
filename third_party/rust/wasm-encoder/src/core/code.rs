@@ -1,4 +1,4 @@
-use crate::{encode_section, Encode, HeapType, Section, SectionId, ValType};
+use crate::{encode_section, Encode, Section, SectionId, ValType};
 use std::borrow::Cow;
 
 /// An encoder for the code section.
@@ -318,13 +318,9 @@ pub enum Instruction<'a> {
     Br(u32),
     BrIf(u32),
     BrTable(Cow<'a, [u32]>, u32),
-    BrOnNull(u32),
-    BrOnNonNull(u32),
     Return,
     Call(u32),
-    CallRef(HeapType),
     CallIndirect { ty: u32, table: u32 },
-    ReturnCallRef(HeapType),
     ReturnCall(u32),
     ReturnCallIndirect { ty: u32, table: u32 },
     Throw(u32),
@@ -517,10 +513,9 @@ pub enum Instruction<'a> {
 
     // Reference types instructions.
     TypedSelect(ValType),
-    RefNull(HeapType),
+    RefNull(ValType),
     RefIsNull,
     RefFunc(u32),
-    RefAsNonNull,
 
     // Bulk memory instructions.
     TableInit { elem_index: u32, table: u32 },
@@ -769,17 +764,15 @@ pub enum Instruction<'a> {
     F64x2ConvertLowI32x4U,
     F32x4DemoteF64x2Zero,
     F64x2PromoteLowF32x4,
-
-    // Relaxed simd proposal
     I8x16RelaxedSwizzle,
-    I32x4RelaxedTruncF32x4S,
-    I32x4RelaxedTruncF32x4U,
-    I32x4RelaxedTruncF64x2SZero,
-    I32x4RelaxedTruncF64x2UZero,
-    F32x4RelaxedMadd,
-    F32x4RelaxedNmadd,
-    F64x2RelaxedMadd,
-    F64x2RelaxedNmadd,
+    I32x4RelaxedTruncSatF32x4S,
+    I32x4RelaxedTruncSatF32x4U,
+    I32x4RelaxedTruncSatF64x2SZero,
+    I32x4RelaxedTruncSatF64x2UZero,
+    F32x4RelaxedFma,
+    F32x4RelaxedFnma,
+    F64x2RelaxedFma,
+    F64x2RelaxedFnma,
     I8x16RelaxedLaneselect,
     I16x8RelaxedLaneselect,
     I32x4RelaxedLaneselect,
@@ -789,8 +782,9 @@ pub enum Instruction<'a> {
     F64x2RelaxedMin,
     F64x2RelaxedMax,
     I16x8RelaxedQ15mulrS,
-    I16x8RelaxedDotI8x16I7x16S,
-    I32x4RelaxedDotI8x16I7x16AddS,
+    I16x8DotI8x16I7x16S,
+    I32x4DotI8x16I7x16AddS,
+    F32x4RelaxedDotBf16x8AddF32x4,
 
     // Atomic instructions (the threads proposal)
     MemoryAtomicNotify(MemArg),
@@ -911,33 +905,16 @@ impl Encode for Instruction<'_> {
                 ls.encode(sink);
                 l.encode(sink);
             }
-            Instruction::BrOnNull(l) => {
-                sink.push(0xD4);
-                l.encode(sink);
-            }
-            Instruction::BrOnNonNull(l) => {
-                sink.push(0xD6);
-                l.encode(sink);
-            }
             Instruction::Return => sink.push(0x0F),
             Instruction::Call(f) => {
                 sink.push(0x10);
                 f.encode(sink);
-            }
-            Instruction::CallRef(ty) => {
-                sink.push(0x14);
-                ty.encode(sink);
             }
             Instruction::CallIndirect { ty, table } => {
                 sink.push(0x11);
                 ty.encode(sink);
                 table.encode(sink);
             }
-            Instruction::ReturnCallRef(ty) => {
-                sink.push(0x15);
-                ty.encode(sink);
-            }
-
             Instruction::ReturnCall(f) => {
                 sink.push(0x12);
                 f.encode(sink);
@@ -1313,7 +1290,6 @@ impl Encode for Instruction<'_> {
                 sink.push(0xd2);
                 f.encode(sink);
             }
-            Instruction::RefAsNonNull => sink.push(0xD3),
 
             // Bulk memory instructions.
             Instruction::TableInit { elem_index, table } => {
@@ -2371,35 +2347,35 @@ impl Encode for Instruction<'_> {
                 sink.push(0xFD);
                 0x100u32.encode(sink);
             }
-            Instruction::I32x4RelaxedTruncF32x4S => {
+            Instruction::I32x4RelaxedTruncSatF32x4S => {
                 sink.push(0xFD);
                 0x101u32.encode(sink);
             }
-            Instruction::I32x4RelaxedTruncF32x4U => {
+            Instruction::I32x4RelaxedTruncSatF32x4U => {
                 sink.push(0xFD);
                 0x102u32.encode(sink);
             }
-            Instruction::I32x4RelaxedTruncF64x2SZero => {
+            Instruction::I32x4RelaxedTruncSatF64x2SZero => {
                 sink.push(0xFD);
                 0x103u32.encode(sink);
             }
-            Instruction::I32x4RelaxedTruncF64x2UZero => {
+            Instruction::I32x4RelaxedTruncSatF64x2UZero => {
                 sink.push(0xFD);
                 0x104u32.encode(sink);
             }
-            Instruction::F32x4RelaxedMadd => {
+            Instruction::F32x4RelaxedFma => {
                 sink.push(0xFD);
                 0x105u32.encode(sink);
             }
-            Instruction::F32x4RelaxedNmadd => {
+            Instruction::F32x4RelaxedFnma => {
                 sink.push(0xFD);
                 0x106u32.encode(sink);
             }
-            Instruction::F64x2RelaxedMadd => {
+            Instruction::F64x2RelaxedFma => {
                 sink.push(0xFD);
                 0x107u32.encode(sink);
             }
-            Instruction::F64x2RelaxedNmadd => {
+            Instruction::F64x2RelaxedFnma => {
                 sink.push(0xFD);
                 0x108u32.encode(sink);
             }
@@ -2439,13 +2415,17 @@ impl Encode for Instruction<'_> {
                 sink.push(0xFD);
                 0x111u32.encode(sink);
             }
-            Instruction::I16x8RelaxedDotI8x16I7x16S => {
+            Instruction::I16x8DotI8x16I7x16S => {
                 sink.push(0xFD);
                 0x112u32.encode(sink);
             }
-            Instruction::I32x4RelaxedDotI8x16I7x16AddS => {
+            Instruction::I32x4DotI8x16I7x16AddS => {
                 sink.push(0xFD);
                 0x113u32.encode(sink);
+            }
+            Instruction::F32x4RelaxedDotBf16x8AddF32x4 => {
+                sink.push(0xFD);
+                0x114u32.encode(sink);
             }
 
             // Atmoic instructions from the thread proposal
@@ -2821,7 +2801,7 @@ impl ConstExpr {
     }
 
     /// Create a constant expression containing a single `ref.null` instruction.
-    pub fn ref_null(ty: HeapType) -> Self {
+    pub fn ref_null(ty: ValType) -> Self {
         Self::new_insn(Instruction::RefNull(ty))
     }
 

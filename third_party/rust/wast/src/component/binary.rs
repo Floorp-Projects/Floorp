@@ -552,32 +552,17 @@ impl From<core::ValType<'_>> for wasm_encoder::ValType {
             core::ValType::F32 => Self::F32,
             core::ValType::F64 => Self::F64,
             core::ValType::V128 => Self::V128,
-            core::ValType::Ref(r) => Self::Ref(r.into()),
+            core::ValType::Ref(r) => r.into(),
         }
     }
 }
 
-impl From<core::RefType<'_>> for wasm_encoder::RefType {
+impl From<core::RefType<'_>> for wasm_encoder::ValType {
     fn from(r: core::RefType<'_>) -> Self {
-        wasm_encoder::RefType {
-            nullable: r.nullable,
-            heap_type: r.heap.into(),
-        }
-    }
-}
-
-impl From<core::HeapType<'_>> for wasm_encoder::HeapType {
-    fn from(r: core::HeapType<'_>) -> Self {
-        match r {
-            core::HeapType::Func => Self::Func,
-            core::HeapType::Extern => Self::Extern,
-            core::HeapType::Index(Index::Num(i, _)) => Self::TypedFunc(i),
-            core::HeapType::Index(_) => panic!("unresolved index"),
-            core::HeapType::Any
-            | core::HeapType::Eq
-            | core::HeapType::Struct
-            | core::HeapType::Array
-            | core::HeapType::I31 => {
+        match r.heap {
+            core::HeapType::Func => Self::FuncRef,
+            core::HeapType::Extern => Self::ExternRef,
+            _ => {
                 todo!("encoding of GC proposal types not yet implemented")
             }
         }
