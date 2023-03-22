@@ -44,7 +44,6 @@ $background-dark: rgb(28, 27, 34);
     &[pos='callout'] {
       height: fit-content;
       min-height: unset;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
       overflow: visible;
 
       .logo-container {
@@ -98,7 +97,7 @@ $background-dark: rgb(28, 27, 34);
           position: relative;
           overflow: hidden;
           border: 1px solid #CFCFD8;
-          box-shadow: 0 2px 14px rgba(58, 57, 68, 0.2);
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
           border-radius: 4px;
           padding-top: 0;
           // Subtract 4px, the block margin of buttons
