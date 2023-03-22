@@ -562,6 +562,9 @@ export class MigrationWizard extends HTMLElement {
       ".selected-data-header"
     );
 
+    let importButton = this.#shadowRoot.querySelector("#import");
+    importButton.disabled = checkedResources == 0;
+
     if (checkedResources == 0) {
       document.l10n.setAttributes(
         selectedDataHeader,
