@@ -810,6 +810,16 @@ NS_IMETHODIMP NullHttpChannel::GetClassicScriptHintCharset(
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP NullHttpChannel::SetDocumentCharacterSet(
+    const nsAString& aDocumentCharacterSet) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP NullHttpChannel::GetDocumentCharacterSet(
+    nsAString& aDocumentCharacterSet) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 #define IMPL_TIMING_ATTR(name)                                           \
   NS_IMETHODIMP                                                          \
   NullHttpChannel::Get##name##Time(PRTime* _retval) {                    \
