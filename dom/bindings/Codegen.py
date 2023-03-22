@@ -7354,7 +7354,7 @@ def getJSToNativeConversionInfo(
         template = template.rstrip()
         template += fill(
             """
-             else if (!mozilla::IsFinite(${readLoc})) {
+             else if (!std::isfinite(${readLoc})) {
               $*{nonFiniteCode}
             }
             """,

@@ -116,7 +116,6 @@ using JS::AutoStableStringChars;
 using mozilla::Abs;
 using mozilla::AssertedCast;
 using mozilla::BitwiseCast;
-using mozilla::IsFinite;
 using mozilla::Maybe;
 using mozilla::NegativeInfinity;
 using mozilla::Nothing;
@@ -3280,7 +3279,7 @@ int8_t BigInt::compare(BigInt* x, double y) {
   constexpr int LessThan = -1, Equal = 0, GreaterThan = 1;
 
   // ±Infinity exceeds a finite bigint value.
-  if (!mozilla::IsFinite(y)) {
+  if (!std::isfinite(y)) {
     return y > 0 ? LessThan : GreaterThan;
   }
 

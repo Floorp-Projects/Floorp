@@ -44,7 +44,7 @@ class SVGPoint {
   operator Point() const { return Point(mX, mY); }
 
 #ifdef DEBUG
-  bool IsValid() const { return IsFinite(mX) && IsFinite(mY); }
+  bool IsValid() const { return std::isfinite(mX) && std::isfinite(mY); }
 #endif
 
   void SetX(float aX) { mX = aX; }

@@ -208,7 +208,7 @@ nsresult SVGLengthListSMILType::ComputeDistance(const SMILValue& aFrom,
   }
 
   float distance = sqrt(total);
-  if (!IsFinite(distance)) {
+  if (!std::isfinite(distance)) {
     return NS_ERROR_FAILURE;
   }
   aDistance = distance;
