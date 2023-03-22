@@ -70,7 +70,7 @@
 
 scrollbar, scrollbarbutton, scrollcorner, slider, thumb, resizer {
   /* Force legacy XUL layout for now on scrollbars / resizers and descendants,
-   * as ScrollFrameHelper relies on that (and nsScrollbarFrame is a XUL frame
+   * as nsHTMLScrollFrame relies on that (and nsScrollbarFrame is a XUL frame
    * anyways).
    *
    * TODO: Eventually we should rewrite scrollbars so that they don't use XUL
