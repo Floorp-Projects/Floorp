@@ -36,6 +36,7 @@
 #include "nsTArray.h"
 #include "WindowRenderer.h"
 #include <algorithm>
+#include <cmath>
 #include <limits>
 
 using namespace mozilla::dom;
@@ -246,7 +247,7 @@ double MediaDecoder::GetDuration() {
 
 bool MediaDecoder::IsInfinite() const {
   MOZ_ASSERT(NS_IsMainThread());
-  return mozilla::IsInfinite<double>(mDuration);
+  return std::isinf(mDuration);
 }
 
 #define INIT_MIRROR(name, val) \
@@ -1038,7 +1039,7 @@ void MediaDecoder::DurationChanged() {
     mDuration = mStateMachineDuration.Ref().ref().ToSeconds();
   }
 
-  if (mDuration == oldDuration || IsNaN(mDuration)) {
+  if (mDuration == oldDuration || std::isnan(mDuration)) {
     return;
   }
 
@@ -1047,7 +1048,7 @@ void MediaDecoder::DurationChanged() {
   // See https://www.w3.org/Bugs/Public/show_bug.cgi?id=28822 for a discussion
   // of whether we should fire durationchange on explicit infinity.
   if (mFiredMetadataLoaded &&
-      (!mozilla::IsInfinite<double>(mDuration) || mExplicitDuration.isSome())) {
+      (!std::isinf(mDuration) || mExplicitDuration.isSome())) {
     GetOwner()->DispatchAsyncEvent(u"durationchange"_ns);
   }
 
@@ -1194,7 +1195,7 @@ bool MediaDecoder::IsMediaSeekable() {
 media::TimeIntervals MediaDecoder::GetSeekable() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (IsNaN(GetDuration())) {
+  if (std::isnan(GetDuration())) {
     // We do not have a duration yet, we can't determine the seekable range.
     return TimeIntervals();
   }

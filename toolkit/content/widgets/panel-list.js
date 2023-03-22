@@ -179,11 +179,9 @@
 
     async setAlign() {
       const hostElement = this.parentElement || this.getRootNode().host;
-      if (!hostElement || this.parentIsXULPanel()) {
+      if (!hostElement) {
         // This could get called before we're added to the DOM.
         // Nothing to do in that case.
-        //
-        // And if we're embedded in a XUL panel, let it handle alignment.
         return;
       }
 
@@ -238,39 +236,46 @@
         );
       });
 
-      // Calculate the left/right alignment.
-      let align;
-      let leftOffset;
-      let leftAlignX = anchorLeft;
-      let rightAlignX = anchorLeft + anchorWidth - panelWidth;
+      // If we're embedded in a XUL panel, let it handle alignment.
+      if (!this.parentIsXULPanel()) {
+        // Calculate the left/right alignment.
+        let align;
+        let leftOffset;
+        let leftAlignX = anchorLeft;
+        let rightAlignX = anchorLeft + anchorWidth - panelWidth;
 
-      if (this.isDocumentRTL()) {
-        // Prefer aligning on the right.
-        align = rightAlignX < 0 ? "left" : "right";
-      } else {
-        // Prefer aligning on the left.
-        align = leftAlignX + panelWidth > winWidth ? "right" : "left";
+        if (this.isDocumentRTL()) {
+          // Prefer aligning on the right.
+          align = rightAlignX < 0 ? "left" : "right";
+        } else {
+          // Prefer aligning on the left.
+          align = leftAlignX + panelWidth > winWidth ? "right" : "left";
+        }
+        leftOffset = align === "left" ? leftAlignX : rightAlignX;
+
+        let bottomAlignY = anchorTop + anchorHeight;
+        let valign;
+        let topOffset;
+        if (bottomAlignY + panelHeight > winHeight) {
+          topOffset = anchorTop - panelHeight;
+          valign = "top";
+        } else {
+          topOffset = bottomAlignY;
+          valign = "bottom";
+        }
+
+        // Set the alignments and show the panel.
+        this.setAttribute("align", align);
+        this.setAttribute("valign", valign);
+        hostElement.style.overflow = "";
+
+        this.style.left = `${leftOffset + winScrollX}px`;
+        this.style.top = `${topOffset + winScrollY}px`;
       }
-      leftOffset = align === "left" ? leftAlignX : rightAlignX;
 
-      let bottomAlignY = anchorTop + anchorHeight;
-      let valign;
-      let topOffset;
-      if (bottomAlignY + panelHeight > winHeight) {
-        topOffset = anchorTop - panelHeight;
-        valign = "top";
-      } else {
-        topOffset = bottomAlignY;
-        valign = "bottom";
-      }
-
-      // Set the alignments and show the panel.
-      this.setAttribute("align", align);
-      this.setAttribute("valign", valign);
-      hostElement.style.overflow = "";
-
-      this.style.left = `${leftOffset + winScrollX}px`;
-      this.style.top = `${topOffset + winScrollY}px`;
+      this.style.minWidth = this.hasAttribute("min-width-from-anchor")
+        ? `${anchorWidth}px`
+        : "";
 
       this.removeAttribute("showing");
     }

@@ -36,8 +36,6 @@ using mozilla::Abs;
 using mozilla::CountLeadingZeroes32;
 using mozilla::ExponentComponent;
 using mozilla::FloorLog2;
-using mozilla::IsInfinite;
-using mozilla::IsNaN;
 using mozilla::IsNegativeZero;
 using mozilla::NegativeInfinity;
 using mozilla::NumberEqualsInt32;
@@ -676,10 +674,10 @@ Range::Range(const MDefinition* def)
 
 static uint16_t ExponentImpliedByDouble(double d) {
   // Handle the special values.
-  if (IsNaN(d)) {
+  if (std::isnan(d)) {
     return Range::IncludesInfinityAndNaN;
   }
-  if (IsInfinite(d)) {
+  if (std::isinf(d)) {
     return Range::IncludesInfinity;
   }
 
@@ -726,8 +724,8 @@ void Range::setDouble(double l, double h) {
   // won't have a fractional value if the value is always beyond the point at
   // which double precision can't represent fractional values.
   uint16_t minExp = std::min(lExp, hExp);
-  bool includesNegative = IsNaN(l) || l < 0;
-  bool includesPositive = IsNaN(h) || h > 0;
+  bool includesNegative = std::isnan(l) || l < 0;
+  bool includesPositive = std::isnan(h) || h > 0;
   bool crossesZero = includesNegative && includesPositive;
   if (crossesZero || minExp < MaxTruncatableExponent) {
     canHaveFractionalPart_ = IncludesFractionalParts;

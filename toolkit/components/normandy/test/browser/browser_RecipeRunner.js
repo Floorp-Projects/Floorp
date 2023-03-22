@@ -3,8 +3,8 @@
 const { NormandyTestUtils } = ChromeUtils.import(
   "resource://testing-common/NormandyTestUtils.jsm"
 );
-const { FilterExpressions } = ChromeUtils.import(
-  "resource://gre/modules/components-utils/FilterExpressions.jsm"
+const { FilterExpressions } = ChromeUtils.importESModule(
+  "resource://gre/modules/components-utils/FilterExpressions.sys.mjs"
 );
 
 const { Normandy } = ChromeUtils.import("resource://normandy/Normandy.jsm");

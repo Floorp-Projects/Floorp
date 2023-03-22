@@ -13,10 +13,7 @@ using mozilla::ExponentComponent;
 using mozilla::FloatingPoint;
 using mozilla::FuzzyEqualsAdditive;
 using mozilla::FuzzyEqualsMultiplicative;
-using mozilla::IsFinite;
 using mozilla::IsFloat32Representable;
-using mozilla::IsInfinite;
-using mozilla::IsNaN;
 using mozilla::IsNegative;
 using mozilla::IsNegativeZero;
 using mozilla::IsPositiveZero;
@@ -310,29 +307,20 @@ static void TestEqualsIsForNonInteger(T aVal) {
 };
 
 static void TestDoublesPredicates() {
-  A(IsNaN(UnspecifiedNaN<double>()));
-  A(IsNaN(SpecificNaN<double>(1, 17)));
+  A(std::isnan(UnspecifiedNaN<double>()));
+  A(std::isnan(SpecificNaN<double>(1, 17)));
   ;
-  A(IsNaN(SpecificNaN<double>(0, 0xfffffffffff0fULL)));
-  A(!IsNaN(0.0));
-  A(!IsNaN(-0.0));
-  A(!IsNaN(1.0));
-  A(!IsNaN(PositiveInfinity<double>()));
-  A(!IsNaN(NegativeInfinity<double>()));
+  A(std::isnan(SpecificNaN<double>(0, 0xfffffffffff0fULL)));
+  A(!std::isnan(PositiveInfinity<double>()));
+  A(!std::isnan(NegativeInfinity<double>()));
 
-  A(IsInfinite(PositiveInfinity<double>()));
-  A(IsInfinite(NegativeInfinity<double>()));
-  A(!IsInfinite(UnspecifiedNaN<double>()));
-  A(!IsInfinite(0.0));
-  A(!IsInfinite(-0.0));
-  A(!IsInfinite(1.0));
+  A(std::isinf(PositiveInfinity<double>()));
+  A(std::isinf(NegativeInfinity<double>()));
+  A(!std::isinf(UnspecifiedNaN<double>()));
 
-  A(!IsFinite(PositiveInfinity<double>()));
-  A(!IsFinite(NegativeInfinity<double>()));
-  A(!IsFinite(UnspecifiedNaN<double>()));
-  A(IsFinite(0.0));
-  A(IsFinite(-0.0));
-  A(IsFinite(1.0));
+  A(!std::isfinite(PositiveInfinity<double>()));
+  A(!std::isfinite(NegativeInfinity<double>()));
+  A(!std::isfinite(UnspecifiedNaN<double>()));
 
   A(!IsNegative(PositiveInfinity<double>()));
   A(IsNegative(NegativeInfinity<double>()));
@@ -412,29 +400,20 @@ static void TestDoublesPredicates() {
 }
 
 static void TestFloatsPredicates() {
-  A(IsNaN(UnspecifiedNaN<float>()));
-  A(IsNaN(SpecificNaN<float>(1, 17)));
+  A(std::isnan(UnspecifiedNaN<float>()));
+  A(std::isnan(SpecificNaN<float>(1, 17)));
   ;
-  A(IsNaN(SpecificNaN<float>(0, 0x7fff0fUL)));
-  A(!IsNaN(0.0f));
-  A(!IsNaN(-0.0f));
-  A(!IsNaN(1.0f));
-  A(!IsNaN(PositiveInfinity<float>()));
-  A(!IsNaN(NegativeInfinity<float>()));
+  A(std::isnan(SpecificNaN<float>(0, 0x7fff0fUL)));
+  A(!std::isnan(PositiveInfinity<float>()));
+  A(!std::isnan(NegativeInfinity<float>()));
 
-  A(IsInfinite(PositiveInfinity<float>()));
-  A(IsInfinite(NegativeInfinity<float>()));
-  A(!IsInfinite(UnspecifiedNaN<float>()));
-  A(!IsInfinite(0.0f));
-  A(!IsInfinite(-0.0f));
-  A(!IsInfinite(1.0f));
+  A(std::isinf(PositiveInfinity<float>()));
+  A(std::isinf(NegativeInfinity<float>()));
+  A(!std::isinf(UnspecifiedNaN<float>()));
 
-  A(!IsFinite(PositiveInfinity<float>()));
-  A(!IsFinite(NegativeInfinity<float>()));
-  A(!IsFinite(UnspecifiedNaN<float>()));
-  A(IsFinite(0.0f));
-  A(IsFinite(-0.0f));
-  A(IsFinite(1.0f));
+  A(!std::isfinite(PositiveInfinity<float>()));
+  A(!std::isfinite(NegativeInfinity<float>()));
+  A(!std::isfinite(UnspecifiedNaN<float>()));
 
   A(!IsNegative(PositiveInfinity<float>()));
   A(IsNegative(NegativeInfinity<float>()));

@@ -1021,7 +1021,7 @@ static bool ToIntlMathematicalValue(JSContext* cx, MutableHandleValue value) {
   double number = LinearStringToNumber(str);
 
   bool exponentTooLarge = false;
-  if (mozilla::IsNaN(number)) {
+  if (std::isnan(number)) {
     // Set to NaN if the input can't be parsed as a number.
     value.setNaN();
   } else if (IsNonDecimalNumber(str)) {
@@ -1065,7 +1065,7 @@ static bool ToIntlMathematicalValue(JSContext* cx, MutableHandleValue value) {
       }
     } else {
       // If we can't parse the string as a decimal, it must be ±Infinity.
-      MOZ_ASSERT(mozilla::IsInfinite(number));
+      MOZ_ASSERT(std::isinf(number));
       MOZ_ASSERT(StringFindPattern(str, cx->names().Infinity, 0) >= 0);
 
       value.setDouble(number);
@@ -1269,13 +1269,13 @@ bool js::intl_FormatNumberRange(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // PartitionNumberRangePattern, step 1.
-  if (start.isDouble() && mozilla::IsNaN(start.toDouble())) {
+  if (start.isDouble() && std::isnan(start.toDouble())) {
     JS_ReportErrorNumberASCII(
         cx, GetErrorMessage, nullptr, JSMSG_NAN_NUMBER_RANGE, "start",
         "NumberFormat", formatToParts ? "formatRangeToParts" : "formatRange");
     return false;
   }
-  if (end.isDouble() && mozilla::IsNaN(end.toDouble())) {
+  if (end.isDouble() && std::isnan(end.toDouble())) {
     JS_ReportErrorNumberASCII(
         cx, GetErrorMessage, nullptr, JSMSG_NAN_NUMBER_RANGE, "end",
         "NumberFormat", formatToParts ? "formatRangeToParts" : "formatRange");

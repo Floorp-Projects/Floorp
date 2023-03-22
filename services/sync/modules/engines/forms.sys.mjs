@@ -126,11 +126,15 @@ FormStore.prototype = {
     await FormWrapper._update(change);
   },
 
-  async applyIncomingBatch(records) {
+  async applyIncomingBatch(records, countTelemetry) {
     Async.checkAppReady();
     // We collect all the changes to be made then apply them all at once.
     this._changes = [];
-    let failures = await Store.prototype.applyIncomingBatch.call(this, records);
+    let failures = await Store.prototype.applyIncomingBatch.call(
+      this,
+      records,
+      countTelemetry
+    );
     if (this._changes.length) {
       await FormWrapper._update(this._changes);
     }

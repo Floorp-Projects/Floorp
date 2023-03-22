@@ -19,9 +19,40 @@ const SYSTEM_TICK_INTERVAL = 5 * 60 * 1000;
 
 class SystemTickFeed {
   init() {
-    this.intervalId = lazy.setInterval(
-      () => this.store.dispatch({ type: at.SYSTEM_TICK }),
-      SYSTEM_TICK_INTERVAL
+    this._idleService = Cc["@mozilla.org/widget/useridleservice;1"].getService(
+      Ci.nsIUserIdleService
+    );
+    this._hasObserver = false;
+    this.setTimer();
+  }
+
+  setTimer() {
+    this.intervalId = lazy.setInterval(() => {
+      if (this._idleService.idleTime > SYSTEM_TICK_INTERVAL) {
+        this.cancelTimer();
+        Services.obs.addObserver(this, "user-interaction-active");
+        this._hasObserver = true;
+        return;
+      }
+      this.dispatchTick();
+    }, SYSTEM_TICK_INTERVAL);
+  }
+
+  cancelTimer() {
+    lazy.clearInterval(this.intervalId);
+    this.intervalId = null;
+  }
+
+  observe() {
+    this.dispatchTick();
+    Services.obs.removeObserver(this, "user-interaction-active");
+    this._hasObserver = false;
+    this.setTimer();
+  }
+
+  dispatchTick() {
+    ChromeUtils.idleDispatch(() =>
+      this.store.dispatch({ type: at.SYSTEM_TICK })
     );
   }
 
@@ -31,7 +62,11 @@ class SystemTickFeed {
         this.init();
         break;
       case at.UNINIT:
-        lazy.clearInterval(this.intervalId);
+        this.cancelTimer();
+        if (this._hasObserver) {
+          Services.obs.removeObserver(this, "user-interaction-active");
+          this._hasObserver = false;
+        }
         break;
     }
   }

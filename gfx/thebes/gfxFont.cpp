@@ -4485,7 +4485,7 @@ gfxFontStyle::gfxFontStyle(FontSlantStyle aStyle, FontWeight aWeight,
       allowSyntheticStyle(aAllowStyleSynthesis),
       allowSyntheticSmallCaps(aAllowSmallCapsSynthesis),
       noFallbackVariantFeatures(true) {
-  MOZ_ASSERT(!mozilla::IsNaN(size));
+  MOZ_ASSERT(!std::isnan(size));
 
   switch (aSizeAdjust.tag) {
     case FontSizeAdjust::Tag::None:
@@ -4507,7 +4507,7 @@ gfxFontStyle::gfxFontStyle(FontSlantStyle aStyle, FontWeight aWeight,
       sizeAdjust = aSizeAdjust.AsIcHeight();
       break;
   }
-  MOZ_ASSERT(!mozilla::IsNaN(sizeAdjust));
+  MOZ_ASSERT(!std::isnan(sizeAdjust));
 
   sizeAdjustBasis = uint8_t(aSizeAdjust.tag);
   // sizeAdjustBasis is currently a small bitfield, so let's assert that the

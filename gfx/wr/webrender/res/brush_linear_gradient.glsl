@@ -7,9 +7,9 @@
 #include shared,prim_shared,brush,gpu_buffer,gradient_shared
 
 // Start offset. Packed in to vector to work around bug 1630356.
-flat varying vec2 v_start_offset;
+flat varying mediump vec2 v_start_offset;
 
-flat varying vec2 v_scale_dir;
+flat varying mediump vec2 v_scale_dir;
 
 #ifdef WR_VERTEX_SHADER
 

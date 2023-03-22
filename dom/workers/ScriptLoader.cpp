@@ -64,6 +64,7 @@
 #include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/PerformanceStorage.h"
 #include "mozilla/dom/Response.h"
+#include "mozilla/dom/ReferrerInfo.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/SerializedStackHolder.h"
 #include "mozilla/dom/workerinternals/CacheLoadHandler.h"

@@ -848,29 +848,10 @@ class FunctionCompiler {
       return true;
     }
 
-    MBasicBlock* joinBlock = nullptr;
-    if (!newBlock(curBlock_, &joinBlock)) {
-      return false;
-    }
+    auto* ins = MWasmTrapIfNull::New(
+        alloc(), value, wasm::Trap::NullPointerDereference, bytecodeOffset());
 
-    MBasicBlock* trapBlock = nullptr;
-    if (!newBlock(curBlock_, &trapBlock)) {
-      return false;
-    }
-    auto* ins = MWasmTrap::New(alloc(), wasm::Trap::NullPointerDereference,
-                               bytecodeOffset());
-    trapBlock->end(ins);
-
-    MDefinition* check = compareIsNull(value, JSOp::Ne);
-    if (!check) {
-      return false;
-    }
-    MTest* test = MTest::New(alloc(), check, joinBlock, trapBlock);
-    if (!test) {
-      return false;
-    }
-    curBlock_->end(test);
-    curBlock_ = joinBlock;
+    curBlock_->add(ins);
     return true;
   }
 

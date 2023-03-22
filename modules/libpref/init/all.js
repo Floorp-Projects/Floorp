@@ -3615,9 +3615,6 @@ pref("browser.safebrowsing.provider.mozilla.lists.content", "moz-full");
 // The table and global pref for blocking plugin content
 pref("urlclassifier.blockedTable", "moztest-block-simple,mozplugin-block-digest256");
 
-// Turn off Spatial navigation by default.
-pref("snav.enabled", false);
-
 // Wakelock is disabled by default.
 pref("dom.wakelock.enabled", false);
 

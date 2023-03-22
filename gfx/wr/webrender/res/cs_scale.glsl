@@ -9,8 +9,8 @@
 
 #include shared
 
-varying vec2 vUv;
-flat varying vec4 vUvRect;
+varying highp vec2 vUv;
+flat varying highp vec4 vUvRect;
 #ifdef WR_FEATURE_TEXTURE_EXTERNAL_ESSL1
 uniform vec2 uTextureSize;
 #endif

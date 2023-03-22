@@ -3608,28 +3608,28 @@ class TreeOrderComparator {
  * series is not finite.
  */
 #define NS_ENSURE_FINITE(f, rv) \
-  if (!mozilla::IsFinite(f)) {  \
+  if (!std::isfinite(f)) {      \
     return (rv);                \
   }
 
-#define NS_ENSURE_FINITE2(f1, f2, rv)    \
-  if (!mozilla::IsFinite((f1) + (f2))) { \
-    return (rv);                         \
+#define NS_ENSURE_FINITE2(f1, f2, rv) \
+  if (!std::isfinite((f1) + (f2))) {  \
+    return (rv);                      \
   }
 
-#define NS_ENSURE_FINITE4(f1, f2, f3, f4, rv)          \
-  if (!mozilla::IsFinite((f1) + (f2) + (f3) + (f4))) { \
-    return (rv);                                       \
+#define NS_ENSURE_FINITE4(f1, f2, f3, f4, rv)      \
+  if (!std::isfinite((f1) + (f2) + (f3) + (f4))) { \
+    return (rv);                                   \
   }
 
-#define NS_ENSURE_FINITE5(f1, f2, f3, f4, f5, rv)             \
-  if (!mozilla::IsFinite((f1) + (f2) + (f3) + (f4) + (f5))) { \
-    return (rv);                                              \
+#define NS_ENSURE_FINITE5(f1, f2, f3, f4, f5, rv)         \
+  if (!std::isfinite((f1) + (f2) + (f3) + (f4) + (f5))) { \
+    return (rv);                                          \
   }
 
-#define NS_ENSURE_FINITE6(f1, f2, f3, f4, f5, f6, rv)                \
-  if (!mozilla::IsFinite((f1) + (f2) + (f3) + (f4) + (f5) + (f6))) { \
-    return (rv);                                                     \
+#define NS_ENSURE_FINITE6(f1, f2, f3, f4, f5, f6, rv)            \
+  if (!std::isfinite((f1) + (f2) + (f3) + (f4) + (f5) + (f6))) { \
+    return (rv);                                                 \
   }
 
 // Deletes a linked list iteratively to avoid blowing up the stack (bug 460444).

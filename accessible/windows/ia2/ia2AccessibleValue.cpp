@@ -63,7 +63,7 @@ ia2AccessibleValue::get_currentValue(VARIANT* aCurrentValue) {
 
   currentValue = valueAcc->CurValue();
 
-  if (IsNaN(currentValue)) return S_FALSE;
+  if (std::isnan(currentValue)) return S_FALSE;
 
   aCurrentValue->vt = VT_R8;
   aCurrentValue->dblVal = currentValue;
@@ -96,7 +96,7 @@ ia2AccessibleValue::get_maximumValue(VARIANT* aMaximumValue) {
 
   maximumValue = valueAcc->MaxValue();
 
-  if (IsNaN(maximumValue)) return S_FALSE;
+  if (std::isnan(maximumValue)) return S_FALSE;
 
   aMaximumValue->vt = VT_R8;
   aMaximumValue->dblVal = maximumValue;
@@ -117,7 +117,7 @@ ia2AccessibleValue::get_minimumValue(VARIANT* aMinimumValue) {
 
   minimumValue = valueAcc->MinValue();
 
-  if (IsNaN(minimumValue)) return S_FALSE;
+  if (std::isnan(minimumValue)) return S_FALSE;
 
   aMinimumValue->vt = VT_R8;
   aMinimumValue->dblVal = minimumValue;

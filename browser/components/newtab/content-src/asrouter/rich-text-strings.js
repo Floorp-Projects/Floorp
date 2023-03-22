@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { FluentBundle } from "fluent";
+import { FluentBundle, FluentResource } from "@fluent/bundle";
 
 /**
  * Properties that allow rich text MUST be added to this list.
@@ -38,7 +38,7 @@ export function generateBundles(content) {
       const attr = attrsToTry.pop();
       string = content[attr];
     }
-    bundle.addMessages(`${key} = ${string}`);
+    bundle.addResource(new FluentResource(`${key} = ${string}`));
   });
   return [bundle];
 }

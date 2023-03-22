@@ -61,7 +61,8 @@ static float calculateNormalizationScale(const nsTArray<const float*>& response,
   power = sqrt(power / (numberOfChannels * aLength));
 
   // Protect against accidental overload
-  if (!IsFinite(power) || IsNaN(power) || power < MinPower) power = MinPower;
+  if (!std::isfinite(power) || std::isnan(power) || power < MinPower)
+    power = MinPower;
 
   float scale = 1 / power;
 

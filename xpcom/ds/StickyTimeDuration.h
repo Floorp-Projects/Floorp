@@ -7,6 +7,7 @@
 #ifndef mozilla_StickyTimeDuration_h
 #define mozilla_StickyTimeDuration_h
 
+#include <cmath>
 #include "mozilla/TimeStamp.h"
 #include "mozilla/FloatingPoint.h"
 
@@ -154,14 +155,14 @@ inline int64_t StickyTimeDurationValueCalculator::Multiply<int64_t>(
 template <>
 inline int64_t StickyTimeDurationValueCalculator::Multiply<double>(int64_t aA,
                                                                    double aB) {
-  MOZ_ASSERT((aA != 0 || (!IsInfinite(aB))) &&
+  MOZ_ASSERT((aA != 0 || (!std::isinf(aB))) &&
                  ((aA != INT64_MIN && aA != INT64_MAX) || aB != 0.0),
              "Multiplication of infinity by zero");
 
   // As with Multiply<int64_t>, if one or more of the arguments is
   // +/-Forever or +/-Infinity, then return -Forever if the signs differ,
   // or +Forever otherwise.
-  if (aA == INT64_MAX || aA == INT64_MIN || IsInfinite(aB)) {
+  if (aA == INT64_MAX || aA == INT64_MIN || std::isinf(aB)) {
     return (aA >= 0) ^ (aB >= 0.0) ? INT64_MIN : INT64_MAX;
   }
 
@@ -171,7 +172,7 @@ inline int64_t StickyTimeDurationValueCalculator::Multiply<double>(int64_t aA,
 template <>
 inline int64_t StickyTimeDurationValueCalculator::Multiply<float>(int64_t aA,
                                                                   float aB) {
-  MOZ_ASSERT(IsInfinite(aB) == IsInfinite(static_cast<double>(aB)),
+  MOZ_ASSERT(std::isinf(aB) == std::isinf(static_cast<double>(aB)),
              "Casting to float loses infinite-ness");
 
   return Multiply(aA, static_cast<double>(aB));

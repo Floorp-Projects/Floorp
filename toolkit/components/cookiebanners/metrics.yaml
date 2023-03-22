@@ -194,16 +194,20 @@ cookie.banners.click:
       - tihuang@mozilla.com
     expires: 115
     telemetry_mirror: COOKIE_BANNERS_CLICK_HANDLE_DURATION_MS
+  # TODO: consider moving this out of "click". It also records cookie injection.
   result:
     type: labeled_counter
     description: >
-      Given a matching cookie banner click rule, how often do we handle or fail
-      to handle cookie banners, labelled by reason. The 'success' and 'fail'
+      Given a matching cookie banner rule, how often do we handle or fail to
+      handle cookie banners, labelled by reason. The 'success' and 'fail'
       counters count the total numbers independently of the reason counters.
-      Counters are incremented after the content window has been destroyed.
+      Counters are incremented after the content window has been destroyed. This
+      metric additionally reports cookie injections after which we didn't see a
+      banner as "success_cookie_injected".
     bugs:
       - https://bugzilla.mozilla.org/1797078
       - https://bugzilla.mozilla.org/1804259
+      - https://bugzilla.mozilla.org/1821738
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1797078#c6
     notification_emails:
@@ -212,6 +216,7 @@ cookie.banners.click:
     expires: 115
     labels:
       - success
+      - success_cookie_injected
       - success_dom_content_loaded
       - success_mutation_pre_load
       - success_mutation_post_load

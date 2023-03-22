@@ -20,11 +20,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=674558
 /** Test for Bug 674558 **/
 SimpleTest.waitForExplicitFinish();
 
-// Turn off spatial navigation because it hijacks VK_RIGHT and VK_LEFT keydown
-// events.
-SimpleTest.waitForFocus(function() {
-  SpecialPowers.pushPrefEnv({"set":[["snav.enabled", false]]}, startTest);
-});
+SimpleTest.waitForFocus(startTest);
+
 function startTest() {
   function textAreaCtor() {
     return document.createElement("textarea");

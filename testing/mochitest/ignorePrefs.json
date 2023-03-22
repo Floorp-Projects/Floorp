@@ -1,0 +1,14 @@
+[
+    "app.update.lastUpdateTime.search-engine-update-timer",
+    "media.gmp-manager.buildID",
+    "app.update.lastUpdateTime.browser-cleanup-thumbnails",
+    "app.update.lastUpdateTime.services-settings-poll-changes",
+    "app.update.lastUpdateTime.addon-background-update-timer",
+    "media.gmp-manager.lastEmptyCheck",
+    "app.update.lastUpdateTime.background-update-timer",
+    "media.gmp-manager.lastCheck",
+    "toolkit.startup.last_success",
+    "toolkit.telemetry.cachedClientID",
+    "security.webauth.softtoken_counter",
+    "extensions.webextensions.ExtensionStorageIDB.migrated.*"
+  ]

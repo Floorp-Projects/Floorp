@@ -11,11 +11,10 @@ ChromeUtils.defineModuleGetter(
   "LogManager",
   "resource://normandy/lib/LogManager.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "JsonSchemaValidator",
-  "resource://gre/modules/components-utils/JsonSchemaValidator.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  JsonSchemaValidator:
+    "resource://gre/modules/components-utils/JsonSchemaValidator.sys.mjs",
+});
 
 var EXPORTED_SYMBOLS = ["BaseAction"];
 

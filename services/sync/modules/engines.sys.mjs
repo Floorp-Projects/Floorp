@@ -28,6 +28,7 @@ import {
   Svc,
   Utils,
 } from "resource://services-sync/util.sys.mjs";
+import { SyncedRecordsTelemetry } from "resource://services-sync/telemetry.sys.mjs";
 
 const lazy = {};
 
@@ -372,9 +373,10 @@ Store.prototype = {
    * if desired.
    *
    * @param  records Array of records to apply
+   * @param  a SyncedRecordsTelemetry obj that will keep track of failed reasons
    * @return Array of record IDs which did not apply cleanly
    */
-  async applyIncomingBatch(records) {
+  async applyIncomingBatch(records, countTelemetry) {
     let failed = [];
 
     await Async.yieldingForEach(records, async record => {
@@ -392,6 +394,7 @@ Store.prototype = {
         }
         this._log.warn("Failed to apply incoming record " + record.id, ex);
         failed.push(record.id);
+        countTelemetry.addIncomingFailedReason(ex.message);
       }
     });
 
@@ -1231,7 +1234,9 @@ SyncEngine.prototype = {
     // failed     => number of items that failed in this sync.
     // newFailed  => number of items that failed for the first time in this sync.
     // reconciled => number of items that were reconciled.
-    let count = { applied: 0, failed: 0, newFailed: 0, reconciled: 0 };
+    // failedReasons => {name, count} of reasons a record failed
+    let countTelemetry = new SyncedRecordsTelemetry();
+    let count = countTelemetry.incomingCounts;
     let recordsToApply = [];
     let failedInCurrentSync = new SerializableSet();
 
@@ -1259,6 +1264,7 @@ SyncEngine.prototype = {
         if (error) {
           failedInCurrentSync.add(record.id);
           count.failed++;
+          countTelemetry.addIncomingFailedReason(error.message);
           return;
         }
         if (!shouldApply) {
@@ -1268,7 +1274,10 @@ SyncEngine.prototype = {
         recordsToApply.push(record);
       });
 
-      let failedToApply = await this._applyRecords(recordsToApply);
+      let failedToApply = await this._applyRecords(
+        recordsToApply,
+        countTelemetry
+      );
       Utils.setAddAll(failedInCurrentSync, failedToApply);
 
       // `applied` is a bit of a misnomer: it counts records that *should* be
@@ -1358,6 +1367,7 @@ SyncEngine.prototype = {
           if (error) {
             failedInBackfill.push(record.id);
             count.failed++;
+            countTelemetry.addIncomingFailedReason(error.message);
             return;
           }
           if (!shouldApply) {
@@ -1367,7 +1377,10 @@ SyncEngine.prototype = {
           backfilledRecordsToApply.push(record);
         });
 
-        let failedToApply = await this._applyRecords(backfilledRecordsToApply);
+        let failedToApply = await this._applyRecords(
+          backfilledRecordsToApply,
+          countTelemetry
+        );
         failedInBackfill.push(...failedToApply);
 
         count.failed += failedToApply.length;
@@ -1497,10 +1510,13 @@ SyncEngine.prototype = {
     return { shouldApply, error: null };
   },
 
-  async _applyRecords(records) {
+  async _applyRecords(records, countTelemetry) {
     this._tracker.ignoreAll = true;
     try {
-      let failedIDs = await this._store.applyIncomingBatch(records);
+      let failedIDs = await this._store.applyIncomingBatch(
+        records,
+        countTelemetry
+      );
       return failedIDs;
     } catch (ex) {
       // Catch any error that escapes from applyIncomingBatch. At present
@@ -1794,7 +1810,8 @@ SyncEngine.prototype = {
     // collection we'll upload
     let up = new Collection(this.engineURL, null, this.service);
     let modifiedIDs = new Set(this._modified.ids());
-    let counts = { failed: 0, sent: 0 };
+    let countTelemetry = new SyncedRecordsTelemetry();
+    let counts = countTelemetry.outgoingCounts;
     this._log.info(`Uploading ${modifiedIDs.size} outgoing records`);
     if (modifiedIDs.size) {
       counts.sent = modifiedIDs.size;
@@ -1831,6 +1848,9 @@ SyncEngine.prototype = {
         }
 
         counts.failed += failed.length;
+        Object.values(failed).forEach(message => {
+          countTelemetry.addOutgoingFailedReason(message);
+        });
 
         for (let id of successful) {
           this._modified.delete(id);
@@ -1870,6 +1890,7 @@ SyncEngine.prototype = {
         } catch (ex) {
           this._log.warn("Error creating record", ex);
           ++counts.failed;
+          countTelemetry.addOutgoingFailedReason(ex.message);
           if (Async.isShutdownException(ex) || !this.allowSkippedRecord) {
             if (!this.allowSkippedRecord) {
               // Don't bother for shutdown errors
@@ -1882,6 +1903,7 @@ SyncEngine.prototype = {
           let { enqueued, error } = await postQueue.enqueue(out);
           if (!enqueued) {
             ++counts.failed;
+            countTelemetry.addOutgoingFailedReason(error.message);
             if (!this.allowSkippedRecord) {
               Observers.notify("weave:engine:sync:uploaded", counts, this.name);
               this._log.warn(

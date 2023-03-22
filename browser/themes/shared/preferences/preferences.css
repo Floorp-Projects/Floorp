@@ -929,19 +929,15 @@ dialog > .sync-engines-list + hbox {
   }
 }
 
-.face-sad {
-  content: url("chrome://browser/skin/preferences/face-sad.svg");
-  width: 20px;
-  height: 20px;
-  margin-block: 5px;
+.face-sad::before {
+  content: "\01F641";
+  font-size: 1.3em;
   margin-inline-end: 8px;
 }
 
-.face-smile {
-  content: url("chrome://browser/skin/preferences/face-smile.svg");
-  width: 20px;
-  height: 20px;
-  margin-block: 5px;
+.face-smile::before {
+  content: "\01F600";
+  font-size: 1.3em;
   margin-inline-end: 8px;
 }
 

@@ -77,7 +77,7 @@ inline float ConvertDecibelToLinear(float aDecibel) {
 }
 
 inline void FixNaN(double& aDouble) {
-  if (IsNaN(aDouble) || IsInfinite(aDouble)) {
+  if (std::isnan(aDouble) || std::isinf(aDouble)) {
     aDouble = 0.0;
   }
 }
@@ -161,7 +161,7 @@ IntType TruncateFloatToInt(FloatType f) {
   static_assert(std::is_floating_point_v<FloatType> == true,
                 "FloatType must be a floating point type");
 
-  if (mozilla::IsNaN(f)) {
+  if (std::isnan(f)) {
     // It is the responsibility of the caller to deal with NaN values.
     // If we ever get to this point, we have a serious bug to fix.
     MOZ_CRASH("We should never see a NaN here");

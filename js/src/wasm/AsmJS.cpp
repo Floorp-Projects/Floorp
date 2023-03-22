@@ -90,7 +90,6 @@ using mozilla::Abs;
 using mozilla::AsVariant;
 using mozilla::CeilingLog2;
 using mozilla::HashGeneric;
-using mozilla::IsNaN;
 using mozilla::IsNegativeZero;
 using mozilla::IsPositiveZero;
 using mozilla::IsPowerOfTwo;
@@ -2335,7 +2334,7 @@ static NumLit ExtractNumericLiteral(ModuleValidatorShared& m, ParseNode* pn) {
 
   // The syntactic checks above rule out these double values.
   MOZ_ASSERT(!IsNegativeZero(d));
-  MOZ_ASSERT(!IsNaN(d));
+  MOZ_ASSERT(!std::isnan(d));
 
   // Although doubles can only *precisely* represent 53-bit integers, they
   // can *imprecisely* represent integers much bigger than an int64_t.
@@ -6767,8 +6766,8 @@ static bool ValidateConstant(JSContext* cx, const AsmJSGlobal& global,
   }
 
   // NaN != NaN
-  if (IsNaN(global.constantValue())) {
-    if (!IsNaN(v.toNumber())) {
+  if (std::isnan(global.constantValue())) {
+    if (!std::isnan(v.toNumber())) {
       return LinkFail(cx, "global constant value needs to be NaN");
     }
   } else {

@@ -44,12 +44,17 @@ function AddOldMenuSideButtons() {
   CustomizableUI.addWidgetToArea(
     "library-button",
     "nav-bar",
-    CustomizableUI.getWidgetIdsInArea("nav-bar").length - 1
+    CustomizableUI.getWidgetIdsInArea("nav-bar").length - 2
   );
   CustomizableUI.addWidgetToArea(
     "sidebar-button",
     "nav-bar",
-    CustomizableUI.getWidgetIdsInArea("nav-bar").length - 1
+    CustomizableUI.getWidgetIdsInArea("nav-bar").length - 2
+  );
+  CustomizableUI.addWidgetToArea(
+    "unified-extensions-button",
+    "nav-bar",
+    CustomizableUI.getWidgetIdsInArea("nav-bar").length - 2
   );
 }
 
@@ -257,10 +262,10 @@ add_task(async function testArrowsToolbarbuttons() {
     );
     await expectFocusAfterKey("ArrowRight", "library-button");
     await expectFocusAfterKey("ArrowRight", "sidebar-button");
-    await expectFocusAfterKey("ArrowRight", "fxa-toolbar-menu-button");
-    // These next checks also confirm that the overflow menu button is skipped,
-    // since it is currently invisible.
     await expectFocusAfterKey("ArrowRight", "unified-extensions-button");
+    await expectFocusAfterKey("ArrowRight", "fxa-toolbar-menu-button");
+    // This next check also confirms that the overflow menu button is skipped,
+    // since it is currently invisible.
     await expectFocusAfterKey("ArrowRight", "PanelUI-menu-button");
     EventUtils.synthesizeKey("KEY_ArrowRight");
     is(
@@ -268,8 +273,8 @@ add_task(async function testArrowsToolbarbuttons() {
       "PanelUI-menu-button",
       "ArrowRight at end of button group does nothing"
     );
-    await expectFocusAfterKey("ArrowLeft", "unified-extensions-button");
     await expectFocusAfterKey("ArrowLeft", "fxa-toolbar-menu-button");
+    await expectFocusAfterKey("ArrowLeft", "unified-extensions-button");
     await expectFocusAfterKey("ArrowLeft", "sidebar-button");
     await expectFocusAfterKey("ArrowLeft", "library-button");
   });
@@ -334,15 +339,17 @@ add_task(async function testArrowsOverflowButton() {
     await expectFocusAfterKey("Tab", afterUrlBarButton);
     await expectFocusAfterKey("ArrowRight", "library-button");
     await expectFocusAfterKey("ArrowRight", "sidebar-button");
+    await expectFocusAfterKey("ArrowRight", "unified-extensions-button");
     await expectFocusAfterKey("ArrowRight", "fxa-toolbar-menu-button");
     await expectFocusAfterKey("ArrowRight", "nav-bar-overflow-button");
-    await expectFocusAfterKey("ArrowRight", "unified-extensions-button");
     // Make sure the button is not reachable once it is invisible again.
     await expectFocusAfterKey("ArrowRight", "PanelUI-menu-button");
     resetToolbarWithoutDevEditionButtons();
-    await expectFocusAfterKey("ArrowLeft", "unified-extensions-button");
     // Flush layout so its invisibility can be detected.
     document.getElementById("nav-bar-overflow-button").clientWidth;
+    // We reset the toolbar above so the unified extensions button is now the
+    // "last" button.
+    await expectFocusAfterKey("ArrowLeft", "unified-extensions-button");
     await expectFocusAfterKey("ArrowLeft", "fxa-toolbar-menu-button");
   });
   RemoveOldMenuSideButtons();

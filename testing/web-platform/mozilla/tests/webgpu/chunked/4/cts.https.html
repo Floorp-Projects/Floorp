@@ -1,0 +1,59 @@
+<!-- AUTO-GENERATED - DO NOT EDIT. See WebGPU CTS: tools/gen_wpt_cts_html. -->
+<!--
+    This test suite is built from the TypeScript sources at:
+    https://github.com/gpuweb/cts
+
+    If you are debugging WebGPU conformance tests, it's highly recommended that
+    you use the standalone interactive runner in that repository, which
+    provides tools for easier debugging and editing (source maps, debug
+    logging, warn/skip functionality, etc.)
+
+    NOTE:
+    The WPT version of this file is generated with *one variant per test spec
+    file*. If your harness needs more fine-grained suppressions, you'll need to
+    generate your own variants list from your suppression list.
+    See `tools/gen_wpt_cts_html` to do this.
+
+    When run under browser CI, the original cts.https.html should be skipped, and
+    this alternate version should be run instead, under a non-exported WPT test
+    directory (e.g. Chromium's wpt_internal).
+-->
+
+<!doctype html>
+<title>WebGPU CTS</title>
+<meta charset=utf-8>
+<link rel=help href='https://gpuweb.github.io/gpuweb/'>
+
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script>
+    const loadWebGPUExpectations = undefined;
+    const shouldWebGPUCTSFailOnWarnings = undefined;
+</script>
+<script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
+
+<meta name=variant content='?q=webgpu:api,operation,memory_sync,buffer,multiple_buffers:multiple_pairs_of_draws_in_one_render_bundle:*'>
+<meta name=variant content='?q=webgpu:api,operation,memory_sync,buffer,multiple_buffers:multiple_pairs_of_dispatches_in_one_compute_pass:*'>
+<meta name=variant content='?q=webgpu:api,operation,memory_sync,buffer,single_buffer:rw:*'>
+<meta name=variant content='?q=webgpu:api,operation,memory_sync,buffer,single_buffer:wr:*'>
+<meta name=variant content='?q=webgpu:api,operation,memory_sync,buffer,single_buffer:ww:*'>
+<meta name=variant content='?q=webgpu:api,operation,memory_sync,buffer,single_buffer:two_draws_in_the_same_render_pass:*'>
+<meta name=variant content='?q=webgpu:api,operation,memory_sync,buffer,single_buffer:two_draws_in_the_same_render_bundle:*'>
+<meta name=variant content='?q=webgpu:api,operation,memory_sync,buffer,single_buffer:two_dispatches_in_the_same_compute_pass:*'>
+<meta name=variant content='?q=webgpu:api,operation,memory_sync,texture,same_subresource:rw:*'>
+<meta name=variant content='?q=webgpu:api,operation,memory_sync,texture,same_subresource:rw,single_pass,load_store:*'>
+<meta name=variant content='?q=webgpu:api,operation,memory_sync,texture,same_subresource:rw,single_pass,load_resolve:*'>
+<meta name=variant content='?q=webgpu:api,operation,memory_sync,texture,same_subresource:wr:*'>
+<meta name=variant content='?q=webgpu:api,operation,memory_sync,texture,same_subresource:ww:*'>
+<meta name=variant content='?q=webgpu:api,operation,onSubmittedWorkDone:without_work:*'>
+<meta name=variant content='?q=webgpu:api,operation,onSubmittedWorkDone:with_work:*'>
+<meta name=variant content='?q=webgpu:api,operation,onSubmittedWorkDone:many,serial:*'>
+<meta name=variant content='?q=webgpu:api,operation,onSubmittedWorkDone:many,parallel:*'>
+<meta name=variant content='?q=webgpu:api,operation,onSubmittedWorkDone:many,parallel_order:*'>
+<meta name=variant content='?q=webgpu:api,operation,pipeline,default_layout:getBindGroupLayout_js_object:*'>
+<meta name=variant content='?q=webgpu:api,operation,pipeline,default_layout:incompatible_with_explicit:*'>
+<meta name=variant content='?q=webgpu:api,operation,pipeline,default_layout:layout:*'>
+<meta name=variant content='?q=webgpu:api,operation,queue,writeBuffer:array_types:*'>
+<meta name=variant content='?q=webgpu:api,operation,queue,writeBuffer:multiple_writes_at_different_offsets_and_sizes:*'>
+<meta name=variant content='?q=webgpu:api,operation,reflection:buffer_reflection_attributes:*'>
+<meta name=variant content='?q=webgpu:api,operation,reflection:texture_reflection_attributes:*'>

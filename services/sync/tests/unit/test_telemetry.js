@@ -288,7 +288,16 @@ add_task(async function test_upload_failed() {
     ok(!!ping);
     equal(ping.engines.length, 1);
     equal(ping.engines[0].incoming, null);
-    deepEqual(ping.engines[0].outgoing, [{ sent: 3, failed: 2 }]);
+    deepEqual(ping.engines[0].outgoing, [
+      {
+        sent: 3,
+        failed: 2,
+        failedReasons: [
+          { name: "scotsman", count: 1 },
+          { name: "peppercorn", count: 1 },
+        ],
+      },
+    ]);
     await engine.setLastSync(123);
 
     changes = await engine._tracker.getChangedIDs();
@@ -300,7 +309,16 @@ add_task(async function test_upload_failed() {
     ping = await sync_engine_and_validate_telem(engine, true);
     ok(!!ping);
     equal(ping.engines.length, 1);
-    deepEqual(ping.engines[0].outgoing, [{ sent: 2, failed: 2 }]);
+    deepEqual(ping.engines[0].outgoing, [
+      {
+        sent: 2,
+        failed: 2,
+        failedReasons: [
+          { name: "scotsman", count: 1 },
+          { name: "peppercorn", count: 1 },
+        ],
+      },
+    ]);
   } finally {
     await cleanAndGo(engine, server);
     await engine.finalize();
@@ -352,8 +370,16 @@ add_task(async function test_sync_partialUpload() {
     equal(ping.engines[0].name, "rotary");
     ok(!ping.engines[0].incoming);
     ok(!ping.engines[0].failureReason);
-    deepEqual(ping.engines[0].outgoing, [{ sent: 234, failed: 2 }]);
-
+    deepEqual(ping.engines[0].outgoing, [
+      {
+        sent: 234,
+        failed: 2,
+        failedReasons: [
+          { name: "record-no-23", count: 1 },
+          { name: "record-no-42", count: 1 },
+        ],
+      },
+    ]);
     collection.post = function() {
       throw new Error("Failure");
     };
@@ -391,6 +417,7 @@ add_task(async function test_sync_partialUpload() {
     equal(ping.engines[0].name, "rotary");
     deepEqual(ping.engines[0].incoming, {
       failed: 1,
+      failedReasons: [{ name: "No ciphertext: nothing to decrypt?", count: 1 }],
     });
     ok(!ping.engines[0].outgoing);
     deepEqual(ping.engines[0].failureReason, uploadFailureError);
@@ -732,6 +759,7 @@ add_task(async function test_initial_sync_engines() {
       equal(e.outgoing.length, 1);
       notEqual(e.outgoing[0].sent, undefined);
       equal(e.outgoing[0].failed, undefined);
+      equal(e.outgoing[0].failedReasons, undefined);
     }
   } finally {
     await cleanAndGo(engine, server);

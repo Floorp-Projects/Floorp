@@ -1,4 +1,4 @@
-pypi:poetry==1.2.0a2
+pypi:poetry==1.4
 # Pin poetry-core so that the same one is used between Python versions.
 # Otherwise, different versions of poetry-core output different "requirements.txt" contents
-pypi:poetry-core==1.1.0a6
+pypi:poetry-core==1.5.1

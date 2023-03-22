@@ -121,7 +121,7 @@ struct BasePoint3D {
     // If the distance is infinite, we scale it by 1/(the maximum value of T)
     // before doing normalization, so we can avoid getting a zero point.
     T length = Length();
-    if (mozilla::IsInfinite(length)) {
+    if (std::isinf(length)) {
       *this /= std::numeric_limits<T>::max();
       length = Length();
     }

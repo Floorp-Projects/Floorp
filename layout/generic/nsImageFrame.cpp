@@ -25,6 +25,7 @@
 #include "mozilla/dom/GeneratedImageContent.h"
 #include "mozilla/dom/HTMLAreaElement.h"
 #include "mozilla/dom/HTMLImageElement.h"
+#include "mozilla/dom/ReferrerInfo.h"
 #include "mozilla/dom/ResponsiveImageSelector.h"
 #include "mozilla/image/WebRenderImageProvider.h"
 #include "mozilla/layers/RenderRootStateManager.h"
@@ -458,7 +459,7 @@ void nsImageFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
   // TODO(emilio): We might want to do the same for regular list-style-image or
   // even simple content: url() changes.
   if (mKind == Kind::XULImage) {
-    if (!mContent->AsElement()->HasAttr(nsGkAtoms::src) && aOldStyle &&
+    if (!mContent->AsElement()->HasNonEmptyAttr(nsGkAtoms::src) && aOldStyle &&
         aOldStyle->StyleList()->mListStyleImage !=
             StyleList()->mListStyleImage) {
       UpdateXULImage();
@@ -519,7 +520,7 @@ const StyleImage* nsImageFrame::GetImageFromStyle() const {
       MOZ_ASSERT(mContent->IsHTMLElement(nsGkAtoms::mozgeneratedcontentimage));
       return &StyleList()->mListStyleImage;
     case Kind::XULImage:
-      MOZ_ASSERT(!mContent->AsElement()->HasAttr(nsGkAtoms::src));
+      MOZ_ASSERT(!mContent->AsElement()->HasNonEmptyAttr(nsGkAtoms::src));
       return &StyleList()->mListStyleImage;
     case Kind::ContentProperty:
     case Kind::ContentPropertyAtIndex: {
@@ -562,7 +563,7 @@ void nsImageFrame::UpdateXULImage() {
 
   nsAutoString src;
   nsPresContext* pc = PresContext();
-  if (mContent->AsElement()->GetAttr(nsGkAtoms::src, src)) {
+  if (mContent->AsElement()->GetAttr(nsGkAtoms::src, src) && !src.IsEmpty()) {
     nsContentPolicyType contentPolicyType;
     nsCOMPtr<nsIPrincipal> triggeringPrincipal;
     uint64_t requestContextID = 0;
@@ -749,7 +750,7 @@ static IntrinsicSize ComputeIntrinsicSize(imgIContainer* aImage,
     }
     if (aKind == nsImageFrame::Kind::ImageLoadingContent ||
         (aKind == nsImageFrame::Kind::XULImage &&
-         aFrame.GetContent()->AsElement()->HasAttr(nsGkAtoms::src))) {
+         aFrame.GetContent()->AsElement()->HasNonEmptyAttr(nsGkAtoms::src))) {
       ScaleIntrinsicSizeForDensity(aImage, *aFrame.GetContent(), intrinsicSize);
     } else {
       ScaleIntrinsicSizeForDensity(intrinsicSize,
@@ -2539,7 +2540,7 @@ nsImageMap* nsImageFrame::GetImageMap() {
 }
 
 bool nsImageFrame::IsServerImageMap() {
-  return mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::ismap);
+  return mContent->AsElement()->HasAttr(nsGkAtoms::ismap);
 }
 
 CSSIntPoint nsImageFrame::TranslateEventCoords(const nsPoint& aPoint) {

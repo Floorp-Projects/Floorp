@@ -71,6 +71,10 @@ class SpeechSynthesisUtterance final : public DOMEventTargetHelper {
 
   bool IsPaused() { return mPaused; }
 
+  bool ShouldResistFingerprinting() const {
+    return mShouldResistFingerprinting;
+  }
+
   IMPL_EVENT_HANDLER(start)
   IMPL_EVENT_HANDLER(end)
   IMPL_EVENT_HANDLER(error)
@@ -102,6 +106,8 @@ class SpeechSynthesisUtterance final : public DOMEventTargetHelper {
   bool mPaused;
 
   RefPtr<SpeechSynthesisVoice> mVoice;
+
+  bool mShouldResistFingerprinting;
 };
 
 }  // namespace mozilla::dom

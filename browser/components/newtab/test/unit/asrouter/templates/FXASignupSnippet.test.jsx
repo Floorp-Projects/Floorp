@@ -1,12 +1,28 @@
 import { FXASignupSnippet } from "content-src/asrouter/templates/FXASignupSnippet/FXASignupSnippet";
 import { mount } from "enzyme";
 import React from "react";
+import { FluentBundle, FluentResource } from "@fluent/bundle";
+import { LocalizationProvider, ReactLocalization } from "@fluent/react";
 import schema from "content-src/asrouter/templates/FXASignupSnippet/FXASignupSnippet.schema.json";
 import { SnippetsTestMessageProvider } from "lib/SnippetsTestMessageProvider.jsm";
 
 describe("FXASignupSnippet", () => {
   let DEFAULT_CONTENT;
   let sandbox;
+
+  function mockL10nWrapper(content) {
+    const bundle = new FluentBundle("en-US");
+    for (const [id, value] of Object.entries(content)) {
+      if (typeof value === "string") {
+        bundle.addResource(new FluentResource(`${id} = ${value}`));
+      }
+    }
+    const l10n = new ReactLocalization([bundle]);
+    return {
+      wrappingComponent: LocalizationProvider,
+      wrappingComponentProps: { l10n },
+    };
+  }
 
   function mountAndCheckProps(content = {}) {
     const props = {
@@ -21,7 +37,10 @@ describe("FXASignupSnippet", () => {
       sendUserActionTelemetry: sandbox.stub(),
       onAction: sandbox.stub(),
     };
-    const comp = mount(<FXASignupSnippet {...props} />);
+    const comp = mount(
+      <FXASignupSnippet {...props} />,
+      mockL10nWrapper(props.content)
+    );
     // Check schema with the final props the component receives (including defaults)
     assert.jsonSchema(comp.children().get(0).props.content, schema);
     return comp;
@@ -46,7 +65,10 @@ describe("FXASignupSnippet", () => {
       sendUserActionTelemetry: sandbox.stub(),
       onAction: sandbox.stub(),
     };
-    const wrapper = mount(<FXASignupSnippet {...defaults} />);
+    const wrapper = mount(
+      <FXASignupSnippet {...defaults} />,
+      mockL10nWrapper(DEFAULT_CONTENT)
+    );
     // FXASignupSnippet is a wrapper around SubmitFormSnippet
     const { props } = wrapper.children().get(0);
 

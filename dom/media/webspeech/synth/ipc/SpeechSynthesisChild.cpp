@@ -56,7 +56,7 @@ PSpeechSynthesisRequestChild*
 SpeechSynthesisChild::AllocPSpeechSynthesisRequestChild(
     const nsAString& aText, const nsAString& aLang, const nsAString& aUri,
     const float& aVolume, const float& aRate, const float& aPitch,
-    const bool& aIsChrome) {
+    const bool& aShouldResistFingerprinting) {
   MOZ_CRASH("Caller is supposed to manually construct a request!");
 }
 
@@ -132,8 +132,8 @@ mozilla::ipc::IPCResult SpeechSynthesisRequestChild::RecvOnMark(
 // SpeechTaskChild
 
 SpeechTaskChild::SpeechTaskChild(SpeechSynthesisUtterance* aUtterance,
-                                 bool aIsChrome)
-    : nsSpeechTask(aUtterance, aIsChrome), mActor(nullptr) {}
+                                 bool aShouldResistFingerprinting)
+    : nsSpeechTask(aUtterance, aShouldResistFingerprinting), mActor(nullptr) {}
 
 NS_IMETHODIMP
 SpeechTaskChild::Setup(nsISpeechTaskCallback* aCallback) {

@@ -24,6 +24,8 @@ const FRAME_ACTOR_CONFIG = {
       "chrome://remote/content/shared/messagehandler/transports/js-window-actors/MessageHandlerFrameChild.sys.mjs",
     events: {
       DOMWindowCreated: {},
+      pagehide: {},
+      pageshow: {},
     },
   },
   allFrames: true,

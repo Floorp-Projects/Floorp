@@ -63,12 +63,20 @@ struct MovableCellHasher<TaggedProto> {
   using Key = TaggedProto;
   using Lookup = TaggedProto;
 
-  static bool hasHash(const Lookup& l) {
-    return !l.isObject() || MovableCellHasher<JSObject*>::hasHash(l.toObject());
+  static bool maybeGetHash(const Lookup& l, HashNumber* hashOut) {
+    if (!l.isObject()) {
+      *hashOut = hash(l);
+      return true;
+    }
+
+    return MovableCellHasher<JSObject*>::maybeGetHash(l.toObject(), hashOut);
   }
-  static bool ensureHash(const Lookup& l) {
-    return !l.isObject() ||
-           MovableCellHasher<JSObject*>::ensureHash(l.toObject());
+  static bool ensureHash(const Lookup& l, HashNumber* hashOut) {
+    if (!l.isObject()) {
+      *hashOut = hash(l);
+      return true;
+    }
+    return MovableCellHasher<JSObject*>::ensureHash(l.toObject(), hashOut);
   }
   static HashNumber hash(const Lookup& l) {
     if (l.isDynamic()) {

@@ -4,9 +4,9 @@
 
 #include shared
 
-varying float vPos;
-flat varying vec4 vColor0;
-flat varying vec4 vColor1;
+varying highp float vPos;
+flat varying mediump vec4 vColor0;
+flat varying mediump vec4 vColor1;
 
 #ifdef WR_VERTEX_SHADER
 

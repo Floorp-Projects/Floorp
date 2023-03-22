@@ -15,11 +15,10 @@ add_task(async () => {
   );
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    ChromeUtils.defineModuleGetter(
-      this,
-      "WindowsVersionInfo",
-      "resource://gre/modules/components-utils/WindowsVersionInfo.jsm"
-    );
+    ChromeUtils.defineESModuleGetters(this, {
+      WindowsVersionInfo:
+        "resource://gre/modules/components-utils/WindowsVersionInfo.sys.mjs",
+    });
 
     Services.scriptloader.loadSubScript(
       "chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js",

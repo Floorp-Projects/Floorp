@@ -1995,7 +1995,7 @@ bool Simulator::overflowFrom(int32_t alu_out, int32_t left, int32_t right,
 
 // Support for VFP comparisons.
 void Simulator::compute_FPSCR_Flags(double val1, double val2) {
-  if (mozilla::IsNaN(val1) || mozilla::IsNaN(val2)) {
+  if (std::isnan(val1) || std::isnan(val2)) {
     n_flag_FPSCR_ = false;
     z_flag_FPSCR_ = false;
     c_flag_FPSCR_ = true;
@@ -4567,7 +4567,7 @@ void Simulator::decodeVCMP(SimInstruction* instr) {
 
     // Raise exceptions for quiet NaNs if necessary.
     if (instr->bit(7) == 1) {
-      if (mozilla::IsNaN(dd_value)) {
+      if (std::isnan(dd_value)) {
         inv_op_vfp_flag_ = true;
       }
     }
@@ -4582,7 +4582,7 @@ void Simulator::decodeVCMP(SimInstruction* instr) {
 
     // Raise exceptions for quiet NaNs if necessary.
     if (instr->bit(7) == 1) {
-      if (mozilla::IsNaN(fd_value)) {
+      if (std::isnan(fd_value)) {
         inv_op_vfp_flag_ = true;
       }
     }

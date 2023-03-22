@@ -272,7 +272,7 @@ jobs:
                 - android-system-image-x86_64-linux
                 - android-avd-x86_64-linux
                 - linux64-jdk
-                - linux64-rust-android
+                - linux64-rust-android-1.67
                 - wrench-deps
         treeherder:
             platform: android-em-7-0-x86/debug
@@ -317,7 +317,7 @@ jobs:
                 - android-system-image-x86_64-linux
                 - android-avd-x86_64-linux
                 - linux64-jdk
-                - linux64-rust-android
+                - linux64-rust-android-1.67
                 - wrench-deps
         treeherder:
             platform: android-em-7-0-x86/opt

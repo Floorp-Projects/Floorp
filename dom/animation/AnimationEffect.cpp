@@ -114,7 +114,7 @@ ComputedTiming AnimationEffect::GetComputedTimingAt(
     result.mDuration = aTiming.Duration().ref();
   }
 
-  MOZ_ASSERT(aTiming.Iterations() >= 0.0 && !IsNaN(aTiming.Iterations()),
+  MOZ_ASSERT(aTiming.Iterations() >= 0.0 && !std::isnan(aTiming.Iterations()),
              "mIterations should be nonnegative & finite, as ensured by "
              "ValidateIterations or CSSParser");
   result.mIterations = aTiming.Iterations();
@@ -183,7 +183,7 @@ ComputedTiming AnimationEffect::GetComputedTimingAt(
   }
 
   // Factor in iteration start offset.
-  if (IsFinite(overallProgress)) {
+  if (std::isfinite(overallProgress)) {
     overallProgress += result.mIterationStart;
   }
 
@@ -200,7 +200,7 @@ ComputedTiming AnimationEffect::GetComputedTimingAt(
   // Convert the overall progress to a fraction of a single iteration--the
   // simply iteration progress.
   // https://drafts.csswg.org/web-animations/#simple-iteration-progress
-  double progress = IsFinite(overallProgress)
+  double progress = std::isfinite(overallProgress)
                         ? fmod(overallProgress, 1.0)
                         : fmod(result.mIterationStart, 1.0);
 
@@ -260,7 +260,7 @@ ComputedTiming AnimationEffect::GetComputedTimingAt(
     progress = fn->At(progress, result.mBeforeFlag);
   }
 
-  MOZ_ASSERT(IsFinite(progress), "Progress value should be finite");
+  MOZ_ASSERT(std::isfinite(progress), "Progress value should be finite");
   result.mProgress.SetValue(progress);
   return result;
 }

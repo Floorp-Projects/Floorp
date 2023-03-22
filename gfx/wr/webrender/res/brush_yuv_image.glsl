@@ -6,23 +6,23 @@
 
 #include shared,prim_shared,brush,yuv
 
-varying vec2 vUv_Y;
-flat varying vec4 vUvBounds_Y;
+varying highp vec2 vUv_Y;
+flat varying highp vec4 vUvBounds_Y;
 
-varying vec2 vUv_U;
-flat varying vec4 vUvBounds_U;
+varying highp vec2 vUv_U;
+flat varying highp vec4 vUvBounds_U;
 
-varying vec2 vUv_V;
-flat varying vec4 vUvBounds_V;
+varying highp vec2 vUv_V;
+flat varying highp vec4 vUvBounds_V;
 
-YUV_PRECISION flat varying vec3 vYcbcrBias;
-YUV_PRECISION flat varying mat3 vRgbFromDebiasedYcbcr;
+flat varying YUV_PRECISION vec3 vYcbcrBias;
+flat varying YUV_PRECISION mat3 vRgbFromDebiasedYcbcr;
 
 // YUV format. Packed in to vector to work around bug 1630356.
-flat varying ivec2 vFormat;
+flat varying mediump ivec2 vFormat;
 
 #ifdef SWGL_DRAW_SPAN
-flat varying int vRescaleFactor;
+flat varying mediump int vRescaleFactor;
 #endif
 
 #ifdef WR_VERTEX_SHADER

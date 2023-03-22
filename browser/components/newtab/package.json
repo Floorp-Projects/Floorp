@@ -7,8 +7,8 @@
     "url": "https://github.com/mozilla/activity-stream/issues"
   },
   "dependencies": {
-    "fluent": "0.13.0",
-    "fluent-react": "0.9.0",
+    "@fluent/bundle": "0.17.1",
+    "@fluent/react": "0.15.0",
     "react": "16.13.1",
     "react-dom": "16.13.1",
     "react-redux": "7.2.6",
@@ -63,8 +63,8 @@
   "engines": {
     "firefox": ">=45.0 <=*",
     "//": "when changing node versions, also edit .nvmrc",
-    "node": "10.23.*",
-    "npm": "6.14.10"
+    "node": "16.19.*",
+    "npm": "8.19.3"
   },
   "homepage": "https://github.com/mozilla/activity-stream",
   "keywords": [

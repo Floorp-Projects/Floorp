@@ -56,16 +56,21 @@ export class LoadListener {
     }
 
     this.#abortController = new AbortController();
-    this.#window.addEventListener(
+
+    // Events are attached to the windowRoot instead of the regular window to
+    // avoid issues with document.open (Bug 1822772).
+    this.#window.windowRoot.addEventListener(
       "DOMContentLoaded",
       this.#onDOMContentLoaded,
       {
+        capture: true,
         mozSystemGroup: true,
         signal: this.#abortController.signal,
       }
     );
 
-    this.#window.addEventListener("load", this.#onLoad, {
+    this.#window.windowRoot.addEventListener("load", this.#onLoad, {
+      capture: true,
       mozSystemGroup: true,
       signal: this.#abortController.signal,
     });
@@ -81,10 +86,18 @@ export class LoadListener {
   }
 
   #onDOMContentLoaded = event => {
-    this.emit("DOMContentLoaded", { target: event.target });
+    // Check that this event was emitted for the relevant window, because events
+    // from inner frames can bubble to the windowRoot.
+    if (event.target.defaultView === this.#window) {
+      this.emit("DOMContentLoaded", { target: event.target });
+    }
   };
 
   #onLoad = event => {
-    this.emit("load", { target: event.target });
+    // Check that this event was emitted for the relevant window, because events
+    // from inner frames can bubble to the windowRoot.
+    if (event.target.defaultView === this.#window) {
+      this.emit("load", { target: event.target });
+    }
   };
 }

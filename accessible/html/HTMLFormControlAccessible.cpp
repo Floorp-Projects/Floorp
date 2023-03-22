@@ -532,28 +532,28 @@ void HTMLSpinnerAccessible::Value(nsString& aValue) const {
 
 double HTMLSpinnerAccessible::MaxValue() const {
   double value = HTMLTextFieldAccessible::MaxValue();
-  if (!IsNaN(value)) return value;
+  if (!std::isnan(value)) return value;
 
   return HTMLInputElement::FromNode(mContent)->GetMaximum().toDouble();
 }
 
 double HTMLSpinnerAccessible::MinValue() const {
   double value = HTMLTextFieldAccessible::MinValue();
-  if (!IsNaN(value)) return value;
+  if (!std::isnan(value)) return value;
 
   return HTMLInputElement::FromNode(mContent)->GetMinimum().toDouble();
 }
 
 double HTMLSpinnerAccessible::Step() const {
   double value = HTMLTextFieldAccessible::Step();
-  if (!IsNaN(value)) return value;
+  if (!std::isnan(value)) return value;
 
   return HTMLInputElement::FromNode(mContent)->GetStep().toDouble();
 }
 
 double HTMLSpinnerAccessible::CurValue() const {
   double value = HTMLTextFieldAccessible::CurValue();
-  if (!IsNaN(value)) return value;
+  if (!std::isnan(value)) return value;
 
   return HTMLInputElement::FromNode(mContent)->GetValueAsDecimal().toDouble();
 }
@@ -583,28 +583,28 @@ void HTMLRangeAccessible::Value(nsString& aValue) const {
 
 double HTMLRangeAccessible::MaxValue() const {
   double value = LeafAccessible::MaxValue();
-  if (!IsNaN(value)) return value;
+  if (!std::isnan(value)) return value;
 
   return HTMLInputElement::FromNode(mContent)->GetMaximum().toDouble();
 }
 
 double HTMLRangeAccessible::MinValue() const {
   double value = LeafAccessible::MinValue();
-  if (!IsNaN(value)) return value;
+  if (!std::isnan(value)) return value;
 
   return HTMLInputElement::FromNode(mContent)->GetMinimum().toDouble();
 }
 
 double HTMLRangeAccessible::Step() const {
   double value = LeafAccessible::Step();
-  if (!IsNaN(value)) return value;
+  if (!std::isnan(value)) return value;
 
   return HTMLInputElement::FromNode(mContent)->GetStep().toDouble();
 }
 
 double HTMLRangeAccessible::CurValue() const {
   double value = LeafAccessible::CurValue();
-  if (!IsNaN(value)) return value;
+  if (!std::isnan(value)) return value;
 
   return HTMLInputElement::FromNode(mContent)->GetValueAsDecimal().toDouble();
 }
@@ -771,12 +771,12 @@ void HTMLProgressAccessible::Value(nsString& aValue) const {
   }
 
   double maxValue = MaxValue();
-  if (IsNaN(maxValue) || maxValue == 0) {
+  if (std::isnan(maxValue) || maxValue == 0) {
     return;
   }
 
   double curValue = CurValue();
-  if (IsNaN(curValue)) {
+  if (std::isnan(curValue)) {
     return;
   }
 
@@ -790,7 +790,7 @@ void HTMLProgressAccessible::Value(nsString& aValue) const {
 
 double HTMLProgressAccessible::MaxValue() const {
   double value = LeafAccessible::MaxValue();
-  if (!IsNaN(value)) {
+  if (!std::isnan(value)) {
     return value;
   }
 
@@ -809,17 +809,17 @@ double HTMLProgressAccessible::MaxValue() const {
 
 double HTMLProgressAccessible::MinValue() const {
   double value = LeafAccessible::MinValue();
-  return IsNaN(value) ? 0 : value;
+  return std::isnan(value) ? 0 : value;
 }
 
 double HTMLProgressAccessible::Step() const {
   double value = LeafAccessible::Step();
-  return IsNaN(value) ? 0 : value;
+  return std::isnan(value) ? 0 : value;
 }
 
 double HTMLProgressAccessible::CurValue() const {
   double value = LeafAccessible::CurValue();
-  if (!IsNaN(value)) {
+  if (!std::isnan(value)) {
     return value;
   }
 
@@ -883,7 +883,7 @@ void HTMLMeterAccessible::Value(nsString& aValue) const {
 
   // If no inner text is found, use curValue
   double curValue = CurValue();
-  if (IsNaN(curValue)) {
+  if (std::isnan(curValue)) {
     return;
   }
 
@@ -894,7 +894,7 @@ double HTMLMeterAccessible::MaxValue() const {
   double max = LeafAccessible::MaxValue();
   double min = MinValue();
 
-  if (!IsNaN(max)) {
+  if (!std::isnan(max)) {
     return max > min ? max : min;
   }
 
@@ -914,7 +914,7 @@ double HTMLMeterAccessible::MaxValue() const {
 
 double HTMLMeterAccessible::MinValue() const {
   double min = LeafAccessible::MinValue();
-  if (!IsNaN(min)) {
+  if (!std::isnan(min)) {
     return min;
   }
 
@@ -935,7 +935,7 @@ double HTMLMeterAccessible::CurValue() const {
   double value = LeafAccessible::CurValue();
   double minValue = MinValue();
 
-  if (IsNaN(value)) {
+  if (std::isnan(value)) {
     /* If we didn't find a value from the LeafAccessible call above, check
      * for a value attribute */
     nsAutoString attrValue;

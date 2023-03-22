@@ -27,7 +27,6 @@ using namespace js::frontend;
 using JS::GenericNaN;
 using JS::ToInt32;
 using JS::ToUint32;
-using mozilla::IsNaN;
 using mozilla::IsNegative;
 using mozilla::NegativeInfinity;
 using mozilla::PositiveInfinity;
@@ -529,7 +528,7 @@ static Truthiness Boolish(ParseNode* pn) {
   switch (pn->getKind()) {
     case ParseNodeKind::NumberExpr:
       return (pn->as<NumericLiteral>().value() != 0 &&
-              !IsNaN(pn->as<NumericLiteral>().value()))
+              !std::isnan(pn->as<NumericLiteral>().value()))
                  ? Truthy
                  : Falsy;
 

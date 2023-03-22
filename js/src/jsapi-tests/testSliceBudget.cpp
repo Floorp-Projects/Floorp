@@ -75,7 +75,7 @@ BEGIN_TEST(testSliceBudgetTimeZero) {
 END_TEST(testSliceBudgetTimeZero)
 
 BEGIN_TEST(testSliceBudgetInterruptibleTime) {
-  mozilla::Atomic<bool> wantInterrupt(false);
+  SliceBudget::InterruptRequestFlag wantInterrupt(false);
 
   // Interruptible 100 second budget. This test will finish in well under that
   // time.

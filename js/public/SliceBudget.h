@@ -48,7 +48,7 @@ struct UnlimitedBudget {};
  */
 class JS_PUBLIC_API SliceBudget {
  public:
-  using InterruptRequestFlag = mozilla::Atomic<bool>;
+  using InterruptRequestFlag = mozilla::Atomic<bool, mozilla::Relaxed>;
 
   // Whether this slice is running in (predicted to be) idle time.
   // Only used for recording in the profile.

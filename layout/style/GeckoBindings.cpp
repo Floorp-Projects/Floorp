@@ -73,6 +73,7 @@
 #include "mozilla/dom/HTMLSelectElement.h"
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/dom/MediaList.h"
+#include "mozilla/dom/ReferrerInfo.h"
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/LookAndFeel.h"

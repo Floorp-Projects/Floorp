@@ -919,6 +919,15 @@ class MochitestArguments(ArgumentContainer):
                 "help": "treat harness level crashes as passing (used for quarantine jobs).",
             },
         ],
+        [
+            ["--compare-preferences"],
+            {
+                "action": "store_true",
+                "dest": "comparePrefs",
+                "default": False,
+                "help": "Compare preferences at the end of each test and report changed ones as failures.",
+            },
+        ],
     ]
 
     defaults = {

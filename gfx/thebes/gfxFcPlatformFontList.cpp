@@ -10,6 +10,7 @@
 #include "gfxFontConstants.h"
 #include "gfxFT2Utils.h"
 #include "gfxPlatform.h"
+#include "nsPresContext.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
@@ -2174,6 +2175,10 @@ bool gfxFcPlatformFontList::FindAndAddFamiliesLocked(
   }
 
   cacheKey.Append(familyName);
+  auto vis =
+      aPresContext ? aPresContext->GetFontVisibility() : FontVisibility::User;
+  cacheKey.Append(':');
+  cacheKey.AppendInt(int(vis));
   if (const auto& cached = mFcSubstituteCache.Lookup(cacheKey)) {
     if (cached->IsEmpty()) {
       return false;

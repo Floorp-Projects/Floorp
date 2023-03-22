@@ -8,10 +8,7 @@ const {
   FrontClassWithSpec,
   registerFront,
 } = require("resource://devtools/shared/protocol.js");
-const {
-  childSpecs,
-  storageSpec,
-} = require("resource://devtools/shared/specs/storage.js");
+const { childSpecs } = require("resource://devtools/shared/specs/storage.js");
 
 for (const childSpec of Object.values(childSpecs)) {
   class ChildStorageFront extends FrontClassWithSpec(childSpec) {
@@ -56,30 +53,3 @@ for (const childSpec of Object.values(childSpecs)) {
   }
   registerFront(ChildStorageFront);
 }
-
-// @backward-compat { version 111 } This class can be removed once 111 is released.
-// This codepath was only used when connecting to older servers.
-class StorageFront extends FrontClassWithSpec(storageSpec) {
-  constructor(client, targetFront, parentFront) {
-    super(client, targetFront, parentFront);
-
-    // Attribute name from which to retrieve the actorID out of the target actor's form
-    this.formAttributeName = "storageActor";
-  }
-
-  // listStores actor method doesn't support being called many times in a row,
-  // so memoize its value to call it only once.
-  // This function fetches all the storage actor's for each store type.
-  // This is called many times by each legacy listener, but its returned content
-  // is always the same as the actors are instantiated once for the whole target's lifecycle.
-  listStores() {
-    if (this.stores) {
-      return this.stores;
-    }
-    this.stores = super.listStores();
-    return this.stores;
-  }
-}
-
-exports.StorageFront = StorageFront;
-registerFront(StorageFront);

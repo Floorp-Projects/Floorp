@@ -27,7 +27,7 @@ SimpleTest.waitForExplicitFinish();
 var r1 = document.getElementById("r1");
 var r2 = document.getElementById("r2");
 var s1 = document.getElementById("s1");
-SpecialPowers.pushPrefEnv({"set":[["snav.enabled", false]]}, startTest);
+startTest();
 function startTest() {
   r1.click();
   ok(r1.checked,

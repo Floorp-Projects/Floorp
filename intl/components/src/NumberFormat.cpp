@@ -53,7 +53,7 @@ Result<std::u16string_view, ICUError> NumberFormat::formatToParts(
     return Err(ICUError::InternalError);
   }
 
-  bool isNegative = !IsNaN(number) && IsNegative(number);
+  bool isNegative = !std::isnan(number) && IsNegative(number);
 
   return FormatResultToParts(mFormattedNumber, Some(number), isNegative,
                              mFormatForUnit, parts);
@@ -110,7 +110,7 @@ bool NumberFormat::formatInternal(double number) const {
   // ICU incorrectly formats NaN values with the sign bit set, as if they
   // were negative.  Replace all NaNs with a single pattern with sign bit
   // unset ("positive", that is) until ICU is fixed.
-  if (MOZ_UNLIKELY(IsNaN(number))) {
+  if (MOZ_UNLIKELY(std::isnan(number))) {
     number = SpecificNaN<double>(0, 1);
   }
 

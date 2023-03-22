@@ -58,11 +58,11 @@ bool JOG::EnsureRuntimeMetricsRegistered(bool aForce) {
 
   MOZ_LOG(sLog, LogLevel::Debug, ("Determining whether there's JOG for you."));
 
-  if (!mozilla::IsDevelopmentBuild()) {
+  if (mozilla::IsPackagedBuild()) {
     // Supporting Artifact Builds is a developer-only thing.
     // We're on the main thread here.
     // Let's not spend any more time than we need to.
-    MOZ_LOG(sLog, LogLevel::Debug, ("!IsDevelopmentBuild. No JOG for you."));
+    MOZ_LOG(sLog, LogLevel::Debug, ("IsPackagedBuild. No JOG for you."));
     return false;
   }
   // The metrics we need to process were placed in GreD in jogfile.json

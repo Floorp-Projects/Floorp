@@ -65,6 +65,7 @@ async function clickTestSetup() {
       ["cookiebanners.bannerClicking.testing", true],
       ["cookiebanners.bannerClicking.timeout", 500],
       ["cookiebanners.bannerClicking.enabled", true],
+      ["cookiebanners.cookieInjector.enabled", false],
     ],
   });
 }
@@ -380,6 +381,7 @@ async function testClickResultTelemetry(expected, resetFOG = true) {
 
   let labels = [
     "success",
+    "success_cookie_injected",
     "success_dom_content_loaded",
     "success_mutation_pre_load",
     "success_mutation_post_load",

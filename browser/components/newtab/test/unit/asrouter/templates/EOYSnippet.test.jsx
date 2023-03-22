@@ -2,6 +2,8 @@ import { EOYSnippet } from "content-src/asrouter/templates/EOYSnippet/EOYSnippet
 import { GlobalOverrider } from "test/unit/utils";
 import { mount } from "enzyme";
 import React from "react";
+import { FluentBundle, FluentResource } from "@fluent/bundle";
+import { LocalizationProvider, ReactLocalization } from "@fluent/react";
 import schema from "content-src/asrouter/templates/EOYSnippet/EOYSnippet.schema.json";
 
 const DEFAULT_CONTENT = {
@@ -18,6 +20,20 @@ describe("EOYSnippet", () => {
   let sandbox;
   let wrapper;
 
+  function mockL10nWrapper(content) {
+    const bundle = new FluentBundle("en-US");
+    for (const [id, value] of Object.entries(content)) {
+      if (typeof value === "string") {
+        bundle.addResource(new FluentResource(`${id} = ${value}`));
+      }
+    }
+    const l10n = new ReactLocalization([bundle]);
+    return {
+      wrappingComponent: LocalizationProvider,
+      wrappingComponentProps: { l10n },
+    };
+  }
+
   /**
    * mountAndCheckProps - Mounts a EOYSnippet with DEFAULT_CONTENT extended with any props
    *                      passed in the content param and validates props against the schema.
@@ -32,7 +48,10 @@ describe("EOYSnippet", () => {
       onBlock: sandbox.stub(),
       sendClick: sandbox.stub(),
     };
-    const comp = mount(<EOYSnippet {...props} />);
+    const comp = mount(
+      <EOYSnippet {...props} />,
+      mockL10nWrapper(props.content)
+    );
     // Check schema with the final props the component receives (including defaults)
     assert.jsonSchema(comp.children().get(0).props.content, schema);
     return comp;

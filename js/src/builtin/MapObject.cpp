@@ -36,7 +36,6 @@
 
 using namespace js;
 
-using mozilla::IsNaN;
 using mozilla::NumberEqualsInt32;
 
 /*** HashableValue **********************************************************/

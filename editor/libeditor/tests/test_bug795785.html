@@ -127,10 +127,6 @@ async function doCompositionTest(aSelector) {
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(async () => {
-  // Turn off spatial navigation because it hijacks arrow key events and
-  // VK_RETURN events.
-  await SpecialPowers.pushPrefEnv({"set": [["snav.enabled", false]]});
-
   await doKeyEventTest("textarea");
   await doKeyEventTest("div[contenteditable]");
   await doCompositionTest("textarea");

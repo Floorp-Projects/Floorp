@@ -33,11 +33,17 @@ export class MessageHandlerFrameChild extends JSWindowActorChild {
     this._registry.on("message-handler-registry-event", this._onRegistryEvent);
   }
 
-  handleEvent({ type }) {
-    if (type == "DOMWindowCreated") {
+  handleEvent({ persisted, type }) {
+    if (type == "DOMWindowCreated" || (type == "pageshow" && persisted)) {
+      // When the window is created or is retrieved from BFCache, instantiate
+      // a MessageHandler for all sessions which might need it.
       if (lazy.isBrowsingContextCompatible(this.manager.browsingContext)) {
         this._registry.createAllMessageHandlers();
       }
+    } else if (type == "pagehide" && persisted) {
+      // When the page is moved to BFCache, all the currently created message
+      // handlers should be destroyed.
+      this._registry.destroy();
     }
   }
 

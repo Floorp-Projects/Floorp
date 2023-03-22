@@ -198,7 +198,7 @@ inline bool PrimitiveConversionTraits_EnforceRange(
   static_assert(std::numeric_limits<T>::is_integer,
                 "This can only be applied to integers!");
 
-  if (!mozilla::IsFinite(d)) {
+  if (!std::isfinite(d)) {
     return cx.ThrowErrorMessage<MSG_ENFORCE_RANGE_NON_FINITE>(
         sourceDescription, TypeName<T>::value());
   }
@@ -229,7 +229,7 @@ inline bool PrimitiveConversionTraits_Clamp(JSContext* cx,
   static_assert(std::numeric_limits<T>::is_integer,
                 "This can only be applied to integers!");
 
-  if (mozilla::IsNaN(d)) {
+  if (std::isnan(d)) {
     *retval = 0;
     return true;
   }
@@ -242,7 +242,7 @@ inline bool PrimitiveConversionTraits_Clamp(JSContext* cx,
     return true;
   }
 
-  MOZ_ASSERT(mozilla::IsFinite(d));
+  MOZ_ASSERT(std::isfinite(d));
 
   // Banker's rounding (round ties towards even).
   // We move away from 0 by 0.5f and then truncate.  That gets us the right

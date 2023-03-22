@@ -1233,11 +1233,11 @@ static bool num_toFixed(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Step 6.
-  if (mozilla::IsNaN(d)) {
+  if (std::isnan(d)) {
     args.rval().setString(cx->names().NaN);
     return true;
   }
-  if (mozilla::IsInfinite(d)) {
+  if (std::isinf(d)) {
     if (d > 0) {
       args.rval().setString(cx->names().Infinity);
       return true;
@@ -1305,11 +1305,11 @@ static bool num_toExponential(JSContext* cx, unsigned argc, Value* vp) {
   MOZ_ASSERT_IF(!args.hasDefined(0), prec == 0);
 
   // Step 4.
-  if (mozilla::IsNaN(d)) {
+  if (std::isnan(d)) {
     args.rval().setString(cx->names().NaN);
     return true;
   }
-  if (mozilla::IsInfinite(d)) {
+  if (std::isinf(d)) {
     if (d > 0) {
       args.rval().setString(cx->names().Infinity);
       return true;
@@ -1368,11 +1368,11 @@ static bool num_toPrecision(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Step 4.
-  if (mozilla::IsNaN(d)) {
+  if (std::isnan(d)) {
     args.rval().setString(cx->names().NaN);
     return true;
   }
-  if (mozilla::IsInfinite(d)) {
+  if (std::isinf(d)) {
     if (d > 0) {
       args.rval().setString(cx->names().Infinity);
       return true;
@@ -1417,7 +1417,7 @@ static const JSFunctionSpec number_methods[] = {
     JS_FS_END};
 
 bool js::IsInteger(double d) {
-  return mozilla::IsFinite(d) && JS::ToInteger(d) == d;
+  return std::isfinite(d) && JS::ToInteger(d) == d;
 }
 
 static const JSFunctionSpec number_static_methods[] = {

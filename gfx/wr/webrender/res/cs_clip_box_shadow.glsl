@@ -4,13 +4,13 @@
 
 #include shared,clip_shared
 
-varying vec4 vLocalPos;
-varying vec2 vUv;
-flat varying vec4 vUvBounds;
-flat varying vec4 vEdge;
-flat varying vec4 vUvBounds_NoClamp;
+varying highp vec4 vLocalPos;
+varying highp vec2 vUv;
+flat varying highp vec4 vUvBounds;
+flat varying mediump vec4 vEdge;
+flat varying highp vec4 vUvBounds_NoClamp;
 // Clip mode. Packed in to a vector to avoid bug 1630356.
-flat varying vec2 vClipMode;
+flat varying mediump vec2 vClipMode;
 
 #define MODE_STRETCH        0
 #define MODE_SIMPLE         1

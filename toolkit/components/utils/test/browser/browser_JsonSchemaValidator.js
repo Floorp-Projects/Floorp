@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { JsonSchemaValidator } = ChromeUtils.import(
-  "resource://gre/modules/components-utils/JsonSchemaValidator.jsm"
+const { JsonSchemaValidator } = ChromeUtils.importESModule(
+  "resource://gre/modules/components-utils/JsonSchemaValidator.sys.mjs"
 );
 
 add_task(async function test_boolean_values() {

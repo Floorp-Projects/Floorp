@@ -826,6 +826,50 @@ add_task(async function test_collect_attribution_data_for_amo_with_long_id() {
   });
 });
 
+add_task(async function test_collect_attribution_data_for_rtamo() {
+  assertNoTelemetryEvents();
+
+  const url = "https://addons.mozilla.org/";
+  const addonId = "{28374a9a-676c-5640-bfa7-865cd4686ead}";
+  // This is the SHA256 hash of the `addonId` above.
+  const expectedHashedAddonId =
+    "cf815c9f45c249473d630705f89e64d359737a106a375bbb83be71e6d52dc234";
+
+  // We simulate what is happening in:
+  // https://searchfox.org/mozilla-central/rev/d2786d9a6af7507bc3443023f0495b36b7e84c2d/browser/components/newtab/content-src/lib/aboutwelcome-utils.js#91
+  const installTelemetryInfo = {
+    ...FAKE_INSTALL_TELEMETRY_INFO,
+    sourceURL: `${url}?utm_content=utm-content-value`,
+    source: "rtamo",
+  };
+
+  const fakeAddonInstall = {
+    addon: { id: addonId },
+    type: "extension",
+    installTelemetryInfo,
+    hashedAddonId: expectedHashedAddonId,
+  };
+  AMTelemetry.recordInstallStatsEvent(fakeAddonInstall);
+
+  const installStatsEvents = getTelemetryEvents(["install_stats"]);
+  Assert.equal(
+    installStatsEvents.length,
+    1,
+    "only one install_stats event should be recorded"
+  );
+
+  const installStatsEvent = installStatsEvents[0];
+
+  Assert.deepEqual(installStatsEvent, {
+    method: "install_stats",
+    object: "extension",
+    value: expectedHashedAddonId,
+    extra: {
+      addon_id: AMTelemetry.getTrimmedString(addonId),
+    },
+  });
+});
+
 add_task(async function teardown() {
   await TelemetryController.testShutdown();
 });

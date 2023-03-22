@@ -82,7 +82,7 @@ add_task(async function test_unconfigured_initial_state() {
     state: UIState.STATUS_NOT_CONFIGURED,
     syncEnabled: false,
   });
-  await withFirefoxView({}, async browser => {
+  await withFirefoxView({ openNewWindow: true }, async browser => {
     Services.obs.notifyObservers(null, UIState.ON_UPDATE);
     await waitForVisibleSetupStep(browser, {
       expectedVisible: "#tabpickup-steps-view1",
@@ -134,7 +134,7 @@ add_task(async function test_signed_in() {
     ],
   });
 
-  await withFirefoxView({}, async browser => {
+  await withFirefoxView({ openNewWindow: true }, async browser => {
     Services.obs.notifyObservers(null, UIState.ON_UPDATE);
     await waitForVisibleSetupStep(browser, {
       expectedVisible: "#tabpickup-steps-view2",
@@ -190,7 +190,7 @@ add_task(async function test_support_links() {
       },
     ],
   });
-  await withFirefoxView({ win: window }, async browser => {
+  await withFirefoxView({}, async browser => {
     Services.obs.notifyObservers(null, UIState.ON_UPDATE);
     await waitForVisibleSetupStep(browser, {
       expectedVisible: "#tabpickup-steps-view2",
@@ -549,10 +549,9 @@ add_task(async function test_mobile_promo_windows() {
         SpecialPowers.getBoolPref("browser.tabs.firefox-view")
     );
 
-    let win2 = await BrowserTestUtils.openNewBrowserWindow();
     info("Got window, now opening Firefox View in it");
     await withFirefoxView(
-      { resetFlowManager: false, win: win2 },
+      { openNewWindow: true, resetFlowManager: false },
       async win2Browser => {
         info("In withFirefoxView taskFn for win2");
         // promo should be visible in the 2nd window too
@@ -602,7 +601,11 @@ add_task(async function test_mobile_promo_windows() {
         );
         const closeButton = confirmBox.querySelector(".close");
         ok(closeButton.hasAttribute("aria-label"), "Button has an a11y name");
-        EventUtils.sendMouseEvent({ type: "click" }, closeButton, win2);
+        EventUtils.sendMouseEvent(
+          { type: "click" },
+          closeButton,
+          win2Browser.ownerGlobal
+        );
         BrowserTestUtils.is_hidden(confirmBox);
 
         for (let fxviewBrowser of [browser, win2Browser]) {
@@ -613,7 +616,6 @@ add_task(async function test_mobile_promo_windows() {
         }
       }
     );
-    await BrowserTestUtils.closeWindow(win2);
   });
   await tearDown(sandbox);
 });

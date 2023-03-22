@@ -57,8 +57,8 @@ const { AppUiTestDelegate, AppUiTestInternals } = ChromeUtils.import(
 const { Preferences } = ChromeUtils.importESModule(
   "resource://gre/modules/Preferences.sys.mjs"
 );
-const { ClientEnvironmentBase } = ChromeUtils.import(
-  "resource://gre/modules/components-utils/ClientEnvironment.jsm"
+const { ClientEnvironmentBase } = ChromeUtils.importESModule(
+  "resource://gre/modules/components-utils/ClientEnvironment.sys.mjs"
 );
 
 ChromeUtils.defineModuleGetter(

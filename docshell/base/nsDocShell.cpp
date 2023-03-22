@@ -4061,6 +4061,7 @@ nsDocShell::Reload(uint32_t aReloadFlags) {
     MOZ_LOG(gSHLog, LogLevel::Debug, ("nsDocShell %p Reload", this));
     bool forceReload = IsForceReloadType(loadType);
     if (!XRE_IsParentProcess()) {
+      ++mPendingReloadCount;
       RefPtr<nsDocShell> docShell(this);
       nsCOMPtr<nsIContentViewer> cv(mContentViewer);
       NS_ENSURE_STATE(cv);
@@ -4095,6 +4096,12 @@ nsDocShell::Reload(uint32_t aReloadFlags) {
                 loadGroup->RemoveRequest(stopDetector, nullptr, NS_OK);
               }
             });
+
+            // Decrease mPendingReloadCount before any other early returns!
+            if (--(docShell->mPendingReloadCount) > 0) {
+              return;
+            }
+
             if (stopDetector->Canceled()) {
               return;
             }

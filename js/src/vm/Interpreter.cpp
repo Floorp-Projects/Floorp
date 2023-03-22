@@ -1740,7 +1740,7 @@ static MOZ_ALWAYS_INLINE bool LessThanImpl(JSContext* cx,
   double lhsNum = lhs.toNumber();
   double rhsNum = rhs.toNumber();
 
-  if (mozilla::IsNaN(lhsNum) || mozilla::IsNaN(rhsNum)) {
+  if (std::isnan(lhsNum) || std::isnan(rhsNum)) {
     res = mozilla::Maybe<bool>(mozilla::Nothing());
     return true;
   }

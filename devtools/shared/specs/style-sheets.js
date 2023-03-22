@@ -12,15 +12,7 @@ const {
 const styleSheetsSpec = generateActorSpec({
   typeName: "stylesheets",
 
-  events: {
-    // @backward-compat { version 111 } This event is no longer emitted by
-    // recent servers, keep the definition so that protocol.js recognizes the
-    // event payloads coming from older servers. Can be removed when 111 reaches
-    // the release channel.
-    "stylesheet-added": {
-      type: "stylesheetAdded",
-    },
-  },
+  events: {},
 
   methods: {
     getTraits: {

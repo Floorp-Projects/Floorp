@@ -463,7 +463,7 @@ static nsresult CloneArray(uint16_t aInType, const nsIID* aInIID,
 #define CASE__NUMERIC_CONVERSION_DOUBLE_MIN_MAX_INT(Ctype_, min_, max_)       \
   case nsIDataType::VTYPE_DOUBLE: {                                           \
     double value = tempData.u.mDoubleValue;                                   \
-    if (mozilla::IsNaN(value) || value < (min_) || value > (max_)) {          \
+    if (std::isnan(value) || value < (min_) || value > (max_)) {              \
       return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;                               \
     }                                                                         \
     *aResult = (Ctype_)value;                                                 \
@@ -557,7 +557,7 @@ nsresult nsDiscriminatedUnion::ConvertToBool(bool* aResult) const {
     return rv;
   }
   // NaN is falsy in JS, so we might as well make it false here.
-  if (mozilla::IsNaN(val)) {
+  if (std::isnan(val)) {
     *aResult = false;
   } else {
     *aResult = 0.0 != val;
@@ -585,7 +585,7 @@ nsresult nsDiscriminatedUnion::ConvertToInt64(int64_t* aResult) const {
       return rv;
     case nsIDataType::VTYPE_DOUBLE: {
       double value = tempData.u.mDoubleValue;
-      if (mozilla::IsNaN(value)) {
+      if (std::isnan(value)) {
         return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
       }
       // XXX should check for data loss here!

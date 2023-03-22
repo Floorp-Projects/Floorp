@@ -133,15 +133,21 @@ class CookieBannerChild extends JSWindowActorChild {
   }
 
   /**
+   * @returns {boolean} Whether we handled a banner for the current load by
+   * injecting cookies.
+   */
+  get #hasInjectedCookieForCookieBannerHandling() {
+    return this.docShell?.currentDocumentChannel?.loadInfo
+      ?.hasInjectedCookieForCookieBannerHandling;
+  }
+
+  /**
    * Checks whether we handled a banner for this site by injecting cookies and
    * dispatches events.
    * @returns {boolean} Whether we handled the banner and dispatched events.
    */
   #dispatchEventsForBannerHandledByInjection() {
-    if (
-      !this.docShell?.currentDocumentChannel?.loadInfo
-        ?.hasInjectedCookieForCookieBannerHandling
-    ) {
+    if (!this.#hasInjectedCookieForCookieBannerHandling) {
       return false;
     }
     // Strictly speaking we don't actively detect a banner when we handle it by
@@ -192,7 +198,17 @@ class CookieBannerChild extends JSWindowActorChild {
     if (!rules.length) {
       // If the cookie injector has handled the banner and there are no click
       // rules we still need to dispatch a "cookiebannerhandled" event.
-      this.#dispatchEventsForBannerHandledByInjection();
+      let dispatchedEvents = this.#dispatchEventsForBannerHandledByInjection();
+      // Record telemetry about handling the banner via cookie injection.
+      // Note: The success state recorded here may be invalid if the given
+      // cookie fails to handle the banner. Since we don't have a presence
+      // detector for this rule we can't determine whether the banner is still
+      // showing or not.
+      if (dispatchedEvents) {
+        this.#telemetryStatus.failReason = null;
+        this.#telemetryStatus.success = true;
+        this.#telemetryStatus.successStage = "cookie_injected";
+      }
 
       this.#maybeSendTestMessage();
       return;
@@ -213,6 +229,14 @@ class CookieBannerChild extends JSWindowActorChild {
     } = await this.handleCookieBanner();
 
     let dispatchedEventsForCookieInjection = this.#dispatchEventsForBannerHandledByInjection();
+    // A cookie injection followed by not detecting the banner via querySelector
+    // is a success state. Record that in telemetry.
+    // Note: The success state reported may be invalid in edge cases where both
+    // the cookie injection and the banner detection via query selector fails.
+    if (dispatchedEventsForCookieInjection && !bannerDetected) {
+      this.#telemetryStatus.success = true;
+      this.#telemetryStatus.successStage = "cookie_injected";
+    }
 
     // 1. Detected event.
     if (bannerDetected) {
@@ -308,14 +332,13 @@ class CookieBannerChild extends JSWindowActorChild {
   }
 
   #reportTelemetry() {
-    // Nothing to report, banner handling didn't run or we don't have any rules
-    // for the site.
+    // Nothing to report, banner handling didn't run.
     if (
-      this.#telemetryStatus.currentStage == null ||
-      !this.#clickRules?.length
+      this.#telemetryStatus.successStage == null &&
+      this.#telemetryStatus.failReason == null
     ) {
       lazy.logConsole.debug(
-        "Skip clickResult telemetry",
+        "Skip telemetry",
         this.#telemetryStatus,
         this.#clickRules
       );

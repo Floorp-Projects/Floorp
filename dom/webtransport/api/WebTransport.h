@@ -26,9 +26,18 @@ class WebTransportDatagramDuplexStream;
 class WebTransportIncomingStreamsAlgorithms;
 class ReadableStream;
 class WritableStream;
-
 using BidirectionalPair = std::pair<RefPtr<mozilla::ipc::DataPipeReceiver>,
                                     RefPtr<mozilla::ipc::DataPipeSender>>;
+
+struct DatagramEntry {
+  DatagramEntry(nsTArray<uint8_t>&& aData, const mozilla::TimeStamp& aTimeStamp)
+      : mBuffer(std::move(aData)), mTimeStamp(aTimeStamp) {}
+  DatagramEntry(Span<uint8_t>& aData, const mozilla::TimeStamp& aTimeStamp)
+      : mBuffer(aData), mTimeStamp(aTimeStamp) {}
+
+  nsTArray<uint8_t> mBuffer;
+  mozilla::TimeStamp mTimeStamp;
+};
 
 class WebTransport final : public nsISupports, public nsWrapperCache {
   friend class WebTransportIncomingStreamsAlgorithms;
@@ -67,6 +76,9 @@ class WebTransport final : public nsISupports, public nsWrapperCache {
 
   void NewUnidirectionalStream(
       const RefPtr<mozilla::ipc::DataPipeReceiver>& aStream);
+
+  void NewDatagramReceived(nsTArray<uint8_t>&& aData,
+                           const mozilla::TimeStamp& aTimeStamp);
 
   void RemoteClosed(bool aCleanly, const uint32_t& aCode,
                     const nsACString& aReason);

@@ -1049,17 +1049,15 @@ struct TrapSitePCOffset {
 
 bool Code::lookupTrap(void* pc, Trap* trapOut, BytecodeOffset* bytecode) const {
   for (Tier t : tiers()) {
+    uint32_t target = ((uint8_t*)pc) - segment(t).base();
     const TrapSiteVectorArray& trapSitesArray = metadata(t).trapSites;
     for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
       const TrapSiteVector& trapSites = trapSitesArray[trap];
 
-      uint32_t target = ((uint8_t*)pc) - segment(t).base();
-      size_t lowerBound = 0;
       size_t upperBound = trapSites.length();
-
       size_t match;
-      if (BinarySearch(TrapSitePCOffset(trapSites), lowerBound, upperBound,
-                       target, &match)) {
+      if (BinarySearch(TrapSitePCOffset(trapSites), 0, upperBound, target,
+                       &match)) {
         MOZ_ASSERT(segment(t).containsCodePC(pc));
         *trapOut = trap;
         *bytecode = trapSites[match].bytecode;

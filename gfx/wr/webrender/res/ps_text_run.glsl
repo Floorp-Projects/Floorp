@@ -4,17 +4,17 @@
 
 #include shared,prim_shared
 
-flat varying vec4 v_color;
-flat varying vec3 v_mask_swizzle;
+flat varying mediump vec4 v_color;
+flat varying mediump vec3 v_mask_swizzle;
 // Normalized bounds of the source image in the texture.
-flat varying vec4 v_uv_bounds;
+flat varying highp vec4 v_uv_bounds;
 
 // Interpolated UV coordinates to sample.
-varying vec2 v_uv;
+varying highp vec2 v_uv;
 
 
 #if defined(WR_FEATURE_GLYPH_TRANSFORM) && !defined(SWGL_CLIP_DIST)
-varying vec4 v_uv_clip;
+varying highp vec4 v_uv_clip;
 #endif
 
 #ifdef WR_VERTEX_SHADER

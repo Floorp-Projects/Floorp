@@ -84,10 +84,28 @@ browser {
 
 .controls-bottom-lower {
   display: grid;
-  grid-template-columns: 16ch auto repeat(3, minmax(16px, 32px)) auto repeat(3, minmax(16px, 32px));
-  grid-template-areas:
-      "timestamp . seekbackward playpause seekforward . audio closedcaption fullscreen";
+  grid-template-columns: repeat(3, 1fr);
   margin: 0 24px;
+}
+
+.start-controls {
+  display: grid;
+  justify-self: start;
+}
+
+.center-controls {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-areas: "seekbackward playpause seekforward";
+  justify-self: center;
+  gap: 8px;
+}
+
+.end-controls {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-areas: "audio closedcaption fullscreen";
+  justify-self: end;
   gap: 8px;
 }
 
@@ -542,34 +560,26 @@ input:checked + .slider::before {
     display: none;
   }
 
-  .controls-bottom-lower {
-    grid-template-columns: 16ch auto repeat(3, minmax(16px, 32px)) auto repeat(2, minmax(16px, 32px));
-    grid-template-areas:
-        "timestamp . seekbackward playpause seekforward . audio fullscreen";
+  .end-controls {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-areas: "audio fullscreen";
   }
 }
 
-@media (width <= 400px) {
-  #fullscreen {
+@media (width <= 440px) {
+  #timestamp {
     display: none;
-  }
-
-  .controls-bottom-lower {
-    grid-template-columns: 16ch repeat(3, minmax(16px, 32px)) auto minmax(16px, 32px);
-    grid-template-areas:
-        "timestamp seekbackward playpause seekforward . audio";
   }
 }
 
 @media (width <= 350px) {
-  #timestamp {
+  #fullscreen {
     display: none;
   }
 
-  .controls-bottom-lower {
-    grid-template-columns: auto repeat(3, minmax(16px, 32px)) auto minmax(16px, 32px);
-    grid-template-areas:
-        ". seekbackward playpause seekforward . audio";
+  .end-controls {
+    grid-template-columns: repeat(1, 1fr);
+    grid-template-areas: "audio";
   }
 }
 
@@ -582,13 +592,21 @@ input:checked + .slider::before {
 @media (width <= 300px) {
   .scrubber-no-drag,
   #seekForward,
-  #seekBackward {
+  #seekBackward,
+  .start-controls {
     display: none;
   }
 
   .controls-bottom-lower {
-    grid-template-columns: auto minmax(16px, 32px) auto minmax(16px, 32px) auto;
-    grid-template-areas:
-        ". playpause . audio .";
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .center-controls {
+    grid-template-columns: repeat(1, 1fr);
+    grid-template-areas: "playpause";
+  }
+
+  .end-controls {
+    justify-self: center;
   }
 }

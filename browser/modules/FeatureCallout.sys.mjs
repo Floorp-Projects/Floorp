@@ -684,6 +684,7 @@ export class FeatureCallout {
     this.win.AWFinish = () => {
       this.endTour();
     };
+    this.win.AWEvaluateScreenTargeting = receive("EVALUATE_SCREEN_TARGETING");
     this.AWSetup = true;
   }
 
