@@ -7,6 +7,7 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
+  MockRegistrar: "resource://testing-common/MockRegistrar.sys.mjs",
   UrlbarProviderWeather: "resource:///modules/UrlbarProviderWeather.sys.mjs",
 });
 
@@ -1450,6 +1451,58 @@ async function doManyNotificationsTest(notifications) {
 
   dateNowStub.restore();
 }
+
+// Fetching when a VPN is detected should set the suggestion to null, and
+// turning off the VPN should trigger a re-fetch.
+add_task(async function vpn() {
+  // Register a mock object that implements nsINetworkLinkService.
+  let mockLinkService = {
+    isLinkUp: true,
+    linkStatusKnown: true,
+    linkType: Ci.nsINetworkLinkService.LINK_TYPE_WIFI,
+    networkID: "abcd",
+    dnsSuffixList: [],
+    platformDNSIndications: Ci.nsINetworkLinkService.NONE_DETECTED,
+    QueryInterface: ChromeUtils.generateQI(["nsINetworkLinkService"]),
+  };
+  let networkLinkServiceCID = MockRegistrar.register(
+    "@mozilla.org/network/network-link-service;1",
+    mockLinkService
+  );
+  QuickSuggest.weather._test_linkService = mockLinkService;
+
+  // At this point no VPN is detected, so a fetch should complete successfully.
+  await QuickSuggest.weather._test_fetch();
+  Assert.ok(QuickSuggest.weather.suggestion, "Suggestion should exist");
+
+  // Modify the mock link service to indicate a VPN is detected.
+  mockLinkService.platformDNSIndications =
+    Ci.nsINetworkLinkService.VPN_DETECTED;
+
+  // Now a fetch should set the suggestion to null.
+  await QuickSuggest.weather._test_fetch();
+  Assert.ok(!QuickSuggest.weather.suggestion, "Suggestion should be null");
+
+  // Simulate the link status changing. Since the mock link service still
+  // indicates a VPN is detected, the suggestion should remain null.
+  let fetchPromise = QuickSuggest.weather.waitForFetches();
+  QuickSuggest.weather.observe(null, "network:link-status-changed", "changed");
+  await fetchPromise;
+  Assert.ok(!QuickSuggest.weather.suggestion, "Suggestion should remain null");
+
+  // Modify the mock link service to indicate a VPN is no longer detected.
+  mockLinkService.platformDNSIndications =
+    Ci.nsINetworkLinkService.NONE_DETECTED;
+
+  // Simulate the link status changing again. The suggestion should be fetched.
+  fetchPromise = QuickSuggest.weather.waitForFetches();
+  QuickSuggest.weather.observe(null, "network:link-status-changed", "changed");
+  await fetchPromise;
+  Assert.ok(QuickSuggest.weather.suggestion, "Suggestion should be fetched");
+
+  MockRegistrar.unregister(networkLinkServiceCID);
+  delete QuickSuggest.weather._test_linkService;
+});
 
 function assertEnabled({ message, hasSuggestion, pendingFetchCount }) {
   info("Asserting feature is enabled");
