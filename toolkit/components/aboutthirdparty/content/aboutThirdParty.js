@@ -591,8 +591,8 @@ async function collectCrashInfo() {
     return;
   }
 
-  const { getCrashManager } = ChromeUtils.import(
-    "resource://gre/modules/CrashManager.jsm"
+  const { getCrashManager } = ChromeUtils.importESModule(
+    "resource://gre/modules/CrashManager.sys.mjs"
   );
   const crashes = await getCrashManager().getCrashes();
   CrashModuleSet = new Set(
