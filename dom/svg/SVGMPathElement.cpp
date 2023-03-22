@@ -9,7 +9,7 @@
 #include "nsDebug.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/SVGObserverUtils.h"
-#include "mozilla/dom/ReferrerInfo.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/SVGAnimateMotionElement.h"
 #include "mozilla/dom/SVGGeometryElement.h"
 #include "nsContentUtils.h"
@@ -206,8 +206,7 @@ void SVGMPathElement::UpdateHrefTarget(nsIContent* aParent,
     // for a call to GetComposedDoc(), and |this| might not have a current
     // document yet (if our caller is BindToTree).
     nsCOMPtr<nsIReferrerInfo> referrerInfo =
-        ReferrerInfo::CreateForSVGResources(OwnerDoc());
-
+        OwnerDoc()->ReferrerInfoForInternalCSSAndSVGResources();
     mPathTracker.ResetToURIFragmentID(aParent, targetURI, referrerInfo);
   } else {
     // if we don't have a parent, then there's no animateMotion element

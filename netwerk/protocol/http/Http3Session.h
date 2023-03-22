@@ -260,9 +260,9 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
   nsRefPtrHashtable<nsPtrHashKey<nsAHttpTransaction>, Http3StreamBase>
       mStreamTransactionHash;
 
-  nsDeque<Http3StreamBase> mReadyForWrite;
+  nsRefPtrDeque<Http3StreamBase> mReadyForWrite;
   nsTArray<RefPtr<Http3StreamBase>> mSlowConsumersReadyForRead;
-  nsDeque<Http3StreamBase> mQueuedStreams;
+  nsRefPtrDeque<Http3StreamBase> mQueuedStreams;
 
   enum State {
     INITIALIZING,

@@ -4,12 +4,12 @@
 
 #include shared,rect,render_task,gpu_cache,gpu_buffer,gradient
 
-varying vec2 v_pos;
+varying highp vec2 v_pos;
 
-flat varying vec2 v_scale_dir;
+flat varying mediump vec2 v_scale_dir;
 
 // Start offset. Packed in to a vector to work around bug 1630356.
-flat varying vec2 v_start_offset;
+flat varying highp vec2 v_start_offset;
 
 #ifdef WR_VERTEX_SHADER
 

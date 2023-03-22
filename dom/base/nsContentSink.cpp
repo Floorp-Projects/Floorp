@@ -16,6 +16,7 @@
 #include "mozilla/StaticPrefs_content.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/LinkStyle.h"
+#include "mozilla/dom/ReferrerInfo.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/MutationObservers.h"
 #include "mozilla/dom/SRILogHelper.h"

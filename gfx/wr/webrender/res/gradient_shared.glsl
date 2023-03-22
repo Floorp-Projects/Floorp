@@ -7,12 +7,12 @@
 // Size of the gradient pattern's rectangle, used to compute horizontal and vertical
 // repetitions. Not to be confused with another kind of repetition of the pattern
 // which happens along the gradient stops.
-flat varying vec2 v_repeated_size;
+flat varying highp vec2 v_repeated_size;
 
-varying vec2 v_pos;
+varying highp vec2 v_pos;
 
 #ifdef WR_FEATURE_ALPHA_PASS
-flat varying vec2 v_tile_repeat;
+flat varying highp vec2 v_tile_repeat;
 #endif
 
 #ifdef WR_VERTEX_SHADER

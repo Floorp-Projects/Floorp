@@ -3,21 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "cache-storage.js",
     "console-messages.js",
-    "cookie.js",
     "css-changes.js",
     "error-messages.js",
-    "extension-storage.js",
-    "indexed-db.js",
-    "local-storage.js",
     "platform-messages.js",
     "reflow.js",
     "root-node.js",
-    "server-sent-events.js",
-    "session-storage.js",
     "source.js",
-    "storage-utils.js",
     "thread-states.js",
-    "websocket.js",
 )

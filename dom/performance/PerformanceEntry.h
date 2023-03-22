@@ -54,6 +54,13 @@ class PerformanceEntry : public nsISupports, public nsWrapperCache {
 
   virtual DOMHighResTimeStamp StartTime() const { return 0; }
 
+  // This is used by the Gecko Profiler only for adding precise markers.
+  // It's not exposed to JS.
+  virtual DOMHighResTimeStamp UnclampedStartTime() const {
+    MOZ_ASSERT(false, "UnclampedStartTime should not be called on this class.");
+    return 0;
+  }
+
   virtual DOMHighResTimeStamp Duration() const { return 0; }
 
   virtual const PerformanceResourceTiming* ToResourceTiming() const {

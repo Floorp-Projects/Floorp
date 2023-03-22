@@ -320,7 +320,7 @@ nsresult SVGAnimatedLength::ConvertToSpecifiedUnits(uint16_t unitType,
       mBaseVal * GetPixelsPerUnit(aSVGElement, mSpecifiedUnitType);
   float valueInSpecifiedUnits = valueInUserUnits / pixelsPerUnit;
 
-  if (!IsFinite(valueInSpecifiedUnits)) {
+  if (!std::isfinite(valueInSpecifiedUnits)) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
@@ -416,7 +416,7 @@ nsresult SVGAnimatedLength::SetBaseValue(float aValue, SVGElement* aSVGElement,
   }
 
   float valueInSpecifiedUnits = aValue / pixelsPerUnit;
-  if (!IsFinite(valueInSpecifiedUnits)) {
+  if (!std::isfinite(valueInSpecifiedUnits)) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
@@ -439,7 +439,7 @@ nsresult SVGAnimatedLength::SetAnimValue(float aValue,
   float valueInSpecifiedUnits =
       aValue / GetPixelsPerUnit(aSVGElement, mSpecifiedUnitType);
 
-  if (IsFinite(valueInSpecifiedUnits)) {
+  if (std::isfinite(valueInSpecifiedUnits)) {
     SetAnimValueInSpecifiedUnits(valueInSpecifiedUnits, aSVGElement);
     return NS_OK;
   }

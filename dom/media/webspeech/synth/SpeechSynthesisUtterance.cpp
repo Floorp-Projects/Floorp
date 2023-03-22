@@ -33,7 +33,9 @@ SpeechSynthesisUtterance::SpeechSynthesisUtterance(
       mVolume(1),
       mRate(1),
       mPitch(1),
-      mPaused(false) {}
+      mPaused(false),
+      mShouldResistFingerprinting(
+          aOwnerWindow->AsGlobal()->ShouldResistFingerprinting()) {}
 
 SpeechSynthesisUtterance::~SpeechSynthesisUtterance() = default;
 

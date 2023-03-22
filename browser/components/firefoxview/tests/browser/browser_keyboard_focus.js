@@ -12,7 +12,7 @@ add_task(async function test_keyboard_focus() {
     set: [["accessibility.tabfocus", 7]],
   });
 
-  await withFirefoxView({ win: window }, async browser => {
+  await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
 
     const sandbox = setupRecentDeviceListMocks();
@@ -57,7 +57,9 @@ add_task(async function test_keyboard_focus() {
 
     window.FirefoxViewHandler.openTab();
 
-    let recentlyClosedEle = document.querySelector(".closed-tab-li-main");
+    let recentlyClosedEle = await TestUtils.waitForCondition(() =>
+      document.querySelector(".closed-tab-li-main")
+    );
     document.querySelectorAll(".page-section-header")[1].focus();
 
     EventUtils.synthesizeKey("KEY_Tab");

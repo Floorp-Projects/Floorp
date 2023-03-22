@@ -4,7 +4,7 @@
 
 #include shared,shared_other
 
-varying vec4 vColor;
+varying mediump vec4 vColor;
 
 #ifdef WR_VERTEX_SHADER
 in vec4 aColor;

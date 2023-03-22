@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-flat varying vec4 vTransformBounds;
+flat varying highp vec4 vTransformBounds;
 
 #ifdef WR_VERTEX_SHADER
 

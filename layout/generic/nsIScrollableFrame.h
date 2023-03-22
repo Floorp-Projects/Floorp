@@ -364,13 +364,13 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * This basically means that we should allocate resources in the
    * expectation that scrolling is going to happen.
    */
-  virtual bool IsScrollingActive() = 0;
+  virtual bool IsScrollingActive() const = 0;
 
   /**
    * Returns true if this scroll frame might be scrolled
    * asynchronously by the compositor.
    */
-  virtual bool IsMaybeAsynchronouslyScrolled() = 0;
+  virtual bool IsMaybeAsynchronouslyScrolled() const = 0;
 
   /**
    * Was the current presentation state for this frame restored from history?
@@ -391,7 +391,7 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * Determine if the passed in rect is nearly visible according to the frame
    * visibility heuristics for how close it is to the visible scrollport.
    */
-  virtual bool IsRectNearlyVisible(const nsRect& aRect) = 0;
+  virtual bool IsRectNearlyVisible(const nsRect& aRect) const = 0;
   /**
    * Expand the given rect taking into account which directions we can scroll
    * and how far we want to expand for frame visibility purposes.
@@ -402,7 +402,7 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * ScrollOrigin::Apz when the compositor's replica frame metrics includes the
    * latest instant scroll.
    */
-  virtual ScrollOrigin LastScrollOrigin() = 0;
+  virtual ScrollOrigin LastScrollOrigin() const = 0;
 
   /**
    * Gets the async scroll animation state of this scroll frame.

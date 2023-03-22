@@ -128,6 +128,7 @@ TestRunner.interactiveDebugger = false;
 TestRunner.cleanupCrashes = false;
 TestRunner.timeoutAsPass = false;
 TestRunner.conditionedProfile = false;
+TestRunner.comparePrefs = false;
 
 TestRunner._expectingProcessCrash = false;
 TestRunner._structuredFormatter = new StructuredFormatter();
@@ -915,6 +916,31 @@ TestRunner.testUnloaded = function() {
     );
   }
 
+  // Always do this, so we can "reset" preferences between tests
+  SpecialPowers.comparePrefsToBaseline(
+    TestRunner.ignorePrefs,
+    TestRunner.verifyPrefsNextTest
+  );
+};
+
+TestRunner.verifyPrefsNextTest = function(p) {
+  if (TestRunner.comparePrefs) {
+    let prefs = Array.from(SpecialPowers.Cu.waiveXrays(p), x =>
+      SpecialPowers.unwrapIfWrapped(SpecialPowers.Cu.unwaiveXrays(x))
+    );
+    prefs.forEach(pr =>
+      TestRunner.structuredLogger.error(
+        "TEST-UNEXPECTED-FAIL | " +
+          TestRunner.currentTestURL +
+          " | changed preference: " +
+          pr
+      )
+    );
+  }
+  TestRunner.doNextTest();
+};
+
+TestRunner.doNextTest = function() {
   TestRunner._currentTest++;
   if (TestRunner.runSlower) {
     setTimeout(TestRunner.runNextTest, 1000);

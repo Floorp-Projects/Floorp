@@ -352,6 +352,15 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD SetEarlyHintPreloaderId(uint64_t aEarlyHintPreloaderId) override;
   NS_IMETHOD GetEarlyHintPreloaderId(uint64_t* aEarlyHintPreloaderId) override;
 
+  NS_IMETHOD SetClassicScriptHintCharset(
+      const nsAString& aClassicScriptHintCharset) override;
+  NS_IMETHOD GetClassicScriptHintCharset(
+      nsAString& aClassicScriptHintCharset) override;
+
+  NS_IMETHOD SetDocumentCharacterSet(
+      const nsAString& aDocumentCharacterSet) override;
+  NS_IMETHOD GetDocumentCharacterSet(nsAString& aDocumentCharacterSet) override;
+
   virtual void SetConnectionInfo(
       mozilla::net::nsHttpConnectionInfo* aCI) override;
 
@@ -813,6 +822,9 @@ class HttpBaseChannel : public nsHashPropertyBag,
   // EarlyHintRegistrar id to connect back to the preload. Set on preload
   // channels started from the above list
   uint64_t mEarlyHintPreloaderId = 0;
+
+  nsString mClassicScriptHintCharset;
+  nsString mDocumentCharacterSet;
 
   // clang-format off
   MOZ_ATOMIC_BITFIELDS(mAtomicBitfields1, 32, (

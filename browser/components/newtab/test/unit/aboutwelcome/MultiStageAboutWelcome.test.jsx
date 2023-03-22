@@ -17,7 +17,7 @@ describe("MultiStageAboutWelcome module", () => {
   let sandbox;
 
   const DEFAULT_PROPS = {
-    screens: AboutWelcomeDefaults.getDefaults().screens,
+    defaultScreens: AboutWelcomeDefaults.getDefaults().screens,
     metricsFlowUri: "http://localhost/",
     message_id: "DEFAULT_ABOUTWELCOME",
     utm_term: "default",
@@ -82,7 +82,7 @@ describe("MultiStageAboutWelcome module", () => {
       ];
 
       const PRIMARY_ACTION_PROPS = {
-        screens,
+        defaultScreens: screens,
         metricsFlowUri: "http://localhost/",
         message_id: "DEFAULT_ABOUTWELCOME",
         utm_term: "default",
@@ -123,7 +123,7 @@ describe("MultiStageAboutWelcome module", () => {
         },
       ];
       const AUTO_ADVANCE_PROPS = {
-        screens,
+        defaultScreens: screens,
         metricsFlowUri: "http://localhost/",
         message_id: "DEFAULT_ABOUTWELCOME",
         utm_term: "default",
@@ -171,7 +171,7 @@ describe("MultiStageAboutWelcome module", () => {
         },
       ];
       const EASY_SETUP_PROPS = {
-        screens,
+        defaultScreens: screens,
         message_id: "DEFAULT_ABOUTWELCOME",
         startScreen: 0,
       };

@@ -8,16 +8,16 @@
 #include shared,prim_shared,brush,blend
 
 // Interpolated UV coordinates to sample.
-varying vec2 v_uv;
+varying highp vec2 v_uv;
 
 // Normalized bounds of the source image in the texture, adjusted to avoid
 // sampling artifacts.
-flat varying vec4 v_uv_sample_bounds;
+flat varying highp vec4 v_uv_sample_bounds;
 
 // x: Flag to allow perspective interpolation of UV.
 // y: Filter-dependent "amount" parameter.
 // Packed in to a vector to work around bug 1630356.
-flat varying vec2 v_perspective_amount;
+flat varying mediump vec2 v_perspective_amount;
 #define v_perspective v_perspective_amount.x
 #define v_amount v_perspective_amount.y
 
@@ -30,12 +30,12 @@ flat varying highp ivec2 v_op_table_address_vec;
 #define v_op v_op_table_address_vec.x
 #define v_table_address v_op_table_address_vec.y
 
-flat varying mat4 v_color_mat;
+flat varying mediump mat4 v_color_mat;
 // The function to use for each component of a component transfer filter. Using a int[4]
 // or ivec4 (with each element or component containing the function for each component) has
 // ran in to bugs 1695912 and 1731758, so instead use a vec4 and cast the values to/from floats.
-flat varying vec4 v_funcs;
-flat varying vec4 v_color_offset;
+flat varying mediump vec4 v_funcs;
+flat varying mediump vec4 v_color_offset;
 
 #ifdef WR_VERTEX_SHADER
 void brush_vs(

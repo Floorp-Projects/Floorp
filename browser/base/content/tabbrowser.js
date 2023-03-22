@@ -2745,21 +2745,26 @@
             );
             b.registeredOpenURI = lazyBrowserURI;
           }
-          SessionStore.setTabState(t, {
-            entries: [
-              {
-                url: lazyBrowserURI?.spec || "about:blank",
-                title: lazyTabTitle,
-                triggeringPrincipal_base64: E10SUtils.serializePrincipal(
-                  triggeringPrincipal
-                ),
-              },
-            ],
-            // Make sure to store the userContextId associated to the lazy tab
-            // otherwise it would be created as a default tab when recreated on a
-            // session restore (See Bug 1819794).
-            userContextId,
-          });
+          // If we're batch inserting, we can't set the tab state meaningfully
+          // because the tab won't be in the DOM yet. The consumer (normally
+          // session restore) will have to do this work itself.
+          if (!batchInsertingTabs) {
+            SessionStore.setTabState(t, {
+              entries: [
+                {
+                  url: lazyBrowserURI?.spec || "about:blank",
+                  title: lazyTabTitle,
+                  triggeringPrincipal_base64: E10SUtils.serializePrincipal(
+                    triggeringPrincipal
+                  ),
+                },
+              ],
+              // Make sure to store the userContextId associated to the lazy tab
+              // otherwise it would be created as a default tab when recreated on a
+              // session restore (See Bug 1819794).
+              userContextId,
+            });
+          }
         } else {
           this._insertBrowser(t, true);
           // If we were called by frontend and don't have openWindowInfo,

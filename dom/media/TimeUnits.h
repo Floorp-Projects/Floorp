@@ -54,9 +54,9 @@ static const int64_t NSECS_PER_S = 1000000000;
 class TimeUnit final {
  public:
   static TimeUnit FromSeconds(double aValue) {
-    MOZ_ASSERT(!IsNaN(aValue));
+    MOZ_ASSERT(!std::isnan(aValue));
 
-    if (mozilla::IsInfinite<double>(aValue)) {
+    if (std::isinf(aValue)) {
       return aValue > 0 ? FromInfinity() : FromNegativeInfinity();
     }
     // Due to internal double representation, this
@@ -154,7 +154,7 @@ class TimeUnit final {
       // +/-Inf, or NaN. So do the calculation in floating point for
       // simplicity.
       double result = ToSeconds() + aOther.ToSeconds();
-      return IsNaN(result) ? TimeUnit::Invalid() : FromSeconds(result);
+      return std::isnan(result) ? TimeUnit::Invalid() : FromSeconds(result);
     }
     return TimeUnit(mValue + aOther.mValue);
   }
@@ -165,7 +165,7 @@ class TimeUnit final {
       // +/-Inf, or NaN. So do the calculation in floating point for
       // simplicity.
       double result = ToSeconds() - aOther.ToSeconds();
-      return IsNaN(result) ? TimeUnit::Invalid() : FromSeconds(result);
+      return std::isnan(result) ? TimeUnit::Invalid() : FromSeconds(result);
     }
     MOZ_ASSERT(!IsInfinite() && !aOther.IsInfinite());
     return TimeUnit(mValue - aOther.mValue);

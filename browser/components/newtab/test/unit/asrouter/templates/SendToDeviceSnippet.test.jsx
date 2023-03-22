@@ -1,5 +1,7 @@
 import { mount } from "enzyme";
 import React from "react";
+import { FluentBundle, FluentResource } from "@fluent/bundle";
+import { LocalizationProvider, ReactLocalization } from "@fluent/react";
 import schema from "content-src/asrouter/templates/SendToDeviceSnippet/SendToDeviceSnippet.schema.json";
 import {
   SendToDeviceSnippet,
@@ -38,6 +40,20 @@ describe("SendToDeviceSnippet", () => {
   let DEFAULT_CONTENT;
   let DEFAULT_SCENE2_CONTENT;
 
+  function mockL10nWrapper(content) {
+    const bundle = new FluentBundle("en-US");
+    for (const [id, value] of Object.entries(content)) {
+      if (typeof value === "string") {
+        bundle.addResource(new FluentResource(`${id} = ${value}`));
+      }
+    }
+    const l10n = new ReactLocalization([bundle]);
+    return {
+      wrappingComponent: LocalizationProvider,
+      wrappingComponentProps: { l10n },
+    };
+  }
+
   function mountAndCheckProps(content = {}) {
     const props = {
       id: "foo123",
@@ -47,7 +63,10 @@ describe("SendToDeviceSnippet", () => {
       sendUserActionTelemetry: sandbox.stub(),
       onAction: sandbox.stub(),
     };
-    const comp = mount(<SendToDeviceSnippet {...props} />);
+    const comp = mount(
+      <SendToDeviceSnippet {...props} />,
+      mockL10nWrapper(props.content)
+    );
     // Check schema with the final props the component receives (including defaults)
     assert.jsonSchema(comp.children().get(0).props.content, schema);
     return comp;
@@ -80,7 +99,10 @@ describe("SendToDeviceSnippet", () => {
       onAction: sandbox.stub(),
       form_method: "POST",
     };
-    const wrapper = mount(<SendToDeviceSnippet {...defaults} />);
+    const wrapper = mount(
+      <SendToDeviceSnippet {...defaults} />,
+      mockL10nWrapper(DEFAULT_CONTENT)
+    );
     // SendToDeviceSnippet is a wrapper around SubmitFormSnippet
     const { props } = wrapper.children().get(0);
 
@@ -192,7 +214,10 @@ describe("SendToDeviceSnippet", () => {
         sendUserActionTelemetry: sandbox.stub(),
         onAction: sandbox.stub(),
       };
-      return mount(<SendToDeviceScene2Snippet {...props} />);
+      return mount(
+        <SendToDeviceScene2Snippet {...props} />,
+        mockL10nWrapper(props.content)
+      );
     }
 
     it("should render scene 2", () => {

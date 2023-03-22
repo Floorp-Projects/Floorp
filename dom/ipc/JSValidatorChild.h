@@ -7,10 +7,18 @@
 #ifndef mozilla_dom_JSValidatorChild
 #define mozilla_dom_JSValidatorChild
 
+#include "mozilla/Result.h"
 #include "mozilla/ProcInfo.h"
 #include "mozilla/dom/PJSValidatorChild.h"
 #include "mozilla/dom/JSValidatorUtils.h"
 #include "mozilla/net/OpaqueResponseUtils.h"
+
+template <typename T>
+using BufferUniquePtr = mozilla::UniquePtr<T, JS::FreePolicy>;
+
+namespace mozilla {
+class Decoder;
+}  // namespace mozilla
 
 namespace mozilla::dom {
 class JSValidatorChild final : public PJSValidatorChild {
@@ -22,7 +30,10 @@ class JSValidatorChild final : public PJSValidatorChild {
 
   mozilla::ipc::IPCResult RecvOnDataAvailable(Shmem&& aData);
 
-  mozilla::ipc::IPCResult RecvOnStopRequest(const nsresult& aReason);
+  mozilla::ipc::IPCResult RecvOnStopRequest(const nsresult& aReason,
+                                            const nsACString& aContentCharset,
+                                            const nsAString& aHintCharset,
+                                            const nsAString& aDocumentCharset);
 
   void ActorDestroy(ActorDestroyReason aReason) override;
 
@@ -31,7 +42,12 @@ class JSValidatorChild final : public PJSValidatorChild {
 
   using ValidatorResult = net::OpaqueResponseBlocker::ValidatorResult;
   void Resolve(ValidatorResult aResult);
-  ValidatorResult ShouldAllowJS() const;
+  ValidatorResult ShouldAllowJS(const mozilla::Span<const char>& aSpan) const;
+
+  mozilla::Result<mozilla::Span<const char>, nsresult> GetUTF8EncodedContent(
+      const mozilla::Span<const uint8_t>& aData,
+      BufferUniquePtr<Utf8Unit[]>& aBuffer,
+      UniquePtr<mozilla::Decoder>& aDecoder);
 
   nsCString mSourceBytes;
   Maybe<IsOpaqueResponseAllowedResolver> mResolver;

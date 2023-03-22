@@ -122,6 +122,29 @@ urlbar.impression.*
   - ``autofill_url``
     For url type autofill.
 
+urlbar.persistedsearchterms.revert_by_popup_count
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  A uint that is incremented when search terms are persisted in the Urlbar and
+  the Urlbar is reverted to show a full URL due to a PopupNotification. This
+  can happen when a user is on a SERP and permissions are requested, e.g.
+  request access to location. If the popup is persistent and the user did not
+  dismiss it before switching tabs, the popup will reappear when they return to
+  the tab. Thus, when returning to the tab with the persistent popup, this
+  value will be incremented because it should have persisted search terms but
+  instead showed a full URL.
+
+urlbar.persistedsearchterms.view_count
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  A uint that is incremented when search terms should be persisted in the
+  Urlbar. This will trigger when a user loads a SERP from any SAP that results
+  in the search terms persisting in the Urlbar, as well as switching to a tab
+  containing a SERP that should be persisting the search terms in the Urlbar,
+  regardless of whether a PopupNotification is present. Thus, for every
+  ``revert_by_popup_count``, there should be at least one corresponding
+  ``view_count``.
+
 urlbar.tips
 ~~~~~~~~~~~
 

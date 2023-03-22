@@ -47,7 +47,7 @@
 ///
 
 #if (defined(WR_FEATURE_ALPHA_PASS) || defined(WR_FEATURE_ANTIALIASING)) && !defined(SWGL_ANTIALIAS)
-varying vec2 v_local_pos;
+varying highp vec2 v_local_pos;
 #endif
 
 #ifdef WR_VERTEX_SHADER

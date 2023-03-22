@@ -13,7 +13,7 @@ attribute vec4 a_src_rect;
 attribute vec4 a_dst_rect;
 attribute vec2 a_dst_texture_size;
 
-varying vec2 v_uv;
+varying highp vec2 v_uv;
 
 void main(void) {
     // We use texel fetch so v_uv is in unnormalized device space.
@@ -30,7 +30,7 @@ void main(void) {
 
 out vec4 oFragColor;
 
-varying vec2 v_uv;
+varying highp vec2 v_uv;
 
 uniform sampler2D sColor0;
 

@@ -6922,7 +6922,7 @@
   "PLACES_DATABASE_CORRUPTION_HANDLING_STAGE": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "thunderbird"],
-    "alert_emails": ["mbonardo@mozilla.com", "mbanner@mozilla.com"],
+    "alert_emails": ["mbonardo@mozilla.com", "fx-search-telemetry@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 6,
@@ -6943,13 +6943,15 @@
   },
   "PLACES_MOST_RECENT_EXPIRED_VISIT_DAYS": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["mbonardo@mozilla.com", "mbanner@mozilla.com"],
+    "products": ["firefox"],
+    "alert_emails": ["mbonardo@mozilla.com", "fx-search-telemetry@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
     "low": 30,
     "high": 730,
     "n_buckets": 12,
+    "bug_numbers": [1822848],
+    "releaseChannelCollection": "opt-out",
     "description": "PLACES: the most recent expired visit in days"
   },
   "PLACES_BOOKMARKS_COUNT": {
@@ -7160,25 +7162,29 @@
   },
   "PLACES_DATABASE_FILESIZE_MB": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "thunderbird"],
+    "alert_emails": ["mbonardo@mozilla.com", "fx-search-telemetry@mozilla.com"],
+    "products": ["firefox"],
     "expires_in_version": "never",
     "kind": "exponential",
     "low": 5,
     "high": 200,
     "n_buckets": 10,
+    "bug_numbers": [1822848],
+    "releaseChannelCollection": "opt-out",
     "description": "PLACES: Database filesize (MB)"
   },
 
   "PLACES_DATABASE_FAVICONS_FILESIZE_MB": {
     "record_in_processes": ["main"],
-    "products": ["firefox", "fennec", "thunderbird"],
-    "alert_emails": ["mak@mozilla.com", "fx-search-telemetry@mozilla.com"],
-    "bug_numbers": [1346554],
+    "products": ["firefox"],
+    "alert_emails": ["mbonardo@mozilla.com", "fx-search-telemetry@mozilla.com"],
+    "bug_numbers": [1346554, 1822848],
     "expires_in_version": "never",
     "kind": "exponential",
     "low": 5,
     "high": 100,
     "n_buckets": 10,
+    "releaseChannelCollection": "opt-out",
     "description": "PLACES: Favicons database filesize (MB)"
   },
   "PLACES_EXPIRATION_STEPS_TO_CLEAN2": {
@@ -7244,6 +7250,17 @@
     "n_values": 20,
     "description": "Cumulative no. of History-specific searches performed before selecting a History link in Library."
   },
+  "PLACES_LIBRARY_CUMULATIVE_BOOKMARK_SEARCHES": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "expires_in_version": "never",
+    "alert_emails": ["firefox-view-engineers@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1819081],
+    "kind": "enumerated",
+    "n_values": 20,
+    "description": "Cumulative no. of Bookmark-specific searches performed before selecting a bookmark link in Library."
+  },
   "PLACES_IDLE_FRECENCY_DECAY_TIME_MS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "thunderbird"],
@@ -7267,13 +7284,14 @@
   "PLACES_FRECENCY_RECALC_CHUNK_TIME_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
-    "alert_emails": ["fx-search-telemetry@mozilla.com"],
+    "alert_emails": ["mbonardo@mozilla.com", "fx-search-telemetry@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "low": 50,
     "high": 10000,
     "n_buckets": 10,
-    "bug_numbers": [1811209],
+    "bug_numbers": [1811209, 1822848],
+    "releaseChannelCollection": "opt-out",
     "description": "PLACES: Time to recalculate frecency for a chunk of pages (ms)"
   },
   "PLACES_ANNOS_PAGES_COUNT": {
@@ -16080,6 +16098,17 @@
     "kind": "enumerated",
     "n_values": 20,
     "description": "Cumulative no. of search filters applied performed before selecting a link."
+  },
+  "PLACES_BOOKMARKS_SEARCHBAR_CUMULATIVE_SEARCHES": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "expires_in_version": "never",
+    "alert_emails": ["firefox-view-engineers@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1819081],
+    "kind": "enumerated",
+    "n_values": 20,
+    "description": "Cumulative no. bookmark of searches performed before selecting a link."
   },
   "NOTIFY_OBSERVERS_LATENCY_MS": {
     "record_in_processes": ["main", "content", "gpu"],

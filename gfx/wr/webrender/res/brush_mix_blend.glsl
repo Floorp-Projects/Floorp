@@ -8,18 +8,18 @@
 #include shared,prim_shared,brush
 
 // UV and bounds for the source image
-varying vec2 v_src_uv;
-flat varying vec4 v_src_uv_sample_bounds;
+varying highp vec2 v_src_uv;
+flat varying highp vec4 v_src_uv_sample_bounds;
 
 // UV and bounds for the backdrop image
-varying vec2 v_backdrop_uv;
-flat varying vec4 v_backdrop_uv_sample_bounds;
+varying highp vec2 v_backdrop_uv;
+flat varying highp vec4 v_backdrop_uv_sample_bounds;
 
 // Flag to allow perspective interpolation of UV.
 // Packed in to vector to work around bug 1630356.
-flat varying vec2 v_perspective;
+flat varying mediump vec2 v_perspective;
 // mix-blend op. Packed in to vector to work around bug 1630356.
-flat varying ivec2 v_op;
+flat varying mediump ivec2 v_op;
 
 #ifdef WR_VERTEX_SHADER
 

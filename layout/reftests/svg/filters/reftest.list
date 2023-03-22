@@ -41,10 +41,10 @@ fuzzy(0-1,0-10000) == feComposite-2.svg feComposite-2-ref.svg
 fuzzy(0-1,0-1600) == feFlood-1.svg feFlood-1-ref.svg
 skip-if(d2d) fuzzy(0-1,0-6400) == feFlood-2.svg feFlood-2-ref.svg
 
-fuzzy(0-2,0-6404) == feGaussianBlur-1.svg feGaussianBlur-1-ref.svg
+fuzzy(0-2,0-6404) fuzzy-if(Android&&device&&!swgl,6-6,6400-6400) == feGaussianBlur-1.svg feGaussianBlur-1-ref.svg
 fuzzy(0-2,0-304) == feGaussianBlur-2.svg feGaussianBlur-2-ref.svg
 # != feGaussianBlur-3.svg feGaussianBlur-3-ref.svg
-fuzzy-if(!useDrawSnapshot,2-5,4764-8168) == feGaussianBlur-4.svg feGaussianBlur-4-ref.svg
+fuzzy-if(!useDrawSnapshot,2-5,4764-8168) fuzzy-if(Android&&device&&!swgl,5-5,8574-8574) == feGaussianBlur-4.svg feGaussianBlur-4-ref.svg
 fuzzy-if(geckoview,0-4,0-200) == feGaussianBlur-5.svg feGaussianBlur-5-ref.svg
 == feGaussianBlur-6.svg feGaussianBlur-6-ref.svg
 skip-if(d2d) == feGaussianBlur-cap-large-directional-radius-on-software.html feGaussianBlur-cap-large-directional-radius-on-software-ref.html

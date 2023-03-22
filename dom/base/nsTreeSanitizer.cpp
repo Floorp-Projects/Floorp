@@ -1787,8 +1787,8 @@ static void SanitizeStyleSheet(const nsAString& aOriginal,
   aSanitized.Truncate();
 
   NS_ConvertUTF16toUTF8 style(aOriginal);
-  RefPtr<nsIReferrerInfo> referrer =
-      ReferrerInfo::CreateForInternalCSSResources(aDocument);
+  nsIReferrerInfo* referrer =
+      aDocument->ReferrerInfoForInternalCSSAndSVGResources();
   auto extraData =
       MakeRefPtr<URLExtraData>(aBaseURI, referrer, aDocument->NodePrincipal());
   RefPtr<RawServoStyleSheetContents> contents =

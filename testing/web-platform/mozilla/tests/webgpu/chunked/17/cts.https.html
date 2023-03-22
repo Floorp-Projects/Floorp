@@ -1,0 +1,59 @@
+<!-- AUTO-GENERATED - DO NOT EDIT. See WebGPU CTS: tools/gen_wpt_cts_html. -->
+<!--
+    This test suite is built from the TypeScript sources at:
+    https://github.com/gpuweb/cts
+
+    If you are debugging WebGPU conformance tests, it's highly recommended that
+    you use the standalone interactive runner in that repository, which
+    provides tools for easier debugging and editing (source maps, debug
+    logging, warn/skip functionality, etc.)
+
+    NOTE:
+    The WPT version of this file is generated with *one variant per test spec
+    file*. If your harness needs more fine-grained suppressions, you'll need to
+    generate your own variants list from your suppression list.
+    See `tools/gen_wpt_cts_html` to do this.
+
+    When run under browser CI, the original cts.https.html should be skipped, and
+    this alternate version should be run instead, under a non-exported WPT test
+    directory (e.g. Chromium's wpt_internal).
+-->
+
+<!doctype html>
+<title>WebGPU CTS</title>
+<meta charset=utf-8>
+<link rel=help href='https://gpuweb.github.io/gpuweb/'>
+
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script>
+    const loadWebGPUExpectations = undefined;
+    const shouldWebGPUCTSFailOnWarnings = undefined;
+</script>
+<script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
+
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,indirect_draw:indirect_offset_alignment:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,indirect_draw:indirect_offset_oob:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,setIndexBuffer:index_buffer_state:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,setIndexBuffer:index_buffer,device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,setIndexBuffer:index_buffer_usage:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,setIndexBuffer:offset_alignment:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,setIndexBuffer:offset_and_size_oob:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,setPipeline:invalid_pipeline:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,setPipeline:pipeline,device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,setVertexBuffer:slot:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,setVertexBuffer:vertex_buffer_state:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,setVertexBuffer:vertex_buffer,device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,setVertexBuffer:vertex_buffer_usage:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,setVertexBuffer:offset_alignment:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,setVertexBuffer:offset_and_size_oob:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,state_tracking:all_needed_vertex_buffer_should_be_bound:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,state_tracking:all_needed_index_buffer_should_be_bound:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,state_tracking:vertex_buffers_inherit_from_previous_pipeline:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,state_tracking:vertex_buffers_do_not_inherit_between_render_passes:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,setBindGroup:state_and_binding_index:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,setBindGroup:bind_group,device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,setBindGroup:dynamic_offsets_passed_but_not_expected:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,setBindGroup:dynamic_offsets_match_expectations_in_pass_encoder:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,setBindGroup:u32array_start_and_length:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,setBindGroup:buffer_dynamic_offsets:*'>

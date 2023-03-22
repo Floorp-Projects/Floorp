@@ -9,6 +9,9 @@
 #include "mozilla/dom/ReadableStreamDefaultController.h"
 #include "mozilla/dom/UnderlyingSourceCallbackHelpers.h"
 #include "mozilla/dom/UnderlyingSourceBinding.h"
+#include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerRunnable.h"
 #include "js/experimental/TypedData.h"
 
 namespace mozilla::dom {
@@ -128,7 +131,9 @@ already_AddRefed<Promise> UnderlyingSourceAlgorithmsWrapper::PullCallback(
   nsCOMPtr<nsIGlobalObject> global = aController.GetParentObject();
   return PromisifyAlgorithm(
       global,
-      [&](ErrorResult& aRv) { return PullCallbackImpl(aCx, aController, aRv); },
+      [&](ErrorResult& aRv) MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
+        return PullCallbackImpl(aCx, aController, aRv);
+      },
       aRv);
 }
 
@@ -146,10 +151,67 @@ already_AddRefed<Promise> UnderlyingSourceAlgorithmsWrapper::CancelCallback(
       aRv);
 }
 
+NS_IMPL_ISUPPORTS(InputStreamHolder, nsIInputStreamCallback)
+
+InputStreamHolder::InputStreamHolder(JSContext* aCx,
+                                     InputToReadableStreamAlgorithms* aCallback,
+                                     nsIAsyncInputStream* aInput)
+    : mCallback(aCallback), mInput(aInput) {
+  if (!NS_IsMainThread()) {
+    // We're in a worker
+    WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
+    MOZ_ASSERT(workerPrivate);
+
+    workerPrivate->AssertIsOnWorkerThread();
+
+    // Note, this will create a ref-cycle between the holder and the stream.
+    // The cycle is broken when the stream is closed or the worker begins
+    // shutting down.
+    mWorkerRef =
+        StrongWorkerRef::Create(workerPrivate, "InputStreamHolder",
+                                [self = RefPtr{this}]() { self->Shutdown(); });
+    if (NS_WARN_IF(!mWorkerRef)) {
+      return;
+    }
+  }
+}
+
+InputStreamHolder::~InputStreamHolder() { MOZ_ASSERT(!mCallback); }
+
+void InputStreamHolder::Shutdown() {
+  if (mCallback) {
+    mCallback = nullptr;
+    mInput->CloseWithStatus(NS_BASE_STREAM_CLOSED);
+    mWorkerRef = nullptr;
+    // If we have an AsyncWait running, we'll get a callback and clear
+    // the mAsyncWaitWorkerRef
+  }
+}
+
+nsresult InputStreamHolder::AsyncWait(uint32_t aFlags, uint32_t aRequestedCount,
+                                      nsIEventTarget* aEventTarget) {
+  nsresult rv = mInput->AsyncWait(this, aFlags, aRequestedCount, aEventTarget);
+  if (NS_SUCCEEDED(rv)) {
+    mAsyncWaitWorkerRef = mWorkerRef;
+  }
+  return rv;
+}
+
+NS_IMETHODIMP InputStreamHolder::OnInputStreamReady(
+    nsIAsyncInputStream* aStream) {
+  mAsyncWaitWorkerRef = nullptr;
+  // We may get called back after ::Shutdown()
+  if (mCallback) {
+    return mCallback->OnInputStreamReady(aStream);
+  }
+  return NS_ERROR_FAILURE;
+}
+
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(
     InputToReadableStreamAlgorithms, UnderlyingSourceAlgorithmsWrapper)
 NS_IMPL_CYCLE_COLLECTION_INHERITED(InputToReadableStreamAlgorithms,
-                                   UnderlyingSourceAlgorithmsWrapper, mStream)
+                                   UnderlyingSourceAlgorithmsWrapper, mStream,
+                                   mOwningEventTarget)
 
 already_AddRefed<Promise> InputToReadableStreamAlgorithms::PullCallbackImpl(
     JSContext* aCx, ReadableStreamController& aController, ErrorResult& aRv) {
@@ -186,7 +248,7 @@ already_AddRefed<Promise> InputToReadableStreamAlgorithms::PullCallbackImpl(
 
   MOZ_DIAGNOSTIC_ASSERT(mInput);
 
-  nsresult rv = mInput->AsyncWait(this, 0, 0, mOwningEventTarget);
+  nsresult rv = mInput->AsyncWait(0, 0, mOwningEventTarget);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     ErrorPropagation(aCx, stream, rv);
     return nullptr;
@@ -202,7 +264,7 @@ InputToReadableStreamAlgorithms::OnInputStreamReady(
   MOZ_DIAGNOSTIC_ASSERT(aStream);
 
   // Already closed. We have nothing else to do here.
-  if (mState == eClosed) {
+  if (mState == eClosed || !mStream) {
     return NS_OK;
   }
 
@@ -291,7 +353,7 @@ void InputToReadableStreamAlgorithms::WriteIntoReadRequestBuffer(
     return;
   }
 
-  rv = mInput->AsyncWait(this, 0, 0, mOwningEventTarget);
+  rv = mInput->AsyncWait(0, 0, mOwningEventTarget);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     ErrorPropagation(aCx, aStream, rv);
     return;
@@ -358,7 +420,11 @@ void InputToReadableStreamAlgorithms::CloseAndReleaseObjects(
 }
 
 void InputToReadableStreamAlgorithms::ReleaseObjects() {
-  mInput->CloseWithStatus(NS_BASE_STREAM_CLOSED);
+  if (mInput) {
+    mInput->CloseWithStatus(NS_BASE_STREAM_CLOSED);
+    mInput->Shutdown();
+    mInput = nullptr;
+  }
 }
 
 void InputToReadableStreamAlgorithms::ErrorPropagation(JSContext* aCx,

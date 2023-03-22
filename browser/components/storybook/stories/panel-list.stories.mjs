@@ -22,7 +22,7 @@ const openMenu = e => {
     .toggle(e);
 };
 
-const Template = ({ isOpen, items }) =>
+const Template = ({ isOpen, items, wideAnchor }) =>
   html`
     <style>
       panel-item[icon="passwords"]::part(button) {
@@ -35,6 +35,9 @@ const Template = ({ isOpen, items }) =>
         position: absolute;
         background-image: url("chrome://global/skin/icons/more.svg");
       }
+      button[wide] {
+        width: 400px !important;
+      }
       .end {
         inset-inline-end: 30px;
       }
@@ -43,14 +46,31 @@ const Template = ({ isOpen, items }) =>
         inset-block-end: 30px;
       }
     </style>
-    <button class="ghost-button icon-button" @click=${openMenu}></button>
-    <button class="ghost-button icon-button end" @click=${openMenu}></button>
-    <button class="ghost-button icon-button bottom" @click=${openMenu}></button>
+    <button
+      class="ghost-button icon-button"
+      @click=${openMenu}
+      ?wide="${wideAnchor}"
+    ></button>
+    <button
+      class="ghost-button icon-button end"
+      @click=${openMenu}
+      ?wide="${wideAnchor}"
+    ></button>
+    <button
+      class="ghost-button icon-button bottom"
+      @click=${openMenu}
+      ?wide="${wideAnchor}"
+    ></button>
     <button
       class="ghost-button icon-button bottom end"
       @click=${openMenu}
+      ?wide="${wideAnchor}"
     ></button>
-    <panel-list ?stay-open=${isOpen} ?open=${isOpen}>
+    <panel-list
+      ?stay-open=${isOpen}
+      ?open=${isOpen}
+      ?min-width-from-anchor=${wideAnchor}
+    >
       ${items.map(i =>
         i == "<hr>"
           ? html`
@@ -73,6 +93,7 @@ const Template = ({ isOpen, items }) =>
 export const Simple = Template.bind({});
 Simple.args = {
   isOpen: false,
+  wideAnchor: false,
   items: [
     "Item One",
     { text: "Item Two (accesskey w)", accesskey: "w" },
@@ -86,6 +107,7 @@ Simple.args = {
 export const Icons = Template.bind({});
 Icons.args = {
   isOpen: false,
+  wideAnchor: false,
   items: [
     { text: "Passwords", icon: "passwords" },
     { text: "Settings", icon: "settings" },
@@ -95,5 +117,12 @@ Icons.args = {
 export const Open = Template.bind({});
 Open.args = {
   ...Simple.args,
+  wideAnchor: false,
   isOpen: true,
+};
+
+export const Wide = Template.bind({});
+Wide.args = {
+  ...Simple.args,
+  wideAnchor: true,
 };

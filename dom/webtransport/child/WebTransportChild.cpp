@@ -58,7 +58,7 @@ void WebTransportChild::CloseAll() {
 
 ::mozilla::ipc::IPCResult WebTransportChild::RecvIncomingDatagram(
     nsTArray<uint8_t>&& aData, const TimeStamp& aRecvTimeStamp) {
-  // XXX handle the received datagram
+  mTransport->NewDatagramReceived(std::move(aData), aRecvTimeStamp);
   return IPC_OK();
 }
 

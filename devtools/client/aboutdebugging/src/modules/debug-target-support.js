@@ -95,13 +95,3 @@ function supportsTemporaryExtensionInstaller(runtimeType) {
   return runtimeType === RUNTIMES.THIS_FIREFOX;
 }
 exports.supportsTemporaryExtensionInstaller = supportsTemporaryExtensionInstaller;
-
-/**
- * Check if the given runtimeType supports temporary extension additional
- * actions (e.g. reload and remove, which are currently disallowed on
- * non-local runtimes).
- */
-function supportsTemporaryExtensionAdditionalActions(runtimeType) {
-  return runtimeType === RUNTIMES.THIS_FIREFOX;
-}
-exports.supportsTemporaryExtensionAdditionalActions = supportsTemporaryExtensionAdditionalActions;

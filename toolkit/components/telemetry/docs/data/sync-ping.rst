@@ -66,6 +66,10 @@ Structure:
                 applied: <integer>, // Number of records applied
                 succeeded: <integer>, // Number of records that applied without error
                 failed: <integer>, // Number of records that failed to apply
+                failedReasons: [
+                  name: <string> // Error message trying to apply the record
+                  count: <integer> // count of how many times this error occurred
+                ],
               },
 
               // Optional, excluded if it would be empty. Records that would be
@@ -74,6 +78,10 @@ Structure:
                 {
                   sent: <integer>, // Number of outgoing records sent. Zero values are omitted.
                   failed: <integer>, // Number that failed to send. Zero values are omitted.
+                  failedReasons: [
+                  name: <string> // Error message trying to apply the record
+                  count: <integer> // count of how many times this error occurred
+                ],
                 }
               ],
               // Optional, excluded if there were no errors

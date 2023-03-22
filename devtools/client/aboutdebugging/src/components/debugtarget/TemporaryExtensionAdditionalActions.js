@@ -10,6 +10,9 @@ const {
 } = require("resource://devtools/client/shared/vendor/react.js");
 const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  connect,
+} = require("resource://devtools/client/shared/vendor/react-redux.js");
 
 const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
 const Localized = createFactory(FluentReact.Localized);
@@ -27,6 +30,13 @@ const {
   MESSAGE_LEVEL,
 } = require("resource://devtools/client/aboutdebugging/src/constants.js");
 
+const {
+  getCurrentRuntimeDetails,
+} = require("resource://devtools/client/aboutdebugging/src/modules/runtimes-state-helper.js");
+const {
+  RUNTIMES,
+} = require("resource://devtools/client/aboutdebugging/src/constants.js");
+
 /**
  * This component provides components that reload/remove temporary extension.
  */
@@ -35,6 +45,8 @@ class TemporaryExtensionAdditionalActions extends PureComponent {
     return {
       dispatch: PropTypes.func.isRequired,
       target: Types.debugTarget.isRequired,
+      // Provided by redux state
+      runtimeDetails: Types.runtimeDetails.isRequired,
     };
   }
 
@@ -132,6 +144,30 @@ class TemporaryExtensionAdditionalActions extends PureComponent {
     );
   }
 
+  renderRemoveButton() {
+    // TODO: Bug 1823457 - Uninstalling an add-on is currently limited to a
+    // local runtime. Once it becomes possible to use the RDP protocol, we can
+    // show this "Remove" button.
+    if (this.props.runtimeDetails.info.type !== RUNTIMES.THIS_FIREFOX) {
+      return null;
+    }
+
+    return Localized(
+      {
+        id: "about-debugging-tmp-extension-remove-button",
+      },
+      dom.button(
+        {
+          className:
+            "default-button default-button--micro " +
+            "qa-temporary-extension-remove-button",
+          onClick: e => this.remove(),
+        },
+        "Remove"
+      )
+    );
+  }
+
   render() {
     return [
       dom.div(
@@ -154,20 +190,7 @@ class TemporaryExtensionAdditionalActions extends PureComponent {
             "Reload"
           )
         ),
-        Localized(
-          {
-            id: "about-debugging-tmp-extension-remove-button",
-          },
-          dom.button(
-            {
-              className:
-                "default-button default-button--micro " +
-                "qa-temporary-extension-remove-button",
-              onClick: e => this.remove(),
-            },
-            "Remove"
-          )
-        )
+        this.renderRemoveButton()
       ),
       this.renderReloadError(),
       this.renderTerminateBackgroundScriptError(),
@@ -175,4 +198,10 @@ class TemporaryExtensionAdditionalActions extends PureComponent {
   }
 }
 
-module.exports = TemporaryExtensionAdditionalActions;
+const mapStateToProps = state => {
+  return {
+    runtimeDetails: getCurrentRuntimeDetails(state.runtimes),
+  };
+};
+
+module.exports = connect(mapStateToProps)(TemporaryExtensionAdditionalActions);

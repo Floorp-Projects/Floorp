@@ -2258,7 +2258,7 @@ library:
     bug_numbers:
       - 1815906
     description: >
-      The number of history items opened from the Library window
+      The number of history or bookmark items opened from the Library window
     expires: never
     kind: uint
     keyed: true
@@ -2273,7 +2273,7 @@ library:
     bug_numbers:
       - 1815906
     description: >
-      The number of times the Library window was opened
+      The number of times the Library window was opened, keyed by 'history' or 'bookmarks'
     expires: never
     kind: uint
     keyed: true
@@ -2288,7 +2288,7 @@ library:
     bug_numbers:
       - 1815906
     description: >
-      The number of history-specific searches made from the Library window
+      The number of history-specific or bookmark-specific searches made from the Library window
     expires: never
     kind: uint
     keyed: true
@@ -7592,6 +7592,44 @@ urlbar.picked:
         - 'firefox'
       record_in_processes:
         - main
+
+urlbar.persistedsearchterms:
+  revert_by_popup_count:
+    bug_numbers:
+      - 1815971
+    description:
+      The count of the number of times search terms were removed from the
+      urlbar due to a shown PopupNotification. This event can happen when
+      a user loads a SERP and a PopupNotification is shown, as well as when
+      a user switches away from a tab on a SERP showing a PopupNotification
+      and switches back to it.
+    expires: never
+    kind: uint
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  view_count:
+    bug_numbers:
+      - 1815971
+    description:
+      The count of the number of times search terms persisted in the Urlbar.
+      This gets recorded after a user loads a SERP that persists search terms,
+      or switches back to an existing tab that should be showing the persisted
+      search terms in the Urlbar, regardless of whether PopupNotification
+      cleared the search terms from the Urlbar.
+    expires: never
+    kind: uint
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
 
 urlbar.searchmode:
   bookmarkmenu:

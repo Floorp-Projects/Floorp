@@ -4,10 +4,10 @@
 
 // Gradient GPU cache address.
 // Packed in to a vector to work around bug 1630356.
-flat varying HIGHP_FS_ADDRESS ivec2 v_gradient_address;
+flat varying highp ivec2 v_gradient_address;
 // Repetition along the gradient stops.
 // Packed in to a vector to work around bug 1630356.
-flat varying vec2 v_gradient_repeat;
+flat varying mediump vec2 v_gradient_repeat;
 
 #ifdef WR_FRAGMENT_SHADER
 

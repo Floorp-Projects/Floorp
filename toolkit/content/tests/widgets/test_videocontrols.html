@@ -59,7 +59,9 @@ const scrubberCenterY = videoHeight - Math.round(scrubberHeight / 2);
 
 const video = document.getElementById("video");
 
-let expectingEvents;
+let requiredEvents = [];
+let forbiddenEvents = [];
+let receivedEvents = [];
 let expectingEventPromise;
 
 async function isMuteButtonMuted() {
@@ -83,27 +85,91 @@ function forceReframe() {
   video.getBoundingClientRect();
 }
 
-function verifyExpectedEvent(event) {
-  const checkingEvent = expectingEvents.shift();
-
-  if (event.type == checkingEvent) {
-    ok(true, "checking event type: " + checkingEvent);
-  } else {
-    expectingEventPromise.reject(new Error(`Got event: ${event.type}, expected: ${checkingEvent}`));
+function captureEventThenCheck(event) {
+  if (event) {
+    info(`Received event ${event.type}.`);
+    receivedEvents.push(event.type);
   }
 
-  if (!expectingEvents.length) {
-    SimpleTest.executeSoon(expectingEventPromise.resolve);
+  const cleanupExpectations = () => {
+    requiredEvents.length = 0;
+    forbiddenEvents.length = 0;
+    receivedEvents.length = 0;
   }
+
+  // If receivedEvents contains any of the forbiddenEvents, reject the expectingEventPromise.
+  for (const forbidden of forbiddenEvents) {
+    if (receivedEvents.includes(forbidden)) {
+      // Capture list of requiredEvents for later reporting.
+      const oldRequiredEvents = requiredEvents.slice();
+      cleanupExpectations();
+      expectingEventPromise.reject(new Error(`Got forbidden event ${forbidden} while expecting ${oldRequiredEvents}`));
+      return;
+    }
+  }
+
+  if (!requiredEvents.length) {
+    // We might be getting an event before we started waiting for it. That's fine,
+    // just early exit.
+    return;
+  }
+
+  // We are expecting at least one event. If receivedEvents is lacking one of the
+  // requiredEvents, exit.
+  for (const required of requiredEvents) {
+    if (!receivedEvents.includes(required)) {
+      return;
+    }
+  }
+
+  // We've received all the events we required. Resolve the expectingEventPromise.
+  info(`No longer waiting for expected event(s) ${requiredEvents}.`);
+  cleanupExpectations();
+
+  // Don't resolve this right away, because this is called from within event handlers and
+  // we want all other event handlers to have a chance to respond to this event before we
+  // proceed with the test. This solves problems with things like a play-pause-play, where
+  // some of the actions will be discarded if the video controls themselves aren't in the
+  // expected state.
+  SimpleTest.executeSoon(expectingEventPromise.resolve);
 }
 
-async function waitForEvent(...eventTypes) {
-  expectingEvents = eventTypes;
+function waitForEvent(required, forbidden) {
+  return new Promise((resolve, reject) => {
+    expectingEventPromise = {resolve, reject};
 
-  await new Promise((resolve, reject) => expectingEventPromise = {resolve, reject}).catch(e => {
-    // Throw error here to get the caller in error stack.
-    ok(false, e);
+    info(`Waiting for ${required}` + (forbidden ? ` but not ${forbidden}...` : `...`));
+    if (Array.isArray(required)) {
+      requiredEvents.push(...required);
+    } else {
+      requiredEvents.push(required);
+    }
+    if (forbidden) {
+      if (Array.isArray(forbidden)) {
+        forbiddenEvents.push(...forbidden);
+      } else {
+        forbiddenEvents.push(forbidden);
+      }
+    }
+
+    // Immediately check the received events, since the calling pattern used in this test is
+    // calling this method *after* the events could have been triggered.
+    captureEventThenCheck();
   });
+}
+
+async function repeatUntilSuccessful(f) {
+  let successful = false;
+  do {
+    try {
+      // Delay one event loop.
+      await new Promise(r => SimpleTest.executeSoon(r));
+      await f();
+      successful = true;
+    } catch (error) {
+      info(`repeatUntilSuccessful: error ${error}.`);
+    }
+  } while(!successful);
 }
 
 add_task(async function setup() {
@@ -121,12 +187,13 @@ add_task(async function setup() {
     video.src = "seek_with_sound.ogg";
   });
 
-  video.addEventListener("play", verifyExpectedEvent);
-  video.addEventListener("pause", verifyExpectedEvent);
-  video.addEventListener("volumechange", verifyExpectedEvent);
-  video.addEventListener("seeking", verifyExpectedEvent);
-  video.addEventListener("seeked", verifyExpectedEvent);
-  document.addEventListener("mozfullscreenchange", verifyExpectedEvent);
+  video.addEventListener("play", captureEventThenCheck);
+  video.addEventListener("pause", captureEventThenCheck);
+  video.addEventListener("volumechange", captureEventThenCheck);
+  video.addEventListener("seeking", captureEventThenCheck);
+  video.addEventListener("seeked", captureEventThenCheck);
+  document.addEventListener("mozfullscreenchange", captureEventThenCheck);
+  document.addEventListener("fullscreenerror", captureEventThenCheck);
 
   ["mousedown", "mouseup", "dblclick", "click"]
     .forEach((eventType) => {
@@ -217,7 +284,7 @@ add_task(async function styled_video() {
 add_task(async function reset_currentTime() {
   ok(true, "video position is at " + video.currentTime);
   video.currentTime = 0.0;
-  await waitForEvent("seeking", "seeked");
+  await waitForEvent(["seeking", "seeked"]);
   // Bug 477434 -- sometimes we get 0.098999 here instead of 0!
   // is(video.currentTime, 0.0, "checking playback position");
   ok(true, "video position is at " + video.currentTime);
@@ -241,7 +308,7 @@ add_task(async function drag_slider() {
   synthesizeMouse(video, beginDragX, scrubberCenterY, {type: "mousedown", button: 0});
   synthesizeMouse(video, endDragX, scrubberCenterY, {type: "mousemove", button: 0});
   synthesizeMouse(video, endDragX, scrubberCenterY, {type: "mouseup",   button: 0});
-  await waitForEvent("seeking", "seeked");
+  await waitForEvent(["seeking", "seeked"]);
   ok(true, "video position is at " + video.currentTime);
   // The width of srubber is not equal in every platform as we use system default font
   // in duration and position box. We can not precisely drag to expected position, so
@@ -256,7 +323,7 @@ add_task(async function drag_slider() {
  */
 add_task(async function click_slider() {
   synthesizeMouse(video, scrubberOffsetX + (scrubberWidth / 4), scrubberCenterY, {});
-  await waitForEvent("seeking", "seeked");
+  await waitForEvent(["seeking", "seeked"]);
   ok(true, "video position is at " + video.currentTime);
   // The scrubber currently just jumps towards the nearest pageIncrement point, not
   // precisely to the point clicked. So, expectedTime isn't (videoDuration / 4).
@@ -318,13 +385,20 @@ add_task(async function change_volume() {
   ok(!video.muted, "Video is not muted.");
   ok(!(await isMuteButtonMuted()), "Mute button says it's not muted");
 
-  synthesizeMouse(video, fullscreenButtonCenterX, fullscreenButtonCenterY, {});
-  await waitForEvent("mozfullscreenchange");
+  await repeatUntilSuccessful(async () => {
+    synthesizeMouse(video, fullscreenButtonCenterX, fullscreenButtonCenterY, {});
+    await waitForEvent("mozfullscreenchange", "fullscreenerror");
+  });
+
   is(video.volume, 0.6, "Volume should still be 0.6");
   await isVolumeSliderShowingCorrectVolume(video.volume);
 
-  synthesizeKey("KEY_Escape");
-  await waitForEvent("mozfullscreenchange");
+  await repeatUntilSuccessful(async () => {
+    video.focus();
+    synthesizeKey("KEY_Escape");
+    await waitForEvent("mozfullscreenchange", "fullscreenerror");
+  });
+
   is(video.volume, 0.6, "Volume should still be 0.6");
   await isVolumeSliderShowingCorrectVolume(video.volume);
   forceReframe();
@@ -353,7 +427,7 @@ add_task(async function whitespace_pause_video() {
  */
 add_task(async function click_and_hold_slider() {
   synthesizeMouse(video, scrubberOffsetX + 10, scrubberCenterY, {type: "mousedown", button: 0});
-  await waitForEvent("pause", "seeking", "seeked");
+  await waitForEvent(["pause", "seeking", "seeked"]);
 
   synthesizeMouse(video, scrubberOffsetX + 10, scrubberCenterY, {});
   await waitForEvent("play");
@@ -371,10 +445,10 @@ add_task(async function click_event_dispatch() {
   video.pause();
   await waitForEvent("pause");
   video.currentTime = 0.0;
-  await waitForEvent("seeking", "seeked");
+  await waitForEvent(["seeking", "seeked"]);
   is(video.paused, true, "checking video play state");
   synthesizeMouse(video, scrubberOffsetX + 10, scrubberCenterY, {});
-  await waitForEvent("seeking", "seeked");
+  await waitForEvent(["seeking", "seeked"]);
 
   video.removeEventListener("click", clientScriptClickHandler);
 });
@@ -393,8 +467,11 @@ add_task(async function ensure_fullscreen_cursor() {
   video.play();
   await waitForEvent("play");
 
-  video.mozRequestFullScreen();
-  await waitForEvent("mozfullscreenchange");
+  await repeatUntilSuccessful(async () => {
+    video.focus();
+    await video.mozRequestFullScreen();
+    await waitForEvent("mozfullscreenchange", "fullscreenerror");
+  });
 
   const controlsSpacer = getElementWithinVideo(video, "controlsSpacer");
   is(controlsSpacer.hasAttribute("hideCursor"), true, "Cursor is hidden");
@@ -410,8 +487,12 @@ add_task(async function ensure_fullscreen_cursor() {
 
   // Restore
   video.setAttribute("mozNoDynamicControls", "");
-  document.mozCancelFullScreen();
-  await waitForEvent("mozfullscreenchange");
+
+  await repeatUntilSuccessful(async () => {
+    await document.mozCancelFullScreen();
+    await waitForEvent("mozfullscreenchange", "fullscreenerror");
+  });
+
   if (!video.paused) {
     video.pause();
     await waitForEvent("pause");
@@ -424,38 +505,57 @@ add_task(async function ensure_fullscreen_button() {
   let host = document.getElementById("host");
   let root = host.attachShadow({ mode: "open" });
   root.appendChild(video);
+  forceReframe();
 
-  video.mozRequestFullScreen();
-  await waitForEvent("mozfullscreenchange");
+  await repeatUntilSuccessful(async () => {
+    await video.mozRequestFullScreen();
+    await waitForEvent("mozfullscreenchange", "fullscreenerror");
+  });
 
-  // Compute the location to click on to hit the fullscreen button.
-  // Use the video size instead of the screen size here, because mozfullscreenchange does not
-  // guarantee that our document covers the screen, see bug 1575630.
-  const r = video.getBoundingClientRect();
-  const buttonCenterX = r.right - fullscreenButtonWidth / 2 - controlBarMargin;
-  const buttonCenterY = r.bottom - fullscreenButtonHeight / 2;
+  await repeatUntilSuccessful(async () => {
+    // Compute the location to click on to hit the fullscreen button.
+    // Use the video size instead of the screen size here, because mozfullscreenchange
+    // does not guarantee that our document covers the screen, see bug 1575630.
+    const r = video.getBoundingClientRect();
+    const buttonCenterX = r.right - fullscreenButtonWidth / 2 - controlBarMargin;
+    const buttonCenterY = r.bottom - fullscreenButtonHeight / 2;
 
-  // Wiggle the mouse a bit
-  synthesizeMouse(video, buttonCenterX, buttonCenterY, { type: "mousemove" });
+    // Though the video no longer has mozNoDynamicControls, it sometimes appears
+    // in the shadow DOM without visible controls. This might happen because
+    // toggling the attribute doesn't force the controls to appear or disappear;
+    // it just affects the timed fadeout behavior. So we wiggle the mouse here
+    // as if we were still using dynamic controls.
+    synthesizeMouse(video, buttonCenterX, buttonCenterY, { type: "mousemove" });
 
-  synthesizeMouse(video, buttonCenterX, buttonCenterY, {});
-  await waitForEvent("mozfullscreenchange");
+    info(`Clicking at ${buttonCenterX}, ${buttonCenterY}.`);
+    synthesizeMouse(video, buttonCenterX, buttonCenterY, {});
+    await waitForEvent("mozfullscreenchange", ["fullscreenerror", "play", "pause"]);
+  });
 
   // Restore
   video.setAttribute("mozNoDynamicControls", "");
   document.getElementById("content").appendChild(video);
+  forceReframe();
 });
 
 add_task(async function ensure_doubleclick_triggers_fullscreen() {
-  const fullscreenPromise = new Promise(resolve => {
-    document.addEventListener("mozfullscreenchange", resolve, { once: true });
-  });
   const { x, y } = video.getBoundingClientRect();
   info("Simulate double click on media player.");
-  synthesizeMouse(video, x, y, { clickCount: 2 });
-  info("Waiting for fullscreen event...");
-  await fullscreenPromise;
+
+  await repeatUntilSuccessful(async () => {
+    synthesizeMouse(video, x, y, { clickCount: 2 });
+    // TODO: A double-click for fullscreen should *not* cause the video to play,
+    // but it does. Adding the "play" event to the forbidden events makes the
+    // test timeout.
+    await waitForEvent("mozfullscreenchange", "fullscreenerror");
+  });
+
   ok(true, "Double clicking should trigger fullscreen event");
+
+  await repeatUntilSuccessful(async () => {
+    await document.mozCancelFullScreen();
+    await waitForEvent("mozfullscreenchange", "fullscreenerror");
+  });
 });
 
 </script>

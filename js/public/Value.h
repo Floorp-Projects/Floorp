@@ -466,7 +466,7 @@ static MOZ_ALWAYS_INLINE double GenericNaN() {
 // Convert an arbitrary double to one compatible with JS::Value representation
 // by replacing any NaN value with a canonical one.
 static MOZ_ALWAYS_INLINE double CanonicalizeNaN(double d) {
-  if (MOZ_UNLIKELY(mozilla::IsNaN(d))) {
+  if (MOZ_UNLIKELY(std::isnan(d))) {
     return GenericNaN();
   }
   return d;

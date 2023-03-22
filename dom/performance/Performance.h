@@ -221,25 +221,27 @@ class Performance : public DOMEventTargetHelper {
   enum class ResolveTimestampAttribute;
 
   DOMHighResTimeStamp ConvertMarkToTimestampWithString(const nsAString& aName,
-                                                       ErrorResult& aRv);
+                                                       ErrorResult& aRv,
+                                                       bool aReturnUnclamped);
   DOMHighResTimeStamp ConvertMarkToTimestampWithDOMHighResTimeStamp(
       const ResolveTimestampAttribute aAttribute, const double aTimestamp,
       ErrorResult& aRv);
   DOMHighResTimeStamp ConvertMarkToTimestamp(
       const ResolveTimestampAttribute aAttribute,
-      const OwningStringOrDouble& aMarkNameOrTimestamp, ErrorResult& aRv);
+      const OwningStringOrDouble& aMarkNameOrTimestamp, ErrorResult& aRv,
+      bool aReturnUnclamped);
 
   DOMHighResTimeStamp ConvertNameToTimestamp(const nsAString& aName,
                                              ErrorResult& aRv);
 
   DOMHighResTimeStamp ResolveEndTimeForMeasure(
       const Optional<nsAString>& aEndMark,
-      const Maybe<const PerformanceMeasureOptions&>& aOptions,
-      ErrorResult& aRv);
+      const Maybe<const PerformanceMeasureOptions&>& aOptions, ErrorResult& aRv,
+      bool aReturnUnclamped);
   DOMHighResTimeStamp ResolveStartTimeForMeasure(
       const Maybe<const nsAString&>& aStartMark,
-      const Maybe<const PerformanceMeasureOptions&>& aOptions,
-      ErrorResult& aRv);
+      const Maybe<const PerformanceMeasureOptions&>& aOptions, ErrorResult& aRv,
+      bool aReturnUnclamped);
 };
 
 }  // namespace dom

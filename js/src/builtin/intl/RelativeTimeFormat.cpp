@@ -300,7 +300,7 @@ bool js::intl_FormatRelativeTime(JSContext* cx, unsigned argc, Value* vp) {
 
   // PartitionRelativeTimePattern, step 4.
   double t = args[1].toNumber();
-  if (!mozilla::IsFinite(t)) {
+  if (!std::isfinite(t)) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_DATE_NOT_FINITE, "RelativeTimeFormat",
                               formatToParts ? "formatToParts" : "format");

@@ -1845,10 +1845,11 @@ CanvasRenderingContext2D::SetContextOptions(JSContext* aCx,
 }
 
 UniquePtr<uint8_t[]> CanvasRenderingContext2D::GetImageBuffer(
-    int32_t* aFormat) {
+    int32_t* out_format, gfx::IntSize* out_imageSize) {
   UniquePtr<uint8_t[]> ret;
 
-  *aFormat = 0;
+  *out_format = 0;
+  *out_imageSize = {};
 
   if (!GetBufferProvider() && !EnsureTarget()) {
     return nullptr;
@@ -1858,7 +1859,8 @@ UniquePtr<uint8_t[]> CanvasRenderingContext2D::GetImageBuffer(
   if (snapshot) {
     RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
     if (data && data->GetSize() == GetSize()) {
-      *aFormat = imgIEncoder::INPUT_FORMAT_HOSTARGB;
+      *out_format = imgIEncoder::INPUT_FORMAT_HOSTARGB;
+      *out_imageSize = data->GetSize();
       ret = SurfaceToPackedBGRA(data);
     }
   }
@@ -1880,14 +1882,15 @@ CanvasRenderingContext2D::GetInputStream(const char* aMimeType,
   }
 
   int32_t format = 0;
-  UniquePtr<uint8_t[]> imageBuffer = GetImageBuffer(&format);
+  gfx::IntSize imageSize = {};
+  UniquePtr<uint8_t[]> imageBuffer = GetImageBuffer(&format, &imageSize);
   if (!imageBuffer) {
     return NS_ERROR_FAILURE;
   }
 
-  return ImageEncoder::GetInputStream(mWidth, mHeight, imageBuffer.get(),
-                                      format, encoder, aEncoderOptions,
-                                      aStream);
+  return ImageEncoder::GetInputStream(imageSize.width, imageSize.height,
+                                      imageBuffer.get(), format, encoder,
+                                      aEncoderOptions, aStream);
 }
 
 already_AddRefed<mozilla::gfx::SourceSurface>
@@ -3205,7 +3208,8 @@ static void RoundRectImpl(
         aRadii,
     ErrorResult& aError) {
   // Step 1. If any of x, y, w, or h are infinite or NaN, then return.
-  if (!IsFinite(aX) || !IsFinite(aY) || !IsFinite(aW) || !IsFinite(aH)) {
+  if (!std::isfinite(aX) || !std::isfinite(aY) || !std::isfinite(aW) ||
+      !std::isfinite(aH)) {
     return;
   }
 
@@ -3237,7 +3241,7 @@ static void RoundRectImpl(
       const DOMPointInit& point = radius.GetAsDOMPointInit();
       // Step 5.1.1. If radius["x"] or radius["y"] is infinite or NaN, then
       // return.
-      if (!IsFinite(point.mX) || !IsFinite(point.mY)) {
+      if (!std::isfinite(point.mX) || !std::isfinite(point.mY)) {
         return;
       }
 
@@ -3258,7 +3262,7 @@ static void RoundRectImpl(
     // Step 5.2. If radius is a unrestricted double:
     double r = radius.GetAsUnrestrictedDouble();
     // Step 5.2.1. If radius is infinite or NaN, then return.
-    if (!IsFinite(r)) {
+    if (!std::isfinite(r)) {
       return;
     }
 
@@ -4192,7 +4196,7 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
   // According to spec, the API should return an empty array if maxWidth was
   // provided but is less than or equal to zero or equal to NaN.
   if (aMaxWidth.WasPassed() &&
-      (aMaxWidth.Value() <= 0 || IsNaN(aMaxWidth.Value()))) {
+      (aMaxWidth.Value() <= 0 || std::isnan(aMaxWidth.Value()))) {
     textToDraw.Truncate();
   }
 
@@ -4254,7 +4258,7 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
     return nullptr;
   }
 
-  if (!IsFinite(aX) || !IsFinite(aY)) {
+  if (!std::isfinite(aX) || !std::isfinite(aY)) {
     aError = NS_OK;
     // This may not be correct - what should TextMetrics contain in the case of
     // infinite width or height?

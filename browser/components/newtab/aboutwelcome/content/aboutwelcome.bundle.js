@@ -197,10 +197,22 @@ __webpack_require__.r(__webpack_exports__);
 const TRANSITION_OUT_TIME = 1000;
 const MultiStageAboutWelcome = props => {
   let {
-    screens
+    defaultScreens
   } = props;
+  const [screens, setScreens] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(defaultScreens);
   const [index, setScreenIndex] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(props.startScreen);
   const [previousOrder, setPreviousOrder] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(props.startScreen - 1);
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    (async () => {
+      // Evaluate targeting and update screens on load of about:welcome
+      let filteredScreens = await window.AWEvaluateScreenTargeting(defaultScreens);
+
+      if (filteredScreens) {
+        setScreens(filteredScreens);
+      }
+    })();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     const screenInitials = screens.map(({
       id
@@ -319,7 +331,9 @@ const MultiStageAboutWelcome = props => {
     langPackInstallPhase,
     languageFilteredScreens
   } = (0,_LanguageSwitcher__WEBPACK_IMPORTED_MODULE_4__.useLanguageSwitcher)(props.appAndSystemLocaleInfo, screens, index, setScreenIndex);
-  screens = languageFilteredScreens;
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    setScreens(languageFilteredScreens);
+  }, [languageFilteredScreens]);
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement((react__WEBPACK_IMPORTED_MODULE_0___default().Fragment), null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: `outer-wrapper onboardingContainer proton transition-${transition}`,
     style: props.backdrop ? {
@@ -352,7 +366,9 @@ const MultiStageAboutWelcome = props => {
       setActiveMultiSelect: setActiveMultiSelect,
       autoAdvance: screen.auto_advance,
       negotiatedLanguage: negotiatedLanguage,
-      langPackInstallPhase: langPackInstallPhase
+      langPackInstallPhase: langPackInstallPhase,
+      defaultScreens: defaultScreens,
+      setScreens: setScreens
     }) : null;
   })));
 };
@@ -515,6 +531,11 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
 
     if (action.persistActiveTheme) {
       this.props.setInitialTheme(this.props.activeTheme);
+    } // Set screens based on dynamic targeting evaluations
+
+
+    if (action.isDynamic) {
+      props.setScreens(await window.AWEvaluateScreenTargeting(props.defaultScreens));
     }
 
     if (action.navigate) {
@@ -2119,7 +2140,7 @@ class AboutWelcome extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
 
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_3__.MultiStageAboutWelcome, {
       message_id: props.messageId,
-      screens: props.screens,
+      defaultScreens: props.screens,
       updateHistory: !props.disableHistoryUpdates,
       metricsFlowUri: this.state.metricsFlowUri,
       utm_term: props.UTMTerm,

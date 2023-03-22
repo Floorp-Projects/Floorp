@@ -306,9 +306,6 @@ void ParallelMarker::decActiveTasks(ParallelMarkTask* task,
   activeTasks--;
 
   if (activeTasks == 0) {
-    // We're finished. Wake up any tasks waiting for work.
-    activeTasksAvailable.ref().notify_all();
-
     while (!waitingTasks.ref().isEmpty()) {
       ParallelMarkTask* task = waitingTasks.ref().popFront();
       MOZ_ASSERT(waitingTaskCount != 0);

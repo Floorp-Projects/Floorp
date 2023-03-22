@@ -6,11 +6,11 @@
 
 #include shared,rect,transform,render_task,gpu_buffer
 
-flat varying vec4 v_color;
-flat varying ivec2 v_flags;
+flat varying mediump vec4 v_color;
+flat varying mediump ivec2 v_flags;
 
 #ifndef SWGL_ANTIALIAS
-varying vec2 vLocalPos;
+varying highp vec2 vLocalPos;
 #endif
 
 #ifdef WR_VERTEX_SHADER
@@ -23,6 +23,10 @@ varying vec2 vLocalPos;
 #define AA_PIXEL_RADIUS 2.0
 
 PER_INSTANCE in ivec4 aData;
+
+struct PrimitiveInfo {
+    vec2 local_pos;
+};
 
 struct QuadPrimitive {
     RectWithEndpoint bounds;
@@ -179,7 +183,7 @@ float get_size_for_tile_index(
     }
 }
 
-void main(void) {
+PrimitiveInfo ps_quad_main(void) {
     QuadInstance qi = decode_instance();
 
     Transform transform = fetch_transform(qi.transform_id);
@@ -296,31 +300,10 @@ void main(void) {
         v_flags.x = 1;
     }
 #endif
+
+    return PrimitiveInfo(
+        vi.local_pos
+    );
 }
-#endif
-
-#ifdef WR_FRAGMENT_SHADER
-void main(void) {
-    vec4 color = v_color;
-
-#ifndef SWGL_ANTIALIAS
-    if (v_flags.x != 0) {
-        float alpha = init_transform_fs(vLocalPos);
-        color *= alpha;
-    }
-#endif
-
-    oFragColor = color;
-}
-
-#if defined(SWGL_DRAW_SPAN)
-void swgl_drawSpanRGBA8() {
-    swgl_commitSolidRGBA8(v_color);
-}
-
-void swgl_drawSpanR8() {
-    swgl_commitSolidR8(v_color.x);
-}
-#endif
 
 #endif

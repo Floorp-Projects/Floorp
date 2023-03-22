@@ -62,6 +62,8 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ClientEnvironmentBase:
+    "resource://gre/modules/components-utils/ClientEnvironment.sys.mjs",
   IndexedDB: "resource://gre/modules/IndexedDB.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   RemoteSettingsClient:
@@ -69,8 +71,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ClientEnvironmentBase:
-    "resource://gre/modules/components-utils/ClientEnvironment.jsm",
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
   ToastNotification: "resource://activity-stream/lib/ToastNotification.jsm",
   Utils: "resource://services-settings/Utils.jsm",

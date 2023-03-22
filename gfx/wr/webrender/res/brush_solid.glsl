@@ -6,7 +6,7 @@
 
 #include shared,prim_shared,brush
 
-flat varying vec4 v_color;
+flat varying mediump vec4 v_color;
 
 #ifdef WR_VERTEX_SHADER
 

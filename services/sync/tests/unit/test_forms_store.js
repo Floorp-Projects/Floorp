@@ -10,6 +10,9 @@ const { FormEngine } = ChromeUtils.importESModule(
 const { Service } = ChromeUtils.importESModule(
   "resource://services-sync/service.sys.mjs"
 );
+const { SyncedRecordsTelemetry } = ChromeUtils.importESModule(
+  "resource://services-sync/telemetry.sys.mjs"
+);
 
 add_task(async function run_test() {
   let engine = new FormEngine(Service);
@@ -17,7 +20,11 @@ add_task(async function run_test() {
   let store = engine._store;
 
   async function applyEnsureNoFailures(records) {
-    Assert.equal((await store.applyIncomingBatch(records)).length, 0);
+    let countTelemetry = new SyncedRecordsTelemetry();
+    Assert.equal(
+      (await store.applyIncomingBatch(records, countTelemetry)).length,
+      0
+    );
   }
 
   _("Remove any existing entries");

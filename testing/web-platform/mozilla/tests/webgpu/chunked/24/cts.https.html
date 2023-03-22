@@ -1,0 +1,59 @@
+<!-- AUTO-GENERATED - DO NOT EDIT. See WebGPU CTS: tools/gen_wpt_cts_html. -->
+<!--
+    This test suite is built from the TypeScript sources at:
+    https://github.com/gpuweb/cts
+
+    If you are debugging WebGPU conformance tests, it's highly recommended that
+    you use the standalone interactive runner in that repository, which
+    provides tools for easier debugging and editing (source maps, debug
+    logging, warn/skip functionality, etc.)
+
+    NOTE:
+    The WPT version of this file is generated with *one variant per test spec
+    file*. If your harness needs more fine-grained suppressions, you'll need to
+    generate your own variants list from your suppression list.
+    See `tools/gen_wpt_cts_html` to do this.
+
+    When run under browser CI, the original cts.https.html should be skipped, and
+    this alternate version should be run instead, under a non-exported WPT test
+    directory (e.g. Chromium's wpt_internal).
+-->
+
+<!doctype html>
+<title>WebGPU CTS</title>
+<meta charset=utf-8>
+<link rel=help href='https://gpuweb.github.io/gpuweb/'>
+
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script>
+    const loadWebGPUExpectations = undefined;
+    const shouldWebGPUCTSFailOnWarnings = undefined;
+</script>
+<script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
+
+<meta name=variant content='?q=webgpu:api,validation,render_pass,render_pass_descriptor:timestampWrites,query_set_type:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pass,render_pass_descriptor:timestamp_writes_location:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pass,render_pass_descriptor:timestampWrite,query_index:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pass,render_pass_descriptor:timestampWrite,same_query_index:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pass,render_pass_descriptor:occlusionQuerySet,query_set_type:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pass,resolve:resolve_attachment:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pass,storeOp:store_op_and_read_only:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,depth_stencil_state:format:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,depth_stencil_state:depth_test:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,depth_stencil_state:depth_write:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,depth_stencil_state:depth_write,frag_depth:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,depth_stencil_state:stencil_test:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,depth_stencil_state:stencil_write:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,fragment_state:color_target_exists:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,fragment_state:targets_format_renderable:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,fragment_state:limits,maxColorAttachments:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,fragment_state:limits,maxColorAttachmentBytesPerSample,aligned:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,fragment_state:limits,maxColorAttachmentBytesPerSample,unaligned:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,fragment_state:targets_format_filterable:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,fragment_state:targets_blend:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,fragment_state:targets_write_mask:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,fragment_state:pipeline_output_targets:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,fragment_state:pipeline_output_targets,blend:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,inter_stage:location,mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,inter_stage:location,superset:*'>

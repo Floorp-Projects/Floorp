@@ -10,7 +10,7 @@
 #define YUV_FORMAT_INTERLEAVED      3
 
 //#define YUV_PRECISION mediump
-#define YUV_PRECISION
+#define YUV_PRECISION highp
 
 #ifdef WR_VERTEX_SHADER
 

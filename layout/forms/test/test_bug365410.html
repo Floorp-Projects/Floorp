@@ -124,10 +124,7 @@ function runTest() {
 }
 
 SimpleTest.waitForExplicitFinish();
-// Turn off spatial nav so that it does not hijack the up and down events.
-SimpleTest.waitForFocus(function() {
-  SpecialPowers.pushPrefEnv({"set":[["snav.enabled", false]]}, runTest);
-});
+SimpleTest.waitForFocus(runTest);
 
 </script>
 </pre>

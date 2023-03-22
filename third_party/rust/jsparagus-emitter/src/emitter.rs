@@ -74,6 +74,7 @@ pub enum ThrowMsgKind {
     MissingPrivateOnGet = 5,
     MissingPrivateOnSet = 6,
     AssignToPrivateMethod = 7,
+    DecoratorInvalidReturnType = 8,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -1203,12 +1204,14 @@ impl InstructionWriter {
         self.emit_op(Opcode::DebugLeaveLexicalEnv);
     }
 
-    pub fn recreate_lexical_env(&mut self) {
+    pub fn recreate_lexical_env(&mut self, lexical_scope_index: GCThingIndex) {
         self.emit_op(Opcode::RecreateLexicalEnv);
+        self.write_g_c_thing_index(lexical_scope_index);
     }
 
-    pub fn freshen_lexical_env(&mut self) {
+    pub fn freshen_lexical_env(&mut self, lexical_scope_index: GCThingIndex) {
         self.emit_op(Opcode::FreshenLexicalEnv);
+        self.write_g_c_thing_index(lexical_scope_index);
     }
 
     pub fn push_class_body_env(&mut self, lexical_scope_index: GCThingIndex) {

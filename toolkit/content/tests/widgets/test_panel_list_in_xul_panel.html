@@ -51,7 +51,10 @@ add_task(async function testXULPanelOpenFromClicks() {
   await xulPanelShown;
 
   ok(panelList.hasAttribute("inxulpanel"), "Should have inxulpanel attribute set");
-  ok(!panelList.hasAttribute("style"), "top/left inline styles should not be set.");
+
+  let style = window.getComputedStyle(panelList);
+  is(style.top, "0px", "computed top inline style should be 0px.");
+  is(style.left, "0px", "computed left inline style should be 0px.");
 
   let xulPanelHidden = BrowserTestUtils.waitForPopupEvent(xulPanel, "hidden");
   let hidden = BrowserTestUtils.waitForEvent(panelList, "hidden");
@@ -68,7 +71,9 @@ add_task(async function testXULPanelOpenProgrammatically() {
   await xulPanelShown;
 
   ok(panelList.hasAttribute("inxulpanel"), "Should have inxulpanel attribute set");
-  ok(!panelList.hasAttribute("style"), "top/left inline styles should not be set.");
+  let style = window.getComputedStyle(panelList);
+  is(style.top, "0px", "computed top inline style should be 0px.");
+  is(style.left, "0px", "computed left inline style should be 0px.");
 
   let xulPanelHidden = BrowserTestUtils.waitForPopupEvent(xulPanel, "hidden");
   let hidden = BrowserTestUtils.waitForEvent(panelList, "hidden");

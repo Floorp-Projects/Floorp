@@ -24,6 +24,7 @@
 #include <algorithm>
 
 using namespace mozilla::dom;
+using mozilla::Maybe;
 
 txXPathTreeWalker::txXPathTreeWalker(const txXPathTreeWalker& aOther) = default;
 

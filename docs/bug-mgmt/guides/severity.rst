@@ -45,6 +45,8 @@ Bugs reported from QA
    are not working on several sites with ETP on (default). This is not an S1 since turning
    ETP off fixes the issue.
 
+Fuzzblocker bugs, which prevent fuzzing from making progress
+
 Examples of S3 bugs
 ^^^^^^^^^^^^^^^^^^^
 

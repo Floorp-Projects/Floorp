@@ -16616,6 +16616,17 @@ void CodeGenerator::visitWasmTrap(LWasmTrap* lir) {
   masm.wasmTrap(mir->trap(), mir->bytecodeOffset());
 }
 
+void CodeGenerator::visitWasmTrapIfNull(LWasmTrapIfNull* lir) {
+  MOZ_ASSERT(gen->compilingWasm());
+  const MWasmTrapIfNull* mir = lir->mir();
+  Label nonNull;
+  Register input = ToRegister(lir->object());
+
+  masm.branchTestPtr(Assembler::NonZero, input, input, &nonNull);
+  masm.wasmTrap(mir->trap(), mir->bytecodeOffset());
+  masm.bind(&nonNull);
+}
+
 void CodeGenerator::visitWasmGcObjectIsSubtypeOf(
     LWasmGcObjectIsSubtypeOf* ins) {
   MOZ_ASSERT(gen->compilingWasm());

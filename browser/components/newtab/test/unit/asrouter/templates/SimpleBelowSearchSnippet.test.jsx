@@ -1,5 +1,7 @@
 import { mount } from "enzyme";
 import React from "react";
+import { FluentBundle, FluentResource } from "@fluent/bundle";
+import { LocalizationProvider, ReactLocalization } from "@fluent/react";
 import schema from "content-src/asrouter/templates/SimpleBelowSearchSnippet/SimpleBelowSearchSnippet.schema.json";
 import { SimpleBelowSearchSnippet } from "content-src/asrouter/templates/SimpleBelowSearchSnippet/SimpleBelowSearchSnippet.jsx";
 
@@ -8,6 +10,20 @@ const DEFAULT_CONTENT = { text: "foo" };
 describe("SimpleBelowSearchSnippet", () => {
   let sandbox;
   let sendUserActionTelemetryStub;
+
+  function mockL10nWrapper(content) {
+    const bundle = new FluentBundle("en-US");
+    for (const [id, value] of Object.entries(content)) {
+      if (typeof value === "string") {
+        bundle.addResource(new FluentResource(`${id} = ${value}`));
+      }
+    }
+    const l10n = new ReactLocalization([bundle]);
+    return {
+      wrappingComponent: LocalizationProvider,
+      wrappingComponentProps: { l10n },
+    };
+  }
 
   /**
    * mountAndCheckProps - Mounts a SimpleBelowSearchSnippet with DEFAULT_CONTENT extended with any props
@@ -23,7 +39,10 @@ describe("SimpleBelowSearchSnippet", () => {
       onAction: sandbox.stub(),
     };
     assert.jsonSchema(props.content, schema);
-    return mount(<SimpleBelowSearchSnippet {...props} />);
+    return mount(
+      <SimpleBelowSearchSnippet {...props} />,
+      mockL10nWrapper(props.content)
+    );
   }
 
   beforeEach(() => {

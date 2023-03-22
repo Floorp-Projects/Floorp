@@ -7,7 +7,7 @@ import { actionTypes as at } from "common/Actions.sys.mjs";
 import { ASRouterUtils } from "./asrouter-utils";
 import { generateBundles } from "./rich-text-strings";
 import { ImpressionsWrapper } from "./components/ImpressionsWrapper/ImpressionsWrapper";
-import { LocalizationProvider } from "fluent-react";
+import { LocalizationProvider, ReactLocalization } from "@fluent/react";
 import { NEWTAB_DARK_THEME } from "content-src/lib/constants";
 import React from "react";
 import ReactDOM from "react-dom";
@@ -285,7 +285,9 @@ export class ASRouterUISurface extends React.PureComponent {
         // This helps with testing
         document={this.props.document}
       >
-        <LocalizationProvider bundles={generateBundles(content)}>
+        <LocalizationProvider
+          l10n={new ReactLocalization(generateBundles(content))}
+        >
           <SnippetComponent
             {...this.state.message}
             UISurface="NEWTAB_FOOTER_BAR"

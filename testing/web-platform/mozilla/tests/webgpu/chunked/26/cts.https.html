@@ -1,0 +1,59 @@
+<!-- AUTO-GENERATED - DO NOT EDIT. See WebGPU CTS: tools/gen_wpt_cts_html. -->
+<!--
+    This test suite is built from the TypeScript sources at:
+    https://github.com/gpuweb/cts
+
+    If you are debugging WebGPU conformance tests, it's highly recommended that
+    you use the standalone interactive runner in that repository, which
+    provides tools for easier debugging and editing (source maps, debug
+    logging, warn/skip functionality, etc.)
+
+    NOTE:
+    The WPT version of this file is generated with *one variant per test spec
+    file*. If your harness needs more fine-grained suppressions, you'll need to
+    generate your own variants list from your suppression list.
+    See `tools/gen_wpt_cts_html` to do this.
+
+    When run under browser CI, the original cts.https.html should be skipped, and
+    this alternate version should be run instead, under a non-exported WPT test
+    directory (e.g. Chromium's wpt_internal).
+-->
+
+<!doctype html>
+<title>WebGPU CTS</title>
+<meta charset=utf-8>
+<link rel=help href='https://gpuweb.github.io/gpuweb/'>
+
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script>
+    const loadWebGPUExpectations = undefined;
+    const shouldWebGPUCTSFailOnWarnings = undefined;
+</script>
+<script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
+
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,shader_module:device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,shader_module:invalid,vertex:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,shader_module:invalid,fragment:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:max_vertex_buffer_limit:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:max_vertex_attribute_limit:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:max_vertex_buffer_array_stride_limit:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:vertex_buffer_array_stride_limit_alignment:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:vertex_attribute_shaderLocation_limit:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:vertex_attribute_shaderLocation_unique:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:vertex_shader_input_location_limit:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:vertex_shader_input_location_in_vertex_state:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:vertex_shader_type_matches_attribute_format:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:vertex_attribute_offset_alignment:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:vertex_attribute_contained_in_stride:*'>
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:many_attributes_overlapping:*'>
+<meta name=variant content='?q=webgpu:api,validation,resource_usages,buffer,in_pass_encoder:subresources,buffer_usage_in_one_compute_pass_with_no_dispatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,resource_usages,buffer,in_pass_encoder:subresources,buffer_usage_in_one_compute_pass_with_one_dispatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,resource_usages,buffer,in_pass_encoder:subresources,buffer_usage_in_compute_pass_with_two_dispatches:*'>
+<meta name=variant content='?q=webgpu:api,validation,resource_usages,buffer,in_pass_encoder:subresources,buffer_usage_in_one_render_pass_with_no_draw:*'>
+<meta name=variant content='?q=webgpu:api,validation,resource_usages,buffer,in_pass_encoder:subresources,buffer_usage_in_one_render_pass_with_one_draw:*'>
+<meta name=variant content='?q=webgpu:api,validation,resource_usages,buffer,in_pass_encoder:subresources,buffer_usage_in_one_render_pass_with_two_draws:*'>
+<meta name=variant content='?q=webgpu:api,validation,resource_usages,buffer,in_pass_misc:subresources,reset_buffer_usage_before_dispatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,resource_usages,buffer,in_pass_misc:subresources,reset_buffer_usage_before_draw:*'>
+<meta name=variant content='?q=webgpu:api,validation,resource_usages,buffer,in_pass_misc:subresources,buffer_usages_in_copy_and_pass:*'>
+<meta name=variant content='?q=webgpu:api,validation,resource_usages,texture,in_pass_encoder:subresources_and_binding_types_combination_for_color:*'>

@@ -16,6 +16,7 @@
 #include "nsGlobalWindow.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/ReferrerInfo.h"
 #include "mozilla/dom/WindowContext.h"
 
 namespace mozilla::dom {

@@ -223,11 +223,7 @@ var AboutReader = function(
 
   this._setupLineHeightButtons();
 
-  if (
-    win.speechSynthesis &&
-    Services.prefs.getBoolPref("narrate.enabled") &&
-    !Services.prefs.getBoolPref("privacy.resistFingerprinting", false)
-  ) {
+  if (win.speechSynthesis && Services.prefs.getBoolPref("narrate.enabled")) {
     new lazy.NarrateControls(win, this._languagePromise);
   }
 

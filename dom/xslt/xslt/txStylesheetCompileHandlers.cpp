@@ -236,7 +236,7 @@ static nsresult getNumberAttr(txStylesheetAttr* aAttributes, int32_t aAttrCount,
   }
 
   aNumber = txDouble::toDouble(attr->mValue);
-  if (mozilla::IsNaN(aNumber) && (aRequired || !aState.fcp())) {
+  if (std::isnan(aNumber) && (aRequired || !aState.fcp())) {
     // XXX ErrorReport: number parse failure
     return NS_ERROR_XSLT_PARSE_FAILURE;
   }

@@ -64,7 +64,7 @@ const WEBAPI_TEST_INSTALL_HOSTS =
     ? ["addons.allizom.org", "addons-dev.allizom.org", "example.com"]
     : ["addons-stage.thunderbird.net", "example.com"];
 
-const AMO_ATTRIBUTION_ALLOWED_SOURCES = ["amo", "disco"];
+const AMO_ATTRIBUTION_ALLOWED_SOURCES = ["amo", "disco", "rtamo"];
 const AMO_ATTRIBUTION_DATA_KEYS = [
   "utm_campaign",
   "utm_content",

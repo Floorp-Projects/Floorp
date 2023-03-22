@@ -1028,6 +1028,17 @@
 - name: WasmTrap
   gen_boilerplate: false
 
+# Trap if the given value is null
+- name: WasmTrapIfNull
+  operands:
+    value: RefOrNull
+  arguments:
+    trap: wasm::Trap
+    bytecodeOffset: wasm::BytecodeOffset
+  guard: true
+  type_policy: none
+  result_type: None
+
 - name: LexicalCheck
   gen_boilerplate: false
 

@@ -6,24 +6,24 @@
 
 #include shared,prim_shared
 
-varying vec2 vInput1Uv;
-varying vec2 vInput2Uv;
-flat varying vec4 vInput1UvRect;
-flat varying vec4 vInput2UvRect;
-flat varying ivec4 vData;
-flat varying vec4 vFilterData0;
-flat varying vec4 vFilterData1;
+varying highp vec2 vInput1Uv;
+varying highp vec2 vInput2Uv;
+flat varying highp vec4 vInput1UvRect;
+flat varying highp vec4 vInput2UvRect;
+flat varying mediump ivec4 vData;
+flat varying mediump vec4 vFilterData0;
+flat varying mediump vec4 vFilterData1;
 
 // x: Filter input count, y: Filter kind.
 // Packed in to a vector to work around bug 1630356.
-flat varying ivec2 vFilterInputCountFilterKindVec;
+flat varying mediump ivec2 vFilterInputCountFilterKindVec;
 #define vFilterInputCount vFilterInputCountFilterKindVec.x
 #define vFilterKind vFilterInputCountFilterKindVec.y
 // Packed in to a vector to work around bug 1630356.
-flat varying vec2 vFloat0;
+flat varying mediump vec2 vFloat0;
 
-flat varying mat4 vColorMat;
-flat varying ivec4 vFuncs;
+flat varying mediump mat4 vColorMat;
+flat varying mediump ivec4 vFuncs;
 
 #define FILTER_BLEND                0
 #define FILTER_FLOOD                1

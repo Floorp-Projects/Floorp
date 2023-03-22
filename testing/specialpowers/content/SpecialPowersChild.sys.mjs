@@ -378,6 +378,12 @@ export class SpecialPowersChild extends JSWindowActorChild {
     return lazy.WrapPrivileged.isWrapper(val);
   }
 
+  unwrapIfWrapped(obj) {
+    return lazy.WrapPrivileged.isWrapper(obj)
+      ? lazy.WrapPrivileged.unwrap(obj)
+      : obj;
+  }
+
   /*
    * Wrap objects on a specified global.
    */
@@ -878,6 +884,34 @@ export class SpecialPowersChild extends JSWindowActorChild {
     }
   }
 
+  /*
+    Collect a snapshot of all preferences in Firefox (i.e. about:prefs).
+    From this, store the results within specialpowers for later reference.
+  */
+  async getBaselinePrefs(callback = null) {
+    await this.sendQuery("getBaselinePrefs");
+    if (callback) {
+      await callback();
+    }
+  }
+
+  /*
+    This uses the stored prefs from getBaselinePrefs, collects a new snapshot
+    of preferences, then compares the new vs the baseline.  If there are differences
+    they are recorded and returned as an array of preferences, in addition
+    all the changed preferences are reset to the value found in the baseline.
+
+    ignorePrefs: array of strings which are preferences.  If they end in *,
+                 we do a partial match
+  */
+  async comparePrefsToBaseline(ignorePrefs, callback = null) {
+    let retVal = await this.sendQuery("comparePrefsToBaseline", ignorePrefs);
+    if (callback) {
+      callback(retVal);
+    }
+    return retVal;
+  }
+
   _promiseEarlyRefresh() {
     return new Promise(r => {
       // for mochitest-browser
@@ -1007,6 +1041,9 @@ export class SpecialPowersChild extends JSWindowActorChild {
   getComplexValue(prefName, iid) {
     return Services.prefs.getComplexValue(prefName, iid);
   }
+  getStringPref(...args) {
+    return Services.prefs.getStringPref(...args);
+  }
 
   getParentBoolPref(prefName, defaultValue) {
     return this._getParentPref(prefName, "BOOL", { defaultValue });
@@ -1016,6 +1053,9 @@ export class SpecialPowersChild extends JSWindowActorChild {
   }
   getParentCharPref(prefName, defaultValue) {
     return this._getParentPref(prefName, "CHAR", { defaultValue });
+  }
+  getParentStringPref(prefName, defaultValue) {
+    return this._getParentPref(prefName, "STRING", { defaultValue });
   }
 
   // Mimic the set*Pref API
@@ -1030,6 +1070,9 @@ export class SpecialPowersChild extends JSWindowActorChild {
   }
   setComplexValue(prefName, iid, value) {
     return this._setPref(prefName, "COMPLEX", value, iid);
+  }
+  setStringPref(prefName, value) {
+    return this._setPref(prefName, "STRING", value);
   }
 
   // Mimic the clearUserPref API
@@ -1065,6 +1108,8 @@ export class SpecialPowersChild extends JSWindowActorChild {
         return Services.prefs.getIntPref(prefName);
       case "CHAR":
         return Services.prefs.getCharPref(prefName);
+      case "STRING":
+        return Services.prefs.getStringPref(prefName);
     }
     return undefined;
   }

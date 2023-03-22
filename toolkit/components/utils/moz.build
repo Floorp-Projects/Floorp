@@ -12,14 +12,14 @@ EXTRA_JS_MODULES += [
 ]
 
 EXTRA_JS_MODULES["components-utils"] = [
-    "ClientEnvironment.jsm",
-    "FilterExpressions.jsm",
-    "JsonSchemaValidator.jsm",
+    "ClientEnvironment.sys.mjs",
+    "FilterExpressions.sys.mjs",
+    "JsonSchemaValidator.sys.mjs",
     "mozjexl.js",
-    "PreferenceFilters.jsm",
-    "Sampling.jsm",
-    "WindowsInstallsInfo.jsm",
-    "WindowsVersionInfo.jsm",
+    "PreferenceFilters.sys.mjs",
+    "Sampling.sys.mjs",
+    "WindowsInstallsInfo.sys.mjs",
+    "WindowsVersionInfo.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [

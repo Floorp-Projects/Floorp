@@ -576,6 +576,7 @@ element.isCollection = function(seq) {
   switch (Object.prototype.toString.call(seq)) {
     case "[object Arguments]":
     case "[object Array]":
+    case "[object DOMTokenList]":
     case "[object FileList]":
     case "[object HTMLAllCollection]":
     case "[object HTMLCollection]":
