@@ -75,6 +75,7 @@ class TRRServiceBase : public nsIProxyConfigChangedCallback {
   nsCString mURIPref;
   nsCString mRolloutURIPref;
   nsCString mDefaultURIPref;
+  nsCString mOHTTPURIPref;
 
   Atomic<nsIDNSService::ResolverMode, Relaxed> mMode{
       nsIDNSService::MODE_NATIVEONLY};

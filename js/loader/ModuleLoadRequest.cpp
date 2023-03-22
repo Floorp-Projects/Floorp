@@ -151,7 +151,7 @@ void ModuleLoadRequest::ModuleErrored() {
     return;
   }
 
-  MOZ_ASSERT(IsFetching() || IsLoadingImports());
+  MOZ_ASSERT(!IsReadyToRun());
 
   CheckModuleDependenciesLoaded();
   MOZ_ASSERT(IsErrored());

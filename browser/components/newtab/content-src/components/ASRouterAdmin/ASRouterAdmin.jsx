@@ -851,9 +851,11 @@ export class ASRouterAdminInner extends React.PureComponent {
       : 0;
     const isCollapsed = this.state.collapsedMessages.includes(msg.id);
     const isModified = this.state.modifiedMessages.includes(msg.id);
-    const aboutMessagePreviewSupported = ["infobar", "spotlight"].includes(
-      msg.template
-    );
+    const aboutMessagePreviewSupported = [
+      "infobar",
+      "spotlight",
+      "cfr_doorhanger",
+    ].includes(msg.template);
 
     let itemClassName = "message-item";
     if (isBlocked) {

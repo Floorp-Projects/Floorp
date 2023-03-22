@@ -226,6 +226,7 @@ class TimeZone final {
   static Result<SpanEnumeration<char>, ICUError> GetAvailableTimeZones();
 
  private:
+#if MOZ_INTL_USE_ICU_CPP_TIMEZONE
   template <typename B>
   static ICUResult FillBuffer(const icu::UnicodeString& aString, B& aBuffer) {
     int32_t length = aString.length();
@@ -245,7 +246,6 @@ class TimeZone final {
     return Ok{};
   }
 
-#if MOZ_INTL_USE_ICU_CPP_TIMEZONE
   UniquePtr<icu::TimeZone> mTimeZone = nullptr;
 #else
   UCalendar* mCalendar = nullptr;
