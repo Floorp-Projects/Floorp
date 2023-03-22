@@ -8414,22 +8414,22 @@ static void RelaxedMaxF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
 
 static void RelaxedConvertF32x4ToI32x4(MacroAssembler& masm, RegV128 rs,
                                        RegV128 rd) {
-  masm.truncSatFloat32x4ToInt32x4Relaxed(rs, rd);
+  masm.truncFloat32x4ToInt32x4Relaxed(rs, rd);
 }
 
 static void RelaxedConvertF32x4ToUI32x4(MacroAssembler& masm, RegV128 rs,
                                         RegV128 rd) {
-  masm.unsignedTruncSatFloat32x4ToInt32x4Relaxed(rs, rd);
+  masm.unsignedTruncFloat32x4ToInt32x4Relaxed(rs, rd);
 }
 
 static void RelaxedConvertF64x2ToI32x4(MacroAssembler& masm, RegV128 rs,
                                        RegV128 rd) {
-  masm.truncSatFloat64x2ToInt32x4Relaxed(rs, rd);
+  masm.truncFloat64x2ToInt32x4Relaxed(rs, rd);
 }
 
 static void RelaxedConvertF64x2ToUI32x4(MacroAssembler& masm, RegV128 rs,
                                         RegV128 rd) {
-  masm.unsignedTruncSatFloat64x2ToInt32x4Relaxed(rs, rd);
+  masm.unsignedTruncFloat64x2ToInt32x4Relaxed(rs, rd);
 }
 
 static void RelaxedQ15MulrS(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
@@ -8451,18 +8451,6 @@ void BaseCompiler::emitDotI8x16I7x16AddS() {
 #    else
   masm.dotInt8x16Int7x16ThenAdd(rs0, rs1, rsd);
 #    endif
-  freeV128(rs1);
-  freeV128(rs0);
-  pushV128(rsd);
-}
-
-void BaseCompiler::emitDotBF16x8AddF32x4() {
-  RegV128 rsd = popV128();
-  RegV128 rs0, rs1;
-  pop2xV128(&rs0, &rs1);
-  RegV128 temp = needV128();
-  masm.dotBFloat16x8ThenAdd(rs0, rs1, rsd, temp);
-  freeV128(temp);
   freeV128(rs1);
   freeV128(rs0);
   pushV128(rsd);
@@ -10158,22 +10146,22 @@ bool BaseCompiler::emitBody() {
               return iter_.unrecognizedOpcode(&op);
             }
             CHECK_NEXT(dispatchVectorBinary(RelaxedMaxF64x2));
-          case uint32_t(SimdOp::I32x4RelaxedTruncSSatF32x4):
+          case uint32_t(SimdOp::I32x4RelaxedTruncF32x4S):
             if (!moduleEnv_.v128RelaxedEnabled()) {
               return iter_.unrecognizedOpcode(&op);
             }
             CHECK_NEXT(dispatchVectorUnary(RelaxedConvertF32x4ToI32x4));
-          case uint32_t(SimdOp::I32x4RelaxedTruncUSatF32x4):
+          case uint32_t(SimdOp::I32x4RelaxedTruncF32x4U):
             if (!moduleEnv_.v128RelaxedEnabled()) {
               return iter_.unrecognizedOpcode(&op);
             }
             CHECK_NEXT(dispatchVectorUnary(RelaxedConvertF32x4ToUI32x4));
-          case uint32_t(SimdOp::I32x4RelaxedTruncSatF64x2SZero):
+          case uint32_t(SimdOp::I32x4RelaxedTruncF64x2SZero):
             if (!moduleEnv_.v128RelaxedEnabled()) {
               return iter_.unrecognizedOpcode(&op);
             }
             CHECK_NEXT(dispatchVectorUnary(RelaxedConvertF64x2ToI32x4));
-          case uint32_t(SimdOp::I32x4RelaxedTruncSatF64x2UZero):
+          case uint32_t(SimdOp::I32x4RelaxedTruncF64x2UZero):
             if (!moduleEnv_.v128RelaxedEnabled()) {
               return iter_.unrecognizedOpcode(&op);
             }
@@ -10198,11 +10186,6 @@ bool BaseCompiler::emitBody() {
               return iter_.unrecognizedOpcode(&op);
             }
             CHECK_NEXT(dispatchTernary0(emitDotI8x16I7x16AddS, ValType::V128));
-          case uint32_t(SimdOp::F32x4RelaxedDotBF16x8AddF32x4):
-            if (!moduleEnv_.v128RelaxedEnabled()) {
-              return iter_.unrecognizedOpcode(&op);
-            }
-            CHECK_NEXT(dispatchTernary0(emitDotBF16x8AddF32x4, ValType::V128));
 #  endif
           default:
             break;

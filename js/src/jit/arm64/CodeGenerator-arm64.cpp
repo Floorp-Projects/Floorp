@@ -3043,11 +3043,6 @@ void CodeGenerator::visitWasmTernarySimd128(LWasmTernarySimd128* ins) {
           ToFloatRegister(ins->v0()), ToFloatRegister(ins->v1()),
           ToFloatRegister(ins->v2()), ToFloatRegister(ins->temp()));
       break;
-    case wasm::SimdOp::F32x4RelaxedDotBF16x8AddF32x4:
-      masm.dotBFloat16x8ThenAdd(
-          ToFloatRegister(ins->v0()), ToFloatRegister(ins->v1()),
-          ToFloatRegister(ins->v2()), ToFloatRegister(ins->temp()));
-      break;
     default:
       MOZ_CRASH("NYI");
   }
@@ -4006,17 +4001,17 @@ void CodeGenerator::visitWasmUnarySimd128(LWasmUnarySimd128* ins) {
     case wasm::SimdOp::I8x16Popcnt:
       masm.popcntInt8x16(src, dest);
       break;
-    case wasm::SimdOp::I32x4RelaxedTruncSSatF32x4:
-      masm.truncSatFloat32x4ToInt32x4Relaxed(src, dest);
+    case wasm::SimdOp::I32x4RelaxedTruncF32x4S:
+      masm.truncFloat32x4ToInt32x4Relaxed(src, dest);
       break;
-    case wasm::SimdOp::I32x4RelaxedTruncUSatF32x4:
-      masm.unsignedTruncSatFloat32x4ToInt32x4Relaxed(src, dest);
+    case wasm::SimdOp::I32x4RelaxedTruncF32x4U:
+      masm.unsignedTruncFloat32x4ToInt32x4Relaxed(src, dest);
       break;
-    case wasm::SimdOp::I32x4RelaxedTruncSatF64x2SZero:
-      masm.truncSatFloat64x2ToInt32x4Relaxed(src, dest);
+    case wasm::SimdOp::I32x4RelaxedTruncF64x2SZero:
+      masm.truncFloat64x2ToInt32x4Relaxed(src, dest);
       break;
-    case wasm::SimdOp::I32x4RelaxedTruncSatF64x2UZero:
-      masm.unsignedTruncSatFloat64x2ToInt32x4Relaxed(src, dest);
+    case wasm::SimdOp::I32x4RelaxedTruncF64x2UZero:
+      masm.unsignedTruncFloat64x2ToInt32x4Relaxed(src, dest);
       break;
     default:
       MOZ_CRASH("Unary SimdOp not implemented");

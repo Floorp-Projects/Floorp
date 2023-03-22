@@ -3554,23 +3554,23 @@ void MacroAssembler::unsignedTruncSatFloat64x2ToInt32x4(FloatRegister src,
   Uqxtn(Simd2S(dest), Simd2D(dest));
 }
 
-void MacroAssembler::truncSatFloat32x4ToInt32x4Relaxed(FloatRegister src,
-                                                       FloatRegister dest) {
+void MacroAssembler::truncFloat32x4ToInt32x4Relaxed(FloatRegister src,
+                                                    FloatRegister dest) {
   Fcvtzs(Simd4S(dest), Simd4S(src));
 }
 
-void MacroAssembler::unsignedTruncSatFloat32x4ToInt32x4Relaxed(
+void MacroAssembler::unsignedTruncFloat32x4ToInt32x4Relaxed(
     FloatRegister src, FloatRegister dest) {
   Fcvtzu(Simd4S(dest), Simd4S(src));
 }
 
-void MacroAssembler::truncSatFloat64x2ToInt32x4Relaxed(FloatRegister src,
-                                                       FloatRegister dest) {
+void MacroAssembler::truncFloat64x2ToInt32x4Relaxed(FloatRegister src,
+                                                    FloatRegister dest) {
   Fcvtzs(Simd2D(dest), Simd2D(src));
   Sqxtn(Simd2S(dest), Simd2D(dest));
 }
 
-void MacroAssembler::unsignedTruncSatFloat64x2ToInt32x4Relaxed(
+void MacroAssembler::unsignedTruncFloat64x2ToInt32x4Relaxed(
     FloatRegister src, FloatRegister dest) {
   Fcvtzu(Simd2D(dest), Simd2D(src));
   Uqxtn(Simd2S(dest), Simd2D(dest));
@@ -3797,20 +3797,6 @@ void MacroAssembler::dotInt8x16Int7x16ThenAdd(FloatRegister lhs,
   Smull2(Simd8H(temp), Simd16B(lhs), Simd16B(rhs));
   Addp(Simd8H(temp), Simd8H(scratch), Simd8H(temp));
   Sadalp(Simd4S(dest), Simd8H(temp));
-}
-
-void MacroAssembler::dotBFloat16x8ThenAdd(FloatRegister lhs, FloatRegister rhs,
-                                          FloatRegister dest,
-                                          FloatRegister temp) {
-  MOZ_ASSERT(lhs != dest && rhs != dest);
-  ScratchSimd128Scope scratch(*this);
-  Shl(Simd4S(scratch), Simd4S(lhs), 16);
-  Shl(Simd4S(temp), Simd4S(rhs), 16);
-  Fmla(Simd4S(dest), Simd4S(scratch), Simd4S(temp));
-  loadConstantSimd128(SimdConstant::SplatX4(int32_t(0xFFFF0000)), temp);
-  And(Simd16B(scratch), Simd16B(lhs), Simd16B(temp));
-  And(Simd16B(temp), Simd16B(rhs), Simd16B(temp));
-  Fmla(Simd4S(dest), Simd4S(scratch), Simd4S(temp));
 }
 
 // Floating point rounding (experimental as of August, 2020)

@@ -564,10 +564,10 @@ OpKind wasm::Classify(OpBytes op) {
         case SimdOp::I16x8ExtaddPairwiseI8x16U:
         case SimdOp::I32x4ExtaddPairwiseI16x8S:
         case SimdOp::I32x4ExtaddPairwiseI16x8U:
-        case SimdOp::I32x4RelaxedTruncSSatF32x4:
-        case SimdOp::I32x4RelaxedTruncUSatF32x4:
-        case SimdOp::I32x4RelaxedTruncSatF64x2SZero:
-        case SimdOp::I32x4RelaxedTruncSatF64x2UZero:
+        case SimdOp::I32x4RelaxedTruncF32x4S:
+        case SimdOp::I32x4RelaxedTruncF32x4U:
+        case SimdOp::I32x4RelaxedTruncF64x2SZero:
+        case SimdOp::I32x4RelaxedTruncF64x2UZero:
           WASM_SIMD_OP(OpKind::Unary);
         case SimdOp::I8x16Shl:
         case SimdOp::I8x16ShrS:
@@ -623,7 +623,6 @@ OpKind wasm::Classify(OpBytes op) {
         case SimdOp::I32x4RelaxedLaneSelect:
         case SimdOp::I64x2RelaxedLaneSelect:
         case SimdOp::I32x4DotI8x16I7x16AddS:
-        case SimdOp::F32x4RelaxedDotBF16x8AddF32x4:
           WASM_SIMD_OP(OpKind::Ternary);
       }
       break;

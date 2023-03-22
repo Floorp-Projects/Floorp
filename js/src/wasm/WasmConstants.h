@@ -770,10 +770,10 @@ enum class SimdOp {
   F64x2ConvertLowI32x4S = 0xfe,
   F64x2ConvertLowI32x4U = 0xff,
   I8x16RelaxedSwizzle = 0x100,
-  I32x4RelaxedTruncSSatF32x4 = 0x101,
-  I32x4RelaxedTruncUSatF32x4 = 0x102,
-  I32x4RelaxedTruncSatF64x2SZero = 0x103,
-  I32x4RelaxedTruncSatF64x2UZero = 0x104,
+  I32x4RelaxedTruncF32x4S = 0x101,
+  I32x4RelaxedTruncF32x4U = 0x102,
+  I32x4RelaxedTruncF64x2SZero = 0x103,
+  I32x4RelaxedTruncF64x2UZero = 0x104,
   F32x4RelaxedFma = 0x105,
   F32x4RelaxedFnma = 0x106,
   F64x2RelaxedFma = 0x107,
@@ -789,9 +789,8 @@ enum class SimdOp {
   I16x8RelaxedQ15MulrS = 0x111,
   I16x8DotI8x16I7x16S = 0x112,
   I32x4DotI8x16I7x16AddS = 0x113,
-  F32x4RelaxedDotBF16x8AddF32x4 = 0x114,
 
-  // Reserved for Relaxed SIMD = 0x115-0x12f
+  // Reserved for Relaxed SIMD = 0x114-0x12f
 
   // Unused = 0x130 and up
 
