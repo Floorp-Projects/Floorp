@@ -23,9 +23,8 @@
 ## When a crash report requires actions:
 * Is this a crash due to a recent change? If so, contact the developer.
   * The histogram on the right side can help determine this along with checking the Firefox-Beta and Firefox Sentry products.
-* Triage the crash to determine if the issue is real and requires a GitHub issue to track it. 
+* Triage the crash to determine if the issue is real and requires a Bugzilla issue to track it. 
   * When filing an issue add a link to it as a comment in the Sentry crash for the products (nightly, beta, release) where the crash appears.
-* If a GitHub issue is required to track the crash, put the issue in the [Android Team Backlog Staging Board](https://github.com/orgs/mozilla-mobile/projects/70).
 * Notify the relevant teams on Slack/Matrix that there's a new crash in Nightly that needs urgent attention, e.g. **#synced-client-integrations** for all things involving application services (A-S), **#nimbus-rust-sdk** for Nimbus, and **[GeckoView on Matrix](https://chat.mozilla.org/#/room/#geckoview:mozilla.org)**.
 
 ## What can you do to help when not monitoring crashes
@@ -34,7 +33,12 @@
 ## Crash monitoring with Socorro
 * Look at [Top Crashers for Fenix Nightly](https://crash-stats.mozilla.org/topcrashers/?product=Fenix&days=3&_range_type=build&process_type=any) for reports on Nightly builds.
   * This will return zero results if GV build ID is greater than 3 days old. Change to the 7 day view and ask #releaseduty-mobile in Slack about the GV upgrade task being broken.
-* Use Sentry, GitHub, and Bugzilla to determine if the crash has already been reported. If a Bugzilla bug has been filed for a crash, a link to the bug should be listed in Socorro's "Bugzilla IDs" column.
-* If the crash is new and the volume is high, then consider filing an issue.
-* If the crash is a native crash, file a bug using the crash-stats Bugzilla tab from a crash ID.
-* If the crash is a Java crash, then consider opening an issue on GitHub.
+* Use Sentry and Bugzilla to determine if the crash has already been reported. If a Bugzilla bug has been filed for a crash, a link to the bug should be listed in Socorro's "Bugzilla IDs" column.
+* If the crash is new and the volume is high, then consider filing an issue using the crash-stats Bugzilla tab from a crash ID.
+
+## How to file bugs in Bugzilla from Socorro
+* Go to the crash report.
+* "Reports" tab.
+* Select a report.
+* Select the "Bugzilla" tab.
+* Just above the header "Related Bugs", you will see a "Create a bug" option. Select the product that matches the crash report.
