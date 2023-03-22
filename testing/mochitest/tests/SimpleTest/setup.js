@@ -68,6 +68,41 @@ function parseQueryString(encodedString, useArrays) {
   return o;
 }
 
+/* helper function, specifically for prefs to ignore */
+function loadFile(url, callback) {
+  let req = new XMLHttpRequest();
+  req.open("GET", url);
+  req.onload = function() {
+    if (req.readyState == 4) {
+      if (req.status == 200) {
+        try {
+          let prefs = JSON.parse(req.responseText);
+          callback(prefs);
+        } catch (e) {
+          dump(
+            "TEST-UNEXPECTED-FAIL: setup.js | error parsing " +
+              url +
+              " (" +
+              e +
+              ")\n"
+          );
+          throw e;
+        }
+      } else {
+        dump(
+          "TEST-UNEXPECTED-FAIL: setup.js | error loading " +
+            url +
+            " (HTTP " +
+            req.status +
+            ")\n"
+        );
+        callback({});
+      }
+    }
+  };
+  req.send();
+}
+
 // Check the query string for arguments
 var params = parseQueryString(location.search.substring(1), true);
 
@@ -193,6 +228,10 @@ if (params.conditionedProfile) {
   TestRunner.conditionedProfile = true;
 }
 
+if (params.comparePrefs) {
+  TestRunner.comparePrefs = true;
+}
+
 // Log things to the console if appropriate.
 TestRunner.logger.addListener("dumpListener", consoleLevel + "", function(msg) {
   dump(msg.info.join(" ") + "\n");
@@ -200,6 +239,7 @@ TestRunner.logger.addListener("dumpListener", consoleLevel + "", function(msg) {
 
 var gTestList = [];
 var RunSet = {};
+
 RunSet.runall = function(e) {
   // Filter tests to include|exclude tests based on data in params.filter.
   // This allows for including or excluding tests from the gTestList
@@ -295,6 +335,17 @@ function hookup() {
   }
 }
 
+function getPrefList() {
+  if (params.ignorePrefsFile) {
+    loadFile(getTestManifestURL(params.ignorePrefsFile), function(prefs) {
+      TestRunner.ignorePrefs = prefs;
+      RunSet.runall();
+    });
+  } else {
+    RunSet.runall();
+  }
+}
+
 function hookupTests(testList) {
   if (testList.length) {
     gTestList = testList;
@@ -309,7 +360,7 @@ function hookupTests(testList) {
   document.getElementById("toggleNonTests").onclick = toggleNonTests;
   // run automatically if autorun specified
   if (params.autorun) {
-    RunSet.runall();
+    getPrefList();
   }
 }
 
