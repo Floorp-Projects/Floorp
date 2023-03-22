@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "EventLog.h"
 #include "NotificationCallback.h"
 
 #include <sstream>
@@ -47,11 +46,12 @@ HRESULT STDMETHODCALLTYPE NotificationCallback::Activate(
 }
 
 void NotificationCallback::HandleActivation(LPCWSTR invokedArgs) {
-  LOG_ERROR_MESSAGE(L"Invoked with arguments: '%s'", invokedArgs);
-
   auto maybeArgs = ParseToastArguments(invokedArgs);
-  if (!maybeArgs) {
-    LOG_ERROR_MESSAGE(L"COM server disabled for toast");
+  if (maybeArgs) {
+    NOTIFY_LOG(mozilla::LogLevel::Info,
+               (L"Invoked with arguments: '%s'", invokedArgs));
+  } else {
+    NOTIFY_LOG(mozilla::LogLevel::Info, (L"COM server disabled for toast"));
     return;
   }
   const auto& args = maybeArgs.value();
@@ -74,7 +74,7 @@ void NotificationCallback::HandleActivation(LPCWSTR invokedArgs) {
                  DETACHED_PROCESS | NORMAL_PRIORITY_CLASS, nullptr, nullptr,
                  &si, &pi);
 
-  LOG_ERROR_MESSAGE(L"Invoked %s", cmdLine.get());
+  NOTIFY_LOG(mozilla::LogLevel::Info, (L"Invoked %s", cmdLine.get()));
 
   // Transfer `SetForegroundWindow` permission to the launched application.
 
@@ -99,6 +99,8 @@ mozilla::Maybe<ToastArgs> NotificationCallback::ParseToastArguments(
       parsedArgs.profile = value;
     } else if (key == kLaunchArgTag) {
       parsedArgs.windowsTag = value;
+    } else if (key == kLaunchArgLogging) {
+      gVerbose = value == L"verbose";
     } else if (key == kLaunchArgAction) {
       // Remainder of args are from the Web Notification action, don't parse.
       // See https://bugzilla.mozilla.org/show_bug.cgi?id=1781929.
@@ -125,14 +127,15 @@ NotificationCallback::BuildRunCommand(const ToastArgs& args) {
     childArgv.push_back(L"--profile");
     childArgv.push_back(args.profile.c_str());
   } else {
-    LOG_ERROR_MESSAGE(L"No profile; invocation will choose default profile");
+    NOTIFY_LOG(mozilla::LogLevel::Warning,
+               (L"No profile; invocation will choose default profile"));
   }
 
   if (!args.windowsTag.empty()) {
     childArgv.push_back(L"--notification-windowsTag");
     childArgv.push_back(args.windowsTag.c_str());
   } else {
-    LOG_ERROR_MESSAGE(L"No windowsTag; invoking anyway");
+    NOTIFY_LOG(mozilla::LogLevel::Warning, (L"No windowsTag; invoking anyway"));
   }
 
   return {programPath,
@@ -155,8 +158,8 @@ mozilla::Maybe<nsAutoHandle> NotificationCallback::CreatePipe(
       1, sizeof(ToastNotificationPermissionMessage),
       sizeof(ToastNotificationPidMessage), 0, nullptr));
   if (pipe.get() == INVALID_HANDLE_VALUE) {
-    LOG_ERROR_MESSAGE(L"Error creating pipe %s, error %lu", pipeName.c_str(),
-                      GetLastError());
+    NOTIFY_LOG(mozilla::LogLevel::Error, (L"Error creating pipe %s, error %lu",
+                                          pipeName.c_str(), GetLastError()));
     return mozilla::Nothing();
   }
 
@@ -166,8 +169,9 @@ mozilla::Maybe<nsAutoHandle> NotificationCallback::CreatePipe(
 bool NotificationCallback::ConnectPipeWithTimeout(const nsAutoHandle& pipe) {
   nsAutoHandle overlappedEvent(CreateEventW(nullptr, TRUE, FALSE, nullptr));
   if (!overlappedEvent) {
-    LOG_ERROR_MESSAGE(L"Error creating pipe connect event, error %lu",
-                      GetLastError());
+    NOTIFY_LOG(
+        mozilla::LogLevel::Error,
+        (L"Error creating pipe connect event, error %lu", GetLastError()));
     return false;
   }
 
@@ -177,19 +181,20 @@ bool NotificationCallback::ConnectPipeWithTimeout(const nsAutoHandle& pipe) {
   BOOL result = ConnectNamedPipe(pipe.get(), &overlappedConnect);
   DWORD lastError = GetLastError();
   if (lastError == ERROR_IO_PENDING) {
-    LOG_ERROR_MESSAGE(L"Waiting on pipe connection");
+    NOTIFY_LOG(mozilla::LogLevel::Info, (L"Waiting on pipe connection"));
 
     if (!WaitEventWithTimeout(overlappedEvent)) {
-      LOG_ERROR_MESSAGE(
-          L"Pipe connect wait failed, cancelling (connection may still "
-          L"succeed)");
+      NOTIFY_LOG(mozilla::LogLevel::Warning,
+                 (L"Pipe connect wait failed, cancelling (connection may still "
+                  L"succeed)"));
 
       CancelIo(pipe.get());
       DWORD undefined;
       BOOL overlappedResult =
           GetOverlappedResult(pipe.get(), &overlappedConnect, &undefined, TRUE);
       if (!overlappedResult || GetLastError() != ERROR_PIPE_CONNECTED) {
-        LOG_ERROR_MESSAGE(L"Pipe connect failed, error %lu", GetLastError());
+        NOTIFY_LOG(mozilla::LogLevel::Error,
+                   (L"Pipe connect failed, error %lu", GetLastError()));
         return false;
       }
 
@@ -197,14 +202,16 @@ bool NotificationCallback::ConnectPipeWithTimeout(const nsAutoHandle& pipe) {
     }
   } else if (result) {
     // Overlapped `ConnectNamedPipe` should return 0.
-    LOG_ERROR_MESSAGE(L"Error connecting pipe, error %lu", lastError);
+    NOTIFY_LOG(mozilla::LogLevel::Error,
+               (L"Error connecting pipe, error %lu", lastError));
     return false;
   } else if (lastError != ERROR_PIPE_CONNECTED) {
-    LOG_ERROR_MESSAGE(L"Error connecting pipe, error %lu", lastError);
+    NOTIFY_LOG(mozilla::LogLevel::Error,
+               (L"Error connecting pipe, error %lu", lastError));
     return false;
   }
 
-  LOG_ERROR_MESSAGE(L"Pipe connected!");
+  NOTIFY_LOG(mozilla::LogLevel::Info, (L"Pipe connected!"));
   return true;
 }
 
@@ -214,7 +221,7 @@ void NotificationCallback::HandlePipeMessages(const nsAutoHandle& pipe) {
     return ReadFile(pipe.get(), &in, sizeof(in), nullptr, &overlapped);
   };
   if (!SyncDoOverlappedIOWithTimeout(pipe, sizeof(in), read)) {
-    LOG_ERROR_MESSAGE(L"Pipe read failed");
+    NOTIFY_LOG(mozilla::LogLevel::Error, (L"Pipe read failed"));
     return;
   }
 
@@ -224,11 +231,11 @@ void NotificationCallback::HandlePipeMessages(const nsAutoHandle& pipe) {
     return WriteFile(pipe.get(), &out, sizeof(out), nullptr, &overlapped);
   };
   if (!SyncDoOverlappedIOWithTimeout(pipe, sizeof(out), write)) {
-    LOG_ERROR_MESSAGE(L"Pipe write failed");
+    NOTIFY_LOG(mozilla::LogLevel::Error, (L"Pipe write failed"));
     return;
   }
 
-  LOG_ERROR_MESSAGE(L"Pipe write succeeded!");
+  NOTIFY_LOG(mozilla::LogLevel::Info, (L"Pipe write succeeded!"));
 }
 
 DWORD NotificationCallback::TransferForegroundPermission(DWORD pid) {
@@ -246,17 +253,17 @@ DWORD NotificationCallback::TransferForegroundPermission(DWORD pid) {
   // because remote server clients do not meet the criteria to receive
   // `SetForegroundWindow` permissions without unsupported hacks.
   if (!pid) {
-    LOG_ERROR_MESSAGE(
-        L"`pid` received from pipe was 0, no process to grant "
-        L"`SetForegroundWindow` permission to");
+    NOTIFY_LOG(mozilla::LogLevel::Warning,
+               (L"`pid` received from pipe was 0, no process to grant "
+                L"`SetForegroundWindow` permission to"));
     return FALSE;
   }
   // When this call succeeds, the COM process loses the `SetForegroundWindow`
   // permission.
   if (!AllowSetForegroundWindow(pid)) {
-    LOG_ERROR_MESSAGE(
-        L"Failed to grant `SetForegroundWindow` permission, error %lu",
-        GetLastError());
+    NOTIFY_LOG(mozilla::LogLevel::Error,
+               (L"Failed to grant `SetForegroundWindow` permission, error %lu",
+                GetLastError()));
     return FALSE;
   }
 
