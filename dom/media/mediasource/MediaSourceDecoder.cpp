@@ -90,7 +90,7 @@ media::TimeIntervals MediaSourceDecoder::GetSeekable() {
   double duration = mMediaSource->Duration();
   if (std::isnan(duration)) {
     // Return empty range.
-  } else if (duration > 0 && mozilla::IsInfinite(duration)) {
+  } else if (duration > 0 && std::isinf(duration)) {
     media::TimeIntervals buffered = GetBuffered();
 
     // 1. If live seekable range is not empty:

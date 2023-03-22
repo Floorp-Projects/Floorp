@@ -1237,7 +1237,7 @@ static bool num_toFixed(JSContext* cx, unsigned argc, Value* vp) {
     args.rval().setString(cx->names().NaN);
     return true;
   }
-  if (mozilla::IsInfinite(d)) {
+  if (std::isinf(d)) {
     if (d > 0) {
       args.rval().setString(cx->names().Infinity);
       return true;
@@ -1309,7 +1309,7 @@ static bool num_toExponential(JSContext* cx, unsigned argc, Value* vp) {
     args.rval().setString(cx->names().NaN);
     return true;
   }
-  if (mozilla::IsInfinite(d)) {
+  if (std::isinf(d)) {
     if (d > 0) {
       args.rval().setString(cx->names().Infinity);
       return true;
@@ -1372,7 +1372,7 @@ static bool num_toPrecision(JSContext* cx, unsigned argc, Value* vp) {
     args.rval().setString(cx->names().NaN);
     return true;
   }
-  if (mozilla::IsInfinite(d)) {
+  if (std::isinf(d)) {
     if (d > 0) {
       args.rval().setString(cx->names().Infinity);
       return true;

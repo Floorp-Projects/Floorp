@@ -58,7 +58,7 @@ nsresult txNumberExpr::evaluate(txIEvalContext* aContext,
       } else {
 #if defined(XP_WIN)
         /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
-        if (!mozilla::IsInfinite(leftDbl) && mozilla::IsInfinite(rightDbl))
+        if (!std::isinf(leftDbl) && std::isinf(rightDbl))
           result = leftDbl;
         else
 #endif

@@ -36,7 +36,6 @@ using mozilla::Abs;
 using mozilla::CountLeadingZeroes32;
 using mozilla::ExponentComponent;
 using mozilla::FloorLog2;
-using mozilla::IsInfinite;
 using mozilla::IsNegativeZero;
 using mozilla::NegativeInfinity;
 using mozilla::NumberEqualsInt32;
@@ -678,7 +677,7 @@ static uint16_t ExponentImpliedByDouble(double d) {
   if (std::isnan(d)) {
     return Range::IncludesInfinityAndNaN;
   }
-  if (IsInfinite(d)) {
+  if (std::isinf(d)) {
     return Range::IncludesInfinity;
   }
 
