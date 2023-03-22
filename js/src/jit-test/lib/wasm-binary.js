@@ -153,7 +153,6 @@ const F64x2RelaxedMaxCode = 0x110;
 const I16x8RelaxedQ15MulrS = 0x111;
 const I16x8DotI8x16I7x16S = 0x112;
 const I32x4DotI8x16I7x16AddS = 0x113;
-const F32x4RelaxedDotBF16x8AddF32x4 = 0x114;
 
 const FirstInvalidOpcode = 0xc5;
 const LastInvalidOpcode = 0xfa;

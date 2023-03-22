@@ -2842,13 +2842,6 @@ void MacroAssembler::dotInt8x16Int7x16ThenAdd(FloatRegister lhs,
   vpaddd(Operand(scratch), dest, dest);
 }
 
-void MacroAssembler::dotBFloat16x8ThenAdd(FloatRegister lhs, FloatRegister rhs,
-                                          FloatRegister dest,
-                                          FloatRegister temp) {
-  MOZ_ASSERT(lhs != dest && rhs != dest);
-  MacroAssemblerX86Shared::dotBFloat16x8ThenAdd(lhs, rhs, dest, temp);
-}
-
 // Rounding
 
 void MacroAssembler::ceilFloat32x4(FloatRegister src, FloatRegister dest) {
@@ -3069,24 +3062,24 @@ void MacroAssembler::unsignedTruncSatFloat64x2ToInt32x4(FloatRegister src,
   MacroAssemblerX86Shared::unsignedTruncSatFloat64x2ToInt32x4(src, temp, dest);
 }
 
-void MacroAssembler::truncSatFloat32x4ToInt32x4Relaxed(FloatRegister src,
-                                                       FloatRegister dest) {
+void MacroAssembler::truncFloat32x4ToInt32x4Relaxed(FloatRegister src,
+                                                    FloatRegister dest) {
   vcvttps2dq(src, dest);
 }
 
-void MacroAssembler::unsignedTruncSatFloat32x4ToInt32x4Relaxed(
+void MacroAssembler::unsignedTruncFloat32x4ToInt32x4Relaxed(
     FloatRegister src, FloatRegister dest) {
-  MacroAssemblerX86Shared::unsignedTruncSatFloat32x4ToInt32x4Relaxed(src, dest);
+  MacroAssemblerX86Shared::unsignedTruncFloat32x4ToInt32x4Relaxed(src, dest);
 }
 
-void MacroAssembler::truncSatFloat64x2ToInt32x4Relaxed(FloatRegister src,
-                                                       FloatRegister dest) {
+void MacroAssembler::truncFloat64x2ToInt32x4Relaxed(FloatRegister src,
+                                                    FloatRegister dest) {
   vcvttpd2dq(src, dest);
 }
 
-void MacroAssembler::unsignedTruncSatFloat64x2ToInt32x4Relaxed(
+void MacroAssembler::unsignedTruncFloat64x2ToInt32x4Relaxed(
     FloatRegister src, FloatRegister dest) {
-  MacroAssemblerX86Shared::unsignedTruncSatFloat64x2ToInt32x4Relaxed(src, dest);
+  MacroAssemblerX86Shared::unsignedTruncFloat64x2ToInt32x4Relaxed(src, dest);
 }
 
 // Floating point widening

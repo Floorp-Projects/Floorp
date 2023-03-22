@@ -1393,7 +1393,7 @@ void MacroAssemblerX86Shared::unsignedTruncSatFloat32x4ToInt32x4(
   vpaddd(Operand(temp), dest, dest);
 }
 
-void MacroAssemblerX86Shared::unsignedTruncSatFloat32x4ToInt32x4Relaxed(
+void MacroAssemblerX86Shared::unsignedTruncFloat32x4ToInt32x4Relaxed(
     FloatRegister src, FloatRegister dest) {
   ScratchSimd128Scope scratch(asMasm());
   src = asMasm().moveSimd128FloatIfNotAVX(src, dest);
@@ -1450,7 +1450,7 @@ void MacroAssemblerX86Shared::unsignedTruncSatFloat64x2ToInt32x4(
   vshufps(0x88, temp, dest, dest);
 }
 
-void MacroAssemblerX86Shared::unsignedTruncSatFloat64x2ToInt32x4Relaxed(
+void MacroAssemblerX86Shared::unsignedTruncFloat64x2ToInt32x4Relaxed(
     FloatRegister src, FloatRegister dest) {
   ScratchSimd128Scope scratch(asMasm());
 
@@ -1481,31 +1481,4 @@ void MacroAssemblerX86Shared::popcntInt8x16(FloatRegister src,
   asMasm().loadConstantSimd128(SimdConstant::CreateX16(counts), temp);
   vpshufb(scratch, temp, temp);
   vpaddb(Operand(temp), output, output);
-}
-
-void MacroAssemblerX86Shared::dotBFloat16x8ThenAdd(FloatRegister lhs,
-                                                   FloatRegister rhs,
-                                                   FloatRegister dest,
-                                                   FloatRegister temp) {
-  ScratchSimd128Scope scratch(asMasm());
-  FloatRegister lhsCopy = asMasm().moveSimd128IntIfNotAVX(lhs, scratch);
-  FloatRegister rhsCopy = asMasm().moveSimd128IntIfNotAVX(rhs, temp);
-  vpslld(Imm32(16), lhsCopy, scratch);
-  vpslld(Imm32(16), rhsCopy, temp);
-  if (HasFMA()) {
-    vfmadd231ps(temp, scratch, dest);
-  } else {
-    asMasm().mulFloat32x4(scratch, temp, scratch);
-    asMasm().addFloat32x4(dest, scratch, dest);
-  }
-  // The temp has 0 in low half-word. Use pblendw instead of `& 0xFFFF0000`.
-  FloatRegister tempCopy = asMasm().moveSimd128IntIfNotAVX(temp, scratch);
-  vpblendw(0xAA, lhs, tempCopy, scratch);
-  vpblendw(0xAA, rhs, temp, temp);
-  if (HasFMA()) {
-    vfmadd231ps(temp, scratch, dest);
-  } else {
-    asMasm().mulFloat32x4(scratch, temp, scratch);
-    asMasm().addFloat32x4(dest, scratch, dest);
-  }
 }
