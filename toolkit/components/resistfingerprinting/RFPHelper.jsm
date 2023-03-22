@@ -312,10 +312,10 @@ class _RFPHelper {
   _registerActor() {
     ChromeUtils.registerWindowActor("RFPHelper", {
       parent: {
-        moduleURI: "resource:///actors/RFPHelperParent.jsm",
+        esModuleURI: "resource:///actors/RFPHelperParent.sys.mjs",
       },
       child: {
-        moduleURI: "resource:///actors/RFPHelperChild.jsm",
+        esModuleURI: "resource:///actors/RFPHelperChild.sys.mjs",
         events: {
           resize: {},
         },
