@@ -308,8 +308,28 @@
           "migration-all-available-data-label",
           "Testing if selected-data-header reflects the selected resources"
         );
-      });
 
+        let importButton = gShadowRoot.querySelector("#import");
+
+        ok(
+          !importButton.disabled,
+          "Testing if import button is enabled when at least one resource is selected."
+        );
+
+        let importButtonUpdated = BrowserTestUtils.waitForEvent(
+          gWiz,
+          "MigrationWizard:ResourcesUpdated"
+        );
+
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.dispatchEvent(new CustomEvent("change", { bubbles: true }));
+        await importButtonUpdated;
+
+        ok(
+          importButton.disabled,
+          "Testing if import button is disabled when no resources are selected."
+        );
+      });
 
       /**
        * Tests variant 2 of the migration wizard when there's a single resource
