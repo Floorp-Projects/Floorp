@@ -12,7 +12,6 @@ JS_PREFERENCE_PP_FILES += [
 ]
 
 DIRS += [
-    "app/distribution",
     "base",
     "components",
     "extensions",

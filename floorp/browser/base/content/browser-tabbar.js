@@ -117,3 +117,63 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 }, { once: true });
+
+//-------------------------------------------------------------------------NewTabOpenPosition----------------------------------------------------------------------------
+
+//copy from browser.js (./browser/base/content/browser.js)
+BrowserOpenTab = function ({ event, url = BROWSER_NEW_TAB_URL } = {}) {
+  let relatedToCurrent = false; //"relatedToCurrent" decide where to open the new tab. Default work as last tab (right side). Floorp use this.
+  let where = "tab";
+  let _OPEN_NEW_TAB_POSITION_PREF = Services.prefs.getIntPref(
+    "floorp.browser.tabs.openNewTabPosition"
+  );
+
+  switch (_OPEN_NEW_TAB_POSITION_PREF) {
+    case 0:
+      // Open the new tab as unrelated to the current tab.
+      relatedToCurrent = false;
+      break;
+    case 1:
+      // Open the new tab as related to the current tab.
+      relatedToCurrent = true;
+      break;
+    default:
+     if (event) {
+      where = whereToOpenLink(event, false, true);
+      switch (where) {
+        case "tab":
+        case "tabshifted":
+          // When accel-click or middle-click are used, open the new tab as
+          // related to the current tab.
+          relatedToCurrent = true;
+          break;
+        case "current":
+          where = "tab";
+          break;
+        }
+     }
+  }
+
+  //Wrote by Mozilla(Firefox)
+  // A notification intended to be useful for modular peformance tracking
+  // starting as close as is reasonably possible to the time when the user
+  // expressed the intent to open a new tab.  Since there are a lot of
+  // entry points, this won't catch every single tab created, but most
+  // initiated by the user should go through here.
+  //
+  // Note 1: This notification gets notified with a promise that resolves
+  //         with the linked browser when the tab gets created
+  // Note 2: This is also used to notify a user that an extension has changed
+  //         the New Tab page.
+  Services.obs.notifyObservers(
+    {
+      wrappedJSObject: new Promise(resolve => {
+        openTrustedLinkIn(url, where, {
+          relatedToCurrent,
+          resolveOnNewTabCreated: resolve,
+        });
+      }),
+    },
+    "browser-open-newtab-start"
+  );
+}

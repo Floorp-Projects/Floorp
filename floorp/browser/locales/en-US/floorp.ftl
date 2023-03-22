@@ -25,6 +25,13 @@ browser-design-settings = Tab Bar Settings
 
 auto-reboot = If you change any of the settings below, your browser will be restarted to apply the changes. Please save the data you are working with before making any changes.
 tab-width = Minimum width of tabs
+preferences-tabs-newtab-position = New Tab Position
+open-new-tab-use-default = 
+ .label = Open new tabs at default position
+open-new-tab-at-the-end =
+ .label = Open new tabs at the end of the tab bar
+open-new-tab-next-to-current = 
+ .label = Open new tabs right of the current tab
 enable-multitab = 
  .label = Enable multi-row tabs
 multirow-tabs-limit = 
@@ -281,6 +288,9 @@ bsb-notes-sidebar =
 
 bsb-TST-sidebar =
   .label = { sidebar2-TST-sidebar }
+
+bsb-notes-sidebar =
+  .label = { sidebar2-notes-sidebar }
 
 bsb-website = 
   .label = Website
@@ -632,7 +642,7 @@ gf-floorp-close-sidebar-description = Close Sidebar
 
 
 gf-floorp-open-browser-manager-sidebar-name = [Floorp] Open BMS
-gf-floorp-open-browser-manager-sidebar-description = If Webpanel of Browser Manager Sidebar has loaded, Open Browser Manager Sidebar
+gf-floorp-open-browser-manager-sidebar-description =  Open Browser Manager Sidebar, if webpanel of Browser Manager Sidebar was loaded
 
 gf-floorp-close-browser-manager-sidebar-name = [Floorp] Close BMS
 gf-floorp-close-browser-manager-sidebar-description = Close Browser Manager Sidebar
@@ -654,7 +664,7 @@ gf-floorp-open-extension-sidebar-description = Open selected add-on of Sidebar
 gf-floorp-open-extension-sidebar-settings-addons-id = Add-on of Sidebar
 gf-floorp-open-extension-sidebar-settings-addons-id-description = The extension of the add-on open of sidebar
 gf-floorp-open-extension-sidebar-settings-list-default = Please select add-on
-gf-floorp-open-extension-sidebar-settings-list-unknwon = Unknwon add-on
+gf-floorp-open-extension-sidebar-settings-list-unknwon = Unknown add-on
 ##################################################################### Floorp System Update Portable Version ###############################################################
 
 update-portable-notification-found-title = Updates found!

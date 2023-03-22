@@ -220,7 +220,7 @@
   }
 
   [data-l10n-id="show-notes-sidebar"] {
-    --BMSIcon: url("chrome://browser/skin/notes.svg");
+    --BMSIcon: url("chrome://browser/skin/notes-bms.svg");
   }
   
   #select-CustomURL{

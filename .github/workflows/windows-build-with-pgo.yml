@@ -97,7 +97,10 @@ jobs:
         echo "DISPLAY_VERSION=$DISPLAY_VERSION" >> $GITHUB_ENV
         echo "UPDATE_CHANNEL=$UPDATE_CHANNEL" >> $GITHUB_ENV
         
-        cp $RUNNER_USERDIR/win-crosstool/clang/lib/clang/14.0.4/lib/windows/clang_rt.profile-x86_64.lib $RUNNER_USERDIR/win-crosstool/vs2017/vc/tools/msvc/${VCTOOL_VERSION}/lib/x64/clang_rt.profile-x86_64.lib
+        rm -rf $RUNNER_USERDIR/.mozbuild/clang
+        wget -nv -O - https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.cache.level-3.toolchains.v3.linux64-clang-15.latest/artifacts/public%2Fbuild%2Fclang.tar.zst | tar --zstd -xv -C $RUNNER_USERDIR/.mozbuild
+        
+        echo "export LIB=\"$(cd $RUNNER_USERDIR/.mozbuild/clang/lib/clang/* && cd lib/windows && pwd)\"" >> mozconfig
 
     - name: Build 🔨
       run: |
@@ -276,7 +279,10 @@ jobs:
         echo "DISPLAY_VERSION=$DISPLAY_VERSION" >> $GITHUB_ENV
         echo "UPDATE_CHANNEL=$UPDATE_CHANNEL" >> $GITHUB_ENV
         
-        cp $RUNNER_USERDIR/win-crosstool/clang/lib/clang/14.0.4/lib/windows/clang_rt.profile-x86_64.lib $RUNNER_USERDIR/win-crosstool/vs2017/vc/tools/msvc/${VCTOOL_VERSION}/lib/x64/clang_rt.profile-x86_64.lib
+        rm -rf $RUNNER_USERDIR/.mozbuild/clang
+        wget -nv -O - https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.cache.level-3.toolchains.v3.linux64-clang-15.latest/artifacts/public%2Fbuild%2Fclang.tar.zst | tar --zstd -xv -C $RUNNER_USERDIR/.mozbuild
+        
+        echo "export LIB=\"$(cd $RUNNER_USERDIR/.mozbuild/clang/lib/clang/* && cd lib/windows && pwd)\"" >> mozconfig
 
     - name: Build 🔨
       run: |

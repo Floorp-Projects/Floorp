@@ -85,8 +85,6 @@ Floorp is a rapid release browser, like Firefox, in order to maximize security a
 
 Specifically, the release phases are as follows
 
-Create a patch for the next version of Firefox on the beta branch before the next version of Firefox is released. The beta version is released with the patch applied. Do this for two and a half weeks to create Floorp features and keep up with the latest version of Firefox.
-
-The source code for the release version of the next version of Firefox will be made available one week before. This source code is relatively stable because it has gone through a beta version. However, it is not complete source code. However, waiting for this will delay security fixes, so Floorp developers will start building Floorp four days after the source code is released. This strikes a balance between keeping the latest version and fixing security issues.
+The source code for the release version of the next version of Firefox will be made available one week before. However, it is not complete source code. However, waiting for this will delay security fixes, so Floorp developers will start building Floorp four days after the source code is released. This strikes a balance between keeping the latest version and fixing security issues.
 
 The exception to this is that if additional critical vulnerabilities or other fixes are introduced into Firefox, Floorp developers may build with additional patches on a case-by-case basis to release new features earlier. In the case of minor updates, Floorp may ignore them. This is the Floorp release method.

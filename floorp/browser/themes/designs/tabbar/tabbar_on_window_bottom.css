@@ -8,6 +8,10 @@
 	 -moz-box-ordinal-group: 3;
 	}
 
+	#TabsToolbar, #titlebar {
+	 background-color: var(--lwt-accent-color) !important;
+	}
+
 	#titlebar:-moz-lwtheme {
         background-image: var(--lwt-additional-images) !important;
         background-repeat: var(--lwt-background-tiling) !important;
@@ -114,8 +118,4 @@
 
 #titlebar {
   background: -moz-Dialog !important;
-}
-
-#TabsToolbar {
-  background-color: var(--lwt-tab-line-color) !important;
 }

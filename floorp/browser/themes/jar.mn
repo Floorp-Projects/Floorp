@@ -10,7 +10,8 @@ browser.jar:
   skin/classic/browser/TST-light.svg                                        (icons/TST-light.svg)
   
 # Floorp Notes
-  skin/classic/browser/notes.svg                                         (icons/notes.svg)
+  skin/classic/browser/notes.png                                          (icons/notes.png)
+  skin/classic/browser/notes-bms.svg                                      (icons/notes-bms.svg)
 
 # options
   skin/classic/browser/options/micaforeveryone.css                        (designs/options/micaforeveryone.css)

@@ -68,24 +68,10 @@ async function onFinalUIStartup() {
     let { BrowserManagerSidebar } = ChromeUtils.import("resource:///modules/BrowserManagerSidebar.jsm")
     BrowserManagerSidebar.prefsUpdate()
 
-    IOUtils.exists(OS.Path.join(OS.Constants.Path.profileDir, "newtabImages")).then(
-        (data) => {
-            if (data){
-                IOUtils.copy(OS.Path.join(OS.Constants.Path.profileDir, "newtabImages"),OS.Path.join(OS.Constants.Path.profileDir,"chrome"), { recursive: true }).then(
-                    ()=> IOUtils.remove(OS.Path.join(OS.Constants.Path.profileDir, "newtabImages"), { recursive: true })
-                )
-            }
-            else{
-                IOUtils.makeDirectory(OS.Path.join(OS.Constants.Path.profileDir,"chrome", "newtabImages"))
-            } 
-        }
-    )
-
-    IOUtils.exists(OS.Path.join(OS.Constants.Path.profileDir,"chrome", "newtabImages")).then(
-        (data) => {
-            if (!data) IOUtils.makeDirectory(OS.Path.join(OS.Constants.Path.profileDir,"chrome", "newtabImages"))
-        }
-    )
+    IOUtils.exists(OS.Path.join(OS.Constants.Path.profileDir, "newtabImages"))
+        .then((data) => {
+            if(!data) IOUtils.makeDirectory(OS.Path.join(OS.Constants.Path.profileDir, "newtabImages"))
+        })
 
     // Write CSS.
     

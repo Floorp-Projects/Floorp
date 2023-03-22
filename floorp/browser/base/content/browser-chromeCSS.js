@@ -119,7 +119,6 @@ var { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 
 			let cssFolder = this.getCSSFolder()
 			let cssList = await IOUtils.getChildren(cssFolder)
-			console.log(cssList)
 
 			for(let elem of cssList){
 				let fileName = elem.replace(cssFolder,"")

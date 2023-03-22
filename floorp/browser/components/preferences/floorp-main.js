@@ -43,6 +43,7 @@ Preferences.addAll([
   { id: "floorp.openLinkInExternal.enabled", type: "bool" },
   { id: "floorp.openLinkInExternal.browserId", type: "string" },
   { id: "floorp.delete.browser.border", type: "bool" },
+  { id: "floorp.browser.tabs.openNewTabPosition", type: "int" },
 ]);
 
 window.addEventListener("pageshow", async function() {

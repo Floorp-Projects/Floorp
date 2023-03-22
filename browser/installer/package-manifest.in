@@ -284,10 +284,6 @@
 ; gre location for now.
 @RESPATH@/defaults/pref/channel-prefs.js
 
-#ifdef XP_LINUX
-@RESPATH@/distribution/policies.json
-#endif
-
 ; Background tasks-specific preferences.  These are in the GRE
 ; location since they apply to all tasks at this time.
 #ifdef MOZ_BACKGROUNDTASKS

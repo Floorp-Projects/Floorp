@@ -8,6 +8,7 @@
 DIRS += [
     "about",
     "search",
+    "search-bms",
     "preferences",
     "notes",
 ]
