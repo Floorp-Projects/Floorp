@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/RefPtr.h"
 #include "mozilla/dom/ReferrerPolicyBinding.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIEffectiveTLDService.h"
@@ -1284,11 +1285,8 @@ already_AddRefed<nsIReferrerInfo> ReferrerInfo::CreateForExternalCSSResources(
 already_AddRefed<nsIReferrerInfo>
 ReferrerInfo::CreateForInternalCSSAndSVGResources(Document* aDocument) {
   MOZ_ASSERT(aDocument);
-  nsCOMPtr<nsIReferrerInfo> referrerInfo;
-
-  referrerInfo = new ReferrerInfo(aDocument->GetDocumentURI(),
-                                  aDocument->GetReferrerPolicy());
-  return referrerInfo.forget();
+  return do_AddRef(new ReferrerInfo(aDocument->GetDocumentURI(),
+                                    aDocument->GetReferrerPolicy()));
 }
 
 nsresult ReferrerInfo::ComputeReferrer(nsIHttpChannel* aChannel) {

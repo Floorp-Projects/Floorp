@@ -9,6 +9,7 @@
 #include "gfxUserFontSet.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/ReferrerInfo.h"
 #include "nsContentSecurityManager.h"
 #include "nsIClassOfService.h"
 #include "nsIHttpChannel.h"

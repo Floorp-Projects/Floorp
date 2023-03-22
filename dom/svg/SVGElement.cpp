@@ -1146,11 +1146,7 @@ class MOZ_STACK_CLASS MappedAttrParser {
 
   URLExtraData& EnsureExtraData() {
     if (!mExtraData) {
-      nsCOMPtr<nsIReferrerInfo> referrerInfo =
-          ReferrerInfo::CreateForInternalCSSAndSVGResources(
-              mElement.OwnerDoc());
-      mExtraData = MakeRefPtr<URLExtraData>(mElement.GetBaseURI(), referrerInfo,
-                                            mElement.NodePrincipal());
+      mExtraData = mElement.GetURLDataForStyleAttr();
     }
     return *mExtraData;
   }

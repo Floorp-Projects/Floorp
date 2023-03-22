@@ -356,10 +356,8 @@ void SVGAnimationElement::UpdateHrefTarget(const nsAString& aHrefStr) {
   nsCOMPtr<nsIURI> targetURI;
   nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), aHrefStr,
                                             OwnerDoc(), baseURI);
-  nsCOMPtr<nsIReferrerInfo> referrerInfo =
-      ReferrerInfo::CreateForInternalCSSAndSVGResources(OwnerDoc());
-
-  mHrefTarget.ResetToURIFragmentID(this, targetURI, referrerInfo);
+  mHrefTarget.ResetToURIFragmentID(
+      this, targetURI, OwnerDoc()->ReferrerInfoForInternalCSSAndSVGResources());
   AnimationTargetChanged();
 }
 

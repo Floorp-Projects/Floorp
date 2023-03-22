@@ -24,6 +24,7 @@
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/InternalRequest.h"
 #include "mozilla/dom/Response.h"
+#include "mozilla/dom/ReferrerInfo.h"
 #include "mozilla/dom/WorkerRef.h"
 
 namespace mozilla::dom {
