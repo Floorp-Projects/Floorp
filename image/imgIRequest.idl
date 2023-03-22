@@ -12,6 +12,7 @@
 interface imgINotificationObserver;
 interface nsIURI;
 interface nsIPrincipal;
+interface nsIReferrerInfo;
 
 /**
  * imgIRequest interface
@@ -141,6 +142,11 @@ interface imgIRequest : nsIRequest
    * The CORS mode that this image was loaded with (a mozilla::CORSMode).
    */
   readonly attribute long CORSMode;
+
+  /**
+   * The referrer that this image was loaded with.
+   */
+  readonly attribute nsIReferrerInfo referrerInfo;
 
   /**
    * Cancels this request as in nsIRequest::Cancel(); further, also nulls out

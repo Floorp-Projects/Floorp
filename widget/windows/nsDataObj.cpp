@@ -15,8 +15,9 @@
 #include "nsClipboard.h"
 #include "nsReadableUtils.h"
 #include "nsICookieJarSettings.h"
-#include "nsITransferable.h"
+#include "nsIHttpChannel.h"
 #include "nsISupportsPrimitives.h"
+#include "nsITransferable.h"
 #include "IEnumFE.h"
 #include "nsPrimitiveHelpers.h"
 #include "nsString.h"
@@ -78,7 +79,8 @@ nsDataObj::CStream::~CStream() {}
 nsresult nsDataObj::CStream::Init(nsIURI* pSourceURI,
                                   nsContentPolicyType aContentPolicyType,
                                   nsIPrincipal* aRequestingPrincipal,
-                                  nsICookieJarSettings* aCookieJarSettings) {
+                                  nsICookieJarSettings* aCookieJarSettings,
+                                  nsIReferrerInfo* aReferrerInfo) {
   // we can not create a channel without a requestingPrincipal
   if (!aRequestingPrincipal) {
     return NS_ERROR_FAILURE;
@@ -91,8 +93,13 @@ nsresult nsDataObj::CStream::Init(nsIURI* pSourceURI,
                      nullptr,  // loadGroup
                      nullptr,  // aCallbacks
                      nsIRequest::LOAD_FROM_CACHE);
-
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel)) {
+    rv = httpChannel->SetReferrerInfo(aReferrerInfo);
+    Unused << NS_WARN_IF(NS_FAILED(rv));
+  }
+
   rv = mChannel->AsyncOpen(this);
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
@@ -350,9 +357,12 @@ HRESULT nsDataObj::CreateStream(IStream** outStream) {
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
       mTransferable->GetCookieJarSettings();
 
+  // The referrer is optional.
+  nsCOMPtr<nsIReferrerInfo> referrerInfo = mTransferable->GetReferrerInfo();
+
   nsContentPolicyType contentPolicyType = mTransferable->GetContentPolicyType();
   rv = pStream->Init(sourceURI, contentPolicyType, requestingPrincipal,
-                     cookieJarSettings);
+                     cookieJarSettings, referrerInfo);
   if (NS_FAILED(rv)) {
     pStream->Release();
     return E_FAIL;

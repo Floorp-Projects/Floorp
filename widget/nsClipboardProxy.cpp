@@ -40,8 +40,9 @@ nsClipboardProxy::SetData(nsITransferable* aTransferable,
   nsCOMPtr<nsIPrincipal> requestingPrincipal =
       aTransferable->GetRequestingPrincipal();
   nsContentPolicyType contentPolicyType = aTransferable->GetContentPolicyType();
+  nsCOMPtr<nsIReferrerInfo> referrerInfo = aTransferable->GetReferrerInfo();
   child->SendSetClipboard(std::move(ipcDataTransfer), isPrivateData,
-                          requestingPrincipal, contentPolicyType,
+                          requestingPrincipal, contentPolicyType, referrerInfo,
                           aWhichClipboard);
 
   return NS_OK;

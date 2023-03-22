@@ -24,10 +24,11 @@
 #include "nsWindowsHelpers.h"
 
 class nsICookieJarSettings;
-class nsIThread;
 class nsIPrincipal;
-class CEnumFormatEtc;
+class nsIReferrerInfo;
+class nsIThread;
 class nsITransferable;
+class CEnumFormatEtc;
 
 /*
  * This ole registered class is used to facilitate drag-drop of objects which
@@ -229,7 +230,8 @@ class nsDataObj : public IDataObject, public IDataObjectAsyncCapability {
     CStream();
     nsresult Init(nsIURI* pSourceURI, nsContentPolicyType aContentPolicyType,
                   nsIPrincipal* aRequestingPrincipal,
-                  nsICookieJarSettings* aCookieJarSettings);
+                  nsICookieJarSettings* aCookieJarSettings,
+                  nsIReferrerInfo* aReferrerInfo);
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUESTOBSERVER
