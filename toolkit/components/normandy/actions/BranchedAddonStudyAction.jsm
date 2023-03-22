@@ -22,6 +22,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+  Sampling: "resource://gre/modules/components-utils/Sampling.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
 });
 
@@ -33,7 +34,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
   NormandyApi: "resource://normandy/lib/NormandyApi.jsm",
   NormandyUtils: "resource://normandy/lib/NormandyUtils.jsm",
-  Sampling: "resource://gre/modules/components-utils/Sampling.jsm",
   TelemetryEvents: "resource://normandy/lib/TelemetryEvents.jsm",
 });
 

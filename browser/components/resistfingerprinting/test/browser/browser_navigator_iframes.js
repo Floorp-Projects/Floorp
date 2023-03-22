@@ -26,13 +26,9 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
+  WindowsVersionInfo:
+    "resource://gre/modules/components-utils/WindowsVersionInfo.sys.mjs",
 });
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "WindowsVersionInfo",
-  "resource://gre/modules/components-utils/WindowsVersionInfo.jsm"
-);
 
 let osVersion = Services.sysinfo.get("version");
 if (AppConstants.platform == "macosx") {

@@ -7,14 +7,11 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  JsonSchemaValidator:
+    "resource://gre/modules/components-utils/JsonSchemaValidator.sys.mjs",
   OpenGraphPageData: "resource:///modules/pagedata/OpenGraphPageData.sys.mjs",
   SchemaOrgPageData: "resource:///modules/pagedata/SchemaOrgPageData.sys.mjs",
   TwitterPageData: "resource:///modules/pagedata/TwitterPageData.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  JsonSchemaValidator:
-    "resource://gre/modules/components-utils/JsonSchemaValidator.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logConsole", function() {

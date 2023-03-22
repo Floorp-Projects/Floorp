@@ -1454,7 +1454,7 @@ XPCOMUtils.defineLazyGetter(UrlbarUtils, "strings", () => {
 
 /**
  * Payload JSON schemas for each result type.  Payloads are validated against
- * these schemas using JsonSchemaValidator.jsm.
+ * these schemas using JsonSchemaValidator.sys.mjs.
  */
 UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
   [UrlbarUtils.RESULT_TYPE.TAB_SWITCH]: {
