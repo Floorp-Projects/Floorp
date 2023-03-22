@@ -91,6 +91,24 @@ export class Weather extends BaseFeature {
     return this.#waitForFetchesDeferred.promise;
   }
 
+  get #vpnDetected() {
+    let linkService =
+      this._test_linkService ||
+      Cc["@mozilla.org/network/network-link-service;1"].getService(
+        Ci.nsINetworkLinkService
+      );
+
+    // `platformDNSIndications` throws `NS_ERROR_NOT_IMPLEMENTED` on all
+    // platforms except Windows, so we can't detect a VPN on any other platform.
+    try {
+      return (
+        linkService.platformDNSIndications &
+        Ci.nsINetworkLinkService.VPN_DETECTED
+      );
+    } catch (e) {}
+    return false;
+  }
+
   #init() {
     this.#merino = new lazy.MerinoClient(this.constructor.name);
     this.#fetch();
@@ -113,6 +131,21 @@ export class Weather extends BaseFeature {
 
   async #fetch() {
     this.logger.info("Fetching suggestion");
+
+    if (this.#vpnDetected) {
+      // A VPN is detected, so Merino will not be able to accurately determine
+      // the user's location. Set the suggestion to null. We treat this as if
+      // the network is offline (see below). When the VPN is disconnected, a
+      // `network:link-status-changed` notification will be sent, triggering a
+      // new fetch.
+      this.logger.info("VPN detected, not fetching");
+      this.#suggestion = null;
+      if (!this.#pendingFetchCount) {
+        this.#waitForFetchesDeferred?.resolve();
+        this.#waitForFetchesDeferred = null;
+      }
+      return;
+    }
 
     // This `Weather` instance may be uninitialized while awaiting the fetch or
     // even uninitialized and re-initialized a number of times. Multiple fetches
@@ -151,6 +184,11 @@ export class Weather extends BaseFeature {
     } else {
       let suggestion = suggestions?.[0];
       if (!suggestion) {
+        // No suggestion was received. The network may be offline or there may
+        // be some other problem. Set the suggestion to null: Better to show
+        // nothing than outdated weather information. When the network comes
+        // back online, one or more network notifications will be sent,
+        // triggering a new fetch.
         this.logger.info("No suggestion received");
         this.#suggestion = null;
       } else {
