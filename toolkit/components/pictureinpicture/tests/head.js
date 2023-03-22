@@ -22,6 +22,8 @@ const TEST_PAGE_WITH_SOUND = TEST_ROOT + "test-page-with-sound.html";
 const TEST_PAGE_WITH_NAN_VIDEO_DURATION =
   TEST_ROOT + "test-page-with-nan-video-duration.html";
 const TEST_PAGE_WITH_WEBVTT = TEST_ROOT + "test-page-with-webvtt.html";
+const TEST_PAGE_MULTIPLE_CONTEXTS =
+  TEST_ROOT + "test-page-multiple-contexts.html";
 const WINDOW_TYPE = "Toolkit:PictureInPicture";
 const TOGGLE_POSITION_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.position";
@@ -186,16 +188,16 @@ async function assertShowingMessage(browser, videoID, expected) {
  * good indicator for answering if this video is currently open in PiP.
  *
  * @param {Browser} browser
- *   The content browser that the video lives in
+ *   The content browser or browsing contect that the video lives in
  * @param {string} videoId
  *   The id associated with the video
  *
  * @returns {bool}
  *   Whether the video is currently being cloned (And is most likely open in PiP)
  */
-function assertVideoIsBeingCloned(browser, videoId) {
-  return SpecialPowers.spawn(browser, [videoId], async videoID => {
-    let video = content.document.getElementById(videoID);
+function assertVideoIsBeingCloned(browser, selector) {
+  return SpecialPowers.spawn(browser, [selector], async slctr => {
+    let video = content.document.querySelector(slctr);
     await ContentTaskUtils.waitForCondition(() => {
       return video.isCloningElementVisually;
     }, "Video is being cloned visually.");
@@ -206,7 +208,7 @@ function assertVideoIsBeingCloned(browser, videoId) {
  * Ensures that each of the videos loaded inside of a document in a
  * <browser> have reached the HAVE_ENOUGH_DATA readyState.
  *
- * @param {Element} browser The <xul:browser> hosting the <video>(s)
+ * @param {Element} browser The <xul:browser> hosting the <video>(s) or the browsing context
  *
  * @return Promise
  * @resolves When each <video> is in the HAVE_ENOUGH_DATA readyState.
@@ -219,6 +221,7 @@ async function ensureVideosReady(browser) {
   await SpecialPowers.spawn(browser, [], async () => {
     let videos = this.content.document.querySelectorAll("video");
     for (let video of videos) {
+      video.currentTime = 0;
       if (video.readyState < content.HTMLMediaElement.HAVE_ENOUGH_DATA) {
         info(`Waiting for 'canplaythrough' for '${video.id}'`);
         await ContentTaskUtils.waitForEvent(video, "canplaythrough");
@@ -772,7 +775,7 @@ async function testToggleHelper(
     let win = await domWindowOpened;
     ok(win, "A Picture-in-Picture window opened.");
 
-    await assertVideoIsBeingCloned(browser, videoID);
+    await assertVideoIsBeingCloned(browser, "#" + videoID);
 
     await BrowserTestUtils.closeWindow(win);
 
