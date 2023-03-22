@@ -30,7 +30,7 @@ class JSValidatorParent final : public PJSValidatorParent {
 
   void OnDataAvailable(const nsACString& aData);
 
-  void OnStopRequest(nsresult aResult);
+  void OnStopRequest(nsresult aResult, nsIRequest& aRequest);
 
  private:
   virtual ~JSValidatorParent() = default;
