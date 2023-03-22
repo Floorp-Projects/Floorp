@@ -365,7 +365,7 @@ class AudioEventTimeline {
 
   const AudioTimelineEvent* GetPreviousEvent(double aTime) const;
 
-  static bool IsValid(double value) { return mozilla::IsFinite(value); }
+  static bool IsValid(double value) { return std::isfinite(value); }
 
   // This is a sorted array of the events in the timeline.  Queries of this
   // data structure should probably be more frequent than modifications to it,

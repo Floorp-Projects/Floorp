@@ -335,9 +335,8 @@ class BaseMatrix {
 
   /* Verifies that the matrix contains no Infs or NaNs. */
   bool IsFinite() const {
-    return mozilla::IsFinite(_11) && mozilla::IsFinite(_12) &&
-           mozilla::IsFinite(_21) && mozilla::IsFinite(_22) &&
-           mozilla::IsFinite(_31) && mozilla::IsFinite(_32);
+    return std::isfinite(_11) && std::isfinite(_12) && std::isfinite(_21) &&
+           std::isfinite(_22) && std::isfinite(_31) && std::isfinite(_32);
   }
 
   /* Returns true if the matrix is a rectilinear transformation (i.e.
@@ -397,7 +396,7 @@ class BaseMatrix {
    */
   bool IsSingular() const {
     T det = Determinant();
-    return !mozilla::IsFinite(det) || det == 0;
+    return !std::isfinite(det) || det == 0;
   }
 
   GFX2D_API BaseMatrix<T>& NudgeToIntegers() {
@@ -1512,14 +1511,12 @@ class Matrix4x4Typed {
 
   // Verifies that the matrix contains no Infs or NaNs
   bool IsFinite() const {
-    return mozilla::IsFinite(_11) && mozilla::IsFinite(_12) &&
-           mozilla::IsFinite(_13) && mozilla::IsFinite(_14) &&
-           mozilla::IsFinite(_21) && mozilla::IsFinite(_22) &&
-           mozilla::IsFinite(_23) && mozilla::IsFinite(_24) &&
-           mozilla::IsFinite(_31) && mozilla::IsFinite(_32) &&
-           mozilla::IsFinite(_33) && mozilla::IsFinite(_34) &&
-           mozilla::IsFinite(_41) && mozilla::IsFinite(_42) &&
-           mozilla::IsFinite(_43) && mozilla::IsFinite(_44);
+    return std::isfinite(_11) && std::isfinite(_12) && std::isfinite(_13) &&
+           std::isfinite(_14) && std::isfinite(_21) && std::isfinite(_22) &&
+           std::isfinite(_23) && std::isfinite(_24) && std::isfinite(_31) &&
+           std::isfinite(_32) && std::isfinite(_33) && std::isfinite(_34) &&
+           std::isfinite(_41) && std::isfinite(_42) && std::isfinite(_43) &&
+           std::isfinite(_44);
   }
 
   void SkewXY(double aXSkew, double aYSkew) {

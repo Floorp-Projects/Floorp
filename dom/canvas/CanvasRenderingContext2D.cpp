@@ -3208,7 +3208,8 @@ static void RoundRectImpl(
         aRadii,
     ErrorResult& aError) {
   // Step 1. If any of x, y, w, or h are infinite or NaN, then return.
-  if (!IsFinite(aX) || !IsFinite(aY) || !IsFinite(aW) || !IsFinite(aH)) {
+  if (!std::isfinite(aX) || !std::isfinite(aY) || !std::isfinite(aW) ||
+      !std::isfinite(aH)) {
     return;
   }
 
@@ -3240,7 +3241,7 @@ static void RoundRectImpl(
       const DOMPointInit& point = radius.GetAsDOMPointInit();
       // Step 5.1.1. If radius["x"] or radius["y"] is infinite or NaN, then
       // return.
-      if (!IsFinite(point.mX) || !IsFinite(point.mY)) {
+      if (!std::isfinite(point.mX) || !std::isfinite(point.mY)) {
         return;
       }
 
@@ -3261,7 +3262,7 @@ static void RoundRectImpl(
     // Step 5.2. If radius is a unrestricted double:
     double r = radius.GetAsUnrestrictedDouble();
     // Step 5.2.1. If radius is infinite or NaN, then return.
-    if (!IsFinite(r)) {
+    if (!std::isfinite(r)) {
       return;
     }
 
@@ -4257,7 +4258,7 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
     return nullptr;
   }
 
-  if (!IsFinite(aX) || !IsFinite(aY)) {
+  if (!std::isfinite(aX) || !std::isfinite(aY)) {
     aError = NS_OK;
     // This may not be correct - what should TextMetrics contain in the case of
     // infinite width or height?
