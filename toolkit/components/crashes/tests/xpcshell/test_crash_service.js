@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { getCrashManagerNoCreate } = ChromeUtils.importESModule(
-  "resource://gre/modules/CrashManager.sys.mjs"
+const { getCrashManagerNoCreate } = ChromeUtils.import(
+  "resource://gre/modules/CrashManager.jsm"
 );
 const { makeFakeAppDir } = ChromeUtils.importESModule(
   "resource://testing-common/AppData.sys.mjs"

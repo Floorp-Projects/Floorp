@@ -19,15 +19,15 @@ XPIDL_SOURCES += [
 
 if CONFIG["MOZ_CRASHREPORTER"]:
     GeneratedFile(
-        "CrashManager.sys.mjs",
+        "CrashManager.jsm",
         script="gen_CrashManager.py",
         entry_point="main",
-        inputs=["CrashManager.in.sys.mjs"],
+        inputs=["CrashManager.in.jsm"],
     )
 
     EXTRA_JS_MODULES += [
-        "!CrashManager.sys.mjs",
-        "CrashService.sys.mjs",
+        "!CrashManager.jsm",
+        "CrashService.jsm",
     ]
 
     XPCOM_MANIFESTS += [
@@ -35,7 +35,7 @@ if CONFIG["MOZ_CRASHREPORTER"]:
     ]
 
     TESTING_JS_MODULES += [
-        "CrashManagerTest.sys.mjs",
+        "CrashManagerTest.jsm",
     ]
 
     XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
