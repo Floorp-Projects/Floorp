@@ -6,7 +6,7 @@ with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
 
 EXTRA_JS_MODULES += [
-    "PromptCollection.jsm",
+    "PromptCollection.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [
