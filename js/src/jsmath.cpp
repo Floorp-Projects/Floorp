@@ -41,7 +41,6 @@ using mozilla::ExponentComponent;
 using mozilla::FloatingPoint;
 using mozilla::IsFinite;
 using mozilla::IsInfinite;
-using mozilla::IsNaN;
 using mozilla::IsNegative;
 using mozilla::IsNegativeZero;
 using mozilla::Maybe;
@@ -318,7 +317,7 @@ double js::math_max_impl(double x, double y) {
   AutoUnsafeCallWithABI unsafe;
 
   // Math.max(num, NaN) => NaN, Math.max(-0, +0) => +0
-  if (x > y || IsNaN(x) || (x == y && IsNegative(y))) {
+  if (x > y || std::isnan(x) || (x == y && IsNegative(y))) {
     return x;
   }
   return y;
@@ -343,7 +342,7 @@ double js::math_min_impl(double x, double y) {
   AutoUnsafeCallWithABI unsafe;
 
   // Math.min(num, NaN) => NaN, Math.min(-0, +0) => -0
-  if (x < y || IsNaN(x) || (x == y && IsNegativeZero(x))) {
+  if (x < y || std::isnan(x) || (x == y && IsNegativeZero(x))) {
     return x;
   }
   return y;
@@ -770,8 +769,7 @@ double js::hypot4(double x, double y, double z, double w) {
     return mozilla::PositiveInfinity<double>();
   }
 
-  if (mozilla::IsNaN(x) || mozilla::IsNaN(y) || mozilla::IsNaN(z) ||
-      mozilla::IsNaN(w)) {
+  if (std::isnan(x) || std::isnan(y) || std::isnan(z) || std::isnan(w)) {
     return GenericNaN();
   }
 
@@ -827,7 +825,7 @@ bool js::math_hypot_handle(JSContext* cx, HandleValueArray args,
     }
 
     isInfinite |= mozilla::IsInfinite(x);
-    isNaN |= mozilla::IsNaN(x);
+    isNaN |= std::isnan(x);
     if (isInfinite || isNaN) {
       continue;
     }
@@ -871,7 +869,7 @@ bool js::math_trunc(JSContext* cx, unsigned argc, Value* vp) {
 double js::math_sign_impl(double x) {
   AutoUnsafeCallWithABI unsafe;
 
-  if (mozilla::IsNaN(x)) {
+  if (std::isnan(x)) {
     return GenericNaN();
   }
 

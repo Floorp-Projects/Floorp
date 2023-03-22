@@ -118,7 +118,7 @@ MOZ_ALWAYS_INLINE bool ToBoolean(HandleValue v) {
   }
   if (v.isDouble()) {
     double d = v.toDouble();
-    return !mozilla::IsNaN(d) && d != 0;
+    return !std::isnan(d) && d != 0;
   }
   if (v.isSymbol()) {
     return true;
@@ -149,7 +149,7 @@ inline double ToInteger(double d) {
   }
 
   if (!mozilla::IsFinite(d)) {
-    if (mozilla::IsNaN(d)) {
+    if (std::isnan(d)) {
       return 0;
     }
     return d;

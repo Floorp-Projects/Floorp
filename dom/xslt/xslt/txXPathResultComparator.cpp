@@ -163,9 +163,9 @@ int txResultNumberComparator::compareValues(txObject* aVal1, txObject* aVal2) {
   double dval1 = ((NumberValue*)aVal1)->mVal;
   double dval2 = ((NumberValue*)aVal2)->mVal;
 
-  if (mozilla::IsNaN(dval1)) return mozilla::IsNaN(dval2) ? 0 : -mAscending;
+  if (std::isnan(dval1)) return std::isnan(dval2) ? 0 : -mAscending;
 
-  if (mozilla::IsNaN(dval2)) return mAscending;
+  if (std::isnan(dval2)) return mAscending;
 
   if (dval1 == dval2) return 0;
 

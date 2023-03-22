@@ -435,7 +435,7 @@ void WebGLContext::ErrorInvalidEnumInfo(const char* const info,
 #ifdef DEBUG
 // For NaNs, etc.
 static bool IsCacheCorrect(float cached, float actual) {
-  if (IsNaN(cached)) {
+  if (std::isnan(cached)) {
     // GL is allowed to do anything it wants for NaNs, so if we're shadowing
     // a NaN, then whatever `actual` is might be correct.
     return true;

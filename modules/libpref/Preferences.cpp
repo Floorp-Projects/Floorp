@@ -463,7 +463,7 @@ static float ParsePrefFloat(const nsCString& aString, nsresult* aError) {
   // Defensively avoid potential breakage caused by returning NaN into
   // unsuspecting code. AFAIK this should never happen as PR_strtod cannot
   // return NaN as currently configured.
-  if (mozilla::IsNaN(result)) {
+  if (std::isnan(result)) {
     MOZ_ASSERT_UNREACHABLE("PR_strtod shouldn't return NaN");
     *aError = NS_ERROR_ILLEGAL_VALUE;
     return 0.f;

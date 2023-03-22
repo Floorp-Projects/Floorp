@@ -46,7 +46,7 @@ nsCSSValue::nsCSSValue(float aValue, nsCSSUnit aUnit) : mUnit(aUnit) {
   MOZ_ASSERT(eCSSUnit_Percent <= aUnit, "not a float value");
   if (eCSSUnit_Percent <= aUnit) {
     mValue.mFloat = aValue;
-    MOZ_ASSERT(!mozilla::IsNaN(mValue.mFloat));
+    MOZ_ASSERT(!std::isnan(mValue.mFloat));
   } else {
     mUnit = eCSSUnit_Null;
     mValue.mInt = 0;
@@ -56,7 +56,7 @@ nsCSSValue::nsCSSValue(float aValue, nsCSSUnit aUnit) : mUnit(aUnit) {
 nsCSSValue::nsCSSValue(const nsCSSValue& aCopy) : mUnit(aCopy.mUnit) {
   if (eCSSUnit_Percent <= mUnit) {
     mValue.mFloat = aCopy.mValue.mFloat;
-    MOZ_ASSERT(!mozilla::IsNaN(mValue.mFloat));
+    MOZ_ASSERT(!std::isnan(mValue.mFloat));
   } else if (eCSSUnit_Integer <= mUnit && mUnit <= eCSSUnit_Enumerated) {
     mValue.mInt = aCopy.mValue.mInt;
   } else {
@@ -148,7 +148,7 @@ void nsCSSValue::SetPercentValue(float aValue) {
   Reset();
   mUnit = eCSSUnit_Percent;
   mValue.mFloat = aValue;
-  MOZ_ASSERT(!mozilla::IsNaN(mValue.mFloat));
+  MOZ_ASSERT(!std::isnan(mValue.mFloat));
 }
 
 void nsCSSValue::SetFloatValue(float aValue, nsCSSUnit aUnit) {
@@ -157,6 +157,6 @@ void nsCSSValue::SetFloatValue(float aValue, nsCSSUnit aUnit) {
   if (IsFloatUnit(aUnit)) {
     mUnit = aUnit;
     mValue.mFloat = aValue;
-    MOZ_ASSERT(!mozilla::IsNaN(mValue.mFloat));
+    MOZ_ASSERT(!std::isnan(mValue.mFloat));
   }
 }

@@ -114,7 +114,7 @@ ComputedTiming AnimationEffect::GetComputedTimingAt(
     result.mDuration = aTiming.Duration().ref();
   }
 
-  MOZ_ASSERT(aTiming.Iterations() >= 0.0 && !IsNaN(aTiming.Iterations()),
+  MOZ_ASSERT(aTiming.Iterations() >= 0.0 && !std::isnan(aTiming.Iterations()),
              "mIterations should be nonnegative & finite, as ensured by "
              "ValidateIterations or CSSParser");
   result.mIterations = aTiming.Iterations();

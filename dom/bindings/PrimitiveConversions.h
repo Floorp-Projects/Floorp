@@ -229,7 +229,7 @@ inline bool PrimitiveConversionTraits_Clamp(JSContext* cx,
   static_assert(std::numeric_limits<T>::is_integer,
                 "This can only be applied to integers!");
 
-  if (mozilla::IsNaN(d)) {
+  if (std::isnan(d)) {
     *retval = 0;
     return true;
   }

@@ -3733,7 +3733,7 @@ template <>
 CSSCoord StyleCalcNode::ResolveToCSSPixels(CSSCoord aBasis) const {
   CSSCoord result =
       ResolveInternal(aBasis, [](CSSCoord aPercent) { return aPercent; });
-  if (IsNaN(float(result))) {
+  if (std::isnan(float(result))) {
     return 0.0f;  // This matches style::values::normalize
   }
   return result;
