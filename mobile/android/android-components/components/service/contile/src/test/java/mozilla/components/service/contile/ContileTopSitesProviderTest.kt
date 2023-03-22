@@ -116,7 +116,7 @@ class ContileTopSitesProviderTest {
         runTest {
             val client = prepareClient()
             val provider = spy(ContileTopSitesProvider(testContext, client))
-            val file = mock<File>() {
+            val file = mock<File> {
                 whenever(exists()).thenReturn(true)
                 whenever(lastModified()).thenReturn(Date().time)
             }
@@ -132,7 +132,7 @@ class ContileTopSitesProviderTest {
             assertFalse(provider.isCacheExpired(shouldUseServerMaxAge = true))
 
             provider.cacheState = provider.cacheState.invalidate()
-            whenever(file.lastModified()).thenReturn(Date().time - 300000)
+            whenever(file.lastModified()).thenReturn(Date().time - 500000)
             whenever(provider.getBaseCacheFile()).thenReturn(file)
 
             assertTrue(provider.isCacheExpired(shouldUseServerMaxAge = true))
