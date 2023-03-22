@@ -6,7 +6,7 @@
 
 let errorMessageMap = {};
 
-let testPromise = (resistFingerprinting, src, whitelist) => new Promise(resolve => {
+let testPromise = (resistFingerprinting, src, allowlist) => new Promise(resolve => {
   let video = document.createElement("video");
   video.src = src;
   video.controls = "true";
@@ -16,8 +16,8 @@ let testPromise = (resistFingerprinting, src, whitelist) => new Promise(resolve 
       SimpleTest.isnot(message, "", "Message should not be blank");
       SimpleTest.info(src + ": " + message);
       errorMessageMap[src] = message;
-    } else if (whitelist) {
-      SimpleTest.is(message, whitelist, "Error message in whitelist: " + whitelist);
+    } else if (allowlist) {
+      SimpleTest.is(message, allowlist, "Error message in allowlist: " + allowlist);
     } else {
       SimpleTest.is(message, "", "Blank error message: " + errorMessageMap[src]);
     }
@@ -35,12 +35,12 @@ async function testBody(resistFingerprinting) {
   await testPromise(
     resistFingerprinting,
     "load_error.mp4",
-    "404: Not Found" // whitelist
+    "404: Not Found" // allowlist
   );
   await testPromise(
     resistFingerprinting,
     "decode_error.mp4",
-    false // whitelist
+    false // allowlist
   );
 }
 

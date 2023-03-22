@@ -536,21 +536,17 @@ async function GetHistoryResource(aProfileFolder) {
 
     migrate(aCallback) {
       (async function() {
-        const MAX_AGE_IN_DAYS = Services.prefs.getIntPref(
-          "browser.migrate.chrome.history.maxAgeInDays"
-        );
         const LIMIT = Services.prefs.getIntPref(
           "browser.migrate.chrome.history.limit"
         );
 
         let query =
           "SELECT url, title, last_visit_time, typed_count FROM urls WHERE hidden = 0";
-        if (MAX_AGE_IN_DAYS) {
-          let maxAge = lazy.ChromeMigrationUtils.dateToChromeTime(
-            Date.now() - MAX_AGE_IN_DAYS * 24 * 60 * 60 * 1000
-          );
-          query += " AND last_visit_time > " + maxAge;
-        }
+        let maxAge = lazy.ChromeMigrationUtils.dateToChromeTime(
+          Date.now() - MigrationUtils.HISTORY_MAX_AGE_IN_MILLISECONDS
+        );
+        query += " AND last_visit_time > " + maxAge;
+
         if (LIMIT) {
           query += " ORDER BY last_visit_time DESC LIMIT " + LIMIT;
         }

@@ -19,7 +19,10 @@
 #  include "mozilla/a11y/Compatibility.h"
 #endif
 #include "mozilla/Logging.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_clipboard.h"
+#include "SpecialSystemDirectory.h"
+
 #include "nsArrayUtils.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
@@ -45,6 +48,20 @@
 using mozilla::LogLevel;
 
 static mozilla::LazyLogModule gWin32ClipboardLog("nsClipboard");
+
+/* static */
+UINT nsClipboard::GetClipboardFileDescriptorFormatA() {
+  static UINT format = ::RegisterClipboardFormatW(CFSTR_FILEDESCRIPTORA);
+  MOZ_ASSERT(format);
+  return format;
+}
+
+/* static */
+UINT nsClipboard::GetClipboardFileDescriptorFormatW() {
+  static UINT format = ::RegisterClipboardFormatW(CFSTR_FILEDESCRIPTORW);
+  MOZ_ASSERT(format);
+  return format;
+}
 
 /* static */
 UINT nsClipboard::GetHtmlClipboardFormat() {
@@ -73,7 +90,7 @@ nsClipboard::nsClipboard() : nsBaseClipboard() {
       do_GetService("@mozilla.org/observer-service;1");
   if (observerService) {
     observerService->AddObserver(this, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID,
-                                 PR_FALSE);
+                                 false);
   }
 }
 
@@ -655,6 +672,19 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject* aDataObject,
   STGMEDIUM stm;
   hres = FillSTGMedium(aDataObject, format, &fe, &stm, TYMED_HGLOBAL);
 
+  // If the format is CF_HDROP and we haven't found any files we can try looking
+  // for virtual files with FILEDESCRIPTOR.
+  if (FAILED(hres) && format == CF_HDROP) {
+    hres = FillSTGMedium(aDataObject,
+                         nsClipboard::GetClipboardFileDescriptorFormatW(), &fe,
+                         &stm, TYMED_HGLOBAL);
+    if (FAILED(hres)) {
+      hres = FillSTGMedium(aDataObject,
+                           nsClipboard::GetClipboardFileDescriptorFormatA(),
+                           &fe, &stm, TYMED_HGLOBAL);
+    }
+  }
+
   // Currently this is only handling TYMED_HGLOBAL data
   // For Text, Dibs, Files, and generic data (like HTML)
   if (S_OK == hres) {
@@ -770,8 +800,34 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject* aDataObject,
 
           default: {
             if (fe.cfFormat == fileDescriptorFlavorA ||
-                fe.cfFormat == fileDescriptorFlavorW ||
-                fe.cfFormat == fileFlavor) {
+                fe.cfFormat == fileDescriptorFlavorW) {
+              nsAutoString tempPath;
+
+              LPFILEGROUPDESCRIPTOR fgdesc =
+                  static_cast<LPFILEGROUPDESCRIPTOR>(GlobalLock(stm.hGlobal));
+              if (fgdesc) {
+                result = GetTempFilePath(
+                    nsDependentString((fgdesc->fgd)[aIndex].cFileName),
+                    tempPath);
+                GlobalUnlock(stm.hGlobal);
+              }
+              if (NS_FAILED(result)) {
+                break;
+              }
+              result = SaveIStorage(aDataObject, aIndex, tempPath);
+              if (result == NS_ERROR_OUT_OF_MEMORY) {
+                result = SaveIStream(aDataObject, aIndex, tempPath);
+              }
+              if (NS_FAILED(result)) {
+                break;
+              }
+              wchar_t* buffer = reinterpret_cast<wchar_t*>(
+                  moz_xmalloc((tempPath.Length() + 1) * sizeof(wchar_t)));
+              wcscpy(buffer, tempPath.get());
+              *aData = buffer;
+              *aLen = tempPath.Length() * sizeof(wchar_t);
+              result = NS_OK;
+            } else if (fe.cfFormat == fileFlavor) {
               NS_WARNING(
                   "Mozilla doesn't yet understand how to read this type of "
                   "file flavor");
@@ -1310,5 +1366,112 @@ NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(
     }
   }
 
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+nsresult nsClipboard::GetTempFilePath(const nsAString& aFileName,
+                                      nsAString& aFilePath) {
+  nsresult result = NS_OK;
+
+  nsCOMPtr<nsIFile> tmpFile;
+  result =
+      GetSpecialSystemDirectory(OS_TemporaryDirectory, getter_AddRefs(tmpFile));
+  NS_ENSURE_SUCCESS(result, result);
+
+  result = tmpFile->Append(aFileName);
+  NS_ENSURE_SUCCESS(result, result);
+
+  result = tmpFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0660);
+  NS_ENSURE_SUCCESS(result, result);
+  result = tmpFile->GetPath(aFilePath);
+
+  return result;
+}
+
+//-------------------------------------------------------------------------
+nsresult nsClipboard::SaveIStorage(IDataObject* aDataObject, UINT aIndex,
+                                   const nsAString& aFileName) {
+  NS_ENSURE_ARG_POINTER(aDataObject);
+
+  FORMATETC fe = {0};
+  SET_FORMATETC(fe, RegisterClipboardFormat(CFSTR_FILECONTENTS), 0,
+                DVASPECT_CONTENT, aIndex, TYMED_ISTORAGE);
+
+  STGMEDIUM stm = {0};
+  HRESULT hres = aDataObject->GetData(&fe, &stm);
+  if (FAILED(hres)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  auto releaseMediumGuard = MakeScopeExit([&] { ReleaseStgMedium(&stm); });
+  RefPtr<IStorage> file;
+  hres = StgCreateStorageEx(
+      aFileName.Data(), STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE,
+      STGFMT_STORAGE, 0, NULL, NULL, IID_IStorage, getter_AddRefs(file));
+  if (FAILED(hres)) {
+    if (hres == E_OUTOFMEMORY) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    return NS_ERROR_FAILURE;
+  }
+
+  hres = stm.pstg->CopyTo(0, NULL, NULL, file);
+  if (FAILED(hres)) {
+    if (hres == STG_E_INSUFFICIENTMEMORY) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    return NS_ERROR_FAILURE;
+  }
+
+  file->Commit(STGC_DEFAULT);
+
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+nsresult nsClipboard::SaveIStream(IDataObject* aDataObject, UINT aIndex,
+                                  const nsString& aFileName) {
+  NS_ENSURE_ARG_POINTER(aDataObject);
+
+  FORMATETC fe = {0};
+  STGMEDIUM stm = {0};
+
+  SET_FORMATETC(fe, RegisterClipboardFormat(CFSTR_FILECONTENTS), 0,
+                DVASPECT_CONTENT, aIndex, TYMED_ISTREAM);
+  HRESULT hres = aDataObject->GetData(&fe, &stm);
+  if (FAILED(hres)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  HANDLE handle = CreateFile(aFileName.Data(), GENERIC_WRITE, FILE_SHARE_READ,
+                             NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+  auto releaseMediumGuard = MakeScopeExit([&] {
+    if (handle != INVALID_HANDLE_VALUE) {
+      CloseHandle(handle);
+    }
+    ReleaseStgMedium(&stm);
+  });
+
+  if (handle == INVALID_HANDLE_VALUE) {
+    return NS_ERROR_FAILURE;
+  }
+  const ULONG bufferSize = 4096; /* What would be a good buffersize? */
+  char buffer[bufferSize] = {0};
+  ULONG bytesRead = 0;
+  DWORD bytesWritten = 0;
+  while (true) {
+    HRESULT result = stm.pstm->Read(buffer, bufferSize, &bytesRead);
+    if (FAILED(result)) {
+      return NS_ERROR_FAILURE;
+    }
+    if (bytesRead == 0) {
+      break;
+    }
+    if (!WriteFile(handle, buffer, static_cast<DWORD>(bytesRead), &bytesWritten,
+                   NULL)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
   return NS_OK;
 }

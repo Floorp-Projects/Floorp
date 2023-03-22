@@ -11,8 +11,10 @@ ignore = [
   # These should be triaged and either fixed or moved to the list below.
   "E713", "E714", "W605",
 
-  # These are intentionally ignored (not necessarily for good reason).
-  "E741",
+  # These are intentionally ignored.
+  "E741",      # ambiguous-variable-name
+  "PLR09",     # too-many-return-statements, too-many-branches, too-many-arguments, too-many-statements
+  "PLR2004",   # magic-value-comparison
 
   # These are handled by black.
   "E1", "E4", "E5", "W2", "W5"

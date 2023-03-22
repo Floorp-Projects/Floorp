@@ -165,3 +165,27 @@ function getRootPath() {
   }
   return Services.dirsvc.get(dirKey, Ci.nsIFile).path;
 }
+
+/**
+ * Returns a PRTime value for the current date minus daysAgo number
+ * of days.
+ *
+ * @param {number} daysAgo
+ *   How many days in the past from now the returned date should be.
+ * @returns {number}
+ */
+function PRTimeDaysAgo(daysAgo) {
+  return PlacesUtils.toPRTime(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
+}
+
+/**
+ * Returns a Date value for the current date minus daysAgo number
+ * of days.
+ *
+ * @param {number} daysAgo
+ *   How many days in the past from now the returned date should be.
+ * @returns {Date}
+ */
+function dateDaysAgo(daysAgo) {
+  return new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
+}

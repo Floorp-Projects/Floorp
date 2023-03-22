@@ -496,6 +496,53 @@ add_task(async function() {
       IsDeleted: false,
     },
   ];
+
+  // The following entries are expected to be skipped as being too old to
+  // migrate.
+  let expiredTypedURLsReferenceItems = [
+    {
+      URL: "https://expired1.invalid/",
+      AccessDateTimeUTC: dateDaysAgo(500),
+    },
+    {
+      URL: "https://expired2.invalid/",
+      AccessDateTimeUTC: dateDaysAgo(300),
+    },
+    {
+      URL: "https://expired3.invalid/",
+      AccessDateTimeUTC: dateDaysAgo(190),
+    },
+  ];
+
+  // The following entries should be new enough to migrate.
+  let unexpiredTypedURLsReferenceItems = [
+    {
+      URL: "https://unexpired1.invalid/",
+      AccessDateTimeUTC: dateDaysAgo(179),
+    },
+    {
+      URL: "https://unexpired2.invalid/",
+      AccessDateTimeUTC: dateDaysAgo(50),
+    },
+    {
+      URL: "https://unexpired3.invalid/",
+    },
+  ];
+
+  let typedURLsReferenceItems = [
+    ...expiredTypedURLsReferenceItems,
+    ...unexpiredTypedURLsReferenceItems,
+  ];
+
+  Assert.ok(
+    MigrationUtils.HISTORY_MAX_AGE_IN_DAYS < 300,
+    "This test expects the current pref to be less than the youngest expired visit."
+  );
+  Assert.ok(
+    MigrationUtils.HISTORY_MAX_AGE_IN_DAYS > 160,
+    "This test expects the current pref to be greater than the oldest unexpired visit."
+  );
+
   eseDBWritingHelpers.setupDB(
     db,
     new Map([
@@ -533,6 +580,19 @@ add_task(async function() {
             { type: COLUMN_TYPES.JET_coltypBit, name: "IsDeleted" },
           ],
           rows: readingListReferenceItems,
+        },
+      ],
+      [
+        "TypedURLs",
+        {
+          columns: [
+            { type: COLUMN_TYPES.JET_coltypLongText, name: "URL", cbMax: 4096 },
+            {
+              type: COLUMN_TYPES.JET_coltypLongLong,
+              name: "AccessDateTimeUTC",
+            },
+          ],
+          rows: typedURLsReferenceItems,
         },
       ],
     ])
@@ -770,4 +830,24 @@ add_task(async function() {
     !readingListReferenceItems.length,
     "Should have seen all expected items."
   );
+
+  let historyDBMigrator = migrator.getHistoryDBMigratorForTesting(db);
+  await new Promise(resolve => {
+    historyDBMigrator.migrate(resolve);
+  });
+  Assert.ok(true, "History DB migration done!");
+  for (let expiredEntry of expiredTypedURLsReferenceItems) {
+    let entry = await PlacesUtils.history.fetch(expiredEntry.URL, {
+      includeVisits: true,
+    });
+    Assert.equal(entry, null, "Should not have found an entry.");
+  }
+
+  for (let unexpiredEntry of unexpiredTypedURLsReferenceItems) {
+    let entry = await PlacesUtils.history.fetch(unexpiredEntry.URL, {
+      includeVisits: true,
+    });
+    Assert.equal(entry.url, unexpiredEntry.URL, "Should have the correct URL");
+    Assert.ok(!!entry.visits.length, "Should have some visits");
+  }
 });
