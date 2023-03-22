@@ -1295,6 +1295,8 @@ class nsDocShell final : public nsDocLoader,
 
   uint64_t mChannelToDisconnectOnPageHide;
 
+  uint32_t mPendingReloadCount = 0;
+
   // The following two fields cannot be declared as bit fields
   // because of uses with AutoRestore.
   bool mCreatingDocument;  // (should be) debugging only
