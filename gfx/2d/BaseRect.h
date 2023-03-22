@@ -66,10 +66,9 @@ struct BaseRect {
   bool IsFinite() const {
     using FloatType =
         std::conditional_t<std::is_same_v<T, float>, float, double>;
-    return (mozilla::IsFinite(FloatType(x)) &&
-            mozilla::IsFinite(FloatType(y)) &&
-            mozilla::IsFinite(FloatType(width)) &&
-            mozilla::IsFinite(FloatType(height)));
+    return (std::isfinite(FloatType(x)) && std::isfinite(FloatType(y)) &&
+            std::isfinite(FloatType(width)) &&
+            std::isfinite(FloatType(height)));
   }
 
   // Returns true if this rectangle contains the interior of aRect. Always

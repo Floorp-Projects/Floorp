@@ -47,7 +47,6 @@
 using namespace js;
 
 using mozilla::CheckedInt;
-using mozilla::IsFinite;
 using mozilla::Maybe;
 using mozilla::RangedPtr;
 
@@ -737,7 +736,7 @@ static bool Str(JSContext* cx, const Value& v, StringifyContext* scx) {
   /* Step 9. */
   if (v.isNumber()) {
     if (v.isDouble()) {
-      if (!IsFinite(v.toDouble())) {
+      if (!std::isfinite(v.toDouble())) {
         MOZ_ASSERT(!scx->maybeSafely,
                    "input JS::ToJSONMaybeSafely must not include "
                    "reachable non-finite numbers");

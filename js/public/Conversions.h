@@ -148,7 +148,7 @@ inline double ToInteger(double d) {
     return 0;
   }
 
-  if (!mozilla::IsFinite(d)) {
+  if (!std::isfinite(d)) {
     if (std::isnan(d)) {
       return 0;
     }

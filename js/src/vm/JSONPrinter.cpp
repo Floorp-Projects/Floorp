@@ -209,7 +209,7 @@ void JSONPrinter::property(const char* name, size_t value) {
 
 void JSONPrinter::floatProperty(const char* name, double value,
                                 size_t precision) {
-  if (!mozilla::IsFinite(value)) {
+  if (!std::isfinite(value)) {
     propertyName(name);
     out_.put("null");
     return;

@@ -12,6 +12,7 @@
 #include "skia/include/effects/SkDashPathEffect.h"
 #include "skia/include/core/SkShader.h"
 #include "mozilla/Assertions.h"
+#include <cmath>
 #include <vector>
 #include "nsDebug.h"
 
@@ -119,7 +120,7 @@ static inline bool StrokeOptionsToPaint(SkPaint& aPaint,
   // Skia renders 0 width strokes with a width of 1 (and in black),
   // so we should just skip the draw call entirely.
   // Skia does not handle non-finite line widths.
-  if (!aOptions.mLineWidth || !IsFinite(aOptions.mLineWidth)) {
+  if (!aOptions.mLineWidth || !std::isfinite(aOptions.mLineWidth)) {
     return false;
   }
   aPaint.setStrokeWidth(SkFloatToScalar(aOptions.mLineWidth));

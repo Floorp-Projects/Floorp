@@ -238,7 +238,7 @@ static FloatT ParseFloatingPoint(const nsTStringRepr<CharT>& aString,
   int processed;
   StringToFP(converter, aString.Data(), aString.Length(), &processed, &result);
 
-  *aErrorCode = mozilla::IsFinite(result) ? NS_OK : NS_ERROR_ILLEGAL_VALUE;
+  *aErrorCode = std::isfinite(result) ? NS_OK : NS_ERROR_ILLEGAL_VALUE;
   return result;
 }
 

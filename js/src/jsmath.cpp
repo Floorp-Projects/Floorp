@@ -39,7 +39,6 @@ using JS::GenericNaN;
 using JS::ToNumber;
 using mozilla::ExponentComponent;
 using mozilla::FloatingPoint;
-using mozilla::IsFinite;
 using mozilla::IsInfinite;
 using mozilla::IsNegative;
 using mozilla::IsNegativeZero;
@@ -442,7 +441,7 @@ double js::ecmaPow(double x, double y) {
    * Because C99 and ECMA specify different behavior for pow(),
    * we need to wrap the libm call to make it ECMA compliant.
    */
-  if (!IsFinite(y) && (x == 1.0 || x == -1.0)) {
+  if (!std::isfinite(y) && (x == 1.0 || x == -1.0)) {
     return GenericNaN();
   }
 
@@ -455,7 +454,7 @@ double js::ecmaPow(double x, double y) {
    * Special case for square roots. Note that pow(x, 0.5) != sqrt(x)
    * when x = -0.0, so we have to guard for this.
    */
-  if (IsFinite(x) && x != 0.0) {
+  if (std::isfinite(x) && x != 0.0) {
     if (y == 0.5) {
       return std::sqrt(x);
     }
@@ -530,7 +529,7 @@ static bool math_random(JSContext* cx, unsigned argc, Value* vp) {
 template <typename T>
 T js::GetBiggestNumberLessThan(T x) {
   MOZ_ASSERT(!IsNegative(x));
-  MOZ_ASSERT(IsFinite(x));
+  MOZ_ASSERT(std::isfinite(x));
   using Bits = typename mozilla::FloatingPoint<T>::Bits;
   Bits bits = mozilla::BitwiseCast<Bits>(x);
   MOZ_ASSERT(bits > 0, "will underflow");
