@@ -756,7 +756,7 @@ BookmarksStore.prototype = {
     });
   },
 
-  async applyIncomingBatch(records) {
+  async applyIncomingBatch(records, countTelemetry) {
     let buf = await this.ensureOpenMirror();
     for (let chunk of lazy.PlacesUtils.chunkArray(
       records,

@@ -18,6 +18,9 @@ const {
 const { Service } = ChromeUtils.importESModule(
   "resource://services-sync/service.sys.mjs"
 );
+const { SyncedRecordsTelemetry } = ChromeUtils.importESModule(
+  "resource://services-sync/telemetry.sys.mjs"
+);
 
 var recordedEvents = [];
 
@@ -770,7 +773,8 @@ add_bookmark_test(async function test_misreconciled_root(engine) {
   let rec = new FakeRecord(BookmarkFolder, to_apply);
 
   _("Applying record.");
-  store.applyIncomingBatch([rec]);
+  let countTelemetry = new SyncedRecordsTelemetry();
+  store.applyIncomingBatch([rec], countTelemetry);
 
   // Ensure that afterwards, toolbar is still there.
   // As of 2012-12-05, this only passes because Places doesn't use "toolbar" as

@@ -186,7 +186,7 @@ HistoryStore.prototype = {
     return urlsByGUID;
   },
 
-  async applyIncomingBatch(records) {
+  async applyIncomingBatch(records, countTelemetry) {
     // Convert incoming records to mozIPlaceInfo objects which are applied as
     // either history additions or removals.
     let failed = [];
@@ -208,6 +208,7 @@ HistoryStore.prototype = {
           this._log.error("Failed to create a place info", ex);
           this._log.trace("The record that failed", record);
           failed.push(record.id);
+          countTelemetry.addIncomingFailedReason(ex.message);
         }
       }
     });
@@ -227,6 +228,7 @@ HistoryStore.prototype = {
             this._log.error("Failed to delete a place info", ex);
             this._log.trace("The record that failed", record);
             failed.push(record.id);
+            countTelemetry.addIncomingFailedReason(ex.message);
           }
         });
       }
@@ -250,6 +252,7 @@ HistoryStore.prototype = {
           );
         } catch (ex) {
           this._log.info("Failed to insert history records", ex);
+          countTelemetry.addIncomingFailedReason(ex.message);
         }
       }
     }

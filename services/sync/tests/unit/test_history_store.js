@@ -7,6 +7,9 @@ const { HistoryEngine } = ChromeUtils.importESModule(
 const { Service } = ChromeUtils.importESModule(
   "resource://services-sync/service.sys.mjs"
 );
+const { SyncedRecordsTelemetry } = ChromeUtils.importESModule(
+  "resource://services-sync/telemetry.sys.mjs"
+);
 
 const TIMESTAMP1 = (Date.now() - 103406528) * 1000;
 const TIMESTAMP2 = (Date.now() - 6592903) * 1000;
@@ -31,7 +34,11 @@ function isDateApproximately(actual, expected, skewMillis = 1000) {
 let engine, store, fxuri, fxguid, tburi, tbguid;
 
 async function applyEnsureNoFailures(records) {
-  Assert.equal((await store.applyIncomingBatch(records)).length, 0);
+  let countTelemetry = new SyncedRecordsTelemetry();
+  Assert.equal(
+    (await store.applyIncomingBatch(records, countTelemetry)).length,
+    0
+  );
 }
 
 add_task(async function setup() {
@@ -194,18 +201,27 @@ add_task(async function test_invalid_records() {
 
   _("Make sure we report records with invalid URIs.");
   let invalid_uri_guid = Utils.makeGUID();
-  let failed = await store.applyIncomingBatch([
-    {
-      id: invalid_uri_guid,
-      histUri: ":::::::::::::::",
-      title: "Doesn't have a valid URI",
-      visits: [
-        { date: TIMESTAMP3, type: Ci.nsINavHistoryService.TRANSITION_EMBED },
-      ],
-    },
-  ]);
+  let countTelemetry = new SyncedRecordsTelemetry();
+  let failed = await store.applyIncomingBatch(
+    [
+      {
+        id: invalid_uri_guid,
+        histUri: ":::::::::::::::",
+        title: "Doesn't have a valid URI",
+        visits: [
+          { date: TIMESTAMP3, type: Ci.nsINavHistoryService.TRANSITION_EMBED },
+        ],
+      },
+    ],
+    countTelemetry
+  );
   Assert.equal(failed.length, 1);
   Assert.equal(failed[0], invalid_uri_guid);
+  Assert.equal(
+    countTelemetry.incomingCounts.failedReasons[0].name,
+    "<URL> is not a valid URL."
+  );
+  Assert.equal(countTelemetry.incomingCounts.failedReasons[0].count, 1);
 
   _("Make sure we handle records with invalid GUIDs gracefully (ignore).");
   await applyEnsureNoFailures([
@@ -226,56 +242,74 @@ add_task(async function test_invalid_records() {
   let no_type_visit_guid = Utils.makeGUID();
   let invalid_type_visit_guid = Utils.makeGUID();
   let non_integer_visit_guid = Utils.makeGUID();
-  failed = await store.applyIncomingBatch([
-    {
-      id: no_date_visit_guid,
-      histUri: "http://no.date.visit/",
-      title: "Visit has no date",
-      visits: [{ type: Ci.nsINavHistoryService.TRANSITION_EMBED }],
-    },
-    {
-      id: no_type_visit_guid,
-      histUri: "http://no.type.visit/",
-      title: "Visit has no type",
-      visits: [{ date: TIMESTAMP3 }],
-    },
-    {
-      id: invalid_type_visit_guid,
-      histUri: "http://invalid.type.visit/",
-      title: "Visit has invalid type",
-      visits: [
-        { date: TIMESTAMP3, type: Ci.nsINavHistoryService.TRANSITION_LINK - 1 },
-      ],
-    },
-    {
-      id: non_integer_visit_guid,
-      histUri: "http://non.integer.visit/",
-      title: "Visit has non-integer date",
-      visits: [
-        { date: 1234.567, type: Ci.nsINavHistoryService.TRANSITION_EMBED },
-      ],
-    },
-  ]);
+  countTelemetry = new SyncedRecordsTelemetry();
+  failed = await store.applyIncomingBatch(
+    [
+      {
+        id: no_date_visit_guid,
+        histUri: "http://no.date.visit/",
+        title: "Visit has no date",
+        visits: [{ type: Ci.nsINavHistoryService.TRANSITION_EMBED }],
+      },
+      {
+        id: no_type_visit_guid,
+        histUri: "http://no.type.visit/",
+        title: "Visit has no type",
+        visits: [{ date: TIMESTAMP3 }],
+      },
+      {
+        id: invalid_type_visit_guid,
+        histUri: "http://invalid.type.visit/",
+        title: "Visit has invalid type",
+        visits: [
+          {
+            date: TIMESTAMP3,
+            type: Ci.nsINavHistoryService.TRANSITION_LINK - 1,
+          },
+        ],
+      },
+      {
+        id: non_integer_visit_guid,
+        histUri: "http://non.integer.visit/",
+        title: "Visit has non-integer date",
+        visits: [
+          { date: 1234.567, type: Ci.nsINavHistoryService.TRANSITION_EMBED },
+        ],
+      },
+    ],
+    countTelemetry
+  );
   Assert.equal(failed.length, 0);
 
   // Make sure we can apply tombstones (both valid and invalid)
-  failed = await store.applyIncomingBatch([
-    { id: no_date_visit_guid, deleted: true },
-    { id: "not-a-valid-guid", deleted: true },
-  ]);
+  countTelemetry = new SyncedRecordsTelemetry();
+  failed = await store.applyIncomingBatch(
+    [
+      { id: no_date_visit_guid, deleted: true },
+      { id: "not-a-valid-guid", deleted: true },
+    ],
+    countTelemetry
+  );
   Assert.deepEqual(failed, ["not-a-valid-guid"]);
+  Assert.equal(
+    countTelemetry.incomingCounts.failedReasons[0].name,
+    "<URL> is not a valid URL."
+  );
 
   _("Make sure we handle records with javascript: URLs gracefully.");
-  await applyEnsureNoFailures([
-    {
-      id: Utils.makeGUID(),
-      histUri: "javascript:''",
-      title: "javascript:''",
-      visits: [
-        { date: TIMESTAMP3, type: Ci.nsINavHistoryService.TRANSITION_EMBED },
-      ],
-    },
-  ]);
+  await applyEnsureNoFailures(
+    [
+      {
+        id: Utils.makeGUID(),
+        histUri: "javascript:''",
+        title: "javascript:''",
+        visits: [
+          { date: TIMESTAMP3, type: Ci.nsINavHistoryService.TRANSITION_EMBED },
+        ],
+      },
+    ],
+    countTelemetry
+  );
 
   _("Make sure we handle records without any visits gracefully.");
   await applyEnsureNoFailures([
@@ -295,16 +329,23 @@ add_task(async function test_unknowingly_invalid_records() {
   try {
     _("Make sure that when places rejects this record we record it as failed");
     let guid = Utils.makeGUID();
-    let result = await store.applyIncomingBatch([
-      {
-        id: guid,
-        histUri: "javascript:''",
-        title: "javascript:''",
-        visits: [
-          { date: TIMESTAMP3, type: Ci.nsINavHistoryService.TRANSITION_EMBED },
-        ],
-      },
-    ]);
+    let countTelemetry = new SyncedRecordsTelemetry();
+    let result = await store.applyIncomingBatch(
+      [
+        {
+          id: guid,
+          histUri: "javascript:''",
+          title: "javascript:''",
+          visits: [
+            {
+              date: TIMESTAMP3,
+              type: Ci.nsINavHistoryService.TRANSITION_EMBED,
+            },
+          ],
+        },
+      ],
+      countTelemetry
+    );
     deepEqual(result, [guid]);
   } finally {
     store._canAddURI = oldCAU;
