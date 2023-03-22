@@ -20,6 +20,10 @@
 #  include "mozilla/Sandbox.h"
 #endif
 
+#if defined(XP_OPENBSD) && defined(MOZ_SANDBOX)
+#  include "mozilla/SandboxSettings.h"
+#endif
+
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
 #  include "mozilla/SandboxTestingChild.h"
 #endif
@@ -117,6 +121,12 @@ bool UtilityProcessChild::Init(mozilla::ipc::UntypedEndpoint&& aEndpoint,
     if (!JS_Init()) {
       return false;
     }
+#if defined(__OpenBSD__) && defined(MOZ_SANDBOX)
+    // Bug 1823458: delay pledge initialization, otherwise
+    // JS_Init triggers sysctl(KERN_PROC_ID) which isnt
+    // permitted with the current pledge.utility config
+    StartOpenBSDSandbox(GeckoProcessType_Utility, mSandbox);
+#endif
   }
 
   profiler_set_process_name(nsCString("Utility Process"));
