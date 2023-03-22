@@ -9,17 +9,9 @@ requestLongerTimeout(2);
 add_task(async function() {
   let arrowScrollbox = gBrowser.tabContainer.arrowScrollbox;
   let scrollbox = arrowScrollbox.scrollbox;
-  let originalSmoothScroll = arrowScrollbox.smoothScroll;
-  let tabMinWidth = parseInt(
-    getComputedStyle(gBrowser.selectedTab, null).minWidth
-  );
 
   let rect = ele => ele.getBoundingClientRect();
   let width = ele => rect(ele).width;
-
-  let tabCountForOverflow = Math.ceil(
-    (width(arrowScrollbox) / tabMinWidth) * 3
-  );
 
   let left = ele => rect(ele).left;
   let right = ele => rect(ele).right;
@@ -34,14 +26,10 @@ add_task(async function() {
     await new Promise(resolve => Services.tm.dispatchToMainThread(resolve));
   };
 
-  arrowScrollbox.smoothScroll = false;
-  registerCleanupFunction(() => {
-    arrowScrollbox.smoothScroll = originalSmoothScroll;
+  await BrowserTestUtils.overflowTabs(registerCleanupFunction, window, {
+    overflowAtStart: false,
+    overflowTabFactor: 3,
   });
-
-  while (gBrowser.tabs.length < tabCountForOverflow) {
-    BrowserTestUtils.addTab(gBrowser, "about:blank", { skipAnimation: true });
-  }
 
   gBrowser.pinTab(gBrowser.tabs[0]);
 
@@ -59,6 +47,8 @@ add_task(async function() {
   let element;
 
   gBrowser.selectedTab = firstScrollable();
+  await TestUtils.waitForTick();
+
   ok(
     left(scrollbox) <= left(firstScrollable()),
     "Selecting the first tab scrolls it into view " +
