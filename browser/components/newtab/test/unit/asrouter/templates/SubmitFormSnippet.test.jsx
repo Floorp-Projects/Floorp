@@ -1,5 +1,7 @@
 import { mount } from "enzyme";
 import React from "react";
+import { FluentBundle, FluentResource } from "@fluent/bundle";
+import { LocalizationProvider, ReactLocalization } from "@fluent/react";
 import { RichText } from "content-src/asrouter/components/RichText/RichText.jsx";
 import schema from "content-src/asrouter/templates/SubmitFormSnippet/SubmitFormSnippet.schema.json";
 import { SubmitFormSnippet } from "content-src/asrouter/templates/SubmitFormSnippet/SubmitFormSnippet.jsx";
@@ -19,6 +21,20 @@ describe("SubmitFormSnippet", () => {
   let sandbox;
   let onBlockStub;
 
+  function mockL10nWrapper(content) {
+    const bundle = new FluentBundle("en-US");
+    for (const [id, value] of Object.entries(content)) {
+      if (typeof value === "string") {
+        bundle.addResource(new FluentResource(`${id} = ${value}`));
+      }
+    }
+    const l10n = new ReactLocalization([bundle]);
+    return {
+      wrappingComponent: LocalizationProvider,
+      wrappingComponentProps: { l10n },
+    };
+  }
+
   /**
    * mountAndCheckProps - Mounts a SubmitFormSnippet with DEFAULT_CONTENT extended with any props
    *                      passed in the content param and validates props against the schema.
@@ -35,7 +51,10 @@ describe("SubmitFormSnippet", () => {
       form_method: "POST",
     };
     assert.jsonSchema(props.content, schema);
-    return mount(<SubmitFormSnippet {...props} />);
+    return mount(
+      <SubmitFormSnippet {...props} />,
+      mockL10nWrapper(props.content)
+    );
   }
 
   beforeEach(() => {

@@ -2,9 +2,28 @@ import {
   convertLinks,
   RichText,
 } from "content-src/asrouter/components/RichText/RichText";
-import { Localized } from "fluent-react";
+import { FluentBundle, FluentResource } from "@fluent/bundle";
+import {
+  Localized,
+  LocalizationProvider,
+  ReactLocalization,
+} from "@fluent/react";
 import { mount } from "enzyme";
 import React from "react";
+
+function mockL10nWrapper(content) {
+  const bundle = new FluentBundle("en-US");
+  for (const [id, value] of Object.entries(content)) {
+    if (typeof value === "string") {
+      bundle.addResource(new FluentResource(`${id} = ${value}`));
+    }
+  }
+  const l10n = new ReactLocalization([bundle]);
+  return {
+    wrappingComponent: LocalizationProvider,
+    wrappingComponentProps: { l10n },
+  };
+}
 
 describe("convertLinks", () => {
   let sandbox;
@@ -72,10 +91,11 @@ describe("convertLinks", () => {
         customElements={{ em: <em style={{ color: "#f05" }} /> }}
         text="<em>foo</em>"
         localization_id="text"
-      />
+      />,
+      mockL10nWrapper({ text: "<em>foo</em>" })
     );
 
     const localized = wrapper.find(Localized);
-    assert.propertyVal(localized.props().em.props.style, "color", "#f05");
+    assert.propertyVal(localized.props().elems.em.props.style, "color", "#f05");
   });
 });

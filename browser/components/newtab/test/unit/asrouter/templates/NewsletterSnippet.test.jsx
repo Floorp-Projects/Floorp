@@ -1,12 +1,28 @@
 import { mount } from "enzyme";
 import { NewsletterSnippet } from "content-src/asrouter/templates/NewsletterSnippet/NewsletterSnippet";
 import React from "react";
+import { FluentBundle, FluentResource } from "@fluent/bundle";
+import { LocalizationProvider, ReactLocalization } from "@fluent/react";
 import schema from "content-src/asrouter/templates/NewsletterSnippet/NewsletterSnippet.schema.json";
 import { SnippetsTestMessageProvider } from "lib/SnippetsTestMessageProvider.jsm";
 
 describe("NewsletterSnippet", () => {
   let sandbox;
   let DEFAULT_CONTENT;
+
+  function mockL10nWrapper(content) {
+    const bundle = new FluentBundle("en-US");
+    for (const [id, value] of Object.entries(content)) {
+      if (typeof value === "string") {
+        bundle.addResource(new FluentResource(`${id} = ${value}`));
+      }
+    }
+    const l10n = new ReactLocalization([bundle]);
+    return {
+      wrappingComponent: LocalizationProvider,
+      wrappingComponentProps: { l10n },
+    };
+  }
 
   function mountAndCheckProps(content = {}) {
     const props = {
@@ -17,7 +33,10 @@ describe("NewsletterSnippet", () => {
       sendUserActionTelemetry: sandbox.stub(),
       onAction: sandbox.stub(),
     };
-    const comp = mount(<NewsletterSnippet {...props} />);
+    const comp = mount(
+      <NewsletterSnippet {...props} />,
+      mockL10nWrapper(props.content)
+    );
     // Check schema with the final props the component receives (including defaults)
     assert.jsonSchema(comp.children().get(0).props.content, schema);
     return comp;
@@ -49,7 +68,10 @@ describe("NewsletterSnippet", () => {
         sendUserActionTelemetry: sandbox.stub(),
         onAction: sandbox.stub(),
       };
-      const wrapper = mount(<NewsletterSnippet {...defaults} />);
+      const wrapper = mount(
+        <NewsletterSnippet {...defaults} />,
+        mockL10nWrapper(DEFAULT_CONTENT)
+      );
       // NewsletterSnippet is a wrapper around SubmitFormSnippet
       const { props } = wrapper.children().get(0);
 

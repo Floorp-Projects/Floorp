@@ -34,7 +34,7 @@ module.exports = (env = {}) => ({
     rules: [
       {
         test: /\.jsx?$/,
-        exclude: /node_modules\/(?!(fluent|fluent-react)\/).*/,
+        exclude: /node_modules\/(?!@fluent\/).*/,
         loader: "babel-loader",
         options: {
           presets: ["@babel/preset-react"],

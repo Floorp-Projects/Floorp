@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { Localized } from "fluent-react";
+import { Localized } from "@fluent/react";
 import React from "react";
 import { RICH_TEXT_KEYS } from "../../rich-text-strings";
 import { safeURI } from "../../template-utils";
@@ -69,14 +69,16 @@ export function RichText(props) {
   return (
     <Localized
       id={props.localization_id}
-      {...ALLOWED_TAGS}
-      {...props.customElements}
-      {...convertLinks(
-        props.links,
-        props.sendClick,
-        props.doNotAutoBlock,
-        props.openNewWindow
-      )}
+      elems={{
+        ...ALLOWED_TAGS,
+        ...props.customElements,
+        ...convertLinks(
+          props.links,
+          props.sendClick,
+          props.doNotAutoBlock,
+          props.openNewWindow
+        ),
+      }}
     >
       <span>{props.text}</span>
     </Localized>
