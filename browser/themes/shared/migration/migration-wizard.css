@@ -85,6 +85,8 @@ button {
   content: url(chrome://global/skin/icons/defaultFavicon.svg);
   height: 32px;
   width: 32px;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 .migrator-icon,
