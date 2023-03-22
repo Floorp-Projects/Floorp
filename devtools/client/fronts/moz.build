@@ -22,7 +22,6 @@ DevToolsModules(
     "compatibility.js",
     "css-properties.js",
     "device.js",
-    "eventsource.js",
     "frame.js",
     "highlighters.js",
     "inspector.js",
@@ -56,5 +55,4 @@ DevToolsModules(
     "walker.js",
     "watcher.js",
     "webconsole.js",
-    "websocket.js",
 )

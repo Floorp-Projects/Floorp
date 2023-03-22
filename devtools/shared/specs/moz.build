@@ -23,7 +23,6 @@ DevToolsModules(
     "css-properties.js",
     "device.js",
     "environment.js",
-    "eventsource.js",
     "frame.js",
     "heap-snapshot-file.js",
     "highlighters.js",
@@ -61,5 +60,4 @@ DevToolsModules(
     "walker.js",
     "watcher.js",
     "webconsole.js",
-    "websocket.js",
 )
