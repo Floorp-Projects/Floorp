@@ -38,6 +38,7 @@
 #include "nsIContent.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/ReferrerInfo.h"
 #include "nsCSSRendering.h"
 #include "nsString.h"
 #include "nsContainerFrame.h"

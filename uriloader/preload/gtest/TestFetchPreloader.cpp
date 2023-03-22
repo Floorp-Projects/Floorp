@@ -208,7 +208,7 @@ class FakeListener : public nsIStreamListener {
 
   bool mOnStart = false;
   nsCString mOnData;
-  Maybe<nsresult> mOnStop;
+  mozilla::Maybe<nsresult> mOnStop;
 
  private:
   virtual ~FakeListener() = default;

@@ -10,6 +10,7 @@
 // Keep others in (case-insensitive) order:
 #include "mozilla/css/ImageLoader.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
+#include "mozilla/dom/ReferrerInfo.h"
 #include "mozilla/dom/SVGGeometryElement.h"
 #include "mozilla/dom/SVGTextPathElement.h"
 #include "mozilla/dom/SVGUseElement.h"
@@ -1439,8 +1440,8 @@ SVGGeometryElement* SVGObserverUtils::GetAndObserveTextPathsPath(
 
     // There's no clear refererer policy spec about non-CSS SVG resource
     // references Bug 1415044 to investigate which referrer we should use
-    nsCOMPtr<nsIReferrerInfo> referrerInfo =
-        ReferrerInfo::CreateForInternalCSSAndSVGResources(content->OwnerDoc());
+    nsIReferrerInfo* referrerInfo =
+        content->OwnerDoc()->ReferrerInfoForInternalCSSAndSVGResources();
     RefPtr<URLAndReferrerInfo> target =
         ResolveURLUsingLocalRef(aTextPathFrame, href, referrerInfo);
 
@@ -1492,8 +1493,8 @@ nsIFrame* SVGObserverUtils::GetAndObserveTemplate(
 
     // There's no clear refererer policy spec about non-CSS SVG resource
     // references.  Bug 1415044 to investigate which referrer we should use.
-    nsCOMPtr<nsIReferrerInfo> referrerInfo =
-        ReferrerInfo::CreateForInternalCSSAndSVGResources(content->OwnerDoc());
+    nsIReferrerInfo* referrerInfo =
+        content->OwnerDoc()->ReferrerInfoForInternalCSSAndSVGResources();
     RefPtr<URLAndReferrerInfo> target =
         new URLAndReferrerInfo(targetURI, referrerInfo);
 
@@ -1525,9 +1526,10 @@ Element* SVGObserverUtils::GetAndObserveBackgroundImage(nsIFrame* aFrame,
       getter_AddRefs(targetURI), elementId,
       aFrame->GetContent()->GetUncomposedDoc(),
       aFrame->GetContent()->GetBaseURI());
-  nsCOMPtr<nsIReferrerInfo> referrerInfo =
-      ReferrerInfo::CreateForInternalCSSAndSVGResources(
-          aFrame->GetContent()->OwnerDoc());
+  nsIReferrerInfo* referrerInfo =
+      aFrame->GetContent()
+          ->OwnerDoc()
+          ->ReferrerInfoForInternalCSSAndSVGResources();
   RefPtr<URLAndReferrerInfo> url =
       new URLAndReferrerInfo(targetURI, referrerInfo);
 

@@ -16,6 +16,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/StaticPrefs_browser.h"
+#include "mozilla/dom/ReferrerInfo.h"
 #include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/ipc/SharedMemory.h"
 #include "MainThreadUtils.h"

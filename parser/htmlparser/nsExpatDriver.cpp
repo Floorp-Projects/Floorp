@@ -47,6 +47,7 @@
 using mozilla::fallible;
 using mozilla::LogLevel;
 using mozilla::MakeStringSpan;
+using mozilla::Maybe;
 using mozilla::Unused;
 using mozilla::dom::Document;
 

@@ -13,6 +13,7 @@
 #include "mozilla/LoadInfo.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Unused.h"
+#include "mozilla/dom/ReferrerInfo.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentSecurityManager.h"
 #include "nsContentUtils.h"

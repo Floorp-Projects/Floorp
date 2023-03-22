@@ -95,6 +95,7 @@
 #include "nsString.h"
 #include "CacheObserver.h"
 #include "mozilla/dom/PerformanceStorage.h"
+#include "mozilla/dom/ReferrerInfo.h"
 #include "mozilla/Telemetry.h"
 #include "AlternateServices.h"
 #include "NetworkMarker.h"

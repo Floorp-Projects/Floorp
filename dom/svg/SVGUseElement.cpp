@@ -14,6 +14,7 @@
 #include "mozilla/SVGUseFrame.h"
 #include "mozilla/URLExtraData.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/ReferrerInfo.h"
 #include "mozilla/dom/ShadowIncludingTreeIterator.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/SVGGraphicsElement.h"
@@ -21,6 +22,7 @@
 #include "mozilla/dom/SVGUseElementBinding.h"
 #include "nsGkAtoms.h"
 #include "nsContentUtils.h"
+#include "nsIReferrerInfo.h"
 #include "nsIURI.h"
 #include "SVGGeometryProperty.h"
 
@@ -512,9 +514,9 @@ void SVGUseElement::LookupHref() {
   nsCOMPtr<nsIURI> targetURI;
   nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), href,
                                             GetComposedDoc(), baseURI);
-  nsCOMPtr<nsIReferrerInfo> referrerInfo =
-      ReferrerInfo::CreateForInternalCSSAndSVGResources(OwnerDoc());
-  mReferencedElementTracker.ResetToURIFragmentID(this, targetURI, referrerInfo);
+  nsIReferrerInfo* referrer =
+      OwnerDoc()->ReferrerInfoForInternalCSSAndSVGResources();
+  mReferencedElementTracker.ResetToURIFragmentID(this, targetURI, referrer);
 }
 
 void SVGUseElement::TriggerReclone() {
