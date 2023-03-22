@@ -349,6 +349,7 @@ struct HttpChannelOpenArgs
   bool                        forceMainDocumentChannel;
   uint8_t                     redirectionLimit;
   nsString                    classicScriptHintCharset;
+  nsString                    documentCharacterSet;
 };
 
 struct HttpChannelConnectArgs
