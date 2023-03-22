@@ -1825,8 +1825,18 @@ nsNavHistory::SetShouldStartFrecencyRecalculation(bool aVal) {
 //// mozIStorageVacuumParticipant
 
 NS_IMETHODIMP
-nsNavHistory::GetDatabaseConnection(mozIStorageConnection** _DBConnection) {
-  return GetDBConnection(_DBConnection);
+nsNavHistory::GetDatabaseConnection(
+    mozIStorageAsyncConnection** _DBConnection) {
+  NS_ENSURE_ARG_POINTER(_DBConnection);
+  nsCOMPtr<mozIStorageAsyncConnection> connection = mDB->MainConn();
+  connection.forget(_DBConnection);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavHistory::GetUseIncrementalVacuum(bool* _useIncremental) {
+  *_useIncremental = false;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

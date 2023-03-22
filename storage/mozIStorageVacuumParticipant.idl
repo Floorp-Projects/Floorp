@@ -6,7 +6,7 @@
 
 #include "nsISupports.idl"
 
-interface mozIStorageConnection;
+interface mozIStorageAsyncConnection;
 
 /**
  * This interface contains the information that the Storage service needs to
@@ -19,19 +19,27 @@ interface mozIStorageConnection;
 interface mozIStorageVacuumParticipant : nsISupports {
   /**
    * The expected page size in bytes for the database.  The vacuum manager will
-   * try to correct the page size during idle based on this value.
+   * try to correct the page size by executing a full vacuum.
    *
    * @note If the database is using the WAL journal mode, the page size won't
-  *        be changed to the requested value.  See bug 634374.
+   *       be changed to the requested value.  See bug 634374.
    * @note Valid page size values are powers of 2 between 512 and 65536.
    *       The suggested value is mozIStorageConnection::defaultPageSize.
    */
   readonly attribute long expectedDatabasePageSize;
 
   /**
+   * Whether the main schema should be using auto_vacuum = INCREMENTAL.
+   * This will cause auto_vacuum to change to INCREMENTAL if it's not set yet.
+   * It is not possible to change mode of any attached databases through this,
+   * to do that you must open a separate connection and use asyncVacuum() on it.
+   */
+  readonly attribute boolean useIncrementalVacuum;
+
+  /**
    * Connection to the database file to be vacuumed.
    */
-  readonly attribute mozIStorageConnection databaseConnection;
+  readonly attribute mozIStorageAsyncConnection databaseConnection;
 
   /**
    * Notifies when a vacuum operation begins.  Listeners should avoid using the
@@ -41,9 +49,9 @@ interface mozIStorageVacuumParticipant : nsISupports {
    *         opt-out for now, it will be retried later.  Useful when participant
    *         is running some other heavy operation that can't be interrupted.
    *
-   * @note When a vacuum operation starts or ends it will also dispatch a global
-   *       "heavy-io-task" notification through the observer service with the
-   *       data argument being either "vacuum-begin" or "vacuum-end".
+   * @note When a vacuum operation starts or ends it will also dispatch global
+   *       "vacuum-begin" and "vacuum-end" notifications through the observer
+   *       service with the data argument being the database filename.
    */
   boolean onBeginVacuum();
 
