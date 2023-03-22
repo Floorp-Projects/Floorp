@@ -1036,10 +1036,10 @@ void Http3Session::QueueStream(Http3StreamBase* stream) {
 void Http3Session::ProcessPending() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  Http3StreamBase* stream;
+  RefPtr<Http3StreamBase> stream;
   while ((stream = mQueuedStreams.PopFront())) {
     LOG3(("Http3Session::ProcessPending %p stream %p woken from queue.", this,
-          stream));
+          stream.get()));
     MOZ_ASSERT(stream->Queued());
     stream->SetQueued(false);
     mReadyForWrite.Push(stream);
@@ -1048,10 +1048,10 @@ void Http3Session::ProcessPending() {
 }
 
 static void RemoveStreamFromQueue(Http3StreamBase* aStream,
-                                  nsDeque<Http3StreamBase>& queue) {
+                                  nsRefPtrDeque<Http3StreamBase>& queue) {
   size_t size = queue.GetSize();
   for (size_t count = 0; count < size; ++count) {
-    Http3StreamBase* stream = queue.PopFront();
+    RefPtr<Http3StreamBase> stream = queue.PopFront();
     if (stream != aStream) {
       queue.Push(stream);
     }
@@ -1410,12 +1410,12 @@ nsresult Http3Session::SendData(nsIUDPSocket* socket) {
   //      to let the error be handled).
 
   nsresult rv = NS_OK;
-  Http3StreamBase* stream = nullptr;
+  RefPtr<Http3StreamBase> stream;
 
   // Step 1)
   while (CanSandData() && (stream = mReadyForWrite.PopFront())) {
     LOG(("Http3Session::SendData call ReadSegments from stream=%p [this=%p]",
-         stream, this));
+         stream.get(), this));
 
     rv = stream->ReadSegments();
 
