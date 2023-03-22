@@ -1,12 +1,10 @@
 import copy
 import json
-import pathlib
 import random
 import time
 from datetime import date
 from unittest import mock
 
-import mozunit
 import pytest
 import requests
 
@@ -16,11 +14,7 @@ from mozperftest.system.android_startup import (
     AndroidStartUpMatchingError,
     AndroidStartUpUnknownTestError,
 )
-from mozperftest.tests.support import (
-    EXAMPLE_ANDROID_STARTUP_TEST,
-    get_running_env,
-    temp_file,
-)
+from mozperftest.tests.support import EXAMPLE_ANDROID_STARTUP_TEST, get_running_env
 
 SAMPLE_APK_METADATA = {
     "name": "fenix_nightly_armeabi-v7a_2022_09_27.apk",
@@ -102,9 +96,6 @@ def init_mocked_request(status_code, **kwargs):
 
 
 @mock.patch(
-    "mozperftest.system.android.AndroidDevice.custom_apk_exists", new=lambda x: False
-)
-@mock.patch(
     "mozdevice.ADBDevice",
     new=FakeDevice,
 )
@@ -142,9 +133,6 @@ def test_invalid_test_name(*mocked):
 
 
 @mock.patch(
-    "mozperftest.system.android.AndroidDevice.custom_apk_exists", new=lambda x: False
-)
-@mock.patch(
     "mozdevice.ADBDevice",
     new=FakeDevice,
 )
@@ -164,9 +152,6 @@ def test_multiple_matching_lines(*mocked):
 
 
 @mock.patch(
-    "mozperftest.system.android.AndroidDevice.custom_apk_exists", new=lambda x: False
-)
-@mock.patch(
     "mozdevice.ADBDevice",
     new=FakeDevice,
 )
@@ -185,9 +170,6 @@ def test_multiple_total_time_prefix(*mocked):
     pass
 
 
-@mock.patch(
-    "mozperftest.system.android.AndroidDevice.custom_apk_exists", new=lambda x: False
-)
 @mock.patch(
     "mozdevice.ADBDevice",
     new=FakeDevice,
@@ -209,9 +191,6 @@ def test_multiple_start_proc_lines(*mocked):
 
 
 @mock.patch(
-    "mozperftest.system.android.AndroidDevice.custom_apk_exists", new=lambda x: False
-)
-@mock.patch(
     "mozdevice.ADBDevice",
     new=FakeDevice,
 )
@@ -230,39 +209,6 @@ def test_perfherder_layer(*mocked):
     test.run(metadata)
 
 
-@mock.patch("mozperftest.system.android.Path")
-@mock.patch(
-    "mozdevice.ADBDevice",
-    new=FakeDevice,
-)
-@mock.patch("time.sleep", return_value=time.sleep(0))
-@mock.patch(
-    "mozperftest.system.android_startup.AndroidStartUp.get_measurement",
-    return_value=random.randint(500, 1000),
-)
-def test_custom_apk_startup(get_measurement_mock, time_sleep_mock, path_mock):
-    SAMPLE_APK_METADATA["name"] = "name_for_multiple_Totaltime_strings"
-    ARGS["apk_metadata"] = SAMPLE_APK_METADATA
-    mach_cmd, metadata, env = running_env(
-        tests=[str(EXAMPLE_ANDROID_STARTUP_TEST)], **ARGS
-    )
-
-    with temp_file(name="user_upload.apk", content="") as sample_apk:
-        sample_apk = pathlib.Path(sample_apk)
-        path_mock.return_value = sample_apk
-
-        with mock.patch(
-            "mozperftest.system.android_startup.AndroidStartUp.run_tests"
-        ) as _:
-            test = android_startup.AndroidStartUp(env, mach_cmd)
-            test.run_tests = lambda: True
-            test.package_id = "FakeID"
-            assert test.run_performance_analysis(SAMPLE_APK_METADATA)
-
-
-@mock.patch(
-    "mozperftest.system.android.AndroidDevice.custom_apk_exists", new=lambda x: False
-)
 @mock.patch(
     "mozdevice.ADBDevice",
     new=FakeDevice,
@@ -278,7 +224,3 @@ def test_get_measurement_from_nav_start_logcat_match_error(*mocked):
     test = android_startup.AndroidStartUp(env, mach_cmd)
     with pytest.raises(AndroidStartUpMatchingError):
         test.run(metadata)
-
-
-if __name__ == "__main__":
-    mozunit.main()

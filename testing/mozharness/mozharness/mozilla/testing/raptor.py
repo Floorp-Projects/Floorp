@@ -9,7 +9,6 @@ import copy
 import glob
 import multiprocessing
 import os
-import pathlib
 import re
 import subprocess
 import sys
@@ -1236,17 +1235,7 @@ class Raptor(
         if not self.config.get("noinstall", False):
             if self.app in self.firefox_android_browsers:
                 self.device.uninstall_app(self.binary_path)
-
-                # Check if the user supplied their own APK, and install
-                # that instead
-                installer_path = pathlib.Path(
-                    self.raptor_path, "raptor", "user_upload.apk"
-                )
-                if not installer_path.exists():
-                    installer_path = self.installerpath
-
-                self.info(f"Installing APK from: {installer_path}")
-                self.install_android_app(str(installer_path))
+                self.install_android_app(self.installer_path)
             else:
                 super(Raptor, self).install()
 
