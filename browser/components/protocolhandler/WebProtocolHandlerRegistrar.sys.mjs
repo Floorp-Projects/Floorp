@@ -3,11 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["WebProtocolHandlerRegistrar"];
-
 const STRING_BUNDLE_URI = "chrome://browser/locale/feeds/subscribe.properties";
 
-function WebProtocolHandlerRegistrar() {}
+export function WebProtocolHandlerRegistrar() {}
 
 WebProtocolHandlerRegistrar.prototype = {
   get stringBundle() {
