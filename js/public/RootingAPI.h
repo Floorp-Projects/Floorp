@@ -852,7 +852,7 @@ struct JS_PUBLIC_API MovableCellHasher {
   using Lookup = T;
 
   static bool maybeGetHash(const Lookup& l, mozilla::HashNumber* hashOut);
-  static bool ensureHash(const Lookup& l);
+  static bool ensureHash(const Lookup& l, HashNumber* hashOut);
   static HashNumber hash(const Lookup& l);
   static bool match(const Key& k, const Lookup& l);
   // The rekey hash policy method is not provided since you dont't need to
@@ -867,8 +867,8 @@ struct JS_PUBLIC_API MovableCellHasher<JS::Heap<T>> {
   static bool maybeGetHash(const Lookup& l, HashNumber* hashOut) {
     return MovableCellHasher<T>::maybeGetHash(l, hashOut);
   }
-  static bool ensureHash(const Lookup& l) {
-    return MovableCellHasher<T>::ensureHash(l);
+  static bool ensureHash(const Lookup& l, HashNumber* hashOut) {
+    return MovableCellHasher<T>::ensureHash(l, hashOut);
   }
   static HashNumber hash(const Lookup& l) {
     return MovableCellHasher<T>::hash(l);
@@ -890,8 +890,9 @@ struct FallibleHashMethods<js::MovableCellHasher<T>> {
                                                   hashOut);
   }
   template <typename Lookup>
-  static bool ensureHash(Lookup&& l) {
-    return js::MovableCellHasher<T>::ensureHash(std::forward<Lookup>(l));
+  static bool ensureHash(Lookup&& l, HashNumber* hashOut) {
+    return js::MovableCellHasher<T>::ensureHash(std::forward<Lookup>(l),
+                                                hashOut);
   }
 };
 

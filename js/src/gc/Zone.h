@@ -547,6 +547,8 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   // Puts an existing UID in |uidp|, or creates a new UID for this Cell and
   // puts that into |uidp|. Returns false on OOM.
   [[nodiscard]] bool getOrCreateUniqueId(js::gc::Cell* cell, uint64_t* uidp);
+  [[nodiscard]] bool getOrCreateHashCode(js::gc::Cell* cell,
+                                         js::HashNumber* hashOut);
 
   js::HashNumber getHashCodeInfallible(js::gc::Cell* cell);
   uint64_t getUniqueIdInfallible(js::gc::Cell* cell);

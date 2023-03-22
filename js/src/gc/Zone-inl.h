@@ -49,6 +49,17 @@ inline bool JS::Zone::maybeGetUniqueId(js::gc::Cell* cell, uint64_t* uidp) {
   return p.found();
 }
 
+inline bool JS::Zone::getOrCreateHashCode(js::gc::Cell* cell,
+                                          js::HashNumber* hashOut) {
+  uint64_t uid;
+  if (!getOrCreateUniqueId(cell, &uid)) {
+    return false;
+  }
+
+  *hashOut = UniqueIdToHash(uid);
+  return true;
+}
+
 inline bool JS::Zone::getOrCreateUniqueId(js::gc::Cell* cell, uint64_t* uidp) {
   MOZ_ASSERT(uidp);
   MOZ_ASSERT(js::CurrentThreadCanAccessZone(this) ||

@@ -79,13 +79,14 @@ template <typename T>
 }
 
 template <typename T>
-/* static */ bool MovableCellHasher<T>::ensureHash(const Lookup& l) {
+/* static */ bool MovableCellHasher<T>::ensureHash(const Lookup& l,
+                                                   HashNumber* hashOut) {
   if (!l) {
+    *hashOut = 0;
     return true;
   }
 
-  uint64_t unusedId;
-  return l->zoneFromAnyThread()->getOrCreateUniqueId(l, &unusedId);
+  return l->zoneFromAnyThread()->getOrCreateHashCode(l, hashOut);
 }
 
 template <typename T>
