@@ -155,20 +155,6 @@ struct FloatingPoint final : private detail::FloatingPointTrait<T> {
                 "all bits accounted for");
 };
 
-/** Determines whether a float/double is NaN. */
-template <typename T>
-static MOZ_ALWAYS_INLINE bool IsNaN(T aValue) {
-  /*
-   * A float/double is NaN if all exponent bits are 1 and the significand
-   * contains at least one non-zero bit.
-   */
-  typedef FloatingPoint<T> Traits;
-  typedef typename Traits::Bits Bits;
-  return (BitwiseCast<Bits>(aValue) & Traits::kExponentBits) ==
-             Traits::kExponentBits &&
-         (BitwiseCast<Bits>(aValue) & Traits::kSignificandBits) != 0;
-}
-
 /** Determines whether a float/double is +Infinity or -Infinity. */
 template <typename T>
 static MOZ_ALWAYS_INLINE bool IsInfinite(T aValue) {
