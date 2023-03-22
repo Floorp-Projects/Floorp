@@ -107,14 +107,6 @@ class SVGGeometryFrame : public nsIFrame, public ISVGDisplayableFrame {
                               uint32_t aFlags) override;
   bool IsDisplayContainer() override { return false; }
 
-  /**
-   * This function returns a set of bit flags indicating which parts of the
-   * element (fill, stroke, bounds) should intercept pointer events. It takes
-   * into account the type of element and the value of the 'pointer-events'
-   * property on the element.
-   */
-  virtual uint16_t GetHitTestFlags();
-
  private:
   enum { eRenderFill = 1, eRenderStroke = 2 };
   void Render(gfxContext* aContext, uint32_t aRenderComponents,
@@ -145,8 +137,6 @@ class SVGGeometryFrame : public nsIFrame, public ISVGDisplayableFrame {
 // Display list item:
 
 class DisplaySVGGeometry final : public DisplaySVGItem {
-  using imgDrawingParams = image::imgDrawingParams;
-
  public:
   DisplaySVGGeometry(nsDisplayListBuilder* aBuilder, SVGGeometryFrame* aFrame)
       : DisplaySVGItem(aBuilder, aFrame) {

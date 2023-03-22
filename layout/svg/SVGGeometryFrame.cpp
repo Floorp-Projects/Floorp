@@ -201,7 +201,7 @@ nsIFrame* SVGGeometryFrame::GetFrameForPoint(const gfxPoint& aPoint) {
     hitTestFlags = SVG_HIT_TEST_FILL;
     fillRule = SVGUtils::ToFillRule(StyleSVG()->mClipRule);
   } else {
-    hitTestFlags = GetHitTestFlags();
+    hitTestFlags = SVGUtils::GetGeometryHitTestFlags(this);
     if (!hitTestFlags) {
       return nullptr;
     }
@@ -273,8 +273,9 @@ void SVGGeometryFrame::ReflowSVG() {
   // for hit testing, which means that for certain values of 'pointer-events'
   // it needs to include the geometry of the fill or stroke even when the fill/
   // stroke don't actually render (e.g. when stroke="none" or
-  // stroke-opacity="0"). GetHitTestFlags() accounts for 'pointer-events'.
-  uint16_t hitTestFlags = GetHitTestFlags();
+  // stroke-opacity="0"). GetGeometryHitTestFlags() accounts for
+  // 'pointer-events'.
+  uint16_t hitTestFlags = SVGUtils::GetGeometryHitTestFlags(this);
   if ((hitTestFlags & SVG_HIT_TEST_FILL)) {
     flags |= SVGUtils::eBBoxIncludeFillGeometry;
   }
@@ -499,7 +500,7 @@ SVGBBox SVGGeometryFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
   }
 
   // Account for markers:
-  if ((aFlags & SVGUtils::eBBoxIncludeMarkers) != 0 && element->IsMarkable()) {
+  if ((aFlags & SVGUtils::eBBoxIncludeMarkers) && element->IsMarkable()) {
     SVGMarkerFrame* markerFrames[SVGMark::eTypeCount];
     if (SVGObserverUtils::GetAndObserveMarkers(this, &markerFrames)) {
       nsTArray<SVGMark> marks;
@@ -830,7 +831,4 @@ float SVGGeometryFrame::GetStrokeWidthForMarkers() {
   return strokeWidth;
 }
 
-uint16_t SVGGeometryFrame::GetHitTestFlags() {
-  return SVGUtils::GetGeometryHitTestFlags(this);
-}
 }  // namespace mozilla
