@@ -1,4 +1,4 @@
-use crate::{encode_section, Encode, Section, SectionId, ValType};
+use crate::{encode_section, ConstExpr, Encode, RefType, Section, SectionId};
 
 /// An encoder for the table section.
 ///
@@ -7,11 +7,11 @@ use crate::{encode_section, Encode, Section, SectionId, ValType};
 /// # Example
 ///
 /// ```
-/// use wasm_encoder::{Module, TableSection, TableType, ValType};
+/// use wasm_encoder::{Module, TableSection, TableType, RefType};
 ///
 /// let mut tables = TableSection::new();
 /// tables.table(TableType {
-///     element_type: ValType::FuncRef,
+///     element_type: RefType::FUNCREF,
 ///     minimum: 128,
 ///     maximum: None,
 /// });
@@ -49,6 +49,18 @@ impl TableSection {
         self.num_added += 1;
         self
     }
+
+    /// Define a table with an explicit initialization expression.
+    ///
+    /// Note that this is part of the function-references proposal.
+    pub fn table_with_init(&mut self, table_type: TableType, init: &ConstExpr) -> &mut Self {
+        self.bytes.push(0x40);
+        self.bytes.push(0x00);
+        table_type.encode(&mut self.bytes);
+        init.encode(&mut self.bytes);
+        self.num_added += 1;
+        self
+    }
 }
 
 impl Encode for TableSection {
@@ -67,7 +79,7 @@ impl Section for TableSection {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct TableType {
     /// The table's element type.
-    pub element_type: ValType,
+    pub element_type: RefType,
     /// Minimum size, in elements, of this table
     pub minimum: u32,
     /// Maximum size, in elements, of this table

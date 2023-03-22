@@ -241,8 +241,11 @@ impl<'a> Encode for HeapType<'a> {
             HeapType::Struct => e.push(0x67),
             HeapType::Array => e.push(0x66),
             HeapType::I31 => e.push(0x6a),
-            HeapType::Index(index) => {
-                index.encode(e);
+            // Note that this is encoded as a signed leb128 so be sure to cast
+            // to an i64 first
+            HeapType::Index(Index::Num(n, _)) => i64::from(*n).encode(e),
+            HeapType::Index(Index::Id(n)) => {
+                panic!("unresolved index in emission: {:?}", n)
             }
         }
     }
@@ -427,8 +430,14 @@ impl Encode for Table<'_> {
     fn encode(&self, e: &mut Vec<u8>) {
         assert!(self.exports.names.is_empty());
         match &self.kind {
-            TableKind::Normal { ty, init_expr: None } => ty.encode(e),
-            TableKind::Normal { ty, init_expr: Some(init_expr) } => {
+            TableKind::Normal {
+                ty,
+                init_expr: None,
+            } => ty.encode(e),
+            TableKind::Normal {
+                ty,
+                init_expr: Some(init_expr),
+            } => {
                 e.push(0x40);
                 e.push(0x00);
                 ty.encode(e);

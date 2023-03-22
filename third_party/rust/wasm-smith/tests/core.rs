@@ -151,7 +151,7 @@ fn smoke_test_imports_config() {
                                 *seen = true
                             }
                             (Some((seen, I::Table(t))), TypeRef::Table(tt))
-                                if *t == tt.element_type =>
+                                if *t == ValType::Ref(tt.element_type) =>
                             {
                                 *seen = true
                             }
@@ -253,7 +253,7 @@ fn import_config(
             ("env", "pipo", Func(&[I32], &[I32])),
             ("env", "popo", Func(&[], &[I32, I32])),
             ("env", "mem", Memory),
-            ("env", "tbl", Table(FuncRef)),
+            ("env", "tbl", Table(ValType::FUNCREF)),
             ("vars", "g", Global(I64)),
             ("tags", "tag1", Tag(&[I32])),
         ]
@@ -300,6 +300,7 @@ fn parser_features_from_config(config: &impl Config) -> WasmFeatures {
         floats: true,
         extended_const: false,
         component_model: false,
+        function_references: false,
         memory_control: false,
     }
 }
