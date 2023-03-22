@@ -740,11 +740,8 @@ option(
 )
 
 
-@depends("--disable-wasm-extended-const", "--wasm-no-experimental")
-def wasm_extended_const(value, no_experimental):
-    if no_experimental:
-        return
-
+@depends("--disable-wasm-extended-const")
+def wasm_extended_const(value):
     if value:
         return True
 
