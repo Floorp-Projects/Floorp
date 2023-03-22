@@ -8,7 +8,6 @@ const strings = [
   "",
 
   // Uncommon zero length strings.
-  newRope("", ""),
   newString("", {external: true}),
 
   // Latin-1 strings.

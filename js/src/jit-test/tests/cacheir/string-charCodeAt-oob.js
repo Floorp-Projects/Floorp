@@ -31,12 +31,23 @@ function codePoints() {
   return [empty, ascii, latin1, twoByte];
 }
 
+function toRope(s) {
+  // Ropes have at least two characters.
+  if (s.length < 2) {
+    return s;
+  }
+  if (s.length === 2) {
+    return newRope(s[0], s[1]);
+  }
+  return newRope(s[0], s.substring(1));
+}
+
 function makeStrings() {
   let strings = codePoints()
   .map(codePoints => String.fromCodePoint(...codePoints))
   .flatMap(x => [
     x,
-    newRope(x, ""),
+    toRope(x),
     newString(x, {twoByte: true}),
     atomize(x),
   ]);

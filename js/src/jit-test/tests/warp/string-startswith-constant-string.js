@@ -25,6 +25,17 @@ const twoByte = [...characters(
   [0x100, 0x17E], // Ā..ž
 )];
 
+function toRope(s) {
+  // Ropes have at least two characters.
+  if (s.length < 2) {
+    return s;
+  }
+  if (s.length === 2) {
+    return newRope(s[0], s[1]);
+  }
+  return newRope(s[0], s.substring(1));
+}
+
 function atomize(s) {
   return Object.keys({[s]: 0})[0];
 }
@@ -44,7 +55,7 @@ for (let i = 1; i <= 32; ++i) {
     String.fromCodePoint(...codePoints.slice(0, i + 1)),
   ]).flatMap(x => [
     x,
-    newRope(x, ""),
+    toRope(x),
     newString(x, {twoByte: true}),
     atomize(x),
   ]);

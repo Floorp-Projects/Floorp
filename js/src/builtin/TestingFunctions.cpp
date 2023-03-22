@@ -3384,7 +3384,13 @@ static bool NewRope(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  Rooted<JSRope*> str(cx, JSRope::new_<CanGC>(cx, left, right, length, heap));
+  // Disallow creating ropes where one side is empty.
+  if (left->empty() || right->empty()) {
+    JS_ReportErrorASCII(cx, "rope child mustn't be the empty string");
+    return false;
+  }
+
+  auto* str = JSRope::new_<CanGC>(cx, left, right, length, heap);
   if (!str) {
     return false;
   }

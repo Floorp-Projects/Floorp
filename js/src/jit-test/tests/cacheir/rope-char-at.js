@@ -10,8 +10,8 @@ function test(a, b, firstCharCode) {
   assertEq(isRope(b), false);
 }
 test("abcdef", "ghijk", 97);
-test("", "abcdefg", 97);
-test("abcdef", "", 97);
+test("a", "bcdefg", 97);
+test("abcde", "f", 97);
 test("0123456", "7", 48);
 test("\u00fe\u00ff", "\u0100\u0101", 0xfe);
 test("\u1000\u1001\u1002", "\u1003\u1004", 4096);
