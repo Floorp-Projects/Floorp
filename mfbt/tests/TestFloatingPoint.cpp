@@ -16,7 +16,6 @@ using mozilla::FuzzyEqualsMultiplicative;
 using mozilla::IsFinite;
 using mozilla::IsFloat32Representable;
 using mozilla::IsInfinite;
-using mozilla::IsNaN;
 using mozilla::IsNegative;
 using mozilla::IsNegativeZero;
 using mozilla::IsPositiveZero;
@@ -310,15 +309,12 @@ static void TestEqualsIsForNonInteger(T aVal) {
 };
 
 static void TestDoublesPredicates() {
-  A(IsNaN(UnspecifiedNaN<double>()));
-  A(IsNaN(SpecificNaN<double>(1, 17)));
+  A(std::isnan(UnspecifiedNaN<double>()));
+  A(std::isnan(SpecificNaN<double>(1, 17)));
   ;
-  A(IsNaN(SpecificNaN<double>(0, 0xfffffffffff0fULL)));
-  A(!IsNaN(0.0));
-  A(!IsNaN(-0.0));
-  A(!IsNaN(1.0));
-  A(!IsNaN(PositiveInfinity<double>()));
-  A(!IsNaN(NegativeInfinity<double>()));
+  A(std::isnan(SpecificNaN<double>(0, 0xfffffffffff0fULL)));
+  A(!std::isnan(PositiveInfinity<double>()));
+  A(!std::isnan(NegativeInfinity<double>()));
 
   A(IsInfinite(PositiveInfinity<double>()));
   A(IsInfinite(NegativeInfinity<double>()));
@@ -412,15 +408,12 @@ static void TestDoublesPredicates() {
 }
 
 static void TestFloatsPredicates() {
-  A(IsNaN(UnspecifiedNaN<float>()));
-  A(IsNaN(SpecificNaN<float>(1, 17)));
+  A(std::isnan(UnspecifiedNaN<float>()));
+  A(std::isnan(SpecificNaN<float>(1, 17)));
   ;
-  A(IsNaN(SpecificNaN<float>(0, 0x7fff0fUL)));
-  A(!IsNaN(0.0f));
-  A(!IsNaN(-0.0f));
-  A(!IsNaN(1.0f));
-  A(!IsNaN(PositiveInfinity<float>()));
-  A(!IsNaN(NegativeInfinity<float>()));
+  A(std::isnan(SpecificNaN<float>(0, 0x7fff0fUL)));
+  A(!std::isnan(PositiveInfinity<float>()));
+  A(!std::isnan(NegativeInfinity<float>()));
 
   A(IsInfinite(PositiveInfinity<float>()));
   A(IsInfinite(NegativeInfinity<float>()));
