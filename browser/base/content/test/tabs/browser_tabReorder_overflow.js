@@ -35,7 +35,9 @@ add_task(async function() {
     { skipAnimation: true }
   ));
 
-  await BrowserTestUtils.overflowTabs(registerCleanupFunction, window, false);
+  await BrowserTestUtils.overflowTabs(registerCleanupFunction, window, {
+    overflowAtStart: false,
+  });
 
   registerCleanupFunction(function() {
     while (gBrowser.tabs.length > initialTabsLength) {

@@ -1852,12 +1852,22 @@ export var BrowserTestUtils = {
    *    function, allowing us to clean up after you if necessary.
    * @param {Window} win
    *    The window where the tabs need to be overflowed.
-   * @param {boolean} overflowAtStart
-   *    Determines whether the new tabs are added at the beginning of the
-   *    URL bar or at the end of it.
+   * @param {object} params [optional]
+   *        Parameters object for BrowserTestUtils.overflowTabs.
+   *        overflowAtStart: bool
+   *          Determines whether the new tabs are added at the beginning of the
+   *          URL bar or at the end of it.
+   *        overflowTabFactor: 3 | 1.1
+   *          Factor that helps in determining the tab count for overflow.
    */
-  async overflowTabs(registerCleanupFunction, win, overflowAtStart = true) {
-    let index = overflowAtStart ? 0 : undefined;
+  async overflowTabs(registerCleanupFunction, win, params = {}) {
+    if (!params.hasOwnProperty("overflowAtStart")) {
+      params.overflowAtStart = true;
+    }
+    if (!params.hasOwnProperty("overflowTabFactor")) {
+      params.overflowTabFactor = 1.1;
+    }
+    let index = params.overflowAtStart ? 0 : undefined;
     let { gBrowser } = win;
     let arrowScrollbox = gBrowser.tabContainer.arrowScrollbox;
     const originalSmoothScroll = arrowScrollbox.smoothScroll;
@@ -1871,7 +1881,7 @@ export var BrowserTestUtils = {
       win.getComputedStyle(gBrowser.selectedTab).minWidth
     );
     let tabCountForOverflow = Math.ceil(
-      (width(arrowScrollbox) / tabMinWidth) * 1.1
+      (width(arrowScrollbox) / tabMinWidth) * params.overflowTabFactor
     );
     while (gBrowser.tabs.length < tabCountForOverflow) {
       BrowserTestUtils.addTab(gBrowser, "about:blank", {
