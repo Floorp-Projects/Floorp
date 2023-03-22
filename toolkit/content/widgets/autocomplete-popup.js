@@ -294,7 +294,7 @@
       }
 
       if (this.mPopupOpen) {
-        delete this._adjustHeightOnPopupShown;
+        this._adjustHeightOnPopupShown = false;
         this._adjustHeightRAFToken = requestAnimationFrame(() =>
           this.adjustHeight()
         );
@@ -353,7 +353,6 @@
 
       this._collapseUnusedItems();
 
-      this.richlistbox.style.removeProperty("height");
       // We need to get the ceiling of the calculated value to ensure that the
       // box fully contains all of its contents and doesn't cause a scrollbar.
       this.richlistbox.style.height = Math.ceil(height) + "px";
@@ -577,7 +576,7 @@
 
       this.addEventListener("popupshown", event => {
         if (this._adjustHeightOnPopupShown) {
-          delete this._adjustHeightOnPopupShown;
+          this._adjustHeightOnPopupShown = false;
           this.adjustHeight();
         }
       });
