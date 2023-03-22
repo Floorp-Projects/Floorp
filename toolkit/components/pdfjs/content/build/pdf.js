@@ -935,7 +935,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: '3.5.73',
+    apiVersion: '3.5.80',
     data,
     password,
     disableAutoFetch,
@@ -1640,9 +1640,11 @@ exports.PDFPageProxy = PDFPageProxy;
 class LoopbackPort {
   #listeners = new Set();
   #deferred = Promise.resolve();
-  postMessage(obj, transfers) {
+  postMessage(obj, transfer) {
     const event = {
-      data: structuredClone(obj, transfers)
+      data: structuredClone(obj, transfer ? {
+        transfer
+      } : null)
     };
     this.#deferred.then(() => {
       for (const listener of this.#listeners) {
@@ -2545,7 +2547,7 @@ class InternalRenderTask {
     } = this.params;
     this.gfx = new _canvas.CanvasGraphics(canvasContext, this.commonObjs, this.objs, this.canvasFactory, this.filterFactory, {
       optionalContentConfig
-    }, this.annotationCanvasMap, this.pageColors);
+    }, this.annotationCanvasMap);
     this.gfx.beginDrawing({
       transform,
       viewport,
@@ -2615,9 +2617,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.5.73';
+const version = '3.5.80';
 exports.version = version;
-const build = '3903391f3';
+const build = 'b1e0253f2';
 exports.build = build;
 
 /***/ }),
@@ -3843,6 +3845,12 @@ class DOMFilterFactory extends _base_factory.BaseFilterFactory {
     }
     return this.#_defs;
   }
+  #appendFeFunc(feComponentTransfer, func, table) {
+    const feFunc = this.#document.createElementNS(SVG_NS, func);
+    feFunc.setAttribute("type", "discrete");
+    feFunc.setAttribute("tableValues", table);
+    feComponentTransfer.append(feFunc);
+  }
   addFilter(maps) {
     if (!maps) {
       return "none";
@@ -3888,19 +3896,9 @@ class DOMFilterFactory extends _base_factory.BaseFilterFactory {
     filter.setAttribute("color-interpolation-filters", "sRGB");
     const feComponentTransfer = this.#document.createElementNS(SVG_NS, "feComponentTransfer");
     filter.append(feComponentTransfer);
-    const type = "discrete";
-    const feFuncR = this.#document.createElementNS(SVG_NS, "feFuncR");
-    feFuncR.setAttribute("type", type);
-    feFuncR.setAttribute("tableValues", tableR);
-    feComponentTransfer.append(feFuncR);
-    const feFuncG = this.#document.createElementNS(SVG_NS, "feFuncG");
-    feFuncG.setAttribute("type", type);
-    feFuncG.setAttribute("tableValues", tableG);
-    feComponentTransfer.append(feFuncG);
-    const feFuncB = this.#document.createElementNS(SVG_NS, "feFuncB");
-    feFuncB.setAttribute("type", type);
-    feFuncB.setAttribute("tableValues", tableB);
-    feComponentTransfer.append(feFuncB);
+    this.#appendFeFunc(feComponentTransfer, "feFuncR", tableR);
+    this.#appendFeFunc(feComponentTransfer, "feFuncG", tableG);
+    this.#appendFeFunc(feComponentTransfer, "feFuncB", tableB);
     this.#defs.append(filter);
     return url;
   }
@@ -3939,19 +3937,9 @@ class DOMFilterFactory extends _base_factory.BaseFilterFactory {
     filter.setAttribute("color-interpolation-filters", "sRGB");
     let feComponentTransfer = this.#document.createElementNS(SVG_NS, "feComponentTransfer");
     filter.append(feComponentTransfer);
-    let type = "discrete";
-    let feFuncR = this.#document.createElementNS(SVG_NS, "feFuncR");
-    feFuncR.setAttribute("type", type);
-    feFuncR.setAttribute("tableValues", table);
-    feComponentTransfer.append(feFuncR);
-    let feFuncG = this.#document.createElementNS(SVG_NS, "feFuncG");
-    feFuncG.setAttribute("type", type);
-    feFuncG.setAttribute("tableValues", table);
-    feComponentTransfer.append(feFuncG);
-    let feFuncB = this.#document.createElementNS(SVG_NS, "feFuncB");
-    feFuncB.setAttribute("type", type);
-    feFuncB.setAttribute("tableValues", table);
-    feComponentTransfer.append(feFuncB);
+    this.#appendFeFunc(feComponentTransfer, "feFuncR", table);
+    this.#appendFeFunc(feComponentTransfer, "feFuncG", table);
+    this.#appendFeFunc(feComponentTransfer, "feFuncB", table);
     const feColorMatrix = this.#document.createElementNS(SVG_NS, "feColorMatrix");
     feColorMatrix.setAttribute("type", "matrix");
     feColorMatrix.setAttribute("values", "0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0 0 0 1 0");
@@ -3967,19 +3955,9 @@ class DOMFilterFactory extends _base_factory.BaseFilterFactory {
       }
       return arr.join(",");
     };
-    type = "discrete";
-    feFuncR = this.#document.createElementNS(SVG_NS, "feFuncR");
-    feFuncR.setAttribute("type", type);
-    feFuncR.setAttribute("tableValues", `${getSteps(0, 5)}`);
-    feComponentTransfer.append(feFuncR);
-    feFuncG = this.#document.createElementNS(SVG_NS, "feFuncG");
-    feFuncG.setAttribute("type", type);
-    feFuncG.setAttribute("tableValues", `${getSteps(1, 5)}`);
-    feComponentTransfer.append(feFuncG);
-    feFuncB = this.#document.createElementNS(SVG_NS, "feFuncB");
-    feFuncB.setAttribute("type", type);
-    feFuncB.setAttribute("tableValues", `${getSteps(2, 5)}`);
-    feComponentTransfer.append(feFuncB);
+    this.#appendFeFunc(feComponentTransfer, "feFuncR", getSteps(0, 5));
+    this.#appendFeFunc(feComponentTransfer, "feFuncG", getSteps(1, 5));
+    this.#appendFeFunc(feComponentTransfer, "feFuncB", getSteps(2, 5));
     this.#defs.append(filter);
     this.#hcmUrl = `url(#${id})`;
     return this.#hcmUrl;
@@ -13265,8 +13243,8 @@ var _annotation_layer = __w_pdfjs_require__(26);
 var _worker_options = __w_pdfjs_require__(14);
 var _svg = __w_pdfjs_require__(29);
 var _xfa_layer = __w_pdfjs_require__(28);
-const pdfjsVersion = '3.5.73';
-const pdfjsBuild = '3903391f3';
+const pdfjsVersion = '3.5.80';
+const pdfjsBuild = 'b1e0253f2';
 })();
 
 /******/ 	return __webpack_exports__;
