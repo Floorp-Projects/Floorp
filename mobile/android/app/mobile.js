@@ -525,9 +525,6 @@ pref("gfx.canvas.azure.backends", "skia");
 // When true, phone number linkification is enabled.
 pref("browser.ui.linkify.phone", false);
 
-// Enables/disables Spatial Navigation
-pref("snav.enabled", true);
-
 // The mode of home provider syncing.
 // 0: Sync always
 // 1: Sync only when on wifi

@@ -28,12 +28,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1372369
 /** Test for <input type='date'> bad input validity state **/
 
 SimpleTest.waitForExplicitFinish();
-// Turn off Spatial Navigation because it hijacks arrow keydown events:
 SimpleTest.waitForFocus(function() {
-  SpecialPowers.pushPrefEnv({"set":[["snav.enabled", false]]}, function() {
-    test();
-    SimpleTest.finish();
-  });
+  test();
+  SimpleTest.finish();
 });
 
 const DATE_BAD_INPUT_MSG = "Please enter a valid date.";

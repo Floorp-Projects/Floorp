@@ -19,11 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=291082
     event.preventDefault();
   }
 
-  function test() {
-    // Turn off Spatial Navigation because it hijacks arrow keydown events.
-    SpecialPowers.pushPrefEnv({"set":[["snav.enabled", false]]}, runTest);
-  }
-
   function runTest() {
     document.getElementById("keydown").addEventListener("keydown", preventDefault);
     document.getElementById("keypress").addEventListener("keypress", preventDefault);
@@ -60,7 +55,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=291082
   }
 </script>
 </head>
-<body onload="test();">
+<body onload="runTest();">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=291082">Mozilla Bug 291082</a>
 <div>
   <ul>
