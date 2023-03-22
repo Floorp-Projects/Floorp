@@ -460,7 +460,7 @@ pref("gfx.downloadable_fonts.disable_cache", false);
 pref("gfx.content.azure.backends", "skia");
 
 #ifdef XP_WIN
-  // pref("gfx.webrender.flip-sequential", false);  // no default
+  pref("gfx.webrender.flip-sequential", false);
   pref("gfx.webrender.dcomp-win.enabled", true);
   pref("gfx.webrender.triple-buffering.enabled", true);
 #endif
