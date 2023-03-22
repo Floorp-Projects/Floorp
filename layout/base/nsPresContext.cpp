@@ -823,7 +823,7 @@ already_AddRefed<nsFontMetrics> nsPresContext::GetMetricsFor(
   return mFontCache->GetMetricsFor(aFont, aParams);
 }
 
-nsresult nsPresContext::FlushFontCache(void) {
+nsresult nsPresContext::FlushFontCache() {
   if (mFontCache) {
     mFontCache->Flush();
   }
