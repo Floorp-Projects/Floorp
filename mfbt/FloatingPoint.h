@@ -155,16 +155,6 @@ struct FloatingPoint final : private detail::FloatingPointTrait<T> {
                 "all bits accounted for");
 };
 
-/** Determines whether a float/double is +Infinity or -Infinity. */
-template <typename T>
-static MOZ_ALWAYS_INLINE bool IsInfinite(T aValue) {
-  /* Infinities have all exponent bits set to 1 and an all-0 significand. */
-  typedef FloatingPoint<T> Traits;
-  typedef typename Traits::Bits Bits;
-  Bits bits = BitwiseCast<Bits>(aValue);
-  return (bits & ~Traits::kSignBit) == Traits::kExponentBits;
-}
-
 /** Determines whether a float/double is not NaN or infinite. */
 template <typename T>
 static MOZ_ALWAYS_INLINE bool IsFinite(T aValue) {
