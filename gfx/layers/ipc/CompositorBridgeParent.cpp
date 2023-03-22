@@ -259,6 +259,9 @@ void CompositorBridgeParent::InitSameProcess(widget::CompositorWidget* aWidget,
 
   mWidget = aWidget;
   mRootLayerTreeID = aLayerTreeId;
+#if defined(XP_WIN)
+  mWidget->AsWindows()->SetRootLayerTreeID(mRootLayerTreeID);
+#endif
 
   Initialize();
 }
