@@ -150,13 +150,16 @@ struct SavedFrame::HashPolicy {
   using SavedFramePtrHasher = MovableCellHasher<SavedFrame*>;
   using JSPrincipalsPtrHasher = PointerHasher<JSPrincipals*>;
 
-  static bool hasHash(const Lookup& l);
+  static bool maybeGetHash(const Lookup& l, HashNumber* hashOut);
   static bool ensureHash(const Lookup& l);
   static HashNumber hash(const Lookup& lookup);
   static bool match(SavedFrame* existing, const Lookup& lookup);
 
   using Key = WeakHeapPtr<SavedFrame*>;
   static void rekey(Key& key, const Key& newKey);
+
+ private:
+  static HashNumber calculateHash(const Lookup& lookup, HashNumber parentHash);
 };
 
 }  // namespace js
@@ -166,8 +169,9 @@ namespace mozilla {
 template <>
 struct FallibleHashMethods<js::SavedFrame::HashPolicy> {
   template <typename Lookup>
-  static bool hasHash(Lookup&& l) {
-    return js::SavedFrame::HashPolicy::hasHash(std::forward<Lookup>(l));
+  static bool maybeGetHash(Lookup&& l, HashNumber* hashOut) {
+    return js::SavedFrame::HashPolicy::maybeGetHash(std::forward<Lookup>(l),
+                                                    hashOut);
   }
   template <typename Lookup>
   static bool ensureHash(Lookup&& l) {

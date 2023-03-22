@@ -1133,8 +1133,8 @@ struct MovableCellHasher<PreBarriered<T>> {
   using Key = PreBarriered<T>;
   using Lookup = T;
 
-  static bool hasHash(const Lookup& l) {
-    return MovableCellHasher<T>::hasHash(l);
+  static bool maybeGetHash(const Lookup& l, HashNumber* hashOut) {
+    return MovableCellHasher<T>::maybeGetHash(l, hashOut);
   }
   static bool ensureHash(const Lookup& l) {
     return MovableCellHasher<T>::ensureHash(l);
@@ -1152,8 +1152,8 @@ struct MovableCellHasher<HeapPtr<T>> {
   using Key = HeapPtr<T>;
   using Lookup = T;
 
-  static bool hasHash(const Lookup& l) {
-    return MovableCellHasher<T>::hasHash(l);
+  static bool maybeGetHash(const Lookup& l, HashNumber* hashOut) {
+    return MovableCellHasher<T>::maybeGetHash(l, hashOut);
   }
   static bool ensureHash(const Lookup& l) {
     return MovableCellHasher<T>::ensureHash(l);
@@ -1171,8 +1171,8 @@ struct MovableCellHasher<WeakHeapPtr<T>> {
   using Key = WeakHeapPtr<T>;
   using Lookup = T;
 
-  static bool hasHash(const Lookup& l) {
-    return MovableCellHasher<T>::hasHash(l);
+  static bool maybeGetHash(const Lookup& l, HashNumber* hashOut) {
+    return MovableCellHasher<T>::maybeGetHash(l, hashOut);
   }
   static bool ensureHash(const Lookup& l) {
     return MovableCellHasher<T>::ensureHash(l);
