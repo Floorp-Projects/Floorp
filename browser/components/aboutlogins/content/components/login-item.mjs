@@ -105,6 +105,12 @@ export default class LoginItem extends HTMLElement {
     this._originDisplayInput.addEventListener("click", this);
     this._revealCheckbox.addEventListener("click", this);
     this._vulnerableAlertLearnMoreLink.addEventListener("click", this);
+
+    this._passwordInput.addEventListener("focus", this);
+    this._passwordInput.addEventListener("blur", this);
+    this._passwordDisplayInput.addEventListener("focus", this);
+    this._passwordDisplayInput.addEventListener("blur", this);
+
     window.addEventListener("AboutLoginsInitialLoginSelected", this);
     window.addEventListener("AboutLoginsLoginSelected", this);
     window.addEventListener("AboutLoginsShowBlankLogin", this);
@@ -322,14 +328,36 @@ export default class LoginItem extends HTMLElement {
         break;
       }
       case "blur": {
+        if (this.dataset.editing && event.target === this._passwordInput) {
+          this._revealCheckbox.checked = false;
+          this._updatePasswordRevealState();
+        }
+
+        if (event.target === this._passwordDisplayInput) {
+          this._revealCheckbox.checked = !!this.dataset.editing;
+          this._updatePasswordRevealState();
+        }
+
         // Add https:// prefix if one was not provided.
         let originValue = this._originInput.value.trim();
         if (!originValue) {
           return;
         }
+
         if (!originValue.match(/:\/\//)) {
           this._originInput.value = "https://" + originValue;
         }
+
+        break;
+      }
+      case "focus": {
+        const { target } = event;
+
+        if (target === this._passwordDisplayInput) {
+          this._revealCheckbox.checked = !!this.dataset.editing;
+          this._updatePasswordRevealState();
+        }
+
         break;
       }
       case "click": {
@@ -867,11 +895,22 @@ export default class LoginItem extends HTMLElement {
     let inputType = checked ? "text" : "password";
     this._passwordInput.type = inputType;
 
+    if (this.dataset.editing) {
+      this._passwordDisplayInput.removeAttribute("tabindex");
+    } else {
+      this._passwordDisplayInput.setAttribute("tabindex", -1);
+    }
+
     // Swap which <input> is in the document depending on whether we need the
     // real .value (which means that the primary password was already entered,
     // if applicable)
-    if (checked || this.dataset.editing) {
+    if (checked || this.dataset.isNewLogin) {
       this._passwordDisplayInput.replaceWith(this._passwordInput);
+
+      // Focus the input if it hasn't been already.
+      if (this.dataset.editing && inputType === "text") {
+        this._passwordInput.focus();
+      }
     } else {
       this._passwordInput.replaceWith(this._passwordDisplayInput);
     }

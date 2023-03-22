@@ -221,19 +221,20 @@ add_task(async function test_login_item() {
         "Password should still be hidden before revealed in edit mode"
       );
 
+      passwordDisplayInput.focus();
+
       let revealCheckbox = loginItem.shadowRoot.querySelector(
         ".reveal-password-checkbox"
       );
-      revealCheckbox.click();
       Assert.ok(
         revealCheckbox.checked,
-        "reveal-checkbox should be checked after clicking"
+        "reveal-checkbox should be checked when password input is focused"
       );
 
       Assert.equal(
         passwordInput.type,
         "text",
-        "Password should be shown as text when revealed in edit mode"
+        "Password should be shown as text when focused"
       );
       let saveChangesButton = loginItem.shadowRoot.querySelector(
         ".save-changes-button"

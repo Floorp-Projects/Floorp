@@ -130,9 +130,17 @@ add_task(async function test_added_login_shows_breach_warning() {
         () => loginItem.dataset.editing == "true",
         "waiting for login-item to enter edit mode"
       );
+
+      // The password display field is in the DOM when password input is unfocused.
+      // To get the password input field, ensure it receives focus.
       let passwordInput = loginItem.shadowRoot.querySelector(
         "input[type='password']"
       );
+      passwordInput.focus();
+      passwordInput = loginItem.shadowRoot.querySelector(
+        "input[name='password']"
+      );
+
       const CHANGED_PASSWORD_VALUE = "changedPassword";
       passwordInput.value = CHANGED_PASSWORD_VALUE;
       let saveChangesButton = loginItem.shadowRoot.querySelector(
@@ -187,9 +195,7 @@ add_task(async function test_added_login_shows_breach_warning() {
         () => loginItem.dataset.editing == "true",
         "waiting for login-item to enter edit mode"
       );
-      passwordInput = loginItem.shadowRoot.querySelector(
-        "input[type='password']"
-      );
+
       passwordInput.value = CHANGED_PASSWORD_VALUE;
       saveChangesButton.click();
 
