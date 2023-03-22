@@ -988,13 +988,13 @@ class Simulator : public DecoderVisitor {
   void PrintWrittenVRegisters();
 
   // As above, but respect LOG_REG and LOG_VREG.
-  void LogWrittenRegisters() {
+  inline void LogWrittenRegisters() {
     if (trace_parameters() & LOG_REGS) PrintWrittenRegisters();
   }
-  void LogWrittenVRegisters() {
+  inline void LogWrittenVRegisters() {
     if (trace_parameters() & LOG_VREGS) PrintWrittenVRegisters();
   }
-  void LogAllWrittenRegisters() {
+  inline void LogAllWrittenRegisters() {
     LogWrittenRegisters();
     LogWrittenVRegisters();
   }
