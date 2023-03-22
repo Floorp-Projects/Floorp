@@ -25,6 +25,20 @@
       win.close();
     });
 
+    add_task(async function runTest2() {
+      let win = window.open("file_load_during_reload.html");
+      await promiseForLoad();
+
+      win.history.replaceState("", "", "?1");
+      win.location.reload();
+      win.history.pushState("", "", "?2");
+      win.location.reload();
+      await promiseForLoad();
+
+      ok(win.location.href.includes("2"), "Should have loaded the second page.");
+      win.close();
+    });
+
   </script>
 </head>
 <body>
