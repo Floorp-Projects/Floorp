@@ -397,25 +397,42 @@
     <string name="reduce_cookie_banner_dialog_body">%1$s nitikïr yeruxutuj pa ruyonil k\'ïy kik\'utuxik taq kuki.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Wakami mani</string>
+    <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Ke\'ewäx taq rutzijol</string>
+    <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
+    <string name="reduce_cookie_banner_dialog_snackbar_text">Xtatz\'ët jub\'a kik\'utuxik kuki</string>
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Ketz\'et jub\'a\' elenel taq kuki</string>
+    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Pa ruyonil titzolïx tzij chi ke ri kitzuwäch taq kuki richin majun yanaqon toq yatok pa k\'amaya\'l. %1$s xkeruxutuj ronojel ri taq kutuxïk.</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Kexutüx elenel taq tzuwäch</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Kech\'utinirisäx kitzijol kuki</string>
+    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">¿La nuya\' q\'ij ri %1$s yeruxutuj ri taq kik\'utuxik kik\'amoj kuki?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Tiya\' q\'ij</string>
+
+    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
+    <string name="reduce_cookie_banner_dialog_change_setting_button">Tiya\' q\'ij</string>
 
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
     <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">Titzij</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Tichup</string>
+    <!-- Summary of https only preference if https only is set to on in all tabs -->
+    <string name="preferences_https_only_on_all">Pa ronojel ruwi\'</string>
     <!-- Summary of https only preference if https only is set to on in private tabs only -->
     <string name="preferences_https_only_on_private">Pa jun ichinan ruwi\'</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">Tetamäx ch\'aqa\' chik</string>
     <!-- Option for the https only setting -->
     <string name="preferences_https_only_in_all_tabs">Titzij pa ronojel ruwi\'</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">Ketzij xa xe\' pan ichinan taq ruwi\'</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">Man k\'o ta ri jikil ruxaq </string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
     <string name="errorpage_httpsonly_message_title">Rik\'in jub\'a\' chi ri ajk\'amaya\'l ruxaq xa man nuk\'äm ta ri\' rik\'in ri HTTPS.</string>
     <!-- Preference for accessibility -->

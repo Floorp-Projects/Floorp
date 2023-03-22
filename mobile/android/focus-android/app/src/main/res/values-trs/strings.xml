@@ -119,8 +119,21 @@
 
 
     <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">Nana\'uì\' riña hua huìi</string>
+         Focus is hard coded since we can't use variables in this context.
+         Do not translate or transliterate Focus.-->
+    <string name="text_selection_search_action_focus">Nānà’huì’ riña Focus</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+             Klar is hard coded since we can't use variables in this context.
+             Do not translate or transliterate Klar.-->
+    <string name="text_selection_search_action_klar">Nānà’huì’ riña Klar</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+            Focus Beta is hard coded since we can't use variables in this context.
+            Do not translate or transliterate Focus Beta.-->
+    <string name="text_selection_search_action_focus_beta">Nānà’huì’ riña Focus Beta</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+          Focus Nightly is hard coded since we can't use variables in this context.
+          Do not translate or transliterate Focus Nightly.-->
+    <string name="text_selection_search_action_focus_nightly">Nānà’huì’ riña Focus Nightly</string>
 
     <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
          Argument 2 is the url for the learn-more link. -->
@@ -362,10 +375,6 @@
     <!-- Explanation text above the list of search engines-->
     <string name="preference_select_preferred_engine">Nāguī sa rīñā ruhuât nānà’uì’t:</string>
 
-    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
-     a user first launches the app. -->
-    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">Digan ma sa rugujñu\'unj riña pajina ayi\'i\'</string>
-
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Nutò\' sa nana\'uì\'</string>
 
@@ -492,15 +501,21 @@
 
 
 
-  <!-- Onboarding: Title -->
+  <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">Nārán</string>
+
+    <!-- New Onboarding flow first screen title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">Guruhuât gunumânt riña %1$s!</string>
+    <string name="onboarding_first_screen_title">Guruhuât gunumânt riña %1$s</string>
 
-    <!-- Onboarding: Description -->
-    <string name="onboarding_description">Gāchē nu hui nukuaj doj nda garan’ ruhuât</string>
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">Hìo, huā hûij. Nitāj sa dukuu ‘na’ riñanj.</string>
 
-    <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">Riña nitāj si rugui’ inkognito</string>
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">Gāyi\'ì</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">Si gi\'iaj guendât</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Nagi\'iaj nukuaj riña gache nun \'ngorïnt</string>
@@ -652,6 +667,20 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Sa huaj ñaan</string>
 
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">Sa rikî nì\'iaj sîtio</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is not disabled. -->
+    <string name="preferences_cookie_banner_summary_on">Nāchrūn</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is disabled. -->
+    <string name="preferences_cookie_banner_summary_off">Dūnâ\’àj</string>
+
+    <!-- CFR for Cookie Banner (Banner Info Message). This text should be the same as the settings text from "cfr_for_cookie_banner". The text should be underlined and should redirect the user to the cookie banner settings screen. -->
+    <string name="cfr_for_cookie_banner_underline_settings" moz:RemovedIn="111" tools:ignore="UnusedResources">nāgi\'iô\'</string>
+    <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
+    <string name="cfr_cookie_banner_link">nāgi\'iô\'</string>
+
     <!-- Preference for studies -->
     <string name="preference_studies">Nej ēstûdio</string>
 
@@ -672,17 +701,6 @@
 
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Guyun sa kïj hua nga USB/Wi-Fi</string>
-
-    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     %1$s is replaced with the app name -->
-    <string moz:removedIn="103" name="biometric_auth_title">Dugi\'iaj sun\' %1$s</string>
-
-    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string moz:removedIn="103" name="biometric_auth_description">Guta\' ra\'àt da\' ga\'anj ne\'ñàan</string>
-
-    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string moz:removedIn="103" name="biometric_auth_new_session">Sesiôn nakàa</string>
 
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
@@ -821,6 +839,13 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Nādure\'</string>
 
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">Nāchrūn a\'ngô si yūgui</string>
+    <!-- Text for the dialog title for renaming a top site -->
+    <string name="rename_top_site">Nāchrūn a\'ngô si yūgui</string>
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">Si yūgui aksêso dīrêkto</string>
+
     <!-- Theme Preferences -->
     <!-- Preference category for changing default theme to dark or light mode -->
     <string name="preferences_theme">Têma</string>
@@ -832,5 +857,7 @@
     <string name="preference_auto_battery_theme">Nanûn man da\’ dūguminj batería </string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Gānikò\' si tema aga\' dan</string>
+
+     <!-- Promote SearchWidget Dialog -->
 
     </resources>

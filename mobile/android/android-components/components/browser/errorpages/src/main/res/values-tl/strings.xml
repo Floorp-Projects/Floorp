@@ -50,7 +50,7 @@
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Ang Website na ito ay na ngangailangan ng sekyur na koneksyon</string>
 
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
-    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Pumaroon...</string>
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Pumaroon…</string>
 
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Bumalik</string>

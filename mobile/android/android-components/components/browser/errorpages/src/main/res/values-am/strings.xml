@@ -53,6 +53,9 @@
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">ከሰርቨር ያልተጠበቀ ምላሽ</string>
 
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">ገጹ በትክክል እየተዘዋወረ አይደለም</string>
+
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">ከመስመር ውጭ ሁነታ</string>
 

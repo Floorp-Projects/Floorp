@@ -484,6 +484,9 @@
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
     <string name="onboarding_first_screen_title">A nikitsau nu %1$s</string>
 
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">Ki tsaà</string>
+
     <!-- Onboarding second screen: Title -->
     <!-- %1$s will be replaced by the app short name(Focus) -->
     <string name="onboarding_second_screen_title">%1$s kue inui tsi inka la nduku</string>
@@ -667,6 +670,9 @@
 
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site. -->
     <string name="cookie_banner_exception_panel_title_state_on_for_site">¿Habilitar reducción de mensajes de cookies para %1$s?</string>
+
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site. -->
+    <string name="cookie_banner_exception_panel_title_state_off_for_site">¿Habilitar reducción de mensajes de cookies para %1$s?</string>
 
     <!-- CFR for Cookie Banner (Banner Info Message). This text should be the same as the settings text from "cfr_for_cookie_banner". The text should be underlined and should redirect the user to the cookie banner settings screen. -->
     <string name="cfr_for_cookie_banner_underline_settings" moz:RemovedIn="111" tools:ignore="UnusedResources">Ndasama</string>
