@@ -304,7 +304,9 @@ add_task(async function test_screenshot() {
   EventUtils.synthesizeKey("KEY_Enter", {}, window);
   await TestUtils.waitForCondition(
     isScreenshotInitialized,
-    "Screenshot component is active"
+    "Screenshot component is active",
+    200,
+    100
   );
 
   info("Press Escape to exit screenshot mode");
