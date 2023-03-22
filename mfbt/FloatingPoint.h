@@ -155,19 +155,6 @@ struct FloatingPoint final : private detail::FloatingPointTrait<T> {
                 "all bits accounted for");
 };
 
-/** Determines whether a float/double is not NaN or infinite. */
-template <typename T>
-static MOZ_ALWAYS_INLINE bool IsFinite(T aValue) {
-  /*
-   * NaN and Infinities are the only non-finite floats/doubles, and both have
-   * all exponent bits set to 1.
-   */
-  typedef FloatingPoint<T> Traits;
-  typedef typename Traits::Bits Bits;
-  Bits bits = BitwiseCast<Bits>(aValue);
-  return (bits & Traits::kExponentBits) != Traits::kExponentBits;
-}
-
 /**
  * Determines whether a float/double is negative or -0.  It is an error
  * to call this method on a float/double which is NaN.
