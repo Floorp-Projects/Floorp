@@ -21,6 +21,7 @@
 #include "nsILoadContext.h"
 #include "nsIPrefService.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ReferrerInfo.h"
 #include "DesktopBackgroundImage.h"
 
 #include <Carbon/Carbon.h>
