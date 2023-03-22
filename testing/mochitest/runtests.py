@@ -1159,6 +1159,9 @@ class MochitestDesktop(object):
                 options.xOriginTests = True
             if options.xOriginTests:
                 self.urlOpts.append("xOriginTests=true")
+            if options.comparePrefs:
+                self.urlOpts.append("comparePrefs=true")
+            self.urlOpts.append("ignorePrefsFile=ignorePrefs.json")
 
     def normflavor(self, flavor):
         """
@@ -1951,6 +1954,12 @@ toolbar#nav-bar {
         if options.runFailures:
             d["runFailures"] = True
         content = json.dumps(d)
+
+        shutil.copy(
+            os.path.join(SCRIPT_DIR, "ignorePrefs.json"),
+            os.path.join(options.profilePath, "ignorePrefs.json"),
+        )
+        d["ignorePrefsFile"] = "ignorePrefs.json"
 
         with open(os.path.join(options.profilePath, "testConfig.js"), "w") as config:
             config.write(content)
@@ -3147,6 +3156,7 @@ toolbar#nav-bar {
             options.keep_open = False
             options.runUntilFailure = True
             options.profilePath = None
+            options.comparePrefs = True
             result = self.runTests(options)
             result = result or (-2 if self.countfail > 0 else 0)
             self.message_logger.finish()
