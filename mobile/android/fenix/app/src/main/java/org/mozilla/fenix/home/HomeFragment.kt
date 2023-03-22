@@ -21,7 +21,6 @@ import android.widget.PopupWindow
 import androidx.annotation.VisibleForTesting
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -42,17 +41,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import mozilla.components.browser.menu.view.MenuButton
-import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
-import mozilla.components.browser.state.state.searchEngines
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.menu.candidate.DrawableMenuIcon
-import mozilla.components.concept.menu.candidate.TextMenuCandidate
 import mozilla.components.concept.storage.FrecencyThresholdOption
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
@@ -66,12 +61,10 @@ import mozilla.components.lib.state.ext.consumeFlow
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
-import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.GleanMetrics.HomeScreen
 import org.mozilla.fenix.GleanMetrics.PrivateBrowsingShortcutCfr
-import org.mozilla.fenix.GleanMetrics.UnifiedSearch
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.addons.showSnackBar
@@ -111,6 +104,7 @@ import org.mozilla.fenix.home.sessioncontrol.SessionControlView
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionHeaderViewHolder
 import org.mozilla.fenix.home.toolbar.DefaultToolbarController
 import org.mozilla.fenix.home.toolbar.SearchSelectorBinding
+import org.mozilla.fenix.home.toolbar.SearchSelectorMenuBinding
 import org.mozilla.fenix.home.topsites.DefaultTopSitesView
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.onboarding.FenixOnboarding
@@ -211,6 +205,7 @@ class HomeFragment : Fragment() {
     private val recentBookmarksFeature = ViewBoundFeatureWrapper<RecentBookmarksFeature>()
     private val historyMetadataFeature = ViewBoundFeatureWrapper<RecentVisitsFeature>()
     private val searchSelectorBinding = ViewBoundFeatureWrapper<SearchSelectorBinding>()
+    private val searchSelectorMenuBinding = ViewBoundFeatureWrapper<SearchSelectorMenuBinding>()
 
     @VisibleForTesting
     internal var getMenuButton: () -> MenuButton? = { binding.menuButton }
@@ -616,13 +611,16 @@ class HomeFragment : Fragment() {
             view = binding.root,
         )
 
-        consumeFlow(requireComponents.core.store) { flow ->
-            flow.map { state -> state.search }
-                .ifChanged()
-                .collect { search ->
-                    updateSearchSelectorMenu(search.searchEngines)
-                }
-        }
+        searchSelectorMenuBinding.set(
+            feature = SearchSelectorMenuBinding(
+                context = view.context,
+                interactor = sessionControlInteractor,
+                searchSelectorMenu = searchSelectorMenu,
+                browserStore = requireComponents.core.store,
+            ),
+            owner = viewLifecycleOwner,
+            view = view,
+        )
 
         // DO NOT MOVE ANYTHING BELOW THIS addMarker CALL!
         requireComponents.core.engine.profiler?.addMarker(
@@ -630,27 +628,6 @@ class HomeFragment : Fragment() {
             profilerStartTime,
             "HomeFragment.onViewCreated",
         )
-    }
-
-    private fun updateSearchSelectorMenu(searchEngines: List<SearchEngine>) {
-        val searchEngineList = searchEngines
-            .map {
-                TextMenuCandidate(
-                    text = it.name,
-                    start = DrawableMenuIcon(
-                        drawable = it.icon.toDrawable(resources),
-                        tint = if (it.type == SearchEngine.Type.APPLICATION) {
-                            requireContext().getColorFromAttr(R.attr.textPrimary)
-                        } else {
-                            null
-                        },
-                    ),
-                ) {
-                    sessionControlInteractor.onMenuItemTapped(SearchSelectorMenu.Item.SearchEngine(it))
-                }
-            }
-
-        searchSelectorMenu.menuController.submitList(searchSelectorMenu.menuItems(searchEngineList))
     }
 
     /**
