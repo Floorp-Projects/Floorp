@@ -155,8 +155,13 @@ struct MovableCellHasher<ObjectEntry> {
     *hashOut &= 0x1;
     return true;
   }
-  static bool ensureHash(const Lookup& l) {
-    return MovableCellHasher<JSObject*>::ensureHash(l);
+  static bool ensureHash(const Lookup& l, HashNumber* hashOut) {
+    if (!MovableCellHasher<JSObject*>::ensureHash(l, hashOut)) {
+      return false;
+    }
+    // Reduce hash code to single bit to generate hash collisions.
+    *hashOut &= 0x1;
+    return true;
   }
   static HashNumber hash(const Lookup& l) {
     // Reduce hash code to single bit to generate hash collisions.
@@ -205,8 +210,12 @@ struct MovableCellHasher<NumberAndObjectEntry> {
     *hashOut ^= l.number;
     return true;
   }
-  static bool ensureHash(const Lookup& l) {
-    return MovableCellHasher<JSObject*>::ensureHash(l.obj);
+  static bool ensureHash(const Lookup& l, HashNumber* hashOut) {
+    if (!MovableCellHasher<JSObject*>::ensureHash(l.obj, hashOut)) {
+      return false;
+    }
+    *hashOut ^= l.number;
+    return true;
   }
   static HashNumber hash(const Lookup& l) {
     return MovableCellHasher<HeapPtr<JSObject*>>::hash(l.obj) ^ l.number;

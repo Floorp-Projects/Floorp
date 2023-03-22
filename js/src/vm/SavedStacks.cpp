@@ -284,8 +284,13 @@ bool SavedFrame::HashPolicy::maybeGetHash(const Lookup& l,
 }
 
 /* static */
-bool SavedFrame::HashPolicy::ensureHash(const Lookup& l) {
-  return SavedFramePtrHasher::ensureHash(l.parent);
+bool SavedFrame::HashPolicy::ensureHash(const Lookup& l, HashNumber* hashOut) {
+  HashNumber parentHash;
+  if (!SavedFramePtrHasher::ensureHash(l.parent, &parentHash)) {
+    return false;
+  }
+  *hashOut = calculateHash(l, parentHash);
+  return true;
 }
 
 /* static */

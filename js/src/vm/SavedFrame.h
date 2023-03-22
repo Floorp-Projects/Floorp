@@ -151,7 +151,7 @@ struct SavedFrame::HashPolicy {
   using JSPrincipalsPtrHasher = PointerHasher<JSPrincipals*>;
 
   static bool maybeGetHash(const Lookup& l, HashNumber* hashOut);
-  static bool ensureHash(const Lookup& l);
+  static bool ensureHash(const Lookup& l, HashNumber* hashOut);
   static HashNumber hash(const Lookup& lookup);
   static bool match(SavedFrame* existing, const Lookup& lookup);
 
@@ -174,8 +174,9 @@ struct FallibleHashMethods<js::SavedFrame::HashPolicy> {
                                                     hashOut);
   }
   template <typename Lookup>
-  static bool ensureHash(Lookup&& l) {
-    return js::SavedFrame::HashPolicy::ensureHash(std::forward<Lookup>(l));
+  static bool ensureHash(Lookup&& l, HashNumber* hashOut) {
+    return js::SavedFrame::HashPolicy::ensureHash(std::forward<Lookup>(l),
+                                                  hashOut);
   }
 };
 
