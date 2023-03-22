@@ -146,12 +146,8 @@ void SpeechSynthesis::AdvanceQueue() {
 
   nsAutoString docLang;
   nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
-  Document* doc = window ? window->GetExtantDoc() : nullptr;
-
-  if (doc) {
-    Element* elm = doc->GetHtmlElement();
-
-    if (elm) {
+  if (Document* doc = window ? window->GetExtantDoc() : nullptr) {
+    if (Element* elm = doc->GetHtmlElement()) {
       elm->GetLang(docLang);
     }
   }
