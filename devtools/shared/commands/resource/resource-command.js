@@ -1283,48 +1283,6 @@ loader.lazyRequireGetter(
   "resource://devtools/shared/commands/resource/legacy-listeners/root-node.js"
 );
 
-// @backward-compat { version 111 } The WebSocket legacy listener can be removed
-// once 111 is released.
-loader.lazyRequireGetter(
-  LegacyListeners,
-  ResourceCommand.TYPES.WEBSOCKET,
-  "resource://devtools/shared/commands/resource/legacy-listeners/websocket.js"
-);
-
-// @backward-compat { version 111 } All storage legacy listeners can be removed once 111 is released.
-// This codepath was only used when connecting to older servers.
-loader.lazyRequireGetter(
-  LegacyListeners,
-  ResourceCommand.TYPES.COOKIE,
-  "resource://devtools/shared/commands/resource/legacy-listeners/cookie.js"
-);
-loader.lazyRequireGetter(
-  LegacyListeners,
-  ResourceCommand.TYPES.CACHE_STORAGE,
-  "resource://devtools/shared/commands/resource/legacy-listeners/cache-storage.js"
-);
-loader.lazyRequireGetter(
-  LegacyListeners,
-  ResourceCommand.TYPES.LOCAL_STORAGE,
-  "resource://devtools/shared/commands/resource/legacy-listeners/local-storage.js"
-);
-loader.lazyRequireGetter(
-  LegacyListeners,
-  ResourceCommand.TYPES.SESSION_STORAGE,
-  "resource://devtools/shared/commands/resource/legacy-listeners/session-storage.js"
-);
-loader.lazyRequireGetter(
-  LegacyListeners,
-  ResourceCommand.TYPES.EXTENSION_STORAGE,
-  "resource://devtools/shared/commands/resource/legacy-listeners/extension-storage.js"
-);
-loader.lazyRequireGetter(
-  LegacyListeners,
-  ResourceCommand.TYPES.INDEXED_DB,
-  "resource://devtools/shared/commands/resource/legacy-listeners/indexed-db.js"
-);
-// --- end of storage legacy listeners
-
 loader.lazyRequireGetter(
   LegacyListeners,
   ResourceCommand.TYPES.SOURCE,
@@ -1335,13 +1293,7 @@ loader.lazyRequireGetter(
   ResourceCommand.TYPES.THREAD_STATE,
   "resource://devtools/shared/commands/resource/legacy-listeners/thread-states.js"
 );
-// @backward-compat { version 111 } The serverSentEvent legacy listener can be
-// removed once 111 is released.
-loader.lazyRequireGetter(
-  LegacyListeners,
-  ResourceCommand.TYPES.SERVER_SENT_EVENT,
-  "resource://devtools/shared/commands/resource/legacy-listeners/server-sent-events.js"
-);
+
 loader.lazyRequireGetter(
   LegacyListeners,
   ResourceCommand.TYPES.REFLOW,
