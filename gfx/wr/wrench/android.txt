@@ -25,7 +25,7 @@ Compiling and running:
         cd wrench
         export ANDROID_SDK_ROOT=$HOME/.mozbuild/android-sdk-linux # exact path may vary
         export ANDROID_NDK_ROOT=$HOME/.mozbuild/android-ndk-r21d  # exact path may vary
-        cargo apk build
+        cargo apk build --lib
 
     Install the APK:
         adb install -r ../target/debug/apk/wrench.apk
@@ -57,7 +57,7 @@ Release mode:
         cd wrench
         export ANDROID_SDK_ROOT=$HOME/.mozbuild/android-sdk-linux # exact path may vary
         export ANDROID_NDK_ROOT=$HOME/.mozbuild/android-ndk-r21d  # exact path may vary
-        cargo apk build --release
+        cargo apk build --lib --release
 
     Now the APK at ../target/release/apk/wrench.apk
     should be signed and installable (you may need to uninstall the debug APK first if you
