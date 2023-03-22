@@ -458,6 +458,7 @@ browser.jar:
 
 # Floorp Fluenial 
   skin/classic/browser/floorplegacy/test_legacy.css           (designs/floorp-legacy/test_legacy.css)
+  skin/classic/browser/floorplegacy/test_legacy_multitab.css  (designs/floorp-legacy/test_legacy_multitab.css)
 
 # New tab background images
   skin/classic/browser/newtabbg-0.webp                            　 (newtabbg/newtabbg-0.webp)
