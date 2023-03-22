@@ -533,11 +533,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   void fixupAfterMovingGC();
   void fixupScriptMapsAfterMovingGC(JSTracer* trc);
 
-  static js::HashNumber UniqueIdToHash(uint64_t uid);
-
-  // Creates a HashNumber based on getUniqueId. Returns false on OOM.
-  [[nodiscard]] bool getHashCode(js::gc::Cell* cell, js::HashNumber* hashp);
-
   // Gets an existing UID in |uidp| if one exists.
   [[nodiscard]] bool maybeGetUniqueId(js::gc::Cell* cell, uint64_t* uidp);
 

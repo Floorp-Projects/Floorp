@@ -11,17 +11,8 @@
 
 #include "vm/Runtime.h"
 
-/* static */ inline js::HashNumber JS::Zone::UniqueIdToHash(uint64_t uid) {
+static inline js::HashNumber UniqueIdToHash(uint64_t uid) {
   return mozilla::HashGeneric(uid);
-}
-
-inline bool JS::Zone::getHashCode(js::gc::Cell* cell, js::HashNumber* hashp) {
-  uint64_t uid;
-  if (!getOrCreateUniqueId(cell, &uid)) {
-    return false;
-  }
-  *hashp = UniqueIdToHash(uid);
-  return true;
 }
 
 inline bool JS::Zone::maybeGetHashCode(js::gc::Cell* cell,
