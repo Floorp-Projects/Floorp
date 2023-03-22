@@ -206,7 +206,7 @@ void SVGMPathElement::UpdateHrefTarget(nsIContent* aParent,
     // for a call to GetComposedDoc(), and |this| might not have a current
     // document yet (if our caller is BindToTree).
     nsCOMPtr<nsIReferrerInfo> referrerInfo =
-        ReferrerInfo::CreateForSVGResources(OwnerDoc());
+        ReferrerInfo::CreateForInternalCSSAndSVGResources(OwnerDoc());
 
     mPathTracker.ResetToURIFragmentID(aParent, targetURI, referrerInfo);
   } else {

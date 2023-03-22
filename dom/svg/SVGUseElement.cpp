@@ -513,8 +513,7 @@ void SVGUseElement::LookupHref() {
   nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), href,
                                             GetComposedDoc(), baseURI);
   nsCOMPtr<nsIReferrerInfo> referrerInfo =
-      ReferrerInfo::CreateForSVGResources(OwnerDoc());
-
+      ReferrerInfo::CreateForInternalCSSAndSVGResources(OwnerDoc());
   mReferencedElementTracker.ResetToURIFragmentID(this, targetURI, referrerInfo);
 }
 

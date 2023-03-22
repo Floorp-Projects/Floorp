@@ -1766,7 +1766,8 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
                                    SRIMetadata{});
     sheet->SetURIs(sheetURI, originalURI, baseURI);
     nsCOMPtr<nsIReferrerInfo> referrerInfo =
-        ReferrerInfo::CreateForInternalCSSResources(aInfo.mContent->OwnerDoc());
+        ReferrerInfo::CreateForInternalCSSAndSVGResources(
+            aInfo.mContent->OwnerDoc());
     sheet->SetReferrerInfo(referrerInfo);
 
     nsIPrincipal* sheetPrincipal = principal;
