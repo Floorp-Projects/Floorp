@@ -831,24 +831,4 @@ NS_IMETHODIMP ObliviousHttpChannel::CloneUploadStream(
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP ObliviousHttpChannel::SetClassicScriptHintCharset(
-    const nsAString& aClassicScriptHintCharset) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP ObliviousHttpChannel::GetClassicScriptHintCharset(
-    nsAString& aClassicScriptHintCharset) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP ObliviousHttpChannel::SetDocumentCharacterSet(
-    const nsAString& aDocumentCharacterSet) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP ObliviousHttpChannel::GetDocumentCharacterSet(
-    nsAString& aDocumenharacterSet) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 }  // namespace mozilla::net

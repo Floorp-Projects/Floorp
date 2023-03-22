@@ -348,8 +348,6 @@ struct HttpChannelOpenArgs
   bool                        preferCacheLoadOverBypass;
   bool                        forceMainDocumentChannel;
   uint8_t                     redirectionLimit;
-  nsString                    classicScriptHintCharset;
-  nsString                    documentCharacterSet;
 };
 
 struct HttpChannelConnectArgs

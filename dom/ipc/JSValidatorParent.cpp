@@ -9,8 +9,6 @@
 #include "mozilla/dom/JSValidatorUtils.h"
 #include "mozilla/dom/JSOracleParent.h"
 #include "mozilla/RefPtr.h"
-#include "nsCOMPtr.h"
-#include "HttpBaseChannel.h"
 
 namespace mozilla::dom {
 /* static */
@@ -72,29 +70,14 @@ void JSValidatorParent::OnDataAvailable(const nsACString& aData) {
       });
 }
 
-void JSValidatorParent::OnStopRequest(nsresult aResult, nsIRequest& aRequest) {
+void JSValidatorParent::OnStopRequest(nsresult aResult) {
   JSOracleParent::WithJSOracle(
-      [self = RefPtr{this}, aResult,
-       request = nsCOMPtr{&aRequest}](const auto* aParent) {
+      [self = RefPtr{this}, aResult](const auto* aParent) {
         if (!aParent) {
           return;
         }
-        if (self->CanSend() && request) {
-          nsCOMPtr<net::HttpBaseChannel> httpBaseChannel =
-              do_QueryInterface(request);
-          MOZ_ASSERT(httpBaseChannel);
-
-          nsAutoCString contentCharset;
-          Unused << httpBaseChannel->GetContentCharset(contentCharset);
-
-          nsAutoString hintCharset;
-          Unused << httpBaseChannel->GetClassicScriptHintCharset(hintCharset);
-
-          nsAutoString documentCharset;
-          Unused << httpBaseChannel->GetDocumentCharacterSet(documentCharset);
-
-          Unused << self->SendOnStopRequest(aResult, contentCharset,
-                                            hintCharset, documentCharset);
+        if (self->CanSend()) {
+          Unused << self->SendOnStopRequest(aResult);
         }
       });
 }
