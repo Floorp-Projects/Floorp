@@ -25,7 +25,7 @@ static void getCurrentValueCB(AtkValue* obj, GValue* value) {
 
   memset(value, 0, sizeof(GValue));
   double accValue = acc->CurValue();
-  if (IsNaN(accValue)) return;
+  if (std::isnan(accValue)) return;
 
   g_value_init(value, G_TYPE_DOUBLE);
   g_value_set_double(value, accValue);
@@ -39,7 +39,7 @@ static void getMaximumValueCB(AtkValue* obj, GValue* value) {
 
   memset(value, 0, sizeof(GValue));
   double accValue = acc->MaxValue();
-  if (IsNaN(accValue)) return;
+  if (std::isnan(accValue)) return;
 
   g_value_init(value, G_TYPE_DOUBLE);
   g_value_set_double(value, accValue);
@@ -53,7 +53,7 @@ static void getMinimumValueCB(AtkValue* obj, GValue* value) {
 
   memset(value, 0, sizeof(GValue));
   double accValue = acc->MinValue();
-  if (IsNaN(accValue)) return;
+  if (std::isnan(accValue)) return;
 
   g_value_init(value, G_TYPE_DOUBLE);
   g_value_set_double(value, accValue);
@@ -67,7 +67,7 @@ static void getMinimumIncrementCB(AtkValue* obj, GValue* minimumIncrement) {
 
   memset(minimumIncrement, 0, sizeof(GValue));
   double accValue = acc->Step();
-  if (IsNaN(accValue)) {
+  if (std::isnan(accValue)) {
     accValue = 0;  // zero if the minimum increment is undefined
   }
 

@@ -531,7 +531,7 @@ nsresult txEXSLTFunctionCall::evaluate(txIEvalContext* aContext,
         nsAutoString str;
         txXPathNodeUtils::appendNodeValue(nodes->get(i), str);
         double val = txDouble::toDouble(str);
-        if (mozilla::IsNaN(val)) {
+        if (std::isnan(val)) {
           res = UnspecifiedNaN<double>();
           break;
         }
@@ -568,7 +568,7 @@ nsresult txEXSLTFunctionCall::evaluate(txIEvalContext* aContext,
         const txXPathNode& node = nodes->get(i);
         txXPathNodeUtils::appendNodeValue(node, str);
         double val = txDouble::toDouble(str);
-        if (mozilla::IsNaN(val)) {
+        if (std::isnan(val)) {
           resultSet->clear();
           break;
         }

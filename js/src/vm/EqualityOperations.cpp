@@ -254,7 +254,7 @@ static inline bool IsNegativeZero(const JS::Value& v) {
 }
 
 static inline bool IsNaN(const JS::Value& v) {
-  return v.isDouble() && mozilla::IsNaN(v.toDouble());
+  return v.isDouble() && std::isnan(v.toDouble());
 }
 
 bool js::SameValue(JSContext* cx, JS::Handle<JS::Value> v1,

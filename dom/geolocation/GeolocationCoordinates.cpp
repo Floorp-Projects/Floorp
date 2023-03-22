@@ -47,7 +47,7 @@ JSObject* GeolocationCoordinates::WrapObject(
     double value;                                              \
     mCoords->Get##name(&value);                                \
     Nullable<double> rv;                                       \
-    if (!IsNaN(value)) {                                       \
+    if (!std::isnan(value)) {                                  \
       rv.SetValue(value);                                      \
     }                                                          \
     return rv;                                                 \
