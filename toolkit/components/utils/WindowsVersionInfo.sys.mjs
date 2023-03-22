@@ -2,13 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["WindowsVersionInfo"];
-
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
 const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
 
 const BYTE = ctypes.uint8_t;
@@ -17,7 +12,7 @@ const DWORD = ctypes.uint32_t;
 const WCHAR = ctypes.char16_t;
 const BOOL = ctypes.int;
 
-var WindowsVersionInfo = {
+export var WindowsVersionInfo = {
   UNKNOWN_VERSION_INFO: {
     servicePackMajor: null,
     servicePackMinor: null,

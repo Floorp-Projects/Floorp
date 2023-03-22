@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["WindowsInstallsInfo"];
-
-var WindowsInstallsInfo = {
+export var WindowsInstallsInfo = {
   /**
    * Retrieve install paths of this app, based on the values in the TaskBarIDs registry key.
    *

@@ -13,11 +13,7 @@
  * - The boolean type accepts (and casts) 0 and 1 as valid values.
  */
 
-"use strict";
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -33,15 +29,13 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   });
 });
 
-var EXPORTED_SYMBOLS = ["JsonSchemaValidator"];
-
 /**
  * To validate a single value, use the static `JsonSchemaValidator.validate`
  * method.  If you need to validate multiple values, you instead might want to
  * make a JsonSchemaValidator instance with the options you need and then call
  * the `validate` instance method.
  */
-class JsonSchemaValidator {
+export class JsonSchemaValidator {
   /**
    * Validates a value against a schema.
    *

@@ -2,15 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["Sampling"];
-
 const hashBits = 48;
 const hashLength = hashBits / 4; // each hexadecimal digit represents 4 bits
 const hashMultiplier = Math.pow(2, hashBits) - 1;
 
-var Sampling = {
+export var Sampling = {
   /**
    * Map from the range [0, 1] to [0, 2^48].
    * @param  {number} frac A float from 0.0 to 1.0.
