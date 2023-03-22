@@ -3354,6 +3354,11 @@ void LIRGenerator::visitWasmTrap(MWasmTrap* ins) {
   add(new (alloc()) LWasmTrap, ins);
 }
 
+void LIRGenerator::visitWasmTrapIfNull(MWasmTrapIfNull* ins) {
+  auto* lir = new (alloc()) LWasmTrapIfNull(useRegister(ins->value()));
+  add(lir, ins);
+}
+
 void LIRGenerator::visitWasmReinterpret(MWasmReinterpret* ins) {
   if (ins->type() == MIRType::Int64) {
     defineInt64(new (alloc())
