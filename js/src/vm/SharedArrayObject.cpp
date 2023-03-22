@@ -8,14 +8,18 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/TaggedAnonymousMemory.h"
 
 #include "gc/GCContext.h"
+#include "gc/Memory.h"
 #include "jit/AtomicOperations.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertySpec.h"
 #include "js/SharedArrayBuffer.h"
 #include "util/Memory.h"
+#include "util/WindowsWrapper.h"
 #include "vm/SharedMem.h"
+#include "wasm/WasmConstants.h"
 #include "wasm/WasmMemory.h"
 
 #include "vm/ArrayBufferObject-inl.h"
@@ -29,6 +33,7 @@ using mozilla::Nothing;
 using mozilla::Some;
 
 using namespace js;
+using namespace js::jit;
 
 static size_t WasmSharedArrayAccessibleSize(size_t length) {
   return AlignBytes(length, gc::SystemPageSize());
@@ -167,6 +172,67 @@ bool WasmSharedArrayRawBuffer::wasmGrowToPagesInPlace(const Lock&,
   length_ = newLength;
 
   return true;
+}
+
+void WasmSharedArrayRawBuffer::discard(size_t byteOffset, size_t byteLen) {
+  SharedMem<uint8_t*> memBase = dataPointerShared();
+
+  // The caller is responsible for ensuring these conditions are met; see this
+  // function's comment in SharedArrayObject.h.
+  MOZ_ASSERT(byteOffset % wasm::PageSize == 0);
+  MOZ_ASSERT(byteLen % wasm::PageSize == 0);
+  MOZ_ASSERT(wasm::MemoryBoundsCheck(uint64_t(byteOffset), uint64_t(byteLen),
+                                     volatileByteLength()));
+
+  // Discarding zero bytes "succeeds" with no effect.
+  if (byteLen == 0) {
+    return;
+  }
+
+  SharedMem<uint8_t*> addr = memBase + uintptr_t(byteOffset);
+
+  // On POSIX-ish platforms, we discard memory by overwriting previously-mapped
+  // pages with freshly-mapped pages (which are all zeroed). The operating
+  // system recognizes this and decreases the process RSS, and eventually
+  // collects the abandoned physical pages.
+  //
+  // On Windows, committing over previously-committed pages has no effect. We
+  // could decommit and recommit, but this doesn't work for shared memories
+  // since other threads could access decommitted memory - causing a trap.
+  // Instead, we simply zero memory (memset 0), and then VirtualUnlock(), which
+  // for Historical Reasons immediately removes the pages from the working set.
+  // And then, because the pages were zeroed, Windows will actually reclaim the
+  // memory entirely instead of paging it out to disk. Naturally this behavior
+  // is not officially documented, but a Raymond Chen blog post is basically as
+  // good as MSDN, right?
+  //
+  // https://devblogs.microsoft.com/oldnewthing/20170113-00/?p=95185
+
+#ifdef XP_WIN
+  // Discarding the entire region at once causes us to page the entire region
+  // into the working set, only to throw it out again. This can be actually
+  // disastrous when discarding already-discarded memory. To mitigate this, we
+  // discard a chunk of memory at a time - this comes at a small performance
+  // cost from syscalls and potentially less-optimal memsets.
+  size_t numPages = byteLen / wasm::PageSize;
+  for (size_t i = 0; i < numPages; i++) {
+    AtomicOperations::memsetSafeWhenRacy(addr + (i * wasm::PageSize), 0,
+                                         wasm::PageSize);
+    DebugOnly<bool> result =
+        VirtualUnlock(addr.unwrap() + (i * wasm::PageSize), wasm::PageSize);
+    MOZ_ASSERT(!result);  // this always "fails" when unlocking unlocked
+                          // memory...which is the only case we care about
+  }
+#elif defined(__wasi__)
+  AtomicOperations::memsetSafeWhenRacy(addr, 0, byteLen);
+#else  // !XP_WIN
+  void* data = MozTaggedAnonymousMmap(
+      addr.unwrap(), byteLen, PROT_READ | PROT_WRITE,
+      MAP_PRIVATE | MAP_ANON | MAP_FIXED, -1, 0, "wasm-reserved");
+  if (data == MAP_FAILED) {
+    MOZ_CRASH("failed to discard wasm memory; memory mappings may be broken");
+  }
+#endif
 }
 
 bool SharedArrayRawBuffer::addReference() {
@@ -415,6 +481,14 @@ SharedArrayBufferObject* SharedArrayBufferObject::createFromNewRawBuffer(
   }
 
   return obj;
+}
+
+/* static */
+void SharedArrayBufferObject::wasmDiscard(HandleSharedArrayBufferObject buf,
+                                          uint64_t byteOffset,
+                                          uint64_t byteLen) {
+  MOZ_ASSERT(buf->isWasm());
+  buf->rawWasmBufferObject()->discard(byteOffset, byteLen);
 }
 
 static const JSClassOps SharedArrayBufferObjectClassOps = {
