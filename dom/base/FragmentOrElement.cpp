@@ -344,7 +344,7 @@ already_AddRefed<URLExtraData> nsIContent::GetURLDataForStyleAttr(
   if (aSubjectPrincipal && aSubjectPrincipal != NodePrincipal()) {
     // TODO: Cache this?
     nsCOMPtr<nsIReferrerInfo> referrerInfo =
-        ReferrerInfo::CreateForInternalCSSResources(OwnerDoc());
+        ReferrerInfo::CreateForInternalCSSAndSVGResources(OwnerDoc());
     return MakeAndAddRef<URLExtraData>(OwnerDoc()->GetDocBaseURI(),
                                        referrerInfo, aSubjectPrincipal);
   }

@@ -6657,7 +6657,8 @@ URLExtraData* Document::DefaultStyleAttrURLData() {
       NS_FAILED(mCachedURLData->ReferrerInfo()->Equals(mCachedReferrerInfo,
                                                        &equals)) ||
       !equals) {
-    mCachedReferrerInfo = ReferrerInfo::CreateForInternalCSSResources(this);
+    mCachedReferrerInfo =
+        ReferrerInfo::CreateForInternalCSSAndSVGResources(this);
     mCachedURLData = new URLExtraData(baseURI, mCachedReferrerInfo, principal);
   }
   return mCachedURLData;

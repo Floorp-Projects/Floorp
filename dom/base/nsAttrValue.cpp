@@ -1758,7 +1758,7 @@ bool nsAttrValue::ParseStyleAttribute(const nsAString& aString,
   }
 
   nsCOMPtr<nsIReferrerInfo> referrerInfo =
-      dom::ReferrerInfo::CreateForInternalCSSResources(ownerDoc);
+      dom::ReferrerInfo::CreateForInternalCSSAndSVGResources(ownerDoc);
   auto data = MakeRefPtr<URLExtraData>(baseURI, referrerInfo, principal);
   RefPtr<DeclarationBlock> decl = DeclarationBlock::FromCssText(
       aString, data, ownerDoc->GetCompatibilityMode(), ownerDoc->CSSLoader(),
