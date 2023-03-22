@@ -41,6 +41,7 @@ function renderMultistage(ready) {
     window.close();
   };
   window.AWWaitForMigrationClose = receive("WAIT_FOR_MIGRATION_CLOSE");
+  window.AWEvaluateScreenTargeting = receive("EVALUATE_SCREEN_TARGETING");
 
   // Update styling to be compatible with about:welcome.
   addStylesheet(
