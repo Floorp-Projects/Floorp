@@ -533,3 +533,13 @@ void nsTransferable::SetCookieJarSettings(
 
   mCookieJarSettings = aCookieJarSettings;
 }
+
+nsIReferrerInfo* nsTransferable::GetReferrerInfo() {
+  MOZ_ASSERT(mInitialized);
+  return mReferrerInfo;
+}
+
+void nsTransferable::SetReferrerInfo(nsIReferrerInfo* aReferrerInfo) {
+  MOZ_ASSERT(mInitialized);
+  mReferrerInfo = aReferrerInfo;
+}

@@ -1217,6 +1217,7 @@ parent:
                        bool aIsPrivateData,
                        nullable nsIPrincipal aRequestingPrincipal,
                        nsContentPolicyType aContentPolicyType,
+                       nullable nsIReferrerInfo aReferrerInfo,
                        int32_t aWhichClipboard);
 
     // Given a list of supported types, returns the clipboard data for the

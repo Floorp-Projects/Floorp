@@ -11,6 +11,7 @@
 
 interface nsICookieJarSettings;
 interface nsIPrincipal;
+interface nsIReferrerInfo;
 
 %{ C++
 
@@ -206,4 +207,9 @@ interface nsITransferable : nsISupports
    * from.
    */
   [notxpcom, nostdcall] attribute nsICookieJarSettings cookieJarSettings;
+
+  /**
+   * Used for initializing the referrer when downloading a file promise.
+   */
+  [notxpcom, nostdcall] attribute nsIReferrerInfo referrerInfo;
 };

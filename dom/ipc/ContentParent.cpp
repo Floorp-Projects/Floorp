@@ -3475,7 +3475,7 @@ mozilla::ipc::IPCResult ContentParent::RecvSetClipboard(
     const IPCDataTransfer& aDataTransfer, const bool& aIsPrivateData,
     nsIPrincipal* aRequestingPrincipal,
     const nsContentPolicyType& aContentPolicyType,
-    const int32_t& aWhichClipboard) {
+    nsIReferrerInfo* aReferrerInfo, const int32_t& aWhichClipboard) {
   // aRequestingPrincipal is allowed to be nullptr here.
 
   if (!ValidatePrincipal(aRequestingPrincipal,
@@ -3491,6 +3491,7 @@ mozilla::ipc::IPCResult ContentParent::RecvSetClipboard(
       do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
   trans->Init(nullptr);
+  trans->SetReferrerInfo(aReferrerInfo);
 
   rv = nsContentUtils::IPCTransferableToTransferable(
       aDataTransfer, aIsPrivateData, aRequestingPrincipal, aContentPolicyType,

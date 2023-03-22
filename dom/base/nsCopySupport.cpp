@@ -494,6 +494,13 @@ nsresult nsCopySupport::ImageCopy(nsIImageLoadingContent* aImageElement,
         aImageElement, getter_AddRefs(imgRequest));
     NS_ENSURE_TRUE(image, NS_ERROR_FAILURE);
 
+    if (imgRequest) {
+      // Remember the referrer used for this image request.
+      nsCOMPtr<nsIReferrerInfo> referrerInfo;
+      imgRequest->GetReferrerInfo(getter_AddRefs(referrerInfo));
+      trans->SetReferrerInfo(referrerInfo);
+    }
+
 #ifdef XP_WIN
     rv = AppendImagePromise(trans, imgRequest, aImageElement);
     NS_ENSURE_SUCCESS(rv, rv);
