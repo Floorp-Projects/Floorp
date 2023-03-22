@@ -1979,7 +1979,6 @@ STATIC_ATOMS = [
     Atom("onmozshowdropdown_sourcetouch", "onmozshowdropdown-sourcetouch"),
     Atom("onprintPreviewUpdate", "onprintPreviewUpdate"),
     Atom("onscrollend", "onscrollend"),
-    Atom("onbeforetoggle", "onbeforetoggle"),
     # WebExtensions
     Atom("moz_extension", "moz-extension"),
     Atom("all_urlsPermission", "<all_urls>"),
