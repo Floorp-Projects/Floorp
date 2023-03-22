@@ -666,7 +666,7 @@ class SmokeTest {
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
-            verifyDefaultBrowserIsDisabled()
+            verifyDefaultBrowserToggle(false)
             clickDefaultBrowserSwitch()
             verifyAndroidDefaultAppsMenuAppears()
         }

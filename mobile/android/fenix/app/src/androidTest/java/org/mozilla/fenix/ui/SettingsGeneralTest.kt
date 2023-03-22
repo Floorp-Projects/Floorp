@@ -62,14 +62,18 @@ class SettingsGeneralTest {
             verifySettingsToolbar()
             verifyGeneralHeading()
             verifySearchButton()
+            verifySettingsOptionSummary("Google")
             verifyTabsButton()
+            verifySettingsOptionSummary("Close manually")
             verifyHomepageButton()
+            verifySettingsOptionSummary("Open on homepage after four hours")
             verifyCustomizeButton()
             verifyLoginsAndPasswordsButton()
             verifyAutofillButton()
             verifyAccessibilityButton()
             verifyLanguageButton()
             verifySetAsDefaultBrowserButton()
+            verifyDefaultBrowserToggle(false)
         }
     }
 

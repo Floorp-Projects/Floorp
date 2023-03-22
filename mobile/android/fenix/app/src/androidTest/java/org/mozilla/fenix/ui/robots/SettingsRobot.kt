@@ -22,8 +22,10 @@ import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.hasSibling
+import androidx.test.espresso.matcher.ViewMatchers.isChecked
 import androidx.test.espresso.matcher.ViewMatchers.isCompletelyDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.isNotChecked
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -48,6 +50,7 @@ import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.getStringResource
+import org.mozilla.fenix.helpers.TestHelper.hasCousin
 import org.mozilla.fenix.helpers.TestHelper.isPackageInstalled
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
@@ -79,7 +82,25 @@ class SettingsRobot {
         assertItemContainingTextExists(itemContainingText(summary))
     fun verifyAutofillButton() = assertAutofillButton()
     fun verifyLanguageButton() = assertLanguageButton()
-    fun verifyDefaultBrowserIsDisabled() = assertDefaultBrowserIsDisabled()
+    fun verifyDefaultBrowserToggle(isEnabled: Boolean) {
+        scrollToElementByText(getStringResource(R.string.preferences_set_as_default_browser))
+        onView(withText(R.string.preferences_set_as_default_browser))
+            .check(
+                matches(
+                    hasCousin(
+                        allOf(
+                            withId(R.id.switch_widget),
+                            if (isEnabled) {
+                                isChecked()
+                            } else {
+                                isNotChecked()
+                            },
+                        ),
+                    ),
+                ),
+            )
+    }
+
     fun clickDefaultBrowserSwitch() = toggleDefaultBrowserSwitch()
     fun verifyAndroidDefaultAppsMenuAppears() = assertAndroidDefaultAppsMenuAppears()
 
@@ -137,6 +158,8 @@ class SettingsRobot {
     fun verifyRateOnGooglePlay() = assertTrue(rateOnGooglePlayHeading().waitForExists(waitingTime))
     fun verifyAboutFirefoxPreview() = assertTrue(aboutFirefoxHeading().waitForExists(waitingTime))
     fun verifyGooglePlayRedirect() = assertGooglePlayRedirect()
+
+    fun verifySettingsOptionSummary(summary: String) = itemContainingText(summary)
 
     class Transition {
         fun goBack(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
@@ -427,12 +450,6 @@ private fun assertSetAsDefaultBrowserButton() {
     scrollToElementByText("Set as default browser")
     onView(withText("Set as default browser"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-}
-
-private fun assertDefaultBrowserIsDisabled() {
-    scrollToElementByText("Set as default browser")
-    onView(withId(R.id.switch_widget))
-        .check(matches(ViewMatchers.isNotChecked()))
 }
 
 private fun toggleDefaultBrowserSwitch() {
