@@ -94,7 +94,7 @@ nsresult txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
 
     double value = result->numberValue();
 
-    if (mozilla::IsInfinite(value) || std::isnan(value) || value < 0.5) {
+    if (std::isinf(value) || std::isnan(value) || value < 0.5) {
       txDouble::toString(value, aValueString);
       return NS_OK;
     }

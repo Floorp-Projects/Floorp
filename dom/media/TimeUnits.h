@@ -56,7 +56,7 @@ class TimeUnit final {
   static TimeUnit FromSeconds(double aValue) {
     MOZ_ASSERT(!std::isnan(aValue));
 
-    if (mozilla::IsInfinite<double>(aValue)) {
+    if (std::isinf(aValue)) {
       return aValue > 0 ? FromInfinity() : FromNegativeInfinity();
     }
     // Due to internal double representation, this

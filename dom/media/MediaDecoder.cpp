@@ -1048,7 +1048,7 @@ void MediaDecoder::DurationChanged() {
   // See https://www.w3.org/Bugs/Public/show_bug.cgi?id=28822 for a discussion
   // of whether we should fire durationchange on explicit infinity.
   if (mFiredMetadataLoaded &&
-      (!mozilla::IsInfinite<double>(mDuration) || mExplicitDuration.isSome())) {
+      (!std::isinf(mDuration) || mExplicitDuration.isSome())) {
     GetOwner()->DispatchAsyncEvent(u"durationchange"_ns);
   }
 

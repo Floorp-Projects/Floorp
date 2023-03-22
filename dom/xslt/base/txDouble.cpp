@@ -120,7 +120,7 @@ void txDouble::toString(double aValue, nsAString& aDest) {
     aDest.AppendLiteral("NaN");
     return;
   }
-  if (mozilla::IsInfinite(aValue)) {
+  if (std::isinf(aValue)) {
     if (aValue < 0) aDest.Append(char16_t('-'));
     aDest.AppendLiteral("Infinity");
     return;

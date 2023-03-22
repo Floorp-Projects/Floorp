@@ -39,7 +39,6 @@ using JS::GenericNaN;
 using JS::ToNumber;
 using mozilla::ExponentComponent;
 using mozilla::FloatingPoint;
-using mozilla::IsInfinite;
 using mozilla::IsNegative;
 using mozilla::IsNegativeZero;
 using mozilla::Maybe;
@@ -763,8 +762,7 @@ double js::hypot4(double x, double y, double z, double w) {
   AutoUnsafeCallWithABI unsafe;
 
   // Check for infinities or NaNs so that we can return immediately.
-  if (mozilla::IsInfinite(x) || mozilla::IsInfinite(y) ||
-      mozilla::IsInfinite(z) || mozilla::IsInfinite(w)) {
+  if (std::isinf(x) || std::isinf(y) || std::isinf(z) || std::isinf(w)) {
     return mozilla::PositiveInfinity<double>();
   }
 
@@ -823,7 +821,7 @@ bool js::math_hypot_handle(JSContext* cx, HandleValueArray args,
       return false;
     }
 
-    isInfinite |= mozilla::IsInfinite(x);
+    isInfinite |= std::isinf(x);
     isNaN |= std::isnan(x);
     if (isInfinite || isNaN) {
       continue;
