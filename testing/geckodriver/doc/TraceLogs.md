@@ -118,7 +118,7 @@ constructing the [`moz:firefoxOptions`] capabilities object:
 
 ```csharp
 FirefoxOptions options = new FirefoxOptions();
-options.LogLevel =  FirefoxDriverLogLevel.Trace;
+options.LogLevel = FirefoxDriverLogLevel.Trace;
 IWebDriver driver = new FirefoxDriver(options);
 ```
 
@@ -139,10 +139,33 @@ options.setLogLevel(FirefoxDriverLogLevel.TRACE);
 WebDriver driver = new FirefoxDriver(options);
 ```
 
-As with C#, the log output is helpfully propagated to stdout.
+The log output is directed to stdout.
 
 [Java client]: https://seleniumhq.github.io/selenium/docs/api/java/
 [`org.openqa.selenium.firefox.FirefoxOptions`]: https://seleniumhq.github.io/selenium/docs/api/java/org/openqa/selenium/firefox/FirefoxOptions.html
+
+## Javascript (webdriver.io)
+
+With the Selenium [JavaScript client] the capabilities object can directly be
+constructed:
+
+```javascript
+import WebDriver from 'webdriver'
+
+const driver = await WebDriver.newSession({
+    capabilities: {
+        browserName: 'firefox',
+        'moz:firefoxOptions': {
+            log: { level: 'trace' },
+        }
+    }
+})
+```
+
+The log output is directed to stdout, or if geckodriver runs as a wdio plugin
+then the generated logs are part of the wdio log system.
+
+[JavaScript client]: https://webdriver.io/
 
 ## Python
 
@@ -176,6 +199,8 @@ Selenium::WebDriver.logger.level = :debug
 opts = Selenium::WebDriver::Firefox::Options.new(log_level: :trace)
 driver = Selenium::WebDriver.for :firefox, options: opts
 ```
+
+The log output is directed to stdout.
 
 [Ruby client]: https://seleniumhq.github.io/selenium/docs/api/rb/
 [`Options`]: https://seleniumhq.github.io/selenium/docs/api/rb/Selenium/WebDriver/Firefox/Options.html
