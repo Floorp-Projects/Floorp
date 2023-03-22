@@ -16,6 +16,8 @@ export function getFilenameFromPath(pathname) {
     // This file does not have a name. Default should be (index).
     if (filename == "") {
       filename = "(index)";
+    } else if (filename == ":formatted") {
+      filename = "(index:formatted)";
     }
   }
   return filename;

@@ -19,6 +19,7 @@ import {
 } from "../../utils/source";
 import { isFulfilled } from "../../utils/async-value";
 import { getOriginalLocation } from "../../utils/source-maps";
+import { prefs } from "../../utils/prefs";
 import {
   loadGeneratedSourceText,
   loadOriginalSourceText,
@@ -37,6 +38,13 @@ import {
 
 import { selectSource } from "./select";
 
+import DevToolsUtils from "devtools/shared/DevToolsUtils";
+
+const LINE_BREAK_REGEX = /\r\n?|\n|\u2028|\u2029/g;
+function matchAllLineBreaks(str) {
+  return Array.from(str.matchAll(LINE_BREAK_REGEX));
+}
+
 function getPrettyOriginalSourceURL(generatedSource) {
   return getPrettySourceURL(generatedSource.url || generatedSource.id);
 }
@@ -54,17 +62,31 @@ export async function prettyPrintSource(
 
   const contentValue = content.value;
   if (
-    !isJavaScript(generatedSource, contentValue) ||
+    (!isJavaScript(generatedSource, contentValue) && !generatedSource.isHTML) ||
     contentValue.type !== "text"
   ) {
-    throw new Error("Can't prettify non-javascript files.");
+    throw new Error(
+      `Can't prettify ${contentValue.contentType} files, only HTML and Javascript.`
+    );
   }
 
   const url = getPrettyOriginalSourceURL(generatedSource);
-  const { code, sourceMap } = await prettyPrintWorker.prettyPrint({
-    text: contentValue.value,
-    url,
-  });
+
+  let prettyPrintWorkerResult;
+  if (generatedSource.isHTML) {
+    prettyPrintWorkerResult = await prettyPrintHtmlFile({
+      prettyPrintWorker,
+      generatedSource,
+      content,
+      actors,
+    });
+  } else {
+    prettyPrintWorkerResult = await prettyPrintWorker.prettyPrint({
+      sourceText: contentValue.value,
+      indent: " ".repeat(prefs.indentSize),
+      url,
+    });
+  }
 
   // The source map URL service used by other devtools listens to changes to
   // sources based on their actor IDs, so apply the sourceMap there too.
@@ -74,13 +96,132 @@ export async function prettyPrintSource(
   ];
   await sourceMapLoader.setSourceMapForGeneratedSources(
     generatedSourceIds,
-    sourceMap
+    prettyPrintWorkerResult.sourceMap
   );
 
   return {
-    text: code,
-    contentType: "text/javascript",
+    text: prettyPrintWorkerResult.code,
+    contentType: contentValue.contentType,
   };
+}
+
+/**
+ * Pretty print inline script inside an HTML file
+ *
+ * @param {Object} options
+ * @param {PrettyPrintDispatcher} options.prettyPrintWorker: The prettyPrint worker
+ * @param {Object} options.generatedSource: The HTML source we want to pretty print
+ * @param {Object} options.content
+ * @param {Array} options.actors: An array of the HTML file inline script sources data
+ *
+ * @returns Promise<Object> A promise that resolves with an object of the following shape:
+ *                          - {String} code: The prettified HTML text
+ *                          - {Object} sourceMap: The sourceMap object
+ */
+async function prettyPrintHtmlFile({
+  prettyPrintWorker,
+  generatedSource,
+  content,
+  actors,
+}) {
+  const url = getPrettyOriginalSourceURL(generatedSource);
+  const contentValue = content.value;
+  const htmlFileText = contentValue.value;
+  const prettyPrintWorkerResult = { code: htmlFileText };
+
+  const allLineBreaks = matchAllLineBreaks(htmlFileText);
+  let lineCountDelta = 0;
+
+  // Sort inline script actors so they are in the same order as in the html document.
+  actors.sort((a, b) => {
+    if (a.sourceStartLine === b.sourceStartLine) {
+      return a.sourceStartColumn > b.sourceStartColumn;
+    }
+    return a.sourceStartLine > b.sourceStartLine;
+  });
+
+  const prettyPrintTaskId = generatedSource.id;
+
+  // We don't want to replace part of the HTML document in the loop since it would require
+  // to account for modified lines for each iteration.
+  // Instead, we'll put each sections to replace in this array, where elements will be
+  // objects of the following shape:
+  // {Integer} startIndex: The start index in htmlFileText of the section we want to replace
+  // {Integer} endIndex: The end index in htmlFileText of the section we want to replace
+  // {String} prettyText: The pretty text we'll replace the original section with
+  // Once we iterated over all the inline scripts, we'll do the replacements (on the html
+  // file text) in reverse order, so we don't need have to care about the modified lines
+  // for each iteration.
+  const replacements = [];
+
+  for (const sourceInfo of actors) {
+    if (!sourceInfo.sourceLength) {
+      continue;
+    }
+    // Here we want to get the index of the last line break before the script tag.
+    // In allLineBreaks, this would be the item at (script tag line - 1)
+    // Since sourceInfo.sourceStartLine is 1-based, we need to get the item at (sourceStartLine - 2)
+    const previousLineBreakIndexInHtmlText =
+      sourceInfo.sourceStartLine > 1
+        ? allLineBreaks[sourceInfo.sourceStartLine - 2].index
+        : 0;
+    const startIndex =
+      previousLineBreakIndexInHtmlText + sourceInfo.sourceStartColumn + 1;
+    const endIndex = startIndex + sourceInfo.sourceLength;
+    const scriptText = htmlFileText.substring(startIndex, endIndex);
+    DevToolsUtils.assert(
+      scriptText.length == sourceInfo.sourceLength,
+      "script text has expected length"
+    );
+
+    // Here we're going to pretty print each inline script content.
+    // Since we want to have a sourceMap that we'll apply to the whole HTML file,
+    // we'll only collect the sourceMap once we handled all inline scripts.
+    // `taskId` allows us to signal to the worker that all those calls are part of the
+    // same bigger file, and we'll use it later to get the sourceMap.
+    const prettyText = await prettyPrintWorker.prettyPrintInlineScript({
+      taskId: prettyPrintTaskId,
+      sourceText: scriptText,
+      indent: " ".repeat(prefs.indentSize),
+      url,
+      originalStartLine: sourceInfo.sourceStartLine,
+      originalStartColumn: sourceInfo.sourceStartColumn,
+      // The generated line will be impacted by the previous inline scripts that were
+      // pretty printed, which is why we offset with lineCountDelta
+      generatedStartLine: sourceInfo.sourceStartLine + lineCountDelta,
+      generatedStartColumn: sourceInfo.sourceStartColumn,
+      lineCountDelta,
+    });
+
+    // We need to keep track of the line added/removed in order to properly offset
+    // the mapping of the pretty-print text
+    lineCountDelta +=
+      matchAllLineBreaks(prettyText).length -
+      matchAllLineBreaks(scriptText).length;
+
+    replacements.push({
+      startIndex,
+      endIndex,
+      prettyText,
+    });
+  }
+
+  // `getSourceMap` allow us to collect the computed source map resulting of the calls
+  // to `prettyPrint` with the same taskId.
+  prettyPrintWorkerResult.sourceMap = await prettyPrintWorker.getSourceMap(
+    prettyPrintTaskId
+  );
+
+  // Sort replacement in reverse order so we can replace code in the HTML file more easily
+  replacements.sort((a, b) => a.startIndex < b.startIndex);
+  for (const { startIndex, endIndex, prettyText } of replacements) {
+    prettyPrintWorkerResult.code =
+      prettyPrintWorkerResult.code.substring(0, startIndex) +
+      prettyText +
+      prettyPrintWorkerResult.code.substring(endIndex);
+  }
+
+  return prettyPrintWorkerResult;
 }
 
 function createPrettySource(cx, source) {

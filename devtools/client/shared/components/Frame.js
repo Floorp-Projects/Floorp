@@ -322,6 +322,12 @@ class Frame extends Component {
     let displaySource = showFullSourceUrl ? unicodeLong : unicodeShort;
     if (originalLocation) {
       displaySource = getSourceMappedFile(displaySource);
+
+      // In case of pretty-printed HTML file, we would only get the formatted suffix; replace
+      // it with the full URL instead
+      if (showEmptyPathAsHost && displaySource == ":formatted") {
+        displaySource = host + displaySource;
+      }
     } else if (
       showEmptyPathAsHost &&
       (displaySource === "" || displaySource === "/")

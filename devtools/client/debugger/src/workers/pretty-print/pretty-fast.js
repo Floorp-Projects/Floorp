@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+/* eslint-disable complexity */
+
 var acorn = require("acorn");
 var sourceMap = require("source-map");
 const NEWLINE_CODE = 10;
@@ -718,15 +720,26 @@ function addComment(
 /**
  * The main function.
  *
- * @param String input
- *        The ugly JS code we want to pretty print.
- * @param Object options
- *        The options object. Provides configurability of the pretty
- *        printing. Properties:
- *          - url: The URL string of the ugly JS code.
- *          - indent: The string to indent code by.
+ * @param {String} input: The ugly JS code we want to pretty print.
+ * @param {Object} options: Provides configurability of the pretty printing.
+ * @param {String} options.url: The URL string of the ugly JS code.
+ * @param {String} options.indent: The string to indent code by.
+ * @param {SourceMapGenerator} options.sourceMapGenerator: An optional sourceMapGenerator
+ *                             the mappings will be added to.
+ * @param {Boolean} options.prefixWithNewLine: When true, the pretty printed code will start
+ *                  with a line break
+ * @param {Integer} options.originalStartLine: The line the passed script starts at (1-based).
+ *                  This is used for inline scripts where we need to account for the lines
+ *                  before the script tag
+ * @param {Integer} options.originalStartColumn: The column the passed script starts at (1-based).
+ *                  This is used for inline scripts where we need to account for the position
+ *                  of the script tag within the line.
+ * @param {Integer} options.generatedStartLine: The line where the pretty printed script
+ *                  will start at (1-based). This is used for pretty printing HTML file,
+ *                  where we might have handle previous inline scripts that impact the
+ *                  position of this script.
  *
- * @returns Object
+ * @returns {Object}
  *          An object with the following properties:
  *            - code: The pretty printed code string.
  *            - map: A SourceMapGenerator instance.
@@ -735,15 +748,28 @@ export function prettyFast(input, options = {}) {
   // The level of indents deep we are.
   let indentLevel = 0;
 
+  const {
+    url: file,
+    originalStartLine,
+    originalStartColumn,
+    prefixWithNewLine,
+    generatedStartLine,
+  } = options;
+
   // We will handle mappings between ugly and pretty printed code in this SourceMapGenerator.
-  const { url: file } = options;
-  const sourceMapGenerator = new sourceMap.SourceMapGenerator({
-    file,
-  });
+  const sourceMapGenerator =
+    options.sourceMapGenerator ||
+    new sourceMap.SourceMapGenerator({
+      file,
+    });
 
   let currentCode = "";
   let currentLine = 1;
   let currentColumn = 0;
+
+  const hasOriginalStartLine = "originalStartLine" in options;
+  const hasOriginalStartColumn = "originalStartColumn" in options;
+  const hasGeneratedStartLine = "generatedStartLine" in options;
 
   /**
    * Write a pretty printed string to the prettified string and for tokens, add their
@@ -767,11 +793,22 @@ export function prettyFast(input, options = {}) {
         // We need to swap original and generated locations, as the prettified text should
         // be seen by the sourcemap service as the "original" one.
         generated: {
-          line,
-          column,
+          // originalStartLine is 1-based, and here we just want to offset by a number of
+          // lines, so we need to decrement it
+          line: hasOriginalStartLine ? line + (originalStartLine - 1) : line,
+          // We only need to adjust the column number if we're looking at the first line, to
+          // account for the html text before the opening <script> tag.
+          column:
+            line == 1 && hasOriginalStartColumn
+              ? column + originalStartColumn
+              : column,
         },
         original: {
-          line: currentLine,
+          // generatedStartLine is 1-based, and here we just want to offset by a number of
+          // lines, so we need to decrement it.
+          line: hasGeneratedStartLine
+            ? currentLine + (generatedStartLine - 1)
+            : currentLine,
           column: currentColumn,
         },
         name: null,
@@ -787,6 +824,11 @@ export function prettyFast(input, options = {}) {
       }
     }
   };
+
+  // Add the initial new line if needed
+  if (prefixWithNewLine) {
+    write("\n");
+  }
 
   // Whether or not we added a newline on after we added the last token.
   let addedNewline = false;

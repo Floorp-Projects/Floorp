@@ -267,17 +267,20 @@ function getVisibleSelectedFrameColumn(dbg) {
  */
 function assertLineIsBreakable(dbg, file, line, shouldBeBreakable) {
   const lineInfo = getCM(dbg).lineInfo(line - 1);
+  const lineText = `${line}| ${lineInfo.text.substring(0, 50)}${
+    lineInfo.text.length > 50 ? "…" : ""
+  } — in ${file}`;
   // When a line is not breakable, the "empty-line" class is added
   // and the line is greyed out
   if (shouldBeBreakable) {
     ok(
       !lineInfo.wrapClass?.includes("empty-line"),
-      `${file}:${line} should be breakable`
+      `${lineText} should be breakable`
     );
   } else {
     ok(
       lineInfo?.wrapClass?.includes("empty-line"),
-      `${file}:${line} should NOT be breakable`
+      `${lineText} should NOT be breakable`
     );
   }
 }
@@ -1064,8 +1067,11 @@ function findColumnBreakpoint(dbg, url, line, column) {
     source.id,
     line
   );
+
   return lineBreakpoints.find(bp => {
-    return bp.generatedLocation.column === column;
+    return source.isOriginal
+      ? bp.location.column === column
+      : bp.generatedLocation.column === column;
   });
 }
 
