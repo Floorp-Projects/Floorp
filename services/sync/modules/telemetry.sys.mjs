@@ -150,6 +150,73 @@ function normalizeExtraTelemetryFields(extra) {
   return lazy.ObjectUtils.isEmpty(result) ? undefined : result;
 }
 
+// Keps track of the counts of individual records fate during a sync cycle
+// The main reason this is a class is to keep track of reasons individual records
+// failure reasons without huge memory overhead.
+export class SyncedRecordsTelemetry {
+  // applied    => number of items that should be applied.
+  // failed     => number of items that failed in this sync.
+  // newFailed  => number of items that failed for the first time in this sync.
+  // reconciled => number of items that were reconciled.
+  // failedReasons => {name, count} of reasons a record failed
+  incomingCounts = {
+    applied: 0,
+    failed: 0,
+    newFailed: 0,
+    reconciled: 0,
+    failedReasons: null,
+  };
+  outgoingCounts = { failed: 0, sent: 0, failedReasons: null };
+
+  addIncomingFailedReason(reason) {
+    if (!this.incomingCounts.failedReasons) {
+      this.incomingCounts.failedReasons = [];
+    }
+    let transformedReason = SyncTelemetry.transformError(reason);
+    // Some errors like http/nss errors don't have an error object
+    // those will be caught by the higher level telemetry
+    if (!transformedReason.error) {
+      return;
+    }
+
+    let index = this.incomingCounts.failedReasons.findIndex(
+      reasons => reasons.name === transformedReason.error
+    );
+
+    if (index >= 0) {
+      this.incomingCounts.failedReasons[index].count += 1;
+    } else {
+      this.incomingCounts.failedReasons.push({
+        name: transformedReason.error,
+        count: 1,
+      });
+    }
+  }
+
+  addOutgoingFailedReason(reason) {
+    if (!this.outgoingCounts.failedReasons) {
+      this.outgoingCounts.failedReasons = [];
+    }
+    let transformedReason = SyncTelemetry.transformError(reason);
+    // Some errors like http/nss errors don't have an error object
+    // those will be caught by the higher level telemetry
+    if (!transformedReason.error) {
+      return;
+    }
+    let index = this.outgoingCounts.failedReasons.findIndex(
+      reasons => reasons.name === transformedReason.error
+    );
+    if (index >= 0) {
+      this.outgoingCounts.failedReasons[index].count += 1;
+    } else {
+      this.outgoingCounts.failedReasons.push({
+        name: transformedReason.error,
+        count: 1,
+      });
+    }
+  }
+}
+
 // The `ErrorSanitizer` has 2 main jobs:
 // * Remove PII from errors, such as the profile dir or URLs the user might
 //   have visited.
@@ -368,8 +435,15 @@ class EngineRecord {
     }
 
     let incomingData = {};
+
+    if (counts.failedReasons) {
+      // sort the failed reasons in desc by count, then take top 10
+      counts.failedReasons = counts.failedReasons
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
+    }
     // Counts has extra stuff used for logging, but we only care about a few
-    let properties = ["applied", "failed"];
+    let properties = ["applied", "failed", "failedReasons"];
     // Only record non-zero properties and only record incoming at all if
     // there's at least one property we care about.
     for (let property of properties) {
@@ -436,9 +510,16 @@ class EngineRecord {
       if (!this.outgoing) {
         this.outgoing = [];
       }
+      if (counts.failedReasons) {
+        // sort the failed reasons in desc by count, then take top 10
+        counts.failedReasons = counts.failedReasons
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 10);
+      }
       this.outgoing.push({
         sent: counts.sent || undefined,
         failed: counts.failed || undefined,
+        failedReasons: counts.failedReasons || undefined,
       });
     }
   }

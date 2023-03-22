@@ -7,6 +7,9 @@ ChromeUtils.importESModule(
 const { Service } = ChromeUtils.importESModule(
   "resource://services-sync/service.sys.mjs"
 );
+const { SyncedRecordsTelemetry } = ChromeUtils.importESModule(
+  "resource://services-sync/telemetry.sys.mjs"
+);
 
 async function checkRecord(
   name,
@@ -95,7 +98,11 @@ async function changePassword(
   let store = engine._store;
 
   if (insert) {
-    Assert.equal((await store.applyIncomingBatch([record])).length, 0);
+    let countTelemetry = new SyncedRecordsTelemetry();
+    Assert.equal(
+      (await store.applyIncomingBatch([record], countTelemetry)).length,
+      0
+    );
   }
 
   return checkRecord(
@@ -332,8 +339,10 @@ add_task(async function run_test() {
   let store = engine._store;
 
   try {
+    let countTelemetry = new SyncedRecordsTelemetry();
     Assert.equal(
-      (await store.applyIncomingBatch([recordA, recordB])).length,
+      (await store.applyIncomingBatch([recordA, recordB], countTelemetry))
+        .length,
       0
     );
 

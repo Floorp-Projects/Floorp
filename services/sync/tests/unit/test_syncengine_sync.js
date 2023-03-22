@@ -722,14 +722,18 @@ add_task(async function test_processIncoming_notify_count() {
   // Engine that fails every 5 records.
   let engine = makeRotaryEngine();
   engine._store._applyIncomingBatch = engine._store.applyIncomingBatch;
-  engine._store.applyIncomingBatch = async function(records) {
+  engine._store.applyIncomingBatch = async function(records, countTelemetry) {
     let sortedRecords = records.sort((a, b) => (a.id > b.id ? 1 : -1));
     let recordsToApply = [],
       recordsToFail = [];
     for (let i = 0; i < sortedRecords.length; i++) {
       (i % 5 === 0 ? recordsToFail : recordsToApply).push(sortedRecords[i]);
     }
-    await engine._store._applyIncomingBatch(recordsToApply);
+    recordsToFail.forEach(() => {
+      countTelemetry.addIncomingFailedReason("failed message");
+    });
+    await engine._store._applyIncomingBatch(recordsToApply, countTelemetry);
+
     return recordsToFail.map(record => record.id);
   };
 
@@ -783,6 +787,8 @@ add_task(async function test_processIncoming_notify_count() {
     // There are newly failed records and they are reported.
     Assert.equal(called, 1);
     Assert.equal(counts.failed, 3);
+    Assert.equal(counts.failedReasons[0].count, 3);
+    Assert.equal(counts.failedReasons[0].name, "failed message");
     Assert.equal(counts.applied, 15);
     Assert.equal(counts.newFailed, 3);
     Assert.equal(counts.succeeded, 12);
@@ -796,6 +802,8 @@ add_task(async function test_processIncoming_notify_count() {
 
     Assert.equal(called, 2);
     Assert.equal(counts.failed, 1);
+    Assert.equal(counts.failedReasons[0].count, 1);
+    Assert.equal(counts.failedReasons[0].name, "failed message");
     Assert.equal(counts.applied, 3);
     Assert.equal(counts.newFailed, 0);
     Assert.equal(counts.succeeded, 2);
@@ -814,7 +822,7 @@ add_task(async function test_processIncoming_previousFailed() {
   // Engine that alternates between failing and applying every 2 records.
   let engine = makeRotaryEngine();
   engine._store._applyIncomingBatch = engine._store.applyIncomingBatch;
-  engine._store.applyIncomingBatch = async function(records) {
+  engine._store.applyIncomingBatch = async function(records, countTelemetry) {
     let sortedRecords = records.sort((a, b) => (a.id > b.id ? 1 : -1));
     let recordsToApply = [],
       recordsToFail = [];
@@ -822,7 +830,7 @@ add_task(async function test_processIncoming_previousFailed() {
     for (let i = 0; i < chunks.length; i++) {
       (i % 2 === 0 ? recordsToFail : recordsToApply).push(...chunks[i]);
     }
-    await engine._store._applyIncomingBatch(recordsToApply);
+    await engine._store._applyIncomingBatch(recordsToApply, countTelemetry);
     return recordsToFail.map(record => record.id);
   };
 
@@ -1098,6 +1106,13 @@ add_task(async function test_processIncoming_decrypt_failed() {
     let ping = await sync_engine_and_validate_telem(engine, true);
     Assert.equal(ping.engines[0].incoming.applied, 2);
     Assert.equal(ping.engines[0].incoming.failed, 4);
+    console.log("incoming telem: ", ping.engines[0].incoming);
+    Assert.equal(
+      ping.engines[0].incoming.failedReasons[0].name,
+      "No ciphertext: nothing to decrypt?"
+    );
+    // There should be 4 of the same error
+    Assert.equal(ping.engines[0].incoming.failedReasons[0].count, 4);
 
     Assert.equal(engine.previousFailed.size, 4);
     Assert.ok(engine.previousFailed.has("nojson"));
@@ -1109,6 +1124,7 @@ add_task(async function test_processIncoming_decrypt_failed() {
     Assert.equal(observerData, engine.name);
     Assert.equal(observerSubject.applied, 2);
     Assert.equal(observerSubject.failed, 4);
+    Assert.equal(observerSubject.failedReasons[0].count, 4);
   } finally {
     await promiseClean(engine, server);
   }
@@ -1390,6 +1406,7 @@ async function createRecordFailTelemetry(allowSkippedRecord) {
   } finally {
     // We reported in telemetry that we failed a record
     Assert.equal(ping.engines[0].outgoing[0].failed, 1);
+    Assert.equal(ping.engines[0].outgoing[0].failedReasons[0].name, "oops");
 
     // In any case, the 'scotsman' record couldn't be created so it wasn't
     // uploaded nor it was not cleared from the tracker.
