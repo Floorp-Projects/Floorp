@@ -75,7 +75,7 @@ impl<'a> Parse<'a> for Table<'a> {
         } else if l.peek::<u32>() {
             TableKind::Normal {
                 ty: parser.parse()?,
-                init_expr: if !parser.is_empty() {
+                init_expr: if parser.peek::<LParen>() {
                     Some(parser.parse::<Expression>()?)
                 } else {
                     None
