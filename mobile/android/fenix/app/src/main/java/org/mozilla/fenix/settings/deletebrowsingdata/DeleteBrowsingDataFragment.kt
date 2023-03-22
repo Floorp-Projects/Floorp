@@ -15,7 +15,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -25,6 +24,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.databinding.FragmentDeleteBrowsingDataBinding
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.utils.Settings
@@ -115,19 +115,21 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
     }
 
     private fun updateDeleteButton(deleteInProgress: Boolean = false) {
-        val enabled = getCheckboxes().any { it.isChecked } && !deleteInProgress
+        runIfFragmentIsAttached {
+            val enabled = getCheckboxes().any { it.isChecked } && !deleteInProgress
 
-        binding.deleteData.isEnabled = enabled
-        binding.deleteData.alpha = if (enabled) ENABLED_ALPHA else DISABLED_ALPHA
+            binding.deleteData.isEnabled = enabled
+            binding.deleteData.alpha = if (enabled) ENABLED_ALPHA else DISABLED_ALPHA
+        }
     }
 
     private fun askToDelete() {
-        context?.let {
-            AlertDialog.Builder(it).apply {
+        runIfFragmentIsAttached {
+            AlertDialog.Builder(requireContext()).apply {
                 setMessage(
-                    it.getString(
+                    requireContext().getString(
                         R.string.delete_browsing_data_prompt_message_3,
-                        it.getString(R.string.app_name),
+                        requireContext().getString(R.string.app_name),
                     ),
                 )
 
