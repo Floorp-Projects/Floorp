@@ -64,8 +64,10 @@ bool UtilityProcessImpl::Init(int aArgc, char* aArgv[]) {
   // Go for it
   mozilla::SandboxTarget::Instance()->StartSandbox();
 #elif defined(__OpenBSD__) && defined(MOZ_SANDBOX)
-  StartOpenBSDSandbox(GeckoProcessType_Utility,
-                      (SandboxingKind)*sandboxingKind);
+  if (*sandboxingKind != SandboxingKind::GENERIC_UTILITY) {
+    StartOpenBSDSandbox(GeckoProcessType_Utility,
+                        (SandboxingKind)*sandboxingKind);
+  }
 #endif
 
   Maybe<const char*> parentBuildID =
