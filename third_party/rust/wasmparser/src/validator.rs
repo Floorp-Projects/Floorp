@@ -14,8 +14,8 @@
  */
 
 use crate::{
-    limits::*, BinaryReaderError, Encoding, FromReader, FunctionBody, Parser, Payload, Result,
-    SectionLimited, ValType, WASM_COMPONENT_VERSION, WASM_MODULE_VERSION,
+    limits::*, BinaryReaderError, Encoding, FromReader, FunctionBody, HeapType, Parser, Payload,
+    Result, SectionLimited, ValType, WASM_COMPONENT_VERSION, WASM_MODULE_VERSION,
 };
 use std::mem;
 use std::ops::Range;
@@ -240,11 +240,17 @@ pub struct WasmFeatures {
     pub extended_const: bool,
     /// The WebAssembly component model proposal.
     pub component_model: bool,
+    /// The WebAssembly typed function references proposal
+    pub function_references: bool,
     /// The WebAssembly memory control proposal
     pub memory_control: bool,
 }
 
 impl WasmFeatures {
+    /// NOTE: This only checks that the value type corresponds to the feature set!!
+    ///
+    /// To check that reference types are valid, we need access to the module
+    /// types. Use module.check_value_type.
     pub(crate) fn check_value_type(&self, ty: ValType) -> Result<(), &'static str> {
         match ty {
             ValType::I32 | ValType::I64 => Ok(()),
@@ -255,9 +261,21 @@ impl WasmFeatures {
                     Err("floating-point support is disabled")
                 }
             }
-            ValType::FuncRef | ValType::ExternRef => {
+            ValType::Ref(r) => {
                 if self.reference_types {
-                    Ok(())
+                    if !self.function_references {
+                        match (r.heap_type, r.nullable) {
+                            (_, false) => {
+                                Err("function references required for non-nullable types")
+                            }
+                            (HeapType::TypedFunc(_), _) => {
+                                Err("function references required for index reference types")
+                            }
+                            _ => Ok(()),
+                        }
+                    } else {
+                        Ok(())
+                    }
                 } else {
                     Err("reference types support is not enabled")
                 }
@@ -284,6 +302,7 @@ impl Default for WasmFeatures {
             memory64: false,
             extended_const: false,
             component_model: false,
+            function_references: false,
             memory_control: false,
 
             // On-by-default features (phase 4 or greater).
@@ -515,8 +534,9 @@ impl Validator {
                 if !self.features.component_model {
                     bail!(
                         range.start,
-                        "unknown binary version: {num:#x}, \
-                         note: the WebAssembly component model feature is not enabled",
+                        "unknown binary version and encoding combination: {num:#x} and 0x1, \
+                        note: encoded as a component but the WebAssembly component model feature \
+                        is not enabled - enable the feature to allow component validation",
                     );
                 }
                 if num == WASM_COMPONENT_VERSION {
@@ -623,9 +643,7 @@ impl Validator {
                 state.module.assert_mut().tables.reserve(count as usize);
                 Ok(())
             },
-            |state, features, _, ty, offset| {
-                state.module.assert_mut().add_table(ty, features, offset)
-            },
+            |state, features, types, table, offset| state.add_table(table, features, types, offset),
         )
     }
 
@@ -1169,13 +1187,13 @@ impl Validator {
             |components, _, count, offset| {
                 let current = components.last_mut().unwrap();
                 check_max(
-                    current.exports.len(),
+                    current.externs.len(),
                     count,
                     MAX_WASM_EXPORTS,
-                    "exports",
+                    "imports and exports",
                     offset,
                 )?;
-                current.exports.reserve(count as usize);
+                current.externs.reserve(count as usize);
                 Ok(())
             },
             |components, types, _, export, offset| {
@@ -1351,7 +1369,7 @@ impl Validator {
 
 #[cfg(test)]
 mod tests {
-    use crate::{GlobalType, MemoryType, TableType, ValType, Validator, WasmFeatures};
+    use crate::{GlobalType, MemoryType, RefType, TableType, ValType, Validator, WasmFeatures};
     use anyhow::Result;
 
     #[test]
@@ -1420,7 +1438,7 @@ mod tests {
             Some(TableType {
                 initial: 10,
                 maximum: None,
-                element_type: ValType::FuncRef,
+                element_type: RefType::FUNCREF,
             })
         );
 
@@ -1448,7 +1466,7 @@ mod tests {
             _ => unreachable!(),
         }
 
-        assert_eq!(types.element_at(0), Some(ValType::FuncRef));
+        assert_eq!(types.element_at(0), Some(RefType::FUNCREF));
 
         Ok(())
     }

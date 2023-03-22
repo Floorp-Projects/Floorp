@@ -152,10 +152,10 @@ impl Module {
                         // TODO(nagisa): generate global.get of imported ref globals too.
                         match e {
                             Some(i) => match el.ty {
-                                ValType::FuncRef => wasm_encoder::ConstExpr::ref_func(*i),
+                                RefType::FUNCREF => wasm_encoder::ConstExpr::ref_func(*i),
                                 _ => unreachable!(),
                             },
-                            None => wasm_encoder::ConstExpr::ref_null(el.ty),
+                            None => wasm_encoder::ConstExpr::ref_null(el.ty.heap_type),
                         }
                     }));
                     wasm_encoder::Elements::Expressions(&exps)
