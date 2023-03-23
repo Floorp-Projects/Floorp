@@ -439,7 +439,7 @@ async function createFileStream(contents, options = {}) {
 async function throwScriptError(options = {}) {
   const { inContent = true } = options;
 
-  const addScriptErrorInternal = ({ options }) => {
+  const addScriptErrorInternal = options => {
     const {
       flag = Ci.nsIScriptError.errorFlag,
       innerWindowId = content.windowGlobalChild.innerWindowId,
@@ -462,14 +462,14 @@ async function throwScriptError(options = {}) {
   };
 
   if (inContent) {
-    ContentTask.spawn(
+    SpecialPowers.spawn(
       gBrowser.selectedBrowser,
-      { options },
+      [options],
       addScriptErrorInternal
     );
   } else {
     options.innerWindowId = window.windowGlobalChild.innerWindowId;
-    addScriptErrorInternal({ options });
+    addScriptErrorInternal(options);
   }
 }
 

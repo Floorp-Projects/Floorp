@@ -13,7 +13,9 @@ const PAGE_CONSOLE_EVENTS_ONLOAD =
 
 add_task(async function noEventsWhenRuntimeDomainDisabled({ client }) {
   await runConsoleTest(client, 0, async () => {
-    ContentTask.spawn(gBrowser.selectedBrowser, {}, () => console.log("foo"));
+    SpecialPowers.spawn(gBrowser.selectedBrowser, [], () =>
+      content.console.log("foo")
+    );
   });
 });
 
@@ -24,7 +26,9 @@ add_task(async function noEventsAfterRuntimeDomainDisabled({ client }) {
   await Runtime.disable();
 
   await runConsoleTest(client, 0, async () => {
-    ContentTask.spawn(gBrowser.selectedBrowser, {}, () => console.log("foo"));
+    SpecialPowers.spawn(gBrowser.selectedBrowser, [], () =>
+      content.console.log("foo")
+    );
   });
 });
 
