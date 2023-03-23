@@ -106,7 +106,6 @@ avoid-blacklist-and-whitelist:
         - dom/html/MediaError.cpp
         - dom/indexedDB/ActorsParent.cpp
         - dom/ipc/ContentParent.cpp
-        - dom/ipc/fuzztest/content_parent_ipc_libfuzz.cpp
         - dom/ipc/URLClassifierParent.cpp
         - dom/media/autoplay/AutoplayPolicy.cpp
         - dom/media/gmp/GMPChild.cpp
@@ -127,7 +126,6 @@ avoid-blacklist-and-whitelist:
         - dom/tests/mochitest/whatwg/test_postMessage_origin.xhtml
         - gfx/gl/GLContextProviderWGL.cpp
         - gfx/gl/GLUploadHelpers.cpp
-        - gfx/layers/ipc/fuzztest/compositor_manager_parent_ipc_libfuzz.cpp
         - gfx/tests/mochitest/test_font_whitelist.html
         - gfx/thebes/gfxFT2FontList.cpp
         - gfx/thebes/gfxPlatformFontList.cpp
@@ -307,10 +305,6 @@ avoid-blacklist-and-whitelist:
         - toolkit/mozapps/extensions/test/xpinstall/browser_localfile4.js
         - toolkit/mozapps/extensions/test/xpinstall/browser_localfile4_postDownload.js
         - toolkit/mozapps/extensions/test/xpinstall/head.js
-        - tools/fuzzing/faulty/Faulty.cpp
-        - tools/fuzzing/faulty/Faulty.h
-        - tools/fuzzing/ipc/ProtocolFuzzer.cpp
-        - tools/fuzzing/ipc/ProtocolFuzzer.h
         - tools/fuzzing/messagemanager/MessageManagerFuzzer.cpp
         - tools/fuzzing/messagemanager/MessageManagerFuzzer.h
         - tools/lint/eslint/eslint-plugin-mozilla/lib/rules/no-define-cc-etc.js
