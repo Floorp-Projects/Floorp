@@ -601,6 +601,14 @@ export class TranslationsChild extends JSWindowActorChild {
    */
   async maybeOfferTranslation() {
     const translationsStart = this.docShell.now();
+
+    if (!this.isTranslationsEngineSupported()) {
+      lazy.console.log(
+        "The translations engine is not supported on this device."
+      );
+      return;
+    }
+
     const langTags = await this.getLangTagsForTranslation();
 
     this.#langTags = langTags;
@@ -609,6 +617,15 @@ export class TranslationsChild extends JSWindowActorChild {
     if (langTags && lazy.autoTranslatePagePref) {
       this.translatePage(langTags, translationsStart);
     }
+  }
+
+  isTranslationsEngineSupported() {
+    if (this.#isTranslationsEngineMocked) {
+      // A mocked engine is always supported.
+      return true;
+    }
+    // Bergamot requires intgemm support.
+    return Boolean(WebAssembly.mozIntGemm);
   }
 
   /**
