@@ -813,22 +813,5 @@ def run_tests_remote(tests, num_tests, prefix, options, slog):
     return ok
 
 
-def platform_might_be_android():
-    try:
-        # The python package for SL4A provides an |android| module.
-        # If that module is present, we're likely in SL4A-python on
-        # device.  False positives and negatives are possible,
-        # however.
-        import android  # NOQA: F401
-
-        return True
-    except ImportError:
-        return False
-
-
-def stdio_might_be_broken():
-    return platform_might_be_android()
-
-
 if __name__ == "__main__":
     print("Use ../jit-test/jit_test.py to run these tests.")
