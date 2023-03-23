@@ -970,8 +970,10 @@ export class FeatureCallout {
             );
             this.win.addEventListener("keypress", this, { capture: true });
             this._positionCallout();
-            let container = this.doc.getElementById(CONTAINER_ID);
-            container.focus();
+            let button = this.doc
+              .getElementById(CONTAINER_ID)
+              .querySelector(".primary");
+            button.focus();
             this.win.addEventListener("focus", this, {
               capture: true, // get the event before retargeting
               passive: true,
