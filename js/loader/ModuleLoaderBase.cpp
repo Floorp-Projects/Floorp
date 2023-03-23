@@ -997,7 +997,12 @@ ModuleLoaderBase::~ModuleLoaderBase() {
 
 void ModuleLoaderBase::Shutdown() {
   CancelAndClearDynamicImports();
-  MOZ_ASSERT(mFetchingModules.IsEmpty());
+
+  for (const auto& entry : mFetchingModules) {
+    if (entry.GetData()) {
+      entry.GetData()->Reject(NS_ERROR_FAILURE, __func__);
+    }
+  }
 
   for (const auto& entry : mFetchedModules) {
     if (entry.GetData()) {
@@ -1005,6 +1010,7 @@ void ModuleLoaderBase::Shutdown() {
     }
   }
 
+  mFetchingModules.Clear();
   mFetchedModules.Clear();
   mGlobalObject = nullptr;
   mEventTarget = nullptr;
