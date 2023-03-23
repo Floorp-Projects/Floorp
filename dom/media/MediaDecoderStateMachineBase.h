@@ -158,6 +158,8 @@ class MediaDecoderStateMachineBase {
 
   virtual RefPtr<SetCDMPromise> SetCDMProxy(CDMProxy* aProxy);
 
+  virtual bool IsExternalStateMachine() const { return false; }
+
  protected:
   virtual ~MediaDecoderStateMachineBase() = default;
 

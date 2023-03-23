@@ -92,6 +92,8 @@ class ExternalEngineStateMachine final
 
   RefPtr<SetCDMPromise> SetCDMProxy(CDMProxy* aProxy) override;
 
+  bool IsExternalStateMachine() const override { return true; }
+
  private:
   ~ExternalEngineStateMachine() = default;
 
