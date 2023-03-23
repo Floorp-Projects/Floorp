@@ -216,7 +216,13 @@ static bool MustBeGenericAccessible(nsIContent* aContent,
 static bool MustBeAccessible(nsIContent* aContent, DocAccessible* aDocument) {
   nsIFrame* frame = aContent->GetPrimaryFrame();
   MOZ_ASSERT(frame);
-  if (frame->IsFocusable()) {
+  // This document might be invisible when it first loads. Therefore, we must
+  // check focusability irrespective of visibility here. Otherwise, we might not
+  // create Accessibles for some focusable elements; e.g. a span with only a
+  // tabindex. Elements that are invisible within this document are excluded
+  // earlier in CreateAccessible.
+  if (frame->IsFocusable(/* aWithMouse */ false,
+                         /* aCheckVisibility */ false)) {
     return true;
   }
 

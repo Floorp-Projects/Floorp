@@ -237,7 +237,9 @@ addAccessibleTask(
  * Test caching of the focusable state in iframes which are initially visibility: hidden.
  */
 addAccessibleTask(
-  `<button id="button"></button>`,
+  `
+<button id="button"></button>
+<span id="span" tabindex="-1">span</span>`,
   async function(browser, topDocAcc) {
     info("Changing visibility on iframe");
     let reordered = waitForEvent(EVENT_REORDER, topDocAcc);
@@ -253,6 +255,9 @@ addAccessibleTask(
     await comparePIDs(browser, gIsRemoteIframe);
     const button = findAccessibleChildByID(iframeDoc, "button");
     testStates(button, STATE_FOCUSABLE);
+    const span = findAccessibleChildByID(iframeDoc, "span");
+    ok(span, "span Accessible exists");
+    testStates(span, STATE_FOCUSABLE);
   },
   {
     topLevel: false,
