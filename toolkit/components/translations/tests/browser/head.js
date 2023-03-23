@@ -7,6 +7,10 @@ const { TranslationsParent } = ChromeUtils.importESModule(
   "resource://gre/actors/TranslationsParent.sys.mjs"
 );
 
+// Avoid about:blank's non-standard behavior.
+const BLANK_PAGE =
+  "data:text/html;charset=utf-8,<title>Blank</title>Blank page";
+
 /**
  * The mochitest runs in the parent process. This function opens up a new tab,
  * opens up about:translations, and passes the test requirements into the content process.
@@ -71,10 +75,10 @@ async function openAboutTranslations({
     translationResultBlank: "#translation-to-blank",
   };
 
-  // Start the tab at about:blank.
+  // Start the tab at a blank page.
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    "about:blank",
+    BLANK_PAGE,
     true // waitForLoad
   );
 
@@ -265,10 +269,10 @@ async function loadTestPage({ runInPage, languagePairs, page }) {
     ],
   });
 
-  // Start the tab at about:blank.
+  // Start the tab at a blank page.
   const tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    "about:blank",
+    BLANK_PAGE,
     true // waitForLoad
   );
 
