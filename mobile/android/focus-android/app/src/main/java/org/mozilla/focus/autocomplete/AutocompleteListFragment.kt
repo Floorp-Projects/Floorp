@@ -305,7 +305,7 @@ open class AutocompleteListFragment : BaseSettingsLikeFragment(), CoroutineScope
                 fragment.activity?.invalidateOptionsMenu()
             }
 
-            handleView.isVisible = isSelectionMode
+            handleView.isVisible = !isSelectionMode
             handleView.setOnTouchListener { _, event ->
                 if (event.actionMasked == MotionEvent.ACTION_DOWN) {
                     itemTouchHelper.startDrag(this)
