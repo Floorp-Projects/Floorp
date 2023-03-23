@@ -110,7 +110,7 @@ excluded_from_imports_prefix = list(
             "remote/shared/messagehandler/test/browser/resources/modules/root/invalid.sys.mjs",
             "testing/talos/talos/startup_test/sessionrestore/profile-manywindows/sessionstore.js",
             "testing/talos/talos/startup_test/sessionrestore/profile/sessionstore.js",
-            "toolkit/components/reader/Readerable.jsm",
+            "toolkit/components/reader/Readerable.sys.mjs",
             "toolkit/components/workerloader/tests/moduleF-syntax-error.js",
             "tools/lint/test/",
             "tools/update-packaging/test/",

@@ -46,12 +46,8 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  ReaderMode: "resource://gre/modules/ReaderMode.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  this,
-  "ReaderMode",
-  "resource://gre/modules/ReaderMode.jsm"
-);
 ChromeUtils.defineModuleGetter(
   this,
   "pktApi",

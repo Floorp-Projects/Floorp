@@ -32,20 +32,12 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ReaderWorker",
-  "resource://gre/modules/reader/ReaderWorker.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
   LanguageDetector:
     "resource://gre/modules/translation/LanguageDetector.sys.mjs",
+  ReaderWorker: "resource://gre/modules/reader/ReaderWorker.sys.mjs",
+  Readerable: "resource://gre/modules/Readerable.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Readerable",
-  "resource://gre/modules/Readerable.jsm"
-);
 
 const gIsFirefoxDesktop =
   Services.appinfo.ID == "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";

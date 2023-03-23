@@ -2,9 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { ReaderMode } = ChromeUtils.import(
-  "resource://gre/modules/ReaderMode.jsm"
-);
+import { ReaderMode } from "resource://gre/modules/ReaderMode.sys.mjs";
+
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 

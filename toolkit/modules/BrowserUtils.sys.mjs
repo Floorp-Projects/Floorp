@@ -9,11 +9,8 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
+  ReaderMode: "resource://gre/modules/ReaderMode.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ReaderMode: "resource://gre/modules/ReaderMode.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
