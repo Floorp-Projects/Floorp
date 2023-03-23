@@ -552,8 +552,12 @@ MOZ_ALWAYS_INLINE bool Proxy::setInternal(JSContext* cx, HandleObject proxy,
   //
   // This doesn't interact with hasPrototype, as PrivateFields are always
   // own propertiers, and so we never deal with prototype traversals.
-  if (id.isPrivateName() && handler->useProxyExpandoObjectForPrivateFields()) {
-    return ProxySetOnExpando(cx, proxy, id, v, receiver, result);
+  if (id.isPrivateName()) {
+    if (handler->useProxyExpandoObjectForPrivateFields()) {
+      return ProxySetOnExpando(cx, proxy, id, v, receiver, result);
+    }
+
+    return handler->set(cx, proxy, id, v, receiver, result);
   }
 
   // Special case. See the comment on BaseProxyHandler::mHasPrototype.
