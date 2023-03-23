@@ -82,6 +82,10 @@ fi
 
 UPSTREAM_ADDED_FILES=""
 
+# Grab the filtered changes from git based on what we vendor.
+FILTERED_GIT_CHANGES=`./mach python $SCRIPT_DIR/filter_git_changes.py \
+   --repo-path $MOZ_LIBWEBRTC_SRC --commit-sha $MOZ_LIBWEBRTC_NEXT_BASE`
+
 # After this point:
 # * eE: All commands should succeed.
 # * u: All variables should be defined before use.
@@ -154,10 +158,8 @@ function add_new_upstream_files {
   if [ "x$HANDLE_NOOP_COMMIT" == "x1" ]; then
     return
   fi
-  UPSTREAM_ADDED_FILES=`cd $MOZ_LIBWEBRTC_SRC && \
-    git diff -r $MOZ_LIBWEBRTC_BASE -r $MOZ_LIBWEBRTC_NEXT_BASE \
-        --name-status --diff-filter=A \
-        | awk '{print $2;}'`
+  UPSTREAM_ADDED_FILES=`echo "$FILTERED_GIT_CHANGES" | grep "^A" \
+      | awk '{print $2;}' || true`
   if [ "x$UPSTREAM_ADDED_FILES" != "x" ]; then
     echo "-------"
     echo "------- Add new upstream files"
@@ -171,10 +173,8 @@ function remove_deleted_upstream_files {
   if [ "x$HANDLE_NOOP_COMMIT" == "x1" ]; then
     return
   fi
-  UPSTREAM_DELETED_FILES=`cd $MOZ_LIBWEBRTC_SRC && \
-    git diff -r $MOZ_LIBWEBRTC_BASE -r $MOZ_LIBWEBRTC_NEXT_BASE \
-        --name-status --diff-filter=D \
-        | awk '{print $2;}'`
+  UPSTREAM_DELETED_FILES=`echo "$FILTERED_GIT_CHANGES" | grep "^D" \
+      | awk '{print $2;}' || true`
   if [ "x$UPSTREAM_DELETED_FILES" != "x" ]; then
     echo "-------"
     echo "------- Remove deleted upstream files"
@@ -188,10 +188,8 @@ function handle_renamed_upstream_files {
   if [ "x$HANDLE_NOOP_COMMIT" == "x1" ]; then
     return
   fi
-  UPSTREAM_RENAMED_FILES=`cd $MOZ_LIBWEBRTC_SRC && \
-    git diff -r $MOZ_LIBWEBRTC_BASE -r $MOZ_LIBWEBRTC_NEXT_BASE \
-        --name-status --diff-filter=R \
-        | awk '{print $2 " " $3;}'`
+  UPSTREAM_RENAMED_FILES=`echo "$FILTERED_GIT_CHANGES" | grep "^R" \
+      | awk '{print $2 " " $3;}' || true`
   if [ "x$UPSTREAM_RENAMED_FILES" != "x" ]; then
     echo "-------"
     echo "------- Handle renamed upstream files"
