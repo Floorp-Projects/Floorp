@@ -372,7 +372,9 @@ function loadCallgraph(files)
             delete functionAttrs[f];
 
         // Remove GC-suppressed functions from the set of functions known to GC.
-        if (all & ATTR_GC_SUPPRESSED)
+        // Also remove functions only reachable through calls that have been
+        // replaced.
+        if (all & (ATTR_GC_SUPPRESSED | ATTR_REPLACED))
             delete gcFunctions[name];
     }
 
@@ -406,7 +408,7 @@ function loadCallgraph(files)
         if (!callersOf.has(name))
             continue;
         for (const [caller, {any, all}] of callersOf.get(name)) {
-            if (!(all & ATTR_GC_SUPPRESSED)) {
+            if ((all & (ATTR_GC_SUPPRESSED | ATTR_REPLACED)) == 0) {
                 if (addGCFunction(caller, name, gcFunctions, functionAttrs, functions))
                     worklist.push(caller);
             }
