@@ -2,9 +2,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
-
-var EXPORTED_SYMBOLS = ["ReaderMode"];
 
 // Constants for telemetry.
 const DOWNLOAD_SUCCESS = 0;
@@ -31,9 +28,7 @@ const CLASSES_TO_PRESERVE = [
   "wp-smiley",
 ];
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -57,7 +52,7 @@ const gIsFirefoxDesktop =
 
 Services.telemetry.setEventRecordingEnabled("readermode", true);
 
-var ReaderMode = {
+export var ReaderMode = {
   DEBUG: 0,
 
   // For time spent telemetry

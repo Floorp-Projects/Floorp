@@ -216,7 +216,7 @@ toolkit/components/reader/Readability-readerable.js
 toolkit/components/reader/JSDOMParser.js
 
 # Uses preprocessing
-toolkit/components/reader/Readerable.jsm
+toolkit/components/reader/Readerable.sys.mjs
 
 # Generated & special files in cld2
 toolkit/components/translation/cld2/

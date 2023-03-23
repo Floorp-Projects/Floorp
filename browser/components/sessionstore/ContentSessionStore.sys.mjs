@@ -80,7 +80,7 @@ class EventListener extends Handler {
         !content.document.body.classList.contains("loaded")
       ) {
         // Don't restore the scroll position of an about:reader page at this
-        // point; listen for the custom event dispatched from AboutReader.jsm.
+        // point; listen for the custom event dispatched from AboutReader.sys.mjs.
         content.addEventListener("AboutReaderContentReady", this);
         return;
       }

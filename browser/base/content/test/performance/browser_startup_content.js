@@ -35,7 +35,7 @@ const known_scripts = {
     "resource:///actors/LinkHandlerChild.sys.mjs",
     "resource:///actors/SearchSERPTelemetryChild.sys.mjs",
     "resource://gre/actors/ContentMetaChild.sys.mjs",
-    "resource://gre/modules/Readerable.jsm",
+    "resource://gre/modules/Readerable.sys.mjs",
 
     // Telemetry
     "resource://gre/modules/TelemetryControllerBase.sys.mjs", // bug 1470339
