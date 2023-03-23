@@ -65,7 +65,7 @@ export class LanguageIdEngine {
       const onMessage = ({ data }) => {
         if (data.type === "initialization-success") {
           resolve();
-        } else if (data.type === "initialization-failure") {
+        } else if (data.type === "initialization-error") {
           reject(data.error);
         }
         this.#languageIdWorker.removeEventListener("message", onMessage);
@@ -252,7 +252,7 @@ export class TranslationsEngine {
         lazy.console.log("Received initialization message", data);
         if (data.type === "initialization-success") {
           resolve();
-        } else if (data.type === "initialization-failure") {
+        } else if (data.type === "initialization-error") {
           reject(data.error);
         }
         this.#translationsWorker.removeEventListener("message", onMessage);
