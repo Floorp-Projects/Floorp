@@ -1,0 +1,38 @@
+# HG changeset patch
+# User Julien Cristau <jcristau@mozilla.com>
+# Date 1679408823 -3600
+#      Tue Mar 21 15:27:03 2023 +0100
+# Branch stable
+# Node ID 3a889388b8f5e4fc884fd7eb6c5daf82056627e2
+# Parent  411dc27fd9fd076d6a031a08fcaace659afe2fe3
+url: don't ignore timeout for https connections
+
+For http, we use the stdlib's HTTPConnection.connect which passes the
+timeout down to socket.create_connection; for https, we override the
+connect method but weren't handling the timeout, so connections could
+hang for hours even with http.timeout set to low values.
+
+diff --git a/mercurial/url.py b/mercurial/url.py
+--- a/mercurial/url.py
++++ b/mercurial/url.py
+@@ -404,17 +404,19 @@ if has_https:
+             *args,
+             **kwargs
+         ):
+             keepalive.HTTPConnection.__init__(self, host, port, *args, **kwargs)
+             self.key_file = key_file
+             self.cert_file = cert_file
+ 
+         def connect(self):
+-            self.sock = socket.create_connection((self.host, self.port))
++            self.sock = socket.create_connection(
++                (self.host, self.port), self.timeout
++            )
+ 
+             host = self.host
+             if self.realhostport:  # use CONNECT proxy
+                 _generic_proxytunnel(self)
+                 host = self.realhostport.rsplit(b':', 1)[0]
+             self.sock = sslutil.wrapsocket(
+                 self.sock,
+                 self.key_file,
