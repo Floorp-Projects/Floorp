@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import pathlib
 from unittest import mock
 
 import mozunit
@@ -162,6 +163,9 @@ def test_android_failure():
         android(metadata)
 
 
+@mock.patch(
+    "mozperftest.system.android.AndroidDevice.custom_apk_exists", new=lambda x: False
+)
 @mock.patch("mozperftest.utils.requests.get", new=requests_content())
 @mock.patch("mozperftest.system.android.ADBLoggedDevice")
 def test_android_apk_alias(device):
@@ -177,7 +181,7 @@ def test_android_apk_alias(device):
     system = env.layers[SYSTEM]
     with system as android, silence(system):
         android(metadata)
-    # XXX really ?
+
     assert device.mock_calls[1][1][0] == "org.mozilla.fenix"
     assert device.mock_calls[2][1][0].endswith("target.apk")
 
@@ -248,6 +252,79 @@ def test_android_log_cat(device):
 
         andro.device.get_logcat.assert_called()
         andro.device.clear_logcat.assert_called()
+
+
+@mock.patch("mozperftest.system.android.AndroidDevice.setup", new=mock.MagicMock)
+@mock.patch("mozperftest.system.android.Path")
+@mock.patch("mozperftest.system.android.ADBLoggedDevice", new=FakeDevice)
+def test_android_custom_apk(mozperftest_android_path):
+    args = {
+        "flavor": "mobile-browser",
+        "android": True,
+    }
+
+    with temp_file(name="user_upload.apk", content="") as sample_apk:
+        sample_apk = pathlib.Path(sample_apk)
+        mozperftest_android_path.return_value = sample_apk
+
+        mach_cmd, metadata, env = get_running_env(**args)
+        system = env.layers[SYSTEM]
+        android = system.layers[1]
+
+        with system as _, silence(system):
+            assert android._custom_apk_path is None
+            assert android.custom_apk_exists()
+            assert android.custom_apk_path == sample_apk
+
+    mozperftest_android_path.assert_called_once()
+
+
+@mock.patch("mozperftest.system.android.AndroidDevice.setup", new=mock.MagicMock)
+@mock.patch("mozperftest.system.android.Path.exists")
+@mock.patch("mozperftest.system.android.ADBLoggedDevice", new=FakeDevice)
+def test_android_custom_apk_nonexistent(path_exists):
+    args = {
+        "flavor": "mobile-browser",
+        "android": True,
+    }
+
+    path_exists.return_value = False
+
+    mach_cmd, metadata, env = get_running_env(**args)
+    system = env.layers[SYSTEM]
+    android = system.layers[1]
+
+    with system as _, silence(system):
+        assert android._custom_apk_path is None
+        assert not android.custom_apk_exists()
+        assert android.custom_apk_path is None
+
+    path_exists.assert_called()
+
+
+@mock.patch("mozperftest.system.android.Path")
+@mock.patch("mozperftest.system.android.ADBLoggedDevice", new=FakeDevice)
+def test_android_setup_custom_apk(mozperftest_android_path):
+    args = {
+        "flavor": "mobile-browser",
+        "android": True,
+    }
+
+    with temp_file(name="user_upload.apk", content="") as sample_apk:
+        sample_apk = pathlib.Path(sample_apk)
+        mozperftest_android_path.return_value = sample_apk
+
+        mach_cmd, metadata, env = get_running_env(**args)
+        system = env.layers[SYSTEM]
+        android = system.layers[1]
+
+        with system as _, silence(system):
+            # The custom apk should be found immediately, and it
+            # should replace any --android-install-apk settings
+            assert android._custom_apk_path == sample_apk
+            assert env.get_arg("android-install-apk") == [sample_apk]
+
+    mozperftest_android_path.assert_called_once()
 
 
 if __name__ == "__main__":
