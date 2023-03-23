@@ -60,6 +60,7 @@ for patch in \
  bug-1790071-ICU-22132-standardize-vtzone-output.diff \
  bug-1792775-ICU-22198.diff \
  bug-1792775-ICU-22206.diff \
+ bug-1818103-CLDR-16399.diff \
 ; do
   echo "Applying local patch $patch"
   patch -d ${icu_dir}/../../ -p1 --no-backup-if-mismatch < ${icu_dir}/../icu-patches/$patch
