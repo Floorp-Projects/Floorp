@@ -707,7 +707,9 @@ void WebAuthnController::RunPinCallback(uint64_t aTransactionId,
                                         const nsCString& aPin) {
   mozilla::ipc::AssertIsOnBackgroundThread();
 
-  mTransportImpl->PinCallback(aTransactionId, aPin);
+  if (mTransportImpl) {
+    mTransportImpl->PinCallback(aTransactionId, aPin);
+  }
 }
 
 NS_IMETHODIMP
