@@ -14,7 +14,7 @@
   min-width: 0;
 }
 
-@media (-moz-platform: macos) and (not (-moz-non-native-content-theme)) {
+@media (-moz-platform: macos) {
   :host {
     -moz-default-appearance: searchfield;
     /* TODO: These are a bit dubious, see bug 1815264 */
@@ -67,16 +67,6 @@ input {
   list-style-image: url(chrome://global/skin/icons/search-textbox.svg);
 }
 
-/* search-textbox.svg is different on macOS vs windows/linux... */
-@media (-moz-platform: macos) {
-  .textbox-search-sign,
-  .textbox-search-icon {
-    -moz-context-properties: fill, fill-opacity;
-    fill: currentColor;
-    fill-opacity: 0.8;
-  }
-}
-
 .textbox-search-sign:-moz-locale-dir(rtl),
 .textbox-search-icon:-moz-locale-dir(rtl) {
   transform: scaleX(-1);
@@ -108,7 +98,7 @@ input {
 
 /* On macOS -moz-default-appearance: searchbox provides the search icon too, so
  * disable those there unconditionally */
-@media (-moz-platform: macos) and (not (-moz-non-native-content-theme)) {
+@media (-moz-platform: macos) {
   .textbox-search-sign,
   .textbox-search-icons:not([selectedIndex="1"]) {
     display: none;
