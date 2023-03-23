@@ -158,14 +158,27 @@ function processBody(functionName, body, functionBodies)
         // The attrs (eg ATTR_GC_SUPPRESSED) are determined by whatever RAII
         // scopes might be active, which have been computed previously for all
         // points in the body.
-        var edgeAttrs = body.attrs[edge.Index[0]] | 0;
+        const scopeAttrs = body.attrs[edge.Index[0]] | 0;
 
         for (var callee of getCallees(edge)) {
-            // Special-case some calls when we can derive more information about them, eg
-            // that they are a destructor that won't do anything.
-            if (callee.kind === "direct" && edgeIsNonReleasingDtor(body, edge, callee.name, functionBodies)) {
-                const block = blockIdentifier(body);
-                addToKeyedList(gcEdges, block, { Index: edge.Index, attrs: ATTR_GC_SUPPRESSED | ATTR_NONRELEASING });
+            let edgeAttrs = scopeAttrs;
+
+            // isSpecialEdge can set the ATTR_REPLACED attribute, which means that the call in the edge
+            // has been replaced by zero or more edges to other functions. This is used when the original
+            // edge will end up calling through a function pointer or something (eg ~shared_ptr<T> invokes
+            // a function pointer whose only possible value is T::~T()).
+            const edgeInfo = callee.kind === "direct" && isSpecialEdge(body, edge, callee.name, functionBodies);
+            if (edgeInfo) {
+                edgeAttrs = edgeAttrs | edgeInfo.attrs;
+
+                // Edges that call a refcounted destructor that we know will not hit a zero
+                // ref count will be added to a "special edge" table that will be consulted
+                // when analyzing the function body. (Calls encountered during per-function
+                // analysis will not consult the global callgraph being generated here.)
+                if (edgeInfo.attrs & ATTR_NONRELEASING) {
+                    const block = blockIdentifier(body);
+                    addToKeyedList(gcEdges, block, { Index: edge.Index, attrs: ATTR_GC_SUPPRESSED | ATTR_NONRELEASING });
+                }
             }
 
             // Individual callees may have additional attrs. The only such
