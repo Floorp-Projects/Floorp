@@ -62,7 +62,11 @@ function dvToString(v) {
     if (typeof(v) === 'object' && v !== null) {
         return `[object ${v.class}]`;
     }
-    return uneval(v);
+    const s = uneval(v);
+    if (s.length > 400) {
+        return s.substr(0, 400) + "...<" + (s.length - 400) + " more bytes>...";
+    }
+    return s;
 }
 
 function summaryObject(dv) {
