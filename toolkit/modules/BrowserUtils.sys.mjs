@@ -187,6 +187,12 @@ export var BrowserUtils = {
        * logic (shows just "(data)", localized). */
       case "data":
         return lazy.gLocalization.formatValueSync("browser-utils-url-data");
+      case "moz-extension":
+        let policy = WebExtensionPolicy.getByURI(uri);
+        return lazy.gLocalization.formatValueSync(
+          "browser-utils-url-extension",
+          { extension: policy?.name.trim() || uri.spec }
+        );
       case "chrome":
       case "resource":
       case "jar":
