@@ -31,8 +31,8 @@ static const char kQueryStrippingEnabledPBMPref[] =
 
 namespace mozilla {
 
-NS_IMPL_ISUPPORTS(URLQueryStringStripper, nsIURLQueryStringStripper,
-                  nsIURLQueryStrippingListObserver)
+NS_IMPL_ISUPPORTS(URLQueryStringStripper, nsIObserver,
+                  nsIURLQueryStringStripper, nsIURLQueryStrippingListObserver)
 
 // static
 already_AddRefed<URLQueryStringStripper>
@@ -249,6 +249,18 @@ URLQueryStringStripper::TestGetStripList(nsACString& aStripList) {
                    [](auto& aResult, const auto& aValue) {
                      aResult.Append(NS_ConvertUTF16toUTF8(aValue));
                    });
+  return NS_OK;
+}
+
+/* nsIObserver */
+NS_IMETHODIMP
+URLQueryStringStripper::Observe(nsISupports*, const char* aTopic,
+                                const char16_t*) {
+  // Since this class is created at profile-after-change by the Category
+  // Manager, it's expected to implement nsIObserver; however, we have nothing
+  // interesting to do here.
+  MOZ_ASSERT(strcmp(aTopic, "profile-after-change") == 0);
+
   return NS_OK;
 }
 
