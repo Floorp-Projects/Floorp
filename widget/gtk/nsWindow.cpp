@@ -8760,6 +8760,8 @@ bool nsWindow::IsAlwaysUndecoratedWindow() const {
     return true;
   }
   if (mWindowType == WindowType::Dialog &&
+      mBorderStyle != BorderStyle::Default &&
+      mBorderStyle != BorderStyle::All &&
       !(mBorderStyle & BorderStyle::Title) &&
       !(mBorderStyle & BorderStyle::ResizeH)) {
     return true;
