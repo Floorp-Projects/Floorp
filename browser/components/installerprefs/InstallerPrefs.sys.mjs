@@ -32,17 +32,13 @@ const INSTALLER_PREFS_BRANCH = "installer.";
 // any others will be ignored.
 const INSTALLER_PREFS_LIST = ["installer.taskbarpin.win10.enabled"];
 
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 // This constructor can take a list of prefs to override the default one,
 // but this is really only intended for tests to use. Normal usage should be
 // to leave the parameter omitted/undefined.
-function InstallerPrefs(prefsList) {
+export function InstallerPrefs(prefsList) {
   this.prefsList = prefsList || INSTALLER_PREFS_LIST;
 
   // Each pref to be reflected will get a value created under this key, in HKCU.
@@ -144,5 +140,3 @@ InstallerPrefs.prototype = {
     return key;
   },
 };
-
-var EXPORTED_SYMBOLS = ["InstallerPrefs"];
