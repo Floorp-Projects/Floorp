@@ -2,6 +2,20 @@
   "data": [
     {
       "click": {
+        "optIn": "button.accept-all",
+        "optOut": "button.reject-all",
+        "presence": "div#consent-page"
+      },
+      "schema": 1678898205499,
+      "cookies": {},
+      "domains": [
+        "yahoo.com"
+      ],
+      "id": "2f9123b1-7d6b-460f-8da8-988f82238ec7",
+      "last_modified": 1679487994744
+    },
+    {
+      "click": {
         "optIn": "#truste-consent-button",
         "optOut": "#truste-consent-required",
         "presence": "#truste-consent-content, .truste-consent-content, #truste-consent-track"
@@ -4148,19 +4162,6 @@
     },
     {
       "click": {
-        "optIn": "button.primary",
-        "presence": "div#consent-page"
-      },
-      "schema": 1674521304583,
-      "cookies": {},
-      "domains": [
-        "yahoo.com"
-      ],
-      "id": "2f9123b1-7d6b-460f-8da8-988f82238ec7",
-      "last_modified": 1674560738083
-    },
-    {
-      "click": {
         "optIn": "#cmpbntyestxt",
         "optOut": "#cmpbntnotxt",
         "presence": "div.cmpboxbtns"
@@ -7736,5 +7737,5 @@
       "last_modified": 1670498155641
     }
   ],
-  "timestamp": 1678276263380
+  "timestamp": 1679487994744
 }
