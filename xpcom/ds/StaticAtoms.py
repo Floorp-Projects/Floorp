@@ -1004,6 +1004,7 @@ STATIC_ATOMS = [
     Atom("popover", "popover"),
     Atom("popoverhidetarget", "popoverhidetarget"),
     Atom("popovershowtarget", "popovershowtarget"),
+    Atom("popovertargetaction", "popovertargetaction"),
     Atom("popovertoggletarget", "popovertoggletarget"),
     Atom("popup", "popup"),
     Atom("popupalign", "popupalign"),

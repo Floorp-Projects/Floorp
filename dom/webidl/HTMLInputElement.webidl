@@ -228,6 +228,8 @@ HTMLInputElement includes MozEditableElement;
 
 HTMLInputElement includes MozImageLoadingContent;
 
+HTMLInputElement includes PopoverInvokerElement;
+
 // https://wicg.github.io/entries-api/#idl-index
 partial interface HTMLInputElement {
   [Pref="dom.webkitBlink.filesystem.enabled", Frozen, Cached, Pure]
