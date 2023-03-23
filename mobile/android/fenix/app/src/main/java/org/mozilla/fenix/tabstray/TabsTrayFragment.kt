@@ -40,6 +40,7 @@ import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.databinding.ComponentTabstray2Binding
 import org.mozilla.fenix.databinding.ComponentTabstray3Binding
+import org.mozilla.fenix.databinding.ComponentTabstray3FabBinding
 import org.mozilla.fenix.databinding.ComponentTabstrayFabBinding
 import org.mozilla.fenix.databinding.FragmentTabTrayDialogBinding
 import org.mozilla.fenix.databinding.TabsTrayTabCounter2Binding
@@ -114,6 +115,10 @@ class TabsTrayFragment : AppCompatDialogFragment() {
     @Suppress("VariableNaming")
     internal var _tabsTrayComposeBinding: ComponentTabstray3Binding? = null
     private val tabsTrayComposeBinding get() = _tabsTrayComposeBinding!!
+
+    @Suppress("VariableNaming")
+    internal var _fabButtonComposeBinding: ComponentTabstray3FabBinding? = null
+    private val fabButtonComposeBinding get() = _fabButtonComposeBinding!!
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -205,6 +210,12 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                 true,
             )
 
+            _fabButtonComposeBinding = ComponentTabstray3FabBinding.inflate(
+                inflater,
+                tabsTrayDialogBinding.root,
+                true,
+            )
+
             tabsTrayComposeBinding.root.setContent {
                 FirefoxTheme(theme = Theme.getTheme(allowPrivateTheme = false)) {
                     TabsTray(
@@ -222,6 +233,12 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                         },
                         onTabLongClick = tabsTrayInteractor::onTabLongClicked,
                     )
+                }
+            }
+
+            fabButtonComposeBinding.root.setContent {
+                FirefoxTheme(theme = Theme.getTheme(allowPrivateTheme = false)) {
+                    TabsTrayFab(tabsTrayStore = tabsTrayStore)
                 }
             }
         } else {
