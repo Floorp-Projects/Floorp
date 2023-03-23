@@ -12,64 +12,6 @@ import tarfile
 
 import requests
 
-# If changing the list of unused files, please also update the egrep line
-# of the GIT_CHANGED variable in loop-ff.sh.
-LIBWEBRTC_UNUSED_IN_FIREFOX = [
-    ".clang-format",
-    ".git-blame-ignore-revs",
-    ".gitignore",
-    ".vpython",
-    "CODE_OF_CONDUCT.md",
-    "ENG_REVIEW_OWNERS",
-    "PRESUBMIT.py",
-    "README.chromium",
-    "WATCHLISTS",
-    "abseil-in-webrtc.md",
-    "codereview.settings",
-    "license_template.txt",
-    "native-api.md",
-    "presubmit_test.py",
-    "presubmit_test_mocks.py",
-    "pylintrc",
-    "style-guide.md",
-    # Only the camera code under sdk/android/api/org/webrtc is used, so
-    # we remove a bunch of other java files that aren't useful.
-    "sdk/android/AndroidManifest.xml",
-    "sdk/android/BUILD.gn",
-    "sdk/android/OWNERS",
-    "sdk/android/README",
-    "sdk/android/api/org/webrtc/OWNERS",
-    "sdk/android/instrumentationtests",
-    "sdk/android/src/jni",
-    "sdk/android/native_api",
-    "sdk/android/native_unittests",
-    "sdk/android/tests",
-    "sdk/android/api/org/webrtc/CandidatePairChangeEvent.java",
-    "sdk/android/api/org/webrtc/DefaultVideoEncoderFactory.java",
-    "sdk/android/api/org/webrtc/HardwareVideoEncoderFactory.java",
-    "sdk/android/api/org/webrtc/IceCandidate.java",
-    "sdk/android/api/org/webrtc/MediaStream.java",
-    "sdk/android/api/org/webrtc/NetworkChangeDetector.java",
-    "sdk/android/api/org/webrtc/NetworkChangeDetectorFactory.java",
-    "sdk/android/api/org/webrtc/NetworkControllerFactoryFactory.java",
-    "sdk/android/api/org/webrtc/NetworkMonitor.java",
-    "sdk/android/api/org/webrtc/NetworkMonitorAutoDetect.java",
-    "sdk/android/api/org/webrtc/NetworkStatePredictorFactoryFactory.java",
-    "sdk/android/api/org/webrtc/PeerConnection.java",
-    "sdk/android/api/org/webrtc/PeerConnectionDependencies.java",
-    "sdk/android/api/org/webrtc/PeerConnectionFactory.java",
-    "sdk/android/api/org/webrtc/RTCStats.java",
-    "sdk/android/api/org/webrtc/RTCStatsCollectorCallback.java",
-    "sdk/android/api/org/webrtc/RTCStatsReport.java",
-    "sdk/android/api/org/webrtc/RtcCertificatePem.java",
-    "sdk/android/api/org/webrtc/RtpParameters.java",
-    "sdk/android/api/org/webrtc/RtpReceiver.java",
-    "sdk/android/api/org/webrtc/RtpSender.java",
-    "sdk/android/api/org/webrtc/RtpTransceiver.java",
-    "sdk/android/src/java/org/webrtc/JniHelper.java",
-]
-
-
 THIRDPARTY_USED_IN_FIREFOX = [
     "abseil-cpp",
     "google_benchmark",
@@ -77,8 +19,172 @@ THIRDPARTY_USED_IN_FIREFOX = [
     "rnnoise",
 ]
 
-
 LIBWEBRTC_DIR = os.path.normpath("third_party/libwebrtc")
+
+
+def get_excluded_paths():
+    return [
+        ".clang-format",
+        ".git-blame-ignore-revs",
+        ".gitignore",
+        ".vpython",
+        "CODE_OF_CONDUCT.md",
+        "ENG_REVIEW_OWNERS",
+        "PRESUBMIT.py",
+        "README.chromium",
+        "WATCHLISTS",
+        "codereview.settings",
+        "license_template.txt",
+        "native-api.md",
+        "presubmit_test.py",
+        "presubmit_test_mocks.py",
+        "pylintrc",
+        # Only the camera code under sdk/android/api/org/webrtc is used, so
+        # we remove sdk/android and add back the specific files we want.
+        "sdk/android",
+    ]
+
+
+# Paths in this list are included even if their parent directory is
+# excluded in get_excluded_paths()
+def get_included_path_overrides():
+    return [
+        "sdk/android/src/java/org/webrtc/NativeLibrary.java",
+        "sdk/android/src/java/org/webrtc/FramerateBitrateAdjuster.java",
+        "sdk/android/src/java/org/webrtc/MediaCodecVideoDecoderFactory.java",
+        "sdk/android/src/java/org/webrtc/BitrateAdjuster.java",
+        "sdk/android/src/java/org/webrtc/MediaCodecWrapperFactory.java",
+        "sdk/android/src/java/org/webrtc/WebRtcClassLoader.java",
+        "sdk/android/src/java/org/webrtc/audio/WebRtcAudioRecord.java",
+        "sdk/android/src/java/org/webrtc/audio/WebRtcAudioTrack.java",
+        "sdk/android/src/java/org/webrtc/audio/WebRtcAudioManager.java",
+        "sdk/android/src/java/org/webrtc/audio/LowLatencyAudioBufferManager.java",
+        "sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java",
+        "sdk/android/src/java/org/webrtc/audio/WebRtcAudioEffects.java",
+        "sdk/android/src/java/org/webrtc/audio/VolumeLogger.java",
+        "sdk/android/src/java/org/webrtc/NativeCapturerObserver.java",
+        "sdk/android/src/java/org/webrtc/MediaCodecWrapper.java",
+        "sdk/android/src/java/org/webrtc/CalledByNative.java",
+        "sdk/android/src/java/org/webrtc/Histogram.java",
+        "sdk/android/src/java/org/webrtc/EglBase10Impl.java",
+        "sdk/android/src/java/org/webrtc/EglBase14Impl.java",
+        "sdk/android/src/java/org/webrtc/MediaCodecWrapperFactoryImpl.java",
+        "sdk/android/src/java/org/webrtc/AndroidVideoDecoder.java",
+        "sdk/android/src/java/org/webrtc/BaseBitrateAdjuster.java",
+        "sdk/android/src/java/org/webrtc/HardwareVideoEncoder.java",
+        "sdk/android/src/java/org/webrtc/VideoCodecMimeType.java",
+        "sdk/android/src/java/org/webrtc/NativeAndroidVideoTrackSource.java",
+        "sdk/android/src/java/org/webrtc/VideoDecoderWrapper.java",
+        "sdk/android/src/java/org/webrtc/JNILogging.java",
+        "sdk/android/src/java/org/webrtc/CameraCapturer.java",
+        "sdk/android/src/java/org/webrtc/CameraSession.java",
+        "sdk/android/src/java/org/webrtc/H264Utils.java",
+        "sdk/android/src/java/org/webrtc/Empty.java",
+        "sdk/android/src/java/org/webrtc/DynamicBitrateAdjuster.java",
+        "sdk/android/src/java/org/webrtc/Camera1Session.java",
+        "sdk/android/src/java/org/webrtc/JniCommon.java",
+        "sdk/android/src/java/org/webrtc/NV12Buffer.java",
+        "sdk/android/src/java/org/webrtc/WrappedNativeI420Buffer.java",
+        "sdk/android/src/java/org/webrtc/GlGenericDrawer.java",
+        "sdk/android/src/java/org/webrtc/RefCountDelegate.java",
+        "sdk/android/src/java/org/webrtc/Camera2Session.java",
+        "sdk/android/src/java/org/webrtc/MediaCodecUtils.java",
+        "sdk/android/src/java/org/webrtc/CalledByNativeUnchecked.java",
+        "sdk/android/src/java/org/webrtc/VideoEncoderWrapper.java",
+        "sdk/android/src/java/org/webrtc/NV21Buffer.java",
+        "sdk/android/api/org/webrtc/RendererCommon.java",
+        "sdk/android/api/org/webrtc/YuvHelper.java",
+        "sdk/android/api/org/webrtc/LibvpxVp9Encoder.java",
+        "sdk/android/api/org/webrtc/Metrics.java",
+        "sdk/android/api/org/webrtc/CryptoOptions.java",
+        "sdk/android/api/org/webrtc/MediaConstraints.java",
+        "sdk/android/api/org/webrtc/YuvConverter.java",
+        "sdk/android/api/org/webrtc/JavaI420Buffer.java",
+        "sdk/android/api/org/webrtc/VideoDecoder.java",
+        "sdk/android/api/org/webrtc/WrappedNativeVideoDecoder.java",
+        "sdk/android/api/org/webrtc/Camera2Enumerator.java",
+        "sdk/android/api/org/webrtc/SurfaceTextureHelper.java",
+        "sdk/android/api/org/webrtc/EglBase10.java",
+        "sdk/android/api/org/webrtc/DataChannel.java",
+        "sdk/android/api/org/webrtc/audio/JavaAudioDeviceModule.java",
+        "sdk/android/api/org/webrtc/audio/AudioDeviceModule.java",
+        "sdk/android/api/org/webrtc/audio/LegacyAudioDeviceModule.java",
+        "sdk/android/api/org/webrtc/SessionDescription.java",
+        "sdk/android/api/org/webrtc/GlUtil.java",
+        "sdk/android/api/org/webrtc/VideoSource.java",
+        "sdk/android/api/org/webrtc/AudioTrack.java",
+        "sdk/android/api/org/webrtc/EglRenderer.java",
+        "sdk/android/api/org/webrtc/VideoEncoder.java",
+        "sdk/android/api/org/webrtc/VideoCapturer.java",
+        "sdk/android/api/org/webrtc/SoftwareVideoDecoderFactory.java",
+        "sdk/android/api/org/webrtc/AudioSource.java",
+        "sdk/android/api/org/webrtc/GlRectDrawer.java",
+        "sdk/android/api/org/webrtc/StatsReport.java",
+        "sdk/android/api/org/webrtc/CameraVideoCapturer.java",
+        "sdk/android/api/org/webrtc/NetEqFactoryFactory.java",
+        "sdk/android/api/org/webrtc/AudioProcessingFactory.java",
+        "sdk/android/api/org/webrtc/Camera2Capturer.java",
+        "sdk/android/api/org/webrtc/ScreenCapturerAndroid.java",
+        "sdk/android/api/org/webrtc/RefCounted.java",
+        "sdk/android/api/org/webrtc/VideoEncoderFallback.java",
+        "sdk/android/api/org/webrtc/AudioEncoderFactoryFactory.java",
+        "sdk/android/api/org/webrtc/EglBase14.java",
+        "sdk/android/api/org/webrtc/SoftwareVideoEncoderFactory.java",
+        "sdk/android/api/org/webrtc/VideoEncoderFactory.java",
+        "sdk/android/api/org/webrtc/StatsObserver.java",
+        "sdk/android/api/org/webrtc/PlatformSoftwareVideoDecoderFactory.java",
+        "sdk/android/api/org/webrtc/Camera1Capturer.java",
+        "sdk/android/api/org/webrtc/AddIceObserver.java",
+        "sdk/android/api/org/webrtc/SurfaceViewRenderer.java",
+        "sdk/android/api/org/webrtc/CameraEnumerator.java",
+        "sdk/android/api/org/webrtc/CameraEnumerationAndroid.java",
+        "sdk/android/api/org/webrtc/VideoDecoderFallback.java",
+        "sdk/android/api/org/webrtc/FileVideoCapturer.java",
+        "sdk/android/api/org/webrtc/NativeLibraryLoader.java",
+        "sdk/android/api/org/webrtc/Camera1Enumerator.java",
+        "sdk/android/api/org/webrtc/NativePeerConnectionFactory.java",
+        "sdk/android/api/org/webrtc/LibaomAv1Encoder.java",
+        "sdk/android/api/org/webrtc/BuiltinAudioEncoderFactoryFactory.java",
+        "sdk/android/api/org/webrtc/AudioDecoderFactoryFactory.java",
+        "sdk/android/api/org/webrtc/FecControllerFactoryFactoryInterface.java",
+        "sdk/android/api/org/webrtc/VideoFrameBufferType.java",
+        "sdk/android/api/org/webrtc/SdpObserver.java",
+        "sdk/android/api/org/webrtc/Predicate.java",
+        "sdk/android/api/org/webrtc/VideoFileRenderer.java",
+        "sdk/android/api/org/webrtc/WrappedNativeVideoEncoder.java",
+        "sdk/android/api/org/webrtc/LibvpxVp8Encoder.java",
+        "sdk/android/api/org/webrtc/DtmfSender.java",
+        "sdk/android/api/org/webrtc/VideoTrack.java",
+        "sdk/android/api/org/webrtc/LibvpxVp8Decoder.java",
+        "sdk/android/api/org/webrtc/GlShader.java",
+        "sdk/android/api/org/webrtc/FrameEncryptor.java",
+        "sdk/android/api/org/webrtc/EglBase.java",
+        "sdk/android/api/org/webrtc/VideoProcessor.java",
+        "sdk/android/api/org/webrtc/SSLCertificateVerifier.java",
+        "sdk/android/api/org/webrtc/VideoSink.java",
+        "sdk/android/api/org/webrtc/MediaSource.java",
+        "sdk/android/api/org/webrtc/DefaultVideoDecoderFactory.java",
+        "sdk/android/api/org/webrtc/VideoCodecInfo.java",
+        "sdk/android/api/org/webrtc/FrameDecryptor.java",
+        "sdk/android/api/org/webrtc/VideoDecoderFactory.java",
+        "sdk/android/api/org/webrtc/TextureBufferImpl.java",
+        "sdk/android/api/org/webrtc/VideoFrame.java",
+        "sdk/android/api/org/webrtc/IceCandidateErrorEvent.java",
+        "sdk/android/api/org/webrtc/CapturerObserver.java",
+        "sdk/android/api/org/webrtc/MediaStreamTrack.java",
+        "sdk/android/api/org/webrtc/GlTextureFrameBuffer.java",
+        "sdk/android/api/org/webrtc/TurnCustomizer.java",
+        "sdk/android/api/org/webrtc/TimestampAligner.java",
+        "sdk/android/api/org/webrtc/BuiltinAudioDecoderFactoryFactory.java",
+        "sdk/android/api/org/webrtc/LibvpxVp9Decoder.java",
+        "sdk/android/api/org/webrtc/SurfaceEglRenderer.java",
+        "sdk/android/api/org/webrtc/HardwareVideoDecoderFactory.java",
+        "sdk/android/api/org/webrtc/VideoCodecStatus.java",
+        "sdk/android/api/org/webrtc/Dav1dDecoder.java",
+        "sdk/android/api/org/webrtc/VideoFrameDrawer.java",
+        "sdk/android/api/org/webrtc/CallSessionFileRotatingLogSink.java",
+        "sdk/android/api/org/webrtc/EncodedImage.java",
+    ]
 
 
 def make_github_url(repo, commit):
@@ -196,34 +302,47 @@ def unpack(target):
             except NotADirectoryError:
                 pass
 
+        unused_libwebrtc_in_firefox = get_excluded_paths()
+        forced_used_in_firefox = get_included_path_overrides()
+
         # adjust target_path if GitHub packaging is involved
         if not os.path.exists(os.path.join(target_path, libwebrtc_used_in_firefox[0])):
             # GitHub packs everything inside a separate directory
             target_path = os.path.join(target_path, os.listdir(target_path)[0])
 
-        # remove the top level exceptions we don't want to vendor into our tree
-        libwebrtc_used_in_firefox = [
-            path
-            for path in libwebrtc_used_in_firefox
-            if (path not in LIBWEBRTC_UNUSED_IN_FIREFOX)
-        ]
+        # remove any entries found in unused_libwebrtc_in_firefox from the
+        # tarfile
+        for path in unused_libwebrtc_in_firefox:
+            if os.path.isdir(os.path.join(target_path, path)):
+                shutil.rmtree(os.path.join(target_path, path))
+            else:
+                os.remove(os.path.join(target_path, path))
 
-        # move all the top level entries from the tarfile to LIBWEBRTC_DIR
-        for path in libwebrtc_used_in_firefox:
+        # move remaining top level entries from the tarfile to LIBWEBRTC_DIR
+        for path in os.listdir(target_path):
             shutil.move(
                 os.path.join(target_path, path), os.path.join(LIBWEBRTC_DIR, path)
             )
 
-        # remove any non-top-level entries in LIBWEBRTC_UNUSED_IN_FIREFOX
-        for path in LIBWEBRTC_UNUSED_IN_FIREFOX:
-            try:
-                if os.path.isdir(os.path.join(LIBWEBRTC_DIR, path)):
-                    shutil.rmtree(os.path.join(LIBWEBRTC_DIR, path))
-                else:
-                    os.remove(os.path.join(LIBWEBRTC_DIR, path))
-            except OSError:
-                # we can ignore errors from trying to delete directories
-                pass
+        # An easy, but inefficient way to accomplish including specific
+        # files from directories otherwise removed.  Re-extract the tar
+        # file, and only copy over the exact files requested.
+        shutil.rmtree(target_path)
+        with tarfile.open(target_archive) as t:
+            safe_extract(t, path=target_path)
+
+        # Copy the force included files.  Note: the instinctual action
+        # is to do this prior to removing the excluded paths to avoid
+        # reextracting the tar file.  However, this causes errors due to
+        # pre-existing paths when other directories are moved out of the
+        # tar file in the "move all the top level entries from the
+        # tarfile" phase above.
+        for path in forced_used_in_firefox:
+            dest_path = os.path.join(LIBWEBRTC_DIR, path)
+            dir_path = os.path.dirname(dest_path)
+            if not os.path.exists(dir_path):
+                os.makedirs(dir_path)
+            shutil.move(os.path.join(target_path, path), dest_path)
     elif target == "build":
         try:
             shutil.rmtree(os.path.join(LIBWEBRTC_DIR, "build"))
