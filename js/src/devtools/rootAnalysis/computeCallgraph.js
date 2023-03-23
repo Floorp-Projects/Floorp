@@ -160,42 +160,15 @@ function processBody(functionName, body, functionBodies)
         // points in the body.
         const scopeAttrs = body.attrs[edge.Index[0]] | 0;
 
-        for (const callee of getCallees(edge)) {
-            let edgeAttrs = scopeAttrs;
-
-            // getCallEdgeProperties can set the ATTR_REPLACED attribute, which
-            // means that the call in the edge has been replaced by zero or
-            // more edges to other functions. This is used when the original
-            // edge will end up calling through a function pointer or something
-            // (eg ~shared_ptr<T> invokes a function pointer whose only possible
-            // value is T::~T()). The original call edges are left in the
-            // graph in case they are useful for other purposes.
-            const edgeInfo = callee.kind === "direct" && getCallEdgeProperties(body, edge, callee.name, functionBodies);
-            if (edgeInfo) {
-                edgeAttrs = edgeAttrs | edgeInfo.attrs;
-
-                // The main output of the callgraph generation step, the
-                // callgraph, does not contain any information on specific
-                // edges (specific calls in a function body). Local attributes
-                // are propagated through the whole callgraph. In some cases,
-                // local information about a call is needed, eg that it has
-                // been replaced (ATTR_REPLACED).
-
-                // ATTR_NONRELEASING: call to a refcounted destructor that we
-                // know will not hit a zero ref count.
-                //
-                // ATTR_REPLACED: call that should not be considered for the
-                // purposes of GC reachability.
-                if (edgeInfo.attrs) {
-                    const block = blockIdentifier(body);
-                    addToKeyedList(gcEdges, block, { Index: edge.Index, attrs: edgeInfo.attrs });
-                }
+        for (const { callee, attrs } of getCallees(body, edge, scopeAttrs, functionBodies)) {
+            if (attrs) {
+                const block = blockIdentifier(body);
+                addToKeyedList(gcEdges, block, { Index: edge.Index, attrs });
             }
 
             // Individual callees may have additional attrs. The only such
             // bit currently is that nsISupports.{AddRef,Release} are assumed
             // to never GC.
-            const attrs = edgeAttrs | callee.attrs;
             let prologue = attrs ? `/${attrs} ` : "";
             prologue += functionId(functionName) + " ";
             if (callee.kind == 'direct') {
