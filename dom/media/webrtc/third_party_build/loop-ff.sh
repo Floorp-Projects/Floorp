@@ -135,11 +135,9 @@ bash $SCRIPT_DIR/fast-forward-libwebrtc.sh 2>&1| tee -a $LOOP_OUTPUT_LOG
 MOZ_CHANGED=`hg diff -c tip --stat \
    | egrep -ve "README.moz-ff-commit|README.mozilla|files changed," \
    | wc -l | tr -d " " || true`
-GIT_CHANGED=`cd $MOZ_LIBWEBRTC_SRC ; \
-   git show --oneline --name-only $MOZ_LIBWEBRTC_NEXT_BASE \
-   | csplit -f $TMP_DIR/gitshow -sk - 2 ; cat $TMP_DIR/gitshow01 \
-   | egrep -ve "^CODE_OF_CONDUCT.md|^ENG_REVIEW_OWNERS|^PRESUBMIT.py|^README.chromium|^WATCHLISTS|^abseil-in-webrtc.md|^codereview.settings|^license_template.txt|^native-api.md|^presubmit_test.py|^presubmit_test_mocks.py|^pylintrc|^style-guide.md" \
-   | wc -l | tr -d " " || true`
+GIT_CHANGED=`./mach python $SCRIPT_DIR/filter_git_changes.py \
+   --repo-path $MOZ_LIBWEBRTC_SRC --commit-sha $MOZ_LIBWEBRTC_NEXT_BASE \
+   | wc -l | tr -d " "`
 FILE_CNT_MISMATCH_MSG=$"
 The number of files changed in the upstream commit ($GIT_CHANGED) does
 not match the number of files changed in the local Mozilla repo
