@@ -101,6 +101,11 @@ async function runTests(browser, accDoc) {
     containerWithInaccessibleChildP2,
     containerWithInaccessibleChildP2.firstChild
   );
+
+  info("Testing wrapped text");
+  const wrappedTextP = findAccessibleChildByID(accDoc, "wrappedTextP");
+  const wrappedTextA = findAccessibleChildByID(accDoc, "wrappedTextA");
+  await hitTest(browser, wrappedTextP, wrappedTextA, wrappedTextA.firstChild);
 }
 
 addAccessibleTask(
@@ -142,6 +147,10 @@ addAccessibleTask(
     <p aria-hidden="true">hi</p>
     <p id="containerWithInaccessibleChild_p2">bye</p>
   </div>
+
+  <p id="wrappedTextP" style="width: 3ch; font-family: monospace;">
+    <a id="wrappedTextA" href="https://example.com/">a</a>b cd
+  </p>
   `,
   runTests,
   {
