@@ -102,7 +102,10 @@ fun Activity.openSetDefaultBrowserOption(
             )
             if (useCustomTab) {
                 startActivity(
-                    SupportUtils.createCustomTabIntent(context = this, url = sumoDefaultBrowserUrl),
+                    SupportUtils.createSandboxCustomTabIntent(
+                        context = this,
+                        url = sumoDefaultBrowserUrl,
+                    ),
                 )
             } else {
                 (this as HomeActivity).openToBrowserAndLoad(

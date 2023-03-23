@@ -34,6 +34,7 @@ import java.util.Locale
  * @param store reference to the application's [BrowserStore].
  * @param sessionId ID of the open custom tab session.
  * @param shouldReverseItems If true, reverse the menu items.
+ * @param isSandboxCustomTab If true, menu should not show the "Open in Firefox" and "POWERED BY FIREFOX" items.
  * @param onItemTapped Called when a menu item is tapped.
  */
 class CustomTabToolbarMenu(
@@ -41,6 +42,7 @@ class CustomTabToolbarMenu(
     private val store: BrowserStore,
     private val sessionId: String?,
     private val shouldReverseItems: Boolean,
+    private val isSandboxCustomTab: Boolean,
     private val onItemTapped: (ToolbarMenu.Item) -> Unit = {},
 ) : ToolbarMenu {
 
@@ -116,12 +118,12 @@ class CustomTabToolbarMenu(
 
     private val menuItems by lazy {
         val menuItems = listOf(
-            poweredBy,
-            BrowserMenuDivider(),
+            poweredBy.apply { visible = { !isSandboxCustomTab } },
+            BrowserMenuDivider().apply { visible = { !isSandboxCustomTab } },
             desktopMode,
             findInPage,
             openInApp.apply { visible = ::shouldShowOpenInApp },
-            openInFenix,
+            openInFenix.apply { visible = { !isSandboxCustomTab } },
             BrowserMenuDivider(),
             menuToolbar,
         )

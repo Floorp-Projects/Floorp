@@ -137,6 +137,7 @@ class BrowserToolbarView(
                     store = components.core.store,
                     sessionId = customTabSession?.id,
                     shouldReverseItems = settings.toolbarPosition == ToolbarPosition.TOP,
+                    isSandboxCustomTab = false,
                     onItemTapped = {
                         it.performHapticIfNeeded(view)
                         interactor.onBrowserToolbarMenuItemTapped(it)

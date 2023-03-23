@@ -284,6 +284,9 @@
             android:name="webAppManifest"
             app:argType="string"
             app:nullable="true" />
+        <argument
+            android:name="isSandboxCustomTab"
+            app:argType="boolean" />
     </fragment>
 
     <fragment

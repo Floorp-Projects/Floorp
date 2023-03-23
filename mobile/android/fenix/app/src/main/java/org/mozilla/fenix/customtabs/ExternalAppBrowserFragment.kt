@@ -73,6 +73,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                 onItemTapped = { browserToolbarInteractor.onBrowserToolbarMenuItemTapped(it) },
                 isPrivate = tab.content.private,
                 shouldReverseItems = !activity.settings().shouldUseBottomToolbar,
+                isSandboxCustomTab = args.isSandboxCustomTab,
             ),
             owner = this,
             view = view,

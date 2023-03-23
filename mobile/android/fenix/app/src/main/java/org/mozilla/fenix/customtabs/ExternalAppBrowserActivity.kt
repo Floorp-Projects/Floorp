@@ -20,6 +20,8 @@ import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.ext.components
 import java.security.InvalidParameterException
 
+const val EXTRA_IS_SANDBOX_CUSTOM_TAB = "org.mozilla.fenix.customtabs.EXTRA_IS_SANDBOX_CUSTOM_TAB"
+
 /**
  * Activity that holds the [ExternalAppBrowserFragment] that is launched within an external app,
  * such as custom tabs and progressive web apps.
@@ -77,6 +79,7 @@ open class ExternalAppBrowserActivity : HomeActivity() {
                 NavGraphDirections.actionGlobalExternalAppBrowser(
                     activeSessionId = customTabSessionId,
                     webAppManifest = manifest,
+                    isSandboxCustomTab = intent.getBooleanExtra(EXTRA_IS_SANDBOX_CUSTOM_TAB, false),
                 )
             else -> throw InvalidParameterException(
                 "Tried to navigate to ExternalAppBrowserFragment from $from",

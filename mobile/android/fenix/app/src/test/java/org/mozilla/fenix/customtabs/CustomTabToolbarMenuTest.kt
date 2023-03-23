@@ -47,6 +47,7 @@ class CustomTabToolbarMenuTest {
                 store = store,
                 sessionId = firefoxCustomTab.id,
                 shouldReverseItems = false,
+                isSandboxCustomTab = false,
                 onItemTapped = { },
             ),
         )

@@ -14,6 +14,7 @@ import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.customtabs.EXTRA_IS_SANDBOX_CUSTOM_TAB
 import org.mozilla.fenix.settings.account.AuthIntentReceiverActivity
 import java.io.UnsupportedEncodingException
 import java.net.URLEncoder
@@ -113,6 +114,13 @@ object SupportUtils {
 
     fun createAuthCustomTabIntent(context: Context, url: String): Intent =
         createCustomTabIntent(context, url).setClassName(context, AuthIntentReceiverActivity::class.java.name)
+
+    /**
+     * Custom tab that cannot open the content in Firefox directly.
+     * This ensures the content is contained to this custom tab only.
+     */
+    fun createSandboxCustomTabIntent(context: Context, url: String): Intent =
+        createCustomTabIntent(context, url).putExtra(EXTRA_IS_SANDBOX_CUSTOM_TAB, true)
 
     private fun getEncodedTopicUTF8(topic: String): String {
         try {
