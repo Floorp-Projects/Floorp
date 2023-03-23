@@ -2333,20 +2333,39 @@ class EventManager {
    * Information about listeners to persistent events is associated with
    * the extension to which they belong.  Any extension thas has such
    * listeners has a property called `persistentListeners` that is a
-   * 3-level Map.  The first 2 keys are the module name (e.g., webRequest)
-   * and the name of the event within the module (e.g., onBeforeRequest).
-   * The third level of the map is used to track multiple listeners for
-   * the same event, these listeners are distinguished by the extra arguments
-   * passed to addListener().  For quick lookups, the key to the third Map
-   * is the result of calling uneval() on the array of extra arguments.
+   * 3-level Map:
    *
-   * The value stored in the Map is a plain object with a property called
-   * `params` that is the original (ie, not uneval()ed) extra arguments to
-   * addListener().  For a primed listener (i.e., the stub listener created
-   * during browser startup before the extension background page is started,
-   * the object also has a `primed` property that holds the things needed
-   * to handle events during startup and eventually connect the listener
-   * with a callback registered from the extension.
+   * - the first 2 keys are the module name (e.g., webRequest)
+   *   and the name of the event within the module (e.g., onBeforeRequest).
+   *
+   * - the third level of the map is used to track multiple listeners for
+   *   the same event, these listeners are distinguished by the extra arguments
+   *   passed to addListener()
+   *
+   * - for quick lookups, the key to the third Map is the result of calling
+   *   uneval() on the array of extra arguments.
+   *
+   * - the value stored in the Map or persistent listeners we keep in memory
+   *   is a plain object with:
+   *   - a property called `params` that is the original (ie, not uneval()ed)
+   *     extra arguments to addListener()
+   *   - and a property called `listeners` that is an array of plain object
+   *     each representing a listener to be primed and a `primeId` autoincremented
+   *     integer that represents each of the primed listeners that belongs to the
+   *     group listeners with the same set of extra params.
+   *   - a `nextPrimeId` property keeps track of the numeric primeId that should
+   *     be assigned to new persistent listeners added for the same event and
+   *     same set of extra params.
+   *
+   * For a primed listener (i.e., the stub listener created during browser startup
+   * before the extension background page is started, and after an event page is
+   * suspended on idle), the object will be later populated (by the callers of
+   * EventManager.primeListeners) with an additional `primed` property that serves
+   * as a placeholder listener, collecting all events that got emitted while the
+   * background page was not yet started, and eventually replaced by a callback
+   * registered from the extension code, once the background page scripts have been
+   * executed (or dropped if the background page scripts do not register the same
+   * listener anymore).
    *
    * @param {Extension} extension
    * @returns {boolean} True if the extension had any persistent listeners.
@@ -2365,14 +2384,62 @@ class EventManager {
     }
 
     let found = false;
-    for (let [module, entry] of Object.entries(persistentListeners)) {
-      for (let [event, paramlists] of Object.entries(entry)) {
-        for (let paramlist of paramlists) {
-          let key = uneval(paramlist);
-          listeners
-            .get(module)
-            .get(event)
-            .set(key, { params: paramlist });
+    for (let [module, savedModuleEntry] of Object.entries(
+      persistentListeners
+    )) {
+      for (let [event, savedEventEntry] of Object.entries(savedModuleEntry)) {
+        for (let paramList of savedEventEntry) {
+          /* Before Bug 1795801 (Firefox < 113) each entry was related to a listener
+           * registered with a different set of extra params (and so only one listener
+           * could be persisted for the same set of extra params)
+           *
+           * After Bug 1795801 (Firefox >= 113) each entry still represents a listener
+           * registered for that event, but multiple listeners registered with the same
+           * set of extra params will be captured as multiple entries in the
+           * paramsList array.
+           *
+           * NOTE: persisted listeners are stored in the startupData part of the Addon DB
+           * and are expected to be preserved across Firefox and Addons upgrades and downgrades
+           * (unlike the WebExtensions startupCache data which is cleared when Firefox or the
+           * addon is updated) and so we are taking special care about forward and backward
+           * compatibility of the persistentListeners on-disk format:
+           *
+           * - forward compatibility: when this new version of this startupData loading logic
+           *   is loading the old persistentListeners on-disk format:
+           *   - on the first run only one listener will be primed for each of the extra params
+           *     recorded in the startupData (same as in older Firefox versions)
+           *     and Bug 1795801 will still be hit, but once the background
+           *     context is started once the startupData will be updated to
+           *     include each of the listeners (indipendently if the set of
+           *     extra params is the same as another listener already been
+           *     persisted).
+           *   - after the first run, all listeners will be primed separately, even if the extra
+           *     params are the same as other listeners already primed, and so
+           *     each of the listener will receive the pending events collected
+           *     by their related primed listener and Bug 1795801 not to be hit anymore.
+           *
+           * - backward compatibility: when the old version of this startupData loading logic
+           *   (https://searchfox.org/mozilla-central/rev/cd2121e7d8/toolkit/components/extensions/ExtensionCommon.jsm#2360-2371)
+           *   is loading the new persistentListeners on-disk format, the last
+           *   entry with the same set of extra params will be eventually overwritting the
+           *   entry for another primed listener with the same extra params, Bug 1795801 will still
+           *   be hit, but no actual change in behavior is expected.
+           */
+          let key = uneval(paramList);
+          const eventEntry = listeners.get(module).get(event);
+
+          if (eventEntry.has(key)) {
+            const keyEntry = eventEntry.get(key);
+            let primeId = keyEntry.nextPrimeId;
+            keyEntry.listeners.push({ primeId });
+            keyEntry.nextPrimeId++;
+          } else {
+            eventEntry.set(key, {
+              params: paramList,
+              nextPrimeId: 1,
+              listeners: [{ primeId: 0 }],
+            });
+          }
           found = true;
         }
       }
@@ -2388,10 +2455,27 @@ class EventManager {
     for (let [module, moduleEntry] of extension.persistentListeners) {
       startupListeners[module] = {};
       for (let [event, eventEntry] of moduleEntry) {
+        // Turn the per-event entries from the format they are being kept
+        // in memory:
+        //
+        //   [
+        //     { params: paramList1, listeners: [listener1, listener2, ...] },
+        //     { params: paramList2, listeners: [listener3, listener3, ...] },
+        //     ...
+        //   ]
+        //
+        // into the format used for storing them on disk (in the startupData),
+        // which is an array of the params for each listener (with the param list
+        // included as many times as many listeners are persisted for the same
+        // set of params):
+        //
+        //   [paramList1, paramList1, ..., paramList2, paramList2, ...]
+        //
+        // This format will also work as expected on older Firefox versions where
+        // only one listener was being persisted for each set of params.
         startupListeners[module][event] = Array.from(
-          eventEntry.values(),
-          listener => listener.params
-        );
+          eventEntry.values()
+        ).flatMap(keyEntry => keyEntry.listeners.map(() => keyEntry.params));
       }
     }
 
@@ -2428,69 +2512,83 @@ class EventManager {
         EventManager._writePersistentListeners(extension);
         continue;
       }
-      for (let [event, listeners] of moduleEntry) {
-        for (let [key, listener] of listeners) {
-          let primed = { pendingEvents: [] };
+      for (let [event, eventEntry] of moduleEntry) {
+        for (let [key, { params, listeners }] of eventEntry) {
+          for (let listener of listeners) {
+            // Reset the `listener.added` flag by setting it to `false` while
+            // re-priming the listeners because the event page has suspended
+            // and the previous converted listener is no longer listening.
+            const listenerWasAdded = listener.added;
+            listener.added = false;
+            listener.params = params;
+            let primed = { pendingEvents: [] };
 
-          let fireEvent = (...args) =>
-            new Promise((resolve, reject) => {
-              if (!listener.primed) {
-                reject(
-                  new Error(
-                    `primed listener ${module}.${event} not re-registered`
-                  )
-                );
-                return;
+            let fireEvent = (...args) =>
+              new Promise((resolve, reject) => {
+                if (!listener.primed) {
+                  reject(
+                    new Error(
+                      `primed listener ${module}.${event} not re-registered`
+                    )
+                  );
+                  return;
+                }
+                primed.pendingEvents.push({ args, resolve, reject });
+                extension.emit("background-script-event");
+              });
+
+            let fire = {
+              wakeup: () => extension.wakeupBackground(),
+              sync: fireEvent,
+              async: fireEvent,
+              // fire.async for ProxyContextParent is already not cloning.
+              raw: fireEvent,
+            };
+
+            try {
+              let handler = api.primeListener(
+                event,
+                fire,
+                listener.params,
+                isInStartup
+              );
+              if (handler) {
+                listener.primed = primed;
+                Object.assign(primed, handler);
               }
-              primed.pendingEvents.push({ args, resolve, reject });
-              extension.emit("background-script-event");
-            });
-
-          let fire = {
-            wakeup: () => extension.wakeupBackground(),
-            sync: fireEvent,
-            async: fireEvent,
-            // fire.async for ProxyContextParent is already not cloning.
-            raw: fireEvent,
-          };
-
-          try {
-            let handler = api.primeListener(
-              event,
-              fire,
-              listener.params,
-              isInStartup
-            );
-            if (handler) {
-              listener.primed = primed;
-              Object.assign(primed, handler);
+            } catch (e) {
+              Cu.reportError(
+                `Error priming listener ${module}.${event}: ${e} :: ${e.stack}`
+              );
+              // Force this listener to be cleared.
+              listener.error = true;
             }
-          } catch (e) {
-            Cu.reportError(
-              `Error priming listener ${module}.${event}: ${e} :: ${e.stack}`
-            );
-            // Force this listener to be cleared.
-            listener.error = true;
-          }
 
-          // If an attempt to prime a listener failed, ensure it is cleared now.
-          // If a module is a startup blocking module, not all listeners may
-          // get primed during early startup.  For that reason, we don't clear
-          // persisted listeners during early startup.  At the end of background
-          // execution any listeners that were not renewed will be cleared.
-          //
-          // TODO(Bug 1797474): consider priming runtime.onStartup and
-          // avoid to special handling it here.
-          if (
-            listener.error ||
-            (!isInStartup &&
-              !(
-                (`${module}.${event}` === "runtime.onStartup" &&
-                  listener.added) ||
-                listener.primed
-              ))
-          ) {
-            EventManager.clearPersistentListener(extension, module, event, key);
+            // If an attempt to prime a listener failed, ensure it is cleared now.
+            // If a module is a startup blocking module, not all listeners may
+            // get primed during early startup.  For that reason, we don't clear
+            // persisted listeners during early startup.  At the end of background
+            // execution any listeners that were not renewed will be cleared.
+            //
+            // TODO(Bug 1797474): consider priming runtime.onStartup and
+            // avoid to special handling it here.
+            if (
+              listener.error ||
+              (!isInStartup &&
+                !(
+                  (`${module}.${event}` === "runtime.onStartup" &&
+                    listenerWasAdded) ||
+                  listener.primed
+                ))
+            ) {
+              EventManager.clearPersistentListener(
+                extension,
+                module,
+                event,
+                key,
+                listener.primeId
+              );
+            }
           }
         }
       }
@@ -2516,33 +2614,41 @@ class EventManager {
     }
 
     for (let [module, moduleEntry] of extension.persistentListeners) {
-      for (let [event, listeners] of moduleEntry) {
-        for (let [key, listener] of listeners) {
-          let { primed, added } = listener;
-          // When a primed listener is added or renewed during initial
-          // background execution we set an added flag.  If it was primed
-          // when added, primed is set to null.
-          if (added) {
-            continue;
-          }
-
-          if (primed) {
-            // When a primed listener was not renewed, primed will still be truthy.
-            // These need to be cleared on shutdown (important for event pages), but
-            // we only clear the persisted listener data after the startup of a background.
-            // Release any pending events and unregister the primed handler.
-            listener.primed = null;
-
-            for (let evt of primed.pendingEvents) {
-              evt.reject(new Error("listener not re-registered"));
+      for (let [event, eventEntry] of moduleEntry) {
+        for (let [key, { listeners }] of eventEntry) {
+          for (let listener of listeners) {
+            let { primed, added, primeId } = listener;
+            // When a primed listener is added or renewed during initial
+            // background execution we set an added flag.  If it was primed
+            // when added, primed is set to null.
+            if (added) {
+              continue;
             }
-            primed.unregister();
-          }
 
-          // Clear any persisted events that were not renewed, should typically
-          // only be done at the end of the background page load.
-          if (clearPersistent) {
-            EventManager.clearPersistentListener(extension, module, event, key);
+            if (primed) {
+              // When a primed listener was not renewed, primed will still be truthy.
+              // These need to be cleared on shutdown (important for event pages), but
+              // we only clear the persisted listener data after the startup of a background.
+              // Release any pending events and unregister the primed handler.
+              listener.primed = null;
+
+              for (let evt of primed.pendingEvents) {
+                evt.reject(new Error("listener not re-registered"));
+              }
+              primed.unregister();
+            }
+
+            // Clear any persisted events that were not renewed, should typically
+            // only be done at the end of the background page load.
+            if (clearPersistent) {
+              EventManager.clearPersistentListener(
+                extension,
+                module,
+                event,
+                key,
+                primeId
+              );
+            }
           }
         }
       }
@@ -2555,26 +2661,56 @@ class EventManager {
   static savePersistentListener(extension, module, event, args = []) {
     EventManager._initPersistentListeners(extension);
     let key = uneval(args);
-    extension.persistentListeners
-      .get(module)
-      .get(event)
+    const eventEntry = extension.persistentListeners.get(module).get(event);
+
+    let primeId;
+    if (!eventEntry.has(key)) {
       // when writing, only args are written, other properties are dropped
-      .set(key, { params: args, added: true });
+      primeId = 0;
+      eventEntry.set(key, {
+        params: args,
+        listeners: [{ added: true, primeId }],
+        nextPrimeId: 1,
+      });
+    } else {
+      const keyEntry = eventEntry.get(key);
+      primeId = keyEntry.nextPrimeId;
+      keyEntry.listeners.push({ added: true, primeId });
+      keyEntry.nextPrimeId = primeId + 1;
+    }
+
     EventManager._writePersistentListeners(extension);
+    return [module, event, key, primeId];
   }
 
   // Remove the record for the given event listener from the extension's
   // startup data.  `key` must be a string, the result of calling uneval()
   // on the array of extra arguments originally passed to addListener().
-  static clearPersistentListener(extension, module, event, key = uneval([])) {
-    let listeners = extension.persistentListeners.get(module).get(event);
-    listeners.delete(key);
+  static clearPersistentListener(
+    extension,
+    module,
+    event,
+    key = uneval([]),
+    primeId = undefined
+  ) {
+    let eventEntry = extension.persistentListeners.get(module).get(event);
 
-    if (listeners.size == 0) {
-      let moduleEntry = extension.persistentListeners.get(module);
-      moduleEntry.delete(event);
-      if (moduleEntry.size == 0) {
-        extension.persistentListeners.delete(module);
+    let keyEntry = eventEntry.get(key);
+
+    if (primeId != undefined && keyEntry) {
+      keyEntry.listeners = keyEntry.listeners.filter(
+        listener => listener.primeId !== primeId
+      );
+    }
+
+    if (primeId == undefined || keyEntry?.listeners.length === 0) {
+      eventEntry.delete(key);
+      if (eventEntry.size == 0) {
+        let moduleEntry = extension.persistentListeners.get(module);
+        moduleEntry.delete(event);
+        if (moduleEntry.size == 0) {
+          extension.persistentListeners.delete(module);
+        }
       }
     }
 
@@ -2664,11 +2800,18 @@ class EventManager {
 
       let key = uneval(args);
       EventManager._initPersistentListeners(extension);
-      let listener = extension.persistentListeners
+      let keyEntry = extension.persistentListeners
         .get(module)
         .get(event)
         .get(key);
 
+      // Get the first persistent listener which matches the module, event and extra arguments
+      // and not added back by the extension yet, the persistent listener found may be either
+      // primed or not (in particular API Events that belongs to APIs that should not be blocking
+      // startup may have persistent listeners that are not primed during the first execution
+      // of the background context happening as part of the applications startup, whereas they
+      // will be primed when the background context will be suspended on the idle timeout).
+      let listener = keyEntry?.listeners.find(listener => !listener.added);
       if (listener) {
         // During startup only a subset of persisted listeners are primed.  As
         // well, each API determines whether to prime a specific listener.
@@ -2691,7 +2834,8 @@ class EventManager {
             extension,
             module,
             event,
-            uneval(args)
+            uneval(args),
+            listener.primeId
           );
         });
       }
@@ -2707,13 +2851,19 @@ class EventManager {
     // If this is a new listener for a persistent event, record
     // the details for subsequent startups.
     if (recordStartupData) {
-      EventManager.savePersistentListener(extension, module, event, args);
+      const [
+        ,
+        ,
+        ,
+        /* _module */ /* _event */ /* _key */ primeId,
+      ] = EventManager.savePersistentListener(extension, module, event, args);
       this.remove.set(callback, () => {
         EventManager.clearPersistentListener(
           extension,
           module,
           event,
-          uneval(args)
+          uneval(args),
+          primeId
         );
       });
     }

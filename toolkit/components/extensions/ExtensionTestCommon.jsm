@@ -279,7 +279,7 @@ const ExtensionTestAssertions = {
     extWrapper,
     apiNs,
     apiEvent,
-    { primed, persisted = true }
+    { primed, persisted = true, primedListenersCount }
   ) {
     if (primed && !persisted) {
       throw new Error(
@@ -300,16 +300,25 @@ const ExtensionTestAssertions = {
     for (const info of listenersInfo) {
       if (primed) {
         lazy.Assert.ok(
-          info.primed,
+          info.listeners.some(listener => listener.primed),
           `${apiNs}.${apiEvent} listener expected to be primed`
         );
       } else {
-        lazy.Assert.equal(
-          info.primed,
-          undefined,
+        lazy.Assert.ok(
+          !info.listeners.some(listener => listener.primed),
           `${apiNs}.${apiEvent} listener expected to not be primed`
         );
       }
+    }
+    if (primed && primedListenersCount > 0) {
+      lazy.Assert.equal(
+        listenersInfo.reduce((acc, info) => {
+          acc += info.listeners.length;
+          return acc;
+        }, 0),
+        primedListenersCount,
+        `Got the expected number of ${apiNs}.${apiEvent} listeners to be primed`
+      );
     }
   },
 };
