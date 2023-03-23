@@ -78,9 +78,6 @@ using mozilla::loader::PScriptCacheParent;
 namespace ipc {
 class CrashReporterHost;
 class TestShellParent;
-#ifdef FUZZING
-class ProtocolFuzzerHelper;
-#endif
 class SharedPreferenceSerializer;
 }  // namespace ipc
 
@@ -132,9 +129,6 @@ class ContentParent final : public PContentParent,
   friend class mozilla::PreallocatedProcessManagerImpl;
   friend class PContentParent;
   friend class mozilla::dom::RemoteWorkerManager;
-#ifdef FUZZING
-  friend class mozilla::ipc::ProtocolFuzzerHelper;
-#endif
 
  public:
   using LaunchError = mozilla::ipc::LaunchError;

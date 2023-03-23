@@ -63,10 +63,6 @@ namespace ipc {
 class IProtocol;
 class IToplevelProtocol;
 
-#ifdef FUZZING
-class ProtocolFuzzerHelper;
-#endif
-
 template <typename P>
 struct IPDLParamTraits;
 
@@ -77,12 +73,6 @@ class Shmem final {
 #ifdef DEBUG
   // For ShadowLayerForwarder::CheckSurfaceDescriptor
   friend class mozilla::layers::ShadowLayerForwarder;
-#endif
-#ifdef FUZZING
-  friend class ProtocolFuzzerHelper;
-  template <typename T>
-  friend void FuzzProtocol(T*, const uint8_t*, size_t,
-                           const nsTArray<nsCString>&);
 #endif
 
  public:
