@@ -108,12 +108,14 @@ migration-wizard-progress-success-passwords =
 # browser has completed.
 #
 # Variables:
-#  $quantity (Number): the number of successfully imported history entries
+#  $maxAgeInDays (Number): the maximum number of days of history that might be imported.
 migration-wizard-progress-success-history =
-    { $quantity ->
-        [one] { $quantity } visit
-       *[other] { $quantity } visits
+    { $maxAgeInDays ->
+        [one] From the last day
+       *[other] From the last { $maxAgeInDays } days
     }
+
+migration-wizard-progress-success-formdata = Form history
 
 migration-wizard-safari-permissions-sub-header = To import Safari bookmarks and browsing history:
 migration-wizard-safari-instructions-continue = Select “Continue”
