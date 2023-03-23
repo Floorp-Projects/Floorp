@@ -398,15 +398,13 @@ void nsTableRowFrame::DidResize() {
 // *including* cells with rowspans
 nscoord nsTableRowFrame::GetMaxCellAscent() const { return mMaxCellAscent; }
 
-Maybe<nscoord> nsTableRowFrame::GetRowBaseline(WritingMode aWM) {
+nscoord nsTableRowFrame::GetRowBaseline(WritingMode aWM) {
   if (mMaxCellAscent) {
-    return Some(mMaxCellAscent);
+    return mMaxCellAscent;
   }
 
   // If we get here, we don't have a baseline on any of the cells in this row.
-  if (aWM.IsCentralBaseline()) {
-    return Nothing{};
-  }
+
   nscoord ascent = 0;
   for (nsIFrame* childFrame : mFrames) {
     MOZ_ASSERT(childFrame->IsTableCellFrame());
@@ -414,7 +412,7 @@ Maybe<nscoord> nsTableRowFrame::GetRowBaseline(WritingMode aWM) {
         childFrame, aWM, BaselineSharingGroup::First);
     ascent = std::max(ascent, s);
   }
-  return Some(ascent);
+  return ascent;
 }
 
 nscoord nsTableRowFrame::GetInitialBSize(nscoord aPctBasis) const {

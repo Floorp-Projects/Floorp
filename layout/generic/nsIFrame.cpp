@@ -2113,9 +2113,6 @@ nscoord nsIFrame::SynthesizeFallbackBaseline(
     WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
   const auto margin = GetLogicalUsedMargin(aWM);
   NS_ASSERTION(!IsSubtreeDirty(), "frame must not be dirty");
-  if (aWM.IsCentralBaseline()) {
-    return (BSize(aWM) + GetLogicalUsedMargin(aWM).BEnd(aWM)) / 2;
-  }
   // Baseline for inverted line content is the top (block-start) margin edge,
   // as the frame is in effect "flipped" for alignment purposes.
   if (aWM.IsLineInverted()) {
