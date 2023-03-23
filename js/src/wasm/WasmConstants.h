@@ -99,6 +99,9 @@ enum class TypeCode {
   // Type constructor for array types - gc proposal
   Array = 0x5e,  // SLEB128(-0x22)
 
+  // Value for non-nullable type present.
+  TableHasInitExpr = 0x40,
+
   // The 'empty' case of blocktype.
   BlockVoid = 0x40,  // SLEB128(-0x40)
 

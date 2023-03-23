@@ -2053,6 +2053,7 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
 
     moduleEnv_.asmJSSigToTableIndex[sigIndex] = moduleEnv_.tables.length();
     if (!moduleEnv_.tables.emplaceBack(RefType::func(), mask + 1, Nothing(),
+                                       /* initExpr */ Nothing(),
                                        /*isAsmJS*/ true)) {
       return false;
     }

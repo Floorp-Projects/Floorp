@@ -608,22 +608,26 @@ static_assert(MaxMemory32LimitField <= UINT64_MAX / PageSize);
 
 struct TableDesc {
   RefType elemType;
-  bool isImportedOrExported;
+  bool isImported;
+  bool isExported;
   bool isAsmJS;
   uint32_t globalDataOffset;
   uint32_t initialLength;
   Maybe<uint32_t> maximumLength;
+  Maybe<InitExpr> initExpr;
 
   TableDesc() = default;
   TableDesc(RefType elemType, uint32_t initialLength,
-            Maybe<uint32_t> maximumLength, bool isAsmJS,
-            bool isImportedOrExported = false)
+            Maybe<uint32_t> maximumLength, Maybe<InitExpr>&& initExpr,
+            bool isAsmJS, bool isImported = false, bool isExported = false)
       : elemType(elemType),
-        isImportedOrExported(isImportedOrExported),
+        isImported(isImported),
+        isExported(isExported),
         isAsmJS(isAsmJS),
         globalDataOffset(UINT32_MAX),
         initialLength(initialLength),
-        maximumLength(maximumLength) {}
+        maximumLength(maximumLength),
+        initExpr(std::move(initExpr)) {}
 };
 
 using TableDescVector = Vector<TableDesc, 0, SystemAllocPolicy>;

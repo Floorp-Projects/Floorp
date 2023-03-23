@@ -10,7 +10,7 @@ assertEq(new WebAssembly.Global({value: "externref"}) instanceof WebAssembly.Glo
 (function() {
     // Test initialization without a value.
     let g = new WebAssembly.Global({value: "externref"});
-    assertEq(g.value, null);
+    assertEq(g.value, void 0);
     assertErrorMessage(() => g.value = 42, TypeError, /immutable global/);
 })();
 

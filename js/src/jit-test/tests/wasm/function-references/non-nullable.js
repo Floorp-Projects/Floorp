@@ -159,10 +159,10 @@ assertErrorMessage(() => runMultiNullStack(), TypeError, /cannot pass null to no
   )`);
 }
 
-// cannot have non-nullable tables
+// cannot have non-nullable tables without initializer
 wasmFailValidateText(`(module
   (table (ref extern) (elem))
-)`, /non-nullable references not supported in tables/);
+)`, /table with non-nullable references requires initializer/);
 
 // Testing internal wasmLosslessInvoke to pass non-nullable as params and arguments.
 let {t} = wasmEvalText(`(module
