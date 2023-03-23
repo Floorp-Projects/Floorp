@@ -36,7 +36,7 @@ def clear_push_schedules_memoize():
 @pytest.fixture
 def params():
     return {
-        "branch": "integration/autoland",
+        "branch": "autoland",
         "head_repository": "https://hg.mozilla.org/integration/autoland",
         "head_rev": "abcdef",
         "project": "autoland",
