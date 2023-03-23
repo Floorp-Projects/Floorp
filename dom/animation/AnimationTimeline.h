@@ -99,7 +99,7 @@ class AnimationTimeline : public nsISupports, public nsWrapperCache {
 
   virtual void RemoveAnimation(Animation* aAnimation);
   virtual void NotifyAnimationContentVisibilityChanged(Animation* aAnimation,
-                                                       bool visible);
+                                                       bool aIsVisible);
 
   virtual Document* GetDocument() const = 0;
 
@@ -122,7 +122,7 @@ class AnimationTimeline : public nsISupports, public nsWrapperCache {
 
   // Animations observing this timeline
   //
-  // We store them in (a) a hashset for quick lookup, and (b) an array
+  // We store them in (a) a hashset for quick lookup, and (b) a LinkedList
   // to maintain a fixed sampling order. Animations that are hidden by
   // `content-visibility` are not sampled and will only be in the hashset.
   //
