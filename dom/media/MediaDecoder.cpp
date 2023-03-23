@@ -436,12 +436,13 @@ void MediaDecoder::OnPlaybackErrorEvent(const MediaResult& aError) {
     return;
   }
 
-  // External engine can't play the resource, try to use our own state machine
-  // again. Here we will create a new state machine immediately and asynchrously
-  // shutdown the old one because we don't want to dispatch any task to the old
-  // state machine. Therefore, we will disconnect anything related with the old
-  // state machine, create a new state machine and setup events/mirror/etc, then
-  // shutdown the old one and release its reference once it finishes shutdown.
+  // External engine can't play the resource or we intentionally disable it, try
+  // to use our own state machine again. Here we will create a new state machine
+  // immediately and asynchrously shutdown the old one because we don't want to
+  // dispatch any task to the old state machine. Therefore, we will disconnect
+  // anything related with the old state machine, create a new state machine and
+  // setup events/mirror/etc, then shutdown the old one and release its
+  // reference once it finishes shutdown.
   MOZ_ASSERT(aError == NS_ERROR_DOM_MEDIA_EXTERNAL_ENGINE_NOT_SUPPORTED_ERR);
   RefPtr<MediaDecoderStateMachineBase> discardStateMachine =
       mDecoderStateMachine;
@@ -1369,6 +1370,16 @@ bool MediaDecoder::CanPlayThrough() {
 
 RefPtr<SetCDMPromise> MediaDecoder::SetCDMProxy(CDMProxy* aProxy) {
   MOZ_ASSERT(NS_IsMainThread());
+#ifdef MOZ_WMF_MEDIA_ENGINE
+  // DRM playback via the media engine is disabled, switch back to the state
+  // machine using Gecko's media pipeline.
+  if (GetStateMachine()->IsExternalStateMachine() &&
+      !StaticPrefs::media_wmf_media_engine_drm_playback()) {
+    LOG("Disable external state machine due to DRM playback not allowed");
+    OnPlaybackErrorEvent(
+        MediaResult{NS_ERROR_DOM_MEDIA_EXTERNAL_ENGINE_NOT_SUPPORTED_ERR});
+  }
+#endif
   return GetStateMachine()->SetCDMProxy(aProxy);
 }
 

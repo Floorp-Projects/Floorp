@@ -10212,6 +10212,12 @@
     value: false
     mirror: always
 
+# This allows playing DRM video via the media engine pipeline.
+-   name: media.wmf.media-engine.drm-playback
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
+
 # The amount of video raw data the engine stream will queue
 -   name: media.wmf.media-engine.raw-data-threshold.video
     type: RelaxedAtomicInt32
