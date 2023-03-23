@@ -16,6 +16,7 @@ const RESOURCE_TYPES_WITH_QUANTITIES = [
   MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS,
   MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.HISTORY,
   MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS,
+  MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.FORMDATA,
 ];
 
 /**
@@ -209,11 +210,36 @@ function assertQuantitiesShown(wizard, expectedResourceTypes) {
           progressGroup.dataset.resourceType
         )
       ) {
-        Assert.notEqual(
-          successText.indexOf(EXPECTED_QUANTITY),
-          -1,
-          `Found expected quantity in success string: ${successText}`
-        );
+        if (
+          progressGroup.dataset.resourceType ==
+          MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.HISTORY
+        ) {
+          // HISTORY is a special case that doesn't show the number of imported
+          // history entries, but instead shows the maximum number of days of history
+          // that might have been imported.
+          Assert.notEqual(
+            successText.indexOf(MigrationUtils.HISTORY_MAX_AGE_IN_DAYS),
+            -1,
+            `Found expected maximum number of days of history: ${successText}`
+          );
+        } else if (
+          progressGroup.dataset.resourceType ==
+          MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.FORMDATA
+        ) {
+          // FORMDATA is another special case, because we simply show "Form history" as
+          // the success string, rather than a particular quantity.
+          Assert.equal(
+            successText,
+            "Form history",
+            `Found expected form data string: ${successText}`
+          );
+        } else {
+          Assert.notEqual(
+            successText.indexOf(EXPECTED_QUANTITY),
+            -1,
+            `Found expected quantity in success string: ${successText}`
+          );
+        }
       } else {
         // If you've found yourself here, and this is failing, it's probably because you've
         // updated MigrationWizardParent.#getStringForImportQuantity to return a string for

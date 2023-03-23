@@ -291,11 +291,10 @@ export class MigrationWizardParent extends JSWindowActorParent {
         );
       }
       case lazy.MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.HISTORY: {
-        let quantity = MigrationUtils.getImportedCount("history");
         return lazy.gFluentStrings.formatValue(
           "migration-wizard-progress-success-history",
           {
-            quantity,
+            maxAgeInDays: MigrationUtils.HISTORY_MAX_AGE_IN_DAYS,
           }
         );
       }
@@ -306,6 +305,11 @@ export class MigrationWizardParent extends JSWindowActorParent {
           {
             quantity,
           }
+        );
+      }
+      case lazy.MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.FORMDATA: {
+        return lazy.gFluentStrings.formatValue(
+          "migration-wizard-progress-success-formdata"
         );
       }
       default: {
