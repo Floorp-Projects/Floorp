@@ -51,10 +51,10 @@ export class LanguageIdEngine {
    * Construct and initialize the language-id worker.
    *
    * @param {Object} data
-   * @property {string} data.type - The message type, expects "initialize".
-   * @property {ArrayBuffer} data.wasmBuffer - The buffer containing the wasm binary.
-   * @property {ArrayBuffer} data.modelBuffer - The buffer containing the language-id model binary.
-   * @property {boolean} data.isLoggingEnabled
+   * @param {string} data.type - The message type, expects "initialize".
+   * @param {ArrayBuffer} [data.wasmBuffer] - The buffer containing the wasm binary.
+   * @param {ArrayBuffer} [data.modelBuffer] - The buffer containing the language-id model binary.
+   * @param {boolean} data.isLoggingEnabled
    */
   constructor(data) {
     this.#languageIdWorker = new Worker(
@@ -73,7 +73,14 @@ export class LanguageIdEngine {
       this.#languageIdWorker.addEventListener("message", onMessage);
     });
 
-    this.#languageIdWorker.postMessage(data);
+    const transferables = [];
+    if (data.wasmBuffer && data.modelBuffer) {
+      // Make sure the ArrayBuffers are transferred, not cloned.
+      // https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Transferable_objects
+      transferables.push(data.wasmBuffer, data.modelBuffer);
+    }
+
+    this.#languageIdWorker.postMessage(data, transferables);
   }
 
   /**
@@ -233,7 +240,8 @@ export class TranslationsEngine {
    *
    * @param {string} fromLanguage
    * @param {string} toLanguage
-   * @param {TranslationsEnginePayload} enginePayload
+   * @param {TranslationsEnginePayload} [enginePayload] - If there is no engine payload
+   *   then the engine will be mocked. This allows this class to be used in tests.
    * @param {number} innerWindowId - This only used for creating profiler markers in
    *   the initial creation of the engine.
    */
@@ -260,15 +268,30 @@ export class TranslationsEngine {
       this.#translationsWorker.addEventListener("message", onMessage);
     });
 
-    this.#translationsWorker.postMessage({
-      type: "initialize",
-      fromLanguage,
-      toLanguage,
-      enginePayload,
-      innerWindowId,
-      messageId: this.#messageId++,
-      logLevel: Services.prefs.getCharPref("browser.translations.logLevel"),
-    });
+    // Make sure the ArrayBuffers are transferred, not cloned.
+    // https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Transferable_objects
+    const transferables = [];
+    if (enginePayload) {
+      transferables.push(enginePayload.bergamotWasmArrayBuffer);
+      for (const files of enginePayload.languageModelFiles) {
+        for (const { buffer } of Object.values(files)) {
+          transferables.push(buffer);
+        }
+      }
+    }
+
+    this.#translationsWorker.postMessage(
+      {
+        type: "initialize",
+        fromLanguage,
+        toLanguage,
+        enginePayload,
+        innerWindowId,
+        messageId: this.#messageId++,
+        logLevel: Services.prefs.getCharPref("browser.translations.logLevel"),
+      },
+      transferables
+    );
   }
 
   /**
@@ -382,16 +405,6 @@ export class TranslationsChild extends JSWindowActorChild {
       "TranslationsChild constructor"
     );
   }
-  /**
-   * The data for the Bergamot translation engine is downloaded from Remote Settings
-   * and cached to disk. It is retained here in child process in case the translation
-   * language switches.
-   *
-   * At the time of this writing ~5mb.
-   *
-   * @type {ArrayBuffer | null}
-   */
-  #bergamotWasmArrayBuffer = null;
 
   /**
    * The translations engine could be mocked for tests, since the wasm and the language
@@ -440,14 +453,7 @@ export class TranslationsChild extends JSWindowActorChild {
         "The engine is mocked, the Bergamot wasm is not available."
       );
     }
-    let arrayBuffer = this.#bergamotWasmArrayBuffer;
-    if (!arrayBuffer) {
-      arrayBuffer = await this.sendQuery(
-        "Translations:GetBergamotWasmArrayBuffer"
-      );
-      this.#bergamotWasmArrayBuffer = arrayBuffer;
-    }
-    return arrayBuffer;
+    return this.sendQuery("Translations:GetBergamotWasmArrayBuffer");
   }
 
   /**
