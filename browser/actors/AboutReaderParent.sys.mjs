@@ -7,12 +7,8 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  ReaderMode: "resource://gre/modules/ReaderMode.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ReaderMode",
-  "resource://gre/modules/ReaderMode.jsm"
-);
 ChromeUtils.defineModuleGetter(
   lazy,
   "pktApi",

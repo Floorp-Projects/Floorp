@@ -5,21 +5,11 @@
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AboutReader",
-  "resource://gre/modules/AboutReader.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ReaderMode",
-  "resource://gre/modules/ReaderMode.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Readerable",
-  "resource://gre/modules/Readerable.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  AboutReader: "resource://gre/modules/AboutReader.sys.mjs",
+  ReaderMode: "resource://gre/modules/ReaderMode.sys.mjs",
+  Readerable: "resource://gre/modules/Readerable.sys.mjs",
+});
 
 var gUrlsToDocContentType = new Map();
 var gUrlsToDocTitle = new Map();

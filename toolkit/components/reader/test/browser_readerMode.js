@@ -179,8 +179,8 @@ add_task(async function test_reader_button() {
 });
 
 add_task(async function test_getOriginalUrl() {
-  let { ReaderMode } = ChromeUtils.import(
-    "resource://gre/modules/ReaderMode.jsm"
+  let { ReaderMode } = ChromeUtils.importESModule(
+    "resource://gre/modules/ReaderMode.sys.mjs"
   );
   let url = "https://foo.com/article.html";
 
