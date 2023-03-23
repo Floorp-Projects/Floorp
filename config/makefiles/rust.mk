@@ -518,7 +518,27 @@ force-cargo-program-build: $(call resfile,module)
 	$(REPORT_BUILD)
 	$(call CARGO_BUILD) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(cargo_target_flag) -- $(addprefix -C link-arg=$(CURDIR)/,$(call resfile,module)) $(CARGO_RUSTCFLAGS)
 
-$(RUST_PROGRAMS): force-cargo-program-build ;
+# RUST_PROGRAM_DEPENDENCIES(RUST_PROGRAM)
+# Generates a rule suitable to rebuild RUST_PROGRAM only if its dependencies are
+# obsolete.
+# It relies on the fact that upon build, cargo generates a dependency file named
+# `$(RUST_PROGRAM).d'. Unfortunately the lhs of the rule has an absolute path,
+# so we extract it under the name $(RUST_PROGRAM)_deps below.
+#
+# If the dependencies are empty, the file was not created so we force a rebuild.
+# Otherwise we add it to the dependency list.
+#
+# The actual rule is a bit tricky. The `+' prefix allow for recursive parallel
+# make, and it's skipped (`:') if we already triggered a rebuild as part of the
+# dependency chain.
+#
+define RUST_PROGRAM_DEPENDENCIES
+$(1)_deps := $(wordlist 2, 10000000, $(file < $(1).d))
+$(1): $(CARGO_FILE) $(call resfile,module) $(if $$($(1)_deps),$$($(1)_deps),force-cargo-program-build)
+	$(if $$($(1)_deps),+$(MAKE) force-cargo-program-build,:)
+endef
+
+$(foreach RUST_PROGRAM,$(RUST_PROGRAMS), $(eval $(call RUST_PROGRAM_DEPENDENCIES,$(RUST_PROGRAM))))
 
 ifndef CARGO_NO_AUTO_ARG
 force-cargo-program-%:
