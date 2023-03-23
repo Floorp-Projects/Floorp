@@ -34,6 +34,11 @@ XPCOMUtils.defineLazyGetter(lazy, "console", () => {
   });
 });
 
+// Do the slow/safe thing of always verifying the signature when the data is
+// loaded from the file system. This restriction could be eased in the future if it
+// proves to be a performance problem, and the security risk is acceptable.
+const VERIFY_SIGNATURES_FROM_FS = true;
+
 /**
  * @typedef {import("../translations").TranslationModelRecord} TranslationModelRecord
  * @typedef {import("../translations").RemoteSettingsClient} RemoteSettingsClient
@@ -156,9 +161,7 @@ export class TranslationsParent extends JSWindowActorParent {
     const modelRecords = await client.get({
       // Pull the records from the network so that we never get an empty list.
       syncIfEmpty: true,
-      // TODO (Bug 1813779) - We should consider the verification process. For now do the
-      // slow/safe thing of always verifying the signature.
-      verifySignature: true,
+      verifySignature: VERIFY_SIGNATURES_FROM_FS,
     });
 
     if (modelRecords.length === 0) {
@@ -219,9 +222,7 @@ export class TranslationsParent extends JSWindowActorParent {
     const wasmRecords = await client.get({
       // Pull the records from the network so that we never get an empty list.
       syncIfEmpty: true,
-      // TODO (Bug 1813779) - We should consider the verification process. For now do the
-      // slow/safe thing of always verifying the signature.
-      verifySignature: true,
+      verifySignature: VERIFY_SIGNATURES_FROM_FS,
       // Only get the fasttext-wasm record.
       filters: { name: "fasttext-wasm" },
     });
@@ -374,9 +375,7 @@ export class TranslationsParent extends JSWindowActorParent {
     const translationModelRecords = await client.get({
       // Pull the records from the network so that we never get an empty list.
       syncIfEmpty: true,
-      // TODO (Bug 1813779) - We should consider the verification process. For now do the
-      // slow/safe thing of always verifying the signature.
-      verifySignature: true,
+      verifySignature: VERIFY_SIGNATURES_FROM_FS,
     });
 
     for (const record of translationModelRecords) {
@@ -450,9 +449,7 @@ export class TranslationsParent extends JSWindowActorParent {
     const wasmRecords = await client.get({
       // Pull the records from the network so that we never get an empty list.
       syncIfEmpty: true,
-      // TODO (Bug 1813779) - We should consider the verification process. For now do the
-      // slow/safe thing of always verifying the signature.
-      verifySignature: true,
+      verifySignature: VERIFY_SIGNATURES_FROM_FS,
       // Only get the bergamot-translator record.
       filters: { name: "bergamot-translator" },
     });
