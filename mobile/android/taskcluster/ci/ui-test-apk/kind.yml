@@ -103,6 +103,7 @@ tasks:
             shipping-product: focus
         description: 'Focus UI tests with firebase'
         run-on-tasks-for: [github-pull-request, github-push]
+        run-on-git-branches: ["^((?!releases[_/]).+)$"]
         run:
             secrets:
                 - name: project/mobile/firefox-android/focus-android/firebase
@@ -128,7 +129,7 @@ tasks:
                 GOOGLE_PROJECT: 'moz-focus-android'
     focus-arm-nightly:
         attributes:
-            build-type: nightly-firebase
+            build-type: focus-nightly-firebase
             shipping-product: focus
         description: 'UI tests on Nightly with firebase'
         run-on-tasks-for: [github-push]
@@ -157,11 +158,11 @@ tasks:
                 GOOGLE_PROJECT: 'moz-focus-android'
     focus-arm-beta:
         attributes:
-            build-type: nightly-firebase
+            build-type: focus-beta-firebase
             shipping-product: focus
         description: 'UI tests on Beta with firebase'
         run-on-tasks-for: [github-push]
-        run-on-git-branches: [main, releases_v]
+        run-on-git-branches: [releases_v]
         dependencies:
             signed-apk-debug-apk: signing-apk-focus-beta-firebase
             signed-apk-android-test: signing-apk-focus-android-test-beta
@@ -242,11 +243,11 @@ tasks:
                 GOOGLE_PROJECT: moz-fenix
     fenix-arm-beta:
         attributes:
-            build-type: beta-firebase
+            build-type: fenix-beta-firebase
             shipping-product: fenix
         description: Test Fenix
         run-on-tasks-for: [github-push]
-        run-on-git-branches: ["^releases[/_].+$"]
+        run-on-git-branches: [releases_v]
         dependencies:
             signed-apk-debug-apk: signing-apk-fenix-beta-firebase
             signed-apk-android-test: signing-apk-fenix-android-test-beta
@@ -270,10 +271,11 @@ tasks:
                 GOOGLE_PROJECT: moz-fenix
     fenix-arm-nightly:
         attributes:
-            build-type: nightly-firebase
+            build-type: fenix-nightly-firebase
             shipping-product: fenix
         description: Test Fenix
         run-on-tasks-for: [github-push]
+        run-on-git-branches: [main]
         dependencies:
             signed-apk-debug-apk: signing-apk-fenix-nightly-firebase
             signed-apk-android-test: signing-apk-fenix-android-test-nightly
