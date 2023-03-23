@@ -33,7 +33,7 @@ if __name__ == "__main__":
         args.commit_sha,
     ]
     # strip possible empty elements from command list
-    command = [x for x in command if x != None]
+    command = [x for x in command if x is not None]
 
     # Get the list of changes in the upstream commit.
     res = subprocess.run(
@@ -46,7 +46,7 @@ if __name__ == "__main__":
         sys.exit("error: {}".format(res.stderr.strip()))
 
     changed_files = [line.strip() for line in res.stdout.strip().split("\n")]
-    changed_files = [line for line in changed_files if line != '']
+    changed_files = [line for line in changed_files if line != ""]
 
     # Fetch the list of excludes and includes used in the vendoring script.
     exclude_list = vendor_libwebrtc.get_excluded_paths()
@@ -68,5 +68,5 @@ if __name__ == "__main__":
         path for path in changed_files if not re.findall(regex_excludes, path)
     ]
 
-    for path in included_files+files_not_excluded:
+    for path in included_files + files_not_excluded:
         print(path)
