@@ -18,23 +18,26 @@ const { ContentTaskUtils } = ChromeUtils.importESModule(
 
 const MEDIA_AUDIO_PROCESS = "media.audio_process_per_codec_name";
 
+const kInterval = 300; /* ms */
+const kRetries = 5;
+
 /**
  * This function waits until utility scalars are reported into the
  * scalar snapshot.
  */
-async function waitForKeyedScalars(process, interval, retries) {
+async function waitForKeyedScalars(process) {
   await ContentTaskUtils.waitForCondition(
     () => {
       const scalars = Telemetry.getSnapshotForKeyedScalars("main", false);
       return Object.keys(scalars).includes("content");
     },
     `Waiting for ${process} scalars to have been set`,
-    interval,
-    retries
+    kInterval,
+    kRetries
   );
 }
 
-async function waitForValue(process, codecNames, interval, retries) {
+async function waitForValue(process, codecNames, extra = "") {
   await ContentTaskUtils.waitForCondition(
     () => {
       const telemetry = Telemetry.getSnapshotForKeyedScalars("main", false)
@@ -42,15 +45,15 @@ async function waitForValue(process, codecNames, interval, retries) {
       if (telemetry && MEDIA_AUDIO_PROCESS in telemetry) {
         const keyProcMimeTypes = Object.keys(telemetry[MEDIA_AUDIO_PROCESS]);
         const found = codecNames.every(item =>
-          keyProcMimeTypes.includes(`${process},${item}`)
+          keyProcMimeTypes.includes(`${process},${item}${extra}`)
         );
         return found;
       }
       return false;
     },
     `Waiting for ${MEDIA_AUDIO_PROCESS}`,
-    interval,
-    retries
+    kInterval,
+    kRetries
   );
 }
 
@@ -101,15 +104,12 @@ function getTelemetry() {
   return telemetry;
 }
 
-const kInterval = 300; /* ms */
-const kRetries = 5;
-
-async function verifyTelemetryForProcess(process, codecNames) {
+async function verifyTelemetryForProcess(process, codecNames, extraKey = "") {
   // Once scalars are set by the utility process, they don't immediately get
   // sent to the parent process. Wait for the Telemetry IPC Timer to trigger
   // and batch send the data back to the parent process.
-  await waitForKeyedScalars(process, kInterval, kRetries);
-  await waitForValue(process, codecNames, kInterval, kRetries);
+  await waitForKeyedScalars(process);
+  await waitForValue(process, codecNames, extraKey);
 
   const telemetry = getTelemetry();
 
@@ -119,17 +119,17 @@ async function verifyTelemetryForProcess(process, codecNames) {
   // in the wild.[${codecName}]
   codecNames.forEach(codecName => {
     Assert.greaterOrEqual(
-      telemetry[MEDIA_AUDIO_PROCESS][`${process},${codecName}`],
+      telemetry[MEDIA_AUDIO_PROCESS][`${process},${codecName}${extraKey}`],
       1,
       `${MEDIA_AUDIO_PROCESS} must have the correct value (${process}, ${codecName}).`
     );
   });
 }
 
-async function verifyNoTelemetryForProcess(process, codecNames) {
+async function verifyNoTelemetryForProcess(process, codecNames, extraKey = "") {
   try {
-    await waitForKeyedScalars(process, kInterval, kRetries);
-    await waitForValue(process, codecNames, kInterval, kRetries);
+    await waitForKeyedScalars(process);
+    await waitForValue(process, codecNames, extraKey);
   } catch (ex) {
     if (ex.indexOf("timed out after") > 0) {
       Assert.ok(
@@ -151,7 +151,10 @@ async function verifyNoTelemetryForProcess(process, codecNames) {
     if (telemetry) {
       if (telemetry && MEDIA_AUDIO_PROCESS in telemetry) {
         Assert.ok(
-          !(`${process},${codecName}` in telemetry[MEDIA_AUDIO_PROCESS]),
+          !(
+            `${process},${codecName}${extraKey}` in
+            telemetry[MEDIA_AUDIO_PROCESS]
+          ),
           `Some telemetry but no ${process}[${MEDIA_AUDIO_PROCESS}][${codecName}]`
         );
       } else {
