@@ -1,0 +1,8 @@
+<script>
+  window.addEventListener('load', async () => {
+    const dir = await navigator.storage.getDirectory();
+    const file = await dir.getFileHandle('555b8afb-96ac-4fe3-8cec', { create: true });
+    const writable = await file.createWritable({});
+    setTimeout('self.close()', 2000)
+  })
+</script>
