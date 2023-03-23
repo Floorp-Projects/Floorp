@@ -22,6 +22,18 @@ void FileSystemManagerChild::SetBackgroundRequestHandler(
   mBackgroundRequestHandler = aBackgroundRequestHandler;
 }
 
+void FileSystemManagerChild::CloseAllWritables(
+    std::function<void()>&& aCallback) {
+  nsTArray<RefPtr<BoolPromise>> promises;
+  CloseAllWritablesImpl(promises);
+
+  BoolPromise::AllSettled(GetCurrentSerialEventTarget(), promises)
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [callback = std::move(aCallback)](
+                 const BoolPromise::AllSettledPromiseType::ResolveOrRejectValue&
+                 /* aValues */) { callback(); });
+}
+
 #ifdef DEBUG
 bool FileSystemManagerChild::AllSyncAccessHandlesClosed() const {
   for (const auto& item : ManagedPFileSystemAccessHandleChild()) {
@@ -39,10 +51,6 @@ bool FileSystemManagerChild::AllSyncAccessHandlesClosed() const {
 bool FileSystemManagerChild::AllWritableFileStreamsClosed() const {
   for (const auto& item : ManagedPFileSystemWritableFileStreamChild()) {
     auto* const child = static_cast<FileSystemWritableFileStreamChild*>(item);
-    if (!child) {
-      continue;
-    }
-
     auto* const handle = child->MutableWritableFileStreamPtr();
     if (!handle) {
       continue;
@@ -90,17 +98,7 @@ FileSystemManagerChild::AllocPFileSystemWritableFileStreamChild() {
     }
   }
 
-  for (const auto& item : ManagedPFileSystemWritableFileStreamChild()) {
-    auto* const child = static_cast<FileSystemWritableFileStreamChild*>(item);
-    if (!child) {
-      continue;
-    }
-
-    auto* const handle = child->MutableWritableFileStreamPtr();
-    if (handle && !handle->IsClosed()) {
-      promises.AppendElement(handle->BeginClose());
-    }
-  }
+  CloseAllWritablesImpl(promises);
 
   BoolPromise::AllSettled(GetCurrentSerialEventTarget(), promises)
       ->Then(GetCurrentSerialEventTarget(), __func__,
@@ -115,6 +113,18 @@ void FileSystemManagerChild::ActorDestroy(ActorDestroyReason aWhy) {
   if (mBackgroundRequestHandler) {
     mBackgroundRequestHandler->ClearActor();
     mBackgroundRequestHandler = nullptr;
+  }
+}
+
+template <class T>
+void FileSystemManagerChild::CloseAllWritablesImpl(T& aPromises) {
+  for (const auto& item : ManagedPFileSystemWritableFileStreamChild()) {
+    auto* const child = static_cast<FileSystemWritableFileStreamChild*>(item);
+    auto* const handle = child->MutableWritableFileStreamPtr();
+
+    if (handle && !handle->IsClosed()) {
+      aPromises.AppendElement(handle->BeginClose());
+    }
   }
 }
 

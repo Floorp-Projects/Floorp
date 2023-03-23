@@ -7,6 +7,7 @@
 #include "FileSystemWritableFileStream.h"
 
 #include "fs/FileSystemAsyncCopy.h"
+#include "fs/FileSystemShutdownBlocker.h"
 #include "fs/FileSystemThreadSafeStreamOwner.h"
 #include "mozilla/Buffer.h"
 #include "mozilla/ErrorResult.h"
@@ -150,6 +151,11 @@ class FileSystemWritableFileStream::CloseHandler {
   enum struct State : uint8_t { Initial = 0, Open, Closing, Closed };
 
  public:
+  CloseHandler()
+      : mShutdownBlocker(fs::FileSystemShutdownBlocker::CreateForWritable()),
+        mClosePromiseHolder(),
+        mState(State::Initial) {}
+
   NS_INLINE_DECL_REFCOUNTING(FileSystemWritableFileStream::CloseHandler)
 
   /**
@@ -196,6 +202,7 @@ class FileSystemWritableFileStream::CloseHandler {
    */
   void Open() {
     MOZ_ASSERT(State::Initial == mState);
+    mShutdownBlocker->Block();
 
     mState = State::Open;
   }
@@ -205,6 +212,7 @@ class FileSystemWritableFileStream::CloseHandler {
    *
    */
   void Close() {
+    mShutdownBlocker->Unblock();
     mState = State::Closed;
     mClosePromiseHolder.ResolveIfExists(true, __func__);
   }
@@ -213,9 +221,11 @@ class FileSystemWritableFileStream::CloseHandler {
   virtual ~CloseHandler() = default;
 
  private:
+  RefPtr<fs::FileSystemShutdownBlocker> mShutdownBlocker;
+
   mutable MozPromiseHolder<BoolPromise> mClosePromiseHolder;
 
-  State mState = State::Initial;
+  State mState;
 };
 
 FileSystemWritableFileStream::FileSystemWritableFileStream(
@@ -418,10 +428,12 @@ bool FileSystemWritableFileStream::IsClosed() const {
 }
 
 RefPtr<BoolPromise> FileSystemWritableFileStream::BeginClose() {
+  using ClosePromise = PFileSystemWritableFileStreamChild::ClosePromise;
   if (mCloseHandler->TestAndSetClosing()) {
     InvokeAsync(mTaskQueue, __func__,
                 [streamOwner = mStreamOwner]() mutable {
                   streamOwner->Close();
+
                   return BoolPromise::CreateAndResolve(true, __func__);
                 })
         ->Then(GetCurrentSerialEventTarget(), __func__,
@@ -431,12 +443,19 @@ RefPtr<BoolPromise> FileSystemWritableFileStream::BeginClose() {
         ->Then(GetCurrentSerialEventTarget(), __func__,
                [self = RefPtr(this)](
                    const ShutdownPromise::ResolveOrRejectValue& /* aValue */) {
-                 if (self->mActor) {
-                   self->mActor->SendClose();
+                 if (!self->mActor) {
+                   return ClosePromise::CreateAndResolve(void_t(), __func__);
                  }
 
+                 return self->mActor->SendClose();
+               })
+        ->Then(GetCurrentSerialEventTarget(), __func__,
+               [self = RefPtr(this)](
+                   const ClosePromise::ResolveOrRejectValue& aValue) {
                  self->mWorkerRef = nullptr;
                  self->mCloseHandler->Close();
+
+                 QM_TRY(OkIf(aValue.IsResolve()), QM_VOID);
                });
   }
 
