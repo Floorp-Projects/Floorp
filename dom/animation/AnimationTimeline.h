@@ -125,6 +125,7 @@ class AnimationTimeline : public nsISupports, public nsWrapperCache {
   // We store them in (a) a hashset for quick lookup, and (b) a LinkedList
   // to maintain a fixed sampling order. Animations that are hidden by
   // `content-visibility` are not sampled and will only be in the hashset.
+  // The LinkedList should always be a subset of the hashset.
   //
   // The hashset keeps a strong reference to each animation since
   // dealing with addref/release with LinkedList is difficult.
