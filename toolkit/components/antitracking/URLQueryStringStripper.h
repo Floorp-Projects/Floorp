@@ -9,6 +9,7 @@
 
 #include "nsIURLQueryStringStripper.h"
 #include "nsIURLQueryStrippingListService.h"
+#include "nsIObserver.h"
 
 #include "nsStringFwd.h"
 #include "nsTHashSet.h"
@@ -17,9 +18,11 @@ class nsIURI;
 
 namespace mozilla {
 
-class URLQueryStringStripper final : public nsIURLQueryStringStripper,
+class URLQueryStringStripper final : public nsIObserver,
+                                     public nsIURLQueryStringStripper,
                                      public nsIURLQueryStrippingListObserver {
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
   NS_DECL_NSIURLQUERYSTRIPPINGLISTOBSERVER
 
   NS_DECL_NSIURLQUERYSTRINGSTRIPPER
