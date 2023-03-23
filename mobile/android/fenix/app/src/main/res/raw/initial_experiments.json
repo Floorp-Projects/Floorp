@@ -2,64 +2,6 @@
   "data": [
     {
       "schemaVersion": "1.11.0",
-      "slug": "android-pre-permission-prompt-experiment-release",
-      "id": "android-pre-permission-prompt-experiment-release",
-      "arguments": {},
-      "application": "org.mozilla.firefox",
-      "appName": "fenix",
-      "appId": "org.mozilla.firefox",
-      "channel": "release",
-      "userFacingName": "Android Pre-Permission Prompt Experiment - Release",
-      "userFacingDescription": "If we show the pre-permission prompt to opt in to notifications for new users, then users will be more likely to opt in to receiving notifications.",
-      "isEnrollmentPaused": false,
-      "isRollout": false,
-      "bucketConfig": {
-        "randomizationUnit": "nimbus_id",
-        "namespace": "fenix-pre-permission-notification-prompt-release-1",
-        "start": 0,
-        "count": 10000,
-        "total": 10000
-      },
-      "featureIds": [
-        "pre-permission-notification-prompt"
-      ],
-      "probeSets": [],
-      "outcomes": [],
-      "branches": [
-        {
-          "slug": "control",
-          "ratio": 1,
-          "feature": {
-            "featureId": "pre-permission-notification-prompt",
-            "enabled": true,
-            "value": {
-              "enabled": false
-            }
-          }
-        },
-        {
-          "slug": "treatment-a",
-          "ratio": 1,
-          "feature": {
-            "featureId": "pre-permission-notification-prompt",
-            "enabled": true,
-            "value": {
-              "enabled": true
-            }
-          }
-        }
-      ],
-      "targeting": "((is_already_enrolled) || (((android_sdk_version|versionCompare('33') >= 0) && is_first_run) && (app_version|versionCompare('110.!') >= 0)))",
-      "startDate": "2023-01-31",
-      "enrollmentEndDate": "2023-02-22",
-      "endDate": null,
-      "proposedDuration": 28,
-      "proposedEnrollment": 8,
-      "referenceBranch": "control",
-      "featureValidationOptOut": false
-    },
-    {
-      "schemaVersion": "1.11.0",
       "slug": "android-re-engagement-notifications-ab-experiment-v112",
       "id": "android-re-engagement-notifications-ab-experiment-v112",
       "arguments": {},
