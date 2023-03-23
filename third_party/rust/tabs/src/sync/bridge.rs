@@ -2,12 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use std::sync::{Arc, Mutex};
-
-use crate::error::{ApiResult, TabsApiError};
+use crate::error::TabsApiError;
 use crate::sync::engine::TabsSyncImpl;
 use crate::TabsStore;
-use error_support::handle_error;
+use anyhow::Result;
+use std::sync::{Arc, Mutex};
 use sync15::bso::{IncomingBso, OutgoingBso};
 use sync15::engine::{ApplyResults, BridgedEngine, CollSyncIds, EngineSyncAssociation};
 use sync15::{ClientData, ServerTimestamp};
@@ -45,10 +44,7 @@ impl BridgedEngineImpl {
 }
 
 impl BridgedEngine for BridgedEngineImpl {
-    type Error = TabsApiError;
-
-    #[handle_error(crate::Error)]
-    fn last_sync(&self) -> ApiResult<i64> {
+    fn last_sync(&self) -> Result<i64> {
         Ok(self
             .sync_impl
             .lock()
@@ -58,8 +54,7 @@ impl BridgedEngine for BridgedEngineImpl {
             .as_millis())
     }
 
-    #[handle_error(crate::Error)]
-    fn set_last_sync(&self, last_sync_millis: i64) -> ApiResult<()> {
+    fn set_last_sync(&self, last_sync_millis: i64) -> Result<()> {
         self.sync_impl
             .lock()
             .unwrap()
@@ -67,16 +62,14 @@ impl BridgedEngine for BridgedEngineImpl {
         Ok(())
     }
 
-    #[handle_error(crate::Error)]
-    fn sync_id(&self) -> ApiResult<Option<String>> {
+    fn sync_id(&self) -> Result<Option<String>> {
         Ok(match self.sync_impl.lock().unwrap().get_sync_assoc()? {
             EngineSyncAssociation::Connected(id) => Some(id.coll.to_string()),
             EngineSyncAssociation::Disconnected => None,
         })
     }
 
-    #[handle_error(crate::Error)]
-    fn reset_sync_id(&self) -> ApiResult<String> {
+    fn reset_sync_id(&self) -> Result<String> {
         let new_id = SyncGuid::random().to_string();
         let new_coll_ids = CollSyncIds {
             global: SyncGuid::empty(),
@@ -89,8 +82,7 @@ impl BridgedEngine for BridgedEngineImpl {
         Ok(new_id)
     }
 
-    #[handle_error(crate::Error)]
-    fn ensure_current_sync_id(&self, sync_id: &str) -> ApiResult<String> {
+    fn ensure_current_sync_id(&self, sync_id: &str) -> Result<String> {
         let mut sync_impl = self.sync_impl.lock().unwrap();
         let assoc = sync_impl.get_sync_assoc()?;
         if matches!(assoc, EngineSyncAssociation::Connected(c) if c.coll == sync_id) {
@@ -102,29 +94,26 @@ impl BridgedEngine for BridgedEngineImpl {
             };
             sync_impl.reset(&EngineSyncAssociation::Connected(new_coll_ids))?;
         }
-        Ok(sync_id.to_string()) // this is a bit odd, why the result?
+        Ok(sync_id.to_string())
     }
 
-    #[handle_error(crate::Error)]
-    fn prepare_for_sync(&self, client_data: &str) -> ApiResult<()> {
+    fn prepare_for_sync(&self, client_data: &str) -> Result<()> {
         let data: ClientData = serde_json::from_str(client_data)?;
-        self.sync_impl.lock().unwrap().prepare_for_sync(data)
+        Ok(self.sync_impl.lock().unwrap().prepare_for_sync(data)?)
     }
 
-    fn sync_started(&self) -> ApiResult<()> {
+    fn sync_started(&self) -> Result<()> {
         // This is a no-op for the Tabs Engine
         Ok(())
     }
 
-    #[handle_error(crate::Error)]
-    fn store_incoming(&self, incoming: Vec<IncomingBso>) -> ApiResult<()> {
+    fn store_incoming(&self, incoming: Vec<IncomingBso>) -> Result<()> {
         // Store the incoming payload in memory so we can use it in apply
         *(self.incoming.lock().unwrap()) = incoming;
         Ok(())
     }
 
-    #[handle_error(crate::Error)]
-    fn apply(&self) -> ApiResult<ApplyResults> {
+    fn apply(&self) -> Result<ApplyResults> {
         let mut incoming = self.incoming.lock().unwrap();
         // We've a reference to a Vec<> but it's owned by the mutex - swap the mutex owned
         // value for an empty vec so we can consume the original.
@@ -141,22 +130,20 @@ impl BridgedEngine for BridgedEngineImpl {
         })
     }
 
-    #[handle_error(crate::Error)]
-    fn set_uploaded(&self, server_modified_millis: i64, ids: &[SyncGuid]) -> ApiResult<()> {
-        self.sync_impl
+    fn set_uploaded(&self, server_modified_millis: i64, ids: &[SyncGuid]) -> Result<()> {
+        Ok(self
+            .sync_impl
             .lock()
             .unwrap()
-            .sync_finished(ServerTimestamp::from_millis(server_modified_millis), ids)
+            .sync_finished(ServerTimestamp::from_millis(server_modified_millis), ids)?)
     }
 
-    #[handle_error(crate::Error)]
-    fn sync_finished(&self) -> ApiResult<()> {
+    fn sync_finished(&self) -> Result<()> {
         *(self.incoming.lock().unwrap()) = Vec::default();
         Ok(())
     }
 
-    #[handle_error(crate::Error)]
-    fn reset(&self) -> ApiResult<()> {
+    fn reset(&self) -> Result<()> {
         self.sync_impl
             .lock()
             .unwrap()
@@ -164,8 +151,7 @@ impl BridgedEngine for BridgedEngineImpl {
         Ok(())
     }
 
-    #[handle_error(crate::Error)]
-    fn wipe(&self) -> ApiResult<()> {
+    fn wipe(&self) -> Result<()> {
         self.sync_impl.lock().unwrap().wipe()?;
         Ok(())
     }
@@ -181,37 +167,36 @@ impl TabsBridgedEngine {
         Self { bridge_impl }
     }
 
-    pub fn last_sync(&self) -> ApiResult<i64> {
+    pub fn last_sync(&self) -> Result<i64> {
         self.bridge_impl.last_sync()
     }
 
-    pub fn set_last_sync(&self, last_sync: i64) -> ApiResult<()> {
+    pub fn set_last_sync(&self, last_sync: i64) -> Result<()> {
         self.bridge_impl.set_last_sync(last_sync)
     }
 
-    pub fn sync_id(&self) -> ApiResult<Option<String>> {
+    pub fn sync_id(&self) -> Result<Option<String>> {
         self.bridge_impl.sync_id()
     }
 
-    pub fn reset_sync_id(&self) -> ApiResult<String> {
+    pub fn reset_sync_id(&self) -> Result<String> {
         self.bridge_impl.reset_sync_id()
     }
 
-    pub fn ensure_current_sync_id(&self, sync_id: &str) -> ApiResult<String> {
+    pub fn ensure_current_sync_id(&self, sync_id: &str) -> Result<String> {
         self.bridge_impl.ensure_current_sync_id(sync_id)
     }
 
-    pub fn prepare_for_sync(&self, client_data: &str) -> ApiResult<()> {
+    pub fn prepare_for_sync(&self, client_data: &str) -> Result<()> {
         self.bridge_impl.prepare_for_sync(client_data)
     }
 
-    pub fn sync_started(&self) -> ApiResult<()> {
+    pub fn sync_started(&self) -> Result<()> {
         self.bridge_impl.sync_started()
     }
 
     // Decode the JSON-encoded IncomingBso's that UniFFI passes to us
-    #[handle_error(crate::Error)]
-    fn convert_incoming_bsos(&self, incoming: Vec<String>) -> ApiResult<Vec<IncomingBso>> {
+    fn convert_incoming_bsos(&self, incoming: Vec<String>) -> Result<Vec<IncomingBso>> {
         let mut bsos = Vec::with_capacity(incoming.len());
         for inc in incoming {
             bsos.push(serde_json::from_str::<IncomingBso>(&inc)?);
@@ -220,8 +205,7 @@ impl TabsBridgedEngine {
     }
 
     // Encode OutgoingBso's into JSON for UniFFI
-    #[handle_error(crate::Error)]
-    fn convert_outgoing_bsos(&self, outgoing: Vec<OutgoingBso>) -> ApiResult<Vec<String>> {
+    fn convert_outgoing_bsos(&self, outgoing: Vec<OutgoingBso>) -> Result<Vec<String>> {
         let mut bsos = Vec::with_capacity(outgoing.len());
         for e in outgoing {
             bsos.push(serde_json::to_string(&e)?);
@@ -229,31 +213,39 @@ impl TabsBridgedEngine {
         Ok(bsos)
     }
 
-    pub fn store_incoming(&self, incoming: Vec<String>) -> ApiResult<()> {
+    pub fn store_incoming(&self, incoming: Vec<String>) -> Result<()> {
         self.bridge_impl
             .store_incoming(self.convert_incoming_bsos(incoming)?)
     }
 
-    pub fn apply(&self) -> ApiResult<Vec<String>> {
+    pub fn apply(&self) -> Result<Vec<String>> {
         let apply_results = self.bridge_impl.apply()?;
         self.convert_outgoing_bsos(apply_results.records)
     }
 
-    pub fn set_uploaded(&self, server_modified_millis: i64, guids: Vec<SyncGuid>) -> ApiResult<()> {
+    pub fn set_uploaded(&self, server_modified_millis: i64, guids: Vec<SyncGuid>) -> Result<()> {
         self.bridge_impl
             .set_uploaded(server_modified_millis, &guids)
     }
 
-    pub fn sync_finished(&self) -> ApiResult<()> {
+    pub fn sync_finished(&self) -> Result<()> {
         self.bridge_impl.sync_finished()
     }
 
-    pub fn reset(&self) -> ApiResult<()> {
+    pub fn reset(&self) -> Result<()> {
         self.bridge_impl.reset()
     }
 
-    pub fn wipe(&self) -> ApiResult<()> {
+    pub fn wipe(&self) -> Result<()> {
         self.bridge_impl.wipe()
+    }
+}
+
+impl From<anyhow::Error> for TabsApiError {
+    fn from(value: anyhow::Error) -> Self {
+        TabsApiError::UnexpectedTabsError {
+            reason: value.to_string(),
+        }
     }
 }
 
