@@ -176,6 +176,26 @@ linux64-rust-macos-1.68:
         ]
         toolchain-alias: linux64-rust-macos
 
+linux64-rust-android-1.67:
+    description: "rust repack with android-cross support"
+    treeherder:
+        symbol: TL(rust-android-1.67)
+    run:
+        arguments: [
+            '--channel', '1.67.0',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'armv7-linux-androideabi',
+            '--target', 'thumbv7neon-linux-androideabi',
+            '--target', 'aarch64-linux-android',
+            '--target', 'i686-linux-android',
+            '--target', 'x86_64-linux-android',
+            '--compiler-builtins-hack',
+        ]
+    fetches:
+        toolchain:
+            - linux64-clang-toolchain
+
 linux64-rust-android-1.68:
     description: "rust repack with android-cross support"
     treeherder:
