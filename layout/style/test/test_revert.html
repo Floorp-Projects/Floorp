@@ -21,6 +21,8 @@ const kInheritedDiv = document.getElementById("inherited");
 const kResetDiv = document.getElementById("nonInherited");
 const kNoAuthorStylesDiv = document.getElementById("noAuthorStyleApplied");
 
+SimpleTest.expectAssertions(3, 3); // bug 1790201
+
 function computedValue(node, property) {
   return get_computed_value(getComputedStyle(node), property);
 }
