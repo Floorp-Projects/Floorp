@@ -5102,7 +5102,6 @@ name = "static_prefs"
 version = "0.1.0"
 dependencies = [
  "mozbuild",
- "nsstring",
 ]
 
 [[package]]
@@ -6467,7 +6466,6 @@ dependencies = [
  "nsstring",
  "parking_lot 0.11.2",
  "serde",
- "static_prefs",
  "wgpu-core",
  "wgpu-hal",
  "wgpu-types",
