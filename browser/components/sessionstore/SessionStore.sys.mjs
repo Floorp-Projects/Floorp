@@ -4369,7 +4369,7 @@ var SessionStoreInternal = {
       this._restore_on_demand;
 
     if (winData.tabs.length) {
-      var tabs = tabbrowser.addMultipleTabs(
+      var tabs = tabbrowser.createTabsForSessionRestore(
         restoreTabsLazily,
         selectTab,
         winData.tabs

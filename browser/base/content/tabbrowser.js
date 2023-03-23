@@ -2619,7 +2619,7 @@
         userContextId,
         csp,
         skipLoad = createLazyBrowser,
-        batchInsertingTabs,
+        insertTab = true,
         globalHistoryOptions,
         triggeringRemoteType,
       } = {}
@@ -2701,8 +2701,7 @@
           noInitialLabel,
           skipBackgroundNotify,
         });
-        if (!batchInsertingTabs) {
-          // When we are not restoring a session, we need to know
+        if (insertTab) {
           // insert the tab into the tab container in the correct position
           this._insertTabAtIndex(t, {
             index,
@@ -2745,10 +2744,11 @@
             );
             b.registeredOpenURI = lazyBrowserURI;
           }
-          // If we're batch inserting, we can't set the tab state meaningfully
-          // because the tab won't be in the DOM yet. The consumer (normally
-          // session restore) will have to do this work itself.
-          if (!batchInsertingTabs) {
+          // If we're not inserting the tab into the DOM, we can't set the tab
+          // state meaningfully. Session restore (the only caller who does this)
+          // will have to do this work itself later, when the tabs have been
+          // inserted.
+          if (insertTab) {
             SessionStore.setTabState(t, {
               entries: [
                 {
@@ -2788,7 +2788,7 @@
         return null;
       }
 
-      if (!batchInsertingTabs) {
+      if (insertTab) {
         // Fire a TabOpen event
         this._fireTabOpen(t, eventDetail);
 
@@ -3119,7 +3119,7 @@
       }
     },
 
-    addMultipleTabs(restoreTabsLazily, selectTab, aPropertiesTabs) {
+    createTabsForSessionRestore(restoreTabsLazily, selectTab, tabDataList) {
       let tabs = [];
       let tabsFragment = document.createDocumentFragment();
       let tabToSelect = null;
@@ -3130,8 +3130,8 @@
       // into a document fragment so that we can insert them all
       // together. This prevents synch reflow for each tab
       // insertion.
-      for (var i = 0; i < aPropertiesTabs.length; i++) {
-        let tabData = aPropertiesTabs[i];
+      for (var i = 0; i < tabDataList.length; i++) {
+        let tabData = tabDataList[i];
 
         let userContextId = tabData.userContextId;
         let select = i == selectTab - 1;
@@ -3191,7 +3191,7 @@
             userContextId,
             skipBackgroundNotify: true,
             bulkOrderedOpen: true,
-            batchInsertingTabs: true,
+            insertTab: false,
             skipLoad: true,
             preferredRemoteType,
           });
