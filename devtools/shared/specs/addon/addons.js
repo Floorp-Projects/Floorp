@@ -20,6 +20,13 @@ const addonsSpec = generateActorSpec({
       },
       response: { addon: RetVal("json") },
     },
+
+    uninstallAddon: {
+      request: {
+        addonId: Arg(0, "string"),
+      },
+      response: {},
+    },
   },
 });
 
