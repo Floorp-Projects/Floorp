@@ -3454,8 +3454,20 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
         if (nsTextFrame* currTextFrame = do_QueryFrame(frame)) {
           nsTArray<int32_t> charData(nsAccUtils::TextLength(this) *
                                      kNumbersInRect);
+          // Continuation offsets are calculated relative to the primary frame.
+          // However, the acc's bounds are calculated using
+          // GetAllInFlowRectsUnion. For wrapped text which starts part way
+          // through a line, this might mean the top left of the acc is
+          // different to the top left of the primary frame. This also happens
+          // when the primary frame is empty (e.g. a blank line at the start of
+          // pre-formatted text), since the union rect will exclude the origin
+          // in that case. Calculate the offset from the acc's rect to the
+          // primary frame's rect.
+          nsRect accOffset =
+              nsLayoutUtils::GetAllInFlowRectsUnion(frame, frame);
           while (currTextFrame) {
             nsPoint contOffset = currTextFrame->GetOffsetTo(frame);
+            contOffset -= accOffset.TopLeft();
             int32_t length = currTextFrame->GetContentLength();
             nsTArray<nsRect> charBounds(length);
             currTextFrame->GetCharacterRectsInRange(
