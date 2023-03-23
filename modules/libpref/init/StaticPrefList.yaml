@@ -4601,7 +4601,7 @@
 # Is support for the Web GPU API enabled?
 - name: dom.webgpu.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 # Are WebGPU indirect draws/dispatches enabled?
