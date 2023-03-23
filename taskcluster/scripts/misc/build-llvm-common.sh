@@ -67,6 +67,14 @@ case "$target" in
   PATH="$PATH:$PWD"
   ;;
 *-linux-android)
+  case "$target" in
+  armv7-linux-android)
+    arch=arm
+    ;;
+  *-linux-android)
+    arch=${target%-linux-android}
+    ;;
+  esac
   target=$target$api_level
   # These flags are only necessary to pass the cmake tests. They don't end up
   # actually using libgcc, so use an empty library instead of trying to find
@@ -84,6 +92,7 @@ case "$target" in
     -DANDROID=1
     -DANDROID_NATIVE_API_LEVEL=$api_level
     -DSANITIZER_ALLOW_CXXABI=OFF
+    -DLLVM_DEFAULT_TARGET_TRIPLE=$arch-unknown-linux-android
   "
   ;;
 *-unknown-linux-gnu)
