@@ -107,7 +107,6 @@ async function handleInitializationMessage({ data }) {
     handleMessages(engine);
     postMessage({ type: "initialization-success" });
   } catch (error) {
-    // TODO (Bug 1813781) - Handle this error in the UI.
     console.error(error);
     postMessage({ type: "initialization-error", error: error?.message });
   }
