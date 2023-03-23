@@ -22,6 +22,7 @@ deb11-mercurial:
             sed -i -e "s/__VERSION__/$(awk -F\" '$2 {print $2}' mercurial/__version__.py)-1.deb11moz1/" \
                          -e "s/__DATE__/$(date --rfc-2822)/" \
                          -e "s/__CODENAME__/bullseye/" debian/changelog
+        patch: mercurial-timeout.diff
 
 deb11-cmake:
     description: "cmake"
