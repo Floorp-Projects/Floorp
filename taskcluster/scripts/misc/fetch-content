@@ -183,8 +183,8 @@ def stream_download(url, sha256=None, size=None):
 
     t0 = time.time()
     with urllib.request.urlopen(
-        url, cafile=certifi.where()
-    ) if certifi else urllib.request.urlopen(url) as fh:
+        url, timeout=60, cafile=certifi.where()
+    ) if certifi else urllib.request.urlopen(url, timeout=60) as fh:
         if not url.endswith(".gz") and fh.info().get("Content-Encoding") == "gzip":
             fh = gzip.GzipFile(fileobj=fh)
 
