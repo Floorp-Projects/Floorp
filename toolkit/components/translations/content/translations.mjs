@@ -7,8 +7,8 @@
 // allow for the page to get access to additional privileged features.
 
 /* global AT_getSupportedLanguages, AT_log, AT_getScriptDirection,
-   AT_logError, AT_destroyTranslationsEngine, AT_createTranslationsEngine, 
-   AT_createLanguageIdEngine, AT_translate, AT_identifyLanguage */
+   AT_logError, AT_destroyTranslationsEngine, AT_createTranslationsEngine,
+   AT_isTranslationEngineSupported, AT_createLanguageIdEngine, AT_translate, AT_identifyLanguage */
 
 // Allow tests to override this value so that they can run faster.
 // This is the delay in milliseconds.
@@ -66,7 +66,14 @@ class TranslationsState {
   translationsEngine = null;
 
   constructor() {
+    /**
+     * Is the engine supported by the device?
+     * @type {boolean}
+     */
+    this.isTranslationEngineSupported = AT_isTranslationEngineSupported();
+
     AT_createLanguageIdEngine();
+
     this.supportedLanguages = AT_getSupportedLanguages();
     this.ui = new TranslationsUI(this);
     this.ui.setup();
@@ -110,6 +117,11 @@ class TranslationsState {
         messageToTranslate,
         translationsEngine,
       } = this;
+
+      if (!this.isTranslationEngineSupported) {
+        // Never translate when the engine isn't supported.
+        return;
+      }
 
       if (
         !fromLanguage ||
@@ -212,8 +224,8 @@ class TranslationsState {
       await this.translationsEngine;
       const duration = performance.now() - start;
       AT_log(`Rebuilt the TranslationsEngine in ${duration / 1000} seconds`);
-      // TODO (Bug 1813781) - Report this error in the UI.
     } catch (error) {
+      this.ui.showInfo("about-translations-engine-error");
       AT_logError("Failed to get the Translations worker", error);
     }
   }
@@ -298,6 +310,10 @@ class TranslationsUI {
   translationTo = document.getElementById("translation-to");
   /** @type {HTMLDivElement} */
   translationToBlank = document.getElementById("translation-to-blank");
+  /** @type {HTMLDivElement} */
+  translationInfo = document.getElementById("translation-info");
+  /** @type {HTMLDivElement} */
+  translationInfoMessage = document.getElementById("translation-info-message");
   /** @type {TranslationsState} */
   state;
 
@@ -324,6 +340,10 @@ class TranslationsUI {
   setup() {
     this.setupDropdowns();
     this.setupTextarea();
+
+    if (!this.state.isTranslationEngineSupported) {
+      this.showInfo("about-translations-no-support");
+    }
   }
 
   /**
@@ -370,6 +390,23 @@ class TranslationsUI {
       this.updateOnLanguageChange();
       this.translationTo.setAttribute("lang", this.languageTo.value);
     });
+  }
+
+  /**
+   * Show an info message to the user.
+   *
+   * @param {string} l10nId
+   */
+  showInfo(l10nId) {
+    this.translationInfoMessage.setAttribute("data-l10n-id", l10nId);
+    this.translationInfo.style.display = "flex";
+  }
+
+  /**
+   * Hides the info UI.
+   */
+  hideInfo() {
+    this.translationInfo.style.display = "none";
   }
 
   /**
@@ -499,6 +536,7 @@ class TranslationsUI {
     if (message) {
       this.translationTo.style.visibility = "visible";
       this.translationToBlank.style.visibility = "hidden";
+      this.hideInfo();
     } else {
       this.translationTo.style.visibility = "hidden";
       this.translationToBlank.style.visibility = "visible";

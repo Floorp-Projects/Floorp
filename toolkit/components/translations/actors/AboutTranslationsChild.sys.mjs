@@ -119,6 +119,7 @@ export class AboutTranslationsChild extends JSWindowActorChild {
       "AT_logError",
       "AT_getAppLocale",
       "AT_getSupportedLanguages",
+      "AT_isTranslationEngineSupported",
       "AT_createLanguageIdEngine",
       "AT_createTranslationsEngine",
       "AT_identifyLanguage",
@@ -169,6 +170,14 @@ export class AboutTranslationsChild extends JSWindowActorChild {
         .getSupportedLanguages()
         .then(data => Cu.cloneInto(data, this.contentWindow))
     );
+  }
+
+  /**
+   * Does this device support the translation engine?
+   * @returns {boolean}
+   */
+  AT_isTranslationEngineSupported() {
+    return this.#getTranslationsChild().isTranslationsEngineSupported();
   }
 
   /**

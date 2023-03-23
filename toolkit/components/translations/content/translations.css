@@ -11,6 +11,7 @@
      look nice by default in "toolkit". */
   --AT-box-background: var(--in-content-box-background, #fff);
   --AT-box-border-color: var(--in-content-box-border-color, #9e9ea0);
+  --AT-box-info-background: var(--in-content-box-info-background, #f0f0f4);
 
   /* Variables used in the page layout */
   --AT-page-margin: 20px;
@@ -115,6 +116,28 @@ select.about-translations-select:dir(rtl) {
   padding: var(--AT-input-padding);
   box-sizing: border-box;
   overflow-y: scroll;
+}
+
+.about-translations-info {
+  display: none;
+  padding: 10px;
+  background-color: var(--AT-box-info-background);
+  border-radius: 4px;
+  margin-bottom: var(--AT-input-padding);
+}
+
+.about-translations-info-message {
+  flex: 1;
+  align-self: center;
+}
+
+.about-translations-info-icon {
+  width: 16px;
+  height: 16px;
+  margin: 10px;
+  background-image: url('chrome://global/skin/icons/info.svg');
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 @media (max-width: 700px) {
