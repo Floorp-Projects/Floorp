@@ -232,7 +232,7 @@ impl Task for PuntTask {
             }
             Err(err) => {
                 let mut message = nsCString::new();
-                write!(message, "{}", err).unwrap();
+                write!(message, "{err}").unwrap();
                 unsafe { callback.HandleError(err.into(), &*message) }
             }
         }
@@ -312,7 +312,7 @@ impl Task for TeardownTask {
             Ok(()) => unsafe { callback.HandleSuccess(().into_variant().coerce()) },
             Err(err) => {
                 let mut message = nsCString::new();
-                write!(message, "{}", err).unwrap();
+                write!(message, "{err}").unwrap();
                 unsafe { callback.HandleError(err.into(), &*message) }
             }
         }

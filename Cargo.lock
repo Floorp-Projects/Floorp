@@ -2418,6 +2418,7 @@ dependencies = [
 name = "golden_gate"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "atomic_refcell",
  "cstr",
  "interrupt-support",
@@ -6254,6 +6255,7 @@ dependencies = [
 name = "webext_storage_bridge"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "atomic_refcell",
  "cstr",
  "golden_gate",
