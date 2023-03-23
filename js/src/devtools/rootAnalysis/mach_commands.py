@@ -6,15 +6,20 @@
 
 
 import argparse
+import html
 import json
+import logging
 import os
+import re
 import textwrap
+import webbrowser
 
 # Command files like this are listed in build/mach_initialize.py in alphabetical
 # order, but we need to access commands earlier in the sorted order to grab
 # their arguments. Force them to load now.
 import mozbuild.artifact_commands  # NOQA: F401
 import mozbuild.build_commands  # NOQA: F401
+import mozhttpd
 from mach.base import FailedCommandError, MachError
 from mach.decorators import Command, CommandArgument, SubCommand
 from mach.registrar import Registrar
@@ -74,19 +79,19 @@ def script_dir(command_context):
     return os.path.join(command_context.topsrcdir, "js/src/devtools/rootAnalysis")
 
 
-def get_work_dir(command_context, application, given):
+def get_work_dir(command_context, project, given):
     if given is not None:
         return given
-    return os.path.join(command_context.topsrcdir, "haz-" + application)
+    return os.path.join(command_context.topsrcdir, "haz-" + project)
 
 
 def get_objdir(command_context, kwargs):
-    application = kwargs["application"]
+    project = kwargs["project"]
     objdir = kwargs["haz_objdir"]
     if objdir is None:
         objdir = os.environ.get("HAZ_OBJDIR")
     if objdir is None:
-        objdir = os.path.join(command_context.topsrcdir, "obj-analyzed-" + application)
+        objdir = os.path.join(command_context.topsrcdir, "obj-analyzed-" + project)
     return objdir
 
 
@@ -144,9 +149,8 @@ CLOBBER_CHOICES = {"objdir", "work", "shell", "all"}
 
 
 @SubCommand("hazards", "clobber", description="Clean up hazard-related files")
-@CommandArgument(
-    "--application", default="browser", help="Build the given application."
-)
+@CommandArgument("--project", default="browser", help="Build the given project.")
+@CommandArgument("--application", dest="project", help="Build the given project.")
 @CommandArgument("--haz-objdir", default=None, help="Hazard analysis objdir.")
 @CommandArgument(
     "--work-dir", default=None, help="Directory for output and working files."
@@ -183,8 +187,8 @@ def clobber(command_context, what, **kwargs):
         print(f"removing {objdir}")
         Clobberer(command_context.topsrcdir, objdir, substs).remove_objdir(full=True)
     if "work" in what:
-        application = kwargs["application"]
-        work_dir = get_work_dir(command_context, application, kwargs["work_dir"])
+        project = kwargs["project"]
+        work_dir = get_work_dir(command_context, project, kwargs["work_dir"])
         print(f"removing {work_dir}")
         Clobberer(command_context.topsrcdir, work_dir, substs).remove_objdir(full=True)
     if "shell" in what:
@@ -265,7 +269,7 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
 
 
 def validate_mozconfig(command_context, kwargs):
-    app = kwargs.pop("application")
+    app = kwargs.pop("project")
     default_mozconfig = "js/src/devtools/rootAnalysis/mozconfig.%s" % app
     mozconfig_path = (
         kwargs.pop("mozconfig", None)
@@ -279,7 +283,7 @@ def validate_mozconfig(command_context, kwargs):
     configure_args = mozconfig["configure_args"]
 
     # Require an explicit --enable-project/application=APP (even if you just
-    # want to build the default browser application.)
+    # want to build the default browser project.)
     if (
         "--enable-project=%s" % app not in configure_args
         and "--enable-application=%s" % app not in configure_args
@@ -305,11 +309,10 @@ def validate_mozconfig(command_context, kwargs):
 @SubCommand(
     "hazards",
     "gather",
-    description="Gather analysis data by compiling the given application",
+    description="Gather analysis data by compiling the given project",
 )
-@CommandArgument(
-    "--application", default="browser", help="Build the given application."
-)
+@CommandArgument("--project", default="browser", help="Build the given project.")
+@CommandArgument("--application", dest="project", help="Build the given project.")
 @CommandArgument(
     "--haz-objdir", default=None, help="Write object files to this directory."
 )
@@ -318,12 +321,10 @@ def validate_mozconfig(command_context, kwargs):
 )
 def gather_hazard_data(command_context, **kwargs):
     """Gather analysis information by compiling the tree"""
-    application = kwargs["application"]
+    project = kwargs["project"]
     objdir = get_objdir(command_context, kwargs)
 
-    validate_mozconfig(command_context, kwargs)
-
-    work_dir = get_work_dir(command_context, application, kwargs["work_dir"])
+    work_dir = get_work_dir(command_context, project, kwargs["work_dir"])
     ensure_dir_exists(work_dir)
     with open(os.path.join(work_dir, "defaults.py"), "wt") as fh:
         data = textwrap.dedent(
@@ -346,8 +347,9 @@ def gather_hazard_data(command_context, **kwargs):
     buildscript = " ".join(
         [
             command_context.topsrcdir + "/mach hazards compile",
+            *kwargs.get("what", []),
             "--job-size=3.0",  # Conservatively estimate 3GB/process
-            "--application=" + application,
+            "--project=" + project,
             "--haz-objdir=" + objdir,
         ]
     )
@@ -375,9 +377,8 @@ def gather_hazard_data(command_context, **kwargs):
     metavar="FILENAME",
     help="Build with the given mozconfig.",
 )
-@CommandArgument(
-    "--application", default="browser", help="Build the given application."
-)
+@CommandArgument("--project", default="browser", help="Build the given project.")
+@CommandArgument("--application", dest="project", help="Build the given project.")
 @CommandArgument(
     "--haz-objdir",
     default=os.environ.get("HAZ_OBJDIR"),
@@ -422,10 +423,11 @@ def inner_compile(command_context, **kwargs):
     "hazards", "analyze", description="Analyzed gathered data for rooting hazards"
 )
 @CommandArgument(
-    "--application",
+    "--project",
     default="browser",
-    help="Analyze the output for the given application.",
+    help="Analyze the output for the given project.",
 )
+@CommandArgument("--application", dest="project", help="Build the given project.")
 @CommandArgument(
     "--shell-objdir",
     default=None,
@@ -457,7 +459,7 @@ def inner_compile(command_context, **kwargs):
 )
 def analyze(
     command_context,
-    application,
+    project,
     shell_objdir,
     work_dir,
     jobs,
@@ -491,7 +493,7 @@ def analyze(
     setup_env_for_tools(os.environ)
     setup_env_for_shell(os.environ, shell)
 
-    work_dir = get_work_dir(command_context, application, work_dir)
+    work_dir = get_work_dir(command_context, project, work_dir)
     return command_context.run_process(args=args, cwd=work_dir, pass_thru=True)
 
 
@@ -529,3 +531,159 @@ def self_test(command_context, shell_objdir, extra):
     setup_env_for_shell(os.environ, shell)
 
     return command_context.run_process(args=args, pass_thru=True)
+
+
+def annotated_source(filename, query):
+    """The index page has URLs of the format <http://.../path/to/source.cpp?L=m-n#m>.
+    The `#m` part will be stripped off and used by the browser to jump to the correct line.
+    The `?L=m-n` or `?L=m` parameter will be processed here on the server to highlight
+    the given line range."""
+    linequery = query.replace("L=", "")
+    if "-" in linequery:
+        line0, line1 = linequery.split("-", 1)
+    else:
+        line0, line1 = linequery or "0", linequery or "0"
+    line0 = int(line0)
+    line1 = int(line1)
+
+    fh = open(filename, "rt")
+
+    out = "<pre>"
+    for lineno, line in enumerate(fh, 1):
+        processed = f"{lineno} <span id='{lineno}'"
+        if line0 <= lineno and lineno <= line1:
+            processed += " style='background: yellow'"
+        processed += ">" + html.escape(line.rstrip()) + "</span>\n"
+        out += processed
+
+    return out
+
+
+@SubCommand(
+    "hazards", "view", description="Display a web page describing any hazards found"
+)
+@CommandArgument(
+    "--project",
+    default="browser",
+    help="Analyze the output for the given project.",
+)
+@CommandArgument("--application", dest="project", help="Build the given project.")
+@CommandArgument(
+    "--haz-objdir", default=None, help="Write object files to this directory."
+)
+@CommandArgument(
+    "--work-dir", default=None, help="Directory for output and working files."
+)
+@CommandArgument("--port", default=6006, help="Port of the web server")
+@CommandArgument(
+    "--serve-only",
+    default=False,
+    action="store_true",
+    help="Serve only, do not navigate to page",
+)
+def view_hazards(command_context, project, haz_objdir, work_dir, port, serve_only):
+    work_dir = get_work_dir(command_context, project, work_dir)
+    haztop = os.path.basename(work_dir)
+    if haz_objdir is None:
+        haz_objdir = os.environ.get("HAZ_OBJDIR")
+    if haz_objdir is None:
+        haz_objdir = os.path.join(command_context.topsrcdir, "obj-analyzed-" + project)
+
+    httpd = None
+
+    def serve_source_file(request, path):
+        info = {"req": path}
+
+        def log(fmt, level=logging.INFO):
+            return command_context.log(level, "view-hazards", info, fmt)
+
+        if path in ("", f"{haztop}"):
+            info["dest"] = f"/{haztop}/hazards.html"
+            info["code"] = 301
+            log("serve '{req}' -> {code} {dest}")
+            return (info["code"], {"Location": info["dest"]}, "")
+
+        # Allow files to be served from the source directory or the objdir.
+        roots = (command_context.topsrcdir, haz_objdir)
+
+        try:
+            # Validate the path. Some source files have weird characters in their paths (eg "+"), but they
+            # all start with an alphanumeric or underscore.
+            command_context.log(
+                logging.DEBUG, "view-hazards", {"path": path}, "Raw path: {path}"
+            )
+            path_component = r"\w[\w\-\.\+]*"
+            if not re.match(f"({path_component}/)*{path_component}$", path):
+                raise ValueError("invalid path")
+
+            # Resolve the path to under one of the roots, and
+            # ensure that the actual file really is underneath a root directory.
+            for rootdir in roots:
+                fullpath = os.path.join(rootdir, path)
+                info["path"] = fullpath
+                fullpath = os.path.realpath(fullpath)
+                if os.path.isfile(fullpath):
+                    # symlinks between roots are ok, but not symlinks outside of the roots.
+                    tops = [
+                        d
+                        for d in roots
+                        if fullpath.startswith(os.path.realpath(d) + "/")
+                    ]
+                    if len(tops) > 0:
+                        break  # Found a file underneath a root.
+            else:
+                raise IOError("not found")
+
+            html = annotated_source(fullpath, request.query)
+            log("serve '{req}' -> 200 {path}")
+            return (
+                200,
+                {"Content-type": "text/html", "Content-length": len(html)},
+                html,
+            )
+        except (IOError, ValueError):
+            log("serve '{req}' -> 404 {path}", logging.ERROR)
+            return (
+                404,
+                {"Content-type": "text/plain"},
+                "We don't have that around here. Don't be asking for it.",
+            )
+
+    httpd = mozhttpd.MozHttpd(
+        port=port,
+        docroot=None,
+        path_mappings={"/" + haztop: work_dir},
+        urlhandlers=[
+            # Treat everything not starting with /haz-browser/ (or /haz-js/)
+            # as a source file to be processed. Everything else is served
+            # as a plain file.
+            {
+                "method": "GET",
+                "path": "/(?!haz-" + project + "/)(.*)",
+                "function": serve_source_file,
+            },
+        ],
+        log_requests=True,
+    )
+
+    # The mozhttpd request handler class eats log messages.
+    httpd.handler_class.log_message = lambda self, format, *args: command_context.log(
+        logging.INFO, "view-hazards", {}, format % args
+    )
+
+    print("Serving at %s:%s" % (httpd.host, httpd.port))
+
+    httpd.start(block=False)
+    url = httpd.get_url(f"/{haztop}/hazards.html")
+    display_url = True
+    if not serve_only:
+        try:
+            webbrowser.get().open_new_tab(url)
+            display_url = False
+        except Exception:
+            pass
+    if display_url:
+        print("Please open %s in a browser." % url)
+
+    print("Hit CTRL+c to stop server.")
+    httpd.server.join()

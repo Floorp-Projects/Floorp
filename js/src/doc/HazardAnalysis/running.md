@@ -16,18 +16,18 @@ To run the analysis on SpiderMonkey:
 
 3. Compile all the code to gather info.
 
-        mach hazards gather --application=js
+        mach hazards gather --project=js
 
 4. Analyze the gathered info.
 
-        mach hazards analyze --application=js
+        mach hazards analyze --project=js
 
 Output goes to `haz-js/hazards.txt`. This will run the analysis on the js/src
 tree only; if you wish to analyze the full browser, use
 
-        --application=browser
+        --project=browser
 
-(or leave it off; `--application=browser` is the default)
+(or leave it off; `--project=browser` is the default)
 
 After running the analysis once, you can reuse the `*.xdb` database files
 generated, using modified analysis scripts, by running either the `mach hazards
