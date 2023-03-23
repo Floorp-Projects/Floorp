@@ -146,6 +146,8 @@ void RenderThread::Start(uint32_t aNamespace) {
       {.stackSize = stackSize});
 
   if (NS_FAILED(rv)) {
+    gfxCriticalNote << "Failed to create Renderer thread: "
+                    << gfx::hexa((uint32_t)rv);
     return;
   }
 
