@@ -3231,6 +3231,12 @@ class DirectoryInstaller {
   cleanStagingDir(aLeafNames = []) {
     let dir = this.getStagingDir();
 
+    // SystemAddonInstaller getStatingDir may return null if there isn't
+    // any addon set directory returned by SystemAddonInstaller._loadAddonSet.
+    if (!dir) {
+      return;
+    }
+
     for (let name of aLeafNames) {
       let file = getFile(name, dir);
       recursiveRemove(file);
