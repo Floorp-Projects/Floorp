@@ -191,7 +191,8 @@ void WorkerModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {
 bool WorkerModuleLoader::IsModuleEvaluationAborted(
     ModuleLoadRequest* aRequest) {
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-  return workerPrivate->GlobalScope()->IsDying();
+  return !workerPrivate || !workerPrivate->GlobalScope() ||
+         workerPrivate->GlobalScope()->IsDying();
 }
 
 }  // namespace mozilla::dom::workerinternals::loader
