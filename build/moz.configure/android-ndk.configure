@@ -139,18 +139,29 @@ def host_dir(host, base_dir):
         return dir
 
 
-@depends(ndk, target, host)
+@depends(host, ndk, "--with-android-toolchain")
+@checking("for the Android toolchain directory", lambda x: x or "not found")
+def android_toolchain(host, ndk, toolchain):
+    if not ndk:
+        return
+    if toolchain:
+        return toolchain[0]
+
+    toolchain = host_dir(host, os.path.join(ndk, "toolchains", "llvm", "prebuilt"))
+    if toolchain:
+        return toolchain
+    die("You have to specify --with-android-toolchain=" "/path/to/ndk/toolchain.")
+
+
+@depends(target, android_toolchain)
 @checking("for android sysroot directory")
 @imports(_from="os.path", _import="isdir")
-def android_sysroot(ndk, target, host):
+def android_sysroot(target, android_toolchain):
     if target.os != "Android":
         return
 
     search_dirs = [
-        os.path.join(
-            host_dir(host, os.path.join(ndk, "toolchains", "llvm", "prebuilt")),
-            "sysroot",
-        ),
+        os.path.join(android_toolchain, "sysroot"),
     ]
 
     for sysroot_dir in search_dirs:
@@ -161,31 +172,6 @@ def android_sysroot(ndk, target, host):
         "Android sysroot directory not found in %s."
         % str([sysroot_dir for sysroot_dir in search_dirs])
     )
-
-
-@depends(target, host, ndk, "--with-android-toolchain")
-@checking("for the Android toolchain directory", lambda x: x or "not found")
-def android_toolchain(target, host, ndk, toolchain):
-    if not ndk:
-        return
-    if toolchain:
-        return toolchain[0]
-    else:
-        if target.cpu == "arm" and target.endianness == "little":
-            target_base = "arm-linux-androideabi"
-        elif target.cpu == "x86":
-            target_base = "x86"
-        elif target.cpu == "x86_64":
-            target_base = "x86_64"
-        elif target.cpu == "aarch64" and target.endianness == "little":
-            target_base = "aarch64-linux-android"
-        else:
-            die("Target cpu is not supported.")
-
-        toolchain = host_dir(host, "%s/toolchains/%s-4.9/prebuilt" % (ndk, target_base))
-        if toolchain:
-            return toolchain
-        die("You have to specify --with-android-toolchain=" "/path/to/ndk/toolchain.")
 
 
 @depends(target, host, ndk, "--with-android-lldb-server")

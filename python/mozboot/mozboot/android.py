@@ -20,7 +20,7 @@ from tqdm import tqdm
 # variable.
 from mozboot.bootstrap import MOZCONFIG_SUGGESTION_TEMPLATE
 
-NDK_VERSION = "r21d"
+NDK_VERSION = "r23c"
 CMDLINE_TOOLS_VERSION_STRING = "9.0"
 CMDLINE_TOOLS_VERSION = "9477386"
 
@@ -676,19 +676,14 @@ def generate_mozconfig(os_name, artifact_mode=False):
 
 def android_ndk_url(os_name, ver=NDK_VERSION):
     # Produce a URL like
-    # 'https://dl.google.com/android/repository/android-ndk-$VER-linux-x86_64.zip
+    # 'https://dl.google.com/android/repository/android-ndk-$VER-linux.zip
     base_url = "https://dl.google.com/android/repository/android-ndk"
 
     if os_name == "macosx":
         # |mach bootstrap| uses 'macosx', but Google uses 'darwin'.
         os_name = "darwin"
 
-    if sys.maxsize > 2 ** 32:
-        arch = "x86_64"
-    else:
-        arch = "x86"
-
-    return "%s-%s-%s-%s.zip" % (base_url, ver, os_name, arch)
+    return "%s-%s-%s.zip" % (base_url, ver, os_name)
 
 
 def main(argv):
