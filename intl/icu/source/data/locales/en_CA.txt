@@ -228,7 +228,7 @@ en_CA{
                 "EEEE, MMMM d, y",
                 "MMMM d, y",
                 "MMM d, y",
-                "M/d/yy",
+                "y-MM-dd",
                 "{1}, {0}",
                 "{1}, {0}",
                 "{1}, {0}",
@@ -237,7 +237,13 @@ en_CA{
             }
             availableFormats{
                 Ed{"E d"}
-                MMdd{"MM/dd"}
+                GyMd{"y-MM-dd G"}
+                MEd{"E, MM-dd"}
+                MMdd{"MM-dd"}
+                Md{"MM-dd"}
+                yM{"y-MM"}
+                yMEd{"E, y-MM-dd"}
+                yMd{"y-MM-dd"}
             }
             dayPeriod{
                 format{

@@ -1,0 +1,39 @@
+# https://github.com/unicode-org/cldr/pull/2759
+# https://github.com/unicode-org/cldr/pull/2759.diff
+# https://github.com/unicode-org/icu/pull/2368
+# https://github.com/unicode-org/icu/pull/2368.diff
+#
+# CLDR bug: https://unicode-org.atlassian.net/browse/CLDR-16399
+
+diff --git a/intl/icu/source/data/locales/en_CA.txt b/intl/icu/source/data/locales/en_CA.txt
+--- a/intl/icu/source/data/locales/en_CA.txt
++++ b/intl/icu/source/data/locales/en_CA.txt
+@@ -226,20 +226,26 @@ en_CA{
+                 "h:mm:ss a",
+                 "h:mm a",
+                 "EEEE, MMMM d, y",
+                 "MMMM d, y",
+                 "MMM d, y",
+-                "M/d/yy",
++                "y-MM-dd",
+                 "{1}, {0}",
+                 "{1}, {0}",
+                 "{1}, {0}",
+                 "{1}, {0}",
+                 "{1}, {0}",
+             }
+             availableFormats{
+                 Ed{"E d"}
+-                MMdd{"MM/dd"}
++                GyMd{"y-MM-dd G"}
++                MEd{"E, MM-dd"}
++                MMdd{"MM-dd"}
++                Md{"MM-dd"}
++                yM{"y-MM"}
++                yMEd{"E, y-MM-dd"}
++                yMd{"y-MM-dd"}
+             }
+             dayPeriod{
+                 format{
+                     narrow{
+                         afternoon1{"aft"}
