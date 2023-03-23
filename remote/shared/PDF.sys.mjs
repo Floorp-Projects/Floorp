@@ -36,8 +36,6 @@ print.defaults = {
 print.addDefaultSettings = function(settings) {
   const {
     background = false,
-    // TODO: Bug 1791819. Remove when marionette supports orientation argument.
-    landscape = false,
     margin = {},
     orientation = "portrait",
     page = {},
@@ -75,8 +73,6 @@ print.addDefaultSettings = function(settings) {
 
   return {
     background,
-    // TODO: Bug 1791819. Remove when marionette supports orientation argument.
-    landscape,
     margin,
     orientation,
     page,

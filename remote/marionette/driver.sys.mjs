@@ -3115,8 +3115,6 @@ GeckoDriver.prototype.teardownReftest = function() {
  * @param {boolean=} background
  *     Whether or not to print background colors and images.
  *     Defaults to false, which prints without background graphics.
- * @param {boolean=} landscape
- *     Paper orientation. Defaults to false.
  * @param {number=} margin.bottom
  *     Bottom margin in cm. Defaults to 1cm (~0.4 inches).
  * @param {number=} margin.left
@@ -3125,6 +3123,8 @@ GeckoDriver.prototype.teardownReftest = function() {
  *     Right margin in cm. Defaults to 1cm (~0.4 inches).
  * @param {number=} margin.top
  *     Top margin in cm. Defaults to 1cm (~0.4 inches).
+ * @param {('landscape'|'portrait')=} options.orientation
+ *     Paper orientation. Defaults to 'portrait'.
  * @param {Array.<string|number>=} pageRanges
  *     Paper ranges to print, e.g., ['1-5', 8, '11-13'].
  *     Defaults to the empty array, which means print all pages.
@@ -3178,7 +3178,14 @@ GeckoDriver.prototype.print = async function(cmd) {
     `scale ${settings.scale} is outside the range ${lazy.print.minScaleValue}-${lazy.print.maxScaleValue}`
   )(settings.scale);
   lazy.assert.boolean(settings.shrinkToFit);
-  lazy.assert.boolean(settings.landscape);
+  lazy.assert.that(
+    orientation => lazy.print.defaults.orientationValue.includes(orientation),
+    `orientation ${
+      settings.orientation
+    } doesn't match allowed values "${lazy.print.defaults.orientationValue.join(
+      "/"
+    )}"`
+  )(settings.orientation);
   lazy.assert.boolean(settings.background);
   lazy.assert.array(settings.pageRanges);
 
