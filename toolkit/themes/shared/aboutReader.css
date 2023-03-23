@@ -703,7 +703,7 @@ body.hcm .color-scheme-buttons {
 /* Article content */
 
 /* Note that any class names from the original article that we want to match on
- * must be added to CLASSES_TO_PRESERVE in ReaderMode.jsm, so that
+ * must be added to CLASSES_TO_PRESERVE in ReaderMode.sys.mjs, so that
  * Readability.js doesn't strip them out */
 
 .container {

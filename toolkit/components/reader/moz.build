@@ -7,19 +7,19 @@
 JAR_MANIFESTS += ["jar.mn"]
 
 EXTRA_JS_MODULES += [
-    "AboutReader.jsm",
-    "ReaderMode.jsm",
+    "AboutReader.sys.mjs",
+    "ReaderMode.sys.mjs",
 ]
 
 EXTRA_PP_JS_MODULES += [
-    "Readerable.jsm",
+    "Readerable.sys.mjs",
 ]
 
 EXTRA_JS_MODULES.reader = [
     "JSDOMParser.js",
     "Readability.js",
     "ReaderWorker.js",
-    "ReaderWorker.jsm",
+    "ReaderWorker.sys.mjs",
 ]
 
 BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]

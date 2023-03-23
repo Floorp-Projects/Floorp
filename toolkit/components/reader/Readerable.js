@@ -5,7 +5,7 @@
 "use strict";
 
 // This file and Readability-readerable.js are merged together into
-// Readerable.jsm.
+// Readerable.sys.mjs.
 
 /* exported Readerable */
 /* import-globals-from Readability-readerable.js */
@@ -13,10 +13,6 @@
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-
-function isNodeVisible(node) {
-  return node.clientHeight > 0 && node.clientWidth > 0;
-}
 
 var Readerable = {
   get isEnabledForParseOnLoad() {
@@ -43,7 +39,11 @@ var Readerable = {
       return false;
     }
 
-    return isProbablyReaderable(doc, isNodeVisible);
+    return isProbablyReaderable(doc, this._isNodeVisible);
+  },
+
+  _isNodeVisible(node) {
+    return node.clientHeight > 0 && node.clientWidth > 0;
   },
 
   _blockedHosts: [
