@@ -3422,7 +3422,16 @@ bool BaselineCacheIRCompiler::emitCallBoundScriptedFunction(
   AutoStubFrame stubFrame(*this);
   stubFrame.enter(masm, scratch);
 
+  Address boundTarget(calleeReg, BoundFunctionObject::offsetOfTargetSlot());
+
+  // If we're constructing, switch to the target's realm and create |this|. If
+  // we're not constructing, we switch to the target's realm after pushing the
+  // arguments and loading the target.
   if (isConstructing) {
+    if (!isSameRealm) {
+      masm.unboxObject(boundTarget, scratch);
+      masm.switchToObjectRealm(scratch, scratch);
+    }
     createThis(argcReg, calleeReg, scratch, flags,
                /* isBoundFunction = */ true);
   }
@@ -3432,10 +3441,9 @@ bool BaselineCacheIRCompiler::emitCallBoundScriptedFunction(
                              numBoundArgs, /* isJitCall = */ true);
 
   // Load the target JSFunction.
-  Address boundTarget(calleeReg, BoundFunctionObject::offsetOfTargetSlot());
   masm.unboxObject(boundTarget, calleeReg);
 
-  if (!isSameRealm) {
+  if (!isConstructing && !isSameRealm) {
     masm.switchToObjectRealm(calleeReg, scratch);
   }
 
