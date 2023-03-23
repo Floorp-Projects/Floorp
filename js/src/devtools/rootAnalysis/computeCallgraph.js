@@ -24,11 +24,6 @@ var options = parse_options([
         default: "rawcalls.txt"
     },
     {
-        name: 'gcEdgesOut_filename',
-        type: 'string',
-        default: "gcEdges.json"
-    },
-    {
         name: 'batch',
         default: 1,
         type: 'number'
@@ -45,8 +40,6 @@ var origOut = os.file.redirect(options.callgraphOut_filename);
 var memoized = new Map();
 
 var unmangled2id = new Set();
-
-var gcEdges = {};
 
 // Insert a string into the name table and return the ID. Do not use for
 // functions, which must be handled specially.
@@ -161,11 +154,6 @@ function processBody(functionName, body, functionBodies)
         const scopeAttrs = body.attrs[edge.Index[0]] | 0;
 
         for (const { callee, attrs } of getCallees(body, edge, scopeAttrs, functionBodies)) {
-            if (attrs) {
-                const block = blockIdentifier(body);
-                addToKeyedList(gcEdges, block, { Index: edge.Index, attrs });
-            }
-
             // Individual callees may have additional attrs. The only such
             // bit currently is that nsISupports.{AddRef,Release} are assumed
             // to never GC.
@@ -419,9 +407,5 @@ for (var nameIndex = start; nameIndex <= end; nameIndex++) {
     xdb.free_string(name);
     xdb.free_string(data);
 }
-
-os.file.close(os.file.redirect(options.gcEdgesOut_filename));
-
-print(JSON.stringify(gcEdges, null, 4));
 
 os.file.close(os.file.redirect(origOut));

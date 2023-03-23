@@ -8,6 +8,7 @@
 
 loadRelativeToScript('utility.js');
 loadRelativeToScript('annotations.js');
+loadRelativeToScript('callgraph.js');
 loadRelativeToScript('CFG.js');
 loadRelativeToScript('dumpCFG.js');
 
@@ -30,10 +31,6 @@ try {
         {
             name: "gcFunctions",
             default: "gcFunctions.lst"
-        },
-        {
-            name: "gcEdges",
-            default: "gcEdges.json"
         },
         {
             name: "limitedFunctions",
@@ -64,7 +61,7 @@ try {
     ]);
 } catch (e) {
     printErr(e);
-    printErr("Usage: analyzeRoots.js [-f function_name] <gcFunctions.lst> <gcEdges.txt> <limitedFunctions.lst> <gcTypes.txt> <typeInfo.txt> [start end [tmpfile]]");
+    printErr("Usage: analyzeRoots.js [-f function_name] <gcFunctions.lst> <limitedFunctions.lst> <gcTypes.txt> <typeInfo.txt> [start end [tmpfile]]");
     quit(1);
 }
 var gcFunctions = {};
@@ -77,8 +74,6 @@ var limitedFunctions = JSON.parse(snarf(options.limitedFunctions));
 text = null;
 
 var typeInfo = loadTypeInfo(options.typeInfo);
-
-var gcEdges = JSON.parse(os.file.readFile(options.gcEdges));
 
 var match;
 var gcThings = new Set();
@@ -130,39 +125,39 @@ function isUnrootedPointerDeclType(decl)
     }
 }
 
-function edgeCanGC(edge)
+function edgeCanGC(functionName, body, edge, scopeAttrs, functionBodies)
 {
-    if (edge.Kind != "Call")
+    if (edge.Kind != "Call") {
         return false;
+    }
 
-    var callee = edge.Exp[0];
+    for (const { callee, attrs } of getCallees(body, edge, scopeAttrs, functionBodies)) {
+        if (attrs & (ATTR_GC_SUPPRESSED | ATTR_REPLACED)) {
+            continue;
+        }
 
-    while (callee.Kind == "Drf")
-        callee = callee.Exp[0];
-
-    if (callee.Kind == "Var") {
-        var variable = callee.Variable;
-
-        if (variable.Kind == "Func") {
-            var func = mangled(variable.Name[0]);
+        if (callee.kind == "direct") {
+            const func = mangled(callee.name);
             if ((func in gcFunctions) || ((func + internalMarker) in gcFunctions))
                 return `'${func}$${gcFunctions[func]}'`;
             return false;
+        } else if (callee.kind == "indirect") {
+            if (!indirectCallCannotGC(functionName, callee.variable)) {
+                return "'*" + callee.variable + "'";
+            }
+        } else if (callee.kind == "field") {
+            if (fieldCallCannotGC(callee.staticCSU, callee.field)) {
+                continue;
+            }
+            const fieldkey = callee.fieldKey;
+            if (fieldkey in gcFunctions) {
+                return `'${fieldkey}'`;
+            }
+        } else {
+            return "<unknown>";
         }
-
-        var varName = variable.Name[0];
-        return indirectCallCannotGC(functionName, varName) ? false : "'*" + varName + "'";
     }
 
-    assert(callee.Kind == "Fld");
-    const staticCSU = getFieldCallInstanceCSU(edge, callee.Field);
-
-    if (fieldCallCannotGC(staticCSU, callee.Field.Name[0]))
-        return false;
-
-    const fieldkey = fieldKey(staticCSU, callee.Field);
-    if (fieldkey in gcFunctions)
-        return `'${fieldkey}'`;
     return false;
 }
 
@@ -408,7 +403,7 @@ function findGCBeforeValueUse(start_body, start_point, funcAttrs, variable)
             const had_gcInfo = Boolean(path.gcInfo);
             const edgeAttrs = body.attrs[ppoint] | funcAttrs;
             if (!path.gcInfo && !(edgeAttrs & (ATTR_GC_SUPPRESSED | ATTR_REPLACED))) {
-                var gcName = edgeCanGC(edge, body);
+                var gcName = edgeCanGC(functionName, body, edge, edgeAttrs, functionBodies);
                 if (gcName) {
                     path.gcInfo = {name:gcName, body, ppoint, edge: edge.Index};
                 }
@@ -929,17 +924,6 @@ function process(name, json) {
         {
             if (attrs)
                 pbody.attrs[id] = attrs;
-        }
-
-        // Also write in any attributes stored in the "special edges" table. Note
-        // that this associates attributes with source points rather than edges,
-        // which is technically incorrect since one point might be the source for
-        // multiple edges and the attributes should really only apply to one of
-        // them. But in practice, the only edges that matter are call edges, and
-        // their sources will be distinct. (Control flow forks are represented as
-        // Assume edges with shared source points.)
-        for (const edgeAttr of gcEdges[blockIdentifier(body)] || []) {
-            body.attrs[edgeAttr.Index[0]] |= edgeAttr.attrs;
         }
     }
 
