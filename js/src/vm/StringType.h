@@ -464,10 +464,6 @@ class JSString : public js::gc::CellWithLengthAndFlags {
 
   inline JSLinearString* ensureLinear(JSContext* cx);
 
-  static bool ensureLinear(JSContext* cx, JSString* str) {
-    return str->ensureLinear(cx) != nullptr;
-  }
-
   /* Type query and debug-checked casts */
 
   MOZ_ALWAYS_INLINE

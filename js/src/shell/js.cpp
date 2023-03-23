@@ -9635,11 +9635,18 @@ static bool PrintEnumeratedHelp(JSContext* cx, HandleObject obj,
         }
       }
 
-      size_t ignored = 0;
-      if (!JSString::ensureLinear(cx, v.toString())) {
+      Rooted<JSString*> inputStr(cx, v.toString());
+      if (!inputStr->ensureLinear(cx)) {
         return false;
       }
-      Rooted<JSLinearString*> input(cx, &v.toString()->asLinear());
+
+      // Execute the regular expression in |regex|'s compartment.
+      AutoRealm ar(cx, regex);
+      if (!cx->compartment()->wrap(cx, &inputStr)) {
+        return false;
+      }
+      Rooted<JSLinearString*> input(cx, &inputStr->asLinear());
+      size_t ignored = 0;
       if (!ExecuteRegExpLegacy(cx, nullptr, regex, input, &ignored, true, &v)) {
         return false;
       }

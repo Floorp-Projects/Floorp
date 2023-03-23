@@ -311,6 +311,8 @@ bool js::ExecuteRegExpLegacy(JSContext* cx, RegExpStatics* res,
                              Handle<RegExpObject*> reobj,
                              Handle<JSLinearString*> input, size_t* lastIndex,
                              bool test, MutableHandleValue rval) {
+  cx->check(reobj, input);
+
   RootedRegExpShared shared(cx, RegExpObject::getShared(cx, reobj));
   if (!shared) {
     return false;
