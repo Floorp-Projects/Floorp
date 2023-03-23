@@ -156,20 +156,19 @@
 
 /* Set link color with proper contrast for WebExt themes */
 
-toolbar .text-link:-moz-lwtheme,
-panel .text-link:-moz-lwtheme {
+:is(toolbar, panel) :is(a, .text-link):-moz-lwtheme {
   color: #0060df;
 }
 
-toolbar[brighttext] .text-link:-moz-lwtheme,
-:root[lwt-popup-brighttext] panel .text-link {
+toolbar[brighttext] :is(a, .text-link):-moz-lwtheme,
+:root[lwt-popup-brighttext] panel :is(a, .text-link) {
   color: var(--lwt-brighttext-url-color);
 }
 
-toolbar .text-link:-moz-lwtheme:not(:hover),
-panel .text-link:-moz-lwtheme:not(:hover) {
+:is(toolbar, panel) :is(a, .text-link):-moz-lwtheme:not(:hover) {
   text-decoration: none;
 }
+
 
 /* Toolbar / content area border */
 

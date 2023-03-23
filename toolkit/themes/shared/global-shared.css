@@ -147,21 +147,22 @@ xul|label[disabled="true"] {
 
 /* Links */
 
-.text-link {
+.text-link,
+a {
   color: -moz-nativehyperlinktext;
   cursor: pointer;
 }
 
-.text-link:hover {
+:is(a, .text-link):hover {
   text-decoration: underline;
 }
 
-.text-link:-moz-lwtheme {
+:is(a, .text-link):-moz-lwtheme {
   color: inherit;
   text-decoration: underline;
 }
 
-.text-link:focus-visible {
+:is(a, .text-link):focus-visible {
   outline: var(--focus-outline);
   /* Not using --focus-outline-offset here because that's intended for elements
      with a background, and we only want a slight offset here while not
