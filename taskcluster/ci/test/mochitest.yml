@@ -102,11 +102,11 @@ mochitest-plain:
                     default: []
             headless:
                 by-test-platform:
-                    linux.*64(-shippable)?-qr/opt: ['mozilla-central']
+                    linux1804-64.*: ['mozilla-central']
                     default: []
             headless+socketprocess_networking:
                 by-test-platform:
-                    linux.*64(-shippable)?-qr/opt: ['mozilla-central']
+                    linux1804-64.*: ['mozilla-central']
                     default: []
             no-fission:
                 by-test-platform:
