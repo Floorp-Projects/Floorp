@@ -7,6 +7,7 @@ const {
   assertFirefoxViewTabSelected,
   openFirefoxViewTab,
   closeFirefoxViewTab,
+  isFirefoxViewTabSelectedInWindow,
 } = ChromeUtils.importESModule(
   "resource://testing-common/FirefoxViewTestUtils.sys.mjs"
 );
@@ -527,3 +528,18 @@ function cleanup_tab_pickup() {
   Services.prefs.clearUserPref("services.sync.lastTabFetch");
   Services.prefs.clearUserPref(TAB_PICKUP_STATE_PREF);
 }
+
+function isFirefoxViewTabSelected(win = window) {
+  return isFirefoxViewTabSelectedInWindow(win);
+}
+
+registerCleanupFunction(() => {
+  is(
+    typeof SyncedTabs._internal?._createRecentTabsList,
+    "function",
+    "in firefoxview/head.js, SyncedTabs._internal._createRecentTabsList is a function"
+  );
+  // ensure all the stubs are restored, regardless of any exceptions
+  // that might have prevented it
+  gSandbox?.restore();
+});
