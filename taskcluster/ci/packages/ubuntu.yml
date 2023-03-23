@@ -71,6 +71,7 @@ ub18-mercurial:
             sed -i -e "s/__VERSION__/$(awk -F\" '$2 {print $2}' mercurial/__version__.py)-1.ub18moz1/" \
                          -e "s/__DATE__/$(date --rfc-2822)/" \
                          -e "s/__CODENAME__/bionic/" debian/changelog
+        patch: mercurial-timeout.diff
 
 ub20-python-zstandard:
     description: "python-zstandard for Ubuntu focal"
@@ -98,3 +99,4 @@ ub20-mercurial:
             sed -i -e "s/__VERSION__/$(awk -F\" '$2 {print $2}' mercurial/__version__.py)-1.ub20moz1/" \
                          -e "s/__DATE__/$(date --rfc-2822)/" \
                          -e "s/__CODENAME__/focal/" debian/changelog
+        patch: mercurial-timeout.diff
