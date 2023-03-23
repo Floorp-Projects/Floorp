@@ -10,6 +10,7 @@ defaults pref(gfx.font_rendering.fallback.async,false)
 == capitalize-7.html capitalize-7-ref.html
 == capitalize-7a.html capitalize-7-ref.html
 == capitalize-8.html capitalize-8-ref.html
+== capitalize-9.html capitalize-9-ref.html
 == lowercase-1.html lowercase-ref.html
 == lowercase-sigma-1.html lowercase-sigma-1-ref.html
 random-if(winWidget) == small-caps-1.html small-caps-1-ref.html # fails if default font supports 'smcp'
