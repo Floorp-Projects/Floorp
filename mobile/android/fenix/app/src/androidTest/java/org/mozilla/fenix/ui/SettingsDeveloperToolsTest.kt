@@ -50,7 +50,7 @@ class SettingsDeveloperToolsTest {
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
-            verifyRemoteDebug()
+            verifyRemoteDebuggingButton()
         }
     }
 

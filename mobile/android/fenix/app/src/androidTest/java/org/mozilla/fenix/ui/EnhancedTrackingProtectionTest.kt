@@ -64,7 +64,7 @@ class EnhancedTrackingProtectionTest {
         }.openThreeDotMenu {
         }.openSettings {
             verifyEnhancedTrackingProtectionButton()
-            verifyEnhancedTrackingProtectionState("Standard")
+            verifySettingsOptionSummary("Enhanced Tracking Protection", "Standard")
         }.openEnhancedTrackingProtectionSubMenu {
             verifyEnhancedTrackingProtectionHeader()
             verifyEnhancedTrackingProtectionOptionsEnabled()

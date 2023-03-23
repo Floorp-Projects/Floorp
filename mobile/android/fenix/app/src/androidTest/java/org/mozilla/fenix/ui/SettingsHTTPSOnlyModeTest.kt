@@ -69,7 +69,7 @@ class SettingsHTTPSOnlyModeTest {
                 privateTabsOptionSelected = false,
             )
         }.goBack {
-            verifyHTTPSOnlyModeSummary("On in all tabs")
+            verifySettingsOptionSummary("HTTPS-Only Mode", "On in all tabs")
             exitMenu()
         }
         navigationToolbar {
@@ -130,7 +130,7 @@ class SettingsHTTPSOnlyModeTest {
                 privateTabsOptionSelected = true,
             )
         }.goBack {
-            verifyHTTPSOnlyModeSummary("On in private tabs")
+            verifySettingsOptionSummary("HTTPS-Only Mode", "On in private tabs")
             exitMenu()
         }
         navigationToolbar {
@@ -188,7 +188,7 @@ class SettingsHTTPSOnlyModeTest {
             clickHttpsOnlyModeSwitch()
             verifyHttpsOnlyModeIsEnabled(false)
         }.goBack {
-            verifyHTTPSOnlyModeSummary("Off")
+            verifySettingsOptionSummary("HTTPS-Only Mode", "Off")
             exitMenu()
         }
         navigationToolbar {
