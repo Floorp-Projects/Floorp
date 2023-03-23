@@ -33,6 +33,8 @@ interface mixin GlobalEventHandlers {
            attribute EventHandler onauxclick;
            [Pref="dom.input_events.beforeinput.enabled"]
            attribute EventHandler onbeforeinput;
+           [Pref="dom.element.popover.enabled"]
+           attribute EventHandler onbeforetoggle;
            attribute EventHandler oncanplay;
            attribute EventHandler oncanplaythrough;
            attribute EventHandler onchange;
