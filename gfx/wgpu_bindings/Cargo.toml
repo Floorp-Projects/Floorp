@@ -60,3 +60,4 @@ log = "0.4"
 parking_lot = "0.11"
 serde = "1"
 nsstring = { path = "../../xpcom/rust/nsstring" }
+static_prefs = { path = "../../modules/libpref/init/static_prefs" }

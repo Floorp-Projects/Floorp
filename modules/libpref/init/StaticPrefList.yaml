@@ -4610,6 +4610,24 @@
   value: false
   mirror: always
 
+# Comma-separated list of wgpu backend names to permit in WebGPU adapters.
+#
+# If non-empty, this is parsed by `wgpu_core::instance::parse_backends_from_comma_list` to
+# produce a `wgpu_types::Backends` bitset used to create a `wgpu_core::hub::Global`. As of
+# 2023-3-22, recognized names are:
+#
+#     "vulkan" | "vk" => Backends::VULKAN,
+#     "dx12" | "d3d12" => Backends::DX12,
+#     "dx11" | "d3d11" => Backends::DX11,
+#     "metal" | "mtl" => Backends::METAL,
+#     "opengl" | "gles" | "gl" => Backends::GL,
+#     "webgpu" => Backends::BROWSER_WEBGPU,
+- name: dom.webgpu.wgpu-backend
+  type: DataMutexString
+  value: ""
+  mirror: always
+  rust: true
+
 # Is support for HTMLInputElement.webkitEntries enabled?
 - name: dom.webkitBlink.filesystem.enabled
   type: bool

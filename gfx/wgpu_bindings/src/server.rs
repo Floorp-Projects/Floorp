@@ -100,11 +100,21 @@ impl std::ops::Deref for Global {
 #[no_mangle]
 pub extern "C" fn wgpu_server_new(factory: IdentityRecyclerFactory) -> *mut Global {
     log::info!("Initializing WGPU server");
+    let backends_pref = static_prefs::pref!("dom.webgpu.wgpu-backend").to_string();
+    let backends = if backends_pref.is_empty() {
+        wgt::Backends::PRIMARY
+    } else {
+        log::info!(
+            "Selecting backends based on dom.webgpu.wgpu-backend pref: {:?}",
+            backends_pref
+        );
+        wgc::instance::parse_backends_from_comma_list(&backends_pref)
+    };
     let global = Global(wgc::hub::Global::new(
         "wgpu",
         factory,
         wgt::InstanceDescriptor {
-            backends: wgt::Backends::PRIMARY,
+            backends,
             dx12_shader_compiler: wgt::Dx12Compiler::Fxc,
         },
     ));

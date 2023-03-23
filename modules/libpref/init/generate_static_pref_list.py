@@ -46,7 +46,7 @@ VALID_TYPES.update(
         "SequentiallyConsistentAtomicUint32": "uint32_t",
         "AtomicFloat": "float",
         "String": None,
-        "DataMutexString": None,
+        "DataMutexString": "nsACString",
     }
 )
 
@@ -56,6 +56,7 @@ RUST_TYPES = {
     "int32_t": "i32",
     "uint32_t": "u32",
     "float": "f32",
+    "DataMutexString": "nsCString",
 }
 
 HEADER_LINE = (
@@ -111,6 +112,13 @@ STATIC_PREFS_GROUP_H_TEMPLATE2 = """\
 STATIC_PREFS_C_GETTERS_TEMPLATE = """\
 extern "C" {typ} StaticPrefs_{full_id}() {{
   return mozilla::StaticPrefs::{full_id}();
+}}
+"""
+
+STATIC_PREFS_C_GETTERS_NSSTRING_TEMPLATE = """\
+extern "C" void StaticPrefs_{full_id}(nsACString *result) {{
+  const auto preflock = mozilla::StaticPrefs::{full_id}();
+  result->Append(*preflock);
 }}
 """
 
@@ -308,22 +316,40 @@ def generate_code(pref_list, input_filename):
         )
 
         if rust:
-            # Generate the C getter.
-            static_prefs_c_getters_cpp.append(
-                STATIC_PREFS_C_GETTERS_TEMPLATE.format(
-                    typ=VALID_TYPES[typ], full_id=full_id
+            passed_type = VALID_TYPES[typ]
+            if passed_type == "nsACString":
+                # Generate the C getter.
+                static_prefs_c_getters_cpp.append(
+                    STATIC_PREFS_C_GETTERS_NSSTRING_TEMPLATE.format(full_id=full_id)
                 )
-            )
 
-            # Generate the C getter declaration, in Rust.
-            decl = "    pub fn StaticPrefs_{full_id}() -> {typ};"
-            static_prefs_rs_decls.append(
-                decl.format(full_id=full_id, typ=RUST_TYPES[VALID_TYPES[typ]])
-            )
+                # Generate the C getter declaration, in Rust.
+                decl = "    pub fn StaticPrefs_{full_id}(result: *mut nsstring::nsACString);"
+                static_prefs_rs_decls.append(decl.format(full_id=full_id))
 
-            # Generate the Rust macro entry.
-            macro = '    ("{name}") => (unsafe {{ $crate::StaticPrefs_{full_id}() }});'
-            static_prefs_rs_macro.append(macro.format(name=name, full_id=full_id))
+                # Generate the Rust macro entry.
+                macro = '    ("{name}") => (unsafe {{ let mut result = $crate::nsCString::new(); $crate::StaticPrefs_{full_id}(&mut *result); result }});'
+                static_prefs_rs_macro.append(macro.format(name=name, full_id=full_id))
+
+            else:
+                # Generate the C getter.
+                static_prefs_c_getters_cpp.append(
+                    STATIC_PREFS_C_GETTERS_TEMPLATE.format(
+                        typ=passed_type, full_id=full_id
+                    )
+                )
+
+                # Generate the C getter declaration, in Rust.
+                decl = "    pub fn StaticPrefs_{full_id}() -> {typ};"
+                static_prefs_rs_decls.append(
+                    decl.format(full_id=full_id, typ=RUST_TYPES[passed_type])
+                )
+
+                # Generate the Rust macro entry.
+                macro = (
+                    '    ("{name}") => (unsafe {{ $crate::StaticPrefs_{full_id}() }});'
+                )
+                static_prefs_rs_macro.append(macro.format(name=name, full_id=full_id))
 
         # Delete this so that `group` can be reused below without Flake8
         # complaining.
@@ -365,7 +391,7 @@ def generate_code(pref_list, input_filename):
         )
 
     # static_prefs.rs contains the Rust macro getters.
-    static_prefs_rs = [first_line, "", 'extern "C" {']
+    static_prefs_rs = [first_line, "", "pub use nsstring::nsCString;", 'extern "C" {']
     static_prefs_rs.extend(static_prefs_rs_decls)
     static_prefs_rs.extend(["}", "", "#[macro_export]", "macro_rules! pref {"])
     static_prefs_rs.extend(static_prefs_rs_macro)
