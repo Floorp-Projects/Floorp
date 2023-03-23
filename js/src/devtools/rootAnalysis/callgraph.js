@@ -106,7 +106,7 @@ function processCSU(csuName, csu)
 // ('direct', 'field', 'resolved-field', 'indirect', 'unknown'), though note
 // that 'resolved-field' is really a global record of virtual method
 // resolutions, indepedent of this particular edge.
-function getCallees(edge)
+function translateCallees(edge)
 {
     if (edge.Kind != "Call")
         return [];
@@ -143,14 +143,35 @@ function getCallees(edge)
     // same call; they're just different ways of describing it.
     const callees = [];
     const field = callee.Exp[0].Field;
-    callees.push({'kind': "field", 'csu': field.FieldCSU.Type.Name,
-                  'field': field.Name[0],
-                  'isVirtual': ("FieldInstanceFunction" in field)});
-
     const staticCSU = getFieldCallInstanceCSU(edge, field);
+    callees.push({'kind': "field", 'csu': field.FieldCSU.Type.Name, staticCSU,
+                  'field': field.Name[0], 'fieldKey': fieldKey(staticCSU, field),
+                  'isVirtual': ("FieldInstanceFunction" in field)});
     callees.push({'kind': "direct", 'name': fieldKey(staticCSU, field)});
 
     return callees;
+}
+
+function getCallees(body, edge, scopeAttrs, functionBodies) {
+    const calls = [];
+
+    // getCallEdgeProperties can set the ATTR_REPLACED attribute, which
+    // means that the call in the edge has been replaced by zero or
+    // more edges to other functions. This is used when the original
+    // edge will end up calling through a function pointer or something
+    // (eg ~shared_ptr<T> calls a function pointer that can only be
+    // T::~T()). The original call edges are left in the graph in case
+    // they are useful for other purposes.
+    for (const callee of translateCallees(edge)) {
+        if (callee.kind != "direct") {
+            calls.push({ callee, attrs: scopeAttrs });
+        } else {
+            const edgeInfo = getCallEdgeProperties(body, edge, callee.name, functionBodies);
+            calls.push({ callee, attrs: scopeAttrs | edgeInfo.attrs});
+        }
+    }
+
+    return calls;
 }
 
 function loadTypes(type_xdb_filename) {
