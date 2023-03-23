@@ -97,7 +97,7 @@ class PasswordRulesManagerParent extends JSWindowActorParent {
    * @return {string} password
    * @memberof PasswordRulesManagerParent
    */
-  async generatePassword(uri) {
+  async generatePassword(uri, { inputMaxLength } = {}) {
     await this.initPasswordRulesCollection();
     let originDisplayHost = uri.displayHost;
     let records = await this._passwordRulesClient.get();
@@ -123,7 +123,10 @@ class PasswordRulesManagerParent extends JSWindowActorParent {
       Services.telemetry
         .getHistogramById(IMPROVED_PASSWORD_GENERATION_HISTOGRAM)
         .add(isCustomRule);
-      return lazy.PasswordGenerator.generatePassword({ rules: mapOfRules });
+      return lazy.PasswordGenerator.generatePassword({
+        rules: mapOfRules,
+        inputMaxLength,
+      });
     }
     lazy.log(
       `No password rules for specified origin, generating standard password.`
@@ -131,6 +134,6 @@ class PasswordRulesManagerParent extends JSWindowActorParent {
     Services.telemetry
       .getHistogramById(IMPROVED_PASSWORD_GENERATION_HISTOGRAM)
       .add(isCustomRule);
-    return lazy.PasswordGenerator.generatePassword({});
+    return lazy.PasswordGenerator.generatePassword({ inputMaxLength });
   }
 }

@@ -58,6 +58,7 @@ const PasswordGenerator = {
   generatePassword({
     length = DEFAULT_PASSWORD_LENGTH,
     rules = DEFAULT_RULES,
+    inputMaxLength,
   }) {
     rules = new Map([...DEFAULT_RULES, ...rules]);
     if (rules.get(MIN_LENGTH) > length) {
@@ -65,6 +66,9 @@ const PasswordGenerator = {
     }
     if (rules.get(MAX_LENGTH) < length) {
       length = rules.get(MAX_LENGTH);
+    }
+    if (inputMaxLength > 0 && inputMaxLength < length) {
+      length = inputMaxLength;
     }
 
     let password = "";
