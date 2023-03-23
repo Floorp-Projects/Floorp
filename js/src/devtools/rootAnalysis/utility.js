@@ -11,13 +11,14 @@ loadRelativeToScript('dumpCFG.js');
 // Attribute bits - each call edge may carry a set of 'attrs' bits, saying eg
 // that the edge takes place within a scope where GC is suppressed, for
 // example.
-var ATTR_GC_SUPPRESSED     = 1;
-var ATTR_CANSCRIPT_BOUNDED = 2; // Unimplemented
-var ATTR_DOM_ITERATING     = 4; // Unimplemented
-var ATTR_NONRELEASING      = 8; // ~RefPtr of value whose refcount will not go to zero
+var ATTR_GC_SUPPRESSED     = 1 << 0;
+var ATTR_CANSCRIPT_BOUNDED = 1 << 1; // Unimplemented
+var ATTR_DOM_ITERATING     = 1 << 2; // Unimplemented
+var ATTR_NONRELEASING      = 1 << 3; // ~RefPtr of value whose refcount will not go to zero
+var ATTR_REPLACED          = 1 << 4; // Ignore edge, it was replaced by zero or more better edges.
 
 var ATTRS_NONE             = 0;
-var ATTRS_ALL              = 7; // All possible bits set
+var ATTRS_ALL              = (ATTR_REPLACED << 1) - 1; // All possible bits set
 
 // The traversal algorithms we run will recurse into children if you change any
 // attrs bit to zero. Use all bits set to maximally attributed, including
