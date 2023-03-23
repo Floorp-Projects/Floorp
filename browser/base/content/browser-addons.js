@@ -695,9 +695,6 @@ var gXPInstallObserver = {
             ? "site-permission-addons"
             : "unlisted-extensions-risks";
           let learnMore = doc.getElementById("addon-install-blocked-info");
-          learnMore.textContent = gNavigatorBundle.getString(
-            "xpinstallPromptMessage.learnMore"
-          );
           learnMore.setAttribute("support-page", article);
         };
 

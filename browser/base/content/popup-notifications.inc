@@ -128,7 +128,12 @@
       <popupnotificationcontent id="addon-install-blocked-content" orient="vertical">
         <description id="addon-install-blocked-message" class="popup-notification-description"></description>
         <hbox>
-          <html:a is="moz-support-link" id="addon-install-blocked-info" class="popup-notification-learnmore-link"/>
+          <html:a 
+              is="moz-support-link"
+              id="addon-install-blocked-info"
+              class="popup-notification-learnmore-link"
+              data-l10n-id="popup-notification-xpinstall-prompt-learn-more"
+            />
         </hbox>
       </popupnotificationcontent>
     </popupnotification>
