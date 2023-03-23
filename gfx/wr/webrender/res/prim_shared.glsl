@@ -19,9 +19,8 @@ uniform sampler2D sClipMask;
 
 #ifndef SWGL_CLIP_MASK
 // TODO: convert back to RectWithEndpoint if driver issues are resolved, if ever.
-// UVs must usually be highp, but because these are unnormalized they can be mediump.
 flat varying mediump vec4 vClipMaskUvBounds;
-varying mediump vec2 vClipMaskUv;
+varying highp vec2 vClipMaskUv;
 #endif
 
 #ifdef WR_VERTEX_SHADER
