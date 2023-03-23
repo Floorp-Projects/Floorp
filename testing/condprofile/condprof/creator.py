@@ -25,6 +25,7 @@ that keep track of the Firefox version that was used and the profile age.
 """
 import os
 import tempfile
+import shutil
 
 from arsenic import get_session
 from arsenic.browsers import Firefox
@@ -115,6 +116,10 @@ class ProfileCreator:
             ]
 
         for name in names:
+            # remove `cache` from profile
+            shutil.rmtree(os.path.join(self.env.profile, "cache"), ignore_errors=True)
+            shutil.rmtree(os.path.join(self.env.profile, "cache2"), ignore_errors=True)
+
             archiver = Archiver(self.scenario, self.env.profile, self.archive)
             # the archive name is of the form
             # profile[-vXYZ.x]-<platform>-<scenario>-<customization>.tgz
