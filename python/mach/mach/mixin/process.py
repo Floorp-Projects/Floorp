@@ -47,6 +47,10 @@ if (
         _current_shell += ".exe"
 
 
+class LineHandlingEarlyReturn(Exception):
+    pass
+
+
 class ProcessExecutionMixin(LoggingMixin):
     """Mix-in that provides process execution functionality."""
 
@@ -111,7 +115,10 @@ class ProcessExecutionMixin(LoggingMixin):
                 line = line.decode(sys.stdout.encoding or "utf-8", "replace")
 
             if line_handler:
-                line_handler(line)
+                try:
+                    line_handler(line)
+                except LineHandlingEarlyReturn:
+                    return
 
             if line.startswith("BUILDTASK") or not log_name:
                 return
