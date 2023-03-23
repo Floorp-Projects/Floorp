@@ -12,7 +12,7 @@
     <string name="content_description_private_browsing_button">ᱯᱨᱟᱭᱣᱮᱴ ᱵᱽᱨᱟᱣᱡᱤᱝ ᱦᱩᱭ ᱦᱚᱪᱚᱭ ᱢᱮ</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">ᱯᱨᱟᱭᱣᱮᱴ ᱵᱽᱨᱟᱣᱡᱤᱝ ᱵᱟᱝ ᱦᱩᱭ ᱦᱚᱪᱚᱜ ᱢᱮ</string>
-    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
     <string name="search_hint">ᱥᱮᱸᱫᱽᱨᱟ ᱟᱨ ᱵᱟᱝ ᱴᱷᱤᱠᱬᱟᱹ ᱟᱫᱮᱨ ᱢᱮ</string>
     <!-- Placeholder text shown in search bar when using history search -->
     <string name="history_search_hint">ᱱᱟᱜᱟᱢ ᱠᱚ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ</string>
@@ -61,12 +61,8 @@
     <string name="private_browsing_common_myths">ᱱᱤᱡᱮᱨᱟᱜ ᱵᱽᱨᱟᱣᱡᱤᱝ ᱵᱟᱵᱚᱛ ᱥᱚᱢᱟᱱ ᱮᱰᱮ ᱠᱚ</string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message -->
-    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">ᱟᱢᱟᱜ ᱚᱲᱟᱜ ᱤᱥᱠᱨᱤᱱ ᱠᱷᱚᱱ ᱱᱤᱡᱮᱨᱟᱜ ᱴᱮᱵᱽ ᱡᱷᱤᱡᱽ ᱞᱟᱹᱜᱤᱫ ᱛᱮ ᱢᱤᱫᱴᱟᱹᱝ ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱥᱮᱞᱮᱫᱽ ᱛᱟᱞᱟᱝ ᱢᱮ ᱾</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
-    <string name="private_mode_cfr_message">ᱢᱤᱫᱴᱟᱝ ᱴᱤᱯᱟᱹᱣ ᱛᱮ ᱤᱱᱟᱹ ᱛᱟᱭᱚᱢᱟᱜ ᱯᱨᱟᱭᱵᱷᱮᱴ ᱴᱟᱵ ᱮᱦᱚᱵ ᱢᱮ ᱾</string>
-    <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
+    <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">ᱢᱤᱫᱴᱟᱝ ᱴᱤᱯᱟᱹᱣ ᱛᱮ ᱤᱱᱟᱹ ᱛᱟᱭᱚᱢᱟᱜ ᱯᱨᱟᱭᱵᱷᱮᱴ ᱴᱟᱵ ᱮᱦᱚᱵ ᱢᱮ ᱾</string>
 
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">ᱚᱲᱟᱜ ᱥᱠᱨᱤᱱ ᱨᱮ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
@@ -81,9 +77,6 @@
 
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">ᱵᱟᱹᱰ</string>
-
-    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
-    <string name="cfr_dismiss_button_default_content_description">ᱵᱚᱸᱫ</string>
 
     <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
     <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
@@ -349,9 +342,11 @@
     <string name="preferences_cookie_banner_reduction">ᱠᱩᱠᱤ ᱵᱮᱱᱚᱨ ᱠᱷᱟᱴᱚ</string>
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">ᱠᱩᱠᱤ ᱵᱮᱱᱚᱨ ᱠᱷᱟᱴᱚᱭ ᱢᱮ</string>
-    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">ᱠᱩᱠᱤ ᱵᱮᱱᱚᱨ ᱨᱮ Firefox ᱫᱚ ᱟᱡ ᱛᱮᱜᱮ ᱠᱩᱠᱤ ᱱᱮᱦᱚᱨ ᱠᱚ ᱵᱟᱫ ᱜᱤᱰᱤ ᱠᱟᱜᱼᱟᱭ ᱾ ᱡᱩᱫᱤ ᱵᱟᱫ ᱜᱤᱫᱤ ᱚᱯᱥᱚᱱ ᱨᱮ ᱵᱟᱹᱱᱩᱜ ᱠᱷᱟᱱ, Firefox ᱫᱚ ᱵᱮᱱᱚᱨ ᱢᱮᱴᱟᱣ ᱞᱟᱹᱜᱤᱫ ᱡᱷᱚᱛᱚ ᱠᱩᱠᱤ ᱦᱮᱥᱤᱭᱟᱹᱨ ᱩᱛᱟᱹᱨ ᱟᱭ ᱾</string>
 
+    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
+    <string name="reduce_cookie_banner_option_off">ᱵᱚᱸᱫᱚ</string>
+    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
+    <string name="reduce_cookie_banner_option_on">ᱪᱟᱹᱞᱩ</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱫ ᱵᱚᱱᱫ ᱜᱮᱭᱟ</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -364,11 +359,16 @@
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s ᱫᱚ ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴᱟᱜ ᱠᱩᱠᱤ ᱠᱚ ᱢᱮᱴᱟᱣᱟᱭ ᱟᱨ ᱥᱟᱦᱴᱟ ᱯᱷᱟᱨᱪᱟ ᱜᱚᱫ ᱠᱟᱜᱼᱟᱭ ᱾ ᱡᱷᱚᱛᱚ ᱠᱩᱠᱤ ᱠᱚ ᱢᱮᱴᱟᱣ ᱞᱮᱠᱷᱟᱱ ᱟᱢ ᱵᱟᱦᱨᱮ ᱛᱮ ᱚᱰᱚᱠᱚᱜᱼᱟᱢ ᱟᱨᱵᱟᱝ ᱠᱤᱨᱤᱧ ᱵᱚᱥᱛᱟ ᱫᱚ ᱠᱷᱟᱹᱞᱤᱜ ᱛᱟᱢᱟᱸ ᱾</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s ᱫᱚ ᱟᱡ ᱛᱮᱜᱮ ᱠᱩᱠᱤ ᱱᱮᱦᱚᱨ ᱠᱚ ᱵᱟᱫ ᱜᱤᱰᱤ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱭ ᱾ ᱡᱩᱫᱤ ᱵᱟᱫ ᱜᱤᱫᱤ ᱚᱯᱥᱚᱱ ᱨᱮ ᱵᱟᱹᱱᱩᱜ ᱠᱷᱟᱱ, %2$s ᱫᱚ ᱵᱮᱱᱚᱨ ᱢᱮᱴᱟᱣ ᱞᱟᱹᱜᱤᱫ ᱡᱷᱚᱛᱚ ᱠᱩᱠᱤ ᱦᱮᱥᱤᱭᱟᱹᱨ ᱩᱛᱟᱹᱨ ᱟᱭ ᱾</string>
 
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_title">ᱠᱩᱠᱤ ᱵᱮᱱᱚᱨ ᱠᱚ ᱪᱟᱞᱟᱣ ᱮᱱᱟ!</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">ᱠᱩᱠᱤ ᱵᱮᱱᱚᱨ ᱠᱚ ᱪᱟᱞᱟᱣ ᱮᱱᱟ!</string>
+
+    <!-- Remind me later text button for the onboarding dialog -->
+    <string name="reduce_cookie_banner_dialog_not_now_button">ᱱᱤᱛᱚᱜ ᱫᱚ ᱵᱟᱝᱟ</string>
+    <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">ᱦᱮᱥᱟᱨᱤᱭᱟᱹ</string>
+    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
+    <string name="reduce_cookie_banner_dialog_change_setting_button">ᱦᱮᱥᱟᱨᱤᱭᱟᱹ</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">ᱵᱮᱰᱷᱟᱣ ᱠᱟᱱᱟ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱞᱟᱹᱜᱤᱫ ᱛᱮ HTTPS ᱫᱟᱱᱟᱝ ᱵᱮᱵᱷᱟᱨ ᱛᱮ ᱥᱟᱭᱤᱴ ᱠᱚ ᱥᱟᱞᱟᱜ ᱟᱡ ᱛᱮ ᱡᱩᱲᱟᱹᱣ ᱵᱤᱲᱟᱹᱣ ᱾</string>
@@ -376,6 +376,8 @@
     <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">ᱪᱟᱹᱞᱩ</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">ᱵᱚᱸᱫᱚ</string>
+    <!-- Summary of https only preference if https only is set to on in all tabs -->
+    <string name="preferences_https_only_on_all">ᱡᱷᱚᱛᱚ ᱴᱮᱵᱽ ᱮᱢ ᱪᱷᱚᱭ ᱢᱮ</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">ᱰᱷᱮᱨ ᱥᱮᱬᱟᱭ ᱢᱮ</string>
     <!-- Option for the https only setting -->
@@ -445,12 +447,17 @@
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">ᱞᱤᱝᱠ ᱠᱚ ᱮᱯ ᱨᱮ ᱡᱷᱤᱡᱽ ᱢᱮ</string>
 
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">ᱛᱤᱥ ᱦᱚᱸ ᱵᱟᱝ</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">ᱵᱟᱦᱨᱮ ᱨᱮᱭᱟᱜ ᱰᱟᱣᱱᱞᱳᱰ ᱢᱮᱱᱮᱡᱟᱹᱨ</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">ᱮᱰ-ᱟᱸᱱᱥ</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">ᱤᱛᱞᱟᱹᱭ ᱠᱚ</string>
+
+    <!-- Summary for notification preference indicating notifications are allowed -->
+    <string name="notifications_allowed_summary">ᱦᱮᱥᱟᱹᱨᱤᱭᱟᱹ</string>
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
@@ -675,10 +682,17 @@
 
     <!-- Text to show users they have one site in the history group section of the History fragment.
     %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_site">%d ᱥᱟᱭᱤᱴ</string>
+    <string name="history_search_group_site" moz:RemovedIn="111" tools:ignore="UnusedResources">%d ᱥᱟᱭᱤᱴ</string>
+    <!-- Text to show users they have one page in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_site_1">%d ᱥᱟᱦᱴᱟ</string>
     <!-- Text to show users they have multiple sites in the history group section of the History fragment.
     %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_sites">%d ᱥᱟᱭᱤᱴ ᱠᱚ</string>
+    <string name="history_search_group_sites" moz:RemovedIn="111" tools:ignore="UnusedResources">%d ᱥᱟᱭᱤᱴ ᱠᱚ</string>
+
+    <!-- Text to show users they have multiple pages in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_sites_1">%d ᱥᱟᱦᱴᱟ ᱠᱚ</string>
 
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">ᱱᱤᱛᱚᱜᱽᱼᱟᱜ ᱵᱚᱸᱫᱚᱼᱟᱜ ᱴᱮᱵᱽ ᱠᱚ</string>
@@ -736,6 +750,9 @@
     <string name="close_tabs_after_one_week_summary">ᱢᱤᱫᱽ ᱦᱟᱴ ᱛᱟᱭᱚᱢ ᱛᱮ ᱵᱚᱸᱫ ᱢᱮ</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">ᱢᱤᱫ ᱪᱟᱸᱫᱚ ᱛᱟᱭᱚᱢ ᱛᱮ ᱵᱚᱸᱫᱽ ᱢᱮ</string>
+
+    <!-- Summary for homepage preference indicating always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage_summary">ᱚᱲᱟᱜ ᱥᱟᱦᱴᱟ ᱨᱮ</string>
 
     <!-- Inactive tabs -->
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
@@ -1132,13 +1149,6 @@
     <string name="notification_pbm_delete_text_2">ᱯᱨᱟᱭᱣᱮᱴ ᱴᱮᱵᱽ ᱠᱚ ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">ᱢᱟᱨᱠᱮᱴᱤᱝ</string>
-    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_title">%1$s ᱫᱚ ᱞᱚᱜᱚᱱ ᱜᱮ ᱟᱨ ᱯᱨᱟᱭᱣᱮᱴ ᱜᱮ ᱠᱟᱹᱢᱤᱟᱭ</string>
-
-    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_text">%1$s ᱫᱚ ᱟᱢᱟᱜ ᱢᱩᱞ ᱯᱷᱮᱲᱟᱛ ᱵᱽᱨᱟᱩᱡᱚᱨ ᱥᱮᱴ ᱢᱮ</string>
 
     <!-- Title shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_title">ᱱᱤᱡᱚᱨᱟᱜ ᱵᱽᱨᱟᱣᱡᱤᱝ ᱠᱩᱨᱩᱢᱩᱴᱩ ᱞᱮᱢ</string>
@@ -1968,4 +1978,4 @@
     <string name="a11y_action_label_wallpaper_collection_learn_more">ᱱᱚᱶᱟ ᱡᱟᱣᱨᱟ ᱵᱮᱵᱚᱫ ᱰᱷᱮᱨ ᱵᱟᱰᱟᱭ ᱞᱟᱹᱜᱤᱫ ᱞᱤᱝᱠ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ</string>
     <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
     <string name="a11y_action_label_read_article">ᱚᱱᱚᱞ ᱯᱟᱲᱦᱟᱣ ᱢᱮ</string>
-</resources>
+    </resources>

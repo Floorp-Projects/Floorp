@@ -66,6 +66,10 @@
     <string name="mozac_feature_addons_settings_on">Ativa</string>
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">Dixativà</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">Parmeti en navigasion privada</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">Exegui en navigasion privada</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Ativo</string>
     <!-- Indicates the add-on is disabled. -->
@@ -76,6 +80,9 @@
     <string name="mozac_feature_addons_recommended_section">Racomandà</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
     <string name="mozac_feature_addons_unsupported_section">No gnancora suportà</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet available section. -->
+    <string name="mozac_feature_addons_unavailable_section">Gnancora disponibiłe
+</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
     <string name="mozac_feature_addons_disabled_section">Dixativà</string>
     <!-- Displays a page with all the details of an add-on. -->
@@ -94,12 +101,14 @@
     <string name="mozac_feature_addons_permissions_dialog_cancel">Anuƚa</string>
     <!-- Accessibility content description to install add-on button. -->
     <string name="mozac_feature_addons_install_addon_content_description">Instaƚa conponente da xontare</string>
-    <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of users -->
-    <string name="mozac_feature_addons_user_rating_count">Utenti: %1$s</string>
+    <!-- This is the label of a button to cancel an ongoing add-on installation. -->
+    <string name="mozac_feature_addons_install_addon_dialog_cancel">Anuƚa</string>
     <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
     <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
     <!-- This is the title of page where all the add-ons are listed-->
     <string name="mozac_feature_addons_addons">Conponenti che se pole xontare</string>
+    <!-- Label for add-ons sub menu item for add-ons manager-->
+    <string name="mozac_feature_addons_addons_manager">Gestion Estension</string>
     <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
     <string name="mozac_feature_addons_updater_notification_allow_button">Parmeti</string>
     <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
