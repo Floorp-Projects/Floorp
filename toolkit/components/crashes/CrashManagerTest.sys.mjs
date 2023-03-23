@@ -4,26 +4,15 @@
 
 /*
  * This file provides common and shared functionality to facilitate
- * testing of the Crashes component (CrashManager.jsm).
+ * testing of the Crashes component (CrashManager.sys.mjs).
  */
-
-"use strict";
-
-var EXPORTED_SYMBOLS = [
-  "configureLogging",
-  "getManager",
-  "sleep",
-  "TestingCrashManager",
-];
 
 /* global OS */
 Cc["@mozilla.org/net/osfileconstantsservice;1"]
   .getService(Ci.nsIOSFileConstantsService)
   .init();
 
-const { CrashManager } = ChromeUtils.import(
-  "resource://gre/modules/CrashManager.jsm"
-);
+import { CrashManager } from "resource://gre/modules/CrashManager.sys.mjs";
 
 const lazy = {};
 
@@ -34,7 +23,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 var loggingConfigured = false;
 
-var configureLogging = function() {
+export var configureLogging = function() {
   if (loggingConfigured) {
     return;
   }
@@ -47,7 +36,7 @@ var configureLogging = function() {
   loggingConfigured = true;
 };
 
-var sleep = function(wait) {
+export var sleep = function(wait) {
   return new Promise(resolve => {
     lazy.setTimeout(() => {
       resolve();
@@ -55,7 +44,7 @@ var sleep = function(wait) {
   });
 };
 
-var TestingCrashManager = function(options) {
+export var TestingCrashManager = function(options) {
   CrashManager.call(this, options);
 };
 
@@ -163,7 +152,7 @@ Object.setPrototypeOf(TestingCrashManager.prototype, CrashManager.prototype);
 
 var DUMMY_DIR_COUNT = 0;
 
-var getManager = function() {
+export var getManager = function() {
   return (async function() {
     const dirMode = OS.Constants.libc.S_IRWXU;
     let baseFile = PathUtils.profileDir;

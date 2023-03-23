@@ -2,14 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { AsyncShutdown } = ChromeUtils.importESModule(
-  "resource://gre/modules/AsyncShutdown.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { AsyncShutdown } from "resource://gre/modules/AsyncShutdown.sys.mjs";
 
 // Set to true if the application is quitting
 var gQuitting = false;
@@ -157,7 +151,7 @@ function processExtraFile(extraPath) {
  *
  * It is a service because some background activity will eventually occur.
  */
-function CrashService() {
+export function CrashService() {
   Services.obs.addObserver(this, "quit-application");
 }
 
@@ -238,5 +232,3 @@ CrashService.prototype = Object.freeze({
     }
   },
 });
-
-var EXPORTED_SYMBOLS = ["CrashService"];

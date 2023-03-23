@@ -2,20 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { PromiseUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseUtils.sys.mjs"
-);
-const { setTimeout } = ChromeUtils.importESModule(
-  "resource://gre/modules/Timer.sys.mjs"
-);
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
+import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -23,15 +13,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Log: "resource://gre/modules/Log.sys.mjs",
   TelemetryController: "resource://gre/modules/TelemetryController.sys.mjs",
 });
-
-var EXPORTED_SYMBOLS = [
-  "CrashManager",
-  "getCrashManager",
-  // The following are exported for tests only.
-  "CrashStore",
-  "dateToDays",
-  "getCrashManagerNoCreate",
-];
 
 /**
  * How long to wait after application startup before crash event files are
@@ -47,7 +28,7 @@ const MILLISECONDS_IN_DAY = 24 * 60 * 60 * 1000;
 // Converts Date to days since UNIX epoch.
 // This was copied from /services/metrics.storage.jsm. The implementation
 // does not account for leap seconds.
-function dateToDays(date) {
+export function dateToDays(date) {
   return Math.floor(date.getTime() / MILLISECONDS_IN_DAY);
 }
 
@@ -123,7 +104,7 @@ function parseAndRemoveField(obj, field) {
  *   telemetryStoreSizeKey (string)
  *     Telemetry histogram to report store size under.
  */
-var CrashManager = function(options) {
+export var CrashManager = function(options) {
   for (let k in options) {
     let value = options[k];
 
@@ -1015,7 +996,7 @@ var gCrashManager;
  *        The telemetry histogram that should be used to store the size
  *        of the data file.
  */
-function CrashStore(storeDir, telemetrySizeKey) {
+export function CrashStore(storeDir, telemetrySizeKey) {
   this._storeDir = storeDir;
   this._telemetrySizeKey = telemetrySizeKey;
 
@@ -1627,7 +1608,7 @@ XPCOMUtils.defineLazyGetter(CrashManager, "Singleton", function() {
   return gCrashManager;
 });
 
-function getCrashManager() {
+export function getCrashManager() {
   return CrashManager.Singleton;
 }
 
@@ -1636,6 +1617,6 @@ function getCrashManager() {
  *
  * @returns {CrashManager}
  */
-function getCrashManagerNoCreate() {
+export function getCrashManagerNoCreate() {
   return gCrashManager;
 }

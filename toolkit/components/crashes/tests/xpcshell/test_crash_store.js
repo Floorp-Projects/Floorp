@@ -7,8 +7,8 @@
 
 "use strict";
 
-const { CrashManager, CrashStore, dateToDays } = ChromeUtils.import(
-  "resource://gre/modules/CrashManager.jsm"
+const { CrashManager, CrashStore, dateToDays } = ChromeUtils.importESModule(
+  "resource://gre/modules/CrashManager.sys.mjs"
 );
 
 const DUMMY_DATE = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
