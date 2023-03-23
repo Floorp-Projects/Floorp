@@ -1252,12 +1252,12 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::CreateDecoder() {
              StaticPrefs::image_avif_use_dav1d() ? "Dav1d" : "AOM",
              IsDecodeSuccess(r) ? "" : "un"));
 
-    if (!IsDecodeSuccess(r)) {
-      return r;
-    }
+    return r;
   }
 
-  return DecodeResult(NonDecoderResult::Complete);
+  return StaticPrefs::image_avif_use_dav1d()
+             ? DecodeResult(Dav1dResult(0))
+             : DecodeResult(AOMResult(AOM_CODEC_OK));
 }
 
 // Records all telemetry available in the AVIF metadata, called only once during
@@ -1504,7 +1504,10 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
             ("[this=%p] Parser returned no image size, decoding...", this));
   }
 
-  CreateDecoder();
+  r = CreateDecoder();
+  if (!IsDecodeSuccess(r)) {
+    return r;
+  }
   MOZ_ASSERT(mDecoder);
   r = mDecoder->Decode(sendDecodeTelemetry, parsedInfo, parsedImage);
   MOZ_LOG(sAVIFLog, LogLevel::Debug,
