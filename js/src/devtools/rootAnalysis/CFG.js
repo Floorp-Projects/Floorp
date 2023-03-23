@@ -908,12 +908,38 @@ function basicBlockEatsVariable(variable, body, startpoint)
     return false;
 }
 
-function isSpecialEdge(body, edge, calleeName, functionBodies) {
-    if (edge.Kind !== "Call") {
-        return false;
+var PROP_REFCNT = 1 << 0;
+
+function getCalleeProperties(calleeName) {
+    let props = 0;
+
+    if (isRefcountedDtor(calleeName)) {
+        props = props | PROP_REFCNT;
     }
-    if (!isRefcountedDtor(calleeName)) {
-        return false;
+    return props;
+}
+
+function getCallEdgeProperties(body, edge, calleeName, functionBodies) {
+    let attrs = 0;
+
+    if (edge.Kind !== "Call") {
+        return { attrs };
+    }
+
+    const props = getCalleeProperties(calleeName);
+    if (props & PROP_REFCNT) {
+        // std::swap of two refcounted values thinks it can drop the
+        // ref count to zero. Or rather, it just calls operator=() in a context
+        // where the refcount will never drop to zero.
+        const blockId = blockIdentifier(body);
+        if (blockId.includes("std::swap") || blockId.includes("mozilla::Swap")) {
+            // Replace the refcnt release call with nothing. It's not going to happen.
+            attrs |= ATTR_REPLACED;
+        }
+    }
+
+    if ((props & PROP_REFCNT) == 0) {
+        return { attrs };
     }
 
     let callee = edge.Exp[0];
@@ -924,7 +950,7 @@ function isSpecialEdge(body, edge, calleeName, functionBodies) {
     const instance = edge.PEdgeCallInstance.Exp;
     if (instance.Kind !== "Var") {
         // TODO: handle field destructors
-        return false;
+        return { attrs };
     }
 
     // Test whether the dtor call is dominated by operations on the variable
@@ -937,7 +963,7 @@ function isSpecialEdge(body, edge, calleeName, functionBodies) {
 
     const variable = instance.Variable;
 
-    const visitor = new class extends Visitor {
+    const visitor = new class DominatorVisitor extends Visitor {
         // Do not revisit nodes. For new nodes, relay the decision made by
         // extend_path.
         next_action(seen, current) { return seen ? "prune" : current; }
@@ -977,10 +1003,10 @@ function isSpecialEdge(body, edge, calleeName, functionBodies) {
         body, edge.Index[0], functionBodies, visitor, "start",
         true // Return value if we reach the root without finding a non-forget() use.
     );
-    if (!edgeIsNonReleasingDtor) {
-        return false;
+    if (edgeIsNonReleasingDtor) {
+        attrs |= ATTR_GC_SUPPRESSED | ATTR_NONRELEASING;
     }
-    return { attrs : ATTR_GC_SUPPRESSED | ATTR_NONRELEASING };
+    return { attrs };
 }
 
 // gcc uses something like "__dt_del " for virtual destructors that it

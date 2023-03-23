@@ -160,24 +160,35 @@ function processBody(functionName, body, functionBodies)
         // points in the body.
         const scopeAttrs = body.attrs[edge.Index[0]] | 0;
 
-        for (var callee of getCallees(edge)) {
+        for (const callee of getCallees(edge)) {
             let edgeAttrs = scopeAttrs;
 
-            // isSpecialEdge can set the ATTR_REPLACED attribute, which means that the call in the edge
-            // has been replaced by zero or more edges to other functions. This is used when the original
-            // edge will end up calling through a function pointer or something (eg ~shared_ptr<T> invokes
-            // a function pointer whose only possible value is T::~T()).
-            const edgeInfo = callee.kind === "direct" && isSpecialEdge(body, edge, callee.name, functionBodies);
+            // getCallEdgeProperties can set the ATTR_REPLACED attribute, which
+            // means that the call in the edge has been replaced by zero or
+            // more edges to other functions. This is used when the original
+            // edge will end up calling through a function pointer or something
+            // (eg ~shared_ptr<T> invokes a function pointer whose only possible
+            // value is T::~T()). The original call edges are left in the
+            // graph in case they are useful for other purposes.
+            const edgeInfo = callee.kind === "direct" && getCallEdgeProperties(body, edge, callee.name, functionBodies);
             if (edgeInfo) {
                 edgeAttrs = edgeAttrs | edgeInfo.attrs;
 
-                // Edges that call a refcounted destructor that we know will not hit a zero
-                // ref count will be added to a "special edge" table that will be consulted
-                // when analyzing the function body. (Calls encountered during per-function
-                // analysis will not consult the global callgraph being generated here.)
-                if (edgeInfo.attrs & ATTR_NONRELEASING) {
+                // The main output of the callgraph generation step, the
+                // callgraph, does not contain any information on specific
+                // edges (specific calls in a function body). Local attributes
+                // are propagated through the whole callgraph. In some cases,
+                // local information about a call is needed, eg that it has
+                // been replaced (ATTR_REPLACED).
+
+                // ATTR_NONRELEASING: call to a refcounted destructor that we
+                // know will not hit a zero ref count.
+                //
+                // ATTR_REPLACED: call that should not be considered for the
+                // purposes of GC reachability.
+                if (edgeInfo.attrs) {
                     const block = blockIdentifier(body);
-                    addToKeyedList(gcEdges, block, { Index: edge.Index, attrs: ATTR_GC_SUPPRESSED | ATTR_NONRELEASING });
+                    addToKeyedList(gcEdges, block, { Index: edge.Index, attrs: edgeInfo.attrs });
                 }
             }
 
