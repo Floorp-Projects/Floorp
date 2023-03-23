@@ -38,9 +38,9 @@ add_task(async function cacheDisabled({ client }) {
 // The promise itself will resolve when the progressListener will detect the
 // expected flags for the provided url.
 function watchLoadFlags(flags, url) {
-  return ContentTask.spawn(
+  return SpecialPowers.spawn(
     gBrowser.selectedBrowser,
-    { flags, url },
+    [{ flags, url }],
     async (options = {}) => {
       const { flags, url } = options;
 
@@ -125,7 +125,7 @@ function watchLoadFlags(flags, url) {
 
 // Wait for the latest promise created in-content by watchLoadFlags to resolve.
 function waitForLoadFlags() {
-  return ContentTask.spawn(gBrowser.selectedBrowser, {}, async () => {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
     await content.resolveCheckLoadFlags;
     delete content.resolveCheckLoadFlags;
   });
