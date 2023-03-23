@@ -201,6 +201,23 @@
         android:name="org.mozilla.fenix.onboarding.HomeOnboardingDialogFragment" />
 
     <dialog
+        android:id="@+id/researchSurfaceDialogFragment"
+        android:name="org.mozilla.fenix.experiments.ResearchSurfaceDialogFragment" >
+        <argument
+            android:name="KEY_MESSAGE_TEXT"
+            app:nullable="true"
+            app:argType="string" />
+        <argument
+            android:name="KEY_ACCEPT_BUTTON_TEXT"
+            app:nullable="true"
+            app:argType="string" />
+        <argument
+            android:name="KEY_DISMISS_BUTTON_TEXT"
+            app:nullable="true"
+            app:argType="string" />
+    </dialog>
+
+    <dialog
         android:id="@+id/homeNotificationPermissionDialogFragment"
         android:name="org.mozilla.fenix.onboarding.HomeNotificationPermissionDialogFragment" />
 
