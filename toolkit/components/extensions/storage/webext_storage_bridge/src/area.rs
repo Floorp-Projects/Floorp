@@ -12,7 +12,7 @@ use std::{
     sync::Arc,
 };
 
-use golden_gate::{ApplyTask, FerryTask};
+use golden_gate::{ApplyTask, BridgedEngine, FerryTask};
 use moz_task::{self, DispatchOptions, TaskRunnable};
 use nserror::{nsresult, NS_OK};
 use nsstring::{nsACString, nsCString, nsString};
@@ -43,12 +43,12 @@ fn path_from_nsifile(file: &nsIFile) -> Result<PathBuf> {
         #[cfg(windows)]
         {
             use std::os::windows::prelude::*;
-            OsString::from_wide(&*raw_path)
+            OsString::from_wide(&raw_path)
         }
         // On other platforms, we must first decode the raw path from
         // UTF-16, and then create our native string.
         #[cfg(not(windows))]
-        OsString::from(String::from_utf16(&*raw_path)?)
+        OsString::from(String::from_utf16(&raw_path)?)
     };
     Ok(native_path.into())
 }
@@ -144,8 +144,8 @@ impl StorageSyncArea {
     ) -> Result<()> {
         self.dispatch(
             Punt::Set {
-                ext_id: str::from_utf8(&*ext_id)?.into(),
-                value: serde_json::from_str(str::from_utf8(&*json)?)?,
+                ext_id: str::from_utf8(ext_id)?.into(),
+                value: serde_json::from_str(str::from_utf8(json)?)?,
             },
             callback,
         )?;
@@ -168,8 +168,8 @@ impl StorageSyncArea {
     ) -> Result<()> {
         self.dispatch(
             Punt::Get {
-                ext_id: str::from_utf8(&*ext_id)?.into(),
-                keys: serde_json::from_str(str::from_utf8(&*json)?)?,
+                ext_id: str::from_utf8(ext_id)?.into(),
+                keys: serde_json::from_str(str::from_utf8(json)?)?,
             },
             callback,
         )
@@ -191,8 +191,8 @@ impl StorageSyncArea {
     ) -> Result<()> {
         self.dispatch(
             Punt::Remove {
-                ext_id: str::from_utf8(&*ext_id)?.into(),
-                keys: serde_json::from_str(str::from_utf8(&*json)?)?,
+                ext_id: str::from_utf8(ext_id)?.into(),
+                keys: serde_json::from_str(str::from_utf8(json)?)?,
             },
             callback,
         )
@@ -208,7 +208,7 @@ impl StorageSyncArea {
     fn clear(&self, ext_id: &nsACString, callback: &mozIExtensionStorageCallback) -> Result<()> {
         self.dispatch(
             Punt::Clear {
-                ext_id: str::from_utf8(&*ext_id)?.into(),
+                ext_id: str::from_utf8(ext_id)?.into(),
             },
             callback,
         )
@@ -230,8 +230,8 @@ impl StorageSyncArea {
     ) -> Result<()> {
         self.dispatch(
             Punt::GetBytesInUse {
-                ext_id: str::from_utf8(&*ext_id)?.into(),
-                keys: serde_json::from_str(str::from_utf8(&*keys)?)?,
+                ext_id: str::from_utf8(ext_id)?.into(),
+                keys: serde_json::from_str(str::from_utf8(keys)?)?,
             },
             callback,
         )
@@ -341,7 +341,7 @@ impl StorageSyncArea {
         )
     );
     fn get_last_sync(&self, callback: &mozIBridgedSyncEngineCallback) -> Result<()> {
-        Ok(FerryTask::for_last_sync(&*self.store()?, callback)?.dispatch(&self.queue)?)
+        Ok(FerryTask::for_last_sync(self.new_bridge()?, callback)?.dispatch(&self.queue)?)
     }
 
     xpcom_method!(
@@ -356,7 +356,7 @@ impl StorageSyncArea {
         callback: &mozIBridgedSyncEngineCallback,
     ) -> Result<()> {
         Ok(
-            FerryTask::for_set_last_sync(&*self.store()?, last_sync_millis, callback)?
+            FerryTask::for_set_last_sync(self.new_bridge()?, last_sync_millis, callback)?
                 .dispatch(&self.queue)?,
         )
     }
@@ -367,7 +367,7 @@ impl StorageSyncArea {
         )
     );
     fn get_sync_id(&self, callback: &mozIBridgedSyncEngineCallback) -> Result<()> {
-        Ok(FerryTask::for_sync_id(&*self.store()?, callback)?.dispatch(&self.queue)?)
+        Ok(FerryTask::for_sync_id(self.new_bridge()?, callback)?.dispatch(&self.queue)?)
     }
 
     xpcom_method!(
@@ -376,7 +376,7 @@ impl StorageSyncArea {
         )
     );
     fn reset_sync_id(&self, callback: &mozIBridgedSyncEngineCallback) -> Result<()> {
-        Ok(FerryTask::for_reset_sync_id(&*self.store()?, callback)?.dispatch(&self.queue)?)
+        Ok(FerryTask::for_reset_sync_id(self.new_bridge()?, callback)?.dispatch(&self.queue)?)
     }
 
     xpcom_method!(
@@ -391,7 +391,7 @@ impl StorageSyncArea {
         callback: &mozIBridgedSyncEngineCallback,
     ) -> Result<()> {
         Ok(
-            FerryTask::for_ensure_current_sync_id(&*self.store()?, new_sync_id, callback)?
+            FerryTask::for_ensure_current_sync_id(self.new_bridge()?, new_sync_id, callback)?
                 .dispatch(&self.queue)?,
         )
     }
@@ -402,7 +402,7 @@ impl StorageSyncArea {
         )
     );
     fn sync_started(&self, callback: &mozIBridgedSyncEngineCallback) -> Result<()> {
-        Ok(FerryTask::for_sync_started(&*self.store()?, callback)?.dispatch(&self.queue)?)
+        Ok(FerryTask::for_sync_started(self.new_bridge()?, callback)?.dispatch(&self.queue)?)
     }
 
     xpcom_method!(
@@ -417,7 +417,7 @@ impl StorageSyncArea {
         callback: &mozIBridgedSyncEngineCallback,
     ) -> Result<()> {
         Ok(FerryTask::for_store_incoming(
-            &*self.store()?,
+            self.new_bridge()?,
             incoming_envelopes_json.map(|v| v.as_slice()).unwrap_or(&[]),
             callback,
         )?
@@ -426,7 +426,7 @@ impl StorageSyncArea {
 
     xpcom_method!(apply => Apply(callback: *const mozIBridgedSyncEngineApplyCallback));
     fn apply(&self, callback: &mozIBridgedSyncEngineApplyCallback) -> Result<()> {
-        Ok(ApplyTask::new(&*self.store()?, callback)?.dispatch(&self.queue)?)
+        Ok(ApplyTask::new(self.new_bridge()?, callback)?.dispatch(&self.queue)?)
     }
 
     xpcom_method!(
@@ -443,7 +443,7 @@ impl StorageSyncArea {
         callback: &mozIBridgedSyncEngineCallback,
     ) -> Result<()> {
         Ok(FerryTask::for_set_uploaded(
-            &*self.store()?,
+            self.new_bridge()?,
             server_modified_millis,
             uploaded_ids.map(|v| v.as_slice()).unwrap_or(&[]),
             callback,
@@ -457,7 +457,7 @@ impl StorageSyncArea {
         )
     );
     fn sync_finished(&self, callback: &mozIBridgedSyncEngineCallback) -> Result<()> {
-        Ok(FerryTask::for_sync_finished(&*self.store()?, callback)?.dispatch(&self.queue)?)
+        Ok(FerryTask::for_sync_finished(self.new_bridge()?, callback)?.dispatch(&self.queue)?)
     }
 
     xpcom_method!(
@@ -466,7 +466,7 @@ impl StorageSyncArea {
         )
     );
     fn reset(&self, callback: &mozIBridgedSyncEngineCallback) -> Result<()> {
-        Ok(FerryTask::for_reset(&*self.store()?, callback)?.dispatch(&self.queue)?)
+        Ok(FerryTask::for_reset(self.new_bridge()?, callback)?.dispatch(&self.queue)?)
     }
 
     xpcom_method!(
@@ -475,6 +475,10 @@ impl StorageSyncArea {
         )
     );
     fn wipe(&self, callback: &mozIBridgedSyncEngineCallback) -> Result<()> {
-        Ok(FerryTask::for_wipe(&*self.store()?, callback)?.dispatch(&self.queue)?)
+        Ok(FerryTask::for_wipe(self.new_bridge()?, callback)?.dispatch(&self.queue)?)
+    }
+
+    fn new_bridge(&self) -> Result<Box<dyn BridgedEngine>> {
+        Ok(Box::new(self.store()?.get()?.bridged_engine()))
     }
 }

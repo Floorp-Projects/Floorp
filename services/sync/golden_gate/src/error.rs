@@ -36,7 +36,7 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Error::Nsresult(result) => write!(f, "Operation failed with {}", result.error_name()),
-            Error::DidNotRun(what) => write!(f, "Failed to run `{}` on background thread", what),
+            Error::DidNotRun(what) => write!(f, "Failed to run `{what}` on background thread"),
             Error::MalformedString(error) => error.fmt(f),
         }
     }
@@ -69,18 +69,3 @@ impl From<Error> for nsresult {
         }
     }
 }
-
-/// A trait that constrains the type of `BridgedEngine::Error`, such that it can
-/// be used as a trait bound for ferries and tasks. `BridgedEngine` doesn't
-/// constrain its associated `Error` type, but we must, so that we can return
-/// Golden Gate errors alongside `BridgedEngine::Error`s, and pass their
-/// result codes and messages to `mozIBridgedSyncEngine*Callback::HandleError`.
-/// Since tasks share error results between the main and background threads,
-/// errors must also be `Send + Sync`.
-///
-/// This would be cleaner to express as a trait alias, but those aren't stable
-/// yet (see rust-lang/rust#41517). Instead, we define a trait with no methods,
-/// and a blanket implementation for its supertraits.
-pub trait BridgedError: From<Error> + Into<nsresult> + fmt::Display + Send + Sync {}
-
-impl<T> BridgedError for T where T: From<Error> + Into<nsresult> + fmt::Display + Send + Sync {}

@@ -110,18 +110,15 @@ impl Log for LogSink {
         }
         if let Some(logger) = &self.logger {
             let mut message = nsString::new();
-            match write!(message, "{}", record.args()) {
-                Ok(_) => {
-                    let task = LogTask {
-                        logger: logger.clone(),
-                        level: record.metadata().level(),
-                        message,
-                    };
-                    let _ =
-                        TaskRunnable::new("extension_storage_sync::Logger::log", Box::new(task))
-                            .and_then(|r| TaskRunnable::dispatch(r, logger.owning_thread()));
-                }
-                Err(_) => {}
+            if write!(message, "{}", record.args()).is_ok() {
+                let task = LogTask {
+                    logger: logger.clone(),
+                    level: record.metadata().level(),
+                    message,
+                };
+                let _ =
+                    TaskRunnable::new("extension_storage_sync::Logger::log", Box::new(task))
+                        .and_then(|r| TaskRunnable::dispatch(r, logger.owning_thread()));
             }
         }
     }
