@@ -26,10 +26,10 @@ add_task(async function feature_callout_is_accessible() {
       await waitForCalloutScreen(document, "FEATURE_CALLOUT_1");
 
       await BrowserTestUtils.waitForCondition(
-        () => document.activeElement.id === calloutId,
-        "Feature Callout is focused on page load"
+        () => document.activeElement.value === "primary_button",
+        `Feature Callout primary button is focused on page load}`
       );
-      ok(true, "Feature Callout was focused on page load");
+      ok(true, "Feature Callout primary button was focused on page load");
 
       await BrowserTestUtils.waitForCondition(
         () =>
@@ -46,10 +46,10 @@ add_task(async function feature_callout_is_accessible() {
 
       ok(true, "FEATURE_CALLOUT_2 was successfully displayed");
       await BrowserTestUtils.waitForCondition(
-        () => document.activeElement.id === calloutId,
-        "Feature Callout is focused after advancing screens"
+        () => document.activeElement.value == "primary_button",
+        "Feature Callout primary button is focused after advancing screens"
       );
-      ok(true, "Feature Callout was successfully focused");
+      ok(true, "Feature Callout primary button was successfully focused");
     }
   );
 });
