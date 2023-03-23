@@ -32,9 +32,9 @@ add_task(async function test_primary_password_locked() {
   const sandbox = setupMocks();
 
   await withFirefoxView({}, async browser => {
-    sandbox
-      .stub(TabsSetupFlowManager, "syncTabs")
-      .returns(Promise.resolve(null));
+    sandbox.stub(TabsSetupFlowManager, "syncTabs").resolves(null);
+    const syncedTabsMock = sandbox.stub(SyncedTabs, "getRecentTabs");
+    syncedTabsMock.resolves(getMockTabData(syncedTabsData1));
 
     const { document } = browser.contentWindow;
     Services.obs.notifyObservers(null, UIState.ON_UPDATE);
