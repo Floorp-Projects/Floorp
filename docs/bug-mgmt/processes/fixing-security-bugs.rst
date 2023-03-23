@@ -70,14 +70,14 @@ In Bugzilla and other public channels
 In addition to commits, you’ll need to be mindful of not disclosing
 sensitive information about the bug in public places, such as Bugzilla:
 
--  **Do not add public bugs in the “duplicate”, “depends on”, “blocks”,
-   “regression”, “regressed by”, or “see also” section if these bugs
-   could give hints about the nature of the security issue.**
-
-   -  Mention the bugs in comment of the private bug instead.
+-  Mention the bugs in comment of the private bug instead.
 -  Do not comment sensitive information in public related bugs.
 -  Also be careful about who you give bug access to: **double check
    before CC’ing the wrong person or alias**.
+-  As of recently, you may now add public bugs in the “duplicate”,
+   “depends on”, “blocks”, “regression”, “regressed by”, or “see also” section.
+   Bugzilla will only reveal those relationships to people with ``editbugs``
+   permission or access to the security bug.
 
 On IRC, Slack channels, GitHub issues, mailing lists: If you need to
 discuss about a security bug, use a private channel (protected with a
