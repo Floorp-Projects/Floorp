@@ -272,7 +272,6 @@ ipc::IPCResult WebGPUParent::RecvInstanceRequestAdapter(
         aOptions.mPowerPreference.Value());
   }
   options.force_fallback_adapter = aOptions.mForceFallbackAdapter;
-  // TODO: make available backends configurable by prefs
 
   ErrorBuffer error;
   int8_t index = ffi::wgpu_server_instance_request_adapter(
