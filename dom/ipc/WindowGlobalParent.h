@@ -225,11 +225,8 @@ class WindowGlobalParent final : public WindowContext,
 
   void ExitTopChromeDocumentFullscreen();
 
-  void SetHasBlockedOpaqueResponse() {
-    if (IsTop()) {
-      mHasBlockedOpaqueResponse = true;
-    }
-  }
+  void SetShouldReportHasBlockedOpaqueResponse(
+      nsContentPolicyType aContentPolicy);
 
  protected:
   already_AddRefed<JSActor> InitJSActor(JS::Handle<JSObject*> aMaybeActor,
@@ -414,7 +411,7 @@ class WindowGlobalParent final : public WindowContext,
   // True if the current loaded document is in fullscreen.
   bool mFullscreen = false;
 
-  bool mHasBlockedOpaqueResponse = false;
+  bool mShouldReportHasBlockedOpaqueResponse = false;
 };
 
 }  // namespace dom

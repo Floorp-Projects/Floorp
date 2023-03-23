@@ -1376,7 +1376,7 @@ IPCResult WindowGlobalParent::RecvDiscoverIdentityCredentialFromExternalSource(
 void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
   if (GetBrowsingContext()->IsTopContent()) {
     Telemetry::Accumulate(Telemetry::ORB_DID_EVER_BLOCK_RESPONSE,
-                          mHasBlockedOpaqueResponse);
+                          mShouldReportHasBlockedOpaqueResponse);
   }
 
   if (mPageUseCountersWindow) {
@@ -1562,6 +1562,21 @@ void WindowGlobalParent::ExitTopChromeDocumentFullscreen() {
       // This only clears the DOM fullscreen, will not exit from browser UI
       // fullscreen mode.
       Document::AsyncExitFullscreen(chromeDoc);
+    }
+  }
+}
+
+void WindowGlobalParent::SetShouldReportHasBlockedOpaqueResponse(
+    nsContentPolicyType aContentPolicy) {
+  // It's always okay to block TYPE_BEACON, TYPE_PING and TYPE_CSP_REPORT in
+  // the parent process because content processes can do nothing to their
+  // responses. Hence excluding them from the telemetry as blocking
+  // them have no webcompat concerns.
+  if (aContentPolicy != nsIContentPolicy::TYPE_BEACON &&
+      aContentPolicy != nsIContentPolicy::TYPE_PING &&
+      aContentPolicy != nsIContentPolicy::TYPE_CSP_REPORT) {
+    if (IsTop()) {
+      mShouldReportHasBlockedOpaqueResponse = true;
     }
   }
 }
