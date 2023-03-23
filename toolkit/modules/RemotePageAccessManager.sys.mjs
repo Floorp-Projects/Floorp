@@ -108,6 +108,7 @@ export let RemotePageAccessManager = {
       RPMGetTRRSkipReason: ["*"],
       RPMGetTRRDomain: ["*"],
       RPMIsSiteSpecificTRRError: ["*"],
+      RPMSetTRRDisabledLoadFlags: ["*"],
       RPMSendQuery: ["Browser:AddTRRExcludedDomain"],
     },
     "about:plugins": {

@@ -38,5 +38,6 @@ module.exports = {
     RPMGetTRRSkipReason: false,
     RPMGetTRRDomain: false,
     RPMIsSiteSpecificTRRError: false,
+    RPMSetTRRDisabledLoadFlags: false,
   },
 };

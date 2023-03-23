@@ -520,6 +520,15 @@ function showNativeFallbackWarning() {
     retryThis(nativeFallbackIgnoreButton);
   });
 
+  let continueThisTimeButton = document.getElementById(
+    "nativeFallbackContinueThisTimeButton"
+  );
+  continueThisTimeButton.addEventListener("click", () => {
+    RPMSetTRRDisabledLoadFlags();
+    document.location.reload();
+  });
+  continueThisTimeButton.hidden = false;
+
   nativeFallbackIgnoreButton.hidden = false;
   let message = document.getElementById("nativeFallbackMessage");
   document.l10n.setAttributes(
