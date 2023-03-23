@@ -229,7 +229,7 @@ void Http3Session::Shutdown() {
        (mError == NS_ERROR_NET_HTTP3_PROTOCOL_ERROR)) &&
       (mError !=
        mozilla::psm::GetXPCOMFromNSSError(SSL_ERROR_BAD_CERT_DOMAIN)) &&
-      !isEchRetry) {
+      !isEchRetry && !mConnInfo->GetWebTransport()) {
     gHttpHandler->ExcludeHttp3(mConnInfo);
   }
 
@@ -1730,9 +1730,12 @@ void Http3Session::CloseStreamInternal(Http3StreamBase* aStream,
   }
   mWebTransportSessions.RemoveElement(aStream);
   mWebTransportStreams.RemoveElement(aStream);
+  // Close(NS_OK) implies that the NeqoHttp3Conn will be closed, so we can only
+  // do this when there is no Http3Steeam, WebTransportSession and
+  // WebTransportStream.
   if ((mShouldClose || mGoawayReceived) &&
-      (!mStreamTransactionHash.Count() || !mWebTransportSessions.IsEmpty() ||
-       !mWebTransportStreams.IsEmpty())) {
+      (!mStreamTransactionHash.Count() && mWebTransportSessions.IsEmpty() &&
+       mWebTransportStreams.IsEmpty())) {
     MOZ_ASSERT(!IsClosing());
     Close(NS_OK);
   }
