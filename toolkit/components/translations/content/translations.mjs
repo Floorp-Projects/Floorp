@@ -444,8 +444,6 @@ class TranslationsUI {
   }
 
   /**
-   * TODO (Bug 1813783) - This needs automated testing.
-   *
    * Define the direction of the language message text, otherwise it might not display
    * correctly. For instance English in an RTL UI would display incorrectly like so:
    *
