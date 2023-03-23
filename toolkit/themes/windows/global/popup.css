@@ -86,8 +86,8 @@ menupopup > menu > menupopup {
   background: var(--panel-background);
   border-radius: var(--panel-border-radius);
   border: 1px solid var(--panel-border-color);
-  width: var(--panel-width);
-  min-width: 0;
+
+  min-width: var(--panel-width);
   min-height: 0;
 
   /* Makes popup constraints work */

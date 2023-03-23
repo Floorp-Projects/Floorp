@@ -53,11 +53,10 @@ panel[titlebar] {
   box-shadow: var(--panel-shadow);
   padding: var(--panel-padding);
   margin: var(--panel-shadow-margin);
-  width: var(--panel-width);
   border-radius: var(--panel-border-radius);
   border: 1px solid var(--panel-border-color);
 
-  min-width: 0;
+  min-width: var(--panel-width);
   min-height: 0;
 
   /* Makes popup constraints work */
