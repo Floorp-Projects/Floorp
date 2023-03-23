@@ -255,7 +255,6 @@ web-platform-tests-wdspec:
             headless:
                 by-test-platform:
                     android.*: []
-                    .*-tsan.*: []
                     default: built-projects
             no-fission:
                 by-test-platform:
