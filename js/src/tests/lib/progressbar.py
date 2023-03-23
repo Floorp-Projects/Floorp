@@ -131,14 +131,6 @@ class ProgressBar(object):
     def conservative_isatty():
         """
         Prefer erring on the side of caution and not using terminal commands if
-        the current output stream may be a file.  We explicitly check for the
-        Android platform because terminal commands work poorly over ADB's
-        redirection.
+        the current output stream may be a file.
         """
-        try:
-            import android  # NOQA: F401
-
-            return False
-        except ImportError:
-            return sys.stdout.isatty()
-        return False
+        return sys.stdout.isatty()
