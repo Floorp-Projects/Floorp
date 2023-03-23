@@ -192,7 +192,6 @@ class SettingsRobot {
 
     fun verifySettingsOptionSummary(setting: String, summary: String) {
         scrollToElementByText(setting)
-
         onView(
             allOf(
                 withText(setting),

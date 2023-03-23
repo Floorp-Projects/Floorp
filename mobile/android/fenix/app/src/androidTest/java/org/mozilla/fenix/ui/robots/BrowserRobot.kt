@@ -1237,6 +1237,7 @@ class BrowserRobot {
         }
 
         fun clickRequestStorageAccessButton(interact: SitePermissionsRobot.() -> Unit): SitePermissionsRobot.Transition {
+            webPageItemContainingText("requestStorageAccess()").waitForExists(waitingTime)
             clickPageObject(webPageItemContainingText("requestStorageAccess()"))
 
             SitePermissionsRobot().interact()

@@ -11,12 +11,14 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.RootMatchers
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import junit.framework.TestCase.assertTrue
+import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.not
 import org.mozilla.fenix.R
@@ -35,23 +37,118 @@ class EnhancedTrackingProtectionRobot {
     fun verifyEnhancedTrackingProtectionSheetStatus(status: String, state: Boolean) =
         assertEnhancedTrackingProtectionSheetStatus(status, state)
 
-    fun verifyEnhancedTrackingProtectionDetailsStatus(status: String) =
-        assertEnhancedTrackingProtectionDetailsStatus(status)
-
     fun verifyETPSwitchVisibility(visible: Boolean) = assertETPSwitchVisibility(visible)
 
-    fun verifyTrackingCookiesBlocked() = assertTrackingCookiesBlocked()
+    fun verifyCrossSiteCookiesBlocked(isBlocked: Boolean) {
+        assertTrue(
+            mDevice.findObject(UiSelector().resourceId("$packageName:id/cross_site_tracking"))
+                .waitForExists(waitingTime),
+        )
+        crossSiteCookiesBlockListButton.click()
+        // Verifies the trackers block/allow list
+        onView(withId(R.id.details_blocking_header))
+            .check(
+                matches(
+                    withText(
+                        if (isBlocked) {
+                            ("Blocked")
+                        } else {
+                            ("Allowed")
+                        },
+                    ),
+                ),
+            )
+    }
 
-    fun verifyFingerprintersBlocked() = assertFingerprintersBlocked()
+    fun verifySocialMediaTrackersBlocked(isBlocked: Boolean) {
+        assertTrue(
+            mDevice.findObject(UiSelector().resourceId("$packageName:id/social_media_trackers"))
+                .waitForExists(waitingTime),
+        )
+        socialTrackersBlockListButton.click()
+        // Verifies the trackers block/allow list
+        onView(withId(R.id.details_blocking_header))
+            .check(
+                matches(
+                    withText(
+                        if (isBlocked) {
+                            ("Blocked")
+                        } else {
+                            ("Allowed")
+                        },
+                    ),
+                ),
+            )
+        onView(withId(R.id.blocking_text_list)).check(matches(isDisplayed()))
+    }
 
-    fun verifyCryptominersBlocked() = assertCryptominersBlocked()
+    fun verifyFingerprintersBlocked(isBlocked: Boolean) {
+        assertTrue(
+            mDevice.findObject(UiSelector().resourceId("$packageName:id/fingerprinters"))
+                .waitForExists(waitingTime),
+        )
+        fingerprintersBlockListButton.click()
+        // Verifies the trackers block/allow list
+        onView(withId(R.id.details_blocking_header))
+            .check(
+                matches(
+                    withText(
+                        if (isBlocked) {
+                            ("Blocked")
+                        } else {
+                            ("Allowed")
+                        },
+                    ),
+                ),
+            )
+        onView(withId(R.id.blocking_text_list)).check(matches(isDisplayed()))
+    }
 
-    fun verifyTrackingContentBlocked() = assertTrackingContentBlocked()
+    fun verifyCryptominersBlocked(isBlocked: Boolean) {
+        assertTrue(
+            mDevice.findObject(UiSelector().resourceId("$packageName:id/cryptominers"))
+                .waitForExists(waitingTime),
+        )
+        cryptominersBlockListButton.click()
+        // Verifies the trackers block/allow list
+        onView(withId(R.id.details_blocking_header))
+            .check(
+                matches(
+                    withText(
+                        if (isBlocked) {
+                            ("Blocked")
+                        } else {
+                            ("Allowed")
+                        },
+                    ),
+                ),
+            )
+        onView(withId(R.id.blocking_text_list)).check(matches(isDisplayed()))
+    }
+
+    fun verifyTrackingContentBlocked(isBlocked: Boolean) {
+        assertTrue(
+            mDevice.findObject(UiSelector().text("Tracking Content"))
+                .waitForExists(waitingTime),
+        )
+        trackingContentBlockListButton.click()
+        // Verifies the trackers block/allow list
+        onView(withId(R.id.details_blocking_header))
+            .check(
+                matches(
+                    withText(
+                        if (isBlocked) {
+                            ("Blocked")
+                        } else {
+                            ("Allowed")
+                        },
+                    ),
+                ),
+            )
+        onView(withId(R.id.blocking_text_list)).check(matches(isDisplayed()))
+    }
 
     fun viewTrackingContentBlockList() {
-        trackingContentBlockListButton()
-            .check(matches(isDisplayed()))
-            .click()
         onView(withId(R.id.blocking_text_list))
             .check(
                 matches(
@@ -66,10 +163,14 @@ class EnhancedTrackingProtectionRobot {
             )
     }
 
+    fun navigateBackToDetails() {
+        onView(withId(R.id.details_back)).click()
+    }
+
     class Transition {
         fun openEnhancedTrackingProtectionSheet(interact: EnhancedTrackingProtectionRobot.() -> Unit): Transition {
-            openEnhancedTrackingProtectionSheet().waitForExists(waitingTime)
-            openEnhancedTrackingProtectionSheet().click()
+            pageSecurityIndicator().waitForExists(waitingTime)
+            pageSecurityIndicator().click()
             assertSecuritySheetIsCompletelyDisplayed()
 
             EnhancedTrackingProtectionRobot().interact()
@@ -84,20 +185,20 @@ class EnhancedTrackingProtectionRobot {
             return BrowserRobot.Transition()
         }
 
-        fun disableEnhancedTrackingProtectionFromSheet(interact: EnhancedTrackingProtectionRobot.() -> Unit): Transition {
+        fun toggleEnhancedTrackingProtectionFromSheet(interact: EnhancedTrackingProtectionRobot.() -> Unit): Transition {
             enhancedTrackingProtectionSwitch().click()
 
             EnhancedTrackingProtectionRobot().interact()
             return Transition()
         }
 
-        fun openProtectionSettings(interact: SettingsSubMenuEnhancedTrackingProtectionRobot.() -> Unit): Transition {
+        fun openProtectionSettings(interact: SettingsSubMenuEnhancedTrackingProtectionRobot.() -> Unit): SettingsSubMenuEnhancedTrackingProtectionRobot.Transition {
             openEnhancedTrackingProtectionDetails().waitForExists(waitingTime)
             openEnhancedTrackingProtectionDetails().click()
             trackingProtectionSettingsButton().click()
 
             SettingsSubMenuEnhancedTrackingProtectionRobot().interact()
-            return Transition()
+            return SettingsSubMenuEnhancedTrackingProtectionRobot.Transition()
         }
 
         fun openDetails(interact: EnhancedTrackingProtectionRobot.() -> Unit): Transition {
@@ -126,7 +227,7 @@ private fun assertETPSwitchVisibility(visible: Boolean) {
 }
 
 private fun assertEnhancedTrackingProtectionSheetStatus(status: String, state: Boolean) {
-    mDevice.waitNotNull(Until.findObjects(By.textContains(status)))
+    mDevice.waitNotNull(Until.findObjects(By.text("Protections are $status for this site")))
     onView(ViewMatchers.withResourceName("switch_widget")).check(
         matches(
             isChecked(
@@ -136,11 +237,7 @@ private fun assertEnhancedTrackingProtectionSheetStatus(status: String, state: B
     )
 }
 
-private fun assertEnhancedTrackingProtectionDetailsStatus(status: String) {
-    mDevice.waitNotNull(Until.findObjects(By.textContains(status)))
-}
-
-private fun openEnhancedTrackingProtectionSheet() =
+private fun pageSecurityIndicator() =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_security_indicator"))
 
 private fun enhancedTrackingProtectionSwitch() =
@@ -156,35 +253,45 @@ private fun trackingProtectionSettingsButton() =
 private fun openEnhancedTrackingProtectionDetails() =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/trackingProtectionDetails"))
 
-private fun assertTrackingCookiesBlocked() {
-    mDevice.findObject(UiSelector().resourceId("$packageName:id/cross_site_tracking"))
-        .waitForExists(waitingTime)
-    onView(withId(R.id.blocking_header)).check(matches(isDisplayed()))
-    onView(withId(R.id.tracking_content)).check(matches(isDisplayed()))
-}
-
-private fun assertFingerprintersBlocked() {
-    mDevice.findObject(UiSelector().resourceId("$packageName:id/fingerprinters"))
-        .waitForExists(waitingTime)
-    onView(withId(R.id.blocking_header)).check(matches(isDisplayed()))
-    onView(withId(R.id.fingerprinters)).check(matches(isDisplayed()))
-}
-
-private fun assertCryptominersBlocked() {
-    mDevice.findObject(UiSelector().resourceId("$packageName:id/cryptominers"))
-        .waitForExists(waitingTime)
-    onView(withId(R.id.blocking_header)).check(matches(isDisplayed()))
-    onView(withId(R.id.cryptominers)).check(matches(isDisplayed()))
-}
-
-private fun assertTrackingContentBlocked() {
-    assertTrue(
-        mDevice.findObject(UiSelector().resourceId("$packageName:id/tracking_content"))
-            .waitForExists(waitingTime),
+private val trackingContentBlockListButton =
+    onView(
+        allOf(
+            withText("Tracking Content"),
+            withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE),
+        ),
     )
-}
 
-private fun trackingContentBlockListButton() = onView(withId(R.id.tracking_content))
+private val socialTrackersBlockListButton =
+    onView(
+        allOf(
+            withId(R.id.social_media_trackers),
+            withText("Social Media Trackers"),
+        ),
+    )
+
+private val crossSiteCookiesBlockListButton =
+    onView(
+        allOf(
+            withId(R.id.cross_site_tracking),
+            withText("Cross-Site Cookies"),
+        ),
+    )
+
+private val cryptominersBlockListButton =
+    onView(
+        allOf(
+            withId(R.id.cryptominers),
+            withText("Cryptominers"),
+        ),
+    )
+
+private val fingerprintersBlockListButton =
+    onView(
+        allOf(
+            withId(R.id.fingerprinters),
+            withText("Fingerprinters"),
+        ),
+    )
 
 private fun assertSecuritySheetIsCompletelyDisplayed() {
     mDevice.findObject(UiSelector().description(getStringResource(R.string.quick_settings_sheet)))

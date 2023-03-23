@@ -2,14 +2,16 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!-- This asset is using the code behind
+   - https://www.mozilla-anti-tracking.com/test/trackingprotection/test_pages/tracking_protection.html
+   - test page.
+   - Source repository: https://github.com/mozilla/anti-tracking-test-pages -->
 <html dir="ltr" xml:lang="en-US" lang="en-US">
   <head>
     <meta charset="utf8">
     <script src="../resources/trackingAPI.js" type="text/javascript"></script>
   </head>
   <body>
-    <iframe src="http://trackertest.org/"></iframe>
-
     <h3>Level 1 (Basic) List</h3>
     <p>social-track-digest256:</p>
     <img
@@ -18,19 +20,19 @@
     <br/>
     <p>ads-track-digest256:</p>
     <img
-            src="https://ads-track-digest256.dummytracker.org/test_not_blocked.png"
+            src="https://ads-track-digest256.dummytracker.org/test_not_blocked.png" alt="ads not blocked"
             onerror="this.onerror=null;this.src='https://not-a-tracker.dummytracker.org/test_blocked.png';this.alt='ads blocked'">
     <br/>
     <p>analytics-track-digest256:</p>
     <img
-            src="https://analytics-track-digest256.dummytracker.org/test_not_blocked.png"
+            src="https://analytics-track-digest256.dummytracker.org/test_not_blocked.png" alt="analytics not blocked"
             onerror="this.onerror=null;this.src='https://not-a-tracker.dummytracker.org/test_blocked.png';this.alt='analytics blocked'">
     <br/>
     <p>Fingerprinting:
     <pre id="result">test not run</pre>
     <script src="https://base-fingerprinting-track-digest256.dummytracker.org/tracker.js"
             onerror="this.onerror=null;var result=document.getElementById('result');result.innerHTML='Fingerprinting blocked';"
-            onload="this.onload=null;var result=document.getElementById('result');result.innerHTML='Fingerprinting NOT blocked';"
+            onload="this.onload=null;var result=document.getElementById('result');result.innerHTML='Fingerprinting not blocked';"
     ></script>
     </p>
     <br/>

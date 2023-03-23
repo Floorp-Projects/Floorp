@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.ui.robots
 
-import androidx.preference.R
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBack
@@ -22,10 +21,14 @@ import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withParentIndex
 import androidx.test.espresso.matcher.ViewMatchers.withResourceName
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.uiautomator.By
+import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers.allOf
+import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.appName
+import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
-import org.mozilla.fenix.helpers.assertIsChecked
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.isChecked
 import org.mozilla.fenix.helpers.isEnabled
@@ -45,27 +48,90 @@ class SettingsSubMenuEnhancedTrackingProtectionRobot {
 
     fun verifyEnhancedTrackingProtectionTextWithSwitchWidget() = assertEnhancedTrackingProtectionTextWithSwitchWidget()
 
-    fun verifyEnhancedTrackingProtectionOptionsEnabled(enabled: Boolean = true) = assertEnhancedTrackingProtectionOptionsState(enabled)
+    fun verifyEnhancedTrackingProtectionOptionsEnabled(enabled: Boolean = true) {
+        onView(withText("Standard (default)"))
+            .check(matches(isEnabled(enabled)))
+
+        onView(withText("Strict"))
+            .check(matches(isEnabled(enabled)))
+
+        onView(withText("Custom"))
+            .check(matches(isEnabled(enabled)))
+    }
 
     fun verifyTrackingProtectionSwitchEnabled() = assertTrackingProtectionSwitchEnabled()
 
     fun switchEnhancedTrackingProtectionToggle() = onView(withResourceName("switch_widget")).click()
 
-    fun verifyRadioButtonDefaults() = assertRadioButtonDefaults()
-
-    fun verifyEnhancedTrackingProtectionProtectionSubMenuItems() {
-        verifyEnhancedTrackingProtectionHeader()
-        verifyEnhancedTrackingProtectionHeaderDescription()
-        verifyLearnMoreText()
-        verifyEnhancedTrackingProtectionTextWithSwitchWidget()
-        verifyTrackingProtectionSwitchEnabled()
-        verifyRadioButtonDefaults()
-        verifyEnhancedTrackingProtectionOptionsEnabled()
+    fun verifyStandardOptionDescription() {
+        onView(withText(R.string.preference_enhanced_tracking_protection_standard_description_4))
+            .check(matches(isDisplayed()))
+        onView(withContentDescription(R.string.preference_enhanced_tracking_protection_standard_info_button))
+            .check(matches(isDisplayed()))
     }
 
-    fun verifyCustomTrackingProtectionSettings() = assertCustomTrackingProtectionSettings()
+    fun verifyStrictOptionDescription() {
+        onView(withText(org.mozilla.fenix.R.string.preference_enhanced_tracking_protection_strict_description_3))
+            .check(matches(isDisplayed()))
+        onView(withContentDescription(R.string.preference_enhanced_tracking_protection_strict_info_button))
+            .check(matches(isDisplayed()))
+    }
+
+    fun verifyCustomTrackingProtectionSettings() {
+        scrollToElementByText("Redirect Trackers")
+        onView(withText(org.mozilla.fenix.R.string.preference_enhanced_tracking_protection_custom_description_2))
+            .check(matches(isDisplayed()))
+        onView(withContentDescription(R.string.preference_enhanced_tracking_protection_custom_info_button))
+            .check(matches(isDisplayed()))
+        cookiesCheckbox().check(matches(isDisplayed()))
+        cookiesDropDownMenuDefault().check(matches(isDisplayed()))
+        trackingContentCheckbox().check(matches(isDisplayed()))
+        trackingcontentDropDownDefault().check(matches(isDisplayed()))
+        cryptominersCheckbox().check(matches(isDisplayed()))
+        fingerprintersCheckbox().check(matches(isDisplayed()))
+        redirectTrackersCheckbox().check(matches(isDisplayed()))
+    }
+
+    fun verifyWhatsBlockedByStandardETPInfo() {
+        onView(withContentDescription(R.string.preference_enhanced_tracking_protection_standard_info_button)).click()
+        blockedByStandardETPInfo()
+    }
+
+    fun verifyWhatsBlockedByStrictETPInfo() {
+        onView(withContentDescription(R.string.preference_enhanced_tracking_protection_strict_info_button)).click()
+        // Repeating the info as in the standard option, with one extra point.
+        blockedByStandardETPInfo()
+        onView(withText("Tracking Content")).check(matches(isDisplayed()))
+        onView(withText("Stops outside ads, videos, and other content from loading that contains tracking code. May affect some website functionality.")).check(matches(isDisplayed()))
+    }
+
+    fun verifyWhatsBlockedByCustomETPInfo() {
+        onView(withContentDescription(R.string.preference_enhanced_tracking_protection_custom_info_button)).click()
+        // Repeating the info as in the standard option, with one extra point.
+        blockedByStandardETPInfo()
+        onView(withText("Tracking Content")).check(matches(isDisplayed()))
+        onView(withText("Stops outside ads, videos, and other content from loading that contains tracking code. May affect some website functionality.")).check(matches(isDisplayed()))
+    }
 
     fun selectTrackingProtectionOption(option: String) = onView(withText(option)).click()
+
+    fun verifyEnhancedTrackingProtectionLevelSelected(option: String, checked: Boolean) {
+        mDevice.wait(
+            Until.findObject(By.text("Enhanced Tracking Protection")),
+            waitingTime,
+        )
+        onView(withText(option))
+            .check(
+                matches(
+                    hasSibling(
+                        allOf(
+                            withId(R.id.radio_button),
+                            isChecked(checked),
+                        ),
+                    ),
+                ),
+            )
+    }
 
     class Transition {
         fun goBackToHomeScreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
@@ -119,22 +185,14 @@ private fun assertEnhancedTrackingProtectionHeader() {
 
 private fun assertEnhancedTrackingProtectionHeaderDescription() {
     onView(
-        allOf(
-            withParent(withParentIndex(0)),
-            withText("Keep your data to yourself. $appName protects you from many of the most common trackers that follow what you do online."),
-        ),
+        withText("Keep your data to yourself. $appName protects you from many of the most common trackers that follow what you do online."),
     )
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
 private fun assertLearnMoreText() {
-    onView(
-        allOf(
-            withParent(withParentIndex(0)),
-            withText("Learn more"),
-        ),
-    )
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    onView(withText("Learn more"))
+        .check(matches(isDisplayed()))
 }
 
 private fun assertEnhancedTrackingProtectionTextWithSwitchWidget() {
@@ -147,26 +205,6 @@ private fun assertEnhancedTrackingProtectionTextWithSwitchWidget() {
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun assertEnhancedTrackingProtectionOptionsState(enabled: Boolean) {
-    onView(withText("Standard (default)"))
-        .check(matches(isEnabled(enabled)))
-
-    onView(withText(org.mozilla.fenix.R.string.preference_enhanced_tracking_protection_standard_description_4))
-        .check(matches(isEnabled(enabled)))
-
-    onView(withText("Strict"))
-        .check(matches(isEnabled(enabled)))
-
-    onView(withText(org.mozilla.fenix.R.string.preference_enhanced_tracking_protection_strict_description_3))
-        .check(matches(isEnabled(enabled)))
-
-    onView(withText("Custom"))
-        .check(matches(isEnabled(enabled)))
-
-    onView(withText(org.mozilla.fenix.R.string.preference_enhanced_tracking_protection_custom_description_2))
-        .check(matches(isEnabled(enabled)))
-}
-
 private fun assertTrackingProtectionSwitchEnabled() {
     onView(withResourceName("switch_widget")).check(
         matches(
@@ -175,23 +213,6 @@ private fun assertTrackingProtectionSwitchEnabled() {
             ),
         ),
     )
-}
-
-private fun assertRadioButtonDefaults() {
-    onView(
-        withText("Strict"),
-    ).assertIsChecked(false)
-
-    onView(
-        allOf(
-            withId(org.mozilla.fenix.R.id.radio_button),
-            hasSibling(withText("Standard (default)")),
-        ),
-    ).assertIsChecked(true)
-
-    onView(
-        withText("Custom"),
-    ).assertIsChecked(false)
 }
 
 fun settingsSubMenuEnhancedTrackingProtection(interact: SettingsSubMenuEnhancedTrackingProtectionRobot.() -> Unit): SettingsSubMenuEnhancedTrackingProtectionRobot.Transition {
@@ -204,17 +225,6 @@ private fun goBackButton() =
 
 private fun openExceptions() =
     onView(allOf(withText("Exceptions")))
-
-private fun assertCustomTrackingProtectionSettings() {
-    scrollToElementByText("Redirect Trackers")
-    cookiesCheckbox().check(matches(isDisplayed()))
-    cookiesDropDownMenuDefault().check(matches(isDisplayed()))
-    trackingContentCheckbox().check(matches(isDisplayed()))
-    trackingcontentDropDownDefault().check(matches(isDisplayed()))
-    cryptominersCheckbox().check(matches(isDisplayed()))
-    fingerprintersCheckbox().check(matches(isDisplayed()))
-    redirectTrackersCheckbox().check(matches(isDisplayed()))
-}
 
 private fun cookiesCheckbox() = onView(withText("Cookies"))
 
@@ -229,3 +239,16 @@ private fun cryptominersCheckbox() = onView(withText("Cryptominers"))
 private fun fingerprintersCheckbox() = onView(withText("Fingerprinters"))
 
 private fun redirectTrackersCheckbox() = onView(withText("Redirect Trackers"))
+
+private fun blockedByStandardETPInfo() {
+    onView(withText("Social Media Trackers")).check(matches(isDisplayed()))
+    onView(withText("Limits the ability of social networks to track your browsing activity around the web.")).check(matches(isDisplayed()))
+    onView(withText("Cross-Site Cookies")).check(matches(isDisplayed()))
+    onView(withText("Total Cookie Protection isolates cookies to the site you’re on so trackers like ad networks can’t use them to follow you across sites.")).check(matches(isDisplayed()))
+    onView(withText("Cryptominers")).check(matches(isDisplayed()))
+    onView(withText("Prevents malicious scripts gaining access to your device to mine digital currency.")).check(matches(isDisplayed()))
+    onView(withText("Fingerprinters")).check(matches(isDisplayed()))
+    onView(withText("Stops uniquely identifiable data from being collected about your device that can be used for tracking purposes.")).check(matches(isDisplayed()))
+    onView(withText("Redirect Trackers")).check(matches(isDisplayed()))
+    onView(withText("Clears cookies set by redirects to known tracking websites.")).check(matches(isDisplayed()))
+}

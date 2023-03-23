@@ -67,12 +67,12 @@ class SettingsTest {
             verifySettingsOptionSummary("Enhanced Tracking Protection", "Standard")
         }.openEnhancedTrackingProtectionSubMenu {
             verifyNavigationToolBarHeader()
-            verifyEnhancedTrackingProtectionProtectionSubMenuItems()
+            verifyEnhancedTrackingProtectionOptionsEnabled()
 
             // ENHANCED TRACKING PROTECTION EXCEPTION
         }.openExceptions {
             verifyNavigationToolBarHeader()
-            verifyEnhancedTrackingProtectionProtectionExceptionsSubMenuItems()
+            verifyTPExceptionsDefaultView()
         }.goBack {
         }.goBack {
             // SITE PERMISSIONS
