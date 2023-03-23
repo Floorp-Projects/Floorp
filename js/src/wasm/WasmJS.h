@@ -481,9 +481,6 @@ class WasmTableObject : public NativeObject {
   // the range is within bounds. Returns false if the coercion failed.
   bool fillRange(JSContext* cx, uint32_t index, uint32_t length,
                  HandleValue value) const;
-#ifdef DEBUG
-  void assertRangeNull(uint32_t index, uint32_t length) const;
-#endif
 };
 
 // The class of WebAssembly.Tag. This class is used to track exception tag

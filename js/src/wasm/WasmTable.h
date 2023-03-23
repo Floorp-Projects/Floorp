@@ -116,6 +116,13 @@ class Table : public ShareableBase<Table> {
   [[nodiscard]] bool addMovingGrowObserver(JSContext* cx,
                                            WasmInstanceObject* instance);
 
+  void fillUninitialized(uint32_t index, uint32_t fillCount, HandleAnyRef ref,
+                         JSContext* cx);
+#ifdef DEBUG
+  void assertRangeNull(uint32_t index, uint32_t length) const;
+  void assertRangeNotNull(uint32_t index, uint32_t length) const;
+#endif  // DEBUG
+
   // about:memory reporting:
 
   size_t sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const;

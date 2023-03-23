@@ -1877,15 +1877,24 @@ static bool DecodeLimits(Decoder& d, LimitsKind kind, Limits* limits) {
   return true;
 }
 
-static bool DecodeTableTypeAndLimits(Decoder& d, const FeatureArgs& features,
-                                     const SharedTypeContext& types,
-                                     TableDescVector* tables) {
-  RefType tableElemType;
-  if (!d.readRefType(*types, features, &tableElemType)) {
-    return false;
+static bool DecodeTableTypeAndLimits(Decoder& d, ModuleEnvironment* env) {
+  bool initExprPresent = false;
+  uint8_t typeCode;
+  if (!d.peekByte(&typeCode)) {
+    return d.fail("expected type code");
   }
-  if (!tableElemType.isNullable()) {
-    return d.fail("non-nullable references not supported in tables");
+  if (typeCode == (uint8_t)TypeCode::TableHasInitExpr) {
+    d.uncheckedReadFixedU8();
+    uint8_t flags;
+    if (!d.readFixedU8(&flags) || flags != 0) {
+      return d.fail("expected reserved byte to be 0");
+    }
+    initExprPresent = true;
+  }
+
+  RefType tableElemType;
+  if (!d.readRefType(*env->types, env->features, &tableElemType)) {
+    return false;
   }
 
   Limits limits;
@@ -1905,7 +1914,7 @@ static bool DecodeTableTypeAndLimits(Decoder& d, const FeatureArgs& features,
     return d.fail("too many table elements");
   }
 
-  if (tables->length() >= MaxTables) {
+  if (env->tables.length() >= MaxTables) {
     return d.fail("too many tables");
   }
 
@@ -1917,8 +1926,22 @@ static bool DecodeTableTypeAndLimits(Decoder& d, const FeatureArgs& features,
     maximumLength = Some(uint32_t(*limits.maximum));
   }
 
-  return tables->emplaceBack(tableElemType, initialLength, maximumLength,
-                             /* isAsmJS */ false);
+  Maybe<InitExpr> initExpr;
+  if (initExprPresent) {
+    InitExpr initializer;
+    if (!InitExpr::decodeAndValidate(d, env, tableElemType,
+                                     env->globals.length(), &initializer)) {
+      return false;
+    }
+    initExpr = Some(std::move(initializer));
+  } else {
+    if (!tableElemType.isNullable()) {
+      return d.fail("table with non-nullable references requires initializer");
+    }
+  }
+
+  return env->tables.emplaceBack(tableElemType, initialLength, maximumLength,
+                                 std::move(initExpr), /* isAsmJS */ false);
 }
 
 static bool DecodeGlobalType(Decoder& d, const SharedTypeContext& types,
@@ -2035,11 +2058,10 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
       break;
     }
     case DefinitionKind::Table: {
-      if (!DecodeTableTypeAndLimits(d, env->features, env->types,
-                                    &env->tables)) {
+      if (!DecodeTableTypeAndLimits(d, env)) {
         return false;
       }
-      env->tables.back().isImportedOrExported = true;
+      env->tables.back().isImported = true;
       break;
     }
     case DefinitionKind::Memory: {
@@ -2176,7 +2198,7 @@ static bool DecodeTableSection(Decoder& d, ModuleEnvironment* env) {
   }
 
   for (uint32_t i = 0; i < numTables; ++i) {
-    if (!DecodeTableTypeAndLimits(d, env->features, env->types, &env->tables)) {
+    if (!DecodeTableTypeAndLimits(d, env)) {
       return false;
     }
   }
@@ -2356,7 +2378,7 @@ static bool DecodeExport(Decoder& d, ModuleEnvironment* env, NameSet* dupSet) {
       if (tableIndex >= env->tables.length()) {
         return d.fail("exported table index out of bounds");
       }
-      env->tables[tableIndex].isImportedOrExported = true;
+      env->tables[tableIndex].isExported = true;
       return env->exports.emplaceBack(std::move(fieldName), tableIndex,
                                       DefinitionKind::Table);
     }

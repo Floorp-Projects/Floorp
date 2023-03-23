@@ -20,7 +20,14 @@ assertErrorMessage(
 // RefType/ValueType can be specified as an {ref: 'func', ...} object
 const t11 = new WebAssembly.Table({element: {ref: 'func', nullable: true}, initial: 3});
 const t12 = new WebAssembly.Table({element: {ref: 'extern', nullable: true}, initial: 3});
-// TODO new WebAssembly.Table({element: {ref: 'func', nullable: false}, initial: 3}),
+const t13 = new WebAssembly.Table({element: {ref: 'extern', nullable: false}, initial: 3}, {});
+
+assertErrorMessage(
+    () => new WebAssembly.Table({element: {ref: 'func', nullable: false}, initial: 1}, null),
+    TypeError, /cannot pass null to non-nullable WebAssembly reference/);
+assertErrorMessage(
+    () => new WebAssembly.Table({element: {ref: 'extern', nullable: false}, initial: 1}, null),
+    TypeError, /cannot pass null to non-nullable WebAssembly reference/);
 
 assertErrorMessage(
     () => new WebAssembly.Table({element: {ref: 'bar', nullable: true}, initial: 1}),
@@ -28,8 +35,17 @@ assertErrorMessage(
 
 const g11 = new WebAssembly.Global({value: {ref: 'func', nullable: true}, mutable: true});
 const g12 = new WebAssembly.Global({value: {ref: 'extern', nullable: true}, mutable: true});
-// TODO new WebAssembly.Global({value: {ref: 'extern', nullable: false}, mutable: true});
+const g13 = new WebAssembly.Global({value: {ref: 'extern', nullable: false}, mutable: true}, {});
+const g14 = new WebAssembly.Global({value: {ref: 'extern', nullable: false}, mutable: true});
+const g15 = new WebAssembly.Global({value: {ref: 'extern', nullable: false}, mutable: true}, void 0);
 
+assertErrorMessage(
+    () => new WebAssembly.Global({value: {ref: 'func', nullable: false}, mutable: true}),
+    TypeError, /cannot pass null to non-nullable WebAssembly reference/);
+assertErrorMessage(
+    () => new WebAssembly.Global({value: {ref: 'extern', nullable: false}, mutable: true}, null),
+    TypeError, /cannot pass null to non-nullable WebAssembly reference/);
+    
 assertErrorMessage(
     () => new WebAssembly.Global({value: {ref: 'bar', nullable: true}, mutable: true}),
     TypeError, /bad value type/);
