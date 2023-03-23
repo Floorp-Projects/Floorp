@@ -1476,8 +1476,11 @@ nsresult WinUtils::WriteBitmap(nsIFile* aFile, SourceSurface* surface) {
 /* static */
 uint32_t WinUtils::IsTouchDeviceSupportPresent() {
   int32_t touchCapabilities = ::GetSystemMetrics(SM_DIGITIZER);
-  return (touchCapabilities & NID_READY) &&
-         (touchCapabilities & (NID_EXTERNAL_TOUCH | NID_INTEGRATED_TOUCH));
+  int32_t touchFlags = NID_EXTERNAL_TOUCH | NID_INTEGRATED_TOUCH;
+  if (StaticPrefs::dom_w3c_pointer_events_scroll_by_pen_enabled()) {
+    touchFlags |= NID_EXTERNAL_PEN | NID_INTEGRATED_PEN;
+  }
+  return (touchCapabilities & NID_READY) && (touchCapabilities & touchFlags);
 }
 
 /* static */
