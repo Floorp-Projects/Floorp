@@ -20,6 +20,7 @@ UNIFIED_SOURCES += [
     "FileSystemDirectoryIteratorFactory.cpp",
     "FileSystemManagerChild.cpp",
     "FileSystemRequestHandler.cpp",
+    "FileSystemShutdownBlocker.cpp",
     "FileSystemThreadSafeStreamOwner.cpp",
     "FileSystemWritableFileStreamChild.cpp",
 ]
