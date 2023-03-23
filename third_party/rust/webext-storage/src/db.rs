@@ -5,6 +5,7 @@
 use crate::error::*;
 use crate::schema;
 use interrupt_support::{SqlInterruptHandle, SqlInterruptScope};
+use parking_lot::Mutex;
 use rusqlite::types::{FromSql, ToSql};
 use rusqlite::Connection;
 use rusqlite::OpenFlags;
@@ -12,7 +13,6 @@ use sql_support::open_database::open_database_with_flags;
 use sql_support::ConnExt;
 use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
-use std::result;
 use std::sync::Arc;
 use url::Url;
 
@@ -69,24 +69,18 @@ impl StorageDb {
 
     /// Closes the database connection. If there are any unfinalized prepared
     /// statements on the connection, `close` will fail and the `StorageDb` will
-    /// be returned to the caller so that it can retry, drop (via `mem::drop`)
-    // or leak (`mem::forget`) the connection.
-    ///
-    /// Keep in mind that dropping the connection tries to close it again, and
-    /// panics on error.
-    pub fn close(self) -> result::Result<(), (StorageDb, Error)> {
-        let StorageDb {
-            writer,
-            interrupt_handle,
-        } = self;
-        writer.close().map_err(|(writer, err)| {
-            (
-                StorageDb {
-                    writer,
-                    interrupt_handle,
-                },
-                err.into(),
-            )
+    /// remain open and the connection will be leaked - we used to return the
+    /// underlying connection so the caller can retry but (a) that's very tricky
+    /// in an Arc<Mutex<>> world and (b) we never actually took advantage of
+    /// that retry capability.
+    pub fn close(self) -> Result<()> {
+        self.writer.close().map_err(|(writer, err)| {
+            // In rusqlite 0.28.0 and earlier, if we just let `writer` drop,
+            // the close would panic on failure.
+            // Later rusqlite versions will not panic, but this behavior doesn't
+            // hurt there.
+            std::mem::forget(writer);
+            err.into()
         })
     }
 }
@@ -102,6 +96,53 @@ impl Deref for StorageDb {
 impl DerefMut for StorageDb {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.writer
+    }
+}
+
+// We almost exclusively use this ThreadSafeStorageDb
+pub struct ThreadSafeStorageDb {
+    db: Mutex<StorageDb>,
+    // This "outer" interrupt_handle not protected by the mutex means
+    // consumers can interrupt us when the mutex is held - which it always will
+    // be if we are doing anything interruptable!
+    interrupt_handle: Arc<SqlInterruptHandle>,
+}
+
+impl ThreadSafeStorageDb {
+    pub fn new(db: StorageDb) -> Self {
+        Self {
+            interrupt_handle: db.interrupt_handle(),
+            db: Mutex::new(db),
+        }
+    }
+
+    pub fn interrupt_handle(&self) -> Arc<SqlInterruptHandle> {
+        Arc::clone(&self.interrupt_handle)
+    }
+
+    pub fn begin_interrupt_scope(&self) -> Result<SqlInterruptScope> {
+        Ok(self.interrupt_handle.begin_interrupt_scope()?)
+    }
+
+    pub fn into_inner(self) -> StorageDb {
+        self.db.into_inner()
+    }
+}
+
+// Deref to a Mutex<StorageDb>, which is how we will use ThreadSafeStorageDb most of the time
+impl Deref for ThreadSafeStorageDb {
+    type Target = Mutex<StorageDb>;
+
+    #[inline]
+    fn deref(&self) -> &Mutex<StorageDb> {
+        &self.db
+    }
+}
+
+// Also implement AsRef<SqlInterruptHandle> so that we can interrupt this at shutdown
+impl AsRef<SqlInterruptHandle> for ThreadSafeStorageDb {
+    fn as_ref(&self) -> &SqlInterruptHandle {
+        &self.interrupt_handle
     }
 }
 
@@ -226,6 +267,10 @@ pub mod test {
         let _ = env_logger::try_init();
         let counter = ATOMIC_COUNTER.fetch_add(1, Ordering::Relaxed);
         StorageDb::new_memory(&format!("test-api-{}", counter)).expect("should get an API")
+    }
+
+    pub fn new_mem_thread_safe_storage_db() -> Arc<ThreadSafeStorageDb> {
+        Arc::new(ThreadSafeStorageDb::new(new_mem_db()))
     }
 }
 

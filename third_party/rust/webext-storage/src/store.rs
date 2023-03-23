@@ -3,12 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::api::{self, StorageChanges};
-use crate::db::StorageDb;
+use crate::db::{StorageDb, ThreadSafeStorageDb};
 use crate::error::*;
 use crate::migration::{migrate, MigrationInfo};
 use crate::sync;
 use std::path::Path;
-use std::result;
 use std::sync::Arc;
 
 use interrupt_support::SqlInterruptHandle;
@@ -25,24 +24,30 @@ use serde_json::Value as JsonValue;
 /// create its own database connection, using up extra memory and CPU cycles,
 /// and causing write contention. For this reason, you should only call
 /// `Store::new()` (or `webext_store_new()`, from the FFI) once.
+///
+/// Note that our Db implementation is behind an Arc<> because we share that
+/// connection with our sync engines - ie, these engines also hold an Arc<>
+/// around the same object.
 pub struct Store {
-    db: StorageDb,
+    db: Arc<ThreadSafeStorageDb>,
 }
 
 impl Store {
     /// Creates a store backed by a database at `db_path`. The path can be a
     /// file path or `file:` URI.
     pub fn new(db_path: impl AsRef<Path>) -> Result<Self> {
+        let db = StorageDb::new(db_path)?;
         Ok(Self {
-            db: StorageDb::new(db_path)?,
+            db: Arc::new(ThreadSafeStorageDb::new(db)),
         })
     }
 
     /// Creates a store backed by an in-memory database.
     #[cfg(test)]
     pub fn new_memory(db_path: &str) -> Result<Self> {
+        let db = StorageDb::new_memory(db_path)?;
         Ok(Self {
-            db: StorageDb::new_memory(db_path)?,
+            db: Arc::new(ThreadSafeStorageDb::new(db)),
         })
     }
 
@@ -54,7 +59,8 @@ impl Store {
     /// Sets one or more JSON key-value pairs for an extension ID. Returns a
     /// list of changes, with existing and new values for each key in `val`.
     pub fn set(&self, ext_id: &str, val: JsonValue) -> Result<StorageChanges> {
-        let tx = self.db.unchecked_transaction()?;
+        let db = self.db.lock();
+        let tx = db.unchecked_transaction()?;
         let result = api::set(&tx, ext_id, val)?;
         tx.commit()?;
         Ok(result)
@@ -62,7 +68,8 @@ impl Store {
 
     /// Returns information about per-extension usage
     pub fn usage(&self) -> Result<Vec<crate::UsageInfo>> {
-        api::usage(&self.db)
+        let db = self.db.lock();
+        api::usage(&db)
     }
 
     /// Returns the values for one or more keys `keys` can be:
@@ -83,7 +90,8 @@ impl Store {
     /// `serde_json::Value::Object`).
     pub fn get(&self, ext_id: &str, keys: JsonValue) -> Result<JsonValue> {
         // Don't care about transactions here.
-        api::get(&self.db, ext_id, keys)
+        let db = self.db.lock();
+        api::get(&db, ext_id, keys)
     }
 
     /// Deletes the values for one or more keys. As with `get`, `keys` can be
@@ -91,7 +99,8 @@ impl Store {
     /// of changes, where each change contains the old value for each deleted
     /// key.
     pub fn remove(&self, ext_id: &str, keys: JsonValue) -> Result<StorageChanges> {
-        let tx = self.db.unchecked_transaction()?;
+        let db = self.db.lock();
+        let tx = db.unchecked_transaction()?;
         let result = api::remove(&tx, ext_id, keys)?;
         tx.commit()?;
         Ok(result)
@@ -101,7 +110,8 @@ impl Store {
     /// a list of changes, where each change contains the old value for each
     /// deleted key.
     pub fn clear(&self, ext_id: &str) -> Result<StorageChanges> {
-        let tx = self.db.unchecked_transaction()?;
+        let db = self.db.lock();
+        let tx = db.unchecked_transaction()?;
         let result = api::clear(&tx, ext_id)?;
         tx.commit()?;
         Ok(result)
@@ -110,18 +120,45 @@ impl Store {
     /// Returns the bytes in use for the specified items (which can be null,
     /// a string, or an array)
     pub fn get_bytes_in_use(&self, ext_id: &str, keys: JsonValue) -> Result<usize> {
-        api::get_bytes_in_use(&self.db, ext_id, keys)
+        let db = self.db.lock();
+        api::get_bytes_in_use(&db, ext_id, keys)
     }
 
     /// Returns a bridged sync engine for Desktop for this store.
-    pub fn bridged_engine(&self) -> sync::BridgedEngine<'_> {
+    pub fn bridged_engine(&self) -> sync::BridgedEngine {
         sync::BridgedEngine::new(&self.db)
     }
 
     /// Closes the store and its database connection. See the docs for
     /// `StorageDb::close` for more details on when this can fail.
-    pub fn close(self) -> result::Result<(), (Store, Error)> {
-        self.db.close().map_err(|(db, err)| (Store { db }, err))
+    pub fn close(self) -> Result<()> {
+        // Even though this consumes `self`, the fact we use an Arc<> means
+        // we can't guarantee we can actually consume the inner DB - so do
+        // the best we can.
+        let shared: ThreadSafeStorageDb = match Arc::try_unwrap(self.db) {
+            Ok(shared) => shared,
+            _ => {
+                // The only way this is possible is if the sync engine has an operation
+                // running - but that shouldn't be possible in practice because desktop
+                // uses a single "task queue" such that the close operation can't possibly
+                // be running concurrently with any sync or storage tasks.
+
+                // If this *could* get hit, rusqlite will attempt to close the DB connection
+                // as it is dropped, and if that close fails, then rusqlite 0.28.0 and earlier
+                // would panic - but even that only happens if prepared statements are
+                // not finalized, which ruqlite also does.
+
+                // tl;dr - this should be impossible. If it was possible, rusqlite might panic,
+                // but we've never seen it panic in practice other places we don't close
+                // connections, and the next rusqlite version will not panic anyway.
+                // So this-is-fine.jpg
+                log::warn!("Attempting to close a store while other DB references exist.");
+                return Err(ErrorKind::OtherConnectionReferencesExist.into());
+            }
+        };
+        // consume the mutex and get back the inner.
+        let db = shared.into_inner();
+        db.close()
     }
 
     /// Gets the changes which the current sync applied. Should be used
@@ -130,7 +167,8 @@ impl Store {
     /// that were applied.
     /// The result is a Vec of already JSON stringified changes.
     pub fn get_synced_changes(&self) -> Result<Vec<sync::SyncedExtensionChange>> {
-        sync::get_synced_changes(&self.db)
+        let db = self.db.lock();
+        sync::get_synced_changes(&db)
     }
 
     /// Migrates data from a database in the format of the "old" kinto
@@ -139,11 +177,12 @@ impl Store {
     ///
     /// Note that `filename` isn't normalized or canonicalized.
     pub fn migrate(&self, filename: impl AsRef<Path>) -> Result<()> {
-        let tx = self.db.unchecked_transaction()?;
+        let db = self.db.lock();
+        let tx = db.unchecked_transaction()?;
         let result = migrate(&tx, filename.as_ref())?;
         tx.commit()?;
         // Failing to store this information should not cause migration failure.
-        if let Err(e) = result.store(&self.db) {
+        if let Err(e) = result.store(&db) {
             debug_assert!(false, "Migration error: {:?}", e);
             log::warn!("Failed to record migration telmetry: {}", e);
         }
@@ -153,7 +192,8 @@ impl Store {
     /// Read-and-delete (e.g. `take` in rust parlance, see Option::take)
     /// operation for any MigrationInfo stored in this database.
     pub fn take_migration_info(&self) -> Result<Option<MigrationInfo>> {
-        let tx = self.db.unchecked_transaction()?;
+        let db = self.db.lock();
+        let tx = db.unchecked_transaction()?;
         let result = MigrationInfo::take(&tx)?;
         tx.commit()?;
         Ok(result)
@@ -172,7 +212,7 @@ pub mod test {
 
     pub fn new_mem_store() -> Store {
         Store {
-            db: crate::db::test::new_mem_db(),
+            db: Arc::new(ThreadSafeStorageDb::new(crate::db::test::new_mem_db())),
         }
     }
 }
