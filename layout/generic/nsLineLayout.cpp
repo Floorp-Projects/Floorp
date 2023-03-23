@@ -1346,7 +1346,9 @@ void nsLineLayout::PlaceFrame(PerFrameData* pfd, ReflowOutput& aMetrics) {
   // its ascent; instead, treat it as a block with baseline at the block-end
   // edge (or block-begin in the case of an "inverted" line).
   if (pfd->mWritingMode.GetBlockDir() != lineWM.GetBlockDir()) {
-    pfd->mAscent = lineWM.IsLineInverted() ? 0 : aMetrics.BSize(lineWM);
+    pfd->mAscent = lineWM.IsAlphabeticalBaseline()
+                       ? lineWM.IsLineInverted() ? 0 : aMetrics.BSize(lineWM)
+                       : aMetrics.BSize(lineWM) / 2;
   } else {
     if (aMetrics.BlockStartAscent() == ReflowOutput::ASK_FOR_BASELINE) {
       pfd->mAscent = pfd->mFrame->GetLogicalBaseline(lineWM);
@@ -2014,25 +2016,7 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
       switch (keyword) {
         default:
         case StyleVerticalAlignKeyword::Baseline:
-          if (lineWM.IsVertical() && !lineWM.IsSideways()) {
-            // FIXME: We should really use a central baseline from the
-            // baseline table of the font, rather than assuming it's in
-            // the middle.
-            if (frameSpan) {
-              nscoord borderBoxBSize = pfd->mBounds.BSize(lineWM);
-              nscoord bStartBP = pfd->mBorderPadding.BStart(lineWM);
-              nscoord bEndBP = pfd->mBorderPadding.BEnd(lineWM);
-              nscoord contentBoxBSize = borderBoxBSize - bStartBP - bEndBP;
-              pfd->mBounds.BStart(lineWM) =
-                  revisedBaselineBCoord - contentBoxBSize / 2 - bStartBP;
-            } else {
-              pfd->mBounds.BStart(lineWM) = revisedBaselineBCoord -
-                                            logicalBSize / 2 +
-                                            pfd->mMargin.BStart(lineWM);
-            }
-          } else {
-            pfd->mBounds.BStart(lineWM) = revisedBaselineBCoord - pfd->mAscent;
-          }
+          pfd->mBounds.BStart(lineWM) = revisedBaselineBCoord - pfd->mAscent;
           pfd->mBlockDirAlign = VALIGN_OTHER;
           break;
 
@@ -2152,7 +2136,7 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
       // inverted relative to block direction.
       nscoord revisedBaselineBCoord =
           baselineBCoord - offset * lineWM.FlowRelativeToLineRelativeFactor();
-      if (lineWM.IsVertical() && !lineWM.IsSideways()) {
+      if (lineWM.IsCentralBaseline()) {
         // If we're using a dominant center baseline, we align with the center
         // of the frame being placed (bug 1133945).
         pfd->mBounds.BStart(lineWM) =

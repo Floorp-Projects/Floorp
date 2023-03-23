@@ -103,6 +103,10 @@ Maybe<nscoord> nsCheckboxRadioFrame::GetNaturalBaselineBOffset(
     return Nothing{};
   }
 
+  if (aWM.IsCentralBaseline()) {
+    return Some(GetLogicalUsedBorderAndPadding(aWM).BStart(aWM) +
+                ContentSize(aWM).BSize(aWM) / 2);
+  }
   // This is for compatibility with Chrome, Safari and Edge (Dec 2016).
   // Treat radio buttons and checkboxes as having an intrinsic baseline
   // at the block-end of the control (use the block-end content edge rather
