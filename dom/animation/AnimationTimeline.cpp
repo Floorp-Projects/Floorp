@@ -46,6 +46,8 @@ bool AnimationTimeline::Tick() {
   for (Animation* animation = mAnimationOrder.getFirst(); animation;
        animation =
            static_cast<LinkedListElement<Animation>*>(animation)->getNext()) {
+    MOZ_ASSERT(mAnimations.Contains(animation),
+               "The sampling order list should be a subset of the hashset");
     MOZ_ASSERT(!animation->IsHiddenByContentVisibility(),
                "The sampling order list should not contain any animations "
                "that are hidden by content-visibility");
@@ -91,6 +93,8 @@ void AnimationTimeline::NotifyAnimationUpdated(Animation& aAnimation) {
 void AnimationTimeline::RemoveAnimation(Animation* aAnimation) {
   MOZ_ASSERT(!aAnimation->GetTimeline() || aAnimation->GetTimeline() == this);
   if (static_cast<LinkedListElement<Animation>*>(aAnimation)->isInList()) {
+    MOZ_ASSERT(mAnimations.Contains(aAnimation),
+               "The sampling order list should be a subset of the hashset");
     static_cast<LinkedListElement<Animation>*>(aAnimation)->remove();
   }
   mAnimations.Remove(aAnimation);
@@ -100,7 +104,9 @@ void AnimationTimeline::NotifyAnimationContentVisibilityChanged(
     Animation* aAnimation, bool aIsVisible) {
   bool inList =
       static_cast<LinkedListElement<Animation>*>(aAnimation)->isInList();
-  if (aIsVisible && !inList) {
+  MOZ_ASSERT(!inList || mAnimations.Contains(aAnimation),
+             "The sampling order list should be a subset of the hashset");
+  if (aIsVisible && !inList && mAnimations.Contains(aAnimation)) {
     mAnimationOrder.insertBack(aAnimation);
   } else if (!aIsVisible && inList) {
     static_cast<LinkedListElement<Animation>*>(aAnimation)->remove();
