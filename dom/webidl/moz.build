@@ -271,6 +271,9 @@ with Files("GeolocationPosition*"):
 with Files("ProfileTimelineMarker.webidl"):
     BUG_COMPONENT = ("DevTools", "Performance Tools (Profiler/Timeline)")
 
+with Files("PopoverInvokerElement.webidl"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
 with Files("ProgressEvent.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Events")
 
@@ -792,6 +795,7 @@ WEBIDL_FILES = [
     "Plugin.webidl",
     "PluginArray.webidl",
     "PointerEvent.webidl",
+    "PopoverInvokerElement.webidl",
     "ProcessingInstruction.webidl",
     "ProfileTimelineMarker.webidl",
     "Promise.webidl",

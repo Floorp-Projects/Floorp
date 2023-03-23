@@ -2749,6 +2749,15 @@ bool nsGenericHTMLFormControlElement::IsAutocapitalizeInheriting() const {
 
 //----------------------------------------------------------------------
 
+static const nsAttrValue::EnumTable kPopoverTargetActionTable[] = {
+    {"toggle", PopoverTargetAction::Toggle},
+    {"show", PopoverTargetAction::Show},
+    {"hide", PopoverTargetAction::Hide},
+    {nullptr, 0}};
+
+static const nsAttrValue::EnumTable* kPopoverTargetActionDefault =
+    &kPopoverTargetActionTable[0];
+
 nsGenericHTMLFormControlElementWithState::
     nsGenericHTMLFormControlElementWithState(
         already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
@@ -2758,6 +2767,33 @@ nsGenericHTMLFormControlElementWithState::
                          ? OwnerDoc()->GetNextControlNumber()
                          : -1) {
   mStateKey.SetIsVoid(true);
+}
+
+bool nsGenericHTMLFormControlElementWithState::ParseAttribute(
+    int32_t aNamespaceID, nsAtom* aAttribute, const nsAString& aValue,
+    nsIPrincipal* aMaybeScriptedPrincipal, nsAttrValue& aResult) {
+  if (aNamespaceID == kNameSpaceID_None &&
+      aAttribute == nsGkAtoms::popovertargetaction &&
+      StaticPrefs::dom_element_popover_enabled()) {
+    return aResult.ParseEnumValue(aValue, kPopoverTargetActionTable, false,
+                                  kPopoverTargetActionDefault);
+  }
+
+  return nsGenericHTMLFormControlElement::ParseAttribute(
+      aNamespaceID, aAttribute, aValue, aMaybeScriptedPrincipal, aResult);
+}
+
+mozilla::dom::Element*
+nsGenericHTMLFormControlElementWithState::GetPopoverTargetElement() const {
+  // TODO: implement attr-associated element algorithm, see
+  // https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#attr-associated-element
+  return nullptr;
+}
+
+void nsGenericHTMLFormControlElementWithState::SetPopoverTargetElement(
+    mozilla::dom::Element*) {
+  // TODO: implement attr-associated element algorithm, see setter steps at
+  // https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#attr-associated-element
 }
 
 void nsGenericHTMLFormControlElementWithState::GenerateStateKey() {
