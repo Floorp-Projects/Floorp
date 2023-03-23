@@ -1,0 +1,99 @@
+From b57ff6da9c8b281ae9312e245fd3372e7ffaff28 Mon Sep 17 00:00:00 2001
+From: Mike Hommey <mh@glandium.org>
+Date: Thu, 23 Mar 2023 06:52:28 +0900
+Subject: [PATCH] Apply the same fallbacks as runtimes search for stdlib search
+
+When building clang with e.g. LLVM_ENABLE_RUNTIMES=libcxx;libunwind,
+those runtimes end up in the stdlib search directory, and when
+LLVM_ENABLE_PER_TARGET_RUNTIME_DIR is set, that ends up in a
+target-specific subdirectory. The stdlib search does handle the
+situation, but when the target in question is Android, the same issues
+as those that required fallbacks for runtimes search apply.
+
+Traditionally, those libraries are shipped as part of the Android NDK,
+but when one builds their own clang for Android, they may want to use
+the runtimes from the same version rather than the ones from the NDK.
+
+Differential Revision: https://reviews.llvm.org/D146664
+---
+ clang/lib/Driver/ToolChain.cpp | 42 +++++++++++++++++++---------------
+ 1 file changed, 24 insertions(+), 18 deletions(-)
+
+diff --git a/clang/lib/Driver/ToolChain.cpp b/clang/lib/Driver/ToolChain.cpp
+index 2dba975a5a8f..9052099cad5e 100644
+--- a/clang/lib/Driver/ToolChain.cpp
++++ b/clang/lib/Driver/ToolChain.cpp
+@@ -569,15 +569,9 @@ const char *ToolChain::getCompilerRTArgString(const llvm::opt::ArgList &Args,
+   return Args.MakeArgString(getCompilerRT(Args, Component, Type));
+ }
+ 
+-ToolChain::path_list ToolChain::getRuntimePaths() const {
+-  path_list Paths;
+-  auto addPathForTriple = [this, &Paths](const llvm::Triple &Triple) {
+-    SmallString<128> P(D.ResourceDir);
+-    llvm::sys::path::append(P, "lib", Triple.str());
+-    Paths.push_back(std::string(P.str()));
+-  };
+-
+-  addPathForTriple(getTriple());
++template <typename F>
++static void fillPaths(const ToolChain &TC, F addPathForTriple) {
++  addPathForTriple(TC.getTriple());
+ 
+   // When building with per target runtime directories, various ways of naming
+   // the Arm architecture may have been normalised to simply "arm".
+@@ -594,30 +588,42 @@ ToolChain::path_list ToolChain::getRuntimePaths() const {
+   //
+   // M profile Arm is bare metal and we know they will not be using the per
+   // target runtime directory layout.
+-  if (getTriple().getArch() == Triple::arm && !getTriple().isArmMClass()) {
+-    llvm::Triple ArmTriple = getTriple();
++  if (TC.getTriple().getArch() == Triple::arm &&
++      !TC.getTriple().isArmMClass()) {
++    llvm::Triple ArmTriple = TC.getTriple();
+     ArmTriple.setArch(Triple::arm);
+     addPathForTriple(ArmTriple);
+   }
+ 
+   // Android targets may include an API level at the end. We still want to fall
+   // back on a path without the API level.
+-  if (getTriple().isAndroid() &&
+-      getTriple().getEnvironmentName() != "android") {
+-    llvm::Triple TripleWithoutLevel = getTriple();
++  if (TC.getTriple().isAndroid() &&
++      TC.getTriple().getEnvironmentName() != "android") {
++    llvm::Triple TripleWithoutLevel = TC.getTriple();
+     TripleWithoutLevel.setEnvironmentName("android");
+     addPathForTriple(TripleWithoutLevel);
+   }
++}
+ 
++ToolChain::path_list ToolChain::getRuntimePaths() const {
++  path_list Paths;
++  auto addPathForTriple = [this, &Paths](const llvm::Triple &Triple) {
++    SmallString<128> P(D.ResourceDir);
++    llvm::sys::path::append(P, "lib", Triple.str());
++    Paths.push_back(std::string(P.str()));
++  };
++  fillPaths(*this, addPathForTriple);
+   return Paths;
+ }
+ 
+ ToolChain::path_list ToolChain::getStdlibPaths() const {
+   path_list Paths;
+-  SmallString<128> P(D.Dir);
+-  llvm::sys::path::append(P, "..", "lib", getTripleString());
+-  Paths.push_back(std::string(P.str()));
+-
++  auto addPathForTriple = [this, &Paths](const llvm::Triple &Triple) {
++    SmallString<128> P(D.Dir);
++    llvm::sys::path::append(P, "..", "lib", Triple.str());
++    Paths.push_back(std::string(P.str()));
++  };
++  fillPaths(*this, addPathForTriple);
+   return Paths;
+ }
+ 
+-- 
+2.39.0.1.g6739ec1790
+
