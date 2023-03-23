@@ -99,6 +99,9 @@ let JSWINDOWACTORS = {
         // Run the actor before any content of the page appears to inject functions.
         DOMDocElementInserted: {},
         DOMContentLoaded: {},
+        // Used to show and hide the translations button.
+        pageshow: { mozSystemGroup: true },
+        pagehide: { mozSystemGroup: true },
       },
     },
     matches: ["about:translations"],

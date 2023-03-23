@@ -3,10 +3,6 @@
 
 "use strict";
 
-const { TranslationsParent } = ChromeUtils.importESModule(
-  "resource://gre/actors/TranslationsParent.sys.mjs"
-);
-
 // Avoid about:blank's non-standard behavior.
 const BLANK_PAGE =
   "data:text/html;charset=utf-8,<title>Blank</title>Blank page";
@@ -260,12 +256,13 @@ async function reorderingTranslator(message) {
   return [translatedDoc.body.innerHTML];
 }
 
-async function loadTestPage({ runInPage, languagePairs, page }) {
+async function loadTestPage({ runInPage, languagePairs, page, prefs }) {
   await SpecialPowers.pushPrefEnv({
     set: [
       // Enabled by default.
       ["browser.translations.enable", true],
       ["browser.translations.logLevel", "All"],
+      ...(prefs ?? []),
     ],
   });
 
