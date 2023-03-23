@@ -146,6 +146,11 @@ class ClientWrapper {
     return this.client.mainRoot.getAddon({ id });
   }
 
+  async uninstallAddon({ id }) {
+    const addonsFront = await this.getFront("addons");
+    return addonsFront.uninstallAddon(id);
+  }
+
   async getMainProcess() {
     return this.client.mainRoot.getMainProcess();
   }
@@ -205,6 +210,10 @@ class ClientWrapper {
       supportedFeatures,
       openRemoteDevTools
     );
+  }
+
+  get traits() {
+    return { ...this.client.mainRoot.traits };
   }
 }
 

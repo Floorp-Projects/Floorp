@@ -141,6 +141,9 @@ class RootActor extends Actor {
       supportsJavascriptTracing: true,
       // @backward-compat { version 112 } Checks if the server supports override
       isOverridesSupported: true,
+      // @backward-compat { version 113 } Fx 113 added support for uninstalling
+      // add-ons via the Addons actor.
+      supportsAddonsUninstall: true,
     };
   }
 

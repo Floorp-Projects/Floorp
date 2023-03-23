@@ -16,8 +16,8 @@ const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs"
 );
 
-// This actor is not used by DevTools, but is relied on externally by
-// webext-run and the Firefox VS-Code plugin. see bug #1578108
+// This actor is used by DevTools as well as external tools such as webext-run
+// and the Firefox VS-Code plugin. see bug #1578108
 class AddonsActor extends Actor {
   constructor(conn) {
     super(conn, addonsSpec);
@@ -64,6 +64,14 @@ class AddonsActor extends Actor {
     // with. Provide a flag that the client can use to detect when it
     // gets upgraded to a real actor object.
     return { id: addon.id, actor: false };
+  }
+
+  async uninstallAddon(addonId) {
+    const addon = await AddonManager.getAddonByID(addonId);
+
+    if (addon) {
+      await addon.uninstall();
+    }
   }
 }
 

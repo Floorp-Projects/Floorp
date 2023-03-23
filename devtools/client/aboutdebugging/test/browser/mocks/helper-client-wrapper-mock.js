@@ -107,6 +107,8 @@ function createClientMock() {
       } = require("resource://devtools/client/shared/remote-debugging/version-checker.js");
       return { status: COMPATIBILITY_STATUS.COMPATIBLE };
     },
+    // No traits by default but allow updates.
+    traits: {},
   };
 }
 

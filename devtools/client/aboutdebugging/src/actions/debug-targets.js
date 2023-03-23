@@ -21,7 +21,6 @@ const {
 
 const {
   openTemporaryExtension,
-  uninstallAddon,
 } = require("resource://devtools/client/aboutdebugging/src/modules/extensions-helper.js");
 
 const {
@@ -174,9 +173,11 @@ function reloadTemporaryExtension(id) {
 }
 
 function removeTemporaryExtension(id) {
-  return async () => {
+  return async ({ getState }) => {
+    const clientWrapper = getCurrentClient(getState().runtimes);
+
     try {
-      await uninstallAddon(id);
+      await clientWrapper.uninstallAddon({ id });
     } catch (e) {
       console.error(e);
     }
