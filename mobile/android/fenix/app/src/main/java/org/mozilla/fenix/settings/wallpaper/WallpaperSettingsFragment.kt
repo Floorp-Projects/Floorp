@@ -70,7 +70,7 @@ class WallpaperSettingsFragment : Fragment() {
                             wallpaperUseCases.loadThumbnail(it)
                         },
                         onSelectWallpaper = {
-                            if (it != currentWallpaper) {
+                            if (it.name != currentWallpaper.name) {
                                 coroutineScope.launch {
                                     val result = wallpaperUseCases.selectWallpaper(it)
                                     onWallpaperSelected(it, result, requireView())
