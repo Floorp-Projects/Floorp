@@ -46,7 +46,9 @@ bool AnimationTimeline::Tick() {
   for (Animation* animation = mAnimationOrder.getFirst(); animation;
        animation =
            static_cast<LinkedListElement<Animation>*>(animation)->getNext()) {
-    MOZ_ASSERT(!animation->IsHiddenByContentVisibility());
+    MOZ_ASSERT(!animation->IsHiddenByContentVisibility(),
+               "The sampling order list should not contain any animations "
+               "that are hidden by content-visibility");
 
     // Skip any animations that are longer need associated with this timeline.
     if (animation->GetTimeline() != this) {
@@ -95,12 +97,12 @@ void AnimationTimeline::RemoveAnimation(Animation* aAnimation) {
 }
 
 void AnimationTimeline::NotifyAnimationContentVisibilityChanged(
-    Animation* aAnimation, bool visible) {
+    Animation* aAnimation, bool aIsVisible) {
   bool inList =
       static_cast<LinkedListElement<Animation>*>(aAnimation)->isInList();
-  if (visible && !inList) {
+  if (aIsVisible && !inList) {
     mAnimationOrder.insertBack(aAnimation);
-  } else if (!visible && inList) {
+  } else if (!aIsVisible && inList) {
     static_cast<LinkedListElement<Animation>*>(aAnimation)->remove();
   }
 }

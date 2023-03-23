@@ -254,9 +254,9 @@ void DocumentTimeline::RemoveAnimation(Animation* aAnimation) {
 }
 
 void DocumentTimeline::NotifyAnimationContentVisibilityChanged(
-    Animation* aAnimation, bool visible) {
+    Animation* aAnimation, bool aIsVisible) {
   AnimationTimeline::NotifyAnimationContentVisibilityChanged(aAnimation,
-                                                             visible);
+                                                             aIsVisible);
 
   if (mIsObservingRefreshDriver && mAnimationOrder.isEmpty()) {
     UnregisterFromRefreshDriver();

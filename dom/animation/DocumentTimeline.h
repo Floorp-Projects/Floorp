@@ -57,7 +57,7 @@ class DocumentTimeline final : public AnimationTimeline,
 
   void RemoveAnimation(Animation* aAnimation) override;
   void NotifyAnimationContentVisibilityChanged(Animation* aAnimation,
-                                               bool visible) override;
+                                               bool aIsVisible) override;
 
   // nsARefreshObserver methods
   void WillRefresh(TimeStamp aTime) override;
