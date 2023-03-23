@@ -13,5 +13,6 @@
     "extensions.webextensions.ExtensionStorageIDB.migrated.*",
     "app.update.lastUpdateTime.region-update-timer",
     "app.update.lastUpdateTime.xpi-signature-verification",
-    "browser.bookmarks.restore_default_bookmarks"
+    "browser.bookmarks.restore_default_bookmarks",
+    "media.gmp.storage.version.observed"
   ]
