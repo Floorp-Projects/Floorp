@@ -41,3 +41,9 @@ tasks.register("assembleAndroidTest") {
     // behaves like our others and we do not need to special case it in automation.
   }
 }
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+  kotlinOptions {
+    jvmTarget = "11"
+  }
+}
