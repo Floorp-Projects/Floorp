@@ -1,19 +1,21 @@
 base_ref: main
 base_repository: https://github.com/mozilla-mobile/firefox-android
-base_rev: aad2e6db380c05b565a5af8f21bc3af3ffb43117
-build_date: 1667216189
+base_rev: 7e08d74a1f7c69255a36d026bdac18c4a1e1bf9e
+build_date: 1679587282
 build_number: 1
 do_not_optimize: []
+enable_always_target: true
 existing_tasks: {}
 filters:
 - target_tasks_method
 head_ref: main
 head_repository: https://github.com/mozilla-mobile/firefox-android
-head_rev: aad2e6db380c05b565a5af8f21bc3af3ffb43117
+head_rev: 7e08d74a1f7c69255a36d026bdac18c4a1e1bf9e
 head_tag: ''
 level: '3'
-moz_build_date: '20221031113629'
+moz_build_date: '20230323160122'
 next_version: null
+optimize_strategies: null
 optimize_target_tasks: true
 owner: cron@noreply.mozilla.org
 project: firefox-android
@@ -24,4 +26,4 @@ release_type: ''
 repository_type: git
 target_tasks_method: nightly
 tasks_for: cron
-version: 108.0.0
+version: 113.0a1
