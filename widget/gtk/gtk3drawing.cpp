@@ -461,6 +461,10 @@ static gint moz_gtk_button_paint(cairo_t* cr, const GdkRectangle* rect,
                                  GtkWidgetState* state, GtkReliefStyle relief,
                                  GtkWidget* widget,
                                  GtkTextDirection direction) {
+  if (!widget) {
+    return MOZ_GTK_UNKNOWN_WIDGET;
+  }
+
   GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
   GtkStyleContext* style = gtk_widget_get_style_context(widget);
   gint x = rect->x, y = rect->y, width = rect->width, height = rect->height;
@@ -530,10 +534,16 @@ static gint moz_gtk_header_bar_button_paint(cairo_t* cr,
   Inset(&rect, metrics->buttonMargin);
 
   GtkWidget* buttonWidget = GetWidget(buttonWidgetType);
+  if (!buttonWidget) {
+    return MOZ_GTK_UNKNOWN_WIDGET;
+  }
   moz_gtk_button_paint(cr, &rect, state, relief, buttonWidget, direction);
 
   GtkWidget* iconWidget =
       gtk_bin_get_child(GTK_BIN(GetWidget(aIconWidgetType)));
+  if (!iconWidget) {
+    return MOZ_GTK_UNKNOWN_WIDGET;
+  }
   cairo_surface_t* surface =
       GetWidgetIconSurface(iconWidget, state->image_scale);
 
@@ -1089,6 +1099,9 @@ static gint moz_gtk_combo_box_paint(cairo_t* cr, const GdkRectangle* aRect,
 
   GtkWidget* comboBoxButton = GetWidget(MOZ_GTK_COMBOBOX_BUTTON);
   GtkWidget* comboBoxArrow = GetWidget(MOZ_GTK_COMBOBOX_ARROW);
+  if (!comboBoxButton || !comboBoxArrow) {
+    return MOZ_GTK_UNKNOWN_WIDGET;
+  }
 
   /* Also sets the direction on gComboBoxButtonWidget, which is then
    * inherited by the separator and arrow */
@@ -1113,7 +1126,9 @@ static gint moz_gtk_combo_box_paint(cairo_t* cr, const GdkRectangle* aRect,
 
   /* If there is no separator in the theme, there's nothing left to do. */
   GtkWidget* widget = GetWidget(MOZ_GTK_COMBOBOX_SEPARATOR);
-  if (!widget) return MOZ_GTK_SUCCESS;
+  if (!widget) {
+    return MOZ_GTK_SUCCESS;
+  }
   style = gtk_widget_get_style_context(widget);
   StyleContextSetScale(style, state->image_scale);
   gtk_style_context_get_style(style, "wide-separators", &wide_separators,
@@ -1171,8 +1186,11 @@ static gint moz_gtk_arrow_paint(cairo_t* cr, GdkRectangle* rect,
   }
   if (arrow_type == GTK_ARROW_NONE) return MOZ_GTK_SUCCESS;
 
-  calculate_arrow_rect(GetWidget(MOZ_GTK_BUTTON_ARROW), rect, &arrow_rect,
-                       direction);
+  GtkWidget* widget = GetWidget(MOZ_GTK_BUTTON_ARROW);
+  if (!widget) {
+    return MOZ_GTK_UNKNOWN_WIDGET;
+  }
+  calculate_arrow_rect(widget, rect, &arrow_rect, direction);
   GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
   GtkStyleContext* style = GetStyleContext(
       MOZ_GTK_BUTTON_ARROW, state->image_scale, direction, state_flags);
@@ -1192,6 +1210,10 @@ static gint moz_gtk_combo_box_entry_button_paint(cairo_t* cr,
   GtkStyleContext* style;
 
   GtkWidget* comboBoxEntry = GetWidget(MOZ_GTK_COMBOBOX_ENTRY_BUTTON);
+  if (!comboBoxEntry) {
+    return MOZ_GTK_UNKNOWN_WIDGET;
+  }
+
   moz_gtk_button_paint(cr, rect, state, GTK_RELIEF_NORMAL, comboBoxEntry,
                        direction);
   calculate_button_inner_rect(comboBoxEntry, rect, &arrow_rect, direction);
@@ -1205,8 +1227,11 @@ static gint moz_gtk_combo_box_entry_button_paint(cairo_t* cr,
     arrow_rect.y += y_displacement;
   }
 
-  calculate_arrow_rect(GetWidget(MOZ_GTK_COMBOBOX_ENTRY_ARROW), &arrow_rect,
-                       &real_arrow_rect, direction);
+  GtkWidget* arrow = GetWidget(MOZ_GTK_COMBOBOX_ENTRY_ARROW);
+  if (!arrow) {
+    return MOZ_GTK_UNKNOWN_WIDGET;
+  }
+  calculate_arrow_rect(arrow, &arrow_rect, &real_arrow_rect, direction);
 
   style = GetStyleContext(MOZ_GTK_COMBOBOX_ENTRY_ARROW, state->image_scale);
   gtk_render_arrow(style, cr, ARROW_DOWN, real_arrow_rect.x, real_arrow_rect.y,
@@ -1706,6 +1731,9 @@ static gint moz_gtk_menu_bar_paint(cairo_t* cr, GdkRectangle* rect,
   GtkStyleContext* style;
 
   GtkWidget* widget = GetWidget(MOZ_GTK_MENUBAR);
+  if (!widget) {
+    return MOZ_GTK_UNKNOWN_WIDGET;
+  }
   gtk_widget_set_direction(widget, direction);
 
   style = gtk_widget_get_style_context(widget);
@@ -1726,6 +1754,9 @@ static gint moz_gtk_menu_popup_paint(cairo_t* cr, GdkRectangle* rect,
   GtkStyleContext* style;
 
   GtkWidget* widget = GetWidget(MOZ_GTK_MENUPOPUP);
+  if (!widget) {
+    return MOZ_GTK_UNKNOWN_WIDGET;
+  }
   gtk_widget_set_direction(widget, direction);
 
   // Draw a backing toplevel. This fixes themes that don't provide a menu
@@ -2093,11 +2124,13 @@ gint moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
     case MOZ_GTK_CHECKBUTTON_CONTAINER:
     case MOZ_GTK_RADIOBUTTON_CONTAINER: {
       w = GetWidget(widget);
-      style = gtk_widget_get_style_context(w);
+      if (w) {
+        style = gtk_widget_get_style_context(w);
 
-      *left = *top = *right = *bottom =
-          gtk_container_get_border_width(GTK_CONTAINER(w));
-      moz_gtk_add_border_padding(style, left, top, right, bottom);
+        *left = *top = *right = *bottom =
+            gtk_container_get_border_width(GTK_CONTAINER(w));
+        moz_gtk_add_border_padding(style, left, top, right, bottom);
+      }
       return MOZ_GTK_SUCCESS;
     }
     case MOZ_GTK_MENUPOPUP:
@@ -2282,13 +2315,17 @@ void moz_gtk_get_arrow_size(WidgetNodeType widgetType, gint* width,
       widget = GetWidget(MOZ_GTK_BUTTON_ARROW);
       break;
   }
+  if (widget) {
+    GtkRequisition requisition;
+    gtk_widget_get_preferred_size(widget, NULL, &requisition);
+    moz_gtk_sanity_preferred_size(&requisition);
 
-  GtkRequisition requisition;
-  gtk_widget_get_preferred_size(widget, NULL, &requisition);
-  moz_gtk_sanity_preferred_size(&requisition);
-
-  *width = requisition.width;
-  *height = requisition.height;
+    *width = requisition.width;
+    *height = requisition.height;
+  } else {
+    *width = 0;
+    *height = 0;
+  }
 }
 
 gint moz_gtk_get_toolbar_separator_width(gint* size) {
@@ -2459,7 +2496,7 @@ const ToggleGTKMetrics* GetToggleMetrics(WidgetNodeType aWidgetType) {
     // Fallback to indicator size if min dimensions are zero
     if (metrics->minSizeWithBorder.height == 0 ||
         metrics->minSizeWithBorder.width == 0) {
-      gint indicator_size;
+      gint indicator_size = 0;
       gtk_widget_style_get(GetWidget(MOZ_GTK_CHECKBUTTON_CONTAINER),
                            "indicator_size", &indicator_size, nullptr);
       if (metrics->minSizeWithBorder.height == 0) {
@@ -2482,7 +2519,7 @@ const ToggleGTKMetrics* GetToggleMetrics(WidgetNodeType aWidgetType) {
     metrics->minSizeWithBorder.height +=
         metrics->borderAndPadding.top + metrics->borderAndPadding.bottom;
   } else {
-    gint indicator_size, indicator_spacing;
+    gint indicator_size = 0, indicator_spacing = 0;
     gtk_widget_style_get(GetWidget(MOZ_GTK_CHECKBUTTON_CONTAINER),
                          "indicator_size", &indicator_size, "indicator_spacing",
                          &indicator_spacing, nullptr);
