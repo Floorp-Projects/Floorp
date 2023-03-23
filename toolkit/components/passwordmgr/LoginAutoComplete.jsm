@@ -673,16 +673,6 @@ class LoginAutoComplete {
     }
     const scenario = loginManagerActor.getScenario(inputElement);
 
-    const messageData = {
-      actionOrigin,
-      searchString,
-      previousResult,
-      forcePasswordGeneration,
-      hasBeenTypePassword,
-      isProbablyANewPasswordField,
-      scenarioName: scenario?.constructor.name,
-    };
-
     if (lazy.LoginHelper.showAutoCompleteFooter) {
       gAutoCompleteListener.init();
     }
@@ -694,9 +684,18 @@ class LoginAutoComplete {
       searchStringLength: searchString.length,
     });
 
-    let result = await loginManagerActor.sendQuery(
+    const result = await loginManagerActor.sendQuery(
       "PasswordManager:autoCompleteLogins",
-      messageData
+      {
+        actionOrigin,
+        searchString,
+        previousResult,
+        forcePasswordGeneration,
+        hasBeenTypePassword,
+        isProbablyANewPasswordField,
+        scenarioName: scenario?.constructor.name,
+        inputMaxLength: inputElement.maxLength,
+      }
     );
 
     return {
