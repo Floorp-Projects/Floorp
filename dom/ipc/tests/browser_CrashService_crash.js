@@ -3,7 +3,7 @@
 "use strict";
 
 // Ensures that content crashes are reported to the crash service
-// (nsICrashService and CrashManager.jsm).
+// (nsICrashService and CrashManager.sys.mjs).
 
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 SimpleTest.requestFlakyTimeout("untriaged");

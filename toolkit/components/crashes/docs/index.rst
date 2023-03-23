@@ -11,7 +11,7 @@ From JavaScript, the service can be accessed via::
 
    let crashManager = Services.crashmanager;
 
-That will give you an instance of ``CrashManager`` from ``CrashManager.jsm``.
+That will give you an instance of ``CrashManager`` from ``CrashManager.sys.mjs``.
 From there, you can access and manipulate crash data.
 
 The crash manager stores statistical information about crashes as well as
