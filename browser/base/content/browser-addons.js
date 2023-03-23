@@ -500,7 +500,7 @@ var gXPInstallObserver = {
     Services.console.logMessage(consoleMsg);
   },
 
-  observe(aSubject, aTopic, aData) {
+  async observe(aSubject, aTopic, aData) {
     var brandBundle = document.getElementById("bundle_brand");
     var installInfo = aSubject.wrappedJSObject;
     var browser = installInfo.browser;
@@ -622,6 +622,7 @@ var gXPInstallObserver = {
         break;
       }
       case "addon-install-blocked": {
+        await window.ensureCustomElements("moz-support-link");
         // Dismiss the progress notification.  Note that this is bad if
         // there are multiple simultaneous installs happening, see
         // bug 1329884 for a longer explanation.
@@ -697,10 +698,7 @@ var gXPInstallObserver = {
           learnMore.textContent = gNavigatorBundle.getString(
             "xpinstallPromptMessage.learnMore"
           );
-          learnMore.setAttribute(
-            "href",
-            Services.urlFormatter.formatURLPref("app.support.baseURL") + article
-          );
+          learnMore.setAttribute("support-page", article);
         };
 
         let secHistogram = Services.telemetry.getHistogramById("SECURITY_UI");
@@ -788,6 +786,7 @@ var gXPInstallObserver = {
           // from product about how to approach this for extensions.
           declineActions.push(neverAllowAndReportAction);
         }
+
         let popup = PopupNotifications.show(
           browser,
           notificationID,

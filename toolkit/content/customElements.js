@@ -839,5 +839,35 @@
         Services.scriptloader.loadSubScript(script, window);
       });
     }
+    // Bug 1813077: This is a workaround until Bug 1803810 lands
+    // which will give us the ability to load ESMs synchronously
+    // like the previous Services.scriptloader.loadSubscript() function
+    function importCustomElementFromESModule(name) {
+      switch (name) {
+        case "moz-button-group":
+          return import(
+            "chrome://global/content/elements/moz-button-group.mjs"
+          );
+        case "moz-support-link":
+          return import(
+            "chrome://global/content/elements/moz-support-link.mjs"
+          );
+        case "moz-toggle":
+          return import("chrome://global/content/elements/moz-toggle.mjs");
+      }
+      throw new Error(`Unknown custom element name (${name})`);
+    }
+
+    /*
+    This function explicitly returns null so that there is no confusion
+    about which custom elements from ES Modules have been loaded.
+    */
+    window.ensureCustomElements = function(...elementNames) {
+      return Promise.all(
+        elementNames
+          .filter(name => !customElements.get(name))
+          .map(name => importCustomElementFromESModule(name))
+      ).then(() => null);
+    };
   }
 })();
