@@ -245,12 +245,6 @@ def main(argv):
         help="Run all tests with valgrind, if valgrind is in $PATH.",
     )
     op.add_argument(
-        "--avoid-stdio",
-        dest="avoid_stdio",
-        action="store_true",
-        help="Use js-shell file indirection instead of piping stdio.",
-    )
-    op.add_argument(
         "--write-failure-output",
         dest="write_failure_output",
         action="store_true",
@@ -387,16 +381,6 @@ def main(argv):
             or not os.access(js_shell + ".exe", os.X_OK)
         ):
             op.error("shell is not executable: " + js_shell)
-
-    if jittests.stdio_might_be_broken():
-        # Prefer erring on the side of caution and not using stdio if
-        # it might be broken on this platform.  The file-redirect
-        # fallback should work on any platform, so at worst by
-        # guessing wrong we might have slowed down the tests a bit.
-        #
-        # XXX technically we could check for broken stdio, but it
-        # really seems like overkill.
-        options.avoid_stdio = True
 
     if options.retest:
         options.read_tests = options.retest
