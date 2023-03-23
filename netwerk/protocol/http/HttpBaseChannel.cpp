@@ -3308,7 +3308,8 @@ void HttpBaseChannel::SetChannelBlockedByOpaqueResponse() {
 
   dom::WindowContext* windowContext = browsingContext->GetTopWindowContext();
   if (windowContext) {
-    windowContext->Canonical()->SetHasBlockedOpaqueResponse();
+    windowContext->Canonical()->SetShouldReportHasBlockedOpaqueResponse(
+        mLoadInfo->InternalContentPolicyType());
   }
 }
 
