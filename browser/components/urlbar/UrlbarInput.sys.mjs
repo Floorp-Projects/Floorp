@@ -378,6 +378,9 @@ export class UrlbarInput {
         uri =
           this.window.gBrowser.selectedBrowser.currentAuthPromptURI ||
           uri ||
+          (this.window.gBrowser.selectedBrowser.browsingContext.sessionHistory
+            ?.count === 0 &&
+            this.window.gBrowser.selectedBrowser._initialURI) ||
           this.window.gBrowser.currentURI;
         // Strip off usernames and passwords for the location bar
         try {

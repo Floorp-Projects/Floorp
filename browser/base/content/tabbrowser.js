@@ -6635,6 +6635,28 @@
             // created or re-created browser, e.g. because it just switched
             // remoteness or is a new tab/window).
             this.mBrowser.urlbarChangeTracker.startedLoad();
+
+            // To improve the user experience and perceived performance when
+            // opening links in new tabs, we show the url and tab title sooner,
+            // but only if it's safe (from a phishing point of view) to do so,
+            // thus there's no session history and the load starts from a
+            // non-web-controlled blank page.
+            if (
+              this.mBrowser.browsingContext.sessionHistory?.count === 0 &&
+              BrowserUIUtils.checkEmptyPageOrigin(
+                this.mBrowser,
+                originalLocation
+              )
+            ) {
+              gBrowser.setInitialTabTitle(this.mTab, originalLocation.spec, {
+                isURL: true,
+              });
+
+              this.mBrowser._initialURI = originalLocation;
+              if (this.mTab.selected && !gBrowser.userTypedValue) {
+                gURLBar.setURI();
+              }
+            }
           }
           delete this.mBrowser.initialPageLoadedFromUserAction;
           // If the browser is loading it must not be crashed anymore
