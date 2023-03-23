@@ -3548,25 +3548,20 @@ Maybe<nscoord> nsTableFrame::GetNaturalBaselineBOffset(
   OrderRowGroups(orderedRowGroups);
   // XXX not sure if this should be the size of the containing block instead.
   nsSize containerSize = mRect.Size();
-  auto TableBaseline = [aWM, containerSize](
-                           nsTableRowGroupFrame* aRowGroup,
-                           nsTableRowFrame* aRow) -> Maybe<nscoord> {
+  auto TableBaseline = [aWM, containerSize](nsTableRowGroupFrame* aRowGroup,
+                                            nsTableRowFrame* aRow) {
     nscoord rgBStart =
         LogicalRect(aWM, aRowGroup->GetNormalRect(), containerSize).BStart(aWM);
     nscoord rowBStart =
-        LogicalRect(aWM, aRow->GetNormalRect(), aRowGroup->GetSize())
-            .BStart(aWM);
-    return aRow->GetRowBaseline(aWM).map(
-        [rgBStart, rowBStart](nscoord aBaseline) {
-          return rgBStart + rowBStart + aBaseline;
-        });
+        LogicalRect(aWM, aRow->GetNormalRect(), containerSize).BStart(aWM);
+    return rgBStart + rowBStart + aRow->GetRowBaseline(aWM);
   };
   if (aBaselineGroup == BaselineSharingGroup::First) {
     for (uint32_t rgIndex = 0; rgIndex < orderedRowGroups.Length(); rgIndex++) {
       nsTableRowGroupFrame* rgFrame = orderedRowGroups[rgIndex];
       nsTableRowFrame* row = rgFrame->GetFirstRow();
       if (row) {
-        return TableBaseline(rgFrame, row);
+        return Some(TableBaseline(rgFrame, row));
       }
     }
   } else {
@@ -3574,9 +3569,7 @@ Maybe<nscoord> nsTableFrame::GetNaturalBaselineBOffset(
       nsTableRowGroupFrame* rgFrame = orderedRowGroups[rgIndex];
       nsTableRowFrame* row = rgFrame->GetLastRow();
       if (row) {
-        return TableBaseline(rgFrame, row).map([this, aWM](nscoord aBaseline) {
-          return BSize(aWM) - aBaseline;
-        });
+        return Some(BSize(aWM) - TableBaseline(rgFrame, row));
       }
     }
   }
