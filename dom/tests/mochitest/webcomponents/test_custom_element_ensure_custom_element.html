@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html lang="en">
+  <!--
+    https://bugzilla.mozilla.org/show_bug.cgi?id=1813077
+  -->
+<head>
+  <meta charset="utf-8">
+  <title>Test for customElements.ensureCustomElement</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script>
+    /* 
+    Note: once you import one of these custom elements, they stay on the window
+    outside of the task that imported them. This can create issues if writing
+    another test in this file.
+    */
+    add_task(async function test_ensure_custom_elements() {
+      let registry = SpecialPowers.wrap(customElements);
+      ok(window.ensureCustomElements, "should be defined");
+
+      // Ensure the custom elements from ESModules are not defined.
+      is(registry.get("moz-button-group"), undefined, "moz-button-group should be undefined since we have not yet imported it");
+      is(registry.get("moz-support-link"), undefined, "moz-support-link should be undefined since we have not yet imported it");
+      is(registry.get("moz-toggle"), undefined, "moz-toggle should be undefined since we have not yet imported it");
+
+      // Import a single custom element and assert it exists in the custom
+      // element registry
+      let modules = await window.ensureCustomElements("moz-support-link");
+      ok(registry.get("moz-support-link"), "moz-support-link should be defined after importing it");
+      is(modules, null, "There should not be a return value when using ensureCustomElements");
+
+      // Import multiple custom elements and assert they exist in the registry
+      modules = undefined;
+      is(registry.get("moz-button-group"), undefined, "moz-button-group should be undefined since we have not yet imported it");
+      is(registry.get("moz-toggle"), undefined, "moz-toggle should be undefined since we have not yet imported it")
+      modules = await window.ensureCustomElements("moz-toggle", "moz-button-group");
+      is(modules, null, "There should not be a return value when using ensureCustomElements");
+      ok(registry.get("moz-toggle"), "moz-toggle should be defined after importing it");
+      ok(registry.get("moz-button-group"), "moz-button-group should be defined after importing it");
+
+      // Ensure there are no errors if the imported elements are imported
+      // again
+      modules = undefined;
+      modules = await window.ensureCustomElements("moz-support-link", "moz-toggle", "moz-button-group");
+      ok(true, "The custom elements should not throw an error if imported again");
+      is(modules, null, "There should not be a return value when using ensureCustomElements");
+    })
+  </script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>
