@@ -102,21 +102,11 @@ JOBS = {
             "{analysis_scriptdir}/computeCallgraph.js",
             "{typeInfo}",
             Output("rawcalls"),
-            Output("rawEdges"),
             "{i}",
             "{n}",
         ],
         "multi-output": True,
-        "outputs": ["rawcalls.{i}.of.{n}", "gcEdges.{i}.of.{n}"],
-    },
-    "mergeJSON": {
-        "command": [
-            "{js}",
-            "{analysis_scriptdir}/mergeJSON.js",
-            MultiInput("{rawEdges}"),
-            Output("gcEdges"),
-        ],
-        "outputs": ["gcEdges.json"],
+        "outputs": ["rawcalls.{i}.of.{n}"],
     },
     "gcFunctions": {
         "command": [
@@ -154,7 +144,6 @@ JOBS = {
             "{js}",
             "{analysis_scriptdir}/analyzeRoots.js",
             "{gcFunctions_list}",
-            "{gcEdges}",
             "{limitedFunctions_list}",
             "{gcTypes}",
             "{typeInfo}",
@@ -392,7 +381,6 @@ steps = [
     "gcTypes",
     "rawcalls",
     "gcFunctions",
-    "mergeJSON",
     "allFunctions",
     "hazards",
     "gather-hazards",
