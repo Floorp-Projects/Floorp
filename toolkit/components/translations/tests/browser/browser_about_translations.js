@@ -9,6 +9,7 @@
  */
 add_task(async function test_about_translations_enabled() {
   await openAboutTranslations({
+    languagePairs: [],
     runInPage: async ({ selectors }) => {
       const { document, window } = content;
 
@@ -53,7 +54,7 @@ add_task(async function test_about_translations_enabled() {
 add_task(async function test_about_translations_disabled() {
   await openAboutTranslations({
     disabled: true,
-
+    languagePairs: [],
     runInPage: async ({ selectors }) => {
       const { document, window } = content;
 
