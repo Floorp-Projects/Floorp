@@ -588,6 +588,17 @@
   transform: scaleX(-1);
 }
 
+/* Translations button */
+
+#translations-button > .urlbar-icon {
+  list-style-image: url(chrome://browser/skin/translations.svg);
+}
+
+#translations-button[translationsactive] > .urlbar-icon {
+  fill: var(--toolbar-field-icon-fill-attention);
+  fill-opacity: 1;
+}
+
 /* Zoom button */
 
 #urlbar-zoom-button {
