@@ -715,21 +715,8 @@ function isRootedDeclType(decl)
                                   (type.Name in typeInfo.RootedGCThings));
 }
 
-function typeDesc(type)
-{
-    if (type.Kind == "CSU") {
-        return type.Name;
-    } else if ('Type' in type) {
-        var inner = typeDesc(type.Type);
-        if (type.Kind == 'Pointer')
-            return inner + '*';
-        else if (type.Kind == 'Array')
-            return inner + '[]';
-        else
-            return inner + '?';
-    } else {
-        return '???';
-    }
+function printRecord(record) {
+    print(JSON.stringify(record));
 }
 
 function printRecord(record) {
@@ -840,7 +827,7 @@ function processBodies(functionName, wholeBodyAttrs)
                     mangled: mangledSymbol,
                     readable,
                     variable: name,
-                    type: typeDesc(decl.Type),
+                    type: str_Type(decl.Type),
                     loc: lineText || "???",
                 }
                 print(",");
@@ -862,7 +849,7 @@ function processBodies(functionName, wholeBodyAttrs)
                     mangled: mangledSymbol,
                     readable,
                     variable: name,
-                    type: typeDesc(decl.Type),
+                    type: str_Type(decl.Type),
                     gccall: result.gcInfo.name.replaceAll("'", ""),
                     gcrange: range,
                     loc: lineText,

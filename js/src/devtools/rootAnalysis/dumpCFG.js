@@ -67,8 +67,10 @@ function str_Type(type) {
       return Name;
     else if (Kind == 'Array')
       return str_Type(Type) + "[]";
-    else
-      return Kind;
+    else if (Kind == 'Function')
+      return str_Type(Type) + "()";
+
+    return Kind;
   } catch(e) {
     badFormat("type", type);
   }
@@ -251,12 +253,16 @@ function str(unknown) {
   } else if ("Index" in unknown) {
     // Note: Variable also has .Index, with a different meaning.
     return str_edge(unknown);
+  } else if ("Type" in unknown) {
+    if ("Variable" in unknown) {
+      return str_definition(unknown);
+    } else {
+      return str_Type(unknown);
+    }
   } else if ("Kind" in unknown) {
     if ("BlockId" in unknown)
       return str_Variable(unknown);
     return str_value(unknown);
-  } else if ("Type" in unknown) {
-    return str_Type(unknown);
   }
   return "unknown";
 }
