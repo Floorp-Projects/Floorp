@@ -2456,6 +2456,14 @@ public class GeckoSessionTestRule implements TestRule {
     return isActive;
   }
 
+  public void triggerCookieBannerDetected(final @NonNull GeckoSession session) {
+    webExtensionApiCall(session, "TriggerCookieBannerDetected", null);
+  }
+
+  public void triggerCookieBannerHandled(final @NonNull GeckoSession session) {
+    webExtensionApiCall(session, "TriggerCookieBannerHandled", null);
+  }
+
   private Object waitForMessage(final WebExtension.Port port, final String id) {
     mPendingResponses.add(port, id);
     UiThreadUtils.waitForCondition(() -> mPendingMessages.containsKey(id), mTimeoutMillis);

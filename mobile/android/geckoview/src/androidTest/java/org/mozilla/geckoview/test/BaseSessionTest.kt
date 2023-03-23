@@ -261,6 +261,12 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
     fun GeckoSession.setResolutionAndScaleTo(resolution: Float) =
         sessionRule.setResolutionAndScaleTo(this, resolution)
 
+    fun GeckoSession.triggerCookieBannerDetected() =
+        sessionRule.triggerCookieBannerDetected(this)
+
+    fun GeckoSession.triggerCookieBannerHandled() =
+        sessionRule.triggerCookieBannerHandled(this)
+
     var GeckoSession.active: Boolean
         get() = sessionRule.getActive(this)
         set(value) = setActive(value)
