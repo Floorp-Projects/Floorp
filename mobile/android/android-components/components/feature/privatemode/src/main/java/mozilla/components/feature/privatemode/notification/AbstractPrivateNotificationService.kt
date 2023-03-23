@@ -17,10 +17,12 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.VISIBILITY_SECRET
 import androidx.core.app.NotificationManagerCompat.IMPORTANCE_LOW
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.store.BrowserStore
@@ -47,8 +49,9 @@ import java.util.Locale
  * As long as a private tab is open this service will keep its notification alive.
  */
 @Suppress("TooManyFunctions")
-abstract class AbstractPrivateNotificationService : Service() {
-
+abstract class AbstractPrivateNotificationService(
+    private val notificationScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+) : Service() {
     private var privateTabsScope: CoroutineScope? = null
     private var localeScope: CoroutineScope? = null
 
@@ -101,11 +104,15 @@ abstract class AbstractPrivateNotificationService : Service() {
      * Re-build and notify an existing notification.
      */
     protected fun refreshNotification() {
-        val notificationId = getNotificationId()
-        val channelId = getChannelId()
+        notificationScope.launch {
+            val notificationId = getNotificationId()
+            val channelId = getChannelId()
 
-        val notification = createNotification(channelId)
-        notificationsDelegate.notify(notificationId = notificationId, notification = notification)
+            val notification = createNotification(channelId)
+            withContext(Dispatchers.Main) {
+                notificationsDelegate.notify(notificationId = notificationId, notification = notification)
+            }
+        }
     }
 
     /**
@@ -115,17 +122,21 @@ abstract class AbstractPrivateNotificationService : Service() {
      * The service should be started only if private tabs are open.
      */
     final override fun onCreate() {
-        val notificationId = getNotificationId()
-        val channelId = getChannelId()
-        val notification = createNotification(channelId)
+        notificationScope.launch {
+            val notificationId = getNotificationId()
+            val channelId = getChannelId()
+            val notification = createNotification(channelId)
 
-        if (SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            notificationsDelegate.requestNotificationPermission(
-                onPermissionGranted = { refreshNotification() },
-            )
+            if (SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                notificationsDelegate.requestNotificationPermission(
+                    onPermissionGranted = { refreshNotification() },
+                )
+            }
+
+            withContext(Dispatchers.Main) {
+                startForeground(notificationId, notification)
+            }
         }
-
-        startForeground(notificationId, notification)
 
         privateTabsScope = store.flowScoped { flow ->
             flow.map { state -> state.privateTabs.isEmpty() }

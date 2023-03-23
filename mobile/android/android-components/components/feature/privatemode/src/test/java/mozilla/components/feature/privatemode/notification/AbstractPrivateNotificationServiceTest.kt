@@ -12,7 +12,10 @@ import android.content.SharedPreferences
 import androidx.core.app.NotificationCompat
 import androidx.core.content.getSystemService
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import mozilla.components.browser.state.action.LocaleAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
@@ -24,6 +27,7 @@ import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import mozilla.components.support.test.whenever
 import mozilla.components.support.utils.ext.stopForegroundCompat
 import org.junit.Assert.assertEquals
@@ -61,9 +65,9 @@ class AbstractPrivateNotificationServiceTest {
     }
 
     @Test
-    fun `WHEN the service is created THEN start foreground is called`() {
+    fun `WHEN the service is created THEN start foreground is called`() = runTestOnMain {
         val service = spy(
-            object : MockService() {
+            object : MockService(scope = this@runTestOnMain) {
                 override fun NotificationCompat.Builder.buildNotification() {
                     setCategory(Notification.CATEGORY_STATUS)
                 }
@@ -76,6 +80,7 @@ class AbstractPrivateNotificationServiceTest {
 
         val notification = argumentCaptor<Notification>()
         service.onCreate()
+        advanceUntilIdle()
 
         verify(service).startForeground(anyInt(), notification.capture())
         assertEquals(Notification.CATEGORY_STATUS, notification.value.category)
@@ -113,7 +118,8 @@ class AbstractPrivateNotificationServiceTest {
         verify(service).notifyLocaleChanged()
     }
 
-    private open class MockService : AbstractPrivateNotificationService() {
+    private open class MockService(scope: CoroutineScope = TestScope()) :
+        AbstractPrivateNotificationService(scope) {
         override val store: BrowserStore = mock()
         override val notificationsDelegate: NotificationsDelegate = mock()
 
