@@ -354,11 +354,9 @@ public class GeckoAppShell {
       return false;
     }
 
-    if (!locationHighAccuracyEnabled) {
-      final Location lastKnownLocation = getLastKnownLocation(lm);
-      if (lastKnownLocation != null) {
-        sAndroidListeners.onLocationChanged(lastKnownLocation);
-      }
+    final Location lastKnownLocation = getLastKnownLocation(lm);
+    if (lastKnownLocation != null) {
+      sAndroidListeners.onLocationChanged(lastKnownLocation);
     }
 
     final Criteria criteria = new Criteria();
