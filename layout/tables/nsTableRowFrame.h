@@ -132,7 +132,7 @@ class nsTableRowFrame : public nsContainerFrame {
 
   /* return the row ascent
    */
-  Maybe<nscoord> GetRowBaseline(mozilla::WritingMode aWM);
+  nscoord GetRowBaseline(mozilla::WritingMode aWritingMode);
 
   /** returns the ordinal position of this row in its table */
   virtual int32_t GetRowIndex() const;

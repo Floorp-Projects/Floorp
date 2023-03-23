@@ -1456,32 +1456,16 @@ static void GetScrollableOverflowForPerspective(
   }
 }
 
-BaselineSharingGroup nsHTMLScrollFrame::GetDefaultBaselineSharingGroup() const {
-  return mScrolledFrame->GetDefaultBaselineSharingGroup();
-}
-
-nscoord nsHTMLScrollFrame::SynthesizeFallbackBaseline(
-    mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
-  // Marign-end even for central baselines.
-  if (aWM.IsLineInverted()) {
-    return -GetLogicalUsedMargin(aWM).BStart(aWM);
-  }
-  return aBaselineGroup == BaselineSharingGroup::First
-             ? BSize(aWM) + GetLogicalUsedMargin(aWM).BEnd(aWM)
-             : -GetLogicalUsedMargin(aWM).BEnd(aWM);
-}
-
 Maybe<nscoord> nsHTMLScrollFrame::GetNaturalBaselineBOffset(
     WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
-  // Block containers that are scrollable always have a last baseline
+  // Block containers that are scrollable always have a first & last baselines
   // that are synthesized from block-end margin edge.
   // Note(dshin): This behaviour is really only relevant to `inline-block`
   // alignment context. In the context of table/flex/grid alignment, first/last
   // baselines are calculated through `GetFirstLineBaseline`, which does
   // calculations of its own.
   // https://drafts.csswg.org/css-align/#baseline-export
-  if (aBaselineGroup == BaselineSharingGroup::Last &&
-      mScrolledFrame->IsBlockFrameOrSubclass()) {
+  if (mScrolledFrame->IsBlockFrameOrSubclass()) {
     return Some(SynthesizeFallbackBaseline(aWM, aBaselineGroup));
   }
 
