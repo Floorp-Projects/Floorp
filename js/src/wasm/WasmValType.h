@@ -844,8 +844,7 @@ using ValTypeVector = Vector<ValType, 16, SystemAllocPolicy>;
 // ValType utilities
 
 extern bool ToValType(JSContext* cx, HandleValue v, ValType* out);
-extern bool ToRefType(JSContext* cx, JSLinearString* typeLinearStr,
-                      RefType* out);
+extern bool ToRefType(JSContext* cx, HandleValue v, RefType* out);
 
 extern UniqueChars ToString(RefType type, const TypeContext* types);
 extern UniqueChars ToString(ValType type, const TypeContext* types);

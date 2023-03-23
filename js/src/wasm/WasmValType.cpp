@@ -23,13 +23,136 @@
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/Printf.h"
 #include "js/Value.h"
+
+#include "vm/JSAtom.h"
+#include "vm/JSObject.h"
 #include "vm/StringType.h"
 #include "wasm/WasmJS.h"
+
+#include "vm/JSAtom-inl.h"
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 using namespace js::wasm;
 
+static bool ToRefType(JSContext* cx, JSLinearString* typeLinearStr,
+                      RefType* out) {
+  if (StringEqualsLiteral(typeLinearStr, "anyfunc") ||
+      StringEqualsLiteral(typeLinearStr, "funcref")) {
+    // The JS API uses "anyfunc" uniformly as the external name of funcref.  We
+    // also allow "funcref" for compatibility with code we've already shipped.
+    *out = RefType::func();
+  } else if (StringEqualsLiteral(typeLinearStr, "externref")) {
+    *out = RefType::extern_();
+#ifdef ENABLE_WASM_GC
+  } else if (GcAvailable(cx) && StringEqualsLiteral(typeLinearStr, "anyref")) {
+    *out = RefType::any();
+  } else if (GcAvailable(cx) && StringEqualsLiteral(typeLinearStr, "eqref")) {
+    *out = RefType::eq();
+  } else if (GcAvailable(cx) &&
+             StringEqualsLiteral(typeLinearStr, "structref")) {
+    *out = RefType::struct_();
+  } else if (GcAvailable(cx) &&
+             StringEqualsLiteral(typeLinearStr, "arrayref")) {
+    *out = RefType::array();
+#endif
+  } else {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_WASM_BAD_STRING_VAL_TYPE);
+    return false;
+  }
+
+  return true;
+}
+
+enum class RefTypeResult {
+  Failure,
+  Parsed,
+  Unparsed,
+};
+
+static RefTypeResult MaybeToRefType(JSContext* cx, HandleObject obj,
+                                    RefType* out) {
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+  if (!wasm::FunctionReferencesAvailable(cx)) {
+    return RefTypeResult::Unparsed;
+  }
+
+  JSAtom* refAtom = Atomize(cx, "ref", strlen("ref"));
+  if (!refAtom) {
+    return RefTypeResult::Failure;
+  }
+  RootedId refId(cx, AtomToId(refAtom));
+
+  RootedValue refVal(cx);
+  if (!GetProperty(cx, obj, obj, refId, &refVal)) {
+    return RefTypeResult::Failure;
+  }
+
+  RootedString typeStr(cx, ToString(cx, refVal));
+  if (!typeStr) {
+    return RefTypeResult::Failure;
+  }
+
+  Rooted<JSLinearString*> typeLinearStr(cx, typeStr->ensureLinear(cx));
+  if (!typeLinearStr) {
+    return RefTypeResult::Failure;
+  }
+
+  if (StringEqualsLiteral(typeLinearStr, "func")) {
+    *out = RefType::func();
+  } else if (StringEqualsLiteral(typeLinearStr, "extern")) {
+    *out = RefType::extern_();
+#  ifdef ENABLE_WASM_GC
+  } else if (GcAvailable(cx) && StringEqualsLiteral(typeLinearStr, "any")) {
+    *out = RefType::any();
+  } else if (GcAvailable(cx) && StringEqualsLiteral(typeLinearStr, "eq")) {
+    *out = RefType::eq();
+  } else if (GcAvailable(cx) && StringEqualsLiteral(typeLinearStr, "struct")) {
+    *out = RefType::struct_();
+  } else if (GcAvailable(cx) && StringEqualsLiteral(typeLinearStr, "array")) {
+    *out = RefType::array();
+#  endif
+  } else {
+    return RefTypeResult::Unparsed;
+  }
+
+  JSAtom* nullableAtom = Atomize(cx, "nullable", strlen("nullable"));
+  if (!nullableAtom) {
+    return RefTypeResult::Failure;
+  }
+  RootedId nullableId(cx, AtomToId(nullableAtom));
+  RootedValue nullableVal(cx);
+  if (!GetProperty(cx, obj, obj, nullableId, &nullableVal)) {
+    return RefTypeResult::Failure;
+  }
+
+  bool nullable = ToBoolean(nullableVal);
+  if (!nullable) {
+    *out = out->asNonNullable();
+  }
+  MOZ_ASSERT(out->isNullable() == nullable);
+  return RefTypeResult::Parsed;
+#else
+  return RefTypeResult::Unparsed;
+#endif
+}
+
 bool wasm::ToValType(JSContext* cx, HandleValue v, ValType* out) {
+  if (v.isObject()) {
+    RootedObject obj(cx, &v.toObject());
+    RefType refType;
+    switch (MaybeToRefType(cx, obj, &refType)) {
+      case RefTypeResult::Failure:
+        return false;
+      case RefTypeResult::Parsed:
+        *out = ValType(refType);
+        return true;
+      case RefTypeResult::Unparsed:
+        break;
+    }
+  }
+
   RootedString typeStr(cx, ToString(cx, v));
   if (!typeStr) {
     return false;
@@ -65,34 +188,30 @@ bool wasm::ToValType(JSContext* cx, HandleValue v, ValType* out) {
   return true;
 }
 
-bool wasm::ToRefType(JSContext* cx, JSLinearString* typeLinearStr,
-                     RefType* out) {
-  if (StringEqualsLiteral(typeLinearStr, "anyfunc") ||
-      StringEqualsLiteral(typeLinearStr, "funcref")) {
-    // The JS API uses "anyfunc" uniformly as the external name of funcref.  We
-    // also allow "funcref" for compatibility with code we've already shipped.
-    *out = RefType::func();
-  } else if (StringEqualsLiteral(typeLinearStr, "externref")) {
-    *out = RefType::extern_();
-#ifdef ENABLE_WASM_GC
-  } else if (GcAvailable(cx) && StringEqualsLiteral(typeLinearStr, "anyref")) {
-    *out = RefType::any();
-  } else if (GcAvailable(cx) && StringEqualsLiteral(typeLinearStr, "eqref")) {
-    *out = RefType::eq();
-  } else if (GcAvailable(cx) &&
-             StringEqualsLiteral(typeLinearStr, "structref")) {
-    *out = RefType::struct_();
-  } else if (GcAvailable(cx) &&
-             StringEqualsLiteral(typeLinearStr, "arrayref")) {
-    *out = RefType::array();
-#endif
-  } else {
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_WASM_BAD_STRING_VAL_TYPE);
+bool wasm::ToRefType(JSContext* cx, HandleValue v, RefType* out) {
+  if (v.isObject()) {
+    RootedObject obj(cx, &v.toObject());
+    switch (MaybeToRefType(cx, obj, out)) {
+      case RefTypeResult::Failure:
+        return false;
+      case RefTypeResult::Parsed:
+        return true;
+      case RefTypeResult::Unparsed:
+        break;
+    }
+  }
+
+  RootedString typeStr(cx, ToString(cx, v));
+  if (!typeStr) {
     return false;
   }
 
-  return true;
+  Rooted<JSLinearString*> typeLinearStr(cx, typeStr->ensureLinear(cx));
+  if (!typeLinearStr) {
+    return false;
+  }
+
+  return ToRefType(cx, typeLinearStr, out);
 }
 
 UniqueChars wasm::ToString(RefType type, const TypeContext* types) {
