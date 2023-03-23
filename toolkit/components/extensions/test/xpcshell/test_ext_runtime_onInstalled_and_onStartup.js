@@ -568,7 +568,7 @@ add_task(
       persisted: true,
     });
 
-    info(`test onStartup filed after restart`);
+    info(`test onStartup after restart`);
     await promiseRestartManager();
 
     // onStartup is a bit special.  During APP_STARTUP we do not

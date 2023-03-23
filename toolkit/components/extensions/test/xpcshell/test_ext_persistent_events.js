@@ -112,6 +112,19 @@ const API = class extends ExtensionAPI {
           },
         }).api(),
 
+        onEvent3: new EventManager({
+          context,
+          module: namespace,
+          event: "onEvent3",
+          register: (fire, ...params) => {
+            let data = { namespace, event: "onEvent3", params };
+            Services.obs.notifyObservers(data, "register-event-listener");
+            return () => {
+              Services.obs.notifyObservers(data, "unregister-event-listener");
+            };
+          },
+        }).api(),
+
         nonBlockingEvent: new EventManager({
           context,
           module: namespace,
@@ -159,6 +172,14 @@ function makeModule(namespace, options = {}) {
           name: "onEvent2",
           type: "function",
           extraParameters: [{ type: "any", optional: true }],
+        },
+        {
+          name: "onEvent3",
+          type: "function",
+          extraParameters: [
+            { type: "object", optional: true, additionalProperties: true },
+            { type: "any", optional: true },
+          ],
         },
         {
           name: "nonBlockingEvent",
@@ -243,7 +264,7 @@ function trackEvents(wrapper) {
 const server = createHttpServer({ hosts: ["example.com"] });
 server.registerDirectory("/data/", do_get_file("data"));
 
-add_task(async function setup() {
+add_setup(async function setup() {
   // The blob:-URL registered above in MODULE_INFO gets loaded at
   // https://searchfox.org/mozilla-central/rev/0fec57c05d3996cc00c55a66f20dd5793a9bfb5d/toolkit/components/extensions/ExtensionCommon.jsm#1649
   Services.prefs.setBoolPref(
@@ -373,6 +394,16 @@ add_task(async function test_persistent_events() {
   ]);
   check(observed, "prime");
 
+  assertPersistentListeners(extension, "startupBlocking", "onEvent1", {
+    primed: true,
+    primedListenersCount: 2,
+  });
+
+  assertPersistentListeners(extension, "startupBlocking", "onEvent2", {
+    primed: true,
+    primedListenersCount: 1,
+  });
+
   // Check that primed listeners are converted to regular listeners
   // when the background page is started after browser startup.
   let p = promiseObservable("convert-event-listener", 3);
@@ -426,6 +457,54 @@ add_task(async function test_persistent_events() {
 
   details = await extension.awaitMessage("listener3");
   deepEqual(details, listenerArgs, "Listener 3 fired for event during startup");
+
+  await extension.awaitMessage("ready");
+
+  // Check that triggering onEvent1 emits calls to both listener1 and listener2
+  // (See Bug 1795801).
+  [observed] = await Promise.all([
+    promiseObservable("unregister-primed-listener", 3),
+    AddonTestUtils.promiseShutdownManager(),
+  ]);
+  check(observed, "unregister");
+  [observed] = await Promise.all([
+    promiseObservable("prime-event-listener", 3),
+    AddonTestUtils.promiseStartupManager(),
+  ]);
+  check(observed, "prime");
+  assertPersistentListeners(extension, "startupBlocking", "onEvent1", {
+    primed: true,
+    primedListenersCount: 2,
+  });
+  assertPersistentListeners(extension, "startupBlocking", "onEvent2", {
+    primed: true,
+    primedListenersCount: 1,
+  });
+
+  p = promiseObservable("convert-event-listener", 3);
+  listenerArgs.test = "startup event";
+  Services.obs.notifyObservers(
+    { listenerArgs },
+    "fire-startupBlocking.onEvent1"
+  );
+  observed = await p;
+
+  check(observed, "convert");
+
+  const [detailsListener1Call, detailsListener2Call] = await Promise.all([
+    extension.awaitMessage("listener1"),
+    extension.awaitMessage("listener2"),
+  ]);
+  deepEqual(
+    detailsListener1Call,
+    listenerArgs,
+    "Listener 1 fired for event during startup"
+  );
+  deepEqual(
+    detailsListener2Call,
+    listenerArgs,
+    "Listener 2 fired for event during startup"
+  );
 
   await extension.awaitMessage("ready");
 
@@ -1266,3 +1345,297 @@ add_task(
     await AddonTestUtils.promiseShutdownManager();
   }
 );
+
+// Regression test for Bug 1795801:
+// - verifies that multiple listeners sharing the same event and set of extra
+//   params are being stored in the startupData and then all primed on the next
+//   startup
+// - verifies behaviors expected when startupData stored from an older
+//   Firefox version (one that didn't include Bug 1795801 changes) is
+//   loaded from a new Firefox version
+// - a small smoke test to also verify the behaviors when startupData stored
+//   by a newer version is being loaded by an older one (where Bug 1795801
+//   changes have not been introduced yet).
+add_task(async function test_migrate_startupData_to_new_format() {
+  await AddonTestUtils.promiseStartupManager();
+
+  const extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: {
+      background: { persistent: false },
+    },
+    background() {
+      const eventParams = [
+        { fromCustomParam1: "value1" },
+        ["fromCustomParam2"],
+      ];
+      const otherEventParams = [
+        { fromCustomParam1: "value2" },
+        ["fromCustomParam2Other"],
+      ];
+      browser.nonStartupBlocking.onEvent3.addListener(function listener1(arg) {
+        browser.test.log("listener1 called on nonStartupBlocking.onEvent3");
+        browser.test.sendMessage("listener1", arg);
+      }, ...eventParams);
+      browser.nonStartupBlocking.onEvent3.addListener(function listener2(arg) {
+        browser.test.log("listener2 called on nonStartupBlocking.onEvent3");
+        browser.test.sendMessage("listener2", arg);
+      }, ...eventParams);
+      browser.nonStartupBlocking.onEvent3.addListener(function listener3(arg) {
+        browser.test.log("listener3 called on nonStartupBlocking.onEvent3");
+        browser.test.sendMessage("listener3", arg);
+      }, ...otherEventParams);
+      browser.test.sendMessage("ready");
+    },
+  });
+
+  // Data expected to be stored in the extension startupData with the new
+  // format and old format.
+  const STARTUP_DATA = {
+    newPersistentListenersFormat: {
+      nonStartupBlocking: {
+        onEvent3: [
+          // 2 listeners registered with the same set of extra params
+          [{ fromCustomParam1: "value1" }, ["fromCustomParam2"]],
+          [{ fromCustomParam1: "value1" }, ["fromCustomParam2"]],
+          // 1 listener registered with different set of extra params
+          [{ fromCustomParam1: "value2" }, ["fromCustomParam2Other"]],
+        ],
+      },
+    },
+    oldPersistentListenersFormat: {
+      nonStartupBlocking: {
+        onEvent3: [
+          [{ fromCustomParam1: "value1" }, ["fromCustomParam2"]],
+          [{ fromCustomParam1: "value2" }, ["fromCustomParam2Other"]],
+        ],
+      },
+    },
+  };
+
+  function getXPIStatesFilePath() {
+    let { path } = ChromeUtils.import(
+      "resource://gre/modules/addons/XPIProvider.jsm"
+    ).XPIInternal.XPIStates._jsonFile;
+    ok(
+      typeof path === "string" && !!path.length,
+      `Found XPIStates file path: ${path}`
+    );
+    return path;
+  }
+
+  async function tamperStartupData(testExtensionWrapper) {
+    const { startupData } = testExtensionWrapper.extension;
+    Assert.deepEqual(
+      startupData.persistentListeners,
+      STARTUP_DATA.newPersistentListenersFormat,
+      "Got data stored from extension.startupData.persistentListeners"
+    );
+
+    startupData.persistentListeners = STARTUP_DATA.oldPersistentListenersFormat;
+
+    // Force the data to be stored on disk (by requesting AddonTestUtils to flush
+    // the XPIStates after having tampered them to make sure they are in the
+    // format we expect from older Firefox versions).
+    testExtensionWrapper.extension.saveStartupData();
+    await AddonTestUtils.loadAddonsList(/* flush */ true);
+    const { XPIInternal } = ChromeUtils.import(
+      "resource://gre/modules/addons/XPIProvider.jsm"
+    );
+    XPIInternal.XPIStates.save();
+    await XPIInternal.XPIStates._jsonFile._save();
+    return getXPIStatesFilePath();
+  }
+
+  async function assertDiskStoredPersistentListeners(
+    extensionId,
+    xpiStatesPath,
+    expectedData
+  ) {
+    const xpiStatesData = await IOUtils.readJSON(xpiStatesPath, {
+      decompress: true,
+    });
+    const startupData =
+      xpiStatesData["app-profile"]?.addons[extensionId]?.startupData;
+    ok(startupData, `Found startupData for test extension ${extensionId}`);
+    Assert.deepEqual(
+      startupData.persistentListeners,
+      expectedData,
+      "Got the expected tampered addon startupData stored on disk"
+    );
+  }
+
+  await extension.startup();
+
+  await extension.awaitMessage("ready");
+  assertPersistentListeners(extension, "nonStartupBlocking", "onEvent3", {
+    persisted: true,
+  });
+
+  info(
+    "Manually tampering startupData.persistentListeners to match the format older Firefox format"
+  );
+  const xpiStatesFilePath = await tamperStartupData(extension);
+  await AddonTestUtils.promiseShutdownManager();
+  await assertDiskStoredPersistentListeners(
+    extension.id,
+    xpiStatesFilePath,
+    STARTUP_DATA.oldPersistentListenersFormat
+  );
+
+  info(
+    "Confirm that the expected listeners have been primed and the startupData migrated to the new format"
+  );
+
+  {
+    await AddonTestUtils.promiseStartupManager();
+    await extension.awaitStartup;
+
+    assertPersistentListeners(extension, "nonStartupBlocking", "onEvent3", {
+      primed: true,
+      // Old format of startupData.persistentListeners did not have a listenersCount
+      // property and so only two primed listeners are expected on the first startup
+      // after the addon startupData have been tampered to match the format expected
+      // by an older Firefox version.
+      primedListenersCount: 2,
+    });
+
+    const promiseListenersConverted = promiseObservable(
+      "convert-event-listener",
+      2
+    );
+    Services.obs.notifyObservers(
+      { listenerArgs: "test-startup" },
+      "fire-nonStartupBlocking.onEvent3"
+    );
+    await promiseListenersConverted;
+
+    deepEqual(
+      await extension.awaitMessage("listener1"),
+      "test-startup",
+      "Listener1 fired for event during startup"
+    );
+
+    deepEqual(
+      await extension.awaitMessage("listener3"),
+      "test-startup",
+      "Listener3 fired for event during startup"
+    );
+
+    await extension.awaitMessage("ready");
+
+    Assert.deepEqual(
+      extension.extension.startupData.persistentListeners,
+      STARTUP_DATA.newPersistentListenersFormat,
+      "Got startupData.persistentListeners migrated to the new format"
+    );
+  }
+
+  info(
+    "Confirm that the startupData written on disk have been migrated to the new format"
+  );
+
+  await AddonTestUtils.promiseShutdownManager();
+  await assertDiskStoredPersistentListeners(
+    extension.id,
+    xpiStatesFilePath,
+    STARTUP_DATA.newPersistentListenersFormat
+  );
+
+  info(
+    "Verify that both listeners are called after migrating to the new format"
+  );
+  {
+    await AddonTestUtils.promiseStartupManager();
+    await extension.awaitStartup;
+
+    assertPersistentListeners(extension, "nonStartupBlocking", "onEvent3", {
+      primed: true,
+      primedListenersCount: 3,
+    });
+
+    const promiseListenersConverted = promiseObservable(
+      "convert-event-listener",
+      2
+    );
+    Services.obs.notifyObservers(
+      { listenerArgs: "test-startup" },
+      "fire-nonStartupBlocking.onEvent3"
+    );
+    await promiseListenersConverted;
+
+    // Now we expect both the listeners to have been called.
+    deepEqual(
+      await extension.awaitMessage("listener1"),
+      "test-startup",
+      "Listener1 fired for event during startup"
+    );
+
+    deepEqual(
+      await extension.awaitMessage("listener2"),
+      "test-startup",
+      "Listener2 fired for event during startup"
+    );
+
+    deepEqual(
+      await extension.awaitMessage("listener3"),
+      "test-startup",
+      "Listener3 fired for event during startup"
+    );
+
+    await extension.awaitMessage("ready");
+  }
+
+  await extension.unload();
+  await AddonTestUtils.promiseShutdownManager();
+
+  // The additional assertions below are meant to provide a smoke test covering
+  // the behavior we would expect if an older Firefox versions (one that would
+  // expect the old format) is loading persistentListeners from startupData
+  // using the new format.
+  info("Verify backward compatibility with old format");
+
+  const { ExtensionUtils } = ChromeUtils.import(
+    "resource://gre/modules/ExtensionUtils.jsm"
+  );
+  const { DefaultMap } = ExtensionUtils;
+  const loadedListeners = new DefaultMap(() => new DefaultMap(() => new Map()));
+
+  // Logic from older Firefox versions expecting the old format
+  // (https://searchfox.org/mozilla-central/rev/cd2121e7d8/toolkit/components/extensions/ExtensionCommon.jsm#2360-2371)
+  let found = false;
+  for (let [module, entry] of Object.entries(
+    STARTUP_DATA.newPersistentListenersFormat
+  )) {
+    for (let [event, paramlists] of Object.entries(entry)) {
+      for (let paramlist of paramlists) {
+        let key = uneval(paramlist);
+        loadedListeners
+          .get(module)
+          .get(event)
+          .set(key, { params: paramlist });
+        found = true;
+      }
+    }
+  }
+
+  Assert.ok(
+    found,
+    "Expect persistentListeners to have been found from the old loading logic"
+  );
+
+  // We expect the older Firefox version to don't choke on loading
+  // the new format, a primed listener is still expected to be
+  // found because the old Firefox version will be overriding a single
+  // entry in the inmemory Map with the multiple entries from the
+  // ondisk format listing the same extra params for multiple listeners,
+  // Bug 1795801 would still be hit, but no other change in behavior is
+  // expected to be hit with the old logic.
+  Assert.ok(
+    loadedListeners
+      .get("nonStartupBlocking")
+      .get("onEvent3")
+      .has(uneval([{ fromCustomParam1: "value1" }, ["fromCustomParam2"]])),
+    "Expect the listener params key to be found in older Firefox versions"
+  );
+});
