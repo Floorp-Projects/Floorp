@@ -17,6 +17,7 @@ import org.junit.Assume.assumeThat
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.* // ktlint-disable no-wildcard-imports
+import org.mozilla.geckoview.ContentBlocking.CookieBannerMode
 import org.mozilla.geckoview.GeckoDisplay.SurfaceInfo
 import org.mozilla.geckoview.GeckoSession.ContentDelegate
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate
@@ -365,6 +366,52 @@ class ContentDelegateTest : BaseSessionTest() {
             override fun onPageStop(session: GeckoSession, success: Boolean) {
             }
         })
+    }
+
+    @Test fun cookieBannerDetectedEvent() {
+        sessionRule.setPrefsUntilTestEnd(
+            mapOf(
+                "cookiebanners.service.mode" to CookieBannerMode.COOKIE_BANNER_MODE_REJECT
+            )
+        )
+
+        val detectHandled = GeckoResult<Void>()
+        mainSession.delegateUntilTestEnd(object : GeckoSession.ContentDelegate {
+            override fun onCookieBannerDetected(
+                session: GeckoSession
+            ) {
+                detectHandled.complete(null)
+            }
+        })
+
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitForPageStop()
+        mainSession.triggerCookieBannerDetected()
+
+        sessionRule.waitForResult(detectHandled)
+    }
+
+    @Test fun cookieBannerHandledEvent() {
+        sessionRule.setPrefsUntilTestEnd(
+            mapOf(
+                "cookiebanners.service.mode" to CookieBannerMode.COOKIE_BANNER_MODE_REJECT
+            )
+        )
+
+        val handleHandled = GeckoResult<Void>()
+        mainSession.delegateUntilTestEnd(object : GeckoSession.ContentDelegate {
+            override fun onCookieBannerHandled(
+                session: GeckoSession
+            ) {
+                handleHandled.complete(null)
+            }
+        })
+
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitForPageStop()
+        mainSession.triggerCookieBannerHandled()
+
+        sessionRule.waitForResult(handleHandled)
     }
 
     @WithDisplay(width = 100, height = 100)

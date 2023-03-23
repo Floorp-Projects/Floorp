@@ -232,6 +232,32 @@
         "async": true,
         "description": "Clears the sites on the HSTS list.",
         "parameters": []
+      },
+
+      {
+        "name":  "triggerCookieBannerDetected",
+        "type": "function",
+        "async": true,
+        "description": "Simulates a cookie banner detection",
+        "parameters": [
+          {
+            "type": "number",
+            "name": "tabId"
+          }
+        ]
+      },
+
+      {
+        "name":  "triggerCookieBannerHandled",
+        "type": "function",
+        "async": true,
+        "description": "Simulates a cookie banner handling",
+        "parameters": [
+          {
+            "type": "number",
+            "name": "tabId"
+          }
+        ]
       }
     ]
   }

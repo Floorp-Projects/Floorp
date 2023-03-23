@@ -42,10 +42,20 @@ this.test = class extends ExtensionAPI {
   }
 
   getAPI(context) {
-    function windowActor(tabId) {
+    /**
+     * Helper function for getting window or process actors.
+     *
+     * @param tabId - id of the tab; required
+     * @param actorName - a string; the name of the actor
+     *   Default: "TestSupport" which is our test framework actor
+     *   (you can still pass the second parameter when getting the TestSupport actor, for readability)
+     *
+     * @returns actor
+     */
+    function getActorForTab(tabId, actorName = "TestSupport") {
       const tab = context.extension.tabManager.get(tabId);
       const { browsingContext } = tab.browser;
-      return browsingContext.currentWindowGlobal.getActor("TestSupport");
+      return browsingContext.currentWindowGlobal.getActor(actorName);
     }
 
     return {
@@ -83,7 +93,10 @@ this.test = class extends ExtensionAPI {
 
         /* Gets link color for a given selector. */
         async getLinkColor(tabId, selector) {
-          return windowActor(tabId).sendQuery("GetLinkColor", { selector });
+          return getActorForTab(tabId, "TestSupport").sendQuery(
+            "GetLinkColor",
+            { selector }
+          );
         },
 
         async getRequestedLocales() {
@@ -134,9 +147,12 @@ this.test = class extends ExtensionAPI {
         },
 
         async setResolutionAndScaleTo(tabId, resolution) {
-          return windowActor(tabId).sendQuery("SetResolutionAndScaleTo", {
-            resolution,
-          });
+          return getActorForTab(tabId, "TestSupport").sendQuery(
+            "SetResolutionAndScaleTo",
+            {
+              resolution,
+            }
+          );
         },
 
         async getActive(tabId) {
@@ -155,11 +171,15 @@ this.test = class extends ExtensionAPI {
           // flushApzRepaints is called for the target content document, if we
           // still meet intermittent failures, we might want to do it here as
           // well.
-          await windowActor(tabId).sendQuery("FlushApzRepaints");
+          await getActorForTab(tabId, "TestSupport").sendQuery(
+            "FlushApzRepaints"
+          );
         },
 
         async promiseAllPaintsDone(tabId) {
-          await windowActor(tabId).sendQuery("PromiseAllPaintsDone");
+          await getActorForTab(tabId, "TestSupport").sendQuery(
+            "PromiseAllPaintsDone"
+          );
         },
 
         async usingGpuProcess() {
@@ -188,6 +208,20 @@ this.test = class extends ExtensionAPI {
             Ci.nsISiteSecurityService
           );
           return sss.clearAll();
+        },
+
+        async triggerCookieBannerDetected(tabId) {
+          const actor = getActorForTab(tabId, "CookieBanner");
+          return actor.receiveMessage({
+            name: "CookieBanner::DetectedBanner",
+          });
+        },
+
+        async triggerCookieBannerHandled(tabId) {
+          const actor = getActorForTab(tabId, "CookieBanner");
+          return actor.receiveMessage({
+            name: "CookieBanner::HandledBanner",
+          });
         },
       },
     };
