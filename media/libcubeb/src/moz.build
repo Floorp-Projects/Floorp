@@ -97,6 +97,7 @@ if CONFIG['MOZ_AAUDIO'] or CONFIG['MOZ_OPENSL']:
 
 if CONFIG['MOZ_AAUDIO']:
     SOURCES += ['cubeb_aaudio.cpp']
+    SOURCES['cubeb_aaudio.cpp'].flags += ['-D__ANDROID_UNAVAILABLE_SYMBOLS_ARE_WEAK__']
     DEFINES['USE_AAUDIO'] = True
 
 if CONFIG['MOZ_OPENSL']:
