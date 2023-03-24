@@ -17,8 +17,7 @@
   NS_ASSERTION(aAboutURI->SchemeIs("about"),
                "should be used only on about: URIs");
 
-  nsresult rv = aAboutURI->GetPathQueryRef(aModule);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(aAboutURI->GetPathQueryRef(aModule));
 
   int32_t f = aModule.FindCharInSet("#?"_ns);
   if (f != kNotFound) {
@@ -30,12 +29,20 @@
   return NS_OK;
 }
 
+[[nodiscard]] inline bool NS_IsContentAccessibleAboutURI(nsIURI* aURI) {
+  MOZ_ASSERT(aURI->SchemeIs("about"), "Should be used only on about: URIs");
+  nsAutoCString name;
+  if (NS_WARN_IF(NS_FAILED(NS_GetAboutModuleName(aURI, name)))) {
+    return true;
+  }
+  return name.EqualsLiteral("blank") || name.EqualsLiteral("srcdoc");
+}
+
 inline nsresult NS_GetAboutModule(nsIURI* aAboutURI, nsIAboutModule** aModule) {
   MOZ_ASSERT(aAboutURI, "Must have URI");
 
   nsAutoCString contractID;
-  nsresult rv = NS_GetAboutModuleName(aAboutURI, contractID);
-  if (NS_FAILED(rv)) return rv;
+  MOZ_TRY(NS_GetAboutModuleName(aAboutURI, contractID));
 
   // look up a handler to deal with "what"
   contractID.InsertLiteral(NS_ABOUT_MODULE_CONTRACTID_PREFIX, 0);

@@ -224,9 +224,11 @@ static IsolationBehavior IsolationBehaviorForURI(nsIURI* aURI, bool aIsSubframe,
     // content, and should be allocated processes based on their simple content
     // principals.
     if (path == "blank"_ns || path == "srcdoc"_ns) {
+      MOZ_ASSERT(NS_IsContentAccessibleAboutURI(aURI));
       return IsolationBehavior::WebContent;
     }
 
+    MOZ_ASSERT(!NS_IsContentAccessibleAboutURI(aURI));
     // If we're loading an `about:reader` URI, perform isolation based on the
     // principal of the URI being loaded.
     if (path == "reader"_ns && aForChannelCreationURI) {

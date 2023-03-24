@@ -30,30 +30,12 @@ void URLExtraData::Init() {
   sDummyChrome->mChromeRulesEnabled = true;
 }
 
-static bool IsPrivilegedAboutURIForCSS(nsIURI* aURI) {
-#ifdef MOZ_THUNDERBIRD
-  if (!aURI->SchemeIs("about")) {
-    return false;
-  }
-  // TODO: we might want to do something a bit less special-casey, perhaps using
-  // nsIAboutModule::GetChromeURI or so? But nsIAboutModule can involve calling
-  // into JS so this is probably fine for now, if it doesn't get too unwieldy.
-  nsAutoCString name;
-  if (NS_WARN_IF(NS_FAILED(NS_GetAboutModuleName(aURI, name)))) {
-    return false;
-  }
-  return name.EqualsLiteral("3pane") || name.EqualsLiteral("addressbook");
-#else
-  return false;
-#endif
-}
-
 bool URLExtraData::ChromeRulesEnabled(nsIURI* aURI) {
   if (!aURI) {
     return false;
   }
   return aURI->SchemeIs("chrome") || aURI->SchemeIs("resource") ||
-         IsPrivilegedAboutURIForCSS(aURI);
+         (aURI->SchemeIs("about") && !NS_IsContentAccessibleAboutURI(aURI));
 }
 
 /* static */
