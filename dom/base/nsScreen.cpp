@@ -36,7 +36,7 @@ already_AddRefed<nsScreen> nsScreen::Create(nsPIDOMWindowInner* aWindow) {
 
 nsScreen::nsScreen(nsPIDOMWindowInner* aWindow)
     : DOMEventTargetHelper(aWindow),
-      mScreenOrientation(new mozilla::dom::ScreenOrientation(aWindow, this)) {}
+      mScreenOrientation(new ScreenOrientation(aWindow, this)) {}
 
 nsScreen::~nsScreen() = default;
 
@@ -161,9 +161,7 @@ hal::ScreenOrientation nsScreen::GetOrientationType() const {
   return s->GetOrientationType();
 }
 
-mozilla::dom::ScreenOrientation* nsScreen::Orientation() const {
-  return mScreenOrientation;
-}
+ScreenOrientation* nsScreen::Orientation() const { return mScreenOrientation; }
 
 void nsScreen::GetMozOrientation(nsString& aOrientation,
                                  CallerType aCallerType) const {
