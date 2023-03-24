@@ -139,7 +139,7 @@ interface nsIWebBrowserPersist : nsICancelable
    *
    * @throws NS_ERROR_INVALID_ARG One or more arguments was invalid.
    */
-  void savePrivacyAwareURI(in nsIURI aURI,
+  void saveURI(in nsIURI aURI,
       in nsIPrincipal aTriggeringPrincipal, in unsigned long aCacheKey,
       in nsIReferrerInfo aReferrerInfo,
       in nsICookieJarSettings aCookieJarSettings,

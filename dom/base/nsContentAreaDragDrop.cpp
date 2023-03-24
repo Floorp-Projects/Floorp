@@ -150,9 +150,9 @@ nsresult nsContentAreaDragDropDataProvider::SaveURIToFile(
       nsIWebBrowserPersist::PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION);
 
   // referrer policy can be anything since the referrer is nullptr
-  return persist->SavePrivacyAwareURI(
-      inSourceURI, inTriggeringPrincipal, 0, nullptr, inCookieJarSettings,
-      nullptr, nullptr, inDestFile, inContentPolicyType, isPrivate);
+  return persist->SaveURI(inSourceURI, inTriggeringPrincipal, 0, nullptr,
+                          inCookieJarSettings, nullptr, nullptr, inDestFile,
+                          inContentPolicyType, isPrivate);
 }
 
 /*

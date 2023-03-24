@@ -406,7 +406,7 @@ function internalSave(
  * @param persistArgs.sourceURI
  *        The nsIURI of the document being saved
  * @param persistArgs.sourceCacheKey [optional]
- *        If set will be passed to savePrivacyAwareURI
+ *        If set will be passed to saveURI
  * @param persistArgs.sourceDocument [optional]
  *        The document to be saved, or null if not saving a complete document
  * @param persistArgs.sourceReferrerInfo
@@ -424,7 +424,7 @@ function internalSave(
  *        content is accepted, enforce sniffing restrictions, etc.
  * @param persistArgs.cookieJarSettings [optional]
  *        The nsICookieJarSettings that will be used for the saving channel, or
- *        null that savePrivacyAwareURI will create one based on the current
+ *        null that saveURI will create one based on the current
  *        state of the prefs/permissions
  * @param persistArgs.targetContentType
  *        Required and used only when persistArgs.sourceDocument is present,
@@ -506,7 +506,7 @@ function internalPersist(persistArgs) {
       kWrapColumn
     );
   } else {
-    persist.savePrivacyAwareURI(
+    persist.saveURI(
       persistArgs.sourceURI,
       persistArgs.sourcePrincipal,
       persistArgs.sourceCacheKey,

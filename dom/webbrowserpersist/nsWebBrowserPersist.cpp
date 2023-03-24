@@ -411,7 +411,7 @@ NS_IMETHODIMP nsWebBrowserPersist::SetProgressListener(
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWebBrowserPersist::SavePrivacyAwareURI(
+NS_IMETHODIMP nsWebBrowserPersist::SaveURI(
     nsIURI* aURI, nsIPrincipal* aPrincipal, uint32_t aCacheKey,
     nsIReferrerInfo* aReferrerInfo, nsICookieJarSettings* aCookieJarSettings,
     nsIInputStream* aPostData, const char* aExtraHeaders, nsISupports* aFile,
