@@ -41,7 +41,7 @@ function compareValues(first, second) {
 
 function waterfall(first, second) {
   const result = compareValues(first.startedMs, second.startedMs);
-  return result || compareValues(first.resourceId, second.resourceId);
+  return result || compareValues(first.id, second.id);
 }
 
 function priority(first, second) {

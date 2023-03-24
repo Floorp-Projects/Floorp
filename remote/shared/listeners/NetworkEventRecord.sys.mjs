@@ -108,38 +108,24 @@ export class NetworkEventRecord {
    *
    * Required API for a NetworkObserver event owner.
    *
-   *
-   * @param {object} options
-   * @param {nsIChannel} options.channel
-   *     The channel.
-   * @param {boolean} options.fromCache
-   * @param {string} options.rawHeaders
+   * @param {Object} response
+   *     The response information.
+   * @param {string} rawHeaders
+   *     The raw headers source.
    */
-  addResponseStart(options) {
-    const { channel, fromCache, rawHeaders = "" } = options;
-    const { headers } = lazy.NetworkUtils.fetchResponseHeadersAndCookies(
-      channel
-    );
-
-    const headersSize = rawHeaders.length;
+  addResponseStart(response, rawHeaders) {
     this.#responseData = {
       ...this.#responseData,
-      bodySize: 0,
-      bytesReceived: headersSize,
-      fromCache: this.#fromCache || !!fromCache,
-      headers,
-      headersSize,
-      mimeType: this.#getMimeType(),
-      protocol: lazy.NetworkUtils.getProtocol(channel),
-      status: channel.responseStatus,
-      statusText: channel.responseStatusText,
+      bodySize: response.bodySize,
+      bytesReceived: response.transferredSize,
+      fromCache: this.#fromCache || response.fromCache,
+      // Note: at this point we only have access to the headers size. Parsed
+      // headers will be added in addResponseHeaders.
+      headersSize: response.headersSize,
+      protocol: response.protocol,
+      status: parseInt(response.status),
+      statusText: response.statusText,
     };
-
-    // This should be triggered when all headers have been received, matching
-    // the WebDriverBiDi response started trigger in `4.6. HTTP-network fetch`
-    // from the fetch specification, based on the PR visible at
-    // https://github.com/whatwg/fetch/pull/1540
-    this.#emitResponseStarted();
   }
 
   /**
@@ -155,6 +141,40 @@ export class NetworkEventRecord {
    *     True if the corresponding channel raced the cache and network requests.
    */
   addSecurityInfo(info, isRacing) {}
+
+  /**
+   * Add network response headers.
+   *
+   * Required API for a NetworkObserver event owner.
+   *
+   * @param {Array} headers
+   *     The response headers array.
+   */
+  addResponseHeaders(headers) {
+    this.#responseData.headers = headers;
+
+    // The mimetype info should also be available on the wrapped channel after
+    // headers have been parsed.
+    this.#responseData.mimeType = this.#getMimeType();
+
+    // This should be triggered when all headers have been received, matching
+    // the WebDriverBiDi response started trigger in `4.6. HTTP-network fetch`
+    // from the fetch specification, based on the PR visible at
+    // https://github.com/whatwg/fetch/pull/1540
+    this.#emitResponseStarted();
+  }
+
+  /**
+   * Add network response cookies.
+   *
+   * Required API for a NetworkObserver event owner.
+   *
+   * Not used for RemoteAgent.
+   *
+   * @param {Array} cookies
+   *     The response cookies array.
+   */
+  addResponseCookies(cookies) {}
 
   /**
    * Add network event timings.
