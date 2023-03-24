@@ -3788,6 +3788,10 @@ pref("browser.translations.logLevel", "Error");
 // and the full page translations uses HTML. Set this pref to true to use the HTML
 // translation behavior on about:translations. Requires a page refresh.
 pref("browser.translations.useHTML", false);
+// Normally there is a UI to ask the user to translate a page, this pref makes it
+// so that the page automatically performs a translation if one is detected as being
+// required.
+pref("browser.translations.autoTranslate", false);
 
 // When a user cancels this number of authentication dialogs coming from
 // a single web page in a row, all following authentication dialogs will

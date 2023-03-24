@@ -15,6 +15,7 @@ const TRANSLATIONS_TESTER_ES =
 add_task(async function test_full_page_translation() {
   await loadTestPage({
     page: TRANSLATIONS_TESTER_ES,
+    prefs: [["browser.translations.autoTranslate", true]],
     languagePairs: [
       { fromLang: "es", toLang: "en" },
       { fromLang: "en", toLang: "es" },
@@ -86,6 +87,7 @@ add_task(async function test_about_translations_enabled() {
 
   await loadTestPage({
     page: TRANSLATIONS_TESTER_EN,
+    prefs: [["browser.translations.autoTranslate", true]],
     languagePairs: [
       { fromLang: "es", toLang: "en" },
       { fromLang: "en", toLang: "es" },

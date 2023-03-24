@@ -374,6 +374,14 @@
                 <image id="picture-in-picture-button-icon"
                        class="urlbar-icon"/>
               </hbox>
+              <hbox id="translations-button"
+                    class="urlbar-page-action"
+                    role="button"
+                    data-l10n-id="urlbar-translations-button"
+                    hidden="true"
+                    onclick="TranslationsParent.urlBarButtonClick(event);">
+                <image class="urlbar-icon"/>
+              </hbox>
               <toolbarbutton id="urlbar-zoom-button"
                      onclick="FullZoom.reset(); FullZoom.resetScalingZoom();"
                      tooltip="dynamic-shortcut-tooltip"
