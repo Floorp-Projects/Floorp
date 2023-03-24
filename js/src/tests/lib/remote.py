@@ -56,9 +56,7 @@ def init_device(options):
     if DEVICE is not None:
         return DEVICE
 
-    from mozbuild.base import MozbuildObject
     from mozdevice import ADBDeviceFactory, ADBError, ADBTimeoutError
-    from mozrunner.devices.android_device import get_adb_path
 
     try:
         if not options.local_lib:
@@ -66,30 +64,21 @@ def init_device(options):
             # the js binary to find the necessary libraries.
             options.local_lib = posixpath.dirname(options.js_shell)
 
-        # Follow the same logic as geckoview builds to find adb
-        context = MozbuildObject.from_environment()
-        adb_path = get_adb_path(context)
-
         DEVICE = ADBDeviceFactory(
-            adb=adb_path,
-            device=options.device_serial,
-            test_root=options.remote_test_root,
+            device=options.device_serial, test_root=options.remote_test_root
         )
+
+        init_remote_dir(DEVICE, options.remote_test_root)
 
         bin_dir = posixpath.join(options.remote_test_root, "bin")
         tests_dir = posixpath.join(options.remote_test_root, "tests")
         temp_dir = posixpath.join(options.remote_test_root, "tmp")
-
-        # Create directory structure on device
-        init_remote_dir(DEVICE, options.remote_test_root)
+        # Push js shell and libraries.
         init_remote_dir(DEVICE, tests_dir)
         init_remote_dir(DEVICE, bin_dir)
         init_remote_dir(DEVICE, temp_dir)
-
-        # Push js shell and libraries.
         push_libs(options, DEVICE, bin_dir)
         push_progs(options, DEVICE, [options.js_shell], bin_dir)
-
         # update options.js_shell to point to the js binary on the device
         options.js_shell = os.path.join(bin_dir, "js")
 
