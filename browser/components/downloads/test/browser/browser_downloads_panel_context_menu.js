@@ -591,5 +591,10 @@ async function prepareDownloads(downloads, overrideExtension = null) {
     }
     ok(props.target instanceof Ci.nsIFile, "download target is a nsIFile");
   }
-  await task_addDownloads(downloads);
+  // If we'd just insert downloads as defined in the test case, they would
+  // appear reversed in the panel, because they will be in descending insertion
+  // order (newest at the top). The problem is we define an itemIndex based on
+  // the downloads array, and it would be weird to define it based on a
+  // reversed order. Short, we just reverse the array to preserve the order.
+  await task_addDownloads(downloads.reverse());
 }
