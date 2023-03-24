@@ -158,7 +158,7 @@ TEST_F(ImageSurfacePipeIntegration, SurfacePipe) {
           ++count;
           EXPECT_EQ(int32_t(100), aLength);
           memcpy(aBlockStart, buffer, 100 * sizeof(uint32_t));
-          return MakeTuple(int32_t(100), Maybe<WriteState>());
+          return std::make_tuple(int32_t(100), Maybe<WriteState>());
         });
 
     EXPECT_EQ(WriteState::FINISHED, result);

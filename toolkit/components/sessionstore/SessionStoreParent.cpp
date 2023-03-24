@@ -91,12 +91,12 @@ static void DoSessionStoreUpdate(CanonicalBrowsingContext* aBrowsingContext,
     if (aZoom) {
       GECKOBUNDLE_START(zoomBundle);
       GECKOBUNDLE_PUT(zoomBundle, "resolution",
-                      java::sdk::Double::New(Get<0>(*aZoom)));
+                      java::sdk::Double::New(std::get<0>(*aZoom)));
       GECKOBUNDLE_START(displaySizeBundle);
       GECKOBUNDLE_PUT(displaySizeBundle, "width",
-                      java::sdk::Integer::ValueOf(Get<1>(*aZoom)));
+                      java::sdk::Integer::ValueOf(std::get<1>(*aZoom)));
       GECKOBUNDLE_PUT(displaySizeBundle, "height",
-                      java::sdk::Integer::ValueOf(Get<2>(*aZoom)));
+                      java::sdk::Integer::ValueOf(std::get<2>(*aZoom)));
       GECKOBUNDLE_FINISH(displaySizeBundle);
       GECKOBUNDLE_PUT(zoomBundle, "displaySize", displaySizeBundle);
       GECKOBUNDLE_FINISH(zoomBundle);

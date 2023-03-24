@@ -389,7 +389,7 @@ opaque-types = [
                             # for clang.
     "mozilla::SeenPtrs",
     "mozilla::SupportsWeakPtr",
-    "mozilla::Tuple",
+    "std::tuple",
     "SupportsWeakPtr",
     "mozilla::detail::WeakReference",
     "mozilla::WeakPtr",

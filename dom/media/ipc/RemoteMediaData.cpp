@@ -88,12 +88,12 @@ already_AddRefed<MediaByteBuffer> RemoteArrayOfByteBuffer::MediaByteBufferAt(
     size_t aIndex) const {
   MOZ_ASSERT(aIndex < Count());
   const OffsetEntry& entry = mOffsets[aIndex];
-  if (!mBuffers || !Get<1>(entry)) {
+  if (!mBuffers || !std::get<1>(entry)) {
     // It's an empty one.
     return nullptr;
   }
-  size_t entrySize = Get<1>(entry);
-  if (!Check(Get<0>(entry), entrySize)) {
+  size_t entrySize = std::get<1>(entry);
+  if (!Check(std::get<0>(entry), entrySize)) {
     // This Shmem is corrupted and can't contain the data we are about to
     // retrieve. We return an empty array instead of asserting to allow for
     // recovery.
@@ -101,7 +101,7 @@ already_AddRefed<MediaByteBuffer> RemoteArrayOfByteBuffer::MediaByteBufferAt(
   }
   RefPtr<MediaByteBuffer> buffer = new MediaByteBuffer(entrySize);
   buffer->SetLength(entrySize);
-  memcpy(buffer->Elements(), mBuffers->get<uint8_t>() + Get<0>(entry),
+  memcpy(buffer->Elements(), mBuffers->get<uint8_t>() + std::get<0>(entry),
          entrySize);
   return buffer.forget();
 }

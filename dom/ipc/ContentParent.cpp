@@ -7840,8 +7840,9 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyOnHistoryReload(
         aForceReload, canReload, loadState, reloadActiveEntry);
   }
   aResolver(
-      Tuple<const bool&, const Maybe<NotNull<RefPtr<nsDocShellLoadState>>>&,
-            const Maybe<bool>&>(canReload, loadState, reloadActiveEntry));
+      std::tuple<const bool&,
+                 const Maybe<NotNull<RefPtr<nsDocShellLoadState>>>&,
+                 const Maybe<bool>&>(canReload, loadState, reloadActiveEntry));
   return IPC_OK();
 }
 
@@ -8243,7 +8244,7 @@ void ContentParent::DidLaunchSubprocess() {
 
 IPCResult ContentParent::RecvGetSystemIcon(nsIURI* aURI,
                                            GetSystemIconResolver&& aResolver) {
-  using ResolverArgs = Tuple<const nsresult&, mozilla::Maybe<ByteBuf>&&>;
+  using ResolverArgs = std::tuple<const nsresult&, mozilla::Maybe<ByteBuf>&&>;
 
   if (!aURI) {
     Maybe<ByteBuf> bytebuf = Nothing();

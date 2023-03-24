@@ -2775,7 +2775,7 @@ void js::maybeUpdateWarmUpCount(JSScript* script) {
     ScriptFinalWarmUpCountMap::Ptr p = map->lookup(script);
     MOZ_ASSERT(p);
 
-    mozilla::Get<0>(p->value()) += script->jitScript()->warmUpCount();
+    std::get<0>(p->value()) += script->jitScript()->warmUpCount();
   }
 }
 
@@ -2789,8 +2789,8 @@ void js::maybeSpewScriptFinalWarmUpCount(JSScript* script) {
     ScriptFinalWarmUpCountMap::Ptr p = map->lookup(script);
     MOZ_ASSERT(p);
     auto& tuple = p->value();
-    uint32_t warmUpCount = mozilla::Get<0>(tuple);
-    SharedImmutableString& scriptName = mozilla::Get<1>(tuple);
+    uint32_t warmUpCount = std::get<0>(tuple);
+    SharedImmutableString& scriptName = std::get<1>(tuple);
 
     JSContext* cx = TlsContext.get();
     cx->spewer().enableSpewing();

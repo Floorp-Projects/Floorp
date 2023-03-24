@@ -7,7 +7,7 @@
 %{ C++
 
 #include "mozilla/Maybe.h"
-#include "mozilla/Tuple.h"
+
 #include "nsTArrayForwardDeclare.h"
 #include "nsHttp.h"
 #include "nsStringFwd.h"
@@ -30,7 +30,7 @@ namespace net {
 native TypeResult(mozilla::net::TypeRecordResultType);
 
 native MaybePort(mozilla::Maybe<uint16_t>);
-native MaybeAlpnTuple(mozilla::Maybe<mozilla::Tuple<nsCString, mozilla::net::SupportedAlpnRank>>);
+native MaybeAlpnTuple(mozilla::Maybe<std::tuple<nsCString, mozilla::net::SupportedAlpnRank>>);
 
 [scriptable, uuid(5d13241b-9d46-448a-90d8-77c418491026)]
 interface nsIDNSByTypeRecord : nsIDNSRecord

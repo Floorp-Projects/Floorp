@@ -30,7 +30,7 @@
 #include "mozilla/StaticPrefs_intl.h"
 #include "mozilla/TaskCategory.h"
 #include "mozilla/TextUtils.h"
-#include "mozilla/Tuple.h"
+
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/BindingDeclarations.h"

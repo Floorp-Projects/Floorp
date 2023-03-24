@@ -1806,10 +1806,10 @@ already_AddRefed<Promise> ChromeUtils::CollectScrollingData(
 
   extPromise->Then(
       GetCurrentSerialEventTarget(), __func__,
-      [promise](const Tuple<uint32_t, uint32_t>& aResult) {
+      [promise](const std::tuple<uint32_t, uint32_t>& aResult) {
         InteractionData out = {};
-        out.mInteractionTimeInMilliseconds = Get<0>(aResult);
-        out.mScrollingDistanceInPixels = Get<1>(aResult);
+        out.mInteractionTimeInMilliseconds = std::get<0>(aResult);
+        out.mScrollingDistanceInPixels = std::get<1>(aResult);
         promise->MaybeResolve(out);
       },
       [promise](bool aValue) { promise->MaybeReject(NS_ERROR_FAILURE); });

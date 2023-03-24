@@ -15,7 +15,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Span.h"
-#include "mozilla/Tuple.h"
+
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/LocationBase.h"
 #include "mozilla/dom/MaybeDiscarded.h"
@@ -878,7 +878,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   // Return mTriggeringPrincipal and mPrincipalToInherit if the load id
   // saved with the principal matches the current load identifier of this BC.
-  Tuple<nsCOMPtr<nsIPrincipal>, nsCOMPtr<nsIPrincipal>>
+  std::tuple<nsCOMPtr<nsIPrincipal>, nsCOMPtr<nsIPrincipal>>
   GetTriggeringAndInheritPrincipalsForCurrentLoad();
 
   void HistoryGo(int32_t aOffset, uint64_t aHistoryEpoch,
@@ -1259,7 +1259,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void CreateChildSHistory();
 
   using PrincipalWithLoadIdentifierTuple =
-      Tuple<nsCOMPtr<nsIPrincipal>, uint64_t>;
+      std::tuple<nsCOMPtr<nsIPrincipal>, uint64_t>;
 
   nsIPrincipal* GetSavedPrincipal(
       Maybe<PrincipalWithLoadIdentifierTuple> aPrincipalTuple);

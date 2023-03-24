@@ -141,7 +141,7 @@ void JSValidatorChild::Resolve(ValidatorResult aResult) {
     }
   }
 
-  mResolver.ref()(Tuple<mozilla::Maybe<Shmem>&&, const ValidatorResult&>(
+  mResolver.ref()(std::tuple<mozilla::Maybe<Shmem>&&, const ValidatorResult&>(
       std::move(data), aResult));
   mResolver.reset();
 }
