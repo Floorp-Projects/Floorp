@@ -2336,12 +2336,6 @@
   value: false
   mirror: always
 
-# Compression Streams (CompressionStream/DecompressionStream)
-- name: dom.compression_streams.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 - name: dom.crypto.randomUUID.enabled
   type: RelaxedAtomicBool
   value: true
