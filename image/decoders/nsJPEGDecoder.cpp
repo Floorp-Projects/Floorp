@@ -157,6 +157,9 @@ nsresult nsJPEGDecoder::InitInternal() {
   mSourceMgr.resync_to_restart = jpeg_resync_to_restart;
   mSourceMgr.term_source = term_source;
 
+  mInfo.mem->max_memory_to_use = static_cast<long>(
+      std::min<size_t>(SurfaceCache::MaximumCapacity(), LONG_MAX));
+
   // Record app markers for ICC data
   for (uint32_t m = 0; m < 16; m++) {
     jpeg_save_markers(&mInfo, JPEG_APP0 + m, 0xFFFF);
