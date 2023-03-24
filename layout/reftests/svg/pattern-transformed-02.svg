@@ -1,0 +1,29 @@
+<svg width="800" height="500" xmlns="http://www.w3.org/2000/svg">
+
+  <text x="25" y="25">Both patterns should render without blurriness</text>
+
+  <pattern id="pattern1" viewBox="0 0 100 20" width="100" height="20"
+           patternUnits="userSpaceOnUse">
+    <circle r="2" cx="10" cy="10" fill="green"/>
+    <circle r="4" cx="30" cy="10" fill="green"/>
+    <circle r="6" cx="50" cy="10" fill="green"/>
+    <circle r="8" cx="70" cy="10" fill="green"/>
+    <circle r="10" cx="90" cy="10" fill="green"/>
+  </pattern>
+
+  <circle r="150" cx="200" cy="200" stroke="gray" fill="none"/>
+  <circle r="150" cx="200" cy="200" fill="url(#pattern1)"/>
+
+  <pattern id="pattern2" viewBox="0 0 20 100" width="20" height="100"
+           patternUnits="userSpaceOnUse" patternTransform="rotate(270)">
+    <circle r="2" cx="10" cy="10" fill="green"/>
+    <circle r="4" cx="10" cy="30" fill="green"/>
+    <circle r="6" cx="10" cy="50" fill="green"/>
+    <circle r="8" cx="10" cy="70" fill="green"/>
+    <circle r="10" cx="10" cy="90" fill="green"/>
+  </pattern>
+
+  <circle r="150" cx="600" cy="200" stroke="gray" fill="none"/>
+  <circle r="150" cx="600" cy="200" fill="url(#pattern2)"/>
+
+</svg>
