@@ -37,13 +37,10 @@ class gfxFontMissingGlyphs final {
    * @param aRect the glyph-box for the glyph that is missing
    * @param aDrawTarget the DrawTarget to draw to
    * @param aPattern the pattern currently being used to paint
-   * @param aAppUnitsPerDevPixel the appUnits to devPixel ratio we're using,
-   *                             (so we can scale glyphs to a sensible size)
    * @param aMat optional local-space orientation matrix
    */
   static void DrawMissingGlyph(uint32_t aChar, const Rect& aRect,
                                DrawTarget& aDrawTarget, const Pattern& aPattern,
-                               uint32_t aAppUnitsPerDevPixel,
                                const Matrix* aMat = nullptr);
   /**
    * @return the desired minimum width for a glyph-box that will allow
