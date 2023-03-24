@@ -18,6 +18,7 @@
 
 #include "GLContextCGL.h"
 #include "MozFramebuffer.h"
+#include "ScopedGLHelpers.h"
 
 namespace mozilla {
 namespace layers {

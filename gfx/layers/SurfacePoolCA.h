@@ -16,6 +16,7 @@
 
 #include "mozilla/layers/SurfacePool.h"
 #include "CFTypeRefPtr.h"
+#include "MozFramebuffer.h"
 #include "nsISupportsImpl.h"
 
 namespace mozilla {
