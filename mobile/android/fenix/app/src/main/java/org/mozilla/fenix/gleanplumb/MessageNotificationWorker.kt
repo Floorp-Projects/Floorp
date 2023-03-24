@@ -192,8 +192,9 @@ class NotificationDismissedService : Service() {
                 NimbusMessagingController(applicationContext.components.analytics.messagingStorage)
 
             // Get the relevant message.
-            val messageId = intent.getStringExtra(DISMISSED_MESSAGE_ID)!!
-            val message = runBlockingIncrement { nimbusMessagingController.getMessage(messageId) }
+            val message = intent.getStringExtra(DISMISSED_MESSAGE_ID) ?.let { messageId ->
+                runBlockingIncrement { nimbusMessagingController.getMessage(messageId) }
+            }
 
             if (message != null) {
                 // Update message as 'dismissed'.
@@ -220,8 +221,9 @@ class NotificationClickedReceiverActivity : Activity() {
             NimbusMessagingController(components.analytics.messagingStorage)
 
         // Get the relevant message.
-        val messageId = intent.getStringExtra(CLICKED_MESSAGE_ID)!!
-        val message = runBlockingIncrement { nimbusMessagingController.getMessage(messageId) }
+        val message = intent.getStringExtra(CLICKED_MESSAGE_ID) ?.let { messageId ->
+            runBlockingIncrement { nimbusMessagingController.getMessage(messageId) }
+        }
 
         if (message != null) {
             // Update message as 'clicked'.

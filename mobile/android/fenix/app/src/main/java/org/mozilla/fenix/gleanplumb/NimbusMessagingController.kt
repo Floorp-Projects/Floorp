@@ -84,7 +84,7 @@ class NimbusMessagingController(
      * @return the [Message] with a matching [id], or null if no [Message] has a matching [id].
      */
     suspend fun getMessage(id: String): Message? {
-        return messagingStorage.getMessages().find { it.id == id }
+        return messagingStorage.getMessage(id)
     }
 
     /**

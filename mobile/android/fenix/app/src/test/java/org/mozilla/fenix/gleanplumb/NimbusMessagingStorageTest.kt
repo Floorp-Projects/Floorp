@@ -600,6 +600,45 @@ class NimbusMessagingStorageTest {
         verify { messagingFeature wasNot Called }
     }
 
+    @Test
+    fun `WHEN calling getMessage THEN return message with matching key OR null if doesn't exist`() =
+        runTest {
+            val messages = mapOf(
+                "low-message" to createMessageData(style = "low-priority"),
+                "high-message" to createMessageData(style = "high-priority"),
+                "medium-message" to createMessageData(style = "medium-priority"),
+            )
+            val styles = mapOf(
+                "high-priority" to createStyle(priority = 100),
+                "medium-priority" to createStyle(priority = 50),
+                "low-priority" to createStyle(priority = 1),
+            )
+            val metadataStorage: MessageMetadataStorage = mockk(relaxed = true)
+            val messagingFeature = createMessagingFeature(
+                styles = styles,
+                messages = messages,
+            )
+
+            coEvery { metadataStorage.getMetadata() } returns mapOf(
+                "message-1" to Message.Metadata(
+                    id = "message-1",
+                ),
+            )
+
+            val storage = NimbusMessagingStorage(
+                testContext,
+                metadataStorage,
+                reportMalformedMessage,
+                gleanPlumb,
+                messagingFeature,
+            )
+
+            assertEquals("high-message", storage.getMessage("high-message")?.id)
+            assertEquals("medium-message", storage.getMessage("medium-message")?.id)
+            assertEquals("low-message", storage.getMessage("low-message")?.id)
+            assertEquals(null, storage.getMessage("no-message")?.id)
+        }
+
     private fun createMessageData(
         action: String = "action-1",
         style: String = "style-1",

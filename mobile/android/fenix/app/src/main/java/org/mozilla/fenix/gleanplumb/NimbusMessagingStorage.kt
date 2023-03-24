@@ -53,7 +53,30 @@ class NimbusMessagingStorage(
         get() = attributeProvider?.getCustomAttributes(context) ?: JSONObject()
 
     /**
-     * Returns a list of available messages descending sorted by their priority.
+     * Returns the [Message] for the given [key] or returns null if none found.
+     */
+    @Suppress("ReturnCount")
+    suspend fun getMessage(key: String): Message? {
+        val featureValue = messagingFeature.value()
+        val value = featureValue.messages[key] ?: return null
+        val trigger = sanitizeTriggers(key, value.trigger, featureValue.triggers) ?: return null
+        val action = sanitizeAction(key, value.action, featureValue.actions, value.isControl) ?: return null
+        val defaultStyle = StyleData()
+        val storageMetadata = metadataStorage.getMetadata()
+
+        return Message(
+            id = key,
+            data = value,
+            action = action,
+            style = featureValue.styles[value.style] ?: defaultStyle,
+            metadata = storageMetadata[key] ?: addMetadata(key),
+            triggers = trigger,
+        )
+    }
+
+    /**
+     * Returns a list of currently available messages descending sorted by their priority.
+     * This list of messages will not include any expired, pressed or dismissed messages.
      */
     suspend fun getMessages(): List<Message> {
         val featureValue = messagingFeature.value()

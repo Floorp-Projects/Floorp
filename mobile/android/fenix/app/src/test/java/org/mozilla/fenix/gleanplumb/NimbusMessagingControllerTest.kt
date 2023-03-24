@@ -283,27 +283,8 @@ class NimbusMessagingControllerTest {
     fun `GIVEN stored messages contains a matching message WHEN calling getMessage THEN return the matching message`() =
         coroutineScope.runTest {
             val message1 = createMessage("1")
-            val message2 = createMessage("2")
-            val message3 = createMessage("3")
-            val messages = listOf(message1, message2, message3)
-            coEvery { storage.getMessages() }.returns(messages)
-
-            val actualMessage = controller.getMessage(message2.id)
-
-            assertEquals(message2, actualMessage)
-        }
-
-    @Test
-    fun `GIVEN stored messages contains multiple matching messages WHEN calling getMessage THEN return the first matching message`() =
-        coroutineScope.runTest {
-            val id = "same id"
-            val message1 = createMessage(id)
-            val message2 = createMessage(id)
-            val message3 = createMessage(id)
-            val messages = listOf(message1, message2, message3)
-            coEvery { storage.getMessages() }.returns(messages)
-
-            val actualMessage = controller.getMessage(id)
+            coEvery { storage.getMessage(message1.id) }.returns(message1)
+            val actualMessage = controller.getMessage(message1.id)
 
             assertEquals(message1, actualMessage)
         }
@@ -311,12 +292,7 @@ class NimbusMessagingControllerTest {
     @Test
     fun `GIVEN stored messages doesn't contain a matching message WHEN calling getMessage THEN return null`() =
         coroutineScope.runTest {
-            val message1 = createMessage("1")
-            val message2 = createMessage("2")
-            val message3 = createMessage("3")
-            val messages = listOf(message1, message2, message3)
-            coEvery { storage.getMessages() }.returns(messages)
-
+            coEvery { storage.getMessage("unknown id") }.returns(null)
             val actualMessage = controller.getMessage("unknown id")
 
             assertNull(actualMessage)
