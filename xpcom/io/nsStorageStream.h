@@ -59,6 +59,8 @@ class nsStorageStream final : public nsIStorageStream, public nsIOutputStream {
   char* mWriteCursor MOZ_GUARDED_BY(mMutex) = nullptr;
   // Pointer to one byte after end of segment containing the write cursor
   char* mSegmentEnd MOZ_GUARDED_BY(mMutex) = nullptr;
+  // Maximum number of bytes which may be written to the stream
+  uint32_t mMaxLogicalLength MOZ_GUARDED_BY(mMutex) = 0;
   // Number of bytes written to stream
   uint32_t mLogicalLength MOZ_GUARDED_BY(mMutex) = 0;
   // number of input streams actively reading a segment.

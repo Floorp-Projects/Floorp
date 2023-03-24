@@ -10,21 +10,16 @@
 #include "nsThreadUtils.h"
 #include "mozilla/ScopeExit.h"
 
-nsresult nsSegmentedBuffer::Init(uint32_t aSegmentSize, uint32_t aMaxSize) {
+nsresult nsSegmentedBuffer::Init(uint32_t aSegmentSize) {
   if (mSegmentArrayCount != 0) {
     return NS_ERROR_FAILURE;  // initialized more than once
   }
   mSegmentSize = aSegmentSize;
-  mMaxSize = aMaxSize;
   mSegmentArrayCount = NS_SEGMENTARRAY_INITIAL_COUNT;
   return NS_OK;
 }
 
 char* nsSegmentedBuffer::AppendNewSegment() {
-  if (GetSize() >= mMaxSize) {
-    return nullptr;
-  }
-
   if (!mSegmentArray) {
     uint32_t bytes = mSegmentArrayCount * sizeof(char*);
     mSegmentArray = (char**)moz_xmalloc(bytes);
@@ -32,9 +27,14 @@ char* nsSegmentedBuffer::AppendNewSegment() {
   }
 
   if (IsFull()) {
-    uint32_t newArraySize = mSegmentArrayCount * 2;
-    uint32_t bytes = newArraySize * sizeof(char*);
-    mSegmentArray = (char**)moz_xrealloc(mSegmentArray, bytes);
+    mozilla::CheckedInt<uint32_t> newArraySize =
+        mozilla::CheckedInt<uint32_t>(mSegmentArrayCount) * 2;
+    mozilla::CheckedInt<uint32_t> bytes = newArraySize * sizeof(char*);
+    if (!bytes.isValid()) {
+      return nullptr;
+    }
+
+    mSegmentArray = (char**)moz_xrealloc(mSegmentArray, bytes.value());
     // copy wrapped content to new extension
     if (mFirstSegmentIndex > mLastSegmentIndex) {
       // deal with wrap around case
@@ -43,12 +43,12 @@ char* nsSegmentedBuffer::AppendNewSegment() {
       memset(mSegmentArray, 0, mLastSegmentIndex * sizeof(char*));
       mLastSegmentIndex += mSegmentArrayCount;
       memset(&mSegmentArray[mLastSegmentIndex], 0,
-             (newArraySize - mLastSegmentIndex) * sizeof(char*));
+             (newArraySize.value() - mLastSegmentIndex) * sizeof(char*));
     } else {
       memset(&mSegmentArray[mLastSegmentIndex], 0,
-             (newArraySize - mLastSegmentIndex) * sizeof(char*));
+             (newArraySize.value() - mLastSegmentIndex) * sizeof(char*));
     }
-    mSegmentArrayCount = newArraySize;
+    mSegmentArrayCount = newArraySize.value();
   }
 
   char* seg = (char*)malloc(mSegmentSize);

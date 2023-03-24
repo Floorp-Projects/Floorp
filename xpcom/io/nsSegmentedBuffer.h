@@ -22,7 +22,6 @@ class nsSegmentedBuffer {
  public:
   nsSegmentedBuffer()
       : mSegmentSize(0),
-        mMaxSize(0),
         mSegmentArray(nullptr),
         mSegmentArrayCount(0),
         mFirstSegmentIndex(0),
@@ -30,7 +29,7 @@ class nsSegmentedBuffer {
 
   ~nsSegmentedBuffer() { Empty(); }
 
-  nsresult Init(uint32_t aSegmentSize, uint32_t aMaxSize);
+  nsresult Init(uint32_t aSegmentSize);
 
   char* AppendNewSegment();  // pushes at end
 
@@ -55,8 +54,6 @@ class nsSegmentedBuffer {
   }
 
   inline uint32_t GetSegmentSize() { return mSegmentSize; }
-  inline uint32_t GetMaxSize() { return mMaxSize; }
-  inline uint32_t GetSize() { return GetSegmentCount() * mSegmentSize; }
 
   inline char* GetSegment(uint32_t aIndex) {
     NS_ASSERTION(aIndex < GetSegmentCount(), "index out of bounds");
@@ -78,7 +75,6 @@ class nsSegmentedBuffer {
 
  protected:
   uint32_t mSegmentSize;
-  uint32_t mMaxSize;
   char** mSegmentArray;
   uint32_t mSegmentArrayCount;
   int32_t mFirstSegmentIndex;
