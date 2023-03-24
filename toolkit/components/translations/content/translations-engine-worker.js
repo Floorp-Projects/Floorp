@@ -535,6 +535,8 @@ class BergamotUtils {
 
       /** @type {Bergamot} */
       const bergamot = loadBergamot({
+        // This is the amount of memory that a simple run of Bergamot uses, in byte.
+        INITIAL_MEMORY: 459_276_288,
         preRun: [],
         onAbort() {
           reject(new Error("Error loading Bergamot wasm module."));
