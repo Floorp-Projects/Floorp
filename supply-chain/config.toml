@@ -621,10 +621,6 @@ criteria = "safe-to-deploy"
 version = "0.3.7"
 criteria = "safe-to-run"
 
-[[exemptions.headers-core]]
-version = "0.2.0"
-criteria = "safe-to-run"
-
 [[exemptions.hermit-abi]]
 version = "0.1.19"
 criteria = "safe-to-deploy"
@@ -639,10 +635,6 @@ criteria = "safe-to-run"
 
 [[exemptions.ident_case]]
 version = "1.0.1"
-criteria = "safe-to-deploy"
-
-[[exemptions.idna]]
-version = "0.2.3"
 criteria = "safe-to-deploy"
 
 [[exemptions.indexmap]]
@@ -729,10 +721,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.mach]]
 version = "0.3.2"
-criteria = "safe-to-deploy"
-
-[[exemptions.malloc_buf]]
-version = "0.0.6"
 criteria = "safe-to-deploy"
 
 [[exemptions.memalloc]]
@@ -865,10 +853,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.paste]]
 version = "1.0.7"
-criteria = "safe-to-deploy"
-
-[[exemptions.peeking_take_while]]
-version = "0.1.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.phf]]
@@ -1014,10 +998,6 @@ criteria = "safe-to-deploy"
 [[exemptions.ryu]]
 version = "1.0.10"
 criteria = "safe-to-deploy"
-
-[[exemptions.safemem]]
-version = "0.3.3"
-criteria = "safe-to-run"
 
 [[exemptions.same-file]]
 version = "1.0.6"
