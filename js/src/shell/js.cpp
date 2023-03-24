@@ -11478,6 +11478,8 @@ bool InitOptionParser(OptionParser& op) {
                         "Enable Watchtower optimizations") ||
       !op.addBoolOption('\0', "disable-watchtower",
                         "Disable Watchtower optimizations") ||
+      !op.addBoolOption('\0', "enable-ic-frame-pointers",
+                        "Use frame pointers in all IC stubs") ||
       !op.addBoolOption('\0', "scalar-replace-arguments",
                         "Use scalar replacement to optimize ArgumentsObject") ||
       !op.addStringOption(
@@ -12385,6 +12387,10 @@ bool SetContextJITOptions(JSContext* cx, const OptionParser& op) {
   }
   if (op.getBoolOption("only-inline-selfhosted")) {
     jit::JitOptions.onlyInlineSelfHosted = true;
+  }
+
+  if (op.getBoolOption("enable-ic-frame-pointers")) {
+    jit::JitOptions.enableICFramePointers = true;
   }
 
   if (const char* str = op.getStringOption("ion-iterator-indices")) {
