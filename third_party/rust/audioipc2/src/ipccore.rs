@@ -7,12 +7,13 @@ use std::io::{self, Result};
 use std::sync::{mpsc, Arc};
 use std::thread;
 
-use crossbeam_channel::{self, Receiver, Sender};
 use mio::{event::Event, Events, Interest, Poll, Registry, Token, Waker};
 use slab::Slab;
 
 use crate::messages::AssociateHandleForMessage;
-use crate::rpccore::{make_client, make_server, Client, Handler, Proxy, Server};
+use crate::rpccore::{
+    make_client, make_server, Client, Handler, Proxy, RequestQueue, RequestQueueSender, Server,
+};
 use crate::{
     codec::Codec,
     codec::LengthDelimitedCodec,
@@ -54,7 +55,7 @@ enum Request {
 #[derive(Clone, Debug)]
 pub struct EventLoopHandle {
     waker: Arc<Waker>,
-    requests_tx: Sender<Request>,
+    requests: RequestQueueSender<Request>,
 }
 
 impl EventLoopHandle {
@@ -101,8 +102,8 @@ impl EventLoopHandle {
     ) -> Result<Token> {
         assert_not_in_event_loop_thread();
         let (tx, rx) = mpsc::channel();
-        self.requests_tx
-            .send(Request::AddConnection(connection, driver, tx))
+        self.requests
+            .push(Request::AddConnection(connection, driver, tx))
             .map_err(|_| {
                 debug!("EventLoopHandle::add_connection send failed");
                 io::ErrorKind::ConnectionAborted
@@ -116,7 +117,7 @@ impl EventLoopHandle {
 
     // Signal EventLoop to shutdown.  Causes EventLoop::poll to return Ok(false).
     fn shutdown(&self) -> Result<()> {
-        self.requests_tx.send(Request::Shutdown).map_err(|_| {
+        self.requests.push(Request::Shutdown).map_err(|_| {
             debug!("EventLoopHandle::shutdown send failed");
             io::ErrorKind::ConnectionAborted
         })?;
@@ -125,9 +126,8 @@ impl EventLoopHandle {
 
     // Signal EventLoop to wake connection specified by `token` for processing.
     pub(crate) fn wake_connection(&self, token: Token) {
-        match self.requests_tx.send(Request::WakeConnection(token)) {
-            Ok(_) => self.waker.wake().expect("wake failed"),
-            Err(e) => debug!("EventLoopHandle::wake_connection failed: {:?}", e),
+        if self.requests.push(Request::WakeConnection(token)).is_ok() {
+            self.waker.wake().expect("wake failed");
         }
     }
 }
@@ -141,8 +141,7 @@ struct EventLoop {
     waker: Arc<Waker>,
     name: String,
     connections: Slab<Connection>,
-    requests_rx: Receiver<Request>,
-    requests_tx: Sender<Request>,
+    requests: Arc<RequestQueue<Request>>,
 }
 
 const EVENT_LOOP_INITIAL_CLIENTS: usize = 64; // Initial client allocation, exceeding this will cause the connection slab to grow.
@@ -152,15 +151,13 @@ impl EventLoop {
     fn new(name: String) -> Result<EventLoop> {
         let poll = Poll::new()?;
         let waker = Arc::new(Waker::new(poll.registry(), WAKE_TOKEN)?);
-        let (tx, rx) = crossbeam_channel::bounded(EVENT_LOOP_INITIAL_CLIENTS);
         let eventloop = EventLoop {
             poll,
             events: Events::with_capacity(EVENT_LOOP_EVENTS_PER_ITERATION),
             waker,
             name,
             connections: Slab::with_capacity(EVENT_LOOP_INITIAL_CLIENTS),
-            requests_rx: rx,
-            requests_tx: tx,
+            requests: Arc::new(RequestQueue::new(EVENT_LOOP_INITIAL_CLIENTS)),
         };
 
         Ok(eventloop)
@@ -170,7 +167,7 @@ impl EventLoop {
     fn handle(&mut self) -> EventLoopHandle {
         EventLoopHandle {
             waker: self.waker.clone(),
-            requests_tx: self.requests_tx.clone(),
+            requests: self.requests.new_sender(),
         }
     }
 
@@ -247,7 +244,7 @@ impl EventLoop {
         }
 
         // If the waker was signalled there may be pending requests to process.
-        while let Ok(req) = self.requests_rx.try_recv() {
+        while let Some(req) = self.requests.pop() {
             match req {
                 Request::AddConnection(pipe, driver, tx) => {
                     debug!("{}: EventLoop: handling add_connection", self.name);
@@ -889,9 +886,9 @@ mod test {
         drop(server);
         drop(client);
 
-        client_proxy
-            .try_clone()
-            .expect_err("cloning a closed proxy");
+        let clone = client_proxy.clone();
+        let response = clone.call(TestServerMessage::TestRequest);
+        response.expect_err("sending to a dropped ClientHandler");
     }
 
     #[test]

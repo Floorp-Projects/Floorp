@@ -647,7 +647,7 @@ impl CubebServer {
             #[cfg(target_os = "linux")]
             ServerMessage::PromoteThreadToRealTime(thread_info) => {
                 let info = RtPriorityThreadInfo::deserialize(thread_info);
-                match promote_thread_to_real_time(info, 256, 48000) {
+                match promote_thread_to_real_time(info, 0, 48000) {
                     Ok(_) => {
                         info!("Promotion of content process thread to real-time OK");
                     }
@@ -741,8 +741,8 @@ impl CubebServer {
             input_frame_size,
             output_frame_size,
             shm,
-            state_callback_rpc: rpc.try_clone()?,
-            device_change_callback_rpc: rpc.try_clone()?,
+            state_callback_rpc: rpc.clone(),
+            device_change_callback_rpc: rpc.clone(),
             data_callback_rpc: rpc,
             connected: AtomicBool::new(false),
         });
@@ -802,7 +802,7 @@ impl CubebServer {
         let min_latency = round_up_pow2(5 * rate / 1000);
         // Note: maximum latency is restricted by the SharedMem size.
         let max_latency = rate;
-        let latency = params.latency_frames.max(min_latency).min(max_latency);
+        let latency = params.latency_frames.clamp(min_latency, max_latency);
         trace!(
             "stream rate={} latency requested={} calculated={}",
             rate,
