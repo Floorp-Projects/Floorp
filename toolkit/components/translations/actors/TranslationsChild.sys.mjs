@@ -394,10 +394,20 @@ export class TranslationsChild extends JSWindowActorChild {
   #bergamotWasmArrayBuffer = null;
 
   /**
+   * @override https://firefox-source-docs.mozilla.org/dom/ipc/jsactors.html#actorcreated
+   */
+  actorCreated() {
+    this.#isTranslationsEngineMocked = this.sendQuery(
+      "Translations:GetIsTranslationsEngineMocked"
+    );
+  }
+
+  /**
    * The translations engine could be mocked for tests, since the wasm and the language
    * models must be downloaded from Remote Settings.
+   * @type {undefined | Promise<boolean>}
    */
-  #isTranslationsEngineMocked = false;
+  #isTranslationsEngineMocked;
 
   /**
    * The getter for the TranslationsEngine, managed by the EngineCache.
@@ -435,7 +445,7 @@ export class TranslationsChild extends JSWindowActorChild {
    * @returns {Promise<ArrayBuffer>}
    */
   async #getBergamotWasmArrayBuffer() {
-    if (this.#isTranslationsEngineMocked) {
+    if (await this.#isTranslationsEngineMocked) {
       throw new Error(
         "The engine is mocked, the Bergamot wasm is not available."
       );
@@ -474,7 +484,7 @@ export class TranslationsChild extends JSWindowActorChild {
    * @returns {Promise<LanguageTranslationModelFiles[]>}
    */
   async #getLanguageTranslationModelFiles(fromLanguage, toLanguage) {
-    if (this.#isTranslationsEngineMocked) {
+    if (await this.#isTranslationsEngineMocked) {
       throw new Error(
         "The engine is mocked, there are no language model files available."
       );
@@ -601,6 +611,14 @@ export class TranslationsChild extends JSWindowActorChild {
    */
   async maybeOfferTranslation() {
     const translationsStart = this.docShell.now();
+
+    if (!(await this.isTranslationsEngineSupported())) {
+      lazy.console.log(
+        "The translations engine is not supported on this device."
+      );
+      return;
+    }
+
     const langTags = await this.getLangTagsForTranslation();
 
     this.#langTags = langTags;
@@ -609,6 +627,15 @@ export class TranslationsChild extends JSWindowActorChild {
     if (langTags && lazy.autoTranslatePagePref) {
       this.translatePage(langTags, translationsStart);
     }
+  }
+
+  async isTranslationsEngineSupported() {
+    if (await this.#isTranslationsEngineMocked) {
+      // A mocked engine is always supported.
+      return true;
+    }
+    // Bergamot requires intgemm support.
+    return Boolean(WebAssembly.mozIntGemm);
   }
 
   /**
@@ -713,9 +740,6 @@ export class TranslationsChild extends JSWindowActorChild {
    */
   receiveMessage(message) {
     switch (message.name) {
-      case "Translations:IsMocked":
-        this.#isTranslationsEngineMocked = message.data;
-        break;
       case "Translations:TranslatePage":
         if (!this.#langTags) {
           lazy.console.warn(
@@ -782,7 +806,10 @@ export class TranslationsChild extends JSWindowActorChild {
    * @returns {null | TranslationsEnginePayload}
    */
   async #getTranslationsEnginePayload(fromLanguage, toLanguage) {
-    if (this.#isTranslationsEngineMocked) {
+    if (!this.#isTranslationsEngineMocked) {
+      throw new Error("Expected #isTranslationsEngineMocked to be a promise.");
+    }
+    if (await this.#isTranslationsEngineMocked) {
       return null;
     }
     const [bergamotWasmArrayBuffer, languageModelFiles] = await Promise.all([
