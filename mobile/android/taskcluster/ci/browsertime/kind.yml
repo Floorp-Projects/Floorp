@@ -157,3 +157,10 @@ tasks:
         run-visual-metrics: False
         chimera: False
         test-name: youtube-playback-vp9-sfr
+
+    constant-regression:
+        description: "Raptor Perftest Regression Detection Testing"
+        subtest-symbol: regress-c
+        test-name: constant-regression
+        run-visual-metrics: False
+        chimera: False
