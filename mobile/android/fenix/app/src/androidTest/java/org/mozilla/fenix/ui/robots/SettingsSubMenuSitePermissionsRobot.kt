@@ -11,11 +11,13 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
+import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import org.hamcrest.CoreMatchers.allOf
+import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.click
 
 /**
@@ -23,9 +25,21 @@ import org.mozilla.fenix.helpers.click
  */
 class SettingsSubMenuSitePermissionsRobot {
 
-    fun verifyNavigationToolBarHeader() = assertNavigationToolBarHeader()
+    fun verifySitePermissionsToolbarTitle() =
+        onView(withText("Site permissions")).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-    fun verifySitePermissionsSubMenuItems() = assertSitePermissionsSubMenuItems()
+    fun verifyToolbarGoBackButton() =
+        goBackButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+    fun verifySitePermissionOption(option: String, summary: String = "") {
+        scrollToElementByText(option)
+        onView(
+            allOf(
+                withText(option),
+                hasSibling(withText(summary)),
+            ),
+        ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    }
 
     class Transition {
         fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
@@ -139,69 +153,6 @@ class SettingsSubMenuSitePermissionsRobot {
             SettingsSubMenuSitePermissionsExceptionsRobot().interact()
             return SettingsSubMenuSitePermissionsExceptionsRobot.Transition()
         }
-    }
-
-    private fun assertNavigationToolBarHeader() = onView(withText("Site permissions"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-    private fun assertSitePermissionsSubMenuItems() {
-        onView(withText("Autoplay"))
-            .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-        val autoplayText = "Block audio only"
-        onView(withText(autoplayText))
-            .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-        val cameraText =
-            "Blocked by Android"
-        onView(withId(R.id.recycler_view)).perform(
-            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                allOf(hasDescendant(withText("Camera")), hasDescendant(withText(cameraText))),
-            ),
-        ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-        val locationText =
-            "Blocked by Android"
-        onView(withId(R.id.recycler_view)).perform(
-            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                allOf(hasDescendant(withText("Location")), hasDescendant(withText(locationText))),
-            ),
-        ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-        val microphoneText =
-            "Blocked by Android"
-        onView(withId(R.id.recycler_view)).perform(
-            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                allOf(hasDescendant(withText("Microphone")), hasDescendant(withText(microphoneText))),
-            ),
-        ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-        onView(withText("Notification"))
-            .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-        val notificationText =
-            "Ask to allow"
-
-        onView(withId(R.id.recycler_view)).perform(
-            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                allOf(hasDescendant(withText("Notification")), hasDescendant(withText(notificationText))),
-            ),
-        ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-        onView(withText("Persistent Storage"))
-            .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-        val persistentStorageText =
-            "Ask to allow"
-
-        onView(withId(R.id.recycler_view)).perform(
-            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                allOf(
-                    hasDescendant(withText("Persistent Storage")),
-                    hasDescendant(withText(persistentStorageText)),
-                ),
-            ),
-        ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
     }
 }
 

@@ -6,16 +6,26 @@ package org.mozilla.fenix.ui.robots
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers.Visibility
-import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
+import androidx.test.espresso.matcher.RootMatchers
+import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.isChecked
+import androidx.test.espresso.matcher.ViewMatchers.isNotChecked
+import androidx.test.espresso.matcher.ViewMatchers.withClassName
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import org.hamcrest.CoreMatchers.allOf
+import org.hamcrest.CoreMatchers.endsWith
 import org.mozilla.fenix.R
-import org.mozilla.fenix.helpers.TestHelper.appName
-import org.mozilla.fenix.helpers.assertIsEnabled
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithDescriptionExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
+import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
+import org.mozilla.fenix.helpers.TestHelper.getStringResource
+import org.mozilla.fenix.helpers.TestHelper.hasCousin
+import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
 
 /**
@@ -23,24 +33,99 @@ import org.mozilla.fenix.helpers.click
  */
 class SettingsSubMenuDataCollectionRobot {
 
-    fun verifyNavigationToolBarHeader() = assertNavigationToolBarHeader()
-
-    fun verifyDataCollectionOptions() = assertDataCollectionOptions()
-
-    fun verifyUsageAndTechnicalDataSwitchDefault() = assertUsageAndTechnicalDataSwitchDefault()
-
-    fun verifyMarketingDataSwitchDefault() = assertMarketingDataValueSwitchDefault()
-
-    fun verifyExperimentsSwitchDefault() = assertExperimentsSwitchDefault()
-
-    fun verifyDataCollectionSubMenuItems() {
-        verifyDataCollectionOptions()
-        verifyUsageAndTechnicalDataSwitchDefault()
-        verifyMarketingDataSwitchDefault()
-        // Temporarily disabled until https://github.com/mozilla-mobile/fenix/issues/17086 and
-        // https://github.com/mozilla-mobile/fenix/issues/17143 are resolved:
-        // verifyExperimentsSwitchDefault()
+    fun verifyDataCollectionView(
+        isUsageAndTechnicalDataEnabled: Boolean,
+        isMarketingDataEnabled: Boolean,
+        studiesSummary: String,
+    ) {
+        assertItemWithDescriptionExists(goBackButton())
+        assertItemContainingTextExists(
+            itemContainingText(getStringResource(R.string.preferences_data_collection)),
+            itemContainingText(getStringResource(R.string.preference_usage_data)),
+            itemContainingText(getStringResource(R.string.preferences_usage_data_description)),
+        )
+        verifyUsageAndTechnicalDataToggle(isUsageAndTechnicalDataEnabled)
+        assertItemContainingTextExists(
+            itemContainingText(getStringResource(R.string.preferences_marketing_data)),
+            itemContainingText(getStringResource(R.string.preferences_marketing_data_description2)),
+        )
+        verifyMarketingDataToggle(isMarketingDataEnabled)
+        assertItemContainingTextExists(
+            itemContainingText(getStringResource(R.string.preference_experiments_2)),
+            itemContainingText(studiesSummary),
+        )
     }
+
+    fun verifyUsageAndTechnicalDataToggle(enabled: Boolean) =
+        onView(withText(R.string.preference_usage_data))
+            .check(
+                matches(
+                    hasCousin(
+                        allOf(
+                            withClassName(endsWith("Switch")),
+                            if (enabled) {
+                                isChecked()
+                            } else {
+                                isNotChecked()
+                            },
+                        ),
+                    ),
+                ),
+            )
+
+    fun verifyMarketingDataToggle(enabled: Boolean) =
+        onView(withText(R.string.preferences_marketing_data))
+            .check(
+                matches(
+                    hasCousin(
+                        allOf(
+                            withClassName(endsWith("Switch")),
+                            if (enabled) {
+                                isChecked()
+                            } else {
+                                isNotChecked()
+                            },
+                        ),
+                    ),
+                ),
+            )
+
+    fun verifyStudiesToggle(enabled: Boolean) =
+        onView(withId(R.id.studies_switch))
+            .check(
+                matches(
+                    if (enabled) {
+                        isChecked()
+                    } else {
+                        isNotChecked()
+                    },
+                ),
+            )
+
+    fun clickUsageAndTechnicalDataToggle() =
+        itemContainingText(getStringResource(R.string.preference_usage_data)).click()
+
+    fun clickMarketingDataToggle() =
+        itemContainingText(getStringResource(R.string.preferences_marketing_data)).click()
+
+    fun clickStudiesOption() =
+        itemContainingText(getStringResource(R.string.preference_experiments_2)).click()
+
+    fun clickStudiesToggle() =
+        itemWithResId("$packageName:id/studies_switch").click()
+
+    fun verifyStudiesDialog() {
+        assertItemWithResIdExists(itemWithResId("$packageName:id/alertTitle"))
+        assertItemContainingTextExists(
+            itemContainingText(getStringResource(R.string.studies_restart_app)),
+        )
+        studiesDialogOkButton.check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        studiesDialogCancelButton.check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    }
+
+    fun clickStudiesDialogCancelButton() = studiesDialogCancelButton.click()
+
+    fun clickStudiesDialogOkButton() = studiesDialogOkButton.click()
 
     class Transition {
         fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
@@ -52,53 +137,6 @@ class SettingsSubMenuDataCollectionRobot {
     }
 }
 
-private fun goBackButton() =
-    onView(withContentDescription("Navigate up"))
-
-private fun assertNavigationToolBarHeader() = onView(
-    allOf(
-        withParent(withId(R.id.navigationToolbar)),
-        withText(R.string.preferences_data_collection),
-    ),
-)
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-private fun assertDataCollectionOptions() {
-    onView(withText(R.string.preference_usage_data))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-    val usageAndTechnicalDataText =
-        "Shares performance, usage, hardware and customization data about your browser with Mozilla to help us make $appName better"
-
-    onView(withText(usageAndTechnicalDataText))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-    onView(withText(R.string.preferences_marketing_data))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-    val marketingDataText =
-        "Shares basic usage data with Adjust, our mobile marketing vendor"
-
-    onView(withText(marketingDataText))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-    // Temporarily disabled until https://github.com/mozilla-mobile/fenix/issues/17086 and
-    // https://github.com/mozilla-mobile/fenix/issues/17143 are resolved:
-    // onView(withText(R.string.preference_experiments_2)).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-    // onView(withText(R.string.preference_experiments_summary_2)).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-}
-
-private fun usageAndTechnicalDataButton() = onView(withText(R.string.preference_usage_data))
-
-private fun assertUsageAndTechnicalDataSwitchDefault() = usageAndTechnicalDataButton()
-    .assertIsEnabled(isEnabled = true)
-
-private fun marketingDataButton() = onView(withText(R.string.preferences_marketing_data))
-
-private fun assertMarketingDataValueSwitchDefault() = marketingDataButton()
-    .assertIsEnabled(isEnabled = true)
-
-private fun experimentsButton() = onView(withText(R.string.preference_experiments_2))
-
-private fun assertExperimentsSwitchDefault() = experimentsButton()
-    .assertIsEnabled(isEnabled = true)
+private fun goBackButton() = itemWithDescription("Navigate up")
+private val studiesDialogOkButton = onView(withId(android.R.id.button1)).inRoot(RootMatchers.isDialog())
+private val studiesDialogCancelButton = onView(withId(android.R.id.button2)).inRoot(RootMatchers.isDialog())
