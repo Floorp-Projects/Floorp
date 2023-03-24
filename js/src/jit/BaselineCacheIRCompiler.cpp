@@ -44,6 +44,10 @@ Address CacheRegisterAllocator::addressOf(MacroAssembler& masm,
                                           BaselineFrameSlot slot) const {
   uint32_t offset =
       stackPushed_ + ICStackValueOffset + slot.slot() * sizeof(JS::Value);
+  if (JitOptions.enableICFramePointers) {
+    // The frame pointer is also on the stack.
+    offset += sizeof(uintptr_t);
+  }
   return Address(masm.getStackPointer(), offset);
 }
 BaseValueIndex CacheRegisterAllocator::addressOf(MacroAssembler& masm,
@@ -51,6 +55,10 @@ BaseValueIndex CacheRegisterAllocator::addressOf(MacroAssembler& masm,
                                                  BaselineFrameSlot slot) const {
   uint32_t offset =
       stackPushed_ + ICStackValueOffset + slot.slot() * sizeof(JS::Value);
+  if (JitOptions.enableICFramePointers) {
+    // The frame pointer is also on the stack.
+    offset += sizeof(uintptr_t);
+  }
   return BaseValueIndex(masm.getStackPointer(), argcReg, offset);
 }
 
@@ -76,6 +84,11 @@ void AutoStubFrame::enter(MacroAssembler& masm, Register scratch,
                           CallCanGC canGC) {
   MOZ_ASSERT(compiler.allocator.stackPushed() == 0);
 
+  if (JitOptions.enableICFramePointers) {
+    // If we have already pushed the frame pointer, pop it
+    // before creating the stub frame.
+    masm.pop(FramePointer);
+  }
   EmitBaselineEnterStubFrame(masm, scratch);
 
 #ifdef DEBUG
@@ -97,6 +110,11 @@ void AutoStubFrame::leave(MacroAssembler& masm) {
 #endif
 
   EmitBaselineLeaveStubFrame(masm);
+  if (JitOptions.enableICFramePointers) {
+    // We will pop the frame pointer when we return,
+    // so we have to push it again now.
+    masm.push(FramePointer);
+  }
 }
 
 #ifdef DEBUG
@@ -127,6 +145,33 @@ JitCode* BaselineCacheIRCompiler::compile() {
 #ifdef JS_CODEGEN_ARM
   masm.setSecondScratchReg(BaselineSecondScratchReg);
 #endif
+  if (JitOptions.enableICFramePointers) {
+    /* [SMDOC] Baseline IC Frame Pointers
+     *
+     *  In general, ICs don't have frame pointers until just before
+     *  doing a VM call, at which point we retroactively create a stub
+     *  frame. However, for the sake of external profilers, we
+     *  optionally support full-IC frame pointers in baseline ICs, with
+     *  the following approach:
+     *    1. We push a frame pointer when we enter an IC.
+     *    2. We pop the frame pointer when we return from an IC, or
+     *       when we jump to the next IC.
+     *    3. Entering a stub frame for a VM call already pushes a
+     *       frame pointer, so we pop our existing frame pointer
+     *       just before entering a stub frame and push it again
+     *       just after leaving a stub frame.
+     *  Some ops take advantage of the fact that the frame pointer is
+     *  not updated until we enter a stub frame to read values from
+     *  the caller's frame. To support this, we allocate a separate
+     *  baselineFrame register when IC frame pointers are enabled.
+     */
+    masm.push(FramePointer);
+    masm.moveStackPtrTo(FramePointer);
+
+    MOZ_ASSERT(baselineFrameReg() != FramePointer);
+    masm.loadPtr(Address(FramePointer, 0), baselineFrameReg());
+  }
+
   // Count stub entries: We count entries rather than successes as it much
   // easier to ensure ICStubReg is valid at entry than at exit.
   Address enteredCount(ICStubReg, ICCacheIRStub::offsetOfEnteredCount());
@@ -157,6 +202,9 @@ JitCode* BaselineCacheIRCompiler::compile() {
   for (size_t i = 0; i < failurePaths.length(); i++) {
     if (!emitFailurePath(i)) {
       return nullptr;
+    }
+    if (JitOptions.enableICFramePointers) {
+      masm.pop(FramePointer);
     }
     EmitStubGuardFailure(masm);
   }
@@ -615,7 +663,7 @@ bool BaselineCacheIRCompiler::emitFrameIsConstructingResult() {
   Register outputScratch = output.valueReg().scratchReg();
 
   // Load the CalleeToken.
-  Address tokenAddr(FramePointer, JitFrameLayout::offsetOfCalleeToken());
+  Address tokenAddr(baselineFrameReg(), JitFrameLayout::offsetOfCalleeToken());
   masm.loadPtr(tokenAddr, outputScratch);
 
   // The low bit indicates whether this call is constructing, just clear the
@@ -1708,7 +1756,7 @@ bool BaselineCacheIRCompiler::emitProxySetByValue(ObjOperandId objId,
   // We need a scratch register but we don't have any registers available on
   // x86, so temporarily store |obj| in the frame's scratch slot.
   int scratchOffset = BaselineFrame::reverseOffsetOfScratchValue();
-  masm.storePtr(obj, Address(FramePointer, scratchOffset));
+  masm.storePtr(obj, Address(baselineFrameReg(), scratchOffset));
 
   AutoStubFrame stubFrame(*this);
   stubFrame.enter(masm, obj);
@@ -1770,7 +1818,7 @@ bool BaselineCacheIRCompiler::emitMegamorphicSetElement(ObjOperandId objId,
   // We need a scratch register but we don't have any registers available on
   // x86, so temporarily store |obj| in the frame's scratch slot.
   int scratchOffset = BaselineFrame::reverseOffsetOfScratchValue();
-  masm.storePtr(obj, Address(FramePointer, scratchOffset));
+  masm.storePtr(obj, Address(baselineFrameReg_, scratchOffset));
 
   AutoStubFrame stubFrame(*this);
   stubFrame.enter(masm, obj);
@@ -1797,6 +1845,9 @@ bool BaselineCacheIRCompiler::emitMegamorphicSetElement(ObjOperandId objId,
 bool BaselineCacheIRCompiler::emitReturnFromIC() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   allocator.discardStack(masm);
+  if (JitOptions.enableICFramePointers) {
+    masm.pop(FramePointer);
+  }
   EmitReturnFromIC(masm);
   return true;
 }
@@ -1986,6 +2037,10 @@ bool BaselineCacheIRCompiler::init(CacheKind kind) {
 
   // Baseline doesn't allocate float registers so none of them are live.
   liveFloatRegs_ = LiveFloatRegisterSet(FloatRegisterSet());
+
+  if (JitOptions.enableICFramePointers) {
+    baselineFrameReg_ = available.takeAny();
+  }
 
   allocator.initAvailableRegs(available);
   return true;
@@ -2557,6 +2612,8 @@ void BaselineCacheIRCompiler::pushArguments(Register argcReg,
 void BaselineCacheIRCompiler::pushStandardArguments(
     Register argcReg, Register scratch, Register scratch2, uint32_t argcFixed,
     bool isJitCall, bool isConstructing) {
+  MOZ_ASSERT(enteredStubFrame_);
+
   // The arguments to the call IC are pushed on the stack left-to-right.
   // Our calling conventions want them right-to-left in the callee, so
   // we duplicate them on the stack in reverse order.
@@ -2624,6 +2681,8 @@ void BaselineCacheIRCompiler::pushArrayArguments(Register argcReg,
                                                  Register scratch2,
                                                  bool isJitCall,
                                                  bool isConstructing) {
+  MOZ_ASSERT(enteredStubFrame_);
+
   // Pull the array off the stack before aligning.
   Register startReg = scratch;
   size_t arrayOffset =
@@ -2756,6 +2815,8 @@ void BaselineCacheIRCompiler::pushFunApplyArgsObj(Register argcReg,
                                                   Register scratch,
                                                   Register scratch2,
                                                   bool isJitCall) {
+  MOZ_ASSERT(enteredStubFrame_);
+
   // Load the arguments object off the stack before aligning.
   Register argsReg = scratch;
   masm.unboxObject(Address(FramePointer, BaselineStubFrameLayout::Size()),
