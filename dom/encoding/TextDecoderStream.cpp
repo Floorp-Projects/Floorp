@@ -48,7 +48,7 @@ JSObject* TextDecoderStream::WrapObject(JSContext* aCx,
 
 // TODO: This does not allow shared array buffers, just as the non-stream
 // TextDecoder/Encoder don't. (Bug 1561594)
-static Span<const uint8_t> ExtractSpanFromBufferSource(
+Span<const uint8_t> ExtractSpanFromBufferSource(
     JSContext* aCx, JS::Handle<JS::Value> aBufferSource, ErrorResult& aRv) {
   RootedUnion<OwningArrayBufferViewOrArrayBuffer> bufferSource(aCx);
   if (!bufferSource.Init(aCx, aBufferSource)) {

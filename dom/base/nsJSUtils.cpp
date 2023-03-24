@@ -186,6 +186,21 @@ bool nsJSUtils::DumpEnabled() {
 #endif
 }
 
+JSObject* nsJSUtils::MoveBufferAsUint8Array(JSContext* aCx, size_t aSize,
+                                            UniquePtr<uint8_t>& aBuffer) {
+  JS::Rooted<JSObject*> arrayBuffer(
+      aCx, JS::NewArrayBufferWithContents(aCx, aSize, aBuffer.get()));
+  if (!arrayBuffer) {
+    return nullptr;
+  }
+
+  // Now the ArrayBuffer owns the buffer, so let's release our ownership
+  (void)aBuffer.release();
+
+  return JS_NewUint8ArrayWithBuffer(aCx, arrayBuffer, 0,
+                                    static_cast<int64_t>(aSize));
+}
+
 //
 // nsDOMJSUtils.h
 //
