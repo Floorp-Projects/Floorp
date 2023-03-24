@@ -271,7 +271,7 @@ var gViewSourceUtils = {
             data.uri,
             browser.contentPrincipal.originAttributes
           );
-          webBrowserPersist.savePrivacyAwareURI(
+          webBrowserPersist.saveURI(
             uri,
             principal,
             null,
