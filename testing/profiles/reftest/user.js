@@ -58,6 +58,9 @@ user_pref("layout.interruptible-reflow.enabled", false);
 // can't guarantee taking both reftest snapshots at the same point
 // during the fade.
 user_pref("layout.testing.overlay-scrollbars.always-visible", true);
+// The broken image icon doesn't block the load event and thus there's no easy
+// way to guarantee it's loaded by the time we take the reftest screenshot.
+user_pref("layout.image.eager_broken_image_icon", true);
 user_pref("media.gmp-manager.url.override", "http://localhost/dummy-gmp-manager.xml");
 user_pref("media.openUnsupportedTypeWithExternalApp", false);
 // Reftests load a lot of URLs very quickly. This puts avoidable and
