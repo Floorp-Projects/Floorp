@@ -144,7 +144,6 @@ elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
         ]
 
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
-    REQUIRES_UNIFIED_BUILD = True
     EXPORTS += [
         "gfxDWriteCommon.h",
         "gfxDWriteFonts.h",

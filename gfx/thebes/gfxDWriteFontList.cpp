@@ -11,8 +11,10 @@
 #include "gfxDWriteFontList.h"
 #include "gfxDWriteFonts.h"
 #include "nsUnicharUtils.h"
+#include "nsPresContext.h"
 #include "nsServiceManagerUtils.h"
 #include "nsCharSeparatedTokenizer.h"
+#include "mozilla/gfx/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/Sprintf.h"
@@ -25,6 +27,8 @@
 #include "nsAppDirectoryServiceDefs.h"
 
 #include "gfxGDIFontList.h"
+#include "gfxRect.h"
+#include "SharedFontList-impl.h"
 
 #include "harfbuzz/hb.h"
 
