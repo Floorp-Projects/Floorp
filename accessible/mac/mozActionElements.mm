@@ -229,3 +229,11 @@ using namespace mozilla::a11y;
 }
 
 @end
+
+@implementation mozDatePickerAccessible
+
+- (NSString*)moxTitle {
+  return utils::LocalizedString(u"dateField"_ns);
+}
+
+@end
