@@ -60,9 +60,9 @@
 
 .ruleview-reveal-panel {
   border-bottom: 1px solid var(--theme-splitter-color);
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, max-content));
   overflow: hidden;
-  flex-wrap: wrap;
   margin: 2px;
 }
 
@@ -77,9 +77,6 @@
 
 .ruleview-reveal-panel label {
   user-select: none;
-  flex-grow: 1;
-  width: 30%;
-  min-width: 100px;
   display: flex;
   align-items: center;
 }
