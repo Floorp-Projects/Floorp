@@ -13849,8 +13849,8 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-driven-animations.enabled")) {
     domProp: "viewTimelineInset",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
-    initial_values: ["0px"],
-    other_values: ["auto", "1%", "1px 1%", "auto auto", "calc(0px) auto"],
+    initial_values: ["auto"],
+    other_values: ["0px", "1%", "1px 1%", "0px 0%", "calc(0px) auto"],
     invalid_values: ["none", "rgb(1, 2, 3)", "foo bar", "1px 2px 3px"],
   };
 

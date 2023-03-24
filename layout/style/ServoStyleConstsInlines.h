@@ -1124,8 +1124,8 @@ inline LengthPercentageOrAuto LengthPercentageOrAuto::Zero() {
 
 template <>
 inline StyleViewTimelineInset::StyleGenericViewTimelineInset()
-    : start(LengthPercentageOrAuto::Zero()),
-      end(LengthPercentageOrAuto::Zero()) {}
+    : start(LengthPercentageOrAuto::Auto()),
+      end(LengthPercentageOrAuto::Auto()) {}
 
 }  // namespace mozilla
 
