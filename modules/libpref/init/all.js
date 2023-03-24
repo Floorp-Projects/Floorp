@@ -3780,7 +3780,9 @@ pref("browser.sanitizer.loglevel", "Warn");
 // [1]: https://browser.mt/
 // [2]: https://github.com/mozilla/firefox-translations
 pref("browser.translations.enable", false);
-// Set to "All" to see all logs, which are useful for debugging.
+// Set to "All" to see all logs, which are useful for debugging. Set to "Info" to see
+// the application logic logs, and not all of the translated messages, which can be
+// slow and overwhelming.
 pref("browser.translations.logLevel", "Error");
 // By default the translations engine on about:translations uses text for translation,
 // and the full page translations uses HTML. Set this pref to true to use the HTML
