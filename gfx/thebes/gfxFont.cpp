@@ -2199,10 +2199,9 @@ bool gfxFont::DrawMissingGlyph(const TextRunDrawParams& aRunParams,
       aRunParams.context->SetMatrix(mat);
     }
 
-    gfxFontMissingGlyphs::DrawMissingGlyph(aDetails->mGlyphID, glyphRect,
-                                           *aRunParams.dt,
-                                           PatternFromState(aRunParams.context),
-                                           1.0 / aRunParams.devPerApp, matPtr);
+    gfxFontMissingGlyphs::DrawMissingGlyph(
+        aDetails->mGlyphID, glyphRect, *aRunParams.dt,
+        PatternFromState(aRunParams.context), matPtr);
   }
   return true;
 }

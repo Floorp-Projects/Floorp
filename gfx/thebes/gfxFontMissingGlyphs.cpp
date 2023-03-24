@@ -378,7 +378,6 @@ void gfxFontMissingGlyphs::Shutdown() { Purge(); }
 void gfxFontMissingGlyphs::DrawMissingGlyph(uint32_t aChar, const Rect& aRect,
                                             DrawTarget& aDrawTarget,
                                             const Pattern& aPattern,
-                                            uint32_t aAppUnitsPerDevPixel,
                                             const Matrix* aMat) {
   Rect rect(aRect);
   // If there is an orientation transform, reorient the bounding rect.
@@ -426,10 +425,19 @@ void gfxFontMissingGlyphs::DrawMissingGlyph(uint32_t aChar, const Rect& aRect,
   Point center = rect.Center();
   Float halfGap = HEX_CHAR_GAP / 2.f;
   Float top = -(MINIFONT_HEIGHT + halfGap);
+
+  // Figure out a scaling factor that will fit the glyphs in the target rect
+  // both horizontally and vertically.
+  Float width = HEX_CHAR_GAP + MINIFONT_WIDTH + HEX_CHAR_GAP + MINIFONT_WIDTH +
+                ((aChar < 0x10000) ? 0 : HEX_CHAR_GAP + MINIFONT_WIDTH) +
+                HEX_CHAR_GAP;
+  Float height = HEX_CHAR_GAP + MINIFONT_HEIGHT + HEX_CHAR_GAP +
+                 MINIFONT_HEIGHT + HEX_CHAR_GAP;
+  Float scaling = std::min(rect.Height() / height, rect.Width() / width);
+
   // We always want integer scaling, otherwise the "bitmap" glyphs will look
-  // even uglier than usual when zoomed
-  int32_t devPixelsPerCSSPx =
-      std::max<int32_t>(1, AppUnitsPerCSSPixel() / aAppUnitsPerDevPixel);
+  // even uglier than usual when scaled to the target.
+  int32_t devPixelsPerCSSPx = std::max<int32_t>(1, std::floor(scaling));
 
   Matrix tempMat;
   if (aMat) {
