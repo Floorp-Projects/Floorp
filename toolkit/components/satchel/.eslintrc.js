@@ -5,8 +5,6 @@
 "use strict";
 
 module.exports = {
-  extends: ["plugin:mozilla/valid-jsdoc"],
-
   rules: {
     "mozilla/balanced-listeners": "error",
     "mozilla/var-only-at-top-level": "error",
