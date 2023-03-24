@@ -36,6 +36,7 @@ XPCOMUtils.defineLazyServiceGetter(
 /**
  * Executes a XUL command on the top window. Called by the callbacks in each
  * TouchBarInput.
+ *
  * @param {string} commandName
  *        A XUL command.
  */
@@ -52,6 +53,7 @@ function execCommand(commandName) {
 /**
  * Static helper function to convert a hexadecimal string to its integer
  * value. Used to convert colours to a format accepted by Apple's NSColor code.
+ *
  * @param {string} hexString
  *        A hexadecimal string, optionally beginning with '#'.
  */
@@ -364,6 +366,7 @@ class TouchBarHelper {
 
   /**
    * Fetches a specific Touch Bar Input by name and updates it on the Touch Bar.
+   *
    * @param {...*} inputNames
    *        A key/keys to a value/values in the gBuiltInInputs object in this file.
    */
@@ -392,6 +395,7 @@ class TouchBarHelper {
   /**
    * Inserts a restriction token into the Urlbar ahead of the current typed
    * search term.
+   *
    * @param {string} restrictionToken
    *        The restriction token to be inserted into the Urlbar. Preferably
    *        sourced from UrlbarTokenizer.RESTRICT.
@@ -509,6 +513,7 @@ helperProto._l10n = new Localization(["browser/touchbar/touchbar.ftl"]);
 
 /**
  * A representation of a Touch Bar input.
+ *
  *     @param {object} input
  *            An object representing a Touch Bar Input.
  *            Contains listed properties.
@@ -617,6 +622,7 @@ class TouchBarInput {
 
   /**
    * Apply Fluent l10n to child inputs.
+   *
    * @param {Array} children
    *   An array of initialized TouchBarInputs.
    */

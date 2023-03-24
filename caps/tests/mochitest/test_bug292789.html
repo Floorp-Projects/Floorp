@@ -20,10 +20,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=292789
 <script class="testbody" type="text/javascript">
 
 /** Test for Bug 292789
- **
- ** Selectively allow access to allowlisted chrome packages
- ** even for ALLOW_CHROME mechanisms (<script>, <img> etc)
- **/
+ *
+ * Selectively allow access to allowlisted chrome packages
+ * even for ALLOW_CHROME mechanisms (<script>, <img> etc)
+ */
 
 /* import-globals-from ../../../toolkit/content/treeUtils.js */
 /* import-globals-from ../../../toolkit/mozapps/update/content/history.js */
@@ -34,20 +34,20 @@ let ChromeUtils = {
   import() { return {}; },
 };
 
-/** <script src=""> test **/
+/** <script src=""> test */
 function testScriptSrc(aCallback) {
     is(typeof gTreeUtils.sort, "function",
        "content can still load <script> from chrome://global");
 
     /** Try to find an export from history.js.  We will find it if it is
-     ** improperly not blocked, otherwise it will be "undefined".
-     **/
+     *  improperly not blocked, otherwise it will be "undefined".
+     */
     is(typeof gUpdateHistory, "undefined",
        "content should not be able to load <script> from chrome://mozapps");
 
     /** make sure the last one didn't pass because someone
-     ** moved history.js
-     **/
+     *  moved history.js
+     */
     var resjs = document.getElementById("resjs");
     resjs.onload = scriptOnload;
     resjs.src = "resource://gre/chrome/toolkit/content/mozapps/update/history.js";
@@ -63,7 +63,7 @@ function testScriptSrc(aCallback) {
     }
 }
 
-/** <img src=""> tests **/
+/** <img src=""> tests */
 var img_global = "chrome://global/skin/media/error.png";
 var img_mozapps = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
 var res_mozapps = "resource://gre/chrome/toolkit/skin/classic/mozapps/extensions/extensionGeneric.svg";

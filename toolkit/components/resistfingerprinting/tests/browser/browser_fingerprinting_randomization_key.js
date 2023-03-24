@@ -7,9 +7,9 @@ const TEST_DOMAIN_THIRD = "https://example.net";
  * the random key works properly.
  *
  * @param {Browser} browser The browser element of the testing tab.
- * @param {String} firstPartyDomain The first-party domain loaded on the tab
- * @param {String} thirdPartyDomain The third-party domain to test
- * @returns {String} The random key hex string
+ * @param {string} firstPartyDomain The first-party domain loaded on the tab
+ * @param {string} thirdPartyDomain The third-party domain to test
+ * @returns {string} The random key hex string
  */
 async function getRandomKeyHexFromBrowser(
   browser,

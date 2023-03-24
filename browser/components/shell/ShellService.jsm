@@ -436,7 +436,7 @@ let ShellServiceInternal = {
    * Determine if we're the default handler for the given file extension (like
    * ".pdf") or protocol (like "https").  Windows-only for now.
    *
-   * @returns true if we are the default handler, false otherwise.
+   * @returns {boolean} true if we are the default handler, false otherwise.
    */
   isDefaultHandlerFor(aFileExtensionOrProtocol) {
     if (AppConstants.platform == "win") {
