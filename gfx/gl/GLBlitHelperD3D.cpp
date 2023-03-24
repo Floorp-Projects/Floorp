@@ -14,8 +14,10 @@
 #include "ScopedGLHelpers.h"
 
 #include "mozilla/layers/D3D11ShareHandleImage.h"
+#include "mozilla/layers/D3D11TextureIMFSampleImage.h"
 #include "mozilla/layers/D3D11YCbCrImage.h"
 #include "mozilla/layers/TextureD3D11.h"
+#include "mozilla/StaticPrefs_gl.h"
 
 namespace mozilla {
 namespace gl {
