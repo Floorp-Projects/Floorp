@@ -34,6 +34,12 @@ XPCOMUtils.defineLazyGetter(lazy, "console", () => {
   });
 });
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "autoTranslatePagePref",
+  "browser.translations.autoTranslate"
+);
+
 export class LanguageIdEngine {
   /** @type {Worker} */
   #languageIdWorker;
@@ -418,6 +424,14 @@ export class TranslationsChild extends JSWindowActorChild {
   translatedDoc = null;
 
   /**
+   * The matched language tags for the page. Used to find a default language pair for
+   * translations.
+   *
+   * @type {null | { appLangTag: string, docLangTag: string }}
+   * */
+  #langTags = null;
+
+  /**
    * @returns {Promise<ArrayBuffer>}
    */
   async #getBergamotWasmArrayBuffer() {
@@ -480,23 +494,49 @@ export class TranslationsChild extends JSWindowActorChild {
       null,
       "Event: " + event.type
     );
-    if (event.type === "DOMContentLoaded") {
-      this.innerWindowId = this.contentWindow.windowGlobalChild.innerWindowId;
-      this.maybeTranslateDocument();
+    switch (event.type) {
+      case "DOMContentLoaded":
+        this.innerWindowId = this.contentWindow.windowGlobalChild.innerWindowId;
+        this.maybeOfferTranslation();
+        break;
+      case "pagehide":
+        lazy.console.log(
+          "pagehide",
+          this.contentWindow.location,
+          this.#langTags
+        );
+        this.reportLangTagsToParent(null);
+        break;
     }
   }
 
-  async maybeTranslateDocument() {
+  /**
+   * This is used to conditionally add the translations button.
+   * @param {null | { appLangTag: string, docLangTag: string }} langTags
+   */
+  reportLangTagsToParent(langTags) {
+    this.sendAsyncMessage("Translations:ReportLangTags", {
+      langTags,
+    });
+  }
+
+  /**
+   * Determine if the page should be translated by checking the App's languages and
+   * comparing it to the reported language of the page. If we can translate the page,
+   * then return the language pair.
+   *
+   * @returns {Promise<null | { appLangTag: string, docLangTag: string }>}
+   */
+  async getLangTagsForTranslation() {
     const { href } = this.contentWindow.location;
     if (
       !href.startsWith("http://") &&
       !href.startsWith("https://") &&
       !href.startsWith("file:///")
     ) {
-      return;
+      return null;
     }
 
-    const translationsStart = this.docShell.now();
     let appLangTag = new Intl.Locale(Services.locale.appLocaleAsBCP47).language;
     let docLangTag;
 
@@ -513,7 +553,7 @@ export class TranslationsChild extends JSWindowActorChild {
         message
       );
       lazy.console.log(message, this.contentWindow.location.href);
-      return;
+      return null;
     }
 
     if (appLangTag === docLangTag) {
@@ -525,7 +565,7 @@ export class TranslationsChild extends JSWindowActorChild {
         message
       );
       lazy.console.log(message, this.contentWindow.location.href);
-      return;
+      return null;
     }
 
     // There is no reason to look at supported languages if the engine is already in
@@ -534,7 +574,7 @@ export class TranslationsChild extends JSWindowActorChild {
       // TODO - This is wrong for non-bidirectional translation pairs.
       const supportedLanguages = await this.getSupportedLanguages();
       if (this.#isDestroyed) {
-        return;
+        return null;
       }
       if (
         !supportedLanguages.some(({ langTag }) => langTag === appLangTag) ||
@@ -547,10 +587,45 @@ export class TranslationsChild extends JSWindowActorChild {
           message
         );
         lazy.console.log(message, supportedLanguages);
-        return;
+        return null;
       }
     }
+    return { appLangTag, docLangTag };
+  }
 
+  /**
+   * Deduce the language tags on the page, and either:
+   *  1. Show an offer to translate.
+   *  2. Auto-translate.
+   *  3. Do nothing.
+   */
+  async maybeOfferTranslation() {
+    const translationsStart = this.docShell.now();
+    const langTags = await this.getLangTagsForTranslation();
+
+    this.#langTags = langTags;
+    this.reportLangTagsToParent(langTags);
+
+    if (langTags && lazy.autoTranslatePagePref) {
+      this.translatePage(langTags, translationsStart);
+    }
+  }
+
+  /**
+   * Load the translation engine and translate the page.
+   *
+   * @param {{docLangTag: string, appLangTag: string}} langTags
+   * @param {number} [translationsStart]
+   * @returns {Promise<void>}
+   */
+  async translatePage(
+    { docLangTag, appLangTag },
+    translationsStart = this.docShell.now()
+  ) {
+    if (this.translatedDoc) {
+      lazy.console.warn("This page was already translated.");
+      return;
+    }
     try {
       const engineLoadStart = this.docShell.now();
 
@@ -640,6 +715,15 @@ export class TranslationsChild extends JSWindowActorChild {
     switch (message.name) {
       case "Translations:IsMocked":
         this.#isTranslationsEngineMocked = message.data;
+        break;
+      case "Translations:TranslatePage":
+        if (!this.#langTags) {
+          lazy.console.warn(
+            "Attempting to translate a page, but no language tags were present."
+          );
+          break;
+        }
+        this.translatePage(this.#langTags);
         break;
       default:
         lazy.console.warn("Unknown message.");

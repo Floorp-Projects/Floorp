@@ -250,3 +250,11 @@ interface LanguageIdEngineMockedPayload {
  * Nodes that are being translated are given priority according to their visibility.
  */
 export type NodeVisibility = "in-viewport" | "out-of-viewport" | "hidden";
+
+/**
+ * Used to decide how to translate a page for full page translations.
+ */
+export interface LangTags {
+  appLangTag: string,
+  docLangTag: string,
+}
