@@ -7280,9 +7280,8 @@ static void ReportHTTPSRRTelemetry(
                                                 getter_AddRefs(svcbRecord)))) {
     MOZ_ASSERT(svcbRecord);
 
-    Maybe<std::tuple<nsCString, SupportedAlpnRank>> alpn =
-        svcbRecord->GetAlpn();
-    bool isHttp3 = alpn ? IsHttp3(std::get<1>(*alpn)) : false;
+    Maybe<Tuple<nsCString, SupportedAlpnRank>> alpn = svcbRecord->GetAlpn();
+    bool isHttp3 = alpn ? IsHttp3(Get<1>(*alpn)) : false;
     Telemetry::Accumulate(Telemetry::HTTPS_RR_WITH_HTTP3_PRESENTED, isHttp3);
   }
 }

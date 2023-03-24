@@ -211,7 +211,7 @@ IdentityCredential::DiscoverFromExternalSourceInMainProcess(
               const IdentityProviderConfigWithManifest& providerAndManifest) {
             IdentityProviderAPIConfig manifest;
             IdentityProviderConfig provider;
-            std::tie(provider, manifest) = providerAndManifest;
+            Tie(provider, manifest) = providerAndManifest;
             return IdentityCredential::CreateCredential(
                 principal, browsingContext, provider, manifest);
           },
@@ -256,12 +256,12 @@ IdentityCredential::CreateCredential(
                                               aManifest)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [argumentPrincipal, browsingContext, aProvider](
-              const std::tuple<IdentityProviderAPIConfig,
-                               IdentityProviderAccountList>& promiseResult) {
+          [argumentPrincipal, browsingContext,
+           aProvider](const Tuple<IdentityProviderAPIConfig,
+                                  IdentityProviderAccountList>& promiseResult) {
             IdentityProviderAPIConfig currentManifest;
             IdentityProviderAccountList accountList;
-            std::tie(currentManifest, accountList) = promiseResult;
+            Tie(currentManifest, accountList) = promiseResult;
             if (!accountList.mAccounts.WasPassed() ||
                 accountList.mAccounts.Value().Length() == 0) {
               return IdentityCredential::GetAccountPromise::CreateAndReject(
@@ -277,11 +277,11 @@ IdentityCredential::CreateCredential(
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [argumentPrincipal, browsingContext, aProvider](
-              const std::tuple<IdentityProviderAPIConfig,
-                               IdentityProviderAccount>& promiseResult) {
+              const Tuple<IdentityProviderAPIConfig, IdentityProviderAccount>&
+                  promiseResult) {
             IdentityProviderAPIConfig currentManifest;
             IdentityProviderAccount account;
-            std::tie(currentManifest, account) = promiseResult;
+            Tie(currentManifest, account) = promiseResult;
             return IdentityCredential::PromptUserWithPolicy(
                 browsingContext, argumentPrincipal, account, currentManifest,
                 aProvider);
@@ -293,11 +293,11 @@ IdentityCredential::CreateCredential(
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [argumentPrincipal, aProvider](
-              const std::tuple<IdentityProviderAPIConfig,
-                               IdentityProviderAccount>& promiseResult) {
+              const Tuple<IdentityProviderAPIConfig, IdentityProviderAccount>&
+                  promiseResult) {
             IdentityProviderAPIConfig currentManifest;
             IdentityProviderAccount account;
-            std::tie(currentManifest, account) = promiseResult;
+            Tie(currentManifest, account) = promiseResult;
             return IdentityCredential::FetchToken(argumentPrincipal, aProvider,
                                                   currentManifest, account);
           },
@@ -307,12 +307,11 @@ IdentityCredential::CreateCredential(
           })
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [aProvider](
-              const std::tuple<IdentityProviderToken, IdentityProviderAccount>&
-                  promiseResult) {
+          [aProvider](const Tuple<IdentityProviderToken,
+                                  IdentityProviderAccount>& promiseResult) {
             IdentityProviderToken token;
             IdentityProviderAccount account;
-            std::tie(token, account) = promiseResult;
+            Tie(token, account) = promiseResult;
             IPCIdentityCredential credential;
             credential.token() = token.mToken;
             credential.id() = account.mId;
@@ -542,7 +541,7 @@ IdentityCredential::FetchAccountList(
       GetCurrentSerialEventTarget(), __func__,
       [aManifest](const IdentityProviderAccountList& accountList) {
         return IdentityCredential::GetAccountListPromise::CreateAndResolve(
-            std::make_tuple(aManifest, accountList), __func__);
+            MakeTuple(aManifest, accountList), __func__);
       },
       [](nsresult error) {
         return IdentityCredential::GetAccountListPromise::CreateAndReject(
@@ -640,7 +639,7 @@ RefPtr<IdentityCredential::GetTokenPromise> IdentityCredential::FetchToken(
       GetCurrentSerialEventTarget(), __func__,
       [aAccount](const IdentityProviderToken& token) {
         return IdentityCredential::GetTokenPromise::CreateAndResolve(
-            std::make_tuple(token, aAccount), __func__);
+            MakeTuple(token, aAccount), __func__);
       },
       [](nsresult error) {
         return IdentityCredential::GetTokenPromise::CreateAndReject(error,
@@ -799,8 +798,8 @@ IdentityCredential::PromptUserToSelectProvider(
         }
         const IdentityProviderAPIConfig& resolvedManifest =
             aManifests.ElementAt(result).ResolveValue();
-        resultPromise->Resolve(
-            std::make_tuple(resolvedProvider, resolvedManifest), __func__);
+        resultPromise->Resolve(MakeTuple(resolvedProvider, resolvedManifest),
+                               __func__);
       },
       [resultPromise](nsresult aRv) { resultPromise->Reject(aRv, __func__); });
   showPromptPromise->AppendNativeHandler(listener);
@@ -876,7 +875,7 @@ IdentityCredential::PromptUserToSelectAccount(
         }
         const IdentityProviderAccount& resolved =
             aAccounts.mAccounts.Value().ElementAt(result);
-        resultPromise->Resolve(std::make_tuple(aManifest, resolved), __func__);
+        resultPromise->Resolve(MakeTuple(aManifest, resolved), __func__);
       },
       [resultPromise](nsresult aRv) { resultPromise->Reject(aRv, __func__); });
   showPromptPromise->AppendNativeHandler(listener);
@@ -927,7 +926,7 @@ IdentityCredential::PromptUserWithPolicy(
     icStorageService->SetState(aPrincipal, idpPrincipal,
                                NS_ConvertUTF16toUTF8(aAccount.mId), true, true);
     return IdentityCredential::GetAccountPromise::CreateAndResolve(
-        std::make_tuple(aManifest, aAccount), __func__);
+        MakeTuple(aManifest, aAccount), __func__);
   }
 
   // otherwise, fetch ->Then display ->Then return ->Catch reject
@@ -1009,7 +1008,7 @@ IdentityCredential::PromptUserWithPolicy(
           [aManifest, aAccount](bool success) {
             if (success) {
               return IdentityCredential::GetAccountPromise::CreateAndResolve(
-                  std::make_tuple(aManifest, aAccount), __func__);
+                  MakeTuple(aManifest, aAccount), __func__);
             }
             return IdentityCredential::GetAccountPromise::CreateAndReject(
                 NS_ERROR_FAILURE, __func__);

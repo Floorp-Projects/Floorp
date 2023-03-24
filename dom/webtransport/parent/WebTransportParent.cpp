@@ -36,8 +36,7 @@ void WebTransportParent::Create(
     const bool& aRequireUnreliable, const uint32_t& aCongestionControl,
     // Sequence<WebTransportHash>* aServerCertHashes,
     Endpoint<PWebTransportParent>&& aParentEndpoint,
-    std::function<void(std::tuple<const nsresult&, const uint8_t&>)>&&
-        aResolver) {
+    std::function<void(Tuple<const nsresult&, const uint8_t&>)>&& aResolver) {
   LOG(("Created WebTransportParent %p %s %s %s congestion=%s", this,
        NS_ConvertUTF16toUTF8(aURL).get(),
        aDedicated ? "Dedicated" : "AllowPooling",

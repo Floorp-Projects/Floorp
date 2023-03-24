@@ -11,6 +11,7 @@
 #include "mozilla/dom/Credential.h"
 #include "mozilla/dom/IPCIdentityCredential.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/Tuple.h"
 
 namespace mozilla::dom {
 
@@ -35,20 +36,19 @@ class IdentityCredential final : public Credential {
   typedef MozPromise<bool, nsresult, true> ValidationPromise;
   typedef MozPromise<IdentityProviderAPIConfig, nsresult, true>
       GetManifestPromise;
-  typedef std::tuple<IdentityProviderConfig, IdentityProviderAPIConfig>
+  typedef Tuple<IdentityProviderConfig, IdentityProviderAPIConfig>
       IdentityProviderConfigWithManifest;
   typedef MozPromise<IdentityProviderConfigWithManifest, nsresult, true>
       GetIdentityProviderConfigWithManifestPromise;
   typedef MozPromise<
-      std::tuple<IdentityProviderAPIConfig, IdentityProviderAccountList>,
-      nsresult, true>
+      Tuple<IdentityProviderAPIConfig, IdentityProviderAccountList>, nsresult,
+      true>
       GetAccountListPromise;
-  typedef MozPromise<std::tuple<IdentityProviderToken, IdentityProviderAccount>,
+  typedef MozPromise<Tuple<IdentityProviderToken, IdentityProviderAccount>,
                      nsresult, true>
       GetTokenPromise;
-  typedef MozPromise<
-      std::tuple<IdentityProviderAPIConfig, IdentityProviderAccount>, nsresult,
-      true>
+  typedef MozPromise<Tuple<IdentityProviderAPIConfig, IdentityProviderAccount>,
+                     nsresult, true>
       GetAccountPromise;
   typedef MozPromise<IdentityProviderClientMetadata, nsresult, true>
       GetMetadataPromise;

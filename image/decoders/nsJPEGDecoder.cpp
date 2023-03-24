@@ -663,8 +663,7 @@ WriteState nsJPEGDecoder::OutputScanlines() {
       [&](uint32_t* aPixelBlock, int32_t aBlockSize) {
         JSAMPROW sampleRow = (JSAMPROW)(mCMSLine ? mCMSLine : aPixelBlock);
         if (jpeg_read_scanlines(&mInfo, &sampleRow, 1) != 1) {
-          return std::make_tuple(/* aWritten */ 0,
-                                 Some(WriteState::NEED_MORE_DATA));
+          return MakeTuple(/* aWritten */ 0, Some(WriteState::NEED_MORE_DATA));
         }
 
         switch (mInfo.out_color_space) {
@@ -688,7 +687,7 @@ WriteState nsJPEGDecoder::OutputScanlines() {
             break;
         }
 
-        return std::make_tuple(aBlockSize, Maybe<WriteState>());
+        return MakeTuple(aBlockSize, Maybe<WriteState>());
       });
 
   Maybe<SurfaceInvalidRect> invalidRect = mPipe.TakeInvalidRect();

@@ -29,7 +29,7 @@
 #ifdef XP_WIN
 #  include "mozilla/TimeStamp_windows.h"
 #endif
-
+#include "mozilla/Tuple.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Vector.h"
@@ -710,8 +710,8 @@ struct ParamTraits<mozilla::UniquePtr<T>> {
 };
 
 template <typename... Ts>
-struct ParamTraits<std::tuple<Ts...>> {
-  typedef std::tuple<Ts...> paramType;
+struct ParamTraits<mozilla::Tuple<Ts...>> {
+  typedef mozilla::Tuple<Ts...> paramType;
 
   template <typename U>
   static void Write(IPC::MessageWriter* aWriter, U&& aParam) {
@@ -719,30 +719,31 @@ struct ParamTraits<std::tuple<Ts...>> {
                   std::index_sequence_for<Ts...>{});
   }
 
-  static bool Read(IPC::MessageReader* aReader, std::tuple<Ts...>* aResult) {
+  static bool Read(IPC::MessageReader* aReader,
+                   mozilla::Tuple<Ts...>* aResult) {
     return ReadInternal(aReader, *aResult, std::index_sequence_for<Ts...>{});
   }
 
  private:
   template <size_t... Is>
   static void WriteInternal(IPC::MessageWriter* aWriter,
-                            const std::tuple<Ts...>& aParam,
+                            const mozilla::Tuple<Ts...>& aParam,
                             std::index_sequence<Is...>) {
-    WriteParams(aWriter, std::get<Is>(aParam)...);
+    WriteParams(aWriter, mozilla::Get<Is>(aParam)...);
   }
 
   template <size_t... Is>
   static void WriteInternal(IPC::MessageWriter* aWriter,
-                            std::tuple<Ts...>&& aParam,
+                            mozilla::Tuple<Ts...>&& aParam,
                             std::index_sequence<Is...>) {
-    WriteParams(aWriter, std::move(std::get<Is>(aParam))...);
+    WriteParams(aWriter, std::move(mozilla::Get<Is>(aParam))...);
   }
 
   template <size_t... Is>
   static bool ReadInternal(IPC::MessageReader* aReader,
-                           std::tuple<Ts...>& aResult,
+                           mozilla::Tuple<Ts...>& aResult,
                            std::index_sequence<Is...>) {
-    return ReadParams(aReader, std::get<Is>(aResult)...);
+    return ReadParams(aReader, mozilla::Get<Is>(aResult)...);
   }
 };
 
