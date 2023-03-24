@@ -118,7 +118,7 @@ template <typename OrigFuncT, typename... Args,
           typename ArgTuple = std::tuple<Args...>, size_t... Indices>
 decltype(auto) Apply(OrigFuncT& aFunc, ArgTuple&& aArgs,
                      std::index_sequence<Indices...>) {
-  return aFunc(std::get<Indices>(std::forward<ArgTuple>(aArgs))...);
+  return std::apply(aFunc, aArgs);
 }
 
 #define DEFINE_TEST_FUNCTION(calling_convention)                               \
