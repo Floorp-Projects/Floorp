@@ -1035,8 +1035,6 @@ WEBIDL_FILES = [
 
 if CONFIG["MOZ_DOM_STREAMS"]:
     WEBIDL_FILES += [
-        "CompressionStream.webidl",
-        "DecompressionStream.webidl",
         "FileSystemWritableFileStream.webidl",
         "QueuingStrategy.webidl",
         "ReadableByteStreamController.webidl",

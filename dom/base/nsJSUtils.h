@@ -81,14 +81,6 @@ class nsJSUtils {
   static void ResetTimeZone();
 
   static bool DumpEnabled();
-
-  // A helper function that receives buffer pointer, creates ArrayBuffer, and
-  // convert it to Uint8Array.
-  // Note that the buffer needs to be created by JS_malloc (or at least can be
-  // freed by JS_free), as the resulting Uint8Array takes the ownership of the
-  // buffer.
-  static JSObject* MoveBufferAsUint8Array(JSContext* aCx, size_t aSize,
-                                          mozilla::UniquePtr<uint8_t>& aBuffer);
 };
 
 inline void AssignFromStringBuffer(nsStringBuffer* buffer, size_t len,
