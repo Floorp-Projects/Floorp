@@ -35,7 +35,7 @@ pypi:s3transfer==0.3.3
 pypi:scandir==1.10.0
 pypi:singledispatch==3.4.0.3
 pypi:snowballstemmer==2.0.0
-pypi:Sphinx==4.3.2
+pypi:Sphinx==4.5
 pypi:sphinx-copybutton==0.5.0
 pypi:sphinx-panels==0.6.0
 pypi:sphinx-js==3.2.1

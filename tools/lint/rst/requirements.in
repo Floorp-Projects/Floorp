@@ -3,6 +3,7 @@ charset-normalizer==2.0.12
 docutils==0.16
 idna==2.10
 imagesize==1.2.0
+importlib-metadata==6.0.0
 markupsafe==2.0.1
 packaging==20.9
 requests==2.27.1
@@ -15,4 +16,4 @@ Pygments==2.6.1
 pytz==2021.1
 urllib3==1.26.9
 # We need sphinx to avoid some rstcheck errors and warnings
-Sphinx==4.3.0
+Sphinx==4.5
