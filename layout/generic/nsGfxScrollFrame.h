@@ -662,7 +662,7 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   static void SetScrollbarVisibility(nsIFrame* aScrollbar, bool aVisible);
 
   /**
-   * GetScrolledRectInternal is designed to encapsulate deciding which
+   * GetUnsnappedScrolledRectInternal is designed to encapsulate deciding which
    * directions of overflow should be reachable by scrolling and which
    * should not.  Callers should NOT depend on it having any particular
    * behavior.
@@ -671,8 +671,8 @@ class nsHTMLScrollFrame : public nsContainerFrame,
    * nsHTMLScrollFrames with LTR directionality, and allows scrolling down and
    * to the left for nsHTMLScrollFrames with RTL directionality.
    */
-  nsRect GetScrolledRectInternal(const nsRect& aScrolledOverflowArea,
-                                 const nsSize& aScrollPortSize) const;
+  nsRect GetUnsnappedScrolledRectInternal(const nsRect& aScrolledOverflowArea,
+                                          const nsSize& aScrollPortSize) const;
 
   bool IsPhysicalLTR() const { return GetWritingMode().IsPhysicalLTR(); }
   bool IsBidiLTR() const { return GetWritingMode().IsBidiLTR(); }
