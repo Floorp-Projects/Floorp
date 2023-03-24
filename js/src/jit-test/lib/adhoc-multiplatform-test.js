@@ -63,7 +63,7 @@ const requiredArchs = ["x64", "x86", "arm64"];
 // ("suffix") to be matched.
 const prefixAndSuffix =
       {x64: {
-           prefix: `48 8b ec        mov %rsp, %rbp`,
+           prefix: `48 89 e5        mov %rsp, %rbp`,
            suffix: `5d              pop %rbp`
        },
        x86: {

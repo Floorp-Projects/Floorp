@@ -34,7 +34,7 @@ var RIPR = `0x${HEXES}`;
 var RIPRADDR = `${HEX}{2} ${HEX}{2} ${HEX}{2} ${HEX}{2}`;
 
 // End of prologue
-var x64_prefix = `48 8b ec                  mov %rsp, %rbp`
+var x64_prefix = `48 89 e5                  mov %rsp, %rbp`
 
 // Start of epilogue
 var x64_suffix = `5d                        pop %rbp`;

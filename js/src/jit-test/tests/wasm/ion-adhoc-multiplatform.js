@@ -53,8 +53,8 @@ codegenTestMultiplatform_adhoc(
     "mul64_zeroL",
     // FIXME folding happened, zero-creation insns could be improved
     {x64:   // Same shenanigans as above.  Also, on xor, REX.W is redundant.
-            `48 8b cf  mov %rdi, %rcx
-             48 8b c1  mov %rcx, %rax
+            `48 89 f9  mov %rdi, %rcx
+             48 89 c8  mov %rcx, %rax
              48 33 c0  xor %rax, %rax`,
      x86:   `33 c0     xor %eax, %eax
              33 d2     xor %edx, %edx`,
@@ -80,8 +80,8 @@ codegenTestMultiplatform_adhoc(
     `(module (func (export "mul64_oneL") (param $p1 i64) (result i64)
        (i64.mul (i64.const 1) (local.get $p1))))`,
     "mul64_oneL",
-    {x64:   `48 8b cf  mov %rdi, %rcx
-             48 8b c1  mov %rcx, %rax`,
+    {x64:   `48 89 f9  mov %rdi, %rcx
+             48 89 c8  mov %rcx, %rax`,
      x86:   `8b 55 14  movl 0x14\\(%rbp\\), %edx
              8b 45 10  movl 0x10\\(%rbp\\), %eax`,
      arm64: ``,
@@ -103,14 +103,14 @@ codegenTestMultiplatform_adhoc(
     `(module (func (export "mul64_minusOneL") (param $p1 i64) (result i64)
        (i64.mul (i64.const -1) (local.get $p1))))`,
     "mul64_minusOneL",
-    {x64:   `48 8b cf  mov %rdi, %rcx
-             48 8b c1  mov %rcx, %rax
+    {x64:   `48 89 f9  mov %rdi, %rcx
+             48 89 c8  mov %rcx, %rax
              48 f7 d8  neg %rax`,
      x86:   `f7 d8     neg %eax
              83 d2 00  adc \\$0x00, %edx
              f7 da     neg %edx`,
      arm64: `cb0003e0  neg  x0, x0`,
-     arm:   `e2700000  rsbs r0, r0, #0 
+     arm:   `e2700000  rsbs r0, r0, #0
              e2e11000  rsc  r1, r1, #0`},
     {x86: {no_prefix:true}}
 );
@@ -132,8 +132,8 @@ codegenTestMultiplatform_adhoc(
     `(module (func (export "mul64_twoL") (param $p1 i64) (result i64)
        (i64.mul (i64.const 2) (local.get $p1))))`,
     "mul64_twoL",
-    {x64:   `48 8b cf  mov %rdi, %rcx
-             48 8b c1  mov %rcx, %rax
+    {x64:   `48 89 f9  mov %rdi, %rcx
+             48 89 c8  mov %rcx, %rax
              48 03 c0  add %rax, %rax`,
      x86:   `8b 55 14  movl 0x14\\(%rbp\\), %edx
              8b 45 10  movl 0x10\\(%rbp\\), %eax
@@ -162,8 +162,8 @@ codegenTestMultiplatform_adhoc(
     `(module (func (export "mul64_fourL") (param $p1 i64) (result i64)
        (i64.mul (i64.const 4) (local.get $p1))))`,
     "mul64_fourL",
-    {x64:   `48 8b cf     mov %rdi, %rcx
-             48 8b c1     mov %rcx, %rax
+    {x64:   `48 89 f9     mov %rdi, %rcx
+             48 89 c8     mov %rcx, %rax
              48 c1 e0 02  shl \\$0x02, %rax`,
      x86:   `8b 55 14     movl 0x14\\(%rbp\\), %edx
              8b 45 10     movl 0x10\\(%rbp\\), %eax
@@ -200,8 +200,8 @@ codegenTestMultiplatform_adhoc(
     `(module (func (export "mul64_zeroR") (param $p1 i64) (result i64)
        (i64.mul (local.get $p1) (i64.const 0))))`,
     "mul64_zeroR",
-    {x64:   `48 8b cf  mov %rdi, %rcx
-             48 8b c1  mov %rcx, %rax
+    {x64:   `48 89 f9  mov %rdi, %rcx
+             48 89 c8  mov %rcx, %rax
              48 33 c0  xor %rax, %rax`,     // REX.W is redundant
      x86:   `33 c0     xor %eax, %eax
              33 d2     xor %edx, %edx`,
@@ -226,8 +226,8 @@ codegenTestMultiplatform_adhoc(
     `(module (func (export "mul64_oneR") (param $p1 i64) (result i64)
        (i64.mul (local.get $p1) (i64.const 1))))`,
     "mul64_oneR",
-    {x64:   `48 8b cf  mov %rdi, %rcx
-             48 8b c1  mov %rcx, %rax`,
+    {x64:   `48 89 f9  mov %rdi, %rcx
+             48 89 c8  mov %rcx, %rax`,
      x86:   `8b 55 14  movl 0x14\\(%rbp\\), %edx
              8b 45 10  movl 0x10\\(%rbp\\), %eax`,
      arm64: ``,
@@ -249,8 +249,8 @@ codegenTestMultiplatform_adhoc(
     `(module (func (export "mul64_minusOneR") (param $p1 i64) (result i64)
        (i64.mul (local.get $p1) (i64.const -1))))`,
     "mul64_minusOneR",
-    {x64:   `48 8b cf  mov %rdi, %rcx
-             48 8b c1  mov %rcx, %rax
+    {x64:   `48 89 f9  mov %rdi, %rcx
+             48 89 c8  mov %rcx, %rax
              48 f7 d8  neg %rax`,
      x86:   `f7 d8     neg %eax
              83 d2 00  adc \\$0x00, %edx
@@ -278,8 +278,8 @@ codegenTestMultiplatform_adhoc(
     `(module (func (export "mul64_twoR") (param $p1 i64) (result i64)
        (i64.mul (local.get $p1) (i64.const 2))))`,
     "mul64_twoR",
-    {x64:   `48 8b cf  mov %rdi, %rcx
-             48 8b c1  mov %rcx, %rax
+    {x64:   `48 89 f9  mov %rdi, %rcx
+             48 89 c8  mov %rcx, %rax
              48 03 c0  add %rax, %rax`,
      x86:   `8b 55 14  movl 0x14\\(%rbp\\), %edx
              8b 45 10  movl 0x10\\(%rbp\\), %eax
@@ -308,8 +308,8 @@ codegenTestMultiplatform_adhoc(
     `(module (func (export "mul64_fourR") (param $p1 i64) (result i64)
        (i64.mul (local.get $p1) (i64.const 4))))`,
     "mul64_fourR",
-    {x64:   `48 8b cf     mov %rdi, %rcx
-             48 8b c1     mov %rcx, %rax
+    {x64:   `48 89 f9     mov %rdi, %rcx
+             48 89 c8     mov %rcx, %rax
              48 c1 e0 02  shl \\$0x02, %rax`,
      x86:   `8b 55 14     movl 0x14\\(%rbp\\), %edx
              8b 45 10     movl 0x10\\(%rbp\\), %eax
@@ -350,8 +350,8 @@ codegenTestMultiplatform_adhoc(
        (i64.shl (local.get $p1) (i64.const 0))))`,
     "shl64_zeroR",
     // FIXME why is this code so much better than the 32-bit case?
-    {x64:   `48 8b cf  mov %rdi, %rcx
-             48 8b c1  mov %rcx, %rax`,
+    {x64:   `48 89 f9  mov %rdi, %rcx
+             48 89 c8  mov %rcx, %rax`,
      x86:   `8b 55 14  movl 0x14\\(%rbp\\), %edx
              8b 45 10  movl 0x10\\(%rbp\\), %eax`,
      arm64: ``, // no-op
@@ -380,8 +380,8 @@ codegenTestMultiplatform_adhoc(
     `(module (func (export "shrU64_zeroR") (param $p1 i64) (result i64)
        (i64.shr_u (local.get $p1) (i64.const 0))))`,
     "shrU64_zeroR",
-    {x64:   `48 8b cf  mov %rdi, %rcx
-             48 8b c1  mov %rcx, %rax`,
+    {x64:   `48 89 f9  mov %rdi, %rcx
+             48 89 c8  mov %rcx, %rax`,
      x86:   `8b 55 14  movl 0x14\\(%rbp\\), %edx
              8b 45 10  movl 0x10\\(%rbp\\), %eax`,
      arm64: ``,
@@ -410,8 +410,8 @@ codegenTestMultiplatform_adhoc(
     `(module (func (export "shrS64_zeroR") (param $p1 i64) (result i64)
        (i64.shr_s (local.get $p1) (i64.const 0))))`,
     "shrS64_zeroR",
-    {x64:   `48 8b cf  mov %rdi, %rcx
-             48 8b c1  mov %rcx, %rax`,
+    {x64:   `48 89 f9  mov %rdi, %rcx
+             48 89 c8  mov %rcx, %rax`,
      x86:   `8b 55 14  movl 0x14\\(%rbp\\), %edx
              8b 45 10  movl 0x10\\(%rbp\\), %eax`,
      arm64: ``,
@@ -442,8 +442,8 @@ codegenTestMultiplatform_adhoc(
     `(module (func (export "add64_zeroR") (param $p1 i64) (result i64)
        (i64.add (local.get $p1) (i64.const 0))))`,
     "add64_zeroR",
-    {x64:   `48 8b cf  mov %rdi, %rcx
-             48 8b c1  mov %rcx, %rax`,
+    {x64:   `48 89 f9  mov %rdi, %rcx
+             48 89 c8  mov %rcx, %rax`,
      x86:   `8b 55 14  movl 0x14\\(%rbp\\), %edx
              8b 45 10  movl 0x10\\(%rbp\\), %eax`,
      arm64: ``,
@@ -468,8 +468,8 @@ codegenTestMultiplatform_adhoc(
     `(module (func (export "add64_zeroL") (param $p1 i64) (result i64)
        (i64.add (i64.const 0) (local.get $p1))))`,
     "add64_zeroL",
-    {x64:   `48 8b cf  mov %rdi, %rcx
-             48 8b c1  mov %rcx, %rax`,
+    {x64:   `48 89 f9  mov %rdi, %rcx
+             48 89 c8  mov %rcx, %rax`,
      x86:   `8b 55 14  movl 0x14\\(%rbp\\), %edx
              8b 45 10  movl 0x10\\(%rbp\\), %eax`,
      arm64: ``,
@@ -497,8 +497,8 @@ codegenTestMultiplatform_adhoc(
        (i64.add (local.get $p1) (local.get $p1))))`,
     "add64_self",
     // FIXME outstandingly bad 32-bit sequences, probably due to the RA
-    {x64:   `48 8b cf  mov %rdi, %rcx
-             48 8b c1  mov %rcx, %rax
+    {x64:   `48 89 f9  mov %rdi, %rcx
+             48 89 c8  mov %rcx, %rax
              48 03 c1  add %rcx, %rax`,
      x86:   // -0x21524111 is 0xDEADBEEF
             `8b 5d 14        movl 0x14\\(%rbp\\), %ebx
@@ -545,8 +545,8 @@ codegenTestMultiplatform_adhoc(
        (i64.sub (local.get $p1) (i64.const 0))))`,
     "sub64_zeroR",
     // FIXME folding missing for all 4 targets
-    {x64:   `48 8b cf     mov %rdi, %rcx
-             48 8b c1     mov %rcx, %rax
+    {x64:   `48 89 f9     mov %rdi, %rcx
+             48 89 c8     mov %rcx, %rax
              48 83 e8 00  sub \\$0x00, %rax`,
      x86:   `8b 55 14  movl 0x14\\(%rbp\\), %edx
              8b 45 10  movl 0x10\\(%rbp\\), %eax
@@ -576,8 +576,8 @@ codegenTestMultiplatform_adhoc(
     `(module (func (export "sub64_zeroL") (param $p1 i64) (result i64)
        (i64.sub (i64.const 0) (local.get $p1))))`,
     "sub64_zeroL",
-    {x64:   `48 8b cf  mov %rdi, %rcx
-             48 8b c1  mov %rcx, %rax
+    {x64:   `48 89 f9  mov %rdi, %rcx
+             48 89 c8  mov %rcx, %rax
              48 f7 d8  neg %rax`,
      x86:   `8b 55 14  movl 0x14\\(%rbp\\), %edx
              8b 45 10  movl 0x10\\(%rbp\\), %eax
@@ -607,8 +607,8 @@ codegenTestMultiplatform_adhoc(
        (i64.sub (local.get $p1) (local.get $p1))))`,
     "sub64_self",
     // FIXME folding missing for all 4 targets
-    {x64:   `48 8b cf        mov %rdi, %rcx
-             48 8b c1        mov %rcx, %rax
+    {x64:   `48 89 f9        mov %rdi, %rcx
+             48 89 c8        mov %rcx, %rax
              48 2b c1        sub %rcx, %rax`,
      x86:   // -0x21524111 is 0xDEADBEEF
             `8b 5d 14        movl 0x14\\(%rbp\\), %ebx
