@@ -574,10 +574,10 @@ void LIRGenerator::visitWasmNeg(MWasmNeg* ins) {
 void LIRGeneratorARM64::lowerUDiv(MDiv* div) {
   LAllocation lhs = useRegister(div->lhs());
   if (div->rhs()->isConstant()) {
-    int32_t rhs = div->rhs()->toConstant()->toInt32();
-    int32_t shift = mozilla::FloorLog2(mozilla::Abs(rhs));
+    uint32_t rhs = div->rhs()->toConstant()->toInt32();
+    int32_t shift = mozilla::FloorLog2(rhs);
 
-    if (rhs != 0 && uint32_t(1) << shift == mozilla::Abs(rhs)) {
+    if (rhs != 0 && uint32_t(1) << shift == rhs) {
       LDivPowTwoI* lir = new (alloc()) LDivPowTwoI(lhs, shift, false);
       if (div->fallible()) {
         assignSnapshot(lir, div->bailoutKind());
