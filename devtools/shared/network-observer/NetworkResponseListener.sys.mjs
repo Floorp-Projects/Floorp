@@ -441,7 +441,14 @@ export class NetworkResponseListener {
     // Remove our listener from the request input stream.
     this.setAsyncListener(this.#sink.inputStream, null);
 
-    if (this.#request.fromCache || this.#httpActivity.responseStatus == 304) {
+    let responseStatus;
+    try {
+      responseStatus = this.#httpActivity.channel.responseStatus;
+    } catch (e) {
+      // Will throw NS_ERROR_NOT_AVAILABLE if the response has not been received
+      // yet.
+    }
+    if (this.#request.fromCache || responseStatus == 304) {
       this.#fetchCacheInformation();
     }
 
@@ -449,7 +456,7 @@ export class NetworkResponseListener {
       this.#onComplete(this.#receivedData);
     } else if (
       !this.#httpActivity.discardResponseBody &&
-      this.#httpActivity.responseStatus == 304
+      responseStatus == 304
     ) {
       // Response is cached, so we load it from cache.
       let charset;

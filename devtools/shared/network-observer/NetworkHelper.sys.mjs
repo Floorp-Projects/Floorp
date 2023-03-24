@@ -366,14 +366,14 @@ export var NetworkHelper = {
   /**
    * Parse a raw Set-Cookie header value.
    *
-   * @param string header
-   *        The raw Set-Cookie header value.
+   * @param array headers
+   *        Array of raw Set-Cookie header values.
    * @return array
    *         Array holding an object for each cookie. Each object holds the
    *         following properties: name, value, secure (boolean), httpOnly
    *         (boolean), path, domain, samesite and expires (ISO date string).
    */
-  parseSetCookieHeader(header) {
+  parseSetCookieHeaders(headers) {
     function parseSameSiteAttribute(attribute) {
       attribute = attribute.toLowerCase();
       switch (attribute) {
@@ -386,43 +386,46 @@ export var NetworkHelper = {
       }
     }
 
-    const rawCookies = header.split(/\r\n|\n|\r/);
     const cookies = [];
 
-    rawCookies.forEach(function(cookie) {
-      const equal = cookie.indexOf("=");
-      const name = unescape(cookie.substr(0, equal).trim());
-      const parts = cookie.substr(equal + 1).split(";");
-      const value = unescape(parts.shift().trim());
+    for (const header of headers) {
+      const rawCookies = header.split(/\r\n|\n|\r/);
 
-      cookie = { name, value };
+      rawCookies.forEach(function(cookie) {
+        const equal = cookie.indexOf("=");
+        const name = unescape(cookie.substr(0, equal).trim());
+        const parts = cookie.substr(equal + 1).split(";");
+        const value = unescape(parts.shift().trim());
 
-      parts.forEach(function(part) {
-        part = part.trim();
-        if (part.toLowerCase() == "secure") {
-          cookie.secure = true;
-        } else if (part.toLowerCase() == "httponly") {
-          cookie.httpOnly = true;
-        } else if (part.indexOf("=") > -1) {
-          const pair = part.split("=");
-          pair[0] = pair[0].toLowerCase();
-          if (pair[0] == "path" || pair[0] == "domain") {
-            cookie[pair[0]] = pair[1];
-          } else if (pair[0] == "samesite") {
-            cookie[pair[0]] = parseSameSiteAttribute(pair[1]);
-          } else if (pair[0] == "expires") {
-            try {
-              pair[1] = pair[1].replace(/-/g, " ");
-              cookie.expires = new Date(pair[1]).toISOString();
-            } catch (ex) {
-              // Ignore.
+        cookie = { name, value };
+
+        parts.forEach(function(part) {
+          part = part.trim();
+          if (part.toLowerCase() == "secure") {
+            cookie.secure = true;
+          } else if (part.toLowerCase() == "httponly") {
+            cookie.httpOnly = true;
+          } else if (part.indexOf("=") > -1) {
+            const pair = part.split("=");
+            pair[0] = pair[0].toLowerCase();
+            if (pair[0] == "path" || pair[0] == "domain") {
+              cookie[pair[0]] = pair[1];
+            } else if (pair[0] == "samesite") {
+              cookie[pair[0]] = parseSameSiteAttribute(pair[1]);
+            } else if (pair[0] == "expires") {
+              try {
+                pair[1] = pair[1].replace(/-/g, " ");
+                cookie.expires = new Date(pair[1]).toISOString();
+              } catch (ex) {
+                // Ignore.
+              }
             }
           }
-        }
-      });
+        });
 
-      cookies.push(cookie);
-    });
+        cookies.push(cookie);
+      });
+    }
 
     return cookies;
   },

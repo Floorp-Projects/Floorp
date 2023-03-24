@@ -23,6 +23,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://devtools/shared/network-observer/NetworkUtils.sys.mjs",
 });
 
+const CONTENT_TYPE_REGEXP = /^content-type/i;
+
 /**
  * Creates an actor for a network event.
  *
@@ -281,8 +283,17 @@ class NetworkEventActor extends Actor {
    *         The response packet - network POST data.
    */
   getRequestPostData() {
+    let postDataText;
+    if (this._request.postData.text) {
+      // Create a long string actor for the postData text if needed.
+      postDataText = this._createLongStringActor(this._request.postData.text);
+    }
+
     return {
-      postData: this._request.postData,
+      postData: {
+        size: this._request.postData.size,
+        text: postDataText,
+      },
       postDataDiscarded: this._discardRequestBody,
     };
   }
@@ -306,10 +317,20 @@ class NetworkEventActor extends Actor {
    *         The response packet - network response headers.
    */
   getResponseHeaders() {
+    let rawHeaders;
+    let headersSize = 0;
+    if (this._response.rawHeaders) {
+      headersSize = this._response.rawHeaders.length;
+      rawHeaders = this._createLongStringActor(this._response.rawHeaders);
+    }
+
     return {
-      headers: this._response.headers,
-      headersSize: this._response.headersSize,
-      rawHeaders: this._response.rawHeaders,
+      headers: this._response.headers.map(header => ({
+        name: header.name,
+        value: this._createLongStringActor(header.value),
+      })),
+      headersSize,
+      rawHeaders,
     };
   }
 
@@ -332,8 +353,31 @@ class NetworkEventActor extends Actor {
    *         The response packet - network response cookies.
    */
   getResponseCookies() {
+    // As opposed to request cookies, response cookies can come with additional
+    // properties.
+    const cookieOptionalProperties = [
+      "domain",
+      "expires",
+      "httpOnly",
+      "path",
+      "samesite",
+      "secure",
+    ];
+
     return {
-      cookies: this._response.cookies,
+      cookies: this._response.cookies.map(cookie => {
+        const cookieResponse = {
+          name: cookie.name,
+          value: this._createLongStringActor(cookie.value),
+        };
+
+        for (const prop of cookieOptionalProperties) {
+          if (prop in cookie) {
+            cookieResponse[prop] = cookie[prop];
+          }
+        }
+        return cookieResponse;
+      }),
     };
   }
 
@@ -382,44 +426,74 @@ class NetworkEventActor extends Actor {
     }
 
     this._request.postData = postData;
-    postData.text = new LongStringActor(this.conn, postData.text);
-    // bug 1462561 - Use "json" type and manually manage/marshall actors to woraround
-    // protocol.js performance issue
-    this.manage(postData.text);
-    postData.text = postData.text.form();
-
     this._onEventUpdate("requestPostData", {});
   }
 
   /**
    * Add the initial network response information.
    *
-   * @param object info
-   *        The response information.
-   * @param string rawHeaders
-   *        The raw headers source.
+   * @param {object} options
+   * @param {nsIChannel} options.channel
+   * @param {boolean} options.fromCache
+   * @param {string} options.rawHeaders
    */
-  addResponseStart(info, rawHeaders) {
+  addResponseStart({ channel, fromCache, rawHeaders = "" }) {
     // Ignore calls when this actor is already destroyed
     if (this.isDestroyed()) {
       return;
     }
 
-    rawHeaders = new LongStringActor(this.conn, rawHeaders);
-    // bug 1462561 - Use "json" type and manually manage/marshall actors to woraround
-    // protocol.js performance issue
-    this.manage(rawHeaders);
-    this._response.rawHeaders = rawHeaders.form();
+    fromCache = fromCache || lazy.NetworkUtils.isFromCache(channel);
 
-    this._response.httpVersion = info.httpVersion;
-    this._response.status = info.status;
-    this._response.statusText = info.statusText;
-    this._response.headersSize = info.headersSize;
-    this._response.waitingTime = info.waitingTime;
-    // Consider as not discarded if info.discardResponseBody is undefined
-    this._discardResponseBody = !!info.discardResponseBody;
+    // Read response headers and cookies.
+    let responseHeaders = [];
+    let responseCookies = [];
+    if (!this._blockedReason) {
+      const {
+        cookies,
+        headers,
+      } = lazy.NetworkUtils.fetchResponseHeadersAndCookies(channel);
+      responseCookies = cookies;
+      responseHeaders = headers;
+    }
 
-    this._onEventUpdate("responseStart", { ...info });
+    // Handle response headers
+    this._response.rawHeaders = rawHeaders;
+    this._response.headers = responseHeaders;
+    this._response.cookies = responseCookies;
+
+    // Handle the rest of the response start metadata.
+    this._response.headersSize = rawHeaders ? rawHeaders.length : 0;
+
+    // Discard the response body for known response statuses.
+    if (lazy.NetworkUtils.isRedirectedChannel(channel)) {
+      this._discardResponseBody = true;
+    }
+
+    // Mime type needs to be sent on response start for identifying an sse channel.
+    const contentTypeHeader = responseHeaders.find(header =>
+      CONTENT_TYPE_REGEXP.test(header.name)
+    );
+
+    let mimeType = "";
+    if (contentTypeHeader) {
+      mimeType = contentTypeHeader.value;
+    }
+
+    const timedChannel = channel.QueryInterface(Ci.nsITimedChannel);
+    const waitingTime = Math.round(
+      (timedChannel.responseStartTime - timedChannel.requestStartTime) / 1000
+    );
+
+    this._onEventUpdate("responseStart", {
+      httpVersion: lazy.NetworkUtils.getHttpVersion(channel),
+      mimeType,
+      remoteAddress: fromCache ? "" : channel.remoteAddress,
+      remotePort: fromCache ? "" : channel.remotePort,
+      status: channel.responseStatus + "",
+      statusText: channel.responseStatusText,
+      waitingTime,
+    });
   }
 
   /**
@@ -443,42 +517,6 @@ class NetworkEventActor extends Actor {
   }
 
   /**
-   * Add network response headers.
-   *
-   * @param array headers
-   *        The response headers array.
-   */
-  addResponseHeaders(headers) {
-    // Ignore calls when this actor is already destroyed
-    if (this.isDestroyed()) {
-      return;
-    }
-
-    this._response.headers = headers;
-    this._prepareHeaders(headers);
-
-    this._onEventUpdate("responseHeaders", {});
-  }
-
-  /**
-   * Add network response cookies.
-   *
-   * @param array cookies
-   *        The response cookies array.
-   */
-  addResponseCookies(cookies) {
-    // Ignore calls when this actor is already destroyed
-    if (this.isDestroyed()) {
-      return;
-    }
-
-    this._response.cookies = cookies;
-    this._prepareHeaders(cookies);
-
-    this._onEventUpdate("responseCookies", {});
-  }
-
-  /**
    * Add network response content.
    *
    * @param object content
@@ -498,7 +536,7 @@ class NetworkEventActor extends Actor {
 
     this._response.content = content;
     content.text = new LongStringActor(this.conn, content.text);
-    // bug 1462561 - Use "json" type and manually manage/marshall actors to woraround
+    // bug 1462561 - Use "json" type and manually manage/marshall actors to workaround
     // protocol.js performance issue
     this.manage(content.text);
     content.text = content.text.form();
@@ -576,22 +614,6 @@ class NetworkEventActor extends Actor {
     return longStringActor.form();
   }
 
-  /**
-   * Prepare the headers array to be sent to the client by using the
-   * LongStringActor for the header values, when needed.
-   *
-   * @private
-   * @param array aHeaders
-   */
-  _prepareHeaders(headers) {
-    for (const header of headers) {
-      header.value = new LongStringActor(this.conn, header.value);
-      // bug 1462561 - Use "json" type and manually manage/marshall actors to woraround
-      // protocol.js performance issue
-      this.manage(header.value);
-      header.value = header.value.form();
-    }
-  }
   /**
    * Sends the updated event data to the client
    *
