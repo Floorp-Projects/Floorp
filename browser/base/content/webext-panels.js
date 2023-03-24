@@ -124,8 +124,6 @@ function getBrowser(panel) {
   };
 
   browser.addEventListener("DidChangeBrowserRemoteness", initBrowser);
-  // Potentially unnecessary: bug 1822037 will evaluate further.
-  browser.browsingContext.isAppTab = true;
   return readyPromise.then(initBrowser);
 }
 

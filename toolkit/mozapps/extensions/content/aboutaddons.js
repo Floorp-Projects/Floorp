@@ -1849,8 +1849,6 @@ class InlineOptionsBrowser extends HTMLElement {
         browserOptions.stylesheets = extensionStylesheets;
       }
 
-      // Potentially unnecessary: bug 1822037 will evaluate further.
-      browser.browsingContext.isAppTab = true;
       mm.sendAsyncMessage("Extension:InitBrowser", browserOptions);
 
       if (browser.isConnectedAndReady) {
