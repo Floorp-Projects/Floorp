@@ -3960,6 +3960,11 @@
   value: true
   mirror: always
 
+- name: dom.workers.importScripts.enforceStrictMimeType
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # Is support for modules (new Worker(..., {type: "module">)) enabled for workers?
 - name: dom.workers.modules.enabled
   type: RelaxedAtomicBool

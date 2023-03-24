@@ -976,7 +976,9 @@ nsresult WorkerScriptLoader::LoadScript(
   if (!IsDebuggerScript()) {
     headerProcessor = MakeRefPtr<ScriptResponseHeaderProcessor>(
         mWorkerRef->Private(),
-        loadContext->IsTopLevel() && !IsDynamicImport(request));
+        loadContext->IsTopLevel() && !IsDynamicImport(request),
+        GetContentPolicyType(request) ==
+            nsIContentPolicy::TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS);
   }
 
   nsCOMPtr<nsIStreamLoader> loader;
