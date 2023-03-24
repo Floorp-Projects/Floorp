@@ -124,10 +124,11 @@ window.setTimeout(function () {
   document.getElementById("browser").insertBefore(document.getElementsByClassName("toolbar-items")[0], document.getElementById("browser").firstChild);
 
   document.getElementsByClassName("toolbar-items")[0].setAttribute("align", "start");
-  document.getElementsByClassName("toolbar-items")[0].setAttribute("style", "display: block; max-width: 25em; min-width: 5em;");
+  document.getElementsByClassName("toolbar-items")[0].setAttribute("style", "display: block; max-width: 25em; min-width: 5em; overflow-y: scroll; overflow-x: hidden; min-height: 0px;");
 
   document.getElementById("tabbrowser-arrowscrollbox").setAttribute("orient", "vertical");
-  document.getElementById("tabbrowser-arrowscrollbox").setAttribute("overflowing", "false");
+  document.getElementById("tabbrowser-arrowscrollbox").removeAttribute("overflowing");
+  document.getElementById("tabbrowser-arrowscrollbox").removeAttribute("scrolledtostart")
   document.getElementById("tabbrowser-arrowscrollbox").disabled = true;
 
   document.getElementById("tabbrowser-tabs").setAttribute("orient", "vertical");
