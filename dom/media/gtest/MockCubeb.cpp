@@ -225,7 +225,7 @@ int MockCubebStream::Start() {
 }
 
 int MockCubebStream::Stop() {
-  mOutputVerificationEvent.Notify(MakeTuple(
+  mOutputVerificationEvent.Notify(std::make_tuple(
       mAudioVerifier.PreSilenceSamples(), mAudioVerifier.EstimatedFreq(),
       mAudioVerifier.CountDiscontinuities()));
   int rv = MockCubeb::AsMock(context)->StopStream(this);
@@ -317,7 +317,7 @@ MediaEventSource<uint32_t>& MockCubebStream::FramesVerifiedEvent() {
   return mFramesVerifiedEvent;
 }
 
-MediaEventSource<Tuple<uint64_t, float, uint32_t>>&
+MediaEventSource<std::tuple<uint64_t, float, uint32_t>>&
 MockCubebStream::OutputVerificationEvent() {
   return mOutputVerificationEvent;
 }

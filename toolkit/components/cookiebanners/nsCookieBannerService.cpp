@@ -14,7 +14,7 @@
 #include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPrefs_cookiebanners.h"
-#include "mozilla/Tuple.h"
+
 #include "nsCOMPtr.h"
 #include "nsCookieBannerRule.h"
 #include "nsCookieInjector.h"
@@ -933,16 +933,13 @@ nsCookieBannerService::OnLocationChange(nsIWebProgress* aWebProgress,
     return NS_OK;
   }
 
-  Maybe<Tuple<bool, bool>> telemetryData =
+  Maybe<std::tuple<bool, bool>> telemetryData =
       mReloadTelemetryData.MaybeGet(bc->Top()->Id());
   if (!telemetryData) {
     return NS_OK;
   }
 
-  bool hasClickRuleInData;
-  bool hasCookieRuleInData;
-
-  Tie(hasClickRuleInData, hasCookieRuleInData) = telemetryData.ref();
+  auto [hasClickRuleInData, hasCookieRuleInData] = telemetryData.ref();
 
   // If the location change is triggered by a reload, we report the telemetry
   // for the given top-level browsing context.
@@ -987,7 +984,8 @@ nsCookieBannerService::OnLocationChange(nsIWebProgress* aWebProgress,
   hasCookieRuleInData |= hasCookieRule;
 
   mReloadTelemetryData.InsertOrUpdate(
-      bc->Top()->Id(), MakeTuple(hasClickRuleInData, hasCookieRuleInData));
+      bc->Top()->Id(),
+      std::make_tuple(hasClickRuleInData, hasCookieRuleInData));
 
   return NS_OK;
 }
@@ -1116,7 +1114,7 @@ nsresult nsCookieBannerService::RegisterWebProgressListener(
     return NS_OK;
   }
 
-  mReloadTelemetryData.InsertOrUpdate(bc->Id(), MakeTuple(false, false));
+  mReloadTelemetryData.InsertOrUpdate(bc->Id(), std::make_tuple(false, false));
 
   return bc->GetWebProgress()->AddProgressListener(
       this, nsIWebProgress::NOTIFY_LOCATION);

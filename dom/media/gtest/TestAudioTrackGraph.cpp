@@ -1283,7 +1283,7 @@ TEST(TestAudioTrackGraph, AudioProcessingTrack)
   uint64_t preSilenceSamples;
   uint32_t estimatedFreq;
   uint32_t nrDiscontinuities;
-  Tie(preSilenceSamples, estimatedFreq, nrDiscontinuities) =
+  std::tie(preSilenceSamples, estimatedFreq, nrDiscontinuities) =
       WaitFor(stream->OutputVerificationEvent());
 
   EXPECT_EQ(estimatedFreq, inputFrequency);
@@ -1424,7 +1424,7 @@ TEST(TestAudioTrackGraph, ReConnectDeviceInput)
   uint64_t preSilenceSamples;
   uint32_t estimatedFreq;
   uint32_t nrDiscontinuities;
-  Tie(preSilenceSamples, estimatedFreq, nrDiscontinuities) =
+  std::tie(preSilenceSamples, estimatedFreq, nrDiscontinuities) =
       WaitFor(stream->OutputVerificationEvent());
 
   EXPECT_EQ(estimatedFreq, inputFrequency);
@@ -1546,7 +1546,7 @@ TEST(TestAudioTrackGraph, AudioProcessingTrackDisabling)
   uint64_t preSilenceSamples;
   uint32_t estimatedFreq;
   uint32_t nrDiscontinuities;
-  Tie(preSilenceSamples, estimatedFreq, nrDiscontinuities) =
+  std::tie(preSilenceSamples, estimatedFreq, nrDiscontinuities) =
       WaitFor(stream->OutputVerificationEvent());
 
   auto data = stream->TakeRecordedOutput();
@@ -2486,7 +2486,7 @@ void TestCrossGraphPort(uint32_t aInputRate, uint32_t aOutputRate,
   uint64_t preSilenceSamples;
   float estimatedFreq;
   uint32_t nrDiscontinuities;
-  Tie(preSilenceSamples, estimatedFreq, nrDiscontinuities) =
+  std::tie(preSilenceSamples, estimatedFreq, nrDiscontinuities) =
       WaitFor(partnerStream->OutputVerificationEvent());
 
   EXPECT_NEAR(estimatedFreq, inputFrequency / aDriftFactor, 5);

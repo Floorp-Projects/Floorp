@@ -30,11 +30,11 @@ void IdleSchedulerChild::Init(IdlePeriodState* aIdlePeriodState) {
 
   RefPtr<IdleSchedulerChild> scheduler = this;
   auto resolve =
-      [&](Tuple<mozilla::Maybe<SharedMemoryHandle>, uint32_t>&& aResult) {
-        if (Get<0>(aResult)) {
-          mActiveCounter.SetHandle(std::move(*Get<0>(aResult)), false);
+      [&](std::tuple<mozilla::Maybe<SharedMemoryHandle>, uint32_t>&& aResult) {
+        if (std::get<0>(aResult)) {
+          mActiveCounter.SetHandle(std::move(*std::get<0>(aResult)), false);
           mActiveCounter.Map(sizeof(int32_t));
-          mChildId = Get<1>(aResult);
+          mChildId = std::get<1>(aResult);
           if (mChildId && mIdlePeriodState && mIdlePeriodState->IsActive()) {
             SetActive();
           }

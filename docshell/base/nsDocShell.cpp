@@ -50,7 +50,7 @@
 #include "mozilla/StorageAccess.h"
 #include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/Tuple.h"
+
 #include "mozilla/Unused.h"
 #include "mozilla/WidgetUtils.h"
 
@@ -4089,8 +4089,8 @@ nsDocShell::Reload(uint32_t aReloadFlags) {
           mBrowsingContext, forceReload,
           [docShell, doc, loadType, browsingContext, currentURI, referrerInfo,
            loadGroup, stopDetector](
-              Tuple<bool, Maybe<NotNull<RefPtr<nsDocShellLoadState>>>,
-                    Maybe<bool>>&& aResult) {
+              std::tuple<bool, Maybe<NotNull<RefPtr<nsDocShellLoadState>>>,
+                         Maybe<bool>>&& aResult) {
             auto scopeExit = MakeScopeExit([loadGroup, stopDetector]() {
               if (loadGroup) {
                 loadGroup->RemoveRequest(stopDetector, nullptr, NS_OK);
@@ -4109,7 +4109,7 @@ nsDocShell::Reload(uint32_t aReloadFlags) {
             Maybe<NotNull<RefPtr<nsDocShellLoadState>>> loadState;
             Maybe<bool> reloadingActiveEntry;
 
-            Tie(canReload, loadState, reloadingActiveEntry) = aResult;
+            std::tie(canReload, loadState, reloadingActiveEntry) = aResult;
 
             if (!canReload) {
               return;
@@ -5297,7 +5297,7 @@ static const char16_t* SkipASCIIWhitespace(const char16_t* aStart,
   return iter;
 }
 
-static Tuple<const char16_t*, const char16_t*> ExtractURLString(
+static std::tuple<const char16_t*, const char16_t*> ExtractURLString(
     const char16_t* aPosition, const char16_t* aEnd) {
   MOZ_ASSERT(aPosition != aEnd);
 
@@ -5316,7 +5316,7 @@ static Tuple<const char16_t*, const char16_t*> ExtractURLString(
     //    U+0072 (r), then advance position to the next code point.
     //    Otherwise, jump to the step labeled parse.
     if (aPosition == aEnd || (*aPosition != 'R' && *aPosition != 'r')) {
-      return MakeTuple(urlStart, urlEnd);
+      return std::make_tuple(urlStart, urlEnd);
     }
 
     ++aPosition;
@@ -5325,7 +5325,7 @@ static Tuple<const char16_t*, const char16_t*> ExtractURLString(
     //    U+006C (l), then advance position to the next code point.
     //    Otherwise, jump to the step labeled parse.
     if (aPosition == aEnd || (*aPosition != 'L' && *aPosition != 'l')) {
-      return MakeTuple(urlStart, urlEnd);
+      return std::make_tuple(urlStart, urlEnd);
     }
 
     ++aPosition;
@@ -5337,7 +5337,7 @@ static Tuple<const char16_t*, const char16_t*> ExtractURLString(
     //    then advance position to the next code point. Otherwise, jump to
     //    the step labeled parse.
     if (aPosition == aEnd || *aPosition != '=') {
-      return MakeTuple(urlStart, urlEnd);
+      return std::make_tuple(urlStart, urlEnd);
     }
 
     ++aPosition;
@@ -5371,7 +5371,7 @@ static Tuple<const char16_t*, const char16_t*> ExtractURLString(
     urlEnd = quotePos;
   }
 
-  return MakeTuple(urlStart, urlEnd);
+  return std::make_tuple(urlStart, urlEnd);
 }
 
 void nsDocShell::SetupRefreshURIFromHeader(Document* aDocument,
@@ -5467,7 +5467,7 @@ void nsDocShell::SetupRefreshURIFromHeader(Document* aDocument,
       const char16_t* urlEnd;
 
       // 1-10. See ExtractURLString.
-      Tie(urlStart, urlEnd) = ExtractURLString(position, end);
+      std::tie(urlStart, urlEnd) = ExtractURLString(position, end);
 
       // 11. Parse: Parse urlString relative to document. If that fails, return.
       //     Otherwise, set urlRecord to the resulting URL record.

@@ -36,7 +36,6 @@
 
 #if defined(MOZ_ENABLE_FORKSERVER)
 #  include "nsStringFwd.h"
-#  include "mozilla/Tuple.h"
 #  include "mozilla/ipc/FileDescriptorShuffle.h"
 
 namespace mozilla {
@@ -314,8 +313,8 @@ class EnvironmentLog {
 };
 
 #if defined(MOZ_ENABLE_FORKSERVER)
-typedef Tuple<nsCString, nsCString> EnvVar;
-typedef Tuple<mozilla::ipc::FileDescriptor, int> FdMapping;
+typedef std::tuple<nsCString, nsCString> EnvVar;
+typedef std::tuple<mozilla::ipc::FileDescriptor, int> FdMapping;
 #endif
 
 }  // namespace mozilla

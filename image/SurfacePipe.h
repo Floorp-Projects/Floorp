@@ -29,7 +29,7 @@
 #include "AnimationParams.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Tuple.h"
+
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Variant.h"
@@ -546,9 +546,7 @@ class SurfaceFilter {
 
     PixelType* rowPtr = reinterpret_cast<PixelType*>(mRowPointer);
     int32_t remainder = mInputSize.width - mCol;
-    int32_t written;
-    Maybe<WriteState> result;
-    Tie(written, result) = aFunc(&rowPtr[mCol], remainder);
+    auto [written, result] = aFunc(&rowPtr[mCol], remainder);
     if (written == remainder) {
       MOZ_ASSERT(result.isNothing());
       mCol = mInputSize.width;

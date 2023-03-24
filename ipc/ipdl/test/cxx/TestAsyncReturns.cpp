@@ -60,7 +60,7 @@ void TestAsyncReturnsParent::Main() {
 
 mozilla::ipc::IPCResult TestAsyncReturnsParent::RecvPong(
     PongResolver&& aResolve) {
-  aResolve(Tuple<const uint32_t&, const uint32_t&>(sMagic1, sMagic2));
+  aResolve(std::tuple<const uint32_t&, const uint32_t&>(sMagic1, sMagic2));
   return IPC_OK();
 }
 
@@ -85,8 +85,8 @@ mozilla::ipc::IPCResult TestAsyncReturnsChild::RecvPing(
     PingResolver&& aResolve) {
   SendPong()->Then(
       MessageLoop::current()->SerialEventTarget(), __func__,
-      [aResolve](const Tuple<uint32_t, uint32_t>& aParam) {
-        if (Get<0>(aParam) == sMagic1 && Get<1>(aParam) == sMagic2) {
+      [aResolve](const std::tuple<uint32_t, uint32_t>& aParam) {
+        if (std::get<0>(aParam) == sMagic1 && std::get<1>(aParam) == sMagic2) {
           passed("take two arguments");
         } else {
           fail("get two argument but has wrong value");

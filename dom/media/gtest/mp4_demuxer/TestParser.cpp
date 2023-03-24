@@ -9,7 +9,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Tuple.h"
+
 #include "BufferStream.h"
 #include "MP4Metadata.h"
 #include "MoofParser.h"
@@ -840,10 +840,10 @@ TEST_F(MP4MetadataTelemetryFixture, Telemetry) {
   // and is used to log if our telem counts are not in an expected state.
   auto CheckHistograms =
       [this, &cx](
-          const Tuple<uint32_t, uint32_t>& aExpectedMultipleCodecCounts,
-          const Tuple<uint32_t, uint32_t>& aExpectedMultipleCryptoCounts,
-          const Tuple<uint32_t, uint32_t, uint32_t, uint32_t, uint32_t,
-                      uint32_t>& aExpectedSampleDescriptionEntryCounts,
+          const std::tuple<uint32_t, uint32_t>& aExpectedMultipleCodecCounts,
+          const std::tuple<uint32_t, uint32_t>& aExpectedMultipleCryptoCounts,
+          const std::tuple<uint32_t, uint32_t, uint32_t, uint32_t, uint32_t,
+                           uint32_t>& aExpectedSampleDescriptionEntryCounts,
           const char* aFileName) {
         // Get a snapshot of the current histograms
         JS::Rooted<JS::Value> snapshot(cx.GetJSContext());
@@ -870,13 +870,13 @@ TEST_F(MP4MetadataTelemetryFixture, Telemetry) {
         TelemetryTestHelpers::GetElement(cx.GetJSContext(), 0, values, &value);
         uint32_t uValue = 0;
         JS::ToUint32(cx.GetJSContext(), value, &uValue);
-        EXPECT_EQ(Get<0>(aExpectedMultipleCodecCounts), uValue)
+        EXPECT_EQ(std::get<0>(aExpectedMultipleCodecCounts), uValue)
             << "Unexpected number of false multiple codecs after parsing "
             << aFileName;
         // True count.
         TelemetryTestHelpers::GetElement(cx.GetJSContext(), 1, values, &value);
         JS::ToUint32(cx.GetJSContext(), value, &uValue);
-        EXPECT_EQ(Get<1>(aExpectedMultipleCodecCounts), uValue)
+        EXPECT_EQ(std::get<1>(aExpectedMultipleCodecCounts), uValue)
             << "Unexpected number of true multiple codecs after parsing "
             << aFileName;
 
@@ -894,13 +894,13 @@ TEST_F(MP4MetadataTelemetryFixture, Telemetry) {
         // False count.
         TelemetryTestHelpers::GetElement(cx.GetJSContext(), 0, values, &value);
         JS::ToUint32(cx.GetJSContext(), value, &uValue);
-        EXPECT_EQ(Get<0>(aExpectedMultipleCryptoCounts), uValue)
+        EXPECT_EQ(std::get<0>(aExpectedMultipleCryptoCounts), uValue)
             << "Unexpected number of false multiple cryptos after parsing "
             << aFileName;
         // True count.
         TelemetryTestHelpers::GetElement(cx.GetJSContext(), 1, values, &value);
         JS::ToUint32(cx.GetJSContext(), value, &uValue);
-        EXPECT_EQ(Get<1>(aExpectedMultipleCryptoCounts), uValue)
+        EXPECT_EQ(std::get<1>(aExpectedMultipleCryptoCounts), uValue)
             << "Unexpected number of true multiple cryptos after parsing "
             << aFileName;
 
@@ -917,32 +917,32 @@ TEST_F(MP4MetadataTelemetryFixture, Telemetry) {
 
         TelemetryTestHelpers::GetElement(cx.GetJSContext(), 0, values, &value);
         JS::ToUint32(cx.GetJSContext(), value, &uValue);
-        EXPECT_EQ(Get<0>(aExpectedSampleDescriptionEntryCounts), uValue)
+        EXPECT_EQ(std::get<0>(aExpectedSampleDescriptionEntryCounts), uValue)
             << "Unexpected number of 0 sample entry descriptions after parsing "
             << aFileName;
         TelemetryTestHelpers::GetElement(cx.GetJSContext(), 1, values, &value);
         JS::ToUint32(cx.GetJSContext(), value, &uValue);
-        EXPECT_EQ(Get<1>(aExpectedSampleDescriptionEntryCounts), uValue)
+        EXPECT_EQ(std::get<1>(aExpectedSampleDescriptionEntryCounts), uValue)
             << "Unexpected number of 1 sample entry descriptions after parsing "
             << aFileName;
         TelemetryTestHelpers::GetElement(cx.GetJSContext(), 2, values, &value);
         JS::ToUint32(cx.GetJSContext(), value, &uValue);
-        EXPECT_EQ(Get<2>(aExpectedSampleDescriptionEntryCounts), uValue)
+        EXPECT_EQ(std::get<2>(aExpectedSampleDescriptionEntryCounts), uValue)
             << "Unexpected number of 2 sample entry descriptions after parsing "
             << aFileName;
         TelemetryTestHelpers::GetElement(cx.GetJSContext(), 3, values, &value);
         JS::ToUint32(cx.GetJSContext(), value, &uValue);
-        EXPECT_EQ(Get<3>(aExpectedSampleDescriptionEntryCounts), uValue)
+        EXPECT_EQ(std::get<3>(aExpectedSampleDescriptionEntryCounts), uValue)
             << "Unexpected number of 3 sample entry descriptions after parsing "
             << aFileName;
         TelemetryTestHelpers::GetElement(cx.GetJSContext(), 4, values, &value);
         JS::ToUint32(cx.GetJSContext(), value, &uValue);
-        EXPECT_EQ(Get<4>(aExpectedSampleDescriptionEntryCounts), uValue)
+        EXPECT_EQ(std::get<4>(aExpectedSampleDescriptionEntryCounts), uValue)
             << "Unexpected number of 4 sample entry descriptions after parsing "
             << aFileName;
         TelemetryTestHelpers::GetElement(cx.GetJSContext(), 5, values, &value);
         JS::ToUint32(cx.GetJSContext(), value, &uValue);
-        EXPECT_EQ(Get<5>(aExpectedSampleDescriptionEntryCounts), uValue)
+        EXPECT_EQ(std::get<5>(aExpectedSampleDescriptionEntryCounts), uValue)
             << "Unexpected number of 5 sample entry descriptions after parsing "
             << aFileName;
       };
@@ -977,11 +977,11 @@ TEST_F(MP4MetadataTelemetryFixture, Telemetry) {
   UpdateMetadataAndHistograms("test_case_1185230.mp4");
 
   // Verify our histograms are updated.
-  CheckHistograms(
-      MakeTuple<uint32_t, uint32_t>(4, 0), MakeTuple<uint32_t, uint32_t>(4, 0),
-      MakeTuple<uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t>(
-          0, 4, 0, 0, 0, 0),
-      "test_case_1185230.mp4");
+  CheckHistograms(std::make_tuple<uint32_t, uint32_t>(4, 0),
+                  std::make_tuple<uint32_t, uint32_t>(4, 0),
+                  std::make_tuple<uint32_t, uint32_t, uint32_t, uint32_t,
+                                  uint32_t, uint32_t>(0, 4, 0, 0, 0, 0),
+                  "test_case_1185230.mp4");
 
   // Parse another test case. This one has a single moov with a single video
   // track. However, the track has two sample description entries, and our
@@ -990,11 +990,11 @@ TEST_F(MP4MetadataTelemetryFixture, Telemetry) {
       "test_case_1513651-2-sample-description-entries.mp4");
 
   // Verify our histograms are updated.
-  CheckHistograms(
-      MakeTuple<uint32_t, uint32_t>(5, 0), MakeTuple<uint32_t, uint32_t>(5, 0),
-      MakeTuple<uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t>(
-          0, 4, 1, 0, 0, 0),
-      "test_case_1513651-2-sample-description-entries.mp4");
+  CheckHistograms(std::make_tuple<uint32_t, uint32_t>(5, 0),
+                  std::make_tuple<uint32_t, uint32_t>(5, 0),
+                  std::make_tuple<uint32_t, uint32_t, uint32_t, uint32_t,
+                                  uint32_t, uint32_t>(0, 4, 1, 0, 0, 0),
+                  "test_case_1513651-2-sample-description-entries.mp4");
 
   // Parse another test case. This one has 2 sample decription entries, both
   // with crypto information, which should be reflected in our telemetry.
@@ -1004,9 +1004,10 @@ TEST_F(MP4MetadataTelemetryFixture, Telemetry) {
 
   // Verify our histograms are updated.
   CheckHistograms(
-      MakeTuple<uint32_t, uint32_t>(6, 0), MakeTuple<uint32_t, uint32_t>(5, 1),
-      MakeTuple<uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t>(
-          0, 4, 2, 0, 0, 0),
+      std::make_tuple<uint32_t, uint32_t>(6, 0),
+      std::make_tuple<uint32_t, uint32_t>(5, 1),
+      std::make_tuple<uint32_t, uint32_t, uint32_t, uint32_t, uint32_t,
+                      uint32_t>(0, 4, 2, 0, 0, 0),
       "test_case_1714125-2-sample-description-entires-with-identical-crypto."
       "mp4");
 }

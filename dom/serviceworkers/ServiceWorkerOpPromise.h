@@ -10,7 +10,7 @@
 #include <utility>
 
 #include "mozilla/MozPromise.h"
-#include "mozilla/Tuple.h"
+
 #include "mozilla/dom/SafeRefPtr.h"
 #include "mozilla/dom/ServiceWorkerOpArgs.h"
 
@@ -19,8 +19,8 @@ namespace mozilla::dom {
 class InternalResponse;
 
 using SynthesizeResponseArgs =
-    Tuple<SafeRefPtr<InternalResponse>, FetchEventRespondWithClosure,
-          FetchEventTimeStamps>;
+    std::tuple<SafeRefPtr<InternalResponse>, FetchEventRespondWithClosure,
+               FetchEventTimeStamps>;
 
 using FetchEventRespondWithResult =
     Variant<SynthesizeResponseArgs, ResetInterceptionArgs,

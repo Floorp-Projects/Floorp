@@ -14,7 +14,7 @@
 #include "nsTArray.h"
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/Tuple.h"
+
 #include "mozilla/UniquePtr.h"
 #include "NSSErrorsService.h"
 

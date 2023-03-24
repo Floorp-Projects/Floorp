@@ -330,7 +330,7 @@ static bool addScriptToFinalWarmUpCountMap(JSContext* cx, HandleScript script) {
   }
 
   if (!zone->scriptFinalWarmUpCountMap->put(
-          script, mozilla::MakeTuple(uint32_t(0), std::move(sfilename)))) {
+          script, std::make_tuple(uint32_t(0), std::move(sfilename)))) {
     ReportOutOfMemory(cx);
     return false;
   }

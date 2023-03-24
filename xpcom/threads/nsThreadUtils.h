@@ -8,6 +8,7 @@
 #define nsThreadUtils_h__
 
 #include <type_traits>
+#include <tuple>
 #include <utility>
 
 #include "MainThreadUtils.h"
@@ -18,7 +19,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/Tuple.h"
+
 #include "nsCOMPtr.h"
 #include "nsICancelableRunnable.h"
 #include "nsIDiscardableRunnable.h"
@@ -1152,15 +1153,15 @@ namespace detail {
 // struct used to store arguments and later apply them to a method.
 template <typename... Ts>
 struct RunnableMethodArguments final {
-  Tuple<typename ::detail::ParameterStorage<Ts>::Type...> mArguments;
+  std::tuple<typename ::detail::ParameterStorage<Ts>::Type...> mArguments;
   template <typename... As>
   explicit RunnableMethodArguments(As&&... aArguments)
       : mArguments(std::forward<As>(aArguments)...) {}
   template <typename C, typename M, typename... Args, size_t... Indices>
-  static auto applyImpl(C* o, M m, Tuple<Args...>& args,
+  static auto applyImpl(C* o, M m, std::tuple<Args...>& args,
                         std::index_sequence<Indices...>)
-      -> decltype(((*o).*m)(Get<Indices>(args).PassAsParameter()...)) {
-    return ((*o).*m)(Get<Indices>(args).PassAsParameter()...);
+      -> decltype(((*o).*m)(std::get<Indices>(args).PassAsParameter()...)) {
+    return ((*o).*m)(std::get<Indices>(args).PassAsParameter()...);
   }
   template <class C, typename M>
   auto apply(C* o, M m)

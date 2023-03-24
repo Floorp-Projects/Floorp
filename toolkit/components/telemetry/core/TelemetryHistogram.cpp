@@ -35,7 +35,6 @@ using base::BooleanHistogram;
 using base::CountHistogram;
 using base::FlagHistogram;
 using base::LinearHistogram;
-using mozilla::MakeTuple;
 using mozilla::MakeUnique;
 using mozilla::StaticMutex;
 using mozilla::StaticMutexAutoLock;
@@ -3312,7 +3311,7 @@ nsresult TelemetryHistogram::DeserializeHistograms(
     return NS_OK;
   }
 
-  typedef mozilla::Tuple<nsCString, nsTArray<base::Histogram::Count>, int64_t>
+  typedef std::tuple<nsCString, nsTArray<base::Histogram::Count>, int64_t>
       PersistedHistogramTuple;
   typedef mozilla::Vector<PersistedHistogramTuple> PersistedHistogramArray;
   typedef mozilla::Vector<PersistedHistogramArray> PersistedHistogramStorage;
@@ -3402,7 +3401,7 @@ nsresult TelemetryHistogram::DeserializeHistograms(
       }
 
       // Finally append the deserialized data to the storage.
-      if (!deserializedProcessData.emplaceBack(MakeTuple(
+      if (!deserializedProcessData.emplaceBack(std::make_tuple(
               std::move(histogramName), std::move(deserializedCounts), sum))) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -3422,7 +3421,7 @@ nsresult TelemetryHistogram::DeserializeHistograms(
         // name.
         HistogramID id;
         if (NS_FAILED(internal_GetHistogramIdByName(
-                locker, mozilla::Get<0>(histogramData), &id))) {
+                locker, std::get<0>(histogramData), &id))) {
           continue;
         }
 
@@ -3455,7 +3454,7 @@ nsresult TelemetryHistogram::DeserializeHistograms(
 
         // Make sure that histogram counts have matching sizes. If not,
         // |AddSampleSet| will fail and crash.
-        size_t numCounts = mozilla::Get<1>(histogramData).Length();
+        size_t numCounts = std::get<1>(histogramData).Length();
         if (h->bucket_count() != numCounts) {
           MOZ_ASSERT(false,
                      "The number of restored buckets does not match with the "
@@ -3464,9 +3463,8 @@ nsresult TelemetryHistogram::DeserializeHistograms(
         }
 
         // Update the data for the histogram.
-        h->AddSampleSet(
-            base::PersistedSampleSet(std::move(mozilla::Get<1>(histogramData)),
-                                     mozilla::Get<2>(histogramData)));
+        h->AddSampleSet(base::PersistedSampleSet(
+            std::move(std::get<1>(histogramData)), std::get<2>(histogramData)));
       }
     }
   }
@@ -3488,8 +3486,8 @@ nsresult TelemetryHistogram::DeserializeKeyedHistograms(
     return NS_OK;
   }
 
-  typedef mozilla::Tuple<nsCString, nsCString, nsTArray<base::Histogram::Count>,
-                         int64_t>
+  typedef std::tuple<nsCString, nsCString, nsTArray<base::Histogram::Count>,
+                     int64_t>
       PersistedKeyedHistogramTuple;
   typedef mozilla::Vector<PersistedKeyedHistogramTuple>
       PersistedKeyedHistogramArray;
@@ -3605,7 +3603,7 @@ nsresult TelemetryHistogram::DeserializeKeyedHistograms(
         }
 
         // Finally append the deserialized data to the storage.
-        if (!deserializedProcessData.emplaceBack(MakeTuple(
+        if (!deserializedProcessData.emplaceBack(std::make_tuple(
                 nsCString(NS_ConvertUTF16toUTF8(histogramName)),
                 std::move(keyName), std::move(deserializedCounts), sum))) {
           return NS_ERROR_OUT_OF_MEMORY;
@@ -3627,7 +3625,7 @@ nsresult TelemetryHistogram::DeserializeKeyedHistograms(
         // name.
         HistogramID id;
         if (NS_FAILED(internal_GetHistogramIdByName(
-                locker, mozilla::Get<0>(histogramData), &id))) {
+                locker, std::get<0>(histogramData), &id))) {
           continue;
         }
 
@@ -3648,8 +3646,8 @@ nsresult TelemetryHistogram::DeserializeKeyedHistograms(
 
         // Get data for the key we're looking for.
         base::Histogram* h = nullptr;
-        if (NS_FAILED(keyed->GetHistogram(
-                "main"_ns, mozilla::Get<1>(histogramData), &h))) {
+        if (NS_FAILED(keyed->GetHistogram("main"_ns, std::get<1>(histogramData),
+                                          &h))) {
           continue;
         }
         MOZ_ASSERT(h);
@@ -3661,7 +3659,7 @@ nsresult TelemetryHistogram::DeserializeKeyedHistograms(
 
         // Make sure that histogram counts have matching sizes. If not,
         // |AddSampleSet| will fail and crash.
-        size_t numCounts = mozilla::Get<2>(histogramData).Length();
+        size_t numCounts = std::get<2>(histogramData).Length();
         if (h->bucket_count() != numCounts) {
           MOZ_ASSERT(false,
                      "The number of restored buckets does not match with the "
@@ -3670,9 +3668,8 @@ nsresult TelemetryHistogram::DeserializeKeyedHistograms(
         }
 
         // Update the data for the histogram.
-        h->AddSampleSet(
-            base::PersistedSampleSet(std::move(mozilla::Get<2>(histogramData)),
-                                     mozilla::Get<3>(histogramData)));
+        h->AddSampleSet(base::PersistedSampleSet(
+            std::move(std::get<2>(histogramData)), std::get<3>(histogramData)));
       }
     }
   }
