@@ -158,6 +158,9 @@
 @BINPATH@/@DLL_PREFIX@qipcap@DLL_SUFFIX@
 #endif
 #endif
+#ifdef MOZ_GTK
+@BINPATH@/vaapitest
+#endif
 
 ; [Components]
 #ifdef ACCESSIBILITY
