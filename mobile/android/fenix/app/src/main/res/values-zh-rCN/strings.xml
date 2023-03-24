@@ -375,7 +375,7 @@
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">在该网站开启</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">不支持该网站</string>
+    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">目前不支持该网站</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">要为 %1$s 开启“减少 Cookie 横幅”功能吗？</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->

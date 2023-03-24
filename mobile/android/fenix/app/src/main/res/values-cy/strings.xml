@@ -84,9 +84,6 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Cau</string>
 
-    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
-    <string name="cfr_dismiss_button_default_content_description" moz:removedIn="110" tools:ignore="UnusedResources">Cau</string>
-
     <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
     <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
     <string name="tcp_cfr_message">Mae ein nodwedd preifatrwydd mwyaf pwerus eto yn ynysu tracwyr traws-wefan.</string>
@@ -360,8 +357,6 @@
     <string name="reduce_cookie_banner_option_off">Diffodd</string>
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
     <string name="reduce_cookie_banner_option_on">Ymlaen</string>
-    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Mae Firefox yn ceisio gwrthod ceisiadau cwcis ar faneri cwcisyn awtomatig. Os nad oes dewis gwrthod ar gael, gall Firefox dderbyn pob cwci er mwyn cau’r faner.</string>
 
     <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
     <string name="reduce_cookie_banner_summary_1">Mae %1$s yn ceisio gwrthod ceisiadau cwci ar faneri cwci yn awtomatig.</string>
@@ -378,8 +373,6 @@
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">Diffodd Llai o Faneri Cwcis ar %1$s?</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">Bydd %1$s yn clirio cwcis y wefan hon ac yn adnewyddu’r dudalen. Gall clirio pob cwci eich allgofnodi neu wagio eich certiau siopa.</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">Gall %1$s geisio gwrthod ceisiadau cwcis yn awtomatig. Os nad oes dewis gwrthod ar gael, gall %2$s dderbyn pob cwci er mwyn cau’r faner.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Gall %1$s geisio gwrthod ceisiadau cwcis yn awtomatig.</string>
@@ -389,8 +382,6 @@
     <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Gwaredu baneri cwcis!</string>
     <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_dialog_title">Caniatáu i %1$s wrthod baneri cwci?</string>
-    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Gwrthod ceisiadau cwcis yn awtomatig, pan fo modd. Fel arall, derbyn pob cwci i ddiystyru baneri cwcis.</string>
 
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Gwrthod ceisiadau cwcis yn awtomatig, pan fo modd.</string>
@@ -407,15 +398,11 @@
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Gweld llai o lamlenni cwci</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Atebwch ffenestri llamlenni cwci yn awtomatig er mwyn gallu pori heb eich poeni. Bydd %1$s yn gwrthod pob cais os yn bosib, neu’n derbyn pob un os nad.</string>
-    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Atebwch ffenestri llamlenni cwci yn awtomatig er mwyn gallu pori heb eich poeni. Bydd %1$s yn gwrthod pob cais os yn bosib.</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Cau Llamlenni</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Cyfyngu Baneri Cwcis</string>
-    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Caniatáu i %1$s wrthod cais caniatâd cwci gwefan os yn bosibl neu dderbyn mynediad cwci pan nad yw’n bosibl?</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Caniatáu i %1$s wrthod cais caniatâd cwci gwefan os yn bosibl?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
@@ -1238,6 +1225,15 @@
     <string name="notification_re_engagement_B_title">Cychwyn eich chwilio cyntaf</string>
     <!-- Text B shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_B_text">Canfod rhywbeth gerllaw. Neu darganfod rywbeth difyr.</string>
+
+    <!-- Survey -->
+    <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_survey_message_text" tools:ignore="UnusedResources">Helpwch i wneud Firefox yn well drwy lanw arolwg byr.</string>
+    <!-- Preference for taking the short survey. -->
+    <string name="preferences_take_survey" tools:ignore="UnusedResources">Llenwch yr Arolwg</string>
+    <!-- Preference for not taking the short survey. -->
+    <string name="preferences_not_take_survey" tools:ignore="UnusedResources">Dim Diolch</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->

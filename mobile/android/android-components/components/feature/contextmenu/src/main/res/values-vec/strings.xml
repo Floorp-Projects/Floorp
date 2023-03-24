@@ -6,14 +6,20 @@
     <string name="mozac_feature_contextmenu_open_link_in_private_tab">Vèrxi en na scheda anonima</string>
     <!-- Text for context menu item to open the image in a new tab. -->
     <string name="mozac_feature_contextmenu_open_image_in_new_tab">Vèrxi imagine en na nova fenèstra</string>
+    <!-- Text for context menu item to save / download the link. -->
+    <string name="mozac_feature_contextmenu_download_link">Scarega link</string>
     <!-- Text for context menu item to share the link with an other app. -->
     <string name="mozac_feature_contextmenu_share_link">Condividi link</string>
+    <!-- Text for context menu item to share the image with an other app. -->
+    <string name="mozac_feature_contextmenu_share_image">Condividi imaxene</string>
     <!-- Text for context menu item to copy the link to the clipboard. -->
     <string name="mozac_feature_contextmenu_copy_link">Còpia link</string>
     <!-- Text for context menu item to copy the URL pointing to the image to the clipboard. -->
     <string name="mozac_feature_contextmenu_copy_image_location">Còpia indiriso imagine</string>
     <!-- Text for context menu item to save / download the image. -->
     <string name="mozac_feature_contextmenu_save_image">Salva imagine</string>
+    <!-- Text for context menu item to copy the image to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_image">Còpia imaxene</string>
     <!-- Text for context menu item to save / download the file. -->
     <string name="mozac_feature_contextmenu_save_file_to_device">Salva el file so el dispoxitivo</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->
@@ -26,10 +32,18 @@
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Pasa a</string>
     <!-- Text for context menu item to open the link in an external app. -->
     <string name="mozac_feature_contextmenu_open_link_in_external_app">Vèrxi en na app esterna</string>
-    <!-- Action shown in a text selection context menu. This will prompt a search using the selected text. The first parameter is the name of the application (For example: Fenix)-->
-    <string name="mozac_selection_context_menu_search">%s Serca</string>
-    <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text The first parameter is the name of the application (For example: Fenix) -->
-    <string name="mozac_selection_context_menu_search_privately">%s Riserca anonima</string>
+    <!-- Text for context menu item to share the email with another app. -->
+    <string name="mozac_feature_contextmenu_share_email_address">Condividi indiriso email</string>
+    <!-- Text for context menu item to copy the email address to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_email_address">Còpia indiriso email</string>
+    <!-- Text for confirmation "snackbar" shown after copying a email address to the clipboard. -->
+    <string name="mozac_feature_contextmenu_snackbar_email_address_copied">Indiriso email copià intel i scaraboci</string>
+    <!-- Text for context menu item to add to a contact. -->
+    <string name="mozac_feature_contextmenu_add_to_contact">Xonta a on contato</string>
+    <!-- Action shown in a text selection context menu. This will prompt a search using the selected text.-->
+    <string name="mozac_selection_context_menu_search_2">Serca</string>
+    <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text-->
+    <string name="mozac_selection_context_menu_search_privately_2">Reserca anonema</string>
     <!-- Action shown in a text selection context menu. This will prompt a share of the selected text. -->
     <string name="mozac_selection_context_menu_share">Condividi</string>
-</resources>
+    </resources>

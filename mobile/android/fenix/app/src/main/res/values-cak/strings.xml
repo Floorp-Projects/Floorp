@@ -455,6 +455,8 @@
     <string name="preferences_gestures">B\'anoj paläj</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Tichinäx</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description_2">Tatikirisaj molojri\'ïl richin ye\'axïm taq ruwi\', taq yaketal, ewan tzij chuqa\' juley chik.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox Taqoya\'l</string>
 
@@ -492,6 +494,12 @@
     <string name="preferences_enable_autocomplete_urls">Titz\'aqatisäx ruyon URLs</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Kejaq taq ximonel pa taq chokoy</string>
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">Junelïk</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">Tik\'utüx toq nijaq</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">Majub\'ey</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Runuk\'samajel chi rij qasanïk</string>
     <!-- Preference for add_ons -->
@@ -529,23 +537,47 @@
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">K\'a b\'a ketz\'et</string>
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket_2">B\'anob\'äl richin yach\'ob\'on</string>
+    <!-- Summary for the customize home screen section with Pocket. The first parameter is product name Pocket -->
+    <string name="customize_toggle_pocket_summary">Taq cholna\'oj ruchilab\'en %s</string>
     <!-- Title for the customize home screen section with sponsored Pocket stories. -->
     <string name="customize_toggle_pocket_sponsored">To\'on taq b\'anob\'äl</string>
+    <!-- Title for the opening wallpaper settings screen -->
+    <string name="customize_wallpapers">Rupam ruwäch</string>
     <!-- Title for the customize home screen section with sponsored shortcuts. -->
     <string name="customize_toggle_contile">Xto\' chojmin okem</string>
 
+    <!-- Wallpapers -->
+    <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
+    <string name="wallpapers_item_name_content_description">Retal rupam ruwäch: %1$s</string>
+    <!-- Snackbar message for when wallpaper is selected -->
+    <string name="wallpaper_updated_snackbar_message">¡Xk\'ex ri rupam ruwäch!</string>
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Titz\'et</string>
+    <!-- Snackbar message for when wallpaper couldn't be downloaded -->
+    <string name="wallpaper_download_error_snackbar_message">Man tikirel ta niqasäx rupam ruwäch</string>
     <!-- Snackbar label for action to retry downloading the wallpaper -->
     <string name="wallpaper_download_error_snackbar_action">Titojtob\'ëx chik</string>
+    <!-- Snackbar message for when wallpaper couldn't be selected because of the disk error -->
+    <string name="wallpaper_select_error_snackbar_message">Man xjalatäj ta ri rupam ruwäch</string>
     <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
     <string name="wallpaper_learn_more">Tetamäx ch\'aqa\' chik</string>
     <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
     <string name="wallpaper_classic_title">Ojer %s</string>
     <!-- Text for limited edition wallpapers title. -->
     <string name="wallpaper_limited_edition_title">Jub\'a\' Ruwäch</string>
+    <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
+    <string name="wallpaper_limited_edition_description_with_learn_more">Ri k\'ak\'a\' Jamäl ch\'ab\'äl molb\'äl. %s</string>
+    <!-- Description text for the limited edition wallpapers. -->
+    <string name="wallpaper_limited_edition_description">Ri k\'ak\'a\' Jamäl ch\'ab\'äl molb\'äl.</string>
     <!-- Wallpaper onboarding dialog header text. -->
     <string name="wallpapers_onboarding_dialog_title_text">Tatojtob\'ej jun rub\'onil pa rub\'eyal</string>
+
+    <!-- Wallpaper onboarding dialog body text. -->
+    <string name="wallpapers_onboarding_dialog_body_text">Tacha\' jun rupam ruwäch richin nak\'üt awi\'.</string>
+    <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
+    <string name="wallpapers_onboarding_dialog_explore_more_button_text">Kekanöx ch\'aqa\' rupam ruwäch</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -1006,6 +1038,8 @@
     <string name="preference_phone_feature_notification">Rutzijol</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Jutaqil taq Yakoj</string>
+    <!-- Preference for altering the storage access setting for all websites -->
+    <string name="preference_phone_feature_cross_origin_storage_access">Kuki xoch\'in taq ruxaq</string>
     <!-- Preference for altering the EME access for all websites -->
     <string name="preference_phone_feature_media_key_system_access">DRM-chajin rupam</string>
     <!-- Label that indicates that a permission must be asked always -->
@@ -1113,6 +1147,8 @@
     <string name="share_button_content_description">Tikomonïx</string>
     <!-- Text for the Save to PDF feature in the share menu -->
     <string name="share_save_to_pdf">Tiyak achi\'el PDF</string>
+    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <string name="unable_to_save_to_pdf_error">Man xtz\'uk ta ri PDF</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Titaq pa okisab\'äl</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1158,8 +1194,25 @@
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Markentin</string>
 
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_title" tools:ignore="UnusedResources">Firefox aninäq chuqa\' ichinel</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_text" tools:ignore="UnusedResources">Tab\'ana\' chi ri Firefox nok ri nab\'ey awokik\'amaya\'l</string>
     <!-- Title shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_title">Titojtob\'ëx ichinan okem</string>
+
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">Katok pa k\'amaya\'l akuchi\' majun kuki o taq natab\'äl eyakon pa %1$s</string>
+    <!-- Title A shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_A_title">Majun etal taya\' kan toq yatok pa k\'amaya\'l</string>
+    <!-- Text A shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_A_text">Ri ichinan okem pa ruk\'amaya\'l %1$s majun nuyäk ri awetamab\'al.</string>
+    <!-- Title B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_title">Tatikirisaj ri nab\'ey akanoxik</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->

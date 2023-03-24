@@ -41,7 +41,7 @@
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">შიგთავსის შეზღუდვა ნებისმიერ გვერდზე</string>
     <!-- Description for declarativeNetRequestFeedback permission. -->
-    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">თქვენი მონახულებული გვერდების ხილვა</string>
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">თქვენ მიერ მონახულებული გვერდების ხილვა</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">ფაილების ჩამოტვირთვა, ჩამოტვირთვების ნახვა და შეცვლა</string>
     <!-- Description for downloads_open permission. -->
