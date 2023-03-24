@@ -109,6 +109,9 @@ nsClipboard::SetNativeClipboardData(int32_t aWhichClipboard) {
       } else if ([currentKey
                      isEqualToString:[UTIHelper stringFromPboardType:kMozFileUrlsPboardType]]) {
         [cocoaPasteboard writeObjects:currentValue];
+      } else if ([currentKey
+                     isEqualToString:[UTIHelper stringFromPboardType:(NSString*)kUTTypeFileURL]]) {
+        [cocoaPasteboard setString:currentValue forType:currentKey];
       } else {
         [cocoaPasteboard setData:currentValue forType:currentKey];
       }
@@ -633,13 +636,11 @@ NSDictionary* nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTran
 
       NSString* str = nsCocoaUtils::ToNSString(fileURI);
       NSURL* url = [NSURL fileURLWithPath:str isDirectory:NO];
-      NSString* fileUTType = [UTIHelper stringFromPboardType:(NSString*)kUTTypeFileURL];
       if (!url || ![url absoluteString]) {
         continue;
       }
-      [pasteboardOutputDict setObject:[[NSString stringWithString:[url absoluteString]]
-                                          dataUsingEncoding:NSUTF8StringEncoding]
-                               forKey:fileUTType];
+      NSString* fileUTType = [UTIHelper stringFromPboardType:(NSString*)kUTTypeFileURL];
+      [pasteboardOutputDict setObject:[url absoluteString] forKey:fileUTType];
     } else if (flavorStr.EqualsLiteral(kFilePromiseMime)) {
       NSString* urlPromise =
           [UTIHelper stringFromPboardType:(NSString*)kPasteboardTypeFileURLPromise];
