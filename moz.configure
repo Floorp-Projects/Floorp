@@ -976,7 +976,11 @@ check_prog(
 
 @depends(js_standalone, target)
 def system_zlib_default(js_standalone, target):
-    return js_standalone and target.kernel not in ("WINNT", "Darwin")
+    return (
+        js_standalone
+        and target.kernel not in ("WINNT", "Darwin")
+        and target.os != "Android"
+    )
 
 
 option(
