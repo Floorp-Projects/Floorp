@@ -195,3 +195,41 @@ serp:
           The action taken on the page.
           Possible values are `clicked`.
         type: string
+
+  ad_impression:
+    type: event
+    description: >
+      Recorded when a user loads a SERP and ads are detected.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1816728
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1816728
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+      - rev-data@mozilla.com
+    expires: never
+    extra_keys:
+      impression_id: *impression_id
+      component:
+        description: >
+          Type of components on a SERP. Possible values are
+          `ad_carousel`, and `ad_link`. Defaults to `ad_link`.
+        type: string
+      ads_loaded:
+        description: >
+          Number of ads loaded for this component. They may or
+          may not be visible on the page.
+        type: quantity
+      ads_visible:
+        description: >
+          Number of ads visible for this component. An ad can be
+          considered visible if was within the browser window
+          by the time the impression was recorded.
+        type: quantity
+      ads_hidden:
+        description: >
+          Number of ads hidden for this component. These are ads that
+          are loaded in the DOM but hidden via CSS and/or Javascript.
+        type: quantity

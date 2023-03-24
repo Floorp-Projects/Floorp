@@ -39,6 +39,10 @@ export var SearchSERPTelemetryUtils = {
   ACTIONS: {
     CLICKED: "clicked",
   },
+  COMPONENTS: {
+    AD_CAROUSEL: "ad_carousel",
+    AD_LINK: "ad_link",
+  },
 };
 
 /**
@@ -230,6 +234,10 @@ class TelemetryHandler {
     this._contentHandler._reportPageWithAds(info, browser);
   }
 
+  reportPageWithAdImpressions(info, browser) {
+    this._contentHandler._reportPageWithAdImpressions(info, browser);
+  }
+
   /**
    * This may start tracking a tab based on the URL. If the URL matches a search
    * partner, and it has a code, then we'll start tracking it. This will aid
@@ -291,6 +299,7 @@ class TelemetryHandler {
     if (item) {
       item.browserTelemetryStateMap.set(browser, {
         adsReported: false,
+        adImpressionsReported: false,
         impressionId,
       });
       item.count++;
@@ -300,6 +309,7 @@ class TelemetryHandler {
       item = this._browserInfoByURL.set(url, {
         browserTelemetryStateMap: new WeakMap().set(browser, {
           adsReported: false,
+          adImpressionsReported: false,
           impressionId,
         }),
         info,
@@ -909,6 +919,47 @@ class ContentHandler {
         is_tagged: item.info.type.startsWith("tagged"),
         telemetry_id: item.info.provider,
       });
+    }
+  }
+
+  /**
+   * Logs ad impression telemetry for a page with adverts, if it is
+   * one of the partner search provider pages that we're tracking.
+   *
+   * @param {object} info
+   *     The search provider information for the page.
+   * @param {string} info.url
+   *     The url of the page.
+   * @param {Map<string, object>} info.adImpressions
+   *     A map of ad impressions found for the page, where the key
+   *     is the type of ad component and the value is an object
+   *     containing the number of ads that were loaded, visible,
+   *     and hidden.
+   * @param {object} browser
+   *     The browser associated with the page.
+   */
+  _reportPageWithAdImpressions(info, browser) {
+    let item = this._findBrowserItemForURL(info.url);
+    if (!item) {
+      return;
+    }
+    let telemetryState = item.browserTelemetryStateMap.get(browser);
+    if (
+      lazy.serpEventsEnabled &&
+      info.adImpressions &&
+      !telemetryState.adImpressionsReported
+    ) {
+      for (let [componentType, data] of info.adImpressions.entries()) {
+        lazy.logConsole.debug("Counting ad:", { type: componentType, ...data });
+        Glean.serp.adImpression.record({
+          impression_id: telemetryState.impressionId,
+          component: componentType,
+          ads_loaded: data.adsLoaded,
+          ads_visible: data.adsVisible,
+          ads_hidden: data.adsHidden,
+        });
+      }
+      telemetryState.adImpressionsReported = true;
     }
   }
 }
