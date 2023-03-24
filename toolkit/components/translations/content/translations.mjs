@@ -72,7 +72,11 @@ class TranslationsState {
      */
     this.isTranslationEngineSupported = AT_isTranslationEngineSupported();
 
-    AT_createLanguageIdEngine();
+    /**
+     * Allow code to wait for the engine to be created.
+     * @type {Promise<void>}
+     */
+    this.languageIdEngineCreated = AT_createLanguageIdEngine();
 
     this.supportedLanguages = AT_getSupportedLanguages();
     this.ui = new TranslationsUI(this);
@@ -88,6 +92,7 @@ class TranslationsState {
    * @param {string} message
    */
   async identifyLanguage(message) {
+    await this.languageIdEngineCreated;
     const start = performance.now();
     const { languageLabel, confidence } = await AT_identifyLanguage(message);
     const duration = performance.now() - start;
