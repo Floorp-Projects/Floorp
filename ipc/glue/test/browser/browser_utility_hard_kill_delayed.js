@@ -50,4 +50,8 @@ add_task(async () => {
     utilityPid,
     `Should match the crashed PID ${utilityPid} with ${data}`
   );
+
+  // Make sure the process is dead, otherwise there is a risk of race for
+  // writing leak logs
+  utilityProcessTest().noteIntentionalCrash(utilityPid);
 });

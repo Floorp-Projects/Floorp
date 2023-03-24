@@ -9,6 +9,7 @@
 #  include "mozilla/ipc/UtilityProcessManager.h"
 #  include "mozilla/dom/Promise.h"
 #  include "mozilla/ProcInfo.h"
+#  include "mozilla/IntentionalCrash.h"
 
 namespace mozilla::ipc {
 
@@ -102,6 +103,12 @@ UtilityProcessTest::StartProcess(const nsTArray<nsCString>& aActorsToRegister,
           });
 
   promise.forget(aOutPromise);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+UtilityProcessTest::NoteIntentionalCrash(uint32_t aPid) {
+  mozilla::NoteIntentionalCrash("utility", aPid);
   return NS_OK;
 }
 

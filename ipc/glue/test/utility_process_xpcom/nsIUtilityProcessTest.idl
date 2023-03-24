@@ -23,6 +23,13 @@ interface nsIUtilityProcessTest : nsISupports
   /**
    * ** Test-only Method **
    *
+   * Note that we are going to manually crash a process
+   */
+  void noteIntentionalCrash(in unsigned long pid);
+
+  /**
+   * ** Test-only Method **
+   *
    * Allowing to stop Utility Process from JS code.
    * Default behavior is to stop any utility process.
    */
