@@ -135,3 +135,12 @@ window.setTimeout(function () {
   document.getElementById("tabbrowser-arrowscrollbox").shadowRoot.querySelector(`[part="scrollbox"]`).setAttribute("orient", "vertical");
 }, 500);
 
+window.setTimeout(function () {
+  document.getElementById("tabbrowser-arrowscrollbox").shadowRoot.querySelector(`[part="scrollbox"]`).setAttribute("style", "overflow: hidden; max-height: none; height: -moz-available; min-height: -moz-available;");
+}, 2000);
+
+window.setTimeout(function () {
+  document.getElementById("tabbrowser-arrowscrollbox").shadowRoot.querySelector(`[part="scrollbox"]`).setAttribute("style", "overflow: hidden; max-height: none; height: -moz-available; min-height: -moz-available;");
+  let observer = new MutationObserver(function(){console.log("aaa")})
+observer.observe(document.getElementById("tabbrowser-arrowscrollbox").shadowRoot.querySelector(`[part="scrollbox"]`),{attributes:true})
+}, 5000);
