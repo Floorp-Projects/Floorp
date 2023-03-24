@@ -82,7 +82,7 @@ ProfilerLabel ProfilerLabelBegin(const char* aLabelName,
                            : nullptr;
   uint32_t generation = data.GenerationCRef();
 
-  return std::make_tuple(entryContext, generation);
+  return MakeTuple(entryContext, generation);
 }
 
 void ProfilerLabelEnd(const ProfilerLabel& aLabel) {
@@ -91,19 +91,19 @@ void ProfilerLabelEnd(const ProfilerLabel& aLabel) {
   }
 
   const AutoProfilerLabelData data;
-  if (data.ExitCRef() && (std::get<1>(aLabel) == data.GenerationCRef())) {
-    data.ExitCRef()(std::get<0>(aLabel));
+  if (data.ExitCRef() && (Get<1>(aLabel) == data.GenerationCRef())) {
+    data.ExitCRef()(Get<0>(aLabel));
   }
 }
 
 AutoProfilerLabel::AutoProfilerLabel(const char* aLabel,
                                      const char* aDynamicString) {
-  std::tie(mEntryContext, mGeneration) =
+  Tie(mEntryContext, mGeneration) =
       ProfilerLabelBegin(aLabel, aDynamicString, this);
 }
 
 AutoProfilerLabel::~AutoProfilerLabel() {
-  ProfilerLabelEnd(std::make_tuple(mEntryContext, mGeneration));
+  ProfilerLabelEnd(MakeTuple(mEntryContext, mGeneration));
 }
 
 }  // namespace mozilla

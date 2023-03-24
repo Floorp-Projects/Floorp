@@ -38,11 +38,11 @@ mozilla::ipc::IPCResult RemoteSpellcheckEngineParent::RecvSetDictionaryFromList(
   for (auto& dictionary : aList) {
     nsresult rv = mSpellChecker->SetCurrentDictionary(dictionary);
     if (NS_SUCCEEDED(rv)) {
-      aResolve(std::tuple<const bool&, const nsACString&>(true, dictionary));
+      aResolve(Tuple<const bool&, const nsACString&>(true, dictionary));
       return IPC_OK();
     }
   }
-  aResolve(std::tuple<const bool&, const nsACString&>(false, ""_ns));
+  aResolve(Tuple<const bool&, const nsACString&>(false, ""_ns));
   return IPC_OK();
 }
 

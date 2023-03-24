@@ -8,6 +8,7 @@
 
 #include "EventQueue.h"
 
+#include "mozilla/Tuple.h"
 #include "nsClassHashtable.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIFrame.h"

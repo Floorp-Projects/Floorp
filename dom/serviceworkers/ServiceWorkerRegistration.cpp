@@ -328,17 +328,17 @@ already_AddRefed<Promise> ServiceWorkerRegistration::Unregister(
   }
 
   mActor->SendUnregister(
-      [outer](std::tuple<bool, CopyableErrorResult>&& aResult) {
-        if (std::get<1>(aResult).Failed()) {
+      [outer](Tuple<bool, CopyableErrorResult>&& aResult) {
+        if (Get<1>(aResult).Failed()) {
           // application layer error
           // register() should be resilient and resolve false instead of
           // rejecting in most cases.
-          std::get<1>(aResult).SuppressException();
+          Get<1>(aResult).SuppressException();
           outer->MaybeResolve(false);
           return;
         }
         // success
-        outer->MaybeResolve(std::get<0>(aResult));
+        outer->MaybeResolve(Get<0>(aResult));
       },
       [outer](ResponseRejectReason&& aReason) {
         // IPC layer error

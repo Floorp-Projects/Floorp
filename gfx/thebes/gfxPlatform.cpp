@@ -287,8 +287,8 @@ void CrashStatsLogForwarder::UpdateCrashReport() {
   }
 
   for (auto& it : mBuffer) {
-    message << logAnnotation << std::get<0>(it) << "]" << std::get<1>(it)
-            << " (t=" << std::get<2>(it) << ") ";
+    message << logAnnotation << Get<0>(it) << "]" << Get<1>(it)
+            << " (t=" << Get<2>(it) << ") ";
   }
 
   nsCString reportString(message.str().c_str());

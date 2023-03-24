@@ -330,13 +330,13 @@ void WebTransport::Init(const GlobalObject& aGlobal, const nsAString& aURL,
              [self = RefPtr{this},
               child](PBackgroundChild::CreateWebTransportParentPromise::
                          ResolveOrRejectValue&& aResult) {
-               // aResult is a std::tuple<nsresult, uint8_t>
+               // aResult is a Tuple<nsresult, uint8_t>
                // TODO: is there a better/more-spec-compliant error in the
                // reject case? Which begs the question, why would we get a
                // reject?
                nsresult rv = aResult.IsReject()
                                  ? NS_ERROR_FAILURE
-                                 : std::get<0>(aResult.ResolveValue());
+                                 : Get<0>(aResult.ResolveValue());
                LOG(("isreject: %d nsresult 0x%x", aResult.IsReject(),
                     (uint32_t)rv));
                if (NS_FAILED(rv)) {
@@ -347,7 +347,7 @@ void WebTransport::Init(const GlobalObject& aGlobal, const nsAString& aURL,
 
                  self->ResolveWaitingConnection(
                      static_cast<WebTransportReliabilityMode>(
-                         std::get<1>(aResult.ResolveValue())),
+                         Get<1>(aResult.ResolveValue())),
                      child);
                }
              });

@@ -927,8 +927,10 @@ void RemoteProxyAutoConfig::GetProxyForURIWithCallback(
 
   mProxyAutoConfigParent->SendGetProxyForURI(
       aTestURI, aTestHost,
-      [aCallback](std::tuple<nsresult, nsCString>&& aResult) {
-        auto [status, result] = aResult;
+      [aCallback](Tuple<nsresult, nsCString>&& aResult) {
+        nsresult status;
+        nsCString result;
+        Tie(status, result) = aResult;
         aCallback(status, result);
       },
       [aCallback](mozilla::ipc::ResponseRejectReason&& aReason) {

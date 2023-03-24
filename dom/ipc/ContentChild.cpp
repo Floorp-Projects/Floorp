@@ -2293,8 +2293,8 @@ mozilla::ipc::IPCResult ContentChild::RecvCollectPerfStatsJSON(
 mozilla::ipc::IPCResult ContentChild::RecvCollectScrollingMetrics(
     CollectScrollingMetricsResolver&& aResolver) {
   auto metrics = ScrollingMetrics::CollectLocalScrollingMetrics();
-  using ResolverArgs = std::tuple<const uint32_t&, const uint32_t&>;
-  aResolver(ResolverArgs(std::get<0>(metrics), std::get<1>(metrics)));
+  using ResolverArgs = Tuple<const uint32_t&, const uint32_t&>;
+  aResolver(ResolverArgs(Get<0>(metrics), Get<1>(metrics)));
   return IPC_OK();
 }
 
@@ -4467,9 +4467,8 @@ mozilla::ipc::IPCResult ContentChild::RecvGetLayoutHistoryState(
     docShell->GetLayoutHistoryState(getter_AddRefs(state));
     wireframe = static_cast<nsDocShell*>(docShell)->GetWireframe();
   }
-  aResolver(
-      std::tuple<nsILayoutHistoryState*, const mozilla::Maybe<Wireframe>&>(
-          state, wireframe));
+  aResolver(Tuple<nsILayoutHistoryState*, const mozilla::Maybe<Wireframe>&>(
+      state, wireframe));
 
   return IPC_OK();
 }

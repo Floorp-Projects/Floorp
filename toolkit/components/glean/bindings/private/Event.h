@@ -11,7 +11,7 @@
 #include "mozilla/glean/bindings/EventGIFFTMap.h"
 #include "mozilla/glean/fog_ffi_generated.h"
 #include "mozilla/ResultVariant.h"
-
+#include "mozilla/Tuple.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -31,7 +31,7 @@ struct RecordedEvent {
   nsCString mCategory;
   nsCString mName;
 
-  nsTArray<std::tuple<nsCString, nsCString>> mExtra;
+  nsTArray<Tuple<nsCString, nsCString>> mExtra;
 };
 
 template <class T>
@@ -59,8 +59,8 @@ class EventMetric {
       if (aExtras) {
         CopyableTArray<Telemetry::EventExtraEntry> extras;
         auto serializedExtras = aExtras->ToFfiExtra();
-        auto keys = std::move(std::get<0>(serializedExtras));
-        auto values = std::move(std::get<1>(serializedExtras));
+        auto keys = std::move(Get<0>(serializedExtras));
+        auto values = std::move(Get<1>(serializedExtras));
         for (size_t i = 0; i < keys.Length(); i++) {
           extras.EmplaceBack(Telemetry::EventExtraEntry{keys[i], values[i]});
         }
@@ -70,7 +70,7 @@ class EventMetric {
     }
     if (aExtras) {
       auto extra = aExtras->ToFfiExtra();
-      fog_event_record(mId, &std::get<0>(extra), &std::get<1>(extra));
+      fog_event_record(mId, &mozilla::Get<0>(extra), &mozilla::Get<1>(extra));
     } else {
       nsTArray<nsCString> keys;
       nsTArray<nsCString> vals;
@@ -122,8 +122,7 @@ class EventMetric {
         // keys & values are interleaved.
         nsCString key = std::move(event.extras[i]);
         nsCString value = std::move(event.extras[i + 1]);
-        ev->mExtra.AppendElement(
-            std::make_tuple(std::move(key), std::move(value)));
+        ev->mExtra.AppendElement(MakeTuple(std::move(key), std::move(value)));
       }
     }
     return Some(std::move(result));
@@ -138,10 +137,10 @@ class EventMetric {
 }  // namespace impl
 
 struct NoExtraKeys {
-  std::tuple<nsTArray<nsCString>, nsTArray<nsCString>> ToFfiExtra() const {
+  Tuple<nsTArray<nsCString>, nsTArray<nsCString>> ToFfiExtra() const {
     nsTArray<nsCString> extraKeys;
     nsTArray<nsCString> extraValues;
-    return std::make_tuple(std::move(extraKeys), std::move(extraValues));
+    return MakeTuple(std::move(extraKeys), std::move(extraValues));
   }
 };
 
