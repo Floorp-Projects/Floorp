@@ -863,7 +863,8 @@ ReadableStream::ReceiveTransferImpl(JSContext* aCx, nsIGlobalObject* aGlobal,
   // Step 2: Let port be deserializedRecord.[[Deserialized]].
 
   // Step 3: Perform ! SetUpCrossRealmTransformReadable(value, port).
-  RefPtr<ReadableStream> readable = new ReadableStream(aGlobal);
+  RefPtr<ReadableStream> readable =
+      new ReadableStream(aGlobal, HoldDropJSObjectsCaller::Implicit);
   ErrorResult rv;
   SetUpCrossRealmTransformReadable(readable, &aPort, rv);
   if (rv.MaybeSetPendingException(aCx)) {
@@ -910,7 +911,8 @@ bool WritableStream::Transfer(JSContext* aCx, UniqueMessagePortId& aPortId) {
   }
 
   // Step 5: Let readable be a new ReadableStream in the current Realm.
-  RefPtr<ReadableStream> readable = new ReadableStream(mGlobal);
+  RefPtr<ReadableStream> readable = new ReadableStream(
+      mGlobal, ReadableStream::HoldDropJSObjectsCaller::Implicit);
 
   // Step 6: Perform ! SetUpCrossRealmTransformReadable(readable, port1).
   // MOZ_KnownLive because Port1 never changes before CC

@@ -53,8 +53,17 @@ class ReadableStream : public nsISupports, public nsWrapperCache {
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
 
-  explicit ReadableStream(const GlobalObject& aGlobal);
-  explicit ReadableStream(nsIGlobalObject* aGlobal);
+  // If one extends ReadableStream with another cycle collectable class,
+  // calling HoldJSObjects and DropJSObjects should happen using 'this' of
+  // that extending class. And in that case Explicit should be passed to the
+  // constructor of ReadableStream so that it doesn't make those calls.
+  // See also https://bugzilla.mozilla.org/show_bug.cgi?id=1801214.
+  enum class HoldDropJSObjectsCaller { Implicit, Explicit };
+
+  explicit ReadableStream(const GlobalObject& aGlobal,
+                          HoldDropJSObjectsCaller aHoldDropCaller);
+  explicit ReadableStream(nsIGlobalObject* aGlobal,
+                          HoldDropJSObjectsCaller aHoldDropCaller);
 
  public:
   // Abstract algorithms
@@ -229,6 +238,8 @@ class ReadableStream : public nsISupports, public nsWrapperCache {
   RefPtr<ReadableStreamGenericReader> mReader;
   ReaderState mState = ReaderState::Readable;
   JS::Heap<JS::Value> mStoredError;
+
+  HoldDropJSObjectsCaller mHoldDropCaller;
 };
 
 namespace streams_abstract {

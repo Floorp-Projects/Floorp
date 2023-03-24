@@ -18,7 +18,7 @@ using namespace mozilla::ipc;
 namespace mozilla::dom {
 
 WebTransportReceiveStream::WebTransportReceiveStream(nsIGlobalObject* aGlobal)
-    : ReadableStream(aGlobal) {}
+    : ReadableStream(aGlobal, HoldDropJSObjectsCaller::Implicit) {}
 
 // WebIDL Boilerplate
 
