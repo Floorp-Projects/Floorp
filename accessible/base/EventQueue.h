@@ -28,7 +28,7 @@ class EventQueue {
   /**
    * Puts name and/or description change events into the queue, if needed.
    */
-  bool PushNameOrDescriptionChange(LocalAccessible* aTarget);
+  bool PushNameOrDescriptionChange(AccEvent* aOrigEvent);
 
   /**
    * Process events from the queue and fires events.

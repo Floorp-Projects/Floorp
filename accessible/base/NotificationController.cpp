@@ -185,7 +185,6 @@ bool NotificationController::QueueMutationEvent(AccTreeMutationEvent* aEvent) {
   // or hidden children of a container.  So either queue a new one, or move an
   // existing one to the end of the queue if the container already has a
   // reorder event.
-  LocalAccessible* target = aEvent->GetAccessible();
   LocalAccessible* container = aEvent->GetAccessible()->LocalParent();
   RefPtr<AccReorderEvent> reorder;
   if (!container->ReorderEventTarget()) {
@@ -195,7 +194,7 @@ bool NotificationController::QueueMutationEvent(AccTreeMutationEvent* aEvent) {
 
     // Since this is the first child of container that is changing, the name
     // and/or description of dependent Accessibles may be changing.
-    if (PushNameOrDescriptionChange(target)) {
+    if (PushNameOrDescriptionChange(aEvent)) {
       ScheduleProcessing();
     }
   } else {
@@ -231,6 +230,7 @@ bool NotificationController::QueueMutationEvent(AccTreeMutationEvent* aEvent) {
     return true;
   }
 
+  LocalAccessible* target = aEvent->GetAccessible();
   int32_t offset = container->AsHyperText()->GetChildOffset(target);
   AccTreeMutationEvent* prevEvent = aEvent->PrevEvent();
   while (prevEvent &&

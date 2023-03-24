@@ -132,8 +132,16 @@
       await nameChanged;
 
       nameChanged = PromEvents.waitForEvent(EVENT_NAME_CHANGE, "listitem");
-      info("Changing text of listitem child");
+      info("Changing textContent of listitem child");
+      // Changing textContent replaces the text leaf with a new one.
       getNode("listitem").textContent = "world";
+      await nameChanged;
+
+      nameChanged = PromEvents.waitForEvent(EVENT_NAME_CHANGE, "button");
+      info("Changing text of button's text leaf");
+      // Changing the text node's data changes the text without replacing the
+      // leaf.
+      getNode("button").firstChild.data = "after";
       await nameChanged;
 
       SimpleTest.finish();
@@ -169,6 +177,8 @@
   <div id="lateLabel"><p id="lateLabelChild">l1</p></div>
 
   <ul><li id="listitem">hello</li></ul>
+
+  <button id="button">before</button>
 
   <div id="eventdump"></div>
 </body>
