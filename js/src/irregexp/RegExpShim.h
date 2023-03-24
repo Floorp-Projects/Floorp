@@ -1211,7 +1211,7 @@ class StackLimitCheck {
   // Use this to check for stack-overflow when entering runtime from JS code.
   bool JsHasOverflowed() {
     js::AutoCheckRecursionLimit recursion(cx_);
-    return !recursion.checkConservativeDontReport(cx_);
+    return !recursion.checkDontReport(cx_);
   }
 
  private:
