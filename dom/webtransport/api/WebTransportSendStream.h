@@ -19,9 +19,11 @@ class WebTransport;
 
 class WebTransportSendStream final : public WritableStream {
  public:
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(WebTransportSendStream, WritableStream)
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(WebTransportSendStream,
+                                           WritableStream)
 
-  explicit WebTransportSendStream(nsIGlobalObject* aGlobal);
+  WebTransportSendStream(nsIGlobalObject* aGlobal, WebTransport* aTransport);
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY static already_AddRefed<WebTransportSendStream>
   Create(WebTransport* aWebTransport, nsIGlobalObject* aGlobal,
@@ -35,7 +37,13 @@ class WebTransportSendStream final : public WritableStream {
   already_AddRefed<Promise> GetStats();
 
  private:
-  ~WebTransportSendStream() override = default;
+  ~WebTransportSendStream() override { mozilla::DropJSObjects(this); };
+
+  // We must hold a reference to the WebTransport so it can't go away on
+  // us.  This forms a cycle with WebTransport that will be broken when the
+  // CC runs.   WebTransport::CleanUp() will destroy all the send and receive
+  // streams, breaking the cycle.
+  RefPtr<WebTransport> mTransport;
 };
 }  // namespace mozilla::dom
 

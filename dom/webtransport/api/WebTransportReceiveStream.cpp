@@ -17,8 +17,20 @@ using namespace mozilla::ipc;
 
 namespace mozilla::dom {
 
-WebTransportReceiveStream::WebTransportReceiveStream(nsIGlobalObject* aGlobal)
-    : ReadableStream(aGlobal, HoldDropJSObjectsCaller::Implicit) {}
+NS_IMPL_CYCLE_COLLECTION_INHERITED(WebTransportReceiveStream, ReadableStream,
+                                   mTransport)
+NS_IMPL_ADDREF_INHERITED(WebTransportReceiveStream, ReadableStream)
+NS_IMPL_RELEASE_INHERITED(WebTransportReceiveStream, ReadableStream)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebTransportReceiveStream)
+NS_INTERFACE_MAP_END_INHERITING(ReadableStream)
+
+WebTransportReceiveStream::WebTransportReceiveStream(nsIGlobalObject* aGlobal,
+                                                     WebTransport* aTransport)
+    : ReadableStream(aGlobal,
+                     ReadableStream::HoldDropJSObjectsCaller::Explicit),
+      mTransport(aTransport) {
+  mozilla::HoldJSObjects(this);
+}
 
 // WebIDL Boilerplate
 
@@ -37,7 +49,7 @@ already_AddRefed<WebTransportReceiveStream> WebTransportReceiveStream::Create(
   }
   JSContext* cx = jsapi.cx();
 
-  auto stream = MakeRefPtr<WebTransportReceiveStream>(aGlobal);
+  auto stream = MakeRefPtr<WebTransportReceiveStream>(aGlobal, aWebTransport);
 
   nsCOMPtr<nsIAsyncInputStream> inputStream = receiver;
   auto algorithms = MakeRefPtr<InputToReadableStreamAlgorithms>(

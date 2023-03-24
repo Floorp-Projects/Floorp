@@ -16,9 +16,20 @@ using namespace mozilla::ipc;
 
 namespace mozilla::dom {
 
-WebTransportSendStream::WebTransportSendStream(nsIGlobalObject* aGlobal)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(WebTransportSendStream, WritableStream,
+                                   mTransport)
+NS_IMPL_ADDREF_INHERITED(WebTransportSendStream, WritableStream)
+NS_IMPL_RELEASE_INHERITED(WebTransportSendStream, WritableStream)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebTransportSendStream)
+NS_INTERFACE_MAP_END_INHERITING(WritableStream)
+
+WebTransportSendStream::WebTransportSendStream(nsIGlobalObject* aGlobal,
+                                               WebTransport* aTransport)
     : WritableStream(aGlobal,
-                     WritableStream::HoldDropJSObjectsCaller::Implicit) {}
+                     WritableStream::HoldDropJSObjectsCaller::Explicit),
+      mTransport(aTransport) {
+  mozilla::HoldJSObjects(this);
+}
 
 JSObject* WebTransportSendStream::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
@@ -37,7 +48,7 @@ already_AddRefed<WebTransportSendStream> WebTransportSendStream::Create(
   }
   JSContext* cx = jsapi.cx();
 
-  auto stream = MakeRefPtr<WebTransportSendStream>(aGlobal);
+  auto stream = MakeRefPtr<WebTransportSendStream>(aGlobal, aWebTransport);
 
   nsCOMPtr<nsIAsyncOutputStream> outputStream = sender;
   auto algorithms = MakeRefPtr<WritableStreamToOutput>(
