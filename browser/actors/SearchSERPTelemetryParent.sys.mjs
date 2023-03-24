@@ -12,8 +12,15 @@ export class SearchSERPTelemetryParent extends JSWindowActorParent {
   receiveMessage(msg) {
     let browser = this.browsingContext.top.embedderElement;
 
-    if (msg.name == "SearchTelemetry:PageInfo") {
-      lazy.SearchSERPTelemetry.reportPageWithAds(msg.data, browser);
+    switch (msg.name) {
+      case "SearchTelemetry:PageInfo": {
+        lazy.SearchSERPTelemetry.reportPageWithAds(msg.data, browser);
+        break;
+      }
+      case "SearchTelemetry:AdImpressions": {
+        lazy.SearchSERPTelemetry.reportPageWithAdImpressions(msg.data, browser);
+        break;
+      }
     }
   }
 }

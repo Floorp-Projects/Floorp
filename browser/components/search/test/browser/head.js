@@ -321,3 +321,28 @@ function assertImpressionEvents(expectedEvents) {
     "Should have equal number of engagements."
   );
 }
+
+function assertAdImpressionEvents(expectedAdImpressions) {
+  let adImpressions = Glean.serp.adImpression.testGetValue() ?? [];
+  let impressions = Glean.serp.impression.testGetValue() ?? [];
+
+  Assert.equal(impressions.length, 1, "Should have a SERP impression event.");
+  Assert.equal(
+    adImpressions.length,
+    expectedAdImpressions.length,
+    "Should have equal number of ad impression events."
+  );
+
+  expectedAdImpressions = expectedAdImpressions.map(expectedAdImpression => {
+    expectedAdImpression.impression_id = impressions[0].extra.impression_id;
+    return expectedAdImpression;
+  });
+
+  for (let [index, expectedAdImpression] of expectedAdImpressions.entries()) {
+    Assert.deepEqual(
+      adImpressions[index]?.extra,
+      expectedAdImpression,
+      "Should have equal values for an ad impression."
+    );
+  }
+}
