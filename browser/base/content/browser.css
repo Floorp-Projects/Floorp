@@ -768,25 +768,26 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
  * on hidpi don't accidentally result in the buttons going into overflow.
  */
 #urlbar-container {
-  width: calc(310px + 2 * (24px + 2 * var(--toolbarbutton-inner-padding)));
+  min-width: calc(310px + 2 * (24px + 2 * var(--toolbarbutton-inner-padding)));
 }
 
 /* When the download button OR the unified extensions button is shown, we leave
  * 310px plus the space needed for a single button as described above. */
-#nav-bar:is([downloadsbuttonshown], [unifiedextensionsbuttonshown]) #urlbar-container {
-  width: calc(310px + 24px + 2 * var(--toolbarbutton-inner-padding));
+#nav-bar[downloadsbuttonshown] #urlbar-container,
+#nav-bar[unifiedextensionsbuttonshown] #urlbar-container {
+  min-width: calc(310px + 24px + 2 * var(--toolbarbutton-inner-padding));
 }
 
 /* When both the download and unified extensions buttons are visible, we use
  * the base min-width value. */
 #nav-bar[downloadsbuttonshown][unifiedextensionsbuttonshown] #urlbar-container {
-  width: 310px;
+  min-width: 310px;
 }
 
 /* Customize mode is difficult to use at moderate window width if the Urlbar
    remains 310px wide. */
 :root[customizing] #urlbar-container {
-  width: 280px;
+  min-width: 280px;
 }
 
 #identity-icon-box {
@@ -795,16 +796,17 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 
 @media (max-width: 770px) {
   #urlbar-container {
-    width: calc(240px + 2 * (24px + 2 * var(--toolbarbutton-inner-padding)));
+    min-width: calc(240px + 2 * (24px + 2 * var(--toolbarbutton-inner-padding)));
   }
-  #nav-bar:is([downloadsbuttonshown], [unifiedextensionsbuttonshown]) #urlbar-container {
-    width: calc(240px + 24px + 2 * var(--toolbarbutton-inner-padding));
+  #nav-bar[downloadsbuttonshown] #urlbar-container,
+  #nav-bar[unifiedextensionsbuttonshown] #urlbar-container {
+    min-width: calc(240px + 24px + 2 * var(--toolbarbutton-inner-padding));
   }
   #nav-bar[downloadsbuttonshown][unifiedextensionsbuttonshown] #urlbar-container {
-    width: 240px;
+    min-width: 240px;
   }
   :root[customizing] #urlbar-container {
-    width: 245px;
+    min-width: 245px;
   }
   #identity-icon-box {
     max-width: 80px;

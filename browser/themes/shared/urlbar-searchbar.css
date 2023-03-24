@@ -269,7 +269,7 @@
 
 #urlbar-container,
 #wrapper-urlbar-container {
-  flex: 400 0 auto;
+  flex: 400 400;
 }
 
 #urlbar-search-splitter {
@@ -650,12 +650,11 @@
 
 #search-container {
   min-width: 125px;
-  width: 125px;
 }
 
 #search-container,
 #wrapper-search-container {
-  flex: 175 0 auto;
+  flex: 175 175;
 }
 
 #search-container[width] {
