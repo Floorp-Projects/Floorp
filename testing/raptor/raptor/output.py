@@ -1839,53 +1839,60 @@ class BrowsertimeOutput(PerftestOutput):
             if "alert_change_type" in test and "alertChangeType" not in suite:
                 suite["alertChangeType"] = test["alert_change_type"]
 
+            def _process_measurements(measurement_name, replicates):
+                subtest = {}
+                subtest["name"] = measurement_name
+                subtest["lowerIsBetter"] = test["subtest_lower_is_better"]
+                subtest["alertThreshold"] = float(test["alert_threshold"])
+                subtest["unit"] = (
+                    "ms" if measurement_name == "cpuTime" else test["subtest_unit"]
+                )
+
+                # Add the alert window settings if needed here too in case
+                # there is no summary value in the test
+                for schema_name in (
+                    "minBackWindow",
+                    "maxBackWindow",
+                    "foreWindow",
+                ):
+                    if suite.get(schema_name, None) is not None:
+                        subtest[schema_name] = suite[schema_name]
+
+                # if 'alert_on' is set for this particular measurement, then we want to set
+                # the flag in the perfherder output to turn on alerting for this subtest
+                if self.subtest_alert_on is not None:
+                    if measurement_name in self.subtest_alert_on:
+                        LOG.info(
+                            "turning on subtest alerting for measurement type: %s"
+                            % measurement_name
+                        )
+                        subtest["shouldAlert"] = True
+                        if self.app in ("chrome", "chrome-m", "chromium"):
+                            subtest["shouldAlert"] = False
+                    else:
+                        # Explicitly set `shouldAlert` to False so that the measurement
+                        # is not alerted on. Otherwise Perfherder defaults to alerting.
+                        LOG.info(
+                            "turning off subtest alerting for measurement type: %s"
+                            % measurement_name
+                        )
+                        subtest["shouldAlert"] = False
+                subtest["replicates"] = replicates
+                return subtest
+
             if test["type"] in ["pageload", "scenario", "power"]:
                 for measurement_name, replicates in test["measurements"].items():
+                    new_subtest = _process_measurements(measurement_name, replicates)
                     if measurement_name not in suite["subtests"]:
-                        subtest = {}
-                        subtest["name"] = measurement_name
-                        subtest["lowerIsBetter"] = test["subtest_lower_is_better"]
-                        subtest["alertThreshold"] = float(test["alert_threshold"])
-                        subtest["unit"] = test["subtest_unit"]
-
-                        # Add the alert window settings if needed here too in case
-                        # there is no summary value in the test
-                        for schema_name in (
-                            "minBackWindow",
-                            "maxBackWindow",
-                            "foreWindow",
-                        ):
-                            if suite.get(schema_name, None) is not None:
-                                subtest[schema_name] = suite[schema_name]
-
-                        # if 'alert_on' is set for this particular measurement, then we want to set
-                        # the flag in the perfherder output to turn on alerting for this subtest
-                        if self.subtest_alert_on is not None:
-                            if measurement_name in self.subtest_alert_on:
-                                LOG.info(
-                                    "turning on subtest alerting for measurement type: %s"
-                                    % measurement_name
-                                )
-                                subtest["shouldAlert"] = True
-                                if self.app in ("chrome", "chrome-m", "chromium"):
-                                    subtest["shouldAlert"] = False
-                            else:
-                                # Explicitly set `shouldAlert` to False so that the measurement
-                                # is not alerted on. Otherwise Perfherder defaults to alerting.
-                                LOG.info(
-                                    "turning off subtest alerting for measurement type: %s"
-                                    % measurement_name
-                                )
-                                subtest["shouldAlert"] = False
-                        subtest["replicates"] = []
-                        suite["subtests"][measurement_name] = subtest
+                        suite["subtests"][measurement_name] = new_subtest
                     else:
-                        subtest = suite["subtests"][measurement_name]
-
-                    subtest["replicates"].extend(replicates)
+                        suite["subtests"][measurement_name]["replicates"].extend(
+                            new_subtest["replicates"]
+                        )
 
             elif "benchmark" in test["type"]:
                 subtests = None
+
                 if "speedometer" in test["measurements"]:
                     # this includes stylebench
                     subtests, vals = self.parseSpeedometerOutput(test)
@@ -1925,6 +1932,15 @@ class BrowsertimeOutput(PerftestOutput):
                     raise Exception("No benchmark metrics found in browsertime results")
 
                 suite["subtests"] = subtests
+
+                if "cpuTime" in test["measurements"] and test.get(
+                    "gather_cpuTime", None
+                ):
+                    replicates = test["measurements"]["cpuTime"]
+                    cpu_subtest = _process_measurements("cpuTime", replicates)
+                    _process(cpu_subtest)
+                    suite["subtests"].append(cpu_subtest)
+
                 # summarize results for both benchmark type tests
                 if len(subtests) > 1:
                     suite["value"] = self.construct_summary(vals, testname=test["name"])

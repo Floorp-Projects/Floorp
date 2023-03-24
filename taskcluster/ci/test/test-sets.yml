@@ -87,6 +87,7 @@ browsertime:
     - browsertime-benchmark
     - browsertime-benchmark-wasm
     - browsertime-youtube-playback
+    - browsertime-youtube-playback-power
     - browsertime-custom
     - browsertime-first-install
     - browsertime-grandprix
@@ -111,12 +112,6 @@ browsertime-profiling:
 browsertime-high-priority:
     - browsertime-benchmark
     - browsertime-tp6
-
-# Raptor desktop power tests
-# (requires Intel Power Gadget to be pre-installed)
-raptor-firefox-power:
-    - raptor-youtube-playback-v9-power-firefox
-    - raptor-youtube-playback-h264-power-firefox
 
 awsy:
     - awsy

@@ -318,7 +318,6 @@ macosx1015-64-shippable-qr/opt:
         - desktop-screenshot-capture
         - macosx1015-64-qr-tests
         - macosx64-talos
-        - raptor-firefox-power
         - talos-profiling
         - web-platform-tests
         - web-platform-tests-backlog
