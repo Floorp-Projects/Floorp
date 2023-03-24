@@ -155,11 +155,7 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   bool PopoverOpen() const;
   bool CheckPopoverValidity(mozilla::dom::PopoverVisibilityState aExpectedState,
                             ErrorResult& aRv);
-  /** Returns true if the event has been cancelled. */
-  MOZ_CAN_RUN_SCRIPT bool FireBeforeToggle(bool aIsOpen);
-  MOZ_CAN_RUN_SCRIPT void ShowPopover(ErrorResult& aRv);
-  MOZ_CAN_RUN_SCRIPT void HidePopoverInternal(bool aFireEvents,
-                                              ErrorResult& aRv);
+  void ShowPopover(ErrorResult& aRv);
   MOZ_CAN_RUN_SCRIPT void HidePopover(ErrorResult& aRv);
   MOZ_CAN_RUN_SCRIPT void TogglePopover(bool force, ErrorResult& aRv);
 

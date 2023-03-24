@@ -223,7 +223,6 @@
 #include "mozilla/dom/StyleSheetApplicableStateChangeEventBinding.h"
 #include "mozilla/dom/StyleSheetList.h"
 #include "mozilla/dom/TimeoutManager.h"
-#include "mozilla/dom/ToggleEvent.h"
 #include "mozilla/dom/Touch.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/dom/TreeOrderedArrayInlines.h"
@@ -14896,30 +14895,18 @@ void Document::HideAllPopoversUntil(nsINode& aEndpoint,
   }
 }
 
-// https://html.spec.whatwg.org/#dom-hidepopover
 void Document::HidePopover(Element& aPopover, bool aFocusPreviousElement,
                            bool aFireEvents, ErrorResult& aRv) {
-  RefPtr<nsGenericHTMLElement> popoverHTMLEl =
-      nsGenericHTMLElement::FromNode(aPopover);
+  auto* popoverHTMLEl = nsGenericHTMLElement::FromNode(aPopover);
   NS_ASSERTION(popoverHTMLEl, "Not a HTML element");
 
-  if (!popoverHTMLEl->CheckPopoverValidity(PopoverVisibilityState::Showing,
+  if (!popoverHTMLEl->CheckPopoverValidity(PopoverVisibilityState::Hidden,
                                            aRv)) {
     return;
   }
 
   // TODO: Run auto popover steps.
-  // Fire beforetoggle event and re-check popover validity.
-  if (aFireEvents) {
-    // Intentionally ignore the return value here as only on open event the
-    // cancelable attribute is initialized to true.
-    popoverHTMLEl->FireBeforeToggle(true);
-    if (!popoverHTMLEl->CheckPopoverValidity(PopoverVisibilityState::Showing,
-                                             aRv)) {
-      return;
-    }
-  }
-
+  // TODO: Fire beforetoggle event and re-check popover validity.
   // TODO: Remove from Top Layer.
 
   popoverHTMLEl->PopoverPseudoStateUpdate(false, true);
@@ -14927,7 +14914,6 @@ void Document::HidePopover(Element& aPopover, bool aFocusPreviousElement,
       PopoverVisibilityState::Hidden);
 
   // TODO: Queue popover toggle event task.
-  // TODO: Handle element focus.
 }
 
 nsTArray<Element*> Document::AutoPopoverList() const {
