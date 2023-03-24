@@ -118,6 +118,10 @@ static bool CompareAddresses(const SharedLibrary& first,
 class SharedLibraryInfo {
  public:
   static SharedLibraryInfo GetInfoForSelf();
+#ifdef XP_WIN
+  static SharedLibraryInfo GetInfoFromPath(const wchar_t* aPath);
+#endif
+
   static void Initialize();
 
   void AddSharedLibrary(SharedLibrary entry) { mEntries.push_back(entry); }

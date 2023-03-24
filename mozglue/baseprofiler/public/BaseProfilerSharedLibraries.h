@@ -125,6 +125,10 @@ static bool CompareAddresses(const SharedLibrary& first,
 class SharedLibraryInfo {
  public:
   static SharedLibraryInfo GetInfoForSelf();
+#ifdef XP_WIN
+  static SharedLibraryInfo GetInfoFromPath(const wchar_t* aPath);
+#endif
+
   static void Initialize();
 
   SharedLibraryInfo() {}
@@ -155,6 +159,11 @@ class SharedLibraryInfo {
   void Clear() { mEntries.clear(); }
 
  private:
+#ifdef XP_WIN
+  void AddSharedLibraryFromModuleInfo(const wchar_t* aModulePath,
+                                      mozilla::Maybe<HMODULE> aModule);
+#endif
+
   std::vector<SharedLibrary> mEntries;
 };
 

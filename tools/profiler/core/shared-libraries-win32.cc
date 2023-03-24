@@ -45,107 +45,121 @@ static bool IsModuleUnsafeToLoad(const nsAString& aModuleName) {
   return false;
 }
 
+void AddSharedLibraryFromModuleInfo(SharedLibraryInfo& sharedLibraryInfo,
+                                    const wchar_t* aModulePath,
+                                    mozilla::Maybe<HMODULE> aModule) {
+  nsDependentSubstring moduleNameStr(
+      mozilla::nt::GetLeafName(nsDependentString(aModulePath)));
+
+  // If the module is unsafe to call LoadLibraryEx for, we skip.
+  if (IsModuleUnsafeToLoad(moduleNameStr)) {
+    return;
+  }
+
+  // If EAF+ is enabled, parsing ntdll's PE header causes a crash.
+  if (mozilla::IsEafPlusEnabled() &&
+      moduleNameStr.LowerCaseEqualsLiteral("ntdll.dll")) {
+    return;
+  }
+
+  // Load the module again to make sure that its handle will remain
+  // valid as we attempt to read the PDB information from it.  We load the
+  // DLL as a datafile so that we don't end up running the newly loaded
+  // module's DllMain function.  If the original handle |aModule| is valid,
+  // LoadLibraryEx just increments its refcount.
+  // LOAD_LIBRARY_AS_IMAGE_RESOURCE is needed to read information from the
+  // sections (not PE headers) which should be relocated by the loader,
+  // otherwise GetPdbInfo() will cause a crash.
+  nsModuleHandle handleLock(::LoadLibraryExW(
+      aModulePath, NULL,
+      LOAD_LIBRARY_AS_DATAFILE | LOAD_LIBRARY_AS_IMAGE_RESOURCE));
+  if (!handleLock) {
+    return;
+  }
+
+  mozilla::nt::PEHeaders headers(handleLock.get());
+  if (!headers) {
+    return;
+  }
+
+  mozilla::Maybe<mozilla::Range<const uint8_t>> bounds = headers.GetBounds();
+  if (!bounds) {
+    return;
+  }
+
+  // Put the original |aModule| into SharedLibrary, but we get debug info
+  // from |handleLock| as |aModule| might be inaccessible.
+  const uintptr_t modStart =
+      aModule.isSome() ? reinterpret_cast<uintptr_t>(*aModule)
+                       : reinterpret_cast<uintptr_t>(handleLock.get());
+  const uintptr_t modEnd = modStart + bounds->length();
+
+  nsAutoCString breakpadId;
+  nsAutoString pdbPathStr;
+  if (const auto* debugInfo = headers.GetPdbInfo()) {
+    MOZ_ASSERT(breakpadId.IsEmpty());
+    const GUID& pdbSig = debugInfo->pdbSignature;
+    breakpadId.AppendPrintf(
+        "%08lX"                             // m0
+        "%04X%04X"                          // m1,m2
+        "%02X%02X%02X%02X%02X%02X%02X%02X"  // m3
+        "%X",                               // pdbAge
+        pdbSig.Data1, pdbSig.Data2, pdbSig.Data3, pdbSig.Data4[0],
+        pdbSig.Data4[1], pdbSig.Data4[2], pdbSig.Data4[3], pdbSig.Data4[4],
+        pdbSig.Data4[5], pdbSig.Data4[6], pdbSig.Data4[7], debugInfo->pdbAge);
+
+    // The PDB file name could be different from module filename,
+    // so report both
+    // e.g. The PDB for C:\Windows\SysWOW64\ntdll.dll is wntdll.pdb
+    pdbPathStr = NS_ConvertUTF8toUTF16(debugInfo->pdbFileName);
+  }
+
+  nsAutoCString codeId;
+  DWORD timestamp;
+  DWORD imageSize;
+  if (headers.GetTimeStamp(timestamp) && headers.GetImageSize(imageSize)) {
+    codeId.AppendPrintf(
+        "%08lX"  // Uppercase 8 digits of hex timestamp with leading zeroes.
+        "%lx",   // Lowercase hex image size
+        timestamp, imageSize);
+  }
+
+  nsAutoCString versionStr;
+  uint64_t version;
+  if (headers.GetVersionInfo(version)) {
+    versionStr.AppendPrintf("%u.%u.%u.%u",
+                            static_cast<uint32_t>((version >> 48) & 0xFFFFu),
+                            static_cast<uint32_t>((version >> 32) & 0xFFFFu),
+                            static_cast<uint32_t>((version >> 16) & 0xFFFFu),
+                            static_cast<uint32_t>(version & 0xFFFFu));
+  }
+
+  const nsString& pdbNameStr =
+      PromiseFlatString(mozilla::nt::GetLeafName(pdbPathStr));
+  SharedLibrary shlib(modStart, modEnd,
+                      0,  // DLLs are always mapped at offset 0 on Windows
+                      breakpadId, codeId, PromiseFlatString(moduleNameStr),
+                      nsDependentString(aModulePath), pdbNameStr, pdbPathStr,
+                      versionStr, "");
+  sharedLibraryInfo.AddSharedLibrary(shlib);
+}
+
 SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
   SharedLibraryInfo sharedLibraryInfo;
 
-  auto addSharedLibraryFromModuleInfo = [&sharedLibraryInfo](
-                                            const wchar_t* aModulePath,
-                                            HMODULE aModule) {
-    nsDependentSubstring moduleNameStr(
-        mozilla::nt::GetLeafName(nsDependentString(aModulePath)));
-
-    // If the module is unsafe to call LoadLibraryEx for, we skip.
-    if (IsModuleUnsafeToLoad(moduleNameStr)) {
-      return;
-    }
-
-    // If EAF+ is enabled, parsing ntdll's PE header causes a crash.
-    if (mozilla::IsEafPlusEnabled() &&
-        moduleNameStr.LowerCaseEqualsLiteral("ntdll.dll")) {
-      return;
-    }
-
-    // Load the module again to make sure that its handle will remain
-    // valid as we attempt to read the PDB information from it.  We load the
-    // DLL as a datafile so that we don't end up running the newly loaded
-    // module's DllMain function.  If the original handle |aModule| is valid,
-    // LoadLibraryEx just increments its refcount.
-    // LOAD_LIBRARY_AS_IMAGE_RESOURCE is needed to read information from the
-    // sections (not PE headers) which should be relocated by the loader,
-    // otherwise GetPdbInfo() will cause a crash.
-    nsModuleHandle handleLock(::LoadLibraryExW(
-        aModulePath, NULL,
-        LOAD_LIBRARY_AS_DATAFILE | LOAD_LIBRARY_AS_IMAGE_RESOURCE));
-    if (!handleLock) {
-      return;
-    }
-
-    mozilla::nt::PEHeaders headers(handleLock.get());
-    if (!headers) {
-      return;
-    }
-
-    mozilla::Maybe<mozilla::Range<const uint8_t>> bounds = headers.GetBounds();
-    if (!bounds) {
-      return;
-    }
-
-    // Put the original |aModule| into SharedLibrary, but we get debug info
-    // from |handleLock| as |aModule| might be inaccessible.
-    const uintptr_t modStart = reinterpret_cast<uintptr_t>(aModule);
-    const uintptr_t modEnd = modStart + bounds->length();
-
-    nsAutoCString breakpadId;
-    nsAutoString pdbPathStr;
-    if (const auto* debugInfo = headers.GetPdbInfo()) {
-      MOZ_ASSERT(breakpadId.IsEmpty());
-      const GUID& pdbSig = debugInfo->pdbSignature;
-      breakpadId.AppendPrintf(
-          "%08lX"                             // m0
-          "%04X%04X"                          // m1,m2
-          "%02X%02X%02X%02X%02X%02X%02X%02X"  // m3
-          "%X",                               // pdbAge
-          pdbSig.Data1, pdbSig.Data2, pdbSig.Data3, pdbSig.Data4[0],
-          pdbSig.Data4[1], pdbSig.Data4[2], pdbSig.Data4[3], pdbSig.Data4[4],
-          pdbSig.Data4[5], pdbSig.Data4[6], pdbSig.Data4[7], debugInfo->pdbAge);
-
-      // The PDB file name could be different from module filename,
-      // so report both
-      // e.g. The PDB for C:\Windows\SysWOW64\ntdll.dll is wntdll.pdb
-      pdbPathStr = NS_ConvertUTF8toUTF16(debugInfo->pdbFileName);
-    }
-
-    nsAutoCString codeId;
-    DWORD timestamp;
-    DWORD imageSize;
-    if (headers.GetTimeStamp(timestamp) && headers.GetImageSize(imageSize)) {
-      codeId.AppendPrintf(
-          "%08lX"  // Uppercase 8 digits of hex timestamp with leading zeroes.
-          "%lx",   // Lowercase hex image size
-          timestamp, imageSize);
-    }
-
-    nsAutoCString versionStr;
-    uint64_t version;
-    if (headers.GetVersionInfo(version)) {
-      versionStr.AppendPrintf("%u.%u.%u.%u",
-                              static_cast<uint32_t>((version >> 48) & 0xFFFFu),
-                              static_cast<uint32_t>((version >> 32) & 0xFFFFu),
-                              static_cast<uint32_t>((version >> 16) & 0xFFFFu),
-                              static_cast<uint32_t>(version & 0xFFFFu));
-    }
-
-    const nsString& pdbNameStr =
-        PromiseFlatString(mozilla::nt::GetLeafName(pdbPathStr));
-    SharedLibrary shlib(modStart, modEnd,
-                        0,  // DLLs are always mapped at offset 0 on Windows
-                        breakpadId, codeId, PromiseFlatString(moduleNameStr),
-                        nsDependentString(aModulePath), pdbNameStr, pdbPathStr,
-                        versionStr, "");
-    sharedLibraryInfo.AddSharedLibrary(shlib);
-  };
+  auto addSharedLibraryFromModuleInfo =
+      [&sharedLibraryInfo](const wchar_t* aModulePath, HMODULE aModule) {
+        AddSharedLibraryFromModuleInfo(sharedLibraryInfo, aModulePath,
+                                       mozilla::Some(aModule));
+      };
 
   mozilla::EnumerateProcessModules(addSharedLibraryFromModuleInfo);
+  return sharedLibraryInfo;
+}
+
+SharedLibraryInfo SharedLibraryInfo::GetInfoFromPath(const wchar_t* aPath) {
+  SharedLibraryInfo sharedLibraryInfo;
+  AddSharedLibraryFromModuleInfo(sharedLibraryInfo, aPath, mozilla::Nothing());
   return sharedLibraryInfo;
 }
 
