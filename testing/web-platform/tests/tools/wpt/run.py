@@ -273,6 +273,7 @@ Consider installing certutil via your OS package manager or directly.""")
         # Allow WebRTC tests to call getUserMedia.
         kwargs["extra_prefs"].append("media.navigator.streams.fake=true")
 
+        kwargs["enable_webtransport_h3"] = True
 
 class FirefoxAndroid(BrowserSetup):
     name = "firefox_android"
@@ -329,6 +330,7 @@ class FirefoxAndroid(BrowserSetup):
                 raise WptrunError("app %s not installed on device %s" %
                                   (app, device_serial))
 
+        kwargs["enable_webtransport_h3"] = True
 
 class Chrome(BrowserSetup):
     name = "chrome"
