@@ -15,15 +15,10 @@
 #include <sys/types.h>
 #include <sys/utsname.h>
 #include <sys/wait.h>
-#include <glib.h>
-#include <fcntl.h>
 
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/SSE.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/XREAppData.h"
-#include "mozilla/ScopeExit.h"
-#include "mozilla/GUniquePtr.h"
 #include "nsCRTGlue.h"
 #include "nsExceptionHandler.h"
 #include "nsPrintfCString.h"
@@ -34,13 +29,9 @@
 #include "prenv.h"
 #include "WidgetUtilsGtk.h"
 #include "MediaCodecsSupport.h"
-#include "nsAppRunner.h"
 
-// How long we wait for data from glxtest/vaapi test process in milliseconds.
-#define GFX_TEST_TIMEOUT 4000
-#define VAAPI_TEST_TIMEOUT 2000
-
-#define VAAPI_PROBE_BINARY "vaapitest"
+// How long we wait for data from glxtest process in milliseconds.
+#define GLXTEST_TIMEOUT 4000
 
 #define EXIT_STATUS_BUFFER_TOO_SMALL 2
 #ifdef DEBUG
@@ -54,7 +45,7 @@ NS_IMPL_ISUPPORTS_INHERITED(GfxInfo, GfxInfoBase, nsIGfxInfoDebug)
 #endif
 
 // these global variables will be set when firing the glxtest process
-int glxtest_pipe = -2;
+int glxtest_pipe = -1;
 pid_t glxtest_pid = 0;
 
 // bits to use decoding codec information returned from glxtest
@@ -73,6 +64,7 @@ nsresult GfxInfo::Init() {
   mIsXWayland = false;
   mHasMultipleGPUs = false;
   mGlxTestError = false;
+  mIsVAAPISupported = false;
   return GfxInfoBase::Init();
 }
 
@@ -116,7 +108,7 @@ void GfxInfo::GetData() {
   }
 
   const TimeStamp deadline =
-      TimeStamp::Now() + TimeDuration::FromMilliseconds(GFX_TEST_TIMEOUT);
+      TimeStamp::Now() + TimeDuration::FromMilliseconds(GLXTEST_TIMEOUT);
 
   enum { buf_size = 2048 };
   char buf[buf_size];
@@ -125,7 +117,7 @@ void GfxInfo::GetData() {
   struct pollfd pfd {};
   pfd.fd = glxtest_pipe;
   pfd.events = POLLIN;
-  auto ret = poll(&pfd, 1, GFX_TEST_TIMEOUT);
+  auto ret = poll(&pfd, 1, GLXTEST_TIMEOUT);
   if (ret <= 0) {
     gfxCriticalNote << "glxtest: failed to read data from glxtest, we may "
                        "fallback to software rendering\n";
@@ -163,7 +155,7 @@ void GfxInfo::GetData() {
         wait_for_glxtest_process = true;
       } else {
         // Bug 718629
-        // ECHILD happens when the glxtest process got reaped after a
+        // ECHILD happens when the glxtest process got reaped got reaped after a
         // PR_CreateProcess as per bug 227246. This shouldn't matter, as we
         // still seem to get the data from the pipe, and if we didn't, the
         // outcome would be to blocklist anyway.
@@ -256,6 +248,29 @@ void GfxInfo::GetData() {
       stringToFill = pciDevices.AppendElement();
     } else if (!strcmp(line, "DRM_RENDERDEVICE")) {
       stringToFill = &drmRenderDevice;
+    } else if (!strcmp(line, "VAAPI_SUPPORTED")) {
+      stringToFill = &isVAAPISupported;
+    } else if (!strcmp(line, "VAAPI_HWCODECS")) {
+      line = NS_strtok("\n", &bufptr);
+      if (!line) break;
+      int codecs = 0;
+      std::istringstream(line) >> codecs;
+      if (codecs & CODEC_HW_H264) {
+        media::MCSInfo::AddSupport(
+            media::MediaCodecsSupport::H264HardwareDecode);
+      }
+      if (codecs & CODEC_HW_VP8) {
+        media::MCSInfo::AddSupport(
+            media::MediaCodecsSupport::VP8HardwareDecode);
+      }
+      if (codecs & CODEC_HW_VP9) {
+        media::MCSInfo::AddSupport(
+            media::MediaCodecsSupport::VP9HardwareDecode);
+      }
+      if (codecs & CODEC_HW_AV1) {
+        media::MCSInfo::AddSupport(
+            media::MediaCodecsSupport::AV1HardwareDecode);
+      }
     } else if (!strcmp(line, "TEST_TYPE")) {
       stringToFill = &testType;
     } else if (!strcmp(line, "WARNING")) {
@@ -317,6 +332,7 @@ void GfxInfo::GetData() {
   }
 
   mDrmRenderDevice = std::move(drmRenderDevice);
+  mIsVAAPISupported = isVAAPISupported.Equals("TRUE");
   mTestType = std::move(testType);
 
   // Mesa always exposes itself in the GL_VERSION string, but not always the
@@ -553,152 +569,6 @@ void GfxInfo::GetData() {
   }
 
   AddCrashReportAnnotations();
-}
-
-int fire_vaapi_process(const char* aRenderDevicePath, int* aOutPipe) {
-  nsAutoCString vaapiTestBinary;
-  if (!gAppData->xreDirectory) {
-    return 0;
-  }
-  gAppData->xreDirectory->GetNativePath(vaapiTestBinary);
-  vaapiTestBinary.Append("/");
-  vaapiTestBinary.Append(VAAPI_PROBE_BINARY);
-
-  char* argv[] = {strdup(PromiseFlatCString(vaapiTestBinary).get()),
-                  strdup("-d"), strdup(aRenderDevicePath), nullptr};
-  auto freeArgv = mozilla::MakeScopeExit([&] {
-    for (auto& arg : argv) {
-      free(arg);
-    }
-  });
-
-  int pid;
-  GUniquePtr<GError> err;
-  g_spawn_async_with_pipes(
-      nullptr, argv, nullptr,
-      GSpawnFlags(G_SPAWN_CLOEXEC_PIPES | G_SPAWN_DO_NOT_REAP_CHILD), nullptr,
-      nullptr, &pid, nullptr, aOutPipe, nullptr, getter_Transfers(err));
-  if (err) {
-    gfxCriticalNote << "Failed to probe VA-API hardware! " << err->message
-                    << "\n";
-    pid = 0;
-  }
-  return pid;
-}
-
-static bool MakeFdNonBlocking(int fd) {
-  return fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK) != -1;
-}
-
-void GfxInfo::GetDataVAAPI() {
-  if (mIsVAAPISupported.isSome()) {
-    return;
-  }
-  mIsVAAPISupported = Some(false);
-
-  int vaapiPipe = -1;
-  int vaapiPID = 0;
-  gsize vaapiDataLen;
-  char* vaapiData = nullptr;
-  GIOChannel* channel = nullptr;
-
-  auto free = mozilla::MakeScopeExit([&] {
-    if (channel) {
-      g_io_channel_unref(channel);
-    }
-    if (vaapiPipe >= 0) {
-      close(vaapiPipe);
-    }
-    if (vaapiData) {
-      g_free((void*)vaapiData);
-    }
-    if (vaapiPID) {
-      int status;
-      waitpid(vaapiPID, &status, WNOHANG);
-    }
-  });
-
-  vaapiPID = fire_vaapi_process(mDrmRenderDevice.get(), &vaapiPipe);
-  if (!vaapiPID) {
-    return;
-  }
-
-  struct pollfd pfd {};
-  pfd.fd = vaapiPipe;
-  pfd.events = POLLIN;
-  auto ret = poll(&pfd, 1, VAAPI_TEST_TIMEOUT);
-  if (ret <= 0) {
-    return;
-  }
-
-  channel = g_io_channel_unix_new(vaapiPipe);
-  MakeFdNonBlocking(vaapiPID);
-
-  GUniquePtr<GError> error;
-  do {
-    error = nullptr;
-    ret = g_io_channel_read_to_end(channel, &vaapiData, &vaapiDataLen,
-                                   getter_Transfers(error));
-  } while (ret == G_IO_STATUS_AGAIN);
-
-  if (error) {
-    return;
-  }
-
-  int vaapi_exit_code = EXIT_FAILURE;
-  int vaapi_status = 0;
-  if (waitpid(vaapiPID, &vaapi_status, WNOHANG) < 0) {
-    vaapiPID = 0;
-    return;
-  }
-  vaapi_exit_code = WEXITSTATUS(vaapi_status);
-  if (vaapi_exit_code != EXIT_SUCCESS) {
-    return;
-  }
-
-  char* bufptr = vaapiData;
-  char* line;
-  while ((line = NS_strtok("\n", &bufptr))) {
-    if (!strcmp(line, "VAAPI_SUPPORTED")) {
-      line = NS_strtok("\n", &bufptr);
-      if (!line) {
-        gfxCriticalNote << "vaapitest: Failed to get VAAPI support\n";
-        return;
-      }
-      mIsVAAPISupported = Some(!strcmp(line, "TRUE"));
-    } else if (!strcmp(line, "VAAPI_HWCODECS")) {
-      line = NS_strtok("\n", &bufptr);
-      if (!line) {
-        gfxCriticalNote << "vaapitest: Failed to get VAAPI codecs\n";
-        return;
-      }
-      int codecs = 0;
-      std::istringstream(line) >> codecs;
-      if (codecs & CODEC_HW_H264) {
-        media::MCSInfo::AddSupport(
-            media::MediaCodecsSupport::H264HardwareDecode);
-      }
-      if (codecs & CODEC_HW_VP8) {
-        media::MCSInfo::AddSupport(
-            media::MediaCodecsSupport::VP8HardwareDecode);
-      }
-      if (codecs & CODEC_HW_VP9) {
-        media::MCSInfo::AddSupport(
-            media::MediaCodecsSupport::VP9HardwareDecode);
-      }
-      if (codecs & CODEC_HW_AV1) {
-        media::MCSInfo::AddSupport(
-            media::MediaCodecsSupport::AV1HardwareDecode);
-      }
-    } else if (!strcmp(line, "WARNING") || !strcmp(line, "ERROR")) {
-      gfxCriticalNote << "vaapitest: " << line;
-      line = NS_strtok("\n", &bufptr);
-      if (line) {
-        gfxCriticalNote << "vaapitest: " << line << "\n";
-      }
-      return;
-    }
-  }
 }
 
 const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
@@ -1114,20 +984,15 @@ nsresult GfxInfo::GetFeatureStatusImpl(
     }
   }
 
-  auto ret = GfxInfoBase::GetFeatureStatusImpl(
-      aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo, aFailureId, &os);
-
-  // Probe VA-API on supported devices only
   if (aFeature == nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING &&
-      *aStatus == nsIGfxInfo::FEATURE_STATUS_OK) {
-    GetDataVAAPI();
-    if (!mIsVAAPISupported.value()) {
-      *aStatus = nsIGfxInfo::FEATURE_BLOCKED_PLATFORM_TEST;
-      aFailureId = "FEATURE_FAILURE_VIDEO_DECODING_TEST_FAILED";
-    }
+      !mIsVAAPISupported) {
+    *aStatus = nsIGfxInfo::FEATURE_BLOCKED_PLATFORM_TEST;
+    aFailureId = "FEATURE_FAILURE_VIDEO_DECODING_TEST_FAILED";
+    return NS_OK;
   }
 
-  return ret;
+  return GfxInfoBase::GetFeatureStatusImpl(
+      aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo, aFailureId, &os);
 }
 
 NS_IMETHODIMP
