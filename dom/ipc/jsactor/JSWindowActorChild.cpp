@@ -38,10 +38,23 @@ void JSWindowActorChild::Init(const nsACString& aName,
   InvokeCallback(CallbackFunction::ActorCreated);
 }
 
+#define WARN_MESSAGE_UNSENT(aMeta, aWarning)                          \
+  NS_DebugBreak(                                                      \
+      NS_DEBUG_WARNING,                                               \
+      nsPrintfCString(                                                \
+          "JSWindowActorChild::SendRawMessage (%s, %s) not sent: %s", \
+          (aMeta).actorName().get(),                                  \
+          NS_LossyConvertUTF16toASCII((aMeta).messageName()).get(),   \
+          (aWarning))                                                 \
+          .get(),                                                     \
+      nullptr, __FILE__, __LINE__)
+
 void JSWindowActorChild::SendRawMessage(
     const JSActorMessageMeta& aMeta, Maybe<ipc::StructuredCloneData>&& aData,
     Maybe<ipc::StructuredCloneData>&& aStack, ErrorResult& aRv) {
-  if (NS_WARN_IF(!CanSend() || !mManager || !mManager->CanSend())) {
+  if (!CanSend() || !mManager || !mManager->CanSend()) {
+    WARN_MESSAGE_UNSENT(aMeta,
+                        "!CanSend() || !mManager || !mManager->CanSend()");
     aRv.ThrowInvalidStateError("JSWindowActorChild cannot send at the moment");
     return;
   }
@@ -57,7 +70,8 @@ void JSWindowActorChild::SendRawMessage(
   Maybe<ClonedMessageData> msgData;
   if (aData) {
     msgData.emplace();
-    if (NS_WARN_IF(!aData->BuildClonedMessageData(*msgData))) {
+    if (!aData->BuildClonedMessageData(*msgData)) {
+      WARN_MESSAGE_UNSENT(aMeta, "!aData->BuildClonedMessageData(*msgData)");
       aRv.ThrowDataCloneError(
           nsPrintfCString("JSWindowActorChild serialization error: cannot "
                           "clone, in actor '%s'",
@@ -74,7 +88,9 @@ void JSWindowActorChild::SendRawMessage(
     }
   }
 
-  if (NS_WARN_IF(!mManager->SendRawMessage(aMeta, msgData, stackData))) {
+  if (!mManager->SendRawMessage(aMeta, msgData, stackData)) {
+    WARN_MESSAGE_UNSENT(aMeta,
+                        "!mManager->SendRawMessage(aMeta, msgData, stackData)");
     aRv.ThrowOperationError(
         nsPrintfCString("JSWindowActorChild send error in actor '%s'",
                         PromiseFlatCString(aMeta.actorName()).get()));
