@@ -1,7 +1,8 @@
 <!doctype html>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-<div></div>
+<iframe></iframe>
+<iframe srcdoc="Foo"></iframe>
 <script>
 const NON_CONTENT_ACCESSIBLE_ENV_VARS = [
   "-moz-gtk-csd-titlebar-radius",
@@ -13,16 +14,26 @@ const NON_CONTENT_ACCESSIBLE_ENV_VARS = [
   "scrollbar-inline-size",
 ];
 
-const div = document.querySelector("div");
-for (const envVar of NON_CONTENT_ACCESSIBLE_ENV_VARS) {
-  test(function() {
+function testInWin(win) {
+  let doc = win.document;
+  const div = doc.createElement("div");
+  doc.documentElement.appendChild(div);
+  for (const envVar of NON_CONTENT_ACCESSIBLE_ENV_VARS) {
     div.style.setProperty("--foo", `env(${envVar},FALLBACK_VALUE)`);
 
     assert_equals(
-      getComputedStyle(div).getPropertyValue("--foo"),
+      win.getComputedStyle(div).getPropertyValue("--foo"),
       "FALLBACK_VALUE",
-      `${envVar} shouldn't be exposed to content`
+      `${envVar} shouldn't be exposed to content in ${doc.documentURI}`
     );
-  });
+  }
 }
+
+let t = async_test("Test non-content-accessible env() vars");
+onload = t.step_func_done(function() {
+  testInWin(window);
+  for (let f of document.querySelectorAll("iframe")) {
+    testInWin(f.contentWindow);
+  }
+});
 </script>
