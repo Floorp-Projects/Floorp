@@ -624,7 +624,7 @@ class BaseAssemblerX64 : public BaseAssembler {
 
   void movq_rr(RegisterID src, RegisterID dst) {
     spew("movq       %s, %s", GPReg64Name(src), GPReg64Name(dst));
-    m_formatter.oneByteOp64(OP_MOV_GvEv, src, dst);
+    m_formatter.oneByteOp64(OP_MOV_EvGv, dst, src);
   }
 
   void movq_rm(RegisterID src, int32_t offset, RegisterID base) {

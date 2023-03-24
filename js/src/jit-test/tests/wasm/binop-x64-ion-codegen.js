@@ -254,18 +254,18 @@ if (getBuildConfiguration().windows) {
           [ ['i32', 'le_s', 'i32',  '8b c3        mov %ebx, %eax',
                                     '3b ca        cmp %edx, %ecx',
                                     '41 0f 4f c1  cmovnle %r9d, %eax'],
-            ['i32', 'lt_u', 'i64',  '48 8b c3     mov %rbx, %rax',
+            ['i32', 'lt_u', 'i64',  '48 89 d8     mov %rbx, %rax',
                                     '3b ca        cmp %edx, %ecx',
                                     '49 0f 43 c1  cmovnb %r9, %rax'],
             ['i64', 'le_s', 'i32',  '8b c3        mov %ebx, %eax',
                                     '48 3b ca     cmp %rdx, %rcx',
                                     '41 0f 4f c1  cmovnle %r9d, %eax'],
-            ['i64', 'lt_u', 'i64',  '48 8b c3     mov %rbx, %rax',
+            ['i64', 'lt_u', 'i64',  '48 89 d8     mov %rbx, %rax',
                                     '48 3b ca     cmp %rdx, %rcx',
                                     '49 0f 43 c1  cmovnb %r9, %rax']
           ] ) {
         codegenTestX64_adhoc(cmpSel32vs64(cmpTy, cmpOp, selTy), 'f',
-          `4. 8b d8   mov %r8.*, %.bx
+          `4. (89 c3|8b d8)   mov %r8.*, %.bx
            ${insn1}
            ${insn2}
            ${insn3}`
@@ -276,13 +276,13 @@ if (getBuildConfiguration().windows) {
           [ ['i32', 'le_s', 'i32',  '8b c2        mov %edx, %eax',
                                     '3b fe        cmp %esi, %edi',
                                     '0f 4f c1     cmovnle %ecx, %eax'],
-            ['i32', 'lt_u', 'i64',  '48 8b c2     mov %rdx, %rax',
+            ['i32', 'lt_u', 'i64',  '48 89 d0     mov %rdx, %rax',
                                     '3b fe        cmp %esi, %edi',
                                     '48 0f 43 c1  cmovnb %rcx, %rax'],
             ['i64', 'le_s', 'i32',  '8b c2        mov %edx, %eax',
                                     '48 3b fe     cmp %rsi, %rdi',
                                     '0f 4f c1     cmovnle %ecx, %eax'],
-            ['i64', 'lt_u', 'i64',  '48 8b c2     mov %rdx, %rax',
+            ['i64', 'lt_u', 'i64',  '48 89 d0     mov %rdx, %rax',
                                     '48 3b fe     cmp %rsi, %rdi',
                                     '48 0f 43 c1  cmovnb %rcx, %rax']
           ] ) {
@@ -326,9 +326,9 @@ for ( [pAnyCmp, pAnySel, cmpBytes, cmpArgL, cmovBytes, cmovArgL ] of
     )`,
     'f',
     // On Linux we have an extra move
-    (getBuildConfiguration().windows ? '' : '48 8b ..       mov %r.+, %r.+\n') +
+    (getBuildConfiguration().windows ? '' : '48 89 ..       mov %r.+, %r.+\n') +
     // 'q*' because the disassembler shows 'q' only for the memory cases
-    `48 8b ..       mov %r.+, %r.+
+    `48 89 ..       mov %r.+, %r.+
      ${cmpBytes}    cmpq*    ${cmpArgL}, %r.+
      ${cmovBytes}   cmovnzq* ${cmovArgL}, %r.+`
    );
