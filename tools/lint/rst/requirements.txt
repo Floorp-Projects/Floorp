@@ -132,9 +132,9 @@ packaging==20.9 \
     # via
     #   -r ./tools/lint/rst/requirements.in
     #   sphinx
-pygments==2.6.1 \
-    --hash=sha256:647344a061c249a3b74e230c739f434d7ea4d8b1d5f3721bc0f3558049b38f44 \
-    --hash=sha256:ff7a40b4860b727ab48fad6360eb351cc1b33cbf9b15a0f689ca5353e9463324
+pygments==2.14.0 \
+    --hash=sha256:b3ed06a9e8ac9a9aae5a6f5dbe78a8a58655d17b43b93c078f094ddc476ae297 \
+    --hash=sha256:fa7bd7bd2771287c0de303af8bfdfc731f51bd2c6a47ab69d117138893b82717
     # via
     #   -r ./tools/lint/rst/requirements.in
     #   sphinx
