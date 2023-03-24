@@ -394,10 +394,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   bool wasCollected() const { return wasCollected_; }
   void setWasCollected(bool v) { wasCollected_ = v; }
 
-  // Get a number that is incremented whenever this zone is collected, and
-  // possibly at other times too.
-  uint64_t gcNumber();
-
   void setNeedsIncrementalBarrier(bool needs);
   const BarrierState* addressOfNeedsIncrementalBarrier() const {
     return &needsIncrementalBarrier_;
