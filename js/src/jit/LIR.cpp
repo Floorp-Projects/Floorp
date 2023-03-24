@@ -454,6 +454,9 @@ UniqueChars LAllocation::toString() const {
             // If a JSContext is a available, output the actual string
             if (JSContext* maybeCx = TlsContext.get()) {
               Sprinter spr(maybeCx);
+              if (!spr.init()) {
+                oomUnsafe.crash("LAllocation::toString()");
+              }
               spr.putString(c->toString());
               buf = spr.release();
             } else {
