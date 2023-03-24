@@ -306,7 +306,7 @@ MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::checkConservative(
 MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::checkConservativeDontReport(
     JSContext* cx) const {
   JS::NativeStackLimit limit = getStackLimitHelper(
-      cx, JS::StackForUntrustedScript, -1024 * int(sizeof(size_t)));
+      cx, JS::StackForUntrustedScript, -4096 * int(sizeof(size_t)));
   int stackDummy;
   return checkLimitImpl(limit, &stackDummy);
 }
