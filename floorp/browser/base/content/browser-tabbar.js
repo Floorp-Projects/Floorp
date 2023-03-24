@@ -117,3 +117,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 }, { once: true })
+
+//-------------------------------------------------------------------------Tabbar-Design----------------------------------------------------------------------------
+
+window.setTimeout(function () {
+  document.getElementsByClassName("toolbar-items")[0].tagName = "vbox";
+  document.getElementById("browser").insertBefore(document.getElementsByClassName("toolbar-items")[0], document.getElementById("browser").firstChild);
+
+  document.getElementsByClassName("toolbar-items")[0].setAttribute("align", "start");
+  document.getElementsByClassName("toolbar-items")[0].setAttribute("style", "display: block;");
+
+  document.getElementById("tabbrowser-arrowscrollbox").setAttribute("orient", "vertical");
+  document.getElementById("tabbrowser-arrowscrollbox").setAttribute("overflowing", "false");
+  document.getElementById("tabbrowser-arrowscrollbox").disabled = true;
+
+  document.getElementById("tabbrowser-tabs").setAttribute("orient", "vertical");
+}, 500);

@@ -1,6 +1,30 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+ .tab-background, .tab-stack {
+  min-height: unset !important;
+ }
+
+ #TabsToolbar-customization-target {
+  width: -moz-available !important;
+  min-width: -moz-available !important;;
+  max-width: -moz-available !important;
+  height: -moz-available !important;
+  min-height: -moz-available !important;
+  max-height: -moz-available !important;
+ }
+
+ .scrollbox-clip > * {
+  max-height: none !important;
+ }
+ 
+ .tabbrowser-tab {
+  width: -moz-available !important;
+  min-width: -moz-available !important;
+  max-width: -moz-available !important;
+ }
+
   #toolbarItemClock > .toolbarbutton-text {
     display: block;
     font-size: 15px;
