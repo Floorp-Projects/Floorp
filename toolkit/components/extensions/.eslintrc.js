@@ -5,8 +5,6 @@
 "use strict";
 
 module.exports = {
-  extends: ["plugin:mozilla/valid-jsdoc"],
-
   globals: {
     // These are defined in the WebExtension script scopes by ExtensionCommon.jsm
     Cc: true,

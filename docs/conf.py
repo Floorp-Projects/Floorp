@@ -51,6 +51,8 @@ extensions = [
 
 # JSDoc must run successfully for dirs specified, so running
 # tree-wide (the default) will not work currently.
+# When adding more paths to this list, please ensure that they are not
+# excluded from valid-jsdoc in the top-level .eslintrc.js.
 js_source_path = [
     "../browser/components/extensions",
     "../browser/components/migration",

@@ -5,8 +5,6 @@
 "use strict";
 
 module.exports = {
-  extends: ["plugin:mozilla/valid-jsdoc"],
-
   rules: {
     // Enforce return statements in callbacks of array methods.
     "array-callback-return": "error",
