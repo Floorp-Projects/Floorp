@@ -71,6 +71,7 @@ pub fn decode_handles(buf: &mut BytesMut) -> arrayvec::ArrayVec<RawFd, HANDLE_QU
     }
 
     let cmsg: &cmsghdr = unsafe { &*(buf.as_ptr() as *const _) };
+    #[allow(clippy::unnecessary_cast)] // `cmsg_len` type is platform-dependent.
     let cmsg_len = cmsg.cmsg_len as usize;
 
     match (cmsg.cmsg_level, cmsg.cmsg_type) {

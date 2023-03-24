@@ -60,9 +60,9 @@ git = "https://github.com/jfkthame/mapped_hyph.git"
 rev = "c7651a0cffff41996ad13c44f689bd9cd2192c01"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/kinetiknz/audioipc-2?rev=73c8a02da8f2ff022723307bfafa3a58a61448da"]
+[source."git+https://github.com/kinetiknz/audioipc-2?rev=916f65cc92f6f2484183ff4681b0e9a2bfd60fe7"]
 git = "https://github.com/kinetiknz/audioipc-2"
-rev = "73c8a02da8f2ff022723307bfafa3a58a61448da"
+rev = "916f65cc92f6f2484183ff4681b0e9a2bfd60fe7"
 replace-with = "vendored-sources"
 
 [source."git+https://github.com/kinetiknz/mio-named-pipes?rev=21c26326f5f45f415c49eac4ba5bc41a2f961321"]

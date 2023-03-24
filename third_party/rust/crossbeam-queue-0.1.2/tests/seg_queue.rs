@@ -1,3 +1,7 @@
+extern crate crossbeam_queue;
+extern crate crossbeam_utils;
+extern crate rand;
+
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use crossbeam_queue::SegQueue;
@@ -8,11 +12,11 @@ use rand::{thread_rng, Rng};
 fn smoke() {
     let q = SegQueue::new();
     q.push(7);
-    assert_eq!(q.pop(), Some(7));
+    assert_eq!(q.pop(), Ok(7));
 
     q.push(8);
-    assert_eq!(q.pop(), Some(8));
-    assert!(q.pop().is_none());
+    assert_eq!(q.pop(), Ok(8));
+    assert!(q.pop().is_err());
 }
 
 #[test]
@@ -20,17 +24,17 @@ fn len_empty_full() {
     let q = SegQueue::new();
 
     assert_eq!(q.len(), 0);
-    assert!(q.is_empty());
+    assert_eq!(q.is_empty(), true);
 
     q.push(());
 
     assert_eq!(q.len(), 1);
-    assert!(!q.is_empty());
+    assert_eq!(q.is_empty(), false);
 
     q.pop().unwrap();
 
     assert_eq!(q.len(), 0);
-    assert!(q.is_empty());
+    assert_eq!(q.is_empty(), true);
 }
 
 #[test]
@@ -54,9 +58,6 @@ fn len() {
 
 #[test]
 fn spsc() {
-    #[cfg(miri)]
-    const COUNT: usize = 100;
-    #[cfg(not(miri))]
     const COUNT: usize = 100_000;
 
     let q = SegQueue::new();
@@ -65,28 +66,24 @@ fn spsc() {
         scope.spawn(|_| {
             for i in 0..COUNT {
                 loop {
-                    if let Some(x) = q.pop() {
+                    if let Ok(x) = q.pop() {
                         assert_eq!(x, i);
                         break;
                     }
                 }
             }
-            assert!(q.pop().is_none());
+            assert!(q.pop().is_err());
         });
         scope.spawn(|_| {
             for i in 0..COUNT {
                 q.push(i);
             }
         });
-    })
-    .unwrap();
+    }).unwrap();
 }
 
 #[test]
 fn mpmc() {
-    #[cfg(miri)]
-    const COUNT: usize = 50;
-    #[cfg(not(miri))]
     const COUNT: usize = 25_000;
     const THREADS: usize = 4;
 
@@ -98,7 +95,7 @@ fn mpmc() {
             scope.spawn(|_| {
                 for _ in 0..COUNT {
                     let n = loop {
-                        if let Some(x) = q.pop() {
+                        if let Ok(x) = q.pop() {
                             break x;
                         }
                     };
@@ -113,8 +110,7 @@ fn mpmc() {
                 }
             });
         }
-    })
-    .unwrap();
+    }).unwrap();
 
     for c in v {
         assert_eq!(c.load(Ordering::SeqCst), THREADS);
@@ -123,10 +119,6 @@ fn mpmc() {
 
 #[test]
 fn drops() {
-    let runs: usize = if cfg!(miri) { 5 } else { 100 };
-    let steps: usize = if cfg!(miri) { 50 } else { 10_000 };
-    let additional: usize = if cfg!(miri) { 100 } else { 1_000 };
-
     static DROPS: AtomicUsize = AtomicUsize::new(0);
 
     #[derive(Debug, PartialEq)]
@@ -140,9 +132,9 @@ fn drops() {
 
     let mut rng = thread_rng();
 
-    for _ in 0..runs {
-        let steps = rng.gen_range(0..steps);
-        let additional = rng.gen_range(0..additional);
+    for _ in 0..100 {
+        let steps = rng.gen_range(0, 10_000);
+        let additional = rng.gen_range(0, 1000);
 
         DROPS.store(0, Ordering::SeqCst);
         let q = SegQueue::new();
@@ -150,7 +142,7 @@ fn drops() {
         scope(|scope| {
             scope.spawn(|_| {
                 for _ in 0..steps {
-                    while q.pop().is_none() {}
+                    while q.pop().is_err() {}
                 }
             });
 
@@ -159,8 +151,7 @@ fn drops() {
                     q.push(DropCounter);
                 }
             });
-        })
-        .unwrap();
+        }).unwrap();
 
         for _ in 0..additional {
             q.push(DropCounter);
@@ -169,27 +160,5 @@ fn drops() {
         assert_eq!(DROPS.load(Ordering::SeqCst), steps);
         drop(q);
         assert_eq!(DROPS.load(Ordering::SeqCst), steps + additional);
-    }
-}
-
-#[test]
-fn into_iter() {
-    let q = SegQueue::new();
-    for i in 0..100 {
-        q.push(i);
-    }
-    for (i, j) in q.into_iter().enumerate() {
-        assert_eq!(i, j);
-    }
-}
-
-#[test]
-fn into_iter_drop() {
-    let q = SegQueue::new();
-    for i in 0..100 {
-        q.push(i);
-    }
-    for (i, j) in q.into_iter().enumerate().take(50) {
-        assert_eq!(i, j);
     }
 }
