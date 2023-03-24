@@ -129,32 +129,15 @@ interface nsIWebBrowserPersist : nsICancelable
    *                   nsIURI object with a file scheme or a scheme that
    *                   supports uploading (e.g. ftp).
    * @param aContentPolicyType The type of content we're saving.
-   * @param aPrivacyContext A context from which the privacy status of this
-   *                   save operation can be determined. Must only be null
-   *                   in situations in which no such context is available
-   *                   (eg. the operation has no logical association with any
-   *                   window or document)
+   * @param aIsPrivate Treat the save operation as private (ie. with
+   *                   regards to networking operations and persistence
+   *                   of intermediate data, etc.)
    *
    * @see nsIFile
    * @see nsIURI
    * @see nsIInputStream
    *
    * @throws NS_ERROR_INVALID_ARG One or more arguments was invalid.
-   */
-  void saveURI(in nsIURI aURI, in nsIPrincipal aTriggeringPrincipal,
-      in unsigned long aCacheKey,
-      in nsIReferrerInfo aReferrerInfo,
-      in nsICookieJarSettings aCookieJarSettings,
-      in nsIInputStream aPostData,
-      in string aExtraHeaders, in nsISupports aFile,
-      in nsContentPolicyType aContentPolicyType,
-      in nsILoadContext aPrivacyContext);
-
-  /**
-   * @param aIsPrivate Treat the save operation as private (ie. with
-   *                   regards to networking operations and persistence
-   *                   of intermediate data, etc.)
-   * @see saveURI for all other parameter descriptions
    */
   void savePrivacyAwareURI(in nsIURI aURI,
       in nsIPrincipal aTriggeringPrincipal, in unsigned long aCacheKey,

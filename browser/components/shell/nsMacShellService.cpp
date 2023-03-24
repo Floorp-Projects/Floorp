@@ -157,9 +157,10 @@ nsMacShellService::SetDesktopBackground(Element* aElement, int32_t aPosition,
 
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
       aElement->OwnerDoc()->CookieJarSettings();
-  return wbp->SaveURI(imageURI, aElement->NodePrincipal(), 0, referrerInfo,
-                      cookieJarSettings, nullptr, nullptr, mBackgroundFile,
-                      nsIContentPolicy::TYPE_IMAGE, loadContext);
+  return wbp->SavePrivacyAwareURI(
+      imageURI, aElement->NodePrincipal(), 0, referrerInfo, cookieJarSettings,
+      nullptr, nullptr, mBackgroundFile, nsIContentPolicy::TYPE_IMAGE,
+      loadContext->UsePrivateBrowsing());
 }
 
 NS_IMETHODIMP
