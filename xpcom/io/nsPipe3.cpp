@@ -574,7 +574,7 @@ nsPipe::nsPipe(uint32_t aSegmentSize, uint32_t aSegmentCount)
   // the size to expand when cloned streams are read at different
   // rates.  We enforce a limit on how much data can be buffered
   // ahead of the fastest reader in GetWriteSegment().
-  MOZ_ALWAYS_SUCCEEDS(mBuffer.Init(aSegmentSize, UINT32_MAX));
+  MOZ_ALWAYS_SUCCEEDS(mBuffer.Init(aSegmentSize));
 }
 
 nsPipe::~nsPipe() = default;
