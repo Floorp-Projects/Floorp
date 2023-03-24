@@ -160,8 +160,8 @@ scheme host and port.""")
     test_selection_group.add_argument("--enable-webtransport-h3",
                                       action="store_true",
                                       dest="enable_webtransport_h3",
-                                      default=None,
-                                      help="Enable tests that require WebTransport over HTTP/3 server (default: false)")
+                                      default=True,
+                                      help="Enable tests that require WebTransport over HTTP/3 server (default: true)")
     test_selection_group.add_argument("--no-enable-webtransport-h3", action="store_false", dest="enable_webtransport_h3",
                                       help="Do not enable WebTransport tests on experimental channels")
     test_selection_group.add_argument("--tag", action="append", dest="tags",
