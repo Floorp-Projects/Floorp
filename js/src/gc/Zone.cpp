@@ -569,8 +569,6 @@ void JS::Zone::checkUniqueIdTableAfterMovingGC() {
 }
 #endif
 
-uint64_t Zone::gcNumber() { return runtimeFromMainThread()->gc.gcNumber(); }
-
 js::jit::JitZone* Zone::createJitZone(JSContext* cx) {
   MOZ_ASSERT(!jitZone_);
   MOZ_ASSERT(cx->runtime()->hasJitRuntime());

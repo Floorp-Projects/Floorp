@@ -626,7 +626,7 @@ static bool ZoneMallocTriggerBytesGetter(JSContext* cx, unsigned argc,
 
 static bool ZoneGCNumberGetter(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setNumber(double(cx->zone()->gcNumber()));
+  args.rval().setNumber(double(cx->runtime()->gc.gcNumber()));
   return true;
 }
 
