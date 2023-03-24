@@ -10099,9 +10099,12 @@
 
 # Force to copy dmabuf video frames
 # Used for debugging/troubleshooting only
-- name: media.ffmpeg.vaapi.force-surface-copy
-  type: bool
-  value: false
+# 0 - force disable
+# 1 - force enable
+# 2 - default
+- name: media.ffmpeg.vaapi.force-surface-zero-copy
+  type: uint32_t
+  value: 2
   mirror: once
 #endif # MOZ_WIDGET_GTK
 

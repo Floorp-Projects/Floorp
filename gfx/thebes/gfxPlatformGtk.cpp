@@ -259,9 +259,13 @@ bool gfxPlatformGtk::InitVAAPIConfig(bool aForceEnabledByUser) {
         gfxConfig::GetFeature(Feature::HW_DECODED_VIDEO_ZERO_COPY);
 
     featureZeroCopy.EnableByDefault();
-    if (StaticPrefs::media_ffmpeg_vaapi_force_surface_copy_AtStartup()) {
-      featureZeroCopy.UserDisable("Force enabled by pref",
+    uint32_t state =
+        StaticPrefs::media_ffmpeg_vaapi_force_surface_zero_copy_AtStartup();
+    if (state == 0) {
+      featureZeroCopy.UserDisable("Force disable by pref",
                                   "FEATURE_FAILURE_USER_FORCE_DISABLED"_ns);
+    } else if (state == 1) {
+      featureZeroCopy.UserEnable("Force enabled by pref");
     } else {
       nsCString failureId;
       int32_t status = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
