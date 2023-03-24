@@ -446,11 +446,10 @@ var DownloadsPanel = {
       // If the last element in the list is selected, or the footer is already
       // focused, focus the footer.
       if (
-        DownloadsView.canChangeSelectedItem &&
-        (richListBox.selectedItem === richListBox.lastElementChild ||
-          document
-            .getElementById("downloadsFooter")
-            .contains(document.activeElement))
+        richListBox.selectedItem === richListBox.lastElementChild ||
+        document
+          .getElementById("downloadsFooter")
+          .contains(document.activeElement)
       ) {
         richListBox.selectedIndex = -1;
         DownloadsFooter.focus();
@@ -514,11 +513,7 @@ var DownloadsPanel = {
       return;
     }
 
-    if (
-      document.activeElement &&
-      (this.panel.contains(document.activeElement) ||
-        this.panel.shadowRoot.contains(document.activeElement))
-    ) {
+    if (document.activeElement && this.panel.contains(document.activeElement)) {
       return;
     }
     let focusOptions = {};
@@ -526,9 +521,7 @@ var DownloadsPanel = {
       focusOptions.focusVisible = false;
     }
     if (DownloadsView.richListBox.itemCount > 0) {
-      if (DownloadsView.canChangeSelectedItem) {
-        DownloadsView.richListBox.selectedIndex = 0;
-      }
+      DownloadsView.richListBox.selectedIndex = 0;
       DownloadsView.richListBox.focus(focusOptions);
     } else {
       DownloadsFooter.focus(focusOptions);
@@ -968,15 +961,6 @@ var DownloadsView = {
   },
 
   /**
-   * Whether it's possible to change the currently selected item.
-   */
-  get canChangeSelectedItem() {
-    // When the context menu or a subview are open, the selected item should
-    // not change.
-    return !this.contextMenuOpen && !this.subViewOpen;
-  },
-
-  /**
    * Mouse listeners to handle selection on hover.
    */
   onDownloadMouseOver(aEvent) {
@@ -994,7 +978,7 @@ var DownloadsView = {
       aEvent.target.closest(".downloadMainArea")
     );
 
-    if (this.canChangeSelectedItem) {
+    if (!this.contextMenuOpen && !this.subViewOpen) {
       this.richListBox.selectedItem = item;
     }
   },
@@ -1011,19 +995,21 @@ var DownloadsView = {
 
     // If the destination element is outside of the richlistitem, clear the
     // selection.
-    if (this.canChangeSelectedItem && !item.contains(aEvent.relatedTarget)) {
+    if (
+      !this.contextMenuOpen &&
+      !this.subViewOpen &&
+      !item.contains(aEvent.relatedTarget)
+    ) {
       this.richListBox.selectedIndex = -1;
     }
   },
 
   onDownloadContextMenu(aEvent) {
-    let element = aEvent.originalTarget.closest("richlistitem");
+    let element = this.richListBox.selectedItem;
     if (!element) {
       return;
     }
-    // Ensure the selected item is the expected one, so commands and the
-    // context menu are updated appropriately.
-    this.richListBox.selectedItem = element;
+
     DownloadsViewController.updateCommands();
 
     DownloadsViewUI.updateContextMenuForElement(this.contextMenu, element);
