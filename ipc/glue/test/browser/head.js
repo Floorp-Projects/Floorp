@@ -86,6 +86,10 @@ async function cleanUtilityProcessShutdown(actor, preferKill = false) {
     `Should match the crashed PID ${utilityPid} with ${data}`
   );
 
+  // Make sure the process is dead, otherwise there is a risk of race for
+  // writing leak logs
+  utilityProcessTest().noteIntentionalCrash(utilityPid);
+
   ok(!subject.hasKey("dumpID"), "There should be no dumpID");
 }
 
@@ -356,6 +360,10 @@ async function crashSomeUtility(utilityPid, actorsCheck) {
     subject instanceof Ci.nsIPropertyBag2,
     "Subject needs to be a nsIPropertyBag2 to clean up properly"
   );
+
+  // Make sure the process is dead, otherwise there is a risk of race for
+  // writing leak logs
+  utilityProcessTest().noteIntentionalCrash(utilityPid);
 
   const dumpID = subject.getPropertyAsAString("dumpID");
   ok(dumpID, "There should be a dumpID");

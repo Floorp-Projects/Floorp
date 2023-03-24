@@ -21,7 +21,7 @@
 
 namespace mozilla {
 
-inline void NoteIntentionalCrash(const char* aProcessType) {
+inline void NoteIntentionalCrash(const char* aProcessType, uint32_t aPid = 0) {
 // In opt builds we don't actually have the leak checking enabled, and the
 // sandbox doesn't allow writing to this path, so we just disable this
 // function's behaviour.
@@ -32,6 +32,8 @@ inline void NoteIntentionalCrash(const char* aProcessType) {
   }
 
   fprintf(stderr, "XPCOM_MEM_BLOAT_LOG: %s\n", f);
+
+  uint32_t processPid = aPid == 0 ? getpid() : aPid;
 
   std::ostringstream bloatName;
   std::string processType(aProcessType);
@@ -47,7 +49,7 @@ inline void NoteIntentionalCrash(const char* aProcessType) {
       bloatLog.erase(bloatLog.size() - 4, 4);
     }
 
-    bloatName << bloatLog << "_" << processType << "_pid" << getpid();
+    bloatName << bloatLog << "_" << processType << "_pid" << processPid;
     if (hasExt) {
       bloatName << ".log";
     }
@@ -57,7 +59,8 @@ inline void NoteIntentionalCrash(const char* aProcessType) {
 
   FILE* processfd = fopen(bloatName.str().c_str(), "a");
   if (processfd) {
-    fprintf(processfd, "==> process %d will purposefully crash\n", getpid());
+    fprintf(processfd, "\n==> process %d will purposefully crash\n",
+            processPid);
     fclose(processfd);
   }
 #endif
