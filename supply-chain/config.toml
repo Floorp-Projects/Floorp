@@ -1243,10 +1243,6 @@ criteria = "safe-to-deploy"
 version = "0.8.2"
 criteria = "safe-to-deploy"
 
-[[exemptions.version_check]]
-version = "0.9.4"
-criteria = "safe-to-deploy"
-
 [[exemptions.walkdir]]
 version = "2.3.2"
 criteria = "safe-to-deploy"

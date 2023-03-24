@@ -9,22 +9,8 @@ user-login = "martinthomson"
 user-name = "Martin Thomson"
 
 [[publisher.glean]]
-version = "52.3.0"
-when = "2023-02-23"
-user-id = 48
-user-login = "badboy"
-user-name = "Jan-Erik Rediger"
-
-[[publisher.glean]]
 version = "52.4.2"
 when = "2023-03-15"
-user-id = 48
-user-login = "badboy"
-user-name = "Jan-Erik Rediger"
-
-[[publisher.glean-core]]
-version = "52.3.0"
-when = "2023-02-23"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
@@ -194,19 +180,7 @@ and nothing suspicious.
 [[audits.bytecode-alliance.audits.wasm-encoder]]
 who = "Alex Crichton <alex@alexcrichton.com>"
 criteria = "safe-to-deploy"
-version = "0.23.0"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.audits.wasm-encoder]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
 version = "0.25.0"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.audits.wasm-smith]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-run"
-version = "0.12.2"
 notes = "The Bytecode Alliance is the author of this crate."
 
 [[audits.bytecode-alliance.audits.wasm-smith]]
@@ -218,19 +192,7 @@ notes = "The Bytecode Alliance is the author of this crate."
 [[audits.bytecode-alliance.audits.wasmparser]]
 who = "Alex Crichton <alex@alexcrichton.com>"
 criteria = "safe-to-deploy"
-version = "0.100.0"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.audits.wasmparser]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
 version = "0.102.0"
-notes = "The Bytecode Alliance is the author of this crate."
-
-[[audits.bytecode-alliance.audits.wast]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-version = "53.0.0"
 notes = "The Bytecode Alliance is the author of this crate."
 
 [[audits.bytecode-alliance.audits.wast]]
@@ -312,6 +274,11 @@ version = "0.1.29"
 who = "ChromeOS"
 criteria = "safe-to-run"
 version = "0.2.3"
+
+[[audits.chromeos.audits.version_check]]
+who = "George Burgess IV <gbiv@google.com>"
+criteria = "safe-to-deploy"
+version = "0.9.4"
 
 [[audits.chromeos.audits.want]]
 who = "ChromeOS"
