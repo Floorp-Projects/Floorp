@@ -113,7 +113,6 @@ EXPORTS.mozilla = [
     "ThreadSafety.h",
     "ThreadSafeWeakPtr.h",
     "ToString.h",
-    "Tuple.h",
     "TypedEnumBits.h",
     "Types.h",
     "TypeTraits.h",

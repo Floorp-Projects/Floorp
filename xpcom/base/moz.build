@@ -133,7 +133,6 @@ EXPORTS.mozilla += [
     "StaticMonitor.h",
     "StaticMutex.h",
     "StaticPtr.h",
-    "TupleCycleCollection.h",
 ]
 
 SOURCES += [
