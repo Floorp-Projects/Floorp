@@ -89,9 +89,6 @@ export class AboutTranslationsChild extends JSWindowActorChild {
         // Create an error in the content window, if the content window is still around.
         if (this.contentWindow) {
           let message = "An error occured in the AboutTranslations actor.";
-          if (typeof error === "string") {
-            message = error;
-          }
           if (typeof error?.message === "string") {
             message = error.message;
           }
@@ -119,7 +116,6 @@ export class AboutTranslationsChild extends JSWindowActorChild {
       "AT_logError",
       "AT_getAppLocale",
       "AT_getSupportedLanguages",
-      "AT_isTranslationEngineSupported",
       "AT_createLanguageIdEngine",
       "AT_createTranslationsEngine",
       "AT_identifyLanguage",
@@ -170,14 +166,6 @@ export class AboutTranslationsChild extends JSWindowActorChild {
         .getSupportedLanguages()
         .then(data => Cu.cloneInto(data, this.contentWindow))
     );
-  }
-
-  /**
-   * Does this device support the translation engine?
-   * @returns {boolean}
-   */
-  AT_isTranslationEngineSupported() {
-    return this.#getTranslationsChild().isTranslationsEngineSupported();
   }
 
   /**
@@ -244,12 +232,10 @@ export class AboutTranslationsChild extends JSWindowActorChild {
    */
   AT_identifyLanguage(message) {
     if (!this.languageIdEngine) {
-      const { Promise, Error } = this.contentWindow;
-      return Promise.reject(
-        new Error("The language identification was not created.")
+      return this.#convertToContentPromise(
+        Promise.reject("The language identification was not created.")
       );
     }
-
     return this.#convertToContentPromise(
       this.languageIdEngine
         .identifyLanguage(message)

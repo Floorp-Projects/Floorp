@@ -14,14 +14,9 @@
 importScripts("chrome://global/content/translations/bergamot-translator.js");
 
 // Respect the preference "browser.translations.logLevel".
-let _loggingLevel = "Error";
+let _isLoggingEnabled = false;
 function log(...args) {
-  if (_loggingLevel !== "Error" && _loggingLevel !== "Warn") {
-    console.log("Translations:", ...args);
-  }
-}
-function trace(...args) {
-  if (_loggingLevel === "Trace" || _loggingLevel === "All") {
+  if (_isLoggingEnabled) {
     console.log("Translations:", ...args);
   }
 }
@@ -65,7 +60,7 @@ async function handleInitializationMessage({ data }) {
       fromLanguage,
       toLanguage,
       enginePayload,
-      logLevel,
+      isLoggingEnabled,
       innerWindowId,
     } = data;
 
@@ -76,9 +71,9 @@ async function handleInitializationMessage({ data }) {
       throw new Error('Worker initialization missing "toLanguage"');
     }
 
-    if (logLevel) {
+    if (isLoggingEnabled) {
       // Respect the "browser.translations.logLevel" preference.
-      _loggingLevel = logLevel;
+      _isLoggingEnabled = true;
     }
 
     let engine;
@@ -107,6 +102,7 @@ async function handleInitializationMessage({ data }) {
     handleMessages(engine);
     postMessage({ type: "initialization-success" });
   } catch (error) {
+    // TODO (Bug 1813781) - Handle this error in the UI.
     console.error(error);
     postMessage({ type: "initialization-error", error: error?.message });
   }
@@ -145,16 +141,6 @@ function handleMessages(engine) {
               isHTML,
               innerWindowId
             );
-
-            // This logging level can be very verbose and slow, so only do it under the
-            // "Trace" level, which is the most verbose. Set the logging level to "Info" to avoid
-            // these, and get all of the other logs.
-            trace("Translation complete", {
-              messageBatch,
-              translations,
-              isHTML,
-              innerWindowId,
-            });
 
             postMessage({
               type: "translation-response",
@@ -534,8 +520,6 @@ class BergamotUtils {
 
       /** @type {Bergamot} */
       const bergamot = loadBergamot({
-        // This is the amount of memory that a simple run of Bergamot uses, in byte.
-        INITIAL_MEMORY: 459_276_288,
         preRun: [],
         onAbort() {
           reject(new Error("Error loading Bergamot wasm module."));
