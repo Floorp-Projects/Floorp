@@ -16,3 +16,5 @@ about-translations-detect-lang = Detect language ({ $language })
 about-translations-select = Select language
 about-translations-textarea =
   .placeholder = Add text to translate
+about-translations-no-support = Your device does not meet the minimum requirements to use this feature. Try on another device.
+about-translations-engine-error = The translations engine failed to load.
