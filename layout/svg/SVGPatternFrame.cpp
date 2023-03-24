@@ -304,12 +304,11 @@ already_AddRefed<SourceSurface> SVGPatternFrame::PaintPattern(
 
   // Now that we have all of the necessary geometries, we can
   // create our surface.
-  gfxRect transformedBBox =
-      ThebesRect(patternTransform.TransformBounds(ToRect(bbox)));
+  gfxSize scaledSize = bbox.Size() * MaxExpansion(patternTransform);
 
   bool resultOverflows;
   IntSize surfaceSize =
-      SVGUtils::ConvertToSurfaceSize(transformedBBox.Size(), &resultOverflows);
+      SVGUtils::ConvertToSurfaceSize(scaledSize, &resultOverflows);
 
   // 0 disables rendering, < 0 is an error
   if (surfaceSize.width <= 0 || surfaceSize.height <= 0) {
@@ -322,9 +321,8 @@ already_AddRefed<SourceSurface> SVGPatternFrame::PaintPattern(
   if (resultOverflows || patternWidth != surfaceSize.width ||
       patternHeight != surfaceSize.height) {
     // scale drawing to pattern surface size
-    gfxMatrix tempTM = gfxMatrix(surfaceSize.width / patternWidth, 0.0, 0.0,
-                                 surfaceSize.height / patternHeight, 0.0, 0.0);
-    patternWithChildren->mCTM->PreMultiply(tempTM);
+    patternWithChildren->mCTM->PreScale(surfaceSize.width / patternWidth,
+                                        surfaceSize.height / patternHeight);
 
     // and rescale pattern to compensate
     patternMatrix->PreScale(patternWidth / surfaceSize.width,
