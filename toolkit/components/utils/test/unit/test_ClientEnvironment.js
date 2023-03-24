@@ -2,18 +2,25 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const { ClientEnvironmentBase } = ChromeUtils.importESModule(
-  "resource://gre/modules/components-utils/ClientEnvironment.sys.mjs"
-);
-const { TelemetryController } = ChromeUtils.importESModule(
-  "resource://gre/modules/TelemetryController.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
+ChromeUtils.defineESModuleGetters(this, {
+  ClientEnvironmentBase:
+    "resource://gre/modules/components-utils/ClientEnvironment.sys.mjs",
+  TelemetryController: "resource://gre/modules/TelemetryController.sys.mjs",
+  AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
+  updateAppInfo: "resource://testing-common/AppInfo.sys.mjs",
+});
+
+ChromeUtils.defineModuleGetter(
+  this,
+  "NormandyTestUtils",
+  "resource://testing-common/NormandyTestUtils.jsm"
 );
 
-// OS Data
-add_task(async () => {
+add_setup(() => {
+  updateAppInfo();
+});
+
+add_task(async function test_OS_data() {
   const os = ClientEnvironmentBase.os;
   ok(os !== undefined, "OS data should be available in the context");
 
@@ -74,7 +81,7 @@ add_task(async () => {
   }
 });
 
-add_task(async () => {
+add_task(async function test_attributionData() {
   try {
     await ClientEnvironmentBase.attribution;
   } catch (ex) {
@@ -106,3 +113,40 @@ add_task(async function testLiveTelemetry() {
   // Put things back the way we found them
   await TelemetryController.testShutdown();
 });
+
+add_task(function testBuildId() {
+  ok(
+    ClientEnvironmentBase.appinfo !== undefined,
+    "appinfo should be available in the context"
+  );
+  ok(
+    typeof ClientEnvironmentBase.appinfo === "object",
+    "appinfo should be an object"
+  );
+  ok(
+    typeof ClientEnvironmentBase.appinfo.appBuildID === "string",
+    "buildId should be a string"
+  );
+});
+
+add_task(
+  {
+    skip_if: () => AppConstants.MOZ_BUILD_APP != "browser",
+  },
+  async function testRandomizationId() {
+    // Should generate an id if none is set
+    await Services.prefs.clearUserPref("app.normandy.user_id");
+    Assert.ok(
+      NormandyTestUtils.isUuid(ClientEnvironmentBase.randomizationId),
+      "randomizationId should be available"
+    );
+
+    // Should read the right preference
+    await Services.prefs.setStringPref("app.normandy.user_id", "fake id");
+    Assert.equal(
+      ClientEnvironmentBase.randomizationId,
+      "fake id",
+      "randomizationId should read from preferences"
+    );
+  }
+);
