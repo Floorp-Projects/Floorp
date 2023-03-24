@@ -99,3 +99,10 @@
 - (void)changeValueBySteps:(int)factor;
 
 @end
+
+@interface mozDatePickerAccessible : mozAccessible
+
+// override
+- (NSString*)moxTitle;
+
+@end

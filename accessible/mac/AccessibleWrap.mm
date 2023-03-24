@@ -313,6 +313,9 @@ Class a11y::GetTypeFromRole(roles::Role aRole) {
     case roles::PAGETAB:
       return [mozTabAccessible class];
 
+    case roles::DATE_EDITOR:
+      return [mozDatePickerAccessible class];
+
     case roles::CHECKBUTTON:
     case roles::TOGGLE_BUTTON:
     case roles::SWITCH:

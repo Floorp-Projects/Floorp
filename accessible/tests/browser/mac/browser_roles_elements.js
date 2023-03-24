@@ -74,6 +74,7 @@ addAccessibleTask(
   <div id="tooltip" role="tooltip"></div>
   <input type="radio" role="menuitemradio" id="menuitemradio">
   <input type="checkbox" role="menuitemcheckbox" id="menuitemcheckbox">
+  <input type="datetime-local" id="datetime">
 
   <!-- text entries -->
   <div id="textbox_multiline" role="textbox" aria-multiline="true"></div>
@@ -187,6 +188,14 @@ addAccessibleTask(
     testRoleAndSubRole(accDoc, "tooltip", "AXGroup", "AXUserInterfaceTooltip");
     testRoleAndSubRole(accDoc, "menuitemradio", "AXMenuItem", null);
     testRoleAndSubRole(accDoc, "menuitemcheckbox", "AXMenuItem", null);
+    testRoleAndSubRole(accDoc, "datetime", "AXGroup", null);
+    // XXX for datetime elements, we spoof the role via the title, since
+    // providing the correct role results in the internal elements being
+    // unreachable by VO
+    is(
+      getNativeInterface(accDoc, "datetime").getAttributeValue("AXTitle"),
+      "date field"
+    );
 
     // Text boxes
     testRoleAndSubRole(accDoc, "textbox_multiline", "AXTextArea");
