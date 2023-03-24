@@ -15,8 +15,12 @@
   max-height: -moz-available !important;
  }
 
- .scrollbox-clip > * {
-  max-height: none !important;
+ #alltabs-button, #new-tab-button {
+  display: none !important;
+ }
+
+ #tabs-newtab-button > .toolbarbutton-text {
+  display: none ;
  }
  
  .tabbrowser-tab {

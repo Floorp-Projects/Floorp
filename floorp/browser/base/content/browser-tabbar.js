@@ -124,7 +124,7 @@ window.setTimeout(function () {
   document.getElementById("browser").insertBefore(document.getElementsByClassName("toolbar-items")[0], document.getElementById("browser").firstChild);
 
   document.getElementsByClassName("toolbar-items")[0].setAttribute("align", "start");
-  document.getElementsByClassName("toolbar-items")[0].setAttribute("style", "display: block;");
+  document.getElementsByClassName("toolbar-items")[0].setAttribute("style", "display: block; max-width: 25em; min-width: 5em;");
 
   document.getElementById("tabbrowser-arrowscrollbox").setAttribute("orient", "vertical");
   document.getElementById("tabbrowser-arrowscrollbox").setAttribute("overflowing", "false");
@@ -133,14 +133,16 @@ window.setTimeout(function () {
   document.getElementById("tabbrowser-tabs").setAttribute("orient", "vertical");
 
   document.getElementById("tabbrowser-arrowscrollbox").shadowRoot.querySelector(`[part="scrollbox"]`).setAttribute("orient", "vertical");
+  let observer = new MutationObserver(function(){ document.getElementById("tabbrowser-arrowscrollbox").shadowRoot.querySelector(`[part="scrollbox"]`).removeAttribute("style");})
+  observer.observe(document.getElementById("tabbrowser-arrowscrollbox").shadowRoot.querySelector(`[part="scrollbox"]`),{attributes:true})
+
+  const splitterNode = window.MozXULElement.parseXULToFragment(
+    `
+    <splitter id="sidebar-splitter3" class="chromeclass-extrachrome" style="background: var(--toolbar-bgcolor);
+              border: var(--win-sidebar-bgcolor) 0.1px solid;" hidden="false"/>
+    `
+ );
+
+  document.getElementById("sidebar-box").before(splitterNode);
+
 }, 500);
-
-window.setTimeout(function () {
-  document.getElementById("tabbrowser-arrowscrollbox").shadowRoot.querySelector(`[part="scrollbox"]`).setAttribute("style", "overflow: hidden; max-height: none; height: -moz-available; min-height: -moz-available;");
-}, 2000);
-
-window.setTimeout(function () {
-  document.getElementById("tabbrowser-arrowscrollbox").shadowRoot.querySelector(`[part="scrollbox"]`).setAttribute("style", "overflow: hidden; max-height: none; height: -moz-available; min-height: -moz-available;");
-  let observer = new MutationObserver(function(){console.log("aaa")})
-observer.observe(document.getElementById("tabbrowser-arrowscrollbox").shadowRoot.querySelector(`[part="scrollbox"]`),{attributes:true})
-}, 5000);
