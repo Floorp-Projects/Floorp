@@ -10,6 +10,9 @@ const {
   "resource:///modules/SearchSERPTelemetry.sys.mjs"
 );
 
+const WINDOW_HEIGHT = 768;
+const WINDOW_WIDTH = 1024;
+
 const TEST_PROVIDER_INFO = [
   {
     telemetryId: "example",
@@ -60,6 +63,12 @@ async function promiseAdImpressionReceived() {
   }, "Should have received an ad impression.");
 }
 
+async function promiseResize(width, height) {
+  return TestUtils.waitForCondition(() => {
+    return window.outerWidth === width && window.outerHeight === height;
+  }, "Waiting for window to resize");
+}
+
 // sharedData messages are only passed to the child on idle. Therefore
 // we wait for a few idles to try and ensure the messages have been able
 // to be passed across and handled.
@@ -82,14 +91,25 @@ add_setup(async function() {
     ],
   });
 
+  // The tests evaluate whether or not ads are visible depending on whether
+  // they are within the view of the window. To ensure the test results
+  // are consistent regardless of where they are launched,
+  // set the window size to something reasonable.
+  let originalWidth = window.outerWidth;
+  let originalHeight = window.outerHeight;
+  window.resizeTo(WINDOW_WIDTH, WINDOW_HEIGHT);
+  await promiseResize(WINDOW_WIDTH, WINDOW_HEIGHT);
+
   registerCleanupFunction(async () => {
     SearchSERPTelemetry.overrideSearchTelemetryForTests();
     Services.telemetry.canRecordExtended = oldCanRecord;
+    window.resizeTo(originalWidth, originalHeight);
+    await promiseResize(originalWidth, originalHeight);
     resetTelemetry();
   });
 });
 
-add_task(async function test_ad_impressions_with_carousels() {
+add_task(async function test_ad_impressions_with_one_carousel() {
   resetTelemetry();
   let url = getSERPUrl("searchTelemetryAd_components_carousel.html");
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
@@ -100,13 +120,57 @@ add_task(async function test_ad_impressions_with_carousels() {
     {
       component: SearchSERPTelemetryUtils.COMPONENTS.AD_CAROUSEL,
       ads_loaded: "4",
-      ads_visible: "4",
+      ads_visible: "3",
       ads_hidden: "0",
     },
   ]);
 
   BrowserTestUtils.removeTab(tab);
 });
+
+// This is to ensure we're not counting two carousel components as two
+// separate components but as one record with a sum of the results.
+add_task(async function test_ad_impressions_with_two_carousels() {
+  resetTelemetry();
+  let url = getSERPUrl("searchTelemetryAd_components_carousel_doubled.html");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+
+  await promiseAdImpressionReceived();
+
+  assertAdImpressionEvents([
+    {
+      component: SearchSERPTelemetryUtils.COMPONENTS.AD_CAROUSEL,
+      ads_loaded: "8",
+      ads_visible: "6",
+      ads_hidden: "0",
+    },
+  ]);
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+add_task(
+  async function test_ad_impressions_with_carousels_with_outer_container() {
+    resetTelemetry();
+    let url = getSERPUrl(
+      "searchTelemetryAd_components_carousel_outer_container.html"
+    );
+    let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+
+    await promiseAdImpressionReceived();
+
+    assertAdImpressionEvents([
+      {
+        component: SearchSERPTelemetryUtils.COMPONENTS.AD_CAROUSEL,
+        ads_loaded: "4",
+        ads_visible: "3",
+        ads_hidden: "0",
+      },
+    ]);
+
+    BrowserTestUtils.removeTab(tab);
+  }
+);
 
 add_task(async function test_ad_impressions_with_carousels_tabhistory() {
   resetTelemetry();
@@ -138,7 +202,7 @@ add_task(async function test_ad_impressions_with_carousels_tabhistory() {
     {
       component: SearchSERPTelemetryUtils.COMPONENTS.AD_CAROUSEL,
       ads_loaded: "4",
-      ads_visible: "4",
+      ads_visible: "3",
       ads_hidden: "0",
     },
   ]);
@@ -159,6 +223,48 @@ add_task(async function test_ad_impressions_with_hidden_carousels() {
       ads_loaded: "3",
       ads_visible: "0",
       ads_hidden: "3",
+    },
+  ]);
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_ad_impressions_with_carousel_scrolled_left() {
+  resetTelemetry();
+  let url = getSERPUrl(
+    "searchTelemetryAd_components_carousel_first_element_non_visible.html"
+  );
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+
+  await promiseAdImpressionReceived();
+
+  assertAdImpressionEvents([
+    {
+      component: SearchSERPTelemetryUtils.COMPONENTS.AD_CAROUSEL,
+      ads_loaded: "4",
+      ads_visible: "2",
+      ads_hidden: "0",
+    },
+  ]);
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_ad_impressions_with_carousel_below_the_fold() {
+  resetTelemetry();
+  let url = getSERPUrl(
+    "searchTelemetryAd_components_carousel_below_the_fold.html"
+  );
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+
+  await promiseAdImpressionReceived();
+
+  assertAdImpressionEvents([
+    {
+      component: SearchSERPTelemetryUtils.COMPONENTS.AD_CAROUSEL,
+      ads_loaded: "4",
+      ads_visible: "0",
+      ads_hidden: "0",
     },
   ]);
 

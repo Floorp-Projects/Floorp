@@ -116,6 +116,15 @@ class SearchAdImpression {
   #elementToAdDataMap = new Map();
 
   /**
+   * Height of the inner window in the browser.
+   */
+  #innerWindowHeight = 0;
+
+  set innerWindowHeight(height) {
+    this.#innerWindowHeight = height;
+  }
+
+  /**
    * A reference the providerInfo for this SERP.
    *
    * @type {object}
@@ -134,6 +143,15 @@ class SearchAdImpression {
         break;
       }
     }
+  }
+
+  /**
+   * How far from the top the page has been scrolled.
+   */
+  #scrollFromTop = 0;
+
+  set scrollFromTop(distance) {
+    this.#scrollFromTop = distance;
   }
 
   /**
@@ -168,6 +186,7 @@ class SearchAdImpression {
             type: result.type,
             count: result.count,
             countChildren: result.countChildren,
+            childElements: result.childElements,
           });
         }
       }
@@ -178,7 +197,11 @@ class SearchAdImpression {
     // element and save the results according to the component they
     // belonged to.
     for (let [element, data] of this.#elementToAdDataMap.entries()) {
-      let count = this.#countVisibleAndHiddenAds(element, data.adsLoaded);
+      let count = this.#countVisibleAndHiddenAds(
+        element,
+        data.adsLoaded,
+        data.childElements
+      );
       if (componentToVisibilityMap.has(data.type)) {
         let componentInfo = componentToVisibilityMap.get(data.type);
         componentInfo.adsLoaded += data.adsLoaded;
@@ -300,7 +323,7 @@ class SearchAdImpression {
       // or if its child elements have already been counted, return null.
       if (this.#elementToAdDataMap.has(parent)) {
         return !this.#childElementsCounted(parent)
-          ? { element: parent, count: 1 }
+          ? { element: parent, count: 1, childElements: [anchor] }
           : null;
       }
 
@@ -317,6 +340,7 @@ class SearchAdImpression {
                 type: component.type,
                 count: childElements.length,
                 countChildren: child.countChildren,
+                childElements,
               };
             }
           } else if (parent.querySelector(child.selector)) {
@@ -324,6 +348,7 @@ class SearchAdImpression {
               element: parent,
               type: component.type,
               count: 1,
+              childElements: [anchor],
             };
           }
         }
@@ -334,6 +359,7 @@ class SearchAdImpression {
         element: parent,
         type: component.type,
         count: 1,
+        childElements: [anchor],
       };
     }
     // If no component was found, use default values.
@@ -341,24 +367,32 @@ class SearchAdImpression {
       element: anchor,
       type: this.#defaultComponent.type,
       count: 1,
+      childElements: [anchor],
     };
   }
 
   /**
-   * Determines whether or not an ad was visible.
-   * TODO: A more robust heuristic.
+   * Determines whether or not an ad was visible or hidden.
+   *
+   * An ad is considered visible if it has non-zero dimensions, and is in
+   * the possible viewing area of the users window at the time the ad
+   * impression is recorded.
    *
    * @param {Element} element
    *  Element to be inspected
    * @param {number} adsLoaded
    *  Number of ads initially determined to be loaded for this element.
+   * @param {NodeListOf<Element>} childElements
+   *  List of children belonging to element.
    * @returns {object}
    *  Contains adsVisible which is the number of ads shown for the element
    *  and adsHidden, the number of ads not visible to the user.
    */
-  #countVisibleAndHiddenAds(element, adsLoaded) {
+  #countVisibleAndHiddenAds(element, adsLoaded, childElements) {
     let elementRect = element.getBoundingClientRect();
 
+    // If the element lacks a dimension, assume all ads that
+    // were contained within it are hidden.
     if (elementRect.width == 0 || elementRect.height == 0) {
       return {
         adsVisible: 0,
@@ -366,9 +400,36 @@ class SearchAdImpression {
       };
     }
 
+    let adsVisible = 0;
+    let adsHidden = 0;
+    for (let child of childElements) {
+      let itemRect = child.getBoundingClientRect();
+
+      // If the element we're inspecting has no dimension, it is hidden.
+      if (itemRect.height == 0 || itemRect.width == 0) {
+        adsHidden += 1;
+        continue;
+      }
+
+      // If the element is to the left of the containing element, or to the
+      // right of the containing element, skip it.
+      if (
+        itemRect.x < elementRect.x ||
+        itemRect.x + itemRect.width > elementRect.x + elementRect.width
+      ) {
+        continue;
+      }
+
+      // If the element is too far down, skip it.
+      if (this.#scrollFromTop + this.#innerWindowHeight < elementRect.y) {
+        continue;
+      }
+      ++adsVisible;
+    }
+
     return {
-      adsVisible: adsLoaded,
-      adsHidden: 0,
+      adsVisible,
+      adsHidden,
     };
   }
 
@@ -392,16 +453,27 @@ class SearchAdImpression {
    *  elements containing an ad link.
    * @param {boolean | null} params.countChildren
    *  Whether all the children were counted for the element.
+   * @param {Array<Element> | null} params.childElements
+   *  An array of DOM elements to inspect.
    */
-  #recordElementData(element, { type, count = 0, countChildren = false } = {}) {
+  #recordElementData(
+    element,
+    { type, count = 0, countChildren = false, childElements = null } = {}
+  ) {
     if (this.#elementToAdDataMap.has(element)) {
       let recordedValues = this.#elementToAdDataMap.get(element);
       recordedValues.adsLoaded = recordedValues.adsLoaded + count;
+      if (childElements) {
+        recordedValues.childElements = recordedValues.childElements.concat(
+          childElements
+        );
+      }
     } else {
       this.#elementToAdDataMap.set(element, {
         type,
         adsLoaded: count,
         countChildren,
+        childElements,
       });
     }
   }
@@ -500,6 +572,8 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
         (eventType == "load" || eventType == "pageshow")
       ) {
         searchAdImpression.providerInfo = providerInfo;
+        searchAdImpression.scrollFromTop = this.contentWindow.scrollY;
+        searchAdImpression.innerWindowHeight = this.contentWindow.innerHeight;
         let adImpressions = searchAdImpression.resultFromAnchors(anchors);
         this.sendAsyncMessage("SearchTelemetry:AdImpressions", {
           adImpressions,
