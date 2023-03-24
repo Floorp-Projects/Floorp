@@ -403,8 +403,6 @@ class BasePopup {
     };
 
     browser.addEventListener("DidChangeBrowserRemoteness", initBrowser); // eslint-disable-line mozilla/balanced-listeners
-    // Potentially unnecessary: bug 1822037 will evaluate further.
-    browser.browsingContext.isAppTab = true;
 
     if (!popupURL) {
       // For remote browsers, we can't do any setup until the frame loader is
