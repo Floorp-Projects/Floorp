@@ -149,6 +149,7 @@
 #endif /* BEFOREUNLOAD_EVENT */
 
 EVENT(abort, eImageAbort, EventNameType_All, eBasicEventClass)
+EVENT(beforetoggle, eBeforeToggle, EventNameType_HTMLXUL, eBasicEventClass)
 EVENT(bounce, eMarqueeBounce, EventNameType_HTMLMarqueeOnly, eBasicEventClass)
 EVENT(canplay, eCanPlay, EventNameType_HTML, eBasicEventClass)
 EVENT(canplaythrough, eCanPlayThrough, EventNameType_HTML, eBasicEventClass)
