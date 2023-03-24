@@ -1123,7 +1123,7 @@ pub fn cond_expr(i: &str) -> ParserResult<syntax::Expr> {
       cut(terminated(char(':'), blank)),
       cut(assignment_expr),
     )),
-    a,
+    move || a.clone(),
     move |acc, (_, b, _, c)| syntax::Expr::Ternary(Box::new(acc), Box::new(b), Box::new(c)),
   )(i)
 }
@@ -1134,7 +1134,7 @@ pub fn logical_or_expr(i: &str) -> ParserResult<syntax::Expr> {
 
   fold_many0(
     preceded(delimited(blank, tag("||"), blank), logical_xor_expr),
-    a,
+    move || a.clone(),
     move |acc, b| syntax::Expr::Binary(syntax::BinaryOp::Or, Box::new(acc), Box::new(b)),
   )(i)
 }
@@ -1145,7 +1145,7 @@ pub fn logical_xor_expr(i: &str) -> ParserResult<syntax::Expr> {
 
   fold_many0(
     preceded(delimited(blank, tag("^^"), blank), logical_and_expr),
-    a,
+    move || a.clone(),
     move |acc, b| syntax::Expr::Binary(syntax::BinaryOp::Xor, Box::new(acc), Box::new(b)),
   )(i)
 }
@@ -1156,7 +1156,7 @@ pub fn logical_and_expr(i: &str) -> ParserResult<syntax::Expr> {
 
   fold_many0(
     preceded(delimited(blank, tag("&&"), blank), inclusive_or_expr),
-    a,
+    move || a.clone(),
     move |acc, b| syntax::Expr::Binary(syntax::BinaryOp::And, Box::new(acc), Box::new(b)),
   )(i)
 }
@@ -1167,7 +1167,7 @@ pub fn inclusive_or_expr(i: &str) -> ParserResult<syntax::Expr> {
 
   fold_many0(
     preceded(delimited(blank, char('|'), blank), inclusive_or_expr),
-    a,
+    move || a.clone(),
     move |acc, b| syntax::Expr::Binary(syntax::BinaryOp::BitOr, Box::new(acc), Box::new(b)),
   )(i)
 }
@@ -1178,7 +1178,7 @@ pub fn exclusive_or_expr(i: &str) -> ParserResult<syntax::Expr> {
 
   fold_many0(
     preceded(delimited(blank, char('^'), blank), exclusive_or_expr),
-    a,
+    move || a.clone(),
     move |acc, b| syntax::Expr::Binary(syntax::BinaryOp::BitXor, Box::new(acc), Box::new(b)),
   )(i)
 }
@@ -1189,7 +1189,7 @@ pub fn and_expr(i: &str) -> ParserResult<syntax::Expr> {
 
   fold_many0(
     preceded(delimited(blank, char('&'), blank), and_expr),
-    a,
+    move || a.clone(),
     move |acc, b| syntax::Expr::Binary(syntax::BinaryOp::BitAnd, Box::new(acc), Box::new(b)),
   )(i)
 }
@@ -1210,7 +1210,7 @@ pub fn equality_expr(i: &str) -> ParserResult<syntax::Expr> {
       ),
       rel_expr,
     ),
-    a,
+    move || a.clone(),
     move |acc, (op, b)| syntax::Expr::Binary(op, Box::new(acc), Box::new(b)),
   )(i)
 }
@@ -1233,7 +1233,7 @@ pub fn rel_expr(i: &str) -> ParserResult<syntax::Expr> {
       ),
       shift_expr,
     ),
-    a,
+    move || a.clone(),
     move |acc, (op, b)| syntax::Expr::Binary(op, Box::new(acc), Box::new(b)),
   )(i)
 }
@@ -1254,7 +1254,7 @@ pub fn shift_expr(i: &str) -> ParserResult<syntax::Expr> {
       ),
       additive_expr,
     ),
-    a,
+    move || a.clone(),
     move |acc, (op, b)| syntax::Expr::Binary(op, Box::new(acc), Box::new(b)),
   )(i)
 }
@@ -1275,7 +1275,7 @@ pub fn additive_expr(i: &str) -> ParserResult<syntax::Expr> {
       ),
       multiplicative_expr,
     ),
-    a,
+    move || a.clone(),
     move |acc, (op, b)| syntax::Expr::Binary(op, Box::new(acc), Box::new(b)),
   )(i)
 }
@@ -1297,7 +1297,7 @@ pub fn multiplicative_expr(i: &str) -> ParserResult<syntax::Expr> {
       ),
       unary_expr,
     ),
-    a,
+    move || a.clone(),
     move |acc, (op, b)| syntax::Expr::Binary(op, Box::new(acc), Box::new(b)),
   )(i)
 }

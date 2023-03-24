@@ -64,7 +64,7 @@ pub fn many0_<'a, A, F>(mut f: F) -> impl FnMut(&'a str) -> ParserResult<'a, ()>
 where
   F: FnMut(&'a str) -> ParserResult<'a, A>,
 {
-  move |i| fold_many0(&mut f, (), |_, _| ())(i)
+  move |i| fold_many0(&mut f, || (), |_, _| ())(i)
 }
 
 /// Parse a string until the end of line.
