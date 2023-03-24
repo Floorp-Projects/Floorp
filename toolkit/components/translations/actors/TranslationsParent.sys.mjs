@@ -117,12 +117,6 @@ export class TranslationsParent extends JSWindowActorParent {
    */
   static #mockedLanguageIdConfidence = null;
 
-  actorCreated() {
-    if (TranslationsParent.#mockedLanguagePairs) {
-      this.sendAsyncMessage("Translations:IsMocked", true);
-    }
-  }
-
   async receiveMessage({ name, data }) {
     switch (name) {
       case "Translations:GetBergamotWasmArrayBuffer": {
@@ -136,6 +130,9 @@ export class TranslationsParent extends JSWindowActorParent {
       }
       case "Translations:GetLanguageIdEngineMockedPayload": {
         return this.#getLanguageIdEngineMockedPayload();
+      }
+      case "Translations:GetIsTranslationsEngineMocked": {
+        return Boolean(TranslationsParent.#mockedLanguagePairs);
       }
       case "Translations:GetLanguageTranslationModelFiles": {
         const { fromLanguage, toLanguage } = data;
