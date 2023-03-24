@@ -7,6 +7,7 @@
 #ifndef MOZILLA_GFX_RENDERCOMPOSITOR_D3D11_H
 #define MOZILLA_GFX_RENDERCOMPOSITOR_D3D11_H
 
+#include "mozilla/gfx/2D.h"
 #include "mozilla/layers/ScreenshotGrabber.h"
 #include "mozilla/layers/TextureD3D11.h"
 #include "mozilla/layers/CompositorD3D11.h"
@@ -56,7 +57,7 @@ class RenderCompositorD3D11SWGL : public RenderCompositorLayersSWGL {
  private:
   already_AddRefed<ID3D11Texture2D> CreateStagingTexture(
       const gfx::IntSize aSize);
-  already_AddRefed<DataSourceSurface> CreateStagingSurface(
+  already_AddRefed<gfx::DataSourceSurface> CreateStagingSurface(
       const gfx::IntSize aSize);
 
   void HandleExternalImage(RenderTextureHost* aExternalImage,
@@ -70,7 +71,7 @@ class RenderCompositorD3D11SWGL : public RenderCompositorLayersSWGL {
    public:
     TileD3D11(layers::DataTextureSourceD3D11* aTexture,
               ID3D11Texture2D* aStagingTexture,
-              DataSourceSurface* aDataSourceSurface, Surface* aOwner,
+              gfx::DataSourceSurface* aDataSourceSurface, Surface* aOwner,
               RenderCompositorD3D11SWGL* aRenderCompositor);
     virtual ~TileD3D11() {}
 
@@ -83,7 +84,7 @@ class RenderCompositorD3D11SWGL : public RenderCompositorLayersSWGL {
    private:
     RefPtr<layers::DataTextureSourceD3D11> mTexture;
     RefPtr<ID3D11Texture2D> mStagingTexture;
-    RefPtr<DataSourceSurface> mSurface;
+    RefPtr<gfx::DataSourceSurface> mSurface;
     SurfaceD3D11SWGL* mOwner;
     RenderCompositorD3D11SWGL* mRenderCompositor;
   };

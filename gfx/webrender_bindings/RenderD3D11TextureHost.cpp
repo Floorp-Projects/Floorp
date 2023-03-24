@@ -6,13 +6,15 @@
 
 #include "RenderD3D11TextureHost.h"
 
-#include <d3d11.h>
-
 #include "GLContextEGL.h"
 #include "GLLibraryEGL.h"
+#include "RenderThread.h"
+#include "RenderCompositor.h"
+#include "RenderCompositorD3D11SWGL.h"
 #include "ScopedGLHelpers.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/gfx/Logging.h"
+#include "mozilla/layers/TextureD3D11.h"
 
 namespace mozilla {
 namespace wr {

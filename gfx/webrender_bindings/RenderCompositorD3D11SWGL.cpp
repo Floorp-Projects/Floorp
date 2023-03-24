@@ -8,10 +8,13 @@
 
 #include "RenderCompositorD3D11SWGL.h"
 
+#include "gfxConfig.h"
+#include "mozilla/gfx/2D.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "mozilla/layers/Effects.h"
 #include "mozilla/webrender/RenderD3D11TextureHost.h"
 #include "RenderCompositorRecordedFrame.h"
+#include "RenderThread.h"
 
 namespace mozilla {
 using namespace layers;
@@ -97,16 +100,16 @@ void RenderCompositorD3D11SWGL::HandleExternalImage(
 
     layer = new DataTextureSourceD3D11(GetDevice(), host->GetFormat(),
                                        host->GetD3D11Texture2D());
-    if (host->GetFormat() == SurfaceFormat::NV12 ||
-        host->GetFormat() == SurfaceFormat::P010 ||
-        host->GetFormat() == SurfaceFormat::P016) {
+    if (host->GetFormat() == gfx::SurfaceFormat::NV12 ||
+        host->GetFormat() == gfx::SurfaceFormat::P010 ||
+        host->GetFormat() == gfx::SurfaceFormat::P016) {
       const auto yuv = FromYUVRangedColorSpace(host->GetYUVColorSpace());
       texturedEffect =
           new EffectNV12(layer, yuv.space, yuv.range, host->GetColorDepth(),
                          aFrameSurface.mFilter);
     } else {
-      MOZ_ASSERT(host->GetFormat() == SurfaceFormat::B8G8R8X8 ||
-                 host->GetFormat() == SurfaceFormat::B8G8R8A8);
+      MOZ_ASSERT(host->GetFormat() == gfx::SurfaceFormat::B8G8R8X8 ||
+                 host->GetFormat() == gfx::SurfaceFormat::B8G8R8A8);
       texturedEffect = CreateTexturedEffect(host->GetFormat(), layer,
                                             aFrameSurface.mFilter, true);
     }
@@ -117,13 +120,13 @@ void RenderCompositorD3D11SWGL::HandleExternalImage(
       return;
     }
 
-    layer = new DataTextureSourceD3D11(GetDevice(), SurfaceFormat::A8,
+    layer = new DataTextureSourceD3D11(GetDevice(), gfx::SurfaceFormat::A8,
                                        host->GetD3D11Texture2D(0));
     RefPtr<DataTextureSourceD3D11> u = new DataTextureSourceD3D11(
-        GetDevice(), SurfaceFormat::A8, host->GetD3D11Texture2D(1));
+        GetDevice(), gfx::SurfaceFormat::A8, host->GetD3D11Texture2D(1));
     layer->SetNextSibling(u);
     RefPtr<DataTextureSourceD3D11> v = new DataTextureSourceD3D11(
-        GetDevice(), SurfaceFormat::A8, host->GetD3D11Texture2D(2));
+        GetDevice(), gfx::SurfaceFormat::A8, host->GetD3D11Texture2D(2));
     u->SetNextSibling(v);
 
     const auto yuv = FromYUVRangedColorSpace(host->GetYUVColorSpace());
@@ -187,7 +190,7 @@ SurfaceD3D11SWGL::SurfaceD3D11SWGL(wr::DeviceIntSize aTileSize, bool aIsOpaque)
 
 RenderCompositorD3D11SWGL::TileD3D11::TileD3D11(
     layers::DataTextureSourceD3D11* aTexture, ID3D11Texture2D* aStagingTexture,
-    DataSourceSurface* aDataSourceSurface, Surface* aOwner,
+    gfx::DataSourceSurface* aDataSourceSurface, Surface* aOwner,
     RenderCompositorD3D11SWGL* aRenderCompositor)
     : Tile(),
       mTexture(aTexture),
@@ -227,8 +230,8 @@ bool RenderCompositorD3D11SWGL::TileD3D11::Map(wr::DeviceIntRect aDirtyRect,
   mRenderCompositor->mCurrentStagingTextureIsTemp = false;
 
   if (uploadMode == Upload_Immediate) {
-    DataSourceSurface::MappedSurface map;
-    if (!mSurface->Map(DataSourceSurface::READ_WRITE, &map)) {
+    gfx::DataSourceSurface::MappedSurface map;
+    if (!mSurface->Map(gfx::DataSourceSurface::READ_WRITE, &map)) {
       return false;
     }
 
@@ -415,9 +418,10 @@ RenderCompositorD3D11SWGL::CreateStagingTexture(const gfx::IntSize aSize) {
   return cpuTexture.forget();
 }
 
-already_AddRefed<DataSourceSurface>
+already_AddRefed<gfx::DataSourceSurface>
 RenderCompositorD3D11SWGL::CreateStagingSurface(const gfx::IntSize aSize) {
-  return Factory::CreateDataSourceSurface(aSize, SurfaceFormat::B8G8R8A8);
+  return gfx::Factory::CreateDataSourceSurface(aSize,
+                                               gfx::SurfaceFormat::B8G8R8A8);
 }
 
 UniquePtr<RenderCompositorLayersSWGL::Tile>
@@ -430,7 +434,7 @@ RenderCompositorD3D11SWGL::DoCreateTile(Surface* aSurface) {
     RefPtr<DataTextureSourceD3D11> source =
         new DataTextureSourceD3D11(gfx::SurfaceFormat::B8G8R8A8, mCompositor,
                                    layers::TextureFlags::NO_FLAGS);
-    RefPtr<DataSourceSurface> surf = CreateStagingSurface(tileSize);
+    RefPtr<gfx::DataSourceSurface> surf = CreateStagingSurface(tileSize);
     return MakeUnique<TileD3D11>(source, nullptr, surf, aSurface, this);
   }
 
@@ -464,10 +468,10 @@ bool RenderCompositorD3D11SWGL::MaybeReadback(
   MOZ_ASSERT(aReadbackFormat == wr::ImageFormat::BGRA8);
 
   auto stride =
-      aReadbackSize.width * gfx::BytesPerPixel(SurfaceFormat::B8G8R8A8);
+      aReadbackSize.width * gfx::BytesPerPixel(gfx::SurfaceFormat::B8G8R8A8);
   RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateDrawTargetForData(
       gfx::BackendType::SKIA, &aReadbackBuffer[0], aReadbackSize, stride,
-      SurfaceFormat::B8G8R8A8, false);
+      gfx::SurfaceFormat::B8G8R8A8, false);
   if (!dt) {
     return false;
   }
