@@ -6,7 +6,7 @@
  * Test for Bug 655273.  Make sure that after changing the URI via
  * history.pushState, the resulting SHEntry has the same title as our old
  * SHEntry.
- **/
+ */
 
 add_task(async function test() {
   waitForExplicitFinish();

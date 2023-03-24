@@ -7,6 +7,7 @@ export var ForgetAboutSite = {
    * Clear data associated with a base domain. This includes partitioned storage
    * associated with the domain. If a base domain can not be computed from
    * aDomainOrHost, data will be cleared by host instead.
+   *
    * @param {string} aDomainOrHost - Domain or host to clear data for. Will be
    * converted to base domain if needed.
    * @returns {Promise} - Resolves once all matching data has been cleared.

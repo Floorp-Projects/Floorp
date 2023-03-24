@@ -5,6 +5,7 @@
 /**
  * A Map of themes built in to the browser, alongwith a Map of collections those themes belong to. Params for the objects contained
  * within the map:
+ *
  * @param {string} id
  *   The unique identifier for the theme. The map's key.
  * @param {string} version
