@@ -78,16 +78,17 @@ async function openAboutTranslations({
     true // waitForLoad
   );
 
-  // Before loading about:translations, handle any mocking of the actor.
-  if (languagePairs) {
-    TranslationsParent.mockLanguagePairs(languagePairs);
-  }
-  if (detectedLanguageLabel && detectedLanguageConfidence) {
-    TranslationsParent.mockLanguageIdentification(
-      detectedLanguageLabel,
-      detectedLanguageConfidence
+  // Before loading about:translations, handle the mocking of the actor.
+  if (!languagePairs) {
+    throw new Error(
+      "Expected language pairs for mocking the translations engine."
     );
   }
+  TranslationsParent.mockLanguagePairs(languagePairs);
+  TranslationsParent.mockLanguageIdentification(
+    detectedLanguageLabel ?? "en",
+    detectedLanguageConfidence ?? "0.5"
+  );
 
   // Now load the about:translations page, since the actor could be mocked.
   BrowserTestUtils.loadURIString(tab.linkedBrowser, "about:translations");
