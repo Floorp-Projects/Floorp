@@ -82,18 +82,6 @@ add_task(async function test_searchAndDedupeLogins_acceptDifferentSubdomains() {
       expected: [DOMAIN1_HTTP_TO_HTTP_U1_P2],
     },
     {
-      description: "HTTPS form, both https, same username, different password",
-      formActionOrigin: DOMAIN1_HTTPS_ORIGIN,
-      logins: [DOMAIN1_HTTPS_TO_HTTPS_U1_P1, DOMAIN1_HTTPS_TO_HTTPS_U1_P2],
-      expected: [DOMAIN1_HTTPS_TO_HTTPS_U1_P1, DOMAIN1_HTTPS_TO_HTTPS_U1_P2],
-    },
-    {
-      description: "HTTP form, both https, same username, different password",
-      formActionOrigin: DOMAIN1_HTTP_ORIGIN,
-      logins: [DOMAIN1_HTTPS_TO_HTTPS_U1_P1, DOMAIN1_HTTPS_TO_HTTPS_U1_P2],
-      expected: [],
-    },
-    {
       description: "HTTPS form, same origin, different port, both schemes",
       formActionOrigin: DOMAIN1_HTTPS_ORIGIN,
       logins: [
@@ -189,6 +177,30 @@ add_task(async function test_searchAndDedupeLogins_acceptDifferentSubdomains() {
     for (let [i, login] of tc.expected.entries()) {
       Assert.ok(actual[i].equals(login), `Check index ${i}`);
     }
+
+    Services.logins.removeAllUserFacingLogins();
+  }
+});
+
+add_task(async function test_reject_duplicates() {
+  const testcases = [
+    {
+      description: "HTTPS form, both https, same username, different password",
+      formActionOrigin: DOMAIN1_HTTPS_ORIGIN,
+      logins: [DOMAIN1_HTTPS_TO_HTTPS_U1_P1, DOMAIN1_HTTPS_TO_HTTPS_U1_P2],
+    },
+    {
+      description: "HTTP form, both https, same username, different password",
+      formActionOrigin: DOMAIN1_HTTP_ORIGIN,
+      logins: [DOMAIN1_HTTPS_TO_HTTPS_U1_P1, DOMAIN1_HTTPS_TO_HTTPS_U1_P2],
+    },
+  ];
+
+  for (const tc of testcases) {
+    info(tc.description);
+
+    const result = await Services.logins.addLogins(tc.logins);
+    Assert.equal(result.length, 1, "only single login added");
 
     Services.logins.removeAllUserFacingLogins();
   }
