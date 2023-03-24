@@ -5505,7 +5505,7 @@ nsresult nsGlobalWindowInner::Observe(nsISupports* aSubject, const char* aTopic,
 
   if (!nsCRT::strcmp(aTopic, "screen-information-changed")) {
     if (mScreen) {
-      if (RefPtr<ScreenOrientation> orientation =
+      if (RefPtr<mozilla::dom::ScreenOrientation> orientation =
               mScreen->GetOrientationIfExists()) {
         orientation->MaybeChanged();
       }

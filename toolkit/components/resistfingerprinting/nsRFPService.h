@@ -143,7 +143,7 @@ enum TimerPrecisionType {
 // NOLINTNEXTLINE(bugprone-macro-parentheses)
 #define ITEM_VALUE(name, val) name = val,
 
-enum class RFPTarget {
+enum RFPTarget {
 #include "RFPTargets.inc"
 };
 
