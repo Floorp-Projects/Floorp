@@ -118,30 +118,10 @@ void BaselineCacheIRCompiler::callVM(MacroAssembler& masm) {
   callVMInternal(masm, id);
 }
 
-template <typename Fn, Fn fn>
-void BaselineCacheIRCompiler::tailCallVM(MacroAssembler& masm) {
-  TailCallVMFunctionId id = TailCallVMFunctionToId<Fn, fn>::id;
-  tailCallVMInternal(masm, id);
-}
-
-void BaselineCacheIRCompiler::tailCallVMInternal(MacroAssembler& masm,
-                                                 TailCallVMFunctionId id) {
-  MOZ_ASSERT(!enteredStubFrame_);
-
-  TrampolinePtr code = cx_->runtime()->jitRuntime()->getVMWrapper(id);
-  const VMFunctionData& fun = GetVMFunction(id);
-  MOZ_ASSERT(fun.expectTailCall == TailCall);
-  size_t argSize = fun.explicitStackSlots() * sizeof(void*);
-
-  EmitBaselineTailCallVM(code, masm, argSize);
-}
-
 JitCode* BaselineCacheIRCompiler::compile() {
   AutoCreatedBy acb(masm, "BaselineCacheIRCompiler::compile");
 
 #ifndef JS_USE_LINK_REGISTER
-  // The first value contains the return addres,
-  // which we pull into ICTailCallReg for tail calls.
   masm.adjustFrame(sizeof(intptr_t));
 #endif
 #ifdef JS_CODEGEN_ARM
@@ -2467,19 +2447,20 @@ bool BaselineCacheIRCompiler::emitCallStringObjectConcatResult(
   ValueOperand lhs = allocator.useValueRegister(masm, lhsId);
   ValueOperand rhs = allocator.useValueRegister(masm, rhsId);
 
+  AutoScratchRegister scratch(allocator, masm);
+
   allocator.discardStack(masm);
 
-  // For the expression decompiler
-  EmitRestoreTailCallReg(masm);
-  masm.pushValue(lhs);
-  masm.pushValue(rhs);
+  AutoStubFrame stubFrame(*this);
+  stubFrame.enter(masm, scratch);
 
   masm.pushValue(rhs);
   masm.pushValue(lhs);
 
   using Fn = bool (*)(JSContext*, HandleValue, HandleValue, MutableHandleValue);
-  tailCallVM<Fn, DoConcatStringObject>(masm);
+  callVM<Fn, DoConcatStringObject>(masm);
 
+  stubFrame.leave(masm);
   return true;
 }
 
@@ -3239,7 +3220,6 @@ bool BaselineCacheIRCompiler::emitCallScriptedFunction(ObjOperandId calleeId,
   allocator.discardStack(masm);
 
   // Push a stub frame so that we can perform a non-tail call.
-  // Note that this leaves the return address in TailCallReg.
   AutoStubFrame stubFrame(*this);
   stubFrame.enter(masm, scratch);
 
@@ -3330,7 +3310,6 @@ bool BaselineCacheIRCompiler::emitCallInlinedFunction(ObjOperandId calleeId,
   allocator.discardStack(masm);
 
   // Push a stub frame so that we can perform a non-tail call.
-  // Note that this leaves the return address in TailCallReg.
   AutoStubFrame stubFrame(*this);
   stubFrame.enter(masm, scratch);
 
@@ -3418,7 +3397,6 @@ bool BaselineCacheIRCompiler::emitCallBoundScriptedFunction(
   allocator.discardStack(masm);
 
   // Push a stub frame so that we can perform a non-tail call.
-  // Note that this leaves the return address in TailCallReg.
   AutoStubFrame stubFrame(*this);
   stubFrame.enter(masm, scratch);
 
