@@ -406,6 +406,9 @@ TEST_F(UntrustedModulesFixture, Serialize) {
     u"\"modules\":\\[{"
       u"\"resolvedDllName\":\"TestUntrustedModules_Dll1\\.dll\","
       u"\"fileVersion\":\"1\\.2\\.3\\.4\","
+      // It would be nice to hard-code this, but this might change with
+      // compiler versions, etc.
+      u"\"debugID\":\"[0-9A-F]{33}\","
       u"\"companyName\":\"Mozilla Corporation\",\"trustFlags\":0}\\],"
     u"\"blockedModules\":\\[.*?\\]," // allow for the case where there are some blocked modules
     u"\"processes\":{"

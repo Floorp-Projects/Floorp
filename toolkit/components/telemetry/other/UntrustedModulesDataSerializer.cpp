@@ -15,6 +15,10 @@
 #include "nsUnicharUtils.h"
 #include "nsXULAppAPI.h"
 
+#if defined(MOZ_GECKO_PROFILER)
+#  include "shared-libraries.h"
+#endif  // MOZ_GECKO_PROFILER
+
 namespace mozilla {
 namespace Telemetry {
 
@@ -165,6 +169,22 @@ static bool SerializeModule(JSContext* aCx,
       return false;
     }
   }
+
+#if defined(MOZ_GECKO_PROFILER)
+  if (aModule->mResolvedDosName) {
+    nsAutoString path;
+    if (aModule->mResolvedDosName->GetPath(path) == NS_OK) {
+      SharedLibraryInfo info = SharedLibraryInfo::GetInfoFromPath(path.Data());
+      if (info.GetSize() > 0) {
+        nsCString breakpadId = info.GetEntry(0).GetBreakpadId();
+        if (!AddLengthLimitedStringProp(aCx, obj, "debugID",
+                                        NS_ConvertASCIItoUTF16(breakpadId))) {
+          return false;
+        }
+      }
+    }
+  }
+#endif  // MOZ_GECKO_PROFILER
 
   if (aModule->mVendorInfo.isSome()) {
     const char* propName;
