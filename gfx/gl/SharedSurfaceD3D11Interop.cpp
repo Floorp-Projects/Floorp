@@ -8,10 +8,14 @@
 #include <d3d11.h>
 #include <d3d11_1.h>
 #include "GLContext.h"
+#include "GLBlitHelper.h"
 #include "MozFramebuffer.h"
+#include "ScopedGLHelpers.h"
 #include "WGLLibrary.h"
 #include "nsPrintfCString.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
+#include "mozilla/gfx/Logging.h"
+#include "mozilla/layers/LayersSurfaces.h"
 #include "mozilla/StaticPrefs_webgl.h"
 
 namespace mozilla {

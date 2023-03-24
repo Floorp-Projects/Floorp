@@ -6,6 +6,7 @@
 #ifndef SHARED_SURFACE_D3D11_INTEROP_H_
 #define SHARED_SURFACE_D3D11_INTEROP_H_
 
+#include <d3d11.h>
 #include <windows.h>
 #include "SharedSurface.h"
 
