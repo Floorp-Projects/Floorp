@@ -194,7 +194,7 @@ dependencies = [
  "askama_escape",
  "mime",
  "mime_guess",
- "nom 7.1.3",
+ "nom",
  "proc-macro2",
  "quote",
  "serde",
@@ -392,7 +392,7 @@ dependencies = [
  "libudev",
  "log",
  "memoffset 0.6.99",
- "nom 7.1.3",
+ "nom",
  "nss-gk-api",
  "pkcs11-bindings",
  "rand 0.8.5",
@@ -613,7 +613,7 @@ name = "builtins-static"
 version = "0.1.0"
 dependencies = [
  "bindgen 0.63.0",
- "nom 7.1.3",
+ "nom",
  "pkcs11-bindings",
  "smallvec",
 ]
@@ -730,7 +730,7 @@ version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6fac387a98bb7c37292057cffc56d62ecb629900026402633ae9160df93a8766"
 dependencies = [
- "nom 7.1.3",
+ "nom",
 ]
 
 [[package]]
@@ -1404,7 +1404,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9313f104b590510b46fc01c0a324fc76505c13871454d3c48490468d04c8d395"
 dependencies = [
  "libc",
- "nom 7.1.3",
+ "nom",
 ]
 
 [[package]]
@@ -2371,11 +2371,11 @@ checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
 
 [[package]]
 name = "glsl"
-version = "6.0.1"
+version = "6.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1fd49bbe5e12dd5aed9d66a84899af422f3d4fcfdd20b2294c8b4ade11500b05"
+checksum = "65c80dbf169ac31dbe6e0a69a7cef0b09ec9805f955da206ff1ee2e47895f836"
 dependencies = [
- "nom 6.99.99",
+ "nom",
 ]
 
 [[package]]
@@ -3810,13 +3810,6 @@ dependencies = [
  "bitflags",
  "cfg-if 1.0.0",
  "libc",
-]
-
-[[package]]
-name = "nom"
-version = "6.99.99"
-dependencies = [
- "nom 7.1.3",
 ]
 
 [[package]]
@@ -6384,7 +6377,7 @@ version = "4.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2e79c5206e1f43a2306fd64bdb95025ee4228960f2e6c5a8b173f3caaf807741"
 dependencies = [
- "nom 7.1.3",
+ "nom",
 ]
 
 [[package]]
