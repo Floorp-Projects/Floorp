@@ -1656,11 +1656,15 @@ main.has-snippet {
   inset-inline-end: 0;
   z-index: 1001;
   padding: 16px;
-  transition: transform 250ms cubic-bezier(0.46, 0.03, 0.52, 0.96), visibility 250ms;
   overflow: auto;
   transform: translateX(435px);
   visibility: hidden;
   cursor: default;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .customize-menu {
+    transition: transform 250ms cubic-bezier(0.46, 0.03, 0.52, 0.96), visibility 250ms;
+  }
 }
 @media (forced-colors: active) {
   .customize-menu {

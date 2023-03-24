@@ -48,11 +48,14 @@
   inset-inline-end: 0;
   z-index: 1001;
   padding: 16px;
-  transition: transform 250ms $customize-menu-slide-bezier, visibility 250ms;
   overflow: auto;
   transform: translateX(435px);
   visibility: hidden;
   cursor: default;
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: transform 250ms $customize-menu-slide-bezier, visibility 250ms;
+  }
 
   @media (forced-colors: active) {
     border-inline-start: solid 1px;
