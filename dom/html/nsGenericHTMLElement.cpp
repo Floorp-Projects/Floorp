@@ -92,6 +92,7 @@
 #include "nsTextFragment.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/MouseEventBinding.h"
+#include "mozilla/dom/ToggleEvent.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/ErrorResult.h"
 #include "nsHTMLDocument.h"
@@ -673,14 +674,17 @@ nsresult nsGenericHTMLElement::AfterSetAttr(
         // The missing value default is the no popover state.
         newState = PopoverState::None;
       }
-      if (newState != GetPopoverState()) {
-        if (PopoverOpen()) {
-          HidePopover(IgnoreErrors());
+      PopoverState oldState = GetPopoverState();
+      if (newState != oldState) {
+        if (oldState != PopoverState::None) {
+          HidePopoverInternal(/* aFireEvents = */ false, IgnoreErrors());
         }
-        if (newState == PopoverState::None) {
-          ClearPopoverData();
-        } else {
+        if (newState != PopoverState::None) {
           EnsurePopoverData().SetPopoverState(newState);
+          PopoverPseudoStateUpdate(false, true);
+        } else {
+          ClearPopoverData();
+          RemoveStates(ElementState::OPEN | ElementState::CLOSED);
         }
       }
     } else if (aName == nsGkAtoms::dir) {
@@ -3182,24 +3186,57 @@ void nsGenericHTMLElement::PopoverPseudoStateUpdate(bool aOpen, bool aNotify) {
   ToggleStates(changedStates, aNotify);
 }
 
+bool nsGenericHTMLElement::FireBeforeToggle(bool aIsOpen) {
+  ToggleEventInit init;
+  init.mBubbles = false;
+  if (aIsOpen) {
+    init.mCancelable = false;
+    init.mOldState = u"open"_ns;
+    init.mNewState = u"closed"_ns;
+  } else {
+    init.mCancelable = true;
+    init.mOldState = u"closed"_ns;
+    init.mNewState = u"open"_ns;
+  }
+  RefPtr<ToggleEvent> event =
+      ToggleEvent::Constructor(this, u"beforetoggle"_ns, init);
+  event->SetTrusted(true);
+
+  EventDispatcher::DispatchDOMEvent(MOZ_KnownLive(ToSupports(this)), nullptr,
+                                    event, nullptr, nullptr);
+  return event->DefaultPrevented();
+}
+
 // https://html.spec.whatwg.org/#dom-showpopover
 void nsGenericHTMLElement::ShowPopover(ErrorResult& aRv) {
   if (!CheckPopoverValidity(PopoverVisibilityState::Hidden, aRv)) {
     return;
   }
-  // TODO: Fire beforetoggle event and re-check popover validity.
+  // Fire beforetoggle event and re-check popover validity.
+  if (FireBeforeToggle(false)) {
+    return;
+  }
+  if (!CheckPopoverValidity(PopoverVisibilityState::Hidden, aRv)) {
+    return;
+  }
   // TODO: Run auto popover steps.
   // TODO: Add to Top Layer.
-  GetPopoverData()->SetPopoverVisibilityState(PopoverVisibilityState::Showing);
 
   PopoverPseudoStateUpdate(true, true);
+  GetPopoverData()->SetPopoverVisibilityState(PopoverVisibilityState::Showing);
 
+  // TODO: Handle popover focusing.
   // TODO: Queue popover toggle event task.
 }
 
 // https://html.spec.whatwg.org/#dom-hidepopover
 void nsGenericHTMLElement::HidePopover(ErrorResult& aRv) {
-  OwnerDoc()->HidePopover(*this, true, true, aRv);
+  HidePopoverInternal(true, aRv);
+}
+
+void nsGenericHTMLElement::HidePopoverInternal(bool aFireEvents,
+                                               ErrorResult& aRv) {
+  OwnerDoc()->HidePopover(*this, true, aFireEvents, aRv);
 }
 
 // https://html.spec.whatwg.org/multipage/popover.html#dom-togglepopover
