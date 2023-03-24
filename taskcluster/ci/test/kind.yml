@@ -37,7 +37,6 @@ jobs-from:
     - marionette.yml
     - misc.yml
     - mochitest.yml
-    - raptor.yml
     - raptor-chrome.yml
     - reftest.yml
     - talos.yml

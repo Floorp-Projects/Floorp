@@ -413,6 +413,30 @@ browsertime-youtube-playback:
             youtube-playback-widevine.*: 3600
             default: 2700
 
+browsertime-youtube-playback-power:
+    description: Browsertime YouTube Playback on Firefox with power usage tracking
+    raptor:
+        apps: [firefox]
+        subtests:
+            by-app:
+                firefox:
+
+                    - [youtube-playback-h264-1080p30, ytp-h264-1080p30]
+                    - [youtube-playback-h264-1080p60, ytp-h264-1080p60]
+                    - [youtube-playback-h264-full-1080p30, ytp-h264-full-1080p30]
+                    - [youtube-playback-h264-full-1080p60, ytp-h264-full-1080p60]
+                    - [youtube-playback-v9-1080p30, ytp-v9-1080p30]
+                    - [youtube-playback-v9-1080p60, ytp-v9-1080p60]
+                    - [youtube-playback-v9-full-1080p30, ytp-v9-full-1080p30]
+                    - [youtube-playback-v9-full-1080p60, ytp-v9-full-1080p60]
+    treeherder-symbol: Btime()
+    run-on-projects:
+        by-test-platform:
+            macosx.*shippable-qr.*: [mozilla-central]
+            default: []
+    tier: 2
+    max-run-time: 2700
+
 browsertime-tp6-live:
     <<: *tp6-defaults
     description: Raptor (browsertime) tp6 on live-sites
