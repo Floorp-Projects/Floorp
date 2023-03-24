@@ -160,7 +160,7 @@ Building SpiderMonkey on Android
 
     ac_add_options --target=aarch64-linux-android
 
-- Then compile as usual with `mach compile` with this `MOZCONFIG` file.
+- Then compile as usual with `mach build` with this `MOZCONFIG` file.
 
 Running jit-tests on Android
 ----------------------------
@@ -195,7 +195,7 @@ the host machine.
 .. code::
 
     adb push \
-        ~/.mozbuild/android-ndk-r20/prebuilt/android-arm64/gdbserver/gdbserver \
+        ~/.mozbuild/android-ndk-r23c/prebuilt/android-arm64/gdbserver/gdbserver \
         /data/local/tmp/test_root/bin
 
 - Make sure that the `ncurses5` library is installed on the host. On
@@ -236,7 +236,7 @@ the host machine.
 
 .. code::
 
-    ~/.mozbuild/android-ndk-r20/prebuilt/linux-x86_64/bin/gdb /path/to/objdir-aarch64-linux-android/dist/bin/js
+    ~/.mozbuild/android-ndk-r23c/prebuilt/linux-x86_64/bin/gdb /path/to/objdir-aarch64-linux-android/dist/bin/js
 
 - Then connect remotely to the GDB server that's listening on the Android
   device:
