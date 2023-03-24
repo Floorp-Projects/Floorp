@@ -321,13 +321,7 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   nsRect PredictedDestRect(const nsRect& aFrameContentBox);
 
  private:
-  // random helpers
-  inline void SpecToURI(const nsAString& aSpec, nsIURI** aURI);
-
-  inline void GetLoadGroup(nsPresContext* aPresContext,
-                           nsILoadGroup** aLoadGroup);
   nscoord GetContinuationOffset() const;
-  void GetDocumentCharacterSet(nsACString& aCharset) const;
   bool ShouldDisplaySelection();
 
   // Whether the image frame should use the mapped aspect ratio from width=""
@@ -414,18 +408,6 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   bool mReflowCallbackPosted = false;
   bool mForceSyncDecoding = false;
   bool mIsInObjectOrEmbed = false;
-
-  /* loading / broken image icon support */
-
-  // XXXbz this should be handled by the prescontext, I think; that
-  // way we would have a single iconload per mozilla session instead
-  // of one per document...
-
-  // LoadIcons: initiate the loading of the static icons used to show
-  // loading / broken images
-  nsresult LoadIcons(nsPresContext* aPresContext);
-  nsresult LoadIcon(const nsAString& aSpec, nsPresContext* aPresContext,
-                    imgRequestProxy** aRequest);
 
  public:
   friend class mozilla::nsDisplayImage;

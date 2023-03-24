@@ -187,39 +187,133 @@ bool nsDisplayGradient::CreateWebRenderCommands(
 // Default alignment value (so we can tell an unset value from a set value)
 #define ALIGN_UNSET uint8_t(-1)
 
-class IconLoad final : public imgINotificationObserver {
+class BrokenImageIcon final : public imgINotificationObserver {
   // private class that wraps the data and logic needed for
   // broken image and loading image icons
  public:
-  IconLoad() = default;
-
-  void Shutdown();
+  explicit BrokenImageIcon(const nsImageFrame& aFrame);
+  static void Shutdown();
 
   NS_DECL_ISUPPORTS
   NS_DECL_IMGINOTIFICATIONOBSERVER
 
-  void AddIconObserver(nsImageFrame* frame) {
-    MOZ_ASSERT(!mIconObservers.Contains(frame),
-               "Observer shouldn't aleady be in array");
-    mIconObservers.AppendElement(frame);
+  static imgRequestProxy* GetImage(nsImageFrame* aFrame) {
+    return Get(*aFrame).mImage.get();
   }
 
-  void RemoveIconObserver(nsImageFrame* frame) {
-    mozilla::DebugOnly<bool> didRemove = mIconObservers.RemoveElement(frame);
+  static void AddObserver(nsImageFrame* aFrame) {
+    auto& instance = Get(*aFrame);
+    MOZ_ASSERT(!instance.mObservers.Contains(aFrame),
+               "Observer shouldn't aleady be in array");
+    instance.mObservers.AppendElement(aFrame);
+  }
+
+  static void RemoveObserver(nsImageFrame* aFrame) {
+    auto& instance = Get(*aFrame);
+    DebugOnly<bool> didRemove = instance.mObservers.RemoveElement(aFrame);
     MOZ_ASSERT(didRemove, "Observer not in array");
   }
 
  private:
-  ~IconLoad() = default;
+  static BrokenImageIcon& Get(const nsImageFrame& aFrame) {
+    if (!gSingleton) {
+      gSingleton = new BrokenImageIcon(aFrame);
+    }
+    return *gSingleton;
+  }
 
-  nsTObserverArray<nsImageFrame*> mIconObservers;
+  ~BrokenImageIcon() = default;
 
- public:
-  RefPtr<imgRequestProxy> mBrokenImage;
+  nsTObserverArray<nsImageFrame*> mObservers;
+  RefPtr<imgRequestProxy> mImage;
+
+  static StaticRefPtr<BrokenImageIcon> gSingleton;
 };
 
-// static icon information
-StaticRefPtr<IconLoad> gIconLoad;
+StaticRefPtr<BrokenImageIcon> BrokenImageIcon::gSingleton;
+
+NS_IMPL_ISUPPORTS(BrokenImageIcon, imgINotificationObserver)
+
+BrokenImageIcon::BrokenImageIcon(const nsImageFrame& aFrame) {
+  constexpr auto brokenSrc = u"resource://gre-resources/broken-image.png"_ns;
+  nsCOMPtr<nsIURI> realURI;
+  NS_NewURI(getter_AddRefs(realURI), brokenSrc);
+
+  MOZ_ASSERT(realURI, "how?");
+  if (NS_WARN_IF(!realURI)) {
+    return;
+  }
+
+  nsPresContext* pc = aFrame.PresContext();
+  Document* doc = pc->Document();
+  RefPtr<imgLoader> il = nsContentUtils::GetImgLoaderForDocument(doc);
+
+  nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
+
+  // For icon loads, we don't need to merge with the loadgroup flags
+  const nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL;
+  const nsContentPolicyType contentPolicyType =
+      nsIContentPolicy::TYPE_INTERNAL_IMAGE;
+
+  nsresult rv =
+      il->LoadImage(realURI, /* icon URI */
+                    nullptr, /* initial document URI; this is only
+                               relevant for cookies, so does not
+                               apply to icons. */
+                    nullptr, /* referrer (not relevant for icons) */
+                    nullptr, /* principal (not relevant for icons) */
+                    0, loadGroup, this, nullptr, /* No context */
+                    nullptr, /* Not associated with any particular document */
+                    loadFlags, nullptr, contentPolicyType, u""_ns,
+                    false, /* aUseUrgentStartForChannel */
+                    false, /* aLinkPreload */
+                    0, getter_AddRefs(mImage));
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+}
+
+void BrokenImageIcon::Shutdown() {
+  if (!gSingleton) {
+    return;
+  }
+  if (gSingleton->mImage) {
+    gSingleton->mImage->CancelAndForgetObserver(NS_ERROR_FAILURE);
+    gSingleton->mImage = nullptr;
+  }
+  gSingleton = nullptr;
+}
+
+void BrokenImageIcon::Notify(imgIRequest* aRequest, int32_t aType,
+                             const nsIntRect* aData) {
+  MOZ_ASSERT(aRequest);
+
+  if (aType != imgINotificationObserver::LOAD_COMPLETE &&
+      aType != imgINotificationObserver::FRAME_UPDATE) {
+    return;
+  }
+
+  if (aType == imgINotificationObserver::LOAD_COMPLETE) {
+    nsCOMPtr<imgIContainer> image;
+    aRequest->GetImage(getter_AddRefs(image));
+    if (!image) {
+      return;
+    }
+
+    // Retrieve the image's intrinsic size.
+    int32_t width = 0;
+    int32_t height = 0;
+    image->GetWidth(&width);
+    image->GetHeight(&height);
+
+    // Request a decode at that size.
+    image->RequestDecodeForSize(IntSize(width, height),
+                                imgIContainer::DECODE_FLAGS_DEFAULT |
+                                    imgIContainer::FLAG_HIGH_QUALITY_SCALING);
+  }
+
+  for (nsImageFrame* frame : mObservers.ForwardRange()) {
+    frame->InvalidateFrame();
+  }
+}
 
 // test if the width and height are fixed, looking at the style data
 // This is used by nsImageFrame::ImageFrameTypeFor and should not be used for
@@ -426,7 +520,9 @@ void nsImageFrame::DestroyFrom(nsIFrame* aDestructRoot,
   mListener = nullptr;
 
   // If we were displaying an icon, take ourselves off the list
-  if (mDisplayingIcon) gIconLoad->RemoveIconObserver(this);
+  if (mDisplayingIcon) {
+    BrokenImageIcon::RemoveObserver(this);
+  }
 
   nsAtomicContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
@@ -609,11 +705,11 @@ void nsImageFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   GetImageMap();  // Ensure to init the image map asap. This is important to
                   // make <area> elements focusable.
 
-  nsPresContext* pc = PresContext();
-  if (!gIconLoad) {
-    LoadIcons(pc);
+  if (StaticPrefs::layout_image_eager_broken_image_icon()) {
+    Unused << BrokenImageIcon::GetImage(this);
   }
 
+  nsPresContext* pc = PresContext();
   if (mKind == Kind::ImageLoadingContent) {
     nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(aContent);
     MOZ_ASSERT(imageLoader);
@@ -1754,10 +1850,7 @@ class nsDisplayAltFeedback final : public nsPaintedDisplayItem {
       const StackingContextHelper& aSc,
       mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) final {
-    // Always sync decode, because these icons are UI, and since they're not
-    // discardable we'll pay the price of sync decoding at most once.
-    uint32_t flags =
-        imgIContainer::FLAG_SYNC_DECODE | imgIContainer::FLAG_ASYNC_NOTIFY;
+    uint32_t flags = imgIContainer::FLAG_ASYNC_NOTIFY;
     nsImageFrame* f = static_cast<nsImageFrame*>(mFrame);
     ImgDrawResult result = f->DisplayAltFeedbackWithoutLayer(
         this, aBuilder, aResources, aSc, aManager, aDisplayListBuilder,
@@ -1772,9 +1865,6 @@ class nsDisplayAltFeedback final : public nsPaintedDisplayItem {
 ImgDrawResult nsImageFrame::DisplayAltFeedback(gfxContext& aRenderingContext,
                                                const nsRect& aDirtyRect,
                                                nsPoint aPt, uint32_t aFlags) {
-  // We should definitely have a gIconLoad here.
-  MOZ_ASSERT(gIconLoad, "How did we succeed in Init then?");
-
   // Whether we draw the broken or loading icon.
   bool isLoading = mKind != Kind::ImageLoadingContent ||
                    ImageOk(mContent->AsElement()->State());
@@ -1837,14 +1927,13 @@ ImgDrawResult nsImageFrame::DisplayAltFeedback(gfxContext& aRenderingContext,
   if (ShouldShowBrokenImageIcon()) {
     result = ImgDrawResult::NOT_READY;
     nscoord size = nsPresContext::CSSPixelsToAppUnits(ICON_SIZE);
-
-    imgIRequest* request = gIconLoad->mBrokenImage;
+    imgIRequest* request = BrokenImageIcon::GetImage(this);
 
     // If we weren't previously displaying an icon, register ourselves
     // as an observer for load and animation updates and flag that we're
     // doing so now.
     if (request && !mDisplayingIcon) {
-      gIconLoad->AddIconObserver(this);
+      BrokenImageIcon::AddObserver(this);
       mDisplayingIcon = true;
     }
 
@@ -1924,9 +2013,6 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
     const StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder, nsPoint aPt, uint32_t aFlags) {
-  // We should definitely have a gIconLoad here.
-  MOZ_ASSERT(gIconLoad, "How did we succeed in Init then?");
-
   // Whether we draw the broken or loading icon.
   bool isLoading = mKind != Kind::ImageLoadingContent ||
                    ImageOk(mContent->AsElement()->State());
@@ -2005,7 +2091,7 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
   }
 
   // Clip to this rect so we don't render outside the inner rect
-  LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
+  const auto bounds = LayoutDeviceRect::FromAppUnits(
       inner, PresContext()->AppUnitsPerDevPixel());
   auto wrBounds = wr::ToLayoutRect(bounds);
 
@@ -2013,13 +2099,13 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
   if (ShouldShowBrokenImageIcon()) {
     ImgDrawResult result = ImgDrawResult::NOT_READY;
     nscoord size = nsPresContext::CSSPixelsToAppUnits(ICON_SIZE);
-    imgIRequest* request = gIconLoad->mBrokenImage;
+    imgIRequest* request = BrokenImageIcon::GetImage(this);
 
     // If we weren't previously displaying an icon, register ourselves
     // as an observer for load and animation updates and flag that we're
     // doing so now.
     if (request && !mDisplayingIcon) {
-      gIconLoad->AddIconObserver(this);
+      BrokenImageIcon::AddObserver(this);
       mDisplayingIcon = true;
     }
 
@@ -2039,7 +2125,7 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
                   size);
 
       const int32_t factor = PresContext()->AppUnitsPerDevPixel();
-      LayoutDeviceRect destRect(LayoutDeviceRect::FromAppUnits(dest, factor));
+      const auto destRect = LayoutDeviceRect::FromAppUnits(dest, factor);
 
       SVGImageContext svgContext;
       Maybe<ImageIntRegion> region;
@@ -2493,7 +2579,7 @@ void nsImageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
       // If we were previously displaying an icon, we're not anymore
       if (mDisplayingIcon) {
-        gIconLoad->RemoveIconObserver(this);
+        BrokenImageIcon::RemoveObserver(this);
         mDisplayingIcon = false;
       }
     }
@@ -2780,128 +2866,6 @@ LogicalSides nsImageFrame::GetLogicalSkipSides() const {
   }
   return skip;
 }
-
-nsresult nsImageFrame::LoadIcon(const nsAString& aSpec,
-                                nsPresContext* aPresContext,
-                                imgRequestProxy** aRequest) {
-  MOZ_ASSERT(!aSpec.IsEmpty(), "What happened??");
-
-  nsCOMPtr<nsIURI> realURI;
-  SpecToURI(aSpec, getter_AddRefs(realURI));
-
-  RefPtr<imgLoader> il =
-      nsContentUtils::GetImgLoaderForDocument(aPresContext->Document());
-
-  nsCOMPtr<nsILoadGroup> loadGroup;
-  GetLoadGroup(aPresContext, getter_AddRefs(loadGroup));
-
-  // For icon loads, we don't need to merge with the loadgroup flags
-  nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL;
-  nsContentPolicyType contentPolicyType = nsIContentPolicy::TYPE_INTERNAL_IMAGE;
-
-  return il->LoadImage(
-      realURI,                          /* icon URI */
-      nullptr,                          /* initial document URI; this is only
-                                          relevant for cookies, so does not
-                                          apply to icons. */
-      nullptr,                          /* referrer (not relevant for icons) */
-      nullptr,                          /* principal (not relevant for icons) */
-      0, loadGroup, gIconLoad, nullptr, /* No context */
-      nullptr, /* Not associated with any particular document */
-      loadFlags, nullptr, contentPolicyType, u""_ns,
-      false, /* aUseUrgentStartForChannel */
-      false, /* aLinkPreload */
-      0, aRequest);
-}
-
-void nsImageFrame::GetDocumentCharacterSet(nsACString& aCharset) const {
-  if (mContent) {
-    NS_ASSERTION(mContent->GetComposedDoc(),
-                 "Frame still alive after content removed from document!");
-    mContent->GetComposedDoc()->GetDocumentCharacterSet()->Name(aCharset);
-  }
-}
-
-void nsImageFrame::SpecToURI(const nsAString& aSpec, nsIURI** aURI) {
-  nsIURI* baseURI = nullptr;
-  if (mContent) {
-    baseURI = mContent->GetBaseURI();
-  }
-  nsAutoCString charset;
-  GetDocumentCharacterSet(charset);
-  NS_NewURI(aURI, aSpec, charset.IsEmpty() ? nullptr : charset.get(), baseURI);
-}
-
-void nsImageFrame::GetLoadGroup(nsPresContext* aPresContext,
-                                nsILoadGroup** aLoadGroup) {
-  if (!aPresContext) return;
-
-  MOZ_ASSERT(nullptr != aLoadGroup, "null OUT parameter pointer");
-
-  mozilla::PresShell* presShell = aPresContext->GetPresShell();
-  if (!presShell) {
-    return;
-  }
-
-  Document* doc = presShell->GetDocument();
-  if (!doc) {
-    return;
-  }
-
-  *aLoadGroup = doc->GetDocumentLoadGroup().take();
-}
-
-nsresult nsImageFrame::LoadIcons(nsPresContext* aPresContext) {
-  NS_ASSERTION(!gIconLoad, "called LoadIcons twice");
-
-  constexpr auto brokenSrc = u"resource://gre-resources/broken-image.png"_ns;
-  gIconLoad = new IconLoad();
-  return LoadIcon(brokenSrc, aPresContext,
-                  getter_AddRefs(gIconLoad->mBrokenImage));
-}
-
-NS_IMPL_ISUPPORTS(IconLoad, imgINotificationObserver)
-
-void IconLoad::Shutdown() {
-  if (mBrokenImage) {
-    mBrokenImage->CancelAndForgetObserver(NS_ERROR_FAILURE);
-    mBrokenImage = nullptr;
-  }
-}
-
-void IconLoad::Notify(imgIRequest* aRequest, int32_t aType,
-                      const nsIntRect* aData) {
-  MOZ_ASSERT(aRequest);
-
-  if (aType != imgINotificationObserver::LOAD_COMPLETE &&
-      aType != imgINotificationObserver::FRAME_UPDATE) {
-    return;
-  }
-
-  if (aType == imgINotificationObserver::LOAD_COMPLETE) {
-    nsCOMPtr<imgIContainer> image;
-    aRequest->GetImage(getter_AddRefs(image));
-    if (!image) {
-      return;
-    }
-
-    // Retrieve the image's intrinsic size.
-    int32_t width = 0;
-    int32_t height = 0;
-    image->GetWidth(&width);
-    image->GetHeight(&height);
-
-    // Request a decode at that size.
-    image->RequestDecodeForSize(IntSize(width, height),
-                                imgIContainer::DECODE_FLAGS_DEFAULT |
-                                    imgIContainer::FLAG_HIGH_QUALITY_SCALING);
-  }
-
-  for (nsImageFrame* frame : mIconObservers.ForwardRange()) {
-    frame->InvalidateFrame();
-  }
-}
-
 NS_IMPL_ISUPPORTS(nsImageListener, imgINotificationObserver)
 
 nsImageListener::nsImageListener(nsImageFrame* aFrame) : mFrame(aFrame) {}
@@ -2938,9 +2902,4 @@ void nsImageFrame::AddInlineMinISize(gfxContext* aRenderingContext,
   aData->DefaultAddInlineMinISize(this, isize, canBreak);
 }
 
-void nsImageFrame::ReleaseGlobals() {
-  if (gIconLoad) {
-    gIconLoad->Shutdown();
-    gIconLoad = nullptr;
-  }
-}
+void nsImageFrame::ReleaseGlobals() { BrokenImageIcon::Shutdown(); }

@@ -9078,6 +9078,14 @@
   value: 4
   mirror: always
 
+# Whether to load the broken image icon eagerly. This is mostly needed for
+# reftests, since the broken image icon doesn't block the load event and thus
+# there's no easy way to guarantee it's loaded.
+- name: layout.image.eager_broken_image_icon
+  type: bool
+  value: false
+  mirror: always
+
 # Enable/disable interruptible reflow, which allows reflows to stop
 # before completion (and display the partial results) when user events
 # are pending.

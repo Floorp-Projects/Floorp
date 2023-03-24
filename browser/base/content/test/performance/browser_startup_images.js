@@ -41,13 +41,6 @@ const knownUnshownImages = [
   },
 
   {
-    // bug 1817360 fixes this.
-    file: "resource://gre-resources/broken-image.png",
-    platforms: ["linux", "win", "macosx"],
-    intermittentNotLoaded: ["linux", "win", "macosx"],
-  },
-
-  {
     file: "chrome://global/skin/icons/chevron.svg",
     platforms: ["win", "linux", "macosx"],
     intermittentShown: ["win", "linux"],
