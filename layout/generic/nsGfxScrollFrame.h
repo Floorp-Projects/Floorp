@@ -129,6 +129,10 @@ class nsHTMLScrollFrame : public nsContainerFrame,
 
   bool ComputeCustomOverflow(mozilla::OverflowAreas& aOverflowAreas) final;
 
+  BaselineSharingGroup GetDefaultBaselineSharingGroup() const override;
+  nscoord SynthesizeFallbackBaseline(
+      mozilla::WritingMode aWM,
+      BaselineSharingGroup aBaselineGroup) const override;
   Maybe<nscoord> GetNaturalBaselineBOffset(
       mozilla::WritingMode aWM,
       BaselineSharingGroup aBaselineGroup) const override;

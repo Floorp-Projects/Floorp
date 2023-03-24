@@ -28,9 +28,12 @@ using namespace mozilla::layout;
 
 nscoord nsTableWrapperFrame::SynthesizeFallbackBaseline(
     mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
+  const auto marginBlockEnd = GetLogicalUsedMargin(aWM).BEnd(aWM);
+  if (aWM.IsCentralBaseline()) {
+    return (BSize(aWM) + marginBlockEnd) / 2;
+  }
   // Our fallback baseline is the block-end margin-edge, with respect to the
   // given writing mode.
-  const auto marginBlockEnd = GetLogicalUsedMargin(aWM).BEnd(aWM);
   if (aBaselineGroup == BaselineSharingGroup::Last) {
     return -marginBlockEnd;
   }
