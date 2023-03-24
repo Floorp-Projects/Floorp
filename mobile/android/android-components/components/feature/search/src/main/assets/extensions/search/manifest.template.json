@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "cookies@mozac.org"
     }
