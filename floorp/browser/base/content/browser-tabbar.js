@@ -66,15 +66,14 @@ function setMultirowTabMaxHeight() {
     .removeAttribute("style");
 
   let rowValue = Services.prefs.getIntPref("floorp.browser.tabbar.multirow.max.row");
+  let multiRowTabEnabled = Services.prefs.getBoolPref("floorp.enable.multitab");
+  let multiRowTabValueEnabled = Services.prefs.getBoolPref("floorp.browser.tabbar.multirow.max.enabled");
   let tabHeight = document.querySelector(".tabbrowser-tab").clientHeight;
-  document.querySelector("#tabbrowser-arrowscrollbox")
+   document.querySelector("#tabbrowser-arrowscrollbox")
     .shadowRoot
     .querySelector("[part=scrollbox]")
     .setAttribute(
-      "style", 
-      Services.prefs.getBoolPref("floorp.browser.tabbar.multirow.max.enabled") ?
-        ("max-height: " + tabHeight*rowValue + "px !important;") :
-        ""
+      "style",("max-height: " + tabHeight*rowValue + "px !important;") 
     );
 }
 
@@ -132,4 +131,7 @@ window.setTimeout(function () {
   document.getElementById("tabbrowser-arrowscrollbox").disabled = true;
 
   document.getElementById("tabbrowser-tabs").setAttribute("orient", "vertical");
+
+  document.getElementById("tabbrowser-arrowscrollbox").shadowRoot.querySelector(`[part="scrollbox"]`).setAttribute("orient", "vertical");
 }, 500);
+
