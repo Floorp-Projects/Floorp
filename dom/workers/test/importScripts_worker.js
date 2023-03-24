@@ -39,7 +39,7 @@ function tryBadScripts() {
   }
 }
 
-const url = "data:text/plain,const startResponse = 'started';";
+const url = "data:text/javascript,const startResponse = 'started';";
 importScripts(url);
 
 onmessage = function(event) {

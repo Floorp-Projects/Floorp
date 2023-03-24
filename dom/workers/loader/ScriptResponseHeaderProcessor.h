@@ -14,6 +14,7 @@
 #include "nsIStreamLoader.h"
 #include "nsStreamUtils.h"
 #include "mozilla/StaticPrefs_browser.h"
+#include "mozilla/StaticPrefs_dom.h"
 
 namespace mozilla::dom {
 
@@ -34,17 +35,29 @@ class ScriptResponseHeaderProcessor final : public nsIRequestObserver {
   NS_DECL_ISUPPORTS
 
   ScriptResponseHeaderProcessor(WorkerPrivate* aWorkerPrivate,
-                                bool aIsMainScript)
-      : mWorkerPrivate(aWorkerPrivate), mIsMainScript(aIsMainScript) {
+                                bool aIsMainScript, bool aIsImportScript)
+      : mWorkerPrivate(aWorkerPrivate),
+        mIsMainScript(aIsMainScript),
+        mIsImportScript(aIsImportScript) {
     AssertIsOnMainThread();
   }
 
   NS_IMETHOD OnStartRequest(nsIRequest* aRequest) override {
+    nsresult rv = NS_OK;
+    if (mIsImportScript &&
+        StaticPrefs::dom_workers_importScripts_enforceStrictMimeType()) {
+      rv = EnsureJavaScriptMimeType(aRequest);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        aRequest->Cancel(rv);
+        return NS_OK;
+      }
+    }
+
     if (!StaticPrefs::browser_tabs_remote_useCrossOriginEmbedderPolicy()) {
       return NS_OK;
     }
 
-    nsresult rv = ProcessCrossOriginEmbedderPolicyHeader(aRequest);
+    rv = ProcessCrossOriginEmbedderPolicyHeader(aRequest);
 
     if (NS_WARN_IF(NS_FAILED(rv))) {
       aRequest->Cancel(rv);
@@ -65,10 +78,13 @@ class ScriptResponseHeaderProcessor final : public nsIRequestObserver {
  private:
   ~ScriptResponseHeaderProcessor() = default;
 
+  nsresult EnsureJavaScriptMimeType(nsIRequest* aRequest);
+
   nsresult ProcessCrossOriginEmbedderPolicyHeader(nsIRequest* aRequest);
 
   WorkerPrivate* const mWorkerPrivate;
   const bool mIsMainScript;
+  const bool mIsImportScript;
 };
 
 }  // namespace workerinternals::loader
