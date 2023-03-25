@@ -23,8 +23,8 @@ class ObliviousHttpConfig {
 };
 
 class ObliviousHttpService final : public nsIObliviousHttpService,
-                                   nsIObserver,
-                                   nsIStreamLoaderObserver {
+                                   public nsIObserver,
+                                   public nsIStreamLoaderObserver {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBLIVIOUSHTTPSERVICE
@@ -36,6 +36,7 @@ class ObliviousHttpService final : public nsIObliviousHttpService,
  private:
   ~ObliviousHttpService() = default;
   void ReadPrefs(const nsACString& whichPref);
+  void FetchConfig(bool aConfigURIChanged);
 
   DataMutex<ObliviousHttpConfig> mTRRConfig;
 };
