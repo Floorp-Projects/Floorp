@@ -660,6 +660,17 @@ void TRRService::ConfirmationContext::SetState(
     enum ConfirmationState aNewState) {
   mState = aNewState;
 
+  if (mState == CONFIRM_FAILED) {
+    NS_DispatchToMainThread(
+        NS_NewRunnableFunction("TRRService::ConfirmationContextRetry", [] {
+          if (nsCOMPtr<nsIObserverService> obs =
+                  mozilla::services::GetObserverService()) {
+            obs->NotifyObservers(nullptr, "trrservice-confirmation-failed",
+                                 nullptr);
+          }
+        }));
+  }
+
   if (XRE_IsParentProcess()) {
     return;
   }
