@@ -68,7 +68,7 @@ Fixing your bug
 We leave this in your hands. Here are some further resources to help:
 
 -  Check out
-   :ref:`Our Developer_Guide and its parent document <Working on Firefox>`
+   :ref:`Our Developer Guide and its parent document <Working on Firefox>`
 -  Our :ref:`reviewer checklist <Reviewer Checklist>` is very
    useful, if you have a patch near completion, and seek a favorable
    review
