@@ -8,7 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Navigation")
 
 EXTRA_JS_MODULES += [
-    "RemoteWebNavigation.jsm",
+    "RemoteWebNavigation.sys.mjs",
 ]
 
 BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]

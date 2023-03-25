@@ -23,10 +23,7 @@
     FinderParent: "resource://gre/modules/FinderParent.sys.mjs",
     PopupBlocker: "resource://gre/actors/PopupBlockingParent.sys.mjs",
     SelectParentHelper: "resource://gre/actors/SelectParent.sys.mjs",
-  });
-
-  XPCOMUtils.defineLazyModuleGetters(lazy, {
-    RemoteWebNavigation: "resource://gre/modules/RemoteWebNavigation.jsm",
+    RemoteWebNavigation: "resource://gre/modules/RemoteWebNavigation.sys.mjs",
   });
 
   XPCOMUtils.defineLazyGetter(lazy, "blankURI", () =>
