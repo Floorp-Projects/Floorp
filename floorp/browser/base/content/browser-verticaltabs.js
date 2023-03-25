@@ -7,19 +7,20 @@
   if (Services.prefs.getBoolPref("floorp.browser.native.verticaltabs.enabled", false)) {
     Services.prefs.setBoolPref("floorp.enable.multitab", true);
     window.setTimeout(function () {
+      let tabBrowserArrowScrollBox = document.getElementById("tabbrowser-arrowscrollbox");
       document.getElementById("browser").insertBefore(document.getElementsByClassName("toolbar-items")[0], document.getElementById("browser").firstChild);
       document.getElementsByClassName("toolbar-items")[0].setAttribute("align", "start");
       document.getElementsByClassName("toolbar-items")[0].setAttribute("style", "display: block; max-width: 25em; min-width: 5em; overflow-y: scroll; overflow-x: hidden; min-height: 0px;");
-      document.getElementById("tabbrowser-arrowscrollbox").setAttribute("orient", "vertical");
-      document.getElementById("tabbrowser-arrowscrollbox").removeAttribute("overflowing");
-      document.getElementById("tabbrowser-arrowscrollbox").removeAttribute("scrolledtostart")
-      document.getElementById("tabbrowser-arrowscrollbox").disabled = true;
+      tabBrowserArrowScrollBox.setAttribute("orient", "vertical");
+      tabBrowserArrowScrollBox.removeAttribute("overflowing");
+      tabBrowserArrowScrollBox.removeAttribute("scrolledtostart")
+      tabBrowserArrowScrollBox.disabled = true;
       document.getElementById("tabbrowser-tabs").setAttribute("orient", "vertical");
-      document.getElementById("tabbrowser-arrowscrollbox").shadowRoot.querySelector(`[part="scrollbox"]`).setAttribute("orient", "vertical");
+      tabBrowserArrowScrollBox.shadowRoot.querySelector(`[part="scrollbox"]`).setAttribute("orient", "vertical");
       let observer = new MutationObserver(function () {
-        document.getElementById("tabbrowser-arrowscrollbox").shadowRoot.querySelector(`[part="scrollbox"]`).removeAttribute("style");
+        tabBrowserArrowScrollBox.shadowRoot.querySelector(`[part="scrollbox"]`).removeAttribute("style");
       })
-      observer.observe(document.getElementById("tabbrowser-arrowscrollbox").shadowRoot.querySelector(`[part="scrollbox"]`), {
+      observer.observe(tabBrowserArrowScrollBox.shadowRoot.querySelector(`[part="scrollbox"]`), {
         attributes: true
       })
       const splitterNode = window.MozXULElement.parseXULToFragment(`
