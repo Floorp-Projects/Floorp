@@ -116,34 +116,3 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 }, { once: true })
-
-//-------------------------------------------------------------------------Tabbar-Design----------------------------------------------------------------------------
-
-window.setTimeout(function () {
-  document.getElementsByClassName("toolbar-items")[0].tagName = "vbox";
-  document.getElementById("browser").insertBefore(document.getElementsByClassName("toolbar-items")[0], document.getElementById("browser").firstChild);
-
-  document.getElementsByClassName("toolbar-items")[0].setAttribute("align", "start");
-  document.getElementsByClassName("toolbar-items")[0].setAttribute("style", "display: block; max-width: 25em; min-width: 5em; overflow-y: scroll; overflow-x: hidden; min-height: 0px;");
-
-  document.getElementById("tabbrowser-arrowscrollbox").setAttribute("orient", "vertical");
-  document.getElementById("tabbrowser-arrowscrollbox").removeAttribute("overflowing");
-  document.getElementById("tabbrowser-arrowscrollbox").removeAttribute("scrolledtostart")
-  document.getElementById("tabbrowser-arrowscrollbox").disabled = true;
-
-  document.getElementById("tabbrowser-tabs").setAttribute("orient", "vertical");
-
-  document.getElementById("tabbrowser-arrowscrollbox").shadowRoot.querySelector(`[part="scrollbox"]`).setAttribute("orient", "vertical");
-  let observer = new MutationObserver(function(){ document.getElementById("tabbrowser-arrowscrollbox").shadowRoot.querySelector(`[part="scrollbox"]`).removeAttribute("style");})
-  observer.observe(document.getElementById("tabbrowser-arrowscrollbox").shadowRoot.querySelector(`[part="scrollbox"]`),{attributes:true})
-
-  const splitterNode = window.MozXULElement.parseXULToFragment(
-    `
-    <splitter id="sidebar-splitter3" class="chromeclass-extrachrome" style="background: var(--toolbar-bgcolor);
-              border: var(--win-sidebar-bgcolor) 0.1px solid;" hidden="false"/>
-    `
- );
-
-  document.getElementById("sidebar-box").before(splitterNode);
-
-}, 500);

@@ -1,0 +1,35 @@
+@import url("chrome://browser/skin/tabbar/verticaltab.css");
+  .tabbrowser-tab {
+    display: block !important;;  
+ }
+
+ #TabsToolbar-customization-target {
+  width: -moz-available !important;
+  min-width: -moz-available !important;;
+  max-width: -moz-available !important;
+  height: 100% !important;
+ }
+ .tabbrowser-tab.tabbrowser-tab:not([pinned]){
+  width: -moz-available !important;
+  min-width: -moz-available !important;
+  max-width: -moz-available !important;
+ }
+
+ #tabs-newtab-button {
+  display: block !important;
+  width: -moz-available;
+ }
+
+ #alltabs-button, #new-tab-button {
+  display: none !important;
+ }
+
+ #tabs-newtab-button > .toolbarbutton-text {
+  display: none ;
+ }
+ 
+ .tabbrowser-tab {
+  width: -moz-available !important;
+  min-width: -moz-available !important;
+  max-width: -moz-available !important;
+ }
