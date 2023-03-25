@@ -786,9 +786,6 @@ GeckoNSMenu* nsMenuX::CreateMenuWithGeckoString(nsString& aMenuTitle) {
   // overrides our decisions and things get incorrectly enabled/disabled.
   myMenu.autoenablesItems = NO;
 
-  // Disable the Services item for now. Bug 660452 tracks turning this on for the appropriate menus.
-  myMenu.allowsContextMenuPlugIns = NO;
-
   // we used to install Carbon event handlers here, but since NSMenu* doesn't
   // create its underlying MenuRef until just before display, we delay until
   // that happens. Now we install the event handlers when Cocoa notifies
