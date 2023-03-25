@@ -82,6 +82,7 @@ class nsJPEGDecoder : public Decoder {
  public:
   struct jpeg_decompress_struct mInfo;
   struct jpeg_source_mgr mSourceMgr;
+  struct jpeg_progress_mgr mProgressMgr;
   decoder_error_mgr mErr;
   jstate mState;
 
