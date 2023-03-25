@@ -140,6 +140,7 @@ add_task(async function test_ohttp_not_configured() {
 });
 
 add_task(async function set_ohttp_invalid_prefs() {
+  let configPromise = TestUtils.topicObserved("ohttp-service-config-loaded");
   Services.prefs.setCharPref(
     "network.trr.ohttp.relay_uri",
     "http://nonexistent.test"
@@ -152,7 +153,7 @@ add_task(async function set_ohttp_invalid_prefs() {
   Cc["@mozilla.org/network/oblivious-http-service;1"].getService(
     Ci.nsIObliviousHttpService
   );
-  await TestUtils.topicObserved("ohttp-service-config-loaded");
+  await configPromise;
 });
 
 // Test that if DNS-over-OHTTP has an invalid configuration, the implementation
@@ -164,6 +165,7 @@ add_task(async function test_ohttp_invalid_prefs_fallback() {
 });
 
 add_task(async function set_ohttp_prefs_500_error() {
+  let configPromise = TestUtils.topicObserved("ohttp-service-config-loaded");
   Services.prefs.setCharPref(
     "network.trr.ohttp.relay_uri",
     `http://localhost:${httpServer.identity.primaryPort}/relay`
@@ -172,7 +174,7 @@ add_task(async function set_ohttp_prefs_500_error() {
     "network.trr.ohttp.config_uri",
     `http://localhost:${httpServer.identity.primaryPort}/500error`
   );
-  await TestUtils.topicObserved("ohttp-service-config-loaded");
+  await configPromise;
 });
 
 // Test that if DNS-over-OHTTP has an invalid configuration, the implementation
@@ -183,13 +185,110 @@ add_task(async function test_ohttp_500_error_fallback() {
   await new TRRDNSListener("example.com", "127.0.0.1");
 });
 
+add_task(async function retryConfigOnConnectivityChange() {
+  Services.prefs.setCharPref("network.trr.confirmationNS", "skip");
+  // First we make sure the config is properly loaded
+  setModeAndURI(2, "doh?responseIP=2.2.2.2");
+  let ohttpService = Cc[
+    "@mozilla.org/network/oblivious-http-service;1"
+  ].getService(Ci.nsIObliviousHttpService);
+  ohttpService.clearTRRConfig();
+  ohttpEncodedConfig = bytesToString(ohttpServer.encodedConfig);
+  let configPromise = TestUtils.topicObserved("ohttp-service-config-loaded");
+  Services.prefs.setCharPref(
+    "network.trr.ohttp.relay_uri",
+    `http://localhost:${httpServer.identity.primaryPort}/relay`
+  );
+  Services.prefs.setCharPref(
+    "network.trr.ohttp.config_uri",
+    `http://localhost:${httpServer.identity.primaryPort}/config`
+  );
+  let [, status] = await configPromise;
+  equal(status, "success");
+  info("retryConfigOnConnectivityChange setup complete");
+
+  ohttpService.clearTRRConfig();
+
+  let port = httpServer.identity.primaryPort;
+  // Stop the server so getting the config fails.
+  await httpServer.stop();
+
+  configPromise = TestUtils.topicObserved("ohttp-service-config-loaded");
+  Services.obs.notifyObservers(
+    null,
+    "network:captive-portal-connectivity-changed"
+  );
+  [, status] = await configPromise;
+  equal(status, "failed");
+
+  // Should fallback to native DNS since the config is empty
+  Services.dns.clearCache(true);
+  await new TRRDNSListener("example.com", "127.0.0.1");
+
+  // Start the server back again.
+  httpServer.start(port);
+  Assert.equal(
+    port,
+    httpServer.identity.primaryPort,
+    "server should get the same port"
+  );
+
+  // Still the config hasn't been reloaded.
+  await new TRRDNSListener("example2.com", "127.0.0.1");
+
+  // Signal a connectivity change so we reload the config
+  configPromise = TestUtils.topicObserved("ohttp-service-config-loaded");
+  Services.obs.notifyObservers(
+    null,
+    "network:captive-portal-connectivity-changed"
+  );
+  [, status] = await configPromise;
+  equal(status, "success");
+
+  await new TRRDNSListener("example3.com", "2.2.2.2");
+
+  // Now check that we also reload a missing config if a TRR confirmation fails.
+  ohttpService.clearTRRConfig();
+  configPromise = TestUtils.topicObserved("ohttp-service-config-loaded");
+  Services.obs.notifyObservers(null, "trrservice-confirmation-failed");
+  [, status] = await configPromise;
+  equal(status, "success");
+  await new TRRDNSListener("example4.com", "2.2.2.2");
+
+  // set the config to an invalid value and check that as long as the URL
+  // doesn't change, we dont reload it again on connectivity notifications.
+  ohttpEncodedConfig = "not a valid config";
+  configPromise = TestUtils.topicObserved("ohttp-service-config-loaded");
+  Services.obs.notifyObservers(
+    null,
+    "network:captive-portal-connectivity-changed"
+  );
+
+  await new TRRDNSListener("example5.com", "2.2.2.2");
+
+  // The change should not cause any config reload because we already have a config.
+  [, status] = await configPromise;
+  equal(status, "no-changes");
+
+  await new TRRDNSListener("example6.com", "2.2.2.2");
+  // Clear the config_uri pref so it gets set to the proper value in the next test.
+  configPromise = TestUtils.topicObserved("ohttp-service-config-loaded");
+  Services.prefs.setCharPref("network.trr.ohttp.config_uri", ``);
+  await configPromise;
+});
+
 add_task(async function set_ohttp_prefs_valid() {
+  let ohttpService = Cc[
+    "@mozilla.org/network/oblivious-http-service;1"
+  ].getService(Ci.nsIObliviousHttpService);
+  ohttpService.clearTRRConfig();
+  let configPromise = TestUtils.topicObserved("ohttp-service-config-loaded");
   ohttpEncodedConfig = bytesToString(ohttpServer.encodedConfig);
   Services.prefs.setCharPref(
     "network.trr.ohttp.config_uri",
     `http://localhost:${httpServer.identity.primaryPort}/config`
   );
-  await TestUtils.topicObserved("ohttp-service-config-loaded");
+  await configPromise;
 });
 
 add_task(test_A_record);
