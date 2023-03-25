@@ -70,6 +70,10 @@ move-tabbar-position =
 tabbar-on-bottom = 
  .label = Display tabbar at the bottom of the window
 
+native-tabbar = Native Vertical Tabbar
+use-native-vertical =
+  .label = Use native vertical tabbar (experimental)
+
 treestyletabSettings-l10 = Tree Style vertical tab settings
 treestyletab-Settings = 
  .label = Expand when mouse focus
