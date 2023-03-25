@@ -26,12 +26,12 @@ The [CaptivePortalService](https://searchfox.org/mozilla-central/source/netwerk/
     - A captive portal was detected, and internet connectivity is not currently available.
     - A [captive portal notification bar](https://searchfox.org/mozilla-central/source/browser/base/content/browser-captivePortal.js) might be displayed to the user.
 
-The Captive portal service uses [CaptiveDetect.jsm](https://searchfox.org/mozilla-central/source/toolkit/components/captivedetect/CaptiveDetect.jsm) to perform the checks, which in turn uses XMLHttpRequest.
+The Captive portal service uses [CaptiveDetect.sys.mjs](https://searchfox.org/mozilla-central/source/toolkit/components/captivedetect/CaptiveDetect.jsm) to perform the checks, which in turn uses XMLHttpRequest.
 This request needs to be exempted from HTTPS upgrades, DNS over HTTPS, and many new browser features in order to function as expected.
 
 ```{note}
 
-CaptiveDetect.jsm would benefit from being rewritten in rust or C++.
+CaptiveDetect.sys.mjs would benefit from being rewritten in rust or C++.
 This is because the API of XMLHttpRequest makes it difficult to distinguish between different types of network errors such as redirect loops vs certificate errors.
 
 Also, we don't currently allow any redirects to take place, even if the redirected resource acts as a transparent proxy (doesn't modify the response). This sometimes causes issues for users on networks which employ such transparent proxies.

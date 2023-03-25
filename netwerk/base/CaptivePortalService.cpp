@@ -66,7 +66,7 @@ nsresult CaptivePortalService::PerformCheck() {
   if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
     return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
-  // Instantiating CaptiveDetect.jsm before the JS engine is ready will
+  // Instantiating CaptiveDetect.sys.mjs before the JS engine is ready will
   // lead to a crash (see bug 1800603)
   // We can remove this restriction when we rewrite the detector in
   // C++ or rust (bug 1809886).
