@@ -68,3 +68,6 @@ HTTP == webcam-simulacrum.html blue.html
 == non-interleaved_progressive-2.jpg non-interleaved_progressive-2-white-ref.png
 
 == red-bad-marker.jpg red.jpg
+
+# check that we reject jpegs with > 1000 scans
+== jpg-progressive-1000.html jpg-progressive-1000-ref.html
