@@ -255,6 +255,8 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "CompositionEvent", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "CompressionStream", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "ConstantSourceNode", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   {
@@ -332,6 +334,8 @@ let interfaceNamesInGlobalScope = [
   { name: "CustomElementRegistry", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "CustomEvent", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "DecompressionStream", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "DataTransfer", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
