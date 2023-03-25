@@ -115,7 +115,9 @@ partial interface HTMLMediaElement {
   attribute MediaStream? srcObject;
 
   // TODO: Remove mozPreservesPitch. (bug 1765201)
-  [Deprecated="MozPreservesPitchDeprecatedPrefix", BinaryName="preservesPitch"]
+  [Deprecated="MozPreservesPitchDeprecatedPrefix",
+   Pref="dom.media.mozPreservesPitch.enabled",
+   BinaryName="preservesPitch"]
   attribute boolean mozPreservesPitch;
   attribute boolean preservesPitch;
 
