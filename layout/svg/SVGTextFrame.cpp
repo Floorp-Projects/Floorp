@@ -3309,11 +3309,6 @@ void SVGTextFrame::ReflowSVG() {
   nsRect overflow = nsRect(nsPoint(0, 0), mRect.Size());
   OverflowAreas overflowAreas(overflow, overflow);
   FinishAndStoreOverflow(overflowAreas, mRect.Size());
-
-  // XXX SVGContainerFrame::ReflowSVG only looks at its ISVGDisplayableFrame
-  // children, and calls ConsiderChildOverflow on them.  Does it matter
-  // that ConsiderChildOverflow won't be called on our children?
-  SVGDisplayContainerFrame::ReflowSVG();
 }
 
 /**
