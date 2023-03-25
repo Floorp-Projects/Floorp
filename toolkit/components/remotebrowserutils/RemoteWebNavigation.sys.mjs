@@ -9,7 +9,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 // This object implements the JS parts of nsIWebNavigation.
-class RemoteWebNavigation {
+export class RemoteWebNavigation {
   constructor(aBrowser) {
     this._browser = aBrowser;
     this._cancelContentJSEpoch = 1;
@@ -205,5 +205,3 @@ class RemoteWebNavigation {
     }
   }
 }
-
-var EXPORTED_SYMBOLS = ["RemoteWebNavigation"];
