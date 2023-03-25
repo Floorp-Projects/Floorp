@@ -33,3 +33,12 @@
   min-width: -moz-available !important;
   max-width: -moz-available !important;
  }
+
+ #tabbrowser-tabs[positionpinnedtabs] > #tabbrowser-arrowscrollbox > .tabbrowser-tab[pinned]{
+  position: unset !important;
+  max-width: 3em !important;
+ }
+
+  #tabbrowser-tabs[positionpinnedtabs] > #tabbrowser-arrowscrollbox > .tabbrowser-tab[pinned] > .tab-stack > .tab-content > .tab-label-container {
+    display: none !important;
+  }
