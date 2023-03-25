@@ -50,8 +50,21 @@
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">መገናኘት አልተቻለም</string>
 
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      <ul>
+        <li>ጣቢያው ለጊዜው የማይገኝ ወይም በጣም ስራ የበዛበት ሊሆን ይችላል። ከጥቂት ጊዜ በኋላ እንደገና ይሞክሩ።</li>
+        <li>ምንም ገጾችን መጫን ካልቻሉ የመሣሪያዎን ውሂብ ወይም የWi-Fi ግንኙነት ያረጋግጡ።</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">ከሰርቨር ያልተጠበቀ ምላሽ</string>
+
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      <p>ድረ-ገፁ ለኔትወርክ ጥያቄው ባልተጠበቀ መልኩ ምላሽ ሰጥቷል እና አሳሹ መቀጠል አልቻለም።</p>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">ገጹ በትክክል እየተዘዋወረ አይደለም</string>

@@ -15,9 +15,14 @@
     <!-- This text is shown in the URL bar when it's empty -->
     <string name="urlbar_hint">Шукаць ці ўвесці адрас</string>
 
+    <string name="teaser">Аўтаматычны прыватнае агляданне.\Паглядзець. Сцерці. Паўтарыць.</string>
+
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
     <string name="feedback_erase">Ваша гісторыя прагляду была сцёрта.</string>
     <string name="feedback_erase2">Гісторыя аглядання выдалена</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
+    <string name="feedback_erase_custom_tab">Гісторыя прагляду карткі была сцёрта.</string>
 
     <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
     <string name="search_hint">Шукаць %1$s</string>
@@ -132,6 +137,18 @@
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Прыватнасць і бяспека</string>
 
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">Асочванне, кукі, выбар даных</string>
+
+    <!-- Preference category description for settings related to search, set default
+    and autocomplete are settings a user can find and change inside the "search" settings screen -->
+    <string name="preference_search_summary">Зрабіць прадвызначаным, аўтазапаўненне</string>
+
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">Аб %1$s, дапамога</string>
+
     <!-- Preference category for ad blocking and enhanced tracking protection settings -->
     <string name="preference_category_tracking_protection3">Узмоцненая ахова ад сачэння</string>
 
@@ -146,6 +163,9 @@
 
     <!-- Preference summary for General Settings category; the two things users can find in this category -->
     <string name="preference_general_summary2">Прадвызначаны браўзер, мова</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">Збор і выкарыстанне даных</string>
 
     <string name="preference_category_search">Пошук</string>
 
@@ -166,6 +186,9 @@
 
     <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
     <string name="preference_subitem_autocomplete">Аўтадапаўненне URL</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
+    <string name="preference_switch_autocomplete_topsites">Для папулярных сайтаў</string>
 
     <!-- Preference category: Manage (user-defined) sites -->
     <string name="preference_category_autocomplete_manage_sites">Кіраванне сайтамі</string>
@@ -230,6 +253,7 @@
     <string name="preference_privacy_block_ads">Блакіраваць рэкламнае сачэнне</string>
 
     <string name="preference_privacy_block_analytics">Блакіраваць трэкеры аналітыкі</string>
+    <string name="preference_privacy_block_social">Блакіраваць трэкеры сацыяльных сетак</string>
     <string name="preference_privacy_block_content">Блакіраваць іншыя трэкеры змесціва</string>
     <string name="preference_privacy_category_cookies">Блакіраваць кукі</string>
 
@@ -394,6 +418,10 @@
     <!-- New Onboarding flow second screen subtitle the one that appears under title -->
     <string name="onboarding_second_screen_subtitle_one">Для павышэння прыватнасці мы выдаляем вашу гісторыю, калі вы закрываеце праграму.</string>
 
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">Зрабіце %1$s прадвызначаным браўзерам, каб абараніць вашы даныя пры адкрыцці кожнай спасылцы.</string>
+
     <!-- New Onboarding flow second screen make Focus default browser button label-->
     <string name="onboarding_second_screen_default_browser_button_text">Зрабіць прадвызначаным браўзерам</string>
 
@@ -545,6 +573,12 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
     <string name="cookie_banner_exception_panel_description_state_off_for_site2">%1$s можа паспрабаваць аўтаматычна адхіляць запыты на файлы кукі.</string>
 
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
+    <string name="cookie_banner_exception_panel_site_is_not_supported_cancel_button">Скасаваць</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Cookie Banner (Banner Info Message). The placeholder will be updated with the app name. -->
+    <string name="cfr_for_cookie_banner" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s спрабуе адхіліць запыты кукі, каб выдаліць раздражняльныя банеры кукі.\n\nКіруйце параметрамі банераў кукі ў наладах.</string>
     <!-- CFR for Cookie Banner (Banner Info Message). This text should be the same as the settings text from "cfr_for_cookie_banner". The text should be underlined and should redirect the user to the cookie banner settings screen. -->
     <string name="cfr_for_cookie_banner_underline_settings" moz:RemovedIn="111" tools:ignore="UnusedResources">налады</string>
     <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
@@ -654,6 +688,9 @@
     <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_yes">Так</string>
 
+    <!-- Message displayed when using a search engine that doesn't provide suggestions -->
+    <string name="no_suggestions_message">Некаторыя пошукавыя сістэмы не могуць паказваць прапановы.</string>
+
     <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
     <string name="dismiss_no_suggestions_prompt_button">Адхіліць</string>
 
@@ -680,8 +717,13 @@
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Выключэнні</string>
+    <!-- Description for the exceptions preference screen-->
+    <string name="preference_exceptions_description">Вы адключылі блакіроўку змесціва для гэтых сайтах.</string>
     <!-- Menu item to remove existing exceptions. -->
     <string name="preference_exceptions_menu_remove">Выдаліць</string>
+
+    <!-- Button to remove all websites from the exception list -->
+    <string name="preference_exceptions_remove_all_button_label">Выдаліць усе вэб-сайты</string>
 
     <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
     <string name="preference_block_cookies_title">Блакіраваць кукі</string>
@@ -691,6 +733,8 @@
 
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">Збой карткі</string>
+    <!-- Headline for the tab crash report screen -->
+    <string name="tab_crash_report_headline">Прабачце. З гэтай карткай узніклі праблемы.</string>
     <!-- Label for button to close the tab-->
     <string name="tab_crash_report_close_tab_button_label">Закрыць картку</string>
 
@@ -756,6 +800,12 @@
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
     <string name="cfr_for_toolbar_shield_icon2">Папаўся! Мы не дазволілі гэтаму сайту шпіёніць за вамі. Націсніце на шчыт, каб даведацца, што мы блакіруем.</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
+    <string name="cfr_close_button_description">Закрыць усплывальнае акно</string>
+
+    <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
+    <!-- Tool Tip Title -->
+    <string name="tool_tip_title">Вы абаронены!</string>
     <!-- Tool Tip Message -->
     <string name="tool_tip_message">Гэтыя прадвызначаныя налады забяспечваюць надзейную абарону. Але вы лёгка можаце змяніць іх у адпаведнасці з вашымі патрэбамі.</string>
     <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
@@ -769,6 +819,10 @@
     <!-- Content description (not visible, for screen readers etc.): This is the description for the
     close button from promote search widget dialog. -->
     <string name="promote_search_widget_dialog_content_description">Закрыць</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. -->
+    <string name="promote_search_widget_dialog_picture_content_description">Віджэт пошуку</string>
 
     <!-- This is the title of promote search widget dialog. -->
     <string name="promote_search_widget_dialog_title">Гісторыя аглядання выдалена! 🎉</string>

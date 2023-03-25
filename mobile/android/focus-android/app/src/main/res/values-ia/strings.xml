@@ -738,6 +738,9 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
     <string name="cookie_banner_exception_panel_description_state_off_for_site2">%1$s pote tentar de rejectar automaticamente le requestas de cookies.</string>
 
+    <!-- Long text for a detail explanation indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
+    <string name="cookie_banner_exception_panel_description_site_is_not_supported">Iste sito non es actualmente supportate per le Reduction del bandieras pro cookies. Amarea vos requirer a vostre equipa de revider iste sito web e adder le supporto in le futuro?</string>
+
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
     <string name="cookie_banner_exception_panel_site_is_not_supported_cancel_button">Cancellar</string>
 

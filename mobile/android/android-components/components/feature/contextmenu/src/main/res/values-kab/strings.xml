@@ -18,6 +18,8 @@
     <string name="mozac_feature_contextmenu_copy_image_location">Nɣel tansa n tugna</string>
     <!-- Text for context menu item to save / download the image. -->
     <string name="mozac_feature_contextmenu_save_image">Sekles tugna</string>
+    <!-- Text for context menu item to copy the image to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_image">Nɣel tugna</string>
     <!-- Text for context menu item to save / download the file. -->
     <string name="mozac_feature_contextmenu_save_file_to_device">Sekles afaylu ɣer ibenk</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->
