@@ -115,17 +115,17 @@ static payload patched_rotatePayload(payload p) {
 
 // Invoke aFunc by taking aArg's contents and using them as aFunc's arguments
 template <typename OrigFuncT, typename... Args,
-          typename ArgTuple = Tuple<Args...>, size_t... Indices>
+          typename ArgTuple = std::tuple<Args...>, size_t... Indices>
 decltype(auto) Apply(OrigFuncT& aFunc, ArgTuple&& aArgs,
                      std::index_sequence<Indices...>) {
-  return aFunc(Get<Indices>(std::forward<ArgTuple>(aArgs))...);
+  return aFunc(std::get<Indices>(std::forward<ArgTuple>(aArgs))...);
 }
 
 #define DEFINE_TEST_FUNCTION(calling_convention)                               \
   template <typename R, typename... Args, typename... TestArgs>                \
   bool TestFunction(R(calling_convention* aFunc)(Args...), bool (*aPred)(R),   \
                     TestArgs&&... aArgs) {                                     \
-    using ArgTuple = Tuple<Args...>;                                           \
+    using ArgTuple = std::tuple<Args...>;                                      \
     using Indices = std::index_sequence_for<Args...>;                          \
     ArgTuple fakeArgs{std::forward<TestArgs>(aArgs)...};                       \
     patched_func_called = false;                                               \
@@ -137,7 +137,7 @@ decltype(auto) Apply(OrigFuncT& aFunc, ArgTuple&& aArgs,
   template <typename PredT, typename... Args, typename... TestArgs>            \
   bool TestFunction(void(calling_convention * aFunc)(Args...), PredT,          \
                     TestArgs&&... aArgs) {                                     \
-    using ArgTuple = Tuple<Args...>;                                           \
+    using ArgTuple = std::tuple<Args...>;                                      \
     using Indices = std::index_sequence_for<Args...>;                          \
     ArgTuple fakeArgs{std::forward<TestArgs>(aArgs)...};                       \
     patched_func_called = false;                                               \

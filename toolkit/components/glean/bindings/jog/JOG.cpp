@@ -13,7 +13,7 @@
 #include "mozilla/glean/bindings/jog/jog_ffi_generated.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Omnijar.h"
-#include "mozilla/Tuple.h"
+
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsThreadUtils.h"

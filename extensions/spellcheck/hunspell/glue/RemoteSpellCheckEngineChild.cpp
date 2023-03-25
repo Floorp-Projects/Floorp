@@ -47,15 +47,15 @@ RemoteSpellcheckEngineChild::SetCurrentDictionaryFromList(
 
   return SendSetDictionaryFromList(aList)->Then(
       GetMainThreadSerialEventTarget(), __func__,
-      [spellChecker](Tuple<bool, nsCString>&& aParam) {
-        if (!Get<0>(aParam)) {
+      [spellChecker](std::tuple<bool, nsCString>&& aParam) {
+        if (!std::get<0>(aParam)) {
           spellChecker->mCurrentDictionaries.Clear();
           return GenericPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
                                                  __func__);
         }
         spellChecker->mCurrentDictionaries.Clear();
         spellChecker->mCurrentDictionaries.AppendElement(
-            std::move(Get<1>(aParam)));
+            std::move(std::get<1>(aParam)));
         return GenericPromise::CreateAndResolve(true, __func__);
       },
       [spellChecker](ResponseRejectReason&& aReason) {

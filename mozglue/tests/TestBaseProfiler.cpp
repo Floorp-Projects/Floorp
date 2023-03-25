@@ -4352,9 +4352,9 @@ void TestBlocksRingBufferSerialization() {
   });
 
   rb.Clear();
-  rb.PutObjects(MakeTuple('0',
-                          WrapProfileBufferLiteralCStringPointer(THE_ANSWER),
-                          42, std::string(" but pi="), 3.14));
+  rb.PutObjects(
+      std::make_tuple('0', WrapProfileBufferLiteralCStringPointer(THE_ANSWER),
+                      42, std::string(" but pi="), 3.14));
   rb.ReadEach([&](ProfileBufferEntryReader& aER) {
     MOZ_RELEASE_ASSERT(aER.ReadObject<char>() == '0');
     MOZ_RELEASE_ASSERT(aER.ReadObject<const char*>() == theAnswer);

@@ -20,7 +20,7 @@
 #include "nsXULAppAPI.h"
 #include "mozilla/PresState.h"
 #include "mozilla/StaticPrefs_fission.h"
-#include "mozilla/Tuple.h"
+
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ContentChild.h"
@@ -1521,15 +1521,15 @@ void IPDLParamTraits<dom::SessionHistoryInfo>::Write(
     const dom::SessionHistoryInfo& aParam) {
   nsCOMPtr<nsIInputStream> postData = aParam.GetPostData();
 
-  Maybe<Tuple<uint32_t, dom::ClonedMessageData>> stateData;
+  Maybe<std::tuple<uint32_t, dom::ClonedMessageData>> stateData;
   if (aParam.mStateData) {
     stateData.emplace();
     // FIXME: We should fail more aggressively if this fails, as currently we'll
     // just early return and the deserialization will break.
     NS_ENSURE_SUCCESS_VOID(
-        aParam.mStateData->GetFormatVersion(&Get<0>(*stateData)));
+        aParam.mStateData->GetFormatVersion(&std::get<0>(*stateData)));
     NS_ENSURE_TRUE_VOID(
-        aParam.mStateData->BuildClonedMessageData(Get<1>(*stateData)));
+        aParam.mStateData->BuildClonedMessageData(std::get<1>(*stateData)));
   }
 
   WriteIPDLParam(aWriter, aActor, aParam.mURI);
@@ -1572,7 +1572,7 @@ void IPDLParamTraits<dom::SessionHistoryInfo>::Write(
 bool IPDLParamTraits<dom::SessionHistoryInfo>::Read(
     IPC::MessageReader* aReader, IProtocol* aActor,
     dom::SessionHistoryInfo* aResult) {
-  Maybe<Tuple<uint32_t, dom::ClonedMessageData>> stateData;
+  Maybe<std::tuple<uint32_t, dom::ClonedMessageData>> stateData;
   uint64_t sharedId;
   if (!ReadIPDLParam(aReader, aActor, &aResult->mURI) ||
       !ReadIPDLParam(aReader, aActor, &aResult->mOriginalURI) ||
@@ -1679,9 +1679,9 @@ bool IPDLParamTraits<dom::SessionHistoryInfo>::Read(
   }
 
   if (stateData.isSome()) {
-    uint32_t version = Get<0>(*stateData);
+    uint32_t version = std::get<0>(*stateData);
     aResult->mStateData = new nsStructuredCloneContainer(version);
-    aResult->mStateData->StealFromClonedMessageData(Get<1>(*stateData));
+    aResult->mStateData->StealFromClonedMessageData(std::get<1>(*stateData));
   }
   MOZ_ASSERT_IF(stateData.isNothing(), !aResult->mStateData);
   return true;

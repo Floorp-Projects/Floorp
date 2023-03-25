@@ -273,7 +273,7 @@ def _alreadyaddrefed(T):
 
 
 def _tuple(types, const=False, ref=False):
-    return Type("Tuple", T=types, const=const, ref=ref)
+    return Type("std::tuple", T=types, const=const, ref=ref)
 
 
 def _promise(resolvetype, rejecttype, tail, resolver=False):
@@ -4825,7 +4825,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         if len(md.returns) > 1:
             resolvetype = _tuple([d.bareType(self.side) for d in md.returns])
             resolvearg = ExprCall(
-                ExprVar("MakeTuple"), args=[ExprMove(p.var()) for p in md.returns]
+                ExprVar("std::make_tuple"), args=[ExprMove(p.var()) for p in md.returns]
             )
         else:
             resolvetype = md.returns[0].bareType(self.side)
@@ -5048,7 +5048,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         def paramValue(idx):
             assert idx < len(md.returns)
             if len(md.returns) > 1:
-                return ExprCode("mozilla::Get<${idx}>(aParam)", idx=idx)
+                return ExprCode("std::get<${idx}>(aParam)", idx=idx)
             return ExprVar("aParam")
 
         serializeParams = [

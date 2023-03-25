@@ -67,7 +67,7 @@ inline void ResolvePromiseForFinished(Promise* aPromise) {
 template <typename Key, typename Value>
 void ResolvePromiseWithKeyAndValue(Promise* aPromise, const Key& aKey,
                                    const Value& aValue) {
-  aPromise->MaybeResolve(MakeTuple(aKey, aValue));
+  aPromise->MaybeResolve(std::make_tuple(aKey, aValue));
 }
 
 }  // namespace iterator_utils

@@ -75,15 +75,15 @@ ScrollingMetrics* ScrollingMetrics::GetSingleton() {
 }
 
 struct ScrollingMetricsCollector {
-  void AppendScrollingMetrics(const Tuple<uint32_t, uint32_t>& aMetrics,
+  void AppendScrollingMetrics(const std::tuple<uint32_t, uint32_t>& aMetrics,
                               dom::ContentParent* aParent) {
-    mTimeScrolledMS += Get<0>(aMetrics);
-    mDistanceScrolledPixels += Get<1>(aMetrics);
+    mTimeScrolledMS += std::get<0>(aMetrics);
+    mDistanceScrolledPixels += std::get<1>(aMetrics);
   }
 
   ~ScrollingMetricsCollector() {
-    mPromiseHolder.Resolve(MakeTuple(mTimeScrolledMS, mDistanceScrolledPixels),
-                           __func__);
+    mPromiseHolder.Resolve(
+        std::make_tuple(mTimeScrolledMS, mDistanceScrolledPixels), __func__);
   }
 
   uint32_t mTimeScrolledMS = 0;
@@ -101,8 +101,7 @@ auto ScrollingMetrics::CollectScrollingMetricsInternal()
   for (dom::ContentParent* parent : contentParents) {
     RefPtr<dom::ContentParent> parentRef = parent;
     parent->SendCollectScrollingMetrics(
-        [collector,
-         parentRef](const mozilla::Tuple<uint32_t, uint32_t>& aMetrics) {
+        [collector, parentRef](const std::tuple<uint32_t, uint32_t>& aMetrics) {
           collector->AppendScrollingMetrics(aMetrics, parentRef.get());
         },
         [](mozilla::ipc::ResponseRejectReason) {});
@@ -111,13 +110,13 @@ auto ScrollingMetrics::CollectScrollingMetricsInternal()
   return collector->mPromiseHolder.Ensure(__func__);
 }
 
-Tuple<uint32_t, uint32_t>
+std::tuple<uint32_t, uint32_t>
 ScrollingMetrics::CollectLocalScrollingMetricsInternal() {
   OnScrollingInteractionEnded();
 
-  Tuple<uint32_t, uint32_t> metrics =
-      MakeTuple(gScrollingInteraction.mInteractionTimeInMilliseconds,
-                gScrollingInteraction.mScrollingDistanceInPixels);
+  std::tuple<uint32_t, uint32_t> metrics =
+      std::make_tuple(gScrollingInteraction.mInteractionTimeInMilliseconds,
+                      gScrollingInteraction.mScrollingDistanceInPixels);
   gScrollingInteraction = {};
   return metrics;
 }

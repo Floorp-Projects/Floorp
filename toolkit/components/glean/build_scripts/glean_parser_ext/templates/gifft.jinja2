@@ -10,10 +10,9 @@ Jinja2 template is not. Please file bugs! #}
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/Tuple.h"
+#include <tuple>
 #include "mozilla/DataMutex.h"
 {% if probe_type == "Scalar" %}
-#include "mozilla/Tuple.h"
 #include "nsClassHashtable.h"
 #include "nsIThread.h"
 #include "nsTHashMap.h"
@@ -31,7 +30,7 @@ using Telemetry::{{ probe_type }}ID;
 
 using MetricId = uint32_t; // Same type as in api/src/private/mod.rs
 using TimerId = uint64_t; // Same as in TimingDistribution.h.
-using MetricTimerTuple = Tuple<MetricId, TimerId>;
+using MetricTimerTuple = std::tuple<MetricId, TimerId>;
 class MetricTimerTupleHashKey : public PLDHashEntryHdr {
  public:
   using KeyType = const MetricTimerTuple&;
@@ -45,13 +44,13 @@ class MetricTimerTupleHashKey : public PLDHashEntryHdr {
 
   KeyType GetKey() const { return mValue; }
   bool KeyEquals(KeyTypePointer aKey) const {
-    return Get<0>(*aKey) == Get<0>(mValue) && Get<1>(*aKey) == Get<1>(mValue);
+    return std::get<0>(*aKey) == std::get<0>(mValue) && std::get<1>(*aKey) == std::get<1>(mValue);
   }
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
   static PLDHashNumber HashKey(KeyTypePointer aKey) {
     // Chosen because this is how nsIntegralHashKey does it.
-    return HashGeneric(Get<0>(*aKey), Get<1>(*aKey));
+    return HashGeneric(std::get<0>(*aKey), std::get<1>(*aKey));
   }
   enum { ALLOW_MEMMOVE = true };
 
@@ -102,7 +101,7 @@ static inline Maybe<TimerToStampMutex::AutoLock> GetTimerIdToStartsLock() {
 }
 {% elif probe_type == "Scalar" %}
 typedef nsUint32HashKey SubmetricIdHashKey;
-typedef nsTHashMap<SubmetricIdHashKey, Tuple<ScalarID, nsString>>
+typedef nsTHashMap<SubmetricIdHashKey, std::tuple<ScalarID, nsString>>
     SubmetricToLabeledMirrorMapType;
 typedef StaticDataMutex<UniquePtr<SubmetricToLabeledMirrorMapType>>
     SubmetricToMirrorMutex;

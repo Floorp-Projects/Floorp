@@ -10,10 +10,11 @@
 #define mozilla_Metrics_h
 
 #include "mozilla/glean/bindings/MetricTypes.h"
-#include "mozilla/Tuple.h"
 #include "mozilla/Maybe.h"
 #include "nsTArray.h"
 #include "nsPrintfCString.h"
+
+#include <tuple>
 
 namespace mozilla::glean {
 struct NoExtraKeys;
@@ -172,7 +173,7 @@ namespace test_nested {
       mozilla::Maybe<nsCString> anExtraKey;
       mozilla::Maybe<nsCString> anotherExtraKey;
 
-      Tuple<nsTArray<nsCString>, nsTArray<nsCString>> ToFfiExtra() const {
+      std::tuple<nsTArray<nsCString>, nsTArray<nsCString>> ToFfiExtra() const {
         nsTArray<nsCString> extraKeys;
         nsTArray<nsCString> extraValues;
         if (anExtraKey) {
@@ -183,7 +184,7 @@ namespace test_nested {
           extraKeys.AppendElement()->AssignASCII("another_extra_key");
           extraValues.EmplaceBack(anotherExtraKey.value());
         }
-        return MakeTuple(std::move(extraKeys), std::move(extraValues));
+        return std::make_tuple(std::move(extraKeys), std::move(extraValues));
       }
     };
     /**

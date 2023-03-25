@@ -289,8 +289,8 @@ class PerformanceRecorderImpl : public PerformanceRecorderBase {
   void Start(int64_t aId, Args... aArgs) {
     if (IsMeasurementEnabled()) {
       MutexAutoLock lock(mMutex);
-      mStages.Push(MakeTuple(aId, GetCurrentTimeForMeasurement(),
-                             StageType(std::move(aArgs)...)));
+      mStages.Push(std::make_tuple(aId, GetCurrentTimeForMeasurement(),
+                                   StageType(std::move(aArgs)...)));
     }
   }
 
@@ -302,20 +302,20 @@ class PerformanceRecorderImpl : public PerformanceRecorderBase {
     Maybe<Entry> entry;
     {
       MutexAutoLock lock(mMutex);
-      while (!mStages.IsEmpty() && Get<0>(mStages.Top()) < aId) {
+      while (!mStages.IsEmpty() && std::get<0>(mStages.Top()) < aId) {
         mStages.Pop();
       }
       if (mStages.IsEmpty()) {
         return 0.0;
       }
-      if (Get<0>(mStages.Top()) != aId) {
+      if (std::get<0>(mStages.Top()) != aId) {
         return 0.0;
       }
       entry = Some(mStages.Pop());
     }
-    const auto& startTime = Get<1>(*entry);
-    auto& stage = Get<2>(*entry);
-    MOZ_ASSERT(Get<0>(*entry) == aId);
+    const auto& startTime = std::get<1>(*entry);
+    auto& stage = std::get<2>(*entry);
+    MOZ_ASSERT(std::get<0>(*entry) == aId);
     double elapsedTimeUs = 0.0;
     if (!startTime.IsNull() && IsMeasurementEnabled()) {
       const auto now = TimeStamp::Now();
@@ -334,11 +334,11 @@ class PerformanceRecorderImpl : public PerformanceRecorderBase {
   }
 
  protected:
-  using Entry = Tuple<int64_t, TimeStamp, StageType>;
+  using Entry = std::tuple<int64_t, TimeStamp, StageType>;
 
   struct IdComparator {
     bool LessThan(const Entry& aTupleA, const Entry& aTupleB) {
-      return Get<0>(aTupleA) < Get<0>(aTupleB);
+      return std::get<0>(aTupleA) < std::get<0>(aTupleB);
     }
   };
 

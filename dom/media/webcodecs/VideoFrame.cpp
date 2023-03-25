@@ -17,7 +17,7 @@
 #include "mozilla/Result.h"
 #include "mozilla/ResultVariant.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/Tuple.h"
+
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/CanvasUtils.h"
 #include "mozilla/dom/DOMRect.h"
@@ -53,8 +53,8 @@ NS_INTERFACE_MAP_END
  * The below are helpers to operate ArrayBuffer or ArrayBufferView.
  */
 template <class T>
-static Result<Tuple<RangedPtr<uint8_t>, size_t>, nsresult> GetArrayBufferData(
-    const T& aBuffer) {
+static Result<std::tuple<RangedPtr<uint8_t>, size_t>, nsresult>
+GetArrayBufferData(const T& aBuffer) {
   // Get buffer's data and length before using it.
   aBuffer.ComputeState();
 
@@ -64,11 +64,11 @@ static Result<Tuple<RangedPtr<uint8_t>, size_t>, nsresult> GetArrayBufferData(
     return Err(NS_ERROR_INVALID_ARG);
   }
 
-  return MakeTuple(RangedPtr(aBuffer.Data(), byteLength.value()),
-                   byteLength.value());
+  return std::make_tuple(RangedPtr(aBuffer.Data(), byteLength.value()),
+                         byteLength.value());
 }
 
-static Result<Tuple<RangedPtr<uint8_t>, size_t>, nsresult>
+static Result<std::tuple<RangedPtr<uint8_t>, size_t>, nsresult>
 GetSharedArrayBufferData(
     const MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer) {
   if (aBuffer.IsArrayBufferView()) {
@@ -458,8 +458,9 @@ static Result<Maybe<gfx::IntSize>, nsCString> MaybeGetDisplaySize(
 }
 
 // https://w3c.github.io/webcodecs/#valid-videoframebufferinit
-static Result<Tuple<gfx::IntSize, Maybe<gfx::IntRect>, Maybe<gfx::IntSize>>,
-              nsCString>
+static Result<
+    std::tuple<gfx::IntSize, Maybe<gfx::IntRect>, Maybe<gfx::IntSize>>,
+    nsCString>
 ValidateVideoFrameBufferInit(const VideoFrameBufferInit& aInit) {
   gfx::IntSize codedSize;
   MOZ_TRY_VAR(codedSize, ToIntSize(aInit.mCodedWidth, aInit.mCodedHeight)
@@ -483,7 +484,7 @@ ValidateVideoFrameBufferInit(const VideoFrameBufferInit& aInit) {
   Maybe<gfx::IntSize> displaySize;
   MOZ_TRY_VAR(displaySize, MaybeGetDisplaySize(aInit));
 
-  return MakeTuple(codedSize, visibleRect, displaySize);
+  return std::make_tuple(codedSize, visibleRect, displaySize);
 }
 
 // https://w3c.github.io/webcodecs/#videoframe-verify-rect-offset-alignment
@@ -736,7 +737,7 @@ static VideoColorSpaceInit PickColorSpace(
 }
 
 // https://w3c.github.io/webcodecs/#validate-videoframeinit
-static Result<Tuple<Maybe<gfx::IntRect>, Maybe<gfx::IntSize>>, nsCString>
+static Result<std::tuple<Maybe<gfx::IntRect>, Maybe<gfx::IntSize>>, nsCString>
 ValidateVideoFrameInit(const VideoFrameInit& aInit,
                        const VideoFrame::Format& aFormat,
                        const gfx::IntSize& aCodedSize) {
@@ -761,7 +762,7 @@ ValidateVideoFrameInit(const VideoFrameInit& aInit,
   Maybe<gfx::IntSize> displaySize;
   MOZ_TRY_VAR(displaySize, MaybeGetDisplaySize(aInit));
 
-  return MakeTuple(visibleRect, displaySize);
+  return std::make_tuple(visibleRect, displaySize);
 }
 
 /*
@@ -984,11 +985,11 @@ static Result<RefPtr<VideoFrame>, nsCString> CreateVideoFrameFromBuffer(
     return Err(nsCString("linear RGB is not supported"));
   }
 
-  Tuple<gfx::IntSize, Maybe<gfx::IntRect>, Maybe<gfx::IntSize>> init;
+  std::tuple<gfx::IntSize, Maybe<gfx::IntRect>, Maybe<gfx::IntSize>> init;
   MOZ_TRY_VAR(init, ValidateVideoFrameBufferInit(aInit));
-  gfx::IntSize codedSize = Get<0>(init);
-  Maybe<gfx::IntRect> visibleRect = Get<1>(init);
-  Maybe<gfx::IntSize> displaySize = Get<2>(init);
+  gfx::IntSize codedSize = std::get<0>(init);
+  Maybe<gfx::IntRect> visibleRect = std::get<1>(init);
+  Maybe<gfx::IntSize> displaySize = std::get<2>(init);
 
   VideoFrame::Format format(aInit.mFormat);
   // TODO: Spec doesn't ask for this in ctor but Pixel Format does. See
@@ -1017,9 +1018,9 @@ static Result<RefPtr<VideoFrame>, nsCString> CreateVideoFrameFromBuffer(
   if (r.isErr()) {
     return Err(nsCString("data is too large"));
   }
-  Tuple<RangedPtr<uint8_t>, size_t> bufInfo = r.unwrap();
-  RangedPtr<uint8_t> ptr(Get<0>(bufInfo));
-  size_t byteLength = Get<1>(bufInfo);
+  std::tuple<RangedPtr<uint8_t>, size_t> bufInfo = r.unwrap();
+  RangedPtr<uint8_t> ptr(std::get<0>(bufInfo));
+  size_t byteLength = std::get<1>(bufInfo);
 
   if (byteLength < static_cast<size_t>(combinedLayout.mAllocationSize)) {
     return Err(nsCString("data is too small"));
@@ -1115,11 +1116,11 @@ InitializeFrameWithResourceAndSize(
     return Err(nsCString("This image has unsupport format"));
   }
 
-  Tuple<Maybe<gfx::IntRect>, Maybe<gfx::IntSize>> init;
+  std::tuple<Maybe<gfx::IntRect>, Maybe<gfx::IntSize>> init;
   MOZ_TRY_VAR(init,
               ValidateVideoFrameInit(aInit, format.ref(), image->GetSize()));
-  Maybe<gfx::IntRect> visibleRect = Get<0>(init);
-  Maybe<gfx::IntSize> displaySize = Get<1>(init);
+  Maybe<gfx::IntRect> visibleRect = std::get<0>(init);
+  Maybe<gfx::IntSize> displaySize = std::get<1>(init);
 
   if (aInit.mAlpha == AlphaOption::Discard) {
     format->MakeOpaque();
@@ -1154,11 +1155,11 @@ InitializeFrameFromOtherFrame(nsIGlobalObject* aGlobal, VideoFrameData&& aData,
     // Keep the alpha data in image for now until it's being rendered.
   }
 
-  Tuple<Maybe<gfx::IntRect>, Maybe<gfx::IntSize>> init;
+  std::tuple<Maybe<gfx::IntRect>, Maybe<gfx::IntSize>> init;
   MOZ_TRY_VAR(init,
               ValidateVideoFrameInit(aInit, format, aData.mImage->GetSize()));
-  Maybe<gfx::IntRect> visibleRect = Get<0>(init);
-  Maybe<gfx::IntSize> displaySize = Get<1>(init);
+  Maybe<gfx::IntRect> visibleRect = std::get<0>(init);
+  Maybe<gfx::IntSize> displaySize = std::get<1>(init);
 
   InitializeVisibleRectAndDisplaySize(visibleRect, displaySize,
                                       aData.mVisibleRect, aData.mDisplaySize);
@@ -1732,9 +1733,9 @@ already_AddRefed<Promise> VideoFrame::CopyTo(
     p->MaybeRejectWithTypeError("Failed to get buffer");
     return p.forget();
   }
-  Tuple<RangedPtr<uint8_t>, size_t> bufInfo = r2.unwrap();
-  RangedPtr<uint8_t> ptr(Get<0>(bufInfo));
-  size_t byteLength = Get<1>(bufInfo);
+  std::tuple<RangedPtr<uint8_t>, size_t> bufInfo = r2.unwrap();
+  RangedPtr<uint8_t> ptr(std::get<0>(bufInfo));
+  size_t byteLength = std::get<1>(bufInfo);
 
   if (byteLength < layout.mAllocationSize) {
     p->MaybeRejectWithTypeError("Destination buffer is too small");

@@ -17,7 +17,7 @@
 #include "mozilla/Maybe.h"       // mozilla::Maybe
 #include "mozilla/Range.h"       // mozilla::Range
 #include "mozilla/Span.h"        // mozilla::Span
-#include "mozilla/Tuple.h"       // mozilla::Tuple
+                                 // std::tuple
 
 #include <algorithm>  // std::copy_n
 #include <stddef.h>   // size_t
@@ -317,7 +317,7 @@ JS_PUBLIC_API size_t JS_GetStringEncodingLength(JSContext* cx, JSString* str);
  *
  * The function does not store an additional zero byte.
  */
-JS_PUBLIC_API mozilla::Maybe<mozilla::Tuple<size_t, size_t>>
+JS_PUBLIC_API mozilla::Maybe<std::tuple<size_t, size_t>>
 JS_EncodeStringToUTF8BufferPartial(JSContext* cx, JSString* str,
                                    mozilla::Span<char> buffer);
 

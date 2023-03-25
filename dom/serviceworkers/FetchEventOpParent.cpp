@@ -25,7 +25,7 @@ using namespace ipc;
 
 namespace dom {
 
-Tuple<Maybe<ParentToParentInternalResponse>, Maybe<ResponseEndArgs>>
+std::tuple<Maybe<ParentToParentInternalResponse>, Maybe<ResponseEndArgs>>
 FetchEventOpParent::OnStart(
     MovingNotNull<RefPtr<FetchEventOpProxyParent>> aFetchEventOpProxyParent) {
   Maybe<ParentToParentInternalResponse> preloadResponse =
@@ -33,7 +33,7 @@ FetchEventOpParent::OnStart(
   Maybe<ResponseEndArgs> preloadResponseEndArgs =
       std::move(mState.as<Pending>().mEndArgs);
   mState = AsVariant(Started{std::move(aFetchEventOpProxyParent)});
-  return MakeTuple(preloadResponse, preloadResponseEndArgs);
+  return std::make_tuple(preloadResponse, preloadResponseEndArgs);
 }
 
 void FetchEventOpParent::OnFinish() {
