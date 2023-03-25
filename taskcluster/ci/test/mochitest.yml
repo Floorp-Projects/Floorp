@@ -261,7 +261,7 @@ mochitest-browser-chrome:
             linux.*64-tsan-qr/opt: 32
             macosx.*64/debug: 16
             windows.*-ccov.*/.*: 14
-            windows.*-asan-qr/opt: 12
+            windows.*-asan-qr/opt: 14
             windows7-32.*: 20
             windows.*32-qr/debug: 12
             default: 7
@@ -271,10 +271,11 @@ mochitest-browser-chrome:
             default:
                 by-test-platform:
                     linux.*64-ccov.*/.*: 9000
-                    windows.*-ccov.*/.*: 10800
-                    macosx.*64-ccov.*/.*: 10800
                     linux.*64-tsan-qr/opt: 10800
                     linux.*-qr/opt: 5400
+                    macosx.*64-ccov.*/.*: 10800
+                    windows.*-ccov.*/.*: 10800
+                    windows.*-asan-qr/opt: 5400
                     .*/debug: 5400
                     default: 3600
     mozharness:
