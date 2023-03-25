@@ -39,7 +39,7 @@ function do_test() {
   if (SpecialPowers.getBoolPref("layout.css.color-mix.enabled")) {
     allColors.push("color-mix");
   }
-  if (SpecialPowers.getBoolPref("layout.css.more_color_4.enabled", false)) {
+  if (SpecialPowers.getBoolPref("layout.css.more_color_4.enabled", true)) {
     allColors.push("color", "lab", "lch", "oklab", "oklch");
   }
   var allGradients = [
