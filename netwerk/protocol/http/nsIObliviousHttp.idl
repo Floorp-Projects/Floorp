@@ -72,4 +72,7 @@ interface nsIObliviousHttpService : nsISupports
   nsIChannel newChannel(in nsIURI relayURI, in nsIURI targetURI, in Array<octet> encodedConfig);
 
   void getTRRSettings(out nsIURI relayURI, out Array<octet> encodedConfig);
+
+  // Clears the config
+  void clearTRRConfig();
 };

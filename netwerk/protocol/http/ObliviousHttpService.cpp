@@ -10,9 +10,11 @@
 #include "DNSUtils.h"
 #include "ObliviousHttpChannel.h"
 #include "mozilla/Base64.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "nsIObserverService.h"
 #include "nsIPrefService.h"
 #include "nsNetUtil.h"
+#include "nsPrintfCString.h"
 
 namespace mozilla::net {
 
@@ -21,19 +23,104 @@ NS_IMPL_ISUPPORTS(ObliviousHttpService, nsIObliviousHttpService, nsIObserver,
 
 ObliviousHttpService::ObliviousHttpService()
     : mTRRConfig(ObliviousHttpConfig(), "ObliviousHttpService::mTRRConfig") {
+  MOZ_ASSERT(NS_IsMainThread());
+
   nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (prefBranch) {
     prefBranch->AddObserver("network.trr.ohttp", this, false);
   }
-  MOZ_ASSERT(NS_IsMainThread());
+
+  if (nsCOMPtr<nsIObserverService> obs =
+          mozilla::services::GetObserverService()) {
+    obs->AddObserver(this, "xpcom-shutdown", false);
+    obs->AddObserver(this, "network:captive-portal-connectivity-changed",
+                     false);
+    obs->AddObserver(this, "trrservice-confirmation-failed", false);
+  }
+
   ReadPrefs("*"_ns);
 }
 
+static constexpr nsLiteralCString kTRRohttpConfigURIPref =
+    "network.trr.ohttp.config_uri"_ns;
+static constexpr nsLiteralCString kTRRohttpRelayURIPref =
+    "network.trr.ohttp.relay_uri"_ns;
+
+void ObliviousHttpService::FetchConfig(bool aConfigURIChanged) {
+  auto scopeExit = MakeScopeExit([&] {
+    nsCOMPtr<nsIObserverService> obs(mozilla::services::GetObserverService());
+    if (!obs) {
+      return;
+    }
+    obs->NotifyObservers(nullptr, "ohttp-service-config-loaded", u"no-changes");
+  });
+
+  {
+    auto trrConfig = mTRRConfig.Lock();
+    if (aConfigURIChanged) {
+      // If the config URI has changed, we need to clear the config.
+      trrConfig->mEncodedConfig.Clear();
+    } else if (trrConfig->mEncodedConfig.Length()) {
+      // The URI hasn't changed and we already have a config. No need to reload
+      return;
+    }
+  }
+
+  nsAutoCString configURIString;
+  nsresult rv =
+      Preferences::GetCString(kTRRohttpConfigURIPref.get(), configURIString);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  nsCOMPtr<nsIURI> configURI;
+  rv = NS_NewURI(getter_AddRefs(configURI), configURIString);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  nsCOMPtr<nsIChannel> channel;
+  rv = DNSUtils::CreateChannelHelper(configURI, getter_AddRefs(channel));
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  rv = channel->SetLoadFlags(
+      nsIRequest::LOAD_ANONYMOUS | nsIRequest::INHIBIT_CACHING |
+      nsIRequest::LOAD_BYPASS_CACHE | nsIChannel::LOAD_BYPASS_URL_CLASSIFIER);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
+  if (!httpChannel) {
+    return;
+  }
+  // This connection should not use TRR
+  rv = httpChannel->SetTRRMode(nsIRequest::TRR_DISABLED_MODE);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  nsCOMPtr<nsIStreamLoader> loader;
+  rv = NS_NewStreamLoader(getter_AddRefs(loader), this);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  rv = httpChannel->AsyncOpen(loader);
+
+  if (NS_SUCCEEDED(rv)) {
+    scopeExit.release();
+    return;
+  }
+
+  nsPrintfCString msg(
+      "ObliviousHttpService::FetchConfig AsyncOpen failed rv=%X",
+      static_cast<uint32_t>(rv));
+  NS_WARNING(msg.get());
+}
+
 void ObliviousHttpService::ReadPrefs(const nsACString& whichPref) {
-  nsAutoCString relayURIPref("network.trr.ohttp.relay_uri");
-  if (whichPref.Equals(relayURIPref) || whichPref.EqualsLiteral("*")) {
+  if (whichPref.Equals(kTRRohttpRelayURIPref) || whichPref.EqualsLiteral("*")) {
     nsAutoCString relayURIString;
-    nsresult rv = Preferences::GetCString(relayURIPref.get(), relayURIString);
+    nsresult rv =
+        Preferences::GetCString(kTRRohttpRelayURIPref.get(), relayURIString);
     if (NS_FAILED(rv)) {
       return;
     }
@@ -46,50 +133,9 @@ void ObliviousHttpService::ReadPrefs(const nsACString& whichPref) {
     trrConfig->mRelayURI = relayURI;
   }
 
-  nsAutoCString configURIPref("network.trr.ohttp.config_uri");
-  if (whichPref.Equals(configURIPref) || whichPref.EqualsLiteral("*")) {
-    nsAutoCString configURIString;
-    nsresult rv = Preferences::GetCString(configURIPref.get(), configURIString);
-    if (NS_FAILED(rv)) {
-      return;
-    }
-    nsCOMPtr<nsIURI> configURI;
-    rv = NS_NewURI(getter_AddRefs(configURI), configURIString);
-    if (NS_FAILED(rv)) {
-      return;
-    }
-
-    nsCOMPtr<nsIChannel> channel;
-    rv = DNSUtils::CreateChannelHelper(configURI, getter_AddRefs(channel));
-    if (NS_FAILED(rv)) {
-      return;
-    }
-    rv = channel->SetLoadFlags(
-        nsIRequest::LOAD_ANONYMOUS | nsIRequest::INHIBIT_CACHING |
-        nsIRequest::LOAD_BYPASS_CACHE | nsIChannel::LOAD_BYPASS_URL_CLASSIFIER);
-    if (NS_FAILED(rv)) {
-      return;
-    }
-    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
-    if (!httpChannel) {
-      return;
-    }
-    // This connection should not use TRR
-    rv = httpChannel->SetTRRMode(nsIRequest::TRR_DISABLED_MODE);
-    if (NS_FAILED(rv)) {
-      return;
-    }
-    nsCOMPtr<nsIStreamLoader> loader;
-    rv = NS_NewStreamLoader(getter_AddRefs(loader), this);
-    if (NS_FAILED(rv)) {
-      return;
-    }
-    rv = httpChannel->AsyncOpen(loader);
-    if (NS_FAILED(rv)) {
-      return;
-    }
-    auto trrConfig = mTRRConfig.Lock();
-    trrConfig->mEncodedConfig.Clear();
+  if (whichPref.Equals(kTRRohttpConfigURIPref) ||
+      whichPref.EqualsLiteral("*")) {
+    FetchConfig(true);
   }
 }
 
@@ -124,6 +170,13 @@ ObliviousHttpService::GetTRRSettings(nsIURI** relayURI,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+ObliviousHttpService::ClearTRRConfig() {
+  auto trrConfig = mTRRConfig.Lock();
+  trrConfig->mEncodedConfig.Clear();
+  return NS_OK;
+}
+
 // nsIObserver
 
 NS_IMETHODIMP
@@ -131,6 +184,21 @@ ObliviousHttpService::Observe(nsISupports* subject, const char* topic,
                               const char16_t* data) {
   if (!strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     ReadPrefs(NS_ConvertUTF16toUTF8(data));
+  } else if (!strcmp(topic, "xpcom-shutdown")) {
+    if (nsCOMPtr<nsIPrefBranch> prefBranch =
+            do_GetService(NS_PREFSERVICE_CONTRACTID)) {
+      prefBranch->RemoveObserver("network.trr.ohttp", this);
+    }
+
+    if (nsCOMPtr<nsIObserverService> obs =
+            mozilla::services::GetObserverService()) {
+      obs->RemoveObserver(this, "xpcom-shutdown");
+      obs->RemoveObserver(this, "network:captive-portal-connectivity-changed");
+      obs->RemoveObserver(this, "trrservice-confirmation-failed");
+    }
+  } else if (!strcmp(topic, "network:captive-portal-connectivity-changed") ||
+             !strcmp(topic, "trrservice-confirmation-failed")) {
+    FetchConfig(false);
   }
   return NS_OK;
 }
@@ -154,7 +222,8 @@ ObliviousHttpService::OnStreamComplete(nsIStreamLoader* aLoader,
     return NS_ERROR_FAILURE;
   }
   nsresult rv = observerService->NotifyObservers(
-      nullptr, "ohttp-service-config-loaded", nullptr);
+      nullptr, "ohttp-service-config-loaded",
+      NS_SUCCEEDED(aStatus) ? u"success" : u"failed");
   if (NS_FAILED(rv)) {
     return rv;
   }
