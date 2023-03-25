@@ -58,24 +58,33 @@ function test_isTextMimeType() {
 }
 
 function test_parseCookieHeader() {
-  let result = NetworkHelper.parseSetCookieHeader("Test=1; SameSite=Strict");
+  let result = NetworkHelper.parseSetCookieHeaders(["Test=1; SameSite=Strict"]);
   Assert.deepEqual(result, [{ name: "Test", value: "1", samesite: "Strict" }]);
 
-  result = NetworkHelper.parseSetCookieHeader("Test=1; SameSite=strict");
+  result = NetworkHelper.parseSetCookieHeaders(["Test=1; SameSite=strict"]);
   Assert.deepEqual(result, [{ name: "Test", value: "1", samesite: "Strict" }]);
 
-  result = NetworkHelper.parseSetCookieHeader("Test=1; SameSite=STRICT");
+  result = NetworkHelper.parseSetCookieHeaders(["Test=1; SameSite=STRICT"]);
   Assert.deepEqual(result, [{ name: "Test", value: "1", samesite: "Strict" }]);
 
-  result = NetworkHelper.parseSetCookieHeader("Test=1; SameSite=None");
+  result = NetworkHelper.parseSetCookieHeaders(["Test=1; SameSite=None"]);
   Assert.deepEqual(result, [{ name: "Test", value: "1", samesite: "None" }]);
 
-  result = NetworkHelper.parseSetCookieHeader("Test=1; SameSite=NONE");
+  result = NetworkHelper.parseSetCookieHeaders(["Test=1; SameSite=NONE"]);
   Assert.deepEqual(result, [{ name: "Test", value: "1", samesite: "None" }]);
 
-  result = NetworkHelper.parseSetCookieHeader("Test=1; SameSite=lax");
+  result = NetworkHelper.parseSetCookieHeaders(["Test=1; SameSite=lax"]);
   Assert.deepEqual(result, [{ name: "Test", value: "1", samesite: "Lax" }]);
 
-  result = NetworkHelper.parseSetCookieHeader("Test=1; SameSite=Lax");
+  result = NetworkHelper.parseSetCookieHeaders(["Test=1; SameSite=Lax"]);
   Assert.deepEqual(result, [{ name: "Test", value: "1", samesite: "Lax" }]);
+
+  result = NetworkHelper.parseSetCookieHeaders([
+    "Test=1; SameSite=Lax",
+    "Foo=2; SameSite=None",
+  ]);
+  Assert.deepEqual(result, [
+    { name: "Test", value: "1", samesite: "Lax" },
+    { name: "Foo", value: "2", samesite: "None" },
+  ]);
 }
