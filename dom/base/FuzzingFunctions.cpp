@@ -18,8 +18,11 @@
 #include "nsPIDOMWindow.h"
 #include "xpcAccessibilityService.h"
 
-namespace mozilla {
-namespace dom {
+#ifdef FUZZING_SNAPSHOT
+#  include "mozilla/dom/ContentChild.h"
+#endif
+
+namespace mozilla::dom {
 
 /* static */
 void FuzzingFunctions::GarbageCollect(const GlobalObject&) {
@@ -384,5 +387,4 @@ void FuzzingFunctions::SynthesizeKeyboardEvents(
   // to want
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
