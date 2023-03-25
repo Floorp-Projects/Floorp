@@ -30,12 +30,13 @@ class WebTransportParent : public PWebTransportParent,
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_WEBTRANSPORTSESSIONEVENTLISTENER
 
-  void Create(
-      const nsAString& aURL, nsIPrincipal* aPrincipal, const bool& aDedicated,
-      const bool& aRequireUnreliable, const uint32_t& aCongestionControl,
-      // Sequence<WebTransportHash>* aServerCertHashes,
-      Endpoint<PWebTransportParent>&& aParentEndpoint,
-      std::function<void(Tuple<const nsresult&, const uint8_t&>)>&& aResolver);
+  void Create(const nsAString& aURL, nsIPrincipal* aPrincipal,
+              const bool& aDedicated, const bool& aRequireUnreliable,
+              const uint32_t& aCongestionControl,
+              // Sequence<WebTransportHash>* aServerCertHashes,
+              Endpoint<PWebTransportParent>&& aParentEndpoint,
+              std::function<void(std::tuple<const nsresult&, const uint8_t&>)>&&
+                  aResolver);
 
   IPCResult RecvClose(const uint32_t& aCode, const nsACString& aReason);
 
@@ -57,7 +58,7 @@ class WebTransportParent : public PWebTransportParent,
  private:
   void NotifyRemoteClosed(uint32_t aErrorCode, const nsACString& aReason);
 
-  using ResolveType = Tuple<const nsresult&, const uint8_t&>;
+  using ResolveType = std::tuple<const nsresult&, const uint8_t&>;
   nsCOMPtr<nsISerialEventTarget> mSocketThread;
   Atomic<bool> mSessionReady{false};
 

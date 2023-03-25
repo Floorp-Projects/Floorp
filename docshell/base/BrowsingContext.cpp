@@ -1356,13 +1356,13 @@ void BrowsingContext::SetTriggeringAndInheritPrincipals(
   }
 }
 
-Tuple<nsCOMPtr<nsIPrincipal>, nsCOMPtr<nsIPrincipal>>
+std::tuple<nsCOMPtr<nsIPrincipal>, nsCOMPtr<nsIPrincipal>>
 BrowsingContext::GetTriggeringAndInheritPrincipalsForCurrentLoad() {
   nsCOMPtr<nsIPrincipal> triggeringPrincipal =
       GetSavedPrincipal(mTriggeringPrincipal);
   nsCOMPtr<nsIPrincipal> principalToInherit =
       GetSavedPrincipal(mPrincipalToInherit);
-  return MakeTuple(triggeringPrincipal, principalToInherit);
+  return std::make_tuple(triggeringPrincipal, principalToInherit);
 }
 
 nsIPrincipal* BrowsingContext::GetSavedPrincipal(
@@ -1370,7 +1370,7 @@ nsIPrincipal* BrowsingContext::GetSavedPrincipal(
   if (aPrincipalTuple) {
     nsCOMPtr<nsIPrincipal> principal;
     uint64_t loadIdentifier;
-    Tie(principal, loadIdentifier) = *aPrincipalTuple;
+    std::tie(principal, loadIdentifier) = *aPrincipalTuple;
     // We want to return a principal only if the load identifier for it
     // matches the current one for this BC.
     if (auto current = GetCurrentLoadIdentifier();

@@ -2085,7 +2085,7 @@ template <class T>
 nsresult PermissionManager::RemovePermissionEntries(T aCondition) {
   EnsureReadCompleted();
 
-  Vector<Tuple<nsCOMPtr<nsIPrincipal>, nsCString, nsCString>, 10> array;
+  Vector<std::tuple<nsCOMPtr<nsIPrincipal>, nsCString, nsCString>, 10> array;
   for (const PermissionHashKey& entry : mPermissionTable) {
     for (const auto& permEntry : entry.GetPermissions()) {
       if (!aCondition(permEntry)) {
@@ -2110,10 +2110,10 @@ nsresult PermissionManager::RemovePermissionEntries(T aCondition) {
 
   for (auto& i : array) {
     // AddInternal handles removal, so let it do the work...
-    AddInternal(Get<0>(i), Get<1>(i), nsIPermissionManager::UNKNOWN_ACTION, 0,
-                nsIPermissionManager::EXPIRE_NEVER, 0, 0,
-                PermissionManager::eNotify, PermissionManager::eWriteToDB,
-                false, &Get<2>(i));
+    AddInternal(
+        std::get<0>(i), std::get<1>(i), nsIPermissionManager::UNKNOWN_ACTION, 0,
+        nsIPermissionManager::EXPIRE_NEVER, 0, 0, PermissionManager::eNotify,
+        PermissionManager::eWriteToDB, false, &std::get<2>(i));
   }
 
   // now re-import any defaults as they may now be required if we just deleted
@@ -2630,7 +2630,8 @@ nsresult PermissionManager::RemovePermissionsWithAttributes(
     OriginAttributesPattern& aPattern) {
   EnsureReadCompleted();
 
-  Vector<Tuple<nsCOMPtr<nsIPrincipal>, nsCString, nsCString>, 10> permissions;
+  Vector<std::tuple<nsCOMPtr<nsIPrincipal>, nsCString, nsCString>, 10>
+      permissions;
   for (const PermissionHashKey& entry : mPermissionTable) {
     nsCOMPtr<nsIPrincipal> principal;
     nsresult rv = GetPrincipalFromOrigin(entry.GetKey()->mOrigin, false,
@@ -2652,10 +2653,10 @@ nsresult PermissionManager::RemovePermissionsWithAttributes(
   }
 
   for (auto& i : permissions) {
-    AddInternal(Get<0>(i), Get<1>(i), nsIPermissionManager::UNKNOWN_ACTION, 0,
-                nsIPermissionManager::EXPIRE_NEVER, 0, 0,
-                PermissionManager::eNotify, PermissionManager::eWriteToDB,
-                false, &Get<2>(i));
+    AddInternal(
+        std::get<0>(i), std::get<1>(i), nsIPermissionManager::UNKNOWN_ACTION, 0,
+        nsIPermissionManager::EXPIRE_NEVER, 0, 0, PermissionManager::eNotify,
+        PermissionManager::eWriteToDB, false, &std::get<2>(i));
   }
 
   return NS_OK;

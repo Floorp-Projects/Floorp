@@ -8,9 +8,8 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/Tuple.h"
+#include <tuple>
 #include "mozilla/DataMutex.h"
-#include "mozilla/Tuple.h"
 #include "nsClassHashtable.h"
 #include "nsIThread.h"
 #include "nsTHashMap.h"
@@ -24,7 +23,7 @@ namespace mozilla::glean {
 using Telemetry::ScalarID;
 
 typedef nsUint32HashKey SubmetricIdHashKey;
-typedef nsTHashMap<SubmetricIdHashKey, Tuple<ScalarID, nsString>>
+typedef nsTHashMap<SubmetricIdHashKey, std::tuple<ScalarID, nsString>>
     SubmetricToLabeledMirrorMapType;
 typedef StaticDataMutex<UniquePtr<SubmetricToLabeledMirrorMapType>>
     SubmetricToMirrorMutex;

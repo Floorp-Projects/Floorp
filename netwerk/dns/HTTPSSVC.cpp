@@ -202,22 +202,22 @@ void SVCB::GetIPHints(CopyableTArray<mozilla::net::NetAddr>& aAddresses) const {
 
 class AlpnComparator {
  public:
-  bool Equals(const Tuple<nsCString, SupportedAlpnRank>& aA,
-              const Tuple<nsCString, SupportedAlpnRank>& aB) const {
-    return Get<1>(aA) == Get<1>(aB);
+  bool Equals(const std::tuple<nsCString, SupportedAlpnRank>& aA,
+              const std::tuple<nsCString, SupportedAlpnRank>& aB) const {
+    return std::get<1>(aA) == std::get<1>(aB);
   }
-  bool LessThan(const Tuple<nsCString, SupportedAlpnRank>& aA,
-                const Tuple<nsCString, SupportedAlpnRank>& aB) const {
-    return Get<1>(aA) > Get<1>(aB);
+  bool LessThan(const std::tuple<nsCString, SupportedAlpnRank>& aA,
+                const std::tuple<nsCString, SupportedAlpnRank>& aB) const {
+    return std::get<1>(aA) > std::get<1>(aB);
   }
 };
 
-nsTArray<Tuple<nsCString, SupportedAlpnRank>> SVCB::GetAllAlpn() const {
-  nsTArray<Tuple<nsCString, SupportedAlpnRank>> alpnList;
+nsTArray<std::tuple<nsCString, SupportedAlpnRank>> SVCB::GetAllAlpn() const {
+  nsTArray<std::tuple<nsCString, SupportedAlpnRank>> alpnList;
   for (const auto& value : mSvcFieldValue) {
     if (value.mValue.is<SvcParamAlpn>()) {
       for (const auto& alpn : value.mValue.as<SvcParamAlpn>().mValue) {
-        alpnList.AppendElement(MakeTuple(alpn, IsAlpnSupported(alpn)));
+        alpnList.AppendElement(std::make_tuple(alpn, IsAlpnSupported(alpn)));
       }
     }
   }
@@ -226,7 +226,7 @@ nsTArray<Tuple<nsCString, SupportedAlpnRank>> SVCB::GetAllAlpn() const {
 }
 
 SVCBRecord::SVCBRecord(const SVCB& data,
-                       Maybe<Tuple<nsCString, SupportedAlpnRank>> aAlpn)
+                       Maybe<std::tuple<nsCString, SupportedAlpnRank>> aAlpn)
     : mData(data), mAlpn(aAlpn) {
   mPort = mData.GetPort();
 }
@@ -243,7 +243,7 @@ NS_IMETHODIMP SVCBRecord::GetName(nsACString& aName) {
 
 Maybe<uint16_t> SVCBRecord::GetPort() { return mPort; }
 
-Maybe<Tuple<nsCString, SupportedAlpnRank>> SVCBRecord::GetAlpn() {
+Maybe<std::tuple<nsCString, SupportedAlpnRank>> SVCBRecord::GetAlpn() {
   return mAlpn;
 }
 
@@ -252,7 +252,7 @@ NS_IMETHODIMP SVCBRecord::GetSelectedAlpn(nsACString& aAlpn) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  aAlpn = Get<0>(*mAlpn);
+  aAlpn = std::get<0>(*mAlpn);
   return NS_OK;
 }
 
@@ -333,7 +333,7 @@ static bool CheckAlpnIsUsable(SupportedAlpnRank aAlpnType, bool aNoHttp2,
 static nsTArray<SVCBWrapper> FlattenRecords(const nsTArray<SVCB>& aRecords) {
   nsTArray<SVCBWrapper> result;
   for (const auto& record : aRecords) {
-    nsTArray<Tuple<nsCString, SupportedAlpnRank>> alpnList =
+    nsTArray<std::tuple<nsCString, SupportedAlpnRank>> alpnList =
         record.GetAllAlpn();
     if (alpnList.IsEmpty()) {
       result.AppendElement(SVCBWrapper(record));
@@ -377,13 +377,13 @@ DNSHTTPSSVCRecordBase::GetServiceModeRecordInternal(
     }
 
     if (record.mAlpn) {
-      if (!CheckAlpnIsUsable(Get<1>(*(record.mAlpn)), aNoHttp2, aNoHttp3,
+      if (!CheckAlpnIsUsable(std::get<1>(*(record.mAlpn)), aNoHttp2, aNoHttp3,
                              aCheckHttp3ExcludedList,
                              record.mRecord.mSvcDomainName, h3ExcludedCount)) {
         continue;
       }
 
-      if (IsHttp3(Get<1>(*(record.mAlpn)))) {
+      if (IsHttp3(std::get<1>(*(record.mAlpn)))) {
         // If the selected alpn is h3 and ech for h3 is disabled, we want
         // to find out if there is another non-h3 record that has
         // echConfig. If yes, we'll use the non-h3 record with echConfig
@@ -479,7 +479,7 @@ void DNSHTTPSSVCRecordBase::GetAllRecordsWithEchConfigInternal(
     }
 
     if (record.mAlpn) {
-      if (!CheckAlpnIsUsable(Get<1>(*(record.mAlpn)), aNoHttp2, aNoHttp3,
+      if (!CheckAlpnIsUsable(std::get<1>(*(record.mAlpn)), aNoHttp2, aNoHttp3,
                              aCheckHttp3ExcludedList,
                              record.mRecord.mSvcDomainName, h3ExcludedCount)) {
         continue;

@@ -94,8 +94,8 @@ inline void PrepareArguments(std::vector<std::string>& aArgv,
 inline void PrepareEnv(base::LaunchOptions* aOptions,
                        nsTArray<EnvVar>& aEnvMap) {
   for (auto& elt : aEnvMap) {
-    nsCString& var = Get<0>(elt);
-    nsCString& val = Get<1>(elt);
+    nsCString& var = std::get<0>(elt);
+    nsCString& val = std::get<1>(elt);
     aOptions->env_map[var.get()] = val.get();
     CleanCString(var);
     CleanCString(val);
@@ -108,8 +108,8 @@ inline void PrepareFdsRemap(base::LaunchOptions* aOptions,
   MOZ_LOG(gForkServiceLog, LogLevel::Verbose, ("fds mapping:"));
   for (auto& elt : aFdsRemap) {
     // FDs are duplicated here.
-    int fd = Get<0>(elt).ClonePlatformHandle().release();
-    std::pair<int, int> fdmap(fd, Get<1>(elt));
+    int fd = std::get<0>(elt).ClonePlatformHandle().release();
+    std::pair<int, int> fdmap(fd, std::get<1>(elt));
     aOptions->fds_to_remap.push_back(fdmap);
     MOZ_LOG(gForkServiceLog, LogLevel::Verbose,
             ("\t%d => %d", fdmap.first, fdmap.second));

@@ -295,7 +295,7 @@ uint8_t nsGIFDecoder2::ColormapIndexToPixel<uint8_t>(uint8_t aIndex) {
 }
 
 template <typename PixelSize>
-Tuple<int32_t, Maybe<WriteState>> nsGIFDecoder2::YieldPixels(
+std::tuple<int32_t, Maybe<WriteState>> nsGIFDecoder2::YieldPixels(
     const uint8_t* aData, size_t aLength, size_t* aBytesReadOut,
     PixelSize* aPixelBlock, int32_t aBlockSize) {
   MOZ_ASSERT(aData);
@@ -320,7 +320,7 @@ Tuple<int32_t, Maybe<WriteState>> nsGIFDecoder2::YieldPixels(
       }
 
       if (mGIFStruct.bits < mGIFStruct.codesize) {
-        return MakeTuple(written, Some(WriteState::NEED_MORE_DATA));
+        return std::make_tuple(written, Some(WriteState::NEED_MORE_DATA));
       }
 
       // Get the leading variable-length symbol from the data stream.
@@ -336,20 +336,20 @@ Tuple<int32_t, Maybe<WriteState>> nsGIFDecoder2::YieldPixels(
         mGIFStruct.codemask = (1 << mGIFStruct.codesize) - 1;
         mGIFStruct.avail = clearCode + 2;
         mGIFStruct.oldcode = -1;
-        return MakeTuple(written, Some(WriteState::NEED_MORE_DATA));
+        return std::make_tuple(written, Some(WriteState::NEED_MORE_DATA));
       }
 
       // Check for explicit end-of-stream code. It should only appear after all
       // image data, but if that was the case we wouldn't be in this function,
       // so this is always an error condition.
       if (code == (clearCode + 1)) {
-        return MakeTuple(written, Some(WriteState::FAILURE));
+        return std::make_tuple(written, Some(WriteState::FAILURE));
       }
 
       if (mGIFStruct.oldcode == -1) {
         if (code >= MAX_BITS) {
           // The code's too big; something's wrong.
-          return MakeTuple(written, Some(WriteState::FAILURE));
+          return std::make_tuple(written, Some(WriteState::FAILURE));
         }
 
         mGIFStruct.firstchar = mGIFStruct.oldcode = code;
@@ -368,13 +368,13 @@ Tuple<int32_t, Maybe<WriteState>> nsGIFDecoder2::YieldPixels(
 
         if (mGIFStruct.stackp >= mGIFStruct.stack + MAX_BITS) {
           // Stack overflow; something's wrong.
-          return MakeTuple(written, Some(WriteState::FAILURE));
+          return std::make_tuple(written, Some(WriteState::FAILURE));
         }
       }
 
       while (code >= clearCode) {
         if ((code >= MAX_BITS) || (code == mGIFStruct.prefix[code])) {
-          return MakeTuple(written, Some(WriteState::FAILURE));
+          return std::make_tuple(written, Some(WriteState::FAILURE));
         }
 
         *mGIFStruct.stackp++ = mGIFStruct.suffix[code];
@@ -382,7 +382,7 @@ Tuple<int32_t, Maybe<WriteState>> nsGIFDecoder2::YieldPixels(
 
         if (mGIFStruct.stackp >= mGIFStruct.stack + MAX_BITS) {
           // Stack overflow; something's wrong.
-          return MakeTuple(written, Some(WriteState::FAILURE));
+          return std::make_tuple(written, Some(WriteState::FAILURE));
         }
       }
 
@@ -409,7 +409,7 @@ Tuple<int32_t, Maybe<WriteState>> nsGIFDecoder2::YieldPixels(
 
     if (MOZ_UNLIKELY(mGIFStruct.stackp <= mGIFStruct.stack)) {
       MOZ_ASSERT_UNREACHABLE("No decoded data but we didn't return early?");
-      return MakeTuple(written, Some(WriteState::FAILURE));
+      return std::make_tuple(written, Some(WriteState::FAILURE));
     }
 
     // Yield a pixel at the appropriate index in the colormap.
@@ -418,7 +418,7 @@ Tuple<int32_t, Maybe<WriteState>> nsGIFDecoder2::YieldPixels(
         ColormapIndexToPixel<PixelSize>(*--mGIFStruct.stackp);
   }
 
-  return MakeTuple(written, Maybe<WriteState>());
+  return std::make_tuple(written, Maybe<WriteState>());
 }
 
 /// Expand the colormap from RGB to Packed ARGB as needed by Cairo.

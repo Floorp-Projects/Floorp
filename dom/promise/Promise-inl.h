@@ -11,7 +11,6 @@
 #include <utility>
 
 #include "mozilla/AlreadyAddRefed.h"
-#include "mozilla/TupleCycleCollection.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Promise.h"

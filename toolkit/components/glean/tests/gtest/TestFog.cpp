@@ -11,7 +11,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
 #include "mozilla/ResultVariant.h"
-#include "mozilla/Tuple.h"
+
 #include "nsTArray.h"
 
 #include "mozilla/Preferences.h"
@@ -116,11 +116,10 @@ TEST_F(FOGFixture, TestCppDatetimeWorks) {
   ASSERT_THAT(received.value(), BitEq(date));
 }
 
-using mozilla::MakeTuple;
 using mozilla::Some;
-using mozilla::Tuple;
 using mozilla::glean::test_only_ipc::AnEventExtra;
 using mozilla::glean::test_only_ipc::EventWithExtraExtra;
+using std::tuple;
 
 TEST_F(FOGFixture, TestCppEventWorks) {
   test_only_ipc::no_extra_event.Record();
@@ -138,8 +137,8 @@ TEST_F(FOGFixture, TestCppEventWorks) {
   ASSERT_STREQ("test_only.ipc", events[0].mCategory.get());
   ASSERT_STREQ("an_event", events[0].mName.get());
   ASSERT_EQ(1UL, events[0].mExtra.Length());
-  ASSERT_STREQ("extra1", mozilla::Get<0>(events[0].mExtra[0]).get());
-  ASSERT_STREQ("can set extras", mozilla::Get<1>(events[0].mExtra[0]).get());
+  ASSERT_STREQ("extra1", std::get<0>(events[0].mExtra[0]).get());
+  ASSERT_STREQ("can set extras", std::get<1>(events[0].mExtra[0]).get());
 }
 
 TEST_F(FOGFixture, TestCppEventsWithDifferentExtraTypes) {
@@ -157,8 +156,8 @@ TEST_F(FOGFixture, TestCppEventsWithDifferentExtraTypes) {
   // The list of extra key/value pairs can be in any order.
   ASSERT_EQ(3UL, events[0].mExtra.Length());
   for (auto extra : events[0].mExtra) {
-    auto key = mozilla::Get<0>(extra);
-    auto value = mozilla::Get<1>(extra);
+    auto key = std::get<0>(extra);
+    auto value = std::get<1>(extra);
 
     if (key == "extra1"_ns) {
       ASSERT_STREQ("can set extras", value.get());

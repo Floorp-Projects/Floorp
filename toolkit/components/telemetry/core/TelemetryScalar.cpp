@@ -1170,13 +1170,11 @@ typedef nsClassHashtable<ProcessIDHashKey, ScalarStorageMapType>
 typedef nsClassHashtable<ProcessIDHashKey, KeyedScalarStorageMapType>
     ProcessesKeyedScalarsMapType;
 
-typedef mozilla::Tuple<const char*, nsCOMPtr<nsIVariant>, uint32_t>
-    ScalarDataTuple;
+typedef std::tuple<const char*, nsCOMPtr<nsIVariant>, uint32_t> ScalarDataTuple;
 typedef nsTArray<ScalarDataTuple> ScalarTupleArray;
 typedef nsTHashMap<ProcessIDHashKey, ScalarTupleArray> ScalarSnapshotTable;
 
-typedef mozilla::Tuple<const char*, nsTArray<KeyedScalar::KeyValuePair>,
-                       uint32_t>
+typedef std::tuple<const char*, nsTArray<KeyedScalar::KeyValuePair>, uint32_t>
     KeyedScalarDataTuple;
 typedef nsTArray<KeyedScalarDataTuple> KeyedScalarTupleArray;
 typedef nsTHashMap<ProcessIDHashKey, KeyedScalarTupleArray>
@@ -2018,7 +2016,7 @@ nsresult internal_ScalarSnapshotter(const StaticMutexAutoLock& aLock,
         }
         // Append it to our list.
         processScalars.AppendElement(
-            mozilla::MakeTuple(info.name(), scalarValue, info.kind));
+            std::make_tuple(info.name(), scalarValue, info.kind));
       }
     }
     if (processScalars.Length() == 0) {
@@ -2076,7 +2074,7 @@ nsresult internal_KeyedScalarSnapshotter(
           continue;
         }
         // Append it to our list.
-        processScalars.AppendElement(mozilla::MakeTuple(
+        processScalars.AppendElement(std::make_tuple(
             info.name(), std::move(scalarKeyedData), info.kind));
       }
     }
@@ -3181,7 +3179,7 @@ nsresult TelemetryScalar::CreateSnapshots(unsigned int aDataset,
     for (ScalarTupleArray::size_type i = 0; i < processScalars.Length(); i++) {
       const ScalarDataTuple& scalar = processScalars[i];
 
-      const char* scalarName = mozilla::Get<0>(scalar);
+      const char* scalarName = std::get<0>(scalar);
       if (aFilterTest && strncmp(TEST_SCALAR_PREFIX, scalarName,
                                  strlen(TEST_SCALAR_PREFIX)) == 0) {
         continue;
@@ -3190,7 +3188,7 @@ nsresult TelemetryScalar::CreateSnapshots(unsigned int aDataset,
       // Convert it to a JS Val.
       JS::Rooted<JS::Value> scalarJsValue(aCx);
       nsresult rv = nsContentUtils::XPConnect()->VariantToJS(
-          aCx, processObj, mozilla::Get<1>(scalar), &scalarJsValue);
+          aCx, processObj, std::get<1>(scalar), &scalarJsValue);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -3259,7 +3257,7 @@ nsresult TelemetryScalar::CreateKeyedSnapshots(
          i++) {
       const KeyedScalarDataTuple& keyedScalarData = processScalars[i];
 
-      const char* scalarName = mozilla::Get<0>(keyedScalarData);
+      const char* scalarName = std::get<0>(keyedScalarData);
       if (aFilterTest && strncmp(TEST_SCALAR_PREFIX, scalarName,
                                  strlen(TEST_SCALAR_PREFIX)) == 0) {
         continue;
@@ -3272,7 +3270,7 @@ nsresult TelemetryScalar::CreateKeyedSnapshots(
       // Define a property for each scalar key, then add it to the keyed scalar
       // object.
       const nsTArray<KeyedScalar::KeyValuePair>& keyProps =
-          mozilla::Get<1>(keyedScalarData);
+          std::get<1>(keyedScalarData);
       for (uint32_t i = 0; i < keyProps.Length(); i++) {
         const KeyedScalar::KeyValuePair& keyData = keyProps[i];
 
@@ -3795,9 +3793,9 @@ nsresult TelemetryScalar::SerializeScalars(mozilla::JSONWriter& aWriter) {
 
     for (const ScalarDataTuple& scalar : processScalars) {
       nsresult rv = WriteVariantToJSONWriter(
-          mozilla::Get<2>(scalar) /*aScalarType*/,
-          mozilla::Get<1>(scalar) /*aInputValue*/,
-          mozilla::MakeStringSpan(mozilla::Get<0>(scalar)) /*aPropertyName*/,
+          std::get<2>(scalar) /*aScalarType*/,
+          std::get<1>(scalar) /*aInputValue*/,
+          mozilla::MakeStringSpan(std::get<0>(scalar)) /*aPropertyName*/,
           aWriter /*aWriter*/);
       if (NS_FAILED(rv)) {
         // Skip this scalar if we failed to write it. We don't bail out just
@@ -3846,15 +3844,15 @@ nsresult TelemetryScalar::SerializeKeyedScalars(mozilla::JSONWriter& aWriter) {
 
     for (const KeyedScalarDataTuple& keyedScalarData : processScalars) {
       aWriter.StartObjectProperty(
-          mozilla::MakeStringSpan(mozilla::Get<0>(keyedScalarData)));
+          mozilla::MakeStringSpan(std::get<0>(keyedScalarData)));
 
       // Define a property for each scalar key, then add it to the keyed scalar
       // object.
       const nsTArray<KeyedScalar::KeyValuePair>& keyProps =
-          mozilla::Get<1>(keyedScalarData);
+          std::get<1>(keyedScalarData);
       for (const KeyedScalar::KeyValuePair& keyData : keyProps) {
         nsresult rv = WriteVariantToJSONWriter(
-            mozilla::Get<2>(keyedScalarData) /*aScalarType*/,
+            std::get<2>(keyedScalarData) /*aScalarType*/,
             keyData.second /*aInputValue*/,
             PromiseFlatCString(keyData.first) /*aOutKey*/, aWriter /*aWriter*/);
         if (NS_FAILED(rv)) {
@@ -4029,7 +4027,7 @@ nsresult TelemetryScalar::DeserializePersistedKeyedScalars(
     return NS_ERROR_FAILURE;
   }
 
-  typedef mozilla::Tuple<nsCString, nsString, nsCOMPtr<nsIVariant>>
+  typedef std::tuple<nsCString, nsString, nsCOMPtr<nsIVariant>>
       PersistedKeyedScalarTuple;
   typedef nsTArray<PersistedKeyedScalarTuple> PersistedKeyedScalarArray;
   typedef nsTHashMap<ProcessIDHashKey, PersistedKeyedScalarArray>
@@ -4165,8 +4163,8 @@ nsresult TelemetryScalar::DeserializePersistedKeyedScalars(
         PersistedKeyedScalarArray& processScalars =
             scalarsToUpdate.LookupOrInsert(static_cast<uint32_t>(processID));
         processScalars.AppendElement(
-            mozilla::MakeTuple(nsCString(NS_ConvertUTF16toUTF8(scalarName)),
-                               nsString(keyName), unpackedVal));
+            std::make_tuple(nsCString(NS_ConvertUTF16toUTF8(scalarName)),
+                            nsString(keyName), unpackedVal));
       }
     }
   }
@@ -4180,9 +4178,9 @@ nsresult TelemetryScalar::DeserializePersistedKeyedScalars(
       for (PersistedKeyedScalarArray::size_type i = 0;
            i < processScalars.Length(); i++) {
         mozilla::Unused << internal_UpdateKeyedScalar(
-            lock, mozilla::Get<0>(processScalars[i]),
-            mozilla::Get<1>(processScalars[i]), ScalarActionType::eSet,
-            mozilla::Get<2>(processScalars[i]), ProcessID(entry.GetKey()),
+            lock, std::get<0>(processScalars[i]),
+            std::get<1>(processScalars[i]), ScalarActionType::eSet,
+            std::get<2>(processScalars[i]), ProcessID(entry.GetKey()),
             true /* aForce */);
       }
     }

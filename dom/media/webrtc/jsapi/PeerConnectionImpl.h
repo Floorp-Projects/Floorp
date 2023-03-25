@@ -39,7 +39,6 @@
 
 #include "mozilla/TimeStamp.h"
 #include "mozilla/net/DataChannel.h"
-#include "mozilla/TupleCycleCollection.h"
 #include "VideoUtils.h"
 #include "VideoSegment.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"

@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_SessionStoreRestoreData_h
 #define mozilla_dom_SessionStoreRestoreData_h
 
-#include "mozilla/Tuple.h"
 #include "mozilla/dom/sessionstore/SessionStoreTypes.h"
 #include "mozilla/dom/SessionStoreData.h"
 #include "nsISessionStoreRestoreData.h"

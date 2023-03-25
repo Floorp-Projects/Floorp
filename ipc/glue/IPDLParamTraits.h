@@ -11,7 +11,7 @@
 #include "ipc/IPCMessageUtilsSpecializations.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Variant.h"
-#include "mozilla/Tuple.h"
+
 #include "nsTArray.h"
 
 #include <type_traits>

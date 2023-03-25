@@ -100,7 +100,7 @@ struct SVCB {
   Maybe<uint16_t> GetPort() const;
   bool NoDefaultAlpn() const;
   void GetIPHints(CopyableTArray<mozilla::net::NetAddr>& aAddresses) const;
-  nsTArray<Tuple<nsCString, SupportedAlpnRank>> GetAllAlpn() const;
+  nsTArray<std::tuple<nsCString, SupportedAlpnRank>> GetAllAlpn() const;
   uint16_t mSvcFieldPriority = 0;
   nsCString mSvcDomainName;
   nsCString mEchConfig;
@@ -112,7 +112,7 @@ struct SVCB {
 
 struct SVCBWrapper {
   explicit SVCBWrapper(const SVCB& aRecord) : mRecord(aRecord) {}
-  Maybe<Tuple<nsCString, SupportedAlpnRank>> mAlpn;
+  Maybe<std::tuple<nsCString, SupportedAlpnRank>> mAlpn;
   const SVCB& mRecord;
 };
 
@@ -123,7 +123,7 @@ class SVCBRecord : public nsISVCBRecord {
   explicit SVCBRecord(const SVCB& data)
       : mData(data), mPort(Nothing()), mAlpn(Nothing()) {}
   explicit SVCBRecord(const SVCB& data,
-                      Maybe<Tuple<nsCString, SupportedAlpnRank>> aAlpn);
+                      Maybe<std::tuple<nsCString, SupportedAlpnRank>> aAlpn);
 
  private:
   friend class DNSHTTPSSVCRecordBase;
@@ -132,7 +132,7 @@ class SVCBRecord : public nsISVCBRecord {
 
   SVCB mData;
   Maybe<uint16_t> mPort;
-  Maybe<Tuple<nsCString, SupportedAlpnRank>> mAlpn;
+  Maybe<std::tuple<nsCString, SupportedAlpnRank>> mAlpn;
 };
 
 class DNSHTTPSSVCRecordBase {

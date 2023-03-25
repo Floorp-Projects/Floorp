@@ -29,7 +29,7 @@
 #ifdef XP_WIN
 #  include "mozilla/TimeStamp_windows.h"
 #endif
-#include "mozilla/Tuple.h"
+
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Vector.h"
@@ -710,8 +710,8 @@ struct ParamTraits<mozilla::UniquePtr<T>> {
 };
 
 template <typename... Ts>
-struct ParamTraits<mozilla::Tuple<Ts...>> {
-  typedef mozilla::Tuple<Ts...> paramType;
+struct ParamTraits<std::tuple<Ts...>> {
+  typedef std::tuple<Ts...> paramType;
 
   template <typename U>
   static void Write(IPC::MessageWriter* aWriter, U&& aParam) {
@@ -719,31 +719,30 @@ struct ParamTraits<mozilla::Tuple<Ts...>> {
                   std::index_sequence_for<Ts...>{});
   }
 
-  static bool Read(IPC::MessageReader* aReader,
-                   mozilla::Tuple<Ts...>* aResult) {
+  static bool Read(IPC::MessageReader* aReader, std::tuple<Ts...>* aResult) {
     return ReadInternal(aReader, *aResult, std::index_sequence_for<Ts...>{});
   }
 
  private:
   template <size_t... Is>
   static void WriteInternal(IPC::MessageWriter* aWriter,
-                            const mozilla::Tuple<Ts...>& aParam,
+                            const std::tuple<Ts...>& aParam,
                             std::index_sequence<Is...>) {
-    WriteParams(aWriter, mozilla::Get<Is>(aParam)...);
+    WriteParams(aWriter, std::get<Is>(aParam)...);
   }
 
   template <size_t... Is>
   static void WriteInternal(IPC::MessageWriter* aWriter,
-                            mozilla::Tuple<Ts...>&& aParam,
+                            std::tuple<Ts...>&& aParam,
                             std::index_sequence<Is...>) {
-    WriteParams(aWriter, std::move(mozilla::Get<Is>(aParam))...);
+    WriteParams(aWriter, std::move(std::get<Is>(aParam))...);
   }
 
   template <size_t... Is>
   static bool ReadInternal(IPC::MessageReader* aReader,
-                           mozilla::Tuple<Ts...>& aResult,
+                           std::tuple<Ts...>& aResult,
                            std::index_sequence<Is...>) {
-    return ReadParams(aReader, mozilla::Get<Is>(aResult)...);
+    return ReadParams(aReader, std::get<Is>(aResult)...);
   }
 };
 

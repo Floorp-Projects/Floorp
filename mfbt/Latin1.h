@@ -16,7 +16,6 @@
 
 #include "mozilla/JsRust.h"
 #include "mozilla/Span.h"
-#include "mozilla/Tuple.h"
 
 #if MOZ_HAS_JSRUST()
 #  include "encoding_rs_mem.h"
@@ -220,13 +219,13 @@ inline size_t ConvertLatin1toUtf8(mozilla::Span<const char> aSource,
  * TextEncoder.encodeInto.
  * https://encoding.spec.whatwg.org/#dom-textencoder-encodeinto
  */
-inline mozilla::Tuple<size_t, size_t> ConvertLatin1toUtf8Partial(
+inline std::tuple<size_t, size_t> ConvertLatin1toUtf8Partial(
     mozilla::Span<const char> aSource, mozilla::Span<char> aDest) {
   size_t srcLen = aSource.Length();
   size_t dstLen = aDest.Length();
   encoding_mem_convert_latin1_to_utf8_partial(aSource.Elements(), &srcLen,
                                               aDest.Elements(), &dstLen);
-  return mozilla::MakeTuple(srcLen, dstLen);
+  return std::make_tuple(srcLen, dstLen);
 }
 
 /**

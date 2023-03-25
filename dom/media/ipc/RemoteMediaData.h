@@ -149,12 +149,12 @@ class RemoteArrayOfByteBuffer {
   AlignedBuffer<Type> AlignedBufferAt(size_t aIndex) const {
     MOZ_ASSERT(aIndex < Count());
     const OffsetEntry& entry = mOffsets[aIndex];
-    size_t entrySize = Get<1>(entry);
+    size_t entrySize = std::get<1>(entry);
     if (!mBuffers || !entrySize) {
       // It's an empty one.
       return AlignedBuffer<Type>();
     }
-    if (!Check(Get<0>(entry), entrySize)) {
+    if (!Check(std::get<0>(entry), entrySize)) {
       // This Shmem is corrupted and can't contain the data we are about to
       // retrieve. We return an empty array instead of asserting to allow for
       // recovery.
@@ -165,7 +165,7 @@ class RemoteArrayOfByteBuffer {
       return AlignedBuffer<Type>();
     }
     return AlignedBuffer<Type>(
-        reinterpret_cast<Type*>(BuffersStartAddress() + Get<0>(entry)),
+        reinterpret_cast<Type*>(BuffersStartAddress() + std::get<0>(entry)),
         entrySize / sizeof(Type));
   }
 
@@ -173,7 +173,7 @@ class RemoteArrayOfByteBuffer {
   // Will return nullptr if the packed buffer was originally empty.
   already_AddRefed<MediaByteBuffer> MediaByteBufferAt(size_t aIndex) const;
   // Return the size of the aIndexth buffer.
-  size_t SizeAt(size_t aIndex) const { return Get<1>(mOffsets[aIndex]); }
+  size_t SizeAt(size_t aIndex) const { return std::get<1>(mOffsets[aIndex]); }
   // Return false if an out of memory error was encountered during construction.
   bool IsValid() const { return mIsValid; };
   // Return the number of buffers packed into this entity.
@@ -198,7 +198,7 @@ class RemoteArrayOfByteBuffer {
   Maybe<ipc::Shmem> mBuffers;
   // The offset to the start of the individual buffer and its size (all in
   // bytes)
-  typedef Tuple<size_t, size_t> OffsetEntry;
+  typedef std::tuple<size_t, size_t> OffsetEntry;
   nsTArray<OffsetEntry> mOffsets;
 };
 

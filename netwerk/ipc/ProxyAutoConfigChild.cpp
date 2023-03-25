@@ -162,7 +162,7 @@ mozilla::ipc::IPCResult ProxyAutoConfigChild::RecvConfigurePAC(
 
 void ProxyAutoConfigChild::PendingQuery::Resolve(nsresult aStatus,
                                                  const nsACString& aResult) {
-  mResolver(Tuple<const nsresult&, const nsACString&>(aStatus, aResult));
+  mResolver(std::tuple<const nsresult&, const nsACString&>(aStatus, aResult));
 }
 
 mozilla::ipc::IPCResult ProxyAutoConfigChild::RecvGetProxyForURI(

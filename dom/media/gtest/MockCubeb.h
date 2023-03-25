@@ -185,7 +185,8 @@ class MockCubebStream {
   MediaEventSource<cubeb_state>& StateEvent();
   MediaEventSource<uint32_t>& FramesProcessedEvent();
   MediaEventSource<uint32_t>& FramesVerifiedEvent();
-  MediaEventSource<Tuple<uint64_t, float, uint32_t>>& OutputVerificationEvent();
+  MediaEventSource<std::tuple<uint64_t, float, uint32_t>>&
+  OutputVerificationEvent();
   MediaEventSource<void>& ErrorForcedEvent();
   MediaEventSource<void>& ErrorStoppedEvent();
   MediaEventSource<void>& DeviceChangeForcedEvent();
@@ -245,7 +246,8 @@ class MockCubebStream {
   MediaEventProducer<cubeb_state> mStateEvent;
   MediaEventProducer<uint32_t> mFramesProcessedEvent;
   MediaEventProducer<uint32_t> mFramesVerifiedEvent;
-  MediaEventProducer<Tuple<uint64_t, float, uint32_t>> mOutputVerificationEvent;
+  MediaEventProducer<std::tuple<uint64_t, float, uint32_t>>
+      mOutputVerificationEvent;
   MediaEventProducer<void> mErrorForcedEvent;
   MediaEventProducer<void> mErrorStoppedEvent;
   MediaEventProducer<void> mDeviceChangedForcedEvent;
