@@ -148,6 +148,8 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "CloseEvent", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "CompressionStream", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "CountQueuingStrategy", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "Crypto", insecureContext: true },
@@ -155,6 +157,8 @@ let interfaceNamesInGlobalScope = [
   { name: "CryptoKey" },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "CustomEvent", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "DecompressionStream", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "DedicatedWorkerGlobalScope", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!

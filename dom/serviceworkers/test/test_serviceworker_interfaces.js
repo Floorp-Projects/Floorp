@@ -143,6 +143,8 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "CloseEvent",
   // IMPORTANT: Do not change this list without review from a DOM peer!
+  "CompressionStream",
+  // IMPORTANT: Do not change this list without review from a DOM peer!
   "CountQueuingStrategy",
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "Crypto",
@@ -150,6 +152,8 @@ let interfaceNamesInGlobalScope = [
   "CryptoKey",
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "CustomEvent",
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  "DecompressionStream",
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "Directory",
   // IMPORTANT: Do not change this list without review from a DOM peer!
