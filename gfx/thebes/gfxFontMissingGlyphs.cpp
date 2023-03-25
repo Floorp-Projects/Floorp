@@ -81,42 +81,53 @@ static const Float BOX_BORDER_OPACITY = 0.5;
 
 #ifndef MOZ_GFX_OPTIMIZE_MOBILE
 
-static RefPtr<DrawTarget> gGlyphDrawTarget;
-static RefPtr<SourceSurface> gGlyphMask;
-static RefPtr<SourceSurface> gGlyphAtlas;
-static DeviceColor gGlyphColor;
+class GlyphAtlas {
+ public:
+  GlyphAtlas(RefPtr<SourceSurface>&& aSurface, const DeviceColor& aColor)
+      : mSurface(std::move(aSurface)), mColor(aColor) {}
+  ~GlyphAtlas() = default;
+
+  already_AddRefed<SourceSurface> Surface() const {
+    RefPtr surface = mSurface;
+    return surface.forget();
+  }
+  DeviceColor Color() const { return mColor; }
+
+ private:
+  RefPtr<SourceSurface> mSurface;
+  DeviceColor mColor;
+};
+
+// This is an owning reference that we will manage via exchange() and
+// explicit new/delete operations.
+static std::atomic<GlyphAtlas*> gGlyphAtlas;
 
 /**
  * Generates a new colored mini-font atlas from the mini-font mask.
  */
-static bool MakeGlyphAtlas(const DeviceColor& aColor) {
-  gGlyphAtlas = nullptr;
-  if (!gGlyphDrawTarget) {
-    gGlyphDrawTarget =
-        gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
-            IntSize(MINIFONT_WIDTH * 16, MINIFONT_HEIGHT),
-            SurfaceFormat::B8G8R8A8);
-    if (!gGlyphDrawTarget) {
-      return false;
-    }
+static GlyphAtlas* MakeGlyphAtlas(const DeviceColor& aColor) {
+  RefPtr<DrawTarget> glyphDrawTarget =
+      gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
+          IntSize(MINIFONT_WIDTH * 16, MINIFONT_HEIGHT),
+          SurfaceFormat::B8G8R8A8);
+  if (!glyphDrawTarget) {
+    return nullptr;
   }
-  if (!gGlyphMask) {
-    gGlyphMask = gGlyphDrawTarget->CreateSourceSurfaceFromData(
-        const_cast<uint8_t*>(gMiniFontData),
-        IntSize(MINIFONT_WIDTH * 16, MINIFONT_HEIGHT), MINIFONT_WIDTH * 16,
-        SurfaceFormat::A8);
-    if (!gGlyphMask) {
-      return false;
-    }
+  RefPtr<SourceSurface> glyphMask =
+      glyphDrawTarget->CreateSourceSurfaceFromData(
+          const_cast<uint8_t*>(gMiniFontData),
+          IntSize(MINIFONT_WIDTH * 16, MINIFONT_HEIGHT), MINIFONT_WIDTH * 16,
+          SurfaceFormat::A8);
+  if (!glyphMask) {
+    return nullptr;
   }
-  gGlyphDrawTarget->MaskSurface(ColorPattern(aColor), gGlyphMask, Point(0, 0),
-                                DrawOptions(1.0f, CompositionOp::OP_SOURCE));
-  gGlyphAtlas = gGlyphDrawTarget->Snapshot();
-  if (!gGlyphAtlas) {
-    return false;
+  glyphDrawTarget->MaskSurface(ColorPattern(aColor), glyphMask, Point(0, 0),
+                               DrawOptions(1.0f, CompositionOp::OP_SOURCE));
+  RefPtr<SourceSurface> surface = glyphDrawTarget->Snapshot();
+  if (!surface) {
+    return nullptr;
   }
-  gGlyphColor = aColor;
-  return true;
+  return new GlyphAtlas(std::move(surface), aColor);
 }
 
 /**
@@ -128,20 +139,35 @@ static inline already_AddRefed<SourceSurface> GetGlyphAtlas(
   // Get the opaque color, ignoring any transparency which will be handled
   // later.
   DeviceColor color(aColor.r, aColor.g, aColor.b);
-  if ((gGlyphAtlas && gGlyphColor == color) || MakeGlyphAtlas(color)) {
-    return do_AddRef(gGlyphAtlas);
+
+  // Atomically grab the current GlyphAtlas pointer (if any). Because we
+  // exchange with nullptr here, no other thread will be able to touch the
+  // currAtlas record while we're using it; if they try, they'll just see
+  // the null that we stored.
+  GlyphAtlas* currAtlas = gGlyphAtlas.exchange(nullptr);
+
+  if (currAtlas && currAtlas->Color() == color) {
+    // If its color is right, grab a reference to its surface.
+    RefPtr<SourceSurface> surface = currAtlas->Surface();
+    // Now put the currAtlas record back in the global. If some other thread
+    // has stored an atlas there in the meantime, we just discard it.
+    delete gGlyphAtlas.exchange(currAtlas);
+    return surface.forget();
   }
-  return nullptr;
+
+  // Make a new atlas in the color we want.
+  GlyphAtlas* atlas = MakeGlyphAtlas(color);
+  RefPtr<SourceSurface> surface = atlas ? atlas->Surface() : nullptr;
+
+  // Store the newly-created atlas in the global; release any other.
+  delete gGlyphAtlas.exchange(atlas);
+  return surface.forget();
 }
 
 /**
  * Clear any cached glyph atlas resources.
  */
-static void PurgeGlyphAtlas() {
-  gGlyphAtlas = nullptr;
-  gGlyphDrawTarget = nullptr;
-  gGlyphMask = nullptr;
-}
+static void PurgeGlyphAtlas() { delete gGlyphAtlas.exchange(nullptr); }
 
 // WebRender layer manager user data that will get signaled when the layer
 // manager is destroyed.
