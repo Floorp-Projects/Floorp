@@ -258,10 +258,6 @@ pref("general.config.obscure_value", 0);
 //font
 pref("font.blacklist.underline_offset", "FangSong,Gulim,GulimChe,MingLiU,MingLiU-ExtB,MingLiU_HKSCS,MingLiU-HKSCS-ExtB,MS Gothic,MS Mincho,MS PGothic,MS PMincho,MS UI Gothic,PMingLiU,PMingLiU-ExtB,SimHei,SimSun,SimSun-ExtB,Hei,Kai,Apple LiGothic,Apple LiSung,Osaka,Meiryo");
 
-// 多少のパフォーマンス改善
-pref("gfx.canvas.accelerated", true);
-pref("gfx.webrender.all", true);
-
 // https://developer.mozilla.org/docs/Web/API/Navigator/share
 #ifdef XP_WIN
 pref("dom.webshare.enabled", true);
