@@ -15,6 +15,7 @@
 #ifdef MOZ_LOGGING
 #  include "mozilla/Logging.h"
 #endif
+#include "mozilla/Tuple.h"
 
 #if defined(MOZ_WIDGET_ANDROID)
 #  include "nsDebug.h"
@@ -195,7 +196,7 @@ struct CriticalLogger {
 // preset capacity we may not get all of them, so the indices help figure out
 // which ones we did save.  The double is expected to be the "TimeDuration",
 // time in seconds since the process creation.
-typedef std::tuple<int32_t, std::string, double> LoggingRecordEntry;
+typedef mozilla::Tuple<int32_t, std::string, double> LoggingRecordEntry;
 
 // Implement this interface and init the Factory with an instance to
 // forward critical logs.

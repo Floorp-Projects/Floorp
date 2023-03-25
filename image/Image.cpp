@@ -17,7 +17,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/SizeOfState.h"
 #include "mozilla/TimeStamp.h"
-// for Tie
+#include "mozilla/Tuple.h"  // for Tie
 #include "mozilla/layers/SharedSurfacesChild.h"
 
 namespace mozilla {

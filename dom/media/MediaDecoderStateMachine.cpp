@@ -24,7 +24,7 @@
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TaskQueue.h"
-
+#include "mozilla/Tuple.h"
 #include "nsIMemoryReporter.h"
 #include "nsPrintfCString.h"
 #include "nsTArray.h"
@@ -251,11 +251,11 @@ class MediaDecoderStateMachine::StateObject {
   MediaQueue<VideoData>& VideoQueue() const { return mMaster->mVideoQueue; }
 
   template <class S, typename... Args, size_t... Indexes>
-  auto CallEnterMemberFunction(S* aS, std::tuple<Args...>& aTuple,
+  auto CallEnterMemberFunction(S* aS, Tuple<Args...>& aTuple,
                                std::index_sequence<Indexes...>)
       -> decltype(ReturnTypeHelper(&S::Enter)) {
     AUTO_PROFILER_LABEL("StateObject::CallEnterMemberFunction", MEDIA_PLAYBACK);
-    return aS->Enter(std::move(std::get<Indexes>(aTuple))...);
+    return aS->Enter(std::move(Get<Indexes>(aTuple))...);
   }
 
   // Note this function will delete the current state object.
@@ -268,7 +268,7 @@ class MediaDecoderStateMachine::StateObject {
     // So we 1) pass the parameters by reference, but then 2) immediately copy
     // them into a Tuple to be safe against modification, and finally 3) move
     // the elements of the Tuple into the final function call.
-    auto copiedArgs = std::make_tuple(std::forward<Ts>(aArgs)...);
+    auto copiedArgs = MakeTuple(std::forward<Ts>(aArgs)...);
 
     // Copy mMaster which will reset to null.
     auto* master = mMaster;

@@ -26,8 +26,7 @@ void BooleanMetric::Set(bool aValue) const {
     GetLabeledMirrorLock().apply([&](auto& lock) {
       auto tuple = lock.ref()->MaybeGet(mId);
       if (tuple) {
-        Telemetry::ScalarSet(std::get<0>(tuple.ref()), std::get<1>(tuple.ref()),
-                             aValue);
+        Telemetry::ScalarSet(Get<0>(tuple.ref()), Get<1>(tuple.ref()), aValue);
       }
     });
   }

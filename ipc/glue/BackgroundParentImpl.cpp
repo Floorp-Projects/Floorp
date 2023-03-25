@@ -1347,8 +1347,8 @@ mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvEnsureRDDProcessAndCreateBridge(
     EnsureRDDProcessAndCreateBridgeResolver&& aResolver) {
   RDDProcessManager* rdd = RDDProcessManager::Get();
-  using Type = std::tuple<const nsresult&,
-                          Endpoint<mozilla::PRemoteDecoderManagerChild>&&>;
+  using Type =
+      Tuple<const nsresult&, Endpoint<mozilla::PRemoteDecoderManagerChild>&&>;
   if (!rdd) {
     aResolver(
         Type(NS_ERROR_NOT_AVAILABLE, Endpoint<PRemoteDecoderManagerChild>()));
@@ -1383,9 +1383,8 @@ BackgroundParentImpl::RecvEnsureUtilityProcessAndCreateBridge(
       [aResolver, managerThread, otherPid, aLocation]() {
         RefPtr<UtilityProcessManager> upm =
             UtilityProcessManager::GetSingleton();
-        using Type =
-            std::tuple<const nsresult&,
-                       Endpoint<mozilla::PRemoteDecoderManagerChild>&&>;
+        using Type = Tuple<const nsresult&,
+                           Endpoint<mozilla::PRemoteDecoderManagerChild>&&>;
         if (!upm) {
           aResolver(Type(NS_ERROR_NOT_AVAILABLE,
                          Endpoint<PRemoteDecoderManagerChild>()));

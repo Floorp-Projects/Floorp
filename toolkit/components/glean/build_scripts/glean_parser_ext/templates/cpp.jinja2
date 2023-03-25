@@ -12,11 +12,10 @@ Jinja2 template is not. Please file bugs! #}
 #define mozilla_Metrics_h
 
 #include "mozilla/glean/bindings/MetricTypes.h"
+#include "mozilla/Tuple.h"
 #include "mozilla/Maybe.h"
 #include "nsTArray.h"
 #include "nsPrintfCString.h"
-
-#include <tuple>
 
 namespace mozilla::glean {
 
@@ -36,7 +35,7 @@ struct {{ obj.name|Camelize }}{{ suffix }} {
   mozilla::Maybe<{{type|extra_type_name}}> {{ item|camelize }};
   {% endfor %}
 
-  std::tuple<nsTArray<nsCString>, nsTArray<nsCString>> ToFfiExtra() const {
+  Tuple<nsTArray<nsCString>, nsTArray<nsCString>> ToFfiExtra() const {
     nsTArray<nsCString> extraKeys;
     nsTArray<nsCString> extraValues;
     {% for item, type in obj|attr(name) %}
@@ -53,7 +52,7 @@ struct {{ obj.name|Camelize }}{{ suffix }} {
       {% endif %}
     }
     {% endfor %}
-    return std::make_tuple(std::move(extraKeys), std::move(extraValues));
+    return MakeTuple(std::move(extraKeys), std::move(extraValues));
   }
 };
 {%- endmacro %}

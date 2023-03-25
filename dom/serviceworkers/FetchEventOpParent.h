@@ -9,6 +9,7 @@
 
 #include "nsISupports.h"
 
+#include "mozilla/Tuple.h"
 #include "mozilla/dom/FetchEventOpProxyParent.h"
 #include "mozilla/dom/PFetchEventOpParent.h"
 
@@ -24,8 +25,7 @@ class FetchEventOpParent final : public PFetchEventOpParent {
 
   // Transition from the Pending state to the Started state. Returns the preload
   // response and response end args, if it has already arrived.
-  std::tuple<Maybe<ParentToParentInternalResponse>, Maybe<ResponseEndArgs>>
-  OnStart(
+  Tuple<Maybe<ParentToParentInternalResponse>, Maybe<ResponseEndArgs>> OnStart(
       MovingNotNull<RefPtr<FetchEventOpProxyParent>> aFetchEventOpProxyParent);
 
   // Transition from the Started state to the Finished state.

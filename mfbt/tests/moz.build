@@ -62,6 +62,7 @@ CppUnitTests(
         "TestSplayTree",
         "TestTemplateLib",
         "TestTextUtils",
+        "TestTuple",
         "TestTypedEnum",
         "TestTypeTraits",
         "TestUniquePtr",

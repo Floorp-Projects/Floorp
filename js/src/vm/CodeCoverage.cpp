@@ -634,7 +634,7 @@ bool InitScriptCoverage(JSContext* cx, JSScript* script) {
 
   // Save source in map for when we collect coverage.
   if (!zone->scriptLCovMap->putNew(script,
-                                   std::make_tuple(source, scriptName))) {
+                                   mozilla::MakeTuple(source, scriptName))) {
     ReportOutOfMemory(cx);
     return false;
   }
@@ -655,7 +655,9 @@ bool CollectScriptCoverage(JSScript* script, bool finalizing) {
     return false;
   }
 
-  auto [source, scriptName] = p->value();
+  LCovSource* source;
+  const char* scriptName;
+  mozilla::Tie(source, scriptName) = p->value();
 
   if (script->hasBytecode()) {
     source->writeScript(script, scriptName);

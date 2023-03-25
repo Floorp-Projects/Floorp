@@ -344,25 +344,25 @@ nsHttpConnectionInfo::CloneAndAdoptHTTPSSVCRecord(
   // Try to get the port and Alpn. If this record has SvcParamKeyPort defined,
   // the new port will be used as mRoutedPort.
   Maybe<uint16_t> port = aRecord->GetPort();
-  Maybe<std::tuple<nsCString, SupportedAlpnRank>> alpn = aRecord->GetAlpn();
+  Maybe<Tuple<nsCString, SupportedAlpnRank>> alpn = aRecord->GetAlpn();
 
   // Let the new conn info learn h3 will be used.
-  bool isHttp3 = alpn ? mozilla::net::IsHttp3(std::get<1>(*alpn)) : false;
+  bool isHttp3 = alpn ? mozilla::net::IsHttp3(Get<1>(*alpn)) : false;
 
   LOG(("HTTPSSVC: use new routed host (%s) and new npnToken (%s)", name.get(),
-       alpn ? std::get<0>(*alpn).get() : "None"));
+       alpn ? Get<0>(*alpn).get() : "None"));
 
   RefPtr<nsHttpConnectionInfo> clone;
   if (name.IsEmpty()) {
     clone = new nsHttpConnectionInfo(
-        mOrigin, mOriginPort, alpn ? std::get<0>(*alpn) : EmptyCString(),
-        mUsername, mProxyInfo, mOriginAttributes, mEndToEndSSL, isHttp3);
+        mOrigin, mOriginPort, alpn ? Get<0>(*alpn) : EmptyCString(), mUsername,
+        mProxyInfo, mOriginAttributes, mEndToEndSSL, isHttp3);
   } else {
     MOZ_ASSERT(mEndToEndSSL);
     clone = new nsHttpConnectionInfo(
-        mOrigin, mOriginPort, alpn ? std::get<0>(*alpn) : EmptyCString(),
-        mUsername, mProxyInfo, mOriginAttributes, name,
-        port ? *port : mOriginPort, isHttp3, mWebTransport);
+        mOrigin, mOriginPort, alpn ? Get<0>(*alpn) : EmptyCString(), mUsername,
+        mProxyInfo, mOriginAttributes, name, port ? *port : mOriginPort,
+        isHttp3, mWebTransport);
   }
 
   // Make sure the anonymous, insecure-scheme, and private flags are transferred

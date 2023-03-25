@@ -12,6 +12,7 @@
 
 #include "mozilla/Preferences.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Tuple.h"
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
@@ -980,7 +981,7 @@ class JsepSessionTest : public JsepSessionTestBase,
         session.AddLocalIceCandidate(kAEqualsCandidate + candidate.str(),
                                      transportId, "", &level, &mid, &skipped);
         if (!skipped) {
-          mCandidatesToTrickle.push_back(std::tuple<Level, Mid, Candidate>(
+          mCandidatesToTrickle.push_back(Tuple<Level, Mid, Candidate>(
               level, mid, kAEqualsCandidate + candidate.str()));
           candidates.push_back(candidate.str());
         }
@@ -1025,7 +1026,10 @@ class JsepSessionTest : public JsepSessionTestBase,
     void Trickle(JsepSession& session) {
       std::string transportId;
       for (const auto& levelMidAndCandidate : mCandidatesToTrickle) {
-        auto [level, mid, candidate] = levelMidAndCandidate;
+        Level level;
+        Mid mid;
+        Candidate candidate;
+        Tie(level, mid, candidate) = levelMidAndCandidate;
         std::cerr << "trickling candidate: " << candidate << " level: " << level
                   << " mid: " << mid << std::endl;
         Maybe<unsigned long> lev = Some(level);
@@ -1153,7 +1157,7 @@ class JsepSessionTest : public JsepSessionTestBase,
     std::map<TransportId, std::map<ComponentType, std::vector<Candidate>>>
         mCandidates;
     // Level/mid/candidate tuples that need to be trickled
-    std::vector<std::tuple<Level, Mid, Candidate>> mCandidatesToTrickle;
+    std::vector<Tuple<Level, Mid, Candidate>> mCandidatesToTrickle;
   };
 
   // For streaming parse errors
