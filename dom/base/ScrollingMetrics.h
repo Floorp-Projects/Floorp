@@ -22,7 +22,7 @@ namespace mozilla {
 class ScrollingMetrics {
  public:
   using ScrollingMetricsPromise =
-      MozPromise<std::tuple<uint32_t, uint32_t>, bool, true>;
+      MozPromise<Tuple<uint32_t, uint32_t>, bool, true>;
 
   static RefPtr<ScrollingMetricsPromise> CollectScrollingMetrics() {
     return GetSingleton()->CollectScrollingMetricsInternal();
@@ -30,7 +30,7 @@ class ScrollingMetrics {
 
   // Return the tuple of <scrollingTimeInMilliseconds,
   // ScrollingDistanceInPixels>
-  static std::tuple<uint32_t, uint32_t> CollectLocalScrollingMetrics() {
+  static Tuple<uint32_t, uint32_t> CollectLocalScrollingMetrics() {
     return GetSingleton()->CollectLocalScrollingMetricsInternal();
   }
 
@@ -43,7 +43,7 @@ class ScrollingMetrics {
   static ScrollingMetrics* GetSingleton();
   static StaticAutoPtr<ScrollingMetrics> sSingleton;
   RefPtr<ScrollingMetricsPromise> CollectScrollingMetricsInternal();
-  std::tuple<uint32_t, uint32_t> CollectLocalScrollingMetricsInternal();
+  Tuple<uint32_t, uint32_t> CollectLocalScrollingMetricsInternal();
 };
 
 }  // namespace mozilla

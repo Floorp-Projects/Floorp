@@ -40,7 +40,10 @@ nsresult GetIPCSynthesizeResponseArgs(
     SynthesizeResponseArgs&& aArgs) {
   MOZ_ASSERT(RemoteWorkerService::Thread()->IsOnCurrentThread());
 
-  auto [internalResponse, closure, timeStamps] = std::move(aArgs);
+  SafeRefPtr<InternalResponse> internalResponse;
+  FetchEventRespondWithClosure closure;
+  FetchEventTimeStamps timeStamps;
+  Tie(internalResponse, closure, timeStamps) = std::move(aArgs);
 
   aIPCArgs->closure() = std::move(closure);
   aIPCArgs->timeStamps() = std::move(timeStamps);

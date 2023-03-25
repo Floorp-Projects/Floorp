@@ -31,6 +31,8 @@ using mozilla::IsAscii;
 using mozilla::IsUtf8Latin1;
 using mozilla::LossyConvertUtf16toLatin1;
 using mozilla::Span;
+using mozilla::Tie;
+using mozilla::Tuple;
 using mozilla::Utf8Unit;
 
 using JS::Latin1CharsZ;
@@ -103,12 +105,16 @@ JS_PUBLIC_API size_t JS::DeflateStringToUTF8Buffer(JSLinearString* src,
   JS::AutoCheckCannotGC nogc;
   if (src->hasLatin1Chars()) {
     auto source = AsChars(Span(src->latin1Chars(nogc), src->length()));
-    auto [read, written] = ConvertLatin1toUtf8Partial(source, dst);
+    size_t read;
+    size_t written;
+    Tie(read, written) = ConvertLatin1toUtf8Partial(source, dst);
     (void)read;
     return written;
   }
   auto source = Span(src->twoByteChars(nogc), src->length());
-  auto [read, written] = ConvertUtf16toUtf8Partial(source, dst);
+  size_t read;
+  size_t written;
+  Tie(read, written) = ConvertUtf16toUtf8Partial(source, dst);
   (void)read;
   return written;
 }

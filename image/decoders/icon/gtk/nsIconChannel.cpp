@@ -427,9 +427,10 @@ nsresult nsIconChannel::Init(nsIURI* aURI) {
 
     icon->Then(
         mozilla::GetCurrentSerialEventTarget(), __func__,
-        [outputStream](std::tuple<nsresult, mozilla::Maybe<ByteBuf>>&& aArg) {
-          nsresult rv = std::get<0>(aArg);
-          mozilla::Maybe<ByteBuf> bytes = std::move(std::get<1>(aArg));
+        [outputStream](
+            mozilla::Tuple<nsresult, mozilla::Maybe<ByteBuf>>&& aArg) {
+          nsresult rv = mozilla::Get<0>(aArg);
+          mozilla::Maybe<ByteBuf> bytes = std::move(mozilla::Get<1>(aArg));
 
           if (NS_SUCCEEDED(rv)) {
             MOZ_RELEASE_ASSERT(bytes);

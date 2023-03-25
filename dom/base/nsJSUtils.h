@@ -168,7 +168,7 @@ inline bool AssignJSString(JSContext* cx, T& dest, JSString* s) {
 
   size_t read;
   size_t written;
-  std::tie(read, written) = *maybe;
+  Tie(read, written) = *maybe;
 
   MOZ_ASSERT(read == JS::GetStringLength(s));
   handle.Finish(written, kAllowShrinking);

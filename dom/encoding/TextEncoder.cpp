@@ -39,7 +39,7 @@ void TextEncoder::EncodeInto(JSContext* aCx, JS::Handle<JSString*> aSrc,
     aError.ReportOOM();
     return;
   }
-  std::tie(read, written) = *maybe;
+  Tie(read, written) = *maybe;
   MOZ_ASSERT(written <= aDst.Length());
   aResult.mRead.Construct() = read;
   aResult.mWritten.Construct() = written;

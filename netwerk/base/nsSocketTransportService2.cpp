@@ -144,14 +144,14 @@ void nsSocketTransportService::ApplyPortRemap(uint16_t* aPort) {
 
   // Reverse the array to make later rules override earlier rules.
   for (auto const& portMapping : Reversed(*mPortRemapping)) {
-    if (*aPort < std::get<0>(portMapping)) {
+    if (*aPort < Get<0>(portMapping)) {
       continue;
     }
-    if (*aPort > std::get<1>(portMapping)) {
+    if (*aPort > Get<1>(portMapping)) {
       continue;
     }
 
-    *aPort = std::get<2>(portMapping);
+    *aPort = Get<2>(portMapping);
     return;
   }
 }
@@ -168,7 +168,7 @@ bool nsSocketTransportService::UpdatePortRemapPreference(
       return true;
     }
 
-    nsTArray<std::tuple<uint16_t, uint16_t>> ranges(2);
+    nsTArray<Tuple<uint16_t, uint16_t>> ranges(2);
     while (true) {
       uint16_t loPort;
       tokenizer.SkipWhites();
@@ -187,7 +187,7 @@ bool nsSocketTransportService::UpdatePortRemapPreference(
         hiPort = loPort;
       }
 
-      ranges.AppendElement(std::make_tuple(loPort, hiPort));
+      ranges.AppendElement(MakeTuple(loPort, hiPort));
 
       tokenizer.SkipWhites();
       if (tokenizer.CheckChar(',')) {
@@ -207,8 +207,8 @@ bool nsSocketTransportService::UpdatePortRemapPreference(
         // remapping array from the end, this may have a small perf win by
         // hitting the most common cases earlier.
         for (auto const& range : Reversed(ranges)) {
-          portRemapping.AppendElement(std::make_tuple(
-              std::get<0>(range), std::get<1>(range), targetPort));
+          portRemapping.AppendElement(
+              MakeTuple(Get<0>(range), Get<1>(range), targetPort));
         }
         ranges.Clear();
 

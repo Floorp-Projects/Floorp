@@ -656,7 +656,9 @@ nsresult LoadInfoArgsToLoadInfo(
                                        : loadInfoArgs.browsingContextID();
     if (RefPtr<BrowsingContext> bc =
             BrowsingContext::Get(targetBrowsingContextId)) {
-      auto [originalTriggeringPrincipal, originalPrincipalToInherit] =
+      nsCOMPtr<nsIPrincipal> originalTriggeringPrincipal;
+      nsCOMPtr<nsIPrincipal> originalPrincipalToInherit;
+      Tie(originalTriggeringPrincipal, originalPrincipalToInherit) =
           bc->GetTriggeringAndInheritPrincipalsForCurrentLoad();
 
       if (originalTriggeringPrincipal &&
