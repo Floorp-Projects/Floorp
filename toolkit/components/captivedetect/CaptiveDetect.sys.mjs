@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 const DEBUG = false; // set to true to show debug messages
 
 const kCAPTIVEPORTALDETECTOR_CID = Components.ID(
@@ -231,7 +229,7 @@ function LoginObserver(captivePortalDetector) {
   return observer;
 }
 
-function CaptivePortalDetector() {
+export function CaptivePortalDetector() {
   // Load preference
   this._canonicalSiteURL = null;
   this._canonicalSiteExpectedContent = null;
@@ -545,5 +543,3 @@ if (DEBUG) {
   // eslint-disable-next-line no-global-assign
   debug = function(s) {};
 }
-
-var EXPORTED_SYMBOLS = ["CaptivePortalDetector"];
