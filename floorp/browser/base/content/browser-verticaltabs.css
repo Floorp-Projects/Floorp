@@ -8,7 +8,7 @@
   min-width: -moz-available !important;;
   max-width: -moz-available !important;
   height: 100% !important;
-  background: var(--lwt-accent-color), var(--toolbar-field-background-color);
+  background: var(--lwt-accent-color);
  }
  
  .tabbrowser-tab.tabbrowser-tab:not([pinned]){
