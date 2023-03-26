@@ -6416,16 +6416,21 @@ void nsTextFrame::PaintText(const PaintTextParams& aParams,
   gfx::Point textBaselinePt;
   if (verticalRun) {
     if (wm.IsVerticalLR()) {
-      textBaselinePt.x = aParams.framePt.x + mAscent;
+      textBaselinePt.x = nsLayoutUtils::GetSnappedBaselineX(
+          this, aParams.context, nscoord(aParams.framePt.x), mAscent);
     } else {
-      textBaselinePt.x = aParams.framePt.x + frameWidth - mAscent;
+      textBaselinePt.x = nsLayoutUtils::GetSnappedBaselineX(
+          this, aParams.context, nscoord(aParams.framePt.x) + frameWidth,
+          -mAscent);
     }
     textBaselinePt.y = reversed ? aParams.framePt.y.value + frameHeight
                                 : aParams.framePt.y.value;
   } else {
-    textBaselinePt = gfx::Point(reversed ? aParams.framePt.x.value + frameWidth
-                                         : aParams.framePt.x.value,
-                                aParams.framePt.y + mAscent);
+    textBaselinePt =
+        gfx::Point(reversed ? aParams.framePt.x.value + frameWidth
+                            : aParams.framePt.x.value,
+                   nsLayoutUtils::GetSnappedBaselineY(
+                       this, aParams.context, aParams.framePt.y, mAscent));
   }
   Range range = ComputeTransformedRange(provider);
   uint32_t startOffset = range.start;
