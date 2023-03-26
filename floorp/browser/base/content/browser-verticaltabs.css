@@ -1,6 +1,11 @@
+/*-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 @import url("chrome://browser/skin/tabbar/verticaltab.css");
+
   .tabbrowser-tab {
-    display: block !important;;  
+    display: block !important;
  }
 
  #TabsToolbar-customization-target {
@@ -15,6 +20,10 @@
   width: -moz-available !important;
   min-width: -moz-available !important;
   max-width: -moz-available !important;
+ }
+
+ #tabbrowser-tabs[positionpinnedtabs] > #tabbrowser-arrowscrollbox > .tabbrowser-tab[pinned] {
+  position: unset !important;
  }
 
  #tabs-newtab-button {
@@ -36,16 +45,18 @@
   max-width: -moz-available !important;
  }
 
- #tabbrowser-tabs[positionpinnedtabs] > #tabbrowser-arrowscrollbox > .tabbrowser-tab[pinned]{
+ .tabbrowser-tab[pinned] {
   position: unset !important;
   max-width: 3em !important;
+  width: 3em !important;
+  min-width: 3em !important;
  }
 
- .tab-label-container[pinned]{
+ .tab-label-container[pinned] {
    display: none !important;
  }
 
- #tabbrowser-arrowscrollbox{
+ #tabbrowser-arrowscrollbox {
   display: block;
  }
  
