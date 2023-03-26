@@ -3408,6 +3408,18 @@
     "n_buckets": 200,
     "description": "ms of SSL wait time for full handshake including TCP and proxy tunneling, keyed by the key exchange algorithm used"
   },
+  "HTTP3_ECH_OUTCOME": {
+    "record_in_processes": ["main"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["seceng-telemetry@mozilla.com", "necko@mozilla.com", "djackson@mozilla.com"],
+    "bug_numbers": [182287 ],
+    "releaseChannelCollection": "opt-out",
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "keyed": true,
+    "n_values": 32,
+    "description": "Success / Fail Rates for HTTP3 Keyed by ECH Usage"
+  },
   "SSL_BYTES_BEFORE_CERT_CALLBACK": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],

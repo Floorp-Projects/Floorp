@@ -178,10 +178,12 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
           100 - StaticPrefs::security_tls_ech_grease_probability()) {
         // Setting an empty config enables GREASE mode.
         mSocketControl->SetEchConfig(config);
+        mEchExtensionStatus = EchExtensionStatus::kGREASE;
       }
     }
   } else if (gHttpHandler->EchConfigEnabled(true) && !config.IsEmpty()) {
     mSocketControl->SetEchConfig(config);
+    mEchExtensionStatus = EchExtensionStatus::kReal;
     HttpConnectionActivity activity(
         mConnInfo->HashKey(), mConnInfo->GetOrigin(), mConnInfo->OriginPort(),
         mConnInfo->EndToEndSSL(), !mConnInfo->GetEchConfig().IsEmpty(),
@@ -189,6 +191,8 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
     gHttpHandler->ObserveHttpActivityWithArgs(
         activity, NS_ACTIVITY_TYPE_HTTP_CONNECTION,
         NS_HTTP_ACTIVITY_SUBTYPE_ECH_SET, PR_Now(), 0, ""_ns);
+  } else {
+    mEchExtensionStatus = EchExtensionStatus::kNotPresent;
   }
 
   // After this line, Http3Session and HttpConnectionUDP become a cycle. We put
@@ -199,7 +203,8 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
 }
 
 void Http3Session::DoSetEchConfig(const nsACString& aEchConfig) {
-  LOG(("Http3Session::DoSetEchConfig %p", this));
+  LOG(("Http3Session::DoSetEchConfig %p of length %zu", this,
+       aEchConfig.Length()));
   nsTArray<uint8_t> config;
   config.AppendElements(
       reinterpret_cast<const uint8_t*>(aEchConfig.BeginReading()),
@@ -287,6 +292,7 @@ void Http3Session::Shutdown() {
 Http3Session::~Http3Session() {
   LOG3(("Http3Session::~Http3Session %p", this));
 
+  EchOutcomeTelemetry();
   Telemetry::Accumulate(Telemetry::HTTP3_REQUEST_PER_CONN, mTransactionCount);
   Telemetry::Accumulate(Telemetry::HTTP3_BLOCKED_BY_STREAM_LIMIT_PER_CONN,
                         mBlockedByStreamLimitCount);
@@ -2078,6 +2084,7 @@ void Http3Session::SetSecInfo() {
 
     mSocketControl->SetInfo(secInfo.cipher, secInfo.version, secInfo.group,
                             secInfo.signature_scheme, secInfo.ech_accepted);
+    mHandshakeSucceeded = true;
   }
 
   if (!mSocketControl->HasServerCert()) {
@@ -2280,6 +2287,26 @@ void Http3Session::ReportHttp3Connection() {
     gHttpHandler->ConnMgr()->ReportHttp3Connection(mUdpConn);
     MaybeResumeSend();
   }
+}
+
+void Http3Session::EchOutcomeTelemetry() {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+  nsAutoCString key;
+  switch (mEchExtensionStatus) {
+    case EchExtensionStatus::kNotPresent:
+      key = "NONE";
+      break;
+    case EchExtensionStatus::kGREASE:
+      key = "GREASE";
+      break;
+    case EchExtensionStatus::kReal:
+      key = "REAL";
+      break;
+  }
+
+  Telemetry::Accumulate(Telemetry::HTTP3_ECH_OUTCOME, key,
+                        mHandshakeSucceeded ? 0 : 1);
 }
 
 void Http3Session::ZeroRttTelemetry(ZeroRttOutcome aOutcome) {

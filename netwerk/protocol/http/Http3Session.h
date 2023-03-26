@@ -113,6 +113,12 @@ class QuicSocketControl;
     }                                                \
   }
 
+enum class EchExtensionStatus {
+  kNotPresent,  // No ECH Extension was sent
+  kGREASE,      // A GREASE ECH Extension was sent
+  kReal         // A 'real' ECH Extension was sent
+};
+
 class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_HTTP3SESSION_IID)
@@ -239,6 +245,8 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
   void CallCertVerification(Maybe<nsCString> aEchPublicName);
   void SetSecInfo();
 
+  void EchOutcomeTelemetry();
+
   void StreamReadyToWrite(Http3StreamBase* aStream);
   void MaybeResumeSend();
 
@@ -329,6 +337,13 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
   int64_t mTotalBytesRead = 0;     // total data read
   int64_t mTotalBytesWritten = 0;  // total data read
   PRIntervalTime mLastWriteTime = 0;
+
+  // Records whether we sent an ECH Extension and whether it was a GREASE Xtn
+  EchExtensionStatus mEchExtensionStatus = EchExtensionStatus::kNotPresent;
+
+  // Records whether the handshake finished successfully and we established a
+  // a connection.
+  bool mHandshakeSucceeded = false;
 
   nsCOMPtr<nsINetAddr> mNetAddr;
 
