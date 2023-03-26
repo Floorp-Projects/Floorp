@@ -8,7 +8,9 @@
   min-width: -moz-available !important;;
   max-width: -moz-available !important;
   height: 100% !important;
+  background: var(--lwt-accent-color), var(--toolbar-field-background-color);
  }
+ 
  .tabbrowser-tab.tabbrowser-tab:not([pinned]){
   width: -moz-available !important;
   min-width: -moz-available !important;
@@ -42,3 +44,8 @@
  .tab-label-container[pinned]{
    display: none !important;
  }
+
+ #tabbrowser-arrowscrollbox{
+  display: block;
+ }
+ 
