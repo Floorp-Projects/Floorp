@@ -2,14 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 const lazy = {};
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 ChromeUtils.defineESModuleGetters(lazy, {
   JsonSchema: "resource://gre/modules/JsonSchema.sys.mjs",
@@ -57,7 +53,7 @@ XPCOMUtils.defineLazyGetter(lazy, "CookieBannerRuleSchema", async () => {
 /**
  * See nsICookieBannerListService
  */
-class CookieBannerListService {
+export class CookieBannerListService {
   classId = Components.ID("{1d8d9470-97d3-4885-a108-44a5c4fb36e2}");
   QueryInterface = ChromeUtils.generateQI(["nsICookieBannerListService"]);
 
@@ -359,5 +355,3 @@ class CookieBannerListService {
     );
   }
 }
-
-var EXPORTED_SYMBOLS = ["CookieBannerListService"];

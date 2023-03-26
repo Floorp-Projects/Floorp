@@ -20,7 +20,7 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = "toolkit_cookiebanners"
 
 EXTRA_JS_MODULES += [
-    "CookieBannerListService.jsm",
+    "CookieBannerListService.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [
@@ -45,8 +45,8 @@ UNIFIED_SOURCES += [
 ]
 
 FINAL_TARGET_FILES.actors += [
-    "CookieBannerChild.jsm",
-    "CookieBannerParent.jsm",
+    "CookieBannerChild.sys.mjs",
+    "CookieBannerParent.sys.mjs",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
