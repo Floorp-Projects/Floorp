@@ -56,32 +56,23 @@ var HandshakeTelemetryHelpers = {
       !mozinfo.socketprocess_networking,
       "Histograms don't populate on network process"
     );
-    let snapshot = JSON.parse(JSON.stringify(histogram.snapshot()));
+    let snapshot = JSON.parse(JSON.stringify(histogram));
     for (let [Tk, Tv] of expectedEntries.entries()) {
       let found = false;
       for (let [i, val] of Object.entries(snapshot.values)) {
         if (i == Tk) {
           found = true;
-          Assert.equal(
-            val,
-            Tv,
-            `expected counts should match for ${histogram.name()} at index ${i}`
-          );
+          Assert.equal(val, Tv, `expected counts should match at index ${i}`);
           snapshot.values[i] = 0; // Reset the value
         }
       }
-      Assert.ok(
-        found,
-        `Should have found an entry for ${histogram.name()} at index ${Tk}`
-      );
+      Assert.ok(found, `Should have found an entry at index ${Tk}`);
     }
     for (let k in snapshot.values) {
       Assert.equal(
         snapshot.values[k],
         0,
-        `Should NOT have found an entry for ${histogram.name()} at index ${k} of value ${
-          snapshot.values[k]
-        }`
+        `Should NOT have found an entry at index ${k} of value ${snapshot.values[k]}`
       );
     }
   },

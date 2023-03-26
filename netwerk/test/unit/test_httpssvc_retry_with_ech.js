@@ -72,6 +72,8 @@ registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("network.dns.echconfig.fallback_to_origin");
   Services.prefs.clearUserPref("network.http.speculative-parallel-limit");
   Services.prefs.clearUserPref("network.dns.port_prefixed_qname_https_rr");
+  Services.prefs.clearUserPref("security.tls.ech.grease_http3");
+  Services.prefs.clearUserPref("security.tls.ech.grease_probability");
   if (trrServer) {
     await trrServer.stop();
   }
@@ -131,7 +133,7 @@ ActivityObserver.prototype = {
   },
 };
 
-function checkHttpActivities(activites) {
+function checkHttpActivities(activites, expectECH) {
   let foundDNSAndSocket = false;
   let foundSettingECH = false;
   let foundConnectionCreated = false;
@@ -154,7 +156,7 @@ function checkHttpActivities(activites) {
   }
 
   Assert.equal(foundDNSAndSocket, true, "Should have one DnsAndSock created");
-  Assert.equal(foundSettingECH, true, "Should have echConfig");
+  Assert.equal(foundSettingECH, expectECH, "Should have echConfig");
   Assert.equal(
     foundConnectionCreated,
     true,
@@ -238,7 +240,7 @@ add_task(async function testConnectWithECH() {
   let filtered = observer.activites.filter(
     activity => activity.host === "ech-private.example.com"
   );
-  checkHttpActivities(filtered);
+  checkHttpActivities(filtered, true);
 });
 
 add_task(async function testEchRetry() {
@@ -311,7 +313,7 @@ add_task(async function testEchRetry() {
     for (let hName of ["SSL_HANDSHAKE_RESULT", "SSL_HANDSHAKE_RESULT_ECH"]) {
       let h = Services.telemetry.getHistogramById(hName);
       HandshakeTelemetryHelpers.assertHistogramMap(
-        h,
+        h.snapshot(),
         new Map([
           ["0", 1],
           ["188", 1],
@@ -325,7 +327,17 @@ add_task(async function testEchRetry() {
   await trrServer.stop();
 });
 
-async function H3ECHTest(echConfig) {
+async function H3ECHTest(
+  echConfig,
+  expectedHistKey,
+  expectedHistEntries,
+  advertiseECH
+) {
+  Services.dns.clearCache(true);
+  Services.obs.notifyObservers(null, "net:cancel-all-connections");
+  /* eslint-disable mozilla/no-arbitrary-setTimeout */
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  resetEchTelemetry();
   trrServer = new TRRServer();
   await trrServer.start();
 
@@ -338,12 +350,27 @@ async function H3ECHTest(echConfig) {
   let observerService = Cc[
     "@mozilla.org/network/http-activity-distributor;1"
   ].getService(Ci.nsIHttpActivityDistributor);
+  Services.obs.notifyObservers(null, "net:cancel-all-connections");
   let observer = new ActivityObserver();
   observerService.addObserver(observer);
   observerService.observeConnection = true;
+  // Clear activities for past connections
+  observer.activites = [];
 
   let portPrefixedName = `_${h3Port}._https.public.example.com`;
+  let vals = [
+    { key: "alpn", value: "h3-29" },
+    { key: "port", value: h3Port },
+  ];
+  if (advertiseECH) {
+    vals.push({
+      key: "echconfig",
+      value: echConfig,
+      needBase64Decode: true,
+    });
+  }
   // Only the last record is valid to use.
+
   await trrServer.registerDoHAnswers(portPrefixedName, "HTTPS", {
     answers: [
       {
@@ -354,15 +381,7 @@ async function H3ECHTest(echConfig) {
         data: {
           priority: 1,
           name: ".",
-          values: [
-            { key: "alpn", value: "h3-29" },
-            { key: "port", value: h3Port },
-            {
-              key: "echconfig",
-              value: echConfig,
-              needBase64Decode: true,
-            },
-          ],
+          values: vals,
         },
       },
     ],
@@ -389,7 +408,7 @@ async function H3ECHTest(echConfig) {
   let [req] = await channelOpenPromise(chan, CL_ALLOW_UNKNOWN_CL);
   req.QueryInterface(Ci.nsIHttpChannel);
   Assert.equal(req.protocolVersion, "h3-29");
-  checkSecurityInfo(chan, true, true);
+  checkSecurityInfo(chan, true, advertiseECH);
 
   await trrServer.stop();
 
@@ -399,14 +418,67 @@ async function H3ECHTest(echConfig) {
   let filtered = observer.activites.filter(
     activity => activity.host === "public.example.com"
   );
-  checkHttpActivities(filtered);
+  checkHttpActivities(filtered, advertiseECH);
+  await checkEchTelemetry(expectedHistKey, expectedHistEntries);
 }
 
-add_task(async function testH3ConnectWithECH() {
-  await H3ECHTest(h3EchConfig);
+function resetEchTelemetry() {
+  Services.telemetry.getKeyedHistogramById("HTTP3_ECH_OUTCOME").clear();
+}
+
+async function checkEchTelemetry(histKey, histEntries) {
+  Services.obs.notifyObservers(null, "net:cancel-all-connections");
+  /* eslint-disable mozilla/no-arbitrary-setTimeout */
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  let values = Services.telemetry
+    .getKeyedHistogramById("HTTP3_ECH_OUTCOME")
+    .snapshot()[histKey];
+  if (!mozinfo.socketprocess_networking) {
+    HandshakeTelemetryHelpers.assertHistogramMap(values, histEntries);
+  }
+}
+
+add_task(async function testH3WithNoEch() {
+  Services.prefs.setBoolPref("security.tls.ech.grease_http3", false);
+  Services.prefs.setIntPref("security.tls.ech.grease_probability", 0);
+  await H3ECHTest(
+    h3EchConfig,
+    "NONE",
+    new Map([
+      ["0", 1],
+      ["1", 0],
+    ]),
+    false
+  );
 });
 
-add_task(async function testH3ConnectWithECHRetry() {
+add_task(async function testH3WithECH() {
+  await H3ECHTest(
+    h3EchConfig,
+    "REAL",
+    new Map([
+      ["0", 1],
+      ["1", 0],
+    ]),
+    true
+  );
+});
+
+add_task(async function testH3WithGreaseEch() {
+  Services.prefs.setBoolPref("security.tls.ech.grease_http3", true);
+  Services.prefs.setIntPref("security.tls.ech.grease_probability", 100);
+  await H3ECHTest(
+    h3EchConfig,
+    "GREASE",
+    new Map([
+      ["0", 1],
+      ["1", 0],
+    ]),
+    false
+  );
+});
+
+add_task(async function testH3WithECHRetry() {
   Services.dns.clearCache(true);
   Services.obs.notifyObservers(null, "net:cancel-all-connections");
   // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
@@ -425,5 +497,13 @@ add_task(async function testH3ConnectWithECHRetry() {
   let decodedConfig = base64ToArray(h3EchConfig);
   decodedConfig[6] ^= 0x94;
   let encoded = btoa(String.fromCharCode.apply(null, decodedConfig));
-  await H3ECHTest(encoded);
+  await H3ECHTest(
+    encoded,
+    "REAL",
+    new Map([
+      ["0", 1],
+      ["1", 1],
+    ]),
+    true
+  );
 });
