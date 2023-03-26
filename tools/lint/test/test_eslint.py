@@ -67,7 +67,8 @@ def test_fix(eslint, config, create_temp_file):
     path = create_temp_file(contents, "bad.js")
     eslint([path], config=config, root=build.topsrcdir, fix=True)
 
-    assert fixed == 6
+    # ESLint returns counts of files fixed, not errors fixed.
+    assert fixed == 1
 
 
 if __name__ == "__main__":
