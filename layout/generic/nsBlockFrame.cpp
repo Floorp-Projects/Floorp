@@ -5025,7 +5025,6 @@ bool nsBlockFrame::IsLastLine(BlockReflowState& aState, LineIterator aLine) {
     // The next line is empty, try the next one
   }
 
-  // XXX Not sure about this part
   // Try our next-in-flows lines to answer the question
   nsBlockFrame* nextInFlow = (nsBlockFrame*)GetNextInFlow();
   while (nullptr != nextInFlow) {
