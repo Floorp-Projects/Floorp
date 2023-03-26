@@ -298,6 +298,41 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">ບໍ່ແມ່ນຕອນນີ້</string>
 
+    <!-- Juno first user onboarding flow experiment -->
+    <!-- Title for set firefox as default browser screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_default_browser_title" tools:ignore="UnusedResources">ເຮັດໃຫ້ %s ໄປຫາຕົວທ່ອງເວັບຂອງທ່ານ</string>
+    <!-- Description for set firefox as default browser screen.
+        The first parameter is the Firefox brand name.
+        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
+    <string name="juno_onboarding_default_browser_description" tools:ignore="UnusedResources">%1$s ເຮັດໃຫ້ຄົນຫຼາຍກວ່າຜົນກຳໄລ ແລະປົກປ້ອງຄວາມເປັນສ່ວນຕົວຂອງທ່ານໂດຍການບລັອກຕົວຕິດຕາມຂ້າມເວັບໄຊ.\n\nສຶກສາເພີ່ມເຕີມໃນ %2$s ຂອງພວກເຮົາ.</string>
+    <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
+    This is part of the string with the key "juno_onboarding_default_browser_description". -->
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">ແຈ້ງການຄວາມເປັນສ່ວນຕົວ</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">ຕັ້ງໃຫ້ເປັນບຣາວເຊີຫລັກ</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">ບໍ່ແມ່ນຕອນນີ້</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">ເລື່ອນຈາກໂທລະສັບໄປຫາແລັບທັອບ ແລະຫຼັງ</string>
+    <!-- Description for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">ດຶງເອົາແຖບ ແລະ ລະຫັດຜ່ານຈາກອຸປະກອນອື່ນຂອງທ່ານອອກຈາກບ່ອນທີ່ເຈົ້າຄ້າງໄວ້.</string>
+
+    <!-- Text for the button to sign in to sync on the device -->
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">ເຂົ້າສູ່ລະບົບ</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">ບໍ່ແມ່ນຕອນນີ້</string>
+    <!-- Title for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_title" tools:ignore="UnusedResources">ການແຈ້ງເຕືອນຊ່ວຍໃຫ້ທ່ານເຮັດໄດ້ຫຼາຍຂຶ້ນກັບ %s</string>
+    <!-- Description for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_description" tools:ignore="UnusedResources">ສົ່ງແຖບລະຫວ່າງອຸປະກອນ, ຈັດການການດາວໂຫຼດ, ແລະຮັບຄຳແນະນຳໃນການໄດ້ຮັບປະໂຫຍດສູງສຸດຈາກ %s.</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">ເປີດການແຈ້ງເຕືອນ</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">ບໍ່​ແມ່ນ​ຕອນ​ນີ້</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">ເປີດແຖບ %1$s ໃໝ່</string>

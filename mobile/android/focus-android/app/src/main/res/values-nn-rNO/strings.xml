@@ -740,8 +740,20 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
     <string name="cookie_banner_exception_panel_description_state_off_for_site2">%1$s kan prøve å automatisk avvise infokapselførespurnadar.</string>
 
+    <!-- Long text for a detail explanation indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
+    <string name="cookie_banner_exception_panel_description_site_is_not_supported">Denne nettstaden er for tida ikkje støtta av Redusering av infokapselbanner. Vil du be om at teamet vårt vurderer denne nettsida og støttar henne i framtida?</string>
+
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
     <string name="cookie_banner_exception_panel_site_is_not_supported_cancel_button">Avbryt</string>
+
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
+    <string name="cookie_banner_exception_panel_site_is_not_supported_request_support_button">Be om brukarstøtte</string>
+
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_report_a_site_snackbar_label">Førespurnad om brukarstøttenettstad er sendt inn.</string>
+
+    <!-- Label for cookie banner item from tracking protection, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_the_site_was_reported">Førespurnad om brukarstøttenettstad er sendt inn.</string>
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Cookie Banner (Banner Info Message). The placeholder will be updated with the app name. -->

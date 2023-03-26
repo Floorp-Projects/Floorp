@@ -282,6 +282,33 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">አሁን አይሆንም</string>
 
+    <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
+    This is part of the string with the key "juno_onboarding_default_browser_description". -->
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">የግላዊነት ማስታወቂያ</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">ነባሪ አሳሽ አድርገህ አስቀምጥ</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">አሁን አይሆንም</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">ከስልክ ወደ ላፕቶፕ ይዝለሉ እና ይመለሱ</string>
+
+    <!-- Description for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">ካቆሙበት ለመቀጠል ከሌሎች መሳሪያዎችዎ ትሮችን እና የይለፍ ቃሎችን ይያዙ።</string>
+    <!-- Text for the button to sign in to sync on the device -->
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">ይግቡ</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">አሁን አይሆንም</string>
+    <!-- Title for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_title" tools:ignore="UnusedResources">ማሳወቂያዎች በ%s የበለጠ እንዲከውኑ ያግዝዎታል</string>
+    <!-- Description for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_description" tools:ignore="UnusedResources">በመሳሪያዎች መካከል ትሮችን ይላኩ፣ ውርዶችን ያስተዳድሩ እና %sን የበለጠ ለመጠቀም ምክሮችን ያግኙ።</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">ማሳወቂያዎችን ያብሩ</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">አሁን አይሆንም</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">አዲስ %1$s ትር ክፈት</string>
@@ -1162,6 +1189,9 @@
     <!-- Title shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_title">የግል አሰሳ ይሞክሩ</string>
 
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">በ%1$s ውስጥ ያለ ምንም ኩኪዎች ወይም ታሪክ ማስቀመጥ ያስሱ</string>
     <!-- Title A shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_A_title">ያለ ዱካ ያስሱ</string>
     <!-- Text A shown in the notification that pops up to re-engage the user.
@@ -1312,8 +1342,26 @@
     <string name="onboarding_firefox_account_sync_is_on">ማመሳሰል በርቷል</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">በነባሪ የግላዊነት ጥበቃ</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button_2">መደበኛ (ነባሪ)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_3">ለግላዊነት እና ለአፈጻጸም የተመጣጠነ። ገጾች በመደበኛነት ይጫናሉ።</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">ጥብቅ</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_3">ገፆች በፍጥነት እንዲጫኑ ተጨማሪ መከታተያዎችን ያግዳል፣ ነገር ግን አንዳንድ በገጽ ላይ ያሉ ተግባራት ላይሰሩ ይችላሉ።</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">የመሳሪያ አሞሌ አቀማመጥ ይምረጡ</string>
+    <!-- Text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description">ከታች ያስቀምጡት, ወይም ወደ ላይ ያንቀሳቅሱት።</string>
+    <!-- Text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header_1">ውሂብዎን ይቆጣጠራሉ</string>
+    <!-- Text for the privacy notice onboarding card description. -->
+    <string name="onboarding_privacy_notice_description">ፋየርፎክስ በመስመር ላይ ምን እንደሚያጋሩ እና ከእኛ ጋር ምን እንደሚያጋሩ እንዲቆጣጠሩ ያስችልዎታል።</string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">የእኛን የግላዊነት መመሪያ ያንብቡ</string>
+    <!-- Text for the conclusion onboarding message -->
+    <string name="onboarding_conclusion_header">የሚገርም ኢንተርኔት ለመክፈት ዝግጁ ነዎት?</string>
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">ማሰስ ይጀምሩ</string>
 
