@@ -39,6 +39,6 @@
   max-width: 3em !important;
  }
 
-  #tabbrowser-tabs[positionpinnedtabs] > #tabbrowser-arrowscrollbox > .tabbrowser-tab[pinned] > .tab-stack > .tab-content > .tab-label-container {
-    display: none !important;
-  }
+ .tab-label-container[pinned]{
+   display: none !important;
+ }
