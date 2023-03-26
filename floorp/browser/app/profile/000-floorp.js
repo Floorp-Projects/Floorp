@@ -122,6 +122,9 @@ pref("browser.search.useDefault.enabled", false);
 
 //新規タブの開く位置
 pref("floorp.browser.tabs.openNewTabPosition", -1);
+
+//ネイティブ実装垂直タブ
+pref("floorp.browser.native.verticaltabs.enabled", false);
 /*----------------------------------------------------------------------------------------------------------------------------------*/
 
 //検索エンジン

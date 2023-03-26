@@ -44,6 +44,7 @@ Preferences.addAll([
   { id: "floorp.openLinkInExternal.browserId", type: "string" },
   { id: "floorp.delete.browser.border", type: "bool" },
   { id: "floorp.browser.tabs.openNewTabPosition", type: "int" },
+  { id: "floorp.browser.native.verticaltabs.enabled", type: "bool" },
 ]);
 
 window.addEventListener("pageshow", async function() {
@@ -183,6 +184,11 @@ window.addEventListener("pageshow", async function() {
     Services.prefs.addObserver(prefName, function () {
       elem.checked = !Services.prefs.getBoolPref(prefName, true);
     });
+  }
+
+  let elems = document.getElementsByClassName("multiRowTabs")
+  for (let i = 0; i < elems.length; i++) {
+    elems[i].disabled = Services.prefs.getBoolPref("floorp.browser.native.verticaltabs.enabled", false);
   }
 }, { once: true });
 

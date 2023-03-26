@@ -85,11 +85,11 @@
               preference="browser.taskbar.previews.enable"/>
 #endif
     <checkbox  data-l10n-id="enable-multitab" preference="floorp.enable.multitab"
-               id="multitabar"/>
+               class="multiRowTabs" id="multitabar"/>
     <checkbox  data-l10n-id="multirow-tabs-newtab" preference="floorp.browser.tabbar.multirow.newtab-inside.enabled"
-               id="multitabarNewTab"/>
+               class="multiRowTabs" id="multitabarNewTab"/>
     <checkbox  data-l10n-id="multirow-tabs-limit" preference="floorp.browser.tabbar.multirow.max.enabled"
-               id="multitabarLimit"/>
+               class="multiRowTabs" id="multitabarLimit"/>
     <hbox>
       <description flex="1" data-l10n-id="multirow-tabs-value"/>
       <html:input type="number" min="1" value="0" id="MultirowValue"/>
@@ -158,6 +158,10 @@
      <radio value="3" class="tabbar" data-l10n-id="move-tabbar-position"/>
      <radio value="4" class="tabbar" data-l10n-id="tabbar-on-bottom"/>
     </radiogroup>
+
+    <html:h2 data-l10n-id="native-tabbar"/>
+    <checkbox preference="floorp.browser.native.verticaltabs.enabled" class="needreboot"
+              id="nativetabbar" data-l10n-id="use-native-vertical"/>
 
    <html:h2 data-l10n-id="bookmarks-bar-settings"/>
 
