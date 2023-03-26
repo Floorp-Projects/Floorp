@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 const FRAME_SCRIPT_URL = "chrome://gfxsanity/content/gfxFrameScript.js";
 
 const TEST_DISABLED_PREF = "media.sanity-test.disabled";
@@ -319,7 +317,7 @@ var listener = {
   },
 };
 
-function SanityTest() {}
+export function SanityTest() {}
 SanityTest.prototype = {
   classID: Components.ID("{f3a8ca4d-4c83-456b-aee2-6a2cbf11e9bd}"),
   QueryInterface: ChromeUtils.generateQI([
@@ -447,5 +445,3 @@ SanityTest.prototype = {
     tester.scheduleTest(sanityTest);
   },
 };
-
-var EXPORTED_SYMBOLS = ["SanityTest"];
