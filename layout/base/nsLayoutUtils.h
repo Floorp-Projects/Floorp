@@ -1649,6 +1649,14 @@ class nsLayoutUtils {
     return DarkenColorIfNeeded(aFrame, color);
   }
 
+  // Get a baseline y position in app units that is snapped to device pixels.
+  static gfxFloat GetSnappedBaselineY(nsIFrame* aFrame, gfxContext* aContext,
+                                      nscoord aY, nscoord aAscent);
+  // Ditto for an x position (for vertical text). Note that for vertical-rl
+  // writing mode, the ascent value should be negated by the caller.
+  static gfxFloat GetSnappedBaselineX(nsIFrame* aFrame, gfxContext* aContext,
+                                      nscoord aX, nscoord aAscent);
+
   static nscoord AppUnitWidthOfString(char16_t aC, nsFontMetrics& aFontMetrics,
                                       DrawTarget* aDrawTarget) {
     return AppUnitWidthOfString(&aC, 1, aFontMetrics, aDrawTarget);
