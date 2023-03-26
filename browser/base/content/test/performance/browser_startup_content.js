@@ -81,7 +81,7 @@ const intermittently_loaded_scripts = {
     "resource://webcompat/AboutCompat.jsm",
 
     // Cookie banner handling.
-    "resource://gre/actors/CookieBannerChild.jsm",
+    "resource://gre/actors/CookieBannerChild.sys.mjs",
     "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 
     // Test related

@@ -218,10 +218,10 @@ let JSWINDOWACTORS = {
 
   CookieBanner: {
     parent: {
-      moduleURI: "resource://gre/actors/CookieBannerParent.jsm",
+      esModuleURI: "resource://gre/actors/CookieBannerParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource://gre/actors/CookieBannerChild.jsm",
+      esModuleURI: "resource://gre/actors/CookieBannerChild.sys.mjs",
       events: {
         DOMContentLoaded: {},
         load: { capture: true },

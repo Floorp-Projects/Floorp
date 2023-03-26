@@ -65,7 +65,7 @@ const intermittently_loaded_scripts = {
     "resource://gre/modules/nsAsyncShutdown.sys.mjs",
 
     // Cookie banner handling.
-    "resource://gre/actors/CookieBannerChild.jsm",
+    "resource://gre/actors/CookieBannerChild.sys.mjs",
     "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 
     // Test related
