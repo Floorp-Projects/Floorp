@@ -254,6 +254,10 @@
 #  include "nsIStringBundle.h"
 #endif
 
+#ifdef USE_GLX_TEST
+#  include "mozilla/GUniquePtr.h"
+#endif
+
 extern uint32_t gRestartMode;
 extern void InstallSignalHandlers(const char* ProgramName);
 
@@ -321,11 +325,6 @@ nsString gProcessStartupShortcut;
 
 #if defined(MOZ_WIDGET_GTK)
 #  include <glib.h>
-#  if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING)
-#    define CLEANUP_MEMORY 1
-#    define PANGO_ENABLE_BACKEND
-#    include <pango/pangofc-fontmap.h>
-#  endif
 #  include "mozilla/WidgetUtilsGtk.h"
 #  include <gtk/gtk.h>
 #  ifdef MOZ_WAYLAND
@@ -335,7 +334,6 @@ nsString gProcessStartupShortcut;
 #  ifdef MOZ_X11
 #    include <gdk/gdkx.h>
 #  endif /* MOZ_X11 */
-#  include <fontconfig/fontconfig.h>
 #endif
 #include "BinaryPath.h"
 
@@ -3620,7 +3618,40 @@ static DWORD WINAPI InitDwriteBG(LPVOID lpdwThreadParam) {
 #endif
 
 #ifdef USE_GLX_TEST
-bool fire_glxtest_process();
+namespace mozilla::widget {
+// the read end of the pipe, which will be used by GfxInfo
+extern int glxtest_pipe;
+// the PID of the glxtest process, to pass to waitpid()
+extern pid_t glxtest_pid;
+}  // namespace mozilla::widget
+
+void fire_glxtest_process() {
+  nsAutoCString glxTestBinary;
+  if (!gAppData->xreDirectory) {
+    return;
+  }
+  gAppData->xreDirectory->GetNativePath(glxTestBinary);
+  glxTestBinary.Append("/");
+  glxTestBinary.Append("glxtest");
+
+  char* argv[] = {strdup(glxTestBinary.get()),
+                  IsWaylandEnabled() ? strdup("-w") : nullptr, nullptr};
+  auto freeArgv = mozilla::MakeScopeExit([&] {
+    for (auto& arg : argv) {
+      free(arg);
+    }
+  });
+
+  GUniquePtr<GError> err;
+  g_spawn_async_with_pipes(
+      nullptr, argv, nullptr,
+      GSpawnFlags(G_SPAWN_CLOEXEC_PIPES | G_SPAWN_DO_NOT_REAP_CHILD), nullptr,
+      nullptr, &mozilla::widget::glxtest_pid, nullptr,
+      &mozilla::widget::glxtest_pipe, nullptr, getter_Transfers(err));
+  if (err) {
+    Output(true, "Failed to probe graphics hardware! %s\n", err->message);
+  }
+}
 #endif
 
 #include "GeckoProfiler.h"
