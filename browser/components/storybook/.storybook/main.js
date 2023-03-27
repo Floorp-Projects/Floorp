@@ -37,7 +37,7 @@ module.exports = {
     "../**/*.stories.md",
     "../stories/**/*.stories.mdx",
     "../stories/**/*.stories.@(js|jsx|mjs|ts|tsx|md)",
-    `${projectRoot}/toolkit/**/*.stories.@(js|jsx|mjs|ts|tsx)`,
+    `${projectRoot}/toolkit/**/*.stories.@(js|jsx|mjs|ts|tsx|md)`,
   ],
   // Additions to the staticDirs might also need to get added to
   // MozXULElement.importCss in preview.mjs to enable auto-reloading.
@@ -77,8 +77,10 @@ module.exports = {
     // folder due to the versions of React it accepts as a peer dependency. That
     // means we have to go one level deeper and look in the node_modules of
     // @storybook/addon-docs, which depends on @mdx-js/react.
+    config.resolve.alias["@storybook/addon-docs"] =
+      "browser/components/storybook/node_modules/@storybook/addon-docs";
     config.resolve.alias["@mdx-js/react"] =
-      "browser/components/storybook/node_modules/@storybook/addon-docs/node_modules/@mdx-js/react";
+      "@storybook/addon-docs/node_modules/@mdx-js/react";
 
     // The @storybook/web-components project uses lit-html. Redirect it to our
     // bundled version.
