@@ -8,7 +8,6 @@
 #define DOM_WEBTRANSPORT_PARENT_WEBTRANSPORTPARENT_H_
 
 #include "ErrorList.h"
-#include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/FlippedOnce.h"
 #include "mozilla/dom/PWebTransportParent.h"
 #include "mozilla/ipc/Endpoint.h"
@@ -32,8 +31,7 @@ class WebTransportParent : public PWebTransportParent,
   NS_DECL_WEBTRANSPORTSESSIONEVENTLISTENER
 
   void Create(const nsAString& aURL, nsIPrincipal* aPrincipal,
-              const IPCClientInfo& aClientInfo, const bool& aDedicated,
-              const bool& aRequireUnreliable,
+              const bool& aDedicated, const bool& aRequireUnreliable,
               const uint32_t& aCongestionControl,
               // Sequence<WebTransportHash>* aServerCertHashes,
               Endpoint<PWebTransportParent>&& aParentEndpoint,
