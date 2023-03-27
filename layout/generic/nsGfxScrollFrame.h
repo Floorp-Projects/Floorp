@@ -385,7 +385,7 @@ class nsHTMLScrollFrame : public nsContainerFrame,
                   nscoord aNewPos) final;
   void ScrollbarReleased(nsScrollbarFrame* aScrollbar) final;
   void VisibilityChanged(bool aVisible) final {}
-  nsIFrame* GetScrollbarBox(bool aVertical) final {
+  nsScrollbarFrame* GetScrollbarBox(bool aVertical) final {
     return aVertical ? mVScrollbarBox : mHScrollbarBox;
   }
 
@@ -717,9 +717,12 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   void AdjustScrollbarRectForResizer(
       nsIFrame* aFrame, nsPresContext* aPresContext, nsRect& aRect,
       bool aHasResizer, mozilla::layers::ScrollDirection aDirection);
-  void LayoutScrollbars(nsBoxLayoutState& aState,
+  void LayoutScrollbars(ScrollReflowInput& aState,
                         const nsRect& aInsideBorderArea,
                         const nsRect& aOldScrollPort);
+
+  void LayoutScrollbarPartAtRect(const ScrollReflowInput&,
+                                 ReflowInput& aKidReflowInput, const nsRect&);
 
   bool IsAlwaysActive() const;
   void MarkRecentlyScrolled();
@@ -783,8 +786,8 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   RefPtr<ScrollEndEvent> mScrollEndEvent;
   nsRevocableEventPtr<AsyncScrollPortEvent> mAsyncScrollPortEvent;
   nsRevocableEventPtr<ScrolledAreaEvent> mScrolledAreaEvent;
-  nsIFrame* mHScrollbarBox;
-  nsIFrame* mVScrollbarBox;
+  nsScrollbarFrame* mHScrollbarBox;
+  nsScrollbarFrame* mVScrollbarBox;
   nsIFrame* mScrolledFrame;
   nsIFrame* mScrollCornerBox;
   nsIFrame* mResizerBox;
