@@ -1667,7 +1667,6 @@ const selectors = {
   logPointInSecPane: ".breakpoint.is-log",
   searchField: ".search-field",
   blackbox: ".action.black-box",
-  projectSearchSearchInput: ".project-text-search .search-field input",
   projectSearchCollapsed: ".project-text-search .arrow:not(.expanded)",
   projectSearchExpandedResults: ".project-text-search .result",
   projectSearchFileResults: ".project-text-search .file-result",
@@ -2487,7 +2486,6 @@ function openProjectSearch(dbg) {
  * @return {Array} List of search results element nodes
  */
 async function doProjectSearch(dbg, searchTerm) {
-  await clearElement(dbg, "projectSearchSearchInput");
   type(dbg, searchTerm);
   pressKey(dbg, "Enter");
   return waitForSearchResults(dbg);
@@ -2510,6 +2508,18 @@ async function waitForSearchResults(dbg, expectedResults) {
     );
   }
   return findAllElements(dbg, "projectSearchFileResults");
+}
+
+/**
+ * Closes the project search panel
+ *
+ * @param {Object} dbg
+ * @return {Boolean} When the panel closes
+ */
+function closeProjectSearch(dbg) {
+  info("Closing the project search panel");
+  synthesizeKeyShortcut("CmdOrCtrl+Shift+F");
+  return waitForState(dbg, state => !dbg.selectors.getActiveSearch());
 }
 
 /**

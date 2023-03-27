@@ -14,6 +14,7 @@ exports[`ProjectSearch found no search results 1`] = `
         count={0}
         excludePatternsLabel="files to exclude"
         excludePatternsPlaceholder="e.g. **/node_modules/**,app.js"
+        handleClose={[MockFunction]}
         isLoading={false}
         onBlur={[Function]}
         onChange={[Function]}
@@ -24,7 +25,7 @@ exports[`ProjectSearch found no search results 1`] = `
         placeholder="Find in files…"
         query="foo"
         searchKey="project-search"
-        showClose={false}
+        showClose={true}
         showErrorEmoji={true}
         showExcludePatterns={true}
         showSearchModifiers={true}
@@ -142,6 +143,7 @@ exports[`ProjectSearch found search results 1`] = `
           count={5}
           excludePatternsLabel="files to exclude"
           excludePatternsPlaceholder="e.g. **/node_modules/**,app.js"
+          handleClose={[MockFunction]}
           isLoading={false}
           onBlur={[Function]}
           onChange={[Function]}
@@ -152,7 +154,7 @@ exports[`ProjectSearch found search results 1`] = `
           placeholder="Find in files…"
           query="match"
           searchKey="project-search"
-          showClose={false}
+          showClose={true}
           showErrorEmoji={false}
           showExcludePatterns={true}
           showSearchModifiers={true}
@@ -164,6 +166,7 @@ exports[`ProjectSearch found search results 1`] = `
             excludePatternsLabel="files to exclude"
             excludePatternsPlaceholder="e.g. **/node_modules/**,app.js"
             expanded={false}
+            handleClose={[MockFunction]}
             hasPrefix={false}
             isLoading={false}
             onBlur={[Function]}
@@ -185,7 +188,7 @@ exports[`ProjectSearch found search results 1`] = `
             }
             selectedItemId=""
             setSearchOptions={[Function]}
-            showClose={false}
+            showClose={true}
             showErrorEmoji={false}
             showExcludePatterns={true}
             showSearchModifiers={true}
@@ -247,11 +250,16 @@ exports[`ProjectSearch found search results 1`] = `
                       <span
                         className="pipe-divider"
                       />
+                      <span
+                        className="search-type-name"
+                      >
+                        Modifiers:
+                      </span>
                       <button
                         className="regex-match-btn "
                         onKeyDown={[Function]}
                         onMouseDown={[Function]}
-                        title="Use Regular Expression"
+                        title="Regex"
                       >
                         <span
                           className="regex-match"
@@ -261,7 +269,7 @@ exports[`ProjectSearch found search results 1`] = `
                         className="case-sensitive-btn "
                         onKeyDown={[Function]}
                         onMouseDown={[Function]}
-                        title="Match Case"
+                        title="Case sensitive"
                       >
                         <span
                           className="case-match"
@@ -271,7 +279,7 @@ exports[`ProjectSearch found search results 1`] = `
                         className="whole-word-btn "
                         onKeyDown={[Function]}
                         onMouseDown={[Function]}
-                        title="Match Whole Word"
+                        title="Whole word"
                       >
                         <span
                           className="whole-word-match"
@@ -279,6 +287,26 @@ exports[`ProjectSearch found search results 1`] = `
                       </button>
                     </div>
                   </SearchModifiers>
+                  <span
+                    className="pipe-divider"
+                  />
+                  <CloseButton
+                    buttonClass="small"
+                    handleClick={[MockFunction]}
+                  >
+                    <button
+                      className="close-btn small"
+                      onClick={[MockFunction]}
+                    >
+                      <AccessibleImage
+                        className="close"
+                      >
+                        <span
+                          className="img close"
+                        />
+                      </AccessibleImage>
+                    </button>
+                  </CloseButton>
                 </div>
               </div>
               <div
@@ -880,46 +908,7 @@ exports[`ProjectSearch found search results 1`] = `
 </ProjectSearch>
 `;
 
-exports[`ProjectSearch renders nothing when disabled 1`] = `
-<div
-  className="search-container"
->
-  <div
-    className="project-text-search"
-  >
-    <div
-      className="header"
-    >
-      <Connect(SearchInput)
-        count={0}
-        excludePatternsLabel="files to exclude"
-        excludePatternsPlaceholder="e.g. **/node_modules/**,app.js"
-        isLoading={false}
-        onBlur={[Function]}
-        onChange={[Function]}
-        onFocus={[Function]}
-        onHistoryScroll={[Function]}
-        onKeyDown={[Function]}
-        onToggleSearchModifier={[Function]}
-        placeholder="Find in files…"
-        query="foo"
-        searchKey="project-search"
-        showClose={false}
-        showErrorEmoji={true}
-        showExcludePatterns={true}
-        showSearchModifiers={true}
-        size="small"
-        summaryMsg="0 results"
-      />
-    </div>
-    <div
-      className="no-result-msg absolute-center"
-    >
-      No results found
-    </div>
-  </div>
-</div>
-`;
+exports[`ProjectSearch renders nothing when disabled 1`] = `""`;
 
 exports[`ProjectSearch should display loading message while search is in progress 1`] = `
 <div
@@ -935,6 +924,7 @@ exports[`ProjectSearch should display loading message while search is in progres
         count={0}
         excludePatternsLabel="files to exclude"
         excludePatternsPlaceholder="e.g. **/node_modules/**,app.js"
+        handleClose={[MockFunction]}
         isLoading={true}
         onBlur={[Function]}
         onChange={[Function]}
@@ -945,7 +935,7 @@ exports[`ProjectSearch should display loading message while search is in progres
         placeholder="Find in files…"
         query="match"
         searchKey="project-search"
-        showClose={false}
+        showClose={true}
         showErrorEmoji={false}
         showExcludePatterns={true}
         showSearchModifiers={true}
@@ -976,6 +966,7 @@ exports[`ProjectSearch showErrorEmoji false if not done & no results 1`] = `
         count={0}
         excludePatternsLabel="files to exclude"
         excludePatternsPlaceholder="e.g. **/node_modules/**,app.js"
+        handleClose={[MockFunction]}
         isLoading={true}
         onBlur={[Function]}
         onChange={[Function]}
@@ -986,7 +977,7 @@ exports[`ProjectSearch showErrorEmoji false if not done & no results 1`] = `
         placeholder="Find in files…"
         query="foo"
         searchKey="project-search"
-        showClose={false}
+        showClose={true}
         showErrorEmoji={false}
         showExcludePatterns={true}
         showSearchModifiers={true}
@@ -1017,6 +1008,7 @@ exports[`ProjectSearch showErrorEmoji false if not done & results 1`] = `
         count={5}
         excludePatternsLabel="files to exclude"
         excludePatternsPlaceholder="e.g. **/node_modules/**,app.js"
+        handleClose={[MockFunction]}
         isLoading={true}
         onBlur={[Function]}
         onChange={[Function]}
@@ -1027,7 +1019,7 @@ exports[`ProjectSearch showErrorEmoji false if not done & results 1`] = `
         placeholder="Find in files…"
         query="foo"
         searchKey="project-search"
-        showClose={false}
+        showClose={true}
         showErrorEmoji={false}
         showExcludePatterns={true}
         showSearchModifiers={true}
@@ -1066,6 +1058,7 @@ exports[`ProjectSearch turns off shortcuts on unmount 1`] = `
         count={0}
         excludePatternsLabel="files to exclude"
         excludePatternsPlaceholder="e.g. **/node_modules/**,app.js"
+        handleClose={[MockFunction]}
         isLoading={false}
         onBlur={[Function]}
         onChange={[Function]}
@@ -1076,7 +1069,7 @@ exports[`ProjectSearch turns off shortcuts on unmount 1`] = `
         placeholder="Find in files…"
         query=""
         searchKey="project-search"
-        showClose={false}
+        showClose={true}
         showErrorEmoji={true}
         showExcludePatterns={true}
         showSearchModifiers={true}
@@ -1102,6 +1095,7 @@ exports[`ProjectSearch where <Enter> has not been pressed 1`] = `
         count={0}
         excludePatternsLabel="files to exclude"
         excludePatternsPlaceholder="e.g. **/node_modules/**,app.js"
+        handleClose={[MockFunction]}
         isLoading={false}
         onBlur={[Function]}
         onChange={[Function]}
@@ -1112,7 +1106,7 @@ exports[`ProjectSearch where <Enter> has not been pressed 1`] = `
         placeholder="Find in files…"
         query=""
         searchKey="project-search"
-        showClose={false}
+        showClose={true}
         showErrorEmoji={true}
         showExcludePatterns={true}
         showSearchModifiers={true}
