@@ -236,6 +236,10 @@ beetmover-geckoview
 -------------------
 Beetmover-geckoview publishes the Android library called "geckoview".
 
+beetmover-apt
+-------------------
+Beetmover-apt publishes Linux .deb packages from the Mozilla archive to our APT repositories.
+
 condprof
 --------
 condprof creates and updates realistic profiles.
