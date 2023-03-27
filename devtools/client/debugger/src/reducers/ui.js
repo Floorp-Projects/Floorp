@@ -10,6 +10,7 @@
  */
 
 import { prefs, features } from "../utils/prefs";
+import { searchKeys } from "../constants";
 
 export const initialUIState = ({ supportsJavascriptTracing = false } = {}) => ({
   selectedPrimaryPaneTab: "sources",
@@ -28,20 +29,23 @@ export const initialUIState = ({ supportsJavascriptTracing = false } = {}) => ({
   javascriptEnabled: true,
   supportsJavascriptTracing,
   mutableSearchOptions: prefs.searchOptions || {
-    "file-search": {
+    [searchKeys.FILE_SEARCH]: {
       regexMatch: false,
       wholeWord: false,
       caseSensitive: false,
+      excludePatterns: "",
     },
-    "project-search": {
+    [searchKeys.PROJECT_SEARCH]: {
       regexMatch: false,
       wholeWord: false,
       caseSensitive: false,
+      excludePatterns: "",
     },
-    "quickopen-search": {
+    [searchKeys.QUICKOPEN_SEARCH]: {
       regexMatch: false,
       wholeWord: false,
       caseSensitive: false,
+      excludePatterns: "",
     },
   },
 });

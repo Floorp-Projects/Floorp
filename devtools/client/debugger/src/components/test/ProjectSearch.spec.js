@@ -11,6 +11,7 @@ import { mount, shallow } from "enzyme";
 import { ProjectSearch } from "../ProjectSearch";
 import { statusType } from "../../reducers/project-text-search";
 import { mockcx } from "../../utils/test-mockup";
+import { searchKeys } from "../../constants";
 
 const hooks = { on: [], off: [] };
 const shortcuts = {
@@ -117,7 +118,16 @@ const testMatch = {
 function render(overrides = {}, mounted = false) {
   const mockStore = configureStore([]);
   const store = mockStore({
-    ui: { mutableSearchOptions: { "foo-search": {} } },
+    ui: {
+      mutableSearchOptions: {
+        [searchKeys.PROJECT_SEARCH]: {
+          regexMatch: false,
+          wholeWord: false,
+          caseSensitive: false,
+          excludePatterns: "",
+        },
+      },
+    },
   });
   const props = {
     cx: mockcx,
@@ -210,7 +220,7 @@ describe("ProjectSearch", () => {
       true
     );
     component
-      .find("SearchInput input")
+      .find("SearchInput .search-field input")
       .simulate("change", { target: { value: "bar" } });
     expect(component.state().inputValue).toEqual("bar");
   });
@@ -224,11 +234,13 @@ describe("ProjectSearch", () => {
       },
       true
     );
-    component.find("SearchInput input").simulate("keydown", { key: "Escape" });
+    component
+      .find("SearchInput .search-field input")
+      .simulate("keydown", { key: "Escape" });
     expect(searchSources).not.toHaveBeenCalled();
     searchSources.mockClear();
     component
-      .find("SearchInput input")
+      .find("SearchInput .search-field input")
       .simulate("keydown", { key: "Other", stopPropagation: jest.fn() });
     expect(searchSources).not.toHaveBeenCalled();
   });
@@ -243,7 +255,7 @@ describe("ProjectSearch", () => {
       true
     );
     component
-      .find("SearchInput input")
+      .find("SearchInput .search-field input")
       .simulate("keydown", { key: "Enter", stopPropagation: jest.fn() });
     expect(searchSources).toHaveBeenCalledWith(mockcx, "foo");
   });

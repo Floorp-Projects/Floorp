@@ -28,6 +28,7 @@ import {
 } from "../selectors";
 import { memoizeLast } from "../utils/memoizeLast";
 import { scrollList } from "../utils/result-list";
+import { searchKeys } from "../constants";
 import {
   formatSymbols,
   parseLineColumn,
@@ -464,7 +465,8 @@ export class QuickOpenModal extends Component {
           handleClose={this.closeModal}
           expanded={expanded}
           showClose={false}
-          searchKey="quickopen-search"
+          searchKey={searchKeys.QUICKOPEN_SEARCH}
+          showExcludePatterns={false}
           showSearchModifiers={false}
           selectedItemId={
             expanded && items[selectedIndex] ? items[selectedIndex].id : ""

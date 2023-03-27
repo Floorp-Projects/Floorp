@@ -12,6 +12,8 @@ exports[`ProjectSearch found no search results 1`] = `
     >
       <Connect(SearchInput)
         count={0}
+        excludePatternsLabel="files to exclude"
+        excludePatternsPlaceholder="e.g. **/node_modules/**,app.js"
         handleClose={[MockFunction]}
         isLoading={false}
         onBlur={[Function]}
@@ -25,8 +27,9 @@ exports[`ProjectSearch found no search results 1`] = `
         searchKey="project-search"
         showClose={true}
         showErrorEmoji={true}
+        showExcludePatterns={true}
         showSearchModifiers={true}
-        size="big"
+        size="small"
         summaryMsg="0 results"
       />
     </div>
@@ -138,6 +141,8 @@ exports[`ProjectSearch found search results 1`] = `
       >
         <Connect(SearchInput)
           count={5}
+          excludePatternsLabel="files to exclude"
+          excludePatternsPlaceholder="e.g. **/node_modules/**,app.js"
           handleClose={[MockFunction]}
           isLoading={false}
           onBlur={[Function]}
@@ -151,12 +156,15 @@ exports[`ProjectSearch found search results 1`] = `
           searchKey="project-search"
           showClose={true}
           showErrorEmoji={false}
+          showExcludePatterns={true}
           showSearchModifiers={true}
-          size="big"
+          size="small"
           summaryMsg="5 results"
         >
           <SearchInput
             count={5}
+            excludePatternsLabel="files to exclude"
+            excludePatternsPlaceholder="e.g. **/node_modules/**,app.js"
             expanded={false}
             handleClose={[MockFunction]}
             hasPrefix={false}
@@ -170,12 +178,21 @@ exports[`ProjectSearch found search results 1`] = `
             placeholder="Find in files…"
             query="match"
             searchKey="project-search"
+            searchOptions={
+              Object {
+                "caseSensitive": false,
+                "excludePatterns": "",
+                "regexMatch": false,
+                "wholeWord": false,
+              }
+            }
             selectedItemId=""
             setSearchOptions={[Function]}
             showClose={true}
             showErrorEmoji={false}
+            showExcludePatterns={true}
             showSearchModifiers={true}
-            size="big"
+            size="small"
             summaryMsg="5 results"
           >
             <div
@@ -185,7 +202,7 @@ exports[`ProjectSearch found search results 1`] = `
                 aria-expanded={false}
                 aria-haspopup="listbox"
                 aria-owns="result-list"
-                className="search-field big"
+                className="search-field small"
                 role="combobox"
               >
                 <AccessibleImage
@@ -217,6 +234,14 @@ exports[`ProjectSearch found search results 1`] = `
                   className="search-buttons-bar"
                 >
                   <SearchModifiers
+                    modifiers={
+                      Object {
+                        "caseSensitive": false,
+                        "excludePatterns": "",
+                        "regexMatch": false,
+                        "wholeWord": false,
+                      }
+                    }
                     onToggleSearchModifier={[Function]}
                   >
                     <div
@@ -266,11 +291,11 @@ exports[`ProjectSearch found search results 1`] = `
                     className="pipe-divider"
                   />
                   <CloseButton
-                    buttonClass="big"
+                    buttonClass="small"
                     handleClick={[MockFunction]}
                   >
                     <button
-                      className="close-btn big"
+                      className="close-btn small"
                       onClick={[MockFunction]}
                     >
                       <AccessibleImage
@@ -283,6 +308,19 @@ exports[`ProjectSearch found search results 1`] = `
                     </button>
                   </CloseButton>
                 </div>
+              </div>
+              <div
+                className="exclude-patterns-field small"
+              >
+                <label>
+                  files to exclude
+                </label>
+                <input
+                  onChange={[Function]}
+                  onKeyDown={[Function]}
+                  placeholder="e.g. **/node_modules/**,app.js"
+                  value=""
+                />
               </div>
             </div>
           </SearchInput>
@@ -884,6 +922,8 @@ exports[`ProjectSearch should display loading message while search is in progres
     >
       <Connect(SearchInput)
         count={0}
+        excludePatternsLabel="files to exclude"
+        excludePatternsPlaceholder="e.g. **/node_modules/**,app.js"
         handleClose={[MockFunction]}
         isLoading={true}
         onBlur={[Function]}
@@ -897,8 +937,9 @@ exports[`ProjectSearch should display loading message while search is in progres
         searchKey="project-search"
         showClose={true}
         showErrorEmoji={false}
+        showExcludePatterns={true}
         showSearchModifiers={true}
-        size="big"
+        size="small"
         summaryMsg="0 results"
       />
     </div>
@@ -923,6 +964,8 @@ exports[`ProjectSearch showErrorEmoji false if not done & no results 1`] = `
     >
       <Connect(SearchInput)
         count={0}
+        excludePatternsLabel="files to exclude"
+        excludePatternsPlaceholder="e.g. **/node_modules/**,app.js"
         handleClose={[MockFunction]}
         isLoading={true}
         onBlur={[Function]}
@@ -936,8 +979,9 @@ exports[`ProjectSearch showErrorEmoji false if not done & no results 1`] = `
         searchKey="project-search"
         showClose={true}
         showErrorEmoji={false}
+        showExcludePatterns={true}
         showSearchModifiers={true}
-        size="big"
+        size="small"
         summaryMsg="0 results"
       />
     </div>
@@ -962,6 +1006,8 @@ exports[`ProjectSearch showErrorEmoji false if not done & results 1`] = `
     >
       <Connect(SearchInput)
         count={5}
+        excludePatternsLabel="files to exclude"
+        excludePatternsPlaceholder="e.g. **/node_modules/**,app.js"
         handleClose={[MockFunction]}
         isLoading={true}
         onBlur={[Function]}
@@ -975,8 +1021,9 @@ exports[`ProjectSearch showErrorEmoji false if not done & results 1`] = `
         searchKey="project-search"
         showClose={true}
         showErrorEmoji={false}
+        showExcludePatterns={true}
         showSearchModifiers={true}
-        size="big"
+        size="small"
         summaryMsg="5 results"
       />
     </div>
@@ -1009,6 +1056,8 @@ exports[`ProjectSearch turns off shortcuts on unmount 1`] = `
     >
       <Connect(SearchInput)
         count={0}
+        excludePatternsLabel="files to exclude"
+        excludePatternsPlaceholder="e.g. **/node_modules/**,app.js"
         handleClose={[MockFunction]}
         isLoading={false}
         onBlur={[Function]}
@@ -1022,8 +1071,9 @@ exports[`ProjectSearch turns off shortcuts on unmount 1`] = `
         searchKey="project-search"
         showClose={true}
         showErrorEmoji={true}
+        showExcludePatterns={true}
         showSearchModifiers={true}
-        size="big"
+        size="small"
         summaryMsg=""
       />
     </div>
@@ -1043,6 +1093,8 @@ exports[`ProjectSearch where <Enter> has not been pressed 1`] = `
     >
       <Connect(SearchInput)
         count={0}
+        excludePatternsLabel="files to exclude"
+        excludePatternsPlaceholder="e.g. **/node_modules/**,app.js"
         handleClose={[MockFunction]}
         isLoading={false}
         onBlur={[Function]}
@@ -1056,8 +1108,9 @@ exports[`ProjectSearch where <Enter> has not been pressed 1`] = `
         searchKey="project-search"
         showClose={true}
         showErrorEmoji={true}
+        showExcludePatterns={true}
         showSearchModifiers={true}
-        size="big"
+        size="small"
         summaryMsg=""
       />
     </div>

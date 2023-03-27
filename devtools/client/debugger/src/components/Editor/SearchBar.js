@@ -17,7 +17,7 @@ import {
 } from "../../selectors";
 
 import { removeOverlay } from "../../utils/editor";
-
+import { searchKeys } from "../../constants";
 import { scrollList } from "../../utils/result-list";
 
 import SearchInput from "../shared/SearchInput";
@@ -244,9 +244,10 @@ class SearchBar extends Component {
           handlePrev={e => this.traverseResults(e, true)}
           shouldFocus={this.state.inputFocused}
           showClose={true}
+          showExcludePatterns={false}
           handleClose={this.closeSearch}
           showSearchModifiers={true}
-          searchKey="file-search"
+          searchKey={searchKeys.FILE_SEARCH}
           onToggleSearchModifier={() => this.doSearch(this.state.query)}
         />
       </div>

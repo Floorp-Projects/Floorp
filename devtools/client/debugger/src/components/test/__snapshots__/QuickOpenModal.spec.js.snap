@@ -87,6 +87,7 @@ exports[`QuickOpenModal Basic render with mount & searchType = functions 1`] = `
                 selectedItemId=""
                 showClose={false}
                 showErrorEmoji={true}
+                showExcludePatterns={false}
                 showSearchModifiers={false}
                 summaryMsg=""
               >
@@ -101,10 +102,19 @@ exports[`QuickOpenModal Basic render with mount & searchType = functions 1`] = `
                   placeholder="Go to file…"
                   query="@"
                   searchKey="quickopen-search"
+                  searchOptions={
+                    Object {
+                      "caseSensitive": false,
+                      "excludePatterns": "",
+                      "regexMatch": false,
+                      "wholeWord": false,
+                    }
+                  }
                   selectedItemId=""
                   setSearchOptions={[Function]}
                   showClose={false}
                   showErrorEmoji={true}
+                  showExcludePatterns={false}
                   showSearchModifiers={false}
                   size=""
                   summaryMsg=""
@@ -258,6 +268,7 @@ exports[`QuickOpenModal Basic render with mount & searchType = variables 1`] = `
                 selectedItemId=""
                 showClose={false}
                 showErrorEmoji={true}
+                showExcludePatterns={false}
                 showSearchModifiers={false}
                 summaryMsg=""
               >
@@ -272,10 +283,19 @@ exports[`QuickOpenModal Basic render with mount & searchType = variables 1`] = `
                   placeholder="Go to file…"
                   query="#"
                   searchKey="quickopen-search"
+                  searchOptions={
+                    Object {
+                      "caseSensitive": false,
+                      "excludePatterns": "",
+                      "regexMatch": false,
+                      "wholeWord": false,
+                    }
+                  }
                   selectedItemId=""
                   setSearchOptions={[Function]}
                   showClose={false}
                   showErrorEmoji={true}
+                  showExcludePatterns={false}
                   showSearchModifiers={false}
                   size=""
                   summaryMsg=""
@@ -412,6 +432,7 @@ exports[`QuickOpenModal Basic render with mount 1`] = `
                 selectedItemId=""
                 showClose={false}
                 showErrorEmoji={false}
+                showExcludePatterns={false}
                 showSearchModifiers={false}
                 size="big"
                 summaryMsg=""
@@ -427,10 +448,19 @@ exports[`QuickOpenModal Basic render with mount 1`] = `
                   placeholder="Go to file…"
                   query=""
                   searchKey="quickopen-search"
+                  searchOptions={
+                    Object {
+                      "caseSensitive": false,
+                      "excludePatterns": "",
+                      "regexMatch": false,
+                      "wholeWord": false,
+                    }
+                  }
                   selectedItemId=""
                   setSearchOptions={[Function]}
                   showClose={false}
                   showErrorEmoji={false}
+                  showExcludePatterns={false}
                   showSearchModifiers={false}
                   size="big"
                   summaryMsg=""
@@ -518,6 +548,7 @@ exports[`QuickOpenModal Renders when enabled 1`] = `
     selectedItemId=""
     showClose={false}
     showErrorEmoji={false}
+    showExcludePatterns={false}
     showSearchModifiers={false}
     size="big"
     summaryMsg=""
@@ -609,6 +640,7 @@ exports[`QuickOpenModal Simple goto search query = :abc & searchType = goto 1`] 
               selectedItemId=""
               showClose={false}
               showErrorEmoji={true}
+              showExcludePatterns={false}
               showSearchModifiers={false}
               summaryMsg="Go to line"
             >
@@ -623,10 +655,19 @@ exports[`QuickOpenModal Simple goto search query = :abc & searchType = goto 1`] 
                 placeholder="Go to file…"
                 query=":abc"
                 searchKey="quickopen-search"
+                searchOptions={
+                  Object {
+                    "caseSensitive": false,
+                    "excludePatterns": "",
+                    "regexMatch": false,
+                    "wholeWord": false,
+                  }
+                }
                 selectedItemId=""
                 setSearchOptions={[Function]}
                 showClose={false}
                 showErrorEmoji={true}
+                showExcludePatterns={false}
                 showSearchModifiers={false}
                 size=""
                 summaryMsg="Go to line"
@@ -767,6 +808,7 @@ exports[`QuickOpenModal showErrorEmoji false when count + query 1`] = `
                 selectedItemId=""
                 showClose={false}
                 showErrorEmoji={true}
+                showExcludePatterns={false}
                 showSearchModifiers={false}
                 size="big"
                 summaryMsg=""
@@ -782,10 +824,19 @@ exports[`QuickOpenModal showErrorEmoji false when count + query 1`] = `
                   placeholder="Go to file…"
                   query="dasdasdas"
                   searchKey="quickopen-search"
+                  searchOptions={
+                    Object {
+                      "caseSensitive": false,
+                      "excludePatterns": "",
+                      "regexMatch": false,
+                      "wholeWord": false,
+                    }
+                  }
                   selectedItemId=""
                   setSearchOptions={[Function]}
                   showClose={false}
                   showErrorEmoji={true}
+                  showExcludePatterns={false}
                   showSearchModifiers={false}
                   size="big"
                   summaryMsg=""
@@ -922,6 +973,7 @@ exports[`QuickOpenModal showErrorEmoji false when goto numeric ':2222' 1`] = `
                 selectedItemId=""
                 showClose={false}
                 showErrorEmoji={false}
+                showExcludePatterns={false}
                 showSearchModifiers={false}
                 summaryMsg="Go to line"
               >
@@ -936,10 +988,19 @@ exports[`QuickOpenModal showErrorEmoji false when goto numeric ':2222' 1`] = `
                   placeholder="Go to file…"
                   query=":2222"
                   searchKey="quickopen-search"
+                  searchOptions={
+                    Object {
+                      "caseSensitive": false,
+                      "excludePatterns": "",
+                      "regexMatch": false,
+                      "wholeWord": false,
+                    }
+                  }
                   selectedItemId=""
                   setSearchOptions={[Function]}
                   showClose={false}
                   showErrorEmoji={false}
+                  showExcludePatterns={false}
                   showSearchModifiers={false}
                   size=""
                   summaryMsg="Go to line"
@@ -1081,6 +1142,7 @@ exports[`QuickOpenModal showErrorEmoji false when no query 1`] = `
                 selectedItemId=""
                 showClose={false}
                 showErrorEmoji={false}
+                showExcludePatterns={false}
                 showSearchModifiers={false}
                 summaryMsg=""
               >
@@ -1095,10 +1157,19 @@ exports[`QuickOpenModal showErrorEmoji false when no query 1`] = `
                   placeholder="Go to file…"
                   query=""
                   searchKey="quickopen-search"
+                  searchOptions={
+                    Object {
+                      "caseSensitive": false,
+                      "excludePatterns": "",
+                      "regexMatch": false,
+                      "wholeWord": false,
+                    }
+                  }
                   selectedItemId=""
                   setSearchOptions={[Function]}
                   showClose={false}
                   showErrorEmoji={false}
+                  showExcludePatterns={false}
                   showSearchModifiers={false}
                   size=""
                   summaryMsg=""
@@ -1251,6 +1322,7 @@ exports[`QuickOpenModal showErrorEmoji true when goto not numeric ':22k22' 1`] =
                 selectedItemId=""
                 showClose={false}
                 showErrorEmoji={true}
+                showExcludePatterns={false}
                 showSearchModifiers={false}
                 summaryMsg="Go to line"
               >
@@ -1265,10 +1337,19 @@ exports[`QuickOpenModal showErrorEmoji true when goto not numeric ':22k22' 1`] =
                   placeholder="Go to file…"
                   query=":22k22"
                   searchKey="quickopen-search"
+                  searchOptions={
+                    Object {
+                      "caseSensitive": false,
+                      "excludePatterns": "",
+                      "regexMatch": false,
+                      "wholeWord": false,
+                    }
+                  }
                   selectedItemId=""
                   setSearchOptions={[Function]}
                   showClose={false}
                   showErrorEmoji={true}
+                  showExcludePatterns={false}
                   showSearchModifiers={false}
                   size=""
                   summaryMsg="Go to line"
@@ -1410,6 +1491,7 @@ exports[`QuickOpenModal showErrorEmoji true when no count + query 1`] = `
                 selectedItemId=""
                 showClose={false}
                 showErrorEmoji={true}
+                showExcludePatterns={false}
                 showSearchModifiers={false}
                 summaryMsg=""
               >
@@ -1424,10 +1506,19 @@ exports[`QuickOpenModal showErrorEmoji true when no count + query 1`] = `
                   placeholder="Go to file…"
                   query="test"
                   searchKey="quickopen-search"
+                  searchOptions={
+                    Object {
+                      "caseSensitive": false,
+                      "excludePatterns": "",
+                      "regexMatch": false,
+                      "wholeWord": false,
+                    }
+                  }
                   selectedItemId=""
                   setSearchOptions={[Function]}
                   showClose={false}
                   showErrorEmoji={true}
+                  showExcludePatterns={false}
                   showSearchModifiers={false}
                   size=""
                   summaryMsg=""
@@ -1497,6 +1588,7 @@ exports[`QuickOpenModal shows loading loads with function type search 1`] = `
     selectedItemId=""
     showClose={false}
     showErrorEmoji={false}
+    showExcludePatterns={false}
     showSearchModifiers={false}
     summaryMsg="Loading…"
   />

@@ -11,6 +11,7 @@ import { shallow, mount } from "enzyme";
 import { QuickOpenModal } from "../QuickOpenModal";
 import { mockcx } from "../../utils/test-mockup";
 import { getDisplayURL } from "../../utils/sources-tree/getURL";
+import { searchKeys } from "../../constants";
 
 jest.mock("fuzzaldrin-plus");
 
@@ -19,7 +20,16 @@ import { filter } from "fuzzaldrin-plus";
 function generateModal(propOverrides, renderType = "shallow") {
   const mockStore = configureStore([]);
   const store = mockStore({
-    ui: { mutableSearchOptions: { "foo-search": {} } },
+    ui: {
+      mutableSearchOptions: {
+        [searchKeys.QUICKOPEN_SEARCH]: {
+          regexMatch: false,
+          wholeWord: false,
+          caseSensitive: false,
+          excludePatterns: "",
+        },
+      },
+    },
   });
   const props = {
     cx: mockcx,
