@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["AutofillTelemetry", "AddressTelemetry"];
-
 const { FormAutofillUtils } = ChromeUtils.import(
   "resource://autofill/FormAutofillUtils.jsm"
 );
@@ -211,7 +207,7 @@ class AutofillTelemetryBase {
   }
 }
 
-class AddressTelemetry extends AutofillTelemetryBase {
+export class AddressTelemetry extends AutofillTelemetryBase {
   EVENT_CATEGORY = "address";
   EVENT_OBJECT_FORM_INTERACTION = "address_form";
   EVENT_OBJECT_FORM_INTERACTION_EXT = "address_form_ext";
@@ -459,7 +455,7 @@ class CreditCardTelemetry extends AutofillTelemetryBase {
   }
 }
 
-class AutofillTelemetry {
+export class AutofillTelemetry {
   static #creditCardTelemetry = new CreditCardTelemetry();
   static #addressTelemetry = new AddressTelemetry();
 
