@@ -77,19 +77,6 @@ export class MigrationWizardParent extends JSWindowActorParent {
           message.data.resourceTypes,
           message.data.profile
         );
-        break;
-      }
-
-      case "CheckPermissions": {
-        let migrator = await MigrationUtils.getMigrator(message.data.key);
-        return migrator.hasPermissions();
-      }
-
-      case "RequestSafariPermissions": {
-        let safariMigrator = await MigrationUtils.getMigrator("safari");
-        return safariMigrator.getPermissions(
-          this.browsingContext.topChromeWindow
-        );
       }
     }
 
@@ -250,11 +237,8 @@ export class MigrationWizardParent extends JSWindowActorParent {
    * @returns {Promise<MigratorProfileInstance>}
    */
   async #serializeMigratorAndProfile(migrator, profileObj) {
-    let [profileMigrationData, lastModifiedDate] = await Promise.all([
-      migrator.getMigrateData(profileObj),
-      migrator.getLastUsedDate(),
-    ]);
-
+    let profileMigrationData = await migrator.getMigrateData(profileObj);
+    let lastModifiedDate = await migrator.getLastUsedDate();
     let availableResourceTypes = [];
 
     for (let resourceType in MigrationUtils.resourceTypes) {

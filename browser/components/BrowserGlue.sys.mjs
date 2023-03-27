@@ -606,8 +606,7 @@ let JSWINDOWACTORS = {
       esModuleURI: "resource:///actors/MigrationWizardChild.sys.mjs",
       events: {
         "MigrationWizard:RequestState": { wantUntrusted: true },
-        "MigrationWizard:BeginMigration": { wantUntrusted: true },
-        "MigrationWizard:RequestSafariPermissions": { wantUntrusted: true },
+        "MigrationWizard:BeginMigration": { wantsUntrusted: true },
       },
     },
 
