@@ -11,7 +11,7 @@ import { isOriginalId } from "devtools/client/shared/source-map-loader/index";
 
 import { setSymbols } from "./symbols";
 import { setInScopeLines } from "../ast";
-import { closeActiveSearch, updateActiveFileSearch } from "../ui";
+import { updateActiveFileSearch } from "../ui";
 import { togglePrettyPrint } from "./prettyPrint";
 import { addTab, closeTab } from "../tabs";
 import { loadSourceText } from "./loadSourceText";
@@ -28,7 +28,6 @@ import {
   getFirstSourceActorForGeneratedSource,
   getSourceByURL,
   getPrettySource,
-  getActiveSearch,
   getSelectedLocation,
   getSelectedSource,
   canPrettyPrintSource,
@@ -136,11 +135,6 @@ export function selectLocation(cx, location, { keepContext = true } = {}) {
       // If there is no source we deselect the current selected source
       dispatch(clearSelectedLocation(cx));
       return;
-    }
-
-    const activeSearch = getActiveSearch(getState());
-    if (activeSearch && activeSearch !== "file") {
-      dispatch(closeActiveSearch());
     }
 
     // Preserve the current source map context (original / generated)

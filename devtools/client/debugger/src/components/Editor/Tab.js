@@ -54,6 +54,7 @@ class Tab extends PureComponent {
       tabSources: PropTypes.array.isRequired,
       toggleBlackBox: PropTypes.func.isRequired,
       togglePrettyPrint: PropTypes.func.isRequired,
+      isBlackBoxed: PropTypes.bool.isRequired,
     };
   }
 
@@ -167,10 +168,6 @@ class Tab extends PureComponent {
     showMenu(e, buildMenu(items));
   }
 
-  isProjectSearchEnabled() {
-    return this.props.activeSearch === "project";
-  }
-
   isSourceSearchEnabled() {
     return this.props.activeSearch === "source";
   }
@@ -192,7 +189,6 @@ class Tab extends PureComponent {
     const active =
       selectedLocation &&
       sourceId == selectedLocation.sourceId &&
-      !this.isProjectSearchEnabled() &&
       !this.isSourceSearchEnabled();
     const isPrettyCode = isPretty(source);
 

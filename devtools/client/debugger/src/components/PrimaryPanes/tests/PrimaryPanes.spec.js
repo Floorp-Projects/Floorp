@@ -38,6 +38,8 @@ function generateDefaults(overrides) {
     setActiveSearch: jest.fn(),
     closeActiveSearch: jest.fn(),
     clearProjectDirectoryRoot: jest.fn(),
+    selectedTab: "sources",
+    cx: {},
     threads: [],
     ...overrides,
   };
