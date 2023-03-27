@@ -691,11 +691,6 @@ const TEST_GLOBAL = {
         record() {},
       },
     },
-    serverKnobs: {
-      validation: {
-        record() {},
-      },
-    },
   },
   GleanPings: {
     newtab: {
