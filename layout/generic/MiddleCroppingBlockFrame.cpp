@@ -10,6 +10,7 @@
 #include "nsTextNode.h"
 #include "nsLineLayout.h"
 #include "mozilla/dom/Document.h"
+#include "gfxContext.h"
 #include "mozilla/intl/Segmenter.h"
 #include "mozilla/ReflowInput.h"
 #include "mozilla/ReflowOutput.h"
