@@ -83,7 +83,7 @@ browsertime-tp6:
                         firefox:
                             by-test-platform:
                                 windows.*-32.*: []
-                                .*64(?!.*nightly-as-release).*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
+                                .*64.*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
                                 default: []
                         default: []
         treeherder-symbol: Btime(tp6)
@@ -149,7 +149,7 @@ browsertime-responsiveness:
             firefox:
                 by-test-platform:
                     windows.*-32.*: []
-                    .*64(?!.*nightly-as-release).*shippable-qr/.*: [trunk]
+                    .*64.*shippable-qr/.*: [trunk]
                     default: []
             default: []
     tier:
@@ -195,7 +195,7 @@ browsertime-tp6-essential:
                     by-test-platform:
                         windows.*-32.*: []
                         macosx1100.*shippable.*: [mozilla-central, mozilla-beta]
-                        .*64(?!.*nightly-as-release).*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
+                        .*64.*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
                         default: []
                 default: []
         tier:
@@ -223,15 +223,6 @@ browsertime-tp6-bytecode:
             - twitter
             - wikipedia
             - yahoo-mail
-    run-on-projects:
-        by-app:
-            firefox:
-                by-test-platform:
-                    windows.*-32.*: []
-                    macosx1100.*shippable.*: [mozilla-central, mozilla-beta]
-                    .*64(?!.*nightly-as-release).*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
-                    default: []
-            default: []
     mozharness:
         extra-options:
             by-test-platform:
@@ -326,8 +317,7 @@ browsertime-benchmark:
                     firefox:
                         by-test-platform:
                             windows.*-32.*: []
-                            .*64(?!.*nightly-as-release).*shippable-qr/.*: [trunk, mozilla-release]
-                            .*nightly-as-release.*: [autoland]
+                            .*64.*shippable-qr/.*: [trunk, mozilla-release]
                             default: []
                     default: []
             unity-webgl:
@@ -335,16 +325,7 @@ browsertime-benchmark:
                     firefox:
                         by-test-platform:
                             windows.*-32.*: []
-                            .*64(?!.*nightly-as-release).*shippable-qr/.*: [trunk, mozilla-release]
-                            default: []
-                    default: []
-            speedometer:
-                by-app:
-                    firefox:
-                        by-test-platform:
-                            windows.*-32.*: []
-                            .*64(?!.*nightly-as-release).*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
-                            .*nightly-as-release.*: [autoland]
+                            .*64.*shippable-qr/.*: [trunk, mozilla-release]
                             default: []
                     default: []
             default:
@@ -352,7 +333,7 @@ browsertime-benchmark:
                     firefox:
                         by-test-platform:
                             windows.*-32.*: []
-                            .*64(?!.*nightly-as-release).*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
+                            .*64.*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
                             default: []
                     default: []
     max-run-time:
@@ -391,7 +372,7 @@ browsertime-benchmark-wasm:
             firefox:
                 by-test-platform:
                     windows.*-32.*: []
-                    .*64(?!.*nightly-as-release).*shippable-qr/.*: [mozilla-central, mozilla-release]
+                    .*64.*shippable-qr/.*: [mozilla-central, mozilla-release]
                     default: []
             default: []
     max-run-time:
@@ -418,7 +399,7 @@ browsertime-youtube-playback:
     run-on-projects:
         by-test-platform:
             windows.*-32.*: []
-            .*64(?!.*nightly-as-release).*shippable-qr/.*: [mozilla-central, mozilla-release]
+            .*64.*shippable-qr/.*: [mozilla-central, mozilla-release]
             default: []
     tier: 2
     limit-platforms:
@@ -586,7 +567,7 @@ browsertime-custom:
     run-on-projects:
         by-test-platform:
             windows.*-32.*: []
-            .*64(?!.*nightly-as-release).*shippable-qr/.*: [mozilla-central]
+            .*64.*shippable-qr/.*: [mozilla-central]
             default: []
     tier: 1
     treeherder-symbol: Btime(ps)
@@ -605,7 +586,7 @@ browsertime-first-install:
     run-on-projects:
         by-test-platform:
             windows.*-32.*: []
-            .*64(?!.*nightly-as-release).*shippable-qr/.*: [trunk]
+            .*64.*shippable-qr/.*: [trunk]
             default: []
     tier: 1
     treeherder-symbol: Btime(welcome)
@@ -621,8 +602,7 @@ browsertime-grandprix:
             firefox:
                 by-test-platform:
                     windows.*-32.*: []
-                    .*64(?!.*nightly-as-release).*shippable-qr/.*: [autoland, mozilla-central]
-                    .*nightly-as-release.*: [autoland]
+                    .*64.*shippable-qr/.*: [autoland, mozilla-central]
                     default: []
             default: []
     tier: 3
