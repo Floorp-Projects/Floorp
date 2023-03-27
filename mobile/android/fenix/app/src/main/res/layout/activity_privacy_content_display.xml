@@ -35,7 +35,7 @@
 
 
     </LinearLayout>
-    <mozilla.components.concept.engine.EngineView
+    <WebView
             tools:ignore="Instantiatable"
             android:id="@+id/privacyContentEngineView"
             android:layout_width="match_parent"

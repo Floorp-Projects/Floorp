@@ -6,13 +6,16 @@ package org.mozilla.fenix.home.mozonline
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.method.LinkMovementMethod
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.MetricServiceType
+import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import kotlin.system.exitProcess
@@ -57,6 +60,10 @@ fun showPrivacyPopWindow(context: Context, activity: Activity) {
             context.settings().shouldShowPrivacyPopWindow = false
             context.settings().isMarketingTelemetryEnabled = true
             context.components.analytics.metrics.start(MetricServiceType.Marketing)
+            // Now that the privacy notice is accepted, application initialization can continue.
+            context.application.initialize()
+            activity.startActivity(Intent(activity, HomeActivity::class.java))
+            activity.finish()
         }
         .setNeutralButton(
             context.getString(R.string.privacy_notice_neutral_button_2),

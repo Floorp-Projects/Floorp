@@ -31,6 +31,11 @@ android {
         testBuildType project.property("testBuildType")
     }
 
+    // This allows overriding the target activity for MozillaOnline builds, which happens
+    // as part of the defaultConfig below, and applies to all other configurations (Nightly,
+    // Beta, and Release.)
+    def targetActivity = "HomeActivity"
+
     defaultConfig {
         applicationId "org.mozilla"
         minSdkVersion Config.minSdkVersion
@@ -64,16 +69,18 @@ android {
         buildConfigField "String", "AMO_SERVER_URL", "\"https://services.addons.mozilla.org\""
         def deepLinkSchemeValue = "fenix-dev"
         buildConfigField "String", "DEEP_LINK_SCHEME", "\"$deepLinkSchemeValue\""
-        manifestPlaceholders = [
-                "deepLinkScheme": deepLinkSchemeValue
-        ]
 
         // Build flag for "Mozilla Online" variants. See `Config.isMozillaOnline`.
         if (project.hasProperty("mozillaOnline") || gradle.hasProperty("localProperties.mozillaOnline")) {
             buildConfigField "boolean", "MOZILLA_ONLINE", "true"
+            targetActivity = "MozillaOnlineHomeActivity"
         } else {
             buildConfigField "boolean", "MOZILLA_ONLINE", "false"
         }
+        manifestPlaceholders = [
+                "targetActivity": targetActivity,
+                "deepLinkScheme": deepLinkSchemeValue
+        ]
     }
 
     def releaseTemplate = {
@@ -110,7 +117,10 @@ android {
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
             def deepLinkSchemeValue = "fenix-nightly"
             buildConfigField "String", "DEEP_LINK_SCHEME", "\"$deepLinkSchemeValue\""
-            manifestPlaceholders = ["deepLinkScheme": deepLinkSchemeValue]
+            manifestPlaceholders = [
+                    "deepLinkScheme": deepLinkSchemeValue,
+                    "targetActivity": targetActivity
+            ]
         }
         beta releaseTemplate >> {
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
@@ -126,7 +136,8 @@ android {
                     //  - https://issuetracker.google.com/issues/36924841
                     //  - https://issuetracker.google.com/issues/36905922
                     "sharedUserId": "org.mozilla.firefox.sharedID",
-                    "deepLinkScheme": deepLinkSchemeValue
+                    "deepLinkScheme": deepLinkSchemeValue,
+                    "targetActivity": targetActivity
             ]
         }
         release releaseTemplate >> {
@@ -143,7 +154,8 @@ android {
                     //  - https://issuetracker.google.com/issues/36924841
                     //  - https://issuetracker.google.com/issues/36905922
                     "sharedUserId": "org.mozilla.firefox.sharedID",
-                    "deepLinkScheme": deepLinkSchemeValue
+                    "deepLinkScheme": deepLinkSchemeValue,
+                    "targetActivity": targetActivity,
             ]
         }
         benchmark releaseTemplate >> {

@@ -62,7 +62,7 @@
         <activity-alias
             android:name="${applicationId}.App"
             android:exported="true"
-            android:targetActivity=".HomeActivity">
+            android:targetActivity=".${targetActivity}">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -143,6 +143,9 @@
                     android:host="urls_history"/>
             </intent-filter>
         </activity>
+
+        <activity android:name=".MozillaOnlineHomeActivity"
+                android:exported="false"/>
 
         <activity android:name=".home.mozonline.PrivacyContentDisplayActivity"
                 android:exported="false"/>
