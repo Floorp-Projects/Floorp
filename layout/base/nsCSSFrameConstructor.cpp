@@ -222,8 +222,8 @@ nsIFrame* NS_NewSliderFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
 nsIFrame* NS_NewScrollbarFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewScrollbarButtonFrame(PresShell*, ComputedStyle*);
-nsIFrame* NS_NewSimpleXULLeafFrame(PresShell*, ComputedStyle*);
+nsIFrame* NS_NewScrollbarButtonFrame(PresShell* aPresShell,
+                                     ComputedStyle* aStyle);
 
 nsIFrame* NS_NewXULImageFrame(PresShell*, ComputedStyle*);
 nsIFrame* NS_NewImageFrameForContentProperty(PresShell*, ComputedStyle*);
@@ -4145,11 +4145,8 @@ nsCSSFrameConstructor::FindXULTagData(const Element& aElement,
       SIMPLE_XUL_CREATE(editor, NS_NewSubDocumentFrame),
       SIMPLE_XUL_CREATE(browser, NS_NewSubDocumentFrame),
       SIMPLE_XUL_CREATE(splitter, NS_NewSplitterFrame),
-      SIMPLE_XUL_CREATE(scrollbar, NS_NewScrollbarFrame),
       SIMPLE_XUL_CREATE(slider, NS_NewSliderFrame),
-      SIMPLE_XUL_CREATE(thumb, NS_NewSimpleXULLeafFrame),
-      SIMPLE_XUL_CREATE(scrollcorner, NS_NewSimpleXULLeafFrame),
-      SIMPLE_XUL_CREATE(resizer, NS_NewSimpleXULLeafFrame),
+      SIMPLE_XUL_CREATE(scrollbar, NS_NewScrollbarFrame),
       SIMPLE_XUL_CREATE(scrollbarbutton, NS_NewScrollbarButtonFrame),
       {nsGkAtoms::panel, kPopupData},
       {nsGkAtoms::menupopup, kPopupData},

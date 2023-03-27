@@ -644,8 +644,9 @@ static void FindScrollParts(nsIFrame* aCurrFrame,
     }
   }
 
-  if (nsScrollbarFrame* sf = do_QueryFrame(aCurrFrame)) {
-    if (!sf->IsHorizontal()) {
+  nsScrollbarFrame* sf = do_QueryFrame(aCurrFrame);
+  if (sf) {
+    if (!aCurrFrame->IsXULHorizontal()) {
       if (!aResult->mVScrollbar) {
         aResult->mVScrollbar = sf;
       }
@@ -670,17 +671,20 @@ static void FindScrollParts(nsIFrame* aCurrFrame,
 nsTreeBodyFrame::ScrollParts nsTreeBodyFrame::GetScrollParts() {
   ScrollParts result = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
   XULTreeElement* tree = GetBaseElement();
-  if (nsIFrame* treeFrame = tree ? tree->GetPrimaryFrame() : nullptr) {
+  nsIFrame* treeFrame = tree ? tree->GetPrimaryFrame() : nullptr;
+  if (treeFrame) {
     // The way we do this, searching through the entire frame subtree, is pretty
     // dumb! We should know where these frames are.
     FindScrollParts(treeFrame, &result);
     if (result.mHScrollbar) {
       result.mHScrollbar->SetScrollbarMediatorContent(GetContent());
-      result.mHScrollbarContent = result.mHScrollbar->GetContent()->AsElement();
+      nsIFrame* f = do_QueryFrame(result.mHScrollbar);
+      result.mHScrollbarContent = f->GetContent()->AsElement();
     }
     if (result.mVScrollbar) {
       result.mVScrollbar->SetScrollbarMediatorContent(GetContent());
-      result.mVScrollbarContent = result.mVScrollbar->GetContent()->AsElement();
+      nsIFrame* f = do_QueryFrame(result.mVScrollbar);
+      result.mVScrollbarContent = f->GetContent()->AsElement();
     }
   }
   return result;
@@ -3816,7 +3820,7 @@ void nsTreeBodyFrame::RepeatButtonScroll(nsScrollbarFrame* aScrollbar) {
   } else if (increment > 0) {
     direction = 1;
   }
-  bool isHorizontal = aScrollbar->IsHorizontal();
+  bool isHorizontal = aScrollbar->IsXULHorizontal();
 
   AutoWeakFrame weakFrame(this);
   if (isHorizontal) {

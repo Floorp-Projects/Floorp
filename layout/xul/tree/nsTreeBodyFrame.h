@@ -145,7 +145,7 @@ class nsTreeBodyFrame final : public nsLeafBoxFrame,
                           nscoord aNewPos) override;
   virtual void ScrollbarReleased(nsScrollbarFrame* aScrollbar) override {}
   virtual void VisibilityChanged(bool aVisible) override { Invalidate(); }
-  nsScrollbarFrame* GetScrollbarBox(bool aVertical) override {
+  virtual nsIFrame* GetScrollbarBox(bool aVertical) override {
     ScrollParts parts = GetScrollParts();
     return aVertical ? parts.mVScrollbar : parts.mHScrollbar;
   }

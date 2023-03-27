@@ -15,7 +15,6 @@
 #include "nsIScrollableFrame.h"
 #include "PresShell.h"
 #include "nsLayoutUtils.h"
-#include "nsScrollbarFrame.h"
 #include "nsRefreshDriver.h"
 #include "nsComponentManagerUtils.h"
 #include "nsStyledElement.h"
