@@ -244,6 +244,7 @@ void WebTransport::Init(const GlobalObject& aGlobal, const nsAString& aURL,
   }
 
   nsCOMPtr<nsIPrincipal> principal = mGlobal->PrincipalOrNull();
+  IPCClientInfo ipcClientInfo(mGlobal->GetClientInfo().ref().ToIPC());
   // Create a new IPC connection
   Endpoint<PWebTransportParent> parentEndpoint;
   Endpoint<PWebTransportChild> childEndpoint;
@@ -321,7 +322,7 @@ void WebTransport::Init(const GlobalObject& aGlobal, const nsAString& aURL,
 
   // https://w3c.github.io/webtransport/#webtransport-constructor Spec 5.2
   backgroundChild
-      ->SendCreateWebTransportParent(aURL, principal, dedicated,
+      ->SendCreateWebTransportParent(aURL, principal, ipcClientInfo, dedicated,
                                      requireUnreliable,
                                      (uint32_t)congestionControl,
                                      // XXX serverCertHashes,
