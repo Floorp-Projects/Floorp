@@ -17,6 +17,8 @@
 
 const path = require("path");
 
+const projectRoot = path.resolve(__dirname, "../../../../");
+
 /**
  * Takes a file path and returns a string to use as the story title, capitalized
  * and split into multiple words. The file name gets transformed into the story
@@ -49,14 +51,29 @@ function toPascalCase(str) {
 
 /**
  * The WebpackLoader export. Takes markdown as its source and returns a docs
- * only MDX story. For now we're filing all docs only stories under "Docs", but
- * that likely won't be desireable long term.
+ * only MDX story. Falls back to filing stories under "Docs" for everything
+ * outside of `toolkit/content/widgets`.
  *
  * @param {string} source - The markdown source to rewrite to MDX.
  */
 module.exports = function markdownStoryLoader(source) {
+  // Currently we sort docs only stories under "Docs" by default.
+  let storyPath = "Docs";
+
   // `this.resourcePath` is the path of the file being processed.
-  let storyTitle = getDocsStoryTitle(this.resourcePath);
+  let relativePath = path
+    .relative(projectRoot, this.resourcePath)
+    .replaceAll(path.sep, "/");
+
+  if (relativePath.includes("toolkit/content/widgets")) {
+    let storyNameRegex = /(?<=\/widgets\/)(?<name>.*?)(?=\/)/g;
+    let componentName = storyNameRegex.exec(relativePath)?.groups?.name;
+    if (componentName) {
+      storyPath = `Design System/Experiments/${toPascalCase(componentName)}`;
+    }
+  }
+
+  let storyTitle = getDocsStoryTitle(relativePath);
 
   // Unfortunately the indentation/spacing here seems to be important for the
   // MDX parser to know what to do in the next step of the Webpack process.
@@ -64,7 +81,7 @@ module.exports = function markdownStoryLoader(source) {
 import { Meta, Description } from "@storybook/addon-docs";
 
 <Meta 
-  title="Docs/${storyTitle}" 
+  title="${storyPath}/${storyTitle}" 
   parameters={{
     previewTabs: {
       canvas: { hidden: true },
