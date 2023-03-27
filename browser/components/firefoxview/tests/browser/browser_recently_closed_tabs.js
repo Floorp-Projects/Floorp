@@ -53,7 +53,7 @@ async function dismiss_tab(tab, content) {
 add_setup(async function setup() {
   // set updateTimeMs to 0 to prevent unexpected/unrelated DOM mutations during testing
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.tabs.firefox-view.updateTimeMs", 0]],
+    set: [["browser.tabs.firefox-view.updateTimeMs", 100000]],
   });
 });
 
@@ -339,11 +339,10 @@ add_task(async function test_time_updates_correctly() {
 
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    const numOfListItems = document.querySelector("ol.closed-tabs-list")
-      .children.length;
-    const lastListItem = document.querySelector("ol.closed-tabs-list").children[
-      numOfListItems - 1
-    ];
+
+    const tabsList = document.querySelector("ol.closed-tabs-list");
+    const numOfListItems = tabsList.children.length;
+    const lastListItem = tabsList.children[numOfListItems - 1];
     const timeLabel = lastListItem.querySelector("span.closed-tab-li-time");
     let initialTimeText = timeLabel.textContent;
     Assert.stringContains(
@@ -655,6 +654,7 @@ add_task(async function test_reopen_recently_closed_tabs() {
  * dismissed by clicking on their respective dismiss buttons.
  */
 add_task(async function test_dismiss_tab() {
+  const TAB_UPDATE_TIME_MS = 5;
   Services.obs.notifyObservers(null, "browser:purge-session-history");
   Assert.equal(
     SessionStore.getClosedTabCount(window),
@@ -682,9 +682,34 @@ add_task(async function test_dismiss_tab() {
     await close_tab(tab1);
     await closedObjectsChanged();
 
-    const tabsList = document.querySelector("ol.closed-tabs-list");
-
     await clearAllParentTelemetryEvents();
+
+    const tabsList = document.querySelector("ol.closed-tabs-list");
+    const numOfListItems = tabsList.children.length;
+    const lastListItem = tabsList.children[numOfListItems - 1];
+    const timeLabel = lastListItem.querySelector("span.closed-tab-li-time");
+    let initialTimeText = timeLabel.textContent;
+    Assert.stringContains(
+      initialTimeText,
+      "Just now",
+      "recently-closed-tabs list item time is 'Just now'"
+    );
+
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.tabs.firefox-view.updateTimeMs", TAB_UPDATE_TIME_MS]],
+    });
+
+    await BrowserTestUtils.waitForMutationCondition(
+      timeLabel,
+      { childList: true },
+      () => !timeLabel.textContent.includes("Just now")
+    );
+
+    isnot(
+      timeLabel.textContent,
+      initialTimeText,
+      "recently-closed-tabs list item time has updated"
+    );
 
     await dismiss_tab(tabsList.children[0], content);
 
@@ -786,6 +811,8 @@ add_task(async function test_dismiss_tab() {
       !document.querySelector("ol.closed-tabs-list"),
       "The recently closed tabs list is not displayed."
     );
+
+    await SpecialPowers.popPrefEnv();
   });
 });
 
