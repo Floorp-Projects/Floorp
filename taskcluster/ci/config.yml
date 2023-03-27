@@ -145,6 +145,7 @@ treeherder:
         'deb-L10n': 'Localized Debian Repacks'
         'BM': 'Beetmover'
         'BMR': 'Beetmover repackages'
+        'BM-apt': 'Beetmover .deb packages'
         'c-Up': 'Balrog submission of complete updates'
         'css': 'Checksum signing for source'
         'rs': 'Repackage signing'

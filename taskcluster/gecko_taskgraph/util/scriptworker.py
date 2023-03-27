@@ -119,6 +119,15 @@ BEETMOVER_BUCKET_SCOPES = {
     "default": "beetmover:bucket:dep",
 }
 
+"""Map the beetmover scope aliases to the actual scopes.
+These are the scopes needed to import artifacts into the product delivery APT repos.
+"""
+BEETMOVER_APT_REPO_SCOPES = {
+    "all-release-branches": "beetmover:apt-repo:release",
+    "all-nightly-branches": "beetmover:apt-repo:nightly",
+    "default": "beetmover:apt-repo:dep",
+}
+
 """Map the beetmover tasks aliases to the actual action scopes.
 """
 BEETMOVER_ACTION_SCOPES = {
@@ -127,6 +136,12 @@ BEETMOVER_ACTION_SCOPES = {
     "default": "beetmover:action:push-to-candidates",
 }
 
+"""Map the beetmover tasks aliases to the actual action scopes.
+The action scopes are generic across different repo types.
+"""
+BEETMOVER_REPO_ACTION_SCOPES = {
+    "default": "beetmover:action:import-from-gcs-to-artifact-registry",
+}
 
 """Known balrog actions."""
 BALROG_ACTIONS = (
@@ -303,6 +318,17 @@ get_beetmover_bucket_scope = functools.partial(
     get_scope_from_project,
     alias_to_project_map=BEETMOVER_SCOPE_ALIAS_TO_PROJECT,
     alias_to_scope_map=BEETMOVER_BUCKET_SCOPES,
+)
+
+get_beetmover_apt_repo_scope = functools.partial(
+    get_scope_from_project,
+    alias_to_project_map=BEETMOVER_SCOPE_ALIAS_TO_PROJECT,
+    alias_to_scope_map=BEETMOVER_APT_REPO_SCOPES,
+)
+
+get_beetmover_repo_action_scope = functools.partial(
+    get_scope_from_release_type,
+    release_type_to_scope_map=BEETMOVER_REPO_ACTION_SCOPES,
 )
 
 get_beetmover_action_scope = functools.partial(
@@ -485,6 +511,23 @@ def generate_beetmover_upstream_artifacts(
 
     upstream_artifacts.sort(key=lambda u: u["paths"])
     return upstream_artifacts
+
+
+def generate_artifact_registry_gcs_sources(dep):
+    gcs_sources = []
+    locale = dep.attributes.get("locale")
+    if not locale:
+        repackage_deb_reference = "<repackage-deb>"
+        repackage_deb_artifact = "public/build/target.deb"
+    else:
+        repackage_deb_reference = "<repackage-deb-l10n>"
+        repackage_deb_artifact = f"public/build/{locale}/target.langpack.deb"
+    for config in dep.task["payload"]["artifactMap"]:
+        if config["taskId"]["task-reference"] == repackage_deb_reference:
+            gcs_sources.append(
+                config["paths"][repackage_deb_artifact]["destinations"][0]
+            )
+    return gcs_sources
 
 
 # generate_beetmover_artifact_map {{{1

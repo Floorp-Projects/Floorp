@@ -984,6 +984,21 @@ def build_beetmover_push_to_release_payload(config, task, task_def):
 
 
 @payload_builder(
+    "beetmover-import-from-gcs-to-artifact-registry",
+    schema={
+        Required("max-run-time"): int,
+        Required("gcs-sources"): [str],
+        Required("product"): str,
+    },
+)
+def build_import_from_gcs_to_artifact_registry_payload(config, task, task_def):
+    task_def["payload"] = {
+        "product": task["worker"]["product"],
+        "gcs_sources": task["worker"]["gcs-sources"],
+    }
+
+
+@payload_builder(
     "beetmover-maven",
     schema={
         Required("max-run-time"): int,
@@ -1510,6 +1525,7 @@ def set_defaults(config, tasks):
             "beetmover",
             "beetmover-push-to-release",
             "beetmover-maven",
+            "beetmover-import-from-gcs-to-artifact-registry",
         ):
             worker.setdefault("max-run-time", 600)
         elif worker["implementation"] == "push-apk":
