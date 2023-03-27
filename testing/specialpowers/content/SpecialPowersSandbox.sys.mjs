@@ -28,7 +28,7 @@ const SANDBOX_GLOBALS = [
   "URL",
 ];
 const EXTRA_IMPORTS = {
-  EventUtils: "resource://specialpowers/SpecialPowersEventUtils.jsm",
+  EventUtils: "resource://specialpowers/SpecialPowersEventUtils.sys.mjs",
 };
 
 let expectFail = false;
@@ -70,9 +70,10 @@ export class SpecialPowersSandbox {
       ...EXTRA_IMPORTS,
       ...opts.imports,
     };
-    for (let [symbol, url] of Object.entries(imports)) {
-      ChromeUtils.defineModuleGetter(this.sandbox, symbol, url);
-    }
+    // We explicitly want these directly in the sandbox, and we aren't going
+    // to be using the globals within this file.
+    // eslint-disable-next-line mozilla/lazy-getter-object-name
+    ChromeUtils.defineESModuleGetters(this.sandbox, imports);
 
     // Note: When updating the set of globals exposed to sandboxes by
     // default, please also update the ESLint plugin rule defined in
