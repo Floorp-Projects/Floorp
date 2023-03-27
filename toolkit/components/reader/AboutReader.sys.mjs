@@ -11,8 +11,12 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AsyncPrefs: "resource://gre/modules/AsyncPrefs.sys.mjs",
-  NarrateControls: "resource://gre/modules/narrate/NarrateControls.sys.mjs",
 });
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "NarrateControls",
+  "resource://gre/modules/narrate/NarrateControls.jsm"
+);
 ChromeUtils.defineModuleGetter(
   lazy,
   "NimbusFeatures",
