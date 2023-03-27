@@ -57,7 +57,7 @@ class WebsiteInfoView(
 
     @VisibleForTesting
     internal fun bindConnectionDetailsListener() {
-        binding.securityInfo.setOnClickListener {
+        binding.securityInfoContainer.setOnClickListener {
             interactor.onConnectionDetailsClicked()
         }
     }
