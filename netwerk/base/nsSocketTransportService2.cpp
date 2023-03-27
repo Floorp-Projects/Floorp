@@ -809,12 +809,9 @@ nsSocketTransportService::Shutdown(bool aXpcomShutdown) {
 
   NS_ENSURE_STATE(NS_IsMainThread());
 
-  if (!mInitialized) {
+  if (!mInitialized || mShuttingDown) {
+    // We never inited, or shutdown has already started
     return NS_OK;
-  }
-
-  if (mShuttingDown) {
-    return NS_ERROR_UNEXPECTED;
   }
 
   {
