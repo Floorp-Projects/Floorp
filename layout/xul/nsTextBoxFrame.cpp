@@ -33,7 +33,6 @@
 #include "nsDisplayList.h"
 #include "nsCSSRendering.h"
 #include "nsIReflowCallback.h"
-#include "nsBoxFrame.h"
 #include "nsLayoutUtils.h"
 #include "TextDrawTarget.h"
 

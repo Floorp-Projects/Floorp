@@ -14,7 +14,6 @@
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/PresShell.h"
 #include "nsLeafBoxFrame.h"
-#include "nsBoxFrame.h"
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"
@@ -128,11 +127,6 @@ void nsLeafBoxFrame::Reflow(nsPresContext* aPresContext,
                             ReflowOutput& aDesiredSize,
                             const ReflowInput& aReflowInput,
                             nsReflowStatus& aStatus) {
-  // This is mostly a copy of nsBoxFrame::Reflow().
-  // We aren't able to share an implementation because of the frame
-  // class hierarchy.  If you make changes here, please keep
-  // nsBoxFrame::Reflow in sync.
-
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsLeafBoxFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);

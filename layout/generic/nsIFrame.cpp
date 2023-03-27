@@ -4247,7 +4247,6 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   }
 
   const nsStyleDisplay* ourDisp = StyleDisplay();
-  // REVIEW: Taken from nsBoxFrame::Paint
   // Don't paint our children if the theme object is a leaf.
   if (IsThemed(ourDisp) && !PresContext()->Theme()->WidgetIsContainer(
                                ourDisp->EffectiveAppearance())) {

@@ -9,7 +9,6 @@
 #include "nsFrameState.h"
 
 #include "nsBlockFrame.h"
-#include "nsBoxFrame.h"
 #include "nsFlexContainerFrame.h"
 #include "nsGridContainerFrame.h"
 #include "nsGfxScrollFrame.h"

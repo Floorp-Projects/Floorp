@@ -20,8 +20,6 @@ EXPORTS += [
 
 UNIFIED_SOURCES += [
     "nsBox.cpp",
-    "nsBoxFrame.cpp",
-    "nsBoxLayout.cpp",
     "nsBoxLayoutState.cpp",
     "nsLeafBoxFrame.cpp",
     "nsMenuPopupFrame.cpp",
@@ -30,7 +28,6 @@ UNIFIED_SOURCES += [
     "nsScrollbarFrame.cpp",
     "nsSliderFrame.cpp",
     "nsSplitterFrame.cpp",
-    "nsSprocketLayout.cpp",
     "nsTextBoxFrame.cpp",
     "nsXULPopupManager.cpp",
     "nsXULTooltipListener.cpp",

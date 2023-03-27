@@ -28,7 +28,6 @@
 #include "nsScrollbarFrame.h"
 #include "nsRepeatService.h"
 #include "nsBoxLayoutState.h"
-#include "nsSprocketLayout.h"
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
@@ -433,9 +432,9 @@ void nsSliderFrame::BuildDisplayListForThumb(nsDisplayListBuilder* aBuilder,
   // If this scrollbar is the scrollbar of an actively scrolled scroll frame,
   // layerize the scrollbar thumb, wrap it in its own ContainerLayer and
   // attach scrolling information to it.
-  // We do this here and not in the thumb's nsBoxFrame::BuildDisplayList so
-  // that the event region that gets created for the thumb is included in
-  // the nsDisplayOwnLayer contents.
+  // We do this here and not in the thumb's BuildDisplayList so that the event
+  // region that gets created for the thumb is included in the nsDisplayOwnLayer
+  // contents.
 
   const layers::ScrollableLayerGuid::ViewID scrollTargetId =
       aBuilder->GetCurrentScrollbarTarget();

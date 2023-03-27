@@ -8,9 +8,8 @@
 #define nsSliderFrame_h__
 
 #include "mozilla/Attributes.h"
-#include "nsIFrame.h"
+#include "nsContainerFrame.h"
 #include "nsRepeatService.h"
-#include "nsBoxFrame.h"
 #include "nsAtom.h"
 #include "nsCOMPtr.h"
 #include "nsITimer.h"

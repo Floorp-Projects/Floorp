@@ -4327,13 +4327,6 @@ class nsIFrame : public nsQueryFrame {
   virtual Valignment GetXULVAlign() const { return vAlign_Top; }
   virtual Halignment GetXULHAlign() const { return hAlign_Left; }
 
-  bool IsXULHorizontal() const {
-    return (mState & NS_STATE_IS_HORIZONTAL) != 0;
-  }
-  bool IsXULNormalDirection() const {
-    return (mState & NS_STATE_IS_DIRECTION_NORMAL) != 0;
-  }
-
   nsresult XULRedraw(nsBoxLayoutState& aState);
 
   static bool AddXULPrefSize(nsIFrame* aBox, nsSize& aSize, bool& aWidth,
