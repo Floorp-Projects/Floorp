@@ -3182,6 +3182,18 @@ Element* nsINode::GetNearestInclusiveOpenPopover() {
   return nullptr;
 }
 
+Element* nsINode::GetNearestInclusiveTargetPopoverForInvoker() {
+  for (auto* el : InclusiveFlatTreeAncestorsOfType<
+           nsGenericHTMLFormControlElementWithState>()) {
+    if (auto* popover = el->GetPopoverTargetElement()) {
+      if (popover->IsAutoPopover() && popover->IsPopoverOpen()) {
+        return popover;
+      }
+    }
+  }
+  return nullptr;
+}
+
 void nsINode::AddAnimationObserver(nsIAnimationObserver* aAnimationObserver) {
   AddMutationObserver(aAnimationObserver);
   OwnerDoc()->SetMayHaveAnimationObservers();

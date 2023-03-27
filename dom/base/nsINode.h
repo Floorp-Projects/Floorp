@@ -502,11 +502,16 @@ class nsINode : public mozilla::dom::EventTarget {
 
   MOZ_CAN_RUN_SCRIPT mozilla::dom::Element* GetParentFlexElement();
 
-  /*
+  /**
    * Returns the nearest inclusive open popover for a given node, see
    * https://html.spec.whatwg.org/multipage/popover.html#nearest-inclusive-open-popover
    */
   mozilla::dom::Element* GetNearestInclusiveOpenPopover();
+
+  /**
+   * https://html.spec.whatwg.org/multipage/popover.html#nearest-inclusive-target-popover-for-invoker
+   */
+  mozilla::dom::Element* GetNearestInclusiveTargetPopoverForInvoker();
 
   bool IsNode() const final { return true; }
 
@@ -518,6 +523,9 @@ class nsINode : public mozilla::dom::EventTarget {
   bool IsElement() const { return GetBoolFlag(NodeIsElement); }
 
   virtual bool IsTextControlElement() const { return false; }
+  virtual bool IsGenericHTMLFormControlElementWithState() const {
+    return false;
+  }
 
   // Returns non-null if this element subclasses `LinkStyle`.
   virtual const mozilla::dom::LinkStyle* AsLinkStyle() const { return nullptr; }

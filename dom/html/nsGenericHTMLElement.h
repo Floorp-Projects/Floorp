@@ -1224,6 +1224,10 @@ class nsGenericHTMLFormControlElementWithState
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
       mozilla::dom::FromParser aFromParser, FormControlType);
 
+  bool IsGenericHTMLFormControlElementWithState() const final { return true; }
+  NS_IMPL_FROMNODE_HELPER(nsGenericHTMLFormControlElementWithState,
+                          IsGenericHTMLFormControlElementWithState())
+
   // nsIContent
   bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                       const nsAString& aValue,
