@@ -53,7 +53,6 @@ if (isNode()) {
   pref("devtools.debugger.features.remove-command-bar-options", true);
   pref("devtools.debugger.features.code-folding", false);
   pref("devtools.debugger.features.command-click", false);
-  pref("devtools.debugger.features.outline", true);
   pref("devtools.debugger.features.column-breakpoints", true);
   pref("devtools.debugger.features.component-pane", false);
   pref("devtools.debugger.features.autocomplete-expressions", false);

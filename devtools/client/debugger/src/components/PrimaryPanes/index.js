@@ -13,7 +13,7 @@ import {
   getSelectedPrimaryPaneTab,
   getContext,
 } from "../../selectors";
-import { features, prefs } from "../../utils/prefs";
+import { prefs } from "../../utils/prefs";
 import { connect } from "../../utils/connect";
 import { formatKeyShortcut } from "../../utils/text";
 
@@ -61,10 +61,6 @@ class PrimaryPanes extends Component {
   };
 
   renderOutlineTabs() {
-    if (!features.outline) {
-      return null;
-    }
-
     const sources = formatKeyShortcut(L10N.getStr("sources.header"));
     const outline = formatKeyShortcut(L10N.getStr("outline.header"));
     const isSources = this.props.selectedTab === "sources";
