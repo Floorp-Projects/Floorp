@@ -8,6 +8,15 @@
 
 requestLongerTimeout(3);
 
+add_task(async function testOpeningAndClosingEmptyProjectSearch() {
+  const dbg = await initDebugger(
+    "doc-script-switching.html",
+    "script-switching-01.js"
+  );
+  await openProjectSearch(dbg);
+  await closeProjectSearch(dbg);
+});
+
 add_task(async function testProjectSearchCloseOnNavigation() {
   const dbg = await initDebugger(
     "doc-script-switching.html",
@@ -33,6 +42,8 @@ add_task(async function testSimpleProjectSearch() {
     "script-switching-01.js"
   );
 
+  await selectSource(dbg, "script-switching-01.js");
+
   await openProjectSearch(dbg);
   const searchTerm = "first";
   await doProjectSearch(dbg, searchTerm);
@@ -47,8 +58,15 @@ add_task(async function testSimpleProjectSearch() {
   );
 
   info("Select a result match to open the location in the source");
-  await clickElement(dbg, "fileMatch");
-  await waitForSelectedSource(dbg, "script-switching-01.js");
+  await selectResultMatch(dbg);
+  await waitForLoadedSource(dbg, "script-switching-01.js");
+
+  is(dbg.selectors.getActiveSearch(), null);
+
+  ok(
+    dbg.selectors.getSelectedSource().url.includes("script-switching-01.js"),
+    "The correct source (script-switching-01.js) is selected"
+  );
 });
 
 add_task(async function testMatchesForRegexSearches() {
@@ -72,6 +90,7 @@ add_task(async function testMatchesForRegexSearches() {
 
   // Turn off the regex modifier so does not break tests below
   await clickElement(dbg, "projectSearchModifiersRegexMatch");
+  await closeProjectSearch(dbg);
 });
 
 // Test expanding search results to reveal the search matches.
@@ -93,8 +112,6 @@ add_task(async function testExpandSearchResultsToShowMatches() {
 
 add_task(async function testSearchModifiers() {
   const dbg = await initDebugger("doc-react.html", "App.js");
-
-  await openProjectSearch(dbg);
 
   await assertProjectSearchModifier(
     dbg,
@@ -195,8 +212,7 @@ add_task(async function testSearchExcludePatterns() {
     "The exclude pattern for node modules is persisted accross reloads"
   );
 
-  // Clear the fields so that it does not impact on the subsequent tests
-  await clearElement(dbg, "projectSearchSearchInput");
+  // Clear the  exclude patterns field so that it does not impact on the subsequent tests
   await clearElement(dbg, "excludePatternsInput");
   pressKey(dbg, "Enter");
 });
@@ -209,10 +225,11 @@ async function assertProjectSearchModifier(
   expected
 ) {
   info(`Assert ${title} search modifier`);
-
+  await openProjectSearch(dbg);
   type(dbg, searchTerm);
   info(`Turn on the ${title} search modifier option`);
   await clickElement(dbg, searchModifierBtn);
+
   let results = await waitForSearchResults(dbg, expected.resultWithModifierOn);
   is(
     results.length,
@@ -229,5 +246,12 @@ async function assertProjectSearchModifier(
     expected.resultWithModifierOff,
     `${results.length} results where found`
   );
-  await clearElement(dbg, "projectSearchSearchInput");
+
+  await closeProjectSearch(dbg);
+}
+
+async function selectResultMatch(dbg) {
+  const select = waitForState(dbg, () => !dbg.selectors.getActiveSearch());
+  await clickElement(dbg, "fileMatch");
+  return select;
 }

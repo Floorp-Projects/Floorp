@@ -7,9 +7,3 @@ export const searchKeys = {
   FILE_SEARCH: "file-search",
   QUICKOPEN_SEARCH: "quickopen-search",
 };
-
-export const primaryPaneTabs = {
-  SOURCES: "sources",
-  OUTLINE: "outline",
-  PROJECT_SEARCH: "project",
-};

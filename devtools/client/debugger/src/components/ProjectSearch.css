@@ -11,6 +11,7 @@
   display: flex;
   flex-direction: column;
   z-index: 20;
+  background-color: var(--theme-body-background);
   overflow-y: hidden;
 
   /* Using the same colors as the Netmonitor's --table-selection-background-hover */
