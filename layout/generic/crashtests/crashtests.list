@@ -280,7 +280,6 @@ load 437565-3.xhtml
 load 438259-1.html
 load 438266-1.html
 skip load 438509-1.html # bug 511234
-load chrome://reftest/content/crashtests/layout/generic/crashtests/442860-1.xhtml
 load 443528-1.html
 load 444230-1.html
 load 444484-1.html
