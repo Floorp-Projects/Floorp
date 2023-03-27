@@ -5,6 +5,17 @@ All notable changes to this program are documented in this file.
 
 ## 0.32.2  (2023-02-08, `602aa16c20d4`)
 
+### Known problems
+
+After enabling the site-isolation feature in Firefox with geckodriver 0.32.1
+some WebDriver clients like Selenium that use the Chrome DevTools Protocol (CDP)
+by default for logging events could trigger a hang in Firefox's experimental CDP
+implementation. The fix for this problem will be shipped with Firefox 112.
+Until then the following Firefox preferences should be set:
+
+- `fission.bfcacheInParent: false`
+- `fission.webContentIsolationStrategy: 0`
+
 ### Fixed
 
 - With the release of geckodriver 0.32.1 the marionette crate was inappropriately
@@ -12,6 +23,17 @@ All notable changes to this program are documented in this file.
   to fail for older releases.
 
 ## 0.32.1  (2023-02-02, `b7f075124503`)
+
+### Known problems
+
+After enabling the site-isolation feature in Firefox with geckodriver 0.32.1
+some WebDriver clients like Selenium that use the Chrome DevTools Protocol (CDP)
+by default for logging events could trigger a hang in Firefox's experimental CDP
+implementation. The fix for this problem will be shipped with Firefox 112.
+Until then the following Firefox preferences should be set:
+
+- `fission.bfcacheInParent: false`
+- `fission.webContentIsolationStrategy: 0`
 
 ### Fixed
 
