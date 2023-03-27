@@ -19,6 +19,7 @@ EXPORTS += [
 ]
 
 UNIFIED_SOURCES += [
+    "MiddleCroppingLabelFrame.cpp",
     "nsBox.cpp",
     "nsBoxLayoutState.cpp",
     "nsLeafBoxFrame.cpp",
@@ -28,7 +29,6 @@ UNIFIED_SOURCES += [
     "nsScrollbarFrame.cpp",
     "nsSliderFrame.cpp",
     "nsSplitterFrame.cpp",
-    "nsTextBoxFrame.cpp",
     "nsXULPopupManager.cpp",
     "nsXULTooltipListener.cpp",
     "SimpleXULLeafFrame.cpp",

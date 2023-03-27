@@ -23,7 +23,6 @@
 #include "nsNameSpaceManager.h"
 #include "nsNetUtil.h"
 #include "nsString.h"
-#include "nsTextBoxFrame.h"
 #include "nsXULElement.h"
 
 using namespace mozilla::a11y;
@@ -36,21 +35,6 @@ XULLabelAccessible::XULLabelAccessible(nsIContent* aContent,
                                        DocAccessible* aDoc)
     : HyperTextAccessibleWrap(aContent, aDoc) {
   mType = eXULLabelType;
-
-  // If @value attribute is given then it's rendered instead text content. In
-  // this case we need to create a text leaf accessible to make @value attribute
-  // accessible.
-  // XXX: text interface doesn't let you get the text by words.
-  nsTextBoxFrame* textBoxFrame = do_QueryFrame(mContent->GetPrimaryFrame());
-  if (textBoxFrame) {
-    mValueTextLeaf = new XULLabelTextLeafAccessible(mContent, mDoc);
-    mDoc->BindToDocument(mValueTextLeaf, nullptr);
-
-    nsAutoString text;
-    textBoxFrame->GetCroppedTitle(text);
-    mValueTextLeaf->SetText(text);
-    AppendChild(mValueTextLeaf);
-  }
 }
 
 void XULLabelAccessible::Shutdown() {

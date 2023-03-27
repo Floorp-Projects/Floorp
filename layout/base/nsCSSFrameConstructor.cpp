@@ -66,7 +66,6 @@
 #include "nsIFormControl.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsTextFragment.h"
-#include "nsTextBoxFrame.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsContentUtils.h"
 #include "nsIScriptError.h"
@@ -172,6 +171,7 @@ nsIFrame* NS_NewSVGFEImageFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 nsIFrame* NS_NewSVGFEUnstyledLeafFrame(PresShell* aPresShell,
                                        ComputedStyle* aStyle);
 nsIFrame* NS_NewFileControlLabelFrame(PresShell*, ComputedStyle*);
+nsIFrame* NS_NewMiddleCroppingLabelFrame(PresShell*, ComputedStyle*);
 
 #include "mozilla/dom/NodeInfo.h"
 #include "prenv.h"
@@ -500,6 +500,33 @@ static bool ParentIsWrapperAnonBox(nsIFrame* aParent) {
     maybeAnonBox = maybeAnonBox->GetParent();
   }
   return maybeAnonBox->Style()->IsWrapperAnonBox();
+}
+
+static bool InsertSeparatorBeforeAccessKey() {
+  static bool sInitialized = false;
+  static bool sValue = false;
+  if (!sInitialized) {
+    sInitialized = true;
+
+    const char* prefName = "intl.menuitems.insertseparatorbeforeaccesskeys";
+    nsAutoString val;
+    Preferences::GetLocalizedString(prefName, val);
+    sValue = val.EqualsLiteral("true");
+  }
+  return sValue;
+}
+
+static bool AlwaysAppendAccessKey() {
+  static bool sInitialized = false;
+  static bool sValue = false;
+  if (!sInitialized) {
+    sInitialized = true;
+    const char* prefName = "intl.menuitems.alwaysappendaccesskeys";
+    nsAutoString val;
+    Preferences::GetLocalizedString(prefName, val);
+    sValue = val.EqualsLiteral("true");
+  }
+  return sValue;
 }
 
 //----------------------------------------------------------------------
@@ -1612,14 +1639,14 @@ void nsCSSFrameConstructor::CreateGeneratedContent(
         ToUpperCase(accesskey);
         nsAutoString accessKeyLabel = u"("_ns + accesskey + u")"_ns;
         if (!StringEndsWith(value, accessKeyLabel)) {
-          if (nsTextBoxFrame::InsertSeparatorBeforeAccessKey() &&
-              !value.IsEmpty() && !NS_IS_SPACE(value.Last())) {
+          if (InsertSeparatorBeforeAccessKey() && !value.IsEmpty() &&
+              !NS_IS_SPACE(value.Last())) {
             value.Append(' ');
           }
           value.Append(accessKeyLabel);
         }
       };
-      if (nsTextBoxFrame::AlwaysAppendAccessKey()) {
+      if (AlwaysAppendAccessKey()) {
         AppendAccessKeyLabel();
         RefPtr c = CreateGenConTextNode(aState, value, nullptr);
         aAddChild(c);
@@ -4167,9 +4194,9 @@ nsCSSFrameConstructor::FindXULLabelOrDescriptionData(const Element& aElement,
     return nullptr;
   }
 
-  static constexpr FrameConstructionData sXULTextBoxData =
-      SIMPLE_XUL_FCDATA(NS_NewTextBoxFrame);
-  return &sXULTextBoxData;
+  static constexpr FrameConstructionData sMiddleCroppingData =
+      SIMPLE_XUL_FCDATA(NS_NewMiddleCroppingLabelFrame);
+  return &sMiddleCroppingData;
 }
 
 #ifdef XP_MACOSX
