@@ -16,7 +16,6 @@
 #include "nsHttpHeaderArray.h"
 #include "nsHttpRequestHead.h"
 #include "nsHttpResponseHead.h"
-#include "mozilla/Tuple.h"
 
 namespace mozilla {
 namespace net {

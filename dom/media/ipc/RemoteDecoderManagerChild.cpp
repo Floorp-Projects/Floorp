@@ -492,13 +492,13 @@ RemoteDecoderManagerChild::LaunchRDDProcessIfNeeded() {
                 return GenericNonExclusivePromise::CreateAndReject(
                     NS_ERROR_FAILURE, __func__);
               }
-              nsresult rv = Get<0>(aResult.ResolveValue());
+              nsresult rv = std::get<0>(aResult.ResolveValue());
               if (NS_FAILED(rv)) {
                 return GenericNonExclusivePromise::CreateAndReject(rv,
                                                                    __func__);
               }
               OpenRemoteDecoderManagerChildForProcess(
-                  Get<1>(std::move(aResult.ResolveValue())),
+                  std::get<1>(std::move(aResult.ResolveValue())),
                   RemoteDecodeIn::RddProcess);
               return GenericNonExclusivePromise::CreateAndResolve(true,
                                                                   __func__);
@@ -586,13 +586,14 @@ RemoteDecoderManagerChild::LaunchUtilityProcessIfNeeded(
                        return GenericNonExclusivePromise::CreateAndReject(
                            NS_ERROR_FAILURE, __func__);
                      }
-                     nsresult rv = Get<0>(aResult.ResolveValue());
+                     nsresult rv = std::get<0>(aResult.ResolveValue());
                      if (NS_FAILED(rv)) {
                        return GenericNonExclusivePromise::CreateAndReject(
                            rv, __func__);
                      }
                      OpenRemoteDecoderManagerChildForProcess(
-                         Get<1>(std::move(aResult.ResolveValue())), aLocation);
+                         std::get<1>(std::move(aResult.ResolveValue())),
+                         aLocation);
                      return GenericNonExclusivePromise::CreateAndResolve(
                          true, __func__);
                    });

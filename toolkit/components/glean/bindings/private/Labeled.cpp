@@ -24,7 +24,7 @@ BooleanMetric Labeled<BooleanMetric>::Get(const nsACString& aLabel) const {
   auto mirrorId = ScalarIdForMetric(mId);
   if (mirrorId) {
     GetLabeledMirrorLock().apply([&](auto& lock) {
-      auto tuple = MakeTuple<Telemetry::ScalarID, nsString>(
+      auto tuple = std::make_tuple<Telemetry::ScalarID, nsString>(
           mirrorId.extract(), NS_ConvertUTF8toUTF16(aLabel));
       lock.ref()->InsertOrUpdate(submetricId, std::move(tuple));
     });
@@ -40,7 +40,7 @@ CounterMetric Labeled<CounterMetric>::Get(const nsACString& aLabel) const {
   auto mirrorId = ScalarIdForMetric(mId);
   if (mirrorId) {
     GetLabeledMirrorLock().apply([&](auto& lock) {
-      auto tuple = MakeTuple<Telemetry::ScalarID, nsString>(
+      auto tuple = std::make_tuple<Telemetry::ScalarID, nsString>(
           mirrorId.extract(), NS_ConvertUTF8toUTF16(aLabel));
       lock.ref()->InsertOrUpdate(submetricId, std::move(tuple));
     });
@@ -82,8 +82,8 @@ already_AddRefed<nsISupports> GleanLabeled::NamedGetter(const nsAString& aName,
   auto mirrorId = ScalarIdForMetric(mId);
   if (mirrorId) {
     GetLabeledMirrorLock().apply([&](auto& lock) {
-      auto tuple = MakeTuple<Telemetry::ScalarID, nsString>(mirrorId.extract(),
-                                                            nsString(aName));
+      auto tuple = std::make_tuple<Telemetry::ScalarID, nsString>(
+          mirrorId.extract(), nsString(aName));
       lock.ref()->InsertOrUpdate(submetricId, std::move(tuple));
     });
   }

@@ -142,9 +142,7 @@ ParentToParentFetchEventRespondWithResult ToParentToParent(
   // need to add it to the arguments. Note that we have to make sure that the
   // arguments don't contain the preload response already, otherwise we'll end
   // up overwriting it with a Nothing.
-  Maybe<ParentToParentInternalResponse> preloadResponse;
-  Maybe<ResponseEndArgs> preloadResponseEndArgs;
-  Tie(preloadResponse, preloadResponseEndArgs) =
+  auto [preloadResponse, preloadResponseEndArgs] =
       actor->mReal->OnStart(WrapNotNull(actor));
   if (copyArgs.preloadResponse().isNothing() && preloadResponse.isSome()) {
     copyArgs.preloadResponse() = Some(ToParentToChild(

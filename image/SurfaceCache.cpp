@@ -29,7 +29,7 @@
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_image.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/Tuple.h"
+
 #include "nsExpirationTracker.h"
 #include "nsHashKeys.h"
 #include "nsIMemoryReporter.h"
@@ -330,19 +330,21 @@ class ImageSurfaceCache {
    *          an IntSize which is the size the caller should choose to decode
    *          at should it attempt to do so.
    */
-  Tuple<already_AddRefed<CachedSurface>, MatchType, IntSize> LookupBestMatch(
-      const SurfaceKey& aIdealKey) {
+  std::tuple<already_AddRefed<CachedSurface>, MatchType, IntSize>
+  LookupBestMatch(const SurfaceKey& aIdealKey) {
     // Try for an exact match first.
     RefPtr<CachedSurface> exactMatch;
     mSurfaces.Get(aIdealKey, getter_AddRefs(exactMatch));
     if (exactMatch) {
       if (exactMatch->IsDecoded()) {
-        return MakeTuple(exactMatch.forget(), MatchType::EXACT, IntSize());
+        return std::make_tuple(exactMatch.forget(), MatchType::EXACT,
+                               IntSize());
       }
     } else if (aIdealKey.Region()) {
       // We cannot substitute if we have a region. Allow it to create an exact
       // match.
-      return MakeTuple(exactMatch.forget(), MatchType::NOT_FOUND, IntSize());
+      return std::make_tuple(exactMatch.forget(), MatchType::NOT_FOUND,
+                             IntSize());
     } else if (!mFactor2Mode) {
       // If no exact match is found, and we are not in factor of 2 mode, then
       // we know that we will trigger a decode because at best we will provide
@@ -358,8 +360,9 @@ class ImageSurfaceCache {
         mSurfaces.Get(compactKey, getter_AddRefs(exactMatch));
         if (exactMatch && exactMatch->IsDecoded()) {
           MOZ_ASSERT(suggestedSize != aIdealKey.Size());
-          return MakeTuple(exactMatch.forget(),
-                           MatchType::SUBSTITUTE_BECAUSE_BEST, suggestedSize);
+          return std::make_tuple(exactMatch.forget(),
+                                 MatchType::SUBSTITUTE_BECAUSE_BEST,
+                                 suggestedSize);
         }
       }
     }
@@ -439,7 +442,7 @@ class ImageSurfaceCache {
       }
     }
 
-    return MakeTuple(bestMatch.forget(), matchType, suggestedSize);
+    return std::make_tuple(bestMatch.forget(), matchType, suggestedSize);
   }
 
   void MaybeSetFactor2Mode() {
@@ -1029,7 +1032,7 @@ class SurfaceCacheImpl final : public nsIMemoryReporter {
     MatchType matchType = MatchType::NOT_FOUND;
     IntSize suggestedSize;
     while (true) {
-      Tie(surface, matchType, suggestedSize) =
+      std::tie(surface, matchType, suggestedSize) =
           cache->LookupBestMatch(aSurfaceKey);
 
       if (!surface) {

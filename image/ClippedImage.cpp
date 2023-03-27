@@ -18,7 +18,7 @@
 #include "gfxUtils.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SVGImageContext.h"
-#include "mozilla/Tuple.h"
+
 #include "mozilla/gfx/2D.h"
 
 namespace mozilla {
@@ -215,9 +215,8 @@ Maybe<AspectRatio> ClippedImage::GetIntrinsicRatio() {
 
 NS_IMETHODIMP_(already_AddRefed<SourceSurface>)
 ClippedImage::GetFrame(uint32_t aWhichFrame, uint32_t aFlags) {
-  ImgDrawResult result;
   RefPtr<SourceSurface> surface;
-  Tie(result, surface) = GetFrameInternal(mClip.Size(), SVGImageContext(),
+  std::tie(std::ignore, surface) = GetFrameInternal(mClip.Size(), SVGImageContext(),
                                           Nothing(), aWhichFrame, aFlags, 1.0);
   return surface.forget();
 }
@@ -338,10 +337,8 @@ ClippedImage::Draw(gfxContext* aContext, const nsIntSize& aSize,
   if (MustCreateSurface(aContext, aSize, aRegion, aFlags)) {
     // Create a temporary surface containing a single tile of this image.
     // GetFrame will call DrawSingleTile internally.
-    ImgDrawResult result;
-    RefPtr<SourceSurface> surface;
-    Tie(result, surface) = GetFrameInternal(aSize, aSVGContext, Nothing(),
-                                            aWhichFrame, aFlags, aOpacity);
+    auto [result, surface] = GetFrameInternal(aSize, aSVGContext, Nothing(),
+                                              aWhichFrame, aFlags, aOpacity);
     if (!surface) {
       MOZ_ASSERT(result != ImgDrawResult::SUCCESS);
       return result;

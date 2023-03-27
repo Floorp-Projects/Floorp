@@ -17,7 +17,6 @@
 #include "mozilla/Latin1.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/Tuple.h"
 
 #include <limits>
 #include <type_traits>
@@ -396,14 +395,14 @@ void CodeGenerator::callVM(LInstruction* ins) {
 
 template <typename... ArgTypes>
 class ArgSeq {
-  mozilla::Tuple<std::remove_reference_t<ArgTypes>...> args_;
+  std::tuple<std::remove_reference_t<ArgTypes>...> args_;
 
   template <std::size_t... ISeq>
   inline void generate(CodeGenerator* codegen,
                        std::index_sequence<ISeq...>) const {
     // Arguments are pushed in reverse order, from last argument to first
     // argument.
-    (codegen->pushArg(mozilla::Get<sizeof...(ISeq) - 1 - ISeq>(args_)), ...);
+    (codegen->pushArg(std::get<sizeof...(ISeq) - 1 - ISeq>(args_)), ...);
   }
 
  public:

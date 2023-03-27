@@ -15,7 +15,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Span.h"
-#include "mozilla/Tuple.h"
+
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Utf8.h"
 #include "mozilla/Variant.h"
@@ -173,7 +173,7 @@ using ScriptCountsMap =
 
 // The 'const char*' for the function name is a pointer within the LCovSource's
 // LifoAlloc and will be discarded at the same time.
-using ScriptLCovEntry = mozilla::Tuple<coverage::LCovSource*, const char*>;
+using ScriptLCovEntry = std::tuple<coverage::LCovSource*, const char*>;
 using ScriptLCovMap =
     GCRekeyableHashMap<HeapPtr<BaseScript*>, ScriptLCovEntry,
                        DefaultHasher<HeapPtr<BaseScript*>>, SystemAllocPolicy>;
@@ -184,8 +184,7 @@ using ScriptVTuneIdMap =
                        DefaultHasher<HeapPtr<BaseScript*>>, SystemAllocPolicy>;
 #endif
 #ifdef JS_CACHEIR_SPEW
-using ScriptFinalWarmUpCountEntry =
-    mozilla::Tuple<uint32_t, SharedImmutableString>;
+using ScriptFinalWarmUpCountEntry = std::tuple<uint32_t, SharedImmutableString>;
 using ScriptFinalWarmUpCountMap =
     GCRekeyableHashMap<HeapPtr<BaseScript*>, ScriptFinalWarmUpCountEntry,
                        DefaultHasher<HeapPtr<BaseScript*>>, SystemAllocPolicy>;
