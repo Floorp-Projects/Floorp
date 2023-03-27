@@ -1,0 +1,26 @@
+{
+  "name": "micromatch",
+  "version": "4.0.4",
+  "description": "The mozilla-central bundle of the micromatch package",
+  "main": "",
+  "scripts": {
+    "webpack": "webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/micromatch/micromatch.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/micromatch/micromatch/issues"
+  },
+  "homepage": "https://github.com/micromatch/micromatch#readme",
+  "dependencies": {
+    "micromatch": "^4.0.4"
+  },
+  "devDependencies": {
+    "webpack": "^4.46.0",
+    "webpack-cli": "^4.10.0"
+  }
+}

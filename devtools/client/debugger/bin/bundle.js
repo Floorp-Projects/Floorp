@@ -42,7 +42,7 @@ function moveFile(src, dest) {
     webpackCompiler.run((error, stats) => resolve(stats));
   });
 
-  if (result.hasErrors()) {
+  if (result?.hasErrors()) {
     console.log(
       "[bundle] Something went wrong. The error was written to assets-error.log"
     );
