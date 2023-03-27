@@ -25,29 +25,38 @@
  * ]
  */
 
+"use strict";
+
 // We expose a singleton from this module. Some tests may import the
 // constructor via a backstage pass.
-import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
-import { FormAutofillUtils } from "resource://autofill/FormAutofillUtils.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+var EXPORTED_SYMBOLS = ["FormAutofillParent", "FormAutofillStatus"];
+
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+const { FormAutofill } = ChromeUtils.import(
+  "resource://autofill/FormAutofill.jsm"
+);
+const { FormAutofillUtils } = ChromeUtils.import(
+  "resource://autofill/FormAutofillUtils.jsm"
+);
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  FormAutofillPreferences:
-    "resource://autofill/FormAutofillPreferences.sys.mjs",
-  FormAutofillPrompter: "resource://autofill/FormAutofillPrompter.sys.mjs",
   OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AddressComparison: "resource://autofill/AddressComponent.sys.mjs",
-  AddressComponent: "resource://autofill/AddressComponent.sys.mjs",
+  AddressComparison: "resource://autofill/AddressComponent.jsm",
+  AddressComponent: "resource://autofill/AddressComponent.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  FormAutofillPreferences: "resource://autofill/FormAutofillPreferences.jsm",
+  FormAutofillPrompter: "resource://autofill/FormAutofillPrompter.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () =>
-  FormAutofill.defineLogGetter(lazy, "FormAutofillParent")
+  FormAutofill.defineLogGetter(lazy, EXPORTED_SYMBOLS[0])
 );
 
 const {
@@ -62,7 +71,7 @@ const {
 
 let gMessageObservers = new Set();
 
-export let FormAutofillStatus = {
+let FormAutofillStatus = {
   _initialized: false,
 
   /**
@@ -269,8 +278,8 @@ export let FormAutofillStatus = {
 // Lazily load the storage JSM to avoid disk I/O until absolutely needed.
 // Once storage is loaded we need to update saved field names and inform content processes.
 XPCOMUtils.defineLazyGetter(lazy, "gFormAutofillStorage", () => {
-  let { formAutofillStorage } = ChromeUtils.importESModule(
-    "resource://autofill/FormAutofillStorage.sys.mjs"
+  let { formAutofillStorage } = ChromeUtils.import(
+    "resource://autofill/FormAutofillStorage.jsm"
   );
   lazy.log.debug("Loading formAutofillStorage");
 
@@ -282,7 +291,7 @@ XPCOMUtils.defineLazyGetter(lazy, "gFormAutofillStorage", () => {
   return formAutofillStorage;
 });
 
-export class FormAutofillParent extends JSWindowActorParent {
+class FormAutofillParent extends JSWindowActorParent {
   constructor() {
     super();
     FormAutofillStatus.init();

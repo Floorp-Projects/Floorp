@@ -6,21 +6,34 @@
  * Defines a handler object to represent forms that autofill can handle.
  */
 
-import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
-import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
-import { FormAutofillUtils } from "resource://autofill/FormAutofillUtils.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+"use strict";
+
+var EXPORTED_SYMBOLS = ["FormAutofillHandler", "FormAutofillCreditCardSection"];
+
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+const { FormAutofill } = ChromeUtils.import(
+  "resource://autofill/FormAutofill.jsm"
+);
+
+const { FormAutofillUtils } = ChromeUtils.import(
+  "resource://autofill/FormAutofillUtils.jsm"
+);
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
-  FormAutofillHeuristics: "resource://autofill/FormAutofillHeuristics.sys.mjs",
   FormLikeFactory: "resource://gre/modules/FormLikeFactory.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AutofillTelemetry: "resource://autofill/AutofillTelemetry.jsm",
+  FormAutofillHeuristics: "resource://autofill/FormAutofillHeuristics.jsm",
 });
 
 const formFillController = Cc[
@@ -40,7 +53,7 @@ XPCOMUtils.defineLazyGetter(lazy, "reauthPasswordPromptMessage", () => {
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () =>
-  FormAutofill.defineLogGetter(lazy, "FormAutofillHandler")
+  FormAutofill.defineLogGetter(lazy, EXPORTED_SYMBOLS[0])
 );
 
 const { FIELD_STATES } = FormAutofillUtils;
@@ -974,7 +987,7 @@ class FormAutofillAddressSection extends FormAutofillSection {
   }
 }
 
-export class FormAutofillCreditCardSection extends FormAutofillSection {
+class FormAutofillCreditCardSection extends FormAutofillSection {
   /**
    * Credit Card Section Constructor
    *
@@ -1424,7 +1437,7 @@ export class FormAutofillCreditCardSection extends FormAutofillSection {
 /**
  * Handles profile autofill for a DOM Form element.
  */
-export class FormAutofillHandler {
+class FormAutofillHandler {
   /**
    * Initialize the form from `FormLike` object to handle the section or form
    * operations.

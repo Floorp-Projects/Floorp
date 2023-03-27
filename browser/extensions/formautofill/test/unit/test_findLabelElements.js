@@ -2,8 +2,8 @@
 
 var LabelUtils;
 add_task(async function() {
-  ({ LabelUtils } = ChromeUtils.importESModule(
-    "resource://autofill/FormAutofillUtils.sys.mjs"
+  ({ LabelUtils } = ChromeUtils.import(
+    "resource://autofill/FormAutofillUtils.jsm"
   ));
 });
 

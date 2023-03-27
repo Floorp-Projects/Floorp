@@ -7,13 +7,24 @@
  * the doorhager UI for formautofill related features.
  */
 
-import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
-import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
-import { FormAutofillUtils } from "resource://autofill/FormAutofillUtils.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+"use strict";
 
+var EXPORTED_SYMBOLS = ["FormAutofillPrompter"];
+
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
 const { AutofillTelemetry } = ChromeUtils.import(
   "resource://autofill/AutofillTelemetry.jsm"
+);
+const { FormAutofill } = ChromeUtils.import(
+  "resource://autofill/FormAutofill.jsm"
+);
+const { FormAutofillUtils } = ChromeUtils.import(
+  "resource://autofill/FormAutofillUtils.jsm"
+);
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 const lazy = {};
@@ -23,7 +34,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () =>
-  FormAutofill.defineLogGetter(lazy, "FormAutofillPrompter")
+  FormAutofill.defineLogGetter(lazy, EXPORTED_SYMBOLS[0])
 );
 
 const { ENABLED_AUTOFILL_CREDITCARDS_PREF } = FormAutofill;
@@ -239,7 +250,7 @@ const CONTENT = {
   },
 };
 
-export let FormAutofillPrompter = {
+let FormAutofillPrompter = {
   /**
    * Generate the main action and secondary actions from content parameters and
    * promise resolve.

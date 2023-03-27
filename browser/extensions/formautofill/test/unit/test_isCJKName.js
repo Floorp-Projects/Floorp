@@ -6,8 +6,8 @@
 
 var FormAutofillNameUtils;
 add_setup(async () => {
-  ({ FormAutofillNameUtils } = ChromeUtils.importESModule(
-    "resource://autofill/FormAutofillNameUtils.sys.mjs"
+  ({ FormAutofillNameUtils } = ChromeUtils.import(
+    "resource://autofill/FormAutofillNameUtils.jsm"
   ));
 });
 
