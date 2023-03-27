@@ -1268,7 +1268,8 @@
       "../node_modules/@babel/generator/node_modules/source-map/lib/binary-search.js": 1116,
       "../node_modules/@babel/generator/node_modules/source-map/lib/quick-sort.js": 1117,
       "../node_modules/@babel/generator/node_modules/source-map/lib/source-node.js": 1118,
-      "../node_modules/source-map/lib/wasm.js": 1119
+      "../node_modules/source-map/lib/wasm.js": 1119,
+      "external \"devtools/client/shared/vendor/micromatch/micromatch\"": 1120
     },
     "usedIds": {
       "0": 0,
@@ -2390,7 +2391,8 @@
       "1116": 1116,
       "1117": 1117,
       "1118": 1118,
-      "1119": 1119
+      "1119": 1119,
+      "1120": 1120
     }
   },
   "chunks": {

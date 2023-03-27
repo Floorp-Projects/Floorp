@@ -20,6 +20,8 @@ const mappings = {
   "prop-types": "devtools/client/shared/vendor/react-prop-types",
   "wasmparser/dist/cjs/WasmParser": "devtools/client/shared/vendor/WasmParser",
   "wasmparser/dist/cjs/WasmDis": "devtools/client/shared/vendor/WasmDis",
+  "devtools/client/shared/vendor/micromatch/micromatch":
+    "devtools/client/shared/vendor/micromatch/micromatch",
   "framework-actions": "devtools/client/framework/actions/index",
   "inspector-shared-utils": "devtools/client/inspector/shared/utils",
 };
