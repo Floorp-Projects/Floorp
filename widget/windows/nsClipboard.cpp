@@ -814,10 +814,7 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject* aDataObject,
               if (NS_FAILED(result)) {
                 break;
               }
-              result = SaveIStorage(aDataObject, aIndex, tempPath);
-              if (result == NS_ERROR_OUT_OF_MEMORY) {
-                result = SaveIStream(aDataObject, aIndex, tempPath);
-              }
+              result = SaveStorageOrStream(aDataObject, aIndex, tempPath);
               if (NS_FAILED(result)) {
                 break;
               }
@@ -1390,13 +1387,13 @@ nsresult nsClipboard::GetTempFilePath(const nsAString& aFileName,
 }
 
 //-------------------------------------------------------------------------
-nsresult nsClipboard::SaveIStorage(IDataObject* aDataObject, UINT aIndex,
-                                   const nsAString& aFileName) {
+nsresult nsClipboard::SaveStorageOrStream(IDataObject* aDataObject, UINT aIndex,
+                                          const nsAString& aFileName) {
   NS_ENSURE_ARG_POINTER(aDataObject);
 
   FORMATETC fe = {0};
   SET_FORMATETC(fe, RegisterClipboardFormat(CFSTR_FILECONTENTS), 0,
-                DVASPECT_CONTENT, aIndex, TYMED_ISTORAGE);
+                DVASPECT_CONTENT, aIndex, TYMED_ISTORAGE | TYMED_ISTREAM);
 
   STGMEDIUM stm = {0};
   HRESULT hres = aDataObject->GetData(&fe, &stm);
@@ -1405,58 +1402,44 @@ nsresult nsClipboard::SaveIStorage(IDataObject* aDataObject, UINT aIndex,
   }
 
   auto releaseMediumGuard = MakeScopeExit([&] { ReleaseStgMedium(&stm); });
-  RefPtr<IStorage> file;
-  hres = StgCreateStorageEx(
-      aFileName.Data(), STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE,
-      STGFMT_STORAGE, 0, NULL, NULL, IID_IStorage, getter_AddRefs(file));
-  if (FAILED(hres)) {
-    if (hres == E_OUTOFMEMORY) {
-      return NS_ERROR_OUT_OF_MEMORY;
+
+  // We do this check because, even though we *asked* for IStorage or IStream,
+  // it seems that IDataObject providers can just hand us back whatever they
+  // feel like. See Bug 1824644 for a fun example of that!
+  if (stm.tymed != TYMED_ISTORAGE && stm.tymed != TYMED_ISTREAM) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (stm.tymed == TYMED_ISTORAGE) {
+    RefPtr<IStorage> file;
+    hres = StgCreateStorageEx(
+        aFileName.Data(), STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE,
+        STGFMT_STORAGE, 0, NULL, NULL, IID_IStorage, getter_AddRefs(file));
+    if (FAILED(hres)) {
+      return NS_ERROR_FAILURE;
     }
-    return NS_ERROR_FAILURE;
-  }
 
-  hres = stm.pstg->CopyTo(0, NULL, NULL, file);
-  if (FAILED(hres)) {
-    if (hres == STG_E_INSUFFICIENTMEMORY) {
-      return NS_ERROR_OUT_OF_MEMORY;
+    hres = stm.pstg->CopyTo(0, NULL, NULL, file);
+    if (FAILED(hres)) {
+      return NS_ERROR_FAILURE;
     }
-    return NS_ERROR_FAILURE;
+
+    file->Commit(STGC_DEFAULT);
+
+    return NS_OK;
   }
 
-  file->Commit(STGC_DEFAULT);
-
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-nsresult nsClipboard::SaveIStream(IDataObject* aDataObject, UINT aIndex,
-                                  const nsString& aFileName) {
-  NS_ENSURE_ARG_POINTER(aDataObject);
-
-  FORMATETC fe = {0};
-  STGMEDIUM stm = {0};
-
-  SET_FORMATETC(fe, RegisterClipboardFormat(CFSTR_FILECONTENTS), 0,
-                DVASPECT_CONTENT, aIndex, TYMED_ISTREAM);
-  HRESULT hres = aDataObject->GetData(&fe, &stm);
-  if (FAILED(hres)) {
-    return NS_ERROR_FAILURE;
-  }
+  MOZ_ASSERT(stm.tymed == TYMED_ISTREAM);
 
   HANDLE handle = CreateFile(aFileName.Data(), GENERIC_WRITE, FILE_SHARE_READ,
                              NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-  auto releaseMediumGuard = MakeScopeExit([&] {
-    if (handle != INVALID_HANDLE_VALUE) {
-      CloseHandle(handle);
-    }
-    ReleaseStgMedium(&stm);
-  });
-
   if (handle == INVALID_HANDLE_VALUE) {
     return NS_ERROR_FAILURE;
   }
-  const ULONG bufferSize = 4096; /* What would be a good buffersize? */
+
+  auto fileCloseGuard = MakeScopeExit([&] { CloseHandle(handle); });
+
+  const ULONG bufferSize = 4096;
   char buffer[bufferSize] = {0};
   ULONG bytesRead = 0;
   DWORD bytesWritten = 0;

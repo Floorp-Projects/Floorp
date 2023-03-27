@@ -94,10 +94,8 @@ class nsClipboard : public nsBaseClipboard, public nsIObserver {
   static void ResolveShortcut(nsIFile* inFileName, nsACString& outURL);
   static nsresult GetTempFilePath(const nsAString& aFileName,
                                   nsAString& aFilePath);
-  static nsresult SaveIStorage(IDataObject* aDataObject, UINT aIndex,
-                               const nsAString& aFileName);
-  static nsresult SaveIStream(IDataObject* aDataObject, UINT aIndex,
-                              const nsString& aFileName);
+  static nsresult SaveStorageOrStream(IDataObject* aDataObject, UINT aIndex,
+                                      const nsAString& aFileName);
 
   nsIWidget* mWindow;
 };
