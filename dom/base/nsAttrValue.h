@@ -560,7 +560,6 @@ class nsAttrValue {
   static void DeallocMiscContainer(MiscContainer* aCont);
 
   static nsTArray<const EnumTable*>* sEnumTableArray;
-  static MiscContainer* sMiscContainerCache;
 
   /**
    * Helper for ParseHTMLDimension and ParseNonzeroHTMLDimension.

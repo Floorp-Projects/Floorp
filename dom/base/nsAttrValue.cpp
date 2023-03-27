@@ -37,17 +37,27 @@
 
 using namespace mozilla;
 
+constexpr uint32_t kMiscContainerCacheSize = 128;
+static void* gMiscContainerCache[kMiscContainerCacheSize];
+static uint32_t gMiscContainerCount = 0;
+
 /* static */
 MiscContainer* nsAttrValue::AllocMiscContainer() {
   MOZ_ASSERT(NS_IsMainThread());
-  MiscContainer* cont = nullptr;
-  std::swap(cont, sMiscContainerCache);
 
-  if (cont) {
-    return new (cont) MiscContainer;
+  static_assert(sizeof(gMiscContainerCache) <= 1024);
+  static_assert(sizeof(MiscContainer) <= 32);
+
+  // Allocate MiscContainer objects in batches to improve performance.
+  if (gMiscContainerCount == 0) {
+    for (; gMiscContainerCount < kMiscContainerCacheSize;
+         ++gMiscContainerCount) {
+      gMiscContainerCache[gMiscContainerCount] =
+          moz_xmalloc(sizeof(MiscContainer));
+    }
   }
 
-  return new MiscContainer;
+  return new (gMiscContainerCache[--gMiscContainerCount]) MiscContainer();
 }
 
 /* static */
@@ -57,12 +67,14 @@ void nsAttrValue::DeallocMiscContainer(MiscContainer* aCont) {
     return;
   }
 
-  if (!sMiscContainerCache) {
-    aCont->~MiscContainer();
-    sMiscContainerCache = aCont;
-  } else {
-    delete aCont;
+  aCont->~MiscContainer();
+
+  if (gMiscContainerCount < kMiscContainerCacheSize) {
+    gMiscContainerCache[gMiscContainerCount++] = aCont;
+    return;
   }
+
+  free(aCont);
 }
 
 bool MiscContainer::GetString(nsAString& aString) const {
@@ -134,7 +146,6 @@ void MiscContainer::Evict() {
 }
 
 nsTArray<const nsAttrValue::EnumTable*>* nsAttrValue::sEnumTableArray = nullptr;
-MiscContainer* nsAttrValue::sMiscContainerCache = nullptr;
 
 nsAttrValue::nsAttrValue() : mBits(0) {}
 
@@ -169,11 +180,11 @@ void nsAttrValue::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   delete sEnumTableArray;
   sEnumTableArray = nullptr;
-  // The MiscContainer pointed to by sMiscContainerCache has already
-  // be destructed so `delete sMiscContainerCache` is
-  // dangerous. Invoke `operator delete` to free the memory.
-  ::operator delete(sMiscContainerCache);
-  sMiscContainerCache = nullptr;
+
+  for (uint32_t i = 0; i < gMiscContainerCount; ++i) {
+    free(gMiscContainerCache[i]);
+  }
+  gMiscContainerCount = 0;
 }
 
 void nsAttrValue::Reset() {
