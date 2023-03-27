@@ -1649,7 +1649,7 @@ export class SpecialPowersChild extends JSWindowActorChild {
   }
 
   /**
-   * Automatically imports the given symbol from the given sys.mjs for any
+   * Automatically imports the given symbol from the given JSM for any
    * task spawned by this SpecialPowers instance.
    */
   addTaskImport(symbol, url) {

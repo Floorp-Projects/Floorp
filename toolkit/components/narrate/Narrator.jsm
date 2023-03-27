@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
+var EXPORTED_SYMBOLS = ["Narrator"];
+
 // Maximum time into paragraph when pressing "skip previous" will go
 // to previous paragraph and not the start of current one.
 const PREV_THRESHOLD = 2000;
@@ -21,7 +25,7 @@ const kTextStylesRules = [
   "word-spacing",
 ];
 
-export function Narrator(win, languagePromise) {
+function Narrator(win, languagePromise) {
   this._winRef = Cu.getWeakReference(win);
   this._languagePromise = languagePromise;
   this._inTest = Services.prefs.getBoolPref("narrate.test");
@@ -323,8 +327,8 @@ Highlighter.prototype = {
   /**
    * Highlight the range within offsets relative to the container.
    *
-   * @param {number} startOffset the start offset
-   * @param {number} length the length in characters of the range
+   * @param {Number} startOffset the start offset
+   * @param {Number} length the length in characters of the range
    */
   highlight(startOffset, length) {
     let containerRect = this.container.getBoundingClientRect();
@@ -388,7 +392,7 @@ Highlighter.prototype = {
    * Returns specified amount of highlight nodes. Creates new ones if necessary
    * and purges any additional nodes that are not needed.
    *
-   * @param {number} count number of nodes needed
+   * @param {Number} count number of nodes needed
    */
   _getFreshHighlightNodes(count) {
     let doc = this.container.ownerDocument;
@@ -414,8 +418,8 @@ Highlighter.prototype = {
    * Create and return a range object with the start and end offsets relative
    * to the container node.
    *
-   * @param {number} startOffset the start offset
-   * @param {number} endOffset the end offset
+   * @param {Number} startOffset the start offset
+   * @param {Number} endOffset the end offset
    */
   _getRange(startOffset, endOffset) {
     let doc = this.container.ownerDocument;

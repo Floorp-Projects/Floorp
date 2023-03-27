@@ -4,7 +4,7 @@ const { PermissionTestUtils } = ChromeUtils.import(
 
 SpecialPowers.addTaskImport(
   "E10SUtils",
-  "resource://gre/modules/E10SUtils.sys.mjs"
+  "resource://gre/modules/E10SUtils.jsm"
 );
 
 function openPermissionPopup() {
