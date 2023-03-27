@@ -396,6 +396,7 @@ static const StaticFingerprints kPinset_google_root_pems = {
 static const char* const kPinset_mozilla_services_Data[] = {
   kISRG_Root_X1Fingerprint,
   kDigiCert_High_Assurance_EV_Root_CAFingerprint,
+  kDigiCert_Global_Root_G2Fingerprint,
   kDigiCert_Global_Root_CAFingerprint,
 };
 static const StaticFingerprints kPinset_mozilla_services = {
@@ -1095,4 +1096,4 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1688038251349000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1688425487047000);
