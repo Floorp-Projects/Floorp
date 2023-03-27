@@ -10,7 +10,7 @@
       let tabBrowserArrowScrollBox = document.getElementById("tabbrowser-arrowscrollbox");
       document.getElementById("browser").insertBefore(document.getElementsByClassName("toolbar-items")[0], document.getElementById("browser").firstChild);
       document.getElementsByClassName("toolbar-items")[0].setAttribute("align", "start");
-      document.getElementsByClassName("toolbar-items")[0].setAttribute("style", " --tab-overflow-pinned-tabs-width: none !important; display: block; max-width: 25em; min-width: 3em; overflow-y: scroll; overflow-x: hidden; min-height: 0px;");
+      document.getElementsByClassName("toolbar-items")[0].setAttribute("style", " --tab-overflow-pinned-tabs-width: none !important; display: block; width:15em; max-width: 50em; min-width: 2.8em; overflow-y: scroll; overflow-x: hidden; min-height: 0px;");
       tabBrowserArrowScrollBox.setAttribute("orient", "vertical");
       tabBrowserArrowScrollBox.removeAttribute("overflowing");
       tabBrowserArrowScrollBox.removeAttribute("scrolledtostart")

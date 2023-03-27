@@ -26,6 +26,15 @@
   position: unset !important;
  }
 
+ :root:not([uidensity="touch"]) #tabbrowser-arrowscrollbox {
+  --scrollbtn-inner-padding: 0px;
+  --scrollbtn-outer-padding: 0px;
+}
+
+ #tabbrowser-tabs[positionpinnedtabs] > #tabbrowser-arrowscrollbox::part(scrollbox) {
+  padding-inline: 0 !important;
+}
+
  #tabs-newtab-button {
   display: block !important;
   width: -moz-available;
