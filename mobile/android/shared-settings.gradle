@@ -55,6 +55,22 @@ def setupProject(name, path, description) {
     }
 }
 
+// Return a manifest version string that respects the Firefox version format,
+// see: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/version#version_format
+def getManifestVersionString(componentsVersion) {
+    // We assume that the `version.txt` file will always contain a version
+    // string with at least two parts separated with a dot. Below, we extract
+    // each part, and we make sure that there is no letter, e.g. `"0a2"` would
+    // become `"0"`.
+    String[] parts = componentsVersion.split("\\.").collect {
+        part -> part.split("a|b")[0]
+    };
+    // Note the single `H` to avoid leading zeros, which are not allowed.
+    String dateAndTime = new Date().format("YYYYMMdd.Hmmss");
+
+    return "${parts[0]}.${parts[1]}.${dateAndTime}";
+}
+
 def yaml = new Yaml()
 def buildconfig = yaml.load(new File(rootDir, '../android-components/.buildconfig.yml').newInputStream())
 
@@ -92,7 +108,7 @@ gradle.projectsLoaded { ->
     )
 
     gradle.rootProject.ext.buildConfig = buildconfig
-    
+
     // Define a reusable task for updating the version in manifest.json for modules that package
     // a web extension. We automate this to make sure we never forget to update the version, either
     // in local development or for releases. In both cases, we want to make sure the latest version
@@ -105,7 +121,7 @@ gradle.projectsLoaded { ->
                 rename { 'manifest.json' }
                 into extDir
 
-                def values = ['version': rootProject.ext.config.componentsVersion.split("a|b")[0] + "." + new Date().format('MMddHHmmss')]
+                def values = ['version': getManifestVersionString(rootProject.ext.config.componentsVersion)]
                 inputs.properties(values)
                 expand(values)
             }
