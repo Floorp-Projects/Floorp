@@ -138,6 +138,7 @@ var supported_properties = {
                    test_path_function ],
     "color": [ test_color_transition,
                test_currentcolor_transition ],
+    "d": [ test_path_function ],
     "fill": [ test_color_transition,
               test_currentcolor_transition ],
     "fill-opacity" : [ test_float_zeroToOne_transition,
@@ -413,10 +414,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
 if (IsCSSPropertyPrefEnabled("layout.css.motion-path-offset-position.enabled")) {
   supported_properties["offset-position"] =
     [ test_background_position_transition ];
-}
-
-if (IsCSSPropertyPrefEnabled("layout.css.d-property.enabled")) {
-  supported_properties["d"] = [ test_path_function ];
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.font-variations.enabled")) {

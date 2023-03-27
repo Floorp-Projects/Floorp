@@ -140,8 +140,7 @@ bool SVGGeometryElement::IsGeometryChangedViaCSS(
     return SVGEllipseElement::IsLengthChangedViaCSS(aNewStyle, aOldStyle);
   }
   if (name == nsGkAtoms::path) {
-    return StaticPrefs::layout_css_d_property_enabled() &&
-           SVGPathElement::IsDPropertyChangedViaCSS(aNewStyle, aOldStyle);
+    return SVGPathElement::IsDPropertyChangedViaCSS(aNewStyle, aOldStyle);
   }
   return false;
 }
@@ -286,8 +285,7 @@ void SVGGeometryElement::FlushStyleIfNeeded() {
   // Note: we still can set d property on other elements which don't have d
   // attribute, but we don't look at the d property on them, so here we only
   // care about the element with d attribute, i.e. SVG path element.
-  if (GetPathDataAttrName() != nsGkAtoms::d ||
-      !StaticPrefs::layout_css_d_property_enabled()) {
+  if (GetPathDataAttrName() != nsGkAtoms::d) {
     return;
   }
 

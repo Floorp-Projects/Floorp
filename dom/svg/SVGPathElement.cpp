@@ -66,11 +66,9 @@ uint32_t SVGPathElement::GetPathSegAtLength(float distance) {
     }
   };
 
-  if (StaticPrefs::layout_css_d_property_enabled()) {
-    FlushStyleIfNeeded();
-    if (SVGGeometryProperty::DoForComputedStyle(this, callback)) {
-      return seg;
-    }
+  FlushStyleIfNeeded();
+  if (SVGGeometryProperty::DoForComputedStyle(this, callback)) {
+    return seg;
   }
   return mD.GetAnimValue().GetPathSegAtLength(distance);
 }
@@ -258,20 +256,10 @@ bool SVGPathElement::HasValidDimensions() const {
 
 NS_IMETHODIMP_(bool)
 SVGPathElement::IsAttributeMapped(const nsAtom* name) const {
-  return (StaticPrefs::layout_css_d_property_enabled() &&
-          name == nsGkAtoms::d) ||
-         SVGPathElementBase::IsAttributeMapped(name);
+  return name == nsGkAtoms::d || SVGPathElementBase::IsAttributeMapped(name);
 }
 
 already_AddRefed<Path> SVGPathElement::GetOrBuildPathForMeasuring() {
-  if (!StaticPrefs::layout_css_d_property_enabled()) {
-    return mD.GetAnimValue().BuildPathForMeasuring();
-  }
-
-  // FIXME: Bug 1715387, the IDL methods should flush style, but internal
-  // callers shouldn't. We have to make sure we flush the style well from the
-  // caller.
-
   RefPtr<Path> path;
   bool success = SVGGeometryProperty::DoForComputedStyle(
       this, [&path](const ComputedStyle* s) {
@@ -303,8 +291,7 @@ void SVGPathElement::GetMarkPoints(nsTArray<SVGMark>* aMarks) {
     }
   };
 
-  if (StaticPrefs::layout_css_d_property_enabled() &&
-      SVGGeometryProperty::DoForComputedStyle(this, callback)) {
+  if (SVGGeometryProperty::DoForComputedStyle(this, callback)) {
     return;
   }
 
@@ -339,7 +326,6 @@ already_AddRefed<Path> SVGPathElement::BuildPath(PathBuilder* aBuilder) {
   auto strokeLineCap = StyleStrokeLinecap::Butt;
   Float strokeWidth = 0;
   RefPtr<Path> path;
-  const bool useDProperty = StaticPrefs::layout_css_d_property_enabled();
 
   auto callback = [&](const ComputedStyle* s) {
     const nsStyleSVG* styleSVG = s->StyleSVG();
@@ -352,10 +338,6 @@ already_AddRefed<Path> SVGPathElement::BuildPath(PathBuilder* aBuilder) {
       strokeWidth = SVGContentUtils::GetStrokeWidth(this, s, nullptr);
     }
 
-    if (!useDProperty) {
-      return;
-    }
-
     const auto& d = s->StyleSVGReset()->mD;
     if (d.IsPath()) {
       path = SVGPathData::BuildPath(d.AsPath()._0.AsSpan(), aBuilder,
@@ -364,7 +346,7 @@ already_AddRefed<Path> SVGPathElement::BuildPath(PathBuilder* aBuilder) {
   };
 
   bool success = SVGGeometryProperty::DoForComputedStyle(this, callback);
-  if (success && useDProperty) {
+  if (success) {
     return path.forget();
   }
 
@@ -382,8 +364,7 @@ bool SVGPathElement::GetDistancesFromOriginToEndsOfVisibleSegments(
               d.AsPath()._0.AsSpan(), aOutput);
   };
 
-  if (StaticPrefs::layout_css_d_property_enabled() &&
-      SVGGeometryProperty::DoForComputedStyle(this, callback)) {
+  if (SVGGeometryProperty::DoForComputedStyle(this, callback)) {
     return ret;
   }
 
