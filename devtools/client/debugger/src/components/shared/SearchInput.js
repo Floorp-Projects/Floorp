@@ -45,6 +45,7 @@ export class SearchInput extends Component {
 
     this.state = {
       history: [],
+      excludePatterns: props.searchOptions.excludePatterns,
     };
   }
 
@@ -68,6 +69,9 @@ export class SearchInput extends Component {
       selectedItemId: PropTypes.string,
       shouldFocus: PropTypes.bool,
       showClose: PropTypes.bool.isRequired,
+      showExcludePatterns: PropTypes.bool.isRequired,
+      excludePatternsLabel: PropTypes.string,
+      excludePatternsPlaceholder: PropTypes.string,
       showErrorEmoji: PropTypes.bool.isRequired,
       size: PropTypes.string,
       summaryMsg: PropTypes.string,
@@ -176,6 +180,15 @@ export class SearchInput extends Component {
     }
   };
 
+  onExcludeKeyDown = e => {
+    if (e.key === "Enter") {
+      this.props.setSearchOptions(this.props.searchKey, {
+        excludePatterns: this.state.excludePatterns,
+      });
+      this.props.onKeyDown(e);
+    }
+  };
+
   saveEnteredTerm(query) {
     const { history } = this.state;
     const previousIndex = history.indexOf(query);
@@ -216,6 +229,9 @@ export class SearchInput extends Component {
   }
 
   renderSearchModifiers() {
+    if (!this.props.showSearchModifiers) {
+      return null;
+    }
     return (
       <SearchModifiers
         modifiers={this.props.searchOptions}
@@ -227,10 +243,42 @@ export class SearchInput extends Component {
     );
   }
 
+  renderExcludePatterns() {
+    if (!this.props.showExcludePatterns) {
+      return null;
+    }
+
+    return (
+      <div className={classnames("exclude-patterns-field", this.props.size)}>
+        <label>{this.props.excludePatternsLabel}</label>
+        <input
+          placeholder={this.props.excludePatternsPlaceholder}
+          value={this.state.excludePatterns}
+          onKeyDown={this.onExcludeKeyDown}
+          onChange={e => this.setState({ excludePatterns: e.target.value })}
+        />
+      </div>
+    );
+  }
+
+  renderClose() {
+    if (!this.props.showClose) {
+      return null;
+    }
+    return (
+      <React.Fragment>
+        <span className="pipe-divider" />
+        <CloseButton
+          handleClick={this.props.handleClose}
+          buttonClass={this.props.size}
+        />
+      </React.Fragment>
+    );
+  }
+
   render() {
     const {
       expanded,
-      handleClose,
       onChange,
       onKeyUp,
       placeholder,
@@ -238,8 +286,6 @@ export class SearchInput extends Component {
       selectedItemId,
       showErrorEmoji,
       size,
-      showClose,
-      showSearchModifiers,
     } = this.props;
 
     const inputProps = {
@@ -276,15 +322,11 @@ export class SearchInput extends Component {
           {this.renderSummaryMsg()}
           {this.renderNav()}
           <div className="search-buttons-bar">
-            {showSearchModifiers && this.renderSearchModifiers()}
-            {showClose && (
-              <React.Fragment>
-                <span className="pipe-divider" />
-                <CloseButton handleClick={handleClose} buttonClass={size} />
-              </React.Fragment>
-            )}
+            {this.renderSearchModifiers()}
+            {this.renderClose()}
           </div>
         </div>
+        {this.renderExcludePatterns()}
       </div>
     );
   }

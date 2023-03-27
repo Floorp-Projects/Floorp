@@ -10,6 +10,7 @@ import { shallow } from "enzyme";
 import SearchBar from "../SearchBar";
 import "../../../workers/search";
 import "../../../utils/editor";
+import { searchKeys } from "../../../constants";
 
 const SearchBarComponent = SearchBar.WrappedComponent;
 
@@ -56,6 +57,7 @@ function generateDefaults() {
     setActiveSearch: jest.fn(),
     toggleFileSearchModifier: jest.fn(),
     traverseResults: jest.fn(),
+    showExcludePatterns: true,
   };
 }
 
@@ -63,7 +65,16 @@ function render(overrides = {}) {
   const defaults = generateDefaults();
   const mockStore = configureStore([]);
   const store = mockStore({
-    ui: { mutableSearchOptions: { "foo-search": {} } },
+    ui: {
+      mutableSearchOptions: {
+        [searchKeys.FILE_SEARCH]: {
+          regexMatch: false,
+          wholeWord: false,
+          caseSensitive: false,
+          excludePatterns: "",
+        },
+      },
+    },
   });
   const props = { ...defaults, ...overrides };
   const component = shallow(

@@ -9,6 +9,7 @@ import classnames from "classnames";
 import actions from "../actions";
 
 import { getEditor } from "../utils/editor";
+import { searchKeys } from "../constants";
 
 import { statusType } from "../reducers/project-text-search";
 import { getRelativePath } from "../utils/sources-tree/utils";
@@ -157,9 +158,6 @@ export class ProjectSearch extends Component {
 
     e.stopPropagation();
 
-    if (e.key !== "Enter") {
-      return;
-    }
     this.setState({ focusedItem: null });
     this.doSearch(this.state.inputValue);
   };
@@ -287,7 +285,7 @@ export class ProjectSearch extends Component {
         query={this.state.inputValue}
         count={this.getResultCount()}
         placeholder={L10N.getStr("projectTextSearch.placeholder")}
-        size="big"
+        size="small"
         showErrorEmoji={this.shouldShowErrorEmoji()}
         summaryMsg={this.renderSummary()}
         isLoading={status === statusType.fetching}
@@ -297,10 +295,17 @@ export class ProjectSearch extends Component {
         onKeyDown={this.onKeyDown}
         onHistoryScroll={this.onHistoryScroll}
         showClose={true}
+        showExcludePatterns={true}
+        excludePatternsLabel={L10N.getStr(
+          "projectTextSearch.excludePatterns.label"
+        )}
+        excludePatternsPlaceholder={L10N.getStr(
+          "projectTextSearch.excludePatterns.placeholder"
+        )}
         handleClose={closeProjectSearch}
         ref="searchInput"
         showSearchModifiers={true}
-        searchKey="project-search"
+        searchKey={searchKeys.PROJECT_SEARCH}
         onToggleSearchModifier={() => this.doSearch(this.state.inputValue)}
       />
     );

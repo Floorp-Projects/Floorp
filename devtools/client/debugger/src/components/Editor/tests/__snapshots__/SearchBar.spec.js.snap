@@ -22,6 +22,7 @@ exports[`SearchBar should render 1`] = `
     shouldFocus={false}
     showClose={true}
     showErrorEmoji={false}
+    showExcludePatterns={false}
     showSearchModifiers={true}
     summaryMsg=""
   />
@@ -52,6 +53,7 @@ exports[`showErrorEmoji false if no query + no results 1`] = `
     shouldFocus={false}
     showClose={true}
     showErrorEmoji={false}
+    showExcludePatterns={false}
     showSearchModifiers={true}
     summaryMsg=""
   />
@@ -80,6 +82,7 @@ exports[`showErrorEmoji false if query + results 1`] = `
     shouldFocus={false}
     showClose={true}
     showErrorEmoji={false}
+    showExcludePatterns={false}
     showSearchModifiers={true}
     summaryMsg="NaN of 10 results"
   />
@@ -108,6 +111,7 @@ exports[`showErrorEmoji true if query + no results 1`] = `
     shouldFocus={false}
     showClose={true}
     showErrorEmoji={true}
+    showExcludePatterns={false}
     showSearchModifiers={true}
     summaryMsg="No results found"
   />

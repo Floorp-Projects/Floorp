@@ -16,12 +16,14 @@ import {
   getSearchOptions,
 } from "../selectors";
 import { createLocation } from "../utils/location";
+import { matchesGlobPatterns } from "../utils/source";
 import { loadSourceText } from "./sources/loadSourceText";
 import {
   getProjectSearchOperation,
   getProjectSearchStatus,
 } from "../selectors/project-text-search";
 import { statusType } from "../reducers/project-text-search";
+import { searchKeys } from "../constants";
 
 export function addSearchQuery(cx, query) {
   return { type: "ADD_QUERY", cx, query };
@@ -80,8 +82,14 @@ export function searchSources(cx, query) {
     await dispatch(clearSearchResults(cx));
     await dispatch(addSearchQuery(cx, query));
     dispatch(updateSearchStatus(cx, statusType.fetching));
+    const searchOptions = getSearchOptions(
+      getState(),
+      searchKeys.PROJECT_SEARCH
+    );
     const validSources = getSourceList(getState()).filter(
-      source => !isSourceBlackBoxed(getState(), source)
+      source =>
+        !isSourceBlackBoxed(getState(), source) &&
+        !matchesGlobPatterns(source, searchOptions.excludePatterns)
     );
     // Sort original entries first so that search results are more useful.
     // Deprioritize third-party scripts, so their results show last.
@@ -144,7 +152,7 @@ export function searchSource(cx, source, sourceActor, query) {
       sourceActor,
     });
 
-    const options = getSearchOptions(state, "project-search");
+    const options = getSearchOptions(state, searchKeys.PROJECT_SEARCH);
     const content = getSettledSourceTextContent(state, location);
     let matches = [];
 

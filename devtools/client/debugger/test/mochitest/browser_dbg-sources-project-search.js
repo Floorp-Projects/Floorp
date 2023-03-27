@@ -16,11 +16,7 @@ add_task(async function testSearchDynamicScripts() {
   await waitForPaused(dbg);
 
   await openProjectSearch(dbg);
-  type(dbg, "foo");
-  pressKey(dbg, "Enter");
-
-  const fileResults = await waitForSearchResults(dbg, 1);
-
+  const fileResults = await doProjectSearch(dbg, "foo");
   ok(
     /source\d+/g.test(fileResults[0].innerText),
     "The search result was found in the eval script."

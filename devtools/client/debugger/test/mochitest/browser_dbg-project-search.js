@@ -45,9 +45,7 @@ add_task(async function testSimpleProjectSearch() {
   await selectSource(dbg, "script-switching-01.js");
 
   await openProjectSearch(dbg);
-
   const searchTerm = "first";
-
   await doProjectSearch(dbg, searchTerm);
 
   const queryMatch = findElement(dbg, "fileMatch").querySelector(
@@ -136,6 +134,87 @@ add_task(async function testSearchModifiers() {
     "whole word match",
     { resultWithModifierOn: 6, resultWithModifierOff: 16 }
   );
+});
+
+add_task(async function testSearchExcludePatterns() {
+  const dbg = await initDebugger("doc-react.html", "App.js");
+
+  info("Search across all files");
+  await openProjectSearch(dbg);
+  let fileResults = await doProjectSearch(dbg, "console");
+
+  is(fileResults.length, 5, "5 results were found");
+
+  let resultsFromNodeModules = [...fileResults].filter(result =>
+    result.innerText.includes("node_modules")
+  );
+
+  is(
+    resultsFromNodeModules.length,
+    3,
+    "3 results were found from node_modules"
+  );
+
+  info("Excludes search results based on multiple search patterns");
+
+  await clickElement(dbg, "excludePatternsInput");
+  type(dbg, "App.js, main.js");
+  pressKey(dbg, "Enter");
+
+  fileResults = await waitForSearchResults(dbg, 3);
+
+  const resultsFromAppJS = [...fileResults].filter(result =>
+    result.innerText.includes("App.js")
+  );
+
+  is(resultsFromAppJS.length, 0, "None of the results is from the App.js file");
+
+  const resultsFromMainJS = [...fileResults].filter(result =>
+    result.innerText.includes("main.js")
+  );
+
+  is(
+    resultsFromMainJS.length,
+    0,
+    "None of the results is from the main.js file"
+  );
+
+  info("Excludes search results from node modules files");
+
+  await clearElement(dbg, "excludePatternsInput");
+  type(dbg, "**/node_modules/**");
+  pressKey(dbg, "Enter");
+
+  fileResults = await waitForSearchResults(dbg, 2);
+
+  resultsFromNodeModules = [...fileResults].filter(result =>
+    result.innerText.includes("node_modules")
+  );
+
+  is(
+    resultsFromNodeModules.length,
+    0,
+    "None of the results is from the node modules files"
+  );
+
+  info("Assert that the exclude pattern is persisted across reloads");
+  await reloadBrowser();
+  await openProjectSearch(dbg);
+
+  const excludePatternsInputElement = await waitForElement(
+    dbg,
+    "excludePatternsInput"
+  );
+
+  is(
+    excludePatternsInputElement.value,
+    "**/node_modules/**",
+    "The exclude pattern for node modules is persisted accross reloads"
+  );
+
+  // Clear the  exclude patterns field so that it does not impact on the subsequent tests
+  await clearElement(dbg, "excludePatternsInput");
+  pressKey(dbg, "Enter");
 });
 
 async function assertProjectSearchModifier(

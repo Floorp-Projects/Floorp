@@ -1364,6 +1364,7 @@ const keyMappings = {
     code: "VK_F11",
     modifiers: { shiftKey: true },
   },
+  Backspace: { code: "VK_BACK_SPACE" },
 };
 
 /**
@@ -1692,6 +1693,7 @@ const selectors = {
   previewPopupObjectObject: ".preview-popup .objectBox-object",
   sourceTreeRootNode: ".sources-panel .node .window",
   sourceTreeFolderNode: ".sources-panel .node .folder",
+  excludePatternsInput: ".project-text-search .exclude-patterns-field input",
 };
 
 function getSelector(elementName, ...args) {
@@ -1794,6 +1796,18 @@ function rightClickEl(dbg, el) {
   const doc = dbg.win.document;
   el.scrollIntoView();
   EventUtils.synthesizeMouseAtCenter(el, { type: "contextmenu" }, dbg.win);
+}
+
+async function clearElement(dbg, elementName) {
+  await clickElement(dbg, elementName);
+  await pressKey(dbg, "End");
+  const selector = getSelector(elementName);
+  const el = findElementWithSelector(dbg, getSelector(elementName));
+  let len = el.value.length;
+  while (len) {
+    pressKey(dbg, "Backspace");
+    len--;
+  }
 }
 
 async function clickGutter(dbg, line) {

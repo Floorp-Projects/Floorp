@@ -28,6 +28,7 @@ describe("SearchInput", () => {
       onKeyDown={() => {}}
       searchKey="foo-search"
       showSearchModifiers={false}
+      showExcludePatterns={false}
       showClose={true}
       handleClose={jest.fn()}
       setSearchOptions={jest.fn()}
