@@ -2,9 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
+var EXPORTED_SYMBOLS = ["FormAutofillNameUtils"];
+
 // FormAutofillNameUtils is initially translated from
 // https://cs.chromium.org/chromium/src/components/autofill/core/browser/autofill_data_util.cc?rcl=b861deff77abecff11ae6a9f6946e9cc844b9817
-export var FormAutofillNameUtils = {
+var FormAutofillNameUtils = {
   NAME_PREFIXES: [
     "1lt",
     "1st",

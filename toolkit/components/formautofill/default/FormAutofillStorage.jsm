@@ -6,22 +6,36 @@
  * Implements an interface of the storage of Form Autofill.
  */
 
+"use strict";
+
 // We expose a singleton from this module. Some tests may import the
 // constructor via a backstage pass.
-import {
-  AddressesBase,
-  CreditCardsBase,
+const EXPORTED_SYMBOLS = ["formAutofillStorage", "FormAutofillStorage"];
+
+const { FormAutofill } = ChromeUtils.import(
+  "resource://autofill/FormAutofill.jsm"
+);
+
+const {
   FormAutofillStorageBase,
-} from "resource://autofill/FormAutofillStorageBase.sys.mjs";
-import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
+  CreditCardsBase,
+  AddressesBase,
+} = ChromeUtils.import("resource://autofill/FormAutofillStorageBase.jsm");
+
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
-  FormAutofillUtils: "resource://autofill/FormAutofillUtils.sys.mjs",
   JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
   OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  FormAutofillUtils: "resource://autofill/FormAutofillUtils.jsm",
 });
 
 const PROFILE_JSON_FILE_NAME = "autofill-profiles.json";
@@ -223,7 +237,7 @@ class CreditCards extends CreditCardsBase {
   }
 }
 
-export class FormAutofillStorage extends FormAutofillStorageBase {
+class FormAutofillStorage extends FormAutofillStorageBase {
   constructor(path) {
     super(path);
   }
@@ -270,6 +284,6 @@ export class FormAutofillStorage extends FormAutofillStorageBase {
 }
 
 // The singleton exposed by this module.
-export const formAutofillStorage = new FormAutofillStorage(
+const formAutofillStorage = new FormAutofillStorage(
   PathUtils.join(PathUtils.profileDir, PROFILE_JSON_FILE_NAME)
 );

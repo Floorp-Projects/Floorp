@@ -2,13 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+"use strict";
 
+var EXPORTED_SYMBOLS = ["AddressResult", "CreditCardResult"];
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
-  FormAutofillUtils: "resource://autofill/FormAutofillUtils.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  FormAutofillUtils: "resource://autofill/FormAutofillUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(
@@ -201,7 +208,7 @@ class ProfileAutoCompleteResult {
   }
 }
 
-export class AddressResult extends ProfileAutoCompleteResult {
+class AddressResult extends ProfileAutoCompleteResult {
   constructor(...args) {
     super(...args);
   }
@@ -323,7 +330,7 @@ export class AddressResult extends ProfileAutoCompleteResult {
   }
 }
 
-export class CreditCardResult extends ProfileAutoCompleteResult {
+class CreditCardResult extends ProfileAutoCompleteResult {
   constructor(...args) {
     super(...args);
     this._cardTypes = this._generateCardTypes(
