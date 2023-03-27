@@ -2,8 +2,8 @@
 
 var AddressResult, CreditCardResult;
 add_setup(async () => {
-  ({ AddressResult, CreditCardResult } = ChromeUtils.import(
-    "resource://autofill/ProfileAutoCompleteResult.jsm"
+  ({ AddressResult, CreditCardResult } = ChromeUtils.importESModule(
+    "resource://autofill/ProfileAutoCompleteResult.sys.mjs"
   ));
 });
 
