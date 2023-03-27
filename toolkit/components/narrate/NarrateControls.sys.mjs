@@ -2,25 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const { VoiceSelect } = ChromeUtils.import(
-  "resource://gre/modules/narrate/VoiceSelect.jsm"
-);
-const { Narrator } = ChromeUtils.import(
-  "resource://gre/modules/narrate/Narrator.jsm"
-);
-const { AsyncPrefs } = ChromeUtils.importESModule(
-  "resource://gre/modules/AsyncPrefs.sys.mjs"
-);
-
-var EXPORTED_SYMBOLS = ["NarrateControls"];
+import { AsyncPrefs } from "resource://gre/modules/AsyncPrefs.sys.mjs";
+import { Narrator } from "resource://gre/modules/narrate/Narrator.sys.mjs";
+import { VoiceSelect } from "resource://gre/modules/narrate/VoiceSelect.sys.mjs";
 
 var gStrings = Services.strings.createBundle(
   "chrome://global/locale/narrate.properties"
 );
 
-function NarrateControls(win, languagePromise) {
+export function NarrateControls(win, languagePromise) {
   this._winRef = Cu.getWeakReference(win);
   this._languagePromise = languagePromise;
 
