@@ -92,6 +92,10 @@ class TRRServiceChannel : public HttpBaseChannel,
   NS_IMETHOD SetEarlyHintObserver(nsIEarlyHintObserver* aObserver) override {
     return NS_OK;
   }
+  NS_IMETHOD SetWebTransportSessionEventListener(
+      WebTransportSessionEventListener* aListener) override {
+    return NS_OK;
+  }
 
   [[nodiscard]] nsresult OnPush(uint32_t aPushedStreamId,
                                 const nsACString& aUrl,

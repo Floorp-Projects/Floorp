@@ -41,6 +41,7 @@ interface nsIProxyInfo;
 interface nsISecurityConsoleMessage;
 interface nsISocketTransport;
 interface nsIURI;
+interface WebTransportSessionEventListener;
 
 /**
  * The callback interface for nsIHttpChannelInternal::HTTPUpgrade()
@@ -499,4 +500,10 @@ interface nsIHttpChannelInternal : nsISupports
     * This attribute indicates if the channel was loaded via Proxy.
     */
     [must_use] readonly attribute boolean isProxyUsed;
+
+     /**
+     * Set mWebTransportSessionEventListener.
+     */
+    [must_use] void setWebTransportSessionEventListener(
+        in WebTransportSessionEventListener aListener);
 };

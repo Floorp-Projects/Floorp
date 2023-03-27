@@ -10,6 +10,7 @@
 #include "WebTransportStreamProxy.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIHttpChannel.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsIRequest.h"
 #include "nsNetUtil.h"
 #include "nsProxyRelease.h"
@@ -123,6 +124,14 @@ nsresult WebTransportSessionProxy::AsyncConnect(
   if (NS_FAILED(rv)) {
     return rv;
   }
+
+  nsCOMPtr<nsIHttpChannelInternal> internalChannel =
+      do_QueryInterface(mChannel);
+  if (!internalChannel) {
+    mChannel = nullptr;
+    return NS_ERROR_ABORT;
+  }
+  Unused << internalChannel->SetWebTransportSessionEventListener(this);
 
   rv = mChannel->AsyncOpen(this);
   if (NS_SUCCEEDED(rv)) {
