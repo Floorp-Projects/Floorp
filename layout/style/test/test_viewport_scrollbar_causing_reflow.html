@@ -13,18 +13,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1367568
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug 1367568</a>
 <div id="content">
   <!-- Some fixed-width divs that we shouldn't have to reflow when the viewport
-       changes: -->
-  <div style="width: 100px">
-    fixed-width
-    <div>(child)</div>
-  </div>
+       changes. More than 5 so that our leeway for scrollbar parts doesn't
+       accidentally cause the test to pass -->
+  <div style="width: 100px">fixed-width <div>(child)</div></div>
+  <div style="width: 100px">fixed-width <div>(child)</div></div>
+  <div style="width: 100px">fixed-width <div>(child)</div></div>
+  <div style="width: 100px">fixed-width <div>(child)</div></div>
+  <div style="width: 100px">fixed-width <div>(child)</div></div>
+  <div style="width: 100px">fixed-width <div>(child)</div></div>
   <div style="position: absolute; width: 150px">
     abs-fixed-width
     <div>(child)</div>
   </div>
 </div>
 <pre id="test">
-<script type="application/javascript">
+<script>
 "use strict";
 
 /** Test for Bug 1367568 **/
@@ -77,9 +80,11 @@ function main() {
   ok(count > 0,
      "Should reflow some frames when 'width' & 'height' change");
 
+  const scrollbarsHaveButtons = navigator.platform.includes("Win");
+  // This is to allow for reflowing scrollbar parts themselves.
+  const scrollbarReflows = scrollbarsHaveButtons ? 5 : 2;
   // Expected maximum number of frames reflowed for "overflow" changes
-  // (+2 is to allow for reflowing scrollbars themselves):
-  const expectedMax = count + 2;
+  const expectedMax = count + scrollbarReflows;
 
   // Shared ending for messages in all ok() checks below:
   const messageSuffix =
