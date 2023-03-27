@@ -4,6 +4,11 @@
     <string name="mozac_feature_applinks_open_in">Uddit e…</string>
     <!-- The description to warn users that their private browsing session changes  -->
     <string name="mozac_feature_applinks_confirm_dialog_title">Uddit-de e nder jaaɓnirgal? Golle maina mbaawi nattude wonde cuuriiɗe.</string>
+    <!-- The title of the prompt that warns users their normal browsing session is trying to open another app  -->
+    <string name="mozac_feature_applinks_normal_confirm_dialog_title">Uddit e jaaɓngal goɗngal</string>
+    <!-- The message of the prompt to confirm with users that they want to open the link in another app
+    %s is a placeholder that will be replaced by the app name -->
+    <string name="mozac_feature_applinks_normal_confirm_dialog_message">Aɗa yiɗi yaltude %s ngam yiyde ndii loowdi?</string>
     <!-- Opens the selected time -->
     <string name="mozac_feature_applinks_confirm_dialog_confirm">Uddit</string>
     <!-- Cancels the prompt -->

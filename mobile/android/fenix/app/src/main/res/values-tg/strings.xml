@@ -307,6 +307,10 @@
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_default_browser_title" tools:ignore="UnusedResources">«%s»-ро ба браузери ҷории худро табдил диҳед</string>
 
+    <!-- Description for set firefox as default browser screen.
+        The first parameter is the Firefox brand name.
+        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
+    <string name="juno_onboarding_default_browser_description" tools:ignore="UnusedResources">«%1$s» одамгариро нисбат ба фоидаоварӣ ба ҷойи аввал мегузорад ва махфияти шуморо тавассути манъкунии пайгирикунандаҳои байнисомонавӣ муҳофизат мекунад.\n\nМаълумоти бештар дар «%2$s» дастрас аст.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">огоҳномаи махфият</string>
@@ -316,6 +320,8 @@
     <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Ҳоло не</string>
     <!-- Title for sign in to sync screen. -->
     <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Аз телефон ба ноутбук ва баръакс гузаред</string>
+    <!-- Description for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Барои идомаи кор аз он ҷое, ки шумо ба қарибӣ тамошо кардаед, варақаҳо ва ниҳонвожаҳоро аз дастгоҳҳои дигари худ ба даст оред.</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Ворид шудан</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -323,6 +329,9 @@
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_enable_notifications_title" tools:ignore="UnusedResources">Огоҳиҳо барои кори бештар бо «%s» ба шумо кумак мекунанд</string>
+    <!-- Description for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_description" tools:ignore="UnusedResources">Варақаҳоро байни дастгоҳҳо интиқол диҳед, боргириҳоро идора кунед ва барои истифодаи бештари «%s» маслиҳат гиред.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Хомӯш кардани огоҳномаҳо</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -1257,6 +1266,15 @@
     <!-- Title B shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_B_title">Ҷустуҷӯи аввалини худро оғоз кунед</string>
 
+    <!-- Text B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_text">Чизе муҳимро дар атрофи худ пайдо кунед. Ё чизе шавқоварро пайдо кунед.</string>
+
+    <!-- Survey -->
+    <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_survey_message_text" tools:ignore="UnusedResources">Лутфан, барои беҳтар кардани браузери «Firefox» тавассути ин саволнома кумак расонед.</string>
+    <!-- Preference for taking the short survey. -->
+    <string name="preferences_take_survey" tools:ignore="UnusedResources">Иштирок дар саволнома</string>
     <!-- Preference for not taking the short survey. -->
     <string name="preferences_not_take_survey" tools:ignore="UnusedResources">Не, ташаккур</string>
 
@@ -1477,20 +1495,28 @@
     <string name="preference_enhanced_tracking_protection">Муҳофизати такмилёфта аз пайгирӣ</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">Тамошокунӣ бе пайгирӣ</string>
+    <!-- Preference summary for enhanced tracking protection settings on/off switch -->
+    <string name="preference_enhanced_tracking_protection_summary" tools:ignore="UnusedResources">Акнун браузери мо дорои хусусияти «Муҳофизати пурра аз кукиҳо» мебошад, ки барои васоити пайгирии байнисомонавӣ монеаи пурқувват мебошад.</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation">Маълумоти худро бо худ нигоҳ доред. %s шуморо аз бисёр васоити пайгирие, ки фаъолияти шуморо дар онлайн пайгирӣ мекунанд, муҳофизат менамояд.</string>
+    <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">«%s» шуморо аз бисёр васоити пайгирие, ки фаъолияти шуморо дар онлайн пайгирӣ мекунанд, муҳофизат менамояд.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Маълумоти бештар</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Стандартӣ (пешфарз)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_4">Мутаносиб барои махфият ва самаранокӣ. Саҳифаҳо ба таври муқаррар бор карда мешаванд.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_5" tools:ignore="UnusedResources">Саҳифаҳо ба таври муқаррар кушода мешаванд, аммо баъзе васоити пайгирӣ манъ карда мешаванд.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Ба воситаи муҳофизати стандартӣ аз пайгирӣ чӣ баста шудааст</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Ҷиддӣ</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_3">Васоити пайгирии бештарро қатъ мекунад, то ки саҳифаҳо тезтар кушода шаванд, аммо баъзеи функсияҳои саҳифа метавонанд вайрон шаванд.</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_4" tools:ignore="UnusedResources">Муҳофизати ҷиддӣ барои самаранокии тезтар ва бар зиддӣ васоити пайгирӣ, аммо баъзе сомонаҳо метавонанд ба таври дуруст кор накунанд.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Ба воситаи муҳофизати ҷиддӣ аз пайгирӣ чӣ баста шудааст</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->

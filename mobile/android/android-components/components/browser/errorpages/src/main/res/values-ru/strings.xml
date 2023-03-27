@@ -38,7 +38,7 @@
         <label>Веб-сайты подтверждают свою подлинность с помощью сертификатов. %1$s не может доверять <b>%2$s</b>, потому что издатель его сертификата неизвестен, сертификат подписан самим сайтом или его сервер не отправляет правильные промежуточные сертификаты.</label>
     ]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
-    <string name="mozac_browser_errorpages_security_bad_cert_back">Назад (рекомендуется)</string>
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Назад (желательно)</string>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Принять риск и продолжить</string>
 
