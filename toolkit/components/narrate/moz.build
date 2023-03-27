@@ -7,6 +7,10 @@
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Reader Mode")
 
-EXTRA_JS_MODULES.narrate = ["NarrateControls.jsm", "Narrator.jsm", "VoiceSelect.jsm"]
+EXTRA_JS_MODULES.narrate = [
+    "NarrateControls.sys.mjs",
+    "Narrator.sys.mjs",
+    "VoiceSelect.sys.mjs",
+]
 
 BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
