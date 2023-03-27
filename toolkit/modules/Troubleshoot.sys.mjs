@@ -771,7 +771,19 @@ var dataProviders = {
         adapterOpts
       )})`;
 
-      const adapter = await navigator.gpu.requestAdapter(adapterOpts);
+      let adapter;
+      try {
+        adapter = await navigator.gpu.requestAdapter(adapterOpts);
+      } catch (e) {
+        // If WebGPU isn't supported or is blocked somehow, include
+        // that in the report. Anything else is an error which should
+        // have consequences (test failures, etc).
+        if (DOMException.isInstance(e) && e.name == "NotSupportedError") {
+          return { [requestAdapterkey]: { not_supported: e.message } };
+        }
+        throw e;
+      }
+
       if (!adapter) {
         ret[requestAdapterkey] = null;
         return ret;
