@@ -112,8 +112,9 @@ class GfxInfo final : public GfxInfoBase {
   bool mIsXWayland;
   bool mHasMultipleGPUs;
   bool mGlxTestError;
-  bool mIsVAAPISupported;
+  mozilla::Maybe<bool> mIsVAAPISupported;
 
+  void GetDataVAAPI();
   void AddCrashReportAnnotations();
 };
 
