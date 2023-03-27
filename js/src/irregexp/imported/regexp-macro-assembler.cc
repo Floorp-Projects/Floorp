@@ -282,7 +282,7 @@ int NativeRegExpMacroAssembler::CheckStackGuardState(
   DisallowGarbageCollection no_gc;
   Address old_pc = PointerAuthentication::AuthenticatePC(return_address, 0);
   DCHECK_LE(re_code.instruction_start(), old_pc);
-  DCHECK_LE(old_pc, re_code.instruction_end());
+  DCHECK_LE(old_pc, re_code.code(kAcquireLoad).InstructionEnd());
 
   StackLimitCheck check(isolate);
   bool js_has_overflowed = check.JsHasOverflowed();
@@ -434,7 +434,7 @@ int NativeRegExpMacroAssembler::Execute(
           const byte* input_end, int* output, int output_size, int call_origin,
           Isolate* isolate, Address regexp);
 
-  auto fn = GeneratedCode<RegexpMatcherSig>::FromCode(code);
+  auto fn = GeneratedCode<RegexpMatcherSig>::FromCode(isolate, code);
   int result = fn.Call(input.ptr(), start_offset, input_start, input_end,
                        output, output_size, call_origin, isolate, regexp.ptr());
   DCHECK_GE(result, SMALLEST_REGEXP_RESULT);
