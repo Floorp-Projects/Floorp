@@ -8,10 +8,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  FormAutofillUtils: "resource://autofill/FormAutofillUtils.jsm",
+  FormAutofillUtils: "resource://autofill/FormAutofillUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(

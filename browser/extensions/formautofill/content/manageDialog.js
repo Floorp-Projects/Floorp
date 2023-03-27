@@ -16,8 +16,8 @@ const { AppConstants } = ChromeUtils.importESModule(
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { FormAutofill } = ChromeUtils.import(
-  "resource://autofill/FormAutofill.jsm"
+const { FormAutofill } = ChromeUtils.importESModule(
+  "resource://autofill/FormAutofill.sys.mjs"
 );
 const { AutofillTelemetry } = ChromeUtils.import(
   "resource://autofill/AutofillTelemetry.jsm"
@@ -25,18 +25,10 @@ const { AutofillTelemetry } = ChromeUtils.import(
 
 ChromeUtils.defineESModuleGetters(this, {
   CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
+  FormAutofillUtils: "resource://autofill/FormAutofillUtils.sys.mjs",
   OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
+  formAutofillStorage: "resource://autofill/FormAutofillStorage.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  this,
-  "formAutofillStorage",
-  "resource://autofill/FormAutofillStorage.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "FormAutofillUtils",
-  "resource://autofill/FormAutofillUtils.jsm"
-);
 
 const lazy = {};
 XPCOMUtils.defineLazyGetter(

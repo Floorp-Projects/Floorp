@@ -14,16 +14,12 @@ import { Utils } from "resource://services-sync/util.sys.mjs";
 const { SCORE_INCREMENT_XLARGE } = ChromeUtils.import(
   "resource://services-sync/constants.js"
 );
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   Log: "resource://gre/modules/Log.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  formAutofillStorage: "resource://autofill/FormAutofillStorage.jsm",
+  formAutofillStorage: "resource://autofill/FormAutofillStorage.sys.mjs",
 });
 
 // A helper to sanitize address and creditcard records suitable for logging.

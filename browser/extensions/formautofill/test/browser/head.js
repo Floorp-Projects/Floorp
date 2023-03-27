@@ -7,8 +7,8 @@ const { OSKeyStoreTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/OSKeyStoreTestUtils.sys.mjs"
 );
 
-const { FormAutofillParent } = ChromeUtils.import(
-  "resource://autofill/FormAutofillParent.jsm"
+const { FormAutofillParent } = ChromeUtils.importESModule(
+  "resource://autofill/FormAutofillParent.sys.mjs"
 );
 
 const MANAGE_ADDRESSES_DIALOG_URL =
