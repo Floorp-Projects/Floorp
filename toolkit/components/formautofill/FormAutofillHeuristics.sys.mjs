@@ -6,14 +6,9 @@
  * Form Autofill field heuristics.
  */
 
-"use strict";
+export let FormAutofillHeuristics;
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const EXPORTED_SYMBOLS = ["FormAutofillHeuristics", "FieldScanner"];
-let FormAutofillHeuristics;
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const { FormAutofill } = ChromeUtils.import(
   "resource://autofill/FormAutofill.jsm"
 );
@@ -31,7 +26,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () =>
-  FormAutofill.defineLogGetter(lazy, EXPORTED_SYMBOLS[0])
+  FormAutofill.defineLogGetter(lazy, "FormAutofillHeuristics")
 );
 
 const PREF_HEURISTICS_ENABLED = "extensions.formautofill.heuristics.enabled";
@@ -68,7 +63,7 @@ const MULTI_N_FIELD_NAMES = {
  * detail with FormAutofillHeuristics.getInfo function. It also provides a
  * cursor (parsingIndex) to indicate which element is waiting for parsing.
  */
-class FieldScanner {
+export class FieldScanner {
   /**
    * Create a FieldScanner based on form elements with the existing
    * fieldDetails.

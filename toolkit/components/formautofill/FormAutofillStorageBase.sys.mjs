@@ -122,19 +122,8 @@
  * this new field.
  */
 
-"use strict";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const EXPORTED_SYMBOLS = [
-  "FormAutofillStorageBase",
-  "CreditCardsBase",
-  "AddressesBase",
-  "ADDRESS_SCHEMA_VERSION",
-  "CREDIT_CARD_SCHEMA_VERSION",
-];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const { FormAutofill } = ChromeUtils.import(
   "resource://autofill/FormAutofill.jsm"
 );
@@ -165,7 +154,7 @@ const STORAGE_SCHEMA_VERSION = 1;
 // Please talk to the sync team before changing this!
 // (And if it did ever change, it must never be "4" due to the reconcile hacks
 // below which repairs credit-cards with version=4)
-const ADDRESS_SCHEMA_VERSION = 1;
+export const ADDRESS_SCHEMA_VERSION = 1;
 
 // Version 2: Bug 1486954 - Encrypt `cc-number`
 // Version 3: Bug 1639795 - Update keystore name
@@ -173,7 +162,7 @@ const ADDRESS_SCHEMA_VERSION = 1;
 // Next version should be 5
 // NOTE: It's likely this number can never change.
 // Please talk to the sync team before changing this!
-const CREDIT_CARD_SCHEMA_VERSION = 3;
+export const CREDIT_CARD_SCHEMA_VERSION = 3;
 
 const VALID_ADDRESS_FIELDS = [
   "given-name",
@@ -1509,7 +1498,7 @@ class AutofillRecords {
   async mergeIfPossible(guid, record, strict) {}
 }
 
-class AddressesBase extends AutofillRecords {
+export class AddressesBase extends AutofillRecords {
   constructor(store) {
     super(
       store,
@@ -1829,7 +1818,7 @@ class AddressesBase extends AutofillRecords {
   }
 }
 
-class CreditCardsBase extends AutofillRecords {
+export class CreditCardsBase extends AutofillRecords {
   constructor(store) {
     super(
       store,
@@ -2149,7 +2138,7 @@ class CreditCardsBase extends AutofillRecords {
   }
 }
 
-class FormAutofillStorageBase {
+export class FormAutofillStorageBase {
   constructor(path) {
     this._path = path;
     this._initializePromise = null;

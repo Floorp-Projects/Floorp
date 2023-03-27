@@ -15,33 +15,24 @@
  * TRAINING REPOSITORY" section.
  */
 
-"use strict";
-
 /**
  * CODE UNIQUE TO PRODUCTION--NOT IN THE TRAINING REPOSITORY:
  */
 
-const EXPORTED_SYMBOLS = ["creditCardRulesets"];
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const {
-  element: clickedElement,
+import {
+  element as clickedElement,
   out,
   rule,
   ruleset,
   score,
   type,
-} = ChromeUtils.importESModule(
-  "resource://gre/modules/third_party/fathom/fathom.mjs"
-);
-const { CreditCard } = ChromeUtils.importESModule(
-  "resource://gre/modules/CreditCard.sys.mjs"
-);
-const { NETWORK_NAMES } = ChromeUtils.importESModule(
-  "resource://gre/modules/CreditCard.sys.mjs"
-);
+} from "resource://gre/modules/third_party/fathom/fathom.mjs";
+import {
+  CreditCard,
+  NETWORK_NAMES,
+} from "resource://gre/modules/CreditCard.sys.mjs";
 
 const lazy = {};
 
@@ -1186,6 +1177,7 @@ const biases = [
   ["cc-exp-month", -8.844199180603027],
   ["cc-exp-year", -6.499860763549805],
 ];
+
 /**
  * END OF CODE PASTED FROM TRAINING REPOSITORY
  */
@@ -1198,7 +1190,7 @@ const biases = [
 // all the tyoes). When the above case exists, the coefficient of the rule will be
 // overwritten, which means, we can't have different coefficient for the same rule on
 // different types. To workaround this issue, we create a new ruleset for each type.
-var creditCardRulesets = {
+export var creditCardRulesets = {
   init() {
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
@@ -1218,4 +1210,5 @@ var creditCardRulesets = {
     return this.supportedTypes;
   },
 };
+
 this.creditCardRulesets.init();
