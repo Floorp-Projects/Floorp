@@ -126,10 +126,6 @@ class nsBoxFrame : public nsContainerFrame {
   static nsresult LayoutChildAt(nsBoxLayoutState& aState, nsIFrame* aBox,
                                 const nsRect& aRect);
 
-  // Gets a next / prev sibling accounting for ordinal group. Slow, please avoid
-  // usage if possible.
-  static nsIFrame* SlowOrdinalGroupAwareSibling(nsIFrame*, bool aNext);
-
  private:
   explicit nsBoxFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
       : nsBoxFrame(aStyle, aPresContext, kClassID) {}
