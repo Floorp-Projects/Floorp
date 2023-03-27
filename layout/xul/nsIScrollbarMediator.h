@@ -81,7 +81,7 @@ class nsIScrollbarMediator : public nsQueryFrame {
    * Obtain the frame for the horizontal or vertical scrollbar, or null
    * if there is no such box.
    */
-  virtual nsIFrame* GetScrollbarBox(bool aVertical) = 0;
+  virtual nsScrollbarFrame* GetScrollbarBox(bool aVertical) = 0;
   /**
    * Show or hide scrollbars on 2 fingers touch.
    * Subclasses should call their ScrollbarActivity's corresponding methods.
