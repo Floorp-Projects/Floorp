@@ -263,11 +263,12 @@ bool RenderCompositorANGLE::CreateSwapChain(nsACString& aError) {
         desc.BufferCount = 2;
       }
       desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
+      desc.Scaling = DXGI_SCALING_NONE;
     } else {
       desc.BufferCount = 1;
       desc.SwapEffect = DXGI_SWAP_EFFECT_SEQUENTIAL;
+      desc.Scaling = DXGI_SCALING_STRETCH;
     }
-    desc.Scaling = DXGI_SCALING_NONE;
     desc.Flags = 0;
 
     hr = dxgiFactory2->CreateSwapChainForHwnd(
