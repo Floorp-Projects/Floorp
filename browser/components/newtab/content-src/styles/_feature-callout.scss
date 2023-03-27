@@ -1,28 +1,47 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+@import 'feature-callout-theme';
+
 $max-z-index: 2147483647;
-// Explicitly define these colors as the CSS variables used in aboutwelcome.scss are unavailable in the browser chrome context.
-$button-background: rgba(207, 207, 216, 0.33);
-$button-background-dark: rgba(43, 42, 51, 1);
-$button-hover-background: rgb(232, 227, 228);
-$button-hover-background-dark: rgb(54, 52, 52);
-$background: #FFF;
-$background-dark: rgb(28, 27, 34);
 
 // sass-lint:disable no-color-literals
 .onboardingContainer.featureCallout {
+  // See _feature-callout-theme.scss for the theme mixins and
+  // FeatureCallout.sys.mjs for the color values
+  @include light-theme;
+
+  @media (prefers-color-scheme: dark) {
+    @include dark-theme;
+  }
+
+  @media (prefers-contrast) {
+    @include hcm-theme;
+  }
+
+  // Account for feature callouts that may be rendered in the chrome but
+  // displayed on top of content. Each context has its own color scheme, so they
+  // may not match. In that case, we use the special media query below.
+  &.simulateContent {
+    @media (-moz-content-prefers-color-scheme: light) {
+      @include light-theme;
+    }
+
+    @media (-moz-content-prefers-color-scheme: dark) {
+      @include dark-theme;
+    }
+
+    @media (prefers-contrast) {
+      @include hcm-theme;
+    }
+  }
+
   position: absolute;
   transition: opacity 0.5s ease;
   z-index: $max-z-index - 2;
   outline: none;
-  // sync with --in-content-focus-outline-color from common-shared.css
-  --feature-callout-focus-outline-color: #0061E0;
-
-  @media (prefers-color-scheme: dark) {
-    --feature-callout-focus-outline-color: #0DF;
-  }
-
-  @media (prefers-contrast) {
-    --feature-callout-focus-outline-color: -moz-DialogText;
-  }
+  color: var(--fc-color);
 
   &.hidden {
     opacity: 0;
@@ -72,7 +91,7 @@ $background-dark: rgb(28, 27, 34);
         h2 {
           font-size: 0.8em;
           margin: 0;
-          color: ButtonText;
+          color: inherit;
         }
 
         h1 {
@@ -96,17 +115,14 @@ $background-dark: rgb(28, 27, 34);
         .main-content {
           position: relative;
           overflow: hidden;
-          border: 1px solid #CFCFD8;
+          border: 1px solid var(--fc-border);
           box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
           border-radius: 4px;
           padding-top: 0;
           // Subtract 4px, the block margin of buttons
           padding-bottom: 30px - 4px;
           width: 25em;
-          background-color: $background;
-          @media (prefers-color-scheme: dark) {
-            background-color: $background-dark;
-          }
+          background-color: var(--fc-background);
 
           .steps {
             height: auto;
@@ -120,16 +136,16 @@ $background-dark: rgb(28, 27, 34);
 
             .indicator {
               // using border will show up in Windows High Contrast Mode to improve accessibility.
-              border: 4px solid WindowText;
+              border: 4px solid var(--fc-step-color);
 
               &.current {
-                border-color: LinkText;
+                border-color: var(--fc-accent-color);
               }
             }
 
             & .indicator.current,
             &.progress-bar .indicator.complete {
-              border-color: LinkText;
+              border-color: var(--fc-accent-color);
             }
           }
         }
@@ -140,11 +156,7 @@ $background-dark: rgb(28, 27, 34);
           margin-block: 15px 0;
           margin-inline: 0 15px;
           z-index: $max-z-index;
-          background-color: $background;
-
-          @media (prefers-color-scheme: dark) {
-            background-color: $background-dark;
-          }
+          background-color: var(--fc-background);
         }
       }
 
@@ -154,6 +166,7 @@ $background-dark: rgb(28, 27, 34);
           padding: 4px 16px;
           font-size: 0.8em;
           height: 2em;
+          background-color: var(--fc-button-background);
         }
 
         .primary {
@@ -164,11 +177,6 @@ $background-dark: rgb(28, 27, 34);
           font-size: 0.8em;
           line-height: 16px;
           min-height: 32px;
-          background-color: $button-background;
-
-          @media (prefers-color-scheme: dark) {
-            background-color: $button-background-dark;
-          }
         }
 
         .secondary-cta {
@@ -177,38 +185,29 @@ $background-dark: rgb(28, 27, 34);
       }
 
       .action-buttons .primary,
+      .action-buttons .secondary-cta .secondary,
       .dismiss-button {
         border-radius: 4px;
-        border: 0;
+        border: 1px solid var(--fc-button-border);
         cursor: pointer;
-        color: ButtonText;
+        color: var(--fc-button-color);
 
         &:hover {
-          background-color: $button-hover-background;
-        }
+          background-color: var(--fc-button-background-hover);
+          color: var(--fc-button-color-hover);
+          border: 1px solid var(--fc-button-border-hover);
 
-        @media (prefers-color-scheme: dark) {
-          background-color: $button-background-dark;
-
-          &:hover {
-            background-color: $button-hover-background-dark;
+          &:active {
+            background-color: var(--fc-button-background-active);
+            color: var(--fc-button-color-active);
+            border: 1px solid var(--fc-button-border-active);
           }
         }
 
-        @media (prefers-contrast) {
-          border: 1px solid ButtonText;
-          background-color: $background;
-          @media (prefers-color-scheme: dark) {
-            background-color: $background-dark;
-          }
-
-          &:hover {
-            background-color: ButtonText;
-            color: $background;
-            @media (prefers-color-scheme: dark) {
-              color: $background-dark;
-            }
-          }
+        &:focus-visible {
+          box-shadow: none;
+          outline: 2px solid var(--fc-accent-color);
+          outline-offset: 2px;
         }
       }
     }
@@ -219,9 +218,8 @@ $background-dark: rgb(28, 27, 34);
   // the arrow already overlaps the callout by 12px (see above), but to account
   // for different pixel scaling factors, we can overlap by 1px more, since the
   // border is drawn underneath the callout (on ::after). this is either added
-  // to or subtracted from absolute coordinates, depending on the inset's sign.
+  // to or subtracted from absolute coordinates, depending on the direction.
   $arrow-overlap-inset: -$arrow-inset-size + 1px;
-  $arrow-outline: 1px solid #CFCFD8;
 
   // applied to all callout arrow foreground and background
   &.callout-arrow::before,
@@ -238,16 +236,13 @@ $background-dark: rgb(28, 27, 34);
   // color for all arrow foreground
   &.callout-arrow::before {
     z-index: $max-z-index;
-    background-color: $background;
-    @media (prefers-color-scheme: dark) {
-      background-color: $background-dark;
-    }
+    background-color: var(--fc-background);
   }
 
   // styles for all arrow backgrounds
   &.callout-arrow::after {
     background: transparent;
-    outline: $arrow-outline;
+    outline: 1px solid var(--fc-border);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     z-index: -1;
   }
@@ -298,14 +293,18 @@ $background-dark: rgb(28, 27, 34);
     .screen {
       &[pos='callout'] {
         .section-main .main-content {
-          outline: 2px solid var(--feature-callout-focus-outline-color);
+          outline: 2px solid var(--fc-accent-color);
           border-color: transparent;
+
+          @media (prefers-contrast) {
+            border-color: var(--fc-background);
+          }
         }
       }
     }
 
     &.callout-arrow::after {
-      outline: 2px solid var(--feature-callout-focus-outline-color);
+      outline: 2px solid var(--fc-accent-color);
     }
   }
 }
