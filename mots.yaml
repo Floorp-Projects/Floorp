@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-03-15T14:56:45.077565'
+updated_at: '2023-03-27T14:14:47.856248'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -300,6 +300,10 @@ people:
     bmo_id: 455480
     name: Edgar Chen
     nick: edgar
+  - &edgul
+    bmo_id: 701256
+    name: Ed Guloien
+    nick: edgul
   - &eeejay
     bmo_id: 291675
     name: Eitan Isaacson
@@ -644,10 +648,6 @@ people:
     bmo_id: 305228
     name: Matthew N
     nick: MattN
-  - &mayhemer
-    bmo_id: 269762
-    name: Honza Bambas
-    nick: mayhemer
   - &mccr8
     bmo_id: 406194
     name: Andrew McCreight
@@ -672,9 +672,6 @@ people:
     bmo_id: 585815
     name: Micah Tigley
     nick: micah
-  - bmo_id: 268625
-    name: Michal Novotny
-    nick: michal
   - &mikokm
     bmo_id: 547538
     name: Miko Mynttinen
@@ -933,6 +930,10 @@ people:
     bmo_id: 628857
     name: Travis Long
     nick: travis_
+  - &tschuster
+    bmo_id: 703078
+    name: Tom Schuster
+    nick: tschuster
   - &TYLin
     bmo_id: 503090
     name: Ting-Yu Lin
@@ -1276,6 +1277,7 @@ modules:
     meta:
       owners_emeritus:
         - Monica Chew
+        - Andrea Marchesini
       peers_emeritus:
         - Josh Matthews
         - Mike Connor
@@ -1283,13 +1285,18 @@ modules:
         - Christian Biesinger
         - Shawn Wilsher
         - Ehsan Akhgari
+        - Honza Bambas
       group: dev-platform
       components:
         - 'Core::Networking: Cookies'
     owners:
-      - *baku
+      - *dveditz
+      - *timhuang
+      - *valentin
     peers:
-      - *mayhemer
+      - *edgul
+      - *pbz
+      - *tschuster
     machine_name: core_cookies
 
   - name: 'Core: Crash reporting'
@@ -4069,5 +4076,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 9d274b9df34ee8d6af1a0e230bab2de0d4622e89
-  export: 970fd50b07f70478cab94d43c061aa137e993f38
+  config: d9dcf5cedd0ecf9b7c3c06fded5f691b9f1a8f1a
+  export: efcd21ae36e1484bdda851f78032c3cc512e6cf2

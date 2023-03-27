@@ -403,14 +403,18 @@ Core: Cookies
 
     * - Owner(s)
       -
-        | `Andrea Marchesini (baku) <https://people.mozilla.org/s?query=baku>`__
+        | `Daniel Veditz (dveditz) <https://people.mozilla.org/s?query=dveditz>`__
+        | `Tim Huang (timhuang) <https://people.mozilla.org/s?query=timhuang>`__
+        | `Valentin Gosu (valentin) <https://people.mozilla.org/s?query=valentin>`__
     * - Peer(s)
       -
-        | `Honza Bambas (mayhemer) <https://people.mozilla.org/s?query=mayhemer>`__
+        | `Ed Guloien (edgul) <https://people.mozilla.org/s?query=edgul>`__
+        | `Paul Zühlcke (pbz) <https://people.mozilla.org/s?query=pbz>`__
+        | `Tom Schuster (tschuster) <https://people.mozilla.org/s?query=tschuster>`__
     * - Owner(s) Emeritus
-      - Monica Chew
+      - Monica Chew, Andrea Marchesini
     * - Peer(s) Emeritus
-      - Josh Matthews, Mike Connor, Dan Witte, Christian Biesinger, Shawn Wilsher, Ehsan Akhgari
+      - Josh Matthews, Mike Connor, Dan Witte, Christian Biesinger, Shawn Wilsher, Ehsan Akhgari, Honza Bambas
     * - Includes
       -
         | `netwerk/cookie/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=netwerk/cookie/\*\*/\*>`__
