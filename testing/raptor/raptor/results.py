@@ -999,6 +999,15 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                     LOG.info("parsed new power result: %s" % str(new_result))
                     return new_result
 
+                def _new_custom_result(new_result):
+                    new_result["type"] = "pageload"
+                    new_result = _new_standard_result(
+                        new_result, subtest_unit=test.get("subtest_unit", "ms")
+                    )
+
+                    LOG.info("parsed new custom result: %s" % str(new_result))
+                    return new_result
+
                 def _new_pageload_result(new_result):
                     new_result["type"] = "pageload"
                     new_result = _new_standard_result(new_result)
@@ -1024,7 +1033,10 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                 if new_result.get("power_data", False):
                     self.results.append(_new_powertest_result(new_result))
                 elif test["type"] == "pageload":
-                    self.results.append(_new_pageload_result(new_result))
+                    if test.get("custom_data", False) == "true":
+                        self.results.append(_new_custom_result(new_result))
+                    else:
+                        self.results.append(_new_pageload_result(new_result))
                 elif test["type"] == "benchmark":
                     for i, item in enumerate(self.results):
                         if item["name"] == test["name"] and not _is_supporting_data(
