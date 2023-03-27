@@ -23,7 +23,7 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
     DIRS += ["mozgtk"]
 
 if CONFIG["MOZ_WAYLAND"]:
-    DIRS += ["wayland", "mozwayland", "vaapitest"]
+    DIRS += ["wayland", "mozwayland"]
 
 EXPORTS += [
     "MozContainer.h",
