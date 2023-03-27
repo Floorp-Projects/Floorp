@@ -133,18 +133,26 @@ namespace xsimd
         /********
          * load *
          ********/
+#if defined(__clang__) || defined(__GNUC__)
+#define xsimd_aligned_load(inst, type, expr) inst((type)__builtin_assume_aligned(expr, 16))
+#elif defined(_MSC_VER)
+#define xsimd_aligned_load(inst, type, expr) inst##_ex((type)expr, 128)
+#else
+#define xsimd_aligned_load(inst, type, expr) inst((type)expr)
+#endif
 
         template <class A>
         inline batch<double, A> load_aligned(double const* src, convert<double>, requires_arch<neon64>) noexcept
         {
-            return vld1q_f64(src);
+            return xsimd_aligned_load(vld1q_f64, double*, src);
         }
 
         template <class A>
         inline batch<double, A> load_unaligned(double const* src, convert<double>, requires_arch<neon64>) noexcept
         {
-            return load_aligned<A>(src, convert<double>(), A {});
+            return vld1q_f64(src);
         }
+#undef xsimd_aligned_load
 
         /*********
          * store *

@@ -11,7 +11,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/IntegerPrintfMacros.h"
 
-#include <intgemm.h>
+#include <gemmology_fwd.h>
 
 #include "js/ErrorReport.h"
 #include "js/HeapAPI.h"
@@ -19,6 +19,26 @@
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmLog.h"
+
+#if defined(USE_AVX2)
+#  define SUPPORTED_ARCHS \
+    xsimd::arch_list<xsimd::avx2, xsimd::ssse3, xsimd::sse2>
+#elif defined(USE_SSSE3)
+#  define SUPPORTED_ARCHS xsimd::arch_list<xsimd::ssse3, xsimd::sse2>
+#elif defined(USE_SSE2)
+#  define SUPPORTED_ARCHS xsimd::arch_list<xsimd::sse2>
+#else
+#  error no supported architecture
+#endif
+
+// Dispatch *at runtime* based on run-time hardware and compile-time
+// architectures.
+//
+// FIXME: Ideally we would not run the dispatch code at each function call.
+#define GEMMOLOGY_DISPATCH(FUNC)                                 \
+  xsimd::dispatch<SUPPORTED_ARCHS>([](auto arch, auto... args) { \
+    return gemmology::Engine<decltype(arch)>::FUNC(args...);     \
+  })
 
 struct JSContext;
 
@@ -118,10 +138,10 @@ int32_t js::intgemm::IntrI8PrepareB(wasm::Instance* instance,
   // Actual call to the 3rd party library (intgemm) for PrepareB
   uint8_t* inputMatrixBPtr = &memBase[inputMatrixB];
   uint8_t* outputMatrixBPtr = &memBase[outputMatrixB];
-  ::intgemm::Int8::PrepareB((const float*)inputMatrixBPtr,
-                            (int8_t*)outputMatrixBPtr,
-                            (float)scale,  // Quant Mult
-                            rowsB, colsB);
+  GEMMOLOGY_DISPATCH(PrepareB)
+  ((const float*)inputMatrixBPtr, (int8_t*)outputMatrixBPtr,
+   (float)scale,  // Quant Mult
+   rowsB, colsB);
   return 0;
 }
 
@@ -160,10 +180,10 @@ int32_t js::intgemm::IntrI8PrepareBFromTransposed(
   // Actual call to the 3rd party library (intgemm) for PrepareBTransposed
   uint8_t* inputMatrixBTransposedPtr = &memBase[inputMatrixBTransposed];
   uint8_t* outputMatrixBPtr = &memBase[outputMatrixB];
-  ::intgemm::Int8::PrepareBTransposed((const float*)inputMatrixBTransposedPtr,
-                                      (int8_t*)outputMatrixBPtr,
-                                      (float)scale,  // Quant Mult
-                                      rowsB, colsB);
+  GEMMOLOGY_DISPATCH(PrepareBTransposed)
+  ((const float*)inputMatrixBTransposedPtr, (int8_t*)outputMatrixBPtr,
+   (float)scale,  // Quant Mult
+   rowsB, colsB);
   return 0;
 }
 
@@ -202,9 +222,9 @@ int32_t js::intgemm::IntrI8PrepareBFromQuantizedTransposed(
   uint8_t* inputMatrixBQuantizedTransposedPtr =
       &memBase[inputMatrixBQuantizedTransposed];
   uint8_t* outputMatrixBPtr = &memBase[outputMatrixB];
-  ::intgemm::Int8::PrepareBQuantizedTransposed(
-      (const int8_t*)inputMatrixBQuantizedTransposedPtr,
-      (int8_t*)outputMatrixBPtr, rowsB, colsB);
+  GEMMOLOGY_DISPATCH(PrepareBQuantizedTransposed)
+  ((const int8_t*)inputMatrixBQuantizedTransposedPtr, (int8_t*)outputMatrixBPtr,
+   rowsB, colsB);
   return 0;
 }
 
@@ -243,9 +263,8 @@ int32_t js::intgemm::IntrI8PrepareA(wasm::Instance* instance,
   // Actual call to the 3rd party library (intgemm)
   uint8_t* inputMatrixAPtr = &memBase[inputMatrixA];
   uint8_t* outputMatrixAPtr = &memBase[outputMatrixA];
-  ::intgemm::Int8Shift::PrepareA((const float*)inputMatrixAPtr,
-                                 (int8_t*)outputMatrixAPtr, scale, rowsA,
-                                 colsA);
+  GEMMOLOGY_DISPATCH(Shift::PrepareA)
+  ((const float*)inputMatrixAPtr, outputMatrixAPtr, scale, rowsA, colsA);
   return 0;
 }
 
@@ -290,10 +309,10 @@ int32_t js::intgemm::IntrI8PrepareBias(
   uint8_t* outputPtr = &memBase[output];
   float unquantFactor =
       (-1) * ((127.0f / scaleA) * (127.0f / scaleB)) / (127.0f);
-  ::intgemm::Int8Shift::PrepareBias(
-      (const int8_t*)inputMatrixBPreparedPtr, rowsB, colsB,
-      ::intgemm::callbacks::UnquantizeAndAddBiasAndWrite(
-          unquantFactor, (const float*)inputBiasPtr, (float*)outputPtr));
+  GEMMOLOGY_DISPATCH(Shift::PrepareBias)
+  ((const int8_t*)inputMatrixBPreparedPtr, rowsB, colsB,
+   gemmology::callbacks::UnquantizeAndAddBiasAndWrite(
+       unquantFactor, (const float*)inputBiasPtr, (float*)outputPtr));
   return 0;
 }
 
@@ -347,12 +366,12 @@ int32_t js::intgemm::IntrI8MultiplyAndAddBias(
   uint8_t* inputBiasPreparedPtr = &memBase[inputBiasPrepared];
   uint8_t* outputPtr = &memBase[output];
   float unquantFactor = unquantMultiplier / (scaleA * scaleB);
-  ::intgemm::Int8Shift::Multiply(
-      (const int8_t*)inputMatrixAPreparedPtr,
-      (const int8_t*)inputMatrixBPreparedPtr, rowsA, width, colsB,
-      ::intgemm::callbacks::UnquantizeAndAddBiasAndWrite(
-          unquantFactor, (const float*)inputBiasPreparedPtr,
-          (float*)outputPtr));
+
+  GEMMOLOGY_DISPATCH(Shift::Multiply)
+  (inputMatrixAPreparedPtr, (const int8_t*)inputMatrixBPreparedPtr, rowsA,
+   width, colsB,
+   gemmology::callbacks::UnquantizeAndAddBiasAndWrite(
+       unquantFactor, (const float*)inputBiasPreparedPtr, (float*)outputPtr));
   return 0;
 }
 
@@ -401,9 +420,12 @@ int32_t js::intgemm::IntrI8SelectColumnsOfB(wasm::Instance* instance,
   uint8_t* inputMatrixBPreparedPtr = &memBase[inputMatrixBPrepared];
   uint8_t* colIndexListPtr = &memBase[colIndexList];
   uint8_t* outputPtr = &memBase[output];
-  ::intgemm::Int8::SelectColumnsB(
-      (const int8_t*)inputMatrixBPreparedPtr, (int8_t*)outputPtr, rowsB,
-      (const uint32_t*)colIndexListPtr,
-      (const uint32_t*)colIndexListPtr + sizeColIndexList);
+  GEMMOLOGY_DISPATCH(SelectColumnsB)
+  ((const int8_t*)inputMatrixBPreparedPtr, (int8_t*)outputPtr, rowsB,
+   (const uint32_t*)colIndexListPtr,
+   (const uint32_t*)colIndexListPtr + sizeColIndexList);
   return 0;
 }
+
+#undef GEMMOLOGY_DISPATCH
+#undef SUPPORTED_ARCHS
