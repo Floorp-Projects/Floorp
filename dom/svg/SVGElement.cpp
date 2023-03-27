@@ -1746,7 +1746,7 @@ void SVGElement::DidAnimatePathSegList() {
   ClearAnyCachedPath();
 
   // Notify style we have to update the d property because of SMIL animation.
-  if (StaticPrefs::layout_css_d_property_enabled() && name == nsGkAtoms::d) {
+  if (name == nsGkAtoms::d) {
     SMILOverrideStyle()->SetSMILValue(nsCSSPropertyID::eCSSProperty_d,
                                       *GetAnimPathSegList());
     return;

@@ -6,10 +6,6 @@
 // Tests that CSS property names are autocompleted and cycled correctly when
 // editing an existing property in the rule view.
 
-const D_PROPERTY_ENABLED = SpecialPowers.getBoolPref(
-  "layout.css.d-property.enabled"
-);
-
 // format :
 //  [
 //    what key to press,
@@ -33,11 +29,11 @@ var testData = [
   ["VK_BACK_SPACE", "", !OPEN, !SELECTED],
   ["d", "display", OPEN, SELECTED],
   ["VK_DOWN", "dominant-baseline", OPEN, SELECTED],
-  D_PROPERTY_ENABLED ? ["VK_DOWN", "d", OPEN, SELECTED] : [],
+  ["VK_DOWN", "d", OPEN, SELECTED],
   ["VK_DOWN", "direction", OPEN, SELECTED],
   ["VK_DOWN", "display", OPEN, SELECTED],
   ["VK_UP", "direction", OPEN, SELECTED],
-  D_PROPERTY_ENABLED ? ["VK_UP", "d", OPEN, SELECTED] : [],
+  ["VK_UP", "d", OPEN, SELECTED],
   ["VK_UP", "dominant-baseline", OPEN, SELECTED],
   ["VK_UP", "display", OPEN, SELECTED],
   ["VK_BACK_SPACE", "d", !OPEN, !SELECTED],
