@@ -275,7 +275,7 @@ bool gfxPlatformGtk::InitVAAPIConfig(bool aForceEnabledByUser) {
       } else if (status == nsIGfxInfo::FEATURE_BLOCKED_PLATFORM_TEST) {
         featureZeroCopy.ForceDisable(FeatureStatus::Unavailable,
                                      "Force disabled by gfxInfo", failureId);
-      } else if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
+      } else if (status != nsIGfxInfo::FEATURE_ALLOW_ALWAYS) {
         featureZeroCopy.Disable(FeatureStatus::Blocklisted,
                                 "Blocklisted by gfxInfo", failureId);
       }
