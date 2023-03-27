@@ -4,9 +4,29 @@
 
 #include ps_quad
 
+#ifndef SWGL_ANTIALIAS
+varying highp vec2 vLocalPos;
+#endif
+
 #ifdef WR_VERTEX_SHADER
 void main(void) {
-    ps_quad_main();
+    PrimitiveInfo info = ps_quad_main();
+
+#ifndef SWGL_ANTIALIAS
+    RectWithEndpoint xf_bounds = RectWithEndpoint(
+        max(info.local_prim_rect.p0, info.local_clip_rect.p0),
+        min(info.local_prim_rect.p1, info.local_clip_rect.p1)
+    );
+    vTransformBounds = vec4(xf_bounds.p0, xf_bounds.p1);
+
+    vLocalPos = info.local_pos;
+
+    if (info.edge_flags == 0) {
+        v_flags.x = 0;
+    } else {
+        v_flags.x = 1;
+    }
+#endif
 }
 #endif
 
