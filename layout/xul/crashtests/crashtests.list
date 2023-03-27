@@ -3,7 +3,6 @@ load chrome://reftest/content/crashtests/layout/xul/crashtests/137216-1.xhtml
 load 140218-1.xml
 load chrome://reftest/content/crashtests/layout/xul/crashtests/151826-1.xhtml
 load chrome://reftest/content/crashtests/layout/xul/crashtests/168724-1.xhtml
-load chrome://reftest/content/crashtests/layout/xul/crashtests/189814-1.xhtml
 skip-if(Android) load chrome://reftest/content/crashtests/layout/xul/crashtests/289410-1.xhtml
 load chrome://reftest/content/crashtests/layout/xul/crashtests/291702-1.xhtml
 load chrome://reftest/content/crashtests/layout/xul/crashtests/291702-2.xhtml
