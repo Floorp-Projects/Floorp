@@ -16,7 +16,7 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/ConduitsParent.jsm"
 );
 
-var { IconDetails, watchExtensionProxyContextLoad } = ExtensionParent;
+var { watchExtensionProxyContextLoad } = ExtensionParent;
 
 var { promiseDocumentLoaded } = ExtensionUtils;
 
@@ -668,13 +668,8 @@ this.devtools_panels = class extends ExtensionAPI {
           },
           create(title, icon, url) {
             // Get a fallback icon from the manifest data.
-            if (icon === "" && context.extension.manifest.icons) {
-              const iconInfo = IconDetails.getPreferredIcon(
-                context.extension.manifest.icons,
-                context.extension,
-                128
-              );
-              icon = iconInfo ? iconInfo.icon : "";
+            if (icon === "") {
+              icon = context.extension.getPreferredIcon(128);
             }
 
             icon = context.extension.baseURI.resolve(icon);

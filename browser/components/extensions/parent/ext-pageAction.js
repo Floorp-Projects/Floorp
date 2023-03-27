@@ -131,7 +131,7 @@ this.pageAction = class extends ExtensionAPIPersistent {
           id: widgetId,
           extensionID: extension.id,
           title: this.action.getProperty(null, "title"),
-          iconURL: this.action.getProperty(null, "title"),
+          iconURL: this.action.getProperty(null, "icon"),
           pinnedToUrlbar: this.action.getPinned(),
           disabled: !this.action.getProperty(null, "enabled"),
           onCommand: (event, buttonNode) => {

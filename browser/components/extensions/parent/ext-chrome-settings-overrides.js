@@ -380,7 +380,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
         browser: windowTracker.topWindow?.gBrowser.selectedBrowser,
         id: extension.id,
         name: extension.name,
-        icon: extension.iconURL,
+        icon: extension.getPreferredIcon(32),
         currentEngine: defaultEngine.name,
         newEngine: engineName,
         async respond(allow) {
