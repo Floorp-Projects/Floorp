@@ -66,8 +66,6 @@ user_pref("media.libavcodec.allow-obsolete", true);
 user_pref("media.navigator.enabled", true);
 user_pref("media.navigator.permission.disabled", true);
 user_pref("media.peerconnection.enabled", true);
-// Disable speculative connections so they aren't reported as leaking when they're hanging around.
-user_pref("network.http.speculative-parallel-limit", 0);
 // Set places maintenance far in the future (the maximum time possible in an
 // int32_t) to avoid it kicking in during tests. The maintenance can take a
 // relatively long time which may cause unnecessary intermittents and slow down
