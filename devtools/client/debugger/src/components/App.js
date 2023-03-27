@@ -8,6 +8,7 @@ import classnames from "classnames";
 
 import { connect } from "../utils/connect";
 import { prefs, features } from "../utils/prefs";
+import { primaryPaneTabs } from "../constants";
 import actions from "../actions";
 import A11yIntention from "./A11yIntention";
 import { ShortcutsModal } from "./ShortcutsModal";
@@ -40,7 +41,6 @@ import "./App.css";
 
 import "./shared/menu.css";
 
-import ProjectSearch from "./ProjectSearch";
 import PrimaryPanes from "./PrimaryPanes";
 import Editor from "./Editor";
 import SecondaryPanes from "./SecondaryPanes";
@@ -63,7 +63,6 @@ class App extends Component {
     return {
       activeSearch: PropTypes.oneOf(["file", "project"]),
       closeActiveSearch: PropTypes.func.isRequired,
-      closeProjectSearch: PropTypes.func.isRequired,
       closeQuickOpen: PropTypes.func.isRequired,
       endPanelCollapsed: PropTypes.bool.isRequired,
       fluentBundles: PropTypes.array.isRequired,
@@ -73,6 +72,7 @@ class App extends Component {
       selectedSource: PropTypes.object,
       setActiveSearch: PropTypes.func.isRequired,
       setOrientation: PropTypes.func.isRequired,
+      setPrimaryPaneTab: PropTypes.func.isRequired,
       startPanelCollapsed: PropTypes.bool.isRequired,
       toolboxDoc: PropTypes.object.isRequired,
     };
@@ -96,14 +96,18 @@ class App extends Component {
       this.toggleQuickOpenModal(e, "@")
     );
 
-    const searchKeys = [
+    [
       L10N.getStr("sources.search.key2"),
       L10N.getStr("sources.search.alt.key"),
-    ];
-    searchKeys.forEach(key => shortcuts.on(key, this.toggleQuickOpenModal));
+    ].forEach(key => shortcuts.on(key, this.toggleQuickOpenModal));
 
     shortcuts.on(L10N.getStr("gotoLineModal.key3"), e =>
       this.toggleQuickOpenModal(e, ":")
+    );
+
+    shortcuts.on(
+      L10N.getStr("projectTextSearch.key"),
+      this.jumpToProjectSearch
     );
 
     shortcuts.on("Escape", this.onEscape);
@@ -118,17 +122,27 @@ class App extends Component {
       this.toggleQuickOpenModal
     );
 
-    const searchKeys = [
+    [
       L10N.getStr("sources.search.key2"),
       L10N.getStr("sources.search.alt.key"),
-    ];
-    searchKeys.forEach(key => shortcuts.off(key, this.toggleQuickOpenModal));
+    ].forEach(key => shortcuts.off(key, this.toggleQuickOpenModal));
 
     shortcuts.off(L10N.getStr("gotoLineModal.key3"), this.toggleQuickOpenModal);
+
+    shortcuts.off(
+      L10N.getStr("projectTextSearch.key"),
+      this.jumpToProjectSearch
+    );
 
     shortcuts.off("Escape", this.onEscape);
     shortcuts.off("CmdOrCtrl+/", this.onCommandSlash);
   }
+
+  jumpToProjectSearch = e => {
+    e.preventDefault();
+    this.props.setPrimaryPaneTab(primaryPaneTabs.PROJECT_SEARCH);
+    this.props.setActiveSearch(primaryPaneTabs.PROJECT_SEARCH);
+  };
 
   onEscape = e => {
     const {
@@ -217,7 +231,6 @@ class App extends Component {
             />
           ) : null}
           <EditorFooter horizontal={horizontal} />
-          <ProjectSearch />
         </div>
       </div>
     );
@@ -335,8 +348,8 @@ const mapStateToProps = state => ({
 export default connect(mapStateToProps, {
   setActiveSearch: actions.setActiveSearch,
   closeActiveSearch: actions.closeActiveSearch,
-  closeProjectSearch: actions.closeProjectSearch,
   openQuickOpen: actions.openQuickOpen,
   closeQuickOpen: actions.closeQuickOpen,
   setOrientation: actions.setOrientation,
+  setPrimaryPaneTab: actions.setPrimaryPaneTab,
 })(App);

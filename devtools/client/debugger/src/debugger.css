@@ -38,8 +38,8 @@
 @import url("chrome://devtools/content/debugger/src/components/Editor/Tabs.css");
 @import url("chrome://devtools/content/debugger/src/components/PrimaryPanes/Outline.css");
 @import url("chrome://devtools/content/debugger/src/components/PrimaryPanes/OutlineFilter.css");
+@import url("chrome://devtools/content/debugger/src/components/PrimaryPanes/ProjectSearch.css");
 @import url("chrome://devtools/content/debugger/src/components/PrimaryPanes/Sources.css");
-@import url("chrome://devtools/content/debugger/src/components/ProjectSearch.css");
 @import url("chrome://devtools/content/debugger/src/components/QuickOpenModal.css");
 @import url("chrome://devtools/content/debugger/src/components/SecondaryPanes/Breakpoints/Breakpoints.css");
 @import url("chrome://devtools/content/debugger/src/components/SecondaryPanes/CommandBar.css");
