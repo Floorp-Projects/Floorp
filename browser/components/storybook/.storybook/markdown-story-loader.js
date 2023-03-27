@@ -50,6 +50,22 @@ function toPascalCase(str) {
 }
 
 /**
+ * Enables rendering code in our markdown docs by parsing the source for
+ * annotated code blocks and replacing them with Storybook's Canvas component.
+ * @param {string} source - Stringified markdown source code.
+ * @returns {string} Source with code blocks replaced by Canvas components.
+ */
+function parseStoriesFromMarkdown(source) {
+  let storiesRegex = /```(?:js|html) story\n(?<code>[\s\S]*?)```/g;
+  // $code comes from the <code> capture group in the regex above. It consists
+  // of any code in between backticks and gets run when used in a Canvas component.
+  return source.replace(
+    storiesRegex,
+    "<Canvas withSource='none'><with-common-styles>$<code></with-common-styles></Canvas>"
+  );
+}
+
+/**
  * The WebpackLoader export. Takes markdown as its source and returns a docs
  * only MDX story. Falls back to filing stories under "Docs" for everything
  * outside of `toolkit/content/widgets`.
@@ -78,7 +94,7 @@ module.exports = function markdownStoryLoader(source) {
   // Unfortunately the indentation/spacing here seems to be important for the
   // MDX parser to know what to do in the next step of the Webpack process.
   let mdxSource = `
-import { Meta, Description } from "@storybook/addon-docs";
+import { Meta, Description, Canvas } from "@storybook/addon-docs";
 
 <Meta 
   title="${storyPath}/${storyTitle}" 
@@ -90,7 +106,7 @@ import { Meta, Description } from "@storybook/addon-docs";
   }}
 />
 
-${source}`;
+${parseStoriesFromMarkdown(source)}`;
 
   return mdxSource;
 };

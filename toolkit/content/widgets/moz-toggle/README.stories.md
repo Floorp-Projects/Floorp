@@ -4,6 +4,13 @@
 It may be helpful to think of it as a button that can be pressed or unpressed,
 corresponding with "on" and "off" states.
 
+```html story
+<moz-toggle pressed
+            label="Toggle label"
+            description="This is a demo toggle for the docs.">
+</moz-toggle>
+```
+
 ## When to use
 
 * Use a toggle for binary controls like on/off or enabled/disabled.

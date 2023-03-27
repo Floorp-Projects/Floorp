@@ -72,13 +72,22 @@ class WithCommonStyles extends MozLitElement {
     context: { type: Object },
   };
 
+  storyContent() {
+    if (this.story) {
+      return this.story();
+    }
+    return html`
+      <slot></slot>
+    `;
+  }
+
   render() {
     return html`
       <link
         rel="stylesheet"
         href="chrome://global/skin/in-content/common.css"
       />
-      ${this.story()}
+      ${this.storyContent()}
     `;
   }
 }
