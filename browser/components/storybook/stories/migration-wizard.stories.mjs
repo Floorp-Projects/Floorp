@@ -199,6 +199,14 @@ SafariPermissions.args = {
   },
 };
 
+export const SafariPasswordPermissions = Template.bind({});
+SafariPasswordPermissions.args = {
+  dialogMode: true,
+  state: {
+    page: MigrationWizardConstants.PAGES.SAFARI_PASSWORD_PERMISSION,
+  },
+};
+
 export const NoBrowsersFound = Template.bind({});
 NoBrowsersFound.args = {
   dialogMode: true,

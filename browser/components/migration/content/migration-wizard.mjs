@@ -115,6 +115,24 @@ export class MigrationWizard extends HTMLElement {
             </moz-button-group>
           </div>
 
+          <div name="page-safari-password-permission">
+            <h1 data-l10n-id="migration-safari-password-import-header"></h1>  
+            <span data-l10n-id="migration-safari-password-import-steps-header"></span>
+            <ol>
+              <li data-l10n-id="migration-safari-password-import-step1"></li>
+              <li data-l10n-id="migration-safari-password-import-step2"><img class="safari-icon-3dots" data-l10n-name="safari-icon-3dots"/></li>
+              <li data-l10n-id="migration-safari-password-import-step3"></li>
+              <li class="safari-icons-group">
+                <span data-l10n-id="migration-safari-password-import-step4"></span>
+                <span class="page-portrait-icon"></span>
+              </li>
+            </ol>
+            <moz-button-group class="buttons">
+              <button class="cancel-close" data-l10n-id="migration-safari-password-import-skip-button"></button>
+              <button class="primary" data-l10n-id="migration-safari-password-import-select-button"></button>
+            </moz-button-group>
+          </div>
+
           <div name="page-safari-permission">
             <h1 data-l10n-id="migration-wizard-selection-header"></h1>
             <div data-l10n-id="migration-wizard-safari-permissions-sub-header"></div>
