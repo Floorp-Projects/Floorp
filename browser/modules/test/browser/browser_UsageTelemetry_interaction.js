@@ -71,7 +71,7 @@ const click = el => {
 };
 
 add_task(async function toolbarButtons() {
-  await BrowserTestUtils.withNewTab("http://example.com", async () => {
+  await BrowserTestUtils.withNewTab("https://example.com", async () => {
     let customButton = await new Promise(resolve => {
       CustomizableUI.createWidget({
         // In CSS identifiers cannot start with a number but CustomizableUI accepts that.
@@ -181,7 +181,7 @@ add_task(async function toolbarButtons() {
 });
 
 add_task(async function contextMenu() {
-  await BrowserTestUtils.withNewTab("http://example.com", async browser => {
+  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
     Services.telemetry.getSnapshotForKeyedScalars("main", true);
 
     let tab = gBrowser.getTabForBrowser(browser);
@@ -307,7 +307,7 @@ add_task(async function contextMenu_entrypoints() {
 });
 
 add_task(async function appMenu() {
-  await BrowserTestUtils.withNewTab("http://example.com", async browser => {
+  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
     Services.telemetry.getSnapshotForKeyedScalars("main", true);
 
     let shown = BrowserTestUtils.waitForEvent(
@@ -339,7 +339,7 @@ add_task(async function appMenu() {
 });
 
 add_task(async function devtools() {
-  await BrowserTestUtils.withNewTab("http://example.com", async browser => {
+  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
     Services.telemetry.getSnapshotForKeyedScalars("main", true);
 
     let shown = BrowserTestUtils.waitForEvent(
@@ -387,7 +387,7 @@ add_task(async function devtools() {
 add_task(async function webextension() {
   BrowserUsageTelemetry._resetAddonIds();
 
-  await BrowserTestUtils.withNewTab("http://example.com", async browser => {
+  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
     Services.telemetry.getSnapshotForKeyedScalars("main", true);
 
     function background() {
@@ -418,7 +418,7 @@ add_task(async function webextension() {
         page_action: {
           default_icon: "default.png",
           default_title: "Hello",
-          show_matches: ["http://example.com/*"],
+          show_matches: ["https://example.com/*"],
         },
         commands: {
           test_command: {
@@ -509,7 +509,7 @@ add_task(async function webextension() {
         page_action: {
           default_icon: "default.png",
           default_title: "Hello",
-          show_matches: ["http://example.com/*"],
+          show_matches: ["https://example.com/*"],
         },
         commands: {
           test_command: {
@@ -658,7 +658,7 @@ add_task(async function mainMenu() {
 
   BrowserUsageTelemetry._resetAddonIds();
 
-  await BrowserTestUtils.withNewTab("http://example.com", async browser => {
+  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
     Services.telemetry.getSnapshotForKeyedScalars("main", true);
 
     CustomizableUI.setToolbarVisibility("toolbar-menubar", true);
@@ -763,4 +763,141 @@ add_task(async function preferences() {
       },
     });
   });
+});
+
+add_task(async function history_appMenu() {
+  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
+    let shown = BrowserTestUtils.waitForEvent(
+      elem("appMenu-popup"),
+      "popupshown"
+    );
+    click("PanelUI-menu-button");
+    await shown;
+
+    click("appMenu-history-button");
+    shown = BrowserTestUtils.waitForEvent(elem("PanelUI-history"), "ViewShown");
+    await shown;
+
+    let list = document.getElementById("appMenu_historyMenu");
+    let listItem = list.querySelector("toolbarbutton");
+
+    EventUtils.synthesizeMouseAtCenter(listItem, {});
+
+    // TODO add context menu click event per bug 1823995
+
+    let expectedScalars = {
+      nav_bar: {
+        "PanelUI-menu-button": 1,
+      },
+
+      app_menu: { "history-item": 1, "appMenu-history-button": 1 },
+    };
+    assertInteractionScalars(expectedScalars);
+  });
+});
+
+add_task(async function bookmarks_appMenu() {
+  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
+    let shown = BrowserTestUtils.waitForEvent(
+      elem("appMenu-popup"),
+      "popupshown"
+    );
+
+    shown = BrowserTestUtils.waitForEvent(elem("appMenu-popup"), "popupshown");
+    click("PanelUI-menu-button");
+    await shown;
+
+    click("appMenu-bookmarks-button");
+    shown = BrowserTestUtils.waitForEvent(
+      elem("PanelUI-bookmarks"),
+      "ViewShown"
+    );
+    await shown;
+
+    let list = document.getElementById("panelMenu_bookmarksMenu");
+    let listItem = list.querySelector("toolbarbutton");
+
+    EventUtils.synthesizeMouseAtCenter(listItem, {});
+
+    // TODO add context menu click event per bug 1823995
+
+    let expectedScalars = {
+      nav_bar: {
+        "PanelUI-menu-button": 1,
+      },
+
+      app_menu: { "bookmark-item": 1, "appMenu-bookmarks-button": 1 },
+    };
+    assertInteractionScalars(expectedScalars);
+  });
+});
+
+add_task(async function bookmarks_library_navbar() {
+  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
+    CustomizableUI.addWidgetToArea("library-button", "nav-bar");
+    let button = document.getElementById("library-button");
+    button.click();
+    await BrowserTestUtils.waitForEvent(
+      elem("appMenu-libraryView"),
+      "ViewShown"
+    );
+
+    click("appMenu-library-bookmarks-button");
+    await BrowserTestUtils.waitForEvent(elem("PanelUI-bookmarks"), "ViewShown");
+
+    let list = document.getElementById("panelMenu_bookmarksMenu");
+    let listItem = list.querySelector("toolbarbutton");
+
+    EventUtils.synthesizeMouseAtCenter(listItem, {});
+
+    // TODO add context menu click event per bug 1823995
+
+    let expectedScalars = {
+      nav_bar: {
+        "library-button": 1,
+        "bookmark-item": 1,
+        "appMenu-library-bookmarks-button": 1,
+      },
+    };
+    assertInteractionScalars(expectedScalars);
+  });
+
+  CustomizableUI.removeWidgetFromArea("library-button");
+});
+
+add_task(async function history_library_navbar() {
+  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
+    CustomizableUI.addWidgetToArea("library-button", "nav-bar");
+    let button = document.getElementById("library-button");
+    button.click();
+    await BrowserTestUtils.waitForEvent(
+      elem("appMenu-libraryView"),
+      "ViewShown"
+    );
+
+    click("appMenu-library-history-button");
+    let shown = BrowserTestUtils.waitForEvent(
+      elem("PanelUI-history"),
+      "ViewShown"
+    );
+    await shown;
+
+    let list = document.getElementById("appMenu_historyMenu");
+    let listItem = list.querySelector("toolbarbutton");
+
+    EventUtils.synthesizeMouseAtCenter(listItem, {});
+
+    // TODO add context menu click event per bug 1823995
+
+    let expectedScalars = {
+      nav_bar: {
+        "library-button": 1,
+        "history-item": 1,
+        "appMenu-library-history-button": 1,
+      },
+    };
+    assertInteractionScalars(expectedScalars);
+  });
+
+  CustomizableUI.removeWidgetFromArea("library-button");
 });
