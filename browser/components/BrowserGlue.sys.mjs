@@ -50,6 +50,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PublicSuffixList:
     "resource://gre/modules/netwerk-dns/PublicSuffixList.sys.mjs",
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
+  RFPHelper: "resource://gre/modules/RFPHelper.sys.mjs",
 
   RemoteSecuritySettings:
     "resource://gre/modules/psm/RemoteSecuritySettings.sys.mjs",
@@ -100,7 +101,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   PdfJs: "resource://pdf.js/PdfJs.jsm",
   PluralForm: "resource://gre/modules/PluralForm.jsm",
   ProcessHangMonitor: "resource:///modules/ProcessHangMonitor.jsm",
-  RFPHelper: "resource://gre/modules/RFPHelper.jsm",
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",
   SaveToPocket: "chrome://pocket/content/SaveToPocket.jsm",

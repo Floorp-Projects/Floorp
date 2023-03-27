@@ -14,13 +14,9 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   GetClipboardSearchString: "resource://gre/modules/Finder.sys.mjs",
+  RFPHelper: "resource://gre/modules/RFPHelper.sys.mjs",
   Rect: "resource://gre/modules/Geometry.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "RFPHelper",
-  "resource://gre/modules/RFPHelper.jsm"
-);
 
 const kPrefLetterboxing = "privacy.resistFingerprinting.letterboxing";
 

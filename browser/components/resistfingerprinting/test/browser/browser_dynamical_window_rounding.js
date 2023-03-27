@@ -10,8 +10,8 @@
  * example.
  */
 
-const { RFPHelper } = ChromeUtils.import(
-  "resource://gre/modules/RFPHelper.jsm"
+const { RFPHelper } = ChromeUtils.importESModule(
+  "resource://gre/modules/RFPHelper.sys.mjs"
 );
 
 // A set of test cases which defines the width and the height of the outer window.
