@@ -493,6 +493,13 @@ nsresult nsGenericHTMLElement::BindToTree(BindContext& aContext,
 
 void nsGenericHTMLElement::UnbindFromTree(bool aNullParent) {
   if (IsInComposedDoc()) {
+    // https://html.spec.whatwg.org/#dom-trees:hide-popover-algorithm
+    // If removedNode's popover attribute is not in the no popover state, then
+    // run the hide popover algorithm given removedNode, false, false, and
+    // false.
+    if (GetPopoverData()) {
+      HidePopoverWithoutRunningScript();
+    }
     RegUnRegAccessKey(false);
   }
 
@@ -677,7 +684,8 @@ nsresult nsGenericHTMLElement::AfterSetAttr(
       PopoverState oldState = GetPopoverState();
       if (newState != oldState) {
         if (oldState != PopoverState::None) {
-          HidePopoverInternal(/* aFireEvents = */ false, IgnoreErrors());
+          HidePopoverInternal(/* aFocusPreviousElement */ true,
+                              /* aFireEvents = */ false, IgnoreErrors());
         }
         if (newState != PopoverState::None) {
           EnsurePopoverData().SetPopoverState(newState);
@@ -3229,14 +3237,21 @@ void nsGenericHTMLElement::ShowPopover(ErrorResult& aRv) {
   // TODO: Queue popover toggle event task.
 }
 
-// https://html.spec.whatwg.org/#dom-hidepopover
-void nsGenericHTMLElement::HidePopover(ErrorResult& aRv) {
-  HidePopoverInternal(true, aRv);
+void nsGenericHTMLElement::HidePopoverWithoutRunningScript() {
+  HidePopoverInternal(/* aFocusPreviousElement */ false,
+                      /* aFireEvents = */ false, IgnoreErrors());
 }
 
-void nsGenericHTMLElement::HidePopoverInternal(bool aFireEvents,
+// https://html.spec.whatwg.org/#dom-hidepopover
+void nsGenericHTMLElement::HidePopover(ErrorResult& aRv) {
+  HidePopoverInternal(/* aFocusPreviousElement */ true,
+                      /* aFireEvents = */ true, aRv);
+}
+
+void nsGenericHTMLElement::HidePopoverInternal(bool aFocusPreviousElement,
+                                               bool aFireEvents,
                                                ErrorResult& aRv) {
-  OwnerDoc()->HidePopover(*this, true, aFireEvents, aRv);
+  OwnerDoc()->HidePopover(*this, aFocusPreviousElement, aFireEvents, aRv);
 }
 
 // https://html.spec.whatwg.org/multipage/popover.html#dom-togglepopover
