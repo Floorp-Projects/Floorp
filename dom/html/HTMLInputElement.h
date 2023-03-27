@@ -247,7 +247,7 @@ class HTMLInputElement final : public TextControlElement,
   MOZ_CAN_RUN_SCRIPT nsresult
   SetValueFromSetRangeText(const nsAString& aValue) override;
   bool HasCachedSelection() override;
-  void SetRevealPassword(bool aValue);
+  MOZ_CAN_RUN_SCRIPT void SetRevealPassword(bool aValue);
   bool RevealPassword() const;
 
   /**
