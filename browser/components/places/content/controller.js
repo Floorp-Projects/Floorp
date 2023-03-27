@@ -1479,20 +1479,15 @@ var PlacesControllerDragHelper = {
   },
 
   /**
-   * Extract the first accepted flavor from a list of flavors.
+   * Extract the most relevant flavor from a list of flavors.
    *
-   * @param {DOMStringList} aFlavors
-   *        The flavors list.
-   * @returns {string}
+   * @param {DOMStringList} flavors The flavors list.
+   * @returns {string} The most relevant flavor, or undefined.
    */
-  getFirstValidFlavor: function PCDH_getFirstValidFlavor(aFlavors) {
-    for (let i = 0; i < aFlavors.length; i++) {
-      if (PlacesUIUtils.SUPPORTED_FLAVORS.includes(aFlavors[i])) {
-        return aFlavors[i];
-      }
-    }
-
-    return null;
+  getMostRelevantFlavor(flavors) {
+    // The DnD API returns a DOMStringList, but tests may pass an Array.
+    flavors = Array.from(flavors);
+    return PlacesUIUtils.SUPPORTED_FLAVORS.find(f => flavors.includes(f));
   },
 
   /**
@@ -1510,7 +1505,7 @@ var PlacesControllerDragHelper = {
 
     // Check every dragged item.
     for (let i = 0; i < dropCount; i++) {
-      let flavor = this.getFirstValidFlavor(dt.mozTypesAt(i));
+      let flavor = this.getMostRelevantFlavor(dt.mozTypesAt(i));
       if (!flavor) {
         return false;
       }
@@ -1623,7 +1618,7 @@ var PlacesControllerDragHelper = {
     let nodes = [];
     let externalDrag = false;
     for (let i = 0; i < dropCount; ++i) {
-      let flavor = this.getFirstValidFlavor(dt.mozTypesAt(i));
+      let flavor = this.getMostRelevantFlavor(dt.mozTypesAt(i));
       if (!flavor) {
         return;
       }
