@@ -485,9 +485,6 @@ void NotificationController::ProcessMutationEvents() {
     acc->SetShowEventTarget(false);
     acc->SetHideEventTarget(false);
     acc->SetReorderEventTarget(false);
-    // Our events are in a doubly linked list. We don't need the previous
-    // pointers any more, so clear them here to remove reference cycles.
-    event->SetPrevEvent(nullptr);
   }
   // 2. Keep the current queue locally, but clear the queue on the instance.
   RefPtr<AccTreeMutationEvent> firstEvent = mFirstMutationEvent;
@@ -630,6 +627,21 @@ void NotificationController::ProcessMutationEvents() {
         return;
       }
     }
+  }
+
+  // Our events are in a doubly linked list. Clear the pointers to reduce
+  // pressure on the cycle collector. Even though clearing the previous pointers
+  // removes cycles, this isn't enough. The cycle collector still gets bogged
+  // down when there are lots of mutation events if the next pointers aren't
+  // cleared. Even without the cycle collector, not clearing the next pointers
+  // potentially results in deep recursion because releasing each event releases
+  // its next event.
+  RefPtr<AccTreeMutationEvent> event = firstEvent;
+  while (event) {
+    RefPtr<AccTreeMutationEvent> next = event->NextEvent();
+    event->SetNextEvent(nullptr);
+    event->SetPrevEvent(nullptr);
+    event = next;
   }
 }
 
