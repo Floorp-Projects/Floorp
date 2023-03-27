@@ -13020,7 +13020,7 @@
   value: true
   mirror: always
 
-# The log level for browser console messages logged in RFPHelper.jsm. Change to
+# The log level for browser console messages logged in RFPHelper.sys.mjs. Change to
 # 'All' and restart to see the messages.
 - name: privacy.resistFingerprinting.jsmloglevel
   type: String

@@ -22,5 +22,5 @@ EXPORTS.mozilla += [
 ]
 
 EXTRA_JS_MODULES += [
-    "RFPHelper.jsm",
+    "RFPHelper.sys.mjs",
 ]

@@ -6,11 +6,9 @@
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "RFPHelper",
-  "resource://gre/modules/RFPHelper.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  RFPHelper: "resource://gre/modules/RFPHelper.sys.mjs",
+});
 
 const kPrefLetterboxing = "privacy.resistFingerprinting.letterboxing";
 
