@@ -196,6 +196,20 @@ function test_read_gooddb() {
     TELEMETRY_VALUES.success,
     1
   );
+
+  histogram.clear();
+
+  Assert.throws(
+    () => db.executeSimpleSQL("INSERT INTO Foo (rowid) VALUES ('test');"),
+    /NS_ERROR_FAILURE/,
+    "Executing sql should fail."
+  );
+  TelemetryTestUtils.assertKeyedHistogramValue(
+    histogram,
+    file.leafName,
+    TELEMETRY_VALUES.misuse,
+    1
+  );
 }
 
 function test_read_baddb() {
@@ -234,6 +248,38 @@ function test_read_baddb() {
   );
 }
 
+function test_busy_telemetry() {
+  // Thunderbird doesn't have one or more of the probes used in this test.
+  // Ensure the data is collected anyway.
+  Services.prefs.setBoolPref(
+    "toolkit.telemetry.testing.overrideProductsCheck",
+    true
+  );
+
+  let file = do_get_file("goodDB.sqlite");
+  let conn1 = Services.storage.openUnsharedDatabase(file);
+  let conn2 = Services.storage.openUnsharedDatabase(file);
+
+  conn1.beginTransaction();
+  conn1.executeSimpleSQL("CREATE TABLE test (id INTEGER PRIMARY KEY)");
+
+  let histogram = TelemetryTestUtils.getAndClearKeyedHistogram(QUERY_HISTOGRAM);
+  Assert.throws(
+    () =>
+      conn2.executeSimpleSQL("CREATE TABLE test_busy (id INTEGER PRIMARY KEY)"),
+    /NS_ERROR_STORAGE_BUSY/,
+    "Nested transaction on second connection should fail"
+  );
+  TelemetryTestUtils.assertKeyedHistogramValue(
+    histogram,
+    file.leafName,
+    TELEMETRY_VALUES.busy,
+    1
+  );
+
+  conn1.rollbackTransaction();
+}
+
 var tests = [
   test_openDatabase_null_file,
   test_openDatabase_file_DNE,
@@ -246,6 +292,7 @@ var tests = [
   test_openDatabase_directory,
   test_read_gooddb,
   test_read_baddb,
+  test_busy_telemetry,
 ];
 
 function run_test() {
