@@ -18,6 +18,7 @@ enum class TrialInliningState : uint8_t {
   Initial = 0,
   Candidate,
   Inlined,
+  MonomorphicInlined,
   Failure,
 };
 
@@ -38,7 +39,7 @@ class ICState {
   uint8_t mode_ : 2;
 
   // The TrialInliningState for a Baseline IC.
-  uint8_t trialInliningState_ : 2;
+  uint8_t trialInliningState_ : 3;
 
   // Whether WarpOracle created a snapshot based on stubs attached to this
   // Baseline IC.
@@ -180,7 +181,8 @@ class ICState {
     // Moving to the Failure state is always valid. The other states should
     // happen in this order:
     //
-    //   Initial -> Candidate -> Inlined
+    //   Initial -> Candidate --> Inlined
+    //                        \-> MonomorphicInlined
     //
     // This ensures we perform trial inlining at most once per IC site.
     if (state != TrialInliningState::Failure) {
@@ -190,9 +192,11 @@ class ICState {
           break;
         case TrialInliningState::Candidate:
           MOZ_ASSERT(state == TrialInliningState::Candidate ||
-                     state == TrialInliningState::Inlined);
+                     state == TrialInliningState::Inlined ||
+                     state == TrialInliningState::MonomorphicInlined);
           break;
         case TrialInliningState::Inlined:
+        case TrialInliningState::MonomorphicInlined:
         case TrialInliningState::Failure:
           MOZ_CRASH("Inlined and Failure can only change to Failure");
           break;
