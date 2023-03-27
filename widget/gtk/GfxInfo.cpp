@@ -746,20 +746,13 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
 
     ////////////////////////////////////
     // FEATURE_DMABUF
+    // Disabled due to high volume crash tracked in bug 1788573.
     APPEND_TO_DRIVER_BLOCKLIST_EXT(
         OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
         WindowProtocol::All, DriverVendor::NonMesaAll, DeviceFamily::NvidiaAll,
-        nsIGfxInfo::FEATURE_DMABUF, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
-        DRIVER_LESS_THAN, V(495, 44, 0, 0), "FEATURE_FAILURE_NO_GBM",
-        "495.44.0");
-
-    // Disabled due to high volume crash tracked in bug 1788573.
-    APPEND_TO_DRIVER_BLOCKLIST_RANGE_EXT(
-        OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
-        WindowProtocol::All, DriverVendor::NonMesaAll, DeviceFamily::NvidiaAll,
-        nsIGfxInfo::FEATURE_DMABUF, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
-        DRIVER_BETWEEN_INCLUSIVE, V(495, 44, 0, 0), V(530, 30, 2, 0),
-        "FEATURE_FAILURE_BUG_1788573", "> 530.30.2");
+        nsIGfxInfo::FEATURE_DMABUF, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
+        DRIVER_COMPARISON_IGNORED, V(0, 0, 0, 0), "FEATURE_FAILURE_BUG_1788573",
+        "");
 
     ////////////////////////////////////
     // FEATURE_DMABUF_SURFACE_EXPORT
@@ -852,15 +845,15 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         WindowProtocol::All, DriverVendor::MesaNouveau, DeviceFamily::All,
         nsIGfxInfo::FEATURE_THREADSAFE_GL, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
         DRIVER_COMPARISON_IGNORED, V(0, 0, 0, 0),
-        "FEATURE_FAILURE_THREADSAFE_GL", "");
+        "FEATURE_FAILURE_THREADSAFE_GL_NOUVEAU", "");
 
     // Disabled due to high volume crash tracked in bug 1788573.
     APPEND_TO_DRIVER_BLOCKLIST_EXT(
         OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
         WindowProtocol::All, DriverVendor::NonMesaAll, DeviceFamily::NvidiaAll,
-        nsIGfxInfo::FEATURE_THREADSAFE_GL,
-        nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_LESS_THAN_OR_EQUAL,
-        V(530, 30, 2, 0), "FEATURE_FAILURE_BUG_1788573", "> 530.30.2");
+        nsIGfxInfo::FEATURE_THREADSAFE_GL, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
+        DRIVER_COMPARISON_IGNORED, V(0, 0, 0, 0), "FEATURE_FAILURE_BUG_1788573",
+        "");
   }
   return *sDriverInfo;
 }
