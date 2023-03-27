@@ -313,16 +313,6 @@ FRAME_STATE_BIT(Generic, 59, NS_FRAME_IS_IN_SINGLE_CHAR_MI)
 // adjusting logic, or moving infrequently-used bits elsewhere. If more space
 // for frame state is still needed, look for bit field gaps in nsIFrame.
 
-// == Frame state bits that apply to box frames ===============================
-
-FRAME_STATE_GROUP(Box, nsBoxFrame)
-
-FRAME_STATE_BIT(Box, 20, NS_STATE_BOX_CHILD_RESERVED)
-FRAME_STATE_BIT(Box, 22, NS_STATE_IS_HORIZONTAL)
-FRAME_STATE_BIT(Box, 23, NS_STATE_AUTO_STRETCH)
-FRAME_STATE_BIT(Box, 24, NS_STATE_MENU_HAS_POPUP_LIST)
-FRAME_STATE_BIT(Box, 25, NS_STATE_IS_DIRECTION_NORMAL)
-
 // == Frame state bits that apply to flex container frames ====================
 
 FRAME_STATE_GROUP(FlexContainer, nsFlexContainerFrame)

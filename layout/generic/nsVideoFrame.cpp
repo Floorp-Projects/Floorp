@@ -21,7 +21,6 @@
 #include "nsPresContext.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsBoxLayoutState.h"
-#include "nsBoxFrame.h"
 #include "nsIContentInlines.h"
 #include "nsImageFrame.h"
 #include "nsIImageLoadingContent.h"

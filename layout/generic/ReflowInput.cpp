@@ -315,19 +315,11 @@ bool ReflowInput::ShouldReflowAllKids() const {
 
 void ReflowInput::SetComputedISize(nscoord aComputedISize,
                                    ResetResizeFlags aFlags) {
-  // It'd be nice to assert that |frame| is not in reflow, but this fails for
-  // two reasons:
-  //
-  // 1) Viewport frames reset the computed isize on a copy of their reflow
-  //    input when reflowing fixed-pos kids.  In that case we actually don't
-  //    want to mess with the resize flags, because comparing the frame's rect
-  //    to the munged computed width is pointless.
-  // 2) nsIFrame::BoxReflow creates a reflow input for its parent.  This reflow
-  //    input is not used to reflow the parent, but just as a parent for the
-  //    frame's own reflow input.  So given a nsBoxFrame inside some non-XUL
-  //    (like a text control, for example), we'll end up creating a reflow
-  //    input for the parent while the parent is reflowing.
-
+  // It'd be nice to assert that |frame| is not in reflow, but this fails
+  // because viewport frames reset the computed isize on a copy of their reflow
+  // input when reflowing fixed-pos kids.  In that case we actually don't want
+  // to mess with the resize flags, because comparing the frame's rect to the
+  // munged computed isize is pointless.
   NS_WARNING_ASSERTION(aComputedISize >= 0, "Invalid computed inline-size!");
   if (ComputedISize() != aComputedISize) {
     mComputedSize.ISize(mWritingMode) = std::max(0, aComputedISize);
@@ -340,18 +332,7 @@ void ReflowInput::SetComputedISize(nscoord aComputedISize,
 void ReflowInput::SetComputedBSize(nscoord aComputedBSize,
                                    ResetResizeFlags aFlags) {
   // It'd be nice to assert that |frame| is not in reflow, but this fails
-  // for two reasons:
-  //
-  // 1) Viewport frames reset the computed block size on a copy of their reflow
-  //    input when reflowing fixed-pos kids. In that case we actually don't want
-  //    to mess with the resize flags, because comparing the frame's rect to the
-  //    munged computed bsize is pointless.
-  // 2) nsIFrame::BoxReflow creates a reflow input for its parent.  This reflow
-  //    input is not used to reflow the parent, but just as a parent for the
-  //    frame's own reflow input.  So given a nsBoxFrame inside some non-XUL
-  //    (like a text control, for example), we'll end up creating a reflow
-  //    input for the parent while the parent is reflowing.
-
+  // for the same reason as above.
   NS_WARNING_ASSERTION(aComputedBSize >= 0, "Invalid computed block-size!");
   if (ComputedBSize() != aComputedBSize) {
     mComputedSize.BSize(mWritingMode) = std::max(0, aComputedBSize);

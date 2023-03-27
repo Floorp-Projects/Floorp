@@ -76,8 +76,6 @@
 #include "ChildIterator.h"
 #include "nsError.h"
 #include "nsLayoutUtils.h"
-#include "nsBoxFrame.h"
-#include "nsBoxLayout.h"
 #include "nsFlexContainerFrame.h"
 #include "nsGridContainerFrame.h"
 #include "RubyUtils.h"
@@ -2486,10 +2484,6 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
       if (display->mDisplay == StyleDisplay::Grid) {
         return NS_NewGridContainerFrame;
       }
-      if (display->mDisplay == StyleDisplay::MozBox &&
-          !computedStyle->StyleVisibility()->EmulateMozBoxWithFlex()) {
-        return NS_NewBoxFrame;
-      }
       return NS_NewFlexContainerFrame;
     }();
     contentFrame = func(mPresShell, computedStyle);
@@ -2644,8 +2638,7 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
         nsHTMLScrollFrame (if needed)
           nsCanvasFrame [abs-cb]
             root element frame (nsBlockFrame, SVGOuterSVGFrame,
-                                nsTableWrapperFrame, nsPlaceholderFrame,
-                                nsBoxFrame)
+                                nsTableWrapperFrame, nsPlaceholderFrame)
 
   Print presentation, non-XUL
 
@@ -4459,15 +4452,6 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
           aElement.OwnerDoc()->IsContentDocument()) {
         aElement.OwnerDoc()->WarnOnceAbout(
             DeprecatedOperations::eMozBoxOrInlineBoxDisplay);
-      }
-
-      // If we're emulating -moz-box with flexbox, then treat it as non-XUL and
-      // fall through.
-      if (aMozBoxLayout == StyleMozBoxLayout::Legacy) {
-        static constexpr FrameConstructionData data =
-            SCROLLABLE_ABSPOS_CONTAINER_XUL_FCDATA(
-                ToCreationFunc(NS_NewBoxFrame));
-        return &data;
       }
       [[fallthrough]];
     }

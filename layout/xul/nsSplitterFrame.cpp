@@ -13,7 +13,6 @@
 
 #include "SimpleXULLeafFrame.h"
 #include "gfxContext.h"
-#include "nsBoxFrame.h"
 #include "nsSplitterFrame.h"
 #include "nsGkAtoms.h"
 #include "nsXULElement.h"

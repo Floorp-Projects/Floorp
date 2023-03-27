@@ -47,7 +47,6 @@
 #include "nsVariant.h"
 #include "nsWidgetsCID.h"
 #include "nsIFrameInlines.h"
-#include "nsBoxFrame.h"
 #include "nsBoxLayoutState.h"
 #include "nsTextBoxFrame.h"
 #include "nsTreeContentView.h"

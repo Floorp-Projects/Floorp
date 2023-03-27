@@ -9,7 +9,6 @@
 #include "nsIFrame.h"
 
 #include "nsBoxLayoutState.h"
-#include "nsBoxFrame.h"
 #include "nsDOMAttributeMap.h"
 #include "nsPresContext.h"
 #include "nsCOMPtr.h"
@@ -18,7 +17,6 @@
 #include "nsNameSpaceManager.h"
 #include "nsGkAtoms.h"
 #include "nsITheme.h"
-#include "nsBoxLayout.h"
 #include "nsLayoutUtils.h"
 #include "mozilla/dom/Attr.h"
 #include "mozilla/dom/Element.h"
