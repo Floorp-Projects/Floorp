@@ -65,7 +65,7 @@ function spawnInNewReaderTab(url, func) {
       SpecialPowers.addTaskImport(
         "NarrateTestUtils",
         "chrome://mochitests/content/browser/" +
-          "toolkit/components/narrate/test/NarrateTestUtils.jsm"
+          "toolkit/components/narrate/test/NarrateTestUtils.sys.mjs"
       );
       await SpecialPowers.spawn(browser, [], async function() {
         await NarrateTestUtils.getReaderReadyPromise(content);
