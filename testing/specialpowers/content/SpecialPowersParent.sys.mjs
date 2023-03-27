@@ -663,7 +663,10 @@ export class SpecialPowersParent extends JSWindowActorParent {
       }
     });
 
-    return failures;
+    if (ignorePrefs.length > 1) {
+      return failures;
+    }
+    return [];
   }
 
   _getAllPreferences() {
