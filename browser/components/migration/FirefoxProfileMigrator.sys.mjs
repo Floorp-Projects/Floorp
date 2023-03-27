@@ -136,6 +136,20 @@ export class FirefoxProfileMigrator extends MigratorBase {
       };
     };
 
+    let _oldRawPrefsMemoized = null;
+    async function readOldPrefs() {
+      if (!_oldRawPrefsMemoized) {
+        let prefsPath = PathUtils.join(sourceProfileDir.path, "prefs.js");
+        if (await IOUtils.exists(prefsPath)) {
+          _oldRawPrefsMemoized = await IOUtils.readUTF8(prefsPath, {
+            encoding: "utf-8",
+          });
+        }
+      }
+
+      return _oldRawPrefsMemoized;
+    }
+
     function savePrefs() {
       // If we've used the pref service to write prefs for the new profile, it's too
       // early in startup for the service to have a profile directory, so we have to
@@ -261,21 +275,16 @@ export class FirefoxProfileMigrator extends MigratorBase {
               // the old profile. We avoid trying to do a full parse of the prefs
               // file and even avoid parsing the single string value we care
               // about.
-              let prefsPath = PathUtils.join(sourceProfileDir.path, "prefs.js");
-              if (await IOUtils.exists(oldPath)) {
-                let rawPrefs = await IOUtils.readUTF8(prefsPath, {
-                  encoding: "utf-8",
-                });
-                if (/^user_pref\("services\.sync\.username"/m.test(rawPrefs)) {
-                  // sync's configured in the source profile - ensure it is in the
-                  // new profile too.
-                  // Write it to prefs.js and flush the file.
-                  Services.prefs.setStringPref(
-                    "services.sync.username",
-                    username
-                  );
-                  savePrefs();
-                }
+              let oldRawPrefs = await readOldPrefs();
+              if (/^user_pref\("services\.sync\.username"/m.test(oldRawPrefs)) {
+                // sync's configured in the source profile - ensure it is in the
+                // new profile too.
+                // Write it to prefs.js and flush the file.
+                Services.prefs.setStringPref(
+                  "services.sync.username",
+                  username
+                );
+                savePrefs();
               }
             }
           }
@@ -313,7 +322,7 @@ export class FirefoxProfileMigrator extends MigratorBase {
     let telemetry = {
       name: "telemetry", // name is used only by tests...
       type: types.OTHERDATA,
-      migrate: aCallback => {
+      migrate: async aCallback => {
         let createSubDir = name => {
           let dir = currentProfileDir.clone();
           dir.append(name);
@@ -339,6 +348,28 @@ export class FirefoxProfileMigrator extends MigratorBase {
             }
             file.copyTo(dest, "");
           }
+        }
+
+        try {
+          let oldRawPrefs = await readOldPrefs();
+          let writePrefs = false;
+          const PREFS = ["bookmarks", "history", "passwords"];
+
+          for (let pref of PREFS) {
+            let fullPref = `browser\.migrate\.interactions\.${pref}`;
+            let regex = new RegExp('^user_pref\\("' + fullPref, "m");
+            if (regex.test(oldRawPrefs)) {
+              Services.prefs.setBoolPref(fullPref, true);
+              writePrefs = true;
+            }
+          }
+
+          if (writePrefs) {
+            savePrefs();
+          }
+        } catch (e) {
+          aCallback(false);
+          return;
         }
 
         aCallback(true);
