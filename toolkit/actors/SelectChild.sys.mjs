@@ -22,7 +22,6 @@ const SUPPORTED_OPTION_OPTGROUP_PROPERTIES = [
   "color",
   "background-color",
   "text-shadow",
-  "text-transform",
   "font-family",
   "font-weight",
   "font-size",
