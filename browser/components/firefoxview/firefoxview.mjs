@@ -11,6 +11,7 @@ const launchFeatureTour = () => {
     win: window,
     prefName: "browser.firefox-view.feature-tour",
     page: "about:firefoxview",
+    theme: { preset: "themed-content" },
   });
   callout.showFeatureCallout();
 };
