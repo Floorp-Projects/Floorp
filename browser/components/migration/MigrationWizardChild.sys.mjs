@@ -38,11 +38,17 @@ export class MigrationWizardChild extends JSWindowActorChild {
         });
 
         let migrators = await this.sendQuery("GetAvailableMigrators");
-        this.setComponentState({
-          migrators,
-          page: MigrationWizardConstants.PAGES.SELECTION,
-          showImportAll: lazy.SHOW_IMPORT_ALL_PREF,
-        });
+        if (!migrators.length) {
+          this.setComponentState({
+            page: MigrationWizardConstants.PAGES.NO_BROWSERS_FOUND,
+          });
+        } else {
+          this.setComponentState({
+            migrators,
+            page: MigrationWizardConstants.PAGES.SELECTION,
+            showImportAll: lazy.SHOW_IMPORT_ALL_PREF,
+          });
+        }
 
         this.#wizardEl.dispatchEvent(
           new this.contentWindow.CustomEvent("MigrationWizard:Ready", {
