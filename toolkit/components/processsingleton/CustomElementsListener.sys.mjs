@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = [];
-
 // Set up Custom Elements for XUL and XHTML documents before anything else
 // happens. Anything loaded here should be considered part of core XUL functionality.
 // Any window-specific elements can be registered via <script> tags at the
