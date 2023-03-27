@@ -14,13 +14,11 @@
 #include "nsIAnonymousContentCreator.h"
 #include "nsCOMPtr.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class FileList;
 class BlobImpl;
 class DataTransfer;
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 class nsFileControlFrame final : public nsBlockFrame,
                                  public nsIFormControlFrame,
@@ -34,38 +32,29 @@ class nsFileControlFrame final : public nsBlockFrame,
   explicit nsFileControlFrame(ComputedStyle* aStyle,
                               nsPresContext* aPresContext);
 
-  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
-                    nsIFrame* aPrevInFlow) override;
+  void Init(nsIContent* aContent, nsContainerFrame* aParent,
+            nsIFrame* aPrevInFlow) override;
 
-  void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
-              const ReflowInput& aReflowInput,
-              nsReflowStatus& aStatus) override;
-
-  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                                const nsDisplayListSet& aLists) override;
+  void BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                        const nsDisplayListSet& aLists) override;
 
   // nsIFormControlFrame
-  virtual nsresult SetFormProperty(nsAtom* aName,
-                                   const nsAString& aValue) override;
-  virtual void SetFocus(bool aOn, bool aRepaint) override;
+  nsresult SetFormProperty(nsAtom* aName, const nsAString& aValue) override;
+  void SetFocus(bool aOn, bool aRepaint) override;
 
-  nscoord GetMinISize(gfxContext* aRenderingContext) override;
-  nscoord GetPrefISize(gfxContext* aRenderingContext) override;
-
-  virtual void DestroyFrom(nsIFrame* aDestructRoot,
-                           PostDestroyData& aPostDestroyData) override;
+  void DestroyFrom(nsIFrame* aDestructRoot,
+                   PostDestroyData& aPostDestroyData) override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override;
+  nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
   void ElementStateChanged(mozilla::dom::ElementState aStates) override;
 
   // nsIAnonymousContentCreator
-  virtual nsresult CreateAnonymousContent(
-      nsTArray<ContentInfo>& aElements) override;
-  virtual void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
-                                        uint32_t aFilter) override;
+  nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;
+  void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
+                                uint32_t aFilter) override;
 
 #ifdef ACCESSIBILITY
   virtual mozilla::a11y::AccType AccessibleType() override;
@@ -151,22 +140,9 @@ class nsFileControlFrame final : public nsBlockFrame,
 
  protected:
   /**
-   * Crop aText to fit inside aWidth using the styles of aFrame.
-   * @return true if aText was modified
-   */
-  static bool CropTextToWidth(gfxContext& aRenderingContext,
-                              const nsIFrame* aFrame, nscoord aWidth,
-                              nsString& aText);
-
-  /**
    * Sync the disabled state of the content with anonymous children.
    */
   void SyncDisabledState();
-
-  /**
-   * Updates the displayed value by using aValue.
-   */
-  void UpdateDisplayedValue(const nsAString& aValue, bool aNotify);
 };
 
 #endif  // nsFileControlFrame_h___

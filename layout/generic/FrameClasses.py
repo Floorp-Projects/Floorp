@@ -23,7 +23,8 @@ FRAME_CLASSES = [
     Frame("nsContinuingTextFrame", "Text", LEAF),
     Frame("nsDateTimeControlFrame", "DateTimeControl", NOT_LEAF),
     Frame("nsFieldSetFrame", "FieldSet", NOT_LEAF),
-    Frame("nsFileControlFrame", "Block", LEAF),
+    Frame("nsFileControlFrame", "FileControl", LEAF),
+    Frame("FileControlLabelFrame", "Block", NOT_LEAF),
     Frame("nsFirstLetterFrame", "Letter", NOT_LEAF),
     Frame("nsFirstLineFrame", "Line", NOT_LEAF),
     Frame("nsFlexContainerFrame", "FlexContainer", NOT_LEAF),
@@ -130,6 +131,7 @@ FRAME_CLASSES = [
     Frame("ViewportFrame", "Viewport", NOT_LEAF),
     Frame("WBRFrame", "Wbr", LEAF),
     # Non-concrete classes (for FrameIID use)
+    AbstractFrame("MiddleCroppingBlockFrame"),
     AbstractFrame("nsContainerFrame"),
     AbstractFrame("nsLeafFrame"),
     AbstractFrame("nsMathMLContainerFrame"),
