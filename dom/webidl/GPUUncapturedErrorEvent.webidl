@@ -12,7 +12,7 @@ dictionary GPUUncapturedErrorEventInit : EventInit {
 };
 
 [Pref="dom.webgpu.enabled",
- Exposed=(Window /* ,DedicatedWorker*/)]
+ Exposed=(Window /* ,DedicatedWorker*/), SecureContext]
 interface GPUUncapturedErrorEvent: Event {
     constructor(DOMString type, GPUUncapturedErrorEventInit gpuUncapturedErrorEventInitDict);
     readonly attribute GPUError error;
