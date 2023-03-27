@@ -2,21 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { ContentTaskUtils } from "resource://testing-common/ContentTaskUtils.sys.mjs";
+import { Preferences } from "resource://gre/modules/Preferences.sys.mjs";
+import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
-const { Preferences } = ChromeUtils.importESModule(
-  "resource://gre/modules/Preferences.sys.mjs"
-);
-const { ContentTaskUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/ContentTaskUtils.sys.mjs"
-);
-const { setTimeout } = ChromeUtils.importESModule(
-  "resource://gre/modules/Timer.sys.mjs"
-);
-
-var EXPORTED_SYMBOLS = ["NarrateTestUtils"];
-
-var NarrateTestUtils = {
+export var NarrateTestUtils = {
   TOGGLE: ".narrate-toggle",
   POPUP: ".narrate-dropdown .dropdown-popup",
   VOICE_SELECT: ".narrate-voices .select-toggle",

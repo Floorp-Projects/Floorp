@@ -75,7 +75,7 @@ void DOMSecurityMonitor::AuditParsingOfHTMLXMLFragments(
       nsLiteralCString("resource://devtools/client/shared/widgets/tooltip/"
                        "inactive-css-tooltip-helper.js"),
       "resource://devtools/client/shared/widgets/Spectrum.js"_ns,
-      "resource://gre/modules/narrate/VoiceSelect.jsm"_ns,
+      "resource://gre/modules/narrate/VoiceSelect.sys.mjs"_ns,
       "resource://normandy-vendor/ReactDOM.js"_ns,
       // ------------------------------------------------------------------
       // test pages
