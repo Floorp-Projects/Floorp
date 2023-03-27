@@ -173,6 +173,7 @@ nsIFrame* NS_NewSVGFELeafFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 nsIFrame* NS_NewSVGFEImageFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 nsIFrame* NS_NewSVGFEUnstyledLeafFrame(PresShell* aPresShell,
                                        ComputedStyle* aStyle);
+nsIFrame* NS_NewFileControlLabelFrame(PresShell*, ComputedStyle*);
 
 #include "mozilla/dom/NodeInfo.h"
 #include "prenv.h"
@@ -3459,6 +3460,15 @@ nsCSSFrameConstructor::FindHTMLData(const Element& aElement,
                        PseudoStyleType::fieldsetContent ||
                    aParentFrame->GetParent()->IsFieldSetFrame(),
                "Unexpected parent for fieldset content anon box");
+
+  if (aElement.IsInNativeAnonymousSubtree() &&
+      aElement.NodeInfo()->NameAtom() == nsGkAtoms::label &&
+      aParentFrame->IsFileControlFrame()) {
+    static constexpr FrameConstructionData sFileLabelData(
+        NS_NewFileControlLabelFrame);
+    return &sFileLabelData;
+  }
+
   static constexpr FrameConstructionDataByTag sHTMLData[] = {
       SIMPLE_TAG_CHAIN(img, nsCSSFrameConstructor::FindImgData),
       SIMPLE_TAG_CHAIN(mozgeneratedcontentimage,
