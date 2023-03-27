@@ -12,8 +12,8 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES += [
-    "CustomElementsListener.jsm",
-    "MainProcessSingleton.jsm",
+    "CustomElementsListener.sys.mjs",
+    "MainProcessSingleton.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [
