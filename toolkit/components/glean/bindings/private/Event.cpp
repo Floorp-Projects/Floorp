@@ -159,8 +159,8 @@ GleanEvent::TestGetValue(const nsACString& aStorageName, JSContext* aCx,
     }
 
     for (auto pair : value->mExtra) {
-      auto key = mozilla::Get<0>(pair);
-      auto val = mozilla::Get<1>(pair);
+      auto key = std::get<0>(pair);
+      auto val = std::get<1>(pair);
       JS::Rooted<JS::Value> valStr(aCx);
       if (!dom::ToJSValue(aCx, val, &valStr) ||
           !JS_DefineProperty(aCx, extraObj, key.Data(), valStr,

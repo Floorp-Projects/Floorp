@@ -81,7 +81,7 @@ class VectorImage final : public ImageResource, public nsIStreamListener {
    * cached surface, if found, and the size to rasterize at, if applicable.
    * If we cannot rasterize, it will be the requested size to draw at (aSize).
    */
-  Tuple<RefPtr<gfx::SourceSurface>, gfx::IntSize> LookupCachedSurface(
+  std::tuple<RefPtr<gfx::SourceSurface>, gfx::IntSize> LookupCachedSurface(
       const gfx::IntSize& aSize, const SVGImageContext& aSVGContext,
       uint32_t aFlags);
 

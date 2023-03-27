@@ -35,7 +35,7 @@
 #include "mozilla/StaticPrefs_image.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/Tuple.h"
+
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Scale.h"
 #include "nsComponentManagerUtils.h"

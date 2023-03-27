@@ -20,7 +20,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/NativeNt.h"
-#include "mozilla/Tuple.h"
+
 #include "mozilla/Types.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"

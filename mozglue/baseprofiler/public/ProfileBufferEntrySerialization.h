@@ -13,7 +13,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/ProfileBufferIndex.h"
 #include "mozilla/Span.h"
-#include "mozilla/Tuple.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Variant.h"
@@ -1019,79 +1018,6 @@ struct ProfileBufferEntryReader::Deserializer<std::tuple<Ts...>> {
     return ob;
   }
 };
-
-// ----------------------------------------------------------------------------
-// mozilla::Tuple
-
-// Tuple is serialized as a sequence of each recursively-serialized
-// item.
-//
-// This is equivalent to manually serializing each item, so reading/writing
-// tuples is equivalent to reading/writing their elements in order, e.g.:
-// ```
-// Tuple<int, std::string> is = ...;
-// aEW.WriteObject(is); // Write the Tuple, equivalent to:
-// aEW.WriteObject(/* int */ std::get<0>(is), /* string */ std::get<1>(is));
-// ...
-// // Reading back can be done directly into a Tuple:
-// auto is = aER.ReadObject<Tuple<int, std::string>>();
-// // Or each item could be read separately:
-// auto i = aER.ReadObject<int>(); auto s = aER.ReadObject<std::string>();
-// ```
-template <typename... Ts>
-struct ProfileBufferEntryWriter::Serializer<Tuple<Ts...>> {
- private:
-  template <size_t... Is>
-  static Length TupleBytes(const Tuple<Ts...>& aTuple,
-                           std::index_sequence<Is...>) {
-    return (0 + ... + SumBytes(Get<Is>(aTuple)));
-  }
-
-  template <size_t... Is>
-  static void TupleWrite(ProfileBufferEntryWriter& aEW,
-                         const Tuple<Ts...>& aTuple,
-                         std::index_sequence<Is...>) {
-    (aEW.WriteObject(Get<Is>(aTuple)), ...);
-  }
-
- public:
-  static Length Bytes(const Tuple<Ts...>& aTuple) {
-    // Generate a 0..N-1 index pack, we'll add the sizes of each item.
-    return TupleBytes(aTuple, std::index_sequence_for<Ts...>());
-  }
-
-  static void Write(ProfileBufferEntryWriter& aEW, const Tuple<Ts...>& aTuple) {
-    // Generate a 0..N-1 index pack, we'll write each item.
-    TupleWrite(aEW, aTuple, std::index_sequence_for<Ts...>());
-  }
-};
-
-template <typename... Ts>
-struct ProfileBufferEntryReader::Deserializer<Tuple<Ts...>> {
-  template <size_t I>
-  static void TupleIReadInto(ProfileBufferEntryReader& aER,
-                             Tuple<Ts...>& aTuple) {
-    aER.ReadIntoObject(Get<I>(aTuple));
-  }
-
-  template <size_t... Is>
-  static void TupleReadInto(ProfileBufferEntryReader& aER, Tuple<Ts...>& aTuple,
-                            std::index_sequence<Is...>) {
-    (TupleIReadInto<Is>(aER, aTuple), ...);
-  }
-
-  static void ReadInto(ProfileBufferEntryReader& aER, Tuple<Ts...>& aTuple) {
-    TupleReadInto(aER, aTuple, std::index_sequence_for<Ts...>());
-  }
-
-  static Tuple<Ts...> Read(ProfileBufferEntryReader& aER) {
-    // Note that this creates default `Ts` first, and then overwrites them.
-    Tuple<Ts...> ob;
-    ReadInto(aER, ob);
-    return ob;
-  }
-};
-
 // ----------------------------------------------------------------------------
 // mozilla::Span
 

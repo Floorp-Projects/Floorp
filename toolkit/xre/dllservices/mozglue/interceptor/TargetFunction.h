@@ -12,7 +12,7 @@
 #include "mozilla/BinarySearch.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Tuple.h"
+
 #include "mozilla/Types.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Vector.h"
@@ -50,7 +50,7 @@ class ReadOnlyTargetFunction;
 template <typename MMPolicy>
 class MOZ_STACK_CLASS WritableTargetFunction final {
   class AutoProtect final {
-    using ProtectParams = Tuple<uintptr_t, uint32_t>;
+    using ProtectParams = std::tuple<uintptr_t, uint32_t>;
 
    public:
     explicit AutoProtect(const MMPolicy& aMMPolicy) : mMMPolicy(aMMPolicy) {}
@@ -79,7 +79,7 @@ class MOZ_STACK_CLASS WritableTargetFunction final {
 
         // Save the previous protection for curAddr so that we can revert this
         // in the destructor.
-        if (!mProtects.append(MakeTuple(curAddr, prevProt))) {
+        if (!mProtects.append(std::make_tuple(curAddr, prevProt))) {
           Clear();
           return;
         }
@@ -105,8 +105,8 @@ class MOZ_STACK_CLASS WritableTargetFunction final {
       for (auto&& entry : mProtects) {
         uint32_t prevProt;
         DebugOnly<bool> ok =
-            mMMPolicy.Protect(reinterpret_cast<void*>(Get<0>(entry)), pageSize,
-                              Get<1>(entry), &prevProt);
+            mMMPolicy.Protect(reinterpret_cast<void*>(std::get<0>(entry)),
+                              pageSize, std::get<1>(entry), &prevProt);
         MOZ_ASSERT(ok);
       }
 

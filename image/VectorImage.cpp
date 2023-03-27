@@ -24,7 +24,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPrefs_image.h"
 #include "mozilla/SVGObserverUtils.h"  // for SVGRenderingObserver
-#include "mozilla/Tuple.h"
+
 #include "nsIStreamListener.h"
 #include "nsMimeTypes.h"
 #include "nsPresContext.h"
@@ -692,9 +692,7 @@ VectorImage::GetFrameAtSize(const IntSize& aSize, uint32_t aWhichFrame,
 
   uint32_t whichFrame = mHaveAnimations ? aWhichFrame : FRAME_FIRST;
 
-  RefPtr<SourceSurface> sourceSurface;
-  IntSize decodeSize;
-  Tie(sourceSurface, decodeSize) =
+  auto [sourceSurface, decodeSize] =
       LookupCachedSurface(aSize, SVGImageContext(), aFlags);
   if (sourceSurface) {
     return sourceSurface.forget();
@@ -1008,7 +1006,7 @@ VectorImage::Draw(gfxContext* aContext, const nsIntSize& aSize,
   // If we have an prerasterized version of this image that matches the
   // drawing parameters, use that.
   RefPtr<SourceSurface> sourceSurface;
-  Tie(sourceSurface, params.size) =
+  std::tie(sourceSurface, params.size) =
       LookupCachedSurface(aSize, params.svgContext, aFlags);
   if (sourceSurface) {
     RefPtr<gfxDrawable> drawable =
@@ -1051,7 +1049,7 @@ already_AddRefed<gfxDrawable> VectorImage::CreateSVGDrawable(
   return svgDrawable.forget();
 }
 
-Tuple<RefPtr<SourceSurface>, IntSize> VectorImage::LookupCachedSurface(
+std::tuple<RefPtr<SourceSurface>, IntSize> VectorImage::LookupCachedSurface(
     const IntSize& aSize, const SVGImageContext& aSVGContext, uint32_t aFlags) {
   // We can't use cached surfaces if we:
   // - Explicitly disallow it via FLAG_BYPASS_SURFACE_CACHE
@@ -1059,7 +1057,7 @@ Tuple<RefPtr<SourceSurface>, IntSize> VectorImage::LookupCachedSurface(
   // - Have animations which aren't supported by the cache.
   if (aFlags & (FLAG_BYPASS_SURFACE_CACHE | FLAG_RECORD_BLOB) ||
       mHaveAnimations) {
-    return MakeTuple(RefPtr<SourceSurface>(), aSize);
+    return std::make_tuple(RefPtr<SourceSurface>(), aSize);
   }
 
   LookupResult result(MatchType::NOT_FOUND);
@@ -1077,7 +1075,7 @@ Tuple<RefPtr<SourceSurface>, IntSize> VectorImage::LookupCachedSurface(
   MOZ_ASSERT(result.Type() != MatchType::SUBSTITUTE_BECAUSE_PENDING);
   if (!result || result.Type() == MatchType::SUBSTITUTE_BECAUSE_NOT_FOUND) {
     // No matching surface, or the OS freed the volatile buffer.
-    return MakeTuple(RefPtr<SourceSurface>(), rasterSize);
+    return std::make_tuple(RefPtr<SourceSurface>(), rasterSize);
   }
 
   RefPtr<SourceSurface> sourceSurface = result.Surface()->GetSourceSurface();
@@ -1085,10 +1083,10 @@ Tuple<RefPtr<SourceSurface>, IntSize> VectorImage::LookupCachedSurface(
     // Something went wrong. (Probably a GPU driver crash or device reset.)
     // Attempt to recover.
     RecoverFromLossOfSurfaces();
-    return MakeTuple(RefPtr<SourceSurface>(), rasterSize);
+    return std::make_tuple(RefPtr<SourceSurface>(), rasterSize);
   }
 
-  return MakeTuple(std::move(sourceSurface), rasterSize);
+  return std::make_tuple(std::move(sourceSurface), rasterSize);
 }
 
 already_AddRefed<SourceSurface> VectorImage::CreateSurface(
