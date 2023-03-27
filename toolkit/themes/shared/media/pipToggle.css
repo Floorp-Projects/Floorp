@@ -129,6 +129,7 @@
 .pip-wrapper:not([small-video], [has-used]) > .pip-expanded {
   opacity: 1;
   scale: 1;
+  pointer-events: auto;
 }
 
 .pip-icon {
@@ -268,6 +269,7 @@
   /* Remove bottom border but keep text centred with padding. */
   border-bottom: none;
   padding-bottom: var(--pip-highlight-width);
+  pointer-events: none;
 }
 
 .pip-wrapper:not([small-video], [has-used], .experiment).hovering > .pip-expanded {
@@ -291,6 +293,7 @@
   margin-inline: calc(-1 * var(--pip-highlight-width));
   width: calc(100% - 24px);
   word-break: break-word;
+  pointer-events: none;
   user-select: none;
 }
 
@@ -300,6 +303,7 @@
 }
 
 .pip-wrapper:not(.experiment).hovering > .pip-expanded > .pip-explainer {
+  pointer-events: auto;
   opacity: 1;
   translate: 0 calc(40px - var(--pip-highlight-width));
 }
