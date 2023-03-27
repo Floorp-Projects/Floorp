@@ -46,39 +46,13 @@ static CustomAttributesSet CacheAttributes(const Decl *D) {
   return attrs;
 }
 
+#ifndef CLANG_TIDY
 static void Report(const Decl *D, const char *message) {
   ASTContext &Context = D->getASTContext();
   DiagnosticsEngine &Diag = Context.getDiagnostics();
   unsigned ID =
       Diag.getDiagnosticIDs()->getCustomDiagID(DiagnosticIDs::Warning, message);
   Diag.Report(D->getBeginLoc(), ID);
-}
-
-CustomAttributesSet GetAttributes(const Decl *D) {
-  CustomAttributesSet attrs = {};
-  if (D->hasAttr<AnnotateAttr>()) {
-    Report(D, "Declaration has unhandled annotations.");
-    attrs = CacheAttributes(D);
-  } else {
-    auto attributes = AttributesCache.find(D);
-    if (attributes != AttributesCache.end()) {
-      attrs = attributes->second;
-    }
-  }
-  return attrs;
-}
-
-bool hasCustomAttribute(const clang::Decl *D, CustomAttributes A) {
-  CustomAttributesSet attrs = GetAttributes(D);
-  switch (A) {
-#define ATTR(a)                                                                \
-  case a:                                                                      \
-    return attrs.has_##a;
-#include "CustomAttributes.inc"
-#include "external/CustomAttributes.inc"
-#undef ATTR
-  }
-  return false;
 }
 
 class CustomAttributesMatcher
@@ -117,3 +91,36 @@ public:
 
 static FrontendPluginRegistry::Add<CustomAttributesAction>
     X("moz-custom-attributes", "prepare custom attributes for moz-check");
+#endif
+
+CustomAttributesSet GetAttributes(const Decl *D) {
+  CustomAttributesSet attrs = {};
+  if (D->hasAttr<AnnotateAttr>()) {
+// If we are not in clang-tidy env push warnings, most likely we are in the
+// build environment and this should have been done in AstMatcher -
+// CustomAttributesMatcher
+#ifndef CLANG_TIDY
+    Report(D, "Declaration has unhandled annotations.");
+#endif
+    attrs = CacheAttributes(D);
+  } else {
+    auto attributes = AttributesCache.find(D);
+    if (attributes != AttributesCache.end()) {
+      attrs = attributes->second;
+    }
+  }
+  return attrs;
+}
+
+bool hasCustomAttribute(const clang::Decl *D, CustomAttributes A) {
+  CustomAttributesSet attrs = GetAttributes(D);
+  switch (A) {
+#define ATTR(a)                                                                \
+  case a:                                                                      \
+    return attrs.has_##a;
+#include "CustomAttributes.inc"
+#include "external/CustomAttributes.inc"
+#undef ATTR
+  }
+  return false;
+}
