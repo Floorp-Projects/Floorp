@@ -3505,7 +3505,7 @@ void RestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
   } else if (aElement->IsInShadowTree() && aAttribute == nsGkAtoms::part) {
     // TODO(emilio, bug 1598094): Maybe finer-grained invalidation for part
     // attribute changes?
-    restyleHint |= RestyleHint::RESTYLE_SELF;
+    restyleHint |= RestyleHint::RESTYLE_SELF | RestyleHint::RESTYLE_PSEUDOS;
   }
 
   if (nsIFrame* primaryFrame = aElement->GetPrimaryFrame()) {
