@@ -12552,21 +12552,13 @@
 # WebTransport
 - name: network.webtransport.enabled
   type: RelaxedAtomicBool
-#if defined(ANDROID)
-  value: @IS_NIGHTLY_BUILD@
-#else
-  value: true
-#endif
+  value: false
   mirror: always
 
 # WebTransport Datagram support
 - name: network.webtransport.datagrams.enabled
   type: RelaxedAtomicBool
-#if defined(ANDROID)
-  value: @IS_NIGHTLY_BUILD@
-#else
-  value: true
-#endif
+  value: false
   mirror: always
 
 # WebTransport Datagram size
