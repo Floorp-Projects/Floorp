@@ -788,17 +788,17 @@ void Connection::RecordQueryStatus(int srv) {
     case SQLITE_FULL:
     case SQLITE_TOOBIG:
       AccumulateCategoricalKeyed(histogramKey,
-                                 LABELS_SQLITE_STORE_OPEN::diskspace);
+                                 LABELS_SQLITE_STORE_QUERY::diskspace);
       break;
     case SQLITE_CONSTRAINT:
     case SQLITE_RANGE:
     case SQLITE_MISMATCH:
     case SQLITE_MISUSE:
       AccumulateCategoricalKeyed(histogramKey,
-                                 LABELS_SQLITE_STORE_OPEN::misuse);
+                                 LABELS_SQLITE_STORE_QUERY::misuse);
       break;
     case SQLITE_BUSY:
-      AccumulateCategoricalKeyed(histogramKey, LABELS_SQLITE_STORE_OPEN::busy);
+      AccumulateCategoricalKeyed(histogramKey, LABELS_SQLITE_STORE_QUERY::busy);
       break;
     default:
       AccumulateCategoricalKeyed(histogramKey,
