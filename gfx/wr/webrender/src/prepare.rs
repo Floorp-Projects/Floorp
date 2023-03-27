@@ -27,10 +27,11 @@ use crate::prim_store::line_dec::MAX_LINE_DECORATION_RESOLUTION;
 use crate::prim_store::*;
 use crate::prim_store::gradient::GradientGpuBlockBuilder;
 use crate::render_backend::DataStores;
-use crate::render_task_graph::RenderTaskId;
+use crate::render_task_graph::{RenderTaskId};
 use crate::render_task_cache::RenderTaskCacheKeyKind;
 use crate::render_task_cache::{RenderTaskCacheKey, to_cache_size, RenderTaskParent};
 use crate::render_task::{RenderTaskKind, RenderTask};
+use crate::renderer::{GpuBufferBuilder, GpuBufferAddress};
 use crate::segment::{EdgeAaSegmentMask, SegmentBuilder};
 use crate::util::{clamp_to_scale_factor, pack_as_float};
 use crate::visibility::{compute_conservative_visible_rect, PrimitiveVisibility, VisibilityState};
@@ -102,6 +103,28 @@ pub fn prepare_primitives(
             prim_instances[prim_instance_index].clear_visibility();
         }
     }
+}
+
+fn can_use_clip_chain_for_quad_path(
+    clip_chain: &ClipChainInstance,
+    prim_spatial_node_index: SpatialNodeIndex,
+    raster_spatial_node_index: SpatialNodeIndex,
+    _clip_store: &ClipStore,
+    _data_stores: &DataStores,
+    spatial_tree: &SpatialTree,
+) -> bool {
+    let map_prim_to_surface = spatial_tree.get_relative_transform(
+        prim_spatial_node_index,
+        raster_spatial_node_index,
+    );
+    if !map_prim_to_surface.is_2d_axis_aligned() {
+        return false;
+    }
+    if map_prim_to_surface.is_perspective() {
+        return false;
+    }
+
+    !clip_chain.needs_mask
 }
 
 fn prepare_prim_for_render(
@@ -185,11 +208,14 @@ fn prepare_prim_for_render(
         // and mask generation.
         let should_update_clip_task = match prim_instance.kind {
             PrimitiveInstanceKind::Rectangle { ref mut use_legacy_path, .. } => {
-                if prim_instance.vis.clip_chain.needs_mask {
-                    *use_legacy_path = true;
-                } else {
-                    *use_legacy_path = false;
-                }
+                *use_legacy_path = !can_use_clip_chain_for_quad_path(
+                    &prim_instance.vis.clip_chain,
+                    cluster.spatial_node_index,
+                    pic_context.raster_spatial_node_index,
+                    frame_state.clip_store,
+                    data_stores,
+                    frame_context.spatial_tree,
+                );
 
                 *use_legacy_path
             }
@@ -576,7 +602,7 @@ fn prepare_interned_prim_for_render(
                     }
                 };
 
-                let color = color.premultiplied();
+                let premul_color = color.premultiplied();
 
                 let map_prim_to_surface = frame_context.spatial_tree.get_relative_transform(
                     prim_spatial_node_index,
@@ -599,28 +625,26 @@ fn prepare_interned_prim_for_render(
                     EdgeAaSegmentMask::all()
                 };
 
-                // TODO(gw): Perhaps rather than writing untyped data here (we at least do validate
-                //           the written block count) to gpu-buffer, we could add a trait for
-                //           writing typed data?
-                let mut writer = frame_state.frame_gpu_data.write_blocks(4);
-                writer.push_one(prim_data.common.prim_rect);
-                writer.push_one(prim_instance.vis.clip_chain.local_clip_rect);
-                // TODO(gw): For now, we always write an empty UV rect here. In future, we'll
-                //           make use of this for drawing quads that have a pre-applied clip mask
-                writer.push_one([0.0; 4]);
-                writer.push_one(color);
-                let prim_address = writer.finish();
-
                 let transform_id = frame_state.transforms.get_id(
                     prim_spatial_node_index,
                     pic_context.raster_spatial_node_index,
                     frame_context.spatial_tree,
                 );
 
+                // TODO(gw): Perhaps rather than writing untyped data here (we at least do validate
+                //           the written block count) to gpu-buffer, we could add a trait for
+                //           writing typed data?
+                let main_prim_address = write_prim_blocks(
+                    frame_state.frame_gpu_data,
+                    prim_data.common.prim_rect,
+                    prim_instance.vis.clip_chain.local_clip_rect,
+                    premul_color,
+                );
+
                 frame_state.push_prim(
                     &PrimitiveCommand::quad(
                         prim_instance_index,
-                        prim_address,
+                        main_prim_address,
                         transform_id,
                         quad_flags,
                         aa_flags,
@@ -1591,3 +1615,17 @@ fn adjust_mask_scale_for_max_size(device_rect: DeviceRect, device_pixel_scale: D
     }
 }
 
+fn write_prim_blocks(
+    builder: &mut GpuBufferBuilder,
+    prim_rect: LayoutRect,
+    clip_rect: LayoutRect,
+    color: PremultipliedColorF,
+) -> GpuBufferAddress {
+    let mut writer = builder.write_blocks(3);
+
+    writer.push_one(prim_rect);
+    writer.push_one(clip_rect);
+    writer.push_one(color);
+
+    writer.finish()
+}

@@ -63,7 +63,6 @@ pub struct FrameBuilderConfig {
     pub force_invalidation: bool,
     pub is_software: bool,
     pub low_quality_pinch_zoom: bool,
-    pub uses_native_antialiasing: bool,
     pub max_shared_surface_size: i32,
 }
 
@@ -595,7 +594,6 @@ impl FrameBuilder {
                     globals: &self.globals,
                     tile_caches,
                     root_spatial_node_index: spatial_tree.root_reference_frame_index(),
-                    uses_native_antialiasing: scene.config.uses_native_antialiasing,
                 };
 
                 let pass = build_render_pass(
@@ -635,7 +633,6 @@ impl FrameBuilder {
                 globals: &self.globals,
                 tile_caches,
                 root_spatial_node_index: spatial_tree.root_reference_frame_index(),
-                uses_native_antialiasing: scene.config.uses_native_antialiasing,
             };
 
             self.build_composite_pass(

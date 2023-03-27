@@ -534,7 +534,6 @@ pub fn create_webrender_instance(
         force_invalidation: false,
         is_software,
         low_quality_pinch_zoom: options.low_quality_pinch_zoom,
-        uses_native_antialiasing: device.get_capabilities().uses_native_antialiasing,
         max_shared_surface_size: options.max_shared_surface_size,
     };
     info!("WR {:?}", config);

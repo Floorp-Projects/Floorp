@@ -547,30 +547,27 @@ pub struct QuadInstance {
     pub prim_address: GpuBufferAddress,
     pub z_id: ZBufferId,
     pub transform_id: TransformPaletteId,
-    pub edge_flags: i32,
-    // The number of tiles configured during the prepare pass for this quad instance
-    pub tile_count_x: u8,
-    pub tile_count_y: u8,
-    pub tile_index_x: u8,
-    pub tile_index_y: u8,
+    pub quad_flags: u8,
+    pub edge_flags: u8,
+    pub part_index: u8,
 }
 
 impl From<QuadInstance> for PrimitiveInstanceData {
     fn from(instance: QuadInstance) -> Self {
         /*
             [32 bits prim address]
-            [16 bits tile config] [16 bits render task address]
-            [8 bits edge flags] [24 bits z_id]
-            [8 bits x/y tile index] [24 bits xf_id]
+            [8 bits quad flags] [8 bits edge flags] [16 bits render task address]
+            [8 bits segment flags] [24 bits z_id]
+            [8 bits spare] [24 bits xf_id]
          */
         PrimitiveInstanceData {
             data: [
                 instance.prim_address.as_int(),
-                ((instance.tile_count_x as i32) << 24) |
-                ((instance.tile_count_y as i32) << 16) |
+                ((instance.quad_flags as i32) << 24) |
+                ((instance.edge_flags as i32) << 16) |
                 instance.render_task_address.0 as i32,
-                (instance.edge_flags << 24) | instance.z_id.0,
-                ((instance.tile_index_x as i32) << 28) | ((instance.tile_index_y as i32) << 24) | instance.transform_id.0 as i32,
+                ((instance.part_index as i32) << 24) | instance.z_id.0,
+                instance.transform_id.0 as i32,
             ],
         }
     }
