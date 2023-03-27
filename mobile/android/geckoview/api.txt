@@ -1642,7 +1642,16 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoSessionSettings.Builder viewportMode(int);
   }
 
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSessionSettings.DisplayMode {
+  }
+
   public static class GeckoSessionSettings.Key<T> {
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSessionSettings.UserAgentMode {
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSessionSettings.ViewportMode {
   }
 
   public class GeckoVRManager {
