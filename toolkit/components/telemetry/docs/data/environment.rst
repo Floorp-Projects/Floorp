@@ -383,6 +383,12 @@ The following is a partial list of `collected preferences <https://searchfox.org
 
 - ``browser.fixup.alternate.enabled``: Whether the browser should try to modify unknown hosts by adding a prefix (e.g. www) and a suffix (.com). Defaults to false.
 
+- ``browser.migrate.interactions.bookmarks``: True if the user has imported bookmarks from another browser before. This preference gets transferred during profile resets.
+
+- ``browser.migrate.interactions.history``: True if the user has imported history from another browser before. This preference gets transferred during profile resets.
+
+- ``browser.migrate.interactions.passwords``: True if the user has imported passwords from another browser before. This preference gets transferred during profile resets.
+
 - ``browser.search.suggest.enabled``: The "master switch" for search suggestions everywhere in Firefox (search bar, urlbar, etc.). Defaults to true.
 
 - ``browser.urlbar.autoFill``: The global preference for whether autofill in the urlbar is enabled. When false, all types of autofill are disabled.

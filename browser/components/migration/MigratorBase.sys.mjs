@@ -12,6 +12,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   BookmarkHTMLUtils: "resource://gre/modules/BookmarkHTMLUtils.sys.mjs",
+  FirefoxProfileMigrator: "resource:///modules/FirefoxProfileMigrator.sys.mjs",
   MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
@@ -359,6 +360,37 @@ export class MigratorBase {
       }
     };
 
+    let collectMigrationTelemetry = resourceType => {
+      // We don't want to collect this if the migration is occurring due to a
+      // profile refresh.
+      if (this.constructor.key == lazy.FirefoxProfileMigrator.key) {
+        return;
+      }
+
+      let prefKey = null;
+      switch (resourceType) {
+        case lazy.MigrationUtils.resourceTypes.BOOKMARKS: {
+          prefKey = "browser.migrate.interactions.bookmarks";
+          break;
+        }
+        case lazy.MigrationUtils.resourceTypes.HISTORY: {
+          prefKey = "browser.migrate.interactions.history";
+          break;
+        }
+        case lazy.MigrationUtils.resourceTypes.PASSWORDS: {
+          prefKey = "browser.migrate.interactions.passwords";
+          break;
+        }
+        default: {
+          return;
+        }
+      }
+
+      if (prefKey) {
+        Services.prefs.setBoolPref(prefKey, true);
+      }
+    };
+
     // Called either directly or through the bookmarks import callback.
     let doMigrate = async function() {
       let resourcesGroupedByItems = new Map();
@@ -425,6 +457,8 @@ export class MigratorBase {
 
               if (resourcesGroupedByItems.size == 0) {
                 collectQuantityTelemetry();
+                collectMigrationTelemetry(migrationType);
+
                 notify("Migration:Ended");
               }
             }
