@@ -70,10 +70,10 @@ void WinCompositorWidget::UpdateCompositorWndSizeIfNecessary() {
     return;
   }
 
-  // This code is racing with the compositor, which needs to reparent
-  // the compositor surface to the actual window (mWnd). To avoid racing
-  // mutations, we refuse to proceed until ::SetParent() is called in parent
-  // process. After the ::SetParent() call, composition is scheduled in
+  // This code is racing with the compositor, which needs to reparent the
+  // compositor surface to the actual window (mWnd). To avoid racing mutations,
+  // we refuse to proceed until ::SetParent() is called in the parent process.
+  // After the ::SetParent() call, composition is scheduled in
   // CompositorWidgetParent::UpdateCompositorWnd().
   if (!mSetParentCompleted) {
     // ::SetParent() is not completed yet.

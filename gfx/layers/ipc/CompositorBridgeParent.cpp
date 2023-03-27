@@ -259,6 +259,12 @@ void CompositorBridgeParent::InitSameProcess(widget::CompositorWidget* aWidget,
 
   mWidget = aWidget;
   mRootLayerTreeID = aLayerTreeId;
+#if defined(XP_WIN)
+  // when run in headless mode, no WinCompositorWidget is created
+  if (widget::WinCompositorWidget* windows = mWidget->AsWindows()) {
+    windows->SetRootLayerTreeID(mRootLayerTreeID);
+  }
+#endif
 
   Initialize();
 }
@@ -269,8 +275,9 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvInitialize(
 
   mRootLayerTreeID = aRootLayerTreeId;
 #ifdef XP_WIN
-  if (XRE_IsGPUProcess()) {
-    mWidget->AsWindows()->SetRootLayerTreeID(mRootLayerTreeID);
+  // headless mode is probably always same-process; but just in case...
+  if (widget::WinCompositorWidget* windows = mWidget->AsWindows()) {
+    windows->SetRootLayerTreeID(mRootLayerTreeID);
   }
 #endif
 

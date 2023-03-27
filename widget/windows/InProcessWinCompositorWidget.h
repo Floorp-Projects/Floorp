@@ -71,7 +71,7 @@ class InProcessWinCompositorWidget final
   nsIWidget* RealWidget() override;
 
   void UpdateCompositorWnd(const HWND aCompositorWnd,
-                           const HWND aParentWnd) override {}
+                           const HWND aParentWnd) override;
   void SetRootLayerTreeID(const layers::LayersId& aRootLayerTreeId) override {}
 
  private:
