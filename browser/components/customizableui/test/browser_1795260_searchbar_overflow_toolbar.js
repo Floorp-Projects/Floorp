@@ -17,7 +17,9 @@ add_task(async function test_syncPreferenceWithWidget() {
   let container = document.getElementById(WIDGET_ID);
   // Set a disproportionately large width, which could be from a saved bigger
   // window, or what not.
-  container.style.width = window.innerWidth * 2 + "px";
+  let width = window.innerWidth * 2;
+  container.setAttribute("width", width);
+  container.style.width = `${width}px`;
 
   // Stuff shouldn't overflow.
   ok(
