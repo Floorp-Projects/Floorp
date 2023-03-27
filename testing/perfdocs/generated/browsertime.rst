@@ -18,7 +18,7 @@ Running Locally
 
 **Prerequisites**
 
-- A local mozilla repository clone with a `successful Firefox build <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions>`_ completed
+- A local mozilla repository clone with a `successful Firefox build </setup>`_ completed
 
 Running on Firefox Desktop
 --------------------------
@@ -127,7 +127,7 @@ Or for Raptor-Browsertime (use ``chrome`` for desktop, and ``chrome-m`` for mobi
 More Examples
 -------------
 
-`Browsertime docs <https://github.com/mozilla/browsertime/tree/master/docs/examples>`_
+`Browsertime docs <https://github.com/sitespeedio/browsertime/tree/main/docs/examples>`_
 
 Passing Additional Arguments to Browsertime
 -------------------------------------------
