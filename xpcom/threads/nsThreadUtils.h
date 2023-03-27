@@ -1157,17 +1157,13 @@ struct RunnableMethodArguments final {
   template <typename... As>
   explicit RunnableMethodArguments(As&&... aArguments)
       : mArguments(std::forward<As>(aArguments)...) {}
-  template <typename C, typename M, typename... Args, size_t... Indices>
-  static auto applyImpl(C* o, M m, std::tuple<Args...>& args,
-                        std::index_sequence<Indices...>)
-      -> decltype(((*o).*m)(std::get<Indices>(args).PassAsParameter()...)) {
-    return ((*o).*m)(std::get<Indices>(args).PassAsParameter()...);
-  }
   template <class C, typename M>
-  auto apply(C* o, M m)
-      -> decltype(applyImpl(o, m, mArguments,
-                            std::index_sequence_for<Ts...>{})) {
-    return applyImpl(o, m, mArguments, std::index_sequence_for<Ts...>{});
+  decltype(auto) apply(C* o, M m) {
+    return std::apply(
+        [&o, m](auto&&... args) {
+          return ((*o).*m)(args.PassAsParameter()...);
+        },
+        mArguments);
   }
 };
 
