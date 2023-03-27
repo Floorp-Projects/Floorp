@@ -34,7 +34,6 @@ UNIFIED_SOURCES += [
     "nsTextBoxFrame.cpp",
     "nsXULPopupManager.cpp",
     "nsXULTooltipListener.cpp",
-    "SimpleXULLeafFrame.cpp",
 ]
 
 DIRS += ["tree"]

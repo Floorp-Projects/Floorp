@@ -14,26 +14,25 @@
 #ifndef nsScrollbarButtonFrame_h___
 #define nsScrollbarButtonFrame_h___
 
-#include "SimpleXULLeafFrame.h"
 #include "mozilla/Attributes.h"
-#include "nsLeafFrame.h"
+#include "nsBoxFrame.h"
 #include "nsRepeatService.h"
 
 namespace mozilla {
 class PresShell;
 }  // namespace mozilla
 
-class nsScrollbarButtonFrame final : public mozilla::SimpleXULLeafFrame {
+class nsScrollbarButtonFrame final : public nsBoxFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsScrollbarButtonFrame)
 
   explicit nsScrollbarButtonFrame(ComputedStyle* aStyle,
                                   nsPresContext* aPresContext)
-      : mozilla::SimpleXULLeafFrame(aStyle, aPresContext, kClassID) {}
+      : nsBoxFrame(aStyle, aPresContext, kClassID), mCursorOnThis(false) {}
 
   // Overrides
-  void DestroyFrom(nsIFrame* aDestructRoot,
-                   PostDestroyData& aPostDestroyData) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot,
+                           PostDestroyData& aPostDestroyData) override;
 
   friend nsIFrame* NS_NewScrollbarButtonFrame(mozilla::PresShell* aPresShell,
                                               ComputedStyle* aStyle);
@@ -80,7 +79,7 @@ class nsScrollbarButtonFrame final : public mozilla::SimpleXULLeafFrame {
     static_cast<nsScrollbarButtonFrame*>(aData)->Notify();
   }
 
-  bool mCursorOnThis = false;
+  bool mCursorOnThis;
 };
 
 #endif

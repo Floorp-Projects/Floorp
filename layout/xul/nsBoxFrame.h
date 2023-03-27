@@ -154,6 +154,14 @@ class nsBoxFrame : public nsContainerFrame {
 
   nsCOMPtr<nsBoxLayout> mLayoutManager;
 
+  // Get the point associated with this event. Returns true if a single valid
+  // point was found. Otherwise false.
+  bool GetEventPoint(mozilla::WidgetGUIEvent* aEvent, nsPoint& aPoint);
+  // Gets the event coordinates relative to the widget offset associated with
+  // this frame. Return true if a single valid point was found.
+  bool GetEventPoint(mozilla::WidgetGUIEvent* aEvent,
+                     mozilla::LayoutDeviceIntPoint& aPoint);
+
  private:
   void CacheAttributes();
 
