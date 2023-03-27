@@ -159,7 +159,7 @@ namespace xsimd
         template <class A, class T_out, class T_in>
         inline batch_bool<T_out, A> batch_bool_cast(batch_bool<T_in, A> const& self, batch_bool<T_out, A> const&, requires_arch<avx>) noexcept
         {
-            return { bitwise_cast<batch<T_out, A>>(batch<T_in, A>(self.data)).data };
+            return { bitwise_cast<T_out>(batch<T_in, A>(self.data)).data };
         }
 
         // bitwise_and
@@ -1493,8 +1493,8 @@ namespace xsimd
                                                   V7> const& mask,
                                    requires_arch<avx>) noexcept
         {
-            return bitwise_cast<batch<T, A>>(
-                swizzle(bitwise_cast<batch<float, A>>(self), mask));
+            return bitwise_cast<T>(
+                swizzle(bitwise_cast<float>(self), mask));
         }
 
         template <class A,
@@ -1509,8 +1509,8 @@ namespace xsimd
                 batch_constant<batch<uint64_t, A>, V0, V1, V2, V3> const& mask,
                 requires_arch<avx>) noexcept
         {
-            return bitwise_cast<batch<T, A>>(
-                swizzle(bitwise_cast<batch<double, A>>(self), mask));
+            return bitwise_cast<T>(
+                swizzle(bitwise_cast<double>(self), mask));
         }
 
         // trunc

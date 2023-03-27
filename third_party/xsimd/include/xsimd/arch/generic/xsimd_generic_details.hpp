@@ -34,8 +34,8 @@ namespace xsimd
     inline batch<T_out, A> batch_cast(batch<T_in, A> const&, batch<T_out, A> const& out) noexcept;
     template <class T, class A>
     inline batch<T, A> bitofsign(batch<T, A> const& self) noexcept;
-    template <class B, class T, class A>
-    inline B bitwise_cast(batch<T, A> const& self) noexcept;
+    template <class T_out, class T_in, class A>
+    inline batch<T_out, A> bitwise_cast(batch<T_in, A> const& self) noexcept;
     template <class T, class A>
     inline batch<T, A> cos(batch<T, A> const& self) noexcept;
     template <class T, class A>
