@@ -21,7 +21,6 @@ export class MigrationWizard extends HTMLElement {
   #resourceTypeList = null;
   #shadowRoot = null;
   #importButton = null;
-  #safariPermissionButton = null;
 
   static get markup() {
     return `
@@ -216,11 +215,6 @@ export class MigrationWizard extends HTMLElement {
     this.#resourceTypeList = shadow.querySelector("#resource-type-list");
     this.#resourceTypeList.addEventListener("change", this);
 
-    this.#safariPermissionButton = shadow.querySelector(
-      "#safari-request-permissions"
-    );
-    this.#safariPermissionButton.addEventListener("click", this);
-
     this.#shadowRoot = shadow;
   }
 
@@ -359,7 +353,6 @@ export class MigrationWizard extends HTMLElement {
       opt.profile = migrator.profile;
       opt.displayName = migrator.displayName;
       opt.resourceTypes = migrator.resourceTypes;
-      opt.hasPermissions = migrator.hasPermissions;
 
       // Bug 1823489 - since the panel-list and panel-items are slotted, we
       // cannot style them directly from migration-wizard.css. We use inline
@@ -502,45 +495,9 @@ export class MigrationWizard extends HTMLElement {
    * externally to perform the actual migration.
    */
   #doImport() {
-    let migrationEventDetail = this.#gatherMigrationEventDetails();
-
-    this.dispatchEvent(
-      new CustomEvent("MigrationWizard:BeginMigration", {
-        bubbles: true,
-        detail: migrationEventDetail,
-      })
-    );
-  }
-
-  /**
-   * @typedef {object} MigrationDetails
-   * @property {string} key
-   *   The key for a MigratorBase subclass.
-   * @property {object|null} profile
-   *   A representation of a browser profile. This is serialized and originally
-   *   sent down from the parent via the GetAvailableMigrators message.
-   * @property {string[]} resourceTypes
-   *   An array of resource types that the user is attempted to import. These
-   *   strings should be from MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.
-   * @property {boolean} hasPermissions
-   *   True if this MigrationWizardChild told us that the associated
-   *   MigratorBase subclass for the key has enough permission to read
-   *   the requested resources.
-   */
-
-  /**
-   * Pulls information from the DOM state of the MigrationWizard and constructs
-   * and returns an object that can be used to begin migration via and event
-   * sent to the MigrationWizardChild.
-   *
-   * @returns {MigrationDetails} details
-   */
-  #gatherMigrationEventDetails() {
     let panelItem = this.#browserProfileSelector.selectedPanelItem;
     let key = panelItem.getAttribute("key");
     let profile = panelItem.profile;
-    let hasPermissions = panelItem.hasPermissions;
-
     let resourceTypeFields = this.#resourceTypeList.querySelectorAll(
       "label[data-resource-type]"
     );
@@ -551,25 +508,14 @@ export class MigrationWizard extends HTMLElement {
       }
     }
 
-    return {
-      key,
-      profile,
-      resourceTypes,
-      hasPermissions,
-    };
-  }
-
-  /**
-   * Sends a request to gain read access to the Safari profile folder on
-   * macOS, and upon gaining access, performs a migration using the current
-   * settings as gathered by #gatherMigrationEventDetails
-   */
-  #requestSafariPermissions() {
-    let migrationEventDetail = this.#gatherMigrationEventDetails();
     this.dispatchEvent(
-      new CustomEvent("MigrationWizard:RequestSafariPermissions", {
+      new CustomEvent("MigrationWizard:BeginMigration", {
         bubbles: true,
-        detail: migrationEventDetail,
+        detail: {
+          key,
+          profile,
+          resourceTypes,
+        },
       })
     );
   }
@@ -683,8 +629,6 @@ export class MigrationWizard extends HTMLElement {
           event.target != this.#browserProfileSelectorList
         ) {
           this.#onBrowserProfileSelectionChanged(event.target);
-        } else if (event.target == this.#safariPermissionButton) {
-          this.#requestSafariPermissions();
         }
         break;
       }
