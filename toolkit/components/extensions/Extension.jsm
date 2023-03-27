@@ -137,6 +137,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 var {
   GlobalManager,
+  IconDetails,
   ParentAPIManager,
   StartupCache,
   apiManager: Management,
@@ -3465,6 +3466,11 @@ class Extension extends ExtensionData {
 
   get hasBrowserActionUI() {
     return this.manifest.browser_action || this.manifest.action;
+  }
+
+  getPreferredIcon(size = 16) {
+    return IconDetails.getPreferredIcon(this.manifest.icons ?? {}, this, size)
+      .icon;
   }
 }
 

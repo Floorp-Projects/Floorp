@@ -206,6 +206,10 @@ add_task(async function test_extension_setting_default_engine_external() {
   async function startExtension(win = window) {
     let extension = ExtensionTestUtils.loadExtension({
       manifest: {
+        icons: {
+          "48": "icon.png",
+          "96": "icon@2x.png",
+        },
         browser_specific_settings: {
           gecko: {
             id: EXTENSION1_ID,
@@ -218,6 +222,10 @@ add_task(async function test_extension_setting_default_engine_external() {
             is_default: true,
           },
         },
+      },
+      files: {
+        "icon.png": "",
+        "icon@2x.png": "",
       },
       useAddonManager: "temporary",
     });
@@ -238,6 +246,11 @@ add_task(async function test_extension_setting_default_engine_external() {
 
   // First time around, don't accept the default engine.
   let { panel, extension } = await startExtension();
+  ok(
+    panel.getAttribute("icon").endsWith("/icon.png"),
+    "expected custom icon set on the notification"
+  );
+
   panel.secondaryButton.click();
 
   await TestUtils.topicObserved("webextension-defaultsearch-prompt-response");

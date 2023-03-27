@@ -373,11 +373,8 @@ var State = {
         }
         name = `${addon.name} (${addon.id})`;
         image =
-          AddonManager.getPreferredIconURL(
-            addon.extension.manifest,
-            32,
-            window
-          ) || "chrome://mozapps/skin/extensions/extension.svg";
+          addon.extension.getPreferredIcon?.(32) ||
+          "chrome://mozapps/skin/extensions/extension.svg";
         type = gSystemAddonIds.has(addon.id) ? "system-addon" : "addon";
       } else if (id == 0 && !tab.isWorker) {
         name = { id: "ghost-windows" };
