@@ -15,13 +15,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1048178
      target="_blank">Mozilla Bug 1048178</a>
 
   <hbox>
-      <scrollbar id="scroller"
-                 orient="horizontal"
-                 curpos="0"
-                 maxpos="500"
-                 pageincrement="500"
-                 width="500"
-                 style="margin:0"/>
+    <scrollbar id="scroller"
+               orient="horizontal"
+               curpos="0"
+               maxpos="500"
+               pageincrement="500"
+               style="width: 500px; margin:0"/>
   </hbox>
 
   <!-- test code goes here -->
@@ -45,7 +44,7 @@ var scrollbarTester = {
     this.mouseup(x, y, 2);
     this.mouseup(x, y, 0);
 
-    var newPos = this.getPos(); // sould be '500'
+    var newPos = this.getPos(); // should be '500'
 
     this.mousedown(x, y, 0);
     this.mousemove(x-1, y, 0);

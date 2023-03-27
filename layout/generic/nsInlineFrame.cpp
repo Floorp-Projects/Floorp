@@ -275,7 +275,7 @@ void nsInlineFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aMetrics, aStatus);
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
-  if (nullptr == aReflowInput.mLineLayout) {
+  if (!aReflowInput.mLineLayout) {
     NS_ERROR("must have non-null aReflowInput.mLineLayout");
     return;
   }

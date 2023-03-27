@@ -20,6 +20,7 @@
 #include "nsIScrollbarMediator.h"
 #include "nsStyleConsts.h"
 #include "nsIContent.h"
+#include "nsLayoutUtils.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/Element.h"
@@ -44,11 +45,11 @@ NS_IMPL_FRAMEARENA_HELPERS(nsScrollbarFrame)
 NS_QUERYFRAME_HEAD(nsScrollbarFrame)
   NS_QUERYFRAME_ENTRY(nsScrollbarFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
-NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 void nsScrollbarFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                             nsIFrame* aPrevInFlow) {
-  nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
+  nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
   // We want to be a reflow root since we use reflows to move the
   // slider.  Any reflow inside the scrollbar frame will be a reflow to
@@ -64,42 +65,112 @@ void nsScrollbarFrame::DestroyFrom(nsIFrame* aDestructRoot,
   aPostDestroyData.AddAnonymousContent(mSlider.forget());
   aPostDestroyData.AddAnonymousContent(mUpBottomButton.forget());
   aPostDestroyData.AddAnonymousContent(mDownBottomButton.forget());
-  nsBoxFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 void nsScrollbarFrame::Reflow(nsPresContext* aPresContext,
                               ReflowOutput& aDesiredSize,
                               const ReflowInput& aReflowInput,
                               nsReflowStatus& aStatus) {
+  MarkInReflow();
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
-  nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowInput, aStatus);
+  // We always take all the space we're given, and our track size in the other
+  // axis.
+  const bool horizontal = IsHorizontal();
+  const auto wm = GetWritingMode();
+  const auto minSize = aReflowInput.ComputedMinSize();
 
-  // nsGfxScrollFrame may have told us to shrink to nothing. If so, make sure
-  // our desired size agrees.
-  if (aReflowInput.AvailableWidth() == 0) {
-    aDesiredSize.Width() = 0;
+  aDesiredSize.ISize(wm) = aReflowInput.ComputedISize();
+  aDesiredSize.BSize(wm) = [&] {
+    if (aReflowInput.ComputedBSize() != NS_UNCONSTRAINEDSIZE) {
+      return aReflowInput.ComputedBSize();
+    }
+    // We don't want to change our size during incremental reflow, see the
+    // reflow root comment in init.
+    if (!aReflowInput.mParentReflowInput) {
+      return GetLogicalSize(wm).BSize(wm);
+    }
+    return minSize.BSize(wm);
+  }();
+
+  const nsSize containerSize = aDesiredSize.PhysicalSize();
+  const LogicalSize totalAvailSize = aDesiredSize.Size(wm);
+  LogicalPoint nextKidPos(wm);
+
+  MOZ_ASSERT(!wm.IsVertical());
+  const bool movesInInlineDirection = horizontal;
+
+  // Layout our kids left to right / top to bottom.
+  for (nsIFrame* kid : mFrames) {
+    MOZ_ASSERT(!kid->GetWritingMode().IsOrthogonalTo(wm),
+               "We don't expect orthogonal scrollbar parts");
+    const bool isSlider = kid->GetContent() == mSlider;
+    LogicalSize availSize = totalAvailSize;
+    {
+      // Assume we'll consume the same size before and after the slider. This is
+      // not a technically correct assumption if we have weird scrollbar button
+      // setups, but those will be going away, see bug 1824254.
+      const int32_t factor = isSlider ? 2 : 1;
+      if (movesInInlineDirection) {
+        availSize.ISize(wm) =
+            std::max(0, totalAvailSize.ISize(wm) - nextKidPos.I(wm) * factor);
+      } else {
+        availSize.BSize(wm) =
+            std::max(0, totalAvailSize.BSize(wm) - nextKidPos.B(wm) * factor);
+      }
+    }
+
+    ReflowInput kidRI(aPresContext, aReflowInput, kid, availSize);
+    if (isSlider) {
+      // We want for the slider to take all the remaining available space.
+      kidRI.SetComputedISize(availSize.ISize(wm));
+      kidRI.SetComputedBSize(availSize.BSize(wm));
+    } else if (movesInInlineDirection) {
+      // Otherwise we want all the space in the axis we're not advancing in, and
+      // the default / minimum size on the other axis.
+      kidRI.SetComputedBSize(availSize.BSize(wm));
+    } else {
+      kidRI.SetComputedISize(availSize.ISize(wm));
+    }
+
+    ReflowOutput kidDesiredSize(wm);
+    nsReflowStatus status;
+    const auto flags = ReflowChildFlags::Default;
+    ReflowChild(kid, aPresContext, kidDesiredSize, kidRI, wm, nextKidPos,
+                containerSize, flags, status);
+    // We haven't seen the slider yet, we can advance
+    FinishReflowChild(kid, aPresContext, kidDesiredSize, &kidRI, wm, nextKidPos,
+                      containerSize, flags);
+    if (movesInInlineDirection) {
+      nextKidPos.I(wm) += kidDesiredSize.ISize(wm);
+    } else {
+      nextKidPos.B(wm) += kidDesiredSize.BSize(wm);
+    }
   }
-  if (aReflowInput.AvailableHeight() == 0) {
-    aDesiredSize.Height() = 0;
-  }
+
+  aDesiredSize.SetOverflowAreasToDesiredBounds();
 }
 
 nsresult nsScrollbarFrame::AttributeChanged(int32_t aNameSpaceID,
                                             nsAtom* aAttribute,
                                             int32_t aModType) {
   nsresult rv =
-      nsBoxFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
+      nsContainerFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
 
   // Update value in our children
   UpdateChildrenAttributeValue(aAttribute, true);
 
   // if the current position changes, notify any nsGfxScrollFrame
   // parent we may have
-  if (aAttribute != nsGkAtoms::curpos) return rv;
+  if (aAttribute != nsGkAtoms::curpos) {
+    return rv;
+  }
 
   nsIScrollableFrame* scrollable = do_QueryFrame(GetParent());
-  if (!scrollable) return rv;
+  if (!scrollable) {
+    return rv;
+  }
 
   nsCOMPtr<nsIContent> content(mContent);
   scrollable->CurPosAttributeChanged(content);
@@ -164,47 +235,34 @@ nsIScrollbarMediator* nsScrollbarFrame::GetScrollbarMediator() {
   return sbm;
 }
 
-nsresult nsScrollbarFrame::GetXULMargin(nsMargin& aMargin) {
-  aMargin.SizeTo(0, 0, 0, 0);
+bool nsScrollbarFrame::IsHorizontal() const {
+  auto appearance = StyleDisplay()->EffectiveAppearance();
+  MOZ_ASSERT(appearance == StyleAppearance::ScrollbarHorizontal ||
+             appearance == StyleAppearance::ScrollbarVertical);
+  return appearance == StyleAppearance::ScrollbarHorizontal;
+}
 
-  const bool overlayScrollbars = PresContext()->UseOverlayScrollbars();
+nsSize nsScrollbarFrame::ScrollbarMinSize() const {
+  nsPresContext* pc = PresContext();
+  const LayoutDeviceIntSize widget =
+      pc->Theme()->GetMinimumWidgetSize(pc, const_cast<nsScrollbarFrame*>(this),
+                                        StyleDisplay()->EffectiveAppearance());
+  return LayoutDeviceIntSize::ToAppUnits(widget, pc->AppUnitsPerDevPixel());
+}
 
-  const bool horizontal = IsXULHorizontal();
-  bool didSetMargin = false;
+StyleScrollbarWidth nsScrollbarFrame::ScrollbarWidth() const {
+  return nsLayoutUtils::StyleForScrollbar(this)
+      ->StyleUIReset()
+      ->ScrollbarWidth();
+}
 
-  if (overlayScrollbars) {
-    nsSize minSize;
-    bool widthSet = false;
-    bool heightSet = false;
-    AddXULMinSize(this, minSize, widthSet, heightSet);
-    if (horizontal) {
-      if (heightSet) {
-        aMargin.top = -minSize.height;
-        didSetMargin = true;
-      }
-    } else {
-      if (widthSet) {
-        aMargin.left = -minSize.width;
-        didSetMargin = true;
-      }
-    }
-  }
-
-  if (!didSetMargin) {
-    DebugOnly<nsresult> rv = nsIFrame::GetXULMargin(aMargin);
-    // TODO(emilio): Should probably not be fallible, it's not like anybody
-    // cares about the return value anyway.
-    MOZ_ASSERT(NS_SUCCEEDED(rv), "nsIFrame::GetXULMargin can't really fail");
-  }
-
-  if (!horizontal) {
-    nsIScrollbarMediator* scrollFrame = GetScrollbarMediator();
-    if (scrollFrame && !scrollFrame->IsScrollbarOnRight()) {
-      std::swap(aMargin.left, aMargin.right);
-    }
-  }
-
-  return NS_OK;
+nscoord nsScrollbarFrame::ScrollbarTrackSize() const {
+  nsPresContext* pc = PresContext();
+  auto overlay = pc->UseOverlayScrollbars() ? nsITheme::Overlay::Yes
+                                            : nsITheme::Overlay::No;
+  return LayoutDevicePixel::ToAppUnits(
+      pc->Theme()->GetScrollbarSize(pc, ScrollbarWidth(), overlay),
+      pc->AppUnitsPerDevPixel());
 }
 
 void nsScrollbarFrame::SetIncrementToLine(int32_t aDirection) {
@@ -358,8 +416,7 @@ static already_AddRefed<Element> MakeScrollbarButton(
 nsresult nsScrollbarFrame::CreateAnonymousContent(
     nsTArray<ContentInfo>& aElements) {
   nsNodeInfoManager* nodeInfoManager = mContent->NodeInfo()->NodeInfoManager();
-
-  Element* el(GetContent()->AsElement());
+  Element* el = GetContent()->AsElement();
 
   // If there are children already in the node, don't create any anonymous
   // content (this only apply to crashtests/369038-1.xhtml)
@@ -368,7 +425,7 @@ nsresult nsScrollbarFrame::CreateAnonymousContent(
   }
 
   nsAutoString orient;
-  el->GetAttr(kNameSpaceID_None, nsGkAtoms::orient, orient);
+  el->GetAttr(nsGkAtoms::orient, orient);
   bool vertical = orient.EqualsLiteral("vertical");
 
   RefPtr<dom::NodeInfo> sbbNodeInfo =
@@ -451,12 +508,12 @@ nsresult nsScrollbarFrame::CreateAnonymousContent(
 
 void nsScrollbarFrame::UpdateChildrenAttributeValue(nsAtom* aAttribute,
                                                     bool aNotify) {
-  Element* el(GetContent()->AsElement());
+  Element* el = GetContent()->AsElement();
 
   nsAutoString value;
-  el->GetAttr(kNameSpaceID_None, aAttribute, value);
+  el->GetAttr(aAttribute, value);
 
-  if (!el->HasAttr(kNameSpaceID_None, aAttribute)) {
+  if (!el->HasAttr(aAttribute)) {
     if (mUpTopButton) {
       mUpTopButton->UnsetAttr(kNameSpaceID_None, aAttribute, aNotify);
     }
