@@ -4,12 +4,12 @@
 
 package mozilla.components.feature.tab.collections.adapter
 
-import android.content.Context
 import mozilla.components.browser.session.storage.serialize.BrowserStateReader
 import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.tab.collections.Tab
 import mozilla.components.feature.tab.collections.db.TabEntity
+import java.io.File
 
 internal class TabAdapter(
     val entity: TabEntity,
@@ -24,12 +24,12 @@ internal class TabAdapter(
         get() = entity.url
 
     override fun restore(
-        context: Context,
+        filesDir: File,
         engine: Engine,
         restoreSessionId: Boolean,
     ): RecoverableTab? {
         val reader = BrowserStateReader()
-        val file = entity.getStateFile(context.filesDir)
+        val file = entity.getStateFile(filesDir)
         return reader.readTab(engine, file, restoreSessionId, restoreParentId = false)
     }
 

@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.home.collections
 
-import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -45,6 +44,7 @@ import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.list.FaviconListItem
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.theme.FirefoxTheme
+import java.io.File
 
 /**
  * Rectangular shape with only right angles used to display a middle tab.
@@ -231,7 +231,7 @@ private val tabPreview = object : Tab {
     override val url = "https://www.mozilla.org/en-US/firefox/whats-new-in-last-version"
 
     override fun restore(
-        context: Context,
+        filesDir: File,
         engine: Engine,
         restoreSessionId: Boolean,
     ): RecoverableTab? = null

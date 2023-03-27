@@ -4,12 +4,12 @@
 
 package mozilla.components.feature.tab.collections.ext
 
-import android.content.Context
 import mozilla.components.browser.state.action.LastAccessAction
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.tab.collections.Tab
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.TabsUseCases
+import java.io.File
 
 /**
  * Restores the given [Tab] from a [TabCollection]. Will invoke [onTabRestored] on successful restore
@@ -18,7 +18,7 @@ import mozilla.components.feature.tabs.TabsUseCases
  * Will update the last accessed property of the tab if [updateLastAccess] is true.
  */
 operator fun TabsUseCases.RestoreUseCase.invoke(
-    context: Context,
+    filesDir: File,
     engine: Engine,
     tab: Tab,
     updateLastAccess: Boolean = true,
@@ -26,7 +26,7 @@ operator fun TabsUseCases.RestoreUseCase.invoke(
     onFailure: () -> Unit,
 ) {
     val item = tab.restore(
-        context = context,
+        filesDir = filesDir,
         engine = engine,
         restoreSessionId = false,
     )
@@ -54,14 +54,14 @@ operator fun TabsUseCases.RestoreUseCase.invoke(
  * Will update the last accessed property of the tab if [updateLastAccess] is true.
  */
 operator fun TabsUseCases.RestoreUseCase.invoke(
-    context: Context,
+    filesDir: File,
     engine: Engine,
     collection: TabCollection,
     updateLastAccess: Boolean = true,
     onFailure: (String) -> Unit,
 ) {
     val tabs = collection.tabs.reversed().mapNotNull { tab ->
-        val recoverableTab = tab.restore(context, engine, restoreSessionId = false)
+        val recoverableTab = tab.restore(filesDir, engine, restoreSessionId = false)
         if (recoverableTab == null) {
             // We were unable to restore the tab. Let the app know so that it can workaround that
             onFailure(tab.url)

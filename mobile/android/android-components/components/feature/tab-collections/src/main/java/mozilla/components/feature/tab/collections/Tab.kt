@@ -4,9 +4,9 @@
 
 package mozilla.components.feature.tab.collections
 
-import android.content.Context
 import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.concept.engine.Engine
+import java.io.File
 
 /**
  * A tab of a [TabCollection].
@@ -35,7 +35,7 @@ interface Tab {
      * multiple times - otherwise breaking the promise of a unique ID per tab.
      */
     fun restore(
-        context: Context,
+        filesDir: File,
         engine: Engine,
         restoreSessionId: Boolean = false,
     ): RecoverableTab?
