@@ -59,6 +59,18 @@ static bool ProxySetOnExpando(JSContext* cx, HandleObject proxy, HandleId id,
                                         ownDesc, result);
 }
 
+static bool ProxyGetOwnPropertyDescriptorFromExpando(
+    JSContext* cx, HandleObject proxy, HandleId id,
+    MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc) {
+  RootedObject expando(cx, proxy->as<ProxyObject>().expando().toObjectOrNull());
+
+  if (!expando) {
+    return true;
+  }
+
+  return GetOwnPropertyDescriptor(cx, expando, id, desc);
+}
+
 static bool ProxyGetOnExpando(JSContext* cx, HandleObject proxy,
                               HandleValue receiver, HandleId id,
                               MutableHandleValue vp) {
@@ -185,10 +197,9 @@ bool Proxy::getOwnPropertyDescriptor(
     return policy.returnValue();
   }
 
-  // Unless we implment ProxyGetOwnPropertyDescriptorFromExpando,
-  // this would be incorrect.
-  MOZ_ASSERT_IF(handler->useProxyExpandoObjectForPrivateFields(),
-                !id.isPrivateName());
+  if (handler->useProxyExpandoObjectForPrivateFields() && id.isPrivateName()) {
+    return ProxyGetOwnPropertyDescriptorFromExpando(cx, proxy, id, desc);
+  }
   return handler->getOwnPropertyDescriptor(cx, proxy, id, desc);
 }
 
