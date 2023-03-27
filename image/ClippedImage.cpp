@@ -216,8 +216,8 @@ Maybe<AspectRatio> ClippedImage::GetIntrinsicRatio() {
 NS_IMETHODIMP_(already_AddRefed<SourceSurface>)
 ClippedImage::GetFrame(uint32_t aWhichFrame, uint32_t aFlags) {
   RefPtr<SourceSurface> surface;
-  std::tie(std::ignore, surface) = GetFrameInternal(mClip.Size(), SVGImageContext(),
-                                          Nothing(), aWhichFrame, aFlags, 1.0);
+  std::tie(std::ignore, surface) = GetFrameInternal(
+      mClip.Size(), SVGImageContext(), Nothing(), aWhichFrame, aFlags, 1.0);
   return surface.forget();
 }
 
