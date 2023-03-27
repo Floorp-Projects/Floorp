@@ -3161,4 +3161,9 @@ HttpChannelChild::SetEarlyHintObserver(nsIEarlyHintObserver* aObserver) {
   return NS_OK;
 }
 
+NS_IMETHODIMP HttpChannelChild::SetWebTransportSessionEventListener(
+    WebTransportSessionEventListener* aListener) {
+  return NS_OK;
+}
+
 }  // namespace mozilla::net

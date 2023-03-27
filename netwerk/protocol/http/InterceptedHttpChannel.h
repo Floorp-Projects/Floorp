@@ -287,6 +287,11 @@ class InterceptedHttpChannel final
     return NS_OK;
   }
 
+  NS_IMETHOD SetWebTransportSessionEventListener(
+      WebTransportSessionEventListener* aListener) override {
+    return NS_OK;
+  }
+
   void DoNotifyListenerCleanup() override;
 
   void DoAsyncAbort(nsresult aStatus) override;

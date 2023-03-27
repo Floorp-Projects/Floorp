@@ -1022,6 +1022,7 @@ void nsHttpChannel::ReleaseListeners() {
   mChannelClassifier = nullptr;
   mWarningReporter = nullptr;
   mEarlyHintObserver = nullptr;
+  mWebTransportSessionEventListener = nullptr;
 
   for (StreamFilterRequest& request : mStreamFilterRequests) {
     request.mPromise->Reject(false, __func__);
@@ -1365,7 +1366,7 @@ nsresult nsHttpChannel::SetupTransaction() {
     mCaps &= ~NS_HTTP_ALLOW_KEEPALIVE;
   }
 
-  if (mIsForWebTransport) {
+  if (mWebTransportSessionEventListener) {
     mCaps |= NS_HTTP_STICKY_CONNECTION;
   }
 
@@ -1402,7 +1403,7 @@ nsresult nsHttpChannel::SetupTransaction() {
                                     aResult.closeReason());
     };
   }
-  mTransaction->SetIsForWebTransport(mIsForWebTransport);
+  mTransaction->SetIsForWebTransport(!!mWebTransportSessionEventListener);
   rv = mTransaction->Init(
       mCaps, mConnectionInfo, &mRequestHead, mUploadStream, mReqContentLength,
       LoadUploadStreamHasHeaders(), GetCurrentSerialEventTarget(), callbacks,
@@ -1985,7 +1986,7 @@ void nsHttpChannel::ProcessAltService() {
     return;
   }
 
-  if (mIsForWebTransport) {
+  if (mWebTransportSessionEventListener) {
     return;
   }
 
@@ -5146,6 +5147,9 @@ nsresult nsHttpChannel::SetupReplacementChannel(nsIURI* newURI,
     mEarlyHintObserver = nullptr;
   }
 
+  // We don't support redirection for WebTransport for now.
+  mWebTransportSessionEventListener = nullptr;
+
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(newChannel);
   if (!httpChannel) return NS_OK;  // no other options to set
 
@@ -5554,6 +5558,7 @@ nsHttpChannel::Cancel(nsresult status) {
                 !AllowedErrorForHTTPSRRFallback(status));
 
   mEarlyHintObserver = nullptr;
+  mWebTransportSessionEventListener = nullptr;
 
   if (mCanceled) {
     LOG(("  ignoring; already canceled\n"));
@@ -5662,6 +5667,7 @@ nsresult nsHttpChannel::CancelInternal(nsresult status) {
   }
 
   mEarlyHintObserver = nullptr;
+  mWebTransportSessionEventListener = nullptr;
   mCanceled = true;
   mStatus = NS_FAILED(status) ? status : NS_ERROR_ABORT;
 
@@ -5739,6 +5745,7 @@ void nsHttpChannel::CancelNetworkRequest(nsresult aStatus) {
   if (mTransactionPump) mTransactionPump->Cancel(aStatus);
 
   mEarlyHintObserver = nullptr;
+  mWebTransportSessionEventListener = nullptr;
 }
 
 NS_IMETHODIMP
@@ -5899,9 +5906,6 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
     ReleaseListeners();
     return rv;
   }
-
-  nsCOMPtr<WebTransportSessionEventListener> wt = do_QueryInterface(listener);
-  mIsForWebTransport = !!wt;
 
   MOZ_ASSERT(
       mLoadInfo->GetSecurityMode() == 0 ||
@@ -6222,7 +6226,7 @@ nsresult nsHttpChannel::BeginConnect() {
                                  originAttributes, host, port, true);
   } else {
 #endif
-    if (mIsForWebTransport) {
+    if (mWebTransportSessionEventListener) {
       connInfo =
           new nsHttpConnectionInfo(host, port, "h3"_ns, mUsername, proxyInfo,
                                    originAttributes, isHttps, true, true);
@@ -6243,7 +6247,7 @@ nsresult nsHttpChannel::BeginConnect() {
 
   RefPtr<AltSvcMapping> mapping;
   if (!mConnectionInfo && LoadAllowAltSvc() &&  // per channel
-      !mIsForWebTransport && (http2Allowed || http3Allowed) &&
+      !mWebTransportSessionEventListener && (http2Allowed || http3Allowed) &&
       !(mLoadFlags & LOAD_FRESH_CONNECTION) &&
       AltSvcMapping::AcceptableProxy(proxyInfo) &&
       (scheme.EqualsLiteral("http") || scheme.EqualsLiteral("https")) &&
@@ -10073,10 +10077,17 @@ nsHttpChannel::EarlyHint(const nsACString& aLinkHeader,
   return NS_OK;
 }
 
-WebTransportSessionEventListener*
+NS_IMETHODIMP nsHttpChannel::SetWebTransportSessionEventListener(
+    WebTransportSessionEventListener* aListener) {
+  mWebTransportSessionEventListener = aListener;
+  return NS_OK;
+}
+
+already_AddRefed<WebTransportSessionEventListener>
 nsHttpChannel::GetWebTransportSessionEventListener() {
-  nsCOMPtr<WebTransportSessionEventListener> wt = do_QueryInterface(mListener);
-  return wt;
+  RefPtr<WebTransportSessionEventListener> wt =
+      mWebTransportSessionEventListener;
+  return wt.forget();
 }
 
 }  // namespace net
