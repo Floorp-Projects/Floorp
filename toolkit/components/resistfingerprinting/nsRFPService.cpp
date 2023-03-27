@@ -286,21 +286,24 @@ void nsRFPService::UpdateRFPLiteOverrideList() {
     if (mappedValue.isSome()) {
       if (each[0] == '+') {
         sTargetOverrideAdditions.AppendElement(mappedValue.value());
-        MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
-                ("Mapped value %s (%X), to an addition, now we have %zu",
-                 NS_ConvertUTF16toUTF8(each).get(), mappedValue.value(),
-                 sTargetOverrideAdditions.Length()));
+        MOZ_LOG(
+            gResistFingerprintingLog, LogLevel::Warning,
+            ("Mapped value %s (%X), to an addition, now we have %zu",
+             NS_ConvertUTF16toUTF8(each).get(), unsigned(mappedValue.value()),
+             sTargetOverrideAdditions.Length()));
       } else if (each[0] == '-') {
         sTargetOverrideSubtractions.AppendElement(mappedValue.value());
-        MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
-                ("Mapped value %s (%X) to a subtraction, now we have %zu",
-                 NS_ConvertUTF16toUTF8(each).get(), mappedValue.value(),
-                 sTargetOverrideSubtractions.Length()));
+        MOZ_LOG(
+            gResistFingerprintingLog, LogLevel::Warning,
+            ("Mapped value %s (%X) to a subtraction, now we have %zu",
+             NS_ConvertUTF16toUTF8(each).get(), unsigned(mappedValue.value()),
+             sTargetOverrideSubtractions.Length()));
       } else {
-        MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
-                ("Mapped value %s (%X) to an RFPTarget Enum, but the first "
-                 "character wasn't + or -",
-                 NS_ConvertUTF16toUTF8(each).get(), mappedValue.value()));
+        MOZ_LOG(
+            gResistFingerprintingLog, LogLevel::Warning,
+            ("Mapped value %s (%X) to an RFPTarget Enum, but the first "
+             "character wasn't + or -",
+             NS_ConvertUTF16toUTF8(each).get(), unsigned(mappedValue.value())));
       }
     } else {
       MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
