@@ -219,6 +219,25 @@ details:not([open]) summary {
   margin-inline-end: 8px;
 }
 
+.page-portrait-icon {
+  width: 16px;
+  height: 16px;
+  content: url("chrome://global/skin/icons/page-portrait.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+  vertical-align: middle;
+}
+
+.safari-icon-3dots {
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+  content: url("chrome://browser/skin/migration/safari-icon-3dots.svg");
+  -moz-context-properties: fill, stroke;
+  fill: currentColor;
+  stroke: color-mix(in srgb, currentColor 10%, transparent 90%);
+}
+
 .no-browsers-found-message {
   display: flex;
 }

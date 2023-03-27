@@ -15,6 +15,7 @@ export const MigrationWizardConstants = Object.freeze({
     SELECTION: "selection",
     PROGRESS: "progress",
     SAFARI_PERMISSION: "safari-permission",
+    SAFARI_PASSWORD_PERMISSION: "safari-password-permission",
     NO_BROWSERS_FOUND: "no-browsers-found",
   }),
 
