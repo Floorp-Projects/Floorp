@@ -1,0 +1,62 @@
+{
+  "triagers": {
+    "Gijs": {
+      "bzmail": "gijskruitbosch+bugs@gmail.com"
+    },
+    "Mike Conley": {
+      "bzmail": "mconley@mozilla.com"
+    },
+    "Florian Quèze": {
+      "bzmail": "florian@mozilla.com"
+    },
+    "Doug Thayer": {
+      "bzmail": "dothayer@mozilla.com"
+    }
+  },
+  "duty-start-dates": {
+    "2023-03-23": "Gijs Kruitbosch",
+    "2023-03-30": "Mike Conley",
+    "2023-04-06": "Florian Quèze",
+    "2023-04-13": "Doug Thayer",
+    "2023-04-20": "Gijs Kruitbosch",
+    "2023-04-27": "Mike Conley",
+    "2023-05-04": "Doug Thayer",
+    "2023-05-11": "Gijs Kruitbosch",
+    "2023-05-18": "Mike Conley",
+    "2023-05-25": "Doug Thayer",
+    "2023-06-01": "Gijs Kruitbosch",
+    "2023-06-08": "Mike Conley",
+    "2023-06-15": "Doug Thayer",
+    "2023-06-22": "Gijs Kruitbosch",
+    "2023-06-29": "Mike Conley",
+    "2023-07-06": "Doug Thayer",
+    "2023-07-13": "Gijs Kruitbosch",
+    "2023-07-20": "Mike Conley",
+    "2023-07-27": "Florian Quèze",
+    "2023-08-03": "Doug Thayer",
+    "2023-08-10": "Gijs Kruitbosch",
+    "2023-08-17": "Mike Conley",
+    "2023-08-24": "Florian Quèze",
+    "2023-08-31": "Doug Thayer",
+    "2023-09-07": "Gijs Kruitbosch",
+    "2023-09-14": "Mike Conley",
+    "2023-09-21": "Florian Quèze",
+    "2023-09-28": "Doug Thayer",
+    "2023-10-05": "Gijs Kruitbosch",
+    "2023-10-12": "Mike Conley",
+    "2023-10-19": "Florian Quèze",
+    "2023-10-26": "Doug Thayer",
+    "2023-11-02": "Gijs Kruitbosch",
+    "2023-11-09": "Mike Conley",
+    "2023-11-16": "Florian Quèze",
+    "2023-11-23": "Doug Thayer",
+    "2023-11-30": "Gijs Kruitbosch",
+    "2023-12-07": "Mike Conley",
+    "2023-12-14": "Florian Quèze",
+    "2023-12-21": "Doug Thayer",
+    "2023-12-28": "Gijs Kruitbosch",
+    "2024-01-04": "Mike Conley",
+    "2024-01-11": "Florian Quèze",
+    "2024-01-18": "Doug Thayer"
+  }
+}
