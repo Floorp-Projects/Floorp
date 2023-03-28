@@ -7545,6 +7545,22 @@ urlbar.picked:
       record_in_processes:
         - main
 
+    trending:
+      bug_numbers:
+        - 1823543
+      description: >
+        Counts how many times this result type was picked at a given index.
+      expires: never
+      kind: uint
+      keyed: true
+      notification_emails:
+        - fx-search-telemetry@mozilla.com
+      release_channel_collection: opt-out
+      products:
+        - 'firefox'
+      record_in_processes:
+        - main
+
     unknown:
       bug_numbers:
         - 1671508

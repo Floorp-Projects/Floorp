@@ -1186,7 +1186,10 @@ export var UrlbarUtils = {
         if (result.providerName == "TabToSearch") {
           return "tabtosearch";
         }
-        return result.payload.suggestion ? "searchsuggestion" : "searchengine";
+        if (result.payload.suggestion) {
+          return result.payload.trending ? "trending" : "searchsuggestion";
+        }
+        return "searchengine";
       case UrlbarUtils.RESULT_TYPE.URL:
         if (result.autofill) {
           let { type } = result.autofill;
@@ -1281,7 +1284,7 @@ export var UrlbarUtils = {
       }
       case UrlbarUtils.RESULT_GROUP.TAIL_SUGGESTION:
       case UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION: {
-        return "search_suggest";
+        return result.payload.trending ? "trending_search" : "search_suggest";
       }
       case UrlbarUtils.RESULT_GROUP.REMOTE_TAB: {
         return "remote_tab";
@@ -1359,7 +1362,7 @@ export var UrlbarUtils = {
           return "search_history";
         }
         if (result.payload.suggestion) {
-          return "search_suggest";
+          return result.payload.trending ? "trending_search" : "search_suggest";
         }
         return "search_engine";
       case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:

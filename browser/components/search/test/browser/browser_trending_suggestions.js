@@ -112,6 +112,29 @@ add_task(async function test_trending_results() {
   });
 });
 
+add_task(async function test_trending_telemetry() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.trending.featureGate", true],
+      ["browser.urlbar.trending.requireSearchMode", false],
+    ],
+  });
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "",
+    waitForFocus: SimpleTest.waitForFocus,
+  });
+
+  await UrlbarTestUtils.promisePopupClose(window, () => {
+    EventUtils.synthesizeKey("KEY_ArrowDown");
+    EventUtils.synthesizeKey("KEY_Enter");
+  });
+
+  let scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
+  TelemetryTestUtils.assertKeyedScalar(scalars, "urlbar.picked.trending", 0, 1);
+});
+
 async function check_results({
   featureEnabled = false,
   requireSearchModeEnabled = true,
