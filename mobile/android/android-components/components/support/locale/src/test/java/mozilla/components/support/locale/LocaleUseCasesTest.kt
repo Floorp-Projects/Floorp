@@ -4,18 +4,15 @@
 
 package mozilla.components.support.locale
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.action.LocaleAction
 import mozilla.components.browser.state.action.LocaleAction.UpdateLocaleAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.mock
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
-import java.util.Locale
+import java.util.*
 
-@RunWith(AndroidJUnit4::class)
 class LocaleUseCasesTest {
 
     private lateinit var browserStore: BrowserStore

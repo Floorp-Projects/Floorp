@@ -5,7 +5,6 @@
 package mozilla.components.browser.thumbnails
 
 import android.graphics.Bitmap
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.EngineAction
@@ -18,10 +17,8 @@ import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.mock
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
 
-@RunWith(AndroidJUnit4::class)
 class ThumbnailsMiddlewareTest {
 
     @Test

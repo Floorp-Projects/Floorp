@@ -4,7 +4,6 @@
 
 package mozilla.components.service.pocket.stories.api
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.fetch.Client
 import mozilla.components.service.pocket.helpers.PocketTestResources
 import mozilla.components.service.pocket.helpers.assertClassVisibility
@@ -16,12 +15,10 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import kotlin.reflect.KVisibility
 
-@RunWith(AndroidJUnit4::class)
 class PocketEndpointTest {
 
     private lateinit var endpoint: PocketEndpoint

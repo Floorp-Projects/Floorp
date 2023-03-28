@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.sitepermissions
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.concept.engine.permission.SitePermissions.AutoplayStatus
 import mozilla.components.concept.engine.permission.SitePermissions.Status.ALLOWED
@@ -20,9 +19,7 @@ import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permi
 import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission.NOTIFICATION
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import org.junit.runner.RunWith
 
-@RunWith(AndroidJUnit4::class)
 class SitePermissionsTest {
     @Test
     fun `Tests get() against direct property access`() {

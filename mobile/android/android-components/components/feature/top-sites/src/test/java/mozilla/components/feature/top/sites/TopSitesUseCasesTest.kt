@@ -4,16 +4,14 @@
 
 package mozilla.components.feature.top.sites
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mozilla.components.support.test.mock
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
 
 @ExperimentalCoroutinesApi // for runTest
-@RunWith(AndroidJUnit4::class)
+
 class TopSitesUseCasesTest {
 
     @Test

@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.syncedtabs.controller
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.storage.sync.SyncedDeviceTabs
 import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.DeviceConstellation
@@ -20,13 +19,11 @@ import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.Mockito.`when`
 
-@RunWith(AndroidJUnit4::class)
 class DefaultControllerTest {
     private val storage: SyncedTabsStorage = mock()
     private val accountManager: FxaAccountManager = mock()

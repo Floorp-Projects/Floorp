@@ -6,7 +6,6 @@ package mozilla.components.feature.privatemode.feature
 
 import android.view.Window
 import android.view.WindowManager.LayoutParams.FLAG_SECURE
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
@@ -16,11 +15,9 @@ import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 
-@RunWith(AndroidJUnit4::class)
 @ExperimentalCoroutinesApi
 class SecureWindowFeatureTest {
 

@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.prompts.address
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.CustomTabSessionState
@@ -23,10 +22,8 @@ import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
 
-@RunWith(AndroidJUnit4::class)
 class AddressPickerTest {
 
     private lateinit var store: BrowserStore

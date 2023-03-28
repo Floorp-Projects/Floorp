@@ -4,15 +4,12 @@
 
 package mozilla.components.browser.storage.sync
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.mock
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 
-@RunWith(AndroidJUnit4::class)
 class GlobalPlacesDependencyProviderTest {
 
     @Before

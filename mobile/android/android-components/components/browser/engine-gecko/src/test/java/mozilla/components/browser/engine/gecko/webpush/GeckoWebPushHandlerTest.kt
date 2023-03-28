@@ -4,20 +4,17 @@
 
 package mozilla.components.browser.engine.gecko.webpush
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.isNull
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.WebPushController
 
-@RunWith(AndroidJUnit4::class)
 class GeckoWebPushHandlerTest {
 
     lateinit var runtime: GeckoRuntime

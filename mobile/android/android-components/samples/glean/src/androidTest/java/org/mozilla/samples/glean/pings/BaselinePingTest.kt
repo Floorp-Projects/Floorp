@@ -7,7 +7,6 @@ package org.mozilla.samples.glean.pings
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.rules.ActivityScenarioRule
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import mozilla.components.service.glean.testing.GleanTestLocalServer
@@ -20,7 +19,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mozilla.samples.glean.MainActivity
 import java.io.BufferedReader
 import java.io.ByteArrayInputStream
@@ -53,7 +51,6 @@ fun RecordedRequest.getPlainBody(): String {
     }
 }
 
-@RunWith(AndroidJUnit4::class)
 class BaselinePingTest {
     private val server = createMockWebServer()
 

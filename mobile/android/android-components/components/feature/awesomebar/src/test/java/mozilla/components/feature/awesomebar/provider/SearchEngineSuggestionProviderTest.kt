@@ -5,7 +5,6 @@
 package mozilla.components.feature.awesomebar.provider
 
 import android.content.Context
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mozilla.components.feature.search.ext.createSearchEngine
@@ -15,10 +14,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 
 @ExperimentalCoroutinesApi // for runTest
-@RunWith(AndroidJUnit4::class)
+
 class SearchEngineSuggestionProviderTest {
     private lateinit var defaultProvider: SearchEngineSuggestionProvider
     private val engineList = listOf(

@@ -6,7 +6,6 @@ package mozilla.components.support.utils
 
 import android.content.Intent
 import android.os.Parcelable
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -14,15 +13,12 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.doThrow
-import java.util.HashSet
 
-@RunWith(AndroidJUnit4::class)
 class SafeIntentTest {
 
     private lateinit var intent: Intent

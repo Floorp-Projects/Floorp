@@ -4,16 +4,13 @@
 
 package mozilla.components.feature.downloads
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.mock
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
 
-@RunWith(AndroidJUnit4::class)
 class DownloadUseCasesTest {
 
     @Test

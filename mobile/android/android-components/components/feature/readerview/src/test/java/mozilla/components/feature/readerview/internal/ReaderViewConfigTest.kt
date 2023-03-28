@@ -8,7 +8,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.content.res.Resources
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.feature.readerview.ReaderViewFeature
 import mozilla.components.feature.readerview.ReaderViewFeature.Companion.COLOR_SCHEME_KEY
 import mozilla.components.feature.readerview.ReaderViewFeature.Companion.FONT_SIZE_DEFAULT
@@ -20,7 +19,6 @@ import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.Mock
 import org.mockito.Mockito.anyString
@@ -29,7 +27,6 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations
 
-@RunWith(AndroidJUnit4::class)
 class ReaderViewConfigTest {
 
     @Mock private lateinit var context: Context

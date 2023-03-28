@@ -5,7 +5,6 @@
 package mozilla.components.lib.state.ext
 
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
@@ -13,9 +12,7 @@ import mozilla.components.lib.state.Store
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 
-@RunWith(AndroidJUnit4::class)
 class ComposeExtensionsKtTest {
     @get:Rule
     val rule = createComposeRule()

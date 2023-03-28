@@ -8,7 +8,6 @@ import android.content.Context
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.util.DisplayMetrics
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.support.images.DesiredSize
@@ -21,14 +20,12 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
-@RunWith(AndroidJUnit4::class)
 class ResizingProcessorTest {
     private lateinit var processor: ResizingProcessor
 

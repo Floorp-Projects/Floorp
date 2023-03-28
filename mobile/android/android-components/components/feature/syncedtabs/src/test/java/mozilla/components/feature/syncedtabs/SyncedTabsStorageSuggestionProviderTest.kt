@@ -5,7 +5,6 @@
 package mozilla.components.feature.syncedtabs
 
 import android.graphics.drawable.Drawable
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.awesomebar.AwesomeBar.Suggestion.Flag
 import mozilla.components.feature.syncedtabs.helper.getDevice1Tabs
@@ -18,9 +17,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 
-@RunWith(AndroidJUnit4::class)
 class SyncedTabsStorageSuggestionProviderTest {
     private lateinit var syncedTabs: SyncedTabsStorage
     private lateinit var indicatorIcon: DeviceIndicators

@@ -4,7 +4,6 @@ package mozilla.components.browser.session.storage/* This Source Code Form is su
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.engine.gecko.GeckoEngine
@@ -15,7 +14,6 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.junit.runner.RunWith
 
 /**
  * The test cases in this class restore actual browsing sessions taken from devices. If a test case
@@ -27,7 +25,6 @@ import org.junit.runner.RunWith
  * need to be reported to the GeckoView team to be fixed before reaching release branches.
  */
 @Suppress("TestFunctionName")
-@RunWith(AndroidJUnit4::class)
 class RestoringBrowsingSessionsTest {
     private val context: Context
         get() = ApplicationProvider.getApplicationContext()

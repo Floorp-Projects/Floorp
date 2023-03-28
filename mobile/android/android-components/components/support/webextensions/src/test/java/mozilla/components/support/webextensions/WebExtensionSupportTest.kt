@@ -4,7 +4,6 @@
 
 package mozilla.components.support.webextensions
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.CustomTabListAction
 import mozilla.components.browser.state.action.EngineAction
@@ -46,7 +45,6 @@ import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.spy
@@ -54,7 +52,6 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import mozilla.components.support.base.facts.Action as FactsAction
 
-@RunWith(AndroidJUnit4::class)
 class WebExtensionSupportTest {
 
     @get:Rule

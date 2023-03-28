@@ -7,7 +7,6 @@
 package mozilla.components.feature.accounts.push
 
 import android.content.Context
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.sync.ConstellationState
@@ -26,7 +25,6 @@ import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.Mockito.verifyNoMoreInteractions
@@ -34,7 +32,6 @@ import org.mockito.Mockito.`when`
 import org.mockito.stubbing.OngoingStubbing
 
 @ExperimentalCoroutinesApi // for runTestOnMain
-@RunWith(AndroidJUnit4::class)
 class ConstellationObserverTest {
 
     private val push: AutoPushFeature = mock()

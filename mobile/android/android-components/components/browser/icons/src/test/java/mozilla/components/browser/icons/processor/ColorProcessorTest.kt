@@ -6,19 +6,16 @@ package mozilla.components.browser.icons.processor
 
 import android.graphics.Bitmap
 import android.graphics.Color
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.icons.Icon
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.doReturn
 
-@RunWith(AndroidJUnit4::class)
 class ColorProcessorTest {
     @Test
     fun `test extracting color`() {

@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.tabs
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
@@ -19,12 +18,10 @@ import mozilla.components.support.test.whenever
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
-@RunWith(AndroidJUnit4::class)
 class WindowFeatureTest {
 
     @get:Rule

@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.toolbar
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.domains.Domain
 import mozilla.components.browser.domains.autocomplete.BaseDomainAutocompleteProvider
@@ -24,7 +23,6 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
@@ -32,7 +30,6 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
-@RunWith(AndroidJUnit4::class)
 class ToolbarAutocompleteFeatureTest {
     class TestToolbar : Toolbar {
         override var highlight: Toolbar.Highlight = Toolbar.Highlight.NONE

@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.webcompat
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.support.test.argumentCaptor
@@ -13,12 +12,10 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.webextensions.WebExtensionController
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
-@RunWith(AndroidJUnit4::class)
 class WebCompatFeatureTest {
 
     @Before

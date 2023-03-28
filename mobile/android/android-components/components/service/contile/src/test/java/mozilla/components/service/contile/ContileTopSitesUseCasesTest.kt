@@ -4,20 +4,17 @@
 
 package mozilla.components.service.contile
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.Mockito.verify
 import java.io.IOException
 
 @ExperimentalCoroutinesApi // for runTest
-@RunWith(AndroidJUnit4::class)
 class ContileTopSitesUseCasesTest {
 
     @Test

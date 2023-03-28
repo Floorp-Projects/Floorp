@@ -5,7 +5,6 @@
 package mozilla.components.browser.engine.gecko.permission
 
 import android.Manifest
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.engine.permission.Permission
 import mozilla.components.support.test.mock
 import mozilla.components.test.ReflectionUtils
@@ -13,7 +12,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
@@ -23,7 +21,6 @@ import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_GEOLOCATION
 
-@RunWith(AndroidJUnit4::class)
 class GeckoPermissionRequestTest {
 
     @Test

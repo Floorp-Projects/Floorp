@@ -4,7 +4,6 @@
 
 package mozilla.components.browser.state.engine.middleware
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
@@ -21,12 +20,10 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
-@RunWith(AndroidJUnit4::class)
 class SuspendMiddlewareTest {
 
     @get:Rule

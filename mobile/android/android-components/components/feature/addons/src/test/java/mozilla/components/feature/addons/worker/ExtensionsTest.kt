@@ -4,16 +4,13 @@
 
 package mozilla.components.feature.addons.worker
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.CancellationException
 import mozilla.components.concept.engine.webextension.WebExtensionException
 import org.junit.Test
-import org.junit.runner.RunWith
 import java.io.IOException
 
-@RunWith(AndroidJUnit4::class)
 class ExtensionsTest {
 
     @Test

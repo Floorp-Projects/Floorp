@@ -7,7 +7,6 @@ package mozilla.components.browser.thumbnails.loader
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.widget.ImageView
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Job
 import mozilla.components.browser.thumbnails.R
@@ -19,13 +18,10 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-
-@RunWith(AndroidJUnit4::class)
 class ThumbnailLoaderTest {
 
     @get:Rule

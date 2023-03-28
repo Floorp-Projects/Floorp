@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.tabs.tabstray
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabPartition
@@ -21,11 +20,9 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verifyNoMoreInteractions
 
-@RunWith(AndroidJUnit4::class)
 class TabsTrayPresenterTest {
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()

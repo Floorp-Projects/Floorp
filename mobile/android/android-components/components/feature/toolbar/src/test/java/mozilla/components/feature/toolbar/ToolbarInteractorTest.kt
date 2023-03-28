@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.toolbar
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.toolbar.AutocompleteDelegate
 import mozilla.components.concept.toolbar.Toolbar
@@ -12,10 +11,8 @@ import mozilla.components.feature.session.SessionUseCases
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.spy
 
-@RunWith(AndroidJUnit4::class)
 class ToolbarInteractorTest {
 
     class TestToolbar : Toolbar {

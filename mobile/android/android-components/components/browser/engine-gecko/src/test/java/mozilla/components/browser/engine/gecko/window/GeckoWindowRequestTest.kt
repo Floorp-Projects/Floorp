@@ -4,14 +4,11 @@
 
 package mozilla.components.browser.engine.gecko.window
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import org.junit.runner.RunWith
 
-@RunWith(AndroidJUnit4::class)
 class GeckoWindowRequestTest {
 
     @Test

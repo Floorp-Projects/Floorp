@@ -10,7 +10,6 @@ import android.os.Bundle
 import androidx.browser.customtabs.CustomTabsIntent.EXTRA_SESSION
 import androidx.browser.customtabs.TrustedWebUtils.EXTRA_LAUNCH_AS_TRUSTED_WEB_ACTIVITY
 import androidx.core.net.toUri
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.state.ExternalAppType
@@ -25,10 +24,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
 
-@RunWith(AndroidJUnit4::class)
 @ExperimentalCoroutinesApi
 @Suppress("DEPRECATION")
 @Ignore("TrustedWebActivityIntentProcessorTest] is deprecated. See https://github.com/mozilla-mobile/android-components/issues/12024")

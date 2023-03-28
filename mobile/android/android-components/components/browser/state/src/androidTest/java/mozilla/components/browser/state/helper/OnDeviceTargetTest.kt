@@ -5,7 +5,6 @@
 package mozilla.components.browser.state.helper
 
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.CustomTabListAction
@@ -18,12 +17,11 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 
 /**
  * On-device tests for [Target].
  */
-@RunWith(AndroidJUnit4::class)
+
 class OnDeviceTargetTest {
     @get:Rule
     val rule = createComposeRule()

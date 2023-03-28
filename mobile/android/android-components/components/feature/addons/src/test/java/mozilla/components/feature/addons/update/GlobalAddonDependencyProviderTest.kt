@@ -4,15 +4,12 @@
 
 package mozilla.components.feature.addons.update
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import junit.framework.TestCase.assertEquals
 import mozilla.components.feature.addons.AddonManager
 import mozilla.components.support.test.mock
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 
-@RunWith(AndroidJUnit4::class)
 class GlobalAddonDependencyProviderTest {
 
     @Before

@@ -4,7 +4,6 @@
 
 package mozilla.components.browser.engine.gecko.permission
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.engine.permission.SitePermissions
@@ -23,7 +22,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.anyBoolean
 import org.mockito.Mockito.anyString
 import org.mockito.Mockito.doNothing
@@ -47,7 +45,6 @@ import org.mozilla.geckoview.StorageController
 import org.mozilla.geckoview.StorageController.ClearFlags
 
 @ExperimentalCoroutinesApi
-@RunWith(AndroidJUnit4::class)
 class GeckoSitePermissionsStorageTest {
     private lateinit var runtime: GeckoRuntime
     private lateinit var geckoStorage: GeckoSitePermissionsStorage

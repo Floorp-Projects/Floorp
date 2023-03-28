@@ -4,7 +4,6 @@
 
 package mozilla.components.browser.engine.gecko.cookiebanners
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
@@ -16,7 +15,6 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
@@ -26,7 +24,6 @@ import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.StorageController
 
 @ExperimentalCoroutinesApi
-@RunWith(AndroidJUnit4::class)
 class GeckoCookieBannersStorageTest {
     private lateinit var runtime: GeckoRuntime
     private lateinit var geckoStorage: GeckoCookieBannersStorage

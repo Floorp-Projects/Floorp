@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.session
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.storage.FrecencyThresholdOption
 import mozilla.components.concept.storage.HistoryStorage
@@ -22,10 +21,8 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
 
-@RunWith(AndroidJUnit4::class)
 class HistoryDelegateTest {
 
     @Test

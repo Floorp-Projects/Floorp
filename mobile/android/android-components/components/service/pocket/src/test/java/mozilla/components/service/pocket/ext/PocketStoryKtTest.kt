@@ -4,7 +4,6 @@
 
 package mozilla.components.service.pocket.ext
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
 import mozilla.components.service.pocket.PocketStory.PocketSponsoredStoryCaps
 import mozilla.components.service.pocket.helpers.PocketTestResources
@@ -14,10 +13,8 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 
-@RunWith(AndroidJUnit4::class)
 class PocketStoryKtTest {
     private val nowInSeconds = System.currentTimeMillis() / 1000
     private val flightPeriod = 100

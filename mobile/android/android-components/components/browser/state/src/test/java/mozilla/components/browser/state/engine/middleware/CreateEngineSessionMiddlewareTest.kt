@@ -4,7 +4,6 @@
 
 package mozilla.components.browser.state.engine.middleware
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.selector.findCustomTab
@@ -27,7 +26,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.never
@@ -35,7 +33,6 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 
-@RunWith(AndroidJUnit4::class)
 class CreateEngineSessionMiddlewareTest {
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()

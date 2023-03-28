@@ -4,13 +4,10 @@
 
 package mozilla.components.support.test.robolectric.mozilla.components.support.test.file
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.file.loadResourceAsString
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import org.junit.runner.RunWith
 
-@RunWith(AndroidJUnit4::class)
 class ResourcesTest {
 
     @Test

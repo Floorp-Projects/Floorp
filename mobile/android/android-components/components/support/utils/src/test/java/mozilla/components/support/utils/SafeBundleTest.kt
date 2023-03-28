@@ -6,18 +6,15 @@ package mozilla.components.support.utils
 
 import android.os.Bundle
 import android.os.Parcelable
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.doThrow
 
-@RunWith(AndroidJUnit4::class)
 class SafeBundleTest {
 
     private lateinit var bundle: Bundle

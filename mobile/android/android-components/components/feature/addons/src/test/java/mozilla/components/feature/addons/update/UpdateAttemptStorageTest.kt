@@ -7,7 +7,6 @@ package mozilla.components.feature.addons.update
 import androidx.room.DatabaseConfiguration
 import androidx.room.InvalidationTracker
 import androidx.sqlite.db.SupportSQLiteOpenHelper
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.feature.addons.update.AddonUpdater.Status.SuccessfullyUpdated
 import mozilla.components.feature.addons.update.DefaultAddonUpdater.UpdateAttemptStorage
 import mozilla.components.feature.addons.update.db.UpdateAttemptDao
@@ -16,12 +15,10 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import java.util.Date
+import java.util.*
 
-@RunWith(AndroidJUnit4::class)
 class UpdateAttemptStorageTest {
 
     private lateinit var mockDAO: UpdateAttemptDao

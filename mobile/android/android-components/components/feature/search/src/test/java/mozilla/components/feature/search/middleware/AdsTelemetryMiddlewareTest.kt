@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.search.middleware
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
@@ -21,10 +20,8 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
 
-@RunWith(AndroidJUnit4::class)
 class AdsTelemetryMiddlewareTest {
     val sessionId = "session"
     lateinit var adsMiddleware: AdsTelemetryMiddleware
