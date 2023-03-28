@@ -770,8 +770,11 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
         # Android selection
         elif accept_raptor_android_build(platform):
             # Bug 1780817 - a51 and p2/p5 are failing to install chrome
-            if "chrome-m" in try_name and (
-                "-a51" in platform or "-p2" in platform or "-p5" in platform
+            # Temporarily enabling the a51 tests for essential and speedometer tests
+            if (
+                "chrome-m" in try_name
+                and ("-a51" in platform or "-p2" in platform or "-p5" in platform)
+                and not ("speedometer" in try_name or "essential" in try_name)
             ):
                 return False
             # Ignore all fennec tests here, we run those weekly

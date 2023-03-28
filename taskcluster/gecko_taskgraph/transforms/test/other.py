@@ -323,7 +323,9 @@ def setup_browsertime(config, tasks):
 
         cd_fetches = {
             "android.*": [
-                "linux64-chromedriver-87",
+                "linux64-chromedriver-109",
+                "linux64-chromedriver-110",
+                "linux64-chromedriver-111",
             ],
             "linux.*": [
                 "linux64-chromedriver-109",
