@@ -38,6 +38,13 @@ Present to allow testing without figuring out how to mock Rust's clock.
 Their values are integer seconds.
 Defaults to 120 (activity), 1200 (inactivity).
 
+## Internal Preferences
+
+`telemetry.fog.artifact_build`
+
+Read-only. This pref is `true` only if `MOZ_ARTIFACT_BUILDS` was set during configure.
+If true, [JOG](./jog) is enabled so that artifact builds will exhibit changes to their Glean metrics.
+
 ## Defines
 
 `MOZ_AUTOMATION`
@@ -71,9 +78,6 @@ This mode can be overridden at runtime in two ways:
 * If the preference `telemetry.fog.test.localhost_port` is set to a value greater than 0,
   then pings are sent to a server operating locally at that port
   (even if the ping has a Debug Tag), to enable testing.
-
-Also, if set, [JOG](./jog) is disabled.
-Artifact builds will not exhibit changes to their Glean metrics.
 
 `MOZILLA_OFFICIAL` tends to be set on most builds released to users,
 including builds distributed by Linux distributions.

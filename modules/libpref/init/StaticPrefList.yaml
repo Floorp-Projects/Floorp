@@ -14167,6 +14167,11 @@
   mirror: always
   rust: true
 
+- name: telemetry.fog.artifact_build
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "test."
 #---------------------------------------------------------------------------
