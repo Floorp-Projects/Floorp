@@ -807,6 +807,10 @@ bool NS_IsInternalSameURIRedirect(nsIChannel* aOldChannel,
 bool NS_IsHSTSUpgradeRedirect(nsIChannel* aOldChannel, nsIChannel* aNewChannel,
                               uint32_t aFlags);
 
+bool NS_ShouldRemoveAuthHeaderOnRedirect(nsIChannel* aOldChannel,
+                                         nsIChannel* aNewChannel,
+                                         uint32_t aFlags);
+
 nsresult NS_LinkRedirectChannels(uint64_t channelId,
                                  nsIParentChannel* parentChannel,
                                  nsIChannel** _result);
