@@ -384,6 +384,8 @@ urlbar.picked.*
     A tip result.
   - ``topsite``
     An entry from top sites.
+  - ``trending``
+    A trending suggestion.
   - ``unknown``
     An unknown result type, a bug should be filed to figure out what it is.
   - ``visiturl``
