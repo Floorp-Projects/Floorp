@@ -32,6 +32,7 @@
 #include "jsapi/PacketDumper.h"
 #include "mozilla/dom/RTCPeerConnectionBinding.h"  // mozPacketDumpType, maybe move?
 #include "mozilla/dom/PeerConnectionImplBinding.h"  // ChainedOperation
+#include "mozilla/dom/RTCRtpCapabilitiesBinding.h"
 #include "mozilla/dom/RTCRtpTransceiverBinding.h"
 #include "mozilla/dom/RTCConfigurationBinding.h"
 #include "PrincipalChangeObserver.h"
@@ -178,6 +179,12 @@ class PeerConnectionImpl final
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(PeerConnectionImpl)
+
+  struct RtpExtensionHeader {
+    JsepMediaType mMediaType;
+    SdpDirectionAttribute::Direction direction;
+    std::string extensionname;
+  };
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
@@ -551,6 +558,25 @@ class PeerConnectionImpl final
   void DisableLongTermStats() { mDisableLongTermStats = true; }
 
   bool LongTermStatsIsDisabled() const { return mDisableLongTermStats; }
+
+  static void GetDefaultVideoCodecs(
+      std::vector<UniquePtr<JsepCodecDescription>>& aSupportedCodecs,
+      bool aUseRtx);
+
+  static void GetDefaultAudioCodecs(
+      std::vector<UniquePtr<JsepCodecDescription>>& aSupportedCodecs);
+
+  static void GetDefaultRtpExtensions(
+      std::vector<RtpExtensionHeader>& aRtpExtensions);
+
+  static void GetCapabilities(const nsAString& aKind,
+                              dom::Nullable<dom::RTCRtpCapabilities>& aResult,
+                              sdp::Direction aDirection);
+  static void SetupPreferredCodecs(
+      std::vector<UniquePtr<JsepCodecDescription>>& aPreferredCodecs);
+
+  static void SetupPreferredRtpExtensions(
+      std::vector<RtpExtensionHeader>& aPreferredheaders);
 
  private:
   virtual ~PeerConnectionImpl();

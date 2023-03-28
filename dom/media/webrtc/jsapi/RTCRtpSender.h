@@ -15,6 +15,7 @@
 #include "libwebrtcglue/RtpRtcpConfig.h"
 #include "nsTArray.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
+#include "mozilla/dom/RTCRtpCapabilitiesBinding.h"
 #include "mozilla/dom/RTCRtpParametersBinding.h"
 #include "RTCStatsReport.h"
 #include "jsep/JsepTrack.h"
@@ -34,6 +35,7 @@ class MediaStreamTrack;
 class Promise;
 class RTCDtlsTransport;
 class RTCDTMFSender;
+struct RTCRtpCapabilities;
 class RTCRtpTransceiver;
 
 class RTCRtpSender : public nsISupports,
@@ -62,6 +64,8 @@ class RTCRtpSender : public nsISupports,
   already_AddRefed<Promise> ReplaceTrack(MediaStreamTrack* aWithTrack,
                                          ErrorResult& aError);
   already_AddRefed<Promise> GetStats(ErrorResult& aError);
+  static void GetCapabilities(const GlobalObject&, const nsAString& kind,
+                              Nullable<dom::RTCRtpCapabilities>& result);
   already_AddRefed<Promise> SetParameters(
       const dom::RTCRtpSendParameters& aParameters, ErrorResult& aError);
   // Not a simple getter, so not const

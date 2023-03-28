@@ -475,6 +475,18 @@ nsresult PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
     return res;
   }
 
+  std::vector<UniquePtr<JsepCodecDescription>> preferredCodecs;
+  SetupPreferredCodecs(preferredCodecs);
+  mJsepSession->SetDefaultCodecs(preferredCodecs);
+
+  std::vector<RtpExtensionHeader> preferredHeaders;
+  SetupPreferredRtpExtensions(preferredHeaders);
+
+  for (const auto& header : preferredHeaders) {
+    mJsepSession->AddRtpExtension(header.mMediaType, header.extensionname,
+                                  header.direction);
+  }
+
   if (XRE_IsContentProcess()) {
     mStunAddrsRequest =
         new net::StunAddrsRequestChild(new StunAddrsHandler(this));
@@ -2255,6 +2267,184 @@ void PeerConnectionImpl::SendWarningToConsole(const nsCString& aWarning) {
   nsAutoString msg = NS_ConvertASCIItoUTF16(aWarning);
   nsContentUtils::ReportToConsoleByWindowID(msg, nsIScriptError::warningFlag,
                                             "WebRTC"_ns, mWindow->WindowID());
+}
+
+void PeerConnectionImpl::GetDefaultVideoCodecs(
+    std::vector<UniquePtr<JsepCodecDescription>>& aSupportedCodecs,
+    bool aUseRtx) {
+  // Supported video codecs.
+  // Note: order here implies priority for building offers!
+  aSupportedCodecs.emplace_back(
+      JsepVideoCodecDescription::CreateDefaultVP8(aUseRtx));
+  aSupportedCodecs.emplace_back(
+      JsepVideoCodecDescription::CreateDefaultVP9(aUseRtx));
+  aSupportedCodecs.emplace_back(
+      JsepVideoCodecDescription::CreateDefaultH264_1(aUseRtx));
+  aSupportedCodecs.emplace_back(
+      JsepVideoCodecDescription::CreateDefaultH264_0(aUseRtx));
+  aSupportedCodecs.emplace_back(
+      JsepVideoCodecDescription::CreateDefaultUlpFec());
+  aSupportedCodecs.emplace_back(
+      JsepApplicationCodecDescription::CreateDefault());
+  aSupportedCodecs.emplace_back(JsepVideoCodecDescription::CreateDefaultRed());
+}
+
+void PeerConnectionImpl::GetDefaultAudioCodecs(
+    std::vector<UniquePtr<JsepCodecDescription>>& aSupportedCodecs) {
+  aSupportedCodecs.emplace_back(JsepAudioCodecDescription::CreateDefaultOpus());
+  aSupportedCodecs.emplace_back(JsepAudioCodecDescription::CreateDefaultG722());
+  aSupportedCodecs.emplace_back(JsepAudioCodecDescription::CreateDefaultPCMU());
+  aSupportedCodecs.emplace_back(JsepAudioCodecDescription::CreateDefaultPCMA());
+  aSupportedCodecs.emplace_back(
+      JsepAudioCodecDescription::CreateDefaultTelephoneEvent());
+}
+
+void PeerConnectionImpl::GetDefaultRtpExtensions(
+    std::vector<RtpExtensionHeader>& aRtpExtensions) {
+  RtpExtensionHeader audioLevel = {JsepMediaType::kAudio,
+                                   SdpDirectionAttribute::Direction::kSendrecv,
+                                   webrtc::RtpExtension::kAudioLevelUri};
+  aRtpExtensions.push_back(audioLevel);
+
+  RtpExtensionHeader csrcAudioLevels = {
+      JsepMediaType::kAudio, SdpDirectionAttribute::Direction::kRecvonly,
+      webrtc::RtpExtension::kCsrcAudioLevelsUri};
+  aRtpExtensions.push_back(csrcAudioLevels);
+
+  RtpExtensionHeader mid = {JsepMediaType::kAudioVideo,
+                            SdpDirectionAttribute::Direction::kSendrecv,
+                            webrtc::RtpExtension::kMidUri};
+  aRtpExtensions.push_back(mid);
+
+  RtpExtensionHeader absSendTime = {JsepMediaType::kVideo,
+                                    SdpDirectionAttribute::Direction::kSendrecv,
+                                    webrtc::RtpExtension::kAbsSendTimeUri};
+  aRtpExtensions.push_back(absSendTime);
+
+  RtpExtensionHeader timestampOffset = {
+      JsepMediaType::kVideo, SdpDirectionAttribute::Direction::kSendrecv,
+      webrtc::RtpExtension::kTimestampOffsetUri};
+  aRtpExtensions.push_back(timestampOffset);
+
+  RtpExtensionHeader playoutDelay = {
+      JsepMediaType::kVideo, SdpDirectionAttribute::Direction::kRecvonly,
+      webrtc::RtpExtension::kPlayoutDelayUri};
+  aRtpExtensions.push_back(playoutDelay);
+
+  RtpExtensionHeader transportSequenceNumber = {
+      JsepMediaType::kVideo, SdpDirectionAttribute::Direction::kSendrecv,
+      webrtc::RtpExtension::kTransportSequenceNumberUri};
+  aRtpExtensions.push_back(transportSequenceNumber);
+}
+
+void PeerConnectionImpl::GetCapabilities(
+    const nsAString& aKind, dom::Nullable<dom::RTCRtpCapabilities>& aResult,
+    sdp::Direction aDirection) {
+  std::vector<UniquePtr<JsepCodecDescription>> codecs;
+  std::vector<RtpExtensionHeader> headers;
+  auto mediaType = JsepMediaType::kNone;
+
+  if (aKind.EqualsASCII("video")) {
+    GetDefaultVideoCodecs(codecs, true);
+    mediaType = JsepMediaType::kVideo;
+  } else if (aKind.EqualsASCII("audio")) {
+    GetDefaultAudioCodecs(codecs);
+    mediaType = JsepMediaType::kAudio;
+  } else {
+    return;
+  }
+
+  GetDefaultRtpExtensions(headers);
+
+  // Use the codecs for kind to fill out the RTCRtpCodecCapability
+  for (const auto& codec : codecs) {
+    // To avoid misleading information on codec capabilities skip those
+    // not signaled for audio/video (webrtc-datachannel)
+    // and any disabled by default (ulpfec and red).
+    if (codec->mName == "webrtc-datachannel" || codec->mName == "ulpfec" ||
+        codec->mName == "red") {
+      continue;
+    }
+
+    dom::RTCRtpCodecCapability capability;
+    capability.mMimeType = aKind + NS_ConvertASCIItoUTF16("/" + codec->mName);
+    capability.mClockRate = codec->mClock;
+
+    if (codec->mChannels) {
+      capability.mChannels.Construct(codec->mChannels);
+    }
+
+    UniquePtr<SdpFmtpAttributeList::Parameters> params;
+    codec->ApplyConfigToFmtp(params);
+
+    if (params != nullptr) {
+      std::ostringstream paramsString;
+      params->Serialize(paramsString);
+      nsTString<char16_t> fmtp;
+      fmtp.AssignASCII(paramsString.str());
+      capability.mSdpFmtpLine.Construct(fmtp);
+    }
+
+    if (!aResult.SetValue().mCodecs.AppendElement(capability, fallible)) {
+      mozalloc_handle_oom(0);
+    }
+  }
+
+  // We need to manually add rtx for video.
+  if (mediaType == JsepMediaType::kVideo) {
+    dom::RTCRtpCodecCapability capability;
+    capability.mMimeType = aKind + NS_ConvertASCIItoUTF16("/rtx");
+    capability.mClockRate = 90000;
+    if (!aResult.SetValue().mCodecs.AppendElement(capability, fallible)) {
+      mozalloc_handle_oom(0);
+    }
+  }
+
+  // Add headers that match the direction and media type requested.
+  for (const auto& header : headers) {
+    if ((header.direction & aDirection) && (header.mMediaType & mediaType)) {
+      dom::RTCRtpHeaderExtensionCapability rtpHeader;
+      rtpHeader.mUri.AssignASCII(header.extensionname);
+      if (!aResult.SetValue().mHeaderExtensions.AppendElement(rtpHeader,
+                                                              fallible)) {
+        mozalloc_handle_oom(0);
+      }
+    }
+  }
+}
+
+void PeerConnectionImpl::SetupPreferredCodecs(
+    std::vector<UniquePtr<JsepCodecDescription>>& aPreferredCodecs) {
+  bool useRtx =
+      Preferences::GetBool("media.peerconnection.video.use_rtx", false);
+
+  GetDefaultVideoCodecs(aPreferredCodecs, useRtx);
+  GetDefaultAudioCodecs(aPreferredCodecs);
+
+  // With red update the redundant encodings list
+  for (auto& videoCodec : aPreferredCodecs) {
+    if (videoCodec->mName == "red") {
+      JsepVideoCodecDescription& red =
+          static_cast<JsepVideoCodecDescription&>(*videoCodec);
+      red.UpdateRedundantEncodings(aPreferredCodecs);
+    }
+  }
+}
+
+void PeerConnectionImpl::SetupPreferredRtpExtensions(
+    std::vector<RtpExtensionHeader>& aPreferredheaders) {
+  GetDefaultRtpExtensions(aPreferredheaders);
+
+  if (!Preferences::GetBool("media.navigator.video.use_transport_cc", false)) {
+    aPreferredheaders.erase(
+        std::remove_if(
+            aPreferredheaders.begin(), aPreferredheaders.end(),
+            [&](const RtpExtensionHeader& header) {
+              return header.extensionname ==
+                     webrtc::RtpExtension::kTransportSequenceNumberUri;
+            }),
+        aPreferredheaders.end());
+  }
 }
 
 nsresult PeerConnectionImpl::CalculateFingerprint(
