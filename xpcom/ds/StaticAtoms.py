@@ -1026,6 +1026,7 @@ STATIC_ATOMS = [
     Atom("prefwidth", "prefwidth"),
     Atom("dynamicRange", "dynamic-range"),
     Atom("videoDynamicRange", "video-dynamic-range"),
+    Atom("scripting", "scripting"),
     Atom("preload", "preload"),
     Atom("preserve", "preserve"),
     Atom("preserveSpace", "preserve-space"),
