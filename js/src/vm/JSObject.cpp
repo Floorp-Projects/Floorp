@@ -1028,12 +1028,13 @@ bool NativeObject::prepareForSwap(JSContext* cx,
 
   if (hasDynamicElements()) {
     ObjectElements* elements = getElementsHeader();
+    void* allocatedElements = getUnshiftedElementsHeader();
     size_t count = elements->numAllocatedElements();
     size_t size = count * sizeof(HeapSlot);
 
     if (isTenured()) {
       RemoveCellMemory(this, size, MemoryUse::ObjectElements);
-    } else if (cx->nursery().isInside(elements)) {
+    } else if (cx->nursery().isInside(allocatedElements)) {
       // Move nursery allocated elements in case they end up in a tenured
       // object.
       ObjectElements* newElements =
@@ -1045,7 +1046,7 @@ bool NativeObject::prepareForSwap(JSContext* cx,
       memmove(newElements, elements, size);
       elements_ = newElements->elements();
     } else {
-      cx->nursery().removeMallocedBuffer(elements, size);
+      cx->nursery().removeMallocedBuffer(allocatedElements, size);
     }
     MOZ_ASSERT(hasDynamicElements());
   }
@@ -1095,11 +1096,12 @@ bool NativeObject::fixupAfterSwap(JSContext* cx, Handle<NativeObject*> obj,
 
   if (obj->hasDynamicElements()) {
     ObjectElements* elements = obj->getElementsHeader();
-    MOZ_ASSERT(!cx->nursery().isInside(elements));
+    void* allocatedElements = obj->getUnshiftedElementsHeader();
+    MOZ_ASSERT(!cx->nursery().isInside(allocatedElements));
     size_t size = elements->numAllocatedElements() * sizeof(HeapSlot);
     if (obj->isTenured()) {
       AddCellMemory(obj, size, MemoryUse::ObjectElements);
-    } else if (!cx->nursery().registerMallocedBuffer(elements, size)) {
+    } else if (!cx->nursery().registerMallocedBuffer(allocatedElements, size)) {
       return false;
     }
   }
@@ -3259,7 +3261,7 @@ js::gc::AllocKind JSObject::allocKindForTenure(
     MOZ_ASSERT(nobj.numFixedSlots() == 0);
 
     /* Use minimal size object if we are just going to copy the pointer. */
-    if (!nursery.isInside(nobj.getElementsHeader())) {
+    if (!nursery.isInside(nobj.getUnshiftedElementsHeader())) {
       return gc::AllocKind::OBJECT0_BACKGROUND;
     }
 
