@@ -17,6 +17,7 @@ info: |
   [...]
 flags: [async]
 features: [async-iteration]
+includes: [asyncHelpers.js]
 ---*/
 
 var returnArgumentsLength;
@@ -33,10 +34,10 @@ var syncIterator = {
   },
 };
 
-(async function () {
+asyncTest(async function () {
   for await (let _ of syncIterator) {
     break;
   }
 
   assert.sameValue(returnArgumentsLength, 0);
-})().then($DONE, $DONE);
+});

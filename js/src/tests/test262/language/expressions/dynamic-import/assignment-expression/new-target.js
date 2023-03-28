@@ -18,6 +18,7 @@ info: |
         LeftHandSideExpression[?Yield, ?Await] AssignmentOperator AssignmentExpression[?In, ?Yield, ?Await]
 flags: [async]
 features: [dynamic-import, new.target]
+includes: [asyncHelpers.js]
 ---*/
 
 function ctor() {
@@ -33,4 +34,4 @@ async function fn() {
     assert.sameValue(ns.default, 42);
 }
 
-fn().then($DONE, $DONE).catch($DONE);
+asyncTest(fn);

@@ -1,4 +1,4 @@
-// |reftest| skip -- resizable-arraybuffer is not supported
+// |reftest| skip -- resizable-arraybuffer,arraybuffer-transfer is not supported
 // Copyright (C) 2021 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
@@ -12,7 +12,7 @@ info: |
     Built-in function objects that are not identified as constructors do not
     implement the [[Construct]] internal method unless otherwise specified
     in the description of a particular function.
-features: [resizable-arraybuffer]
+features: [resizable-arraybuffer, arraybuffer-transfer]
 ---*/
 
 assert.sameValue(

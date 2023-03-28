@@ -1,4 +1,4 @@
-// |reftest| skip -- resizable-arraybuffer is not supported
+// |reftest| skip -- resizable-arraybuffer,arraybuffer-transfer is not supported
 // Copyright (C) 2021 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
@@ -16,7 +16,7 @@ info: |
     Unless otherwise specified, the name property of a built-in Function
     object, if it exists, has the attributes { [[Writable]]: false,
     [[Enumerable]]: false, [[Configurable]]: true }.
-features: [resizable-arraybuffer]
+features: [resizable-arraybuffer, arraybuffer-transfer]
 includes: [propertyHelper.js]
 ---*/
 

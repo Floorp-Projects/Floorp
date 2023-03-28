@@ -1,4 +1,4 @@
-// |reftest| skip -- resizable-arraybuffer is not supported
+// |reftest| skip -- resizable-arraybuffer,arraybuffer-transfer is not supported
 // Copyright (C) 2021 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
@@ -25,7 +25,7 @@ info: |
       this method as a zero-copy move or a realloc.
   14. Perform ! DetachArrayBuffer(O).
   15. Return new.
-features: [resizable-arraybuffer]
+features: [resizable-arraybuffer, arraybuffer-transfer]
 ---*/
 
 var source = new ArrayBuffer(4, { maxByteLength: 8 });
@@ -43,9 +43,9 @@ assert.throws(TypeError, function() {
   source.slice();
 });
 
-assert.sameValue(dest.resizable, false, 'dest.resizable');
+assert.sameValue(dest.resizable, true, 'dest.resizable');
 assert.sameValue(dest.byteLength, 3, 'dest.byteLength');
-assert.sameValue(dest.maxByteLength, 3, 'dest.maxByteLength');
+assert.sameValue(dest.maxByteLength, 8, 'dest.maxByteLength');
 
 var destArray = new Uint8Array(dest);
 

@@ -8,6 +8,7 @@ esid: pending
 description: >
   Await throws errors from rejected promises
 flags: [async]
+includes: [asyncHelpers.js]
 ---*/
 
 async function foo() {
@@ -23,4 +24,4 @@ async function foo() {
   assert(caught);
 }
 
-foo().then($DONE, $DONE);
+asyncTest(foo);

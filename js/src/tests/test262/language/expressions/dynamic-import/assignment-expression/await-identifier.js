@@ -18,6 +18,7 @@ info: |
         LeftHandSideExpression[?Yield, ?Await] AssignmentOperator AssignmentExpression[?In, ?Yield, ?Await]
 flags: [async]
 features: [dynamic-import]
+includes: [asyncHelpers.js]
 ---*/
 
 const await = './module-code_FIXTURE.js';
@@ -31,4 +32,4 @@ async function fn() {
     assert.sameValue(ns1.default, 42);
 }
 
-fn().then($DONE, $DONE).catch($DONE);
+asyncTest(fn);

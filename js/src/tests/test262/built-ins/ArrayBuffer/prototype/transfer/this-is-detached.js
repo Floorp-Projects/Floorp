@@ -1,4 +1,4 @@
-// |reftest| skip -- resizable-arraybuffer is not supported
+// |reftest| skip -- resizable-arraybuffer,arraybuffer-transfer is not supported
 // Copyright (C) 2021 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
@@ -14,7 +14,7 @@ info: |
   4. If IsDetachedBuffer(O) is true, throw a TypeError exception.
   [...]
 includes: [detachArrayBuffer.js]
-features: [resizable-arraybuffer]
+features: [resizable-arraybuffer, arraybuffer-transfer]
 ---*/
 
 assert.sameValue(typeof ArrayBuffer.prototype.transfer, 'function');

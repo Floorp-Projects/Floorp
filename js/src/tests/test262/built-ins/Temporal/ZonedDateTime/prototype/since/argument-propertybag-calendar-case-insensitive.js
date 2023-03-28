@@ -14,8 +14,12 @@ const instance = new Temporal.ZonedDateTime(0n, timeZone);
 
 const calendar = "IsO8601";
 
-const arg = { year: 1970, monthCode: "M01", day: 1, timeZone, calendar };
-const result = instance.since(arg);
-TemporalHelpers.assertDuration(result, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, `Calendar created from string "${calendar}"`);
+let arg = { year: 1970, monthCode: "M01", day: 1, timeZone, calendar };
+const result1 = instance.since(arg);
+TemporalHelpers.assertDuration(result1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "Calendar is case-insensitive");
+
+arg = { year: 1970, monthCode: "M01", day: 1, timeZone, calendar: { calendar } };
+const result2 = instance.since(arg);
+TemporalHelpers.assertDuration(result2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "Calendar is case-insensitive (nested property)");
 
 reportCompare(0, 0);
