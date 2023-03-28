@@ -38,7 +38,6 @@ constexpr int CursorMetaSize(int w, int h) {
           w * h * kCursorBpp);
 }
 
-constexpr PipeWireVersion kDmaBufMinVersion = {0, 3, 24};
 constexpr PipeWireVersion kDmaBufModifierMinVersion = {0, 3, 33};
 constexpr PipeWireVersion kDropSingleModifierMinVersion = {0, 3, 40};
 
@@ -150,6 +149,12 @@ class SharedScreenCastStreamPrivate {
   struct spa_video_info_raw spa_video_format_;
 
   void ProcessBuffer(pw_buffer* buffer);
+  bool ProcessMemFDBuffer(pw_buffer* buffer,
+                          DesktopFrame& frame,
+                          const DesktopVector& offset);
+  bool ProcessDMABuffer(pw_buffer* buffer,
+                        DesktopFrame& frame,
+                        const DesktopVector& offset);
   void ConvertRGBxToBGRx(uint8_t* frame, uint32_t size);
 
   // PipeWire callbacks
@@ -272,10 +277,9 @@ void SharedScreenCastStreamPrivate::OnStreamParamChanged(
       has_modifier ? that->spa_video_format_.modifier : DRM_FORMAT_MOD_INVALID;
   std::vector<const spa_pod*> params;
   const int buffer_types =
-      has_modifier || (that->pw_server_version_ >= kDmaBufMinVersion)
-          ? (1 << SPA_DATA_DmaBuf) | (1 << SPA_DATA_MemFd) |
-                (1 << SPA_DATA_MemPtr)
-          : (1 << SPA_DATA_MemFd) | (1 << SPA_DATA_MemPtr);
+      has_modifier
+          ? (1 << SPA_DATA_DmaBuf) | (1 << SPA_DATA_MemFd)
+          : (1 << SPA_DATA_MemFd);
 
   params.push_back(reinterpret_cast<spa_pod*>(spa_pod_builder_add_object(
       &builder, SPA_TYPE_OBJECT_ParamBuffers, SPA_PARAM_Buffers,
@@ -606,9 +610,6 @@ DesktopVector SharedScreenCastStreamPrivate::CaptureCursorPosition() {
 RTC_NO_SANITIZE("cfi-icall")
 void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
   spa_buffer* spa_buffer = buffer->buffer;
-  ScopedBuf map;
-  std::unique_ptr<uint8_t[]> src_unique_ptr;
-  uint8_t* src = nullptr;
 
   // Try to update the mouse cursor first, because it can be the only
   // information carried by the buffer
@@ -647,79 +648,6 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
   }
 
   if (spa_buffer->datas[0].chunk->size == 0) {
-    return;
-  }
-
-  if (spa_buffer->datas[0].type == SPA_DATA_MemFd) {
-    map.initialize(
-        static_cast<uint8_t*>(
-            mmap(nullptr,
-                 spa_buffer->datas[0].maxsize + spa_buffer->datas[0].mapoffset,
-                 PROT_READ, MAP_PRIVATE, spa_buffer->datas[0].fd, 0)),
-        spa_buffer->datas[0].maxsize + spa_buffer->datas[0].mapoffset,
-        spa_buffer->datas[0].fd);
-
-    if (!map) {
-      RTC_LOG(LS_ERROR) << "Failed to mmap the memory: "
-                        << std::strerror(errno);
-      return;
-    }
-
-    src = SPA_MEMBER(map.get(), spa_buffer->datas[0].mapoffset, uint8_t);
-  } else if (spa_buffer->datas[0].type == SPA_DATA_DmaBuf) {
-    const uint n_planes = spa_buffer->n_datas;
-
-    if (!n_planes) {
-      return;
-    }
-
-    std::vector<EglDmaBuf::PlaneData> plane_datas;
-    for (uint32_t i = 0; i < n_planes; ++i) {
-      EglDmaBuf::PlaneData data = {
-          static_cast<int32_t>(spa_buffer->datas[i].fd),
-          static_cast<uint32_t>(spa_buffer->datas[i].chunk->stride),
-          static_cast<uint32_t>(spa_buffer->datas[i].chunk->offset)};
-      plane_datas.push_back(data);
-    }
-
-    // When importing DMA-BUFs, we use the stride (number of bytes from one row
-    // of pixels in the buffer) provided by PipeWire. The stride from PipeWire
-    // is given by the graphics driver and some drivers might add some
-    // additional padding for memory layout optimizations so not everytime the
-    // stride is equal to BYTES_PER_PIXEL x WIDTH. This is fine, because during
-    // the import we will use OpenGL and same graphics driver so it will be able
-    // to work with the stride it provided, but later on when we work with
-    // images we get from DMA-BUFs we will need to update the stride to be equal
-    // to BYTES_PER_PIXEL x WIDTH as that's the size of the DesktopFrame we
-    // allocate for each captured frame.
-    src_unique_ptr = egl_dmabuf_->ImageFromDmaBuf(
-        stream_size_, spa_video_format_.format, plane_datas, modifier_);
-    if (src_unique_ptr) {
-      src = src_unique_ptr.get();
-    } else {
-      RTC_LOG(LS_ERROR) << "Dropping DMA-BUF modifier: " << modifier_
-                        << " and trying to renegotiate stream parameters";
-
-      if (pw_server_version_ >= kDropSingleModifierMinVersion) {
-        modifiers_.erase(
-            std::remove(modifiers_.begin(), modifiers_.end(), modifier_),
-            modifiers_.end());
-      } else {
-        modifiers_.clear();
-      }
-
-      pw_loop_signal_event(pw_thread_loop_get_loop(pw_main_loop_),
-                           renegotiate_);
-      return;
-    }
-  } else if (spa_buffer->datas[0].type == SPA_DATA_MemPtr) {
-    src = static_cast<uint8_t*>(spa_buffer->datas[0].data);
-  }
-
-  if (!src) {
-    if (observer_) {
-      observer_->OnFailedToProcessBuffer();
-    }
     return;
   }
 
@@ -780,8 +708,8 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
   }
 
   // Get the position of the video crop within the stream. Just double-check
-  // that the position doesn't exceed the size of the stream itself. NOTE:
-  // Currently it looks there is no implementation using this.
+  // that the position doesn't exceed the size of the stream itself.
+  // NOTE: Currently it looks there is no implementation using this.
   uint32_t y_offset =
       videocrop_metadata_use &&
               (videocrop_metadata->region.position.y + frame_size_.height() <=
@@ -794,22 +722,7 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
                stream_size_.width())
           ? videocrop_metadata->region.position.x
           : 0;
-
-  const uint32_t stream_stride = kBytesPerPixel * stream_size_.width();
-  uint32_t buffer_stride = spa_buffer->datas[0].chunk->stride;
-  uint32_t src_stride = buffer_stride;
-
-  if (spa_buffer->datas[0].type == SPA_DATA_DmaBuf &&
-      buffer_stride > stream_stride) {
-    // When DMA-BUFs are used, sometimes spa_buffer->stride we get might
-    // contain additional padding, but after we import the buffer, the stride
-    // we used is no longer relevant and we should just calculate it based on
-    // the stream width. For more context see https://crbug.com/1333304.
-    src_stride = stream_stride;
-  }
-
-  uint8_t* updated_src =
-      src + (src_stride * y_offset) + (kBytesPerPixel * x_offset);
+  DesktopVector offset = DesktopVector(x_offset, y_offset);
 
   webrtc::MutexLock lock(&queue_lock_);
 
@@ -829,9 +742,20 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
     queue_.ReplaceCurrentFrame(SharedDesktopFrame::Wrap(std::move(frame)));
   }
 
-  queue_.current_frame()->CopyPixelsFrom(
-      updated_src, (src_stride - (kBytesPerPixel * x_offset)),
-      DesktopRect::MakeWH(frame_size_.width(), frame_size_.height()));
+  bool bufferProcessed = false;
+  if (spa_buffer->datas[0].type == SPA_DATA_MemFd) {
+    bufferProcessed =
+        ProcessMemFDBuffer(buffer, *queue_.current_frame(), offset);
+  } else if (spa_buffer->datas[0].type == SPA_DATA_DmaBuf) {
+    bufferProcessed = ProcessDMABuffer(buffer, *queue_.current_frame(), offset);
+  }
+
+  if (!bufferProcessed) {
+    if (observer_) {
+      observer_->OnFailedToProcessBuffer();
+    }
+    return;
+  }
 
   if (spa_video_format_.format == SPA_VIDEO_FORMAT_RGBx ||
       spa_video_format_.format == SPA_VIDEO_FORMAT_RGBA) {
@@ -875,6 +799,87 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
     queue_.current_frame()->mutable_updated_region()->SetRect(
         DesktopRect::MakeSize(queue_.current_frame()->size()));
   }
+}
+
+RTC_NO_SANITIZE("cfi-icall")
+bool SharedScreenCastStreamPrivate::ProcessMemFDBuffer(
+    pw_buffer* buffer,
+    DesktopFrame& frame,
+    const DesktopVector& offset) {
+  spa_buffer* spa_buffer = buffer->buffer;
+  ScopedBuf map;
+  uint8_t* src = nullptr;
+
+  map.initialize(
+      static_cast<uint8_t*>(
+          mmap(nullptr,
+               spa_buffer->datas[0].maxsize + spa_buffer->datas[0].mapoffset,
+               PROT_READ, MAP_PRIVATE, spa_buffer->datas[0].fd, 0)),
+      spa_buffer->datas[0].maxsize + spa_buffer->datas[0].mapoffset,
+      spa_buffer->datas[0].fd);
+
+  if (!map) {
+    RTC_LOG(LS_ERROR) << "Failed to mmap the memory: " << std::strerror(errno);
+    return false;
+  }
+
+  src = SPA_MEMBER(map.get(), spa_buffer->datas[0].mapoffset, uint8_t);
+
+  uint32_t buffer_stride = spa_buffer->datas[0].chunk->stride;
+  uint32_t src_stride = buffer_stride;
+
+  uint8_t* updated_src =
+      src + (src_stride * offset.y()) + (kBytesPerPixel * offset.x());
+
+  frame.CopyPixelsFrom(
+      updated_src, (src_stride - (kBytesPerPixel * offset.x())),
+      DesktopRect::MakeWH(frame.size().width(), frame.size().height()));
+
+  return true;
+}
+
+RTC_NO_SANITIZE("cfi-icall")
+bool SharedScreenCastStreamPrivate::ProcessDMABuffer(
+    pw_buffer* buffer,
+    DesktopFrame& frame,
+    const DesktopVector& offset) {
+  spa_buffer* spa_buffer = buffer->buffer;
+
+  const uint n_planes = spa_buffer->n_datas;
+
+  if (!n_planes) {
+    return false;
+  }
+
+  std::vector<EglDmaBuf::PlaneData> plane_datas;
+  for (uint32_t i = 0; i < n_planes; ++i) {
+    EglDmaBuf::PlaneData data = {
+        static_cast<int32_t>(spa_buffer->datas[i].fd),
+        static_cast<uint32_t>(spa_buffer->datas[i].chunk->stride),
+        static_cast<uint32_t>(spa_buffer->datas[i].chunk->offset)};
+    plane_datas.push_back(data);
+  }
+
+  const bool imported = egl_dmabuf_->ImageFromDmaBuf(
+      stream_size_, spa_video_format_.format, plane_datas, modifier_, offset,
+      frame.size(), frame.data());
+  if (!imported) {
+    RTC_LOG(LS_ERROR) << "Dropping DMA-BUF modifier: " << modifier_
+                      << " and trying to renegotiate stream parameters";
+
+    if (pw_server_version_ >= kDropSingleModifierMinVersion) {
+      modifiers_.erase(
+          std::remove(modifiers_.begin(), modifiers_.end(), modifier_),
+          modifiers_.end());
+    } else {
+      modifiers_.clear();
+    }
+
+    pw_loop_signal_event(pw_thread_loop_get_loop(pw_main_loop_), renegotiate_);
+    return false;
+  }
+
+  return true;
 }
 
 void SharedScreenCastStreamPrivate::ConvertRGBxToBGRx(uint8_t* frame,
