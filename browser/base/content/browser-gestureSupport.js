@@ -668,6 +668,15 @@ var gHistorySwipeAnimation = {
       return;
     }
 
+    if (
+      Services.prefs.getBoolPref(
+        "browser.history_swipe_animation.disabled",
+        false
+      )
+    ) {
+      return;
+    }
+
     this._icon = document.getElementById("swipe-nav-icon");
     this._initPrefValues();
     this._addPrefObserver();
