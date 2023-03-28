@@ -8810,7 +8810,7 @@
 # Is support for forced-color-adjust properties enabled?
 - name: layout.css.forced-color-adjust.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
   rust: true
 
