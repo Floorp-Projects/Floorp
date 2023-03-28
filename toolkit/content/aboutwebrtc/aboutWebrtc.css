@@ -189,9 +189,3 @@ div.fold-trigger {
   width: 50%;
   overflow: scroll;
 }
-
-.line-graph {
-  border: 1px solid var(--in-content-border-color);
-  margin-inline-end: 2 px;
-  padding: 1px;
-}
