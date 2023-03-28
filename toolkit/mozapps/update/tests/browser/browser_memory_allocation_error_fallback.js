@@ -17,6 +17,10 @@ const UPDATER_QUOTED_PATH_MEM_ERROR = 14;
 const EXPECTED_STATUS =
   AppConstants.platform == "win" ? STATE_PENDING_SVC : STATE_PENDING;
 
+let env = Cc["@mozilla.org/process/environment;1"].getService(
+  Ci.nsIEnvironment
+);
+
 add_setup(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -26,12 +30,12 @@ add_setup(async function setup() {
   });
 
   registerCleanupFunction(() => {
-    Services.env.set("MOZ_FORCE_ERROR_CODE", "");
+    env.set("MOZ_FORCE_ERROR_CODE", "");
   });
 });
 
 async function memAllocErrorFallback(errorCode) {
-  Services.env.set("MOZ_FORCE_ERROR_CODE", errorCode.toString());
+  env.set("MOZ_FORCE_ERROR_CODE", errorCode.toString());
 
   // Since the partial should be successful specify an invalid size for the
   // complete update.
