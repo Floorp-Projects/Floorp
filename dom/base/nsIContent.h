@@ -298,7 +298,8 @@ class nsIContent : public nsINode {
   virtual bool IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse);
 
   // https://html.spec.whatwg.org/multipage/interaction.html#focus-delegate
-  mozilla::dom::Element* GetFocusDelegate(bool aWithMouse) const;
+  mozilla::dom::Element* GetFocusDelegate(bool aWithMouse,
+                                          bool aAutofocusOnly = false) const;
 
   /*
    * Get desired IME state for the content.

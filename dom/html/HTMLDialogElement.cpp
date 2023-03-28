@@ -143,45 +143,14 @@ void HTMLDialogElement::FocusDialog() {
     doc->FlushPendingNotifications(FlushType::Frames);
   }
 
-  Element* controlCandidate = GetFocusDelegate(false /* aWithMouse */);
+  RefPtr<Element> control = GetFocusDelegate(false /* aWithMouse */);
 
   // If there isn't one of those either, then let control be subject.
-  if (!controlCandidate) {
-    controlCandidate = this;
+  if (!control) {
+    control = this;
   }
 
-  RefPtr<Element> control = controlCandidate;
-
-  // 3) Run the focusing steps for control.
-  ErrorResult rv;
-  nsIFrame* frame = control->GetPrimaryFrame();
-  if (frame && frame->IsFocusable()) {
-    control->Focus(FocusOptions(), CallerType::NonSystem, rv);
-    if (rv.Failed()) {
-      return;
-    }
-  } else if (IsInTopLayer()) {
-    if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {
-      // Clear the focus which ends up making the body gets focused
-      nsCOMPtr<nsPIDOMWindowOuter> outerWindow = OwnerDoc()->GetWindow();
-      fm->ClearFocus(outerWindow);
-    }
-  }
-
-  // 4) Let topDocument be the active document of control's node document's
-  // browsing context's top-level browsing context.
-  // 5) If control's node document's origin is not the same as the origin of
-  // topDocument, then return.
-  BrowsingContext* bc = control->OwnerDoc()->GetBrowsingContext();
-  if (bc && bc->IsInProcess() && bc->SameOriginWithTop()) {
-    if (nsCOMPtr<nsIDocShell> docShell = bc->Top()->GetDocShell()) {
-      if (Document* topDocument = docShell->GetExtantDocument()) {
-        // 6) Empty topDocument's autofocus candidates.
-        // 7) Set topDocument's autofocus processed flag to true.
-        topDocument->SetAutoFocusFired();
-      }
-    }
-  }
+  FocusCandidate(*control, IsInTopLayer());
 }
 
 void HTMLDialogElement::QueueCancelDialog() {

@@ -1041,7 +1041,8 @@ bool nsIContent::IsFocusable(int32_t* aTabIndex, bool aWithMouse) {
   return false;
 }
 
-Element* nsIContent::GetFocusDelegate(bool aWithMouse) const {
+Element* nsIContent::GetFocusDelegate(bool aWithMouse,
+                                      bool aAutofocusOnly) const {
   const nsIContent* whereToLook = this;
   if (ShadowRoot* root = GetShadowRoot()) {
     if (!root->DelegatesFocus()) {
@@ -1067,6 +1068,9 @@ Element* nsIContent::GetFocusDelegate(bool aWithMouse) const {
 
     const bool autofocus = el->GetBoolAttr(nsGkAtoms::autofocus);
 
+    if (aAutofocusOnly && !autofocus) {
+      continue;
+    }
     if (autofocus) {
       if (IsFocusable(el)) {
         // Found an autofocus candidate.
