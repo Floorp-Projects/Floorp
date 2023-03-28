@@ -574,7 +574,17 @@ namespace xsimd
         template <class A, class T, class = typename std::enable_if<std::is_integral<T>::value, void>::type>
         inline batch<T, A> mul(batch<T, A> const& self, batch<T, A> const& other, requires_arch<avx2>) noexcept
         {
-            XSIMD_IF_CONSTEXPR(sizeof(T) == 2)
+            XSIMD_IF_CONSTEXPR(sizeof(T) == 1)
+            {
+                __m256i mask_hi = _mm256_set1_epi32(0xFF00FF00);
+                __m256i res_lo = _mm256_mullo_epi16(self, other);
+                __m256i other_hi = _mm256_srli_epi16(other, 8);
+                __m256i self_hi = _mm256_and_si256(self, mask_hi);
+                __m256i res_hi = _mm256_mullo_epi16(self_hi, other_hi);
+                __m256i res = _mm256_blendv_epi8(res_lo, res_hi, mask_hi);
+                return res;
+            }
+            else XSIMD_IF_CONSTEXPR(sizeof(T) == 2)
             {
                 return _mm256_mullo_epi16(self, other);
             }
@@ -852,7 +862,7 @@ namespace xsimd
         template <class A, uint64_t V0, uint64_t V1, uint64_t V2, uint64_t V3>
         inline batch<int64_t, A> swizzle(batch<int64_t, A> const& self, batch_constant<batch<uint64_t, A>, V0, V1, V2, V3> mask, requires_arch<avx2>) noexcept
         {
-            return bitwise_cast<batch<int64_t, A>>(swizzle(bitwise_cast<batch<uint64_t, A>>(self), mask, avx2 {}));
+            return bitwise_cast<int64_t>(swizzle(bitwise_cast<uint64_t>(self), mask, avx2 {}));
         }
         template <class A, uint32_t V0, uint32_t V1, uint32_t V2, uint32_t V3, uint32_t V4, uint32_t V5, uint32_t V6, uint32_t V7>
         inline batch<uint32_t, A> swizzle(batch<uint32_t, A> const& self, batch_constant<batch<uint32_t, A>, V0, V1, V2, V3, V4, V5, V6, V7> mask, requires_arch<avx2>) noexcept
@@ -862,7 +872,7 @@ namespace xsimd
         template <class A, uint32_t V0, uint32_t V1, uint32_t V2, uint32_t V3, uint32_t V4, uint32_t V5, uint32_t V6, uint32_t V7>
         inline batch<int32_t, A> swizzle(batch<int32_t, A> const& self, batch_constant<batch<uint32_t, A>, V0, V1, V2, V3, V4, V5, V6, V7> mask, requires_arch<avx2>) noexcept
         {
-            return bitwise_cast<batch<int32_t, A>>(swizzle(bitwise_cast<batch<uint32_t, A>>(self), mask, avx2 {}));
+            return bitwise_cast<int32_t>(swizzle(bitwise_cast<uint32_t>(self), mask, avx2 {}));
         }
 
         // zip_hi

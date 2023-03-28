@@ -16,14 +16,14 @@ with Files('dav1d/**'):
 with Files('function2/**'):
     BUG_COMPONENT = ('Core', 'MFBT')
 
+with Files('gemmology/**'):
+    BUG_COMPONENT = ('Core', 'Javascript: WebAssembly')
+
 with Files('googletest/**'):
     BUG_COMPONENT = ('Testing', 'GTest')
 
 with Files('highway/**'):
     BUG_COMPONENT = ('Core', 'Graphics: ImageLib')
-
-with Files('intgemm/**'):
-    BUG_COMPONENT = ('Core', 'Javascript: WebAssembly')
 
 with Files('jpeg-xl/**'):
     BUG_COMPONENT = ('Core', 'Graphics: ImageLib')

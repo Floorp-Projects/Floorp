@@ -15,19 +15,32 @@ with Files("*"):
 LOCAL_INCLUDES += [
     "!..",
     "..",
-    "/third_party/intgemm/intgemm",
+    "/third_party/gemmology",
+    "/third_party/xsimd/include",
 ]
+
+if CONFIG["INTEL_ARCHITECTURE"]:
+    DEFINES["USE_SSE2"] = True
+    SOURCES += ["/third_party/gemmology/kernels/GemmologyEngineSSE2.cpp"]
+    SOURCES["/third_party/gemmology/kernels/GemmologyEngineSSE2.cpp"].flags += CONFIG[
+        "SSE2_FLAGS"
+    ]
+    if CONFIG["SSSE3_FLAGS"]:
+        DEFINES["USE_SSSE3"] = True
+        SOURCES += ["/third_party/gemmology/kernels/GemmologyEngineSSSE3.cpp"]
+        SOURCES[
+            "/third_party/gemmology/kernels/GemmologyEngineSSSE3.cpp"
+        ].flags += CONFIG["SSSE3_FLAGS"]
+    if CONFIG["AVX2_FLAGS"]:
+        DEFINES["USE_AVX2"] = True
+        SOURCES += ["/third_party/gemmology/kernels/GemmologyEngineAVX2.cpp"]
+        SOURCES[
+            "/third_party/gemmology/kernels/GemmologyEngineAVX2.cpp"
+        ].flags += CONFIG["AVX2_FLAGS"]
 
 SOURCES += [
-    "/third_party/intgemm/intgemm/intgemm.cc",
     "IntegerGemmIntrinsic.cpp",
 ]
-
-GeneratedFile(
-    "intgemm/intgemm_config.h",
-    script="enable_intel_extensions.py",
-    inputs=["/third_party/intgemm/intgemm/intgemm_config.h.in"],
-)
 
 # We allow warnings for third-party code that can be updated from upstream.
 AllowCompilerWarnings()

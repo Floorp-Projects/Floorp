@@ -1,0 +1,29 @@
+schema: 1
+
+bugzilla:
+  product: Core
+  component: "JavaScript: WebAssembly"
+
+origin:
+  name: gemmology
+  description: small integer matrix multiply
+
+  url: https://github.com/serge-sans-paille/gemmology
+
+  release: e1167c52cbbfd989390e4d9515c84c88878bfe80 (2023-03-28T11:32:43Z).
+  revision: e1167c52cbbfd989390e4d9515c84c88878bfe80
+
+  license: MIT
+
+vendoring:
+  url: https://github.com/serge-sans-paille/gemmology
+  source-hosting: github
+  tracking: commit
+
+  exclude:
+    - ".*"
+    - "*.rst"
+    - test
+
+  keep:
+    - kernels/*.cpp
