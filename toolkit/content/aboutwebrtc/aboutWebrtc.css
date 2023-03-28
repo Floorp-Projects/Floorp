@@ -192,6 +192,6 @@ div.fold-trigger {
 
 .line-graph {
   border: 1px solid var(--in-content-border-color);
-  margin-right: 2px;
+  margin-inline: 1px;
   padding: 1px;
 }
