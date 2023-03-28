@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<style>
+.c {
+  break-after: page;
+  page: Rotated;
+}
+</style>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  SpecialPowers.wrap(window).printPreview()?.close()
+})
+</script>
+<menu style="max-height: 0em">
+<menu id="b">
+<option class="c">a</option>
+</menu>
+</menu>
+<select class="c">
