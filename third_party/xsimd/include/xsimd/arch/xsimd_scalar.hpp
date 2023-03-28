@@ -441,7 +441,16 @@ namespace xsimd
         return !(x0 == x1);
     }
 
-#if defined(_GNU_SOURCE) && !defined(__APPLE__) && !defined(__MINGW32__) && !defined(__ANDROID__)
+#if defined(__APPLE__)
+    inline float exp10(const float& x) noexcept
+    {
+        return __exp10f(x);
+    }
+    inline double exp10(const double& x) noexcept
+    {
+        return __exp10(x);
+    }
+#elif defined(__GLIBC__)
     inline float exp10(const float& x) noexcept
     {
         return ::exp10f(x);
@@ -450,14 +459,24 @@ namespace xsimd
     {
         return ::exp10(x);
     }
-#endif
-
+#elif defined(_WIN32)
     template <class T, class = typename std::enable_if<std::is_scalar<T>::value>::type>
     inline T exp10(const T& x) noexcept
     {
-        // FIXME: very inefficient
+        // Very inefficient but other implementations give incorrect results
+        // on Windows
         return std::pow(T(10), x);
     }
+#else
+    inline float exp10(const float& x) noexcept
+    {
+        return std::exp(0x1.26bb1cp+1f * x);
+    }
+    inline double exp10(const double& x) noexcept
+    {
+        return std::exp(0x1.26bb1bbb55516p+1 * x);
+    }
+#endif
 
     template <class T, class = typename std::enable_if<std::is_scalar<T>::value>::type>
     inline auto rsqrt(const T& x) noexcept -> decltype(std::sqrt(x))

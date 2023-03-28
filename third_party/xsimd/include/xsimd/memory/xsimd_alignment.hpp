@@ -71,6 +71,21 @@ namespace xsimd
     template <class C>
     using container_alignment_t = typename container_alignment<C>::type;
 
+    /*********************
+     * alignment checker *
+     *********************/
+
+    /**
+     * Checks whether pointer \c ptr is aligned according the alignment
+     * requirements of \c Arch.
+     * @return true if the alignment requirements are met
+     */
+    template <class Arch = default_arch>
+    inline bool is_aligned(void const* ptr)
+    {
+        return (reinterpret_cast<uintptr_t>(ptr) % static_cast<uintptr_t>(Arch::alignment())) == 0;
+    }
+
 }
 
 #endif

@@ -179,7 +179,8 @@ rsync_filter_list = """
 - /third_party/python/gyp
 + /third_party/python/**
 + /third_party/rust/**
-+ /third_party/intgemm/**
++ /third_party/gemmology/**
++ /third_party/xsimd/**
 + /layout/tools/reftest/reftest/**
 
 + /testing/mach_commands.py
