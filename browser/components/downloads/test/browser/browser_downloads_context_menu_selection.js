@@ -83,6 +83,30 @@ add_task(async function test() {
     cmd_delete: true,
   });
 
+  info("Check we don't open a context menu between items.");
+  function listener() {
+    Assert.ok(false, "Should not open a context menu");
+  }
+  document.addEventListener("popupshown", listener);
+  let listRect = downloadsListBox.getBoundingClientRect();
+  let firstRect = first.getBoundingClientRect();
+  let secondRect = second.getBoundingClientRect();
+  let x = parseInt(firstRect.width / 2);
+  Assert.greater(
+    secondRect.y - firstRect.y - firstRect.height,
+    1,
+    "There should be a gap of at least 1 px for this test"
+  );
+  let y = parseInt(firstRect.y - listRect.y + firstRect.height + 1);
+  info(`Right click at (${x}, ${y})`);
+  EventUtils.synthesizeMouse(downloadsListBox, x, y, {
+    type: "contextmenu",
+    button: 2,
+  });
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(r => setTimeout(r, 100));
+  document.removeEventListener("popupshown", listener);
+
   let hiddenPromise = BrowserTestUtils.waitForEvent(
     DownloadsPanel.panel,
     "popuphidden"
