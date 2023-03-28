@@ -46,6 +46,9 @@ loader.lazyRequireGetter(
   "resource://devtools/shared/DevToolsUtils.js",
   true
 );
+loader.lazyGetter(this, "HighlightersBundle", () => {
+  return new Localization(["devtools/shared/highlighters.ftl"], true);
+});
 
 const DEFAULT_HIGHLIGHTER_COLOR = "#9400FF";
 const SUBGRID_PARENT_ALPHA = 0.5;
@@ -227,15 +230,25 @@ class HighlightersOverlay {
       "display-change": this.onDisplayChange,
     });
 
+    if (this.toolbox.win.matchMedia("(prefers-reduced-motion)").matches) {
+      this._showSimpleHighlightersMessage();
+    }
+
     EventEmitter.decorate(this);
   }
 
   get inspectorFront() {
     return this.inspector.inspectorFront;
   }
+
   get target() {
     return this.inspector.currentTarget;
   }
+
+  get toolbox() {
+    return this.inspector.toolbox;
+  }
+
   // FIXME: Shim for HighlightersOverlay.parentGridHighlighters
   // Remove after updating tests to stop accessing this map directly. Bug 1683153
   get parentGridHighlighters() {
@@ -1854,6 +1867,56 @@ class HighlightersOverlay {
     this.geometryEditorHighlighterShown = null;
     this.hoveredHighlighterShown = null;
     this.shapesHighlighterShown = null;
+  }
+
+  /**
+   * Display a message about the simple highlighters which can be enabled for
+   * users relying on prefers-reduced-motion. This message will be a toolbox
+   * notification, which will contain a button to open the settings panel and
+   * will no longer be displayed if the user decides to explicitly close the
+   * message.
+   */
+  _showSimpleHighlightersMessage() {
+    const pref = "devtools.inspector.simple-highlighters.message-dismissed";
+    const messageDismissed = Services.prefs.getBoolPref(pref, false);
+    if (messageDismissed) {
+      return;
+    }
+    const notificationBox = this.inspector.toolbox.getNotificationBox();
+    const message = HighlightersBundle.formatValueSync(
+      "simple-highlighters-message"
+    );
+
+    notificationBox.appendNotification(
+      message,
+      "simple-highlighters-message",
+      null,
+      notificationBox.PRIORITY_INFO_MEDIUM,
+      [
+        {
+          label: HighlightersBundle.formatValueSync(
+            "simple-highlighters-settings-button"
+          ),
+          callback: async () => {
+            const { panelDoc } = await this.toolbox.selectTool("options");
+            const option = panelDoc.querySelector(
+              "[data-pref='devtools.inspector.simple-highlighters-reduced-motion']"
+            ).parentNode;
+            option.scrollIntoView({ block: "center" });
+            option.classList.add("options-panel-highlight");
+
+            // Emit a test-only event to know when the settings panel is opened.
+            this.toolbox.emitForTests("test-highlighters-settings-opened");
+          },
+        },
+      ],
+      evt => {
+        if (evt === "removed") {
+          // Flip the preference when the message is dismissed.
+          Services.prefs.setBoolPref(pref, true);
+        }
+      }
+    );
   }
 
   /**

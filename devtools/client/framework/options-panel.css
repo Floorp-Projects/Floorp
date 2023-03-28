@@ -181,3 +181,23 @@
 .experimental-notice a:hover{
   text-decoration: underline;
 }
+
+@keyframes highlight {
+    0% {
+        background-color: var(--theme-highlight-yellow);
+    }
+    100% {
+        background-color: transparent;
+    }
+}
+
+.options-panel-highlight {
+  animation: highlight 8s;
+  animation-timing-function: ease;
+}
+
+@media (prefers-reduced-motion) {
+  .highlighted {
+    animation-timing-function: steps(1, end);
+  }
+}

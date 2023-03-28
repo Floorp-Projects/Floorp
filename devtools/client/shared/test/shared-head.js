@@ -218,6 +218,14 @@ Services.prefs.setBoolPref(
   false
 );
 
+// On some Linux platforms, prefers-reduced-motion is enabled, which would
+// trigger the notification to be displayed in the toolbox. Dismiss the message
+// by default.
+Services.prefs.setBoolPref(
+  "devtools.inspector.simple-highlighters.message-dismissed",
+  true
+);
+
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.dump.emit");
   Services.prefs.clearUserPref("devtools.inspector.three-pane-enabled");
@@ -228,6 +236,9 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.toolbox.splitconsoleHeight");
   Services.prefs.clearUserPref(
     "javascript.options.asyncstack_capture_debuggee_only"
+  );
+  Services.prefs.clearUserPref(
+    "devtools.inspector.simple-highlighters.message-dismissed"
   );
 });
 
