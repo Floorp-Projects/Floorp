@@ -45,9 +45,7 @@ let dialog = {
     }
 
     document.addEventListener("dialogaccept", () => this.onAccept());
-    document.mozSubdialogReady = this.initL10n().then(() => {
-      window.sizeToContent();
-    });
+    this.initL10n();
 
     this._delayHelper = new EnableDelayHelper({
       disableDialog: () => {
@@ -154,7 +152,7 @@ let dialog = {
     return this._principal?.exposablePrePath;
   },
 
-  async initL10n() {
+  initL10n() {
     // The UI labels depend on whether we will show the application chooser next
     // or directly open the assigned protocol handler.
 
@@ -171,7 +169,6 @@ let dialog = {
 
     let description = document.getElementById("description");
 
-    document.l10n.pauseObserving();
     let pendingElements = [description];
 
     let host = this.displayPrePath;
@@ -193,23 +190,9 @@ let dialog = {
       pendingElements.push(checkboxLabel);
     }
 
-    // Set the dialog button labels.
-    // Ideally we would do this via attributes, however the <dialog> element
-    // does not support changing l10n ids on the fly.
     let acceptButton = this._dialog.getButton("accept");
-    let [result] = await document.l10n.formatMessages([{ id: idAcceptButton }]);
-    result.attributes.forEach(attr => {
-      if (attr.name == "label") {
-        acceptButton.label = attr.value;
-      } else {
-        acceptButton.accessKey = attr.value;
-      }
-    });
-
-    document.l10n.resumeObserving();
-
-    await document.l10n.translateElements(pendingElements);
-    return document.l10n.ready;
+    document.l10n.connectRoot(acceptButton.containingShadowRoot);
+    document.l10n.setAttributes(acceptButton, idAcceptButton);
   },
 
   onAccept() {

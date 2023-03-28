@@ -82,9 +82,7 @@ let dialog = {
     // UI is ready, lets populate our list
     this.populateList();
 
-    document.mozSubdialogReady = this.initL10n().then(() => {
-      window.sizeToContent();
-    });
+    this.initL10n();
 
     if (enableButtonDelay) {
       this._delayHelper = new EnableDelayHelper({
@@ -101,9 +99,7 @@ let dialog = {
     }
   },
 
-  async initL10n() {
-    document.l10n.pauseObserving();
-
+  initL10n() {
     let rememberLabel = document.getElementById("remember-label");
     document.l10n.setAttributes(rememberLabel, "chooser-dialog-remember", {
       scheme: this._handlerInfo.type,
@@ -113,11 +109,6 @@ let dialog = {
     document.l10n.setAttributes(description, "chooser-dialog-description", {
       scheme: this._handlerInfo.type,
     });
-
-    document.l10n.resumeObserving();
-
-    await document.l10n.translateElements([rememberLabel, description]);
-    return document.l10n.ready;
   },
 
   /**
