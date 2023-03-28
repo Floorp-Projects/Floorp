@@ -219,8 +219,9 @@ void PreloadService::PreloadFont(nsIURI* aURI, const nsAString& aCrossOrigin,
   CORSMode cors = dom::Element::StringToCORSMode(aCrossOrigin);
   auto key = PreloadHashKey::CreateAsFont(aURI, cors);
 
-  // * Bug 1618549: Depending on where we decide to do the deduplication, we may
-  // want to check if the font is already being preloaded here.
+  if (PreloadExists(key)) {
+    return;
+  }
 
   RefPtr<FontPreloader> preloader = new FontPreloader();
   dom::ReferrerPolicy referrerPolicy = PreloadReferrerPolicy(aReferrerPolicy);
@@ -234,8 +235,9 @@ void PreloadService::PreloadFetch(nsIURI* aURI, const nsAString& aCrossOrigin,
   CORSMode cors = dom::Element::StringToCORSMode(aCrossOrigin);
   auto key = PreloadHashKey::CreateAsFetch(aURI, cors);
 
-  // * Bug 1618549: Depending on where we decide to do the deduplication, we may
-  // want to check if a fetch is already being preloaded here.
+  if (PreloadExists(key)) {
+    return;
+  }
 
   RefPtr<FetchPreloader> preloader = new FetchPreloader();
   dom::ReferrerPolicy referrerPolicy = PreloadReferrerPolicy(aReferrerPolicy);
