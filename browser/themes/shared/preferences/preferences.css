@@ -801,6 +801,10 @@ html|dialog,
   display: block;
 }
 
+.sync-choose-dialog-description {
+  margin-block-end: 10px;
+}
+
 .sync-engines-list > div,
 .sync-engines-list + hbox {
   margin-top: 0;
@@ -836,6 +840,7 @@ dialog > .sync-engines-list + hbox {
 .sync-engines-list {
   column-count: 2;
   column-fill: balance;
+  margin-block-end: 10px;
 }
 
 .sync-engines-list > div:not([hidden]) {
