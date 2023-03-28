@@ -46,6 +46,7 @@ class MockConduit : public MediaSessionConduit {
   MOCK_CONST_METHOD1(HasCodecPluginID, bool(uint64_t));
   MOCK_METHOD0(RtcpByeEvent, MediaEventSource<void>&());
   MOCK_METHOD0(RtcpTimeoutEvent, MediaEventSource<void>&());
+  MOCK_METHOD0(RtpPacketEvent, MediaEventSource<void>&());
   MOCK_METHOD3(SendRtp,
                bool(const uint8_t*, size_t, const webrtc::PacketOptions&));
   MOCK_METHOD2(SendSenderRtcp, bool(const uint8_t*, size_t));

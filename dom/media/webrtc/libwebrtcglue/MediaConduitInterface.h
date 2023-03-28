@@ -163,8 +163,10 @@ class MediaSessionConduit {
 
   virtual bool HasCodecPluginID(uint64_t aPluginID) const = 0;
 
+  // Stuff for driving mute/unmute events
   virtual MediaEventSource<void>& RtcpByeEvent() = 0;
   virtual MediaEventSource<void>& RtcpTimeoutEvent() = 0;
+  virtual MediaEventSource<void>& RtpPacketEvent() = 0;
 
   virtual bool SendRtp(const uint8_t* aData, size_t aLength,
                        const webrtc::PacketOptions& aOptions) = 0;

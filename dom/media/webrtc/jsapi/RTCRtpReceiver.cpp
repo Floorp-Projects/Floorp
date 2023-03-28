@@ -132,12 +132,6 @@ RTCRtpReceiver::RTCRtpReceiver(
         GetMainThreadSerialEventTarget(), this, &RTCRtpReceiver::OnRtcpTimeout);
   }
 
-  // Unmute event handling. The unmute event is fired after receiving RTP
-  // packets and therefore async, and handled through these event and watch
-  // handlers. The mute event is fired synchronously during negotiation, see
-  // SetTrackMuteFromRemoteSdp().
-  mUnmuteListener = mPipeline->UnmuteEvent().Connect(
-      GetMainThreadSerialEventTarget(), this, &RTCRtpReceiver::OnUnmute);
   mWatchManager.Watch(mReceiveTrackMute,
                       &RTCRtpReceiver::UpdateReceiveTrackMute);
 }
@@ -766,10 +760,21 @@ bool RTCRtpReceiver::HasTrack(const dom::MediaStreamTrack* aTrack) const {
 }
 
 void RTCRtpReceiver::SyncFromJsep(const JsepTransceiver& aJsepTransceiver) {
+  if (!mPipeline) {
+    return;
+  }
+
   // Spec says we set [[Receptive]] to true on sLD(sendrecv/recvonly), and to
   // false on sRD(recvonly/inactive), sLD(sendonly/inactive), or when stop()
   // is called.
+  bool wasReceptive = mReceptive;
   mReceptive = aJsepTransceiver.mRecvTrack.GetReceptive();
+  if (!wasReceptive && mReceptive) {
+    mUnmuteListener = mPipeline->mConduit->RtpPacketEvent().Connect(
+        GetMainThreadSerialEventTarget(), this, &RTCRtpReceiver::OnRtpPacket);
+  } else if (wasReceptive && !mReceptive) {
+    mUnmuteListener.DisconnectIfExists();
+  }
 }
 
 void RTCRtpReceiver::SyncToJsep(JsepTransceiver& aJsepTransceiver) const {}
@@ -852,9 +857,10 @@ void RTCRtpReceiver::SetTrackMuteFromRemoteSdp() {
   MOZ_ASSERT(mTrack->Muted(), "Muted state was indeed set synchronously");
 }
 
-void RTCRtpReceiver::OnUnmute() {
-  // If we are blocking unmute, we ignore this packet, even if we stop blocking
-  // afterward.
+void RTCRtpReceiver::OnRtpPacket() {
+  MOZ_ASSERT(mReceptive, "We should not be registered unless this is set!");
+  // We should be registered since we're currently getting a callback.
+  mUnmuteListener.Disconnect();
   if (mReceptive) {
     mReceiveTrackMute = false;
   }

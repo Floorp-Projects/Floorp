@@ -162,6 +162,7 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   MediaEventSource<void>& RtcpTimeoutEvent() override {
     return mRtcpTimeoutEvent;
   }
+  MediaEventSource<void>& RtpPacketEvent() override { return mRtpPacketEvent; }
 
   std::vector<webrtc::RtpSource> GetUpstreamRtpSources() const override;
 
@@ -279,6 +280,7 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   Atomic<bool> mTransportActive = Atomic<bool>(false);
   MediaEventProducer<void> mRtcpByeEvent;
   MediaEventProducer<void> mRtcpTimeoutEvent;
+  MediaEventProducer<void> mRtpPacketEvent;
   MediaEventProducerExc<MediaPacket> mSenderRtpSendEvent;
   MediaEventProducerExc<MediaPacket> mSenderRtcpSendEvent;
   MediaEventProducerExc<MediaPacket> mReceiverRtcpSendEvent;
