@@ -4317,15 +4317,19 @@ Maybe<GdkWindowEdge> nsWindow::CheckResizerEdge(
       // we still want the resizers there, even when tiled.
       return true;
     }
-    if (mDrawInTitlebar) {
-      // If we show top resizers on a (non-PIP) tiled window on GNOME, it
-      // doesn't really work, since the window is "stuck" to the top and
-      // bottom, so don't show them in that case.
-      return !mIsTiled;
+    if (!mDrawInTitlebar) {
+      return false;
     }
-    // If we're not a PIP window nor drawing to the titlebar, we don't need to
-    // add resizers.
-    return false;
+    // On KDE, allow for 1 extra pixel at the top of regular windows when
+    // drawing to the titlebar. This matches the native titlebar behavior on
+    // that environment. See bug 1813554.
+    //
+    // Don't do that on GNOME (see bug 1822764). If we wanted to do this on
+    // GNOME we'd need an extra check for mIsTiled, since the window is "stuck"
+    // to the top and bottom.
+    //
+    // Other DEs are untested.
+    return mDrawInTitlebar && IsKdeDesktopEnvironment();
   }();
 
   if (!canResize) {
