@@ -16,13 +16,6 @@
 
 #include "xsimd_batch.hpp"
 
-/**
- * high level type traits
- *
- * @defgroup batch_traits Type traits
- *
- **/
-
 namespace xsimd
 {
 
@@ -212,18 +205,11 @@ namespace xsimd
     template <class T1, class T2, class A = default_arch>
     using simd_return_type = typename detail::simd_return_type_impl<T1, T2, A>::type;
 
-    /**
-     * @ingroup batch_traits
-     *
-     * type traits that inherits from @c std::true_type for @c batch<...> types and from
-     * @c std::false_type otherwise.
-     *
-     * @tparam T type to analyze.
-     */
-    template <class T>
-    struct is_batch;
+    /************
+     * is_batch *
+     ************/
 
-    template <class T>
+    template <class V>
     struct is_batch : std::false_type
     {
     };
@@ -233,16 +219,11 @@ namespace xsimd
     {
     };
 
-    /**
-     * @ingroup batch_traits
-     *
-     * type traits that inherits from @c std::true_type for @c batch_bool<...> types and from
-     * @c std::false_type otherwise.
-     *
-     * @tparam T type to analyze.
-     */
+    /*****************
+     * is_batch_bool *
+     *****************/
 
-    template <class T>
+    template <class V>
     struct is_batch_bool : std::false_type
     {
     };
@@ -252,16 +233,11 @@ namespace xsimd
     {
     };
 
-    /**
-     * @ingroup batch_traits
-     *
-     * type traits that inherits from @c std::true_type for @c batch<std::complex<...>>
-     * types and from @c std::false_type otherwise.
-     *
-     * @tparam T type to analyze.
-     */
+    /********************
+     * is_batch_complex *
+     ********************/
 
-    template <class T>
+    template <class V>
     struct is_batch_complex : std::false_type
     {
     };
@@ -270,50 +246,6 @@ namespace xsimd
     struct is_batch_complex<batch<std::complex<T>, A>> : std::true_type
     {
     };
-
-    /**
-     * @ingroup batch_traits
-     *
-     * type traits whose @c type field is set to @c T::value_type if @c
-     * is_batch<T>::value and to @c T otherwise.
-     *
-     * @tparam T type to analyze.
-     */
-    template <class T>
-    struct scalar_type
-    {
-        using type = T;
-    };
-    template <class T, class A>
-    struct scalar_type<batch<T, A>>
-    {
-        using type = T;
-    };
-
-    template <class T>
-    using scalar_type_t = typename scalar_type<T>::type;
-
-    /**
-     * @ingroup batch_traits
-     *
-     * type traits whose @c type field is set to @c T::value_type if @c
-     * is_batch_bool<T>::value and to @c bool otherwise.
-     *
-     * @tparam T type to analyze.
-     */
-    template <class T>
-    struct mask_type
-    {
-        using type = bool;
-    };
-    template <class T, class A>
-    struct mask_type<batch<T, A>>
-    {
-        using type = typename batch<T, A>::batch_bool_type;
-    };
-
-    template <class T>
-    using mask_type_t = typename mask_type<T>::type;
 }
 
 #endif
