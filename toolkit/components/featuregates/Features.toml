@@ -104,5 +104,5 @@ is-public = {default = false, nightly = true}
 default = false
 nightly = true
 android = true
-"early_beta_or_earlier,win" = true
-"early_beta_or_earlier,linux" = true
+win = true
+linux = true
