@@ -13,7 +13,7 @@
 #include "mozilla/glean/bindings/jog/jog_ffi_generated.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Omnijar.h"
-
+#include "mozilla/StaticPrefs_telemetry.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsThreadUtils.h"
@@ -44,13 +44,6 @@ static Maybe<bool> sFoundAndLoadedJogfile;
 bool JOG::EnsureRuntimeMetricsRegistered(bool aForce) {
   MOZ_ASSERT(NS_IsMainThread());
 
-#ifdef MOZILLA_OFFICIAL
-  // In the event we're an official build we want there to be no chance we might
-  // accidentally perform I/O on the main thread.
-  MOZ_LOG(sLog, LogLevel::Verbose, ("MOZILLA_OFFICIAL build. No JOG for you."));
-  return false;
-#endif
-
   if (sFoundAndLoadedJogfile) {
     return sFoundAndLoadedJogfile.value();
   }
@@ -58,11 +51,12 @@ bool JOG::EnsureRuntimeMetricsRegistered(bool aForce) {
 
   MOZ_LOG(sLog, LogLevel::Debug, ("Determining whether there's JOG for you."));
 
-  if (mozilla::IsPackagedBuild()) {
+  if (!mozilla::StaticPrefs::telemetry_fog_artifact_build()) {
     // Supporting Artifact Builds is a developer-only thing.
     // We're on the main thread here.
     // Let's not spend any more time than we need to.
-    MOZ_LOG(sLog, LogLevel::Debug, ("IsPackagedBuild. No JOG for you."));
+    MOZ_LOG(sLog, LogLevel::Debug,
+            ("!telemetry.fog.artifact_build. No JOG for you."));
     return false;
   }
   // The metrics we need to process were placed in GreD in jogfile.json
