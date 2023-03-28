@@ -13,22 +13,16 @@
  * limitations under the License.
  */
 
-"use strict";
-
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PdfStreamConverter",
-  "resource://pdf.js/PdfStreamConverter.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PdfStreamConverter: "resource://pdf.js/PdfStreamConverter.sys.mjs",
+});
 
 // Register/unregister a constructor as a factory.
-function StreamConverterFactory() {
+export function StreamConverterFactory() {
   if (!Services.prefs.getBoolPref("pdfjs.disabled", false)) {
     return new lazy.PdfStreamConverter();
   }
   throw Components.Exception("", Cr.NS_ERROR_FACTORY_NOT_REGISTERED);
 }
-
-var EXPORTED_SYMBOLS = ["StreamConverterFactory"];

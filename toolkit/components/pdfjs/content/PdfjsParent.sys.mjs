@@ -13,13 +13,7 @@
  * limitations under the License.
  */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["PdfjsParent"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -51,7 +45,7 @@ let gFindTypes = [
   "finddiacriticmatchingchange",
 ];
 
-class PdfjsParent extends JSWindowActorParent {
+export class PdfjsParent extends JSWindowActorParent {
   constructor() {
     super();
     this._boundToFindbar = null;

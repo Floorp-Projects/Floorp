@@ -39,6 +39,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   OsEnvironment: "resource://gre/modules/OsEnvironment.sys.mjs",
   PageDataService: "resource:///modules/pagedata/PageDataService.sys.mjs",
+  PdfJs: "resource://pdf.js/PdfJs.sys.mjs",
   PermissionUI: "resource:///modules/PermissionUI.sys.mjs",
   PlacesBackups: "resource://gre/modules/PlacesBackups.sys.mjs",
   PlacesDBUtils: "resource://gre/modules/PlacesDBUtils.sys.mjs",
@@ -98,7 +99,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 
   PageActions: "resource:///modules/PageActions.jsm",
   PageThumbs: "resource://gre/modules/PageThumbs.jsm",
-  PdfJs: "resource://pdf.js/PdfJs.jsm",
   PluralForm: "resource://gre/modules/PluralForm.jsm",
   ProcessHangMonitor: "resource:///modules/ProcessHangMonitor.jsm",
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
@@ -646,10 +646,10 @@ let JSWINDOWACTORS = {
 
   Pdfjs: {
     parent: {
-      moduleURI: "resource://pdf.js/PdfjsParent.jsm",
+      esModuleURI: "resource://pdf.js/PdfjsParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource://pdf.js/PdfjsChild.jsm",
+      esModuleURI: "resource://pdf.js/PdfjsChild.sys.mjs",
     },
     allFrames: true,
   },

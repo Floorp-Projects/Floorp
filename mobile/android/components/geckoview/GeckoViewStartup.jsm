@@ -14,16 +14,13 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   ActorManagerParent: "resource://gre/modules/ActorManagerParent.sys.mjs",
   EventDispatcher: "resource://gre/modules/Messaging.sys.mjs",
+  PdfJs: "resource://pdf.js/PdfJs.sys.mjs",
   Preferences: "resource://gre/modules/Preferences.sys.mjs",
 });
 
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  PdfJs: "resource://pdf.js/PdfJs.jsm",
-});
 
 const { debug, warn } = GeckoViewUtils.initLogging("Startup");
 

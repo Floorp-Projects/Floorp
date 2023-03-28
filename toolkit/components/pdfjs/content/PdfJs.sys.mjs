@@ -13,10 +13,6 @@
  * limitations under the License.
  */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["PdfJs"];
-
 const PREF_PREFIX = "pdfjs";
 const PREF_DISABLED = PREF_PREFIX + ".disabled";
 const PREF_MIGRATION_VERSION = PREF_PREFIX + ".migrationVersion";
@@ -27,9 +23,7 @@ const PREF_ISDEFAULT_CACHE_STATE = PREF_PREFIX + ".enabledCache.state";
 const TOPIC_PDFJS_HANDLER_CHANGED = "pdfjs:handlerChanged";
 const PDF_CONTENT_TYPE = "application/pdf";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 var Svc = {};
 XPCOMUtils.defineLazyServiceGetter(
@@ -45,11 +39,9 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIHandlerService"
 );
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PdfJsDefaultPreferences",
-  "resource://pdf.js/PdfJsDefaultPreferences.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PdfJsDefaultPreferences: "resource://pdf.js/PdfJsDefaultPreferences.sys.mjs",
+});
 
 function initializeDefaultPreferences() {
   var defaultBranch = Services.prefs.getDefaultBranch(PREF_PREFIX + ".");
@@ -96,7 +88,7 @@ const gPdfFakeHandlerInfo = {
   type: PDF_CONTENT_TYPE,
 };
 
-var PdfJs = {
+export var PdfJs = {
   QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
   _initialized: false,
   _cachedIsDefault: true,

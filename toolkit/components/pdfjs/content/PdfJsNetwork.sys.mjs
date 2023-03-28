@@ -13,10 +13,6 @@
  * limitations under the License.
  */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["NetworkManager"];
-
 // eslint-disable-next-line no-unused-vars
 function log(aMsg) {
   var msg = "PdfJsNetwork.jsm: " + (aMsg.join ? aMsg.join("") : aMsg);
@@ -31,7 +27,7 @@ function getTypedArray(xhr) {
   return Uint8Array.from(data, ch => ch.charCodeAt(0) & 0xff);
 }
 
-var NetworkManager = (function NetworkManagerClosure() {
+export var NetworkManager = (function NetworkManagerClosure() {
   const OK_RESPONSE = 200;
   const PARTIAL_CONTENT_RESPONSE = 206;
 

@@ -14,11 +14,7 @@
  */
 /* eslint max-len: ["error", 100] */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["PdfJsTelemetry"];
-
-var PdfJsTelemetry = {
+export var PdfJsTelemetry = {
   onViewerIsUsed() {
     Glean.pdfjs.used.add(1);
   },

@@ -13,10 +13,6 @@
  * limitations under the License.
  */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["PdfStreamConverter"];
-
 const PDFJS_EVENT_ID = "pdf.js.message";
 const PREF_PREFIX = "pdfjs";
 const PDF_VIEWER_ORIGIN = "resource://pdf.js";
@@ -25,43 +21,22 @@ const MAX_NUMBER_OF_PREFS = 50;
 const MAX_STRING_PREF_LENGTH = 128;
 const PDF_CONTENT_TYPE = "application/pdf";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
-
 ChromeUtils.defineESModuleGetters(lazy, {
   AsyncPrefs: "resource://gre/modules/AsyncPrefs.sys.mjs",
+  NetworkManager: "resource://pdf.js/PdfJsNetwork.sys.mjs",
+  PdfJs: "resource://pdf.js/PdfJs.sys.mjs",
+  PdfJsTelemetry: "resource://pdf.js/PdfJsTelemetry.sys.mjs",
+  PdfSandbox: "resource://pdf.js/PdfSandbox.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(
   lazy,
   "NetUtil",
   "resource://gre/modules/NetUtil.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "NetworkManager",
-  "resource://pdf.js/PdfJsNetwork.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PdfJsTelemetry",
-  "resource://pdf.js/PdfJsTelemetry.jsm"
-);
-
-ChromeUtils.defineModuleGetter(lazy, "PdfJs", "resource://pdf.js/PdfJs.jsm");
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PdfSandbox",
-  "resource://pdf.js/PdfSandbox.jsm"
 );
 
 var Svc = {};
@@ -861,7 +836,7 @@ class RequestListener {
   }
 }
 
-function PdfStreamConverter() {}
+export function PdfStreamConverter() {}
 
 PdfStreamConverter.prototype = {
   QueryInterface: ChromeUtils.generateQI([
