@@ -187,8 +187,8 @@ GeneratedFile(
 )
 
 # Only generate jogfile.json in Artifact Builds since
-# its presence triggers main-thread I/O (!MOZILLA_OFFICIAL builds only).
-if not CONFIG["COMPILE_ENVIRONMENT"]:
+# its presence triggers main-thread I/O.
+if CONFIG["MOZ_ARTIFACT_BUILDS"]:
     GeneratedFile(
         "jogfile.json",
         script="build_scripts/glean_parser_ext/run_glean_parser.py",

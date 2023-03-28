@@ -84,11 +84,13 @@ including builds distributed by Linux distributions.
 It tends to not be set on local developer builds.
 See [bug 1680025](https://bugzilla.mozilla.org/show_bug.cgi?id=1680025) for details.
 
-`COMPILE_ENVIRONMENT`
+`MOZ_ARTIFACT_BUILDS`
 
-If `COMPILE_ENVIRONMENT` isn't set in the build config,
+If `MOZ_ARTIFACT_BUILDS` is set in the build config,
 [JOG](./jog) will generate a file for the runtime-registration of metrics and pings.
 This is to support [Artifact Builds](/contributing/build/artifact_builds).
+
+See also `telemetry.fog.artifact_build`.
 
 `OS_TARGET`
 
