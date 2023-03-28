@@ -3681,8 +3681,8 @@ void nsExternalHelperAppService::SanitizeFileName(nsAString& aFileName,
 
   if (!(aFlags & VALIDATE_ALLOW_INVALID_FILENAMES)) {
     // If the extension is one these types, replace it with .download, as these
-    // types of files can have significance on Windows. This happens for any
-    // file, not just those with the shortcut mime type.
+    // types of files can have significance on Windows or Linux.
+    // This happens for any file, not just those with the shortcut mime type.
     if (StringEndsWith(outFileName, u".lnk"_ns,
                        nsCaseInsensitiveStringComparator) ||
         StringEndsWith(outFileName, u".local"_ns,
@@ -3690,6 +3690,8 @@ void nsExternalHelperAppService::SanitizeFileName(nsAString& aFileName,
         StringEndsWith(outFileName, u".url"_ns,
                        nsCaseInsensitiveStringComparator) ||
         StringEndsWith(outFileName, u".scf"_ns,
+                       nsCaseInsensitiveStringComparator) ||
+        StringEndsWith(outFileName, u".desktop"_ns,
                        nsCaseInsensitiveStringComparator)) {
       outFileName.AppendLiteral(".download");
     }
