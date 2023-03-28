@@ -78,7 +78,8 @@ class GMPChild : public PGMPChild {
   GMPErr GetAPI(const char* aAPIName, void* aHostAPI, void** aPluginAPI,
                 const nsACString& aKeySystem = ""_ns);
 
-  nsTArray<std::pair<nsCString, nsCString>> MakeCDMHostVerificationPaths();
+  nsTArray<std::pair<nsCString, nsCString>> MakeCDMHostVerificationPaths(
+      const nsACString& aPluginLibPath);
 
   nsTArray<RefPtr<GMPContentChild>> mGMPContentChildren;
 
