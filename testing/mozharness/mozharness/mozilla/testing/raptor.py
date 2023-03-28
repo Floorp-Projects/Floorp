@@ -798,7 +798,10 @@ class Raptor(
             )
             return
         self.info("Fetching and installing Google Chrome for Android")
+        self.device.shell_output("cmd package install-existing com.android.chrome")
+        self.info("Google Chrome for Android successfully installed")
 
+    def download_chrome_android(self):
         # Fetch the APK
         tmpdir = tempfile.mkdtemp()
         self.tooltool_fetch(
@@ -811,8 +814,6 @@ class Raptor(
             ),
             output_dir=tmpdir,
         )
-
-        # Find the downloaded APK
         files = os.listdir(tmpdir)
         if len(files) > 1:
             raise Exception(
@@ -827,8 +828,6 @@ class Raptor(
         # Re-enable verification and delete the temporary directory
         self.device.shell_output("settings put global verifier_verify_adb_installs 1")
         rmtree(tmpdir)
-
-        self.info("Google Chrome for Android successfully installed")
 
     def install_chromium_distribution(self):
         """Install Google Chromium distribution in production"""

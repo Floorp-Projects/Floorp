@@ -670,7 +670,8 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                     # chrome and safari we just measure fcp and loadtime; skip fnbpaint and dcf
                     if (
                         self.app
-                        and self.app.lower() in NON_FIREFOX_BROWSERS
+                        and self.app.lower()
+                        in NON_FIREFOX_BROWSERS + NON_FIREFOX_BROWSERS_MOBILE
                         and bt
                         in (
                             "fnbpaint",
