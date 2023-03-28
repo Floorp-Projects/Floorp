@@ -239,10 +239,10 @@ function assertSwitchAndPrefState({ win, isPBM, expectedSwitchState }) {
       "protections-popup-cookie-banner-switch"
     ),
     labelON: win.document.querySelector(
-      "#protections-popup-cookie-banner-enabled"
+      "#protections-popup-cookie-banner-detected"
     ),
     labelOFF: win.document.querySelector(
-      "#protections-popup-cookie-banner-disabled"
+      "#protections-popup-cookie-banner-site-disabled"
     ),
     labelUNDETECTED: win.document.querySelector(
       "#protections-popup-cookie-banner-undetected"
@@ -252,11 +252,7 @@ function assertSwitchAndPrefState({ win, isPBM, expectedSwitchState }) {
   let currentURI = win.gBrowser.currentURI;
   let pref = Services.cookieBanners.getDomainPref(currentURI, isPBM);
   if (expectedSwitchState == "on") {
-    ok(
-      !el.section.hasAttribute("hasException") &&
-        el.section.hasAttribute("enabled"),
-      "CBH switch is set to ON"
-    );
+    ok(el.section.dataset.state == "detected", "CBH switch is set to ON");
 
     ok(BrowserTestUtils.is_visible(el.labelON), "ON label should be visible");
     ok(
@@ -274,11 +270,7 @@ function assertSwitchAndPrefState({ win, isPBM, expectedSwitchState }) {
       `There should be no per-site exception for ${currentURI.spec}.`
     );
   } else if (expectedSwitchState === "off") {
-    ok(
-      el.section.hasAttribute("hasException") &&
-        el.section.hasAttribute("enabled"),
-      "CBH switch is set to OFF"
-    );
+    ok(el.section.dataset.state == "site-disabled", "CBH switch is set to OFF");
 
     ok(
       !BrowserTestUtils.is_visible(el.labelON),
@@ -296,7 +288,7 @@ function assertSwitchAndPrefState({ win, isPBM, expectedSwitchState }) {
       `There should be a per-site exception for ${currentURI.spec}.`
     );
   } else {
-    ok(el.section.hasAttribute("disabled"), "CBH not supported for site");
+    ok(el.section.dataset.state == "undetected", "CBH not supported for site");
 
     ok(
       !BrowserTestUtils.is_visible(el.labelON),

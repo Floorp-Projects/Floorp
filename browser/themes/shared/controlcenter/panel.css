@@ -547,11 +547,6 @@
   display: none;
 }
 
-#protections-popup-cookie-banner-section[uiDisabled],
-#protections-popup-cookie-banner-section-separator[uiDisabled]{
-  display: none;
-}
-
 #protections-popup-toast-panel-tp-on-desc,
 #protections-popup-toast-panel-tp-off-desc {
   display: none;
@@ -830,38 +825,22 @@
   margin-top: auto;
 }
 
+
 /* Cookie banner state toggles for the popup menu item */
 
-/* Cookie banner not supported for site */
-#protections-popup-cookie-banner-section:not([enabled]) description#protections-popup-cookie-banner-disabled,
-#protections-popup-cookie-banner-section:not([enabled]) description#protections-popup-cookie-banner-enabled {
+#protections-popup-cookie-banner-section:not([data-state="detected"]) description#protections-popup-cookie-banner-detected,
+#protections-popup-cookie-banner-section:not([data-state="undetected"]) description#protections-popup-cookie-banner-undetected,
+#protections-popup-cookie-banner-section:not([data-state="site-disabled"]) description#protections-popup-cookie-banner-site-disabled {
   display: none;
 }
 
-/* Cookie banner enabled for site */
-#protections-popup-cookie-banner-section[enabled]:not([hasException]) description#protections-popup-cookie-banner-disabled,
-#protections-popup-cookie-banner-section[enabled]:not([hasException]) description#protections-popup-cookie-banner-undetected {
-  display: none;
-}
-
-/* Cookie banner disabled for site by user */
-#protections-popup-cookie-banner-section[enabled][hasException] description#protections-popup-cookie-banner-enabled,
-#protections-popup-cookie-banner-section[enabled][hasException] description#protections-popup-cookie-banner-undetected {
-  display: none;
-}
-
-/* Cookie banner state toggles for the subview */
-
-/* Cookie banner enabled for site, so hide enable controls */
-#protections-popup-cookieBannerView:not([hasException]) #protections-popup-cookieBannerView-enable-button,
-#protections-popup-cookieBannerView:not([hasException]) description#cookieBannerView-enable-site,
-#protections-popup-cookieBannerView:not([hasException]) description#cookieBannerView-enable-site-description {
-  display: none;
-}
-
-/* Cookie banner disabled for site by user, so hide disable controls */
-#protections-popup-cookieBannerView[hasException] #protections-popup-cookieBannerView-disable-button,
-#protections-popup-cookieBannerView[hasException] description#cookieBannerView-disable-site,
-#protections-popup-cookieBannerView[hasException] description#cookieBannerView-disable-site-warning {
+/* Cookie banner state toggles for the subview: if the state is detected, show
+ * the disable controls; if the state is site-disabled, show the enable controls. */
+#protections-popup-cookieBannerView:not([data-state="detected"]) #protections-popup-cookieBannerView-disable-button,
+#protections-popup-cookieBannerView:not([data-state="detected"]) description#cookieBannerView-disable-site,
+#protections-popup-cookieBannerView:not([data-state="detected"]) description#cookieBannerView-disable-site-warning,
+#protections-popup-cookieBannerView:not([data-state="site-disabled"]) #protections-popup-cookieBannerView-enable-button,
+#protections-popup-cookieBannerView:not([data-state="site-disabled"]) description#cookieBannerView-enable-site,
+#protections-popup-cookieBannerView:not([data-state="site-disabled"]) description#cookieBannerView-enable-site-description {
   display: none;
 }
