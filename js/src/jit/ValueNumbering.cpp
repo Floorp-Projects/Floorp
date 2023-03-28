@@ -834,7 +834,10 @@ bool ValueNumberer::visitDefinition(MDefinition* def) {
       return false;
     }
 
-    rep->updateForReplacement(def);
+    if (rep->isPhi()) {
+      MOZ_ASSERT(def->isPhi());
+      rep->toPhi()->updateForReplacement(def->toPhi());
+    }
 
 #ifdef JS_JITSPEW
     JitSpew(JitSpew_GVN, "      Replacing %s%u with %s%u", def->opName(),
