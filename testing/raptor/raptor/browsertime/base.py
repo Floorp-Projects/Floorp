@@ -309,6 +309,8 @@ class Browsertime(Perftest):
             "true" if self.config["test_bytecode_cache"] else "false",
             "--firefox.perfStats",
             test.get("perfstats", "false"),
+            "--browsertime.moz_fetch_dir",
+            os.environ.get("MOZ_FETCHES_DIR", "None"),
         ]
 
         if test.get("perfstats") == "true":

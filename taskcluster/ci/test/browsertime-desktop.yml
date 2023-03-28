@@ -624,3 +624,23 @@ browsertime-regression-tests:
                 default: []
     tier: 2
     treeherder-symbol: Btime(regressor)
+
+browsertime-upload:
+    raptor:
+        apps: [firefox, chrome, chromium, safari]
+        subtests: [upload]
+    description: Raptor (browsertime) file upload performance test
+    max-run-time: 2700
+    run-on-projects:
+        by-app:
+            firefox:
+                by-test-platform:
+                    windows.*-32.*: []
+                    .*64.*shippable-qr/.*: [autoland, mozilla-central]
+                    default: []
+            default: []
+    tier: 3
+    treeherder-symbol: Btime(upload)
+    fetches:
+        fetch:
+            - upload-speed-test-file
