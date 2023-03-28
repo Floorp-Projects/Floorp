@@ -35,6 +35,23 @@
                   border: var(--win-sidebar-bgcolor) 0.1px solid;" hidden="false"/>
         `);
       document.getElementById("sidebar-box").before(splitterNode);
+  
+      const box = document.getElementById("toolbar-items-verticaltabs");
+      const splitter = document.getElementById("sidebar-splitter3");
+
+      function handleMouseEnter() {
+        box.removeAttribute("style");
+      }
+
+      function handleMouseLeave() {
+        box.removeAttribute("style");
+        box.setAttribute("style", "min-width: " + box.getAttribute("width") + "px !important;");
+        
+      }
+
+      splitter.addEventListener("mouseenter", handleMouseEnter);
+      splitter.addEventListener("mouseleave", handleMouseLeave);
+  
     }, 500);
 
     //toolbar modification
