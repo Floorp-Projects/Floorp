@@ -7504,22 +7504,6 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
-  "forced-color-adjust": {
-    "isInherited": true,
-    "subproperties": [
-      "forced-color-adjust"
-    ],
-    "supports": [],
-    "values": [
-      "auto",
-      "inherit",
-      "initial",
-      "none",
-      "revert",
-      "revert-layer",
-      "unset"
-    ]
-  },
   "gap": {
     "isInherited": false,
     "subproperties": [
