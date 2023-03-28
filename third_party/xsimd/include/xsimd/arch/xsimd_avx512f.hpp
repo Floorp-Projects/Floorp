@@ -768,6 +768,45 @@ namespace xsimd
             return _mm512_roundscale_pd(self, _MM_FROUND_TO_NEG_INF);
         }
 
+        // fnma
+        template <class A>
+        inline batch<float, A> fnma(batch<float, A> const& x, batch<float, A> const& y, batch<float, A> const& z, requires_arch<avx512f>) noexcept
+        {
+            return _mm512_fnmadd_ps(x, y, z);
+        }
+
+        template <class A>
+        inline batch<double, A> fnma(batch<double, A> const& x, batch<double, A> const& y, batch<double, A> const& z, requires_arch<avx512f>) noexcept
+        {
+            return _mm512_fnmadd_pd(x, y, z);
+        }
+
+        // fma
+        template <class A>
+        inline batch<float, A> fma(batch<float, A> const& x, batch<float, A> const& y, batch<float, A> const& z, requires_arch<avx512f>) noexcept
+        {
+            return _mm512_fmadd_ps(x, y, z);
+        }
+
+        template <class A>
+        inline batch<double, A> fma(batch<double, A> const& x, batch<double, A> const& y, batch<double, A> const& z, requires_arch<avx512f>) noexcept
+        {
+            return _mm512_fmadd_pd(x, y, z);
+        }
+
+        // fms
+        template <class A>
+        inline batch<float, A> fms(batch<float, A> const& x, batch<float, A> const& y, batch<float, A> const& z, requires_arch<avx512f>) noexcept
+        {
+            return _mm512_fmsub_ps(x, y, z);
+        }
+
+        template <class A>
+        inline batch<double, A> fms(batch<double, A> const& x, batch<double, A> const& y, batch<double, A> const& z, requires_arch<avx512f>) noexcept
+        {
+            return _mm512_fmsub_pd(x, y, z);
+        }
+
         // from bool
         template <class A, class T>
         inline batch<T, A> from_bool(batch_bool<T, A> const& self, requires_arch<avx512f>) noexcept
@@ -1763,7 +1802,7 @@ namespace xsimd
         template <class A, uint64_t... Vs>
         inline batch<int64_t, A> swizzle(batch<int64_t, A> const& self, batch_constant<batch<uint64_t, A>, Vs...> mask, requires_arch<avx512f>) noexcept
         {
-            return bitwise_cast<batch<int64_t, A>>(swizzle(bitwise_cast<batch<uint64_t, A>>(self), mask, avx512f {}));
+            return bitwise_cast<int64_t>(swizzle(bitwise_cast<uint64_t>(self), mask, avx512f {}));
         }
 
         template <class A, uint32_t... Vs>
@@ -1775,7 +1814,7 @@ namespace xsimd
         template <class A, uint32_t... Vs>
         inline batch<int32_t, A> swizzle(batch<int32_t, A> const& self, batch_constant<batch<uint32_t, A>, Vs...> mask, requires_arch<avx512f>) noexcept
         {
-            return bitwise_cast<batch<int32_t, A>>(swizzle(bitwise_cast<batch<uint32_t, A>>(self), mask, avx512f {}));
+            return bitwise_cast<int32_t>(swizzle(bitwise_cast<uint32_t>(self), mask, avx512f {}));
         }
 
         namespace detail
@@ -1833,7 +1872,7 @@ namespace xsimd
         inline batch<int16_t, A>
         swizzle(batch<int16_t, A> const& self, batch_constant<batch<uint16_t, A>, Vs...> mask, requires_arch<avx512f>) noexcept
         {
-            return bitwise_cast<batch<int16_t, A>>(swizzle(bitwise_cast<batch<uint16_t, A>>(self), mask, avx512f {}));
+            return bitwise_cast<int16_t>(swizzle(bitwise_cast<uint16_t>(self), mask, avx512f {}));
         }
 
         // trunc
