@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<style>
+.c {
+  break-after: page;
+  page: Rotated;
+}
+</style>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  b.insertAdjacentHTML("afterBegin", a.innerHTML)
+  SpecialPowers.wrap(window).printPreview()?.close()
+})
+</script>
+<audio>
+<optgroup id="a">
+<option class="c">a</option>
+</audio>
+<menu style="max-height: 0em">
+<menu id="b"></menu>
+</menu>
+<select class="c">

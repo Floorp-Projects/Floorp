@@ -9516,10 +9516,17 @@ inline void nsCSSFrameConstructor::ConstructFramesFromItemList(
   VerifyGridFlexContainerChildren(aParentFrame, aFrameList);
 
   // Calculate and propagate page-name values for each frame in the frame list.
-  // This will be affected by https://bugzilla.mozilla.org/1782597
+  // We do not want to compute and propagate page-name values from frames that
+  // are children of any subclasses of block frames, but not actually a block
+  // frame. The page-name property does not apply to frames which cannot create
+  // class A breakpoints (currently no subclass of BlockFrame can). Because the
+  // property does not apply, those children also cannot propagate page-name
+  // values.
+  // This assumption helps avoid unnecessarily handling page-names for frames
+  // such as form controls, which also avoids bug 1819468.
   if (aState.mPresContext->IsPaginated() &&
       StaticPrefs::layout_css_named_pages_enabled() &&
-      aParentFrame->IsBlockFrameOrSubclass()) {
+      aParentFrame->IsBlockFrame()) {
     // Set the start/end page values while iterating the frame list, to walk
     // up the frame tree only once after iterating the frame list.
     // This also avoids extra property lookups on these frames.
@@ -9604,7 +9611,7 @@ inline void nsCSSFrameConstructor::ConstructFramesFromItemList(
       // frame that is not a block frame.
       for (nsContainerFrame* ancestorFrame = aParentFrame;
            (startPageValue || endPageValue) && ancestorFrame &&
-           ancestorFrame->IsBlockFrameOrSubclass();
+           ancestorFrame->IsBlockFrame();
            ancestorFrame = ancestorFrame->GetParent()) {
         MOZ_ASSERT(!ancestorFrame->GetPrevInFlow(),
                    "Should not have fragmentation yet");
