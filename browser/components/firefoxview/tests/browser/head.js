@@ -427,12 +427,16 @@ const getCalloutMessageById = id => {
  * Create a sinon sandbox with `sendTriggerMessage` stubbed
  * to return a specified test message for featureCalloutCheck.
  *
- * @param {object} Test message
+ * @param {object} testMessage
+ * @param {string} [source="about:firefoxview"]
  */
-const createSandboxWithCalloutTriggerStub = testMessage => {
+const createSandboxWithCalloutTriggerStub = (
+  testMessage,
+  source = "about:firefoxview"
+) => {
   const firefoxViewMatch = sinon.match({
     id: "featureCalloutCheck",
-    context: { source: "about:firefoxview" },
+    context: { source },
   });
   const sandbox = sinon.createSandbox();
   const sendTriggerStub = sandbox.stub(ASRouter, "sendTriggerMessage");

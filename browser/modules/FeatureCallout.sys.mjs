@@ -26,18 +26,19 @@ export class FeatureCallout {
   /**
    * @typedef {Object} FeatureCalloutOptions
    * @property {Window} win window in which messages will be rendered
-   * @property {string} prefName name of the pref used to track progress through
+   * @property {String} prefName name of the pref used to track progress through
    *   a given feature tour, e.g. "browser.pdfjs.feature-tour"
-   * @property {string} [page] string to pass as the page when requesting
+   * @property {String} [page] string to pass as the page when requesting
    *   messages from ASRouter and sending telemetry. for browser chrome, the
    *   string "chrome" is used
    * @property {MozBrowser} [browser] <browser> element responsible for the
    *   feature callout. for content pages, this is the browser element that the
    *   callout is being shown in. for chrome, this is the active browser
+   * @property {FeatureCalloutTheme} [theme] @see FeatureCallout.themePresets
    */
 
   /** @param {FeatureCalloutOptions} options */
-  constructor({ win, prefName, page, browser } = {}) {
+  constructor({ win, prefName, page, browser, theme = {} } = {}) {
     this.win = win;
     this.doc = win.document;
     this.browser = browser || this.win.docShell.chromeEventHandler;
@@ -51,6 +52,7 @@ export class FeatureCallout {
     this._positionListenersRegistered = false;
     this.AWSetup = false;
     this.page = page;
+    this._initTheme(theme);
 
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
@@ -303,6 +305,7 @@ export class FeatureCallout {
       `#${CONTAINER_ID} .welcome-text`
     );
     container.tabIndex = 0;
+    this._applyTheme(container);
     this.doc.body.prepend(container);
     return container;
   }
@@ -621,7 +624,7 @@ export class FeatureCallout {
     /**
      * Horizontally align a top/bottom-positioned callout according to the
      * passed position.
-     * @param {string} [position = "start"] <"start"|"end"|"center">
+     * @param {String} [position = "start"] <"start"|"end"|"center">
      */
     const alignHorizontally = position => {
       switch (position) {
@@ -1002,4 +1005,218 @@ export class FeatureCallout {
     this._setupWindowFunctions();
     await this._renderCallout();
   }
+
+  /**
+   * @typedef {Object} FeatureCalloutTheme An object with a set of custom color
+   *   schemes and/or a preset key. If both are provided, the preset will be
+   *   applied first, then the custom themes will override the preset values.
+   * @property {String} [preset] Key of {@link FeatureCallout.themePresets}
+   * @property {ColorScheme} [light] Custom light scheme
+   * @property {ColorScheme} [dark] Custom dark scheme
+   * @property {ColorScheme} [hcm] Custom high contrast scheme
+   * @property {ColorScheme} [all] Custom scheme that will be applied in all
+   *   cases, but overridden by the other schemes if they are present. This is
+   *   useful if the values are already controlled by the browser theme.
+   * @property {Boolean} [simulateContent] Set to true if the feature callout
+   *   exists in the browser chrome but is meant to be displayed over the
+   *   content area to appear as if it is part of the page. This will cause the
+   *   styles to use a media query targeting the content instead of the chrome,
+   *   so that if the browser theme doesn't match the content color scheme, the
+   *   callout will correctly follow the content scheme. This is currently used
+   *   for the feature callouts displayed over the PDF.js viewer.
+   */
+
+  /**
+   * @typedef {Object} ColorScheme An object with key-value pairs, with keys
+   *   from {@link FeatureCallout.themePropNames}, mapped to CSS color values
+   */
+
+  /**
+   * Combine the preset and custom themes into a single object and store it.
+   * @param {FeatureCalloutTheme} theme
+   */
+  _initTheme(theme) {
+    /** @type {FeatureCalloutTheme} */
+    this.theme = Object.assign(
+      {},
+      FeatureCallout.themePresets[theme.preset],
+      theme
+    );
+  }
+
+  /**
+   * Apply all the theme colors to the feature callout's root element as CSS
+   * custom properties in inline styles. These custom properties are consumed by
+   * _feature-callout-theme.scss, which is bundled with the other styles that
+   * are loaded by {@link FeatureCallout.prototype._addCalloutLinkElements}.
+   * @param {Element} [container] Root element of the feature callout
+   */
+  _applyTheme(container = this.doc?.getElementById(CONTAINER_ID)) {
+    if (container) {
+      // This tells the stylesheets to use -moz-content-prefers-color-scheme
+      // instead of prefers-color-scheme, in order to follow the content color
+      // scheme instead of the chrome color scheme, in case of a mismatch when
+      // the feature callout exists in the chrome but is meant to look like it's
+      // part of the content of a page in a browser tab (like PDF.js).
+      container.classList.toggle(
+        "simulateContent",
+        this.page === "chrome" && this.theme.simulateContent
+      );
+      for (const type of ["light", "dark", "hcm"]) {
+        const scheme = this.theme[type];
+        for (const name of FeatureCallout.themePropNames) {
+          this._setThemeVariable(
+            container,
+            `--fc-${name}-${type}`,
+            scheme?.[name] || this.theme.all[name]
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Set or remove a CSS custom property on the feature callout container
+   * @param {Element} container Root element of the feature callout
+   * @param {String} name Name of the CSS custom property
+   * @param {String|void} [value] Value of the property, or omit to remove it
+   */
+  _setThemeVariable(container, name, value) {
+    if (value) {
+      container.style.setProperty(name, value);
+    } else {
+      container.style.removeProperty(name);
+    }
+  }
+
+  /** A list of all the theme properties that can be set */
+  static themePropNames = [
+    "background",
+    "color",
+    "border",
+    "accent-color",
+    "button-background",
+    "button-color",
+    "button-border",
+    "button-background-hover",
+    "button-color-hover",
+    "button-border-hover",
+    "button-background-active",
+    "button-color-active",
+    "button-border-active",
+  ];
+
+  /** @type {Object<String, FeatureCalloutTheme>} */
+  static themePresets = {
+    // For themed system pages like New Tab and Firefox View. Themed content
+    // colors inherit from the user's theme through contentTheme.js.
+    "themed-content": {
+      all: {
+        background: "var(--newtab-background-color-secondary)",
+        color: "var(--newtab-text-primary-color, var(--in-content-page-color))",
+        border:
+          "color-mix(in srgb, var(--newtab-background-color-secondary) 80%, #000)",
+        "accent-color": "var(--in-content-primary-button-background)",
+        "button-background": "color-mix(in srgb, transparent 93%, #000)",
+        "button-color":
+          "var(--newtab-text-primary-color, var(--in-content-page-color))",
+        "button-border": "transparent",
+        "button-background-hover": "color-mix(in srgb, transparent 88%, #000)",
+        "button-color-hover":
+          "var(--newtab-text-primary-color, var(--in-content-page-color))",
+        "button-border-hover": "transparent",
+        "button-background-active": "color-mix(in srgb, transparent 80%, #000)",
+        "button-color-active":
+          "var(--newtab-text-primary-color, var(--in-content-page-color))",
+        "button-border-active": "transparent",
+      },
+      dark: {
+        border:
+          "color-mix(in srgb, var(--newtab-background-color-secondary) 80%, #FFF)",
+        "button-background": "color-mix(in srgb, transparent 80%, #000)",
+        "button-background-hover": "color-mix(in srgb, transparent 65%, #000)",
+        "button-background-active": "color-mix(in srgb, transparent 55%, #000)",
+      },
+      hcm: {
+        background: "-moz-dialog",
+        color: "-moz-dialogtext",
+        border: "-moz-dialogtext",
+        "accent-color": "LinkText",
+        "button-background": "ButtonFace",
+        "button-color": "ButtonText",
+        "button-border": "ButtonText",
+        "button-background-hover": "ButtonText",
+        "button-color-hover": "ButtonFace",
+        "button-border-hover": "ButtonText",
+        "button-background-active": "ButtonText",
+        "button-color-active": "ButtonFace",
+        "button-border-active": "ButtonText",
+      },
+    },
+    // PDF.js colors are from toolkit/components/pdfjs/content/web/viewer.css
+    pdfjs: {
+      all: {
+        background: "#FFF",
+        color: "rgb(12, 12, 13)",
+        border: "#CFCFD8",
+        "accent-color": "#0A84FF",
+        "button-background": "rgb(215, 215, 219)",
+        "button-color": "rgb(12, 12, 13)",
+        "button-border": "transparent",
+        "button-background-hover": "rgb(221, 222, 223)",
+        "button-color-hover": "rgb(12, 12, 13)",
+        "button-border-hover": "transparent",
+        "button-background-active": "rgb(221, 222, 223)",
+        "button-color-active": "rgb(12, 12, 13)",
+        "button-border-active": "transparent",
+      },
+      dark: {
+        background: "#1C1B22",
+        color: "#F9F9FA",
+        border: "#3A3944",
+        "button-background": "rgb(74, 74, 79)",
+        "button-color": "#F9F9FA",
+        "button-background-hover": "rgb(102, 102, 103)",
+        "button-color-hover": "#F9F9FA",
+        "button-background-active": "rgb(102, 102, 103)",
+        "button-color-active": "#F9F9FA",
+      },
+      hcm: {
+        background: "-moz-dialog",
+        color: "-moz-dialogtext",
+        border: "CanvasText",
+        "accent-color": "Highlight",
+        "button-background": "ButtonFace",
+        "button-color": "ButtonText",
+        "button-border": "ButtonText",
+        "button-background-hover": "Highlight",
+        "button-color-hover": "CanvasText",
+        "button-border-hover": "Highlight",
+        "button-background-active": "Highlight",
+        "button-color-active": "CanvasText",
+        "button-border-active": "Highlight",
+      },
+    },
+    // These colors are intended to inherit the user's theme properties from the
+    // main chrome window, for callouts to be anchored to chrome elements.
+    // Specific schemes aren't necessary since the theme and frontend
+    // stylesheets handle these variables' values.
+    chrome: {
+      all: {
+        background: "var(--arrowpanel-background)",
+        color: "var(--arrowpanel-color)",
+        border: "var(--arrowpanel-border-color)",
+        "accent-color": "var(--focus-outline-color)",
+        "button-background": "var(--button-bgcolor)",
+        "button-color": "var(--arrowpanel-color)",
+        "button-border": "transparent",
+        "button-background-hover": "var(--button-hover-bgcolor)",
+        "button-color-hover": "var(--arrowpanel-color)",
+        "button-border-hover": "transparent",
+        "button-background-active": "var(--button-active-bgcolor)",
+        "button-color-active": "var(--arrowpanel-color)",
+        "button-border-active": "transparent",
+      },
+    },
+  };
 }

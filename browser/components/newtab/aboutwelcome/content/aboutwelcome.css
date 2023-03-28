@@ -2,20 +2,112 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 .onboardingContainer.featureCallout {
+  --fc-background: var(--fc-background-light, #FFF);
+  --fc-color: var(--fc-color-light, #15141A);
+  --fc-border: var(--fc-border-light, #CFCFD8);
+  --fc-accent-color: var(--fc-accent-color-light, #0061E0);
+  --fc-button-background: var(--fc-button-background-light, #F0F0F4);
+  --fc-button-color: var(--fc-button-color-light, #15141A);
+  --fc-button-border: var(--fc-button-border-light, transparent);
+  --fc-button-background-hover: var(--fc-button-background-hover-light, #E0E0E6);
+  --fc-button-color-hover: var(--fc-button-color-hover-light, #15141A);
+  --fc-button-border-hover: var(--fc-button-border-hover-light, transparent);
+  --fc-button-background-active: var(--fc-button-background-active-light, #CFCFD8);
+  --fc-button-color-active: var(--fc-button-color-active-light, #15141A);
+  --fc-button-border-active: var(--fc-button-border-active-light, transparent);
+  --fc-step-color: color-mix(in srgb, currentColor 50%, transparent);
   position: absolute;
   transition: opacity 0.5s ease;
   z-index: 2147483645;
   outline: none;
-  --feature-callout-focus-outline-color: #0061E0;
+  color: var(--fc-color);
 }
 @media (prefers-color-scheme: dark) {
   .onboardingContainer.featureCallout {
-    --feature-callout-focus-outline-color: #0DF;
+    --fc-background: var(--fc-background-dark, #42414D);
+    --fc-color: var(--fc-color-dark, #FBFBFE);
+    --fc-border: var(--fc-border-dark, #3A3944);
+    --fc-accent-color: var(--fc-accent-color-dark, #00DDFF);
+    --fc-button-background: var(--fc-button-background-dark, #2B2A33);
+    --fc-button-color: var(--fc-button-color-dark, #FBFBFE);
+    --fc-button-border: var(--fc-button-border-dark, transparent);
+    --fc-button-background-hover: var(--fc-button-background-hover-dark, #52525E);
+    --fc-button-color-hover: var(--fc-button-color-hover-dark, #FBFBFE);
+    --fc-button-border-hover: var(--fc-button-border-hover-dark, transparent);
+    --fc-button-background-active: var(--fc-button-background-active-dark, #5B5B66);
+    --fc-button-color-active: var(--fc-button-color-active-dark, #FBFBFE);
+    --fc-button-border-active: var(--fc-button-border-active-dark, transparent);
   }
 }
 @media (prefers-contrast) {
   .onboardingContainer.featureCallout {
-    --feature-callout-focus-outline-color: -moz-DialogText;
+    --fc-background: var(--fc-background-hcm, -moz-dialog);
+    --fc-color: var(--fc-color-hcm, -moz-dialogtext);
+    --fc-border: var(--fc-border-hcm, -moz-dialogtext);
+    --fc-accent-color: var(--fc-accent-color-hcm, LinkText);
+    --fc-button-background: var(--fc-button-background-hcm, ButtonFace);
+    --fc-button-color: var(--fc-button-color-hcm, ButtonText);
+    --fc-button-border: var(--fc-button-border-hcm, ButtonText);
+    --fc-button-background-hover: var(--fc-button-background-hover-hcm, ButtonText);
+    --fc-button-color-hover: var(--fc-button-color-hover-hcm, ButtonFace);
+    --fc-button-border-hover: var(--fc-button-border-hover-hcm, ButtonText);
+    --fc-button-background-active: var(--fc-button-background-active-hcm, ButtonText);
+    --fc-button-color-active: var(--fc-button-color-active-hcm, ButtonFace);
+    --fc-button-border-active: var(--fc-button-border-active-hcm, ButtonText);
+    --fc-step-color: var(--fc-accent-color-hcm, LinkText);
+  }
+}
+@media (-moz-content-prefers-color-scheme: light) {
+  .onboardingContainer.featureCallout.simulateContent {
+    --fc-background: var(--fc-background-light, #FFF);
+    --fc-color: var(--fc-color-light, #15141A);
+    --fc-border: var(--fc-border-light, #CFCFD8);
+    --fc-accent-color: var(--fc-accent-color-light, #0061E0);
+    --fc-button-background: var(--fc-button-background-light, #F0F0F4);
+    --fc-button-color: var(--fc-button-color-light, #15141A);
+    --fc-button-border: var(--fc-button-border-light, transparent);
+    --fc-button-background-hover: var(--fc-button-background-hover-light, #E0E0E6);
+    --fc-button-color-hover: var(--fc-button-color-hover-light, #15141A);
+    --fc-button-border-hover: var(--fc-button-border-hover-light, transparent);
+    --fc-button-background-active: var(--fc-button-background-active-light, #CFCFD8);
+    --fc-button-color-active: var(--fc-button-color-active-light, #15141A);
+    --fc-button-border-active: var(--fc-button-border-active-light, transparent);
+    --fc-step-color: color-mix(in srgb, currentColor 50%, transparent);
+  }
+}
+@media (-moz-content-prefers-color-scheme: dark) {
+  .onboardingContainer.featureCallout.simulateContent {
+    --fc-background: var(--fc-background-dark, #42414D);
+    --fc-color: var(--fc-color-dark, #FBFBFE);
+    --fc-border: var(--fc-border-dark, #3A3944);
+    --fc-accent-color: var(--fc-accent-color-dark, #00DDFF);
+    --fc-button-background: var(--fc-button-background-dark, #2B2A33);
+    --fc-button-color: var(--fc-button-color-dark, #FBFBFE);
+    --fc-button-border: var(--fc-button-border-dark, transparent);
+    --fc-button-background-hover: var(--fc-button-background-hover-dark, #52525E);
+    --fc-button-color-hover: var(--fc-button-color-hover-dark, #FBFBFE);
+    --fc-button-border-hover: var(--fc-button-border-hover-dark, transparent);
+    --fc-button-background-active: var(--fc-button-background-active-dark, #5B5B66);
+    --fc-button-color-active: var(--fc-button-color-active-dark, #FBFBFE);
+    --fc-button-border-active: var(--fc-button-border-active-dark, transparent);
+  }
+}
+@media (prefers-contrast) {
+  .onboardingContainer.featureCallout.simulateContent {
+    --fc-background: var(--fc-background-hcm, -moz-dialog);
+    --fc-color: var(--fc-color-hcm, -moz-dialogtext);
+    --fc-border: var(--fc-border-hcm, -moz-dialogtext);
+    --fc-accent-color: var(--fc-accent-color-hcm, LinkText);
+    --fc-button-background: var(--fc-button-background-hcm, ButtonFace);
+    --fc-button-color: var(--fc-button-color-hcm, ButtonText);
+    --fc-button-border: var(--fc-button-border-hcm, ButtonText);
+    --fc-button-background-hover: var(--fc-button-background-hover-hcm, ButtonText);
+    --fc-button-color-hover: var(--fc-button-color-hover-hcm, ButtonFace);
+    --fc-button-border-hover: var(--fc-button-border-hover-hcm, ButtonText);
+    --fc-button-background-active: var(--fc-button-background-active-hcm, ButtonText);
+    --fc-button-color-active: var(--fc-button-color-active-hcm, ButtonFace);
+    --fc-button-border-active: var(--fc-button-border-active-hcm, ButtonText);
+    --fc-step-color: var(--fc-accent-color-hcm, LinkText);
   }
 }
 .onboardingContainer.featureCallout.hidden {
@@ -53,7 +145,7 @@
 .onboardingContainer.featureCallout .screen[pos=callout] .welcome-text h2 {
   font-size: 0.8em;
   margin: 0;
-  color: ButtonText;
+  color: inherit;
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .welcome-text h1 {
   font-weight: bold;
@@ -71,18 +163,13 @@
 .onboardingContainer.featureCallout .screen[pos=callout] .section-main .main-content {
   position: relative;
   overflow: hidden;
-  border: 1px solid #CFCFD8;
+  border: 1px solid var(--fc-border);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   border-radius: 4px;
   padding-top: 0;
   padding-bottom: 26px;
   width: 25em;
-  background-color: #FFF;
-}
-@media (prefers-color-scheme: dark) {
-  .onboardingContainer.featureCallout .screen[pos=callout] .section-main .main-content {
-    background-color: #1c1b22;
-  }
+  background-color: var(--fc-background);
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .section-main .main-content .steps {
   height: auto;
@@ -92,13 +179,13 @@
   padding-block: 0;
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .section-main .main-content .steps .indicator {
-  border: 4px solid WindowText;
+  border: 4px solid var(--fc-step-color);
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .section-main .main-content .steps .indicator.current {
-  border-color: LinkText;
+  border-color: var(--fc-accent-color);
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .section-main .main-content .steps .indicator.current, .onboardingContainer.featureCallout .screen[pos=callout] .section-main .main-content .steps.progress-bar .indicator.complete {
-  border-color: LinkText;
+  border-color: var(--fc-accent-color);
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .section-main .dismiss-button {
   font-size: 1em;
@@ -106,18 +193,14 @@
   margin-block: 15px 0;
   margin-inline: 0 15px;
   z-index: 2147483647;
-  background-color: #FFF;
-}
-@media (prefers-color-scheme: dark) {
-  .onboardingContainer.featureCallout .screen[pos=callout] .section-main .dismiss-button {
-    background-color: #1c1b22;
-  }
+  background-color: var(--fc-background);
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary,
 .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .secondary-cta .secondary {
   padding: 4px 16px;
   font-size: 0.8em;
   height: 2em;
+  background-color: var(--fc-button-background);
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary {
   font-weight: bold;
@@ -127,62 +210,38 @@
   font-size: 0.8em;
   line-height: 16px;
   min-height: 32px;
-  background-color: rgba(207, 207, 216, 0.33);
-}
-@media (prefers-color-scheme: dark) {
-  .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary {
-    background-color: #2b2a33;
-  }
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .secondary-cta {
   float: inline-end;
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary,
+.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .secondary-cta .secondary,
 .onboardingContainer.featureCallout .screen[pos=callout] .dismiss-button {
   border-radius: 4px;
-  border: 0;
+  border: 1px solid var(--fc-button-border);
   cursor: pointer;
-  color: ButtonText;
+  color: var(--fc-button-color);
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary:hover,
+.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .secondary-cta .secondary:hover,
 .onboardingContainer.featureCallout .screen[pos=callout] .dismiss-button:hover {
-  background-color: #e8e3e4;
+  background-color: var(--fc-button-background-hover);
+  color: var(--fc-button-color-hover);
+  border: 1px solid var(--fc-button-border-hover);
 }
-@media (prefers-color-scheme: dark) {
-  .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary,
-.onboardingContainer.featureCallout .screen[pos=callout] .dismiss-button {
-    background-color: #2b2a33;
-  }
-  .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary:hover,
-.onboardingContainer.featureCallout .screen[pos=callout] .dismiss-button:hover {
-    background-color: #363434;
-  }
+.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary:hover:active,
+.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .secondary-cta .secondary:hover:active,
+.onboardingContainer.featureCallout .screen[pos=callout] .dismiss-button:hover:active {
+  background-color: var(--fc-button-background-active);
+  color: var(--fc-button-color-active);
+  border: 1px solid var(--fc-button-border-active);
 }
-@media (prefers-contrast) {
-  .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary,
-.onboardingContainer.featureCallout .screen[pos=callout] .dismiss-button {
-    border: 1px solid ButtonText;
-    background-color: #FFF;
-  }
-}
-@media (prefers-contrast) and (prefers-color-scheme: dark) {
-  .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary,
-.onboardingContainer.featureCallout .screen[pos=callout] .dismiss-button {
-    background-color: #1c1b22;
-  }
-}
-@media (prefers-contrast) {
-  .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary:hover,
-.onboardingContainer.featureCallout .screen[pos=callout] .dismiss-button:hover {
-    background-color: ButtonText;
-    color: #FFF;
-  }
-}
-@media (prefers-contrast) and (prefers-color-scheme: dark) {
-  .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary:hover,
-.onboardingContainer.featureCallout .screen[pos=callout] .dismiss-button:hover {
-    color: #1c1b22;
-  }
+.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary:focus-visible,
+.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .secondary-cta .secondary:focus-visible,
+.onboardingContainer.featureCallout .screen[pos=callout] .dismiss-button:focus-visible {
+  box-shadow: none;
+  outline: 2px solid var(--fc-accent-color);
+  outline-offset: 2px;
 }
 .onboardingContainer.featureCallout.callout-arrow::before, .onboardingContainer.featureCallout.callout-arrow::after {
   content: "";
@@ -194,16 +253,11 @@
 }
 .onboardingContainer.featureCallout.callout-arrow::before {
   z-index: 2147483647;
-  background-color: #FFF;
-}
-@media (prefers-color-scheme: dark) {
-  .onboardingContainer.featureCallout.callout-arrow::before {
-    background-color: #1c1b22;
-  }
+  background-color: var(--fc-background);
 }
 .onboardingContainer.featureCallout.callout-arrow::after {
   background: transparent;
-  outline: 1px solid #CFCFD8;
+  outline: 1px solid var(--fc-border);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   z-index: -1;
 }
@@ -232,11 +286,16 @@
   inset-inline-start: 12px;
 }
 .onboardingContainer.featureCallout:focus-visible .screen[pos=callout] .section-main .main-content {
-  outline: 2px solid var(--feature-callout-focus-outline-color);
+  outline: 2px solid var(--fc-accent-color);
   border-color: transparent;
 }
+@media (prefers-contrast) {
+  .onboardingContainer.featureCallout:focus-visible .screen[pos=callout] .section-main .main-content {
+    border-color: var(--fc-background);
+  }
+}
 .onboardingContainer.featureCallout:focus-visible.callout-arrow::after {
-  outline: 2px solid var(--feature-callout-focus-outline-color);
+  outline: 2px solid var(--fc-accent-color);
 }
 
 html {
