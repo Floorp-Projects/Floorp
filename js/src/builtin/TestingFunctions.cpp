@@ -5683,8 +5683,15 @@ static bool GetBacktrace(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  JS::ConstUTF8CharsZ utf8chars(buf.get(), strlen(buf.get()));
-  JSString* str = NewStringCopyUTF8Z(cx, utf8chars);
+  size_t len;
+  UniqueTwoByteChars ucbuf(JS::LossyUTF8CharsToNewTwoByteCharsZ(
+                               cx, JS::UTF8Chars(buf.get(), strlen(buf.get())),
+                               &len, js::MallocArena)
+                               .get());
+  if (!ucbuf) {
+    return false;
+  }
+  JSString* str = JS_NewUCStringCopyN(cx, ucbuf.get(), len);
   if (!str) {
     return false;
   }
