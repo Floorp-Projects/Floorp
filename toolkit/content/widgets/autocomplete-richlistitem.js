@@ -654,18 +654,7 @@
     `;
     }
 
-    _adjustAcItem() {
-      const popup = this.parentNode.parentNode;
-      const minWidth = getComputedStyle(popup).minWidth.replace("px", "");
-      // Make item fit in popup as XUL box could not constrain
-      // item's width
-      // --panel-width is equal to the input field's width from the content process
-      this.firstElementChild.style.width =
-        Math.max(
-          minWidth,
-          parseFloat(popup.style.getPropertyValue("--panel-width") || "0")
-        ) + "px";
-    }
+    _adjustAcItem() {}
 
     _onOverflow() {}
 
