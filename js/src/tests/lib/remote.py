@@ -64,21 +64,38 @@ def init_device(options):
             # the js binary to find the necessary libraries.
             options.local_lib = posixpath.dirname(options.js_shell)
 
-        DEVICE = ADBDeviceFactory(
-            device=options.device_serial, test_root=options.remote_test_root
-        )
+        # Try to find 'adb' off the build environment to automatically use the
+        # .mozbuild version if possible. In test automation, we don't have
+        # mozbuild available so use the default 'adb' that automation provides.
+        try:
+            from mozbuild.base import MozbuildObject
+            from mozrunner.devices.android_device import get_adb_path
 
-        init_remote_dir(DEVICE, options.remote_test_root)
+            context = MozbuildObject.from_environment()
+            adb_path = get_adb_path(context)
+        except (ImportError):
+            adb_path = "adb"
+
+        DEVICE = ADBDeviceFactory(
+            adb=adb_path,
+            device=options.device_serial,
+            test_root=options.remote_test_root,
+        )
 
         bin_dir = posixpath.join(options.remote_test_root, "bin")
         tests_dir = posixpath.join(options.remote_test_root, "tests")
         temp_dir = posixpath.join(options.remote_test_root, "tmp")
-        # Push js shell and libraries.
+
+        # Create directory structure on device
+        init_remote_dir(DEVICE, options.remote_test_root)
         init_remote_dir(DEVICE, tests_dir)
         init_remote_dir(DEVICE, bin_dir)
         init_remote_dir(DEVICE, temp_dir)
+
+        # Push js shell and libraries.
         push_libs(options, DEVICE, bin_dir)
         push_progs(options, DEVICE, [options.js_shell], bin_dir)
+
         # update options.js_shell to point to the js binary on the device
         options.js_shell = os.path.join(bin_dir, "js")
 

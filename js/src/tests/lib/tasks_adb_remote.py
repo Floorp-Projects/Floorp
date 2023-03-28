@@ -111,6 +111,8 @@ def setup_device(prefix, options):
         prefix[0] = posixpath.join(options.remote_test_root, "bin", "js")
         tempdir = posixpath.join(options.remote_test_root, "tmp")
 
+        print("tasks_adb_remote.py : Transfering test files")
+
         # Push tests & lib directories.
         device.push(os.path.dirname(TEST_DIR), options.remote_test_root, timeout=600)
 
@@ -180,7 +182,6 @@ def setup_script(device, prefix, tempdir, options, uniq_tag, tests):
     timeout = int(options.timeout)
     script_timeout = 0
     try:
-        print("tasks_adb_remote.py : Create batch script")
         tmpf = tempfile.NamedTemporaryFile(mode="w", delete=False)
         tmpf.write(script_preamble(uniq_tag, prefix, options))
         for i, test in enumerate(tests):
@@ -247,7 +248,6 @@ def start_script(
             adb_process, prefix, tempdir, uniq_tag, tests, options
         ):
             yield test_output
-        print("tasks_adb_remote.py : Finished")
     except ADBProcessError as e:
         # After a device error, the device is typically in a
         # state where all further tests will fail so there is no point in
