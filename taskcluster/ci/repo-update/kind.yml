@@ -12,7 +12,10 @@ transforms:
 job-defaults:
     worker:
         env:
-            DO_HSTS: ""
+            DO_HSTS:
+                by-project:
+                    mozilla-(central|beta|esr.*): "1"
+                    default: ""
             DO_HPKP:
                 by-project:
                     mozilla-(central|beta|esr.*): "1"
@@ -41,7 +44,7 @@ jobs:
             platform: linux64/opt
             symbol: pfu
             tier: 1
-        worker-type: b-linux-gcp
+        worker-type: b-linux-xlarge-gcp
         worker:
             implementation: docker-worker
             os: linux
