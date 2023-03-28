@@ -279,8 +279,7 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsACString& aFaceName,
     : gfxFT2FontEntryBase(aFaceName),
       mFontPattern(aFontPattern),
       mFTFaceInitialized(false),
-      mIgnoreFcCharmap(aIgnoreFcCharmap),
-      mHasVariationsInitialized(false) {
+      mIgnoreFcCharmap(aIgnoreFcCharmap) {
   GetFontProperties(aFontPattern, &mWeightRange, &mStretchRange, &mStyleRange);
   GetUserFontFeatures(mFontPattern);
 }
@@ -339,8 +338,7 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsACString& aFaceName,
       mFontPattern(CreatePatternForFace(aFace->GetFace())),
       mFTFace(aFace.forget().take()),
       mFTFaceInitialized(true),
-      mIgnoreFcCharmap(true),
-      mHasVariationsInitialized(false) {
+      mIgnoreFcCharmap(true) {
   mWeightRange = aWeight;
   mStyleRange = aStyle;
   mStretchRange = aStretch;
@@ -354,8 +352,7 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsACString& aFaceName,
                                                SlantStyleRange aStyle)
     : gfxFT2FontEntryBase(aFaceName),
       mFontPattern(aFontPattern),
-      mFTFaceInitialized(false),
-      mHasVariationsInitialized(false) {
+      mFTFaceInitialized(false) {
   mWeightRange = aWeight;
   mStyleRange = aStyle;
   mStretchRange = aStretch;
@@ -967,14 +964,23 @@ FTUserFontData* gfxFontconfigFontEntry::GetUserFontData() {
 }
 
 bool gfxFontconfigFontEntry::HasVariations() {
-  if (mHasVariationsInitialized) {
-    return mHasVariations;
+  // If the answer is already cached, just return it.
+  switch (mHasVariations) {
+    case HasVariationsState::No:
+      return false;
+    case HasVariationsState::Yes:
+      return true;
+    case HasVariationsState::Uninitialized:
+      break;
   }
-  mHasVariationsInitialized = true;
-  mHasVariations = false;
+
+  // Figure out whether we have variations, and record in mHasVariations.
+  // (It doesn't matter if we race with another thread to set this; the result
+  // will be the same.)
 
   if (!gfxPlatform::HasVariationFontSupport()) {
-    return mHasVariations;
+    mHasVariations = HasVariationsState::No;
+    return false;
   }
 
   // For installed fonts, query the fontconfig pattern rather than paying
@@ -984,22 +990,32 @@ bool gfxFontconfigFontEntry::HasVariations() {
     if ((FcPatternGetBool(mFontPattern, FC_VARIABLE, 0, &variable) ==
          FcResultMatch) &&
         variable) {
-      mHasVariations = true;
+      mHasVariations = HasVariationsState::Yes;
+      return true;
     }
   } else {
     if (auto ftFace = GetFTFace()) {
-      mHasVariations =
-          ftFace->GetFace()->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS;
+      if (ftFace->GetFace()->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) {
+        mHasVariations = HasVariationsState::Yes;
+        return true;
+      }
     }
   }
 
-  return mHasVariations;
+  mHasVariations = HasVariationsState::No;
+  return false;
 }
 
 FT_MM_Var* gfxFontconfigFontEntry::GetMMVar() {
-  if (mMMVarInitialized) {
-    return mMMVar;
+  {
+    AutoReadLock lock(mLock);
+    if (mMMVarInitialized) {
+      return mMMVar;
+    }
   }
+
+  AutoWriteLock lock(mLock);
+
   mMMVarInitialized = true;
   InitializeVarFuncs();
   if (!sGetVar) {
