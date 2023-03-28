@@ -93,6 +93,7 @@ browsertime:
     - browsertime-grandprix
     - browsertime-responsiveness
     - browsertime-regression-tests
+    - browsertime-upload
 
 browsertime-clang:
     - browsertime-tp6

@@ -178,6 +178,7 @@ suites:
             welcome: "Measures pageload metrics for the first-install about:welcome page"
             grandprix: "Runs the Grandprix benchmark"
             constant-regression: "Generates a constant value that can be changed to induce a regression."
+            upload: "Measures file upload speed" 
     interactive:
         description: "Browsertime tests that interact with the webpage. Includes responsiveness tests as they make use of this support for navigation. These form of tests allow the specification of browsertime commands through the test manifest."
         tests:
