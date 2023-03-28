@@ -697,6 +697,10 @@ export class BraveProfileMigrator extends ChromeProfileMigrator {
     return "migration-wizard-migrator-display-name-brave";
   }
 
+  static get brandImage() {
+    return "chrome://browser/content/migration/brands/brave.png";
+  }
+
   _chromeUserDataPathSuffix = "Brave";
   _keychainServiceName = "Brave Browser Safe Storage";
   _keychainAccountName = "Brave Browser";
