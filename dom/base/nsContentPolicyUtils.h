@@ -147,6 +147,7 @@ inline const char* NS_CP_ContentTypeName(nsContentPolicyType contentType) {
     CASE_RETURN(TYPE_INTERNAL_WORKER_STATIC_MODULE);
     CASE_RETURN(TYPE_PROXIED_WEBRTC_MEDIA);
     CASE_RETURN(TYPE_WEB_IDENTITY);
+    CASE_RETURN(TYPE_WEB_TRANSPORT);
     CASE_RETURN(TYPE_END);
     case nsIContentPolicy::TYPE_INVALID:
       break;
