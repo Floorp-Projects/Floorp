@@ -24,6 +24,7 @@
 #include "imgINotificationObserver.h"
 #include "nsScrollbarFrame.h"
 #include "nsThreadUtils.h"
+#include "SimpleXULLeafFrame.h"
 #include "mozilla/LookAndFeel.h"
 
 class nsFontMetrics;
@@ -49,7 +50,7 @@ struct nsTreeImageCacheEntry {
 };
 
 // The actual frame that paints the cells and rows.
-class nsTreeBodyFrame final : public nsLeafBoxFrame,
+class nsTreeBodyFrame final : public mozilla::SimpleXULLeafFrame,
                               public nsIScrollbarMediator,
                               public nsIReflowCallback {
   typedef mozilla::layout::ScrollbarActivity ScrollbarActivity;
@@ -58,6 +59,8 @@ class nsTreeBodyFrame final : public nsLeafBoxFrame,
  public:
   explicit nsTreeBodyFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
   ~nsTreeBodyFrame();
+
+  nscoord GetIntrinsicBSize() override;
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsTreeBodyFrame)
@@ -116,64 +119,58 @@ class nsTreeBodyFrame final : public nsLeafBoxFrame,
 
   void ManageReflowCallback(const nsRect& aRect, nscoord aHorzWidth);
 
-  virtual nsSize GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) override;
-  virtual void SetXULBounds(nsBoxLayoutState& aBoxLayoutState,
-                            const nsRect& aRect,
-                            bool aRemoveOverflowArea = false) override;
+  void DidReflow(nsPresContext*, const ReflowInput*) override;
 
   // nsIReflowCallback
-  virtual bool ReflowFinished() override;
-  virtual void ReflowCallbackCanceled() override;
+  bool ReflowFinished() override;
+  void ReflowCallbackCanceled() override;
 
   // nsIScrollbarMediator
-  virtual void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection,
-                            mozilla::ScrollSnapFlags aSnapFlags =
-                                mozilla::ScrollSnapFlags::Disabled) override;
-  virtual void ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection,
-                             mozilla::ScrollSnapFlags aSnapFlags =
-                                 mozilla::ScrollSnapFlags::Disabled) override;
-  virtual void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection,
-                            mozilla::ScrollSnapFlags aSnapFlags =
-                                mozilla::ScrollSnapFlags::Disabled) override;
-  virtual void ScrollByUnit(nsScrollbarFrame* aScrollbar,
-                            mozilla::ScrollMode aMode, int32_t aDirection,
-                            mozilla::ScrollUnit aUnit,
-                            mozilla::ScrollSnapFlags aSnapFlags =
-                                mozilla::ScrollSnapFlags::Disabled) override;
-  virtual void RepeatButtonScroll(nsScrollbarFrame* aScrollbar) override;
-  virtual void ThumbMoved(nsScrollbarFrame* aScrollbar, nscoord aOldPos,
-                          nscoord aNewPos) override;
-  virtual void ScrollbarReleased(nsScrollbarFrame* aScrollbar) override {}
-  virtual void VisibilityChanged(bool aVisible) override { Invalidate(); }
+  void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection,
+                    mozilla::ScrollSnapFlags aSnapFlags =
+                        mozilla::ScrollSnapFlags::Disabled) override;
+  void ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection,
+                     mozilla::ScrollSnapFlags aSnapFlags =
+                         mozilla::ScrollSnapFlags::Disabled) override;
+  void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection,
+                    mozilla::ScrollSnapFlags aSnapFlags =
+                        mozilla::ScrollSnapFlags::Disabled) override;
+  void ScrollByUnit(nsScrollbarFrame* aScrollbar, mozilla::ScrollMode aMode,
+                    int32_t aDirection, mozilla::ScrollUnit aUnit,
+                    mozilla::ScrollSnapFlags aSnapFlags =
+                        mozilla::ScrollSnapFlags::Disabled) override;
+  void RepeatButtonScroll(nsScrollbarFrame* aScrollbar) override;
+  void ThumbMoved(nsScrollbarFrame* aScrollbar, nscoord aOldPos,
+                  nscoord aNewPos) override;
+  void ScrollbarReleased(nsScrollbarFrame* aScrollbar) override {}
+  void VisibilityChanged(bool aVisible) override { Invalidate(); }
   nsScrollbarFrame* GetScrollbarBox(bool aVertical) override {
     ScrollParts parts = GetScrollParts();
     return aVertical ? parts.mVScrollbar : parts.mHScrollbar;
   }
-  virtual void ScrollbarActivityStarted() const override;
-  virtual void ScrollbarActivityStopped() const override;
-  virtual bool IsScrollbarOnRight() const override {
+  void ScrollbarActivityStarted() const override;
+  void ScrollbarActivityStopped() const override;
+  bool IsScrollbarOnRight() const override {
     return StyleVisibility()->mDirection == mozilla::StyleDirection::Ltr;
   }
-  virtual bool ShouldSuppressScrollbarRepaints() const override {
-    return false;
-  }
+  bool ShouldSuppressScrollbarRepaints() const override { return false; }
 
   // Overridden from nsIFrame to cache our pres context.
-  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
-                    nsIFrame* aPrevInFlow) override;
-  virtual void DestroyFrom(nsIFrame* aDestructRoot,
-                           PostDestroyData& aPostDestroyData) override;
+  void Init(nsIContent* aContent, nsContainerFrame* aParent,
+            nsIFrame* aPrevInFlow) override;
+  void DestroyFrom(nsIFrame* aDestructRoot,
+                   PostDestroyData& aPostDestroyData) override;
 
   mozilla::Maybe<Cursor> GetCursor(const nsPoint&) override;
 
-  virtual nsresult HandleEvent(nsPresContext* aPresContext,
-                               mozilla::WidgetGUIEvent* aEvent,
-                               nsEventStatus* aEventStatus) override;
+  nsresult HandleEvent(nsPresContext* aPresContext,
+                       mozilla::WidgetGUIEvent* aEvent,
+                       nsEventStatus* aEventStatus) override;
 
-  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                                const nsDisplayListSet& aLists) override;
+  void BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                        const nsDisplayListSet& aLists) override;
 
-  virtual void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
+  void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
 
   friend nsIFrame* NS_NewTreeBodyFrame(mozilla::PresShell* aPresShell);
   friend class nsTreeColumn;
@@ -378,7 +375,6 @@ class nsTreeBodyFrame final : public nsLeafBoxFrame,
   nsresult GetCellWidth(int32_t aRow, nsTreeColumn* aCol,
                         gfxContext* aRenderingContext, nscoord& aDesiredSize,
                         nscoord& aCurrentSize);
-  nscoord CalcMaxRowWidth();
 
   // Translate the given rect horizontally from tree coordinates into the
   // coordinate system of our nsTreeBodyFrame.  If clip is true, then clip the
@@ -577,7 +573,6 @@ class nsTreeBodyFrame final : public nsLeafBoxFrame,
   nsRect mInnerBox;  // 4-byte aligned
   int32_t mRowHeight;
   int32_t mIndentation;
-  nscoord mStringWidth;
 
   int32_t mUpdateBatchNest;
 
