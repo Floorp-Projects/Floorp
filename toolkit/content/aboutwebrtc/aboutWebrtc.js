@@ -1,21 +1,21 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
-import { GraphImpl } from "chrome://global/content/aboutwebrtc/graph.mjs";
-import { GraphDb } from "chrome://global/content/aboutwebrtc/graphdb.mjs";
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 
-const lazy = {};
-
-ChromeUtils.defineESModuleGetters(lazy, {
+ChromeUtils.defineESModuleGetters(this, {
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
 });
-
-function makeFilePickerService() {
-  const fpContractID = "@mozilla.org/filepicker;1";
-  const fpIID = Ci.nsIFilePicker;
-  return Cc[fpContractID].createInstance(fpIID);
-}
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "FilePicker",
+  "@mozilla.org/filepicker;1",
+  "nsIFilePicker"
+);
 
 const WGI = WebrtcGlobalInformation;
 
@@ -24,8 +24,8 @@ const WEBRTC_TRACE_ALL = 65535;
 
 class Renderer {
   // Long function names preserved until code can be uniformly moved to new names
-  renderElement(eleName, options, l10n_id, l10n_args) {
-    let elem = Object.assign(document.createElement(eleName), options);
+  renderElement(name, options, l10n_id, l10n_args) {
+    let elem = Object.assign(document.createElement(name), options);
     if (l10n_id) {
       document.l10n.setAttributes(elem, l10n_id, l10n_args);
     }
@@ -34,11 +34,11 @@ class Renderer {
   elem() {
     return this.renderElement(...arguments);
   }
-  text(eleName, textContent, options) {
-    return this.renderElement(eleName, Object.assign({ textContent }, options));
+  text(name, textContent, options) {
+    return this.renderElement(name, Object.assign({ textContent }, options));
   }
-  renderElements(eleName, options, list) {
-    const element = renderElement(eleName, options);
+  renderElements(name, options, list) {
+    const element = renderElement(name, options);
     element.append(...list);
     return element;
   }
@@ -68,35 +68,21 @@ const elemRenderer = new Proxy(new Renderer(), {
   },
 });
 
-const graphData = [];
-function appendReportToHistory(report) {
-  if (graphData[report.pcid] === undefined) {
-    graphData[report.pcid] ??= new GraphDb(report);
-  } else {
-    graphData[report.pcid].insertReportData(report);
-  }
-}
-
-function appendStats(allStats) {
-  allStats.forEach(appendReportToHistory);
-}
-
 async function getStats() {
   const { reports } = await new Promise(r => WGI.getAllStats(r));
-  appendStats(reports);
   return [...reports].sort((a, b) => b.timestamp - a.timestamp);
 }
 
 const getLog = () => new Promise(r => WGI.getLogging("", r));
 
-const renderElement = (eleName, options, l10n_id, l10n_args) =>
-  elemRenderer.elem(eleName, options, l10n_id, l10n_args);
+const renderElement = (name, options, l10n_id, l10n_args) =>
+  elemRenderer.elem(name, options, l10n_id, l10n_args);
 
-const renderText = (eleName, textContent, options) =>
-  elemRenderer.text(eleName, textContent, options);
+const renderText = (name, textContent, options) =>
+  elemRenderer.text(name, textContent, options);
 
-const renderElements = (eleName, options, list) =>
-  elemRenderer.elems(eleName, options, list);
+const renderElements = (name, options, list) =>
+  elemRenderer.elems(name, options, list);
 
 // Button control classes
 
@@ -154,17 +140,15 @@ class SavePage extends Control {
     let [dialogTitle] = await document.l10n.formatValues([
       { id: "about-webrtc-save-page-dialog-title" },
     ]);
-    let FilePicker = makeFilePickerService();
-    const lazyFileUtils = lazy.FileUtils;
     FilePicker.init(window, dialogTitle, FilePicker.modeSave);
     FilePicker.defaultString = LOGFILE_NAME_DEFAULT;
     const rv = await new Promise(r => FilePicker.open(r));
     if (rv != FilePicker.returnOK && rv != FilePicker.returnReplace) {
       return;
     }
-    const fout = lazyFileUtils.openAtomicFileOutputStream(
+    const fout = FileUtils.openAtomicFileOutputStream(
       FilePicker.file,
-      lazyFileUtils.MODE_WRONLY | lazyFileUtils.MODE_CREATE
+      FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE
     );
     const content = document.querySelector("#content");
     const noPrintList = [...content.querySelectorAll(".no-print")];
@@ -174,7 +158,7 @@ class SavePage extends Control {
     try {
       fout.write(content.outerHTML, content.outerHTML.length);
     } finally {
-      lazyFileUtils.closeAtomicFileOutputStream(fout);
+      FileUtils.closeAtomicFileOutputStream(fout);
       for (const node of noPrintList) {
         node.style.removeProperty("display");
       }
@@ -264,11 +248,11 @@ class ShowTab extends Control {
   }
 
   onClick() {
-    const globalBrowser =
+    const gBrowser =
       window.ownerGlobal.browsingContext.topChromeWindow.gBrowser;
-    for (const tab of globalBrowser.visibleTabs) {
+    for (const tab of gBrowser.visibleTabs) {
       if (tab.linkedBrowser && tab.linkedBrowser.browserId == this.browserId) {
-        globalBrowser.selectedTab = tab;
+        gBrowser.selectedTab = tab;
         return;
       }
     }
@@ -387,24 +371,23 @@ class ShowTab extends Control {
   }
 
   window.setInterval(
-    async hist => {
-      const statReports = await getStats();
+    async history => {
       // Only refresh if the autorefresh checkbox is checked
       if (!document.getElementById("autorefresh").checked) {
         return;
       }
-      const rndr = elemRenderer;
+      const reports = await getStats();
 
       const translateSection = async (report, id, renderFunc) => {
         const element = document.getElementById(`${id}: ${report.pcid}`);
         const result =
-          element && (await translate(renderFunc(rndr, report, hist)));
+          element && (await translate(renderFunc(report, history)));
         return { element, translated: result };
       };
 
       const sections = (
         await Promise.all(
-          statReports.flatMap(report => [
+          reports.flatMap(report => [
             translateSection(report, "ice-stats", renderICEStats),
             translateSection(report, "rtp-stats", renderRTPStats),
             translateSection(report, "bandwidth-stats", renderBandwidthStats),
@@ -419,20 +402,14 @@ class ShowTab extends Control {
       }
       document.l10n.resumeObserving();
     },
-    250,
+    500,
     {}
   );
 })();
 
 function renderPeerConnection(report) {
   const rndr = elemRenderer;
-  const {
-    pcid,
-    browserId,
-    closed: isClosed,
-    timestamp,
-    configuration,
-  } = report;
+  const { pcid, browserId, closed, timestamp, configuration } = report;
 
   const pcDiv = renderElement("div", { className: "peer-connection" });
   {
@@ -441,7 +418,7 @@ function renderPeerConnection(report) {
     const now = new Date(timestamp);
 
     pcDiv.append(
-      isClosed
+      closed
         ? renderElement("h3", {}, "about-webrtc-connection-closed", {
             "browser-id": browserId,
             id,
@@ -471,11 +448,11 @@ function renderPeerConnection(report) {
         renderText("span", pcid, { className: "info-body" }),
         renderConfiguration(rndr, configuration),
       ]),
-      renderRTPStats(rndr, report),
-      renderICEStats(rndr, report),
+      renderRTPStats(report),
+      renderICEStats(report),
       renderSDPStats(rndr, report),
-      renderBandwidthStats(rndr, report),
-      renderFrameRateStats(rndr, report)
+      renderBandwidthStats(report),
+      renderFrameRateStats(report)
     );
     pcDiv.append(section);
   }
@@ -615,7 +592,7 @@ function renderSDPStats(
   return sdpDiv;
 }
 
-function renderBandwidthStats(rndr, report) {
+function renderBandwidthStats(report) {
   const statsDiv = renderElement("div", {
     id: "bandwidth-stats: " + report.pcid,
   });
@@ -645,10 +622,10 @@ function renderBandwidthStats(rndr, report) {
   return statsDiv;
 }
 
-function renderFrameRateStats(rndr, report) {
+function renderFrameRateStats(report) {
   const statsDiv = renderElement("div", { id: "frame-stats: " + report.pcid });
-  report.videoFrameHistories.forEach(hist => {
-    const stats = hist.entries.map(stat => {
+  report.videoFrameHistories.forEach(history => {
+    const stats = history.entries.map(stat => {
       stat.elapsed = stat.lastFrameTimestamp - stat.firstFrameTimestamp;
       if (stat.elapsed < 1) {
         stat.elapsed = "0.00";
@@ -694,7 +671,7 @@ function renderFrameRateStats(rndr, report) {
 
     statsDiv.append(
       renderElement("h4", {}, "about-webrtc-frame-stats-heading", {
-        "track-identifier": hist.trackIdentifier,
+        "track-identifier": history.trackIdentifier,
       }),
       table
     );
@@ -703,7 +680,7 @@ function renderFrameRateStats(rndr, report) {
   return statsDiv;
 }
 
-function renderRTPStats(rndr, report, hist) {
+function renderRTPStats(report, history) {
   const rtpStats = [
     ...(report.inboundRtpStreamStats || []),
     ...(report.outboundRtpStreamStats || []),
@@ -729,48 +706,19 @@ function renderRTPStats(rndr, report, hist) {
   for (const stat of rtpStats.filter(s => "codecId" in s)) {
     stat.codecStat = report.codecStats.find(({ id }) => id == stat.codecId);
   }
-  const graphsByStat = stat =>
-    (graphData[report.pcid]?.getGraphDataById(stat.id) || []).map(gd => {
-      // For some (remote) graphs data comes in slowly.
-      // Those graphs can be larger to show trends.
-      const histSecs = gd.getConfig().histSecs;
-      const canvas = rndr.elem_canvas({
-        width: (histSecs > 30 ? histSecs / 3 : 15) * 10,
-        height: 75,
-        className: "line-graph",
-      });
-      const graph = new GraphImpl(canvas, canvas.width, canvas.height);
-      graph.startTime = () => stat.timestamp - histSecs * 1000;
-      graph.stopTime = () => stat.timestamp;
-      graph.maxColor = max =>
-        gd.subKey == "packetsLost" && max > 0 ? "red" : "grey";
-      // Get a bit more history for averages
-      let dataSet = gd.getDataSetSince(graph.startTime() - histSecs * 200);
-      graph.drawSparseValues(dataSet, gd.subKey, gd.getConfig());
-      return canvas;
-    });
+
   // Render stats set
   return renderElements("div", { id: "rtp-stats: " + report.pcid }, [
     renderElement("h4", {}, "about-webrtc-rtp-stats-heading"),
     ...rtpStats.map(stat => {
-      const { ssrc, remoteId, remoteRtpStats: rtcpStats } = stat;
-      const remoteGraphs = rtcpStats
-        ? [
-            rndr.elems_div({}, [
-              rndr.text_h6(rtcpStats.type),
-              ...graphsByStat(rtcpStats),
-            ]),
-          ]
-        : [];
+      const { ssrc, remoteId, remoteRtpStats } = stat;
       const div = renderElements("div", {}, [
-        rndr.text_h5(`SSRC ${ssrc}`),
-        rndr.elems_div({}, [rndr.text_h6(stat.type), ...graphsByStat(stat)]),
-        ...remoteGraphs,
+        renderText("h5", `SSRC ${ssrc}`),
         renderCodecStats(stat),
-        renderTransportStats(stat, true, hist),
+        renderTransportStats(stat, true, history),
       ]);
-      if (remoteId && rtcpStats) {
-        div.append(renderTransportStats(rtcpStats, false));
+      if (remoteId && remoteRtpStats) {
+        div.append(renderTransportStats(remoteRtpStats, false));
       }
       return div;
     }),
@@ -873,19 +821,19 @@ function renderTransportStats(
     bytesSent,
   },
   local,
-  hist
+  history
 ) {
-  if (hist) {
-    if (hist[id] === undefined) {
-      hist[id] = {};
+  if (history) {
+    if (history[id] === undefined) {
+      history[id] = {};
     }
   }
 
-  const estimateKBps = (curTimestamp, lastTimestamp, bytes, lastBytes) => {
-    if (!curTimestamp || !lastTimestamp || !bytes || !lastBytes) {
+  const estimateKBps = (timestamp, lastTimestamp, bytes, lastBytes) => {
+    if (!timestamp || !lastTimestamp || !bytes || !lastBytes) {
       return "0.0";
     }
-    const elapsedTime = curTimestamp - lastTimestamp;
+    const elapsedTime = timestamp - lastTimestamp;
     if (elapsedTime <= 0) {
       return "0.0";
     }
@@ -923,12 +871,12 @@ function renderTransportStats(
 
     if (bytesReceived) {
       let s = ` (${(bytesReceived / 1024).toFixed(2)} Kb`;
-      if (local && hist) {
+      if (local && history) {
         s += ` , ${estimateKBps(
           timestamp,
-          hist[id].lastTimestamp,
+          history[id].lastTimestamp,
           bytesReceived,
-          hist[id].lastBytesReceived
+          history[id].lastBytesReceived
         )} KBps`;
       }
       s += ")";
@@ -956,7 +904,7 @@ function renderTransportStats(
       )
     );
 
-    if (roundTripTime !== undefined) {
+    if (roundTripTime) {
       elements.push(renderText("span", ` RTT: ${roundTripTime * 1000} ms`));
     }
   } else if (packetsSent) {
@@ -972,12 +920,12 @@ function renderTransportStats(
     );
     if (bytesSent) {
       let s = ` (${(bytesSent / 1024).toFixed(2)} Kb`;
-      if (local && hist) {
+      if (local && history) {
         s += `, ${estimateKBps(
           timestamp,
-          hist[id].lastTimestamp,
+          history[id].lastTimestamp,
           bytesSent,
-          hist[id].lastBytesSent
+          history[id].lastBytesSent
         )} KBps`;
       }
       s += ")";
@@ -986,10 +934,10 @@ function renderTransportStats(
   }
 
   // Update history
-  if (hist) {
-    hist[id].lastBytesReceived = bytesReceived;
-    hist[id].lastBytesSent = bytesSent;
-    hist[id].lastTimestamp = timestamp;
+  if (history) {
+    history[id].lastBytesReceived = bytesReceived;
+    history[id].lastBytesSent = bytesSent;
+    history[id].lastTimestamp = timestamp;
   }
 
   return renderElements("div", {}, elements);
@@ -1056,7 +1004,7 @@ function renderConfiguration(rndr, c) {
   return confDiv;
 }
 
-function renderICEStats(rndr, report) {
+function renderICEStats(report) {
   const iceDiv = renderElements("div", { id: "ice-stats: " + report.pcid }, [
     renderElement("h4", {}, "about-webrtc-ice-stats-heading"),
   ]);
@@ -1317,13 +1265,13 @@ function renderUserPrefs() {
   );
 }
 
-function renderFoldableSection(parentElem, options = {}) {
+function renderFoldableSection(parent, options = {}) {
   const section = renderElement("div");
-  if (parentElem) {
+  if (parent) {
     const ctrl = renderElements("div", { className: "section-ctrl no-print" }, [
       new FoldEffect(section, options).render(),
     ]);
-    parentElem.append(ctrl);
+    parent.append(ctrl);
   }
   return section;
 }
