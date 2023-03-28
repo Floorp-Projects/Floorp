@@ -71,59 +71,6 @@ GMPChild::~GMPChild() {
 #endif
 }
 
-static bool GetFileBase(const nsAString& aPluginPath,
-                        nsCOMPtr<nsIFile>& aLibDirectory,
-                        nsCOMPtr<nsIFile>& aFileBase, nsAutoString& aBaseName) {
-  nsresult rv = NS_NewLocalFile(aPluginPath, true, getter_AddRefs(aFileBase));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  if (NS_WARN_IF(NS_FAILED(aFileBase->Clone(getter_AddRefs(aLibDirectory))))) {
-    return false;
-  }
-
-  nsCOMPtr<nsIFile> parent;
-  rv = aFileBase->GetParent(getter_AddRefs(parent));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  nsAutoString parentLeafName;
-  rv = parent->GetLeafName(parentLeafName);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  aBaseName = Substring(parentLeafName, 4, parentLeafName.Length() - 1);
-  return true;
-}
-
-static bool GetPluginFile(const nsAString& aPluginPath,
-                          nsCOMPtr<nsIFile>& aLibDirectory,
-                          nsCOMPtr<nsIFile>& aLibFile) {
-  nsAutoString baseName;
-  GetFileBase(aPluginPath, aLibDirectory, aLibFile, baseName);
-
-#if defined(XP_MACOSX)
-  nsAutoString binaryName = u"lib"_ns + baseName + u".dylib"_ns;
-#elif defined(OS_POSIX)
-  nsAutoString binaryName = u"lib"_ns + baseName + u".so"_ns;
-#elif defined(XP_WIN)
-  nsAutoString binaryName = baseName + u".dll"_ns;
-#else
-#  error not defined
-#endif
-  aLibFile->AppendRelativePath(binaryName);
-  return true;
-}
-
-static bool GetPluginFile(const nsAString& aPluginPath,
-                          nsCOMPtr<nsIFile>& aLibFile) {
-  nsCOMPtr<nsIFile> unusedlibDir;
-  return GetPluginFile(aPluginPath, unusedlibDir, aLibFile);
-}
-
 #if defined(XP_MACOSX)
 static nsCString GetNativeTarget(nsIFile* aFile) {
   bool isLink;
@@ -136,28 +83,7 @@ static nsCString GetNativeTarget(nsIFile* aFile) {
   }
   return path;
 }
-
-#  if defined(MOZ_SANDBOX)
-static bool GetPluginPaths(const nsAString& aPluginPath,
-                           nsCString& aPluginDirectoryPath,
-                           nsCString& aPluginFilePath) {
-  nsCOMPtr<nsIFile> libDirectory, libFile;
-  if (!GetPluginFile(aPluginPath, libDirectory, libFile)) {
-    return false;
-  }
-
-  // Mac sandbox rules expect paths to actual files and directories -- not
-  // soft links.
-  libDirectory->Normalize();
-  aPluginDirectoryPath = GetNativeTarget(libDirectory);
-
-  libFile->Normalize();
-  aPluginFilePath = GetNativeTarget(libFile);
-
-  return true;
-}
-#  endif  // MOZ_SANDBOX
-#endif    // XP_MACOSX
+#endif  // XP_MACOSX
 
 bool GMPChild::Init(const nsAString& aPluginPath,
                     mozilla::ipc::UntypedEndpoint&& aEndpoint) {
@@ -292,30 +218,92 @@ static bool ResolveLinks(nsCOMPtr<nsIFile>& aPath) {
 }
 
 bool GMPChild::GetUTF8LibPath(nsACString& aOutLibPath) {
-#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-  nsAutoCString pluginDirectoryPath, pluginFilePath;
-  if (!GetPluginPaths(mPluginPath, pluginDirectoryPath, pluginFilePath)) {
-    MOZ_CRASH("Error scanning plugin path");
-  }
-  aOutLibPath.Assign(pluginFilePath);
-  return true;
-#else
   nsCOMPtr<nsIFile> libFile;
-  if (!GetPluginFile(mPluginPath, libFile)) {
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#  define GMP_DIAGNOSTIC_CRASH(explain)                    \
+    do {                                                   \
+      nsAutoString path;                                   \
+      if (!libFile || NS_FAILED(libFile->GetPath(path))) { \
+        path = mPluginPath;                                \
+      }                                                    \
+      CrashReporter::AnnotateCrashReport(                  \
+          CrashReporter::Annotation::GMPLibraryPath,       \
+          NS_ConvertUTF16toUTF8(path));                    \
+      MOZ_CRASH(explain);                                  \
+    } while (false)
+#else
+#  define GMP_ANNOTATE_DIAGNOSTIC_CRASH(explain) \
+    do {                                         \
+    } while (false)
+#endif
+
+  nsresult rv = NS_NewLocalFile(mPluginPath, true, getter_AddRefs(libFile));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    GMP_DIAGNOSTIC_CRASH("Failed to create file for plugin path");
     return false;
   }
 
-  if (!FileExists(libFile)) {
-    NS_WARNING("Can't find GMP library file!");
+  nsCOMPtr<nsIFile> parent;
+  rv = libFile->GetParent(getter_AddRefs(parent));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    GMP_DIAGNOSTIC_CRASH("Failed to get parent file for plugin file");
+    return false;
+  }
+
+  nsAutoString parentLeafName;
+  rv = parent->GetLeafName(parentLeafName);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    GMP_DIAGNOSTIC_CRASH("Failed to get leaf for plugin file");
+    return false;
+  }
+
+  nsAutoString baseName;
+  baseName = Substring(parentLeafName, 4, parentLeafName.Length() - 1);
+
+#if defined(XP_MACOSX)
+  nsAutoString binaryName = u"lib"_ns + baseName + u".dylib"_ns;
+#elif defined(OS_POSIX)
+  nsAutoString binaryName = u"lib"_ns + baseName + u".so"_ns;
+#elif defined(XP_WIN)
+  nsAutoString binaryName = baseName + u".dll"_ns;
+#else
+#  error not defined
+#endif
+  rv = libFile->AppendRelativePath(binaryName);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    GMP_DIAGNOSTIC_CRASH("Failed to append lib to plugin file");
+    return false;
+  }
+
+  // On some platforms, we may not be able to normalize the path because we
+  // don't have access to the parent directories, hence why we ignore access
+  // denied errors.
+  rv = libFile->Normalize();
+  if (rv != NS_ERROR_FILE_ACCESS_DENIED && NS_WARN_IF(NS_FAILED(rv))) {
+    GMP_DIAGNOSTIC_CRASH("Failed to normalize plugin file");
+    return false;
+  }
+
+  if (NS_WARN_IF(!ResolveLinks(libFile))) {
+    GMP_DIAGNOSTIC_CRASH("Failed to resolve links in plugin file");
+    return false;
+  }
+
+  if (NS_WARN_IF(!FileExists(libFile))) {
+    GMP_DIAGNOSTIC_CRASH("Plugin file does not exist");
     return false;
   }
 
   nsAutoString path;
-  libFile->GetPath(path);
-  CopyUTF16toUTF8(path, aOutLibPath);
+  rv = libFile->GetPath(path);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    GMP_DIAGNOSTIC_CRASH("Failed to get path for plugin file");
+    return false;
+  }
 
+  CopyUTF16toUTF8(path, aOutLibPath);
   return true;
-#endif
 }
 
 static nsCOMPtr<nsIFile> AppendFile(nsCOMPtr<nsIFile>&& aFile,
@@ -445,26 +433,22 @@ static bool AppendHostPath(nsCOMPtr<nsIFile>& aFile,
 }
 
 nsTArray<std::pair<nsCString, nsCString>>
-GMPChild::MakeCDMHostVerificationPaths() {
+GMPChild::MakeCDMHostVerificationPaths(const nsACString& aPluginLibPath) {
   // Record the file path and its sig file path.
   nsTArray<std::pair<nsCString, nsCString>> paths;
   // Plugin binary path.
-  nsCOMPtr<nsIFile> path;
-  nsString str;
-  if (GetPluginFile(mPluginPath, path) && FileExists(path) &&
-      ResolveLinks(path) && NS_SUCCEEDED(path->GetPath(str))) {
-    paths.AppendElement(
-        std::make_pair(nsCString(NS_ConvertUTF16toUTF8(str)),
-                       nsCString(NS_ConvertUTF16toUTF8(str) + ".sig"_ns)));
-  }
+  paths.AppendElement(
+      std::make_pair(nsCString(aPluginLibPath), aPluginLibPath + ".sig"_ns));
 
   // Plugin-container binary path.
   // Note: clang won't let us initialize an nsString from a wstring, so we
   // need to go through UTF8 to get to an nsString.
   const std::string pluginContainer =
       WideToUTF8(CommandLine::ForCurrentProcess()->program());
-  path = nullptr;
+  nsString str;
+
   CopyUTF8toUTF16(nsDependentCString(pluginContainer.c_str()), str);
+  nsCOMPtr<nsIFile> path;
   if (NS_FAILED(NS_NewLocalFile(str, true, /* aFollowLinks */
                                 getter_AddRefs(path))) ||
       !AppendHostPath(path, paths)) {
@@ -514,12 +498,11 @@ static auto ToCString(const nsTArray<std::pair<nsCString, nsCString>>& aPairs) {
 mozilla::ipc::IPCResult GMPChild::RecvStartPlugin(const nsString& aAdapter) {
   GMP_CHILD_LOG_DEBUG("%s", __FUNCTION__);
 
-  nsCString libPath;
+  nsAutoCString libPath;
   if (!GetUTF8LibPath(libPath)) {
     CrashReporter::AnnotateCrashReport(
         CrashReporter::Annotation::GMPLibraryPath,
         NS_ConvertUTF16toUTF8(mPluginPath));
-
 #ifdef XP_WIN
     return IPC_FAIL(this,
                     nsPrintfCString("Failed to get lib path with error(%lu).",
@@ -544,7 +527,7 @@ mozilla::ipc::IPCResult GMPChild::RecvStartPlugin(const nsString& aAdapter) {
 
   GMPAdapter* adapter = nullptr;
   if (aAdapter.EqualsLiteral("chromium")) {
-    auto&& paths = MakeCDMHostVerificationPaths();
+    auto&& paths = MakeCDMHostVerificationPaths(libPath);
     GMP_CHILD_LOG_DEBUG("%s CDM host paths=%s", __func__,
                         ToCString(paths).get());
     adapter = new ChromiumCDMAdapter(std::move(paths));
