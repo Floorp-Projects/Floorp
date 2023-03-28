@@ -492,7 +492,8 @@ ObliviousHttpChannel::GetContentType(nsACString& aContentType) {
 
 NS_IMETHODIMP
 ObliviousHttpChannel::SetContentType(const nsACString& aContentType) {
-  return mInnerChannel->SetContentType(aContentType);
+  mContentType = aContentType;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -558,6 +559,10 @@ ObliviousHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
   for (auto iter = mHeaders.ConstIter(); !iter.Done(); iter.Next()) {
     headerNames.AppendElement(iter.Key());
     headerValues.AppendElement(iter.Data());
+  }
+  if (!mContentType.IsEmpty() && !headerNames.Contains("Content-Type")) {
+    headerNames.AppendElement("Content-Type"_ns);
+    headerValues.AppendElement(mContentType);
   }
   nsCOMPtr<nsIBinaryHttp> bhttp(
       do_GetService("@mozilla.org/network/binary-http;1"));
@@ -815,6 +820,7 @@ NS_IMETHODIMP ObliviousHttpChannel::ExplicitSetUploadStream(
   if (written != available) {
     return NS_ERROR_FAILURE;
   }
+  mContentType = aContentType;
   return NS_OK;
 }
 
