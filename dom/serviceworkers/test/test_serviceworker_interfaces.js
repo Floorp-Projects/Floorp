@@ -353,6 +353,24 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "WebSocket",
   // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "WebTransport", desktop: true, nightlyAndroid: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  {
+    name: "WebTransportBidirectionalStream",
+    nightly: true,
+  },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  {
+    name: "WebTransportDatagramDuplexStream",
+    nightly: true,
+  },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "WebTransportError", nightly: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "WebTransportReceiveStream", nightly: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "WebTransportSendStream", nightly: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
   "WebGL2RenderingContext",
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "WebGLActiveInfo",
