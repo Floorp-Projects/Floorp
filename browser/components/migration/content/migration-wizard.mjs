@@ -22,6 +22,7 @@ export class MigrationWizard extends HTMLElement {
   #shadowRoot = null;
   #importButton = null;
   #safariPermissionButton = null;
+  #selectAllCheckbox = null;
 
   static get markup() {
     return `
@@ -220,6 +221,8 @@ export class MigrationWizard extends HTMLElement {
       "#safari-request-permissions"
     );
     this.#safariPermissionButton.addEventListener("click", this);
+
+    this.#selectAllCheckbox = shadow.querySelector("#select-all").control;
 
     this.#shadowRoot = shadow;
   }
@@ -691,15 +694,24 @@ export class MigrationWizard extends HTMLElement {
       case "change": {
         if (event.target == this.#browserProfileSelector) {
           this.#onBrowserProfileSelectionChanged();
-        } else if (event.target.classList.contains("select-all-checkbox")) {
+        } else if (event.target == this.#selectAllCheckbox) {
           let checkboxes = this.#shadowRoot.querySelectorAll(
             'label[data-resource-type]:not([hidden]) > input[type="checkbox"]'
           );
           for (let checkbox of checkboxes) {
-            checkbox.checked = event.target.checked;
+            checkbox.checked = this.#selectAllCheckbox.checked;
           }
           this.#displaySelectedResources();
         } else {
+          let checkboxes = this.#shadowRoot.querySelectorAll(
+            'label[data-resource-type]:not([hidden]) > input[type="checkbox"]'
+          );
+
+          let allVisibleChecked = Array.from(checkboxes).every(checkbox => {
+            return checkbox.checked;
+          });
+
+          this.#selectAllCheckbox.checked = allVisibleChecked;
           this.#displaySelectedResources();
         }
         break;

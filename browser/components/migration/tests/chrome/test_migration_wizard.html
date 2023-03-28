@@ -387,6 +387,38 @@
       });
 
       /**
+       * Tests that the Select All checkbox is checked if all non-hidden resource
+       * types are checked, and unchecked otherwise.
+       */
+      add_task(async function test_selection_variant_2_select_all() {
+        gWiz.setState({
+          page: MigrationWizardConstants.PAGES.SELECTION,
+          migrators: MIGRATOR_PROFILE_INSTANCES,
+          showImportAll: true,
+        });
+
+        let details = gShadowRoot.querySelector("details");
+        ok(!details.open, "Details should be closed");
+        details.open = true;
+
+        let selectAll = gShadowRoot.querySelector("#select-all");
+        ok(selectAll.control.checked, "Select all should be checked by default");
+
+        let bookmarksResourceLabel = gShadowRoot.querySelector(
+          "label[data-resource-type='BOOKMARKS']"
+        );
+        ok(bookmarksResourceLabel.control.checked, "Bookmarks should be checked");
+
+        bookmarksResourceLabel.control.click();
+        ok(!bookmarksResourceLabel.control.checked, "Bookmarks should no longer be checked");
+        ok(!selectAll.control.checked, "Select all should not longer be checked");
+
+        bookmarksResourceLabel.control.click();
+        ok(bookmarksResourceLabel.control.checked, "Bookmarks should be checked again");
+        ok(selectAll.control.checked, "Select all should be checked");
+      });
+
+      /**
        * Tests that the wizard can show partial progress during migration.
        */
       add_task(async function test_partial_progress() {
