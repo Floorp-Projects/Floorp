@@ -7,7 +7,8 @@
 // Check that the boxmodel highlighter is styled differently when
 // ui.prefersReducedMotion is enabled.
 
-const TEST_URL = "data:text/html;charset=utf-8,<h1>test1<h1><h2>test2<h2>";
+const TEST_URL =
+  "data:text/html;charset=utf-8,<h1>test1</h1><h2>test2</h2><h3>test3</h3>";
 
 add_task(async function() {
   info("Disable ui.prefersReducedMotion");
@@ -63,5 +64,26 @@ add_task(async function() {
   );
   is(fill, "none", "If prefersReducedMotion is enabled, fill style is none");
 
+  await inspector.highlighters.hideHighlighterType(HIGHLIGHTER_TYPE);
+
+  info("Disable simple highlighters");
+  await pushPref(
+    "devtools.inspector.simple-highlighters-reduced-motion",
+    false
+  );
+
+  info("Highlight a node and check the highlighter is filled again");
+  await selectAndHighlightNode("h3", inspector);
+  stroke = await getElementComputedStyle("box-model-content", "stroke");
+  fill = await getElementComputedStyle("box-model-content", "fill");
+  is(
+    stroke,
+    "none",
+    "If simple highlighters are disabled, stroke style is none"
+  );
+  ok(
+    InspectorUtils.isValidCSSColor(fill),
+    "If simple highlighters are disabled, fill style is a valid color"
+  );
   await inspector.highlighters.hideHighlighterType(HIGHLIGHTER_TYPE);
 });

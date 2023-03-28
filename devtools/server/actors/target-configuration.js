@@ -49,6 +49,8 @@ const SUPPORTED_OPTIONS = {
   serviceWorkersTestingEnabled: true,
   // Enable touch events simulation
   touchEventsOverride: true,
+  // Use simplified highlighters when prefers-reduced-motion is enabled.
+  useSimpleHighlightersForReducedMotion: true,
 };
 /* eslint-disable sort-keys */
 

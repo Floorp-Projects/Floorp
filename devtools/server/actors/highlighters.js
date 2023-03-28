@@ -180,7 +180,12 @@ class HighlighterEnvironment extends EventEmitter {
   initFromTargetActor(targetActor) {
     this._targetActor = targetActor;
 
-    const relayedEvents = ["window-ready", "navigate", "will-navigate"];
+    const relayedEvents = [
+      "window-ready",
+      "navigate",
+      "will-navigate",
+      "use-simple-highlighters-updated",
+    ];
 
     this._abortController = new AbortController();
     const signal = this._abortController.signal;
@@ -243,6 +248,10 @@ class HighlighterEnvironment extends EventEmitter {
 
   get isXUL() {
     return isXUL(this.window);
+  }
+
+  get useSimpleHighlightersForReducedMotion() {
+    return this._targetActor?._useSimpleHighlightersForReducedMotion;
   }
 
   get window() {

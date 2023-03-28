@@ -1315,6 +1315,12 @@ class WindowGlobalTargetActor extends BaseTargetActor {
       this.customFormatters = options.customFormatters;
     }
 
+    if (typeof options.useSimpleHighlightersForReducedMotion == "boolean") {
+      this._useSimpleHighlightersForReducedMotion =
+        options.useSimpleHighlightersForReducedMotion;
+      this.emit("use-simple-highlighters-updated");
+    }
+
     if (!this.isTopLevelTarget) {
       // Following DevTools target options should only apply to the top target and be
       // propagated through the window global tree via the platform.

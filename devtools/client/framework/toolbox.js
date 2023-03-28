@@ -290,6 +290,9 @@ function Toolbox(commands, selectedTool, hostType, contentWindow, frameId) {
   this._applyServiceWorkersTestingSettings = this._applyServiceWorkersTestingSettings.bind(
     this
   );
+  this._applySimpleHighlightersSettings = this._applySimpleHighlightersSettings.bind(
+    this
+  );
   this._saveSplitConsoleHeight = this._saveSplitConsoleHeight.bind(this);
   this._onFocus = this._onFocus.bind(this);
   this._onBlur = this._onBlur.bind(this);
@@ -935,6 +938,10 @@ Toolbox.prototype = {
         this._applyServiceWorkersTestingSettings
       );
       Services.prefs.addObserver(
+        "devtools.inspector.simple-highlighters-reduced-motion",
+        this._applySimpleHighlightersSettings
+      );
+      Services.prefs.addObserver(
         BROWSERTOOLBOX_SCOPE_PREF,
         this._refreshHostTitle
       );
@@ -954,6 +961,7 @@ Toolbox.prototype = {
       // Forward configuration flags to the DevTools server.
       this._applyCacheSettings();
       this._applyServiceWorkersTestingSettings();
+      this._applySimpleHighlightersSettings();
 
       this._addWindowListeners();
       this._addChromeEventHandlerEvents();
@@ -2197,6 +2205,16 @@ Toolbox.prototype = {
     const serviceWorkersTestingEnabled = Services.prefs.getBoolPref(pref);
     this.commands.targetConfigurationCommand.updateConfiguration({
       serviceWorkersTestingEnabled,
+    });
+  },
+
+  /**
+   * Apply the current simple highlighters setting to this toolbox's tab.
+   */
+  _applySimpleHighlightersSettings() {
+    const pref = "devtools.inspector.simple-highlighters-reduced-motion";
+    this.commands.targetConfigurationCommand.updateConfiguration({
+      useSimpleHighlightersForReducedMotion: Services.prefs.getBoolPref(pref),
     });
   },
 
@@ -3989,6 +4007,10 @@ Toolbox.prototype = {
     Services.prefs.removeObserver(
       "devtools.serviceWorkers.testing.enabled",
       this._applyServiceWorkersTestingSettings
+    );
+    Services.prefs.removeObserver(
+      "devtools.inspector.simple-highlighters-reduced-motion",
+      this._applySimpleHighlightersSettings
     );
     Services.prefs.removeObserver(
       BROWSERTOOLBOX_SCOPE_PREF,
