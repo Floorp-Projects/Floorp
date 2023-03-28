@@ -138,8 +138,13 @@ class gfxFontconfigFontEntry final : public gfxFT2FontEntryBase {
   // query fontconfig for this (so they will only work if fontconfig is
   // recent enough to include support); for downloaded user-fonts we query
   // the FreeType face.
-  bool mHasVariations;
-  bool mHasVariationsInitialized;
+  enum class HasVariationsState : int8_t {
+    Uninitialized = -1,
+    No = 0,
+    Yes = 1,
+  };
+  std::atomic<HasVariationsState> mHasVariations =
+      HasVariationsState::Uninitialized;
 
   class UnscaledFontCache {
    public:
