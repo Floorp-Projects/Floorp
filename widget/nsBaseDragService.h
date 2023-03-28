@@ -191,7 +191,7 @@ class nsBaseDragService : public nsIDragService, public nsIDragSession {
 
   // set if the image in mImage is a popup. If this case, the popup will be
   // opened and moved instead of using a drag image.
-  nsCOMPtr<nsIContent> mDragPopup;
+  nsCOMPtr<mozilla::dom::Element> mDragPopup;
 
   // the screen position where drag gesture occurred, used for positioning the
   // drag image.

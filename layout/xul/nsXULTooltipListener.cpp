@@ -472,7 +472,7 @@ void nsXULTooltipListener::LaunchTooltip() {
 }
 
 nsresult nsXULTooltipListener::HideTooltip() {
-  if (nsCOMPtr<nsIContent> currentTooltip = do_QueryReferent(mCurrentTooltip)) {
+  if (nsCOMPtr<Element> currentTooltip = do_QueryReferent(mCurrentTooltip)) {
     if (nsXULPopupManager* pm = nsXULPopupManager::GetInstance()) {
       pm->HidePopup(currentTooltip, {});
     }

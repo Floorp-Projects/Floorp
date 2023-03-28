@@ -1051,7 +1051,8 @@ void nsView::DynamicToolbarOffsetChanged(ScreenIntCoord aOffset) {
 bool nsView::RequestWindowClose(nsIWidget* aWidget) {
   if (mFrame && IsPopupWidget(aWidget) && mFrame->IsMenuPopupFrame()) {
     if (nsXULPopupManager* pm = nsXULPopupManager::GetInstance()) {
-      pm->HidePopup(mFrame->GetContent(), {HidePopupOption::DeselectMenu});
+      pm->HidePopup(mFrame->GetContent()->AsElement(),
+                    {HidePopupOption::DeselectMenu});
       return true;
     }
   }
@@ -1124,7 +1125,7 @@ void nsView::RequestRepaint() {
 bool nsView::ShouldNotBeVisible() {
   if (mFrame && mFrame->IsMenuPopupFrame()) {
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-    return !pm || !pm->IsPopupOpen(mFrame->GetContent());
+    return !pm || !pm->IsPopupOpen(mFrame->GetContent()->AsElement());
   }
 
   return false;
