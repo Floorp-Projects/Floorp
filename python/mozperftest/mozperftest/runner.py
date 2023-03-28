@@ -28,7 +28,6 @@ import logging
 import os
 import shutil
 import sys
-import tempfile
 from pathlib import Path
 
 TASKCLUSTER = "TASK_ID" in os.environ.keys()
@@ -86,7 +85,11 @@ def _activate_mach_virtualenv():
 def _create_artifacts_dir(kwargs, artifacts):
     from mozperftest.utils import create_path
 
-    return create_path(artifacts / "artifacts" / "side-by-side" / kwargs["test_name"])
+    results_dir = kwargs.get("test_name")
+    if results_dir is None:
+        results_dir = "results"
+
+    return create_path(artifacts / "artifacts" / kwargs["tool"] / results_dir)
 
 
 def _save_params(kwargs, artifacts):
@@ -188,7 +191,7 @@ def run_tools(mach_cmd, kwargs):
     install_package(mach_cmd.virtualenv_manager, "opencv-python==4.5.4.60")
     install_package(
         mach_cmd.virtualenv_manager,
-        "mozperftest-tools==0.1.13",
+        "mozperftest-tools==0.2.6",
     )
 
     log_level = logging.INFO
@@ -199,28 +202,21 @@ def run_tools(mach_cmd, kwargs):
         mach_cmd.log_manager.enable_all_structured_loggers()
         mach_cmd.log_manager.enable_unstructured()
 
-    from mozperftest_tools.side_by_side import SideBySide
-
     if ON_TRY:
         artifacts = Path(os.environ.get("MOZ_FETCHES_DIR"), "..").resolve()
         artifacts = _create_artifacts_dir(kwargs, artifacts)
     else:
         artifacts = _create_artifacts_dir(kwargs, SRC_ROOT)
-    tempdir = tempfile.mkdtemp()
 
-    if "output" in kwargs:
-        kwargs.pop("output")
-    s = SideBySide(str(tempdir))
-    s.run(**kwargs)
+    _save_params(kwargs, artifacts)
 
-    try:
-        for file in os.listdir(tempdir):
-            if file.startswith("cold-") or file.startswith("warm-"):
-                print(f"Copying from {tempdir}/{file} to {artifacts}")
-                shutil.copy(Path(tempdir, file), artifacts)
-        _save_params(kwargs, artifacts)
-    finally:
-        shutil.rmtree(tempdir)
+    # Run the requested tool
+    from mozperftest.tools import TOOL_RUNNERS
+
+    tool = kwargs.pop("tool")
+    print(f"Running {tool} tool")
+
+    TOOL_RUNNERS[tool](artifacts, kwargs)
 
 
 def main(argv=sys.argv[1:]):
@@ -271,6 +267,7 @@ def main(argv=sys.argv[1:]):
         PerftestToolsArgumentParser.tool = argv[1]
         perftools_parser = PerftestToolsArgumentParser()
         args = dict(vars(perftools_parser.parse_args(args=argv[2:])))
+        args["tool"] = argv[1]
         run_tools(mach_cmd, args)
     else:
         perftest_parser = PerftestArgumentParser(description="vanilla perftest")

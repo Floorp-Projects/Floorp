@@ -285,4 +285,21 @@ def run_tools(command_context, **kwargs):
 def run_side_by_side(command_context, **kwargs):
     from mozperftest.runner import run_tools
 
+    kwargs["tool"] = "side-by-side"
+    run_tools(command_context, kwargs)
+
+
+@SubCommand(
+    "perftest-tools",
+    "change-detector",
+    description="This tool can be used to determine if there are differences between two "
+    "revisions. It can do either direct comparisons, or searching for regressions in between "
+    "two revisions (with a maximum or autocomputed depth).",
+    virtualenv_name="perftest-side-by-side",
+    parser=get_perftest_tools_parser("change-detector"),
+)
+def run_change_detector(command_context, **kwargs):
+    from mozperftest.runner import run_tools
+
+    kwargs["tool"] = "change-detector"
     run_tools(command_context, kwargs)
