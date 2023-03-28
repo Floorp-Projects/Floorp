@@ -51,7 +51,7 @@ const GFX_DEVICE_ID = "0x1234";
 const EXPECTED_HDD_FIELDS = ["profile", "binary", "system"];
 
 // Valid attribution code to write so that settings.attribution can be tested.
-const ATTRIBUTION_CODE = "source%3Dgoogle.com";
+const ATTRIBUTION_CODE = "source%3Dgoogle.com%26dlsource%3Dunittest";
 
 function truncateToDays(aMsec) {
   return Math.floor(aMsec / MILLISECONDS_PER_DAY);
@@ -340,6 +340,7 @@ export var TelemetryEnvironmentTesting = {
     if ((gIsWindows || gIsMac) && AppConstants.MOZ_BUILD_APP == "browser") {
       lazy.Assert.equal(typeof data.settings.attribution, "object");
       lazy.Assert.equal(data.settings.attribution.source, "google.com");
+      lazy.Assert.equal(data.settings.attribution.dlsource, "unittest");
     }
 
     this.checkIntlSettings(data.settings);
