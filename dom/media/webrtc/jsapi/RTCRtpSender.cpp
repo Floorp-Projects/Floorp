@@ -563,6 +563,7 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
   // If any of the following conditions are met,
   // return a promise rejected with a newly created InvalidModificationError:
 
+  bool compatModeAllowedRidChange = false;
   // encodings.length is different from N.
   if (paramsCopy.mEncodings.Length() != oldParams->mEncodings.Length()) {
     nsCString error("Cannot change the number of encodings with setParameters");
@@ -575,6 +576,7 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
       p->MaybeRejectWithInvalidModificationError(error);
       return p.forget();
     }
+    compatModeAllowedRidChange = true;
     if (!mHaveWarnedBecauseEncodingCountChange) {
       mHaveWarnedBecauseEncodingCountChange = true;
       mozilla::glean::rtcrtpsender_setparameters::warn_length_changed
@@ -716,7 +718,7 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
   uint32_t serialNumber = ++mNumSetParametersCalls;
   MaybeUpdateConduit();
 
-  if (mAllowOldSetParameters) {
+  if (compatModeAllowedRidChange) {
     SetJsepRids(paramsCopy);
   }
 
