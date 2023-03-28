@@ -283,3 +283,69 @@ def setup_perftest_test_date(config, jobs):
             yesterday = (date.today() - timedelta(1)).strftime("%Y.%m.%d")
             job["run"]["command"] += " --test-date %s" % yesterday
         yield job
+
+
+@transforms.add
+def setup_regression_detector(config, jobs):
+    for job in jobs:
+        if "change-detector" in job.get("name"):
+
+            tasks_to_analyze = []
+            for task in config.params["try_task_config"].get("tasks", []):
+                # Explicitly skip these tasks since they're
+                # part of the mozperftest tasks
+                if "side-by-side" in task:
+                    continue
+                if "change-detector" in task:
+                    continue
+
+                # Select these tasks
+                if "browsertime" in task:
+                    tasks_to_analyze.append(task)
+                elif "talos" in task:
+                    tasks_to_analyze.append(task)
+                elif "awsy" in task:
+                    tasks_to_analyze.append(task)
+                elif "perftest" in task:
+                    tasks_to_analyze.append(task)
+
+            if len(tasks_to_analyze) == 0:
+                yield job
+                continue
+
+            # Make the change detector task depend on the tasks to analyze.
+            # This prevents the task from running until all data is available
+            # within the current push.
+            job["soft-dependencies"] = tasks_to_analyze
+            job["requires"] = "all-completed"
+
+            new_project = config.params["project"]
+            if (
+                "try" in config.params["project"]
+                or config.params["try_mode"] == "try_select"
+            ):
+                new_project = "try"
+
+            base_project = None
+            if (
+                config.params.get("try_task_config", {})
+                .get("env", {})
+                .get("PERF_BASE_REVISION", None)
+                is not None
+            ):
+                task_names = " --task-name ".join(tasks_to_analyze)
+                base_revision = config.params["try_task_config"]["env"][
+                    "PERF_BASE_REVISION"
+                ]
+                base_project = new_project
+
+                # Add all the required information to the task
+                job["run"]["command"] = job["run"]["command"].format(
+                    task_name=task_names,
+                    base_revision=base_revision,
+                    base_branch=base_project,
+                    new_branch=new_project,
+                    new_revision=config.params["head_rev"],
+                )
+
+        yield job
