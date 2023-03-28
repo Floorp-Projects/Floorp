@@ -164,6 +164,9 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
                                               ErrorResult& aRv);
   MOZ_CAN_RUN_SCRIPT void HidePopover(ErrorResult& aRv);
   MOZ_CAN_RUN_SCRIPT void TogglePopover(bool force, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void FocusPopover();
+
+  MOZ_CAN_RUN_SCRIPT void FocusCandidate(Element&, bool aClearUpFocus);
 
   void SetNonce(const nsAString& aNonce) {
     SetProperty(nsGkAtoms::nonce, new nsString(aNonce),

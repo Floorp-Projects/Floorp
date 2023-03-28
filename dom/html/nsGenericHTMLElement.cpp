@@ -103,6 +103,7 @@
 #include "mozilla/dom/HTMLLabelElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/CustomElementRegistry.h"
+#include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/ElementInternals.h"
 
 using namespace mozilla;
@@ -3260,6 +3261,54 @@ void nsGenericHTMLElement::TogglePopover(bool force, ErrorResult& aRv) {
     HidePopover(aRv);
   } else if (force && !PopoverOpen()) {
     ShowPopover(aRv);
+  }
+}
+
+// https://html.spec.whatwg.org/multipage/popover.html#popover-focusing-steps
+void nsGenericHTMLElement::FocusPopover() {
+  // This diverges from the spec a bit,
+  // see https://github.com/whatwg/html/pull/8998
+  RefPtr<Element> control =
+      GetBoolAttr(nsGkAtoms::autofocus)
+          ? this
+          : GetFocusDelegate(false /* aWithMouse */, true /* aAutofocusOnly */);
+  if (!control) {
+    return;
+  }
+  FocusCandidate(*control, false /* aClearUpFocus */);
+}
+
+void nsGenericHTMLElement::FocusCandidate(Element& aControl,
+                                          bool aClearUpFocus) {
+  // 1) Run the focusing steps given control.
+  IgnoredErrorResult rv;
+  nsIFrame* frame = aControl.GetPrimaryFrame();
+  if (frame && frame->IsFocusable()) {
+    aControl.Focus(FocusOptions(), CallerType::NonSystem, rv);
+    if (rv.Failed()) {
+      return;
+    }
+  } else if (aClearUpFocus) {
+    if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {
+      // Clear the focus which ends up making the body gets focused
+      nsCOMPtr<nsPIDOMWindowOuter> outerWindow = OwnerDoc()->GetWindow();
+      fm->ClearFocus(outerWindow);
+    }
+  }
+
+  // 2) Let topDocument be the active document of control's node document's
+  // browsing context's top-level browsing context.
+  // 3) If control's node document's origin is not the same as the origin of
+  // topDocument, then return.
+  BrowsingContext* bc = aControl.OwnerDoc()->GetBrowsingContext();
+  if (bc && bc->IsInProcess() && bc->SameOriginWithTop()) {
+    if (nsCOMPtr<nsIDocShell> docShell = bc->Top()->GetDocShell()) {
+      if (Document* topDocument = docShell->GetExtantDocument()) {
+        // 4) Empty topDocument's autofocus candidates.
+        // 5) Set topDocument's autofocus processed flag to true.
+        topDocument->SetAutoFocusFired();
+      }
+    }
   }
 }
 
