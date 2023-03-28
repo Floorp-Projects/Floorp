@@ -165,9 +165,24 @@ void Gamepad::init(IOHIDDeviceRef aDevice, bool aDefaultRemapper) {
                    IOHIDElementGetLogicalMin(element),
                    IOHIDElementGetLogicalMax(element)};
       axes.AppendElement(axis);
-    } else if ((usagePage == kSimUsagePage &&
-                (usage == kAcceleratorUsage || usage == kBrakeUsage)) ||
-               (usagePage == kButtonUsagePage) ||
+    } else if (usagePage == kSimUsagePage &&
+               (usage == kAcceleratorUsage || usage == kBrakeUsage)) {
+      if (IOHIDElementGetType(element) == kIOHIDElementTypeInput_Button) {
+        Button button(int(buttons.Length()), element,
+                      IOHIDElementGetLogicalMin(element),
+                      IOHIDElementGetLogicalMax(element));
+        buttons.AppendElement(button);
+      } else {
+        Axis axis = {aDefaultRemapper ? int(axes.Length())
+                                      : static_cast<int>(usage - kAxisUsageMin),
+                     element,
+                     usagePage,
+                     usage,
+                     IOHIDElementGetLogicalMin(element),
+                     IOHIDElementGetLogicalMax(element)};
+        axes.AppendElement(axis);
+      }
+    } else if ((usagePage == kButtonUsagePage) ||
                (usagePage == kConsumerPage &&
                 (usage == kHomeUsage || usage == kBackUsage))) {
       Button button(int(buttons.Length()), element,
