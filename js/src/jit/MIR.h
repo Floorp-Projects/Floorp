@@ -826,11 +826,6 @@ class MDefinition : public MNode {
   // instruction which are recovered on bailouts.
   void replaceAllLiveUsesWith(MDefinition* dom);
 
-  // Mark this instruction as having replaced all uses of ins, as during GVN.
-  // For use when GVN eliminates instructions which are not equivalent to one
-  // another.
-  virtual void updateForReplacement(MDefinition* ins) {}
-
   void setVirtualRegister(uint32_t vreg) {
     virtualRegister_ = vreg;
     setLoweredUnchecked();
@@ -6132,7 +6127,10 @@ class MPhi final : public MDefinition,
   MDefinition* foldsTernary(TempAllocator& alloc);
 
   bool congruentTo(const MDefinition* ins) const override;
-  void updateForReplacement(MDefinition* def) override;
+
+  // Mark this phi-node as having replaced all uses of |other|, as during GVN.
+  // For use when GVN eliminates phis which are not equivalent to one another.
+  void updateForReplacement(MPhi* other);
 
   bool isIterator() const { return isIterator_; }
   void setIterator() { isIterator_ = true; }
