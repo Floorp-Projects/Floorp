@@ -12,6 +12,33 @@ createHTML({
   visible: true
 });
 
+const simulcastOffer = `v=0
+o=- 3840232462471583827 0 IN IP4 127.0.0.1
+s=-
+t=0 0
+a=group:BUNDLE 0
+a=msid-semantic: WMS
+m=video 9 UDP/TLS/RTP/SAVPF 96
+c=IN IP4 0.0.0.0
+a=rtcp:9 IN IP4 0.0.0.0
+a=ice-ufrag:Li6+
+a=ice-pwd:3C05CTZBRQVmGCAq7hVasHlT
+a=ice-options:trickle
+a=fingerprint:sha-256 5B:D3:8E:66:0E:7D:D3:F3:8E:E6:80:28:19:FC:55:AD:58:5D:B9:3D:A8:DE:45:4A:E7:87:02:F8:3C:0B:3B:B3
+a=setup:actpass
+a=mid:0
+a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
+a=recvonly
+a=rtcp-mux
+a=rtpmap:96 VP8/90000
+a=rtcp-fb:96 goog-remb
+a=rtcp-fb:96 transport-cc
+a=rtcp-fb:96 ccm fir
+a=rid:foo recv
+a=rid:bar recv
+a=simulcast:recv foo;bar
+`;
+
 function buildMaximumSendEncodings() {
   const sendEncodings = [];
   while (true) {
@@ -154,6 +181,63 @@ const tests = [
     }
   },
 
+  async function checkCompatModeUnicastSetParametersAllowsSimulcastOffer() {
+    await pushPrefs(
+      ["media.peerconnection.allow_old_setParameters", true]);
+    const pc1 = new RTCPeerConnection();
+    const stream = await navigator.mediaDevices.getUserMedia({video: true});
+    const sender = pc1.addTrack(stream.getTracks()[0]);
+    const parameters = sender.getParameters();
+    parameters.encodings[0].scaleResolutionDownBy = 3.0;
+    await sender.setParameters(parameters);
+
+    await pc1.setRemoteDescription({type: "offer", sdp: simulcastOffer});
+
+    const {encodings} = sender.getParameters();
+    const rids = encodings.map(({rid}) => rid);
+    isDeeply(rids, ["foo", "bar"]);
+    is(encodings[0].scaleResolutionDownBy, 2.0);
+    is(encodings[1].scaleResolutionDownBy, 1.0);
+  },
+
+  async function checkCompatModeUnicastSetParametersInterruptAllowsSimulcastOffer() {
+    await pushPrefs(
+      ["media.peerconnection.allow_old_setParameters", true]);
+    const pc1 = new RTCPeerConnection();
+    const stream = await navigator.mediaDevices.getUserMedia({video: true});
+    const sender = pc1.addTrack(stream.getTracks()[0]);
+    const parameters = sender.getParameters();
+    parameters.encodings[0].scaleResolutionDownBy = 3.0;
+
+    const offerDone = pc1.setRemoteDescription({type: "offer", sdp: simulcastOffer});
+    await sender.setParameters(parameters);
+    await offerDone;
+
+    const {encodings} = sender.getParameters();
+    const rids = encodings.map(({rid}) => rid);
+    isDeeply(rids, ["foo", "bar"]);
+    is(encodings[0].scaleResolutionDownBy, 2.0);
+    is(encodings[1].scaleResolutionDownBy, 1.0);
+  },
+
+  async function checkCompatModeSimulcastSetParametersSetsSimulcastEnvelope() {
+    await pushPrefs(
+      ["media.peerconnection.allow_old_setParameters", true]);
+    const pc1 = new RTCPeerConnection();
+    const stream = await navigator.mediaDevices.getUserMedia({video: true});
+    const sender = pc1.addTrack(stream.getTracks()[0]);
+    const parameters = sender.getParameters();
+    parameters.encodings[0].rid = "1";
+    parameters.encodings.push({rid: "2"});
+    await sender.setParameters(parameters);
+
+    await pc1.setRemoteDescription({type: "offer", sdp: simulcastOffer});
+
+    const {encodings} = sender.getParameters();
+    const rids = encodings.map(({rid}) => rid);
+    // No overlap in rids -> unicast
+    isDeeply(rids, [undefined]);
+  },
 ];
 
 runNetworkTest(async () => {
