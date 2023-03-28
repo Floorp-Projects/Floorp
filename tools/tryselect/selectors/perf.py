@@ -65,6 +65,12 @@ class APKNotFound(Exception):
     pass
 
 
+class InvalidRegressionDetectorQuery(Exception):
+    """Thrown when the detector query produces anything other than 1 task."""
+
+    pass
+
+
 class LogProcessor:
     def __init__(self):
         self.buf = ""
@@ -531,6 +537,14 @@ class PerfParser(CompareParser):
                 "thing except it's for mozperftest tests such as the startup ones. "
                 "Note that those tests only exist through --show-all, as they "
                 "aren't contained in any existing categories. ",
+            },
+        ],
+        [
+            ["--detect-changes"],
+            {
+                "action": "store_true",
+                "default": False,
+                "help": "Adds a task that detects performance changes using MWU.",
             },
         ],
         [
@@ -1213,22 +1227,10 @@ class PerfParser(CompareParser):
             # a processor that we can use to catch the revision
             # while providing real-time output
             log_processor = LogProcessor()
-            with redirect_stdout(log_processor):
-                push_to_try(
-                    "perf",
-                    "{msg}".format(msg=msg),
-                    # XXX Figure out if changing `fuzzy` to `perf` will break something
-                    try_task_config=generate_try_task_config(
-                        "fuzzy", selected_tasks, try_config
-                    ),
-                    stage_changes=False,
-                    dry_run=dry_run,
-                    closed_tree=False,
-                    allow_log_capture=True,
-                )
 
-            new_revision_treeherder = log_processor.revision
-
+            # Push the base revision first. This lets the new revision appear
+            # first in the Treeherder view, and it also lets us enhance the new
+            # revision with information about the base run.
             if not (dry_run or single_run):
                 vcs.update(compare_commit)
                 updated = True
@@ -1250,11 +1252,48 @@ class PerfParser(CompareParser):
                     )
 
                 base_revision_treeherder = log_processor.revision
+
+                # Reset updated since we no longer need to worry
+                # about failing while we're on a base commit
+                updated = False
+                try_config.setdefault("env", {})[
+                    "PERF_BASE_REVISION"
+                ] = base_revision_treeherder
+                vcs.update(current_revision_ref)
+
+            with redirect_stdout(log_processor):
+                push_to_try(
+                    "perf",
+                    "{msg}".format(msg=msg),
+                    # XXX Figure out if changing `fuzzy` to `perf` will break something
+                    try_task_config=generate_try_task_config(
+                        "fuzzy", selected_tasks, try_config
+                    ),
+                    stage_changes=False,
+                    dry_run=dry_run,
+                    closed_tree=False,
+                    allow_log_capture=True,
+                )
+
+            new_revision_treeherder = log_processor.revision
+
         finally:
             if updated:
                 vcs.update(current_revision_ref)
 
         return base_revision_treeherder, new_revision_treeherder
+
+    def inject_change_detector(base_cmd, all_tasks, selected_tasks):
+        query = "'perftest 'mwu 'detect"
+        mwu_task = PerfParser.get_tasks(base_cmd, [], query, all_tasks)
+
+        if len(mwu_task) > 1 or len(mwu_task) == 0:
+            raise InvalidRegressionDetectorQuery(
+                f"Expected 1 task from change detector "
+                f"query, but found {len(mwu_task)}"
+            )
+
+        selected_tasks |= set(mwu_task)
 
     def run(
         update=False,
@@ -1264,6 +1303,7 @@ class PerfParser(CompareParser):
         dry_run=False,
         single_run=False,
         query=None,
+        detect_changes=False,
         **kwargs,
     ):
         # Setup fzf
@@ -1297,9 +1337,14 @@ class PerfParser(CompareParser):
             print("No tasks selected")
             return None
 
+        if detect_changes:
+            PerfParser.inject_change_detector(base_cmd, all_tasks, selected_tasks)
+
+        if try_config is None:
+            try_config = {}
         if kwargs.get("extra_args", []):
             args = " ".join(kwargs["extra_args"])
-            try_config["env"] = {"PERF_FLAGS": args}
+            try_config.setdefault("env", {})["PERF_FLAGS"] = args
 
         return PerfParser.perf_push_to_try(
             selected_tasks,
