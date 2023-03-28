@@ -11,8 +11,9 @@
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 #include "mozilla/Attributes.h"  // MOZ_STACK_CLASS, MOZ_ALWAYS_INLINE, MOZ_NEVER_INLINE, MOZ_RAII
-#include "mozilla/Maybe.h"  // mozilla::Maybe, mozilla::Some
-#include "mozilla/Span.h"   // mozilla::Span
+#include "mozilla/Maybe.h"     // mozilla::Maybe, mozilla::Some
+#include "mozilla/Saturate.h"  // mozilla::SaturateUint8
+#include "mozilla/Span.h"      // mozilla::Span
 
 #include <stddef.h>  // ptrdiff_t
 #include <stdint.h>  // uint16_t, uint32_t
@@ -312,6 +313,11 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   // Jump target just before the final yield in a generator or async function.
   JumpList finalYields = {};
+
+  // In order to heuristically determine the size of the allocation if this is a
+  // constructor function, we track expressions which add properties in the
+  // constructor.
+  mozilla::SaturateUint8 propertyAdditionEstimate = {};
 
   /*
    * Note that BytecodeEmitters are magic: they own the arena "top-of-stack"

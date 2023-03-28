@@ -21,6 +21,7 @@
 #include "vm/JSObject.h"     // JSObject, js::GetPrototypeFromConstructor
 #include "vm/TaggedProto.h"  // js::TaggedProto
 
+#include "vm/JSFunction-inl.h"
 #include "vm/JSObject-inl.h"  // js::NewObjectWithGroup, js::NewObjectGCKind
 
 using namespace js;
@@ -48,6 +49,9 @@ SharedShape* js::ThisShapeForFunction(JSContext* cx, Handle<JSFunction*> callee,
   }
 
   js::gc::AllocKind allocKind = NewObjectGCKind();
+  if (!JSFunction::getAllocKindForThis(cx, callee, allocKind)) {
+    return nullptr;
+  }
 
   SharedShape* res;
   if (proto && proto != cx->global()->maybeGetPrototype(JSProto_Object)) {
