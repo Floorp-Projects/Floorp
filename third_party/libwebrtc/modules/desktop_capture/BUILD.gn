@@ -288,10 +288,9 @@ if (rtc_include_tests) {
   }
 }
 
+if (!build_with_mozilla) {
 if (is_linux || is_chromeos) {
   if (rtc_use_pipewire) {
-    defines = [ "WEBRTC_USE_PIPEWIRE" ]
-    if (!build_with_mozilla) {
     pkg_config("gio") {
       packages = [
         "gio-2.0",
@@ -305,9 +304,7 @@ if (is_linux || is_chromeos) {
         ignore_libs = true
       }
     }
-    }
 
-if (!build_with_mozilla) {
     pkg_config("gbm") {
       packages = [ "gbm" ]
     }
@@ -321,12 +318,10 @@ if (!build_with_mozilla) {
     pkg_config("libdrm") {
       packages = [ "libdrm" ]
     }
-}
 
     if (!rtc_link_pipewire) {
       # When libpipewire is not directly linked, use stubs to allow for dlopening of
       # the binary.
-      if (!build_with_mozilla) {
       generate_stubs("pipewire_stubs") {
         configs = [
           "../../:common_config",
@@ -344,13 +339,10 @@ if (!build_with_mozilla) {
           macro_deps = [ "../../rtc_base/system:no_cfi_icall" ]
         }
       }
-      }
     }
 
     config("pipewire_config") {
-      if (!build_with_mozilla) {
-        defines = [ "WEBRTC_USE_PIPEWIRE" ]
-      }
+      defines = [ "WEBRTC_USE_PIPEWIRE" ]
       if (!rtc_link_pipewire) {
         defines += [ "WEBRTC_DLOPEN_PIPEWIRE" ]
       }
@@ -364,11 +356,11 @@ if (!build_with_mozilla) {
     }
   }
 }
+} # !build_with_mozilla
 
 rtc_library("desktop_capture") {
   visibility = [ "*" ]
   defines = []
-  include_dirs = []
   deps = []
   public_configs = [ ":x11_config" ]
   sources = [
@@ -603,11 +595,6 @@ rtc_library("desktop_capture") {
   }
 
   deps += [ "//third_party/libyuv" ]
-  if (build_with_mozilla) {
-    include_dirs += [
-      "/third_party/pipewire",
-    ]
-  }
 
   if (use_desktop_capture_differ_sse2) {
     deps += [ ":desktop_capture_differ_sse2" ]
@@ -642,18 +629,11 @@ rtc_library("desktop_capture") {
     ]
 
     if (build_with_mozilla) {
-    include_dirs += [
-      "/gfx/angle/checkout/include",
-      "/third_party/drm/drm",
-      "/third_party/drm/drm/include",
-      "/third_party/drm/drm/include/libdrm",
-      "/third_party/drm/libdrm",
-      "/third_party/gbm/gbm",
-      "/third_party/libepoxy/libepoxy/include",
-    ]
-    }
-
-   if (!build_with_mozilla) {
+      deps += ["//third_party/pipewire",
+               "//third_party/drm",
+               "//third_party/gbm",
+               "//third_party/libepoxy"]
+    } else { # build_with_mozilla else !build_with_mozilla
     configs += [
       ":gio",
       ":pipewire",
@@ -662,27 +642,13 @@ rtc_library("desktop_capture") {
       ":epoxy",
       ":libdrm",
     ]
-    }
 
     if (!rtc_link_pipewire) {
-      if (!build_with_mozilla) {
       deps += [ ":pipewire_stubs" ]
-      }
-
-      if (!build_with_mozilla) {
-        configs += [
-          ":gio",
-          ":pipewire",
-        ]
-      } else {
-        defines += [ "WEBRTC_USE_PIPEWIRE" ]
-        include_dirs += [ "/third_party/pipewire" ]
-      }
     }
 
-    if (!build_with_mozilla) {
-      public_configs += [ ":pipewire_config" ]
-    }
+    public_configs += [ ":pipewire_config" ]
+    } # !build_with_mozilla
 
     deps += [ "../../rtc_base:sanitizer" ]
   }
