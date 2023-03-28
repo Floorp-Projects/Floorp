@@ -202,6 +202,13 @@ class SettingsSearchTest {
             changeDefaultSearchEngine(activityTestRule, searchEngine)
         }.submitQuery("mozilla ") {
             verifyUrl(searchEngine)
+        }.openThreeDotMenu {
+        }.openSettings {
+            verifySettingsOptionSummary("Search", "Google")
+        }.openSearchSubMenu {
+            changeDefaultSearchEngine(searchEngine)
+        }.goBack {
+            verifySettingsOptionSummary("Search", searchEngine)
         }
     }
 
@@ -233,6 +240,7 @@ class SettingsSearchTest {
             saveEditSearchEngine()
             changeDefaultSearchEngine(searchEngine.newTitle)
         }.goBack {
+            verifySettingsOptionSummary("Search", searchEngine.newTitle)
         }.goBack {
         }.openSearch {
             verifyDefaultSearchEngine(searchEngine.newTitle)

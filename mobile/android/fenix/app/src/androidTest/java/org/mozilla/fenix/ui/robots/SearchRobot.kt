@@ -510,18 +510,15 @@ private fun assertEngineListShortcutContains(rule: ComposeTestRule, searchEngine
         ).waitForExists(waitingTime)
 
         rule.onNodeWithTag("mozac.awesomebar.suggestions")
-            .performScrollToIndex(5)
+            .performScrollToNode(hasText(searchEngineName))
 
         rule.onNodeWithText(searchEngineName)
-            .assertExists()
             .assertIsDisplayed()
             .assertHasClickAction()
     }
 }
 
 private fun ComposeTestRule.selectDefaultSearchEngine(searchEngine: String) {
-    onView(withId(R.id.mozac_browser_toolbar_edit_icon)).click()
-
     onNodeWithText(searchEngine)
         .assertExists()
         .assertIsDisplayed()
