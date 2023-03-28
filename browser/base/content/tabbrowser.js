@@ -404,6 +404,7 @@
         browser,
         prefName: "browser.pdfjs.feature-tour",
         page: "chrome",
+        theme: { preset: "pdfjs", simulateContent: true },
       });
     },
     _setupInitialBrowserAndTab() {
