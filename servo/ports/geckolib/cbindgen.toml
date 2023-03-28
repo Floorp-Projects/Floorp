@@ -98,6 +98,7 @@ include = [
   "PrefersColorScheme",
   "PrefersContrast",
   "DynamicRange",
+  "Scripting",
   "FillRule",
   "FontDisplay",
   "FontFaceSourceListComponent",
