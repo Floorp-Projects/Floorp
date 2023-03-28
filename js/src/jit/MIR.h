@@ -1373,19 +1373,6 @@ class MConstant : public MNullaryInstruction {
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 
-  [[nodiscard]] bool updateForReplacement(MDefinition* def) override {
-    MConstant* c = def->toConstant();
-    // During constant folding, we don't want to replace a float32
-    // value by a double value.
-    if (type() == MIRType::Float32) {
-      return c->type() == MIRType::Float32;
-    }
-    if (type() == MIRType::Double) {
-      return c->type() != MIRType::Float32;
-    }
-    return true;
-  }
-
   void computeRange(TempAllocator& alloc) override;
   bool canTruncate() const override;
   void truncate(TruncateKind kind) override;
@@ -5195,8 +5182,6 @@ class MMul : public MBinaryArithInstruction {
   void setCanBeNegativeZero(bool negativeZero) {
     canBeNegativeZero_ = negativeZero;
   }
-
-  [[nodiscard]] bool updateForReplacement(MDefinition* ins) override;
 
   bool fallible() const { return canBeNegativeZero_ || canOverflow(); }
 
