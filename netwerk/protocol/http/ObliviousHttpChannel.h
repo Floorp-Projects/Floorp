@@ -51,6 +51,7 @@ class ObliviousHttpChannel final : public nsIHttpChannel,
   nsTArray<uint8_t> mEncodedConfig;
 
   nsCString mMethod{"GET"_ns};
+  nsCString mContentType;
   nsTHashMap<nsCStringHashKey, nsCString> mHeaders;
   nsTArray<uint8_t> mContent;
 
