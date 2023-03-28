@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-class SandboxSupportBase {
+export class SandboxSupportBase {
  constructor(win) {
   this.win = win;
   this.timeoutIds = new Map();
@@ -138,7 +138,4 @@ class SandboxSupportBase {
    }
   };
  }
-}
-{
- var EXPORTED_SYMBOLS = ["SandboxSupportBase"];
 }

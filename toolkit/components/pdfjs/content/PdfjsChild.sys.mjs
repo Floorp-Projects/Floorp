@@ -13,11 +13,7 @@
  * limitations under the License.
  */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["PdfjsChild"];
-
-class PdfjsChild extends JSWindowActorChild {
+export class PdfjsChild extends JSWindowActorChild {
   init(supportsFind) {
     if (supportsFind) {
       this.sendAsyncMessage("PDFJS:Parent:addEventListener");

@@ -1,11 +1,11 @@
 pdfjs.jar:
 % resource pdf.js %content/
- content/PdfJs.jsm (content/PdfJs.jsm)
- content/PdfJsDefaultPreferences.jsm (content/PdfJsDefaultPreferences.jsm)
- content/PdfJsNetwork.jsm (content/PdfJsNetwork.jsm)
- content/PdfJsTelemetry.jsm (content/PdfJsTelemetry.jsm)
- content/PdfSandbox.jsm (content/PdfSandbox.jsm)
- content/PdfStreamConverter.jsm (content/PdfStreamConverter.jsm)
+ content/PdfJs.sys.mjs (content/PdfJs.sys.mjs)
+ content/PdfJsDefaultPreferences.sys.mjs (content/PdfJsDefaultPreferences.sys.mjs)
+ content/PdfJsNetwork.sys.mjs (content/PdfJsNetwork.sys.mjs)
+ content/PdfJsTelemetry.sys.mjs (content/PdfJsTelemetry.sys.mjs)
+ content/PdfSandbox.sys.mjs (content/PdfSandbox.sys.mjs)
+ content/PdfStreamConverter.sys.mjs (content/PdfStreamConverter.sys.mjs)
  content/build/	(content/build/*)
  content/web/cmaps/	(content/web/cmaps/*)
  content/web/standard_fonts/	(content/web/standard_fonts/*)
@@ -18,8 +18,8 @@ pdfjs.jar:
  content/web/viewer.css (content/web/viewer-geckoview.css)
  content/web/viewer.js (content/web/viewer-geckoview.js)
 #else
- content/PdfjsParent.jsm (content/PdfjsParent.jsm)
- content/PdfjsChild.jsm (content/PdfjsChild.jsm)
+ content/PdfjsParent.sys.mjs (content/PdfjsParent.sys.mjs)
+ content/PdfjsChild.sys.mjs (content/PdfjsChild.sys.mjs)
  content/web/viewer.html (content/web/viewer.html)
  content/web/viewer.css (content/web/viewer.css)
  content/web/viewer.js (content/web/viewer.js)

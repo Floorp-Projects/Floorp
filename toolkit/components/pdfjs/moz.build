@@ -13,7 +13,7 @@ MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
 JAR_MANIFESTS += ["jar.mn"]
 
 EXTRA_JS_MODULES += [
-    "pdfjs.js",
+    "pdfjs.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [

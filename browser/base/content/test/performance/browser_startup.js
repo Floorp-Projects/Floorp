@@ -103,7 +103,7 @@ const startupPhases = {
         "resource://gre/modules/AsyncPrefs.sys.mjs",
         "resource://gre/modules/LoginManagerContextMenu.jsm",
         "resource://gre/modules/osfile.jsm",
-        "resource://pdf.js/PdfStreamConverter.jsm",
+        "resource://pdf.js/PdfStreamConverter.sys.mjs",
       ]),
     },
   },

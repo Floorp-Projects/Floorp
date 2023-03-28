@@ -13,13 +13,7 @@
  * limitations under the License.
  */
 
-"use strict";
-
-const { SandboxSupportBase } = ChromeUtils.import(
-  "resource://pdf.js/build/pdf.sandbox.external.js"
-);
-
-const EXPORTED_SYMBOLS = ["PdfSandbox"];
+import { SandboxSupportBase } from "resource://pdf.js/build/pdf.sandbox.external.sys.mjs";
 
 class SandboxSupport extends SandboxSupportBase {
   constructor(win, sandbox) {
@@ -39,7 +33,7 @@ class SandboxSupport extends SandboxSupportBase {
   }
 }
 
-class PdfSandbox {
+export class PdfSandbox {
   constructor(window, data) {
     this.window = window;
     const sandbox = Cu.Sandbox(null, {

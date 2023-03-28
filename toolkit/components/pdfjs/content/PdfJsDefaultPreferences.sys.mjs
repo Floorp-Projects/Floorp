@@ -19,9 +19,7 @@
 // THIS FILE IS GENERATED AUTOMATICALLY, DO NOT EDIT MANUALLY!
 //
 
-"use strict";
-var EXPORTED_SYMBOLS = ["PdfJsDefaultPreferences"];
-var PdfJsDefaultPreferences = Object.freeze({
+export const PdfJsDefaultPreferences = Object.freeze({
  "annotationEditorMode": 0,
  "annotationMode": 2,
  "cursorToolOnLoad": 0,

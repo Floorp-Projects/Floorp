@@ -19,8 +19,8 @@ add_task(async function test_js_sandbox() {
       ]);
 
       await SpecialPowers.spawn(browser, [], async () => {
-        const { PdfSandbox } = ChromeUtils.import(
-          "resource://pdf.js/PdfSandbox.jsm"
+        const { PdfSandbox } = ChromeUtils.importESModule(
+          "resource://pdf.js/PdfSandbox.sys.mjs"
         );
 
         let sandboxDestroyCount = 0;
