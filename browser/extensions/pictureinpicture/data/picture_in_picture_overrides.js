@@ -91,6 +91,12 @@ let AVAILABLE_PIP_OVERRIDES;
       },
     },
 
+    edx: {
+      "https://*.edx.org/*": {
+        videoWrapperScriptPath: "video-wrappers/edx.js",
+      },
+    },
+
     frontendMasters: {
       "https://*.frontendmasters.com/*": {
         videoWrapperScriptPath: "video-wrappers/videojsWrapper.js",
