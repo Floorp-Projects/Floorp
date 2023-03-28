@@ -177,22 +177,18 @@ exports.CustomHighlighterActor = class CustomHighligherActor extends Actor {
  */
 
 class HighlighterEnvironment extends EventEmitter {
-  constructor() {
-    super();
-    this.relayTargetActorWindowReady = this.relayTargetActorWindowReady.bind(
-      this
-    );
-    this.relayTargetActorNavigate = this.relayTargetActorNavigate.bind(this);
-    this.relayTargetActorWillNavigate = this.relayTargetActorWillNavigate.bind(
-      this
-    );
-  }
-
   initFromTargetActor(targetActor) {
     this._targetActor = targetActor;
-    this._targetActor.on("window-ready", this.relayTargetActorWindowReady);
-    this._targetActor.on("navigate", this.relayTargetActorNavigate);
-    this._targetActor.on("will-navigate", this.relayTargetActorWillNavigate);
+
+    const relayedEvents = ["window-ready", "navigate", "will-navigate"];
+
+    this._abortController = new AbortController();
+    const signal = this._abortController.signal;
+    for (const event of relayedEvents) {
+      this._targetActor.on(event, this.relayTargetEvent.bind(this, event), {
+        signal,
+      });
+    }
   }
 
   initFromWindow(win) {
@@ -302,23 +298,14 @@ class HighlighterEnvironment extends EventEmitter {
     return this.docShell && this.docShell.chromeEventHandler;
   }
 
-  relayTargetActorWindowReady(data) {
-    this.emit("window-ready", data);
-  }
-
-  relayTargetActorNavigate(data) {
-    this.emit("navigate", data);
-  }
-
-  relayTargetActorWillNavigate(data) {
-    this.emit("will-navigate", data);
+  relayTargetEvent(name, data) {
+    this.emit(name, data);
   }
 
   destroy() {
-    if (this._targetActor) {
-      this._targetActor.off("window-ready", this.relayTargetActorWindowReady);
-      this._targetActor.off("navigate", this.relayTargetActorNavigate);
-      this._targetActor.off("will-navigate", this.relayTargetActorWillNavigate);
+    if (this._abortController) {
+      this._abortController.abort();
+      this._abortController = null;
     }
 
     // In case the environment was initialized from a window, we need to remove
