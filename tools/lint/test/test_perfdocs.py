@@ -157,10 +157,20 @@ def setup_sample_logger(logger, structured_logger, top_dir):
     gn.logger = logger
 
 
+@mock.patch("taskgraph.util.taskcluster.get_artifact")
+@mock.patch("tryselect.tasks.generate_tasks")
 @mock.patch("perfdocs.generator.Generator")
 @mock.patch("perfdocs.verifier.Verifier")
 @mock.patch("perfdocs.logger.PerfDocLogger", new=PerfDocsLoggerMock)
-def test_perfdocs_start_and_fail(verifier, generator, structured_logger, config, paths):
+def test_perfdocs_start_and_fail(
+    verifier,
+    generator,
+    get_artifact_mock,
+    gen_tasks_mock,
+    structured_logger,
+    config,
+    paths,
+):
     from perfdocs.perfdocs import run_perfdocs
 
     with temp_file("bad", content="foo") as temp:
@@ -176,6 +186,8 @@ def test_perfdocs_start_and_fail(verifier, generator, structured_logger, config,
     assert generator.call_count == 0
 
 
+@mock.patch("taskgraph.util.taskcluster.get_artifact")
+@mock.patch("tryselect.tasks.generate_tasks")
 @mock.patch("perfdocs.generator.Generator")
 @mock.patch("perfdocs.verifier.Verifier")
 @mock.patch("perfdocs.logger.PerfDocLogger", new=PerfDocsLoggerMock)
