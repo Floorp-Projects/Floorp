@@ -2,3 +2,4 @@
 command: cargo-check
 continue_on_error: true
 # cargo_build_flags: []
+requires_export: true

@@ -127,6 +127,9 @@ def _cargo_config_yaml_schema():
             # Whether `make` should stop immediately in case
             # of error returned by the command. Default: False
             "continue_on_error": Boolean,
+            # Whether this command requires pre_export and export build
+            # targets to have run. Defaults to bool(cargo_build_flags).
+            "requires_export": Boolean,
             # Build flags to use.  If this variable is not
             # defined here, the build flags are generated automatically and are
             # the same as for `cargo build`. See available substitutions at the
@@ -235,9 +238,10 @@ def cargo(
     cargo_extra_flags = yaml_config.get("cargo_extra_flags")
     if cargo_extra_flags is not None:
         cargo_extra_flags = " ".join(cargo_extra_flags)
+    requires_export = yaml_config.get("requires_export", bool(cargo_build_flags))
 
     ret = 0
-    if cargo_build_flags:
+    if requires_export:
         # This directory is created during export. If it's not there,
         # export hasn't run already.
         deps = Path(command_context.topobjdir) / ".deps"
