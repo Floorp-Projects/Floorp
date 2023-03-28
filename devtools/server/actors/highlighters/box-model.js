@@ -126,11 +126,17 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
     return true;
   }
 
+  get supportsSimpleHighlighters() {
+    return true;
+  }
+
   _buildMarkup() {
     const highlighterContainer = this.markup.anonymousContentDocument.createElement(
       "div"
     );
     highlighterContainer.className = "highlighter-container box-model";
+
+    this.highlighterContainer = highlighterContainer;
     // We need a better solution for how to handle the highlighter from the
     // accessibility standpoint. For now, in order to avoid displaying it in the
     // accessibility tree lets hide it altogether. See bug 1598667 for more
@@ -142,7 +148,11 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
       parent: highlighterContainer,
       attributes: {
         id: "root",
-        class: "root",
+        class:
+          "root" +
+          (this.highlighterEnv.useSimpleHighlightersForReducedMotion
+            ? " use-simple-highlighters"
+            : ""),
         role: "presentation",
       },
       prefix: this.ID_CLASS_PREFIX,
@@ -383,7 +393,9 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
       } else {
         this._hideInfobar();
       }
+      this._updateSimpleHighlighters();
       this._showBoxModel();
+
       shown = true;
     } else {
       // Nothing to highlight (0px rectangle like a <script> tag for instance)

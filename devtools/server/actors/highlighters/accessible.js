@@ -98,6 +98,10 @@ class AccessibleHighlighter extends AutoRefreshHighlighter {
     return true;
   }
 
+  get supportsSimpleHighlighters() {
+    return true;
+  }
+
   /**
    * Build highlighter markup.
    *
@@ -115,7 +119,11 @@ class AccessibleHighlighter extends AutoRefreshHighlighter {
       parent: container,
       attributes: {
         id: "root",
-        class: "root",
+        class:
+          "root" +
+          (this.highlighterEnv.useSimpleHighlightersForReducedMotion
+            ? " use-simple-highlighters"
+            : ""),
       },
       prefix: this.ID_CLASS_PREFIX,
     });

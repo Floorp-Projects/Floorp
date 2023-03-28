@@ -128,27 +128,29 @@
 }
 
 @media (prefers-reduced-motion) {
-  :-moz-native-anonymous .box-model-content,
-  :-moz-native-anonymous .box-model-padding,
-  :-moz-native-anonymous .box-model-border,
-  :-moz-native-anonymous .box-model-margin {
+  :-moz-native-anonymous .use-simple-highlighters :is(
+     .box-model-content,
+     .box-model-padding,
+     .box-model-border,
+     .box-model-margin
+  ) {
     fill: none;
     stroke-width: 3;
   }
 
-  :-moz-native-anonymous .box-model-content {
+  :-moz-native-anonymous .use-simple-highlighters .box-model-content {
     stroke: var(--highlighter-box-content-color);
   }
 
-  :-moz-native-anonymous .box-model-padding {
+  :-moz-native-anonymous .use-simple-highlighters .box-model-padding {
     stroke: var(--highlighter-box-padding-color);
   }
 
-  :-moz-native-anonymous .box-model-border {
+  :-moz-native-anonymous .use-simple-highlighters .box-model-border {
     stroke: var(--highlighter-box-border-color);
   }
 
-  :-moz-native-anonymous .box-model-margin {
+  :-moz-native-anonymous .use-simple-highlighters .box-model-margin {
     stroke: var(--highlighter-box-margin-color);
   }
 }
@@ -945,7 +947,7 @@
 }
 
 @media (prefers-reduced-motion) {
-  :-moz-native-anonymous .accessible-bounds {
+  :-moz-native-anonymous .use-simple-highlighters .accessible-bounds {
     fill: none;
     stroke: var(--highlighter-accessibility-bounds-color);
     stroke-width: 3;
