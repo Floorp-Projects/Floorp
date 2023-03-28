@@ -879,7 +879,7 @@ void nsMenuX::DidFirePopupShowing() {
 
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm) {
-    pm->UpdateMenuItems(popupContent);
+    pm->UpdateMenuItems(popupContent->AsElement());
   }
 }
 
