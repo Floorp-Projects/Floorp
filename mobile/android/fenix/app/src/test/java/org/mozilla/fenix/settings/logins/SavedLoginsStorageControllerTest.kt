@@ -135,14 +135,14 @@ class SavedLoginsStorageControllerTest {
                 oldLogin.guid,
             )
 
-        val expectedNewList = listOf(newLogin.mapToSavedLogin())
+        val expectedNewLogin = newLogin.mapToSavedLogin()
 
         coVerify {
             passwordsStorage.get(oldLogin.guid)
             passwordsStorage.update(newLogin.guid, newLogin.toEntry())
             loginsFragmentStore.dispatch(
-                LoginsAction.UpdateLoginsList(
-                    expectedNewList,
+                LoginsAction.AddLogin(
+                    expectedNewLogin,
                 ),
             )
             navController.navigate(directionsEq(directions))

@@ -53,6 +53,7 @@ class LoginsFragmentStore(initialState: LoginsListState) :
 sealed class LoginsAction : Action {
     data class FilterLogins(val newText: String?) : LoginsAction()
     data class UpdateLoginsList(val list: List<SavedLogin>) : LoginsAction()
+    data class AddLogin(val newLogin: SavedLogin) : LoginsAction()
     object LoginsListUpToDate : LoginsAction()
     data class UpdateCurrentLogin(val item: SavedLogin) : LoginsAction()
     data class SortLogins(val sortingStrategy: SortingStrategy) : LoginsAction()
@@ -106,6 +107,14 @@ private fun savedLoginsStateReducer(
                 isLoading = false,
                 loginList = action.list,
                 filteredItems = state.sortingStrategy(action.list),
+            )
+        }
+        is LoginsAction.AddLogin -> {
+            val updatedLogins = state.loginList + action.newLogin
+            state.copy(
+                isLoading = false,
+                loginList = updatedLogins,
+                filteredItems = state.sortingStrategy(updatedLogins),
             )
         }
         is LoginsAction.FilterLogins -> {

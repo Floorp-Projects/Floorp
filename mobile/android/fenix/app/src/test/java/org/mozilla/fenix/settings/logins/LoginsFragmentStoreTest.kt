@@ -85,6 +85,23 @@ class LoginsFragmentStoreTest {
     }
 
     @Test
+    fun `GIVEN logins already exist WHEN asked to add a new one THEN update the state to contain them all`() {
+        val store = LoginsFragmentStore(
+            baseState.copy(isLoading = true),
+        )
+
+        store.dispatch(LoginsAction.AddLogin(exampleLogin)).joinBlocking()
+        assertFalse(store.state.isLoading)
+        assertEquals(listOf(exampleLogin), store.state.loginList)
+
+        // Select a login to force "isLoading = true"
+        store.dispatch(LoginsAction.AddLogin(firefoxLogin)).joinBlocking()
+        assertFalse(store.state.isLoading)
+        assertEquals(loginList, store.state.loginList)
+        assertEquals(listOf(firefoxLogin, exampleLogin), store.state.filteredItems)
+    }
+
+    @Test
     fun `FilterLogins action`() {
         val store = LoginsFragmentStore(
             baseState.copy(

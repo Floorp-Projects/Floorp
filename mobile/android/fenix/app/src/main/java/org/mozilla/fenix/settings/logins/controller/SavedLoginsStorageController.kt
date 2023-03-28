@@ -98,7 +98,7 @@ open class SavedLoginsStorageController(
         var encryptedLogin: EncryptedLogin? = null
         try {
             encryptedLogin = passwordsStorage.add(loginEntryToSave)
-            syncAndUpdateList(passwordsStorage.decryptLogin(encryptedLogin))
+            addLoginToState(passwordsStorage.decryptLogin(encryptedLogin))
         } catch (loginException: LoginsApiException) {
             Log.e(
                 "Add new login",
@@ -149,7 +149,7 @@ open class SavedLoginsStorageController(
     private suspend fun save(guid: String, loginEntryToSave: LoginEntry) {
         try {
             val encryptedLogin = passwordsStorage.update(guid, loginEntryToSave)
-            syncAndUpdateList(passwordsStorage.decryptLogin(encryptedLogin))
+            addLoginToState(passwordsStorage.decryptLogin(encryptedLogin))
         } catch (loginException: LoginsApiException) {
             when (loginException) {
                 is NoSuchRecordException,
@@ -170,12 +170,10 @@ open class SavedLoginsStorageController(
         }
     }
 
-    private fun syncAndUpdateList(updatedLogin: Login) {
+    private fun addLoginToState(updatedLogin: Login) {
         val login = updatedLogin.mapToSavedLogin()
         loginsFragmentStore.dispatch(
-            LoginsAction.UpdateLoginsList(
-                listOf(login),
-            ),
+            LoginsAction.AddLogin(login),
         )
     }
 
