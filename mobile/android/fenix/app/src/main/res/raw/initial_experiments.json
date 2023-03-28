@@ -74,6 +74,78 @@
     },
     {
       "schemaVersion": "1.11.0",
+      "slug": "fx-release-android-re-engagement-notifications-ab-experiment-v112",
+      "id": "fx-release-android-re-engagement-notifications-ab-experiment-v112",
+      "arguments": {},
+      "application": "org.mozilla.firefox",
+      "appName": "fenix",
+      "appId": "org.mozilla.firefox",
+      "channel": "release",
+      "userFacingName": "Fx Release - Android re-engagement notifications A/B experiment v112",
+      "userFacingDescription": "A/B message content test for Firefox 112",
+      "isEnrollmentPaused": false,
+      "isRollout": false,
+      "bucketConfig": {
+        "randomizationUnit": "nimbus_id",
+        "namespace": "fenix-re-engagement-notification-release-2",
+        "start": 0,
+        "count": 10000,
+        "total": 10000
+      },
+      "featureIds": [
+        "re-engagement-notification"
+      ],
+      "probeSets": [],
+      "outcomes": [],
+      "branches": [
+        {
+          "slug": "control",
+          "ratio": 1,
+          "feature": {
+            "featureId": "re-engagement-notification",
+            "enabled": true,
+            "value": {
+              "enabled": true,
+              "type": 0
+            }
+          }
+        },
+        {
+          "slug": "treatment-a",
+          "ratio": 1,
+          "feature": {
+            "featureId": "re-engagement-notification",
+            "enabled": true,
+            "value": {
+              "enabled": true,
+              "type": 1
+            }
+          }
+        },
+        {
+          "slug": "treatment-b",
+          "ratio": 1,
+          "feature": {
+            "featureId": "re-engagement-notification",
+            "enabled": true,
+            "value": {
+              "enabled": true,
+              "type": 2
+            }
+          }
+        }
+      ],
+      "targeting": "(app_version|versionCompare('112.*') <= 0) && ((is_already_enrolled) || ((isFirstRun == 'true') && (app_version|versionCompare('112.!') >= 0)))",
+      "startDate": "2023-03-28",
+      "enrollmentEndDate": "2023-04-11",
+      "endDate": null,
+      "proposedDuration": 28,
+      "proposedEnrollment": 14,
+      "referenceBranch": "control",
+      "featureValidationOptOut": false
+    },
+    {
+      "schemaVersion": "1.11.0",
       "slug": "release-android-sign-to-sync-onboarding-page",
       "id": "release-android-sign-to-sync-onboarding-page",
       "arguments": {},
