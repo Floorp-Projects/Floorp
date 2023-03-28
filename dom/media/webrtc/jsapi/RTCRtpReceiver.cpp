@@ -140,8 +140,6 @@ RTCRtpReceiver::RTCRtpReceiver(
       GetMainThreadSerialEventTarget(), this, &RTCRtpReceiver::OnUnmute);
   mWatchManager.Watch(mReceiveTrackMute,
                       &RTCRtpReceiver::UpdateReceiveTrackMute);
-  mWatchManager.Watch(mBlockUnmuteEvents,
-                      &RTCRtpReceiver::UpdateReceiveTrackMute);
 }
 
 #undef INIT_CANONICAL
@@ -768,9 +766,10 @@ bool RTCRtpReceiver::HasTrack(const dom::MediaStreamTrack* aTrack) const {
 }
 
 void RTCRtpReceiver::SyncFromJsep(const JsepTransceiver& aJsepTransceiver) {
-  // If a SRD has unset the receive bit, block unmute events so RTP passing
-  // through MediaPipeline does not unmute the receive track.
-  mBlockUnmuteEvents = !aJsepTransceiver.mRecvTrack.GetRemoteSetSendBit();
+  // Spec says we set [[Receptive]] to true on sLD(sendrecv/recvonly), and to
+  // false on sRD(recvonly/inactive), sLD(sendonly/inactive), or when stop()
+  // is called.
+  mReceptive = aJsepTransceiver.mRecvTrack.GetReceptive();
 }
 
 void RTCRtpReceiver::SyncToJsep(JsepTransceiver& aJsepTransceiver) const {}
@@ -843,7 +842,7 @@ void RTCRtpReceiver::OnRtcpBye() { mReceiveTrackMute = true; }
 void RTCRtpReceiver::OnRtcpTimeout() { mReceiveTrackMute = true; }
 
 void RTCRtpReceiver::SetTrackMuteFromRemoteSdp() {
-  MOZ_ASSERT(mBlockUnmuteEvents,
+  MOZ_ASSERT(!mReceptive,
              "PeerConnectionImpl should have blocked unmute events prior to "
              "firing mute");
   mReceiveTrackMute = true;
@@ -853,17 +852,19 @@ void RTCRtpReceiver::SetTrackMuteFromRemoteSdp() {
   MOZ_ASSERT(mTrack->Muted(), "Muted state was indeed set synchronously");
 }
 
-void RTCRtpReceiver::OnUnmute() { mReceiveTrackMute = false; }
+void RTCRtpReceiver::OnUnmute() {
+  // If we are blocking unmute, we ignore this packet, even if we stop blocking
+  // afterward.
+  if (mReceptive) {
+    mReceiveTrackMute = false;
+  }
+}
 
 void RTCRtpReceiver::UpdateReceiveTrackMute() {
   if (!mTrack) {
     return;
   }
   if (!mTrackSource) {
-    return;
-  }
-  if (mBlockUnmuteEvents && !mReceiveTrackMute) {
-    // Unmuting is blocked.
     return;
   }
   // This sets the muted state for mTrack and all its clones.

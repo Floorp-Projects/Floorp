@@ -844,6 +844,7 @@ JsepSession::Result JsepSessionImpl::SetLocalDescription(
 
     const auto& msection = parsed->GetMediaSection(i);
     transceiver->Associate(msection.GetAttributeList().GetMid());
+    transceiver->mRecvTrack.RecvTrackSetLocal(msection);
 
     if (mSdpHelper.MsectionIsDisabled(msection)) {
       transceiver->mTransport.Close();
