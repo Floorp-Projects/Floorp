@@ -68,6 +68,7 @@ class SavedLoginsStorageControllerTest {
 
         coVerify {
             passwordsStorage.delete(loginId)
+            loginsFragmentStore.dispatch(LoginsAction.DeleteLogin(loginId))
             navController.popBackStack(R.id.savedLoginsFragment, false)
         }
     }

@@ -49,6 +49,7 @@ open class SavedLoginsStorageController(
                 passwordsStorage.delete(loginId)
             }
             deleteLoginJob?.await()
+            deleteLoginFromState(loginId)
             withContext(Dispatchers.Main) {
                 navController.popBackStack(R.id.savedLoginsFragment, false)
             }
@@ -174,6 +175,12 @@ open class SavedLoginsStorageController(
         val login = updatedLogin.mapToSavedLogin()
         loginsFragmentStore.dispatch(
             LoginsAction.AddLogin(login),
+        )
+    }
+
+    private fun deleteLoginFromState(loginId: String) {
+        loginsFragmentStore.dispatch(
+            LoginsAction.DeleteLogin(loginId),
         )
     }
 

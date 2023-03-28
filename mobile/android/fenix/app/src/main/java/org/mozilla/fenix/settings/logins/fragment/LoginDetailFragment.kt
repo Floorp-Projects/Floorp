@@ -15,9 +15,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
-import androidx.core.os.bundleOf
 import androidx.core.view.MenuProvider
-import androidx.fragment.app.setFragmentResult
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -220,10 +218,6 @@ class LoginDetailFragment : SecureFragment(R.layout.fragment_login_detail), Menu
                 setPositiveButton(R.string.dialog_delete_positive) { dialog: DialogInterface, _ ->
                     Logins.deleteSavedLogin.record(NoExtras())
                     interactor.onDeleteLogin(args.savedLoginId)
-                    setFragmentResult(
-                        LOGIN_REQUEST_KEY,
-                        bundleOf(LOGIN_BUNDLE_ARGS to args.savedLoginId),
-                    )
                     dialog.dismiss()
                 }
                 create().withCenterAlignedButtons()
@@ -238,7 +232,5 @@ class LoginDetailFragment : SecureFragment(R.layout.fragment_login_detail), Menu
 
     companion object {
         private const val BUTTON_INCREASE_DPS = 24
-        const val LOGIN_REQUEST_KEY = "logins"
-        const val LOGIN_BUNDLE_ARGS = "loginsBundle"
     }
 }

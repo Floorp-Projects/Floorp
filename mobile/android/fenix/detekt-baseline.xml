@@ -252,6 +252,7 @@
     <ID>UndocumentedPublicClass:LoginsFragmentStore.kt$LoginsAction$UpdateCurrentLogin : LoginsAction</ID>
     <ID>UndocumentedPublicClass:LoginsFragmentStore.kt$LoginsAction$UpdateLoginsList : LoginsAction</ID>
     <ID>UndocumentedPublicClass:LoginsFragmentStore.kt$LoginsAction$AddLogin : LoginsAction</ID>
+    <ID>UndocumentedPublicClass:LoginsFragmentStore.kt$LoginsAction$DeleteLogin : LoginsAction</ID>
     <ID>UndocumentedPublicClass:LoginsListViewHolder.kt$LoginsListViewHolder : ViewHolder</ID>
     <ID>UndocumentedPublicClass:MenuPresenter.kt$MenuPresenter : OnAttachStateChangeListener</ID>
     <ID>UndocumentedPublicClass:MessageMetadataStorage.kt$MessageMetadataStorage</ID>

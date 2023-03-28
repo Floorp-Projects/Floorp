@@ -54,6 +54,7 @@ sealed class LoginsAction : Action {
     data class FilterLogins(val newText: String?) : LoginsAction()
     data class UpdateLoginsList(val list: List<SavedLogin>) : LoginsAction()
     data class AddLogin(val newLogin: SavedLogin) : LoginsAction()
+    data class DeleteLogin(val loginId: String) : LoginsAction()
     object LoginsListUpToDate : LoginsAction()
     data class UpdateCurrentLogin(val item: SavedLogin) : LoginsAction()
     data class SortLogins(val sortingStrategy: SortingStrategy) : LoginsAction()
@@ -113,6 +114,13 @@ private fun savedLoginsStateReducer(
             val updatedLogins = state.loginList + action.newLogin
             state.copy(
                 isLoading = false,
+                loginList = updatedLogins,
+                filteredItems = state.sortingStrategy(updatedLogins),
+            )
+        }
+        is LoginsAction.DeleteLogin -> {
+            val updatedLogins = state.loginList.filterNot { it.guid == action.loginId }
+            state.copy(
                 loginList = updatedLogins,
                 filteredItems = state.sortingStrategy(updatedLogins),
             )

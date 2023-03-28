@@ -24,8 +24,8 @@ class LoginsFragmentStoreTest {
         password = "",
         timeLastUsed = 0L,
     )
-    private val exampleLogin = baseLogin.copy(origin = "example.com", timeLastUsed = 10)
-    private val firefoxLogin = baseLogin.copy(origin = "firefox.com", timeLastUsed = 20)
+    private val exampleLogin = baseLogin.copy(guid = "example", origin = "example.com", timeLastUsed = 10)
+    private val firefoxLogin = baseLogin.copy(guid = "firefox", origin = "firefox.com", timeLastUsed = 20)
     private val loginList = listOf(exampleLogin, firefoxLogin)
     private val baseState = LoginsListState(
         loginList = emptyList(),
@@ -99,6 +99,33 @@ class LoginsFragmentStoreTest {
         assertFalse(store.state.isLoading)
         assertEquals(loginList, store.state.loginList)
         assertEquals(listOf(firefoxLogin, exampleLogin), store.state.filteredItems)
+    }
+
+    @Test
+    fun `GIVEN logins already exist WHEN asked to remove one THEN update the state to not contain it`() {
+        val store = LoginsFragmentStore(
+            baseState.copy(
+                isLoading = true,
+                loginList = loginList,
+            ),
+        )
+
+        store.dispatch(LoginsAction.DeleteLogin("not_existing")).joinBlocking()
+        assertEquals(loginList, store.state.loginList)
+        assertEquals(listOf(firefoxLogin, exampleLogin), store.state.filteredItems)
+
+        store.dispatch(LoginsAction.DeleteLogin(exampleLogin.guid)).joinBlocking()
+        assertEquals(listOf(firefoxLogin), store.state.loginList)
+        assertEquals(listOf(firefoxLogin), store.state.filteredItems)
+
+        store.dispatch(LoginsAction.DeleteLogin(firefoxLogin.guid)).joinBlocking()
+        assertEquals(emptyList<SavedLogin>(), store.state.loginList)
+        assertEquals(emptyList<SavedLogin>(), store.state.filteredItems)
+
+        // Test deleting from an empty store
+        store.dispatch(LoginsAction.DeleteLogin(firefoxLogin.guid)).joinBlocking()
+        assertEquals(emptyList<SavedLogin>(), store.state.loginList)
+        assertEquals(emptyList<SavedLogin>(), store.state.filteredItems)
     }
 
     @Test
