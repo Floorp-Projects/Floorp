@@ -475,11 +475,14 @@ const nsCString& GetDesktopEnvironmentIdentifier() {
 }
 
 bool IsGnomeDesktopEnvironment() {
-  return FindInReadable("gnome"_ns, GetDesktopEnvironmentIdentifier());
+  static bool sIsGnome =
+      !!FindInReadable("gnome"_ns, GetDesktopEnvironmentIdentifier());
+  return sIsGnome;
 }
 
 bool IsKdeDesktopEnvironment() {
-  return GetDesktopEnvironmentIdentifier().EqualsLiteral("kde");
+  static bool sIsKde = GetDesktopEnvironmentIdentifier().EqualsLiteral("kde");
+  return sIsKde;
 }
 
 }  // namespace mozilla::widget
