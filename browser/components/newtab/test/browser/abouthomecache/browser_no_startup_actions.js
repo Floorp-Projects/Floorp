@@ -12,7 +12,12 @@
  */
 add_task(async function test_no_startup_actions() {
   await withFullyLoadedAboutHome(async browser => {
-    // Make sure we have a cached document.
+    // Make sure we have a cached document. We simulate a restart to ensure
+    // that we start with a cache... that we can then clear without a problem,
+    // before writing a new cache. This ensures that no matter what, we're in a
+    // state where we have a fresh cache, regardless of what's happened in earlier
+    // tests.
+    await simulateRestart(browser);
     await clearCache();
     await simulateRestart(browser);
     await ensureCachedAboutHome(browser);
