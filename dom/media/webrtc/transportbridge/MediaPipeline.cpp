@@ -585,7 +585,6 @@ void MediaPipeline::RtpPacketReceived(const MediaPacket& packet) {
   MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
           ("%s received RTP packet.", mDescription.c_str()));
   IncrementRtpPacketsReceived(packet.len());
-  OnRtpPacketReceived();
 
   RtpLogger::LogPacket(packet, true, mDescription);
 
@@ -1213,8 +1212,6 @@ MediaPipelineReceive::MediaPipelineReceive(
                     std::move(aCallThread), std::move(aStsThread),
                     std::move(aConduit)),
       mWatchManager(this, AbstractThread::MainThread()) {
-  mWatchManager.Watch(mActive,
-                      &MediaPipelineReceive::UpdateMaybeTrackNeedsUnmute);
   mWatchManager.Watch(mActive, &MediaPipelineReceive::UpdateListener);
 }
 
@@ -1229,21 +1226,6 @@ void MediaPipelineReceive::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   MediaPipeline::Shutdown();
   mWatchManager.Shutdown();
-}
-
-void MediaPipelineReceive::UpdateMaybeTrackNeedsUnmute() {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mActive.Ref()) {
-    mMaybeTrackNeedsUnmute = true;
-  }
-}
-
-void MediaPipelineReceive::OnRtpPacketReceived() {
-  ASSERT_ON_THREAD(mStsThread);
-  bool needsUnmute = mMaybeTrackNeedsUnmute.exchange(false);
-  if (needsUnmute) {
-    mUnmuteEvent.Notify();
-  }
 }
 
 class MediaPipelineReceiveAudio::PipelineListener

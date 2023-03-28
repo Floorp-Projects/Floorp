@@ -170,7 +170,6 @@ class MediaPipeline : public sigslot::has_slots<> {
   void IncrementRtpPacketsSent(const MediaPacket& aPacket);
   void IncrementRtcpPacketsSent();
   void IncrementRtpPacketsReceived(int aBytes);
-  virtual void OnRtpPacketReceived() {}
   void IncrementRtcpPacketsReceived();
 
   virtual void SendPacket(MediaPacket&& packet);
@@ -367,9 +366,6 @@ class MediaPipelineReceive : public MediaPipeline {
   virtual void SetPrivatePrincipal(PrincipalHandle aHandle) = 0;
 
   void Shutdown() override;
-  void OnRtpPacketReceived() override;
-
-  MediaEventSource<void>& UnmuteEvent() { return mUnmuteEvent; }
 
  protected:
   ~MediaPipelineReceive();
@@ -377,11 +373,7 @@ class MediaPipelineReceive : public MediaPipeline {
   virtual void UpdateListener() = 0;
 
  private:
-  void UpdateMaybeTrackNeedsUnmute();
-
   WatchManager<MediaPipelineReceive> mWatchManager;
-  MediaEventProducer<void> mUnmuteEvent;
-  Atomic<bool> mMaybeTrackNeedsUnmute;
 };
 
 // A specialization of pipeline for reading from the network and

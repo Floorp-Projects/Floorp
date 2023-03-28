@@ -1464,6 +1464,7 @@ void WebrtcVideoConduit::OnRtpReceived(MediaPacket&& aPacket,
       (uint32_t)ntohl(((uint32_t*)aPacket.data())[2]),
       (uint32_t)ntohl(((uint32_t*)aPacket.data())[2]));
 
+  mRtpPacketEvent.Notify();
   DeliverPacket(rtc::CopyOnWriteBuffer(aPacket.data(), aPacket.len()),
                 PacketType::RTP);
 }

@@ -247,6 +247,7 @@ class WebrtcVideoConduit
   MediaEventSource<void>& RtcpTimeoutEvent() override {
     return mRtcpTimeoutEvent;
   }
+  MediaEventSource<void>& RtpPacketEvent() override { return mRtpPacketEvent; }
 
   bool RequiresNewSendStream(const VideoCodecConfig& newConfig) const;
 
@@ -471,6 +472,7 @@ class WebrtcVideoConduit
   Atomic<bool> mTransportActive = Atomic<bool>(false);
   MediaEventProducer<void> mRtcpByeEvent;
   MediaEventProducer<void> mRtcpTimeoutEvent;
+  MediaEventProducer<void> mRtpPacketEvent;
   MediaEventProducerExc<MediaPacket> mSenderRtpSendEvent;
   MediaEventProducerExc<MediaPacket> mSenderRtcpSendEvent;
   MediaEventProducerExc<MediaPacket> mReceiverRtcpSendEvent;

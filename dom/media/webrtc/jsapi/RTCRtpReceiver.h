@@ -114,7 +114,7 @@ class RTCRtpReceiver : public nsISupports,
   void OnRtcpTimeout();
 
   void SetTrackMuteFromRemoteSdp();
-  void OnUnmute();
+  void OnRtpPacket();
   void UpdateUnmuteBlockingState();
   void UpdateReceiveTrackMute();
 
