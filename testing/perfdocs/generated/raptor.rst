@@ -6727,7 +6727,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, geckoview, fenix
    * **browser cycles**: 1
-   * **browsertime args**: --browsertime.constant_value=1000
+   * **browsertime args**: --browsertime.constant_value=1500
    * **custom data**: true
    * **expected**: pass
    * **fore window**: 1
