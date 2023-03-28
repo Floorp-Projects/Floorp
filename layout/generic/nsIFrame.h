@@ -4664,7 +4664,7 @@ class nsIFrame : public nsQueryFrame {
    * Values that don't result in a 2D matrix will be ignored and an identity
    * matrix will be returned instead.
    */
-  Matrix ComputeWidgetTransform();
+  Matrix ComputeWidgetTransform() const;
 
   /**
    * @return true iff this frame has one or more associated image requests.

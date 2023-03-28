@@ -11517,7 +11517,7 @@ bool nsIFrame::IsScrolledOutOfView() const {
   return IsFrameScrolledOutOfView(this, rect, this);
 }
 
-gfx::Matrix nsIFrame::ComputeWidgetTransform() {
+gfx::Matrix nsIFrame::ComputeWidgetTransform() const {
   const nsStyleUIReset* uiReset = StyleUIReset();
   if (uiReset->mMozWindowTransform.IsNone()) {
     return gfx::Matrix();

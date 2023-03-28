@@ -258,11 +258,8 @@ void nsMenuPopupFrame::PrepareWidget(bool aRecreate) {
   }
   if (!ourView->HasWidget()) {
     CreateWidgetForView(ourView);
-  }
-  if (nsIWidget* widget = GetWidget()) {
-    // This won't dynamically update the color scheme changes while the widget
-    // is shown, but it's good enough.
-    widget->SetColorScheme(Some(LookAndFeel::ColorSchemeForFrame(this)));
+  } else {
+    PropagateStyleToWidget();
   }
 }
 
@@ -301,7 +298,7 @@ nsresult nsMenuPopupFrame::CreateWidgetForView(nsView* aView) {
 
   bool remote = HasRemoteContent();
 
-  auto mode = nsLayoutUtils::GetFrameTransparency(this, this);
+  const auto mode = nsLayoutUtils::GetFrameTransparency(this, this);
   widgetData.mHasRemoteContent = remote;
   widgetData.mTransparencyMode = mode;
   widgetData.mPopupLevel = GetPopupLevel(widgetData.mNoAutoHide);
@@ -329,10 +326,8 @@ nsresult nsMenuPopupFrame::CreateWidgetForView(nsView* aView) {
 
   nsIWidget* widget = aView->GetWidget();
   widget->SetTransparencyMode(mode);
-  widget->SetInputRegion(ComputeInputRegion(*Style(), *PresContext()));
-  widget->SetWindowShadowStyle(GetShadowStyle());
-  widget->SetWindowOpacity(StyleUIReset()->mWindowOpacity);
-  widget->SetWindowTransform(ComputeWidgetTransform());
+
+  PropagateStyleToWidget();
 
   // most popups don't have a title so avoid setting the title if there isn't
   // one
@@ -343,13 +338,42 @@ nsresult nsMenuPopupFrame::CreateWidgetForView(nsView* aView) {
   return NS_OK;
 }
 
+void nsMenuPopupFrame::PropagateStyleToWidget(WidgetStyleFlags aFlags) const {
+  if (aFlags.isEmpty()) {
+    return;
+  }
+
+  nsIWidget* widget = GetWidget();
+  if (!widget) {
+    return;
+  }
+
+  if (aFlags.contains(WidgetStyle::ColorScheme)) {
+    widget->SetColorScheme(Some(LookAndFeel::ColorSchemeForFrame(this)));
+  }
+  if (aFlags.contains(WidgetStyle::InputRegion)) {
+    widget->SetInputRegion(ComputeInputRegion(*Style(), *PresContext()));
+  }
+  if (aFlags.contains(WidgetStyle::Opacity)) {
+    widget->SetWindowOpacity(StyleUIReset()->mWindowOpacity);
+  }
+  if (aFlags.contains(WidgetStyle::Shadow)) {
+    widget->SetWindowShadowStyle(GetShadowStyle());
+  }
+  if (aFlags.contains(WidgetStyle::Transform)) {
+    widget->SetWindowTransform(ComputeWidgetTransform());
+  }
+}
+
 bool nsMenuPopupFrame::IsMouseTransparent() const {
   return ::IsMouseTransparent(*Style());
 }
 
-StyleWindowShadow nsMenuPopupFrame::GetShadowStyle() {
+StyleWindowShadow nsMenuPopupFrame::GetShadowStyle() const {
   StyleWindowShadow shadow = StyleUIReset()->mWindowShadow;
-  if (shadow != StyleWindowShadow::Default) return shadow;
+  if (shadow != StyleWindowShadow::Default) {
+    return shadow;
+  }
 
   switch (StyleDisplay()->EffectiveAppearance()) {
     case StyleAppearance::Tooltip:
@@ -428,28 +452,35 @@ void nsMenuPopupFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
     return;
   }
 
+  WidgetStyleFlags flags;
+
+  if (aOldStyle->StyleUI()->mColorScheme != StyleUI()->mColorScheme) {
+    flags += WidgetStyle::ColorScheme;
+  }
+
   auto& newUI = *StyleUIReset();
   auto& oldUI = *aOldStyle->StyleUIReset();
   if (newUI.mWindowOpacity != oldUI.mWindowOpacity) {
-    if (nsIWidget* widget = GetWidget()) {
-      widget->SetWindowOpacity(newUI.mWindowOpacity);
-    }
+    flags += WidgetStyle::Opacity;
   }
 
   if (newUI.mMozWindowTransform != oldUI.mMozWindowTransform) {
-    if (nsIWidget* widget = GetWidget()) {
-      widget->SetWindowTransform(ComputeWidgetTransform());
-    }
+    flags += WidgetStyle::Transform;
   }
 
-  auto oldRegion = ComputeInputRegion(*aOldStyle, *PresContext());
-  auto newRegion = ComputeInputRegion(*Style(), *PresContext());
+  if (newUI.mWindowShadow != oldUI.mWindowShadow) {
+    flags += WidgetStyle::Shadow;
+  }
+
+  const auto& pc = *PresContext();
+  auto oldRegion = ComputeInputRegion(*aOldStyle, pc);
+  auto newRegion = ComputeInputRegion(*Style(), pc);
   if (oldRegion.mFullyTransparent != newRegion.mFullyTransparent ||
       oldRegion.mMargin != newRegion.mMargin) {
-    if (nsIWidget* widget = GetWidget()) {
-      widget->SetInputRegion(newRegion);
-    }
+    flags += WidgetStyle::InputRegion;
   }
+
+  PropagateStyleToWidget(flags);
 }
 
 void nsMenuPopupFrame::TweakMinPrefISize(nscoord& aSize) {
