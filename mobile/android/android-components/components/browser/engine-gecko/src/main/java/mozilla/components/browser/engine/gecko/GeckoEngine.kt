@@ -357,8 +357,19 @@ class GeckoEngine(
             }
         }
 
-        runtime.webExtensionController.promptDelegate = promptDelegate
+        val addonManagerDelegate = object : WebExtensionController.AddonManagerDelegate {
+            override fun onDisabled(extension: org.mozilla.geckoview.WebExtension) {
+                webExtensionDelegate.onDisabled(GeckoWebExtension(extension, runtime))
+            }
+
+            override fun onEnabled(extension: org.mozilla.geckoview.WebExtension) {
+                webExtensionDelegate.onEnabled(GeckoWebExtension(extension, runtime))
+            }
+        }
+
+        runtime.webExtensionController.setPromptDelegate(promptDelegate)
         runtime.webExtensionController.setDebuggerDelegate(debuggerDelegate)
+        runtime.webExtensionController.setAddonManagerDelegate(addonManagerDelegate)
     }
 
     /**
@@ -399,7 +410,6 @@ class GeckoEngine(
         runtime.webExtensionController.enable((extension as GeckoWebExtension).nativeExtension, source.id).then(
             {
                 val enabledExtension = GeckoWebExtension(it!!, runtime)
-                webExtensionDelegate?.onEnabled(enabledExtension)
                 onSuccess(enabledExtension)
                 GeckoResult<Void>()
             },
@@ -422,7 +432,6 @@ class GeckoEngine(
         runtime.webExtensionController.disable((extension as GeckoWebExtension).nativeExtension, source.id).then(
             {
                 val disabledExtension = GeckoWebExtension(it!!, runtime)
-                webExtensionDelegate?.onDisabled(disabledExtension)
                 onSuccess(disabledExtension)
                 GeckoResult<Void>()
             },
