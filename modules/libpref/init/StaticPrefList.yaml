@@ -230,11 +230,7 @@
 # the parent process.
 - name: accessibility.cache.enabled
   type: bool
-#if defined(XP_MACOSX)
-  value: @IS_NOT_RELEASE_OR_BETA@
-#else
   value: true
-#endif
   mirror: once
 
 # Whether to avoid accessibility activation on Windows shortly after clipboard
