@@ -200,6 +200,7 @@ treeherder:
         'doc': 'Documentation'
         'GhS': 'GitHub Synchronization'
         'perftest': 'Performance tests'
+        'perftest-detect': 'Performance regression detection tooling'
         'perftest-chrome': 'Performance tests using Chrone'
         'perftest-http3': 'Performance tests with HTTP/3'
         'l10n': 'Localization checks'

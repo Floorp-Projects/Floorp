@@ -327,3 +327,23 @@ side-by-side:
             --new-revision {new_revision}
             --base-branch {base_branch}
             --new-branch {new_branch}
+
+mwu-change-detector:
+    description: Runs Mann-Whitney U-test on two revisions to detect performance changes
+    treeherder:
+        symbol: perftest-detect(mwu)
+        tier: 2
+    run:
+        using: run-task
+        sparse-profile: perftest
+        checkout: true
+        command: >-
+            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
+            cd $MOZ_FETCHES_DIR &&
+            python3.8 python/mozperftest/mozperftest/runner.py
+            tools change-detector
+            --task-name {task_name}
+            --base-revision {base_revision}
+            --new-revision {new_revision}
+            --base-branch {base_branch}
+            --new-branch {new_branch}
