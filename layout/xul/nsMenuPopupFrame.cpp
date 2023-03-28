@@ -1710,7 +1710,7 @@ void nsMenuPopupFrame::PerformMove(const Rects& aRects) {
     mUsedScreenRect = aRects.mUsedRect;
     if (!HasAnyStateBits(NS_FRAME_FIRST_REFLOW) && !mPendingPositionedEvent) {
       mPendingPositionedEvent =
-          nsXULPopupPositionedEvent::DispatchIfNeeded(mContent);
+          nsXULPopupPositionedEvent::DispatchIfNeeded(mContent->AsElement());
     }
   }
 
@@ -2411,7 +2411,7 @@ void nsMenuPopupFrame::CheckForAnchorChange(nsRect& aRect) {
     if (pm) {
       // As the caller will be iterating over the open popups, hide
       // asyncronously.
-      pm->HidePopup(mContent,
+      pm->HidePopup(mContent->AsElement(),
                     {HidePopupOption::DeselectMenu, HidePopupOption::Async});
     }
 

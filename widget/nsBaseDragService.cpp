@@ -854,7 +854,7 @@ nsresult nsBaseDragService::DrawDrag(nsINode* aDOMNode,
 
     nsIFrame* frame = content->GetPrimaryFrame();
     if (frame && frame->IsMenuPopupFrame()) {
-      mDragPopup = content;
+      mDragPopup = content->AsElement();
     }
   }
 
