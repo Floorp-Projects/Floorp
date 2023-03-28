@@ -353,7 +353,7 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "WebSocket",
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "WebTransport", desktop: true, nightlyAndroid: true },
+  { name: "WebTransport", nightly: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   {
     name: "WebTransportBidirectionalStream",
