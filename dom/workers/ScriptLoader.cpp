@@ -236,8 +236,10 @@ void LoadAllScripts(WorkerPrivate* aWorkerPrivate,
   if (!ok) {
     return;
   }
-
-  if (aWorkerPrivate->WorkerType() == WorkerType::Module) {
+  // Bug 1817259 - For now, we force loading the debugger script as Classic,
+  // even if the debugged worker is a Module.
+  if (aWorkerPrivate->WorkerType() == WorkerType::Module &&
+      aWorkerScriptType != DebuggerScript) {
     if (!StaticPrefs::dom_workers_modules_enabled()) {
       aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
       return;
@@ -549,8 +551,12 @@ bool WorkerScriptLoader::CreateScriptRequests(
   // 10.3.1 Importing scripts and libraries.
   // Step 1. If worker global scope's type is "module", throw a TypeError
   //         exception.
+  //
+  // Also, for now, the debugger script is always loaded as Classic,
+  // even if the debugged worker is a Module. We still want to allow
+  // it to use importScripts.
   if (mWorkerRef->Private()->WorkerType() == WorkerType::Module &&
-      !aIsMainScript) {
+      !aIsMainScript && !IsDebuggerScript()) {
     // This should only run for non-main scripts, as only these are
     // importScripts
     mRv.ThrowTypeError(
@@ -640,7 +646,9 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
       new ScriptFetchOptions(CORSMode::CORS_NONE, referrerPolicy, nullptr);
 
   RefPtr<ScriptLoadRequest> request = nullptr;
-  if (mWorkerRef->Private()->WorkerType() == WorkerType::Classic) {
+  // Bug 1817259 - For now the debugger scripts are always loaded a Classic.
+  if (mWorkerRef->Private()->WorkerType() == WorkerType::Classic ||
+      IsDebuggerScript()) {
     request = new ScriptLoadRequest(ScriptKind::eClassic, uri, fetchOptions,
                                     SRIMetadata(), nullptr,  // mReferrer
                                     loadContext);
