@@ -13,6 +13,7 @@
 #include "gc/GCProbes.h"
 #include "vm/WellKnownAtom.h"  // js_*_str
 
+#include "gc/ObjectKind-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
@@ -118,6 +119,23 @@ inline JSAtom* JSFunction::infallibleGetUnresolvedName(JSContext* cx) {
   }
 
   return cx->names().empty;
+}
+
+/* static */ inline bool JSFunction::getAllocKindForThis(
+    JSContext* cx, js::HandleFunction func, js::gc::AllocKind& allocKind) {
+  JSScript* script = getOrCreateScript(cx, func);
+  if (!script) {
+    return false;
+  }
+
+  size_t propertyCountEstimate =
+      script->immutableScriptData()->propertyCountEstimate;
+
+  // Choose the alloc assuming at least the default NewObjectKind slots, but
+  // bigger if our estimate shows we need it.
+  allocKind = js::gc::GetGCObjectKind(std::max(
+      js::gc::GetGCKindSlots(js::NewObjectGCKind()), propertyCountEstimate));
+  return true;
 }
 
 #endif /* vm_JSFunction_inl_h */
