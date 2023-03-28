@@ -3986,7 +3986,9 @@ nsresult Http2Session::OnWriteSegment(char* buf, uint32_t count,
     *countWritten = count;
 
     if (mFlatHTTPResponseHeaders.Length() == mFlatHTTPResponseHeadersOut) {
-      if (!mInputFrameFinal) {
+      // Since mInputFrameFinal can be reset, we need to also check RecvdFin to
+      // see if a stream doesn’t expect more frames.
+      if (!mInputFrameFinal && !mInputFrameDataStream->RecvdFin()) {
         // If more frames are expected in this stream, then reset the state so
         // they can be handled. Otherwise (e.g. a 0 length response with the fin
         // on the incoming headers) stay in PROCESSING_COMPLETE_HEADERS state so
