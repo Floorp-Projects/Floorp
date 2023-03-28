@@ -265,5 +265,5 @@ enums:
         description: A banner in the homescreen.
       notification:
         description: A local notification in the background, like a push notification.
-      fullscreen:
-        description: A full screen dialog that is intended to be disruptive.
+      survey:
+        description: A survey dialog that is intended to be disruptive.
