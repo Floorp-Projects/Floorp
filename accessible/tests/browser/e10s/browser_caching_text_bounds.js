@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
+requestLongerTimeout(3);
 
 /* import-globals-from ../../mochitest/layout.js */
 loadScripts({ name: "layout.js", dir: MOCHITESTS_DIR });
@@ -671,4 +672,35 @@ foo</p>
     );
   },
   { chrome: true, topLevel: !isWinNoCache, remoteIframe: !isWinNoCache }
+);
+
+/**
+ * Test character bounds in an intervening inline element with non-br line breaks
+ */
+addAccessibleTask(
+  `
+  <style>
+    @font-face {
+      font-family: Ahem;
+      src: url(${CURRENT_CONTENT_DIR}e10s/fonts/Ahem.sjs);
+    }
+    pre {
+      font: 20px/20px Ahem;
+    }
+  </style>
+  <pre><code id="t" role="group">XX
+XXX
+XX
+X</pre>`,
+  async function(browser, docAcc) {
+    await testChar(docAcc, browser, "t", 0);
+    await testChar(docAcc, browser, "t", 3);
+    await testChar(docAcc, browser, "t", 7);
+    await testChar(docAcc, browser, "t", 10);
+  },
+  {
+    chrome: true,
+    topLevel: !isWinNoCache,
+    iframe: !isWinNoCache,
+  }
 );
