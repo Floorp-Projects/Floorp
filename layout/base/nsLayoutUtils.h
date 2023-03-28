@@ -2817,7 +2817,6 @@ class nsLayoutUtils {
   static nsMargin ScrollbarAreaToExcludeFromCompositionBoundsFor(
       const nsIFrame* aScrollFrame);
 
-  static bool ShouldUseNoScriptSheet(mozilla::dom::Document*);
   static bool ShouldUseNoFramesSheet(mozilla::dom::Document*);
 
   /**

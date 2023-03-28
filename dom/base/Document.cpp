@@ -3180,10 +3180,6 @@ void Document::FillStyleSetUserAndUASheets() {
     mStyleSet->AppendStyleSheet(*cache->NoFramesSheet());
   }
 
-  if (nsLayoutUtils::ShouldUseNoScriptSheet(this)) {
-    mStyleSet->AppendStyleSheet(*cache->NoScriptSheet());
-  }
-
   mStyleSet->AppendStyleSheet(*cache->CounterStylesSheet());
 
   // Only load the full XUL sheet if we'll need it.
