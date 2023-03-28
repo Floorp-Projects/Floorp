@@ -50,6 +50,7 @@ import mozilla.components.ui.icons.R as iconsR
 @Suppress("LongParameterList", "LongMethod")
 fun CFRPopupContent(
     popupBodyColors: List<Int>,
+    showDismissButton: Boolean,
     dismissButtonColor: Int,
     indicatorDirection: CFRPopup.IndicatorDirection,
     indicatorArrowStartOffset: Dp,
@@ -103,7 +104,7 @@ fun CFRPopupContent(
             ) {
                 Box(
                     modifier = Modifier.padding(
-                        end = if(showDismissButton) 24.dp else 16.dp, // 8.dp extra padding to the "X" icon
+                        end = if (showDismissButton) 24.dp else 16.dp, // 8.dp extra padding to the "X" icon
                     ),
                 ) {
                     text()
@@ -147,6 +148,7 @@ fun CFRPopupContent(
 private fun CFRPopupAbovePreview() {
     CFRPopupContent(
         popupBodyColors = listOf(Color.Cyan.toArgb(), Color.Blue.toArgb()),
+        showDismissButton = true,
         dismissButtonColor = Color.Black.toArgb(),
         indicatorDirection = DOWN,
         indicatorArrowStartOffset = CFRPopup.DEFAULT_INDICATOR_START_OFFSET.dp,
@@ -163,6 +165,7 @@ private fun CFRPopupAbovePreview() {
 private fun CFRPopupBelowPreview() {
     CFRPopupContent(
         popupBodyColors = listOf(Color.Cyan.toArgb(), Color.Blue.toArgb()),
+        showDismissButton = true,
         dismissButtonColor = Color.Black.toArgb(),
         indicatorDirection = UP,
         indicatorArrowStartOffset = CFRPopup.DEFAULT_INDICATOR_START_OFFSET.dp,

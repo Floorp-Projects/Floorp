@@ -181,6 +181,7 @@ internal class CFRPopupFullscreenLayout(
         ) {
             CFRPopupContent(
                 popupBodyColors = properties.popupBodyColors,
+                showDismissButton = properties.showDismissButton,
                 dismissButtonColor = properties.dismissButtonColor,
                 indicatorDirection = properties.indicatorDirection,
                 indicatorArrowStartOffset = with(LocalDensity.current) {

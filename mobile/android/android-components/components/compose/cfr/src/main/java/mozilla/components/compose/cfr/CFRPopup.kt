@@ -44,6 +44,7 @@ data class CFRPopupProperties(
     val popupAlignment: PopupAlignment = PopupAlignment.BODY_TO_ANCHOR_CENTER,
     val popupBodyColors: List<Int> = listOf(Color.Blue.toArgb()),
     val popupVerticalOffset: Dp = CFRPopup.DEFAULT_VERTICAL_OFFSET.dp,
+    val showDismissButton: Boolean = true,
     val dismissButtonColor: Int = Color.Black.toArgb(),
     val dismissOnBackPress: Boolean = false,
     val dismissOnClickOutside: Boolean = false,
