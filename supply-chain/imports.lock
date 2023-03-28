@@ -218,90 +218,6 @@ criteria = "safe-to-deploy"
 version = "55.0.0"
 notes = "The Bytecode Alliance is the author of this crate."
 
-[[audits.chromeos.audits.fastrand]]
-who = "George Burgess IV <gbiv@google.com>"
-criteria = "safe-to-deploy"
-version = "1.9.0"
-notes = """
-`does-not-implement-crypto` is certified because this crate explicitly says
-that the RNG here is not cryptographically secure.
-"""
-
-[[audits.chromeos.audits.h2]]
-who = "ChromeOS"
-criteria = "safe-to-run"
-version = "0.3.14"
-
-[[audits.chromeos.audits.http]]
-who = "ChromeOS"
-criteria = "safe-to-run"
-version = "0.2.8"
-
-[[audits.chromeos.audits.http-body]]
-who = "ChromeOS"
-criteria = "safe-to-run"
-version = "0.4.5"
-
-[[audits.chromeos.audits.httpdate]]
-who = "ChromeOS"
-criteria = "safe-to-run"
-version = "1.0.2"
-
-[[audits.chromeos.audits.hyper]]
-who = "ChromeOS"
-criteria = "safe-to-run"
-version = "0.14.20"
-
-[[audits.chromeos.audits.pin-project]]
-who = "ChromeOS"
-criteria = "safe-to-run"
-version = "1.0.12"
-
-[[audits.chromeos.audits.pin-project-internal]]
-who = "ChromeOS"
-criteria = "safe-to-run"
-version = "1.0.12"
-
-[[audits.chromeos.audits.serde_urlencoded]]
-who = "ChromeOS"
-criteria = "safe-to-run"
-version = "0.7.1"
-
-[[audits.chromeos.audits.tower-service]]
-who = "ChromeOS"
-criteria = "safe-to-run"
-version = "0.3.2"
-
-[[audits.chromeos.audits.tracing]]
-who = "ChromeOS"
-criteria = "safe-to-run"
-version = "0.1.35"
-
-[[audits.chromeos.audits.tracing-attributes]]
-who = "ChromeOS"
-criteria = "safe-to-run"
-version = "0.1.22"
-
-[[audits.chromeos.audits.tracing-core]]
-who = "ChromeOS"
-criteria = "safe-to-run"
-version = "0.1.29"
-
-[[audits.chromeos.audits.try-lock]]
-who = "ChromeOS"
-criteria = "safe-to-run"
-version = "0.2.3"
-
-[[audits.chromeos.audits.version_check]]
-who = "George Burgess IV <gbiv@google.com>"
-criteria = "safe-to-deploy"
-version = "0.9.4"
-
-[[audits.chromeos.audits.want]]
-who = "ChromeOS"
-criteria = "safe-to-run"
-version = "0.3.0"
-
 [[audits.embark-studios.audits.anyhow]]
 who = "Johan Andersson <opensource@embark-studios.com>"
 criteria = "safe-to-deploy"
@@ -322,6 +238,90 @@ version = "0.6.0"
 who = "Johan Andersson <opensource@embark-studios.com>"
 criteria = "safe-to-run"
 version = "0.6.0"
+
+[[audits.google.audits.fastrand]]
+who = "George Burgess IV <gbiv@google.com>"
+criteria = "safe-to-deploy"
+version = "1.9.0"
+notes = """
+`does-not-implement-crypto` is certified because this crate explicitly says
+that the RNG here is not cryptographically secure.
+"""
+
+[[audits.google.audits.h2]]
+who = "ChromeOS"
+criteria = "safe-to-run"
+version = "0.3.14"
+
+[[audits.google.audits.http]]
+who = "ChromeOS"
+criteria = "safe-to-run"
+version = "0.2.8"
+
+[[audits.google.audits.http-body]]
+who = "ChromeOS"
+criteria = "safe-to-run"
+version = "0.4.5"
+
+[[audits.google.audits.httpdate]]
+who = "ChromeOS"
+criteria = "safe-to-run"
+version = "1.0.2"
+
+[[audits.google.audits.hyper]]
+who = "ChromeOS"
+criteria = "safe-to-run"
+version = "0.14.20"
+
+[[audits.google.audits.pin-project]]
+who = "ChromeOS"
+criteria = "safe-to-run"
+version = "1.0.12"
+
+[[audits.google.audits.pin-project-internal]]
+who = "ChromeOS"
+criteria = "safe-to-run"
+version = "1.0.12"
+
+[[audits.google.audits.serde_urlencoded]]
+who = "ChromeOS"
+criteria = "safe-to-run"
+version = "0.7.1"
+
+[[audits.google.audits.tower-service]]
+who = "ChromeOS"
+criteria = "safe-to-run"
+version = "0.3.2"
+
+[[audits.google.audits.tracing]]
+who = "ChromeOS"
+criteria = "safe-to-run"
+version = "0.1.35"
+
+[[audits.google.audits.tracing-attributes]]
+who = "ChromeOS"
+criteria = "safe-to-run"
+version = "0.1.22"
+
+[[audits.google.audits.tracing-core]]
+who = "ChromeOS"
+criteria = "safe-to-run"
+version = "0.1.29"
+
+[[audits.google.audits.try-lock]]
+who = "ChromeOS"
+criteria = "safe-to-run"
+version = "0.2.3"
+
+[[audits.google.audits.version_check]]
+who = "George Burgess IV <gbiv@google.com>"
+criteria = "safe-to-deploy"
+version = "0.9.4"
+
+[[audits.google.audits.want]]
+who = "ChromeOS"
+criteria = "safe-to-run"
+version = "0.3.0"
 
 [[audits.isrg.audits.block-buffer]]
 who = "David Cook <dcook@divviup.org>"
