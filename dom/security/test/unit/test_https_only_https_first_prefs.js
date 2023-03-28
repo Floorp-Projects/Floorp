@@ -266,7 +266,10 @@ function ChannelListener() {}
 
 ChannelListener.prototype = {
   onStartRequest(request) {
-    // dummy implementation
+    var chan = request.QueryInterface(Ci.nsIChannel);
+    var httpChan = chan.QueryInterface(Ci.nsIHttpChannel);
+    var authHeader = httpChan.getRequestHeader("Authorization");
+    Assert.equal(authHeader, "Basic user:pass", curTest.description);
   },
   onDataAvailable(request, stream, offset, count) {
     do_throw("Should not get any data!");
@@ -323,6 +326,7 @@ function setUpChannel() {
   });
   chan.QueryInterface(Ci.nsIHttpChannel);
   chan.requestMethod = "GET";
+  chan.setRequestHeader("Authorization", "Basic user:pass", false);
   return chan;
 }
 

@@ -2582,6 +2582,33 @@ bool NS_IsHSTSUpgradeRedirect(nsIChannel* aOldChannel, nsIChannel* aNewChannel,
   return NS_SUCCEEDED(upgradedURI->Equals(newURI, &res)) && res;
 }
 
+bool NS_ShouldRemoveAuthHeaderOnRedirect(nsIChannel* aOldChannel,
+                                         nsIChannel* aNewChannel,
+                                         uint32_t aFlags) {
+  // we need to strip Authentication headers for external cross-origin redirects
+  // Howerver, we should NOT strip auth headers for
+  // - internal redirects/HSTS upgrades
+  // - same origin redirects
+  // Ref: https://fetch.spec.whatwg.org/#http-redirect-fetch
+  if ((aFlags & (nsIChannelEventSink::REDIRECT_STS_UPGRADE |
+                 nsIChannelEventSink::REDIRECT_INTERNAL))) {
+    // this is an internal redirect do not strip auth header
+    return false;
+  }
+  nsCOMPtr<nsIURI> oldUri;
+  MOZ_ALWAYS_SUCCEEDS(
+      NS_GetFinalChannelURI(aOldChannel, getter_AddRefs(oldUri)));
+
+  nsCOMPtr<nsIURI> newUri;
+  MOZ_ALWAYS_SUCCEEDS(
+      NS_GetFinalChannelURI(aNewChannel, getter_AddRefs(newUri)));
+
+  nsresult rv = nsContentUtils::GetSecurityManager()->CheckSameOriginURI(
+      newUri, oldUri, false, false);
+
+  return NS_FAILED(rv);
+}
+
 nsresult NS_LinkRedirectChannels(uint64_t channelId,
                                  nsIParentChannel* parentChannel,
                                  nsIChannel** _result) {
