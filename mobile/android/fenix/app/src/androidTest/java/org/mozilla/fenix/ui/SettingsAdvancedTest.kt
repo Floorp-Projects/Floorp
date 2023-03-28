@@ -10,6 +10,7 @@ import mozilla.components.concept.engine.utils.EngineReleaseChannel
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -263,6 +264,7 @@ class SettingsAdvancedTest {
     }
 
     // Assumes Play Store is installed and enabled
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1824928")
     @SmokeTest
     @Test
     fun askBeforeOpeningLinkInAppTest() {
@@ -301,6 +303,7 @@ class SettingsAdvancedTest {
     }
 
     // Assumes Play Store is installed and enabled
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1824928")
     @SmokeTest
     @Test
     fun privateBrowsingAskBeforeOpeningLinkInAppTest() {
@@ -342,6 +345,7 @@ class SettingsAdvancedTest {
     }
 
     // Assumes Play Store is installed and enabled
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1824928")
     @SmokeTest
     @Test
     fun alwaysOpenLinkInAppTest() {
@@ -378,6 +382,7 @@ class SettingsAdvancedTest {
     }
 
     // Assumes Play Store is installed and enabled
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1824928")
     @SmokeTest
     @Test
     fun privateBrowsingAlwaysOpenLinkInAppTest() {
