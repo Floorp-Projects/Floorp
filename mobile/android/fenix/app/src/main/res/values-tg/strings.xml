@@ -537,7 +537,7 @@
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Ҷузъҳои иловагӣ</string>
     <!-- Preference for notifications -->
-    <string name="preferences_notifications">Огоҳиномаҳо</string>
+    <string name="preferences_notifications">Огоҳномаҳо</string>
 
     <!-- Summary for notification preference indicating notifications are allowed -->
     <string name="notifications_allowed_summary">Иҷозат дода мешавад</string>
@@ -661,7 +661,7 @@
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Варақаҳо аз дастгоҳҳои дигар</string>
     <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
-    <string name="fxa_received_tab_channel_description">Огоҳиномаҳо дар бораи варақаҳое, ки аз дигар дастгоҳҳои Firefox гирифта шудаанд.</string>
+    <string name="fxa_received_tab_channel_description">Огоҳномаҳо дар бораи варақаҳое, ки аз дигар дастгоҳҳои Firefox гирифта шудаанд.</string>
     <!--  The body for these is the URL of the tab received  -->
     <string name="fxa_tab_received_notification_name">Варақаи қабулшуда</string>
     <!-- %s is the device name -->
@@ -1088,7 +1088,7 @@
     <string name="preference_phone_feature_location">Ҷойгиршавӣ</string>
 
     <!-- Preference for altering the notification access for all websites -->
-    <string name="preference_phone_feature_notification">Огоҳинома</string>
+    <string name="preference_phone_feature_notification">Огоҳнома</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Захирагоҳи доимӣ</string>
     <!-- Preference for altering the storage access setting for all websites -->
@@ -1438,7 +1438,7 @@
     <!-- Text for the privacy notice onboarding card description. -->
     <string name="onboarding_privacy_notice_description">Браузери «Firefox» имкон медиҳад, ки шумо тавонед он чизҳоеро, ки дар онлайн ва бо мо мубодила мекунед, мустақилона идора намоед.</string>
     <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Огоҳиномаи махфияти моро хонед</string>
+    <string name="onboarding_privacy_notice_read_button">Огоҳномаи махфияти моро хонед</string>
 
     <!-- Text for the conclusion onboarding message -->
     <string name="onboarding_conclusion_header">Шумо барои боз кардани Интернети ҳайратангез омода ҳастед?</string>
@@ -1610,7 +1610,7 @@
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
     <string name="about_crashes">Вайрониҳо</string>
     <!-- About page link text to open privacy notice link -->
-    <string name="about_privacy_notice">Огоҳиномаи махфият</string>
+    <string name="about_privacy_notice">Огоҳномаи махфият</string>
     <!-- About page link text to open know your rights link -->
     <string name="about_know_your_rights">Ҳуқуқҳои худро донед</string>
     <!-- About page link text to open licensing information link -->

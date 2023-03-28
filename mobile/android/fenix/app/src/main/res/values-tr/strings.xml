@@ -88,7 +88,7 @@
     <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
     <string name="tcp_cfr_message">Şimdiye kadarki en güçlü gizlilik özelliğimiz, siteler arası takip kodlarını izole ediyor.</string>
     <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
-    <string name="tcp_cfr_learn_more">Komple çerez koruması hakkında bilgi al</string>
+    <string name="tcp_cfr_learn_more">Komple Çerez Koruması hakkında bilgi al</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Kamera erişimi gerekiyor. Android ayarlarına gidin, izinlere girin ve izin verin.</string>
@@ -327,6 +327,9 @@
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_enable_notifications_title" tools:ignore="UnusedResources">Bildirimler sayesinde %s ile daha fazlasını yapın</string>
+    <!-- Description for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_description" tools:ignore="UnusedResources">Sekmelerinizi cihazdan cihaza gönderin, indirmelerinizi yönetin ve %s ile ilgili ipuçları alın.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Bildirimleri aç</string>
 
@@ -1407,7 +1410,7 @@
     <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
     <string name="onboarding_tracking_protection_description_old">%1$s şirketlerin sizi web’de gizlice takip etmesini otomatik olarak engeller.</string>
     <!-- Text for the tracking protection card description. -->
-    <string name="onboarding_tracking_protection_description">Komple çerez koruması, takip kodlarının sizi web’de takip etmek için çerezleri kullanmasını engeller.</string>
+    <string name="onboarding_tracking_protection_description">Komple Çerez Koruması, takip kodlarının sizi web’de takip etmek için çerezleri kullanmasını engeller.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standart (varsayılan)</string>
     <!-- text for standard blocking option button description -->
@@ -1483,6 +1486,8 @@
     <string name="preference_enhanced_tracking_protection">Gelişmiş izlenme koruması</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">Takip edilmeden gezinin</string>
+    <!-- Preference summary for enhanced tracking protection settings on/off switch -->
+    <string name="preference_enhanced_tracking_protection_summary" tools:ignore="UnusedResources">Siteler arası takip kodlarına karşı en güçlü korumamız olan Komple Çerez Koruması da içinde.</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation">Verileriniz sizde kalsın. %s, internette ne yaptığınızı öğrenmeye çalışan takipçilerin çoğundan sizi korur.</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
@@ -1551,7 +1556,7 @@
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Reklam ağlarının ve analitik şirketlerinin farklı siteler arasındaki gezintilerinizi izlemek için kullandığı çerezleri engeller.</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_description_2">Komple çerez koruması, çerezleri sadece bulunduğunuz sitenin kullanabileceği şekilde izole eder. Bu sayede, reklam ağları hangi sitelerde gezindiğinizi izlemek için çerezleri kullanamaz.</string>
+    <string name="etp_cookies_description_2">Komple Çerez Koruması, çerezleri sadece bulunduğunuz sitenin kullanabileceği şekilde izole eder. Bu sayede, reklam ağları hangi sitelerde gezindiğinizi izlemek için çerezleri kullanamaz.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Kripto madencileri</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->

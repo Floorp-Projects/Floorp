@@ -35,6 +35,15 @@
     <!-- The document title and heading of the error page shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">ይህ ድረ-ገፅ ደህንነቱ የተጠበቀ ግንኙነት ይፈልጋል።</string>
 
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>ለማየት የሞከሩት ገጽ ሊታይ አይችልም ምክንያቱም ይህ ድረ-ገጽ ደህንነቱ የተጠበቀ ግንኙነት ስለሚያስፈልገው።</li>
+         <li>ጉዳዩ ከድረ-ገፁ ሊሆን ይችላል፣ እና እሱን ለመፍታት እርስዎ  ምንም ማድረግ አይችሉም።</li>
+         <li>ስለ ችግሩ የድረ-ገፁን አስተዳዳሪ ማሳወቅ ይችላሉ።</li>
+      </ul>
+    ]]></string>
+
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">የላቀ…</string>
 

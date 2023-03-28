@@ -57,7 +57,7 @@
     <!-- Description for native_messaging permission. -->
     <string name="mozac_feature_addons_permissions_native_messaging_description">Мубодила кардани паёмҳо бо барномаҳо ба ғайр аз барномаи ҷорӣ</string>
     <!-- Description for notifications permission. -->
-    <string name="mozac_feature_addons_permissions_notifications_description">Намоиш додани огоҳиномаҳо ба шумо</string>
+    <string name="mozac_feature_addons_permissions_notifications_description">Намоиш додани огоҳномаҳо ба шумо</string>
     <!-- Description for pkcs11 permission. -->
     <string name="mozac_feature_addons_permissions_pkcs11_description">Таъмин намудани хидматҳои санҷиши ҳаққоният бо нақши рамзӣ</string>
     <!-- Description for proxy permission. -->

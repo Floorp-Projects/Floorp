@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Title of a dialog for a notification permission request. -->
-    <string name="mozac_feature_sitepermissions_notification_title">Ба %1$s барои фиристодани огоҳиномаҳо иҷозат медиҳед?</string>
+    <string name="mozac_feature_sitepermissions_notification_title">Ба %1$s барои фиристодани огоҳномаҳо иҷозат медиҳед?</string>
     <!-- Title of a dialog for a camera permission request. -->
     <string name="mozac_feature_sitepermissions_camera_title">Ба %1$s барои истифодаи камераи шумо иҷозат медиҳед?</string>
     <!-- Title of a dialog for a microphone permission request. -->
