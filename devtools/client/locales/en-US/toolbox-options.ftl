@@ -44,6 +44,12 @@ options-inspector-draggable-properties-label = Click and drag to edit size value
 options-inspector-draggable-properties-tooltip =
     .title = Click and drag to edit size values in the inspector rules view.
 
+# The label for the checkbox option to enable simplified highlighting on page elements
+# within the inspector for users who enabled prefers-reduced-motion = reduce
+options-inspector-simplified-highlighters-label = Use simpler highlighters with prefers-reduced-motion
+options-inspector-simplified-highlighters-tooltip =
+    .title = Enables simplified highlighters when prefers-reduced-motion is enabled. Draws lines instead of filled rectangles around highlighted elements to avoid flashing effects.
+
 ## "Default Color Unit" options for the Inspector
 
 options-default-color-unit-label = Default color unit

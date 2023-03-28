@@ -13,6 +13,9 @@ add_task(async function() {
   info("Disable ui.prefersReducedMotion");
   await pushPref("ui.prefersReducedMotion", 0);
 
+  info("Enable simple highlighters");
+  await pushPref("devtools.inspector.simple-highlighters-reduced-motion", true);
+
   const { highlighterTestFront, inspector } = await openInspectorForURL(
     TEST_URL
   );
