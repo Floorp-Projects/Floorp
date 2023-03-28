@@ -233,6 +233,71 @@ add_task(async function testTabActivationEvent() {
   await extension.awaitFinish("tabs-events");
   await extension.unload();
 });
+
+add_task(async function test_tabs_event_page() {
+  async function background() {
+    const EVENTS = [
+      "onActivated",
+      "onRemoved",
+      "onUpdated",
+    ];
+    browser.tabs.onCreated.addListener(() => {
+      browser.test.sendMessage("onCreated");
+    });
+    for (const event of EVENTS) {
+      browser.tabs[event].addListener(() => {
+      });
+    }
+    browser.test.sendMessage("ready");
+    await browser.tabs.create({url: "about:blank"});
+  }
+
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      browser_specific_settings: { gecko: { id: "eventpage@tabs" } },
+      "permissions": ["tabs"],
+      background: { persistent: false },
+    },
+    background,
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("ready");
+  await extension.awaitMessage("onCreated");
+
+  async function assertPersistentListeners(extension, primed) {
+    const EVENTS = [
+      "onActivated",
+      "onCreated",
+      "onRemoved",
+      "onUpdated",
+    ];
+    await SpecialPowers.spawnChrome([extension.id, EVENTS, primed], async (id, EVENTS, expectedPrimed) => {
+      const { ExtensionTestCommon } = ChromeUtils.import("resource://testing-common/ExtensionTestCommon.jsm");
+      const ext = { id };
+      for (const event of EVENTS) {
+        ExtensionTestCommon.testAssertions.assertPersistentListeners(ext, "tabs", event, {
+          primed: expectedPrimed,
+        });
+      }
+    });
+  }
+
+  // on startup, all event listeners should not be primed
+  await assertPersistentListeners(extension, false);
+
+  // when the extension is killed, all event listeners should be primed
+  await extension.terminateBackground();
+  await assertPersistentListeners(extension, true);
+
+  // on start up again, all event listeners should not be primed
+  await extension.wakeupBackground();
+  await extension.awaitMessage("ready");
+  await assertPersistentListeners(extension, false);
+
+  await extension.unload();
+});
+
 </script>
 
 </body>

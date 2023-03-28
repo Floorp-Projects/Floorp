@@ -562,8 +562,8 @@ class MobileWindowTracker extends EventEmitter {
   }
 
   setTabActive(aWindow, aActive) {
-    const { browser, tab, docShell } = aWindow;
-    tab.active = aActive;
+    const { browser, tab: nativeTab, docShell } = aWindow;
+    nativeTab.active = aActive;
 
     if (aActive) {
       this._topWindow = Cu.getWeakReference(aWindow);
@@ -573,8 +573,9 @@ class MobileWindowTracker extends EventEmitter {
       }
       this.emit("tab-activated", {
         windowId: docShell.outerWindowID,
-        tabId: tab.id,
+        tabId: nativeTab.id,
         isPrivate,
+        nativeTab,
       });
     }
   }
