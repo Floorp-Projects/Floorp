@@ -733,7 +733,7 @@ export class SearchSuggestionController {
    * @returns {SearchSuggestionEntry}
    */
   #newSearchSuggestionEntry(suggestion, richSuggestionData, trending) {
-    if (richSuggestionData) {
+    if (!trending && richSuggestionData) {
       // We have valid rich suggestions.
       return new SearchSuggestionEntry(suggestion, {
         matchPrefix: richSuggestionData?.mp,
