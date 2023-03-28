@@ -182,6 +182,25 @@ exports.shortSource = function(sheet) {
   return sheet.href;
 };
 
+/**
+ * Return the style sheet's source, handling element, inline and constructed stylesheets.
+ *
+ * @param {CSSStyleSheet} sheet the DOM object for the style sheet.
+ */
+exports.longSource = function(sheet) {
+  if (!sheet) {
+    return exports.l10n("rule.sourceInline");
+  }
+
+  if (!sheet.href) {
+    return exports.l10n(
+      sheet.constructed ? "rule.sourceConstructed" : "rule.sourceInline"
+    );
+  }
+
+  return sheet.href;
+};
+
 const TAB_CHARS = "\t";
 const SPACE_CHARS = " ";
 

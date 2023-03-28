@@ -24,6 +24,11 @@ const DOCUMENT_URL =
    div { color: #f06; }
    </style>
    <link rel="stylesheet" type="text/css" href="${STYLESHEET_URL}">
+   <script>
+     const sheet = new CSSStyleSheet();
+     sheet.replaceSync(".highlight { color: tomato; }");
+     document.adoptedStyleSheets.push(sheet);
+   </script>
    </head>
    <body>
    <h1>Some header text</h1>
@@ -52,6 +57,7 @@ add_task(async function() {
   await testFirstInlineStyleSheet(view, toolbox);
   await testSecondInlineStyleSheet(view, toolbox);
   await testExternalStyleSheet(view, toolbox);
+  await testConstructedStyleSheet(view, toolbox);
 });
 
 async function testInlineStyle(view) {
@@ -61,7 +67,11 @@ async function testInlineStyle(view) {
 
   const onTab = waitForTab();
   info("Clicking on the first rule-link in the computed-view");
-  clickLinkByIndex(view, 0);
+  checkComputedViewLink(view, {
+    index: 0,
+    expectedText: "element",
+    expectedTitle: "element",
+  });
 
   const tab = await onTab;
 
@@ -78,7 +88,11 @@ async function testFirstInlineStyleSheet(view, toolbox) {
   const onSwitch = waitForStyleEditor(toolbox);
 
   info("Clicking an inline stylesheet");
-  clickLinkByIndex(view, 2);
+  checkComputedViewLink(view, {
+    index: 3,
+    expectedText: "inline:3",
+    expectedTitle: "inline:3",
+  });
   const editor = await onSwitch;
 
   ok(true, "Switched to the style-editor panel in the toolbox");
@@ -89,7 +103,6 @@ async function testFirstInlineStyleSheet(view, toolbox) {
 async function testSecondInlineStyleSheet(view, toolbox) {
   info("Testing second inline stylesheet");
 
-  info("Waiting for the stylesheet editor to be selected");
   const panel = toolbox.getCurrentPanel();
   const onSelected = panel.UI.once("editor-selected");
 
@@ -97,7 +110,13 @@ async function testSecondInlineStyleSheet(view, toolbox) {
   await toolbox.selectTool("inspector");
 
   info("Clicking on second inline stylesheet link");
-  clickLinkByIndex(view, 4);
+  checkComputedViewLink(view, {
+    index: 5,
+    expectedText: "inline:2",
+    expectedTitle: "inline:2",
+  });
+
+  info("Waiting for an editor to be selected in StyleEditor");
   const editor = await onSelected;
 
   is(
@@ -111,7 +130,6 @@ async function testSecondInlineStyleSheet(view, toolbox) {
 async function testExternalStyleSheet(view, toolbox) {
   info("Testing external stylesheet");
 
-  info("Waiting for the stylesheet editor to be selected");
   const panel = toolbox.getCurrentPanel();
   const onSelected = panel.UI.once("editor-selected");
 
@@ -119,7 +137,13 @@ async function testExternalStyleSheet(view, toolbox) {
   await toolbox.selectTool("inspector");
 
   info("Clicking on an external stylesheet link");
-  clickLinkByIndex(view, 1);
+  checkComputedViewLink(view, {
+    index: 2,
+    expectedText: `${STYLESHEET_URL.replace("data:text/css,", "")}:1`,
+    expectedTitle: `${STYLESHEET_URL}:1`,
+  });
+
+  info("Waiting for an editor to be selected in StyleEditor");
   const editor = await onSelected;
 
   is(
@@ -128,6 +152,34 @@ async function testExternalStyleSheet(view, toolbox) {
     "The style editor is selected again"
   );
   await validateStyleEditorSheet(editor, 2);
+}
+
+async function testConstructedStyleSheet(view, toolbox) {
+  info("Testing constructed stylesheet");
+
+  const panel = toolbox.getCurrentPanel();
+  const onSelected = panel.UI.once("editor-selected");
+
+  info("Switching back to the inspector panel in the toolbox");
+  await toolbox.selectTool("inspector");
+
+  info("Clicking on an constructed stylesheet link");
+
+  checkComputedViewLink(view, {
+    index: 1,
+    expectedText: "constructed",
+    expectedTitle: "constructed",
+  });
+
+  info("Waiting for an editor to be selected in StyleEditor");
+  const editor = await onSelected;
+
+  is(
+    toolbox.currentToolId,
+    "styleeditor",
+    "The style editor is selected again"
+  );
+  ok(editor.styleSheet.constructed, "The constructed stylesheet is selected");
 }
 
 async function validateStyleEditorSheet(editor, expectedSheetIndex) {
@@ -145,8 +197,14 @@ async function validateStyleEditorSheet(editor, expectedSheetIndex) {
   );
 }
 
-function clickLinkByIndex(view, index) {
+function checkComputedViewLink(view, { index, expectedText, expectedTitle }) {
   const link = getComputedViewLinkByIndex(view, index);
+  is(link.innerText, expectedText, `Link #${index} has expected label`);
+  is(
+    link.getAttribute("title"),
+    expectedTitle,
+    `Link #${index} has expected title attribute`
+  );
   link.scrollIntoView();
   link.click();
 }
