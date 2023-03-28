@@ -16,6 +16,7 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketStoriesController
+import org.mozilla.fenix.home.privatebrowsing.controller.PrivateBrowsingController
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.home.recentbookmarks.controller.RecentBookmarksController
 import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTab
@@ -34,6 +35,7 @@ class SessionControlInteractorTest {
     private val recentSyncedTabController: RecentSyncedTabController = mockk(relaxed = true)
     private val recentBookmarksController: RecentBookmarksController = mockk(relaxed = true)
     private val pocketStoriesController: PocketStoriesController = mockk(relaxed = true)
+    private val privateBrowsingController: PrivateBrowsingController = mockk(relaxed = true)
     private val onboardingController: OnboardingController = mockk(relaxed = true)
     private val toolbarController: ToolbarController = mockk(relaxed = true)
 
@@ -51,6 +53,7 @@ class SessionControlInteractorTest {
             recentBookmarksController,
             recentVisitsController,
             pocketStoriesController,
+            privateBrowsingController,
             onboardingController,
             toolbarController,
         )
@@ -101,8 +104,8 @@ class SessionControlInteractorTest {
 
     @Test
     fun onPrivateBrowsingLearnMoreClicked() {
-        interactor.onPrivateBrowsingLearnMoreClicked()
-        verify { controller.handlePrivateBrowsingLearnMoreClicked() }
+        interactor.onLearnMoreClicked()
+        verify { privateBrowsingController.handleLearnMoreClicked() }
     }
 
     @Test
@@ -215,7 +218,7 @@ class SessionControlInteractorTest {
         val hasBeenOnboarded = true
 
         interactor.onPrivateModeButtonClicked(newMode, hasBeenOnboarded)
-        verify { controller.handlePrivateModeButtonClicked(newMode, hasBeenOnboarded) }
+        verify { privateBrowsingController.handlePrivateModeButtonClicked(newMode, hasBeenOnboarded) }
     }
 
     @Test

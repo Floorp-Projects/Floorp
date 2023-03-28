@@ -39,7 +39,6 @@ import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator
-import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.AppStore
@@ -49,17 +48,14 @@ import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.gleanplumb.Message
 import org.mozilla.fenix.gleanplumb.MessageController
 import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.home.HomeFragmentDirections
-import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.onboarding.WallpaperOnboardingDialogFragment.Companion.THUMBNAILS_SELECTION_COUNT
 import org.mozilla.fenix.search.toolbar.SearchSelectorInteractor
 import org.mozilla.fenix.search.toolbar.SearchSelectorMenu
 import org.mozilla.fenix.settings.SupportUtils
-import org.mozilla.fenix.settings.SupportUtils.SumoTopic.PRIVATE_BROWSING_MYTHS
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.wallpapers.Wallpaper
 import org.mozilla.fenix.wallpapers.WallpaperState
@@ -105,11 +101,6 @@ interface SessionControlController {
      * @see [TopSiteInteractor.onOpenInPrivateTabClicked]
      */
     fun handleOpenInPrivateTabClicked(topSite: TopSite)
-
-    /**
-     * @see [TabSessionInteractor.onPrivateBrowsingLearnMoreClicked]
-     */
-    fun handlePrivateBrowsingLearnMoreClicked()
 
     /**
      * @see [TopSiteInteractor.onRenameTopSiteClicked]
@@ -165,11 +156,6 @@ interface SessionControlController {
      * @see [MessageCardInteractor.onMessageClosedClicked]
      */
     fun handleMessageClosed(message: Message)
-
-    /**
-     * @see [TabSessionInteractor.onPrivateModeButtonClicked]
-     */
-    fun handlePrivateModeButtonClicked(newMode: BrowsingMode, userHasBeenOnboarded: Boolean)
 
     /**
      * @see [CustomizeHomeIteractor.openCustomizeHomePage]
@@ -299,14 +285,6 @@ class DefaultSessionControlController(
                 from = BrowserDirection.FromHome,
             )
         }
-    }
-
-    override fun handlePrivateBrowsingLearnMoreClicked() {
-        activity.openToBrowserAndLoad(
-            searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(PRIVATE_BROWSING_MYTHS),
-            newTab = true,
-            from = BrowserDirection.FromHome,
-        )
     }
 
     @SuppressLint("InflateParams")
@@ -548,29 +526,6 @@ class DefaultSessionControlController(
 
     override fun handleMessageClosed(message: Message) {
         messageController.onMessageDismissed(message)
-    }
-
-    override fun handlePrivateModeButtonClicked(
-        newMode: BrowsingMode,
-        userHasBeenOnboarded: Boolean,
-    ) {
-        if (newMode == BrowsingMode.Private) {
-            activity.settings().incrementNumTimesPrivateModeOpened()
-        }
-
-        if (userHasBeenOnboarded) {
-            appStore.dispatch(
-                AppAction.ModeChange(Mode.fromBrowsingMode(newMode)),
-            )
-
-            if (navController.currentDestination?.id == R.id.searchDialogFragment) {
-                navController.navigate(
-                    BrowserFragmentDirections.actionGlobalSearchDialog(
-                        sessionId = null,
-                    ),
-                )
-            }
-        }
     }
 
     override fun handleReportSessionMetrics(state: AppState) {

@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LifecycleOwner
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.ComposeViewHolder
-import org.mozilla.fenix.home.sessioncontrol.TabSessionInteractor
+import org.mozilla.fenix.home.privatebrowsing.interactor.PrivateBrowsingInteractor
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -35,12 +35,12 @@ import org.mozilla.fenix.theme.FirefoxTheme
  *
  * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
  * @param viewLifecycleOwner [LifecycleOwner] life cycle owner for the view.
- * @param interactor [TabSessionInteractor] which will have delegated to all user interactions.
+ * @param interactor [PrivateBrowsingInteractor] which will have delegated to all user interactions.
  */
 class PrivateBrowsingDescriptionViewHolder(
     composeView: ComposeView,
     viewLifecycleOwner: LifecycleOwner,
-    val interactor: TabSessionInteractor,
+    val interactor: PrivateBrowsingInteractor,
 ) : ComposeViewHolder(composeView, viewLifecycleOwner) {
 
     init {
@@ -52,7 +52,7 @@ class PrivateBrowsingDescriptionViewHolder(
     @Composable
     override fun Content() {
         PrivateBrowsingDescription(
-            onLearnMoreClick = interactor::onPrivateBrowsingLearnMoreClicked,
+            onLearnMoreClick = interactor::onLearnMoreClicked,
         )
     }
 
