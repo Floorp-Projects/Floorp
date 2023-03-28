@@ -1485,17 +1485,6 @@ class ContentParent final : public PContentParent,
 
   void AssertAlive();
 
-  /**
-   * Called when a subprocess succesfully launches.
-   *
-   * May submit telemetry if the new number of content processes is greater
-   * than the previous maximum.
-   *
-   * This will submit telemetry about the time delta between this content
-   * process launch and the last content process launch.
-   */
-  static void DidLaunchSubprocess();
-
  private:
   // Released in ActorDealloc; deliberately not exposed to the CC.
   RefPtr<ContentParent> mSelfRef;
@@ -1659,7 +1648,6 @@ class ContentParent final : public PContentParent,
 
   static uint32_t sMaxContentProcesses;
   static uint32_t sPageLoadEventCounter;
-  static Maybe<TimeStamp> sLastContentProcessLaunch;
 
   bool mIsSignaledImpendingShutdown = false;
   bool mIsNotifiedShutdownSuccess = false;

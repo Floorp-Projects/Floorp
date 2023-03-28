@@ -28,9 +28,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   WindowsInstallsInfo:
     "resource://gre/modules/components-utils/WindowsInstallsInfo.sys.mjs",
-  clearInterval: "resource://gre/modules/Timer.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
-  setInterval: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
@@ -75,11 +73,7 @@ const UNFILTERED_URI_COUNT_SCALAR_NAME =
 const TOTAL_URI_COUNT_NORMAL_AND_PRIVATE_MODE_SCALAR_NAME =
   "browser.engagement.total_uri_count_normal_and_private_mode";
 
-const CONTENT_PROCESS_COUNT = "CONTENT_PROCESS_COUNT";
-const CONTENT_PROCESS_PRECISE_COUNT = "CONTENT_PROCESS_PRECISE_COUNT";
-
 const MINIMUM_TAB_COUNT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes, in ms
-const CONTENT_PROCESS_COUNT_INTERVAL_MS = 5 * 60 * 1000;
 
 // The elements we consider to be interactive.
 const UI_TARGET_ELEMENTS = [
@@ -451,11 +445,6 @@ let BrowserUsageTelemetry = {
     Services.prefs.addObserver("browser.tabs.inTitlebar", this);
 
     this._recordUITelemetry();
-
-    this._recordContentProcessCountInterval = lazy.setInterval(
-      () => this._recordContentProcessCount(),
-      CONTENT_PROCESS_COUNT_INTERVAL_MS
-    );
   },
 
   /**
@@ -497,8 +486,6 @@ let BrowserUsageTelemetry = {
     }
     Services.obs.removeObserver(this, DOMWINDOW_OPENED_TOPIC);
     Services.obs.removeObserver(this, TELEMETRY_SUBSESSIONSPLIT_TOPIC);
-
-    lazy.clearInterval(this._recordContentProcessCountInterval);
   },
 
   observe(subject, topic, data) {
@@ -1403,19 +1390,6 @@ let BrowserUsageTelemetry = {
       null,
       provenanceExtra
     );
-  },
-
-  /**
-   * Record the number of content processes.
-   */
-  _recordContentProcessCount() {
-    // All DOM processes includes the parent.
-    const count = ChromeUtils.getAllDOMProcesses().length - 1;
-
-    Services.telemetry.getHistogramById(CONTENT_PROCESS_COUNT).add(count);
-    Services.telemetry
-      .getHistogramById(CONTENT_PROCESS_PRECISE_COUNT)
-      .add(count);
   },
 };
 

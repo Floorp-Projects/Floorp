@@ -340,46 +340,12 @@
   "CONTENT_PROCESS_LAUNCH_IS_SYNC" : {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
-    "alert_emails": ["jld@mozilla.com", "jimm@mozilla.  com", "mconley@mozilla.com"],
+    "alert_emails": ["jld@mozilla.com", "jimm@mozilla.com", "mconley@mozilla.com"],
     "expires_in_version": "never",
     "bug_numbers": [1474991],
     "kind": "boolean",
     "releaseChannelCollection": "opt-out",
     "description": "Whether a content process was launched synchronously (unnecessarily delaying UI response)."
-  },
-  "CONTENT_PROCESS_COUNT": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "alert_emails": ["barret@mozilla.com", "perf-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "104",
-    "bug_numbers": [1688078, 1745268],
-    "kind": "linear",
-    "high": 500,
-    "n_buckets": 100,
-    "releaseChannelCollection": "opt-out",
-    "description": "A count of the number of content processes, collected every five minutes."
-  },
-  "CONTENT_PROCESS_PRECISE_COUNT": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "alert_emails": ["barret@mozilla.com", "perf-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "104",
-    "bug_numbers": [1722103, 1745268],
-    "kind": "enumerated",
-    "n_values": 100,
-    "releaseChannelCollection": "opt-out",
-    "description": "An enumerated count of the number of content processes, collected every five minutes."
-  },
-  "CONTENT_PROCESS_TIME_SINCE_LAST_LAUNCH_MS": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "alert_emails": ["barret@mozilla.com", "perf-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "104",
-    "bug_numbers": [1688082, 1745268],
-    "kind": "exponential",
-    "high": 600000,
-    "n_buckets": 100,
-    "description": "The time (in milliseconds) since the last content process was launched."
   },
   "COOKIE_BANNERS_CLICK_HANDLE_DURATION_MS": {
     "record_in_processes": ["content"],
