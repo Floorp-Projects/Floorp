@@ -472,6 +472,11 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal(
   return promises;
 }
 
+void RTCRtpSender::GetCapabilities(const GlobalObject&, const nsAString& aKind,
+                                   Nullable<dom::RTCRtpCapabilities>& aResult) {
+  PeerConnectionImpl::GetCapabilities(aKind, aResult, sdp::Direction::kSend);
+}
+
 void RTCRtpSender::WarnAboutBadSetParameters(const nsCString& aError) {
   nsCString warning(
       "WARNING! Invalid setParameters call detected! The good news? Firefox "

@@ -14,6 +14,7 @@
 #include "libwebrtcglue/MediaConduitInterface.h"
 #include "libwebrtcglue/RtpRtcpConfig.h"
 #include "nsTArray.h"
+#include "mozilla/dom/RTCRtpCapabilitiesBinding.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
 #include "PerformanceRecorder.h"
 #include "RTCStatsReport.h"
@@ -34,6 +35,7 @@ namespace dom {
 class MediaStreamTrack;
 class Promise;
 class RTCDtlsTransport;
+struct RTCRtpCapabilities;
 struct RTCRtpContributingSource;
 struct RTCRtpSynchronizationSource;
 class RTCRtpTransceiver;
@@ -59,6 +61,8 @@ class RTCRtpReceiver : public nsISupports,
   // webidl
   MediaStreamTrack* Track() const { return mTrack; }
   RTCDtlsTransport* GetTransport() const;
+  static void GetCapabilities(const GlobalObject&, const nsAString& aKind,
+                              Nullable<dom::RTCRtpCapabilities>& aResult);
   already_AddRefed<Promise> GetStats(ErrorResult& aError);
   void GetContributingSources(
       nsTArray<dom::RTCRtpContributingSource>& aSources);

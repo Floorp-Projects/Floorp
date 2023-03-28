@@ -88,6 +88,9 @@ class JsepSession {
   virtual nsresult AddDtlsFingerprint(const std::string& algorithm,
                                       const std::vector<uint8_t>& value) = 0;
 
+  virtual nsresult AddRtpExtension(
+      JsepMediaType mediaType, const std::string& extensionName,
+      SdpDirectionAttribute::Direction direction) = 0;
   virtual nsresult AddAudioRtpExtension(
       const std::string& extensionName,
       SdpDirectionAttribute::Direction direction) = 0;
@@ -219,6 +222,9 @@ class JsepSession {
       }
     }
   }
+
+  virtual void SetDefaultCodecs(
+      const std::vector<UniquePtr<JsepCodecDescription>>& aPreferredCodecs) = 0;
 
   // See Bug 1642419, this can be removed when all sites are working with RTX.
   void SetRtxIsAllowed(bool aRtxIsAllowed) { mRtxIsAllowed = aRtxIsAllowed; }
