@@ -49,6 +49,7 @@
   display: flex;
   flex-direction: row;
   margin: 0;
+  min-width: 0;
 }
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="login"] > .ac-site-icon,
@@ -65,9 +66,8 @@
 #PopupAutoComplete > richlistbox > richlistitem > .two-line-wrapper > .labels-wrapper {
   /* The text should flex while the icon should not */
   flex: 1;
-  /* width/min-width are needed to get the text-overflow: ellipsis to work for the children */
+  /* min-width is needed to get the text-overflow: ellipsis to work for the children */
   min-width: 0;
-  width: 0;
 }
 
 #PopupAutoComplete > richlistbox > richlistitem > .two-line-wrapper > .labels-wrapper > .label-row {
