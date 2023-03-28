@@ -32,7 +32,8 @@ WebTransportParent::~WebTransportParent() {
 }
 
 void WebTransportParent::Create(
-    const nsAString& aURL, nsIPrincipal* aPrincipal, const bool& aDedicated,
+    const nsAString& aURL, nsIPrincipal* aPrincipal,
+    const IPCClientInfo& aClientInfo, const bool& aDedicated,
     const bool& aRequireUnreliable, const uint32_t& aCongestionControl,
     // Sequence<WebTransportHash>* aServerCertHashes,
     Endpoint<PWebTransportParent>&& aParentEndpoint,
@@ -88,10 +89,12 @@ void WebTransportParent::Create(
       "WebTransport AsyncConnect",
       [self = RefPtr{this}, uri = std::move(uri),
        principal = RefPtr{aPrincipal},
-       flags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL] {
+       flags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
+       aClientInfo] {
         LOG(("WebTransport %p AsyncConnect", self.get()));
-        if (NS_FAILED(self->mWebTransport->AsyncConnect(uri, principal, flags,
-                                                        self))) {
+        if (NS_FAILED(self->mWebTransport->AsyncConnectWithClient(
+                uri, principal, flags, self,
+                mozilla::Some(ClientInfo(aClientInfo))))) {
           LOG(("AsyncConnect failure; we should get OnSessionClosed"));
         }
       });

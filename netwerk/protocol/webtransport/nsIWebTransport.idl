@@ -14,6 +14,9 @@ interface nsIWebTransportSendStream;
 interface nsIWebTransportReceiveStream;
 
 %{C++
+namespace mozilla::dom {
+class ClientInfo;
+}
 namespace mozilla::net {
 class Http3WebTransportSession;
 class Http3WebTransportStream;
@@ -23,6 +26,7 @@ class Http3WebTransportStream;
 [ptr] native Http3WebTransportSessionPtr(mozilla::net::Http3WebTransportSession);
 [ptr] native Http3WebTransportStreamPtr(mozilla::net::Http3WebTransportStream);
 native Datagram(nsTArray<uint8_t>&&);
+[ref] native const_MaybeClientInfoRef(const mozilla::Maybe<mozilla::dom::ClientInfo>);
 
 [builtinclass, scriptable, uuid(c20d6e77-8cb1-4838-a88d-fff826080aa3)]
 interface nsIWebTransport : nsISupports {
@@ -36,6 +40,13 @@ interface nsIWebTransport : nsISupports {
                     in nsIPrincipal aLoadingPrincipal,
                     in unsigned long aSecurityFlags,
                     in WebTransportSessionEventListener aListener);
+
+  void asyncConnectWithClient(in nsIURI aURI,
+                    in nsIPrincipal aLoadingPrincipal,
+                    in unsigned long aSecurityFlags,
+                    in WebTransportSessionEventListener aListener,
+                    in const_MaybeClientInfoRef aClientInfo);
+
   // Asynchronously get states.
   void getStats();
 
