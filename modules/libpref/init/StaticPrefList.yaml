@@ -12540,13 +12540,13 @@
 # WebTransport
 - name: network.webtransport.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # WebTransport Datagram support
 - name: network.webtransport.datagrams.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # WebTransport Datagram size
