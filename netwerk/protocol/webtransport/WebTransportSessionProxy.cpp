@@ -62,6 +62,14 @@ WebTransportSessionProxy::~WebTransportSessionProxy() {
 nsresult WebTransportSessionProxy::AsyncConnect(
     nsIURI* aURI, nsIPrincipal* aPrincipal, uint32_t aSecurityFlags,
     WebTransportSessionEventListener* aListener) {
+  return AsyncConnectWithClient(aURI, aPrincipal, aSecurityFlags, aListener,
+                                Maybe<dom::ClientInfo>());
+}
+
+nsresult WebTransportSessionProxy::AsyncConnectWithClient(
+    nsIURI* aURI, nsIPrincipal* aPrincipal, uint32_t aSecurityFlags,
+    WebTransportSessionEventListener* aListener,
+    const Maybe<dom::ClientInfo>& aClientInfo) {
   MOZ_ASSERT(NS_IsMainThread());
 
   LOG(("WebTransportSessionProxy::AsyncConnect"));
@@ -81,12 +89,24 @@ nsresult WebTransportSessionProxy::AsyncConnect(
   nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL |
                           nsIRequest::LOAD_BYPASS_CACHE |
                           nsIRequest::INHIBIT_CACHING;
-  nsresult rv = NS_NewChannel(getter_AddRefs(mChannel), aURI, aPrincipal, flags,
-                              nsContentPolicyType::TYPE_OTHER,
-                              /* aCookieJarSettings */ nullptr,
-                              /* aPerformanceStorage */ nullptr,
-                              /* aLoadGroup */ nullptr,
-                              /* aCallbacks */ this, loadFlags);
+  nsresult rv = NS_ERROR_FAILURE;
+
+  if (aClientInfo.isSome()) {
+    rv = NS_NewChannel(getter_AddRefs(mChannel), aURI, aPrincipal,
+                       aClientInfo.ref(), Maybe<dom::ServiceWorkerDescriptor>(),
+                       flags, nsContentPolicyType::TYPE_WEB_TRANSPORT,
+                       /* aCookieJarSettings */ nullptr,
+                       /* aPerformanceStorage */ nullptr,
+                       /* aLoadGroup */ nullptr,
+                       /* aCallbacks */ this, loadFlags);
+  } else {
+    rv = NS_NewChannel(getter_AddRefs(mChannel), aURI, aPrincipal, flags,
+                       nsContentPolicyType::TYPE_WEB_TRANSPORT,
+                       /* aCookieJarSettings */ nullptr,
+                       /* aPerformanceStorage */ nullptr,
+                       /* aLoadGroup */ nullptr,
+                       /* aCallbacks */ this, loadFlags);
+  }
 
   NS_ENSURE_SUCCESS(rv, rv);
 
