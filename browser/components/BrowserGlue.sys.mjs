@@ -5802,6 +5802,15 @@ export var AboutHomeStartupCache = {
       return;
     }
 
+    // Similar to `willLoadAboutHome`, we'll assume that if we happen to be
+    // restoring a previous session due to a crash or an upgrade, we're
+    // unlikely to be loading about:home first, so we can ignore the cache.
+    if (lazy.SessionStartup.willRestore()) {
+      this.log.trace("Performing a restore on startup.");
+      this.recordResult(this.CACHE_RESULT_SCALARS.NOT_LOADING_ABOUTHOME);
+      return;
+    }
+
     if (!Services.prefs.getBoolPref(this.PRELOADED_NEWTAB_PREF, false)) {
       this.log.trace("Preloaded about:newtab disabled.");
       this.recordResult(this.CACHE_RESULT_SCALARS.PRELOADING_DISABLED);
