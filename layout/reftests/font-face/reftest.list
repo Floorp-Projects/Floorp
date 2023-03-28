@@ -193,6 +193,7 @@ skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(Android,8-8,1484-148
 skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-1,0-291) == colrv1-06.html colrv1-06-ref.html
 skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-128,0-264) == colrv1-07.html colrv1-07-ref.html
 skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == colrv1-08.html colrv1-08-ref.html
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == colrv1-09.html colrv1-09-ref.html
 defaults
 
 # Check that the tech(color-COLRv1) function responds to whether COLRv1 support is enabled.
