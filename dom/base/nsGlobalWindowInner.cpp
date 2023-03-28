@@ -1310,7 +1310,6 @@ void nsGlobalWindowInner::FreeInnerObjects() {
   if (mWindowGlobalChild && !mWindowGlobalChild->IsClosed()) {
     mWindowGlobalChild->Destroy();
   }
-  mWindowGlobalChild = nullptr;
 
   mIntlUtils = nullptr;
 
