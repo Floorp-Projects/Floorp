@@ -54,7 +54,7 @@ to static `JOG::` functions.
 
 ### Build Integration
 
-If JOG detects we're an artifact build (by checking `COMPILE_ENVIRONMENT`),
+If JOG detects we're an artifact build (by checking `MOZ_ARTIFACT_BUILDS`),
 it generates `jogfile.json` and ensures it is placed in `GreD`
 (next to the `firefox` binary).
 
