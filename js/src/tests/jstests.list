@@ -619,8 +619,9 @@ skip script test262/intl402/NumberFormat/constructor-roundingIncrement.js
 # Tests disabled due to issues in test262 importer script #
 ###########################################################
 
-# test262 importer merges all includes in a per directory shell.js file, breaking this harness test case.
+# test262 importer merges all includes in a per directory shell.js file, breaking these harness test cases.
 skip script test262/harness/detachArrayBuffer.js
+skip script test262/harness/asyncHelpers-asyncTest-without-async-flag.js
 
 # Likewise here -- shell.js defines an |AsyncFunction| global property for
 # various tests in this directory that have an include that defines it, but this
@@ -652,82 +653,6 @@ skip script test262/intl402/DateTimeFormat/prototype/resolvedOptions/hourCycle-d
 # See bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1769088
 skip script test262/built-ins/Date/year-zero.js
 skip script test262/built-ins/Date/parse/year-zero.js
-
-# Local test262 copy not yet updated for https://github.com/tc39/test262/pull/3713
-skip script test262/intl402/Intl/supportedValuesOf/units.js
-skip script test262/intl402/NumberFormat/prototype/format/units-invalid.js
-
-# https://github.com/tc39/test262/pull/3676
-skip script test262/intl402/DateTimeFormat/prototype/formatRange/fractionalSecondDigits.js
-skip script test262/intl402/DateTimeFormat/prototype/formatRange/en-US.js
-skip script test262/intl402/DateTimeFormat/prototype/formatRangeToParts/fractionalSecondDigits.js
-skip script test262/intl402/DateTimeFormat/prototype/formatRangeToParts/en-US.js
-skip script test262/intl402/DateTimeFormat/prototype/format/timedatestyle-en.js
-
-# Unicode 15 changes
-skip script test262/built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Egyptian_Hieroglyphs.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Cased.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Script_-_Katakana.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Alphabetic.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Latin.js
-skip script test262/built-ins/RegExp/property-escapes/generated/XID_Start.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Unified_Ideograph.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Arabic.js
-skip script test262/built-ins/RegExp/property-escapes/generated/XID_Continue.js
-skip script test262/built-ins/RegExp/property-escapes/generated/General_Category_-_Letter.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Soft_Dotted.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Script_-_Lao.js
-skip script test262/built-ins/RegExp/property-escapes/generated/General_Category_-_Other_Number.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Han.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Emoji_Modifier_Base.js
-skip script test262/built-ins/RegExp/property-escapes/generated/General_Category_-_Cased_Letter.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Lowercase.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Katakana.js
-skip script test262/built-ins/RegExp/property-escapes/generated/General_Category_-_Nonspacing_Mark.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Ideographic.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Emoji.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Script_-_Kannada.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Devanagari.js
-skip script test262/built-ins/RegExp/property-escapes/generated/General_Category_-_Number.js
-skip script test262/built-ins/RegExp/property-escapes/generated/General_Category_-_Modifier_Letter.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Cyrillic.js
-skip script test262/built-ins/RegExp/property-escapes/generated/General_Category_-_Other.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Grapheme_Extend.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Script_-_Latin.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Kannada.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Case_Ignorable.js
-skip script test262/built-ins/RegExp/property-escapes/generated/General_Category_-_Spacing_Mark.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Lao.js
-skip script test262/built-ins/RegExp/property-escapes/generated/General_Category_-_Other_Letter.js
-skip script test262/built-ins/RegExp/property-escapes/generated/General_Category_-_Format.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Script_-_Han.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Script_-_Khojki.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Common.js
-skip script test262/built-ins/RegExp/property-escapes/generated/General_Category_-_Decimal_Number.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Script_-_Cyrillic.js
-skip script test262/built-ins/RegExp/property-escapes/generated/General_Category_-_Mark.js
-skip script test262/built-ins/RegExp/property-escapes/generated/General_Category_-_Punctuation.js
-skip script test262/built-ins/RegExp/property-escapes/generated/General_Category_-_Symbol.js
-skip script test262/built-ins/RegExp/property-escapes/generated/ID_Continue.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Script_-_Common.js
-skip script test262/built-ins/RegExp/property-escapes/generated/ID_Start.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Sentence_Terminal.js
-skip script test262/built-ins/RegExp/property-escapes/generated/General_Category_-_Unassigned.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Grapheme_Base.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Script_-_Devanagari.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Khojki.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Assigned.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Script_-_Egyptian_Hieroglyphs.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Script_-_Hiragana.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Hiragana.js
-skip script test262/built-ins/RegExp/property-escapes/generated/General_Category_-_Other_Symbol.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Terminal_Punctuation.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Emoji_Presentation.js
-skip script test262/built-ins/RegExp/property-escapes/generated/General_Category_-_Lowercase_Letter.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Changes_When_NFKC_Casefolded.js
-skip script test262/built-ins/RegExp/property-escapes/generated/General_Category_-_Other_Punctuation.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Diacritic.js
-skip script test262/built-ins/RegExp/property-escapes/generated/Script_-_Arabic.js
 
 
 ##############################################
