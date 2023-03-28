@@ -268,16 +268,22 @@
         let selectAllCheckbox = gShadowRoot.querySelector(".select-all-checkbox");
         selectAllCheckbox.checked = true;
         selectAllCheckbox.dispatchEvent(new CustomEvent("change"));
-        let checkboxes = gShadowRoot.querySelectorAll(
-          'label:not([hidden])[data-resource-type] > input[type="checkbox"]'
-        );
-        for (let checkbox of checkboxes) {
-          is(
-            checkbox.checked,
-            selectAllCheckbox.checked,
-            "Testing if checking select-all selects unchecked resources"
-          );
+        let resourceLabels = gShadowRoot.querySelectorAll("label[data-resource-type]");
+        for (let resourceLabel of resourceLabels) {
+          if (resourceLabel.hidden) {
+            ok(
+              !resourceLabel.control.checked,
+              `Hidden checkbox for ${resourceLabel.dataset.resourceType} should be unchecked.`
+
+            );
+          } else {
+            ok(
+              resourceLabel.control.checked,
+              `Visible checkbox for ${resourceLabel.dataset.resourceType} should be checked.`
+            );
+          }
         }
+
         let selectedDataHeader = gShadowRoot.querySelector(".selected-data-header");
         let selectedData = gShadowRoot.querySelector(".selected-data");
 
