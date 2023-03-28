@@ -191,7 +191,12 @@
 
 /* Use a container query as the inline-size of the output might vary when the console is in editor mode */
 @container console-output (width < 500px) {
-  .message > .timestamp {
+  /*
+   * When we export messages, we mount the app as a sibling of the #app-wrapper element,
+   * in a 0-width section which would cause the timestamp to be hidden, so only hide
+   * the timestamp in the "visible" element.
+   */
+  #app-wrapper .message > .timestamp {
     display: none;
   }
 

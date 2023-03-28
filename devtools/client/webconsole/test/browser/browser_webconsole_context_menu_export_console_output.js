@@ -52,6 +52,9 @@ var FileUtils = ChromeUtils.importESModule(
 add_task(async function testExportToClipboard() {
   // Clear clipboard content.
   SpecialPowers.clipboardCopyString("");
+  // Display timestamp to make sure we export them (there's a container query that would
+  // hide them in the regular case, which we don't want).
+  await pushPref("devtools.webconsole.timestampMessages", true);
 
   const hud = await openNewTabAndConsole(TEST_URI);
   await clearOutput(hud);
@@ -108,10 +111,16 @@ function checkExportedText(text) {
   //   item-99 test.js:11:19
   //   -----------------------------------------------------
   info("Check if all messages where exported as expected");
-  const lines = text.split("\n").map(line => line.replace(/\r$/, ""));
+  let lines = text.split("\n").map(line => line.replace(/\r$/, ""));
 
   is(lines.length, 115, "There's 115 lines of text");
   is(lines.at(-1), "", "Last line is empty");
+
+  info("Check that timestamp are displayed");
+  const timestampRegex = /^\d{2}:\d{2}:\d{2}\.\d{3} /;
+  // only check the first message
+  ok(timestampRegex.test(lines[0]), "timestamp are included in the messages");
+  lines = lines.map(l => l.replace(timestampRegex, ""));
 
   info("Check simple text message");
   is(lines[0], "hello test.js:4:17", "Simple log has expected text");
