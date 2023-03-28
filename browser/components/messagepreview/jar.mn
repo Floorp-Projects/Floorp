@@ -3,9 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
-#ifdef NIGHTLY_BUILD
     content/browser/messagepreview/messagepreview.html
     content/browser/messagepreview/messagepreview.js
     content/browser/messagepreview/limelight.svg
     content/browser/messagepreview/messagepreview.css
-#endif

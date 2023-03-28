@@ -10,15 +10,24 @@ html,
 body {
   height: 100%;
   width: 100%;
-  background: url(chrome://browser/content/messagepreview/limelight.svg)
-    center/contain no-repeat;
-  -moz-context-properties: fill;
-  fill: var(--in-content-icon-color);
-  filter: opacity(0.1);
 }
 
-@media (prefers-color-scheme: dark) {
-  body {
-    filter: none;
-  }
+body {
+  background: url(chrome://browser/content/messagepreview/limelight.svg)
+    center/contain no-repeat;
+  -moz-context-properties: fill, fill-opacity;
+  fill: var(--in-content-icon-color);
+  fill-opacity: 0.2;
+}
+
+.hint-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hint {
+  max-width: 40em;
+  font-size: 1.2em;
+  text-align: center;
 }
