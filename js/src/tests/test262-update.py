@@ -19,21 +19,22 @@ from operator import itemgetter
 UNSUPPORTED_FEATURES = set(
     [
         "tail-call-optimization",
-        "Intl.DateTimeFormat-quarter",
-        "Intl.Segmenter",
-        "Intl.Locale-info",
-        "Intl.DurationFormat",
-        "Atomics.waitAsync",
-        "legacy-regexp",
-        "json-modules",
-        "resizable-arraybuffer",
-        "Temporal",
-        "regexp-v-flag",
-        "decorators",
-        "regexp-duplicate-named-groups",
+        "Intl.Segmenter",  # Bug 1423593
+        "Intl.Locale-info",  # Bug 1693576
+        "Intl.DurationFormat",  # Bug 1648139
+        "Atomics.waitAsync",  # Bug 1467846
+        "legacy-regexp",  # Bug 1306461
+        "json-modules",  # Bug 1670176
+        "resizable-arraybuffer",  # Bug 1670026
+        "Temporal",  # Bug 1519167
+        "regexp-v-flag",  # Bug 1713657
+        "decorators",  # Bug 1435869
+        "regexp-duplicate-named-groups",  # Bug 1773135
         "String.prototype.isWellFormed",  # Bug 1803523
         "String.prototype.toWellFormed",  # Bug 1803523
         "symbols-as-weakmap-keys",  # Bug 1710433
+        "arraybuffer-transfer",  # Bug 1519163
+        "json-parse-with-source",  # Bug 1658310
     ]
 )
 FEATURE_CHECK_NEEDED = {
@@ -41,13 +42,13 @@ FEATURE_CHECK_NEEDED = {
     "FinalizationRegistry": "!this.hasOwnProperty('FinalizationRegistry')",
     "SharedArrayBuffer": "!this.hasOwnProperty('SharedArrayBuffer')",
     "WeakRef": "!this.hasOwnProperty('WeakRef')",
-    "array-grouping": "!Array.prototype.group",
-    "change-array-by-copy": "!Array.prototype.with",
-    "Array.fromAsync": "!Array.fromAsync",
+    "array-grouping": "!Array.prototype.group",  # Bug 1792650
+    "change-array-by-copy": "!Array.prototype.with",  # Bug 1811054
+    "Array.fromAsync": "!Array.fromAsync",  # Bug 1746209
 }
 RELEASE_OR_BETA = set(
     [
-        "Intl.NumberFormat-v3",
+        "Intl.NumberFormat-v3",  # Bug 1795756
     ]
 )
 SHELL_OPTIONS = {
@@ -297,13 +298,19 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
         "Can't have both async and negative attributes: %s" % testName
     )
 
-    # Only async tests may use the $DONE function.  However, negative parse
-    # tests may "use" the $DONE function (of course they don't actually use it!)
-    # without specifying the "async" attribute.  Otherwise, $DONE must not
-    # appear in the test.
-    assert b"$DONE" not in testSource or isAsync or isNegative, (
-        "Missing async attribute in: %s" % testName
-    )
+    # Only async tests may use the $DONE or asyncTest function. However,
+    # negative parse tests may "use" the $DONE (or asyncTest) function (of
+    # course they don't actually use it!) without specifying the "async"
+    # attribute. Otherwise, neither $DONE nor asyncTest must appear in the test.
+    #
+    # Some "harness" tests redefine $DONE, so skip this check when the test file
+    # is in the "harness" directory.
+    assert (
+        (b"$DONE" not in testSource and b"asyncTest" not in testSource)
+        or isAsync
+        or isNegative
+        or testName.split(os.path.sep)[0] == "harness"
+    ), ("Missing async attribute in: %s" % testName)
 
     # When the "module" attribute is set, the source code is module code.
     isModule = "module" in testRec
