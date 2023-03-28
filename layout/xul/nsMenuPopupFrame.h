@@ -173,6 +173,20 @@ class nsMenuPopupFrame final : public nsBlockFrame {
 
   nsIWidget* GetWidget() const;
 
+  enum class WidgetStyle : uint8_t {
+    ColorScheme,
+    InputRegion,
+    Opacity,
+    Shadow,
+    Transform,
+  };
+  using WidgetStyleFlags = mozilla::EnumSet<WidgetStyle>;
+  static constexpr WidgetStyleFlags AllWidgetStyleFlags() {
+    return {WidgetStyle::ColorScheme, WidgetStyle::InputRegion,
+            WidgetStyle::Opacity, WidgetStyle::Shadow, WidgetStyle::Transform};
+  }
+  void PropagateStyleToWidget(WidgetStyleFlags = AllWidgetStyleFlags()) const;
+
   // Overridden methods
   void Init(nsIContent* aContent, nsContainerFrame* aParent,
             nsIFrame* aPrevInFlow) override;
@@ -206,7 +220,7 @@ class nsMenuPopupFrame final : public nsBlockFrame {
   MOZ_CAN_RUN_SCRIPT void EnsureActiveMenuListItemIsVisible();
 
   nsresult CreateWidgetForView(nsView* aView);
-  mozilla::StyleWindowShadow GetShadowStyle();
+  mozilla::StyleWindowShadow GetShadowStyle() const;
 
   void DidSetComputedStyle(ComputedStyle* aOldStyle) override;
 
