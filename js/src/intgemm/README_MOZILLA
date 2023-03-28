@@ -1,18 +1,18 @@
-This directory contains build files for the intgemm reference implementation.
-The actual library source is in $TOPSRCDIR/third_party/intgemm/
+This directory contains build files for the gemmology reference implementation.
+The actual library source is in $TOPSRCDIR/third_party/gemmology/
 
 Any patches or additional configuration to be applied to the
-upstream source should be kept in $TOPSRCDIR/third_party/intgemm/.
+upstream source should be kept in $TOPSRCDIR/third_party/gemmology/.
 
 To update the library source and build config files, execute
 
-  ./mach vendor js/src/intgemm/moz.yaml
+  ./mach vendor third_party/gemmology/moz.yaml
 
 To update to a specific upstream git tag or commit, use
 
-  ./mach vendor js/src/intgemm/moz.yaml -r <commit>
+  ./mach vendor third_party/gemmology/moz.yaml -r <commit>
 
-The upstream git repository is https://github.com/kpu/intgemm
+The upstream git repository is https://github.com/serge-sans-paille/gemmology
 
 To view the information about the current version, check the
 'origin' section of moz.yaml.
