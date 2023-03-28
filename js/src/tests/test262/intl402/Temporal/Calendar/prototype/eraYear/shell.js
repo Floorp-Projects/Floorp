@@ -46,6 +46,7 @@ function formatPropertyName(propertyKey, objectName = "") {
     case "number":
       return `${objectName}[${propertyKey}]`;
     default:
+      // TODO: check if propertyKey is an integer index.
       return objectName ? `${objectName}.${propertyKey}` : propertyKey;
   }
 }
@@ -1524,7 +1525,7 @@ var TemporalHelpers = {
     // Automatically generate the other methods that don't need any custom code
     ["toString", "dateUntil", "era", "eraYear", "year", "month", "monthCode", "day", "daysInMonth", "fields", "mergeFields"].forEach((methodName) => {
       trackingMethods[methodName] = function (...args) {
-        actual.push(`call ${formatPropertyName(methodName, objectName)}`);
+        calls.push(`call ${formatPropertyName(methodName, objectName)}`);
         if (methodName in methodOverrides) {
           const value = methodOverrides[methodName];
           return typeof value === "function" ? value(...args) : value;
@@ -1535,11 +1536,11 @@ var TemporalHelpers = {
     return new Proxy(trackingMethods, {
       get(target, key, receiver) {
         const result = Reflect.get(target, key, receiver);
-        actual.push(`get ${formatPropertyName(key, objectName)}`);
+        calls.push(`get ${formatPropertyName(key, objectName)}`);
         return result;
       },
       has(target, key) {
-        actual.push(`has ${formatPropertyName(key, objectName)}`);
+        calls.push(`has ${formatPropertyName(key, objectName)}`);
         return Reflect.has(target, key);
       },
     });
@@ -1695,7 +1696,7 @@ var TemporalHelpers = {
         if (result === undefined) {
           return undefined;
         }
-        if (typeof result === "object") {
+        if ((result !== null && typeof result === "object") || typeof result === "function") {
           return result;
         }
         return TemporalHelpers.toPrimitiveObserver(calls, result, `${formatPropertyName(key, objectName)}`);
@@ -1820,7 +1821,7 @@ var TemporalHelpers = {
     // Automatically generate the methods
     ["getOffsetNanosecondsFor", "getPossibleInstantsFor", "toString"].forEach((methodName) => {
       trackingMethods[methodName] = function (...args) {
-        actual.push(`call ${formatPropertyName(methodName, objectName)}`);
+        calls.push(`call ${formatPropertyName(methodName, objectName)}`);
         if (methodName in methodOverrides) {
           const value = methodOverrides[methodName];
           return typeof value === "function" ? value(...args) : value;
@@ -1831,11 +1832,11 @@ var TemporalHelpers = {
     return new Proxy(trackingMethods, {
       get(target, key, receiver) {
         const result = Reflect.get(target, key, receiver);
-        actual.push(`get ${formatPropertyName(key, objectName)}`);
+        calls.push(`get ${formatPropertyName(key, objectName)}`);
         return result;
       },
       has(target, key) {
-        actual.push(`has ${formatPropertyName(key, objectName)}`);
+        calls.push(`has ${formatPropertyName(key, objectName)}`);
         return Reflect.has(target, key);
       },
     });

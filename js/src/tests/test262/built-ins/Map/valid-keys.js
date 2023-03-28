@@ -12,7 +12,7 @@ info: |
   Append p as the last element of entries.
   ...
 
-features: [BigInt, Symbol, TypedArray, WeakRef]
+features: [BigInt, Symbol, TypedArray, WeakRef, exponentiation]
 ---*/
 
 

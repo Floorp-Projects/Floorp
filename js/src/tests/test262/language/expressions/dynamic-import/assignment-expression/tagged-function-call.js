@@ -18,6 +18,7 @@ info: |
         LeftHandSideExpression[?Yield, ?Await] AssignmentOperator AssignmentExpression[?In, ?Yield, ?Await]
 flags: [async]
 features: [dynamic-import]
+includes: [asyncHelpers.js]
 ---*/
 
 function tag(arg) {
@@ -32,4 +33,4 @@ async function fn() {
     assert.sameValue(ns.default, 1612);
 }
 
-fn().then($DONE, $DONE).catch($DONE);
+asyncTest(fn);

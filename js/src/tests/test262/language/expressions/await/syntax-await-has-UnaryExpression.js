@@ -8,6 +8,7 @@ esid: pending
 description: >
   Await's operand is a UnaryExpression
 flags: [async]
+includes: [asyncHelpers.js]
 ---*/
 
 async function foo() {
@@ -16,4 +17,4 @@ async function foo() {
   assert.sameValue(y, 1);
   assert.sameValue(x, 2);
 }
-foo().then($DONE, $DONE);
+asyncTest(foo);

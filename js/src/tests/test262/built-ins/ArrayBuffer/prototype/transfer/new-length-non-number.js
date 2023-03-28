@@ -1,4 +1,4 @@
-// |reftest| skip -- resizable-arraybuffer is not supported
+// |reftest| skip -- resizable-arraybuffer,arraybuffer-transfer is not supported
 // Copyright (C) 2021 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
@@ -15,7 +15,7 @@ info: |
      O.[[ArrayBufferByteLength]].
   6. Else, let newByteLength be ? ToIntegerOrInfinity(newLength).
   [...]
-features: [resizable-arraybuffer]
+features: [resizable-arraybuffer, arraybuffer-transfer]
 ---*/
 
 var log = [];

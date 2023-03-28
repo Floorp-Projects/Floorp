@@ -11,6 +11,7 @@ info: |
       MemberExpression [PrimaryExpression identifier] OptionalChain
 features: [optional-chaining]
 flags: [async]
+includes: [asyncHelpers.js]
 ---*/
 
 const a = undefined;
@@ -30,4 +31,4 @@ async function checkAssertions() {
   c.e = Promise.resolve(39);
   assert.sameValue(await c?.e, 39, 'await unwraps the promise given after the evaluation of the OCE');
 }
-checkAssertions().then($DONE, $DONE);
+asyncTest(checkAssertions);

@@ -47,7 +47,7 @@ for (const [value, expected] of values) {
   assert("roundingIncrement" in resolvedOptions, "has property for value " + value);
   assert.sameValue(resolvedOptions.roundingIncrement, expected);
 
-  assert.compareArray(callOrder, ["roundingIncrement", "notation"]);
+  assert.compareArray(callOrder, ["notation", "roundingIncrement"]);
 }
 
 reportCompare(0, 0);

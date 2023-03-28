@@ -8,6 +8,7 @@ esid: pending
 description: >
   The this value is set to the global object when not passed in sloppy mode.
 flags: [noStrict, async]
+includes: [asyncHelpers.js]
 ---*/
 
 var glob = this;
@@ -15,4 +16,4 @@ async function foo() {
   assert.sameValue(this, glob);
 }
 
-foo().then($DONE, $DONE);
+asyncTest(foo);

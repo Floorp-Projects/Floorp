@@ -5,7 +5,7 @@
 /*---
 esid: sec-temporal-zoneddatetime-objects
 description: calendar with nontrivial mergeFields implementation
-features: [Temporal]
+features: [Temporal, Array.prototype.includes]
 ---*/
 
 class CenturyCalendar extends Temporal.Calendar {

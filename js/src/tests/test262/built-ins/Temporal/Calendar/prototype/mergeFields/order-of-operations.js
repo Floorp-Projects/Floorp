@@ -10,6 +10,7 @@ includes: [compareArray.js, temporalHelpers.js]
 ---*/
 
 const expected = [
+  // CopyDataProperties on fields
   "ownKeys fields",
   "getOwnPropertyDescriptor fields.year",
   "get fields.year",
@@ -19,6 +20,7 @@ const expected = [
   "get fields.day",
   "getOwnPropertyDescriptor fields.extra",
   "get fields.extra",
+  // CopyDataProperties on additionalFields
   "ownKeys additionalFields",
   "getOwnPropertyDescriptor additionalFields.3",
   "get additionalFields.3",

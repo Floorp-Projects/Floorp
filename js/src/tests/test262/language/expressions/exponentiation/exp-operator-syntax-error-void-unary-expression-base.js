@@ -15,6 +15,7 @@ info: |
     ...
     `void` UnaryExpression
     ...
+features: [exponentiation]
 
 negative:
   phase: parse

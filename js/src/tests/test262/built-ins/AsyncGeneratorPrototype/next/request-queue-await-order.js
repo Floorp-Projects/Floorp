@@ -28,6 +28,7 @@ info: >
 
 flags: [async]
 features: [async-iteration]
+includes: [asyncHelpers.js]
 ---*/
 
 var yieldorder = 0;
@@ -59,7 +60,7 @@ async function awaitnexts() {
   assert.sameValue((await item1).value, 1)
 }
 
-awaitnexts().then($DONE, $DONE);
+asyncTest(awaitnexts);
 
 // At this point:
 //   yieldorder == 0

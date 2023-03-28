@@ -18,6 +18,7 @@ info: |
         LeftHandSideExpression[?Yield, ?Await] AssignmentOperator AssignmentExpression[?In, ?Yield, ?Await]
 flags: [async]
 features: [dynamic-import]
+includes: [asyncHelpers.js]
 ---*/
 
 Function.prototype.toString = () => './module-code_FIXTURE.js';
@@ -29,4 +30,4 @@ async function fn() {
     assert.sameValue(ns.default, 42);
 }
 
-fn().then($DONE, $DONE).catch($DONE);
+asyncTest(fn);

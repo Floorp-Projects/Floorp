@@ -15,6 +15,7 @@ info: |
     ...
     `-` UnaryExpression
     ...
+features: [exponentiation]
 
 negative:
   phase: parse

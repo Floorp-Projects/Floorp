@@ -17,6 +17,7 @@ info: |
         f. Otherwise, perform ! Call(promiseCapability.[[Resolve]], undefined, « namespace.[[Value]] »).
 flags: [async]
 features: [dynamic-import, async-iteration]
+includes: [asyncHelpers.js]
 ---*/
 
 async function * agen() {
@@ -49,4 +50,4 @@ async function fn() {
     assert.sameValue(error, 'foo');
 }
 
-fn().then($DONE, $DONE);
+asyncTest(fn);
