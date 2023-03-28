@@ -833,30 +833,30 @@ bool ValueNumberer::visitDefinition(MDefinition* def) {
     if (rep == nullptr) {
       return false;
     }
-    if (rep->updateForReplacement(def)) {
+
+    rep->updateForReplacement(def);
+
 #ifdef JS_JITSPEW
-      JitSpew(JitSpew_GVN, "      Replacing %s%u with %s%u", def->opName(),
-              def->id(), rep->opName(), rep->id());
+    JitSpew(JitSpew_GVN, "      Replacing %s%u with %s%u", def->opName(),
+            def->id(), rep->opName(), rep->id());
 #endif
-      ReplaceAllUsesWith(def, rep);
+    ReplaceAllUsesWith(def, rep);
 
-      // The node's congruentTo said |def| is congruent to |rep|, and it's
-      // dominated by |rep|. If |def| is a guard, it's covered by |rep|,
-      // so we can clear |def|'s guard flag and let it be discarded.
-      def->setNotGuardUnchecked();
+    // The node's congruentTo said |def| is congruent to |rep|, and it's
+    // dominated by |rep|. If |def| is a guard, it's covered by |rep|,
+    // so we can clear |def|'s guard flag and let it be discarded.
+    def->setNotGuardUnchecked();
 
-      if (DeadIfUnused(def)) {
-        // discardDef should not add anything to the deadDefs, as the
-        // redundant operation should have the same input operands.
-        mozilla::DebugOnly<bool> r = discardDef(def);
-        MOZ_ASSERT(
-            r,
-            "discardDef shouldn't have tried to add anything to the worklist, "
-            "so it shouldn't have failed");
-        MOZ_ASSERT(deadDefs_.empty(),
-                   "discardDef shouldn't have added anything to the worklist");
-      }
-      def = rep;
+    if (DeadIfUnused(def)) {
+      // discardDef should not add anything to the deadDefs, as the
+      // redundant operation should have the same input operands.
+      mozilla::DebugOnly<bool> r = discardDef(def);
+      MOZ_ASSERT(
+          r,
+          "discardDef shouldn't have tried to add anything to the worklist, "
+          "so it shouldn't have failed");
+      MOZ_ASSERT(deadDefs_.empty(),
+                 "discardDef shouldn't have added anything to the worklist");
     }
   }
 

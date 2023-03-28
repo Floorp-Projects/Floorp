@@ -2198,7 +2198,7 @@ bool MPhi::congruentTo(const MDefinition* ins) const {
   return congruentIfOperandsEqual(ins);
 }
 
-bool MPhi::updateForReplacement(MDefinition* def) {
+void MPhi::updateForReplacement(MDefinition* def) {
   // This function is called to fix the current Phi flags using it as a
   // replacement of the other Phi instruction |def|.
   //
@@ -2220,7 +2220,6 @@ bool MPhi::updateForReplacement(MDefinition* def) {
                usageAnalysis_ == PhiUsage::Unknown);
     MOZ_ASSERT(usageAnalysis_ == other->usageAnalysis_);
   }
-  return true;
 }
 
 /* static */
