@@ -336,7 +336,8 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsACString& aFaceName,
                                                SlantStyleRange aStyle,
                                                RefPtr<SharedFTFace>&& aFace)
     : gfxFT2FontEntryBase(aFaceName),
-      mFTFace(std::move(aFace)),
+      mFontPattern(CreatePatternForFace(aFace->GetFace())),
+      mFTFace(aFace.forget().take()),
       mFTFaceInitialized(true),
       mIgnoreFcCharmap(true),
       mHasVariationsInitialized(false) {
@@ -344,8 +345,6 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsACString& aFaceName,
   mStyleRange = aStyle;
   mStretchRange = aStretch;
   mIsDataUserFont = true;
-
-  mFontPattern = CreatePatternForFace(mFTFace->GetFace());
 }
 
 gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsACString& aFaceName,
@@ -405,11 +404,16 @@ gfxFontconfigFontEntry::~gfxFontconfigFontEntry() {
     // InitializeVarFuncs must have been called in order for mMMVar to be
     // non-null here, so we don't need to do it again.
     if (sDoneVar) {
-      MOZ_ASSERT(mFTFace, "How did mMMVar get set without a face?");
-      (*sDoneVar)(mFTFace->GetFace()->glyph->library, mMMVar);
+      auto ftFace = GetFTFace();
+      MOZ_ASSERT(ftFace, "How did mMMVar get set without a face?");
+      (*sDoneVar)(ftFace->GetFace()->glyph->library, mMMVar);
     } else {
       free(mMMVar);
     }
+  }
+  if (mFTFaceInitialized) {
+    auto face = mFTFace.exchange(nullptr);
+    NS_IF_RELEASE(face);
   }
 }
 
@@ -923,9 +927,12 @@ gfxFont* gfxFontconfigFontEntry::CreateFontInstance(
   RefPtr<UnscaledFontFontconfig> unscaledFont =
       mUnscaledFontCache.Lookup(file, index);
   if (!unscaledFont) {
-    unscaledFont = mFTFace->GetData() ? new UnscaledFontFontconfig(mFTFace)
-                                      : new UnscaledFontFontconfig(
-                                            std::move(file), index, mFTFace);
+    // Here, we use the original mFTFace, not a potential clone with variation
+    // settings applied.
+    auto ftFace = GetFTFace();
+    unscaledFont = ftFace->GetData() ? new UnscaledFontFontconfig(ftFace)
+                                     : new UnscaledFontFontconfig(
+                                           std::move(file), index, ftFace);
     mUnscaledFontCache.Add(unscaledFont);
   }
 
@@ -936,17 +943,25 @@ gfxFont* gfxFontconfigFontEntry::CreateFontInstance(
   return newFont;
 }
 
-const RefPtr<SharedFTFace>& gfxFontconfigFontEntry::GetFTFace() {
+SharedFTFace* gfxFontconfigFontEntry::GetFTFace() {
   if (!mFTFaceInitialized) {
-    mFTFaceInitialized = true;
-    mFTFace = CreateFaceForPattern(mFontPattern);
+    RefPtr<SharedFTFace> face = CreateFaceForPattern(mFontPattern);
+    if (face) {
+      if (mFTFace.compareExchange(nullptr, face.get())) {
+        Unused << face.forget();  // The reference is now owned by mFTFace.
+        mFTFaceInitialized = true;
+      } else {
+        // We lost a race to set mFTFace! Just discard our new face.
+      }
+    }
   }
   return mFTFace;
 }
 
 FTUserFontData* gfxFontconfigFontEntry::GetUserFontData() {
-  if (mFTFace && mFTFace->GetData()) {
-    return static_cast<FTUserFontData*>(mFTFace->GetData());
+  auto face = GetFTFace();
+  if (face && face->GetData()) {
+    return static_cast<FTUserFontData*>(face->GetData());
   }
   return nullptr;
 }
@@ -972,9 +987,9 @@ bool gfxFontconfigFontEntry::HasVariations() {
       mHasVariations = true;
     }
   } else {
-    if (GetFTFace()) {
+    if (auto ftFace = GetFTFace()) {
       mHasVariations =
-          mFTFace->GetFace()->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS;
+          ftFace->GetFace()->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS;
     }
   }
 
@@ -990,10 +1005,11 @@ FT_MM_Var* gfxFontconfigFontEntry::GetMMVar() {
   if (!sGetVar) {
     return nullptr;
   }
-  if (!GetFTFace()) {
+  auto ftFace = GetFTFace();
+  if (!ftFace) {
     return nullptr;
   }
-  if (FT_Err_Ok != (*sGetVar)(mFTFace->GetFace(), &mMMVar)) {
+  if (FT_Err_Ok != (*sGetVar)(ftFace->GetFace(), &mMMVar)) {
     mMMVar = nullptr;
   }
   return mMMVar;
