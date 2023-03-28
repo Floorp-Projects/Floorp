@@ -73,11 +73,12 @@ class LoginDetailFragment : SecureFragment(R.layout.fragment_login_detail), Menu
     ): View? {
         val view = inflater.inflate(R.layout.fragment_login_detail, container, false)
         _binding = FragmentLoginDetailBinding.bind(view)
-        savedLoginsStore = StoreProvider.get(this) {
-            LoginsFragmentStore(
-                createInitialLoginsListState(requireContext().settings()),
-            )
-        }
+        savedLoginsStore =
+            StoreProvider.get(findNavController().getBackStackEntry(R.id.savedLogins)) {
+                LoginsFragmentStore(
+                    createInitialLoginsListState(requireContext().settings()),
+                )
+            }
         loginDetailsBindingDelegate = LoginDetailsBindingDelegate(binding)
 
         return view
@@ -130,7 +131,7 @@ class LoginDetailFragment : SecureFragment(R.layout.fragment_login_detail), Menu
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requireActivity().onBackPressedDispatcher.addCallback(this) {
-            val directions = LoginDetailFragmentDirections.actionLoginDetailFragmentToSavedLoginsFragment()
+            val directions = LoginDetailFragmentDirections.actionLoginDetailFragmentToSavedLogins()
             findNavController().navigate(directions)
         }
     }

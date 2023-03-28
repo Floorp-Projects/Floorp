@@ -22,6 +22,7 @@ import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.navGraphViewModels
 import mozilla.components.concept.menu.MenuController
 import mozilla.components.concept.menu.Orientation
 import mozilla.components.lib.state.ext.consumeFrom
@@ -35,6 +36,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.redirectToReAuth
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
+import org.mozilla.fenix.home.SharedViewModel
 import org.mozilla.fenix.settings.logins.LoginsAction
 import org.mozilla.fenix.settings.logins.LoginsFragmentStore
 import org.mozilla.fenix.settings.logins.LoginsListState
@@ -74,11 +76,12 @@ class SavedLoginsFragment : SecureFragment(), MenuProvider {
         val view = inflater.inflate(R.layout.fragment_saved_logins, container, false)
         val binding = FragmentSavedLoginsBinding.bind(view)
 
-        savedLoginsStore = StoreProvider.get(this) {
-            LoginsFragmentStore(
-                createInitialLoginsListState(requireContext().settings()),
-            )
-        }
+        savedLoginsStore =
+            StoreProvider.get(findNavController().getBackStackEntry(R.id.savedLogins)) {
+                LoginsFragmentStore(
+                    createInitialLoginsListState(requireContext().settings()),
+                )
+            }
 
         loginsListController =
             LoginsListController(

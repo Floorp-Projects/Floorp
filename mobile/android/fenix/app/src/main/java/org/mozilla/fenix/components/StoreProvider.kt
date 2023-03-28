@@ -4,9 +4,9 @@
 
 package org.mozilla.fenix.components
 
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.get
 import mozilla.components.lib.state.Store
 
@@ -20,9 +20,9 @@ class StoreProvider<T : Store<*, *>>(
 ) : ViewModel() {
 
     companion object {
-        fun <T : Store<*, *>> get(fragment: Fragment, createStore: () -> T): T {
+        fun <T : Store<*, *>> get(owner: ViewModelStoreOwner, createStore: () -> T): T {
             val factory = StoreProviderFactory(createStore)
-            val viewModel: StoreProvider<T> = ViewModelProvider(fragment, factory).get()
+            val viewModel: StoreProvider<T> = ViewModelProvider(owner, factory).get()
             return viewModel.store
         }
     }

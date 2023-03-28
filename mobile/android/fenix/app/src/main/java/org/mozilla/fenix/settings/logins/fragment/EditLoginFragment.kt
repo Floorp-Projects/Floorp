@@ -70,11 +70,12 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login), MenuProvider {
 
         oldLogin = args.savedLoginItem
 
-        loginsFragmentStore = StoreProvider.get(this) {
-            LoginsFragmentStore(
-                createInitialLoginsListState(requireContext().settings()),
-            )
-        }
+        loginsFragmentStore =
+            StoreProvider.get(findNavController().getBackStackEntry(R.id.savedLogins)) {
+                LoginsFragmentStore(
+                    createInitialLoginsListState(requireContext().settings()),
+                )
+            }
 
         interactor = EditLoginInteractor(
             SavedLoginsStorageController(

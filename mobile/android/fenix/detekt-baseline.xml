@@ -904,7 +904,7 @@
     <ID>UndocumentedPublicFunction:StartupTypeTelemetry.kt$StartupTypeTelemetry$fun attachOnHomeActivityOnCreate(lifecycle: Lifecycle)</ID>
     <ID>UndocumentedPublicFunction:StorageStatsMetrics.kt$StorageStatsMetrics$// I couldn't get runBlockingTest to work correctly so I moved the functionality under test to // a synchronous function. @VisibleForTesting(otherwise = PRIVATE) @WorkerThread // queryStatsForUid fun reportSync(context: Context)</ID>
     <ID>UndocumentedPublicFunction:StorageStatsMetrics.kt$StorageStatsMetrics$@OptIn(DelicateCoroutinesApi::class) // GlobalScope usage fun report(context: Context)</ID>
-    <ID>UndocumentedPublicFunction:StoreProvider.kt$StoreProvider.Companion$fun &lt;T : Store&lt;*, *&gt;&gt; get(fragment: Fragment, createStore: () -&gt; T): T</ID>
+    <ID>UndocumentedPublicFunction:StoreProvider.kt$StoreProvider.Companion$fun &lt;T : Store&lt;*, *&gt;&gt; get(owner: ViewModelStoreOwner, createStore: () -&gt; T): T</ID>
     <ID>UndocumentedPublicFunction:StudiesView.kt$StudiesView$@Suppress("TooGenericExceptionCaught", "ApplySharedPref") fun bind()</ID>
     <ID>UndocumentedPublicFunction:SupportUtils.kt$SupportUtils$fun createAuthCustomTabIntent(context: Context, url: String): Intent</ID>
     <ID>UndocumentedPublicFunction:SupportUtils.kt$SupportUtils$fun createCustomTabIntent(context: Context, url: String): Intent</ID>
