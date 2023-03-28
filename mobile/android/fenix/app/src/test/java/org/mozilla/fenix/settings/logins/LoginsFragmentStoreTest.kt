@@ -102,6 +102,26 @@ class LoginsFragmentStoreTest {
     }
 
     @Test
+    fun `GIVEN logins already exist WHEN asked to update one THEN update the available logins`() {
+        val store = LoginsFragmentStore(
+            baseState.copy(
+                isLoading = true,
+                loginList = loginList,
+            ),
+        )
+        val updatedLogin = firefoxLogin.copy(origin = "test")
+
+        store.dispatch(LoginsAction.UpdateLogin(firefoxLogin.guid, updatedLogin)).joinBlocking()
+        assertFalse(store.state.isLoading)
+        assertEquals(listOf(exampleLogin, updatedLogin), store.state.loginList)
+
+        // Test updating a non-existent login
+        store.dispatch(LoginsAction.UpdateLogin("test", updatedLogin.copy(origin = "none"))).joinBlocking()
+        assertFalse(store.state.isLoading)
+        assertEquals(listOf(exampleLogin, updatedLogin), store.state.loginList)
+    }
+
+    @Test
     fun `GIVEN logins already exist WHEN asked to remove one THEN update the state to not contain it`() {
         val store = LoginsFragmentStore(
             baseState.copy(

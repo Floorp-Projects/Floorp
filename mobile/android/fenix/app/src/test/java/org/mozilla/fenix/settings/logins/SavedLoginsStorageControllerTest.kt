@@ -142,7 +142,8 @@ class SavedLoginsStorageControllerTest {
             passwordsStorage.get(oldLogin.guid)
             passwordsStorage.update(newLogin.guid, newLogin.toEntry())
             loginsFragmentStore.dispatch(
-                LoginsAction.AddLogin(
+                LoginsAction.UpdateLogin(
+                    newLogin.guid,
                     expectedNewLogin,
                 ),
             )

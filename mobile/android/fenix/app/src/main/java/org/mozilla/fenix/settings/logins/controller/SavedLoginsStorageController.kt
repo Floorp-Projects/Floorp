@@ -150,7 +150,7 @@ open class SavedLoginsStorageController(
     private suspend fun save(guid: String, loginEntryToSave: LoginEntry) {
         try {
             val encryptedLogin = passwordsStorage.update(guid, loginEntryToSave)
-            addLoginToState(passwordsStorage.decryptLogin(encryptedLogin))
+            updateLoginInState(guid, passwordsStorage.decryptLogin(encryptedLogin))
         } catch (loginException: LoginsApiException) {
             when (loginException) {
                 is NoSuchRecordException,
@@ -175,6 +175,13 @@ open class SavedLoginsStorageController(
         val login = updatedLogin.mapToSavedLogin()
         loginsFragmentStore.dispatch(
             LoginsAction.AddLogin(login),
+        )
+    }
+
+    private fun updateLoginInState(loginId: String, updatedLogin: Login) {
+        val login = updatedLogin.mapToSavedLogin()
+        loginsFragmentStore.dispatch(
+            LoginsAction.UpdateLogin(loginId, login),
         )
     }
 
