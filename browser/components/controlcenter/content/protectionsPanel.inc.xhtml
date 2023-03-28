@@ -43,29 +43,36 @@
 
       <toolbarseparator></toolbarseparator>
       <vbox id="protections-popup-main-body" class="panel-subview-body">
-        <hbox id="protections-popup-tp-switch-section" class="protections-popup-section protections-popup-switch-section">
-          <vbox class="protections-popup-tp-switch-label-box" flex="1" align="start">
-            <label class="protections-popup-switch-header protections-popup-tp-switch-on-header"
-                   role="heading"
-                   aria-level="2" data-l10n-id="protections-panel-etp-on-header"></label>
-            <label class="protections-popup-switch-header protections-popup-tp-switch-off-header"
-                   role="heading"
-                   aria-level="2" data-l10n-id="protections-panel-etp-off-header"></label>
-            <label id="protections-popup-tp-switch-breakage-link"
-                   class="text-link"
-                   onclick="gProtectionsHandler.showSiteNotWorkingView(); gProtectionsHandler.recordClick('sitenotworking_link');" data-l10n-id="protections-panel-site-not-working"></label>
-            <label id="protections-popup-tp-switch-breakage-fixed-link"
-                   class="text-link"
-                   onclick="gProtectionsHandler.showSendReportView(); gProtectionsHandler.recordClick('sitenotworking_link', 'sitefixed');"
-                   data-l10n-id="protections-panel-sitefixedsendreport-label"></label>
-          </vbox>
-          <vbox class="protections-popup-tp-switch-box">
-            <toolbarbutton id="protections-popup-tp-switch"
-                           class="protections-popup-tp-switch"
-                           enabled="false"
-                           oncommand="gProtectionsHandler.onTPSwitchCommand();" />
-          </vbox>
-        </hbox>
+        <vbox id="protections-popup-tp-switch-section" class="protections-popup-section protections-popup-switch-section">
+          <hbox id="protections-popup-tp-switch-section-header" class="protections-popup-switch-section-header">
+            <vbox class="protections-popup-tp-switch-label-box" flex="1" align="start">
+              <label class="protections-popup-switch-header protections-popup-tp-switch-on-header"
+                     role="heading"
+                     aria-level="2" data-l10n-id="protections-panel-etp-on-header"></label>
+              <label class="protections-popup-switch-header protections-popup-tp-switch-off-header"
+                     role="heading"
+                     aria-level="2" data-l10n-id="protections-panel-etp-off-header"></label>
+            </vbox>
+            <vbox class="protections-popup-tp-switch-box">
+              <toolbarbutton id="protections-popup-tp-switch"
+                             class="protections-popup-tp-switch"
+                             enabled="false"
+                             oncommand="gProtectionsHandler.onTPSwitchCommand();" />
+            </vbox>
+          </hbox>
+          <hbox id="protections-popup-tp-switch-section-footer">
+            <toolbarbutton id="protections-popup-tp-switch-breakage-link"
+                           oncommand="gProtectionsHandler.showSiteNotWorkingView(); gProtectionsHandler.recordClick('sitenotworking_link');"
+                           class="subviewbutton subviewbutton-nav" align="center" flex="1">
+              <label flex="1" class="toolbarbutton-text" data-l10n-id="protections-panel-site-not-working"></label>
+            </toolbarbutton>
+            <toolbarbutton id="protections-popup-tp-switch-breakage-fixed-link"
+                           oncommand="gProtectionsHandler.showSendReportView(); gProtectionsHandler.recordClick('sitenotworking_link', 'sitefixed');"
+                           class="subviewbutton subviewbutton-nav" align="center" flex="1">
+              <label flex="1" class="toolbarbutton-text" data-l10n-id="protections-panel-sitefixedsendreport-label"></label>
+            </toolbarbutton>
+          </hbox>
+        </vbox>
 
         <toolbarseparator id="protections-popup-cookie-banner-section-separator"></toolbarseparator>
         <hbox id="protections-popup-cookie-banner-section" class="protections-popup-section" uiDisabled="true" enabled="true" flex="1">

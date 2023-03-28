@@ -559,15 +559,11 @@
 
 .protections-popup-tp-switch-label-box,
 .protections-popup-tp-switch-box {
-  min-height: 40px;
   justify-content: center;
 }
 
-/* This is needed in order to show a correct height if the 'Site not working?'
-   link is not displaying. */
-.protections-popup-switch-section[short] > .protections-popup-tp-switch-label-box,
-.protections-popup-switch-section[short] > .protections-popup-tp-switch-box {
-  min-height: 30px;
+.protections-popup-switch-section-header {
+  min-height: 40px;
 }
 
 .protections-popup-switch-header {
@@ -725,11 +721,6 @@
   stroke: #ffbd4f;
 }
 
-#protections-popup-tp-switch-breakage-link,
-#protections-popup-tp-switch-breakage-fixed-link {
-  text-decoration: underline;
-}
-
 .permission-popup-section {
   padding-bottom: 12px;
 }
@@ -739,7 +730,7 @@
 }
 
 .protections-popup-section-header,
-.protections-popup-switch-section,
+.protections-popup-switch-section-header,
 #protections-popup-siteNotWorkingView-header {
   padding: var(--arrowpanel-menuitem-padding);
   margin: var(--arrowpanel-menuitem-margin);
