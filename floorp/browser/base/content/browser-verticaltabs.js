@@ -7,28 +7,37 @@
   if (Services.prefs.getBoolPref("floorp.browser.native.verticaltabs.enabled", false)) {
     Services.prefs.setBoolPref("floorp.enable.multitab", true);
     window.setTimeout(function () {
+
+      //init vertical tabs
       let tabBrowserArrowScrollBox = document.getElementById("tabbrowser-arrowscrollbox");
       document.getElementById("browser").insertBefore(document.getElementsByClassName("toolbar-items")[0], document.getElementById("browser").firstChild);
       document.getElementsByClassName("toolbar-items")[0].setAttribute("align", "start");
-      document.getElementsByClassName("toolbar-items")[0].setAttribute("style", " --tab-overflow-pinned-tabs-width: none !important; display: block; width:15em; max-width: 50em; min-width: 2.8em; overflow-y: scroll; overflow-x: hidden; min-height: 0px;");
+      document.getElementsByClassName("toolbar-items")[0].id = "toolbar-items-verticaltabs";
+      document.getElementsByClassName("toolbar-items")[0].setAttribute("style", " --tab-overflow-pinned-tabs-width: none !important;");
       tabBrowserArrowScrollBox.setAttribute("orient", "vertical");
       tabBrowserArrowScrollBox.removeAttribute("overflowing");
       tabBrowserArrowScrollBox.removeAttribute("scrolledtostart")
       tabBrowserArrowScrollBox.disabled = true;
       document.getElementById("tabbrowser-tabs").setAttribute("orient", "vertical");
       tabBrowserArrowScrollBox.shadowRoot.querySelector(`[part="scrollbox"]`).setAttribute("orient", "vertical");
+
+      //Delete max-height
       let observer = new MutationObserver(function () {
         tabBrowserArrowScrollBox.shadowRoot.querySelector(`[part="scrollbox"]`).removeAttribute("style");
       })
       observer.observe(tabBrowserArrowScrollBox.shadowRoot.querySelector(`[part="scrollbox"]`), {
         attributes: true
       })
+
+      //splitter
       const splitterNode = window.MozXULElement.parseXULToFragment(`
         <splitter id="sidebar-splitter3" class="chromeclass-extrachrome" style="background: var(--toolbar-bgcolor);
                   border: var(--win-sidebar-bgcolor) 0.1px solid;" hidden="false"/>
         `);
       document.getElementById("sidebar-box").before(splitterNode);
     }, 500);
+
+    //toolbar modification
     var Tag = document.createElement("style");
     Tag.textContent = `@import url("chrome://browser/content/browser-verticaltabs.css");`;
     document.head.appendChild(Tag);

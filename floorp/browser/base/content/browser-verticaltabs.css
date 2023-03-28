@@ -16,6 +16,17 @@
   background: var(--lwt-accent-color);
  }
  
+ #toolbar-items-verticaltabs {
+  display: block; 
+  width:15em;
+  max-width: 50em;
+  min-width: 2.5em;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  min-height: 0px;
+ }
+ 
  .tabbrowser-tab.tabbrowser-tab:not([pinned]){
   width: -moz-available !important;
   min-width: -moz-available !important;
