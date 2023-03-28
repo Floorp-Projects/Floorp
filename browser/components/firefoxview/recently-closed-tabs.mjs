@@ -48,7 +48,11 @@ class RecentlyClosedTabsList extends MozLitElement {
       "timeMsPref",
       "browser.tabs.firefox-view.updateTimeMs",
       NOW_THRESHOLD_MS,
-      () => this.updateTime()
+      timeMsPref => {
+        clearInterval(this.intervalID);
+        this.intervalID = setInterval(() => this.requestUpdate(), timeMsPref);
+        this.requestUpdate();
+      }
     );
   }
 
@@ -70,21 +74,11 @@ class RecentlyClosedTabsList extends MozLitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    this.intervalID = setInterval(() => this.updateTime(), lazy.timeMsPref);
+    this.intervalID = setInterval(() => this.requestUpdate(), lazy.timeMsPref);
   }
 
   disconnectedCallback() {
     clearInterval(this.intervalID);
-  }
-
-  updateTime() {
-    for (let timeEl of this.timeElements) {
-      timeEl.textContent = convertTimestamp(
-        parseInt(timeEl.getAttribute("data-timestamp")),
-        this.fluentStrings,
-        lazy.timeMsPref
-      );
-    }
   }
 
   getTabStateValue(tab, key) {
@@ -210,13 +204,13 @@ class RecentlyClosedTabsList extends MozLitElement {
 
   updated() {
     let focusRestored = false;
-    if (this.lastFocusedIndex >= 0) {
-      if (this.tabsList && this.tabsList.children.length) {
+    if (
+      this.lastFocusedIndex >= 0 &&
+      (!this.tabsList || this.lastFocusedIndex >= this.tabsList.children.length)
+    ) {
+      if (this.tabsList) {
         let items = [...this.tabsList.children];
-        let newFocusIndex = Math.max(
-          Math.min(items.length - 1, this.lastFocusedIndex - 1),
-          0
-        );
+        let newFocusIndex = items.length - 1;
         let newFocus = items[newFocusIndex];
         if (newFocus) {
           focusRestored = true;
@@ -259,7 +253,11 @@ class RecentlyClosedTabsList extends MozLitElement {
 
   recentlyClosedTabTemplate(tab, primary) {
     const targetURI = this.getTabStateValue(tab, "url");
-    const convertedTime = convertTimestamp(tab.closedAt, this.fluentStrings);
+    const convertedTime = convertTimestamp(
+      tab.closedAt,
+      this.fluentStrings,
+      lazy.timeMsPref
+    );
     return html`
       <li
         class="closed-tab-li"
