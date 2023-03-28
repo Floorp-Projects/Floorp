@@ -53,6 +53,12 @@ let AVAILABLE_PIP_OVERRIDES;
       },
     },
 
+    aol: {
+      "https://*.aol.com/*": {
+        videoWrapperScriptPath: "video-wrappers/yahoo.js",
+      },
+    },
+
     bbc: {
       "https://*.bbc.com/*": {
         videoWrapperScriptPath: "video-wrappers/bbc.js",
@@ -229,7 +235,7 @@ let AVAILABLE_PIP_OVERRIDES;
 
     yahoofinance: {
       "https://*.finance.yahoo.com/*": {
-        videoWrapperScriptPath: "video-wrappers/yahoofinance.js",
+        videoWrapperScriptPath: "video-wrappers/yahoo.js",
       },
     },
 
