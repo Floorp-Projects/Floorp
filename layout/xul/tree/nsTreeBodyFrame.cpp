@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "SimpleXULLeafFrame.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/DebugOnly.h"
@@ -229,12 +230,12 @@ NS_IMPL_FRAMEARENA_HELPERS(nsTreeBodyFrame)
 NS_QUERYFRAME_HEAD(nsTreeBodyFrame)
   NS_QUERYFRAME_ENTRY(nsIScrollbarMediator)
   NS_QUERYFRAME_ENTRY(nsTreeBodyFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsLeafBoxFrame)
+NS_QUERYFRAME_TAIL_INHERITING(SimpleXULLeafFrame)
 
 // Constructor
 nsTreeBodyFrame::nsTreeBodyFrame(ComputedStyle* aStyle,
                                  nsPresContext* aPresContext)
-    : nsLeafBoxFrame(aStyle, aPresContext, kClassID),
+    : SimpleXULLeafFrame(aStyle, aPresContext, kClassID),
       mImageCache(),
       mTopRowIndex(0),
       mPageLength(0),
@@ -244,7 +245,6 @@ nsTreeBodyFrame::nsTreeBodyFrame(ComputedStyle* aStyle,
       mAdjustWidth(0),
       mRowHeight(0),
       mIndentation(0),
-      mStringWidth(-1),
       mUpdateBatchNest(0),
       mRowCount(0),
       mMouseOverRow(-1),
@@ -277,86 +277,25 @@ static void AdjustForBorderPadding(ComputedStyle* aStyle, nsRect& aRect) {
 
 void nsTreeBodyFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                            nsIFrame* aPrevInFlow) {
-  nsLeafBoxFrame::Init(aContent, aParent, aPrevInFlow);
+  SimpleXULLeafFrame::Init(aContent, aParent, aPrevInFlow);
 
   mIndentation = GetIndentation();
   mRowHeight = GetRowHeight();
 
   // Call GetBaseElement so that mTree is assigned.
-  GetBaseElement();
+  RefPtr<XULTreeElement> tree(GetBaseElement());
+  if (MOZ_LIKELY(tree)) {
+    nsAutoString rows;
+    if (tree->GetAttr(nsGkAtoms::rows, rows)) {
+      nsresult err;
+      mPageLength = rows.ToInteger(&err);
+    }
+  }
 
-  if (LookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars) != 0) {
+  if (PresContext()->UseOverlayScrollbars()) {
     mScrollbarActivity =
         new ScrollbarActivity(static_cast<nsIScrollbarMediator*>(this));
   }
-}
-
-nsSize nsTreeBodyFrame::GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) {
-  EnsureView();
-
-  RefPtr<XULTreeElement> tree(GetBaseElement());
-
-  nsSize min(0, 0);
-  int32_t desiredRows;
-  if (MOZ_UNLIKELY(!tree)) {
-    desiredRows = 0;
-  } else {
-    nsAutoString rows;
-    tree->GetAttr(kNameSpaceID_None, nsGkAtoms::rows, rows);
-    if (!rows.IsEmpty()) {
-      nsresult err;
-      desiredRows = rows.ToInteger(&err);
-      mPageLength = desiredRows;
-    } else {
-      desiredRows = 0;
-    }
-  }
-
-  min.height = mRowHeight * desiredRows;
-
-  AddXULBorderAndPadding(min);
-  bool widthSet, heightSet;
-  nsIFrame::AddXULMinSize(this, min, widthSet, heightSet);
-
-  return min;
-}
-
-nscoord nsTreeBodyFrame::CalcMaxRowWidth() {
-  if (mStringWidth != -1) return mStringWidth;
-
-  if (!mView) {
-    return 0;
-  }
-
-  ComputedStyle* rowContext =
-      GetPseudoComputedStyle(nsCSSAnonBoxes::mozTreeRow());
-  nsMargin rowMargin(0, 0, 0, 0);
-  GetBorderPadding(rowContext, rowMargin);
-
-  nscoord rowWidth;
-  nsTreeColumn* col;
-
-  UniquePtr<gfxContext> rc = PresShell()->CreateReferenceRenderingContext();
-
-  for (int32_t row = 0; row < mRowCount; ++row) {
-    rowWidth = 0;
-
-    for (col = mColumns->GetFirstColumn(); col; col = col->GetNext()) {
-      nscoord desiredWidth, currentWidth;
-      nsresult rv =
-          GetCellWidth(row, col, rc.get(), desiredWidth, currentWidth);
-      if (NS_FAILED(rv)) {
-        MOZ_ASSERT_UNREACHABLE("invalid column");
-        continue;
-      }
-      rowWidth += desiredWidth;
-    }
-
-    if (rowWidth > mStringWidth) mStringWidth = rowWidth;
-  }
-
-  mStringWidth += rowMargin.left + rowMargin.right;
-  return mStringWidth;
 }
 
 void nsTreeBodyFrame::DestroyFrom(nsIFrame* aDestructRoot,
@@ -388,7 +327,7 @@ void nsTreeBodyFrame::DestroyFrom(nsIFrame* aDestructRoot,
     view->SetTree(nullptr);
   }
 
-  nsLeafBoxFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  SimpleXULLeafFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 void nsTreeBodyFrame::EnsureView() {
@@ -441,14 +380,16 @@ void nsTreeBodyFrame::ManageReflowCallback(const nsRect& aRect,
   }
 }
 
-void nsTreeBodyFrame::SetXULBounds(nsBoxLayoutState& aBoxLayoutState,
-                                   const nsRect& aRect,
-                                   bool aRemoveOverflowArea) {
-  nscoord horzWidth = CalcHorzWidth(GetScrollParts());
-  ManageReflowCallback(aRect, horzWidth);
-  mHorzWidth = horzWidth;
+nscoord nsTreeBodyFrame::GetIntrinsicBSize() {
+  return mRowHeight * mPageLength;
+}
 
-  nsLeafBoxFrame::SetXULBounds(aBoxLayoutState, aRect, aRemoveOverflowArea);
+void nsTreeBodyFrame::DidReflow(nsPresContext* aPresContext,
+                                const ReflowInput* aReflowInput) {
+  nscoord horzWidth = CalcHorzWidth(GetScrollParts());
+  ManageReflowCallback(GetRect(), horzWidth);
+  mHorzWidth = horzWidth;
+  SimpleXULLeafFrame::DidReflow(aPresContext, aReflowInput);
 }
 
 bool nsTreeBodyFrame::ReflowFinished() {
@@ -2289,7 +2230,7 @@ Maybe<nsIFrame::Cursor> nsTreeBodyFrame::GetCursor(const nsPoint& aPoint) {
           Cursor{kind, AllowCustomCursorImage::Yes, std::move(childContext)});
     }
   }
-  return nsLeafBoxFrame::GetCursor(aPoint);
+  return SimpleXULLeafFrame::GetCursor(aPoint);
 }
 
 static uint32_t GetDropEffect(WidgetGUIEvent* aEvent) {
@@ -2550,8 +2491,7 @@ class nsDisplayTreeBody final : public nsPaintedDisplayItem {
                                                     aInvalidRegion);
   }
 
-  virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     gfxContext* aCtx) override {
+  void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override {
     MOZ_ASSERT(aBuilder);
     Unused << static_cast<nsTreeBodyFrame*>(mFrame)->PaintTreeBody(
         *aCtx, GetPaintRect(aBuilder, aCtx), ToReferenceFrame(), aBuilder);
@@ -2559,7 +2499,7 @@ class nsDisplayTreeBody final : public nsPaintedDisplayItem {
 
   NS_DISPLAY_DECL_NAME("XULTreeBody", TYPE_XUL_TREE_BODY)
 
-  virtual nsRect GetComponentAlphaBounds(
+  nsRect GetComponentAlphaBounds(
       nsDisplayListBuilder* aBuilder) const override {
     bool snap;
     return GetBounds(aBuilder, &snap);
@@ -2588,16 +2528,13 @@ void nsTreeBodyFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   if (!IsVisibleForPainting()) return;  // We're invisible.  Don't paint.
 
   // Handles painting our background, border, and outline.
-  nsLeafBoxFrame::BuildDisplayList(aBuilder, aLists);
+  SimpleXULLeafFrame::BuildDisplayList(aBuilder, aLists);
 
   // Bail out now if there's no view or we can't run script because the
   // document is a zombie
   if (!mView || !GetContent()->GetComposedDoc()->GetWindow()) return;
 
   nsDisplayItem* item = MakeDisplayItem<nsDisplayTreeBody>(aBuilder, this);
-  if (!item) {
-    return;
-  }
   aLists.Content()->AppendToTop(item);
 
 #ifdef XP_MACOSX
@@ -4032,7 +3969,7 @@ void nsTreeBodyFrame::RemoveImageCacheEntry(int32_t aRowIndex,
 
 /* virtual */
 void nsTreeBodyFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
-  nsLeafBoxFrame::DidSetComputedStyle(aOldComputedStyle);
+  SimpleXULLeafFrame::DidSetComputedStyle(aOldComputedStyle);
 
   // Clear the style cache; the pointers are no longer even valid
   mStyleCache.Clear();
@@ -4041,7 +3978,6 @@ void nsTreeBodyFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
   // dpi changes
   mIndentation = GetIndentation();
   mRowHeight = GetRowHeight();
-  mStringWidth = -1;
 }
 
 bool nsTreeBodyFrame::OffsetForHorzScroll(nsRect& rect, bool clip) {
