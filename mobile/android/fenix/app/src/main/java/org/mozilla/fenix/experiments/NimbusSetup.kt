@@ -8,6 +8,7 @@ import android.content.Context
 import mozilla.components.service.nimbus.NimbusApi
 import mozilla.components.service.nimbus.NimbusAppInfo
 import mozilla.components.service.nimbus.NimbusBuilder
+import mozilla.components.service.nimbus.loggingErrorReporter
 import mozilla.components.service.nimbus.messaging.FxNimbusMessaging
 import mozilla.components.service.nimbus.messaging.NimbusSystem
 import mozilla.components.support.base.log.logger.Logger
@@ -59,9 +60,16 @@ fun createNimbus(context: Context, urlString: String?): NimbusApi {
     return NimbusBuilder(context).apply {
         url = urlString
         errorReporter = { message, e ->
-            Logger.error("Nimbus error: $message", e)
+            if (BuildConfig.BUILD_TYPE == "debug") {
+                Logger.error("Nimbus error: $message", e)
+            }
             if (e !is NimbusException || e.isReportableError()) {
-                context.components.analytics.crashReporter.submitCaughtException(e)
+                @Suppress("TooGenericExceptionCaught")
+                try {
+                    context.components.analytics.crashReporter.submitCaughtException(e)
+                } catch (e: Throwable) {
+                    loggingErrorReporter(message, e)
+                }
             }
         }
         initialExperiments = R.raw.initial_experiments
