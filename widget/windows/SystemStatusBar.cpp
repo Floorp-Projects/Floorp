@@ -265,8 +265,8 @@ LRESULT StatusBarEntry::OnMessage(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
     // focuses any window in the parent process).
     ::SetForegroundWindow(win);
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-    pm->ShowPopupAtScreen(popupFrame->GetContent(), point.x, point.y, false,
-                          nullptr);
+    pm->ShowPopupAtScreen(popupFrame->GetContent()->AsElement(), point.x,
+                          point.y, false, nullptr);
   }
 
   return DefWindowProc(hWnd, msg, wp, lp);
