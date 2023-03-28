@@ -107,6 +107,73 @@ add_task(function test_addLogin_removeLogin() {
   LoginTestUtils.checkLogins([]);
 });
 
+add_task(async function add_login_works_with_empty_array() {
+  const result = await Services.logins.addLogins([]);
+  Assert.equal(result.length, 0, "no logins added");
+});
+
+add_task(async function duplicated_logins_are_not_added() {
+  const login = TestData.formLogin({
+    username: "user",
+  });
+  await Services.logins.addLogins([login]);
+  const result = await Services.logins.addLogins([login]);
+  Assert.equal(result, 0, "no logins added");
+  Services.logins.removeAllUserFacingLogins();
+});
+
+add_task(async function logins_containing_nul_in_username_are_not_added() {
+  const result = await Services.logins.addLogins([
+    TestData.formLogin({ username: "user\0name" }),
+  ]);
+  Assert.equal(result, 0, "no logins added");
+});
+
+add_task(async function logins_containing_nul_in_password_are_not_added() {
+  const result = await Services.logins.addLogins([
+    TestData.formLogin({ password: "pass\0word" }),
+  ]);
+  Assert.equal(result, 0, "no logins added");
+});
+
+add_task(
+  async function return_value_includes_plaintext_username_and_password() {
+    const login = TestData.formLogin({});
+    const [result] = await Services.logins.addLogins([login]);
+    Assert.equal(result.username, login.username, "plaintext username is set");
+    Assert.equal(result.password, login.password, "plaintext password is set");
+    Services.logins.removeAllUserFacingLogins();
+  }
+);
+
+add_task(async function event_data_includes_plaintext_username_and_password() {
+  const login = TestData.formLogin({});
+  const TestObserver = {
+    QueryInterface: ChromeUtils.generateQI([
+      "nsIObserver",
+      "nsISupportsWeakReference",
+    ]),
+    observe(subject, topic, data) {
+      Assert.ok(subject instanceof Ci.nsILoginInfo);
+      Assert.ok(subject instanceof Ci.nsILoginMetaInfo);
+      Assert.equal(
+        subject.username,
+        login.username,
+        "plaintext username is set"
+      );
+      Assert.equal(
+        subject.password,
+        login.password,
+        "plaintext password is set"
+      );
+    },
+  };
+  Services.obs.addObserver(TestObserver, "passwordmgr-storage-changed");
+  await Services.logins.addLogins([login]);
+  Services.obs.removeObserver(TestObserver, "passwordmgr-storage-changed");
+  Services.logins.removeAllUserFacingLogins();
+});
+
 /**
  * Tests invalid combinations of httpRealm and formActionOrigin.
  *
