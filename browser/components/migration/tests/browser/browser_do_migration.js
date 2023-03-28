@@ -358,3 +358,49 @@ add_task(async function test_successful_migrations() {
     assertQuantitiesShown(wizard, allResourceTypeStrs);
   });
 });
+
+/**
+ * Tests that if somehow the Migration Wizard requests to import a
+ * resource type that the migrator doesn't have the ability to import,
+ * that it's ignored and the migration completes normally.
+ */
+add_task(async function test_invalid_resource_type() {
+  let migration = waitForTestMigration(
+    [MigrationUtils.resourceTypes.BOOKMARKS],
+    [MigrationUtils.resourceTypes.BOOKMARKS],
+    null
+  );
+
+  await withMigrationWizardDialog(async prefsWin => {
+    let dialogBody = prefsWin.document.body;
+    let wizard = dialogBody.querySelector("migration-wizard");
+    let wizardDone = BrowserTestUtils.waitForEvent(
+      wizard,
+      "MigrationWizard:DoneMigration"
+    );
+
+    // The Migration Wizard _shouldn't_ display anything except BOOKMARKS,
+    // since that's the only resource type that the selected migrator is
+    // supposed to currently support, but we'll check the other checkboxes
+    // even though they're hidden just to see what happens.
+    selectResourceTypesAndStartMigration(wizard, [
+      MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS,
+      MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS,
+      MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.HISTORY,
+      MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.FORMDATA,
+    ]);
+    await migration;
+
+    let dialog = prefsWin.document.querySelector("#migrationWizardDialog");
+    let shadow = wizard.openOrClosedShadowRoot;
+    let doneButton = shadow.querySelector("#done-button");
+    let dialogClosed = BrowserTestUtils.waitForEvent(dialog, "close");
+
+    doneButton.click();
+    await dialogClosed;
+    await wizardDone;
+    assertQuantitiesShown(wizard, [
+      MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS,
+    ]);
+  });
+});

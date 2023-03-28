@@ -102,7 +102,7 @@ export class MigrationWizardParent extends JSWindowActorParent {
    *
    * @param {string} migratorKey
    *   The unique identification key for a migrator.
-   * @param {string[]} resourceTypes
+   * @param {string[]} resourceTypeNames
    *   An array of strings, where each string represents a resource type
    *   that can be imported for this migrator and profile. The strings
    *   should be one of the key values of
@@ -116,17 +116,21 @@ export class MigrationWizardParent extends JSWindowActorParent {
    * @returns {Promise<undefined>}
    *   Resolves once the Migration:Ended observer notification has fired.
    */
-  async #doMigration(migratorKey, resourceTypes, profileObj) {
+  async #doMigration(migratorKey, resourceTypeNames, profileObj) {
     let migrator = await MigrationUtils.getMigrator(migratorKey);
+    let availableResourceTypes = await migrator.getMigrateData();
     let resourceTypesToMigrate = 0;
     let progress = {};
 
-    for (let resourceType of resourceTypes) {
-      resourceTypesToMigrate |= MigrationUtils.resourceTypes[resourceType];
-      progress[resourceType] = {
-        inProgress: true,
-        message: "",
-      };
+    for (let resourceTypeName of resourceTypeNames) {
+      let resourceType = MigrationUtils.resourceTypes[resourceTypeName];
+      if (availableResourceTypes & resourceType) {
+        resourceTypesToMigrate |= resourceType;
+        progress[resourceTypeName] = {
+          inProgress: true,
+          message: "",
+        };
+      }
     }
 
     this.sendAsyncMessage("UpdateProgress", progress);

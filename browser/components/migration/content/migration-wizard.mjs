@@ -693,7 +693,7 @@ export class MigrationWizard extends HTMLElement {
           this.#onBrowserProfileSelectionChanged();
         } else if (event.target.classList.contains("select-all-checkbox")) {
           let checkboxes = this.#shadowRoot.querySelectorAll(
-            'label[data-resource-type] > input[type="checkbox"]'
+            'label[data-resource-type]:not([hidden]) > input[type="checkbox"]'
           );
           for (let checkbox of checkboxes) {
             checkbox.checked = event.target.checked;
