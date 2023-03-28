@@ -23,4 +23,4 @@
 # don't change CLOBBER for WebIDL changes any more.
 
 
-Modified build files in third_party/libwebrtc - Bug 1817024 - Vendor libwebrtc from 15a82c93d0
+Modified build files in third_party/libwebrtc - Bug 1824170: Reduce our opportunities for merge conflicts around pipewire build config. r?mjf

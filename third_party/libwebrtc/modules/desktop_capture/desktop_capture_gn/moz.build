@@ -31,7 +31,6 @@ LOCAL_INCLUDES += [
     "/media/libyuv/libyuv/include/",
     "/third_party/libwebrtc/",
     "/third_party/libwebrtc/third_party/abseil-cpp/",
-    "/third_party/pipewire/",
     "/tools/profiler/public"
 ]
 
@@ -254,9 +253,9 @@ if CONFIG["CPU_ARCH"] == "arm":
         "/third_party/drm/drm/",
         "/third_party/drm/drm/include/",
         "/third_party/drm/drm/include/libdrm/",
-        "/third_party/drm/libdrm/",
         "/third_party/gbm/gbm/",
-        "/third_party/libepoxy/libepoxy/include/"
+        "/third_party/libepoxy/libepoxy/include/",
+        "/third_party/pipewire/"
     ]
 
     SOURCES += [
@@ -332,9 +331,9 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
         "/third_party/drm/drm/",
         "/third_party/drm/drm/include/",
         "/third_party/drm/drm/include/libdrm/",
-        "/third_party/drm/libdrm/",
         "/third_party/gbm/gbm/",
-        "/third_party/libepoxy/libepoxy/include/"
+        "/third_party/libepoxy/libepoxy/include/",
+        "/third_party/pipewire/"
     ]
 
     SOURCES += [
@@ -369,9 +368,9 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
         "/third_party/drm/drm/",
         "/third_party/drm/drm/include/",
         "/third_party/drm/drm/include/libdrm/",
-        "/third_party/drm/libdrm/",
         "/third_party/gbm/gbm/",
-        "/third_party/libepoxy/libepoxy/include/"
+        "/third_party/libepoxy/libepoxy/include/",
+        "/third_party/pipewire/"
     ]
 
     SOURCES += [
@@ -402,9 +401,9 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
         "/third_party/drm/drm/",
         "/third_party/drm/drm/include/",
         "/third_party/drm/drm/include/libdrm/",
-        "/third_party/drm/libdrm/",
         "/third_party/gbm/gbm/",
-        "/third_party/libepoxy/libepoxy/include/"
+        "/third_party/libepoxy/libepoxy/include/",
+        "/third_party/pipewire/"
     ]
 
     SOURCES += [
