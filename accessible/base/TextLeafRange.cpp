@@ -566,7 +566,6 @@ MOZ_CAN_RUN_SCRIPT static std::pair<nsIContent*, int32_t> DOMPointForSelection(
       }
     }
 
-    MOZ_ASSERT(aPoint.mAcc->IsDoc() || content->HasFlag(NODE_IS_EDITABLE));
     return {content, 0};
   }
 
