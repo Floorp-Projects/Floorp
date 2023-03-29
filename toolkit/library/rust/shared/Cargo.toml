@@ -25,19 +25,8 @@ webrender_bindings = { path = "../../../../gfx/webrender_bindings" }
 cubeb-coreaudio = { git = "https://github.com/mozilla/cubeb-coreaudio-rs", rev = "93b5c01a131f65c83c11aeb317f4583405c5eb79", optional = true }
 cubeb-pulse = { git = "https://github.com/mozilla/cubeb-pulse-rs", rev="cf48897be5cbe147d051ebbbe1eaf5fd8fb6bbc9", optional = true, features=["pulse-dlopen"] }
 cubeb-sys = { version = "0.10.3", optional = true, features=["gecko-in-tree"] }
-audioipc2-client = { git = "https://github.com/kinetiknz/audioipc-2", rev = "916f65cc92f6f2484183ff4681b0e9a2bfd60fe7", optional = true } # macos (v2) branch
-audioipc2-server = { git = "https://github.com/kinetiknz/audioipc-2", rev = "916f65cc92f6f2484183ff4681b0e9a2bfd60fe7", optional = true } # macos (v2) branch
-audioipc-client = { git = "https://github.com/mozilla/audioipc", rev = "fb7a2b12ced3b43e6a268621989c6191d1ed7e39", optional = true }
-audioipc-server = { git = "https://github.com/mozilla/audioipc", rev = "fb7a2b12ced3b43e6a268621989c6191d1ed7e39", optional = true }
-# Force tokio-reactor on an old version to avoid new dependencies of newer versions.
-# Remove when audioipc-client and audioipc-server above are replaced with
-# audioipc2-client and audioipc2-server.
-tokio-reactor = { version = "=0.1.3", optional = true }
-# Force tokio-threadpool on an old version that doesn't depend on crossbeam-queue 0.2
-# that has licensing issues.
-# Remove when audioipc-client and audioipc-server above are replaced with
-# audioipc2-client and audioipc2-server.
-tokio-threadpool = { version = "=0.1.17", optional = true }
+audioipc2-client = { git = "https://github.com/mozilla/audioipc", rev = "916f65cc92f6f2484183ff4681b0e9a2bfd60fe7", optional = true }
+audioipc2-server = { git = "https://github.com/mozilla/audioipc", rev = "916f65cc92f6f2484183ff4681b0e9a2bfd60fe7", optional = true }
 encoding_glue = { path = "../../../../intl/encoding_glue" }
 authrs_bridge = { path = "../../../../dom/webauthn/authrs_bridge" }
 gkrust_utils = { path = "../../../../xpcom/rust/gkrust_utils" }
@@ -124,7 +113,7 @@ detect_win32k_conflicts = { path = "../../../xre/detect_win32k_conflicts" }
 [features]
 default = []
 moz_memory = ["mozglue-static/moz_memory"]
-cubeb-remoting = ["cubeb-sys", "audioipc-client", "audioipc-server", "audioipc2-client", "audioipc2-server"]
+cubeb-remoting = ["cubeb-sys", "audioipc2-client", "audioipc2-server"]
 cubeb_coreaudio_rust = ["cubeb-sys", "cubeb-coreaudio"]
 cubeb_pulse_rust = ["cubeb-sys", "cubeb-pulse"]
 gecko_debug = ["geckoservo/gecko_debug", "nsstring/gecko_debug"]

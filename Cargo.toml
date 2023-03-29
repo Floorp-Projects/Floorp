@@ -102,9 +102,6 @@ darling = { path = "build/rust/darling" }
 # Patch redox_users to an empty crate
 redox_users = { path = "build/rust/redox_users" }
 
-# Patch memmap2 0.2 to 0.3
-memmap2 = { path = "build/rust/memmap2" }
-
 # Patch getrandom 0.7 to 0.8
 rand = { path = "build/rust/rand" }
 

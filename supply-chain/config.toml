@@ -22,14 +22,6 @@ url = "https://raw.githubusercontent.com/divviup/libprio-rs/main/supply-chain/au
 [imports.mozilla]
 url = "https://raw.githubusercontent.com/mozilla/supply-chain/main/audits.toml"
 
-[policy.audioipc-client]
-criteria = []
-notes = "Going away very soon in bug 1697845"
-
-[policy.audioipc-server]
-criteria = []
-notes = "Going away very soon in bug 1697845"
-
 [policy.autocfg]
 audit-as-crates-io = true
 notes = "This is the upstream code plus a few local fixes, see bug 1685697."
@@ -98,10 +90,6 @@ notes = "This is a pinned version of the upstream code, presumably to get a fix 
 [policy.minidump-writer]
 audit-as-crates-io = true
 notes = "This is a pinned version of the upstream code, presumably to get a fix that hadn't been released yet. We should consider switching to the latest official release."
-
-[policy.mio-named-pipes]
-audit-as-crates-io = true
-notes = "We have a local fork, but this entire subtree is going away shortly anyway with the old audioipc code."
 
 [policy."mio:0.6.23"]
 audit-as-crates-io = true

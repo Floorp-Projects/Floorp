@@ -60,16 +60,6 @@ git = "https://github.com/jfkthame/mapped_hyph.git"
 rev = "c7651a0cffff41996ad13c44f689bd9cd2192c01"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/kinetiknz/audioipc-2?rev=916f65cc92f6f2484183ff4681b0e9a2bfd60fe7"]
-git = "https://github.com/kinetiknz/audioipc-2"
-rev = "916f65cc92f6f2484183ff4681b0e9a2bfd60fe7"
-replace-with = "vendored-sources"
-
-[source."git+https://github.com/kinetiknz/mio-named-pipes?rev=21c26326f5f45f415c49eac4ba5bc41a2f961321"]
-git = "https://github.com/kinetiknz/mio-named-pipes"
-rev = "21c26326f5f45f415c49eac4ba5bc41a2f961321"
-replace-with = "vendored-sources"
-
 [source."git+https://github.com/mozilla-spidermonkey/jsparagus?rev=64ba08e24749616de2344112f226d1ef4ba893ae"]
 git = "https://github.com/mozilla-spidermonkey/jsparagus"
 rev = "64ba08e24749616de2344112f226d1ef4ba893ae"
@@ -80,9 +70,9 @@ git = "https://github.com/mozilla/application-services"
 rev = "86c84c217036c12283d19368867323a66bf35883"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/mozilla/audioipc?rev=fb7a2b12ced3b43e6a268621989c6191d1ed7e39"]
+[source."git+https://github.com/mozilla/audioipc?rev=916f65cc92f6f2484183ff4681b0e9a2bfd60fe7"]
 git = "https://github.com/mozilla/audioipc"
-rev = "fb7a2b12ced3b43e6a268621989c6191d1ed7e39"
+rev = "916f65cc92f6f2484183ff4681b0e9a2bfd60fe7"
 replace-with = "vendored-sources"
 
 [source."git+https://github.com/mozilla/cubeb-coreaudio-rs?rev=93b5c01a131f65c83c11aeb317f4583405c5eb79"]
