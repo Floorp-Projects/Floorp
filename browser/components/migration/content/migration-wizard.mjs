@@ -64,7 +64,7 @@ export class MigrationWizard extends HTMLElement {
                   <input type="checkbox" class="select-all-checkbox"/><span data-l10n-id="migration-select-all-option-label"></span>
                 </label>
                 <label id="bookmarks" data-resource-type="BOOKMARKS"/>
-                  <input type="checkbox"/><span data-l10n-id="migration-bookmarks-option-label"></span>
+                  <input type="checkbox"/><span default-data-l10n-id="migration-bookmarks-option-label" ie-edge-data-l10n-id="migration-favorites-option-label"></span>
                 </label>
                 <label id="logins-and-passwords" data-resource-type="PASSWORDS">
                   <input type="checkbox"/><span data-l10n-id="migration-logins-and-passwords-option-label"></span>
@@ -89,7 +89,7 @@ export class MigrationWizard extends HTMLElement {
             <div class="resource-progress">
               <div data-resource-type="BOOKMARKS" class="resource-progress-group">
                 <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
-                <span data-l10n-id="migration-bookmarks-option-label"></span>
+                <span default-data-l10n-id="migration-bookmarks-option-label" ie-edge-data-l10n-id="migration-favorites-option-label"></span>
                 <span class="success-text deemphasized-text">&nbsp;</span>
               </div>
 
@@ -324,6 +324,7 @@ export class MigrationWizard extends HTMLElement {
       ).style.content = "url(chrome://global/skin/icons/defaultFavicon.svg)";
     }
 
+    let key = panelItem.getAttribute("key");
     let resourceTypes = panelItem.resourceTypes;
     for (let child of this.#resourceTypeList.children) {
       child.hidden = true;
@@ -337,6 +338,23 @@ export class MigrationWizard extends HTMLElement {
       if (resourceLabel) {
         resourceLabel.hidden = false;
         resourceLabel.control.checked = true;
+
+        let labelSpan = resourceLabel.querySelector(
+          "span[default-data-l10n-id]"
+        );
+        if (labelSpan) {
+          if (MigrationWizardConstants.USES_FAVORITES.includes(key)) {
+            document.l10n.setAttributes(
+              labelSpan,
+              labelSpan.getAttribute("ie-edge-data-l10n-id")
+            );
+          } else {
+            document.l10n.setAttributes(
+              labelSpan,
+              labelSpan.getAttribute("default-data-l10n-id")
+            );
+          }
+        }
       }
     }
     let selectAll = this.#shadowRoot.querySelector("#select-all").control;
@@ -434,6 +452,8 @@ export class MigrationWizard extends HTMLElement {
    * @param {object} state
    *   The state object passed into setState. The following properties are
    *   used:
+   * @param {string} state.key
+   *   The key of the migrator being used.
    * @param {Object<string, ProgressState>} state.progress
    *   An object whose keys match one of DISPLAYED_RESOURCE_TYPES.
    *
@@ -457,6 +477,21 @@ export class MigrationWizard extends HTMLElement {
 
       let progressIcon = group.querySelector(".progress-icon");
       let successText = group.querySelector(".success-text");
+
+      let labelSpan = group.querySelector("span[default-data-l10n-id]");
+      if (labelSpan) {
+        if (MigrationWizardConstants.USES_FAVORITES.includes(state.key)) {
+          document.l10n.setAttributes(
+            labelSpan,
+            labelSpan.getAttribute("ie-edge-data-l10n-id")
+          );
+        } else {
+          document.l10n.setAttributes(
+            labelSpan,
+            labelSpan.getAttribute("default-data-l10n-id")
+          );
+        }
+      }
 
       if (state.progress[resourceType].inProgress) {
         document.l10n.setAttributes(
@@ -599,13 +634,15 @@ export class MigrationWizard extends HTMLElement {
     let resourceTypeLabels = this.#resourceTypeList.querySelectorAll(
       "label:not([hidden])[data-resource-type]"
     );
+    let panelItem = this.#browserProfileSelector.selectedPanelItem;
+    let key = panelItem.getAttribute("key");
 
     let totalResources = resourceTypeLabels.length;
     let checkedResources = 0;
 
     let selectedData = this.#shadowRoot.querySelector(".selected-data");
     let selectedDataArray = [];
-    const RESOURCE_TYPE_TO_LABEL_IDS = {
+    let resourceTypeToLabelIDs = {
       [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS]:
         "migration-list-bookmark-label",
       [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS]:
@@ -616,8 +653,14 @@ export class MigrationWizard extends HTMLElement {
         "migration-list-autofill-label",
     };
 
-    let resourceTypes = Object.keys(RESOURCE_TYPE_TO_LABEL_IDS);
-    let labelIds = Object.values(RESOURCE_TYPE_TO_LABEL_IDS).map(id => {
+    if (MigrationWizardConstants.USES_FAVORITES.includes(key)) {
+      resourceTypeToLabelIDs[
+        MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS
+      ] = "migration-list-favorites-label";
+    }
+
+    let resourceTypes = Object.keys(resourceTypeToLabelIDs);
+    let labelIds = Object.values(resourceTypeToLabelIDs).map(id => {
       return { id };
     });
     let labels = await document.l10n.formatValues(labelIds);

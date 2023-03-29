@@ -53,6 +53,11 @@ migration-selected-data-label = Import selected data
 
 migration-select-all-option-label = Select all
 migration-bookmarks-option-label = Bookmarks
+
+# Favorites is used for Bookmarks when importing from Internet Explorer or
+# Edge, as this is the terminology for bookmarks on those browsers.
+migration-favorites-option-label = Favorites
+
 migration-logins-and-passwords-option-label = Saved logins and passwords
 migration-history-option-label = Browsing history
 migration-form-autofill-option-label = Form autofill data
@@ -69,6 +74,10 @@ migration-wizard-import-browser-no-browsers = { -brand-short-name } couldn’t f
 ## For example, a possible list could be "Bookmarks, passwords and autofill data".
 
 migration-list-bookmark-label = bookmarks
+
+# “favorites” refers to bookmarks in Edge and Internet Explorer. Use the same terminology
+# if the browser is available in your language.
+migration-list-favorites-label = favorites
 migration-list-password-label = passwords
 migration-list-history-label = history
 migration-list-autofill-label = autofill data
@@ -101,6 +110,19 @@ migration-wizard-progress-success-bookmarks =
     { $quantity ->
         [one] { $quantity } bookmark
        *[other] { $quantity } bookmarks
+    }
+
+# Shown in the migration wizard after importing bookmarks from either
+# Internet Explorer or Edge.
+#
+# Use the same terminology if the browser is available in your language.
+#
+# Variables:
+#  $quantity (Number): the number of successfully imported bookmarks
+migration-wizard-progress-success-favorites =
+    { $quantity ->
+        [one] { $quantity } favorite
+       *[other] { $quantity } favorites
     }
 
 # Shown in the migration wizard after importing passwords from another

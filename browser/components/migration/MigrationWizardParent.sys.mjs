@@ -133,7 +133,7 @@ export class MigrationWizardParent extends JSWindowActorParent {
       }
     }
 
-    this.sendAsyncMessage("UpdateProgress", progress);
+    this.sendAsyncMessage("UpdateProgress", { key: migratorKey, progress });
 
     try {
       await migrator.migrate(
@@ -165,10 +165,14 @@ export class MigrationWizardParent extends JSWindowActorParent {
             progress[foundResourceTypeName] = {
               inProgress: false,
               message: await this.#getStringForImportQuantity(
+                migratorKey,
                 foundResourceTypeName
               ),
             };
-            this.sendAsyncMessage("UpdateProgress", progress);
+            this.sendAsyncMessage("UpdateProgress", {
+              key: migratorKey,
+              progress,
+            });
           }
         }
       );
@@ -294,22 +298,29 @@ export class MigrationWizardParent extends JSWindowActorParent {
    * Returns the "success" string for a particular resource type after
    * migration has completed.
    *
+   * @param {string} migratorKey
+   *   The key for the migrator being used.
    * @param {string} resourceTypeStr
    *   A string mapping to one of the key values of
    *   MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.
    * @returns {Promise<string>}
    *   The success string for the resource type after migration has completed.
    */
-  #getStringForImportQuantity(resourceTypeStr) {
+  #getStringForImportQuantity(migratorKey, resourceTypeStr) {
     switch (resourceTypeStr) {
       case lazy.MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS: {
         let quantity = MigrationUtils.getImportedCount("bookmarks");
-        return lazy.gFluentStrings.formatValue(
-          "migration-wizard-progress-success-bookmarks",
-          {
-            quantity,
-          }
-        );
+        let stringID = "migration-wizard-progress-success-bookmarks";
+
+        if (
+          lazy.MigrationWizardConstants.USES_FAVORITES.includes(migratorKey)
+        ) {
+          stringID = "migration-wizard-progress-success-favorites";
+        }
+
+        return lazy.gFluentStrings.formatValue(stringID, {
+          quantity,
+        });
       }
       case lazy.MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.HISTORY: {
         return lazy.gFluentStrings.formatValue(

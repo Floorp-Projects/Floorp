@@ -3,12 +3,25 @@
 
 "use strict";
 
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
 const { MigrationWizardConstants } = ChromeUtils.importESModule(
   "chrome://browser/content/migration/migration-wizard-constants.mjs"
+);
+const { InternalTestingProfileMigrator } = ChromeUtils.importESModule(
+  "resource:///modules/InternalTestingProfileMigrator.sys.mjs"
 );
 
 const DIALOG_URL =
   "chrome://browser/content/migration/migration-dialog-window.html";
+
+/**
+ * We'll have this be our magic number of quantities of various imports.
+ * We will use Sinon to prepare MigrationUtils to presume that this was
+ * how many of each quantity-supported resource type was imported.
+ */
+const EXPECTED_QUANTITY = 123;
 
 /**
  * The withMigrationWizardDialog callback, called after the
@@ -78,4 +91,146 @@ async function waitForMigrationWizardDialogTab() {
   info("Done waiting - migration subdialog loaded and ready.");
 
   return tab.linkedBrowser;
+}
+
+/**
+ * A helper function that prepares the InternalTestingProfileMigrator
+ * with some set of fake available resources, and resolves a Promise
+ * when the InternalTestingProfileMigrator is used for a migration.
+ *
+ * @param {number[]} availableResourceTypes
+ *   An array of resource types from MigrationUtils.resourcesTypes.
+ *   A single MigrationResource will be created per type, with a
+ *   no-op migrate function.
+ * @param {number[]} expectedResourceTypes
+ *   An array of resource types from MigrationUtils.resourceTypes.
+ *   These are the resource types that are expected to be passed
+ *   to the InternalTestingProfileMigrator.migrate function.
+ * @param {object|string} expectedProfile
+ *   The profile object or string that is expected to be passed
+ *   to the InternalTestingProfileMigrator.migrate function.
+ * @returns {Promise<undefined>}
+ */
+async function waitForTestMigration(
+  availableResourceTypes,
+  expectedResourceTypes,
+  expectedProfile
+) {
+  let sandbox = sinon.createSandbox();
+
+  // Fake out the getResources method of the migrator so that we return
+  // a single fake MigratorResource per availableResourceType.
+  sandbox
+    .stub(InternalTestingProfileMigrator.prototype, "getResources")
+    .callsFake(() => {
+      return Promise.resolve(
+        availableResourceTypes.map(resourceType => {
+          return {
+            type: resourceType,
+            migrate: () => {},
+          };
+        })
+      );
+    });
+
+  sandbox.stub(MigrationUtils, "_importQuantities").value({
+    bookmarks: EXPECTED_QUANTITY,
+    history: EXPECTED_QUANTITY,
+    logins: EXPECTED_QUANTITY,
+  });
+
+  // Fake out the migrate method of the migrator and assert that the
+  // next time it's called, its arguments match our expectations.
+  return new Promise(resolve => {
+    sandbox
+      .stub(InternalTestingProfileMigrator.prototype, "migrate")
+      .callsFake((aResourceTypes, aStartup, aProfile, aProgressCallback) => {
+        Assert.ok(
+          !aStartup,
+          "Migrator should not have been called as a startup migration."
+        );
+
+        let bitMask = 0;
+        for (let resourceType of expectedResourceTypes) {
+          bitMask |= resourceType;
+        }
+
+        Assert.deepEqual(
+          aResourceTypes,
+          bitMask,
+          "Got the expected resource types"
+        );
+        Assert.deepEqual(
+          aProfile,
+          expectedProfile,
+          "Got the expected profile object"
+        );
+
+        for (let resourceType of expectedResourceTypes) {
+          aProgressCallback(resourceType);
+        }
+        Services.obs.notifyObservers(null, "Migration:Ended");
+        resolve();
+      });
+  }).finally(async () => {
+    sandbox.restore();
+
+    // MigratorBase caches resources fetched by the getResources method
+    // as a performance optimization. In order to allow different tests
+    // to have different available resources, we call into a special
+    // method of InternalTestingProfileMigrator that clears that
+    // cache.
+    let migrator = await MigrationUtils.getMigrator(
+      InternalTestingProfileMigrator.key
+    );
+    migrator.flushResourceCache();
+  });
+}
+
+/**
+ * Takes a MigrationWizard element and chooses the
+ * InternalTestingProfileMigrator as the browser to migrate from. Then, it
+ * checks the checkboxes associated with the selectedResourceTypes and
+ * unchecks the rest before clicking the "Import" button.
+ *
+ * @param {Element} wizard
+ *   The MigrationWizard element.
+ * @param {string[]} selectedResourceTypes
+ *   An array of resource type strings from
+ *   MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.
+ * @param {string} [migratorKey=InternalTestingProfileMigrator.key]
+ *   The key for the migrator to use. Defaults to the
+ *   InternalTestingProfileMigrator.
+ */
+async function selectResourceTypesAndStartMigration(
+  wizard,
+  selectedResourceTypes,
+  migratorKey = InternalTestingProfileMigrator.key
+) {
+  let shadow = wizard.openOrClosedShadowRoot;
+
+  // First, select the InternalTestingProfileMigrator browser.
+  let selector = shadow.querySelector("#browser-profile-selector");
+  selector.click();
+
+  await new Promise(resolve => {
+    wizard
+      .querySelector("panel-list")
+      .addEventListener("shown", resolve, { once: true });
+  });
+
+  let panelItem = wizard.querySelector(`panel-item[key="${migratorKey}"]`);
+  panelItem.click();
+
+  // And then check the right checkboxes for the resource types.
+  let resourceTypeList = shadow.querySelector("#resource-type-list");
+  for (let resourceType in MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES) {
+    let node = resourceTypeList.querySelector(
+      `label[data-resource-type="${resourceType}"]`
+    );
+    node.control.checked = selectedResourceTypes.includes(resourceType);
+  }
+
+  let importButton = shadow.querySelector("#import");
+  importButton.click();
 }

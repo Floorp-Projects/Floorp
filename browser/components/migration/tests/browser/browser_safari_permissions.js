@@ -3,7 +3,6 @@
 
 "use strict";
 
-const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 const { SafariProfileMigrator } = ChromeUtils.importESModule(
   "resource:///modules/SafariProfileMigrator.sys.mjs"
 );

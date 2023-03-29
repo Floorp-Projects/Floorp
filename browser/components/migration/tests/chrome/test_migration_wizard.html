@@ -425,6 +425,7 @@
         const BOOKMARKS_SUCCESS_STRING = "Some bookmarks success string";
         gWiz.setState({
           page: MigrationWizardConstants.PAGES.PROGRESS,
+          key: "chrome",
           progress: {
             [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS]: {
               inProgress: false,
@@ -516,6 +517,7 @@
         const FORMDATA_SUCCESS_STRING = "Some formdata string";
         gWiz.setState({
           page: MigrationWizardConstants.PAGES.PROGRESS,
+          key: "chrome",
           progress: {
             [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS]: {
               inProgress: false,
@@ -640,6 +642,142 @@
           isHidden(button),
           ".cancel-close button should be hidden when not in dialog mode."
         );
+      });
+
+      /**
+       * Internet Explorer and Edge refer to bookmarks as "favorites",
+       * and we change our labels to suit when either of those browsers are
+       * selected as the migration source. This test tests that behavior in the
+       * selection page.
+       */
+      add_task(async function test_ie_edge_favorites_selection() {
+        gWiz.setState({
+          page: MigrationWizardConstants.PAGES.SELECTION,
+          migrators: MIGRATOR_PROFILE_INSTANCES,
+          showImportAll: false,
+        });
+
+        let bookmarksCheckboxLabel = gShadowRoot.querySelector("#bookmarks");
+        let span = bookmarksCheckboxLabel.querySelector("span[default-data-l10n-id]");
+        ok(span, "The bookmarks selection span has a default-data-l10n-id attribute");
+        is(
+          span.getAttribute("data-l10n-id"),
+          span.getAttribute("default-data-l10n-id"),
+          "Should be showing the default string for bookmarks"
+        );
+
+        // Now test when in Variant 2, for the string in the <summary>.
+        let selectedDataUpdated = BrowserTestUtils.waitForEvent(
+          gWiz,
+          "MigrationWizard:ResourcesUpdated"
+        );
+
+        gWiz.setState({
+          page: MigrationWizardConstants.PAGES.SELECTION,
+          migrators: MIGRATOR_PROFILE_INSTANCES,
+          showImportAll: true,
+        });
+
+        await selectedDataUpdated;
+
+        let summary = gShadowRoot.querySelector("summary");
+        ok(
+          summary.textContent.toLowerCase().includes("bookmarks"),
+          "Summary should include the string 'bookmarks'"
+        );
+
+        for (let key of MigrationWizardConstants.USES_FAVORITES) {
+          gWiz.setState({
+            page: MigrationWizardConstants.PAGES.SELECTION,
+            migrators: [{
+              key,
+              displayName: "Legacy Microsoft Browser",
+              resourceTypes: ["BOOKMARKS"],
+              profile: null,
+            }],
+            showImportAll: false,
+          });
+
+          is(
+            span.getAttribute("data-l10n-id"),
+            span.getAttribute("ie-edge-data-l10n-id"),
+            "Should be showing the IE/Edge string for bookmarks"
+          );
+
+          // Now test when in Variant 2, for the string in the <summary>.
+          selectedDataUpdated = BrowserTestUtils.waitForEvent(
+            gWiz,
+            "MigrationWizard:ResourcesUpdated"
+          );
+
+          gWiz.setState({
+            page: MigrationWizardConstants.PAGES.SELECTION,
+            migrators: [{
+              key,
+              displayName: "Legacy Microsoft Browser",
+              resourceTypes: ["BOOKMARKS"],
+              profile: null,
+            }],
+            showImportAll: true,
+          });
+
+          await selectedDataUpdated;
+
+          ok(
+            summary.textContent.toLowerCase().includes("favorites"),
+            "Summary should include the string 'favorites'"
+          );
+        }
+      });
+
+      /**
+       * Internet Explorer and Edge refer to bookmarks as "favorites",
+       * and we change our labels to suit when either of those browsers are
+       * selected as the migration source. This test tests that behavior in the
+       * progress page
+       */
+      add_task(async function test_ie_edge_favorites_progress() {
+        gWiz.setState({
+          page: MigrationWizardConstants.PAGES.PROGRESS,
+          key: "chrome",
+          progress: {
+            [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS]: {
+              inProgress: false,
+              message: "A string from the parent",
+            },
+          },
+        });
+
+        let bookmarksGroup = getResourceGroup(
+          MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS
+        );
+        let span = bookmarksGroup.querySelector("span[default-data-l10n-id]");
+        ok(span, "Should have found a span with default-data-l10n-id");
+        is(
+          span.getAttribute("data-l10n-id"),
+          span.getAttribute("default-data-l10n-id"),
+          "Should be using the default string."
+        );
+
+
+        for (let key of MigrationWizardConstants.USES_FAVORITES) {
+          gWiz.setState({
+            page: MigrationWizardConstants.PAGES.PROGRESS,
+            key,
+            progress: {
+              [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS]: {
+                inProgress: false,
+                message: "A string from the parent",
+              },
+            },
+          });
+
+          is(
+            span.getAttribute("data-l10n-id"),
+            span.getAttribute("ie-edge-data-l10n-id"),
+            "Should be showing the IE/Edge string for bookmarks"
+          );
+        }
       });
     </script>
   </head>
