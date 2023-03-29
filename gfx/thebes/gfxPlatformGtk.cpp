@@ -227,6 +227,10 @@ void gfxPlatformGtk::InitDmabufConfig() {
 bool gfxPlatformGtk::InitVAAPIConfig(bool aForceEnabledByUser) {
   FeatureState& feature =
       gfxConfig::GetFeature(Feature::HARDWARE_VIDEO_DECODING);
+  // We're already configured in parent process
+  if (!XRE_IsParentProcess()) {
+    return feature.IsEnabled();
+  }
 #ifdef MOZ_WAYLAND
   feature.EnableByDefault();
 
