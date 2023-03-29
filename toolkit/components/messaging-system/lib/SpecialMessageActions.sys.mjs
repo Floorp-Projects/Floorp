@@ -12,11 +12,11 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   FxAccounts: "resource://gre/modules/FxAccounts.sys.mjs",
   MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
+  UITour: "resource:///modules/UITour.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
-  UITour: "resource:///modules/UITour.jsm",
   Spotlight: "resource://activity-stream/lib/Spotlight.jsm",
   ColorwayClosetOpener: "resource:///modules/ColorwayClosetOpener.jsm",
 });

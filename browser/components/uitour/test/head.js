@@ -3,11 +3,9 @@
 // This file expects these globals to be defined by the test case.
 /* global gTestTab:true, gContentAPI:true, tests:false */
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "UITour",
-  "resource:///modules/UITour.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  UITour: "resource:///modules/UITour.sys.mjs",
+});
 
 const { PermissionTestUtils } = ChromeUtils.import(
   "resource://testing-common/PermissionTestUtils.jsm"
@@ -276,7 +274,7 @@ function promisePanelElementEvent(win, aPanel, aEvent) {
     function onPanelEvent(e) {
       aPanel.removeEventListener(aEvent, onPanelEvent);
       win.clearTimeout(timeoutId);
-      // Wait one tick to let UITour.jsm process the event as well.
+      // Wait one tick to let UITour.sys.mjs process the event as well.
       executeSoon(resolve);
     }
 

@@ -8,7 +8,7 @@
  * Test opening and closing the menu panel UI.
  */
 
-// Show and hide the menu panel programmatically without an event (like UITour.jsm would)
+// Show and hide the menu panel programmatically without an event (like UITour.sys.mjs would)
 add_task(async function() {
   await gCUITestUtils.openMainMenu();
 

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXTRA_JS_MODULES += ["UITour.jsm", "UITourChild.jsm", "UITourParent.jsm"]
+EXTRA_JS_MODULES += ["UITour.sys.mjs", "UITourChild.sys.mjs", "UITourParent.sys.mjs"]
 
 BROWSER_CHROME_MANIFESTS += [
     "test/browser.ini",
