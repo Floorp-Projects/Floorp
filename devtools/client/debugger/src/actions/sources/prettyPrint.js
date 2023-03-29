@@ -154,18 +154,10 @@ async function prettyPrintHtmlFile({
   // for each iteration.
   const replacements = [];
 
-  const seenLocations = new Set();
-
   for (const sourceInfo of actors) {
-    // We can get duplicate source actors representing the same inline script which will
-    // cause trouble in the pretty printing here. This should be fixed on the server (see
-    // Bug 1824979), but in the meantime let's not handle the same location twice so the
-    // pretty printing is not impacted.
-    const location = `${sourceInfo.sourceStartLine}:${sourceInfo.sourceStartColumn}`;
-    if (!sourceInfo.sourceLength || seenLocations.has(location)) {
+    if (!sourceInfo.sourceLength) {
       continue;
     }
-    seenLocations.add(location);
     // Here we want to get the index of the last line break before the script tag.
     // In allLineBreaks, this would be the item at (script tag line - 1)
     // Since sourceInfo.sourceStartLine is 1-based, we need to get the item at (sourceStartLine - 2)
