@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*eslint-env browser*/
-
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
@@ -14,7 +12,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 });
 
 const TRANSITION_MS = 500;
-const CONTAINER_ID = "root";
+const CONTAINER_ID = "multi-stage-message-root";
 const BUNDLE_SRC =
   "resource://activity-stream/aboutwelcome/aboutwelcome.bundle.js";
 
@@ -157,13 +155,12 @@ export class FeatureCallout {
       this.currentScreen = null;
     } else if (prefVal.screen !== this.currentScreen?.id) {
       this.ready = false;
-      const container = this.doc.getElementById(CONTAINER_ID);
-      container?.classList.add("hidden");
+      this._container?.classList.add("hidden");
       this._pageEventManager?.clear();
       // wait for fade out transition
       this.win.setTimeout(async () => {
         await this._loadConfig();
-        container?.remove();
+        this._container?.remove();
         this._removePositionListeners();
         this.doc.querySelector(`[src="${BUNDLE_SRC}"]`)?.remove();
         await this._renderCallout();
@@ -174,16 +171,16 @@ export class FeatureCallout {
   handleEvent(event) {
     switch (event.type) {
       case "focus": {
-        let container = this.doc.getElementById(CONTAINER_ID);
-        if (!container) {
+        if (!this._container) {
           return;
         }
         // If focus has fired on the feature callout window itself, or on something
         // contained in that window, ignore it, as we can't possibly place the focus
         // on it after the callout is closd.
         if (
-          event.target.id === CONTAINER_ID ||
-          (Node.isInstance(event.target) && container.contains(event.target))
+          event.target === this._container ||
+          (Node.isInstance(event.target) &&
+            this._container.contains(event.target))
         ) {
           return;
         }
@@ -198,8 +195,7 @@ export class FeatureCallout {
         if (event.key !== "Escape") {
           return;
         }
-        let container = this.doc.getElementById(CONTAINER_ID);
-        if (!container) {
+        if (!this._container) {
           return;
         }
         let focusedElement =
@@ -211,7 +207,7 @@ export class FeatureCallout {
           !focusedElement ||
           focusedElement === this.doc.body ||
           focusedElement === this.browser ||
-          container.contains(focusedElement)
+          this._container.contains(focusedElement)
         ) {
           this.win.AWSendEventTelemetry?.({
             event: "DISMISS",
@@ -290,31 +286,33 @@ export class FeatureCallout {
       return false;
     }
 
-    let container = this.doc.createElement("div");
-    container.classList.add(
-      "onboardingContainer",
-      "featureCallout",
-      "callout-arrow",
-      "hidden"
-    );
-    container.id = CONTAINER_ID;
-    // This value is reported as the "page" in about:welcome telemetry
-    container.dataset.page = this.page;
-    container.setAttribute(
-      "aria-describedby",
-      `#${CONTAINER_ID} .welcome-text`
-    );
-    container.tabIndex = 0;
-    this._applyTheme(container);
-    this.doc.body.prepend(container);
-    return container;
+    if (!this._container?.parentElement) {
+      this._container = this.doc.createElement("div");
+      this._container.classList.add(
+        "onboardingContainer",
+        "featureCallout",
+        "callout-arrow",
+        "hidden"
+      );
+      this._container.id = CONTAINER_ID;
+      // This value is reported as the "page" in about:welcome telemetry
+      this._container.dataset.page = this.page;
+      this._container.setAttribute(
+        "aria-describedby",
+        `#${CONTAINER_ID} .welcome-text`
+      );
+      this._container.tabIndex = 0;
+      this._applyTheme();
+      this.doc.body.prepend(this._container);
+    }
+    return this._container;
   }
 
   /**
    * Set callout's position relative to parent element
    */
   _positionCallout() {
-    const container = this.doc.getElementById(CONTAINER_ID);
+    const container = this._container;
     const parentEl = this.doc.querySelector(
       this.currentScreen?.parent_selector
     );
@@ -727,12 +725,11 @@ export class FeatureCallout {
     delete this.featureTourProgress;
     this.ready = false;
     // wait for fade out transition
-    let container = this.doc.getElementById(CONTAINER_ID);
-    container?.classList.add("hidden");
+    this._container?.classList.add("hidden");
     this._clearWindowFunctions();
     this.win.setTimeout(
       () => {
-        container?.remove();
+        this._container?.remove();
         this.renderObserver?.disconnect();
         this._removePositionListeners();
         this.doc.querySelector(`[src="${BUNDLE_SRC}"]`)?.remove();
@@ -961,7 +958,7 @@ export class FeatureCallout {
 
     this.renderObserver = new this.win.MutationObserver(() => {
       // Check if the Feature Callout screen has loaded for the first time
-      if (!this.ready && this.doc.querySelector(`#${CONTAINER_ID} .screen`)) {
+      if (!this.ready && this._container.querySelector(".screen")) {
         // Once the screen element is added to the DOM, wait for the
         // animation frame after next to ensure that _positionCallout
         // has access to the rendered screen with the correct height
@@ -973,9 +970,7 @@ export class FeatureCallout {
             );
             this.win.addEventListener("keypress", this, { capture: true });
             this._positionCallout();
-            let button = this.doc
-              .getElementById(CONTAINER_ID)
-              .querySelector(".primary");
+            let button = this._container.querySelector(".primary");
             button.focus();
             this.win.addEventListener("focus", this, {
               capture: true, // get the event before retargeting
@@ -988,8 +983,7 @@ export class FeatureCallout {
 
     this._pageEventManager?.clear();
     this.ready = false;
-    const container = this.doc.getElementById(CONTAINER_ID);
-    container?.remove();
+    this._container?.remove();
 
     // If user has disabled CFR, don't show any callouts. But make sure we load
     // the necessary stylesheets first, since re-enabling CFR should allow
@@ -1049,16 +1043,15 @@ export class FeatureCallout {
    * custom properties in inline styles. These custom properties are consumed by
    * _feature-callout-theme.scss, which is bundled with the other styles that
    * are loaded by {@link FeatureCallout.prototype._addCalloutLinkElements}.
-   * @param {Element} [container] Root element of the feature callout
    */
-  _applyTheme(container = this.doc?.getElementById(CONTAINER_ID)) {
-    if (container) {
+  _applyTheme() {
+    if (this._container) {
       // This tells the stylesheets to use -moz-content-prefers-color-scheme
       // instead of prefers-color-scheme, in order to follow the content color
       // scheme instead of the chrome color scheme, in case of a mismatch when
       // the feature callout exists in the chrome but is meant to look like it's
       // part of the content of a page in a browser tab (like PDF.js).
-      container.classList.toggle(
+      this._container.classList.toggle(
         "simulateContent",
         this.page === "chrome" && this.theme.simulateContent
       );
@@ -1066,7 +1059,6 @@ export class FeatureCallout {
         const scheme = this.theme[type];
         for (const name of FeatureCallout.themePropNames) {
           this._setThemeVariable(
-            container,
             `--fc-${name}-${type}`,
             scheme?.[name] || this.theme.all[name]
           );
@@ -1077,15 +1069,14 @@ export class FeatureCallout {
 
   /**
    * Set or remove a CSS custom property on the feature callout container
-   * @param {Element} container Root element of the feature callout
    * @param {String} name Name of the CSS custom property
    * @param {String|void} [value] Value of the property, or omit to remove it
    */
-  _setThemeVariable(container, name, value) {
+  _setThemeVariable(name, value) {
     if (value) {
-      container.style.setProperty(name, value);
+      this._container.style.setProperty(name, value);
     } else {
-      container.style.removeProperty(name);
+      this._container.style.removeProperty(name);
     }
   }
 

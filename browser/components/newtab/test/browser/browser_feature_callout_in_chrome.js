@@ -7,7 +7,7 @@ const { ASRouter } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouter.jsm"
 );
 
-const calloutId = "root";
+const calloutId = "multi-stage-message-root";
 const calloutSelector = `#${calloutId}.featureCallout`;
 const primaryButtonSelector = `#${calloutId} .primary`;
 const PDF_TEST_URL =
@@ -187,7 +187,9 @@ add_task(
     const tab2 = await openURLInNewTab(win, "about:preferences");
     tab2.focus();
     await BrowserTestUtils.waitForCondition(() => {
-      return !doc.body.querySelector("#root.featureCallout");
+      return !doc.body.querySelector(
+        "#multi-stage-message-root.featureCallout"
+      );
     });
 
     ok(

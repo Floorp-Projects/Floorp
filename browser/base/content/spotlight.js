@@ -49,7 +49,7 @@ function renderMultistage(ready) {
   );
 
   document.body.classList.add("onboardingContainer");
-  document.body.id = "root";
+  document.body.id = "multi-stage-message-root";
   // This value is reported as the "page" in telemetry
   document.body.dataset.page = "spotlight";
 
