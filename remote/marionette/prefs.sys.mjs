@@ -88,16 +88,11 @@ export class Branch {
  * preferences.
  *
  * Some of Marionette's preferences are stored using primitive values
- * that internally are represented by complex types.  One such example
- * is `marionette.log.level` which stores a string such as `info` or
- * `DEBUG`, and which is represented as `Log.Level`.
+ * that internally are represented by complex types.
  *
  * Because we cannot trust the input of many of these preferences,
  * this class provides abstraction that lets us safely deal with
- * potentially malformed input.  In the `marionette.log.level` example,
- * `DEBUG`, `Debug`, and `dEbUg` are considered valid inputs and the
- * `LogBranch` specialisation deserialises the string value to the
- * correct `Log.Level` by sanitising the input data first.
+ * potentially malformed input.
  *
  * A further complication is that we cannot rely on `Preferences.sys.mjs`
  * in Marionette.  See https://bugzilla.mozilla.org/show_bug.cgi?id=1357517

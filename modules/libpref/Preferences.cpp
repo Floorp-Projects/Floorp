@@ -6123,7 +6123,6 @@ static const PrefListEntry sDynamicPrefOverrideList[]{
     PREF_LIST_ENTRY("intl.date_time.pattern_override."),
     PREF_LIST_ENTRY("intl.hyphenation-alias."),
     PREF_LIST_ENTRY("logging.config.LOG_FILE"),
-    PREF_LIST_ENTRY("marionette.log.level"),
     PREF_LIST_ENTRY("media.audio_loopback_dev"),
     PREF_LIST_ENTRY("media.decoder-doctor."),
     PREF_LIST_ENTRY("media.cubeb.output_device"),
@@ -6143,6 +6142,7 @@ static const PrefListEntry sDynamicPrefOverrideList[]{
     PREF_LIST_ENTRY("print.printer_"),
     PREF_LIST_ENTRY("print_printer"),
     PREF_LIST_ENTRY("places.interactions.customBlocklist"),
+    PREF_LIST_ENTRY("remote.log.level"),
     PREF_LIST_ENTRY(
         "services.settings.preview_enabled"),  // This is really a boolean
                                                // dynamic pref, but one Nightly

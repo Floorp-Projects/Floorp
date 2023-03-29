@@ -64,7 +64,7 @@ extended_properties.update(
         },
         "preferences": {
             "type": "object",
-            "default": {"marionette.log.level": "Info"},
+            "default": {"remote.log.level": "Info"},
             "title": "Extra gecko (about:config) preferences",
             "description": "Extra gecko (about:config) preferences to use for this run",
             "additionalProperties": {"type": "string"},

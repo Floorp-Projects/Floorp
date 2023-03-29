@@ -33,7 +33,7 @@ DEFAULT_PREFS = {
     "focusmanager.testmode": True,
     "marionette.defaultPrefs.port": 2828,
     "marionette.port": 2828,
-    "marionette.log.level": "Trace",
+    "remote.log.level": "Trace",
     "marionette.log.truncate": False,
     "extensions.autoDisableScopes": 10,
     "devtools.debugger.remote-enabled": True,
