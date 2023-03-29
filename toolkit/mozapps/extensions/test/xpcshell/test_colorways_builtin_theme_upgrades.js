@@ -7,7 +7,9 @@ const { BuiltInThemeConfig } = ChromeUtils.importESModule(
   "resource:///modules/BuiltInThemeConfig.sys.mjs"
 );
 
-const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
 
 // Enable SCOPE_APPLICATION for builtin testing.
 let scopes = AddonManager.SCOPE_PROFILE | AddonManager.SCOPE_APPLICATION;

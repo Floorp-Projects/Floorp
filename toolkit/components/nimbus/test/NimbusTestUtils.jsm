@@ -20,6 +20,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   JsonSchema: "resource://gre/modules/JsonSchema.sys.mjs",
+  sinon: "resource://testing-common/Sinon.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -29,7 +30,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   NormandyUtils: "resource://normandy/lib/NormandyUtils.jsm",
   _RemoteSettingsExperimentLoader:
     "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm",
-  sinon: "resource://testing-common/Sinon.jsm",
   FeatureManifest: "resource://nimbus/FeatureManifest.js",
 });
 

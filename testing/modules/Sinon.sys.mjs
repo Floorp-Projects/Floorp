@@ -2,22 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["sinon"];
-
 // ================================================
 // Load mocking/stubbing library sinon
 // docs: http://sinonjs.org/releases/v7.2.7/
-const {
+import {
   clearInterval,
   clearTimeout,
   setInterval,
   setIntervalWithTarget,
   setTimeout,
   setTimeoutWithTarget,
-} = ChromeUtils.importESModule("resource://gre/modules/Timer.sys.mjs");
-// eslint-disable-next-line no-unused-vars
+} from "resource://gre/modules/Timer.sys.mjs";
+
 const obj = {
   global: {
     clearInterval,
@@ -28,10 +24,17 @@ const obj = {
     setTimeoutWithTarget,
     Date,
   },
+  clearInterval,
+  clearTimeout,
+  setInterval,
+  setIntervalWithTarget,
+  setTimeout,
+  setTimeoutWithTarget,
 };
 Services.scriptloader.loadSubScript(
   "resource://testing-common/sinon-7.2.7.js",
   obj
 );
-const sinon = obj.global.sinon;
+
+export const sinon = obj.global.sinon;
 // ================================================

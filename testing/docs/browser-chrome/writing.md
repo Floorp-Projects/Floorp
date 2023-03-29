@@ -119,7 +119,7 @@ The [`Sinon`](https://sinonjs.org/) mocking framework is available. You can impo
 using something like:
 
 ```js
-const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { sinon } = ChromeUtils.importESModule("resource://testing-common/Sinon.sys.mjs");
 ```
 
 More details on how to do mocking are available on the Sinon website.

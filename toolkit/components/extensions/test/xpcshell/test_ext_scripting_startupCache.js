@@ -19,7 +19,9 @@ const { TestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TestUtils.sys.mjs"
 );
 
-const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
 
 add_task(async function test_hasPersistedScripts_startup_cache() {
   let extension1 = ExtensionTestUtils.loadExtension({

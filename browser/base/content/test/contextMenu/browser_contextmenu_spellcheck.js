@@ -5,7 +5,9 @@
 
 let contextMenu;
 
-const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
 
 const example_base =
   // eslint-disable-next-line @microsoft/sdl/no-insecure-url

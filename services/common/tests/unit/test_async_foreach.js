@@ -4,7 +4,9 @@
 const { Async } = ChromeUtils.importESModule(
   "resource://services-common/async.sys.mjs"
 );
-const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
 
 function makeArray(length) {
   // Start at 1 so that we can just divide by yieldEvery to get the expected

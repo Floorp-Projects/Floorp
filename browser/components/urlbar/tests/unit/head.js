@@ -29,12 +29,12 @@ ChromeUtils.defineESModuleGetters(this, {
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
+  sinon: "resource://testing-common/Sinon.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
   HttpServer: "resource://testing-common/httpd.js",
-  sinon: "resource://testing-common/Sinon.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {

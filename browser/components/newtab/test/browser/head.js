@@ -19,7 +19,9 @@ const { FxAccounts } = ChromeUtils.importESModule(
 );
 // We import sinon here to make it available across all mochitest test files
 // eslint-disable-next-line no-unused-vars
-const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
 // Set the content pref to make it available across tests
 const ABOUT_WELCOME_OVERRIDE_CONTENT_PREF = "browser.aboutwelcome.screens";
 // Test differently for windows 7 as theme screens are removed.

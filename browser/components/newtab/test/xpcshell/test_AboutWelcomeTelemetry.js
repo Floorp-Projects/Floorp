@@ -10,7 +10,9 @@ const { AboutWelcomeTelemetry } = ChromeUtils.import(
 const { AttributionCode } = ChromeUtils.importESModule(
   "resource:///modules/AttributionCode.sys.mjs"
 );
-const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
 const TELEMETRY_PREF = "browser.newtabpage.activity-stream.telemetry";
 
 add_task(function test_enabled() {

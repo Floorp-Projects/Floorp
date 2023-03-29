@@ -5,10 +5,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 ChromeUtils.defineESModuleGetters(this, {
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  sinon: "resource://testing-common/Sinon.jsm",
+  sinon: "resource://testing-common/Sinon.sys.mjs",
 });
 
 // Helpers for testing telemetry events.

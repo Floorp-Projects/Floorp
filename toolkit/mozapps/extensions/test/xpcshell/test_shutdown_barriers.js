@@ -129,7 +129,9 @@ add_task(async function test_wait_addons_startup_before_granting_quit() {
 
 // Regression test for Bug 1799421.
 add_task(async function test_late_XPIDB_load_rejected() {
-  const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+  const { sinon } = ChromeUtils.importESModule(
+    "resource://testing-common/Sinon.sys.mjs"
+  );
   const sandbox = sinon.createSandbox();
   await AddonTestUtils.promiseStartupManager();
 

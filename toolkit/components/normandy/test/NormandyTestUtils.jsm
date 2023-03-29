@@ -15,7 +15,9 @@ const { NormandyUtils } = ChromeUtils.import(
 const { RecipeRunner } = ChromeUtils.import(
   "resource://normandy/lib/RecipeRunner.jsm"
 );
-const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
 
 const FIXTURE_ADDON_ID = "normandydriver-a@example.com";
 const UUID_REGEX = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;

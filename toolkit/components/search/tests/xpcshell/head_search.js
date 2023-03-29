@@ -20,10 +20,7 @@ ChromeUtils.defineESModuleGetters(this, {
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  sinon: "resource://testing-common/Sinon.jsm",
+  sinon: "resource://testing-common/Sinon.sys.mjs",
 });
 
 var { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");

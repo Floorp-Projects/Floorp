@@ -10,10 +10,7 @@
 ChromeUtils.defineESModuleGetters(this, {
   EnterprisePolicyTesting:
     "resource://testing-common/EnterprisePolicyTesting.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  sinon: "resource://testing-common/Sinon.jsm",
+  sinon: "resource://testing-common/Sinon.sys.mjs",
 });
 
 // We use this pref in enterprise preference policy tests. We specifically use a

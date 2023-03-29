@@ -2808,7 +2808,9 @@ add_task(async function test_preventive_maintenance() {
 // ------------------------------------------------------------------------------
 
 add_task(async function test_idle_daily() {
-  const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+  const { sinon } = ChromeUtils.importESModule(
+    "resource://testing-common/Sinon.sys.mjs"
+  );
   const sandbox = sinon.createSandbox();
   sandbox.stub(PlacesDBUtils, "maintenanceOnIdle");
   Services.prefs.clearUserPref("places.database.lastMaintenance");

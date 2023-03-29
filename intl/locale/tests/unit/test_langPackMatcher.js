@@ -8,7 +8,9 @@ const { getAddonAndLocalAPIsMocker } = ChromeUtils.importESModule(
 const { LangPackMatcher } = ChromeUtils.importESModule(
   "resource://gre/modules/LangPackMatcher.sys.mjs"
 );
-const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
 
 const sandbox = sinon.createSandbox();
 const mockAddonAndLocaleAPIs = getAddonAndLocalAPIsMocker(this, sandbox);

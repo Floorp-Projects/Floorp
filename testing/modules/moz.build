@@ -15,7 +15,7 @@ TESTING_JS_MODULES += [
     "FileTestUtils.sys.mjs",
     "MockRegistrar.sys.mjs",
     "sinon-7.2.7.js",
-    "Sinon.jsm",
+    "Sinon.sys.mjs",
     "StructuredLog.sys.mjs",
     "TestUtils.sys.mjs",
     "XPCShellContentUtils.sys.mjs",

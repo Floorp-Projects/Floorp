@@ -179,7 +179,9 @@ add_task(async function invalid_properties_for_bookmark_type() {
 });
 
 add_task(async function test_insert_into_root_throws() {
-  const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+  const { sinon } = ChromeUtils.importESModule(
+    "resource://testing-common/Sinon.sys.mjs"
+  );
   const sandbox = sinon.createSandbox();
   sandbox.stub(PlacesUtils, "isInAutomation").get(() => false);
   registerCleanupFunction(() => sandbox.restore());

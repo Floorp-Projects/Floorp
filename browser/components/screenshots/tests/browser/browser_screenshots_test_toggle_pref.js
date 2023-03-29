@@ -3,7 +3,9 @@
 
 "use strict";
 
-const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
 
 ChromeUtils.defineESModuleGetters(this, {
   ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.sys.mjs",
