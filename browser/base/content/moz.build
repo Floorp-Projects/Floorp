@@ -166,6 +166,9 @@ with Files("hiddenWindowMac.xhtml"):
 with Files("macWindow.inc.xhtml"):
     BUG_COMPONENT = ("Firefox", "Shell Integration")
 
+with Files("sanitize*"):
+    BUG_COMPONENT = ("Toolkit", "Data Sanitization")
+
 with Files("tabbrowser*"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
