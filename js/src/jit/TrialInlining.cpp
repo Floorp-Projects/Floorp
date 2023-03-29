@@ -516,9 +516,8 @@ bool TrialInliner::canInline(JSFunction* target, HandleScript caller,
   return true;
 }
 
-TrialInliningDecision TrialInliner::getInliningDecision(JSFunction* target,
-                                                        ICCacheIRStub* stub,
-                                                        BytecodeLocation loc) {
+bool TrialInliner::shouldInline(JSFunction* target, ICCacheIRStub* stub,
+                                BytecodeLocation loc) {
 #ifdef JS_JITSPEW
   if (JitSpewEnabled(JitSpew_WarpTrialInlining)) {
     BaseScript* baseScript =
@@ -542,7 +541,7 @@ TrialInliningDecision TrialInliner::getInliningDecision(JSFunction* target,
 #endif
 
   if (!canInline(target, script_, loc)) {
-    return TrialInliningDecision::NoInline;
+    return false;
   }
 
   // Don't inline (direct) recursive calls. This still allows recursion if
@@ -550,14 +549,14 @@ TrialInliningDecision TrialInliner::getInliningDecision(JSFunction* target,
   JSScript* targetScript = target->nonLazyScript();
   if (script_ == targetScript) {
     JitSpew(JitSpew_WarpTrialInlining, "SKIP: recursion");
-    return TrialInliningDecision::NoInline;
+    return false;
   }
 
   // Don't inline if the callee has a loop that was hot enough to enter Warp
   // via OSR. This helps prevent getting stuck in Baseline code for a long time.
   if (targetScript->jitScript()->hadIonOSR()) {
     JitSpew(JitSpew_WarpTrialInlining, "SKIP: had OSR");
-    return TrialInliningDecision::NoInline;
+    return false;
   }
 
   // Ensure the total bytecode size does not exceed ionMaxScriptSize.
@@ -565,14 +564,14 @@ TrialInliningDecision TrialInliner::getInliningDecision(JSFunction* target,
       inliningRootTotalBytecodeSize() + targetScript->length();
   if (newTotalSize > JitOptions.ionMaxScriptSize) {
     JitSpew(JitSpew_WarpTrialInlining, "SKIP: total size too big");
-    return TrialInliningDecision::NoInline;
+    return false;
   }
 
   uint32_t entryCount = stub->enteredCount();
   if (entryCount < JitOptions.inliningEntryThreshold) {
     JitSpew(JitSpew_WarpTrialInlining, "SKIP: Entry count is %u (minimum %u)",
             unsigned(entryCount), unsigned(JitOptions.inliningEntryThreshold));
-    return TrialInliningDecision::NoInline;
+    return false;
   }
 
   if (!JitOptions.isSmallFunction(targetScript)) {
@@ -580,7 +579,7 @@ TrialInliningDecision TrialInliner::getInliningDecision(JSFunction* target,
       JitSpew(JitSpew_WarpTrialInlining, "SKIP: Length is %u (maximum %u)",
               unsigned(targetScript->length()),
               unsigned(JitOptions.smallFunctionMaxBytecodeLength));
-      return TrialInliningDecision::NoInline;
+      return false;
     }
 
     JitSpew(JitSpew_WarpTrialInlining,
@@ -588,24 +587,7 @@ TrialInliningDecision TrialInliner::getInliningDecision(JSFunction* target,
             unsigned(targetScript->length()));
   }
 
-  JitScript* jitScript = targetScript->jitScript();
-  ICScript* icScript = jitScript->icScript();
-
-  // Here we check for any ICs which have entered a megamorphic or
-  // generic state. It seems the sweet spot happens when we do
-  // trial inlining to have a chance of avoiding going megamorphic,
-  // but do the cheaper monomorphic inlining for everything else.
-  // NOTE: if we're able to reduce the cost of trial inlining, we
-  // need to reevaluate this heuristic.
-  for (size_t i = 0; i < icScript->numICEntries(); i++) {
-    ICFallbackStub* fallback = icScript->fallbackStub(i);
-    if (fallback->enteredCount() > 0 ||
-        fallback->state().mode() != ICState::Mode::Specialized) {
-      return TrialInliningDecision::Inline;
-    }
-  }
-
-  return TrialInliningDecision::MonomorphicInline;
+  return true;
 }
 
 ICScript* TrialInliner::createInlinedICScript(JSFunction* target,
@@ -686,14 +668,8 @@ bool TrialInliner::maybeInlineCall(ICEntry& entry, ICFallbackStub* fallback,
 
   MOZ_ASSERT(!data->icScript);
 
-  TrialInliningDecision inlining = getInliningDecision(data->target, stub, loc);
   // Decide whether to inline the target.
-  if (inlining == TrialInliningDecision::NoInline) {
-    return true;
-  }
-
-  if (inlining == TrialInliningDecision::MonomorphicInline) {
-    fallback->setTrialInliningState(TrialInliningState::MonomorphicInlined);
+  if (!shouldInline(data->target, stub, loc)) {
     return true;
   }
 
@@ -730,14 +706,8 @@ bool TrialInliner::maybeInlineGetter(ICEntry& entry, ICFallbackStub* fallback,
 
   MOZ_ASSERT(!data->icScript);
 
-  TrialInliningDecision inlining = getInliningDecision(data->target, stub, loc);
   // Decide whether to inline the target.
-  if (inlining == TrialInliningDecision::NoInline) {
-    return true;
-  }
-
-  if (inlining == TrialInliningDecision::MonomorphicInline) {
-    fallback->setTrialInliningState(TrialInliningState::MonomorphicInlined);
+  if (!shouldInline(data->target, stub, loc)) {
     return true;
   }
 
@@ -777,14 +747,8 @@ bool TrialInliner::maybeInlineSetter(ICEntry& entry, ICFallbackStub* fallback,
 
   MOZ_ASSERT(!data->icScript);
 
-  TrialInliningDecision inlining = getInliningDecision(data->target, stub, loc);
   // Decide whether to inline the target.
-  if (inlining == TrialInliningDecision::NoInline) {
-    return true;
-  }
-
-  if (inlining == TrialInliningDecision::MonomorphicInline) {
-    fallback->setTrialInliningState(TrialInliningState::MonomorphicInlined);
+  if (!shouldInline(data->target, stub, loc)) {
     return true;
   }
 

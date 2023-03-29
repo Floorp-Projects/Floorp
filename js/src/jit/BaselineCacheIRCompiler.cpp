@@ -2449,17 +2449,9 @@ ICAttachResult js::jit::AttachBaselineCacheIRStub(
     // stub so that we can still transpile, and reset the bailout
     // counter if we have already been transpiled.
     stub->resetEnteredCount();
-    JSScript* owningScript = nullptr;
-    if (outerScript == cx->lastStubFoldingBailoutChild_.ref()) {
-      MOZ_ASSERT(cx->lastStubFoldingBailoutParent_);
-      owningScript = cx->lastStubFoldingBailoutParent_;
-    } else {
-      owningScript = icScript->isInlined()
-                         ? icScript->inliningRoot()->owningScript()
-                         : outerScript;
-    }
-    cx->lastStubFoldingBailoutChild_ = nullptr;
-    cx->lastStubFoldingBailoutParent_ = nullptr;
+    JSScript* owningScript = icScript->isInlined()
+                                 ? icScript->inliningRoot()->owningScript()
+                                 : outerScript;
     if (stub->usedByTranspiler() && owningScript->hasIonScript()) {
       owningScript->ionScript()->resetNumFixableBailouts();
     }
@@ -2486,7 +2478,6 @@ ICAttachResult js::jit::AttachBaselineCacheIRStub(
     case TrialInliningState::Candidate:
       stub->setTrialInliningState(writer.trialInliningState());
       break;
-    case TrialInliningState::MonomorphicInlined:
     case TrialInliningState::Inlined:
       stub->setTrialInliningState(TrialInliningState::Failure);
       break;
