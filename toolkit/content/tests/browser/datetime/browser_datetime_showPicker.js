@@ -31,3 +31,22 @@ add_task(async function test_datepicker_showPicker() {
 
   await helper.tearDown();
 });
+
+/**
+ * Test that date picker opens with showPicker and the explicit value.
+ */
+add_task(async function test_datepicker_showPicker_value() {
+  await helper.openPicker(
+    "data:text/html, <input type='date' value='2012-10-15'>",
+    false,
+    "showPicker"
+  );
+
+  Assert.equal(
+    helper.getElement(MONTH_YEAR).textContent,
+    DATE_FORMAT_LOCAL(new Date("2012-10-12")),
+    "Date picker opens when a showPicker method is called"
+  );
+
+  await helper.tearDown();
+});

@@ -272,6 +272,7 @@ this.DateTimeBoxWidget = class {
       "MozDateTimeAttributeChanged",
       "MozPickerValueChanged",
       "MozSetDateTimePickerState",
+      "MozDateTimeShowPickerForJS",
     ];
   }
 
@@ -550,6 +551,10 @@ this.DateTimeBoxWidget = class {
       }
       case "MozSetDateTimePickerState": {
         this.setPickerState(aEvent.detail);
+        break;
+      }
+      case "MozDateTimeShowPickerForJS": {
+        this.openDateTimePicker();
         break;
       }
       case "keydown": {
