@@ -38,6 +38,9 @@ defaults pref(layout.css.named-pages.enabled,true)
 == page-name-propagated-004.html page-name-propagated-004-ref.html
 == page-name-propagated-005.html page-name-propagated-005-ref.html
 == page-name-propagated-006.html page-name-propagated-006-ref.html
+== page-name-propagated-007.html page-name-propagated-007-ref.html
+== page-name-propagated-008.html page-name-propagated-008-ref.html
+== page-name-propagated-009.html page-name-propagated-009-ref.html
 == page-name-siblings-001.html page-name-siblings-ref.html
 == page-name-siblings-002.html page-name-siblings-ref.html
 == page-name-siblings-003.html page-name-siblings-ref.html
