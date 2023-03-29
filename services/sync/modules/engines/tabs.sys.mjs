@@ -8,6 +8,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 import { SyncEngine, Tracker } from "resource://services-sync/engines.sys.mjs";
 import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
+import { Log } from "resource://gre/modules/Log.sys.mjs";
 
 const { SCORE_INCREMENT_SMALL, STATUS_OK, URI_LENGTH_MAX } = ChromeUtils.import(
   "resource://services-sync/constants.js"
@@ -190,17 +191,10 @@ TabEngine.prototype = {
   },
 
   async getTabsWithinPayloadSize() {
-    let tabs = await TabProvider.getAllTabs(true);
     const maxPayloadSize = this.service.getMaxRecordPayloadSize();
-    let records = Utils.tryFitItems(tabs, maxPayloadSize);
-
-    if (records.length != tabs.length) {
-      this._log.warn(
-        `Can't fit all tabs in sync payload: have ${tabs.length}, but can only fit ${records.length}.`
-      );
-    }
-
-    return records;
+    // See bug 535326 comment 8 for an explanation of the estimation
+    const maxSerializedSize = (maxPayloadSize / 4) * 3 - 1500;
+    return TabProvider.getAllTabsWithEstimatedMax(true, maxSerializedSize);
   },
 
   // Support for "quick writes"
@@ -352,72 +346,105 @@ export const TabProvider = {
     return win.closed || lazy.PrivateBrowsingUtils.isWindowPrivate(win);
   },
 
-  async getAllTabs(filter) {
-    let allTabs = [];
-    let iconPromises = [];
-
+  getAllBrowserTabs() {
+    let tabs = [];
     for (let win of this.getWindowEnumerator()) {
       if (this.shouldSkipWindow(win)) {
         continue;
       }
-
+      // Get all the tabs from the browser
       for (let tab of win.gBrowser.tabs) {
-        // Note that we used to sync "tab history" (ie, the "back button") state,
-        // but in practice this hasn't been used - only the current URI is of
-        // interest to clients.
-        // We stopped recording this in bug 1783991.
-        if (!tab?.linkedBrowser) {
-          continue;
-        }
-        let acceptable = !filter
-          ? url => url
-          : url =>
-              url &&
-              !lazy.TABS_FILTERED_SCHEMES.has(Services.io.extractScheme(url));
-
-        let url = tab.linkedBrowser.currentURI?.spec;
-        // Special case for reader mode.
-        if (url && url.startsWith("about:reader?")) {
-          url = lazy.ReaderMode.getOriginalUrl(url);
-        }
-        // We ignore the tab completely if the current entry url is
-        // not acceptable (we need something accurate to open).
-        if (!acceptable(url)) {
-          continue;
-        }
-
-        if (url.length > URI_LENGTH_MAX) {
-          this._log.trace("Skipping over-long URL.");
-          continue;
-        }
-
-        let thisTab = {
-          title: tab.linkedBrowser.contentTitle || "",
-          urlHistory: [url],
-          icon: "",
-          lastUsed: Math.floor((tab.lastAccessed || 0) / 1000),
-        };
-        allTabs.push(thisTab);
-        // Use the favicon service for the icon url - we can wait for the promises at the end.
-        let iconPromise = lazy.PlacesUtils.promiseFaviconData(url)
-          .then(iconData => {
-            thisTab.icon = iconData.uri.spec;
-          })
-          .catch(ex => {
-            this._log.trace(
-              `Failed to fetch favicon for ${url}`,
-              thisTab.urlHistory[0]
-            );
-          });
-        iconPromises.push(iconPromise);
+        tabs.push(tab);
       }
     }
 
-    await Promise.allSettled(iconPromises);
-
-    return allTabs.sort(function(a, b) {
-      return b.lastUsed - a.lastUsed;
+    return tabs.sort(function(a, b) {
+      return b.lastAccessed - a.lastAccessed;
     });
+  },
+
+  // This function creates tabs records up to a specified amount of bytes
+  // It is an "estimation" since we don't accurately calculate how much the
+  // favicon and JSON overhead is and give a rough estimate (for optimization purposes)
+  async getAllTabsWithEstimatedMax(filter, bytesMax) {
+    let log = Log.repository.getLogger(`Sync.Engine.Tabs.Provider`);
+    let tabRecords = [];
+    let iconPromises = [];
+    let runningByteLength = 0;
+    let encoder = new TextEncoder();
+
+    // Fetch all the tabs the user has open
+    let winTabs = this.getAllBrowserTabs();
+
+    for (let tab of winTabs) {
+      // We don't want to process any more tabs than we can sync
+      if (runningByteLength >= bytesMax) {
+        log.warn(
+          `Can't fit all tabs in sync payload: have ${winTabs.length},
+             but can only fit ${tabRecords.length}.`
+        );
+        break;
+      }
+
+      // Note that we used to sync "tab history" (ie, the "back button") state,
+      // but in practice this hasn't been used - only the current URI is of
+      // interest to clients.
+      // We stopped recording this in bug 1783991.
+      if (!tab?.linkedBrowser) {
+        continue;
+      }
+      let acceptable = !filter
+        ? url => url
+        : url =>
+            url &&
+            !lazy.TABS_FILTERED_SCHEMES.has(Services.io.extractScheme(url));
+
+      let url = tab.linkedBrowser.currentURI?.spec;
+      // Special case for reader mode.
+      if (url && url.startsWith("about:reader?")) {
+        url = lazy.ReaderMode.getOriginalUrl(url);
+      }
+      // We ignore the tab completely if the current entry url is
+      // not acceptable (we need something accurate to open).
+      if (!acceptable(url)) {
+        continue;
+      }
+
+      if (url.length > URI_LENGTH_MAX) {
+        log.trace("Skipping over-long URL.");
+        continue;
+      }
+
+      let thisTab = {
+        title: tab.linkedBrowser.contentTitle || "",
+        urlHistory: [url],
+        icon: "",
+        lastUsed: Math.floor((tab.lastAccessed || 0) / 1000),
+      };
+      tabRecords.push(thisTab);
+
+      // we don't want to wait for each favicon to resolve to get the bytes
+      // so we estimate a conservative 100 chars for the favicon and json overhead
+      // Rust will further optimize and trim if we happened to be wildly off
+      runningByteLength +=
+        encoder.encode(thisTab.title + thisTab.lastUsed + url).byteLength + 100;
+
+      // Use the favicon service for the icon url - we can wait for the promises at the end.
+      let iconPromise = lazy.PlacesUtils.promiseFaviconData(url)
+        .then(iconData => {
+          thisTab.icon = iconData.uri.spec;
+        })
+        .catch(ex => {
+          log.trace(
+            `Failed to fetch favicon for ${url}`,
+            thisTab.urlHistory[0]
+          );
+        });
+      iconPromises.push(iconPromise);
+    }
+
+    await Promise.allSettled(iconPromises);
+    return tabRecords;
   },
 };
 
@@ -511,7 +538,7 @@ TabTracker.prototype = {
     switch (event.type) {
       case "TabOpen":
         /* We do not have a reliable way of checking the URI on the TabOpen
-         * so we will rely on the other methods (onLocationChange, getAllTabs)
+         * so we will rely on the other methods (onLocationChange, getAllTabsWithEstimatedMax)
          * to filter these when going through sync
          */
         this.callScheduleSync(SCORE_INCREMENT_SMALL);

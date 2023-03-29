@@ -414,6 +414,11 @@ export var Utils = {
    * Helper utility function to fit an array of records so that when serialized,
    * they will be within payloadSizeMaxBytes. Returns a new array without the
    * items.
+   *
+   * Note: This shouldn't be used for extremely large record sizes as
+   * it uses JSON.stringify, which could lead to a heavy performance hit.
+   * See Bug 1815151 for more details.
+   *
    */
   tryFitItems(records, payloadSizeMaxBytes) {
     // Copy this so that callers don't have to do it in advance.
