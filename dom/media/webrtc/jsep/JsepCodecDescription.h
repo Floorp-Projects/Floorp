@@ -112,6 +112,9 @@ class JsepCodecDescription {
     return true;
   }
 
+  virtual void ApplyConfigToFmtp(
+      UniquePtr<SdpFmtpAttributeList::Parameters>& aFmtp) const = 0;
+
   virtual void AddToMediaSection(SdpMediaSection& msection) const {
     if (mEnabled && msection.GetMediaType() == Type()) {
       if (mDirection == sdp::kRecv) {
@@ -268,27 +271,13 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
     }
 
     if (mName == "opus") {
-      SdpFmtpAttributeList::OpusParameters opusParams(
-          GetOpusParameters(mDefaultPt, msection));
-      if (mMaxPlaybackRate) {
-        opusParams.maxplaybackrate = mMaxPlaybackRate;
-      }
-      opusParams.maxAverageBitrate = mMaxAverageBitrate;
+      UniquePtr<SdpFmtpAttributeList::Parameters> opusParams =
+          MakeUnique<SdpFmtpAttributeList::OpusParameters>(
+              GetOpusParameters(mDefaultPt, msection));
 
-      if (mChannels == 2 &&
-          !Preferences::GetBool("media.peerconnection.sdp.disable_stereo_fmtp",
-                                false) &&
-          !mForceMono) {
-        // We prefer to receive stereo, if available.
-        opusParams.stereo = 1;
-      }
-      opusParams.useInBandFec = mFECEnabled ? 1 : 0;
-      opusParams.useDTX = mDTXEnabled;
-      opusParams.frameSizeMs = mFrameSizeMs;
-      opusParams.minFrameSizeMs = mMinFrameSizeMs;
-      opusParams.maxFrameSizeMs = mMaxFrameSizeMs;
-      opusParams.useCbr = mCbrEnabled;
-      msection.SetFmtp(SdpFmtpAttributeList::Fmtp(mDefaultPt, opusParams));
+      ApplyConfigToFmtp(opusParams);
+
+      msection.SetFmtp(SdpFmtpAttributeList::Fmtp(mDefaultPt, *opusParams));
     } else if (mName == "telephone-event") {
       // add the default dtmf tones
       SdpFmtpAttributeList::TelephoneEventParameters teParams(
@@ -335,6 +324,41 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
 
     return true;
   }
+
+  void ApplyConfigToFmtp(
+      UniquePtr<SdpFmtpAttributeList::Parameters>& aFmtp) const override {
+    if (mName == "opus") {
+      SdpFmtpAttributeList::OpusParameters opusParams;
+      if (aFmtp) {
+        MOZ_RELEASE_ASSERT(aFmtp->codec_type == SdpRtpmapAttributeList::kOpus);
+        opusParams =
+            static_cast<const SdpFmtpAttributeList::OpusParameters&>(*aFmtp);
+        opusParams.useInBandFec = mFECEnabled ? 1 : 0;
+      } else {
+        // If we weren't passed a fmtp to use then show we can do in band FEC
+        // for getCapabilities queries.
+        opusParams.useInBandFec = 1;
+      }
+      if (mMaxPlaybackRate) {
+        opusParams.maxplaybackrate = mMaxPlaybackRate;
+      }
+      opusParams.maxAverageBitrate = mMaxAverageBitrate;
+
+      if (mChannels == 2 &&
+          !Preferences::GetBool("media.peerconnection.sdp.disable_stereo_fmtp",
+                                false) &&
+          !mForceMono) {
+        // We prefer to receive stereo, if available.
+        opusParams.stereo = 1;
+      }
+      opusParams.useDTX = mDTXEnabled;
+      opusParams.frameSizeMs = mFrameSizeMs;
+      opusParams.minFrameSizeMs = mMinFrameSizeMs;
+      opusParams.maxFrameSizeMs = mMaxFrameSizeMs;
+      opusParams.useCbr = mCbrEnabled;
+      aFmtp.reset(opusParams.Clone());
+    }
+  };
 
   uint32_t mMaxPlaybackRate;
   bool mForceMono;
@@ -433,6 +457,68 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
     );
   }
 
+  void ApplyConfigToFmtp(
+      UniquePtr<SdpFmtpAttributeList::Parameters>& aFmtp) const override {
+    if (mName == "H264") {
+      SdpFmtpAttributeList::H264Parameters h264Params;
+      if (aFmtp) {
+        MOZ_RELEASE_ASSERT(aFmtp->codec_type == SdpRtpmapAttributeList::kH264);
+        h264Params =
+            static_cast<const SdpFmtpAttributeList::H264Parameters&>(*aFmtp);
+      }
+
+      if (mDirection == sdp::kSend) {
+        if (!h264Params.level_asymmetry_allowed) {
+          // First time the fmtp has been set; set just in case this is for a
+          // sendonly m-line, since even though we aren't receiving the level
+          // negotiation still needs to happen (sigh).
+          h264Params.profile_level_id = mProfileLevelId;
+        }
+      } else {
+        // Parameters that only apply to what we receive
+        h264Params.max_mbps = mConstraints.maxMbps;
+        h264Params.max_fs = mConstraints.maxFs;
+        h264Params.max_cpb = mConstraints.maxCpb;
+        h264Params.max_dpb = mConstraints.maxDpb;
+        h264Params.max_br = mConstraints.maxBr;
+        strncpy(h264Params.sprop_parameter_sets, mSpropParameterSets.c_str(),
+                sizeof(h264Params.sprop_parameter_sets) - 1);
+        h264Params.profile_level_id = mProfileLevelId;
+      }
+
+      // Parameters that apply to both the send and recv directions
+      h264Params.packetization_mode = mPacketizationMode;
+      // Hard-coded, may need to change someday?
+      h264Params.level_asymmetry_allowed = true;
+
+      // Parameters that apply to both the send and recv directions
+      h264Params.packetization_mode = mPacketizationMode;
+      // Hard-coded, may need to change someday?
+      h264Params.level_asymmetry_allowed = true;
+      aFmtp.reset(h264Params.Clone());
+    } else if (mName == "VP8" || mName == "VP9") {
+      SdpRtpmapAttributeList::CodecType type =
+          mName == "VP8" ? SdpRtpmapAttributeList::CodecType::kVP8
+                         : SdpRtpmapAttributeList::CodecType::kVP9;
+      auto vp8Params = SdpFmtpAttributeList::VP8Parameters(type);
+
+      if (aFmtp) {
+        MOZ_RELEASE_ASSERT(aFmtp->codec_type == type);
+        vp8Params =
+            static_cast<const SdpFmtpAttributeList::VP8Parameters&>(*aFmtp);
+      }
+      // VP8 and VP9 share the same SDP parameters thus far
+      vp8Params.max_fs = mConstraints.maxFs;
+      if (mConstraints.maxFps.isSome()) {
+        vp8Params.max_fr =
+            static_cast<unsigned int>(std::round(*mConstraints.maxFps));
+      } else {
+        vp8Params.max_fr = 60;
+      }
+      aFmtp.reset(vp8Params.Clone());
+    }
+  }
+
   virtual void EnableTmmbr() {
     // EnableTmmbr can be called multiple times due to multiple calls to
     // PeerConnectionImpl::ConfigureJsepSessionCodecs
@@ -492,34 +578,13 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
 
   void AddFmtpsToMSection(SdpMediaSection& msection) const {
     if (mName == "H264") {
-      SdpFmtpAttributeList::H264Parameters h264Params(
-          GetH264Parameters(mDefaultPt, msection));
+      UniquePtr<SdpFmtpAttributeList::Parameters> h264Params =
+          MakeUnique<SdpFmtpAttributeList::H264Parameters>(
+              GetH264Parameters(mDefaultPt, msection));
 
-      if (mDirection == sdp::kSend) {
-        if (!h264Params.level_asymmetry_allowed) {
-          // First time the fmtp has been set; set just in case this is for a
-          // sendonly m-line, since even though we aren't receiving the level
-          // negotiation still needs to happen (sigh).
-          h264Params.profile_level_id = mProfileLevelId;
-        }
-      } else {
-        // Parameters that only apply to what we receive
-        h264Params.max_mbps = mConstraints.maxMbps;
-        h264Params.max_fs = mConstraints.maxFs;
-        h264Params.max_cpb = mConstraints.maxCpb;
-        h264Params.max_dpb = mConstraints.maxDpb;
-        h264Params.max_br = mConstraints.maxBr;
-        strncpy(h264Params.sprop_parameter_sets, mSpropParameterSets.c_str(),
-                sizeof(h264Params.sprop_parameter_sets) - 1);
-        h264Params.profile_level_id = mProfileLevelId;
-      }
+      ApplyConfigToFmtp(h264Params);
 
-      // Parameters that apply to both the send and recv directions
-      h264Params.packetization_mode = mPacketizationMode;
-      // Hard-coded, may need to change someday?
-      h264Params.level_asymmetry_allowed = true;
-
-      msection.SetFmtp(SdpFmtpAttributeList::Fmtp(mDefaultPt, h264Params));
+      msection.SetFmtp(SdpFmtpAttributeList::Fmtp(mDefaultPt, *h264Params));
     } else if (mName == "red" && !mRedundantEncodings.empty()) {
       SdpFmtpAttributeList::RedParameters redParams(
           GetRedParameters(mDefaultPt, msection));
@@ -528,17 +593,11 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
     } else if (mName == "VP8" || mName == "VP9") {
       if (mDirection == sdp::kRecv) {
         // VP8 and VP9 share the same SDP parameters thus far
-        SdpFmtpAttributeList::VP8Parameters vp8Params(
-            GetVP8Parameters(mDefaultPt, msection));
-
-        vp8Params.max_fs = mConstraints.maxFs;
-        if (mConstraints.maxFps.isSome()) {
-          vp8Params.max_fr =
-              static_cast<unsigned int>(std::round(*mConstraints.maxFps));
-        } else {
-          vp8Params.max_fr = 60;
-        }
-        msection.SetFmtp(SdpFmtpAttributeList::Fmtp(mDefaultPt, vp8Params));
+        UniquePtr<SdpFmtpAttributeList::Parameters> vp8Params =
+            MakeUnique<SdpFmtpAttributeList::VP8Parameters>(
+                GetVP8Parameters(mDefaultPt, msection));
+        ApplyConfigToFmtp(vp8Params);
+        msection.SetFmtp(SdpFmtpAttributeList::Fmtp(mDefaultPt, *vp8Params));
       }
     }
 
@@ -1121,6 +1180,9 @@ class JsepApplicationCodecDescription : public JsepCodecDescription {
   // We only support one datachannel per m-section
   void EnsureNoDuplicatePayloadTypes(std::set<std::string>& aUsedPts) override {
   }
+
+  void ApplyConfigToFmtp(
+      UniquePtr<SdpFmtpAttributeList::Parameters>& aFmtp) const override{};
 
   uint16_t mLocalPort;
   uint32_t mLocalMaxMessageSize;

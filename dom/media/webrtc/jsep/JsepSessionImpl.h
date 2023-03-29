@@ -85,9 +85,9 @@ class JsepSessionImpl : public JsepSession, public JsepSessionCopyableStuff {
   virtual nsresult AddDtlsFingerprint(
       const std::string& algorithm, const std::vector<uint8_t>& value) override;
 
-  nsresult AddRtpExtension(JsepMediaType mediaType,
-                           const std::string& extensionName,
-                           SdpDirectionAttribute::Direction direction);
+  virtual nsresult AddRtpExtension(
+      JsepMediaType mediaType, const std::string& extensionName,
+      SdpDirectionAttribute::Direction direction) override;
   virtual nsresult AddAudioRtpExtension(
       const std::string& extensionName,
       SdpDirectionAttribute::Direction direction =
@@ -180,6 +180,10 @@ class JsepSessionImpl : public JsepSession, public JsepSessionCopyableStuff {
 
   virtual bool CheckNegotiationNeeded() const override;
 
+  virtual void SetDefaultCodecs(
+      const std::vector<UniquePtr<JsepCodecDescription>>& aPreferredCodecs)
+      override;
+
  private:
   // Non-const so it can set mLastError
   nsresult CreateGenericSDP(UniquePtr<Sdp>* sdp);
@@ -192,8 +196,6 @@ class JsepSessionImpl : public JsepSession, public JsepSessionCopyableStuff {
                         SdpMediaSection* msection);
   uint16_t GetNeverUsedExtmapEntry();
   nsresult SetupIds();
-  void SetupDefaultCodecs();
-  void SetupDefaultRtpExtensions();
   void SetState(JsepSignalingState state);
   // Non-const so it can set mLastError
   nsresult ParseSdp(const std::string& sdp, UniquePtr<Sdp>* parsedp);
