@@ -2212,9 +2212,12 @@ Toolbox.prototype = {
    * Apply the current simple highlighters setting to this toolbox's tab.
    */
   _applySimpleHighlightersSettings() {
-    const pref = "devtools.inspector.simple-highlighters-reduced-motion";
+    const useSimpleHighlightersForReducedMotion = Services.prefs.getBoolPref(
+      "devtools.inspector.simple-highlighters-reduced-motion",
+      false
+    );
     this.commands.targetConfigurationCommand.updateConfiguration({
-      useSimpleHighlightersForReducedMotion: Services.prefs.getBoolPref(pref),
+      useSimpleHighlightersForReducedMotion,
     });
   },
 
