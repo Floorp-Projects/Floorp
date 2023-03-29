@@ -77,6 +77,7 @@ protections-panel-site-not-working-view-issue-list-forms = Forms
 protections-panel-site-not-working-view-issue-list-payments = Payments
 protections-panel-site-not-working-view-issue-list-comments = Comments
 protections-panel-site-not-working-view-issue-list-videos = Videos
+protections-panel-site-not-working-view-issue-list-fonts = Fonts
 
 protections-panel-site-not-working-view-send-report = Send a report
 

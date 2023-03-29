@@ -1504,6 +1504,13 @@ var gProtectionsHandler = {
     ));
   },
 
+  get _siteNotWorkingIssueListFonts() {
+    delete this._siteNotWorkingIssueListFonts;
+    return (this._siteNotWorkingIssueListFonts = document.getElementById(
+      "protections-panel-site-not-working-view-issue-list-fonts"
+    ));
+  },
+
   strings: {
     get activeTooltipText() {
       delete this.activeTooltipText;
@@ -1548,6 +1555,13 @@ var gProtectionsHandler = {
   },
 
   init() {
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "_fontVisibilityTrackingProtection",
+      "layout.css.font-visibility.trackingprotection",
+      3000
+    );
+
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
       "_protectionsPopupToastTimeout",
@@ -2430,6 +2444,13 @@ var gProtectionsHandler = {
   },
 
   showSiteNotWorkingView() {
+    // Only show the Fonts item if we are restricting font visibility
+    if (this._fontVisibilityTrackingProtection >= 3) {
+      this._siteNotWorkingIssueListFonts.setAttribute("hidden", "true");
+    } else {
+      this._siteNotWorkingIssueListFonts.removeAttribute("hidden");
+    }
+
     this._protectionsPopupMultiView.showSubView(
       "protections-popup-siteNotWorkingView"
     );
