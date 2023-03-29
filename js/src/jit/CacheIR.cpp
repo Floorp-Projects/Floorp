@@ -1063,7 +1063,7 @@ void GetPropIRGenerator::attachMegamorphicNativeSlot(ObjOperandId objId,
   }
   writer.returnFromIC();
 
-  trackAttached("MegamorphicNativeSlot");
+  trackAttached("GetMegamorphicNativeSlot");
 }
 
 AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,
@@ -1092,7 +1092,7 @@ AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,
       if (kind == NativeGetPropKind::Slot) {
         EmitReadSlotResult(writer, nobj, holder, *prop, objId);
         writer.returnFromIC();
-        trackAttached("NativeSlot");
+        trackAttached("GetNativeSlot");
       } else {
         EmitMissingPropResult(writer, nobj, objId);
         writer.returnFromIC();
@@ -1210,7 +1210,7 @@ AttachDecision GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
       EmitReadSlotResult(writer, windowObj, holder, *prop, windowObjId);
       writer.returnFromIC();
 
-      trackAttached("WindowProxySlot");
+      trackAttached("GetWindowProxySlot");
       return AttachDecision::Attach;
     }
 
@@ -1492,7 +1492,7 @@ AttachDecision GetPropIRGenerator::tryAttachGenericProxy(
 
   writer.returnFromIC();
 
-  trackAttached("GenericProxy");
+  trackAttached("GetGenericProxy");
   return AttachDecision::Attach;
 }
 
@@ -1616,7 +1616,7 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyShadowed(
   writer.proxyGetResult(objId, id);
   writer.returnFromIC();
 
-  trackAttached("DOMProxyShadowed");
+  trackAttached("GetDOMProxyShadowed");
   return AttachDecision::Attach;
 }
 
@@ -1714,7 +1714,7 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyUnshadowed(
     writer.returnFromIC();
   }
 
-  trackAttached("DOMProxyUnshadowed");
+  trackAttached("GetDOMProxyUnshadowed");
   return AttachDecision::Attach;
 }
 
@@ -2573,7 +2573,7 @@ AttachDecision GetPropIRGenerator::tryAttachArgumentsObjectArg(
   writer.loadArgumentsObjectArgResult(objId, indexId);
   writer.returnFromIC();
 
-  trackAttached("ArgumentsObjectArg");
+  trackAttached("GetArgumentsObjectArg");
   return AttachDecision::Attach;
 }
 
@@ -2898,7 +2898,7 @@ AttachDecision GetPropIRGenerator::tryAttachProxyElement(HandleObject obj,
   writer.proxyGetByValueResult(objId, getElemKeyValueId());
   writer.returnFromIC();
 
-  trackAttached("ProxyElement");
+  trackAttached("GetProxyElement");
   return AttachDecision::Attach;
 }
 
@@ -3257,7 +3257,7 @@ AttachDecision GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
   writer.loadOperandResult(resId);
   writer.returnFromIC();
 
-  trackAttached("EnvironmentName");
+  trackAttached("GetEnvironmentName");
   return AttachDecision::Attach;
 }
 
@@ -3403,7 +3403,7 @@ AttachDecision BindNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
   writer.loadObjectResult(lastObjId);
   writer.returnFromIC();
 
-  trackAttached("EnvironmentName");
+  trackAttached("SetEnvironmentName");
   return AttachDecision::Attach;
 }
 
@@ -3559,7 +3559,7 @@ AttachDecision HasPropIRGenerator::tryAttachArgumentsObjectArg(
   writer.loadArgumentsObjectArgExistsResult(objId, indexId);
   writer.returnFromIC();
 
-  trackAttached("ArgumentsObjectArg");
+  trackAttached("HasArgumentsObjectArg");
   return AttachDecision::Attach;
 }
 
@@ -4037,7 +4037,7 @@ AttachDecision SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj,
       IsPropertySetOp(JSOp(*pc_))) {
     writer.megamorphicStoreSlot(objId, id.toAtom()->asPropertyName(), rhsId);
     writer.returnFromIC();
-    trackAttached("MegamorphicNativeSlot");
+    trackAttached("SetMegamorphicNativeSlot");
     return AttachDecision::Attach;
   }
 
@@ -4050,7 +4050,7 @@ AttachDecision SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj,
 
   EmitStoreSlotAndReturn(writer, objId, nobj, *prop, rhsId);
 
-  trackAttached("NativeSlot");
+  trackAttached("SetNativeSlot");
   return AttachDecision::Attach;
 }
 
@@ -4635,7 +4635,7 @@ AttachDecision SetPropIRGenerator::tryAttachGenericProxy(
 
   writer.returnFromIC();
 
-  trackAttached("GenericProxy");
+  trackAttached("SetGenericProxy");
   return AttachDecision::Attach;
 }
 
@@ -4652,7 +4652,7 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyShadowed(
   writer.proxySet(objId, id, rhsId, IsStrictSetPC(pc_));
   writer.returnFromIC();
 
-  trackAttached("DOMProxyShadowed");
+  trackAttached("SetDOMProxyShadowed");
   return AttachDecision::Attach;
 }
 
@@ -4696,7 +4696,7 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyUnshadowed(
   // guards will be generated, we can just pass that instead.
   EmitCallSetterNoGuards(cx_, writer, nproto, holder, *prop, objId, rhsId);
 
-  trackAttached("DOMProxyUnshadowed");
+  trackAttached("SetDOMProxyUnshadowed");
   return AttachDecision::Attach;
 }
 
@@ -4812,7 +4812,7 @@ AttachDecision SetPropIRGenerator::tryAttachProxyElement(HandleObject obj,
   writer.proxySetByValue(objId, setElemKeyValueId(), rhsId, IsStrictSetPC(pc_));
   writer.returnFromIC();
 
-  trackAttached("ProxyElement");
+  trackAttached("SetProxyElement");
   return AttachDecision::Attach;
 }
 
@@ -4873,7 +4873,7 @@ AttachDecision SetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
 
   EmitStoreSlotAndReturn(writer, windowObjId, windowObj, *prop, rhsId);
 
-  trackAttached("WindowProxySlot");
+  trackAttached("SetWindowProxySlot");
   return AttachDecision::Attach;
 }
 
@@ -5105,14 +5105,14 @@ AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(
   } else if (holder->isFixedSlot(propInfo.slot())) {
     size_t offset = NativeObject::getFixedSlotOffset(propInfo.slot());
     writer.addAndStoreFixedSlot(objId, offset, rhsValId, newShape);
-    trackAttached("AddSlot");
+    trackAttached("AddSlotFixed");
   } else {
     size_t offset = holder->dynamicSlotIndex(propInfo.slot()) * sizeof(Value);
     uint32_t numOldSlots = NativeObject::calculateDynamicSlots(oldSharedShape);
     uint32_t numNewSlots = holder->numDynamicSlots();
     if (numOldSlots == numNewSlots) {
       writer.addAndStoreDynamicSlot(objId, offset, rhsValId, newShape);
-      trackAttached("AddSlot");
+      trackAttached("AddSlotDynamic");
     } else {
       MOZ_ASSERT(numNewSlots > numOldSlots);
       writer.allocateAndStoreDynamicSlot(objId, offset, rhsValId, newShape,
@@ -5276,7 +5276,7 @@ AttachDecision TypeOfIRGenerator::tryAttachPrimitive(ValOperandId valId) {
       TypeName(js::TypeOfValue(val_), cx_->names()));
   writer.returnFromIC();
   writer.setTypeData(TypeData(JSValueType(val_.type())));
-  trackAttached("Primitive");
+  trackAttached("TypeOf.Primitive");
   return AttachDecision::Attach;
 }
 
@@ -5289,7 +5289,7 @@ AttachDecision TypeOfIRGenerator::tryAttachObject(ValOperandId valId) {
   writer.loadTypeOfObjectResult(objId);
   writer.returnFromIC();
   writer.setTypeData(TypeData(JSValueType(val_.type())));
-  trackAttached("Object");
+  trackAttached("TypeOf.Object");
   return AttachDecision::Attach;
 }
 
@@ -7747,7 +7747,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachSpreadMathMinMax(
 
   writer.returnFromIC();
 
-  trackAttached(isMax ? "MathMax" : "MathMin");
+  trackAttached(isMax ? "MathMaxArray" : "MathMinArray");
   return AttachDecision::Attach;
 }
 
@@ -9208,7 +9208,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayByteOffset() {
   }
   writer.returnFromIC();
 
-  trackAttached("TypedArrayByteOffset");
+  trackAttached("IntrinsicTypedArrayByteOffset");
   return AttachDecision::Attach;
 }
 
@@ -9267,7 +9267,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayLength(
   }
   writer.returnFromIC();
 
-  trackAttached("TypedArrayLength");
+  trackAttached("IntrinsicTypedArrayLength");
   return AttachDecision::Attach;
 }
 
@@ -11248,7 +11248,7 @@ AttachDecision CompareIRGenerator::tryAttachString(ValOperandId lhsId,
   writer.compareStringResult(op_, lhsStrId, rhsStrId);
   writer.returnFromIC();
 
-  trackAttached("String");
+  trackAttached("Compare.String");
   return AttachDecision::Attach;
 }
 
@@ -11265,7 +11265,7 @@ AttachDecision CompareIRGenerator::tryAttachObject(ValOperandId lhsId,
   writer.compareObjectResult(op_, lhsObjId, rhsObjId);
   writer.returnFromIC();
 
-  trackAttached("Object");
+  trackAttached("Compare.Object");
   return AttachDecision::Attach;
 }
 
@@ -11282,7 +11282,7 @@ AttachDecision CompareIRGenerator::tryAttachSymbol(ValOperandId lhsId,
   writer.compareSymbolResult(op_, lhsSymId, rhsSymId);
   writer.returnFromIC();
 
-  trackAttached("Symbol");
+  trackAttached("Compare.Symbol");
   return AttachDecision::Attach;
 }
 
@@ -11310,7 +11310,7 @@ AttachDecision CompareIRGenerator::tryAttachStrictDifferentTypes(
   writer.loadBooleanResult(op_ == JSOp::StrictNe ? true : false);
   writer.returnFromIC();
 
-  trackAttached("StrictDifferentTypes");
+  trackAttached("Compare.StrictDifferentTypes");
   return AttachDecision::Attach;
 }
 
@@ -11335,7 +11335,7 @@ AttachDecision CompareIRGenerator::tryAttachInt32(ValOperandId lhsId,
   writer.compareInt32Result(op_, lhsIntId, rhsIntId);
   writer.returnFromIC();
 
-  trackAttached("Int32");
+  trackAttached("Compare.Int32");
   return AttachDecision::Attach;
 }
 
@@ -11361,7 +11361,7 @@ AttachDecision CompareIRGenerator::tryAttachNumber(ValOperandId lhsId,
   writer.compareDoubleResult(op_, lhs, rhs);
   writer.returnFromIC();
 
-  trackAttached("Number");
+  trackAttached("Compare.Number");
   return AttachDecision::Attach;
 }
 
@@ -11377,7 +11377,7 @@ AttachDecision CompareIRGenerator::tryAttachBigInt(ValOperandId lhsId,
   writer.compareBigIntResult(op_, lhs, rhs);
   writer.returnFromIC();
 
-  trackAttached("BigInt");
+  trackAttached("Compare.BigInt");
   return AttachDecision::Attach;
 }
 
@@ -11404,21 +11404,21 @@ AttachDecision CompareIRGenerator::tryAttachAnyNullUndefined(
     if (rhsVal_.isNull()) {
       writer.guardIsNull(rhsId);
       writer.compareNullUndefinedResult(op_, /* isUndefined */ false, lhsId);
-      trackAttached("AnyNull");
+      trackAttached("Compare.AnyNull");
     } else {
       writer.guardIsUndefined(rhsId);
       writer.compareNullUndefinedResult(op_, /* isUndefined */ true, lhsId);
-      trackAttached("AnyUndefined");
+      trackAttached("Compare.AnyUndefined");
     }
   } else {
     if (lhsVal_.isNull()) {
       writer.guardIsNull(lhsId);
       writer.compareNullUndefinedResult(op_, /* isUndefined */ false, rhsId);
-      trackAttached("NullAny");
+      trackAttached("Compare.NullAny");
     } else {
       writer.guardIsUndefined(lhsId);
       writer.compareNullUndefinedResult(op_, /* isUndefined */ true, rhsId);
-      trackAttached("UndefinedAny");
+      trackAttached("Compare.UndefinedAny");
     }
   }
 
@@ -11438,7 +11438,7 @@ AttachDecision CompareIRGenerator::tryAttachNullUndefined(ValOperandId lhsId,
     writer.guardIsNullOrUndefined(rhsId);
     // Sloppy equality means we actually only care about the op:
     writer.loadBooleanResult(op_ == JSOp::Eq);
-    trackAttached("SloppyNullUndefined");
+    trackAttached("Compare.SloppyNullUndefined");
   } else {
     // Strict equality only hits this branch, and only in the
     // undef {!,=}==  undef and null {!,=}== null cases.
@@ -11449,7 +11449,7 @@ AttachDecision CompareIRGenerator::tryAttachNullUndefined(ValOperandId lhsId,
     rhsVal_.isNull() ? writer.guardIsNull(rhsId)
                      : writer.guardIsUndefined(rhsId);
     writer.loadBooleanResult(op_ == JSOp::StrictEq);
-    trackAttached("StrictNullUndefinedEquality");
+    trackAttached("Compare.StrictNullUndefinedEquality");
   }
 
   writer.returnFromIC();
@@ -11480,7 +11480,7 @@ AttachDecision CompareIRGenerator::tryAttachStringNumber(ValOperandId lhsId,
   writer.compareDoubleResult(op_, lhsGuardedId, rhsGuardedId);
   writer.returnFromIC();
 
-  trackAttached("StringNumber");
+  trackAttached("Compare.StringNumber");
   return AttachDecision::Attach;
 }
 
@@ -11535,7 +11535,7 @@ AttachDecision CompareIRGenerator::tryAttachPrimitiveSymbol(
   writer.loadBooleanResult(op_ == JSOp::Ne || op_ == JSOp::StrictNe);
   writer.returnFromIC();
 
-  trackAttached("PrimitiveSymbol");
+  trackAttached("Compare.PrimitiveSymbol");
   return AttachDecision::Attach;
 }
 
@@ -11563,7 +11563,7 @@ AttachDecision CompareIRGenerator::tryAttachBigIntInt32(ValOperandId lhsId,
   }
   writer.returnFromIC();
 
-  trackAttached("BigIntInt32");
+  trackAttached("Compare.BigIntInt32");
   return AttachDecision::Attach;
 }
 
@@ -11597,7 +11597,7 @@ AttachDecision CompareIRGenerator::tryAttachBigIntNumber(ValOperandId lhsId,
   }
   writer.returnFromIC();
 
-  trackAttached("BigIntNumber");
+  trackAttached("Compare.BigIntNumber");
   return AttachDecision::Attach;
 }
 
@@ -11625,7 +11625,7 @@ AttachDecision CompareIRGenerator::tryAttachBigIntString(ValOperandId lhsId,
   }
   writer.returnFromIC();
 
-  trackAttached("BigIntString");
+  trackAttached("Compare.BigIntString");
   return AttachDecision::Attach;
 }
 
