@@ -19,9 +19,16 @@ const mockIdleService = {
   },
 };
 
-const sleepMs = ms => new Promise(resolve => setTimeout(resolve, ms)); // eslint-disable-line mozilla/no-arbitrary-setTimeout
+const sleepMs = (ms = 0) => new Promise(resolve => setTimeout(resolve, ms)); // eslint-disable-line mozilla/no-arbitrary-setTimeout
+
+const inChaosMode = !!parseInt(Services.env.get("MOZ_CHAOSMODE"), 16);
 
 add_setup(async function() {
+  // Runtime increases in chaos mode on Mac.
+  if (inChaosMode && AppConstants.platform === "macosx") {
+    requestLongerTimeout(2);
+  }
+
   registerCleanupFunction(() => {
     const trigger = ASRouterTriggerListeners.get("openURL");
     trigger.uninit();
@@ -262,9 +269,9 @@ add_task(async function test_activityAfterIdleWake() {
   );
   mockIdleService._fireObservers("wake_notification");
   mockIdleService._fireObservers("idle");
-  await TestUtils.waitForTick();
+  await sleepMs(1);
   mockIdleService._fireObservers("active");
-  await sleepMs(31);
+  await sleepMs(inChaosMode ? 32 : 300);
   ok(handlerStub.notCalled, "Not called immediately after waking from sleep");
 
   mockIdleService._fireObservers("idle");
@@ -275,4 +282,63 @@ add_task(async function test_activityAfterIdleWake() {
     "Called once after waiting for wake delay before firing idle"
   );
   restore();
+});
+
+add_task(async function test_formAutofillTrigger() {
+  const sandbox = sinon.createSandbox();
+  const handlerStub = sandbox.stub();
+  const formAutofillTrigger = ASRouterTriggerListeners.get("formAutofill");
+  sandbox.stub(formAutofillTrigger, "_triggerDelay").value(0);
+  formAutofillTrigger.uninit();
+  formAutofillTrigger.init(handlerStub);
+
+  function notifyCreditCardSaved() {
+    Services.obs.notifyObservers(
+      {
+        wrappedJSObject: { sourceSync: false, collectionName: "creditCards" },
+      },
+      formAutofillTrigger._topic,
+      "add"
+    );
+  }
+
+  // Saving credit cards for autofill currently fails for some hardware
+  // configurations, so mock the event instead of really adding a card.
+  notifyCreditCardSaved();
+  await sleepMs(1);
+  Assert.ok(handlerStub.called, "Called after event");
+
+  // Test that the trigger doesn't fire when the credit card manager is open.
+  handlerStub.resetHistory();
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:preferences#privacy" },
+    async browser => {
+      await SpecialPowers.spawn(browser, [], async () =>
+        (
+          await ContentTaskUtils.waitForCondition(
+            () => content.document.querySelector("#creditCardAutofill button"),
+            "Waiting for credit card manager button"
+          )
+        )?.click()
+      );
+      await BrowserTestUtils.waitForCondition(
+        () => browser.contentWindow?.gSubDialog?.dialogs.length
+      );
+      notifyCreditCardSaved();
+      await sleepMs(1);
+      Assert.ok(
+        handlerStub.notCalled,
+        "Not called when credit card manager is open"
+      );
+    }
+  );
+
+  formAutofillTrigger.uninit();
+  handlerStub.resetHistory();
+  notifyCreditCardSaved();
+  await sleepMs(1);
+  Assert.ok(handlerStub.notCalled, "Not called after uninit");
+
+  sandbox.restore();
+  formAutofillTrigger.uninit();
 });
