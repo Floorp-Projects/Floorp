@@ -2,12 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["UITourChild"];
-
 const PREF_TEST_WHITELIST = "browser.uitour.testingOrigins";
 const UITOUR_PERMISSION = "uitour";
 
-class UITourChild extends JSWindowActorChild {
+export class UITourChild extends JSWindowActorChild {
   handleEvent(event) {
     if (!Services.prefs.getBoolPref("browser.uitour.enabled")) {
       return;
@@ -47,7 +45,7 @@ class UITourChild extends JSWindowActorChild {
     return false;
   }
 
-  // This function is copied from UITour.jsm.
+  // This function is copied from UITour.sys.mjs.
   isSafeScheme(aURI) {
     let allowedSchemes = new Set(["https", "about"]);
     if (!Services.prefs.getBoolPref("browser.uitour.requireSecure")) {

@@ -8,7 +8,7 @@
 # See PermissionManager.cpp for more...
 
 # UITour
-# Bug 1557153: www.mozilla.org gets a special workaround in UITourChild.jsm
+# Bug 1557153: www.mozilla.org gets a special workaround in UITourChild.sys.mjs
 origin	uitour	1	https://www.mozilla.org
 origin	uitour	1	https://monitor.firefox.com
 origin	uitour	1	https://screenshots.firefox.com

@@ -794,10 +794,10 @@ let JSWINDOWACTORS = {
 
   UITour: {
     parent: {
-      moduleURI: "resource:///modules/UITourParent.jsm",
+      esModuleURI: "resource:///modules/UITourParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource:///modules/UITourChild.jsm",
+      esModuleURI: "resource:///modules/UITourChild.sys.mjs",
       events: {
         mozUITour: { wantUntrusted: true },
       },

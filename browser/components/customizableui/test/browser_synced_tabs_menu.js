@@ -16,11 +16,9 @@ let { UIState } = ChromeUtils.importESModule(
   "resource://services-sync/UIState.sys.mjs"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "UITour",
-  "resource:///modules/UITour.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  UITour: "resource:///modules/UITour.sys.mjs",
+});
 
 const DECKINDEX_TABS = 0;
 const DECKINDEX_FETCHING = 1;
