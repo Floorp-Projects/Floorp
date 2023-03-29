@@ -666,7 +666,6 @@ void* nsCocoaWindow::GetNativeData(uint32_t aDataType) {
     // to emulate how windows works, we always have to return a NSView
     // for NS_NATIVE_WIDGET
     case NS_NATIVE_WIDGET:
-    case NS_NATIVE_DISPLAY:
       retVal = [mWindow contentView];
       break;
 

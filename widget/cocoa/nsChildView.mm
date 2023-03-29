@@ -415,7 +415,6 @@ void* nsChildView::GetNativeData(uint32_t aDataType) {
 
   switch (aDataType) {
     case NS_NATIVE_WIDGET:
-    case NS_NATIVE_DISPLAY:
       retVal = (void*)mView;
       break;
 
