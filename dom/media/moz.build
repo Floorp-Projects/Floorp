@@ -383,8 +383,6 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
     EXPORTS += [
         "!audioipc2_client_ffi_generated.h",
         "!audioipc2_server_ffi_generated.h",
-        "!audioipc_client_ffi_generated.h",
-        "!audioipc_server_ffi_generated.h",
     ]
 
     CbindgenHeader(
@@ -395,14 +393,6 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
     CbindgenHeader(
         "audioipc2_server_ffi_generated.h",
         inputs=["/third_party/rust/audioipc2-server"],
-    )
-
-    CbindgenHeader(
-        "audioipc_client_ffi_generated.h", inputs=["/third_party/rust/audioipc-client"]
-    )
-
-    CbindgenHeader(
-        "audioipc_server_ffi_generated.h", inputs=["/third_party/rust/audioipc-server"]
     )
 
 if CONFIG["ENABLE_TESTS"]:

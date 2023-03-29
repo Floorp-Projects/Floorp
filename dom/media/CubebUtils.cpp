@@ -32,8 +32,6 @@
 #ifdef XP_WIN
 #  include "mozilla/mscom/EnsureMTA.h"
 #endif
-#include "audioipc_server_ffi_generated.h"
-#include "audioipc_client_ffi_generated.h"
 #include "audioipc2_server_ffi_generated.h"
 #include "audioipc2_client_ffi_generated.h"
 #include <cmath>
@@ -41,7 +39,6 @@
 #include "CallbackThreadRegistry.h"
 #include "mozilla/StaticPrefs_media.h"
 
-#define AUDIOIPC_POOL_SIZE_DEFAULT 1
 #define AUDIOIPC_STACK_SIZE_DEFAULT (64 * 4096)
 
 #define PREF_VOLUME_SCALE "media.volume_scale"
@@ -57,8 +54,6 @@
 #define PREF_CUBEB_FORCE_NULL_CONTEXT "media.cubeb.force_null_context"
 #define PREF_CUBEB_OUTPUT_VOICE_ROUTING "media.cubeb.output_voice_routing"
 #define PREF_CUBEB_SANDBOX "media.cubeb.sandbox"
-#define PREF_CUBEB_SANDBOX_V2 "media.cubeb.sandbox_v2"
-#define PREF_AUDIOIPC_POOL_SIZE "media.audioipc.pool_size"
 #define PREF_AUDIOIPC_STACK_SIZE "media.audioipc.stack_size"
 #define PREF_AUDIOIPC_SHM_AREA_SIZE "media.audioipc.shm_area_size"
 
@@ -108,8 +103,6 @@ bool sCubebForceNullContext = false;
 bool sRouteOutputAsVoice = false;
 #ifdef MOZ_CUBEB_REMOTING
 bool sCubebSandbox = false;
-bool sCubebSandboxV2 = false;
-size_t sAudioIPCPoolSize;
 size_t sAudioIPCStackSize;
 size_t sAudioIPCShmAreaSize;
 #endif
@@ -164,7 +157,7 @@ void* sServerHandle = nullptr;
 StaticAutoPtr<ipc::FileDescriptor> sIPCConnection;
 
 static bool StartAudioIPCServer() {
-  if (sCubebSandboxV2) {
+  if (sCubebSandbox) {
     audioipc2::AudioIpcServerInitParams initParams{};
     initParams.mThreadCreateCallback = [](const char* aName) {
       PROFILER_REGISTER_THREAD(aName);
@@ -172,15 +165,6 @@ static bool StartAudioIPCServer() {
     initParams.mThreadDestroyCallback = []() { PROFILER_UNREGISTER_THREAD(); };
 
     sServerHandle = audioipc2::audioipc2_server_start(
-        sBrandName, sCubebBackendName, &initParams);
-  } else {
-    audioipc::AudioIpcServerInitParams initParams{};
-    initParams.mThreadCreateCallback = [](const char* aName) {
-      PROFILER_REGISTER_THREAD(aName);
-    };
-    initParams.mThreadDestroyCallback = []() { PROFILER_UNREGISTER_THREAD(); };
-
-    sServerHandle = audioipc::audioipc_server_start(
         sBrandName, sCubebBackendName, &initParams);
   }
   return sServerHandle != nullptr;
@@ -191,11 +175,7 @@ static void ShutdownAudioIPCServer() {
     return;
   }
 
-  if (sCubebSandboxV2) {
-    audioipc2::audioipc2_server_stop(sServerHandle);
-  } else {
-    audioipc::audioipc_server_stop(sServerHandle);
-  }
+  audioipc2::audioipc2_server_stop(sServerHandle);
   sServerHandle = nullptr;
 }
 #endif  // MOZ_CUBEB_REMOTING
@@ -281,16 +261,6 @@ void PrefChanged(const char* aPref, void* aClosure) {
     sCubebSandbox = Preferences::GetBool(aPref);
     MOZ_LOG(gCubebLog, LogLevel::Verbose,
             ("%s: %s", PREF_CUBEB_SANDBOX, sCubebSandbox ? "true" : "false"));
-  } else if (strcmp(aPref, PREF_CUBEB_SANDBOX_V2) == 0) {
-    StaticMutexAutoLock lock(sMutex);
-    sCubebSandboxV2 = Preferences::GetBool(aPref);
-    MOZ_LOG(
-        gCubebLog, LogLevel::Verbose,
-        ("%s: %s", PREF_CUBEB_SANDBOX_V2, sCubebSandboxV2 ? "true" : "false"));
-  } else if (strcmp(aPref, PREF_AUDIOIPC_POOL_SIZE) == 0) {
-    StaticMutexAutoLock lock(sMutex);
-    sAudioIPCPoolSize = Preferences::GetUint(PREF_AUDIOIPC_POOL_SIZE,
-                                             AUDIOIPC_POOL_SIZE_DEFAULT);
   } else if (strcmp(aPref, PREF_AUDIOIPC_STACK_SIZE) == 0) {
     StaticMutexAutoLock lock(sMutex);
     sAudioIPCStackSize = Preferences::GetUint(PREF_AUDIOIPC_STACK_SIZE,
@@ -474,13 +444,8 @@ ipc::FileDescriptor CreateAudioIPCConnectionUnlocked() {
           ("%s: %d", PREF_AUDIOIPC_SHM_AREA_SIZE, (int)sAudioIPCShmAreaSize));
   MOZ_ASSERT(sServerHandle);
   ipc::FileDescriptor::PlatformHandleType rawFD;
-  if (sCubebSandboxV2) {
-    rawFD = audioipc2::audioipc2_server_new_client(sServerHandle,
-                                                   sAudioIPCShmAreaSize);
-  } else {
-    rawFD = audioipc::audioipc_server_new_client(sServerHandle,
+  rawFD = audioipc2::audioipc2_server_new_client(sServerHandle,
                                                  sAudioIPCShmAreaSize);
-  }
   ipc::FileDescriptor fd(rawFD);
   if (!fd.IsValid()) {
     MOZ_LOG(gCubebLog, LogLevel::Error, ("audioipc_server_new_client failed"));
@@ -533,9 +498,6 @@ cubeb* GetCubebContextUnlocked() {
 #ifdef MOZ_CUBEB_REMOTING
   MOZ_LOG(gCubebLog, LogLevel::Info,
           ("%s: %s", PREF_CUBEB_SANDBOX, sCubebSandbox ? "true" : "false"));
-  MOZ_LOG(
-      gCubebLog, LogLevel::Info,
-      ("%s: %s", PREF_CUBEB_SANDBOX_V2, sCubebSandboxV2 ? "true" : "false"));
 
   if (sCubebSandbox) {
     if (XRE_IsParentProcess() && !sIPCConnection) {
@@ -552,41 +514,19 @@ cubeb* GetCubebContextUnlocked() {
     }
 
     MOZ_LOG(gCubebLog, LogLevel::Debug,
-            ("%s: %d", PREF_AUDIOIPC_POOL_SIZE, (int)sAudioIPCPoolSize));
-    MOZ_LOG(gCubebLog, LogLevel::Debug,
             ("%s: %d", PREF_AUDIOIPC_STACK_SIZE, (int)sAudioIPCStackSize));
 
-    if (sCubebSandboxV2) {
-      audioipc2::AudioIpcInitParams initParams{};
-      initParams.mPoolSize = sAudioIPCPoolSize;
-      initParams.mStackSize = sAudioIPCStackSize;
-      initParams.mServerConnection =
-          sIPCConnection->ClonePlatformHandle().release();
-      initParams.mThreadCreateCallback = [](const char* aName) {
-        PROFILER_REGISTER_THREAD(aName);
-      };
-      initParams.mThreadDestroyCallback = []() {
-        PROFILER_UNREGISTER_THREAD();
-      };
+    audioipc2::AudioIpcInitParams initParams{};
+    initParams.mStackSize = sAudioIPCStackSize;
+    initParams.mServerConnection =
+        sIPCConnection->ClonePlatformHandle().release();
+    initParams.mThreadCreateCallback = [](const char* aName) {
+      PROFILER_REGISTER_THREAD(aName);
+    };
+    initParams.mThreadDestroyCallback = []() { PROFILER_UNREGISTER_THREAD(); };
 
-      rv = audioipc2::audioipc2_client_init(&sCubebContext, sBrandName,
-                                            &initParams);
-    } else {
-      audioipc::AudioIpcInitParams initParams{};
-      initParams.mPoolSize = sAudioIPCPoolSize;
-      initParams.mStackSize = sAudioIPCStackSize;
-      initParams.mServerConnection =
-          sIPCConnection->ClonePlatformHandle().release();
-      initParams.mThreadCreateCallback = [](const char* aName) {
-        PROFILER_REGISTER_THREAD(aName);
-      };
-      initParams.mThreadDestroyCallback = []() {
-        PROFILER_UNREGISTER_THREAD();
-      };
-
-      rv = audioipc::audioipc_client_init(&sCubebContext, sBrandName,
+    rv = audioipc2::audioipc2_client_init(&sCubebContext, sBrandName,
                                           &initParams);
-    }
   } else {
 #endif  // MOZ_CUBEB_REMOTING
 #ifdef XP_WIN
@@ -680,10 +620,10 @@ static const char* gInitCallbackPrefs[] = {
     PREF_VOLUME_SCALE,           PREF_CUBEB_OUTPUT_DEVICE,
     PREF_CUBEB_LATENCY_PLAYBACK, PREF_CUBEB_LATENCY_MTG,
     PREF_CUBEB_BACKEND,          PREF_CUBEB_FORCE_NULL_CONTEXT,
-    PREF_CUBEB_SANDBOX,          PREF_CUBEB_SANDBOX_V2,
-    PREF_AUDIOIPC_POOL_SIZE,     PREF_AUDIOIPC_STACK_SIZE,
+    PREF_CUBEB_SANDBOX,          PREF_AUDIOIPC_STACK_SIZE,
     PREF_AUDIOIPC_SHM_AREA_SIZE, nullptr,
 };
+
 static const char* gCallbackPrefs[] = {
     PREF_CUBEB_FORCE_SAMPLE_RATE,
     // We don't want to call the callback on startup, because the pref is the
