@@ -495,7 +495,7 @@ define(function(require, exports, module) {
     const allowedStylesRegex = new RegExp(
       "^(?:-moz-)?(?:align|background|border|box|clear|color|cursor|display|" +
         "float|font|justify|line|margin|padding|position|text|transition" +
-        "|outline|white-space|word|writing|" +
+        "|outline|vertical-align|white-space|word|writing|" +
         "(?:min-|max-)?width|(?:min-|max-)?height)"
     );
 
