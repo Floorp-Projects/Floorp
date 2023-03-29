@@ -23,11 +23,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
-import org.robolectric.RobolectricTestRunner
 import java.io.IOException
 import java.net.CookieHandler
 import java.net.CookieManager
@@ -35,7 +33,6 @@ import java.net.HttpCookie
 import java.net.URI
 import java.util.concurrent.TimeUnit
 
-@RunWith(RobolectricTestRunner::class)
 class ConceptFetchHttpUploaderTest {
     private val testPath: String = "/some/random/path/not/important"
     private val testPing: String = "{ 'ping': 'test' }"

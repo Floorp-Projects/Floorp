@@ -4,19 +4,18 @@
 
 package mozilla.components.feature.search.widget
 
+import android.content.Context
 import mozilla.components.feature.search.R
 import mozilla.components.feature.search.widget.AppSearchWidgetProvider.Companion.getLayout
 import mozilla.components.support.test.mock
-import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
 class AppSearchWidgetProviderTest {
+
+    private val testContext: Context = mock()
 
     @Test
     fun testGetLayoutSize() {
