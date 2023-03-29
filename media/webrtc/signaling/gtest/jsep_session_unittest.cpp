@@ -16,6 +16,7 @@
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
 
+#include "PeerConnectionImpl.h"
 #include "sdp/SdpMediaSection.h"
 #include "sdp/SipccSdpParser.h"
 #include "jsep/JsepCodecDescription.h"
@@ -72,6 +73,21 @@ class JsepSessionTest : public JsepSessionTestBase,
 
     EXPECT_EQ(NS_OK, mSessionOff->Init());
     EXPECT_EQ(NS_OK, mSessionAns->Init());
+
+    std::vector<UniquePtr<JsepCodecDescription>> preferredCodecs;
+    PeerConnectionImpl::SetupPreferredCodecs(preferredCodecs);
+    mSessionOff->SetDefaultCodecs(preferredCodecs);
+    mSessionAns->SetDefaultCodecs(preferredCodecs);
+
+    std::vector<PeerConnectionImpl::RtpExtensionHeader> preferredHeaders;
+    PeerConnectionImpl::SetupPreferredRtpExtensions(preferredHeaders);
+
+    for (const auto& header : preferredHeaders) {
+      mSessionOff->AddRtpExtension(header.mMediaType, header.extensionname,
+                                   header.direction);
+      mSessionAns->AddRtpExtension(header.mMediaType, header.extensionname,
+                                   header.direction);
+    }
 
     mOffererTransport = MakeUnique<TransportData>();
     mAnswererTransport = MakeUnique<TransportData>();
