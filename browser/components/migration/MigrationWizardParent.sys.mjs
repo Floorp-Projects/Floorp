@@ -283,6 +283,7 @@ export class MigrationWizardParent extends JSWindowActorParent {
     return {
       key: migrator.constructor.key,
       displayName,
+      brandImage: migrator.constructor.brandImage,
       resourceTypes: availableResourceTypes,
       profile: profileObj,
       lastModifiedDate,

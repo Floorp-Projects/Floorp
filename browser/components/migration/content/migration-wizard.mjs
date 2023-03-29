@@ -118,7 +118,7 @@ export class MigrationWizard extends HTMLElement {
           </div>
 
           <div name="page-safari-password-permission">
-            <h1 data-l10n-id="migration-safari-password-import-header"></h1>  
+            <h1 data-l10n-id="migration-safari-password-import-header"></h1>
             <span data-l10n-id="migration-safari-password-import-steps-header"></span>
             <ol>
               <li data-l10n-id="migration-safari-password-import-step1"></li>
@@ -314,6 +314,16 @@ export class MigrationWizard extends HTMLElement {
     this.#browserProfileSelector.querySelector(".profile-name").textContent =
       panelItem.profile?.name || "";
 
+    if (panelItem.brandImage) {
+      this.#browserProfileSelector.querySelector(
+        ".migrator-icon"
+      ).style.content = `url(${panelItem.brandImage})`;
+    } else {
+      this.#browserProfileSelector.querySelector(
+        ".migrator-icon"
+      ).style.content = "url(chrome://global/skin/icons/defaultFavicon.svg)";
+    }
+
     let resourceTypes = panelItem.resourceTypes;
     for (let child of this.#resourceTypeList.children) {
       child.hidden = true;
@@ -332,7 +342,6 @@ export class MigrationWizard extends HTMLElement {
     let selectAll = this.#shadowRoot.querySelector("#select-all").control;
     selectAll.checked = true;
     this.#displaySelectedResources();
-    this.#browserProfileSelector.selectedPanelItem = panelItem;
   }
 
   /**
@@ -363,6 +372,7 @@ export class MigrationWizard extends HTMLElement {
       opt.displayName = migrator.displayName;
       opt.resourceTypes = migrator.resourceTypes;
       opt.hasPermissions = migrator.hasPermissions;
+      opt.brandImage = migrator.brandImage;
 
       // Bug 1823489 - since the panel-list and panel-items are slotted, we
       // cannot style them directly from migration-wizard.css. We use inline
@@ -372,7 +382,11 @@ export class MigrationWizard extends HTMLElement {
       // stylesheet instead.
       let button = opt.shadowRoot.querySelector("button");
       button.style.minHeight = "40px";
-      button.style.backgroundImage = `url("chrome://global/skin/icons/defaultFavicon.svg")`;
+      if (migrator.brandImage) {
+        button.style.backgroundImage = `url(${migrator.brandImage})`;
+      } else {
+        button.style.backgroundImage = `url("chrome://global/skin/icons/defaultFavicon.svg")`;
+      }
 
       if (migrator.profile) {
         document.l10n.setAttributes(
