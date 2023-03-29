@@ -196,17 +196,6 @@ input[type="text"] {
   background-position-x: right;
 }
 
-#button-container {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-}
-
-#button-container > button {
-  flex: 1 1 auto;
-  margin: 0;
-}
-
 #custom-range {
   margin-top: 4px;
   margin-inline: 0;

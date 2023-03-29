@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="chrome://global/content/toggle-group.css">
     <link rel="stylesheet" href="chrome://global/content/print.css">
     <script defer src="chrome://global/content/print.js"></script>
+    <script type="module" src="chrome://global/content/elements/moz-button-group.mjs"></script>
   </head>
 
   <body loading rendering>
@@ -247,10 +248,10 @@
 
       <footer class="footer-container" id="print-footer" role="none">
         <p id="print-progress" class="section-block" data-l10n-id="printui-print-progress-indicator" hidden></p>
-        <section id="button-container" class="section-block">
+        <moz-button-group id="button-container" class="section-block">
           <button id="print-button" class="primary" showfocus name="print" data-l10n-id="printui-primary-button" is="print-button" type="submit"></button>
           <button id="cancel-button" name="cancel" data-l10n-id="printui-cancel-button" data-close-l10n-id="printui-close-button" data-cancel-l10n-id="printui-cancel-button" type="button" is="cancel-button"></button>
-        </section>
+        </moz-button-group>
       </footer>
     </form>
   </body>
