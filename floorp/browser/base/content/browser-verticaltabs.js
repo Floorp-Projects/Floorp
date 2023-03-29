@@ -15,7 +15,7 @@
       sidebarBox.setAttribute("style", "overflow: scroll !important;");
 
       //init vertical tabs
-      document.getElementById("sidebar-box").insertBefore(verticalTabs, document.getElementById("sidebar-box").firstChild);
+      sidebarBox.insertBefore(verticalTabs, sidebarBox.firstChild);
       let tabBrowserArrowScrollBox = document.getElementById("tabbrowser-arrowscrollbox");
       verticalTabs.setAttribute("align", "start");
       tabBrowserArrowScrollBox.setAttribute("orient", "vertical");
