@@ -34,7 +34,10 @@
       });
   
       //move menubar
-      document.getElementById("titlebar").before(document.getElementById("toolbar-menubar")); 
+      document.getElementById("titlebar").before(document.getElementById("toolbar-menubar"));
+      if(sidebarBox.getAttribute("hidden") == "true") {
+        SidebarUI.toggle();
+      }
     }, 500);
 
     //toolbar modification
