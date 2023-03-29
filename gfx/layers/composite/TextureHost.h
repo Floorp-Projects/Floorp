@@ -64,6 +64,7 @@ class SurfaceDescriptor;
 class HostIPCAllocator;
 class ISurfaceAllocator;
 class MacIOSurfaceTextureHostOGL;
+class ShmemTextureHost;
 class SurfaceTextureHost;
 class TextureHostOGL;
 class TextureReadLock;
@@ -579,6 +580,7 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
   TextureReadLock* GetReadLock() { return mReadLock; }
 
   virtual BufferTextureHost* AsBufferTextureHost() { return nullptr; }
+  virtual ShmemTextureHost* AsShmemTextureHost() { return nullptr; }
   virtual MacIOSurfaceTextureHostOGL* AsMacIOSurfaceTextureHost() {
     return nullptr;
   }
@@ -838,6 +840,8 @@ class ShmemTextureHost : public BufferTextureHost {
   const char* Name() override { return "ShmemTextureHost"; }
 
   void OnShutdown() override;
+
+  ShmemTextureHost* AsShmemTextureHost() override { return this; }
 
  protected:
   UniquePtr<mozilla::ipc::Shmem> mShmem;
