@@ -201,10 +201,6 @@ html|input:disabled {
   min-width: 10em;
 }
 
-#thepreviewimage {
-  margin: 1em;
-}
-
 treechildren::-moz-tree-cell-text(broken) {
   font-style: italic;
   color: graytext;
