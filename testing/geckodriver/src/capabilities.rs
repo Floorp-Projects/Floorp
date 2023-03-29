@@ -307,6 +307,7 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
                 }
             }
             "moz:useNonSpecCompliantPointerOrigin" => {
+                warn!("You are using the deprecated vendor specific capability 'moz:useNonSpecCompliantPointerOrigin', which will be removed in Firefox 116.");
                 if !value.is_boolean() {
                     return Err(WebDriverError::new(
                         ErrorStatus::InvalidArgument,
