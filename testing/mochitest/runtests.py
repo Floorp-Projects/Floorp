@@ -2442,7 +2442,7 @@ toolbar#nav-bar {
             "browser.tabs.remote.autostart": options.e10s,
             # Enable tracing output for detailed failures in case of
             # failing connection attempts, and hangs (bug 1397201)
-            "marionette.log.level": "Trace",
+            "remote.log.level": "Trace",
             # Disable async font fallback, because the unpredictable
             # extra reflow it can trigger (potentially affecting a later
             # test) results in spurious intermittent failures.

@@ -47,7 +47,7 @@ def main(args=sys.argv[1:]):
     if args.enable_marionette_trace:
         args.extra_prefs.update(
             {
-                "marionette.log.level": "Trace",
+                "remote.log.level": "Trace",
             }
         )
 

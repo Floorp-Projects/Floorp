@@ -307,8 +307,7 @@ class GeckoInstance(object):
 
         if self.verbose:
             level = "Trace" if self.verbose >= 2 else "Debug"
-            args["preferences"]["marionette.log.level"] = level
-            args["preferences"]["marionette.logging"] = level
+            args["preferences"]["remote.log.level"] = level
 
         if "-jsdebugger" in self.app_args:
             args["preferences"].update(
