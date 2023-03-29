@@ -107,6 +107,9 @@ extern "C" const char* __lsan_default_suppressions() {
          // The symbol is really __GI___strdup, but if you have the leading _,
          // it doesn't suppress it.
 
+         // xdg_mime_init() is leaked by Gtk3 library
+         "leak:xdg_mime_init\n"
+
          // Bug 1078015 - If the process terminates during a PR_Sleep, LSAN
          // detects a leak
          "leak:PR_Sleep\n"
