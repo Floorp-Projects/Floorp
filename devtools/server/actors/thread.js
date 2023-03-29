@@ -1446,7 +1446,10 @@ class ThreadActor extends Actor {
     const urlMap = {};
     for (const url of this.dbg.findSourceURLs()) {
       if (url !== "self-hosted") {
-        urlMap[url] = 1 + (urlMap[url] || 0);
+        if (!urlMap[url]) {
+          urlMap[url] = { count: 0, sources: [] };
+        }
+        urlMap[url].count++;
       }
     }
 
@@ -1463,15 +1466,16 @@ class ThreadActor extends Actor {
       // loaded from the HTML page. This boolean will be defined only when the <script> tag
       // is added by Javascript code at runtime.
       // https://searchfox.org/mozilla-central/rev/3d03a3ca09f03f06ef46a511446537563f62a0c6/devtools/docs/user/debugger-api/debugger.source/index.rst#113
-      if (!source.introductionScript) {
-        urlMap[source.url]--;
+      if (!source.introductionScript && urlMap[source.url]) {
+        urlMap[source.url].count--;
+        urlMap[source.url].sources.push(source);
       }
     }
 
     // Resurrect any URLs for which not all sources are accounted for.
-    for (const [url, count] of Object.entries(urlMap)) {
-      if (count > 0) {
-        this._resurrectSource(url);
+    for (const [url, data] of Object.entries(urlMap)) {
+      if (data.count > 0) {
+        this._resurrectSource(url, data.sources);
       }
     }
   }
@@ -2133,8 +2137,11 @@ class ThreadActor extends Actor {
    * sources that were found in the result.
    *
    * @param url The URL string to fetch.
+   * @param existingInlineSources The inline sources for the URL the debugger knows about
+   *                              already, and that we shouldn't re-create (only used when
+   *                              url content type is text/html).
    */
-  async _resurrectSource(url) {
+  async _resurrectSource(url, existingInlineSources) {
     let {
       content,
       contentType,
@@ -2169,44 +2176,68 @@ class ThreadActor extends Actor {
 
       // For each inline source found, see if there is a start offset for what
       // appears to be a script tag, whose contents match the inline source.
-      const scripts = document.querySelectorAll("script");
-      for (const script of scripts) {
-        if (script.src) {
-          continue;
-        }
-
+      [...document.scripts].forEach(script => {
         const text = script.innerText;
-        for (const offset of scriptStartOffsets) {
-          if (content.substring(offset, offset + text.length) == text) {
-            const allLineBreaks = [
-              ...content.substring(0, offset).matchAll("\n"),
-            ];
-            const startLine = 1 + allLineBreaks.length;
-            const startColumn = offset - allLineBreaks.at(-1).index - 1;
 
-            try {
-              const global = this.dbg.getDebuggees()[0];
-              this._addSource(
-                global.createSource({
-                  text,
-                  url,
-                  startLine,
-                  startColumn,
-                  isScriptElement: true,
-                })
-              );
-            } catch (e) {
-              //  Ignore parse errors.
-            }
-            break;
-          }
+        // We only want to handle inline scripts
+        if (script.src) {
+          return;
         }
-      }
+
+        // Don't create source for empty script tag
+        if (!text.trim()) {
+          return;
+        }
+
+        const scriptStartOffsetIndex = scriptStartOffsets.findIndex(
+          offset => content.substring(offset, offset + text.length) == text
+        );
+        // Bail if we couldn't find the start offset for the script
+        if (scriptStartOffsetIndex == -1) {
+          return;
+        }
+
+        const scriptStartOffset = scriptStartOffsets[scriptStartOffsetIndex];
+        // Remove the offset from the array to mitigate any issue we might with scripts
+        // sharing the same text content.
+        scriptStartOffsets.splice(scriptStartOffsetIndex, 1);
+
+        const allLineBreaks = [
+          ...content.substring(0, scriptStartOffset).matchAll("\n"),
+        ];
+        const startLine = 1 + allLineBreaks.length;
+        const startColumn = scriptStartOffset - allLineBreaks.at(-1).index - 1;
+
+        // Don't create a source if we already found one for this script
+        if (
+          existingInlineSources.find(
+            source =>
+              source.startLine == startLine && source.startColumn == startColumn
+          )
+        ) {
+          return;
+        }
+
+        try {
+          const global = this.dbg.getDebuggees()[0];
+          this._addSource(
+            global.createSource({
+              text,
+              url,
+              startLine,
+              startColumn,
+              isScriptElement: true,
+            })
+          );
+        } catch (e) {
+          //  Ignore parse errors.
+        }
+      });
 
       // If no scripts were found, we might have an inaccurate content type and
       // the file is actually JavaScript. Fall through and add the entire file
       // as the source.
-      if (scripts.length) {
+      if (document.scripts.length) {
         return;
       }
     }
