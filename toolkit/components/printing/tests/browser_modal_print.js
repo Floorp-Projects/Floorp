@@ -137,9 +137,10 @@ add_task(async function testTabOrder() {
     await focused;
     ok(true, "Printer picker focused after tab");
 
-    const lastButton = helper.doc.querySelector(
-      `#button-container > button:last-child`
-    );
+    const lastButtonId =
+      AppConstants.platform == "win" ? "cancel-button" : "print-button";
+    const lastButton = helper.doc.getElementById(lastButtonId);
+
     focused = BrowserTestUtils.waitForEvent(lastButton, "focus");
     lastButton.focus();
     await focused;
