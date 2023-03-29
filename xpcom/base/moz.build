@@ -220,6 +220,9 @@ if CONFIG["OS_TARGET"] == "Linux":
         "AvailableMemoryWatcherUtils.h",
     ]
 
+if CONFIG["MOZ_PHC"]:
+    DEFINES["MOZ_PHC"] = True
+
 GeneratedFile("ErrorList.h", script="ErrorList.py", entry_point="error_list_h")
 GeneratedFile(
     "ErrorNamesInternal.h", script="ErrorList.py", entry_point="error_names_internal_h"
