@@ -4,6 +4,31 @@ geckodriver is an implementation of WebDriver, and WebDriver can
 be used for widely different purposes.  How you invoke geckodriver
 largely depends on your use case.
 
+## Running Firefox in a container-based package
+
+When Firefox is packaged inside a container (e.g. [Snap], [Flatpak]), it may
+see a different filesystem to the host. This can affect access to the generated
+profile directory, which may result in a hang when starting Firefox.
+
+This is known to affect launching the default Firefox shipped with Ubuntu 22.04+.
+
+There are several workarounds available for this problem:
+
+- Do not use container-packaged Firefox builds with geckodriver. Instead
+download a Firefox release from <https://download.mozilla.org/?product=firefox-latest&os=linux>
+and a geckodriver release from <https://github.com/mozilla/geckodriver/releases>.
+
+- Use a geckodriver that runs in the same container filesystem as the Firefox
+package. For example on Ubuntu `/snap/bin/geckodriver` will work with the
+default Firefox.
+
+- Set the `--profile-root` command line option to write the profile to a
+directory accessible to both Firefox and geckodriver, for example a non-hidden
+directory under `$HOME`.
+
+[Flatpak]: https://flatpak.org/
+[Snap]: https://ubuntu.com/core/services/guide/snaps-intro
+
 ## Selenium
 
 If you are using geckodriver through [Selenium], you must ensure that
