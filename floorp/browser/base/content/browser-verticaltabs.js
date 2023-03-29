@@ -7,13 +7,17 @@
   if (Services.prefs.getBoolPref("floorp.browser.native.verticaltabs.enabled", false)) {
     Services.prefs.setBoolPref("floorp.enable.multitab", true);
     window.setTimeout(function () {
+      document.getElementsByClassName("toolbar-items")[0].id = "toolbar-items-verticaltabs";
+      
+      let verticalTabs = document.getElementById("toolbar-items-verticaltabs");
+      let sidebarBox = document.getElementById("sidebar-box");
+      //init sidebar
+      sidebarBox.setAttribute("style", "overflow: scroll !important;");
 
       //init vertical tabs
+      document.getElementById("sidebar-box").insertBefore(verticalTabs, document.getElementById("sidebar-box").firstChild);
       let tabBrowserArrowScrollBox = document.getElementById("tabbrowser-arrowscrollbox");
-      document.getElementById("browser").insertBefore(document.getElementsByClassName("toolbar-items")[0], document.getElementById("browser").firstChild);
-      document.getElementsByClassName("toolbar-items")[0].setAttribute("align", "start");
-      document.getElementsByClassName("toolbar-items")[0].id = "toolbar-items-verticaltabs";
-      document.getElementsByClassName("toolbar-items")[0].setAttribute("style", " --tab-overflow-pinned-tabs-width: none !important;");
+      verticalTabs.setAttribute("align", "start");
       tabBrowserArrowScrollBox.setAttribute("orient", "vertical");
       tabBrowserArrowScrollBox.removeAttribute("overflowing");
       tabBrowserArrowScrollBox.removeAttribute("scrolledtostart")
@@ -27,31 +31,10 @@
       })
       observer.observe(tabBrowserArrowScrollBox.shadowRoot.querySelector(`[part="scrollbox"]`), {
         attributes: true
-      })
-
-      //splitter
-      const splitterNode = window.MozXULElement.parseXULToFragment(`
-        <splitter id="sidebar-splitter3" class="chromeclass-extrachrome" style="background: var(--toolbar-bgcolor);
-                  border: var(--win-sidebar-bgcolor) 0.1px solid;" hidden="false"/>
-        `);
-      document.getElementById("sidebar-box").before(splitterNode);
+      });
   
-      const box = document.getElementById("toolbar-items-verticaltabs");
-      const splitter = document.getElementById("sidebar-splitter3");
-
-      function handleMouseEnter() {
-        box.removeAttribute("style");
-      }
-
-      function handleMouseLeave() {
-        box.removeAttribute("style");
-        box.setAttribute("style", "min-width: " + box.getAttribute("width") + "px !important;");
-        
-      }
-
-      splitter.addEventListener("mouseenter", handleMouseEnter);
-      splitter.addEventListener("mouseleave", handleMouseLeave);
-  
+      //move menubar
+      document.getElementById("titlebar").before(document.getElementById("toolbar-menubar")); 
     }, 500);
 
     //toolbar modification

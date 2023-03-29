@@ -17,6 +17,7 @@
  }
  
  #toolbar-items-verticaltabs {
+  -moz-box-ordinal-group: 0 !important;
   display: block; 
   width:15em;
   max-width: 50em;
@@ -80,3 +81,12 @@
   display: block;
  }
  
+  /* disable Firefox's sidebar features */
+
+  #sidebar-header {
+    display: none !important;
+  }
+
+  #sidebar {
+    display: none !important;
+  }
