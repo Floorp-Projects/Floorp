@@ -56,6 +56,7 @@ interface nsIOutputStream : nsISupports
     /**
      * Close the stream. Forces the output stream to flush any buffered data.
      * Any subsequent calls to StreamStatus should throw NS_BASE_STREAM_CLOSED.
+     * Succeeds without effect if already closed.
      *
      * @throws NS_BASE_STREAM_WOULD_BLOCK if unable to flush without blocking
      *   the calling thread (non-blocking mode only)

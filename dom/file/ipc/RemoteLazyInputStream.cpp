@@ -491,6 +491,10 @@ RemoteLazyInputStream::Close() {
 
   {
     MutexAutoLock lock(mMutex);
+    if (mState == eClosed) {
+      return NS_OK;
+    }
+
     MOZ_LOG(gRemoteLazyStreamLog, LogLevel::Debug,
             ("Close %s", Describe().get()));
 
