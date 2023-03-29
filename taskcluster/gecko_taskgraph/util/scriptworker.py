@@ -523,7 +523,10 @@ def generate_artifact_registry_gcs_sources(dep):
         repackage_deb_reference = "<repackage-deb-l10n>"
         repackage_deb_artifact = f"public/build/{locale}/target.langpack.deb"
     for config in dep.task["payload"]["artifactMap"]:
-        if config["taskId"]["task-reference"] == repackage_deb_reference:
+        if (
+            config["taskId"]["task-reference"] == repackage_deb_reference
+            and repackage_deb_artifact in config["paths"]
+        ):
             gcs_sources.append(
                 config["paths"][repackage_deb_artifact]["destinations"][0]
             )
