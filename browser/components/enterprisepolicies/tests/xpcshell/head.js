@@ -51,7 +51,7 @@ function checkLockedPref(prefName, prefValue) {
     true,
     `Pref ${prefName} is correctly locked`
   );
-  equal(
+  strictEqual(
     Preferences.get(prefName),
     prefValue,
     `Pref ${prefName} has the correct value`
@@ -64,7 +64,7 @@ function checkUnlockedPref(prefName, prefValue) {
     false,
     `Pref ${prefName} is correctly unlocked`
   );
-  equal(
+  strictEqual(
     Preferences.get(prefName),
     prefValue,
     `Pref ${prefName} has the correct value`
@@ -72,7 +72,7 @@ function checkUnlockedPref(prefName, prefValue) {
 }
 
 function checkUserPref(prefName, prefValue) {
-  equal(
+  strictEqual(
     Preferences.get(prefName),
     prefValue,
     `Pref ${prefName} has the correct value`

@@ -967,6 +967,26 @@ const POLICIES_TESTS = [
       "print.prefer_system_dialog": true,
     },
   },
+
+  // Bug 1820195
+  {
+    policies: {
+      Preferences: {
+        "pdfjs.annotationMode": {
+          Value: 1,
+          Status: "default",
+        },
+        "pdfjs.sidebarViewOnLoad": {
+          Value: 0,
+          Status: "default",
+        },
+      },
+    },
+    unlockedPrefs: {
+      "pdfjs.annotationMode": 1,
+      "pdfjs.sidebarViewOnLoad": 0,
+    },
+  },
 ];
 
 add_task(async function test_policy_simple_prefs() {
