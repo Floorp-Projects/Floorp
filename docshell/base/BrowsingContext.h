@@ -770,7 +770,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     already_AddRefed<WindowContext> GetParent();
     already_AddRefed<BrowsingContext> GetOpener();
 
-    uint64_t GetOpenerId() const { return mFields.mOpenerId; }
+    uint64_t GetOpenerId() const { return mFields.Get<IDX_OpenerId>(); }
 
     bool mWindowless = false;
     bool mUseRemoteTabs = false;

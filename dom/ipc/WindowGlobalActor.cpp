@@ -18,6 +18,7 @@
 #include "mozilla/dom/JSWindowActorProtocol.h"
 #include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/net/CookieJarSettings.h"
+#include "mozilla/dom/WindowContext.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 
@@ -44,6 +45,8 @@ WindowGlobalInit WindowGlobalActor::BaseInitializer(
     uint64_t aOuterWindowId) {
   MOZ_DIAGNOSTIC_ASSERT(aBrowsingContext);
 
+  using Indexes = WindowContext::FieldIndexes;
+
   WindowGlobalInit init;
   auto& ctx = init.context();
   ctx.mInnerWindowId = aInnerWindowId;
@@ -53,9 +56,10 @@ WindowGlobalInit WindowGlobalActor::BaseInitializer(
   // If any synced fields need to be initialized from our BrowsingContext, we
   // can initialize them here.
   auto& fields = ctx.mFields;
-  fields.mEmbedderPolicy = InheritedPolicy(aBrowsingContext);
-  fields.mAutoplayPermission = nsIPermissionManager::UNKNOWN_ACTION;
-  fields.mAllowJavascript = true;
+  fields.Get<Indexes::IDX_EmbedderPolicy>() = InheritedPolicy(aBrowsingContext);
+  fields.Get<Indexes::IDX_AutoplayPermission>() =
+      nsIPermissionManager::UNKNOWN_ACTION;
+  fields.Get<Indexes::IDX_AllowJavascript>() = true;
   return init;
 }
 
@@ -93,24 +97,29 @@ WindowGlobalInit WindowGlobalActor::WindowInitializer(
       ->Serialize(init.cookieJarSettings());
   init.httpsOnlyStatus() = doc->HttpsOnlyStatus();
 
+  using Indexes = WindowContext::FieldIndexes;
+
   auto& fields = init.context().mFields;
-  fields.mCookieBehavior = Some(doc->CookieJarSettings()->GetCookieBehavior());
-  fields.mIsOnContentBlockingAllowList =
+  fields.Get<Indexes::IDX_CookieBehavior>() =
+      Some(doc->CookieJarSettings()->GetCookieBehavior());
+  fields.Get<Indexes::IDX_IsOnContentBlockingAllowList>() =
       doc->CookieJarSettings()->GetIsOnContentBlockingAllowList();
-  fields.mIsThirdPartyWindow = doc->HasThirdPartyChannel();
-  fields.mIsThirdPartyTrackingResourceWindow =
+  fields.Get<Indexes::IDX_IsThirdPartyWindow>() = doc->HasThirdPartyChannel();
+  fields.Get<Indexes::IDX_IsThirdPartyTrackingResourceWindow>() =
       nsContentUtils::IsThirdPartyTrackingResourceWindow(aWindow);
-  fields.mShouldResistFingerprinting = doc->ShouldResistFingerprinting();
-  fields.mIsSecureContext = aWindow->IsSecureContext();
+  fields.Get<Indexes::IDX_ShouldResistFingerprinting>() =
+      doc->ShouldResistFingerprinting();
+  fields.Get<Indexes::IDX_IsSecureContext>() = aWindow->IsSecureContext();
 
   // Initialze permission fields
-  fields.mAutoplayPermission =
+  fields.Get<Indexes::IDX_AutoplayPermission>() =
       media::AutoplayPolicy::GetSiteAutoplayPermission(init.principal());
-  fields.mPopupPermission = PopupBlocker::GetPopupPermission(init.principal());
+  fields.Get<Indexes::IDX_PopupPermission>() =
+      PopupBlocker::GetPopupPermission(init.principal());
 
   // Initialize top level permission fields
   if (aWindow->GetBrowsingContext()->IsTop()) {
-    fields.mAllowMixedContent = [&] {
+    fields.Get<Indexes::IDX_AllowMixedContent>() = [&] {
       uint32_t permit = nsIPermissionManager::UNKNOWN_ACTION;
       nsCOMPtr<nsIPermissionManager> permissionManager =
           components::PermissionManager::Service();
@@ -123,28 +132,31 @@ WindowGlobalInit WindowGlobalActor::WindowInitializer(
       return permit == nsIPermissionManager::ALLOW_ACTION;
     }();
 
-    fields.mShortcutsPermission =
+    fields.Get<Indexes::IDX_ShortcutsPermission>() =
         nsGlobalWindowInner::GetShortcutsPermission(init.principal());
   }
 
   if (auto policy = doc->GetEmbedderPolicy()) {
-    fields.mEmbedderPolicy = *policy;
+    fields.Get<Indexes::IDX_EmbedderPolicy>() = *policy;
   }
 
   // Init Mixed Content Fields
   nsCOMPtr<nsIURI> innerDocURI = NS_GetInnermostURI(doc->GetDocumentURI());
-  fields.mIsSecure = innerDocURI && innerDocURI->SchemeIs("https");
+  fields.Get<Indexes::IDX_IsSecure>() =
+      innerDocURI && innerDocURI->SchemeIs("https");
 
   nsCOMPtr<nsITransportSecurityInfo> securityInfo;
   if (nsCOMPtr<nsIChannel> channel = doc->GetChannel()) {
     nsCOMPtr<nsILoadInfo> loadInfo(channel->LoadInfo());
-    fields.mIsOriginalFrameSource = loadInfo->GetOriginalFrameSrcLoad();
+    fields.Get<Indexes::IDX_IsOriginalFrameSource>() =
+        loadInfo->GetOriginalFrameSrcLoad();
 
     channel->GetSecurityInfo(getter_AddRefs(securityInfo));
   }
   init.securityInfo() = securityInfo;
 
-  fields.mIsLocalIP = init.principal()->GetIsLocalIpAddress();
+  fields.Get<Indexes::IDX_IsLocalIP>() =
+      init.principal()->GetIsLocalIpAddress();
 
   // Most data here is specific to the Document, which can change without
   // creating a new WindowGlobal. Anything new added here which fits that
