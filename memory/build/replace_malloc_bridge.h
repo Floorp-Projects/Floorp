@@ -17,7 +17,7 @@
 // can decide to implement those methods or not.
 //
 // Replace-malloc libraries can provide such a bridge by implementing
-// a ReplaceMallocBridge-derived class, and a replace_get_bridge function
+// a ReplaceMallocBridge-derived class, and a get_bridge function
 // returning an instance of that class. The default methods in
 // ReplaceMallocBridge are expected to return values that callers would
 // understand as "the bridge doesn't implement this method", so that a
