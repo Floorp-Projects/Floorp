@@ -868,6 +868,10 @@ nsBufferedOutputStream::Init(nsIOutputStream* stream, uint32_t bufferSize) {
 
 NS_IMETHODIMP
 nsBufferedOutputStream::Close() {
+  if (!mStream) {
+    return NS_OK;
+  }
+
   nsresult rv1, rv2 = NS_OK;
 
   rv1 = Flush();

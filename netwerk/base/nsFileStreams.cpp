@@ -159,6 +159,10 @@ nsFileStreamBase::GetFileDescriptor(PRFileDesc** _retval) {
 }
 
 nsresult nsFileStreamBase::Close() {
+  if (mState == eClosed) {
+    return NS_OK;
+  }
+
   CleanUpOpen();
 
   nsresult rv = NS_OK;
@@ -476,6 +480,11 @@ nsFileInputStream::Init(nsIFile* aFile, int32_t aIOFlags, int32_t aPerm,
 
 NS_IMETHODIMP
 nsFileInputStream::Close() {
+  // If this stream has already been closed, do nothing.
+  if (mState == eClosed) {
+    return NS_OK;
+  }
+
   // Get the cache position at the time the file was close. This allows
   // NS_SEEK_CUR on a closed file that has been opened with
   // REOPEN_ON_REWIND.
@@ -484,7 +493,7 @@ nsFileInputStream::Close() {
     nsFileStreamBase::Tell(&mCachedPosition);
   }
 
-  // null out mLineBuffer in case Close() is called again after failing
+  // explicitly clear mLineBuffer in case this stream is reopened
   mLineBuffer = nullptr;
   return nsFileStreamBase::Close();
 }
