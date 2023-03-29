@@ -24,6 +24,7 @@ task-template:
         symbol:
             by-build-type:
                 release: post-signing-release
+                beta: post-signing-beta
                 nightly: post-signing-nightly
                 default: post-signing
         tier: 1

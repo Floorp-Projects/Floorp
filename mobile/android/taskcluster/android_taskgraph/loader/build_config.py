@@ -48,7 +48,7 @@ def _get_components_tasks(config, for_build_type=None):
             }
         }
         for component in get_components()
-        for build_type in ('regular', 'nightly', 'release')
+        for build_type in ('regular', 'nightly', 'beta', 'release')
         if (
             component['name'] not in not_for_components
             and (component['shouldPublish'] or build_type == 'regular')

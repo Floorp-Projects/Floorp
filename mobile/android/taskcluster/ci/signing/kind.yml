@@ -20,13 +20,14 @@ group-by: component
 
 only-for-build-types:
     - release
+    - beta
     - nightly
 
 task-template:
     description: Sign component
     index:
         by-build-type:
-            (release|nightly):
+            (release|beta|nightly):
                 type: signing
             default: {}
     run-on-tasks-for: []
@@ -34,6 +35,7 @@ task-template:
         job-symbol:
             by-build-type:
                 release: BRs
+                beta: BBs
                 nightly: BNs
                 default: Bs
         kind: build

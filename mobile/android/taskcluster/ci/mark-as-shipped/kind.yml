@@ -20,6 +20,7 @@ primary-dependency: post-beetmover
 group-by: build-type
 
 only-for-build-types:
+    - beta
     - release
 
 task-template:
@@ -37,7 +38,11 @@ task-template:
     worker: {}
 
     treeherder:
-        symbol: mark-shipped
+        symbol:
+            by-build-type:
+                release: mark-shipped-release
+                beta: mark-shipped-beta
+                default: mark-shipped
         platform: release/opt
         kind: build
         tier: 2

@@ -19,6 +19,7 @@ primary-dependency: signing
 
 only-for-build-types:
     - release
+    - beta
     - nightly
 
 group-by: component
@@ -33,6 +34,7 @@ task-template:
         job-symbol:
             by-build-type:
                 release: BM-R
+                beta: BM-B
                 nightly: BM-N
                 default: BM-B
         kind: build
@@ -44,6 +46,10 @@ task-template:
                     by-level:
                         '3': maven-production
                         default: maven-staging
+                beta:
+                    by-level:
+                        '3': maven-production
+                        default: maven-staging
                 nightly:
                     by-level:
                         '3': maven-nightly-production
@@ -51,6 +57,7 @@ task-template:
         beetmover-application-name:
             by-build-type:
                 release: components
+                beta: components
                 nightly: nightly_components
                 default: UNDEFINED
     worker-type: beetmover

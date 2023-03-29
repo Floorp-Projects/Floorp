@@ -42,12 +42,14 @@ task-defaults:
         code-review:
             by-build-type:
                 release: false
+                beta: false
                 nightly: false
                 default: true
     description: Execute Gradle tasks for component "{component}"
     expose-artifacts:
         by-build-type:
             release: true
+            beta: true
             nightly: true
             default: false
     fetches:
@@ -58,12 +60,18 @@ task-defaults:
     include-coverage:
         by-build-type:
             release: false
+            beta: false
             nightly: false
             default: true
     run:
         gradlew:
             by-build-type:
                 release:
+                    - ':{component}:assembleRelease'
+                    - ':{component}:testRelease'
+                    - ':{component}:lintRelease'
+                    - ':{component}:publish'
+                beta:
                     - ':{component}:assembleRelease'
                     - ':{component}:testRelease'
                     - ':{component}:lintRelease'
@@ -103,6 +111,7 @@ task-defaults:
     run-on-tasks-for:
         by-build-type:
             release: []
+            beta: []
             nightly: []
             default:
                 - github-pull-request
@@ -110,13 +119,14 @@ task-defaults:
                 - github-push
     shipping-phase:
         by-build-type:
-            (nightly|release): promote
+            (nightly|beta|release): promote
             default: build
     treeherder:
         kind: build
         symbol:
             by-build-type:
                 release: '{treeherder_group}(BR)'
+                beta: '{treeherder_group}(BB)'
                 nightly: '{treeherder_group}(BN)'
                 default: '{treeherder_group}(B)'
         platform: AC-android-all/opt
