@@ -19,6 +19,7 @@ kind-dependencies:
 group-by: build-type
 
 only-for-build-types:
+    - beta
     - release
 
 task-template:
@@ -36,5 +37,8 @@ task-template:
                 default: false
 
     treeherder:
-        job-symbol: vb
+        job-symbol:
+            by-build-type:
+                release: vb
+                beta: vbB
         kind: build

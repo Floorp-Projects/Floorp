@@ -42,7 +42,6 @@ task-template:
             by-build-type:
                 release: mark-shipped-release
                 beta: mark-shipped-beta
-                default: mark-shipped
         platform: release/opt
         kind: build
         tier: 2

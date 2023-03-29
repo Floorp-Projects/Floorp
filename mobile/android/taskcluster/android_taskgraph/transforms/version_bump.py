@@ -17,7 +17,7 @@ transforms = TransformSequence()
 @transforms.add
 def resolve_keys(config, tasks):
     for task in tasks:
-        for key in ("worker.push",):
+        for key in ("worker.push", "treeherder.symbol"):
             resolve_keyed_by(
                 task,
                 key,
