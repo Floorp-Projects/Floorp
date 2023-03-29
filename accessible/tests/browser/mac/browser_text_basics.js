@@ -378,3 +378,22 @@ addAccessibleTask(
     is(str, "hello", "Left word at start of input should be right word");
   }
 );
+
+addAccessibleTask(`<p id="p">hello world</p>`, async (browser, accDoc) => {
+  let macDoc = accDoc.nativeInterface.QueryInterface(
+    Ci.nsIAccessibleMacInterface
+  );
+
+  let p = getNativeInterface(accDoc, "p");
+  let range = macDoc.getParameterizedAttributeValue(
+    "AXTextMarkerRangeForUIElement",
+    p
+  );
+
+  let bounds = macDoc.getParameterizedAttributeValue(
+    "AXBoundsForTextMarkerRange",
+    range
+  );
+
+  ok(bounds.origin && bounds.size, "Returned valid bounds");
+});
