@@ -245,12 +245,6 @@ nsSHEntry::SetPostData(nsIInputStream* aPostData) {
 }
 
 NS_IMETHODIMP
-nsSHEntry::GetHasPostData(bool* aResult) {
-  *aResult = !!mPostData;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsSHEntry::GetLayoutHistoryState(nsILayoutHistoryState** aResult) {
   *aResult = mShared->mLayoutHistoryState;
   NS_IF_ADDREF(*aResult);

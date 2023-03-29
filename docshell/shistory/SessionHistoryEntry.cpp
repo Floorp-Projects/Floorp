@@ -716,12 +716,6 @@ SessionHistoryEntry::SetPostData(nsIInputStream* aPostData) {
 }
 
 NS_IMETHODIMP
-SessionHistoryEntry::GetHasPostData(bool* aResult) {
-  *aResult = mInfo->HasPostData();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 SessionHistoryEntry::GetLayoutHistoryState(
     nsILayoutHistoryState** aLayoutHistoryState) {
   nsCOMPtr<nsILayoutHistoryState> layoutHistoryState =
