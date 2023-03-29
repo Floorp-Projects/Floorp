@@ -11,8 +11,10 @@
 // See documentation in associated header file
 //
 
+#include "LayoutConstants.h"
 #include "SimpleXULLeafFrame.h"
 #include "gfxContext.h"
+#include "mozilla/ReflowInput.h"
 #include "nsSplitterFrame.h"
 #include "nsGkAtoms.h"
 #include "nsXULElement.h"
@@ -26,7 +28,6 @@
 #include "nsHTMLParts.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/CSSOrderAwareFrameIterator.h"
-#include "nsBoxLayoutState.h"
 #include "nsContainerFrame.h"
 #include "nsContentCID.h"
 #include "nsLayoutUtils.h"
@@ -143,8 +144,7 @@ class nsSplitterFrameInner final : public nsIDOMEventListener {
   bool SupportsCollapseDirection(CollapseDirection aDirection);
 
   void EnsureOrient();
-  void SetPreferredSize(nsBoxLayoutState& aState, nsIFrame* aChildBox,
-                        bool aIsHorizontal, nscoord aSize);
+  void SetPreferredSize(nsIFrame* aChildBox, bool aIsHorizontal, nscoord aSize);
 
   nsSplitterFrame* mOuter;
   bool mDidDrag = false;
@@ -514,6 +514,15 @@ static nsSize ToLengthWithFallback(const LengthLike& aWidth,
           ToLengthWithFallback(aHeight, aFallback)};
 }
 
+static void ApplyMargin(nsSize& aSize, const nsMargin& aMargin) {
+  if (aSize.width != NS_UNCONSTRAINEDSIZE) {
+    aSize.width += aMargin.LeftRight();
+  }
+  if (aSize.height != NS_UNCONSTRAINEDSIZE) {
+    aSize.height += aMargin.TopBottom();
+  }
+}
+
 nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
   NS_ENSURE_TRUE(mOuter, NS_OK);
   dom::MouseEvent* mouseEvent = aMouseEvent->AsMouseEvent();
@@ -536,12 +545,6 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
   }
 
   // get our index
-  nsPresContext* outerPresContext = mOuter->PresContext();
-
-  UniquePtr<gfxContext> rc =
-      outerPresContext->PresShell()->CreateReferenceRenderingContext();
-  nsBoxLayoutState state(outerPresContext, rc.get());
-
   mDidDrag = false;
 
   EnsureOrient();
@@ -579,7 +582,9 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
     count++;
 
     nsIContent* content = childBox->GetContent();
-    const nscoord flex = childBox->GetXULFlex();
+    // XXX flex seems untested, as it uses mBoxFlex rather than actual flexbox
+    // flex.
+    const nscoord flex = childBox->StyleXUL()->mBoxFlex;
     const bool isBefore = !foundOuter;
     const bool isResizable = [&] {
       if (auto* element = nsXULElement::FromNode(content)) {
@@ -634,13 +639,20 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
     nsSize prefSize(ToLengthWithFallback(pos.mWidth, curSize.width),
                     ToLengthWithFallback(pos.mHeight, curSize.height));
 
-    maxSize = nsIFrame::XULBoundsCheckMinMax(minSize, maxSize);
-    prefSize = nsIFrame::XULBoundsCheck(minSize, prefSize, maxSize);
+    maxSize.width = std::max(maxSize.width, minSize.width);
+    maxSize.height = std::max(maxSize.height, minSize.height);
+    prefSize.width =
+        NS_CSS_MINMAX(prefSize.width, minSize.width, maxSize.width);
+    prefSize.height =
+        NS_CSS_MINMAX(prefSize.height, minSize.height, maxSize.height);
 
-    nsSplitterFrame::AddXULMargin(childBox, minSize);
-    nsSplitterFrame::AddXULMargin(childBox, maxSize);
-    nsSplitterFrame::AddXULMargin(childBox, prefSize);
-    nsSplitterFrame::AddXULMargin(childBox, curSize);
+    nsMargin m;
+    childBox->StyleMargin()->GetMargin(m);
+
+    ApplyMargin(curSize, m);
+    ApplyMargin(minSize, m);
+    ApplyMargin(maxSize, m);
+    ApplyMargin(prefSize, m);
 
     auto& list = isBefore ? mChildInfosBefore : mChildInfosAfter;
     nsSplitterInfo& info = *list.AppendElement();
@@ -854,23 +866,19 @@ void nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext,
                                           bool aIsHorizontal) {
   /// printf("------- AdjustChildren------\n");
 
-  nsBoxLayoutState state(aPresContext);
-
   for (auto& info : aChildInfos) {
     nscoord newPref = info.pref + (info.changed - info.current);
     if (nsIFrame* childBox =
             GetChildBoxForContent(mParentBox, info.childElem)) {
-      SetPreferredSize(state, childBox, aIsHorizontal, newPref);
+      SetPreferredSize(childBox, aIsHorizontal, newPref);
     }
   }
 }
 
-void nsSplitterFrameInner::SetPreferredSize(nsBoxLayoutState& aState,
-                                            nsIFrame* aChildBox,
+void nsSplitterFrameInner::SetPreferredSize(nsIFrame* aChildBox,
                                             bool aIsHorizontal, nscoord aSize) {
-  nsMargin margin(0, 0, 0, 0);
-  aChildBox->GetXULMargin(margin);
-
+  nsMargin margin;
+  aChildBox->StyleMargin()->GetMargin(margin);
   if (aIsHorizontal) {
     aSize -= (margin.left + margin.right);
   } else {

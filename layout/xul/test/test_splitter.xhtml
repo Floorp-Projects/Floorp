@@ -96,8 +96,6 @@ XUL <splitter> collapsing tests
     async function runAllTests() {
       await runTests(false, "ltr-splitter");
       await runTests(true, "rtl-splitter");
-      await runTests(false, "ltr-flex-splitter");
-      await runTests(true, "rtl-flex-splitter");
       SimpleTest.finish();
     }
 
@@ -113,18 +111,6 @@ XUL <splitter> collapsing tests
   <hbox style="display: none; width: 200px; height: 300px; direction: rtl;">
     <vbox style="height: 300px; flex: 1 auto" />
     <splitter id="rtl-splitter" style="width: 5px"/>
-    <vbox style="height: 300px; flex: 1 auto" />
-  </hbox>
-
-  <hbox style="display: none; width: 200px; height: 300px; direction: ltr; -moz-box-layout: flex">
-    <vbox style="height: 300px; flex: 1 auto" />
-    <splitter id="ltr-flex-splitter" style="width: 5px"/>
-    <vbox style="height: 300px; flex: 1 auto" />
-  </hbox>
-
-  <hbox style="display: none; width: 200px; height: 300px; direction: rtl; -moz-box-layout: flex">
-    <vbox style="height: 300px; flex: 1 auto" />
-    <splitter id="rtl-flex-splitter" style="width: 5px"/>
     <vbox style="height: 300px; flex: 1 auto" />
   </hbox>
 

@@ -24,7 +24,6 @@
 #include "FrameMetrics.h"
 
 class gfxContext;
-class nsBoxLayoutState;
 class nsIScrollPositionListener;
 class nsIFrame;
 class nsPresContext;

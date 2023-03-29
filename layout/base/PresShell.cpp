@@ -46,7 +46,6 @@
 #include "mozilla/Unused.h"
 #include "mozilla/ViewportUtils.h"
 #include "mozilla/gfx/Types.h"
-#include "nsBoxLayoutState.h"
 #include <algorithm>
 
 #ifdef XP_WIN

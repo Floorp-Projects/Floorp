@@ -2695,7 +2695,6 @@ nsStyleVisibility::nsStyleVisibility(const Document& aDocument)
       mImageRendering(StyleImageRendering::Auto),
       mWritingMode(StyleWritingModeProperty::HorizontalTb),
       mTextOrientation(StyleTextOrientation::Mixed),
-      mMozBoxLayout(StyleMozBoxLayout::Flex),
       mMozBoxCollapse(StyleMozBoxCollapse::Flex),
       mPrintColorAdjust(StylePrintColorAdjust::Economy),
       mImageOrientation(StyleImageOrientation::FromImage) {
@@ -2708,7 +2707,6 @@ nsStyleVisibility::nsStyleVisibility(const nsStyleVisibility& aSource)
       mImageRendering(aSource.mImageRendering),
       mWritingMode(aSource.mWritingMode),
       mTextOrientation(aSource.mTextOrientation),
-      mMozBoxLayout(aSource.mMozBoxLayout),
       mMozBoxCollapse(aSource.mMozBoxCollapse),
       mPrintColorAdjust(aSource.mPrintColorAdjust),
       mImageOrientation(aSource.mImageOrientation) {
@@ -2720,8 +2718,7 @@ nsChangeHint nsStyleVisibility::CalcDifference(
   nsChangeHint hint = nsChangeHint(0);
 
   if (mDirection != aNewData.mDirection ||
-      mWritingMode != aNewData.mWritingMode ||
-      mMozBoxLayout != aNewData.mMozBoxLayout) {
+      mWritingMode != aNewData.mWritingMode) {
     // It's important that a change in mWritingMode results in frame
     // reconstruction, because it may affect intrinsic size (see
     // nsSubDocumentFrame::GetIntrinsicISize/BSize).

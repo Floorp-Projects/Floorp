@@ -85,12 +85,6 @@ enum class StyleDisplay : uint16_t {
                               StyleDisplayInside::RubyText),
   RubyTextContainer = StyleDisplayFrom(StyleDisplayOutside::InternalRuby,
                                        StyleDisplayInside::RubyTextContainer),
-
-  /// XUL boxes.
-  MozBox =
-      StyleDisplayFrom(StyleDisplayOutside::Block, StyleDisplayInside::MozBox),
-  MozInlineBox =
-      StyleDisplayFrom(StyleDisplayOutside::Inline, StyleDisplayInside::MozBox),
 };
 // The order of the StyleDisplay values isn't meaningful.
 bool operator<(const StyleDisplay&, const StyleDisplay&) = delete;
@@ -511,12 +505,6 @@ enum class StyleTextOrientation : uint8_t {
   Mixed,
   Upright,
   Sideways,
-};
-
-// Whether to emulate -moz-box with flex. See nsStyleVisibility
-enum class StyleMozBoxLayout : uint8_t {
-  Flex,
-  Legacy,
 };
 
 // Whether flexbox visibility: collapse items use legacy -moz-box behavior or

@@ -1077,10 +1077,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleVisibility {
            mVisible == mozilla::StyleVisibility::Collapse;
   }
 
-  bool EmulateMozBoxWithFlex() const {
-    return mMozBoxLayout == mozilla::StyleMozBoxLayout::Flex;
-  }
-
   bool UseLegacyCollapseBehavior() const {
     return mMozBoxCollapse == mozilla::StyleMozBoxCollapse::Legacy;
   }
@@ -1116,7 +1112,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleVisibility {
   mozilla::StyleImageRendering mImageRendering;
   mozilla::StyleWritingModeProperty mWritingMode;
   mozilla::StyleTextOrientation mTextOrientation;
-  mozilla::StyleMozBoxLayout mMozBoxLayout;
   mozilla::StyleMozBoxCollapse mMozBoxCollapse;
   mozilla::StylePrintColorAdjust mPrintColorAdjust;
 
@@ -1494,8 +1489,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
     if (outside == mozilla::StyleDisplayOutside::Block) {
       return false;
     }
-    return mozilla::StyleDisplay::MozInlineBox == aDisplay ||
-           mozilla::StyleDisplay::RubyBase == aDisplay ||
+    return mozilla::StyleDisplay::RubyBase == aDisplay ||
            mozilla::StyleDisplay::RubyBaseContainer == aDisplay ||
            mozilla::StyleDisplay::RubyText == aDisplay ||
            mozilla::StyleDisplay::RubyTextContainer == aDisplay;

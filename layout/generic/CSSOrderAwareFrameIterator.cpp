@@ -10,7 +10,7 @@
 #include "nsIFrameInlines.h"
 
 static bool CanUse(const nsIFrame* aFrame) {
-  return aFrame->IsFlexOrGridContainer() || aFrame->IsXULBoxFrame() ||
+  return aFrame->IsFlexOrGridContainer() ||
          (aFrame->GetContent() && aFrame->GetContent()->IsAnyOfXULElements(
                                       nsGkAtoms::treecols, nsGkAtoms::treecol));
 }

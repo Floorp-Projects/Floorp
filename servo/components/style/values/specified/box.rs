@@ -22,11 +22,6 @@ use std::fmt::{self, Write};
 use style_traits::{CssWriter, KeywordsCollectFn, ParseError};
 use style_traits::{SpecifiedValueInfo, StyleParseErrorKind, ToCss};
 
-#[cfg(feature = "gecko")]
-fn moz_display_values_enabled(context: &ParserContext) -> bool {
-    context.in_ua_or_chrome_sheet()
-}
-
 #[cfg(not(feature = "servo-layout-2020"))]
 fn flexbox_enabled() -> bool {
     true
@@ -56,8 +51,6 @@ pub enum DisplayOutside {
     InternalTable,
     #[cfg(feature = "gecko")]
     InternalRuby,
-    #[cfg(feature = "gecko")]
-    XUL,
 }
 
 #[allow(missing_docs)]
@@ -100,8 +93,6 @@ pub enum DisplayInside {
     RubyTextContainer,
     #[cfg(feature = "gecko")]
     WebkitBox,
-    #[cfg(feature = "gecko")]
-    MozBox,
 }
 
 #[allow(missing_docs)]
@@ -208,12 +199,6 @@ impl Display {
         DisplayInside::RubyTextContainer,
     );
 
-    /// XUL boxes.
-    #[cfg(feature = "gecko")]
-    pub const MozBox: Self = Self::new(DisplayOutside::Block, DisplayInside::MozBox);
-    #[cfg(feature = "gecko")]
-    pub const MozInlineBox: Self = Self::new(DisplayOutside::Inline, DisplayInside::MozBox);
-
     /// Make a raw display value from <display-outside> and <display-inside> values.
     #[inline]
     const fn new(outside: DisplayOutside, inside: DisplayInside) -> Self {
@@ -318,8 +303,6 @@ impl Display {
             DisplayInside::Flex => true,
             #[cfg(feature = "gecko")]
             DisplayInside::Grid => true,
-            #[cfg(feature = "gecko")]
-            DisplayInside::MozBox => true,
             _ => false,
         }
     }
@@ -358,7 +341,7 @@ impl Display {
                 };
                 Display::from3(DisplayOutside::Block, inside, self.is_list_item())
             },
-            DisplayOutside::Block | DisplayOutside::XUL | DisplayOutside::None => *self,
+            DisplayOutside::Block | DisplayOutside::None => *self,
             #[cfg(any(feature = "servo-layout-2013", feature = "gecko"))]
             _ => Display::Block,
         }
@@ -411,8 +394,6 @@ impl ToCss for Display {
             Display::InlineBlock => dest.write_str("inline-block"),
             #[cfg(feature = "gecko")]
             Display::WebkitInlineBox => dest.write_str("-webkit-inline-box"),
-            #[cfg(feature = "gecko")]
-            Display::MozInlineBox => dest.write_str("-moz-inline-box"),
             #[cfg(any(feature = "servo-layout-2013", feature = "gecko"))]
             Display::TableCaption => dest.write_str("table-caption"),
             _ => match (outside, inside) {
@@ -587,10 +568,6 @@ impl Parse for Display {
             "-webkit-box" => Display::WebkitBox,
             #[cfg(feature = "gecko")]
             "-webkit-inline-box" => Display::WebkitInlineBox,
-            #[cfg(feature = "gecko")]
-            "-moz-box" if moz_display_values_enabled(context) => Display::MozBox,
-            #[cfg(feature = "gecko")]
-            "-moz-inline-box" if moz_display_values_enabled(context) => Display::MozInlineBox,
         })
     }
 }

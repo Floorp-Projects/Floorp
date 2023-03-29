@@ -27,7 +27,6 @@
 #include "nsISupportsImpl.h"
 #include "nsScrollbarFrame.h"
 #include "nsRepeatService.h"
-#include "nsBoxLayoutState.h"
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
