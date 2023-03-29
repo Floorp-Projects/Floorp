@@ -666,12 +666,14 @@ Streams Specification implementation
 
     * - Owner(s)
       -
-        | `Matthew Gaudet (mgaudet) <https://people.mozilla.org/s?query=mgaudet>`__
+        | `Kagami (saschanaz) <https://people.mozilla.org/s?query=saschanaz>`__
     * - Peer(s)
       -
         | `Olli Pettay (smaug) <https://people.mozilla.org/s?query=smaug>`__
         | `Tom S (evilpie) <https://people.mozilla.org/s?query=evilpie>`__
-        | `Kagami (saschanaz) <https://people.mozilla.org/s?query=saschanaz>`__
+        | `Matthew Gaudet (mgaudet) <https://people.mozilla.org/s?query=mgaudet>`__
+    * - Owner(s) Emeritus
+      - Matthew Gaudet
     * - Includes
       -
         | `dom/streams/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=dom/streams/\*\*/\*>`__

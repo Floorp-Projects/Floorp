@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-03-27T14:14:47.856248'
+updated_at: '2023-03-29T09:29:53.741754'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -1496,16 +1496,18 @@ modules:
       - dom/streams/**/*
     excludes: []
     owners:
-      - *mgaudet
+      - *saschanaz
     peers:
       - *smaug
       - *evilpie
-      - *saschanaz
+      - *mgaudet
     meta:
       url: http://developer.mozilla.org/en/docs/DOM
       group: dev-platform
       components:
         - 'Core::DOM: Streams'
+      owners_emeritus:
+        - *mgaudet
   - name: 'Core: Editor'
     description: ''
     includes:
@@ -4076,5 +4078,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: d9dcf5cedd0ecf9b7c3c06fded5f691b9f1a8f1a
-  export: efcd21ae36e1484bdda851f78032c3cc512e6cf2
+  config: 4fa77257b438fffbab9ffce4e8f73bb23a5650d0
+  export: 7d55d5457734f1fd0242112af7318a52330a37fb
