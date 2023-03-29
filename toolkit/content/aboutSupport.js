@@ -747,6 +747,7 @@ var snapshotFormatters = {
       if (obj) {
         const str = JSON.stringify(obj, null, "  ");
         await addRow("features", feature, [new Text(str)]);
+        delete data[feature];
       }
     }
 
