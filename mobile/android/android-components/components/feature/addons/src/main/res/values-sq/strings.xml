@@ -199,7 +199,7 @@
     <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->
     <string name="mozac_feature_addons_updater_status_error">Gabim</string>
     <!-- Text shown in a dialog that displays information about the last attempt to update an add-on. This is the title of the dialog. -->
-    <string name="mozac_feature_addons_updater_dialog_title">Të dhëna Përditësuesi</string>
+    <string name="mozac_feature_addons_updater_dialog_title">Hollësi Përditësuesi</string>
     <!-- Label in the dialog displaying information for the last attempt to update add-ons. It's followed by the date of the last attempt. -->
     <string name="mozac_feature_addons_updater_dialog_last_attempt">Përpjekja e fundit:</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->

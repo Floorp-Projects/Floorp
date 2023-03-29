@@ -1200,7 +1200,7 @@
     <!-- Title B shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_B_title">የመጀመሪያ ፍለጋዎን ይጀምሩ</string>
     <!-- Text B shown in the notification that pops up to re-engage the user -->
-    <string name="notification_re_engagement_B_text">በአቅራቢያ የሆነ ነገር ያግኙ። ወይም የሆነ አስደሳች ነገር ያግኙ።</string>
+    <string name="notification_re_engagement_B_text">በአቅራቢያ ያለን ነገር ይፈልጉ። ወይም ዘና የሚያደርግ ነገር ይወቁ።</string>
 
     <!-- Survey -->
     <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.

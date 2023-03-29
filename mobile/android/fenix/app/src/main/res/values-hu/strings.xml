@@ -302,6 +302,40 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">Most nem</string>
 
+    <!-- Juno first user onboarding flow experiment -->
+    <!-- Title for set firefox as default browser screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_default_browser_title" tools:ignore="UnusedResources">Legyen a %s a szokásos böngészője</string>
+    <!-- Description for set firefox as default browser screen.
+        The first parameter is the Firefox brand name.
+        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
+    <string name="juno_onboarding_default_browser_description" tools:ignore="UnusedResources">A(z) %1$s az embereket helyezi a profit elé, és a webhelyek közötti nyomkövetők blokkolásával védi az Ön adatait.\n\nTovábbi információk az %2$s.</string>
+    <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
+    This is part of the string with the key "juno_onboarding_default_browser_description". -->
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">adatvédelmi nyilatkozatban</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Beállítás alapértelmezett böngészőként</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Most nem</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Váltson át a telefonról a laptopra és vissza</string>
+    <!-- Description for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Vegye át a lapokat és a jelszavakat a többi eszközéről, hogy ott folytassa, ahol abbahagyta.</string>
+    <!-- Text for the button to sign in to sync on the device -->
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Bejelentkezés</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Most nem</string>
+    <!-- Title for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_title" tools:ignore="UnusedResources">Az értesítések segítségével még többet tehet a %s alkalmazással</string>
+    <!-- Description for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_description" tools:ignore="UnusedResources">Küldjön lapokat az eszközök között, kezelje a letöltéseket, és kapjon tippeket arról, hogyan hozza ki a legtöbbet a %s böngészőből.</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Értesítések bekapcsolása</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Most nem</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Új %1$s lap megnyitása</string>

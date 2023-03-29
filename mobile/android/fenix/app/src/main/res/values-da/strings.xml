@@ -298,6 +298,40 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">Ikke nu</string>
 
+    <!-- Juno first user onboarding flow experiment -->
+    <!-- Title for set firefox as default browser screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_default_browser_title" tools:ignore="UnusedResources">Gør %s til din standard-browser</string>
+    <!-- Description for set firefox as default browser screen.
+        The first parameter is the Firefox brand name.
+        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
+    <string name="juno_onboarding_default_browser_description" tools:ignore="UnusedResources">%1$s sætter mennesker før profit og beskytter dit privatliv ved at blokere sporing på tværs af websteder.\n\nLæs mere om vores %2$s.</string>
+    <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
+    This is part of the string with the key "juno_onboarding_default_browser_description". -->
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">privatlivserklæring</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Angiv som standard-browser</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Ikke nu</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Fra telefon til computer og tilbage</string>
+    <!-- Description for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Hent faneblade og adgangskoder fra dine andre enheder for at fortsætte, hvor du slap.</string>
+    <!-- Text for the button to sign in to sync on the device -->
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Log ind</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Ikke nu</string>
+    <!-- Title for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_title" tools:ignore="UnusedResources">Meddelelser hjælper dig med at gøre mere med %s</string>
+    <!-- Description for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_description" tools:ignore="UnusedResources">Send faneblade mellem enheder, håndter filhentninger og få tips til at få mest muligt ud af %s.</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Slå meddelelser til</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Ikke nu</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Åbn et nyt %1$s-faneblad</string>
@@ -397,7 +431,7 @@
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Se færre pop op-beskeder om cookies</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Besvar automatisk cookie pop op-beskeder, så du kan surfe uden forstyrrelser. %1$s vil afvise alle forespørgsler, når det er muligt.</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Besvar automatisk cookie pop op-beskeder, så du kan bruge nettet uden forstyrrelser. %1$s vil afvise alle forespørgsler, når det er muligt.</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Afvis pop op-beskeder om cookies</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
@@ -1207,7 +1241,7 @@
     <string name="notification_re_engagement_title">Prøv privat browsing</string>
     <!-- Text shown in the notification that pops up to re-engage the user.
     %1$s is a placeholder that will be replaced by the app name. -->
-    <string name="notification_re_engagement_text">Surf på nettet uden at cookies eller historik gemmes i %1$s</string>
+    <string name="notification_re_engagement_text">Brug nettet uden at cookies eller historik gemmes i %1$s</string>
 
     <!-- Title A shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_A_title">Brug nettet uden at efterlade spor</string>

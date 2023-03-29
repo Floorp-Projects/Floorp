@@ -88,9 +88,6 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">ਖ਼ਾਰਜ ਕਰੋ</string>
 
-    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
-    <string name="cfr_dismiss_button_default_content_description" moz:removedIn="110" tools:ignore="UnusedResources">ਖ਼ਾਰਜ ਕਰੋ</string>
-
     <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
     <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
     <string name="tcp_cfr_message">ਸਾਡਾ ਹਾਲੇ ਤੱਕ ਦਾ ਸਭ ਤੋਂ ਜ਼ਿਆਦਾ ਮਜ਼ਬੂਤ ਪਰਦੇਦਾਰੀ ਫ਼ੀਚਰ ਅੰਤਰ-ਸਾਈਟ ਟਰੈਕਰਾਂ ਨੂੰ ਨਿਖੇੜਦਾ ਹੈ।</string>
@@ -310,6 +307,41 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">ਹੁਣੇ ਨਹੀਂ</string>
 
+    <!-- Juno first user onboarding flow experiment -->
+    <!-- Title for set firefox as default browser screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_default_browser_title" tools:ignore="UnusedResources">%s ਨੂੰ ਆਪਣਾ ਪੱਕਾ ਬਰਾਊਜ਼ਰ ਬਣਾਓ</string>
+    <!-- Description for set firefox as default browser screen.
+        The first parameter is the Firefox brand name.
+        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
+    <string name="juno_onboarding_default_browser_description" tools:ignore="UnusedResources">%1$s ਫ਼ਾਇਦੇ ਤੋਂ ਪਹਿਲਾਂ ਲੋਕਾਂ ਨੂੰ ਰੱਖਦਾ ਹੈ ਅਤੇ ਅੰਤਰ-ਸਾਈਟ ਟਰੈਕਰਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾ ਕੇ ਤੁਹਾਡੀ ਪਰਦੇਦਾਰੀ ਦੀ ਰੱਖਿਆ ਕਰਦਾ ਹੈ।\n\nਸਾਡੇ %2$s ਬਾਰੇ ਹੋਰ ਜਾਣੋ।</string>
+    <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
+    This is part of the string with the key "juno_onboarding_default_browser_description". -->
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">ਪਰਦੇਦਾਰੀ ਸੂਚਨਾ</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">ਮੂਲ ਬਰਾਊਜ਼ਰ ਬਣਾਓ</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">ਹੁਣੇ ਨਹੀਂ</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">ਫ਼ੋਨ ਤੋਂ ਲੈਪਟਾਪ ਉੱਤੇ ਜਾਓ ਤੇ ਵਾਪਸ ਆਓ</string>
+    <!-- Description for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">ਆਪਣੇ ਹੋਰ ਡਿਵਾਈਸਾਂ ਉੱਤੇ ਜਿੱਥੇ ਤੁਸੀਂ ਟੈਬਾਂ ਤੇ ਪਾਸਵਰਡਾਂ ਨੂੰ ਜਿੱਥੇ ਛੱਡਿਆ ਸੀ, ਓਥੋਂ ਹੀ ਲਵੋ।</string>
+    <!-- Text for the button to sign in to sync on the device -->
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">ਸਾਈਨ ਇਨ</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">ਹੁਣੇ ਨਹੀਂ</string>
+    <!-- Title for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_title" tools:ignore="UnusedResources">ਨੋਟੀਫ਼ਿਕੇਸ਼ਨ ਤੁਹਾਨੂੰ %s ਨਾਲ ਹੋਰ ਕਰਨ ਦੀ ਮਦਦ ਕਰਦੇ ਹਨ</string>
+
+    <!-- Description for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_description" tools:ignore="UnusedResources">ਡਿਵਾਈਸਾਂ ਵਿੱਚ ਟੈਬਾਂ ਭੇਜੋ, ਡਾਊਨਲੋਡਾਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ ਅਤੇ %s ਦਾ ਭਰਪੂਰ ਫ਼ਾਇਦਾ ਲੈਣ ਲਈ ਹੋਰ ਸੁਝਾਅ ਲਵੋ।</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">ਸੂਚਨਾਵਾਂ ਚਾਲੂ ਕਰੋ</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">ਹੁਣੇ ਨਹੀਂ</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">ਨਵੀਂ %1$s ਟੈਬ ਖੋਲ੍ਹੋ</string>
@@ -369,8 +401,6 @@
     <string name="reduce_cookie_banner_option_off">ਬੰਦ</string>
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
     <string name="reduce_cookie_banner_option_on">ਚਾਲੂ</string>
-    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox ਆਪਣੇ-ਆਪ ਕੂਕੀਜ਼ ਬੈਨਰ ਲਈ ਕੂਕੀਜ਼ ਬੇਨਤੀਆਂ ਨੂੰ ਇਨਕਾਰ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ ਕਰਦਾ ਹੈ। ਜੇ ਇਨਕਾਰ ਕਰਨ ਦੀ ਚੋਣ ਨਹੀਂ ਮੌਜੂਦ ਹੁੰਦੀ ਤਾਂ Firefox ਬੈਨਰ ਨੂੰ ਖਾਰਜ ਕਰਨ ਵਾਸਤੇ ਸਾਰੇ ਕੂਕੀਜ਼ ਨੂੰ ਮਨਜ਼ੂਰ ਵੀ ਕਰ ਸਕਦਾ ਹੈ।</string>
 
     <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
     <string name="reduce_cookie_banner_summary_1">%1$s ਕੂਕੀ ਬੈਨਰਾਂ ਤੋਂ ਕੂਕੀ ਬੇਨਤੀਆਂ ਨੂੰ ਆਪਣੇ-ਆਪਹੀ ਰੱਦ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰਦਾ ਹੈ।</string>
@@ -388,8 +418,6 @@
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s ਇਸ ਸਾਈਟ ਦੀਆਂ ਕੁਕੀਆਂ ਨੂੰ ਸਾਫ਼ ਕਰ ਕੇ ਵਰਕੇ ਨੂੰ ਸੱਜਰਾ ਕਰ ਦੇਵੇਗਾ। ਸਾਰੀਆਂ ਕੁਕੀਆਂ ਨੂੰ ਸਾਫ਼ ਕਰਨ ਨਾਲ ਤੁਸੀਂ ਸਾਈਨ ਆਊਟ ਹੋ ਸਕਦੇ ਹੋ ਜਾਂ ਖਰੀਦਦਾਰੀ ਵਾਲੀ ਟੋਕਰੀ ਖਾਲੀ ਹੋ ਸਕਦੀ ਹੈ।</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s ਆਪਣੇ-ਆਪ ਕੁਕੀਆਂ ਦੀਆਂ ਬੇਨਤੀਆਂ ਨੂੰ ਨਾਮੰਨਜੂਰ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ ਕਰ ਸਕਦਾ ਹੈ। ਜੇ ਨਾਮੰਨਜੂਰ ਕਰਨ ਦੀ ਚੋਣ ਮੌਜੂਦ ਨਹੀਂ ਹੁੰਦੀ ਤਾਂ ਝੰਡੀ ਨੂੰ ਖਾਰਜ ਕਰਨ ਵਾਸਤੇ %2$s ਸਾਰੀਆਂ ਕੁਕੀਆਂ ਨੂੰ ਮੰਨਜ਼ੂਰ ਵੀ ਕਰ ਸਕਦਾ ਹੈ।</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s ਕੂਕੀ ਬੇਨਤੀਆਂ ਨੂੰ ਆਪਣੇ-ਆਪ ਹੀ ਰੱਦ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ ਕਰ ਸਕਦਾ ਹੈ।</string>
@@ -399,9 +427,6 @@
     <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">ਕੂਕੀ ਬੈਨਰ ਕਰੋ ਰਵਾਨਾ!</string>
     <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_dialog_title">%1$s ਨੂੰ ਕੂਕੀ ਬੈਨਰ ਰੱਦ ਕਰਨ ਦੀ ਇਜਾਜ਼ਤ ਦੇਣੀ ਹੈ?</string>
-    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">ਜਦੋਂ ਵੀ ਮੌਕਾ ਹੋਵੇ ਤਾਂ ਕੂਕੀ ਬੇਨਤੀਆਂ ਨੂੰ ਆਪਣੇ ਖ਼ਾਰਜ ਕਰ ਦਿਓ।
-ਨਹੀਂ ਤਾਂ ਕੂਕੀ ਬੈਨਰ ਨੂੰ ਖਾਰਜ ਕਰਨ ਲਈ ਸਾਰੇ ਕੂਕੀ ਮਨਜ਼ੂਰ ਕਰੋ।</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">ਜਦੋਂ ਵੀ ਸੰਭਵ ਹੋਵੇ ਤਾਂ ਕੂਕੀ ਬੇਨਤੀਆਂ ਨੂੰ ਆਪਣੇ-ਆਪ ਹੀ ਰੱਦ ਕਰੋ।</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
@@ -418,15 +443,11 @@
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">ਘੱਟ ਕੂਕੀ ਪੌਪ-ਅੱਪ ਵੇਖੋ</string>
 
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">ਰੁਕਾਵਟ ਰਹਿਤ ਬਰਾਊਜ਼ ਕਰਨ ਲਈ ਕੂਕੀ ਪੌਪ-ਅੱਪ ਨੂੰ ਆਪਣੇ-ਆਪ ਜਵਾਬ ਦਿਓ। ਜਦੋਂ ਮੌਕੇ ਹੋਵੇਗਾ ਤਾਂ %1$s ਸਭ ਬੇਨਤੀਆਂ ਨੂੰ ਰੱਦ ਕਰੇਗਾ ਜਾਂ ਜੇ ਨਹੀ ਹੋਵੇਗਾ ਤਾਂ ਸਭ ਨੂੰ ਮਨਜ਼ੂਰ ਕਰੇਗਾ।</string>
-    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">ਰੁਕਾਵਟ ਰਹਿਤ ਬਰਾਊਜ਼ ਕਰਨ ਲਈ ਕੂਕੀ ਪੌਪ-ਅੱਪ ਨੂੰ ਆਪਣੇ-ਆਪ ਜਵਾਬ ਦਿਓ। ਜਦੋਂ ਸੰਭਵ ਹੋਵੇ ਤਾਂ %1$s ਸਭ ਬੇਨਤੀਆਂ ਨੂੰ ਰੱਦ ਕਰੇਗਾ।</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">ਪੌਪ-ਅੱਪ ਖ਼ਾਰਜ ਕਰੋ</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">ਕੂਕੀ ਬੈਨਰ ਘਟਾਉਣਾ</string>
-    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s ਨੂੰ ਜਦ ਵੀ ਮੌਕੇ ਹੋਵੇ ਤਾਂ ਸਾਈਟ ਦੇ ਕੂਕੀ ਸਹਿਮਤੀ ਬੇਨਤੀ ਲਈ ਰੱਦ ਕਰਨ ਜਾਂ ਜੇ ਨਾ ਹੋ ਸਕੇ ਤਾਂ ਕੂਕੀ ਪਹੁੰਚ ਨੂੰ ਮਨਜ਼ੂਰ ਕਰਨ ਦੀ ਇਜਾਜ਼ਤ ਦੇਣੀ ਹੈ?</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">ਜਦੋਂ ਵੀ ਸੰਭਵ ਹੋਵੇ ਤਾਂ %1$s ਨੂੰ ਸਾਈਟ ਦੇ ਕੂਕੀ ਸਹਿਮਤੀ ਬੇਨਤੀ ਲਈ ਇਨਕਾਰ ਕਰਨ ਦੀ ਇਜਾਜ਼ਤ ਦੇਣੀ ਹੈ?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
@@ -1259,6 +1280,15 @@
     <string name="notification_re_engagement_B_title">ਆਪਣੀ ਪਹਿਲੀ ਖੋਜ ਕਰੋ</string>
     <!-- Text B shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_B_text">ਨੇੜੇ ਤੇੜੇ ਕੁਝ ਲੱਭੋ। ਜਾਂ ਕੁਝ ਮੌਜ ਮਸਤੀ ਲਈ ਲੱਭੋ।</string>
+
+    <!-- Survey -->
+    <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_survey_message_text" tools:ignore="UnusedResources">ਛੋਟੇ ਜਿਹੇ ਸਰਵੇਖਣ ਦਾ ਹਿੱਸਾ ਬਣ ਕੇ Firefox ਨੂੰ ਬੇਹਤਰ ਬਣਾਉਣ ਲਈ ਮਦਦ ਕਰੋ।</string>
+    <!-- Preference for taking the short survey. -->
+    <string name="preferences_take_survey" tools:ignore="UnusedResources">ਸਰਵੇਖਣ ਭਰੋ</string>
+    <!-- Preference for not taking the short survey. -->
+    <string name="preferences_not_take_survey" tools:ignore="UnusedResources">ਨਹੀਂ, ਧੰਨਵਾਦ</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->

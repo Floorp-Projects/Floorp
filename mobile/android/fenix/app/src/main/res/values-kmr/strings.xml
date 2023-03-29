@@ -13,8 +13,10 @@
     <string name="content_description_private_browsing_button">Gerîna veşartî veke</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">Gerîna veşartî bigire</string>
-    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
     <string name="search_hint">Lêgerîn an jî navnîşan</string>
+    <!-- Placeholder text shown in the search bar before a user enters text for a general engine -->
+    <string name="search_hint_general_engine">Di webê de bigere</string>
     <!-- Placeholder text shown in search bar when using history search -->
     <string name="history_search_hint">Raboriya lêgerînê</string>
     <!-- Placeholder text shown in search bar when using bookmarks search -->
@@ -65,12 +67,10 @@
     </string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message -->
-    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Ji bo ku tu ji ekrana xwe ya Destpêkê hilpekîneke veşartî vekî, kurterêyekê tevlî bike.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
-    <string name="private_mode_cfr_message">Hilpekîna din a veşartî bi destdanekê veke.</string>
-    <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Kurterêyê tevlî bike</string>
+    <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">Hilpekîna din a veşartî bi destdanekê veke.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message_2">Hilpekîna din a nepen bi tiliyekê veke.</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Tevlî ekrana destpêkê bike</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
@@ -83,9 +83,6 @@
     <string name="open_in_app_cfr_positive_button_text">Here sazkariyan</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Bigire</string>
-
-    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
-    <string name="cfr_dismiss_button_default_content_description">Bigire</string>
 
     <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
     <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
@@ -296,10 +293,48 @@
     <!-- Enable notification pre permission dialog title
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="onboarding_home_enable_notifications_title">Bi xêra agahdariyan bi %sê re zêdetir tiştan bike</string>
+    <!-- Enable notification pre permission dialog description with rationale
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_description">Hilpekînên xwe di navbera cîhazan de senkronîze bike, jêbarkirinan bi rê ve bibe, derbarê parastina nepeniyê ya geroka xwe %sê de zêdetir şîretan bistîne û zêdetir.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="onboarding_home_enable_notifications_positive_button">Bidomîne</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">Ne niha</string>
+
+    <!-- Juno first user onboarding flow experiment -->
+    <!-- Title for set firefox as default browser screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_default_browser_title" tools:ignore="UnusedResources">%sê bike geroka xwe ya sereke</string>
+    <!-- Description for set firefox as default browser screen.
+        The first parameter is the Firefox brand name.
+        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
+    <string name="juno_onboarding_default_browser_description" tools:ignore="UnusedResources">%1$s ji berjewendiyê zêdetir qîmetê dide mirovan û bi astengkirina şopînerên navmalperî nepeniya te diparêze.\n\nJi bo agahiyên zêdetir li %2$sê binêre.</string>
+    <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
+    This is part of the string with the key "juno_onboarding_default_browser_description". -->
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">danezana nepeniyê</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Bike geroka sereke</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Ne niha</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Ji telefonê derbasî kompîturê, ji kompîturê derbasî telefonê bibe</string>
+    <!-- Description for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Tab û şîfreyên ji cîhazên xwe yên din wergire û ji ciyê lê mayî dewam bike.</string>
+    <!-- Text for the button to sign in to sync on the device -->
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Têkeve</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Ne niha</string>
+    <!-- Title for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_title" tools:ignore="UnusedResources">Bi xêra agahdariyan bi %sê re zêdetir tiştan bike</string>
+
+    <!-- Description for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_description" tools:ignore="UnusedResources">Hilpekînan ji cîhazekê bişîne ya din, jêbarkirinan bi rê ve bibe û derbarê %sê de zêdetir bizane.</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Danezanan çalak bike</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Ne niha</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -356,12 +391,18 @@
     <string name="preferences_cookie_banner_reduction">Agahdariya xurekan kêm bike</string>
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Agahdariyên xurekan kêm bike</string>
-    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox bi awayekî otomatîk hewl dide ku daxwazên xurekan ên di agahdariyên xurekan de red bike. Heke vebijarka redkirinê ne berdest be, dibe ku Firefox ji bo girtina agahdariyê hemû xurekan qebûl bike.</string>
+    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
+    <string name="reduce_cookie_banner_option_off">Girtî</string>
+    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
+    <string name="reduce_cookie_banner_option_on">Vekirî</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_summary_1">%1$s bixweber hewl dide ku daxwazên çerezên li ser bannerên çerezan red bike.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Ji bo vê malperê girtî ye</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Ji bo vê malperê vekirî ye</string>
+    <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">Malper niha nayê piştgirîkirin</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">Bila ji bo %1$sê agahdariyên xurekê were vekirin?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
@@ -369,13 +410,42 @@
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s ew ê hemû xurekên malperê paqij bike û malperê nû bike. Paqijkirina hemû xurekan dibe ku têketina te bigire û sepeta te ya danûstandinê vala bike.</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s, dikare bi awayekî otomatîk daxwazên xurekan red bike. Heke vebijarka redkirinê ne berdest be,  dibe ku %2$s ji bo girtina agahdariyê hemû xurekan qebûl bike.</string>
 
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s dikare hewlê bide ku daxwazên çerezan bixweber red bike.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s hewlêdidebide ku daxwazên çerezan yên li ser malperên piştgirîkirî bixweber red bike.</string>
+    <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Destûrê didî Firefoxê ku banerên çerezan red bike?</string>
+    <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_title">Destûrê didî %1$sê ku banerên çerezan red bike?</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Gava gengaz be daxwazên çerezan bixweber red bike.</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_2" moz:RemovedIn="112" tools:ignore="UnusedResources">Destûrê bide  %1$sê ku gava gengaz be daxwazên çerezan bixweber red bike?</string>
+    <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_body">%1$s dikare gelek daxwazên banerên çerezan bixweber red bike.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Ne niha</string>
+    <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Banerê bigire</string>
+    <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
+    <string name="reduce_cookie_banner_dialog_snackbar_text">Tu yê hindiktir daxwazên çerezan bibînî</string>
+    <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Hindiktir pop-upên çerezan bibîne</string>
+    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Ji bo gereka bibaldartir pop-upên çerezan xweber bibersivîne. Heke gengaz be %1$s dê hemû daxwazan red bike.</string>
+    <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Pop-ups bigire</string>
+    <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Kêmkirina Banerên Çerezan</string>
+    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Destûrê didî ku %1$s gava gengaz be daxwaza razîbûna çerezan ya malperan red bike?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">Destûrê bide</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Destûrê bide</string>
+
+    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
+    <string name="reduce_cookie_banner_dialog_change_setting_button">Destûrê bidê</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Ji bo ewlekariya zêdetir hewlê bide ku bi protokola şîfrekirî ya HTTPSê bi awayekî xweber têkeve malperan.</string>
@@ -455,6 +525,12 @@
     <string name="preferences_enable_autocomplete_urls">Navnîşanan bixweber dagire</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Girêdanan di sepanan de veke</string>
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">Her car</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">Beriya vekirinê bipirse</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">Ti caran</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Rêvebera daxistinê ya derveyî</string>
     <!-- Preference for add_ons -->
@@ -691,10 +767,17 @@
 
     <!-- Text to show users they have one site in the history group section of the History fragment.
     %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_site">%d malper</string>
+    <string name="history_search_group_site" moz:RemovedIn="111" tools:ignore="UnusedResources">%d malper</string>
+    <!-- Text to show users they have one page in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_site_1">%d rûpel</string>
     <!-- Text to show users they have multiple sites in the history group section of the History fragment.
     %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_sites">%d malper</string>
+    <string name="history_search_group_sites" moz:RemovedIn="111" tools:ignore="UnusedResources">%d malper</string>
+
+    <!-- Text to show users they have multiple pages in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_sites_1">%d rûpel</string>
 
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Hilpekînên herî dawî hatine girtin</string>
@@ -1161,18 +1244,37 @@
 
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Bazarkirin</string>
-    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_title">%1$s him bilez him jî veşartî ye</string>
-    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_text">%1$s bila bibe geroka te ya sereke</string>
 
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_title" tools:ignore="UnusedResources">Firefrox lezgîn û nepen e</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_text" tools:ignore="UnusedResources">Firefoxê bike geroka xwe ya standard</string>
     <!-- Title shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_title">Gerîna veşartî biceribîne</string>
     <!-- Text shown in the notification that pops up to re-engage the user.
     %1$s is a placeholder that will be replaced by the app name. -->
     <string name="notification_re_engagement_text">Di %1$sê de bêyî ku xurek û raboriya te were tomarkirin, bigere</string>
+
+    <!-- Title A shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_A_title">Gereke bêşop</string>
+    <!-- Text A shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_A_text">Gera nepen ya bi %1$sê agahiyên te naparêze.</string>
+    <!-- Title B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_title">Dest bi gera xwe ya pêşî bike</string>
+    <!-- Text B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_text">Tiştên li nêzîk bibîne. Yan jî tiştên pêkenî bibîne.</string>
+
+    <!-- Survey -->
+    <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_survey_message_text" tools:ignore="UnusedResources">Tika ye bi beşdariya anketeke biçûk alîkariya Firefozê bike.</string>
+    <!-- Preference for taking the short survey. -->
+    <string name="preferences_take_survey" tools:ignore="UnusedResources">Beşdarî anketê bibe</string>
+    <!-- Preference for not taking the short survey. -->
+    <string name="preferences_not_take_survey" tools:ignore="UnusedResources">Na, spas</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
@@ -1309,6 +1411,8 @@
     <string name="onboarding_firefox_account_sync_is_on">Sync vekirî ye</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Parastina nihêniyê temî vekirî ye</string>
+    <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_old">%1$s bi awayekî xweber asteng dike ku şirket te li ser webê bidizî bişopînin.</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">Parastina çerezan ya bi temamî kodên şopandinê asteng dike ku nikaribin te li ser webê bişopînin.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1386,20 +1490,28 @@
     <string name="preference_enhanced_tracking_protection">Parastina ji şopandinê ya pêşketî</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">Bêyî ku tu werî şopandin bigere</string>
+    <!-- Preference summary for enhanced tracking protection settings on/off switch -->
+    <string name="preference_enhanced_tracking_protection_summary" tools:ignore="UnusedResources">Niha taybetiya Parastina Tevahî ya Çerezan li dijî kodên şopandina navmalperî bariyera me ya herî xurt e.</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation">Bila daneyên te ji te re bimînin. %s te ji gelek şopdarên dilxerab diparêze û nahêle tiştên ku tu li ser înternetê dikî ji aliyê wan ve bên dîtin.</string>
+    <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">%s te li hemberî piraniya şopgerên naskirî yên tevgerên te yên li ser înternetê dişopînin, diparêze.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Zêdetir bizane</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standard (heyî)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_4">Hevsengiya ji bo nepenî û performansê. Rûpel asayî tên barkirin.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_5" tools:ignore="UnusedResources">Rûpel dê bi awayê asayî bên barkirin, lê dê hindiktir şopger bên astengkirin.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Bi parastina ji şopandinê ya standard çi tên astengkirin?</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Tund</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_3">Ji bo rûpel zûtir bên vekirin zêdetir şopîneran asteng dike lê dibe ku hin fonksiyonên rûpelan xira bibin.</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_4" tools:ignore="UnusedResources">Parastina ji şopandinê ya bihêztir û performansa zûtir, lê dibe ku hin malper birêkûpêk nexebitin.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Bi parastina ji şopandinê ya tund çi tên astengkirin?</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1990,4 +2102,6 @@
     <string name="a11y_action_label_wallpaper_collection_learn_more">ji bo derbarê vê koleksiyonê de bêtir bizanî, girêdankê veke</string>
     <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
     <string name="a11y_action_label_read_article">gotarê bixwîne</string>
+    <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
+    <string name="a11y_action_label_pocket_learn_more">ji bo zêdetir bizanî lînkê veke</string>
 </resources>

@@ -8,7 +8,7 @@
     <string name="mozac_browser_errorpages_generic_title">Kërkesa Nuk Plotësohet Dot</string>
     <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_message"><![CDATA[
-      <p>Hëpërhë nuk ka të dhëna shtesë gati rreth këtij problemi apo gabimi.</p>
+      <p>Hëpërhë s’ka hollësi shtesë të gatshme rreth këtij problemi apo gabimi.</p>
     ]]></string>
 
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
@@ -107,7 +107,7 @@
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Shfletuesi ka reshtur së provuari të marrë objektin e kërkuar. Sajti po e ridrejton kërkesën në një mënyrë që s’do të plotësohet kurrë.</p>
       <ul>
-        <li>I keni çaktivizuar apo bllokuar cookie-t e nevojshme për këtë sajt?</li>
+        <li>I keni çaktivizuar apo bllokuar cookie-t e domosdoshme për këtë sajt?</li>
         <li>Nëse pranimi i cookie-ve s’e zgjidh problemin, ka të ngjarë të jetë çështje formësimi shërbyesi dhe jo e pajisjes tuaj.</li>
       </ul>]]></string>
 

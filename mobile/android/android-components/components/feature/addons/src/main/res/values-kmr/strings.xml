@@ -40,6 +40,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Daneyan bişîne panoyê</string>
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">Naveroka li ser hemû rûpelan asteng bike</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">Raboriya geroka xwe bixwîne</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Dosyeyan daxîne, raboriya gerokê bixwîne û biguherîne</string>
     <!-- Description for downloads_open permission. -->

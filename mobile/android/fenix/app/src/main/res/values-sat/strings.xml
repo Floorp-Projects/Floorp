@@ -288,10 +288,30 @@
     <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
     <string name="onboarding_home_content_description_close_button">ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
 
+    <!-- Notification pre-permission dialog -->
+    <!-- Enable notification pre permission dialog title
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_title">%s ᱮᱛᱞᱟᱤᱭᱟᱹ ᱥᱟᱞᱟᱜ ᱵᱟᱹᱲᱛᱤ ᱠᱟᱹᱢᱤ ᱠᱚᱨᱟᱣ ᱨᱮ ᱜᱚᱲᱚ ᱮᱢᱚᱜᱼᱟᱭ</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="onboarding_home_enable_notifications_positive_button">ᱞᱮᱛᱟᱲ</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">ᱱᱤᱛᱚᱜ ᱫᱚ ᱵᱟᱝᱟ</string>
+
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">ᱱᱤᱛᱚᱜ ᱫᱚ ᱵᱟᱝᱟ</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">ᱯᱷᱚᱱ ᱠᱷᱚᱱ ᱞᱮᱯᱴᱚᱯ ᱛᱮ ᱩᱪᱟᱹᱲ ᱢᱮ ᱵᱟᱨ ᱯᱟᱦᱴᱮ ᱞᱮᱠᱟᱛᱮ</string>
+    <!-- Description for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">ᱴᱮᱵᱽ ᱟᱨ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫ ᱫᱚ ᱮᱴᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱠᱷᱚᱱ ᱡᱟᱦᱟᱸ ᱨᱮ ᱟᱲᱟᱜ ᱞᱮᱫᱟᱢ ᱚᱱᱰᱮ ᱠᱷᱚᱱ ᱯᱟᱧᱡᱟ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱢ ᱾</string>
+    <!-- Text for the button to sign in to sync on the device -->
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">ᱱᱤᱛᱚᱜ ᱫᱚ ᱵᱟᱝᱟ</string>
+    <!-- Title for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_title" tools:ignore="UnusedResources">%s ᱮᱛᱞᱟᱤᱭᱟᱹ ᱥᱟᱞᱟᱜ ᱵᱟᱹᱲᱛᱤ ᱠᱟᱹᱢᱤ ᱠᱚᱨᱟᱣ ᱨᱮ ᱜᱚᱲᱚ ᱮᱢᱚᱜᱼᱟᱭ</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">ᱱᱤᱛᱚᱜ ᱫᱚ ᱵᱟᱝᱟ</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1024,6 +1044,12 @@
     <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">ᱪᱟᱹᱞᱩ</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">ᱵᱚᱸᱫᱚ</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to standard -->
+    <string name="tracking_protection_standard">ᱢᱟᱱᱚᱠ</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to strict -->
+    <string name="tracking_protection_strict">ᱱᱤᱦᱟᱹᱛ</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to custom -->
+    <string name="tracking_protection_custom">ᱠᱩᱥᱤᱭᱟᱜ</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">ᱟᱰᱤᱭᱳ ᱟᱨ ᱣᱤᱰᱤᱭᱳ ᱦᱮᱥᱟᱨᱤᱭᱟᱹ ᱢᱮ</string>
     <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
@@ -1161,6 +1187,9 @@
     %1$s is a placeholder that will be replaced by the app name. -->
     <string name="notification_re_engagement_text">%1$s ᱨᱮ ᱵᱟᱝ ᱥᱟᱧᱪᱟᱣ ᱠᱟᱱ ᱠᱩᱠᱤ ᱟᱨᱵᱟᱝ ᱦᱤᱛᱟᱹᱞ ᱠᱚ ᱵᱽᱨᱟᱣᱩᱡᱽ ᱢᱮ</string>
 
+    <!-- Preference for not taking the short survey. -->
+    <string name="preferences_not_take_survey" tools:ignore="UnusedResources">ᱵᱟᱝᱟ ᱥᱟᱨᱦᱟᱣ</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">ᱛᱩᱢᱟᱹᱞ ᱢᱮᱴᱟᱣᱮᱱᱟ</string>
@@ -1297,6 +1326,8 @@
     <string name="onboarding_firefox_account_sync_is_on">ᱥᱭᱝᱠ ᱪᱟᱹᱞᱩ ᱢᱮᱱᱟᱜ-ᱟ</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">ᱢᱩᱞ ᱞᱮᱠᱷᱟᱛᱮ ᱱᱤᱥᱚᱱ ᱨᱩᱠᱷᱤᱭᱟᱹᱭ ᱢᱮ</string>
+    <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_old">%1$s ᱫᱚ ᱵᱟᱦᱨᱮ ᱠᱚᱢᱯᱟᱱᱤ ᱠᱚ ᱣᱮᱵᱽ ᱨᱮ ᱟᱢ ᱯᱟᱸᱡᱟ ᱠᱚ ᱵᱚᱸᱫᱚᱜᱼᱟ ᱾</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">ᱡᱷᱚᱛᱚ ᱥᱟᱭᱤᱴ ᱠᱚᱨᱮ ᱠᱩᱠᱤ ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ ᱠᱚ ᱵᱟᱹᱲ ᱪᱷᱚ ᱞᱟᱹᱜᱤᱫ ᱢᱩᱴ ᱠᱩᱠᱤ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱫᱮᱠᱷᱟᱣᱜ ᱠᱟᱱᱟ ᱾</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1982,4 +2013,6 @@
     <string name="a11y_action_label_wallpaper_collection_learn_more">ᱱᱚᱶᱟ ᱡᱟᱣᱨᱟ ᱵᱮᱵᱚᱫ ᱰᱷᱮᱨ ᱵᱟᱰᱟᱭ ᱞᱟᱹᱜᱤᱫ ᱞᱤᱝᱠ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ</string>
     <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
     <string name="a11y_action_label_read_article">ᱚᱱᱚᱞ ᱯᱟᱲᱦᱟᱣ ᱢᱮ</string>
-    </resources>
+    <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
+    <string name="a11y_action_label_pocket_learn_more">ᱰᱷᱮᱨ ᱵᱟᱲᱟᱭ ᱞᱟᱹᱜᱤᱫ ᱞᱤᱝᱠ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ</string>
+</resources>
