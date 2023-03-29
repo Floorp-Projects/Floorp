@@ -16,8 +16,8 @@ origin:
   license-file: COPYING
 
 updatebot:
-  maintainer-phab: bryce
-  maintainer-bz: bryce
+  maintainer-phab: kinetik
+  maintainer-bz: kinetik
   tasks:
     - type: vendoring
       enabled: true
