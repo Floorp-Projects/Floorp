@@ -735,17 +735,21 @@ function renderRTPStats(rndr, report, hist) {
       // Those graphs can be larger to show trends.
       const histSecs = gd.getConfig().histSecs;
       const canvas = rndr.elem_canvas({
-        width: (histSecs > 30 ? histSecs / 3 : 15) * 15,
+        width: (histSecs > 30 ? histSecs / 3 : 15) * 20,
         height: 100,
         className: "line-graph",
       });
       const graph = new GraphImpl(canvas, canvas.width, canvas.height);
       graph.startTime = () => stat.timestamp - histSecs * 1000;
       graph.stopTime = () => stat.timestamp;
-      graph.maxColor = max =>
-        gd.subKey == "packetsLost" && max > 0 ? "red" : "grey";
-      // Get a bit more history for averages
-      let dataSet = gd.getDataSetSince(graph.startTime() - histSecs * 200);
+      if (gd.subKey == "packetsLost") {
+        const oldMaxColor = graph.maxColor;
+        graph.maxColor = data => (data.value == 0 ? "red" : oldMaxColor(data));
+      }
+      // Get a bit more history for averages (20%)
+      const dataSet = gd.getDataSetSince(
+        graph.startTime() - histSecs * 0.2 * 1000
+      );
       graph.drawSparseValues(dataSet, gd.subKey, gd.getConfig());
       return canvas;
     });
@@ -762,8 +766,9 @@ function renderRTPStats(rndr, report, hist) {
             ]),
           ]
         : [];
+      const mime = stat?.codecStat?.mimeType?.concat(" - ") || "";
       const div = renderElements("div", {}, [
-        rndr.text_h5(`SSRC ${ssrc}`),
+        rndr.text_h5(`${mime}SSRC ${ssrc}`),
         rndr.elems_div({}, [rndr.text_h6(stat.type), ...graphsByStat(stat)]),
         ...remoteGraphs,
         renderCodecStats(stat),

@@ -2,6 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+function compStyle(property) {
+  return getComputedStyle(window.document.body).getPropertyValue(property);
+}
+
+function toHumanReadable(num, fpDecimals) {
+  const prefixes = [..." kMGTPEYZYRQ"];
+  const inner = (curr, remainingPrefixes) => {
+    return Math.abs(curr >= 1000)
+      ? inner(curr / 1000, remainingPrefixes.slice(1, -1))
+      : [curr.toFixed(fpDecimals), remainingPrefixes[0].trimEnd()];
+  };
+  return inner(num, prefixes);
+}
+
 class GraphImpl {
   constructor(canvas, width, height) {
     this.canvas = canvas;
@@ -21,7 +35,7 @@ class GraphImpl {
   /** @type {CanvasRenderingContext2D} */
   drawCtx = {};
   // The default background color
-  bgColor = () => "var(--in-content-box-info-background)";
+  bgColor = () => compStyle("--in-content-page-background");
   // The color to use for value graph lines
   valueLineColor = () => "grey";
   // The color to use for average graph lines and text
@@ -31,7 +45,7 @@ class GraphImpl {
   // The color to use for the min value
   minColor = ({ time, value }) => "grey";
   // Title color
-  titleColor = title => "grey";
+  titleColor = title => compStyle("--in-content-page-color");
   // The color to use for a data point at a time.
   // The destination x coordinate and graph width are also provided.
   datumColor = ({ time, value, x, width }) => "red";
@@ -77,6 +91,7 @@ class GraphImpl {
       this.height - 1 - (value - rangeMin) * yFactor - 13;
     const xFactor = width / (1 + stopTime - startTime);
     const xPos = ({ time }) => (time - startTime) * xFactor;
+    ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.strokeStyle = this.valueLineColor();
     [...filtered.dataPoints].forEach((datum, index) => {
@@ -92,6 +107,7 @@ class GraphImpl {
     ctx.stroke();
 
     // Rolling average
+    ctx.lineWidth = 2;
     ctx.strokeStyle = this.averageLineColor();
     ctx.beginPath();
     const rollingAverage = avgDataSet.dataPoints;
@@ -103,12 +119,16 @@ class GraphImpl {
       }
     });
     const fixed = num => num.toFixed(config.fixedPointDecimals);
+    const formatValue = value =>
+      config.toHuman
+        ? toHumanReadable(value, config.fixedPointDecimals).join("")
+        : fixed(value);
     rollingAverage.slice(-1).forEach(({ value }) => {
       ctx.stroke();
       ctx.fillStyle = this.averageLineColor();
-      ctx.font = "11px Arial";
+      ctx.font = "12px Arial";
       ctx.textAlign = "left";
-      ctx.fillText(fixed(value), 5, this.height - 4);
+      ctx.fillText(formatValue(value), 5, this.height - 4);
     });
 
     // Draw the title
@@ -118,12 +138,12 @@ class GraphImpl {
       ctx.textAlign = "left";
       ctx.fillText(`${title}${config.toRate ? "/s" : ""}`, 5, 12);
     }
-    ctx.font = "11px Arial";
+    ctx.font = "12px Arial";
     ctx.fillStyle = this.maxColor(range.max);
     ctx.textAlign = "right";
-    ctx.fillText(fixed(range.max), this.width - 5, 12);
+    ctx.fillText(formatValue(range.max), this.width - 5, 12);
     ctx.fillStyle = this.minColor(range.min);
-    ctx.fillText(fixed(range.min), this.width - 5, this.height - 4);
+    ctx.fillText(formatValue(range.min), this.width - 5, this.height - 4);
   };
 }
 
