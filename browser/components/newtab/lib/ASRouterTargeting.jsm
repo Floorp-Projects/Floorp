@@ -848,6 +848,36 @@ const TargetingGetters = {
   get defaultPDFHandler() {
     return QueryCache.getters.defaultPDFHandler.get();
   },
+
+  get creditCardsSaved() {
+    return (
+      Services.wm
+        .getMostRecentBrowserWindow()
+        ?.gBrowser?.selectedBrowser?.browsingContext.currentWindowGlobal.getActor(
+          "FormAutofill"
+        )
+        ?.receiveMessage({
+          name: "FormAutofill:GetRecords",
+          data: { collectionName: "creditCards" },
+        })
+        .then(cards => cards?.length ?? 0) ?? 0
+    );
+  },
+
+  get addressesSaved() {
+    return (
+      Services.wm
+        .getMostRecentBrowserWindow()
+        ?.gBrowser?.selectedBrowser?.browsingContext.currentWindowGlobal.getActor(
+          "FormAutofill"
+        )
+        ?.receiveMessage({
+          name: "FormAutofill:GetRecords",
+          data: { collectionName: "addresses" },
+        })
+        .then(addresses => addresses?.length ?? 0) ?? 0
+    );
+  },
 };
 
 const ASRouterTargeting = {

@@ -36,6 +36,22 @@ let patterns: string[];
 
 ## Available trigger actions
 
+* [openArticleURL](#openarticleurl)
+* [openBookmarkedURL](#openbookmarkedurl)
+* [frequentVisits](#frequentvisits)
+* [openURL](#openurl)
+* [newSavedLogin](#newsavedlogin)
+* [formAutofill](#formautofill)
+* [contentBlocking](#contentblocking)
+* [defaultBrowserCheck](#defaultbrowsercheck)
+* [captivePortalLogin](#captiveportallogin)
+* [preferenceObserver](#preferenceobserver)
+* [featureCalloutCheck](#featurecalloutcheck)
+* [nthTabClosed](#nthtabclosed)
+* [activityAfterIdle](#activityafteridle)
+* [cookieBannerDetected](#cookiebannerdetected)
+* [messagesLoaded](#messagesloaded)
+
 ### `openArticleURL`
 
 Happens when the user loads a Reader Mode compatible webpage.
@@ -86,6 +102,24 @@ Does not filter by host or patterns.
 
 ```typescript
 let type = "update" | "save";
+```
+
+### `formAutofill`
+
+Happens when the user saves, updates, or uses a credit card or address for form
+autofill. To reduce the trigger's disruptiveness, it does not fire when the user
+is manually editing these items in the manager in about:preferences. For the
+same reason, the trigger only fires after a 10-second delay. The trigger context
+includes an `event` and `type` that can be used in targeting. Possible events
+include `add`, `update`, and `use`. Possible types are `card` and `address`.
+This trigger is especially intended to be used in tandem with the
+`creditCardsSaved` and `addressesSaved` [targeting attributes](../../../../../browser/components/newtab/content-src/asrouter/docs/targeting-attributes.md).
+
+```js
+{
+  trigger: { id: "formAutofill" },
+  targeting: "type == 'card' && event in ['add', 'update']"
+}
 ```
 
 ### `contentBlocking`

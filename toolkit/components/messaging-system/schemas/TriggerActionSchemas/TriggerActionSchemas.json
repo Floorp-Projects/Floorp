@@ -132,6 +132,22 @@
             "id": {
               "type": "string",
               "enum": [
+                "formAutofill"
+              ]
+            }
+          },
+          "required": [
+            "id"
+          ],
+          "additionalProperties": false,
+          "description": "Happens when the user saves, updates, or uses a credit card or address for form autofill"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "enum": [
                 "contentBlocking"
               ]
             },

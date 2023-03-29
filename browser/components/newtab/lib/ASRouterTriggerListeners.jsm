@@ -484,6 +484,82 @@ const ASRouterTriggerListeners = new Map([
       },
     },
   ],
+  [
+    "formAutofill",
+    {
+      id: "formAutofill",
+      _initialized: false,
+      _triggerHandler: null,
+      _triggerDelay: 10000, // 10 second delay before triggering
+      _topic: "formautofill-storage-changed",
+      _events: ["add", "update", "notifyUsed"] /** @see AutofillRecords */,
+      _collections: ["addresses", "creditCards"] /** @see AutofillRecords */,
+
+      init(triggerHandler) {
+        if (!this._initialized) {
+          Services.obs.addObserver(this, this._topic);
+          this._initialized = true;
+        }
+        this._triggerHandler = triggerHandler;
+      },
+
+      uninit() {
+        if (this._initialized) {
+          Services.obs.removeObserver(this, this._topic);
+          this._initialized = false;
+          this._triggerHandler = null;
+        }
+      },
+
+      observe(subject, topic, data) {
+        const browser = Services.wm.getMostRecentBrowserWindow()?.gBrowser
+          .selectedBrowser;
+        if (
+          !browser ||
+          topic !== this._topic ||
+          !subject.wrappedJSObject ||
+          // Ignore changes caused by manual edits in the credit card/address
+          // managers in about:preferences.
+          browser.contentWindow?.gSubDialog?.dialogs.length
+        ) {
+          return;
+        }
+        let { sourceSync, collectionName } = subject.wrappedJSObject;
+        // Ignore changes from sync and changes to untracked collections.
+        if (sourceSync || !this._collections.includes(collectionName)) {
+          return;
+        }
+        if (this._events.includes(data)) {
+          let event = data;
+          let type = collectionName;
+          if (event === "notifyUsed") {
+            event = "use";
+          }
+          if (type === "creditCards") {
+            type = "card";
+          }
+          if (type === "addresses") {
+            type = "address";
+          }
+          lazy.setTimeout(() => {
+            if (
+              this._initialized &&
+              // Make sure the browser still exists and is still selected.
+              browser.isConnectedAndReady &&
+              browser ===
+                Services.wm.getMostRecentBrowserWindow()?.gBrowser
+                  .selectedBrowser
+            ) {
+              this._triggerHandler(browser, {
+                id: this.id,
+                context: { event, type },
+              });
+            }
+          }, this._triggerDelay);
+        }
+      },
+    },
+  ],
 
   [
     "contentBlocking",
