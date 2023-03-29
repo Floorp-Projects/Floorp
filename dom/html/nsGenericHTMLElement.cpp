@@ -187,11 +187,10 @@ static const nsAttrValue::EnumTable kDirTable[] = {
 
 static const nsAttrValue::EnumTable kPopoverTable[] = {
     {"auto", PopoverState::Auto},
-    {"", PopoverState::Auto},
     {"manual", PopoverState::Manual},
     {nullptr, 0}};
 
-static const nsAttrValue::EnumTable* kPopoverTableDefault = &kPopoverTable[2];
+static const nsAttrValue::EnumTable* kPopoverTableDefault = &kPopoverTable[1];
 
 void nsGenericHTMLElement::AddToNameTable(nsAtom* aName) {
   MOZ_ASSERT(HasName(), "Node doesn't have name?");
