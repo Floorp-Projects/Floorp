@@ -31,6 +31,8 @@
 }
 
 #thepreviewimage {
+  margin: 1em auto;
+  flex: none;
   display: block;
 }
 
