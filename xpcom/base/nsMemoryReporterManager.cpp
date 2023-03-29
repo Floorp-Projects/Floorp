@@ -1335,6 +1335,25 @@ class JemallocHeapReporter final : public nsIMemoryReporter {
     MOZ_COLLECT_REPORT(
       "heap-chunksize", KIND_OTHER, UNITS_BYTES, stats.chunksize,
       "Size of chunks.");
+
+#ifdef MOZ_PHC
+    mozilla::phc::MemoryUsage usage;
+    ReplaceMalloc::PHCMemoryUsage(usage);
+
+    MOZ_COLLECT_REPORT(
+      "explicit/heap-overhead/phc/metadata", KIND_NONHEAP, UNITS_BYTES,
+      usage.mMetadataBytes,
+"Memory used by PHC to store stacks and other metadata for each allocation");
+    MOZ_COLLECT_REPORT(
+      "explicit/heap-overhead/phc/fragmentation", KIND_NONHEAP, UNITS_BYTES,
+      usage.mFragmentationBytes,
+"The amount of memory lost due to rounding up allocations to the next page "
+"size. "
+"This is also known as 'internal fragmentation'. "
+"Note that all allocators have some internal fragmentation, there may still "
+"be some internal fragmentation without PHC.");
+#endif
+
     // clang-format on
 
     return NS_OK;
