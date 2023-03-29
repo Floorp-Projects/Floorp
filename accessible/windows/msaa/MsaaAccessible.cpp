@@ -674,10 +674,16 @@ static bool VisitDocAccessibleParentDescendantsAtTopLevelInContentProcess(
     dom::BrowserParent* aBrowser, Callback aCallback) {
   // We can't use BrowserBridgeParent::VisitAllDescendants because it doesn't
   // provide a way to stop the search.
-  const auto& bridges = aBrowser->ManagedPBrowserBridgeParent();
-  return std::all_of(bridges.cbegin(), bridges.cend(), [&](const auto& key) {
-    auto* bridge = static_cast<dom::BrowserBridgeParent*>(key);
-    dom::BrowserParent* childBrowser = bridge->GetBrowserParent();
+  const auto& rawBridges = aBrowser->ManagedPBrowserBridgeParent();
+  nsTArray<RefPtr<dom::BrowserBridgeParent>> bridges(rawBridges.Count());
+  for (const auto bridge : rawBridges) {
+    bridges.AppendElement(static_cast<dom::BrowserBridgeParent*>(bridge));
+  }
+  return std::all_of(bridges.cbegin(), bridges.cend(), [&](const auto& bridge) {
+    RefPtr<dom::BrowserParent> childBrowser = bridge->GetBrowserParent();
+    if (!childBrowser) {
+      return true;
+    }
     DocAccessibleParent* childDocAcc = childBrowser->GetTopLevelDocAccessible();
     if (!childDocAcc || childDocAcc->IsShutdown()) {
       return true;
