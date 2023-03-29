@@ -60,9 +60,9 @@
 
 .ruleview-reveal-panel {
   border-bottom: 1px solid var(--theme-splitter-color);
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, max-content));
+  display: flex;
   overflow: hidden;
+  flex-wrap: wrap;
   margin: 2px;
 }
 
@@ -86,6 +86,16 @@
   padding: 0 3px;
 }
 
+/* Pseudo Class toggle panel */
+
+#pseudo-class-panel {
+  grid-template-columns: repeat(auto-fit, minmax(100px, max-content));
+}
+
+#pseudo-class-panel:not([hidden]) {
+  display: grid;
+}
+
 /* Class toggle panel */
 
 #ruleview-class-panel {
@@ -104,6 +114,7 @@
 #ruleview-class-panel .classes label {
   flex: 0 0;
   max-width: 50%;
+  min-width: 100px;
 }
 
 #ruleview-class-panel .classes label span {
