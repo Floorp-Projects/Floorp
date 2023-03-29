@@ -15,13 +15,21 @@ import {
 } from "../../selectors";
 import { prefs } from "../../utils/prefs";
 import { connect } from "../../utils/connect";
+import { primaryPaneTabs } from "../../constants";
 import { formatKeyShortcut } from "../../utils/text";
 
 import Outline from "./Outline";
 import SourcesTree from "./SourcesTree";
+import ProjectSearch from "./ProjectSearch";
 import AccessibleImage from "../shared/AccessibleImage";
 
 import "./Sources.css";
+
+const tabs = [
+  primaryPaneTabs.SOURCES,
+  primaryPaneTabs.OUTLINE,
+  primaryPaneTabs.PROJECT_SEARCH,
+];
 
 class PrimaryPanes extends Component {
   constructor(props) {
@@ -37,14 +45,12 @@ class PrimaryPanes extends Component {
       clearProjectDirectoryRoot: PropTypes.func.isRequired,
       cx: PropTypes.object.isRequired,
       projectRootName: PropTypes.string.isRequired,
-      selectedTab: PropTypes.oneOf(["sources", "outline"]).isRequired,
+      selectedTab: PropTypes.oneOf(tabs).isRequired,
       setPrimaryPaneTab: PropTypes.func.isRequired,
+      setActiveSearch: PropTypes.func.isRequired,
+      closeActiveSearch: PropTypes.func.isRequired,
     };
   }
-
-  showPane = selectedPane => {
-    this.props.setPrimaryPaneTab(selectedPane);
-  };
 
   onAlphabetizeClick = () => {
     const alphabetizeOutline = !prefs.alphabetizeOutline;
@@ -53,31 +59,40 @@ class PrimaryPanes extends Component {
   };
 
   onActivateTab = index => {
-    if (index === 0) {
-      this.showPane("sources");
+    const tab = tabs.at(index);
+    this.props.setPrimaryPaneTab(tab);
+    if (tab == primaryPaneTabs.PROJECT_SEARCH) {
+      this.props.setActiveSearch(tab);
     } else {
-      this.showPane("outline");
+      this.props.closeActiveSearch();
     }
   };
 
-  renderOutlineTabs() {
-    const sources = formatKeyShortcut(L10N.getStr("sources.header"));
-    const outline = formatKeyShortcut(L10N.getStr("outline.header"));
-    const isSources = this.props.selectedTab === "sources";
-    const isOutline = this.props.selectedTab === "outline";
-
+  renderTabList() {
     return [
       <Tab
-        className={classnames("tab sources-tab", { active: isSources })}
+        className={classnames("tab sources-tab", {
+          active: this.props.selectedTab === primaryPaneTabs.SOURCES,
+        })}
         key="sources-tab"
       >
-        {sources}
+        {formatKeyShortcut(L10N.getStr("sources.header"))}
       </Tab>,
       <Tab
-        className={classnames("tab outline-tab", { active: isOutline })}
+        className={classnames("tab outline-tab", {
+          active: this.props.selectedTab === primaryPaneTabs.OUTLINE,
+        })}
         key="outline-tab"
       >
-        {outline}
+        {formatKeyShortcut(L10N.getStr("outline.header"))}
+      </Tab>,
+      <Tab
+        className={classnames("tab search-tab", {
+          active: this.props.selectedTab === primaryPaneTabs.PROJECT_SEARCH,
+        })}
+        key="search-tab"
+      >
+        {formatKeyShortcut(L10N.getStr("search.header"))}
       </Tab>,
     ];
   }
@@ -104,22 +119,16 @@ class PrimaryPanes extends Component {
     );
   }
 
-  renderThreadSources() {
-    return <SourcesTree />;
-  }
-
   render() {
     const { selectedTab, projectRootName } = this.props;
-    const activeIndex = selectedTab === "sources" ? 0 : 1;
-
     return (
       <Tabs
-        activeIndex={activeIndex}
+        activeIndex={tabs.indexOf(selectedTab)}
         className="sources-panel"
         onActivateTab={this.onActivateTab}
       >
         <TabList className="source-outline-tabs">
-          {this.renderOutlineTabs()}
+          {this.renderTabList()}
         </TabList>
         <TabPanels
           className={classnames("source-outline-panel", {
@@ -129,12 +138,13 @@ class PrimaryPanes extends Component {
         >
           <div className="threads-list">
             {this.renderProjectRootHeader()}
-            {this.renderThreadSources()}
+            <SourcesTree />
           </div>
           <Outline
             alphabetizeOutline={this.state.alphabetizeOutline}
             onAlphabetizeClick={this.onAlphabetizeClick}
           />
+          <ProjectSearch />
         </TabPanels>
       </Tabs>
     );

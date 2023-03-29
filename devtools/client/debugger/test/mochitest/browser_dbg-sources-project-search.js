@@ -6,6 +6,8 @@
 
 "use strict";
 
+requestLongerTimeout(3);
+
 // Tests for searching in dynamic (without urls) sources
 add_task(async function testSearchDynamicScripts() {
   const dbg = await initDebugger("doc-minified.html");
@@ -22,7 +24,6 @@ add_task(async function testSearchDynamicScripts() {
     "The search result was found in the eval script."
   );
 
-  await closeProjectSearch(dbg);
   await resume(dbg);
   await executeComplete;
 });
@@ -41,15 +42,12 @@ add_task(async function testIgnoreMinifiedSourceForPrettySource() {
     "The search result was found in the minified (pretty.js) source"
   );
 
-  await closeProjectSearch(dbg);
-
   await selectSource(dbg, "pretty.js");
   await waitForSelectedSource(dbg, "pretty.js");
 
   info("Pretty print the source");
   await prettyPrint(dbg);
 
-  await openProjectSearch(dbg);
   fileResults = await doProjectSearch(dbg, "stuff");
 
   is(
@@ -113,8 +111,6 @@ add_task(async function testBlackBoxedSources() {
   let fileResults = await doProjectSearch(dbg, "stuff");
 
   is(fileResults.length, 0, "No results were found as pretty.js is blackboxed");
-
-  await closeProjectSearch(dbg);
 
   info("Unblackbox pretty.js");
   await toggleBlackbox(dbg);

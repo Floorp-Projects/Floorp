@@ -9,9 +9,9 @@ import PropTypes from "prop-types";
 
 import { mount, shallow } from "enzyme";
 import { ProjectSearch } from "../ProjectSearch";
-import { statusType } from "../../reducers/project-text-search";
-import { mockcx } from "../../utils/test-mockup";
-import { searchKeys } from "../../constants";
+import { statusType } from "../../../reducers/project-text-search";
+import { mockcx } from "../../../utils/test-mockup";
+import { searchKeys } from "../../../constants";
 
 const hooks = { on: [], off: [] };
 const shortcuts = {

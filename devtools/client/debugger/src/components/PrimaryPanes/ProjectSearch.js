@@ -4,27 +4,26 @@
 
 import React, { Component } from "react";
 import PropTypes from "prop-types";
-import { connect } from "../utils/connect";
+import { connect } from "../../utils/connect";
 import classnames from "classnames";
-import actions from "../actions";
+import actions from "../../actions";
 
-import { getEditor } from "../utils/editor";
-import { searchKeys } from "../constants";
+import { getEditor } from "../../utils/editor";
+import { searchKeys } from "../../constants";
 
-import { statusType } from "../reducers/project-text-search";
-import { getRelativePath } from "../utils/sources-tree/utils";
-import { getFormattedSourceId } from "../utils/source";
+import { statusType } from "../../reducers/project-text-search";
+import { getRelativePath } from "../../utils/sources-tree/utils";
+import { getFormattedSourceId } from "../../utils/source";
 import {
-  getActiveSearch,
   getProjectSearchResults,
   getProjectSearchStatus,
   getProjectSearchQuery,
   getContext,
-} from "../selectors";
+} from "../../selectors";
 
-import ManagedTree from "./shared/ManagedTree";
-import SearchInput from "./shared/SearchInput";
-import AccessibleImage from "./shared/AccessibleImage";
+import ManagedTree from "../shared/ManagedTree";
+import SearchInput from "../shared/SearchInput";
+import AccessibleImage from "../shared/AccessibleImage";
 
 const { PluralForm } = require("devtools/shared/plural-form");
 
@@ -50,9 +49,7 @@ export class ProjectSearch extends Component {
 
   static get propTypes() {
     return {
-      activeSearch: PropTypes.string,
       clearSearch: PropTypes.func.isRequired,
-      closeProjectSearch: PropTypes.func.isRequired,
       cx: PropTypes.object.isRequired,
       doSearchForHighlight: PropTypes.func.isRequired,
       query: PropTypes.string.isRequired,
@@ -74,20 +71,11 @@ export class ProjectSearch extends Component {
 
   componentDidMount() {
     const { shortcuts } = this.context;
-
-    shortcuts.on(
-      L10N.getStr("projectTextSearch.key"),
-      this.toggleProjectTextSearch
-    );
     shortcuts.on("Enter", this.onEnterPress);
   }
 
   componentWillUnmount() {
     const { shortcuts } = this.context;
-    shortcuts.off(
-      L10N.getStr("projectTextSearch.key"),
-      this.toggleProjectTextSearch
-    );
     shortcuts.off("Enter", this.onEnterPress);
   }
 
@@ -103,21 +91,6 @@ export class ProjectSearch extends Component {
       this.props.searchSources(this.props.cx, searchTerm);
     }
   }
-
-  toggleProjectTextSearch = e => {
-    const { cx, closeProjectSearch, setActiveSearch } = this.props;
-    if (e) {
-      e.preventDefault();
-    }
-
-    if (this.isProjectSearchEnabled()) {
-      return closeProjectSearch(cx);
-    }
-
-    return setActiveSearch("project");
-  };
-
-  isProjectSearchEnabled = () => this.props.activeSearch === "project";
 
   selectMatchItem = matchItem => {
     this.props.selectSpecificLocation(this.props.cx, matchItem.location);
@@ -167,11 +140,8 @@ export class ProjectSearch extends Component {
   };
 
   onEnterPress = () => {
-    if (
-      !this.isProjectSearchEnabled() ||
-      !this.state.focusedItem ||
-      this.state.inputFocused
-    ) {
+    // This is to select a match from the search result.
+    if (!this.state.focusedItem || this.state.inputFocused) {
       return;
     }
     if (this.state.focusedItem.type === "MATCH") {
@@ -278,7 +248,7 @@ export class ProjectSearch extends Component {
   }
 
   renderInput() {
-    const { closeProjectSearch, status } = this.props;
+    const { status } = this.props;
 
     return (
       <SearchInput
@@ -294,7 +264,7 @@ export class ProjectSearch extends Component {
         onBlur={() => this.setState({ inputFocused: false })}
         onKeyDown={this.onKeyDown}
         onHistoryScroll={this.onHistoryScroll}
-        showClose={true}
+        showClose={false}
         showExcludePatterns={true}
         excludePatternsLabel={L10N.getStr(
           "projectTextSearch.excludePatterns.label"
@@ -302,7 +272,6 @@ export class ProjectSearch extends Component {
         excludePatternsPlaceholder={L10N.getStr(
           "projectTextSearch.excludePatterns.placeholder"
         )}
-        handleClose={closeProjectSearch}
         ref="searchInput"
         showSearchModifiers={true}
         searchKey={searchKeys.PROJECT_SEARCH}
@@ -312,10 +281,6 @@ export class ProjectSearch extends Component {
   }
 
   render() {
-    if (!this.isProjectSearchEnabled()) {
-      return null;
-    }
-
     return (
       <div className="search-container">
         <div className="project-text-search">
@@ -333,14 +298,12 @@ ProjectSearch.contextTypes = {
 
 const mapStateToProps = state => ({
   cx: getContext(state),
-  activeSearch: getActiveSearch(state),
   results: getProjectSearchResults(state),
   query: getProjectSearchQuery(state),
   status: getProjectSearchStatus(state),
 });
 
 export default connect(mapStateToProps, {
-  closeProjectSearch: actions.closeProjectSearch,
   searchSources: actions.searchSources,
   clearSearch: actions.clearSearch,
   selectSpecificLocation: actions.selectSpecificLocation,

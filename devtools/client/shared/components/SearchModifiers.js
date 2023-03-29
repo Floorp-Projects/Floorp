@@ -26,19 +26,19 @@ const modifierOptions = [
     value: "regexMatch",
     className: "regex-match-btn",
     svgName: "regex-match",
-    tooltip: l10n.getStr("searchModifier.regex"),
+    tooltip: l10n.getStr("searchModifier.regExpModifier"),
   },
   {
     value: "caseSensitive",
     className: "case-sensitive-btn",
     svgName: "case-match",
-    tooltip: l10n.getStr("searchModifier.caseSensitive"),
+    tooltip: l10n.getStr("searchModifier.caseSensitiveModifier"),
   },
   {
     value: "wholeWord",
     className: "whole-word-btn",
     svgName: "whole-word-match",
-    tooltip: l10n.getStr("searchModifier.wholeWord"),
+    tooltip: l10n.getStr("searchModifier.wholeWordModifier"),
   },
 ];
 
@@ -76,10 +76,6 @@ class SearchModifiers extends Component {
     return div(
       { className: "search-modifiers" },
       span({ className: "pipe-divider" }),
-      span(
-        { className: "search-type-name" },
-        l10n.getStr("searchModifier.modifiersLabel")
-      ),
       modifierOptions.map(options => this.#renderSearchModifier(options))
     );
   }
