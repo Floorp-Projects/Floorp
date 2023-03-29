@@ -7,11 +7,8 @@ package org.mozilla.fenix.ext
 import mozilla.components.feature.top.sites.TopSite
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.SupportUtils
 
-@RunWith(FenixRobolectricTestRunner::class)
 class TopSiteTest {
 
     val defaultGoogleTopSite = TopSite.Default(

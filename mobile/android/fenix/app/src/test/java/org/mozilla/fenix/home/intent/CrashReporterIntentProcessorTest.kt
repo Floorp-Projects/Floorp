@@ -16,12 +16,9 @@ import mozilla.components.lib.crash.Crash.NativeCodeCrash
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
-@RunWith(FenixRobolectricTestRunner::class)
 class CrashReporterIntentProcessorTest {
     private val appStore: AppStore = mockk(relaxed = true)
     private val navController: NavController = mockk()
