@@ -482,7 +482,6 @@
       <description id="distributionId" class="text-blurb" hidden="true"/>
     </vbox>
 #ifdef MOZ_UPDATER
-    <spacer flex="1"/>
     <button id="showUpdateHistory"
             is="highlightable-button"
             class="accessory-button"
@@ -517,8 +516,7 @@
       </hbox>
       <hbox id="checkingForUpdates" align="start">
         <html:img class="update-throbber"/>
-        <label data-l10n-id="update-checkingForUpdates"></label>
-        <spacer flex="1"/>
+        <label data-l10n-id="update-checkingForUpdates"/>
         <button data-l10n-id="update-checkForUpdatesButton"
                 is="highlightable-button"
                 disabled="true"/>
@@ -529,41 +527,36 @@
       </hbox>
       <hbox id="applying" align="start">
         <html:img class="update-throbber"/>
-        <label data-l10n-id="update-applying"></label>
+        <label data-l10n-id="update-applying"/>
       </hbox>
       <hbox id="downloadFailed" align="start">
         <label data-l10n-id="update-failed-main">
           <html:a id="failedLink" target="_blank" class="learnMore text-link" data-l10n-name="failed-link-main"></html:a>
         </label>
-        <spacer flex="1"/>
         <button id="checkForUpdatesButton2"
                 data-l10n-id="update-checkForUpdatesButton"
                 is="highlightable-button"/>
       </hbox>
       <hbox id="policyDisabled" align="start">
-        <label data-l10n-id="update-adminDisabled"></label>
-        <spacer flex="1"/>
+        <label data-l10n-id="update-adminDisabled"/>
         <button data-l10n-id="update-checkForUpdatesButton"
                 is="highlightable-button"
                 disabled="true"/>
       </hbox>
       <hbox id="noUpdatesFound" align="start">
-        <label class="face-smile" data-l10n-id="update-noUpdatesFound"></label>
-        <spacer flex="1"/>
+        <label class="face-smile" data-l10n-id="update-noUpdatesFound"/>
         <button id="checkForUpdatesButton3"
                 data-l10n-id="update-checkForUpdatesButton"
                 is="highlightable-button"/>
       </hbox>
       <hbox id="checkingFailed" align="start">
-        <label class="face-sad" data-l10n-id="aboutdialog-update-checking-failed"></label>
-        <spacer flex="1"/>
+        <label class="face-sad" data-l10n-id="aboutdialog-update-checking-failed"/>
         <button id="checkForUpdatesButton4"
                 data-l10n-id="update-checkForUpdatesButton"
                 is="highlightable-button"/>
       </hbox>
       <hbox id="otherInstanceHandlingUpdates" align="start">
-        <label data-l10n-id="update-otherInstanceHandlingUpdates"></label>
-        <spacer flex="1"/>
+        <label data-l10n-id="update-otherInstanceHandlingUpdates"/>
         <button data-l10n-id="update-checkForUpdatesButton"
                 is="highlightable-button"
                 disabled="true"/>
@@ -572,7 +565,6 @@
         <description class="face-sad" flex="1" data-l10n-id="update-manual">
           <label class="manualLink" data-l10n-name="manual-link" is="text-link"/>
         </description>
-        <spacer flex="1"/>
         <button data-l10n-id="update-checkForUpdatesButton"
                 is="highlightable-button"
                 disabled="true"/>
@@ -581,14 +573,13 @@
         <description flex="1" data-l10n-id="update-unsupported">
           <label id="unsupportedLink" class="learnMore" data-l10n-name="unsupported-link" is="text-link"></label>
         </description>
-        <spacer flex="1"/>
         <button data-l10n-id="update-checkForUpdatesButton"
                 is="highlightable-button"
                 disabled="true"/>
       </hbox>
       <hbox id="restarting" align="start">
-        <html:img class="update-throbber"/><label data-l10n-id="update-restarting"></label>
-        <spacer flex="1"/>
+        <html:img class="update-throbber"/>
+        <label data-l10n-id="update-restarting"/>
         <button data-l10n-id="update-updateButton"
                 is="highlightable-button"
                 disabled="true"/>
@@ -597,7 +588,6 @@
         <description class="face-sad" flex="1" data-l10n-id="update-internal-error">
           <label class="manualLink" data-l10n-name="manual-link" is="text-link"/>
         </description>
-        <spacer flex="1"/>
         <button data-l10n-id="update-checkForUpdatesButton"
                 is="highlightable-button"
                 disabled="true"/>
