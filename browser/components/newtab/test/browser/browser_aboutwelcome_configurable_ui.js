@@ -315,7 +315,7 @@ add_task(async function test_aboutwelcome_split_position() {
     // Expected styles:
     {
       // Override default text-link styles
-      "background-color": "rgba(207, 207, 216, 0.33)",
+      "background-color": "rgba(21, 20, 26, 0.07)",
       color: "rgb(21, 20, 26)",
     }
   );
