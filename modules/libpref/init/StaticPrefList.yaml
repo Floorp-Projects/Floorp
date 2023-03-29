@@ -5687,7 +5687,7 @@
   type: bool
 #if defined(XP_MACOSX) || defined(XP_LINUX) && !defined(ANDROID)
   value: true
-#elif defined(MOZ_WIDGET_ANDROID) && defined(NIGHTLY_BUILD)
+#elif defined(MOZ_WIDGET_ANDROID)
   value: true
 #else
   value: false
