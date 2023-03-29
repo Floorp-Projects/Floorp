@@ -7,6 +7,7 @@ package org.mozilla.focus.cookiebannerreducer
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
@@ -87,7 +89,12 @@ fun CookieBannerReducerItem(
 
     if (cookieBannerReducerStatus !is CookieBannerReducerStatus.CookieBannerUnsupportedSiteRequestWasSubmitted
     ) {
-        rowModifier = rowModifier.then(Modifier.clickable { preferenceOnClickListener?.invoke() })
+        rowModifier = rowModifier.then(
+            Modifier.clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+            ) { preferenceOnClickListener?.invoke() },
+        )
     }
 
     Row(
@@ -95,10 +102,10 @@ fun CookieBannerReducerItem(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val painter =
-            if (cookieBannerReducerStatus !is CookieBannerReducerStatus.NoException) {
-                painterResource(id = R.drawable.ic_cookies_disable)
-            } else {
+            if (cookieBannerReducerStatus is CookieBannerReducerStatus.NoException) {
                 painterResource(id = R.drawable.mozac_ic_cookies)
+            } else {
+                painterResource(id = R.drawable.ic_cookies_disable)
             }
         Icon(
             painter = painter,

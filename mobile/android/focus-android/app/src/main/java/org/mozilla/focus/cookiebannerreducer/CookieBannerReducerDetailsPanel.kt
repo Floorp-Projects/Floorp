@@ -146,6 +146,7 @@ class CookieBannerReducerDetailsPanel(
         }
         binding.cancelButton.setOnClickListener {
             CookieBanner.reportSiteCancelButton.record(NoExtras())
+            goBack.invoke()
             dismiss()
         }
         binding.requestSupport.setOnClickListener {

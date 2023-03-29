@@ -141,4 +141,7 @@
     <color name="promote_search_widget_dialog_background">#2B2A33</color>
     <color name="promote_search_widget_dialog_close_button_background">#3B3C3F</color>
     <color name="promote_search_widget_dialog_add_widget_button_background">#7542E5</color>
+
+    <!---Cookie banner details panel colors-->
+    <color name="cookie_banner_details_panel_report_a_site_text_color">@color/photonViolet20</color>
 </resources>
