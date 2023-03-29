@@ -1368,7 +1368,7 @@ class RequestDetails {
         // See the above comment for more info.
         initiatorURI: parentPrin?.isContentPrincipal ? parentPrin.URI : null,
         type: isTop ? "main_frame" : "sub_frame",
-        method: bc.activeSessionHistoryEntry?.hasPostData ? "post" : "get",
+        method: "get", // TODO 1821303: Detect POST requests.
         tabId: this.tabId,
         // In this loop we are already explicitly accounting for ancestors, so
         // we intentionally omit browsingContext even though we have |bc|. If

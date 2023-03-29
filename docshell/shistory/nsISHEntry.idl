@@ -128,7 +128,6 @@ interface nsISHEntry : nsISupports
 
     /** Post Data for the document */
     [infallible] attribute nsIInputStream postData;
-    [infallible] readonly attribute boolean hasPostData;
 
     /** LayoutHistoryState for scroll position and form values */
     [infallible] attribute nsILayoutHistoryState layoutHistoryState;
