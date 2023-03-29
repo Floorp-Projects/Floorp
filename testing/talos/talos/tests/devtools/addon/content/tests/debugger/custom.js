@@ -133,6 +133,7 @@ async function testProjectSearch(tab, toolbox) {
   const firstSearchResultTest = runTest(
     `custom.jsdebugger.project-search.first-search-result.DAMP`
   );
+  await dbg.actions.setPrimaryPaneTab("project");
   await dbg.actions.setActiveSearch("project");
   const complete = dbg.actions.searchSources(cx, "return");
   // Wait till the first search result match is rendered

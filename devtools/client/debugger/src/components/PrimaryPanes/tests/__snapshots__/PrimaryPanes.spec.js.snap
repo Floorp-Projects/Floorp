@@ -2,7 +2,7 @@
 
 exports[`PrimaryPanes should not render the directory root header if the directory root has not been set. 1`] = `
 <Tabs
-  activeIndex={1}
+  activeIndex={0}
   className="sources-panel"
   onActivateTab={[Function]}
 >
@@ -14,7 +14,7 @@ exports[`PrimaryPanes should not render the directory root header if the directo
   >
     <Tab
       active={false}
-      className="tab sources-tab"
+      className="tab sources-tab active"
       key="sources-tab"
     >
       Sources
@@ -25,6 +25,13 @@ exports[`PrimaryPanes should not render the directory root header if the directo
       key="outline-tab"
     >
       Outline
+    </Tab>
+    <Tab
+      active={false}
+      className="tab search-tab"
+      key="search-tab"
+    >
+      Search
     </Tab>
   </TabList>
   <TabPanels
@@ -41,13 +48,14 @@ exports[`PrimaryPanes should not render the directory root header if the directo
       alphabetizeOutline={false}
       onAlphabetizeClick={[Function]}
     />
+    <Connect(ProjectSearch) />
   </TabPanels>
 </Tabs>
 `;
 
 exports[`PrimaryPanes should render the directory root header if the directory root has been set. 1`] = `
 <Tabs
-  activeIndex={1}
+  activeIndex={0}
   className="sources-panel"
   onActivateTab={[Function]}
 >
@@ -59,7 +67,7 @@ exports[`PrimaryPanes should render the directory root header if the directory r
   >
     <Tab
       active={false}
-      className="tab sources-tab"
+      className="tab sources-tab active"
       key="sources-tab"
     >
       Sources
@@ -70,6 +78,13 @@ exports[`PrimaryPanes should render the directory root header if the directory r
       key="outline-tab"
     >
       Outline
+    </Tab>
+    <Tab
+      active={false}
+      className="tab search-tab"
+      key="search-tab"
+    >
+      Search
     </Tab>
   </TabList>
   <TabPanels
@@ -108,6 +123,7 @@ exports[`PrimaryPanes should render the directory root header if the directory r
       alphabetizeOutline={false}
       onAlphabetizeClick={[Function]}
     />
+    <Connect(ProjectSearch) />
   </TabPanels>
 </Tabs>
 `;

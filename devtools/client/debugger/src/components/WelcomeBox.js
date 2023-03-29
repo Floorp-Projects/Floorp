@@ -6,6 +6,7 @@ import React, { Component } from "react";
 import PropTypes from "prop-types";
 
 import { connect } from "../utils/connect";
+import { primaryPaneTabs } from "../constants";
 
 import actions from "../actions";
 import { getPaneCollapse } from "../selectors";
@@ -19,6 +20,7 @@ export class WelcomeBox extends Component {
       openQuickOpen: PropTypes.func.isRequired,
       setActiveSearch: PropTypes.func.isRequired,
       toggleShortcutsModal: PropTypes.func.isRequired,
+      setPrimaryPaneTab: PropTypes.func.isRequired,
     };
   }
 
@@ -38,7 +40,6 @@ export class WelcomeBox extends Component {
     const allShortcutsLabel = L10N.getStr("welcome.allShortcuts");
     const searchSourcesLabel = L10N.getStr("welcome.search2").substring(2);
     const searchProjectLabel = L10N.getStr("welcome.findInFiles2").substring(2);
-    const { setActiveSearch, openQuickOpen, toggleShortcutsModal } = this.props;
 
     return (
       <div className="welcomebox">
@@ -48,7 +49,7 @@ export class WelcomeBox extends Component {
               className="welcomebox__searchSources"
               role="button"
               tabIndex="0"
-              onClick={() => openQuickOpen()}
+              onClick={() => this.props.openQuickOpen()}
             >
               <span className="shortcutKey">{searchSourcesShortcut}</span>
               <span className="shortcutLabel">{searchSourcesLabel}</span>
@@ -57,7 +58,10 @@ export class WelcomeBox extends Component {
               className="welcomebox__searchProject"
               role="button"
               tabIndex="0"
-              onClick={setActiveSearch.bind(null, "project")}
+              onClick={() => {
+                this.props.setActiveSearch(primaryPaneTabs.PROJECT_SEARCH);
+                this.props.setPrimaryPaneTab(primaryPaneTabs.PROJECT_SEARCH);
+              }}
             >
               <span className="shortcutKey">{searchProjectShortcut}</span>
               <span className="shortcutLabel">{searchProjectLabel}</span>
@@ -66,7 +70,7 @@ export class WelcomeBox extends Component {
               className="welcomebox__allShortcuts"
               role="button"
               tabIndex="0"
-              onClick={() => toggleShortcutsModal()}
+              onClick={() => this.props.toggleShortcutsModal()}
             >
               <span className="shortcutKey">{allShortcutsShortcut}</span>
               <span className="shortcutLabel">{allShortcutsLabel}</span>
@@ -86,4 +90,5 @@ export default connect(mapStateToProps, {
   togglePaneCollapse: actions.togglePaneCollapse,
   setActiveSearch: actions.setActiveSearch,
   openQuickOpen: actions.openQuickOpen,
+  setPrimaryPaneTab: actions.setPrimaryPaneTab,
 })(WelcomeBox);

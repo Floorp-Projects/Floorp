@@ -19,9 +19,9 @@ export const statusType = {
   error: "ERROR",
 };
 
-export function initialProjectTextSearchState() {
+export function initialProjectTextSearchState(state) {
   return {
-    query: "",
+    query: state?.query || "",
     results: [],
     ongoingSearch: null,
     status: statusType.initial,
@@ -72,8 +72,9 @@ function update(state = initialProjectTextSearchState(), action) {
 
     case "CLEAR_SEARCH":
     case "CLOSE_PROJECT_SEARCH":
-    case "NAVIGATE":
       return initialProjectTextSearchState();
+    case "NAVIGATE":
+      return initialProjectTextSearchState(state);
   }
   return state;
 }

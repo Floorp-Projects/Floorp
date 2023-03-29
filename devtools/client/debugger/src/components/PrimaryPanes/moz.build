@@ -9,6 +9,7 @@ CompiledModules(
     "index.js",
     "Outline.js",
     "OutlineFilter.js",
+    "ProjectSearch.js",
     "SourcesTree.js",
     "SourcesTreeItem.js",
 )
