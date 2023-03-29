@@ -19,7 +19,6 @@ RELEASE_PROJECTS = {
     "comm-central",
     "comm-beta",
     "comm-esr102",
-    "oak",
 }
 
 RELEASE_PROMOTION_PROJECTS = {
@@ -31,8 +30,8 @@ RELEASE_PROMOTION_PROJECTS = {
 
 TEMPORARY_PROJECTS = set(
     {
-        # When using a "Disposeabel Project Branch" you can specify your branch here. e.g.:
-        # 'oak',
+        # When using a "Disposable Project Branch" you can specify your branch here. e.g.:
+        "oak",
     }
 )
 
