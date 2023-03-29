@@ -21,15 +21,20 @@ const {
  *          - {Boolean} stacktrace: If true, wait for a stacktrace element to be rendered.
  */
 exports.reloadConsoleAndLog = async function(label, toolbox, expectedMessages) {
+  const webConsole = toolbox.getPanel("webconsole");
+  const onWebConsoleReload = webConsole.once("reloaded");
   const onReload = async function() {
-    const { hud } = toolbox.getPanel("webconsole");
-
+    const { hud } = webConsole;
     const expected =
       typeof expectedMessages === "number"
         ? [{ text: "", count: expectedMessages }]
         : expectedMessages;
 
     let logMissingMessagesTimeoutId;
+
+    // Wait for webconsole panel reload in order to prevent matching messages from previous
+    // page load in the code below.
+    await onWebConsoleReload;
 
     await waitForConsoleOutputChildListChange(hud, consoleOutputEl => {
       if (logMissingMessagesTimeoutId) {
