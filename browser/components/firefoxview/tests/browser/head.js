@@ -45,7 +45,7 @@ const RECENTLY_CLOSED_STATE_PREF =
 const TAB_PICKUP_STATE_PREF =
   "browser.tabs.firefox-view.ui-state.tab-pickup.open";
 
-const calloutId = "root";
+const calloutId = "multi-stage-message-root";
 const calloutSelector = `#${calloutId}.featureCallout`;
 const primaryButtonSelector = `#${calloutId} .primary`;
 

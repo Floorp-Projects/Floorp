@@ -132,7 +132,7 @@ async function mount() {
       UTMTerm={UTMTerm}
       {...aboutWelcomeProps}
     />,
-    document.getElementById("root")
+    document.getElementById("multi-stage-message-root")
   );
 }
 

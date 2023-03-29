@@ -28,13 +28,15 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "AboutWelcomeUtils": () => (/* binding */ AboutWelcomeUtils),
 /* harmony export */   "DEFAULT_RTAMO_CONTENT": () => (/* binding */ DEFAULT_RTAMO_CONTENT)
 /* harmony export */ });
+var _document$querySelect;
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 // If the container has a "page" data attribute, then this is
 // a Spotlight modal or Feature Callout. Otherwise, this is
 // about:welcome and we should return the current page.
-const page = document.querySelector("#root.onboardingContainer[data-page]") ? document.querySelector("#root[data-page]").dataset.page : document.location.href;
+const page = ((_document$querySelect = document.querySelector("#multi-stage-message-root.onboardingContainer[data-page]")) === null || _document$querySelect === void 0 ? void 0 : _document$querySelect.dataset.page) || document.location.href;
 const AboutWelcomeUtils = {
   handleUserAction(action) {
     window.AWSendToParent("SPECIAL_ACTION", action);
@@ -2200,7 +2202,7 @@ async function mount() {
   react_dom__WEBPACK_IMPORTED_MODULE_1___default().render( /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(AboutWelcome, _extends({
     messageId: messageId,
     UTMTerm: UTMTerm
-  }, aboutWelcomeProps)), document.getElementById("root"));
+  }, aboutWelcomeProps)), document.getElementById("multi-stage-message-root"));
 }
 
 performance.mark("mount");

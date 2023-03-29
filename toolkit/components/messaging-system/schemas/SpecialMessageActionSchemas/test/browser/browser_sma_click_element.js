@@ -84,7 +84,7 @@ add_task(async function test_CLICK_ELEMENT() {
 
   await withFirefoxView({ openNewWindow: true }, async browser => {
     const { document } = browser.contentWindow;
-    const calloutSelector = "#root.featureCallout";
+    const calloutSelector = "#multi-stage-message-root.featureCallout";
 
     await BrowserTestUtils.waitForCondition(() => {
       return document.querySelector(

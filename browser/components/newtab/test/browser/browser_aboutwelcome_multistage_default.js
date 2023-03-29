@@ -730,32 +730,28 @@ add_setup(async function() {
   });
 });
 
-// Test Fxaccounts MetricsFlowURI
-test_newtab(
-  {
-    async before({ pushPrefs }) {
-      await pushPrefs(["browser.aboutwelcome.enabled", true]);
-    },
-    test: async function test_startBrowsing() {
+add_task(async function test_FxA_metricsFlowURI() {
+  let browser = await openAboutWelcome();
+
+  await ContentTask.spawn(browser, {}, async () => {
+    Assert.ok(
       await ContentTaskUtils.waitForCondition(
         () => content.document.querySelector("div.onboardingContainer"),
         "Wait for about:welcome to load"
-      );
-    },
-    after() {
-      Assert.ok(
-        FxAccounts.config.promiseMetricsFlowURI.called,
-        "Stub was called"
-      );
-      Assert.equal(
-        FxAccounts.config.promiseMetricsFlowURI.firstCall.args[0],
-        "aboutwelcome",
-        "Called by AboutWelcomeParent"
-      );
-    },
-  },
-  "about:welcome"
-);
+      ),
+      "about:welcome loaded"
+    );
+  });
+
+  Assert.ok(FxAccounts.config.promiseMetricsFlowURI.called, "Stub was called");
+  Assert.equal(
+    FxAccounts.config.promiseMetricsFlowURI.firstCall.args[0],
+    "aboutwelcome",
+    "Called by AboutWelcomeParent"
+  );
+
+  SpecialPowers.popPrefEnv();
+});
 
 add_task(async function test_send_aboutwelcome_as_page_in_event_telemetry() {
   const sandbox = sinon.createSandbox();
