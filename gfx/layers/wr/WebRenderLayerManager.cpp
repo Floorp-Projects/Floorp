@@ -257,13 +257,8 @@ bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
   // Since we don't do repeat transactions right now, just set the time
   mAnimationReadyTime = TimeStamp::Now();
 
-#if MOZ_WIDGET_GTK
-  // Don't block on hidden windows on Linux as it may block all rendering
-  const bool throttle = mWidget->IsMapped();
-#else
-  const bool throttle = true;
-#endif
-  mLatestTransactionId = mTransactionIdAllocator->GetTransactionId(throttle);
+  mLatestTransactionId =
+      mTransactionIdAllocator->GetTransactionId(/*aThrottle*/ true);
 
   if (aFlags & EndTransactionFlags::END_NO_COMPOSITE &&
       !mWebRenderCommandBuilder.NeedsEmptyTransaction()) {
@@ -411,13 +406,8 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
     nsLayoutUtils::NotifyPaintSkipTransaction(update);
   }
 
-#if MOZ_WIDGET_GTK
-  // Don't block on hidden windows on Linux as it may block all rendering
-  const bool throttle = mWidget->IsMapped();
-#else
-  const bool throttle = true;
-#endif
-  mLatestTransactionId = mTransactionIdAllocator->GetTransactionId(throttle);
+  mLatestTransactionId =
+      mTransactionIdAllocator->GetTransactionId(/*aThrottle*/ true);
 
   // Get the time of when the refresh driver start its tick (if available),
   // otherwise use the time of when LayerManager::BeginTransaction was called.

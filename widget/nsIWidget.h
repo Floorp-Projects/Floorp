@@ -682,17 +682,10 @@ class nsIWidget : public nsISupports {
   virtual uint32_t GetMaxTouchPoints() const = 0;
 
   /**
-   * Returns whether the window is visible from browser perspective.
+   * Returns whether the window is visible
    *
    */
   virtual bool IsVisible() const = 0;
-
-  /**
-   * Returns whether the window is visible from OS perspective,
-   * i.e. the window is really visible.
-   * It's used on Linux/Gtk where we should not paint to invisible window.
-   */
-  virtual bool IsMapped() const { return false; }
 
   /**
    * Perform platform-dependent sanity check on a potential window position.
