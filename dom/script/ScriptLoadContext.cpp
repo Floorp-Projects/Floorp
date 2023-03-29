@@ -65,6 +65,7 @@ ScriptLoadContext::ScriptLoadContext()
       mOffThreadToken(nullptr),
       mRunnable(nullptr),
       mLineNo(1),
+      mColumnNo(0),
       mIsPreload(false),
       mUnreportedPreloadError(NS_OK) {}
 
