@@ -1410,9 +1410,11 @@ void replace_jemalloc_stats(jemalloc_stats_t* aStats,
   }
   aStats->allocated += allocated;
 
-  // Waste is the gap between `allocated` and `mapped`.
-  size_t waste = mapped - allocated;
-  aStats->waste += waste;
+  // guards is the gap between `allocated` and `mapped`. In some ways this
+  // almost fits into aStats->wasted since it feels like wasted memory. However
+  // wasted should only include committed memory and these guard pages are
+  // uncommitted. Therefore we don't include it anywhere.
+  // size_t guards = mapped - allocated;
 
   // aStats.page_cache and aStats.bin_unused are left unchanged because PHC
   // doesn't have anything corresponding to those.
