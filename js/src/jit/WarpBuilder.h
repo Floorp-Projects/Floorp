@@ -315,9 +315,6 @@ class MOZ_STACK_CLASS WarpBuilder : public WarpBuilderShared {
   [[nodiscard]] bool buildInline();
 
   CallInfo* inlineCallInfo() const { return inlineCallInfo_; }
-  bool isMonomorphicInlined() const {
-    return scriptSnapshot_->isMonomorphicInlined();
-  }
 };
 
 }  // namespace jit
