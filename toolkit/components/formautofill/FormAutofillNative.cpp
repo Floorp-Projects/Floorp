@@ -396,6 +396,8 @@ const Rule kCreditCardRules[] = {
      // fr-FR
      "|nom.*(titulaire|détenteur)"
      "|(titulaire|détenteur).*(carte)"
+     // it-IT
+     "|titolare.*carta"
      // Rules from Bitwarden
      "|cc-?name"
      "|card-?name"
@@ -419,6 +421,8 @@ const Rule kCreditCardRules[] = {
      // de-DE
      "(cc|kk)nr"
      "|(kredit)?(karten)(nummer|nr)"
+     // it-IT
+     "|numero.*carta"
      // fr-FR
      "|(numero|número|numéro).*(carte)"
      // Rules from Bitwarden
