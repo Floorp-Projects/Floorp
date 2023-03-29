@@ -725,6 +725,11 @@ HashNumber ICScript::hash() {
     h = mozilla::AddToHash(h, stub->enteredCount() == 0);
   }
 
+  if (inlinedChildren_) {
+    for (auto& callsite : *inlinedChildren_) {
+      h = mozilla::AddToHash(h, callsite.callee_->hash());
+    }
+  }
   return h;
 }
 #endif
