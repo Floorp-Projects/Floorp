@@ -119,10 +119,10 @@ export class MigrationWizardChild extends JSWindowActorChild {
    */
   receiveMessage(message) {
     if (message.name == "UpdateProgress") {
-      let progress = message.data;
       this.setComponentState({
         page: MigrationWizardConstants.PAGES.PROGRESS,
-        progress,
+        progress: message.data.progress,
+        key: message.data.key,
       });
     }
   }

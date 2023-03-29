@@ -41,6 +41,12 @@ const FAKE_BROWSER_LIST = [
     brandImage: "chrome://browser/content/migration/brands/ie.png",
   },
   {
+    key: "edge",
+    displayName: "Microsoft Edge Legacy",
+    resourceTypes: ["HISTORY", "FORMDATA", "PASSWORDS", "BOOKMARKS"],
+    profile: null,
+  },
+  {
     key: "chromium-edge",
     displayName: "Microsoft Edge",
     resourceTypes: ["HISTORY", "FORMDATA", "PASSWORDS", "BOOKMARKS"],
@@ -139,6 +145,7 @@ Progress.args = {
   dialogMode: true,
   state: {
     page: MigrationWizardConstants.PAGES.PROGRESS,
+    key: "chrome",
     progress: {
       [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS]: {
         inProgress: true,
@@ -161,6 +168,7 @@ PartialProgress.args = {
   dialogMode: true,
   state: {
     page: MigrationWizardConstants.PAGES.PROGRESS,
+    key: "chrome",
     progress: {
       [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS]: {
         inProgress: true,
@@ -185,6 +193,7 @@ Success.args = {
   dialogMode: true,
   state: {
     page: MigrationWizardConstants.PAGES.PROGRESS,
+    key: "chrome",
     progress: {
       [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS]: {
         inProgress: false,
