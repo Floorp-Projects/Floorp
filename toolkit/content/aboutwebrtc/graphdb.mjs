@@ -10,11 +10,12 @@ const CHECK_RTC_STATS_COLLECTION = [
 ];
 
 const DEFAULT_PROPS = {
-  avgPoints: 5,
+  avgPoints: 10,
   histSecs: 15,
   toRate: false,
   noAvg: false,
   fixedPointDecimals: 2,
+  toHuman: false,
 };
 
 const REMOTE_RTP_PROPS = "avgPoints=2;histSecs=90";
@@ -29,7 +30,7 @@ const GRAPH_KEYS = [
   "outbound-rtp.nackCount",
   "outbound-rtp.pliCount",
   "outbound-rtp.firCount",
-  `remote-outbound-rtp.bytesSent;toRate;${REMOTE_RTP_PROPS}`,
+  `remote-outbound-rtp.bytesSent;toHuman;toRate;${REMOTE_RTP_PROPS}`,
   `remote-outbound-rtp.packetsSent;toRate;${REMOTE_RTP_PROPS}`,
 ]
   .map(k => k.split(".", 2))
