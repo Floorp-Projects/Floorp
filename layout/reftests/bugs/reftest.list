@@ -425,7 +425,6 @@ fuzzy(0-1,0-1) == 315920-20.svg 315920-20-ref.svg
 == chrome://reftest/content/bugs/321402-5.xhtml chrome://reftest/content/bugs/321402-5-ref.xhtml
 == chrome://reftest/content/bugs/321402-6.xhtml chrome://reftest/content/bugs/321402-6-ref.xhtml
 == 321738-1.html 321738-1-ref.html
-== chrome://reftest/content/bugs/322436-1.html chrome://reftest/content/bugs/322436-1-ref.html
 == 322461-1.xml 322461-1-ref.html
 == 323656-1.html 323656-1-ref.html
 == 323656-2.html 323656-2-ref.html
@@ -934,7 +933,6 @@ fails == 411585-3.html 411585-3-ref.html # bug 426909
 == 412607-1b.html 412607-1-ref.html
 == 412679-1.html 412679-1-ref.html
 fuzzy(0-1,0-17) == 412679-2.html 412679-2-ref.html
-== chrome://reftest/content/bugs/413027-1.html chrome://reftest/content/bugs/413027-1-ref.html
 fails == 413027-2.html 413027-2-ref.html
 fails == 413027-3.html 413027-3-ref.html
 == 413286-1a.html 413286-1-ref.html
@@ -1364,7 +1362,6 @@ fuzzy-if(Android,0-5,0-2800) == 506481-1.html 506481-1-ref.html
 == 507762-2.html 507762-2-ref.html
 == 507762-3.html 507762-1-ref.html
 == 507762-4.html 507762-2-ref.html
-== chrome://reftest/content/bugs/508816-2.html chrome://reftest/content/bugs/508816-2-ref.html
 == 508919-1.xhtml 508919-1-ref.xhtml
 == 509155-1.xhtml 509155-1-ref.xhtml
 fuzzy(0-1,0-1200) == 512410.html 512410-ref.html
@@ -1403,7 +1400,6 @@ fuzzy(0-5,0-50) == 526463-1.html 526463-1-ref.html
 == 528038-2.html 528038-2-ref.html
 == 528096-1.html 528096-1-ref.html
 == 530686-1.html 530686-1-ref.html
-== chrome://reftest/content/bugs/531098-1.html chrome://reftest/content/bugs/531098-1-ref.html
 fuzzy-if(Android,0-2,0-48) fuzzy-if(cocoaWidget&&swgl,0-1,0-3) == 531200-1.html 531200-1-ref.html
 == 531371-1.html 531371-1-ref.html
 == 534526-1a.html 534526-1-ref.html
@@ -1513,7 +1509,7 @@ random-if(!winWidget) == 574907-2.html 574907-2-ref.html
 random-if(!winWidget) != 574907-3.html 574907-3-notref.html
 == 577838-1.html 577838-1-ref.html
 == 577838-2.html 577838-2-ref.html
-pref(layout.css.moz-box-flexbox-emulation.enabled,true) == chrome://reftest/content/bugs/579323-1.html chrome://reftest/content/bugs/579323-1-ref.html
+== chrome://reftest/content/bugs/579323-1.html chrome://reftest/content/bugs/579323-1-ref.html
 == 579349-1.html 579349-1-ref.html
 == 579655-1.html 579655-1-ref.html
 fails-if(Android) random-if(layersGPUAccelerated) fuzzy(0-1,0-10000) == 579985-1.html 579985-1-ref.html # this bug was only for a regression in BasicLayers anyway

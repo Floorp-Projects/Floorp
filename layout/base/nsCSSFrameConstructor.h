@@ -1569,7 +1569,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   // Not static because it does PropagateScrollToViewport.  If this
   // changes, make this static.
   const FrameConstructionData* FindDisplayData(const nsStyleDisplay&,
-                                               mozilla::StyleMozBoxLayout,
                                                const Element&);
 
   /**

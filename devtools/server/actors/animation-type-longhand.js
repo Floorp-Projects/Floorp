@@ -248,7 +248,6 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "page-orientation",
       "math-depth",
       "-moz-box-collapse",
-      "-moz-box-layout",
       "-moz-top-layer",
       "scroll-timeline-axis",
       "scroll-timeline-name",

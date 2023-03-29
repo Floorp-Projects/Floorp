@@ -10,7 +10,6 @@
 #include "mozilla/AtomArray.h"
 #include "mozilla/Attributes.h"
 
-#include "nsLeafBoxFrame.h"
 #include "nsITreeView.h"
 #include "nsIScrollbarMediator.h"
 #include "nsITimer.h"

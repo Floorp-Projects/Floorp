@@ -184,8 +184,7 @@ bool TableAccessible::IsProbablyLayoutTable() {
     RETURN_LAYOUT_ANSWER(false, "table's first cell has no frame!");
   }
 
-  nsMargin border;
-  cellFrame->GetXULBorder(border);
+  nsMargin border = cellFrame->StyleBorder()->GetComputedBorder();
   if (border.top && border.bottom && border.left && border.right) {
     RETURN_LAYOUT_ANSWER(false, "Has nonzero border-width on table cell");
   }

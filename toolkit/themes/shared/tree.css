@@ -135,9 +135,6 @@ treecol:where(:hover),
 
 .treecol-text {
   margin: 0 !important;
-  /* NOTE(emilio): Eventually we should move <treecol> out of XUL layout
-   * proper, till then this makes cropping work. */
-  -moz-box-layout: flex;
 }
 
 treecol[hideheader="true"] {

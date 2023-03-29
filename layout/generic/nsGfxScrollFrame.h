@@ -17,7 +17,6 @@
 #include "nsIStatefulFrame.h"
 #include "nsThreadUtils.h"
 #include "nsIReflowCallback.h"
-#include "nsBoxLayoutState.h"
 #include "nsQueryFrame.h"
 #include "nsExpirationTracker.h"
 #include "TextOverflow.h"
@@ -117,8 +116,6 @@ class nsHTMLScrollFrame : public nsContainerFrame,
 
   nscoord GetMinISize(gfxContext* aRenderingContext) override;
   nscoord GetPrefISize(gfxContext* aRenderingContext) override;
-  nsresult GetXULPadding(nsMargin& aPadding) final;
-  bool IsXULCollapsed() final;
 
   void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
               const ReflowInput& aReflowInput,
@@ -162,8 +159,6 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   nsContainerFrame* GetContentInsertionFrame() override {
     return GetScrolledFrame()->GetContentInsertionFrame();
   }
-
-  bool DoesClipChildrenInBothAxes() final { return true; }
 
   nsPoint GetPositionOfChildIgnoringScrolling(const nsIFrame* aChild) final {
     nsPoint pt = aChild->GetPosition();

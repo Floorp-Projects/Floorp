@@ -407,22 +407,8 @@ uint64_t LocalAccessible::NativeState() const {
   state |= VisibilityState();
 
   nsIFrame* frame = GetFrame();
-  if (frame) {
-    if (frame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) state |= states::FLOATING;
-
-    // XXX we should look at layout for non XUL box frames, but need to decide
-    // how that interacts with ARIA.
-    if (HasOwnContent() && mContent->IsXULElement() && frame->IsXULBoxFrame()) {
-      const nsStyleXUL* xulStyle = frame->StyleXUL();
-      if (xulStyle && frame->IsXULBoxFrame()) {
-        // In XUL all boxes are either vertical or horizontal
-        if (xulStyle->mBoxOrient == StyleBoxOrient::Vertical) {
-          state |= states::VERTICAL;
-        } else {
-          state |= states::HORIZONTAL;
-        }
-      }
-    }
+  if (frame && frame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
+    state |= states::FLOATING;
   }
 
   // Check if a XUL element has the popup attribute (an attached popup menu).

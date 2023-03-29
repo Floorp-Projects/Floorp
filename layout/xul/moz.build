@@ -20,9 +20,6 @@ EXPORTS += [
 
 UNIFIED_SOURCES += [
     "MiddleCroppingLabelFrame.cpp",
-    "nsBox.cpp",
-    "nsBoxLayoutState.cpp",
-    "nsLeafBoxFrame.cpp",
     "nsMenuPopupFrame.cpp",
     "nsRepeatService.cpp",
     "nsScrollbarButtonFrame.cpp",
