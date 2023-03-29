@@ -104,6 +104,8 @@ var FathomHeuristicsRegExp = {
         // fr-FR
         "|nom.*(titulaire|détenteur)" +
         "|(titulaire|détenteur).*(carte)" +
+        // it-IT
+        "|titolare.*carta" +
         // Rules from Bitwarden
         "|cc-?name" +
         "|card-?name" +
@@ -126,6 +128,8 @@ var FathomHeuristicsRegExp = {
         // de-DE
         "(cc|kk)nr" +
         "|(kredit)?(karten)(nummer|nr)" +
+        // it-IT
+        "|numero.*carta" +
         // fr-FR
         "|(numero|número|numéro).*(carte)" +
         // Rules from Bitwarden
@@ -1186,6 +1190,7 @@ const biases = [
   ["cc-exp-month", -8.844199180603027],
   ["cc-exp-year", -6.499860763549805],
 ];
+
 /**
  * END OF CODE PASTED FROM TRAINING REPOSITORY
  */
