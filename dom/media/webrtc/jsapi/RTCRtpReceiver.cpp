@@ -3,8 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "RTCRtpReceiver.h"
-#include "PeerConnectionImpl.h"
-#include "mozilla/dom/RTCRtpCapabilitiesBinding.h"
 #include "transport/logging.h"
 #include "mozilla/dom/MediaStreamTrack.h"
 #include "mozilla/dom/Promise.h"
@@ -152,12 +150,6 @@ RTCDtlsTransport* RTCRtpReceiver::GetTransport() const {
     return nullptr;
   }
   return mTransceiver->GetDtlsTransport();
-}
-
-void RTCRtpReceiver::GetCapabilities(
-    const GlobalObject&, const nsAString& aKind,
-    Nullable<dom::RTCRtpCapabilities>& aResult) {
-  PeerConnectionImpl::GetCapabilities(aKind, aResult, sdp::Direction::kRecv);
 }
 
 already_AddRefed<Promise> RTCRtpReceiver::GetStats(ErrorResult& aError) {

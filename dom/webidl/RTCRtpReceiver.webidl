@@ -12,11 +12,10 @@
 interface RTCRtpReceiver {
   readonly attribute MediaStreamTrack   track;
   readonly attribute RTCDtlsTransport?  transport;
-  static RTCRtpCapabilities? getCapabilities(DOMString kind);
-  sequence<RTCRtpContributingSource>    getContributingSources();
-  sequence<RTCRtpSynchronizationSource> getSynchronizationSources();
   [NewObject]
   Promise<RTCStatsReport>               getStats();
+  sequence<RTCRtpContributingSource>    getContributingSources();
+  sequence<RTCRtpSynchronizationSource> getSynchronizationSources();
 
   // test-only: for testing getContributingSources
   [ChromeOnly]

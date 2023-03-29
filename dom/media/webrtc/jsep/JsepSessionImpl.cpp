@@ -112,6 +112,9 @@ nsresult JsepSessionImpl::Init() {
   nsresult rv = SetupIds();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  SetupDefaultCodecs();
+  SetupDefaultRtpExtensions();
+
   mEncodeTrackId =
       Preferences::GetBool("media.peerconnection.sdp.encode_track_id", true);
 
@@ -2152,12 +2155,75 @@ nsresult JsepSessionImpl::SetupIds() {
   return NS_OK;
 }
 
-void JsepSessionImpl::SetDefaultCodecs(
-    const std::vector<UniquePtr<JsepCodecDescription>>& aPreferredCodecs) {
-  mSupportedCodecs.clear();
+void JsepSessionImpl::SetupDefaultCodecs() {
+  // Supported audio codecs.
+  mSupportedCodecs.emplace_back(JsepAudioCodecDescription::CreateDefaultOpus());
+  mSupportedCodecs.emplace_back(JsepAudioCodecDescription::CreateDefaultG722());
+  mSupportedCodecs.emplace_back(JsepAudioCodecDescription::CreateDefaultPCMU());
+  mSupportedCodecs.emplace_back(JsepAudioCodecDescription::CreateDefaultPCMA());
+  mSupportedCodecs.emplace_back(
+      JsepAudioCodecDescription::CreateDefaultTelephoneEvent());
 
-  for (const auto& codec : aPreferredCodecs) {
-    mSupportedCodecs.emplace_back(codec->Clone());
+  bool useRtx =
+      mRtxIsAllowed &&
+      Preferences::GetBool("media.peerconnection.video.use_rtx", false);
+  // Supported video codecs.
+  // Note: order here implies priority for building offers!
+  mSupportedCodecs.emplace_back(
+      JsepVideoCodecDescription::CreateDefaultVP8(useRtx));
+  mSupportedCodecs.emplace_back(
+      JsepVideoCodecDescription::CreateDefaultVP9(useRtx));
+  mSupportedCodecs.emplace_back(
+      JsepVideoCodecDescription::CreateDefaultH264_1(useRtx));
+  mSupportedCodecs.emplace_back(
+      JsepVideoCodecDescription::CreateDefaultH264_0(useRtx));
+  mSupportedCodecs.emplace_back(
+      JsepVideoCodecDescription::CreateDefaultUlpFec());
+
+  mSupportedCodecs.emplace_back(
+      JsepApplicationCodecDescription::CreateDefault());
+
+  auto red = JsepVideoCodecDescription::CreateDefaultRed();
+  // Update the redundant encodings for the RED codec with the supported
+  // codecs.  Note: only uses the video codecs.
+  red->UpdateRedundantEncodings(mSupportedCodecs);
+  mSupportedCodecs.push_back(std::move(red));
+
+  // Filter out codecs using pref (case sensitive), useful for testing.
+  nsCString filteredCodecsPref;
+  if (NS_OK ==
+      Preferences::GetCString("media.peerconnection.default_codecs.blocklist",
+                              filteredCodecsPref)) {
+    for (const auto& codecName : filteredCodecsPref.Split(',')) {
+      nsCString blocked(codecName.BeginReading(), codecName.Length());
+      blocked.StripWhitespace();
+      // Remove blocked codecs
+      mSupportedCodecs.erase(
+          std::remove_if(mSupportedCodecs.begin(), mSupportedCodecs.end(),
+                         [&](const UniquePtr<JsepCodecDescription>& codec) {
+                           return blocked.EqualsASCII(codec->mName.c_str());
+                         }),
+          mSupportedCodecs.end());
+    }
+  }
+}
+
+void JsepSessionImpl::SetupDefaultRtpExtensions() {
+  AddAudioRtpExtension(webrtc::RtpExtension::kAudioLevelUri,
+                       SdpDirectionAttribute::Direction::kSendrecv);
+  AddAudioRtpExtension(webrtc::RtpExtension::kCsrcAudioLevelsUri,
+                       SdpDirectionAttribute::Direction::kRecvonly);
+  AddAudioVideoRtpExtension(webrtc::RtpExtension::kMidUri,
+                            SdpDirectionAttribute::Direction::kSendrecv);
+  AddVideoRtpExtension(webrtc::RtpExtension::kAbsSendTimeUri,
+                       SdpDirectionAttribute::Direction::kSendrecv);
+  AddVideoRtpExtension(webrtc::RtpExtension::kTimestampOffsetUri,
+                       SdpDirectionAttribute::Direction::kSendrecv);
+  AddVideoRtpExtension(webrtc::RtpExtension::kPlayoutDelayUri,
+                       SdpDirectionAttribute::Direction::kRecvonly);
+  if (Preferences::GetBool("media.navigator.video.use_transport_cc", false)) {
+    AddVideoRtpExtension(webrtc::RtpExtension::kTransportSequenceNumberUri,
+                         SdpDirectionAttribute::Direction::kSendrecv);
   }
 }
 
