@@ -2,7 +2,9 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 
 "use strict";
-const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
 
 ChromeUtils.defineModuleGetter(
   this,

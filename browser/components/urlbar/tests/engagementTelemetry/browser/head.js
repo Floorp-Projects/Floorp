@@ -30,12 +30,9 @@ XPCOMUtils.defineLazyGetter(this, "MerinoTestUtils", () => {
   return module;
 });
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  sinon: "resource://testing-common/Sinon.jsm",
-});
-
 ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
+  sinon: "resource://testing-common/Sinon.sys.mjs",
 });
 
 async function addTopSites(url) {

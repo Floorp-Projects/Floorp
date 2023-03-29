@@ -24,7 +24,9 @@ add_setup(async () => {
   const { WebRequest } = ChromeUtils.import(
     "resource://gre/modules/WebRequest.jsm"
   );
-  const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+  const { sinon } = ChromeUtils.importESModule(
+    "resource://testing-common/Sinon.sys.mjs"
+  );
   gTabLookupSpy = sinon.spy(WebRequest, "getTabIdForChannelWrapper");
 
   await ExtensionTestUtils.startAddonManager();

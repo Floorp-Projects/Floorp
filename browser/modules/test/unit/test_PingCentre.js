@@ -17,7 +17,9 @@ const { UpdateUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/UpdateUtils.sys.mjs"
 );
 
-const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
 
 const FAKE_PING = { event: "fake_event", value: "fake_value", locale: "en-US" };
 const FAKE_ENDPOINT = "https://www.test.com";

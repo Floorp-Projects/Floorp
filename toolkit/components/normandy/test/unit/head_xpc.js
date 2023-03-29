@@ -1,3 +1,5 @@
 "use strict";
 
-var { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+var { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);

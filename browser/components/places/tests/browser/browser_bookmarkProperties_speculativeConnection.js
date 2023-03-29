@@ -7,7 +7,9 @@
  * Test to ensure that on "mousedown" in Toolbar we set Speculative Connection
  */
 
-const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
 const sandbox = sinon.createSandbox();
 let spy = sandbox
   .stub(PlacesUIUtils, "setupSpeculativeConnection")

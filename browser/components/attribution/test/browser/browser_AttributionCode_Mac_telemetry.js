@@ -7,7 +7,9 @@ const { MacAttribution } = ChromeUtils.importESModule(
 const { AttributionIOUtils } = ChromeUtils.importESModule(
   "resource:///modules/AttributionCode.sys.mjs"
 );
-const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
 
 async function assertCacheExistsAndIsEmpty() {
   // We should have written to the cache, and be able to read back

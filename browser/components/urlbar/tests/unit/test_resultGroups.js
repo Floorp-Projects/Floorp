@@ -9,8 +9,8 @@
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  sinon: "resource://testing-common/Sinon.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  sinon: "resource://testing-common/Sinon.sys.mjs",
 });
 
 // The possible limit-related properties in result groups.

@@ -9,11 +9,11 @@ const { AddonTestUtils } = ChromeUtils.import(
 ChromeUtils.defineESModuleGetters(this, {
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
+  sinon: "resource://testing-common/Sinon.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   HomePage: "resource:///modules/HomePage.jsm",
-  sinon: "resource://testing-common/Sinon.jsm",
 });
 
 function promisePrefChanged(expectedValue) {

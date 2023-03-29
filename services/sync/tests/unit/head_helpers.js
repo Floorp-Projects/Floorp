@@ -22,7 +22,9 @@ var { CommonUtils } = ChromeUtils.importESModule(
 var { PlacesTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/PlacesTestUtils.sys.mjs"
 );
-var { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+var { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
 var {
   SerializableSet,
   Svc,

@@ -7,8 +7,8 @@
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  sinon: "resource://testing-common/Sinon.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  sinon: "resource://testing-common/Sinon.sys.mjs",
 });
 
 const MAX_RESULTS = 10;

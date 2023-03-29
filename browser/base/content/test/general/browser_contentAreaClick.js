@@ -14,7 +14,9 @@
  * correctly prevent default events, and follows the correct code path.
  */
 
-const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
 
 var gTests = [
   {

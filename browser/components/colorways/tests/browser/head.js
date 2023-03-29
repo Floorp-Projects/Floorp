@@ -12,7 +12,9 @@ const { BuiltInThemes } = ChromeUtils.importESModule(
 const { ColorwayClosetOpener } = ChromeUtils.import(
   "resource:///modules/ColorwayClosetOpener.jsm"
 );
-const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
 
 const MOCK_COLLECTION_TEST_CARD_IMAGE_PATH = "mockCollectionPreview.avif";
 const MOCK_THEME_NAME = "Mock Theme";

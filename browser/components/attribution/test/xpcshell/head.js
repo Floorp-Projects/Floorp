@@ -102,7 +102,9 @@ async function setupStubs() {
   const { AppConstants } = ChromeUtils.importESModule(
     "resource://gre/modules/AppConstants.sys.mjs"
   );
-  const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+  const { sinon } = ChromeUtils.importESModule(
+    "resource://testing-common/Sinon.sys.mjs"
+  );
 
   // This depends on the caller to invoke it by name.  We do try to
   // prevent the most obvious incorrect invocation, namely

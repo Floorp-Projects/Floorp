@@ -3,7 +3,9 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
 const { EdgeProfileMigrator } = ChromeUtils.importESModule(
   "resource:///modules/EdgeProfileMigrator.sys.mjs"
 );

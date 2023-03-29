@@ -8,8 +8,8 @@
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  sinon: "resource://testing-common/Sinon.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  sinon: "resource://testing-common/Sinon.sys.mjs",
 });
 
 const SUGGEST_PREF = "browser.urlbar.suggest.searches";
