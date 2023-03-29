@@ -968,9 +968,9 @@ AddBias::operator()(
     std::tuple<xsimd::batch<float, Arch>, xsimd::batch<float, Arch>> total,
     size_t, size_t col_idx, size_t) {
   return std::make_tuple(
-      std::get<0>(total) + xsimd::load_aligned(bias_addr + col_idx + 0),
+      std::get<0>(total) + xsimd::batch<float, Arch>::load_aligned(bias_addr + col_idx + 0),
       std::get<1>(total) +
-          xsimd::load_aligned(bias_addr + col_idx +
+          xsimd::batch<float, Arch>::load_aligned(bias_addr + col_idx +
                               xsimd::batch<float, Arch>::size));
 }
 
