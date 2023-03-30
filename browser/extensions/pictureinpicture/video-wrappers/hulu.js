@@ -33,8 +33,22 @@ class PictureInPictureVideoWrapper {
     if (container) {
       updateCaptionsFunction("");
       const callback = function(mutationsList, observer) {
-        let text = container.innerText;
-        updateCaptionsFunction(text);
+        // This will get the subtitles for both live and regular playback videos
+        // and combine them to display. liveVideoText should be an empty string
+        // when the video is regular playback and vice versa. If both
+        // liveVideoText and regularVideoText are non empty strings, which
+        // doesn't seem to be the case, they will both show.
+        let liveVideoText = Array.from(
+          container.querySelectorAll(
+            "#inband-closed-caption > div > div > div"
+          ),
+          x => x.textContent.trim()
+        )
+          .filter(String)
+          .join("\n");
+        let regularVideoText = container.querySelector(".CaptionBox").innerText;
+
+        updateCaptionsFunction(liveVideoText + regularVideoText);
       };
 
       // immediately invoke the callback function to add subtitles to the PiP window
