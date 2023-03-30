@@ -7,11 +7,11 @@
 
 "use strict";
 
-const { FormAutofill } = ChromeUtils.importESModule(
-  "resource://autofill/FormAutofill.sys.mjs"
+const { FormAutofill } = ChromeUtils.import(
+  "resource://autofill/FormAutofill.jsm"
 );
-const { FormAutofillUtils } = ChromeUtils.importESModule(
-  "resource://autofill/FormAutofillUtils.sys.mjs"
+const { FormAutofillUtils } = ChromeUtils.import(
+  "resource://autofill/FormAutofillUtils.jsm"
 );
 
 class EditAutofillForm {

@@ -11,8 +11,8 @@ const { CreditCard } = ChromeUtils.importESModule(
 let FormAutofillParent, FormAutofillStatus;
 let OSKeyStore;
 add_setup(async () => {
-  ({ FormAutofillParent, FormAutofillStatus } = ChromeUtils.importESModule(
-    "resource://autofill/FormAutofillParent.sys.mjs"
+  ({ FormAutofillParent, FormAutofillStatus } = ChromeUtils.import(
+    "resource://autofill/FormAutofillParent.jsm"
   ));
   ({ OSKeyStore } = ChromeUtils.importESModule(
     "resource://gre/modules/OSKeyStore.sys.mjs"
