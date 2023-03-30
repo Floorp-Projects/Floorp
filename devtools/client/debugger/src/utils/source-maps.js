@@ -5,6 +5,7 @@
 import { isOriginalId } from "devtools/client/shared/source-map-loader/index";
 import { getSource } from "../selectors";
 import { createLocation } from "./location";
+import { waitForSourceToBeRegisteredInStore } from "../client/firefox/create";
 
 /**
  * For any location, return the matching generated location.
@@ -50,7 +51,30 @@ export async function getGeneratedLocation(location, thunkArgs) {
   });
 }
 
-export async function getOriginalLocation(location, thunkArgs) {
+/**
+ * For any location, return the matching original location.
+ * If this is already an original location, returns the same location.
+ *
+ * In additional to `SourceMapLoader.getOriginalLocation`,
+ * this automatically fetches the original source object in order to build
+ * the original location object.
+ *
+ * @param {Object} location
+ * @param {Object} thunkArgs
+ *        Redux action thunk arguments
+ * @param {boolean} waitForSource
+ *        Default to false. If true is passed, this function will
+ *        ensure waiting, possibly asynchronously for the related original source
+ *        to be registered in the redux store.
+ *
+ * @param {Object}
+ *        The matching original location.
+ */
+export async function getOriginalLocation(
+  location,
+  thunkArgs,
+  waitForSource = false
+) {
   if (isOriginalId(location.sourceId)) {
     return location;
   }
@@ -61,6 +85,13 @@ export async function getOriginalLocation(location, thunkArgs) {
   if (originalLocation.sourceId == location.sourceId) {
     return location;
   }
+
+  // When we are mapping frames while being paused,
+  // the original source may not be registered yet in the reducer.
+  if (waitForSource) {
+    await waitForSourceToBeRegisteredInStore(originalLocation.sourceId);
+  }
+
   // SourceMapLoader doesn't known about debugger's source objects
   // so that we have to fetch it from here
   const originalSource = getSource(getState(), originalLocation.sourceId);

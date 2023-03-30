@@ -35,7 +35,7 @@ async function updateFrameLocation(frame, thunkArgs) {
   if (frame.isOriginal) {
     return Promise.resolve(frame);
   }
-  const location = await getOriginalLocation(frame.location, thunkArgs);
+  const location = await getOriginalLocation(frame.location, thunkArgs, true);
   return {
     ...frame,
     location,
