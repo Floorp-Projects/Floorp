@@ -45,6 +45,8 @@
 /* eslint-env mozilla/browser-window */
 
 ChromeUtils.defineESModuleGetters(this, {
+  ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   ReaderMode: "resource://gre/modules/ReaderMode.sys.mjs",
 });
@@ -63,14 +65,6 @@ ChromeUtils.defineModuleGetter(
   "pktTelemetry",
   "chrome://pocket/content/pktTelemetry.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExperimentAPI",
-  "resource://nimbus/ExperimentAPI.jsm"
-);
-XPCOMUtils.defineLazyModuleGetters(this, {
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
-});
 
 const POCKET_ONSAVERECS_PREF = "extensions.pocket.onSaveRecs";
 const POCKET_ONSAVERECS_LOCLES_PREF = "extensions.pocket.onSaveRecs.locales";

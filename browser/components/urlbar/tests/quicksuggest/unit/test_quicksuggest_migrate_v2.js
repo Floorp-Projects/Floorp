@@ -6,9 +6,9 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  ExperimentFakes: "resource://testing-common/NimbusTestUtils.jsm",
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  ExperimentFakes: "resource://testing-common/NimbusTestUtils.sys.mjs",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
 });
 
 // Expected version 2 default-branch prefs

@@ -10,16 +10,11 @@ const lazy = {};
 // Get the theme variables from the app resource directory.
 // This allows per-app variables.
 ChromeUtils.defineESModuleGetters(lazy, {
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   ThemeContentPropertyList: "resource:///modules/ThemeVariableMap.sys.mjs",
   ThemeVariableMap: "resource:///modules/ThemeVariableMap.sys.mjs",
 });
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "NimbusFeatures",
-  "resource://nimbus/ExperimentAPI.jsm"
-);
 
 // Whether the content and chrome areas should always use the same color
 // scheme (unless user-overridden). Thunderbird uses this.

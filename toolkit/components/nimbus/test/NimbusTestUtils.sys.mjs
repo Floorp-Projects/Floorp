@@ -2,34 +2,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
-const { ExperimentStore } = ChromeUtils.import(
-  "resource://nimbus/lib/ExperimentStore.jsm"
-);
-
-const { FileTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/FileTestUtils.sys.mjs"
-);
+import { ExperimentStore } from "resource://nimbus/lib/ExperimentStore.sys.mjs";
+import { FileTestUtils } from "resource://testing-common/FileTestUtils.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ExperimentManager: "resource://nimbus/lib/ExperimentManager.sys.mjs",
   JsonSchema: "resource://gre/modules/JsonSchema.sys.mjs",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
+  _ExperimentManager: "resource://nimbus/lib/ExperimentManager.sys.mjs",
+  _RemoteSettingsExperimentLoader:
+    "resource://nimbus/lib/RemoteSettingsExperimentLoader.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  _ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
-  ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   NormandyUtils: "resource://normandy/lib/NormandyUtils.jsm",
-  _RemoteSettingsExperimentLoader:
-    "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm",
   FeatureManifest: "resource://nimbus/FeatureManifest.js",
 });
 
@@ -46,9 +36,7 @@ async function fetchSchema(url) {
   return schema;
 }
 
-const EXPORTED_SYMBOLS = ["ExperimentTestUtils", "ExperimentFakes"];
-
-const ExperimentTestUtils = {
+export const ExperimentTestUtils = {
   _validateSchema(schema, value, errorMsg) {
     const result = lazy.JsonSchema.validate(value, schema, {
       shortCircuit: false,
@@ -171,7 +159,7 @@ const ExperimentTestUtils = {
   },
 };
 
-const ExperimentFakes = {
+export const ExperimentFakes = {
   manager(store) {
     let sandbox = lazy.sinon.createSandbox();
     let manager = new lazy._ExperimentManager({ store: store || this.store() });

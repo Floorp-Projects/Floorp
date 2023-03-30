@@ -1,7 +1,7 @@
 "use strict";
 
-const { ExperimentStore } = ChromeUtils.import(
-  "resource://nimbus/lib/ExperimentStore.jsm"
+const { ExperimentStore } = ChromeUtils.importESModule(
+  "resource://nimbus/lib/ExperimentStore.sys.mjs"
 );
 const { FeatureManifest } = ChromeUtils.import(
   "resource://nimbus/FeatureManifest.js"

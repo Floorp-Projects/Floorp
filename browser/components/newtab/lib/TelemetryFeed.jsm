@@ -45,6 +45,8 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineESModuleGetters(lazy, {
   ClientID: "resource://gre/modules/ClientID.sys.mjs",
+  ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
   TelemetrySession: "resource://gre/modules/TelemetrySession.sys.mjs",
@@ -60,11 +62,6 @@ ChromeUtils.defineModuleGetter(
   "ExtensionSettingsStore",
   "resource://gre/modules/ExtensionSettingsStore.jsm"
 );
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
-});
 
 const ACTIVITY_STREAM_ID = "activity-stream";
 const DOMWINDOW_OPENED_TOPIC = "domwindowopened";

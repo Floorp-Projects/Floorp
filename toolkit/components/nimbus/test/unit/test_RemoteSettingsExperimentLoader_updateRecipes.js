@@ -1,16 +1,16 @@
 "use strict";
 
-const { ExperimentFakes } = ChromeUtils.import(
-  "resource://testing-common/NimbusTestUtils.jsm"
+const { ExperimentFakes } = ChromeUtils.importESModule(
+  "resource://testing-common/NimbusTestUtils.sys.mjs"
 );
 const { FirstStartup } = ChromeUtils.importESModule(
   "resource://gre/modules/FirstStartup.sys.mjs"
 );
-const { NimbusFeatures } = ChromeUtils.import(
-  "resource://nimbus/ExperimentAPI.jsm"
+const { NimbusFeatures } = ChromeUtils.importESModule(
+  "resource://nimbus/ExperimentAPI.sys.mjs"
 );
-const { EnrollmentsContext } = ChromeUtils.import(
-  "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm"
+const { EnrollmentsContext } = ChromeUtils.importESModule(
+  "resource://nimbus/lib/RemoteSettingsExperimentLoader.sys.mjs"
 );
 const { PanelTestProvider } = ChromeUtils.import(
   "resource://activity-stream/lib/PanelTestProvider.jsm"

@@ -3,9 +3,9 @@
 const {
   ExperimentAPI,
   _ExperimentFeature: ExperimentFeature,
-} = ChromeUtils.import("resource://nimbus/ExperimentAPI.jsm");
-const { ExperimentFakes } = ChromeUtils.import(
-  "resource://testing-common/NimbusTestUtils.jsm"
+} = ChromeUtils.importESModule("resource://nimbus/ExperimentAPI.sys.mjs");
+const { ExperimentFakes } = ChromeUtils.importESModule(
+  "resource://testing-common/NimbusTestUtils.sys.mjs"
 );
 
 async function setupForExperimentFeature() {

@@ -7,7 +7,7 @@ const { sinon } = ChromeUtils.importESModule(
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-XPCOMUtils.defineLazyModuleGetters(this, {
-  ExperimentFakes: "resource://testing-common/NimbusTestUtils.jsm",
-  ExperimentTestUtils: "resource://testing-common/NimbusTestUtils.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  ExperimentFakes: "resource://testing-common/NimbusTestUtils.sys.mjs",
+  ExperimentTestUtils: "resource://testing-common/NimbusTestUtils.sys.mjs",
 });

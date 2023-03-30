@@ -14,6 +14,7 @@ ChromeUtils.defineESModuleGetters(this, {
   ClientID: "resource://gre/modules/ClientID.sys.mjs",
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
@@ -24,7 +25,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
   ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
   ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.jsm",
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "browserBundle", () => {

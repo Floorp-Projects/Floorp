@@ -24,6 +24,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AttributionCode: "resource:///modules/AttributionCode.sys.mjs",
   BuiltInThemes: "resource:///modules/BuiltInThemes.sys.mjs",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   ProfileAge: "resource://gre/modules/ProfileAge.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
   TargetingContext: "resource://messaging-system/targeting/Targeting.sys.mjs",
@@ -38,7 +39,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   HomePage: "resource:///modules/HomePage.jsm",
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
 ChromeUtils.defineModuleGetter(

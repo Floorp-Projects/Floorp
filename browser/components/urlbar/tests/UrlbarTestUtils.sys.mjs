@@ -14,8 +14,14 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserTestUtils: "resource://testing-common/BrowserTestUtils.sys.mjs",
+  ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
+  ExperimentFakes: "resource://testing-common/NimbusTestUtils.sys.mjs",
+  ExperimentManager: "resource://nimbus/lib/ExperimentManager.sys.mjs",
+
   FormHistoryTestUtils:
     "resource://testing-common/FormHistoryTestUtils.sys.mjs",
+
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
   UrlbarController: "resource:///modules/UrlbarController.sys.mjs",
@@ -28,10 +34,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
   BrowserUIUtils: "resource:///modules/BrowserUIUtils.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
-  ExperimentFakes: "resource://testing-common/NimbusTestUtils.jsm",
-  ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
 export var UrlbarTestUtils = {

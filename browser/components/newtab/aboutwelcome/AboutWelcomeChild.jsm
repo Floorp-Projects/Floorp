@@ -12,11 +12,14 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
   AboutWelcomeDefaults:
     "resource://activity-stream/aboutwelcome/lib/AboutWelcomeDefaults.jsm",
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {

@@ -8,8 +8,8 @@ const { MessagingExperimentAction } = ChromeUtils.import(
   "resource://normandy/actions/MessagingExperimentAction.jsm"
 );
 
-const { _ExperimentManager, ExperimentManager } = ChromeUtils.import(
-  "resource://nimbus/lib/ExperimentManager.jsm"
+const { _ExperimentManager, ExperimentManager } = ChromeUtils.importESModule(
+  "resource://nimbus/lib/ExperimentManager.sys.mjs"
 );
 
 decorate_task(

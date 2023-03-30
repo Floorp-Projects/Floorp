@@ -15,6 +15,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AddonSearchEngine: "resource://gre/modules/AddonSearchEngine.sys.mjs",
   IgnoreLists: "resource://gre/modules/IgnoreLists.sys.mjs",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   OpenSearchEngine: "resource://gre/modules/OpenSearchEngine.sys.mjs",
   PolicySearchEngine: "resource://gre/modules/PolicySearchEngine.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
@@ -29,7 +30,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logConsole", () => {

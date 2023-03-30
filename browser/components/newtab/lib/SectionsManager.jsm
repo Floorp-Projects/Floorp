@@ -6,9 +6,6 @@
 const { EventEmitter } = ChromeUtils.importESModule(
   "resource://gre/modules/EventEmitter.sys.mjs"
 );
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const { actionCreators: ac, actionTypes: at } = ChromeUtils.importESModule(
   "resource://activity-stream/common/Actions.sys.mjs"
 );
@@ -19,11 +16,8 @@ const { getDefaultOptions } = ChromeUtils.import(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
 /*

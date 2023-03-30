@@ -10,15 +10,15 @@ const {
   _ExperimentFeature: ExperimentFeature,
 
   ExperimentAPI,
-} = ChromeUtils.import("resource://nimbus/ExperimentAPI.jsm");
-const { ExperimentTestUtils } = ChromeUtils.import(
-  "resource://testing-common/NimbusTestUtils.jsm"
+} = ChromeUtils.importESModule("resource://nimbus/ExperimentAPI.sys.mjs");
+const { ExperimentTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/NimbusTestUtils.sys.mjs"
 );
-const { ExperimentManager } = ChromeUtils.import(
-  "resource://nimbus/lib/ExperimentManager.jsm"
+const { ExperimentManager } = ChromeUtils.importESModule(
+  "resource://nimbus/lib/ExperimentManager.sys.mjs"
 );
-const { RemoteSettingsExperimentLoader } = ChromeUtils.import(
-  "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm"
+const { RemoteSettingsExperimentLoader } = ChromeUtils.importESModule(
+  "resource://nimbus/lib/RemoteSettingsExperimentLoader.sys.mjs"
 );
 
 const FOO_FAKE_FEATURE_MANIFEST = {

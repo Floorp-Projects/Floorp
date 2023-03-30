@@ -19,6 +19,11 @@ const { setTimeout } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ExperimentManager: "resource://nimbus/lib/ExperimentManager.sys.mjs",
+
+  RemoteSettingsExperimentLoader:
+    "resource://nimbus/lib/RemoteSettingsExperimentLoader.sys.mjs",
+
   TelemetryUtils: "resource://gre/modules/TelemetryUtils.sys.mjs",
 });
 
@@ -33,9 +38,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   RecipeRunner: "resource://normandy/lib/RecipeRunner.jsm",
   ShieldPreferences: "resource://normandy/lib/ShieldPreferences.jsm",
   TelemetryEvents: "resource://normandy/lib/TelemetryEvents.jsm",
-  ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
-  RemoteSettingsExperimentLoader:
-    "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm",
 });
 
 var EXPORTED_SYMBOLS = ["Normandy"];

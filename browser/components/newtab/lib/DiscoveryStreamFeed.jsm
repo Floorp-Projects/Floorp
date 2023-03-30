@@ -5,6 +5,7 @@
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
+  ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
@@ -24,11 +25,6 @@ ChromeUtils.defineModuleGetter(
   lazy,
   "PersistentCache",
   "resource://activity-stream/lib/PersistentCache.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ExperimentAPI",
-  "resource://nimbus/ExperimentAPI.jsm"
 );
 
 const CACHE_KEY = "discovery_stream";

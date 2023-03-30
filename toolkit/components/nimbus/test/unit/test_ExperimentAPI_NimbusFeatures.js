@@ -3,7 +3,7 @@
 const {
   ExperimentAPI,
   _ExperimentFeature: ExperimentFeature,
-} = ChromeUtils.import("resource://nimbus/ExperimentAPI.jsm");
+} = ChromeUtils.importESModule("resource://nimbus/ExperimentAPI.sys.mjs");
 
 const { JsonSchema } = ChromeUtils.importESModule(
   "resource://gre/modules/JsonSchema.sys.mjs"

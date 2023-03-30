@@ -8,8 +8,8 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
 });
 
 let getVariableStub;

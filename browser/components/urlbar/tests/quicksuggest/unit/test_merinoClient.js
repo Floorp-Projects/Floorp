@@ -7,12 +7,9 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
+  ExperimentFakes: "resource://testing-common/NimbusTestUtils.sys.mjs",
   MerinoClient: "resource:///modules/MerinoClient.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  ExperimentFakes: "resource://testing-common/NimbusTestUtils.jsm",
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
 });
 
 // Set the `merino.timeoutMs` pref to a large value so that the client will not

@@ -29,16 +29,11 @@ ChromeUtils.defineModuleGetter(
   "RecipeRunner",
   "resource://normandy/lib/RecipeRunner.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ExperimentManager",
-  "resource://nimbus/lib/ExperimentManager.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "RemoteSettingsExperimentLoader",
-  "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  ExperimentManager: "resource://nimbus/lib/ExperimentManager.sys.mjs",
+  RemoteSettingsExperimentLoader:
+    "resource://nimbus/lib/RemoteSettingsExperimentLoader.sys.mjs",
+});
 
 var EXPORTED_SYMBOLS = ["AboutPages"];
 

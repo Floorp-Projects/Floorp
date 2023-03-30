@@ -37,6 +37,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Log: "resource://gre/modules/Log.sys.mjs",
   LoginBreaches: "resource:///modules/LoginBreaches.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   OsEnvironment: "resource://gre/modules/OsEnvironment.sys.mjs",
   PageDataService: "resource:///modules/pagedata/PageDataService.sys.mjs",
   PdfJs: "resource://pdf.js/PdfJs.sys.mjs",
@@ -91,7 +92,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   Normandy: "resource://normandy/Normandy.jsm",
 
   OnboardingMessageProvider:

@@ -2,13 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { EventEmitter } from "resource://gre/modules/EventEmitter.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const EXPORTED_SYMBOLS = ["SharedDataMap"];
-
-const { EventEmitter } = ChromeUtils.importESModule(
-  "resource://gre/modules/EventEmitter.sys.mjs"
-);
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
@@ -18,11 +14,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 const IS_MAIN_PROCESS =
   Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
-class SharedDataMap extends EventEmitter {
+export class SharedDataMap extends EventEmitter {
   constructor(sharedDataKey, options = { isParent: IS_MAIN_PROCESS }) {
     super();
 

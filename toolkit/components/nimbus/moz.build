@@ -29,7 +29,7 @@ XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
 SPHINX_TREES["docs"] = "docs"
 
 TESTING_JS_MODULES += [
-    "test/NimbusTestUtils.jsm",
+    "test/NimbusTestUtils.sys.mjs",
 ]
 
 GeneratedFile(

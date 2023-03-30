@@ -1,7 +1,7 @@
 "use strict";
 
-const { ExperimentFakes, ExperimentTestUtils } = ChromeUtils.import(
-  "resource://testing-common/NimbusTestUtils.jsm"
+const { ExperimentFakes, ExperimentTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/NimbusTestUtils.sys.mjs"
 );
 
 add_task(async function test_recipe_fake_validates() {
