@@ -170,6 +170,8 @@ class RuntimeService final : public nsIObserver {
 
   bool IsShuttingDown() const { return mShuttingDown; }
 
+  void DumpRunningWorkers();
+
  private:
   RuntimeService();
   ~RuntimeService();

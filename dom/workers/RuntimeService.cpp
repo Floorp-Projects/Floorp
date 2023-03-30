@@ -85,6 +85,13 @@
 
 #define WORKERS_SHUTDOWN_TOPIC "web-workers-shutdown"
 
+static mozilla::LazyLogModule gWorkerShutdownDumpLog("WorkerShutdownDump");
+
+#ifdef SHUTDOWN_LOG
+#  undef SHUTDOWN_LOG
+#endif
+#define SHUTDOWN_LOG(msg) MOZ_LOG(gWorkerShutdownDumpLog, LogLevel::Debug, msg);
+
 namespace mozilla {
 
 using namespace ipc;
@@ -1476,11 +1483,11 @@ void RuntimeService::Shutdown() {
 
 namespace {
 
-class CrashIfHangingRunnable : public WorkerControlRunnable {
+class DumpCrashInfoRunnable : public WorkerControlRunnable {
  public:
-  explicit CrashIfHangingRunnable(WorkerPrivate* aWorkerPrivate)
+  explicit DumpCrashInfoRunnable(WorkerPrivate* aWorkerPrivate)
       : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
-        mMonitor("CrashIfHangingRunnable::mMonitor") {}
+        mMonitor("DumpCrashInfoRunnable::mMonitor") {}
 
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
     MonitorAutoLock lock(mMonitor);
@@ -1543,8 +1550,8 @@ struct ActiveWorkerStats {
   template <uint32_t ActiveWorkerStats::*Category>
   void Update(const nsTArray<WorkerPrivate*>& aWorkers) {
     for (const auto worker : aWorkers) {
-      RefPtr<CrashIfHangingRunnable> runnable =
-          new CrashIfHangingRunnable(worker);
+      RefPtr<DumpCrashInfoRunnable> runnable =
+          new DumpCrashInfoRunnable(worker);
       if (runnable->DispatchAndWait()) {
         ++(this->*Category);
 
@@ -1625,6 +1632,20 @@ void RuntimeService::Cleanup() {
       nsIThread* currentThread = NS_GetCurrentThread();
       NS_ASSERTION(currentThread, "This should never be null!");
 
+      // If the loop below takes too long, we probably have a problematic
+      // worker.  MOZ_LOG some info before the parent process forcibly
+      // terminates us so that in the event we are a content process, the log
+      // output can provide useful context about the workers that did not
+      // cleanly shut down.
+      nsCOMPtr<nsITimer> timer;
+      RefPtr<RuntimeService> self = this;
+      nsresult rv = NS_NewTimerWithCallback(
+          getter_AddRefs(timer),
+          [self](nsITimer*) { self->DumpRunningWorkers(); },
+          TimeDuration::FromSeconds(1), nsITimer::TYPE_ONE_SHOT,
+          "RuntimeService::WorkerShutdownDump");
+      Unused << NS_WARN_IF(NS_FAILED(rv));
+
       // And make sure all their final messages have run and all their threads
       // have joined.
       while (mDomainMap.Count()) {
@@ -1634,6 +1655,10 @@ void RuntimeService::Cleanup() {
           NS_WARNING("Something bad happened!");
           break;
         }
+      }
+
+      if (NS_SUCCEEDED(rv)) {
+        timer->Cancel();
       }
     }
   }
@@ -1961,6 +1986,81 @@ RuntimeService::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
+namespace {
+const char* WorkerKindToString(WorkerKind kind) {
+  switch (kind) {
+    case WorkerKindDedicated:
+      return "dedicated";
+    case WorkerKindShared:
+      return "shared";
+    case WorkerKindService:
+      return "service";
+    default:
+      NS_WARNING("Unknown worker type");
+      return "unknown worker type";
+  }
+}
+
+void LogWorker(WorkerPrivate* worker, const char* category) {
+  AssertIsOnMainThread();
+
+  SHUTDOWN_LOG(("Found %s (%s): %s", category,
+                WorkerKindToString(worker->Kind()),
+                NS_ConvertUTF16toUTF8(worker->ScriptURL()).get()));
+
+  if (worker->Kind() == WorkerKindService) {
+    SHUTDOWN_LOG(("Scope: %s", worker->ServiceWorkerScope().get()));
+  }
+
+  nsCString origin;
+  worker->GetPrincipal()->GetOrigin(origin);
+  SHUTDOWN_LOG(("Principal: %s", origin.get()));
+
+  nsCString loadingOrigin;
+  worker->GetLoadingPrincipal()->GetOrigin(loadingOrigin);
+  SHUTDOWN_LOG(("LoadingPrincipal: %s", loadingOrigin.get()));
+
+  SHUTDOWN_LOG(("BusyCount: %d", worker->BusyCount()));
+
+  RefPtr<DumpCrashInfoRunnable> runnable = new DumpCrashInfoRunnable(worker);
+  if (runnable->DispatchAndWait()) {
+    SHUTDOWN_LOG(("CrashInfo: %s", runnable->MsgData().get()));
+  } else {
+    SHUTDOWN_LOG(("CrashInfo: dispatch failed"));
+  }
+}
+}  // namespace
+
+void RuntimeService::DumpRunningWorkers() {
+  // Temporarily set the LogLevel high enough to be certain the messages are
+  // visible.
+  LogModule* module = gWorkerShutdownDumpLog;
+  LogLevel prevLevel = module->Level();
+
+  const auto cleanup =
+      MakeScopeExit([module, prevLevel] { module->SetLevel(prevLevel); });
+
+  if (prevLevel < LogLevel::Debug) {
+    module->SetLevel(LogLevel::Debug);
+  }
+
+  MutexAutoLock lock(mMutex);
+
+  for (const auto& info : mDomainMap.Values()) {
+    for (WorkerPrivate* worker : info->mActiveWorkers) {
+      LogWorker(worker, "ActiveWorker");
+    }
+
+    for (WorkerPrivate* worker : info->mActiveServiceWorkers) {
+      LogWorker(worker, "ActiveServiceWorker");
+    }
+
+    for (WorkerPrivate* worker : info->mQueuedWorkers) {
+      LogWorker(worker, "QueuedWorker");
+    }
+  }
+}
+
 bool LogViolationDetailsRunnable::MainThreadRun() {
   AssertIsOnMainThread();
 
@@ -2158,6 +2258,16 @@ WorkerThreadPrimaryRunnable::FinishedRunnable::Run() {
 }
 
 }  // namespace workerinternals
+
+// This is mostly for invoking within a debugger.
+void DumpRunningWorkers() {
+  RuntimeService* runtimeService = RuntimeService::GetService();
+  if (runtimeService) {
+    runtimeService->DumpRunningWorkers();
+  } else {
+    NS_WARNING("RuntimeService not found");
+  }
+}
 
 void CancelWorkersForWindow(const nsPIDOMWindowInner& aWindow) {
   AssertIsOnMainThread();
