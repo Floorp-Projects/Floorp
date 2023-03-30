@@ -530,7 +530,6 @@ static bool CheckForFullscreenWindow() {
       }
     }
   }
-  return false;
 }
 #endif
 

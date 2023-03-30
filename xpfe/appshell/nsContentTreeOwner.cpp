@@ -24,6 +24,7 @@
 #include "nsIMIMEInfo.h"
 #include "nsIWidget.h"
 #include "nsWindowWatcher.h"
+#include "nsIWindowMediator.h"
 #include "mozilla/Components.h"
 #include "mozilla/NullPrincipal.h"
 #include "nsDocShell.h"

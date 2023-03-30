@@ -17,6 +17,7 @@
 #include "nsWindowMediator.h"
 #include "nsIWindowMediatorListener.h"
 #include "nsGlobalWindow.h"
+#include "nsServiceManagerUtils.h"
 
 #include "nsIDocShell.h"
 #include "nsIInterfaceRequestor.h"
