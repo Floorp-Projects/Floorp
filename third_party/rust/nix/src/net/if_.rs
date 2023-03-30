@@ -8,7 +8,8 @@ use libc::c_uint;
 
 /// Resolve an interface into a interface number.
 pub fn if_nametoindex<P: ?Sized + NixPath>(name: &P) -> Result<c_uint> {
-    let if_index = name.with_nix_path(|name| unsafe { libc::if_nametoindex(name.as_ptr()) })?;
+    let if_index = name
+        .with_nix_path(|name| unsafe { libc::if_nametoindex(name.as_ptr()) })?;
 
     if if_index == 0 {
         Err(Error::last())

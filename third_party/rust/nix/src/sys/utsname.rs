@@ -1,9 +1,9 @@
 //! Get system identification
+use crate::{Errno, Result};
+use libc::c_char;
+use std::ffi::OsStr;
 use std::mem;
 use std::os::unix::ffi::OsStrExt;
-use std::ffi::OsStr;
-use libc::c_char;
-use crate::{Errno, Result};
 
 /// Describes the running system.  Return type of [`uname`].
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
@@ -35,6 +35,12 @@ impl UtsName {
     pub fn machine(&self) -> &OsStr {
         cast_and_trim(&self.0.machine)
     }
+
+    /// NIS or YP domain name of this machine.
+    #[cfg(any(target_os = "android", target_os = "linux"))]
+    pub fn domainname(&self) -> &OsStr {
+        cast_and_trim(&self.0.domainname)
+    }
 }
 
 /// Get system identification
@@ -47,10 +53,12 @@ pub fn uname() -> Result<UtsName> {
 }
 
 fn cast_and_trim(slice: &[c_char]) -> &OsStr {
-    let length = slice.iter().position(|&byte| byte == 0).unwrap_or(slice.len());
-    let bytes = unsafe {
-        std::slice::from_raw_parts(slice.as_ptr().cast(), length)
-    };
+    let length = slice
+        .iter()
+        .position(|&byte| byte == 0)
+        .unwrap_or(slice.len());
+    let bytes =
+        unsafe { std::slice::from_raw_parts(slice.as_ptr().cast(), length) };
 
     OsStr::from_bytes(bytes)
 }

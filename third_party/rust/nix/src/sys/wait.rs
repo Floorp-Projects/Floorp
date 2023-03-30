@@ -135,7 +135,9 @@ impl WaitStatus {
     pub fn pid(&self) -> Option<Pid> {
         use self::WaitStatus::*;
         match *self {
-            Exited(p, _) | Signaled(p, _, _) | Stopped(p, _) | Continued(p) => Some(p),
+            Exited(p, _) | Signaled(p, _, _) | Stopped(p, _) | Continued(p) => {
+                Some(p)
+            }
             StillAlive => None,
             #[cfg(any(target_os = "android", target_os = "linux"))]
             PtraceEvent(p, _, _) | PtraceSyscall(p) => Some(p),
@@ -274,7 +276,9 @@ impl WaitStatus {
                 Signal::try_from(si_status)?,
                 siginfo.si_code == libc::CLD_DUMPED,
             ),
-            libc::CLD_STOPPED => WaitStatus::Stopped(pid, Signal::try_from(si_status)?),
+            libc::CLD_STOPPED => {
+                WaitStatus::Stopped(pid, Signal::try_from(si_status)?)
+            }
             libc::CLD_CONTINUED => WaitStatus::Continued(pid),
             #[cfg(any(target_os = "android", target_os = "linux"))]
             libc::CLD_TRAPPED => {
@@ -298,7 +302,10 @@ impl WaitStatus {
 /// Wait for a process to change status
 ///
 /// See also [waitpid(2)](https://pubs.opengroup.org/onlinepubs/9699919799/functions/waitpid.html)
-pub fn waitpid<P: Into<Option<Pid>>>(pid: P, options: Option<WaitPidFlag>) -> Result<WaitStatus> {
+pub fn waitpid<P: Into<Option<Pid>>>(
+    pid: P,
+    options: Option<WaitPidFlag>,
+) -> Result<WaitStatus> {
     use self::WaitStatus::*;
 
     let mut status: i32 = 0;

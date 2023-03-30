@@ -156,7 +156,7 @@ impl MinidumpWriter {
             return true;
         }
 
-        let (stack_ptr, stack_len) = match dumper.get_stack_info(stack_pointer as usize) {
+        let (stack_ptr, stack_len) = match dumper.get_stack_info(stack_pointer) {
             Ok(x) => x,
             Err(_) => {
                 return false;
@@ -173,7 +173,7 @@ impl MinidumpWriter {
             }
         };
 
-        let sp_offset = stack_pointer as usize - stack_ptr;
+        let sp_offset = stack_pointer - stack_ptr;
         self.principal_mapping
             .as_ref()
             .unwrap()

@@ -11,7 +11,7 @@
 
 [package]
 name = "memoffset"
-version = "0.7.1"
+version = "0.8.0"
 authors = ["Gilad Naaman <gilad.naaman@gmail.com>"]
 description = "offset_of functionality for Rust structs."
 readme = "README.md"

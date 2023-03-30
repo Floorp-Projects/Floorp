@@ -85,7 +85,8 @@ impl ClockId {
         target_os = "linux"
     ))]
     #[cfg_attr(docsrs, doc(cfg(all())))]
-    pub const CLOCK_BOOTTIME_ALARM: ClockId = ClockId(libc::CLOCK_BOOTTIME_ALARM);
+    pub const CLOCK_BOOTTIME_ALARM: ClockId =
+        ClockId(libc::CLOCK_BOOTTIME_ALARM);
     pub const CLOCK_MONOTONIC: ClockId = ClockId(libc::CLOCK_MONOTONIC);
     #[cfg(any(
         target_os = "android",
@@ -94,13 +95,16 @@ impl ClockId {
         target_os = "linux"
     ))]
     #[cfg_attr(docsrs, doc(cfg(all())))]
-    pub const CLOCK_MONOTONIC_COARSE: ClockId = ClockId(libc::CLOCK_MONOTONIC_COARSE);
+    pub const CLOCK_MONOTONIC_COARSE: ClockId =
+        ClockId(libc::CLOCK_MONOTONIC_COARSE);
     #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
     #[cfg_attr(docsrs, doc(cfg(all())))]
-    pub const CLOCK_MONOTONIC_FAST: ClockId = ClockId(libc::CLOCK_MONOTONIC_FAST);
+    pub const CLOCK_MONOTONIC_FAST: ClockId =
+        ClockId(libc::CLOCK_MONOTONIC_FAST);
     #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
     #[cfg_attr(docsrs, doc(cfg(all())))]
-    pub const CLOCK_MONOTONIC_PRECISE: ClockId = ClockId(libc::CLOCK_MONOTONIC_PRECISE);
+    pub const CLOCK_MONOTONIC_PRECISE: ClockId =
+        ClockId(libc::CLOCK_MONOTONIC_PRECISE);
     #[cfg(any(
         target_os = "android",
         target_os = "emscripten",
@@ -121,7 +125,8 @@ impl ClockId {
         target_os = "linux"
     ))]
     #[cfg_attr(docsrs, doc(cfg(all())))]
-    pub const CLOCK_PROCESS_CPUTIME_ID: ClockId = ClockId(libc::CLOCK_PROCESS_CPUTIME_ID);
+    pub const CLOCK_PROCESS_CPUTIME_ID: ClockId =
+        ClockId(libc::CLOCK_PROCESS_CPUTIME_ID);
     #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
     #[cfg_attr(docsrs, doc(cfg(all())))]
     pub const CLOCK_PROF: ClockId = ClockId(libc::CLOCK_PROF);
@@ -133,7 +138,8 @@ impl ClockId {
         target_os = "linux"
     ))]
     #[cfg_attr(docsrs, doc(cfg(all())))]
-    pub const CLOCK_REALTIME_ALARM: ClockId = ClockId(libc::CLOCK_REALTIME_ALARM);
+    pub const CLOCK_REALTIME_ALARM: ClockId =
+        ClockId(libc::CLOCK_REALTIME_ALARM);
     #[cfg(any(
         target_os = "android",
         target_os = "emscripten",
@@ -141,13 +147,15 @@ impl ClockId {
         target_os = "linux"
     ))]
     #[cfg_attr(docsrs, doc(cfg(all())))]
-    pub const CLOCK_REALTIME_COARSE: ClockId = ClockId(libc::CLOCK_REALTIME_COARSE);
+    pub const CLOCK_REALTIME_COARSE: ClockId =
+        ClockId(libc::CLOCK_REALTIME_COARSE);
     #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
     #[cfg_attr(docsrs, doc(cfg(all())))]
     pub const CLOCK_REALTIME_FAST: ClockId = ClockId(libc::CLOCK_REALTIME_FAST);
     #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
     #[cfg_attr(docsrs, doc(cfg(all())))]
-    pub const CLOCK_REALTIME_PRECISE: ClockId = ClockId(libc::CLOCK_REALTIME_PRECISE);
+    pub const CLOCK_REALTIME_PRECISE: ClockId =
+        ClockId(libc::CLOCK_REALTIME_PRECISE);
     #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
     #[cfg_attr(docsrs, doc(cfg(all())))]
     pub const CLOCK_SECOND: ClockId = ClockId(libc::CLOCK_SECOND);
@@ -177,7 +185,8 @@ impl ClockId {
         target_os = "linux"
     ))]
     #[cfg_attr(docsrs, doc(cfg(all())))]
-    pub const CLOCK_THREAD_CPUTIME_ID: ClockId = ClockId(libc::CLOCK_THREAD_CPUTIME_ID);
+    pub const CLOCK_THREAD_CPUTIME_ID: ClockId =
+        ClockId(libc::CLOCK_THREAD_CPUTIME_ID);
     #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
     #[cfg_attr(docsrs, doc(cfg(all())))]
     pub const CLOCK_UPTIME: ClockId = ClockId(libc::CLOCK_UPTIME);
@@ -186,7 +195,8 @@ impl ClockId {
     pub const CLOCK_UPTIME_FAST: ClockId = ClockId(libc::CLOCK_UPTIME_FAST);
     #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
     #[cfg_attr(docsrs, doc(cfg(all())))]
-    pub const CLOCK_UPTIME_PRECISE: ClockId = ClockId(libc::CLOCK_UPTIME_PRECISE);
+    pub const CLOCK_UPTIME_PRECISE: ClockId =
+        ClockId(libc::CLOCK_UPTIME_PRECISE);
     #[cfg(any(target_os = "freebsd", target_os = "dragonfly"))]
     #[cfg_attr(docsrs, doc(cfg(all())))]
     pub const CLOCK_VIRTUAL: ClockId = ClockId(libc::CLOCK_VIRTUAL);
@@ -216,7 +226,8 @@ impl std::fmt::Display for ClockId {
 #[cfg_attr(docsrs, doc(cfg(all())))]
 pub fn clock_getres(clock_id: ClockId) -> Result<TimeSpec> {
     let mut c_time: MaybeUninit<libc::timespec> = MaybeUninit::uninit();
-    let ret = unsafe { libc::clock_getres(clock_id.as_raw(), c_time.as_mut_ptr()) };
+    let ret =
+        unsafe { libc::clock_getres(clock_id.as_raw(), c_time.as_mut_ptr()) };
     Errno::result(ret)?;
     let res = unsafe { c_time.assume_init() };
     Ok(TimeSpec::from(res))
@@ -226,7 +237,8 @@ pub fn clock_getres(clock_id: ClockId) -> Result<TimeSpec> {
 /// [clock_gettime(2)](https://pubs.opengroup.org/onlinepubs/7908799/xsh/clock_gettime.html)).
 pub fn clock_gettime(clock_id: ClockId) -> Result<TimeSpec> {
     let mut c_time: MaybeUninit<libc::timespec> = MaybeUninit::uninit();
-    let ret = unsafe { libc::clock_gettime(clock_id.as_raw(), c_time.as_mut_ptr()) };
+    let ret =
+        unsafe { libc::clock_gettime(clock_id.as_raw(), c_time.as_mut_ptr()) };
     Errno::result(ret)?;
     let res = unsafe { c_time.assume_init() };
     Ok(TimeSpec::from(res))
@@ -242,7 +254,8 @@ pub fn clock_gettime(clock_id: ClockId) -> Result<TimeSpec> {
 )))]
 #[cfg_attr(docsrs, doc(cfg(all())))]
 pub fn clock_settime(clock_id: ClockId, timespec: TimeSpec) -> Result<()> {
-    let ret = unsafe { libc::clock_settime(clock_id.as_raw(), timespec.as_ref()) };
+    let ret =
+        unsafe { libc::clock_settime(clock_id.as_raw(), timespec.as_ref()) };
     Errno::result(ret).map(drop)
 }
 
@@ -259,7 +272,8 @@ pub fn clock_settime(clock_id: ClockId, timespec: TimeSpec) -> Result<()> {
 #[cfg_attr(docsrs, doc(cfg(feature = "process")))]
 pub fn clock_getcpuclockid(pid: Pid) -> Result<ClockId> {
     let mut clk_id: MaybeUninit<libc::clockid_t> = MaybeUninit::uninit();
-    let ret = unsafe { libc::clock_getcpuclockid(pid.into(), clk_id.as_mut_ptr()) };
+    let ret =
+        unsafe { libc::clock_getcpuclockid(pid.into(), clk_id.as_mut_ptr()) };
     if ret == 0 {
         let res = unsafe { clk_id.assume_init() };
         Ok(ClockId::from(res))

@@ -6,9 +6,12 @@ use std::convert::From;
 use std::time::Duration;
 use std::{cmp, fmt, ops};
 
-const TIMESPEC_ZERO: libc::timespec = unsafe {
-    std::mem::transmute([0u8; std::mem::size_of::<libc::timespec>()])
-};
+const fn zero_init_timespec() -> timespec {
+    // `std::mem::MaybeUninit::zeroed()` is not yet a const fn
+    // (https://github.com/rust-lang/rust/issues/91850) so we will instead initialize an array of
+    // the appropriate size to zero and then transmute it to a timespec value.
+    unsafe { std::mem::transmute([0u8; std::mem::size_of::<timespec>()]) }
+}
 
 #[cfg(any(
     all(feature = "time", any(target_os = "android", target_os = "linux")),
@@ -24,7 +27,7 @@ const TIMESPEC_ZERO: libc::timespec = unsafe {
     )
 ))]
 pub(crate) mod timer {
-    use crate::sys::time::{TimeSpec, TIMESPEC_ZERO};
+    use crate::sys::time::{zero_init_timespec, TimeSpec};
     use bitflags::bitflags;
 
     #[derive(Debug, Clone, Copy)]
@@ -33,8 +36,8 @@ pub(crate) mod timer {
     impl TimerSpec {
         pub const fn none() -> Self {
             Self(libc::itimerspec {
-                it_interval: TIMESPEC_ZERO,
-                it_value: TIMESPEC_ZERO,
+                it_interval: zero_init_timespec(),
+                it_value: zero_init_timespec(),
             })
         }
     }
@@ -55,7 +58,7 @@ pub(crate) mod timer {
         fn from(expiration: Expiration) -> TimerSpec {
             match expiration {
                 Expiration::OneShot(t) => TimerSpec(libc::itimerspec {
-                    it_interval: TIMESPEC_ZERO,
+                    it_interval: zero_init_timespec(),
                     it_value: *t.as_ref(),
                 }),
                 Expiration::IntervalDelayed(start, interval) => {
@@ -261,9 +264,8 @@ impl TimeValLike for TimeSpec {
             "TimeSpec out of bounds; seconds={}",
             seconds
         );
-        let mut ts = TIMESPEC_ZERO;
+        let mut ts = zero_init_timespec();
         ts.tv_sec = seconds as time_t;
-        ts.tv_nsec = 0;
         TimeSpec(ts)
     }
 
@@ -296,7 +298,7 @@ impl TimeValLike for TimeSpec {
             (TS_MIN_SECONDS..=TS_MAX_SECONDS).contains(&secs),
             "TimeSpec out of bounds"
         );
-        let mut ts = TIMESPEC_ZERO;
+        let mut ts = zero_init_timespec();
         ts.tv_sec = secs as time_t;
         ts.tv_nsec = nanos as timespec_tv_nsec_t;
         TimeSpec(ts)
@@ -333,7 +335,7 @@ impl TimeSpec {
     /// Construct a new `TimeSpec` from its components
     #[cfg_attr(target_env = "musl", allow(deprecated))] // https://github.com/rust-lang/libc/issues/1848
     pub const fn new(seconds: time_t, nanoseconds: timespec_tv_nsec_t) -> Self {
-        let mut ts = TIMESPEC_ZERO;
+        let mut ts = zero_init_timespec();
         ts.tv_sec = seconds;
         ts.tv_nsec = nanoseconds;
         Self(ts)
@@ -359,7 +361,7 @@ impl TimeSpec {
     #[cfg_attr(target_env = "musl", allow(deprecated))]
     // https://github.com/rust-lang/libc/issues/1848
     pub const fn from_duration(duration: Duration) -> Self {
-        let mut ts = TIMESPEC_ZERO;
+        let mut ts = zero_init_timespec();
         ts.tv_sec = duration.as_secs() as time_t;
         ts.tv_nsec = duration.subsec_nanos() as timespec_tv_nsec_t;
         TimeSpec(ts)

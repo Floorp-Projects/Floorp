@@ -213,7 +213,6 @@ impl PtraceDumper {
         if task_path.is_dir() {
             std::fs::read_dir(task_path)
                 .map_err(|e| InitError::IOError(filename, e))?
-                .into_iter()
                 .filter_map(|entry| entry.ok()) // Filter out bad entries
                 .filter_map(|entry| {
                     entry
@@ -481,14 +480,14 @@ impl PtraceDumper {
     ) -> Option<&'data [u8]> {
         if let Some(mut notes) = elf_obj.iter_note_headers(mem_slice) {
             while let Some(Ok(note)) = notes.next() {
-                if note.n_type == elf::note::NT_GNU_BUILD_ID {
+                if (note.name == "GNU") && (note.n_type == elf::note::NT_GNU_BUILD_ID) {
                     return Some(note.desc);
                 }
             }
         }
         if let Some(mut notes) = elf_obj.iter_note_sections(mem_slice, Some(".note.gnu.build-id")) {
             while let Some(Ok(note)) = notes.next() {
-                if note.n_type == elf::note::NT_GNU_BUILD_ID {
+                if (note.name == "GNU") && (note.n_type == elf::note::NT_GNU_BUILD_ID) {
                     return Some(note.desc);
                 }
             }

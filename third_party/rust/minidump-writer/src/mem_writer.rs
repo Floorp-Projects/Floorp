@@ -118,7 +118,7 @@ where
         let position = buffer.reserve(size) as u32;
 
         Ok(Self {
-            position: position as u32,
+            position,
             size,
             phantom: std::marker::PhantomData,
         })

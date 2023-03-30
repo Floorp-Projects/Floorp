@@ -1,13 +1,13 @@
 //! List directory contents
 
-use crate::{Error, NixPath, Result};
 use crate::errno::Errno;
 use crate::fcntl::{self, OFlag};
+use crate::sys;
+use crate::{Error, NixPath, Result};
+use cfg_if::cfg_if;
+use std::ffi;
 use std::os::unix::io::{AsRawFd, IntoRawFd, RawFd};
 use std::ptr;
-use std::ffi;
-use crate::sys;
-use cfg_if::cfg_if;
 
 #[cfg(target_os = "linux")]
 use libc::{dirent64 as dirent, readdir64_r as readdir_r};
@@ -29,21 +29,26 @@ use libc::{dirent, readdir_r};
 ///    * returns entries' names as a `CStr` (no allocation or conversion beyond whatever libc
 ///      does).
 #[derive(Debug, Eq, Hash, PartialEq)]
-pub struct Dir(
-    ptr::NonNull<libc::DIR>
-);
+pub struct Dir(ptr::NonNull<libc::DIR>);
 
 impl Dir {
     /// Opens the given path as with `fcntl::open`.
-    pub fn open<P: ?Sized + NixPath>(path: &P, oflag: OFlag,
-                                     mode: sys::stat::Mode) -> Result<Self> {
+    pub fn open<P: ?Sized + NixPath>(
+        path: &P,
+        oflag: OFlag,
+        mode: sys::stat::Mode,
+    ) -> Result<Self> {
         let fd = fcntl::open(path, oflag, mode)?;
         Dir::from_fd(fd)
     }
 
     /// Opens the given path as with `fcntl::openat`.
-    pub fn openat<P: ?Sized + NixPath>(dirfd: RawFd, path: &P, oflag: OFlag,
-                                       mode: sys::stat::Mode) -> Result<Self> {
+    pub fn openat<P: ?Sized + NixPath>(
+        dirfd: RawFd,
+        path: &P,
+        oflag: OFlag,
+        mode: sys::stat::Mode,
+    ) -> Result<Self> {
         let fd = fcntl::openat(dirfd, path, oflag, mode)?;
         Dir::from_fd(fd)
     }
@@ -55,13 +60,15 @@ impl Dir {
     }
 
     /// Converts from a file descriptor, closing it on success or failure.
-    #[cfg_attr(has_doc_alias, doc(alias("fdopendir")))]
+    #[doc(alias("fdopendir"))]
     pub fn from_fd(fd: RawFd) -> Result<Self> {
-        let d = ptr::NonNull::new(unsafe { libc::fdopendir(fd) }).ok_or_else(|| {
-            let e = Error::last();
-            unsafe { libc::close(fd) };
-            e
-        })?;
+        let d = ptr::NonNull::new(unsafe { libc::fdopendir(fd) }).ok_or_else(
+            || {
+                let e = Error::last();
+                unsafe { libc::close(fd) };
+                e
+            },
+        )?;
         Ok(Dir(d))
     }
 
@@ -103,9 +110,11 @@ fn next(dir: &mut Dir) -> Option<Result<Entry>> {
         // Probably fine here too then.
         let mut ent = std::mem::MaybeUninit::<dirent>::uninit();
         let mut result = ptr::null_mut();
-        if let Err(e) = Errno::result(
-            readdir_r(dir.0.as_ptr(), ent.as_mut_ptr(), &mut result))
-        {
+        if let Err(e) = Errno::result(readdir_r(
+            dir.0.as_ptr(),
+            ent.as_mut_ptr(),
+            &mut result,
+        )) {
             return Some(Err(e));
         }
         if result.is_null() {
@@ -207,7 +216,7 @@ pub enum Type {
 
 impl Entry {
     /// Returns the inode number (`d_ino`) of the underlying `dirent`.
-    #[allow(clippy::useless_conversion)]    // Not useless on all OSes
+    #[allow(clippy::useless_conversion)] // Not useless on all OSes
     // The cast is not unnecessary on all platforms.
     #[allow(clippy::unnecessary_cast)]
     pub fn ino(&self) -> u64 {
@@ -240,7 +249,11 @@ impl Entry {
     /// notably, some Linux filesystems don't implement this. The caller should use `stat` or
     /// `fstat` if this returns `None`.
     pub fn file_type(&self) -> Option<Type> {
-        #[cfg(not(any(target_os = "illumos", target_os = "solaris", target_os = "haiku")))]
+        #[cfg(not(any(
+            target_os = "illumos",
+            target_os = "solaris",
+            target_os = "haiku"
+        )))]
         match self.0.d_type {
             libc::DT_FIFO => Some(Type::Fifo),
             libc::DT_CHR => Some(Type::CharacterDevice),
@@ -253,7 +266,11 @@ impl Entry {
         }
 
         // illumos, Solaris, and Haiku systems do not have the d_type member at all:
-        #[cfg(any(target_os = "illumos", target_os = "solaris", target_os = "haiku"))]
+        #[cfg(any(
+            target_os = "illumos",
+            target_os = "solaris",
+            target_os = "haiku"
+        ))]
         None
     }
 }

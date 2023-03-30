@@ -264,6 +264,33 @@ fn test_so_tcp_keepalive() {
 }
 
 #[test]
+#[cfg(any(target_os = "android", target_os = "linux"))]
+#[cfg_attr(qemu, ignore)]
+fn test_get_mtu() {
+    use nix::sys::socket::{bind, connect, SockaddrIn};
+    use std::net::SocketAddrV4;
+    use std::str::FromStr;
+
+    let std_sa = SocketAddrV4::from_str("127.0.0.1:4001").unwrap();
+    let std_sb = SocketAddrV4::from_str("127.0.0.1:4002").unwrap();
+
+    let usock = socket(
+        AddressFamily::Inet,
+        SockType::Datagram,
+        SockFlag::empty(),
+        SockProtocol::Udp,
+    )
+    .unwrap();
+
+    // Bind and initiate connection
+    bind(usock, &SockaddrIn::from(std_sa)).unwrap();
+    connect(usock, &SockaddrIn::from(std_sb)).unwrap();
+
+    // Loopback connections have 2^16 - the maximum - MTU
+    assert_eq!(getsockopt(usock, sockopt::IpMtu), Ok(u16::MAX as i32))
+}
+
+#[test]
 #[cfg(any(target_os = "android", target_os = "freebsd", target_os = "linux"))]
 fn test_ttl_opts() {
     let fd4 = socket(
@@ -353,4 +380,52 @@ fn test_v6dontfrag_opts() {
     setsockopt(fd6d, sockopt::Ipv6DontFrag, &false).expect(
         "unsetting IPV6_DONTFRAG on an inet6 datagram socket should succeed",
     );
+}
+
+#[test]
+#[cfg(target_os = "linux")]
+fn test_so_priority() {
+    let fd = socket(
+        AddressFamily::Inet,
+        SockType::Stream,
+        SockFlag::empty(),
+        SockProtocol::Tcp,
+    )
+    .unwrap();
+    let priority = 3;
+    setsockopt(fd, sockopt::Priority, &priority).unwrap();
+    assert_eq!(getsockopt(fd, sockopt::Priority).unwrap(), priority);
+}
+
+#[test]
+#[cfg(target_os = "linux")]
+fn test_ip_tos() {
+    let fd = socket(
+        AddressFamily::Inet,
+        SockType::Stream,
+        SockFlag::empty(),
+        SockProtocol::Tcp,
+    )
+    .unwrap();
+    let tos = 0x80; // CS4
+    setsockopt(fd, sockopt::IpTos, &tos).unwrap();
+    assert_eq!(getsockopt(fd, sockopt::IpTos).unwrap(), tos);
+}
+
+#[test]
+#[cfg(target_os = "linux")]
+// Disable the test under emulation because it fails in Cirrus-CI.  Lack
+// of QEMU support is suspected.
+#[cfg_attr(qemu, ignore)]
+fn test_ipv6_tclass() {
+    let fd = socket(
+        AddressFamily::Inet6,
+        SockType::Stream,
+        SockFlag::empty(),
+        SockProtocol::Tcp,
+    )
+    .unwrap();
+    let class = 0x80; // CS4
+    setsockopt(fd, sockopt::Ipv6TClass, &class).unwrap();
+    assert_eq!(getsockopt(fd, sockopt::Ipv6TClass).unwrap(), class);
 }

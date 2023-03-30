@@ -114,8 +114,8 @@ fn test_linux_gate_mapping_id() {
 #[test]
 fn test_merged_mappings() {
     let page_size = nix::unistd::sysconf(nix::unistd::SysconfVar::PAGE_SIZE).unwrap();
-    let page_size = page_size.unwrap() as usize;
-    let map_size = 3 * page_size;
+    let page_size = std::num::NonZeroUsize::new(page_size.unwrap() as usize).unwrap();
+    let map_size = std::num::NonZeroUsize::new(3 * page_size.get()).unwrap();
 
     let path: &'static str = std::env!("CARGO_BIN_EXE_test");
     let file = std::fs::File::open(path).unwrap();
@@ -124,7 +124,7 @@ fn test_merged_mappings() {
     // enclosed in the other, but with different protections.
     let mapped_mem = unsafe {
         mmap(
-            std::ptr::null_mut(),
+            None,
             map_size,
             ProtFlags::PROT_READ,
             MapFlags::MAP_SHARED,
@@ -137,14 +137,14 @@ fn test_merged_mappings() {
     // Carve a page out of the first mapping with different permissions.
     let _inside_mapping = unsafe {
         mmap(
-            (mapped_mem as usize + 2 * page_size) as *mut libc::c_void,
+            std::num::NonZeroUsize::new(mapped_mem as usize + 2 * page_size.get()),
             page_size,
             ProtFlags::PROT_NONE,
             MapFlags::MAP_SHARED | MapFlags::MAP_FIXED,
             file.as_raw_fd(),
             // Map a different offset just to
             // better test real-world conditions.
-            page_size.try_into().unwrap(), // try_into() in order to work for 32 and 64 bit
+            page_size.get().try_into().unwrap(), // try_into() in order to work for 32 and 64 bit
         )
     };
 
@@ -153,7 +153,7 @@ fn test_merged_mappings() {
         &[
             path,
             &format!("{}", mapped_mem as usize),
-            &format!("{}", map_size),
+            &format!("{map_size}"),
         ],
     );
 }
@@ -255,7 +255,7 @@ fn test_sanitize_stack_copy() {
     }
 
     // The instruction pointer definitely should point into an executable mapping.
-    let instr_ptr = thread_info.get_instruction_pointer() as usize;
+    let instr_ptr = thread_info.get_instruction_pointer();
     let mapping_info = dumper
         .find_mapping_no_bias(instr_ptr)
         .expect("Failed to find mapping info");

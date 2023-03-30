@@ -23,20 +23,17 @@
 //! }
 //! ```
 
-use libc::{
-    c_char,
-    c_int,
-};
-use std::ffi::{OsString,OsStr,CStr};
-use std::os::unix::ffi::OsStrExt;
-use std::mem::{MaybeUninit, size_of};
-use std::os::unix::io::{RawFd,AsRawFd,FromRawFd};
-use std::ptr;
-use crate::unistd::read;
-use crate::Result;
-use crate::NixPath;
 use crate::errno::Errno;
+use crate::unistd::read;
+use crate::NixPath;
+use crate::Result;
 use cfg_if::cfg_if;
+use libc::{c_char, c_int};
+use std::ffi::{CStr, OsStr, OsString};
+use std::mem::{size_of, MaybeUninit};
+use std::os::unix::ffi::OsStrExt;
+use std::os::unix::io::{AsRawFd, FromRawFd, RawFd};
+use std::ptr;
 
 libc_bitflags! {
     /// Configuration options for [`inotify_add_watch`](fn.inotify_add_watch.html).
@@ -106,7 +103,7 @@ libc_bitflags! {
 /// other interfaces consuming file descriptors, epoll for example.
 #[derive(Debug, Clone, Copy)]
 pub struct Inotify {
-    fd: RawFd
+    fd: RawFd,
 }
 
 /// This object is returned when you create a new watch on an inotify instance.
@@ -114,7 +111,7 @@ pub struct Inotify {
 /// know which watch triggered which event.
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct WatchDescriptor {
-    wd: i32
+    wd: i32,
 }
 
 /// A single inotify event.
@@ -134,7 +131,7 @@ pub struct InotifyEvent {
     pub cookie: u32,
     /// Filename. This field exists only if the event was triggered for a file
     /// inside the watched directory.
-    pub name: Option<OsString>
+    pub name: Option<OsString>,
 }
 
 impl Inotify {
@@ -144,9 +141,7 @@ impl Inotify {
     ///
     /// For more information see, [inotify_init(2)](https://man7.org/linux/man-pages/man2/inotify_init.2.html).
     pub fn init(flags: InitFlags) -> Result<Inotify> {
-        let res = Errno::result(unsafe {
-            libc::inotify_init1(flags.bits())
-        });
+        let res = Errno::result(unsafe { libc::inotify_init1(flags.bits()) });
 
         res.map(|fd| Inotify { fd })
     }
@@ -156,15 +151,13 @@ impl Inotify {
     /// Returns a watch descriptor. This is not a File Descriptor!
     ///
     /// For more information see, [inotify_add_watch(2)](https://man7.org/linux/man-pages/man2/inotify_add_watch.2.html).
-    pub fn add_watch<P: ?Sized + NixPath>(self,
-                                          path: &P,
-                                          mask: AddWatchFlags)
-                                            -> Result<WatchDescriptor>
-    {
-        let res = path.with_nix_path(|cstr| {
-            unsafe {
-                libc::inotify_add_watch(self.fd, cstr.as_ptr(), mask.bits())
-            }
+    pub fn add_watch<P: ?Sized + NixPath>(
+        self,
+        path: &P,
+        mask: AddWatchFlags,
+    ) -> Result<WatchDescriptor> {
+        let res = path.with_nix_path(|cstr| unsafe {
+            libc::inotify_add_watch(self.fd, cstr.as_ptr(), mask.bits())
         })?;
 
         Errno::result(res).map(|wd| WatchDescriptor { wd })
@@ -210,7 +203,7 @@ impl Inotify {
                 ptr::copy_nonoverlapping(
                     buffer.as_ptr().add(offset),
                     event.as_mut_ptr() as *mut u8,
-                    (BUFSIZ - offset).min(header_size)
+                    (BUFSIZ - offset).min(header_size),
                 );
                 event.assume_init()
             };
@@ -219,9 +212,7 @@ impl Inotify {
                 0 => None,
                 _ => {
                     let ptr = unsafe {
-                        buffer
-                            .as_ptr()
-                            .add(offset + header_size)
+                        buffer.as_ptr().add(offset + header_size)
                             as *const c_char
                     };
                     let cstr = unsafe { CStr::from_ptr(ptr) };
@@ -234,7 +225,7 @@ impl Inotify {
                 wd: WatchDescriptor { wd: event.wd },
                 mask: AddWatchFlags::from_bits_truncate(event.mask),
                 cookie: event.cookie,
-                name
+                name,
             });
 
             offset += header_size + event.len as usize;

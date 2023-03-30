@@ -36,6 +36,7 @@ mod test_resource;
 #[cfg(any(
     target_os = "android",
     target_os = "dragonfly",
+    all(target_os = "freebsd", fbsd14),
     target_os = "linux"
 ))]
 mod test_sched;

@@ -74,8 +74,8 @@ pub fn write(
         // unhelpful.
         if config.crash_context.is_some() && thread.thread_id == config.blamed_thread as u32 {
             let crash_context = config.crash_context.as_ref().unwrap();
-            let instruction_ptr = crash_context.get_instruction_pointer() as usize;
-            let stack_pointer = crash_context.get_stack_pointer() as usize;
+            let instruction_ptr = crash_context.get_instruction_pointer();
+            let stack_pointer = crash_context.get_stack_pointer();
             fill_thread_stack(
                 config,
                 buffer,
@@ -142,7 +142,7 @@ pub fn write(
                 } else {
                     MaxStackLen::None // default to no maximum for this thread
                 };
-            let instruction_ptr = info.get_instruction_pointer() as usize;
+            let instruction_ptr = info.get_instruction_pointer();
             fill_thread_stack(
                 config,
                 buffer,

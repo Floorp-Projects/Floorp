@@ -6,8 +6,8 @@ use std::ptr;
 
 use libc::{self, off_t};
 
-use crate::Result;
 use crate::errno::Errno;
+use crate::Result;
 
 /// Copy up to `count` bytes to `out_fd` from `in_fd` starting at `offset`.
 ///

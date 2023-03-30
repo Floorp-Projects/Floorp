@@ -11,12 +11,12 @@ pub use self::sched_linux_like::*;
 #[cfg_attr(docsrs, doc(cfg(all())))]
 mod sched_linux_like {
     use crate::errno::Errno;
+    use crate::unistd::Pid;
+    use crate::Result;
     use libc::{self, c_int, c_void};
     use std::mem;
     use std::option::Option;
     use std::os::unix::io::RawFd;
-    use crate::unistd::Pid;
-    use crate::Result;
 
     // For some functions taking with a parameter of type CloneFlags,
     // only a subset of these flags have an effect.
@@ -112,7 +112,8 @@ mod sched_linux_like {
             let ptr_aligned = ptr.sub(ptr as usize % 16);
             libc::clone(
                 mem::transmute(
-                    callback as extern "C" fn(*mut Box<dyn FnMut() -> isize>) -> i32,
+                    callback
+                        as extern "C" fn(*mut Box<dyn FnMut() -> isize>) -> i32,
                 ),
                 ptr_aligned as *mut c_void,
                 combined,
@@ -142,25 +143,38 @@ mod sched_linux_like {
     }
 }
 
-#[cfg(any(target_os = "android", target_os = "dragonfly", target_os = "linux"))]
+#[cfg(any(
+    target_os = "android",
+    target_os = "dragonfly",
+    target_os = "freebsd",
+    target_os = "linux"
+))]
 pub use self::sched_affinity::*;
 
-#[cfg(any(target_os = "android", target_os = "dragonfly", target_os = "linux"))]
+#[cfg(any(
+    target_os = "android",
+    target_os = "dragonfly",
+    target_os = "freebsd",
+    target_os = "linux"
+))]
 mod sched_affinity {
     use crate::errno::Errno;
-    use std::mem;
     use crate::unistd::Pid;
     use crate::Result;
+    use std::mem;
 
     /// CpuSet represent a bit-mask of CPUs.
     /// CpuSets are used by sched_setaffinity and
     /// sched_getaffinity for example.
     ///
     /// This is a wrapper around `libc::cpu_set_t`.
-    #[repr(C)]
+    #[repr(transparent)]
     #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
     pub struct CpuSet {
+        #[cfg(not(target_os = "freebsd"))]
         cpu_set: libc::cpu_set_t,
+        #[cfg(target_os = "freebsd")]
+        cpu_set: libc::cpuset_t,
     }
 
     impl CpuSet {
@@ -187,7 +201,9 @@ mod sched_affinity {
             if field >= CpuSet::count() {
                 Err(Errno::EINVAL)
             } else {
-                unsafe { libc::CPU_SET(field, &mut self.cpu_set); }
+                unsafe {
+                    libc::CPU_SET(field, &mut self.cpu_set);
+                }
                 Ok(())
             }
         }
@@ -198,14 +214,21 @@ mod sched_affinity {
             if field >= CpuSet::count() {
                 Err(Errno::EINVAL)
             } else {
-                unsafe { libc::CPU_CLR(field, &mut self.cpu_set);}
+                unsafe {
+                    libc::CPU_CLR(field, &mut self.cpu_set);
+                }
                 Ok(())
             }
         }
 
         /// Return the maximum number of CPU in CpuSet
         pub const fn count() -> usize {
-            8 * mem::size_of::<libc::cpu_set_t>()
+            #[cfg(not(target_os = "freebsd"))]
+            let bytes = mem::size_of::<libc::cpu_set_t>();
+            #[cfg(target_os = "freebsd")]
+            let bytes = mem::size_of::<libc::cpuset_t>();
+
+            8 * bytes
         }
     }
 
@@ -281,6 +304,13 @@ mod sched_affinity {
         };
 
         Errno::result(res).and(Ok(cpuset))
+    }
+
+    /// Determines the CPU on which the calling thread is running.
+    pub fn sched_getcpu() -> Result<usize> {
+        let res = unsafe { libc::sched_getcpu() };
+
+        Errno::result(res).map(|int| int as usize)
     }
 }
 

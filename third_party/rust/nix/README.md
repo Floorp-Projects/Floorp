@@ -47,6 +47,7 @@ limitations. Support for platforms is split into three tiers:
 The following targets are supported by `nix`:
 
 Tier 1:
+  * aarch64-apple-darwin
   * aarch64-unknown-linux-gnu
   * arm-unknown-linux-gnueabi
   * armv7-unknown-linux-gnueabihf
@@ -58,13 +59,11 @@ Tier 1:
   * mips64el-unknown-linux-gnuabi64
   * mipsel-unknown-linux-gnu
   * powerpc64le-unknown-linux-gnu
-  * x86_64-apple-darwin
   * x86_64-unknown-freebsd
   * x86_64-unknown-linux-gnu
   * x86_64-unknown-linux-musl
 
 Tier 2:
-  * aarch64-apple-darwin
   * aarch64-apple-ios
   * aarch64-linux-android
   * arm-linux-androideabi
@@ -75,6 +74,7 @@ Tier 2:
   * s390x-unknown-linux-gnu
   * x86_64-apple-ios
   * x86_64-linux-android
+  * x86_64-apple-darwin
   * x86_64-unknown-illumos
   * x86_64-unknown-netbsd
 
@@ -89,7 +89,7 @@ Tier 3:
 
 ## Minimum Supported Rust Version (MSRV)
 
-nix is supported on Rust 1.46.0 and higher.  Its MSRV will not be
+nix is supported on Rust 1.56.1 and higher.  Its MSRV will not be
 changed in the future without bumping the major or minor version.
 
 ## Contributing

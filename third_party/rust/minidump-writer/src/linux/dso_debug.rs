@@ -42,21 +42,21 @@ pub struct LinkMap {
 }
 
 // COPY from <link.h>
-#[derive(Debug, Clone)]
+/// This state value describes the mapping change taking place when
+/// the `r_brk' address is called.
+#[derive(Debug, Clone, Default)]
 #[allow(non_camel_case_types, unused)]
 #[repr(C)]
 enum RState {
-    /* This state value describes the mapping change taking place when
-    the `r_brk' address is called.  */
-    RT_CONSISTENT, /* Mapping change is complete.  */
-    RT_ADD,        /* Beginning to add a new object.  */
-    RT_DELETE,     /* Beginning to remove an object mapping.  */
+    /// Mapping change is complete.
+    #[default]
+    RT_CONSISTENT,
+    /// Beginning to add a new object.
+    RT_ADD,
+    /// Beginning to remove an object mapping.
+    RT_DELETE,
 }
-impl Default for RState {
-    fn default() -> Self {
-        RState::RT_CONSISTENT // RStates are not used anyway
-    }
-}
+
 // COPY from <link.h>
 #[derive(Debug, Clone, Default)]
 #[repr(C)]
