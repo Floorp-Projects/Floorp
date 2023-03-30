@@ -2070,9 +2070,9 @@ static void ForeachObservedPref(const Function& aFunction) {
 #endif
 }
 
-// NOTE: never Dispatch(....,NS_DISPATCH_SYNC) to the MediaManager
-// thread from the MainThread, as we NS_DISPATCH_SYNC to MainThread
-// from MediaManager thread.
+// NOTE: never NS_DispatchAndSpinEventLoopUntilComplete to the MediaManager
+// thread from the MainThread, as we NS_DispatchAndSpinEventLoopUntilComplete to
+// MainThread from MediaManager thread.
 
 // Guaranteed never to return nullptr.
 /* static */

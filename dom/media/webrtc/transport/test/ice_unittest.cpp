@@ -129,39 +129,33 @@ class StunTest : public MtransportTest {
     }
 
     // Make sure NrIceCtx is in a testable state.
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnableNM(&NrIceCtx::internal_DeinitializeGlobal),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnableNM(&NrIceCtx::internal_DeinitializeGlobal));
 
     // NB: NrIceCtx::internal_DeinitializeGlobal destroys the RLogConnector
     // singleton.
     RLogConnector::CreateInstance();
 
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnableNM(&TestStunServer::GetInstance, AF_INET),
-        NS_DISPATCH_SYNC);
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnableNM(&TestStunServer::GetInstance, AF_INET6),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnableNM(&TestStunServer::GetInstance, AF_INET));
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnableNM(&TestStunServer::GetInstance, AF_INET6));
 
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnableNM(&TestStunTcpServer::GetInstance, AF_INET),
-        NS_DISPATCH_SYNC);
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnableNM(&TestStunTcpServer::GetInstance, AF_INET6),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnableNM(&TestStunTcpServer::GetInstance, AF_INET));
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnableNM(&TestStunTcpServer::GetInstance, AF_INET6));
   }
 
   void TearDown() override {
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnableNM(&NrIceCtx::internal_DeinitializeGlobal),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnableNM(&NrIceCtx::internal_DeinitializeGlobal));
 
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnableNM(&TestStunServer::ShutdownInstance), NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnableNM(&TestStunServer::ShutdownInstance));
 
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnableNM(&TestStunTcpServer::ShutdownInstance), NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnableNM(&TestStunTcpServer::ShutdownInstance));
 
     RLogConnector::DestroyInstance();
 
@@ -310,9 +304,8 @@ class SchedulableTrickleCandidate {
   }
 
   void Schedule(unsigned int ms) {
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(this, &SchedulableTrickleCandidate::Schedule_s, ms),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(this, &SchedulableTrickleCandidate::Schedule_s, ms));
   }
 
   void Schedule_s(unsigned int ms) {
@@ -396,8 +389,7 @@ class IceTestPeer : public sigslot::has_slots<> {
   }
 
   ~IceTestPeer() {
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(this, &IceTestPeer::Shutdown), NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(WrapRunnable(this, &IceTestPeer::Shutdown));
 
     // Give the ICE destruction callback time to fire before
     // we destroy the resolver.
@@ -439,9 +431,8 @@ class IceTestPeer : public sigslot::has_slots<> {
   }
 
   void AddStream(int components) {
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(this, &IceTestPeer::AddStream_s, components),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(this, &IceTestPeer::AddStream_s, components));
   }
 
   void RemoveStream_s(size_t index) {
@@ -449,9 +440,8 @@ class IceTestPeer : public sigslot::has_slots<> {
   }
 
   void RemoveStream(size_t index) {
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(this, &IceTestPeer::RemoveStream_s, index),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(this, &IceTestPeer::RemoveStream_s, index));
   }
 
   RefPtr<NrIceMediaStream> GetStream_s(size_t index) {
@@ -527,18 +517,16 @@ class IceTestPeer : public sigslot::has_slots<> {
               bool obfuscate_host_addresses = false) {
     nsresult res;
 
-    test_utils_->sts_target()->Dispatch(
+    test_utils_->SyncDispatchToSTS(
         WrapRunnableRet(&res, ice_ctx_, &NrIceCtx::StartGathering,
-                        default_route_only, obfuscate_host_addresses),
-        NS_DISPATCH_SYNC);
+                        default_route_only, obfuscate_host_addresses));
 
     ASSERT_TRUE(NS_SUCCEEDED(res));
   }
 
   void SetCtxFlags(bool default_route_only) {
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(ice_ctx_, &NrIceCtx::SetCtxFlags, default_route_only),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(ice_ctx_, &NrIceCtx::SetCtxFlags, default_route_only));
   }
 
   nsTArray<NrIceStunAddr> GetStunAddrs() { return ice_ctx_->GetStunAddrs(); }
@@ -676,9 +664,8 @@ class IceTestPeer : public sigslot::has_slots<> {
   }
   bool is_ready(size_t stream) {
     bool result;
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnableRet(&result, this, &IceTestPeer::is_ready_s, stream),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnableRet(&result, this, &IceTestPeer::is_ready_s, stream));
     return result;
   }
   bool ice_connected() { return ice_connected_; }
@@ -688,8 +675,8 @@ class IceTestPeer : public sigslot::has_slots<> {
   size_t sent() { return sent_; }
 
   void RestartIce() {
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(this, &IceTestPeer::RestartIce_s), NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(this, &IceTestPeer::RestartIce_s));
   }
 
   void RestartIce_s() {
@@ -706,9 +693,8 @@ class IceTestPeer : public sigslot::has_slots<> {
   }
 
   void RollbackIceRestart() {
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(this, &IceTestPeer::RollbackIceRestart_s),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(this, &IceTestPeer::RollbackIceRestart_s));
   }
 
   void RollbackIceRestart_s() {
@@ -768,10 +754,8 @@ class IceTestPeer : public sigslot::has_slots<> {
 
   void Connect(IceTestPeer* remote, TrickleMode trickle_mode,
                bool start = true) {
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(this, &IceTestPeer::Connect_s, remote, trickle_mode,
-                     start),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(WrapRunnable(this, &IceTestPeer::Connect_s,
+                                                remote, trickle_mode, start));
   }
 
   void SimulateTrickle(size_t stream) {
@@ -916,14 +900,13 @@ class IceTestPeer : public sigslot::has_slots<> {
   }
 
   void DumpAndCheckActiveCandidates() {
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(this, &IceTestPeer::DumpAndCheckActiveCandidates_s),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(this, &IceTestPeer::DumpAndCheckActiveCandidates_s));
   }
 
   void Close() {
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(ice_ctx_, &NrIceCtx::destroy_peer_ctx), NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(ice_ctx_, &NrIceCtx::destroy_peer_ctx));
   }
 
   void Shutdown() {
@@ -949,15 +932,12 @@ class IceTestPeer : public sigslot::has_slots<> {
   void StartChecks() {
     nsresult res;
 
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnableRet(
-            &res, ice_ctx_, &NrIceCtx::SetControlling,
-            offerer_ ? NrIceCtx::ICE_CONTROLLING : NrIceCtx::ICE_CONTROLLED),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(WrapRunnableRet(
+        &res, ice_ctx_, &NrIceCtx::SetControlling,
+        offerer_ ? NrIceCtx::ICE_CONTROLLING : NrIceCtx::ICE_CONTROLLED));
     // Now start checks
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnableRet(&res, ice_ctx_, &NrIceCtx::StartChecks),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnableRet(&res, ice_ctx_, &NrIceCtx::StartChecks));
     ASSERT_TRUE(NS_SUCCEEDED(res));
   }
 
@@ -1032,10 +1012,8 @@ class IceTestPeer : public sigslot::has_slots<> {
   nsresult GetCandidatePairs(size_t stream_index,
                              std::vector<NrIceCandidatePair>* pairs) {
     nsresult v;
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnableRet(&v, this, &IceTestPeer::GetCandidatePairs_s,
-                        stream_index, pairs),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(WrapRunnableRet(
+        &v, this, &IceTestPeer::GetCandidatePairs_s, stream_index, pairs));
     return v;
   }
 
@@ -1235,10 +1213,8 @@ class IceTestPeer : public sigslot::has_slots<> {
 
   void ParseCandidate(size_t i, const std::string& candidate,
                       const std::string& mdns_addr) {
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(this, &IceTestPeer::ParseCandidate_s, i, candidate,
-                     mdns_addr),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(WrapRunnable(
+        this, &IceTestPeer::ParseCandidate_s, i, candidate, mdns_addr));
   }
 
   void DisableComponent_s(size_t index, int component_id) {
@@ -1251,10 +1227,8 @@ class IceTestPeer : public sigslot::has_slots<> {
   }
 
   void DisableComponent(size_t stream, int component_id) {
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(this, &IceTestPeer::DisableComponent_s, stream,
-                     component_id),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(WrapRunnable(
+        this, &IceTestPeer::DisableComponent_s, stream, component_id));
   }
 
   void AssertConsentRefresh_s(size_t index, int component_id,
@@ -1288,9 +1262,8 @@ class IceTestPeer : public sigslot::has_slots<> {
   }
 
   void AssertConsentRefresh(ConsentStatus status) {
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(this, &IceTestPeer::AssertConsentRefresh_s, 0, 1, status),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(this, &IceTestPeer::AssertConsentRefresh_s, 0, 1, status));
   }
 
   void ChangeNetworkState_s(bool online) {
@@ -1298,31 +1271,27 @@ class IceTestPeer : public sigslot::has_slots<> {
   }
 
   void ChangeNetworkStateToOffline() {
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(this, &IceTestPeer::ChangeNetworkState_s, false),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(this, &IceTestPeer::ChangeNetworkState_s, false));
   }
 
   void ChangeNetworkStateToOnline() {
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(this, &IceTestPeer::ChangeNetworkState_s, true),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(this, &IceTestPeer::ChangeNetworkState_s, true));
   }
 
   void SetControlling(NrIceCtx::Controlling controlling) {
     nsresult res;
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnableRet(&res, ice_ctx_, &NrIceCtx::SetControlling, controlling),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(WrapRunnableRet(
+        &res, ice_ctx_, &NrIceCtx::SetControlling, controlling));
     ASSERT_TRUE(NS_SUCCEEDED(res));
   }
 
   NrIceCtx::Controlling GetControlling() { return ice_ctx_->GetControlling(); }
 
   void SetTiebreaker(uint64_t tiebreaker) {
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(this, &IceTestPeer::SetTiebreaker_s, tiebreaker),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(this, &IceTestPeer::SetTiebreaker_s, tiebreaker));
   }
 
   void SetTiebreaker_s(uint64_t tiebreaker) {
@@ -1337,10 +1306,8 @@ class IceTestPeer : public sigslot::has_slots<> {
   nsresult GetDefaultCandidate(unsigned int stream, NrIceCandidate* cand) {
     nsresult rv;
 
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnableRet(&rv, this, &IceTestPeer::GetDefaultCandidate_s, stream,
-                        cand),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(WrapRunnableRet(
+        &rv, this, &IceTestPeer::GetDefaultCandidate_s, stream, cand));
 
     return rv;
   }
@@ -1396,15 +1363,11 @@ class WebRtcIceGatherTest : public StunTest {
 
     Preferences::SetInt("media.peerconnection.ice.tcp_so_sock_count", 3);
 
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(TestStunServer::GetInstance(AF_INET),
-                     &TestStunServer::Reset),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(WrapRunnable(
+        TestStunServer::GetInstance(AF_INET), &TestStunServer::Reset));
     if (TestStunServer::GetInstance(AF_INET6)) {
-      test_utils_->sts_target()->Dispatch(
-          WrapRunnable(TestStunServer::GetInstance(AF_INET6),
-                       &TestStunServer::Reset),
-          NS_DISPATCH_SYNC);
+      test_utils_->SyncDispatchToSTS(WrapRunnable(
+          TestStunServer::GetInstance(AF_INET6), &TestStunServer::Reset));
     }
   }
 
@@ -1823,8 +1786,8 @@ class WebRtcIceConnectTest : public StunTest {
   void ConnectThenDelete() {
     p2_->Connect(p1_.get(), TRICKLE_NONE, false);
     p1_->Connect(p2_.get(), TRICKLE_NONE, true);
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(this, &WebRtcIceConnectTest::CloseP1), NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(this, &WebRtcIceConnectTest::CloseP1));
     p2_->StartChecks();
 
     // Wait to see if we crash
@@ -1841,14 +1804,13 @@ class WebRtcIceConnectTest : public StunTest {
     size_t previousReceived = p2->received();
 
     if (expect_tx_failure) {
-      test_utils_->sts_target()->Dispatch(
-          WrapRunnable(p1, &IceTestPeer::SendFailure, 0, 1), NS_DISPATCH_SYNC);
+      test_utils_->SyncDispatchToSTS(
+          WrapRunnable(p1, &IceTestPeer::SendFailure, 0, 1));
       ASSERT_EQ(previousSent, p1->sent());
     } else {
-      test_utils_->sts_target()->Dispatch(
+      test_utils_->SyncDispatchToSTS(
           WrapRunnable(p1, &IceTestPeer::SendPacket, 0, 1,
-                       reinterpret_cast<const unsigned char*>("TEST"), 4),
-          NS_DISPATCH_SYNC);
+                       reinterpret_cast<const unsigned char*>("TEST"), 4));
       ASSERT_EQ(previousSent + 1, p1->sent());
     }
     if (expect_rx_failure) {
@@ -1860,9 +1822,8 @@ class WebRtcIceConnectTest : public StunTest {
   }
 
   void SendFailure() {
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(p1_.get(), &IceTestPeer::SendFailure, 0, 1),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(p1_.get(), &IceTestPeer::SendFailure, 0, 1));
   }
 
  protected:
@@ -1951,9 +1912,8 @@ class WebRtcIcePacketFilterTest : public StunTest {
   }
 
   void TearDown() {
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(this, &WebRtcIcePacketFilterTest::TearDown_s),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(this, &WebRtcIcePacketFilterTest::TearDown_s));
     StunTest::TearDown();
   }
 

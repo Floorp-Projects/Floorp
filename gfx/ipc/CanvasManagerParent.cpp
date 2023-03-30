@@ -13,6 +13,7 @@
 #include "mozilla/webgpu/WebGPUParent.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "nsIThread.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla::gfx {
 
@@ -60,11 +61,11 @@ CanvasManagerParent::ManagerSet CanvasManagerParent::sManagers;
     return;
   }
 
-  owningThread->Dispatch(
-      NS_NewRunnableFunction(
-          "CanvasManagerParent::Shutdown",
-          []() -> void { CanvasManagerParent::ShutdownInternal(); }),
-      NS_DISPATCH_SYNC);
+  NS_DispatchAndSpinEventLoopUntilComplete(
+      "CanvasManagerParent::Shutdown"_ns, owningThread,
+      NS_NewRunnableFunction("CanvasManagerParent::Shutdown", []() -> void {
+        CanvasManagerParent::ShutdownInternal();
+      }));
 }
 
 /* static */ void CanvasManagerParent::ShutdownInternal() {

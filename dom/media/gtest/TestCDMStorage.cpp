@@ -198,8 +198,9 @@ static void ClearCDMStorage(already_AddRefed<nsIRunnable> aContinuation,
 }
 
 static void SimulatePBModeExit() {
-  NS_DispatchToMainThread(new NotifyObserversTask("last-pb-context-exited"),
-                          NS_DISPATCH_SYNC);
+  NS_DispatchAndSpinEventLoopUntilComplete(
+      "SimulatePBModeExit"_ns, GetMainThreadSerialEventTarget(),
+      MakeAndAddRef<NotifyObserversTask>("last-pb-context-exited"));
 }
 
 class TestGetNodeIdCallback : public GetNodeIdCallback {

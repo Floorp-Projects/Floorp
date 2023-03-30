@@ -135,8 +135,6 @@ pub unsafe fn dispatch_background_task_runnable(
 }
 
 /// Options to control how task runnables are dispatched.
-///
-/// NOTE: The `DISPATCH_SYNC` flag is intentionally not supported by this type.
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 pub struct DispatchOptions(u32);
 

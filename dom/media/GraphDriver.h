@@ -808,6 +808,12 @@ class AsyncCubebTask : public Runnable {
     return mDriver->mInitShutdownThread->Dispatch(this, aFlags);
   }
 
+  nsresult DispatchAndSpinEventLoopUntilComplete(
+      const nsACString& aVeryGoodReasonToDoThis) {
+    return NS_DispatchAndSpinEventLoopUntilComplete(
+        aVeryGoodReasonToDoThis, mDriver->mInitShutdownThread, do_AddRef(this));
+  }
+
  protected:
   virtual ~AsyncCubebTask();
 

@@ -1755,6 +1755,17 @@ extern "C" nsresult NS_DispatchBackgroundTask(
 extern "C" nsresult NS_CreateBackgroundTaskQueue(
     const char* aName, nsISerialEventTarget** aTarget);
 
+/**
+ * Dispatch the given runnable to the given event target, spinning the current
+ * thread's event loop until the runnable has finished executing.
+ *
+ * This is roughly equivalent to the previously-supported `NS_DISPATCH_SYNC`
+ * flag.
+ */
+extern nsresult NS_DispatchAndSpinEventLoopUntilComplete(
+    const nsACString& aVeryGoodReasonToDoThis, nsIEventTarget* aEventTarget,
+    already_AddRefed<nsIRunnable> aEvent);
+
 // Predeclaration for logging function below
 namespace IPC {
 class Message;

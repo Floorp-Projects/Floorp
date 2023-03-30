@@ -720,9 +720,9 @@ bool MessageChannel::Open(MessageChannel* aTargetChan,
       NodeController::GetSingleton()->CreatePortPair();
 
   // NOTE: This dispatch must be sync as it captures locals by non-owning
-  // reference, however we can't use `NS_DISPATCH_SYNC` as that will spin a
-  // nested event loop, and doesn't work with certain types of calling event
-  // targets.
+  // reference, however we can't use `NS_DispatchAndSpinEventLoopUntilComplete`
+  // as that will spin a nested event loop, and doesn't work with certain types
+  // of calling event targets.
   base::WaitableEvent event(/* manual_reset */ true,
                             /* initially_signaled */ false);
   MOZ_ALWAYS_SUCCEEDS(aEventTarget->Dispatch(NS_NewCancelableRunnableFunction(

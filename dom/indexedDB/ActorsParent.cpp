@@ -6377,7 +6377,8 @@ nsresult DispatchAndReturnFileReferences(
   QuotaManager* const quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  // XXX can't we simply use NS_DISPATCH_SYNC instead of using a monitor?
+  // XXX can't we simply use NS_DispatchAndSpinEventLoopUntilComplete instead of
+  // using a monitor?
   QM_TRY(MOZ_TO_RESULT(quotaManager->IOThread()->Dispatch(
       NS_NewRunnableFunction("GetFileReferences", std::move(lambda)),
       NS_DISPATCH_NORMAL)));

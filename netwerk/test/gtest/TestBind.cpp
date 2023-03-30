@@ -133,38 +133,35 @@ TEST(TestBind, MainTest)
   auto* sts = gSocketTransportService;
   ASSERT_TRUE(sts);
   for (int32_t tried = 0; tried < 100; tried++) {
-    sts->Dispatch(
-        NS_NewRunnableFunction(
-            "test",
-            [&]() {
-              nsCOMPtr<nsISocketTransport> client;
-              rv = service->CreateTransport(nsTArray<nsCString>(),
-                                            "127.0.0.1"_ns, serverPort, nullptr,
-                                            nullptr, getter_AddRefs(client));
-              ASSERT_NS_SUCCEEDED(rv);
+    NS_DispatchAndSpinEventLoopUntilComplete(
+        "test"_ns, sts, NS_NewRunnableFunction("test", [&]() {
+          nsCOMPtr<nsISocketTransport> client;
+          rv = service->CreateTransport(nsTArray<nsCString>(), "127.0.0.1"_ns,
+                                        serverPort, nullptr, nullptr,
+                                        getter_AddRefs(client));
+          ASSERT_NS_SUCCEEDED(rv);
 
-              // Bind to a port. It's possible that we are binding to a port
-              // that is currently in use. If we failed to bind, we try next
-              // port.
-              NetAddr bindingAddr;
-              bindingAddr.inet.family = AF_INET;
-              bindingAddr.inet.ip = 0;
-              bindingAddr.inet.port = PR_htons(bindingPort);
-              rv = client->Bind(&bindingAddr);
-              ASSERT_NS_SUCCEEDED(rv);
+          // Bind to a port. It's possible that we are binding to a port
+          // that is currently in use. If we failed to bind, we try next
+          // port.
+          NetAddr bindingAddr;
+          bindingAddr.inet.family = AF_INET;
+          bindingAddr.inet.ip = 0;
+          bindingAddr.inet.port = PR_htons(bindingPort);
+          rv = client->Bind(&bindingAddr);
+          ASSERT_NS_SUCCEEDED(rv);
 
-              // Open IO streams, to make client SocketTransport connect to
-              // server.
-              clientCallback = new ClientInputCallback(waiter);
-              rv = client->OpenInputStream(nsITransport::OPEN_UNBUFFERED, 0, 0,
-                                           getter_AddRefs(inputStream));
-              ASSERT_NS_SUCCEEDED(rv);
+          // Open IO streams, to make client SocketTransport connect to
+          // server.
+          clientCallback = new ClientInputCallback(waiter);
+          rv = client->OpenInputStream(nsITransport::OPEN_UNBUFFERED, 0, 0,
+                                       getter_AddRefs(inputStream));
+          ASSERT_NS_SUCCEEDED(rv);
 
-              nsCOMPtr<nsIAsyncInputStream> asyncInputStream =
-                  do_QueryInterface(inputStream);
-              rv = asyncInputStream->AsyncWait(clientCallback, 0, 0, nullptr);
-            }),
-        NS_DISPATCH_SYNC);
+          nsCOMPtr<nsIAsyncInputStream> asyncInputStream =
+              do_QueryInterface(inputStream);
+          rv = asyncInputStream->AsyncWait(clientCallback, 0, 0, nullptr);
+        }));
 
     // Wait for server's response or callback of input stream.
     waiter->Wait(1);

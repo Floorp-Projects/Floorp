@@ -453,9 +453,12 @@ nsresult nsPACMan::DispatchToPAC(already_AddRefed<nsIRunnable> aEvent,
     }
   }
 
-  return mPACThread->Dispatch(
-      e.forget(),
-      aSync ? nsIEventTarget::DISPATCH_SYNC : nsIEventTarget::DISPATCH_NORMAL);
+  if (aSync) {
+    return NS_DispatchAndSpinEventLoopUntilComplete(
+        "nsPACMan::DispatchToPAC"_ns, mPACThread, e.forget());
+  } else {
+    return mPACThread->Dispatch(e.forget());
+  }
 }
 
 nsresult nsPACMan::AsyncGetProxyForURI(nsIURI* uri, nsPACManCallback* callback,

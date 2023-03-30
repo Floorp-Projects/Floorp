@@ -65,7 +65,8 @@ TEST(ThreadPool, Parallelism)
 
   // Dispatch and sleep to ensure we have an idle thread
   nsCOMPtr<nsIRunnable> r0 = new Runnable("TestRunnable");
-  pool->Dispatch(r0, NS_DISPATCH_SYNC);
+  NS_DispatchAndSpinEventLoopUntilComplete("ThreadPool::Parallelism"_ns, pool,
+                                           do_AddRef(r0));
   PR_Sleep(PR_SecondsToInterval(2));
 
   class Runnable1 : public Runnable {

@@ -86,40 +86,6 @@ ThreadEventTarget::Dispatch(already_AddRefed<nsIRunnable> aEvent,
 
   LogRunnable::LogDispatch(event.get());
 
-  if (aFlags & DISPATCH_SYNC) {
-    // NOTE: Get the current thread specifically, as `SpinEventLoopUntil` can
-    // only spin that event target's loop. The reply will specify
-    // NS_DISPATCH_IGNORE_BLOCK_DISPATCH to ensure the reply is received even if
-    // the caller is a threadpool thread.
-    nsCOMPtr<nsIThread> current = NS_GetCurrentThread();
-    if (NS_WARN_IF(!current)) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    // XXX we should be able to do something better here... we should
-    //     be able to monitor the slot occupied by this event and use
-    //     that to tell us when the event has been processed.
-
-    RefPtr<nsThreadSyncDispatch> wrapper =
-        new nsThreadSyncDispatch(current.forget(), event.take());
-    bool success = mSink->PutEvent(do_AddRef(wrapper),
-                                   EventQueuePriority::Normal);  // hold a ref
-    if (!success) {
-      // PutEvent leaked the wrapper runnable object on failure, so we
-      // explicitly release this object once for that. Note that this
-      // object will be released again soon because it exits the scope.
-      wrapper.get()->Release();
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    // Allows waiting; ensure no locks are held that would deadlock us!
-    SpinEventLoopUntil(
-        "ThreadEventTarget::Dispatch"_ns,
-        [&, wrapper]() -> bool { return !wrapper->IsPending(); });
-
-    return NS_OK;
-  }
-
   NS_ASSERTION((aFlags & (NS_DISPATCH_AT_END |
                           NS_DISPATCH_IGNORE_BLOCK_DISPATCH)) == aFlags,
                "unexpected dispatch flags");

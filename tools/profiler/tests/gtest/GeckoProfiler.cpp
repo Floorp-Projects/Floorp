@@ -1917,15 +1917,14 @@ TEST(GeckoProfiler, DifferentThreads)
     uint32_t features = ProfilerFeature::JS;
     const char* filters[] = {"GeckoMain", "Compositor"};
 
-    thread->Dispatch(
-        NS_NewRunnableFunction("GeckoProfiler_DifferentThreads_Test::TestBody",
-                               [&]() {
-                                 profiler_start(PROFILER_DEFAULT_ENTRIES,
-                                                PROFILER_DEFAULT_INTERVAL,
-                                                features, filters,
-                                                MOZ_ARRAY_LENGTH(filters), 0);
-                               }),
-        NS_DISPATCH_SYNC);
+    NS_DispatchAndSpinEventLoopUntilComplete(
+        "GeckoProfiler_DifferentThreads_Test::TestBody"_ns, thread,
+        NS_NewRunnableFunction(
+            "GeckoProfiler_DifferentThreads_Test::TestBody", [&]() {
+              profiler_start(PROFILER_DEFAULT_ENTRIES,
+                             PROFILER_DEFAULT_INTERVAL, features, filters,
+                             MOZ_ARRAY_LENGTH(filters), 0);
+            }));
 
     ASSERT_TRUE(profiler_is_active());
     ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::MainThreadIO));
@@ -1935,10 +1934,10 @@ TEST(GeckoProfiler, DifferentThreads)
                       PROFILER_DEFAULT_INTERVAL, features, filters,
                       MOZ_ARRAY_LENGTH(filters), 0);
 
-    thread->Dispatch(
+    NS_DispatchAndSpinEventLoopUntilComplete(
+        "GeckoProfiler_DifferentThreads_Test::TestBody"_ns, thread,
         NS_NewRunnableFunction("GeckoProfiler_DifferentThreads_Test::TestBody",
-                               [&]() { profiler_stop(); }),
-        NS_DISPATCH_SYNC);
+                               [&]() { profiler_stop(); }));
 
     InactiveFeaturesAndParamsCheck();
   }
@@ -1952,10 +1951,10 @@ TEST(GeckoProfiler, DifferentThreads)
     profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
                    features, filters, MOZ_ARRAY_LENGTH(filters), 0);
 
-    thread->Dispatch(
+    NS_DispatchAndSpinEventLoopUntilComplete(
+        "GeckoProfiler_DifferentThreads_Test::TestBody"_ns, thread,
         NS_NewRunnableFunction(
-            "GeckoProfiler_DifferentThreads_Test::TestBody",
-            [&]() {
+            "GeckoProfiler_DifferentThreads_Test::TestBody", [&]() {
               ASSERT_TRUE(profiler_is_active());
               ASSERT_TRUE(
                   !profiler_feature_active(ProfilerFeature::MainThreadIO));
@@ -1965,15 +1964,14 @@ TEST(GeckoProfiler, DifferentThreads)
               ActiveParamsCheck(PROFILER_DEFAULT_ENTRIES.Value(),
                                 PROFILER_DEFAULT_INTERVAL, features, filters,
                                 MOZ_ARRAY_LENGTH(filters), 0);
-            }),
-        NS_DISPATCH_SYNC);
+            }));
 
     profiler_stop();
 
-    thread->Dispatch(
+    NS_DispatchAndSpinEventLoopUntilComplete(
+        "GeckoProfiler_DifferentThreads_Test::TestBody"_ns, thread,
         NS_NewRunnableFunction("GeckoProfiler_DifferentThreads_Test::TestBody",
-                               [&]() { InactiveFeaturesAndParamsCheck(); }),
-        NS_DISPATCH_SYNC);
+                               [&]() { InactiveFeaturesAndParamsCheck(); }));
   }
 
   thread->Shutdown();
@@ -3867,7 +3865,9 @@ TEST(GeckoProfiler, StreamJSONForThisProcessThreaded)
                  filters, MOZ_ARRAY_LENGTH(filters), 0);
 
   // Call profiler_stream_json_for_this_process on a background thread.
-  thread->Dispatch(
+  NS_DispatchAndSpinEventLoopUntilComplete(
+      "GeckoProfiler_StreamJSONForThisProcessThreaded_Test::TestBody"_ns,
+      thread,
       NS_NewRunnableFunction(
           "GeckoProfiler_StreamJSONForThisProcessThreaded_Test::TestBody",
           [&]() {
@@ -3879,8 +3879,7 @@ TEST(GeckoProfiler, StreamJSONForThisProcessThreaded)
                             mozilla::ProgressLogger{})
                             .isOk());
             w.End();
-          }),
-      NS_DISPATCH_SYNC);
+          }));
 
   MOZ_RELEASE_ASSERT(!w.ChunkedWriteFunc().Failed());
   MOZ_RELEASE_ASSERT(!w.ChunkedWriteFunc().GetFailure());
@@ -3893,7 +3892,9 @@ TEST(GeckoProfiler, StreamJSONForThisProcessThreaded)
 
   // Stop the profiler and call profiler_stream_json_for_this_process on a
   // background thread.
-  thread->Dispatch(
+  NS_DispatchAndSpinEventLoopUntilComplete(
+      "GeckoProfiler_StreamJSONForThisProcessThreaded_Test::TestBody"_ns,
+      thread,
       NS_NewRunnableFunction(
           "GeckoProfiler_StreamJSONForThisProcessThreaded_Test::TestBody",
           [&]() {
@@ -3904,8 +3905,7 @@ TEST(GeckoProfiler, StreamJSONForThisProcessThreaded)
                             /* ProfilerCodeAddressService* aService */ nullptr,
                             mozilla::ProgressLogger{})
                             .isErr());
-          }),
-      NS_DISPATCH_SYNC);
+          }));
   thread->Shutdown();
 
   // Call profiler_stream_json_for_this_process on the main thread.
@@ -3982,10 +3982,10 @@ class GTestStackCollector final : public ProfilerStackCollector {
 
 void DoSuspendAndSample(ProfilerThreadId aTidToSample,
                         nsIThread* aSamplingThread) {
-  aSamplingThread->Dispatch(
+  NS_DispatchAndSpinEventLoopUntilComplete(
+      "GeckoProfiler_SuspendAndSample_Test::TestBody"_ns, aSamplingThread,
       NS_NewRunnableFunction(
-          "GeckoProfiler_SuspendAndSample_Test::TestBody",
-          [&]() {
+          "GeckoProfiler_SuspendAndSample_Test::TestBody", [&]() {
             uint32_t features = ProfilerFeature::CPUUtilization;
             GTestStackCollector collector;
             profiler_suspend_and_sample_thread(aTidToSample, features,
@@ -3995,8 +3995,7 @@ void DoSuspendAndSample(ProfilerThreadId aTidToSample,
             ASSERT_TRUE(collector.mSetIsMainThread ==
                         (aTidToSample == profiler_main_thread_id()));
             ASSERT_TRUE(collector.mFrames > 0);
-          }),
-      NS_DISPATCH_SYNC);
+          }));
 }
 
 TEST(GeckoProfiler, SuspendAndSample)

@@ -41,17 +41,15 @@ class MultiTcpSocketTest : public MtransportTest {
     NrIceCtx::InitializeGlobals(NrIceCtx::GlobalConfig());
     ice_ctx_ = NrIceCtx::Create("stun");
 
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnableNM(&TestStunTcpServer::GetInstance, AF_INET),
-        NS_DISPATCH_SYNC);
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnableNM(&TestStunTcpServer::GetInstance, AF_INET6),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnableNM(&TestStunTcpServer::GetInstance, AF_INET));
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnableNM(&TestStunTcpServer::GetInstance, AF_INET6));
   }
 
   void TearDown() {
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(this, &MultiTcpSocketTest::Shutdown_s), NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(this, &MultiTcpSocketTest::Shutdown_s));
 
     MtransportTest::TearDown();
   }
@@ -121,10 +119,9 @@ class MultiTcpSocketTest : public MtransportTest {
                     std::string stun_server_addr = "",
                     uint16_t stun_server_port = 0) {
     nr_socket* sock = nullptr;
-    test_utils_->sts_target()->Dispatch(
+    test_utils_->SyncDispatchToSTS(
         WrapRunnable(this, &MultiTcpSocketTest::Create_s, tcp_type,
-                     stun_server_addr, stun_server_port, &sock),
-        NS_DISPATCH_SYNC);
+                     stun_server_addr, stun_server_port, &sock));
     return sock;
   }
 
@@ -138,9 +135,8 @@ class MultiTcpSocketTest : public MtransportTest {
   }
 
   void Listen(nr_socket* sock) {
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(this, &MultiTcpSocketTest::Listen_s, sock),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(this, &MultiTcpSocketTest::Listen_s, sock));
   }
 
   void Destroy_s(nr_socket* sock) {
@@ -149,9 +145,8 @@ class MultiTcpSocketTest : public MtransportTest {
   }
 
   void Destroy(nr_socket* sock) {
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(this, &MultiTcpSocketTest::Destroy_s, sock),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(this, &MultiTcpSocketTest::Destroy_s, sock));
   }
 
   void Connect_s(nr_socket* from, nr_socket* to) {
@@ -168,9 +163,8 @@ class MultiTcpSocketTest : public MtransportTest {
   }
 
   void Connect(nr_socket* from, nr_socket* to) {
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(this, &MultiTcpSocketTest::Connect_s, from, to),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(this, &MultiTcpSocketTest::Connect_s, from, to));
   }
 
   void ConnectSo_s(nr_socket* so1, nr_socket* so2) {
@@ -188,9 +182,8 @@ class MultiTcpSocketTest : public MtransportTest {
   }
 
   void ConnectSo(nr_socket* from, nr_socket* to) {
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(this, &MultiTcpSocketTest::ConnectSo_s, from, to),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(this, &MultiTcpSocketTest::ConnectSo_s, from, to));
   }
 
   void SendDataToAddress_s(nr_socket* from, nr_transport_addr* to,
@@ -207,10 +200,8 @@ class MultiTcpSocketTest : public MtransportTest {
 
   void SendData(nr_socket* from, nr_transport_addr* to, const char* data,
                 size_t len) {
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(this, &MultiTcpSocketTest::SendDataToAddress_s, from, to,
-                     data, len),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(WrapRunnable(
+        this, &MultiTcpSocketTest::SendDataToAddress_s, from, to, data, len));
   }
 
   void SendDataToSocket_s(nr_socket* from, nr_socket* to, const char* data,
@@ -223,10 +214,8 @@ class MultiTcpSocketTest : public MtransportTest {
   }
 
   void SendData(nr_socket* from, nr_socket* to, const char* data, size_t len) {
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(this, &MultiTcpSocketTest::SendDataToSocket_s, from, to,
-                     data, len),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(WrapRunnable(
+        this, &MultiTcpSocketTest::SendDataToSocket_s, from, to, data, len));
   }
 
   void RecvDataFromAddress_s(nr_transport_addr* expected_from,
@@ -262,10 +251,9 @@ class MultiTcpSocketTest : public MtransportTest {
   void RecvData(nr_transport_addr* expected_from, nr_socket* sent_to,
                 const char* expected_data = nullptr, size_t expected_len = 0) {
     ASSERT_TRUE_WAIT(IsReadable(), 1000);
-    test_utils_->sts_target()->Dispatch(
+    test_utils_->SyncDispatchToSTS(
         WrapRunnable(this, &MultiTcpSocketTest::RecvDataFromAddress_s,
-                     expected_from, sent_to, expected_data, expected_len),
-        NS_DISPATCH_SYNC);
+                     expected_from, sent_to, expected_data, expected_len));
   }
 
   void RecvDataFromSocket_s(nr_socket* expected_from, nr_socket* sent_to,
@@ -281,10 +269,9 @@ class MultiTcpSocketTest : public MtransportTest {
   void RecvData(nr_socket* expected_from, nr_socket* sent_to,
                 const char* expected_data, size_t expected_len) {
     ASSERT_TRUE_WAIT(IsReadable(), 1000);
-    test_utils_->sts_target()->Dispatch(
+    test_utils_->SyncDispatchToSTS(
         WrapRunnable(this, &MultiTcpSocketTest::RecvDataFromSocket_s,
-                     expected_from, sent_to, expected_data, expected_len),
-        NS_DISPATCH_SYNC);
+                     expected_from, sent_to, expected_data, expected_len));
   }
 
   void RecvDataFailed_s(nr_socket* sent_to, size_t expected_len,
@@ -306,10 +293,9 @@ class MultiTcpSocketTest : public MtransportTest {
   void RecvDataFailed(nr_socket* sent_to, size_t expected_len,
                       int expected_err) {
     ASSERT_TRUE_WAIT(IsReadable(), 1000);
-    test_utils_->sts_target()->Dispatch(
+    test_utils_->SyncDispatchToSTS(
         WrapRunnable(this, &MultiTcpSocketTest::RecvDataFailed_s, sent_to,
-                     expected_len, expected_err),
-        NS_DISPATCH_SYNC);
+                     expected_len, expected_err));
   }
 
   void TransferData(nr_socket* from, nr_socket* to, const char* data,
