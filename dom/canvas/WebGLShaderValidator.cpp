@@ -46,22 +46,23 @@ static ShCompileOptions ChooseValidatorCompileOptions(
 #endif
 
   if (gl->WorkAroundDriverBugs()) {
-#ifdef XP_MACOSX
-    // Work around https://bugs.webkit.org/show_bug.cgi?id=124684,
-    // https://chromium.googlesource.com/angle/angle/+/5e70cf9d0b1bb
-    options.unfoldShortCircuit = true;
+    if (kIsMacOS) {
+      // Work around https://bugs.webkit.org/show_bug.cgi?id=124684,
+      // https://chromium.googlesource.com/angle/angle/+/5e70cf9d0b1bb
+      options.unfoldShortCircuit = true;
 
-    // Work around that Mac drivers handle struct scopes incorrectly.
-    options.regenerateStructNames = true;
-    options.initOutputVariables = true;
+      // Work around that Mac drivers handle struct scopes incorrectly.
+      options.regenerateStructNames = true;
+      options.initOutputVariables = true;
+      options.initGLPointSize = true;
 
-    if (gl->Vendor() == gl::GLVendor::Intel) {
-      // Work around that Intel drivers on Mac OSX handle for-loop incorrectly.
-      options.addAndTrueToLoopCondition = true;
+      if (gl->Vendor() == gl::GLVendor::Intel) {
+        // Work around that Intel drivers on Mac OSX handle for-loop incorrectly.
+        options.addAndTrueToLoopCondition = true;
 
-      options.rewriteTexelFetchOffsetToTexelFetch = true;
+        options.rewriteTexelFetchOffsetToTexelFetch = true;
+      }
     }
-#endif
 
     if (!gl->IsANGLE() && gl->Vendor() == gl::GLVendor::Intel) {
       // Failures on at least Windows+Intel+OGL on:
