@@ -5,10 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "nsBidiUtils.h"
 
-namespace mozilla {
-static const uint32_t kMinRTLChar = 0x0590;
-}  // namespace mozilla
-
 #define ARABIC_TO_HINDI_DIGIT_INCREMENT \
   (START_HINDI_DIGITS - START_ARABIC_DIGITS)
 #define PERSIAN_TO_HINDI_DIGIT_INCREMENT \

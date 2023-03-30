@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsUnicharUtils.h"
+#include "nsUnicodeProperties.h"
 #include "nsUTF8Utils.h"
 #include "mozilla/Likely.h"
 #include "mozilla/HashFunctions.h"
