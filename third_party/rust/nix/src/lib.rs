@@ -106,7 +106,6 @@ feature! {
     #[allow(missing_docs)]
     pub mod kmod;
 }
-#[cfg(any(target_os = "android", target_os = "freebsd", target_os = "linux"))]
 feature! {
     #![feature = "mount"]
     pub mod mount;

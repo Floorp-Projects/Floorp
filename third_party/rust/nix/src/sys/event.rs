@@ -3,9 +3,9 @@
 
 use crate::{Errno, Result};
 #[cfg(not(target_os = "netbsd"))]
-use libc::{timespec, time_t, c_int, c_long, intptr_t, uintptr_t};
+use libc::{c_int, c_long, intptr_t, time_t, timespec, uintptr_t};
 #[cfg(target_os = "netbsd")]
-use libc::{timespec, time_t, c_long, intptr_t, uintptr_t, size_t};
+use libc::{c_long, intptr_t, size_t, time_t, timespec, uintptr_t};
 use std::convert::TryInto;
 use std::mem;
 use std::os::unix::io::RawFd;
@@ -18,9 +18,13 @@ pub struct KEvent {
     kevent: libc::kevent,
 }
 
-#[cfg(any(target_os = "dragonfly", target_os = "freebsd",
-          target_os = "ios", target_os = "macos",
-          target_os = "openbsd"))]
+#[cfg(any(
+    target_os = "dragonfly",
+    target_os = "freebsd",
+    target_os = "ios",
+    target_os = "macos",
+    target_os = "openbsd"
+))]
 type type_of_udata = *mut libc::c_void;
 #[cfg(any(target_os = "netbsd"))]
 type type_of_udata = intptr_t;
@@ -75,13 +79,17 @@ libc_enum! {
     impl TryFrom<type_of_event_filter>
 }
 
-#[cfg(any(target_os = "dragonfly", target_os = "freebsd",
-          target_os = "ios", target_os = "macos",
-          target_os = "openbsd"))]
+#[cfg(any(
+    target_os = "dragonfly",
+    target_os = "freebsd",
+    target_os = "ios",
+    target_os = "macos",
+    target_os = "openbsd"
+))]
 pub type type_of_event_flag = u16;
 #[cfg(any(target_os = "netbsd"))]
 pub type type_of_event_flag = u32;
-libc_bitflags!{
+libc_bitflags! {
     pub struct EventFlag: type_of_event_flag {
         EV_ADD;
         EV_CLEAR;
@@ -205,27 +213,33 @@ pub fn kqueue() -> Result<RawFd> {
     Errno::result(res)
 }
 
-
 // KEvent can't derive Send because on some operating systems, udata is defined
 // as a void*.  However, KEvent's public API always treats udata as an intptr_t,
 // which is safe to Send.
-unsafe impl Send for KEvent {
-}
+unsafe impl Send for KEvent {}
 
 impl KEvent {
-    #[allow(clippy::needless_update)]   // Not needless on all platforms.
-    pub fn new(ident: uintptr_t, filter: EventFilter, flags: EventFlag,
-               fflags:FilterFlag, data: intptr_t, udata: intptr_t) -> KEvent {
-        KEvent { kevent: libc::kevent {
-            ident,
-            filter: filter as type_of_event_filter,
-            flags: flags.bits(),
-            fflags: fflags.bits(),
-            // data can be either i64 or intptr_t, depending on platform
-            data: data as _,
-            udata: udata as type_of_udata,
-            .. unsafe { mem::zeroed() }
-        } }
+    #[allow(clippy::needless_update)] // Not needless on all platforms.
+    pub fn new(
+        ident: uintptr_t,
+        filter: EventFilter,
+        flags: EventFlag,
+        fflags: FilterFlag,
+        data: intptr_t,
+        udata: intptr_t,
+    ) -> KEvent {
+        KEvent {
+            kevent: libc::kevent {
+                ident,
+                filter: filter as type_of_event_filter,
+                flags: flags.bits(),
+                fflags: fflags.bits(),
+                // data can be either i64 or intptr_t, depending on platform
+                data: data as _,
+                udata: udata as type_of_udata,
+                ..unsafe { mem::zeroed() }
+            },
+        }
     }
 
     pub fn ident(&self) -> uintptr_t {
@@ -253,34 +267,38 @@ impl KEvent {
     }
 }
 
-pub fn kevent(kq: RawFd,
-              changelist: &[KEvent],
-              eventlist: &mut [KEvent],
-              timeout_ms: usize) -> Result<usize> {
-
+pub fn kevent(
+    kq: RawFd,
+    changelist: &[KEvent],
+    eventlist: &mut [KEvent],
+    timeout_ms: usize,
+) -> Result<usize> {
     // Convert ms to timespec
     let timeout = timespec {
         tv_sec: (timeout_ms / 1000) as time_t,
-        tv_nsec: ((timeout_ms % 1000) * 1_000_000) as c_long
+        tv_nsec: ((timeout_ms % 1000) * 1_000_000) as c_long,
     };
 
     kevent_ts(kq, changelist, eventlist, Some(timeout))
 }
 
-#[cfg(any(target_os = "macos",
-          target_os = "ios",
-          target_os = "freebsd",
-          target_os = "dragonfly",
-          target_os = "openbsd"))]
+#[cfg(any(
+    target_os = "macos",
+    target_os = "ios",
+    target_os = "freebsd",
+    target_os = "dragonfly",
+    target_os = "openbsd"
+))]
 type type_of_nchanges = c_int;
 #[cfg(target_os = "netbsd")]
 type type_of_nchanges = size_t;
 
-pub fn kevent_ts(kq: RawFd,
-              changelist: &[KEvent],
-              eventlist: &mut [KEvent],
-              timeout_opt: Option<timespec>) -> Result<usize> {
-
+pub fn kevent_ts(
+    kq: RawFd,
+    changelist: &[KEvent],
+    eventlist: &mut [KEvent],
+    timeout_opt: Option<timespec>,
+) -> Result<usize> {
     let res = unsafe {
         libc::kevent(
             kq,
@@ -288,40 +306,48 @@ pub fn kevent_ts(kq: RawFd,
             changelist.len() as type_of_nchanges,
             eventlist.as_mut_ptr() as *mut libc::kevent,
             eventlist.len() as type_of_nchanges,
-            if let Some(ref timeout) = timeout_opt {timeout as *const timespec} else {ptr::null()})
+            if let Some(ref timeout) = timeout_opt {
+                timeout as *const timespec
+            } else {
+                ptr::null()
+            },
+        )
     };
 
     Errno::result(res).map(|r| r as usize)
 }
 
 #[inline]
-pub fn ev_set(ev: &mut KEvent,
-              ident: usize,
-              filter: EventFilter,
-              flags: EventFlag,
-              fflags: FilterFlag,
-              udata: intptr_t) {
-
-    ev.kevent.ident  = ident as uintptr_t;
+pub fn ev_set(
+    ev: &mut KEvent,
+    ident: usize,
+    filter: EventFilter,
+    flags: EventFlag,
+    fflags: FilterFlag,
+    udata: intptr_t,
+) {
+    ev.kevent.ident = ident as uintptr_t;
     ev.kevent.filter = filter as type_of_event_filter;
-    ev.kevent.flags  = flags.bits();
+    ev.kevent.flags = flags.bits();
     ev.kevent.fflags = fflags.bits();
-    ev.kevent.data   = 0;
-    ev.kevent.udata  = udata as type_of_udata;
+    ev.kevent.data = 0;
+    ev.kevent.udata = udata as type_of_udata;
 }
 
 #[test]
 fn test_struct_kevent() {
     use std::mem;
 
-    let udata : intptr_t = 12345;
+    let udata: intptr_t = 12345;
 
-    let actual = KEvent::new(0xdead_beef,
-                             EventFilter::EVFILT_READ,
-                             EventFlag::EV_ONESHOT | EventFlag::EV_ADD,
-                             FilterFlag::NOTE_CHILD | FilterFlag::NOTE_EXIT,
-                             0x1337,
-                             udata);
+    let actual = KEvent::new(
+        0xdead_beef,
+        EventFilter::EVFILT_READ,
+        EventFlag::EV_ONESHOT | EventFlag::EV_ADD,
+        FilterFlag::NOTE_CHILD | FilterFlag::NOTE_EXIT,
+        0x1337,
+        udata,
+    );
     assert_eq!(0xdead_beef, actual.ident());
     let filter = actual.kevent.filter;
     assert_eq!(libc::EVFILT_READ, filter);
@@ -334,13 +360,15 @@ fn test_struct_kevent() {
 
 #[test]
 fn test_kevent_filter() {
-    let udata : intptr_t = 12345;
+    let udata: intptr_t = 12345;
 
-    let actual = KEvent::new(0xdead_beef,
-                             EventFilter::EVFILT_READ,
-                             EventFlag::EV_ONESHOT | EventFlag::EV_ADD,
-                             FilterFlag::NOTE_CHILD | FilterFlag::NOTE_EXIT,
-                             0x1337,
-                             udata);
+    let actual = KEvent::new(
+        0xdead_beef,
+        EventFilter::EVFILT_READ,
+        EventFlag::EV_ONESHOT | EventFlag::EV_ADD,
+        FilterFlag::NOTE_CHILD | FilterFlag::NOTE_EXIT,
+        0x1337,
+        udata,
+    );
     assert_eq!(EventFilter::EVFILT_READ, actual.filter().unwrap());
 }

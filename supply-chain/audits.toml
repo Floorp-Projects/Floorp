@@ -430,6 +430,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.9.10 -> 0.9.13"
 
+[[audits.crossbeam-epoch]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.9.13 -> 0.9.14"
+
 [[audits.crossbeam-queue]]
 who = "Matthew Gregan <kinetik@flim.org>"
 criteria = "safe-to-deploy"
@@ -1357,6 +1362,11 @@ version = "0.7.0"
 notes = "The code in this crate was written or reviewed by Mozilla employees, the crate it evolved from was written specifically for gecko."
 
 [[audits.minidump-writer]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.7.0 -> 0.7.0@git:59179c83ba62e4378619c6967c0b8c0c077cac2d"
+
+[[audits.minidump-writer]]
 who = "Bobby Holley <bobbyholley@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.7.0 -> 0.7.0@git:7d76616d27b9dc87fe3a94639b8b4f947d52a6aa"
@@ -1473,6 +1483,11 @@ notes = "Plenty of new bindings but also several important bug fixes (including 
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.25.0 -> 0.25.1"
+
+[[audits.nix]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.25.1 -> 0.26.2"
 
 [[audits.nom]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"

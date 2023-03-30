@@ -1310,7 +1310,7 @@ fn test_getpeereid_invalid_fd() {
 }
 
 #[test]
-#[cfg(not(any(target_os = "illumos", target_os = "redox")))]
+#[cfg(not(target_os = "redox"))]
 fn test_faccessat_none_not_existing() {
     use nix::fcntl::AtFlags;
     let tempdir = tempfile::tempdir().unwrap();
@@ -1324,7 +1324,7 @@ fn test_faccessat_none_not_existing() {
 }
 
 #[test]
-#[cfg(not(any(target_os = "illumos", target_os = "redox")))]
+#[cfg(not(target_os = "redox"))]
 fn test_faccessat_not_existing() {
     use nix::fcntl::AtFlags;
     let tempdir = tempfile::tempdir().unwrap();
@@ -1344,7 +1344,7 @@ fn test_faccessat_not_existing() {
 }
 
 #[test]
-#[cfg(not(any(target_os = "illumos", target_os = "redox")))]
+#[cfg(not(target_os = "redox"))]
 fn test_faccessat_none_file_exists() {
     use nix::fcntl::AtFlags;
     let tempdir = tempfile::tempdir().unwrap();
@@ -1360,7 +1360,7 @@ fn test_faccessat_none_file_exists() {
 }
 
 #[test]
-#[cfg(not(any(target_os = "illumos", target_os = "redox")))]
+#[cfg(not(target_os = "redox"))]
 fn test_faccessat_file_exists() {
     use nix::fcntl::AtFlags;
     let tempdir = tempfile::tempdir().unwrap();
@@ -1375,4 +1375,33 @@ fn test_faccessat_file_exists() {
         AtFlags::empty(),
     )
     .is_ok());
+}
+
+#[test]
+#[cfg(any(
+    all(target_os = "linux", not(target_env = "uclibc")),
+    target_os = "freebsd",
+    target_os = "dragonfly"
+))]
+fn test_eaccess_not_existing() {
+    let tempdir = tempdir().unwrap();
+    let dir = tempdir.path().join("does_not_exist.txt");
+    assert_eq!(
+        eaccess(&dir, AccessFlags::F_OK).err().unwrap(),
+        Errno::ENOENT
+    );
+}
+
+#[test]
+#[cfg(any(
+    all(target_os = "linux", not(target_env = "uclibc")),
+    target_os = "freebsd",
+    target_os = "dragonfly"
+))]
+fn test_eaccess_file_exists() {
+    let tempdir = tempdir().unwrap();
+    let path = tempdir.path().join("does_exist.txt");
+    let _file = File::create(path.clone()).unwrap();
+    eaccess(&path, AccessFlags::R_OK | AccessFlags::W_OK)
+        .expect("assertion failed");
 }

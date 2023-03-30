@@ -79,7 +79,11 @@ libc_bitflags!(
 /// ```
 ///
 /// See [`man init_module(2)`](https://man7.org/linux/man-pages/man2/init_module.2.html) for more information.
-pub fn finit_module<T: AsRawFd>(fd: &T, param_values: &CStr, flags: ModuleInitFlags) -> Result<()> {
+pub fn finit_module<T: AsRawFd>(
+    fd: &T,
+    param_values: &CStr,
+    flags: ModuleInitFlags,
+) -> Result<()> {
     let res = unsafe {
         libc::syscall(
             libc::SYS_finit_module,
@@ -116,7 +120,9 @@ libc_bitflags!(
 ///
 /// See [`man delete_module(2)`](https://man7.org/linux/man-pages/man2/delete_module.2.html) for more information.
 pub fn delete_module(name: &CStr, flags: DeleteModuleFlags) -> Result<()> {
-    let res = unsafe { libc::syscall(libc::SYS_delete_module, name.as_ptr(), flags.bits()) };
+    let res = unsafe {
+        libc::syscall(libc::SYS_delete_module, name.as_ptr(), flags.bits())
+    };
 
     Errno::result(res).map(drop)
 }

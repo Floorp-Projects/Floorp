@@ -2,7 +2,7 @@ use crate::{
     mem_writer::{Buffer, MemoryArrayWriter, MemoryWriterError},
     minidump_format::MDRawDirectory,
 };
-use std::io::{Error, Seek, SeekFrom, Write};
+use std::io::{Error, Seek, Write};
 
 pub type DumpBuf = Buffer;
 
@@ -44,7 +44,7 @@ where
         Ok(Self {
             curr_idx: 0,
             section: dir_section,
-            destination_start_offset: destination.seek(SeekFrom::Current(0))?,
+            destination_start_offset: destination.stream_position()?,
             destination,
             last_position_written_to_file: 0,
         })
@@ -65,7 +65,7 @@ where
         // Now write it to file
 
         // First get all the positions
-        let curr_file_pos = self.destination.seek(SeekFrom::Current(0))?;
+        let curr_file_pos = self.destination.stream_position()?;
         let idx_pos = self.section.location_of_index(self.curr_idx);
         self.curr_idx += 1;
 

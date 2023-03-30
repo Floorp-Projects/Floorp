@@ -1,16 +1,16 @@
 //! Memory management declarations.
 
-use crate::Result;
+use crate::errno::Errno;
 #[cfg(not(target_os = "android"))]
 use crate::NixPath;
-use crate::errno::Errno;
+use crate::Result;
 #[cfg(not(target_os = "android"))]
 #[cfg(feature = "fs")]
 use crate::{fcntl::OFlag, sys::stat::Mode};
-use libc::{self, c_int, c_void, size_t, off_t};
-use std::os::unix::io::RawFd;
+use libc::{self, c_int, c_void, off_t, size_t};
+use std::{os::unix::io::RawFd, num::NonZeroUsize};
 
-libc_bitflags!{
+libc_bitflags! {
     /// Desired memory protection of a memory mapping.
     pub struct ProtFlags: c_int {
         /// Pages cannot be accessed.
@@ -32,7 +32,7 @@ libc_bitflags!{
     }
 }
 
-libc_bitflags!{
+libc_bitflags! {
     /// Additional parameters for [`mmap`].
     pub struct MapFlags: c_int {
         /// Compatibility flag. Ignored.
@@ -188,7 +188,7 @@ libc_bitflags!{
 }
 
 #[cfg(any(target_os = "linux", target_os = "netbsd"))]
-libc_bitflags!{
+libc_bitflags! {
     /// Options for [`mremap`].
     pub struct MRemapFlags: c_int {
         /// Permit the kernel to relocate the mapping to a new virtual address, if necessary.
@@ -210,7 +210,7 @@ libc_bitflags!{
     }
 }
 
-libc_enum!{
+libc_enum! {
     /// Usage information for a range of memory to allow for performance optimizations by the kernel.
     ///
     /// Used by [`madvise`].
@@ -331,7 +331,7 @@ libc_enum!{
     }
 }
 
-libc_bitflags!{
+libc_bitflags! {
     /// Configuration flags for [`msync`].
     pub struct MsFlags: c_int {
         /// Schedule an update but return immediately.
@@ -352,7 +352,7 @@ libc_bitflags!{
 }
 
 #[cfg(not(target_os = "haiku"))]
-libc_bitflags!{
+libc_bitflags! {
     /// Flags for [`mlockall`].
     pub struct MlockAllFlags: c_int {
         /// Lock pages that are currently mapped into the address space of the process.
@@ -416,8 +416,20 @@ pub fn munlockall() -> Result<()> {
 /// See the [`mmap(2)`] man page for detailed requirements.
 ///
 /// [`mmap(2)`]: https://man7.org/linux/man-pages/man2/mmap.2.html
-pub unsafe fn mmap(addr: *mut c_void, length: size_t, prot: ProtFlags, flags: MapFlags, fd: RawFd, offset: off_t) -> Result<*mut c_void> {
-    let ret = libc::mmap(addr, length, prot.bits(), flags.bits(), fd, offset);
+pub unsafe fn mmap(
+    addr: Option<NonZeroUsize>,
+    length: NonZeroUsize,
+    prot: ProtFlags,
+    flags: MapFlags,
+    fd: RawFd,
+    offset: off_t,
+) -> Result<*mut c_void> {
+    let ptr = addr.map_or(
+        std::ptr::null_mut(),
+        |a| usize::from(a) as *mut c_void
+    );
+    
+    let ret = libc::mmap(ptr, length.into(), prot.bits(), flags.bits(), fd, offset);
 
     if ret == libc::MAP_FAILED {
         Err(Errno::last())
@@ -439,10 +451,16 @@ pub unsafe fn mremap(
     old_size: size_t,
     new_size: size_t,
     flags: MRemapFlags,
-    new_address: Option<* mut c_void>,
+    new_address: Option<*mut c_void>,
 ) -> Result<*mut c_void> {
     #[cfg(target_os = "linux")]
-    let ret = libc::mremap(addr, old_size, new_size, flags.bits(), new_address.unwrap_or(std::ptr::null_mut()));
+    let ret = libc::mremap(
+        addr,
+        old_size,
+        new_size,
+        flags.bits(),
+        new_address.unwrap_or(std::ptr::null_mut()),
+    );
     #[cfg(target_os = "netbsd")]
     let ret = libc::mremap(
         addr,
@@ -450,7 +468,7 @@ pub unsafe fn mremap(
         new_address.unwrap_or(std::ptr::null_mut()),
         new_size,
         flags.bits(),
-        );
+    );
 
     if ret == libc::MAP_FAILED {
         Err(Errno::last())
@@ -479,7 +497,11 @@ pub unsafe fn munmap(addr: *mut c_void, len: size_t) -> Result<()> {
 /// [`MmapAdvise::MADV_FREE`].
 ///
 /// [`madvise(2)`]: https://man7.org/linux/man-pages/man2/madvise.2.html
-pub unsafe fn madvise(addr: *mut c_void, length: size_t, advise: MmapAdvise) -> Result<()> {
+pub unsafe fn madvise(
+    addr: *mut c_void,
+    length: size_t,
+    advise: MmapAdvise,
+) -> Result<()> {
     Errno::result(libc::madvise(addr, length, advise as i32)).map(drop)
 }
 
@@ -498,8 +520,9 @@ pub unsafe fn madvise(addr: *mut c_void, length: size_t, advise: MmapAdvise) -> 
 /// # use nix::sys::mman::{mmap, mprotect, MapFlags, ProtFlags};
 /// # use std::ptr;
 /// const ONE_K: size_t = 1024;
+/// let one_k_non_zero = std::num::NonZeroUsize::new(ONE_K).unwrap();
 /// let mut slice: &mut [u8] = unsafe {
-///     let mem = mmap(ptr::null_mut(), ONE_K, ProtFlags::PROT_NONE,
+///     let mem = mmap(None, one_k_non_zero, ProtFlags::PROT_NONE,
 ///                    MapFlags::MAP_ANON | MapFlags::MAP_PRIVATE, -1, 0).unwrap();
 ///     mprotect(mem, ONE_K, ProtFlags::PROT_READ | ProtFlags::PROT_WRITE).unwrap();
 ///     std::slice::from_raw_parts_mut(mem as *mut u8, ONE_K)
@@ -508,7 +531,11 @@ pub unsafe fn madvise(addr: *mut c_void, length: size_t, advise: MmapAdvise) -> 
 /// slice[0] = 0xFF;
 /// assert_eq!(slice[0], 0xFF);
 /// ```
-pub unsafe fn mprotect(addr: *mut c_void, length: size_t, prot: ProtFlags) -> Result<()> {
+pub unsafe fn mprotect(
+    addr: *mut c_void,
+    length: size_t,
+    prot: ProtFlags,
+) -> Result<()> {
     Errno::result(libc::mprotect(addr, length, prot.bits())).map(drop)
 }
 
@@ -520,7 +547,11 @@ pub unsafe fn mprotect(addr: *mut c_void, length: size_t, prot: ProtFlags) -> Re
 /// page.
 ///
 /// [`msync(2)`]: https://man7.org/linux/man-pages/man2/msync.2.html
-pub unsafe fn msync(addr: *mut c_void, length: size_t, flags: MsFlags) -> Result<()> {
+pub unsafe fn msync(
+    addr: *mut c_void,
+    length: size_t,
+    flags: MsFlags,
+) -> Result<()> {
     Errno::result(libc::msync(addr, length, flags.bits())).map(drop)
 }
 
@@ -561,9 +592,8 @@ pub fn shm_open<P>(
 /// [`shm_unlink(3)`]: https://man7.org/linux/man-pages/man3/shm_unlink.3.html
 #[cfg(not(target_os = "android"))]
 pub fn shm_unlink<P: ?Sized + NixPath>(name: &P) -> Result<()> {
-    let ret = name.with_nix_path(|cstr| {
-        unsafe { libc::shm_unlink(cstr.as_ptr()) }
-    })?;
+    let ret =
+        name.with_nix_path(|cstr| unsafe { libc::shm_unlink(cstr.as_ptr()) })?;
 
     Errno::result(ret).map(drop)
 }

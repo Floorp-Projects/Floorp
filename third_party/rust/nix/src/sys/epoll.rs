@@ -1,9 +1,9 @@
-use crate::Result;
 use crate::errno::Errno;
+use crate::Result;
 use libc::{self, c_int};
+use std::mem;
 use std::os::unix::io::RawFd;
 use std::ptr;
-use std::mem;
 
 libc_bitflags!(
     pub struct EpollFlags: c_int {
@@ -35,7 +35,7 @@ pub enum EpollOp {
     EpollCtlMod = libc::EPOLL_CTL_MOD,
 }
 
-libc_bitflags!{
+libc_bitflags! {
     pub struct EpollCreateFlags: c_int {
         EPOLL_CLOEXEC;
     }
@@ -49,7 +49,12 @@ pub struct EpollEvent {
 
 impl EpollEvent {
     pub fn new(events: EpollFlags, data: u64) -> Self {
-        EpollEvent { event: libc::epoll_event { events: events.bits() as u32, u64: data } }
+        EpollEvent {
+            event: libc::epoll_event {
+                events: events.bits() as u32,
+                u64: data,
+            },
+        }
     }
 
     pub fn empty() -> Self {
@@ -80,8 +85,14 @@ pub fn epoll_create1(flags: EpollCreateFlags) -> Result<RawFd> {
 }
 
 #[inline]
-pub fn epoll_ctl<'a, T>(epfd: RawFd, op: EpollOp, fd: RawFd, event: T) -> Result<()>
-    where T: Into<Option<&'a mut EpollEvent>>
+pub fn epoll_ctl<'a, T>(
+    epfd: RawFd,
+    op: EpollOp,
+    fd: RawFd,
+    event: T,
+) -> Result<()>
+where
+    T: Into<Option<&'a mut EpollEvent>>,
 {
     let mut event: Option<&mut EpollEvent> = event.into();
     if event.is_none() && op != EpollOp::EpollCtlDel {
@@ -99,9 +110,18 @@ pub fn epoll_ctl<'a, T>(epfd: RawFd, op: EpollOp, fd: RawFd, event: T) -> Result
 }
 
 #[inline]
-pub fn epoll_wait(epfd: RawFd, events: &mut [EpollEvent], timeout_ms: isize) -> Result<usize> {
+pub fn epoll_wait(
+    epfd: RawFd,
+    events: &mut [EpollEvent],
+    timeout_ms: isize,
+) -> Result<usize> {
     let res = unsafe {
-        libc::epoll_wait(epfd, events.as_mut_ptr() as *mut libc::epoll_event, events.len() as c_int, timeout_ms as c_int)
+        libc::epoll_wait(
+            epfd,
+            events.as_mut_ptr() as *mut libc::epoll_event,
+            events.len() as c_int,
+            timeout_ms as c_int,
+        )
     };
 
     Errno::result(res).map(|r| r as usize)

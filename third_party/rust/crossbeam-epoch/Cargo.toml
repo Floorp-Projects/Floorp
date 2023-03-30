@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.38"
 name = "crossbeam-epoch"
-version = "0.9.13"
+version = "0.9.14"
 description = "Epoch-based garbage collection"
 homepage = "https://github.com/crossbeam-rs/crossbeam/tree/master/crossbeam-epoch"
 readme = "README.md"
@@ -39,7 +39,7 @@ version = "0.8.5"
 default-features = false
 
 [dependencies.memoffset]
-version = "0.7"
+version = "0.8"
 
 [dependencies.scopeguard]
 version = "1.1"

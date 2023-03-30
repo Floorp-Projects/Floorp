@@ -11,9 +11,9 @@ use std::iter::Iterator;
 use std::mem;
 use std::option::Option;
 
-use crate::{Result, Errno};
-use crate::sys::socket::{SockaddrLike, SockaddrStorage};
 use crate::net::if_::*;
+use crate::sys::socket::{SockaddrLike, SockaddrStorage};
+use crate::{Errno, Result};
 
 /// Describes a single address for an interface as returned by `getifaddrs`.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]

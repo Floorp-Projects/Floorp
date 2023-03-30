@@ -1,7 +1,7 @@
 //! Reboot/shutdown or enable/disable Ctrl-Alt-Delete.
 
-use crate::Result;
 use crate::errno::Errno;
+use crate::Result;
 use std::convert::Infallible;
 use std::mem::drop;
 
@@ -30,9 +30,7 @@ libc_enum! {
 
 /// Reboots or shuts down the system.
 pub fn reboot(how: RebootMode) -> Result<Infallible> {
-    unsafe {
-        libc::reboot(how as libc::c_int)
-    };
+    unsafe { libc::reboot(how as libc::c_int) };
     Err(Errno::last())
 }
 
@@ -45,8 +43,6 @@ pub fn set_cad_enabled(enable: bool) -> Result<()> {
     } else {
         libc::RB_DISABLE_CAD
     };
-    let res = unsafe {
-        libc::reboot(cmd)
-    };
+    let res = unsafe { libc::reboot(cmd) };
     Errno::result(res).map(drop)
 }

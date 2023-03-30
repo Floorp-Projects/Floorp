@@ -32,8 +32,7 @@ use std::{
     mem,
     os::unix::io::RawFd,
     pin::Pin,
-    ptr,
-    thread,
+    ptr, thread,
 };
 
 use libc::{c_void, off_t};
@@ -107,7 +106,7 @@ unsafe impl Sync for LibcAiocb {}
 // polymorphism is at the level of `Futures`.
 #[repr(C)]
 struct AioCb {
-    aiocb:       LibcAiocb,
+    aiocb: LibcAiocb,
     /// Could this `AioCb` potentially have any in-kernel state?
     // It would be really nice to perform the in-progress check entirely at
     // compile time.  But I can't figure out how, because:
@@ -153,7 +152,7 @@ impl AioCb {
         a.aio_reqprio = prio;
         a.aio_sigevent = SigEvent::new(sigev_notify).sigevent();
         AioCb {
-            aiocb:       LibcAiocb(a),
+            aiocb: LibcAiocb(a),
             in_progress: false,
         }
     }
@@ -432,7 +431,7 @@ macro_rules! aio_methods {
 #[repr(transparent)]
 pub struct AioFsync {
     aiocb: AioCb,
-    _pin:  PhantomPinned,
+    _pin: PhantomPinned,
 }
 
 impl AioFsync {
@@ -546,7 +545,7 @@ impl AsRef<libc::aiocb> for AioFsync {
 pub struct AioRead<'a> {
     aiocb: AioCb,
     _data: PhantomData<&'a [u8]>,
-    _pin:  PhantomPinned,
+    _pin: PhantomPinned,
 }
 
 impl<'a> AioRead<'a> {
@@ -667,7 +666,7 @@ impl<'a> AsRef<libc::aiocb> for AioRead<'a> {
 pub struct AioReadv<'a> {
     aiocb: AioCb,
     _data: PhantomData<&'a [&'a [u8]]>,
-    _pin:  PhantomPinned,
+    _pin: PhantomPinned,
 }
 
 #[cfg(target_os = "freebsd")]
@@ -778,7 +777,7 @@ impl<'a> AsRef<libc::aiocb> for AioReadv<'a> {
 pub struct AioWrite<'a> {
     aiocb: AioCb,
     _data: PhantomData<&'a [u8]>,
-    _pin:  PhantomPinned,
+    _pin: PhantomPinned,
 }
 
 impl<'a> AioWrite<'a> {
@@ -896,7 +895,7 @@ impl<'a> AsRef<libc::aiocb> for AioWrite<'a> {
 pub struct AioWritev<'a> {
     aiocb: AioCb,
     _data: PhantomData<&'a [&'a [u8]]>,
-    _pin:  PhantomPinned,
+    _pin: PhantomPinned,
 }
 
 #[cfg(target_os = "freebsd")]
@@ -1053,8 +1052,7 @@ pub fn aio_suspend(
     timeout: Option<TimeSpec>,
 ) -> Result<()> {
     let p = list as *const [&dyn AsRef<libc::aiocb>]
-        as *const [*const libc::aiocb]
-        as *const *const libc::aiocb;
+        as *const [*const libc::aiocb] as *const *const libc::aiocb;
     let timep = match timeout {
         None => ptr::null::<libc::timespec>(),
         Some(x) => x.as_ref() as *const libc::timespec,
@@ -1180,8 +1178,7 @@ pub fn lio_listio(
     sigev_notify: SigevNotify,
 ) -> Result<()> {
     let p = list as *mut [Pin<&mut dyn AsMut<libc::aiocb>>]
-        as *mut [*mut libc::aiocb]
-        as *mut *mut libc::aiocb;
+        as *mut [*mut libc::aiocb] as *mut *mut libc::aiocb;
     let sigev = SigEvent::new(sigev_notify);
     let sigevp = &mut sigev.sigevent() as *mut libc::sigevent;
     Errno::result(unsafe {

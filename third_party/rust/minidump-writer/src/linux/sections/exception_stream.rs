@@ -8,9 +8,9 @@ pub fn write(
 ) -> Result<MDRawDirectory, errors::SectionExceptionStreamError> {
     let exception = if let Some(context) = &config.crash_context {
         MDException {
-            exception_code: context.inner.siginfo.ssi_signo as u32,
+            exception_code: context.inner.siginfo.ssi_signo,
             exception_flags: context.inner.siginfo.ssi_code as u32,
-            exception_address: context.inner.siginfo.ssi_addr as u64,
+            exception_address: context.inner.siginfo.ssi_addr,
             ..Default::default()
         }
     } else {

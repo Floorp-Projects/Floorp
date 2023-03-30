@@ -1,4 +1,4 @@
-use crate::{Error, Result};
+use crate::Result;
 use cfg_if::cfg_if;
 use libc::{c_int, c_void};
 use std::convert::TryFrom;
@@ -51,34 +51,6 @@ pub fn errno() -> i32 {
 }
 
 impl Errno {
-    /// Convert this `Error` to an [`Errno`](enum.Errno.html).
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use nix::Error;
-    /// # use nix::errno::Errno;
-    /// let e = Error::from(Errno::EPERM);
-    /// assert_eq!(Some(Errno::EPERM), e.as_errno());
-    /// ```
-    #[deprecated(since = "0.22.0", note = "It's a no-op now; just delete it.")]
-    pub const fn as_errno(self) -> Option<Self> {
-        Some(self)
-    }
-
-    /// Create a nix Error from a given errno
-    #[deprecated(since = "0.22.0", note = "It's a no-op now; just delete it.")]
-    #[allow(clippy::wrong_self_convention)] // False positive
-    pub fn from_errno(errno: Errno) -> Error {
-        errno
-    }
-
-    /// Create a new invalid argument error (`EINVAL`)
-    #[deprecated(since = "0.22.0", note = "Use Errno::EINVAL instead")]
-    pub const fn invalid_argument() -> Error {
-        Errno::EINVAL
-    }
-
     pub fn last() -> Self {
         last()
     }
@@ -104,18 +76,6 @@ impl Errno {
         } else {
             Ok(value)
         }
-    }
-
-    /// Backwards compatibility hack for Nix <= 0.21.0 users
-    ///
-    /// In older versions of Nix, `Error::Sys` was an enum variant.  Now it's a
-    /// function, which is compatible with most of the former use cases of the
-    /// enum variant.  But you should use `Error(Errno::...)` instead.
-    #[deprecated(since = "0.22.0", note = "Use Errno::... instead")]
-    #[allow(non_snake_case)]
-    #[inline]
-    pub const fn Sys(errno: Errno) -> Error {
-        errno
     }
 }
 
@@ -1297,22 +1257,6 @@ mod consts {
         EHWPOISON = libc::EHWPOISON,
     }
 
-    #[deprecated(
-        since = "0.22.1",
-        note = "use nix::errno::Errno::EWOULDBLOCK instead"
-    )]
-    pub const EWOULDBLOCK: Errno = Errno::EAGAIN;
-    #[deprecated(
-        since = "0.22.1",
-        note = "use nix::errno::Errno::EDEADLOCK instead"
-    )]
-    pub const EDEADLOCK: Errno = Errno::EDEADLK;
-    #[deprecated(
-        since = "0.22.1",
-        note = "use nix::errno::Errno::ENOTSUP instead"
-    )]
-    pub const ENOTSUP: Errno = Errno::EOPNOTSUPP;
-
     impl Errno {
         pub const EWOULDBLOCK: Errno = Errno::EAGAIN;
         pub const EDEADLOCK: Errno = Errno::EDEADLK;
@@ -1576,22 +1520,6 @@ mod consts {
         EQFULL = libc::EQFULL,
     }
 
-    #[deprecated(
-        since = "0.22.1",
-        note = "use nix::errno::Errno::ELAST instead"
-    )]
-    pub const ELAST: Errno = Errno::EQFULL;
-    #[deprecated(
-        since = "0.22.1",
-        note = "use nix::errno::Errno::EWOULDBLOCK instead"
-    )]
-    pub const EWOULDBLOCK: Errno = Errno::EAGAIN;
-    #[deprecated(
-        since = "0.22.1",
-        note = "use nix::errno::Errno::EDEADLOCK instead"
-    )]
-    pub const EDEADLOCK: Errno = Errno::EDEADLK;
-
     impl Errno {
         pub const ELAST: Errno = Errno::EQFULL;
         pub const EWOULDBLOCK: Errno = Errno::EAGAIN;
@@ -1818,27 +1746,6 @@ mod consts {
         EOWNERDEAD = libc::EOWNERDEAD,
     }
 
-    #[deprecated(
-        since = "0.22.1",
-        note = "use nix::errno::Errno::ELAST instead"
-    )]
-    pub const ELAST: Errno = Errno::EOWNERDEAD;
-    #[deprecated(
-        since = "0.22.1",
-        note = "use nix::errno::Errno::EWOULDBLOCK instead"
-    )]
-    pub const EWOULDBLOCK: Errno = Errno::EAGAIN;
-    #[deprecated(
-        since = "0.22.1",
-        note = "use nix::errno::Errno::EDEADLOCK instead"
-    )]
-    pub const EDEADLOCK: Errno = Errno::EDEADLK;
-    #[deprecated(
-        since = "0.22.1",
-        note = "use nix::errno::Errno::EOPNOTSUPP instead"
-    )]
-    pub const EOPNOTSUPP: Errno = Errno::ENOTSUP;
-
     impl Errno {
         pub const ELAST: Errno = Errno::EOWNERDEAD;
         pub const EWOULDBLOCK: Errno = Errno::EAGAIN;
@@ -2056,27 +1963,6 @@ mod consts {
         EASYNC = libc::EASYNC,
     }
 
-    #[deprecated(
-        since = "0.22.1",
-        note = "use nix::errno::Errno::ELAST instead"
-    )]
-    pub const ELAST: Errno = Errno::EASYNC;
-    #[deprecated(
-        since = "0.22.1",
-        note = "use nix::errno::Errno::EWOULDBLOCK instead"
-    )]
-    pub const EWOULDBLOCK: Errno = Errno::EAGAIN;
-    #[deprecated(
-        since = "0.22.1",
-        note = "use nix::errno::Errno::EDEADLOCK instead"
-    )]
-    pub const EDEADLOCK: Errno = Errno::EDEADLK;
-    #[deprecated(
-        since = "0.22.1",
-        note = "use nix::errno::Errno::EOPNOTSUPP instead"
-    )]
-    pub const EOPNOTSUPP: Errno = Errno::ENOTSUP;
-
     impl Errno {
         pub const ELAST: Errno = Errno::EASYNC;
         pub const EWOULDBLOCK: Errno = Errno::EAGAIN;
@@ -2290,17 +2176,6 @@ mod consts {
         EOWNERDEAD = libc::EOWNERDEAD,
         EPROTO = libc::EPROTO,
     }
-
-    #[deprecated(
-        since = "0.22.1",
-        note = "use nix::errno::Errno::ELAST instead"
-    )]
-    pub const ELAST: Errno = Errno::ENOTSUP;
-    #[deprecated(
-        since = "0.22.1",
-        note = "use nix::errno::Errno::EWOULDBLOCK instead"
-    )]
-    pub const EWOULDBLOCK: Errno = Errno::EAGAIN;
 
     impl Errno {
         pub const ELAST: Errno = Errno::ENOTSUP;
@@ -2516,17 +2391,6 @@ mod consts {
         EPROTO = libc::EPROTO,
     }
 
-    #[deprecated(
-        since = "0.22.1",
-        note = "use nix::errno::Errno::ELAST instead"
-    )]
-    pub const ELAST: Errno = Errno::ENOTSUP;
-    #[deprecated(
-        since = "0.22.1",
-        note = "use nix::errno::Errno::EWOULDBLOCK instead"
-    )]
-    pub const EWOULDBLOCK: Errno = Errno::EAGAIN;
-
     impl Errno {
         pub const ELAST: Errno = Errno::ENOTSUP;
         pub const EWOULDBLOCK: Errno = Errno::EAGAIN;
@@ -2730,12 +2594,6 @@ mod consts {
         ENOLINK = libc::ENOLINK,
         EPROTO = libc::EPROTO,
     }
-
-    #[deprecated(
-        since = "0.22.1",
-        note = "use nix::errno::Errno::EWOULDBLOCK instead"
-    )]
-    pub const EWOULDBLOCK: Errno = Errno::EAGAIN;
 
     impl Errno {
         pub const EWOULDBLOCK: Errno = Errno::EAGAIN;
@@ -2964,17 +2822,6 @@ mod consts {
         EINPROGRESS = libc::EINPROGRESS,
         ESTALE = libc::ESTALE,
     }
-
-    #[deprecated(
-        since = "0.22.1",
-        note = "use nix::errno::Errno::ELAST instead"
-    )]
-    pub const ELAST: Errno = Errno::ELAST;
-    #[deprecated(
-        since = "0.22.1",
-        note = "use nix::errno::Errno::EWOULDBLOCK instead"
-    )]
-    pub const EWOULDBLOCK: Errno = Errno::EAGAIN;
 
     impl Errno {
         pub const ELAST: Errno = Errno::ESTALE;

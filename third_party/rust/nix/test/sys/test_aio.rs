@@ -1,5 +1,5 @@
 use std::{
-    io::{Read, Seek, SeekFrom, Write},
+    io::{Read, Seek, Write},
     ops::Deref,
     os::unix::io::AsRawFd,
     pin::Pin,
@@ -371,7 +371,7 @@ mod aio_write {
         assert_eq!(err, Ok(()));
         assert_eq!(aiow.as_mut().aio_return().unwrap(), wbuf.len());
 
-        f.seek(SeekFrom::Start(0)).unwrap();
+        f.rewind().unwrap();
         let len = f.read_to_end(&mut rbuf).unwrap();
         assert_eq!(len, EXPECT.len());
         assert_eq!(rbuf, EXPECT);
@@ -402,7 +402,7 @@ mod aio_write {
         assert_eq!(err, Ok(()));
         assert_eq!(aiow.as_mut().aio_return().unwrap(), wbuf.len());
 
-        f.seek(SeekFrom::Start(0)).unwrap();
+        f.rewind().unwrap();
         let len = f.read_to_end(&mut rbuf).unwrap();
         assert_eq!(len, EXPECT.len());
         assert_eq!(rbuf, EXPECT);
@@ -487,7 +487,7 @@ mod aio_writev {
         assert_eq!(err, Ok(()));
         assert_eq!(aiow.as_mut().aio_return().unwrap(), wlen);
 
-        f.seek(SeekFrom::Start(0)).unwrap();
+        f.rewind().unwrap();
         let len = f.read_to_end(&mut rbuf).unwrap();
         assert_eq!(len, EXPECT.len());
         assert_eq!(rbuf, EXPECT);
@@ -537,7 +537,7 @@ fn sigev_signal() {
     }
 
     assert_eq!(aiow.as_mut().aio_return().unwrap(), WBUF.len());
-    f.seek(SeekFrom::Start(0)).unwrap();
+    f.rewind().unwrap();
     let len = f.read_to_end(&mut rbuf).unwrap();
     assert_eq!(len, EXPECT.len());
     assert_eq!(rbuf, EXPECT);

@@ -1,20 +1,24 @@
 //! For detailed description of the ptrace requests, consult `man ptrace`.
 
-use cfg_if::cfg_if;
-use std::{mem, ptr};
-use crate::Result;
 use crate::errno::Errno;
-use libc::{self, c_void, c_long, siginfo_t};
-use crate::unistd::Pid;
 use crate::sys::signal::Signal;
+use crate::unistd::Pid;
+use crate::Result;
+use cfg_if::cfg_if;
+use libc::{self, c_long, c_void, siginfo_t};
+use std::{mem, ptr};
 
 pub type AddressType = *mut ::libc::c_void;
 
 #[cfg(all(
     target_os = "linux",
-    any(all(target_arch = "x86_64",
-            any(target_env = "gnu", target_env = "musl")),
-        all(target_arch = "x86", target_env = "gnu"))
+    any(
+        all(
+            target_arch = "x86_64",
+            any(target_env = "gnu", target_env = "musl")
+        ),
+        all(target_arch = "x86", target_env = "gnu")
+    )
 ))]
 use libc::user_regs_struct;
 
@@ -30,7 +34,7 @@ cfg_if! {
     }
 }
 
-libc_enum!{
+libc_enum! {
     #[cfg_attr(not(any(target_env = "musl", target_env = "uclibc", target_os = "android")), repr(u32))]
     #[cfg_attr(any(target_env = "musl", target_env = "uclibc", target_os = "android"), repr(i32))]
     /// Ptrace Request enum defining the action to be taken.
@@ -120,7 +124,7 @@ libc_enum!{
     }
 }
 
-libc_enum!{
+libc_enum! {
     #[repr(i32)]
     /// Using the ptrace options the tracer can configure the tracee to stop
     /// at certain events. This enum is used to define those events as defined
@@ -178,7 +182,12 @@ libc_bitflags! {
     }
 }
 
-fn ptrace_peek(request: Request, pid: Pid, addr: AddressType, data: *mut c_void) -> Result<c_long> {
+fn ptrace_peek(
+    request: Request,
+    pid: Pid,
+    addr: AddressType,
+    data: *mut c_void,
+) -> Result<c_long> {
     let ret = unsafe {
         Errno::clear();
         libc::ptrace(request as RequestType, libc::pid_t::from(pid), addr, data)
@@ -192,9 +201,13 @@ fn ptrace_peek(request: Request, pid: Pid, addr: AddressType, data: *mut c_void)
 /// Get user registers, as with `ptrace(PTRACE_GETREGS, ...)`
 #[cfg(all(
     target_os = "linux",
-    any(all(target_arch = "x86_64",
-            any(target_env = "gnu", target_env = "musl")),
-        all(target_arch = "x86", target_env = "gnu"))
+    any(
+        all(
+            target_arch = "x86_64",
+            any(target_env = "gnu", target_env = "musl")
+        ),
+        all(target_arch = "x86", target_env = "gnu")
+    )
 ))]
 pub fn getregs(pid: Pid) -> Result<user_regs_struct> {
     ptrace_get_data::<user_regs_struct>(Request::PTRACE_GETREGS, pid)
@@ -203,16 +216,22 @@ pub fn getregs(pid: Pid) -> Result<user_regs_struct> {
 /// Set user registers, as with `ptrace(PTRACE_SETREGS, ...)`
 #[cfg(all(
     target_os = "linux",
-    any(all(target_arch = "x86_64",
-            any(target_env = "gnu", target_env = "musl")),
-        all(target_arch = "x86", target_env = "gnu"))
+    any(
+        all(
+            target_arch = "x86_64",
+            any(target_env = "gnu", target_env = "musl")
+        ),
+        all(target_arch = "x86", target_env = "gnu")
+    )
 ))]
 pub fn setregs(pid: Pid, regs: user_regs_struct) -> Result<()> {
     let res = unsafe {
-        libc::ptrace(Request::PTRACE_SETREGS as RequestType,
-                     libc::pid_t::from(pid),
-                     ptr::null_mut::<c_void>(),
-                     &regs as *const _ as *const c_void)
+        libc::ptrace(
+            Request::PTRACE_SETREGS as RequestType,
+            libc::pid_t::from(pid),
+            ptr::null_mut::<c_void>(),
+            &regs as *const _ as *const c_void,
+        )
     };
     Errno::result(res).map(drop)
 }
@@ -224,26 +243,41 @@ pub fn setregs(pid: Pid, regs: user_regs_struct) -> Result<()> {
 fn ptrace_get_data<T>(request: Request, pid: Pid) -> Result<T> {
     let mut data = mem::MaybeUninit::uninit();
     let res = unsafe {
-        libc::ptrace(request as RequestType,
-                     libc::pid_t::from(pid),
-                     ptr::null_mut::<T>(),
-                     data.as_mut_ptr() as *const _ as *const c_void)
+        libc::ptrace(
+            request as RequestType,
+            libc::pid_t::from(pid),
+            ptr::null_mut::<T>(),
+            data.as_mut_ptr() as *const _ as *const c_void,
+        )
     };
     Errno::result(res)?;
-    Ok(unsafe{ data.assume_init() })
+    Ok(unsafe { data.assume_init() })
 }
 
-unsafe fn ptrace_other(request: Request, pid: Pid, addr: AddressType, data: *mut c_void) -> Result<c_long> {
-    Errno::result(libc::ptrace(request as RequestType, libc::pid_t::from(pid), addr, data)).map(|_| 0)
+unsafe fn ptrace_other(
+    request: Request,
+    pid: Pid,
+    addr: AddressType,
+    data: *mut c_void,
+) -> Result<c_long> {
+    Errno::result(libc::ptrace(
+        request as RequestType,
+        libc::pid_t::from(pid),
+        addr,
+        data,
+    ))
+    .map(|_| 0)
 }
 
 /// Set options, as with `ptrace(PTRACE_SETOPTIONS,...)`.
 pub fn setoptions(pid: Pid, options: Options) -> Result<()> {
     let res = unsafe {
-        libc::ptrace(Request::PTRACE_SETOPTIONS as RequestType,
-                     libc::pid_t::from(pid),
-                     ptr::null_mut::<c_void>(),
-                     options.bits() as *mut c_void)
+        libc::ptrace(
+            Request::PTRACE_SETOPTIONS as RequestType,
+            libc::pid_t::from(pid),
+            ptr::null_mut::<c_void>(),
+            options.bits() as *mut c_void,
+        )
     };
     Errno::result(res).map(drop)
 }
@@ -260,12 +294,14 @@ pub fn getsiginfo(pid: Pid) -> Result<siginfo_t> {
 
 /// Set siginfo as with `ptrace(PTRACE_SETSIGINFO,...)`
 pub fn setsiginfo(pid: Pid, sig: &siginfo_t) -> Result<()> {
-    let ret = unsafe{
+    let ret = unsafe {
         Errno::clear();
-        libc::ptrace(Request::PTRACE_SETSIGINFO as RequestType,
-                     libc::pid_t::from(pid),
-                     ptr::null_mut::<c_void>(),
-                     sig as *const _ as *const c_void)
+        libc::ptrace(
+            Request::PTRACE_SETSIGINFO as RequestType,
+            libc::pid_t::from(pid),
+            ptr::null_mut::<c_void>(),
+            sig as *const _ as *const c_void,
+        )
     };
     match Errno::result(ret) {
         Ok(_) => Ok(()),
@@ -284,7 +320,8 @@ pub fn traceme() -> Result<()> {
             Pid::from_raw(0),
             ptr::null_mut(),
             ptr::null_mut(),
-        ).map(drop) // ignore the useless return value
+        )
+        .map(drop) // ignore the useless return value
     }
 }
 
@@ -298,12 +335,8 @@ pub fn syscall<T: Into<Option<Signal>>>(pid: Pid, sig: T) -> Result<()> {
         None => ptr::null_mut(),
     };
     unsafe {
-        ptrace_other(
-            Request::PTRACE_SYSCALL,
-            pid,
-            ptr::null_mut(),
-            data,
-        ).map(drop) // ignore the useless return value
+        ptrace_other(Request::PTRACE_SYSCALL, pid, ptr::null_mut(), data)
+            .map(drop) // ignore the useless return value
     }
 }
 
@@ -312,14 +345,19 @@ pub fn syscall<T: Into<Option<Signal>>>(pid: Pid, sig: T) -> Result<()> {
 /// In contrast to the `syscall` function, the syscall stopped at will not be executed.
 /// Thus the the tracee will only be stopped once per syscall,
 /// optionally delivering a signal specified by `sig`.
-#[cfg(all(target_os = "linux", target_env = "gnu", any(target_arch = "x86", target_arch = "x86_64")))]
+#[cfg(all(
+    target_os = "linux",
+    target_env = "gnu",
+    any(target_arch = "x86", target_arch = "x86_64")
+))]
 pub fn sysemu<T: Into<Option<Signal>>>(pid: Pid, sig: T) -> Result<()> {
     let data = match sig.into() {
         Some(s) => s as i32 as *mut c_void,
         None => ptr::null_mut(),
     };
     unsafe {
-        ptrace_other(Request::PTRACE_SYSEMU, pid, ptr::null_mut(), data).map(drop)
+        ptrace_other(Request::PTRACE_SYSEMU, pid, ptr::null_mut(), data)
+            .map(drop)
         // ignore the useless return value
     }
 }
@@ -334,7 +372,8 @@ pub fn attach(pid: Pid) -> Result<()> {
             pid,
             ptr::null_mut(),
             ptr::null_mut(),
-        ).map(drop) // ignore the useless return value
+        )
+        .map(drop) // ignore the useless return value
     }
 }
 
@@ -350,7 +389,8 @@ pub fn seize(pid: Pid, options: Options) -> Result<()> {
             pid,
             ptr::null_mut(),
             options.bits() as *mut c_void,
-        ).map(drop) // ignore the useless return value
+        )
+        .map(drop) // ignore the useless return value
     }
 }
 
@@ -364,12 +404,8 @@ pub fn detach<T: Into<Option<Signal>>>(pid: Pid, sig: T) -> Result<()> {
         None => ptr::null_mut(),
     };
     unsafe {
-        ptrace_other(
-            Request::PTRACE_DETACH,
-            pid,
-            ptr::null_mut(),
-            data
-        ).map(drop)
+        ptrace_other(Request::PTRACE_DETACH, pid, ptr::null_mut(), data)
+            .map(drop)
     }
 }
 
@@ -383,7 +419,8 @@ pub fn cont<T: Into<Option<Signal>>>(pid: Pid, sig: T) -> Result<()> {
         None => ptr::null_mut(),
     };
     unsafe {
-        ptrace_other(Request::PTRACE_CONT, pid, ptr::null_mut(), data).map(drop) // ignore the useless return value
+        ptrace_other(Request::PTRACE_CONT, pid, ptr::null_mut(), data).map(drop)
+        // ignore the useless return value
     }
 }
 
@@ -394,7 +431,13 @@ pub fn cont<T: Into<Option<Signal>>>(pid: Pid, sig: T) -> Result<()> {
 #[cfg_attr(docsrs, doc(cfg(all())))]
 pub fn interrupt(pid: Pid) -> Result<()> {
     unsafe {
-        ptrace_other(Request::PTRACE_INTERRUPT, pid, ptr::null_mut(), ptr::null_mut()).map(drop)
+        ptrace_other(
+            Request::PTRACE_INTERRUPT,
+            pid,
+            ptr::null_mut(),
+            ptr::null_mut(),
+        )
+        .map(drop)
     }
 }
 
@@ -403,7 +446,13 @@ pub fn interrupt(pid: Pid) -> Result<()> {
 /// This request is equivalent to `ptrace(PTRACE_CONT, ..., SIGKILL);`
 pub fn kill(pid: Pid) -> Result<()> {
     unsafe {
-        ptrace_other(Request::PTRACE_KILL, pid, ptr::null_mut(), ptr::null_mut()).map(drop)
+        ptrace_other(
+            Request::PTRACE_KILL,
+            pid,
+            ptr::null_mut(),
+            ptr::null_mut(),
+        )
+        .map(drop)
     }
 }
 
@@ -436,7 +485,8 @@ pub fn step<T: Into<Option<Signal>>>(pid: Pid, sig: T) -> Result<()> {
         None => ptr::null_mut(),
     };
     unsafe {
-        ptrace_other(Request::PTRACE_SINGLESTEP, pid, ptr::null_mut(), data).map(drop)
+        ptrace_other(Request::PTRACE_SINGLESTEP, pid, ptr::null_mut(), data)
+            .map(drop)
     }
 }
 
@@ -446,7 +496,11 @@ pub fn step<T: Into<Option<Signal>>>(pid: Pid, sig: T) -> Result<()> {
 /// Advances the execution by a single step or until the next syscall.
 /// In case the tracee is stopped at a syscall, the syscall will not be executed.
 /// Optionally, the signal specified by `sig` is delivered to the tracee upon continuation.
-#[cfg(all(target_os = "linux", target_env = "gnu", any(target_arch = "x86", target_arch = "x86_64")))]
+#[cfg(all(
+    target_os = "linux",
+    target_env = "gnu",
+    any(target_arch = "x86", target_arch = "x86_64")
+))]
 pub fn sysemu_step<T: Into<Option<Signal>>>(pid: Pid, sig: T) -> Result<()> {
     let data = match sig.into() {
         Some(s) => s as i32 as *mut c_void,
@@ -477,8 +531,8 @@ pub fn read(pid: Pid, addr: AddressType) -> Result<c_long> {
 pub unsafe fn write(
     pid: Pid,
     addr: AddressType,
-    data: *mut c_void) -> Result<()>
-{
+    data: *mut c_void,
+) -> Result<()> {
     ptrace_other(Request::PTRACE_POKEDATA, pid, addr, data).map(drop)
 }
 
@@ -498,7 +552,7 @@ pub fn read_user(pid: Pid, offset: AddressType) -> Result<c_long> {
 pub unsafe fn write_user(
     pid: Pid,
     offset: AddressType,
-    data: *mut c_void) -> Result<()>
-{
+    data: *mut c_void,
+) -> Result<()> {
     ptrace_other(Request::PTRACE_POKEUSER, pid, offset, data).map(drop)
 }

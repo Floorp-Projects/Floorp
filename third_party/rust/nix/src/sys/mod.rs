@@ -50,7 +50,7 @@ feature! {
 #[macro_use]
 pub mod ioctl;
 
-#[cfg(any(target_os = "android", target_os = "linux"))]
+#[cfg(any(target_os = "android", target_os = "freebsd", target_os = "linux"))]
 feature! {
     #![feature = "fs"]
     pub mod memfd;

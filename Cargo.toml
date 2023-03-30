@@ -121,10 +121,10 @@ wasi = { path = "build/rust/wasi" }
 # Patch bindgen 0.63 to 0.64
 bindgen = { path = "build/rust/bindgen" }
 
-# Patch memoffset 0.6 to 0.7
+# Patch memoffset 0.6 to 0.8
 memoffset = { path = "build/rust/memoffset" }
 
-# Patch nix 0.24 to 0.25
+# Patch nix 0.24 to 0.26
 nix = { path = "build/rust/nix" }
 
 # Patch hermit-abi 0.1 to 0.2
@@ -157,7 +157,7 @@ firefox-on-glean = { path = "toolkit/components/glean/api" }
 libudev-sys = { path = "dom/webauthn/libudev-sys" }
 packed_simd = { package = "packed_simd_2", git = "https://github.com/hsivonen/packed_simd", rev="412f9a0aa556611de021bde89dee8fefe6e0fbbd" }
 midir = { git = "https://github.com/mozilla/midir.git", rev = "519e651241e867af3391db08f9ae6400bc023e18" }
-minidump-writer = { git = "https://github.com/rust-minidump/minidump-writer.git", rev = "7d76616d27b9dc87fe3a94639b8b4f947d52a6aa" }
+minidump-writer = { git = "https://github.com/rust-minidump/minidump-writer.git", rev = "59179c83ba62e4378619c6967c0b8c0c077cac2d" }
 # warp 0.3.3 + https://github.com/seanmonstar/warp/pull/1007
 warp = { git = "https://github.com/glandium/warp", rev = "4af45fae95bc98b0eba1ef0db17e1dac471bb23d" }
 

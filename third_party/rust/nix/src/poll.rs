@@ -1,8 +1,8 @@
 //! Wait for events to trigger on specific file descriptors
 use std::os::unix::io::{AsRawFd, RawFd};
 
-use crate::Result;
 use crate::errno::Errno;
+use crate::Result;
 
 /// This is a wrapper around `libc::pollfd`.
 ///
@@ -35,6 +35,26 @@ impl PollFd {
     /// `None` if the kernel provides status flags that Nix does not know about.
     pub fn revents(self) -> Option<PollFlags> {
         PollFlags::from_bits(self.pollfd.revents)
+    }
+
+    /// Returns if any of the events of interest occured in the last call to `poll` or `ppoll`. Will
+    /// only return `None` if the kernel provides status flags that Nix does not know about.
+    ///
+    /// Equivalent to `x.revents()? != PollFlags::empty()`.
+    ///
+    /// This is marginally more efficient than [`PollFd::all`].
+    pub fn any(self) -> Option<bool> {
+        Some(self.revents()? != PollFlags::empty())
+    }
+
+    /// Returns if all the events of interest occured in the last call to `poll` or `ppoll`. Will
+    /// only return `None` if the kernel provides status flags that Nix does not know about.
+    ///
+    /// Equivalent to `x.revents()? & x.events() == x.events()`.
+    ///
+    /// This is marginally less efficient than [`PollFd::any`].
+    pub fn all(self) -> Option<bool> {
+        Some(self.revents()? & self.events() == self.events())
     }
 
     /// The events of interest for this `PollFd`.
@@ -134,9 +154,11 @@ libc_bitflags! {
 /// ready.
 pub fn poll(fds: &mut [PollFd], timeout: libc::c_int) -> Result<libc::c_int> {
     let res = unsafe {
-        libc::poll(fds.as_mut_ptr() as *mut libc::pollfd,
-                   fds.len() as libc::nfds_t,
-                   timeout)
+        libc::poll(
+            fds.as_mut_ptr() as *mut libc::pollfd,
+            fds.len() as libc::nfds_t,
+            timeout,
+        )
     };
 
     Errno::result(res)

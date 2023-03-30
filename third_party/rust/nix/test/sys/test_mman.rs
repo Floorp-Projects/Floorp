@@ -1,11 +1,12 @@
 use nix::sys::mman::{mmap, MapFlags, ProtFlags};
+use std::num::NonZeroUsize;
 
 #[test]
 fn test_mmap_anonymous() {
     unsafe {
         let ptr = mmap(
-            std::ptr::null_mut(),
-            1,
+            None,
+            NonZeroUsize::new(1).unwrap(),
             ProtFlags::PROT_READ | ProtFlags::PROT_WRITE,
             MapFlags::MAP_PRIVATE | MapFlags::MAP_ANONYMOUS,
             -1,
@@ -25,10 +26,12 @@ fn test_mremap_grow() {
     use nix::sys::mman::{mremap, MRemapFlags};
 
     const ONE_K: size_t = 1024;
+    let one_k_non_zero = NonZeroUsize::new(ONE_K).unwrap();
+
     let slice: &mut [u8] = unsafe {
         let mem = mmap(
-            std::ptr::null_mut(),
-            ONE_K,
+            None,
+            one_k_non_zero,
             ProtFlags::PROT_READ | ProtFlags::PROT_WRITE,
             MapFlags::MAP_ANONYMOUS | MapFlags::MAP_PRIVATE,
             -1,
@@ -79,12 +82,14 @@ fn test_mremap_grow() {
 fn test_mremap_shrink() {
     use nix::libc::{c_void, size_t};
     use nix::sys::mman::{mremap, MRemapFlags};
+    use std::num::NonZeroUsize;
 
     const ONE_K: size_t = 1024;
+    let ten_one_k = NonZeroUsize::new(10 * ONE_K).unwrap();
     let slice: &mut [u8] = unsafe {
         let mem = mmap(
-            std::ptr::null_mut(),
-            10 * ONE_K,
+            None,
+            ten_one_k,
             ProtFlags::PROT_READ | ProtFlags::PROT_WRITE,
             MapFlags::MAP_ANONYMOUS | MapFlags::MAP_PRIVATE,
             -1,
@@ -100,7 +105,7 @@ fn test_mremap_shrink() {
     let slice: &mut [u8] = unsafe {
         let mem = mremap(
             slice.as_mut_ptr() as *mut c_void,
-            10 * ONE_K,
+            ten_one_k.into(),
             ONE_K,
             MRemapFlags::empty(),
             None,
