@@ -11,6 +11,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Encoding.h"
+#include "mozilla/UniquePtr.h"
 #include "nsDebug.h"
 #include "nsReadableUtils.h"
 #include "nsUTF8Utils.h"  // for LossyConvertEncoding
@@ -189,11 +190,13 @@ nsresult nsScanner::Append(const nsAString& aBuffer) {
 nsresult nsScanner::Append(const char* aBuffer, uint32_t aLen) {
   nsresult res = NS_OK;
   if (mUnicodeDecoder) {
-    CheckedInt<size_t> needed = mUnicodeDecoder->MaxUTF16BufferLength(aLen);
+    mozilla::CheckedInt<size_t> needed =
+        mUnicodeDecoder->MaxUTF16BufferLength(aLen);
     if (!needed.isValid()) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    CheckedInt<uint32_t> allocLen(1);  // null terminator due to legacy sadness
+    mozilla::CheckedInt<uint32_t> allocLen(
+        1);  // null terminator due to legacy sadness
     allocLen += needed.value();
     if (!allocLen.isValid()) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -209,12 +212,13 @@ nsresult nsScanner::Append(const char* aBuffer, uint32_t aLen) {
     // Do not use structured binding lest deal with [-Werror=unused-variable]
     std::tie(result, read, written) =
         mUnicodeDecoder->DecodeToUTF16WithoutReplacement(
-            AsBytes(Span(aBuffer, aLen)), Span(unichars, needed.value()),
+            AsBytes(mozilla::Span(aBuffer, aLen)),
+            mozilla::Span(unichars, needed.value()),
             false);  // Retain bug about failure to handle EOF
     MOZ_ASSERT(result != kOutputFull);
     MOZ_ASSERT(read <= aLen);
     MOZ_ASSERT(written <= needed.value());
-    if (result != kInputEmpty) {
+    if (result != mozilla::kInputEmpty) {
       // Since about:blank is empty, this line runs only for XML. Use a
       // character that's illegal in XML instead of U+FFFD in order to make
       // expat flag the error. There is no need to loop and convert more, since
@@ -279,7 +283,7 @@ void nsScanner::SetPosition(nsScannerIterator& aPosition, bool aTerminate) {
 
 void nsScanner::AppendToBuffer(nsScannerString::Buffer* aBuf) {
   if (!mSlidingBuffer) {
-    mSlidingBuffer = MakeUnique<nsScannerString>(aBuf);
+    mSlidingBuffer = mozilla::MakeUnique<nsScannerString>(aBuf);
     mSlidingBuffer->BeginReading(mCurrentPosition);
     mMarkPosition = mCurrentPosition;
   } else {

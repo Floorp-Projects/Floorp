@@ -50,5 +50,3 @@ FINAL_LIBRARY = "xul"
 LOCAL_INCLUDES += [
     "!/security/rlbox",
 ]
-
-REQUIRES_UNIFIED_BUILD = True

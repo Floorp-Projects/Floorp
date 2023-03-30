@@ -137,8 +137,6 @@ int32_t nsScannerSubstring::CountChar(char16_t c) const {
     if (!(lengthToExamine -= lengthToExamineInThisFragment)) return result;
     iter.advance(lengthToExamineInThisFragment);
   }
-  // never reached; quiets warnings
-  return 0;
 }
 
 void nsScannerSubstring::Rebind(const nsScannerSubstring& aString,
