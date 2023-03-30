@@ -11,14 +11,14 @@ default-value = {default = false, nightly = true, thunderbird = true}
 
 [web-api-webgpu]
 title = "experimental-features-web-gpu2"
-description = "experimental-features-web-gpu-description2"
-description-links = {wikipedia = "https://en.wikipedia.org/wiki/Graphics%20Processing%20Unit", spec = "https://gpuweb.github.io/gpuweb/", bugzilla = "https://bugzilla.mozilla.org/show_bug.cgi?id=1602129"}
-restart-required = true
+description = "experimental-features-web-gpu-description3"
+description-links = {wikipedia-webgpu = "https://en.wikipedia.org/wiki/WebGPU", wikipedia-gpu = "https://en.wikipedia.org/wiki/Graphics_processing_unit", spec = "https://gpuweb.github.io/gpuweb/", bugzilla = "https://bugzilla.mozilla.org/show_bug.cgi?id=1616739"}
+restart-required = false
 preference = "dom.webgpu.enabled"
 type = "boolean"
-bug-numbers = [1602129]
+bug-numbers = [1616739]
 is-public = {default = false, nightly = true}
-default-value = false
+default-value = {default = false, nightly = true}
 
 [media-jxl]
 title = "experimental-features-media-jxl"
