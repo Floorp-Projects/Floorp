@@ -4,532 +4,65 @@
 
 html,
 body {
-  padding:  0;
-  margin:  0;
-  background-color: transparent;
   height: 100vh;
   width: 100vw;
 }
 
-.button,
-.preview-button {
+.image-view {
+  width: 100%;
+  height: 100%;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  border-radius: 3px;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: 400;
-  height: 40px;
-  min-width: 40px;
-  outline: none;
-  padding: 0 10px;
-  position: relative;
-  text-align: center;
-  text-decoration: none;
-  transition: background 150ms cubic-bezier(0.07, 0.95, 0, 1), border 150ms cubic-bezier(0.07, 0.95, 0, 1);
-  user-select: none;
-  white-space: nowrap;
-}
-
-button img {
-  -moz-context-properties: fill;
-  fill: currentColor;
-}
-
-.button.hidden,
-.hidden.preview-button {
-  display: none;
-}
-
-.button.small,
-.small.preview-button {
-  height: 32px;
-  line-height: 32px;
-  padding: 0 8px;
-}
-
-.button.active,
-.active.preview-button {
-  background-color: #dedede;
-}
-
-@media (forced-colors: active), (prefers-contrast) {
-  .button.active,
-  .active.preview-button {
-    background-color: ButtonFace;
-  }
-}
-
-.button.tiny,
-.tiny.preview-button {
-  font-size: 14px;
-  height: 26px;
-  border: 1px solid #c7c7c7;
-}
-
-.button.tiny:hover,
-.tiny.preview-button:hover,
-.button.tiny:focus,
-.tiny.preview-button:focus {
-  background: #ededf0;
-  border-color: #989898;
-}
-
-.button.tiny:active,
-.tiny.preview-button:active {
-  background: #dedede;
-  border-color: #989898;
-}
-
-.button.block-button,
-.block-button.preview-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  border: 0;
-  border-inline-end: 1px solid #c7c7c7;
-  box-shadow: none;
-  border-radius: 0;
-  flex-shrink: 0;
-  font-size: 20px;
-  height: 100px;
-  line-height: 100%;
-  overflow: hidden;
-}
-
-@media (max-width: 719px) {
-  .button.block-button,
-  .block-button.preview-button {
-    justify-content: flex-start;
-    font-size: 16px;
-    height: 72px;
-    margin-inline-end: 10px;
-    padding: 0 5px;
-  }
-}
-
-.button.block-button:hover,
-.block-button.preview-button:hover {
-  background: #ededf0;
-}
-
-.button.block-button:active,
-.block-button.preview-button:active {
-  background: #dedede;
-}
-
-@media (forced-colors: active), (prefers-contrast) {
-  .button.block-button:hover,
-  .block-button.preview-button:hover {
-    background-color: ButtonText;
-  }
-
-  .button.block-button:active,
-  .block-button.preview-button:active {
-    background-color: ButtonFace;
-  }
-}
-
-.button.download,
-.download.preview-button,
-.button.flag,
-.flag.preview-button {
-  background-repeat: no-repeat;
-  background-size: 50%;
-  background-position: center;
-  margin-inline-end: 10px;
-  transition: background-color 150ms cubic-bezier(0.07, 0.95, 0, 1);
-}
-
-.button.download,
-.download.highlight-button-retry,
-.download.highlight-button-cancel,
-.download.highlight-button-download,
-.download.highlight-button-copy {
-  background-image: url("chrome://browser/content/screenshots/download.svg");
-}
-
-.button.download:hover,
-.download.preview-button:hover {
-  background-color: #ededf0;
-}
-
-.button.download:active,
-.download.preview-button:active {
-  background-color: #dedede;
-}
-
-@media (forced-colors: active), (prefers-contrast) {
-  .button.download:hover,
-  .download.preview-button:hover {
-    background-color: ButtonText;
-    color: ButtonFace;
-  }
-
-  .button.download:active,
-  .download.preview-button:active {
-    background-color: ButtonFace;
-    color: ButtonText;
-  }
-}
-
-.button.primary,
-.primary.highlight-retry-cancel,
-.primary.highlight-button-cancel,
-.highlight-button-download,
-.primary.highlight-button-copy {
-  background-color: #0a84ff;
-  color: #fff;
-}
-
-.button.primary:hover,
-.primary.highlight-button-retry:hover,
-.primary.highlight-button-cancel:hover,
-.highlight-button-download:hover,
-.primary.highlight-button-copy:hover,
-.button.primary:focus,
-.primary.highlight-button-retry:focus,
-.primary.highlight-button-cancel:focus,
-.highlight-button-download:focus,
-.primary.highlight-button-copy:focus {
-  background-color: #0072e5;
-}
-
-.button.primary:active,
-.primary.highlight-button-retry:active,
-.primary.highlight-button-cancel:active,
-.highlight-button-download:active,
-.primary.highlight-button-copy:active {
-  background-color: #0065cc;
-}
-
-@media (forced-colors: active), (prefers-contrast) {
-  .button.primary,
-  .primary.highlight-retry-cancel,
-  .primary.highlight-button-cancel,
-  .highlight-button-download,
-  .primary.highlight-button-copy {
-    background-color: ButtonFace;
-    color: ButtonText;
-  }
-
-  .button.primary:hover,
-  .primary.highlight-button-retry:hover,
-  .primary.highlight-button-cancel:hover,
-  .highlight-button-download:hover,
-  .primary.highlight-button-copy:hover,
-  .button.primary:focus,
-  .primary.highlight-button-retry:focus,
-  .primary.highlight-button-cancel:focus,
-  .highlight-button-download:focus,
-  .primary.highlight-button-copy:focus {
-    background-color: ButtonText;
-    color: ButtonFace;
-  }
-
-  .button.primary:active,
-  .primary.highlight-button-retry:active,
-  .primary.highlight-button-cancel:active,
-  .highlight-button-download:active,
-  .primary.highlight-button-copy:active {
-    background-color: ButtonFace;
-    color: ButtonText;
-  }
-}
-
-.button.secondary,
-.highlight-button-retry,
-.highlight-button-cancel,
-.secondary.highlight-button-download,
-.highlight-button-copy {
-  background-color: #f9f9fa;
-  color: #38383d;
-}
-
-.button.secondary:hover,
-.highlight-button-retry:hover,
-.highlight-button-cancel:hover,
-.secondary.highlight-button-download:hover,
-.highlight-button-copy:hover {
-  background-color: #ededf0;
-}
-
-.button.secondary:active,
-.highlight-button-retry:active,
-.highlight-button-cancel:active,
-.secondary.highlight-button-download:active,
-.highlight-button-copy:active {
-  background-color: #dedede;
-}
-
-@media (forced-colors: active), (prefers-contrast) {
-  .button.secondary,
-  .highlight-button-retry,
-  .highlight-button-cancel,
-  .secondary.highlight-button-download,
-  .highlight-button-copy {
-    background-color: ButtonFace;
-    color: ButtonText;
-  }
-
-  .button.secondary:hover,
-  .highlight-button-retry:hover,
-  .highlight-button-cancel:hover,
-  .secondary.highlight-button-download:hover,
-  .highlight-button-copy:hover {
-    background-color: ButtonText;
-    color: ButtonFace;
-  }
-
-  .button.secondary:active,
-  .highlight-button-retry:active,
-  .highlight-button-cancel:active,
-  .secondary.highlight-button-download:active,
-  .highlight-button-copy:active {
-    background-color: ButtonFace;
-    color: ButtonText;
-  }
-}
-
-.button.transparent,
-.transparent.preview-button {
-  background-color: transparent;
-  color: #38383d;
-}
-
-.button.transparent:hover,
-.transparent.preview-button:hover {
-  background-color: #ededf0;
-}
-
-.button.transparent:focus,
-.transparent.preview-button:focus,
-.button.transparent:active,
-.transparent.preview-button:active {
-  background-color: #dedede;
-}
-
-@media (forced-colors: active), (prefers-contrast) {
-  .button.transparent,
-  .transparent.preview-button {
-    background-color: ButtonFace;
-    color: ButtonText;
-  }
-
-  .button.transparent:hover,
-  .transparent.preview-button:hover {
-    background-color: ButtonText;
-    color: ButtonFace;
-  }
-
-  .button.transparent:focus,
-  .transparent.preview-button:focus,
-  .button.transparent:active,
-  .transparent.preview-button:active {
-    background-color: ButtonFace;
-    color: ButtonText;
-  }
-}
-
-.button.warning,
-.warning.preview-button {
-  color: #fff;
-  background: #d92215;
-}
-
-.button.warning:hover,
-.warning.preview-button:hover,
-.button.warning:focus,
-.warning.preview-button:focus {
-  background: #b81d12;
-}
-
-.button.warning:active,
-.warning.preview-button:active {
-  background: #a11910;
-}
-
-@media (forced-colors: active), (prefers-contrast) {
-  .button.warning,
-  .warning.preview-button {
-    color: ButtonText;
-    background-color: ButtonFace;
-  }
-
-  .button.warning:hover,
-  .warning.preview-button:hover,
-  .button.warning:focus,
-  .warning.preview-button:focus {
-    background-color: ButtonText;
-    color: ButtonFace;
-  }
-
-  .button.warning:active,
-  .warning.preview-button:active {
-    background-color: ButtonFace;
-  }
-}
-
-@keyframes bounce {
-  0% {
-    transform: translateX(-40px);
-  }
-  100% {
-    transform: translate(190px);
-  }
-}
-
-@keyframes pulse {
-  0% {
-    opacity: 0.3;
-    transform: scale(1);
-  }
-  70% {
-    opacity: 0.25;
-    transform: scale(1.04);
-  }
-  100% {
-    opacity: 0.3;
-    transform: scale(1);
-  }
-}
-
-.highlight {
-  border-radius: 1px;
-  border: 2px dashed rgba(255, 255, 255, 0.8);
-  box-sizing: border-box;
-  cursor: move;
-  position: absolute;
-  z-index: 9999999999;
-}
-
-/* When prefers contrast is fully supported, we should change these quereies to cover both high and low prefers contrast cases */
-@media (forced-colors: active) {
-  .highlight {
-    border: 2px dashed white;
-    opacity: 1.0;
-  }
-}
-
-.highlight-button-cancel {
-  margin: 5px;
-  width: 40px;
-}
-
-.highlight-button-download {
-  margin: 5px;
-  width: auto;
-  font-size: 18px;
-}
-
-.highlight-button-download img {
-  height: 16px;
-  width: 16px;
-}
-
-.highlight-button-download:-moz-locale-dir(rtl) {
-  flex-direction: column-reverse;
-}
-
-.highlight-button-download img:-moz-locale-dir(ltr) {
-  padding-inline-end: 8px;
-}
-
-.highlight-button-download img:-moz-locale-dir(rtl) {
-  padding-inline-start: 8px;
-}
-
-.highlight-button-copy {
-  margin: 5px;
-  width: auto;
-}
-
-.highlight-button-copy img {
-  height: 16px;
-  width: 16px;
-}
-
-.highlight-button-copy:-moz-locale-dir(rtl) {
-  flex-direction: column-reverse;
-}
-
-.highlight-button-copy img:-moz-locale-dir(ltr) {
-  padding-inline-end: 8px;
-}
-
-.highlight-button-copy img:-moz-locale-dir(rtl) {
-  padding-inline-start: 8px;
+  flex-direction: column;
 }
 
 .preview-buttons {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding-inline-end: 4px;
-  inset-inline-end: 0;
   width: 100%;
-  height: 60px;
-  border-radius: 4px 4px 0 0;
-  background: rgba(249, 249, 250, 0.8);
-  top: 0;
-  border: 1px solid rgba(249, 249, 250, 0.2);
-  border-bottom: 0;
+  border: 0;
   box-sizing: border-box;
+  margin: 4px 0;
+  margin-inline-start: calc(-2% + 4px);
+}
+
+.preview-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-align: center;
+  user-select: none;
+  white-space: nowrap;
+  min-height: 36px;
+  font-size: 15px;
+  min-width: 36px;
+}
+
+.preview-button > img {
+  -moz-context-properties: fill;
+  fill: currentColor;
+  width: 16px;
+  height: 16px;
+}
+
+#download > img,
+#copy > img {
+  margin-inline-end: 5px;
 }
 
 .preview-image {
-  background-color: rgba(249, 249, 250, 0.8);
   height: 100%;
   width: 100%;
   overflow: auto;
 }
 
-.preview-image-area {
-  margin: 10%;
-  margin-top: 2%;
-}
-
-.image-view {
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
-  display: flex;
-  flex-direction: column;
-}
-
-.left {
-  margin-inline-start: 0;
-}
-
-.right {
-  margin-inline-start: 20px;
+#preview-image-div {
+  margin: 2%;
+  margin-top: 0;
 }
 
 #placeholder-image {
   width: 100%;
   height: 100%;
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.06);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-@keyframes fade-in {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
 }

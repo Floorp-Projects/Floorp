@@ -173,9 +173,7 @@ add_task(async function test_started_retry() {
       await screenshotReady;
 
       let dialog = helper.getDialog();
-      let retryButton = dialog._frame.contentDocument.querySelector(
-        ".highlight-button-retry"
-      );
+      let retryButton = dialog._frame.contentDocument.getElementById("retry");
       ok(retryButton, "Got the retry button");
       retryButton.click();
 
@@ -213,9 +211,7 @@ add_task(async function test_canceled() {
       await screenshotReady;
 
       let dialog = helper.getDialog();
-      let cancelButton = dialog._frame.contentDocument.querySelector(
-        ".highlight-button-cancel"
-      );
+      let cancelButton = dialog._frame.contentDocument.getElementById("cancel");
       ok(cancelButton, "Got the cancel button");
       cancelButton.click();
 
@@ -261,9 +257,7 @@ add_task(async function test_copy() {
       await screenshotReady;
 
       let dialog = helper.getDialog();
-      let copyButton = dialog._frame.contentDocument.querySelector(
-        ".highlight-button-copy"
-      );
+      let copyButton = dialog._frame.contentDocument.getElementById("copy");
 
       let clipboardChanged = helper.waitForRawClipboardChange();
 

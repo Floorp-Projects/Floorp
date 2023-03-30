@@ -116,8 +116,8 @@ add_task(async function test_download_without_filepicker() {
 
       await screenshotReady;
 
-      let downloadButton = dialog._frame.contentDocument.querySelector(
-        ".highlight-button-download"
+      let downloadButton = dialog._frame.contentDocument.getElementById(
+        "download"
       );
       ok(downloadButton, "Got the download button");
 

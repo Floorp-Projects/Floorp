@@ -317,7 +317,7 @@ class AnonymousContentOverlay {
               <div class="face"></div>
             </div>
             <div class="preview-instructions">${instructions.value}</div>
-            <button class="cancel-shot" id="screenshots-cancel-button">${cancel.value}</button>
+            <button class="screenshots-button" id="screenshots-cancel-button">${cancel.value}</button>
           </div>
         </div>
         <div id="${this.hoverBoxId}"></div>
@@ -355,7 +355,7 @@ class AnonymousContentOverlay {
           <div id="buttons" style="display:none;">
             <button id="cancel" class="screenshots-button" title="${cancel.value}" aria-label="${cancel.value}"><img/></button>
             <button id="copy" class="screenshots-button" title="${copy.value}" aria-label="${copy.value}"><img/>${copy.value}</button>
-            <button id="download" class="screenshots-button" title="${download.value}" aria-label="${download.value}"><img/>${download.value}</button>
+            <button id="download" class="screenshots-button primary" title="${download.value}" aria-label="${download.value}"><img/>${download.value}</button>
           </div>
         </div>
       </div>
@@ -1830,7 +1830,7 @@ class ButtonsLayer extends AnonLayer {
         top = scrollY + clientHeight - 60;
       }
     }
-    if (boxRight < 265) {
+    if (boxRight < 300) {
       leftOrRight = `left:${boxLeft}px;`;
     }
 
