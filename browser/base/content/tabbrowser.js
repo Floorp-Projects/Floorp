@@ -3945,12 +3945,11 @@
       }
 
       let isLastTab = !aTab.hidden && this.visibleTabs.length == 1;
-      let windowUtils = window.windowUtils;
       // We have to sample the tab width now, since _beginRemoveTab might
       // end up modifying the DOM in such a way that aTab gets a new
       // frame created for it (for example, by updating the visually selected
       // state).
-      let tabWidth = windowUtils.getBoundsWithoutFlushing(aTab).width;
+      let tabWidth = window.windowUtils.getBoundsWithoutFlushing(aTab).width;
 
       if (
         !this._beginRemoveTab(aTab, {
@@ -3987,8 +3986,7 @@
           3 /* don't want lots of concurrent animations */ ||
         aTab.getAttribute("fadein") !=
           "true" /* fade-in transition hasn't been triggered yet */ ||
-        window.getComputedStyle(aTab).maxWidth ==
-          "0.1px" /* fade-in transition hasn't moved yet */
+        tabWidth == 0 /* fade-in transition hasn't moved yet */
       ) {
         // We're not animating, so we can cancel the animation stopwatch.
         TelemetryStopwatch.cancel("FX_TAB_CLOSE_TIME_ANIM_MS", aTab);
