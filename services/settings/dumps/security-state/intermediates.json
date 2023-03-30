@@ -4393,42 +4393,6 @@
       "last_modified": 1666727873126
     },
     {
-      "schema": 1666727431867,
-      "derHash": "8K+uGHBGpDHt3O/xnOWuMG1SM4+IoR7BG5W4HVIYlaQ=",
-      "subject": "CN=FUJIFILM Fnet CA - S2,O=FUJIFILM,C=JP",
-      "subjectDN": "MEAxCzAJBgNVBAYTAkpQMREwDwYDVQQKEwhGVUpJRklMTTEeMBwGA1UEAxMVRlVKSUZJTE0gRm5ldCBDQSAtIFMy",
-      "whitelist": false,
-      "attachment": {
-        "hash": "f434c76c8251a421ee8fc800cbd407cd274659ab482bae169fb0c1f83989689a",
-        "size": 2028,
-        "filename": "FoZrORtfOQVQIdnaO-pphxZC_MNQQ1WYobR981Jaydk=.pem",
-        "location": "security-state-staging/intermediates/e9d8a1ba-614f-45db-990f-7a8f75f34a1a.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "FoZrORtfOQVQIdnaO+pphxZC/MNQQ1WYobR981Jaydk=",
-      "crlite_enrolled": false,
-      "id": "70e78e77-a582-4640-a51d-cd1c1b140a32",
-      "last_modified": 1666727873112
-    },
-    {
-      "schema": 1666727411841,
-      "derHash": "/uojidT3JysCT1Gvcej+hKpUNpjQFcHSQXk1ldYgn7k=",
-      "subject": "CN=Fuji Xerox Xnet CA - S2,O=Fuji Xerox,C=JP",
-      "subjectDN": "MEQxCzAJBgNVBAYTAkpQMRMwEQYDVQQKEwpGdWppIFhlcm94MSAwHgYDVQQDExdGdWppIFhlcm94IFhuZXQgQ0EgLSBTMg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "710e4f1163a011055b893eb9dfc6cf94f414414a197db5107a182e64dde4831f",
-        "size": 2150,
-        "filename": "B7_wi5BX-cgrZ8uOuYuwLz2cFlyRGuCKCG8QhI13A_8=.pem",
-        "location": "security-state-staging/intermediates/8fd4cc27-e252-4688-a23a-052184b7be3c.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "B7/wi5BX+cgrZ8uOuYuwLz2cFlyRGuCKCG8QhI13A/8=",
-      "crlite_enrolled": false,
-      "id": "9e504fc6-6c09-43d6-9bec-886929b25629",
-      "last_modified": 1666727873098
-    },
-    {
       "schema": 1666727446208,
       "derHash": "sJNdwEtOYMDELe9+xXobHY+VjReYjnHMgKjPXmNbpbQ=",
       "subject": "CN=D-TRUST SSL Class 3 CA 1 EV 2009,O=D-Trust GmbH,C=DE",
@@ -27469,5 +27433,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1679518623586
+  "timestamp": 1680101823404
 }
