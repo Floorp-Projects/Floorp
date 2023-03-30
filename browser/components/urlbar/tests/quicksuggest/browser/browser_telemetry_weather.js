@@ -16,7 +16,6 @@ const match_type = "firefox-suggest";
 const index = 0;
 const position = index + 1;
 
-const { TELEMETRY_SCALARS: QS_SCALARS } = UrlbarProviderQuickSuggest;
 const { TELEMETRY_SCALARS: WEATHER_SCALARS } = UrlbarProviderWeather;
 const { WEATHER_SUGGESTION: suggestion } = MerinoTestUtils;
 
@@ -71,7 +70,6 @@ add_task(async function() {
       scalars: {
         [WEATHER_SCALARS.EXPOSURE]: position,
         [WEATHER_SCALARS.IMPRESSION]: position,
-        [QS_SCALARS.IMPRESSION_NONSPONSORED]: position,
       },
       event: {
         category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
@@ -92,8 +90,6 @@ add_task(async function() {
           [WEATHER_SCALARS.EXPOSURE]: position,
           [WEATHER_SCALARS.IMPRESSION]: position,
           [WEATHER_SCALARS.CLICK]: position,
-          [QS_SCALARS.IMPRESSION_NONSPONSORED]: position,
-          [QS_SCALARS.CLICK_NONSPONSORED]: position,
         },
         event: {
           category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
@@ -113,8 +109,6 @@ add_task(async function() {
           [WEATHER_SCALARS.EXPOSURE]: position,
           [WEATHER_SCALARS.IMPRESSION]: position,
           [WEATHER_SCALARS.BLOCK]: position,
-          [QS_SCALARS.IMPRESSION_NONSPONSORED]: position,
-          [QS_SCALARS.BLOCK_NONSPONSORED]: position,
         },
         event: {
           category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
@@ -134,8 +128,6 @@ add_task(async function() {
           [WEATHER_SCALARS.EXPOSURE]: position,
           [WEATHER_SCALARS.IMPRESSION]: position,
           [WEATHER_SCALARS.HELP]: position,
-          [QS_SCALARS.IMPRESSION_NONSPONSORED]: position,
-          [QS_SCALARS.HELP_NONSPONSORED]: position,
         },
         event: {
           category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
