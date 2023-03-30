@@ -7285,6 +7285,22 @@ void BCPaintBorderIterator::AccumulateOrDoActionBlockDirSegment(
         }
       }
       blockDirSeg.AdvanceOffsetB();
+      // If the row is empty and cell borders are defined, the row will be
+      // zero-sized (If there existed an empty cell, it'd be sized to contain
+      // the cell's borders). In this case, we effectively need to "pull up"
+      // where the segment starts (Unless the empty row has enough block size).
+      if (mRow->PrincipalChildList().IsEmpty()) {
+        const auto rowSize = mRow->BSize(mTableWM);
+        if (blockDirSeg.mBEndOffset > 0 && blockDirSeg.mBEndOffset > rowSize) {
+          blockDirSeg.mOffsetB -= blockDirSeg.mBEndOffset - rowSize;
+        } else if (blockDirSeg.mBEndOffset < 0 &&
+                   -blockDirSeg.mBEndOffset > rowSize) {
+          // For cases of segments that don't have bevel (e.g. inner block
+          // direction borders). Since they "end early," the block end offset is
+          // negative.
+          blockDirSeg.mOffsetB += blockDirSeg.mBEndOffset + rowSize;
+        }
+      }
     }
     blockDirSeg.Start(*this, borderOwner, blockSegISize, inlineSegBSize);
   }
