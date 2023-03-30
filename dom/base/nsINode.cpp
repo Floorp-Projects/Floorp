@@ -3171,24 +3171,36 @@ Element* nsINode::GetParentFlexElement() {
   return nullptr;
 }
 
-Element* nsINode::GetNearestInclusiveOpenPopover() {
-  for (nsINode* node = this; node; node = node->GetFlattenedTreeParentNode()) {
-    if (auto* el = Element::FromNode(node)) {
-      if (el->IsAutoPopover() && el->IsPopoverOpen()) {
-        return el;
-      }
+Element* nsINode::GetNearestInclusiveOpenPopover() const {
+  for (auto* el : InclusiveFlatTreeAncestorsOfType<Element>()) {
+    if (el->IsAutoPopover() && el->IsPopoverOpen()) {
+      return el;
     }
   }
   return nullptr;
 }
 
-Element* nsINode::GetNearestInclusiveTargetPopoverForInvoker() {
+Element* nsINode::GetNearestInclusiveTargetPopoverForInvoker() const {
   for (auto* el : InclusiveFlatTreeAncestorsOfType<
            nsGenericHTMLFormControlElementWithState>()) {
     if (auto* popover = el->GetPopoverTargetElement()) {
       if (popover->IsAutoPopover() && popover->IsPopoverOpen()) {
         return popover;
       }
+    }
+  }
+  return nullptr;
+}
+
+Element* nsINode::GetTopmostClickedPopover() const {
+  Element* clickedPopover = GetNearestInclusiveOpenPopover();
+  Element* invokedPopover = GetNearestInclusiveTargetPopoverForInvoker();
+  if (!clickedPopover) {
+    return invokedPopover;
+  }
+  for (Element* el : Reversed(clickedPopover->OwnerDoc()->AutoPopoverList())) {
+    if (el == clickedPopover || el == invokedPopover) {
+      return el;
     }
   }
   return nullptr;

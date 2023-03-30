@@ -506,12 +506,17 @@ class nsINode : public mozilla::dom::EventTarget {
    * Returns the nearest inclusive open popover for a given node, see
    * https://html.spec.whatwg.org/multipage/popover.html#nearest-inclusive-open-popover
    */
-  mozilla::dom::Element* GetNearestInclusiveOpenPopover();
+  mozilla::dom::Element* GetNearestInclusiveOpenPopover() const;
 
   /**
    * https://html.spec.whatwg.org/multipage/popover.html#nearest-inclusive-target-popover-for-invoker
    */
-  mozilla::dom::Element* GetNearestInclusiveTargetPopoverForInvoker();
+  mozilla::dom::Element* GetNearestInclusiveTargetPopoverForInvoker() const;
+
+  /**
+   * https://html.spec.whatwg.org/multipage/popover.html#topmost-clicked-popover
+   */
+  mozilla::dom::Element* GetTopmostClickedPopover() const;
 
   bool IsNode() const final { return true; }
 
