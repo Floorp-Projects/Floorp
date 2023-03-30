@@ -109,15 +109,14 @@ void EarlyHintRegistrar::RegisterEarlyHint(uint64_t aEarlyHintPreloaderId,
 }
 
 bool EarlyHintRegistrar::LinkParentChannel(uint64_t aEarlyHintPreloaderId,
-                                           nsIParentChannel* aParent,
-                                           uint64_t aChannelId) {
+                                           nsIParentChannel* aParent) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aParent);
 
   RefPtr<EarlyHintPreloader> ehp;
   bool found = mEarlyHint.Get(aEarlyHintPreloaderId, getter_AddRefs(ehp));
   if (ehp) {
-    ehp->OnParentReady(aParent, aChannelId);
+    ehp->OnParentReady(aParent);
   }
   MOZ_ASSERT(ehp || !found);
   return found;

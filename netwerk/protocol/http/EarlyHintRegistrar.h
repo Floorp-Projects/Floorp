@@ -51,7 +51,7 @@ class EarlyHintRegistrar final : public RefCounted<EarlyHintRegistrar> {
    *        EarlyHintPreloader.
    */
   bool LinkParentChannel(uint64_t aEarlyHintPreloaderId,
-                         nsIParentChannel* aParent, uint64_t aChannelId);
+                         nsIParentChannel* aParent);
 
   /*
    * Delete previous stored EarlyHintPreloader

@@ -102,7 +102,7 @@ class EarlyHintPreloader final : public nsIStreamListener,
   nsresult CancelChannel(nsresult aStatus, const nsACString& aReason,
                          bool aDeleteEntry);
 
-  void OnParentReady(nsIParentChannel* aParent, uint64_t aChannelId);
+  void OnParentReady(nsIParentChannel* aParent);
 
  private:
   void SetParentChannel();
@@ -132,7 +132,6 @@ class EarlyHintPreloader final : public nsIStreamListener,
   static void CollectResourcesTypeTelemetry(ASDestination aASDestination);
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIChannel> mRedirectChannel;
-  uint64_t mChannelId = 0;
 
   EarlyHintConnectArgs mConnectArgs;
 
