@@ -31,7 +31,6 @@ use super::context::{BindgenContext, ItemId, TypeId};
 use super::item::{IsOpaque, Item, ItemAncestors};
 use super::traversal::{EdgeKind, Trace, Tracer};
 use crate::clang;
-use crate::parse::ClangItemParser;
 
 /// Template declaration (and such declaration's template parameters) related
 /// methods.

@@ -118,7 +118,7 @@ tinyvec = { path = "build/rust/tinyvec" }
 # Patch wasi 0.10 to 0.11
 wasi = { path = "build/rust/wasi" }
 
-# Patch bindgen 0.64 to 0.63
+# Patch bindgen 0.63 to 0.64
 bindgen = { path = "build/rust/bindgen" }
 
 # Patch memoffset 0.6 to 0.7

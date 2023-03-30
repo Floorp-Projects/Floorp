@@ -4,6 +4,7 @@ mod helpers;
 mod impl_debug;
 mod impl_partialeq;
 mod postprocessing;
+mod serialize;
 pub mod struct_layout;
 
 #[cfg(test)]
@@ -18,6 +19,7 @@ use self::struct_layout::StructLayoutTracker;
 
 use super::BindgenOptions;
 
+use crate::callbacks::{DeriveInfo, TypeKind as DeriveTypeKind};
 use crate::ir::analysis::{HasVtable, Sizedness};
 use crate::ir::annotations::FieldAccessorKind;
 use crate::ir::comp::{
@@ -57,6 +59,29 @@ use std::fmt::Write;
 use std::iter;
 use std::ops;
 use std::str::FromStr;
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum CodegenError {
+    Serialize { msg: String, loc: String },
+    Io(String),
+}
+
+impl From<std::io::Error> for CodegenError {
+    fn from(err: std::io::Error) -> Self {
+        Self::Io(err.to_string())
+    }
+}
+
+impl std::fmt::Display for CodegenError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CodegenError::Serialize { msg, loc } => {
+                write!(f, "serialization error at {}: {}", loc, msg)
+            }
+            CodegenError::Io(err) => err.fmt(f),
+        }
+    }
+}
 
 // Name of type defined in constified enum module
 pub static CONSTIFIED_ENUM_MODULE_REPR_NAME: &str = "Type";
@@ -240,6 +265,8 @@ struct CodegenResult<'a> {
     /// function name to the number of overloads we have already codegen'd for
     /// that name. This lets us give each overload a unique suffix.
     overload_counters: HashMap<String, u32>,
+
+    items_to_serialize: Vec<ItemId>,
 }
 
 impl<'a> CodegenResult<'a> {
@@ -257,6 +284,7 @@ impl<'a> CodegenResult<'a> {
             functions_seen: Default::default(),
             vars_seen: Default::default(),
             overload_counters: Default::default(),
+            items_to_serialize: Default::default(),
         }
     }
 
@@ -434,10 +462,10 @@ trait CodeGenerator {
     /// Extra information returned to the caller.
     type Return;
 
-    fn codegen<'a>(
+    fn codegen(
         &self,
         ctx: &BindgenContext,
-        result: &mut CodegenResult<'a>,
+        result: &mut CodegenResult<'_>,
         extra: &Self::Extra,
     ) -> Self::Return;
 }
@@ -477,10 +505,10 @@ impl CodeGenerator for Item {
     type Extra = ();
     type Return = ();
 
-    fn codegen<'a>(
+    fn codegen(
         &self,
         ctx: &BindgenContext,
-        result: &mut CodegenResult<'a>,
+        result: &mut CodegenResult<'_>,
         _extra: &(),
     ) {
         debug!("<Item as CodeGenerator>::codegen: self = {:?}", self);
@@ -509,10 +537,10 @@ impl CodeGenerator for Module {
     type Extra = Item;
     type Return = ();
 
-    fn codegen<'a>(
+    fn codegen(
         &self,
         ctx: &BindgenContext,
-        result: &mut CodegenResult<'a>,
+        result: &mut CodegenResult<'_>,
         item: &Item,
     ) {
         debug!("<Module as CodeGenerator>::codegen: item = {:?}", item);
@@ -601,10 +629,10 @@ impl CodeGenerator for Var {
     type Extra = Item;
     type Return = ();
 
-    fn codegen<'a>(
+    fn codegen(
         &self,
         ctx: &BindgenContext,
-        result: &mut CodegenResult<'a>,
+        result: &mut CodegenResult<'_>,
         item: &Item,
     ) {
         use crate::ir::var::VarType;
@@ -748,10 +776,10 @@ impl CodeGenerator for Type {
     type Extra = Item;
     type Return = ();
 
-    fn codegen<'a>(
+    fn codegen(
         &self,
         ctx: &BindgenContext,
-        result: &mut CodegenResult<'a>,
+        result: &mut CodegenResult<'_>,
         item: &Item,
     ) {
         debug!("<Type as CodeGenerator>::codegen: item = {:?}", item);
@@ -1069,10 +1097,10 @@ impl<'a> CodeGenerator for Vtable<'a> {
     type Extra = Item;
     type Return = ();
 
-    fn codegen<'b>(
+    fn codegen(
         &self,
         ctx: &BindgenContext,
-        result: &mut CodegenResult<'b>,
+        result: &mut CodegenResult<'_>,
         item: &Item,
     ) {
         assert_eq!(item.id(), self.item_id);
@@ -1168,10 +1196,10 @@ impl CodeGenerator for TemplateInstantiation {
     type Extra = Item;
     type Return = ();
 
-    fn codegen<'a>(
+    fn codegen(
         &self,
         ctx: &BindgenContext,
-        result: &mut CodegenResult<'a>,
+        result: &mut CodegenResult<'_>,
         item: &Item,
     ) {
         debug_assert!(item.is_enabled_for_codegen(ctx));
@@ -1796,10 +1824,10 @@ impl CodeGenerator for CompInfo {
     type Extra = Item;
     type Return = ();
 
-    fn codegen<'a>(
+    fn codegen(
         &self,
         ctx: &BindgenContext,
-        result: &mut CodegenResult<'a>,
+        result: &mut CodegenResult<'_>,
         item: &Item,
     ) {
         debug!("<CompInfo as CodeGenerator>::codegen: item = {:?}", item);
@@ -2100,11 +2128,18 @@ impl CodeGenerator for CompInfo {
         let mut derives: Vec<_> = derivable_traits.into();
         derives.extend(item.annotations().derives().iter().map(String::as_str));
 
+        let is_rust_union = is_union && struct_layout.is_rust_union();
+
         // The custom derives callback may return a list of derive attributes;
         // add them to the end of the list.
         let custom_derives = ctx.options().all_callbacks(|cb| {
-            cb.add_derives(&crate::callbacks::DeriveInfo {
+            cb.add_derives(&DeriveInfo {
                 name: &canonical_name,
+                kind: if is_rust_union {
+                    DeriveTypeKind::Union
+                } else {
+                    DeriveTypeKind::Struct
+                },
             })
         });
         // In most cases this will be a no-op, since custom_derives will be empty.
@@ -2118,7 +2153,7 @@ impl CodeGenerator for CompInfo {
             attributes.push(attributes::must_use());
         }
 
-        let mut tokens = if is_union && struct_layout.is_rust_union() {
+        let mut tokens = if is_rust_union {
             quote! {
                 #( #attributes )*
                 pub union #canonical_ident
@@ -2193,16 +2228,7 @@ impl CodeGenerator for CompInfo {
                         })
                     };
 
-                    // FIXME when [issue #465](https://github.com/rust-lang/rust-bindgen/issues/465) ready
-                    let too_many_base_vtables = self
-                        .base_members()
-                        .iter()
-                        .filter(|base| base.ty.has_vtable(ctx))
-                        .count() >
-                        1;
-
-                    let should_skip_field_offset_checks =
-                        is_opaque || too_many_base_vtables;
+                    let should_skip_field_offset_checks = is_opaque;
 
                     let check_field_offset = if should_skip_field_offset_checks
                     {
@@ -2406,24 +2432,13 @@ impl CodeGenerator for CompInfo {
     }
 }
 
-trait MethodCodegen {
-    fn codegen_method<'a>(
+impl Method {
+    fn codegen_method(
         &self,
         ctx: &BindgenContext,
         methods: &mut Vec<proc_macro2::TokenStream>,
         method_names: &mut HashSet<String>,
-        result: &mut CodegenResult<'a>,
-        parent: &CompInfo,
-    );
-}
-
-impl MethodCodegen for Method {
-    fn codegen_method<'a>(
-        &self,
-        ctx: &BindgenContext,
-        methods: &mut Vec<proc_macro2::TokenStream>,
-        method_names: &mut HashSet<String>,
-        result: &mut CodegenResult<'a>,
+        result: &mut CodegenResult<'_>,
         _parent: &CompInfo,
     ) {
         assert!({
@@ -2720,6 +2735,7 @@ impl<'a> EnumBuilder<'a> {
         mut attrs: Vec<proc_macro2::TokenStream>,
         repr: proc_macro2::TokenStream,
         enum_variation: EnumVariation,
+        has_typedef: bool,
     ) -> Self {
         let ident = Ident::new(name, Span::call_site());
 
@@ -2752,10 +2768,12 @@ impl<'a> EnumBuilder<'a> {
             EnumVariation::Consts => {
                 let mut variants = Vec::new();
 
-                variants.push(quote! {
-                    #( #attrs )*
-                    pub type #ident = #repr;
-                });
+                if !has_typedef {
+                    variants.push(quote! {
+                        #( #attrs )*
+                        pub type #ident = #repr;
+                    });
+                }
 
                 EnumBuilder::Consts { variants }
             }
@@ -2779,13 +2797,13 @@ impl<'a> EnumBuilder<'a> {
     }
 
     /// Add a variant to this enum.
-    fn with_variant<'b>(
+    fn with_variant(
         self,
         ctx: &BindgenContext,
         variant: &EnumVariant,
         mangling_prefix: Option<&str>,
         rust_ty: proc_macro2::TokenStream,
-        result: &mut CodegenResult<'b>,
+        result: &mut CodegenResult<'_>,
         is_ty_named: bool,
     ) -> Self {
         let variant_name = ctx.rust_mangle(variant.name());
@@ -2896,11 +2914,11 @@ impl<'a> EnumBuilder<'a> {
         }
     }
 
-    fn build<'b>(
+    fn build(
         self,
         ctx: &BindgenContext,
         rust_ty: proc_macro2::TokenStream,
-        result: &mut CodegenResult<'b>,
+        result: &mut CodegenResult<'_>,
     ) -> proc_macro2::TokenStream {
         match self {
             EnumBuilder::Rust {
@@ -2999,10 +3017,10 @@ impl CodeGenerator for Enum {
     type Extra = Item;
     type Return = ();
 
-    fn codegen<'a>(
+    fn codegen(
         &self,
         ctx: &BindgenContext,
-        result: &mut CodegenResult<'a>,
+        result: &mut CodegenResult<'_>,
         item: &Item,
     ) {
         debug!("<Enum as CodeGenerator>::codegen: item = {:?}", item);
@@ -3129,7 +3147,10 @@ impl CodeGenerator for Enum {
             // The custom derives callback may return a list of derive attributes;
             // add them to the end of the list.
             let custom_derives = ctx.options().all_callbacks(|cb| {
-                cb.add_derives(&crate::callbacks::DeriveInfo { name: &name })
+                cb.add_derives(&DeriveInfo {
+                    name: &name,
+                    kind: DeriveTypeKind::Enum,
+                })
             });
             // In most cases this will be a no-op, since custom_derives will be empty.
             derives.extend(custom_derives.iter().map(|s| s.as_str()));
@@ -3137,7 +3158,7 @@ impl CodeGenerator for Enum {
             attrs.push(attributes::derives(&derives));
         }
 
-        fn add_constant<'a>(
+        fn add_constant(
             ctx: &BindgenContext,
             enum_: &Type,
             // Only to avoid recomputing every time.
@@ -3148,7 +3169,7 @@ impl CodeGenerator for Enum {
             variant_name: &Ident,
             referenced_name: &Ident,
             enum_rust_ty: proc_macro2::TokenStream,
-            result: &mut CodegenResult<'a>,
+            result: &mut CodegenResult<'_>,
         ) {
             let constant_name = if enum_.name().is_some() {
                 if ctx.options().prepend_enum_name {
@@ -3168,8 +3189,10 @@ impl CodeGenerator for Enum {
         }
 
         let repr = repr.to_rust_ty_or_opaque(ctx, item);
+        let has_typedef = ctx.is_enum_typedef_combo(item.id());
 
-        let mut builder = EnumBuilder::new(&name, attrs, repr, variation);
+        let mut builder =
+            EnumBuilder::new(&name, attrs, repr, variation, has_typedef);
 
         // A map where we keep a value -> variant relation.
         let mut seen_values = HashMap::<_, Ident>::default();
@@ -3995,20 +4018,25 @@ impl CodeGenerator for Function {
     /// it.
     type Return = Option<u32>;
 
-    fn codegen<'a>(
+    fn codegen(
         &self,
         ctx: &BindgenContext,
-        result: &mut CodegenResult<'a>,
+        result: &mut CodegenResult<'_>,
         item: &Item,
     ) -> Self::Return {
         debug!("<Function as CodeGenerator>::codegen: item = {:?}", item);
         debug_assert!(item.is_enabled_for_codegen(ctx));
 
-        // We can't currently do anything with Internal functions so just
-        // avoid generating anything for them.
-        match self.linkage() {
-            Linkage::Internal => return None,
-            Linkage::External => {}
+        let is_internal = matches!(self.linkage(), Linkage::Internal);
+
+        if is_internal {
+            if ctx.options().wrap_static_fns {
+                result.items_to_serialize.push(item.id());
+            } else {
+                // We can't do anything with Internal functions if we are not wrapping them so just
+                // avoid generating anything for them.
+                return None;
+            }
         }
 
         // Pure virtual methods have no actual symbol, so we can't generate
@@ -4118,6 +4146,7 @@ impl CodeGenerator for Function {
             write!(&mut canonical_name, "{}", times_seen).unwrap();
         }
 
+        let mut has_link_name_attr = false;
         let link_name = mangled_name.unwrap_or(name);
         if !is_dynamic_function &&
             !utils::names_will_be_identical_after_mangling(
@@ -4127,6 +4156,7 @@ impl CodeGenerator for Function {
             )
         {
             attributes.push(attributes::link_name(link_name));
+            has_link_name_attr = true;
         }
 
         // Unfortunately this can't piggyback on the `attributes` list because
@@ -4136,6 +4166,11 @@ impl CodeGenerator for Function {
             ctx.options().wasm_import_module_name.as_ref().map(|name| {
                 quote! { #[link(wasm_import_module = #name)] }
             });
+
+        if is_internal && ctx.options().wrap_static_fns && !has_link_name_attr {
+            let name = canonical_name.clone() + ctx.wrap_static_fns_suffix();
+            attributes.push(attributes::link_name(&name));
+        }
 
         let ident = ctx.rust_ident(canonical_name);
         let tokens = quote! {
@@ -4150,11 +4185,7 @@ impl CodeGenerator for Function {
         if is_dynamic_function {
             let args_identifiers =
                 utils::fnsig_argument_identifiers(ctx, signature);
-            let return_item = ctx.resolve_item(signature.return_type());
-            let ret_ty = match *return_item.kind().expect_type().kind() {
-                TypeKind::Void => quote! {()},
-                _ => return_item.to_rust_ty_or_opaque(ctx, &()),
-            };
+            let ret_ty = utils::fnsig_return_ty(ctx, signature);
             result.dynamic_items().push(
                 ident,
                 abi,
@@ -4237,10 +4268,10 @@ impl CodeGenerator for ObjCInterface {
     type Extra = Item;
     type Return = ();
 
-    fn codegen<'a>(
+    fn codegen(
         &self,
         ctx: &BindgenContext,
-        result: &mut CodegenResult<'a>,
+        result: &mut CodegenResult<'_>,
         item: &Item,
     ) {
         debug_assert!(item.is_enabled_for_codegen(ctx));
@@ -4445,7 +4476,8 @@ impl CodeGenerator for ObjCInterface {
 
 pub(crate) fn codegen(
     context: BindgenContext,
-) -> (proc_macro2::TokenStream, BindgenOptions, Vec<String>) {
+) -> Result<(proc_macro2::TokenStream, BindgenOptions, Vec<String>), CodegenError>
+{
     context.gen(|context| {
         let _t = context.timer("codegen");
         let counter = Cell::new(0);
@@ -4495,20 +4527,72 @@ pub(crate) fn codegen(
             result.push(dynamic_items_tokens);
         }
 
-        postprocessing::postprocessing(result.items, context.options())
+        utils::serialize_items(&result, context)?;
+
+        Ok(postprocessing::postprocessing(
+            result.items,
+            context.options(),
+        ))
     })
 }
 
 pub mod utils {
-    use super::{error, ToRustTyOrOpaque};
+    use super::serialize::CSerialize;
+    use super::{error, CodegenError, CodegenResult, ToRustTyOrOpaque};
     use crate::ir::context::BindgenContext;
     use crate::ir::function::{Abi, ClangAbi, FunctionSig};
     use crate::ir::item::{Item, ItemCanonicalPath};
     use crate::ir::ty::TypeKind;
+    use crate::{args_are_cpp, file_is_cpp};
     use proc_macro2;
     use std::borrow::Cow;
     use std::mem;
+    use std::path::PathBuf;
     use std::str::FromStr;
+
+    pub(super) fn serialize_items(
+        result: &CodegenResult,
+        context: &BindgenContext,
+    ) -> Result<(), CodegenError> {
+        if result.items_to_serialize.is_empty() {
+            return Ok(());
+        }
+
+        let path = context
+            .options()
+            .wrap_static_fns_path
+            .as_ref()
+            .map(PathBuf::from)
+            .unwrap_or_else(|| {
+                std::env::temp_dir().join("bindgen").join("extern")
+            });
+
+        let dir = path.parent().unwrap();
+
+        if !dir.exists() {
+            std::fs::create_dir_all(&dir)?;
+        }
+
+        let is_cpp = args_are_cpp(&context.options().clang_args) ||
+            context
+                .options()
+                .input_headers
+                .iter()
+                .any(|h| file_is_cpp(h));
+
+        let source_path = path.with_extension(if is_cpp { "cpp" } else { "c" });
+
+        let mut code = Vec::new();
+
+        for &id in &result.items_to_serialize {
+            let item = context.resolve_item(id);
+            item.serialize(context, (), &mut vec![], &mut code)?;
+        }
+
+        std::fs::write(source_path, code)?;
+
+        Ok(())
+    }
 
     pub fn prepend_bitfield_unit_type(
         ctx: &BindgenContext,
@@ -4826,23 +4910,50 @@ pub mod utils {
         })
     }
 
+    fn fnsig_return_ty_internal(
+        ctx: &BindgenContext,
+        sig: &FunctionSig,
+        include_arrow: bool,
+    ) -> proc_macro2::TokenStream {
+        if sig.is_divergent() {
+            return if include_arrow {
+                quote! { -> ! }
+            } else {
+                quote! { ! }
+            };
+        }
+
+        let canonical_type_kind = sig
+            .return_type()
+            .into_resolver()
+            .through_type_refs()
+            .through_type_aliases()
+            .resolve(ctx)
+            .kind()
+            .expect_type()
+            .kind();
+
+        if let TypeKind::Void = canonical_type_kind {
+            return if include_arrow {
+                quote! {}
+            } else {
+                quote! { () }
+            };
+        }
+
+        let ret_ty = sig.return_type().to_rust_ty_or_opaque(ctx, &());
+        if include_arrow {
+            quote! { -> #ret_ty }
+        } else {
+            ret_ty
+        }
+    }
+
     pub fn fnsig_return_ty(
         ctx: &BindgenContext,
         sig: &FunctionSig,
     ) -> proc_macro2::TokenStream {
-        if sig.is_divergent() {
-            return quote! { -> ! };
-        }
-
-        let return_item = ctx.resolve_item(sig.return_type());
-        if let TypeKind::Void = *return_item.kind().expect_type().kind() {
-            quote! {}
-        } else {
-            let ret_ty = return_item.to_rust_ty_or_opaque(ctx, &());
-            quote! {
-                -> #ret_ty
-            }
-        }
+        fnsig_return_ty_internal(ctx, sig, /* include_arrow = */ true)
     }
 
     pub fn fnsig_arguments(
@@ -4957,14 +5068,9 @@ pub mod utils {
             arg_item.to_rust_ty_or_opaque(ctx, &())
         });
 
-        let return_item = ctx.resolve_item(sig.return_type());
-        let ret_ty =
-            if let TypeKind::Void = *return_item.kind().expect_type().kind() {
-                quote! { () }
-            } else {
-                return_item.to_rust_ty_or_opaque(ctx, &())
-            };
-
+        let ret_ty = fnsig_return_ty_internal(
+            ctx, sig, /* include_arrow = */ false,
+        );
         quote! {
             *const ::block::Block<(#(#args,)*), #ret_ty>
         }

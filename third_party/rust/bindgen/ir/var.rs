@@ -7,12 +7,10 @@ use super::function::cursor_mangling;
 use super::int::IntKind;
 use super::item::Item;
 use super::ty::{FloatKind, TypeKind};
-use crate::callbacks::MacroParsingBehavior;
+use crate::callbacks::{ItemInfo, ItemKind, MacroParsingBehavior};
 use crate::clang;
 use crate::clang::ClangToken;
-use crate::parse::{
-    ClangItemParser, ClangSubItemParser, ParseError, ParseResult,
-};
+use crate::parse::{ClangSubItemParser, ParseError, ParseResult};
 use cexpr;
 use std::io;
 use std::num::Wrapping;
@@ -274,7 +272,20 @@ impl ClangSubItemParser for Var {
                 ))
             }
             CXCursor_VarDecl => {
-                let name = cursor.spelling();
+                let mut name = cursor.spelling();
+                if cursor.linkage() == CXLinkage_External {
+                    if let Some(nm) = ctx.options().last_callback(|callbacks| {
+                        callbacks.generated_name_override(ItemInfo {
+                            name: name.as_str(),
+                            kind: ItemKind::Var,
+                        })
+                    }) {
+                        name = nm;
+                    }
+                }
+                // No more changes to name
+                let name = name;
+
                 if name.is_empty() {
                     warn!("Empty constant name?");
                     return Err(ParseError::Continue);

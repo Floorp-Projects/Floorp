@@ -1,8 +1,7 @@
 //! Common traits and types related to parsing our IR from Clang cursors.
 
 use crate::clang;
-use crate::ir::context::{BindgenContext, ItemId, TypeId};
-use crate::ir::ty::TypeKind;
+use crate::ir::context::{BindgenContext, ItemId};
 
 /// Not so much an error in the traditional sense, but a control flow message
 /// when walking over Clang's AST with a cursor.
@@ -38,65 +37,4 @@ pub trait ClangSubItemParser: Sized {
         cursor: clang::Cursor,
         context: &mut BindgenContext,
     ) -> Result<ParseResult<Self>, ParseError>;
-}
-
-/// An intermediate representation item that can be parsed from a Clang cursor.
-pub trait ClangItemParser: Sized {
-    /// Parse this item from the given Clang cursor.
-    fn parse(
-        cursor: clang::Cursor,
-        parent: Option<ItemId>,
-        context: &mut BindgenContext,
-    ) -> Result<ItemId, ParseError>;
-
-    /// Parse this item from the given Clang type.
-    fn from_ty(
-        ty: &clang::Type,
-        location: clang::Cursor,
-        parent: Option<ItemId>,
-        ctx: &mut BindgenContext,
-    ) -> Result<TypeId, ParseError>;
-
-    /// Identical to `from_ty`, but use the given `id` as the `ItemId` for the
-    /// newly parsed item.
-    fn from_ty_with_id(
-        id: ItemId,
-        ty: &clang::Type,
-        location: clang::Cursor,
-        parent: Option<ItemId>,
-        ctx: &mut BindgenContext,
-    ) -> Result<TypeId, ParseError>;
-
-    /// Parse this item from the given Clang type, or if we haven't resolved all
-    /// the other items this one depends on, an unresolved reference.
-    fn from_ty_or_ref(
-        ty: clang::Type,
-        location: clang::Cursor,
-        parent_id: Option<ItemId>,
-        context: &mut BindgenContext,
-    ) -> TypeId;
-
-    /// Identical to `from_ty_or_ref`, but use the given `potential_id` as the
-    /// `ItemId` for the newly parsed item.
-    fn from_ty_or_ref_with_id(
-        potential_id: ItemId,
-        ty: clang::Type,
-        location: clang::Cursor,
-        parent_id: Option<ItemId>,
-        context: &mut BindgenContext,
-    ) -> TypeId;
-
-    /// Create a named template type.
-    fn type_param(
-        with_id: Option<ItemId>,
-        location: clang::Cursor,
-        ctx: &mut BindgenContext,
-    ) -> Option<TypeId>;
-
-    /// Create a builtin type.
-    fn builtin_type(
-        kind: TypeKind,
-        is_const: bool,
-        context: &mut BindgenContext,
-    ) -> TypeId;
 }

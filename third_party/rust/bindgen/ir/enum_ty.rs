@@ -6,7 +6,7 @@ use super::item::Item;
 use super::ty::{Type, TypeKind};
 use crate::clang;
 use crate::ir::annotations::Annotations;
-use crate::parse::{ClangItemParser, ParseError};
+use crate::parse::ParseError;
 use crate::regex_set::RegexSet;
 
 /// An enum representing custom handling that can be given to a variant.
