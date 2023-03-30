@@ -118,6 +118,7 @@ abstract class AbstractBrowserTabViewHolder(
     override fun showTabIsMultiSelectEnabled(selectedMaskView: View?, isSelected: Boolean) {
         selectedMaskView?.isVisible = isSelected
         closeView.isInvisible = trayStore.state.mode is TabsTrayState.Mode.Select
+        closeView.isClickable = trayStore.state.mode !is TabsTrayState.Mode.Select
     }
 
     private fun updateFavicon(tab: TabSessionState) {
