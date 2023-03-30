@@ -285,9 +285,9 @@ Dependency substiting your local GeckoView into a Mozilla project
 Most GeckoView-consuming projects produced by Mozilla support dependency
 substitution via ``local.properties``. These projects include:
 
-- `Fenix <https://github.com/mozilla-mobile/fenix>`_
+- `Fenix <https://github.com/mozilla-mobile/firefox-android/tree/main/fenix>`_
 - `reference-browser <https://github.com/mozilla-mobile/reference-browser>`_
-- `android-components <https://github.com/mozilla-mobile/android-components>`_
+- `android-components <https://github.com/mozilla-mobile/firefox-android/tree/main/android-components>`_
 - `Firefox Reality <https://github.com/MozillaReality/FirefoxReality>`_
 
 Simply edit (or create) the file ``local.properties`` in the project

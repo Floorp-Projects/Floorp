@@ -26,7 +26,7 @@ served by our general bootstrapping guide. If you are looking to
 contribute to front-end development of one of Mozilla’s Android
 browsers, you’re likely better off starting with their codebase and
 returning here only if actual GeckoView changes are needed. See, for
-example, `Fenix’s GitHub <https://github.com/mozilla-mobile/fenix>`_.
+example, `Fenix’s GitHub <https://github.com/mozilla-mobile/firefox-android/tree/main/fenix>`_.
 
 What to do if this guide contains bugs or leads you astray: The quickest
 way to get a response is to ask generally on #gv on Mozilla Slack;
