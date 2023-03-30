@@ -141,7 +141,7 @@ JSObject* ResolveModuleObjectProperty(JSContext* aCx,
                                       JS::Handle<JSObject*> aModObj,
                                       const char* aName) {
   if (JS_HasExtensibleLexicalEnvironment(aModObj)) {
-    RootedObject lexical(aCx, JS_ExtensibleLexicalEnvironment(aModObj));
+    JS::RootedObject lexical(aCx, JS_ExtensibleLexicalEnvironment(aModObj));
     bool found;
     if (!JS_HasOwnProperty(aCx, lexical, aName, &found)) {
       return nullptr;
