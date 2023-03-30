@@ -38,5 +38,3 @@ FINAL_LIBRARY = "xul"
 LOCAL_INCLUDES += [
     "/netwerk/base",
 ]
-
-REQUIRES_UNIFIED_BUILD = True
