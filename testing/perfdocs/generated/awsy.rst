@@ -15,7 +15,7 @@ Awsy tests
 
 
 .. dropdown:: base (FF)
-   :container: + anchor-id-base-Awsy-tests
+   :class-container: anchor-id-base-Awsy-tests
 
    **Owner**: :mccr8 and Perftest Team
 
@@ -54,7 +54,7 @@ Awsy tests
 
 
 .. dropdown:: dmd (FF)
-   :container: + anchor-id-dmd-Awsy-tests
+   :class-container: anchor-id-dmd-Awsy-tests
 
    **Owner**: :mccr8 and Perftest Team
 
@@ -93,7 +93,7 @@ Awsy tests
 
 
 .. dropdown:: tp5 (FF)
-   :container: + anchor-id-tp5-Awsy-tests
+   :class-container: anchor-id-tp5-Awsy-tests
 
    **Owner**: :mccr8 and Perftest Team
 
@@ -116,7 +116,7 @@ Awsy tests
 
 
 .. dropdown:: tp6 (FF)
-   :container: + anchor-id-tp6-Awsy-tests
+   :class-container: anchor-id-tp6-Awsy-tests
 
    **Owner**: :mccr8 and Perftest Team
 

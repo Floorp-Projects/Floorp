@@ -325,9 +325,9 @@ median values of the raw data from the subtests).
 
 Tests which are imported benchmarks are:
 
--  `ARES6 <#ARES6>`_
+-  `ARES6 <#ares6>`_
 -  `dromaeo <#dromaeo>`_
--  `JetStream <#JetStream>`_
+-  `JetStream <#jetstream>`_
 -  `kraken <#kraken>`_
 -  `motionmark <#motionmark>`_
 -  `stylebench <#stylebench>`_

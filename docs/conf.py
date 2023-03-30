@@ -45,7 +45,7 @@ extensions = [
     "sphinxcontrib.mermaid",
     "sphinx_copybutton",
     "sphinx_markdown_tables",
-    "sphinx_panels",
+    "sphinx_design",
     "bzlink",
 ]
 
@@ -102,6 +102,9 @@ html_favicon = os.path.join(topsrcdir, "browser/branding/nightly/firefox.ico")
 
 exclude_patterns = ["_build", "_staging", "_venv"]
 pygments_style = "sphinx"
+# generate label “slugs” for header anchors so that
+# we can reference them from markdown links.
+myst_heading_anchors = 5
 
 # We need to perform some adjustment of the settings and environment
 # when running on Read The Docs.
@@ -137,12 +140,12 @@ html_show_copyright = False
 autosectionlabel_maxdepth = 1
 
 
-def install_sphinx_panels(app, pagename, templatename, context, doctree):
+def install_sphinx_design(app, pagename, templatename, context, doctree):
     if "perfdocs" in pagename:
-        app.add_js_file("sphinx_panels.js")
-        app.add_css_file("sphinx_panels.css")
+        app.add_js_file("sphinx_design.js")
+        app.add_css_file("sphinx_design.css")
 
 
 def setup(app):
     app.add_css_file("custom_theme.css")
-    app.connect("html-page-context", install_sphinx_panels)
+    app.connect("html-page-context", install_sphinx_design)

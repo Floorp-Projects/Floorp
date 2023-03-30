@@ -5,7 +5,7 @@
 (function() {
   "use strict";
 
-  var dropdownClassName = "dropdown";
+  var dropdownClassName = "sd-dropdown";
 
   function getDropdownElement() {
     var dropdownId = window.location.hash;
@@ -39,7 +39,7 @@
       aTag.innerHTML = "¶";
 
       var summaryElement = dropdowns[i].getElementsByClassName(
-        "summary-title"
+        "sd-summary-title"
       )[0];
       summaryElement.insertBefore(
         aTag,

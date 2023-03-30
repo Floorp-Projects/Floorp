@@ -325,9 +325,9 @@ median values of the raw data from the subtests).
 
 Tests which are imported benchmarks are:
 
--  `ARES6 <#ARES6>`_
+-  `ARES6 <#ares6>`_
 -  `dromaeo <#dromaeo>`_
--  `JetStream <#JetStream>`_
+-  `JetStream <#jetstream>`_
 -  `kraken <#kraken>`_
 -  `motionmark <#motionmark>`_
 -  `stylebench <#stylebench>`_
@@ -372,7 +372,7 @@ Talos Tests
 For the sample commands found below, note that the capitalization used is important. Without the exact spelling, the test won't be found when running locally.
 
 .. dropdown:: ARES6
-   :container: + anchor-id-ARES6
+   :class-container: anchor-id-ARES6
 
    * contact: :jandem and SpiderMonkey Team
    * source: `ARES-6 <https://searchfox.org/mozilla-central/source/third_party/webkit/PerformanceTests/ARES-6>`__
@@ -426,7 +426,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: JetStream
-   :container: + anchor-id-JetStream
+   :class-container: anchor-id-JetStream
 
    * contact: :jandem and SpiderMonkey Team
    * source: `jetstream.manifest <https://searchfox.org/mozilla-central/source/testing/talos/talos/tests/jetstream/jetstream.manifest>`__ and jetstream.zip from tooltool
@@ -485,7 +485,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: a11yr
-   :container: + anchor-id-a11yr
+   :class-container: anchor-id-a11yr
 
    * contact: :jamie and accessibility team
    * source: `a11y.manifest <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/a11y>`__
@@ -683,7 +683,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: about_preferences_basic
-   :container: + anchor-id-about_preferences_basic
+   :class-container: anchor-id-about_preferences_basic
 
    * contact: :jaws and :gijs
    * source: `about_preferences_basic.manifest <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/about-preferences/about_preferences_basic.manifest>`__
@@ -900,7 +900,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: basic_compositor_video
-   :container: + anchor-id-basic_compositor_video
+   :class-container: anchor-id-basic_compositor_video
 
    * contact: :b0bh00d, :jeffm, and gfx
    * source: `video <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/video>`__
@@ -1116,7 +1116,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: cpstartup
-   :container: + anchor-id-cpstartup
+   :class-container: anchor-id-cpstartup
 
    * contact: :mconley, Firefox Desktop Front-end team, Gijs, fqueze, and dthayer
    * measuring: Time from opening a new tab (which creates a new content process) to having that new content process be ready to load URLs.
@@ -1306,7 +1306,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: cross_origin_pageload
-   :container: + anchor-id-cross_origin_pageload
+   :class-container: anchor-id-cross_origin_pageload
 
    * contact: :sefeng, :jesup, and perf eng team
    * measuring: The time it takes to load a page which has 20 cross origin iframes
@@ -1495,7 +1495,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: damp
-   :container: + anchor-id-damp
+   :class-container: anchor-id-damp
 
    * contact: :ochameau and devtools team
    * source: `damp <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/devtools>`__
@@ -1866,7 +1866,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: displaylist_mutate
-   :container: + anchor-id-displaylist_mutate
+   :class-container: anchor-id-displaylist_mutate
 
    * contact: :miko and gfx
    * source: `displaylist_mutate.html <https://searchfox.org/mozilla-central/source/testing/talos/talos/tests/layout/benchmarks/displaylist_mutate.html>`__
@@ -2065,7 +2065,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: dromaeo
-   :container: + anchor-id-dromaeo
+   :class-container: anchor-id-dromaeo
 
    * description:
       | Dromaeo suite of tests for JavaScript performance testing. See the
@@ -2088,7 +2088,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: dromaeo_css
-   :container: + anchor-id-dromaeo_css
+   :class-container: anchor-id-dromaeo_css
 
    * contact: :emilio, and css/layout team
    * source: `css.manifest <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/dromaeo>`__
@@ -2259,7 +2259,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: dromaeo_dom
-   :container: + anchor-id-dromaeo_dom
+   :class-container: anchor-id-dromaeo_dom
 
    * contact: :peterv and dom team
    * source: `dom.manifest <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/dromaeo>`__
@@ -2366,7 +2366,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: glterrain
-   :container: + anchor-id-glterrain
+   :class-container: anchor-id-glterrain
 
    * contact: :jgilbert and gfx
    * source: `glterrain <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/webgl/benchmarks/terrain>`__
@@ -2645,7 +2645,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: glvideo
-   :container: + anchor-id-glvideo
+   :class-container: anchor-id-glvideo
 
    * contact: :jgilbert and gfx
    * source: `glvideo <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/webgl/benchmarks/video>`__
@@ -2920,7 +2920,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: kraken
-   :container: + anchor-id-kraken
+   :class-container: anchor-id-kraken
 
    * contact: :sdetar, jandem, and SpiderMonkey Team
    * source: `kraken.manifest <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/kraken>`__
@@ -3097,7 +3097,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: motionmark_animometer
-   :container: + anchor-id-motionmark_animometer
+   :class-container: anchor-id-motionmark_animometer
 
    * contact: :b0bh00d, :jeffm, and gfx
    * source: `source <https://searchfox.org/mozilla-central/source/third_party/webkit/PerformanceTests/MotionMark>`__ `manifests <https://searchfox.org/mozilla-central/source/testing/talos/talos/tests/motionmark>`__
@@ -3151,7 +3151,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: motionmark_htmlsuite
-   :container: + anchor-id-motionmark_htmlsuite
+   :class-container: anchor-id-motionmark_htmlsuite
 
    * contact: :jrmuizel and graphics(gfx) team
    * tpmanifest: ${talos}/tests/motionmark/htmlsuite.manifest
@@ -3197,7 +3197,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: motionmark_webgl
-   :container: + anchor-id-motionmark_webgl
+   :class-container: anchor-id-motionmark_webgl
 
    * contact: :jgilbert and gfx
    * source: `source <https://searchfox.org/mozilla-central/source/third_party/webkit/PerformanceTests/MotionMark>`__ `manifest <https://searchfox.org/mozilla-central/source/testing/talos/talos/tests/motionmark/webgl.manifest>`__
@@ -3448,7 +3448,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: pdfpaint
-   :container: + anchor-id-pdfpaint
+   :class-container: anchor-id-pdfpaint
 
    * contact: :calixte and CI and Quality Tools team
    * source:
@@ -3629,7 +3629,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: perf_reftest
-   :container: + anchor-id-perf_reftest
+   :class-container: anchor-id-perf_reftest
 
    * contact: :emilio and css/layout team
    * source: `perf-reftest <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/perf-reftest>`__
@@ -3859,7 +3859,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: perf_reftest_singletons
-   :container: + anchor-id-perf_reftest_singletons
+   :class-container: anchor-id-perf_reftest_singletons
 
    * contact: :emelio and Layout team
    * source: `perf-reftest-singletons <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/perf-reftest-singletons>`__
@@ -4030,7 +4030,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: rasterflood_gradient
-   :container: + anchor-id-rasterflood_gradient
+   :class-container: anchor-id-rasterflood_gradient
 
    * contact: :jrmuizel, :jimm, and gfx
    * source: `rasterflood_gradient.html <https://searchfox.org/mozilla-central/source/testing/talos/talos/tests/gfx/benchmarks/rasterflood_gradient.html>`__
@@ -4235,7 +4235,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: rasterflood_svg
-   :container: + anchor-id-rasterflood_svg
+   :class-container: anchor-id-rasterflood_svg
 
    * contact: :jrmuizel, :jimm, and gfx
    * source: `rasterflood_svg.html <https://searchfox.org/mozilla-central/source/testing/talos/talos/tests/gfx/benchmarks/rasterflood_svg.html>`__
@@ -4438,7 +4438,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: sessionrestore
-   :container: + anchor-id-sessionrestore
+   :class-container: anchor-id-sessionrestore
 
    * contact: :dale, :dao, :farre, session restore module owners/peers, and DOM team
    * source: `talos/sessionrestore <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/startup_test/sessionrestore>`__
@@ -4651,7 +4651,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: sessionrestore_many_windows
-   :container: + anchor-id-sessionrestore_many_windows
+   :class-container: anchor-id-sessionrestore_many_windows
 
    * See `sessionrestore <#sessionrestore>`_.
    * profile_path: ${talos}/startup_test/sessionrestore/profile-manywindows
@@ -4822,7 +4822,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: sessionrestore_no_auto_restore
-   :container: + anchor-id-sessionrestore_no_auto_restore
+   :class-container: anchor-id-sessionrestore_no_auto_restore
 
    * See `sessionrestore <#sessionrestore>`_.
    * preferences: {'browser.startup.page': 1, 'talos.sessionrestore.norestore': True}
@@ -4994,7 +4994,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: startup_about_home_paint
-   :container: + anchor-id-startup_about_home_paint
+   :class-container: anchor-id-startup_about_home_paint
 
    * contact: :mconley, Firefox Desktop Front-end team, :gijs, :fqueze, and :dthayer
    * source: `addon <https://hg.mozilla.org/mozilla-central/file/tip/testing/talos/talos/startup_test/startup_about_home_paint/addon/>`__
@@ -5182,7 +5182,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: startup_about_home_paint_cached
-   :container: + anchor-id-startup_about_home_paint_cached
+   :class-container: anchor-id-startup_about_home_paint_cached
 
    * contact: :mconley, Firefox Desktop Front-end team, :gijs, :fqueze, and :dthayer
    * See `startup_about_home_paint <#startup_about_home_paint>`_.
@@ -5361,7 +5361,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: startup_about_home_paint_realworld_webextensions
-   :container: + anchor-id-startup_about_home_paint_realworld_webextensions
+   :class-container: anchor-id-startup_about_home_paint_realworld_webextensions
 
    * contact: :mconley, Firefox Desktop Front-end team, :gijs, :fqueze, and :dthayer
    * source: `addon <https://hg.mozilla.org/mozilla-central/file/tip/testing/talos/talos/startup_test/startup_about_home_paint/addon/>`__
@@ -5514,7 +5514,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: stylebench
-   :container: + anchor-id-stylebench
+   :class-container: anchor-id-stylebench
 
    * contact: :emilio and Layout team
    * source: `stylebench.manifest <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/stylebench/stylebench.manifest>`__
@@ -5530,7 +5530,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: tabpaint
-   :container: + anchor-id-tabpaint
+   :class-container: anchor-id-tabpaint
 
    * contact: :mconley, Firefox Desktop Front-end team, :gijs, :fqueze, and :dthayer
    * source: `tabpaint <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/tabpaint>`__
@@ -5733,7 +5733,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: tabswitch
-   :container: + anchor-id-tabswitch
+   :class-container: anchor-id-tabswitch
 
    * contact: :mconley, Firefox Desktop Front-end team, :gijs, :fqueze, and :dthayer
    * source: `tabswitch <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/tabswitch>`__
@@ -5968,7 +5968,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: tart
-   :container: + anchor-id-tart
+   :class-container: anchor-id-tart
 
    * contact: :mconley, Firefox Desktop Front-end team, :gijs, :fqueze, and :dthayer
    * source: `tart <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/tart>`__
@@ -6214,7 +6214,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: tp5
-   :container: + anchor-id-tp5
+   :class-container: anchor-id-tp5
 
    * description:
       | Note that the tp5 test no longer exists (only talos-tp5o) though many
@@ -6229,7 +6229,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: tp5n
-   :container: + anchor-id-tp5n
+   :class-container: anchor-id-tp5n
 
    * contact: fx-perf@mozilla.com
    * description:
@@ -6308,7 +6308,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: tp5o
-   :container: + anchor-id-tp5o
+   :class-container: anchor-id-tp5o
 
    * contact: :davehunt, and perftest team
    * source: `tp5n.zip <#page-sets>`__
@@ -6583,7 +6583,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: tp5o_scroll
-   :container: + anchor-id-tp5o_scroll
+   :class-container: anchor-id-tp5o_scroll
 
    * contact: :botond, :tnikkel, :hiro, and layout team
    * source: `tp5n.zip <#page-sets>`__
@@ -6843,7 +6843,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: tp5o_webext
-   :container: + anchor-id-tp5o_webext
+   :class-container: anchor-id-tp5o_webext
 
    * contact: :mixedpuppy and webextension team
    * preferences: {'xpinstall.signatures.required': False}
@@ -7015,7 +7015,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: tresize
-   :container: + anchor-id-tresize
+   :class-container: anchor-id-tresize
 
    * contact: :gcp and platform integration
    * source: `tresize-test.html <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/startup_test/tresize/addon/content/tresize-test.html>`__
@@ -7223,7 +7223,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: ts_paint
-   :container: + anchor-id-ts_paint
+   :class-container: anchor-id-ts_paint
 
    * contact: :mconley, Firefox Desktop Front-end team,
    * source: `tspaint_test.html <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/startup_test/tspaint_test.html>`__
@@ -7427,7 +7427,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: ts_paint_heavy
-   :container: + anchor-id-ts_paint_heavy
+   :class-container: anchor-id-ts_paint_heavy
 
    * `ts_paint <#ts_paint>`_ test run against a heavy user profile.
    * contact: :mconley, Firefox Desktop Front-end team,
@@ -7440,7 +7440,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: ts_paint_webext
-   :container: + anchor-id-ts_paint_webext
+   :class-container: anchor-id-ts_paint_webext
 
    * contact: :mconley, Firefox Desktop Front-end team,
    * preferences: {'xpinstall.signatures.required': False}
@@ -7612,7 +7612,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: tscrollx
-   :container: + anchor-id-tscrollx
+   :class-container: anchor-id-tscrollx
 
    * contact: :jrmuizel and gfx
    * source: `scroll.manifest <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/scroll>`__
@@ -7823,7 +7823,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: tsvg_static
-   :container: + anchor-id-tsvg_static
+   :class-container: anchor-id-tsvg_static
 
    * contact: :jwatt, :dholbert
    * source: `svg_static <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/svg_static/>`__
@@ -8019,7 +8019,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: tsvgm
-   :container: + anchor-id-tsvgm
+   :class-container: anchor-id-tsvgm
 
    * An svg-only number that measures SVG rendering performance for dynamic content only.
    * contact: :jwatt, :dholbert
@@ -8041,7 +8041,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: tsvgr_opacity
-   :container: + anchor-id-tsvgr_opacity
+   :class-container: anchor-id-tsvgr_opacity
 
    * contact: :jwatt, :dholbert
    * source: `svg_opacity.manifest <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/svg_opacity/svg_opacity.manifest>`__
@@ -8247,7 +8247,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: tsvgx
-   :container: + anchor-id-tsvgx
+   :class-container: anchor-id-tsvgx
 
    * contact: :jwatt, :dholbert
    * source: `svgx <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/svgx>`__
@@ -8463,7 +8463,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: twinopen
-   :container: + anchor-id-twinopen
+   :class-container: anchor-id-twinopen
 
    * contact: :gcp and platform integration
    * source: `twinopen <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/twinopen>`__
@@ -8661,7 +8661,7 @@ For the sample commands found below, note that the capitalization used is import
 
 
 .. dropdown:: v8_7
-   :container: + anchor-id-v8_7
+   :class-container: anchor-id-v8_7
 
    * description:
       | This is the V8 (version 7) javascript benchmark taken verbatim and slightly modified
