@@ -38,6 +38,10 @@
         android:layout_alignParentEnd="true"
         android:layout_centerVertical="true"
         android:layout_marginEnd="1dp"
-        android:background="@drawable/ic_microphone_widget"
-        android:contentDescription="@string/search_widget_voice" />
+        android:background="@android:color/transparent"
+        android:contentDescription="@string/search_widget_voice"
+        android:scaleType="centerInside"
+        android:src="@drawable/mozac_ic_microphone"
+        android:tint="@color/fx_mobile_icon_color_primary"
+        tools:ignore="AndroidSrcXmlDetector,UseAppTint" />
 </RelativeLayout>
