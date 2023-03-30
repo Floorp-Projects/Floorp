@@ -33,6 +33,14 @@ class RaptorRunner(MozbuildObject):
         2. Make the config for Raptor mozharness
         3. Run mozharness
         """
+        # Validate that the user is using a supported python version before doing anything else
+        max_py_major, max_py_minor = 3, 10
+        sys_maj, sys_min = sys.version_info.major, sys.version_info.minor
+        if sys_min > max_py_minor:
+            raise PythonVersionException(
+                f"Please downgrade your Python version as Raptor does not yet support Python versions greater than {max_py_major}.{max_py_minor}. "
+                f"You seem to currently be using Python {sys_maj}.{sys_min}"
+            )
         self.init_variables(raptor_args, kwargs)
         self.make_config()
         self.write_config()
@@ -444,3 +452,7 @@ def run_raptor(command_context, **kwargs):
 )
 def run_raptor_test(command_context, **kwargs):
     return run_raptor(command_context, **kwargs)
+
+
+class PythonVersionException(Exception):
+    pass
