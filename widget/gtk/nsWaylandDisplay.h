@@ -34,7 +34,8 @@ class nsWaylandDisplay {
   // connection.
   explicit nsWaylandDisplay(wl_display* aDisplay);
 
-  bool DispatchEventQueue();
+  void DispatchEventQueue();
+  void ShutdownEventQueue();
 
   void SyncBegin();
   void QueueSyncBegin();
@@ -99,8 +100,8 @@ class nsWaylandDisplay {
 void WaylandDispatchDisplays();
 void WaylandDisplayRelease();
 
-RefPtr<nsWaylandDisplay> WaylandDisplayGet(GdkDisplay* aGdkDisplay = nullptr);
-wl_display* WaylandDisplayGetWLDisplay(GdkDisplay* aGdkDisplay = nullptr);
+RefPtr<nsWaylandDisplay> WaylandDisplayGet();
+wl_display* WaylandDisplayGetWLDisplay();
 
 }  // namespace widget
 }  // namespace mozilla

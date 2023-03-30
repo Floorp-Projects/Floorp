@@ -1,6 +1,5 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:expandtab:shiftwidth=4:tabstop=4:
- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -12,30 +11,30 @@
 #include "base/message_loop.h"  // for MessageLoop
 #include "base/task.h"          // for NewRunnableMethod, etc
 #include "mozilla/StaticMutex.h"
+#include "mozilla/Array.h"
+#include "mozilla/StaticPtr.h"
+#include "mozilla/ThreadLocal.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "WidgetUtilsGtk.h"
 
-struct _GdkSeat;
-typedef struct _GdkSeat GdkSeat;
-
-namespace mozilla {
-namespace widget {
+namespace mozilla::widget {
 
 // nsWaylandDisplay needs to be created for each calling thread(main thread,
 // compositor thread and render thread)
 #define MAX_DISPLAY_CONNECTIONS 10
 
-// An array of active wayland displays. We need a display for every thread
-// where is wayland interface used as we need to dispatch waylands events
-// there.
-static RefPtr<nsWaylandDisplay> gWaylandDisplays[MAX_DISPLAY_CONNECTIONS];
-static StaticMutex gWaylandDisplayArrayWriteMutex MOZ_UNANNOTATED;
+// An array of active Wayland displays. We need a display for every thread
+// where Wayland interface used as we need to dispatch Wayland's events there.
+static StaticDataMutex<
+    Array<StaticRefPtr<nsWaylandDisplay>, MAX_DISPLAY_CONNECTIONS>>
+    gWaylandDisplays{"gWaylandDisplays"};
+
+MOZ_THREAD_LOCAL(nsWaylandDisplay*) sTLSDisplay;
 
 // Dispatch events to Compositor/Render queues
 void WaylandDispatchDisplays() {
-  MOZ_ASSERT(NS_IsMainThread(),
-             "WaylandDispatchDisplays() is supposed to run in main thread");
-  for (auto& display : gWaylandDisplays) {
+  auto lock = gWaylandDisplays.Lock();
+  for (auto& display : *lock) {
     if (display) {
       display->DispatchEventQueue();
     }
@@ -43,49 +42,61 @@ void WaylandDispatchDisplays() {
 }
 
 void WaylandDisplayRelease() {
-  StaticMutexAutoLock lock(gWaylandDisplayArrayWriteMutex);
-  for (auto& display : gWaylandDisplays) {
+  auto lock = gWaylandDisplays.Lock();
+  for (auto& display : *lock) {
     if (display) {
-      display = nullptr;
+      display->ShutdownEventQueue();
+      // NOTE: Intentionally leaking the object as otherwise the TLS cache is
+      // stale.
     }
   }
 }
 
 // Get WaylandDisplay for given wl_display and actual calling thread.
-RefPtr<nsWaylandDisplay> WaylandDisplayGet(GdkDisplay* aGdkDisplay) {
-  wl_display* waylandDisplay = WaylandDisplayGetWLDisplay(aGdkDisplay);
+RefPtr<nsWaylandDisplay> WaylandDisplayGet() {
+  bool hasTLS = false;
+  if (MOZ_LIKELY(sTLSDisplay.init())) {
+    if (auto* disp = sTLSDisplay.get()) {
+      return disp;
+    }
+    hasTLS = true;
+  }
+
+  wl_display* waylandDisplay = WaylandDisplayGetWLDisplay();
   if (!waylandDisplay) {
     return nullptr;
   }
 
+  RefPtr<nsWaylandDisplay> ret;
+  if (MOZ_LIKELY(hasTLS)) {
+    ret = new nsWaylandDisplay(waylandDisplay);
+    sTLSDisplay.set(ret.get());
+  }
+
+  auto lock = gWaylandDisplays.Lock();
+
   // Search existing display connections for wl_display:thread combination.
-  for (auto& display : gWaylandDisplays) {
-    if (display && display->Matches(waylandDisplay)) {
+  for (auto& display : *lock) {
+    if (display) {
+      if (display->Matches(waylandDisplay)) {
+        MOZ_ASSERT(!hasTLS, "We shouldn't have got here");
+        return display;
+      }
+    } else {
+      display = ret ? ret.get() : new nsWaylandDisplay(waylandDisplay);
       return display;
     }
   }
-
-  StaticMutexAutoLock arrayLock(gWaylandDisplayArrayWriteMutex);
-  for (auto& display : gWaylandDisplays) {
-    if (display == nullptr) {
-      display = new nsWaylandDisplay(waylandDisplay);
-      return display;
-    }
-  }
-
   MOZ_CRASH("There's too many wayland display conections!");
   return nullptr;
 }
 
-wl_display* WaylandDisplayGetWLDisplay(GdkDisplay* aGdkDisplay) {
-  if (!aGdkDisplay) {
-    aGdkDisplay = gdk_display_get_default();
-    if (!GdkIsWaylandDisplay(aGdkDisplay)) {
-      return nullptr;
-    }
+wl_display* WaylandDisplayGetWLDisplay() {
+  GdkDisplay* disp = gdk_display_get_default();
+  if (!GdkIsWaylandDisplay(disp)) {
+    return nullptr;
   }
-
-  return gdk_wayland_display_get_wl_display(aGdkDisplay);
+  return gdk_wayland_display_get_wl_display(disp);
 }
 
 void nsWaylandDisplay::SetShm(wl_shm* aShm) { mShm = aShm; }
@@ -192,11 +203,19 @@ static void global_registry_remover(void* data, wl_registry* registry,
 static const struct wl_registry_listener registry_listener = {
     global_registry_handler, global_registry_remover};
 
-bool nsWaylandDisplay::DispatchEventQueue() {
+void nsWaylandDisplay::DispatchEventQueue() {
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
   if (mEventQueue) {
     wl_display_dispatch_queue_pending(mDisplay, mEventQueue);
   }
-  return true;
+}
+
+void nsWaylandDisplay::ShutdownEventQueue() {
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
+  if (mEventQueue) {
+    wl_event_queue_destroy(mEventQueue);
+    mEventQueue = nullptr;
+  }
 }
 
 void nsWaylandDisplay::SyncEnd() {
@@ -304,13 +323,6 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay)
                         "We're missing subcompositor interface!");
 }
 
-nsWaylandDisplay::~nsWaylandDisplay() {
-  if (mEventQueue) {
-    wl_event_queue_destroy(mEventQueue);
-    mEventQueue = nullptr;
-  }
-  mDisplay = nullptr;
-}
+nsWaylandDisplay::~nsWaylandDisplay() { ShutdownEventQueue(); }
 
-}  // namespace widget
-}  // namespace mozilla
+}  // namespace mozilla::widget
