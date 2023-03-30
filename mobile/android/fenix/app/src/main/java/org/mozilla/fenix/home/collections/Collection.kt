@@ -38,6 +38,8 @@ import mozilla.components.feature.tab.collections.TabCollection
 import org.mozilla.fenix.R
 import org.mozilla.fenix.R.drawable
 import org.mozilla.fenix.R.string
+import org.mozilla.fenix.compose.DropdownMenu
+import org.mozilla.fenix.compose.MenuItem
 import org.mozilla.fenix.compose.list.ExpandableListHeader
 import org.mozilla.fenix.ext.getIconColor
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -59,7 +61,7 @@ private val expandedCollectionShape = RoundedCornerShape(topStart = 8.dp, topEnd
  *
  * @param collection [TabCollection] to display.
  * @param expanded Whether the collection is expanded to show it's containing tabs or not.
- * @param menuItems List of [CollectionMenuItem] to be shown in a menu.
+ * @param menuItems List of [MenuItem] to be shown in a menu.
  * @param onToggleCollectionExpanded Invoked when the user clicks on the collection.
  * @param onCollectionShareTabsClicked Invoked when the user clicks to share the collection.
  */
@@ -68,7 +70,7 @@ private val expandedCollectionShape = RoundedCornerShape(topStart = 8.dp, topEnd
 fun Collection(
     collection: TabCollection,
     expanded: Boolean,
-    menuItems: List<CollectionMenuItem>,
+    menuItems: List<MenuItem>,
     onToggleCollectionExpanded: (TabCollection, Boolean) -> Unit,
     onCollectionShareTabsClicked: (TabCollection) -> Unit,
 ) {
@@ -139,7 +141,7 @@ fun Collection(
                                 tint = FirefoxTheme.colors.iconPrimary,
                             )
 
-                            CollectionMenu(
+                            DropdownMenu(
                                 showMenu = isMenuExpanded,
                                 menuItems = menuItems,
                                 onDismissRequest = { isMenuExpanded = false },

@@ -15,13 +15,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.RecyclerView
+import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.feature.tab.collections.TabCollection
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.ComposeViewHolder
+import org.mozilla.fenix.compose.MenuItem
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.sessioncontrol.CollectionInteractor
+import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
  * [RecyclerView.ViewHolder] for displaying an individual [TabCollection].
@@ -88,6 +94,58 @@ class CollectionViewHolder(
     companion object {
         val LAYOUT_ID = View.generateViewId()
     }
+}
+
+/**
+ * Constructs and returns the default list of menu options for a [TabCollection].
+ *
+ * @param collection [TabCollection] for which the menu will be shown.
+ * Might serve as an argument for the callbacks for when the user interacts with certain menu options.
+ * @param onOpenTabsTapped Invoked when the user chooses to open the tabs from [collection].
+ * @param onRenameCollectionTapped Invoked when the user chooses to rename the [collection].
+ * @param onAddTabTapped Invoked when the user chooses to add tabs to [collection].
+ * @param onDeleteCollectionTapped Invoked when the user chooses to delete [collection].
+ */
+@Composable
+private fun getMenuItems(
+    collection: TabCollection,
+    onOpenTabsTapped: (TabCollection) -> Unit,
+    onRenameCollectionTapped: (TabCollection) -> Unit,
+    onAddTabTapped: (TabCollection) -> Unit,
+    onDeleteCollectionTapped: (TabCollection) -> Unit,
+): List<MenuItem> {
+    return listOfNotNull(
+        MenuItem(
+            title = stringResource(R.string.collection_open_tabs),
+            color = FirefoxTheme.colors.textPrimary,
+        ) {
+            onOpenTabsTapped(collection)
+        },
+        MenuItem(
+            title = stringResource(R.string.collection_rename),
+            color = FirefoxTheme.colors.textPrimary,
+        ) {
+            onRenameCollectionTapped(collection)
+        },
+
+        if (LocalContext.current.components.core.store.state.normalTabs.isNotEmpty()) {
+            MenuItem(
+                title = stringResource(R.string.add_tab),
+                color = FirefoxTheme.colors.textPrimary,
+            ) {
+                onAddTabTapped(collection)
+            }
+        } else {
+            null
+        },
+
+        MenuItem(
+            title = stringResource(R.string.collection_delete),
+            color = FirefoxTheme.colors.textWarning,
+        ) {
+            onDeleteCollectionTapped(collection)
+        },
+    )
 }
 
 /**

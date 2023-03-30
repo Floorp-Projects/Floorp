@@ -6,7 +6,6 @@ package org.mozilla.fenix.home.recentvisits.view
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -15,7 +14,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -27,11 +25,8 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
-import androidx.compose.material.DropdownMenu
-import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,7 +35,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
@@ -53,8 +47,10 @@ import androidx.compose.ui.unit.sp
 import mozilla.components.support.ktx.kotlin.trimmed
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.Divider
+import org.mozilla.fenix.compose.DropdownMenu
 import org.mozilla.fenix.compose.EagerFlingBehavior
 import org.mozilla.fenix.compose.Favicon
+import org.mozilla.fenix.compose.MenuItem
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
@@ -206,11 +202,14 @@ private fun RecentlyVisitedHistoryGroup(
             }
         }
 
-        RecentlyVisitedMenu(
+        DropdownMenu(
             showMenu = isMenuExpanded,
-            menuItems = menuItems,
-            recentVisit = recentVisit,
             onDismissRequest = { isMenuExpanded = false },
+            menuItems = menuItems.map { MenuItem(it.title) { it.onClick(recentVisit) } },
+            modifier = Modifier.semantics {
+                testTagsAsResourceId = true
+                testTag = "recent.visit.menu"
+            },
         )
     }
 }
@@ -272,11 +271,14 @@ private fun RecentlyVisitedHistoryHighlight(
             }
         }
 
-        RecentlyVisitedMenu(
+        DropdownMenu(
             showMenu = isMenuExpanded,
-            menuItems = menuItems,
-            recentVisit = recentVisit,
             onDismissRequest = { isMenuExpanded = false },
+            menuItems = menuItems.map { item -> MenuItem(item.title) { item.onClick(recentVisit) } },
+            modifier = Modifier.semantics {
+                testTagsAsResourceId = true
+                testTag = "recent.visit.menu"
+            },
         )
     }
 }
@@ -330,58 +332,6 @@ private fun RecentlyVisitedCaption(
         overflow = TextOverflow.Ellipsis,
         maxLines = 1,
     )
-}
-
-/**
- * Menu shown for a [RecentlyVisitedItem].
- *
- * @see [DropdownMenu]
- *
- * @param showMenu Whether this is currently open and visible to the user.
- * @param menuItems List of options shown.
- * @param recentVisit The [RecentlyVisitedItem] for which this menu is shown.
- * @param onDismissRequest Called when the user chooses a menu option or requests to dismiss the menu.
- */
-@OptIn(ExperimentalComposeUiApi::class)
-@Composable
-private fun RecentlyVisitedMenu(
-    showMenu: Boolean,
-    menuItems: List<RecentVisitMenuItem>,
-    recentVisit: RecentlyVisitedItem,
-    onDismissRequest: () -> Unit,
-) {
-    DisposableEffect(LocalConfiguration.current.orientation) {
-        onDispose { onDismissRequest() }
-    }
-
-    DropdownMenu(
-        expanded = showMenu,
-        onDismissRequest = { onDismissRequest() },
-        modifier = Modifier
-            .background(color = FirefoxTheme.colors.layer2)
-            .semantics {
-                testTagsAsResourceId = true
-                testTag = "recent.visit.menu"
-            },
-    ) {
-        for (item in menuItems) {
-            DropdownMenuItem(
-                onClick = {
-                    onDismissRequest()
-                    item.onClick(recentVisit)
-                },
-            ) {
-                Text(
-                    text = item.title,
-                    color = FirefoxTheme.colors.textPrimary,
-                    maxLines = 1,
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .align(Alignment.CenterVertically),
-                )
-            }
-        }
-    }
 }
 
 /**
