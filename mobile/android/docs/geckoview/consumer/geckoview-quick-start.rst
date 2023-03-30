@@ -5,7 +5,7 @@ Getting Started with GeckoView
 
 How to use GeckoView in your Android app.
 
-*Building a browser? Check out* `Android Components <https://mozilla-mobile.github.io/android-components/>`_, *our collection of ready-to-use support libraries!*
+*Building a browser? Check out* `Android Components <https://mozilla-mobile.github.io/firefox-android/>`_, *our collection of ready-to-use support libraries!*
 
 The following article is a brief guide to embedding GeckoView in an app. For a more in depth tutorial on getting started with GeckoView please read the article we have published on `raywenderlich.com <https://www.raywenderlich.com/1381698-android-tutorial-for-geckoview-getting-started>`_.
 

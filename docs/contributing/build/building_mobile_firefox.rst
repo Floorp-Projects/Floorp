@@ -7,16 +7,16 @@ devices, and audiences:
 -  Building **Firefox for Android** (codename: fenix). Our general-purpose
    mobile browser is split into several different artifact layers:
 
-  - `The fenix Android application <https://github.com/mozilla-mobile/fenix/>`_
-  - `The android-components Android library <https://github.com/mozilla-mobile/android-components/>`_
-  - `The GeckoView platform <https://geckoview.dev/contributor/geckoview-quick-start>`_
+  - `The fenix Android application <https://github.com/mozilla-mobile/firefox-android/tree/main/fenix>`_
+  - `The android-components Android library <https://github.com/mozilla-mobile/firefox-android/tree/main/android-components>`_
+  - `The GeckoView platform <https://firefox-source-docs.mozilla.org/mobile/android/geckoview/index.html>`_
 
--  `Building Firefox for iOS <https://developer.mozilla.org/docs/Mozilla/Firefox_for_iOS>`_,
+-  `Firefox for iOS <https://github.com/mozilla-mobile/firefox-ios>`_,
    our general-purpose browser for iOS with desktop sync built-in.
 -  Building **Firefox Focus**, our privacy-focused browser for
 
   - `iOS <https://github.com/mozilla-mobile/focus-ios>`_
-  - `Android <https://github.com/mozilla-mobile/focus-android>`_. This browser
+  - `Android <https://github.com/mozilla-mobile/firefox-android/tree/main/focus-android>`_. This browser
     also uses the android-components library and GeckoView platform, like Firefox for Android
 
 For both Desktop and Mobile development, please bear the following in
