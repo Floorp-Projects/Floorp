@@ -43,22 +43,23 @@ static ShCompileOptions ChooseValidatorCompileOptions(
 #endif
 
   if (gl->WorkAroundDriverBugs()) {
-#ifdef XP_MACOSX
-    // Work around https://bugs.webkit.org/show_bug.cgi?id=124684,
-    // https://chromium.googlesource.com/angle/angle/+/5e70cf9d0b1bb
-    options |= SH_UNFOLD_SHORT_CIRCUIT;
+    if (kIsMacOS) {
+      // Work around https://bugs.webkit.org/show_bug.cgi?id=124684,
+      // https://chromium.googlesource.com/angle/angle/+/5e70cf9d0b1bb
+      options |= SH_UNFOLD_SHORT_CIRCUIT;
 
-    // Work around that Mac drivers handle struct scopes incorrectly.
-    options |= SH_REGENERATE_STRUCT_NAMES;
-    options |= SH_INIT_OUTPUT_VARIABLES;
+      // Work around that Mac drivers handle struct scopes incorrectly.
+      options |= SH_REGENERATE_STRUCT_NAMES;
+      options |= SH_INIT_OUTPUT_VARIABLES;
+      options |= SH_INIT_GL_POINT_SIZE;
 
-    if (gl->Vendor() == gl::GLVendor::Intel) {
-      // Work around that Intel drivers on Mac OSX handle for-loop incorrectly.
-      options |= SH_ADD_AND_TRUE_TO_LOOP_CONDITION;
+      if (gl->Vendor() == gl::GLVendor::Intel) {
+        // Work around that Intel drivers on Mac OSX handle for-loop incorrectly.
+        options |= SH_ADD_AND_TRUE_TO_LOOP_CONDITION;
 
-      options |= SH_REWRITE_TEXELFETCHOFFSET_TO_TEXELFETCH;
+        options |= SH_REWRITE_TEXELFETCHOFFSET_TO_TEXELFETCH;
+      }
     }
-#endif
 
     if (!gl->IsANGLE() && gl->Vendor() == gl::GLVendor::Intel) {
       // Failures on at least Windows+Intel+OGL on:
