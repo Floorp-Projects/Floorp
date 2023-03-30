@@ -12,17 +12,17 @@ your code you are allocating memory.
 
 ## The basics
 -   Opening [the memory
-    tool](basic_operations.html#opening-the-memory-tool)
+    tool](basic_operations.md#opening-the-memory-tool)
 -   [Taking a heap
-    snapshot](basic_operations.html#saving-and-loading-snapshots)
+    snapshot](basic_operations.md#saving-and-loading-snapshots)
 -   [Comparing two
-    snapshots](basic_operations.html#comparing-snapshots)
+    snapshots](basic_operations.md#comparing-snapshots)
 -   [Deleting
-    snapshots](basic_operations.html#clearing-a-snapshot)
+    snapshots](basic_operations.md#clearing-a-snapshot)
 -   [Saving and loading
-    snapshots](basic_operations.html#saving-and-loading-snapshots)
+    snapshots](basic_operations.md#saving-and-loading-snapshots)
 -   [Recording call
-    stacks](basic_operations.html#recording-call-stacks)
+    stacks](basic_operations.md#recording-call-stacks)
 
 ------------------------------------------------------------------------
 

@@ -214,7 +214,7 @@ physical meaning. Avoid them.
 
 The most notable example of a hybrid proxy measurement is the ["Energy
 Impact" used by OS X's Activity
-Monitor](Activity_Monitor_and_top.md#What_does_Energy_Impact_measure).
+[Monitor](activity_monitor_and_top.md#What-does-Energy-Impact-measure).
 
 ## Ways to user power-related measurements
 
@@ -305,7 +305,7 @@ power consumption.
     residency, GPU usage, etc.) may be helpful.
 -   Animations are sometimes the cause of high power consumption. The
     [animation
-    inspector](/en-US/docs/Tools/Page_Inspector/How_to/Work_with_animations#Animation_inspector)
+    inspector](/devtools-user/page_inspector/how_to/work_with_animations/index.rst#animation-inspector)
     in the Firefox Devtools can identify them. Alternatively, [here is
     an
     explanation](https://bugzilla.mozilla.org/show_bug.cgi?id=1190721#c10)

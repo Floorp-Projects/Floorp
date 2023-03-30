@@ -1,6 +1,6 @@
 # Writing new browser mochitests
 
-After [creating a new empty test file](index.html#adding-new-tests), you will
+After [creating a new empty test file](index.md#adding-new-tests), you will
 have an empty `add_task` into which you can write your test.
 
 ## General guidance
@@ -29,7 +29,7 @@ To help do this, a number of useful primitives are available:
 - `add_setup` allows you to add setup tasks that run before any `add_task` tasks.
 - `SpecialPowers.pushPrefEnv` ([see below](#changing-preferences)) allows you to set prefs that will be automatically
   reverted when the test file has finished running.
-- [`BrowserTestUtils.withNewTab`](browsertestutils.html#BrowserTestUtils.withNewTab), allows you to easily run async code
+- [`BrowserTestUtils.withNewTab`](browsertestutils.rst#BrowserTestUtils.withNewTab), allows you to easily run async code
   talking to a tab that you open and close it when done.
 - `registerCleanupFunction` takes an async callback function that you can use
   to do any other cleanup your test might need.
@@ -95,13 +95,13 @@ order for your test to pass reliably on macOS if it uses keyboard focus.
 
 ### Wait for an observer service notification topic or DOM event
 
-Use the utilities for this on [`TestUtils`](../testutils.html#TestUtils.topicObserved):
+Use the utilities for this on [`TestUtils`](../testutils.rst#TestUtils.topicObserved):
 
 ```js
 await TestUtils.topicObserved("sync-pane-loaded");
 ```
 
-and [`BrowserTestUtils`](browsertestutils.html#BrowserTestUtils.waitForEvent), respectively:
+and [`BrowserTestUtils`](browsertestutils.rst#BrowserTestUtils.waitForEvent), respectively:
 
 ```js
 await BrowserTestUtils.waitForEvent(domElement, "click");
@@ -109,7 +109,7 @@ await BrowserTestUtils.waitForEvent(domElement, "click");
 
 ### Wait for some DOM to update.
 
-Use [`BrowserTestUtils.waitForMutationCondition`](browsertestutils.html#BrowserTestUtils.waitForMutationCondition).
+Use [`BrowserTestUtils.waitForMutationCondition`](browsertestutils.rst#BrowserTestUtils.waitForMutationCondition).
 Do **not** use `waitForCondition`, which uses a timeout loop and often
 leads to intermittent failures.
 

@@ -70,4 +70,4 @@ a try run failing due to a simple linting issue.
 
 [mozlint]: /code-quality/lint/mozlint.rst
 [eslint]: /code-quality/lint/linters/eslint.rst
-[enable automatic linting]: /tools/lint/usage.html#using-a-vcs-hook
+[enable automatic linting]: /code-quality/lint/usage.rst#using-a-vcs-hook

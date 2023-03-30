@@ -200,7 +200,7 @@ other modules.  Documentation for non-exported symbols is not required.
 
 Marionette consists mostly of JavaScript (server) and Python (client,
 harness, test runner) code.  We lint our code with [mozlint],
-which harmonises the output from [eslint] and [flake8].
+which harmonises the output from [eslint] and [ruff].
 
 To run the linter with a sensible output:
 
@@ -225,5 +225,5 @@ failing due to a stupid linting issue.
 
 [mozlint]: /code-quality/lint/mozlint.rst
 [eslint]: /code-quality/lint/linters/eslint.rst
-[flake8]: /code-quality/lint/linters/flake8.rst
-[enable automatic linting]: /code-quality/lint/usage.html#using-a-vcs-hook
+[ruff]: /code-quality/lint/linters/ruff.rst
+[enable automatic linting]: /code-quality/lint/usage.rst#using-a-vcs-hook

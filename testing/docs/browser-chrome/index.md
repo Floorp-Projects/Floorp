@@ -11,7 +11,7 @@ implemented in [`Assert.sys.mjs`](../assert.rst).
 These tests are used to test UI-related behaviour in Firefox for
 Desktop. They do not run on Android. If you're testing internal code that
 does not directly interact with the user interface,
-[xpcshell tests](../xpcshell/index.md) are probably a better fit for your needs.
+[xpcshell tests](../xpcshell/index.rst) are probably a better fit for your needs.
 
 
 Running the tests
