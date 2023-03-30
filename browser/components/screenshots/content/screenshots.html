@@ -19,23 +19,23 @@
     <template id="screenshots-dialog-template">
       <div class="image-view">
         <div class="preview-buttons">
-          <button id="retry" class="preview-button" data-l10n-id="screenshots-retry-button-title">
+          <button class="highlight-button-retry preview-button" data-l10n-id="screenshots-retry-button-title">
             <img src="chrome://global/skin/icons/reload.svg"/>
           </button>
-          <button id="cancel" class="preview-button" data-l10n-id="screenshots-cancel-button-title">
-            <img src="chrome://global/skin/icons/close.svg"/>
+          <button class="highlight-button-cancel preview-button" data-l10n-id="screenshots-cancel-button-title">
+            <img src="chrome://browser/content/screenshots/cancel.svg"/>
           </button>
-          <button id="copy" class="preview-button" data-l10n-id="screenshots-copy-button-title">
-            <img src="chrome://global/skin/icons/edit-copy.svg"/>
+          <button class="highlight-button-copy preview-button" data-l10n-id="screenshots-copy-button-title">
+            <img src="chrome://browser/content/screenshots/copy.svg"/>
             <span data-l10n-id="screenshots-copy-button"/>
           </button>
-          <button id="download" class="preview-button primary" data-l10n-id="screenshots-download-button-title">
-            <img src="chrome://browser/skin/downloads/downloads.svg"/>
+          <button class="highlight-button-download preview-button" data-l10n-id="screenshots-download-button-title">
+            <img src="chrome://browser/content/screenshots/download-white.svg"/>
             <span data-l10n-id="screenshots-download-button"/>
           </button>
         </div>
         <div class="preview-image">
-          <div id="preview-image-div">
+          <div id="preview-image-div" class="preview-image-area">
           </div>
         </div>
       </div>
