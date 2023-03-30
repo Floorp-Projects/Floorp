@@ -11,8 +11,8 @@ const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
 
 var FormAutofillHandler, OSKeyStore;
 add_setup(async () => {
-  ({ FormAutofillHandler } = ChromeUtils.import(
-    "resource://autofill/FormAutofillHandler.jsm"
+  ({ FormAutofillHandler } = ChromeUtils.importESModule(
+    "resource://autofill/FormAutofillHandler.sys.mjs"
   ));
   ({ OSKeyStore } = ChromeUtils.importESModule(
     "resource://gre/modules/OSKeyStore.sys.mjs"

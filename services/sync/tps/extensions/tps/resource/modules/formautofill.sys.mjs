@@ -11,14 +11,9 @@ import { Logger } from "resource://tps/logger.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "formAutofillStorage",
-  "resource://autofill/FormAutofillStorage.jsm"
-);
-
 ChromeUtils.defineESModuleGetters(lazy, {
   OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
+  formAutofillStorage: "resource://autofill/FormAutofillStorage.sys.mjs",
 });
 
 class FormAutofillBase {

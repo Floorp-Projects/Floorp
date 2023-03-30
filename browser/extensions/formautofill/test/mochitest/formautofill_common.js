@@ -10,8 +10,8 @@ let defaultTextColor;
 let defaultDisabledTextColor;
 let expectingPopup = null;
 
-const { FormAutofillUtils } = SpecialPowers.ChromeUtils.import(
-  "resource://autofill/FormAutofillUtils.jsm"
+const { FormAutofillUtils } = ChromeUtils.importESModule(
+  "resource://autofill/FormAutofillUtils.sys.mjs"
 );
 
 async function sleep(ms = 500, reason = "Intentionally wait for UI ready") {
@@ -221,7 +221,7 @@ async function triggerAutofillAndCheckProfile(profile) {
                 );
               }
               ok(
-                event instanceof InputEvent,
+                InputEvent.isInstance(event),
                 `"input" event should be dispatched with InputEvent interface on ${element.tagName}`
               );
               is(
@@ -242,7 +242,7 @@ async function triggerAutofillAndCheckProfile(profile) {
                 `"beforeinput" event shouldn't be fired on ${element.tagName}`
               );
               ok(
-                event instanceof Event && !(event instanceof UIEvent),
+                Event.isInstance(event) && !UIEvent.isInstance(event),
                 `"input" event should be dispatched with Event interface on ${element.tagName}`
               );
             }
