@@ -257,7 +257,14 @@ async function reorderingTranslator(message) {
   return [translatedDoc.body.innerHTML];
 }
 
-async function loadTestPage({ runInPage, languagePairs, page, prefs }) {
+async function loadTestPage({
+  runInPage,
+  languagePairs,
+  detectedLanguageConfidence,
+  detectedLanguageLabel,
+  page,
+  prefs,
+}) {
   await SpecialPowers.pushPrefEnv({
     set: [
       // Enabled by default.
@@ -279,6 +286,13 @@ async function loadTestPage({ runInPage, languagePairs, page, prefs }) {
     TranslationsParent.mockLanguagePairs(languagePairs);
   }
 
+  if (detectedLanguageLabel && detectedLanguageConfidence) {
+    TranslationsParent.mockLanguageIdentification(
+      detectedLanguageLabel,
+      detectedLanguageConfidence
+    );
+  }
+
   BrowserTestUtils.loadURIString(tab.linkedBrowser, page);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
@@ -291,6 +305,11 @@ async function loadTestPage({ runInPage, languagePairs, page, prefs }) {
   if (languagePairs) {
     TranslationsParent.mockLanguagePairs(null);
   }
+
+  if (detectedLanguageLabel && detectedLanguageConfidence) {
+    TranslationsParent.mockLanguageIdentification(null, null);
+  }
+
   BrowserTestUtils.removeTab(tab);
   await SpecialPowers.popPrefEnv();
 }
