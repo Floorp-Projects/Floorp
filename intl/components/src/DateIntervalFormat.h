@@ -4,6 +4,7 @@
 #ifndef intl_components_DateIntervalFormat_h_
 #define intl_components_DateIntervalFormat_h_
 
+#include "mozilla/intl/Calendar.h"
 #include "mozilla/intl/DateTimePart.h"
 #include "mozilla/intl/ICU4CGlue.h"
 #include "mozilla/intl/ICUError.h"
