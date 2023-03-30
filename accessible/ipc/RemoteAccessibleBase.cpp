@@ -331,7 +331,7 @@ double RemoteAccessibleBase<Derived>::Step() const {
 
 template <class Derived>
 bool RemoteAccessibleBase<Derived>::ContainsPoint(int32_t aX, int32_t aY) {
-  if (!Bounds().Contains(aX, aY)) {
+  if (!BoundsWithOffset(Nothing(), true).Contains(aX, aY)) {
     return false;
   }
   if (!IsTextLeaf()) {
@@ -380,7 +380,7 @@ bool RemoteAccessibleBase<Derived>::ContainsPoint(int32_t aX, int32_t aY) {
     if (lineEnd > lineStart) {
       lineRect.UnionRect(lineRect, GetCachedCharRect(lineEnd));
     }
-    if (BoundsWithOffset(Some(lineRect)).Contains(aX, aY)) {
+    if (BoundsWithOffset(Some(lineRect), true).Contains(aX, aY)) {
       return true;
     }
     lineStart = lineEnd + 1;
@@ -391,10 +391,16 @@ bool RemoteAccessibleBase<Derived>::ContainsPoint(int32_t aX, int32_t aY) {
 template <class Derived>
 Accessible* RemoteAccessibleBase<Derived>::ChildAtPoint(
     int32_t aX, int32_t aY, LocalAccessible::EWhichChildAtPoint aWhichChild) {
+  // Elements that are partially on-screen should have their bounds masked by
+  // their containing scroll area so hittesting yields results that are
+  // consistent with the content's visual representation. Pass this value to
+  // bounds calculation functions to indicate that we're hittesting.
+  const bool hitTesting = true;
+
   if (IsOuterDoc() && aWhichChild == EWhichChildAtPoint::DirectChild) {
     // This is an iframe, which is as deep as the viewport cache goes. The
     // caller wants a direct child, which can only be the embedded document.
-    if (Bounds().Contains(aX, aY)) {
+    if (BoundsWithOffset(Nothing(), hitTesting).Contains(aX, aY)) {
       return RemoteFirstChild();
     }
     return nullptr;
@@ -429,7 +435,7 @@ Accessible* RemoteAccessibleBase<Derived>::ChildAtPoint(
 
         if (acc->IsOuterDoc() &&
             aWhichChild == EWhichChildAtPoint::DeepestChild &&
-            acc->Bounds().Contains(aX, aY)) {
+            acc->BoundsWithOffset(Nothing(), hitTesting).Contains(aX, aY)) {
           // acc is an iframe, which is as deep as the viewport cache goes. This
           // iframe contains the requested point.
           RemoteAccessible* innerDoc = acc->RemoteFirstChild();
@@ -492,7 +498,7 @@ Accessible* RemoteAccessibleBase<Derived>::ChildAtPoint(
     lastMatch = nullptr;
   }
 
-  if (!lastMatch && Bounds().Contains(aX, aY)) {
+  if (!lastMatch && BoundsWithOffset(Nothing(), hitTesting).Contains(aX, aY)) {
     // Even though the hit target isn't inside `this`, the point is still
     // within our bounds, so fall back to `this`.
     return this;
@@ -572,12 +578,12 @@ bool RemoteAccessibleBase<Derived>::ApplyTransform(
 }
 
 template <class Derived>
-void RemoteAccessibleBase<Derived>::ApplyScrollOffset(nsRect& aBounds) const {
+bool RemoteAccessibleBase<Derived>::ApplyScrollOffset(nsRect& aBounds) const {
   Maybe<const nsTArray<int32_t>&> maybeScrollPosition =
       mCachedFields->GetAttribute<nsTArray<int32_t>>(nsGkAtoms::scrollPosition);
 
   if (!maybeScrollPosition || maybeScrollPosition->Length() != 2) {
-    return;
+    return false;
   }
   // Our retrieved value is in app units, so we don't need to do any
   // unit conversion here.
@@ -589,6 +595,11 @@ void RemoteAccessibleBase<Derived>::ApplyScrollOffset(nsRect& aBounds) const {
   nsPoint scrollOffset(-scrollPosition[0], -scrollPosition[1]);
 
   aBounds.MoveBy(scrollOffset.x, scrollOffset.y);
+
+  // Return true here even if the scroll offset was 0,0 because the RV is used
+  // as a scroll container indicator. Non-scroll containers won't have cached
+  // scroll position.
+  return true;
 }
 
 template <class Derived>
@@ -620,7 +631,7 @@ bool RemoteAccessibleBase<Derived>::IsFixedPos() const {
 
 template <class Derived>
 LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
-    Maybe<nsRect> aOffset) const {
+    Maybe<nsRect> aOffset, bool aBoundsAreForHittesting) const {
   Maybe<nsRect> maybeBounds = RetrieveCachedBounds();
   if (maybeBounds) {
     nsRect bounds = *maybeBounds;
@@ -647,6 +658,12 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
     const Accessible* acc = Parent();
     bool encounteredFixedContainer = IsFixedPos();
     while (acc && acc->IsRemote()) {
+      // Return early if we're hit testing and our cumulative bounds are empty,
+      // since walking the ancestor chain won't produce any hits.
+      if (aBoundsAreForHittesting && bounds.IsEmpty()) {
+        return LayoutDeviceIntRect{};
+      }
+
       RemoteAccessible* remoteAcc = const_cast<Accessible*>(acc)->AsRemote();
 
       if (Maybe<nsRect> maybeRemoteBounds = remoteAcc->RetrieveCachedBounds()) {
@@ -682,7 +699,18 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
           // happens in this loop instead of both inside and outside of
           // the loop (like ApplyTransform).
           // Never apply scroll offsets past a fixed container.
-          remoteAcc->ApplyScrollOffset(remoteBounds);
+          const bool hasScrollArea = remoteAcc->ApplyScrollOffset(bounds);
+
+          // If we are hit testing and the Accessible has a scroll area, ensure
+          // that the bounds we've calculated so far are constrained to the
+          // bounds of the scroll area. Without this, we'll "hit" the off-screen
+          // portions of accs that are are partially (but not fully) within the
+          // scroll area.
+          if (aBoundsAreForHittesting && hasScrollArea) {
+            nsRect selfRelativeScrollBounds(0, 0, remoteBounds.width,
+                                            remoteBounds.height);
+            bounds = bounds.SafeIntersect(selfRelativeScrollBounds);
+          }
         }
         if (remoteAcc->IsDoc()) {
           // Fixed elements are document relative, so if we've hit a
