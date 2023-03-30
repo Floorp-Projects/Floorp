@@ -60,8 +60,11 @@ function checkXrayProperty(obj, name, values) {
   } while ((obj = Object.getPrototypeOf(obj)));
 }
 
-function checkWindowXrayProperty(obj, name, windowValue, windowPrototypeValue, namedPropertiesValue, eventTargetValue) {
-  checkXrayProperty(obj, name, [ windowValue, windowPrototypeValue, namedPropertiesValue, eventTargetValue ]);
+function checkWindowXrayProperty(win, name, { windowValue, windowPrototypeValue, namedPropertiesValue, eventTargetPrototypeValue }) {
+  checkXrayProperty(win, name, [ windowValue, windowPrototypeValue, namedPropertiesValue, eventTargetPrototypeValue ]);
+}
+function checkDocumentXrayProperty(doc, name, { documentValue, htmlDocumentPrototypeValue, documentPrototypeValue, nodePrototypeValue, eventTargetPrototypeValue }) {
+  checkXrayProperty(doc, name, [ documentValue, htmlDocumentPrototypeValue, documentPrototypeValue, nodePrototypeValue, eventTargetPrototypeValue ]);
 }
 
 function test() {
@@ -78,25 +81,33 @@ function test() {
   var eventTargetProto = Object.getPrototypeOf(namedPropertiesObject);
   is(eventTargetProto, win.EventTarget.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
 
-  // Xrays need to filter expandos.
-  checkWindowXrayProperty(win, "expando", undefined);
-  ok(!("expando" in win), "Xrays should filter expandos");
+  let docProto = Object.getPrototypeOf(doc);
+  is(docProto, win.HTMLDocument.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
 
-  checkWindowXrayProperty(win, "shadowedIframe", undefined);
-  ok(!("shadowedIframe" in win), "Named properties should not be exposed through Xrays");
+  // Xrays need to filter expandos.
+  checkDocumentXrayProperty(doc, "expando", {});
+  ok(!("expando" in doc), "Xrays should filter expandos");
+
+  checkDocumentXrayProperty(doc, "shadowedIframe", {});
+  ok(!("shadowedIframe" in doc), "Named properties should not be exposed through Xrays");
 
   // Named properties live on the named properties object for global objects,
   // but are not exposed via Xrays.
-  checkWindowXrayProperty(win, "iframe", undefined, undefined, undefined, undefined);
+  checkWindowXrayProperty(win, "iframe", {});
   ok(!("iframe" in win), "Named properties should not be exposed through Xrays");
 
   // Window properties live on the instance, shadowing the properties of the named property object.
-  checkWindowXrayProperty(win, "document", doc, undefined, undefined, undefined);
+  checkWindowXrayProperty(win, "document", { windowValue: doc });
   ok("document" in win, "WebIDL properties should be exposed through Xrays");
 
   // Unforgeable properties live on the instance, shadowing the properties of the named property object.
-  checkWindowXrayProperty(win, "self", win, undefined, undefined, undefined);
+  checkWindowXrayProperty(win, "self", { windowValue: win });
   ok("self" in win, "WebIDL properties should be exposed through Xrays");
+
+  // Named properties live on the instance for non-global objects, but are not
+  // exposed via Xrays.
+  checkDocumentXrayProperty(doc, "iframe", {});
+  ok(!("iframe" in doc), "Named properties should not be exposed through Xrays");
 
   // Object.prototype is at the end of the prototype chain.
   var obj = win;
@@ -107,17 +118,17 @@ function test() {
   is(obj, win.Object.prototype, "Object.prototype should be at the end of the prototype chain");
 
   // Named properties shouldn't shadow WebIDL- or ECMAScript-defined properties.
-  checkWindowXrayProperty(win, "addEventListener", undefined, undefined, undefined, eventTargetProto.addEventListener);
+  checkWindowXrayProperty(win, "addEventListener", { eventTargetPrototypeValue: eventTargetProto.addEventListener });
   is(win.addEventListener, eventTargetProto.addEventListener, "Named properties shouldn't shadow WebIDL-defined properties");
 
   is(win.toString, win.Object.prototype.toString, "Named properties shouldn't shadow ECMAScript-defined properties");
 
   // WebIDL interface names should be exposed.
   var waivedWin = Cu.waiveXrays(win);
-  checkWindowXrayProperty(win, "Element", Cu.unwaiveXrays(waivedWin.Element));
+  checkWindowXrayProperty(win, "Element", { windowValue: Cu.unwaiveXrays(waivedWin.Element) });
 
   // JS standard classes should be exposed.
-  checkWindowXrayProperty(win, "Array", Cu.unwaiveXrays(waivedWin.Array));
+  checkWindowXrayProperty(win, "Array", { windowValue: Cu.unwaiveXrays(waivedWin.Array) });
 
   // HTMLDocument
   // Unforgeable properties live on the instance.
