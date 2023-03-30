@@ -653,6 +653,7 @@ void FragmentOrElement::nsExtendedDOMSlots::UnlinkExtendedSlots(
     mAnimations = nullptr;
     aContent.ClearMayHaveAnimations();
   }
+  mExplicitlySetAttrElements.Clear();
 }
 
 void FragmentOrElement::nsExtendedDOMSlots::TraverseExtendedSlots(

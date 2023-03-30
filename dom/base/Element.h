@@ -1247,6 +1247,18 @@ class Element : public FragmentOrElement {
   already_AddRefed<nsIHTMLCollection> GetElementsByClassName(
       const nsAString& aClassNames);
 
+  /**
+   * Returns attribute associated element for the given attribute name, see
+   * https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#attr-associated-element
+   */
+  Element* GetAttrAssociatedElement(nsAtom* aAttr) const;
+
+  /**
+   * Sets an attribute element for the given attribute.
+   * https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#explicitly-set-attr-element
+   */
+  void ExplicitlySetAttrElement(Element* aElement, nsAtom* aAttr);
+
   PseudoStyleType GetPseudoElementType() const {
     nsresult rv = NS_OK;
     auto raw = GetProperty(nsGkAtoms::pseudoProperty, &rv);

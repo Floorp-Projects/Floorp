@@ -740,6 +740,12 @@ class nsINode : public mozilla::dom::EventTarget {
 
   /**
    * Returns OwnerDoc() if the node is in uncomposed document and ShadowRoot if
+   * the node is in Shadow DOM.
+   */
+  mozilla::dom::DocumentOrShadowRoot* GetContainingDocumentOrShadowRoot() const;
+
+  /**
+   * Returns OwnerDoc() if the node is in uncomposed document and ShadowRoot if
    * the node is in Shadow DOM and is in composed document.
    */
   mozilla::dom::DocumentOrShadowRoot* GetUncomposedDocOrConnectedShadowRoot()

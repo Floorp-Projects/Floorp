@@ -648,6 +648,18 @@ void nsINode::GetTextContentInternal(nsAString& aTextContent,
   SetDOMStringToNull(aTextContent);
 }
 
+DocumentOrShadowRoot* nsINode::GetContainingDocumentOrShadowRoot() const {
+  if (IsInUncomposedDoc()) {
+    return OwnerDoc();
+  }
+
+  if (IsInShadowTree()) {
+    return AsContent()->GetContainingShadow();
+  }
+
+  return nullptr;
+}
+
 DocumentOrShadowRoot* nsINode::GetUncomposedDocOrConnectedShadowRoot() const {
   if (IsInUncomposedDoc()) {
     return OwnerDoc();
