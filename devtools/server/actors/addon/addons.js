@@ -69,9 +69,13 @@ class AddonsActor extends Actor {
   async uninstallAddon(addonId) {
     const addon = await AddonManager.getAddonByID(addonId);
 
-    if (addon) {
-      await addon.uninstall();
+    // We only support uninstallation of temporarily loaded add-ons at the
+    // moment.
+    if (!addon?.temporarilyInstalled) {
+      throw new Error(`Could not uninstall add-on "${addonId}"`);
     }
+
+    await addon.uninstall();
   }
 }
 
