@@ -13001,12 +13001,36 @@ void CodeGenerator::visitGetFrameArgument(LGetFrameArgument* lir) {
   const LAllocation* index = lir->index();
   size_t argvOffset = JitFrameLayout::offsetOfActualArgs();
 
+  // This instruction is used to access actual arguments and formal arguments.
+  // The number of Values on the stack is |max(numFormals, numActuals)|, so we
+  // assert |index < numFormals || index < numActuals| in debug builds.
+  DebugOnly<size_t> numFormals = gen->outerInfo().script()->function()->nargs();
+
   if (index->isConstant()) {
     int32_t i = index->toConstant()->toInt32();
+#ifdef DEBUG
+    if (uint32_t(i) >= numFormals) {
+      Label ok;
+      Register argc = result.scratchReg();
+      masm.loadNumActualArgs(FramePointer, argc);
+      masm.branch32(Assembler::Above, argc, Imm32(i), &ok);
+      masm.assumeUnreachable("Invalid argument index");
+      masm.bind(&ok);
+    }
+#endif
     Address argPtr(FramePointer, sizeof(Value) * i + argvOffset);
     masm.loadValue(argPtr, result);
   } else {
     Register i = ToRegister(index);
+#ifdef DEBUG
+    Label ok;
+    Register argc = result.scratchReg();
+    masm.branch32(Assembler::Below, i, Imm32(numFormals), &ok);
+    masm.loadNumActualArgs(FramePointer, argc);
+    masm.branch32(Assembler::Above, argc, i, &ok);
+    masm.assumeUnreachable("Invalid argument index");
+    masm.bind(&ok);
+#endif
     BaseValueIndex argPtr(FramePointer, i, argvOffset);
     masm.loadValue(argPtr, result);
   }
