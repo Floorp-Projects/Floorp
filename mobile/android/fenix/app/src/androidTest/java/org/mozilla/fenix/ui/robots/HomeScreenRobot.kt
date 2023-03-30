@@ -7,7 +7,10 @@
 package org.mozilla.fenix.ui.robots
 
 import android.graphics.Bitmap
+import android.view.View
 import android.widget.EditText
+import android.widget.TextView
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotSelected
@@ -518,6 +521,21 @@ class HomeScreenRobot {
                     isCompletelyAbove(withId(R.id.homeAppBar))
                 },
             )
+    }
+    fun verifyNimbusMessageCard(title: String, text: String, action: String) {
+        val textView = UiSelector()
+            .className(ComposeView::class.java)
+            .className(View::class.java)
+            .className(TextView::class.java)
+        assertTrue(
+            mDevice.findObject(textView.textContains(title)).waitForExists(waitingTime),
+        )
+        assertTrue(
+            mDevice.findObject(textView.textContains(text)).waitForExists(waitingTime),
+        )
+        assertTrue(
+            mDevice.findObject(textView.textContains(action)).waitForExists(waitingTime),
+        )
     }
 
     class Transition {
