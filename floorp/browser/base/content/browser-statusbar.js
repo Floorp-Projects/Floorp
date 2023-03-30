@@ -59,27 +59,29 @@ function changeStatusbarVisibility() {
 }
 
 function showStatusbar() {
+    var statuspanel_label = document.getElementById("statuspanel-label")
     //remove CSS
     document.getElementById("statusBarCSS")?.remove();
 
     //move statustext to statusbar
-    document.getElementById("status-text").appendChild(document.getElementById("statuspanel-label"));
+    document.getElementById("status-text").appendChild(statuspanel_label);
 
     //add CSS
-    document.getElementById("statuspanel-label").setAttribute("style", displayStatusbar);
+    statuspanel_label.setAttribute("style", displayStatusbar);
 }
 
 function hideStatusbar() {
+    var statuspanel_label = document.getElementById("statuspanel-label")
     var Tag = document.createElement("style");
     Tag.setAttribute("id", "statusBarCSS");
     Tag.innerText = hideedStatusBar;
     document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend", Tag);
 
     //revert statustext to statuspanel
-    document.getElementById("statuspanel-inner").appendChild(document.getElementById("statuspanel-label"));
+    document.getElementById("statuspanel-inner").appendChild(statuspanel_label);
 
     //remove CSS
-    document.getElementById("statuspanel-label").removeAttribute("style");
+    statuspanel_label.removeAttribute("style");
 }
 
 {
