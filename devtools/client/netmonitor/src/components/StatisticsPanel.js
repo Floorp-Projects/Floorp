@@ -62,6 +62,7 @@ class StatisticsPanel extends Component {
       connector: PropTypes.object.isRequired,
       closeStatistics: PropTypes.func.isRequired,
       enableRequestFilterTypeOnly: PropTypes.func.isRequired,
+      hasLoad: PropTypes.bool,
       requests: PropTypes.array,
     };
   }
@@ -110,28 +111,34 @@ class StatisticsPanel extends Component {
   componentDidUpdate(prevProps) {
     MediaQueryList.addListener(this.onLayoutChange);
 
-    const { requests } = this.props;
-    const ready =
-      requests?.length &&
-      requests.every(
-        req =>
-          req.contentSize !== undefined &&
-          req.mimeType &&
-          req.responseHeaders &&
-          req.status !== undefined &&
-          req.totalTime !== undefined
-      );
+    const { hasLoad, requests } = this.props;
+
+    // Display statistics about all requests for which we received enough data,
+    // as soon as the page is considered to be loaded
+    const ready = requests.length && hasLoad;
+
+    // Ignore requests which are missing data expected by this component:
+    // - pending/incomplete requests
+    // - blocked/errored requests
+    const validRequests = requests.filter(
+      req =>
+        req.contentSize !== undefined &&
+        req.mimeType &&
+        req.responseHeaders &&
+        req.status !== undefined &&
+        req.totalTime !== undefined
+    );
 
     this.createChart({
       id: "primedCacheChart",
       title: CHARTS_CACHE_ENABLED,
-      data: ready ? this.sanitizeChartDataSource(requests, false) : null,
+      data: ready ? this.sanitizeChartDataSource(validRequests, false) : null,
     });
 
     this.createChart({
       id: "emptyCacheChart",
       title: CHARTS_CACHE_DISABLED,
-      data: ready ? this.sanitizeChartDataSource(requests, true) : null,
+      data: ready ? this.sanitizeChartDataSource(validRequests, true) : null,
     });
 
     this.createMDNLink("primedCacheChart", getPerformanceAnalysisURL());
@@ -392,6 +399,9 @@ class StatisticsPanel extends Component {
 
 module.exports = connect(
   state => ({
+    // `firstDocumentLoadTimestamp` is set on timing markers when we receive
+    // DOCUMENT_EVENT's dom-complete, which is equivalent to page `load` event.
+    hasLoad: state.timingMarkers.firstDocumentLoadTimestamp != -1,
     requests: [...state.requests.requests],
   }),
   (dispatch, props) => ({
