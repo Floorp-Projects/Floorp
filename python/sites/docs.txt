@@ -18,7 +18,7 @@ pypi:livereload==2.6.3
 pypi:Markdown==3.3.4
 pypi:MarkupSafe==2.0.1
 pypi:mock==5.0.1
-pypi:myst-parser==0.16.1
+pypi:myst-parser==0.17
 pypi:mdit-py-plugins==0.3.0
 pypi:parsimonious==0.10.0
 pypi:pyasn1==0.4.8
@@ -39,7 +39,7 @@ pypi:singledispatch==4.0.0
 pypi:snowballstemmer==2.2.0
 pypi:Sphinx==4.5
 pypi:sphinx-copybutton==0.5.1
-pypi:sphinx-panels==0.6.0
+pypi:sphinx-design==0.3.0
 pypi:sphinx-js==3.2.1
 pypi:sphinx-markdown-tables==0.0.15
 pypi:sphinx-rtd-theme==1.2.0

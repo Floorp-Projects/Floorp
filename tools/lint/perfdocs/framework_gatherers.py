@@ -251,7 +251,7 @@ class RaptorGatherer(FrameworkGatherer):
             )
 
         result = f".. dropdown:: {title}\n"
-        result += f"   :container: + anchor-id-{title}-{suite_name[0]}\n\n"
+        result += f"   :class-container: anchor-id-{title}-{suite_name[0]}\n\n"
 
         for idx, description in enumerate(matcher):
             if description["name"] != title:
@@ -413,7 +413,7 @@ class TalosGatherer(FrameworkGatherer):
 
     def build_test_description(self, title, test_description="", suite_name=""):
         result = f".. dropdown:: {title}\n"
-        result += f"   :container: + anchor-id-{title}\n\n"
+        result += f"   :class-container: anchor-id-{title}\n\n"
 
         yml_descriptions = [s.strip() for s in test_description.split("- ") if s]
         for description in yml_descriptions:
@@ -534,7 +534,7 @@ class AwsyGatherer(FrameworkGatherer):
     def build_test_description(self, title, test_description="", suite_name=""):
         dropdown_suite_name = suite_name.replace(" ", "-")
         result = f".. dropdown:: {title} ({test_description})\n"
-        result += f"   :container: + anchor-id-{title}-{dropdown_suite_name}\n\n"
+        result += f"   :class-container: anchor-id-{title}-{dropdown_suite_name}\n\n"
 
         awsy_data = read_yaml(self._yaml_path)["suites"]["Awsy tests"]
         if "owner" in awsy_data.keys():

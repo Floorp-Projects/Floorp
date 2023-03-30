@@ -10,7 +10,7 @@ a.dropdown-link {
     visibility: hidden;
 }
 
-details.dropdown:hover a.dropdown-link {
+details.sd-dropdown:hover a.dropdown-link {
     visibility: visible;
 }
 
