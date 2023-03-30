@@ -2,6 +2,58 @@
   "data": [
     {
       "os": "Linux",
+      "schema": 1680017089172,
+      "vendor": "0x10de",
+      "details": {
+        "bug": "1824778",
+        "name": "NVIDIA driver stability issues"
+      },
+      "devices": [],
+      "enabled": true,
+      "feature": "DMABUF",
+      "hardware": "",
+      "driverVendor": "nvidia/unknown",
+      "versionRange": {
+        "maxVersion": "111.*",
+        "minVersion": ""
+      },
+      "driverVersion": "",
+      "featureStatus": "BLOCKED_DEVICE",
+      "windowProtocol": "",
+      "driverVersionMax": "",
+      "desktopEnvironment": "",
+      "driverVersionComparator": "",
+      "id": "78cc082a-221b-4353-8b07-57db1d03c871",
+      "last_modified": 1680018554787
+    },
+    {
+      "os": "Linux",
+      "schema": 1680017296058,
+      "vendor": "0x10de",
+      "details": {
+        "bug": "1824778",
+        "name": "NVIDIA driver stability issues"
+      },
+      "devices": [],
+      "enabled": true,
+      "feature": "THREADSAFE_GL",
+      "hardware": "",
+      "driverVendor": "nvidia/unknown",
+      "versionRange": {
+        "maxVersion": "111.*",
+        "minVersion": ""
+      },
+      "driverVersion": "",
+      "featureStatus": "BLOCKED_DEVICE",
+      "windowProtocol": "",
+      "driverVersionMax": "",
+      "desktopEnvironment": "",
+      "driverVersionComparator": "",
+      "id": "57d7fc9f-3e12-4b79-b28e-84abda7496af",
+      "last_modified": 1680018554776
+    },
+    {
+      "os": "Linux",
       "schema": 1677861301308,
       "vendor": "0x10de",
       "details": {
@@ -1348,5 +1400,5 @@
       "last_modified": 1480349134090
     }
   ],
-  "timestamp": 1677879347585
+  "timestamp": 1680018554787
 }
