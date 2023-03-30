@@ -11,6 +11,7 @@
 #include "nsString.h"
 #include "nsContentUtils.h"
 #include "FluentResource.h"
+#include "FileSource.h"
 #include "nsICategoryManager.h"
 #include "mozilla/SimpleEnumerator.h"
 #include "mozilla/dom/Promise.h"

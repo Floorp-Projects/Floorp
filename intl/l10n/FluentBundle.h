@@ -31,6 +31,8 @@ struct FluentBundleAddResourceOptions;
 
 namespace intl {
 
+class FluentResource;
+
 using L10nArgs =
     dom::Record<nsCString, dom::Nullable<dom::OwningUTF8StringOrDouble>>;
 

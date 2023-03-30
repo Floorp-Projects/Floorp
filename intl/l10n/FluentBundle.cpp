@@ -6,6 +6,7 @@
 
 #include "FluentBundle.h"
 #include "nsContentUtils.h"
+#include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/intl/NumberFormat.h"
 #include "mozilla/intl/DateTimeFormat.h"
