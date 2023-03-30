@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-/* eslint-disable */
-
 //
 // THIS FILE IS GENERATED AUTOMATICALLY, DO NOT EDIT MANUALLY!
 //
