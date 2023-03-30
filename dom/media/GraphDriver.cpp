@@ -774,6 +774,8 @@ void AudioCallbackDriver::Stop() {
   cubeb_stream_register_device_changed_callback(mAudioStream, nullptr);
   if (cubeb_stream_stop(mAudioStream) != CUBEB_OK) {
     NS_WARNING("Could not stop cubeb stream for MTG.");
+  } else {
+    mAudioStreamState = AudioStreamState::None;
   }
 }
 
@@ -1046,7 +1048,13 @@ void AudioCallbackDriver::StateCallback(cubeb_state aState) {
   LOG(LogLevel::Debug,
       ("AudioCallbackDriver(%p) State: %s", this, StateToString(aState)));
 
-  if (aState == CUBEB_STATE_STARTED) {
+  if (aState == CUBEB_STATE_STARTED || aState == CUBEB_STATE_STOPPED) {
+    // Nothing to do for STARTED.
+    //
+    // For STOPPED, don't reset mAudioStreamState until after
+    // cubeb_stream_stop() returns, as wasapi_stream_stop() dispatches
+    // CUBEB_STATE_STOPPED before ensuring that data callbacks have finished.
+    // https://searchfox.org/mozilla-central/rev/f9beb753a84aa297713d1565dcd0c5e3c66e4174/media/libcubeb/src/cubeb_wasapi.cpp#3009,3012
     return;
   }
 
@@ -1058,7 +1066,7 @@ void AudioCallbackDriver::StateCallback(cubeb_state aState) {
     return;
   }
 
-  // Reset for the not running states: stopped, drained, error.
+  // Reset for DRAINED or ERROR.
   streamState = mAudioStreamState.exchange(AudioStreamState::None);
 
   if (aState == CUBEB_STATE_ERROR) {
@@ -1082,8 +1090,6 @@ void AudioCallbackDriver::StateCallback(cubeb_state aState) {
         FallbackToSystemClockDriver();
       }
     }
-  } else {
-    MOZ_ASSERT(!(aState == CUBEB_STATE_STOPPED && ThreadRunning()));
   }
 }
 
