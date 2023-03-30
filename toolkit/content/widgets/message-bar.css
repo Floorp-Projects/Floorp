@@ -7,9 +7,9 @@
   --warn-icon-url: url("chrome://global/skin/icons/warning.svg");
   --success-icon-url: url("chrome://global/skin/icons/check.svg");
   --error-icon-url: url("chrome://global/skin/icons/error.svg");
-  --close-icon-url: url("chrome://global/skin/icons/close.svg");
+  --close-icon-url: url("chrome://global/skin/icons/close-12.svg");
   --icon-size: 16px;
-  --close-icon-size: 32px;
+  --close-icon-size: 24px;
 }
 
 :host([message-bar-type=infobar]) {
@@ -226,7 +226,7 @@
 
 .close {
   margin: 4px 8px;
-  background-size: 16px;
+  background-size: 12px;
 }
 
 .notification-button {

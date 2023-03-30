@@ -452,14 +452,15 @@
   margin-inline-end: calc(var(--inline-tab-padding) / -2);
   width: 24px;
   height: 24px;
-  padding: 7px;
+  padding: 6px;
   border-radius: var(--tab-border-radius);
+  list-style-image: url(chrome://global/skin/icons/close-12.svg);
 }
 
 /* The following rulesets allow showing more of the tab title */
 .tabbrowser-tab:not([labelendaligned],:hover) > .tab-stack > .tab-content > .tab-close-button {
   padding-inline-start: 0;
-  width: 17px;
+  width: 18px;
 }
 
 .tabbrowser-tab[visuallyselected=true]:not([labelendaligned]):hover,
