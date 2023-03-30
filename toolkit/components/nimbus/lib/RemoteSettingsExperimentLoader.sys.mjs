@@ -2,31 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = [
-  "_RemoteSettingsExperimentLoader",
-  "RemoteSettingsExperimentLoader",
-  "EnrollmentsContext",
-];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ExperimentManager: "resource://nimbus/lib/ExperimentManager.sys.mjs",
   JsonSchema: "resource://gre/modules/JsonSchema.sys.mjs",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   TargetingContext: "resource://messaging-system/targeting/Targeting.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.jsm",
-  ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
   CleanupManager: "resource://normandy/lib/CleanupManager.jsm",
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {
@@ -86,7 +76,7 @@ const SCHEMAS = {
   },
 };
 
-class _RemoteSettingsExperimentLoader {
+export class _RemoteSettingsExperimentLoader {
   constructor() {
     // Has the timer been set?
     this._initialized = false;
@@ -368,7 +358,7 @@ class _RemoteSettingsExperimentLoader {
   }
 }
 
-class EnrollmentsContext {
+export class EnrollmentsContext {
   constructor(
     experimentManager,
     recipeValidator,
@@ -666,4 +656,4 @@ class EnrollmentsContext {
   }
 }
 
-const RemoteSettingsExperimentLoader = new _RemoteSettingsExperimentLoader();
+export const RemoteSettingsExperimentLoader = new _RemoteSettingsExperimentLoader();

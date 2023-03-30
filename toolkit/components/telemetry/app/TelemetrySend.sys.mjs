@@ -22,16 +22,12 @@ import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   TelemetryHealthPing: "resource://gre/modules/HealthPing.sys.mjs",
   TelemetryReportingPolicy:
     "resource://gre/modules/TelemetryReportingPolicy.sys.mjs",
   TelemetryStorage: "resource://gre/modules/TelemetryStorage.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "NimbusFeatures",
-  "resource://nimbus/ExperimentAPI.jsm"
-);
 
 const Utils = TelemetryUtils;
 

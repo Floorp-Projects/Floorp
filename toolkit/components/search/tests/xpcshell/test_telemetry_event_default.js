@@ -10,11 +10,8 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
 const BASE_CONFIG = [

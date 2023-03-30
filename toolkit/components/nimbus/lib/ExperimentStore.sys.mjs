@@ -2,16 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { SharedDataMap } from "resource://nimbus/lib/SharedDataMap.sys.mjs";
 
-const EXPORTED_SYMBOLS = ["ExperimentStore"];
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { SharedDataMap } = ChromeUtils.import(
-  "resource://nimbus/lib/SharedDataMap.jsm"
-);
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const lazy = {};
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   FeatureManifest: "resource://nimbus/FeatureManifest.js",
@@ -233,7 +227,7 @@ function featuresCompat(branch) {
   return features;
 }
 
-class ExperimentStore extends SharedDataMap {
+export class ExperimentStore extends SharedDataMap {
   static SYNC_DATA_PREF_BRANCH = SYNC_DATA_PREF_BRANCH;
   static SYNC_DEFAULTS_PREF_BRANCH = SYNC_DEFAULTS_PREF_BRANCH;
 

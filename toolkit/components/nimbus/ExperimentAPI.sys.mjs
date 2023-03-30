@@ -2,30 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = [
-  "ExperimentAPI",
-  "NimbusFeatures",
-  "_ExperimentFeature",
-];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ExperimentManager: "resource://nimbus/lib/ExperimentManager.sys.mjs",
+  ExperimentStore: "resource://nimbus/lib/ExperimentStore.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ExperimentStore: "resource://nimbus/lib/ExperimentStore.jsm",
-  ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
   FeatureManifest: "resource://nimbus/FeatureManifest.js",
 });
 
@@ -85,7 +73,7 @@ const experimentBranchAccessor = {
   },
 };
 
-const ExperimentAPI = {
+export const ExperimentAPI = {
   /**
    * @returns {Promise} Resolves when the API has synchronized to the main store
    */
@@ -305,14 +293,15 @@ const ExperimentAPI = {
  * Singleton that holds lazy references to _ExperimentFeature instances
  * defined by the FeatureManifest
  */
-const NimbusFeatures = {};
+export const NimbusFeatures = {};
+
 for (let feature in lazy.FeatureManifest) {
   XPCOMUtils.defineLazyGetter(NimbusFeatures, feature, () => {
     return new _ExperimentFeature(feature);
   });
 }
 
-class _ExperimentFeature {
+export class _ExperimentFeature {
   constructor(featureId, manifest) {
     this.featureId = featureId;
     this.prefGetters = {};

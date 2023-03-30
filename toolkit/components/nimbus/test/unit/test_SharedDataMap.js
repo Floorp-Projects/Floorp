@@ -1,5 +1,5 @@
-const { SharedDataMap } = ChromeUtils.import(
-  "resource://nimbus/lib/SharedDataMap.jsm"
+const { SharedDataMap } = ChromeUtils.importESModule(
+  "resource://nimbus/lib/SharedDataMap.sys.mjs"
 );
 const { FileTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/FileTestUtils.sys.mjs"

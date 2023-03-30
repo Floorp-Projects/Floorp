@@ -10,11 +10,9 @@ const { BaseStudyAction } = ChromeUtils.import(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ExperimentManager",
-  "resource://nimbus/lib/ExperimentManager.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  ExperimentManager: "resource://nimbus/lib/ExperimentManager.sys.mjs",
+});
 
 ChromeUtils.defineModuleGetter(
   lazy,

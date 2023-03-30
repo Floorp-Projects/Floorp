@@ -973,8 +973,8 @@ var dataProviders = {
     const {
       PreferenceRollouts: NormandyPreferenceRollouts,
     } = ChromeUtils.import("resource://normandy/lib/PreferenceRollouts.jsm");
-    const { ExperimentManager } = ChromeUtils.import(
-      "resource://nimbus/lib/ExperimentManager.jsm"
+    const { ExperimentManager } = ChromeUtils.importESModule(
+      "resource://nimbus/lib/ExperimentManager.sys.mjs"
     );
 
     // Get Normandy data in parallel, and sort each group by slug.

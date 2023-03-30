@@ -37,12 +37,12 @@ XPCOMUtils.defineLazyGetter(lazy, "PasswordRulesManager", () => {
 ChromeUtils.defineESModuleGetters(lazy, {
   ChromeMigrationUtils: "resource:///modules/ChromeMigrationUtils.sys.mjs",
   MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   FirefoxRelay: "resource://gre/modules/FirefoxRelay.jsm",
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
   PasswordGenerator: "resource://gre/modules/PasswordGenerator.jsm",
 });

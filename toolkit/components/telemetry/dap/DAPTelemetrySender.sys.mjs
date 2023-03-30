@@ -12,8 +12,8 @@ XPCOMUtils.defineLazyGetter(lazy, "logConsole", function() {
     maxLogLevelPref: "toolkit.telemetry.dap.logLevel",
   });
 });
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
 });
 
 const PREF_LEADER = "toolkit.telemetry.dap_leader";

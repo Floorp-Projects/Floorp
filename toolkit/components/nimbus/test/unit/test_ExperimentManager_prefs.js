@@ -4,7 +4,7 @@
 const {
   _ExperimentFeature: ExperimentFeature,
   NimbusFeatures,
-} = ChromeUtils.import("resource://nimbus/ExperimentAPI.jsm");
+} = ChromeUtils.importESModule("resource://nimbus/ExperimentAPI.sys.mjs");
 
 const { PrefUtils } = ChromeUtils.import(
   "resource://normandy/lib/PrefUtils.jsm"
