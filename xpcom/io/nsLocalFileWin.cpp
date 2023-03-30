@@ -192,7 +192,7 @@ nsresult nsLocalFile::RevealFile(const nsString& aResolvedPath) {
 }
 
 // static
-void nsLocalFile::CheckForReservedFileName(nsString& aFileName) {
+bool nsLocalFile::CheckForReservedFileName(const nsString& aFileName) {
   static const char* forbiddenNames[] = {
       "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7",  "COM8",
       "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6",  "LPT7",
@@ -205,10 +205,12 @@ void nsLocalFile::CheckForReservedFileName(nsString& aFileName) {
       // invalid name is either the entire string, or a prefix with a period
       if (aFileName.Length() == nameLen ||
           aFileName.CharAt(nameLen) == char16_t('.')) {
-        aFileName.Truncate();
+        return true;
       }
     }
   }
+
+  return false;
 }
 
 class nsDriveEnumerator : public nsSimpleEnumerator,

@@ -207,6 +207,10 @@ class nsExternalHelperAppService : public nsIExternalHelperAppService,
       nsAString& aFileName, const nsACString& aMimeType, nsIURI* aURI,
       nsIURI* aOriginalURI, uint32_t aFlags, bool aAllowURLExtension);
 
+  // If aFileName is blank or just an extension, set aFileName to the
+  // default filename.
+  void CheckDefaultFileName(nsAString& aFileName, uint32_t aFlags);
+
   // Ensure that the filename is safe for the file system. This will remove or
   // replace any invalid characters and trim extra whitespace as needed. If the
   // filename is too long, it will be truncated but the existing period and
