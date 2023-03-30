@@ -21,9 +21,10 @@ const {
  *          - {Boolean} stacktrace: If true, wait for a stacktrace element to be rendered.
  */
 exports.reloadConsoleAndLog = async function(label, toolbox, expectedMessages) {
+  const webConsole = toolbox.getPanel("webconsole");
+  const onWebConsoleReload = webConsole.once("reloaded");
   const onReload = async function() {
-    const { hud } = toolbox.getPanel("webconsole");
-
+    const { hud } = webConsole;
     const expected =
       typeof expectedMessages === "number"
         ? [{ text: "", count: expectedMessages }]
@@ -31,7 +32,11 @@ exports.reloadConsoleAndLog = async function(label, toolbox, expectedMessages) {
 
     let logMissingMessagesTimeoutId;
 
-    await waitForConsoleOutputChildListChange(hud, consoleOutputEl => {
+    // Wait for webconsole panel reload in order to prevent matching messages from previous
+    // page load in the code below.
+    await onWebConsoleReload;
+
+    const checkMessages = consoleOutputEl => {
       if (logMissingMessagesTimeoutId) {
         clearTimeout(logMissingMessagesTimeoutId);
         logMissingMessagesTimeoutId = null;
@@ -78,7 +83,14 @@ exports.reloadConsoleAndLog = async function(label, toolbox, expectedMessages) {
         }, 3000);
       }
       return foundAllMessages;
-    });
+    };
+
+    // Messages might already be displayed in the console
+    if (checkMessages(getConsoleOutputElement(hud))) {
+      return;
+    }
+    // if all messages weren't there, wait for mutations and check again
+    await waitForConsoleOutputChildListChange(hud, checkMessages);
   };
   await reloadPageAndLog(label + ".webconsole", toolbox, onReload);
 };
@@ -94,8 +106,7 @@ exports.reloadConsoleAndLog = async function(label, toolbox, expectedMessages) {
  *                              when it returns `true`.
  */
 async function waitForConsoleOutputChildListChange(hud, predicate) {
-  const { document } = hud.ui;
-  const webConsoleOutputEl = document.querySelector(".webconsole-output");
+  const webConsoleOutputEl = getConsoleOutputElement(hud);
 
   await waitForDOMPredicate(
     webConsoleOutputEl,
@@ -104,3 +115,13 @@ async function waitForConsoleOutputChildListChange(hud, predicate) {
   );
 }
 exports.waitForConsoleOutputChildListChange = waitForConsoleOutputChildListChange;
+
+/**
+ * Return the webconsole output element from the hud.
+ *
+ * @param {WebConsole} hud
+ * @returns {Element}
+ */
+function getConsoleOutputElement(hud) {
+  return hud.ui.document.querySelector(".webconsole-output");
+}
