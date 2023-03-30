@@ -428,7 +428,7 @@ void vpx_highbd_minmax_8x8_c(const uint8_t *s8, int p, const uint8_t *d8,
   int i, j;
   const uint16_t *s = CONVERT_TO_SHORTPTR(s8);
   const uint16_t *d = CONVERT_TO_SHORTPTR(d8);
-  *min = 255;
+  *min = 65535;
   *max = 0;
   for (i = 0; i < 8; ++i, s += p, d += dp) {
     for (j = 0; j < 8; ++j) {

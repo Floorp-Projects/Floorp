@@ -30,6 +30,7 @@ namespace libvpx {
 struct VP9RateControlRtcConfig : public VpxRateControlRtcConfig {
  public:
   VP9RateControlRtcConfig() {
+    ss_number_layers = 1;
     vp9_zero(max_quantizers);
     vp9_zero(min_quantizers);
     vp9_zero(scaling_factor_den);
@@ -44,8 +45,6 @@ struct VP9RateControlRtcConfig : public VpxRateControlRtcConfig {
 
   // Number of spatial layers
   int ss_number_layers;
-  // Number of temporal layers
-  int ts_number_layers;
   int max_quantizers[VPX_MAX_LAYERS];
   int min_quantizers[VPX_MAX_LAYERS];
   int scaling_factor_num[VPX_SS_MAX_LAYERS];
@@ -69,22 +68,21 @@ struct VP9SegmentationData {
 // the encoder. To use this interface, you need to link with libvpxrc.a.
 //
 // #include "vp9/ratectrl_rtc.h"
-// VP9RateControlRTC rc_api;
 // VP9RateControlRtcConfig cfg;
 // VP9FrameParamsQpRTC frame_params;
 //
 // YourFunctionToInitializeConfig(cfg);
-// rc_api.InitRateControl(cfg);
+// std::unique_ptr<VP9RateControlRTC> rc_api = VP9RateControlRTC::Create(cfg);
 // // start encoding
 // while (frame_to_encode) {
 //   if (config_changed)
-//     rc_api.UpdateRateControl(cfg);
+//     rc_api->UpdateRateControl(cfg);
 //   YourFunctionToFillFrameParams(frame_params);
-//   rc_api.ComputeQP(frame_params);
-//   YourFunctionToUseQP(rc_api.GetQP());
-//   YourFunctionToUseLoopfilter(rc_api.GetLoopfilterLevel());
+//   rc_api->ComputeQP(frame_params);
+//   YourFunctionToUseQP(rc_api->GetQP());
+//   YourFunctionToUseLoopfilter(rc_api->GetLoopfilterLevel());
 //   // After encoding
-//   rc_api.PostEncode(encoded_frame_size);
+//   rc_api->PostEncode(encoded_frame_size, frame_params);
 // }
 class VP9RateControlRTC {
  public:
@@ -92,18 +90,19 @@ class VP9RateControlRTC {
       const VP9RateControlRtcConfig &cfg);
   ~VP9RateControlRTC();
 
-  void UpdateRateControl(const VP9RateControlRtcConfig &rc_cfg);
+  bool UpdateRateControl(const VP9RateControlRtcConfig &rc_cfg);
   // GetQP() needs to be called after ComputeQP() to get the latest QP
   int GetQP() const;
   int GetLoopfilterLevel() const;
   bool GetSegmentationData(VP9SegmentationData *segmentation_data) const;
   void ComputeQP(const VP9FrameParamsQpRTC &frame_params);
   // Feedback to rate control with the size of current encoded frame
-  void PostEncodeUpdate(uint64_t encoded_frame_size);
+  void PostEncodeUpdate(uint64_t encoded_frame_size,
+                        const VP9FrameParamsQpRTC &frame_params);
 
  private:
   VP9RateControlRTC() {}
-  void InitRateControl(const VP9RateControlRtcConfig &cfg);
+  bool InitRateControl(const VP9RateControlRtcConfig &cfg);
   struct VP9_COMP *cpi_;
 };
 

@@ -160,7 +160,7 @@ class Vp8RcInterfaceTest
     if (test_video_.width == 640 && target_bitrate_ == 1000) return;
     SetConfig();
     rc_api_ = libvpx::VP8RateControlRTC::Create(rc_cfg_);
-    rc_api_->UpdateRateControl(rc_cfg_);
+    ASSERT_TRUE(rc_api_->UpdateRateControl(rc_cfg_));
 
     ::libvpx_test::I420VideoSource video(test_video_.name, test_video_.width,
                                          test_video_.height, 30, 1, 0,
@@ -177,7 +177,7 @@ class Vp8RcInterfaceTest
     key_interval_ = 100;
     SetConfig();
     rc_api_ = libvpx::VP8RateControlRTC::Create(rc_cfg_);
-    rc_api_->UpdateRateControl(rc_cfg_);
+    ASSERT_TRUE(rc_api_->UpdateRateControl(rc_cfg_));
 
     ::libvpx_test::I420VideoSource video(test_video_.name, test_video_.width,
                                          test_video_.height, 30, 1, 0,
@@ -193,7 +193,7 @@ class Vp8RcInterfaceTest
     if (test_video_.width == 640 && target_bitrate_ == 1000) return;
     SetConfigTemporalLayers(2);
     rc_api_ = libvpx::VP8RateControlRTC::Create(rc_cfg_);
-    rc_api_->UpdateRateControl(rc_cfg_);
+    ASSERT_TRUE(rc_api_->UpdateRateControl(rc_cfg_));
 
     ::libvpx_test::I420VideoSource video(test_video_.name, test_video_.width,
                                          test_video_.height, 30, 1, 0,
@@ -209,7 +209,7 @@ class Vp8RcInterfaceTest
     if (test_video_.width == 640 && target_bitrate_ == 1000) return;
     SetConfigTemporalLayers(3);
     rc_api_ = libvpx::VP8RateControlRTC::Create(rc_cfg_);
-    rc_api_->UpdateRateControl(rc_cfg_);
+    ASSERT_TRUE(rc_api_->UpdateRateControl(rc_cfg_));
 
     ::libvpx_test::I420VideoSource video(test_video_.name, test_video_.width,
                                          test_video_.height, 30, 1, 0,

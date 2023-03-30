@@ -249,8 +249,7 @@ void vp9_init_plane_quantizers(VP9_COMP *cpi, MACROBLOCK *x) {
   // Y
   x->plane[0].quant = quants->y_quant[qindex];
   x->plane[0].quant_fp = quants->y_quant_fp[qindex];
-  memcpy(x->plane[0].round_fp, quants->y_round_fp[qindex],
-         8 * sizeof(*(x->plane[0].round_fp)));
+  x->plane[0].round_fp = quants->y_round_fp[qindex];
   x->plane[0].quant_shift = quants->y_quant_shift[qindex];
   x->plane[0].zbin = quants->y_zbin[qindex];
   x->plane[0].round = quants->y_round[qindex];
@@ -262,8 +261,7 @@ void vp9_init_plane_quantizers(VP9_COMP *cpi, MACROBLOCK *x) {
   for (i = 1; i < 3; i++) {
     x->plane[i].quant = quants->uv_quant[qindex];
     x->plane[i].quant_fp = quants->uv_quant_fp[qindex];
-    memcpy(x->plane[i].round_fp, quants->uv_round_fp[qindex],
-           8 * sizeof(*(x->plane[i].round_fp)));
+    x->plane[i].round_fp = quants->uv_round_fp[qindex];
     x->plane[i].quant_shift = quants->uv_quant_shift[qindex];
     x->plane[i].zbin = quants->uv_zbin[qindex];
     x->plane[i].round = quants->uv_round[qindex];

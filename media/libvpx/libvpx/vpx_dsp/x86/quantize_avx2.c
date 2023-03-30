@@ -13,6 +13,8 @@
 
 #include "./vpx_dsp_rtcd.h"
 #include "vpx/vpx_integer.h"
+#include "vp9/common/vp9_scan.h"
+#include "vp9/encoder/vp9_block.h"
 
 static VPX_FORCE_INLINE void load_b_values_avx2(
     const int16_t *zbin_ptr, __m256i *zbin, const int16_t *round_ptr,
@@ -250,23 +252,19 @@ static VPX_FORCE_INLINE __m256i quantize_b_32x32_16(
   }
 }
 
-void vpx_quantize_b_32x32_avx2(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
-                               const int16_t *zbin_ptr,
-                               const int16_t *round_ptr,
-                               const int16_t *quant_ptr,
-                               const int16_t *quant_shift_ptr,
+void vpx_quantize_b_32x32_avx2(const tran_low_t *coeff_ptr,
+                               const struct macroblock_plane *const mb_plane,
                                tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
                                const int16_t *dequant_ptr, uint16_t *eob_ptr,
-                               const int16_t *scan, const int16_t *iscan) {
+                               const struct ScanOrder *const scan_order) {
   __m256i v_zbin, v_round, v_quant, v_dequant, v_quant_shift;
   __m256i v_eobmax = _mm256_setzero_si256();
   intptr_t count;
-  (void)n_coeffs;
-  (void)scan;
+  const int16_t *iscan = scan_order->iscan;
 
-  load_b_values_avx2(zbin_ptr, &v_zbin, round_ptr, &v_round, quant_ptr,
-                     &v_quant, dequant_ptr, &v_dequant, quant_shift_ptr,
-                     &v_quant_shift, 1);
+  load_b_values_avx2(mb_plane->zbin, &v_zbin, mb_plane->round, &v_round,
+                     mb_plane->quant, &v_quant, dequant_ptr, &v_dequant,
+                     mb_plane->quant_shift, &v_quant_shift, 1);
 
   // Do DC and first 15 AC.
   v_eobmax = quantize_b_32x32_16(coeff_ptr, qcoeff_ptr, dqcoeff_ptr, iscan,

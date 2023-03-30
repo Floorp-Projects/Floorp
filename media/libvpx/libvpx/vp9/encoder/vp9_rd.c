@@ -513,22 +513,6 @@ static void model_rd_norm(int xsq_q10, int *r_q10, int *d_q10) {
   *d_q10 = (dist_tab_q10[xq] * b_q10 + dist_tab_q10[xq + 1] * a_q10) >> 10;
 }
 
-static void model_rd_norm_vec(int xsq_q10[MAX_MB_PLANE],
-                              int r_q10[MAX_MB_PLANE],
-                              int d_q10[MAX_MB_PLANE]) {
-  int i;
-  const int one_q10 = 1 << 10;
-  for (i = 0; i < MAX_MB_PLANE; ++i) {
-    const int tmp = (xsq_q10[i] >> 2) + 8;
-    const int k = get_msb(tmp) - 3;
-    const int xq = (k << 3) + ((tmp >> k) & 0x7);
-    const int a_q10 = ((xsq_q10[i] - xsq_iq_q10[xq]) << 10) >> (2 + k);
-    const int b_q10 = one_q10 - a_q10;
-    r_q10[i] = (rate_tab_q10[xq] * b_q10 + rate_tab_q10[xq + 1] * a_q10) >> 10;
-    d_q10[i] = (dist_tab_q10[xq] * b_q10 + dist_tab_q10[xq + 1] * a_q10) >> 10;
-  }
-}
-
 static const uint32_t MAX_XSQ_Q10 = 245727;
 
 void vp9_model_rd_from_var_lapndz(unsigned int var, unsigned int n_log2,
@@ -551,30 +535,6 @@ void vp9_model_rd_from_var_lapndz(unsigned int var, unsigned int n_log2,
     model_rd_norm(xsq_q10, &r_q10, &d_q10);
     *rate = ROUND_POWER_OF_TWO(r_q10 << n_log2, 10 - VP9_PROB_COST_SHIFT);
     *dist = (var * (int64_t)d_q10 + 512) >> 10;
-  }
-}
-
-// Implements a fixed length vector form of vp9_model_rd_from_var_lapndz where
-// vectors are of length MAX_MB_PLANE and all elements of var are non-zero.
-void vp9_model_rd_from_var_lapndz_vec(unsigned int var[MAX_MB_PLANE],
-                                      unsigned int n_log2[MAX_MB_PLANE],
-                                      unsigned int qstep[MAX_MB_PLANE],
-                                      int64_t *rate_sum, int64_t *dist_sum) {
-  int i;
-  int xsq_q10[MAX_MB_PLANE], d_q10[MAX_MB_PLANE], r_q10[MAX_MB_PLANE];
-  for (i = 0; i < MAX_MB_PLANE; ++i) {
-    const uint64_t xsq_q10_64 =
-        (((uint64_t)qstep[i] * qstep[i] << (n_log2[i] + 10)) + (var[i] >> 1)) /
-        var[i];
-    xsq_q10[i] = (int)VPXMIN(xsq_q10_64, MAX_XSQ_Q10);
-  }
-  model_rd_norm_vec(xsq_q10, r_q10, d_q10);
-  for (i = 0; i < MAX_MB_PLANE; ++i) {
-    int rate =
-        ROUND_POWER_OF_TWO(r_q10[i] << n_log2[i], 10 - VP9_PROB_COST_SHIFT);
-    int64_t dist = (var[i] * (int64_t)d_q10[i] + 512) >> 10;
-    *rate_sum += rate;
-    *dist_sum += dist;
   }
 }
 

@@ -279,7 +279,7 @@ vpx_codec_err_t vpx_svc_set_options(SvcContext *svc_ctx, const char *options) {
   if (svc_ctx == NULL || options == NULL || si == NULL) {
     return VPX_CODEC_INVALID_PARAM;
   }
-  strncpy(si->options, options, sizeof(si->options));
+  strncpy(si->options, options, sizeof(si->options) - 1);
   si->options[sizeof(si->options) - 1] = '\0';
   return VPX_CODEC_OK;
 }
