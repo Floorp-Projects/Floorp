@@ -12,8 +12,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
-  UrlbarProviderQuickSuggest:
-    "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
   UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
   UrlbarView: "resource:///modules/UrlbarView.sys.mjs",
@@ -474,8 +472,6 @@ class ProviderWeather extends UrlbarProvider {
    *   `onEngagement()`; see `TelemetryEvent.typeFromElement()`.
    */
   #recordEngagementTelemetry(result, isPrivate, selType) {
-    const { TELEMETRY_SCALARS: QS_SCALARS } = lazy.UrlbarProviderQuickSuggest;
-
     // Indexes recorded in quick suggest telemetry are 1-based, so add 1 to the
     // 0-based `result.rowIndex`.
     let telemetryResultIndex = result.rowIndex + 1;
@@ -486,26 +482,18 @@ class ProviderWeather extends UrlbarProvider {
       telemetryResultIndex,
       1
     );
-    Services.telemetry.keyedScalarAdd(
-      QS_SCALARS.IMPRESSION_NONSPONSORED,
-      telemetryResultIndex,
-      1
-    );
 
     // scalars related to clicking the result and other elements in its row
     let clickScalars = [];
     switch (selType) {
       case "weather":
         clickScalars.push(TELEMETRY_SCALARS.CLICK);
-        clickScalars.push(QS_SCALARS.CLICK_NONSPONSORED);
         break;
       case "help":
         clickScalars.push(TELEMETRY_SCALARS.HELP);
-        clickScalars.push(QS_SCALARS.HELP_NONSPONSORED);
         break;
       case "block":
         clickScalars.push(TELEMETRY_SCALARS.BLOCK);
-        clickScalars.push(QS_SCALARS.BLOCK_NONSPONSORED);
         break;
       default:
         if (selType) {
