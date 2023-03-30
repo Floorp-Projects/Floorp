@@ -17,7 +17,7 @@
 // can decide to implement those methods or not.
 //
 // Replace-malloc libraries can provide such a bridge by implementing
-// a ReplaceMallocBridge-derived class, and a get_bridge function
+// a ReplaceMallocBridge-derived class, and a replace_get_bridge function
 // returning an instance of that class. The default methods in
 // ReplaceMallocBridge are expected to return values that callers would
 // understand as "the bridge doesn't implement this method", so that a
@@ -117,16 +117,6 @@ struct DMDFuncs;
 
 namespace phc {
 class AddrInfo;
-
-struct MemoryUsage {
-  // The amount of memory used for PHC metadata, eg information about each
-  // allocation including stacks.
-  size_t mMetadataBytes = 0;
-
-  // The amount of memory lost due to rounding allocation sizes up to the
-  // nearest page.  AKA internal fragmentation.
-  size_t mFragmentationBytes = 0;
-};
 }  // namespace phc
 
 // Callbacks to register debug file handles for Poison IO interpose.
@@ -136,10 +126,11 @@ struct DebugFdRegistry {
 
   virtual void UnRegisterHandle(intptr_t aFd);
 };
+
 }  // namespace mozilla
 
 struct ReplaceMallocBridge {
-  ReplaceMallocBridge() : mVersion(5) {}
+  ReplaceMallocBridge() : mVersion(4) {}
 
   // This method was added in version 1 of the bridge.
   virtual mozilla::dmd::DMDFuncs* GetDMDFuncs() { return nullptr; }
@@ -190,10 +181,6 @@ struct ReplaceMallocBridge {
   // useful for tests.
   // This method was added in version 4 of the bridge.
   virtual bool IsPHCEnabledOnCurrentThread() { return false; }
-
-  // Return PHC memory usage information by filling in the supplied structure.
-  // This method was added in version 5 of the bridge.
-  virtual void PHCMemoryUsage(mozilla::phc::MemoryUsage& aMemoryUsage) {}
 
 #  ifndef REPLACE_MALLOC_IMPL
   // Returns the replace-malloc bridge if its version is at least the
@@ -261,13 +248,6 @@ struct ReplaceMalloc {
   static bool IsPHCEnabledOnCurrentThread() {
     auto singleton = ReplaceMallocBridge::Get(/* minimumVersion */ 4);
     return singleton ? singleton->IsPHCEnabledOnCurrentThread() : false;
-  }
-
-  static void PHCMemoryUsage(mozilla::phc::MemoryUsage& aMemoryUsage) {
-    auto singleton = ReplaceMallocBridge::Get(/* minimumVersion */ 5);
-    if (singleton) {
-      singleton->PHCMemoryUsage(aMemoryUsage);
-    }
   }
 };
 #  endif
