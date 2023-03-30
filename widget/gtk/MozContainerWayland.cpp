@@ -597,6 +597,13 @@ void moz_container_wayland_set_scale_factor(MozContainer* container) {
   }
 }
 
+bool moz_container_wayland_size_matches_scale_factor_locked(
+    const MutexAutoLock& aProofOfLock, MozContainer* container, int aWidth,
+    int aHeight) {
+  return aWidth % container->wl_container.buffer_scale == 0 &&
+         aHeight % container->wl_container.buffer_scale == 0;
+}
+
 static bool moz_container_wayland_surface_create_locked(
     const MutexAutoLock& aProofOfLock, MozContainer* container) {
   MozContainerWayland* wl_container = &container->wl_container;

@@ -85,6 +85,9 @@ bool moz_container_wayland_egl_window_needs_size_update(MozContainer* container,
 void moz_container_wayland_set_scale_factor(MozContainer* container);
 void moz_container_wayland_set_scale_factor_locked(
     const mozilla::MutexAutoLock& aProofOfLock, MozContainer* container);
+bool moz_container_wayland_size_matches_scale_factor_locked(
+    const mozilla::MutexAutoLock& aProofOfLock, MozContainer* container,
+    int aWidth, int aHeight);
 
 void moz_container_wayland_add_initial_draw_callback_locked(
     MozContainer* container, const std::function<void(void)>& initial_draw_cb);
