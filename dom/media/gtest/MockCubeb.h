@@ -137,6 +137,12 @@ class SmartMockCubebStream;
 // Represents the fake cubeb_stream. The context instance is needed to
 // provide access on cubeb_ops struct.
 class MockCubebStream {
+  // These members need to have the exact same memory layout as a real
+  // cubeb_stream, so that AsMock() returns a pointer to this that can be used
+  // as a cubeb_stream.
+  cubeb* context;
+  void* mUserPtr;
+
  public:
   MockCubebStream(cubeb* aContext, cubeb_devid aInputDevice,
                   cubeb_stream_params* aInputStreamParams,
@@ -194,9 +200,6 @@ class MockCubebStream {
 
   void Process10Ms();
 
- private:
-  cubeb* context = nullptr;
-
  public:
   const bool mHasInput;
   const bool mHasOutput;
@@ -229,8 +232,6 @@ class MockCubebStream {
   cubeb_state_callback mStateCallback = nullptr;
   // The device changed callback
   cubeb_device_changed_callback mDeviceChangedCallback = nullptr;
-  // Stream's user data
-  void* mUserPtr = nullptr;
   // The stream params
   cubeb_stream_params mOutputParams = {};
   cubeb_stream_params mInputParams = {};
