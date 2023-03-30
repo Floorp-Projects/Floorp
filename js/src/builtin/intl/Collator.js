@@ -249,7 +249,7 @@ function InitializeCollator(collator, locales, options) {
  * Spec: ECMAScript Internationalization API Specification, 10.2.2.
  */
 function Intl_Collator_supportedLocalesOf(locales /*, options*/) {
-  var options = arguments.length > 1 ? arguments[1] : undefined;
+  var options = ArgumentsLength() > 1 ? GetArgument(1) : undefined;
 
   // Step 1.
   var availableLocales = "Collator";

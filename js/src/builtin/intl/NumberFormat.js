@@ -885,7 +885,7 @@ function CurrencyDigits(currency) {
  * Spec: ECMAScript Internationalization API Specification, 11.3.2.
  */
 function Intl_NumberFormat_supportedLocalesOf(locales /*, options*/) {
-  var options = arguments.length > 1 ? arguments[1] : undefined;
+  var options = ArgumentsLength() > 1 ? GetArgument(1) : undefined;
 
   // Step 1.
   var availableLocales = "NumberFormat";

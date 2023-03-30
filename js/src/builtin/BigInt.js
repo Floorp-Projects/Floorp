@@ -13,8 +13,8 @@ function BigInt_toLocaleString() {
   // Step 1. Note that valueOf enforces "thisBigIntValue" restrictions.
   var x = callFunction(std_BigInt_valueOf, this);
 
-  var locales = arguments.length ? arguments[0] : undefined;
-  var options = arguments.length > 1 ? arguments[1] : undefined;
+  var locales = ArgumentsLength() ? GetArgument(0) : undefined;
+  var options = ArgumentsLength() > 1 ? GetArgument(1) : undefined;
 
   // Step 2.
   var numberFormat;
