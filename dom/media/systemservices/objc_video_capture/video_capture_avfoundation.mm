@@ -73,43 +73,35 @@ AVCaptureDeviceFormat* _Nullable FindFormat(AVCaptureDevice* _Nonnull aDevice,
 }  // namespace
 
 @implementation VideoCaptureAdapter
-@synthesize capturer = _capturer;
-
-- (void)capturer:(RTC_OBJC_TYPE(RTCVideoCapturer) * _Nonnull)capturer
-    didCaptureVideoFrame:(RTC_OBJC_TYPE(RTCVideoFrame) * _Nonnull)frame {
-  _capturer->StartFrameRecording(frame.width, frame.height);
-  const int64_t timestamp_us = frame.timeStampNs / rtc::kNumNanosecsPerMicrosec;
-  RTC_OBJC_TYPE(RTCI420Buffer)* buffer = [[frame buffer] toI420];
-  // Accessing the (intended-to-be-private) native buffer directly is hacky but lets us skip two
-  // copies
-  rtc::scoped_refptr<webrtc::I420BufferInterface> nativeBuffer = [buffer nativeI420Buffer];
-  webrtc::VideoFrame nativeFrame = webrtc::VideoFrame::Builder()
-                                       .set_video_frame_buffer(nativeBuffer)
-                                       .set_rotation(ToNativeRotation(frame.rotation))
-                                       .set_timestamp_us(timestamp_us)
-                                       .build();
-  _capturer->OnFrame(nativeFrame);
+- (void)setCapturer:(webrtc::videocapturemodule::VideoCaptureAvFoundation* _Nullable)capturer {
+  webrtc::MutexLock lock(&_mutex);
+  _capturer = capturer;
 }
 
+- (void)capturer:(RTCVideoCapturer* _Nonnull)capturer
+    didCaptureVideoFrame:(RTCVideoFrame* _Nonnull)frame {
+  rtc::scoped_refptr<webrtc::videocapturemodule::VideoCaptureAvFoundation> cap;
+  {
+    webrtc::MutexLock lock(&_mutex);
+    cap = rtc::scoped_refptr(_capturer);
+  }
+  if (!cap) return;
+  cap->OnFrame(frame);
+}
 @end
 
 namespace webrtc::videocapturemodule {
 VideoCaptureAvFoundation::VideoCaptureAvFoundation(AVCaptureDevice* _Nonnull aDevice)
     : mDevice(aDevice),
       mAdapter([[VideoCaptureAdapter alloc] init]),
-      mCapturer(nullptr),
+      mCapturer([[RTC_OBJC_TYPE(RTCCameraVideoCapturer) alloc] initWithDelegate:mAdapter]),
       mCallbackThreadId() {
-  {
-    const char* uniqueId = [[aDevice uniqueID] UTF8String];
-    size_t len = strlen(uniqueId);
-    _deviceUniqueId = new (std::nothrow) char[len + 1];
-    if (_deviceUniqueId) {
-      memcpy(_deviceUniqueId, uniqueId, len + 1);
-    }
+  const char* uniqueId = [[aDevice uniqueID] UTF8String];
+  size_t len = strlen(uniqueId);
+  _deviceUniqueId = new (std::nothrow) char[len + 1];
+  if (_deviceUniqueId) {
+    memcpy(_deviceUniqueId, uniqueId, len + 1);
   }
-
-  mAdapter.capturer = this;
-  mCapturer = [[RTC_OBJC_TYPE(RTCCameraVideoCapturer) alloc] initWithDelegate:mAdapter];
 }
 
 VideoCaptureAvFoundation::~VideoCaptureAvFoundation() {
@@ -158,30 +150,66 @@ int32_t VideoCaptureAvFoundation::StartCapture(const VideoCaptureCapability& aCa
     }
   }
 
-  Monitor monitor("VideoCaptureAVFoundation::StartCapture");
-  Monitor* copyableMonitor = &monitor;
-  MonitorAutoLock lock(monitor);
-  __block Maybe<int32_t> rv;
+  [mAdapter setCapturer:this];
 
-  [mCapturer startCaptureWithDevice:mDevice
-                             format:format
-                                fps:aCapability.maxFPS
-                  completionHandler:^(NSError* error) {
-                    MOZ_RELEASE_ASSERT(!rv);
-                    rv = Some(error ? -1 : 0);
-                    copyableMonitor->Notify();
-                  }];
+  {
+    Monitor monitor("VideoCaptureAVFoundation::StartCapture");
+    Monitor* copyableMonitor = &monitor;
+    MonitorAutoLock lock(monitor);
+    __block Maybe<int32_t> rv;
 
-  while (!rv) {
-    monitor.Wait();
+    [mCapturer startCaptureWithDevice:mDevice
+                               format:format
+                                  fps:aCapability.maxFPS
+                    completionHandler:^(NSError* error) {
+                      MOZ_RELEASE_ASSERT(!rv);
+                      rv = Some(error ? -1 : 0);
+                      copyableMonitor->Notify();
+                    }];
+
+    while (!rv) {
+      monitor.Wait();
+    }
+
+    if (*rv != 0) {
+      return *rv;
+    }
   }
 
-  if (*rv == 0) {
-    MutexLock lock(&api_lock_);
-    mCapability = Some(aCapability);
-  }
+  MutexLock lock(&api_lock_);
+  mCapability = Some(aCapability);
+  mImageType = Some([type = aCapability.videoType] {
+    switch (type) {
+      case webrtc::VideoType::kI420:
+        return CaptureStage::ImageType::I420;
+      case webrtc::VideoType::kYUY2:
+        return CaptureStage::ImageType::YUY2;
+      case webrtc::VideoType::kYV12:
+      case webrtc::VideoType::kIYUV:
+        return CaptureStage::ImageType::YV12;
+      case webrtc::VideoType::kUYVY:
+        return CaptureStage::ImageType::UYVY;
+      case webrtc::VideoType::kNV12:
+        return CaptureStage::ImageType::NV12;
+      case webrtc::VideoType::kNV21:
+        return CaptureStage::ImageType::NV21;
+      case webrtc::VideoType::kMJPEG:
+        return CaptureStage::ImageType::MJPEG;
+      case webrtc::VideoType::kRGB24:
+      case webrtc::VideoType::kABGR:
+      case webrtc::VideoType::kARGB:
+      case webrtc::VideoType::kARGB4444:
+      case webrtc::VideoType::kRGB565:
+      case webrtc::VideoType::kARGB1555:
+      case webrtc::VideoType::kBGRA:
+      case webrtc::VideoType::kUnknown:
+        // Unlikely, and not represented by CaptureStage::ImageType.
+        return CaptureStage::ImageType::Unknown;
+    }
+    return CaptureStage::ImageType::Unknown;
+  }());
 
-  return *rv;
+  return 0;
 }
 
 int32_t VideoCaptureAvFoundation::StopCapture() {
@@ -208,6 +236,9 @@ int32_t VideoCaptureAvFoundation::StopCapture() {
   while (!done) {
     monitor.Wait();
   }
+
+  [mAdapter setCapturer:nil];
+
   return 0;
 }
 
@@ -222,10 +253,31 @@ int32_t VideoCaptureAvFoundation::CaptureSettings(VideoCaptureCapability& aSetti
   return -1;
 }
 
-int32_t VideoCaptureAvFoundation::OnFrame(webrtc::VideoFrame& aFrame) {
-  MutexLock lock(&api_lock_);
+int32_t VideoCaptureAvFoundation::OnFrame(__strong RTCVideoFrame* _Nonnull aFrame) {
+  MaybeRegisterCallbackThread();
+  if (MutexLock lock(&api_lock_); MOZ_LIKELY(mTrackingId)) {
+    mCaptureRecorder.Start(0, "VideoCaptureAVFoundation"_ns, *mTrackingId, aFrame.width,
+                           aFrame.height, mImageType.valueOr(CaptureStage::ImageType::Unknown));
+    if (mCapability && mCapability->videoType != webrtc::VideoType::kI420) {
+      mConversionRecorder.Start(0, "VideoCaptureAVFoundation"_ns, *mTrackingId, aFrame.width,
+                                aFrame.height);
+    }
+  }
+
+  const int64_t timestamp_us = aFrame.timeStampNs / rtc::kNumNanosecsPerMicrosec;
+  RTCI420Buffer* buffer = [aFrame.buffer toI420];
   mConversionRecorder.Record(0);
-  int32_t rv = DeliverCapturedFrame(aFrame);
+  // Accessing the (intended-to-be-private) native buffer directly is hacky but lets us skip two
+  // copies
+  rtc::scoped_refptr<webrtc::I420BufferInterface> nativeBuffer = buffer.nativeI420Buffer;
+  auto frame = webrtc::VideoFrame::Builder()
+                   .set_video_frame_buffer(nativeBuffer)
+                   .set_rotation(ToNativeRotation(aFrame.rotation))
+                   .set_timestamp_us(timestamp_us)
+                   .build();
+
+  MutexLock lock(&api_lock_);
+  int32_t rv = DeliverCapturedFrame(frame);
   mCaptureRecorder.Record(0);
   return rv;
 }
@@ -239,41 +291,6 @@ void VideoCaptureAvFoundation::SetTrackingId(uint32_t aTrackingIdProcId) {
     return;
   }
   mTrackingId.emplace(TrackingId::Source::Camera, aTrackingIdProcId);
-}
-
-void VideoCaptureAvFoundation::StartFrameRecording(int32_t aWidth, int32_t aHeight) {
-  MaybeRegisterCallbackThread();
-  MutexLock lock(&api_lock_);
-  if (MOZ_UNLIKELY(!mTrackingId)) {
-    return;
-  }
-  auto fromWebrtcVideoType = [](webrtc::VideoType aType) -> CaptureStage::ImageType {
-    switch (aType) {
-      case webrtc::VideoType::kI420:
-        return CaptureStage::ImageType::I420;
-      case webrtc::VideoType::kYUY2:
-        return CaptureStage::ImageType::YUY2;
-      case webrtc::VideoType::kYV12:
-        return CaptureStage::ImageType::YV12;
-      case webrtc::VideoType::kUYVY:
-        return CaptureStage::ImageType::UYVY;
-      case webrtc::VideoType::kNV12:
-        return CaptureStage::ImageType::NV12;
-      case webrtc::VideoType::kNV21:
-        return CaptureStage::ImageType::NV21;
-      case webrtc::VideoType::kMJPEG:
-        return CaptureStage::ImageType::MJPEG;
-      default:
-        return CaptureStage::ImageType::Unknown;
-    }
-  };
-  mCaptureRecorder.Start(
-      0, "VideoCaptureAVFoundation"_ns, *mTrackingId, aWidth, aHeight,
-      mCapability.map([&](const auto& aCap) { return fromWebrtcVideoType(aCap.videoType); })
-          .valueOr(CaptureStage::ImageType::Unknown));
-  if (mCapability && mCapability->videoType != webrtc::VideoType::kI420) {
-    mConversionRecorder.Start(0, "VideoCaptureAVFoundation"_ns, *mTrackingId, aWidth, aHeight);
-  }
 }
 
 void VideoCaptureAvFoundation::MaybeRegisterCallbackThread() {
