@@ -15,10 +15,7 @@ var gPermissionPanel = {
       let wrapper = document.getElementById("template-permission-popup");
       wrapper.replaceWith(wrapper.content);
 
-      let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
-      document.getElementById(
-        "permission-popup-storage-access-permission-learn-more"
-      ).href = baseURL + "site-information-third-party-access";
+      window.ensureCustomElements("moz-support-link");
 
       this._popupInitialized = true;
     }
