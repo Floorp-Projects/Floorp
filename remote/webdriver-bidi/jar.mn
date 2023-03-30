@@ -16,6 +16,7 @@ remote.jar:
 
   # WebDriver BiDi root modules
   content/webdriver-bidi/modules/root/browsingContext.sys.mjs (modules/root/browsingContext.sys.mjs)
+  content/webdriver-bidi/modules/root/input.sys.mjs (modules/root/input.sys.mjs)
   content/webdriver-bidi/modules/root/log.sys.mjs (modules/root/log.sys.mjs)
   content/webdriver-bidi/modules/root/network.sys.mjs (modules/root/network.sys.mjs)
   content/webdriver-bidi/modules/root/script.sys.mjs (modules/root/script.sys.mjs)
@@ -23,6 +24,7 @@ remote.jar:
 
   # WebDriver BiDi windowglobal modules
   content/webdriver-bidi/modules/windowglobal/browsingContext.sys.mjs (modules/windowglobal/browsingContext.sys.mjs)
+  content/webdriver-bidi/modules/windowglobal/input.sys.mjs (modules/windowglobal/input.sys.mjs)
   content/webdriver-bidi/modules/windowglobal/log.sys.mjs (modules/windowglobal/log.sys.mjs)
   content/webdriver-bidi/modules/windowglobal/script.sys.mjs (modules/windowglobal/script.sys.mjs)
 
