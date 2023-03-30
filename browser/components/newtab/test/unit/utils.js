@@ -62,6 +62,16 @@ export class GlobalOverrider {
 }
 
 /**
+ * A map of mocked preference names and values, used by `FakensIPrefBranch`,
+ * `FakensIPrefService`, and `FakePrefs`.
+ *
+ * Tests should add entries to this map for any preferences they'd like to set,
+ * and remove any entries during teardown for preferences that shouldn't be
+ * shared between tests.
+ */
+export const FAKE_GLOBAL_PREFS = new Map();
+
+/**
  * Very simple fake for the most basic semantics of nsIPrefBranch. Lots of
  * things aren't yet supported.  Feel free to add them in.
  *
@@ -72,48 +82,119 @@ export class GlobalOverrider {
  *                   stubs and spies can be inspected by the test code.
  */
 export class FakensIPrefBranch {
+  PREF_INVALID = "invalid";
+  PREF_INT = "integer";
+  PREF_BOOL = "boolean";
+  PREF_STRING = "string";
+
   constructor(args) {
     if (args) {
       if ("initHook" in args) {
         args.initHook.call(this);
       }
       if (args.defaultBranch) {
-        this.prefs = {};
+        this.prefs = new Map();
+      } else {
+        this.prefs = FAKE_GLOBAL_PREFS;
       }
+    } else {
+      this.prefs = FAKE_GLOBAL_PREFS;
     }
     this._prefBranch = {};
-    this.observers = {};
+    this.observers = new Map();
   }
-  addObserver(prefName, callback) {
-    this.observers[prefName] = callback;
+  addObserver(prefix, callback) {
+    this.observers.set(prefix, callback);
   }
-  removeObserver(prefName, callback) {
-    if (prefName in this.observers) {
-      delete this.observers[prefName];
-    }
+  removeObserver(prefix, callback) {
+    this.observers.delete(prefix, callback);
   }
-  observeBranch(listener) {}
-  ignoreBranch(listener) {}
-  setStringPref(prefName) {}
-
+  setStringPref(prefName, value) {
+    this.set(prefName, value);
+  }
   getStringPref(prefName) {
     return this.get(prefName);
+  }
+  setBoolPref(prefName, value) {
+    this.set(prefName, value);
   }
   getBoolPref(prefName) {
     return this.get(prefName);
   }
-  get(prefName) {
-    return this.prefs[prefName];
+  setIntPref(prefName, value) {
+    this.set(prefName, value);
   }
-  setBoolPref(prefName, value) {
-    this.prefs[prefName] = value;
+  getIntPref(prefName) {
+    return this.get(prefName);
+  }
+  setCharPref(prefName, value) {
+    this.set(prefName, value);
+  }
+  getCharPref(prefName) {
+    return this.get(prefName);
+  }
+  clearUserPref(prefName) {
+    this.prefs.delete(prefName);
+  }
+  get(prefName) {
+    return this.prefs.get(prefName);
+  }
+  getPrefType(prefName) {
+    let value = this.prefs.get(prefName);
+    switch (typeof value) {
+      case "number":
+        return this.PREF_INT;
 
-    if (prefName in this.observers) {
-      this.observers[prefName]("", "", prefName);
+      case "boolean":
+        return this.PREF_BOOL;
+
+      case "string":
+        return this.PREF_STRING;
+
+      default:
+        return this.PREF_INVALID;
     }
   }
+  set(prefName, value) {
+    this.prefs.set(prefName, value);
+
+    // Trigger all observers for prefixes of the changed pref name. This matches
+    // the semantics of `nsIPrefBranch`.
+    let observerPrefixes = [...this.observers.keys()].filter(prefix =>
+      prefName.startsWith(prefix)
+    );
+    for (let observerPrefix of observerPrefixes) {
+      this.observers.get(observerPrefix)("", "", prefName);
+    }
+  }
+  getChildList(prefix) {
+    return [...this.prefs.keys()].filter(prefName =>
+      prefName.startsWith(prefix)
+    );
+  }
+  prefHasUserValue(prefName) {
+    return this.prefs.has(prefName);
+  }
+  prefIsLocked(prefName) {
+    return false;
+  }
 }
-FakensIPrefBranch.prototype.prefs = {};
+
+/**
+ * A fake `Services.prefs` implementation that extends `FakensIPrefBranch`
+ * with methods specific to `nsIPrefService`.
+ */
+export class FakensIPrefService extends FakensIPrefBranch {
+  getBranch() {}
+  getDefaultBranch(prefix) {
+    return {
+      setBoolPref() {},
+      setIntPref() {},
+      setStringPref() {},
+      clearUserPref() {},
+    };
+  }
+}
 
 /**
  * Very simple fake for the most basic semantics of Preferences.sys.mjs.
@@ -126,11 +207,15 @@ export class FakePrefs extends FakensIPrefBranch {
   ignore(prefName, callback) {
     super.removeObserver(prefName, callback);
   }
+  observeBranch(listener) {}
+  ignoreBranch(listener) {}
   set(prefName, value) {
-    this.prefs[prefName] = value;
+    this.prefs.set(prefName, value);
 
-    if (prefName in this.observers) {
-      this.observers[prefName](value);
+    // Trigger observers for just the changed pref name, not any of its
+    // prefixes. This matches the semantics of `Preferences.sys.mjs`.
+    if (this.observers.has(prefName)) {
+      this.observers.get(prefName)(value);
     }
   }
 }

@@ -11,7 +11,7 @@ import {
   SessionPing,
   UserEventPing,
 } from "test/schemas/pings";
-import { FakePrefs, GlobalOverrider } from "test/unit/utils";
+import { FAKE_GLOBAL_PREFS, GlobalOverrider } from "test/unit/utils";
 import { ASRouterPreferences } from "lib/ASRouterPreferences.jsm";
 import injector from "inject!lib/TelemetryFeed.jsm";
 import { MESSAGE_TYPE_HASH as msg } from "common/ActorConstants.sys.mjs";
@@ -46,6 +46,28 @@ describe("TelemetryFeed", () => {
     sendSessionEndEvent() {}
     uninit() {}
   }
+
+  // Reset the global prefs before importing the `TelemetryFeed` module, to
+  // avoid a coverage miss caused by preference pollution when this test and
+  // `ActivityStream.test.js` are run together.
+  //
+  // The `TelemetryFeed` module defines a lazy `contextId` getter, which the
+  // `XPCOMUtils.defineLazyGetter` mock (defined in `unit-entry.js`) executes
+  // immediately, as soon as the module is imported.
+  //
+  // If this test runs first, there's no coverage miss: this test will load
+  // the `TelemetryFeed` module and run the lazy `contextId` getter, which will
+  // generate a fake context ID and store it in `FAKE_GLOBAL_PREFS`, covering
+  // all branches in the module. When `ActivityStream.test.js` runs, it'll load
+  // `TelemetryFeed` and run the lazy getter a second time, which will use the
+  // existing fake context ID from `FAKE_GLOBAL_PREFS` instead of generating a
+  // new one.
+  //
+  // But, if `ActivityStream.test.js` runs first, then loading `TelemetryFeed` a
+  // second time as part of this test will use the existing fake context ID from
+  // `FAKE_GLOBAL_PREFS`, missing coverage for the branch to generate a new
+  // context ID.
+  FAKE_GLOBAL_PREFS.clear();
 
   const {
     TelemetryFeed,
@@ -99,7 +121,7 @@ describe("TelemetryFeed", () => {
   afterEach(() => {
     clock.restore();
     globals.restore();
-    FakePrefs.prototype.prefs = {};
+    FAKE_GLOBAL_PREFS.clear();
     ASRouterPreferences.uninit();
   });
   describe("#init", () => {
@@ -162,8 +184,7 @@ describe("TelemetryFeed", () => {
       assert.equal(instance._impressionId, FAKE_UUID);
     });
     it("should set impression id if it exists", () => {
-      FakePrefs.prototype.prefs = {};
-      FakePrefs.prototype.prefs[PREF_IMPRESSION_ID] = "fakeImpressionId";
+      FAKE_GLOBAL_PREFS.set(PREF_IMPRESSION_ID, "fakeImpressionId");
       assert.equal(new TelemetryFeed()._impressionId, "fakeImpressionId");
     });
     it("should register listeners on existing windows", () => {
@@ -183,8 +204,7 @@ describe("TelemetryFeed", () => {
     });
     describe("telemetry pref changes from false to true", () => {
       beforeEach(() => {
-        FakePrefs.prototype.prefs = {};
-        FakePrefs.prototype.prefs[TELEMETRY_PREF] = false;
+        FAKE_GLOBAL_PREFS.set(TELEMETRY_PREF, false);
         instance = new TelemetryFeed();
 
         assert.propertyVal(instance, "telemetryEnabled", false);
@@ -198,8 +218,7 @@ describe("TelemetryFeed", () => {
     });
     describe("events telemetry pref changes from false to true", () => {
       beforeEach(() => {
-        FakePrefs.prototype.prefs = {};
-        FakePrefs.prototype.prefs[EVENTS_TELEMETRY_PREF] = false;
+        FAKE_GLOBAL_PREFS.set(EVENTS_TELEMETRY_PREF, false);
         instance = new TelemetryFeed();
 
         assert.propertyVal(instance, "eventTelemetryEnabled", false);
@@ -505,8 +524,8 @@ describe("TelemetryFeed", () => {
       assert.isFalse(instance.sessions.has("foo"));
     });
     it("should call createSessionSendEvent and sendEvent with the sesssion", () => {
-      FakePrefs.prototype.prefs[TELEMETRY_PREF] = true;
-      FakePrefs.prototype.prefs[EVENTS_TELEMETRY_PREF] = true;
+      FAKE_GLOBAL_PREFS.set(TELEMETRY_PREF, true);
+      FAKE_GLOBAL_PREFS.set(EVENTS_TELEMETRY_PREF, true);
       instance = new TelemetryFeed();
 
       sandbox.stub(instance, "sendEvent");
@@ -528,9 +547,8 @@ describe("TelemetryFeed", () => {
   });
   describe("ping creators", () => {
     beforeEach(() => {
-      FakePrefs.prototype.prefs = {};
       for (const pref of Object.keys(USER_PREFS_ENCODING)) {
-        FakePrefs.prototype.prefs[pref] = true;
+        FAKE_GLOBAL_PREFS.set(pref, true);
         expectedUserPrefs |= USER_PREFS_ENCODING[pref];
       }
       instance.init();
@@ -1192,7 +1210,7 @@ describe("TelemetryFeed", () => {
   });
   describe("#sendEvent", () => {
     it("should call sendEventPing on activity_stream_user_event", () => {
-      FakePrefs.prototype.prefs.telemetry = true;
+      FAKE_GLOBAL_PREFS.set(TELEMETRY_PREF, true);
       const event = { action: "activity_stream_user_event" };
       instance = new TelemetryFeed();
       sandbox.spy(instance, "sendEventPing");
@@ -1202,7 +1220,7 @@ describe("TelemetryFeed", () => {
       assert.calledOnce(instance.sendEventPing);
     });
     it("should call sendSessionPing on activity_stream_session", () => {
-      FakePrefs.prototype.prefs.telemetry = true;
+      FAKE_GLOBAL_PREFS.set(TELEMETRY_PREF, true);
       const event = { action: "activity_stream_session" };
       instance = new TelemetryFeed();
       sandbox.spy(instance, "sendSessionPing");
@@ -1214,8 +1232,8 @@ describe("TelemetryFeed", () => {
   });
   describe("#sendUTEvent", () => {
     it("should call the UT event function passed in", async () => {
-      FakePrefs.prototype.prefs[TELEMETRY_PREF] = true;
-      FakePrefs.prototype.prefs[EVENTS_TELEMETRY_PREF] = true;
+      FAKE_GLOBAL_PREFS.set(TELEMETRY_PREF, true);
+      FAKE_GLOBAL_PREFS.set(EVENTS_TELEMETRY_PREF, true);
       const event = {};
       instance = new TelemetryFeed();
       sandbox.stub(instance.utEvents, "sendUserEvent");
@@ -1227,7 +1245,7 @@ describe("TelemetryFeed", () => {
   });
   describe("#sendStructuredIngestionEvent", () => {
     it("should call PingCentre sendStructuredIngestionPing", async () => {
-      FakePrefs.prototype.prefs[TELEMETRY_PREF] = true;
+      FAKE_GLOBAL_PREFS.set(TELEMETRY_PREF, true);
       const event = {};
       instance = new TelemetryFeed();
       sandbox.stub(instance.pingCentre, "sendStructuredIngestionPing");
@@ -1382,7 +1400,7 @@ describe("TelemetryFeed", () => {
   });
   describe("#onAction", () => {
     beforeEach(() => {
-      FakePrefs.prototype.prefs = {};
+      FAKE_GLOBAL_PREFS.clear();
     });
     it("should call .init() on an INIT action", () => {
       const init = sandbox.stub(instance, "init");
@@ -1449,8 +1467,8 @@ describe("TelemetryFeed", () => {
       assert.calledWith(stub, "port123", data);
     });
     it("should send an event on a TELEMETRY_USER_EVENT action", () => {
-      FakePrefs.prototype.prefs[TELEMETRY_PREF] = true;
-      FakePrefs.prototype.prefs[EVENTS_TELEMETRY_PREF] = true;
+      FAKE_GLOBAL_PREFS.set(TELEMETRY_PREF, true);
+      FAKE_GLOBAL_PREFS.set(EVENTS_TELEMETRY_PREF, true);
       instance = new TelemetryFeed();
 
       const sendEvent = sandbox.stub(instance, "sendEvent");
@@ -1465,8 +1483,8 @@ describe("TelemetryFeed", () => {
       assert.calledWith(utSendUserEvent, eventCreator.returnValue);
     });
     it("should send an event on a DISCOVERY_STREAM_USER_EVENT action", () => {
-      FakePrefs.prototype.prefs[TELEMETRY_PREF] = true;
-      FakePrefs.prototype.prefs[EVENTS_TELEMETRY_PREF] = true;
+      FAKE_GLOBAL_PREFS.set(TELEMETRY_PREF, true);
+      FAKE_GLOBAL_PREFS.set(EVENTS_TELEMETRY_PREF, true);
       instance = new TelemetryFeed();
 
       const sendEvent = sandbox.stub(instance, "sendEvent");
@@ -1497,8 +1515,8 @@ describe("TelemetryFeed", () => {
       ];
       actions.forEach(type => {
         it(`${type} action`, () => {
-          FakePrefs.prototype.prefs[TELEMETRY_PREF] = true;
-          FakePrefs.prototype.prefs[EVENTS_TELEMETRY_PREF] = true;
+          FAKE_GLOBAL_PREFS.set(TELEMETRY_PREF, true);
+          FAKE_GLOBAL_PREFS.set(EVENTS_TELEMETRY_PREF, true);
           instance = new TelemetryFeed();
 
           const eventHandler = sandbox.spy(instance, "handleASRouterUserEvent");
@@ -1952,10 +1970,7 @@ describe("TelemetryFeed", () => {
       const fakeEndpoint = "http://fakeendpoint.com/base/";
       const fakeUUID = "{34f24486-f01a-9749-9c5b-21476af1fa77}";
       const fakeUUIDWithoutBraces = fakeUUID.substring(1, fakeUUID.length - 1);
-      FakePrefs.prototype.prefs = {};
-      FakePrefs.prototype.prefs[
-        STRUCTURED_INGESTION_ENDPOINT_PREF
-      ] = fakeEndpoint;
+      FAKE_GLOBAL_PREFS.set(STRUCTURED_INGESTION_ENDPOINT_PREF, fakeEndpoint);
       sandbox.stub(Services.uuid, "generateUUID").returns(fakeUUID);
       const feed = new TelemetryFeed();
       const url = feed._generateStructuredIngestionEndpoint(

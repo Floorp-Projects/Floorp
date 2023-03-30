@@ -85,7 +85,7 @@ describe("ActivityStreamPrefs", () => {
         assert.calledWith(defaultPrefs.set, "foo", true);
       });
       it("should not initialize a pref if a default exists", () => {
-        defaultPrefs.prefs.foo = false;
+        defaultPrefs.prefs.set("foo", false);
 
         defaultPrefs.init();
 

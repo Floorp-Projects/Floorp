@@ -281,6 +281,7 @@ describe("DiscoveryStreamFeed", () => {
       assert.equal(feed._impressionId, FAKE_UUID);
     });
     it("should create impression id if none exists", async () => {
+      sandbox.stub(global.Services.prefs, "getCharPref").returns("");
       sandbox.stub(global.Services.prefs, "setCharPref").returns();
 
       const result = feed.getOrCreateImpressionId();
