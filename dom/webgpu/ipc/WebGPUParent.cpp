@@ -1082,7 +1082,8 @@ ipc::IPCResult WebGPUParent::RecvBumpImplicitBindGroupLayout(RawId aPipelineId,
 ipc::IPCResult WebGPUParent::RecvDevicePushErrorScope(RawId aDeviceId) {
   const auto& lookup = mErrorScopeMap.find(aDeviceId);
   if (lookup == mErrorScopeMap.end()) {
-    NS_WARNING("WebGPU: attempt to push an error scope on a destroyed device!");
+    // Content can cause this simply by destroying a device and then
+    // calling `pushErrorScope`.
     return IPC_OK();
   }
 
@@ -1094,14 +1095,16 @@ ipc::IPCResult WebGPUParent::RecvDevicePopErrorScope(
     RawId aDeviceId, DevicePopErrorScopeResolver&& aResolver) {
   const auto& lookup = mErrorScopeMap.find(aDeviceId);
   if (lookup == mErrorScopeMap.end()) {
-    NS_WARNING("WebGPU: attempt to pop an error scope on a destroyed device!");
+    // Content can cause this simply by destroying a device and then
+    // calling `popErrorScope`.
     ScopedError error = {true};
     aResolver(Some(error));
     return IPC_OK();
   }
 
   if (lookup->second.mStack.IsEmpty()) {
-    NS_WARNING("WebGPU no error scope to pop!");
+    // Content can cause this simply by calling `popErrorScope` when
+    // there is no error scope pushed.
     ScopedError error = {true};
     aResolver(Some(error));
     return IPC_OK();
