@@ -24,6 +24,7 @@ browser.jar:
   skin/classic/browser/options/navbar-botttom.css                         (designs/options/navbar-botttom.css)
   skin/classic/browser/options/disableFullScreenNotification.css          (designs/options/disableFullScreenNotification.css)
   skin/classic/browser/options/delete-border.css                          (designs/options/delete-border.css)
+  skin/classic/browser/options/native-verticaltab-hover.css               (designs/options/native-verticaltab-hover.css)
 
 # tabbar
   skin/classic/browser/tabbar/hide-tabbrowser.css                        (designs/tabbar/hide-tabbrowser.css)

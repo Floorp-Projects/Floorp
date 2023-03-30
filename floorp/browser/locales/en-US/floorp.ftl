@@ -75,9 +75,12 @@ use-native-vertical =
   .label = Use native vertical tabbar (experimental)
 native-tabbar-tip = This feature uses default Firefox sidebar, so you can't use it with other sidebar addons & default sidebar panels.
 
+hover-vertical-tab = 
+ .label = Expand VerticalTabs when mouse focus
+
 treestyletabSettings-l10 = Tree Style vertical tab settings
 treestyletab-Settings = 
- .label = Expand when mouse focus
+ .label = Expand TreeStyleTab when mouse focus
 treestyletab-open-option = TreeStyleTab Settings
 
 bookmarks-bar-settings = Bookmark Bar Settings (Can`t be used in parallel)

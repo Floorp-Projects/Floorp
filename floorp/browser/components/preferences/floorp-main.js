@@ -45,6 +45,7 @@ Preferences.addAll([
   { id: "floorp.delete.browser.border", type: "bool" },
   { id: "floorp.browser.tabs.openNewTabPosition", type: "int" },
   { id: "floorp.browser.native.verticaltabs.enabled", type: "bool" },
+  { id: "floorp.verticaltab.hover.enabled", type: "bool" },
 ]);
 
 window.addEventListener("pageshow", async function() {

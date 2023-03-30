@@ -6,7 +6,7 @@
 
   .tabbrowser-tab {
     display: block !important;
- }
+  }
 
  #TabsToolbar-customization-target {
   width: -moz-available !important;
@@ -24,6 +24,11 @@
   overflow-x: hidden;
   scrollbar-width: none;
   min-height: 0px;
+ }
+
+ /* Hide tabtoolber custom elem */
+ #main-window[tabsintitlebar="true"]:not([extradragspace="true"]) #TabsToolbar > .toolbar-items {
+  display: none !important;
  }
 
  #sidebar-box {

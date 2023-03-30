@@ -203,3 +203,16 @@ if (!Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
   }`;
   document.head.appendChild(Tag);
 }
+
+/*------------------------------------------- verticaltab -------------------------------------------*/
+
+UICustomPrefHandler("floorp.verticaltab.hover.enabled", function(event) {
+  if (event.prefValue) {
+    var Tag = document.createElement("style");
+    Tag.innerText = `@import url(chrome://browser/skin/options/native-verticaltab-hover.css)`;
+    Tag.setAttribute("id", "floorp-vthover");
+    document.head.appendChild(Tag);
+  } else {
+    document.getElementById("floorp-vthover")?.remove();
+  }
+});
