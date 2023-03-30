@@ -92,5 +92,3 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
         "!fluent_langneg_ffi_generated.h",
         "!unic_langid_ffi_generated.h",
     ]
-
-REQUIRES_UNIFIED_BUILD = True
