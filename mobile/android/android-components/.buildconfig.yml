@@ -694,6 +694,7 @@ projects:
     - ui-colors
     - ui-icons
     - ui-tabcounter
+    - ui-widgets
   feature-customtabs:
     description: Component for providing custom tabs functionality.
     path: components/feature/customtabs

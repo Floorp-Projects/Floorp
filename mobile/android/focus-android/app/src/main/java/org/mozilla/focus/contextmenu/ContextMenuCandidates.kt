@@ -10,8 +10,8 @@ import mozilla.components.feature.app.links.AppLinksUseCases
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuUseCases
 import mozilla.components.feature.tabs.TabsUseCases
-import mozilla.components.support.utils.DefaultSnackbarDelegate
-import mozilla.components.support.utils.SnackbarDelegate
+import mozilla.components.ui.widgets.DefaultSnackbarDelegate
+import mozilla.components.ui.widgets.SnackbarDelegate
 
 object ContextMenuCandidates {
     @Suppress("LongParameterList", "UndocumentedPublicFunction")

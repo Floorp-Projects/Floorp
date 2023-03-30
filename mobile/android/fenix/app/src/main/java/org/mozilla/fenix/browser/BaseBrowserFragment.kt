@@ -498,8 +498,9 @@ abstract class BaseBrowserFragment :
             httpClient = context.components.core.client,
             store = store,
             tabId = customTabSessionId,
-            snackbarParent = binding.dynamicSnackbarContainer,
-            snackbarDelegate = FenixSnackbarDelegate(binding.dynamicSnackbarContainer),
+            onCopyConfirmation = {
+                showSnackbarForClipboardCopy()
+            },
         )
 
         val downloadFeature = DownloadsFeature(
@@ -901,6 +902,22 @@ abstract class BaseBrowserFragment :
         )
 
         initializeEngineView(toolbarHeight)
+    }
+
+    /**
+     * Show a [Snackbar] when data is set to the device clipboard. To avoid duplicate displays of
+     * information only show a [Snackbar] for Android 12 and lower.
+     *
+     * [See details](https://developer.android.com/develop/ui/views/touch-and-input/copy-paste#duplicate-notifications).
+     */
+    private fun showSnackbarForClipboardCopy() {
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+            FenixSnackbarDelegate(binding.dynamicSnackbarContainer).show(
+                snackBarParentView = binding.dynamicSnackbarContainer,
+                text = R.string.snackbar_copy_image_to_clipboard_confirmation,
+                duration = Snackbar.LENGTH_LONG,
+            )
+        }
     }
 
     /**

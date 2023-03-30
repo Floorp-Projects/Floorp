@@ -67,6 +67,7 @@ projects:
     - ui-colors
     - ui-icons
     - ui-tabcounter
+    - ui-widgets
 variants:
 - apks:
   - abi: arm64-v8a

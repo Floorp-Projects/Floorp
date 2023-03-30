@@ -21,19 +21,16 @@ import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.hardware.camera2.CameraManager
 import android.os.Build
-import android.view.View
 import androidx.core.content.FileProvider
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.google.android.material.snackbar.Snackbar
 import mozilla.components.support.ktx.R
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.fakes.android.FakeContext
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
-import mozilla.components.support.utils.SnackbarDelegate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -45,7 +42,6 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyNoInteractions
 import org.robolectric.Robolectric
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
@@ -187,10 +183,12 @@ class ContextTest {
     }
 
     @Test
-    @Config(shadows = [ShadowFileProvider::class], sdk = [Build.VERSION_CODES.TIRAMISU])
-    fun `copyImage will copy the file URI to the clipboard`() {
+    @Config(shadows = [ShadowFileProvider::class])
+    fun `copyImage will copy the file URI to the clipboard & invoke the confirmation action`() {
         val context = spy(testContext)
-        context.copyImage("filePath", mock(), mock())
+        val confirmationAction = mock<() -> Unit>()
+
+        context.copyImage("filePath", confirmationAction)
 
         val clipboardManager =
             testContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -198,31 +196,7 @@ class ContextTest {
             ShadowFileProvider.FAKE_URI_RESULT,
             clipboardManager.primaryClip!!.getItemAt(0).uri,
         )
-    }
-
-    @Test
-    @Config(shadows = [ShadowFileProvider::class], sdk = [Build.VERSION_CODES.TIRAMISU])
-    fun `copyImage will not show a Snackbar for Android 13`() {
-        val context = spy(testContext)
-        val snackbarDelegate = mock<SnackbarDelegate>()
-        context.copyImage("filePath", mock(), snackbarDelegate)
-
-        verifyNoInteractions(snackbarDelegate)
-    }
-
-    @Test
-    @Config(shadows = [ShadowFileProvider::class], sdk = [Build.VERSION_CODES.S_V2])
-    fun `copyImage will show a Snackbar for Android 12`() {
-        val context = spy(testContext)
-        val snackbarParentView = mock<View>()
-        val snackbarDelegate = mock<SnackbarDelegate>()
-        context.copyImage("filePath", snackbarParentView, snackbarDelegate)
-
-        verify(snackbarDelegate).show(
-            snackbarParentView,
-            R.string.mozac_support_ktx_snackbar_delegate_image_copied,
-            Snackbar.LENGTH_LONG,
-        )
+        verify(confirmationAction).invoke()
     }
 
     @Test

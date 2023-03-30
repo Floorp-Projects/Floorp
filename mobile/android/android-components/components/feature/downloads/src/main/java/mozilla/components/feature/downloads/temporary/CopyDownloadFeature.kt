@@ -5,7 +5,6 @@
 package mozilla.components.feature.downloads.temporary
 
 import android.content.Context
-import android.view.View
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -23,7 +22,6 @@ import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.content.copyImage
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
-import mozilla.components.support.utils.SnackbarDelegate
 import java.util.concurrent.TimeUnit
 
 /**
@@ -43,8 +41,7 @@ import java.util.concurrent.TimeUnit
  *  @property context Android context used for various platform interactions.
  *  @property store a reference to the application's [BrowserStore].
  *  @property tabId ID of the tab session, or null if the selected session should be used.
- *  @property snackbarParent Parent [View] of the [SnackbarDelegate].
- *  @property snackbarDelegate [SnackbarDelegate] used to actually show a `Snackbar`.
+ *  @property onCopyConfirmation The confirmation action of copying an image.
  *  @param httpClient Client used for downloading internet resources.
  *  @param cleanupCacheCoroutineDispatcher Coroutine dispatcher used for the cleanup of old
  *  cached files. Defaults to IO.
@@ -53,8 +50,7 @@ class CopyDownloadFeature(
     private val context: Context,
     private val store: BrowserStore,
     private val tabId: String?,
-    private val snackbarParent: View,
-    private val snackbarDelegate: SnackbarDelegate,
+    private val onCopyConfirmation: () -> Unit,
     httpClient: Client,
     cleanupCacheCoroutineDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : TemporaryDownloadFeature(
@@ -91,12 +87,12 @@ class CopyDownloadFeature(
         scope?.launch(coroutineExceptionHandler) {
             withTimeout(operationTimeoutMs) {
                 val download = download(internetResource)
-                copy(download.canonicalPath, snackbarParent, snackbarDelegate)
+                copy(download.canonicalPath, onCopyConfirmation)
             }
         }
     }
 
     @VisibleForTesting
-    internal fun copy(filePath: String, snackbarParent: View, snackbarDelegate: SnackbarDelegate) =
-        context.copyImage(filePath, snackbarParent, snackbarDelegate)
+    internal fun copy(filePath: String, onCopyConfirmation: () -> Unit) =
+        context.copyImage(filePath, onCopyConfirmation)
 }

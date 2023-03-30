@@ -6,7 +6,7 @@ package org.mozilla.focus.utils
 
 import android.view.View
 import androidx.annotation.StringRes
-import mozilla.components.support.utils.SnackbarDelegate
+import mozilla.components.ui.widgets.SnackbarDelegate
 
 class FocusSnackbarDelegate(private val view: View) : SnackbarDelegate {
 

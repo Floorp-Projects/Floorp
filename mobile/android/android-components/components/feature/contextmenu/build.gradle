@@ -38,6 +38,7 @@ dependencies {
     implementation project(':support-utils')
     implementation project(':support-ktx')
     implementation project(':feature-search')
+    implementation project(':ui-widgets')
 
     implementation ComponentsDependencies.google_material
     implementation ComponentsDependencies.androidx_constraintlayout

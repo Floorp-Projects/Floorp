@@ -22,7 +22,7 @@ import mozilla.components.feature.contextmenu.ContextMenuFeature
 import mozilla.components.feature.contextmenu.ContextMenuUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.base.feature.LifecycleAwareFeature
-import mozilla.components.support.utils.DefaultSnackbarDelegate
+import mozilla.components.ui.widgets.DefaultSnackbarDelegate
 import org.mozilla.samples.browser.databinding.FragmentBrowserBinding
 
 @Suppress("LongParameterList", "UndocumentedPublicClass")

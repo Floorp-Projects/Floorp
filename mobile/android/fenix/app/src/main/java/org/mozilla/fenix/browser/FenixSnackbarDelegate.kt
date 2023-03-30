@@ -6,7 +6,7 @@ package org.mozilla.fenix.browser
 
 import android.view.View
 import androidx.annotation.StringRes
-import mozilla.components.support.utils.SnackbarDelegate
+import mozilla.components.ui.widgets.SnackbarDelegate
 import org.mozilla.fenix.components.FenixSnackbar
 
 class FenixSnackbarDelegate(private val view: View) : SnackbarDelegate {

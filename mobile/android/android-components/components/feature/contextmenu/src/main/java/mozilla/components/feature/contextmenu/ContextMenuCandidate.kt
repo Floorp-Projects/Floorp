@@ -24,8 +24,8 @@ import mozilla.components.support.ktx.android.content.createChooserExcludingCurr
 import mozilla.components.support.ktx.android.content.share
 import mozilla.components.support.ktx.kotlin.stripMailToProtocol
 import mozilla.components.support.ktx.kotlin.takeOrReplace
-import mozilla.components.support.utils.DefaultSnackbarDelegate
-import mozilla.components.support.utils.SnackbarDelegate
+import mozilla.components.ui.widgets.DefaultSnackbarDelegate
+import mozilla.components.ui.widgets.SnackbarDelegate
 
 /**
  * A candidate for an item to be displayed in the context menu.

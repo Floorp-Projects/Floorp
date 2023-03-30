@@ -8,8 +8,8 @@ import android.content.Context
 import android.view.View
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuUseCases
-import mozilla.components.support.utils.DefaultSnackbarDelegate
-import mozilla.components.support.utils.SnackbarDelegate
+import mozilla.components.ui.widgets.DefaultSnackbarDelegate
+import mozilla.components.ui.widgets.SnackbarDelegate
 
 class CustomTabContextMenuCandidate {
     companion object {
