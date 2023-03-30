@@ -1,0 +1,26 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.single_dep:loader
+
+transforms:
+    - gecko_taskgraph.transforms.name_sanity:transforms
+    - gecko_taskgraph.transforms.signing:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - build-mac-signing
+
+only-for-attributes:
+    - shippable
+
+job-template:
+    treeherder:
+        symbol: BMN
+    upstream-artifacts:
+        - taskType: signing
+          paths: ["public/build/target.tar.gz"]
+          formats: ["apple_notarization"]
+          taskId:
+              task-reference: <build-mac-signing>

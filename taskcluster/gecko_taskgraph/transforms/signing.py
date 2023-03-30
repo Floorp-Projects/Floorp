@@ -204,7 +204,11 @@ def make_task_description(config, jobs):
         if dep_job.kind in task["dependencies"]:
             task["if-dependencies"] = [dep_job.kind]
 
-        if "macosx" in build_platform:
+        # build-mac-notarization uses signingscript instead of iscript
+        if "macosx" in build_platform and config.kind == "build-mac-notarization":
+            task["worker"]["mac-behavior"] = "mac_sign"
+        elif "macosx" in build_platform:
+            # iscript overrides
             shippable = "false"
             if "shippable" in attributes and attributes["shippable"]:
                 shippable = "true"
@@ -223,9 +227,8 @@ def make_task_description(config, jobs):
                     mac_behavior = "mac_notarize_part_3"
                 else:
                     raise Exception(f"Unknown kind {config.kind} for mac_behavior!")
-            else:
-                if "part-1" in config.kind:
-                    continue
+            elif "part-1" in config.kind:
+                continue
             task["worker"]["mac-behavior"] = mac_behavior
             worker_type_alias_map = {
                 "linux-depsigning": "mac-depsigning",
