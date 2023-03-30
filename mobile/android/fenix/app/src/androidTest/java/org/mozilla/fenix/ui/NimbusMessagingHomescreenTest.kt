@@ -7,6 +7,10 @@ package org.mozilla.fenix.ui
 import android.content.Intent
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
+import mozilla.components.service.nimbus.messaging.FxNimbusMessaging
+import mozilla.components.service.nimbus.messaging.MessageData
+import mozilla.components.service.nimbus.messaging.Messaging
+import mozilla.components.service.nimbus.messaging.StyleData
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
@@ -20,9 +24,6 @@ import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.nimbus.HomeScreenSection
 import org.mozilla.fenix.nimbus.Homescreen
-import org.mozilla.fenix.nimbus.MessageData
-import org.mozilla.fenix.nimbus.Messaging
-import org.mozilla.fenix.nimbus.StyleData
 import org.mozilla.fenix.ui.robots.homeScreen
 
 /**
@@ -55,7 +56,7 @@ class NimbusMessagingHomescreenTest {
     @Before
     fun setUp() {
         // Set up nimbus message
-        FxNimbus.features.messaging.withInitializer {
+        FxNimbusMessaging.features.messaging.withInitializer {
             // FML generated objects.
             Messaging(
                 messages = mapOf(
