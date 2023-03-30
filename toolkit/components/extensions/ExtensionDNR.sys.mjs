@@ -779,6 +779,27 @@ class RuleValidator {
     this.isSessionRuleset = isSessionRuleset;
   }
 
+  /**
+   * Static method used to deserialize Rule class instances from a plain
+   * js object rule as serialized implicitly by aomStartup.encodeBlob
+   * when we store the rules into the startup cache file.
+   *
+   * @param {object} rule
+   * @returns {Rule}
+   */
+  static deserializeRule(rule) {
+    const newRule = new Rule(rule);
+    if (newRule.condition.regexFilter) {
+      newRule.condition.setCompiledRegexFilter(
+        compileRegexFilter(
+          newRule.condition.regexFilter,
+          newRule.condition.isUrlFilterCaseSensitive
+        )
+      );
+    }
+    return newRule;
+  }
+
   removeRuleIds(ruleIds) {
     for (const ruleId of ruleIds) {
       this.rulesMap.delete(ruleId);

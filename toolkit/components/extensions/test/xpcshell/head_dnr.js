@@ -130,12 +130,40 @@ const assertDNRStoreData = async (
     // a big enough output to don't be immediately useful to investigate
     // failures, asserting each rule individually would produce more
     // readable assertion failure logs.
-    const assertRuleAtIdx = ruleIdx =>
+    const assertRuleAtIdx = ruleIdx => {
+      const actualRule = actualData.rules[ruleIdx];
+      const expectedRule = expectedRulesetRules[ruleIdx];
       Assert.deepEqual(
-        actualData.rules[ruleIdx],
-        expectedRulesetRules[ruleIdx],
+        actualRule,
+        expectedRule,
         `Got the expected rule at index ${ruleIdx} for ruleset id "${rulesetId}"`
       );
+      Assert.equal(
+        actualRule.constructor.name,
+        "Rule",
+        `Expect rule at index ${ruleIdx} to be an instance of the Rule class`
+      );
+      if (expectedRule.condition.regexFilter) {
+        const compiledRegexFilter = actualData.rules[
+          ruleIdx
+        ].condition.getCompiledRegexFilter();
+        Assert.equal(
+          compiledRegexFilter?.constructor.name,
+          "RegExp",
+          `Expect rule ${ruleIdx} condition.getCompiledRegexFilter() to return a compiled regexp filter`
+        );
+        Assert.equal(
+          compiledRegexFilter?.source,
+          new RegExp(expectedRule.condition.regexFilter).source,
+          `Expect rule ${ruleIdx} condition's compiled RegExp source to match the regexFilter string`
+        );
+        Assert.equal(
+          compiledRegexFilter?.ignoreCase,
+          !expectedRule.condition.isUrlFilterCaseSensitive,
+          `Expect rule ${ruleIdx} conditions's compiled RegExp ignoreCase to be set based on condition.isUrlFilterCaseSensitive`
+        );
+      }
+    };
 
     // Some tests may be using a big enough number of rules that
     // the assertiongs would be producing a huge amount of log spam,
@@ -148,7 +176,7 @@ const assertDNRStoreData = async (
       for (let ruleIdx = 0; ruleIdx < expectedRulesetRules.length; ruleIdx++) {
         assertRuleAtIdx(ruleIdx);
       }
-    } else {
+    } else if (expectedRulesetRules.length) {
       // NOTE: Only asserting the first and last rule also helps to speed up
       // the test is some slower builds when the number of expected rules is
       // big enough (e.g. the test task verifying the enforced rule count limits

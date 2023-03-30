@@ -571,7 +571,14 @@ add_task(async function test_save_and_load_dynamic_rules() {
   info("Verify dynamic rules loaded back as expected on AOM restart");
   dnrStore._data.delete(extUUID);
   dnrStore._dataPromises.delete(extUUID);
+
+  // NOTE: promiseRestartManager will not be enough to make sure the
+  // DNR store data for the test extension is going to be loaded from
+  // the DNR startup cache file.
+  // See test_ext_dnr_startup_cache.js for a test case that more completely
+  // simulates ExtensionDNRStore initialization on browser restart.
   await promiseRestartManager();
+
   await extension.awaitStartup();
   await extension.awaitMessage("bgpage:ready");
 
