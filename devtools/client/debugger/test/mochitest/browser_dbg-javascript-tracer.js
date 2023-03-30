@@ -62,3 +62,27 @@ add_task(async function() {
     "We stopped recording traces, an the function call isn't logged in the console"
   );
 });
+
+add_task(async function testPersitentLogMethod() {
+  let dbg = await initDebugger("doc-scripts.html");
+  is(
+    dbg.selectors.getJavascriptTracingLogMethod(),
+    "console",
+    "By default traces are logged to the console"
+  );
+
+  info("Change the log method to stdout");
+  dbg.actions.setJavascriptTracingLogMethod("stdout");
+
+  await dbg.toolbox.closeToolbox();
+
+  dbg = await initDebugger("doc-scripts.html");
+  is(
+    dbg.selectors.getJavascriptTracingLogMethod(),
+    "stdout",
+    "The new setting has been persisted"
+  );
+
+  info("Reset back to the default value");
+  dbg.actions.setJavascriptTracingLogMethod("console");
+});

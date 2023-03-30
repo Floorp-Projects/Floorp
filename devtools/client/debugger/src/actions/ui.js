@@ -237,3 +237,12 @@ export function copyToClipboard(location) {
     }
   };
 }
+
+export function setJavascriptTracingLogMethod(value) {
+  return ({ dispatch, getState }) => {
+    dispatch({
+      type: "SET_JAVASCRIPT_TRACING_LOG_METHOD",
+      value,
+    });
+  };
+}

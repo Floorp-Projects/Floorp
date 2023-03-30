@@ -28,6 +28,7 @@ export const initialUIState = ({ supportsJavascriptTracing = false } = {}) => ({
   editorWrappingEnabled: prefs.editorWrapping,
   javascriptEnabled: true,
   supportsJavascriptTracing,
+  javascriptTracingLogMethod: prefs.javascriptTracingLogMethod,
   mutableSearchOptions: prefs.searchOptions || {
     [searchKeys.FILE_SEARCH]: {
       regexMatch: false,
@@ -139,6 +140,11 @@ function update(state = initialUIState(), action) {
 
     case "NAVIGATE": {
       return { ...state, activeSearch: null, highlightedLineRange: {} };
+    }
+
+    case "SET_JAVASCRIPT_TRACING_LOG_METHOD": {
+      prefs.javascriptTracingLogMethod = action.value;
+      return { ...state, javascriptTracingLogMethod: action.value };
     }
 
     case "SET_SEARCH_OPTIONS": {
