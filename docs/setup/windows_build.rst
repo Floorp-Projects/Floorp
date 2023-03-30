@@ -74,6 +74,7 @@ the interactive setup process.
 
 .. code-block:: shell
 
+    # Using the C:\mozilla-build\start-shell.bat shell from step 1.2:
     cd c:/
     mkdir mozilla-source
     cd mozilla-source
