@@ -11841,11 +11841,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ✅
         - ✅
         - ✅
-      * - **browsertime-tp6-live-chrome-imgur**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-live-chromium-imgur**
         - ❌
         - ❌
@@ -11882,11 +11877,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ✅
         - ✅
         - ✅
-      * - **browsertime-tp6-live-chrome-imgur**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-live-chromium-imgur**
         - ❌
         - ❌
@@ -11940,11 +11930,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
       * - **browsertime-tp6-firefox-imgur**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6-live-chrome-imgur**
         - ❌
         - ❌
         - ❌
@@ -12006,11 +11991,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ✅
         - ✅
         - ✅
-      * - **browsertime-tp6-live-chrome-imgur**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6-live-chromium-imgur**
         - ❌
         - ❌
