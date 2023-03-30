@@ -773,7 +773,7 @@ const DrawBlitProg* GLBlitHelper::CreateDrawBlitProg(
   mGL->fAttachShader(prog, mDrawBlitProg_VertShader);
   mGL->fAttachShader(prog, fs);
 
-  mGL->fBindAttribLocation(prog, 0, "aPosition");
+  mGL->fBindAttribLocation(prog, 0, "aVert");
   mGL->fLinkProgram(prog);
 
   GLenum status = 0;
