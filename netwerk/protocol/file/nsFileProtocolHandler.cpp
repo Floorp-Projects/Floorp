@@ -16,6 +16,7 @@
 #include "FileChannelChild.h"
 
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/net/NeckoCommon.h"
 
 // URL file handling, copied and modified from
 // xpfe/components/bookmarks/src/nsBookmarksService.cpp
@@ -170,7 +171,7 @@ nsFileProtocolHandler::NewChannel(nsIURI* uri, nsILoadInfo* aLoadInfo,
   nsresult rv;
 
   RefPtr<nsFileChannel> chan;
-  if (IsNeckoChild()) {
+  if (mozilla::net::IsNeckoChild()) {
     chan = new mozilla::net::FileChannelChild(uri);
   } else {
     chan = new nsFileChannel(uri);
@@ -211,7 +212,7 @@ nsFileProtocolHandler::NewFileURI(nsIFile* aFile, nsIURI** aResult) {
   RefPtr<nsIFile> file(aFile);
   // NOTE: the origin charset is assigned the value of the platform
   // charset by the SetFile method.
-  return NS_MutateURI(new nsStandardURL::Mutator())
+  return NS_MutateURI(new mozilla::net::nsStandardURL::Mutator())
       .Apply(&nsIFileURLMutator::SetFile, file)
       .Finalize(aResult);
 }
@@ -222,7 +223,7 @@ nsFileProtocolHandler::NewFileURIMutator(nsIFile* aFile,
   NS_ENSURE_ARG_POINTER(aFile);
   nsresult rv;
 
-  nsCOMPtr<nsIURIMutator> mutator = new nsStandardURL::Mutator();
+  nsCOMPtr<nsIURIMutator> mutator = new mozilla::net::nsStandardURL::Mutator();
   nsCOMPtr<nsIFileURLMutator> fileMutator = do_QueryInterface(mutator, &rv);
   if (NS_FAILED(rv)) {
     return rv;
