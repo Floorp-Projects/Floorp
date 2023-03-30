@@ -18,7 +18,7 @@
     <!-- Privacy Notice positive button-->
     <string name="privacy_notice_positive_button">Agree and Continue</string>
     <!-- Privacy Notice neutral button-->
-    <string name="privacy_notice_neutral_button_2">Disagree and Exit</string>
+    <string name="privacy_notice_neutral_button_2">Disagree</string>
 
     <!-- Topsites-->
     <!-- Default title for pinned Baidu top site that links to Baidu home page  -->

@@ -304,7 +304,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = false,
     )
 
-    val isTelemetryEnabled by booleanPreference(
+    var isTelemetryEnabled by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_telemetry),
         default = true,
     )
