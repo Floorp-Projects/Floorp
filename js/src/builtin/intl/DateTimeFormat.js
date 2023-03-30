@@ -729,7 +729,7 @@ function ToDateTimeOptions(options, required, defaults) {
  * Spec: ECMAScript Internationalization API Specification, 12.3.2.
  */
 function Intl_DateTimeFormat_supportedLocalesOf(locales /*, options*/) {
-  var options = arguments.length > 1 ? arguments[1] : undefined;
+  var options = ArgumentsLength() > 1 ? GetArgument(1) : undefined;
 
   // Step 1.
   var availableLocales = "DateTimeFormat";

@@ -86,8 +86,8 @@ function Date_toLocaleString() {
   }
 
   // Steps 3-4.
-  var locales = arguments.length ? arguments[0] : undefined;
-  var options = arguments.length > 1 ? arguments[1] : undefined;
+  var locales = ArgumentsLength() ? GetArgument(0) : undefined;
+  var options = ArgumentsLength() > 1 ? GetArgument(1) : undefined;
 
   // Step 5-6.
   var dateTimeFormat;
@@ -119,8 +119,8 @@ function Date_toLocaleDateString() {
   }
 
   // Steps 3-4.
-  var locales = arguments.length ? arguments[0] : undefined;
-  var options = arguments.length > 1 ? arguments[1] : undefined;
+  var locales = ArgumentsLength() ? GetArgument(0) : undefined;
+  var options = ArgumentsLength() > 1 ? GetArgument(1) : undefined;
 
   // Step 5-6.
   var dateTimeFormat;
@@ -152,8 +152,8 @@ function Date_toLocaleTimeString() {
   }
 
   // Steps 3-4.
-  var locales = arguments.length ? arguments[0] : undefined;
-  var options = arguments.length > 1 ? arguments[1] : undefined;
+  var locales = ArgumentsLength() ? GetArgument(0) : undefined;
+  var options = ArgumentsLength() > 1 ? GetArgument(1) : undefined;
 
   // Step 5-6.
   var dateTimeFormat;

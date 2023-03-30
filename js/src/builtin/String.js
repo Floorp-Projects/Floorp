@@ -653,14 +653,14 @@ function String_concat(arg1) {
   var str = ToString(this);
 
   // Specialize for the most common number of arguments for better inlining.
-  if (arguments.length === 0) {
+  if (ArgumentsLength() === 0) {
     return str;
   }
-  if (arguments.length === 1) {
-    return str + ToString(arguments[0]);
+  if (ArgumentsLength() === 1) {
+    return str + ToString(GetArgument(0));
   }
-  if (arguments.length === 2) {
-    return str + ToString(arguments[0]) + ToString(arguments[1]);
+  if (ArgumentsLength() === 2) {
+    return str + ToString(GetArgument(0)) + ToString(GetArgument(1));
   }
 
   // Step 3. (implicit)
@@ -668,9 +668,9 @@ function String_concat(arg1) {
   var result = str;
 
   // Step 5.
-  for (var i = 0; i < arguments.length; i++) {
+  for (var i = 0; i < ArgumentsLength(); i++) {
     // Steps 5.a-b.
-    var nextString = ToString(arguments[i]);
+    var nextString = ToString(GetArgument(i));
     // Step 5.c.
     result += nextString;
   }
@@ -895,8 +895,8 @@ function String_localeCompare(that) {
   var That = ToString(that);
 
   // Steps 4-5.
-  var locales = arguments.length > 1 ? arguments[1] : undefined;
-  var options = arguments.length > 2 ? arguments[2] : undefined;
+  var locales = ArgumentsLength() > 1 ? GetArgument(1) : undefined;
+  var options = ArgumentsLength() > 2 ? GetArgument(2) : undefined;
 
   // Step 6.
   var collator;
@@ -932,7 +932,7 @@ function String_toLocaleLowerCase() {
 
   // Handle the common cases (no locales argument or a single string
   // argument) first.
-  var locales = arguments.length ? arguments[0] : undefined;
+  var locales = ArgumentsLength() ? GetArgument(0) : undefined;
   var requestedLocale;
   if (locales === undefined) {
     // Steps 3, 6.
@@ -977,7 +977,7 @@ function String_toLocaleUpperCase() {
 
   // Handle the common cases (no locales argument or a single string
   // argument) first.
-  var locales = arguments.length ? arguments[0] : undefined;
+  var locales = ArgumentsLength() ? GetArgument(0) : undefined;
   var requestedLocale;
   if (locales === undefined) {
     // Steps 3, 6.
@@ -1032,14 +1032,14 @@ function String_static_raw(callSite /*, ...substitutions*/) {
     return ToString(raw[0]);
   }
 
-  // Steps 7-9 were reordered to use the arguments object instead of a rest
-  // parameter, because the former is currently more optimized.
+  // Steps 7-9 were reordered to use ArgumentsLength/GetArgument instead of a
+  // rest parameter, because the former is currently more optimized.
   //
   // String.raw intersperses the substitution elements between the literal
   // segments, i.e. a substitution is added iff there are still pending
   // literal segments. Furthermore by moving the access to |raw[0]| outside
   // of the loop, we can use |nextIndex| to index into both, the |raw| array
-  // and the arguments object.
+  // and the arguments.
 
   // Steps 7 (implicit) and 9.a-c.
   var resultString = ToString(raw[0]);
@@ -1047,8 +1047,8 @@ function String_static_raw(callSite /*, ...substitutions*/) {
   // Steps 8-9, 9.d, and 9.i.
   for (var nextIndex = 1; nextIndex < literalSegments; nextIndex++) {
     // Steps 9.e-h.
-    if (nextIndex < arguments.length) {
-      resultString += ToString(arguments[nextIndex]);
+    if (nextIndex < ArgumentsLength()) {
+      resultString += ToString(GetArgument(nextIndex));
     }
 
     // Steps 9.a-c.

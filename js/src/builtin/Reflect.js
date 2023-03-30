@@ -63,8 +63,8 @@ function Reflect_construct(target, argumentsList /*, newTarget*/) {
 
   // Steps 2-3.
   var newTarget;
-  if (arguments.length > 2) {
-    newTarget = arguments[2];
+  if (ArgumentsLength() > 2) {
+    newTarget = GetArgument(2);
     if (!IsConstructor(newTarget)) {
       ThrowTypeError(JSMSG_NOT_CONSTRUCTOR, DecompileArg(2, newTarget));
     }
@@ -172,9 +172,9 @@ function Reflect_get(target, propertyKey /*, receiver*/) {
   }
 
   // Step 3 (reordered).
-  if (arguments.length > 2) {
+  if (ArgumentsLength() > 2) {
     // Steps 2, 4.
-    return getPropertySuper(target, propertyKey, arguments[2]);
+    return getPropertySuper(target, propertyKey, GetArgument(2));
   }
 
   // Steps 2, 4.

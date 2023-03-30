@@ -11,7 +11,7 @@ function ArrayEvery(callbackfn /*, thisArg*/) {
   var len = ToLength(O.length);
 
   /* Step 4. */
-  if (arguments.length === 0) {
+  if (ArgumentsLength() === 0) {
     ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.prototype.every");
   }
   if (!IsCallable(callbackfn)) {
@@ -19,7 +19,7 @@ function ArrayEvery(callbackfn /*, thisArg*/) {
   }
 
   /* Step 5. */
-  var T = arguments.length > 1 ? arguments[1] : undefined;
+  var T = ArgumentsLength() > 1 ? GetArgument(1) : undefined;
 
   /* Steps 6-7. */
   /* Steps a (implicit), and d. */
@@ -48,7 +48,7 @@ function ArraySome(callbackfn /*, thisArg*/) {
   var len = ToLength(O.length);
 
   /* Step 4. */
-  if (arguments.length === 0) {
+  if (ArgumentsLength() === 0) {
     ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.prototype.some");
   }
   if (!IsCallable(callbackfn)) {
@@ -56,7 +56,7 @@ function ArraySome(callbackfn /*, thisArg*/) {
   }
 
   /* Step 5. */
-  var T = arguments.length > 1 ? arguments[1] : undefined;
+  var T = ArgumentsLength() > 1 ? GetArgument(1) : undefined;
 
   /* Steps 6-7. */
   /* Steps a (implicit), and d. */
@@ -164,7 +164,7 @@ function ArrayForEach(callbackfn /*, thisArg*/) {
   var len = ToLength(O.length);
 
   /* Step 4. */
-  if (arguments.length === 0) {
+  if (ArgumentsLength() === 0) {
     ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.prototype.forEach");
   }
   if (!IsCallable(callbackfn)) {
@@ -172,7 +172,7 @@ function ArrayForEach(callbackfn /*, thisArg*/) {
   }
 
   /* Step 5. */
-  var T = arguments.length > 1 ? arguments[1] : undefined;
+  var T = ArgumentsLength() > 1 ? GetArgument(1) : undefined;
 
   /* Steps 6-7. */
   /* Steps a (implicit), and d. */
@@ -199,7 +199,7 @@ function ArrayMap(callbackfn /*, thisArg*/) {
   var len = ToLength(O.length);
 
   /* Step 3. */
-  if (arguments.length === 0) {
+  if (ArgumentsLength() === 0) {
     ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.prototype.map");
   }
   if (!IsCallable(callbackfn)) {
@@ -207,7 +207,7 @@ function ArrayMap(callbackfn /*, thisArg*/) {
   }
 
   /* Step 4. */
-  var T = arguments.length > 1 ? arguments[1] : undefined;
+  var T = ArgumentsLength() > 1 ? GetArgument(1) : undefined;
 
   /* Steps 5. */
   var A = ArraySpeciesCreate(O, len);
@@ -238,7 +238,7 @@ function ArrayFilter(callbackfn /*, thisArg*/) {
   var len = ToLength(O.length);
 
   /* Step 3. */
-  if (arguments.length === 0) {
+  if (ArgumentsLength() === 0) {
     ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.prototype.filter");
   }
   if (!IsCallable(callbackfn)) {
@@ -246,7 +246,7 @@ function ArrayFilter(callbackfn /*, thisArg*/) {
   }
 
   /* Step 4. */
-  var T = arguments.length > 1 ? arguments[1] : undefined;
+  var T = ArgumentsLength() > 1 ? GetArgument(1) : undefined;
 
   /* Step 5. */
   var A = ArraySpeciesCreate(O, 0);
@@ -294,7 +294,7 @@ function ArrayGroup(callbackfn /*, thisArg*/) {
   /* Step 7. Let obj be ! OrdinaryObjectCreate(null). */
   var object = std_Object_create(null);
 
-  var thisArg = arguments.length > 1 ? arguments[1] : undefined;
+  var thisArg = ArgumentsLength() > 1 ? GetArgument(1) : undefined;
 
   /* Steps 4, 6. */
   for (var k = 0; k < len; k++) {
@@ -361,7 +361,7 @@ function ArrayGroupToMap(callbackfn /*, thisArg*/) {
   var C = GetBuiltinConstructor("Map");
   var map = new C();
 
-  var thisArg = arguments.length > 1 ? arguments[1] : undefined;
+  var thisArg = ArgumentsLength() > 1 ? GetArgument(1) : undefined;
 
   /* Combine Step 6. and Step 8.
    *
@@ -418,7 +418,7 @@ function ArrayReduce(callbackfn /*, initialValue*/) {
   var len = ToLength(O.length);
 
   /* Step 4. */
-  if (arguments.length === 0) {
+  if (ArgumentsLength() === 0) {
     ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.prototype.reduce");
   }
   if (!IsCallable(callbackfn)) {
@@ -430,8 +430,8 @@ function ArrayReduce(callbackfn /*, initialValue*/) {
 
   /* Steps 5, 7-8. */
   var accumulator;
-  if (arguments.length > 1) {
-    accumulator = arguments[1];
+  if (ArgumentsLength() > 1) {
+    accumulator = GetArgument(1);
   } else {
     /* Step 5. */
     // Add an explicit |throw| here and below to inform Ion that the
@@ -488,7 +488,7 @@ function ArrayReduceRight(callbackfn /*, initialValue*/) {
   var len = ToLength(O.length);
 
   /* Step 4. */
-  if (arguments.length === 0) {
+  if (ArgumentsLength() === 0) {
     ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.prototype.reduce");
   }
   if (!IsCallable(callbackfn)) {
@@ -500,8 +500,8 @@ function ArrayReduceRight(callbackfn /*, initialValue*/) {
 
   /* Steps 5, 7-8. */
   var accumulator;
-  if (arguments.length > 1) {
-    accumulator = arguments[1];
+  if (ArgumentsLength() > 1) {
+    accumulator = GetArgument(1);
   } else {
     /* Step 5. */
     // Add an explicit |throw| here and below to inform Ion that the
@@ -558,7 +558,7 @@ function ArrayFind(predicate /*, thisArg*/) {
   var len = ToLength(O.length);
 
   /* Step 6. */
-  if (arguments.length === 0) {
+  if (ArgumentsLength() === 0) {
     ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.prototype.find");
   }
   if (!IsCallable(predicate)) {
@@ -566,7 +566,7 @@ function ArrayFind(predicate /*, thisArg*/) {
   }
 
   /* Step 7. */
-  var T = arguments.length > 1 ? arguments[1] : undefined;
+  var T = ArgumentsLength() > 1 ? GetArgument(1) : undefined;
 
   /* Steps 8-9. */
   /* Steps a (implicit), and g. */
@@ -594,7 +594,7 @@ function ArrayFindIndex(predicate /*, thisArg*/) {
   var len = ToLength(O.length);
 
   /* Step 6. */
-  if (arguments.length === 0) {
+  if (ArgumentsLength() === 0) {
     ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.prototype.find");
   }
   if (!IsCallable(predicate)) {
@@ -602,7 +602,7 @@ function ArrayFindIndex(predicate /*, thisArg*/) {
   }
 
   /* Step 7. */
-  var T = arguments.length > 1 ? arguments[1] : undefined;
+  var T = ArgumentsLength() > 1 ? GetArgument(1) : undefined;
 
   /* Steps 8-9. */
   /* Steps a (implicit), and g. */
@@ -1290,11 +1290,11 @@ function ArrayConcat(arg1) {
   // Step 3.
   var n = 0;
 
-  // Step 4 (implicit in |arguments|).
+  // Step 4 (handled implicitly with |ArgumentsLength| and |GetArgument|).
 
   // Step 5.
   var i = 0;
-  var argsLen = arguments.length;
+  var argsLen = ArgumentsLength();
 
   // Step 5.a (first element).
   var E = O;
@@ -1355,7 +1355,7 @@ function ArrayConcat(arg1) {
       break;
     }
     // Step 5.a (subsequent elements).
-    E = arguments[i];
+    E = GetArgument(i);
     i++;
   }
 
@@ -1381,7 +1381,7 @@ function ArrayFlatMap(mapperFunction /*, thisArg*/) {
   }
 
   // Step 4.
-  var T = arguments.length > 1 ? arguments[1] : undefined;
+  var T = ArgumentsLength() > 1 ? GetArgument(1) : undefined;
 
   // Step 5.
   var A = ArraySpeciesCreate(O, 0);
@@ -1406,8 +1406,8 @@ function ArrayFlat(/* depth */) {
   var depthNum = 1;
 
   // Step 4.
-  if (arguments.length && arguments[0] !== undefined) {
-    depthNum = ToInteger(arguments[0]);
+  if (ArgumentsLength() && GetArgument(0) !== undefined) {
+    depthNum = ToInteger(GetArgument(0));
   }
 
   // Step 5.
@@ -1443,7 +1443,7 @@ function FlattenIntoArray(
 
       if (mapperFunction) {
         // Step 3.c.ii.1.
-        assert(arguments.length === 7, "thisArg is present");
+        assert(ArgumentsLength() === 7, "thisArg is present");
 
         // Step 3.c.ii.2.
         element = callContentFunction(
@@ -1622,14 +1622,14 @@ function ArrayFindLast(predicate /*, thisArg*/) {
   var len = ToLength(O.length);
 
   // Step 3.
-  if (arguments.length === 0) {
+  if (ArgumentsLength() === 0) {
     ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.prototype.findLast");
   }
   if (!IsCallable(predicate)) {
     ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, predicate));
   }
 
-  var thisArg = arguments.length > 1 ? arguments[1] : undefined;
+  var thisArg = ArgumentsLength() > 1 ? GetArgument(1) : undefined;
 
   // Steps 4-5.
   for (var k = len - 1; k >= 0; k--) {
@@ -1658,14 +1658,14 @@ function ArrayFindLastIndex(predicate /*, thisArg*/) {
   var len = ToLength(O.length);
 
   // Step 3.
-  if (arguments.length === 0) {
+  if (ArgumentsLength() === 0) {
     ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.prototype.findLastIndex");
   }
   if (!IsCallable(predicate)) {
     ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, predicate));
   }
 
-  var thisArg = arguments.length > 1 ? arguments[1] : undefined;
+  var thisArg = ArgumentsLength() > 1 ? GetArgument(1) : undefined;
 
   // Steps 4-5.
   for (var k = len - 1; k >= 0; k--) {

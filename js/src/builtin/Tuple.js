@@ -52,16 +52,16 @@ function TupleToSpliced(start, deleteCount /*, ...items */) {
   /* Step 6. */
   var insertCount;
   var actualDeleteCount;
-  if (arguments.length === 0) {
+  if (ArgumentsLength() === 0) {
     insertCount = 0;
     actualDeleteCount = 0;
-  } else if (arguments.length === 1) {
+  } else if (ArgumentsLength() === 1) {
     /* Step 7. */
     insertCount = 0;
     actualDeleteCount = len - actualStart;
   } else {
     /* Step 8a. */
-    insertCount = arguments.length - 2;
+    insertCount = ArgumentsLength() - 2;
     /* Step 8b. */
     let dc = ToInteger(deleteCount);
     /* Step 8c. */
@@ -97,7 +97,7 @@ function TupleToSpliced(start, deleteCount /*, ...items */) {
   /* Step 16. */
   while (itemK < itemCount) {
     /* Step 16a. */
-    let E = arguments[itemK + 2];
+    let E = GetArgument(itemK + 2);
     /* Step 16b. */
     if (IsObject(E)) {
       ThrowTypeError(JSMSG_RECORD_TUPLE_NO_OBJECT);
@@ -161,9 +161,9 @@ function TupleConcat() {
   var n = list.length;
   /* Step 4 not necessary due to changed step 2. */
   /* Step 5 */
-  for (var i = 0; i < arguments.length; i++) {
+  for (var i = 0; i < ArgumentsLength(); i++) {
     /* Step 5a. */
-    let E = arguments[i];
+    let E = GetArgument(i);
     /* Step 5b. */
     var spreadable = IsConcatSpreadable(E);
     /* Step 5c. */
@@ -219,7 +219,7 @@ function TupleConcat() {
 // proposal-record-tuple
 // Tuple.prototype.includes()
 function TupleIncludes(valueToFind /* , fromIndex */) {
-  var fromIndex = arguments.length > 1 ? arguments[1] : undefined;
+  var fromIndex = ArgumentsLength() > 1 ? GetArgument(1) : undefined;
   return callFunction(
     std_Array_includes,
     ThisTupleValue(this),
@@ -231,7 +231,7 @@ function TupleIncludes(valueToFind /* , fromIndex */) {
 // proposal-record-tuple
 // Tuple.prototype.indexOf()
 function TupleIndexOf(valueToFind /* , fromIndex */) {
-  var fromIndex = arguments.length > 1 ? arguments[1] : undefined;
+  var fromIndex = ArgumentsLength() > 1 ? GetArgument(1) : undefined;
   return callFunction(
     std_Array_indexOf,
     ThisTupleValue(this),
@@ -291,7 +291,7 @@ function TupleJoin(separator) {
 // proposal-record-tuple
 // Tuple.prototype.lastIndexOf()
 function TupleLastIndexOf(valueToFind /* , fromIndex */) {
-  if (arguments.length < 2) {
+  if (ArgumentsLength() < 2) {
     return callFunction(
       std_Array_lastIndexOf,
       ThisTupleValue(this),
@@ -302,7 +302,7 @@ function TupleLastIndexOf(valueToFind /* , fromIndex */) {
     std_Array_lastIndexOf,
     ThisTupleValue(this),
     valueToFind,
-    arguments[1]
+    GetArgument(1)
   );
 }
 
@@ -368,7 +368,7 @@ function TupleFilter(callbackfn) {
   var len = TupleLength(list);
 
   /* Step 4. */
-  if (arguments.length === 0) {
+  if (ArgumentsLength() === 0) {
     ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Tuple.prototype.filter");
   }
   if (!IsCallable(callbackfn)) {
@@ -383,7 +383,7 @@ function TupleFilter(callbackfn) {
   var newK = 0;
 
   /* Step 7. */
-  var T = arguments.length > 1 ? arguments[1] : undefined;
+  var T = ArgumentsLength() > 1 ? GetArgument(1) : undefined;
   while (k < len) {
     /* Step 7a. */
     var kValue = list[k];
@@ -440,7 +440,7 @@ function TupleMap(callbackfn) {
   var newList = [];
 
   /* Steps 6-7. */
-  var thisArg = arguments.length > 1 ? arguments[1] : undefined;
+  var thisArg = ArgumentsLength() > 1 ? GetArgument(1) : undefined;
   for (var k = 0; k < len; k++) {
     /* Step 7a. */
     var kValue = list[k];
@@ -461,21 +461,21 @@ function TupleMap(callbackfn) {
 // proposal-record-tuple
 // Tuple.prototype.reduce()
 function TupleReduce(callbackfn /*, initialVal */) {
-  if (arguments.length < 2) {
+  if (ArgumentsLength() < 2) {
     return callContentFunction(ArrayReduce, ThisTupleValue(this), callbackfn);
   }
   return callContentFunction(
     ArrayReduce,
     ThisTupleValue(this),
     callbackfn,
-    arguments[1]
+    GetArgument(1)
   );
 }
 
 // proposal-record-tuple
 // Tuple.prototype.reduceRight()
 function TupleReduceRight(callbackfn /*, initialVal*/) {
-  if (arguments.length < 2) {
+  if (ArgumentsLength() < 2) {
     return callContentFunction(
       ArrayReduceRight,
       ThisTupleValue(this),
@@ -486,7 +486,7 @@ function TupleReduceRight(callbackfn /*, initialVal*/) {
     ArrayReduceRight,
     ThisTupleValue(this),
     callbackfn,
-    arguments[1]
+    GetArgument(1)
   );
 }
 
@@ -508,14 +508,14 @@ function FlattenIntoTuple(target, source, depth) {
   /* Step 4. */
   var mapperFunction = undefined;
   var thisArg = undefined;
-  var mapperIsPresent = arguments.length > 3;
+  var mapperIsPresent = ArgumentsLength() > 3;
   if (mapperIsPresent) {
-    mapperFunction = arguments[3];
+    mapperFunction = GetArgument(3);
     assert(
-      IsCallable(mapperFunction) && arguments.length > 4 && depth === 1,
+      IsCallable(mapperFunction) && ArgumentsLength() > 4 && depth === 1,
       "FlattenIntoTuple: mapper function must be callable, thisArg present, and depth === 1"
     );
-    thisArg = arguments[4];
+    thisArg = GetArgument(4);
   }
 
   /* Step 5. */
@@ -567,8 +567,8 @@ function TupleFlat() {
   var depthNum = 1;
 
   /* Step 4. */
-  if (arguments.length && arguments[0] !== undefined) {
-    depthNum = ToInteger(arguments[0]);
+  if (ArgumentsLength() && GetArgument(0) !== undefined) {
+    depthNum = ToInteger(GetArgument(0));
   }
 
   /* Step 5. */
@@ -588,7 +588,7 @@ function TupleFlatMap(mapperFunction /*, thisArg*/) {
   var list = ThisTupleValue(this);
 
   /* Step 3. */
-  if (arguments.length === 0) {
+  if (ArgumentsLength() === 0) {
     ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Tuple.prototype.flatMap");
   }
   if (!IsCallable(mapperFunction)) {
@@ -599,7 +599,7 @@ function TupleFlatMap(mapperFunction /*, thisArg*/) {
   var flat = [];
 
   /* Step 5. */
-  var thisArg = arguments.length > 1 ? arguments[1] : undefined;
+  var thisArg = ArgumentsLength() > 1 ? GetArgument(1) : undefined;
   FlattenIntoTuple(flat, list, 1, mapperFunction, thisArg);
 
   /* Step 6. */
@@ -609,14 +609,14 @@ function TupleFlatMap(mapperFunction /*, thisArg*/) {
 function TupleFrom(items /*, mapFn, thisArg */) {
   /* Step 1 */
   var mapping;
-  var mapfn = arguments.length < 2 ? undefined : arguments[1];
-  var thisArg = arguments.length < 3 ? undefined : arguments[2];
+  var mapfn = ArgumentsLength() < 2 ? undefined : GetArgument(1);
+  var thisArg = ArgumentsLength() < 3 ? undefined : GetArgument(2);
   if (mapfn === undefined) {
     mapping = false;
   } else {
     /* Step 2 */
     if (!IsCallable(mapfn)) {
-      ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, arguments[1]));
+      ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, GetArgument(1)));
     }
     mapping = true;
   }
