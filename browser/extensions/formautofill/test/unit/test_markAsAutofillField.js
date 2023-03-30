@@ -162,8 +162,8 @@ let markedFieldId = [];
 
 var FormAutofillContent;
 add_setup(async () => {
-  ({ FormAutofillContent } = ChromeUtils.import(
-    "resource://autofill/FormAutofillContent.jsm"
+  ({ FormAutofillContent } = ChromeUtils.importESModule(
+    "resource://autofill/FormAutofillContent.sys.mjs"
   ));
 
   FormAutofillContent._markAsAutofillField = function(field) {

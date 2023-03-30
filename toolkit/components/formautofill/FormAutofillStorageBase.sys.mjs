@@ -122,24 +122,21 @@
  * this new field.
  */
 
+import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
-const { FormAutofill } = ChromeUtils.import(
-  "resource://autofill/FormAutofill.jsm"
-);
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
+  FormAutofillNameUtils: "resource://autofill/FormAutofillNameUtils.sys.mjs",
+  FormAutofillUtils: "resource://autofill/FormAutofillUtils.sys.mjs",
   OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
+  PhoneNumber: "resource://autofill/phonenumberutils/PhoneNumber.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AutofillTelemetry: "resource://autofill/AutofillTelemetry.jsm",
-  FormAutofillNameUtils: "resource://autofill/FormAutofillNameUtils.jsm",
-  FormAutofillUtils: "resource://autofill/FormAutofillUtils.jsm",
-  PhoneNumber: "resource://autofill/phonenumberutils/PhoneNumber.jsm",
 });
 
 const CryptoHash = Components.Constructor(

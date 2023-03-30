@@ -1,18 +1,18 @@
 "use strict";
 
-const { FieldScanner } = ChromeUtils.import(
-  "resource://autofill/FormAutofillHeuristics.jsm"
+const { FieldScanner } = ChromeUtils.importESModule(
+  "resource://autofill/FormAutofillHeuristics.sys.mjs"
 );
 var FormAutofillHeuristics, LabelUtils, FormAutofill;
 add_task(async function() {
-  ({ FormAutofillHeuristics } = ChromeUtils.import(
-    "resource://autofill/FormAutofillHeuristics.jsm"
+  ({ FormAutofillHeuristics } = ChromeUtils.importESModule(
+    "resource://autofill/FormAutofillHeuristics.sys.mjs"
   ));
-  ({ LabelUtils } = ChromeUtils.import(
-    "resource://autofill/FormAutofillUtils.jsm"
+  ({ LabelUtils } = ChromeUtils.importESModule(
+    "resource://autofill/FormAutofillUtils.sys.mjs"
   ));
-  ({ FormAutofill } = ChromeUtils.import(
-    "resource://autofill/FormAutofill.jsm"
+  ({ FormAutofill } = ChromeUtils.importESModule(
+    "resource://autofill/FormAutofill.sys.mjs"
   ));
 });
 

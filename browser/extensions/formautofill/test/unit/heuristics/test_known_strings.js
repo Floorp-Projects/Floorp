@@ -128,8 +128,8 @@ const KNOWN_NAMES = {
 };
 
 add_setup(async () => {
-  ({ FormAutofillHeuristics } = ChromeUtils.import(
-    "resource://autofill/FormAutofillHeuristics.jsm"
+  ({ FormAutofillHeuristics } = ChromeUtils.importESModule(
+    "resource://autofill/FormAutofillHeuristics.sys.mjs"
   ));
 });
 

@@ -7,26 +7,20 @@
  */
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
+import { FormAutofillUtils } from "resource://autofill/FormAutofillUtils.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
-const { FormAutofill } = ChromeUtils.import(
-  "resource://autofill/FormAutofill.jsm"
-);
-
-const { FormAutofillUtils } = ChromeUtils.import(
-  "resource://autofill/FormAutofillUtils.jsm"
-);
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
+  FormAutofillHeuristics: "resource://autofill/FormAutofillHeuristics.sys.mjs",
   FormLikeFactory: "resource://gre/modules/FormLikeFactory.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AutofillTelemetry: "resource://autofill/AutofillTelemetry.jsm",
-  FormAutofillHeuristics: "resource://autofill/FormAutofillHeuristics.jsm",
 });
 
 const formFillController = Cc[

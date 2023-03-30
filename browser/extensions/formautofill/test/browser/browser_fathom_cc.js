@@ -62,11 +62,11 @@ async function run_test(path, dirs) {
         browser,
         [{ eligibleElementSelector, file }],
         obj => {
-          const { FieldScanner } = ChromeUtils.import(
-            "resource://autofill/FormAutofillHeuristics.jsm"
+          const { FieldScanner } = ChromeUtils.importESModule(
+            "resource://autofill/FormAutofillHeuristics.sys.mjs"
           );
-          const { FormAutofillUtils } = ChromeUtils.import(
-            "resource://autofill/FormAutofillUtils.jsm"
+          const { FormAutofillUtils } = ChromeUtils.importESModule(
+            "resource://autofill/FormAutofillUtils.sys.mjs"
           );
 
           let eligibleFields = [];
