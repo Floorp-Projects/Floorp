@@ -307,8 +307,18 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvHideEvent(
     return IPC_OK();
   }
 
+#ifdef XP_WIN
+  WeakPtr<RemoteAccessible> parent = root->RemoteParent();
+#else
   RemoteAccessible* parent = root->RemoteParent();
+#endif
   ProxyShowHideEvent(root, parent, false, aFromUser);
+#ifdef XP_WIN
+  if (!parent) {
+    MOZ_ASSERT(!StaticPrefs::accessibility_cache_enabled_AtStartup());
+    return IPC_FAIL(this, "Parent removed while removing child");
+  }
+#endif
 
   RefPtr<xpcAccHideEvent> event = nullptr;
   if (nsCoreUtils::AccEventObserversExist()) {
