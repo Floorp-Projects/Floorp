@@ -174,6 +174,13 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
             return SettingsSubMenuLoginsAndPasswordRobot.Transition()
         }
 
+        fun goBackToSavedLogins(interact: SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot.() -> Unit): SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot.Transition {
+            goBackButton().perform(ViewActions.click())
+
+            SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot().interact()
+            return SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot.Transition()
+        }
+
         fun goToSavedWebsite(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             openWebsiteButton.click()
 

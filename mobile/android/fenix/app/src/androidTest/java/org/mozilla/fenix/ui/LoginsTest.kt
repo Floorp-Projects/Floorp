@@ -518,7 +518,7 @@ class LoginsTest {
     }
 
     @Test
-    fun verifySearchLoginsTest() {
+    fun searchLoginsByUsernameTest() {
         val firstLoginPage = TestAssetHelper.getSaveLoginAsset(mockWebServer)
         val secondLoginPage = "https://mozilla-mobile.github.io/testapp/v2.0/loginForm.html"
         val originWebsite = "mozilla-mobile.github.io"
@@ -529,7 +529,7 @@ class LoginsTest {
             saveLoginFromPrompt("Save")
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(secondLoginPage.toUri()) {
-            fillAndSubmitLoginCredentials("mozilla", "firefox")
+            fillAndSubmitLoginCredentials("android", "firefox")
             saveLoginFromPrompt("Save")
         }.openThreeDotMenu {
         }.openSettings {
@@ -537,9 +537,65 @@ class LoginsTest {
         }.openSavedLogins {
             tapSetupLater()
             clickSearchLoginButton()
+            searchLogin("ANDROID")
+            viewSavedLoginDetails(originWebsite)
+            verifyLoginItemUsername("android")
+            revealPassword()
+            verifyPasswordSaved("firefox")
+        }.goBackToSavedLogins {
+            clickSearchLoginButton()
+            searchLogin("android")
+            viewSavedLoginDetails(originWebsite)
+            verifyLoginItemUsername("android")
+            revealPassword()
+            verifyPasswordSaved("firefox")
+        }.goBackToSavedLogins {
+            clickSearchLoginButton()
+            searchLogin("AnDrOiD")
+            viewSavedLoginDetails(originWebsite)
+            verifyLoginItemUsername("android")
+            revealPassword()
+            verifyPasswordSaved("firefox")
+        }
+    }
+
+    @Test
+    fun searchLoginsByUrlTest() {
+        val firstLoginPage = TestAssetHelper.getSaveLoginAsset(mockWebServer)
+        val secondLoginPage = "https://mozilla-mobile.github.io/testapp/v2.0/loginForm.html"
+        val originWebsite = "mozilla-mobile.github.io"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(firstLoginPage.url) {
+            clickSubmitLoginButton()
+            saveLoginFromPrompt("Save")
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(secondLoginPage.toUri()) {
+            fillAndSubmitLoginCredentials("android", "firefox")
+            saveLoginFromPrompt("Save")
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openLoginsAndPasswordSubMenu {
+        }.openSavedLogins {
+            tapSetupLater()
+            clickSearchLoginButton()
+            searchLogin("MOZILLA")
+            viewSavedLoginDetails(originWebsite)
+            verifyLoginItemUsername("android")
+            revealPassword()
+            verifyPasswordSaved("firefox")
+        }.goBackToSavedLogins {
+            clickSearchLoginButton()
             searchLogin("mozilla")
             viewSavedLoginDetails(originWebsite)
-            verifyLoginItemUsername("mozilla")
+            verifyLoginItemUsername("android")
+            revealPassword()
+            verifyPasswordSaved("firefox")
+        }.goBackToSavedLogins {
+            clickSearchLoginButton()
+            searchLogin("MoZiLlA")
+            viewSavedLoginDetails(originWebsite)
+            verifyLoginItemUsername("android")
             revealPassword()
             verifyPasswordSaved("firefox")
         }

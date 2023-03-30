@@ -404,7 +404,11 @@ class BrowserRobot {
                 it.click()
             }
 
-    fun clickSubmitLoginButton() = clickPageObject(webPageItemWithResourceId("submit"))
+    fun clickSubmitLoginButton() {
+        clickPageObject(webPageItemWithResourceId("submit"))
+        webPageItemWithResourceId("submit").waitUntilGone(waitingTime)
+        mDevice.waitForIdle(waitingTimeLong)
+    }
 
     fun verifyUpdateLoginPromptIsShown() = mDevice.waitNotNull(Until.findObjects(text("Update")))
 
