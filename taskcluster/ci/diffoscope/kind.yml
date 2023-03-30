@@ -50,6 +50,9 @@ jobs:
             # browser.eme.ui.enabled to false should give us the same preferences as
             # the non-EME build.
             - sed -i '/browser\.eme\.ui\.enabled/s/true/false/;/media\.gmp-widevinecdm\./d' b/firefox/browser/defaults/preferences/firefox.js
+            # bug 1825141 - telemetry.fog.artifact_build isn't stable between
+            # artifact and not-artifact builds, so remove its line if present.
+            - sed -i '/telemetry\.fog\.artifact\_build/d' b/firefox/browser/defaults/preferences/firefox.js
         # Extra diffoscope arguments to account for:
         # - about:buildconfig being expectedly different.
         # - There are some differences in PE metadata in helper.exe because
