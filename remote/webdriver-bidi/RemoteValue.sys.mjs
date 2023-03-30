@@ -445,6 +445,24 @@ function getSharedIdForNode(node, realm, options = {}) {
 }
 
 /**
+ * Determines if <var>node</var> is shadow root.
+ *
+ * @param {Node} node
+ *    Node to check.
+ *
+ * @returns {boolean}
+ *    True if <var>node</var> is shadow root, false otherwise.
+ */
+function isShadowRoot(node) {
+  const DOCUMENT_FRAGMENT_NODE = 11;
+  return (
+    node &&
+    node.nodeType === DOCUMENT_FRAGMENT_NODE &&
+    node.containingShadowRoot == node
+  );
+}
+
+/**
  * Helper to serialize an Array-like object.
  *
  * @see https://w3c.github.io/webdriver-bidi/#serialize-an-array-like
@@ -651,7 +669,8 @@ function serializeNode(
 
   serialized.childNodeCount = node.childNodes.length;
 
-  if (maxDepth !== 0) {
+  // Bug 1824953: Add support for shadow root children serialization.
+  if (maxDepth !== 0 && !isShadowRoot(node)) {
     const children = [];
     const childDepth = maxDepth !== null ? maxDepth - 1 : null;
     for (const child of node.childNodes) {
@@ -676,7 +695,22 @@ function serializeNode(
       return map;
     }, {});
 
-    // TODO: Bug 1802137 - Add support for shadowRoot
+    const shadowRoot = Cu.unwaiveXrays(node).openOrClosedShadowRoot;
+    serialized.shadowRoot = null;
+    if (shadowRoot !== null) {
+      serialized.shadowRoot = serialize(
+        shadowRoot,
+        maxDepth,
+        ownershipType,
+        serializationInternalMap,
+        realm,
+        options
+      );
+    }
+  }
+
+  if (isShadowRoot(node)) {
+    serialized.mode = node.mode;
   }
 
   return serialized;
