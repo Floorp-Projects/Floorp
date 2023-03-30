@@ -7,7 +7,7 @@ DEFINES["ANGLE_ENABLE_GLSL"] = True
 DEFINES["ANGLE_ENABLE_HLSL"] = True
 # DEFINES["ANGLE_IS_WIN"] = True
 # DEFINES["CERT_CHAIN_PARA_HAS_EXTRA_FIELDS"] = True
-DEFINES["CR_CLANG_REVISION"] = '"llvmorg-13-init-3462-gfe5c2c3c-2"'
+DEFINES["CR_CLANG_REVISION"] = '"llvmorg-13-init-9302-g897d7bce-1"'
 DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
 # DEFINES["NDEBUG"] = True
 DEFINES["NOMINMAX"] = True
@@ -43,7 +43,6 @@ LOCAL_INCLUDES += [
 #     "-D__DATE__=",
 #     "-D__TIME__=",
 #     "-D__TIMESTAMP__=",
-#     "-debug-info-kind=constructor",
 #     "-fcolor-diagnostics",
 #     "-fcomplete-member-pointers",
 #     "-fcrash-diagnostics-dir=../tools/clang/crashreports",
@@ -338,7 +337,7 @@ DIRS += [
 #     "/pdbaltpath:%_PDB%",
 #     "/PDBSourcePath:C:/dev/angle/out",
 #     "/PROFILE",
-#     "/TIMESTAMP:1615093200",
+#     "/TIMESTAMP:1619931600",
 #     "/WX",
 # ]
 
