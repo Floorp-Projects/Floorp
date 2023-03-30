@@ -27,6 +27,7 @@ import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
 import org.mozilla.fenix.home.toolbar.ToolbarController
 import org.mozilla.fenix.onboarding.controller.OnboardingController
+import org.mozilla.fenix.search.toolbar.SearchSelectorController
 
 class SessionControlInteractorTest {
 
@@ -37,6 +38,7 @@ class SessionControlInteractorTest {
     private val pocketStoriesController: PocketStoriesController = mockk(relaxed = true)
     private val privateBrowsingController: PrivateBrowsingController = mockk(relaxed = true)
     private val onboardingController: OnboardingController = mockk(relaxed = true)
+    private val searchSelectorController: SearchSelectorController = mockk(relaxed = true)
     private val toolbarController: ToolbarController = mockk(relaxed = true)
 
     // Note: the recent visits tests are handled in [RecentVisitsInteractorTest] and [RecentVisitsControllerTest]
@@ -55,6 +57,7 @@ class SessionControlInteractorTest {
             pocketStoriesController,
             privateBrowsingController,
             onboardingController,
+            searchSelectorController,
             toolbarController,
         )
     }

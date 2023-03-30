@@ -33,6 +33,7 @@ import org.mozilla.fenix.home.toolbar.ToolbarController
 import org.mozilla.fenix.home.toolbar.ToolbarInteractor
 import org.mozilla.fenix.onboarding.controller.OnboardingController
 import org.mozilla.fenix.onboarding.interactor.OnboardingInteractor
+import org.mozilla.fenix.search.toolbar.SearchSelectorController
 import org.mozilla.fenix.search.toolbar.SearchSelectorInteractor
 import org.mozilla.fenix.search.toolbar.SearchSelectorMenu
 import org.mozilla.fenix.wallpapers.WallpaperState
@@ -226,6 +227,7 @@ class SessionControlInteractor(
     private val pocketStoriesController: PocketStoriesController,
     private val privateBrowsingController: PrivateBrowsingController,
     private val onboardingController: OnboardingController,
+    private val searchSelectorController: SearchSelectorController,
     private val toolbarController: ToolbarController,
 ) : CollectionInteractor,
     OnboardingInteractor,
@@ -438,6 +440,6 @@ class SessionControlInteractor(
     }
 
     override fun onMenuItemTapped(item: SearchSelectorMenu.Item) {
-        controller.handleMenuItemTapped(item)
+        searchSelectorController.handleMenuItemTapped(item)
     }
 }

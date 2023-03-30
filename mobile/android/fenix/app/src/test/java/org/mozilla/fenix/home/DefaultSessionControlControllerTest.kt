@@ -6,7 +6,6 @@ package org.mozilla.fenix.home
 
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
-import androidx.navigation.NavOptions
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -68,7 +67,6 @@ import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.messaging.MessageController
 import org.mozilla.fenix.onboarding.WallpaperOnboardingDialogFragment.Companion.THUMBNAILS_SELECTION_COUNT
-import org.mozilla.fenix.search.toolbar.SearchSelectorMenu
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.wallpapers.Wallpaper
@@ -1114,34 +1112,6 @@ class DefaultSessionControlControllerTest {
         }
         verify {
             messageController.onMessageDismissed(message)
-        }
-    }
-
-    @Test
-    fun `WHEN handleMenuItemTapped is called with SearchSettings item THEN navigate to SearchEngineFragment`() {
-        createController().handleMenuItemTapped(SearchSelectorMenu.Item.SearchSettings)
-
-        verify {
-            navController.navigate(
-                match<NavDirections> { it.actionId == R.id.action_global_searchEngineFragment },
-                null,
-            )
-        }
-    }
-
-    @Test
-    fun `WHEN handleMenuItemTapped is called with SearchEngine item THEN navigate to SearchDialogFragment`() {
-        val item = mockk<SearchSelectorMenu.Item.SearchEngine>()
-        every { item.searchEngine.id } returns "DuckDuckGo"
-
-        createController().handleMenuItemTapped(item)
-
-        val expectedDirections = HomeFragmentDirections.actionGlobalSearchDialog(
-            sessionId = null,
-            searchEngine = item.searchEngine.id,
-        )
-        verify {
-            navController.navigate(expectedDirections, any<NavOptions>())
         }
     }
 

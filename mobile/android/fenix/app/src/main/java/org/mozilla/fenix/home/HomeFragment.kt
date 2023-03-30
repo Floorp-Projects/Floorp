@@ -110,6 +110,7 @@ import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.onboarding.controller.DefaultOnboardingController
 import org.mozilla.fenix.perf.MarkersFragmentLifecycleCallbacks
 import org.mozilla.fenix.perf.runBlockingIncrement
+import org.mozilla.fenix.search.toolbar.DefaultSearchSelectorController
 import org.mozilla.fenix.search.toolbar.SearchSelectorMenu
 import org.mozilla.fenix.tabstray.TabsTrayAccessPoint
 import org.mozilla.fenix.utils.Settings.Companion.TOP_SITES_PROVIDER_MAX_THRESHOLD
@@ -408,6 +409,10 @@ class HomeFragment : Fragment() {
             onboardingController = DefaultOnboardingController(
                 activity = activity,
                 hideOnboarding = ::hideOnboardingAndOpenSearch,
+            ),
+            searchSelectorController = DefaultSearchSelectorController(
+                activity = activity,
+                navController = findNavController(),
             ),
             toolbarController = DefaultToolbarController(
                 activity = activity,
