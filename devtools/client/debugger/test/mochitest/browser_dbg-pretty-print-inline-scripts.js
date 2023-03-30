@@ -145,6 +145,35 @@ add_task(async function() {
   ok(true, "…at the expected location");
 });
 
+add_task(async function prettyPrintSingleLineDataUrl() {
+  const TEST_URL = `data:text/html,<meta charset=utf8><script>{"use strict"; globalThis.foo = function() {}}</script>`;
+  const PRETTY_PRINTED_URL = `${TEST_URL}:formatted`;
+  const dbg = await initDebuggerWithAbsoluteURL(TEST_URL);
+
+  await selectSource(dbg, TEST_URL);
+  clickElement(dbg, "prettyPrintButton");
+
+  const prettySource = await waitForSource(dbg, PRETTY_PRINTED_URL);
+  await waitForSelectedSource(dbg, prettySource);
+  const prettyPrintedSource = findSourceContent(dbg, PRETTY_PRINTED_URL);
+
+  ok(prettyPrintedSource, "Pretty-printed source exists");
+
+  info("Check that the HTML file was pretty-printed as expected");
+  const expectedPrettyHtml = `<meta charset=utf8><script>
+{
+  'use strict';
+  globalThis.foo = function () {
+  }
+}
+</script>`;
+  is(
+    prettyPrintedSource.value,
+    expectedPrettyHtml,
+    "HTML file is pretty printed as expected"
+  );
+});
+
 /**
  * Return the expected pretty-printed HTML. Lines starting with ➤ indicate breakable
  * lines for easier maintenance.

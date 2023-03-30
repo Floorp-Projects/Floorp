@@ -824,7 +824,7 @@ async function selectSource(dbg, url, line, column) {
     createLocation({ source, line, column }),
     { keepContext: false }
   );
-  return waitForSelectedSource(dbg, url);
+  return waitForSelectedSource(dbg, source);
 }
 
 async function closeTab(dbg, url) {
