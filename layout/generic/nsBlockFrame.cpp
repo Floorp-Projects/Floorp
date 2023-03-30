@@ -2856,7 +2856,7 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowState& aState) {
         while (prevFrame && prevFrame->IsPlaceholderFrame()) {
           prevFrame = prevFrame->GetPrevSibling();
         }
-        if (prevFrame && prevFrame->GetEndPageValue() != nextPageName) {
+        if (prevFrame && prevFrame->GetStartPageValue() != nextPageName) {
           shouldBreakForPageName = true;
           line->MarkDirty();
         }
