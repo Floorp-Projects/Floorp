@@ -42,6 +42,9 @@
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/ipc/UtilityProcessManager.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
+#ifdef MOZ_PHC
+#  include "replace_malloc_bridge.h"
+#endif
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "mozilla/java/GeckoAppShellWrappers.h"
