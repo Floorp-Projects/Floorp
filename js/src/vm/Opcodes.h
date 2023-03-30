@@ -2853,6 +2853,30 @@
      */ \
     MACRO(GetLocal, get_local, NULL, 4, 0, 1, JOF_LOCAL|JOF_NAME) \
     /*
+     * Push the number of actual arguments as Int32Value.
+     *
+     * This is emitted for the ArgumentsLength() intrinsic in self-hosted code.
+     *
+     *   Category: Variables and scopes
+     *   Type: Getting binding values
+     *   Operands:
+     *   Stack: => arguments.length
+     */ \
+    MACRO(ArgumentsLength, arguments_length, NULL, 1, 0, 1, JOF_BYTE) \
+    /*
+     * Push the value of an argument that is stored in the stack frame. The
+     * value on top of the stack must be an Int32Value storing the index. The
+     * index must be less than the number of actual arguments.
+     *
+     * This is emitted for the GetArgument(i) intrinsic in self-hosted code.
+     *
+     *   Category: Variables and scopes
+     *   Type: Getting binding values
+     *   Operands:
+     *   Stack: index => arguments[index]
+     */ \
+    MACRO(GetActualArg, get_actual_arg, NULL, 1, 1, 1, JOF_BYTE) \
+    /*
      * Push the value of an aliased binding.
      *
      * Local bindings that aren't closed over or dynamically accessed are
@@ -3528,15 +3552,13 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
-  IF_RECORD_TUPLE(/* empty */, MACRO(227))     \
-  IF_RECORD_TUPLE(/* empty */, MACRO(228))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(229))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(230))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(231))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(232))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(233))     \
-  MACRO(234)                                   \
-  MACRO(235)                                   \
+  IF_RECORD_TUPLE(/* empty */, MACRO(234))     \
+  IF_RECORD_TUPLE(/* empty */, MACRO(235))     \
   MACRO(236)                                   \
   MACRO(237)                                   \
   MACRO(238)                                   \

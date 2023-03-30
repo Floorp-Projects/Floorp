@@ -27,6 +27,7 @@
 #include "jit/MIRGraph.h"
 #include "jit/RangeAnalysis.h"
 #include "jit/VMFunctions.h"
+#include "jit/WarpBuilderShared.h"
 #include "js/Conversions.h"
 #include "js/experimental/JitInfo.h"  // JSJitInfo, JSTypedMethodJitInfo
 #include "js/ScalarType.h"            // js::Scalar::Type
@@ -7014,6 +7015,26 @@ MGetInlinedArgument* MGetInlinedArgument::New(
   ins->initOperand(0, index);
   for (uint32_t i = 0; i < argc; i++) {
     ins->initOperand(i + NumNonArgumentOperands, args->getArg(i));
+  }
+
+  return ins;
+}
+
+MGetInlinedArgument* MGetInlinedArgument::New(TempAllocator& alloc,
+                                              MDefinition* index,
+                                              const CallInfo& callInfo) {
+  MGetInlinedArgument* ins = new (alloc) MGetInlinedArgument();
+
+  uint32_t argc = callInfo.argc();
+  MOZ_ASSERT(argc <= ArgumentsObject::MaxInlinedArgs);
+
+  if (!ins->init(alloc, argc + NumNonArgumentOperands)) {
+    return nullptr;
+  }
+
+  ins->initOperand(0, index);
+  for (uint32_t i = 0; i < argc; i++) {
+    ins->initOperand(i + NumNonArgumentOperands, callInfo.getArg(i));
   }
 
   return ins;

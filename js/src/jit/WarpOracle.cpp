@@ -616,6 +616,8 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::InitLexical:
       case JSOp::GetArg:
       case JSOp::SetArg:
+      case JSOp::ArgumentsLength:
+      case JSOp::GetActualArg:
       case JSOp::JumpTarget:
       case JSOp::LoopHead:
       case JSOp::Case:

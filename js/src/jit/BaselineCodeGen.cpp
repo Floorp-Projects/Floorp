@@ -4064,6 +4064,50 @@ bool BaselineCodeGen<Handler>::emit_SetArg() {
   return emitFormalArgAccess(JSOp::SetArg);
 }
 
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_ArgumentsLength() {
+  frame.syncStack(0);
+
+  masm.loadNumActualArgs(FramePointer, R0.scratchReg());
+  masm.tagValue(JSVAL_TYPE_INT32, R0.scratchReg(), R0);
+
+  frame.push(R0);
+  return true;
+}
+
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_GetActualArg() {
+  frame.popRegsAndSync(1);
+
+#ifdef DEBUG
+  {
+    Label ok;
+    masm.branchTestInt32(Assembler::Equal, R0, &ok);
+    masm.assumeUnreachable("GetActualArg unexpected type");
+    masm.bind(&ok);
+  }
+#endif
+
+  Register index = R0.scratchReg();
+  masm.unboxInt32(R0, index);
+
+#ifdef DEBUG
+  {
+    Label ok;
+    masm.loadNumActualArgs(FramePointer, R1.scratchReg());
+    masm.branch32(Assembler::Above, R1.scratchReg(), index, &ok);
+    masm.assumeUnreachable("GetActualArg invalid index");
+    masm.bind(&ok);
+  }
+#endif
+
+  BaseValueIndex addr(FramePointer, index,
+                      JitFrameLayout::offsetOfActualArgs());
+  masm.loadValue(addr, R0);
+  frame.push(R0);
+  return true;
+}
+
 template <>
 void BaselineCompilerCodeGen::loadNumFormalArguments(Register dest) {
   masm.move32(Imm32(handler.function()->nargs()), dest);

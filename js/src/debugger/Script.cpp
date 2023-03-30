@@ -1482,6 +1482,8 @@ static bool BytecodeIsEffectful(JSScript* script, size_t offset) {
     case JSOp::SetArg:
     case JSOp::GetLocal:
     case JSOp::SetLocal:
+    case JSOp::GetActualArg:
+    case JSOp::ArgumentsLength:
     case JSOp::ThrowSetConst:
     case JSOp::CheckLexical:
     case JSOp::CheckAliasedLexical:

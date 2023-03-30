@@ -952,6 +952,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   [[nodiscard]] bool emitSelfHostedSetIsInlinableLargeFunction(
       CallNode* callNode);
   [[nodiscard]] bool emitSelfHostedSetCanonicalName(CallNode* callNode);
+  [[nodiscard]] bool emitSelfHostedArgumentsLength(CallNode* callNode);
+  [[nodiscard]] bool emitSelfHostedGetArgument(CallNode* callNode);
 #ifdef DEBUG
   void assertSelfHostedExpectedTopLevel(ParseNode* node);
   void assertSelfHostedUnsafeGetReservedSlot(ListNode* argsList);

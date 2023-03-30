@@ -3215,7 +3215,7 @@ bool JSScript::hasLoops() {
 }
 
 bool JSScript::mayReadFrameArgsDirectly() {
-  return needsArgsObj() || hasRest();
+  return needsArgsObj() || usesArgumentsIntrinsics() || hasRest();
 }
 
 void JSScript::resetWarmUpCounterToDelayIonCompilation() {

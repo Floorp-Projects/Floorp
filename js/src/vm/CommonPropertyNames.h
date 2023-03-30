@@ -34,6 +34,7 @@
   MACRO_(apply, apply, "apply")                                                \
   MACRO_(approximatelySign, approximatelySign, "approximatelySign")            \
   MACRO_(arguments, arguments, "arguments")                                    \
+  MACRO_(ArgumentsLength, ArgumentsLength, "ArgumentsLength")                  \
   MACRO_(ArrayBufferSpecies, ArrayBufferSpecies, "$ArrayBufferSpecies")        \
   MACRO_(ArrayIterator, ArrayIterator, "Array Iterator")                       \
   MACRO_(ArrayIteratorNext, ArrayIteratorNext, "ArrayIteratorNext")            \
@@ -212,6 +213,7 @@
   MACRO_(GeneratorThrow, GeneratorThrow, "GeneratorThrow")                     \
   MACRO_(get, get, "get")                                                      \
   MACRO_(GetAggregateError, GetAggregateError, "GetAggregateError")            \
+  MACRO_(GetArgument, GetArgument, "GetArgument")                              \
   MACRO_(getBigInt64, getBigInt64, "getBigInt64")                              \
   MACRO_(getBigUint64, getBigUint64, "getBigUint64")                           \
   MACRO_(GetBuiltinConstructor, GetBuiltinConstructor,                         \

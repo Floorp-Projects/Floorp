@@ -3790,6 +3790,19 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(SetLocal)
 
+    CASE(ArgumentsLength) {
+      MOZ_ASSERT(!script->needsArgsObj());
+      PUSH_INT32(REGS.fp()->numActualArgs());
+    }
+    END_CASE(ArgumentsLength)
+
+    CASE(GetActualArg) {
+      MOZ_ASSERT(!script->needsArgsObj());
+      uint32_t index = REGS.sp[-1].toInt32();
+      REGS.sp[-1] = REGS.fp()->unaliasedActual(index);
+    }
+    END_CASE(GetActualArg)
+
     CASE(GlobalOrEvalDeclInstantiation) {
       GCThingIndex lastFun = GET_GCTHING_INDEX(REGS.pc);
       HandleObject env = REGS.fp()->environmentChain();
