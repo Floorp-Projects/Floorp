@@ -10,5 +10,3 @@ FINAL_LIBRARY = "xul"
 LOCAL_INCLUDES += [
     "..",
 ]
-
-REQUIRES_UNIFIED_BUILD = True
