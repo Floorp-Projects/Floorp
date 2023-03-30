@@ -96,11 +96,12 @@ void ChildProfilerController::ShutdownAndMaybeGrabShutdownProfileFirst(
       // If we're not profiling, this operation will be very quick, so it can be
       // done synchronously. This avoids having to manually shutdown the thread,
       // which runs a risky inner event loop, see bug 1613798.
-      profilerChildThread->Dispatch(
+      NS_DispatchAndSpinEventLoopUntilComplete(
+          "ChildProfilerController::ShutdownProfilerChild SYNC"_ns,
+          profilerChildThread,
           NewRunnableMethod<ProfileAndAdditionalInformation*>(
               "ChildProfilerController::ShutdownProfilerChild SYNC", this,
-              &ChildProfilerController::ShutdownProfilerChild, nullptr),
-          NS_DISPATCH_SYNC);
+              &ChildProfilerController::ShutdownProfilerChild, nullptr));
     }
     // At this point, `profilerChildThread` should be the last reference to the
     // thread, so it will now get destroyed.

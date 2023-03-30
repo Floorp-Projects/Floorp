@@ -74,12 +74,8 @@ class AndroidUiThread : public nsThread {
 NS_IMETHODIMP
 AndroidUiThread::Dispatch(already_AddRefed<nsIRunnable> aEvent,
                           uint32_t aFlags) {
-  if (aFlags & NS_DISPATCH_SYNC) {
-    return nsThread::Dispatch(std::move(aEvent), aFlags);
-  } else {
-    EnqueueTask(std::move(aEvent), 0);
-    return NS_OK;
-  }
+  EnqueueTask(std::move(aEvent), 0);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -163,12 +163,12 @@ class TimerHelper {
   }
 
   void Cancel() {
-    mTarget->Dispatch(NS_NewRunnableFunction("~TimerHelper timer cancel",
-                                             [this] {
-                                               MonitorAutoLock lock(mMonitor);
-                                               mTimer->Cancel();
-                                             }),
-                      NS_DISPATCH_SYNC);
+    NS_DispatchAndSpinEventLoopUntilComplete(
+        "~TimerHelper timer cancel"_ns, mTarget,
+        NS_NewRunnableFunction("~TimerHelper timer cancel", [this] {
+          MonitorAutoLock lock(mMonitor);
+          mTimer->Cancel();
+        }));
   }
 
  private:

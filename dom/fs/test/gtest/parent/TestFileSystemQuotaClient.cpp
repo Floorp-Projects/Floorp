@@ -60,29 +60,27 @@ class TestFileSystemQuotaClient
       quota::QuotaManager* quotaManager = quota::QuotaManager::Get();
       ASSERT_TRUE(quotaManager);
 
-      quotaManager->IOThread()->Dispatch(
-          NS_NewRunnableFunction(
-              "TestFileSystemQuotaClient",
-              []() {
-                quota::QuotaManager* qm = quota::QuotaManager::Get();
-                ASSERT_TRUE(qm);
+      NS_DispatchAndSpinEventLoopUntilComplete(
+          "TestFileSystemQuotaClient"_ns, quotaManager->IOThread(),
+          NS_NewRunnableFunction("TestFileSystemQuotaClient", []() {
+            quota::QuotaManager* qm = quota::QuotaManager::Get();
+            ASSERT_TRUE(qm);
 
-                ASSERT_NSEQ(NS_OK, qm->EnsureStorageIsInitialized());
+            ASSERT_NSEQ(NS_OK, qm->EnsureStorageIsInitialized());
 
-                ASSERT_NSEQ(NS_OK, qm->EnsureTemporaryStorageIsInitialized());
+            ASSERT_NSEQ(NS_OK, qm->EnsureTemporaryStorageIsInitialized());
 
-                const quota::OriginMetadata& testOriginMeta =
-                    GetTestQuotaOriginMetadata();
+            const quota::OriginMetadata& testOriginMeta =
+                GetTestQuotaOriginMetadata();
 
-                auto dirInfoRes = qm->EnsureTemporaryOriginIsInitialized(
-                    quota::PERSISTENCE_TYPE_DEFAULT, testOriginMeta);
-                if (dirInfoRes.isErr()) {
-                  ASSERT_NSEQ(NS_OK, dirInfoRes.unwrapErr());
-                }
+            auto dirInfoRes = qm->EnsureTemporaryOriginIsInitialized(
+                quota::PERSISTENCE_TYPE_DEFAULT, testOriginMeta);
+            if (dirInfoRes.isErr()) {
+              ASSERT_NSEQ(NS_OK, dirInfoRes.unwrapErr());
+            }
 
-                qm->EnsureQuotaForOrigin(testOriginMeta);
-              }),
-          NS_DISPATCH_SYNC);
+            qm->EnsureQuotaForOrigin(testOriginMeta);
+          }));
     };
 
     PerformOnBackgroundThread(std::move(backgroundTask));

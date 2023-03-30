@@ -809,9 +809,9 @@ void DeleteSurfaceDescriptorUserData(void* aClosure) {
 
 already_AddRefed<SourceSurface> RemoteDecoderManagerChild::Readback(
     const SurfaceDescriptorGPUVideo& aSD) {
-  // We can't use NS_DISPATCH_SYNC here since that can spin the event
-  // loop while it waits. This function can be called from JS and we
-  // don't want that to happen.
+  // We can't use NS_DispatchAndSpinEventLoopUntilComplete here since that will
+  // spin the event loop while it waits. This function can be called from JS and
+  // we don't want that to happen.
   nsCOMPtr<nsISerialEventTarget> managerThread = GetManagerThread();
   if (!managerThread) {
     return nullptr;

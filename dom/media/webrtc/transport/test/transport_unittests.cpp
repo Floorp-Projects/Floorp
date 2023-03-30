@@ -466,8 +466,8 @@ class TransportTestPeer : public sigslot::has_slots<> {
   }
 
   ~TransportTestPeer() {
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(this, &TransportTestPeer::DestroyFlow), NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(this, &TransportTestPeer::DestroyFlow));
   }
 
   void DestroyFlow() {
@@ -482,15 +482,11 @@ class TransportTestPeer : public sigslot::has_slots<> {
   }
 
   void DisconnectDestroyFlow() {
-    test_utils_->sts_target()->Dispatch(
-        NS_NewRunnableFunction(
-            __func__,
-            [this] {
-              loopback_->Disconnect();
-              disconnect_all();  // Disconnect from the signals;
-              flow_ = nullptr;
-            }),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(NS_NewRunnableFunction(__func__, [this] {
+      loopback_->Disconnect();
+      disconnect_all();  // Disconnect from the signals;
+      flow_ = nullptr;
+    }));
   }
 
   void SetDtlsAllowAll() {
@@ -577,9 +573,8 @@ class TransportTestPeer : public sigslot::has_slots<> {
   }
 
   void ConnectSocket(TransportTestPeer* peer) {
-    RUN_ON_THREAD(test_utils_->sts_target(),
-                  WrapRunnable(this, &TransportTestPeer::ConnectSocket_s, peer),
-                  NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(this, &TransportTestPeer::ConnectSocket_s, peer));
   }
 
   nsresult InitIce_s() {
@@ -618,9 +613,8 @@ class TransportTestPeer : public sigslot::has_slots<> {
     ice_ = new TransportLayerIce();
     ice_->SetParameters(stream, 1);
 
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnableRet(&res, this, &TransportTestPeer::InitIce_s),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnableRet(&res, this, &TransportTestPeer::InitIce_s));
 
     ASSERT_EQ((nsresult)NS_OK, res);
 
@@ -630,10 +624,8 @@ class TransportTestPeer : public sigslot::has_slots<> {
     dtls_->SignalStateChange.connect(this, &TransportTestPeer::StateChanged);
 
     // Start gathering
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnableRet(&res, ice_ctx_, &NrIceCtx::StartGathering, false,
-                        false),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(WrapRunnableRet(
+        &res, ice_ctx_, &NrIceCtx::StartGathering, false, false));
     ASSERT_TRUE(NS_SUCCEEDED(res));
   }
 
@@ -671,26 +663,22 @@ class TransportTestPeer : public sigslot::has_slots<> {
     }
 
     // First send attributes
-    test_utils_->sts_target()->Dispatch(
+    test_utils_->SyncDispatchToSTS(
         WrapRunnableRet(&res, peer_->ice_ctx_, &NrIceCtx::ParseGlobalAttributes,
-                        ice_ctx_->GetGlobalAttributes()),
-        NS_DISPATCH_SYNC);
+                        ice_ctx_->GetGlobalAttributes()));
     ASSERT_TRUE(NS_SUCCEEDED(res));
 
     for (size_t i = 0; i < streams_.size(); ++i) {
-      test_utils_->sts_target()->Dispatch(
-          WrapRunnableRet(&res, peer_->streams_[i],
-                          &NrIceMediaStream::ConnectToPeer, "ufrag", "pass",
-                          streams_[i]->GetAttributes()),
-          NS_DISPATCH_SYNC);
+      test_utils_->SyncDispatchToSTS(WrapRunnableRet(
+          &res, peer_->streams_[i], &NrIceMediaStream::ConnectToPeer, "ufrag",
+          "pass", streams_[i]->GetAttributes()));
 
       ASSERT_TRUE(NS_SUCCEEDED(res));
     }
 
     // Start checks on the other peer.
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnableRet(&res, peer_->ice_ctx_, &NrIceCtx::StartChecks),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnableRet(&res, peer_->ice_ctx_, &NrIceCtx::StartChecks));
     ASSERT_TRUE(NS_SUCCEEDED(res));
   }
 
@@ -704,10 +692,8 @@ class TransportTestPeer : public sigslot::has_slots<> {
   TransportResult SendPacket(MediaPacket& packet) {
     TransportResult ret;
 
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnableNMRet(&ret, &TransportTestPeer::SendPacketWrapper, dtls_,
-                          &packet),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(WrapRunnableNMRet(
+        &ret, &TransportTestPeer::SendPacketWrapper, dtls_, &packet));
 
     return ret;
   }
@@ -940,12 +926,10 @@ class TransportTest : public MtransportTest {
 
  protected:
   void ConnectSocketInternal() {
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(p1_, &TransportTestPeer::ConnectSocket, p2_),
-        NS_DISPATCH_SYNC);
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(p2_, &TransportTestPeer::ConnectSocket, p1_),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(p1_, &TransportTestPeer::ConnectSocket, p2_));
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(p2_, &TransportTestPeer::ConnectSocket, p1_));
   }
 
   PRFileDesc* fds_[2];

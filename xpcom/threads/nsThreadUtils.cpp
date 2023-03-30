@@ -15,6 +15,8 @@
 #include "nsExceptionHandler.h"
 #include "nsIEventTarget.h"
 #include "nsITimer.h"
+#include "nsString.h"
+#include "nsThreadSyncDispatch.h"
 #include "nsTimerImpl.h"
 #include "prsystem.h"
 
@@ -739,3 +741,28 @@ nsresult NS_CreateBackgroundTaskQueue(const char* aName,
 }
 
 }  // extern "C"
+
+nsresult NS_DispatchAndSpinEventLoopUntilComplete(
+    const nsACString& aVeryGoodReasonToDoThis, nsIEventTarget* aEventTarget,
+    already_AddRefed<nsIRunnable> aEvent) {
+  // NOTE: Get the current thread specifically, as `SpinEventLoopUntil` can
+  // only spin that event target's loop. The reply will specify
+  // NS_DISPATCH_IGNORE_BLOCK_DISPATCH to ensure the reply is received even if
+  // the caller is a threadpool thread.
+  nsCOMPtr<nsIThread> current = NS_GetCurrentThread();
+  if (NS_WARN_IF(!current)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  RefPtr<nsThreadSyncDispatch> wrapper =
+      new nsThreadSyncDispatch(current.forget(), std::move(aEvent));
+  nsresult rv = aEventTarget->Dispatch(do_AddRef(wrapper));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // FIXME: Consider avoiding leaking the `nsThreadSyncDispatch` as well by
+    // using a fallible version of `Dispatch` once that is added.
+    return rv;
+  }
+
+  wrapper->SpinEventLoopUntilComplete(aVeryGoodReasonToDoThis);
+  return NS_OK;
+}

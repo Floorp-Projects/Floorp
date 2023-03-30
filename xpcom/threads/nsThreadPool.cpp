@@ -375,25 +375,9 @@ nsThreadPool::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  if (aFlags & DISPATCH_SYNC) {
-    nsCOMPtr<nsIThread> thread;
-    nsThreadManager::get().GetCurrentThread(getter_AddRefs(thread));
-    if (NS_WARN_IF(!thread)) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    RefPtr<nsThreadSyncDispatch> wrapper =
-        new nsThreadSyncDispatch(thread.forget(), std::move(aEvent));
-    PutEvent(wrapper);
-
-    SpinEventLoopUntil("nsThreadPool::Dispatch"_ns, [&, wrapper]() -> bool {
-      return !wrapper->IsPending();
-    });
-  } else {
-    NS_ASSERTION(aFlags == NS_DISPATCH_NORMAL || aFlags == NS_DISPATCH_AT_END,
-                 "unexpected dispatch flags");
-    PutEvent(std::move(aEvent), aFlags);
-  }
+  NS_ASSERTION(aFlags == NS_DISPATCH_NORMAL || aFlags == NS_DISPATCH_AT_END,
+               "unexpected dispatch flags");
+  PutEvent(std::move(aEvent), aFlags);
   return NS_OK;
 }
 

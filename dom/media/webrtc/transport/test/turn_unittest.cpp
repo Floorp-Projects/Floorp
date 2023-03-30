@@ -135,9 +135,7 @@ class TurnClient : public MtransportTest {
   }
 
   void TearDown() {
-    RUN_ON_THREAD(test_utils_->sts_target(),
-                  WrapRunnable(this, &TurnClient::TearDown_s),
-                  NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(WrapRunnable(this, &TurnClient::TearDown_s));
   }
 
   void Allocate_s() {
@@ -149,9 +147,7 @@ class TurnClient : public MtransportTest {
   }
 
   void Allocate(bool expect_success = true) {
-    RUN_ON_THREAD(test_utils_->sts_target(),
-                  WrapRunnable(this, &TurnClient::Allocate_s),
-                  NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(WrapRunnable(this, &TurnClient::Allocate_s));
 
     if (expect_success) {
       ASSERT_TRUE_WAIT(allocated_, 5000);
@@ -188,9 +184,8 @@ class TurnClient : public MtransportTest {
   }
 
   void Deallocate() {
-    RUN_ON_THREAD(test_utils_->sts_target(),
-                  WrapRunnable(this, &TurnClient::Deallocate_s),
-                  NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(this, &TurnClient::Deallocate_s));
   }
 
   void RequestPermission_s(const std::string& target) {
@@ -215,9 +210,8 @@ class TurnClient : public MtransportTest {
   }
 
   void RequestPermission(const std::string& target) {
-    RUN_ON_THREAD(test_utils_->sts_target(),
-                  WrapRunnable(this, &TurnClient::RequestPermission_s, target),
-                  NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(this, &TurnClient::RequestPermission_s, target));
   }
 
   void Readable(NR_SOCKET s, int how, void* arg) {
@@ -305,10 +299,8 @@ class TurnClient : public MtransportTest {
   }
 
   void SendTo(const std::string& target, int expect_return = 0) {
-    RUN_ON_THREAD(
-        test_utils_->sts_target(),
-        WrapRunnable(this, &TurnClient::SendTo_s, target, expect_return),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(this, &TurnClient::SendTo_s, target, expect_return));
   }
 
   int received() const { return received_; }

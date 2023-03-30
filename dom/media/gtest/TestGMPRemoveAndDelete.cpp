@@ -264,13 +264,13 @@ bool GMPRemoveTest::CreateVideoDecoder(nsCString aNodeId) {
   codec.mGMPApiVersion = 33;
 
   nsTArray<uint8_t> empty;
-  mGMPThread->Dispatch(
+  NS_DispatchAndSpinEventLoopUntilComplete(
+      "GMPVideoDecoderProxy::InitDecode"_ns, mGMPThread,
       NewNonOwningRunnableMethod<const GMPVideoCodec&, const nsTArray<uint8_t>&,
                                  GMPVideoDecoderCallbackProxy*, int32_t>(
           "GMPVideoDecoderProxy::InitDecode", decoder,
           &GMPVideoDecoderProxy::InitDecode, codec, empty, this,
-          1 /* core count */),
-      NS_DISPATCH_SYNC);
+          1 /* core count */));
 
   if (mDecoder) {
     CloseVideoDecoder();
@@ -317,10 +317,10 @@ void GMPRemoveTest::gmp_GetVideoDecoder(nsCString aNodeId,
 }
 
 void GMPRemoveTest::CloseVideoDecoder() {
-  mGMPThread->Dispatch(
+  NS_DispatchAndSpinEventLoopUntilComplete(
+      "GMPVideoDecoderProxy::Close"_ns, mGMPThread,
       NewNonOwningRunnableMethod("GMPVideoDecoderProxy::Close", mDecoder,
-                                 &GMPVideoDecoderProxy::Close),
-      NS_DISPATCH_SYNC);
+                                 &GMPVideoDecoderProxy::Close));
 
   mDecoder = nullptr;
   mHost = nullptr;

@@ -669,10 +669,11 @@ Result<Ok, nsresult> ScriptPreloader::WriteCache() {
   if (!mDataPrepared && !mSaveComplete) {
     MonitorSingleWriterAutoUnlock mau(mSaveMonitor);
 
-    NS_DispatchToMainThread(
+    NS_DispatchAndSpinEventLoopUntilComplete(
+        "ScriptPreloader::PrepareCacheWrite"_ns,
+        GetMainThreadSerialEventTarget(),
         NewRunnableMethod("ScriptPreloader::PrepareCacheWrite", this,
-                          &ScriptPreloader::PrepareCacheWrite),
-        NS_DISPATCH_SYNC);
+                          &ScriptPreloader::PrepareCacheWrite));
   }
 
   if (mSaveComplete) {

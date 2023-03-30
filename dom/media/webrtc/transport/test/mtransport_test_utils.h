@@ -15,6 +15,7 @@
 #include "nsISerialEventTarget.h"
 #include "nsPISocketTransportService.h"
 #include "nsServiceManagerUtils.h"
+#include "nsThreadUtils.h"
 
 class MtransportTestUtils {
  public:
@@ -31,6 +32,15 @@ class MtransportTestUtils {
   }
 
   nsISerialEventTarget* sts_target() { return sts_target_; }
+
+  nsresult SyncDispatchToSTS(nsIRunnable* aRunnable) {
+    return SyncDispatchToSTS(do_AddRef(aRunnable));
+  }
+  nsresult SyncDispatchToSTS(already_AddRefed<nsIRunnable>&& aRunnable) {
+    return NS_DispatchAndSpinEventLoopUntilComplete(
+        "MtransportTestUtils::SyncDispatchToSts"_ns, sts_target_,
+        std::move(aRunnable));
+  }
 
  private:
   nsCOMPtr<nsISerialEventTarget> sts_target_;

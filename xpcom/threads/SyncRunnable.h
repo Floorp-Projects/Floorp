@@ -18,11 +18,11 @@ namespace mozilla {
 
 /**
  * This class will wrap a nsIRunnable and dispatch it to the target thread
- * synchronously. This is different from nsIEventTarget.DISPATCH_SYNC:
- * this class does not spin the event loop waiting for the event to be
- * dispatched. This means that you don't risk reentrance from pending
- * messages, but you must be sure that the target thread does not ever block
- * on this thread, or else you will deadlock.
+ * synchronously. This is different from
+ * NS_DispatchAndSpinEventLoopUntilComplete: this class does not spin the event
+ * loop waiting for the event to be dispatched. This means that you don't risk
+ * reentrance from pending messages, but you must be sure that the target thread
+ * does not ever block on this thread, or else you will deadlock.
  *
  * Typical usage:
  *   RefPtr<SyncRunnable> sr = new SyncRunnable(new myrunnable...());

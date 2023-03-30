@@ -293,7 +293,8 @@ EnumVoicesRunnable::Run() {
   }
 
   RefPtr<RegisterVoicesRunnable> runnable = new RegisterVoicesRunnable(mSpeechService, list);
-  NS_DispatchToMainThread(runnable, NS_DISPATCH_SYNC);
+  NS_DispatchAndSpinEventLoopUntilComplete("EnumVoicesRunnable"_ns,
+                                           GetMainThreadSerialEventTarget(), runnable.forget());
 
   return NS_OK;
 

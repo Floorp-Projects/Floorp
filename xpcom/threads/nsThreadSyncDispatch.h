@@ -9,6 +9,7 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/SpinEventLoopUntil.h"
 
 #include "nsThreadUtils.h"
 #include "LeakRefPtr.h"
@@ -25,6 +26,11 @@ class nsThreadSyncDispatch : public mozilla::Runnable {
   bool IsPending() {
     // This is an atomic acquire on the origin thread.
     return mIsPending;
+  }
+
+  void SpinEventLoopUntilComplete(const nsACString& aVeryGoodReasonToDoThis) {
+    mozilla::SpinEventLoopUntil(aVeryGoodReasonToDoThis,
+                                [&]() -> bool { return !IsPending(); });
   }
 
  private:

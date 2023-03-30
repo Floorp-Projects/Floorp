@@ -799,7 +799,8 @@ void AudioCallbackDriver::Shutdown() {
 
   RefPtr<AsyncCubebTask> releaseEvent =
       new AsyncCubebTask(this, AsyncCubebOperation::SHUTDOWN);
-  releaseEvent->Dispatch(NS_DISPATCH_SYNC);
+  releaseEvent->DispatchAndSpinEventLoopUntilComplete(
+      "AudioCallbackDriver::Shutdown"_ns);
 }
 
 /* static */

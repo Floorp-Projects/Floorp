@@ -95,7 +95,8 @@ static void RunDecodeToSurface(const ImageTestCase& aTestCase,
   RefPtr<SourceSurface> surface;
   nsCOMPtr<nsIRunnable> runnable = new DecodeToSurfaceRunnable(
       surface, inputStream, aImageBuffer, aTestCase);
-  thread->Dispatch(runnable, nsIThread::DISPATCH_SYNC);
+  NS_DispatchAndSpinEventLoopUntilComplete("RunDecodeToSurface"_ns, thread,
+                                           do_AddRef(runnable));
 
   thread->Shutdown();
 

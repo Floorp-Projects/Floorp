@@ -17,6 +17,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/PluginCrashedEvent.h"
+#include "nsThreadUtils.h"
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
 #  include "mozilla/SandboxInfo.h"
 #endif
@@ -354,7 +355,7 @@ nsCOMPtr<nsIAsyncShutdownClient> GeckoMediaPluginService::GetShutdownBarrier() {
 nsresult GeckoMediaPluginService::GMPDispatch(nsIRunnable* event,
                                               uint32_t flags) {
   nsCOMPtr<nsIRunnable> r(event);
-  return GMPDispatch(r.forget());
+  return GMPDispatch(r.forget(), flags);
 }
 
 nsresult GeckoMediaPluginService::GMPDispatch(

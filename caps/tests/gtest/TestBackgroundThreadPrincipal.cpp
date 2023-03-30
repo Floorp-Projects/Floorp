@@ -9,6 +9,7 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsIEventTarget.h"
+#include "nsISerialEventTarget.h"
 #include "nsIURIMutator.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
@@ -18,10 +19,13 @@ namespace mozilla {
 
 template <typename F>
 void RunOnBackgroundThread(F&& aFunction) {
-  ASSERT_NS_SUCCEEDED(NS_DispatchBackgroundTask(
+  nsCOMPtr<nsISerialEventTarget> backgroundQueue;
+  ASSERT_NS_SUCCEEDED(NS_CreateBackgroundTaskQueue(
+      "RunOnBackgroundThread", getter_AddRefs(backgroundQueue)));
+  ASSERT_NS_SUCCEEDED(NS_DispatchAndSpinEventLoopUntilComplete(
+      "RunOnBackgroundThread"_ns, backgroundQueue,
       NS_NewRunnableFunction("RunOnBackgroundThread",
-                             std::forward<F>(aFunction)),
-      NS_DISPATCH_SYNC));
+                             std::forward<F>(aFunction))));
 }
 
 TEST(BackgroundThreadPrincipal, CreateContent)

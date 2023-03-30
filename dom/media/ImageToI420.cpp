@@ -41,11 +41,12 @@ static already_AddRefed<SourceSurface> GetSourceSurface(Image* aImage) {
 
   // GLImage::GetAsSourceSurface() only supports main thread
   RefPtr<SourceSurface> surf;
-  NS_DispatchToMainThread(
+  NS_DispatchAndSpinEventLoopUntilComplete(
+      "ImageToI420::GLImage::GetSourceSurface"_ns,
+      mozilla::GetMainThreadSerialEventTarget(),
       NS_NewRunnableFunction(
           "ImageToI420::GLImage::GetSourceSurface",
-          [&aImage, &surf]() { surf = aImage->GetAsSourceSurface(); }),
-      NS_DISPATCH_SYNC);
+          [&aImage, &surf]() { surf = aImage->GetAsSourceSurface(); }));
 
   return surf.forget();
 }

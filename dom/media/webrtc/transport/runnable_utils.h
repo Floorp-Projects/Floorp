@@ -180,8 +180,9 @@ static inline nsresult RUN_ON_THREAD(
 static inline nsresult RUN_ON_THREAD(
     nsIEventTarget* thread,
     detail::runnable_args_base<detail::ReturnsResult>* runnable) {
-  return detail::RunOnThreadInternal(
-      thread, static_cast<nsIRunnable*>(runnable), NS_DISPATCH_SYNC);
+  return NS_DispatchAndSpinEventLoopUntilComplete(
+      "webrtc RUN_ON_THREAD"_ns, thread,
+      do_AddRef(static_cast<nsIRunnable*>(runnable)));
 }
 
 #ifdef DEBUG

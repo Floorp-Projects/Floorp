@@ -194,9 +194,9 @@ class MediaManager final : public nsIMediaManagerService,
  public:
   static already_AddRefed<MediaManager> GetInstance();
 
-  // NOTE: never Dispatch(....,NS_DISPATCH_SYNC) to the MediaManager
-  // thread from the MainThread, as we NS_DISPATCH_SYNC to MainThread
-  // from MediaManager thread.
+  // NOTE: never NS_DispatchAndSpinEventLoopUntilComplete to the MediaManager
+  // thread from the MainThread, as we NS_DispatchAndSpinEventLoopUntilComplete
+  // to MainThread from MediaManager thread.
   static MediaManager* Get();
   static MediaManager* GetIfExists();
   static void StartupInit();

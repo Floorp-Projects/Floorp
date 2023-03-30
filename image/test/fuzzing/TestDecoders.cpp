@@ -92,7 +92,8 @@ static int RunDecodeToSurfaceFuzzing(nsCOMPtr<nsIInputStream> inputStream,
   RefPtr<SourceSurface> surface;
   nsCOMPtr<nsIRunnable> runnable =
       new DecodeToSurfaceRunnableFuzzing(surface, inputStream, mimeType);
-  thread->Dispatch(runnable, nsIThread::DISPATCH_SYNC);
+  NS_DispatchAndSpinEventLoopUntilComplete("RunDecodeToSurfaceFuzzing"_ns,
+                                           thread, runnable.forget());
 
   thread->Shutdown();
 

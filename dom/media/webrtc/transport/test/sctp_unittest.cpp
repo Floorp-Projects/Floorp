@@ -119,16 +119,15 @@ class TransportTestPeer : public sigslot::has_slots<> {
     usrsctp_close(sctp_);
     usrsctp_deregister_address(static_cast<void*>(this));
 
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(this, &TransportTestPeer::Disconnect_s), NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(this, &TransportTestPeer::Disconnect_s));
 
     std::cerr << "~TransportTestPeer() completed" << std::endl;
   }
 
   void ConnectSocket(TransportTestPeer* peer) {
-    test_utils_->sts_target()->Dispatch(
-        WrapRunnable(this, &TransportTestPeer::ConnectSocket_s, peer),
-        NS_DISPATCH_SYNC);
+    test_utils_->SyncDispatchToSTS(
+        WrapRunnable(this, &TransportTestPeer::ConnectSocket_s, peer));
   }
 
   void ConnectSocket_s(TransportTestPeer* peer) {
