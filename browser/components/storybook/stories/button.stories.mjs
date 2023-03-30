@@ -8,7 +8,14 @@ export default {
   title: "Design System/Atoms/Button",
 };
 
-const Template = ({ disabled, primary, text, ghostButton, icon }) =>
+const Template = ({
+  disabled,
+  primary,
+  text,
+  ghostButton,
+  icon,
+  dangerButton,
+}) =>
   html`
     <style>
       .icon-button {
@@ -21,6 +28,7 @@ const Template = ({ disabled, primary, text, ghostButton, icon }) =>
         primary,
         "ghost-button": ghostButton,
         "icon-button": icon,
+        "danger-button": dangerButton,
       })}
     >
       ${text}
@@ -44,6 +52,14 @@ DisabledButton.args = {
   text: "Disabled",
   primary: false,
   disabled: true,
+};
+
+export const DangerButton = Template.bind({});
+DangerButton.args = {
+  text: "Danger",
+  primary: true,
+  disabled: false,
+  dangerButton: true,
 };
 
 export const GhostIconButton = Template.bind({});
