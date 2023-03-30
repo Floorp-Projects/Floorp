@@ -51,7 +51,7 @@ class EventCallbackDebuggerNotification : public CallbackDebuggerNotification {
 
 class MOZ_RAII EventCallbackDebuggerNotificationGuard final {
  public:
-  MOZ_CAN_RUN_SCRIPT explicit EventCallbackDebuggerNotificationGuard(
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY explicit EventCallbackDebuggerNotificationGuard(
       mozilla::dom::EventTarget* aEventTarget, mozilla::dom::Event* aEvent)
       : mDebuggeeGlobal(aEventTarget ? aEventTarget->GetOwnerGlobal()
                                      : nullptr),
@@ -68,7 +68,7 @@ class MOZ_RAII EventCallbackDebuggerNotificationGuard final {
   EventCallbackDebuggerNotificationGuard& operator=(
       EventCallbackDebuggerNotificationGuard&&) = delete;
 
-  MOZ_CAN_RUN_SCRIPT ~EventCallbackDebuggerNotificationGuard() {
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY ~EventCallbackDebuggerNotificationGuard() {
     Dispatch(CallbackDebuggerNotificationPhase::Post);
   }
 
