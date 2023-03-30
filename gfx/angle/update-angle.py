@@ -336,7 +336,7 @@ print("\nRun actions")
 required_files: Set[str] = set()
 required_files.add("//LICENSE")
 
-run_checked("ninja", "-C", str(OUT_DIR), ":angle_commit_id")
+run_checked("ninja", "-C", str(OUT_DIR), ":angle_commit_id", shell=True)
 required_files.add("//out/gen/angle/angle_commit.h")
 
 # -

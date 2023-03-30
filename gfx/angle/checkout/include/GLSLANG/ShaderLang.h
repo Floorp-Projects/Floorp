@@ -337,6 +337,11 @@ const ShCompileOptions SH_ADD_VULKAN_XFB_EXTENSION_SUPPORT_CODE = UINT64_C(1) <<
 // gl_FragColor is not written.
 const ShCompileOptions SH_INIT_FRAGMENT_OUTPUT_VARIABLES = UINT64_C(1) << 57;
 
+// This flag initializes gl_PointSize to 0.0f at the beginning of the vertex shader's
+// main(), and has no effect in the fragment shader. It is intended to assist in working around
+// bugs on some drivers when this is left written and then POINTS are drawn.
+const ShCompileOptions SH_INIT_GL_POINT_SIZE = UINT64_C(1) << 58;
+
 // Defines alternate strategies for implementing array index clamping.
 enum ShArrayIndexClampingStrategy
 {
