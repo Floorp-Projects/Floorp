@@ -409,13 +409,6 @@ dependencies = [
 
 [[package]]
 name = "bindgen"
-version = "0.61.999"
-dependencies = [
- "bindgen 0.63.0",
-]
-
-[[package]]
-name = "bindgen"
 version = "0.63.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "36d860121800b2a9a94f9b5604b332d5cffb234ce17609ea479d723dbc9d3885"
@@ -432,6 +425,13 @@ dependencies = [
  "rustc-hash",
  "shlex",
  "syn",
+]
+
+[[package]]
+name = "bindgen"
+version = "0.64.999"
+dependencies = [
+ "bindgen 0.63.0",
 ]
 
 [[package]]
@@ -854,11 +854,11 @@ dependencies = [
 
 [[package]]
 name = "coreaudio-sys"
-version = "0.2.11"
+version = "0.2.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1a9444b94b8024feecc29e01a9706c69c1e26bfee480221c90764200cfd778fb"
+checksum = "f034b2258e6c4ade2f73bf87b21047567fb913ee9550837c2316d139b0262b24"
 dependencies = [
- "bindgen 0.61.999",
+ "bindgen 0.64.999",
 ]
 
 [[package]]
@@ -3657,7 +3657,7 @@ version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1a689b62ba71fda80458a77b6ace9371d6e6a5473300901383ebd101659b3352"
 dependencies = [
- "bindgen 0.63.0",
+ "bindgen 0.64.999",
  "mozbuild",
  "once_cell",
  "pkcs11-bindings",
@@ -4036,7 +4036,7 @@ version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d0fabbdbe64b22820753da90995b3a73d02907eaeeac6f2414962a566aaa18ea"
 dependencies = [
- "bindgen 0.63.0",
+ "bindgen 0.64.999",
 ]
 
 [[package]]
