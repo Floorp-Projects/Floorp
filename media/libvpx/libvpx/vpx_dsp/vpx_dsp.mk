@@ -342,6 +342,10 @@ DSP_SRCS-$(HAVE_SSE2)  += x86/avg_intrin_sse2.c
 DSP_SRCS-$(HAVE_AVX2)  += x86/avg_intrin_avx2.c
 DSP_SRCS-$(HAVE_NEON)  += arm/avg_neon.c
 DSP_SRCS-$(HAVE_NEON)  += arm/hadamard_neon.c
+ifeq ($(CONFIG_VP9_HIGHBITDEPTH),yes)
+DSP_SRCS-$(HAVE_NEON)  += arm/highbd_hadamard_neon.c
+DSP_SRCS-$(HAVE_NEON)  += arm/highbd_avg_neon.c
+endif
 DSP_SRCS-$(HAVE_MSA)   += mips/avg_msa.c
 DSP_SRCS-$(HAVE_LSX)   += loongarch/avg_lsx.c
 ifeq ($(VPX_ARCH_X86_64),yes)

@@ -768,7 +768,7 @@ static void block_yrd(VP9_COMP *cpi, MACROBLOCK *x, RD_COST *this_rdc,
   for (r = 0; r < max_blocks_high; r += block_step) {
     for (c = 0; c < num_4x4_w; c += block_step) {
       if (c < max_blocks_wide) {
-        const scan_order *const scan_order = &vp9_default_scan_orders[tx_size];
+        const ScanOrder *const scan_order = &vp9_default_scan_orders[tx_size];
         tran_low_t *const coeff = BLOCK_OFFSET(p->coeff, block);
         tran_low_t *const qcoeff = BLOCK_OFFSET(p->qcoeff, block);
         tran_low_t *const dqcoeff = BLOCK_OFFSET(pd->dqcoeff, block);

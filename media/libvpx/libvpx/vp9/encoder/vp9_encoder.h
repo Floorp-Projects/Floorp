@@ -14,6 +14,7 @@
 #include <stdio.h>
 
 #include "./vpx_config.h"
+#include "./vpx_dsp_rtcd.h"
 #include "vpx/internal/vpx_codec_internal.h"
 #include "vpx/vpx_ext_ratectrl.h"
 #include "vpx/vp8cx.h"
@@ -920,7 +921,7 @@ typedef struct VP9_COMP {
   SVC svc;
 
   // Store frame variance info in SOURCE_VAR_BASED_PARTITION search type.
-  diff *source_diff_var;
+  Diff *source_diff_var;
   // The threshold used in SOURCE_VAR_BASED_PARTITION search type.
   unsigned int source_var_thresh;
   int frames_till_next_var_check;
@@ -1475,6 +1476,105 @@ static INLINE void alloc_frame_mvs(VP9_COMMON *const cm, int buffer_idx) {
                                          sizeof(*new_fb_ptr->mvs)));
     new_fb_ptr->mi_rows = cm->mi_rows;
     new_fb_ptr->mi_cols = cm->mi_cols;
+  }
+}
+
+static INLINE int num_4x4_to_edge(int plane_4x4_dim, int mb_to_edge_dim,
+                                  int subsampling_dim, int blk_dim) {
+  return plane_4x4_dim + (mb_to_edge_dim >> (5 + subsampling_dim)) - blk_dim;
+}
+
+// Compute the sum of squares on all visible 4x4s in the transform block.
+static int64_t sum_squares_visible(const MACROBLOCKD *xd,
+                                   const struct macroblockd_plane *const pd,
+                                   const int16_t *diff, const int diff_stride,
+                                   int blk_row, int blk_col,
+                                   const BLOCK_SIZE plane_bsize,
+                                   const BLOCK_SIZE tx_bsize,
+                                   int *visible_width, int *visible_height) {
+  int64_t sse;
+  const int plane_4x4_w = num_4x4_blocks_wide_lookup[plane_bsize];
+  const int plane_4x4_h = num_4x4_blocks_high_lookup[plane_bsize];
+  const int tx_4x4_w = num_4x4_blocks_wide_lookup[tx_bsize];
+  const int tx_4x4_h = num_4x4_blocks_high_lookup[tx_bsize];
+  const int b4x4s_to_right_edge = num_4x4_to_edge(
+      plane_4x4_w, xd->mb_to_right_edge, pd->subsampling_x, blk_col);
+  const int b4x4s_to_bottom_edge = num_4x4_to_edge(
+      plane_4x4_h, xd->mb_to_bottom_edge, pd->subsampling_y, blk_row);
+  if (tx_bsize == BLOCK_4X4 ||
+      (b4x4s_to_right_edge >= tx_4x4_w && b4x4s_to_bottom_edge >= tx_4x4_h)) {
+    assert(tx_4x4_w == tx_4x4_h);
+    sse = (int64_t)vpx_sum_squares_2d_i16(diff, diff_stride, tx_4x4_w << 2);
+    *visible_width = tx_4x4_w << 2;
+    *visible_height = tx_4x4_h << 2;
+  } else {
+    int r, c;
+    const int max_r = VPXMIN(b4x4s_to_bottom_edge, tx_4x4_h);
+    const int max_c = VPXMIN(b4x4s_to_right_edge, tx_4x4_w);
+    sse = 0;
+    // if we are in the unrestricted motion border.
+    for (r = 0; r < max_r; ++r) {
+      // Skip visiting the sub blocks that are wholly within the UMV.
+      for (c = 0; c < max_c; ++c) {
+        sse += (int64_t)vpx_sum_squares_2d_i16(
+            diff + r * diff_stride * 4 + c * 4, diff_stride, 4);
+      }
+    }
+    *visible_width = max_c << 2;
+    *visible_height = max_r << 2;
+  }
+  return sse;
+}
+
+// Check if trellis coefficient optimization of the transform block is enabled.
+static INLINE int do_trellis_opt(const struct macroblockd_plane *pd,
+                                 const int16_t *src_diff, int diff_stride,
+                                 int blk_row, int blk_col,
+                                 BLOCK_SIZE plane_bsize, TX_SIZE tx_size,
+                                 void *arg) {
+  const struct encode_b_args *const args = (struct encode_b_args *)arg;
+  const MACROBLOCK *const x = args->x;
+
+  switch (args->enable_trellis_opt) {
+    case DISABLE_TRELLIS_OPT: return 0;
+    case ENABLE_TRELLIS_OPT: return 1;
+    case ENABLE_TRELLIS_OPT_TX_RD_SRC_VAR: {
+      vpx_clear_system_state();
+
+      return (args->trellis_opt_thresh > 0.0)
+                 ? (x->log_block_src_var <= args->trellis_opt_thresh)
+                 : 1;
+    }
+    case ENABLE_TRELLIS_OPT_TX_RD_RESIDUAL_MSE: {
+      const MACROBLOCKD *const xd = &x->e_mbd;
+      const BLOCK_SIZE tx_bsize = txsize_to_bsize[tx_size];
+#if CONFIG_VP9_HIGHBITDEPTH
+      const int dequant_shift =
+          (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH) ? xd->bd - 5 : 3;
+#else
+      const int dequant_shift = 3;
+#endif  // CONFIG_VP9_HIGHBITDEPTH
+      const int qstep = pd->dequant[1] >> dequant_shift;
+      int *sse_calc_done = args->sse_calc_done;
+      int64_t *sse = args->sse;
+      int visible_width = 0, visible_height = 0;
+
+      // TODO: Enable the sf for high bit-depth case
+      if ((xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH) || !sse ||
+          !sse_calc_done)
+        return 1;
+
+      *sse = sum_squares_visible(xd, pd, src_diff, diff_stride, blk_row,
+                                 blk_col, plane_bsize, tx_bsize, &visible_width,
+                                 &visible_height);
+      *sse_calc_done = 1;
+
+      vpx_clear_system_state();
+
+      return (*(sse) <= (int64_t)visible_width * visible_height * qstep *
+                            qstep * args->trellis_opt_thresh);
+    }
+    default: assert(0 && "Invalid trellis optimization method."); return 1;
   }
 }
 

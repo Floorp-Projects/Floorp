@@ -694,6 +694,18 @@ INSTANTIATE_TEST_SUITE_P(
         TemporalFilterWithBd(&wrap_vp9_highbd_apply_temporal_filter_sse4_1_12,
                              12)));
 #endif  // HAVE_SSE4_1
+#if HAVE_NEON
+WRAP_HIGHBD_FUNC(vp9_highbd_apply_temporal_filter_neon, 10)
+WRAP_HIGHBD_FUNC(vp9_highbd_apply_temporal_filter_neon, 12)
+
+INSTANTIATE_TEST_SUITE_P(
+    NEON, YUVTemporalFilterTest,
+    ::testing::Values(
+        TemporalFilterWithBd(&wrap_vp9_highbd_apply_temporal_filter_neon_10,
+                             10),
+        TemporalFilterWithBd(&wrap_vp9_highbd_apply_temporal_filter_neon_12,
+                             12)));
+#endif  // HAVE_NEON
 #else
 INSTANTIATE_TEST_SUITE_P(
     C, YUVTemporalFilterTest,
@@ -704,5 +716,11 @@ INSTANTIATE_TEST_SUITE_P(SSE4_1, YUVTemporalFilterTest,
                          ::testing::Values(TemporalFilterWithBd(
                              &vp9_apply_temporal_filter_sse4_1, 8)));
 #endif  // HAVE_SSE4_1
+#if HAVE_NEON
+INSTANTIATE_TEST_SUITE_P(NEON, YUVTemporalFilterTest,
+                         ::testing::Values(TemporalFilterWithBd(
+                             &vp9_apply_temporal_filter_neon, 8)));
+#endif  // HAVE_NEON
 #endif  // CONFIG_VP9_HIGHBITDEPTH
+
 }  // namespace

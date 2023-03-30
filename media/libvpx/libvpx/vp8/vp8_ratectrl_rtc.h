@@ -39,7 +39,7 @@ class VP8RateControlRTC {
       const VP8RateControlRtcConfig &cfg);
   ~VP8RateControlRTC();
 
-  void UpdateRateControl(const VP8RateControlRtcConfig &rc_cfg);
+  bool UpdateRateControl(const VP8RateControlRtcConfig &rc_cfg);
   // GetQP() needs to be called after ComputeQP() to get the latest QP
   int GetQP() const;
   // int GetLoopfilterLevel() const;
@@ -49,7 +49,7 @@ class VP8RateControlRTC {
 
  private:
   VP8RateControlRTC() {}
-  void InitRateControl(const VP8RateControlRtcConfig &cfg);
+  bool InitRateControl(const VP8RateControlRtcConfig &cfg);
   struct VP8_COMP *cpi_;
   int q_;
 };

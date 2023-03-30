@@ -169,8 +169,8 @@ static void pack_mb_tokens(vpx_writer *w, TOKENEXTRA **tp,
         vpx_write_bit(w, p->extra & 1);
       } else {  // t >= TWO_TOKEN && t < EOB_TOKEN
         const struct vp9_token *const a = &vp9_coef_encodings[t];
-        const int v = a->value;
-        const int n = a->len;
+        int v = a->value;
+        int n = a->len;
         const int e = p->extra;
         vpx_write(w, 1, context_tree[2]);
         vp9_write_tree(w, vp9_coef_con_tree,
@@ -179,8 +179,8 @@ static void pack_mb_tokens(vpx_writer *w, TOKENEXTRA **tp,
         if (t >= CATEGORY1_TOKEN) {
           const vp9_extra_bit *const b = &extra_bits[t];
           const unsigned char *pb = b->prob;
-          int v = e >> 1;
-          int n = b->len;  // number of bits in v, assumed nonzero
+          v = e >> 1;
+          n = b->len;  // number of bits in v, assumed nonzero
           do {
             const int bb = (v >> --n) & 1;
             vpx_write(w, bb, *pb++);
@@ -599,7 +599,6 @@ static void update_coef_probs_common(vpx_writer *const bc, VP9_COMP *cpi,
               for (t = 0; t < entropy_nodes_update; ++t) {
                 vpx_prob newp = new_coef_probs[i][j][k][l][t];
                 vpx_prob *oldp = old_coef_probs[i][j][k][l] + t;
-                const vpx_prob upd = DIFF_UPDATE_PROB;
                 int64_t s;
                 int u = 0;
                 if (t == PIVOT_NODE)

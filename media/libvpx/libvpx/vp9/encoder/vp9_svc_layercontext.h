@@ -70,8 +70,11 @@ typedef struct {
   int actual_num_seg1_blocks;
   int actual_num_seg2_blocks;
   int counter_encode_maxq_scene_change;
+  int qindex_delta[3];
   uint8_t speed;
   int loopfilter_ctrl;
+  int frame_qp;
+  int MBs;
 } LAYER_CONTEXT;
 
 typedef struct SVC {

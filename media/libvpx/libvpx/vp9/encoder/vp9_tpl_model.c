@@ -434,7 +434,7 @@ static void get_quantize_error(MACROBLOCK *x, int plane, tran_low_t *coeff,
   MACROBLOCKD *const xd = &x->e_mbd;
   const struct macroblock_plane *const p = &x->plane[plane];
   const struct macroblockd_plane *const pd = &xd->plane[plane];
-  const scan_order *const scan_order = &vp9_default_scan_orders[tx_size];
+  const ScanOrder *const scan_order = &vp9_default_scan_orders[tx_size];
   uint16_t eob;
   int pix_num = 1 << num_pels_log2_lookup[txsize_to_bsize[tx_size]];
   const int shift = tx_size == TX_32X32 ? 0 : 2;

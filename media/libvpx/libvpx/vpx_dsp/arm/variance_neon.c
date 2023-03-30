@@ -371,163 +371,182 @@ VARIANCE_WXH_NEON(64, 64, 12)
 
 #if defined(__ARM_FEATURE_DOTPROD)
 
-unsigned int vpx_mse16x16_neon(const unsigned char *src_ptr, int src_stride,
-                               const unsigned char *ref_ptr, int ref_stride,
-                               unsigned int *sse) {
-  int i;
-  uint8x16_t a[2], b[2], abs_diff[2];
-  uint32x4_t sse_vec[2] = { vdupq_n_u32(0), vdupq_n_u32(0) };
+static INLINE unsigned int vpx_mse8xh_neon(const unsigned char *src_ptr,
+                                           int src_stride,
+                                           const unsigned char *ref_ptr,
+                                           int ref_stride, int h,
+                                           unsigned int *sse) {
+  uint32x2_t sse_u32[2] = { vdup_n_u32(0), vdup_n_u32(0) };
 
-  for (i = 0; i < 8; i++) {
-    a[0] = vld1q_u8(src_ptr);
+  int i = h / 2;
+  do {
+    uint8x8_t s0, s1, r0, r1, diff0, diff1;
+
+    s0 = vld1_u8(src_ptr);
     src_ptr += src_stride;
-    a[1] = vld1q_u8(src_ptr);
+    s1 = vld1_u8(src_ptr);
     src_ptr += src_stride;
-    b[0] = vld1q_u8(ref_ptr);
+    r0 = vld1_u8(ref_ptr);
     ref_ptr += ref_stride;
-    b[1] = vld1q_u8(ref_ptr);
+    r1 = vld1_u8(ref_ptr);
     ref_ptr += ref_stride;
 
-    abs_diff[0] = vabdq_u8(a[0], b[0]);
-    abs_diff[1] = vabdq_u8(a[1], b[1]);
+    diff0 = vabd_u8(s0, r0);
+    diff1 = vabd_u8(s1, r1);
 
-    sse_vec[0] = vdotq_u32(sse_vec[0], abs_diff[0], abs_diff[0]);
-    sse_vec[1] = vdotq_u32(sse_vec[1], abs_diff[1], abs_diff[1]);
-  }
+    sse_u32[0] = vdot_u32(sse_u32[0], diff0, diff0);
+    sse_u32[1] = vdot_u32(sse_u32[1], diff1, diff1);
+  } while (--i != 0);
 
-  *sse = horizontal_add_uint32x4(vaddq_u32(sse_vec[0], sse_vec[1]));
-  return horizontal_add_uint32x4(vaddq_u32(sse_vec[0], sse_vec[1]));
+  *sse = horizontal_add_uint32x2(vadd_u32(sse_u32[0], sse_u32[1]));
+  return *sse;
+}
+
+static INLINE unsigned int vpx_mse16xh_neon(const unsigned char *src_ptr,
+                                            int src_stride,
+                                            const unsigned char *ref_ptr,
+                                            int ref_stride, int h,
+                                            unsigned int *sse) {
+  uint32x4_t sse_u32[2] = { vdupq_n_u32(0), vdupq_n_u32(0) };
+
+  int i = h / 2;
+  do {
+    uint8x16_t s0, s1, r0, r1, diff0, diff1;
+
+    s0 = vld1q_u8(src_ptr);
+    src_ptr += src_stride;
+    s1 = vld1q_u8(src_ptr);
+    src_ptr += src_stride;
+    r0 = vld1q_u8(ref_ptr);
+    ref_ptr += ref_stride;
+    r1 = vld1q_u8(ref_ptr);
+    ref_ptr += ref_stride;
+
+    diff0 = vabdq_u8(s0, r0);
+    diff1 = vabdq_u8(s1, r1);
+
+    sse_u32[0] = vdotq_u32(sse_u32[0], diff0, diff0);
+    sse_u32[1] = vdotq_u32(sse_u32[1], diff1, diff1);
+  } while (--i != 0);
+
+  *sse = horizontal_add_uint32x4(vaddq_u32(sse_u32[0], sse_u32[1]));
+  return *sse;
 }
 
 unsigned int vpx_get4x4sse_cs_neon(const unsigned char *src_ptr, int src_stride,
                                    const unsigned char *ref_ptr,
                                    int ref_stride) {
-  uint8x8_t a[4], b[4], abs_diff[4];
-  uint32x2_t sse = vdup_n_u32(0);
+  uint8x16_t s = load_unaligned_u8q(src_ptr, src_stride);
+  uint8x16_t r = load_unaligned_u8q(ref_ptr, ref_stride);
 
-  a[0] = vld1_u8(src_ptr);
-  src_ptr += src_stride;
-  b[0] = vld1_u8(ref_ptr);
-  ref_ptr += ref_stride;
-  a[1] = vld1_u8(src_ptr);
-  src_ptr += src_stride;
-  b[1] = vld1_u8(ref_ptr);
-  ref_ptr += ref_stride;
-  a[2] = vld1_u8(src_ptr);
-  src_ptr += src_stride;
-  b[2] = vld1_u8(ref_ptr);
-  ref_ptr += ref_stride;
-  a[3] = vld1_u8(src_ptr);
-  b[3] = vld1_u8(ref_ptr);
+  uint8x16_t abs_diff = vabdq_u8(s, r);
 
-  abs_diff[0] = vabd_u8(a[0], b[0]);
-  abs_diff[1] = vabd_u8(a[1], b[1]);
-  abs_diff[2] = vabd_u8(a[2], b[2]);
-  abs_diff[3] = vabd_u8(a[3], b[3]);
+  uint32x4_t sse = vdotq_u32(vdupq_n_u32(0), abs_diff, abs_diff);
 
-  sse = vdot_u32(sse, abs_diff[0], abs_diff[0]);
-  sse = vdot_u32(sse, abs_diff[1], abs_diff[1]);
-  sse = vdot_u32(sse, abs_diff[2], abs_diff[2]);
-  sse = vdot_u32(sse, abs_diff[3], abs_diff[3]);
-
-  return vget_lane_u32(sse, 0);
+  return horizontal_add_uint32x4(sse);
 }
 
 #else  // !defined(__ARM_FEATURE_DOTPROD)
 
-unsigned int vpx_mse16x16_neon(const unsigned char *src_ptr, int src_stride,
-                               const unsigned char *ref_ptr, int ref_stride,
-                               unsigned int *sse) {
-  int i;
-  uint8x16_t a[2], b[2];
-  int16x4_t diff_lo[4], diff_hi[4];
-  uint16x8_t diff[4];
-  int32x4_t sse_vec[4] = { vdupq_n_s32(0), vdupq_n_s32(0), vdupq_n_s32(0),
-                           vdupq_n_s32(0) };
+static INLINE unsigned int vpx_mse8xh_neon(const unsigned char *src_ptr,
+                                           int src_stride,
+                                           const unsigned char *ref_ptr,
+                                           int ref_stride, int h,
+                                           unsigned int *sse) {
+  uint32x4_t sse_u32[2] = { vdupq_n_u32(0), vdupq_n_u32(0) };
 
-  for (i = 0; i < 8; i++) {
-    a[0] = vld1q_u8(src_ptr);
+  int i = h / 2;
+  do {
+    uint8x8_t s0, s1, r0, r1, diff0, diff1;
+    uint16x8_t sse0, sse1;
+
+    s0 = vld1_u8(src_ptr);
     src_ptr += src_stride;
-    a[1] = vld1q_u8(src_ptr);
+    s1 = vld1_u8(src_ptr);
     src_ptr += src_stride;
-    b[0] = vld1q_u8(ref_ptr);
+    r0 = vld1_u8(ref_ptr);
     ref_ptr += ref_stride;
-    b[1] = vld1q_u8(ref_ptr);
+    r1 = vld1_u8(ref_ptr);
     ref_ptr += ref_stride;
 
-    diff[0] = vsubl_u8(vget_low_u8(a[0]), vget_low_u8(b[0]));
-    diff[1] = vsubl_u8(vget_high_u8(a[0]), vget_high_u8(b[0]));
-    diff[2] = vsubl_u8(vget_low_u8(a[1]), vget_low_u8(b[1]));
-    diff[3] = vsubl_u8(vget_high_u8(a[1]), vget_high_u8(b[1]));
+    diff0 = vabd_u8(s0, r0);
+    diff1 = vabd_u8(s1, r1);
 
-    diff_lo[0] = vreinterpret_s16_u16(vget_low_u16(diff[0]));
-    diff_lo[1] = vreinterpret_s16_u16(vget_low_u16(diff[1]));
-    sse_vec[0] = vmlal_s16(sse_vec[0], diff_lo[0], diff_lo[0]);
-    sse_vec[1] = vmlal_s16(sse_vec[1], diff_lo[1], diff_lo[1]);
+    sse0 = vmull_u8(diff0, diff0);
+    sse_u32[0] = vpadalq_u16(sse_u32[0], sse0);
+    sse1 = vmull_u8(diff1, diff1);
+    sse_u32[1] = vpadalq_u16(sse_u32[1], sse1);
+  } while (--i != 0);
 
-    diff_lo[2] = vreinterpret_s16_u16(vget_low_u16(diff[2]));
-    diff_lo[3] = vreinterpret_s16_u16(vget_low_u16(diff[3]));
-    sse_vec[2] = vmlal_s16(sse_vec[2], diff_lo[2], diff_lo[2]);
-    sse_vec[3] = vmlal_s16(sse_vec[3], diff_lo[3], diff_lo[3]);
+  *sse = horizontal_add_uint32x4(vaddq_u32(sse_u32[0], sse_u32[1]));
+  return *sse;
+}
 
-    diff_hi[0] = vreinterpret_s16_u16(vget_high_u16(diff[0]));
-    diff_hi[1] = vreinterpret_s16_u16(vget_high_u16(diff[1]));
-    sse_vec[0] = vmlal_s16(sse_vec[0], diff_hi[0], diff_hi[0]);
-    sse_vec[1] = vmlal_s16(sse_vec[1], diff_hi[1], diff_hi[1]);
+static INLINE unsigned int vpx_mse16xh_neon(const unsigned char *src_ptr,
+                                            int src_stride,
+                                            const unsigned char *ref_ptr,
+                                            int ref_stride, int h,
+                                            unsigned int *sse) {
+  uint32x4_t sse_u32[2] = { vdupq_n_u32(0), vdupq_n_u32(0) };
 
-    diff_hi[2] = vreinterpret_s16_u16(vget_high_u16(diff[2]));
-    diff_hi[3] = vreinterpret_s16_u16(vget_high_u16(diff[3]));
-    sse_vec[2] = vmlal_s16(sse_vec[2], diff_hi[2], diff_hi[2]);
-    sse_vec[3] = vmlal_s16(sse_vec[3], diff_hi[3], diff_hi[3]);
-  }
+  int i = h;
+  do {
+    uint8x16_t s, r, diff;
+    uint16x8_t sse0, sse1;
 
-  sse_vec[0] = vaddq_s32(sse_vec[0], sse_vec[1]);
-  sse_vec[2] = vaddq_s32(sse_vec[2], sse_vec[3]);
-  sse_vec[0] = vaddq_s32(sse_vec[0], sse_vec[2]);
+    s = vld1q_u8(src_ptr);
+    src_ptr += src_stride;
+    r = vld1q_u8(ref_ptr);
+    ref_ptr += ref_stride;
 
-  *sse = horizontal_add_uint32x4(vreinterpretq_u32_s32(sse_vec[0]));
-  return horizontal_add_uint32x4(vreinterpretq_u32_s32(sse_vec[0]));
+    diff = vabdq_u8(s, r);
+
+    sse0 = vmull_u8(vget_low_u8(diff), vget_low_u8(diff));
+    sse_u32[0] = vpadalq_u16(sse_u32[0], sse0);
+    sse1 = vmull_u8(vget_high_u8(diff), vget_high_u8(diff));
+    sse_u32[1] = vpadalq_u16(sse_u32[1], sse1);
+  } while (--i != 0);
+
+  *sse = horizontal_add_uint32x4(vaddq_u32(sse_u32[0], sse_u32[1]));
+  return *sse;
 }
 
 unsigned int vpx_get4x4sse_cs_neon(const unsigned char *src_ptr, int src_stride,
                                    const unsigned char *ref_ptr,
                                    int ref_stride) {
-  uint8x8_t a[4], b[4];
-  int16x4_t diff_lo[4];
-  uint16x8_t diff[4];
-  int32x4_t sse;
+  uint8x8_t s[2], r[2];
+  uint16x8_t abs_diff[2];
+  uint32x4_t sse;
 
-  a[0] = vld1_u8(src_ptr);
-  src_ptr += src_stride;
-  b[0] = vld1_u8(ref_ptr);
-  ref_ptr += ref_stride;
-  a[1] = vld1_u8(src_ptr);
-  src_ptr += src_stride;
-  b[1] = vld1_u8(ref_ptr);
-  ref_ptr += ref_stride;
-  a[2] = vld1_u8(src_ptr);
-  src_ptr += src_stride;
-  b[2] = vld1_u8(ref_ptr);
-  ref_ptr += ref_stride;
-  a[3] = vld1_u8(src_ptr);
-  b[3] = vld1_u8(ref_ptr);
+  s[0] = load_u8(src_ptr, src_stride);
+  r[0] = load_u8(ref_ptr, ref_stride);
+  src_ptr += 2 * src_stride;
+  ref_ptr += 2 * ref_stride;
+  s[1] = load_u8(src_ptr, src_stride);
+  r[1] = load_u8(ref_ptr, ref_stride);
 
-  diff[0] = vsubl_u8(a[0], b[0]);
-  diff[1] = vsubl_u8(a[1], b[1]);
-  diff[2] = vsubl_u8(a[2], b[2]);
-  diff[3] = vsubl_u8(a[3], b[3]);
+  abs_diff[0] = vabdl_u8(s[0], r[0]);
+  abs_diff[1] = vabdl_u8(s[1], r[1]);
 
-  diff_lo[0] = vget_low_s16(vreinterpretq_s16_u16(diff[0]));
-  diff_lo[1] = vget_low_s16(vreinterpretq_s16_u16(diff[1]));
-  diff_lo[2] = vget_low_s16(vreinterpretq_s16_u16(diff[2]));
-  diff_lo[3] = vget_low_s16(vreinterpretq_s16_u16(diff[3]));
+  sse = vmull_u16(vget_low_u16(abs_diff[0]), vget_low_u16(abs_diff[0]));
+  sse = vmlal_u16(sse, vget_high_u16(abs_diff[0]), vget_high_u16(abs_diff[0]));
+  sse = vmlal_u16(sse, vget_low_u16(abs_diff[1]), vget_low_u16(abs_diff[1]));
+  sse = vmlal_u16(sse, vget_high_u16(abs_diff[1]), vget_high_u16(abs_diff[1]));
 
-  sse = vmull_s16(diff_lo[0], diff_lo[0]);
-  sse = vmlal_s16(sse, diff_lo[1], diff_lo[1]);
-  sse = vmlal_s16(sse, diff_lo[2], diff_lo[2]);
-  sse = vmlal_s16(sse, diff_lo[3], diff_lo[3]);
-
-  return horizontal_add_uint32x4(vreinterpretq_u32_s32(sse));
+  return horizontal_add_uint32x4(sse);
 }
 
 #endif  // defined(__ARM_FEATURE_DOTPROD)
+
+#define VPX_MSE_WXH_NEON(w, h)                                              \
+  unsigned int vpx_mse##w##x##h##_neon(                                     \
+      const unsigned char *src_ptr, int src_stride,                         \
+      const unsigned char *ref_ptr, int ref_stride, unsigned int *sse) {    \
+    return vpx_mse##w##xh_neon(src_ptr, src_stride, ref_ptr, ref_stride, h, \
+                               sse);                                        \
+  }
+
+VPX_MSE_WXH_NEON(8, 8)
+VPX_MSE_WXH_NEON(8, 16)
+VPX_MSE_WXH_NEON(16, 8)
+VPX_MSE_WXH_NEON(16, 16)
