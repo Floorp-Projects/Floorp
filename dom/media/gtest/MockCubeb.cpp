@@ -236,6 +236,14 @@ int MockCubebStream::Stop() {
   return rv;
 }
 
+void MockCubebStream::Destroy() {
+  // Dispatch an extra STOPPED state change as produced with audioipc.
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1801190#c1
+  NotifyStateChanged(CUBEB_STATE_STOPPED);
+
+  MockCubeb::AsMock(context)->StreamDestroy(AsCubebStream());
+}
+
 int MockCubebStream::RegisterDeviceChangedCallback(
     cubeb_device_changed_callback aDeviceChangedCallback) {
   if (mDeviceChangedCallback && aDeviceChangedCallback) {

@@ -1048,11 +1048,20 @@ void AudioCallbackDriver::StateCallback(cubeb_state aState) {
   LOG(LogLevel::Debug,
       ("AudioCallbackDriver(%p) State: %s", this, StateToString(aState)));
 
-  AudioStreamState streamState = mAudioStreamState;
-  if (aState != CUBEB_STATE_STARTED) {
-    // Clear the flag for the not running states: stopped, drained, error.
-    streamState = mAudioStreamState.exchange(AudioStreamState::None);
+  if (aState == CUBEB_STATE_STARTED) {
+    return;
   }
+
+  if (!IsStarted()) {
+    // mAudioStream has already entered STOPPED, DRAINED, or ERROR.
+    // Don't reset a Pending state indicating that a task to destroy
+    // mAudioStream and init a new cubeb_stream has already been triggered.
+    return;
+  }
+
+  // Reset for the not running states: stopped, drained, error.
+  AudioStreamState streamState =
+      mAudioStreamState.exchange(AudioStreamState::None);
 
   if (aState == CUBEB_STATE_ERROR) {
     // About to hand over control of the graph.  Do not start a new driver if

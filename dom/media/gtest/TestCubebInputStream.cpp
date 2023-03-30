@@ -58,7 +58,7 @@ TEST(TestCubebInputStream, DataCallback)
       });
 
   EXPECT_CALL(*listener, StateCallback(CUBEB_STATE_STARTED));
-  EXPECT_CALL(*listener, StateCallback(CUBEB_STATE_STOPPED));
+  EXPECT_CALL(*listener, StateCallback(CUBEB_STATE_STOPPED)).Times(2);
 
   EXPECT_CALL(*listener, DeviceChangedCallback).Times(0);
 
@@ -109,6 +109,7 @@ TEST(TestCubebInputStream, ErrorCallback)
 
   EXPECT_CALL(*listener, StateCallback(CUBEB_STATE_STARTED));
   EXPECT_CALL(*listener, StateCallback(CUBEB_STATE_ERROR));
+  EXPECT_CALL(*listener, StateCallback(CUBEB_STATE_STOPPED));
 
   EXPECT_CALL(*listener, DeviceChangedCallback).Times(0);
 
@@ -158,7 +159,7 @@ TEST(TestCubebInputStream, DeviceChangedCallback)
   // unplugged). But it's fine to not check here since we can control how
   // MockCubeb behaves.
   EXPECT_CALL(*listener, StateCallback(CUBEB_STATE_STARTED));
-  EXPECT_CALL(*listener, StateCallback(CUBEB_STATE_STOPPED));
+  EXPECT_CALL(*listener, StateCallback(CUBEB_STATE_STOPPED)).Times(2);
 
   EXPECT_CALL(*listener, DeviceChangedCallback);
 
