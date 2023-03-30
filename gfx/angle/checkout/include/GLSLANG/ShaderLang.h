@@ -199,6 +199,11 @@ struct ShCompileOptions
     // which incorrectly fail to link programs if gl_Position is not written.
     uint64_t initGLPosition : 1;
 
+    // This flag initializes gl_PointSize to 0.0f at the beginning of the vertex shader's
+    // main(), and has no effect in the fragment shader. It is intended to assist in working around
+    // bugs on some drivers when this is left written and then POINTS are drawn.
+    uint64_t initGLPointSize : 1;
+
     // This flag replaces
     //   "a && b" with "a ? b : false",
     //   "a || b" with "a ? true : b".
