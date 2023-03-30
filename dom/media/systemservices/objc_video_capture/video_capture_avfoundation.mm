@@ -20,6 +20,7 @@
 #include "modules/video_capture/video_capture_defines.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/TaskQueue.h"
 #include "mozilla/UniquePtr.h"
 #include "rtc_base/time_utils.h"
 
@@ -81,9 +82,14 @@ AVCaptureDeviceFormat* _Nullable FindFormat(AVCaptureDevice* _Nonnull aDevice,
 
 namespace webrtc::videocapturemodule {
 VideoCaptureAvFoundation::VideoCaptureAvFoundation(AVCaptureDevice* _Nonnull aDevice)
-    : mDevice(aDevice),
+    : mCallbackThread(TaskQueue::Create(do_AddRef(GetCurrentSerialEventTarget()),
+                                        "VideoCaptureAvFoundation::mCallbackThread")),
+      mDevice(aDevice),
       mAdapter([[VideoCaptureAdapter alloc] init]),
-      mCapturer([[RTC_OBJC_TYPE(RTCCameraVideoCapturer) alloc] initWithDelegate:mAdapter]) {
+      mCapturer([[RTC_OBJC_TYPE(RTCCameraVideoCapturer) alloc] initWithDelegate:mAdapter]),
+      mWatchManager(this, mCallbackThread),
+      mNextFrameToProcess(nil, "VideoCaptureAvFoundation::mNextFrameToProcess") {
+  mWatchManager.Watch(mNextFrameToProcess, &VideoCaptureAvFoundation::ProcessNextFrame);
   const char* uniqueId = [[aDevice uniqueID] UTF8String];
   size_t len = strlen(uniqueId);
   _deviceUniqueId = new (std::nothrow) char[len + 1];
@@ -95,6 +101,7 @@ VideoCaptureAvFoundation::VideoCaptureAvFoundation(AVCaptureDevice* _Nonnull aDe
 VideoCaptureAvFoundation::~VideoCaptureAvFoundation() {
   // Must block until capture has fully stopped, including async operations.
   MOZ_RELEASE_ASSERT(mOkToDestroy);
+  mWatchManager.Shutdown();
   StopCapture();
 }
 
@@ -138,8 +145,8 @@ int32_t VideoCaptureAvFoundation::StartCapture(const VideoCaptureCapability& aCa
     }
   }
 
-  mFrameListener = mAdapter->frameEvent.Connect(GetCurrentSerialEventTarget(), this,
-                                                &VideoCaptureAvFoundation::OnFrame);
+  mFrameListener =
+      mAdapter->frameEvent.Connect(mCallbackThread, this, &VideoCaptureAvFoundation::OnFrame);
 
   {
     Monitor monitor("VideoCaptureAVFoundation::StartCapture");
@@ -244,29 +251,47 @@ int32_t VideoCaptureAvFoundation::CaptureSettings(VideoCaptureCapability& aSetti
 void VideoCaptureAvFoundation::OnFrame(__strong RTCVideoFrame* _Nonnull aFrame) {
   RTC_DCHECK_RUN_ON(&mChecker);
   if (MOZ_LIKELY(mTrackingId)) {
-    mCaptureRecorder.Start(0, "VideoCaptureAVFoundation"_ns, *mTrackingId, aFrame.width,
+    const int64_t timestamp_us = aFrame.timeStampNs / rtc::kNumNanosecsPerMicrosec;
+    mCaptureRecorder.Start(timestamp_us, "VideoCaptureAVFoundation"_ns, *mTrackingId, aFrame.width,
                            aFrame.height, mImageType.valueOr(CaptureStage::ImageType::Unknown));
-    if (mCapability && mCapability->videoType != webrtc::VideoType::kI420) {
-      mConversionRecorder.Start(0, "VideoCaptureAVFoundation"_ns, *mTrackingId, aFrame.width,
-                                aFrame.height);
-    }
   }
 
-  const int64_t timestamp_us = aFrame.timeStampNs / rtc::kNumNanosecsPerMicrosec;
-  RTCI420Buffer* buffer = [aFrame.buffer toI420];
-  mConversionRecorder.Record(0);
+  if (mNextFrameToProcess) {
+    // Skipping a frame -- make sure it still shows up in the profiler.
+    mCaptureRecorder.Record(mNextFrameToProcess.Ref().timeStampNs / rtc::kNumNanosecsPerMicrosec);
+  }
+
+  mNextFrameToProcess = aFrame;
+}
+
+void VideoCaptureAvFoundation::ProcessNextFrame() {
+  RTC_DCHECK_RUN_ON(&mChecker);
+  if (!mNextFrameToProcess) {
+    return;
+  }
+
+  RTCVideoFrame* frame = mNextFrameToProcess;
+  mNextFrameToProcess = nil;
+
+  const int64_t timestamp_us = frame.timeStampNs / rtc::kNumNanosecsPerMicrosec;
+  if (mTrackingId && mImageType && *mImageType != CaptureStage::ImageType::I420) {
+    mConversionRecorder.Start(timestamp_us, "VideoCaptureAVFoundation"_ns, *mTrackingId,
+                              frame.width, frame.height);
+  }
+  RTCI420Buffer* buffer = [frame.buffer toI420];
+  mConversionRecorder.Record(timestamp_us);
   // Accessing the (intended-to-be-private) native buffer directly is hacky but lets us skip two
   // copies
   rtc::scoped_refptr<webrtc::I420BufferInterface> nativeBuffer = buffer.nativeI420Buffer;
-  auto frame = webrtc::VideoFrame::Builder()
-                   .set_video_frame_buffer(nativeBuffer)
-                   .set_rotation(ToNativeRotation(aFrame.rotation))
-                   .set_timestamp_us(timestamp_us)
-                   .build();
+  auto videoFrame = webrtc::VideoFrame::Builder()
+                        .set_video_frame_buffer(nativeBuffer)
+                        .set_rotation(ToNativeRotation(frame.rotation))
+                        .set_timestamp_us(timestamp_us)
+                        .build();
 
   MutexLock lock(&api_lock_);
-  DeliverCapturedFrame(frame);
-  mCaptureRecorder.Record(0);
+  DeliverCapturedFrame(videoFrame);
+  mCaptureRecorder.Record(timestamp_us);
 }
 
 void VideoCaptureAvFoundation::SetTrackingId(uint32_t aTrackingIdProcId) {
