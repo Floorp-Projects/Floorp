@@ -112,6 +112,8 @@ const HTTPS_CUSTOM_GET_URL = HTTPS_EXAMPLE_URL + "html_custom-get-page.html";
 const SINGLE_GET_URL = EXAMPLE_URL + "html_single-get-page.html";
 const HTTPS_SINGLE_GET_URL = HTTPS_EXAMPLE_URL + "html_single-get-page.html";
 const STATISTICS_URL = EXAMPLE_URL + "html_statistics-test-page.html";
+const STATISTICS_EDGE_CASE_URL =
+  EXAMPLE_URL + "html_statistics-edge-case-page.html";
 const CURL_URL = EXAMPLE_URL + "html_copy-as-curl.html";
 const HTTPS_CURL_URL = HTTPS_EXAMPLE_URL + "html_copy-as-curl.html";
 const HTTPS_CURL_UTILS_URL = HTTPS_EXAMPLE_URL + "html_curl-utils.html";
@@ -324,7 +326,7 @@ function initNetMonitor(
 ) {
   info("Initializing a network monitor pane.");
 
-  if (!requestCount) {
+  if (!requestCount && !enableCache) {
     ok(
       false,
       "initNetMonitor should be given a number of requests the page will perform"

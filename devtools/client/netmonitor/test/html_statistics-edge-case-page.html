@@ -1,0 +1,23 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+ <head>
+   <meta charset="utf-8"/>
+   <title>Test page with slow requests and image-cache requests</title>
+ </head>
+  <body>
+    <script type="text/javascript">
+      "use strict";
+      /* exported unblock */
+
+      // Open a request which will not resolve until unblock() is called.
+      fetch("sjs_long-polling-server.sjs").then(res => res.text()).then(console.log);
+
+      function unblock() {
+        fetch("sjs_long-polling-server.sjs?unblock");
+      }
+    </script>
+    <img src="test-image.png">
+    <img src="test-image.png">
+  </body>
+</html>
