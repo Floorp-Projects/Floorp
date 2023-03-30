@@ -861,8 +861,13 @@ class TelemetryEvent {
     } catch (ex) {
       console.error("Could not record event: ", ex);
     } finally {
-      this._startEventInfo = null;
-      this._discarded = false;
+      // The view remains open when results are dismissed, making it possible to
+      // record multiple engagements per session. Each should use the same start
+      // event info. Reset it only for non-dismissal engagements.
+      if (details.selType != "dismiss") {
+        this._startEventInfo = null;
+        this._discarded = false;
+      }
     }
   }
 
