@@ -753,7 +753,7 @@ const MultiStageProtonScreen = props => {
   });
 };
 const ProtonScreenActionButtons = props => {
-  var _content$checkbox, _content$primary_butt, _content$primary_butt2;
+  var _content$checkbox, _content$additional_b, _content$primary_butt, _content$primary_butt2;
 
   const {
     content,
@@ -767,7 +767,8 @@ const ProtonScreenActionButtons = props => {
   }
 
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: `action-buttons ${content.additional_button ? "additional-cta-container" : ""}`
+    className: `action-buttons ${content.additional_button ? "additional-cta-container" : ""}`,
+    flow: (_content$additional_b = content.additional_button) === null || _content$additional_b === void 0 ? void 0 : _content$additional_b.flow
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
     text: (_content$primary_butt = content.primary_button) === null || _content$primary_butt === void 0 ? void 0 : _content$primary_butt.label
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
