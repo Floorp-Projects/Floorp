@@ -178,9 +178,8 @@ static DisplayPortMargins ScrollFrame(nsIContent* aContent,
   // re-get it.
   sf = nsLayoutUtils::FindScrollableFrameFor(aRequest.GetScrollId());
   bool scrollUpdated = false;
-  auto displayPortMargins = DisplayPortMargins::ForScrollFrame(
-      sf, aRequest.GetDisplayPortMargins(),
-      Some(aRequest.DisplayportPixelsPerCSSPixel()));
+  auto displayPortMargins =
+      DisplayPortMargins::ForScrollFrame(sf, aRequest.GetDisplayPortMargins());
   CSSPoint apzScrollOffset = aRequest.GetVisualScrollOffset();
   CSSPoint actualScrollOffset = ScrollFrameTo(sf, aRequest, scrollUpdated);
   CSSPoint scrollDelta = apzScrollOffset - actualScrollOffset;
@@ -199,9 +198,9 @@ static DisplayPortMargins ScrollFrame(nsIContent* aContent,
     } else {
       // Correct the display port due to the difference between the requested
       // and actual scroll offsets.
-      displayPortMargins = DisplayPortMargins::FromAPZ(
-          aRequest.GetDisplayPortMargins(), apzScrollOffset, actualScrollOffset,
-          aRequest.DisplayportPixelsPerCSSPixel());
+      displayPortMargins =
+          DisplayPortMargins::FromAPZ(aRequest.GetDisplayPortMargins(),
+                                      apzScrollOffset, actualScrollOffset);
     }
   } else if (aRequest.IsRootContent() &&
              apzScrollOffset != aRequest.GetLayoutScrollOffset()) {
@@ -213,8 +212,7 @@ static DisplayPortMargins ScrollFrame(nsIContent* aContent,
     // offsets in repaints requested by
     // AsyncPanZoomController::NotifyLayersUpdated.
     displayPortMargins = DisplayPortMargins::FromAPZ(
-        aRequest.GetDisplayPortMargins(), apzScrollOffset, actualScrollOffset,
-        aRequest.DisplayportPixelsPerCSSPixel());
+        aRequest.GetDisplayPortMargins(), apzScrollOffset, actualScrollOffset);
   } else {
     // For whatever reason we couldn't update the scroll offset on the scroll
     // frame, which means the data APZ used for its displayport calculation is
@@ -223,8 +221,7 @@ static DisplayPortMargins ScrollFrame(nsIContent* aContent,
     // the scroll position, and the scroll position here is out of our control.
     // See bug 966507 comment 21 for a more detailed explanation.
     displayPortMargins = DisplayPortMargins::ForScrollFrame(
-        sf, RecenterDisplayPort(aRequest.GetDisplayPortMargins()),
-        Some(aRequest.DisplayportPixelsPerCSSPixel()));
+        sf, RecenterDisplayPort(aRequest.GetDisplayPortMargins()));
   }
 
   // APZ transforms inputs assuming we applied the exact scroll offset it

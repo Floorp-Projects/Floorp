@@ -38,35 +38,15 @@ typedef ScrollableLayerGuid::ViewID ViewID;
 static LazyLogModule sDisplayportLog("apz.displayport");
 
 /* static */
-DisplayPortMargins DisplayPortMargins::FromAPZ(
-    const ScreenMargin& aMargins, const CSSPoint& aVisualOffset,
-    const CSSPoint& aLayoutOffset, const CSSToScreenScale2D& aScale) {
-  return DisplayPortMargins{aMargins, aVisualOffset, aLayoutOffset, aScale};
-}
-
-CSSToScreenScale2D ComputeDisplayportScale(nsIScrollableFrame* aScrollFrame) {
-  // The calculation here is equivalent to
-  // CalculateBasicFrameMetrics(aScrollFrame).DisplayportPixelsPerCSSPixel(),
-  // but we don't calculate the entire frame metrics.
-  if (!aScrollFrame) {
-    return CSSToScreenScale2D(1.0, 1.0);
-  }
-  nsIFrame* frame = do_QueryFrame(aScrollFrame);
-  MOZ_ASSERT(frame);
-  nsPresContext* presContext = frame->PresContext();
-  PresShell* presShell = presContext->PresShell();
-
-  return presContext->CSSToDevPixelScale() *
-         LayoutDeviceToLayerScale(presShell->GetCumulativeResolution()) *
-         LayerToParentLayerScale(1.0) *
-         nsLayoutUtils::GetTransformToAncestorScaleCrossProcessForFrameMetrics(
-             frame);
+DisplayPortMargins DisplayPortMargins::FromAPZ(const ScreenMargin& aMargins,
+                                               const CSSPoint& aVisualOffset,
+                                               const CSSPoint& aLayoutOffset) {
+  return DisplayPortMargins{aMargins, aVisualOffset, aLayoutOffset};
 }
 
 /* static */
 DisplayPortMargins DisplayPortMargins::ForScrollFrame(
-    nsIScrollableFrame* aScrollFrame, const ScreenMargin& aMargins,
-    const Maybe<CSSToScreenScale2D>& aScale) {
+    nsIScrollableFrame* aScrollFrame, const ScreenMargin& aMargins) {
   CSSPoint visualOffset;
   CSSPoint layoutOffset;
   if (aScrollFrame) {
@@ -81,10 +61,7 @@ DisplayPortMargins DisplayPortMargins::ForScrollFrame(
       visualOffset = layoutOffset;
     }
   }
-  return DisplayPortMargins{aMargins, visualOffset, layoutOffset,
-                            aScale.valueOrFrom([&] {
-                              return ComputeDisplayportScale(aScrollFrame);
-                            })};
+  return DisplayPortMargins{aMargins, visualOffset, layoutOffset};
 }
 
 /* static */
@@ -92,7 +69,7 @@ DisplayPortMargins DisplayPortMargins::ForContent(
     nsIContent* aContent, const ScreenMargin& aMargins) {
   return ForScrollFrame(
       aContent ? nsLayoutUtils::FindScrollableFrameFor(aContent) : nullptr,
-      aMargins, Nothing());
+      aMargins);
 }
 
 ScreenMargin DisplayPortMargins::GetRelativeToLayoutViewport(
@@ -788,9 +765,8 @@ bool DisplayPortUtils::CalculateAndSetDisplayPortMargins(
       metrics, ParentLayerPoint(0.0f, 0.0f));
   PresShell* presShell = frame->PresContext()->GetPresShell();
 
-  DisplayPortMargins margins = DisplayPortMargins::ForScrollFrame(
-      aScrollFrame, displayportMargins,
-      Some(metrics.DisplayportPixelsPerCSSPixel()));
+  DisplayPortMargins margins =
+      DisplayPortMargins::ForScrollFrame(aScrollFrame, displayportMargins);
 
   return SetDisplayPortMargins(content, presShell, margins,
                                ClearMinimalDisplayPortProperty::Yes, 0,
