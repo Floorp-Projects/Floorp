@@ -4,7 +4,7 @@ import {
   actionCreators as ac,
   actionTypes as at,
 } from "common/Actions.sys.mjs";
-import { FakePrefs, GlobalOverrider } from "test/unit/utils";
+import { FAKE_GLOBAL_PREFS, FakePrefs, GlobalOverrider } from "test/unit/utils";
 import {
   insertPinned,
   TOP_SITES_DEFAULT_ROWS,
@@ -129,7 +129,7 @@ describe("Top Sites Feed", () => {
       Screenshots: fakeScreenshot,
     });
     sandbox.spy(global.XPCOMUtils, "defineLazyGetter");
-    FakePrefs.prototype.prefs["default.sites"] = "https://foo.com/";
+    FAKE_GLOBAL_PREFS.set("default.sites", "https://foo.com/");
     ({ TopSitesFeed, DEFAULT_TOP_SITES } = injector({
       "lib/ActivityStreamPrefs.jsm": { Prefs: FakePrefs },
       "common/Dedupe.jsm": { Dedupe: fakeDedupe },

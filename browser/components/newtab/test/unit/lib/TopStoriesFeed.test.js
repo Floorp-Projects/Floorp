@@ -1,4 +1,4 @@
-import { FakePrefs, GlobalOverrider } from "test/unit/utils";
+import { FAKE_GLOBAL_PREFS, FakePrefs, GlobalOverrider } from "test/unit/utils";
 import { actionTypes as at } from "common/Actions.sys.mjs";
 import injector from "inject!lib/TopStoriesFeed.jsm";
 
@@ -28,13 +28,16 @@ describe("Top Stories Feed", () => {
   };
 
   beforeEach(() => {
-    FakePrefs.prototype.prefs.apiKeyPref = "test-api-key";
-    FakePrefs.prototype.prefs.pocketCta = JSON.stringify({
-      cta_button: "",
-      cta_text: "",
-      cta_url: "",
-      use_cta: false,
-    });
+    FAKE_GLOBAL_PREFS.set("apiKeyPref", "test-api-key");
+    FAKE_GLOBAL_PREFS.set(
+      "pocketCta",
+      JSON.stringify({
+        cta_button: "",
+        cta_text: "",
+        cta_url: "",
+        use_cta: false,
+      })
+    );
 
     globals = new GlobalOverrider();
     globals.set("PlacesUtils", { history: {} });

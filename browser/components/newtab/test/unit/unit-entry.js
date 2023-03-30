@@ -1,6 +1,7 @@
 import {
   EventEmitter,
   FakePrefs,
+  FakensIPrefService,
   GlobalOverrider,
   FakeConsoleAPI,
   FakeLogger,
@@ -425,37 +426,7 @@ const TEST_GLOBAL = {
       },
     },
     console: { logStringMessage: () => {} },
-    prefs: {
-      addObserver() {},
-      prefHasUserValue() {},
-      removeObserver() {},
-      getPrefType() {},
-      clearUserPref() {},
-      getChildList() {
-        return [];
-      },
-      getStringPref() {},
-      setStringPref() {},
-      getIntPref() {},
-      getBoolPref() {},
-      getCharPref() {},
-      setBoolPref() {},
-      setCharPref() {},
-      setIntPref() {},
-      getBranch() {},
-      PREF_BOOL: "boolean",
-      PREF_INT: "integer",
-      PREF_STRING: "string",
-      getDefaultBranch() {
-        return {
-          setBoolPref() {},
-          setIntPref() {},
-          setStringPref() {},
-          clearUserPref() {},
-        };
-      },
-      prefIsLocked() {},
-    },
+    prefs: new FakensIPrefService(),
     tm: {
       dispatchToMainThread: cb => cb(),
       idleDispatchToMainThread: cb => cb(),
