@@ -364,16 +364,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
         },
         primary_button: {
           label: {
-            string_id: "mr2022-onboarding-gratitude-primary-button-label",
-          },
-          action: {
-            type: "OPEN_FIREFOX_VIEW",
-            navigate: true,
-          },
-        },
-        secondary_button: {
-          label: {
-            string_id: "mr2022-onboarding-gratitude-secondary-button-label",
+            string_id: "mr2-onboarding-start-browsing-button-label",
           },
           action: {
             navigate: true,
