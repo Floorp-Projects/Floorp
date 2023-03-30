@@ -3283,7 +3283,7 @@ void QuotaManager::SafeMaybeRecordQuotaClientShutdownStep(
 void QuotaManager::RecordQuotaManagerShutdownStep(
     const nsACString& aStepDescription) {
   // Callable on any thread.
-  MOZ_ASSERT(mShutdownStarted);
+  MOZ_ASSERT(IsShuttingDown());
 
   RecordShutdownStep(Nothing{}, aStepDescription);
 }
@@ -3338,17 +3338,11 @@ void QuotaManager::Shutdown() {
   // Define some local helper functions
 
   auto flagShutdownStarted = [this]() {
+    mShutdownStartedAt.init(TimeStamp::NowLoRes());
+
     // Setting this flag prevents the service from being recreated and prevents
     // further storages from being created.
-    // XXX: Harmonize QM shutdown flags, see bug 1726714
     gShutdown = true;
-
-    // StopIdleMaintenance used to happen before mShutdownStarted is set true
-    // but it is just an internal flag for the recording of shutdown steps
-    // and not evaluated elsewhere.
-
-    mShutdownStartedAt.init(TimeStamp::NowLoRes());
-    mShutdownStarted = true;
   };
 
   nsCOMPtr<nsITimer> crashBrowserTimer;
