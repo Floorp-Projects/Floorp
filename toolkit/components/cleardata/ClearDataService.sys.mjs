@@ -1435,7 +1435,7 @@ const IdentityCredentialStorageCleaner = {
   },
 
   async deleteByRange(aFrom, aTo) {
-    lazy.IdentityCredentialStorageService.deleteFromRange(aFrom, aTo);
+    lazy.IdentityCredentialStorageService.deleteFromTimeRange(aFrom, aTo);
   },
 
   async deleteByHost(aHost, aOriginAttributes) {
