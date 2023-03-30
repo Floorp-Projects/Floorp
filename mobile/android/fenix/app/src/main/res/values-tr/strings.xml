@@ -260,10 +260,10 @@
     <string name="search_settings_menu_item">Arama ayarları</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">Bununla ara:</string>
+    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">Burada ara:</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item_2">Bununla ara:</string>
+    <string name="search_header_menu_item_2">Burada ara:</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
@@ -1261,6 +1261,9 @@
     <string name="notification_re_engagement_A_text">%1$s, gizli gezintide bilgilerinizi kaydetmez.</string>
     <!-- Title B shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_B_title">Aramaya başlayın</string>
+
+    <!-- Text B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_text">İster yakınınızdaki restoranları bulun, ister eğlenceli bir şeyler keşfedin.</string>
 
     <!-- Survey -->
     <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.

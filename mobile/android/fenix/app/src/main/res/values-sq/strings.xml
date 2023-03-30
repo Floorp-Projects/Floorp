@@ -14,6 +14,8 @@
     <string name="content_description_disable_private_browsing_button">Çaktivizo shfletim privat</string>
     <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
     <string name="search_hint">Bëni kërkim, ose jepni adresë</string>
+    <!-- Placeholder text shown in the search bar before a user enters text for a general engine -->
+    <string name="search_hint_general_engine">Kërkoni në Web</string>
     <!-- Placeholder text shown in search bar when using history search -->
     <string name="history_search_hint">Kërkoni në historik</string>
     <!-- Placeholder text shown in search bar when using bookmarks search -->
@@ -66,6 +68,8 @@
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">Skedën pasuese private hape me një prekje.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message_2">Skedën tuaj pasuese private hape me një prekje.</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Shtoje te skena e Kreut</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
@@ -292,6 +296,41 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">Jo tani</string>
 
+    <!-- Juno first user onboarding flow experiment -->
+    <!-- Title for set firefox as default browser screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_default_browser_title" tools:ignore="UnusedResources">Bëjeni %s shfletuesin tuaj të zemrës</string>
+    <!-- Description for set firefox as default browser screen.
+        The first parameter is the Firefox brand name.
+        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
+    <string name="juno_onboarding_default_browser_description" tools:ignore="UnusedResources">%1$s vë njerëzit mbi fitimet dhe mbron privatësinë tuaj duke bllokuar gjurmues nga sajti në sajt.\n\nMësoni më tepër te %2$s ynë.</string>
+    <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
+    This is part of the string with the key "juno_onboarding_default_browser_description". -->
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">shënim mbi privatësinë</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Vëre si shfletuesin parazgjedhje</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Jo tani</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Kaloni nga telefoni në portativ, ose anasjelltas</string>
+
+    <!-- Description for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Merrni skeda dhe fjalëkalim nga pajisjet tuaja të tjera, për të vazhduar atje ku e latë.</string>
+    <!-- Text for the button to sign in to sync on the device -->
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Hyni</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Jo tani</string>
+    <!-- Title for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_title" tools:ignore="UnusedResources">Njoftimet ju ndihmojnë të arrini më tepër gjëra me %s</string>
+    <!-- Description for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_description" tools:ignore="UnusedResources">Dërgoni skeda nga pajisje në pajisje, administroni shkarkime dhe merrni ndihmëza se si të përfitoni maksimumin nga %s.</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Aktivizoni njoftimet</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Jo tani</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Hapni një skedë të re %1$s</string>
@@ -374,10 +413,14 @@
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s provon të hedhë poshtë automatikisht krejt kërkesat për cookies, në sajtet që e mbulojnë.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Lamtumirë banderola cookie-sh!</string>
+    <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_title">Të lejohet %1$s të hedhë poshtë banderola cookie-sh?</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Hidh vetvetiu tej kërkesa për depozitim cookie-sh, kur është e mundur.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_2" moz:RemovedIn="112" tools:ignore="UnusedResources">Të lejohet %1$s të hedhë tej vetvetiu kërkesa për depozitim cookie-sh, kur është e mundur?</string>
+    <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_body">%1$s mund të hedhë vetvetiu poshtë mjaft kërkesa banderolash cookie-sh.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Jo Tani</string>
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
@@ -396,6 +439,9 @@
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Të lejohet %1$s të hedhë poshtë kërkesa pranimi cookie-sh nëse është e mundur?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Lejoje</string>
+
+    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
+    <string name="reduce_cookie_banner_dialog_change_setting_button">Lejoje</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Përpiqet automatikisht të lidhet me sajtet duke përdorur protokollin HTTPS të fshehtëzimit, për më tepër siguri.</string>
@@ -476,6 +522,12 @@
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Hapi lidhjet në aplikacione</string>
 
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">Përherë</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">Pyet para hapjes</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">Kurrë</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Përgjegjës i jashtëm shkarkimesh</string>
     <!-- Preference for add_ons -->
@@ -708,9 +760,16 @@
     <!-- Text to show users they have one site in the history group section of the History fragment.
     %d is a placeholder for the number of sites in the group. -->
     <string name="history_search_group_site" moz:RemovedIn="111" tools:ignore="UnusedResources">%d sajt</string>
+    <!-- Text to show users they have one page in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_site_1">%d faqe</string>
     <!-- Text to show users they have multiple sites in the history group section of the History fragment.
     %d is a placeholder for the number of sites in the group. -->
     <string name="history_search_group_sites" moz:RemovedIn="111" tools:ignore="UnusedResources">%d sajte</string>
+
+    <!-- Text to show users they have multiple pages in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_sites_1">%d faqe</string>
 
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Skeda të mbyllura së fundi</string>
@@ -1175,11 +1234,36 @@
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Marketing</string>
 
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_title" tools:ignore="UnusedResources">Firefox-i është i shpejtë dhe privat</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_text" tools:ignore="UnusedResources">Bëjeni Firefox-in shfletuesin tuaj parazgjedhje</string>
     <!-- Title shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_title">Provoni shfletimin privat</string>
     <!-- Text shown in the notification that pops up to re-engage the user.
     %1$s is a placeholder that will be replaced by the app name. -->
     <string name="notification_re_engagement_text">Shfletoni pa “cookies” të ruajtura ose historik te %1$s</string>
+
+    <!-- Title A shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_A_title">Shfletoni pa lënë gjurmë</string>
+    <!-- Text A shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_A_text">Shfletimi privat në %1$s s’ruan informacion tuajin.</string>
+    <!-- Title B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_title">Filloni kërkimin tuaj të parë</string>
+    <!-- Text B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_text">Gjeni diçka atypari. Ose zbuloni diçka zbavitëse.</string>
+
+    <!-- Survey -->
+    <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_survey_message_text" tools:ignore="UnusedResources">Ju lutemi, ndihmoni të bëhet Firefox-i më i mirë, duke plotësuar këtë pyetësor të shkurtër.</string>
+    <!-- Preference for taking the short survey. -->
+    <string name="preferences_take_survey" tools:ignore="UnusedResources">Plotësoni Pyetësorin</string>
+    <!-- Preference for not taking the short survey. -->
+    <string name="preferences_not_take_survey" tools:ignore="UnusedResources">Jo, Faleminderit</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
@@ -1318,6 +1402,8 @@
     <string name="onboarding_firefox_account_sync_is_on">Njëkohësimi është aktiv</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Mbrojtje privatësie, si parazgjedhje</string>
+    <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_old">%1$s i pengon vetvetiu shoqëritë t’ju ndjekin ju fshehtas nëpër internet.</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">Me Mbrojtj Tërësore Nga Cookie-t, për të ndalur gjurmuesit të përdorin “cookies” për t’ju ndjekur nëpër sajte.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1396,20 +1482,28 @@
     <string name="preference_enhanced_tracking_protection">Mbrojtje e Thelluar Nga Gjurmimi</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">Shfletoni pa qenë i ndjekur</string>
+    <!-- Preference summary for enhanced tracking protection settings on/off switch -->
+    <string name="preference_enhanced_tracking_protection_summary" tools:ignore="UnusedResources">Tashmë me Mbrojtje Totale Nga Cookie-t, barriera jonë më e fuqishme deri më sot kundër gjurmuesve nga sajti në sajt.</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation">Mbajini për vete të dhënat tuaja. %s ju mbron nga shumë prej gjurmuesve më të rëndomtë që ndjekin ç’bëni në internet.</string>
+    <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">%s ju mbron nga shumë prej gjurmuesve më të rëndomtë që ndjekin ç’bëni në internet.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Mësoni më tepër</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standarde (parazgjedhje)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_4">I baraspeshuar për privatësi dhe funksionim. Faqet do të ngarkohen normalisht.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_5" tools:ignore="UnusedResources">Faqet do të ngarkohen normalisht, por blloko më pak gjurmues.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Ç’bllokohet nga mbrojtje standarde kundër gjurmimit</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Strikte</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_3">Bllokon më shumë gjurmues, ndaj faqet ngarkohen më shpejt, por disa anë, pjesë e faqes, mund të mos punojnë.</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_4" tools:ignore="UnusedResources">Mbrojtje më e fortë kundër gjurmimit dhe punim më i shpejtë, por disa sajte mund të mos funksionojnë siç duhet.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Ç’bllokohet nga mbrojtje strikte kundër gjurmimit</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -2003,4 +2097,6 @@
     <string name="a11y_action_label_wallpaper_collection_learn_more">që të mësoni më tepër mbi këtë koleksion, hapni lidhjen</string>
     <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
     <string name="a11y_action_label_read_article">lexoni artikullin</string>
-    </resources>
+    <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
+    <string name="a11y_action_label_pocket_learn_more">që të mësoni më tepër, hapni lidhjen</string>
+</resources>

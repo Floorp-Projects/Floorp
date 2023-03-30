@@ -1271,7 +1271,7 @@
     <!-- Title B shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_B_title">ເລີ່ມການຄົ້ນຫາທໍາອິດຂອງທ່ານ</string>
     <!-- Text B shown in the notification that pops up to re-engage the user -->
-    <string name="notification_re_engagement_B_text">ຊອກຫາສິ່ງທີ່ຢູ່ໃກ້ໆ. ຫຼືຄົ້ນພົບສິ່ງທີ່ມ່ວນ.</string>
+    <string name="notification_re_engagement_B_text">ຊອກຫາສິ່ງທີ່ຢູ່ໃກ້ໆ. ຫຼືຄົ້ນຫາສິ່ງທີ່ມ່ວນ.</string>
 
     <!-- Survey -->
     <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.

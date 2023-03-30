@@ -60,7 +60,7 @@
     <!-- Private Browsing -->
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description_2">%1$s გაასუფთავებს თქვენი ძიებისა და ნახვების ისტორიას ყველა პირადი ჩანართის დახურვისას ან პროგრამიდან გამოსვლისას. მართალია, ეს არ დაფარავს თქვენს ვინაობას საიტებისა და ინტერნეტის მომწოდებლისგან, თუმცა დაგეხმარებათ დაიცვათ პირადი მონაცემები, ამ მოწყობილობის სხვა მომხმარებლებისგან.</string>
+    <string name="private_browsing_placeholder_description_2">%1$s გაასუფთავებს თქვენი ძიებისა და ნახვების ისტორიას ყველა პირადი ჩანართის დახურვისას ან პროგრამიდან გამოსვლისას. მართალია, ეს არ დაფარავს თქვენს ვინაობას საიტებისა და ინტერნეტის მომწოდებლისგან, მაგრამ დაგეხმარებათ დაიცვათ პირადი მონაცემები ამ მოწყობილობის სხვა მომხმარებლებისგან.</string>
     <string name="private_browsing_common_myths">არასწორი წარმოდგენები პირადი თვალიერების რეჟიმზე</string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
@@ -428,7 +428,7 @@
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
     <string name="errorpage_httpsonly_message_title">სავარაუდოდ, საიტზე არაა მხარდაჭერილი HTTPS.</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
-    <string name="errorpage_httpsonly_message_summary">თუმცა, შესაძლოა შემტევის ხელიც ერიოს. თუ მაინც გადახვალთ, საიტის ველებში ნუ შეიყვანთ პირად მონაცემებს. ამასთანავე, მხოლოდ-HTTPS-რეჟიმი დროებით გამოირთვება ამ საიტისთვის.</string>
+    <string name="errorpage_httpsonly_message_summary">მიუხედავად ამისა, არაა გამორიცხული, შემტევის ხელიც ერიოს. თუ მაინც გადახვალთ, საიტის ველებში ნუ შეიყვანთ პირად მონაცემებს. ამასთანავე, მხოლოდ-HTTPS-რეჟიმი დროებით გამოირთვება ამ საიტისთვის.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">ხელმისაწვდომობა</string>
     <!-- Preference to override the Firefox Account server -->

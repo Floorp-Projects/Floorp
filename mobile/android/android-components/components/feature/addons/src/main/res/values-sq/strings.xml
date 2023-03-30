@@ -40,6 +40,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Të fusë të dhëna në të papastër</string>
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">Blloko lëndë në çfarëdo faqe</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">Të lexojë historikun tuaj të shfletimit</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Të shkarkojë kartela dhe të lexojë dhe ndryshojë historikun e shkarkimeve të shfletuesit</string>
     <!-- Description for downloads_open permission. -->

@@ -18,6 +18,8 @@
     <string name="mozac_feature_contextmenu_copy_image_location">Kopjo vendndodhje figure</string>
     <!-- Text for context menu item to save / download the image. -->
     <string name="mozac_feature_contextmenu_save_image">Ruaje figurën</string>
+    <!-- Text for context menu item to copy the image to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_image">Kopjo figurën</string>
     <!-- Text for context menu item to save / download the file. -->
     <string name="mozac_feature_contextmenu_save_file_to_device">Ruajeni kartelën te pajisje</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->

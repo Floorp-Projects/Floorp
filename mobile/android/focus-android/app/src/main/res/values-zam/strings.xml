@@ -20,6 +20,11 @@
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
     <string name="feedback_erase">Mté dont na ré ko wíl.</string>
 
+    <string name="feedback_erase2">Ndó bíy</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
+    <string name="feedback_erase_custom_tab">Ndó bíy sá.</string>
+
     <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
     <string name="search_hint">KwàɁn lô %1$s</string>
 
@@ -42,6 +47,11 @@
 
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">M-tòb lô yíʔb</string>
+
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">M-tóba ló kó tílta yúl</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">Mté dónt kúe</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
     <string name="menu_whats_new">Ko kùb</string>
@@ -199,7 +209,12 @@
     <string name="preference_privacy_block_content">TòɁw-ná lô men dè-kè</string>
     <string name="preference_privacy_category_cookies">TòɁw cookies</string>
 
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option2">Yénta</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">TòɁw 3 cookies ná táɁ thîb mèn</string>
+
+    <string name="preference_privacy_should_block_cookies_yes_option2">ăɁ líy</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
@@ -372,6 +387,9 @@
     <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_add">M-tòb</string>
 
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">ăɁ</string>
+
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">B-láɁ=y</string>
 
@@ -405,6 +423,9 @@
     <!-- Content Description of Security Icon in toolbar -->
     <string name="site_security_icon_content_description">Zá nî-éy</string>
     <string name="preference_autocomplete_duplicate_url_error">URL šò=là</string>
+
+    <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_yes">ăɁ</string>
 
     <!-- Tips displayed on the home view -->
 
