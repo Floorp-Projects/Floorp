@@ -5,7 +5,6 @@
 remote.jar:
 % content remote %content/
   content/marionette/accessibility.sys.mjs (accessibility.sys.mjs)
-  content/marionette/action.sys.mjs (action.sys.mjs)
   content/marionette/actors/MarionetteCommandsChild.sys.mjs (actors/MarionetteCommandsChild.sys.mjs)
   content/marionette/actors/MarionetteCommandsParent.sys.mjs (actors/MarionetteCommandsParent.sys.mjs)
   content/marionette/actors/MarionetteEventsChild.sys.mjs (actors/MarionetteEventsChild.sys.mjs)

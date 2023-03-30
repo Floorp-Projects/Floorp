@@ -5,7 +5,7 @@
 "use strict";
 
 const { action } = ChromeUtils.importESModule(
-  "chrome://remote/content/marionette/action.sys.mjs"
+  "chrome://remote/content/shared/webdriver/Actions.sys.mjs"
 );
 
 const XHTMLNS = "http://www.w3.org/1999/xhtml";
