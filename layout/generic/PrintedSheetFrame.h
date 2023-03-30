@@ -26,6 +26,14 @@ class PrintedSheetFrame final : public nsContainerFrame {
 
   void SetSharedPageData(nsSharedPageData* aPD) { mPD = aPD; }
 
+  // Invokes MoveOverflowToChildList.
+  // This is intended for use by callers that need to be able to get our first/
+  // only nsPageFrame from our child list to examine its computed style just
+  // **prior** to us being reflowed. (If our first nsPageFrame will come from
+  // our prev-in-flow, we won't otherwise take ownership of it until we are
+  // reflowed.)
+  void ClaimPageFrameFromPrevInFlow();
+
   // nsIFrame overrides
   void Reflow(nsPresContext* aPresContext, ReflowOutput& aReflowOutput,
               const ReflowInput& aReflowInput,

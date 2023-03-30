@@ -347,6 +347,10 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
     auto* sheet = static_cast<PrintedSheetFrame*>(kidFrame);
     sheet->SetSharedPageData(mPageData.get());
 
+    // If we want to reliably access the nsPageFrame before reflowing the sheet
+    // frame, we need to call this:
+    sheet->ClaimPageFrameFromPrevInFlow();
+
     // Reflow the sheet
     ReflowInput kidReflowInput(
         aPresContext, aReflowInput, kidFrame,
