@@ -91,9 +91,11 @@ StaticRefPtr<ShutdownObserver> sObserver;
 /* static */
 void RemoteDecoderManagerChild::Init() {
   MOZ_ASSERT(NS_IsMainThread());
+  LOG("RemoteDecoderManagerChild Init");
 
   auto remoteDecoderManagerThread = sRemoteDecoderManagerChildThread.Lock();
   if (!*remoteDecoderManagerThread) {
+    LOG("RemoteDecoderManagerChild's thread is created");
     // We can't use a MediaThreadType::SUPERVISOR as the RemoteDecoderModule
     // runs on it and dispatch synchronous tasks to the manager thread, should
     // more than 4 concurrent videos being instantiated at the same time, we
@@ -137,6 +139,7 @@ void RemoteDecoderManagerChild::InitForGPUProcess(
 /* static */
 void RemoteDecoderManagerChild::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
+  LOG("RemoteDecoderManagerChild Shutdown");
 
   if (sObserver) {
     nsContentUtils::UnregisterShutdownObserver(sObserver);
@@ -147,6 +150,7 @@ void RemoteDecoderManagerChild::Shutdown() {
   {
     auto remoteDecoderManagerThread = sRemoteDecoderManagerChildThread.Lock();
     childThread = remoteDecoderManagerThread->forget();
+    LOG("RemoteDecoderManagerChild's thread is released");
   }
   if (childThread) {
     MOZ_ALWAYS_SUCCEEDS(childThread->Dispatch(NS_NewRunnableFunction(
