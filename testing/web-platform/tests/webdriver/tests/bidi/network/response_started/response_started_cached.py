@@ -7,9 +7,6 @@ from .. import assert_response_event
 
 PAGE_EMPTY_TEXT = "/webdriver/tests/bidi/network/support/empty.txt"
 
-# The following tests are marked as tentative until
-# https://github.com/w3c/webdriver-bidi/pull/204 is merged.
-
 
 @pytest.mark.asyncio
 async def test_cached(
