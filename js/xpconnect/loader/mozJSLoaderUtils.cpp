@@ -13,6 +13,7 @@
 #include "js/experimental/JSStencil.h"
 
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/Span.h"
 
 using namespace JS;
 using namespace mozilla::scache;
@@ -47,7 +48,7 @@ nsresult ReadCachedStencil(StartupCache* cache, nsACString& cachePath,
     return rv;  // don't warn since NOT_AVAILABLE is an ok error
   }
 
-  JS::TranscodeRange range(AsBytes(Span(buf, len)));
+  JS::TranscodeRange range(AsBytes(mozilla::Span(buf, len)));
   JS::TranscodeResult code = JS::DecodeStencil(cx, options, range, stencilOut);
   return HandleTranscodeResult(cx, code);
 }
@@ -66,7 +67,7 @@ nsresult WriteCachedStencil(StartupCache* cache, nsACString& cachePath,
   }
 
   // Move the vector buffer into a unique pointer buffer.
-  UniqueFreePtr<char[]> buf(
+  mozilla::UniqueFreePtr<char[]> buf(
       reinterpret_cast<char*>(buffer.extractOrCopyRawBuffer()));
   nsresult rv = cache->PutBuffer(PromiseFlatCString(cachePath).get(),
                                  std::move(buf), size);

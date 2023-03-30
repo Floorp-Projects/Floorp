@@ -23,6 +23,8 @@
 #include "js/TypeDecls.h"   // JSContext, JSObject, JS::MutableHandleVector
 #include "js/Value.h"       // JS::Value
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
+#include "js/String.h"
+#include "js/Modules.h"
 
 namespace mozilla {
 namespace loader {

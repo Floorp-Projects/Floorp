@@ -18,6 +18,7 @@
 #include "mozilla/Vector.h"
 #include "mozilla/Result.h"
 #include "mozilla/loader/AutoMemMap.h"
+#include "MainThreadUtils.h"
 #include "nsClassHashtable.h"
 #include "nsIAsyncShutdown.h"
 #include "nsIFile.h"
