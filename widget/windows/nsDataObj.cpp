@@ -1082,16 +1082,20 @@ nsDataObj ::GetFileContents(FORMATETC& aFE, STGMEDIUM& aSTG) {
 }  // GetFileContents
 
 // Ensure that the supplied name doesn't have invalid characters.
-static void ValidateFilename(nsString& aFilename) {
+static void ValidateFilename(nsString& aFilename, bool isShortcut) {
   nsCOMPtr<nsIMIMEService> mimeService = do_GetService("@mozilla.org/mime;1");
   if (NS_WARN_IF(!mimeService)) {
     aFilename.Truncate();
     return;
   }
 
+  uint32_t flags = nsIMIMEService::VALIDATE_SANITIZE_ONLY;
+  if (isShortcut) {
+    flags |= nsIMIMEService::VALIDATE_ALLOW_INVALID_FILENAMES;
+  }
+
   nsAutoString outFilename;
-  mimeService->ValidateFileNameForSaving(aFilename, EmptyCString(),
-                                         nsIMIMEService::VALIDATE_SANITIZE_ONLY,
+  mimeService->ValidateFileNameForSaving(aFilename, EmptyCString(), flags,
                                          outFilename);
   aFilename = outFilename;
 }
@@ -1108,7 +1112,7 @@ static bool CreateURLFilenameFromTextA(nsAutoString& aText, char* aFilename) {
     return false;
   }
   aText.AppendLiteral(".URL");
-  ValidateFilename(aText);
+  ValidateFilename(aText, true);
   if (aText.IsEmpty()) {
     return false;
   }
@@ -1130,7 +1134,7 @@ static bool CreateURLFilenameFromTextW(nsAutoString& aText,
     return false;
   }
   aText.AppendLiteral(".URL");
-  ValidateFilename(aText);
+  ValidateFilename(aText, true);
   if (aText.IsEmpty() || aText.Length() >= MAX_PATH) {
     return false;
   }
@@ -2145,7 +2149,7 @@ HRESULT nsDataObj::GetDownloadDetails(nsIURI** aSourceURI,
   }
 
   // make the name safe for the filesystem
-  ValidateFilename(srcFileName);
+  ValidateFilename(srcFileName, false);
   if (srcFileName.IsEmpty()) return E_FAIL;
 
   sourceURI.swap(*aSourceURI);
