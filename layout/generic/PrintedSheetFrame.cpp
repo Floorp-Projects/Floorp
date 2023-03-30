@@ -62,6 +62,10 @@ static bool TagIfSkippedByCustomRange(nsPageFrame* aPageFrame, int32_t aPageNum,
   return true;
 }
 
+void PrintedSheetFrame::ClaimPageFrameFromPrevInFlow() {
+  MoveOverflowToChildList();
+}
+
 void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
                                ReflowOutput& aReflowOutput,
                                const ReflowInput& aReflowInput,
