@@ -3,6 +3,76 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :-moz-native-anonymous #screenshots-component {
+  --in-content-page-background: #fff;
+
+  --in-content-button-text-color: rgb(21, 20, 26);
+  --in-content-button-text-color-hover: var(--in-content-text-color);
+  --in-content-button-text-color-active: var(--in-content-button-text-color);
+  --in-content-button-background: rgba(207,207,216,.33);
+  --in-content-button-background-hover: rgba(207,207,216,.66);
+  --in-content-button-background-active: rgb(207,207,216);
+  --in-content-button-border-color: transparent;
+  --in-content-button-border-color-hover: transparent;
+  --in-content-button-border-color-active: transparent;
+
+  --in-content-primary-button-text-color: rgb(251,251,254);
+  --in-content-primary-button-text-color-hover: var(--in-content-primary-button-text-color);
+  --in-content-primary-button-text-color-active: var(--in-content-primary-button-text-color);
+  --in-content-primary-button-background: #0061e0;
+  --in-content-primary-button-background-hover: #0250bb;
+  --in-content-primary-button-background-active: #053e94;
+  --in-content-primary-button-border-color: transparent;
+  --in-content-primary-button-border-color-hover: transparent;
+  --in-content-primary-button-border-color-active: transparent;
+
+  --in-content-focus-outline-color: var(--in-content-primary-button-background);
+}
+
+@media (prefers-color-scheme: dark) {
+  :-moz-native-anonymous #screenshots-component {
+    --in-content-page-background: #42414d;
+
+    --in-content-button-text-color: rgb(251,251,254);
+    --in-content-button-background: rgb(43,42,51);
+    --in-content-button-background-hover: rgb(82,82,94);
+    --in-content-button-background-active: rgb(91,91,102);
+
+    --in-content-primary-button-text-color: rgb(43,42,51);
+    --in-content-primary-button-background: rgb(0,221,255);
+    --in-content-primary-button-background-hover: rgb(128,235,255);
+    --in-content-primary-button-background-active: rgb(170,242,255);
+  }
+}
+
+@media (forced-colors: active), (prefers-contrast) {
+  :-moz-native-anonymous #screenshots-component {
+    --in-content-page-background: Canvas;
+
+    --in-content-button-text-color: ButtonText;
+    --in-content-button-text-color-hover: SelectedItemText;
+    --in-content-button-text-color-active: SelectedItem;
+    --in-content-button-background: ButtonFace;
+    --in-content-button-background-hover: SelectedItem;
+    --in-content-button-background-active: SelectedItemText;
+    --in-content-button-border-color: ButtonText;
+    --in-content-button-border-color-hover: SelectedItemText;
+    --in-content-button-border-color-active: SelectedItem;
+
+    --in-content-primary-button-text-color: ButtonFace;
+    --in-content-primary-button-text-color-hover: SelectedItemText;
+    --in-content-primary-button-text-color-active: SelectedItem;
+    --in-content-primary-button-background: ButtonText;
+    --in-content-primary-button-background-hover: SelectedItem;
+    --in-content-primary-button-background-active: SelectedItemText;
+    --in-content-primary-button-border-color: ButtonFace;
+    --in-content-primary-button-border-color-hover: SelectedItemText;
+    --in-content-primary-button-border-color-active: SelectedItem;
+
+    --in-content-focus-outline-color: -moz-DialogText;
+  }
+}
+
+:-moz-native-anonymous #screenshots-component {
   width: 100%;
   height: 100%;
   overflow: clip;
@@ -59,19 +129,87 @@
   cursor: grabbing;
 }
 
+:-moz-native-anonymous #buttons {
+  position: absolute;
+  margin: 10px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--in-content-page-background);
+  border-radius: 4px;
+  padding: 4px;
+}
+
+:-moz-native-anonymous .screenshots-button {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-align: center;
+  user-select: none;
+  white-space: nowrap;
+  min-height: 36px;
+  font-size: 15px;
+  min-width: 36px;
+  z-index: 6;
+  margin-inline: 4px;
+  font-family: "Segoe UI";
+
+  /* Below styles are copied from common-shared.css */
+  appearance: none;
+  padding: 7px 15px;
+  text-decoration: none;
+  font-weight: 600;
+  margin: 4px;
+  border: 1px solid var(--in-content-button-border-color);
+  color: var(--in-content-button-text-color);
+  border-radius: 4px;
+  background-color: var(--in-content-button-background);
+}
+
+:-moz-native-anonymous .screenshots-button:focus-visible,
+:-moz-native-anonymous #screenshots-cancel-button:focus-visible {
+  outline: 2px solid var(--in-content-focus-outline-color);
+  outline-offset: 2px;
+}
+
+:-moz-native-anonymous .screenshots-button:hover {
+  background-color: var(--in-content-button-background-hover);
+  border-color: var(--in-content-button-border-color-hover);
+  color: var(--in-content-button-text-color-hover);
+}
+
+:-moz-native-anonymous .screenshots-button:active {
+  background-color: var(--in-content-button-background-active);
+  border-color: var(--in-content-button-border-color-active);
+  color: var(--in-content-button-text-color-active);
+}
+
+:-moz-native-anonymous .primary {
+  background-color: var(--in-content-primary-button-background);
+  border-color: var(--in-content-primary-button-border-color);
+  color: var(--in-content-primary-button-text-color);
+}
+
+:-moz-native-anonymous .primary:hover {
+  background-color: var(--in-content-primary-button-background-hover);
+  border-color: var(--in-content-primary-button-border-color-hover);
+  color: var(--in-content-primary-button-text-color-hover);
+}
+
+:-moz-native-anonymous .primary:active {
+  background-color: var(--in-content-primary-button-background-active);
+  border-color: var(--in-content-primary-button-border-color-active);
+  color: var(--in-content-primary-button-text-color-active);
+}
+
 :-moz-native-anonymous #screenshots-cancel-button {
   background-color: transparent;
-  width: fit-content;
-  cursor: pointer;
-  outline: none;
-  appearance: none;
-  border-radius: 3px;
-  border: 1px #9b9b9b solid;
-  color: #fff;
-  font-family: -apple-system, BlinkMacSystemFont, "segoe ui", "helvetica neue", helvetica, ubuntu, roboto, noto, arial, sans-serif;
-  font-size: 16px;
   margin-top: 40px;
-  padding: 10px 25px;
+  width: fit-content;
+  border-color: #fff;
+  color: #fff;
 }
 
 :-moz-native-anonymous #screenshots-cancel-button:hover {
@@ -79,138 +217,35 @@
   color: #000;
 }
 
-:-moz-native-anonymous .screenshots-button:focus-visible,
-:-moz-native-anonymous #screenshots-cancel-button:focus-visible {
-  outline: 2px solid #00ddff;
-  outline-offset: 2px;
-}
-
 @media (forced-colors: active), (prefers-contrast) {
   :-moz-native-anonymous #screenshots-cancel-button {
     border-color: ButtonBorder;
+    color: CanvasText;
   }
 }
 
-:-moz-native-anonymous .screenshots-button {
-  cursor: pointer;
-  appearance: none;
-  pointer-events: auto;
-  background-color: #f9f9fa;
-  color: #38383d;
-  border: 0;
-  border-radius: 3px;
-  font-size: 16px;
-  font-weight: 400;
-  height: 40px;
-  min-width: 40px;
-  outline: none;
-  padding: 0 10px;
-  position: relative;
-  text-align: center;
-  text-decoration: none;
-  transition: background 150ms cubic-bezier(0.07, 0.95, 0, 1), border 150ms cubic-bezier(0.07, 0.95, 0, 1);
-  user-select: none;
-  white-space: nowrap;
-  margin: 0 5px;
-  box-shadow: 0 0 0 1px rgba(12, 12, 13, 0.1), 0 2px 8px rgba(12, 12, 13, 0.1);
-  z-index: 6;
-}
-
-:-moz-native-anonymous .screenshots-button:hover,
-:-moz-native-anonymous #download:hover {
-  background-color: #52525e;
-  color: #fff;
-}
-
-:-moz-native-anonymous .screenshots-button:hover > img {
-  fill: #fff;
-}
-
-@media (forced-colors: active), (prefers-contrast) {
-  :-moz-native-anonymous .screenshots-button {
-    background-color: ButtonFace;
-    color: ButtonText;
-  }
-
-  :-moz-native-anonymous .screenshots-button:hover {
-    background-color: ButtonText;
-    color: ButtonFace;
-  }
-}
-
-:-moz-native-anonymous button img {
+:-moz-native-anonymous .screenshots-button > img {
   -moz-context-properties: fill;
   fill: currentColor;
-}
-
-:-moz-native-anonymous #buttons {
-  position: absolute;
-  margin: 10px 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-:-moz-native-anonymous #cancel {
-  width: 40px;
-}
-
-:-moz-native-anonymous #cancel > img {
-  color: #38383d;
-  content: url("chrome://global/skin/icons/close.svg");
-  width: 20px;
-  height: 20px;
-  padding: 10px 0;
-}
-
-@media (forced-colors: active), (prefers-contrast) {
-  :-moz-native-anonymous #cancel > img {
-    color: ButtonText;
-  }
-
-  :-moz-native-anonymous #cancel:hover > img {
-    color: ButtonFace;
-  }
-}
-
-:-moz-native-anonymous #copy > img {
-  color: #38383d;
-  content: url("chrome://global/skin/icons/edit-copy.svg");
   width: 16px;
   height: 16px;
 }
 
-@media (forced-colors: active), (prefers-contrast) {
-  :-moz-native-anonymous #copy > img {
-    color: ButtonText;
-  }
-
-  :-moz-native-anonymous #copy:hover > img {
-    color: ButtonFace;
-  }
+:-moz-native-anonymous #cancel > img {
+  content: url("chrome://global/skin/icons/close.svg");
 }
 
-:-moz-native-anonymous #download {
-  background-color: #0a84ff;
-  color: #fff;
+:-moz-native-anonymous #copy > img {
+  content: url("chrome://global/skin/icons/edit-copy.svg");
 }
 
 :-moz-native-anonymous #download > img {
   content: url("chrome://browser/skin/downloads/downloads.svg");
-  width: 16px;
-  height: 16px;
 }
 
-@media (forced-colors: active), (prefers-contrast) {
-  :-moz-native-anonymous #download {
-    background-color: ButtonFace;
-    color: ButtonText;
-  }
-
-  :-moz-native-anonymous #download:hover {
-    background-color: ButtonText;
-    color: ButtonFace;
-  }
+:-moz-native-anonymous #download > img,
+:-moz-native-anonymous #copy > img {
+  margin-inline-end: 5px;
 }
 
 :-moz-native-anonymous .fixed-container {

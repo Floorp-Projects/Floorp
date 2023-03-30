@@ -30,13 +30,13 @@ class ScreenshotsUI extends HTMLElement {
     let templateContent = template.content;
     this.appendChild(templateContent.cloneNode(true));
 
-    this._retryButton = this.querySelector(".highlight-button-retry");
+    this._retryButton = this.querySelector("#retry");
     this._retryButton.addEventListener("click", this);
-    this._cancelButton = this.querySelector(".highlight-button-cancel");
+    this._cancelButton = this.querySelector("#cancel");
     this._cancelButton.addEventListener("click", this);
-    this._copyButton = this.querySelector(".highlight-button-copy");
+    this._copyButton = this.querySelector("#copy");
     this._copyButton.addEventListener("click", this);
-    this._downloadButton = this.querySelector(".highlight-button-download");
+    this._downloadButton = this.querySelector("#download");
     this._downloadButton.addEventListener("click", this);
   }
 
