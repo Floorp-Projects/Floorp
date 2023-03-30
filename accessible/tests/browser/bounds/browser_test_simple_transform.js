@@ -196,3 +196,30 @@ addAccessibleTask(
   },
   { topLevel: true, iframe: true, remoteIframe: true }
 );
+
+// Test bounds of a rotated element after scroll.
+addAccessibleTask(
+  `
+<div id="scrollable" style="transform: rotate(180deg); overflow: scroll; height: 500px;">
+  <p id="test">hello world</p><hr style="height: 100vh;">
+</div>
+  `,
+  async function(browser, docAcc) {
+    info(
+      "Testing that the unscrolled bounds of a transformed element are correct."
+    );
+    await testBoundsWithContent(docAcc, "test", browser);
+
+    await invokeContentTask(browser, [], () => {
+      // Scroll the scrollable region down (scrolls up due to the transform).
+      let elem = content.document.getElementById("scrollable");
+      elem.scrollTo(0, elem.scrollHeight);
+    });
+
+    info(
+      "Testing that the scrolled bounds of a transformed element are correct."
+    );
+    await testBoundsWithContent(docAcc, "test", browser);
+  },
+  { topLevel: true, iframe: true, remoteIframe: true }
+);

@@ -436,10 +436,13 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   void SetParent(Derived* aParent);
   Maybe<nsRect> RetrieveCachedBounds() const;
   bool ApplyTransform(nsRect& aCumulativeBounds) const;
-  void ApplyScrollOffset(nsRect& aBounds) const;
+  bool ApplyScrollOffset(nsRect& aBounds) const;
   void ApplyCrossDocOffset(nsRect& aBounds) const;
-  LayoutDeviceIntRect BoundsWithOffset(Maybe<nsRect> aOffset) const;
+  LayoutDeviceIntRect BoundsWithOffset(
+      Maybe<nsRect> aOffset, bool aBoundsAreForHittesting = false) const;
   bool IsFixedPos() const;
+
+  // This function is used exclusively for hit testing.
   bool ContainsPoint(int32_t aX, int32_t aY);
 
   virtual void ARIAGroupPosition(int32_t* aLevel, int32_t* aSetSize,
