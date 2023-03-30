@@ -7594,6 +7594,12 @@
   value: false
   mirror: always
 
+# Experimental support Array.fromAsync
+- name: javascript.options.experimental.enable_array_from_async
+  type: bool
+  value: false
+  mirror: always
+
 #if defined(ENABLE_NEW_SET_METHODS)
   # Experimental support for New Set methods
 - name: javascript.options.experimental.enable_new_set_methods
