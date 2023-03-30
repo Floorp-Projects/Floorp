@@ -54,7 +54,7 @@ TEST(TestAudioInputSource, StartAndStop)
   EXPECT_CALL(*listener,
               AudioStateCallback(
                   sourceId, AudioInputSource::EventListener::State::Stopped))
-      .Times(2);
+      .Times(4);
 
   RefPtr<AudioInputSource> ais = MakeRefPtr<AudioInputSource>(
       std::move(listener), sourceId, deviceId, channels, true, testPrincipal,
@@ -118,7 +118,8 @@ TEST(TestAudioInputSource, DataOutputBeforeStartAndAfterStop)
                   sourceId, AudioInputSource::EventListener::State::Started));
   EXPECT_CALL(*listener,
               AudioStateCallback(
-                  sourceId, AudioInputSource::EventListener::State::Stopped));
+                  sourceId, AudioInputSource::EventListener::State::Stopped))
+      .Times(2);
 
   RefPtr<AudioInputSource> ais = MakeRefPtr<AudioInputSource>(
       std::move(listener), sourceId, deviceId, channels, true, testPrincipal,
@@ -198,6 +199,9 @@ TEST(TestAudioInputSource, ErrorCallback)
   EXPECT_CALL(*listener,
               AudioStateCallback(
                   sourceId, AudioInputSource::EventListener::State::Error));
+  EXPECT_CALL(*listener,
+              AudioStateCallback(
+                  sourceId, AudioInputSource::EventListener::State::Stopped));
 
   RefPtr<AudioInputSource> ais = MakeRefPtr<AudioInputSource>(
       std::move(listener), sourceId, deviceId, channels, true, testPrincipal,
@@ -245,7 +249,8 @@ TEST(TestAudioInputSource, DeviceChangedCallback)
                   sourceId, AudioInputSource::EventListener::State::Started));
   EXPECT_CALL(*listener,
               AudioStateCallback(
-                  sourceId, AudioInputSource::EventListener::State::Stopped));
+                  sourceId, AudioInputSource::EventListener::State::Stopped))
+      .Times(2);
 
   RefPtr<AudioInputSource> ais = MakeRefPtr<AudioInputSource>(
       std::move(listener), sourceId, deviceId, channels, true, testPrincipal,

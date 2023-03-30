@@ -1162,7 +1162,8 @@ TEST(TestAudioTrackGraph, ErrorCallback)
   //
   // We open an input through this track so that there's something triggering
   // EnsureNextIteration on the fallback driver after the callback driver has
-  // gotten the error.
+  // gotten the error, and to check that a replacement cubeb_stream receives
+  // output from the graph.
   RefPtr<AudioProcessingTrack> processingTrack;
   RefPtr<AudioInputProcessing> listener;
   auto started = Invoke([&] {
@@ -1176,6 +1177,7 @@ TEST(TestAudioTrackGraph, ErrorCallback)
     processingTrack->ConnectDeviceInput(deviceId, listener,
                                         PRINCIPAL_HANDLE_NONE);
     EXPECT_EQ(processingTrack->DeviceId().value(), deviceId);
+    processingTrack->AddAudioOutput(reinterpret_cast<void*>(1));
     return graph->NotifyWhenDeviceStarted(processingTrack);
   });
 
@@ -1186,17 +1188,18 @@ TEST(TestAudioTrackGraph, ErrorCallback)
   // Force a cubeb state_callback error and see that we don't crash.
   DispatchFunction([&] { stream->ForceError(); });
 
-  // Wait for both the error to take effect, and the driver to restart.
-  bool errored = false, init = false;
+  // Wait for the error to take effect, and the driver to restart and receive
+  // output.
+  bool errored = false;
   MediaEventListener errorListener = stream->ErrorForcedEvent().Connect(
       AbstractThread::GetCurrent(), [&] { errored = true; });
-  MediaEventListener initListener = cubeb->StreamInitEvent().Connect(
-      AbstractThread::GetCurrent(), [&] { init = true; });
-  SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
-      "TEST(TestAudioTrackGraph, ErrorCallback)"_ns,
-      [&] { return errored && init; });
+  stream = WaitFor(cubeb->StreamInitEvent());
+  WaitFor(stream->FramesVerifiedEvent());
+  // The error event is notified after CUBEB_STATE_ERROR triggers other
+  // threads to init a new cubeb_stream, so there is a theoretical chance that
+  // `errored` might not be set when `stream` is set.
   errorListener.Disconnect();
-  initListener.Disconnect();
+  EXPECT_TRUE(errored);
 
   // Clean up.
   DispatchFunction([&] {

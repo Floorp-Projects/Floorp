@@ -150,6 +150,7 @@ class MockCubebStream {
 
   int Start();
   int Stop();
+  void Destroy();
   int RegisterDeviceChangedCallback(
       cubeb_device_changed_callback aDeviceChangedCallback);
 
@@ -193,9 +194,10 @@ class MockCubebStream {
 
   void Process10Ms();
 
- public:
+ private:
   cubeb* context = nullptr;
 
+ public:
   const bool mHasInput;
   const bool mHasOutput;
   SmartMockCubebStream* const mSelf;
@@ -458,9 +460,7 @@ int cubeb_mock_stream_stop(cubeb_stream* stream) {
 }
 
 void cubeb_mock_stream_destroy(cubeb_stream* stream) {
-  MockCubebStream* mockStream = MockCubebStream::AsMock(stream);
-  MockCubeb* mock = MockCubeb::AsMock(mockStream->context);
-  return mock->StreamDestroy(stream);
+  MockCubebStream::AsMock(stream)->Destroy();
 }
 
 static char const* cubeb_mock_get_backend_id(cubeb* context) {

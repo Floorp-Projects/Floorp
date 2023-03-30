@@ -263,7 +263,8 @@ TEST_F(TestDeviceInputTrack, StartAndStop) {
                     sourceId, AudioInputSource::EventListener::State::Started));
     EXPECT_CALL(*listener,
                 AudioStateCallback(
-                    sourceId, AudioInputSource::EventListener::State::Stopped));
+                    sourceId, AudioInputSource::EventListener::State::Stopped))
+        .Times(2);
 
     // No input channels and device preference before start.
     EXPECT_EQ(track->NumberOfChannels(), 0U);
@@ -308,7 +309,8 @@ TEST_F(TestDeviceInputTrack, StartAndStop) {
                     sourceId, AudioInputSource::EventListener::State::Started));
     EXPECT_CALL(*listener,
                 AudioStateCallback(
-                    sourceId, AudioInputSource::EventListener::State::Stopped));
+                    sourceId, AudioInputSource::EventListener::State::Stopped))
+        .Times(2);
 
     DispatchFunction([&] {
       track->StartAudio(MakeRefPtr<AudioInputSource>(
@@ -387,7 +389,8 @@ TEST_F(TestDeviceInputTrack, NonNativeInputTrackData) {
                   sourceId, AudioInputSource::EventListener::State::Started));
   EXPECT_CALL(*listener,
               AudioStateCallback(
-                  sourceId, AudioInputSource::EventListener::State::Stopped));
+                  sourceId, AudioInputSource::EventListener::State::Stopped))
+      .Times(2);
 
   DispatchFunction([&] {
     track->StartAudio(MakeRefPtr<AudioInputSource>(
@@ -462,7 +465,8 @@ TEST_F(TestDeviceInputTrack, NonNativeDeviceChangedCallback) {
                   sourceId, AudioInputSource::EventListener::State::Started));
   EXPECT_CALL(*listener,
               AudioStateCallback(
-                  sourceId, AudioInputSource::EventListener::State::Stopped));
+                  sourceId, AudioInputSource::EventListener::State::Stopped))
+      .Times(2);
 
   // Launch and start an audio stream.
   DispatchFunction([&] {
@@ -520,6 +524,9 @@ TEST_F(TestDeviceInputTrack, NonNativeErrorCallback) {
   EXPECT_CALL(*listener,
               AudioStateCallback(
                   sourceId, AudioInputSource::EventListener::State::Error));
+  EXPECT_CALL(*listener,
+              AudioStateCallback(
+                  sourceId, AudioInputSource::EventListener::State::Stopped));
 
   // Launch and start an audio stream.
   DispatchFunction([&] {
