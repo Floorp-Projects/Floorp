@@ -285,8 +285,8 @@ void WindowSurfaceWaylandMB::Commit(
   mFrameInProcess = false;
 
   MozContainer* container = mWindow->GetMozContainer();
-  MozContainerSurfaceLock lock(container);
-  struct wl_surface* waylandSurface = lock.GetSurface();
+  MozContainerSurfaceLock MozContainerLock(container);
+  struct wl_surface* waylandSurface = MozContainerLock.GetSurface();
   if (!waylandSurface) {
     LOGWAYLAND(
         "WindowSurfaceWaylandMB::Commit [%p] frame queued: can't lock "
@@ -319,8 +319,19 @@ void WindowSurfaceWaylandMB::Commit(
     }
   }
 
+  // aProofOfLock is a kind of substitution of MozContainerSurfaceLock.
+  // MozContainer is locked but MozContainerSurfaceLock doen't convert to
+  // MutexAutoLock& so we use aProofOfLock here.
   moz_container_wayland_set_scale_factor_locked(aProofOfLock, container);
-  mInProgressBuffer->AttachAndCommit(waylandSurface);
+
+  // It's possible that scale factor changed between Lock() and Commit()
+  // but window size is the same.
+  // Don't attach such buffer as it may have incorrect size,
+  // we'll paint new content soon.
+  if (moz_container_wayland_size_matches_scale_factor_locked(
+          aProofOfLock, container, mWindowSize.width, mWindowSize.height)) {
+    mInProgressBuffer->AttachAndCommit(waylandSurface);
+  }
 
   mInProgressBuffer->ResetBufferAge();
   mFrontBuffer = mInProgressBuffer;
