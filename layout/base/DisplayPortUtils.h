@@ -107,8 +107,8 @@ struct DisplayPortMargins {
   // applied to (or, in the case of fixed content), the scroll frame wrt. which
   // the content is fixed.
   ScreenMargin GetRelativeToLayoutViewport(
-      ContentGeometryType aGeometryType,
-      nsIScrollableFrame* aScrollableFrame) const;
+      ContentGeometryType aGeometryType, nsIScrollableFrame* aScrollableFrame,
+      const CSSToScreenScale2D& aDisplayportScale) const;
 
   friend std::ostream& operator<<(std::ostream& aOs,
                                   const DisplayPortMargins& aMargins);
