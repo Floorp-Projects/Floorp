@@ -100,13 +100,6 @@ import:
                 priority: 50
                 max-display-count: 1
             messages:
-              arturo-notification:
-                text: "This is our notification test"
-                surface: notification
-                action: "https://developer.android.com/guide/background/persistent/getting-started/define-work"
-                trigger: [ "USER_FR_SPEAKER" ]
-                style: "PERSISTENT"
-                button-label: "My new button"
               default-browser:
                 text: default_browser_experiment_card_text
                 surface: homescreen
