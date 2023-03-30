@@ -332,6 +332,7 @@ mochitest-browser-media:
             wmf-media-engine:
                 by-test-platform:
                     .*asan.*: []
+                    windows11-64.*/debug: []  # Bug 1805736
                     windows1.*-64.*: ['autoland', 'mozilla-central']
                     default: []
             default:
