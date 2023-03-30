@@ -293,9 +293,10 @@ AsyncCubebTask::AsyncCubebTask(AudioCallbackDriver* aDriver,
       mDriver(aDriver),
       mOperation(aOperation),
       mShutdownGrip(aDriver->Graph()) {
-  NS_WARNING_ASSERTION(
-      mDriver->mAudioStream || aOperation == AsyncCubebOperation::INIT,
-      "No audio stream!");
+  MOZ_ASSERT(mDriver->mAudioStreamState ==
+                     AudioCallbackDriver::AudioStreamState::Pending ||
+                 aOperation == AsyncCubebOperation::SHUTDOWN,
+             "Replacing active stream!");
 }
 
 AsyncCubebTask::~AsyncCubebTask() = default;
