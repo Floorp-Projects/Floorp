@@ -93,7 +93,7 @@ function logEvent({ threadActor, frame, level, expression, bindings }) {
     TYPES.CONSOLE_MESSAGE
   );
   if (consoleMessageWatcher) {
-    consoleMessageWatcher.emitMessage(message);
+    consoleMessageWatcher.emitMessages([message]);
   } else {
     // Bug 1642296: Once we enable ConsoleMessage resource on the server, we should remove onConsoleAPICall
     // from the WebConsoleActor, and only support the ConsoleMessageWatcher codepath.

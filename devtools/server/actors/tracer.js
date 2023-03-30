@@ -7,6 +7,8 @@
 const { Actor } = require("resource://devtools/shared/protocol.js");
 const { tracerSpec } = require("resource://devtools/shared/specs/tracer.js");
 
+const { throttle } = require("resource://devtools/shared/throttle.js");
+
 const {
   TYPES,
   getResourceWatcher,
@@ -24,12 +26,25 @@ const CONSOLE_ARGS_STYLES = [
   "color: var(--theme-highlight-blue); margin-inline: 2px;",
 ];
 
+const CONSOLE_THROTTLING_DELAY = 250;
+
 class TracerActor extends Actor {
   constructor(conn, targetActor) {
     super(conn, tracerSpec);
     this.targetActor = targetActor;
 
+    // Flag used by CONSOLE_MESSAGE resources
+    this.isChromeContext = /conn\d+\.parentProcessTarget\d+/.test(
+      this.targetActor.actorID
+    );
+
     this.onEnterFrame = this.onEnterFrame.bind(this);
+
+    this.throttledConsoleMessages = [];
+    this.throttleLogMessages = throttle(
+      this.flushConsoleMessages.bind(this),
+      CONSOLE_THROTTLING_DELAY
+    );
   }
 
   isTracing() {
@@ -102,12 +117,13 @@ class TracerActor extends Actor {
         if (this.logMethod == LOG_METHODS.STDOUT) {
           dump(message + "\n");
         } else if (this.logMethod == LOG_METHODS.CONSOLE) {
-          logConsoleMessage({
-            targetActor: this.targetActor,
-            source: script.source,
-            args: [message],
+          this.throttledConsoleMessages.push({
+            arguments: [message],
             styles: [],
+            level: "logTrace",
+            chromeContext: this.isChromeContext,
           });
+          this.throttleLogMessages();
         }
         this.stopTracing();
         return;
@@ -132,14 +148,18 @@ class TracerActor extends Actor {
           formatDisplayName(frame),
         ];
 
-        logConsoleMessage({
-          targetActor: this.targetActor,
-          source: script.source,
+        // Create a message object that fits Console Message Watcher expectations
+        this.throttledConsoleMessages.push({
+          filename: script.source.url,
           lineNumber,
           columnNumber,
-          args,
+          arguments: args,
           styles: CONSOLE_ARGS_STYLES,
+          level: "logTrace",
+          chromeContext: this.isChromeContext,
+          sourceId: script.source.id,
         });
+        this.throttleLogMessages();
       }
 
       this.depth++;
@@ -149,6 +169,25 @@ class TracerActor extends Actor {
     } catch (e) {
       console.error("Exception while tracing javascript", e);
     }
+  }
+
+  /**
+   * This method is throttled and will notify all pending traces to be logged in the console
+   * via the console message watcher.
+   */
+  flushConsoleMessages() {
+    const consoleMessageWatcher = getResourceWatcher(
+      this.targetActor,
+      TYPES.CONSOLE_MESSAGE
+    );
+    // Ignore the request if the frontend isn't listening to console messages for that target.
+    if (!consoleMessageWatcher) {
+      return;
+    }
+    const messages = this.throttledConsoleMessages;
+    this.throttledConsoleMessages = [];
+
+    consoleMessageWatcher.emitMessages(messages);
   }
 }
 exports.TracerActor = TracerActor;
@@ -169,54 +208,4 @@ function formatDisplayName(frame) {
   }
 
   return `(${frame.type})`;
-}
-
-/**
- * Log a message to the web console.
- *
- * @param {Object} targetActor
- *        The related target actor where we want to log the message.
- *        The message will be seen as coming from one specific target.
- * @param {Debugger.Source} source
- *        The source of the location where you the message be reported to be coming from.
- * @param {Number} line
- *        The line of the location where you the message be reported to be coming from.
- * @param {Number} column
- *        The column of the location where you the message be reported to be coming from.
- * @param {Array<Object>} args
- *        Arguments of the console message to display.
- * @param {Object} styles
- *        Styles to apply to the console message.
- */
-function logConsoleMessage({
-  targetActor,
-  source,
-  lineNumber,
-  columnNumber,
-  args,
-  styles,
-}) {
-  const message = {
-    filename: source.url,
-    lineNumber,
-    columnNumber,
-    arguments: args,
-    styles,
-    level: "logTrace",
-    chromeContext:
-      targetActor.actorID &&
-      /conn\d+\.parentProcessTarget\d+/.test(targetActor.actorID),
-    // The 'prepareConsoleMessageForRemote' method in webconsoleActor expects internal source ID,
-    // thus we can't set sourceId directly to sourceActorID.
-    sourceId: source.id,
-  };
-
-  // Ignore the request if the frontend isn't listening to console messages for that target.
-  const consoleMessageWatcher = getResourceWatcher(
-    targetActor,
-    TYPES.CONSOLE_MESSAGE
-  );
-  if (consoleMessageWatcher) {
-    consoleMessageWatcher.emitMessage(message);
-  }
 }
