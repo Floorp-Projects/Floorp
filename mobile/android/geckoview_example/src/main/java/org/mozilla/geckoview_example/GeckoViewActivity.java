@@ -17,6 +17,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -82,6 +83,7 @@ import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.GeckoView;
 import org.mozilla.geckoview.GeckoWebExecutor;
 import org.mozilla.geckoview.Image;
+import org.mozilla.geckoview.MediaSession;
 import org.mozilla.geckoview.OrientationController;
 import org.mozilla.geckoview.RuntimeTelemetry;
 import org.mozilla.geckoview.SlowScriptResponse;
@@ -1117,6 +1119,8 @@ public class GeckoViewActivity extends AppCompatActivity
     session.setPermissionDelegate(permission);
 
     session.setMediaDelegate(new ExampleMediaDelegate(this));
+
+    session.setMediaSessionDelegate(new ExampleMediaSessionDelegate(this));
 
     session.setSelectionActionDelegate(new BasicSelectionActionDelegate(this));
     if (sExtensionManager.extension != null) {
@@ -2465,6 +2469,38 @@ public class GeckoViewActivity extends AppCompatActivity
               .setCategory(NotificationCompat.CATEGORY_SERVICE);
 
       notificationManager.notify(mNotificationId, builder.build());
+    }
+  }
+
+  private class ExampleMediaSessionDelegate implements MediaSession.Delegate {
+    private final Activity mActivity;
+
+    public ExampleMediaSessionDelegate(Activity activity) {
+      mActivity = activity;
+    }
+
+    @Override
+    public void onFullscreen(
+        @NonNull final GeckoSession session,
+        @NonNull final MediaSession mediaSession,
+        final boolean enabled,
+        @Nullable final MediaSession.ElementMetadata meta) {
+      Log.d(LOGTAG, "onFullscreen: Metadata=" + (meta != null ? meta.toString() : "null"));
+
+      if (!enabled) {
+        mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER);
+        return;
+      }
+
+      if (meta == null) {
+        return;
+      }
+
+      if (meta.width > meta.height) {
+        mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+      } else {
+        mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+      }
     }
   }
 

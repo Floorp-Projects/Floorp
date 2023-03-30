@@ -953,4 +953,47 @@ class MediaSessionTest : BaseSessionTest() {
         mediaSession1!!.pause()
         sessionRule.waitForResult(completedStep5)
     }
+
+    @Test
+    fun fullscreenVideoWithActivated() {
+        // TODO: bug 1810736
+        assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
+
+        sessionRule.setPrefsUntilTestEnd(
+            mapOf(
+                "media.autoplay.default" to 0,
+                "full-screen-api.allow-trusted-requests-only" to false
+            )
+        )
+
+        val path = VIDEO_WEBM_PATH
+        val session = sessionRule.createOpenSession()
+        val resultFullscreen = GeckoResult<Void>()
+        session.loadTestPath(path)
+        sessionRule.waitForPageStop()
+
+        session.delegateDuringNextWait(object : MediaSession.Delegate {
+            override fun onFullscreen(
+                session: GeckoSession,
+                mediaSession: MediaSession,
+                enabled: Boolean,
+                meta: MediaSession.ElementMetadata?
+            ) {
+                assertThat(
+                    "Fullscreen should be enabled",
+                    enabled,
+                    equalTo(true)
+                )
+                assertThat(
+                    "Element metadata should exist",
+                    meta,
+                    notNullValue()
+                )
+                resultFullscreen.complete(null)
+            }
+        })
+
+        session.evaluateJS("document.querySelector('video').requestFullscreen()")
+        sessionRule.waitForResult(resultFullscreen)
+    }
 }

@@ -14,6 +14,10 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   MediaUtils: "resource://gre/modules/MediaUtils.jsm",
 });
@@ -27,12 +31,12 @@ class MediaControlDelegateChild extends GeckoViewActorChild {
     switch (aEvent.type) {
       case "MozDOMFullscreen:Entered":
       case "MozDOMFullscreen:Exited":
-        this.handleFullscreenChanged();
+        this.handleFullscreenChanged(true);
         break;
     }
   }
 
-  handleFullscreenChanged() {
+  async handleFullscreenChanged(retry) {
     debug`handleFullscreenChanged`;
 
     const element = this.document.fullscreenElement;
@@ -43,11 +47,23 @@ class MediaControlDelegateChild extends GeckoViewActorChild {
       debug`No fullscreen media element found.`;
     }
 
-    this.eventDispatcher.sendRequest({
+    const activated = await this.eventDispatcher.sendRequestForResult({
       type: "GeckoView:MediaSession:Fullscreen",
       metadata: lazy.MediaUtils.getMetadata(mediaElement) ?? {},
       enabled: !!element,
     });
+    if (activated) {
+      return;
+    }
+    if (retry && element) {
+      // When media session is going to active, we have a race condition of
+      // full screen event because media session will be activated by full
+      // screen event.
+      // So we retry to call media session delegate for this situation.
+      lazy.setTimeout(() => {
+        this.handleFullscreenChanged(false);
+      }, 100);
+    }
   }
 }
 
