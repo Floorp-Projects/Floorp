@@ -191,6 +191,29 @@ describe("MultiStageAboutWelcomeProton module", () => {
       assert.equal(wrapper.find(".additional-cta.cta-link").exists(), true);
     });
 
+    it("should render an additional button with vertical orientation", () => {
+      const SCREEN_PROPS = {
+        content: {
+          position: "center",
+          title: "test title",
+          primary_button: {
+            label: "test primary button",
+          },
+          additional_button: {
+            label: "test additional button",
+            style: "secondary",
+            flow: "column",
+          },
+        },
+      };
+      const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
+      assert.ok(wrapper.exists());
+      assert.equal(
+        wrapper.find(".additional-cta-container[flow='column']").exists(),
+        true
+      );
+    });
+
     it("should not render a progress bar if there is 1 step", () => {
       const SCREEN_PROPS = {
         content: {

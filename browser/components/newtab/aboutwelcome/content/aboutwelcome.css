@@ -632,8 +632,7 @@ html {
   background-color: var(--in-content-button-background-hover);
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons.additional-cta-container {
-  display: flex;
-  flex-direction: column;
+  flex-wrap: nowrap;
   align-items: start;
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta {
@@ -1373,6 +1372,18 @@ html {
 }
 .onboardingContainer .steps.progress-bar .indicator:dir(rtl) {
   translate: calc(var(--progress-bar-progress, 0%) * -1 + 100%);
+}
+.onboardingContainer .additional-cta-container[flow] {
+  display: flex;
+  flex-flow: column wrap;
+  align-items: center;
+}
+.onboardingContainer .additional-cta-container[flow][flow=row] {
+  flex-direction: row;
+  justify-content: center;
+}
+.onboardingContainer .additional-cta-container[flow][flow=row] .secondary-cta {
+  flex-basis: 100%;
 }
 .onboardingContainer .primary,
 .onboardingContainer .secondary,

@@ -451,8 +451,7 @@ html {
             }
 
             &.additional-cta-container {
-              display: flex;
-              flex-direction: column;
+              flex-wrap: nowrap;
               align-items: start;
             }
 
@@ -1336,6 +1335,23 @@ html {
 
         &:dir(rtl) {
           translate: calc(var(--progress-bar-progress, 0%) * -1 + 100%);
+        }
+      }
+    }
+  }
+
+  .additional-cta-container {
+    &[flow] {
+      display: flex;
+      flex-flow: column wrap;
+      align-items: center;
+
+      &[flow='row'] {
+        flex-direction: row;
+        justify-content: center;
+
+        .secondary-cta {
+          flex-basis: 100%;
         }
       }
     }
