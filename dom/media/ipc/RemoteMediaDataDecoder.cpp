@@ -10,8 +10,17 @@
 
 namespace mozilla {
 
+#ifdef LOG
+#  undef LOG
+#endif  // LOG
+#define LOG(arg, ...)                                                  \
+  DDMOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, "::%s: " arg, __func__, \
+            ##__VA_ARGS__)
+
 RemoteMediaDataDecoder::RemoteMediaDataDecoder(RemoteDecoderChild* aChild)
-    : mChild(aChild) {}
+    : mChild(aChild) {
+  LOG("%p is created", this);
+}
 
 RemoteMediaDataDecoder::~RemoteMediaDataDecoder() {
   if (mChild) {
@@ -29,6 +38,7 @@ RemoteMediaDataDecoder::~RemoteMediaDataDecoder() {
               });
         }));
   }
+  LOG("%p is released", this);
 }
 
 RefPtr<MediaDataDecoder::InitPromise> RemoteMediaDataDecoder::Init() {
@@ -51,6 +61,9 @@ RefPtr<MediaDataDecoder::InitPromise> RemoteMediaDataDecoder::Init() {
             mIsHardwareAccelerated =
                 mChild->IsHardwareAccelerated(mHardwareAcceleratedReason);
             mConversion = mChild->NeedsConversion();
+            LOG("%p RemoteDecoderChild has been initialized - description: %s, "
+                "process: %s, codec: %s",
+                this, mDescription.get(), mProcessName.get(), mCodecName.get());
             return InitPromise::CreateAndResolve(aTrack, __func__);
           },
           [self](const MediaResult& aError) {
@@ -144,5 +157,7 @@ nsCString RemoteMediaDataDecoder::GetProcessName() const {
 }
 
 nsCString RemoteMediaDataDecoder::GetCodecName() const { return mCodecName; }
+
+#undef LOG
 
 }  // namespace mozilla
