@@ -18,6 +18,29 @@
  */
 const lazy = {};
 
+/**
+ * The threshold that the language-identification confidence
+ * value must be greater than in order to provide the detected language
+ * tag for translations.
+ *
+ * This value should ideally be one that does not allow false positives
+ * while also not being too restrictive.
+ *
+ * At this time, this value is not driven by statistical data or analysis.
+ */
+const DOC_LANGUAGE_DETECTION_THRESHOLD = 0.65;
+
+/**
+ * The length of the substring to pull from the document's text for language
+ * identification.
+ *
+ * This value should ideally be one that is large enough to yield a confident
+ * identification result without being too large or expensive to extract.
+ *
+ * At this time, this value is not driven by statistical data or analysis.
+ */
+const DOC_TEXT_TO_IDENTIFY_LENGTH = 1024;
+
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -502,6 +525,21 @@ export class TranslationsChild extends JSWindowActorChild {
   }
 
   /**
+   * Retrieve a substring of text from the document body to be
+   * analyzed by the LanguageIdEngine to determine the page's language.
+   *
+   * @returns {string}
+   */
+  #getTextToIdentify() {
+    let encoder = Cu.createDocumentEncoder("text/plain");
+    encoder.init(this.document, "text/plain", encoder.SkipInvisibleContent);
+    return encoder
+      .encodeToStringWithMaxLength(DOC_TEXT_TO_IDENTIFY_LENGTH)
+      .replaceAll("\r", "")
+      .replaceAll("\n", " ");
+  }
+
+  /**
    * @param {{ type: string }} event
    */
   handleEvent(event) {
@@ -543,7 +581,7 @@ export class TranslationsChild extends JSWindowActorChild {
    *
    * @returns {Promise<null | { appLangTag: string, docLangTag: string }>}
    */
-  async getLangTagsForTranslation() {
+  async getLangTagsForTranslation(translationsStart = this.docShell.now()) {
     const { href } = this.contentWindow.location;
     if (
       !href.startsWith("http://") &&
@@ -556,10 +594,27 @@ export class TranslationsChild extends JSWindowActorChild {
     let appLangTag = new Intl.Locale(Services.locale.appLocaleAsBCP47).language;
     let docLangTag;
 
+    // First try to get the langTag from the document's markup.
     try {
       const docLocale = new Intl.Locale(this.document.documentElement.lang);
       docLangTag = docLocale.language;
     } catch (error) {}
+
+    // If the document's markup had no specified langTag, attempt
+    // to identify the page's language using the LanguageIdEngine.
+    if (!docLangTag) {
+      let languageIdEngine = await this.createLanguageIdEngine();
+      let {
+        languageLabel,
+        confidence,
+      } = await languageIdEngine.identifyLanguage(this.#getTextToIdentify());
+      lazy.console.log(
+        `${languageLabel}(${confidence.toFixed(2)}) Detected Page Language`
+      );
+      if (confidence >= DOC_LANGUAGE_DETECTION_THRESHOLD) {
+        docLangTag = languageLabel;
+      }
+    }
 
     if (!docLangTag) {
       const message = "No valid language detected.";
@@ -571,6 +626,12 @@ export class TranslationsChild extends JSWindowActorChild {
       lazy.console.log(message, this.contentWindow.location.href);
       return null;
     }
+
+    ChromeUtils.addProfilerMarker(
+      "TranslationsChild",
+      { innerWindowId: this.innerWindowId, startTime: translationsStart },
+      "Time to determine langTags"
+    );
 
     if (appLangTag === docLangTag) {
       const message =
@@ -625,7 +686,7 @@ export class TranslationsChild extends JSWindowActorChild {
       return;
     }
 
-    const langTags = await this.getLangTagsForTranslation();
+    const langTags = await this.getLangTagsForTranslation(translationsStart);
 
     this.#langTags = langTags;
     this.reportLangTagsToParent(langTags);
