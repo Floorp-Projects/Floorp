@@ -2206,7 +2206,9 @@ class ThreadActor extends Actor {
           ...content.substring(0, scriptStartOffset).matchAll("\n"),
         ];
         const startLine = 1 + allLineBreaks.length;
-        const startColumn = scriptStartOffset - allLineBreaks.at(-1).index - 1;
+        const startColumn =
+          scriptStartOffset -
+          (allLineBreaks.length ? allLineBreaks.at(-1).index - 1 : 0);
 
         // Don't create a source if we already found one for this script
         if (

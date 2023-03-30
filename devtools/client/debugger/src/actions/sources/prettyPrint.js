@@ -169,12 +169,12 @@ async function prettyPrintHtmlFile({
     // Here we want to get the index of the last line break before the script tag.
     // In allLineBreaks, this would be the item at (script tag line - 1)
     // Since sourceInfo.sourceStartLine is 1-based, we need to get the item at (sourceStartLine - 2)
-    const previousLineBreakIndexInHtmlText =
+    const indexAfterPreviousLineBreakInHtml =
       sourceInfo.sourceStartLine > 1
-        ? allLineBreaks[sourceInfo.sourceStartLine - 2].index
+        ? allLineBreaks[sourceInfo.sourceStartLine - 2].index + 1
         : 0;
     const startIndex =
-      previousLineBreakIndexInHtmlText + sourceInfo.sourceStartColumn + 1;
+      indexAfterPreviousLineBreakInHtml + sourceInfo.sourceStartColumn;
     const endIndex = startIndex + sourceInfo.sourceLength;
     const scriptText = htmlFileText.substring(startIndex, endIndex);
     DevToolsUtils.assert(
