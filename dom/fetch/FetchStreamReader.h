@@ -34,8 +34,12 @@ class FetchStreamReader final : public nsIOutputStreamCallback {
                          FetchStreamReader** aStreamReader,
                          nsIInputStream** aInputStream);
 
+  MOZ_CAN_RUN_SCRIPT
   void ChunkSteps(JSContext* aCx, JS::Handle<JS::Value> aChunk,
                   ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT
+  void CloseSteps(JSContext* aCx, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT
   void ErrorSteps(JSContext* aCx, JS::Handle<JS::Value> aError,
                   ErrorResult& aRv);
 
@@ -59,6 +63,12 @@ class FetchStreamReader final : public nsIOutputStreamCallback {
 
   nsresult WriteBuffer();
 
+  // Attempt to copy data from mBuffer into mPipeOut. Returns `true` if data was
+  // written, and AsyncWait callbacks or FetchReadRequest calls have been set up
+  // to write more data in the future, and `false` otherwise.
+  MOZ_CAN_RUN_SCRIPT
+  bool Process(JSContext* aCx);
+
   void ReportErrorToConsole(JSContext* aCx, JS::Handle<JS::Value> aValue);
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
@@ -72,10 +82,11 @@ class FetchStreamReader final : public nsIOutputStreamCallback {
   RefPtr<ReadableStreamDefaultReader> mReader;
 
   nsTArray<uint8_t> mBuffer;
-  uint32_t mBufferRemaining;
-  uint32_t mBufferOffset;
+  uint32_t mBufferRemaining = 0;
+  uint32_t mBufferOffset = 0;
 
-  bool mStreamClosed;
+  bool mHasOutstandingReadRequest = false;
+  bool mStreamClosed = false;
 };
 
 }  // namespace mozilla::dom
