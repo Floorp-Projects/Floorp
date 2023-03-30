@@ -53,6 +53,7 @@ remote.jar:
   content/shared/messagehandler/transports/FrameTransport.sys.mjs (shared/messagehandler/transports/FrameTransport.sys.mjs)
 
   # shared modules (WebDriver HTTP / BiDi only)
+  content/shared/webdriver/Actions.sys.mjs (shared/webdriver/Actions.sys.mjs)
   content/shared/webdriver/Assert.sys.mjs (shared/webdriver/Assert.sys.mjs)
   content/shared/webdriver/Capabilities.sys.mjs (shared/webdriver/Capabilities.sys.mjs)
   content/shared/webdriver/Errors.sys.mjs (shared/webdriver/Errors.sys.mjs)
