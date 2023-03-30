@@ -20,6 +20,7 @@
 #include "nsCycleCollectionParticipant.h"  // NS_DECL_CYCLE_*
 #include "nsIContent.h"                    // base class
 #include "nsIHTMLCollection.h"
+#include "nsIWeakReferenceUtils.h"
 
 class ContentUnbinder;
 class nsContentList;
@@ -225,6 +226,10 @@ class FragmentOrElement : public nsIContent {
      * the purposes of `content-visibility: auto.
      */
     Maybe<bool> mVisibleForContentVisibility;
+
+    // Explicitly set attr-elements, see
+    // https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#explicitly-set-attr-element
+    nsTHashMap<nsRefPtrHashKey<nsAtom>, nsWeakPtr> mExplicitlySetAttrElements;
   };
 
   class nsDOMSlots : public nsIContent::nsContentSlots {
