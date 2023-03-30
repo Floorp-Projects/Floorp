@@ -73,10 +73,22 @@ function selectionScrollCheck() {
   var element = otherWindow.document.documentElement;
 
   var count = 0;
+  let previousScrollPosition = 0;
+
   function selectionScrollDone() {
-    // wait for 6 scroll events to occur
-    if (count++ < 6)
+    // Don't count unchanged scroll position.
+    // There's a bug that scroll events get fired during reconstructing scroll
+    // frames even if the scroll position is unchanged (bug 1825470). We need to
+    // ignore the unchanged scroll events here.
+    if (otherWindow.scrollY == previousScrollPosition) {
       return;
+    }
+    previousScrollPosition = otherWindow.scrollY;
+
+    // wait for 6 scroll events to occur
+    if (count++ < 6) {
+      return;
+    }
 
     otherWindow.removeEventListener("scroll", selectionScrollDone);
 
