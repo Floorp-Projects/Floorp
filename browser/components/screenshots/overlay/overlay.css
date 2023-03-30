@@ -157,7 +157,7 @@
 
 :-moz-native-anonymous #cancel > img {
   color: #38383d;
-  content: url('chrome://browser/content/screenshots/cancel.svg');
+  content: url("chrome://global/skin/icons/close.svg");
   width: 20px;
   height: 20px;
   padding: 10px 0;
@@ -175,7 +175,7 @@
 
 :-moz-native-anonymous #copy > img {
   color: #38383d;
-  content: url('chrome://browser/content/screenshots/copy.svg');
+  content: url("chrome://global/skin/icons/edit-copy.svg");
   width: 16px;
   height: 16px;
 }
@@ -196,7 +196,7 @@
 }
 
 :-moz-native-anonymous #download > img {
-  content: url('chrome://browser/content/screenshots/download.svg');
+  content: url("chrome://browser/skin/downloads/downloads.svg");
   width: 16px;
   height: 16px;
 }
