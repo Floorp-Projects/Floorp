@@ -9,7 +9,6 @@
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
-#include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/WebTransportBinding.h"
 #include "mozilla/dom/WebTransportLog.h"
 #include "mozilla/ipc/BackgroundParent.h"
@@ -33,8 +32,7 @@ WebTransportParent::~WebTransportParent() {
 }
 
 void WebTransportParent::Create(
-    const nsAString& aURL, nsIPrincipal* aPrincipal,
-    const mozilla::Maybe<IPCClientInfo>& aClientInfo, const bool& aDedicated,
+    const nsAString& aURL, nsIPrincipal* aPrincipal, const bool& aDedicated,
     const bool& aRequireUnreliable, const uint32_t& aCongestionControl,
     // Sequence<WebTransportHash>* aServerCertHashes,
     Endpoint<PWebTransportParent>&& aParentEndpoint,
@@ -90,11 +88,10 @@ void WebTransportParent::Create(
       "WebTransport AsyncConnect",
       [self = RefPtr{this}, uri = std::move(uri),
        principal = RefPtr{aPrincipal},
-       flags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
-       aClientInfo] {
+       flags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL] {
         LOG(("WebTransport %p AsyncConnect", self.get()));
-        if (NS_FAILED(self->mWebTransport->AsyncConnectWithClient(
-                uri, principal, flags, self, aClientInfo))) {
+        if (NS_FAILED(self->mWebTransport->AsyncConnect(uri, principal, flags,
+                                                        self))) {
           LOG(("AsyncConnect failure; we should get OnSessionClosed"));
         }
       });
