@@ -629,10 +629,18 @@ public class MediaSession {
       } else if (FEATURES_EVENT.equals(event)) {
         final long features = Feature.fromBundle(message.getBundle("features"));
         delegate.onFeatures(mSession, mMediaSession, features);
-      } else if (FULLSCREEN_EVENT.equals(event) && mMediaSession.isActive()) {
+      } else if (FULLSCREEN_EVENT.equals(event)) {
         final boolean enabled = message.getBoolean("enabled");
         final ElementMetadata meta = ElementMetadata.fromBundle(message.getBundle("metadata"));
+        if (!mMediaSession.isActive()) {
+          if (DEBUG) {
+            Log.d(LOGTAG, "Media session is not active yet");
+          }
+          callback.sendSuccess(false);
+          return;
+        }
         delegate.onFullscreen(mSession, mMediaSession, enabled, meta);
+        callback.sendSuccess(true);
       }
     }
   }
