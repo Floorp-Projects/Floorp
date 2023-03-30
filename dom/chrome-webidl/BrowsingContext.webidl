@@ -6,6 +6,7 @@
 interface URI;
 interface nsIDocShell;
 interface nsISecureBrowserUI;
+interface nsISHEntry;
 interface nsIPrintSettings;
 interface nsIWebProgress;
 
@@ -345,6 +346,7 @@ interface CanonicalBrowsingContext : BrowsingContext {
   undefined stop(unsigned long aStopFlags);
 
   readonly attribute nsISHistory? sessionHistory;
+  readonly attribute nsISHEntry? activeSessionHistoryEntry;
 
   readonly attribute MediaController? mediaController;
 
