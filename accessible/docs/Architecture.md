@@ -1,6 +1,6 @@
 # Architecture
 
-This document provides a high-level overview of how the accessibility code is structured. See [the Document Accessibility Lifecycle page](/accessible/DocumentAccessibilityLifecycle.html#docaccessible-creation) for a lower level description of the code.
+This document provides a high-level overview of how the accessibility code is structured. See [the Document Accessibility Lifecycle page](DocumentAccessibilityLifecycle.md#docaccessible-creation) for a lower level description of the code.
 
 ## Process Model
 The accessibility component spans multiple processes. In the parent process, it creates an accessibility tree of the Firefox UI and responds to requests from screen readers. In content processes, the accessibility component creates accessibility trees from web content.

@@ -108,6 +108,6 @@ The distribution data is omitted if there was zero or one samples taken.
 
 ## Combining with `powermetrics`
 
-On Mac, you can use the [mach power](powermetrics.html#mach-power) command
+On Mac, you can use the [mach power](powermetrics.md#mach-power) command
 to run `rapl` in combination with `powermetrics` in a way that gives the
 most useful summary measurements for each of Firefox, Chrome and Safari.

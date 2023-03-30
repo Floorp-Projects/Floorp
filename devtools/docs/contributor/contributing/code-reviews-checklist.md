@@ -40,12 +40,12 @@ It can also be useful for patch authors: if the changes comply with these guidel
 * Test changes:
   * The feature or bug is [tested by new tests, or a modification of existing tests](../tests/writing-tests.md).
   * [Test logging](../tests/writing-tests.md#logs-and-comments) is sufficient to help investigating test failures/timeouts.
-  * [Test is e10s compliant](../tests/writing-tests.md#e10s-electrolysis) (doesn't try to access web content from the parent process, etc…).
+  * [Test is e10s compliant](../tests/writing-tests.md#electrolysis) (doesn't try to access web content from the parent process, etc…).
   * Tests are [clean and maintainable](../tests/writing-tests.md#writing-clean-maintainable-test-code).
   * A try push has started (or even better, is green already).
 * User facing changes:
   * If any user-facing interfaces are added/modified, double-check the changes with the UX mockups or specs, if available. If there's any confusion, need-info the UX designer.<!--TODO this needs updating with the new process-->
-  * If a user facing string has been added, it is localized and follows [the localization guidelines](../files/adding-files.html#localization-l10n).
+  * If a user facing string has been added, it is localized and follows [the localization guidelines](../files/adding-files.md#localization-l10n).
   * If a user-facing string has changed meaning, [the key has been updated](https://mozilla-l10n.github.io/documentation/localization/making_string_changes.html).
   * If a new image is added, it is a SVG image or there is a reason for not using a SVG.
   * If a SVG is added/modified, it follows [the SVG guidelines](../frontend/svgs.md).

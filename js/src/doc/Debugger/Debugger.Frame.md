@@ -479,11 +479,11 @@ Accessing this property will throw if `.onStack == false`.
 [vf]: #visible-frames
 [debugger-object]: Debugger.md
 [object]: Debugger.Object.md
-[dbg code]: Conventions.html#debuggee-code
+[dbg code]: Conventions.md#debuggee-code
 [inv fr]: #invocation-functions-and-debugger-frames
-[cv]: Conventions.html#completion-values
+[cv]: Conventions.md#completion-values
 [script]: Debugger.Script.md
 [environment]: Debugger.Environment.md
-[rv]: Conventions.html#resumption-values
+[rv]: Conventions.md#resumption-values
 [fr eval]: #eval-code-options
 [saved-frame]: ../SavedFrame/index

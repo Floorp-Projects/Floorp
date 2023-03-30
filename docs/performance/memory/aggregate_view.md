@@ -73,7 +73,7 @@ instances:
 ![](../img/memory-tool-in-group.png)
 
 For each instance, you can see the [retained size and shallow
-size](dominators.html#shallow_and_retained_size) of
+size](dominators.md#shallow_and_retained_size) of
 that instance. In this case, you can see that the first three arrays
 have a fairly large shallow size (5% of the total heap usage) and a much
 larger retained size (26% of the total).
@@ -81,7 +81,7 @@ larger retained size (26% of the total).
 On the right-hand side is a pane that just says \"Select an item to view
 its retaining paths\". If you select an item, you\'ll see the [Retaining
 paths
-panel](/dominators_view.html#retaining_paths_panel)
+panel](dominators_view.md#retaining_paths_panel)
 for that item:
 
 ![](../img/memory-tool-in-group-retaining-paths.png)

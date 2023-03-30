@@ -251,4 +251,4 @@ it will leave the exception's `cause` property undefined.
 
 
 [debugger]: Debugger-API.md
-[inv fr]: Debugger.Frame.html#invocation-functions-and-debugger-frames
+[inv fr]: Debugger.Frame.md#invocation-functions-and-debugger-frames

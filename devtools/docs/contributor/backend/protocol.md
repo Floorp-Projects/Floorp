@@ -261,7 +261,7 @@ A descriptor for an accessor property has the form:
 
 where *getter* and *setter* are grips on the property's getter and setter functions. These may be `{ "type":"undefined" }` if the property lacks the given accessor function.
 
-A **safe getter value descriptor** provides a value that an inherited accessor returned when applied to an instance. (See [Finding An Object's Prototype And Properties](#finding-an-objects-prototype-and-properties) for an explanation of why and when such descriptors are used.) Such a descriptor has the form:
+A **safe getter value descriptor** provides a value that an inherited accessor returned when applied to an instance. (See [Finding An Object's Prototype And Properties](#finding-an-object-s-prototype-and-properties) for an explanation of why and when such descriptors are used.) Such a descriptor has the form:
 
 ```
 { "getterValue": <value>, "getterPrototypeLevel": <level>,
@@ -282,7 +282,7 @@ then a grip on this value would have the form:
 { "type":"object", "class":"Object", "actor":<actor> }
 ```
 
-and sending a ["prototypeAndProperties"](#finding-an-objects-prototype-and-properties) request to *actor* would produce the following reply:
+and sending a ["prototypeAndProperties"](#finding-an-object-s-prototype-and-properties) request to *actor* would produce the following reply:
 
 ```
 { "from":<actor>, "prototype":{ "type":"object", "class":"Object", "actor":<objprotoActor> },
@@ -297,7 +297,7 @@ and sending a ["prototypeAndProperties"](#finding-an-objects-prototype-and-prope
 ```
 
 
-Sending a ["prototypeAndProperties"](#finding-an-objects-prototype-and-properties) request to an object actor referring to a DOM mouse event might produce the following reply:
+Sending a ["prototypeAndProperties"](#finding-an-object-s-prototype-and-properties) request to an object actor referring to a DOM mouse event might produce the following reply:
 
 ```
 { "from":<mouseEventActor>, "prototype":{ "type":"object", "class":"MouseEvent", "actor":<mouseEventProtoActor> },

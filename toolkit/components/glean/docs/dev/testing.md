@@ -74,7 +74,7 @@ If you are in C++ and didn't come from JS, use `MOZ_LOG` with module `fog`.
 
 Use the logging macros from `log`, e.g. `log::info!` or `log::error!`.
 Remember that, no matter the log level, `log::debug!` and `log::trace!`
-[will not appear in non-debug builds](/testing-rust-code/index.html#gecko-logging)
+[will not appear in non-debug builds](/testing-rust-code/index.md#gecko-logging)
 
 If you are logging due to a situation caused by and fixable by a developer using the API,
 use `log::error!(...)`. Otherwise, use a quieter level.

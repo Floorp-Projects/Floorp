@@ -567,9 +567,9 @@ In a census, all the various forms of JavaScript code are placed in the
 [bernoulli-trial]: https://en.wikipedia.org/wiki/Bernoulli_trial
 [alloc-sampling-probability]: #allocsamplingprobability
 [object]: Debugger.Object.md
-[allocation-site]: Debugger.Object.html#allocationsite
+[allocation-site]: Debugger.Object.md#allocationsite
 [saved-frame]: ../SavedFrame/index
 [drain-alloc-log]: #drainAllocationsLog
 [max-alloc-log]: #maxAllocationsLogLength
 [take-census]: #takecensus-options
-[timestamps]: ./Conventions.html#timestamps
+[timestamps]: ./Conventions.md#timestamps

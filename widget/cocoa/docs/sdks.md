@@ -167,7 +167,7 @@ being used. Here's [an example](https://searchfox.org/mozilla-central/rev/9ad88f
 
 We can also use this macro to supply missing API definitions in such a way that
 they don't conflict with the definitions from the SDK.
-This is described in the "Using macOS APIs" document, under [Using new APIs with old SDKs](./macos-apis.html#using-new-apis-with-old-sdks).
+This is described in the "Using macOS APIs" document, under [Using new APIs with old SDKs](./macos-apis.md#using-new-apis-with-old-sdks).
 
 ## Overriding SDK-dependent runtime behavior
 

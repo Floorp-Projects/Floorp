@@ -194,7 +194,7 @@ is a good thing to review first.
 Unfortunately, FOG requires gecko
 (to tell it where the profile dir is, and other things),
 which means we need to use the
-[GTest + FFI approach](/testing-rust-code/index.html#gtests)
+[GTest + FFI approach](/testing-rust-code/index.md#gtests)
 where GTest is the runner and Rust is just the language the test is written in.
 
 This means your test will look like a GTest like this:

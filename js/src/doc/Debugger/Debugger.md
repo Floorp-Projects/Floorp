@@ -540,8 +540,8 @@ The functions described below are not called with a `this` value.
 [add]: #adddebuggee-global
 [source]: Debugger.Source.md
 [script]: Debugger.Script.md
-[rv]: Conventions.html#resumption-values
+[rv]: Conventions.md#resumption-values
 [object]: Debugger.Object.md
-[vf]: Debugger.Frame.html#visible-frames
-[tracking-allocs]: Debugger.Memory.html#trackingallocationsites
+[vf]: Debugger.Frame.md#visible-frames
+[tracking-allocs]: Debugger.Memory.md#trackingallocationsites
 [frame]: Debugger.Frame.md

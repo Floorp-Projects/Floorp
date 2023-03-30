@@ -675,8 +675,8 @@ promise. There are several different sorts of reaction records:
 [promise]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
 [saved-frame]: ../SavedFrame/index
 
-[tracking-allocs]: Debugger.Memory.html#trackingallocationsites
-[inv fr]: Debugger.Frame.html#invocation-functions-and-debugger-frames
-[wouldrun]: Conventions.html#the-debugger-debuggeewouldrun-exception
-[cv]: Conventions.html#completion-values
-[fr eval]: Debugger.Frame.html#eval-code-options
+[tracking-allocs]: Debugger.Memory.md#trackingallocationsites
+[inv fr]: Debugger.Frame.md#invocation-functions-and-debugger-frames
+[wouldrun]: Conventions.md#the-debugger-debuggeewouldrun-exception
+[cv]: Conventions.md#completion-values
+[fr eval]: Debugger.Frame.md#eval-code-options
