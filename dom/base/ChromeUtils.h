@@ -65,11 +65,6 @@ class ChromeUtils {
   static already_AddRefed<devtools::HeapSnapshot> ReadHeapSnapshot(
       GlobalObject& global, const nsAString& filePath, ErrorResult& rv);
 
-  static bool IsDevToolsOpened();
-  static bool IsDevToolsOpened(GlobalObject& aGlobal);
-  static void NotifyDevToolsOpened(GlobalObject& aGlobal);
-  static void NotifyDevToolsClosed(GlobalObject& aGlobal);
-
   static void NondeterministicGetWeakMapKeys(
       GlobalObject& aGlobal, JS::Handle<JS::Value> aMap,
       JS::MutableHandle<JS::Value> aRetval, ErrorResult& aRv);
@@ -301,10 +296,6 @@ class ChromeUtils {
 
   static void GetAllPossibleUtilityActorNames(GlobalObject& aGlobal,
                                               nsTArray<nsCString>& aNames);
-
- private:
-  // Number of DevTools session debugging the current process
-  static std::atomic<uint32_t> sDevToolsOpenedCount;
 };
 
 }  // namespace dom
