@@ -6,10 +6,9 @@ use super::dot::DotAttributes;
 use super::item::Item;
 use super::traversal::{EdgeKind, Trace, Tracer};
 use super::ty::TypeKind;
+use crate::callbacks::{ItemInfo, ItemKind};
 use crate::clang::{self, Attribute};
-use crate::parse::{
-    ClangItemParser, ClangSubItemParser, ParseError, ParseResult,
-};
+use crate::parse::{ClangSubItemParser, ParseError, ParseResult};
 use clang_sys::{self, CXCallingConv};
 use proc_macro2;
 use quote;
@@ -665,7 +664,6 @@ impl ClangSubItemParser for Function {
         };
 
         debug!("Function::parse({:?}, {:?})", cursor, cursor.cur_type());
-
         let visibility = cursor.visibility();
         if visibility != CXVisibility_Default {
             return Err(ParseError::Continue);
@@ -675,25 +673,36 @@ impl ClangSubItemParser for Function {
             return Err(ParseError::Continue);
         }
 
-        if cursor.is_inlined_function() ||
-            cursor
-                .definition()
-                .map_or(false, |x| x.is_inlined_function())
-        {
-            if !context.options().generate_inline_functions {
-                return Err(ParseError::Continue);
-            }
-            if cursor.is_deleted_function() {
-                return Err(ParseError::Continue);
-            }
-        }
-
         let linkage = cursor.linkage();
         let linkage = match linkage {
             CXLinkage_External | CXLinkage_UniqueExternal => Linkage::External,
             CXLinkage_Internal => Linkage::Internal,
             _ => return Err(ParseError::Continue),
         };
+
+        if cursor.is_inlined_function() ||
+            cursor
+                .definition()
+                .map_or(false, |x| x.is_inlined_function())
+        {
+            if !context.options().generate_inline_functions &&
+                !context.options().wrap_static_fns
+            {
+                return Err(ParseError::Continue);
+            }
+
+            if cursor.is_deleted_function() {
+                return Err(ParseError::Continue);
+            }
+
+            // We cannot handle `inline` functions that are not `static`.
+            if context.options().wrap_static_fns &&
+                cursor.is_inlined_function() &&
+                matches!(linkage, Linkage::External)
+            {
+                return Err(ParseError::Continue);
+            }
+        }
 
         // Grab the signature using Item::from_ty.
         let sig = Item::from_ty(&cursor.cur_type(), cursor, None, context)?;
@@ -714,10 +723,12 @@ impl ClangSubItemParser for Function {
             // but seems easy enough to handle it here.
             name.push_str("_destructor");
         }
-        if let Some(nm) = context
-            .options()
-            .last_callback(|callbacks| callbacks.generated_name_override(&name))
-        {
+        if let Some(nm) = context.options().last_callback(|callbacks| {
+            callbacks.generated_name_override(ItemInfo {
+                name: name.as_str(),
+                kind: ItemKind::Function,
+            })
+        }) {
             name = nm;
         }
         assert!(!name.is_empty(), "Empty function name.");
@@ -726,7 +737,8 @@ impl ClangSubItemParser for Function {
         let comment = cursor.raw_comment();
 
         let function =
-            Self::new(name, mangled_name, sig, comment, kind, linkage);
+            Self::new(name.clone(), mangled_name, sig, comment, kind, linkage);
+
         Ok(ParseResult::New(function, Some(cursor)))
     }
 }

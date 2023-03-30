@@ -65,7 +65,7 @@ mod clang;
 mod codegen;
 mod deps;
 mod features;
-mod ir;
+pub mod ir;
 mod parse;
 mod regex_set;
 mod time;
@@ -78,6 +78,7 @@ doc_mod!(ir, ir_docs);
 doc_mod!(parse, parse_docs);
 doc_mod!(regex_set, regex_set_docs);
 
+use codegen::CodegenError;
 use ir::comment;
 
 pub use crate::codegen::{
@@ -90,8 +91,8 @@ pub use crate::features::{
 use crate::ir::context::{BindgenContext, ItemId};
 pub use crate::ir::function::Abi;
 use crate::ir::item::Item;
-use crate::parse::{ClangItemParser, ParseError};
-use crate::regex_set::RegexSet;
+use crate::parse::ParseError;
+pub use crate::regex_set::RegexSet;
 
 use std::borrow::Cow;
 use std::env;
@@ -108,6 +109,7 @@ pub(crate) use std::collections::hash_map::Entry;
 
 /// Default prefix for the anon fields.
 pub const DEFAULT_ANON_FIELDS_PREFIX: &str = "__bindgen_anon_";
+const DEFAULT_NON_EXTERN_FNS_SUFFIX: &str = "__extern";
 
 fn file_is_cpp(name_file: &str) -> bool {
     name_file.ends_with(".hpp") ||
@@ -244,6 +246,10 @@ impl Default for CodegenConfig {
 /// regular expressions as arguments. These regular expressions will be parenthesized and wrapped
 /// in `^` and `$`. So if `<regex>` is passed as argument, the regular expression to be stored will
 /// be `^(<regex>)$`.
+///
+/// Releases of `bindgen` with a version lesser or equal to `0.62.0` used to accept the wildcard
+/// pattern `*` as a valid regular expression. This behavior has been deprecated and the `.*`
+/// pattern must be used instead.
 #[derive(Debug, Default, Clone)]
 pub struct Builder {
     options: BindgenOptions,
@@ -647,6 +653,28 @@ impl Builder {
 
         if self.options.wrap_unsafe_ops {
             output_vector.push("--wrap-unsafe-ops".into());
+        }
+
+        #[cfg(feature = "cli")]
+        for callbacks in &self.options.parse_callbacks {
+            output_vector.extend(callbacks.cli_args());
+        }
+        if self.options.wrap_static_fns {
+            output_vector.push("--wrap-static-fns".into())
+        }
+
+        if let Some(ref path) = self.options.wrap_static_fns_path {
+            output_vector.push("--wrap-static-fns-path".into());
+            output_vector.push(path.display().to_string());
+        }
+
+        if let Some(ref suffix) = self.options.wrap_static_fns_suffix {
+            output_vector.push("--wrap-static-fns-suffix".into());
+            output_vector.push(suffix.clone());
+        }
+
+        if cfg!(feature = "experimental") {
+            output_vector.push("--experimental".into());
         }
 
         // Add clang arguments
@@ -1544,33 +1572,25 @@ impl Builder {
     }
 
     /// Generate the Rust bindings using the options built up thus far.
-    pub fn generate(self) -> Result<Bindings, BindgenError> {
-        let mut options = self.options.clone();
+    pub fn generate(mut self) -> Result<Bindings, BindgenError> {
         // Add any extra arguments from the environment to the clang command line.
-        options.clang_args.extend(get_extra_clang_args());
+        self.options.clang_args.extend(get_extra_clang_args());
 
         // Transform input headers to arguments on the clang command line.
-        options.clang_args.extend(
-            options.input_headers
-                [..options.input_headers.len().saturating_sub(1)]
+        self.options.clang_args.extend(
+            self.options.input_headers
+                [..self.options.input_headers.len().saturating_sub(1)]
                 .iter()
                 .flat_map(|header| ["-include".into(), header.to_string()]),
         );
 
         let input_unsaved_files =
-            std::mem::take(&mut options.input_header_contents)
+            std::mem::take(&mut self.options.input_header_contents)
                 .into_iter()
                 .map(|(name, contents)| clang::UnsavedFile::new(name, contents))
                 .collect::<Vec<_>>();
 
-        match Bindings::generate(options, input_unsaved_files) {
-            GenerateResult::Ok(bindings) => Ok(bindings),
-            GenerateResult::ShouldRestart { header } => self
-                .header(header)
-                .generate_inline_functions(false)
-                .generate(),
-            GenerateResult::Err(err) => Err(err),
-        }
+        Bindings::generate(self.options, input_unsaved_files)
     }
 
     /// Preprocess and dump the input header files to disk.
@@ -1605,7 +1625,7 @@ impl Builder {
 
         // For each input header content, add a prefix line of `#line 0 "$name"`
         // followed by the contents.
-        for &(ref name, ref contents) in &self.options.input_header_contents {
+        for (name, contents) in &self.options.input_header_contents {
             is_cpp |= file_is_cpp(name);
 
             wrapper_contents.push_str("#line 0 \"");
@@ -1785,6 +1805,32 @@ impl Builder {
     /// If true, wraps unsafe operations in unsafe blocks.
     pub fn wrap_unsafe_ops(mut self, doit: bool) -> Self {
         self.options.wrap_unsafe_ops = doit;
+        self
+    }
+
+    #[cfg(feature = "experimental")]
+    /// Whether to generate extern wrappers for `static` and `static inline` functions. Defaults to
+    /// false.
+    pub fn wrap_static_fns(mut self, doit: bool) -> Self {
+        self.options.wrap_static_fns = doit;
+        self
+    }
+
+    #[cfg(feature = "experimental")]
+    /// Set the path for the source code file that would be created if any wrapper functions must
+    /// be generated due to the presence of static functions.
+    ///
+    /// Bindgen will automatically add the right extension to the header and source code files.
+    pub fn wrap_static_fns_path<T: AsRef<Path>>(mut self, path: T) -> Self {
+        self.options.wrap_static_fns_path = Some(path.as_ref().to_owned());
+        self
+    }
+
+    #[cfg(feature = "experimental")]
+    /// Set the suffix added to the extern wrapper functions generated for `static` and `static
+    /// inline` functions.
+    pub fn wrap_static_fns_suffix<T: AsRef<str>>(mut self, suffix: T) -> Self {
+        self.options.wrap_static_fns_suffix = Some(suffix.as_ref().to_owned());
         self
     }
 }
@@ -2127,6 +2173,12 @@ struct BindgenOptions {
 
     /// Whether to wrap unsafe operations in unsafe blocks or not.
     wrap_unsafe_ops: bool,
+
+    wrap_static_fns: bool,
+
+    wrap_static_fns_suffix: Option<String>,
+
+    wrap_static_fns_path: Option<PathBuf>,
 }
 
 impl BindgenOptions {
@@ -2319,6 +2371,9 @@ impl Default for BindgenOptions {
             merge_extern_blocks,
             abi_overrides,
             wrap_unsafe_ops,
+            wrap_static_fns,
+            wrap_static_fns_suffix,
+            wrap_static_fns_path,
         }
     }
 }
@@ -2349,18 +2404,6 @@ fn ensure_libclang_is_loaded() {
 #[cfg(not(feature = "runtime"))]
 fn ensure_libclang_is_loaded() {}
 
-#[derive(Debug)]
-enum GenerateResult {
-    Ok(Bindings),
-    /// Error variant raised when bindgen requires to run again with a newly generated header
-    /// input.
-    #[allow(dead_code)]
-    ShouldRestart {
-        header: String,
-    },
-    Err(BindgenError),
-}
-
 /// Error type for rust-bindgen.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[non_exhaustive]
@@ -2373,6 +2416,8 @@ pub enum BindgenError {
     NotExist(PathBuf),
     /// Clang diagnosed an error.
     ClangDiagnostic(String),
+    /// Code generation reported an error.
+    Codegen(CodegenError),
 }
 
 impl std::fmt::Display for BindgenError {
@@ -2389,6 +2434,9 @@ impl std::fmt::Display for BindgenError {
             }
             BindgenError::ClangDiagnostic(message) => {
                 write!(f, "clang diagnosed error: {}", message)
+            }
+            BindgenError::Codegen(err) => {
+                write!(f, "codegen error: {}", err)
             }
         }
     }
@@ -2418,6 +2466,15 @@ fn rust_to_clang_target(rust_target: &str) -> String {
     } else if rust_target.starts_with("riscv64gc-") {
         let mut clang_target = "riscv64-".to_owned();
         clang_target.push_str(rust_target.strip_prefix("riscv64gc-").unwrap());
+        return clang_target;
+    } else if rust_target.ends_with("-espidf") {
+        let mut clang_target =
+            rust_target.strip_suffix("-espidf").unwrap().to_owned();
+        clang_target.push_str("-elf");
+        if clang_target.starts_with("riscv32imc-") {
+            clang_target = "riscv32-".to_owned() +
+                clang_target.strip_prefix("riscv32imc-").unwrap();
+        }
         return clang_target;
     }
     rust_target.to_owned()
@@ -2454,7 +2511,7 @@ impl Bindings {
     pub(crate) fn generate(
         mut options: BindgenOptions,
         input_unsaved_files: Vec<clang::UnsavedFile>,
-    ) -> GenerateResult {
+    ) -> Result<Bindings, BindgenError> {
         ensure_libclang_is_loaded();
 
         #[cfg(feature = "runtime")]
@@ -2575,21 +2632,17 @@ impl Bindings {
             let path = Path::new(h);
             if let Ok(md) = std::fs::metadata(path) {
                 if md.is_dir() {
-                    return GenerateResult::Err(BindgenError::FolderAsHeader(
-                        path.into(),
-                    ));
+                    return Err(BindgenError::FolderAsHeader(path.into()));
                 }
                 if !can_read(&md.permissions()) {
-                    return GenerateResult::Err(
-                        BindgenError::InsufficientPermissions(path.into()),
-                    );
+                    return Err(BindgenError::InsufficientPermissions(
+                        path.into(),
+                    ));
                 }
                 let h = h.clone();
                 options.clang_args.push(h);
             } else {
-                return GenerateResult::Err(BindgenError::NotExist(
-                    path.into(),
-                ));
+                return Err(BindgenError::NotExist(path.into()));
             }
         }
 
@@ -2617,14 +2670,13 @@ impl Bindings {
 
         {
             let _t = time::Timer::new("parse").with_output(time_phases);
-            if let Err(err) = parse(&mut context) {
-                return GenerateResult::Err(err);
-            }
+            parse(&mut context)?;
         }
 
-        let (module, options, warnings) = codegen::codegen(context);
+        let (module, options, warnings) =
+            codegen::codegen(context).map_err(BindgenError::Codegen)?;
 
-        GenerateResult::Ok(Bindings {
+        Ok(Bindings {
             options,
             warnings,
             module,
@@ -3001,4 +3053,16 @@ fn test_rust_to_clang_target_riscv() {
         rust_to_clang_target("riscv64gc-unknown-linux-gnu"),
         "riscv64-unknown-linux-gnu"
     )
+}
+
+#[test]
+fn test_rust_to_clang_target_espidf() {
+    assert_eq!(
+        rust_to_clang_target("riscv32imc-esp-espidf"),
+        "riscv32-esp-elf"
+    );
+    assert_eq!(
+        rust_to_clang_target("xtensa-esp32-espidf"),
+        "xtensa-esp32-elf"
+    );
 }

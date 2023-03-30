@@ -11,9 +11,9 @@
 
 [package]
 edition = "2018"
-rust-version = "1.57.0"
+rust-version = "1.60.0"
 name = "bindgen"
-version = "0.63.0"
+version = "0.64.0"
 authors = [
     "Jyun-Yan You <jyyou.tw@gmail.com>",
     "Emilio Cobos Álvarez <emilio@crisal.io>",
@@ -24,7 +24,7 @@ build = "build.rs"
 description = "Automatically generates Rust FFI bindings to C and C++ libraries."
 homepage = "https://rust-lang.github.io/rust-bindgen/"
 documentation = "https://docs.rs/bindgen"
-readme = "README.md"
+readme = "../README.md"
 keywords = [
     "bindings",
     "ffi",
@@ -100,11 +100,13 @@ optional = true
 default-features = false
 
 [features]
+cli = []
 default = [
     "logging",
     "runtime",
     "which-rustfmt",
 ]
+experimental = []
 logging = ["log"]
 runtime = ["clang-sys/runtime"]
 static = ["clang-sys/static"]

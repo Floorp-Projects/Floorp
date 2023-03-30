@@ -25,14 +25,23 @@ impl Default for MacroParsingBehavior {
 /// A trait to allow configuring different kinds of types in different
 /// situations.
 pub trait ParseCallbacks: fmt::Debug {
+    #[cfg(feature = "cli")]
+    #[doc(hidden)]
+    fn cli_args(&self) -> Vec<String> {
+        vec![]
+    }
+
     /// This function will be run on every macro that is identified.
     fn will_parse_macro(&self, _name: &str) -> MacroParsingBehavior {
         MacroParsingBehavior::Default
     }
 
-    /// This function will run for every function. The returned value determines the name visible
-    /// in the bindings.
-    fn generated_name_override(&self, _function_name: &str) -> Option<String> {
+    /// This function will run for every extern variable and function. The returned value determines
+    /// the name visible in the bindings.
+    fn generated_name_override(
+        &self,
+        _item_info: ItemInfo<'_>,
+    ) -> Option<String> {
         None
     }
 
@@ -117,8 +126,40 @@ pub trait ParseCallbacks: fmt::Debug {
 
 /// Relevant information about a type to which new derive attributes will be added using
 /// [`ParseCallbacks::add_derives`].
+#[derive(Debug)]
 #[non_exhaustive]
 pub struct DeriveInfo<'a> {
     /// The name of the type.
     pub name: &'a str,
+    /// The kind of the type.
+    pub kind: TypeKind,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// The kind of the current type.
+pub enum TypeKind {
+    /// The type is a Rust `struct`.
+    Struct,
+    /// The type is a Rust `enum`.
+    Enum,
+    /// The type is a Rust `union`.
+    Union,
+}
+
+/// An struct providing information about the item being passed to `ParseCallbacks::generated_name_override`.
+#[non_exhaustive]
+pub struct ItemInfo<'a> {
+    /// The name of the item
+    pub name: &'a str,
+    /// The kind of item
+    pub kind: ItemKind,
+}
+
+/// An enum indicating the kind of item for an ItemInfo.
+#[non_exhaustive]
+pub enum ItemKind {
+    /// A Function
+    Function,
+    /// A Variable
+    Var,
 }

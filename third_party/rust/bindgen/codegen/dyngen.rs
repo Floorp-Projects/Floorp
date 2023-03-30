@@ -170,7 +170,7 @@ impl DynamicItems {
         if !is_variadic {
             self.struct_implementation.push(quote! {
                 #(#attributes)*
-                pub unsafe fn #ident ( &self, #( #args ),* ) -> #ret_ty {
+                pub unsafe fn #ident ( &self, #( #args ),* ) #ret_ty {
                     #call_body
                 }
             });

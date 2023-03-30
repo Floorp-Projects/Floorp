@@ -6,7 +6,6 @@ use super::item::Item;
 use super::traversal::{Trace, Tracer};
 use super::ty::TypeKind;
 use crate::clang;
-use crate::parse::ClangItemParser;
 use clang_sys::CXChildVisit_Continue;
 use clang_sys::CXCursor_ObjCCategoryDecl;
 use clang_sys::CXCursor_ObjCClassMethodDecl;
@@ -261,7 +260,17 @@ impl ObjCMethod {
                 if name.is_empty() {
                     None
                 } else {
-                    Some(Ident::new(name, Span::call_site()))
+                    // Try to parse the current name as an identifier. This might fail if the
+                    // name is a keyword so we try to prepend "r#" to it and parse again. If
+                    // this also fails, we panic with the first error.
+                    Some(
+                        syn::parse_str::<Ident>(name)
+                            .or_else(|err| {
+                                syn::parse_str::<Ident>(&format!("r#{}", name))
+                                    .map_err(|_| err)
+                            })
+                            .expect("Invalid identifier"),
+                    )
                 }
             })
             .collect();

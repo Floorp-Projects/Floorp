@@ -424,8 +424,7 @@ impl<'ctx> MonotoneFramework for UsedTemplateParameters<'ctx> {
             // generic template parameters are used.
             let item_kind =
                 ctx.resolve_item(item).as_type().map(|ty| ty.kind());
-            if let Some(&TypeKind::TemplateInstantiation(ref inst)) = item_kind
-            {
+            if let Some(TypeKind::TemplateInstantiation(inst)) = item_kind {
                 let decl = ctx.resolve_type(inst.template_definition());
                 let args = inst.template_arguments();
 
@@ -540,7 +539,7 @@ impl<'ctx> MonotoneFramework for UsedTemplateParameters<'ctx> {
             }
             // Template instantiations only use their template arguments if the
             // template definition uses the corresponding template parameter.
-            Some(&TypeKind::TemplateInstantiation(ref inst)) => {
+            Some(TypeKind::TemplateInstantiation(inst)) => {
                 if self
                     .allowlisted_items
                     .contains(&inst.template_definition().into())

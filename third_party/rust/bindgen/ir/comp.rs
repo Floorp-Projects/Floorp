@@ -12,7 +12,7 @@ use super::ty::RUST_DERIVE_IN_ARRAY_LIMIT;
 use crate::clang;
 use crate::codegen::struct_layout::{align_to, bytes_from_bits_pow2};
 use crate::ir::derive::CanDeriveCopy;
-use crate::parse::{ClangItemParser, ParseError};
+use crate::parse::ParseError;
 use crate::HashMap;
 use crate::NonCopyUnionStyle;
 use peeking_take_while::PeekableExt;
