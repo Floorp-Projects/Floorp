@@ -129,6 +129,10 @@
 .pip-wrapper:not([small-video], [has-used]) > .pip-expanded {
   opacity: 1;
   scale: 1;
+  pointer-events: none;
+}
+
+.pip-wrapper:not([small-video], [has-used]).hovering > .pip-expanded {
   pointer-events: auto;
 }
 
@@ -269,7 +273,6 @@
   /* Remove bottom border but keep text centred with padding. */
   border-bottom: none;
   padding-bottom: var(--pip-highlight-width);
-  pointer-events: none;
 }
 
 .pip-wrapper:not([small-video], [has-used], .experiment).hovering > .pip-expanded {
