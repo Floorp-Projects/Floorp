@@ -57,7 +57,8 @@ static ShCompileOptions ChooseValidatorCompileOptions(
       options.initGLPointSize = true;
 
       if (gl->Vendor() == gl::GLVendor::Intel) {
-        // Work around that Intel drivers on Mac OSX handle for-loop incorrectly.
+        // Work around that Intel drivers on Mac OSX handle for-loop
+        // incorrectly.
         options.addAndTrueToLoopCondition = true;
 
         options.rewriteTexelFetchOffsetToTexelFetch = true;
