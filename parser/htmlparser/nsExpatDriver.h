@@ -14,6 +14,7 @@
 #include "nsIInputStream.h"
 #include "nsIParser.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsScanner.h"
 
 #include "rlbox_expat.h"
 #include "nsRLBoxExpatDriver.h"
