@@ -4,6 +4,7 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
+  ExtensionDNR: "resource://gre/modules/ExtensionDNR.sys.mjs",
   ExtensionDNRLimits: "resource://gre/modules/ExtensionDNRLimits.sys.mjs",
   ExtensionDNRStore: "resource://gre/modules/ExtensionDNRStore.sys.mjs",
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
@@ -473,6 +474,9 @@ add_task(async function test_load_from_corrupted_data() {
       "DNR store data cleared from memory after the extension has been disabled"
     );
 
+    // Make sure we remove a previous corrupt file in case there is one from a previous run.
+    await IOUtils.remove(expectedCorruptFile, { ignoreAbsent: true });
+
     await asyncWriteStoreFile();
 
     await extension.addon.enable();
@@ -488,11 +492,6 @@ add_task(async function test_load_from_corrupted_data() {
     await TestUtils.waitForCondition(
       () => IOUtils.exists(`${expectedCorruptFile}`),
       `Wait for the "${expectedCorruptFile}" file to have been created`
-    );
-
-    ok(
-      !(await IOUtils.exists(storeFile)),
-      "Corrupted store file expected to be removed"
     );
   }
 
@@ -1318,7 +1317,14 @@ add_task(async function test_static_rulesets_limits() {
   // Ensure all changes were stored and reloaded from disk store and the
   // DNR store update queue can accept new updates.
   info("Verify static rules load and updates after extension is restarted");
+
+  // NOTE: promiseRestartManager will not be enough to make sure the
+  // DNR store data for the test extension is going to be loaded from
+  // the DNR startup cache file.
+  // See test_ext_dnr_startup_cache.js for a test case that more completely
+  // simulates ExtensionDNRStore initialization on browser restart.
   await AddonTestUtils.promiseRestartManager();
+
   await extension.awaitStartup();
   await extension.awaitMessage("bgpage:ready");
   await assertDNRGetEnabledRulesets(
@@ -1411,6 +1417,68 @@ add_task(async function test_tabId_conditions_invalid_in_static_rules() {
       ruleset2_with_excludeTabId_condition[1],
     ]),
   });
+
+  await extension.unload();
+});
+
+add_task(async function test_dnr_all_rules_disabled_allowed() {
+  const ruleset1 = [
+    getDNRRule({ id: 3, condition: { urlFilter: "valid-ruleset1-rule" } }),
+  ];
+
+  const rule_resources = [
+    {
+      id: "ruleset1",
+      enabled: true,
+      path: "ruleset1.json",
+    },
+  ];
+
+  const files = {
+    "ruleset1.json": JSON.stringify(ruleset1),
+  };
+
+  const extension = ExtensionTestUtils.loadExtension(
+    getDNRExtension({
+      id: "tabId-invalid-in-session-rules@mochitest",
+      rule_resources,
+      files,
+    })
+  );
+
+  await extension.startup();
+  await extension.awaitMessage("bgpage:ready");
+
+  await assertDNRGetEnabledRulesets(extension, ["ruleset1"]);
+
+  const dnrStore = ExtensionDNRStore._getStoreForTesting();
+  await assertDNRStoreData(dnrStore, extension, {
+    ruleset1: getSchemaNormalizedRules(extension, ruleset1),
+  });
+
+  info("Disable static ruleset1");
+  extension.sendMessage("updateEnabledRulesets", {
+    disableRulesetIds: ["ruleset1"],
+  });
+  await extension.awaitMessage("updateEnabledRulesets:done");
+  await assertDNRGetEnabledRulesets(extension, []);
+  await assertDNRStoreData(dnrStore, extension, {});
+
+  info("Verify that static ruleset1 is still disable after browser restart");
+
+  // NOTE: promiseRestartManager will not be enough to make sure the
+  // DNR store data for the test extension is going to be loaded from
+  // the DNR startup cache file.
+  // See test_ext_dnr_startup_cache.js for a test case that more completely
+  // simulates ExtensionDNRStore initialization on browser restart.
+  await AddonTestUtils.promiseRestartManager();
+
+  await extension.awaitStartup;
+  await ExtensionDNR.ensureInitialized(extension.extension);
+  await extension.awaitMessage("bgpage:ready");
+
+  await assertDNRGetEnabledRulesets(extension, []);
+  await assertDNRStoreData(dnrStore, extension, {});
 
   await extension.unload();
 });
