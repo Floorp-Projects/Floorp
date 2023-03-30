@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<title>Test that we do not checkerboard after resetting the pinch-zoom scale</title>
+<script type="application/javascript" src="apz_test_utils.js"></script>
+<script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<style>
+.scrolled {
+  width: 10000px;
+  height: 10000px;
+  background: linear-gradient(lime, cyan);
+}
+</style>
+</head><body>
+  <div class="scrolled"></div>
+</body>
+
+<script type="application/javascript">
+async function test() {
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+  var scrollerId = utils.getViewId(document.documentElement);
+
+  // Zoom in to the maximum level
+  utils.setResolutionAndScaleTo(10.0);
+  await promiseApzFlushedRepaints();
+
+  // Scroll the layout viewport to around middle of the page
+  window.scrollTo(window.scrollMaxX / 2, window.scrollMaxY / 2);
+  await promiseApzFlushedRepaints();
+
+  // Scroll the visual viewport to the bottom of the layout viewport.
+  // This creates an offset between the visual and layout viewport
+  // offsets which is needed to trigger the bug.
+  utils.scrollToVisual(window.scrollX,
+                       window.scrollY + (0.9 * document.documentElement.clientHeight),
+                       utils.UPDATE_TYPE_MAIN_THREAD,
+                       utils.SCROLL_MODE_INSTANT);
+  await promiseApzFlushedRepaints();
+
+  // Reset the zoom level to 1.0x
+  utils.setResolutionAndScaleTo(1.0);
+  await promiseApzFlushedRepaints();
+
+  // Assert that we're not checkerboarded
+  assertNotCheckerboarded(utils, scrollerId, "After resetting zoom level");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>
+</html>
