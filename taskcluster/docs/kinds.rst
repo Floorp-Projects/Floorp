@@ -46,6 +46,16 @@ build-notarization-poller
 
 We switched to a 3-part mac notarization workflow in bug 1562412. This is the second task, which polls Apple for notarization status. Because this is run in a separate, special notarization poller pool, we free up the mac notarization pool for actual signing work.
 
+build-mac-signing
+-----------------
+
+Mac signing without notarization
+
+build-mac-notarization
+----------------------
+
+Mac notarization on signinscript (linux) using rcodesign
+
 artifact-build
 --------------
 
