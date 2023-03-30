@@ -124,27 +124,27 @@ function SpeciesConstructor(obj, defaultConstructor) {
   );
 }
 
-function GetTypeError(msg) {
+function GetTypeError(...args) {
   try {
-    FUN_APPLY(ThrowTypeError, undefined, arguments);
+    FUN_APPLY(ThrowTypeError, undefined, args);
   } catch (e) {
     return e;
   }
   assert(false, "the catch block should've returned from this function.");
 }
 
-function GetAggregateError(msg) {
+function GetAggregateError(...args) {
   try {
-    FUN_APPLY(ThrowAggregateError, undefined, arguments);
+    FUN_APPLY(ThrowAggregateError, undefined, args);
   } catch (e) {
     return e;
   }
   assert(false, "the catch block should've returned from this function.");
 }
 
-function GetInternalError(msg) {
+function GetInternalError(...args) {
   try {
-    FUN_APPLY(ThrowInternalError, undefined, arguments);
+    FUN_APPLY(ThrowInternalError, undefined, args);
   } catch (e) {
     return e;
   }
