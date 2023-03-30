@@ -26,7 +26,7 @@ const gScreenshotUISelectors = {
   panelButtons: "#screenshotsPagePanel",
   fullPageButton: "button.full-page",
   visiblePageButton: "button.visible-page",
-  copyButton: "button.highlight-button-copy",
+  copyButton: "button.#copy",
 };
 
 // MouseEvents is for the mouse events on the Anonymous content
@@ -271,25 +271,28 @@ class ScreenshotsHelper {
   }
 
   clickDownloadButton() {
-    mouse.click(this.endX - 60, this.endY + 30);
+    // Click the download button with last x and y position from dragOverlay.
+    // The middle of the copy button is last X - 70 and last Y + 36.
+    // Ex. 500, 500 would be 530, 536
+    mouse.click(this.endX - 70, this.endY + 36);
   }
 
   clickCopyButton(overrideX = null, overrideY = null) {
-    // click copy button with last x and y position from dragOverlay
-    // the middle of the copy button is last X - 163 and last Y + 30.
-    // Ex. 500, 500 would be 336, 530
+    // Click the copy button with last x and y position from dragOverlay.
+    // The middle of the copy button is last X - 183 and last Y + 36.
+    // Ex. 500, 500 would be 317, 536
     if (overrideX && overrideY) {
-      mouse.click(overrideX - 166, overrideY + 30);
+      mouse.click(overrideX - 183, overrideY + 36);
     } else {
-      mouse.click(this.endX - 166, this.endY + 30);
+      mouse.click(this.endX - 183, this.endY + 36);
     }
   }
 
   clickCancelButton() {
-    // click copy button with last x and y position from dragOverlay
-    // the middle of the copy button is last X - 230 and last Y + 30.
-    // Ex. 500, 500 would be 270, 530
-    mouse.click(this.endX - 230, this.endY + 30);
+    // Click the cancel button with last x and y position from dragOverlay.
+    // The middle of the copy button is last X - 259 and last Y + 36.
+    // Ex. 500, 500 would be 241, 536
+    mouse.click(this.endX - 259, this.endY + 36);
   }
 
   async clickTestPageElement() {

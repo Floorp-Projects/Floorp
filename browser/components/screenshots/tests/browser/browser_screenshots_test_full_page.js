@@ -33,9 +33,7 @@ add_task(async function test_fullpageScreenshot() {
 
       await screenshotReady;
 
-      let copyButton = dialog._frame.contentDocument.querySelector(
-        ".highlight-button-copy"
-      );
+      let copyButton = dialog._frame.contentDocument.getElementById("copy");
       ok(copyButton, "Got the copy button");
 
       let clipboardChanged = helper.waitForRawClipboardChange();
@@ -120,9 +118,7 @@ add_task(async function test_fullpageScreenshotScrolled() {
 
       await screenshotReady;
 
-      let copyButton = dialog._frame.contentDocument.querySelector(
-        ".highlight-button-copy"
-      );
+      let copyButton = dialog._frame.contentDocument.getElementById("copy");
       ok(copyButton, "Got the copy button");
 
       let clipboardChanged = helper.waitForRawClipboardChange();
