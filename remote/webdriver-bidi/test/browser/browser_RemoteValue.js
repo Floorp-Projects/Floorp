@@ -272,6 +272,7 @@ const REMOTE_COMPLEX_VALUES = [
         localName: "div",
         namespaceURI: "http://www.w3.org/1999/xhtml",
         nodeType: 1,
+        shadowRoot: null,
       },
     },
   },
@@ -951,6 +952,7 @@ add_task(function test_serializeNodeChildren() {
           localName: "body",
           namespaceURI: "http://www.w3.org/1999/xhtml",
           nodeType: 1,
+          shadowRoot: null,
         },
       },
     },
@@ -973,6 +975,7 @@ add_task(function test_serializeNodeChildren() {
                 localName: "div",
                 namespaceURI: "http://www.w3.org/1999/xhtml",
                 nodeType: 1,
+                shadowRoot: null,
               },
             },
             {
@@ -984,12 +987,14 @@ add_task(function test_serializeNodeChildren() {
                 localName: "iframe",
                 namespaceURI: "http://www.w3.org/1999/xhtml",
                 nodeType: 1,
+                shadowRoot: null,
               },
             },
           ],
           localName: "body",
           namespaceURI: "http://www.w3.org/1999/xhtml",
           nodeType: 1,
+          shadowRoot: null,
         },
       },
     },
@@ -1005,6 +1010,7 @@ add_task(function test_serializeNodeChildren() {
           localName: "div",
           namespaceURI: "http://www.w3.org/1999/xhtml",
           nodeType: 1,
+          shadowRoot: null,
         },
       },
     },
@@ -1021,6 +1027,7 @@ add_task(function test_serializeNodeChildren() {
           localName: "div",
           namespaceURI: "http://www.w3.org/1999/xhtml",
           nodeType: 1,
+          shadowRoot: null,
         },
       },
     },
@@ -1041,6 +1048,71 @@ add_task(function test_serializeNodeChildren() {
     );
 
     Assert.deepEqual(serializedValue, serialized, "Got expected structure");
+  }
+});
+
+add_task(function test_serializeShadowRoot() {
+  const nodeCache = new NodeCache();
+  const realm = new WindowRealm(browser.document.defaultView);
+
+  for (const mode of ["open", "closed"]) {
+    info(`Checking shadow root with mode '${mode}'`);
+    const customElement = browser.document.createElement(
+      `${mode}-custom-element`
+    );
+    const insideShadowRootElement = browser.document.createElement("input");
+    bodyEl.appendChild(customElement);
+    const shadowRoot = customElement.attachShadow({ mode });
+    shadowRoot.appendChild(insideShadowRootElement);
+
+    // Add the used elements to the cache so that we know the unique reference.
+    const customElementRef = nodeCache.getOrCreateNodeReference(customElement);
+    const shadowRootRef = nodeCache.getOrCreateNodeReference(shadowRoot);
+
+    const dataSet = [
+      {
+        node: customElement,
+        maxDepth: 1,
+        serialized: {
+          type: "node",
+          sharedId: customElementRef,
+          value: {
+            attributes: {},
+            childNodeCount: 0,
+            children: [],
+            localName: `${mode}-custom-element`,
+            namespaceURI: "http://www.w3.org/1999/xhtml",
+            nodeType: 1,
+            shadowRoot: {
+              sharedId: shadowRootRef,
+              type: "node",
+              value: {
+                childNodeCount: 1,
+                mode,
+                nodeType: 11,
+              },
+            },
+          },
+        },
+      },
+    ];
+
+    for (const { node, maxDepth, serialized } of dataSet) {
+      info(`Checking shadow root with maxDepth ${maxDepth}`);
+
+      const serializationInternalMap = new Map();
+
+      const serializedValue = serialize(
+        node,
+        maxDepth,
+        "none",
+        serializationInternalMap,
+        realm,
+        { nodeCache }
+      );
+
+      Assert.deepEqual(serializedValue, serialized, "Got expected structure");
+    }
   }
 });
 
