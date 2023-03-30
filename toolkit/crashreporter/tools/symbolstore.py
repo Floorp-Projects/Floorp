@@ -41,6 +41,7 @@ from mozbuild.generated_sources import (
     get_s3_region_and_bucket,
 )
 from mozbuild.util import memoize
+from mozpack import executables
 from mozpack.copier import FileRegistry
 from mozpack.manifests import InstallManifest, UnreadableInstallManifest
 
@@ -513,12 +514,6 @@ class Dumper:
     def ShouldProcess(self, file):
         return True
 
-    def RunFileCommand(self, file):
-        """Utility function, returns the output of file(1)"""
-        # we use -L to read the targets of symlinks,
-        # and -b to print just the content, not the filename
-        return read_output("file", "-Lb", file)
-
     # This is a no-op except on Win32
     def SourceServerIndexing(
         self, debug_file, guid, sourceFileStream, vcs_root, s3_bucket
@@ -837,7 +832,7 @@ class Dumper_Linux(Dumper):
         file(1) reports as being ELF files.  It expects to find the file
         command in PATH."""
         if file.endswith(".so") or os.access(file, os.X_OK):
-            return self.RunFileCommand(file).startswith("ELF")
+            return executables.get_type(file) == executables.ELF
         return False
 
     def CopyExeAndDebugInfo(self, file, debug_file, guid, code_file, code_id):
@@ -871,21 +866,13 @@ class Dumper_Linux(Dumper):
 
 
 class Dumper_Solaris(Dumper):
-    def RunFileCommand(self, file):
-        """Utility function, returns the output of file(1)"""
-        try:
-            output = os.popen("file " + file).read()
-            return output.split("\t")[1]
-        except Exception:
-            return ""
-
     def ShouldProcess(self, file):
         """This function will allow processing of files that are
         executable, or end with the .so extension, and additionally
         file(1) reports as being ELF files.  It expects to find the file
         command in PATH."""
         if file.endswith(".so") or os.access(file, os.X_OK):
-            return self.RunFileCommand(file).startswith("ELF")
+            return executables.get_type(file) == executables.ELF
         return False
 
 
@@ -896,7 +883,7 @@ class Dumper_Mac(Dumper):
         file(1) reports as being Mach-O files.  It expects to find the file
         command in PATH."""
         if file.endswith(".dylib") or os.access(file, os.X_OK):
-            return self.RunFileCommand(file).startswith("Mach-O")
+            return executables.get_type(file) == executables.MACHO
         return False
 
     def ProcessFile(self, file, count_ctors=False):
