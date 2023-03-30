@@ -96,8 +96,8 @@ DisplayPortMargins DisplayPortMargins::ForContent(
 }
 
 ScreenMargin DisplayPortMargins::GetRelativeToLayoutViewport(
-    ContentGeometryType aGeometryType,
-    nsIScrollableFrame* aScrollableFrame) const {
+    ContentGeometryType aGeometryType, nsIScrollableFrame* aScrollableFrame,
+    const CSSToScreenScale2D& aDisplayportScale) const {
   // APZ wants |mMargins| applied relative to the visual viewport.
   // The main-thread painting code applies margins relative to
   // the layout viewport. To get the main thread to paint the
@@ -106,7 +106,7 @@ ScreenMargin DisplayPortMargins::GetRelativeToLayoutViewport(
   // applying the displayport to scrolled or fixed content.
   CSSPoint scrollDeltaCss =
       ComputeAsyncTranslation(aGeometryType, aScrollableFrame);
-  ScreenPoint scrollDelta = scrollDeltaCss * mScale;
+  ScreenPoint scrollDelta = scrollDeltaCss * aDisplayportScale;
   ScreenMargin margins = mMargins;
   margins.left -= scrollDelta.x;
   margins.right += scrollDelta.x;
@@ -275,7 +275,8 @@ static nsRect GetDisplayPortFromMarginsData(
   MOZ_ASSERT(presShell);
 
   ScreenMargin margins = aMarginsData->mMargins.GetRelativeToLayoutViewport(
-      aOptions.mGeometryType, scrollableFrame);
+      aOptions.mGeometryType, scrollableFrame,
+      presContext->CSSToDevPixelScale() * res);
 
   if (presShell->IsDisplayportSuppressed() ||
       aContent->GetProperty(nsGkAtoms::MinimalDisplayPort)) {
