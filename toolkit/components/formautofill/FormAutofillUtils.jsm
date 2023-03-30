@@ -2,7 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-export let FormAutofillUtils;
+"use strict";
+
+const EXPORTED_SYMBOLS = [
+  "FormAutofillUtils",
+  "AddressDataLoader",
+  "LabelUtils",
+];
+let FormAutofillUtils;
 
 const ADDRESS_METADATA_PATH = "resource://autofill/addressmetadata/";
 const ADDRESS_REFERENCES = "addressReferences.js";
@@ -56,18 +63,24 @@ const ELIGIBLE_INPUT_TYPES = ["text", "email", "tel", "number", "month"];
 // attacks that fill the user's hard drive(s).
 const MAX_FIELD_VALUE_LENGTH = 200;
 
-import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+const { FormAutofill } = ChromeUtils.import(
+  "resource://autofill/FormAutofill.jsm"
+);
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
-  FormAutofillNameUtils: "resource://autofill/FormAutofillNameUtils.sys.mjs",
   OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
 });
 
-export let AddressDataLoader = {
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  FormAutofillNameUtils: "resource://autofill/FormAutofillNameUtils.jsm",
+});
+
+let AddressDataLoader = {
   // Status of address data loading. We'll load all the countries with basic level 1
   // information while requesting conutry information, and set country to true.
   // Level 1 Set is for recording which country's level 1/level 2 data is loaded,
@@ -1180,7 +1193,7 @@ FormAutofillUtils = {
   },
 };
 
-export const LabelUtils = {
+const LabelUtils = {
   // The tag name list is from Chromium except for "STYLE":
   // eslint-disable-next-line max-len
   // https://cs.chromium.org/chromium/src/components/autofill/content/renderer/form_autofill_util.cc?l=216&rcl=d33a171b7c308a64dc3372fac3da2179c63b419e

@@ -8,26 +8,34 @@
 
 /* eslint-disable no-use-before-define */
 
+"use strict";
+
+var EXPORTED_SYMBOLS = ["FormAutofillContent"];
+
 const Cm = Components.manager;
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  AddressResult: "resource://autofill/ProfileAutoCompleteResult.sys.mjs",
-  CreditCardResult: "resource://autofill/ProfileAutoCompleteResult.sys.mjs",
-  FormAutofill: "resource://autofill/FormAutofill.sys.mjs",
-  FormAutofillHandler: "resource://autofill/FormAutofillHandler.sys.mjs",
-  FormAutofillUtils: "resource://autofill/FormAutofillUtils.sys.mjs",
   FormLikeFactory: "resource://gre/modules/FormLikeFactory.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
+  AddressResult: "resource://autofill/ProfileAutoCompleteResult.jsm",
   ComponentUtils: "resource://gre/modules/ComponentUtils.jsm",
+  CreditCardResult: "resource://autofill/ProfileAutoCompleteResult.jsm",
   AutofillTelemetry: "resource://autofill/AutofillTelemetry.jsm",
+  FormAutofill: "resource://autofill/FormAutofill.jsm",
+  FormAutofillHandler: "resource://autofill/FormAutofillHandler.jsm",
+  FormAutofillUtils: "resource://autofill/FormAutofillUtils.jsm",
   InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.jsm",
 });
 
@@ -435,7 +443,7 @@ let ProfileAutocomplete = {
  *
  * NOTE: Declares it by "var" to make it accessible in unit tests.
  */
-export var FormAutofillContent = {
+var FormAutofillContent = {
   /**
    * @type {WeakMap} mapping FormLike root HTML elements to FormAutofillHandler objects.
    */
