@@ -95,8 +95,7 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
 
   void InvokeAsyncOpen(nsresult rv);
 
-  void InvokeEarlyHintPreloader(nsresult rv, uint64_t aEarlyHintPreloaderId,
-                                uint64_t aChannelId);
+  void InvokeEarlyHintPreloader(nsresult rv, uint64_t aEarlyHintPreloaderId);
 
   // Calls SendSetPriority if mIPCClosed is false.
   void DoSendSetPriority(int16_t aValue);

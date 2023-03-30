@@ -355,18 +355,16 @@ void HttpChannelParent::InvokeAsyncOpen(nsresult rv) {
   }
 }
 
-void HttpChannelParent::InvokeEarlyHintPreloader(nsresult rv,
-                                                 uint64_t aEarlyHintPreloaderId,
-                                                 uint64_t aChannelId) {
+void HttpChannelParent::InvokeEarlyHintPreloader(
+    nsresult rv, uint64_t aEarlyHintPreloaderId) {
   LOG(("HttpChannelParent::InvokeEarlyHintPreloader [this=%p rv=%" PRIx32 "]\n",
        this, static_cast<uint32_t>(rv)));
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<EarlyHintRegistrar> ehr = EarlyHintRegistrar::GetOrCreate();
   if (NS_SUCCEEDED(rv)) {
-    rv = ehr->LinkParentChannel(aEarlyHintPreloaderId, this, aChannelId)
-             ? NS_OK
-             : NS_ERROR_FAILURE;
+    rv = ehr->LinkParentChannel(aEarlyHintPreloaderId, this) ? NS_OK
+                                                             : NS_ERROR_FAILURE;
   }
 
   if (NS_FAILED(rv)) {
@@ -417,15 +415,13 @@ bool HttpChannelParent::DoAsyncOpen(
     WaitForBgParent(aChannelId)
         ->Then(
             GetMainThreadSerialEventTarget(), __func__,
-            [self, aEarlyHintPreloaderId, aChannelId]() {
+            [self, aEarlyHintPreloaderId]() {
               self->mRequest.Complete();
-              self->InvokeEarlyHintPreloader(NS_OK, aEarlyHintPreloaderId,
-                                             aChannelId);
+              self->InvokeEarlyHintPreloader(NS_OK, aEarlyHintPreloaderId);
             },
-            [self, aEarlyHintPreloaderId, aChannelId](nsresult aStatus) {
+            [self, aEarlyHintPreloaderId](nsresult aStatus) {
               self->mRequest.Complete();
-              self->InvokeEarlyHintPreloader(aStatus, aEarlyHintPreloaderId,
-                                             aChannelId);
+              self->InvokeEarlyHintPreloader(aStatus, aEarlyHintPreloaderId);
             })
         ->Track(mRequest);
     return true;
