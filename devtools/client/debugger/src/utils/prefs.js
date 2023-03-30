@@ -44,6 +44,7 @@ if (isNode()) {
   pref("devtools.debugger.skip-pausing", false);
   pref("devtools.debugger.log-actions", true);
   pref("devtools.debugger.log-event-breakpoints", false);
+  pref("devtools.debugger.javascript-tracing-log-method", "console");
   pref("devtools.debugger.features.workers", true);
   pref("devtools.debugger.features.async-stepping", false);
   pref("devtools.debugger.features.wasm", true);
@@ -112,6 +113,10 @@ export const prefs = new PrefsHelper("devtools", {
   logActions: ["Bool", "debugger.log-actions"],
   logEventBreakpoints: ["Bool", "debugger.log-event-breakpoints"],
   indentSize: ["Int", "editor.tabsize"],
+  javascriptTracingLogMethod: [
+    "String",
+    "debugger.javascript-tracing-log-method",
+  ],
 });
 
 // The pref may not be defined. Defaulting to null isn't viable (cursor never blinks).

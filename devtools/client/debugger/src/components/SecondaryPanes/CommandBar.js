@@ -17,6 +17,7 @@ import {
   getIsCurrentThreadPaused,
   getIsThreadCurrentlyTracing,
   getSupportsJavascriptTracing,
+  getJavascriptTracingLogMethod,
 } from "../../selectors";
 import { formatKeyShortcut } from "../../utils/text";
 import actions from "../../actions";
@@ -86,9 +87,7 @@ class CommandBar extends Component {
   constructor() {
     super();
 
-    this.state = {
-      logMethod: LOG_METHODS.CONSOLE,
-    };
+    this.state = {};
   }
   static get propTypes() {
     return {
@@ -111,6 +110,8 @@ class CommandBar extends Component {
       toggleSourceMapsEnabled: PropTypes.func.isRequired,
       topFrameSelected: PropTypes.bool.isRequired,
       toggleTracing: PropTypes.func.isRequired,
+      logMethod: PropTypes.string.isRequired,
+      setJavascriptTracingLogMethod: PropTypes.func.isRequired,
     };
   }
 
@@ -204,10 +205,10 @@ class CommandBar extends Component {
         title={
           this.props.isTracingEnabled
             ? L10N.getStr("stopTraceButtonTooltip")
-            : L10N.getFormatStr("startTraceButtonTooltip", this.state.logMethod)
+            : L10N.getFormatStr("startTraceButtonTooltip", this.props.logMethod)
         }
         onClick={event => {
-          this.props.toggleTracing(this.state.logMethod);
+          this.props.toggleTracing(this.props.logMethod);
         }}
         onContextMenu={event => {
           event.preventDefault();
@@ -222,21 +223,17 @@ class CommandBar extends Component {
             {
               id: "debugger-trace-menu-item-console",
               label: L10N.getStr("traceInWebConsole"),
-              checked: this.state.logMethod == LOG_METHODS.CONSOLE,
+              checked: this.props.logMethod == LOG_METHODS.CONSOLE,
               click: () => {
-                this.setState({
-                  logMethod: LOG_METHODS.CONSOLE,
-                });
+                this.props.setJavascriptTracingLogMethod(LOG_METHODS.CONSOLE);
               },
             },
             {
               id: "debugger-trace-menu-item-stdout",
               label: L10N.getStr("traceInStdout"),
-              checked: this.state.logMethod == LOG_METHODS.STDOUT,
+              checked: this.props.logMethod == LOG_METHODS.STDOUT,
               click: () => {
-                this.setState({
-                  logMethod: LOG_METHODS.STDOUT,
-                });
+                this.props.setJavascriptTracingLogMethod(LOG_METHODS.STDOUT);
               },
             },
           ];
@@ -390,10 +387,12 @@ const mapStateToProps = state => ({
   isPaused: getIsCurrentThreadPaused(state),
   isTracingEnabled: getIsThreadCurrentlyTracing(state, getCurrentThread(state)),
   supportsJavascriptTracing: getSupportsJavascriptTracing(state),
+  logMethod: getJavascriptTracingLogMethod(state),
 });
 
 export default connect(mapStateToProps, {
   toggleTracing: actions.toggleTracing,
+  setJavascriptTracingLogMethod: actions.setJavascriptTracingLogMethod,
   resume: actions.resume,
   stepIn: actions.stepIn,
   stepOut: actions.stepOut,

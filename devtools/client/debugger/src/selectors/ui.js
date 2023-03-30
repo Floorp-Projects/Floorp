@@ -58,6 +58,10 @@ export function getSupportsJavascriptTracing(state) {
   return state.ui.supportsJavascriptTracing;
 }
 
+export function getJavascriptTracingLogMethod(state) {
+  return state.ui.javascriptTracingLogMethod;
+}
+
 export function getSearchOptions(state, searchKey) {
   return state.ui.mutableSearchOptions[searchKey];
 }
