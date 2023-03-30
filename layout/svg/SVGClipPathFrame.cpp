@@ -182,11 +182,13 @@ void SVGClipPathFrame::PaintFrameIntoMask(nsIFrame* aFrame,
   SVGUtils::MaskUsage maskUsage;
   SVGUtils::DetermineMaskUsage(aFrame, true, maskUsage);
   if (maskUsage.shouldApplyClipPath) {
-    clipPathThatClipsChild->ApplyClipPath(aTarget, aClippedFrame,
-                                          mMatrixForChildren);
+    clipPathThatClipsChild->ApplyClipPath(
+        aTarget, aClippedFrame,
+        SVGUtils::GetTransformMatrixInUserSpace(aFrame) * mMatrixForChildren);
   } else if (maskUsage.shouldGenerateClipMaskLayer) {
     RefPtr<SourceSurface> maskSurface = clipPathThatClipsChild->GetClipMask(
-        aTarget, aClippedFrame, mMatrixForChildren);
+        aTarget, aClippedFrame,
+        SVGUtils::GetTransformMatrixInUserSpace(aFrame) * mMatrixForChildren);
 
     // We want the mask to be untransformed so use the inverse of the current
     // transform as the maskTransform to compensate.
