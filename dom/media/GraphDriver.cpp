@@ -501,11 +501,9 @@ AudioCallbackDriver::AudioCallbackDriver(
       mOutputDeviceID(aOutputDeviceID),
       mInputDeviceID(aInputDeviceID),
       mIterationDurationMS(MEDIA_GRAPH_TARGET_PERIOD_MS),
-      mStarted(false),
       mInitShutdownThread(CUBEB_TASK_THREAD),
       mAudioThreadId(ProfilerThreadId{}),
       mAudioThreadIdInCb(std::thread::id()),
-      mAudioStreamState(AudioStreamState::None),
       mFallback("AudioCallbackDriver::mFallback"),
       mSandboxed(CubebUtils::SandboxEnabled()) {
   LOG(LogLevel::Debug, ("%p: AudioCallbackDriver %p ctor - input: device %p, "
@@ -757,13 +755,13 @@ void AudioCallbackDriver::Start() {
 bool AudioCallbackDriver::StartStream() {
   TRACE("AudioCallbackDriver::StartStream");
   MOZ_ASSERT(!IsStarted() && OnCubebOperationThread());
-  // Set mStarted before cubeb_stream_start, since starting the cubeb stream can
-  // result in a callback (that may read mStarted) before mStarted would
-  // otherwise be set to true.
-  mStarted = true;
+  // Set STARTING before cubeb_stream_start, since starting the cubeb stream
+  // can result in a callback (that may read mAudioStreamState) before
+  // mAudioStreamState would otherwise be set.
+  mAudioStreamState = AudioStreamState::Starting;
   if (cubeb_stream_start(mAudioStream) != CUBEB_OK) {
     NS_WARNING("Could not start cubeb stream for MTG.");
-    mStarted = false;
+    MOZ_ASSERT(mAudioStreamState == AudioStreamState::None);
     return false;
   }
 
@@ -855,7 +853,7 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
                                             "NativeAudioCallback");
   }
 
-  if (mAudioStreamState.compareExchange(AudioStreamState::Pending,
+  if (mAudioStreamState.compareExchange(AudioStreamState::Starting,
                                         AudioStreamState::Running)) {
     LOG(LogLevel::Verbose, ("%p: AudioCallbackDriver %p First audio callback "
                             "close the Fallback driver",
@@ -1052,7 +1050,8 @@ void AudioCallbackDriver::StateCallback(cubeb_state aState) {
     return;
   }
 
-  if (!IsStarted()) {
+  AudioStreamState streamState = mAudioStreamState;
+  if (streamState < AudioStreamState::Starting) {
     // mAudioStream has already entered STOPPED, DRAINED, or ERROR.
     // Don't reset a Pending state indicating that a task to destroy
     // mAudioStream and init a new cubeb_stream has already been triggered.
@@ -1060,8 +1059,7 @@ void AudioCallbackDriver::StateCallback(cubeb_state aState) {
   }
 
   // Reset for the not running states: stopped, drained, error.
-  AudioStreamState streamState =
-      mAudioStreamState.exchange(AudioStreamState::None);
+  streamState = mAudioStreamState.exchange(AudioStreamState::None);
 
   if (aState == CUBEB_STATE_ERROR) {
     // About to hand over control of the graph.  Do not start a new driver if
@@ -1069,7 +1067,6 @@ void AudioCallbackDriver::StateCallback(cubeb_state aState) {
     // or another driver has control of the graph.
     if (streamState == AudioStreamState::Running) {
       MOZ_ASSERT(!ThreadRunning());
-      mStarted = false;
       if (mFallbackDriverState == FallbackDriverState::None) {
         // Only switch to fallback if it's not already running. It could be
         // running with the callback driver having started but not seen a single
@@ -1085,9 +1082,8 @@ void AudioCallbackDriver::StateCallback(cubeb_state aState) {
         FallbackToSystemClockDriver();
       }
     }
-  } else if (aState == CUBEB_STATE_STOPPED) {
-    MOZ_ASSERT(!ThreadRunning());
-    mStarted = false;
+  } else {
+    MOZ_ASSERT(!(aState == CUBEB_STATE_STOPPED && ThreadRunning()));
   }
 }
 
@@ -1200,8 +1196,6 @@ void AudioCallbackDriver::EnsureNextIteration() {
     }
   }
 }
-
-bool AudioCallbackDriver::IsStarted() { return mStarted; }
 
 TimeDuration AudioCallbackDriver::AudioOutputLatency() {
   TRACE("AudioCallbackDriver::AudioOutputLatency");

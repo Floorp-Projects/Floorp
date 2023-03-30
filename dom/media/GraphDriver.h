@@ -647,9 +647,9 @@ class AudioCallbackDriver : public GraphDriver, public MixerCallbackReceiver {
     return mAudioStreamState == AudioStreamState::Running;
   }
 
-  /* Whether the underlying cubeb stream has been started. See comment for
-   * mStarted for details. */
-  bool IsStarted();
+  /* Whether the underlying cubeb stream has been started and has not stopped
+   * or errored. */
+  bool IsStarted() { return mAudioStreamState > AudioStreamState::Starting; };
 
   // Returns the output latency for the current audio output stream.
   TimeDuration AudioOutputLatency();
@@ -720,20 +720,6 @@ class AudioCallbackDriver : public GraphDriver, public MixerCallbackReceiver {
    * video frames. This is in milliseconds. Only even used (after
    * inizatialization) on the audio callback thread. */
   uint32_t mIterationDurationMS;
-  /* cubeb_stream_init calls the audio callback to prefill the buffers. The
-   * previous driver has to be kept alive until the audio stream has been
-   * started, because it is responsible to call cubeb_stream_start, so we delay
-   * the cleanup of the previous driver until it has started the audio stream.
-   * Otherwise, there is a race where we kill the previous driver thread
-   * between cubeb_stream_init and cubeb_stream_start,
-   * and callbacks after the prefill never get called.
-   * This is written on the previous driver's thread (if switching) or main
-   * thread (if this driver is the first one).
-   * This is read on previous driver's thread (during callbacks from
-   * cubeb_stream_init) and the audio thread (when switching away from this
-   * driver back to a SystemClockDriver).
-   * */
-  Atomic<bool> mStarted;
 
   struct AutoInCallback {
     explicit AutoInCallback(AudioCallbackDriver* aDriver);
@@ -756,16 +742,21 @@ class AudioCallbackDriver : public GraphDriver, public MixerCallbackReceiver {
   std::atomic<std::thread::id> mAudioThreadIdInCb;
   /* State of the audio stream, see inline comments. */
   enum class AudioStreamState {
-    /* There is no AudioStream and no pending AsyncCubebTask to INIT one. */
+    /* There is no cubeb_stream or mAudioStream is in CUBEB_STATE_ERROR or
+     * CUBEB_STATE_STOPPED and no pending AsyncCubebTask exists to INIT a new
+     * cubeb_stream. */
     None,
-    /* There is no AudioStream but an AsyncCubebTask to INIT one is pending. */
+    /* An AsyncCubebTask to INIT a new cubeb_stream is pending. */
     Pending,
-    /* There is a running AudioStream. */
+    /* cubeb_start_stream() is about to be or has been called on mAudioStream.
+     * Any previous cubeb_streams have been destroyed. */
+    Starting,
+    /* mAudioStream is running. */
     Running,
-    /* There is an AudioStream that is draining, and will soon stop. */
+    /* mAudioStream is draining, and will soon stop. */
     Stopping
   };
-  Atomic<AudioStreamState> mAudioStreamState;
+  Atomic<AudioStreamState> mAudioStreamState{AudioStreamState::None};
   /* State of the fallback driver, see inline comments. */
   enum class FallbackDriverState {
     /* There is no fallback driver. */
