@@ -34,5 +34,3 @@ if CONFIG["OS_TARGET"] in ("Linux", "Android"):
     DEFINES["COMMON_LINUX_GUID_CREATOR_H__"] = 1
 
 include("/toolkit/crashreporter/crashreporter.mozbuild")
-
-REQUIRES_UNIFIED_BUILD = True
