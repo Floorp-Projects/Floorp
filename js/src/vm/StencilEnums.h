@@ -252,6 +252,10 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
   // JSOp::NewTarget in the prologue to initialize it. This binding may be
   // used directly for "new.target", or indirectly (e.g. in super() calls).
   FunctionHasNewTargetBinding = 1 << 29,
+
+  // Whether this is a self-hosted function that uses the ArgumentsLength or
+  // GetArgument intrinsic.
+  UsesArgumentsIntrinsics = 1 << 30,
 };
 
 enum class MutableScriptFlagsEnum : uint32_t {

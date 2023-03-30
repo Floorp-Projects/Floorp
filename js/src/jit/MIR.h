@@ -70,6 +70,8 @@ bool CurrentThreadIsIonCompiling();
 
 namespace jit {
 
+class CallInfo;
+
 #ifdef JS_JITSPEW
 // Helper for debug printing.  Avoids creating a MIR.h <--> MIRGraph.h cycle.
 // Implementation of this needs to see inside `MBasicBlock`; that is possible
@@ -3192,6 +3194,8 @@ class MGetInlinedArgument
   INSTRUCTION_HEADER(GetInlinedArgument)
   static MGetInlinedArgument* New(TempAllocator& alloc, MDefinition* index,
                                   MCreateInlinedArgumentsObject* args);
+  static MGetInlinedArgument* New(TempAllocator& alloc, MDefinition* index,
+                                  const CallInfo& callInfo);
   NAMED_OPERANDS((0, index))
 
   MDefinition* getArg(uint32_t idx) const {

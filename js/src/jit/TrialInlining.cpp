@@ -493,12 +493,21 @@ bool TrialInliner::canInline(JSFunction* target, HandleScript caller,
   }
 
   uint32_t maxCalleeNumActuals = GetMaxCalleeNumActuals(loc);
-  if (script->needsArgsObj() &&
-      maxCalleeNumActuals > ArgumentsObject::MaxInlinedArgs) {
-    JitSpew(JitSpew_WarpTrialInlining,
-            "SKIP: needs arguments object with %u actual args (maximum %u)",
-            maxCalleeNumActuals, ArgumentsObject::MaxInlinedArgs);
-    return false;
+  if (maxCalleeNumActuals > ArgumentsObject::MaxInlinedArgs) {
+    if (script->needsArgsObj()) {
+      JitSpew(JitSpew_WarpTrialInlining,
+              "SKIP: needs arguments object with %u actual args (maximum %u)",
+              maxCalleeNumActuals, ArgumentsObject::MaxInlinedArgs);
+      return false;
+    }
+    // The GetArgument(n) intrinsic in self-hosted code uses MGetInlinedArgument
+    // too, so the same limit applies.
+    if (script->usesArgumentsIntrinsics()) {
+      JitSpew(JitSpew_WarpTrialInlining,
+              "SKIP: uses GetArgument(i) with %u actual args (maximum %u)",
+              maxCalleeNumActuals, ArgumentsObject::MaxInlinedArgs);
+      return false;
+    }
   }
 
   if (TooManyFormalArguments(target->nargs())) {

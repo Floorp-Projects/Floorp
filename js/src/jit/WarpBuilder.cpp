@@ -986,6 +986,30 @@ bool WarpBuilder::build_SetArg(BytecodeLocation loc) {
   return resumeAfter(ins, loc);
 }
 
+bool WarpBuilder::build_ArgumentsLength(BytecodeLocation) {
+  if (inlineCallInfo()) {
+    pushConstant(Int32Value(inlineCallInfo()->argc()));
+  } else {
+    auto* argsLength = MArgumentsLength::New(alloc());
+    current->add(argsLength);
+    current->push(argsLength);
+  }
+  return true;
+}
+
+bool WarpBuilder::build_GetActualArg(BytecodeLocation) {
+  MDefinition* index = current->pop();
+  MInstruction* arg;
+  if (inlineCallInfo()) {
+    arg = MGetInlinedArgument::New(alloc(), index, *inlineCallInfo());
+  } else {
+    arg = MGetFrameArgument::New(alloc(), index);
+  }
+  current->add(arg);
+  current->push(arg);
+  return true;
+}
+
 bool WarpBuilder::build_ToNumeric(BytecodeLocation loc) {
   return buildUnaryOp(loc);
 }

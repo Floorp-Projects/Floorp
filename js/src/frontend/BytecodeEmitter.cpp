@@ -7483,6 +7483,30 @@ bool BytecodeEmitter::emitSelfHostedGetBuiltinSymbol(CallNode* callNode) {
   return emit2(JSOp::Symbol, uint8_t(code));
 }
 
+bool BytecodeEmitter::emitSelfHostedArgumentsLength(CallNode* callNode) {
+  MOZ_ASSERT(!sc->asFunctionBox()->needsArgsObj());
+  sc->asFunctionBox()->setUsesArgumentsIntrinsics();
+
+  MOZ_ASSERT(callNode->right()->as<ListNode>().count() == 0);
+
+  return emit1(JSOp::ArgumentsLength);
+}
+
+bool BytecodeEmitter::emitSelfHostedGetArgument(CallNode* callNode) {
+  MOZ_ASSERT(!sc->asFunctionBox()->needsArgsObj());
+  sc->asFunctionBox()->setUsesArgumentsIntrinsics();
+
+  ListNode* argsList = &callNode->right()->as<ListNode>();
+  MOZ_ASSERT(argsList->count() == 1);
+
+  ParseNode* argNode = argsList->head();
+  if (!emitTree(argNode)) {
+    return false;
+  }
+
+  return emit1(JSOp::GetActualArg);
+}
+
 #ifdef DEBUG
 void BytecodeEmitter::assertSelfHostedExpectedTopLevel(ParseNode* node) {
   // The function argument is expected to be a simple binding/function name.
@@ -8043,6 +8067,12 @@ bool BytecodeEmitter::emitCallOrNew(CallNode* callNode, ValueUsage valueUsage) {
     }
     if (calleeName == TaggedParserAtomIndex::WellKnown::GetBuiltinSymbol()) {
       return emitSelfHostedGetBuiltinSymbol(callNode);
+    }
+    if (calleeName == TaggedParserAtomIndex::WellKnown::ArgumentsLength()) {
+      return emitSelfHostedArgumentsLength(callNode);
+    }
+    if (calleeName == TaggedParserAtomIndex::WellKnown::GetArgument()) {
+      return emitSelfHostedGetArgument(callNode);
     }
     if (calleeName ==
         TaggedParserAtomIndex::WellKnown::SetIsInlinableLargeFunction()) {

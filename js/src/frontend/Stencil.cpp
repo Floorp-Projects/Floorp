@@ -4003,6 +4003,9 @@ void js::DumpImmutableScriptFlags(js::JSONPrinter& json,
         case ImmutableScriptFlagsEnum::FunctionHasNewTargetBinding:
           json.value("FunctionHasNewTargetBinding");
           break;
+        case ImmutableScriptFlagsEnum::UsesArgumentsIntrinsics:
+          json.value("UsesArgumentsIntrinsics");
+          break;
         default:
           json.value("Unknown(%x)", i);
           break;

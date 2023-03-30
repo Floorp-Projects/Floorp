@@ -663,6 +663,13 @@ class FunctionBox : public SuspendableContext {
     }
   }
 
+  void setUsesArgumentsIntrinsics() {
+    immutableFlags_.setFlag(ImmutableFlags::UsesArgumentsIntrinsics, true);
+    if (isScriptExtraFieldCopiedToStencil) {
+      copyUpdatedImmutableFlags();
+    }
+  }
+
   uint16_t length() { return length_; }
   void setLength(uint16_t length) { length_ = length; }
 
