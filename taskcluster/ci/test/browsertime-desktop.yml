@@ -479,6 +479,33 @@ browsertime-tp6-live:
                     - wikipedia
                     # - yahoo-mail (Bug 1802922)
                     - youtube
+                chrome:
+                    - amazon
+                    - [bing-search, bing]
+                    - ebay
+                    - [facebook, fb]
+                    - fandom
+                    - [google-docs, gdocs]
+                    - [google-mail, gmail]
+                    - [google-search, gsearch]
+                    - [google-slides, gslides]
+                    - imdb
+                    # - imgur (see bugs 1825337 & 1817420)
+                    # - instagram (see bug 1736999)
+                    - linkedin
+                    - microsoft
+                    - netflix
+                    # - office (site loads blank page if not signed in)
+                    - outlook
+                    - paypal
+                    - pinterest
+                    - reddit
+                    - tumblr
+                    - twitch
+                    - twitter
+                    - wikipedia
+                    - yahoo-mail
+                    - youtube
                 default:
                     - amazon
                     - [bing-search, bing]
