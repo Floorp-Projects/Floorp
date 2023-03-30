@@ -15,9 +15,6 @@ PAGE_REDIRECT_HTTP_EQUIV = (
 )
 PAGE_REDIRECTED_HTML = "/webdriver/tests/bidi/network/support/redirected.html"
 
-# The following tests are marked as tentative until
-# https://github.com/w3c/webdriver-bidi/pull/204 is merged.
-
 
 @pytest.mark.asyncio
 async def test_subscribe_status(bidi_session, top_context, wait_for_event, url, fetch):

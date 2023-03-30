@@ -10,9 +10,6 @@ from .. import (
 PAGE_EMPTY_HTML = "/webdriver/tests/bidi/network/support/empty.html"
 PAGE_EMPTY_TEXT = "/webdriver/tests/bidi/network/support/empty.txt"
 
-# The following tests are marked as tentative until
-# https://github.com/w3c/webdriver-bidi/pull/204 is merged.
-
 
 @pytest.mark.asyncio
 async def test_same_request_id(
