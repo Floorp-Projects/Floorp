@@ -36,16 +36,13 @@ class InputVolumeController final {
   // Config for the constructor.
   struct Config {
     bool enabled = false;
-    // TODO(bugs.webrtc.org/1275566): Describe `startup_min_volume`.
-    int startup_min_volume = 0;
-    // Lowest analog microphone level that will be applied in response to
-    // clipping.
+    // Lowest input volume level that will be applied in response to clipping.
     int clipped_level_min = 70;
-    // Amount the microphone level is lowered with every clipping event.
-    // Limited to (0, 255].
+    // Amount input volume level is lowered with every clipping event. Limited
+    // to (0, 255].
     int clipped_level_step = 15;
     // Proportion of clipped samples required to declare a clipping event.
-    // Limited to (0.f, 1.f).
+    // Limited to (0.0f, 1.0f).
     float clipped_ratio_threshold = 0.1f;
     // Time in frames to wait after a clipping event before checking again.
     // Limited to values higher than 0.
@@ -65,6 +62,12 @@ class InputVolumeController final {
     int target_range_min_dbfs = -48;
     // Number of wait frames between the recommended input volume updates.
     int update_input_volume_wait_frames = 100;
+    // Speech probability threshold: speech probabilities below the threshold
+    // are considered silence. Limited to [0.0f, 1.0f].
+    float speech_probability_threshold = 0.7f;
+    // Minimum speech frame ratio for volume updates to be allowed. Limited to
+    // [0.0f, 1.0f].
+    float speech_ratio_threshold = 0.9f;
   };
 
   // Ctor. `num_capture_channels` specifies the number of channels for the audio
@@ -90,6 +93,7 @@ class InputVolumeController final {
   // prediction (if enabled). Must be called after `set_stream_analog_level()`.
   void AnalyzePreProcess(const AudioBuffer& audio_buffer);
 
+  // TODO(bugs.webrtc.org/7494): Rename, audio not passed to the method anymore.
   // Adjusts the recommended input volume upwards/downwards based on
   // `speech_level_dbfs`. Must be called after `AnalyzePreProcess()`. The value
   // of `speech_probability` is expected to be in the range [0.0f, 1.0f] and
@@ -185,7 +189,9 @@ class MonoInputVolumeController {
  public:
   MonoInputVolumeController(int clipped_level_min,
                             int min_mic_level,
-                            int update_input_volume_wait_frames);
+                            int update_input_volume_wait_frames,
+                            float speech_probability_threshold,
+                            float speech_ratio_threshold);
   ~MonoInputVolumeController();
   MonoInputVolumeController(const MonoInputVolumeController&) = delete;
   MonoInputVolumeController& operator=(const MonoInputVolumeController&) =
@@ -202,10 +208,13 @@ class MonoInputVolumeController {
   // `set_stream_analog_level()`.
   void HandleClipping(int clipped_level_step);
 
-  // Adjusts the recommended input volume upwards/downwards depending on whether
-  // `rms_error_dbfs` is positive or negative. Must be called after
-  // `HandleClipping()`.
-  void Process(absl::optional<int> rms_error_dbfs);
+  // TODO(bugs.webrtc.org/7494): Rename, audio not passed to the method anymore.
+  // Adjusts the recommended input volume upwards/downwards depending on
+  // whether `rms_error_dbfs` is positive or negative. Updates are only allowed
+  // for active speech segments and when `rms_error_dbfs` is not empty. Must be
+  // called after `HandleClipping()`.
+  void Process(absl::optional<int> rms_error_dbfs,
+               absl::optional<float> speech_probability);
 
   // Returns the recommended input volume. Must be called after `Process()`.
   int recommended_analog_level() const { return recommended_input_volume_; }
@@ -254,10 +263,18 @@ class MonoInputVolumeController {
 
   const int clipped_level_min_;
 
-  // Number of frames waited between the calls to `UpdateInputVolume()`.
+  // Counters for frames and speech frames since the last update in the
+  // recommended input volume.
   const int update_input_volume_wait_frames_;
   int frames_since_update_input_volume_ = 0;
+  int speech_frames_since_update_input_volume_ = 0;
   bool is_first_frame_ = true;
+
+  // Speech probability threshold for a frame to be considered speech (instead
+  // of silence). Limited to [0.0f, 1.0f].
+  const float speech_probability_threshold_;
+  // Minimum ratio of speech frames. Limited to [0.0f, 1.0f].
+  const float speech_ratio_threshold_;
 };
 
 }  // namespace webrtc

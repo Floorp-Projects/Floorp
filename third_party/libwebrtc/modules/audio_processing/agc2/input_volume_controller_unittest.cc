@@ -44,6 +44,8 @@ constexpr float kClippedRatioThreshold = 0.1f;
 constexpr int kClippedWaitFrames = 300;
 constexpr float kHighSpeechProbability = 0.7f;
 constexpr float kSpeechLevel = -25.0f;
+constexpr float kSpeechProbabilityThreshold = 0.5f;
+constexpr float kSpeechRatioThreshold = 0.8f;
 
 constexpr float kMinSample = std::numeric_limits<int16_t>::min();
 constexpr float kMaxSample = std::numeric_limits<int16_t>::max();
@@ -57,7 +59,6 @@ constexpr InputVolumeControllerConfig kDefaultInputVolumeControllerConfig{};
 constexpr ClippingPredictorConfig kDefaultClippingPredictorConfig{};
 
 std::unique_ptr<InputVolumeController> CreateInputVolumeController(
-    int startup_min_volume,
     int clipped_level_step,
     float clipped_ratio_threshold,
     int clipped_wait_frames,
@@ -65,7 +66,6 @@ std::unique_ptr<InputVolumeController> CreateInputVolumeController(
     int update_input_volume_wait_frames = 0) {
   InputVolumeControllerConfig config{
       .enabled = true,
-      .startup_min_volume = startup_min_volume,
       .clipped_level_min = kClippedMin,
       .clipped_level_step = clipped_level_step,
       .clipped_ratio_threshold = clipped_ratio_threshold,
@@ -74,6 +74,8 @@ std::unique_ptr<InputVolumeController> CreateInputVolumeController(
       .target_range_max_dbfs = -18,
       .target_range_min_dbfs = -30,
       .update_input_volume_wait_frames = update_input_volume_wait_frames,
+      .speech_probability_threshold = kSpeechProbabilityThreshold,
+      .speech_ratio_threshold = kSpeechRatioThreshold,
   };
 
   return std::make_unique<InputVolumeController>(/*num_capture_channels=*/1,
@@ -258,7 +260,6 @@ class SpeechSamplesReader {
 constexpr InputVolumeControllerConfig GetInputVolumeControllerTestConfig() {
   InputVolumeControllerConfig config{
       .enabled = true,
-      .startup_min_volume = kInitialInputVolume,
       .clipped_level_min = kClippedMin,
       .clipped_level_step = kClippedLevelStep,
       .clipped_ratio_threshold = kClippedRatioThreshold,
@@ -267,6 +268,8 @@ constexpr InputVolumeControllerConfig GetInputVolumeControllerTestConfig() {
       .target_range_max_dbfs = -18,
       .target_range_min_dbfs = -30,
       .update_input_volume_wait_frames = 0,
+      .speech_probability_threshold = 0.5f,
+      .speech_ratio_threshold = 1.0f,
   };
   return config;
 }
@@ -946,9 +949,8 @@ TEST_P(InputVolumeControllerParametrizedTest,
 }
 
 TEST(InputVolumeControllerTest, AgcMinMicLevelExperimentDefault) {
-  std::unique_ptr<InputVolumeController> manager =
-      CreateInputVolumeController(kInitialInputVolume, kClippedLevelStep,
-                                  kClippedRatioThreshold, kClippedWaitFrames);
+  std::unique_ptr<InputVolumeController> manager = CreateInputVolumeController(
+      kClippedLevelStep, kClippedRatioThreshold, kClippedWaitFrames);
   EXPECT_EQ(manager->channel_controllers_[0]->min_mic_level(), kMinMicLevel);
 }
 
@@ -957,8 +959,8 @@ TEST(InputVolumeControllerTest, AgcMinMicLevelExperimentDisabled) {
     test::ScopedFieldTrials field_trial(
         GetAgcMinMicLevelExperimentFieldTrial("Disabled" + field_trial_suffix));
     std::unique_ptr<InputVolumeController> manager =
-        CreateInputVolumeController(kInitialInputVolume, kClippedLevelStep,
-                                    kClippedRatioThreshold, kClippedWaitFrames);
+        CreateInputVolumeController(kClippedLevelStep, kClippedRatioThreshold,
+                                    kClippedWaitFrames);
 
     EXPECT_EQ(manager->channel_controllers_[0]->min_mic_level(), kMinMicLevel);
   }
@@ -969,9 +971,8 @@ TEST(InputVolumeControllerTest, AgcMinMicLevelExperimentDisabled) {
 TEST(InputVolumeControllerTest, AgcMinMicLevelExperimentOutOfRangeAbove) {
   test::ScopedFieldTrials field_trial(
       GetAgcMinMicLevelExperimentFieldTrial("Enabled-256"));
-  std::unique_ptr<InputVolumeController> manager =
-      CreateInputVolumeController(kInitialInputVolume, kClippedLevelStep,
-                                  kClippedRatioThreshold, kClippedWaitFrames);
+  std::unique_ptr<InputVolumeController> manager = CreateInputVolumeController(
+      kClippedLevelStep, kClippedRatioThreshold, kClippedWaitFrames);
   EXPECT_EQ(manager->channel_controllers_[0]->min_mic_level(), kMinMicLevel);
 }
 
@@ -980,9 +981,8 @@ TEST(InputVolumeControllerTest, AgcMinMicLevelExperimentOutOfRangeAbove) {
 TEST(InputVolumeControllerTest, AgcMinMicLevelExperimentOutOfRangeBelow) {
   test::ScopedFieldTrials field_trial(
       GetAgcMinMicLevelExperimentFieldTrial("Enabled--1"));
-  std::unique_ptr<InputVolumeController> manager =
-      CreateInputVolumeController(kInitialInputVolume, kClippedLevelStep,
-                                  kClippedRatioThreshold, kClippedWaitFrames);
+  std::unique_ptr<InputVolumeController> manager = CreateInputVolumeController(
+      kClippedLevelStep, kClippedRatioThreshold, kClippedWaitFrames);
   EXPECT_EQ(manager->channel_controllers_[0]->min_mic_level(), kMinMicLevel);
 }
 
@@ -997,8 +997,8 @@ TEST(InputVolumeControllerTest, AgcMinMicLevelExperimentEnabled50) {
         GetAgcMinMicLevelExperimentFieldTrialEnabled(kMinMicLevelOverride,
                                                      field_trial_suffix));
     std::unique_ptr<InputVolumeController> manager =
-        CreateInputVolumeController(kInitialInputVolume, kClippedLevelStep,
-                                    kClippedRatioThreshold, kClippedWaitFrames);
+        CreateInputVolumeController(kClippedLevelStep, kClippedRatioThreshold,
+                                    kClippedWaitFrames);
 
     EXPECT_EQ(manager->channel_controllers_[0]->min_mic_level(),
               kMinMicLevelOverride);
@@ -1016,8 +1016,8 @@ TEST(InputVolumeControllerTest,
   // relevant field trial.
   const auto factory = []() {
     std::unique_ptr<InputVolumeController> manager =
-        CreateInputVolumeController(kInitialInputVolume, kClippedLevelStep,
-                                    kClippedRatioThreshold, kClippedWaitFrames);
+        CreateInputVolumeController(kClippedLevelStep, kClippedRatioThreshold,
+                                    kClippedWaitFrames);
     manager->Initialize();
     manager->set_stream_analog_level(kInitialInputVolume);
     return manager;
@@ -1071,8 +1071,8 @@ TEST(InputVolumeControllerTest,
   // relevant field trial.
   const auto factory = []() {
     std::unique_ptr<InputVolumeController> manager =
-        CreateInputVolumeController(kInitialInputVolume, kClippedLevelStep,
-                                    kClippedRatioThreshold, kClippedWaitFrames);
+        CreateInputVolumeController(kClippedLevelStep, kClippedRatioThreshold,
+                                    kClippedWaitFrames);
     manager->Initialize();
     manager->set_stream_analog_level(kInitialInputVolume);
     return manager;
@@ -1127,7 +1127,6 @@ TEST(InputVolumeControllerTest,
     // with clipping.
     InputVolumeControllerConfig config = kDefaultInputVolumeControllerConfig;
     config.enabled = true;
-    config.startup_min_volume = kInitialInputVolume;
     config.clipped_level_step = 64;
     config.clipped_ratio_threshold = kClippedRatioThreshold;
     config.clipped_wait_frames = kClippedWaitFrames;
@@ -1193,7 +1192,6 @@ TEST(InputVolumeControllerTest,
     // with clipping.
     InputVolumeControllerConfig config = kDefaultInputVolumeControllerConfig;
     config.enabled = true;
-    config.startup_min_volume = kInitialInputVolume;
     config.clipped_level_step = 64;
     config.clipped_ratio_threshold = kClippedRatioThreshold;
     config.clipped_wait_frames = kClippedWaitFrames;
@@ -1252,16 +1250,14 @@ TEST_P(InputVolumeControllerParametrizedTest, ClippingParametersVerified) {
     GTEST_SKIP() << "Skipped. RMS error does not affect the test.";
   }
 
-  std::unique_ptr<InputVolumeController> manager =
-      CreateInputVolumeController(kInitialInputVolume, kClippedLevelStep,
-                                  kClippedRatioThreshold, kClippedWaitFrames);
+  std::unique_ptr<InputVolumeController> manager = CreateInputVolumeController(
+      kClippedLevelStep, kClippedRatioThreshold, kClippedWaitFrames);
   manager->Initialize();
   EXPECT_EQ(manager->clipped_level_step_, kClippedLevelStep);
   EXPECT_EQ(manager->clipped_ratio_threshold_, kClippedRatioThreshold);
   EXPECT_EQ(manager->clipped_wait_frames_, kClippedWaitFrames);
   std::unique_ptr<InputVolumeController> manager_custom =
-      CreateInputVolumeController(kInitialInputVolume,
-                                  /*clipped_level_step=*/10,
+      CreateInputVolumeController(/*clipped_level_step=*/10,
                                   /*clipped_ratio_threshold=*/0.2f,
                                   /*clipped_wait_frames=*/50);
   manager_custom->Initialize();
@@ -1277,8 +1273,8 @@ TEST_P(InputVolumeControllerParametrizedTest,
   }
 
   std::unique_ptr<InputVolumeController> manager = CreateInputVolumeController(
-      kInitialInputVolume, kClippedLevelStep, kClippedRatioThreshold,
-      kClippedWaitFrames, /*enable_clipping_predictor=*/false);
+      kClippedLevelStep, kClippedRatioThreshold, kClippedWaitFrames,
+      /*enable_clipping_predictor=*/false);
   manager->Initialize();
 
   EXPECT_FALSE(manager->clipping_predictor_enabled());
@@ -1302,8 +1298,8 @@ TEST_P(InputVolumeControllerParametrizedTest,
   }
 
   std::unique_ptr<InputVolumeController> manager = CreateInputVolumeController(
-      kInitialInputVolume, kClippedLevelStep, kClippedRatioThreshold,
-      kClippedWaitFrames, /*enable_clipping_predictor=*/true);
+      kClippedLevelStep, kClippedRatioThreshold, kClippedWaitFrames,
+      /*enable_clipping_predictor=*/true);
   manager->Initialize();
 
   EXPECT_TRUE(manager->clipping_predictor_enabled());
@@ -1469,13 +1465,13 @@ TEST_P(InputVolumeControllerParametrizedTest, EmptyRmsErrorHasNoEffect) {
 TEST(InputVolumeControllerTest, UpdateInputVolumeWaitFramesIsEffective) {
   constexpr int kInputVolume = kInitialInputVolume;
   std::unique_ptr<InputVolumeController> controller_wait_0 =
-      CreateInputVolumeController(kInitialInputVolume, kClippedLevelStep,
-                                  kClippedRatioThreshold, kClippedWaitFrames,
+      CreateInputVolumeController(kClippedLevelStep, kClippedRatioThreshold,
+                                  kClippedWaitFrames,
                                   /*enable_clipping_predictor=*/false,
                                   /*update_input_volume_wait_frames=*/0);
   std::unique_ptr<InputVolumeController> controller_wait_100 =
-      CreateInputVolumeController(kInitialInputVolume, kClippedLevelStep,
-                                  kClippedRatioThreshold, kClippedWaitFrames,
+      CreateInputVolumeController(kClippedLevelStep, kClippedRatioThreshold,
+                                  kClippedWaitFrames,
                                   /*enable_clipping_predictor=*/false,
                                   /*update_input_volume_wait_frames=*/100);
   controller_wait_0->Initialize();
@@ -1502,6 +1498,116 @@ TEST(InputVolumeControllerTest, UpdateInputVolumeWaitFramesIsEffective) {
   // Check that adaptation only occurs when enough frames have been processed.
   ASSERT_GT(controller_wait_0->recommended_analog_level(), kInputVolume);
   ASSERT_GT(controller_wait_100->recommended_analog_level(), kInputVolume);
+}
+
+TEST(InputVolumeControllerTest, SpeechRatioThresholdIsEffective) {
+  constexpr int kInputVolume = kInitialInputVolume;
+  // Create two input volume controllers with 10 frames between volume updates
+  // and the minimum speech ratio of 0.8 and speech probability threshold 0.5.
+  std::unique_ptr<InputVolumeController> controller_1 =
+      CreateInputVolumeController(kClippedLevelStep, kClippedRatioThreshold,
+                                  kClippedWaitFrames,
+                                  /*enable_clipping_predictor=*/false,
+                                  /*update_input_volume_wait_frames=*/10);
+  std::unique_ptr<InputVolumeController> controller_2 =
+      CreateInputVolumeController(kClippedLevelStep, kClippedRatioThreshold,
+                                  kClippedWaitFrames,
+                                  /*enable_clipping_predictor=*/false,
+                                  /*update_input_volume_wait_frames=*/10);
+  controller_1->Initialize();
+  controller_2->Initialize();
+  controller_1->set_stream_analog_level(kInputVolume);
+  controller_2->set_stream_analog_level(kInputVolume);
+
+  SpeechSamplesReader reader_1;
+  SpeechSamplesReader reader_2;
+
+  reader_1.Feed(/*num_frames=*/1, /*gain_db=*/0,
+                /*speech_probability=*/0.7f, /*speech_level=*/-42.0f,
+                *controller_1);
+  reader_2.Feed(/*num_frames=*/1, /*gain_db=*/0,
+                /*speech_probability=*/0.4f, /*speech_level=*/-42.0f,
+                *controller_2);
+
+  ASSERT_EQ(controller_1->recommended_analog_level(), kInputVolume);
+  ASSERT_EQ(controller_2->recommended_analog_level(), kInputVolume);
+
+  reader_1.Feed(/*num_frames=*/2, /*gain_db=*/0,
+                /*speech_probability=*/0.4f, /*speech_level=*/-42.0f,
+                *controller_1);
+  reader_2.Feed(/*num_frames=*/2, /*gain_db=*/0,
+                /*speech_probability=*/0.4f, /*speech_level=*/-42.0f,
+                *controller_2);
+
+  ASSERT_EQ(controller_1->recommended_analog_level(), kInputVolume);
+  ASSERT_EQ(controller_2->recommended_analog_level(), kInputVolume);
+
+  reader_1.Feed(/*num_frames=*/7, /*gain_db=*/0,
+                /*speech_probability=*/0.7f, /*speech_level=*/-42.0f,
+                *controller_1);
+  reader_2.Feed(/*num_frames=*/7, /*gain_db=*/0,
+                /*speech_probability=*/0.7f, /*speech_level=*/-42.0f,
+                *controller_2);
+
+  ASSERT_GT(controller_1->recommended_analog_level(), kInputVolume);
+  ASSERT_EQ(controller_2->recommended_analog_level(), kInputVolume);
+}
+
+TEST(InputVolumeControllerTest, SpeechProbabilityThresholdIsEffective) {
+  constexpr int kInputVolume = kInitialInputVolume;
+  // Create two input volume controllers with the exact same settings and
+  // 10 frames between volume updates.
+  std::unique_ptr<InputVolumeController> controller_1 =
+      CreateInputVolumeController(kClippedLevelStep, kClippedRatioThreshold,
+                                  kClippedWaitFrames,
+                                  /*enable_clipping_predictor=*/false,
+                                  /*update_input_volume_wait_frames=*/10);
+  std::unique_ptr<InputVolumeController> controller_2 =
+      CreateInputVolumeController(kClippedLevelStep, kClippedRatioThreshold,
+                                  kClippedWaitFrames,
+                                  /*enable_clipping_predictor=*/false,
+                                  /*update_input_volume_wait_frames=*/10);
+  controller_1->Initialize();
+  controller_2->Initialize();
+  controller_1->set_stream_analog_level(kInputVolume);
+  controller_2->set_stream_analog_level(kInputVolume);
+
+  SpeechSamplesReader reader_1;
+  SpeechSamplesReader reader_2;
+
+  // Process with two sets of inputs: Use `reader_1` to process inputs
+  // that make the volume to be adjusted after enough frames have been
+  // processsed and `reader_2` to process inputs that won't make the volume
+  // to be adjusted.
+  reader_1.Feed(/*num_frames=*/1, /*gain_db=*/0,
+                /*speech_probability=*/0.5f, /*speech_level=*/-42.0f,
+                *controller_1);
+  reader_2.Feed(/*num_frames=*/1, /*gain_db=*/0,
+                /*speech_probability=*/0.49f, /*speech_level=*/-42.0f,
+                *controller_2);
+
+  ASSERT_EQ(controller_1->recommended_analog_level(), kInputVolume);
+  ASSERT_EQ(controller_2->recommended_analog_level(), kInputVolume);
+
+  reader_1.Feed(/*num_frames=*/2, /*gain_db=*/0,
+                /*speech_probability=*/0.49f, /*speech_level=*/-42.0f,
+                *controller_1);
+  reader_2.Feed(/*num_frames=*/2, /*gain_db=*/0,
+                /*speech_probability=*/0.49f, /*speech_level=*/-42.0f,
+                *controller_2);
+
+  ASSERT_EQ(controller_1->recommended_analog_level(), kInputVolume);
+  ASSERT_EQ(controller_2->recommended_analog_level(), kInputVolume);
+
+  reader_1.Feed(/*num_frames=*/7, /*gain_db=*/0,
+                /*speech_probability=*/0.5f, /*speech_level=*/-42.0f,
+                *controller_1);
+  reader_2.Feed(/*num_frames=*/7, /*gain_db=*/0,
+                /*speech_probability=*/0.5f, /*speech_level=*/-42.0f,
+                *controller_2);
+
+  ASSERT_GT(controller_1->recommended_analog_level(), kInputVolume);
+  ASSERT_EQ(controller_2->recommended_analog_level(), kInputVolume);
 }
 
 }  // namespace webrtc
