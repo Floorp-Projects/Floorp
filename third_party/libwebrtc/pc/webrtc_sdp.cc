@@ -1940,7 +1940,7 @@ void BuildRtpmap(const MediaContentDescription* media_desc,
     if (GetMinValue(maxptimes, &min_maxptime)) {
       AddAttributeLine(kCodecParamMaxPTime, min_maxptime, message);
     }
-    RTC_DCHECK(min_maxptime > max_minptime);
+    RTC_DCHECK_GE(min_maxptime, max_minptime);
     // Populate the ptime attribute with the smallest ptime or the largest
     // minptime, whichever is the largest, for all codecs under the same m-line.
     int ptime = INT_MAX;
