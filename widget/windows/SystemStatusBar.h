@@ -7,7 +7,6 @@
 #define widget_windows_SystemStatusBar_h
 
 #include "nsISystemStatusBar.h"
-#include "mozilla/LinkedList.h"
 
 namespace mozilla::widget {
 class StatusBarEntry;

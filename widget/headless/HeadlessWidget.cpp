@@ -17,7 +17,6 @@
 #include "mozilla/WritingModes.h"
 #include "mozilla/widget/HeadlessWidgetTypes.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
-#include "mozilla/widget/Screen.h"
 #include "nsIScreen.h"
 #include "HeadlessKeyBindings.h"
 

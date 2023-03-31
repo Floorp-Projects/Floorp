@@ -7,7 +7,6 @@
 #include <objc/runtime.h>
 
 #include "mozilla/MacStringHelpers.h"
-#include "mozilla/dom/Document.h"
 #include "nsArrayUtils.h"
 #include "nsCocoaUtils.h"
 #include "nsDirectoryServiceDefs.h"

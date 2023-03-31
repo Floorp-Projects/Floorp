@@ -7,8 +7,6 @@
 
 #include <windows.h>
 #include <fcntl.h>
-#include <cstdio>
-#include <io.h>
 
 namespace mozilla {
 

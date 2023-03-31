@@ -8,7 +8,6 @@
 #ifndef InkCollector_h__
 #define InkCollector_h__
 
-#include <objbase.h>
 #include <msinkaut.h>
 #include "mozilla/StaticPtr.h"
 
