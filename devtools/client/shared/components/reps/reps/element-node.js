@@ -34,7 +34,9 @@ define(function(require, exports, module) {
 
   ElementNode.propTypes = {
     object: PropTypes.object.isRequired,
-    inspectIconTitle: PropTypes.string,
+    // The class should be in reps.css
+    inspectIconTitle: PropTypes.oneOf(["open-inspector", "highlight-node"]),
+    inspectIconClassName: PropTypes.string,
     mode: PropTypes.oneOf(Object.values(MODE)),
     onDOMNodeClick: PropTypes.func,
     onDOMNodeMouseOver: PropTypes.func,
@@ -272,6 +274,7 @@ define(function(require, exports, module) {
       isInTree,
       onInspectIconClick,
       inspectIconTitle,
+      inspectIconClassName,
       onDOMNodeClick,
     } = opts;
 
@@ -280,7 +283,7 @@ define(function(require, exports, module) {
     }
 
     return button({
-      className: "open-inspector",
+      className: inspectIconClassName || "open-inspector",
       // TODO: Localize this with "openNodeInInspector" when Bug 1317038 lands
       title: inspectIconTitle || "Click to select the node in the inspector",
       onClick: e => {
