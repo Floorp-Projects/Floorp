@@ -39,10 +39,8 @@ constexpr int kMaxResidualGainChange = 15;
 
 // Target speech level (dBFs) and speech probability threshold used to compute
 // the RMS error in `GetSpeechLevelErrorDb()`.
-// TODO(webrtc:7494): Move these to a config and pass in the ctor with
-// kUpdateInputVolumeWaitFrames = 100.
+// TODO(webrtc:7494): Move this to a config and pass in the ctor.
 constexpr float kSpeechProbabilitySilenceThreshold = 0.5f;
-constexpr int kUpdateInputVolumeWaitFrames = 0;
 
 using Agc1ClippingPredictorConfig = AudioProcessing::Config::GainController1::
     AnalogGainController::ClippingPredictor;
@@ -168,11 +166,14 @@ int GetSpeechLevelErrorDb(float speech_level_dbfs,
 
 }  // namespace
 
-MonoInputVolumeController::MonoInputVolumeController(int clipped_level_min,
-                                                     int min_mic_level)
+MonoInputVolumeController::MonoInputVolumeController(
+    int clipped_level_min,
+    int min_mic_level,
+    int update_input_volume_wait_frames)
     : min_mic_level_(min_mic_level),
       max_level_(kMaxMicLevel),
-      clipped_level_min_(clipped_level_min) {}
+      clipped_level_min_(clipped_level_min),
+      update_input_volume_wait_frames_(update_input_volume_wait_frames) {}
 
 MonoInputVolumeController::~MonoInputVolumeController() = default;
 
@@ -180,7 +181,7 @@ void MonoInputVolumeController::Initialize() {
   max_level_ = kMaxMicLevel;
   capture_output_used_ = true;
   check_volume_on_next_process_ = true;
-  frames_since_update_gain_ = 0;
+  frames_since_update_input_volume_ = 0;
   is_first_frame_ = true;
 }
 
@@ -192,15 +193,12 @@ void MonoInputVolumeController::Process(absl::optional<int> rms_error_dbfs) {
     CheckVolumeAndReset();
   }
 
-  if (rms_error_dbfs.has_value() && !is_first_frame_ &&
-      frames_since_update_gain_ >= kUpdateInputVolumeWaitFrames) {
+  if (++frames_since_update_input_volume_ >= update_input_volume_wait_frames_ &&
+      rms_error_dbfs.has_value() && !is_first_frame_) {
     UpdateInputVolume(*rms_error_dbfs);
   }
 
   is_first_frame_ = false;
-  if (frames_since_update_gain_ < kUpdateInputVolumeWaitFrames) {
-    ++frames_since_update_gain_;
-  }
 }
 
 void MonoInputVolumeController::HandleClipping(int clipped_level_step) {
@@ -217,7 +215,7 @@ void MonoInputVolumeController::HandleClipping(int clipped_level_step) {
     // a consequence, if the user has brought the level above the limit, we
     // will still not react until the postproc updates the level.
     SetLevel(std::max(clipped_level_min_, level_ - clipped_level_step));
-    frames_since_update_gain_ = 0;
+    frames_since_update_input_volume_ = 0;
     is_first_frame_ = false;
   }
 }
@@ -251,7 +249,7 @@ void MonoInputVolumeController::SetLevel(int new_level) {
     }
     // Take no action in this case, since we can't be sure when the volume
     // was manually adjusted.
-    frames_since_update_gain_ = 0;
+    frames_since_update_input_volume_ = 0;
     is_first_frame_ = false;
     return;
   }
@@ -312,7 +310,7 @@ int MonoInputVolumeController::CheckVolumeAndReset() {
 
   level_ = level;
   startup_ = false;
-  frames_since_update_gain_ = 0;
+  frames_since_update_input_volume_ = 0;
   is_first_frame_ = true;
 
   return 0;
@@ -321,7 +319,7 @@ int MonoInputVolumeController::CheckVolumeAndReset() {
 void MonoInputVolumeController::UpdateInputVolume(int rms_error_dbfs) {
   // Always reset the counter regardless of whether the gain is changed
   // or not.
-  frames_since_update_gain_ = 0;
+  frames_since_update_input_volume_ = 0;
 
   const int residual_gain = rtc::SafeClamp(
       rms_error_dbfs, -kMaxResidualGainChange, kMaxResidualGainChange);
@@ -368,7 +366,8 @@ InputVolumeController::InputVolumeController(int num_capture_channels,
 
   for (auto& controller : channel_controllers_) {
     controller = std::make_unique<MonoInputVolumeController>(
-        config.clipped_level_min, min_mic_level);
+        config.clipped_level_min, min_mic_level,
+        config.update_input_volume_wait_frames);
   }
 
   RTC_DCHECK(!channel_controllers_.empty());
