@@ -71,9 +71,6 @@ class PeerConnectionE2EQualityTest
   void AddQualityMetricsReporter(std::unique_ptr<QualityMetricsReporter>
                                      quality_metrics_reporter) override;
 
-  PeerHandle* AddPeer(
-      const PeerNetworkDependencies& network_dependencies,
-      rtc::FunctionView<void(PeerConfigurer*)> configurer) override;
   PeerHandle* AddPeer(std::unique_ptr<PeerConfigurer> configurer) override;
   void Run(RunParams run_params) override;
 

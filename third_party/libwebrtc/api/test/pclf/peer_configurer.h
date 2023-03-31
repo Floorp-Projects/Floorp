@@ -47,16 +47,6 @@ class PeerConfigurer {
 
   explicit PeerConfigurer(const PeerNetworkDependencies& network_dependencies);
 
-  PeerConfigurer(rtc::Thread* network_thread,
-                 rtc::NetworkManager* network_manager,
-                 rtc::PacketSocketFactory* packet_socket_factory)
-      : components_(
-            std::make_unique<InjectableComponents>(network_thread,
-                                                   network_manager,
-                                                   packet_socket_factory)),
-        params_(std::make_unique<Params>()),
-        configurable_params_(std::make_unique<ConfigurableParams>()) {}
-
   // Sets peer name that will be used to report metrics related to this peer.
   // If not set, some default name will be assigned. All names have to be
   // unique.
