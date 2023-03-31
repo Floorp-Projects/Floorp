@@ -994,6 +994,11 @@ ToastNotificationHandler::OnDismiss(
 HRESULT
 ToastNotificationHandler::OnFail(const ComPtr<IToastNotification>& notification,
                                  const ComPtr<IToastFailedEventArgs>& aArgs) {
+  HRESULT err;
+  aArgs->get_ErrorCode(&err);
+  MOZ_LOG(sWASLog, LogLevel::Error,
+          ("Error creating notification, error: %ld", err));
+
   SendFinished();
   mBackend->RemoveHandler(mName, this);
   return S_OK;
