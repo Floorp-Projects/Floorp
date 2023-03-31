@@ -591,7 +591,6 @@ if (!build_with_mozilla) {
     "../rtc_base:stringutils",
     "../rtc_base:threading",
     "../test:fileutils",
-    "../test/pc/e2e:video_dumping",
     "audio:audio_mixer_api",
     "rtc_event_log",
     "task_queue",
