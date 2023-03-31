@@ -1092,8 +1092,78 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   EXPECT_THAT(stats.decoders, IsEmpty());
 }
 
-// TODO(titovartem): add test that just pre decoded frame can't be received as
-// dropped one because decoder always returns either decoded frame or error.
+TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
+     PreDecodedDroppedKeyFrameAccountedInStats) {
+  DefaultVideoQualityAnalyzerCpuMeasurer cpu_measurer;
+  DefaultVideoQualityAnalyzerFramesComparator comparator(
+      Clock::GetRealTimeClock(), cpu_measurer,
+      DefaultVideoQualityAnalyzerOptions());
+
+  Timestamp captured_time = Clock::GetRealTimeClock()->CurrentTime();
+  uint16_t frame_id = 1;
+  size_t stream = 0;
+  size_t sender = 0;
+  size_t receiver = 1;
+  InternalStatsKey stats_key(stream, sender, receiver);
+
+  // Frame captured
+  FrameStats frame_stats(/*frame_id=*/1, captured_time);
+  // Frame pre encoded
+  frame_stats.pre_encode_time = captured_time + TimeDelta::Millis(10);
+  // Frame encoded
+  frame_stats.encoded_time = captured_time + TimeDelta::Millis(20);
+  frame_stats.used_encoder =
+      Vp8CodecForOneFrame(frame_id, frame_stats.encoded_time);
+  frame_stats.encoded_frame_type = VideoFrameType::kVideoFrameKey;
+  frame_stats.encoded_image_size = DataSize::Bytes(1000);
+  frame_stats.target_encode_bitrate = 2000;
+  // Frame pre decoded
+  frame_stats.pre_decoded_frame_type = VideoFrameType::kVideoFrameKey;
+  frame_stats.pre_decoded_image_size = DataSize::Bytes(500);
+  frame_stats.received_time = captured_time + TimeDelta::Millis(30);
+  frame_stats.decode_start_time = captured_time + TimeDelta::Millis(40);
+
+  comparator.Start(/*max_threads_count=*/1);
+  comparator.EnsureStatsForStream(stream, sender, /*peers_count=*/2,
+                                  captured_time, captured_time);
+  comparator.AddComparison(stats_key,
+                           /*captured=*/absl::nullopt,
+                           /*rendered=*/absl::nullopt,
+                           FrameComparisonType::kDroppedFrame, frame_stats);
+  comparator.Stop(/*last_rendered_frame_times=*/{});
+
+  EXPECT_EQ(comparator.stream_stats().size(), 1lu);
+  StreamStats stats = comparator.stream_stats().at(stats_key);
+  EXPECT_EQ(stats.stream_started_time, captured_time);
+  expectEmpty(stats.psnr);
+  expectEmpty(stats.ssim);
+  expectEmpty(stats.transport_time_ms);
+  expectEmpty(stats.total_delay_incl_transport_ms);
+  expectEmpty(stats.time_between_rendered_frames_ms);
+  expectEmpty(stats.encode_frame_rate);
+  EXPECT_DOUBLE_EQ(GetFirstOrDie(stats.encode_time_ms), 10.0);
+  expectEmpty(stats.decode_time_ms);
+  expectEmpty(stats.receive_to_render_time_ms);
+  expectEmpty(stats.skipped_between_rendered);
+  expectEmpty(stats.freeze_time_ms);
+  expectEmpty(stats.time_between_freezes_ms);
+  expectEmpty(stats.resolution_of_decoded_frame);
+  EXPECT_DOUBLE_EQ(GetFirstOrDie(stats.target_encode_bitrate), 2000.0);
+  expectEmpty(stats.recv_key_frame_size_bytes);
+  expectEmpty(stats.recv_delta_frame_size_bytes);
+  EXPECT_EQ(stats.total_encoded_images_payload, 1000);
+  EXPECT_EQ(stats.num_send_key_frames, 1);
+  EXPECT_EQ(stats.num_recv_key_frames, 0);
+  EXPECT_THAT(stats.dropped_by_phase, Eq(std::map<FrameDropPhase, int64_t>{
+                                          {FrameDropPhase::kBeforeEncoder, 0},
+                                          {FrameDropPhase::kByEncoder, 0},
+                                          {FrameDropPhase::kTransport, 0},
+                                          {FrameDropPhase::kByDecoder, 1},
+                                          {FrameDropPhase::kAfterDecoder, 0}}));
+  EXPECT_EQ(stats.encoders,
+            std::vector<StreamCodecInfo>{*frame_stats.used_encoder});
+  EXPECT_THAT(stats.decoders, IsEmpty());
+}
 
 TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
      DecodedDroppedKeyFrameAccountedInStats) {
