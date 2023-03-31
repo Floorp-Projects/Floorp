@@ -89,7 +89,8 @@ RtpTransportControllerSend::RtpTransportControllerSend(
     NetworkControllerFactoryInterface* controller_factory,
     const BitrateConstraints& bitrate_config,
     TaskQueueFactory* task_queue_factory,
-    const FieldTrialsView& trials)
+    const FieldTrialsView& trials,
+    absl::optional<TimeDelta> pacer_burst_interval)
     : clock_(clock),
       event_log_(event_log),
       task_queue_factory_(task_queue_factory),
@@ -101,7 +102,8 @@ RtpTransportControllerSend::RtpTransportControllerSend(
              trials,
              task_queue_factory,
              pacer_settings_.holdback_window.Get(),
-             pacer_settings_.holdback_packets.Get()),
+             pacer_settings_.holdback_packets.Get(),
+             pacer_burst_interval),
       observer_(nullptr),
       controller_factory_override_(controller_factory),
       controller_factory_fallback_(

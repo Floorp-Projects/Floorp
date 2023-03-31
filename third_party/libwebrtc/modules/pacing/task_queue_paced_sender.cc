@@ -57,7 +57,8 @@ TaskQueuePacedSender::TaskQueuePacedSender(
     const FieldTrialsView& field_trials,
     TaskQueueFactory* task_queue_factory,
     TimeDelta max_hold_back_window,
-    int max_hold_back_window_in_packets)
+    int max_hold_back_window_in_packets,
+    absl::optional<TimeDelta> burst_interval)
     : clock_(clock),
       bursty_pacer_flags_(field_trials),
       slacked_pacer_flags_(field_trials),
@@ -85,6 +86,12 @@ TaskQueuePacedSender::TaskQueuePacedSender(
       burst = slacked_burst;
     }
   }
+  // Burst can also be controlled via the `burst_interval` argument.
+  if (burst_interval.has_value() &&
+      (!burst.has_value() || burst.value() < burst_interval.value())) {
+    burst = burst_interval;
+  }
+
   if (burst.has_value()) {
     pacing_controller_.SetSendBurstInterval(burst.value());
   }

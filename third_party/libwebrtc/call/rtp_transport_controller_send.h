@@ -57,7 +57,8 @@ class RtpTransportControllerSend final
       NetworkControllerFactoryInterface* controller_factory,
       const BitrateConstraints& bitrate_config,
       TaskQueueFactory* task_queue_factory,
-      const FieldTrialsView& trials);
+      const FieldTrialsView& trials,
+      absl::optional<TimeDelta> pacer_burst_interval);
   ~RtpTransportControllerSend() override;
 
   RtpTransportControllerSend(const RtpTransportControllerSend&) = delete;

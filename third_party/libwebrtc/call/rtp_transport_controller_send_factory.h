@@ -28,7 +28,7 @@ class RtpTransportControllerSendFactory
     return std::make_unique<RtpTransportControllerSend>(
         clock, config.event_log, config.network_state_predictor_factory,
         config.network_controller_factory, config.bitrate_config,
-        config.task_queue_factory, *config.trials);
+        config.task_queue_factory, *config.trials, config.pacer_burst_interval);
   }
 
   virtual ~RtpTransportControllerSendFactory() {}

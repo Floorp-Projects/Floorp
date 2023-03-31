@@ -695,6 +695,9 @@ class RTC_EXPORT PeerConnectionInterface : public rtc::RefCountInterface {
 
     PortAllocatorConfig port_allocator_config;
 
+    // The burst interval of the pacer, see TaskQueuePacedSender constructor.
+    absl::optional<TimeDelta> pacer_burst_interval;
+
     //
     // Don't forget to update operator== if adding something.
     //

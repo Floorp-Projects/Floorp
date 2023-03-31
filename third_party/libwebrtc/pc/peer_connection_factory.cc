@@ -242,9 +242,10 @@ PeerConnectionFactory::CreatePeerConnectionOrError(
 
   const FieldTrialsView* trials =
       dependencies.trials ? dependencies.trials.get() : &field_trials();
-  std::unique_ptr<Call> call =
-      worker_thread()->BlockingCall([this, &event_log, trials] {
-        return CreateCall_w(event_log.get(), *trials);
+  std::unique_ptr<Call> call = worker_thread()->BlockingCall(
+      [this, &event_log, trials,
+       pacer_burst_interval = configuration.pacer_burst_interval] {
+        return CreateCall_w(event_log.get(), *trials, pacer_burst_interval);
       });
 
   auto result = PeerConnection::Create(context_, options_, std::move(event_log),
@@ -303,7 +304,8 @@ std::unique_ptr<RtcEventLog> PeerConnectionFactory::CreateRtcEventLog_w() {
 
 std::unique_ptr<Call> PeerConnectionFactory::CreateCall_w(
     RtcEventLog* event_log,
-    const FieldTrialsView& field_trials) {
+    const FieldTrialsView& field_trials,
+    absl::optional<TimeDelta> pacer_burst_interval) {
   RTC_DCHECK_RUN_ON(worker_thread());
 
   webrtc::Call::Config call_config(event_log, network_thread());
@@ -346,6 +348,7 @@ std::unique_ptr<Call> PeerConnectionFactory::CreateCall_w(
   call_config.rtp_transport_controller_send_factory =
       transport_controller_send_factory_.get();
   call_config.metronome = metronome_.get();
+  call_config.pacer_burst_interval = pacer_burst_interval;
   return std::unique_ptr<Call>(
       context_->call_factory()->CreateCall(call_config));
 }
