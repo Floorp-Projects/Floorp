@@ -37,11 +37,6 @@ constexpr int kMinMicLevel = 12;
 // Prevent very large microphone level changes.
 constexpr int kMaxResidualGainChange = 15;
 
-// Target speech level (dBFs) and speech probability threshold used to compute
-// the RMS error in `GetSpeechLevelErrorDb()`.
-// TODO(webrtc:7494): Move this to a config and pass in the ctor.
-constexpr float kSpeechProbabilitySilenceThreshold = 0.5f;
-
 using Agc1ClippingPredictorConfig = AudioProcessing::Config::GainController1::
     AnalogGainController::ClippingPredictor;
 
@@ -128,25 +123,16 @@ void LogClippingMetrics(int clipping_rate) {
 }
 
 // Computes the speech level error in dB. The value of `speech_level_dbfs` is
-// required to be in the range [-90.0f, 30.0f] and `speech_probability` in the
-// range [0.0f, 1.0f]. Returns a positive value when the speech level is below
-// the target range and a negative value when the speech level is above the
-// target range.
+// required to be in the range [-90.0f, 30.0f]. Returns a positive value when
+// the speech level is below the target range and a negative value when the
+// speech level is above the target range.
 int GetSpeechLevelErrorDb(float speech_level_dbfs,
-                          float speech_probability,
                           int target_range_min_dbfs,
                           int target_range_max_dbfs) {
   constexpr float kMinSpeechLevelDbfs = -90.0f;
   constexpr float kMaxSpeechLevelDbfs = 30.0f;
   RTC_DCHECK_GE(speech_level_dbfs, kMinSpeechLevelDbfs);
   RTC_DCHECK_LE(speech_level_dbfs, kMaxSpeechLevelDbfs);
-  RTC_DCHECK_GE(speech_probability, 0.0f);
-  RTC_DCHECK_LE(speech_probability, 1.0f);
-
-  // TODO(webrtc:7494): Replace with the use of `SpeechProbabilityBuffer`.
-  if (speech_probability < kSpeechProbabilitySilenceThreshold) {
-    return 0;
-  }
 
   // Ensure the speech level is in the range [-90.0f, 30.0f].
   speech_level_dbfs = rtc::SafeClamp<float>(
@@ -169,11 +155,26 @@ int GetSpeechLevelErrorDb(float speech_level_dbfs,
 MonoInputVolumeController::MonoInputVolumeController(
     int clipped_level_min,
     int min_mic_level,
-    int update_input_volume_wait_frames)
+    int update_input_volume_wait_frames,
+    float speech_probability_threshold,
+    float speech_ratio_threshold)
     : min_mic_level_(min_mic_level),
       max_level_(kMaxMicLevel),
       clipped_level_min_(clipped_level_min),
-      update_input_volume_wait_frames_(update_input_volume_wait_frames) {}
+      update_input_volume_wait_frames_(
+          std::max(update_input_volume_wait_frames, 1)),
+      speech_probability_threshold_(speech_probability_threshold),
+      speech_ratio_threshold_(speech_ratio_threshold) {
+  RTC_DCHECK_GE(clipped_level_min_, 0);
+  RTC_DCHECK_LE(clipped_level_min_, 255);
+  RTC_DCHECK_GE(min_mic_level_, 0);
+  RTC_DCHECK_LE(min_mic_level_, 255);
+  RTC_DCHECK_GE(update_input_volume_wait_frames_, 0);
+  RTC_DCHECK_GE(speech_probability_threshold_, 0.0f);
+  RTC_DCHECK_LE(speech_probability_threshold_, 1.0f);
+  RTC_DCHECK_GE(speech_ratio_threshold_, 0.0f);
+  RTC_DCHECK_LE(speech_ratio_threshold_, 1.0f);
+}
 
 MonoInputVolumeController::~MonoInputVolumeController() = default;
 
@@ -182,10 +183,18 @@ void MonoInputVolumeController::Initialize() {
   capture_output_used_ = true;
   check_volume_on_next_process_ = true;
   frames_since_update_input_volume_ = 0;
+  speech_frames_since_update_input_volume_ = 0;
   is_first_frame_ = true;
 }
 
-void MonoInputVolumeController::Process(absl::optional<int> rms_error_dbfs) {
+// A speech segment is considered active if at least
+// `update_input_volume_wait_frames_` new frames have been processed since the
+// previous update and the ratio of non-silence frames (i.e., frames with a
+// non-empty `speech_probability` value above `speech_probability_threshold_`)
+// is at least `speech_ratio_threshold_`.
+void MonoInputVolumeController::Process(
+    absl::optional<int> rms_error_dbfs,
+    absl::optional<float> speech_probability) {
   if (check_volume_on_next_process_) {
     check_volume_on_next_process_ = false;
     // We have to wait until the first process call to check the volume,
@@ -193,9 +202,29 @@ void MonoInputVolumeController::Process(absl::optional<int> rms_error_dbfs) {
     CheckVolumeAndReset();
   }
 
-  if (++frames_since_update_input_volume_ >= update_input_volume_wait_frames_ &&
-      rms_error_dbfs.has_value() && !is_first_frame_) {
-    UpdateInputVolume(*rms_error_dbfs);
+  // Count frames with a high speech probability as speech.
+  if (speech_probability.has_value() &&
+      *speech_probability >= speech_probability_threshold_) {
+    ++speech_frames_since_update_input_volume_;
+  }
+
+  // Reset the counters and maybe update the input volume.
+  if (++frames_since_update_input_volume_ >= update_input_volume_wait_frames_) {
+    const float speech_ratio =
+        static_cast<float>(speech_frames_since_update_input_volume_) /
+        static_cast<float>(update_input_volume_wait_frames_);
+
+    // Always reset the counters regardless of whether the volume changes or
+    // not.
+    frames_since_update_input_volume_ = 0;
+    speech_frames_since_update_input_volume_ = 0;
+
+    // Update the input volume if allowed.
+    if (!is_first_frame_ && speech_ratio >= speech_ratio_threshold_) {
+      if (rms_error_dbfs.has_value()) {
+        UpdateInputVolume(*rms_error_dbfs);
+      }
+    }
   }
 
   is_first_frame_ = false;
@@ -216,6 +245,7 @@ void MonoInputVolumeController::HandleClipping(int clipped_level_step) {
     // will still not react until the postproc updates the level.
     SetLevel(std::max(clipped_level_min_, level_ - clipped_level_step));
     frames_since_update_input_volume_ = 0;
+    speech_frames_since_update_input_volume_ = 0;
     is_first_frame_ = false;
   }
 }
@@ -250,6 +280,7 @@ void MonoInputVolumeController::SetLevel(int new_level) {
     // Take no action in this case, since we can't be sure when the volume
     // was manually adjusted.
     frames_since_update_input_volume_ = 0;
+    speech_frames_since_update_input_volume_ = 0;
     is_first_frame_ = false;
     return;
   }
@@ -311,16 +342,13 @@ int MonoInputVolumeController::CheckVolumeAndReset() {
   level_ = level;
   startup_ = false;
   frames_since_update_input_volume_ = 0;
+  speech_frames_since_update_input_volume_ = 0;
   is_first_frame_ = true;
 
   return 0;
 }
 
 void MonoInputVolumeController::UpdateInputVolume(int rms_error_dbfs) {
-  // Always reset the counter regardless of whether the gain is changed
-  // or not.
-  frames_since_update_input_volume_ = 0;
-
   const int residual_gain = rtc::SafeClamp(
       rms_error_dbfs, -kMaxResidualGainChange, kMaxResidualGainChange);
 
@@ -367,7 +395,8 @@ InputVolumeController::InputVolumeController(int num_capture_channels,
   for (auto& controller : channel_controllers_) {
     controller = std::make_unique<MonoInputVolumeController>(
         config.clipped_level_min, min_mic_level,
-        config.update_input_volume_wait_frames);
+        config.update_input_volume_wait_frames,
+        config.speech_probability_threshold, config.speech_ratio_threshold);
   }
 
   RTC_DCHECK(!channel_controllers_.empty());
@@ -481,13 +510,13 @@ void InputVolumeController::Process(absl::optional<float> speech_probability,
 
   absl::optional<int> rms_error_dbfs;
   if (speech_probability.has_value() && speech_level_dbfs.has_value()) {
-    rms_error_dbfs =
-        GetSpeechLevelErrorDb(*speech_level_dbfs, *speech_probability,
-                              target_range_min_dbfs_, target_range_max_dbfs_);
+    // Compute the error for all frames (both speech and non-speech frames).
+    rms_error_dbfs = GetSpeechLevelErrorDb(
+        *speech_level_dbfs, target_range_min_dbfs_, target_range_max_dbfs_);
   }
 
   for (auto& controller : channel_controllers_) {
-    controller->Process(rms_error_dbfs);
+    controller->Process(rms_error_dbfs, speech_probability);
   }
 
   AggregateChannelLevels();
