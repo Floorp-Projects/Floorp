@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/functional/any_invocable.h"
 #include "api/crypto/frame_encryptor_interface.h"
 #include "api/dtls_transport_interface.h"
 #include "api/dtmf_sender_interface.h"
@@ -32,6 +33,8 @@
 #include "rtc_base/system/rtc_export.h"
 
 namespace webrtc {
+
+using SetParametersCallback = absl::AnyInvocable<void(RTCError) &&>;
 
 class RTC_EXPORT RtpSenderInterface : public rtc::RefCountInterface {
  public:
@@ -79,6 +82,8 @@ class RTC_EXPORT RtpSenderInterface : public rtc::RefCountInterface {
   // rtpparameters.h
   // The encodings are in increasing quality order for simulcast.
   virtual RTCError SetParameters(const RtpParameters& parameters) = 0;
+  virtual void SetParametersAsync(const RtpParameters& parameters,
+                                  SetParametersCallback callback);
 
   // Returns null for a video sender.
   virtual rtc::scoped_refptr<DtmfSenderInterface> GetDtmfSender() const = 0;

@@ -885,7 +885,7 @@ class VideoStreamEncoderTest : public ::testing::Test {
         &video_source_, webrtc::DegradationPreference::MAINTAIN_FRAMERATE);
     video_stream_encoder_->SetStartBitrate(kTargetBitrate.bps());
     video_stream_encoder_->ConfigureEncoder(std::move(video_encoder_config),
-                                            kMaxPayloadLength);
+                                            kMaxPayloadLength, nullptr);
     video_stream_encoder_->WaitUntilTaskQueueIsIdle();
   }
 

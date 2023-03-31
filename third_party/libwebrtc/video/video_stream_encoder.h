@@ -17,8 +17,10 @@
 #include <string>
 #include <vector>
 
+#include "absl/container/inlined_vector.h"
 #include "api/adaptation/resource.h"
 #include "api/field_trials_view.h"
+#include "api/rtp_sender_interface.h"
 #include "api/sequence_checker.h"
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "api/units/data_rate.h"
@@ -106,6 +108,9 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
 
   void ConfigureEncoder(VideoEncoderConfig config,
                         size_t max_data_payload_length) override;
+  void ConfigureEncoder(VideoEncoderConfig config,
+                        size_t max_data_payload_length,
+                        SetParametersCallback callback) override;
 
   // Permanently stop encoding. After this method has returned, it is
   // guaranteed that no encoded frames will be delivered to the sink.
@@ -302,6 +307,8 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
   // Set when configuration must create a new encoder object, e.g.,
   // because of a codec change.
   bool pending_encoder_creation_ RTC_GUARDED_BY(&encoder_queue_);
+  absl::InlinedVector<SetParametersCallback, 2> encoder_configuration_callbacks_
+      RTC_GUARDED_BY(&encoder_queue_);
 
   absl::optional<VideoFrameInfo> last_frame_info_
       RTC_GUARDED_BY(&encoder_queue_);

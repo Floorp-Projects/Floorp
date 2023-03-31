@@ -23,6 +23,7 @@
 #include "api/crypto/crypto_options.h"
 #include "api/frame_transformer_interface.h"
 #include "api/rtp_parameters.h"
+#include "api/rtp_sender_interface.h"
 #include "api/scoped_refptr.h"
 #include "api/video/video_content_type.h"
 #include "api/video/video_frame.h"
@@ -250,6 +251,9 @@ class VideoSendStream {
   // in the config. Encoder settings are passed on to the encoder instance along
   // with the VideoStream settings.
   virtual void ReconfigureVideoEncoder(VideoEncoderConfig config) = 0;
+
+  virtual void ReconfigureVideoEncoder(VideoEncoderConfig config,
+                                       SetParametersCallback callback) = 0;
 
   virtual Stats GetStats() = 0;
 

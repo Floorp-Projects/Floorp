@@ -26,6 +26,7 @@
 #include "api/media_stream_interface.h"
 #include "api/rtc_error.h"
 #include "api/rtp_parameters.h"
+#include "api/rtp_sender_interface.h"
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "api/transport/data_channel_transport_interface.h"
 #include "api/transport/rtp/rtp_source.h"
@@ -61,6 +62,10 @@ class Timing;
 namespace webrtc {
 class AudioSinkInterface;
 class VideoFrame;
+
+webrtc::RTCError InvokeSetParametersCallback(SetParametersCallback& callback,
+                                             RTCError error);
+
 }  // namespace webrtc
 
 namespace cricket {
@@ -277,7 +282,8 @@ class MediaChannel {
   virtual webrtc::RtpParameters GetRtpSendParameters(uint32_t ssrc) const = 0;
   virtual webrtc::RTCError SetRtpSendParameters(
       uint32_t ssrc,
-      const webrtc::RtpParameters& parameters) = 0;
+      const webrtc::RtpParameters& parameters,
+      webrtc::SetParametersCallback callback = nullptr) = 0;
 
   virtual void SetEncoderToPacketizerFrameTransformer(
       uint32_t ssrc,

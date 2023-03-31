@@ -57,6 +57,7 @@ rtc_library("rtc_media_base") {
     "../api:media_stream_interface",
     "../api:rtc_error",
     "../api:rtp_parameters",
+    "../api:rtp_sender_interface",
     "../api:scoped_refptr",
     "../api:sequence_checker",
     "../api/audio:audio_frame_processor",

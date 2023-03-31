@@ -30,6 +30,7 @@
 #include "modules/audio_processing/include/audio_processing.h"
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/network_route.h"
+#include "rtc_base/thread.h"
 
 using webrtc::RtpExtension;
 
@@ -149,20 +150,25 @@ class RtpHelper : public Base {
   }
   virtual webrtc::RTCError SetRtpSendParameters(
       uint32_t ssrc,
-      const webrtc::RtpParameters& parameters) {
+      const webrtc::RtpParameters& parameters,
+      webrtc::SetParametersCallback callback) {
     auto parameters_iterator = rtp_send_parameters_.find(ssrc);
     if (parameters_iterator != rtp_send_parameters_.end()) {
       auto result = CheckRtpParametersInvalidModificationAndValues(
           parameters_iterator->second, parameters);
-      if (!result.ok())
-        return result;
+      if (!result.ok()) {
+        return webrtc::InvokeSetParametersCallback(callback, result);
+      }
 
       parameters_iterator->second = parameters;
-      return webrtc::RTCError::OK();
+
+      return webrtc::InvokeSetParametersCallback(callback,
+                                                 webrtc::RTCError::OK());
     }
     // Replicate the behavior of the real media channel: return false
     // when setting parameters for unknown SSRCs.
-    return webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR);
+    return InvokeSetParametersCallback(
+        callback, webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR));
   }
 
   virtual webrtc::RtpParameters GetRtpReceiveParameters(uint32_t ssrc) const {
