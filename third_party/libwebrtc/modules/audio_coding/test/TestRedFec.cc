@@ -22,8 +22,6 @@
 #include "api/audio_codecs/g711/audio_encoder_g711.h"
 #include "api/audio_codecs/g722/audio_decoder_g722.h"
 #include "api/audio_codecs/g722/audio_encoder_g722.h"
-#include "api/audio_codecs/isac/audio_decoder_isac_float.h"
-#include "api/audio_codecs/isac/audio_encoder_isac_float.h"
 #include "api/audio_codecs/opus/audio_decoder_opus.h"
 #include "api/audio_codecs/opus/audio_encoder_opus.h"
 #include "modules/audio_coding/codecs/cng/audio_encoder_cng.h"
@@ -38,12 +36,10 @@ namespace webrtc {
 TestRedFec::TestRedFec()
     : encoder_factory_(CreateAudioEncoderFactory<AudioEncoderG711,
                                                  AudioEncoderG722,
-                                                 AudioEncoderIsacFloat,
                                                  AudioEncoderL16,
                                                  AudioEncoderOpus>()),
       decoder_factory_(CreateAudioDecoderFactory<AudioDecoderG711,
                                                  AudioDecoderG722,
-                                                 AudioDecoderIsacFloat,
                                                  AudioDecoderL16,
                                                  AudioDecoderOpus>()),
       _acmA(AudioCodingModule::Create(
@@ -95,19 +91,6 @@ void TestRedFec::Perform() {
   Run();
   _outFileB.Close();
 
-  RegisterSendCodec(_acmA, {"ISAC", 16000, 1}, Vad::kVadVeryAggressive, false);
-  OpenOutFile(_testCntr);
-  Run();
-  _outFileB.Close();
-
-  // Switch to a 32 kHz codec; RED should be switched off.
-  RegisterSendCodec(_acmA, {"ISAC", 32000, 1}, Vad::kVadVeryAggressive, false);
-  OpenOutFile(_testCntr);
-  Run();
-  _outFileB.Close();
-
-  RegisterSendCodec(_acmA, {"ISAC", 32000, 1}, absl::nullopt, false);
-
   _channelA2B->SetFECTestWithPacketLoss(true);
   // Following tests are under packet losses.
 
@@ -117,22 +100,6 @@ void TestRedFec::Perform() {
   OpenOutFile(_testCntr);
   Run();
   _outFileB.Close();
-
-  // Switch to a 16 kHz codec, RED should have been switched off.
-  RegisterSendCodec(_acmA, {"ISAC", 16000, 1}, Vad::kVadVeryAggressive, false);
-
-  OpenOutFile(_testCntr);
-  Run();
-  _outFileB.Close();
-
-  // Switch to a 32 kHz codec, RED should have been switched off.
-  RegisterSendCodec(_acmA, {"ISAC", 32000, 1}, Vad::kVadVeryAggressive, false);
-
-  OpenOutFile(_testCntr);
-  Run();
-  _outFileB.Close();
-
-  RegisterSendCodec(_acmA, {"ISAC", 32000, 1}, absl::nullopt, false);
 
   RegisterSendCodec(_acmA, {"opus", 48000, 2}, absl::nullopt, false);
 

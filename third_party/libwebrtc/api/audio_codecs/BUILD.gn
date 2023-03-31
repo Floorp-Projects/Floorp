@@ -62,7 +62,6 @@ rtc_library("builtin_audio_decoder_factory") {
     "L16:audio_decoder_L16",
     "g711:audio_decoder_g711",
     "g722:audio_decoder_g722",
-    "isac:audio_decoder_isac",
   ]
   defines = []
   if (rtc_include_ilbc) {
@@ -95,7 +94,6 @@ rtc_library("builtin_audio_encoder_factory") {
     "L16:audio_encoder_L16",
     "g711:audio_encoder_g711",
     "g722:audio_encoder_g722",
-    "isac:audio_encoder_isac",
   ]
   defines = []
   if (rtc_include_ilbc) {

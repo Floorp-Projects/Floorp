@@ -269,22 +269,6 @@ webrtc_fuzzer_test("audio_decoder_ilbc_fuzzer") {
   ]
 }
 
-webrtc_fuzzer_test("audio_decoder_isac_fuzzer") {
-  sources = [ "audio_decoder_isac_fuzzer.cc" ]
-  deps = [
-    ":audio_decoder_fuzzer",
-    "../../modules/audio_coding:isac",
-  ]
-}
-
-webrtc_fuzzer_test("audio_decoder_isacfix_fuzzer") {
-  sources = [ "audio_decoder_isacfix_fuzzer.cc" ]
-  deps = [
-    ":audio_decoder_fuzzer",
-    "../../modules/audio_coding:isac_fix",
-  ]
-}
-
 webrtc_fuzzer_test("audio_decoder_opus_fuzzer") {
   sources = [ "audio_decoder_opus_fuzzer.cc" ]
   deps = [
@@ -346,24 +330,6 @@ webrtc_fuzzer_test("audio_encoder_opus_fuzzer") {
   deps = [
     ":audio_encoder_fuzzer",
     "../../api/audio_codecs/opus:audio_encoder_opus",
-    "../../rtc_base:checks",
-  ]
-}
-
-webrtc_fuzzer_test("audio_encoder_isac_fixed_fuzzer") {
-  sources = [ "audio_encoder_isac_fixed_fuzzer.cc" ]
-  deps = [
-    ":audio_encoder_fuzzer",
-    "../../api/audio_codecs/isac:audio_encoder_isac_fix",
-    "../../rtc_base:checks",
-  ]
-}
-
-webrtc_fuzzer_test("audio_encoder_isac_float_fuzzer") {
-  sources = [ "audio_encoder_isac_float_fuzzer.cc" ]
-  deps = [
-    ":audio_encoder_fuzzer",
-    "../../api/audio_codecs/isac:audio_encoder_isac_float",
     "../../rtc_base:checks",
   ]
 }

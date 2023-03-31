@@ -75,31 +75,6 @@ TEST(AudioDecoderFactoryTest, CreateIlbc) {
       adf->MakeAudioDecoder(SdpAudioFormat("ilbc", 16000, 1), absl::nullopt));
 }
 
-TEST(AudioDecoderFactoryTest, CreateIsac) {
-  rtc::scoped_refptr<AudioDecoderFactory> adf =
-      CreateBuiltinAudioDecoderFactory();
-  ASSERT_TRUE(adf);
-  // iSAC supports 16 kHz, 1 channel. The float implementation additionally
-  // supports 32 kHz, 1 channel.
-  EXPECT_FALSE(
-      adf->MakeAudioDecoder(SdpAudioFormat("isac", 16000, 0), absl::nullopt));
-  EXPECT_TRUE(
-      adf->MakeAudioDecoder(SdpAudioFormat("isac", 16000, 1), absl::nullopt));
-  EXPECT_FALSE(
-      adf->MakeAudioDecoder(SdpAudioFormat("isac", 16000, 2), absl::nullopt));
-  EXPECT_FALSE(
-      adf->MakeAudioDecoder(SdpAudioFormat("isac", 8000, 1), absl::nullopt));
-  EXPECT_FALSE(
-      adf->MakeAudioDecoder(SdpAudioFormat("isac", 48000, 1), absl::nullopt));
-#ifdef WEBRTC_ARCH_ARM
-  EXPECT_FALSE(
-      adf->MakeAudioDecoder(SdpAudioFormat("isac", 32000, 1), absl::nullopt));
-#else
-  EXPECT_TRUE(
-      adf->MakeAudioDecoder(SdpAudioFormat("isac", 32000, 1), absl::nullopt));
-#endif
-}
-
 TEST(AudioDecoderFactoryTest, CreateL16) {
   rtc::scoped_refptr<AudioDecoderFactory> adf =
       CreateBuiltinAudioDecoderFactory();
@@ -124,9 +99,6 @@ TEST(AudioDecoderFactoryTest, MaxNrOfChannels) {
   std::vector<std::string> codecs = {
 #ifdef WEBRTC_CODEC_OPUS
     "opus",
-#endif
-#if defined(WEBRTC_CODEC_ISAC) || defined(WEBRTC_CODEC_ISACFX)
-    "isac",
 #endif
 #ifdef WEBRTC_CODEC_ILBC
     "ilbc",
