@@ -533,7 +533,7 @@ force-cargo-program-build: $(call resfile,module)
 # dependency chain.
 #
 define RUST_PROGRAM_DEPENDENCIES
-$(1)_deps := $(wordlist 2, 10000000, $(file < $(1).d))
+$(1)_deps := $(wordlist 2, 10000000, $(if $(wildcard $(1).d),$(shell cat $(1).d)))
 $(1): $(CARGO_FILE) $(call resfile,module) $(if $$($(1)_deps),$$($(1)_deps),force-cargo-program-build)
 	$(if $$($(1)_deps),+$(MAKE) force-cargo-program-build,:)
 endef
