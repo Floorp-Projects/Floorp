@@ -30,6 +30,8 @@ function log(msg) {
 // Used as unique id for pending sanitizations.
 var gPendingSanitizationSerial = 0;
 
+var gPrincipalsCollector = null;
+
 export var Sanitizer = {
   /**
    * Whether we should sanitize on shutdown.
@@ -272,6 +274,8 @@ export var Sanitizer = {
    */
   async sanitize(itemsToClear = null, options = {}) {
     let progress = options.progress;
+    // initialise the principals collector
+    gPrincipalsCollector = new lazy.PrincipalsCollector();
     if (!progress) {
       progress = options.progress = {};
     }
@@ -345,6 +349,8 @@ export var Sanitizer = {
 
   // This method is meant to be used by tests.
   async runSanitizeOnShutdown() {
+    // since we bypass sanitize() we need to initialise the principalsCollector ourselves
+    gPrincipalsCollector = new lazy.PrincipalsCollector();
     return sanitizeOnShutdown({
       isShutdown: true,
       clearHonoringExceptions: true,
@@ -366,12 +372,16 @@ export var Sanitizer = {
     },
 
     cookies: {
-      async clear(range, { progress, principalsForShutdownClearing }) {
+      async clear(range, { progress }, clearHonoringExceptions) {
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_COOKIES_2", refObj);
         // This is true if called by sanitizeOnShutdown.
         // On shutdown we clear by principal to be able to honor the users exceptions
-        if (principalsForShutdownClearing) {
+        if (clearHonoringExceptions) {
+          progress.step = "getAllPrincipals";
+          let principalsForShutdownClearing = await gPrincipalsCollector.getAllPrincipals(
+            progress
+          );
           await maybeSanitizeSessionPrincipals(
             progress,
             principalsForShutdownClearing,
@@ -387,11 +397,14 @@ export var Sanitizer = {
     },
 
     offlineApps: {
-      async clear(range, { progress, principalsForShutdownClearing }) {
+      async clear(range, { progress }, clearHonoringExceptions) {
         // This is true if called by sanitizeOnShutdown.
         // On shutdown we clear by principal to be able to honor the users exceptions
-        if (principalsForShutdownClearing) {
-          // Cleaning per principal to be able to consider the users exceptions
+        if (clearHonoringExceptions) {
+          progress.step = "getAllPrincipals";
+          let principalsForShutdownClearing = await gPrincipalsCollector.getAllPrincipals(
+            progress
+          );
           await maybeSanitizeSessionPrincipals(
             progress,
             principalsForShutdownClearing,
@@ -406,6 +419,13 @@ export var Sanitizer = {
 
     history: {
       async clear(range, { progress }) {
+        // TODO: This check is needed for the case that this method is invoked directly and not via the sanitizer.sanitize API.
+        // This can be removed once bug 1803799 has landed.
+        if (!gPrincipalsCollector) {
+          gPrincipalsCollector = new lazy.PrincipalsCollector();
+        }
+        progress.step = "getAllPrincipals";
+        let principals = await gPrincipalsCollector.getAllPrincipals(progress);
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_HISTORY", refObj);
         progress.step = "clearing browsing history";
@@ -422,9 +442,6 @@ export var Sanitizer = {
         // indicates that we can purge cookies and site data for tracking origins without
         // user interaction, we need to ensure that we only delete those permissions that
         // do not have any existing storage.
-        let principalsCollector = new lazy.PrincipalsCollector();
-        progress.step = "getAllPrincipals";
-        let principals = await principalsCollector.getAllPrincipals(progress);
         progress.step = "clearing user interaction";
         await new Promise(resolve => {
           Services.clearData.deleteUserInteractionForClearingHistory(
@@ -750,12 +767,6 @@ async function sanitizeInternal(items, aItemsToClear, options) {
     console.error("Error sanitizing " + name, ex);
   };
 
-  // When clearing on shutdown we clear by principal for certain cleaning categories, to consider the users exceptions
-  if (progress.clearHonoringExceptions) {
-    let principalsCollector = new lazy.PrincipalsCollector();
-    let principals = await principalsCollector.getAllPrincipals(progress);
-    options.principalsForShutdownClearing = principals;
-  }
   // Array of objects in form { name, promise }.
   // `name` is the item's name and `promise` may be a promise, if the
   // sanitization is asynchronous, or the function return value, otherwise.
@@ -770,7 +781,8 @@ async function sanitizeInternal(items, aItemsToClear, options) {
         promise: item
           .clear(
             range,
-            Object.assign(options, { progress: progress[name + "Progress"] })
+            Object.assign(options, { progress: progress[name + "Progress"] }),
+            progress.clearHonoringExceptions
           )
           .then(
             () => {
@@ -858,49 +870,51 @@ async function sanitizeOnShutdown(progress) {
     Services.prefs.savePrefFile(null);
   }
 
-  // In case the user has not activated sanitizeOnShutdown but has explicitely set exceptions
-  // to always clear particular origins, we clear those here
-  let principalsCollector = new lazy.PrincipalsCollector();
+  if (!Sanitizer.shouldSanitizeOnShutdown) {
+    // In case the user has not activated sanitizeOnShutdown but has explicitely set exceptions
+    // to always clear particular origins, we clear those here
 
-  progress.advancement = "session-permission";
+    progress.advancement = "session-permission";
 
-  let exceptions = 0;
-  // Let's see if we have to forget some particular site.
-  for (let permission of Services.perms.all) {
-    if (
-      permission.type != "cookie" ||
-      permission.capability != Ci.nsICookiePermission.ACCESS_SESSION
-    ) {
-      continue;
+    let exceptions = 0;
+    // Let's see if we have to forget some particular site.
+    for (let permission of Services.perms.all) {
+      if (
+        permission.type != "cookie" ||
+        permission.capability != Ci.nsICookiePermission.ACCESS_SESSION
+      ) {
+        continue;
+      }
+
+      // We consider just permissions set for http, https and file URLs.
+      if (!isSupportedPrincipal(permission.principal)) {
+        continue;
+      }
+
+      log(
+        "Custom session cookie permission detected for: " +
+          permission.principal.asciiSpec
+      );
+      exceptions++;
+
+      // We use just the URI here, because permissions ignore OriginAttributes.
+      // The principalsCollector is lazy, this is computed only once
+      let principals = await gPrincipalsCollector.getAllPrincipals(progress);
+      let selectedPrincipals = extractMatchingPrincipals(
+        principals,
+        permission.principal.host
+      );
+      await maybeSanitizeSessionPrincipals(
+        progress,
+        selectedPrincipals,
+        Ci.nsIClearDataService.CLEAR_ALL_CACHES |
+          Ci.nsIClearDataService.CLEAR_COOKIES |
+          Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
+          Ci.nsIClearDataService.CLEAR_EME
+      );
     }
-
-    // We consider just permissions set for http, https and file URLs.
-    if (!isSupportedPrincipal(permission.principal)) {
-      continue;
-    }
-
-    log(
-      "Custom session cookie permission detected for: " +
-        permission.principal.asciiSpec
-    );
-    exceptions++;
-
-    // We use just the URI here, because permissions ignore OriginAttributes.
-    let principals = await principalsCollector.getAllPrincipals(progress);
-    let selectedPrincipals = extractMatchingPrincipals(
-      principals,
-      permission.principal.host
-    );
-    await maybeSanitizeSessionPrincipals(
-      progress,
-      selectedPrincipals,
-      Ci.nsIClearDataService.CLEAR_ALL_CACHES |
-        Ci.nsIClearDataService.CLEAR_COOKIES |
-        Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
-        Ci.nsIClearDataService.CLEAR_EME
-    );
+    progress.sanitizationPrefs.session_permission_exceptions = exceptions;
   }
-  progress.sanitizationPrefs.session_permission_exceptions = exceptions;
   progress.advancement = "done";
 }
 

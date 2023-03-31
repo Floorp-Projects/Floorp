@@ -42,6 +42,9 @@ function log(msg) {
  *  There is currently no `refresh` method, though you are free to add one.
  */
 export class PrincipalsCollector {
+  // Indicating that we are in the process of collecting principals,
+  // that might take some time
+  #pendingCollection = null;
   /**
    * Creates a new PrincipalsCollector.
    */
@@ -78,11 +81,20 @@ export class PrincipalsCollector {
    * @returns {Array<nsIPrincipal>} the list of principals
    */
   async getAllPrincipals(progress = {}) {
-    if (this.principals == null) {
-      // Here is the list of principals with site data.
-      this.principals = await this._getAllPrincipalsInternal(progress);
+    // Here is the list of principals with site data.
+    if (this.principals) {
+      return this.principals;
     }
-
+    // Gathering all principals might take a while,
+    // to ensure this process is only done once, we queue
+    // the incomming calls here in case we are not yet done gathering principals
+    if (!this.#pendingCollection) {
+      this.#pendingCollection = this._getAllPrincipalsInternal(progress);
+      this.principals = await this.#pendingCollection;
+      this.#pendingCollection = null;
+      return this.principals;
+    }
+    await this.#pendingCollection;
     return this.principals;
   }
 
@@ -157,8 +169,8 @@ export class PrincipalsCollector {
       }
     });
 
-    progress.step = "total-principals:" + principals.length;
     principals = Array.from(principals.values());
+    progress.step = "total-principals:" + principals.length;
     return principals;
   }
 }
