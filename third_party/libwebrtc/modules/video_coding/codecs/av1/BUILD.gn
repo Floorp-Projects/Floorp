@@ -61,6 +61,7 @@ rtc_library("libaom_av1_encoder") {
     "../../../../common_video",
     "../../../../rtc_base:checks",
     "../../../../rtc_base:logging",
+    "../../../../rtc_base:rtc_numerics",
     "../../svc:scalability_structures",
     "../../svc:scalable_video_controller",
     "//third_party/libaom",
