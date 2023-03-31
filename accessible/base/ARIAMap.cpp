@@ -1470,8 +1470,20 @@ uint8_t aria::GetIndexFromRoleMap(const nsRoleMapEntry* aRoleMapEntry) {
   } else if (aRoleMapEntry == &sLandmarkRoleMap) {
     return LANDMARK_ROLE_MAP_ENTRY_INDEX;
   } else {
-    return aRoleMapEntry - sWAIRoleMaps;
+    uint8_t index = aRoleMapEntry - sWAIRoleMaps;
+    MOZ_ASSERT(aria::IsRoleMapIndexValid(index));
+    return index;
   }
+}
+
+bool aria::IsRoleMapIndexValid(uint8_t aRoleMapIndex) {
+  switch (aRoleMapIndex) {
+    case NO_ROLE_MAP_ENTRY_INDEX:
+    case EMPTY_ROLE_MAP_ENTRY_INDEX:
+    case LANDMARK_ROLE_MAP_ENTRY_INDEX:
+      return true;
+  }
+  return aRoleMapIndex < ArrayLength(sWAIRoleMaps);
 }
 
 uint64_t aria::UniversalStatesFor(mozilla::dom::Element* aElement) {
