@@ -316,12 +316,22 @@ NetworkManagerBase::enumeration_permission() const {
   return enumeration_permission_;
 }
 
+std::unique_ptr<Network> NetworkManagerBase::CreateNetwork(
+    absl::string_view name,
+    absl::string_view description,
+    const IPAddress& prefix,
+    int prefix_length,
+    AdapterType type) const {
+  return std::make_unique<Network>(name, description, prefix, prefix_length,
+                                   type, field_trials_.get());
+}
+
 std::vector<const Network*> NetworkManagerBase::GetAnyAddressNetworks() {
   std::vector<const Network*> networks;
   if (!ipv4_any_address_network_) {
     const rtc::IPAddress ipv4_any_address(INADDR_ANY);
-    ipv4_any_address_network_ = std::make_unique<Network>(
-        "any", "any", ipv4_any_address, 0, ADAPTER_TYPE_ANY, field_trials_);
+    ipv4_any_address_network_ =
+        CreateNetwork("any", "any", ipv4_any_address, 0, ADAPTER_TYPE_ANY);
     ipv4_any_address_network_->set_default_local_address_provider(this);
     ipv4_any_address_network_->set_mdns_responder_provider(this);
     ipv4_any_address_network_->AddIP(ipv4_any_address);
@@ -330,8 +340,8 @@ std::vector<const Network*> NetworkManagerBase::GetAnyAddressNetworks() {
 
   if (!ipv6_any_address_network_) {
     const rtc::IPAddress ipv6_any_address(in6addr_any);
-    ipv6_any_address_network_ = std::make_unique<Network>(
-        "any", "any", ipv6_any_address, 0, ADAPTER_TYPE_ANY, field_trials_);
+    ipv6_any_address_network_ =
+        CreateNetwork("any", "any", ipv6_any_address, 0, ADAPTER_TYPE_ANY);
     ipv6_any_address_network_->set_default_local_address_provider(this);
     ipv6_any_address_network_->set_mdns_responder_provider(this);
     ipv6_any_address_network_->AddIP(ipv6_any_address);
@@ -531,14 +541,14 @@ bool NetworkManagerBase::IsVpnMacAddress(
 BasicNetworkManager::BasicNetworkManager(
     NetworkMonitorFactory* network_monitor_factory,
     SocketFactory* socket_factory,
-    const webrtc::FieldTrialsView* field_trials)
-    : field_trials_(field_trials),
+    const webrtc::FieldTrialsView* field_trials_view)
+    : NetworkManagerBase(field_trials_view),
       network_monitor_factory_(network_monitor_factory),
       socket_factory_(socket_factory),
       allow_mac_based_ipv6_(
-          field_trials_->IsEnabled("WebRTC-AllowMACBasedIPv6")),
+          field_trials()->IsEnabled("WebRTC-AllowMACBasedIPv6")),
       bind_using_ifname_(
-          !field_trials_->IsDisabled("WebRTC-BindUsingInterfaceName")) {
+          !field_trials()->IsDisabled("WebRTC-BindUsingInterfaceName")) {
   RTC_DCHECK(socket_factory_);
 }
 
@@ -668,9 +678,8 @@ void BasicNetworkManager::ConvertIfAddrs(
       if_info.adapter_type = ADAPTER_TYPE_VPN;
     }
 
-    auto network = std::make_unique<Network>(
-        cursor->ifa_name, cursor->ifa_name, prefix, prefix_length,
-        if_info.adapter_type, field_trials_.get());
+    auto network = CreateNetwork(cursor->ifa_name, cursor->ifa_name, prefix,
+                                 prefix_length, if_info.adapter_type);
     network->set_default_local_address_provider(this);
     network->set_scope_id(scope_id);
     network->AddIP(ip);
@@ -859,8 +868,8 @@ bool BasicNetworkManager::CreateNetworks(
             adapter_type = ADAPTER_TYPE_VPN;
           }
 
-          auto network = std::make_unique<Network>(name, description, prefix,
-                                                   prefix_length, adapter_type);
+          auto network = CreateNetwork(name, description, prefix, prefix_length,
+                                       adapter_type);
           network->set_underlying_type_for_vpn(underlying_type_for_vpn);
           network->set_default_local_address_provider(this);
           network->set_mdns_responder_provider(this);
@@ -965,7 +974,7 @@ void BasicNetworkManager::StartNetworkMonitor() {
   }
   if (!network_monitor_) {
     network_monitor_.reset(
-        network_monitor_factory_->CreateNetworkMonitor(*field_trials_));
+        network_monitor_factory_->CreateNetworkMonitor(*field_trials()));
     if (!network_monitor_) {
       return;
     }
