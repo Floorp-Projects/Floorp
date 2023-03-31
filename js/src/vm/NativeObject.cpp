@@ -528,7 +528,7 @@ DenseElementResult NativeObject::maybeDensifySparseElements(
 
   obj->ensureDenseInitializedLength(newInitializedLength, 0);
 
-  if (cx->compartment()->objectMaybeInIteration(obj)) {
+  if (obj->compartment()->objectMaybeInIteration(obj)) {
     // Mark the densified elements as maybe-in-iteration. See also the comment
     // in GetIterator.
     obj->markDenseElementsMaybeInIteration();

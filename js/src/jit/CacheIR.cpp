@@ -5318,6 +5318,9 @@ AttachDecision GetIteratorIRGenerator::tryAttachObject(ValOperandId valId) {
   if (!val_.isObject()) {
     return AttachDecision::NoAction;
   }
+
+  MOZ_ASSERT(val_.toObject().compartment() == cx_->compartment());
+
   ObjOperandId objId = writer.guardToObject(valId);
   writer.objectToIteratorResult(objId, cx_->compartment()->enumeratorsAddr());
   writer.returnFromIC();

@@ -1822,7 +1822,7 @@ static bool SuppressDeletedProperty(JSContext* cx, NativeIterator* ni,
  */
 static bool SuppressDeletedPropertyHelper(JSContext* cx, HandleObject obj,
                                           Handle<JSLinearString*> str) {
-  NativeIteratorListIter iter(cx->compartment()->enumeratorsAddr());
+  NativeIteratorListIter iter(obj->compartment()->enumeratorsAddr());
   while (!iter.done()) {
     NativeIterator* ni = iter.next();
     if (!SuppressDeletedProperty(cx, ni, obj, str)) {
@@ -1834,7 +1834,7 @@ static bool SuppressDeletedPropertyHelper(JSContext* cx, HandleObject obj,
 }
 
 bool js::SuppressDeletedProperty(JSContext* cx, HandleObject obj, jsid id) {
-  if (MOZ_LIKELY(!cx->compartment()->objectMaybeInIteration(obj))) {
+  if (MOZ_LIKELY(!obj->compartment()->objectMaybeInIteration(obj))) {
     return true;
   }
 
@@ -1851,7 +1851,7 @@ bool js::SuppressDeletedProperty(JSContext* cx, HandleObject obj, jsid id) {
 
 bool js::SuppressDeletedElement(JSContext* cx, HandleObject obj,
                                 uint32_t index) {
-  if (MOZ_LIKELY(!cx->compartment()->objectMaybeInIteration(obj))) {
+  if (MOZ_LIKELY(!obj->compartment()->objectMaybeInIteration(obj))) {
     return true;
   }
 
