@@ -8,7 +8,6 @@
 
 #include "mozilla/ProfilerMarkers.h"
 #include "chrome/common/ipc_message.h"
-#include "base/process.h"
 
 namespace IPC {
 

@@ -9,7 +9,6 @@
 
 #include <cmath>
 #include <cstdint>
-#include "imgIContainer.h"
 #include "ErrorList.h"
 #include "Units.h"
 #include "mozilla/AlreadyAddRefed.h"
@@ -47,6 +46,7 @@
 // forward declarations
 class nsIBidiKeyboard;
 class nsIRollupListener;
+class imgIContainer;
 class nsIContent;
 class ViewWrapper;
 class nsIRunnable;

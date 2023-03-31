@@ -11,8 +11,6 @@
 #include "nsCOMPtr.h"
 #include "nsIWindowWatcher.h"
 
-#include <windef.h>
-
 class nsIPrintSettings;
 class nsIDialogParamBlock;
 

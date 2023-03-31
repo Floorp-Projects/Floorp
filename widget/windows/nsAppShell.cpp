@@ -30,7 +30,6 @@
 #include "mozilla/widget/ScreenManager.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/WindowsProcessMitigations.h"
-#include "mozilla/WindowsVersion.h"
 
 #ifdef MOZ_BACKGROUNDTASKS
 #  include "mozilla/BackgroundTasks.h"

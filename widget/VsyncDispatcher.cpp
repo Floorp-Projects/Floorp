@@ -238,7 +238,7 @@ void VsyncDispatcher::RemoveMainThreadObserver(VsyncObserver* aObserver) {
 void VsyncDispatcher::UpdateVsyncStatus() {
   bool wasObservingVsync = false;
   bool needVsync = false;
-  RefPtr<gfx::VsyncSource> vsyncSource;
+  RefPtr<VsyncSource> vsyncSource;
 
   {
     auto state = mState.Lock();

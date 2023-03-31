@@ -14,7 +14,6 @@
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPtr.h"
 #include "nsHashtablesFwd.h"
-#include "nsdefs.h"
 
 namespace mozilla::widget {
 
