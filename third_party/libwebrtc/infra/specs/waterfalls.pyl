@@ -68,7 +68,7 @@
       'Fuchsia Release': {
         'os_type': 'linux',
         'mixins':
-        ['linux-bionic', 'x86-64', 'resultdb-json-format', 'fuchsia'],
+        ['linux-bionic', 'x86-64', 'has_native_resultdb_integration'],
         'test_suites': {
           'isolated_scripts': 'fuchsia_compatible_tests',
         },
@@ -467,7 +467,7 @@
       'fuchsia_rel': {
         'os_type': 'linux',
         'mixins':
-        ['linux-bionic', 'x86-64', 'resultdb-json-format', 'fuchsia'],
+        ['linux-bionic', 'x86-64', 'has_native_resultdb_integration'],
         'test_suites': {
           'isolated_scripts': 'fuchsia_compatible_tests',
         },
