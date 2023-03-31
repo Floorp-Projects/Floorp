@@ -1118,8 +1118,25 @@ struct nsFlexContainerFrame::PerFragmentFlexData final {
   // them.)
   //
   // mSumOfChildrenBSize stores the sum of the D values for the current flex
-  // container and for all its prev-in-flows.
+  // container fragments and for all its previous fragments
   nscoord mSumOfChildrenBSize = 0;
+
+  // This variable accumulates FirstLineOrFirstItemBAxisMetrics::mBEndEdgeShift,
+  // for the current flex container fragment and for all its previous fragments.
+  // See the comment of mBEndEdgeShift for its computation details. In short,
+  // this value is the net block-end edge shift, accumulated for the children in
+  // all the previous fragments. This number is non-negative.
+  //
+  // This value is also used to grow a flex container's block-size if the
+  // container's computed block-size is unconstrained. For example: a tall item
+  // may be pushed to the next page/column, which leaves some wasted area at the
+  // bottom of the current flex container fragment, and causes the flex
+  // container fragments to be (collectively) larger than the hypothetical
+  // unfragmented size. Another example: a tall flex item may be broken into
+  // multiple fragments, and those fragments may have a larger collective
+  // block-size as compared to the item's original unfragmented size; the
+  // container would need to increase its block-size to account for this.
+  nscoord mCumulativeBEndEdgeShift = 0;
 
   // The frame property under which this struct is stored. Cached on every
   // in-flow fragment (continuation) at the end of the flex container's
@@ -4472,28 +4489,18 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
     fragmentData = *fragmentDataProp;
   }
 
-  const LogicalSize contentBoxSize =
-      axisTracker.LogicalSizeFromFlexRelativeSizes(flr.mContentBoxMainSize,
-                                                   flr.mContentBoxCrossSize);
+  LogicalSize contentBoxSize = axisTracker.LogicalSizeFromFlexRelativeSizes(
+      flr.mContentBoxMainSize, flr.mContentBoxCrossSize);
+
   const nscoord consumedBSize = CalcAndCacheConsumedBSize();
   const nscoord effectiveContentBSize =
       contentBoxSize.BSize(wm) - consumedBSize;
   LogicalMargin borderPadding = aReflowInput.ComputedLogicalBorderPadding(wm);
-  bool mayNeedNextInFlow = false;
   if (MOZ_UNLIKELY(aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE)) {
     // We assume we are the last fragment by using
     // PreReflowBlockLevelLogicalSkipSides(), and skip block-end border and
     // padding if needed.
     borderPadding.ApplySkipSides(PreReflowBlockLevelLogicalSkipSides());
-    // Check if we may need a next-in-flow. If so, we'll need to skip block-end
-    // border and padding.
-    const LogicalSize availableSizeForItems =
-        ComputeAvailableSizeForItems(aReflowInput, borderPadding);
-    mayNeedNextInFlow = effectiveContentBSize > availableSizeForItems.BSize(wm);
-    if (mayNeedNextInFlow && aReflowInput.mStyleBorder->mBoxDecorationBreak ==
-                                 StyleBoxDecorationBreak::Slice) {
-      borderPadding.BEnd(wm) = 0;
-    }
   }
 
   // Determine this frame's tentative border-box size. This is used for logical
@@ -4526,6 +4533,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
       ReflowChildren(aReflowInput, containerSize, availableSizeForItems,
                      borderPadding, axisTracker, flr, fragmentData);
 
+  bool mayNeedNextInFlow = false;
   if (aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE) {
     // maxBlockEndEdgeOfChildren is relative to border-box, so we need to
     // subtract block-start border and padding to make it relative to our
@@ -4536,6 +4544,23 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
     fragmentData.mSumOfChildrenBSize +=
         std::max(maxBlockEndEdgeOfChildren - borderPadding.BStart(wm),
                  availableSizeForItems.BSize(wm));
+
+    // mCumulativeBEndEdgeShift was updated in ReflowChildren(). If our
+    // block-size in unconstrained, use that to grow our block-size, subject to
+    // min/max constraints.
+    if (aReflowInput.ComputedBSize() == NS_UNCONSTRAINEDSIZE) {
+      contentBoxSize.BSize(wm) = aReflowInput.ApplyMinMaxBSize(
+          contentBoxSize.BSize(wm) + fragmentData.mCumulativeBEndEdgeShift);
+    }
+
+    // Check if we may need a next-in-flow. If so, we'll need to skip block-end
+    // border and padding.
+    mayNeedNextInFlow = contentBoxSize.BSize(wm) - consumedBSize >
+                        availableSizeForItems.BSize(wm);
+    if (mayNeedNextInFlow && aReflowInput.mStyleBorder->mBoxDecorationBreak ==
+                                 StyleBoxDecorationBreak::Slice) {
+      borderPadding.BEnd(wm) = 0;
+    }
   }
 
   PopulateReflowOutput(aReflowOutput, aReflowInput, aStatus, contentBoxSize,
@@ -5134,6 +5159,64 @@ nsFlexContainerFrame::FlexLayoutResult nsFlexContainerFrame::DoFlexLayout(
   return flr;
 }
 
+// This data structure is used in fragmentation, storing the block coordinate
+// metrics when reflowing 1) the BStart-most line in each fragment of a
+// row-oriented flex container or, 2) the BStart-most item in each fragment of a
+// single-line column-oriented flex container.
+//
+// When we lay out a row-oriented flex container fragment, its first line might
+// contain one or more monolithic items that were pushed from the previous
+// fragment specifically to avoid having those monolithic items overlap the
+// page/column break. The situation is similar for single-row column-oriented
+// flex container fragments, but a bit simpler; only their first item might have
+// been pushed to avoid overlapping a page/column break.
+//
+// We'll have to place any such pushed items at the block-start edge of the
+// current fragment's content-box, which is as close as we can get them to their
+// theoretical/unfragmented position (without slicing them); but it does
+// represent a shift away from their theoretical/unfragmented position (which
+// was somewhere in the previous fragment).
+//
+// When that happens, we need to record the maximum such shift that we had to
+// perform so that we can apply the same block-endwards shift to "downstream"
+// items (items towards the block-end edge) that we could otherwise collide
+// with. We also potentially apply the same shift when computing the block-end
+// edge of this flex container fragment's content-box so that we don't
+// inadvertently shift the last item (or line-of-items) to overlap the flex
+// container's border, or content beyond the flex container.
+//
+// We use this structure to keep track of several metrics, in service of this
+// goal. This structure is also necessary to adjust PerFragmentFlexData at the
+// end of ReflowChildren().
+//
+// Note: "First" in the struct name means "BStart-most", not the order in the
+// flex line array or flex item array.
+//
+// TODO: Currently, we assume (for proper fragmentation) that the main-axis (or
+// cross-axis) is in the same direction as the corresponding writing-mode
+// inline-axis (or block-axis). Bug 1812485 will support pushing tall flex items
+// for flex containers with a "reversed" main-axis (or cross-axis).
+struct FirstLineOrFirstItemBAxisMetrics final {
+  // This value stores the block-end edge shift for 1) the BStart-most line in
+  // the current fragment of a row-oriented flex container, or 2) the
+  // BStart-most item in the current fragment of a single-line column-oriented
+  // flex container. This number is non-negative.
+  //
+  // This value may become positive when any item is a first-in-flow and also
+  // satisfies either the above condition 1) or 2), since that's a hint that it
+  // could be monolithic or have a monolithic first descendant, and therefore an
+  // item that might incur a page/column-break-dodging position-shift that this
+  // variable needs to track.
+  nscoord mBEndEdgeShift = 0;
+
+  // The first and second value in the pair store the max block-end edges for
+  // items before and after applying the per-item position-shift in the block
+  // axis. We only record the block-end edges for items with first-in-flow
+  // frames placed in the current flex container fragment. This is used only by
+  // row-oriented flex containers.
+  Maybe<std::pair<nscoord, nscoord>> mMaxBEndEdge;
+};
+
 std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
     const ReflowInput& aReflowInput, const nsSize& aContainerSize,
     const LogicalSize& aAvailableSizeForItems,
@@ -5158,26 +5241,91 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
   // The block-end of children is relative to the flex container's border-box.
   nscoord maxBlockEndEdgeOfChildren = containerContentBoxOrigin.B(flexWM);
 
+  FirstLineOrFirstItemBAxisMetrics bAxisMetrics;
   FrameHashtable pushedItems;
   FrameHashtable incompleteItems;
   FrameHashtable overflowIncompleteItems;
 
+  const bool isSingleLine =
+      StyleFlexWrap::Nowrap == aReflowInput.mStylePosition->mFlexWrap;
+
   // FINAL REFLOW: Give each child frame another chance to reflow, now that
   // we know its final size and position.
   for (const FlexLine& line : aFlr.mLines) {
+    const bool isInFirstLine = &line == &aFlr.mLines[0];
+
     for (const FlexItem& item : line.Items()) {
       LogicalPoint framePos = aAxisTracker.LogicalPointFromFlexRelativePoint(
           item.MainPosition(), item.CrossPosition(), aFlr.mContentBoxMainSize,
           aFlr.mContentBoxCrossSize);
+      // This variable records the item's block-end edge before we give it a
+      // per-item-position-shift, if the item is a first-in-flow in the first
+      // line of a row-oriented flex container fragment. It is used to determine
+      // the block-end edge shift for the first line at the end of the outer
+      // loop.
+      Maybe<nscoord> frameBPosBeforePerItemShift;
 
       if (item.Frame()->GetPrevInFlow()) {
         // The item is a continuation. Lay it out at the beginning of the
         // available space.
         framePos.B(flexWM) = 0;
       } else if (GetPrevInFlow()) {
-        // We haven't laid the item out. Subtract its block-direction position
-        // by the sum of our prev-in-flows' content block-end.
+        // The item we're placing is not a continuation; though we're placing it
+        // into a flex container fragment which *is* a continuation. To compute
+        // the item's correct position in this fragment, we adjust the item's
+        // theoretical/unfragmented block-direction position by subtracting the
+        // cumulative content-box block-size for all the previous fragments and
+        // adding the cumulative block-end edge shift.
+        //
+        // Note that the item's position in this fragment has not been finalized
+        // yet. At this point, we've adjusted the item's
+        // theoretical/unfragmented position to be relative to the block-end
+        // edge of the previous container fragment's content-box. Later, we'll
+        // compute per-item position-shift to finalize its position.
         framePos.B(flexWM) -= aFragmentData.mSumOfChildrenBSize;
+        framePos.B(flexWM) += aFragmentData.mCumulativeBEndEdgeShift;
+
+        // This helper gets the per-item position-shift in the block-axis.
+        auto GetPerItemPositionShiftToBEnd = [&]() {
+          if (framePos.B(flexWM) >= 0) {
+            // The item final position might be in current flex container
+            // fragment or in any of the later fragments. No adjustment needed.
+            return 0;
+          }
+
+          // The item's block position is negative, but we want to place it at
+          // the content-box block-start edge of this container fragment. To
+          // achieve this, return a negated (positive) value to make the final
+          // block position zero.
+          //
+          // This scenario occurs when fragmenting a row-oriented flex container
+          // where this item is pushed to this container fragment.
+          return -framePos.B(flexWM);
+        };
+
+        if (aAxisTracker.IsRowOriented()) {
+          if (isInFirstLine) {
+            frameBPosBeforePerItemShift.emplace(framePos.B(flexWM));
+            framePos.B(flexWM) += GetPerItemPositionShiftToBEnd();
+          } else {
+            // We've computed how far the block-end edge of the first line had
+            // to shift at the end of outer loop. Here, we just shift all items
+            // in rest of the lines by the same amount.
+            framePos.B(flexWM) += bAxisMetrics.mBEndEdgeShift;
+          }
+        } else {
+          MOZ_ASSERT(aAxisTracker.IsColumnOriented());
+          if (isSingleLine) {
+            if (&item == firstItem) {
+              bAxisMetrics.mBEndEdgeShift = GetPerItemPositionShiftToBEnd();
+            }
+            framePos.B(flexWM) += bAxisMetrics.mBEndEdgeShift;
+          } else {
+            // Bug 1806717: We need a more sophisticated solution for multi-line
+            // column-oriented flex container when each line has a different
+            // position-shift value. For now, we don't shift them.
+          }
+        }
       }
 
       // Adjust available block-size for the item. (We compute it here because
@@ -5201,6 +5349,7 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
       const bool childBPosExceedAvailableSpaceBEnd =
           availableBSizeForItem != NS_UNCONSTRAINEDSIZE &&
           availableBSizeForItem <= 0;
+      bool itemInPushedItems = false;
       if (childBPosExceedAvailableSpaceBEnd) {
         // Note: Even if all of our items are beyond the available space & get
         // pushed here, we'll be guaranteed to place at least one of them (and
@@ -5214,6 +5363,7 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
             "next-in-flow due to position below available space's block-end",
             item.Frame());
         pushedItems.Insert(item.Frame());
+        itemInPushedItems = true;
       } else if (item.NeedsFinalReflow(aReflowInput)) {
         // The available size must be in item's writing-mode.
         const WritingMode itemWM = item.GetWritingMode();
@@ -5226,7 +5376,31 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
             ReflowFlexItem(aAxisTracker, aReflowInput, item, framePos,
                            availableSize, aContainerSize);
 
-        if (childReflowStatus.IsIncomplete()) {
+        const bool shouldPushItem = [&]() {
+          if (framePos.B(flexWM) == containerContentBoxOrigin.B(flexWM)) {
+            // The flex item is adjacent with block-start of the container's
+            // content-box. Don't push it, or we'll trap in an infinite loop.
+            return false;
+          }
+          if (item.Frame()->BSize() <= availableBSizeForItem) {
+            return false;
+          }
+          if (aAxisTracker.IsColumnOriented() &&
+              item.Frame()->StyleDisplay()->mBreakBefore ==
+                  StyleBreakBetween::Avoid) {
+            return false;
+          }
+          return true;
+        }();
+        if (shouldPushItem) {
+          FLEX_LOG(
+              "[frag] Flex item %p needed to be pushed to container's "
+              "next-in-flow because its block-size is larger than the "
+              "available space",
+              item.Frame());
+          pushedItems.Insert(item.Frame());
+          itemInPushedItems = true;
+        } else if (childReflowStatus.IsIncomplete()) {
           incompleteItems.Insert(item.Frame());
         } else if (childReflowStatus.IsOverflowIncomplete()) {
           overflowIncompleteItems.Insert(item.Frame());
@@ -5235,13 +5409,33 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
         MoveFlexItemToFinalPosition(item, framePos, aContainerSize);
       }
 
-      if (!childBPosExceedAvailableSpaceBEnd) {
+      if (!itemInPushedItems) {
+        const nscoord itemBSize = item.Frame()->BSize(flexWM);
+        const nscoord bEndEdgeAfterPerItemShift =
+            framePos.B(flexWM) + itemBSize;
+
         // The item (or a fragment thereof) was placed in this flex container
         // fragment. Update the max block-end edge with the item's block-end
         // edge.
         maxBlockEndEdgeOfChildren =
-            std::max(maxBlockEndEdgeOfChildren,
-                     framePos.B(flexWM) + item.Frame()->BSize(flexWM));
+            std::max(maxBlockEndEdgeOfChildren, bEndEdgeAfterPerItemShift);
+
+        if (frameBPosBeforePerItemShift) {
+          // Make the block-end edge relative to flex container's border-box
+          // because bEndEdgeAfterPerItemShift is relative to the border-box.
+          const nscoord bEndEdgeBeforePerItemShift =
+              containerContentBoxOrigin.B(flexWM) +
+              *frameBPosBeforePerItemShift + itemBSize;
+
+          if (bAxisMetrics.mMaxBEndEdge) {
+            auto& [before, after] = *bAxisMetrics.mMaxBEndEdge;
+            before = std::max(before, bEndEdgeBeforePerItemShift);
+            after = std::max(after, bEndEdgeAfterPerItemShift);
+          } else {
+            bAxisMetrics.mMaxBEndEdge.emplace(bEndEdgeBeforePerItemShift,
+                                              bEndEdgeAfterPerItemShift);
+          }
+        }
       }
 
       // If the item has auto margins, and we were tracking the UsedMargin
@@ -5262,6 +5456,15 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
         aFlr.mAscent = framePos.B(flexWM) + item.ResolvedAscent(true);
       }
     }
+
+    // Now we've finished processing all the items in the first line. Determine
+    // the amount by which the first line's block-end edge has shifted, so we
+    // can apply the same shift for the remaining lines.
+    if (GetPrevInFlow() && aAxisTracker.IsRowOriented() && isInFirstLine &&
+        bAxisMetrics.mMaxBEndEdge) {
+      auto& [before, after] = *bAxisMetrics.mMaxBEndEdge;
+      bAxisMetrics.mBEndEdgeShift = after - before;
+    }
   }
 
   if (!aFlr.mPlaceholders.IsEmpty()) {
@@ -5274,6 +5477,10 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
 
   if (!pushedItems.IsEmpty()) {
     AddStateBits(NS_STATE_FLEX_DID_PUSH_ITEMS);
+  }
+
+  if (GetPrevInFlow()) {
+    aFragmentData.mCumulativeBEndEdgeShift += bAxisMetrics.mBEndEdgeShift;
   }
 
   return {maxBlockEndEdgeOfChildren, anyChildIncomplete};
@@ -5325,7 +5532,7 @@ void nsFlexContainerFrame::PopulateReflowOutput(
 
         // We also potentially need to get the unskipped block-end border and
         // padding (if we assumed it'd be skipped as part of our tentative
-        // assumption that we'd be complete).
+        // assumption that we'd be incomplete).
         if (aReflowInput.mStyleBorder->mBoxDecorationBreak ==
             StyleBoxDecorationBreak::Slice) {
           blockEndContainerBP =
