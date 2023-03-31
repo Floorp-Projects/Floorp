@@ -175,8 +175,6 @@ class ContextGenerationInfo final {
 
   Maybe<uvec2> mDrawingBufferSize;
 
-  webgl::ProvokingVertex mProvokingVertex = webgl::ProvokingVertex::LastVertex;
-
   ObjectId NextId() { return mLastId += 1; }
 };
 
@@ -2188,8 +2186,6 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
                             ErrorResult& rv) {
     GetParameter(cx, pname, retval, rv, true);
   }
-
-  void ProvokingVertex(GLenum rawMode) const;
 
   // -------------------------------------------------------------------------
   // Client-side methods.  Calls in the Host are forwarded to the client.

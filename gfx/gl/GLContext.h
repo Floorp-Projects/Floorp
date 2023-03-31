@@ -109,7 +109,6 @@ enum class GLFeature {
   packed_depth_stencil,
   prim_restart,
   prim_restart_fixed,
-  provoking_vertex,
   query_counter,
   query_objects,
   query_time_elapsed,
@@ -351,7 +350,6 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
     ANGLE_framebuffer_multisample,
     ANGLE_instanced_arrays,
     ANGLE_multiview,
-    ANGLE_provoking_vertex,
     ANGLE_texture_compression_dxt3,
     ANGLE_texture_compression_dxt5,
     ANGLE_timer_query,
@@ -379,7 +377,6 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
     ARB_map_buffer_range,
     ARB_occlusion_query2,
     ARB_pixel_buffer_object,
-    ARB_provoking_vertex,
     ARB_robust_buffer_access_behavior,
     ARB_robustness,
     ARB_sampler_objects,
@@ -421,7 +418,6 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
     EXT_multisampled_render_to_texture,
     EXT_occlusion_query_boolean,
     EXT_packed_depth_stencil,
-    EXT_provoking_vertex,
     EXT_read_format_bgra,
     EXT_robustness,
     EXT_sRGB,
@@ -3390,16 +3386,6 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
     mSymbols.fEnablei(capability, i);
     AFTER_GL_CALL;
   }
-
-  // -
-
-  void fProvokingVertex(GLenum mode) const {
-    BEFORE_GL_CALL;
-    mSymbols.fProvokingVertex(mode);
-    AFTER_GL_CALL;
-  }
-
-  // -
 
 #undef BEFORE_GL_CALL
 #undef AFTER_GL_CALL
