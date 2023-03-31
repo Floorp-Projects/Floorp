@@ -11589,6 +11589,18 @@
   value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
+# The max number of speculative connections we allow for `Link: rel=preconnect`.
+# When 0, the speculative connection created due to `Link: rel=preconnect` will
+# be limited by "network.http.speculative-parallel-limit".
+- name: network.early-hints.preconnect.max_connections
+  type: uint32_t
+#if defined(NIGHTLY_BUILD)
+  value: 10
+#else
+  value: 0
+#endif
+  mirror: always
+
 # How long we should wait for EarlyHintPreloader to be used.
 # Under normal circumstances it should be used immidiately.
 - name: network.early-hints.parent-connect-timeout

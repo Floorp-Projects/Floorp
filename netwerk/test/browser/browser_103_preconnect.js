@@ -5,11 +5,15 @@
 Services.prefs.setBoolPref("network.early-hints.enabled", true);
 Services.prefs.setBoolPref("network.early-hints.preconnect.enabled", true);
 Services.prefs.setBoolPref("network.http.debug-observations", true);
+Services.prefs.setIntPref("network.early-hints.preconnect.max_connections", 10);
 
 registerCleanupFunction(function() {
   Services.prefs.clearUserPref("network.early-hints.enabled");
   Services.prefs.clearUserPref("network.early-hints.preconnect.enabled");
   Services.prefs.clearUserPref("network.http.debug-observations");
+  Services.prefs.clearUserPref(
+    "network.early-hints.preconnect.max_connections"
+  );
 });
 
 // Test steps:

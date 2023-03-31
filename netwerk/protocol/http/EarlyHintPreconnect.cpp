@@ -9,8 +9,72 @@
 #include "mozilla/StaticPrefs_network.h"
 #include "nsIOService.h"
 #include "nsIURI.h"
+#include "SpeculativeTransaction.h"
 
 namespace mozilla::net {
+
+namespace {
+class EarlyHintsPreConnectOverride : public nsIInterfaceRequestor,
+                                     public nsISpeculativeConnectionOverrider {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSISPECULATIVECONNECTIONOVERRIDER
+  NS_DECL_NSIINTERFACEREQUESTOR
+
+  explicit EarlyHintsPreConnectOverride(uint32_t aConnectionLimit)
+      : mConnectionLimit(aConnectionLimit) {}
+
+ private:
+  virtual ~EarlyHintsPreConnectOverride() = default;
+
+  // Only set once on main thread and can be read on multiple threads.
+  const uint32_t mConnectionLimit;
+};
+
+NS_IMPL_ISUPPORTS(EarlyHintsPreConnectOverride, nsIInterfaceRequestor,
+                  nsISpeculativeConnectionOverrider)
+
+NS_IMETHODIMP
+EarlyHintsPreConnectOverride::GetInterface(const nsIID& iid, void** result) {
+  if (NS_SUCCEEDED(QueryInterface(iid, result)) && *result) {
+    return NS_OK;
+  }
+
+  return NS_ERROR_NO_INTERFACE;
+}
+
+NS_IMETHODIMP
+EarlyHintsPreConnectOverride::GetIgnoreIdle(bool* ignoreIdle) {
+  *ignoreIdle = true;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+EarlyHintsPreConnectOverride::GetParallelSpeculativeConnectLimit(
+    uint32_t* parallelSpeculativeConnectLimit) {
+  *parallelSpeculativeConnectLimit = mConnectionLimit;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+EarlyHintsPreConnectOverride::GetIsFromPredictor(bool* isFromPredictor) {
+  *isFromPredictor = false;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+EarlyHintsPreConnectOverride::GetAllow1918(bool* allow) {
+  *allow = false;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+EarlyHintsPreConnectOverride::GetIgnoreUserCertCheck(bool* ignore) {
+  *ignore = !!mConnectionLimit;
+  return NS_OK;
+}
+
+}  // namespace
 
 void EarlyHintPreconnect::MaybePreconnect(const LinkHeader& aHeader,
                                           nsIURI* aBaseURI,
@@ -33,14 +97,18 @@ void EarlyHintPreconnect::MaybePreconnect(const LinkHeader& aHeader,
     return;
   }
 
-  // Note that the http connection manager will limit the number of connections
-  // we can make, so it should be fine we don't check duplicate preconnect
-  // attempts here.
+  uint32_t maxPreconnectCount =
+      StaticPrefs::network_early_hints_preconnect_max_connections();
+  nsCOMPtr<nsIInterfaceRequestor> callbacks =
+      new EarlyHintsPreConnectOverride(maxPreconnectCount);
+  // Note that the http connection manager will limit the number of
+  // connections we can make, so it should be fine we don't check duplicate
+  // preconnect attempts here.
   CORSMode corsMode = dom::Element::StringToCORSMode(aHeader.mCrossOrigin);
   if (corsMode == CORS_ANONYMOUS) {
-    gIOService->SpeculativeAnonymousConnect(uri, aPrincipal, nullptr);
+    gIOService->SpeculativeAnonymousConnect(uri, aPrincipal, callbacks);
   } else {
-    gIOService->SpeculativeConnect(uri, aPrincipal, nullptr);
+    gIOService->SpeculativeConnect(uri, aPrincipal, callbacks);
   }
 }
 
