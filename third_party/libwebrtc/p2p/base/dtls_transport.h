@@ -49,14 +49,12 @@ class StreamInterfaceChannel : public rtc::StreamInterface {
   // Implementations of StreamInterface
   rtc::StreamState GetState() const override;
   void Close() override;
-  rtc::StreamResult Read(void* buffer,
-                         size_t buffer_len,
-                         size_t* read,
-                         int* error) override;
-  rtc::StreamResult Write(const void* data,
-                          size_t data_len,
-                          size_t* written,
-                          int* error) override;
+  rtc::StreamResult Read(rtc::ArrayView<uint8_t> buffer,
+                         size_t& read,
+                         int& error) override;
+  rtc::StreamResult Write(rtc::ArrayView<const uint8_t> data,
+                          size_t& written,
+                          int& error) override;
 
  private:
   RTC_NO_UNIQUE_ADDRESS webrtc::SequenceChecker sequence_checker_;
