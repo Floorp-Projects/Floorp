@@ -8,6 +8,8 @@ ITEM_VALUE(TouchEvents, 0x0001)
 
 ITEM_VALUE(ScreenOrientation, 0x0005)
 
+// SpeechSynthesis part of the Web Speech API
+ITEM_VALUE(SpeechSynthesis, 0x0006)
 
 /*
  * Certain classes (Document, at time of writing) have a cached value for
