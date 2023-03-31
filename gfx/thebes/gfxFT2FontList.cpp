@@ -83,7 +83,9 @@ static __inline void BuildKeyNameFromFontName(nsACString& aName) {
 // allocate memory to uncompress a font from omnijar.
 already_AddRefed<SharedFTFace> FT2FontEntry::GetFTFace(bool aCommit) {
   if (mFTFace) {
-    return do_AddRef(mFTFace);
+    // Create a new reference, and return it.
+    RefPtr<SharedFTFace> face(mFTFace);
+    return face.forget();
   }
 
   NS_ASSERTION(!mFilename.IsEmpty(),
@@ -129,15 +131,22 @@ already_AddRefed<SharedFTFace> FT2FontEntry::GetFTFace(bool aCommit) {
   }
 
   if (aCommit) {
-    mFTFace = face;
+    if (mFTFace.compareExchange(nullptr, face.get())) {
+      // The reference we created is now owned by mFTFace.
+      Unused << face.forget();
+    } else {
+      // We lost a race! Just discard our new face and use the existing one.
+    }
   }
 
+  // Create a new reference, and return it.
+  face = mFTFace;
   return face.forget();
 }
 
 FTUserFontData* FT2FontEntry::GetUserFontData() {
-  if (mFTFace && mFTFace->GetData()) {
-    return static_cast<FTUserFontData*>(mFTFace->GetData());
+  if (SharedFTFace* face = mFTFace) {
+    return static_cast<FTUserFontData*>(face->GetData());
   }
   return nullptr;
 }
@@ -154,7 +163,12 @@ FTUserFontData* FT2FontEntry::GetUserFontData() {
 
 FT2FontEntry::~FT2FontEntry() {
   if (mMMVar) {
-    FT_Done_MM_Var(mFTFace->GetFace()->glyph->library, mMMVar);
+    SharedFTFace* face = mFTFace;
+    FT_Done_MM_Var(face->GetFace()->glyph->library, mMMVar);
+  }
+  if (mFTFace) {
+    auto face = mFTFace.exchange(nullptr);
+    NS_IF_RELEASE(face);
   }
 }
 
@@ -210,10 +224,12 @@ gfxFont* FT2FontEntry::CreateFontInstance(const gfxFontStyle* aStyle) {
 
   RefPtr<UnscaledFontFreeType> unscaledFont(mUnscaledFont);
   if (!unscaledFont) {
-    unscaledFont = !mFilename.IsEmpty() && mFilename[0] == '/'
-                       ? new UnscaledFontFreeType(mFilename.BeginReading(),
-                                                  mFTFontIndex, mFTFace)
-                       : new UnscaledFontFreeType(mFTFace);
+    RefPtr<SharedFTFace> origFace(mFTFace);
+    unscaledFont =
+        !mFilename.IsEmpty() && mFilename[0] == '/'
+            ? new UnscaledFontFreeType(mFilename.BeginReading(), mFTFontIndex,
+                                       std::move(origFace))
+            : new UnscaledFontFreeType(std::move(origFace));
     mUnscaledFont = unscaledFont;
   }
 
@@ -239,7 +255,7 @@ FT2FontEntry* FT2FontEntry::CreateFontEntry(
   FT2FontEntry* fe =
       FT2FontEntry::CreateFontEntry(aFontName, nullptr, 0, nullptr);
   if (fe) {
-    fe->mFTFace = face;
+    fe->mFTFace = face.forget().take();  // mFTFace takes ownership.
     fe->mStyleRange = aStyle;
     fe->mWeightRange = aWeight;
     fe->mStretchRange = aStretch;
@@ -476,12 +492,16 @@ hb_face_t* FT2FontEntry::CreateHBFace() const {
 }
 
 bool FT2FontEntry::HasFontTable(uint32_t aTableTag) {
-  if (mAvailableTables.Count() > 0) {
-    return mAvailableTables.Contains(aTableTag);
+  {
+    AutoReadLock lock(mLock);
+    if (mAvailableTables.Count() > 0) {
+      return mAvailableTables.Contains(aTableTag);
+    }
   }
 
   // If we haven't created a FreeType face already, try to avoid that by
   // reading the available table tags via harfbuzz and caching in a hashset.
+  AutoWriteLock lock(mLock);
   if (!mFTFace && !mFilename.IsEmpty()) {
     hb_face_t* face = CreateHBFace();
     if (face) {
@@ -547,28 +567,32 @@ hb_blob_t* FT2FontEntry::GetFontTable(uint32_t aTableTag) {
 }
 
 bool FT2FontEntry::HasVariations() {
-  if (!mHasVariationsInitialized) {
-    mHasVariationsInitialized = true;
-    if (mFTFace) {
-      mHasVariations =
-          mFTFace->GetFace()->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS;
-    } else {
-      mHasVariations = gfxPlatform::HasVariationFontSupport() &&
-                       HasFontTable(TRUETYPE_TAG('f', 'v', 'a', 'r'));
-    }
+  switch (mHasVariations) {
+    case HasVariationsState::No:
+      return false;
+    case HasVariationsState::Yes:
+      return true;
+    case HasVariationsState::Uninitialized:
+      break;
   }
-  return mHasVariations;
+
+  SharedFTFace* face = mFTFace;
+  bool hasVariations =
+      face ? face->GetFace()->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS
+           : gfxPlatform::HasVariationFontSupport() &&
+                 HasFontTable(TRUETYPE_TAG('f', 'v', 'a', 'r'));
+  mHasVariations =
+      hasVariations ? HasVariationsState::Yes : HasVariationsState::No;
+  return hasVariations;
 }
 
 void FT2FontEntry::GetVariationAxes(nsTArray<gfxFontVariationAxis>& aAxes) {
   if (!HasVariations()) {
     return;
   }
-  FT_MM_Var* mmVar = GetMMVar();
-  if (!mmVar) {
-    return;
+  if (FT_MM_Var* mmVar = GetMMVar()) {
+    gfxFT2Utils::GetVariationAxes(mmVar, aAxes);
   }
-  gfxFT2Utils::GetVariationAxes(mmVar, aAxes);
 }
 
 void FT2FontEntry::GetVariationInstances(
@@ -576,18 +600,16 @@ void FT2FontEntry::GetVariationInstances(
   if (!HasVariations()) {
     return;
   }
-  FT_MM_Var* mmVar = GetMMVar();
-  if (!mmVar) {
-    return;
+  if (FT_MM_Var* mmVar = GetMMVar()) {
+    gfxFT2Utils::GetVariationInstances(this, mmVar, aInstances);
   }
-  gfxFT2Utils::GetVariationInstances(this, mmVar, aInstances);
 }
 
 FT_MM_Var* FT2FontEntry::GetMMVar() {
   if (mMMVarInitialized) {
     return mMMVar;
   }
-  mMMVarInitialized = true;
+  AutoWriteLock lock(mLock);
   RefPtr<SharedFTFace> face = GetFTFace(true);
   if (!face) {
     return nullptr;
@@ -595,6 +617,7 @@ FT_MM_Var* FT2FontEntry::GetMMVar() {
   if (FT_Err_Ok != FT_Get_MM_Var(face->GetFace(), &mMMVar)) {
     mMMVar = nullptr;
   }
+  mMMVarInitialized = true;
   return mMMVar;
 }
 
