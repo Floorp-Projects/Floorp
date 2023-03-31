@@ -1035,4 +1035,64 @@ INSTANTIATE_TEST_SUITE_P(AudioProcessingImplTest,
                                             ::testing::Values(absl::nullopt,
                                                               20)));
 
+// When the input volume is not emulated and no input volume controller is
+// active, the recommended volume must always be the applied volume.
+TEST(AudioProcessingImplTest,
+     RecommendAppliedInputVolumeWithNoAgcWithNoEmulation) {
+  auto apm = AudioProcessingBuilder()
+                 .SetConfig({.capture_level_adjustment = {.enabled = false},
+                             .gain_controller1 = {.enabled = false}})
+                 .Create();
+
+  constexpr int kOneFrame = 1;
+  EXPECT_EQ(ProcessInputVolume(*apm, kOneFrame, /*initial_volume=*/123), 123);
+  EXPECT_EQ(ProcessInputVolume(*apm, kOneFrame, /*initial_volume=*/59), 59);
+  EXPECT_EQ(ProcessInputVolume(*apm, kOneFrame, /*initial_volume=*/135), 135);
+}
+
+// When the input volume is emulated, the recommended volume must always be the
+// applied volume and at any time it must not be that set in the input volume
+// emulator.
+// TODO(bugs.webrtc.org/14581): Enable when APM fixed to let this test pass.
+TEST(AudioProcessingImplTest,
+     DISABLED_RecommendAppliedInputVolumeWithNoAgcWithEmulation) {
+  auto apm =
+      AudioProcessingBuilder()
+          .SetConfig({.capture_level_adjustment = {.enabled = true,
+                                                   .analog_mic_gain_emulation{
+                                                       .enabled = true,
+                                                       .initial_level = 255}},
+                      .gain_controller1 = {.enabled = false}})
+          .Create();
+
+  constexpr int kOneFrame = 1;
+  EXPECT_EQ(ProcessInputVolume(*apm, kOneFrame, /*initial_volume=*/123), 123);
+  EXPECT_EQ(ProcessInputVolume(*apm, kOneFrame, /*initial_volume=*/59), 59);
+  EXPECT_EQ(ProcessInputVolume(*apm, kOneFrame, /*initial_volume=*/135), 135);
+}
+
+// Even if there is an enabled input volume controller, when the input volume is
+// emulated, the recommended volume is always the applied volume because the
+// active controller must only adjust the internally emulated volume and leave
+// the externally applied volume unchanged.
+// TODO(bugs.webrtc.org/14581): Enable when APM fixed to let this test pass.
+TEST(AudioProcessingImplTest,
+     DISABLED_RecommendAppliedInputVolumeWithAgcWithEmulation) {
+  auto apm =
+      AudioProcessingBuilder()
+          .SetConfig({.capture_level_adjustment = {.enabled = true,
+                                                   .analog_mic_gain_emulation{
+                                                       .enabled = true}},
+                      .gain_controller1 = {.enabled = true,
+                                           .analog_gain_controller{
+                                               .enabled = true,
+                                           }}})
+          .Create();
+
+  constexpr int kOneFrame = 1;
+  EXPECT_EQ(ProcessInputVolume(*apm, kOneFrame, /*initial_volume=*/123), 123);
+  EXPECT_EQ(ProcessInputVolume(*apm, kOneFrame, /*initial_volume=*/59), 59);
+  EXPECT_EQ(ProcessInputVolume(*apm, kOneFrame, /*initial_volume=*/135), 135);
+}
+
 }  // namespace webrtc

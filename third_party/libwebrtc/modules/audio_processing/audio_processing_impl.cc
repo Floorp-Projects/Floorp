@@ -1746,12 +1746,6 @@ void AudioProcessingImpl::set_stream_key_pressed(bool key_pressed) {
 }
 
 void AudioProcessingImpl::set_stream_analog_level(int level) {
-  // Check that input volume emulation is disabled since, when enabled, there is
-  // no externally applied input volume to notify to APM.
-  RTC_DCHECK(
-      !submodules_.capture_levels_adjuster ||
-      !config_.capture_level_adjustment.analog_mic_gain_emulation.enabled);
-
   MutexLock lock_capture(&mutex_capture_);
   set_stream_analog_level_locked(level);
 }
