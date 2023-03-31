@@ -98,7 +98,7 @@ add_setup(async function() {
     setAsDefault: true,
   });
   suggestionEngine.alias = ENGINE_ALIAS;
-  engineDomain = suggestionEngine.getResultDomain();
+  engineDomain = suggestionEngine.searchUrlDomain;
   engineName = suggestionEngine.name;
 
   // And the first one-off engine.

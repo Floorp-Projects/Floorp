@@ -170,11 +170,11 @@ add_task(async function test() {
     sources: [UrlbarUtils.RESULT_SOURCE.BOOKMARKS],
   });
   let host = await UrlbarProviderAutofill.getTopHostOverThreshold(context, [
-    wikiEngine.getResultDomain(),
+    wikiEngine.searchUrlDomain,
   ]);
   Assert.equal(
     host,
-    wikiEngine.getResultDomain(),
+    wikiEngine.searchUrlDomain,
     "The search satisfies the autofill threshold requirement."
   );
   await check_results({

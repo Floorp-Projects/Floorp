@@ -2,7 +2,7 @@
  *    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /*
- * Tests getResultDomain API.
+ * Tests searchUrlDomain API.
  */
 
 "use strict";
@@ -17,11 +17,5 @@ add_task(async function test_resultDomain() {
 
   let engine = Services.search.getEngineByName("Test search engine");
 
-  Assert.equal(engine.getResultDomain(), "www.google.com");
-  Assert.equal(engine.getResultDomain("text/html"), "www.google.com");
-  Assert.equal(
-    engine.getResultDomain("application/x-suggestions+json"),
-    "suggestqueries.google.com"
-  );
-  Assert.equal(engine.getResultDomain("fake-response-type"), "");
+  Assert.equal(engine.searchUrlDomain, "www.google.com");
 });
