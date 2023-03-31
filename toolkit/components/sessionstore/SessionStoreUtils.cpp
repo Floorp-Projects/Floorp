@@ -9,6 +9,7 @@
 #include "js/PropertyAndElement.h"  // JS_GetElement
 #include "js/TypeDecls.h"
 #include "jsapi.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/AutocompleteInfoBinding.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
