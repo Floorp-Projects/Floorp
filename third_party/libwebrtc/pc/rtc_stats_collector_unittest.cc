@@ -3558,6 +3558,32 @@ TEST_P(RTCStatsCollectorTestWithParamKind,
 }
 
 TEST_P(RTCStatsCollectorTestWithParamKind,
+       RTCRemoteInboundRtpStreamStatsRttMissingBeforeMeasurement) {
+  constexpr int64_t kReportBlockTimestampUtcUs = 123456789;
+
+  RTCPReportBlock report_block;
+  // The remote-inbound-rtp SSRC and the outbound-rtp SSRC is the same as the
+  // `source_ssrc`, "SSRC of the RTP packet sender".
+  report_block.source_ssrc = 12;
+  ReportBlockData report_block_data;  // AddRoundTripTimeSample() not called.
+  report_block_data.SetReportBlock(report_block, kReportBlockTimestampUtcUs);
+
+  AddSenderInfoAndMediaChannel("TransportName", {report_block_data},
+                               absl::nullopt);
+
+  rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
+
+  std::string remote_inbound_rtp_id = "RI" + MediaTypeCharStr() + "12";
+  ASSERT_TRUE(report->Get(remote_inbound_rtp_id));
+  auto& remote_inbound_rtp = report->Get(remote_inbound_rtp_id)
+                                 ->cast_to<RTCRemoteInboundRtpStreamStats>();
+
+  EXPECT_TRUE(remote_inbound_rtp.round_trip_time_measurements.is_defined());
+  EXPECT_EQ(0, *remote_inbound_rtp.round_trip_time_measurements);
+  EXPECT_FALSE(remote_inbound_rtp.round_trip_time.is_defined());
+}
+
+TEST_P(RTCStatsCollectorTestWithParamKind,
        RTCRemoteInboundRtpStreamStatsWithTimestampFromReportBlock) {
   const int64_t kReportBlockTimestampUtcUs = 123456789;
   fake_clock_.SetTime(Timestamp::Micros(kReportBlockTimestampUtcUs));
