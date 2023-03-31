@@ -820,6 +820,7 @@ SandboxBrokerPolicyFactory::GetRDDPolicy(int aPid) {
 
   AddSharedMemoryPaths(policy.get(), aPid);
 
+  policy->AddPath(rdonly, "/dev/urandom");
   // FIXME (bug 1662321): we should fix nsSystemInfo so that every
   // child process doesn't need to re-read these files to get the info
   // the parent process already has.
