@@ -161,3 +161,40 @@ async function assertRunningProcessAndDecoderName(
     }
   );
 }
+
+/**
+ * Check whether the video playback is not performed in the given process and given decoder.
+ * @param {object} tab
+ *        the tab which has a playing video
+ * @param {string} givenProcess
+ *        the process name on which the video playback should not be running
+ * @param {string} givenDecoder
+ *        the decoder name with which the video playback should not be running
+ */
+async function assertNotEqualRunningProcessAndDecoderName(
+  tab,
+  { givenProcess, givenDecoder } = {}
+) {
+  return SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [givenProcess, givenDecoder],
+    // eslint-disable-next-line no-shadow
+    async (givenProcess, givenDecoder) => {
+      const video = content.document.querySelector("video");
+      ok(!video.paused, "checking a playing video");
+
+      const debugInfo = await SpecialPowers.wrap(video).mozRequestDebugInfo();
+      const videoDecoderName = debugInfo.decoder.reader.videoDecoderName;
+      const pattern = /(.+?)\s+\((\S+)\s+remote\)/;
+      const match = videoDecoderName.match(pattern);
+      if (match) {
+        const decoder = match[1];
+        const process = match[2];
+        isnot(decoder, givenDecoder, `Decoder name is not equal`);
+        isnot(process, givenProcess, `Process name is not equal`);
+      } else {
+        ok(false, "failed to match decoder/process name?");
+      }
+    }
+  );
+}
