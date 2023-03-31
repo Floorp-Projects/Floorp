@@ -108,6 +108,18 @@ bool ToastNotification::EnsureAumidRegistered() {
     return true;
   }
 
+  // Fall back to start menu shortcut for Windows 8; toast AUMID registration in
+  // the registry only works in Windows 10+.
+  if (!IsWin10OrLater()) {
+    nsAutoString aumid;
+    if (!WinTaskbar::GetAppUserModelID(aumid)) {
+      return false;
+    }
+
+    mAumid = Some(aumid);
+    return true;
+  }
+
   nsAutoString installHash;
   nsresult rv = gDirServiceProvider->GetInstallHash(installHash);
   NS_ENSURE_SUCCESS(rv, false);
