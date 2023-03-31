@@ -97,6 +97,14 @@ export class WebDriverBiDiConnection extends WebSocketConnection {
    */
   sendEvent(method, params) {
     this.send({ method, params });
+
+    if (Services.profiler?.IsActive()) {
+      ChromeUtils.addProfilerMarker(
+        "BiDi: Event",
+        { category: "Remote-Protocol" },
+        method
+      );
+    }
   }
 
   /**
@@ -137,6 +145,7 @@ export class WebDriverBiDiConnection extends WebSocketConnection {
     super.onPacket(packet);
 
     const { id, method, params } = packet;
+    const startTime = Cu.now();
 
     try {
       // First check for mandatory field in the command packet
@@ -171,7 +180,15 @@ export class WebDriverBiDiConnection extends WebSocketConnection {
 
       this.sendResult(id, result);
     } catch (e) {
-      this.sendError(packet.id, e);
+      this.sendError(id, e);
+    }
+
+    if (Services.profiler?.IsActive()) {
+      ChromeUtils.addProfilerMarker(
+        "BiDi: Command",
+        { startTime, category: "Remote-Protocol" },
+        `${method} (${id})`
+      );
     }
   }
 }
