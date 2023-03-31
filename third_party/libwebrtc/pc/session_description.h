@@ -272,10 +272,10 @@ class MediaContentDescriptionImpl : public MediaContentDescription {
   typedef C CodecType;
 
   // Codecs should be in preference order (most preferred codec first).
-  virtual const std::vector<C>& codecs() const { return codecs_; }
-  virtual void set_codecs(const std::vector<C>& codecs) { codecs_ = codecs; }
+  const std::vector<C>& codecs() const { return codecs_; }
+  void set_codecs(const std::vector<C>& codecs) { codecs_ = codecs; }
   bool has_codecs() const override { return !codecs_.empty(); }
-  virtual bool HasCodec(int id) {
+  bool HasCodec(int id) {
     bool found = false;
     for (typename std::vector<C>::iterator iter = codecs_.begin();
          iter != codecs_.end(); ++iter) {
@@ -286,8 +286,8 @@ class MediaContentDescriptionImpl : public MediaContentDescription {
     }
     return found;
   }
-  virtual void AddCodec(const C& codec) { codecs_.push_back(codec); }
-  virtual void AddOrReplaceCodec(const C& codec) {
+  void AddCodec(const C& codec) { codecs_.push_back(codec); }
+  void AddOrReplaceCodec(const C& codec) {
     for (typename std::vector<C>::iterator iter = codecs_.begin();
          iter != codecs_.end(); ++iter) {
       if (iter->id == codec.id) {
@@ -297,7 +297,7 @@ class MediaContentDescriptionImpl : public MediaContentDescription {
     }
     AddCodec(codec);
   }
-  virtual void AddCodecs(const std::vector<C>& codecs) {
+  void AddCodecs(const std::vector<C>& codecs) {
     typename std::vector<C>::const_iterator codec;
     for (codec = codecs.begin(); codec != codecs.end(); ++codec) {
       AddCodec(*codec);
