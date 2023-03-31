@@ -988,15 +988,9 @@ gfxRect SVGUtils::GetBBox(nsIFrame* aFrame, uint32_t aFlags,
   if (SVGUtils::IsInSVGTextSubtree(aFrame)) {
     // It is possible to apply a gradient, pattern, clipping path, mask or
     // filter to text. When one of these facilities is applied to text
-    // the bounding box is the entire text element in all
-    // cases.
-    nsIFrame* ancestor = GetFirstNonAAncestorFrame(aFrame);
-    if (ancestor && SVGUtils::IsInSVGTextSubtree(ancestor)) {
-      while (!ancestor->IsSVGTextFrame()) {
-        ancestor = ancestor->GetParent();
-      }
-    }
-    aFrame = ancestor;
+    // the bounding box is the entire text element in all cases.
+    aFrame =
+        nsLayoutUtils::GetClosestFrameOfType(aFrame, LayoutFrameType::SVGText);
   }
 
   ISVGDisplayableFrame* svg = do_QueryFrame(aFrame);
@@ -1028,8 +1022,8 @@ gfxRect SVGUtils::GetBBox(nsIFrame* aFrame, uint32_t aFlags,
 
   // Clean out flags which have no effects on returning bbox from now, so that
   // we can cache and reuse ObjectBoundingBoxProperty() in the code below.
-  aFlags &= ~eIncludeOnlyCurrentFrameForNonSVGElement;
-  aFlags &= ~eUseFrameBoundsForOuterSVG;
+  aFlags &=
+      ~(eIncludeOnlyCurrentFrameForNonSVGElement | eUseFrameBoundsForOuterSVG);
   if (!aFrame->IsSVGUseFrame()) {
     aFlags &= ~eUseUserSpaceOfUseElement;
   }
@@ -1063,12 +1057,10 @@ gfxRect SVGUtils::GetBBox(nsIFrame* aFrame, uint32_t aFlags,
       svg->GetBBoxContribution(ToMatrix(matrix), aFlags).ToThebesRect();
   // Account for 'clipped'.
   if (aFlags & SVGUtils::eBBoxIncludeClipped) {
-    gfxRect clipRect(0, 0, 0, 0);
+    gfxRect clipRect;
     float x, y, width, height;
-    gfxMatrix tm;
     gfxRect fillBBox =
-        svg->GetBBoxContribution(ToMatrix(tm), SVGUtils::eBBoxIncludeFill)
-            .ToThebesRect();
+        svg->GetBBoxContribution({}, SVGUtils::eBBoxIncludeFill).ToThebesRect();
     x = fillBBox.x;
     y = fillBBox.y;
     width = fillBBox.width;
