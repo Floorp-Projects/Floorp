@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '25ef2f60dfc939a58811aa81c141a9fc226d0626',
+  'chromium_revision': 'b1f886001eec212c4a7de787e3746439f53f92c6',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -41,7 +41,7 @@ vars = {
 deps = {
   # TODO(kjellander): Move this to be Android-only.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@a881dc199f4b6c29ffcab4905667e6322c79a855',
+    'https://chromium.googlesource.com/chromium/src/base@f0fb0996815c17673b76c3c278af062998d388b5',
   'src/build':
     'https://chromium.googlesource.com/chromium/src/build@bd893617b2052b7fbe0d81d843a716af300c1d36',
   'src/buildtools':
@@ -52,13 +52,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@752ac57699f5403ca03aec76501d81d51699b234',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@271782c39193ab1e6c0ff06ec3f5e918966fcb86',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@f58fba0a44f934a1d458164c39b638d6b8950ca7',
+    'https://chromium.googlesource.com/chromium/src/testing@6b4bdff82e130cf582cf2a5353a5ccd0a453778e',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@f0b85f1f0631ba24b6228fadb0b30205e403c0c1',
+    'https://chromium.googlesource.com/chromium/src/third_party@695b477e4ff6efbd12e71145fa5323e182db4afb',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -294,7 +294,7 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@f32846a2accdcc8538db7d605c0f9e203f264581',
+    'https://chromium.googlesource.com/chromium/src/tools@c26f5558f7f409ade5507ccd945c3779d0c2306f',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
