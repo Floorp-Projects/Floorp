@@ -512,11 +512,15 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
     if (["OPEN_URL", "SHOW_FIREFOX_ACCOUNTS"].includes(action.type)) {
       this.handleOpenURL(action, props.flowParams, props.UTMTerm);
     } else if (action.type) {
-      var _action$data;
-
       _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.handleUserAction(action); // Wait until migration closes to complete the action
 
-      if (action.type === "SHOW_MIGRATION_WIZARD" || action.type === "MULTI_ACTION" && action !== null && action !== void 0 && (_action$data = action.data) !== null && _action$data !== void 0 && _action$data.actions.find(subAction => subAction.type === "SHOW_MIGRATION_WIZARD")) {
+      const hasMigrate = a => {
+        var _a$data, _a$data$actions;
+
+        return a.type === "SHOW_MIGRATION_WIZARD" || a.type === "MULTI_ACTION" && ((_a$data = a.data) === null || _a$data === void 0 ? void 0 : (_a$data$actions = _a$data.actions) === null || _a$data$actions === void 0 ? void 0 : _a$data$actions.some(hasMigrate));
+      };
+
+      if (hasMigrate(action)) {
         await window.AWWaitForMigrationClose();
         _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendActionTelemetry(props.messageId, "migrate_close");
       }
