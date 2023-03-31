@@ -29,8 +29,13 @@ class GeckoViewPrintDelegateParent extends GeckoViewActorParent {
     this.browserStaticClone = null;
   }
 
+  telemetryDotPrintRequested() {
+    Glean.dotprint.requested.add(1);
+  }
+
   printRequest() {
     if (this.browserStaticClone != null) {
+      this.telemetryDotPrintRequested();
       this.eventDispatcher.sendRequest({
         type: "GeckoView:DotPrintRequest",
         canonicalBrowsingContextId: this.browserStaticClone.browsingContext.id,

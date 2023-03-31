@@ -36,3 +36,5 @@ FINAL_TARGET_FILES.actors += [
     "SelectionActionDelegateChild.jsm",
     "SelectionActionDelegateParent.jsm",
 ]
+
+MOCHITEST_MANIFESTS += ["tests/mochitests/mochitest.ini"]
