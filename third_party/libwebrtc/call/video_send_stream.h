@@ -23,7 +23,7 @@
 #include "api/crypto/crypto_options.h"
 #include "api/frame_transformer_interface.h"
 #include "api/rtp_parameters.h"
-#include "api/rtp_sender_interface.h"
+#include "api/rtp_sender_setparameters_callback.h"
 #include "api/scoped_refptr.h"
 #include "api/video/video_content_type.h"
 #include "api/video/video_frame.h"

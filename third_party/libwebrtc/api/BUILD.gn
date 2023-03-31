@@ -215,14 +215,26 @@ rtc_library("rtp_sender_interface") {
     ":dtmf_sender_interface",
     ":frame_transformer_interface",
     ":media_stream_interface",
-    ":rtc_error",
     ":rtp_parameters",
+    ":rtp_sender_setparameters_callback",
     ":scoped_refptr",
     "../rtc_base:checks",
     "../rtc_base:refcount",
     "../rtc_base/system:rtc_export",
     "crypto:frame_encryptor_interface",
     "video_codecs:video_codecs_api",
+  ]
+}
+
+rtc_library("rtp_sender_setparameters_callback") {
+  visibility = [ "*" ]
+
+  sources = [
+    "rtp_sender_setparameters_callback.cc",
+    "rtp_sender_setparameters_callback.h",
+  ]
+  deps = [
+    ":rtc_error",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/functional:any_invocable" ]
 }
