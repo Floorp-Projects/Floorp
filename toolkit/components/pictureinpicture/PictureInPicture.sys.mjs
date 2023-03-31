@@ -576,11 +576,13 @@ export var PictureInPicture = {
     }
     this.removePiPBrowserFromWeakMap(this.weakWinToBrowser.get(win));
 
+    let args = { reason };
     Services.telemetry.recordEvent(
       "pictureinpicture",
       "closed_method",
-      reason,
-      null
+      "method",
+      null,
+      args
     );
     await this.closePipWindow(win);
   },
@@ -1251,11 +1253,6 @@ export var PictureInPicture = {
 
   hideToggle() {
     Services.prefs.setBoolPref(TOGGLE_ENABLED_PREF, false);
-    Services.telemetry.recordEvent(
-      "pictureinpicture.settings",
-      "disable",
-      "player"
-    );
   },
 
   /**
