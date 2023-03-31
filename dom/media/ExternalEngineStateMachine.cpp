@@ -569,8 +569,9 @@ void ExternalEngineStateMachine::BufferedRangeUpdated() {
 // Note: the variadic only supports passing member variables.
 #define PERFORM_WHEN_ALLOW(Func, ...)                                         \
   do {                                                                        \
-    /* Initialzation is not done yet, posepone the operation */               \
-    if (mState.IsInitEngine() && mState.AsInitEngine()->mInitPromise) {       \
+    /* Initialzation is not done yet, postpone the operation */               \
+    if ((mState.IsInitEngine() || mState.IsRecoverEngine()) &&                \
+        mState.AsInitEngine()->mInitPromise) {                                \
       LOG("%s is called before init", __func__);                              \
       mState.AsInitEngine()->mInitPromise->Then(                              \
           OwnerThread(), __func__,                                            \
