@@ -272,7 +272,8 @@ bool PointerEvent::ShouldResistFingerprinting() {
   //   3. This event is a mouse pointer event.
   //  We don't need to check for the system group since pointer events won't be
   //  dispatched to the system group.
-  if (!nsContentUtils::ShouldResistFingerprinting("Efficiency Check") ||
+  if (!nsContentUtils::ShouldResistFingerprinting("Efficiency Check",
+                                                  RFPTarget::PointerEvents) ||
       !mEvent->IsTrusted() ||
       mEvent->AsPointerEvent()->mInputSource ==
           MouseEvent_Binding::MOZ_SOURCE_MOUSE) {
@@ -281,7 +282,7 @@ bool PointerEvent::ShouldResistFingerprinting() {
 
   // Pref is checked above, so use true as fallback.
   nsCOMPtr<Document> doc = GetDocument();
-  return doc ? doc->ShouldResistFingerprinting() : true;
+  return doc ? doc->ShouldResistFingerprinting(RFPTarget::PointerEvents) : true;
 }
 
 }  // namespace mozilla::dom
