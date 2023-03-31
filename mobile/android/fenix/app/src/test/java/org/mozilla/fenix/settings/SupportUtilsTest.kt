@@ -26,8 +26,8 @@ class SupportUtilsTest {
             SupportUtils.getSumoURLForTopic(mockContext("2 0"), SupportUtils.SumoTopic.TRACKING_PROTECTION, Locale("fr")),
         )
         assertEquals(
-            "https://support.mozilla.org/1/mobile/three/Android/es-CL/whats-new-firefox-preview",
-            SupportUtils.getSumoURLForTopic(mockContext("three"), SupportUtils.SumoTopic.WHATS_NEW, Locale("es", "CL")),
+            "https://www.mozilla.org/firefox/android/notes",
+            SupportUtils.WHATS_NEW_URL,
         )
     }
 

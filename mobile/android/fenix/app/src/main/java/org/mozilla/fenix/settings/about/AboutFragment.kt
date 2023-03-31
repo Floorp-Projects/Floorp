@@ -135,7 +135,7 @@ class AboutFragment : Fragment(), AboutPageListener {
             AboutPageItem(
                 AboutItem.ExternalLink(
                     WHATS_NEW,
-                    SupportUtils.getWhatsNewUrl(context),
+                    SupportUtils.WHATS_NEW_URL,
                 ),
                 getString(R.string.about_whats_new, getString(R.string.app_name)),
             ),

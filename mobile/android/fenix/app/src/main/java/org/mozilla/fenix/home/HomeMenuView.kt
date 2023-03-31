@@ -166,7 +166,7 @@ class HomeMenuView(
                 Events.whatsNewTapped.record(NoExtras())
 
                 homeActivity.openToBrowserAndLoad(
-                    searchTermOrURL = SupportUtils.getWhatsNewUrl(context),
+                    searchTermOrURL = SupportUtils.WHATS_NEW_URL,
                     newTab = true,
                     from = BrowserDirection.FromHome,
                 )

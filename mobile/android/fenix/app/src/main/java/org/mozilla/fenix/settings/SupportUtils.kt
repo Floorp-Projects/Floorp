@@ -37,6 +37,7 @@ object SupportUtils {
     const val MEITUAN_URL = "https://tb.j5k6.com/6ZSOp"
     const val GOOGLE_US_URL = "https://www.google.com/webhp?client=firefox-b-1-m&channel=ts"
     const val GOOGLE_XX_URL = "https://www.google.com/webhp?client=firefox-b-m&channel=ts"
+    const val WHATS_NEW_URL = "https://www.mozilla.org/firefox/android/notes"
 
     enum class SumoTopic(internal val topicStr: String) {
         HELP("faq-android"),
@@ -44,7 +45,6 @@ object SupportUtils {
         YOUR_RIGHTS("your-rights"),
         TRACKING_PROTECTION("tracking-protection-firefox-android"),
         TOTAL_COOKIE_PROTECTION("enhanced-tracking-protection-android"),
-        WHATS_NEW("whats-new-firefox-preview"),
         OPT_OUT_STUDIES("how-opt-out-studies-firefox-android"),
         SEND_TABS("send-tab-preview"),
         SET_AS_DEFAULT_BROWSER("make-firefox-default-browser-android"),
@@ -98,8 +98,6 @@ object SupportUtils {
         val langTag = getLanguageTag(locale)
         return "https://www.mozilla.org/$langTag/$path"
     }
-
-    fun getWhatsNewUrl(context: Context) = getSumoURLForTopic(context, SumoTopic.WHATS_NEW)
 
     fun createCustomTabIntent(context: Context, url: String): Intent = CustomTabsIntent.Builder()
         .setInstantAppsEnabled(false)

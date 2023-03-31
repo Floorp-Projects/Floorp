@@ -91,7 +91,7 @@ class BrowserRobot {
     }
 
     fun verifyWhatsNewURL() {
-        verifyUrl("support.mozilla.org/")
+        verifyUrl("mozilla.org/")
     }
 
     fun verifyRateOnGooglePlayURL() {
