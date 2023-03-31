@@ -94,6 +94,12 @@ const FAKE_BROWSER_LIST = [
     profile: { id: "Default", name: "Default" },
     brandImage: "chrome://browser/content/migration/brands/vivaldi.png",
   },
+  {
+    key: "no-resources-browser",
+    displayName: "Browser with no resources",
+    resourceTypes: [],
+    profile: { id: "Default", name: "Default" },
+  },
 ];
 
 const Template = ({ state, dialogMode }) => html`

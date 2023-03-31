@@ -206,6 +206,32 @@
       });
 
       /**
+       * Tests the migration wizard with no resources
+       */
+      add_task(async function test_no_resources() {
+        gWiz.setState({
+          page: MigrationWizardConstants.PAGES.SELECTION,
+          migrators: [{
+            key: "some-browser-0",
+            displayName: "Some Browser 0 with no resources",
+            resourceTypes: [],
+            profile: { id: "person-1", name: "Person 1" },
+          }],
+          showImportAll: false,
+        });
+
+        let noResourcesFound = gShadowRoot.querySelector(".no-resources-found");
+        let hideOnErrorEls = gShadowRoot.querySelectorAll(".hide-on-error");
+        ok(
+          !isHidden(noResourcesFound),
+          "Error message of no reasources should be shown."
+        );
+        for (let hideOnErrorEl of hideOnErrorEls) {
+          ok(isHidden(hideOnErrorEl), "Item should be hidden.");
+        }
+      });
+
+      /**
        * Tests variant 2 of the migration wizard
        */
       add_task(async function test_selection_variant_2() {
