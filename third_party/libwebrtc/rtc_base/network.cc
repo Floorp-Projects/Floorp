@@ -50,9 +50,11 @@ using ::webrtc::SafeTask;
 using ::webrtc::TimeDelta;
 
 // List of MAC addresses of known VPN (for windows).
-constexpr uint8_t kVpns[2][6] = {
-    // Cisco AnyConnect.
+constexpr uint8_t kVpns[3][6] = {
+    // Cisco AnyConnect SSL VPN Client.
     {0x0, 0x5, 0x9A, 0x3C, 0x7A, 0x0},
+    // Cisco AnyConnect IPSEC VPN Client.
+    {0x0, 0x5, 0x9A, 0x3C, 0x78, 0x0},
     // GlobalProtect Virtual Ethernet.
     {0x2, 0x50, 0x41, 0x0, 0x0, 0x1},
 };
@@ -864,7 +866,9 @@ bool BasicNetworkManager::CreateNetworks(
                   reinterpret_cast<const uint8_t*>(
                       adapter_addrs->PhysicalAddress),
                   adapter_addrs->PhysicalAddressLength))) {
-            underlying_type_for_vpn = adapter_type;
+            // With MAC-based detection we do not know the
+            // underlying adapter type.
+            underlying_type_for_vpn = ADAPTER_TYPE_UNKNOWN;
             adapter_type = ADAPTER_TYPE_VPN;
           }
 
