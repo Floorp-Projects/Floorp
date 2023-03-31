@@ -670,6 +670,17 @@ TEST(AudioEncoderOpusTest, TestConfigFromInvalidParams) {
             config.supported_frame_lengths_ms);
 }
 
+TEST(AudioEncoderOpusTest, GetFrameLenghtRange) {
+  AudioEncoderOpusConfig config =
+      CreateConfigWithParameters({{"maxptime", "10"}, {"ptime", "10"}});
+  std::unique_ptr<AudioEncoder> encoder =
+      AudioEncoderOpus::MakeAudioEncoder(config, kDefaultOpusPayloadType);
+  auto ptime = webrtc::TimeDelta::Millis(10);
+  absl::optional<std::pair<webrtc::TimeDelta, webrtc::TimeDelta>> range = {
+      {ptime, ptime}};
+  EXPECT_EQ(encoder->GetFrameLengthRange(), range);
+}
+
 // Test that bitrate will be overridden by the "maxaveragebitrate" parameter.
 // Also test that the "maxaveragebitrate" can't be set to values outside the
 // range of 6000 and 510000
