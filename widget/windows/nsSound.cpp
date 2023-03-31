@@ -32,7 +32,9 @@
 
 using mozilla::LogLevel;
 
+#ifdef DEBUG
 static mozilla::LazyLogModule gWin32SoundLog("nsSound");
+#endif
 
 // Hackaround for bug 1644240
 // When we call PlaySound for the first time in the process, winmm.dll creates

@@ -9,6 +9,7 @@
 #include "nsIWidget.h"
 #include "mozilla/widget/PCompositorWidgetParent.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/gfx/2D.h"
 #include "prthread.h"
 #include <windows.h>
 

@@ -34,7 +34,7 @@ static void GetDisplayNameForPrinter(const cups_dest_t& aDest,
   const char* displayName = CupsShim().cupsGetOption(
       "printer-info", aDest.num_options, aDest.options);
   if (displayName) {
-    CopyUTF8toUTF16(MakeStringSpan(displayName), aName);
+    CopyUTF8toUTF16(mozilla::MakeStringSpan(displayName), aName);
   }
 #endif
 }

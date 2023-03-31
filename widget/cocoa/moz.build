@@ -180,5 +180,3 @@ OS_LIBS += [
 ]
 
 SPHINX_TREES["/widget/cocoa"] = "docs"
-
-REQUIRES_UNIFIED_BUILD = True

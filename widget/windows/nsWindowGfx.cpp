@@ -25,6 +25,7 @@
 #include "gfxEnv.h"
 #include "gfxImageSurface.h"
 #include "gfxUtils.h"
+#include "gfxConfig.h"
 #include "gfxWindowsSurface.h"
 #include "gfxWindowsPlatform.h"
 #include "gfxDWriteFonts.h"
@@ -40,6 +41,8 @@
 #include "nsIWidgetListener.h"
 #include "mozilla/Unused.h"
 #include "nsDebug.h"
+#include "WindowRenderer.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
 
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
@@ -71,9 +74,6 @@ extern mozilla::LazyLogModule gWindowsLog;
  * SECTION: nsWindow statics
  *
  **************************************************************/
-
-static UniquePtr<uint8_t[]> sSharedSurfaceData;
-static IntSize sSharedSurfaceSize;
 
 struct IconMetrics {
   int32_t xMetric;

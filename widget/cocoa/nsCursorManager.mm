@@ -72,7 +72,6 @@ static constexpr nsCursor kCustomCursor = eCursorCount;
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   switch (aCursor) {
-    SEL cursorSelector;
     case eCursor_standard:
       return [nsMacCursor cursorWithCursor:[NSCursor arrowCursor] type:aCursor];
     case eCursor_wait:
@@ -89,24 +88,27 @@ static constexpr nsCursor kCustomCursor = eCursorCount;
       return [nsMacCursor cursorWithImageNamed:@"move" hotSpot:NSMakePoint(12, 12) type:aCursor];
     case eCursor_help:
       return [nsMacCursor cursorWithImageNamed:@"help" hotSpot:NSMakePoint(12, 12) type:aCursor];
-    case eCursor_copy:
-      cursorSelector = @selector(dragCopyCursor);
+    case eCursor_copy: {
+      SEL cursorSelector = @selector(dragCopyCursor);
       return [nsMacCursor cursorWithCursor:[NSCursor respondsToSelector:cursorSelector]
                                                ? [NSCursor performSelector:cursorSelector]
                                                : [NSCursor arrowCursor]
                                       type:aCursor];
-    case eCursor_alias:
-      cursorSelector = @selector(dragLinkCursor);
+    }
+    case eCursor_alias: {
+      SEL cursorSelector = @selector(dragLinkCursor);
       return [nsMacCursor cursorWithCursor:[NSCursor respondsToSelector:cursorSelector]
                                                ? [NSCursor performSelector:cursorSelector]
                                                : [NSCursor arrowCursor]
                                       type:aCursor];
-    case eCursor_context_menu:
-      cursorSelector = @selector(contextualMenuCursor);
+    }
+    case eCursor_context_menu: {
+      SEL cursorSelector = @selector(contextualMenuCursor);
       return [nsMacCursor cursorWithCursor:[NSCursor respondsToSelector:cursorSelector]
                                                ? [NSCursor performSelector:cursorSelector]
                                                : [NSCursor arrowCursor]
                                       type:aCursor];
+    }
     case eCursor_cell:
       return [nsMacCursor cursorWithImageNamed:@"cell" hotSpot:NSMakePoint(12, 12) type:aCursor];
     case eCursor_grab:
@@ -122,12 +124,13 @@ static constexpr nsCursor kCustomCursor = eCursorCount;
     case eCursor_all_scroll:
       return [nsMacCursor cursorWithCursor:[NSCursor openHandCursor] type:aCursor];
     case eCursor_not_allowed:
-    case eCursor_no_drop:
-      cursorSelector = @selector(operationNotAllowedCursor);
+    case eCursor_no_drop: {
+      SEL cursorSelector = @selector(operationNotAllowedCursor);
       return [nsMacCursor cursorWithCursor:[NSCursor respondsToSelector:cursorSelector]
                                                ? [NSCursor performSelector:cursorSelector]
                                                : [NSCursor arrowCursor]
                                       type:aCursor];
+    }
     // Resize Cursors:
     // North
     case eCursor_n_resize:

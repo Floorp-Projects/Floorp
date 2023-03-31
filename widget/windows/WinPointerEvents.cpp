@@ -8,7 +8,9 @@
  */
 
 #include "nscore.h"
+#include "nsWindowDefs.h"
 #include "WinPointerEvents.h"
+#include "WinUtils.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/WindowsVersion.h"
