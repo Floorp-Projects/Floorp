@@ -60,6 +60,19 @@ bool IsEnabled(const FieldTrialsView* config, absl::string_view key) {
 bool IsNotDisabled(const FieldTrialsView* config, absl::string_view key) {
   return !absl::StartsWith(config->Lookup(key), "Disabled");
 }
+
+BandwidthLimitedCause GetBandwidthLimitedCause(
+    LossBasedState loss_based_state) {
+  switch (loss_based_state) {
+    case LossBasedState::kDecreasing:
+      return BandwidthLimitedCause::kLossLimitedBweDecreasing;
+    case LossBasedState::kIncreasing:
+      return BandwidthLimitedCause::kLossLimitedBweIncreasing;
+    default:
+      return BandwidthLimitedCause::kDelayBasedLimited;
+  }
+}
+
 }  // namespace
 
 GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config,
@@ -669,9 +682,7 @@ void GoogCcNetworkController::MaybeTriggerOnNetworkChanged(
 
     auto probes = probe_controller_->SetEstimatedBitrate(
         loss_based_target_rate,
-        /*bwe_limited_due_to_packet_loss=*/
-        bandwidth_estimation_->loss_based_state() !=
-            LossBasedState::kDelayBasedEstimate,
+        GetBandwidthLimitedCause(bandwidth_estimation_->loss_based_state()),
         at_time);
     update->probe_cluster_configs.insert(update->probe_cluster_configs.end(),
                                          probes.begin(), probes.end());
