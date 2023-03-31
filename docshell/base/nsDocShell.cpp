@@ -975,6 +975,7 @@ bool nsDocShell::MaybeHandleSubframeHistory(
       // executing an onLoad Handler,this load will not go
       // into session history.
       // XXX Why is this code in a method which deals with iframes!
+      MOZ_ASSERT(!aLoadState->IsFormSubmission());
       bool inOnLoadHandler = false;
       GetIsExecutingOnLoadHandler(&inOnLoadHandler);
       if (inOnLoadHandler) {
@@ -13085,11 +13086,20 @@ nsresult nsDocShell::OnLinkClickSync(nsIContent* aContent,
     CopyUTF8toUTF16(type, typeHint);
   }
 
-  // Link click (or form submission) can be triggered inside an onload
-  // handler, and we don't want to add history entry in this case.
-  bool inOnLoadHandler = false;
-  GetIsExecutingOnLoadHandler(&inOnLoadHandler);
-  uint32_t loadType = inOnLoadHandler ? LOAD_NORMAL_REPLACE : LOAD_LINK;
+  uint32_t loadType;
+  if (aLoadState->IsFormSubmission()) {
+    // https://html.spec.whatwg.org/#form-submission-algorithm
+    //  22. Let historyHandling be "push".
+    //  23. If form document has not yet completely loaded, then set
+    //      historyHandling to "replace".
+    loadType = mEODForCurrentDocument ? LOAD_LINK : LOAD_NORMAL_REPLACE;
+  } else {
+    // Link click can be triggered inside an onload handler, and we don't want
+    // to add history entry in this case.
+    bool inOnLoadHandler = false;
+    GetIsExecutingOnLoadHandler(&inOnLoadHandler);
+    loadType = inOnLoadHandler ? LOAD_NORMAL_REPLACE : LOAD_LINK;
+  }
 
   nsCOMPtr<nsIReferrerInfo> referrerInfo =
       elementCanHaveNoopener ? new ReferrerInfo(*aContent->AsElement())
