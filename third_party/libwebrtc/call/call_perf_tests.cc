@@ -267,8 +267,11 @@ void CallPerfTest::TestAudioVideoSync(FecMode fec,
 
     AudioSendStream::Config audio_send_config(audio_send_transport.get());
     audio_send_config.rtp.ssrc = kAudioSendSsrc;
+    // TODO(bugs.webrtc.org/14683): Let the tests fail with invalid config.
     audio_send_config.send_codec_spec = AudioSendStream::Config::SendCodecSpec(
-        kAudioSendPayloadType, {"ISAC", 16000, 1});
+        kAudioSendPayloadType, {"OPUS", 48000, 2});
+    audio_send_config.min_bitrate_bps = 6000;
+    audio_send_config.max_bitrate_bps = 510000;
     audio_send_config.encoder_factory = CreateBuiltinAudioEncoderFactory();
     audio_send_stream = sender_call_->CreateAudioSendStream(audio_send_config);
 
@@ -290,7 +293,7 @@ void CallPerfTest::TestAudioVideoSync(FecMode fec,
     audio_recv_config.sync_group = kSyncGroup;
     audio_recv_config.decoder_factory = audio_decoder_factory_;
     audio_recv_config.decoder_map = {
-        {kAudioSendPayloadType, {"ISAC", 16000, 1}}};
+        {kAudioSendPayloadType, {"OPUS", 48000, 2}}};
 
     if (create_first == CreateOrder::kAudioFirst) {
       audio_receive_stream =
