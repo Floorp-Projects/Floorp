@@ -1,6 +1,6 @@
-use crate::crypto;
+use crate::crypto::{CryptoError, PinUvAuthParam};
 use crate::ctap2::client_data::ClientDataHash;
-use crate::ctap2::commands::client_pin::{GetPinToken, GetRetries, Pin, PinAuth, PinError};
+use crate::ctap2::commands::client_pin::{GetPinToken, GetRetries, Pin, PinError};
 use crate::errors::AuthenticatorError;
 use crate::transport::errors::{ApduErrorStatus, HIDError};
 use crate::transport::FidoDevice;
@@ -95,25 +95,20 @@ pub trait RequestCtap2: fmt::Debug {
 pub(crate) trait PinAuthCommand {
     fn pin(&self) -> &Option<Pin>;
     fn set_pin(&mut self, pin: Option<Pin>);
-    fn pin_auth(&self) -> &Option<PinAuth>;
-    fn set_pin_auth(&mut self, pin_auth: Option<PinAuth>, pin_auth_protocol: Option<u64>);
+    fn pin_auth(&self) -> &Option<PinUvAuthParam>;
+    fn set_pin_auth(&mut self, pin_auth: Option<PinUvAuthParam>);
     fn client_data_hash(&self) -> ClientDataHash;
     fn unset_uv_option(&mut self);
     fn determine_pin_auth<D: FidoDevice>(&mut self, dev: &mut D) -> Result<(), AuthenticatorError> {
         if !dev.supports_ctap2() {
-            self.set_pin_auth(None, None);
+            self.set_pin_auth(None);
             return Ok(());
         }
 
         let client_data_hash = self.client_data_hash();
-        let (pin_auth, pin_auth_protocol) =
-            match calculate_pin_auth(dev, &client_data_hash, self.pin()) {
-                Ok((pin_auth, pin_auth_protocol)) => (pin_auth, pin_auth_protocol),
-                Err(e) => {
-                    return Err(repackage_pin_errors(dev, e));
-                }
-            };
-        self.set_pin_auth(pin_auth, pin_auth_protocol);
+        let pin_auth = calculate_pin_auth(dev, &client_data_hash, self.pin())
+            .map_err(|e| repackage_pin_errors(dev, e))?;
+        self.set_pin_auth(pin_auth);
         Ok(())
     }
 }
@@ -391,7 +386,7 @@ pub enum CommandError {
     Serializing(CborError),
     StatusCode(StatusCode, Option<Value>),
     Json(json::Error),
-    Crypto(crypto::CryptoError),
+    Crypto(CryptoError),
     UnsupportedPinProtocol,
 }
 
@@ -426,7 +421,7 @@ pub(crate) fn calculate_pin_auth<Dev>(
     dev: &mut Dev,
     client_data_hash: &ClientDataHash,
     pin: &Option<Pin>,
-) -> Result<(Option<PinAuth>, Option<u64>), AuthenticatorError>
+) -> Result<Option<PinUvAuthParam>, AuthenticatorError>
 where
     Dev: FidoDevice,
 {
@@ -436,7 +431,7 @@ where
 
     // TODO(MS): What to do if token supports client_pin, but none has been set: Some(false)
     //           AND a Pin is not None?
-    let pin_auth = if info.options.client_pin == Some(true) {
+    if info.options.client_pin == Some(true) {
         let pin = pin
             .as_ref()
             .ok_or(HIDError::Command(CommandError::StatusCode(
@@ -444,20 +439,15 @@ where
                 None,
             )))?;
 
-        let pin_command = GetPinToken::new(&info, &shared_secret, pin)?;
+        let pin_command = GetPinToken::new(&shared_secret, pin);
         let pin_token = dev.send_cbor(&pin_command)?;
 
-        (
-            Some(
-                pin_token
-                    .auth(client_data_hash.as_ref())
-                    .map_err(CommandError::Crypto)?,
-            ),
-            Some(1), // Currently only pin_auth_protocol 1 supported
-        )
+        Ok(Some(
+            pin_token
+                .derive(client_data_hash.as_ref())
+                .map_err(CommandError::Crypto)?,
+        ))
     } else {
-        (None, None)
-    };
-
-    Ok(pin_auth)
+        Ok(None)
+    }
 }

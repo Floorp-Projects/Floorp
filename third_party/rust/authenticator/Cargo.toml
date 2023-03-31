@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "authenticator"
-version = "0.4.0-alpha.10"
+version = "0.4.0-alpha.11"
 authors = [
     "J.C. Jones <jc@mozilla.com>",
     "Tim Taubert <ttaubert@mozilla.com>",
@@ -78,10 +78,6 @@ optional = true
 [dependencies.rand]
 version = "0.8"
 
-[dependencies.ring]
-version = "0.16"
-optional = true
-
 [dependencies.runloop]
 version = "0.1.0"
 
@@ -140,7 +136,6 @@ crypto_openssl = [
     "openssl",
     "openssl-sys",
 ]
-crypto_ring = ["ring"]
 default = ["crypto_nss"]
 gecko = ["nss-gk-api/gecko"]
 webdriver = [

@@ -1,5 +1,5 @@
 use crate::consts::{Capability, HIDCmd, CID_BROADCAST};
-use crate::crypto::ECDHSecret;
+use crate::crypto::SharedSecret;
 use crate::ctap2::commands::get_info::AuthenticatorInfo;
 use crate::transport::{errors::HIDError, Nonce};
 use crate::u2ftypes::{U2FDevice, U2FDeviceInfo, U2FHIDCont, U2FHIDInit, U2FHIDInitResp};
@@ -28,8 +28,8 @@ where
     fn is_u2f(&mut self) -> bool;
     fn get_authenticator_info(&self) -> Option<&AuthenticatorInfo>;
     fn set_authenticator_info(&mut self, authenticator_info: AuthenticatorInfo);
-    fn set_shared_secret(&mut self, secret: ECDHSecret);
-    fn get_shared_secret(&self) -> Option<&ECDHSecret>;
+    fn set_shared_secret(&mut self, secret: SharedSecret);
+    fn get_shared_secret(&self) -> Option<&SharedSecret>;
     fn clone_device_as_write_only(&self) -> Result<Self, HIDError>;
 
     fn supports_ctap1(&self) -> bool {

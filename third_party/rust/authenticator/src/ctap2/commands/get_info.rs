@@ -650,7 +650,7 @@ pub mod tests {
         // init_resp packet
         let mut msg = CID_BROADCAST.to_vec();
         msg.extend(vec![
-            0x06, /*HIDCmd::Init without TYPE_INIT*/
+            0x06, /* HIDCmd::Init without TYPE_INIT */
             0x00, 0x11,
         ]); // cmd + bcnt
         msg.extend_from_slice(&nonce);

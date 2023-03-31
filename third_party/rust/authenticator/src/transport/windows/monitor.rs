@@ -44,27 +44,37 @@ where
     }
 
     pub fn run(&mut self, alive: &dyn Fn() -> bool) -> Result<(), Box<dyn Error>> {
-        let mut stored = HashSet::new();
+        let mut current = HashSet::new();
+        let mut previous;
 
         while alive() {
             let device_info_set = DeviceInfoSet::new()?;
-            let devices = HashSet::from_iter(device_info_set.devices());
+            previous = current;
+            current = HashSet::from_iter(device_info_set.devices());
 
             // Remove devices that are gone.
-            for path in stored.difference(&devices) {
+            for path in previous.difference(&current) {
                 self.remove_device(path);
             }
 
-            let paths: Vec<_> = devices.difference(&stored).cloned().collect();
-            self.selector_sender
-                .send(DeviceSelectorEvent::DevicesAdded(paths.clone()))?;
-            // Add devices that were plugged in.
-            for path in paths {
-                self.add_device(&path);
+            let added: Vec<String> = current.difference(&previous).cloned().collect();
+
+            // We have to notify additions in batches to avoid
+            // arbitrarily selecting the first added device.
+            if !added.is_empty()
+                && self
+                    .selector_sender
+                    .send(DeviceSelectorEvent::DevicesAdded(added.clone()))
+                    .is_err()
+            {
+                // Send only fails if the receiver hung up. We should exit the loop.
+                break;
             }
 
-            // Remember the new set.
-            stored = devices;
+            // Add devices that were plugged in.
+            for path in added {
+                self.add_device(&path);
+            }
 
             // Wait a little before looking for devices again.
             thread::sleep(Duration::from_millis(100));

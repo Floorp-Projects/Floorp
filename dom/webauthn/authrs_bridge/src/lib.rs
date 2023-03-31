@@ -91,7 +91,7 @@ fn authrs_to_nserror(e: &AuthenticatorError) -> nsresult {
         AuthenticatorError::PinError(PinError::PinAuthBlocked) => NS_ERROR_DOM_OPERATION_ERR,
         AuthenticatorError::PinError(PinError::PinBlocked) => NS_ERROR_DOM_OPERATION_ERR,
         AuthenticatorError::PinError(PinError::PinNotSet) => NS_ERROR_DOM_UNKNOWN_ERR,
-        AuthenticatorError::PinError(PinError::Backend(_)) => NS_ERROR_DOM_UNKNOWN_ERR,
+        AuthenticatorError::PinError(PinError::Crypto(_)) => NS_ERROR_DOM_UNKNOWN_ERR,
         _ => NS_ERROR_DOM_UNKNOWN_ERR,
     }
 }

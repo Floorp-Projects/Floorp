@@ -6,7 +6,7 @@ extern crate libc;
 use crate::consts::CID_BROADCAST;
 use crate::transport::hid::HIDDevice;
 use crate::transport::platform::{hidraw, monitor};
-use crate::transport::{AuthenticatorInfo, ECDHSecret, FidoDevice, HIDError};
+use crate::transport::{AuthenticatorInfo, FidoDevice, HIDError, SharedSecret};
 use crate::u2ftypes::{U2FDevice, U2FDeviceInfo};
 use crate::util::from_unix_result;
 use std::fs::OpenOptions;
@@ -24,7 +24,7 @@ pub struct Device {
     out_rpt_size: usize,
     cid: [u8; 4],
     dev_info: Option<U2FDeviceInfo>,
-    secret: Option<ECDHSecret>,
+    secret: Option<SharedSecret>,
     authenticator_info: Option<AuthenticatorInfo>,
 }
 
@@ -142,11 +142,11 @@ impl HIDDevice for Device {
         hidraw::is_u2f_device(self.fd.as_raw_fd())
     }
 
-    fn get_shared_secret(&self) -> Option<&ECDHSecret> {
+    fn get_shared_secret(&self) -> Option<&SharedSecret> {
         self.secret.as_ref()
     }
 
-    fn set_shared_secret(&mut self, secret: ECDHSecret) {
+    fn set_shared_secret(&mut self, secret: SharedSecret) {
         self.secret = Some(secret);
     }
 

@@ -4,7 +4,7 @@
 
 use crate::transport::hid::HIDDevice;
 use crate::transport::FidoDevice;
-use crate::transport::{AuthenticatorInfo, ECDHSecret, HIDError};
+use crate::transport::{AuthenticatorInfo, HIDError, SharedSecret};
 use crate::u2ftypes::{U2FDevice, U2FDeviceInfo};
 use std::hash::Hash;
 use std::io;
@@ -88,11 +88,11 @@ impl HIDDevice for Device {
         unimplemented!()
     }
 
-    fn set_shared_secret(&mut self, secret: ECDHSecret) {
+    fn set_shared_secret(&mut self, secret: SharedSecret) {
         unimplemented!()
     }
 
-    fn get_shared_secret(&self) -> Option<&ECDHSecret> {
+    fn get_shared_secret(&self) -> Option<&SharedSecret> {
         unimplemented!()
     }
 
