@@ -1511,7 +1511,7 @@ bool WarpCacheIRTranspiler::emitLoadProtoObject(ObjOperandId resultId,
   if (ins->isConstant()) {
     MDefinition* receiverObj = getOperand(receiverObjId);
 
-    ins = MConstantProto::New(alloc(), ins, receiverObj);
+    ins = MConstantProto::New(alloc(), ins, receiverObj->skipObjectGuards());
     add(ins);
   }
   return defineOperand(resultId, ins);
