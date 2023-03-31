@@ -53,5 +53,3 @@ FINAL_LIBRARY = "xul"
 
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "Session Restore")
-
-REQUIRES_UNIFIED_BUILD = True

@@ -7,6 +7,7 @@
 
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/ipc/IPDLParamTraits.h"
+#include "mozilla/ipc/URIUtils.h"
 #include "SessionStoreData.h"
 #include "SessionStoreUtils.h"
 #include "SessionStoreRestoreData.h"
