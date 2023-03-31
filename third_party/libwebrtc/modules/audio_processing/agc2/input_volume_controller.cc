@@ -187,14 +187,13 @@ void MonoInputVolumeController::Initialize() {
   is_first_frame_ = true;
 }
 
-// A speech segment is considered active if at least
+// A speeh segment is considered active if at least
 // `update_input_volume_wait_frames_` new frames have been processed since the
 // previous update and the ratio of non-silence frames (i.e., frames with a
-// non-empty `speech_probability` value above `speech_probability_threshold_`)
-// is at least `speech_ratio_threshold_`.
-void MonoInputVolumeController::Process(
-    absl::optional<int> rms_error_dbfs,
-    absl::optional<float> speech_probability) {
+// `speech_probability` higher than `speech_probability_threshold_`) is at least
+// `speech_ratio_threshold_`.
+void MonoInputVolumeController::Process(absl::optional<int> rms_error_dbfs,
+                                        float speech_probability) {
   if (check_volume_on_next_process_) {
     check_volume_on_next_process_ = false;
     // We have to wait until the first process call to check the volume,
@@ -203,8 +202,7 @@ void MonoInputVolumeController::Process(
   }
 
   // Count frames with a high speech probability as speech.
-  if (speech_probability.has_value() &&
-      *speech_probability >= speech_probability_threshold_) {
+  if (speech_probability >= speech_probability_threshold_) {
     ++speech_frames_since_update_input_volume_;
   }
 
@@ -364,8 +362,7 @@ void MonoInputVolumeController::UpdateInputVolume(int rms_error_dbfs) {
 
 InputVolumeController::InputVolumeController(int num_capture_channels,
                                              const Config& config)
-    : analog_controller_enabled_(config.enabled),
-      num_capture_channels_(num_capture_channels),
+    : num_capture_channels_(num_capture_channels),
       min_mic_level_override_(GetMinMicLevelOverride()),
       capture_output_used_(true),
       clipped_level_step_(config.clipped_level_step),
@@ -384,9 +381,8 @@ InputVolumeController::InputVolumeController(int num_capture_channels,
       target_range_max_dbfs_(config.target_range_max_dbfs),
       target_range_min_dbfs_(config.target_range_min_dbfs),
       channel_controllers_(num_capture_channels) {
-  RTC_LOG(LS_INFO) << "[agc] analog controller enabled: "
-                   << (analog_controller_enabled_ ? "yes" : "no");
   const int min_mic_level = min_mic_level_override_.value_or(kMinMicLevel);
+  RTC_LOG(LS_INFO) << "[agc] Input volume controller enabled";
   RTC_LOG(LS_INFO) << "[agc] Min mic level: " << min_mic_level
                    << " (overridden: "
                    << (min_mic_level_override_.has_value() ? "yes" : "no")
@@ -475,10 +471,12 @@ void InputVolumeController::AnalyzePreProcess(const AudioBuffer& audio_buffer) {
       }
     }
   }
+
   if (clipping_detected) {
     RTC_DLOG(LS_INFO) << "[agc] Clipping detected. clipped_ratio="
                       << clipped_ratio;
   }
+
   int step = clipped_level_step_;
   if (clipping_predicted) {
     predicted_step = std::max(predicted_step, clipped_level_step_);
@@ -487,6 +485,7 @@ void InputVolumeController::AnalyzePreProcess(const AudioBuffer& audio_buffer) {
       step = predicted_step;
     }
   }
+
   if (clipping_detected ||
       (clipping_predicted && use_clipping_predictor_step_)) {
     for (auto& state_ch : channel_controllers_) {
@@ -497,10 +496,11 @@ void InputVolumeController::AnalyzePreProcess(const AudioBuffer& audio_buffer) {
       clipping_predictor_->Reset();
     }
   }
+
   AggregateChannelLevels();
 }
 
-void InputVolumeController::Process(absl::optional<float> speech_probability,
+void InputVolumeController::Process(float speech_probability,
                                     absl::optional<float> speech_level_dbfs) {
   AggregateChannelLevels();
 
@@ -509,7 +509,7 @@ void InputVolumeController::Process(absl::optional<float> speech_probability,
   }
 
   absl::optional<int> rms_error_dbfs;
-  if (speech_probability.has_value() && speech_level_dbfs.has_value()) {
+  if (speech_level_dbfs.has_value()) {
     // Compute the error for all frames (both speech and non-speech frames).
     rms_error_dbfs = GetSpeechLevelErrorDb(
         *speech_level_dbfs, target_range_min_dbfs_, target_range_max_dbfs_);
@@ -527,14 +527,11 @@ void InputVolumeController::HandleCaptureOutputUsedChange(
   for (auto& controller : channel_controllers_) {
     controller->HandleCaptureOutputUsedChange(capture_output_used);
   }
+
   capture_output_used_ = capture_output_used;
 }
 
 void InputVolumeController::set_stream_analog_level(int level) {
-  if (!analog_controller_enabled_) {
-    recommended_input_volume_ = level;
-  }
-
   for (auto& controller : channel_controllers_) {
     controller->set_stream_analog_level(level);
   }
@@ -559,9 +556,7 @@ void InputVolumeController::AggregateChannelLevels() {
         std::max(new_recommended_input_volume, *min_mic_level_override_);
   }
 
-  if (analog_controller_enabled_) {
-    recommended_input_volume_ = new_recommended_input_volume;
-  }
+  recommended_input_volume_ = new_recommended_input_volume;
 }
 
 }  // namespace webrtc
