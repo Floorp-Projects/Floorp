@@ -44,11 +44,11 @@ NS_IMETHODIMP nsOpenWindowInfo::GetScriptableOriginAttributes(
   return NS_OK;
 }
 
-const OriginAttributes& nsOpenWindowInfo::GetOriginAttributes() {
+const mozilla::OriginAttributes& nsOpenWindowInfo::GetOriginAttributes() {
   return mOriginAttributes;
 }
 
-BrowserParent* nsOpenWindowInfo::GetNextRemoteBrowser() {
+mozilla::dom::BrowserParent* nsOpenWindowInfo::GetNextRemoteBrowser() {
   return mNextRemoteBrowser;
 }
 
@@ -61,7 +61,8 @@ NS_IMPL_ISUPPORTS(nsBrowsingContextReadyCallback,
                   nsIBrowsingContextReadyCallback)
 
 nsBrowsingContextReadyCallback::nsBrowsingContextReadyCallback(
-    RefPtr<BrowsingContextCallbackReceivedPromise::Private> aPromise)
+    RefPtr<mozilla::dom::BrowsingContextCallbackReceivedPromise::Private>
+        aPromise)
     : mPromise(std::move(aPromise)) {}
 
 nsBrowsingContextReadyCallback::~nsBrowsingContextReadyCallback() {
@@ -72,7 +73,7 @@ nsBrowsingContextReadyCallback::~nsBrowsingContextReadyCallback() {
 }
 
 NS_IMETHODIMP nsBrowsingContextReadyCallback::BrowsingContextReady(
-    BrowsingContext* aBC) {
+    mozilla::dom::BrowsingContext* aBC) {
   MOZ_DIAGNOSTIC_ASSERT(mPromise,
                         "The 'browsing context ready' callback is null");
   if (!mPromise) {
