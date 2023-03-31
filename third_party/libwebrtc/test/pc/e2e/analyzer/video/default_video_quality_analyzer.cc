@@ -347,9 +347,9 @@ void DefaultVideoQualityAnalyzer::OnFrameEncoded(
   used_encoder.last_frame_id = frame_id;
   used_encoder.switched_on_at = now;
   used_encoder.switched_from_at = now;
-  frame_in_flight.OnFrameEncoded(now, encoded_image._frameType,
-                                 DataSize::Bytes(encoded_image.size()),
-                                 stats.target_encode_bitrate, used_encoder);
+  frame_in_flight.OnFrameEncoded(
+      now, encoded_image._frameType, DataSize::Bytes(encoded_image.size()),
+      stats.target_encode_bitrate, stats.qp, used_encoder);
 
   if (options_.report_infra_metrics) {
     analyzer_stats_.on_frame_encoded_processing_time_ms.AddSample(
@@ -1132,6 +1132,9 @@ void DefaultVideoQualityAnalyzer::ReportResults(
       "target_encode_bitrate", test_case_name,
       stats.target_encode_bitrate / 1000, Unit::kKilobitsPerSecond,
       ImprovementDirection::kNeitherIsBetter, metric_metadata);
+  metrics_logger_->LogMetric("qp", test_case_name, stats.qp, Unit::kUnitless,
+                             ImprovementDirection::kSmallerIsBetter,
+                             metric_metadata);
   metrics_logger_->LogSingleValueMetric(
       "actual_encode_bitrate", test_case_name,
       static_cast<double>(stats.total_encoded_images_payload) /
