@@ -515,6 +515,14 @@ void DrawTargetWebgl::SharedContext::SetBlendState(
         mWebgl->Disable(LOCAL_GL_BLEND);
       }
       break;
+    case CompositionOp::OP_CLEAR:
+      // Assume the source is an alpha mask for clearing. Be careful to blend in
+      // the correct alpha if the target is opaque.
+      mWebgl->BlendFuncSeparate(
+          LOCAL_GL_ZERO, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
+          IsOpaque(mCurrentTarget->GetFormat()) ? LOCAL_GL_ONE : LOCAL_GL_ZERO,
+          LOCAL_GL_ONE_MINUS_SRC_ALPHA);
+      break;
     default:
       mWebgl->Disable(LOCAL_GL_BLEND);
       break;
@@ -1339,12 +1347,8 @@ void DrawTargetWebgl::ClearRect(const Rect& aRect) {
     return;
   }
 
-  // OP_SOURCE may not be bounded by a mask, so we ensure that a clip is pushed
-  // here to avoid a group being pushed for it.
-  PushClipRect(aRect);
   DrawRect(aRect, GetClearPattern(),
-           DrawOptions(1.0f, CompositionOp::OP_SOURCE));
-  PopClip();
+           DrawOptions(1.0f, CompositionOp::OP_CLEAR));
 
   // If the clear rectangle encompasses the entire viewport and is not clipped,
   // then mark the target as entirely clear.
@@ -1513,6 +1517,7 @@ static inline bool SupportsDrawOptions(const DrawOptions& aOptions) {
     case CompositionOp::OP_ADD:
     case CompositionOp::OP_ATOP:
     case CompositionOp::OP_SOURCE:
+    case CompositionOp::OP_CLEAR:
       return true;
     default:
       return false;
@@ -1868,6 +1873,14 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
                          aAccelOnly, aForceUpdate, aStrokeOptions,
                          aVertexRange);
   }
+  if (aOptions.mCompositionOp == CompositionOp::OP_CLEAR &&
+      aPattern.GetType() == PatternType::SURFACE && !aMaskColor) {
+    // If the surface being drawn with clear is not a mask, then its contents
+    // needs to be ignored. Just use a color pattern instead.
+    return DrawRectAccel(aRect, ColorPattern(DeviceColor(1, 1, 1, 1)), aOptions,
+                         Nothing(), aHandle, aTransformed, aClipped, aAccelOnly,
+                         aForceUpdate, aStrokeOptions, aVertexRange);
+  }
 
   // Set up the scissor test to reflect the clipping rectangle, if supplied.
   bool scissor = false;
@@ -1891,7 +1904,8 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
           static_cast<const ColorPattern&>(aPattern).mColor, aOptions.mAlpha);
       if (((color.a == 1.0f &&
             aOptions.mCompositionOp == CompositionOp::OP_OVER) ||
-           aOptions.mCompositionOp == CompositionOp::OP_SOURCE) &&
+           aOptions.mCompositionOp == CompositionOp::OP_SOURCE ||
+           aOptions.mCompositionOp == CompositionOp::OP_CLEAR) &&
           !aStrokeOptions && !aVertexRange && !HasClipMask()) {
         // Certain color patterns can be mapped to scissored clears. The
         // composition op must effectively overwrite the destination, and the
@@ -1905,6 +1919,9 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
             mWebgl->Scissor(scissorRect.x, scissorRect.y, scissorRect.width,
                             scissorRect.height);
           }
+          if (aOptions.mCompositionOp == CompositionOp::OP_CLEAR) {
+            color = PremultiplyColor(mCurrentTarget->GetClearPattern().mColor);
+          }
           mWebgl->ClearColor(color.b, color.g, color.r, color.a);
           mWebgl->Clear(LOCAL_GL_COLOR_BUFFER_BIT);
           success = true;
@@ -1913,11 +1930,13 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
       }
       // Map the composition op to a WebGL blend mode, if possible.
       Maybe<DeviceColor> blendColor;
-      if (aOptions.mCompositionOp == CompositionOp::OP_SOURCE) {
+      if (aOptions.mCompositionOp == CompositionOp::OP_SOURCE ||
+          aOptions.mCompositionOp == CompositionOp::OP_CLEAR) {
         // The source operator can support clipping and AA by emulating it with
         // the over op. Supply the color with blend state, and set the shader
         // color to white, to avoid needing dual-source blending.
         blendColor = Some(color);
+        // Both source and clear operators should output a mask from the shader.
         color = DeviceColor(1, 1, 1, 1);
       }
       SetBlendState(aOptions.mCompositionOp, blendColor);
@@ -2162,10 +2181,13 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
         mDirtyAA = aaData == 0.0f;
       }
       DeviceColor color =
-          PremultiplyColor(aMaskColor && format != SurfaceFormat::A8
-                               ? DeviceColor::Mask(1.0f, aMaskColor->a)
-                               : aMaskColor.valueOr(DeviceColor(1, 1, 1, 1)),
-                           aOptions.mAlpha);
+          mLastCompositionOp == CompositionOp::OP_CLEAR
+              ? DeviceColor(1, 1, 1, 1)
+              : PremultiplyColor(
+                    aMaskColor && format != SurfaceFormat::A8
+                        ? DeviceColor::Mask(1.0f, aMaskColor->a)
+                        : aMaskColor.valueOr(DeviceColor(1, 1, 1, 1)),
+                    aOptions.mAlpha);
       float colorData[4] = {color.b, color.g, color.r, color.a};
       float swizzleData =
           aMaskColor && format == SurfaceFormat::A8 ? 1.0f : 0.0f;
@@ -2889,9 +2911,11 @@ bool DrawTargetWebgl::SharedContext::DrawPathAccel(
   // mask to render the path, as opposed to baking the pattern into the cached
   // path texture.
   Maybe<DeviceColor> color =
-      aPattern.GetType() == PatternType::COLOR
-          ? Some(static_cast<const ColorPattern&>(aPattern).mColor)
-          : Nothing();
+      aOptions.mCompositionOp == CompositionOp::OP_CLEAR
+          ? Some(DeviceColor(1, 1, 1, 1))
+          : (aPattern.GetType() == PatternType::COLOR
+                 ? Some(static_cast<const ColorPattern&>(aPattern).mColor)
+                 : Nothing());
   // Look for an existing path cache entry, if possible, or otherwise create
   // one. If the draw request is not cacheable, then don't create an entry.
   RefPtr<PathCacheEntry> entry;
@@ -2920,7 +2944,7 @@ bool DrawTargetWebgl::SharedContext::DrawPathAccel(
   // If there is a shadow, it needs to draw with the shadow color rather than
   // the path color.
   Maybe<DeviceColor> shadowColor = color;
-  if (aShadow) {
+  if (aShadow && aOptions.mCompositionOp != CompositionOp::OP_CLEAR) {
     shadowColor = Some(aShadow->mColor);
     if (color) {
       shadowColor->a *= color->a;
@@ -3721,7 +3745,8 @@ bool DrawTargetWebgl::SharedContext::DrawGlyphsAccel(
   // masks, we need to know that the rasterized result actually represents a
   // subpixel mask rather than try to interpret it as a normal RGBA result such
   // as for color emoji.
-  bool useBitmaps = !aStrokeOptions && aFont->MayUseBitmaps();
+  bool useBitmaps = !aStrokeOptions && aFont->MayUseBitmaps() &&
+                    aOptions.mCompositionOp != CompositionOp::OP_CLEAR;
 
   // Look for an existing glyph cache on the font. If not there, create it.
   GlyphCache* cache =
@@ -3732,7 +3757,9 @@ bool DrawTargetWebgl::SharedContext::DrawGlyphsAccel(
     mGlyphCaches.insertFront(cache);
   }
   // Hash the incoming text run and looking for a matching entry.
-  DeviceColor color = static_cast<const ColorPattern&>(aPattern).mColor;
+  DeviceColor color = aOptions.mCompositionOp == CompositionOp::OP_CLEAR
+                          ? DeviceColor(1, 1, 1, 1)
+                          : static_cast<const ColorPattern&>(aPattern).mColor;
 #ifdef XP_MACOSX
   // On macOS, depending on whether the text is classified as light-on-dark or
   // dark-on-light, we may end up with different amounts of dilation applied, so
