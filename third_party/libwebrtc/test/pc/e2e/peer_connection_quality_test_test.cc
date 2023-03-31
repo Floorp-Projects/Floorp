@@ -20,6 +20,7 @@
 #include "api/test/network_emulation_manager.h"
 #include "api/test/pclf/media_configuration.h"
 #include "api/test/pclf/media_quality_test_params.h"
+#include "api/test/pclf/peer_configurer.h"
 #include "api/test/peerconnection_quality_test_fixture.h"
 #include "api/units/time_delta.h"
 #include "rtc_base/time_utils.h"
@@ -35,8 +36,7 @@ namespace {
 using ::testing::Eq;
 using ::testing::Test;
 
-using PeerConfigurer = ::webrtc::webrtc_pc_e2e::
-    PeerConnectionE2EQualityTestFixture::PeerConfigurer;
+using ::webrtc::webrtc_pc_e2e::PeerConfigurer;
 
 // Remove files and directories in a directory non-recursively.
 void CleanDir(absl::string_view dir, size_t expected_output_files_count) {
