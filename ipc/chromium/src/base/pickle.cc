@@ -32,10 +32,6 @@ static const uint32_t kDefaultSegmentCapacity = 4096;
 
 static const char kBytePaddingMarker = char(0xbf);
 
-// Note: we round the time to the nearest millisecond. So a min value of 1 ms
-// actually captures from 500us and above.
-static const uint32_t kMinTelemetryIPCReadLatencyMs = 1;
-
 namespace {
 
 // We want to copy data to our payload as efficiently as possible.

@@ -11,6 +11,7 @@
 #include <sys/time.h>
 
 #include "base/lock.h"
+#include "base/logging.h"
 #include "base/time.h"
 #include "build/build_config.h"
 
