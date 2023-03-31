@@ -868,7 +868,6 @@ bool AudioProcessingImpl::RuntimeSettingEnqueuer::Enqueue(
   const bool successful_insert = runtime_settings_.Insert(&setting);
 
   if (!successful_insert) {
-    RTC_HISTOGRAM_BOOLEAN("WebRTC.Audio.ApmRuntimeSettingCannotEnqueue", 1);
     RTC_LOG(LS_ERROR) << "Cannot enqueue a new runtime setting.";
   }
   return successful_insert;
