@@ -78,7 +78,7 @@
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. The first parameter is the name of the application.-->
-    <string name="open_in_app_cfr_info_message_2">Siz %1$stı siltemelerdi baǵdarlamalarda avtomatikalıq ashatuǵın etip sazlawıńız múmkin.</string>
+    <string name="open_in_app_cfr_info_message_2">Siz %1$stı siltemelerdi baǵdarlamalarda avtomat tárizde ashatuǵın etip sazlawıńız múmkin.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Sazlawlardı ashıw</string>
 
@@ -110,7 +110,7 @@
     <!-- Text for the action link to go to Settings for inactive tabs. -->
     <string name="tab_tray_inactive_onboarding_button_text">Sazlawlarda óshiriń</string>
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
-    <string name="tab_tray_inactive_auto_close_title">Bir aydan soń avtomatikalıq jabılsın ba?</string>
+    <string name="tab_tray_inactive_auto_close_title">Bir aydan soń avtomat tárizde jabılsın ba?</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs.
         The first parameter is the name of the application.-->
     <string name="tab_tray_inactive_auto_close_body_2">%1$s ótken ay dawamında kórilmegen betlerdi jabıwı múmkin.</string>
@@ -119,7 +119,7 @@
 
 
     <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
-    <string name="tab_tray_inactive_turn_on_auto_close_button_2">Avtomatikalıq jabıwdı qosıw</string>
+    <string name="tab_tray_inactive_turn_on_auto_close_button_2">Avtomat tárizde jabıwdı qosıw</string>
 
 
     <!-- Home screen icons - Long press shortcuts -->
@@ -295,20 +295,20 @@
     <string name="onboarding_home_enable_notifications_negative_button">Házir emes</string>
 
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Tiykarǵi brauzer retinde ornatıw</string>
+    <string name="juno_onboarding_default_browser_positive_button">Tiykarǵi brauzer retinde ornatıw</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Házir emes</string>
+    <string name="juno_onboarding_default_browser_negative_button">Házir emes</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Kiriw</string>
+    <string name="juno_onboarding_sign_in_positive_button">Kiriw</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Házir emes</string>
+    <string name="juno_onboarding_sign_in_negative_button">Házir emes</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" tools:ignore="UnusedResources">Xabarlamalar sizge %s penen kóbirek nárseler islewge járdem beredi</string>
+    <string name="juno_onboarding_enable_notifications_title">Xabarlamalar sizge %s penen kóbirek nárseler islewge járdem beredi</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Xabarlamalardı qosıw</string>
+    <string name="juno_onboarding_enable_notifications_positive_button">Xabarlamalardı qosıw</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Házir emes</string>
+    <string name="juno_onboarding_enable_notifications_negative_button">Házir emes</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -371,7 +371,7 @@
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
     <string name="reduce_cookie_banner_option_on">Qosıwlı</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_summary_1">%1$s cookie haqqındaǵı xabarlamalardaǵı cookie sorawlardı avtomatikalıq biykarlawǵa háreket etedi.</string>
+    <string name="reduce_cookie_banner_summary_1">%1$s cookie haqqındaǵı xabarlamalardaǵı cookie sorawlardı avtomat tárizde biykarlawǵa háreket etedi.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Bul sayt ushın óshirilgen</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -385,15 +385,15 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s bul sayttıń cookieların óshiredi hám betti jańalaydı. Barlıq cookielardı óshiriw sizdi sistemadan shıǵarıwı yamasa sawda islew sebetińizdi bosatıwı múmkin.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s kuki sorawların avtomatikalıq biykarlawǵa háreket qılıwı múmkin.</string>
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s kuki sorawların avtomat tárizde biykarlawǵa háreket qılıwı múmkin.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s qollap-quwatlanǵan saytlardaǵı barlıq cookie sorawların avtomatikalıq biykarlawǵa háreket etedi.</string>
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s qollap-quwatlanǵan saytlardaǵı barlıq cookie sorawların avtomat tárizde biykarlawǵa háreket etedi.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Cookie haqqındaǵı xabarlamalar joq bolıp ketti!</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Imkanı bolǵanda, cookie sorawların avtomatikalıq biykarlaw.</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Imkanı bolǵanda, cookie sorawların avtomat tárizde biykarlaw.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_2" moz:RemovedIn="112" tools:ignore="UnusedResources">%1$sqa imkanı bolǵanda cookie sorawların avtomatikalıq biykarlawǵa ruqsat berilsin be?</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_2" moz:RemovedIn="112" tools:ignore="UnusedResources">%1$sqa imkanı bolǵanda cookie sorawların avtomat tárizde biykarlawǵa ruqsat berilsin be?</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Házir emes</string>
 
@@ -404,7 +404,7 @@
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Qalqıp shıǵıwshı cookie aynaların azıraq kóriw</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Kóriwden alań bolmaw ushın, cookie haqqındaǵı qalqıp shıǵıwshı aynalarǵa avtomatikalıq juwap beriw. %1$s múmkinshiligi bolsa hámme sorawlardı bırkarlaydı.</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Kóriwden alań bolmaw ushın, cookie haqqındaǵı qalqıp shıǵıwshı aynalarǵa avtomat tárizde juwap beriw. %1$s múmkinshiligi bolsa hámme sorawlardı bırkarlaydı.</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Qalqıp turıwshı aynalardı ótkerip jiberiw</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
@@ -418,7 +418,7 @@
     <string name="reduce_cookie_banner_dialog_change_setting_button">Ruqsat beriw</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
-    <string name="preferences_https_only_summary">Qáwipsizlikti arttırıw ushın HTTPS shifrlaw protokolı járdeminde saytlarǵa avtomatikalıq jalǵanıwǵa háreket etedi.</string>
+    <string name="preferences_https_only_summary">Qáwipsizlikti arttırıw ushın HTTPS shifrlaw protokolı járdeminde saytlarǵa avtomat tárizde jalǵanıwǵa háreket etedi.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
     <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">Qosıwlı</string>
 
@@ -495,7 +495,7 @@
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Akkaunt sazlawları</string>
     <!-- Preference for enabling url autocomplete-->
-    <string name="preferences_enable_autocomplete_urls">URLs nı avtomatikalıq toltırıw</string>
+    <string name="preferences_enable_autocomplete_urls">URLs nı avtomat tárizde toltırıw</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Siltemelerdi baǵdarlamalarda ashıw</string>
     <!-- Preference for open links in third party apps always open in apps option -->
@@ -791,7 +791,7 @@
     <string name="close_tabs_after_one_month">Bir aydan keyin</string>
 
     <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
-    <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Ashıq betlerdi avtomatikalıq jabıw</string>
+    <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Ashıq betlerdi avtomat tárizde jabıw</string>
 
     <!-- Opening screen -->
     <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
@@ -837,7 +837,7 @@
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Tolıǵıraq úyreniw</string>
     <!-- Dialog message shown after removing a study -->
-    <string name="studies_restart_app">Ózgerislerdi iske asırıw ushın baǵdarlama jabıladı</string>
+    <string name="studies_restart_app">Ózgerislerdi qollanıw ushın baǵdarlama jabıladı</string>
     <!-- Dialog button to confirm the removing a study. -->
     <string name="studies_restart_dialog_ok">MAQUL</string>
     <!-- Dialog button text for canceling removing a study. -->
@@ -1059,7 +1059,7 @@
     <!-- Button label for clearing all the information on all sites-->
     <string name="clear_permissions_on_all_sites">Barlıq saytlardaǵı ruqsatlardı tazalaw</string>
     <!-- Preference for altering video and audio autoplay for all websites -->
-    <string name="preference_browser_feature_autoplay">Avtomatikalıq iske túsiriw</string>
+    <string name="preference_browser_feature_autoplay">Avtomat tárizde iske túsiriw</string>
     <!-- Preference for altering the camera access for all websites -->
     <string name="preference_phone_feature_camera">Kamera</string>
     <!-- Preference for altering the microphone access for all websites -->
@@ -1319,7 +1319,7 @@
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">Shıqqanda brauzer tariyxın óshiriw</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit_2">Tiykarǵı menyuden \&quot;Shıǵıw\&quot; túymesin tańlaǵanda, brauzer tariyxı avtomatikalıq óshiriledi</string>
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Tiykarǵı menyuden \&quot;Shıǵıw\&quot; túymesin tańlaǵanda, brauzer tariyxı avtomat tárizde óshiriledi</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Shıǵıw</string>
 
@@ -1606,11 +1606,11 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Heshqashan saqlamaw</string>
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
-    <string name="preferences_passwords_autofill2">%1$sda avtomatikalıq toltırıw</string>
+    <string name="preferences_passwords_autofill2">%1$sda avtomat tárizde toltırıw</string>
     <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill_description">%1$sdı paydalanıp atırǵan waqıtta paydalanıwshı atları hám parollerdi veb-saytlarda toltırıw hám saqlaw.</string>
     <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
-    <string name="preferences_android_autofill">Basqa baǵdarlamalarda avtomatikalıq toltırıw</string>
+    <string name="preferences_android_autofill">Basqa baǵdarlamalarda avtomat tárizde toltırıw</string>
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">Qurılmańızdaǵı basqa baǵdarlamalarda paydalanıw atları hám parollerin toltırıw.</string>
     <!-- Preference option for adding a login -->
@@ -1689,13 +1689,13 @@
 
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
-    <string name="preferences_autofill">Avtomatikalıq toltırıw</string>
+    <string name="preferences_autofill">Avtomat tárizde toltırıw</string>
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Mánziller</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Bank kartaları</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards">Kartalardı saqlaw hám avtomatikalıq toltırıw</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards">Kartalardı saqlaw hám avtomat tárizde toltırıw</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Maǵlıwmatlar shifrlengen</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
@@ -1713,7 +1713,7 @@
     <string name="preferences_addresses_manage_addresses">Mánzillerdi basqarıw</string>
 
     <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses">Mánzillerdi saqlaw hám avtomatikalıq toltırıw</string>
+    <string name="preferences_addresses_save_and_autofill_addresses">Mánzillerdi saqlaw hám avtomat tárizde toltırıw</string>
 
     <!-- Preference summary for saving and autofilling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary">Sanlar, elektron pochta hám jetkerip beriw mánzilleri sıyaqlı maǵlıwmatlardı óz ishine aladı</string>
@@ -1995,13 +1995,13 @@
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
-    <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">Bir aydan soń avtomat jabılsın ba?</string>
+    <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">Bir aydan soń avtomat tárizde jabılsın ba?</string>
     <!-- A description below the header to notify the user what the inactive tabs auto-close feature is. -->
     <string name="inactive_tabs_auto_close_message_description" tools:ignore="UnusedResources">Firefox ótken ayda kórilmegen betlerdi jabıwı múmkin.</string>
     <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
-    <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">AVTOMAT JABÍWDÍ QOSÍW</string>
+    <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">AVTOMAT TÁRIZDE JABÍWDÍ QOSÍW</string>
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
-    <string name="inactive_tabs_auto_close_message_snackbar">Avtomatik jabıw iske túsirilgen</string>
+    <string name="inactive_tabs_auto_close_message_snackbar">Avtomat tárizde jabıw iske túsirilgen</string>
 
     <!-- Awesome bar suggestion's headers -->
     <!-- Search suggestions title for Firefox Suggest. -->
@@ -2013,7 +2013,7 @@
     <string name="other_default_search_engine_suggestion_header">%s da izlew</string>
 
     <!-- Default browser experiment -->
-    <string name="default_browser_experiment_card_text">Saytlardaǵı, elektron xatlardaǵı hám xabarlardaǵı siltemelerdi Firefoxda avtomatikalıq ashılatuǵın etip sazlań.</string>
+    <string name="default_browser_experiment_card_text">Saytlardaǵı, elektron xatlardaǵı hám xabarlardaǵı siltemelerdi Firefoxda avtomat tárizde ashılatuǵın etip sazlań.</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Alıp taslaw</string>

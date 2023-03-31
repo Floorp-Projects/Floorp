@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:moz="http://mozac.org/tools">
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -119,8 +119,18 @@
 
 
     <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">جست‌وجو ناشناس</string>
+         Focus is hard coded since we can't use variables in this context.
+         Do not translate or transliterate Focus.-->
+    <string name="text_selection_search_action_focus">جستجو در فوکوس</string>
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+            Focus Beta is hard coded since we can't use variables in this context.
+            Do not translate or transliterate Focus Beta.-->
+    <string name="text_selection_search_action_focus_beta">جستجو در فوکوس بتا</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+          Focus Nightly is hard coded since we can't use variables in this context.
+          Do not translate or transliterate Focus Nightly.-->
+    <string name="text_selection_search_action_focus_nightly">جستجو در Focus Nightly</string>
 
     <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
          Argument 2 is the url for the learn-more link. -->
@@ -294,10 +304,12 @@
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">استفاده از اثرانگشت برای بازکردن برنامه</string>
+
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
-        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_security_biometric_summary">اثرانگشت شما همچنین می‌تواند%1$s را بازکند اگر یکURL در برنامه باز بوده باشد مخفی خواهد ماند تا زمانی که باز شود.</string>
+        %s will be replaced by the app name (e.g. Firefox Focus)
+        Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
+    <string name="preference_security_biometric_summary2">بازکردن قفل به وسیله اثر انگشت اگر این میانبر را اضافه کرده‌ اید یا پایگاه اینترنتی در حال حاضر در %s باز است.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
@@ -359,10 +371,6 @@
 
     <!-- Explanation text above the list of search engines-->
     <string name="preference_select_preferred_engine">گزینش موتور مورد نظر شما:</string>
-
-    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
-     a user first launches the app. -->
-    <string name="preference_homescreen_tips">نمایش نکات صفحه اصلی</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">اضافه کردن موتور جست‌وجو</string>
@@ -490,7 +498,27 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">بستن</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">به %1$s خوش‌ آمدید</string>
+
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">سریع. خصوصی. بدون حواس پرتی.</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">شروع کنید</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s مانند سایر مرورگرها نیست</string>
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">برای حفظ حریم خصوصی بیشتر، وقتی برنامه را می بندید، سابقه شما را پاک می کنیم.</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">قدرت حریم‌شخصی خود را افزایش دهید</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">مرور خصوصی را به سطحی بالاتر ببرید. تبلیغات و دیگر محتواهایی را مسدود کنید که می‌توانند شما را در سراسر سایت‌ها ردیابی و زمان‌های بارگذاری صفحه را خراب کنند.</string>
@@ -662,17 +690,6 @@
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">اشکال زدایی از طریق USB/Wi-Fi</string>
 
-    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     %1$s is replaced with the app name -->
-    <string name="biometric_auth_title">بازکردن%1$s</string>
-
-    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string name="biometric_auth_description">سنسور اثرانگشت را برای ادامه لمس کنید.</string>
-
-    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string name="biometric_auth_new_session">جلسه جدید</string>
-
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
     <string name="biometric_auth_open_link_new_session">باز کردن پیوند در یک نشست تازه</string>
@@ -713,11 +730,6 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">سایت رفتار غیرمنتظره‌ای دارد؟\n محافظت از دنبال کردن را خاموش کنید</string>
 
-    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
-The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection3">محتوا در سایت وجود ندارد یا عجیب عمل می‌کنید؟\n
-    سعی کنید محافظت پیشرفته در برابر ردیابی را خاموش کنید</string>
-
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[با اشاره یک انگشت به سایت های پربازدید خود دسترسی داشته باشید%1$s فهرست> اضافه کردن به صفحه خانگی]]></string>
@@ -735,28 +747,8 @@ The new line here must be kept as the second half of the string is clickable for
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">بازکردن یک پیوند در زبانه جدید\n نگاه داشتن بیشتر انگشت برای باز کردن پیوند در صفحه</string>
 
-    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
-      %1$s is a placeholder for the app name. -->
-    <string name="tip_request_desktop2">آیا می‌خواهید نسخه کامل یک سایت را ببینید؟\n
-        از منوی %1$s، نسخه‌ی میزکار پایگاه اینترنتی را روشن کنید</string>
-
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">خاموش کردن نکات راهنما بر روی صفحه آغازین</string>
-
-    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
-     "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist3">آیا می‌خواهید محافظت پیشرفته در برابر ردیابی را برای سایتی که به آن اعتماد دارید، خاموش کنید؟\n
-        آن را به فهرست مجاز در تنظیمات اضافه کنید
-    </string>
-
-    <!-- Tip displayed on the home view about the changes in the new release.
-    %1$s is a placeholder for the app name -->
-    <string name="tip_fresh_look">چرا بله، ما ظاهر جدیدی داریم!\n  درباره این و سایر به‌ روز رسانی‌ها در %1$s بیشتر بخوانید.</string>
-
-    <!-- Tip displayed on the home view about shortcuts
-    %1$s is a placeholder for the app name -->
-    <string name="tip_about_shortcuts">برای سایت‌هایی که بیشتر از آنها بازدید می‌کنید، میانبر ایجاد کنید:\n
-    از منوی %1$s افزودن به میانبرها را انتخاب کنید</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">زبانه‌ي جدیدی باز شده است</string>
@@ -767,8 +759,6 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for switching to a new tab immediately after opening -->
     <string name="preference_open_new_tab">تعویض بلافاصله پیوند در زبانه‌های جدید</string>
 
-    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string moz:removedIn="97" name="preference_category_safe_browsing">مرورگر امن</string>
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">مسدود سازی خطرات بالقوه و سایت‌های فریبنده</string>
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
@@ -776,8 +766,6 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">حالت فقط HTTPS</string>
-    <!-- Description of the preference to enable "HTTPS-Only" mode. %1$s will get replaced with the name of the app. -->
-    <string name="preference_https_only_summary">HTTPS یک اتصال امن و رمزگذاری شده بین %1$s و وب‌سایتهایی که بازدید می‌کنید، ارائه می‌دهد. اکثر وب‌سایت‌ها از HTTPS پشتیبانی می‌کنند و چنانچه حالت فقط HTTPS فعال باشد، %1$s تمام اتصال‌ها را به HTTPS ارتقا می‌دهد.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">استثناعات</string>
@@ -865,4 +853,7 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">بستن زبانه</string>
-</resources>
+
+    <!-- Promote SearchWidget Dialog -->
+
+    </resources>
