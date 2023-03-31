@@ -569,6 +569,7 @@ struct SpeculativeConnectionOverriderArgs {
   bool ignoreIdle;
   bool isFromPredictor;
   bool allow1918;
+  bool ignoreUserCertCheck;
 };
 
 //-----------------------------------------------------------------------------

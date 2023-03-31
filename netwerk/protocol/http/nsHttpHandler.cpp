@@ -2331,8 +2331,14 @@ nsresult nsHttpHandler::SpeculativeConnectInternal(
     return NS_ERROR_UNEXPECTED;
   }
 
+  nsCOMPtr<nsISpeculativeConnectionOverrider> overrider =
+      do_GetInterface(aCallbacks);
+  bool ignoreUserCertCheck =
+      overrider ? overrider->GetIgnoreUserCertCheck() : false;
+
   // Construct connection info object
-  if (aURI->SchemeIs("https") && !mSpeculativeConnectEnabled) {
+  if (aURI->SchemeIs("https") && !mSpeculativeConnectEnabled &&
+      !ignoreUserCertCheck) {
     glean::networking::speculative_connect_outcome
         .Get("aborted_https_not_enabled"_ns)
         .Add(1);

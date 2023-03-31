@@ -3546,9 +3546,9 @@ void nsHttpConnectionMgr::DoSpeculativeConnectionInternal(
         .Get("aborted_socket_limit"_ns)
         .Add(1);
     LOG(
-        ("DoSpeculativeConnectionInternal Transport "
+        ("DoSpeculativeConnectionInternal Transport ci=%s "
          "not created due to existing connection count:%d",
-         parallelSpeculativeConnectLimit));
+         aEnt->mConnInfo->HashKey().get(), parallelSpeculativeConnectLimit));
   }
 }
 

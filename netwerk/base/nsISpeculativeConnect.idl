@@ -68,4 +68,12 @@ interface nsISpeculativeConnectionOverrider : nsISupports
      * by default speculative connections are not made to RFC 1918 addresses
      */
     [infallible] readonly attribute boolean allow1918;
+
+    /**
+     * By default the speculative connections triggered by nsISpeculativeConnect
+     * should respect the user certificate checks implemented in nsHttpHandler.
+     * The checks can be ignored for `Link: rel=preconnect` and is also
+     * controlled by a pref.
+     */
+    [infallible] readonly attribute boolean ignoreUserCertCheck;
 };
