@@ -219,8 +219,10 @@ void LossBasedBweV2::UpdateBandwidthEstimate(
     rtc::ArrayView<const PacketResult> packet_results,
     DataRate delay_based_estimate,
     BandwidthUsage delay_detector_state,
-    absl::optional<DataRate> probe_bitrate) {
+    absl::optional<DataRate> probe_bitrate,
+    DataRate upper_link_capacity) {
   delay_based_estimate_ = delay_based_estimate;
+  upper_link_capacity_ = upper_link_capacity;
   if (!IsEnabled()) {
     RTC_LOG(LS_WARNING)
         << "The estimator must be enabled before it can be used.";
@@ -410,6 +412,8 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
       "SlopeOfBweHighLossFunc", 1000);
   FieldTrialParameter<bool> probe_integration_enabled("ProbeIntegrationEnabled",
                                                       false);
+  FieldTrialParameter<bool> bound_by_upper_link_capacity_when_loss_limited(
+      "BoundByUpperLinkCapacityWhenLossLimited", true);
   if (key_value_config) {
     ParseFieldTrial({&enabled,
                      &bandwidth_rampup_upper_bound_factor,
@@ -445,7 +449,8 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
                      &probe_integration_enabled,
                      &high_loss_rate_threshold,
                      &bandwidth_cap_at_high_loss_rate,
-                     &slope_of_bwe_high_loss_func},
+                     &slope_of_bwe_high_loss_func,
+                     &bound_by_upper_link_capacity_when_loss_limited},
                     key_value_config->Lookup("WebRTC-Bwe-LossBasedBweV2"));
   }
 
@@ -506,6 +511,8 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
       bandwidth_cap_at_high_loss_rate.Get();
   config->slope_of_bwe_high_loss_func = slope_of_bwe_high_loss_func.Get();
   config->probe_integration_enabled = probe_integration_enabled.Get();
+  config->bound_by_upper_link_capacity_when_loss_limited =
+      bound_by_upper_link_capacity_when_loss_limited.Get();
 
   return config;
 }
@@ -946,6 +953,12 @@ void LossBasedBweV2::CalculateInstantUpperBound() {
     }
   }
 
+  if (IsBandwidthLimitedDueToLoss()) {
+    if (IsValid(upper_link_capacity_) &&
+        config_->bound_by_upper_link_capacity_when_loss_limited) {
+      instant_limit = std::min(instant_limit, upper_link_capacity_);
+    }
+  }
   cached_instant_upper_bound_ = instant_limit;
 }
 
