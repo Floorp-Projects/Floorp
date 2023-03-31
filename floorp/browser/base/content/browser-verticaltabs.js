@@ -38,6 +38,13 @@
       if(sidebarBox.getAttribute("hidden") == "true") {
         SidebarUI.toggle();
       }
+
+      let promise = new Promise(function (resolve, reject) {
+        SidebarUI.toggle() ? resolve() : reject();
+      });
+      promise.then(function () {
+        SidebarUI.toggle();
+      });
     }, 500);
 
     //toolbar modification
