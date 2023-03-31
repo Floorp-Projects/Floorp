@@ -87,7 +87,8 @@ PacingController::PacingController(Clock* clock,
       congested_(false),
       queue_time_limit_(kMaxExpectedQueueLength),
       account_for_audio_(false),
-      include_overhead_(false) {
+      include_overhead_(false),
+      circuit_breaker_threshold_(1 << 16) {
   if (!drain_large_queues_) {
     RTC_LOG(LS_WARNING) << "Pacer queues will not be drained,"
                            "pushback experiment must be enabled.";
@@ -139,6 +140,10 @@ void PacingController::SetCongested(bool congested) {
     UpdateBudgetWithElapsedTime(UpdateTimeAndGetElapsed(CurrentTime()));
   }
   congested_ = congested;
+}
+
+void PacingController::SetCircuitBreakerThreshold(int num_iterations) {
+  circuit_breaker_threshold_ = num_iterations;
 }
 
 bool PacingController::IsProbing() const {
@@ -423,12 +428,10 @@ void PacingController::ProcessPackets() {
   }
 
   DataSize data_sent = DataSize::Zero();
-  // Circuit breaker, making sure main loop isn't forever.
-  static constexpr int kMaxIterations = 1 << 16;
   int iteration = 0;
   int packets_sent = 0;
   int padding_packets_generated = 0;
-  for (; iteration < kMaxIterations; ++iteration) {
+  for (; iteration < circuit_breaker_threshold_; ++iteration) {
     // Fetch packet, so long as queue is not empty or budget is not
     // exhausted.
     std::unique_ptr<RtpPacketToSend> rtp_packet =
@@ -499,14 +502,30 @@ void PacingController::ProcessPackets() {
     }
   }
 
-  if (iteration >= kMaxIterations) {
+  if (iteration >= circuit_breaker_threshold_) {
     // Circuit break activated. Log warning, adjust send time and return.
     // TODO(sprang): Consider completely clearing state.
-    RTC_LOG(LS_ERROR) << "PacingController exceeded max iterations in "
-                         "send-loop: packets sent = "
-                      << packets_sent << ", padding packets generated = "
-                      << padding_packets_generated
-                      << ", bytes sent = " << data_sent.bytes();
+    RTC_LOG(LS_ERROR)
+        << "PacingController exceeded max iterations in "
+           "send-loop. Debug info: "
+        << " packets sent = " << packets_sent
+        << ", padding packets generated = " << padding_packets_generated
+        << ", bytes sent = " << data_sent.bytes()
+        << ", probing = " << (is_probing ? "true" : "false")
+        << ", recommended_probe_size = " << recommended_probe_size.bytes()
+        << ", now = " << now.us()
+        << ", target_send_time = " << target_send_time.us()
+        << ", last_process_time = " << last_process_time_.us()
+        << ", last_send_time = " << last_send_time_.us()
+        << ", paused = " << (paused_ ? "true" : "false")
+        << ", media_debt = " << media_debt_.bytes()
+        << ", padding_debt = " << padding_debt_.bytes()
+        << ", pacing_rate = " << pacing_rate_.bps()
+        << ", adjusted_media_rate = " << adjusted_media_rate_.bps()
+        << ", padding_rate = " << padding_rate_.bps()
+        << ", queue size (packets) = " << packet_queue_.SizeInPackets()
+        << ", queue size (payload bytes) = "
+        << packet_queue_.SizeInPayloadBytes();
     last_send_time_ = now;
     last_process_time_ = now;
     return;
