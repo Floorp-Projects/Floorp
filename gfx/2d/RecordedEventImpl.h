@@ -1789,7 +1789,7 @@ static void ReadDrawOptions(S& aStream, DrawOptions& aDrawOptions) {
     return;
   }
 
-  if (aDrawOptions.mCompositionOp < CompositionOp::OP_OVER ||
+  if (aDrawOptions.mCompositionOp < CompositionOp::OP_CLEAR ||
       aDrawOptions.mCompositionOp > CompositionOp::OP_COUNT) {
     aStream.SetIsBad();
   }

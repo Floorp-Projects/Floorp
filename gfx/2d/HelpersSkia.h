@@ -157,6 +157,8 @@ static inline bool StrokeOptionsToPaint(SkPaint& aPaint,
 
 static inline SkBlendMode GfxOpToSkiaOp(CompositionOp op) {
   switch (op) {
+    case CompositionOp::OP_CLEAR:
+      return SkBlendMode::kClear;
     case CompositionOp::OP_OVER:
       return SkBlendMode::kSrcOver;
     case CompositionOp::OP_ADD:
@@ -209,9 +211,11 @@ static inline SkBlendMode GfxOpToSkiaOp(CompositionOp op) {
       return SkBlendMode::kColor;
     case CompositionOp::OP_LUMINOSITY:
       return SkBlendMode::kLuminosity;
-    default:
-      return SkBlendMode::kSrcOver;
+    case CompositionOp::OP_COUNT:
+      break;
   }
+
+  return SkBlendMode::kSrcOver;
 }
 
 /* There's quite a bit of inconsistency about

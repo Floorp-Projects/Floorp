@@ -5269,7 +5269,8 @@ void CanvasRenderingContext2D::SetGlobalCompositeOperation(
 #define CANVAS_OP_TO_GFX_OP(cvsop, op2d) \
   if (aOp.EqualsLiteral(cvsop)) comp_op = CompositionOp::OP_##op2d;
 
-  CANVAS_OP_TO_GFX_OP("copy", SOURCE)
+  CANVAS_OP_TO_GFX_OP("clear", CLEAR)
+  else CANVAS_OP_TO_GFX_OP("copy", SOURCE)
   else CANVAS_OP_TO_GFX_OP("source-atop", ATOP)
   else CANVAS_OP_TO_GFX_OP("source-in", IN)
   else CANVAS_OP_TO_GFX_OP("source-out", OUT)
@@ -5309,7 +5310,8 @@ void CanvasRenderingContext2D::GetGlobalCompositeOperation(
 #define CANVAS_OP_TO_GFX_OP(cvsop, op2d) \
   if (comp_op == CompositionOp::OP_##op2d) aOp.AssignLiteral(cvsop);
 
-  CANVAS_OP_TO_GFX_OP("copy", SOURCE)
+  CANVAS_OP_TO_GFX_OP("clear", CLEAR)
+  else CANVAS_OP_TO_GFX_OP("copy", SOURCE)
   else CANVAS_OP_TO_GFX_OP("destination-atop", DEST_ATOP)
   else CANVAS_OP_TO_GFX_OP("destination-in", DEST_IN)
   else CANVAS_OP_TO_GFX_OP("destination-out", DEST_OUT)

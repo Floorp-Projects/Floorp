@@ -522,6 +522,9 @@ class Log final {
   Log& operator<<(CompositionOp aOp) {
     if (MOZ_UNLIKELY(LogIt())) {
       switch (aOp) {
+        case CompositionOp::OP_CLEAR:
+          mMessage << "CompositionOp::OP_CLEAR";
+          break;
         case CompositionOp::OP_OVER:
           mMessage << "CompositionOp::OP_OVER";
           break;
