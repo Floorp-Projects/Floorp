@@ -11,7 +11,7 @@ random != boxshadow-blur-2.html boxshadow-blur-2-notref.html # fixedpoint divisi
 == boxshadow-rounding.html boxshadow-rounding-ref.html
 # One uses old path, one uses WR box shadow.
 == boxshadow-button.html boxshadow-button-ref.html
-fuzzy(0-14,0-179) fuzzy-if(swgl&&!Android,1-1,714-952) fuzzy-if(useDrawSnapshot&&swgl,14-14,54-54) == boxshadow-large-border-radius.html boxshadow-large-border-radius-ref.html # Bug 1209649
+fuzzy(0-14,0-179) fuzzy-if(swgl&&!Android,0-1,0-952) fuzzy-if(useDrawSnapshot&&swgl,14-14,54-54) == boxshadow-large-border-radius.html boxshadow-large-border-radius-ref.html # Bug 1209649
 
 == boxshadow-fileupload.html boxshadow-fileupload-ref.html
 fuzzy(13-19,28-49) == boxshadow-inner-basic.html boxshadow-inner-basic-ref.svg
