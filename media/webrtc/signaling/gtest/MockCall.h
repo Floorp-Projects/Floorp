@@ -26,7 +26,8 @@ class MockAudioSendStream : public webrtc::AudioSendStream {
 
   const webrtc::AudioSendStream::Config& GetConfig() const override;
 
-  void Reconfigure(const Config& config) override;
+  void Reconfigure(const Config& config,
+                   webrtc::SetParametersCallback callback) override;
 
   void Start() override {}
 
@@ -129,6 +130,9 @@ class MockVideoSendStream : public webrtc::VideoSendStream {
       const webrtc::DegradationPreference& degradation_preference) override {}
 
   void ReconfigureVideoEncoder(webrtc::VideoEncoderConfig config) override;
+
+  void ReconfigureVideoEncoder(webrtc::VideoEncoderConfig config,
+                               webrtc::SetParametersCallback callback) override;
 
   Stats GetStats() override { return mStats; }
 

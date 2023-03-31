@@ -8,6 +8,7 @@
 
 #include "api/task_queue/task_queue_factory.h"
 #include "mozilla/DataMutex.h"
+#include "mozilla/RecursiveMutex.h"
 #include "mozilla/ProfilerRunnable.h"
 #include "mozilla/TaskQueue.h"
 #include "VideoUtils.h"
