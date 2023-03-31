@@ -35,6 +35,14 @@
       }
     }
   },
+  'hammerhead': {
+    'swarming': {
+      'dimensions': {
+        'device_type': 'hammerhead',
+        'os': 'Android'
+      }
+    }
+  },
   'ios-device-15.7': {
     'swarming': {
       'dimensions': {
@@ -132,6 +140,13 @@
     'swarming': {
       'dimensions': {
         'os': 'Mac-11'
+      }
+    }
+  },
+  'marshmallow_generic': {
+    'swarming': {
+      'dimensions': {
+        'device_os': 'M'
       }
     }
   },
