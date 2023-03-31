@@ -305,24 +305,6 @@ NetworkEmulationManagerImpl::CreateEmulatedNetworkManagerInterface(
 
 void NetworkEmulationManagerImpl::GetStats(
     rtc::ArrayView<EmulatedEndpoint* const> endpoints,
-    std::function<void(std::unique_ptr<EmulatedNetworkStats>)> stats_callback) {
-  task_queue_.PostTask([endpoints, stats_callback,
-                        stats_gathering_mode = stats_gathering_mode_]() {
-    EmulatedNetworkStatsBuilder stats_builder(stats_gathering_mode);
-    for (auto* endpoint : endpoints) {
-      // It's safe to cast here because EmulatedEndpointImpl can be the only
-      // implementation of EmulatedEndpoint, because only it has access to
-      // EmulatedEndpoint constructor.
-      auto endpoint_impl = static_cast<EmulatedEndpointImpl*>(endpoint);
-      stats_builder.AddEmulatedNetworkStats(endpoint_impl->stats());
-    }
-    stats_callback(
-        std::make_unique<EmulatedNetworkStats>(stats_builder.Build()));
-  });
-}
-
-void NetworkEmulationManagerImpl::GetStats(
-    rtc::ArrayView<EmulatedEndpoint* const> endpoints,
     std::function<void(EmulatedNetworkStats)> stats_callback) {
   task_queue_.PostTask([endpoints, stats_callback,
                         stats_gathering_mode = stats_gathering_mode_]() {
