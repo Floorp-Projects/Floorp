@@ -29,6 +29,8 @@ async function UCTFirst(){
 }
  UCTFirst();
 
+/**************************************** clock ****************************************/
+
 
 let locale = Cc["@mozilla.org/intl/ospreferences;1"].getService(Ci.mozIOSPreferences).regionalPrefsLocales;
 const options = { month: 'short', day: 'numeric', weekday: 'short'}

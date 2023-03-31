@@ -110,3 +110,7 @@
   #sidebar {
     display: none !important;
   }
+
+  #sidebar-button {
+    display: none !important;
+  }

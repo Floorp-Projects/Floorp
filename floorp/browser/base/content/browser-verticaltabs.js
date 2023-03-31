@@ -6,6 +6,7 @@
  
   if (Services.prefs.getBoolPref("floorp.browser.native.verticaltabs.enabled", false)) {
     Services.prefs.setBoolPref("floorp.enable.multitab", true);
+
     window.setTimeout(function () {
       document.getElementsByClassName("toolbar-items")[0].id = "toolbar-items-verticaltabs";
       
@@ -56,4 +57,27 @@
         Services.prefs.setBoolPref("floorp.enable.multitab", false);
       }
     }, false);
+
+    /**************************************** vertical tab change position ****************************************/
+
+    (async() => {
+      let l10n = new Localization(["browser/floorp.ftl"])
+      let l10n_text = await l10n.formatValue("vertical-tab-reverse-position");
+      CustomizableUI.createWidget({
+        id: "vertical-tab-reverse-position",
+        type: "button",
+        label: l10n_text,
+        tooltiptext: l10n_text,
+        onCreated(aNode) {
+            aNode.appendChild(window.MozXULElement.parseXULToFragment(`<stack xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="toolbarbutton-badge-stack"><image class="toolbarbutton-icon" label="閉じたタブを開く"/><html:label xmlns:html="http://www.w3.org/1999/xhtml" class="toolbarbutton-badge" ></html:label></stack>`))
+    
+            let a = aNode.querySelector(".toolbarbutton-icon:not(stack > .toolbarbutton-icon)")
+            if (a != null) a.remove()
+        },
+        onCommand() {
+          SidebarUI.reversePosition();
+        }
+      });
+      CustomizableUI.addWidgetToArea("vertical-tab-reverse-position", CustomizableUI.AREA_NAVBAR, 1);
+    })();
   }

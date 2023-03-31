@@ -78,6 +78,8 @@ native-tabbar-tip = This feature uses default Firefox sidebar, so you can't use 
 hover-vertical-tab =
  .label = Expand vertical tabs when hovering the mouse cursor
 
+vertical-tab-reverse-position = Reverse VerticalTab Position
+
 treestyletabSettings-l10 = Tree Style vertical tab settings
 treestyletab-Settings =
  .label = Expand TreeStyleTab when hovering the mouse cursor

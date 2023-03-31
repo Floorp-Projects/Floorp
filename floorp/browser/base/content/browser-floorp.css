@@ -260,3 +260,7 @@
   #undo-closed-tab {
     list-style-image: url("chrome://browser/skin/undo-closed-tab.svg");
   }
+
+  #vertical-tab-reverse-position {
+    list-style-image: url("chrome://browser/skin/sort.svg");
+  }

@@ -34,6 +34,7 @@
   #sidebar-box {
     min-width: var(--default-vertitaltab-width) !important;
     max-width: var(--default-vertitaltab-width) !important;
+    width: var(--default-vertitaltab-width) !important;
     transition: all 200ms !important;
     transition-delay: 0.2s !important;
   }

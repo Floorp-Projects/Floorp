@@ -13,7 +13,7 @@ browser.jar:
   content/browser/browser-userChrome.js         (content/browser-userChrome.js)
   content/browser/browser-preferences.js        (content/browser-preferences.js)
   content/browser/browser-command.js            (content/browser-command.js)
-  content/browser/browser-undo-closed-tab.js    (content/browser-undo-closed-tab.js)
+  content/browser/browser-toolbar-features.js   (content/browser-toolbar-features.js)
   content/browser/browser-floorp.css            (content/browser-floorp.css)
   content/browser/browser-pinned-tabs-title.js  (content/browser-pinned-tabs-title.js)
   content/browser/browser-rest-mode.js          (content/browser-rest-mode.js)
