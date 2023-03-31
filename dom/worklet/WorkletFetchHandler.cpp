@@ -60,7 +60,7 @@ class StartModuleLoadRunnable final : public Runnable {
   RefPtr<WorkletImpl> mWorkletImpl;
   nsMainThreadPtrHandle<WorkletFetchHandler> mHandlerRef;
   nsCOMPtr<nsIURI> mURI;
-  nsIURI* mReferrer;
+  nsCOMPtr<nsIURI> mReferrer;
   const nsTArray<nsString>& mLocalizedStrs;
   JSRuntime* mParentRuntime;
 };
