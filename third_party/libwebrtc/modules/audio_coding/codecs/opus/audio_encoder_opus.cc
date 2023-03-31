@@ -813,9 +813,10 @@ ANAStats AudioEncoderOpusImpl::GetANAStats() const {
 
 absl::optional<std::pair<TimeDelta, TimeDelta> >
 AudioEncoderOpusImpl::GetFrameLengthRange() const {
-  if (config_.supported_frame_lengths_ms.empty()) {
-    return absl::nullopt;
-  } else if (audio_network_adaptor_) {
+  if (audio_network_adaptor_) {
+    if (config_.supported_frame_lengths_ms.empty()) {
+      return absl::nullopt;
+    }
     return {{TimeDelta::Millis(config_.supported_frame_lengths_ms.front()),
              TimeDelta::Millis(config_.supported_frame_lengths_ms.back())}};
   } else {
