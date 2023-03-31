@@ -815,8 +815,10 @@ class SSLStreamAdapterTestTLS
 
     send_stream_.ReserveSize(size);
     for (int i = 0; i < size; ++i) {
-      char ch = static_cast<char>(i);
-      send_stream_.Write(&ch, 1, nullptr, nullptr);
+      uint8_t ch = static_cast<uint8_t>(i);
+      size_t written;
+      int error;
+      send_stream_.Write(rtc::MakeArrayView(&ch, 1), written, error);
     }
     send_stream_.Rewind();
 
@@ -849,8 +851,8 @@ class SSLStreamAdapterTestTLS
 
     for (;;) {
       send_stream_.GetPosition(&position);
-      if (send_stream_.Read(block, sizeof(block), &tosend, nullptr) !=
-          rtc::SR_EOS) {
+      int dummy_error;
+      if (send_stream_.Read(block, tosend, dummy_error) != rtc::SR_EOS) {
         int error;
         rv = client_ssl_->Write(rtc::MakeArrayView(block, tosend), sent, error);
 
@@ -895,8 +897,9 @@ class SSLStreamAdapterTestTLS
 
       ASSERT_EQ(rtc::SR_SUCCESS, r);
       RTC_LOG(LS_VERBOSE) << "Read " << bread;
-
-      recv_stream_.Write(buffer, bread, nullptr, nullptr);
+      size_t written;
+      int error;
+      recv_stream_.Write(rtc::MakeArrayView(buffer, bread), written, error);
     }
   }
 
