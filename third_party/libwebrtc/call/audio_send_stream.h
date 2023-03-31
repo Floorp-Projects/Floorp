@@ -25,7 +25,7 @@
 #include "api/crypto/frame_encryptor_interface.h"
 #include "api/frame_transformer_interface.h"
 #include "api/rtp_parameters.h"
-#include "api/rtp_sender_interface.h"
+#include "api/rtp_sender_setparameters_callback.h"
 #include "api/scoped_refptr.h"
 #include "call/audio_sender.h"
 #include "call/rtp_config.h"

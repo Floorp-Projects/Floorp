@@ -32,9 +32,9 @@
 #include "rtc_base/ref_count.h"
 #include "rtc_base/system/rtc_export.h"
 
-namespace webrtc {
+#include "api/rtp_sender_setparameters_callback.h"
 
-using SetParametersCallback = absl::AnyInvocable<void(RTCError) &&>;
+namespace webrtc {
 
 class RTC_EXPORT RtpSenderInterface : public rtc::RefCountInterface {
  public:
