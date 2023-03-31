@@ -1163,6 +1163,9 @@ export var PushServiceWebSocket = {
 
     // If it is a ping, do not handle the message.
     if (doNotHandle) {
+      if (!this._hasPendingRequests()) {
+        this._requestTimeoutTimer.cancel();
+      }
       return;
     }
 
