@@ -416,13 +416,6 @@ void MonoAgc::UpdateGain(int rms_error_db) {
 }
 
 void MonoAgc::UpdateCompressor() {
-  calls_since_last_gain_log_++;
-  if (calls_since_last_gain_log_ == 100) {
-    calls_since_last_gain_log_ = 0;
-    RTC_HISTOGRAM_COUNTS_LINEAR("WebRTC.Audio.Agc.DigitalGainApplied",
-                                compression_, 0, kMaxCompressionGain,
-                                kMaxCompressionGain + 1);
-  }
   if (compression_ == target_compression_) {
     return;
   }
@@ -447,9 +440,6 @@ void MonoAgc::UpdateCompressor() {
 
   // Set the new compression gain.
   if (new_compression != compression_) {
-    RTC_HISTOGRAM_COUNTS_LINEAR("WebRTC.Audio.Agc.DigitalGainUpdated",
-                                new_compression, 0, kMaxCompressionGain,
-                                kMaxCompressionGain + 1);
     compression_ = new_compression;
     compression_accumulator_ = new_compression;
     new_compression_to_set_ = compression_;
