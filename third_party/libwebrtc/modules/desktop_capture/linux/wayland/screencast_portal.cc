@@ -58,9 +58,12 @@ ScreenCastPortal::ScreenCastPortal(
     PortalNotifier* notifier,
     ProxyRequestResponseHandler proxy_request_response_handler,
     SourcesRequestResponseSignalHandler sources_request_response_signal_handler,
-    gpointer user_data)
+    gpointer user_data,
+    bool prefer_cursor_embedded)
     : notifier_(notifier),
       capture_source_type_(ToCaptureSourceType(type)),
+      cursor_mode_(prefer_cursor_embedded ? CursorMode::kEmbedded
+                                          : CursorMode::kMetadata),
       proxy_request_response_handler_(proxy_request_response_handler),
       sources_request_response_signal_handler_(
           sources_request_response_signal_handler),
