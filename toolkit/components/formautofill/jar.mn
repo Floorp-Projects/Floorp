@@ -4,14 +4,14 @@
 
 toolkit.jar:
 % resource autofill %res/autofill/
-  res/autofill/ (./*.sys.mjs)
-  res/autofill/phonenumberutils/ (./phonenumberutils/*.sys.mjs)
+  res/autofill/ (./*.jsm)
+  res/autofill/phonenumberutils/ (./phonenumberutils/*.jsm)
   res/autofill/addressmetadata/ (./addressmetadata/*)
   res/autofill/content/ (./content/*)
 #ifdef ANDROID
-  res/autofill/FormAutofillPrompter.sys.mjs (./android/FormAutofillPrompter.sys.mjs)
-  res/autofill/FormAutofillStorage.sys.mjs (./android/FormAutofillStorage.sys.mjs)
+  res/autofill/FormAutofillPrompter.jsm (./android/FormAutofillPrompter.jsm)
+  res/autofill/FormAutofillStorage.jsm (./android/FormAutofillStorage.jsm)
 #else
-  res/autofill/FormAutofillPrompter.sys.mjs (./default/FormAutofillPrompter.sys.mjs)
-  res/autofill/FormAutofillStorage.sys.mjs (./default/FormAutofillStorage.sys.mjs)
+  res/autofill/FormAutofillPrompter.jsm (./default/FormAutofillPrompter.jsm)
+  res/autofill/FormAutofillStorage.jsm (./default/FormAutofillStorage.jsm)
 #endif

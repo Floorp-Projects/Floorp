@@ -20,7 +20,7 @@ const {
   sanitizeStorageObject,
   AutofillRecord,
   AddressesEngine,
-} = ChromeUtils.importESModule("resource://autofill/FormAutofillSync.sys.mjs");
+} = ChromeUtils.import("resource://autofill/FormAutofillSync.jsm");
 
 Services.prefs.setCharPref("extensions.formautofill.loglevel", "Trace");
 initTestLogging("Trace");

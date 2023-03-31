@@ -7,7 +7,13 @@
  * the doorhager UI for formautofill related features.
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+"use strict";
+
+var EXPORTED_SYMBOLS = ["FormAutofillPrompter"];
+
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 
 const lazy = {};
 
@@ -27,7 +33,7 @@ const CreditCardStorageHint = {
   LOW_CONFIDENCE: 1 << 1,
 };
 
-export let FormAutofillPrompter = {
+let FormAutofillPrompter = {
   _createMessage(creditCards) {
     let hint = CreditCardStorageHint.NONE;
     return {

@@ -788,10 +788,10 @@ function startup() {
         actors: {
           FormAutofill: {
             parent: {
-              esModuleURI: "resource://autofill/FormAutofillParent.sys.mjs",
+              moduleURI: "resource://autofill/FormAutofillParent.jsm",
             },
             child: {
-              esModuleURI: "resource://autofill/FormAutofillChild.sys.mjs",
+              moduleURI: "resource://autofill/FormAutofillChild.jsm",
               events: {
                 focusin: {},
                 DOMFormBeforeSubmit: {},

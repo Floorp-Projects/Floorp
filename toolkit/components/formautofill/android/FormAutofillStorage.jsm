@@ -6,16 +6,24 @@
  * Implements an interface of the storage of Form Autofill for GeckoView.
  */
 
+"use strict";
+
 // We expose a singleton from this module. Some tests may import the
 // constructor via a backstage pass.
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+const EXPORTED_SYMBOLS = ["formAutofillStorage", "FormAutofillStorage"];
 
-import {
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+
+const {
   FormAutofillStorageBase,
   CreditCardsBase,
   AddressesBase,
-} from "resource://autofill/FormAutofillStorageBase.sys.mjs";
-import { JSONFile } from "resource://gre/modules/JSONFile.sys.mjs";
+} = ChromeUtils.import("resource://autofill/FormAutofillStorageBase.jsm");
+const { JSONFile } = ChromeUtils.importESModule(
+  "resource://gre/modules/JSONFile.sys.mjs"
+);
 
 const lazy = {};
 
@@ -240,7 +248,7 @@ class CreditCards extends CreditCardsBase {
   }
 }
 
-export class FormAutofillStorage extends FormAutofillStorageBase {
+class FormAutofillStorage extends FormAutofillStorageBase {
   constructor() {
     super(null);
   }
@@ -273,4 +281,4 @@ export class FormAutofillStorage extends FormAutofillStorageBase {
 }
 
 // The singleton exposed by this module.
-export const formAutofillStorage = new FormAutofillStorage();
+const formAutofillStorage = new FormAutofillStorage();

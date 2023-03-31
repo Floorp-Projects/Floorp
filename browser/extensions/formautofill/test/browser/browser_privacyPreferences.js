@@ -13,8 +13,8 @@ const SELECTORS = {
   reauthCheckbox: "#creditCardReauthenticate checkbox",
 };
 
-const { FormAutofill } = ChromeUtils.importESModule(
-  "resource://autofill/FormAutofill.sys.mjs"
+const { FormAutofill } = ChromeUtils.import(
+  "resource://autofill/FormAutofill.jsm"
 );
 
 // Visibility of form autofill group should be hidden when opening
