@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "absl/types/optional.h"
+#include "api/numerics/samples_stats_counter.h"
 #include "api/units/data_size.h"
 #include "api/units/timestamp.h"
 #include "api/video/video_frame.h"
@@ -153,7 +154,7 @@ class FrameInFlight {
   VideoFrameType frame_type_ = VideoFrameType::kEmptyFrame;
   DataSize encoded_image_size_ = DataSize::Bytes(0);
   uint32_t target_encode_bitrate_ = 0;
-  std::vector<int> qp_values_;
+  SamplesStatsCounter qp_values_;
   // Can be not set if frame was dropped by encoder.
   absl::optional<StreamCodecInfo> used_encoder_ = absl::nullopt;
   // Map from the receiver peer's index to frame stats for that peer.
