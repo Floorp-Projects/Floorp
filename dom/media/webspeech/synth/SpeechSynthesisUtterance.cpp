@@ -35,7 +35,8 @@ SpeechSynthesisUtterance::SpeechSynthesisUtterance(
       mPitch(1),
       mPaused(false),
       mShouldResistFingerprinting(
-          aOwnerWindow->AsGlobal()->ShouldResistFingerprinting()) {}
+          aOwnerWindow->AsGlobal()->ShouldResistFingerprinting(
+              RFPTarget::SpeechSynthesis)) {}
 
 SpeechSynthesisUtterance::~SpeechSynthesisUtterance() = default;
 
