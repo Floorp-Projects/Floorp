@@ -59,7 +59,7 @@ function changeStatusbarVisibility() {
 }
 
 function showStatusbar() {
-    var statuspanel_label = document.getElementById("statuspanel-label")
+    let statuspanel_label = document.getElementById("statuspanel-label");
     //remove CSS
     document.getElementById("statusBarCSS")?.remove();
 
@@ -71,8 +71,8 @@ function showStatusbar() {
 }
 
 function hideStatusbar() {
-    var statuspanel_label = document.getElementById("statuspanel-label")
-    var Tag = document.createElement("style");
+    let statuspanel_label = document.getElementById("statuspanel-label");
+    let Tag = document.createElement("style");
     Tag.setAttribute("id", "statusBarCSS");
     Tag.innerText = hideedStatusBar;
     document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend", Tag);
