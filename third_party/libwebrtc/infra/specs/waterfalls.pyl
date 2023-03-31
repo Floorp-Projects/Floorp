@@ -13,7 +13,7 @@
     'machines': {
       'Android32 (M Nexus5X)': {
         'mixins': [
-          'bullhead', 'marshmallow', 'android-devices', 'logdog-butler',
+          'walleye', 'android-devices', 'logdog-butler',
           'has_native_resultdb_integration'
         ],
         'test_suites': {
@@ -23,7 +23,7 @@
       },
       'Android32 (M Nexus5X)(dbg)': {
         'mixins': [
-          'bullhead', 'marshmallow', 'android-devices', 'logdog-butler',
+          'walleye', 'android-devices', 'logdog-butler',
           'has_native_resultdb_integration'
         ],
         'test_suites': {
@@ -33,7 +33,7 @@
       },
       'Android32 (more configs)': {
         'mixins': [
-          'bullhead', 'marshmallow', 'android-devices', 'logdog-butler',
+          'walleye', 'android-devices', 'logdog-butler',
           'has_native_resultdb_integration'
         ],
         'test_suites': {
@@ -45,7 +45,7 @@
       'Android32 Builder x86 (dbg)': {},
       'Android64 (M Nexus5X)': {
         'mixins': [
-          'bullhead', 'marshmallow', 'android-devices', 'logdog-butler',
+          'walleye', 'android-devices', 'logdog-butler',
           'has_native_resultdb_integration'
         ],
         'test_suites': {
@@ -55,7 +55,7 @@
       },
       'Android64 (M Nexus5X)(dbg)': {
         'mixins': [
-          'bullhead', 'marshmallow', 'android-devices', 'logdog-butler',
+          'walleye', 'android-devices', 'logdog-butler',
           'has_native_resultdb_integration'
         ],
         'test_suites': {
