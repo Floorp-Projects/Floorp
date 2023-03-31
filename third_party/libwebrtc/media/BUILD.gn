@@ -653,6 +653,7 @@ if (rtc_include_tests) {
         "../call:call_interfaces",
         "../common_video",
         "../modules/audio_device:mock_audio_device",
+        "../modules/audio_mixer:audio_mixer_impl",
         "../modules/audio_processing",
         "../modules/audio_processing:api",
         "../modules/audio_processing:mocks",
