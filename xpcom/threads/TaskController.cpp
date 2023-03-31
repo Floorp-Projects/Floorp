@@ -168,10 +168,9 @@ TaskController* TaskController::Get() {
   return sSingleton.get();
 }
 
-bool TaskController::Initialize() {
+void TaskController::Initialize() {
   MOZ_ASSERT(!sSingleton);
   sSingleton = std::make_unique<TaskController>();
-  return sSingleton->InitializeInternal();
 }
 
 void ThreadFuncPoolThread(void* aIndex) {
@@ -180,7 +179,11 @@ void ThreadFuncPoolThread(void* aIndex) {
   TaskController::Get()->RunPoolThread();
 }
 
-bool TaskController::InitializeInternal() {
+TaskController::TaskController()
+    : mGraphMutex("TaskController::mGraphMutex"),
+      mThreadPoolCV(mGraphMutex, "TaskController::mThreadPoolCV"),
+      mMainThreadCV(mGraphMutex, "TaskController::mMainThreadCV"),
+      mRunOutOfMTTasksCounter(0) {
   InputTaskManager::Init();
   VsyncTaskManager::Init();
   mMTProcessingRunnable = NS_NewRunnableFunction(
@@ -189,8 +192,6 @@ bool TaskController::InitializeInternal() {
   mMTBlockingProcessingRunnable = NS_NewRunnableFunction(
       "TaskController::ExecutePendingMTTasks()",
       []() { TaskController::Get()->ProcessPendingMTTask(true); });
-
-  return true;
 }
 
 // We want our default stack size limit to be approximately 2MB, to be safe for
@@ -392,7 +393,6 @@ void TaskController::AddTask(already_AddRefed<Task>&& aTask) {
     MutexAutoLock lock(mPoolInitializationMutex);
     if (!mThreadPoolInitialized) {
       InitializeThreadPool();
-      mThreadPoolInitialized = true;
     }
   }
 
@@ -605,6 +605,7 @@ nsIRunnable* TaskController::GetRunnableForMTTask(bool aReallyWait) {
 }
 
 bool TaskController::HasMainThreadPendingTasks() {
+  MOZ_ASSERT(NS_IsMainThread());
   auto resetIdleState = MakeScopeExit([&idleManager = mIdleTaskManager] {
     if (idleManager) {
       idleManager->State().ClearCachedIdleDeadline();
@@ -691,6 +692,7 @@ uint64_t TaskController::PendingMainthreadTaskCountIncludingSuspended() {
 
 bool TaskController::ExecuteNextTaskOnlyMainThreadInternal(
     const MutexAutoLock& aProofOfLock) {
+  MOZ_ASSERT(NS_IsMainThread());
   mGraphMutex.AssertCurrentThreadOwns();
   // Block to make it easier to jump to our cleanup.
   bool taskRan = false;
