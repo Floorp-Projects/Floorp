@@ -10250,12 +10250,6 @@
     value: 2000000
     mirror: always
 
-# Specifies how many times we restart MFCDM process after crash till we give up.
--   name: media.wmf.media-engine.max-crashes
-    type: RelaxedAtomicInt32
-    value: 2
-    mirror: always
-
 # Enable PlayReady DRM for EME
 -   name: media.eme.playready.enabled
     type: RelaxedAtomicBool
