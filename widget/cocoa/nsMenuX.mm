@@ -68,6 +68,11 @@ static void SwizzleDynamicIndexingMethods() {
   nsToolkit::SwizzleMethods(SCTGRLIndexClass, @selector(indexMenuBarDynamically),
                             @selector(nsMenuX_SCTGRLIndex_indexMenuBarDynamically));
 
+  Class NSServicesMenuUpdaterClass = ::NSClassFromString(@"_NSServicesMenuUpdater");
+  nsToolkit::SwizzleMethods(NSServicesMenuUpdaterClass,
+                            @selector(populateMenu:withServiceEntries:forDisplay:),
+                            @selector(nsMenuX_populateMenu:withServiceEntries:forDisplay:));
+
   gMenuMethodsSwizzled = true;
 }
 
@@ -1357,6 +1362,43 @@ static NSMutableDictionary* gShadowKeyEquivDB = nil;
   ++nsMenuX::sIndexingMenuLevel;
   [self nsMenuX_SCTGRLIndex_indexMenuBarDynamically];
   --nsMenuX::sIndexingMenuLevel;
+}
+
+@end
+
+@interface NSObject (NSServicesMenuUpdaterSwizzling)
+- (void)nsMenuX_populateMenu:(NSMenu*)aMenu
+          withServiceEntries:(NSArray*)aServices
+                  forDisplay:(BOOL)aForDisplay;
+@end
+
+@interface _NSServiceEntry : NSObject
+- (NSString*)bundleIdentifier;
+@end
+
+@implementation NSObject (NSServicesMenuUpdaterSwizzling)
+
+- (void)nsMenuX_populateMenu:(NSMenu*)aMenu
+          withServiceEntries:(NSArray*)aServices
+                  forDisplay:(BOOL)aForDisplay {
+  NSMutableArray* filteredServices = [NSMutableArray array];
+
+  // We need to filter some services, such as "Search with Google", since this
+  // service is duplicating functionality already exposed by our "Search Google
+  // for..." context menu entry and because it opens in Safari, which can cause
+  // confusion for users.
+  for (_NSServiceEntry* service in aServices) {
+    NSString* bundleId = [service bundleIdentifier];
+    NSString* msg = [service valueForKey:@"message"];
+    bool shouldSkip = ([bundleId isEqualToString:@"com.apple.Safari"]) ||
+                      ([bundleId isEqualToString:@"com.apple.systemuiserver"] &&
+                       [msg isEqualToString:@"openURL"]);
+    if (!shouldSkip) {
+      [filteredServices addObject:service];
+    }
+  }
+
+  [self nsMenuX_populateMenu:aMenu withServiceEntries:filteredServices forDisplay:aForDisplay];
 }
 
 @end
