@@ -2,8 +2,8 @@
 
 var FormAutofillContent;
 add_setup(async () => {
-  ({ FormAutofillContent } = ChromeUtils.import(
-    "resource://autofill/FormAutofillContent.jsm"
+  ({ FormAutofillContent } = ChromeUtils.importESModule(
+    "resource://autofill/FormAutofillContent.sys.mjs"
   ));
 });
 
