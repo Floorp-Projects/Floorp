@@ -289,12 +289,12 @@
 /* Open DOMNode in inspector or Accessible in accessibility inspector button */
 
 button.open-accessibility-inspector {
-  mask: url("chrome://devtools/content/shared/components/reps/images/open-a11y.svg")
+  background: url("chrome://devtools/content/shared/components/reps/images/open-a11y.svg")
     no-repeat;
 }
 
 button.open-inspector {
-  mask: url("chrome://devtools/content/shared/components/reps/images/open-inspector.svg")
+  background: url("chrome://devtools/content/shared/components/reps/images/open-inspector.svg")
     no-repeat;
 }
 
@@ -306,8 +306,9 @@ button:is(.open-accessibility-inspector,.open-inspector) {
   margin: 0 4px;
   padding: 0;
   border: none;
-  background-color: var(--theme-icon-color);
+  fill: var(--theme-icon-color);
   cursor: pointer;
+  -moz-context-properties: fill;
 }
 
 .objectBox-accessible:hover .open-accessibility-inspector,
@@ -315,7 +316,7 @@ button:is(.open-accessibility-inspector,.open-inspector) {
 .objectBox-textNode:hover .open-inspector,
 .open-accessibility-inspector:hover,
 .open-inspector:hover {
-  background-color: var(--theme-icon-checked-color);
+  fill: var(--theme-icon-checked-color);
 }
 
 /******************************************************************************/
