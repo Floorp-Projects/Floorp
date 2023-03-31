@@ -27,6 +27,7 @@
 #include "mozilla/URLPreloader.h"
 #include "mozilla/Unused.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/Services.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 
 #include "nsAppDirectoryServiceDefs.h"
@@ -41,6 +42,7 @@
 #include "nsIZipReader.h"
 #include "nsJARProtocolHandler.h"
 #include "nsJSUtils.h"
+#include "nsIObserverService.h"
 #include "nsReadableUtils.h"
 #include "nsXULAppAPI.h"
 
