@@ -76,6 +76,7 @@ rtc_library("emulated_network") {
     "../../rtc_base:threading",
     "../../rtc_base/memory:always_valid_pointer",
     "../../rtc_base/synchronization:mutex",
+    "../../rtc_base/system:no_unique_address",
     "../../rtc_base/task_utils:repeating_task",
     "../../system_wrappers",
     "../../test:scoped_key_value_config",

@@ -37,6 +37,14 @@ namespace webrtc_pc_e2e {
 class StatsBasedNetworkQualityMetricsReporter
     : public PeerConnectionE2EQualityTestFixture::QualityMetricsReporter {
  public:
+  // Emulated network layer stats for single peer.
+  struct NetworkLayerStats {
+    EmulatedNetworkStats endpoints_stats;
+    EmulatedNetworkNodeStats uplink_stats;
+    EmulatedNetworkNodeStats downlink_stats;
+    std::set<std::string> receivers;
+  };
+
   // `networks` map peer name to network to report network layer stability stats
   // and to log network layer metrics.
   StatsBasedNetworkQualityMetricsReporter(
@@ -47,6 +55,10 @@ class StatsBasedNetworkQualityMetricsReporter
 
   void AddPeer(absl::string_view peer_name,
                std::vector<EmulatedEndpoint*> endpoints);
+  void AddPeer(absl::string_view peer_name,
+               std::vector<EmulatedEndpoint*> endpoints,
+               std::vector<EmulatedNetworkNode*> uplink,
+               std::vector<EmulatedNetworkNode*> downlink);
 
   // Network stats must be empty when this method will be invoked.
   void Start(absl::string_view test_case_name,
@@ -71,11 +83,6 @@ class StatsBasedNetworkQualityMetricsReporter
     int64_t packets_sent = 0;
   };
 
-  struct NetworkLayerStats {
-    EmulatedNetworkStats stats;
-    std::set<std::string> receivers;
-  };
-
   class NetworkLayerStatsCollector {
    public:
     NetworkLayerStatsCollector(
@@ -85,13 +92,19 @@ class StatsBasedNetworkQualityMetricsReporter
     void Start();
 
     void AddPeer(absl::string_view peer_name,
-                 std::vector<EmulatedEndpoint*> endpoints);
+                 std::vector<EmulatedEndpoint*> endpoints,
+                 std::vector<EmulatedNetworkNode*> uplink,
+                 std::vector<EmulatedNetworkNode*> downlink);
 
     std::map<std::string, NetworkLayerStats> GetStats();
 
    private:
     Mutex mutex_;
     std::map<std::string, std::vector<EmulatedEndpoint*>> peer_endpoints_
+        RTC_GUARDED_BY(mutex_);
+    std::map<std::string, std::vector<EmulatedNetworkNode*>> peer_uplinks_
+        RTC_GUARDED_BY(mutex_);
+    std::map<std::string, std::vector<EmulatedNetworkNode*>> peer_downlinks_
         RTC_GUARDED_BY(mutex_);
     std::map<rtc::IPAddress, std::string> ip_to_peer_ RTC_GUARDED_BY(mutex_);
     NetworkEmulationManager* const network_emulation_;
