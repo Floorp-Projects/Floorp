@@ -3150,76 +3150,23 @@ void WorkerPrivate::DoRunLoop(JSContext* aCx) {
 
   InitializeGCTimers();
 
-  bool checkFinalGCCC =
-      StaticPrefs::dom_workers_GCCC_on_potentially_last_event();
-
-  bool debuggerRunnablesPending = false;
-  bool normalRunnablesPending = false;
-  auto noRunnablesPendingAndKeepAlive =
-      [&debuggerRunnablesPending, &normalRunnablesPending, &thread, this]()
-          MOZ_REQUIRES(mMutex) {
-            // We want to keep both pending flags always updated while looping.
-            debuggerRunnablesPending = !mDebuggerQueue.IsEmpty();
-            normalRunnablesPending = NS_HasPendingEvents(thread);
-
-            bool anyRunnablesPending = !mControlQueue.IsEmpty() ||
-                                       debuggerRunnablesPending ||
-                                       normalRunnablesPending;
-            bool keepWorkerAlive = mStatus == Running || HasActiveWorkerRefs();
-
-            return (!anyRunnablesPending && keepWorkerAlive);
-          };
-
   for (;;) {
     WorkerStatus currentStatus;
-
-    if (checkFinalGCCC) {
-      // If we get here after the last event ran but someone holds a WorkerRef
-      // and there is no other logic to release that WorkerRef than lazily
-      // through GC/CC, we might block forever on the next WaitForWorkerEvents.
-      // Every object holding a WorkerRef should really have a straight,
-      // deterministic line from the WorkerRef's callback being invoked to the
-      // WorkerRef being released which is supported by strong-references that
-      // can't form a cycle.
-      bool mayNeedFinalGCCC = false;
-      {
-        MutexAutoLock lock(mMutex);
-
-        currentStatus = mStatus;
-        mayNeedFinalGCCC =
-            (mStatus >= Canceling && HasActiveWorkerRefs() &&
-             !debuggerRunnablesPending && !normalRunnablesPending);
-      }
-      if (mayNeedFinalGCCC) {
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-        // WorkerRef::ReleaseWorker will check this flag via
-        // AssertIsNotPotentiallyLastGCCCRunning
-        data->mIsPotentiallyLastGCCCRunning = true;
-#endif
-        // GarbageCollectInternal will trigger both GC and CC
-        GarbageCollectInternal(aCx, true /* aShrinking */,
-                               true /* aCollectChildren */);
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-        data->mIsPotentiallyLastGCCCRunning = false;
-#endif
-      }
-    }
+    bool debuggerRunnablesPending = false;
+    bool normalRunnablesPending = false;
 
     {
       MutexAutoLock lock(mMutex);
 
-      if (checkFinalGCCC && currentStatus != mStatus) {
-        // Something moved our status while we were supposed to check for a
-        // potentially needed GC/CC. Just check again.
-        continue;
-      }
-
       // Wait for a runnable to arrive that we can execute, or for it to be okay
       // to shutdown this worker once all holders have been removed.
-      // Holders may be removed from inside normal runnables,  but we don't
-      // check for that after processing normal runnables, so we need to let
-      // control flow to the shutdown logic without blocking.
-      while (noRunnablesPendingAndKeepAlive()) {
+      // Holders may be removed from inside normal runnables, but we don't check
+      // for that after processing normal runnables, so we need to let control
+      // flow to the shutdown logic without blocking.
+      while (mControlQueue.IsEmpty() &&
+             !(debuggerRunnablesPending = !mDebuggerQueue.IsEmpty()) &&
+             !(normalRunnablesPending = NS_HasPendingEvents(thread)) &&
+             !(mStatus != Running && !HasActiveWorkerRefs())) {
         // We pop out to this loop when there are no pending events.
         // If we don't reset these, we may not re-enter ProcessNextEvent()
         // until we have events to process, and it may seem like we have

@@ -65,9 +65,6 @@ void WorkerRef::ReleaseWorker() {
   if (mHolding) {
     MOZ_ASSERT(mWorkerPrivate);
 
-    if (mIsPreventingShutdown) {
-      mWorkerPrivate->AssertIsNotPotentiallyLastGCCCRunning();
-    }
     mWorkerPrivate->RemoveWorkerRef(this);
     mWorkerPrivate = nullptr;
 
