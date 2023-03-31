@@ -61,7 +61,8 @@ std::unique_ptr<InputVolumeController> CreateInputVolumeController(
     int clipped_level_step,
     float clipped_ratio_threshold,
     int clipped_wait_frames,
-    bool enable_clipping_predictor = false) {
+    bool enable_clipping_predictor = false,
+    int update_input_volume_wait_frames = 0) {
   InputVolumeControllerConfig config{
       .enabled = true,
       .startup_min_volume = startup_min_volume,
@@ -72,6 +73,7 @@ std::unique_ptr<InputVolumeController> CreateInputVolumeController(
       .enable_clipping_predictor = enable_clipping_predictor,
       .target_range_max_dbfs = -18,
       .target_range_min_dbfs = -30,
+      .update_input_volume_wait_frames = update_input_volume_wait_frames,
   };
 
   return std::make_unique<InputVolumeController>(/*num_capture_channels=*/1,
@@ -264,6 +266,7 @@ constexpr InputVolumeControllerConfig GetInputVolumeControllerTestConfig() {
       .enable_clipping_predictor = kDefaultClippingPredictorConfig.enabled,
       .target_range_max_dbfs = -18,
       .target_range_min_dbfs = -30,
+      .update_input_volume_wait_frames = 0,
   };
   return config;
 }
@@ -1459,6 +1462,46 @@ TEST_P(InputVolumeControllerParametrizedTest, EmptyRmsErrorHasNoEffect) {
 
   // Check that no adaptation occurs.
   ASSERT_EQ(manager.recommended_analog_level(), kInputVolume);
+}
+
+// Checks that the recommended input volume is not updated unless enough
+// frames have been processed after the previous update.
+TEST(InputVolumeControllerTest, UpdateInputVolumeWaitFramesIsEffective) {
+  constexpr int kInputVolume = kInitialInputVolume;
+  std::unique_ptr<InputVolumeController> controller_wait_0 =
+      CreateInputVolumeController(kInitialInputVolume, kClippedLevelStep,
+                                  kClippedRatioThreshold, kClippedWaitFrames,
+                                  /*enable_clipping_predictor=*/false,
+                                  /*update_input_volume_wait_frames=*/0);
+  std::unique_ptr<InputVolumeController> controller_wait_100 =
+      CreateInputVolumeController(kInitialInputVolume, kClippedLevelStep,
+                                  kClippedRatioThreshold, kClippedWaitFrames,
+                                  /*enable_clipping_predictor=*/false,
+                                  /*update_input_volume_wait_frames=*/100);
+  controller_wait_0->Initialize();
+  controller_wait_100->Initialize();
+  controller_wait_0->set_stream_analog_level(kInputVolume);
+  controller_wait_100->set_stream_analog_level(kInputVolume);
+
+  SpeechSamplesReader reader_1;
+  SpeechSamplesReader reader_2;
+  reader_1.Feed(/*num_frames=*/99, /*gain_db=*/0, kHighSpeechProbability,
+                /*speech_level=*/-42.0f, *controller_wait_0);
+  reader_2.Feed(/*num_frames=*/99, /*gain_db=*/0, kHighSpeechProbability,
+                /*speech_level=*/-42.0f, *controller_wait_100);
+
+  // Check that adaptation only occurs if enough frames have been processed.
+  ASSERT_GT(controller_wait_0->recommended_analog_level(), kInputVolume);
+  ASSERT_EQ(controller_wait_100->recommended_analog_level(), kInputVolume);
+
+  reader_1.Feed(/*num_frames=*/1, /*gain_db=*/0, kHighSpeechProbability,
+                /*speech_level=*/-42.0f, *controller_wait_0);
+  reader_2.Feed(/*num_frames=*/1, /*gain_db=*/0, kHighSpeechProbability,
+                /*speech_level=*/-42.0f, *controller_wait_100);
+
+  // Check that adaptation only occurs when enough frames have been processed.
+  ASSERT_GT(controller_wait_0->recommended_analog_level(), kInputVolume);
+  ASSERT_GT(controller_wait_100->recommended_analog_level(), kInputVolume);
 }
 
 }  // namespace webrtc

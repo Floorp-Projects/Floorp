@@ -63,6 +63,8 @@ class InputVolumeController final {
     // up to -30 dB.
     int target_range_max_dbfs = -18;
     int target_range_min_dbfs = -48;
+    // Number of wait frames between the recommended input volume updates.
+    int update_input_volume_wait_frames = 100;
   };
 
   // Ctor. `num_capture_channels` specifies the number of channels for the audio
@@ -181,7 +183,9 @@ class InputVolumeController final {
 // convention.
 class MonoInputVolumeController {
  public:
-  MonoInputVolumeController(int clipped_level_min, int min_mic_level);
+  MonoInputVolumeController(int clipped_level_min,
+                            int min_mic_level,
+                            int update_input_volume_wait_frames);
   ~MonoInputVolumeController();
   MonoInputVolumeController(const MonoInputVolumeController&) = delete;
   MonoInputVolumeController& operator=(const MonoInputVolumeController&) =
@@ -250,8 +254,9 @@ class MonoInputVolumeController {
 
   const int clipped_level_min_;
 
-  // Frames since the last `UpdateInputVolume()` call.
-  int frames_since_update_gain_ = 0;
+  // Number of frames waited between the calls to `UpdateInputVolume()`.
+  const int update_input_volume_wait_frames_;
+  int frames_since_update_input_volume_ = 0;
   bool is_first_frame_ = true;
 };
 
