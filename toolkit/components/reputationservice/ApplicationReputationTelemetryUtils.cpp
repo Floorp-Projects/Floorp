@@ -4,6 +4,7 @@
 
 #include "ApplicationReputationTelemetryUtils.h"
 #include "mozilla/Assertions.h"
+#include "chrome/common/safe_browsing/csd.pb.h"
 
 using ServerLabel = mozilla::Telemetry::LABELS_APPLICATION_REPUTATION_SERVER_2;
 using ServerVerdictLabel =
