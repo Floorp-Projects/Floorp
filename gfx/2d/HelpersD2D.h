@@ -205,6 +205,7 @@ static inline bool D2DSupportsCompositeMode(CompositionOp aOp) {
     case CompositionOp::OP_DEST_OVER:
     case CompositionOp::OP_DEST_ATOP:
     case CompositionOp::OP_XOR:
+    case CompositionOp::OP_CLEAR:
       return true;
     default:
       return false;
@@ -235,6 +236,8 @@ static inline D2D1_COMPOSITE_MODE D2DCompositionMode(CompositionOp aOp) {
       return D2D1_COMPOSITE_MODE_DESTINATION_ATOP;
     case CompositionOp::OP_XOR:
       return D2D1_COMPOSITE_MODE_XOR;
+    case CompositionOp::OP_CLEAR:
+      return D2D1_COMPOSITE_MODE_DESTINATION_OUT;
     default:
       return D2D1_COMPOSITE_MODE_SOURCE_OVER;
   }
@@ -310,7 +313,12 @@ static inline D2D1_PRIMITIVE_BLEND D2DPrimitiveBlendMode(CompositionOp aOp) {
   }
 }
 
-static inline bool IsPatternSupportedByD2D(const Pattern& aPattern) {
+static inline bool IsPatternSupportedByD2D(
+    const Pattern& aPattern, CompositionOp aOp = CompositionOp::OP_OVER) {
+  if (aOp == CompositionOp::OP_CLEAR) {
+    return true;
+  }
+
   if (aPattern.GetType() == PatternType::CONIC_GRADIENT) {
     return false;
   }
