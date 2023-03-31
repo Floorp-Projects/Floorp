@@ -1959,7 +1959,7 @@ name = "gecko_logger"
 version = "0.1.0"
 dependencies = [
  "app_services_logger",
- "env_logger 0.9.999",
+ "env_logger 0.10.0",
  "lazy_static",
  "log",
 ]
@@ -3836,7 +3836,7 @@ version = "0.1.4"
 dependencies = [
  "byteorder",
  "core-foundation",
- "env_logger 0.9.999",
+ "env_logger 0.10.0",
  "lazy_static",
  "libloading",
  "log",
@@ -4859,7 +4859,7 @@ name = "smoosh"
 version = "0.1.0"
 dependencies = [
  "bumpalo",
- "env_logger 0.9.999",
+ "env_logger 0.10.0",
  "jsparagus",
  "log",
 ]
