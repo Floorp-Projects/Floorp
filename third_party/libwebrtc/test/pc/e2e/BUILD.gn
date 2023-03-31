@@ -72,7 +72,6 @@ if (!build_with_chromium) {
   }
 
   rtc_library("encoded_image_data_injector_api") {
-    visibility = [ "*" ]
     testonly = true
     sources = [ "analyzer/video/encoded_image_data_injector.h" ]
 
@@ -81,7 +80,6 @@ if (!build_with_chromium) {
   }
 
   rtc_library("single_process_encoded_image_data_injector") {
-    visibility = [ "*" ]
     testonly = true
     sources = [
       "analyzer/video/single_process_encoded_image_data_injector.cc",
@@ -99,7 +97,6 @@ if (!build_with_chromium) {
   }
 
   rtc_library("video_frame_tracking_id_injector") {
-    visibility = [ "*" ]
     testonly = true
     sources = [
       "analyzer/video/video_frame_tracking_id_injector.cc",
@@ -115,7 +112,6 @@ if (!build_with_chromium) {
   }
 
   rtc_library("simulcast_dummy_buffer_helper") {
-    visibility = [ "*" ]
     testonly = true
     sources = [
       "analyzer/video/simulcast_dummy_buffer_helper.cc",
@@ -136,7 +132,6 @@ if (!build_with_chromium) {
   }
 
   rtc_library("quality_analyzing_video_decoder") {
-    visibility = [ "*" ]
     testonly = true
     sources = [
       "analyzer/video/quality_analyzing_video_decoder.cc",
@@ -162,7 +157,6 @@ if (!build_with_chromium) {
   }
 
   rtc_library("quality_analyzing_video_encoder") {
-    visibility = [ "*" ]
     testonly = true
     sources = [
       "analyzer/video/quality_analyzing_video_encoder.cc",
@@ -251,7 +245,6 @@ if (!build_with_chromium) {
     }
 
     rtc_library("video_quality_analyzer_injection_helper") {
-      visibility = [ "*" ]
       testonly = true
       sources = [
         "analyzer/video/video_quality_analyzer_injection_helper.cc",
@@ -290,7 +283,6 @@ if (!build_with_chromium) {
     }
 
     rtc_library("echo_emulation") {
-      visibility = [ "*" ]
       testonly = true
       sources = [
         "echo/echo_emulation.cc",
@@ -304,7 +296,6 @@ if (!build_with_chromium) {
     }
 
     rtc_library("test_peer") {
-      visibility = [ "*" ]
       testonly = true
       sources = [
         "test_peer.cc",
@@ -335,7 +326,6 @@ if (!build_with_chromium) {
     }
 
     rtc_library("test_peer_factory") {
-      visibility = [ "*" ]
       testonly = true
       sources = [
         "test_peer_factory.cc",
@@ -372,7 +362,6 @@ if (!build_with_chromium) {
     }
 
     rtc_library("media_helper") {
-      visibility = [ "*" ]
       testonly = true
       sources = [
         "media/media_helper.cc",
@@ -398,7 +387,6 @@ if (!build_with_chromium) {
     }
 
     rtc_library("peer_configurer") {
-      visibility = [ "*" ]
       testonly = true
       sources = [ "peer_configurer.h" ]
       deps = [
@@ -428,7 +416,6 @@ if (!build_with_chromium) {
     }
 
     rtc_library("test_activities_executor") {
-      visibility = [ "*" ]
       testonly = true
       sources = [
         "test_activities_executor.cc",
@@ -453,7 +440,6 @@ if (!build_with_chromium) {
     }
 
     rtc_library("peerconnection_quality_test") {
-      visibility = [ "*" ]
       testonly = true
 
       sources = [
@@ -681,14 +667,12 @@ if (!build_with_chromium) {
     }
 
     rtc_library("stats_provider") {
-      visibility = [ "*" ]
       testonly = true
       sources = [ "stats_provider.h" ]
       deps = [ "../../../api:rtc_stats_api" ]
     }
 
     rtc_library("stats_poller") {
-      visibility = [ "*" ]
       testonly = true
       sources = [
         "stats_poller.cc",
@@ -811,7 +795,6 @@ if (!build_with_chromium) {
   }
 
   rtc_library("analyzer_helper") {
-    visibility = [ "*" ]
     sources = [
       "analyzer_helper.cc",
       "analyzer_helper.h",
@@ -828,7 +811,6 @@ if (!build_with_chromium) {
   }
 
   rtc_library("default_audio_quality_analyzer") {
-    visibility = [ "*" ]
     testonly = true
     sources = [
       "analyzer/audio/default_audio_quality_analyzer.cc",
@@ -857,7 +839,6 @@ if (!build_with_chromium) {
   }
 
   rtc_library("example_video_quality_analyzer") {
-    visibility = [ "*" ]
     testonly = true
     sources = [
       "analyzer/video/example_video_quality_analyzer.cc",
@@ -877,8 +858,6 @@ if (!build_with_chromium) {
   }
 
   rtc_library("video_quality_metrics_reporter") {
-    visibility = [ "*" ]
-
     testonly = true
     sources = [
       "analyzer/video/video_quality_metrics_reporter.cc",
@@ -906,14 +885,11 @@ if (!build_with_chromium) {
   }
 
   rtc_library("metric_metadata_keys") {
-    visibility = [ "*" ]
     testonly = true
     sources = [ "metric_metadata_keys.h" ]
   }
 
   rtc_library("default_video_quality_analyzer") {
-    visibility = [ "*" ]
-
     testonly = true
     sources = [
       "analyzer/video/default_video_quality_analyzer.cc",
@@ -999,8 +975,6 @@ if (!build_with_chromium) {
   }
 
   rtc_library("default_video_quality_analyzer_shared") {
-    visibility = [ "*" ]
-
     testonly = true
     sources = [
       "analyzer/video/default_video_quality_analyzer_shared_objects.cc",
@@ -1017,7 +991,6 @@ if (!build_with_chromium) {
   }
 
   rtc_library("network_quality_metrics_reporter") {
-    visibility = [ "*" ]
     testonly = true
     sources = [
       "network_quality_metrics_reporter.cc",
@@ -1042,7 +1015,6 @@ if (!build_with_chromium) {
   }
 
   rtc_library("stats_based_network_quality_metrics_reporter") {
-    visibility = [ "*" ]
     testonly = true
     sources = [
       "stats_based_network_quality_metrics_reporter.cc",
@@ -1075,7 +1047,6 @@ if (!build_with_chromium) {
   }
 
   rtc_library("cross_media_metrics_reporter") {
-    visibility = [ "*" ]
     testonly = true
     sources = [
       "cross_media_metrics_reporter.cc",
@@ -1106,7 +1077,6 @@ if (!build_with_chromium) {
   }
 
   rtc_library("sdp_changer") {
-    visibility = [ "*" ]
     testonly = true
     sources = [
       "sdp/sdp_changer.cc",
@@ -1132,7 +1102,6 @@ if (!build_with_chromium) {
   }
 
   rtc_library("multi_reader_queue") {
-    visibility = [ "*" ]
     testonly = true
     sources = [ "analyzer/video/multi_reader_queue.h" ]
     deps = [ "../../../rtc_base:checks" ]
