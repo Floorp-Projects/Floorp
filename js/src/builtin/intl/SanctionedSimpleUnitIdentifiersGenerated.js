@@ -5,7 +5,7 @@
  *
  * Intl.NumberFormat Unified API Proposal
  */
-/* eslint-disable prettier/prettier */
+// prettier-ignore
 var sanctionedSimpleUnitIdentifiers = {
   "acre": true,
   "bit": true,
@@ -53,4 +53,3 @@ var sanctionedSimpleUnitIdentifiers = {
   "yard": true,
   "year": true
 };
-/* eslint-enable prettier/prettier */
