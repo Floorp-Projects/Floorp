@@ -84,7 +84,10 @@ class ScreenCastPortal : public xdg_portal::ScreenCapturePortalInterface {
                    ProxyRequestResponseHandler proxy_request_response_handler,
                    SourcesRequestResponseSignalHandler
                        sources_request_response_signal_handler,
-                   gpointer user_data);
+                   gpointer user_data,
+                   // TODO(chromium:1291247): Remove the default option once
+                   // downstream has been adjusted.
+                   bool prefer_cursor_embedded = false);
 
   ~ScreenCastPortal();
 
@@ -140,7 +143,7 @@ class ScreenCastPortal : public xdg_portal::ScreenCapturePortalInterface {
   CaptureSourceType capture_source_type_ =
       ScreenCastPortal::CaptureSourceType::kScreen;
 
-  CursorMode cursor_mode_ = ScreenCastPortal::CursorMode::kMetadata;
+  CursorMode cursor_mode_ = CursorMode::kMetadata;
 
   PersistMode persist_mode_ = ScreenCastPortal::PersistMode::kDoNotPersist;
 
