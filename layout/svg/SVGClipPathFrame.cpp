@@ -39,7 +39,9 @@ NS_IMPL_FRAMEARENA_HELPERS(SVGClipPathFrame)
 void SVGClipPathFrame::ApplyClipPath(gfxContext& aContext,
                                      nsIFrame* aClippedFrame,
                                      const gfxMatrix& aMatrix) {
-  MOZ_ASSERT(IsTrivial(), "Caller needs to use GetClipMask");
+  ISVGDisplayableFrame* singleClipPathChild = nullptr;
+  DebugOnly<bool> trivial = IsTrivial(&singleClipPathChild);
+  MOZ_ASSERT(trivial, "Caller needs to use GetClipMask");
 
   const DrawTarget* drawTarget = aContext.GetDrawTarget();
 
@@ -47,12 +49,9 @@ void SVGClipPathFrame::ApplyClipPath(gfxContext& aContext,
   // don't reference another clip path.
 
   // Restore current transform after applying clip path:
-  gfxContextMatrixAutoSaveRestore autoRestore(&aContext);
+  gfxContextMatrixAutoSaveRestore autoRestoreTransform(&aContext);
 
   RefPtr<Path> clipPath;
-
-  ISVGDisplayableFrame* singleClipPathChild = nullptr;
-  IsTrivial(&singleClipPathChild);
 
   if (singleClipPathChild) {
     SVGGeometryFrame* pathFrame = do_QueryFrame(singleClipPathChild);
