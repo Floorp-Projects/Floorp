@@ -231,6 +231,7 @@ rtc_library("default_video_quality_analyzer_internal") {
     "../..:metric_metadata_keys",
     "../../../../../api:array_view",
     "../../../../../api:scoped_refptr",
+    "../../../../../api/numerics",
     "../../../../../api/units:data_size",
     "../../../../../api/units:timestamp",
     "../../../../../api/video:video_frame",

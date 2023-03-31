@@ -108,6 +108,16 @@ FrameStats ShiftStatsOn(const FrameStats& stats, TimeDelta delta) {
   return frame_stats;
 }
 
+SamplesStatsCounter StatsCounter(
+    const std::vector<std::pair<double, Timestamp>>& samples) {
+  SamplesStatsCounter counter;
+  for (const std::pair<double, Timestamp>& sample : samples) {
+    counter.AddSample(SamplesStatsCounter::StatsSample{.value = sample.first,
+                                                       .time = sample.second});
+  }
+  return counter;
+}
+
 double GetFirstOrDie(const SamplesStatsCounter& counter) {
   EXPECT_FALSE(counter.IsEmpty()) << "Counter has to be not empty";
   return counter.GetSamples()[0];
@@ -478,7 +488,8 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   frame_stats.encoded_frame_type = VideoFrameType::kVideoFrameKey;
   frame_stats.encoded_image_size = DataSize::Bytes(1000);
   frame_stats.target_encode_bitrate = 2000;
-  frame_stats.qp_values = {5, 5};
+  frame_stats.qp_values = StatsCounter(
+      /*samples=*/{{5, Timestamp::Seconds(1)}, {5, Timestamp::Seconds(2)}});
 
   comparator.Start(/*max_threads_count=*/1);
   comparator.EnsureStatsForStream(stream, sender, /*peers_count=*/2,
@@ -548,7 +559,8 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   frame_stats.encoded_frame_type = VideoFrameType::kVideoFrameDelta;
   frame_stats.encoded_image_size = DataSize::Bytes(1000);
   frame_stats.target_encode_bitrate = 2000;
-  frame_stats.qp_values = {5, 5};
+  frame_stats.qp_values = StatsCounter(
+      /*samples=*/{{5, Timestamp::Seconds(1)}, {5, Timestamp::Seconds(2)}});
 
   comparator.Start(/*max_threads_count=*/1);
   comparator.EnsureStatsForStream(stream, sender, /*peers_count=*/2,
@@ -618,7 +630,8 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   frame_stats.encoded_frame_type = VideoFrameType::kVideoFrameKey;
   frame_stats.encoded_image_size = DataSize::Bytes(1000);
   frame_stats.target_encode_bitrate = 2000;
-  frame_stats.qp_values = {5, 5};
+  frame_stats.qp_values = StatsCounter(
+      /*samples=*/{{5, Timestamp::Seconds(1)}, {5, Timestamp::Seconds(2)}});
   // Frame pre decoded
   frame_stats.pre_decoded_frame_type = VideoFrameType::kVideoFrameKey;
   frame_stats.pre_decoded_image_size = DataSize::Bytes(500);
@@ -693,7 +706,8 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   frame_stats.encoded_frame_type = VideoFrameType::kVideoFrameKey;
   frame_stats.encoded_image_size = DataSize::Bytes(1000);
   frame_stats.target_encode_bitrate = 2000;
-  frame_stats.qp_values = {5, 5};
+  frame_stats.qp_values = StatsCounter(
+      /*samples=*/{{5, Timestamp::Seconds(1)}, {5, Timestamp::Seconds(2)}});
   // Frame pre decoded
   frame_stats.pre_decoded_frame_type = VideoFrameType::kVideoFrameKey;
   frame_stats.pre_decoded_image_size = DataSize::Bytes(500);
@@ -776,7 +790,8 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   frame_stats.encoded_frame_type = VideoFrameType::kVideoFrameKey;
   frame_stats.encoded_image_size = DataSize::Bytes(1000);
   frame_stats.target_encode_bitrate = 2000;
-  frame_stats.qp_values = {5, 5};
+  frame_stats.qp_values = StatsCounter(
+      /*samples=*/{{5, Timestamp::Seconds(1)}, {5, Timestamp::Seconds(2)}});
   // Frame pre decoded
   frame_stats.pre_decoded_frame_type = VideoFrameType::kVideoFrameKey;
   frame_stats.pre_decoded_image_size = DataSize::Bytes(500);
@@ -977,7 +992,8 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   frame_stats.encoded_frame_type = VideoFrameType::kVideoFrameKey;
   frame_stats.encoded_image_size = DataSize::Bytes(1000);
   frame_stats.target_encode_bitrate = 2000;
-  frame_stats.qp_values = {5, 5};
+  frame_stats.qp_values = StatsCounter(
+      /*samples=*/{{5, Timestamp::Seconds(1)}, {5, Timestamp::Seconds(2)}});
 
   comparator.Start(/*max_threads_count=*/1);
   comparator.EnsureStatsForStream(stream, sender, /*peers_count=*/2,
@@ -1047,7 +1063,8 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   frame_stats.encoded_frame_type = VideoFrameType::kVideoFrameDelta;
   frame_stats.encoded_image_size = DataSize::Bytes(1000);
   frame_stats.target_encode_bitrate = 2000;
-  frame_stats.qp_values = {5, 5};
+  frame_stats.qp_values = StatsCounter(
+      /*samples=*/{{5, Timestamp::Seconds(1)}, {5, Timestamp::Seconds(2)}});
 
   comparator.Start(/*max_threads_count=*/1);
   comparator.EnsureStatsForStream(stream, sender, /*peers_count=*/2,
@@ -1193,7 +1210,8 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   frame_stats.encoded_frame_type = VideoFrameType::kVideoFrameKey;
   frame_stats.encoded_image_size = DataSize::Bytes(1000);
   frame_stats.target_encode_bitrate = 2000;
-  frame_stats.qp_values = {5, 5};
+  frame_stats.qp_values = StatsCounter(
+      /*samples=*/{{5, Timestamp::Seconds(1)}, {5, Timestamp::Seconds(2)}});
   // Frame pre decoded
   frame_stats.pre_decoded_frame_type = VideoFrameType::kVideoFrameKey;
   frame_stats.pre_decoded_image_size = DataSize::Bytes(500);
@@ -1275,7 +1293,8 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   frame_stats.encoded_frame_type = VideoFrameType::kVideoFrameKey;
   frame_stats.encoded_image_size = DataSize::Bytes(1000);
   frame_stats.target_encode_bitrate = 2000;
-  frame_stats.qp_values = {5, 5};
+  frame_stats.qp_values = StatsCounter(
+      /*samples=*/{{5, Timestamp::Seconds(1)}, {5, Timestamp::Seconds(2)}});
   // Frame pre decoded
   frame_stats.pre_decoded_frame_type = VideoFrameType::kVideoFrameKey;
   frame_stats.pre_decoded_image_size = DataSize::Bytes(500);
@@ -1359,7 +1378,8 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   frame_stats.encoded_frame_type = VideoFrameType::kVideoFrameKey;
   frame_stats.encoded_image_size = DataSize::Bytes(1000);
   frame_stats.target_encode_bitrate = 2000;
-  frame_stats.qp_values = {5, 5};
+  frame_stats.qp_values = StatsCounter(
+      /*samples=*/{{5, Timestamp::Seconds(1)}, {5, Timestamp::Seconds(2)}});
   // Frame pre decoded
   frame_stats.pre_decoded_frame_type = VideoFrameType::kVideoFrameKey;
   frame_stats.pre_decoded_image_size = DataSize::Bytes(500);
@@ -1444,7 +1464,8 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest, AllStatsHaveMetadataSet) {
   frame_stats.encoded_frame_type = VideoFrameType::kVideoFrameKey;
   frame_stats.encoded_image_size = DataSize::Bytes(1000);
   frame_stats.target_encode_bitrate = 2000;
-  frame_stats.qp_values = {5, 5};
+  frame_stats.qp_values = StatsCounter(
+      /*samples=*/{{5, Timestamp::Seconds(1)}, {5, Timestamp::Seconds(2)}});
   // Frame pre decoded
   frame_stats.pre_decoded_frame_type = VideoFrameType::kVideoFrameKey;
   frame_stats.pre_decoded_image_size = DataSize::Bytes(500);

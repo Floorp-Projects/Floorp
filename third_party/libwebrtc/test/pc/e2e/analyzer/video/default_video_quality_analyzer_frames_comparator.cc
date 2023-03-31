@@ -459,8 +459,10 @@ void DefaultVideoQualityAnalyzerFramesComparator::ProcessComparison(
         frame_stats.encoded_image_size.bytes();
     stats->target_encode_bitrate.AddSample(StatsSample(
         frame_stats.target_encode_bitrate, frame_stats.encoded_time, metadata));
-    for (const int qp : frame_stats.qp_values) {
-      stats->qp.AddSample(StatsSample(qp, frame_stats.encoded_time, metadata));
+    for (SamplesStatsCounter::StatsSample qp :
+         frame_stats.qp_values.GetTimedSamples()) {
+      qp.metadata = metadata;
+      stats->qp.AddSample(std::move(qp));
     }
 
     // Stats sliced on encoded frame type.
