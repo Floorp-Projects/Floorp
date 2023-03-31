@@ -783,7 +783,7 @@ ul.ruleview-rule-ancestor-data {
   fill: var(--theme-icon-checked-color);
   /* Since the icon is quite thin, it can be hard to differentiate it
      from its regular state. Adding some background helps make it pop a bit */
-  background-color: var(--toolbarbutton-hover-background);
+  background-color: var(--dimmed-highlighter-box-content-color);
 }
 
 #ruleview-add-rule-button::before {

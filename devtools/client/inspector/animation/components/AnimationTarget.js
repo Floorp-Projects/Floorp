@@ -145,6 +145,7 @@ class AnimationTarget extends Component {
         inspectIconTitle: getInspectorStr(
           "inspector.nodePreview.highlightNodeLabel"
         ),
+        inspectIconClassName: "highlight-node",
         object: translateNodeFrontToGrip(nodeFront),
         onDOMNodeClick: () => this.select(),
         onDOMNodeMouseOut: () => {

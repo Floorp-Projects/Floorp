@@ -298,7 +298,13 @@ button.open-inspector {
     no-repeat;
 }
 
-button:is(.open-accessibility-inspector,.open-inspector) {
+button.highlight-node {
+  background: url("chrome://devtools/skin/images/highlight-selector.svg")
+    no-repeat;
+}
+
+
+button:is(.open-accessibility-inspector, .open-inspector, .highlight-node) {
   display: inline-block;
   vertical-align: top;
   height: 15px;
@@ -315,6 +321,7 @@ button:is(.open-accessibility-inspector,.open-inspector) {
 .objectBox-node:hover .open-inspector,
 .objectBox-textNode:hover .open-inspector,
 .open-accessibility-inspector:hover,
+.highlight-node:hover,
 .open-inspector:hover {
   fill: var(--theme-icon-checked-color);
 }

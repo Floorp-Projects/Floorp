@@ -32,6 +32,12 @@
   /* The photon animation curve */
   --animation-curve: cubic-bezier(0.07, 0.95, 0, 1);
 
+  /* This should be similar to --highlighter-box-content-color from highlighter.css,
+   * with lower opacity than the 0.6 we apply on highlighter so this can be used as
+   * background color without being too bold
+   */
+  --dimmed-highlighter-box-content-color:hsl(197,71%,73%,.3);
+
   /*
    * Photon Colors CSS Variables v3.3.2
    * - Colors are taken from https://github.com/FirefoxUX/photon-colors/blob/master/photon-colors.css

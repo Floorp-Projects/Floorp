@@ -199,17 +199,21 @@ select.playback-rate-selector.devtools-button:not(:empty, :disabled, .checked):h
   white-space: nowrap;
 }
 
-.animation-target .objectBox .open-inspector {
+.animation-target .objectBox .highlight-node {
+  fill: var(--theme-icon-dimmed-color);
   flex: none;
 }
 
-.animation-target .objectBox:hover .open-inspector {
-  background-color: var(--comment-node-color);
+.animation-target .objectBox .highlight-node:hover{
+  fill: var(--theme-icon-color);
 }
 
-.animation-target .objectBox .open-inspector:hover,
-.animation-target.highlighting .objectBox .open-inspector {
-  background-color: var(--theme-highlight-blue);
+.animation-target .objectBox .highlight-node:active,
+.animation-target.highlighting .objectBox .highlight-node {
+  fill: var(--theme-icon-checked-color);
+  /* Since the icon is quite thin, it can be hard to differentiate it
+     from its regular state. Adding some background helps make it pop a bit */
+  background-color: var(--dimmed-highlighter-box-content-color);
 }
 
 /* Summary Graph */

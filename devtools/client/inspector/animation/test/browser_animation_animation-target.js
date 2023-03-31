@@ -55,7 +55,7 @@ add_task(async function() {
       "objectBox is in the page exists"
     );
     ok(
-      animationTargetEl.querySelector(".open-inspector").title,
+      animationTargetEl.querySelector(".highlight-node").title,
       INSPECTOR_L10N.getStr("inspector.nodePreview.highlightNodeLabel")
     );
   }
