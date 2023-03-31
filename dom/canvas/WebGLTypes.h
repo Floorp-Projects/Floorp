@@ -261,6 +261,7 @@ enum class WebGLExtensionID : uint8_t {
   WEBGL_draw_buffers,
   WEBGL_explicit_present,
   WEBGL_lose_context,
+  WEBGL_provoking_vertex,
   Max
 };
 
@@ -1225,6 +1226,27 @@ union UniformDataVal {
   int32_t i32;
   uint32_t u32;
 };
+
+enum class ProvokingVertex : GLenum {
+  FirstVertex = LOCAL_GL_FIRST_VERTEX_CONVENTION,
+  LastVertex = LOCAL_GL_LAST_VERTEX_CONVENTION,
+};
+inline constexpr bool IsEnumCase(const ProvokingVertex raw) {
+  switch (raw) {
+    case ProvokingVertex::FirstVertex:
+    case ProvokingVertex::LastVertex:
+      return true;
+  }
+  return false;
+}
+
+template <class E>
+inline constexpr std::optional<E> AsEnumCase(
+    const std::underlying_type_t<E> raw) {
+  const auto ret = static_cast<E>(raw);
+  if (!IsEnumCase(ret)) return {};
+  return ret;
+}
 
 }  // namespace webgl
 

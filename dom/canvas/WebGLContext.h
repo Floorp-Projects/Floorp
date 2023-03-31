@@ -634,6 +634,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   void LineWidth(GLfloat width);
   void LinkProgram(WebGLProgram& prog);
   void PolygonOffset(GLfloat factor, GLfloat units);
+  void ProvokingVertex(webgl::ProvokingVertex) const;
 
   ////
 

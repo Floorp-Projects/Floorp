@@ -775,6 +775,11 @@ class HostWebGLContext final : public SupportsWeakPtr {
     return mContext->GetQueryParameter(*obj, pname);
   }
 
+  // WEBGL_provoking_vertex
+  void ProvokingVertex(const webgl::ProvokingVertex mode) const {
+    mContext->ProvokingVertex(mode);
+  }
+
   // -------------------------------------------------------------------------
   // Client-side methods.  Calls in the Host are forwarded to the client.
   // -------------------------------------------------------------------------
