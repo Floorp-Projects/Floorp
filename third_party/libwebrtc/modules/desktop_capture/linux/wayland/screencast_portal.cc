@@ -13,8 +13,8 @@
 #include <gio/gunixfdlist.h>
 #include <glib-object.h>
 
-#include "modules/desktop_capture/linux/wayland/scoped_glib.h"
-#include "modules/desktop_capture/linux/wayland/xdg_desktop_portal_utils.h"
+#include "modules/portal/scoped_glib.h"
+#include "modules/portal/xdg_desktop_portal_utils.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 

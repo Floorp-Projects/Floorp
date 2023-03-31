@@ -20,8 +20,8 @@
 
 #include "absl/memory/memory.h"
 #include "modules/desktop_capture/linux/wayland/egl_dmabuf.h"
-#include "modules/desktop_capture/linux/wayland/pipewire_utils.h"
 #include "modules/desktop_capture/linux/wayland/screencast_stream_utils.h"
+#include "modules/portal/pipewire_utils.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/sanitizer.h"

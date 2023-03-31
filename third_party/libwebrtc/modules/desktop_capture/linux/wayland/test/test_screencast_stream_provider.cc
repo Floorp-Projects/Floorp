@@ -20,7 +20,7 @@
 #include <utility>
 #include <vector>
 
-#include "modules/desktop_capture/linux/wayland/pipewire_utils.h"
+#include "modules/portal/pipewire_utils.h"
 #include "rtc_base/logging.h"
 
 namespace webrtc {
