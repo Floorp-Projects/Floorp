@@ -6,10 +6,6 @@
  * Injects the form autofill section into about:preferences.
  */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["FormAutofillPreferences"];
-
 // Add addresses enabled flag in telemetry environment for recording the number of
 // users who disable/enable the address autofill feature.
 const BUNDLE_URI = "chrome://formautofill/locale/formautofill.properties";
@@ -24,9 +20,7 @@ const { FormAutofill } = ChromeUtils.import(
 const { FormAutofillUtils } = ChromeUtils.import(
   "resource://autofill/FormAutofillUtils.jsm"
 );
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -49,7 +43,7 @@ const {
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
-function FormAutofillPreferences() {
+export function FormAutofillPreferences() {
   this.bundle = Services.strings.createBundle(BUNDLE_URI);
 }
 

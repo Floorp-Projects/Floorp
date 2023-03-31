@@ -6,16 +6,9 @@
  * Defines a handler object to represent forms that autofill can handle.
  */
 
-"use strict";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["FormAutofillHandler", "FormAutofillCreditCardSection"];
-
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const { FormAutofill } = ChromeUtils.import(
   "resource://autofill/FormAutofill.jsm"
 );
@@ -53,7 +46,7 @@ XPCOMUtils.defineLazyGetter(lazy, "reauthPasswordPromptMessage", () => {
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () =>
-  FormAutofill.defineLogGetter(lazy, EXPORTED_SYMBOLS[0])
+  FormAutofill.defineLogGetter(lazy, "FormAutofillHandler")
 );
 
 const { FIELD_STATES } = FormAutofillUtils;
@@ -987,7 +980,7 @@ class FormAutofillAddressSection extends FormAutofillSection {
   }
 }
 
-class FormAutofillCreditCardSection extends FormAutofillSection {
+export class FormAutofillCreditCardSection extends FormAutofillSection {
   /**
    * Credit Card Section Constructor
    *
@@ -1437,7 +1430,7 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
 /**
  * Handles profile autofill for a DOM Form element.
  */
-class FormAutofillHandler {
+export class FormAutofillHandler {
   /**
    * Initialize the form from `FormLike` object to handle the section or form
    * operations.

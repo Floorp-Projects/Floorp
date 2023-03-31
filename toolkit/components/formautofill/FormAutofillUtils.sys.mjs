@@ -2,14 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = [
-  "FormAutofillUtils",
-  "AddressDataLoader",
-  "LabelUtils",
-];
-let FormAutofillUtils;
+export let FormAutofillUtils;
 
 const ADDRESS_METADATA_PATH = "resource://autofill/addressmetadata/";
 const ADDRESS_REFERENCES = "addressReferences.js";
@@ -63,9 +56,8 @@ const ELIGIBLE_INPUT_TYPES = ["text", "email", "tel", "number", "month"];
 // attacks that fill the user's hard drive(s).
 const MAX_FIELD_VALUE_LENGTH = 200;
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const { FormAutofill } = ChromeUtils.import(
   "resource://autofill/FormAutofill.jsm"
 );
@@ -80,7 +72,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   FormAutofillNameUtils: "resource://autofill/FormAutofillNameUtils.jsm",
 });
 
-let AddressDataLoader = {
+export let AddressDataLoader = {
   // Status of address data loading. We'll load all the countries with basic level 1
   // information while requesting conutry information, and set country to true.
   // Level 1 Set is for recording which country's level 1/level 2 data is loaded,
@@ -1193,7 +1185,7 @@ FormAutofillUtils = {
   },
 };
 
-const LabelUtils = {
+export const LabelUtils = {
   // The tag name list is from Chromium except for "STYLE":
   // eslint-disable-next-line max-len
   // https://cs.chromium.org/chromium/src/components/autofill/content/renderer/form_autofill_util.cc?l=216&rcl=d33a171b7c308a64dc3372fac3da2179c63b419e

@@ -2,17 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["AddressComparison", "AddressComponent"];
-
 const { FormAutofill } = ChromeUtils.import(
   "resource://autofill/FormAutofill.jsm"
 );
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -323,7 +317,7 @@ class Email extends AddressField {
 /**
  * Class to compare two address components and store their comparison result.
  */
-class AddressComparison {
+export class AddressComparison {
   // Store the comparion result in an object, keyed by field name.
   #result = {};
 
@@ -465,13 +459,14 @@ class AddressComparison {
     return ret;
   }
 }
+
 /**
  * Class that transforms record (created in FormAutofillHandler createRecord)
  * into an address component object to more easily compare two address records.
  *
  * Note. This class assumes records that pass to it have already been normalized.
  */
-class AddressComponent {
+export class AddressComponent {
   #fields = [];
 
   constructor(record) {

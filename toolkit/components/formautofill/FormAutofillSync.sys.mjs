@@ -2,31 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import {
+  Changeset,
+  Store,
+  SyncEngine,
+  Tracker,
+} from "resource://services-sync/engines.sys.mjs";
+import { CryptoWrapper } from "resource://services-sync/record.sys.mjs";
+import { Utils } from "resource://services-sync/util.sys.mjs";
 
-var EXPORTED_SYMBOLS = [
-  "AddressesEngine",
-  "CreditCardsEngine",
-  // The items below are exported for test purposes.
-  "sanitizeStorageObject",
-  "AutofillRecord",
-];
-
-const { Changeset, Store, SyncEngine, Tracker } = ChromeUtils.importESModule(
-  "resource://services-sync/engines.sys.mjs"
-);
-const { CryptoWrapper } = ChromeUtils.importESModule(
-  "resource://services-sync/record.sys.mjs"
-);
-const { Utils } = ChromeUtils.importESModule(
-  "resource://services-sync/util.sys.mjs"
-);
 const { SCORE_INCREMENT_XLARGE } = ChromeUtils.import(
   "resource://services-sync/constants.js"
 );
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -39,7 +27,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 });
 
 // A helper to sanitize address and creditcard records suitable for logging.
-function sanitizeStorageObject(ob) {
+export function sanitizeStorageObject(ob) {
   if (!ob) {
     return null;
   }
@@ -58,7 +46,7 @@ function sanitizeStorageObject(ob) {
   return result;
 }
 
-function AutofillRecord(collection, id) {
+export function AutofillRecord(collection, id) {
   CryptoWrapper.call(this, collection, id);
 }
 
@@ -353,7 +341,7 @@ AddressesStore.prototype = {
 };
 Object.setPrototypeOf(AddressesStore.prototype, FormAutofillStore.prototype);
 
-function AddressesEngine(service) {
+export function AddressesEngine(service) {
   FormAutofillEngine.call(this, service, "Addresses");
 }
 
@@ -386,7 +374,7 @@ CreditCardsStore.prototype = {
 };
 Object.setPrototypeOf(CreditCardsStore.prototype, FormAutofillStore.prototype);
 
-function CreditCardsEngine(service) {
+export function CreditCardsEngine(service) {
   FormAutofillEngine.call(this, service, "CreditCards");
 }
 
