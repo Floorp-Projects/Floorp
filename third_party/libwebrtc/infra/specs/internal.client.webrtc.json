@@ -6,7 +6,7 @@
       {
         "args": [
           "--xctest",
-          "--undefok=enable-run-ios-unittests-with-xctest",
+          "--undefok=enable-run-ios-unittests-with-xctest,write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -50,7 +50,7 @@
       {
         "args": [
           "--xctest",
-          "--undefok=enable-run-ios-unittests-with-xctest",
+          "--undefok=enable-run-ios-unittests-with-xctest,write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -95,7 +95,7 @@
         "args": [
           "--readline-timeout=1200",
           "--xctest",
-          "--undefok=enable-run-ios-unittests-with-xctest",
+          "--undefok=enable-run-ios-unittests-with-xctest,write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -142,7 +142,7 @@
       {
         "args": [
           "--xctest",
-          "--undefok=enable-run-ios-unittests-with-xctest",
+          "--undefok=enable-run-ios-unittests-with-xctest,write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -187,7 +187,7 @@
       {
         "args": [
           "--xctest",
-          "--undefok=enable-run-ios-unittests-with-xctest",
+          "--undefok=enable-run-ios-unittests-with-xctest,write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -231,7 +231,7 @@
       {
         "args": [
           "--xctest",
-          "--undefok=enable-run-ios-unittests-with-xctest",
+          "--undefok=enable-run-ios-unittests-with-xctest,write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -275,7 +275,7 @@
       {
         "args": [
           "--xctest",
-          "--undefok=enable-run-ios-unittests-with-xctest",
+          "--undefok=enable-run-ios-unittests-with-xctest,write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -319,7 +319,7 @@
       {
         "args": [
           "--xctest",
-          "--undefok=enable-run-ios-unittests-with-xctest",
+          "--undefok=enable-run-ios-unittests-with-xctest,write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -363,7 +363,7 @@
       {
         "args": [
           "--xctest",
-          "--undefok=enable-run-ios-unittests-with-xctest",
+          "--undefok=enable-run-ios-unittests-with-xctest,write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -407,7 +407,7 @@
       {
         "args": [
           "--xctest",
-          "--undefok=enable-run-ios-unittests-with-xctest",
+          "--undefok=enable-run-ios-unittests-with-xctest,write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -451,7 +451,7 @@
       {
         "args": [
           "--xctest",
-          "--undefok=enable-run-ios-unittests-with-xctest",
+          "--undefok=enable-run-ios-unittests-with-xctest,write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -555,7 +555,7 @@
       {
         "args": [
           "--xctest",
-          "--undefok=enable-run-ios-unittests-with-xctest",
+          "--undefok=enable-run-ios-unittests-with-xctest,write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -599,7 +599,7 @@
       {
         "args": [
           "--xctest",
-          "--undefok=enable-run-ios-unittests-with-xctest",
+          "--undefok=enable-run-ios-unittests-with-xctest,write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -644,7 +644,7 @@
         "args": [
           "--readline-timeout=1200",
           "--xctest",
-          "--undefok=enable-run-ios-unittests-with-xctest",
+          "--undefok=enable-run-ios-unittests-with-xctest,write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -691,7 +691,7 @@
       {
         "args": [
           "--xctest",
-          "--undefok=enable-run-ios-unittests-with-xctest",
+          "--undefok=enable-run-ios-unittests-with-xctest,write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -736,7 +736,7 @@
       {
         "args": [
           "--xctest",
-          "--undefok=enable-run-ios-unittests-with-xctest",
+          "--undefok=enable-run-ios-unittests-with-xctest,write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -780,7 +780,7 @@
       {
         "args": [
           "--xctest",
-          "--undefok=enable-run-ios-unittests-with-xctest",
+          "--undefok=enable-run-ios-unittests-with-xctest,write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -824,7 +824,7 @@
       {
         "args": [
           "--xctest",
-          "--undefok=enable-run-ios-unittests-with-xctest",
+          "--undefok=enable-run-ios-unittests-with-xctest,write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -868,7 +868,7 @@
       {
         "args": [
           "--xctest",
-          "--undefok=enable-run-ios-unittests-with-xctest",
+          "--undefok=enable-run-ios-unittests-with-xctest,write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -912,7 +912,7 @@
       {
         "args": [
           "--xctest",
-          "--undefok=enable-run-ios-unittests-with-xctest",
+          "--undefok=enable-run-ios-unittests-with-xctest,write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -956,7 +956,7 @@
       {
         "args": [
           "--xctest",
-          "--undefok=enable-run-ios-unittests-with-xctest",
+          "--undefok=enable-run-ios-unittests-with-xctest,write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",
@@ -1000,7 +1000,7 @@
       {
         "args": [
           "--xctest",
-          "--undefok=enable-run-ios-unittests-with-xctest",
+          "--undefok=enable-run-ios-unittests-with-xctest,write-compiled-tests-json-to-writable-path",
           "--xcode-build-version",
           "13c100",
           "--out-dir",

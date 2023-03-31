@@ -248,7 +248,7 @@
     '$mixin_append': {
       'args': [
         '--xctest',
-        '--undefok=enable-run-ios-unittests-with-xctest',
+        '--undefok=enable-run-ios-unittests-with-xctest,write-compiled-tests-json-to-writable-path',
       ],
     },
   },
