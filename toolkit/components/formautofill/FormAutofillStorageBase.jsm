@@ -122,21 +122,35 @@
  * this new field.
  */
 
-import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+"use strict";
+
+const EXPORTED_SYMBOLS = [
+  "FormAutofillStorageBase",
+  "CreditCardsBase",
+  "AddressesBase",
+  "ADDRESS_SCHEMA_VERSION",
+  "CREDIT_CARD_SCHEMA_VERSION",
+];
+
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+const { FormAutofill } = ChromeUtils.import(
+  "resource://autofill/FormAutofill.jsm"
+);
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
-  FormAutofillNameUtils: "resource://autofill/FormAutofillNameUtils.sys.mjs",
-  FormAutofillUtils: "resource://autofill/FormAutofillUtils.sys.mjs",
   OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
-  PhoneNumber: "resource://autofill/phonenumberutils/PhoneNumber.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AutofillTelemetry: "resource://autofill/AutofillTelemetry.jsm",
+  FormAutofillNameUtils: "resource://autofill/FormAutofillNameUtils.jsm",
+  FormAutofillUtils: "resource://autofill/FormAutofillUtils.jsm",
+  PhoneNumber: "resource://autofill/phonenumberutils/PhoneNumber.jsm",
 });
 
 const CryptoHash = Components.Constructor(
@@ -151,7 +165,7 @@ const STORAGE_SCHEMA_VERSION = 1;
 // Please talk to the sync team before changing this!
 // (And if it did ever change, it must never be "4" due to the reconcile hacks
 // below which repairs credit-cards with version=4)
-export const ADDRESS_SCHEMA_VERSION = 1;
+const ADDRESS_SCHEMA_VERSION = 1;
 
 // Version 2: Bug 1486954 - Encrypt `cc-number`
 // Version 3: Bug 1639795 - Update keystore name
@@ -159,7 +173,7 @@ export const ADDRESS_SCHEMA_VERSION = 1;
 // Next version should be 5
 // NOTE: It's likely this number can never change.
 // Please talk to the sync team before changing this!
-export const CREDIT_CARD_SCHEMA_VERSION = 3;
+const CREDIT_CARD_SCHEMA_VERSION = 3;
 
 const VALID_ADDRESS_FIELDS = [
   "given-name",
@@ -1495,7 +1509,7 @@ class AutofillRecords {
   async mergeIfPossible(guid, record, strict) {}
 }
 
-export class AddressesBase extends AutofillRecords {
+class AddressesBase extends AutofillRecords {
   constructor(store) {
     super(
       store,
@@ -1815,7 +1829,7 @@ export class AddressesBase extends AutofillRecords {
   }
 }
 
-export class CreditCardsBase extends AutofillRecords {
+class CreditCardsBase extends AutofillRecords {
   constructor(store) {
     super(
       store,
@@ -2135,7 +2149,7 @@ export class CreditCardsBase extends AutofillRecords {
   }
 }
 
-export class FormAutofillStorageBase {
+class FormAutofillStorageBase {
   constructor(path) {
     this._path = path;
     this._initializePromise = null;

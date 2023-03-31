@@ -6,11 +6,11 @@
 
 var PhoneNumber, PhoneNumberNormalizer;
 add_setup(async () => {
-  ({ PhoneNumber } = ChromeUtils.importESModule(
-    "resource://autofill/phonenumberutils/PhoneNumber.sys.mjs"
+  ({ PhoneNumber } = ChromeUtils.import(
+    "resource://autofill/phonenumberutils/PhoneNumber.jsm"
   ));
-  ({ PhoneNumberNormalizer } = ChromeUtils.importESModule(
-    "resource://autofill/phonenumberutils/PhoneNumberNormalizer.sys.mjs"
+  ({ PhoneNumberNormalizer } = ChromeUtils.import(
+    "resource://autofill/phonenumberutils/PhoneNumberNormalizer.jsm"
   ));
 });
 

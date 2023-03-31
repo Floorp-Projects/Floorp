@@ -1,8 +1,8 @@
 "use strict";
 
 const TEST_STORE_FILE_NAME = "test-profile.json";
-const { CREDIT_CARD_SCHEMA_VERSION } = ChromeUtils.importESModule(
-  "resource://autofill/FormAutofillStorageBase.sys.mjs"
+const { CREDIT_CARD_SCHEMA_VERSION } = ChromeUtils.import(
+  "resource://autofill/FormAutofillStorageBase.jsm"
 );
 
 // NOTE: a guide to reading these test-cases:

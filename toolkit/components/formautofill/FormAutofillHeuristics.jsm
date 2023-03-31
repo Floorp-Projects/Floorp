@@ -6,21 +6,32 @@
  * Form Autofill field heuristics.
  */
 
-export let FormAutofillHeuristics;
-import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+"use strict";
+
+const EXPORTED_SYMBOLS = ["FormAutofillHeuristics", "FieldScanner"];
+let FormAutofillHeuristics;
+
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+const { FormAutofill } = ChromeUtils.import(
+  "resource://autofill/FormAutofill.jsm"
+);
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
-  FormAutofillUtils: "resource://autofill/FormAutofillUtils.sys.mjs",
-  LabelUtils: "resource://autofill/FormAutofillUtils.sys.mjs",
-  creditCardRulesets: "resource://autofill/CreditCardRuleset.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  creditCardRulesets: "resource://autofill/CreditCardRuleset.jsm",
+  FormAutofillUtils: "resource://autofill/FormAutofillUtils.jsm",
+  LabelUtils: "resource://autofill/FormAutofillUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () =>
-  FormAutofill.defineLogGetter(lazy, "FormAutofillHeuristics")
+  FormAutofill.defineLogGetter(lazy, EXPORTED_SYMBOLS[0])
 );
 
 const PREF_HEURISTICS_ENABLED = "extensions.formautofill.heuristics.enabled";
@@ -57,7 +68,7 @@ const MULTI_N_FIELD_NAMES = {
  * detail with FormAutofillHeuristics.getInfo function. It also provides a
  * cursor (parsingIndex) to indicate which element is waiting for parsing.
  */
-export class FieldScanner {
+class FieldScanner {
   /**
    * Create a FieldScanner based on form elements with the existing
    * fieldDetails.

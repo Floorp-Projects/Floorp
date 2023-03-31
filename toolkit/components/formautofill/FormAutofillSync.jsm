@@ -2,28 +2,44 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {
-  Changeset,
-  Store,
-  SyncEngine,
-  Tracker,
-} from "resource://services-sync/engines.sys.mjs";
-import { CryptoWrapper } from "resource://services-sync/record.sys.mjs";
-import { Utils } from "resource://services-sync/util.sys.mjs";
+"use strict";
 
+var EXPORTED_SYMBOLS = [
+  "AddressesEngine",
+  "CreditCardsEngine",
+  // The items below are exported for test purposes.
+  "sanitizeStorageObject",
+  "AutofillRecord",
+];
+
+const { Changeset, Store, SyncEngine, Tracker } = ChromeUtils.importESModule(
+  "resource://services-sync/engines.sys.mjs"
+);
+const { CryptoWrapper } = ChromeUtils.importESModule(
+  "resource://services-sync/record.sys.mjs"
+);
+const { Utils } = ChromeUtils.importESModule(
+  "resource://services-sync/util.sys.mjs"
+);
 const { SCORE_INCREMENT_XLARGE } = ChromeUtils.import(
   "resource://services-sync/constants.js"
+);
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   Log: "resource://gre/modules/Log.sys.mjs",
-  formAutofillStorage: "resource://autofill/FormAutofillStorage.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  formAutofillStorage: "resource://autofill/FormAutofillStorage.jsm",
 });
 
 // A helper to sanitize address and creditcard records suitable for logging.
-export function sanitizeStorageObject(ob) {
+function sanitizeStorageObject(ob) {
   if (!ob) {
     return null;
   }
@@ -42,7 +58,7 @@ export function sanitizeStorageObject(ob) {
   return result;
 }
 
-export function AutofillRecord(collection, id) {
+function AutofillRecord(collection, id) {
   CryptoWrapper.call(this, collection, id);
 }
 
@@ -337,7 +353,7 @@ AddressesStore.prototype = {
 };
 Object.setPrototypeOf(AddressesStore.prototype, FormAutofillStore.prototype);
 
-export function AddressesEngine(service) {
+function AddressesEngine(service) {
   FormAutofillEngine.call(this, service, "Addresses");
 }
 
@@ -370,7 +386,7 @@ CreditCardsStore.prototype = {
 };
 Object.setPrototypeOf(CreditCardsStore.prototype, FormAutofillStore.prototype);
 
-export function CreditCardsEngine(service) {
+function CreditCardsEngine(service) {
   FormAutofillEngine.call(this, service, "CreditCards");
 }
 
