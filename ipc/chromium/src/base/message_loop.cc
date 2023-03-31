@@ -52,18 +52,6 @@ static base::ThreadLocalPointer<MessageLoop>& get_tls_ptr() {
 
 //------------------------------------------------------------------------------
 
-// Logical events for Histogram profiling. Run with -message-loop-histogrammer
-// to get an accounting of messages and actions taken on each thread.
-static const int kTaskRunEvent = 0x1;
-static const int kTimerEvent = 0x2;
-
-// Provide range of message IDs for use in histogramming and debug display.
-static const int kLeastNonZeroMessageId = 1;
-static const int kMaxMessageId = 1099;
-static const int kNumberOfDistinctMessagesDisplayed = 1100;
-
-//------------------------------------------------------------------------------
-
 #if defined(OS_WIN)
 
 // Upon a SEH exception in this thread, it restores the original unhandled

@@ -10,6 +10,7 @@
 #include <os/availability.h>
 #include <spawn.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 #include <string>
 
