@@ -31,8 +31,8 @@
     },
     'client.webrtc': {
       # Android
-      'Android32 (M Nexus5X)': 'android_release_bot_arm_reclient',
-      'Android32 (M Nexus5X)(dbg)': 'android_debug_static_bot_arm',
+      'Android32': 'android_release_bot_arm_reclient',
+      'Android32 (dbg)': 'android_debug_static_bot_arm',
       'Android32 (more configs)': {
         'bwe_test_logging': 'bwe_test_logging_android_arm',
         'dummy_audio_file_devices_no_protobuf':
@@ -42,8 +42,8 @@
       'Android32 Builder arm': 'android_pure_release_bot_arm',
       'Android32 Builder x86': 'android_release_bot_x86',
       'Android32 Builder x86 (dbg)': 'android_debug_static_bot_x86',
-      'Android64 (M Nexus5X)': 'android_release_bot_arm64',
-      'Android64 (M Nexus5X)(dbg)': 'android_debug_static_bot_arm64',
+      'Android64': 'android_release_bot_arm64',
+      'Android64 (dbg)': 'android_debug_static_bot_arm64',
       'Android64 Builder arm64': 'android_pure_release_bot_arm64',
       'Android64 Builder x64 (dbg)': 'android_debug_static_bot_x64',
 
