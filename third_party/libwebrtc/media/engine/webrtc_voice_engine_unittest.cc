@@ -53,7 +53,6 @@ using webrtc::BitrateConstraints;
 constexpr uint32_t kMaxUnsignaledRecvStreams = 4;
 
 const cricket::AudioCodec kPcmuCodec(0, "PCMU", 8000, 64000, 1);
-const cricket::AudioCodec kIsacCodec(103, "ISAC", 16000, 32000, 1);
 const cricket::AudioCodec kOpusCodec(111, "opus", 48000, 32000, 2);
 const cricket::AudioCodec kG722CodecVoE(9, "G722", 16000, 64000, 1);
 const cricket::AudioCodec kG722CodecSdp(9, "G722", 8000, 64000, 1);
@@ -852,7 +851,7 @@ TEST_P(WebRtcVoiceEngineTestFake, OpusSupportsTransportCc) {
 TEST_P(WebRtcVoiceEngineTestFake, SetRecvCodecs) {
   EXPECT_TRUE(SetupChannel());
   cricket::AudioRecvParameters parameters;
-  parameters.codecs.push_back(kIsacCodec);
+  parameters.codecs.push_back(kOpusCodec);
   parameters.codecs.push_back(kPcmuCodec);
   parameters.codecs.push_back(kTelephoneEventCodec1);
   parameters.codecs.push_back(kTelephoneEventCodec2);
@@ -863,7 +862,7 @@ TEST_P(WebRtcVoiceEngineTestFake, SetRecvCodecs) {
   EXPECT_THAT(GetRecvStreamConfig(kSsrcX).decoder_map,
               (ContainerEq<std::map<int, webrtc::SdpAudioFormat>>(
                   {{0, {"PCMU", 8000, 1}},
-                   {106, {"ISAC", 16000, 1}},
+                   {106, {"OPUS", 48000, 2}},
                    {126, {"telephone-event", 8000, 1}},
                    {107, {"telephone-event", 32000, 1}}})));
 }
@@ -872,7 +871,7 @@ TEST_P(WebRtcVoiceEngineTestFake, SetRecvCodecs) {
 TEST_P(WebRtcVoiceEngineTestFake, SetRecvCodecsUnsupportedCodec) {
   EXPECT_TRUE(SetupChannel());
   cricket::AudioRecvParameters parameters;
-  parameters.codecs.push_back(kIsacCodec);
+  parameters.codecs.push_back(kOpusCodec);
   parameters.codecs.push_back(cricket::AudioCodec(127, "XYZ", 32000, 0, 1));
   EXPECT_FALSE(channel_->SetRecvParameters(parameters));
 }
@@ -881,9 +880,9 @@ TEST_P(WebRtcVoiceEngineTestFake, SetRecvCodecsUnsupportedCodec) {
 TEST_P(WebRtcVoiceEngineTestFake, SetRecvCodecsDuplicatePayloadType) {
   EXPECT_TRUE(SetupChannel());
   cricket::AudioRecvParameters parameters;
-  parameters.codecs.push_back(kIsacCodec);
+  parameters.codecs.push_back(kOpusCodec);
   parameters.codecs.push_back(kCn16000Codec);
-  parameters.codecs[1].id = kIsacCodec.id;
+  parameters.codecs[1].id = kOpusCodec.id;
   EXPECT_FALSE(channel_->SetRecvParameters(parameters));
 }
 
@@ -891,32 +890,27 @@ TEST_P(WebRtcVoiceEngineTestFake, SetRecvCodecsDuplicatePayloadType) {
 TEST_P(WebRtcVoiceEngineTestFake, SetRecvCodecsWithOpusNoStereo) {
   EXPECT_TRUE(SetupChannel());
   cricket::AudioRecvParameters parameters;
-  parameters.codecs.push_back(kIsacCodec);
   parameters.codecs.push_back(kPcmuCodec);
   parameters.codecs.push_back(kOpusCodec);
   EXPECT_TRUE(channel_->SetRecvParameters(parameters));
   EXPECT_TRUE(AddRecvStream(kSsrcX));
   EXPECT_THAT(GetRecvStreamConfig(kSsrcX).decoder_map,
               (ContainerEq<std::map<int, webrtc::SdpAudioFormat>>(
-                  {{0, {"PCMU", 8000, 1}},
-                   {103, {"ISAC", 16000, 1}},
-                   {111, {"opus", 48000, 2}}})));
+                  {{0, {"PCMU", 8000, 1}}, {111, {"opus", 48000, 2}}})));
 }
 
 // Test that we can decode OPUS with stereo = 0.
 TEST_P(WebRtcVoiceEngineTestFake, SetRecvCodecsWithOpus0Stereo) {
   EXPECT_TRUE(SetupChannel());
   cricket::AudioRecvParameters parameters;
-  parameters.codecs.push_back(kIsacCodec);
   parameters.codecs.push_back(kPcmuCodec);
   parameters.codecs.push_back(kOpusCodec);
-  parameters.codecs[2].params["stereo"] = "0";
+  parameters.codecs[1].params["stereo"] = "0";
   EXPECT_TRUE(channel_->SetRecvParameters(parameters));
   EXPECT_TRUE(AddRecvStream(kSsrcX));
   EXPECT_THAT(GetRecvStreamConfig(kSsrcX).decoder_map,
               (ContainerEq<std::map<int, webrtc::SdpAudioFormat>>(
                   {{0, {"PCMU", 8000, 1}},
-                   {103, {"ISAC", 16000, 1}},
                    {111, {"opus", 48000, 2, {{"stereo", "0"}}}}})));
 }
 
@@ -924,16 +918,14 @@ TEST_P(WebRtcVoiceEngineTestFake, SetRecvCodecsWithOpus0Stereo) {
 TEST_P(WebRtcVoiceEngineTestFake, SetRecvCodecsWithOpus1Stereo) {
   EXPECT_TRUE(SetupChannel());
   cricket::AudioRecvParameters parameters;
-  parameters.codecs.push_back(kIsacCodec);
   parameters.codecs.push_back(kPcmuCodec);
   parameters.codecs.push_back(kOpusCodec);
-  parameters.codecs[2].params["stereo"] = "1";
+  parameters.codecs[1].params["stereo"] = "1";
   EXPECT_TRUE(channel_->SetRecvParameters(parameters));
   EXPECT_TRUE(AddRecvStream(kSsrcX));
   EXPECT_THAT(GetRecvStreamConfig(kSsrcX).decoder_map,
               (ContainerEq<std::map<int, webrtc::SdpAudioFormat>>(
                   {{0, {"PCMU", 8000, 1}},
-                   {103, {"ISAC", 16000, 1}},
                    {111, {"opus", 48000, 2, {{"stereo", "1"}}}}})));
 }
 
@@ -941,7 +933,7 @@ TEST_P(WebRtcVoiceEngineTestFake, SetRecvCodecsWithOpus1Stereo) {
 TEST_P(WebRtcVoiceEngineTestFake, SetRecvCodecsWithMultipleStreams) {
   EXPECT_TRUE(SetupChannel());
   cricket::AudioRecvParameters parameters;
-  parameters.codecs.push_back(kIsacCodec);
+  parameters.codecs.push_back(kOpusCodec);
   parameters.codecs.push_back(kPcmuCodec);
   parameters.codecs.push_back(kTelephoneEventCodec1);
   parameters.codecs.push_back(kTelephoneEventCodec2);
@@ -953,7 +945,7 @@ TEST_P(WebRtcVoiceEngineTestFake, SetRecvCodecsWithMultipleStreams) {
     EXPECT_THAT(GetRecvStreamConfig(ssrc).decoder_map,
                 (ContainerEq<std::map<int, webrtc::SdpAudioFormat>>(
                     {{0, {"PCMU", 8000, 1}},
-                     {106, {"ISAC", 16000, 1}},
+                     {106, {"OPUS", 48000, 2}},
                      {126, {"telephone-event", 8000, 1}},
                      {107, {"telephone-event", 32000, 1}}})));
   }
@@ -962,20 +954,20 @@ TEST_P(WebRtcVoiceEngineTestFake, SetRecvCodecsWithMultipleStreams) {
 TEST_P(WebRtcVoiceEngineTestFake, SetRecvCodecsAfterAddingStreams) {
   EXPECT_TRUE(SetupRecvStream());
   cricket::AudioRecvParameters parameters;
-  parameters.codecs.push_back(kIsacCodec);
+  parameters.codecs.push_back(kOpusCodec);
   parameters.codecs[0].id = 106;  // collide with existing CN 32k
   EXPECT_TRUE(channel_->SetRecvParameters(parameters));
 
   const auto& dm = GetRecvStreamConfig(kSsrcX).decoder_map;
   ASSERT_EQ(1u, dm.count(106));
-  EXPECT_EQ(webrtc::SdpAudioFormat("isac", 16000, 1), dm.at(106));
+  EXPECT_EQ(webrtc::SdpAudioFormat("opus", 48000, 2), dm.at(106));
 }
 
 // Test that we can apply the same set of codecs again while playing.
 TEST_P(WebRtcVoiceEngineTestFake, SetRecvCodecsWhilePlaying) {
   EXPECT_TRUE(SetupRecvStream());
   cricket::AudioRecvParameters parameters;
-  parameters.codecs.push_back(kIsacCodec);
+  parameters.codecs.push_back(kPcmuCodec);
   parameters.codecs.push_back(kCn16000Codec);
   EXPECT_TRUE(channel_->SetRecvParameters(parameters));
   channel_->SetPlayout(true);
@@ -983,7 +975,7 @@ TEST_P(WebRtcVoiceEngineTestFake, SetRecvCodecsWhilePlaying) {
 
   // Remapping a payload type to a different codec should fail.
   parameters.codecs[0] = kOpusCodec;
-  parameters.codecs[0].id = kIsacCodec.id;
+  parameters.codecs[0].id = kPcmuCodec.id;
   EXPECT_FALSE(channel_->SetRecvParameters(parameters));
   EXPECT_TRUE(GetRecvStream(kSsrcX).started());
 }
@@ -992,7 +984,7 @@ TEST_P(WebRtcVoiceEngineTestFake, SetRecvCodecsWhilePlaying) {
 TEST_P(WebRtcVoiceEngineTestFake, AddRecvCodecsWhilePlaying) {
   EXPECT_TRUE(SetupRecvStream());
   cricket::AudioRecvParameters parameters;
-  parameters.codecs.push_back(kIsacCodec);
+  parameters.codecs.push_back(kPcmuCodec);
   parameters.codecs.push_back(kCn16000Codec);
   EXPECT_TRUE(channel_->SetRecvParameters(parameters));
   channel_->SetPlayout(true);
@@ -1007,7 +999,7 @@ TEST_P(WebRtcVoiceEngineTestFake, AddRecvCodecsWhilePlaying) {
 TEST_P(WebRtcVoiceEngineTestFake, ChangeRecvCodecPayloadType) {
   EXPECT_TRUE(SetupRecvStream());
   cricket::AudioRecvParameters parameters;
-  parameters.codecs.push_back(kIsacCodec);
+  parameters.codecs.push_back(kOpusCodec);
   EXPECT_TRUE(channel_->SetRecvParameters(parameters));
 
   ++parameters.codecs[0].id;
@@ -1035,9 +1027,6 @@ TEST_P(WebRtcVoiceEngineTestFake, SetSendBandwidthAuto) {
   // value. autobw is enabled for the following tests because the target
   // bitrate is <= 0.
 
-  // ISAC, default bitrate == 32000.
-  TestMaxSendBandwidth(kIsacCodec, 0, true, 32000);
-
   // PCMU, default bitrate == 64000.
   TestMaxSendBandwidth(kPcmuCodec, -1, true, 64000);
 
@@ -1047,11 +1036,6 @@ TEST_P(WebRtcVoiceEngineTestFake, SetSendBandwidthAuto) {
 
 TEST_P(WebRtcVoiceEngineTestFake, SetMaxSendBandwidthMultiRateAsCaller) {
   EXPECT_TRUE(SetupSendStream());
-
-  // ISAC, default bitrate == 32000.
-  TestMaxSendBandwidth(kIsacCodec, 16000, true, 16000);
-  // Rates above the max (56000) should be capped.
-  TestMaxSendBandwidth(kIsacCodec, 100000, true, 32000);
 
   // opus, default bitrate == 64000.
   TestMaxSendBandwidth(kOpusCodec, 96000, true, 96000);
@@ -1264,13 +1248,13 @@ TEST_P(WebRtcVoiceEngineTestFake, RtpParametersArePerStream) {
 TEST_P(WebRtcVoiceEngineTestFake, GetRtpSendParametersCodecs) {
   EXPECT_TRUE(SetupSendStream());
   cricket::AudioSendParameters parameters;
-  parameters.codecs.push_back(kIsacCodec);
+  parameters.codecs.push_back(kOpusCodec);
   parameters.codecs.push_back(kPcmuCodec);
   SetSendParameters(parameters);
 
   webrtc::RtpParameters rtp_parameters = channel_->GetRtpSendParameters(kSsrcX);
   ASSERT_EQ(2u, rtp_parameters.codecs.size());
-  EXPECT_EQ(kIsacCodec.ToCodecParameters(), rtp_parameters.codecs[0]);
+  EXPECT_EQ(kOpusCodec.ToCodecParameters(), rtp_parameters.codecs[0]);
   EXPECT_EQ(kPcmuCodec.ToCodecParameters(), rtp_parameters.codecs[1]);
 }
 
@@ -1310,7 +1294,7 @@ TEST_P(WebRtcVoiceEngineTestFake, GetRtpSendParametersSsrc) {
 TEST_P(WebRtcVoiceEngineTestFake, SetAndGetRtpSendParameters) {
   EXPECT_TRUE(SetupSendStream());
   cricket::AudioSendParameters parameters;
-  parameters.codecs.push_back(kIsacCodec);
+  parameters.codecs.push_back(kOpusCodec);
   parameters.codecs.push_back(kPcmuCodec);
   SetSendParameters(parameters);
 
@@ -1384,14 +1368,14 @@ TEST_P(WebRtcVoiceEngineTestFake, SetRtpSendParameterUpdatesBitratePriority) {
 TEST_P(WebRtcVoiceEngineTestFake, GetRtpReceiveParametersCodecs) {
   EXPECT_TRUE(SetupRecvStream());
   cricket::AudioRecvParameters parameters;
-  parameters.codecs.push_back(kIsacCodec);
+  parameters.codecs.push_back(kOpusCodec);
   parameters.codecs.push_back(kPcmuCodec);
   EXPECT_TRUE(channel_->SetRecvParameters(parameters));
 
   webrtc::RtpParameters rtp_parameters =
       channel_->GetRtpReceiveParameters(kSsrcX);
   ASSERT_EQ(2u, rtp_parameters.codecs.size());
-  EXPECT_EQ(kIsacCodec.ToCodecParameters(), rtp_parameters.codecs[0]);
+  EXPECT_EQ(kOpusCodec.ToCodecParameters(), rtp_parameters.codecs[0]);
   EXPECT_EQ(kPcmuCodec.ToCodecParameters(), rtp_parameters.codecs[1]);
 }
 
@@ -1408,7 +1392,7 @@ TEST_P(WebRtcVoiceEngineTestFake, GetRtpReceiveParametersSsrc) {
 TEST_P(WebRtcVoiceEngineTestFake, SetAndGetRtpReceiveParameters) {
   EXPECT_TRUE(SetupRecvStream());
   cricket::AudioRecvParameters parameters;
-  parameters.codecs.push_back(kIsacCodec);
+  parameters.codecs.push_back(kOpusCodec);
   parameters.codecs.push_back(kPcmuCodec);
   EXPECT_TRUE(channel_->SetRecvParameters(parameters));
 
@@ -1430,7 +1414,7 @@ TEST_P(WebRtcVoiceEngineTestFake, GetRtpReceiveParametersWithUnsignaledSsrc) {
   // Call necessary methods to configure receiving a default stream as
   // soon as it arrives.
   cricket::AudioRecvParameters parameters;
-  parameters.codecs.push_back(kIsacCodec);
+  parameters.codecs.push_back(kOpusCodec);
   parameters.codecs.push_back(kPcmuCodec);
   EXPECT_TRUE(channel_->SetRecvParameters(parameters));
 
@@ -1462,7 +1446,7 @@ TEST_P(WebRtcVoiceEngineTestFake, GetRtpReceiveParametersWithUnsignaledSsrc) {
 TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecs) {
   EXPECT_TRUE(SetupSendStream());
   cricket::AudioSendParameters parameters;
-  parameters.codecs.push_back(kIsacCodec);
+  parameters.codecs.push_back(kOpusCodec);
   parameters.codecs.push_back(kPcmuCodec);
   parameters.codecs.push_back(kCn8000Codec);
   parameters.codecs[0].id = 96;
@@ -1471,7 +1455,7 @@ TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecs) {
   const auto& send_codec_spec = *GetSendStreamConfig(kSsrcX).send_codec_spec;
   EXPECT_EQ(96, send_codec_spec.payload_type);
   EXPECT_EQ(22000, send_codec_spec.target_bitrate_bps);
-  EXPECT_STRCASEEQ("ISAC", send_codec_spec.format.name.c_str());
+  EXPECT_STRCASEEQ("OPUS", send_codec_spec.format.name.c_str());
   EXPECT_NE(send_codec_spec.format.clockrate_hz, 8000);
   EXPECT_EQ(absl::nullopt, send_codec_spec.cng_payload_type);
   EXPECT_FALSE(channel_->CanInsertDtmf());
@@ -1567,7 +1551,7 @@ TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecsRedFmtpAmountOfRedundancy) {
 TEST_P(WebRtcVoiceEngineTestFake, DontRecreateSendStream) {
   EXPECT_TRUE(SetupSendStream());
   cricket::AudioSendParameters parameters;
-  parameters.codecs.push_back(kIsacCodec);
+  parameters.codecs.push_back(kOpusCodec);
   parameters.codecs.push_back(kPcmuCodec);
   parameters.codecs.push_back(kCn8000Codec);
   parameters.codecs[0].id = 96;
@@ -1840,7 +1824,7 @@ TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecDisableNackRecvStreams) {
 TEST_P(WebRtcVoiceEngineTestFake, AddRecvStreamEnableNack) {
   EXPECT_TRUE(SetupSendStream());
   cricket::AudioSendParameters parameters;
-  parameters.codecs.push_back(kIsacCodec);
+  parameters.codecs.push_back(kOpusCodec);
   parameters.codecs.push_back(kCn16000Codec);
   parameters.codecs[0].AddFeedbackParam(cricket::FeedbackParam(
       cricket::kRtcpFbParamNack, cricket::kParamValueEmpty));
@@ -1860,7 +1844,7 @@ TEST_P(WebRtcVoiceEngineTestFake, TransportCcCanBeEnabledAndDisabled) {
   SetSendParameters(send_parameters);
 
   cricket::AudioRecvParameters recv_parameters;
-  recv_parameters.codecs.push_back(kIsacCodec);
+  recv_parameters.codecs.push_back(kOpusCodec);
   EXPECT_TRUE(channel_->SetRecvParameters(recv_parameters));
   EXPECT_TRUE(AddRecvStream(kSsrcX));
   ASSERT_TRUE(call_.GetAudioReceiveStream(kSsrcX) != nullptr);
@@ -1872,8 +1856,8 @@ TEST_P(WebRtcVoiceEngineTestFake, TransportCcCanBeEnabledAndDisabled) {
   EXPECT_TRUE(call_.GetAudioReceiveStream(kSsrcX)->transport_cc());
 }
 
-// Test that we can switch back and forth between Opus and ISAC with CN.
-TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecsIsacOpusSwitching) {
+// Test that we can switch back and forth between Opus and PCMU with CN.
+TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecsOpusPcmuSwitching) {
   EXPECT_TRUE(SetupSendStream());
 
   cricket::AudioSendParameters opus_parameters;
@@ -1885,15 +1869,15 @@ TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecsIsacOpusSwitching) {
     EXPECT_STRCASEEQ("opus", spec.format.name.c_str());
   }
 
-  cricket::AudioSendParameters isac_parameters;
-  isac_parameters.codecs.push_back(kIsacCodec);
-  isac_parameters.codecs.push_back(kCn16000Codec);
-  isac_parameters.codecs.push_back(kOpusCodec);
-  SetSendParameters(isac_parameters);
+  cricket::AudioSendParameters pcmu_parameters;
+  pcmu_parameters.codecs.push_back(kPcmuCodec);
+  pcmu_parameters.codecs.push_back(kCn16000Codec);
+  pcmu_parameters.codecs.push_back(kOpusCodec);
+  SetSendParameters(pcmu_parameters);
   {
     const auto& spec = *GetSendStreamConfig(kSsrcX).send_codec_spec;
-    EXPECT_EQ(103, spec.payload_type);
-    EXPECT_STRCASEEQ("ISAC", spec.format.name.c_str());
+    EXPECT_EQ(0, spec.payload_type);
+    EXPECT_STRCASEEQ("PCMU", spec.format.name.c_str());
   }
 
   SetSendParameters(opus_parameters);
@@ -1908,33 +1892,7 @@ TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecsIsacOpusSwitching) {
 TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecsBitrate) {
   EXPECT_TRUE(SetupSendStream());
   cricket::AudioSendParameters parameters;
-  parameters.codecs.push_back(kIsacCodec);  // bitrate == 32000
-  SetSendParameters(parameters);
-  {
-    const auto& spec = *GetSendStreamConfig(kSsrcX).send_codec_spec;
-    EXPECT_EQ(103, spec.payload_type);
-    EXPECT_STRCASEEQ("ISAC", spec.format.name.c_str());
-    EXPECT_EQ(32000, spec.target_bitrate_bps);
-  }
-
-  parameters.codecs[0].bitrate = 0;  // bitrate == default
-  SetSendParameters(parameters);
-  {
-    const auto& spec = *GetSendStreamConfig(kSsrcX).send_codec_spec;
-    EXPECT_EQ(103, spec.payload_type);
-    EXPECT_STRCASEEQ("ISAC", spec.format.name.c_str());
-    EXPECT_EQ(32000, spec.target_bitrate_bps);
-  }
-  parameters.codecs[0].bitrate = 28000;  // bitrate == 28000
-  SetSendParameters(parameters);
-  {
-    const auto& spec = *GetSendStreamConfig(kSsrcX).send_codec_spec;
-    EXPECT_EQ(103, spec.payload_type);
-    EXPECT_STRCASEEQ("ISAC", spec.format.name.c_str());
-    EXPECT_EQ(28000, spec.target_bitrate_bps);
-  }
-
-  parameters.codecs[0] = kPcmuCodec;  // bitrate == 64000
+  parameters.codecs.push_back(kPcmuCodec);
   SetSendParameters(parameters);
   {
     const auto& spec = *GetSendStreamConfig(kSsrcX).send_codec_spec;
@@ -1976,14 +1934,14 @@ TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecsDTMFOnTop) {
   EXPECT_TRUE(SetupSendStream());
   cricket::AudioSendParameters parameters;
   parameters.codecs.push_back(kTelephoneEventCodec1);
-  parameters.codecs.push_back(kIsacCodec);
+  parameters.codecs.push_back(kOpusCodec);
   parameters.codecs.push_back(kPcmuCodec);
   parameters.codecs[0].id = 98;  // DTMF
   parameters.codecs[1].id = 96;
   SetSendParameters(parameters);
   const auto& spec = *GetSendStreamConfig(kSsrcX).send_codec_spec;
   EXPECT_EQ(96, spec.payload_type);
-  EXPECT_STRCASEEQ("ISAC", spec.format.name.c_str());
+  EXPECT_STRCASEEQ("OPUS", spec.format.name.c_str());
   SetSend(true);
   EXPECT_TRUE(channel_->CanInsertDtmf());
 }
@@ -2009,7 +1967,7 @@ TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecsDTMFPayloadTypeOutOfRange) {
   EXPECT_TRUE(SetupSendStream());
   cricket::AudioSendParameters parameters;
   parameters.codecs.push_back(kTelephoneEventCodec2);
-  parameters.codecs.push_back(kIsacCodec);
+  parameters.codecs.push_back(kOpusCodec);
   parameters.codecs[0].id = 0;  // DTMF
   parameters.codecs[1].id = 96;
   SetSendParameters(parameters);
@@ -2031,15 +1989,13 @@ TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecsDTMFPayloadTypeOutOfRange) {
 TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecsCNOnTop) {
   EXPECT_TRUE(SetupSendStream());
   cricket::AudioSendParameters parameters;
-  parameters.codecs.push_back(kCn16000Codec);
-  parameters.codecs.push_back(kIsacCodec);
+  parameters.codecs.push_back(kCn8000Codec);
   parameters.codecs.push_back(kPcmuCodec);
-  parameters.codecs[0].id = 98;  // wideband CN
-  parameters.codecs[1].id = 96;
+  parameters.codecs[0].id = 98;  // narrowband CN
   SetSendParameters(parameters);
   const auto& send_codec_spec = *GetSendStreamConfig(kSsrcX).send_codec_spec;
-  EXPECT_EQ(96, send_codec_spec.payload_type);
-  EXPECT_STRCASEEQ("ISAC", send_codec_spec.format.name.c_str());
+  EXPECT_EQ(0, send_codec_spec.payload_type);
+  EXPECT_STRCASEEQ("PCMU", send_codec_spec.format.name.c_str());
   EXPECT_EQ(98, send_codec_spec.cng_payload_type);
 }
 
@@ -2047,19 +2003,17 @@ TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecsCNOnTop) {
 TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecsCNandDTMFAsCaller) {
   EXPECT_TRUE(SetupSendStream());
   cricket::AudioSendParameters parameters;
-  parameters.codecs.push_back(kIsacCodec);
   parameters.codecs.push_back(kPcmuCodec);
-  // TODO(juberti): cn 32000
   parameters.codecs.push_back(kCn16000Codec);
   parameters.codecs.push_back(kCn8000Codec);
   parameters.codecs.push_back(kTelephoneEventCodec1);
   parameters.codecs[0].id = 96;
-  parameters.codecs[2].id = 97;  // wideband CN
-  parameters.codecs[4].id = 98;  // DTMF
+  parameters.codecs[2].id = 97;  // narrowband CN
+  parameters.codecs[3].id = 98;  // DTMF
   SetSendParameters(parameters);
   const auto& send_codec_spec = *GetSendStreamConfig(kSsrcX).send_codec_spec;
   EXPECT_EQ(96, send_codec_spec.payload_type);
-  EXPECT_STRCASEEQ("ISAC", send_codec_spec.format.name.c_str());
+  EXPECT_STRCASEEQ("PCMU", send_codec_spec.format.name.c_str());
   EXPECT_EQ(1u, send_codec_spec.format.num_channels);
   EXPECT_EQ(97, send_codec_spec.cng_payload_type);
   SetSend(true);
@@ -2070,22 +2024,20 @@ TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecsCNandDTMFAsCaller) {
 TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecsCNandDTMFAsCallee) {
   EXPECT_TRUE(SetupChannel());
   cricket::AudioSendParameters parameters;
-  parameters.codecs.push_back(kIsacCodec);
   parameters.codecs.push_back(kPcmuCodec);
-  // TODO(juberti): cn 32000
   parameters.codecs.push_back(kCn16000Codec);
   parameters.codecs.push_back(kCn8000Codec);
   parameters.codecs.push_back(kTelephoneEventCodec2);
   parameters.codecs[0].id = 96;
-  parameters.codecs[2].id = 97;  // wideband CN
-  parameters.codecs[4].id = 98;  // DTMF
+  parameters.codecs[2].id = 97;  // narrowband CN
+  parameters.codecs[3].id = 98;  // DTMF
   SetSendParameters(parameters);
   EXPECT_TRUE(
       channel_->AddSendStream(cricket::StreamParams::CreateLegacy(kSsrcX)));
 
   const auto& send_codec_spec = *GetSendStreamConfig(kSsrcX).send_codec_spec;
   EXPECT_EQ(96, send_codec_spec.payload_type);
-  EXPECT_STRCASEEQ("ISAC", send_codec_spec.format.name.c_str());
+  EXPECT_STRCASEEQ("PCMU", send_codec_spec.format.name.c_str());
   EXPECT_EQ(1u, send_codec_spec.format.num_channels);
   EXPECT_EQ(97, send_codec_spec.cng_payload_type);
   SetSend(true);
@@ -2097,19 +2049,10 @@ TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecsCNandDTMFAsCallee) {
 TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecsCNNoMatch) {
   EXPECT_TRUE(SetupSendStream());
   cricket::AudioSendParameters parameters;
-  // Set ISAC(16K) and CN(16K). VAD should be activated.
-  parameters.codecs.push_back(kIsacCodec);
+  // Set PCMU(8K) and CN(16K). VAD should not be activated.
+  parameters.codecs.push_back(kPcmuCodec);
   parameters.codecs.push_back(kCn16000Codec);
   parameters.codecs[1].id = 97;
-  SetSendParameters(parameters);
-  {
-    const auto& send_codec_spec = *GetSendStreamConfig(kSsrcX).send_codec_spec;
-    EXPECT_STRCASEEQ("ISAC", send_codec_spec.format.name.c_str());
-    EXPECT_EQ(1u, send_codec_spec.format.num_channels);
-    EXPECT_EQ(97, send_codec_spec.cng_payload_type);
-  }
-  // Set PCMU(8K) and CN(16K). VAD should not be activated.
-  parameters.codecs[0] = kPcmuCodec;
   SetSendParameters(parameters);
   {
     const auto& send_codec_spec = *GetSendStreamConfig(kSsrcX).send_codec_spec;
@@ -2125,12 +2068,12 @@ TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecsCNNoMatch) {
     EXPECT_EQ(1u, send_codec_spec.format.num_channels);
     EXPECT_EQ(13, send_codec_spec.cng_payload_type);
   }
-  // Set ISAC(16K) and CN(8K). VAD should not be activated.
-  parameters.codecs[0] = kIsacCodec;
+  // Set OPUS(48K) and CN(8K). VAD should not be activated.
+  parameters.codecs[0] = kOpusCodec;
   SetSendParameters(parameters);
   {
     const auto& send_codec_spec = *GetSendStreamConfig(kSsrcX).send_codec_spec;
-    EXPECT_STRCASEEQ("ISAC", send_codec_spec.format.name.c_str());
+    EXPECT_STRCASEEQ("OPUS", send_codec_spec.format.name.c_str());
     EXPECT_EQ(absl::nullopt, send_codec_spec.cng_payload_type);
   }
 }
@@ -2139,19 +2082,18 @@ TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecsCNNoMatch) {
 TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecsCaseInsensitive) {
   EXPECT_TRUE(SetupSendStream());
   cricket::AudioSendParameters parameters;
-  parameters.codecs.push_back(kIsacCodec);
   parameters.codecs.push_back(kPcmuCodec);
   parameters.codecs.push_back(kCn16000Codec);
   parameters.codecs.push_back(kCn8000Codec);
   parameters.codecs.push_back(kTelephoneEventCodec1);
-  parameters.codecs[0].name = "iSaC";
+  parameters.codecs[0].name = "PcMu";
   parameters.codecs[0].id = 96;
-  parameters.codecs[2].id = 97;  // wideband CN
-  parameters.codecs[4].id = 98;  // DTMF
+  parameters.codecs[2].id = 97;  // narrowband CN
+  parameters.codecs[3].id = 98;  // DTMF
   SetSendParameters(parameters);
   const auto& send_codec_spec = *GetSendStreamConfig(kSsrcX).send_codec_spec;
   EXPECT_EQ(96, send_codec_spec.payload_type);
-  EXPECT_STRCASEEQ("ISAC", send_codec_spec.format.name.c_str());
+  EXPECT_STRCASEEQ("PCMU", send_codec_spec.format.name.c_str());
   EXPECT_EQ(1u, send_codec_spec.format.num_channels);
   EXPECT_EQ(97, send_codec_spec.cng_payload_type);
   SetSend(true);
@@ -2292,24 +2234,25 @@ TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecsWithMultipleSendStreams) {
   }
 
   cricket::AudioSendParameters parameters;
-  // Set ISAC(16K) and CN(16K). VAD should be activated.
-  parameters.codecs.push_back(kIsacCodec);
-  parameters.codecs.push_back(kCn16000Codec);
+  // Set PCMU and CN(8K). VAD should be activated.
+  parameters.codecs.push_back(kPcmuCodec);
+  parameters.codecs.push_back(kCn8000Codec);
   parameters.codecs[1].id = 97;
   SetSendParameters(parameters);
 
-  // Verify ISAC and VAD are corrected configured on all send channels.
+  // Verify PCMU and VAD are corrected configured on all send channels.
   for (uint32_t ssrc : kSsrcs4) {
     ASSERT_TRUE(call_.GetAudioSendStream(ssrc) != nullptr);
     const auto& send_codec_spec =
         *call_.GetAudioSendStream(ssrc)->GetConfig().send_codec_spec;
-    EXPECT_STRCASEEQ("ISAC", send_codec_spec.format.name.c_str());
+    EXPECT_STRCASEEQ("PCMU", send_codec_spec.format.name.c_str());
     EXPECT_EQ(1u, send_codec_spec.format.num_channels);
     EXPECT_EQ(97, send_codec_spec.cng_payload_type);
   }
 
   // Change to PCMU(8K) and CN(16K).
   parameters.codecs[0] = kPcmuCodec;
+  parameters.codecs[1] = kCn16000Codec;
   SetSendParameters(parameters);
   for (uint32_t ssrc : kSsrcs4) {
     ASSERT_TRUE(call_.GetAudioSendStream(ssrc) != nullptr);
@@ -2859,13 +2802,13 @@ TEST_P(WebRtcVoiceEngineTestFake, AddRecvStream) {
 TEST_P(WebRtcVoiceEngineTestFake, AddRecvStreamUnsupportedCodec) {
   EXPECT_TRUE(SetupSendStream());
   cricket::AudioRecvParameters parameters;
-  parameters.codecs.push_back(kIsacCodec);
+  parameters.codecs.push_back(kOpusCodec);
   parameters.codecs.push_back(kPcmuCodec);
   EXPECT_TRUE(channel_->SetRecvParameters(parameters));
   EXPECT_TRUE(AddRecvStream(kSsrcX));
   EXPECT_THAT(GetRecvStreamConfig(kSsrcX).decoder_map,
               (ContainerEq<std::map<int, webrtc::SdpAudioFormat>>(
-                  {{0, {"PCMU", 8000, 1}}, {103, {"ISAC", 16000, 1}}})));
+                  {{0, {"PCMU", 8000, 1}}, {111, {"OPUS", 48000, 2}}})));
 }
 
 // Test that we properly clean up any streams that were added, even if
@@ -3666,7 +3609,7 @@ TEST(WebRtcVoiceEngineTest, StartupShutdownWithExternalADM) {
   }
 }
 
-// Verify the payload id of common audio codecs, including CN, ISAC, and G722.
+// Verify the payload id of common audio codecs, including CN and G722.
 TEST(WebRtcVoiceEngineTest, HasCorrectPayloadTypeMapping) {
   for (bool use_null_apm : {false, true}) {
     std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory =
@@ -3693,10 +3636,6 @@ TEST(WebRtcVoiceEngineTest, HasCorrectPayloadTypeMapping) {
         EXPECT_EQ(105, codec.id);
       } else if (is_codec("CN", 32000)) {
         EXPECT_EQ(106, codec.id);
-      } else if (is_codec("ISAC", 16000)) {
-        EXPECT_EQ(103, codec.id);
-      } else if (is_codec("ISAC", 32000)) {
-        EXPECT_EQ(104, codec.id);
       } else if (is_codec("G722", 8000)) {
         EXPECT_EQ(9, codec.id);
       } else if (is_codec("telephone-event", 8000)) {
