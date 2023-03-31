@@ -47,7 +47,7 @@ object SupportUtils {
         WHATS_NEW("whats-new-firefox-preview"),
         OPT_OUT_STUDIES("how-opt-out-studies-firefox-android"),
         SEND_TABS("send-tab-preview"),
-        SET_AS_DEFAULT_BROWSER("set-firefox-preview-default"),
+        SET_AS_DEFAULT_BROWSER("make-firefox-default-browser-android"),
         SEARCH_SUGGESTION("how-search-firefox-preview"),
         CUSTOM_SEARCH_ENGINES("custom-search-engines"),
         SYNC_SETUP("how-set-firefox-sync-firefox-android"),

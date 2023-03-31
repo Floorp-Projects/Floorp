@@ -262,9 +262,8 @@ class HomeDeepLinkIntentProcessorTest {
 
         assertTrue(processorHome.process(testIntent("make_default_browser"), navController, out))
 
-        val searchTermOrURL = SupportUtils.getSumoURLForTopic(
-            activity,
-            SupportUtils.SumoTopic.SET_AS_DEFAULT_BROWSER,
+        val searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(
+            topic = SupportUtils.SumoTopic.SET_AS_DEFAULT_BROWSER,
         )
 
         verify {

@@ -96,8 +96,7 @@ fun Activity.openSetDefaultBrowserOption(
             navigateToDefaultBrowserAppsSettings()
         }
         else -> {
-            val sumoDefaultBrowserUrl = SupportUtils.getSumoURLForTopic(
-                context = this,
+            val sumoDefaultBrowserUrl = SupportUtils.getGenericSumoURLForTopic(
                 topic = SupportUtils.SumoTopic.SET_AS_DEFAULT_BROWSER,
             )
             if (useCustomTab) {
