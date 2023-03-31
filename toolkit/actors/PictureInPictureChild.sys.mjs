@@ -131,7 +131,7 @@ export class PictureInPictureLauncherChild extends JSWindowActorChild {
     switch (event.type) {
       case "MozTogglePictureInPicture": {
         if (event.isTrusted) {
-          this.togglePictureInPicture(event.target);
+          this.togglePictureInPicture(event);
         }
         break;
       }
@@ -153,24 +153,24 @@ export class PictureInPictureLauncherChild extends JSWindowActorChild {
    * Picture-in-Picture window existing, this tells the parent to
    * close it before opening the new one.
    *
-   * @param {Element} video The <video> element to view in a Picture
-   * in Picture window.
+   * @param {Event} event The event dispatched on the video element.
    *
    * @return {Promise}
    * @resolves {undefined} Once the new Picture-in-Picture window
    * has been requested.
    */
-  async togglePictureInPicture(video) {
+  async togglePictureInPicture(event) {
+    let video = event.target;
     if (video.isCloningElementVisually) {
       // The only way we could have entered here for the same video is if
-      // we are toggling via the context menu, since we hide the inline
-      // Picture-in-Picture toggle when a video is being displayed in
-      // Picture-in-Picture. Turn off PiP in this case
+      // we are toggling via the context menu or via the urlbar button,
+      // since we hide the inline Picture-in-Picture toggle when a video
+      // is being displayed in Picture-in-Picture. Turn off PiP in this case
       const stopPipEvent = new this.contentWindow.CustomEvent(
         "MozStopPictureInPicture",
         {
           bubbles: true,
-          detail: { reason: "context-menu" },
+          detail: event.detail,
         }
       );
       video.dispatchEvent(stopPipEvent);
@@ -583,10 +583,25 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
       this.eligiblePipVideos
     )[0];
     if (video) {
+      if (!video.isCloningElementVisually) {
+        let args = {
+          firstTimeToggle: (!Services.prefs.getBoolPref(
+            "media.videocontrols.picture-in-picture.video-toggle.has-used"
+          )).toString(),
+        };
+        Services.telemetry.recordEvent(
+          "pictureinpicture",
+          "opened_method",
+          "urlBar",
+          null,
+          args
+        );
+      }
       let pipEvent = new this.contentWindow.CustomEvent(
         "MozTogglePictureInPicture",
         {
           bubbles: true,
+          detail: { reason: "urlBar" },
         }
       );
       video.dispatchEvent(pipEvent);
@@ -945,7 +960,6 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
       1
     );
     let args = {
-      method: "toggle",
       firstTimeToggle: (!Services.prefs.getBoolPref(
         "media.videocontrols.picture-in-picture.video-toggle.has-used"
       )).toString(),
@@ -953,7 +967,7 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
     Services.telemetry.recordEvent(
       "pictureinpicture",
       "opened_method",
-      "method",
+      "toggle",
       null,
       args
     );
@@ -1785,7 +1799,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
     switch (event.type) {
       case "MozStopPictureInPicture": {
         if (event.isTrusted && event.target === this.getWeakVideo()) {
-          const reason = event.detail?.reason || "video-el-remove";
+          const reason = event.detail?.reason || "videoElRemove";
           this.closePictureInPicture({ reason });
         }
         break;
@@ -1851,7 +1865,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
         // close Picture-in-Picture.
         this.emptiedTimeout = setTimeout(() => {
           if (!video || !video.src) {
-            this.closePictureInPicture({ reason: "video-el-emptied" });
+            this.closePictureInPicture({ reason: "videoElEmptied" });
           }
         }, EMPTIED_TIMEOUT_MS);
         break;
@@ -2193,7 +2207,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
       // If the video element has gone away before we've had a chance to set up
       // Picture-in-Picture for it, tell the parent to close the Picture-in-Picture
       // window.
-      await this.closePictureInPicture({ reason: "setup-failure" });
+      await this.closePictureInPicture({ reason: "setupFailure" });
       return;
     }
 
@@ -2419,7 +2433,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
             return;
           }
           this.pause();
-          this.closePictureInPicture({ reason: "close-player-shortcut" });
+          this.closePictureInPicture({ reason: "closePlayerShortcut" });
           break;
         case "downArrow" /* Volume decrease */:
           if (this.isKeyDisabled(lazy.KEYBOARD_CONTROLS.VOLUME)) {
