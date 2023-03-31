@@ -499,7 +499,7 @@ IntRect ToOutsideIntRect(const gfxRect& aRect) {
 }
 
 void WebRenderLayerManager::MakeSnapshotIfRequired(LayoutDeviceIntSize aSize) {
-  if (!mTarget || aSize.IsEmpty()) {
+  if (!mTarget || !mTarget->GetDrawTarget() || aSize.IsEmpty()) {
     return;
   }
 
