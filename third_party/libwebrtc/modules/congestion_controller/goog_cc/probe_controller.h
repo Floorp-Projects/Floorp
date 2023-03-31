@@ -72,12 +72,21 @@ struct ProbeControllerConfig {
   FieldTrialParameter<int> min_probe_packets_sent;
   // The minimum probing duration.
   FieldTrialParameter<TimeDelta> min_probe_duration;
-  // Max limit the target rate of a probe to current estimate if BWE is loss
-  // limited.
+  // Periodically probe when bandwidth estimate is loss limited.
   FieldTrialParameter<bool> limit_probe_target_rate_to_loss_bwe;
+  FieldTrialParameter<double> loss_limited_probe_scale;
   // Dont send a probe if min(estimate, network state estimate) is larger than
   // this fraction of the set max bitrate.
   FieldTrialParameter<double> skip_if_estimate_larger_than_fraction_of_max;
+};
+
+// Reason that bandwidth estimate is limited. Bandwidth estimate can be limited
+// by either delay based bwe, or loss based bwe when it increases/decreases the
+// estimate.
+enum class BandwidthLimitedCause {
+  kLossLimitedBweIncreasing = 0,
+  kLossLimitedBweDecreasing = 1,
+  kDelayBasedLimited = 2
 };
 
 // This class controls initiation of probing to estimate initial channel
@@ -109,7 +118,7 @@ class ProbeController {
 
   ABSL_MUST_USE_RESULT std::vector<ProbeClusterConfig> SetEstimatedBitrate(
       DataRate bitrate,
-      bool bwe_limited_due_to_packet_loss,
+      BandwidthLimitedCause bandwidth_limited_cause,
       Timestamp at_time);
 
   void EnablePeriodicAlrProbing(bool enable);
@@ -149,7 +158,8 @@ class ProbeController {
   bool TimeForNetworkStateProbe(Timestamp at_time) const;
 
   bool network_available_;
-  bool bwe_limited_due_to_packet_loss_;
+  BandwidthLimitedCause bandwidth_limited_cause_ =
+      BandwidthLimitedCause::kDelayBasedLimited;
   State state_;
   DataRate min_bitrate_to_probe_further_ = DataRate::PlusInfinity();
   Timestamp time_last_probing_initiated_ = Timestamp::MinusInfinity();
