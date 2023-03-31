@@ -196,6 +196,10 @@ uint32_t DocAccessibleParent::AddSubtree(
     aParent->AddChildAt(aIdxInParent, newProxy);
     newProxy->SetParent(aParent);
   } else {
+    if (!aria::IsRoleMapIndexValid(newChild.RoleMapEntryIndex())) {
+      MOZ_ASSERT_UNREACHABLE("Invalid role map entry index");
+      return 0;
+    }
     newProxy = new RemoteAccessible(
         newChild.ID(), aParent, this, newChild.Role(), newChild.Type(),
         newChild.GenericTypes(), newChild.RoleMapEntryIndex());
