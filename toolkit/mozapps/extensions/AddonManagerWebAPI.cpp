@@ -7,6 +7,7 @@
 #include "AddonManagerWebAPI.h"
 
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/NavigatorBinding.h"
 
