@@ -312,10 +312,6 @@ NetEqTest::DecoderMap NetEqTest::StandardDecoderMap() {
 #ifdef WEBRTC_CODEC_ILBC
     {102, SdpAudioFormat("ilbc", 8000, 1)},
 #endif
-    {103, SdpAudioFormat("isac", 16000, 1)},
-#if !defined(WEBRTC_ANDROID)
-    {104, SdpAudioFormat("isac", 32000, 1)},
-#endif
 #ifdef WEBRTC_CODEC_OPUS
     {111, SdpAudioFormat("opus", 48000, 2)},
 #endif
