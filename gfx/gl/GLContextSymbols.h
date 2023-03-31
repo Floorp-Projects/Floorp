@@ -456,9 +456,6 @@ struct GLContextSymbols final {
                                 realGLboolean, realGLboolean);
   void(GLAPIENTRY* fDisablei)(GLenum, GLuint);
   void(GLAPIENTRY* fEnablei)(GLenum, GLuint);
-
-  // provoking_vertex
-  void(GLAPIENTRY* fProvokingVertex)(GLenum);
 };
 
 }  // namespace gl
