@@ -548,13 +548,6 @@ class WorkerPrivate final
   }
 #endif
 
-  void AssertIsNotPotentiallyLastGCCCRunning() {
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-    auto data = mWorkerThreadAccessible.Access();
-    MOZ_DIAGNOSTIC_ASSERT(!data->mIsPotentiallyLastGCCCRunning);
-#endif
-  }
-
   void SetWorkerScriptExecutedSuccessfully() {
     AssertIsOnWorkerThread();
     // Should only be called once!
@@ -1469,7 +1462,7 @@ class WorkerPrivate final
     // created with a nesting level one more than the current nesting level,
     // saturating at the kClampTimeoutNestingLevel.
     //
-    // When RunExpiredTimeouts is run,  it sets this value to the
+    // When RunExpiredTimeouts is run, it sets this value to the
     // TimeoutInfo::mNestingLevel for the duration of
     // the WorkerScriptTimeoutHandler::Call which will explicitly trigger a
     // microtask checkpoint so that any immediately-resolved promises will
@@ -1485,9 +1478,6 @@ class WorkerPrivate final
     bool mJSThreadExecutionGranted;
     bool mCCCollectedAnything;
     FlippedOnce<false> mDeletionScheduled;
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-    bool mIsPotentiallyLastGCCCRunning = false;
-#endif
   };
   ThreadBound<WorkerThreadAccessible> mWorkerThreadAccessible;
 

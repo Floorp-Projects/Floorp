@@ -3985,19 +3985,6 @@
   value: false
   mirror: always
 
-# Enable stronger diagnostics on worker shutdown.
-# If this is true, we will potentially run an extra GCCC when a  worker should
-# exit its DoRunLoop but holds any WorkerRef and we will MOZ_DIAGNOSTIC_ASSERT
-# if during that extra GCCC such a WorkerRef is freed.
-- name: dom.workers.GCCC_on_potentially_last_event
-  type: RelaxedAtomicBool
-#if defined(FUZZING) || defined(DEBUG)
-  value: true
-#else
-  value: false
-#endif
-  mirror: always
-
 - name: dom.sitepermsaddon-provider.enabled
   type: bool
   value: @IS_NOT_ANDROID@
