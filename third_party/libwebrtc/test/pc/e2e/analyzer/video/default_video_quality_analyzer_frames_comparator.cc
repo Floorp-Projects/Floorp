@@ -126,16 +126,6 @@ FrameComparison ValidateFrameComparison(FrameComparison comparison) {
         RTC_DCHECK(comparison.frame_stats.decoded_frame_height.has_value())
             << "Dropped frame comparison has to have decoded_frame_height when "
             << "decode_end_time is set";
-      } else {
-        RTC_DCHECK(!comparison.frame_stats.received_time.IsFinite())
-            << "Dropped frame comparison can't have received_time when "
-            << "decode_end_time is not set and there were no decoder failures";
-        RTC_DCHECK(!comparison.frame_stats.decode_start_time.IsFinite())
-            << "Dropped frame comparison can't have decode_start_time when "
-            << "decode_end_time is not set and there were no decoder failures";
-        RTC_DCHECK(!comparison.frame_stats.used_decoder.has_value())
-            << "Dropped frame comparison can't have used_decoder when "
-            << "decode_end_time is not set and there were no decoder failures";
       }
       RTC_DCHECK(!comparison.frame_stats.rendered_time.IsFinite())
           << "Dropped frame comparison can't have rendered_time";
@@ -448,8 +438,7 @@ void DefaultVideoQualityAnalyzerFramesComparator::ProcessComparison(
     FrameDropPhase dropped_phase;
     if (frame_stats.decode_end_time.IsFinite()) {
       dropped_phase = FrameDropPhase::kAfterDecoder;
-    } else if (frame_stats.decode_start_time.IsFinite() &&
-               frame_stats.decoder_failed) {
+    } else if (frame_stats.decode_start_time.IsFinite()) {
       dropped_phase = FrameDropPhase::kByDecoder;
     } else if (frame_stats.encoded_time.IsFinite()) {
       dropped_phase = FrameDropPhase::kTransport;
