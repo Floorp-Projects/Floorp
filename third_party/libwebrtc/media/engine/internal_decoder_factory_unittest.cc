@@ -16,6 +16,7 @@
 #include "api/video_codecs/vp9_profile.h"
 #include "media/base/media_constants.h"
 #include "system_wrappers/include/field_trial.h"
+#include "test/field_trial.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 
@@ -122,7 +123,7 @@ TEST(InternalDecoderFactoryTest, Av1Profile1_Dav1dDecoderTrialEnabled) {
 }
 
 TEST(InternalDecoderFactoryTest, Av1Profile1_Dav1dDecoderTrialDisabled) {
-  InitFieldTrialsFromString(kDav1dDecoderFieldTrialDisabled);
+  test::ScopedFieldTrials disable_dav1d(kDav1dDecoderFieldTrialDisabled);
   InternalDecoderFactory factory;
   std::unique_ptr<VideoDecoder> decoder = factory.CreateVideoDecoder(
       SdpVideoFormat(cricket::kAv1CodecName,
