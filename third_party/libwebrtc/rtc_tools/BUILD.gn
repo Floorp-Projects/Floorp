@@ -17,6 +17,7 @@ group("rtc_tools") {
   deps = [ ":video_file_reader" ]
   if (!build_with_chromium) {
     deps += [
+      ":frame_analyzer",
       ":psnr_ssim_analyzer",
       ":rgba_to_i420_converter",
       ":video_quality_analysis",
