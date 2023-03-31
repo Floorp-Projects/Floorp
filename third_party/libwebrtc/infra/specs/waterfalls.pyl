@@ -402,7 +402,7 @@
     'machines': {
       'android_arm64_dbg': {
         'mixins': [
-          'bullhead', 'marshmallow', 'android-devices', 'logdog-butler',
+          'walleye', 'android-devices', 'logdog-butler',
           'has_native_resultdb_integration'
         ],
         'test_suites': {
@@ -412,7 +412,7 @@
       },
       'android_arm64_rel': {
         'mixins': [
-          'bullhead', 'marshmallow', 'android-devices', 'logdog-butler',
+          'walleye', 'android-devices', 'logdog-butler',
           'has_native_resultdb_integration'
         ],
         'test_suites': {
@@ -422,7 +422,7 @@
       },
       'android_arm_dbg': {
         'mixins': [
-          'bullhead', 'marshmallow', 'android-devices', 'logdog-butler',
+          'walleye', 'android-devices', 'logdog-butler',
           'has_native_resultdb_integration'
         ],
         'test_suites': {
@@ -432,7 +432,7 @@
       },
       'android_arm_more_configs': {
         'mixins': [
-          'bullhead', 'marshmallow', 'android-devices', 'logdog-butler',
+          'walleye', 'android-devices', 'logdog-butler',
           'has_native_resultdb_integration'
         ],
         'test_suites': {
@@ -441,7 +441,7 @@
       },
       'android_arm_rel': {
         'mixins': [
-          'bullhead', 'marshmallow', 'android-devices', 'logdog-butler',
+          'walleye', 'android-devices', 'logdog-butler',
           'has_native_resultdb_integration'
         ],
         'test_suites': {
