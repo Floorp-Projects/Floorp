@@ -348,13 +348,10 @@ export class WelcomeScreen extends React.PureComponent {
     } else if (action.type) {
       AboutWelcomeUtils.handleUserAction(action);
       // Wait until migration closes to complete the action
-      if (
-        action.type === "SHOW_MIGRATION_WIZARD" ||
-        (action.type === "MULTI_ACTION" &&
-          action?.data?.actions.find(
-            subAction => subAction.type === "SHOW_MIGRATION_WIZARD"
-          ))
-      ) {
+      const hasMigrate = a =>
+        a.type === "SHOW_MIGRATION_WIZARD" ||
+        (a.type === "MULTI_ACTION" && a.data?.actions?.some(hasMigrate));
+      if (hasMigrate(action)) {
         await window.AWWaitForMigrationClose();
         AboutWelcomeUtils.sendActionTelemetry(props.messageId, "migrate_close");
       }
