@@ -248,12 +248,13 @@ class AudioProcessingImpl : public AudioProcessing {
   // capture thread blocks the render thread.
   // Called by render: Holds the render lock when reading the format struct and
   // acquires both locks if reinitialization is required.
-  int MaybeInitializeRender(const ProcessingConfig& processing_config)
+  void MaybeInitializeRender(const StreamConfig& input_config,
+                             const StreamConfig& output_config)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_render_);
-  // Called by capture: Holds the capture lock when reading the format struct
-  // and acquires both locks if reinitialization is needed.
-  int MaybeInitializeCapture(const StreamConfig& input_config,
-                             const StreamConfig& output_config);
+  // Called by capture: Acquires and releases the capture lock to read the
+  // format struct and acquires both locks if reinitialization is needed.
+  void MaybeInitializeCapture(const StreamConfig& input_config,
+                              const StreamConfig& output_config);
 
   // Method for updating the state keeping track of the active submodules.
   // Returns a bool indicating whether the state has changed.
@@ -262,7 +263,7 @@ class AudioProcessingImpl : public AudioProcessing {
 
   // Methods requiring APM running in a single-threaded manner, requiring both
   // the render and capture lock to be acquired.
-  int InitializeLocked(const ProcessingConfig& config)
+  void InitializeLocked(const ProcessingConfig& config)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_render_, mutex_capture_);
   void InitializeResidualEchoDetector()
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_render_, mutex_capture_);
@@ -321,7 +322,6 @@ class AudioProcessingImpl : public AudioProcessing {
 
   // Render-side exclusive methods possibly running APM in a multi-threaded
   // manner that are called with the render lock already acquired.
-  // TODO(ekm): Remove once all clients updated to new interface.
   int AnalyzeReverseStreamLocked(const float* const* src,
                                  const StreamConfig& input_config,
                                  const StreamConfig& output_config)
