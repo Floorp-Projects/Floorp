@@ -6,6 +6,7 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
+/* eslint-disable prettier/prettier */
 ChromeUtils.defineModuleGetter(
   lazy,
   "ShellService",
@@ -21,7 +22,7 @@ ChromeUtils.defineModuleGetter(
   "NormandyUtils",
   "resource://normandy/lib/NormandyUtils.jsm"
 );
-
+/* eslint-enable prettier/prettier */
 ChromeUtils.defineESModuleGetters(lazy, {
   TelemetryArchive: "resource://gre/modules/TelemetryArchive.sys.mjs",
   TelemetryController: "resource://gre/modules/TelemetryController.sys.mjs",

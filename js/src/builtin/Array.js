@@ -1252,10 +1252,9 @@ function ArraySpeciesCreate(originalArray, length) {
 // ES 2017 draft (April 8, 2016) 22.1.3.1.1
 function IsConcatSpreadable(O) {
   // Step 1.
-  // prettier-ignore
-  if (!IsObject(O)
+  if (!IsObject(O) // eslint-disable-line prettier/prettier
 #ifdef ENABLE_RECORD_TUPLE
-    && !IsTuple(O)
+    && !IsTuple(O) // eslint-disable-line prettier/prettier
 #endif
   ) {
     return false;
