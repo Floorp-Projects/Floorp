@@ -1028,7 +1028,7 @@ class ProviderAutofill extends UrlbarProvider {
       return null;
     }
     let url = engine.searchForm;
-    let domain = engine.getResultDomain();
+    let domain = engine.searchUrlDomain;
     // Verify that the match we got is acceptable. Autofilling "example/" to
     // "example.com/" would not be good.
     if (

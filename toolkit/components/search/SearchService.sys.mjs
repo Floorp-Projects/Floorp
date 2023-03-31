@@ -2993,13 +2993,13 @@ export class SearchService {
 
     if (!sendSubmissionURL) {
       // ... or engines that are the same domain as a default engine.
-      let engineHost = engine.getResultDomain();
+      let engineHost = engine.searchUrlDomain;
       for (let innerEngine of this._engines.values()) {
         if (!innerEngine.isAppProvided) {
           continue;
         }
 
-        if (innerEngine.getResultDomain() == engineHost) {
+        if (innerEngine.searchUrlDomain == engineHost) {
           sendSubmissionURL = true;
           break;
         }

@@ -108,7 +108,7 @@ class SearchUtils {
       if (disabledEngines.includes(engine.name)) {
         continue;
       }
-      let domain = engine.getResultDomain();
+      let domain = engine.searchUrlDomain;
       if (domain.startsWith(prefix) || domain.startsWith("www." + prefix)) {
         perfectMatchEngines.push(engine);
         perfectMatchEngineSet.add(engine);
@@ -196,7 +196,7 @@ class SearchUtils {
    *   engine's domain if the engine's URL does not have a valid TLD.
    */
   getRootDomainFromEngine(engine) {
-    let domain = engine.getResultDomain();
+    let domain = engine.searchUrlDomain;
     let suffix = engine.searchUrlPublicSuffix;
     if (!suffix) {
       if (domain.endsWith(".test")) {
@@ -236,7 +236,7 @@ class SearchUtils {
     let scalarKey;
     if (searchMode.engineName) {
       let engine = Services.search.getEngineByName(searchMode.engineName);
-      let resultDomain = engine.getResultDomain();
+      let resultDomain = engine.searchUrlDomain;
       // For built-in engines, sanitize the data in a few special cases to make
       // analysis easier.
       if (!engine.isAppProvided) {

@@ -20,7 +20,7 @@ add_task(async function() {
 
 add_task(async function search_engine_match() {
   let engine = await Services.search.getDefault();
-  let domain = engine.getResultDomain();
+  let domain = engine.searchUrlDomain;
   let token = domain.substr(0, 1);
   let matchedEngine = (
     await UrlbarSearchUtils.enginesForDomainPrefix(token)
@@ -37,14 +37,14 @@ add_task(async function no_match() {
 
 add_task(async function hide_search_engine_nomatch() {
   let engine = await Services.search.getDefault();
-  let domain = engine.getResultDomain();
+  let domain = engine.searchUrlDomain;
   let token = domain.substr(0, 1);
   let promiseTopic = promiseSearchTopic("engine-changed");
   await Promise.all([Services.search.removeEngine(engine), promiseTopic]);
   Assert.ok(engine.hidden);
   let matchedEngines = await UrlbarSearchUtils.enginesForDomainPrefix(token);
   Assert.ok(
-    !matchedEngines.length || matchedEngines[0].getResultDomain() != domain
+    !matchedEngines.length || matchedEngines[0].searchUrlDomain != domain
   );
   engine.hidden = false;
   await TestUtils.waitForCondition(
@@ -62,18 +62,18 @@ add_task(async function hide_search_engine_nomatch() {
 
 add_task(async function onlyEnabled_option_nomatch() {
   let engine = await Services.search.getDefault();
-  let domain = engine.getResultDomain();
+  let domain = engine.searchUrlDomain;
   let token = domain.substr(0, 1);
   Services.prefs.setCharPref("browser.search.hiddenOneOffs", engine.name);
   let matchedEngines = await UrlbarSearchUtils.enginesForDomainPrefix(token, {
     onlyEnabled: true,
   });
-  Assert.notEqual(matchedEngines[0].getResultDomain(), domain);
+  Assert.notEqual(matchedEngines[0].searchUrlDomain, domain);
   Services.prefs.clearUserPref("browser.search.hiddenOneOffs");
   matchedEngines = await UrlbarSearchUtils.enginesForDomainPrefix(token, {
     onlyEnabled: true,
   });
-  Assert.equal(matchedEngines[0].getResultDomain(), domain);
+  Assert.equal(matchedEngines[0].searchUrlDomain, domain);
 });
 
 add_task(async function add_search_engine_match() {

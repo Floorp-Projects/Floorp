@@ -397,7 +397,7 @@ class ProviderTabToSearch extends UrlbarProvider {
     for (let engine of engines) {
       // Trim the engine host. This will also be set as the result url, so the
       // Muxer can use it to filter.
-      let [host] = UrlbarUtils.stripPrefixAndTrim(engine.getResultDomain(), {
+      let [host] = UrlbarUtils.stripPrefixAndTrim(engine.searchUrlDomain, {
         stripWww: true,
       });
       // Check if the host may be autofilled.
@@ -412,7 +412,7 @@ class ProviderTabToSearch extends UrlbarProvider {
 
       // Otherwise it may be a partial match that would not be autofilled.
       if (host.includes("." + searchStr.toLocaleLowerCase())) {
-        partialMatchEnginesByHost.set(engine.getResultDomain(), engine);
+        partialMatchEnginesByHost.set(engine.searchUrlDomain, engine);
         // Don't continue here, we are looking for more partial matches.
       }
       // We also try to match the searchForm domain, because otherwise for an
@@ -446,7 +446,7 @@ class ProviderTabToSearch extends UrlbarProvider {
 }
 
 function makeOnboardingResult(engine, satisfiesAutofillThreshold = false) {
-  let [url] = UrlbarUtils.stripPrefixAndTrim(engine.getResultDomain(), {
+  let [url] = UrlbarUtils.stripPrefixAndTrim(engine.searchUrlDomain, {
     stripWww: true,
   });
   url = url.substr(0, url.length - engine.searchUrlPublicSuffix.length);
@@ -468,7 +468,7 @@ function makeOnboardingResult(engine, satisfiesAutofillThreshold = false) {
 }
 
 function makeResult(context, engine, satisfiesAutofillThreshold = false) {
-  let [url] = UrlbarUtils.stripPrefixAndTrim(engine.getResultDomain(), {
+  let [url] = UrlbarUtils.stripPrefixAndTrim(engine.searchUrlDomain, {
     stripWww: true,
   });
   url = url.substr(0, url.length - engine.searchUrlPublicSuffix.length);

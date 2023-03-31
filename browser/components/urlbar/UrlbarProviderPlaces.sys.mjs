@@ -451,7 +451,7 @@ function Search(queryContext, listener, provider) {
   if (this._searchModeEngine) {
     // Filter Places results on host.
     let engine = Services.search.getEngineByName(this._searchModeEngine);
-    this._filterOnHost = engine.getResultDomain();
+    this._filterOnHost = engine.searchUrlDomain;
   }
 
   this._userContextId = lazy.UrlbarProviderOpenTabs.getUserContextIdForOpenPagesTable(

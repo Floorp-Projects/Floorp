@@ -214,17 +214,12 @@ interface nsISearchEngine : nsISupports
   readonly attribute boolean isGeneralPurposeEngine;
 
   /**
-   * Gets a string representing the hostname from which search results for a
-   * given responseType are returned.  This can be specified as an url attribute
-   * in the engine description file, but will default to host from the <Url>'s
-   * template otherwise.
-   *
-   * @param  responseType [optional]
-   *         The MIME type to get resultDomain for.  Defaults to "text/html".
-   *
-   * @return the resultDomain for the given responseType.
-   */
-  AString getResultDomain([optional] in AString responseType);
+  * The domain from which search results are returned for this engine.
+  *
+  * @return the domain of the the search URL.
+  */
+readonly attribute AString searchUrlDomain;
+
 };
 
 [scriptable, uuid(0dc93e51-a7bf-4a16-862d-4b3469ff6206)]
