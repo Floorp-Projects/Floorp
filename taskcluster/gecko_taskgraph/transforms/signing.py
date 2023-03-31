@@ -204,8 +204,10 @@ def make_task_description(config, jobs):
         if dep_job.kind in task["dependencies"]:
             task["if-dependencies"] = [dep_job.kind]
 
-        # build-mac-notarization uses signingscript instead of iscript
+        # build-mac-{signing,notarization} uses signingscript instead of iscript
         if "macosx" in build_platform and config.kind == "build-mac-notarization":
+            task["worker"]["mac-behavior"] = "apple_notarization"
+        elif "macosx" in build_platform and config.kind == "build-mac-signing":
             task["worker"]["mac-behavior"] = "mac_sign"
         elif "macosx" in build_platform:
             # iscript overrides
