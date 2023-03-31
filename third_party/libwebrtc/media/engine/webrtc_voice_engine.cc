@@ -1041,7 +1041,6 @@ class WebRtcVoiceMediaChannel::WebRtcAudioSendStream
     // - a reasonable default of 32kbps min/max
     // - fixed target bitrate from codec spec
     // - lower min bitrate if adaptive ptime is enabled
-    // - bitrate configured in the rtp_parameter encodings settings
     const int kDefaultBitrateBps = 32000;
     config_.min_bitrate_bps = kDefaultBitrateBps;
     config_.max_bitrate_bps = kDefaultBitrateBps;
@@ -1056,13 +1055,6 @@ class WebRtcVoiceMediaChannel::WebRtcAudioSendStream
       config_.min_bitrate_bps = std::min(
           config_.min_bitrate_bps,
           static_cast<int>(adaptive_ptime_config_.min_encoder_bitrate.bps()));
-    }
-
-    if (rtp_parameters_.encodings[0].min_bitrate_bps) {
-      config_.min_bitrate_bps = *rtp_parameters_.encodings[0].min_bitrate_bps;
-    }
-    if (rtp_parameters_.encodings[0].max_bitrate_bps) {
-      config_.max_bitrate_bps = *rtp_parameters_.encodings[0].max_bitrate_bps;
     }
   }
 
