@@ -55,6 +55,7 @@ include protocol PWebSocketConnection;
 include protocol PWebTransport;
 include protocol PFetch;
 
+include ClientIPCTypes;
 include DOMTypes;
 include IPCBlob;
 include IPCServiceWorkerDescriptor;
@@ -195,6 +196,7 @@ parent:
   async CreateWebTransportParent(
       nsString aURL,
       nullable nsIPrincipal aPrincipal,
+      IPCClientInfo?  aClientInfo,
       bool aDedicated,
       bool aRequireUnreliable,
       uint32_t aCongestionControl,
