@@ -68,7 +68,6 @@
         'iPhone X',
         '--version',
         '12.4',
-        '--undefok=write-compiled-tests-json-to-writable-path',
       ],
       'swarming': {
         'named_caches': [
@@ -87,7 +86,6 @@
         'iPhone X',
         '--version',
         '13.6',
-        '--undefok=write-compiled-tests-json-to-writable-path',
       ],
       'swarming': {
         'named_caches': [
@@ -106,7 +104,6 @@
         'iPhone X',
         '--version',
         '14.5',
-        '--undefok=write-compiled-tests-json-to-writable-path',
       ],
       'swarming': {
         'named_caches': [
@@ -188,11 +185,6 @@
       }
     }
   },
-  'fuchsia': {
-    '$mixin_append': {
-      'args': ['--', '--undefok=use-vulkan']
-    }
-  },
   'resultdb-gtest-json-format': {
     '$mixin_append': {
       'args': [
@@ -248,7 +240,6 @@
     '$mixin_append': {
       'args': [
         '--xctest',
-        '--undefok=enable-run-ios-unittests-with-xctest,write-compiled-tests-json-to-writable-path',
       ],
     },
   },
