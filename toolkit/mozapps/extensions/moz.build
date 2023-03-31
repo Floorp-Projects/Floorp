@@ -99,5 +99,3 @@ with Files("Blocklist.jsm"):
 
 with Files("content/blocklist**"):
     BUG_COMPONENT = ("Toolkit", "Blocklist Implementation")
-
-REQUIRES_UNIFIED_BUILD = True
