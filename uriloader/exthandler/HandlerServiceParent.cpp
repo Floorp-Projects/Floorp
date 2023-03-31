@@ -9,8 +9,14 @@
 #include "HandlerServiceParent.h"
 #include "nsIHandlerService.h"
 #include "nsIMIMEInfo.h"
+#include "nsIMIMEService.h"
 #include "ContentHandlerService.h"
+#include "nsIExternalProtocolService.h"
 #include "nsStringEnumerator.h"
+#include "nsIMutableArray.h"
+#include "nsCExternalHandlerService.h"
+#include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #ifdef MOZ_WIDGET_GTK
 #  include "unix/nsGNOMERegistry.h"
 #endif

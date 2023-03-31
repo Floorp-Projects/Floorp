@@ -11,15 +11,20 @@
 #include "nsIFile.h"
 #include "nsIFileURL.h"
 #include "nsEscape.h"
+#include "nsComponentManagerUtils.h"
 #include "nsCURILoader.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIExternalProtocolService.h"
 #include "nsIObserverService.h"
+#include "nsISupportsPrimitives.h"
+#include "mozilla/ClearOnShutdown.h"
+#include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "xpcpublic.h"
 
 static bool sInitializedOurData = false;
-StaticRefPtr<nsIFile> sOurAppFile;
+mozilla::StaticRefPtr<nsIFile> sOurAppFile;
 
 /* static */
 already_AddRefed<nsIFile> nsMIMEInfoBase::GetCanonicalExecutable(
@@ -80,14 +85,14 @@ nsMIMEInfoBase::nsMIMEInfoBase(const char* aMIMEType)
     : mSchemeOrType(aMIMEType),
       mClass(eMIMEInfo),
       mAlwaysAskBeforeHandling(
-          StaticPrefs::
+          mozilla::StaticPrefs::
               browser_download_always_ask_before_handling_new_types()) {}
 
 nsMIMEInfoBase::nsMIMEInfoBase(const nsACString& aMIMEType)
     : mSchemeOrType(aMIMEType),
       mClass(eMIMEInfo),
       mAlwaysAskBeforeHandling(
-          StaticPrefs::
+          mozilla::StaticPrefs::
               browser_download_always_ask_before_handling_new_types()) {}
 
 // Constructor for a handler that lets the caller specify whether this is a
@@ -99,7 +104,7 @@ nsMIMEInfoBase::nsMIMEInfoBase(const nsACString& aType, HandlerClass aClass)
     : mSchemeOrType(aType),
       mClass(aClass),
       mAlwaysAskBeforeHandling(
-          StaticPrefs::
+          mozilla::StaticPrefs::
               browser_download_always_ask_before_handling_new_types() ||
           aClass != eMIMEInfo) {}
 
@@ -352,7 +357,8 @@ bool nsMIMEInfoBase::AutomationOnlyCheckIfLaunchStubbed(nsIFile* aFile) {
 }
 
 NS_IMETHODIMP
-nsMIMEInfoBase::LaunchWithURI(nsIURI* aURI, BrowsingContext* aBrowsingContext) {
+nsMIMEInfoBase::LaunchWithURI(nsIURI* aURI,
+                              mozilla::dom::BrowsingContext* aBrowsingContext) {
   // This is only being called with protocol handlers
   NS_ASSERTION(mClass == eProtocolInfo,
                "nsMIMEInfoBase should be a protocol handler");
