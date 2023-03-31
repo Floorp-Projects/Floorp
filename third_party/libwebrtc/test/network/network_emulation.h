@@ -33,6 +33,7 @@
 #include "rtc_base/network_constants.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/synchronization/mutex.h"
+#include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/task_queue_for_test.h"
 #include "rtc_base/task_utils/repeating_task.h"
 #include "rtc_base/thread_annotations.h"

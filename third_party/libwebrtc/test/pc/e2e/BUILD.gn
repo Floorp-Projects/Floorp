@@ -34,6 +34,7 @@ if (!build_with_chromium) {
         ":peer_connection_e2e_smoke_test",
         ":peer_connection_quality_test_metric_names_test",
         ":peer_connection_quality_test_test",
+        ":stats_based_network_quality_metrics_reporter_test",
         ":stats_poller_test",
       ]
     }
@@ -333,6 +334,32 @@ if (!build_with_chromium) {
       ]
     }
 
+    rtc_library("stats_based_network_quality_metrics_reporter_test") {
+      testonly = true
+      sources = [ "stats_based_network_quality_metrics_reporter_test.cc" ]
+      deps = [
+        ":metric_metadata_keys",
+        ":peerconnection_quality_test",
+        ":stats_based_network_quality_metrics_reporter",
+        "../..:test_support",
+        "../../../api:array_view",
+        "../../../api:create_network_emulation_manager",
+        "../../../api:create_peer_connection_quality_test_frame_generator",
+        "../../../api:network_emulation_manager_api",
+        "../../../api:peer_connection_quality_test_fixture_api",
+        "../../../api/test/metrics:metrics_logger",
+        "../../../api/test/metrics:stdout_metrics_exporter",
+        "../../../api/test/pclf:media_configuration",
+        "../../../api/test/pclf:media_quality_test_params",
+        "../../../api/test/pclf:peer_configurer",
+        "../../../api/units:time_delta",
+      ]
+      absl_deps = [
+        "//third_party/abseil-cpp/absl/strings",
+        "//third_party/abseil-cpp/absl/types:optional",
+      ]
+    }
+
     rtc_library("peer_connection_quality_test_test") {
       testonly = true
       sources = [ "peer_connection_quality_test_test.cc" ]
@@ -470,6 +497,7 @@ if (!build_with_chromium) {
       "../../../api:peer_connection_quality_test_fixture_api",
       "../../../api:rtc_stats_api",
       "../../../api:scoped_refptr",
+      "../../../api:sequence_checker",
       "../../../api/numerics",
       "../../../api/test/metrics:metric",
       "../../../api/test/metrics:metrics_logger",
@@ -483,6 +511,7 @@ if (!build_with_chromium) {
       "../../../rtc_base:rtc_event",
       "../../../rtc_base:stringutils",
       "../../../rtc_base/synchronization:mutex",
+      "../../../rtc_base/system:no_unique_address",
       "../../../system_wrappers:field_trial",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
