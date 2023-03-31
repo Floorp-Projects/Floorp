@@ -1169,10 +1169,13 @@ HashNumber MConstant::valueHash() const {
   return ConstantValueHash(type(), payload_.asBits);
 }
 
-// We will in theory get some extra collisions here, but dealing with those
-// should be cheaper than doing the skipObjectGuards for the receiver object.
 HashNumber MConstantProto::valueHash() const {
-  return protoObject()->valueHash();
+  HashNumber hash = protoObject()->valueHash();
+  const MDefinition* receiverObject = getReceiverObject();
+  if (receiverObject) {
+    hash = addU32ToHash(hash, receiverObject->id());
+  }
+  return hash;
 }
 
 bool MConstant::congruentTo(const MDefinition* ins) const {

@@ -9210,9 +9210,10 @@ class MConstantProto : public MUnaryInstruction,
   // but instead just keep a pointer to it. This means we need to ensure it's
   // not discarded before we try to access it. If this is discarded, we
   // basically just become an MConstant for the object's proto, which is fine.
-  MDefinition* receiverObject_;
+  const MDefinition* receiverObject_;
 
-  explicit MConstantProto(MDefinition* protoObject, MDefinition* receiverObject)
+  explicit MConstantProto(MDefinition* protoObject,
+                          const MDefinition* receiverObject)
       : MUnaryInstruction(classOpcode, protoObject),
         receiverObject_(receiverObject) {
     MOZ_ASSERT(protoObject->isConstant());
@@ -9244,7 +9245,7 @@ class MConstantProto : public MUnaryInstruction,
     if (receiverObject_->isDiscarded()) {
       return nullptr;
     }
-    return receiverObject_->skipObjectGuards();
+    return receiverObject_;
   }
 };
 
