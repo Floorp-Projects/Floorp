@@ -468,13 +468,25 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateProbing(
             : std::min(max_total_allocated_bitrate_, max_bitrate_);
     if (std::min(network_estimate, estimated_bitrate_) >
         config_.skip_if_estimate_larger_than_fraction_of_max * max_probe_rate) {
-      state_ = State::kProbingComplete;
-      min_bitrate_to_probe_further_ = DataRate::PlusInfinity();
       return {};
     }
   }
 
   DataRate max_probe_bitrate = max_bitrate_;
+  if (bwe_limited_due_to_packet_loss_ &&
+      config_.limit_probe_target_rate_to_loss_bwe) {
+    max_probe_bitrate = std::min(estimated_bitrate_, max_bitrate_);
+  }
+  if (config_.network_state_estimate_probing_interval->IsFinite() &&
+      network_estimate_ && network_estimate_->link_capacity_upper.IsFinite()) {
+    if (network_estimate_->link_capacity_upper.IsZero()) {
+      RTC_LOG(LS_INFO) << "Not sending probe, Network state estimate is zero";
+      return {};
+    }
+    max_probe_bitrate =
+        std::min(max_probe_bitrate, network_estimate_->link_capacity_upper *
+                                        config_.network_state_probe_scale);
+  }
   if (max_total_allocated_bitrate_ > DataRate::Zero()) {
     // If a max allocated bitrate has been configured, allow probing up to 2x
     // that rate. This allows some overhead to account for bursty streams,
@@ -486,28 +498,10 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateProbing(
         std::min(max_probe_bitrate, max_total_allocated_bitrate_ * 2);
   }
 
-  DataRate estimate_capped_bitrate = DataRate::PlusInfinity();
-  if (bwe_limited_due_to_packet_loss_ &&
-      config_.limit_probe_target_rate_to_loss_bwe) {
-    estimate_capped_bitrate = std::min(estimated_bitrate_, max_probe_bitrate);
-  }
-  if (config_.network_state_estimate_probing_interval->IsFinite() &&
-      network_estimate_ && network_estimate_->link_capacity_upper.IsFinite()) {
-    if (network_estimate_->link_capacity_upper.IsZero()) {
-      RTC_LOG(LS_INFO) << "Not sending probe, Network state estimate is zero";
-      return {};
-    }
-    estimate_capped_bitrate =
-        std::min({estimate_capped_bitrate, max_probe_bitrate,
-                  network_estimate_->link_capacity_upper *
-                      config_.network_state_probe_scale});
-  }
-
   std::vector<ProbeClusterConfig> pending_probes;
   for (DataRate bitrate : bitrates_to_probe) {
     RTC_DCHECK(!bitrate.IsZero());
 
-    bitrate = std::min(bitrate, estimate_capped_bitrate);
     if (bitrate > max_probe_bitrate) {
       bitrate = max_probe_bitrate;
       probe_further = false;
@@ -533,8 +527,7 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateProbing(
   if (probe_further) {
     state_ = State::kWaitingForProbingResult;
     min_bitrate_to_probe_further_ =
-        std::min(estimate_capped_bitrate, (*(bitrates_to_probe.end() - 1))) *
-        config_.further_probe_threshold;
+        (*(bitrates_to_probe.end() - 1)) * config_.further_probe_threshold;
   } else {
     state_ = State::kProbingComplete;
     min_bitrate_to_probe_further_ = DataRate::PlusInfinity();
