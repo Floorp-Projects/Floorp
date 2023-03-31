@@ -266,20 +266,24 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             it.start()
         }
 
-        // Unless the activity is recreated, navigate to home first (without rendering it)
-        // to add it to the back stack.
-        if (savedInstanceState == null) {
-            navigateToHome()
-        }
-
-        if (!shouldStartOnHome() && shouldNavigateToBrowserOnColdStart(savedInstanceState)) {
-            navigateToBrowserOnColdStart()
+        if (settings().shouldShowJunoOnboarding(intent.toSafeIntent().isLauncherIntent)) {
+            navHost.navController.navigate(NavGraphDirections.actionGlobalHomeJunoOnboarding())
         } else {
-            StartOnHome.enterHomeScreen.record(NoExtras())
-        }
+            // Unless the activity is recreated, navigate to home first (without rendering it)
+            // to add it to the back stack.
+            if (savedInstanceState == null) {
+                navigateToHome()
+            }
+            if (!shouldStartOnHome() && shouldNavigateToBrowserOnColdStart(savedInstanceState)) {
+                navigateToBrowserOnColdStart()
+            } else {
+                StartOnHome.enterHomeScreen.record(NoExtras())
+            }
 
-        if (settings().showHomeOnboardingDialog && onboarding.userHasBeenOnboarded()) {
-            navHost.navController.navigate(NavGraphDirections.actionGlobalHomeOnboardingDialog())
+            if (settings().showHomeOnboardingDialog && onboarding.userHasBeenOnboarded()) {
+                navHost.navController.navigate(NavGraphDirections.actionGlobalHomeOnboardingDialog())
+            }
+            showNotificationPermissionPromptIfRequired()
         }
 
         Performance.processIntentIfPerformanceTest(intent, this)
@@ -341,8 +345,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             }
         }
 
-        showNotificationPermissionPromptIfRequired()
-
         components.backgroundServices.accountManagerAvailableQueue.runIfReadyOrQueue {
             lifecycleScope.launch(IO) {
                 // If we're authenticated, kick-off a sync and a device state refresh.
@@ -368,6 +370,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
      * Show the pre permission dialog to the user once if the notification are not enabled.
      */
     private fun showNotificationPermissionPromptIfRequired() {
+        if (settings().junoOnboardingEnabled) {
+            return
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             !NotificationManagerCompat.from(applicationContext).areNotificationsEnabledSafe() &&
             settings().numberOfAppLaunches <= 1

@@ -826,6 +826,50 @@ class SettingsTest {
     }
 
     @Test
+    fun `GIVEN junoOnboarding is disabled THEN shouldShowJunoOnboarding returns false`() {
+        val settings = spyk(settings)
+        every { settings.junoOnboardingEnabled } returns false
+        every { settings.isJunoOnboardingShown } returns false
+
+        val actual = settings.shouldShowJunoOnboarding(true)
+
+        assertFalse(actual)
+    }
+
+    @Test
+    fun `GIVEN junoOnboarding is enabled, isOnboardingShown is false and isLauncherIntent is false THEN shouldShowJunoOnboarding returns false`() {
+        val settings = spyk(settings)
+        every { settings.junoOnboardingEnabled } returns true
+        every { settings.isJunoOnboardingShown } returns false
+
+        val actual = settings.shouldShowJunoOnboarding(false)
+
+        assertFalse(actual)
+    }
+
+    @Test
+    fun `GIVEN junoOnboarding is enabled and isOnboardingShown is true THEN shouldShowJunoOnboarding returns false`() {
+        val settings = spyk(settings)
+        every { settings.junoOnboardingEnabled } returns true
+        every { settings.isJunoOnboardingShown } returns true
+
+        val actual = settings.shouldShowJunoOnboarding(true)
+
+        assertFalse(actual)
+    }
+
+    @Test
+    fun `GIVEN junoOnboarding is enabled, isOnboardingShown is false and isLauncherIntent is true THEN shouldShowJunoOnboarding returns true`() {
+        val settings = spyk(settings)
+        every { settings.junoOnboardingEnabled } returns true
+        every { settings.isJunoOnboardingShown } returns false
+
+        val actual = settings.shouldShowJunoOnboarding(true)
+
+        assertTrue(actual)
+    }
+
+    @Test
     fun `GIVEN Https-only mode is disabled THEN the engine mode is HttpsOnlyMode#DISABLED`() {
         settings.shouldUseHttpsOnly = false
 
