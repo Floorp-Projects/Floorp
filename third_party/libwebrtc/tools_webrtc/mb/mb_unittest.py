@@ -324,12 +324,15 @@ class UnitTest(unittest.TestCase):
         files,
         ['../../.vpython3', '../../testing/test_env.py', 'foo_unittests'])
     self.assertEqual(command, [
+        'luci-auth',
+        'context',
+        '--',
         'vpython3',
         '../../build/android/test_wrapper/logdog_wrapper.py',
         '--target',
         'foo_unittests',
         '--logdog-bin-cmd',
-        '../../bin/logdog_butler',
+        '../../.task_template_packages/logdog_butler',
         '--logcat-output-file',
         '${ISOLATED_OUTDIR}/logcats',
         '--store-tombstones',
@@ -363,12 +366,15 @@ class UnitTest(unittest.TestCase):
         files,
         ['../../.vpython3', '../../testing/test_env.py', 'foo_unittests'])
     self.assertEqual(command, [
+        'luci-auth',
+        'context',
+        '--',
         'vpython3',
         '../../build/android/test_wrapper/logdog_wrapper.py',
         '--target',
         'foo_unittests',
         '--logdog-bin-cmd',
-        '../../bin/logdog_butler',
+        '../../.task_template_packages/logdog_butler',
         '--logcat-output-file',
         '${ISOLATED_OUTDIR}/logcats',
         '--store-tombstones',
