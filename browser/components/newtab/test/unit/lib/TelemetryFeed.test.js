@@ -247,6 +247,63 @@ describe("TelemetryFeed", () => {
       assert.equal(type, "deletion.request.context_id");
       assert.equal(value, FAKE_UUID);
     });
+    describe("#_beginObservingNewtabPingPrefs", () => {
+      it("should record initial metrics from newtab prefs", () => {
+        FAKE_GLOBAL_PREFS.set(
+          "browser.newtabpage.activity-stream.feeds.topsites",
+          true
+        );
+        FAKE_GLOBAL_PREFS.set(
+          "browser.newtabpage.activity-stream.topSitesRows",
+          3
+        );
+        sandbox.spy(Glean.topsites.enabled, "set");
+        sandbox.spy(Glean.topsites.rows, "set");
+
+        instance = new TelemetryFeed();
+        instance.init();
+
+        assert.calledOnce(Glean.topsites.enabled.set);
+        assert.calledWith(Glean.topsites.enabled.set, true);
+        assert.calledOnce(Glean.topsites.rows.set);
+        assert.calledWith(Glean.topsites.rows.set, 3);
+      });
+      it("should record new metrics for newtab pref changes", () => {
+        FAKE_GLOBAL_PREFS.set(
+          "browser.newtabpage.activity-stream.topSitesRows",
+          3
+        );
+        sandbox.spy(Glean.topsites.rows, "set");
+
+        instance = new TelemetryFeed();
+        instance.init();
+
+        Services.prefs.setIntPref(
+          "browser.newtabpage.activity-stream.topSitesRows",
+          2
+        );
+
+        assert.calledTwice(Glean.topsites.rows.set);
+        assert.calledWith(Glean.topsites.rows.set.firstCall, 3);
+        assert.calledWith(Glean.topsites.rows.set.secondCall, 2);
+      });
+      it("should ignore changes to other prefs", () => {
+        FAKE_GLOBAL_PREFS.set("some.other.pref", 123);
+        FAKE_GLOBAL_PREFS.set(
+          "browser.newtabpage.activity-stream.impressionId",
+          "{foo-123-foo}"
+        );
+
+        instance = new TelemetryFeed();
+        instance.init();
+
+        Services.prefs.setIntPref("some.other.pref", 456);
+        Services.prefs.setCharPref(
+          "browser.newtabpage.activity-stream.impressionId",
+          "{foo-456-foo}"
+        );
+      });
+    });
   });
   describe("#handleEvent", () => {
     it("should dispatch a TAB_PINNED_EVENT", () => {
@@ -2037,7 +2094,7 @@ describe("TelemetryFeed", () => {
         type: "impression",
         tile_id: 42,
         source: "newtab",
-        position: 1,
+        position: 0,
         reporting_url: "https://test.reporting.net/",
       };
       instance = new TelemetryFeed();
@@ -2078,7 +2135,7 @@ describe("TelemetryFeed", () => {
         type: "click",
         tile_id: 42,
         source: "newtab",
-        position: 1,
+        position: 0,
         reporting_url: "https://test.reporting.net/",
       };
       instance = new TelemetryFeed();
@@ -2135,6 +2192,7 @@ describe("TelemetryFeed", () => {
       assert.calledWith(Glean.topsites.impression.record, {
         newtab_visit_id: session_id,
         is_sponsored: true,
+        position: 1,
       });
     });
     it("should record a Glean topsites.click event on a click event", async () => {
@@ -2142,7 +2200,7 @@ describe("TelemetryFeed", () => {
         type: "click",
         tile_id: 42,
         source: "newtab",
-        position: 1,
+        position: 0,
         reporting_url: "https://test.reporting.net/",
       };
       instance = new TelemetryFeed();
@@ -2157,6 +2215,7 @@ describe("TelemetryFeed", () => {
       assert.calledWith(Glean.topsites.click.record, {
         newtab_visit_id: session_id,
         is_sponsored: true,
+        position: 0,
       });
     });
     it("should console.error on unknown pingTypes", async () => {
@@ -2175,7 +2234,7 @@ describe("TelemetryFeed", () => {
       const data = {
         type: "impression",
         source: "newtab",
-        position: 1,
+        position: 0,
       };
       instance = new TelemetryFeed();
       const session_id = "decafc0ffee";
@@ -2188,13 +2247,14 @@ describe("TelemetryFeed", () => {
       assert.calledWith(Glean.topsites.impression.record, {
         newtab_visit_id: session_id,
         is_sponsored: false,
+        position: 0,
       });
     });
     it("should record a Glean topsites.click event on a click event", async () => {
       const data = {
         type: "click",
         source: "newtab",
-        position: 1,
+        position: 0,
       };
       instance = new TelemetryFeed();
       const session_id = "decafc0ffee";
@@ -2207,6 +2267,7 @@ describe("TelemetryFeed", () => {
       assert.calledWith(Glean.topsites.click.record, {
         newtab_visit_id: session_id,
         is_sponsored: false,
+        position: 0,
       });
     });
   });

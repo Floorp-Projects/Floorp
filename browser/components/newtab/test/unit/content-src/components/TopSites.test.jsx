@@ -756,6 +756,7 @@ describe("<TopSite>", () => {
 
     assert.propertyVal(action.data, "type", "impression");
     assert.propertyVal(action.data, "source", "newtab");
+    assert.propertyVal(action.data, "position", 3);
   });
   it("should record impressions for visible sponsored Top Sites", () => {
     const dispatch = sinon.stub();
@@ -794,7 +795,7 @@ describe("<TopSite>", () => {
     assert.propertyVal(action.data, "type", "impression");
     assert.propertyVal(action.data, "tile_id", 12345);
     assert.propertyVal(action.data, "source", "newtab");
-    assert.propertyVal(action.data, "position", 4);
+    assert.propertyVal(action.data, "position", 3);
     assert.propertyVal(
       action.data,
       "reporting_url",
@@ -828,6 +829,7 @@ describe("<TopSite>", () => {
 
       assert.propertyVal(action.data, "type", "click");
       assert.propertyVal(action.data, "source", "newtab");
+      assert.propertyVal(action.data, "position", 3);
     });
     it("should dispatch a UserEventAction with the right data", () => {
       const dispatch = sinon.stub();
@@ -924,7 +926,7 @@ describe("<TopSite>", () => {
       assert.propertyVal(action.data, "type", "click");
       assert.propertyVal(action.data, "tile_id", 1);
       assert.propertyVal(action.data, "source", "newtab");
-      assert.propertyVal(action.data, "position", 2);
+      assert.propertyVal(action.data, "position", 1);
       assert.propertyVal(action.data, "advertiser", "test advertiser");
     });
     it("should dispatch OPEN_LINK with the right data", () => {

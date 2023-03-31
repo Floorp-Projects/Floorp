@@ -661,6 +661,9 @@ const TEST_GLOBAL = {
       click: {
         record() {},
       },
+      rows: {
+        set() {},
+      },
     },
   },
   GleanPings: {

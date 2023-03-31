@@ -11928,7 +11928,7 @@ class TopSiteLink extends (external_React_default()).PureComponent {
       impressionStats = /*#__PURE__*/external_React_default().createElement(TopSiteImpressionWrapper, {
         actionType: actionTypes.TOP_SITES_SPONSORED_IMPRESSION_STATS,
         tile: {
-          position: this.props.index + 1,
+          position: this.props.index,
           tile_id: link.sponsored_tile_id || -1,
           reporting_url: link.sponsored_impression_url,
           advertiser: title.toLocaleLowerCase(),
@@ -11944,6 +11944,7 @@ class TopSiteLink extends (external_React_default()).PureComponent {
       impressionStats = /*#__PURE__*/external_React_default().createElement(TopSiteImpressionWrapper, {
         actionType: actionTypes.TOP_SITES_ORGANIC_IMPRESSION_STATS,
         tile: {
+          position: this.props.index,
           source: NEWTAB_SOURCE
         } // For testing.
         ,
@@ -12095,7 +12096,7 @@ class TopSite extends (external_React_default()).PureComponent {
           type: actionTypes.TOP_SITES_SPONSORED_IMPRESSION_STATS,
           data: {
             type: "click",
-            position: this.props.link.pos + 1,
+            position: this.props.link.pos,
             tile_id: this.props.link.id,
             advertiser: title.toLocaleLowerCase(),
             source: NEWTAB_SOURCE
@@ -12108,7 +12109,7 @@ class TopSite extends (external_React_default()).PureComponent {
           type: actionTypes.TOP_SITES_SPONSORED_IMPRESSION_STATS,
           data: {
             type: "click",
-            position: this.props.index + 1,
+            position: this.props.index,
             tile_id: this.props.link.sponsored_tile_id || -1,
             reporting_url: this.props.link.sponsored_click_url,
             advertiser: title.toLocaleLowerCase(),
@@ -12121,6 +12122,7 @@ class TopSite extends (external_React_default()).PureComponent {
           type: actionTypes.TOP_SITES_ORGANIC_IMPRESSION_STATS,
           data: {
             type: "click",
+            position: this.props.index,
             source: NEWTAB_SOURCE
           }
         }));
