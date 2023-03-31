@@ -5294,10 +5294,10 @@ TEST_F(WebRtcVideoChannelTest, TestSetDscpOptions) {
 
   // Various priorities map to various dscp values.
   parameters.encodings[0].network_priority = webrtc::Priority::kHigh;
-  ASSERT_TRUE(channel->SetRtpSendParameters(kSsrc, parameters).ok());
+  ASSERT_TRUE(channel->SetRtpSendParameters(kSsrc, parameters, nullptr).ok());
   EXPECT_EQ(rtc::DSCP_AF41, network_interface->dscp());
   parameters.encodings[0].network_priority = webrtc::Priority::kVeryLow;
-  ASSERT_TRUE(channel->SetRtpSendParameters(kSsrc, parameters).ok());
+  ASSERT_TRUE(channel->SetRtpSendParameters(kSsrc, parameters, nullptr).ok());
   EXPECT_EQ(rtc::DSCP_CS1, network_interface->dscp());
 
   // Packets should also self-identify their dscp in PacketOptions.

@@ -73,7 +73,9 @@ class RtpSenderInternal : public RtpSenderInterface {
   // `GetParameters` and `SetParameters` operate with a transactional model.
   // Allow access to get/set parameters without invalidating transaction id.
   virtual RtpParameters GetParametersInternal() const = 0;
-  virtual RTCError SetParametersInternal(const RtpParameters& parameters) = 0;
+  virtual void SetParametersInternal(const RtpParameters& parameters,
+                                     SetParametersCallback,
+                                     bool blocking) = 0;
 
   // GetParameters and SetParameters will remove deactivated simulcast layers
   // and restore them on SetParameters. This is probably a Bad Idea, but we
@@ -130,11 +132,16 @@ class RtpSenderBase : public RtpSenderInternal, public ObserverInterface {
 
   RtpParameters GetParameters() const override;
   RTCError SetParameters(const RtpParameters& parameters) override;
+  void SetParametersAsync(const RtpParameters& parameters,
+                          SetParametersCallback callback) override;
 
   // `GetParameters` and `SetParameters` operate with a transactional model.
   // Allow access to get/set parameters without invalidating transaction id.
   RtpParameters GetParametersInternal() const override;
-  RTCError SetParametersInternal(const RtpParameters& parameters) override;
+  void SetParametersInternal(const RtpParameters& parameters,
+                             SetParametersCallback callback = nullptr,
+                             bool blocking = true) override;
+  RTCError CheckSetParameters(const RtpParameters& parameters);
   RtpParameters GetParametersInternalWithAllLayers() const override;
   RTCError SetParametersInternalWithAllLayers(
       const RtpParameters& parameters) override;

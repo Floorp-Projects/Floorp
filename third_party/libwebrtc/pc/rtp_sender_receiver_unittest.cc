@@ -855,6 +855,20 @@ TEST_F(RtpSenderReceiverTest, AudioSenderCanSetParameters) {
   DestroyAudioRtpSender();
 }
 
+TEST_F(RtpSenderReceiverTest, AudioSenderCanSetParametersAsync) {
+  CreateAudioRtpSender();
+
+  RtpParameters params = audio_rtp_sender_->GetParameters();
+  EXPECT_EQ(1u, params.encodings.size());
+  absl::optional<webrtc::RTCError> result;
+  audio_rtp_sender_->SetParametersAsync(
+      params, [&result](webrtc::RTCError error) { result = error; });
+  run_loop_.Flush();
+  EXPECT_TRUE(result->ok());
+
+  DestroyAudioRtpSender();
+}
+
 TEST_F(RtpSenderReceiverTest, AudioSenderCanSetParametersBeforeNegotiation) {
   audio_rtp_sender_ =
       AudioRtpSender::Create(worker_thread_, /*id=*/"", nullptr, nullptr);
@@ -865,8 +879,34 @@ TEST_F(RtpSenderReceiverTest, AudioSenderCanSetParametersBeforeNegotiation) {
   EXPECT_TRUE(audio_rtp_sender_->SetParameters(params).ok());
 
   params = audio_rtp_sender_->GetParameters();
-  EXPECT_TRUE(audio_rtp_sender_->SetParameters(params).ok());
   EXPECT_EQ(params.encodings[0].max_bitrate_bps, 90000);
+  EXPECT_TRUE(audio_rtp_sender_->SetParameters(params).ok());
+
+  DestroyAudioRtpSender();
+}
+
+TEST_F(RtpSenderReceiverTest,
+       AudioSenderCanSetParametersAsyncBeforeNegotiation) {
+  audio_rtp_sender_ =
+      AudioRtpSender::Create(worker_thread_, /*id=*/"", nullptr, nullptr);
+
+  absl::optional<webrtc::RTCError> result;
+  RtpParameters params = audio_rtp_sender_->GetParameters();
+  ASSERT_EQ(1u, params.encodings.size());
+  params.encodings[0].max_bitrate_bps = 90000;
+
+  audio_rtp_sender_->SetParametersAsync(
+      params, [&result](webrtc::RTCError error) { result = error; });
+  run_loop_.Flush();
+  EXPECT_TRUE(result->ok());
+
+  params = audio_rtp_sender_->GetParameters();
+  EXPECT_EQ(params.encodings[0].max_bitrate_bps, 90000);
+
+  audio_rtp_sender_->SetParametersAsync(
+      params, [&result](webrtc::RTCError error) { result = error; });
+  run_loop_.Flush();
+  EXPECT_TRUE(result->ok());
 
   DestroyAudioRtpSender();
 }
@@ -937,6 +977,25 @@ TEST_F(RtpSenderReceiverTest,
   EXPECT_TRUE(audio_rtp_sender_->SetParameters(params).ok());
   RTCError result = audio_rtp_sender_->SetParameters(params);
   EXPECT_EQ(RTCErrorType::INVALID_STATE, result.type());
+
+  DestroyAudioRtpSender();
+}
+
+TEST_F(RtpSenderReceiverTest,
+       AudioSenderSetParametersAsyncInvalidatesTransactionId) {
+  CreateAudioRtpSender();
+
+  RtpParameters params = audio_rtp_sender_->GetParameters();
+  EXPECT_EQ(1u, params.encodings.size());
+  absl::optional<webrtc::RTCError> result;
+  audio_rtp_sender_->SetParametersAsync(
+      params, [&result](webrtc::RTCError error) { result = error; });
+  run_loop_.Flush();
+  EXPECT_TRUE(result->ok());
+  audio_rtp_sender_->SetParametersAsync(
+      params, [&result](webrtc::RTCError error) { result = error; });
+  run_loop_.Flush();
+  EXPECT_EQ(RTCErrorType::INVALID_STATE, result->type());
 
   DestroyAudioRtpSender();
 }
@@ -1047,6 +1106,20 @@ TEST_F(RtpSenderReceiverTest, VideoSenderCanSetParameters) {
   DestroyVideoRtpSender();
 }
 
+TEST_F(RtpSenderReceiverTest, VideoSenderCanSetParametersAsync) {
+  CreateVideoRtpSender();
+
+  RtpParameters params = video_rtp_sender_->GetParameters();
+  EXPECT_EQ(1u, params.encodings.size());
+  absl::optional<webrtc::RTCError> result;
+  video_rtp_sender_->SetParametersAsync(
+      params, [&result](webrtc::RTCError error) { result = error; });
+  run_loop_.Flush();
+  EXPECT_TRUE(result->ok());
+
+  DestroyVideoRtpSender();
+}
+
 TEST_F(RtpSenderReceiverTest, VideoSenderCanSetParametersBeforeNegotiation) {
   video_rtp_sender_ =
       VideoRtpSender::Create(worker_thread_, /*id=*/"", nullptr);
@@ -1059,6 +1132,30 @@ TEST_F(RtpSenderReceiverTest, VideoSenderCanSetParametersBeforeNegotiation) {
   params = video_rtp_sender_->GetParameters();
   EXPECT_TRUE(video_rtp_sender_->SetParameters(params).ok());
   EXPECT_EQ(params.encodings[0].max_bitrate_bps, 90000);
+
+  DestroyVideoRtpSender();
+}
+
+TEST_F(RtpSenderReceiverTest,
+       VideoSenderCanSetParametersAsyncBeforeNegotiation) {
+  video_rtp_sender_ =
+      VideoRtpSender::Create(worker_thread_, /*id=*/"", nullptr);
+
+  absl::optional<webrtc::RTCError> result;
+  RtpParameters params = video_rtp_sender_->GetParameters();
+  ASSERT_EQ(1u, params.encodings.size());
+  params.encodings[0].max_bitrate_bps = 90000;
+  video_rtp_sender_->SetParametersAsync(
+      params, [&result](webrtc::RTCError error) { result = error; });
+  run_loop_.Flush();
+  EXPECT_TRUE(result->ok());
+
+  params = video_rtp_sender_->GetParameters();
+  EXPECT_EQ(params.encodings[0].max_bitrate_bps, 90000);
+  video_rtp_sender_->SetParametersAsync(
+      params, [&result](webrtc::RTCError error) { result = error; });
+  run_loop_.Flush();
+  EXPECT_TRUE(result->ok());
 
   DestroyVideoRtpSender();
 }
@@ -1211,6 +1308,25 @@ TEST_F(RtpSenderReceiverTest,
   EXPECT_TRUE(video_rtp_sender_->SetParameters(params).ok());
   RTCError result = video_rtp_sender_->SetParameters(params);
   EXPECT_EQ(RTCErrorType::INVALID_STATE, result.type());
+
+  DestroyVideoRtpSender();
+}
+
+TEST_F(RtpSenderReceiverTest,
+       VideoSenderSetParametersAsyncInvalidatesTransactionId) {
+  CreateVideoRtpSender();
+
+  RtpParameters params = video_rtp_sender_->GetParameters();
+  EXPECT_EQ(1u, params.encodings.size());
+  absl::optional<webrtc::RTCError> result;
+  video_rtp_sender_->SetParametersAsync(
+      params, [&result](webrtc::RTCError error) { result = error; });
+  run_loop_.Flush();
+  EXPECT_TRUE(result->ok());
+  video_rtp_sender_->SetParametersAsync(
+      params, [&result](webrtc::RTCError error) { result = error; });
+  run_loop_.Flush();
+  EXPECT_EQ(RTCErrorType::INVALID_STATE, result->type());
 
   DestroyVideoRtpSender();
 }
@@ -1745,9 +1861,9 @@ TEST_F(RtpSenderReceiverTest,
   RtpParameters parameters = video_rtp_sender_->GetParameters();
   RtpParameters new_parameters = video_rtp_sender_->GetParametersInternal();
   new_parameters.encodings[0].active = false;
-  video_rtp_sender_->SetParametersInternal(new_parameters);
+  video_rtp_sender_->SetParametersInternal(new_parameters, nullptr, true);
   new_parameters.encodings[0].active = true;
-  video_rtp_sender_->SetParametersInternal(new_parameters);
+  video_rtp_sender_->SetParametersInternal(new_parameters, nullptr, true);
   parameters.encodings[0].active = false;
   EXPECT_TRUE(video_rtp_sender_->SetParameters(parameters).ok());
 }

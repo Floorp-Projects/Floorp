@@ -52,6 +52,7 @@ rtc_library("call_interfaces") {
     "../api:rtc_error",
     "../api:rtp_headers",
     "../api:rtp_parameters",
+    "../api:rtp_sender_interface",
     "../api:scoped_refptr",
     "../api:transport_api",
     "../api/adaptation:resource_adaptation_api",
@@ -80,6 +81,7 @@ rtc_library("call_interfaces") {
     "../rtc_base/network:sent_packet",
   ]
   absl_deps = [
+    "//third_party/abseil-cpp/absl/functional:any_invocable",
     "//third_party/abseil-cpp/absl/functional:bind_front",
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
@@ -387,6 +389,7 @@ rtc_library("video_stream_api") {
     "../api:frame_transformer_interface",
     "../api:rtp_headers",
     "../api:rtp_parameters",
+    "../api:rtp_sender_interface",
     "../api:scoped_refptr",
     "../api:transport_api",
     "../api/adaptation:resource_adaptation_api",
@@ -404,7 +407,10 @@ rtc_library("video_stream_api") {
     "../rtc_base:stringutils",
     "../video/config:encoder_config",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/functional:any_invocable",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("simulated_network") {

@@ -71,7 +71,9 @@ class MockVoiceMediaChannel : public VoiceMediaChannel {
               (const, override));
   MOCK_METHOD(webrtc::RTCError,
               SetRtpSendParameters,
-              (uint32_t ssrc, const webrtc::RtpParameters& parameters),
+              (uint32_t ssrc,
+               const webrtc::RtpParameters& parameters,
+               webrtc::SetParametersCallback callback),
               (override));
   MOCK_METHOD(
       void,

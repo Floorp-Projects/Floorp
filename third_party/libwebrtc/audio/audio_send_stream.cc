@@ -31,6 +31,7 @@
 #include "common_audio/vad/include/vad.h"
 #include "logging/rtc_event_log/events/rtc_event_audio_send_stream_config.h"
 #include "logging/rtc_event_log/rtc_stream_config.h"
+#include "media/base/media_channel.h"
 #include "modules/audio_coding/codecs/cng/audio_encoder_cng.h"
 #include "modules/audio_coding/codecs/red/audio_encoder_copy_red.h"
 #include "modules/audio_processing/include/audio_processing.h"
@@ -174,7 +175,7 @@ AudioSendStream::AudioSendStream(
   RTC_DCHECK(rtp_rtcp_module_);
 
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-  ConfigureStream(config, true);
+  ConfigureStream(config, true, nullptr);
   UpdateCachedTargetAudioBitrateConstraints();
 }
 
@@ -195,9 +196,10 @@ const webrtc::AudioSendStream::Config& AudioSendStream::GetConfig() const {
 }
 
 void AudioSendStream::Reconfigure(
-    const webrtc::AudioSendStream::Config& new_config) {
+    const webrtc::AudioSendStream::Config& new_config,
+    SetParametersCallback callback) {
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-  ConfigureStream(new_config, false);
+  ConfigureStream(new_config, false, std::move(callback));
 }
 
 AudioSendStream::ExtensionIds AudioSendStream::FindExtensionIds(
@@ -229,7 +231,8 @@ int AudioSendStream::TransportSeqNumId(const AudioSendStream::Config& config) {
 
 void AudioSendStream::ConfigureStream(
     const webrtc::AudioSendStream::Config& new_config,
-    bool first_time) {
+    bool first_time,
+    SetParametersCallback callback) {
   RTC_LOG(LS_INFO) << "AudioSendStream::ConfigureStream: "
                    << new_config.ToString();
   UpdateEventLogStreamConfig(event_log_, new_config,
@@ -327,6 +330,10 @@ void AudioSendStream::ConfigureStream(
 
   if (!ReconfigureSendCodec(new_config)) {
     RTC_LOG(LS_ERROR) << "Failed to set up send codec state.";
+
+    webrtc::InvokeSetParametersCallback(
+        callback, webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR,
+                                   "Failed to set up send codec state."));
   }
 
   // Set currently known overhead (used in ANA, opus only).
@@ -352,6 +359,8 @@ void AudioSendStream::ConfigureStream(
   if (!first_time) {
     UpdateCachedTargetAudioBitrateConstraints();
   }
+
+  webrtc::InvokeSetParametersCallback(callback, webrtc::RTCError::OK());
 }
 
 void AudioSendStream::Start() {

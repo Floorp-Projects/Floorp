@@ -301,11 +301,17 @@ void VideoSendStream::SetSource(
 }
 
 void VideoSendStream::ReconfigureVideoEncoder(VideoEncoderConfig config) {
+  ReconfigureVideoEncoder(std::move(config), nullptr);
+}
+
+void VideoSendStream::ReconfigureVideoEncoder(VideoEncoderConfig config,
+                                              SetParametersCallback callback) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   RTC_DCHECK_EQ(content_type_, config.content_type);
   video_stream_encoder_->ConfigureEncoder(
       std::move(config),
-      config_.rtp.max_packet_size - CalculateMaxHeaderSize(config_.rtp));
+      config_.rtp.max_packet_size - CalculateMaxHeaderSize(config_.rtp),
+      std::move(callback));
 }
 
 VideoSendStream::Stats VideoSendStream::GetStats() {

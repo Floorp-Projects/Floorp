@@ -12,6 +12,19 @@
 
 #include "media/base/rtp_utils.h"
 
+namespace webrtc {
+
+webrtc::RTCError InvokeSetParametersCallback(SetParametersCallback& callback,
+                                             RTCError error) {
+  if (callback) {
+    std::move(callback)(error);
+    callback = nullptr;
+  }
+  return error;
+}
+
+}  // namespace webrtc
+
 namespace cricket {
 using webrtc::FrameDecryptorInterface;
 using webrtc::FrameEncryptorInterface;
