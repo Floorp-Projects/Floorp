@@ -52,8 +52,12 @@ export class MigrationWizard extends HTMLElement {
               </div>
               <span class="dropdown-icon"></span>
             </button>
-            <div data-l10n-id="migration-wizard-selection-list" class="resource-selection-preamble deemphasized-text"></div>
-            <details class="resource-selection-details">
+            <div class="no-resources-found error-message">
+              <span class="error-icon" role="img"></span>
+              <div data-l10n-id="migration-wizard-import-browser-no-resources"></div>
+            </div>
+            <div data-l10n-id="migration-wizard-selection-list" class="resource-selection-preamble deemphasized-text hide-on-error"></div>
+            <details class="resource-selection-details hide-on-error">
               <summary>
                 <div class="selected-data-header" data-l10n-id="migration-all-available-data-label"></div>
                 <div class="selected-data deemphasized-text">&nbsp;</div>
@@ -150,7 +154,7 @@ export class MigrationWizard extends HTMLElement {
 
           <div name="page-no-browsers-found">
             <h1 data-l10n-id="migration-wizard-selection-header"></h1>
-            <div class="no-browsers-found">
+            <div class="no-browsers-found error-message">
               <span class="error-icon" role="img"></span>
               <div class="no-browsers-found-message" data-l10n-id="migration-wizard-import-browser-no-browsers"></div>
             </div>
@@ -360,6 +364,12 @@ export class MigrationWizard extends HTMLElement {
     let selectAll = this.#shadowRoot.querySelector("#select-all").control;
     selectAll.checked = true;
     this.#displaySelectedResources();
+    this.#browserProfileSelector.selectedPanelItem = panelItem;
+
+    let selectionPage = this.#shadowRoot.querySelector(
+      "div[name='page-selection']"
+    );
+    selectionPage.toggleAttribute("no-resources", !resourceTypes.length);
   }
 
   /**

@@ -242,9 +242,19 @@ details:not([open]) summary {
   display: flex;
 }
 
-.no-browsers-found {
+.error-message {
   display: flex;
   align-items: start;
+}
+
+.no-resources-found {
+  font-size: 0.84em;
+  margin-block-start: 16px;
+}
+
+div[name="page-selection"]:not([no-resources]) .no-resources-found,
+div[name="page-selection"][no-resources] .hide-on-error {
+  display: none;
 }
 
 /**
