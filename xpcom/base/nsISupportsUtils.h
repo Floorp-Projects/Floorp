@@ -10,6 +10,7 @@
 #include <type_traits>
 
 #include "nscore.h"
+#include "nsIOutputStream.h"
 #include "nsISupports.h"
 #include "nsError.h"
 #include "nsDebug.h"

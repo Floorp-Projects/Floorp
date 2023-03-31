@@ -33,5 +33,3 @@ LOCAL_INCLUDES += [
     "/widget",
     "/widget/android",
 ]
-
-REQUIRES_UNIFIED_BUILD = True

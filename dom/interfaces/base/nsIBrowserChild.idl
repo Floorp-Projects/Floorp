@@ -6,6 +6,10 @@
 #include "domstubs.idl"
 #include "nsIDroppedLinkHandler.idl"
 
+%{C++
+#include "mozilla/dom/BindingDeclarations.h"
+%}
+
 interface nsIWebBrowserChrome;
 
 webidl ContentFrameMessageManager;

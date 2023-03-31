@@ -24,6 +24,8 @@
 #include "nsDocShell.h"
 #include "nsWindowGfx.h"
 
+#include "shellapi.h"
+
 namespace mozilla::widget {
 
 using mozilla::LinkedListElement;

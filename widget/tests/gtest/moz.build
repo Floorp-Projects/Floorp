@@ -25,5 +25,3 @@ LOCAL_INCLUDES += [
 ]
 
 DisableStlWrapping()
-
-REQUIRES_UNIFIED_BUILD = True

@@ -14,9 +14,13 @@
 
 #include "nsIWeakReferenceUtils.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/StaticPtr.h"
+#include "mozilla/WindowsVersion.h"
 #include "mozilla/ThreadSafeWeakPtr.h"
 #include "mozilla/widget/WindowOcclusionState.h"
 #include "mozilla/widget/WinEventObserver.h"
+#include "Units.h"
+#include "nsThreadUtils.h"
 
 class nsBaseWidget;
 struct IVirtualDesktopManager;

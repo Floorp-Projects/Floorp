@@ -10,6 +10,7 @@
 #include "nsToolkit.h"
 #include "nsWidgetsCID.h"
 #include "nsIDragService.h"
+#include "nsServiceManagerUtils.h"
 #include "mozilla/dom/DataTransfer.h"
 
 /*

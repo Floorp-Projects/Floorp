@@ -7,6 +7,8 @@
 #include "GeckoProfiler.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Span.h"
+#include "mozilla/gfx/Point.h"
+#include "WinUtils.h"
 #include <algorithm>
 #include <type_traits>
 
@@ -163,7 +165,7 @@ class SharedImage {
 
   already_AddRefed<gfx::DrawTarget> CreateDrawTarget() {
     return gfx::Factory::CreateDrawTargetForData(
-        gfx::BackendType::CAIRO, mPixelData, IntSize(mWidth, mHeight),
+        gfx::BackendType::CAIRO, mPixelData, gfx::IntSize(mWidth, mHeight),
         GetStride(), gfx::SurfaceFormat::B8G8R8A8);
   }
 
@@ -287,8 +289,8 @@ class PresentableSharedImage {
           mDeviceContext, &srcPos, 0 /*colorKey*/, &bf, ULW_ALPHA);
     }
 
-    IntRect sharedImageRect{0, 0, mSharedImage.GetWidth(),
-                            mSharedImage.GetHeight()};
+    gfx::IntRect sharedImageRect{0, 0, mSharedImage.GetWidth(),
+                                 mSharedImage.GetHeight()};
 
     bool result = true;
 
@@ -298,9 +300,9 @@ class PresentableSharedImage {
     }
 
     for (auto& ipcDirtyRect : aDirtyRects) {
-      IntRect dirtyRect{ipcDirtyRect.x, ipcDirtyRect.y, ipcDirtyRect.width,
-                        ipcDirtyRect.height};
-      IntRect bltRect = dirtyRect.Intersect(sharedImageRect);
+      gfx::IntRect dirtyRect{ipcDirtyRect.x, ipcDirtyRect.y, ipcDirtyRect.width,
+                             ipcDirtyRect.height};
+      gfx::IntRect bltRect = dirtyRect.Intersect(sharedImageRect);
 
       if (!::BitBlt(windowDC, bltRect.x /*dstX*/, bltRect.y /*dstY*/,
                     bltRect.width, bltRect.height, mDeviceContext,

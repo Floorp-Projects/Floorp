@@ -11,7 +11,10 @@
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/WritingModes.h"
 
+#include "windef.h"
+#include "winnetwk.h"
 #include "npapi.h"
+
 #include "nsCOMPtr.h"
 #include "nsIWidget.h"
 #include "nsRect.h"

@@ -13,8 +13,8 @@
 #include "nsIServiceManager.h"
 #include "nsWindowsHelpers.h"
 #include "ipc/IPCMessageUtils.h"
-
-const char kPrinterListContractID[] = "@mozilla.org/gfx/printerlist;1";
+#include "chrome/common/ipc_channel.h"
+#include "mozilla/embedding/PPrintingTypes.h"
 
 using namespace mozilla::embedding;
 

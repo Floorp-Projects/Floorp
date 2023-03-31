@@ -14,6 +14,7 @@
 #include "nsCRT.h"
 #include "nsNetCID.h"
 #include "nsCExternalHandlerService.h"
+#include "nsComponentManagerUtils.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Preferences.h"
 #include "JumpListBuilder.h"

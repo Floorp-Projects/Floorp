@@ -36,6 +36,8 @@
 #include "mozilla/widget/ScreenManager.h"
 #include "mozilla/widget/Screen.h"
 
+#include "jsapi.h"
+
 #include "gfxPlatform.h"
 #include "gfxConfig.h"
 #include "DriverCrashGuard.h"
