@@ -7,12 +7,12 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#include "modules/desktop_capture/linux/wayland/xdg_desktop_portal_utils.h"
+#include "modules/portal/xdg_desktop_portal_utils.h"
 
 #include <string>
 
 #include "absl/strings/string_view.h"
-#include "modules/desktop_capture/linux/wayland/scoped_glib.h"
+#include "modules/portal/scoped_glib.h"
 #include "rtc_base/logging.h"
 
 namespace webrtc {

@@ -15,10 +15,10 @@
 
 #include <string>
 
-#include "modules/desktop_capture/linux/wayland/portal_request_response.h"
-#include "modules/desktop_capture/linux/wayland/scoped_glib.h"
-#include "modules/desktop_capture/linux/wayland/xdg_desktop_portal_utils.h"
-#include "modules/desktop_capture/linux/wayland/xdg_session_details.h"
+#include "modules/portal/portal_request_response.h"
+#include "modules/portal/scoped_glib.h"
+#include "modules/portal/xdg_desktop_portal_utils.h"
+#include "modules/portal/xdg_session_details.h"
 
 namespace webrtc {
 namespace xdg_portal {
