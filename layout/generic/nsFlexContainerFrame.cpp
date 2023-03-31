@@ -5471,20 +5471,22 @@ nsReflowStatus nsFlexContainerFrame::ReflowFlexItem(
   // Override flex item's main size.
   if (aItem.IsInlineAxisMainAxis()) {
     sizeOverrides.mStyleISize.emplace(aItem.StyleMainSize());
+    FLEX_LOGV(" Main size (inline-size) override: %d", aItem.MainSize());
   } else {
     sizeOverrides.mStyleBSize.emplace(aItem.StyleMainSize());
+    FLEX_LOGV(" Main size (block-size) override: %d", aItem.MainSize());
   }
-  FLEX_LOGV(" Main size override: %d", aItem.MainSize());
 
   // Override flex item's cross size if it was stretched in the cross axis (in
   // which case we're imposing a cross size).
   if (aItem.IsStretched()) {
     if (aItem.IsInlineAxisCrossAxis()) {
       sizeOverrides.mStyleISize.emplace(aItem.StyleCrossSize());
+      FLEX_LOGV(" Cross size (inline-size) override: %d", aItem.CrossSize());
     } else {
       sizeOverrides.mStyleBSize.emplace(aItem.StyleCrossSize());
+      FLEX_LOGV(" Cross size (block-size) override: %d", aItem.CrossSize());
     }
-    FLEX_LOGV(" Cross size override: %d", aItem.CrossSize());
   }
   if (sizeOverrides.mStyleBSize) {
     // We are overriding the block-size. For robustness, we always assume that
@@ -5518,6 +5520,9 @@ nsReflowStatus nsFlexContainerFrame::ReflowFlexItem(
   // NOTE: Be very careful about doing anything else with childReflowInput
   // after this point, because some of its methods (e.g. SetComputedWidth)
   // internally call InitResizeFlags and stomp on mVResize & mHResize.
+
+  FLEX_LOG("Reflowing flex item %p at its desired position %s", aItem.Frame(),
+           ToString(aFramePos).c_str());
 
   // CachedFlexItemData is stored in item's writing mode, so we pass
   // aChildReflowInput into ReflowOutput's constructor.
