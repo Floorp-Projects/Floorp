@@ -65,7 +65,7 @@ fun InactiveTabsList(
     inactiveTabs: List<TabSessionState>,
     expanded: Boolean,
     showAutoCloseDialog: Boolean,
-    onHeaderClick: () -> Unit,
+    onHeaderClick: (Boolean) -> Unit,
     onDeleteAllButtonClick: () -> Unit,
     onAutoCloseDismissClick: () -> Unit,
     onEnableAutoCloseClick: () -> Unit,
@@ -86,7 +86,7 @@ fun InactiveTabsList(
         ) {
             InactiveTabsHeader(
                 expanded = expanded,
-                onClick = onHeaderClick,
+                onClick = { onHeaderClick(!expanded) },
                 onDeleteAllClick = onDeleteAllButtonClick,
             )
 

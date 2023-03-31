@@ -18,6 +18,8 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
@@ -34,70 +36,68 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * Top-level UI for displaying a list of tabs.
  *
  * @param tabs The list of [TabSessionState] to display.
+ * @param displayTabsInGrid Whether the tabs should be displayed in a grid.
  * @param onTabClose Invoked when the user clicks to close a tab.
  * @param onTabMediaClick Invoked when the user interacts with a tab's media controls.
  * @param onTabClick Invoked when the user clicks on a tab.
  * @param onTabLongClick Invoked when the user long clicks a tab.
+ * @param header Optional layout to display before [tabs].
  */
+@Suppress("LongParameterList")
 @Composable
-fun TabList(
+fun TabLayout(
+    tabs: List<TabSessionState>,
+    displayTabsInGrid: Boolean,
+    onTabClose: (TabSessionState) -> Unit,
+    onTabMediaClick: (TabSessionState) -> Unit,
+    onTabClick: (TabSessionState) -> Unit,
+    onTabLongClick: (TabSessionState) -> Unit,
+    header: (@Composable () -> Unit)? = null,
+) {
+    if (displayTabsInGrid) {
+        TabGrid(
+            tabs = tabs,
+            onTabClose = onTabClose,
+            onTabMediaClick = onTabMediaClick,
+            onTabClick = onTabClick,
+            onTabLongClick = onTabLongClick,
+            header = header,
+        )
+    } else {
+        TabList(
+            tabs = tabs,
+            onTabClose = onTabClose,
+            onTabMediaClick = onTabMediaClick,
+            onTabClick = onTabClick,
+            onTabLongClick = onTabLongClick,
+            header = header,
+        )
+    }
+}
+
+@Composable
+private fun TabGrid(
     tabs: List<TabSessionState>,
     onTabClose: (TabSessionState) -> Unit,
     onTabMediaClick: (TabSessionState) -> Unit,
     onTabClick: (TabSessionState) -> Unit,
     onTabLongClick: (TabSessionState) -> Unit,
+    header: (@Composable () -> Unit)? = null,
 ) {
-    val tabListBottomPadding = dimensionResource(id = R.dimen.tab_tray_list_bottom_padding)
-    val state = rememberLazyListState()
-
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        state = state,
-    ) {
-        items(
-            items = tabs,
-            key = { tab -> tab.id },
-        ) { tab ->
-            TabListItem(
-                tab = tab,
-                onCloseClick = onTabClose,
-                onMediaClick = onTabMediaClick,
-                onClick = onTabClick,
-                onLongClick = onTabLongClick,
-            )
-        }
-
-        item {
-            Spacer(modifier = Modifier.height(tabListBottomPadding))
-        }
-    }
-}
-
-/**
- * Top-level UI for displaying a grid of tabs.
- *
- * @param tabs The list of [TabSessionState] to display.
- * @param onTabClose Invoked when the user clicks to close a tab.
- * @param onTabMediaClick Invoked when the user interacts with a tab's media controls.
- * @param onTabClick Invoked when the user clicks on a tab.
- * @param onTabLongClick Invoked when the user long clicks a tab.
- */
-@Composable
-fun TabGrid(
-    tabs: List<TabSessionState>,
-    onTabClose: (tab: TabSessionState) -> Unit,
-    onTabMediaClick: (tab: TabSessionState) -> Unit,
-    onTabClick: (tab: TabSessionState) -> Unit,
-    onTabLongClick: (tab: TabSessionState) -> Unit,
-) {
-    val tabListBottomPadding = dimensionResource(id = R.dimen.tab_tray_list_bottom_padding)
     val state = rememberLazyGridState()
+    val tabListBottomPadding = dimensionResource(id = R.dimen.tab_tray_list_bottom_padding)
 
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = MIN_COLUMN_WIDTH_DP.dp),
         modifier = Modifier.fillMaxSize(),
         state = state,
     ) {
+        header?.let {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                header()
+            }
+        }
+
         items(
             items = tabs,
             key = { tab -> tab.id },
@@ -117,18 +117,62 @@ fun TabGrid(
     }
 }
 
+@Composable
+private fun TabList(
+    tabs: List<TabSessionState>,
+    onTabClose: (TabSessionState) -> Unit,
+    onTabMediaClick: (TabSessionState) -> Unit,
+    onTabClick: (TabSessionState) -> Unit,
+    onTabLongClick: (TabSessionState) -> Unit,
+    header: (@Composable () -> Unit)? = null,
+) {
+    val state = rememberLazyListState()
+    val tabListBottomPadding = dimensionResource(id = R.dimen.tab_tray_list_bottom_padding)
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        state = state,
+    ) {
+        header?.let {
+            item {
+                header()
+            }
+        }
+
+        items(
+            items = tabs,
+            key = { tab -> tab.id },
+        ) { tab ->
+            TabListItem(
+                tab = tab,
+                onCloseClick = onTabClose,
+                onMediaClick = onTabMediaClick,
+                onClick = onTabClick,
+                onLongClick = onTabLongClick,
+            )
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(tabListBottomPadding))
+        }
+    }
+}
+
 @LightDarkPreview
 @Composable
 private fun TabListPreview() {
+    val tabs = remember { generateFakeTabsList().toMutableStateList() }
+
     FirefoxTheme {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(FirefoxTheme.colors.layer1),
         ) {
-            TabList(
-                tabs = generateFakeTabsList(),
-                onTabClose = {},
+            TabLayout(
+                tabs = tabs,
+                displayTabsInGrid = false,
+                onTabClose = tabs::remove,
                 onTabMediaClick = {},
                 onTabClick = {},
                 onTabLongClick = {},
@@ -140,15 +184,18 @@ private fun TabListPreview() {
 @LightDarkPreview
 @Composable
 private fun TabGridPreview() {
+    val tabs = remember { generateFakeTabsList().toMutableStateList() }
+
     FirefoxTheme {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(FirefoxTheme.colors.layer1),
         ) {
-            TabGrid(
-                tabs = generateFakeTabsList(),
-                onTabClose = {},
+            TabLayout(
+                tabs = tabs,
+                displayTabsInGrid = true,
+                onTabClose = tabs::remove,
                 onTabMediaClick = {},
                 onTabClick = {},
                 onTabLongClick = {},
@@ -157,13 +204,13 @@ private fun TabGridPreview() {
     }
 }
 
-private fun generateFakeTabsList(tabCount: Int = 10): List<TabSessionState> {
-    val fakeTab = TabSessionState(
-        id = "tabId",
-        content = ContentState(
-            url = "www.mozilla.com",
-        ),
-    )
-
-    return List(tabCount) { fakeTab }
-}
+private fun generateFakeTabsList(tabCount: Int = 10, isPrivate: Boolean = false): List<TabSessionState> =
+    List(tabCount) { index ->
+        TabSessionState(
+            id = "tabId$index-$isPrivate",
+            content = ContentState(
+                url = "www.mozilla.com",
+                private = isPrivate,
+            ),
+        )
+    }

@@ -11,7 +11,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -24,8 +29,12 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.lib.state.ext.observeAsComposableState
+import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.compose.Divider
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
+import org.mozilla.fenix.tabstray.ext.isNormalTab
+import org.mozilla.fenix.tabstray.inactivetabs.InactiveTabsList
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -38,18 +47,37 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param onTabClick Invoked when the user clicks on a tab.
  * @param onTabMultiSelectClick Invoked when the user clicks on a tab while in multi-select mode.
  * @param onTabLongClick Invoked when the user long clicks a tab.
+ * @param onInactiveTabsHeaderClick Invoked when the user clicks on the inactive tabs section header.
+ * @param onDeleteAllInactiveTabsClick Invoked when the user clicks on the delete all inactive tabs button.
+ * @param onInactiveTabsAutoCloseDialogShown Invoked when the inactive tabs auto close dialog
+ * is presented to the user.
+ * @param onInactiveTabAutoCloseDialogCloseButtonClick Invoked when the user clicks on the inactive
+ * tab auto close dialog's dismiss button.
+ * @param onEnableInactiveTabAutoCloseClick Invoked when the user clicks on the inactive tab auto
+ * close dialog's enable button.
+ * @param onInactiveTabClick Invoked when the user clicks on an inactive tab.
+ * @param onInactiveTabClose Invoked when the user clicks on an inactive tab's close button.
  */
 @OptIn(ExperimentalPagerApi::class, ExperimentalComposeUiApi::class)
 @Suppress("LongMethod", "LongParameterList")
 @Composable
 fun TabsTray(
+    appStore: AppStore,
     tabsTrayStore: TabsTrayStore,
     displayTabsInGrid: Boolean,
+    shouldShowInactiveTabsAutoCloseDialog: (Int) -> Boolean,
     onTabClose: (TabSessionState) -> Unit,
     onTabMediaClick: (TabSessionState) -> Unit,
     onTabClick: (TabSessionState) -> Unit,
     onTabMultiSelectClick: (TabSessionState) -> Unit,
     onTabLongClick: (TabSessionState) -> Unit,
+    onInactiveTabsHeaderClick: (Boolean) -> Unit,
+    onDeleteAllInactiveTabsClick: () -> Unit,
+    onInactiveTabsAutoCloseDialogShown: () -> Unit,
+    onInactiveTabAutoCloseDialogCloseButtonClick: () -> Unit,
+    onEnableInactiveTabAutoCloseClick: () -> Unit,
+    onInactiveTabClick: (TabSessionState) -> Unit,
+    onInactiveTabClose: (TabSessionState) -> Unit,
 ) {
     val multiselectMode = tabsTrayStore
         .observeAsComposableState { state -> state.mode }.value ?: TabsTrayState.Mode.Normal
@@ -57,6 +85,10 @@ fun TabsTray(
         .observeAsComposableState { state -> state.normalTabs }.value ?: emptyList()
     val privateTabs = tabsTrayStore
         .observeAsComposableState { state -> state.privateTabs }.value ?: emptyList()
+    val inactiveTabsExpanded = appStore
+        .observeAsComposableState { state -> state.inactiveTabsExpanded }.value ?: false
+    val inactiveTabs = tabsTrayStore
+        .observeAsComposableState { state -> state.inactiveTabs }.value ?: emptyList()
     val pagerState = rememberPagerState(initialPage = 0)
     val scope = rememberCoroutineScope()
     val isInMultiSelectMode = multiselectMode is TabsTrayState.Mode.Select
@@ -97,42 +129,56 @@ fun TabsTray(
             ) { position ->
                 when (Page.positionToPage(position)) {
                     Page.NormalTabs -> {
-                        if (displayTabsInGrid) {
-                            TabGrid(
-                                tabs = normalTabs,
-                                onTabClose = onTabClose,
-                                onTabMediaClick = onTabMediaClick,
-                                onTabClick = handleTabClick,
-                                onTabLongClick = onTabLongClick,
-                            )
+                        val showInactiveTabsAutoCloseDialog = shouldShowInactiveTabsAutoCloseDialog(inactiveTabs.size)
+                        var showAutoCloseDialog by remember { mutableStateOf(showInactiveTabsAutoCloseDialog) }
+
+                        val optionalInactiveTabsHeader: (@Composable () -> Unit)? = if (inactiveTabs.isEmpty()) {
+                            null
                         } else {
-                            TabList(
-                                tabs = normalTabs,
-                                onTabClose = onTabClose,
-                                onTabMediaClick = onTabMediaClick,
-                                onTabClick = handleTabClick,
-                                onTabLongClick = onTabLongClick,
-                            )
+                            {
+                                InactiveTabsList(
+                                    inactiveTabs = inactiveTabs,
+                                    expanded = inactiveTabsExpanded,
+                                    showAutoCloseDialog = showAutoCloseDialog,
+                                    onHeaderClick = onInactiveTabsHeaderClick,
+                                    onDeleteAllButtonClick = onDeleteAllInactiveTabsClick,
+                                    onAutoCloseDismissClick = {
+                                        onInactiveTabAutoCloseDialogCloseButtonClick()
+                                        showAutoCloseDialog = !showAutoCloseDialog
+                                    },
+                                    onEnableAutoCloseClick = {
+                                        onEnableInactiveTabAutoCloseClick()
+                                        showAutoCloseDialog = !showAutoCloseDialog
+                                    },
+                                    onTabClick = onInactiveTabClick,
+                                    onTabCloseClick = onInactiveTabClose,
+                                )
+                            }
                         }
+
+                        if (showInactiveTabsAutoCloseDialog) {
+                            onInactiveTabsAutoCloseDialogShown()
+                        }
+
+                        TabLayout(
+                            tabs = normalTabs,
+                            displayTabsInGrid = displayTabsInGrid,
+                            onTabClose = onTabClose,
+                            onTabMediaClick = onTabMediaClick,
+                            onTabClick = handleTabClick,
+                            onTabLongClick = onTabLongClick,
+                            header = optionalInactiveTabsHeader,
+                        )
                     }
                     Page.PrivateTabs -> {
-                        if (displayTabsInGrid) {
-                            TabGrid(
-                                tabs = privateTabs,
-                                onTabClose = onTabClose,
-                                onTabMediaClick = onTabMediaClick,
-                                onTabClick = handleTabClick,
-                                onTabLongClick = onTabLongClick,
-                            )
-                        } else {
-                            TabList(
-                                tabs = privateTabs,
-                                onTabClose = onTabClose,
-                                onTabMediaClick = onTabMediaClick,
-                                onTabClick = handleTabClick,
-                                onTabLongClick = onTabLongClick,
-                            )
-                        }
+                        TabLayout(
+                            tabs = privateTabs,
+                            displayTabsInGrid = displayTabsInGrid,
+                            onTabClose = onTabClose,
+                            onTabMediaClick = onTabMediaClick,
+                            onTabClick = handleTabClick,
+                            onTabLongClick = onTabLongClick,
+                        )
                     }
                     Page.SyncedTabs -> {
                         Text(
@@ -151,48 +197,96 @@ fun TabsTray(
 @LightDarkPreview
 @Composable
 private fun TabsTrayPreview() {
-    val store = TabsTrayStore(
-        initialState = TabsTrayState(
-            normalTabs = generateFakeTabsList(),
-            privateTabs = generateFakeTabsList(
-                tabCount = 7,
-                isPrivate = true,
-            ),
+    TabsTrayPreviewRoot(
+        displayTabsInGrid = false,
+        normalTabs = generateFakeTabsList(),
+        privateTabs = generateFakeTabsList(
+            tabCount = 7,
+            isPrivate = true,
         ),
     )
-
-    FirefoxTheme {
-        TabsTray(
-            tabsTrayStore = store,
-            displayTabsInGrid = false,
-            onTabClose = {},
-            onTabMediaClick = {},
-            onTabClick = {},
-            onTabMultiSelectClick = {},
-            onTabLongClick = {},
-        )
-    }
 }
 
 @LightDarkPreview
 @Composable
 private fun TabsTrayMultiSelectPreview() {
-    val store = TabsTrayStore(
+    TabsTrayPreviewRoot(
+        mode = TabsTrayState.Mode.Select(setOf()),
+        normalTabs = generateFakeTabsList(),
+    )
+}
+
+@LightDarkPreview
+@Composable
+private fun TabsTrayInactiveTabsPreview() {
+    TabsTrayPreviewRoot(
+        normalTabs = generateFakeTabsList(tabCount = 3),
+        inactiveTabs = generateFakeTabsList(),
+        inactiveTabsExpanded = true,
+        showInactiveTabsAutoCloseDialog = true,
+    )
+}
+
+@Composable
+private fun TabsTrayPreviewRoot(
+    displayTabsInGrid: Boolean = true,
+    mode: TabsTrayState.Mode = TabsTrayState.Mode.Normal,
+    normalTabs: List<TabSessionState> = emptyList(),
+    inactiveTabs: List<TabSessionState> = emptyList(),
+    privateTabs: List<TabSessionState> = emptyList(),
+    inactiveTabsExpanded: Boolean = false,
+    showInactiveTabsAutoCloseDialog: Boolean = false,
+) {
+    val normalTabsState = remember { normalTabs.toMutableStateList() }
+    val inactiveTabsState = remember { inactiveTabs.toMutableStateList() }
+    val privateTabsState = remember { privateTabs.toMutableStateList() }
+    var inactiveTabsExpandedState by remember { mutableStateOf(inactiveTabsExpanded) }
+    var showInactiveTabsAutoCloseDialogState by remember { mutableStateOf(showInactiveTabsAutoCloseDialog) }
+
+    val appStore = AppStore(
+        initialState = AppState(
+            inactiveTabsExpanded = inactiveTabsExpandedState,
+        ),
+    )
+    val tabsTrayStore = TabsTrayStore(
         initialState = TabsTrayState(
-            mode = TabsTrayState.Mode.Select(setOf()),
-            normalTabs = generateFakeTabsList(),
+            mode = mode,
+            inactiveTabs = inactiveTabsState,
+            normalTabs = normalTabsState,
+            privateTabs = privateTabs,
         ),
     )
 
     FirefoxTheme {
         TabsTray(
-            tabsTrayStore = store,
-            displayTabsInGrid = true,
-            onTabClose = {},
+            appStore = appStore,
+            tabsTrayStore = tabsTrayStore,
+            displayTabsInGrid = displayTabsInGrid,
+            shouldShowInactiveTabsAutoCloseDialog = { true },
+            onTabClose = { tab ->
+                if (tab.isNormalTab()) {
+                    normalTabsState.remove(tab)
+                } else {
+                    privateTabsState.remove(tab)
+                }
+            },
             onTabMediaClick = {},
             onTabClick = {},
             onTabMultiSelectClick = {},
             onTabLongClick = {},
+            onInactiveTabsHeaderClick = {
+                inactiveTabsExpandedState = !inactiveTabsExpandedState
+            },
+            onDeleteAllInactiveTabsClick = inactiveTabsState::clear,
+            onInactiveTabsAutoCloseDialogShown = {},
+            onInactiveTabAutoCloseDialogCloseButtonClick = {
+                showInactiveTabsAutoCloseDialogState = !showInactiveTabsAutoCloseDialogState
+            },
+            onEnableInactiveTabAutoCloseClick = {
+                showInactiveTabsAutoCloseDialogState = !showInactiveTabsAutoCloseDialogState
+            },
+            onInactiveTabClick = {},
+            onInactiveTabClose = inactiveTabsState::remove,
         )
     }
 }
