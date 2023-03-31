@@ -703,10 +703,10 @@ ios_builder, ios_try_job = normal_builder_factory(
 
 # Actual builder configuration:
 
-android_builder("Android32 (M Nexus5X)(dbg)", "Android|arm|dbg")
+android_builder("Android32 (dbg)", "Android|arm|dbg")
 android_try_job("android_compile_arm_dbg", cq = None)
 android_try_job("android_arm_dbg")
-android_builder("Android32 (M Nexus5X)", "Android|arm|rel")
+android_builder("Android32", "Android|arm|rel")
 android_try_job("android_arm_rel")
 android_builder("Android32 Builder arm", "Android|arm|size", perf_cat = "Android|arm|Builder|", prioritized = True)
 android_try_job("android_compile_arm_rel")
@@ -716,7 +716,7 @@ perf_builder("Perf Android32 (O Pixel2)", "Android|arm|Tester|O Pixel2", trigger
 perf_builder("Perf Android32 (R Pixel5)", "Android|arm|Tester|R Pixel5", triggered_by = ["Android32 Builder arm"])
 android_try_job("android_compile_arm64_dbg", cq = None)
 android_try_job("android_arm64_dbg", cq = None)
-android_builder("Android64 (M Nexus5X)", "Android|arm64|rel")
+android_builder("Android64", "Android|arm64|rel")
 android_try_job("android_arm64_rel")
 android_builder("Android64 Builder arm64", "Android|arm64|size", perf_cat = "Android|arm64|Builder|", prioritized = True)
 perf_builder("Perf Android64 (M Nexus5X)", "Android|arm64|Tester|M Nexus5X", triggered_by = ["Android64 Builder arm64"])

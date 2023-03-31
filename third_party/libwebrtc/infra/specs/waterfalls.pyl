@@ -11,7 +11,7 @@
     'name': 'client.webrtc',
     'mixins': [],
     'machines': {
-      'Android32 (M Nexus5X)': {
+      'Android32': {
         'mixins': [
           'walleye', 'android-devices', 'has_native_resultdb_integration',
           'chromium-tester-service-account'
@@ -21,7 +21,7 @@
           'junit_tests': 'android_junit_tests',
         },
       },
-      'Android32 (M Nexus5X)(dbg)': {
+      'Android32 (dbg)': {
         'mixins': [
           'walleye', 'android-devices', 'has_native_resultdb_integration',
           'chromium-tester-service-account'
@@ -43,7 +43,7 @@
       'Android32 Builder arm': {},
       'Android32 Builder x86': {},
       'Android32 Builder x86 (dbg)': {},
-      'Android64 (M Nexus5X)': {
+      'Android64': {
         'mixins': [
           'walleye', 'android-devices', 'has_native_resultdb_integration',
           'chromium-tester-service-account'
@@ -53,7 +53,7 @@
           'junit_tests': 'android_junit_tests',
         },
       },
-      'Android64 (M Nexus5X)(dbg)': {
+      'Android64 (dbg)': {
         'mixins': [
           'walleye', 'android-devices', 'has_native_resultdb_integration',
           'chromium-tester-service-account'
