@@ -80,6 +80,12 @@ pub struct Extension {
     pub hmac_secret: Option<HmacSecretResponse>,
 }
 
+impl Extension {
+    fn has_some(&self) -> bool {
+        self.pin_min_length.is_some() || self.hmac_secret.is_some()
+    }
+}
+
 fn parse_extensions(input: &[u8]) -> IResult<&[u8], Extension, NomError<&[u8]>> {
     serde_to_nom(input)
 }
@@ -284,21 +290,45 @@ impl<'de> Deserialize<'de> for AuthenticatorData {
 }
 
 impl AuthenticatorData {
+    // see https://www.w3.org/TR/webauthn-2/#sctn-authenticator-data
+    // Authenticator Data
+    //                   Name Length (in bytes)
+    //               rpIdHash 32
+    //                  flags 1
+    //              signCount 4
+    // attestedCredentialData variable (if present)
+    //             extensions variable (if present)
     pub fn to_vec(&self) -> Result<Vec<u8>, AuthenticatorError> {
         let mut data = Vec::new();
-        data.extend(self.rp_id_hash.0);
-        data.extend([self.flags.bits()]);
-        data.extend(self.counter.to_be_bytes());
+        data.extend(self.rp_id_hash.0); // (1) "rpIDHash", len=32
+        data.extend([self.flags.bits()]); // (2) "flags", len=1 (u8)
+        data.extend(self.counter.to_be_bytes()); // (3) "signCount", len=4, 32-bit unsigned big-endian integer.
 
-        // TODO(baloo): need to yield credential_data and extensions, but that dependends on flags,
-        //              should we consider another type system?
+        // TODO(MS): Here flags=AT needs to be set, but this data comes from the security device
+        //           and we (probably?) need to just trust the device to set the right flags
         if let Some(cred) = &self.credential_data {
-            data.extend(cred.aaguid.0);
-            data.extend((cred.credential_id.len() as u16).to_be_bytes());
-            data.extend(&cred.credential_id);
+            // see https://www.w3.org/TR/webauthn-2/#sctn-attested-credential-data
+            // Attested Credential Data
+            //                Name Length (in bytes)
+            //              aaguid 16
+            //  credentialIdLength 2
+            //        credentialId L
+            // credentialPublicKey variable
+            data.extend(cred.aaguid.0); // (1) "aaguid", len=16
+            data.extend((cred.credential_id.len() as u16).to_be_bytes()); // (2) "credentialIdLength", len=2, 16-bit unsigned big-endian integer
+            data.extend(&cred.credential_id); // (3) "credentialId", len= see (2)
             data.extend(
+                // (4) "credentialPublicKey", len=variable
                 &serde_cbor::to_vec(&cred.credential_public_key)
                     .map_err(CommandError::Serializing)?,
+            );
+        }
+        // TODO(MS): Here flags=ED needs to be set, but this data comes from the security device
+        //           and we (probably?) need to just trust the device to set the right flags
+        if self.extensions.has_some() {
+            data.extend(
+                // (5) "extensions", len=variable
+                &serde_cbor::to_vec(&self.extensions).map_err(CommandError::Serializing)?,
             );
         }
         Ok(data)
@@ -382,35 +412,44 @@ pub enum AttestationStatement {
 // }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
-// See https://www.w3.org/TR/webauthn/#fido-u2f-attestation
+// See https://www.w3.org/TR/webauthn-2/#sctn-fido-u2f-attestation
+// u2fStmtFormat = {
+//                     x5c: [ attestnCert: bytes ],
+//                     sig: bytes
+//                 }
 pub struct AttestationStatementFidoU2F {
-    pub sig: Signature,
-
-    #[serde(rename = "x5c")]
     /// Certificate chain in x509 format
-    pub attestation_cert: Vec<AttestationCertificate>,
+    #[serde(rename = "x5c")]
+    pub attestation_cert: Vec<AttestationCertificate>, // (1) "x5c"
+    pub sig: Signature, // (2) "sig"
 }
 
-#[allow(dead_code)] // TODO(MS): Remove me, once we can parse AttestationStatements and use this function
 impl AttestationStatementFidoU2F {
     pub fn new(cert: &[u8], signature: &[u8]) -> Self {
         AttestationStatementFidoU2F {
-            sig: Signature(ByteBuf::from(signature)),
             attestation_cert: vec![AttestationCertificate(Vec::from(cert))],
+            sig: Signature(ByteBuf::from(signature)),
         }
     }
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
-// TODO(baloo): there is a couple other options than x5c:
-//              https://www.w3.org/TR/webauthn/#packed-attestation
+// https://www.w3.org/TR/webauthn-2/#sctn-packed-attestation
+// packedStmtFormat = {
+//                       alg: COSEAlgorithmIdentifier,
+//                       sig: bytes,
+//                       x5c: [ attestnCert: bytes, * (caCert: bytes) ]
+//                   } //
+//                   {
+//                       alg: COSEAlgorithmIdentifier
+//                       sig: bytes,
+//                   }
 pub struct AttestationStatementPacked {
-    pub alg: COSEAlgorithm,
-    pub sig: Signature,
-
-    #[serde(rename = "x5c")]
+    pub alg: COSEAlgorithm, // (1) "alg"
+    pub sig: Signature,     // (2) "sig"
     /// Certificate chain in x509 format
-    pub attestation_cert: Vec<AttestationCertificate>,
+    #[serde(rename = "x5c", skip_serializing_if = "Vec::is_empty", default)]
+    pub attestation_cert: Vec<AttestationCertificate>, // (3) "x5c"
 }
 
 #[derive(Debug, Deserialize, PartialEq, Eq)]
@@ -523,31 +562,32 @@ impl Serialize for AttestationObject {
         let map_len = 3;
         let mut map = serializer.serialize_map(Some(map_len))?;
 
+        // CTAP2 canonical CBOR order for these entries is ("fmt", "attStmt", "authData")
+        // as strings are sorted by length and then lexically.
+        // see https://www.w3.org/TR/webauthn-2/#attestation-object
+        match self.att_statement {
+            AttestationStatement::None => {
+                // Even with Att None, an empty map is returned in the cbor!
+                map.serialize_entry(&"fmt", &"none")?; // (1) "fmt"
+                let v = serde_cbor::Value::Map(std::collections::BTreeMap::new());
+                map.serialize_entry(&"attStmt", &v)?; // (2) "attStmt"
+            }
+            AttestationStatement::Packed(ref v) => {
+                map.serialize_entry(&"fmt", &"packed")?; // (1) "fmt"
+                map.serialize_entry(&"attStmt", v)?; // (2) "attStmt"
+            }
+            AttestationStatement::FidoU2F(ref v) => {
+                map.serialize_entry(&"fmt", &"fido-u2f")?; // (1) "fmt"
+                map.serialize_entry(&"attStmt", v)?; // (2) "attStmt"
+            }
+        }
+
         let auth_data = self
             .auth_data
             .to_vec()
             .map(serde_cbor::Value::Bytes)
             .map_err(|_| SerError::custom("Failed to serialize auth_data"))?;
-
-        // CTAP2 canonical CBOR order for these entries is ("fmt", "attStmt", "authData")
-        // as strings are sorted by length and then lexically.
-        match self.att_statement {
-            AttestationStatement::None => {
-                // Even with Att None, an empty map is returned in the cbor!
-                map.serialize_entry(&"fmt", &"none")?;
-                let v = serde_cbor::Value::Map(std::collections::BTreeMap::new());
-                map.serialize_entry(&"attStmt", &v)?;
-            }
-            AttestationStatement::Packed(ref v) => {
-                map.serialize_entry(&"fmt", &"packed")?;
-                map.serialize_entry(&"attStmt", v)?;
-            }
-            AttestationStatement::FidoU2F(ref v) => {
-                map.serialize_entry(&"fmt", &"fido-u2f")?;
-                map.serialize_entry(&"attStmt", v)?;
-            }
-        }
-        map.serialize_entry(&"authData", &auth_data)?;
+        map.serialize_entry(&"authData", &auth_data)?; // (3) "authData"
         map.end()
     }
 }

@@ -1,13 +1,13 @@
 use crate::consts::HIDCmd;
-use crate::crypto::ECDHSecret;
+use crate::crypto::SharedSecret;
 
-use crate::ctap2::commands::client_pin::{GetKeyAgreement, PinAuth};
+use crate::ctap2::commands::client_pin::GetKeyAgreement;
 use crate::ctap2::commands::get_info::{AuthenticatorInfo, GetInfo};
 use crate::ctap2::commands::get_version::GetVersion;
 use crate::ctap2::commands::make_credentials::dummy_make_credentials_cmd;
 use crate::ctap2::commands::selection::Selection;
 use crate::ctap2::commands::{
-    CommandError, PinAuthCommand, Request, RequestCtap1, RequestCtap2, Retryable, StatusCode,
+    CommandError, Request, RequestCtap1, RequestCtap2, Retryable, StatusCode,
 };
 use crate::transport::device_selector::BlinkResult;
 use crate::transport::errors::{ApduErrorStatus, HIDError};
@@ -208,16 +208,12 @@ pub trait FidoDevice: HIDDevice {
         } else {
             // We need to fake a blink-request, because FIDO2.0 forgot to specify one
             // See: https://fidoalliance.org/specs/fido-v2.0-ps-20190130/fido-client-to-authenticator-protocol-v2.0-ps-20190130.html#using-pinToken-in-authenticatorMakeCredential
-            let mut msg = match dummy_make_credentials_cmd() {
+            let msg = match dummy_make_credentials_cmd() {
                 Ok(m) => m,
                 Err(_) => {
                     return BlinkResult::Cancelled;
                 }
             };
-            // Using a zero-length pinAuth will trigger the device to blink
-            // For CTAP1, this gets ignored anyways and we do a 'normal' register
-            // command, which also just blinks.
-            msg.set_pin_auth(Some(PinAuth::empty_pin_auth()), None);
             info!("Trying to blink: {:?}", &msg);
             // We don't care about the Ok-value, just if it is Ok or not
             self.send_msg_cancellable(&msg, keep_alive).map(|_| ())
@@ -241,8 +237,8 @@ pub trait FidoDevice: HIDDevice {
                 debug!("Device {:?} got cancelled", &self);
                 BlinkResult::Cancelled
             }
-            // Something unexpected happened, so we assume this device is not usable and interpreting
-            // this equivalent to being cancelled.
+            // Something unexpected happened, so we assume this device is not usable and
+            // interpreting this equivalent to being cancelled.
             e => {
                 info!("Device {:?} received unexpected answer, so we assume an error occurred and we are NOT using this device (assuming the request was cancelled): {:?}", &self, e);
                 BlinkResult::Cancelled
@@ -250,7 +246,7 @@ pub trait FidoDevice: HIDDevice {
         }
     }
 
-    fn establish_shared_secret(&mut self) -> Result<(ECDHSecret, AuthenticatorInfo), HIDError> {
+    fn establish_shared_secret(&mut self) -> Result<(SharedSecret, AuthenticatorInfo), HIDError> {
         if !self.supports_ctap2() {
             return Err(HIDError::UnsupportedCommand);
         }

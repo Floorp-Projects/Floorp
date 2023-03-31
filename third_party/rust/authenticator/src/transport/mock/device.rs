@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 use crate::consts::CID_BROADCAST;
-use crate::crypto::ECDHSecret;
+use crate::crypto::SharedSecret;
 use crate::ctap2::commands::get_info::AuthenticatorInfo;
 use crate::transport::device_selector::DeviceCommand;
 use crate::transport::{hid::HIDDevice, FidoDevice, HIDError};
@@ -145,10 +145,10 @@ impl HIDDevice for Device {
         self.authenticator_info = Some(authenticator_info);
     }
 
-    fn set_shared_secret(&mut self, _: ECDHSecret) {
+    fn set_shared_secret(&mut self, _: SharedSecret) {
         // Nothing
     }
-    fn get_shared_secret(&self) -> std::option::Option<&ECDHSecret> {
+    fn get_shared_secret(&self) -> std::option::Option<&SharedSecret> {
         None
     }
 
