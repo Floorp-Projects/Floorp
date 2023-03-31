@@ -12,8 +12,10 @@
 
   --organizer-hover-background: SelectedItem;
   --organizer-hover-color: SelectedItemText;
-  --organizer-selected-background: SelectedItem;
-  --organizer-selected-color: SelectedItemText;
+  --organizer-selected-background: -moz-cellhighlight;
+  --organizer-selected-color: -moz-cellhighlighttext;
+  --organizer-focus-selected-background: SelectedItem;
+  --organizer-focus-selected-color: SelectedItemText;
   --organizer-outline-color: SelectedItem;
 
   --organizer-separator-color: ThreeDDarkShadow;
@@ -40,6 +42,8 @@
     --organizer-hover-color: var(--organizer-color);
     --organizer-selected-background: rgb(207,207,216);
     --organizer-selected-color: var(--organizer-color);
+    --organizer-focus-selected-background: rgb(0,97,224);
+    --organizer-focus-selected-color: rgb(251,251,254);
     --organizer-outline-color: rgb(0,97,224);
 
     --organizer-separator-color: var(--organizer-pane-field-border-color);
@@ -64,6 +68,8 @@
 
       --organizer-hover-background: rgb(82,82,94);
       --organizer-selected-background: rgb(91,91,102);
+      --organizer-focus-selected-background: color-mix(in srgb, rgb(0,221,255) 80%, currentColor);
+      --organizer-focus-selected-color: rgb(43,42,51);
       --organizer-outline-color: rgb(0,221,255);
 
       --organizer-toolbar-field-background: rgb(28,27,34);
@@ -251,6 +257,11 @@ treechildren::-moz-tree-row(selected) {
   border: 1px solid transparent;
 }
 
+treechildren::-moz-tree-row(selected, focus) {
+  background-color: var(--organizer-focus-selected-background);
+  color: var(--organizer-focus-selected-color);
+}
+
 treechildren::-moz-tree-image(hover),
 treechildren::-moz-tree-twisty(hover),
 treechildren::-moz-tree-cell-text(hover) {
@@ -261,6 +272,12 @@ treechildren::-moz-tree-image(selected),
 treechildren::-moz-tree-twisty(selected),
 treechildren::-moz-tree-cell-text(selected) {
   color: var(--organizer-selected-color);
+}
+
+treechildren::-moz-tree-image(selected, focus),
+treechildren::-moz-tree-twisty(selected, focus),
+treechildren::-moz-tree-cell-text(selected, focus) {
+  color: var(--organizer-focus-selected-color);
 }
 
 treechildren::-moz-tree-separator {
@@ -274,6 +291,10 @@ treechildren::-moz-tree-separator(hover) {
 
 treechildren::-moz-tree-separator(selected) {
   border-color: var(--organizer-selected-color);
+}
+
+treechildren::-moz-tree-separator(selected, focus) {
+  border-color: var(--organizer-focus-selected-color);
 }
 
 /* Info box */
