@@ -136,8 +136,10 @@ class PeerConnectionFactory : public PeerConnectionFactoryInterface {
   bool IsTrialEnabled(absl::string_view key) const;
 
   std::unique_ptr<RtcEventLog> CreateRtcEventLog_w();
-  std::unique_ptr<Call> CreateCall_w(RtcEventLog* event_log,
-                                     const FieldTrialsView& field_trials);
+  std::unique_ptr<Call> CreateCall_w(
+      RtcEventLog* event_log,
+      const FieldTrialsView& field_trials,
+      absl::optional<TimeDelta> pacer_burst_interval);
 
   rtc::scoped_refptr<ConnectionContext> context_;
   PeerConnectionFactoryInterface::Options options_

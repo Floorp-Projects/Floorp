@@ -343,6 +343,7 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
     webrtc::VpnPreference vpn_preference;
     std::vector<rtc::NetworkMask> vpn_list;
     PortAllocatorConfig port_allocator_config;
+    absl::optional<TimeDelta> pacer_burst_interval;
   };
   static_assert(sizeof(stuff_being_tested_for_equality) == sizeof(*this),
                 "Did you add something to RTCConfiguration and forget to "
@@ -409,7 +410,8 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
          vpn_preference == o.vpn_preference && vpn_list == o.vpn_list &&
          port_allocator_config.min_port == o.port_allocator_config.min_port &&
          port_allocator_config.max_port == o.port_allocator_config.max_port &&
-         port_allocator_config.flags == o.port_allocator_config.flags;
+         port_allocator_config.flags == o.port_allocator_config.flags &&
+         pacer_burst_interval == o.pacer_burst_interval;
 }
 
 bool PeerConnectionInterface::RTCConfiguration::operator!=(
