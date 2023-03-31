@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "LoginReputationIPC.h"
+#include "LoginReputation.h"
 #include "mozilla/Components.h"
 #include "mozilla/Unused.h"
 
