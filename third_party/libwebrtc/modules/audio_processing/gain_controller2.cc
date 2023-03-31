@@ -67,7 +67,7 @@ std::unique_ptr<InputVolumeController> CreateInputVolumeController(
     int num_channels) {
   if (enabled) {
     return std::make_unique<InputVolumeController>(
-        num_channels, InputVolumeController::Config{.enabled = enabled});
+        num_channels, InputVolumeController::Config());
   }
   return nullptr;
 }
@@ -170,12 +170,17 @@ void GainController2::Process(absl::optional<float> speech_probability,
   }
 
   if (input_volume_controller_) {
+    // TODO(bugs.webrtc.org/7494): A temprorary check, remove once not needed.
+    RTC_DCHECK(adaptive_digital_controller_);
     absl::optional<float> speech_level;
     if (adaptive_digital_controller_) {
       speech_level =
           adaptive_digital_controller_->GetSpeechLevelDbfsIfConfident();
     }
-    input_volume_controller_->Process(speech_probability, speech_level);
+    RTC_DCHECK(speech_probability.has_value());
+    if (speech_probability.has_value()) {
+      input_volume_controller_->Process(*speech_probability, speech_level);
+    }
   }
 
   fixed_gain_applier_.ApplyGain(float_frame);

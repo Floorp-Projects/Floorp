@@ -35,7 +35,6 @@ class InputVolumeController final {
  public:
   // Config for the constructor.
   struct Config {
-    bool enabled = false;
     // Lowest input volume level that will be applied in response to clipping.
     int clipped_level_min = 70;
     // Amount input volume level is lowered with every clipping event. Limited
@@ -98,7 +97,7 @@ class InputVolumeController final {
   // `speech_level_dbfs`. Must be called after `AnalyzePreProcess()`. The value
   // of `speech_probability` is expected to be in the range [0.0f, 1.0f] and
   // `speech_level_dbfs` in the the range [-90.f, 30.0f].
-  void Process(absl::optional<float> speech_probability,
+  void Process(float speech_probability,
                absl::optional<float> speech_level_dbfs);
 
   // TODO(bugs.webrtc.org/7494): Return recommended input volume and remove
@@ -141,8 +140,6 @@ class InputVolumeController final {
                            ClippingParametersVerified);
 
   void AggregateChannelLevels();
-
-  const bool analog_controller_enabled_;
 
   const int num_capture_channels_;
 
@@ -213,8 +210,7 @@ class MonoInputVolumeController {
   // whether `rms_error_dbfs` is positive or negative. Updates are only allowed
   // for active speech segments and when `rms_error_dbfs` is not empty. Must be
   // called after `HandleClipping()`.
-  void Process(absl::optional<int> rms_error_dbfs,
-               absl::optional<float> speech_probability);
+  void Process(absl::optional<int> rms_error_dbfs, float speech_probability);
 
   // Returns the recommended input volume. Must be called after `Process()`.
   int recommended_analog_level() const { return recommended_input_volume_; }

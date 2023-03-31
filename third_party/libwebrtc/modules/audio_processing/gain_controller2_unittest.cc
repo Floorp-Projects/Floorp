@@ -159,6 +159,7 @@ TEST(GainController2,
 
   Agc2Config config;
   config.input_volume_controller.enabled = false;
+
   auto gain_controller =
       std::make_unique<GainController2>(config, kSampleRateHz, kNumChannels,
                                         /*use_internal_vad=*/true);
@@ -189,6 +190,8 @@ TEST(GainController2,
 
   Agc2Config config;
   config.input_volume_controller.enabled = true;
+  config.adaptive_digital.enabled = true;
+
   auto gain_controller =
       std::make_unique<GainController2>(config, kSampleRateHz, kNumChannels,
                                         /*use_internal_vad=*/true);
