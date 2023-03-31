@@ -156,6 +156,11 @@ class PacingController {
 
   bool IsProbing() const;
 
+  // Note: Intended for debugging purposes only, will be removed.
+  // Sets the number of iterations of the main loop in `ProcessPackets()` that
+  // is considered erroneous to exceed.
+  void SetCircuitBreakerThreshold(int num_iterations);
+
  private:
   TimeDelta UpdateTimeAndGetElapsed(Timestamp now);
   bool ShouldSendKeepalive(Timestamp now) const;
@@ -232,6 +237,8 @@ class PacingController {
   TimeDelta queue_time_limit_;
   bool account_for_audio_;
   bool include_overhead_;
+
+  int circuit_breaker_threshold_;
 };
 }  // namespace webrtc
 

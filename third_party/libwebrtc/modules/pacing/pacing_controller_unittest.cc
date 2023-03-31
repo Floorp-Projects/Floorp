@@ -2115,5 +2115,31 @@ TEST_F(PacingControllerTest, BudgetDoesNotAffectRetransmissionInsTrial) {
   pacer.ProcessPackets();
 }
 
+TEST_F(PacingControllerTest, AbortsAfterReachingCircuitBreakLimit) {
+  const DataSize kPacketSize = DataSize::Bytes(1000);
+
+  EXPECT_CALL(callback_, SendPadding).Times(0);
+  PacingController pacer(&clock_, &callback_, trials_);
+  pacer.SetPacingRates(kTargetRate, /*padding_rate=*/DataRate::Zero());
+
+  // Set the circuit breaker to abort after one iteration of the main
+  // sending loop.
+  pacer.SetCircuitBreakerThreshold(1);
+  EXPECT_CALL(callback_, SendPacket).Times(1);
+
+  // Send two packets.
+  pacer.EnqueuePacket(BuildPacket(RtpPacketMediaType::kVideo, kVideoSsrc,
+                                  /*sequence_number=*/1,
+                                  /*capture_time=*/1, kPacketSize.bytes()));
+  pacer.EnqueuePacket(BuildPacket(RtpPacketMediaType::kVideo, kVideoSsrc,
+                                  /*sequence_number=*/2,
+                                  /*capture_time=*/2, kPacketSize.bytes()));
+
+  // Advance time to way past where both should be eligible for sending.
+  clock_.AdvanceTime(TimeDelta::Seconds(1));
+
+  pacer.ProcessPackets();
+}
+
 }  // namespace
 }  // namespace webrtc
