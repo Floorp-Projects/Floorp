@@ -16,7 +16,7 @@ const kSafe = 1;
 const kUnsafe = 2;
 const kInvalid = 3;
 
-/* eslint-disable prettier/prettier */
+// prettier-ignore
 let testCases = [
   // No IDN
   ["www.google.com", "www.google.com", kSafe],
@@ -1012,7 +1012,6 @@ let testCases = [
   //    Chromium's IDN encoder/decoder to generate test files loses an
   //    advantage of having Python's IDN encode/decode the tests.
 ];
-/* eslint-enable prettier/prettier */
 
 function checkEquals(a, b, message, expectedFail) {
   if (!expectedFail) {

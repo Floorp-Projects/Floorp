@@ -41,7 +41,6 @@ export class Dropdown extends Component {
 
   renderButton() {
     return (
-      // eslint-disable-next-line prettier/prettier
       <button className="dropdown-button" onClick={this.toggleDropdown}>
         {this.props.icon}
       </button>

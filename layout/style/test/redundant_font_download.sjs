@@ -7,7 +7,7 @@ const BinaryOutputStream = Components.Constructor(
 );
 
 // this is simply a hex dump of a red square .PNG image
-/* eslint-disable prettier/prettier */
+// prettier-ignore
 const RED_SQUARE =
   [
     0x89,  0x50,  0x4E,  0x47,  0x0D,  0x0A,  0x1A,  0x0A,  0x00,  0x00,
@@ -22,7 +22,7 @@ const RED_SQUARE =
     0xA3,  0xC4,  0x01,  0x3F,  0x58,  0x1D,  0xEF,  0x27,  0x00,  0x00,
     0x00,  0x00,  0x49,  0x45,  0x4E,  0x44,  0xAE,  0x42,  0x60,  0x82
   ];
-/* eslint-enable prettier/prettier */
+
 function handleRequest(request, response) {
   let query = {};
   request.queryString.split("&").forEach(function(val) {
