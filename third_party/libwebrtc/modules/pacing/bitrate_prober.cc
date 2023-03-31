@@ -24,6 +24,7 @@ namespace webrtc {
 
 namespace {
 constexpr TimeDelta kProbeClusterTimeout = TimeDelta::Seconds(5);
+constexpr size_t kMaxPendingProbeClusters = 5;
 
 }  // namespace
 
@@ -84,8 +85,9 @@ void BitrateProber::CreateProbeCluster(
 
   total_probe_count_++;
   while (!clusters_.empty() &&
-         cluster_config.at_time - clusters_.front().requested_at >
-             kProbeClusterTimeout) {
+         (cluster_config.at_time - clusters_.front().requested_at >
+              kProbeClusterTimeout ||
+          clusters_.size() > kMaxPendingProbeClusters)) {
     clusters_.pop();
     total_failed_probe_count_++;
   }
