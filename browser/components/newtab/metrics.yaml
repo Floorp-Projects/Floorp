@@ -262,6 +262,7 @@ topsites:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670#c3
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105#c11
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1820707#c3
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1821556#c3
     data_sensitivity:
       - interaction
     notification_emails:
@@ -276,6 +277,9 @@ topsites:
       is_sponsored: &is_sponsored
         description: Whether the topsite tile was sponsored.
         type: boolean
+      position: &topsite_position
+        description: The position (0-index) of the topsite tile.
+        type: quantity
     send_in_pings:
       - newtab
 
@@ -295,6 +299,7 @@ topsites:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670#c3
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105#c11
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1820707#c3
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1821556#c3
     data_sensitivity:
       - interaction
     notification_emails:
@@ -307,6 +312,34 @@ topsites:
     extra_keys:
       newtab_visit_id: *newtab_visit_id
       is_sponsored: *is_sponsored
+      position: *topsite_position
+    send_in_pings:
+      - newtab
+
+  rows:
+    lifetime: application
+    type: quantity
+    unit: integer
+    description: >
+      The number of topsite tile rows configured to be shown on the newtab
+      page. Corresponds to the value of the
+      `browser.newtabpage.activity-stream.topSitesRows` pref. This is not the
+      number of rows actually seen by the user: if the browser window is
+      partially off-screen, or isn't wide enough to accommodate eight tiles per
+      row, the actual number of rows may be different.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1821556
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1821556#c3
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - anicholson@mozilla.com
+      - chutten@mozilla.com
+      - mmccorquodale@mozilla.com
+      - najiang@mozilla.com
+      - lina@mozilla.com
+    expires: never
     send_in_pings:
       - newtab
 
