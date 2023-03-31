@@ -106,7 +106,9 @@ class FT2FontEntry final : public gfxFT2FontEntryBase {
   void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                               FontListSizes* aSizes) const override;
 
-  RefPtr<mozilla::gfx::SharedFTFace> mFTFace;
+  // Strong reference (addref'd), but held in an atomic ptr rather than a
+  // normal RefPtr.
+  mozilla::Atomic<mozilla::gfx::SharedFTFace*> mFTFace;
 
   FT_MM_Var* mMMVar = nullptr;
 
@@ -117,8 +119,14 @@ class FT2FontEntry final : public gfxFT2FontEntryBase {
 
   nsTHashSet<uint32_t> mAvailableTables;
 
-  bool mHasVariations = false;
-  bool mHasVariationsInitialized = false;
+  enum class HasVariationsState : int8_t {
+    Uninitialized = -1,
+    No = 0,
+    Yes = 1,
+  };
+  std::atomic<HasVariationsState> mHasVariations =
+      HasVariationsState::Uninitialized;
+
   bool mMMVarInitialized = false;
 };
 
