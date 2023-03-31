@@ -271,11 +271,9 @@ TEST(AudioProcessingImplTest, AudioParameterChangeTriggersInit) {
   EXPECT_NOERR(mock.ProcessStream(frame.data(), config, config, frame.data()));
 
   // New number of channels.
-  // TODO(peah): Investigate why this causes 2 inits.
   config = StreamConfig(32000, 2);
   EXPECT_CALL(mock, InitializeLocked).Times(2);
   EXPECT_NOERR(mock.ProcessStream(frame.data(), config, config, frame.data()));
-  // ProcessStream sets num_channels_ == num_output_channels.
   EXPECT_NOERR(
       mock.ProcessReverseStream(frame.data(), config, config, frame.data()));
 

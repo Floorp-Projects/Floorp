@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <cstring>
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -144,6 +145,174 @@ void PackRenderAudioBufferForEchoDetector(const AudioBuffer& audio,
 }
 
 constexpr int kUnspecifiedDataDumpInputVolume = -100;
+
+// Options for gracefully handling processing errors.
+enum class FormatErrorOutputOption {
+  kOutputExactCopyOfInput,
+  kOutputBroadcastCopyOfFirstInputChannel,
+  kOutputSilence,
+  kDoNothing
+};
+
+enum class AudioFormatValidity {
+  // Format is supported by APM.
+  kValidAndSupported,
+  // Format has a reasonable interpretation but is not supported.
+  kValidButUnsupportedSampleRate,
+  // The remaining enums values signal that the audio does not have a reasonable
+  // interpretation and cannot be used.
+  kInvalidSampleRate,
+  kInvalidChannelCount
+};
+
+AudioFormatValidity ValidateAudioFormat(const StreamConfig& config) {
+  if (config.sample_rate_hz() < 0)
+    return AudioFormatValidity::kInvalidSampleRate;
+  if (config.num_channels() == 0)
+    return AudioFormatValidity::kInvalidChannelCount;
+
+  // Format has a reasonable interpretation, but may still be unsupported.
+  if (config.sample_rate_hz() < 8000 ||
+      config.sample_rate_hz() > AudioBuffer::kMaxSampleRate)
+    return AudioFormatValidity::kValidButUnsupportedSampleRate;
+
+  // Format is fully supported.
+  return AudioFormatValidity::kValidAndSupported;
+}
+
+int AudioFormatValidityToErrorCode(AudioFormatValidity validity) {
+  switch (validity) {
+    case AudioFormatValidity::kValidAndSupported:
+      return AudioProcessing::kNoError;
+    case AudioFormatValidity::kValidButUnsupportedSampleRate:  // fall-through
+    case AudioFormatValidity::kInvalidSampleRate:
+      return AudioProcessing::kBadSampleRateError;
+    case AudioFormatValidity::kInvalidChannelCount:
+      return AudioProcessing::kBadNumberChannelsError;
+  }
+  RTC_DCHECK(false);
+}
+
+// Returns an AudioProcessing::Error together with the best possible option for
+// output audio content.
+std::pair<int, FormatErrorOutputOption> ChooseErrorOutputOption(
+    const StreamConfig& input_config,
+    const StreamConfig& output_config) {
+  AudioFormatValidity input_validity = ValidateAudioFormat(input_config);
+  AudioFormatValidity output_validity = ValidateAudioFormat(output_config);
+
+  int error_code = AudioFormatValidityToErrorCode(input_validity);
+  if (error_code == AudioProcessing::kNoError) {
+    error_code = AudioFormatValidityToErrorCode(output_validity);
+  }
+
+  FormatErrorOutputOption output_option;
+  if (output_validity != AudioFormatValidity::kValidAndSupported &&
+      output_validity != AudioFormatValidity::kValidButUnsupportedSampleRate) {
+    // The output format is uninterpretable: cannot do anything.
+    output_option = FormatErrorOutputOption::kDoNothing;
+  } else if (input_validity != AudioFormatValidity::kValidAndSupported &&
+             input_validity !=
+                 AudioFormatValidity::kValidButUnsupportedSampleRate) {
+    // The input format is uninterpretable: cannot use it, must output silence.
+    output_option = FormatErrorOutputOption::kOutputSilence;
+  } else if (input_config.sample_rate_hz() != output_config.sample_rate_hz()) {
+    // Sample rates do not match: Cannot copy input into output, output silence.
+    // Note: If the sample rates are in a supported range, we could resample.
+    // However, that would significantly increase complexity of this error
+    // handling code.
+    output_option = FormatErrorOutputOption::kOutputSilence;
+  } else if (input_config.num_channels() != output_config.num_channels()) {
+    // Channel counts do not match: We cannot easily map input channels to
+    // output channels.
+    output_option =
+        FormatErrorOutputOption::kOutputBroadcastCopyOfFirstInputChannel;
+  } else {
+    // The formats match exactly.
+    RTC_DCHECK(input_config == output_config);
+    output_option = FormatErrorOutputOption::kOutputExactCopyOfInput;
+  }
+  return std::make_pair(error_code, output_option);
+}
+
+// Checks if the audio format is supported. If not, the output is populated in a
+// best-effort manner and an APM error code is returned.
+int HandleUnsupportedAudioFormats(const int16_t* const src,
+                                  const StreamConfig& input_config,
+                                  const StreamConfig& output_config,
+                                  int16_t* const dest) {
+  RTC_DCHECK(src);
+  RTC_DCHECK(dest);
+
+  auto [error_code, output_option] =
+      ChooseErrorOutputOption(input_config, output_config);
+  if (error_code == AudioProcessing::kNoError)
+    return AudioProcessing::kNoError;
+
+  const size_t num_output_channels = output_config.num_channels();
+  switch (output_option) {
+    case FormatErrorOutputOption::kOutputSilence:
+      memset(dest, 0, output_config.num_samples() * sizeof(int16_t));
+      break;
+    case FormatErrorOutputOption::kOutputBroadcastCopyOfFirstInputChannel:
+      for (size_t i = 0; i < output_config.num_frames(); ++i) {
+        int16_t sample = src[input_config.num_channels() * i];
+        for (size_t ch = 0; ch < num_output_channels; ++ch) {
+          dest[ch + num_output_channels * i] = sample;
+        }
+      }
+      break;
+    case FormatErrorOutputOption::kOutputExactCopyOfInput:
+      memcpy(dest, src, output_config.num_samples() * sizeof(int16_t));
+      break;
+    case FormatErrorOutputOption::kDoNothing:
+      break;
+  }
+  return error_code;
+}
+
+// Checks if the audio format is supported. If not, the output is populated in a
+// best-effort manner and an APM error code is returned.
+int HandleUnsupportedAudioFormats(const float* const* src,
+                                  const StreamConfig& input_config,
+                                  const StreamConfig& output_config,
+                                  float* const* dest) {
+  RTC_DCHECK(src);
+  RTC_DCHECK(dest);
+  for (size_t i = 0; i < input_config.num_channels(); ++i) {
+    RTC_DCHECK(src[i]);
+  }
+  for (size_t i = 0; i < output_config.num_channels(); ++i) {
+    RTC_DCHECK(dest[i]);
+  }
+
+  auto [error_code, output_option] =
+      ChooseErrorOutputOption(input_config, output_config);
+  if (error_code == AudioProcessing::kNoError)
+    return AudioProcessing::kNoError;
+
+  const size_t num_output_channels = output_config.num_channels();
+  switch (output_option) {
+    case FormatErrorOutputOption::kOutputSilence:
+      for (size_t ch = 0; ch < num_output_channels; ++ch) {
+        memset(dest[ch], 0, output_config.num_frames() * sizeof(float));
+      }
+      break;
+    case FormatErrorOutputOption::kOutputBroadcastCopyOfFirstInputChannel:
+      for (size_t ch = 0; ch < num_output_channels; ++ch) {
+        memcpy(dest[ch], src[0], output_config.num_frames() * sizeof(float));
+      }
+      break;
+    case FormatErrorOutputOption::kOutputExactCopyOfInput:
+      for (size_t ch = 0; ch < num_output_channels; ++ch) {
+        memcpy(dest[ch], src[ch], output_config.num_frames() * sizeof(float));
+      }
+      break;
+    case FormatErrorOutputOption::kDoNothing:
+      break;
+  }
+  return error_code;
+}
 
 }  // namespace
 
@@ -305,9 +474,9 @@ AudioProcessingImpl::AudioProcessingImpl(
                    << !!submodules_.capture_post_processor
                    << "\nRender pre processor: "
                    << !!submodules_.render_pre_processor;
-  RTC_LOG(LS_INFO) << "Denormal disabler: "
-                   << (DenormalDisabler::IsSupported() ? "supported"
-                                                       : "unsupported");
+  if (!DenormalDisabler::IsSupported()) {
+    RTC_LOG(LS_INFO) << "Denormal disabler unsupported";
+  }
 
   // Mark Echo Controller enabled if a factory is injected.
   capture_nonlocked_.echo_controller_enabled =
@@ -330,18 +499,23 @@ int AudioProcessingImpl::Initialize(const ProcessingConfig& processing_config) {
   // Run in a single-threaded manner during initialization.
   MutexLock lock_render(&mutex_render_);
   MutexLock lock_capture(&mutex_capture_);
-  return InitializeLocked(processing_config);
+  InitializeLocked(processing_config);
+  return kNoError;
 }
 
-int AudioProcessingImpl::MaybeInitializeRender(
-    const ProcessingConfig& processing_config) {
-  // Called from both threads. Thread check is therefore not possible.
+void AudioProcessingImpl::MaybeInitializeRender(
+    const StreamConfig& input_config,
+    const StreamConfig& output_config) {
+  ProcessingConfig processing_config = formats_.api_format;
+  processing_config.reverse_input_stream() = input_config;
+  processing_config.reverse_output_stream() = output_config;
+
   if (processing_config == formats_.api_format) {
-    return kNoError;
+    return;
   }
 
   MutexLock lock_capture(&mutex_capture_);
-  return InitializeLocked(processing_config);
+  InitializeLocked(processing_config);
 }
 
 void AudioProcessingImpl::InitializeLocked() {
@@ -416,24 +590,8 @@ void AudioProcessingImpl::InitializeLocked() {
   }
 }
 
-int AudioProcessingImpl::InitializeLocked(const ProcessingConfig& config) {
+void AudioProcessingImpl::InitializeLocked(const ProcessingConfig& config) {
   UpdateActiveSubmoduleStates();
-
-  for (const auto& stream : config.streams) {
-    if (stream.num_channels() > 0 && stream.sample_rate_hz() <= 0) {
-      return kBadSampleRateError;
-    }
-  }
-
-  const size_t num_in_channels = config.input_stream().num_channels();
-  const size_t num_out_channels = config.output_stream().num_channels();
-
-  // Need at least one input channel.
-  // Need either one output channel or as many outputs as there are inputs.
-  if (num_in_channels == 0 ||
-      !(num_out_channels == 1 || num_out_channels == num_in_channels)) {
-    return kBadNumberChannelsError;
-  }
 
   formats_.api_format = config;
 
@@ -508,7 +666,6 @@ int AudioProcessingImpl::InitializeLocked(const ProcessingConfig& config) {
   }
 
   InitializeLocked();
-  return kNoError;
 }
 
 void AudioProcessingImpl::ApplyConfig(const AudioProcessing::Config& config) {
@@ -717,7 +874,7 @@ bool AudioProcessingImpl::RuntimeSettingEnqueuer::Enqueue(
   return successful_insert;
 }
 
-int AudioProcessingImpl::MaybeInitializeCapture(
+void AudioProcessingImpl::MaybeInitializeCapture(
     const StreamConfig& input_config,
     const StreamConfig& output_config) {
   ProcessingConfig processing_config;
@@ -746,9 +903,8 @@ int AudioProcessingImpl::MaybeInitializeCapture(
     processing_config = formats_.api_format;
     processing_config.input_stream() = input_config;
     processing_config.output_stream() = output_config;
-    RETURN_ON_ERR(InitializeLocked(processing_config));
+    InitializeLocked(processing_config);
   }
-  return kNoError;
 }
 
 int AudioProcessingImpl::ProcessStream(const float* const* src,
@@ -756,14 +912,12 @@ int AudioProcessingImpl::ProcessStream(const float* const* src,
                                        const StreamConfig& output_config,
                                        float* const* dest) {
   TRACE_EVENT0("webrtc", "AudioProcessing::ProcessStream_StreamConfig");
-  if (!src || !dest) {
-    return kNullPointerError;
-  }
-
-  RETURN_ON_ERR(MaybeInitializeCapture(input_config, output_config));
+  DenormalDisabler denormal_disabler(use_denormal_disabler_);
+  RETURN_ON_ERR(
+      HandleUnsupportedAudioFormats(src, input_config, output_config, dest));
+  MaybeInitializeCapture(input_config, output_config);
 
   MutexLock lock_capture(&mutex_capture_);
-  DenormalDisabler denormal_disabler(use_denormal_disabler_);
 
   if (aec_dump_) {
     RecordUnprocessedCaptureStream(src);
@@ -1055,7 +1209,10 @@ int AudioProcessingImpl::ProcessStream(const int16_t* const src,
                                        const StreamConfig& output_config,
                                        int16_t* const dest) {
   TRACE_EVENT0("webrtc", "AudioProcessing::ProcessStream_AudioFrame");
-  RETURN_ON_ERR(MaybeInitializeCapture(input_config, output_config));
+
+  RETURN_ON_ERR(
+      HandleUnsupportedAudioFormats(src, input_config, output_config, dest));
+  MaybeInitializeCapture(input_config, output_config);
 
   MutexLock lock_capture(&mutex_capture_);
   DenormalDisabler denormal_disabler(use_denormal_disabler_);
@@ -1412,6 +1569,15 @@ int AudioProcessingImpl::AnalyzeReverseStream(
     const StreamConfig& reverse_config) {
   TRACE_EVENT0("webrtc", "AudioProcessing::AnalyzeReverseStream_StreamConfig");
   MutexLock lock(&mutex_render_);
+  DenormalDisabler denormal_disabler(use_denormal_disabler_);
+  RTC_DCHECK(data);
+  for (size_t i = 0; i < reverse_config.num_channels(); ++i) {
+    RTC_DCHECK(data[i]);
+  }
+  RETURN_ON_ERR(
+      AudioFormatValidityToErrorCode(ValidateAudioFormat(reverse_config)));
+
+  MaybeInitializeRender(reverse_config, reverse_config);
   return AnalyzeReverseStreamLocked(data, reverse_config, reverse_config);
 }
 
@@ -1422,8 +1588,13 @@ int AudioProcessingImpl::ProcessReverseStream(const float* const* src,
   TRACE_EVENT0("webrtc", "AudioProcessing::ProcessReverseStream_StreamConfig");
   MutexLock lock(&mutex_render_);
   DenormalDisabler denormal_disabler(use_denormal_disabler_);
+  RETURN_ON_ERR(
+      HandleUnsupportedAudioFormats(src, input_config, output_config, dest));
+
+  MaybeInitializeRender(input_config, output_config);
 
   RETURN_ON_ERR(AnalyzeReverseStreamLocked(src, input_config, output_config));
+
   if (submodule_states_.RenderMultiBandProcessingActive() ||
       submodule_states_.RenderFullBandProcessingActive()) {
     render_.render_audio->CopyTo(formats_.api_format.reverse_output_stream(),
@@ -1444,24 +1615,6 @@ int AudioProcessingImpl::AnalyzeReverseStreamLocked(
     const float* const* src,
     const StreamConfig& input_config,
     const StreamConfig& output_config) {
-  if (src == nullptr) {
-    return kNullPointerError;
-  }
-
-  if (input_config.num_channels() == 0) {
-    return kBadNumberChannelsError;
-  }
-
-  ProcessingConfig processing_config = formats_.api_format;
-  processing_config.reverse_input_stream() = input_config;
-  processing_config.reverse_output_stream() = output_config;
-
-  RETURN_ON_ERR(MaybeInitializeRender(processing_config));
-  RTC_DCHECK_EQ(input_config.num_frames(),
-                formats_.api_format.reverse_input_stream().num_frames());
-
-  DenormalDisabler denormal_disabler(use_denormal_disabler_);
-
   if (aec_dump_) {
     const size_t channel_size =
         formats_.api_format.reverse_input_stream().num_frames();
@@ -1481,28 +1634,12 @@ int AudioProcessingImpl::ProcessReverseStream(const int16_t* const src,
                                               int16_t* const dest) {
   TRACE_EVENT0("webrtc", "AudioProcessing::ProcessReverseStream_AudioFrame");
 
-  if (input_config.num_channels() <= 0) {
-    return AudioProcessing::Error::kBadNumberChannelsError;
-  }
-
   MutexLock lock(&mutex_render_);
   DenormalDisabler denormal_disabler(use_denormal_disabler_);
 
-  ProcessingConfig processing_config = formats_.api_format;
-  processing_config.reverse_input_stream().set_sample_rate_hz(
-      input_config.sample_rate_hz());
-  processing_config.reverse_input_stream().set_num_channels(
-      input_config.num_channels());
-  processing_config.reverse_output_stream().set_sample_rate_hz(
-      output_config.sample_rate_hz());
-  processing_config.reverse_output_stream().set_num_channels(
-      output_config.num_channels());
-
-  RETURN_ON_ERR(MaybeInitializeRender(processing_config));
-  if (input_config.num_frames() !=
-      formats_.api_format.reverse_input_stream().num_frames()) {
-    return kBadDataLengthError;
-  }
+  RETURN_ON_ERR(
+      HandleUnsupportedAudioFormats(src, input_config, output_config, dest));
+  MaybeInitializeRender(input_config, output_config);
 
   if (aec_dump_) {
     aec_dump_->WriteRenderStreamMessage(src, input_config.num_frames(),
