@@ -5,7 +5,7 @@
 #define _TRANSCEIVERIMPL_H_
 
 #include <string>
-#include "libwebrtcglue/MediaConduitControl.h"
+#include "mozilla/StateMirroring.h"
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsISerialEventTarget.h"
