@@ -139,7 +139,7 @@ class PeerConnectionFactory : public PeerConnectionFactoryInterface {
   std::unique_ptr<Call> CreateCall_w(
       RtcEventLog* event_log,
       const FieldTrialsView& field_trials,
-      absl::optional<TimeDelta> pacer_burst_interval);
+      const PeerConnectionInterface::RTCConfiguration& configuration);
 
   rtc::scoped_refptr<ConnectionContext> context_;
   PeerConnectionFactoryInterface::Options options_
