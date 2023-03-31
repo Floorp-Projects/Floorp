@@ -14,12 +14,8 @@ const MANAGE_ADDRESSES_URL =
 const MANAGE_CREDITCARDS_URL =
   "chrome://formautofill/content/manageCreditCards.xhtml";
 
-const { FormAutofill } = ChromeUtils.import(
-  "resource://autofill/FormAutofill.jsm"
-);
-const { FormAutofillUtils } = ChromeUtils.import(
-  "resource://autofill/FormAutofillUtils.jsm"
-);
+import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
+import { FormAutofillUtils } from "resource://autofill/FormAutofillUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};

@@ -2,12 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { FormAutofillUtils } = ChromeUtils.import(
-  "resource://autofill/FormAutofillUtils.jsm"
-);
-const { FormAutofillCreditCardSection } = ChromeUtils.import(
-  "resource://autofill/FormAutofillHandler.jsm"
-);
+import { FormAutofillCreditCardSection } from "resource://autofill/FormAutofillHandler.sys.mjs";
+import { FormAutofillUtils } from "resource://autofill/FormAutofillUtils.sys.mjs";
 
 const { FIELD_STATES } = FormAutofillUtils;
 

@@ -10,11 +10,11 @@
 // constructor via a backstage pass.
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const {
+import {
   FormAutofillStorageBase,
   CreditCardsBase,
   AddressesBase,
-} = ChromeUtils.import("resource://autofill/FormAutofillStorageBase.jsm");
+} from "resource://autofill/FormAutofillStorageBase.sys.mjs";
 import { JSONFile } from "resource://gre/modules/JSONFile.sys.mjs";
 
 const lazy = {};

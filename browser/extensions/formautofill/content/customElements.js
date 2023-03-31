@@ -261,8 +261,8 @@
 
     _onCollapse() {
       if (this.showWarningText) {
-        let { FormAutofillParent } = ChromeUtils.import(
-          "resource://autofill/FormAutofillParent.jsm"
+        let { FormAutofillParent } = ChromeUtils.importESModule(
+          "resource://autofill/FormAutofillParent.sys.mjs"
         );
         FormAutofillParent.removeMessageObserver(this);
       }
@@ -298,8 +298,8 @@
       this.showWarningText = this._allFieldCategories && this._focusedCategory;
 
       if (this.showWarningText) {
-        let { FormAutofillParent } = ChromeUtils.import(
-          "resource://autofill/FormAutofillParent.jsm"
+        let { FormAutofillParent } = ChromeUtils.importESModule(
+          "resource://autofill/FormAutofillParent.sys.mjs"
         );
         FormAutofillParent.addMessageObserver(this);
         this.updateWarningNote();

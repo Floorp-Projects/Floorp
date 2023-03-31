@@ -6,18 +6,18 @@
 
 let FormAutofillStorage;
 add_setup(async () => {
-  ({ FormAutofillStorage } = ChromeUtils.import(
-    "resource://autofill/FormAutofillStorage.jsm"
+  ({ FormAutofillStorage } = ChromeUtils.importESModule(
+    "resource://autofill/FormAutofillStorage.sys.mjs"
   ));
 });
 
 const TEST_STORE_FILE_NAME = "test-profile.json";
 
-const { ADDRESS_SCHEMA_VERSION } = ChromeUtils.import(
-  "resource://autofill/FormAutofillStorageBase.jsm"
+const { ADDRESS_SCHEMA_VERSION } = ChromeUtils.importESModule(
+  "resource://autofill/FormAutofillStorageBase.sys.mjs"
 );
-const { CREDIT_CARD_SCHEMA_VERSION } = ChromeUtils.import(
-  "resource://autofill/FormAutofillStorageBase.jsm"
+const { CREDIT_CARD_SCHEMA_VERSION } = ChromeUtils.importESModule(
+  "resource://autofill/FormAutofillStorageBase.sys.mjs"
 );
 
 const ADDRESS_TESTCASES = [
