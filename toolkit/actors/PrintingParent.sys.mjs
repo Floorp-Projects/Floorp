@@ -10,7 +10,8 @@ export class PrintingParent extends JSWindowActorParent {
     if (message.name == "Printing:Error") {
       browser.ownerGlobal.PrintUtils._displayPrintingError(
         message.data.nsresult,
-        message.data.isPrinting
+        message.data.isPrinting,
+        browser
       );
     } else if (message.name == "Printing:Preview:CurrentPage") {
       browser.setAttribute("current-page", message.data.currentPage);

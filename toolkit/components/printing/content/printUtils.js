@@ -457,7 +457,7 @@ var PrintUtils = {
     return "FAILURE";
   },
 
-  _displayPrintingError(nsresult, isPrinting) {
+  _displayPrintingError(nsresult, isPrinting, browser) {
     // The nsresults from a printing error are mapped to strings that have
     // similar names to the errors themselves. For example, for error
     // NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE, the name of the string
@@ -490,7 +490,12 @@ var PrintUtils = {
         : "printpreview_error_dialog_title"
     );
 
-    Services.prompt.alert(window, title, msg);
+    Services.prompt.asyncAlert(
+      browser.browsingContext,
+      Services.prompt.MODAL_TYPE_TAB,
+      title,
+      msg
+    );
 
     Services.telemetry.keyedScalarAdd(
       "printing.error",
