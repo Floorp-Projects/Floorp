@@ -369,7 +369,8 @@ void SendSideBandwidthEstimation::SetAcknowledgedRate(
 void SendSideBandwidthEstimation::UpdateLossBasedEstimator(
     const TransportPacketsFeedback& report,
     BandwidthUsage delay_detector_state,
-    absl::optional<DataRate> probe_bitrate) {
+    absl::optional<DataRate> probe_bitrate,
+    DataRate upper_link_capacity) {
   if (LossBasedBandwidthEstimatorV1Enabled()) {
     loss_based_bandwidth_estimator_v1_.UpdateLossStatistics(
         report.packet_feedbacks, report.feedback_time);
@@ -377,7 +378,7 @@ void SendSideBandwidthEstimation::UpdateLossBasedEstimator(
   if (LossBasedBandwidthEstimatorV2Enabled()) {
     loss_based_bandwidth_estimator_v2_.UpdateBandwidthEstimate(
         report.packet_feedbacks, delay_based_limit_, delay_detector_state,
-        probe_bitrate);
+        probe_bitrate, upper_link_capacity);
     UpdateEstimate(report.feedback_time);
   }
 }
