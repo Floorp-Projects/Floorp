@@ -72,5 +72,3 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'uikit':
     ]
 
 FINAL_LIBRARY = 'xul-gtest'
-
-REQUIRES_UNIFIED_BUILD = True
