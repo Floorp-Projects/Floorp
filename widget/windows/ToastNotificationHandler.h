@@ -55,7 +55,7 @@ class ToastNotificationHandler final
 
   nsresult InitAlertAsync(nsIAlertNotification* aAlert);
 
-  void OnWriteBitmapFinished(nsresult rv);
+  void OnWriteImageFinished(nsresult rv);
 
   void HideAlert();
   bool IsPrivate();
@@ -124,7 +124,7 @@ class ToastNotificationHandler final
   nsresult TryShowAlert();
   bool ShowAlert();
   nsresult AsyncSaveImage(imgIRequest* aRequest);
-  nsresult OnWriteBitmapSuccess();
+  nsresult OnWriteImageSuccess();
   void SendFinished();
 
   nsresult InitWindowsTag();

@@ -8,6 +8,7 @@
 
 #include <windows.foundation.h>
 
+#include "gfxUtils.h"
 #include "imgIContainer.h"
 #include "imgIRequest.h"
 #include "mozilla/gfx/2D.h"
@@ -1038,7 +1039,7 @@ nsresult ToastNotificationHandler::AsyncSaveImage(imgIRequest* aRequest) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   NSID_TrimBracketsASCII uuidStr(uuid);
-  uuidStr.AppendLiteral(".bmp");
+  uuidStr.AppendLiteral(".png");
   mImageFile->AppendNative(uuidStr);
 
   nsCOMPtr<imgIContainer> imgContainer;
@@ -1054,20 +1055,24 @@ nsresult ToastNotificationHandler::AsyncSaveImage(imgIRequest* aRequest) {
       imgIContainer::FRAME_FIRST,
       imgIContainer::FLAG_SYNC_DECODE | imgIContainer::FLAG_ASYNC_NOTIFY);
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      "ToastNotificationHandler::AsyncWriteBitmap",
+      "ToastNotificationHandler::AsyncWriteImage",
       [self, imageFile, surface]() -> void {
-        nsresult rv;
-        if (!surface) {
-          rv = NS_ERROR_FAILURE;
-        } else {
-          rv = WinUtils::WriteBitmap(imageFile, surface);
+        nsresult rv = NS_ERROR_FAILURE;
+        if (surface) {
+          FILE* file = nullptr;
+          rv = imageFile->OpenANSIFileDesc("wb", &file);
+          if (NS_SUCCEEDED(rv)) {
+            rv = gfxUtils::EncodeSourceSurface(surface, ImageType::PNG, u""_ns,
+                                               gfxUtils::eBinaryEncode, file);
+            fclose(file);
+          }
         }
 
         nsCOMPtr<nsIRunnable> cbRunnable = NS_NewRunnableFunction(
-            "ToastNotificationHandler::AsyncWriteBitmapCb",
+            "ToastNotificationHandler::AsyncWriteImageCb",
             [self, rv]() -> void {
               auto handler = const_cast<ToastNotificationHandler*>(self.get());
-              handler->OnWriteBitmapFinished(rv);
+              handler->OnWriteImageFinished(rv);
             });
 
         NS_DispatchToMainThread(cbRunnable);
@@ -1076,14 +1081,14 @@ nsresult ToastNotificationHandler::AsyncSaveImage(imgIRequest* aRequest) {
   return mBackend->BackgroundDispatch(r);
 }
 
-void ToastNotificationHandler::OnWriteBitmapFinished(nsresult rv) {
+void ToastNotificationHandler::OnWriteImageFinished(nsresult rv) {
   if (NS_SUCCEEDED(rv)) {
-    OnWriteBitmapSuccess();
+    OnWriteImageSuccess();
   }
   TryShowAlert();
 }
 
-nsresult ToastNotificationHandler::OnWriteBitmapSuccess() {
+nsresult ToastNotificationHandler::OnWriteImageSuccess() {
   nsresult rv;
 
   nsCOMPtr<nsIURI> fileURI;
