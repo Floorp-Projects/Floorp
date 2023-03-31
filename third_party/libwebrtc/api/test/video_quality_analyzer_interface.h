@@ -62,6 +62,8 @@ class VideoQualityAnalyzerInterface
     // https://crbug.com/webrtc/11443: improve stats API to make available
     // there.
     uint32_t target_encode_bitrate = 0;
+    // Encoder quantizer value.
+    int qp = -1;
   };
   // Contains extra statistic provided by video decoder.
   struct DecoderStats {
