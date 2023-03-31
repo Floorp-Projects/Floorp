@@ -135,6 +135,21 @@ class ClientWebGLExtensionLoseContext : public ClientWebGLExtensionBase {
   }
 };
 
+class ClientWebGLExtensionProvokingVertex : public ClientWebGLExtensionBase {
+ public:
+  virtual JSObject* WrapObject(JSContext* cx,
+                               JS::Handle<JSObject*> givenProto) override;
+  explicit ClientWebGLExtensionProvokingVertex(ClientWebGLContext&);
+
+  void ProvokingVertexWEBGL(const GLenum mode) const {
+    if (MOZ_UNLIKELY(!mContext)) {
+      AutoJsWarning("provokingVertexWEBGL: Extension is `invalidated`.");
+      return;
+    }
+    mContext->ProvokingVertex(mode);
+  }
+};
+
 DECLARE_SIMPLE_WEBGL_EXTENSION(WebGLExtensionSRGB)
 
 DECLARE_SIMPLE_WEBGL_EXTENSION(WebGLExtensionStandardDerivatives)
