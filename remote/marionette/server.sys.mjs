@@ -290,6 +290,8 @@ export class TCPConnection {
    *     A command's implementation may throw at any time.
    */
   async despatch(cmd, resp) {
+    const startTime = Cu.now();
+
     let fn = this.driver.commands[cmd.name];
     if (typeof fn == "undefined") {
       throw new lazy.error.UnknownCommandError(cmd.name);
@@ -334,6 +336,14 @@ export class TCPConnection {
       } else {
         resp.body.value = rv;
       }
+    }
+
+    if (Services.profiler?.IsActive()) {
+      ChromeUtils.addProfilerMarker(
+        "Marionette: Command",
+        { startTime, category: "Remote-Protocol" },
+        `${cmd.name} (${cmd.id})`
+      );
     }
   }
 

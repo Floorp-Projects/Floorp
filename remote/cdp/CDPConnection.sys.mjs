@@ -95,12 +95,20 @@ export class CDPConnection extends WebSocketConnection {
    *     followed by the event name, e.g. `Target.targetCreated`.
    * @param {Object} params
    *     A JSON-serializable object, which is the payload of this event.
-   * @param {Sting=} sessionId
+   * @param {String=} sessionId
    *     The sessionId from which this packet is emitted. Falls back to the
    *     default session if not specified.
    */
   sendEvent(method, params, sessionId) {
     this.send({ method, params, sessionId });
+
+    if (Services.profiler?.IsActive()) {
+      ChromeUtils.addProfilerMarker(
+        "CDP: Event",
+        { category: "Remote-Protocol" },
+        method
+      );
+    }
 
     // When a client attaches to a secondary target via
     // `Target.attachToTarget`, we should emit an event back with the
@@ -206,9 +214,10 @@ export class CDPConnection extends WebSocketConnection {
   async onPacket(packet) {
     super.onPacket(packet);
 
-    try {
-      const { id, method, params, sessionId } = packet;
+    const { id, method, params, sessionId } = packet;
+    const startTime = Cu.now();
 
+    try {
       // First check for mandatory field in the packets
       if (typeof id == "undefined") {
         throw new TypeError("Message missing 'id' field");
@@ -244,7 +253,15 @@ export class CDPConnection extends WebSocketConnection {
       const result = await session.execute(id, domain, command, params);
       this.sendResult(id, result, sessionId);
     } catch (e) {
-      this.sendError(packet.id, e, packet.sessionId);
+      this.sendError(id, e, packet.sessionId);
+    }
+
+    if (Services.profiler?.IsActive()) {
+      ChromeUtils.addProfilerMarker(
+        "CDP: Command",
+        { startTime, category: "Remote-Protocol" },
+        `${method} (${id})`
+      );
     }
   }
 }
