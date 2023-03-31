@@ -33,7 +33,6 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
  *  Including
  *  - Verifying default states
  *  - Verifying Enhanced Tracking Protection notification bubble
- *  - Verifying Enhanced Tracking Protection notification shield
  *  - Verifying Enhanced Tracking Protection content sheet
  *  - Verifying Enhanced Tracking Protection content sheet details
  *  - Verifying Enhanced Tracking Protection toggle
@@ -72,8 +71,7 @@ class EnhancedTrackingProtectionTest {
             verifyEnhancedTrackingProtectionButton()
             verifySettingsOptionSummary("Enhanced Tracking Protection", "Standard")
         }.openEnhancedTrackingProtectionSubMenu {
-            verifyEnhancedTrackingProtectionHeader()
-            verifyEnhancedTrackingProtectionHeaderDescription()
+            verifyEnhancedTrackingProtectionSummary()
             verifyLearnMoreText()
             verifyEnhancedTrackingProtectionTextWithSwitchWidget()
             verifyTrackingProtectionSwitchEnabled()

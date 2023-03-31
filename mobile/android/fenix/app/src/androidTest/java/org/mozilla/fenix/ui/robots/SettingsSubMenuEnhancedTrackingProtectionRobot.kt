@@ -40,9 +40,7 @@ class SettingsSubMenuEnhancedTrackingProtectionRobot {
 
     fun verifyNavigationToolBarHeader() = assertNavigationToolBarHeader()
 
-    fun verifyEnhancedTrackingProtectionHeader() = assertEnhancedTrackingProtectionHeader()
-
-    fun verifyEnhancedTrackingProtectionHeaderDescription() = assertEnhancedTrackingProtectionHeaderDescription()
+    fun verifyEnhancedTrackingProtectionSummary() = assertEnhancedTrackingProtectionSummary()
 
     fun verifyLearnMoreText() = assertLearnMoreText()
 
@@ -61,17 +59,22 @@ class SettingsSubMenuEnhancedTrackingProtectionRobot {
 
     fun verifyTrackingProtectionSwitchEnabled() = assertTrackingProtectionSwitchEnabled()
 
-    fun switchEnhancedTrackingProtectionToggle() = onView(withResourceName("switch_widget")).click()
+    fun switchEnhancedTrackingProtectionToggle() = onView(
+        allOf(
+            withText("Enhanced Tracking Protection"),
+            hasSibling(withResourceName("checkbox")),
+        ),
+    ).click()
 
     fun verifyStandardOptionDescription() {
-        onView(withText(R.string.preference_enhanced_tracking_protection_standard_description_4))
+        onView(withText(R.string.preference_enhanced_tracking_protection_standard_description_5))
             .check(matches(isDisplayed()))
         onView(withContentDescription(R.string.preference_enhanced_tracking_protection_standard_info_button))
             .check(matches(isDisplayed()))
     }
 
     fun verifyStrictOptionDescription() {
-        onView(withText(org.mozilla.fenix.R.string.preference_enhanced_tracking_protection_strict_description_3))
+        onView(withText(R.string.preference_enhanced_tracking_protection_strict_description_4))
             .check(matches(isDisplayed()))
         onView(withContentDescription(R.string.preference_enhanced_tracking_protection_strict_info_button))
             .check(matches(isDisplayed()))
@@ -79,7 +82,7 @@ class SettingsSubMenuEnhancedTrackingProtectionRobot {
 
     fun verifyCustomTrackingProtectionSettings() {
         scrollToElementByText("Redirect Trackers")
-        onView(withText(org.mozilla.fenix.R.string.preference_enhanced_tracking_protection_custom_description_2))
+        onView(withText(R.string.preference_enhanced_tracking_protection_custom_description_2))
             .check(matches(isDisplayed()))
         onView(withContentDescription(R.string.preference_enhanced_tracking_protection_custom_info_button))
             .check(matches(isDisplayed()))
@@ -171,22 +174,15 @@ class SettingsSubMenuEnhancedTrackingProtectionRobot {
 private fun assertNavigationToolBarHeader() {
     onView(
         allOf(
-            withParent(withId(org.mozilla.fenix.R.id.navigationToolbar)),
+            withParent(withId(R.id.navigationToolbar)),
             withText("Enhanced Tracking Protection"),
         ),
     )
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun assertEnhancedTrackingProtectionHeader() {
-    onView(withText("Browse without being followed"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-}
-
-private fun assertEnhancedTrackingProtectionHeaderDescription() {
-    onView(
-        withText("Keep your data to yourself. $appName protects you from many of the most common trackers that follow what you do online."),
-    )
+private fun assertEnhancedTrackingProtectionSummary() {
+    onView(withText("$appName protects you from many of the most common trackers that follow what you do online."))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
@@ -206,7 +202,7 @@ private fun assertEnhancedTrackingProtectionTextWithSwitchWidget() {
 }
 
 private fun assertTrackingProtectionSwitchEnabled() {
-    onView(withResourceName("switch_widget")).check(
+    onView(withResourceName("checkbox")).check(
         matches(
             isChecked(
                 true,

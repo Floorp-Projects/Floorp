@@ -123,7 +123,7 @@ class DeepLinkTest {
     @Test
     fun openSettingsTrackingProtection() {
         robot.openSettingsTrackingProtection {
-            verifyEnhancedTrackingProtectionHeader()
+            verifyEnhancedTrackingProtectionSummary()
         }
     }
 

@@ -20,73 +20,50 @@
         app:srcCompat="@drawable/ic_etp_artwork" />
 
     <TextView
-        android:id="@android:id/title"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
-        android:paddingTop="20dp"
-        android:ellipsize="none"
-        android:letterSpacing="0.05"
-        android:scrollHorizontally="false"
-        android:singleLine="false"
-        android:text="@string/preference_enhanced_tracking_protection_explanation_title"
-        android:textAlignment="viewStart"
-        android:textAppearance="@style/Header16TextStyle"
-        android:textColor="@color/photonLightGrey05"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/guideline"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <TextView
         android:id="@android:id/summary"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:paddingTop="12dp"
-        android:paddingBottom="12dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp"
         android:ellipsize="none"
+        android:gravity="center_vertical"
+        android:letterSpacing="0.02"
+        android:lineSpacingExtra="4sp"
         android:scrollHorizontally="false"
-        android:text="@string/preference_enhanced_tracking_protection_explanation"
-        android:textAlignment="viewStart"
+        android:singleLine="false"
+        android:text="@string/preference_enhanced_tracking_protection_explanation_2"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
         android:textColor="@color/photonLightGrey05"
-        android:textSize="14sp"
         app:layout_constraintBottom_toTopOf="@id/learn_more"
         app:layout_constraintEnd_toStartOf="@id/guideline"
         app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="@android:id/title"
-        app:layout_constraintTop_toBottomOf="@android:id/title" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/learn_more"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingBottom="12dp"
         android:ellipsize="none"
+        android:gravity="top"
+        android:letterSpacing="0.02"
+        android:lineSpacingExtra="-2sp"
+        android:layout_marginBottom="16dp"
         android:text="@string/preference_enhanced_tracking_protection_explanation_learn_more"
-        android:textAlignment="viewStart"
-        android:textColor="@color/photonLightGrey05"
-        android:textSize="14sp"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+        android:textColor="@color/photonLightGrey30"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/guideline"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="@android:id/title"
-        app:layout_constraintTop_toBottomOf="@android:id/summary"
-        app:layout_constraintBottom_toBottomOf="parent"/>
-
-    <ImageView
-        android:layout_width="8dp"
-        android:layout_height="0dp"
-        android:layout_marginStart="12dp"
-        android:paddingBottom="12dp"
-        android:importantForAccessibility="no"
-        app:tint="@color/photonLightGrey05"
-        app:layout_constraintBottom_toBottomOf="@id/learn_more"
-        app:layout_constraintStart_toEndOf="@id/learn_more"
-        app:layout_constraintTop_toTopOf="@id/learn_more"
-        app:srcCompat="@drawable/ic_arrowhead_right" />
+        app:layout_constraintStart_toStartOf="@android:id/summary"
+        app:layout_constraintTop_toBottomOf="@android:id/summary" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.5" />
+        app:layout_constraintGuide_percent="0.55" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -10,49 +9,52 @@
     android:layout_height="wrap_content"
     android:baselineAligned="false"
     android:orientation="horizontal"
-    android:paddingTop="@dimen/radio_button_preference_vertical"
-    android:paddingBottom="@dimen/radio_button_preference_vertical">
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp">
 
     <RadioButton
         android:id="@+id/radio_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="start"
-        android:layout_marginStart="66dp"
+        android:layout_marginStart="76dp"
         android:background="@android:color/transparent"
         android:button="@null"
         android:clickable="false"
-        android:drawablePadding="6dp"
         android:focusable="false"
+        app:layout_constraintBottom_toBottomOf="@id/title"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toTopOf="@id/title"
         tools:drawableStart="?android:attr/listChoiceIndicatorSingle" />
 
     <TextView
         android:id="@+id/title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:gravity="center|start"
-        android:textAlignment="viewStart"
-        android:textAppearance="?android:attr/textAppearanceListItem"
-        android:paddingTop="6dp"
-        android:paddingBottom="6dp"
+        android:layout_marginStart="14dp"
+        android:layout_marginEnd="8dp"
+        android:letterSpacing="0.01"
+        android:lineSpacingExtra="5sp"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+        app:layout_constraintBottom_toTopOf="@id/widget_summary"
         app:layout_constraintEnd_toStartOf="@+id/vertical_divider"
         app:layout_constraintStart_toEndOf="@+id/radio_button"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toTopOf="@id/vertical_divider"
+        app:layout_constraintVertical_chainStyle="packed"
         tools:text="Use recommended settings" />
 
     <TextView
         android:id="@+id/widget_summary"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:textAlignment="viewStart"
-        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:letterSpacing="0.02"
+        android:lineSpacingExtra="4sp"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
         android:textColor="?android:attr/textColorSecondary"
-        app:layout_constraintEnd_toStartOf="@+id/vertical_divider"
-        app:layout_constraintStart_toStartOf="@+id/title"
-        app:layout_constraintTop_toBottomOf="@+id/title"
-        tools:text="@tools:sample/lorem/random" />
+        app:layout_constraintBottom_toBottomOf="@id/vertical_divider"
+        app:layout_constraintEnd_toEndOf="@id/title"
+        app:layout_constraintStart_toStartOf="@id/title"
+        app:layout_constraintTop_toBottomOf="@id/title"
+        tools:text="@tools:sample/full_names" />
 
     <View
         android:id="@+id/vertical_divider"
@@ -63,21 +65,20 @@
         android:paddingEnd="1dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/info_button"
-        app:layout_constraintStart_toEndOf="@+id/title"
+        app:layout_constraintStart_toEndOf="@id/title"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
         android:id="@+id/info_button"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_marginStart="6dp"
-        android:layout_marginEnd="6dp"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginStart="19dp"
+        android:layout_marginEnd="19dp"
         android:contentDescription="@string/radio_preference_info_content_description"
-        android:padding="12dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/vertical_divider"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/vertical_divider"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toEndOf="@id/vertical_divider"
+        app:layout_constraintTop_toTopOf="@id/vertical_divider"
         app:srcCompat="@drawable/ic_info" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

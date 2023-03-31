@@ -1445,29 +1445,29 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Enhanced Tracking Protection</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">Browse without being followed</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Browse without being followed</string>
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
-    <string name="preference_enhanced_tracking_protection_summary" tools:ignore="UnusedResources">Now featuring Total Cookie Protection, our most powerful barrier yet against cross-site trackers.</string>
+    <string name="preference_enhanced_tracking_protection_summary">Now featuring Total Cookie Protection, our most powerful barrier yet against cross-site trackers.</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Keep your data to yourself. %s protects you from many of the most common trackers that follow what you do online.</string>
+    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Keep your data to yourself. %s protects you from many of the most common trackers that follow what you do online.</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">%s protects you from many of the most common trackers that follow what you do online.</string>
+    <string name="preference_enhanced_tracking_protection_explanation_2">%s protects you from many of the most common trackers that follow what you do online.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Learn more</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standard (default)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">Balanced for privacy and performance. Pages load normally.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">Balanced for privacy and performance. Pages load normally.</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_5" tools:ignore="UnusedResources">Pages will load normally, but block fewer trackers.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_5">Pages will load normally, but block fewer trackers.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">What’s blocked by standard tracking protection</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Strict</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3">Blocks more trackers so pages load faster, but some on-page functionality may break.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">Blocks more trackers so pages load faster, but some on-page functionality may break.</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_4" tools:ignore="UnusedResources">Stronger tracking protection and faster performance, but some sites may not work properly.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_4">Stronger tracking protection and faster performance, but some sites may not work properly.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">What’s blocked by strict tracking protection</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1552,6 +1552,9 @@
     <string name="preference_etp_smartblock_description">Some trackers marked below have been partially unblocked on this page because you interacted with them *.</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">Learn more</string>
+    <!-- Content description (not visible, for screen readers etc.):
+    Enhanced tracking protection exception preference icon for ETP settings. -->
+    <string name="preference_etp_exceptions_icon_description">Enhanced tracking protection exception preference icon</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Support</string>

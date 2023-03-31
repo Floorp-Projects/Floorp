@@ -11,7 +11,6 @@ import androidx.preference.CheckBoxPreference
 import androidx.preference.DropDownPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.SwitchPreference
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.HomeActivity
@@ -72,7 +71,7 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
 
         // Tracking Protection Switch
         val preferenceTP =
-            requirePreference<SwitchPreference>(R.string.pref_key_tracking_protection)
+            requirePreference<FenixSwitchPreference>(R.string.pref_key_tracking_protection)
 
         preferenceTP.isChecked = requireContext().settings().shouldUseTrackingProtection
         preferenceTP.setOnPreferenceChangeListener<Boolean> { preference, trackingProtectionOn ->
@@ -97,7 +96,7 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
             true
         }
         learnMorePreference.summary = getString(
-            R.string.preference_enhanced_tracking_protection_explanation,
+            R.string.preference_enhanced_tracking_protection_explanation_2,
             getString(R.string.app_name),
         )
 

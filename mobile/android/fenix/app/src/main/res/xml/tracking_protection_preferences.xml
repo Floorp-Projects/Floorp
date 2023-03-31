@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
@@ -6,25 +7,25 @@
     <androidx.preference.Preference
         android:key="@string/pref_key_etp_learn_more"
         android:layout="@layout/tracking_protection_learn_more_preference"
-        android:summary="@string/preference_enhanced_tracking_protection_explanation"
-        android:title="@string/preference_enhanced_tracking_protection_explanation_title"
+        android:summary="@string/preference_enhanced_tracking_protection_explanation_2"
         app:allowDividerBelow="false" />
-    <SwitchPreference
+    <org.mozilla.fenix.settings.FenixSwitchPreference
         android:defaultValue="true"
-        android:icon="@drawable/ic_tracking_protection_enabled"
         android:key="@string/pref_key_tracking_protection"
-        android:title="@string/preference_enhanced_tracking_protection" />
+        android:summary="@string/preference_enhanced_tracking_protection_summary"
+        android:title="@string/preference_enhanced_tracking_protection"
+        app:iconSpaceReserved="false" />
     <org.mozilla.fenix.settings.RadioButtonInfoPreference
         android:defaultValue="true"
         android:dependency="@string/pref_key_tracking_protection"
         android:key="@string/pref_key_tracking_protection_standard_option"
-        android:summary="@string/preference_enhanced_tracking_protection_standard_description_4"
+        android:summary="@string/preference_enhanced_tracking_protection_standard_description_5"
         android:title="@string/preference_enhanced_tracking_protection_standard_default_1" />
     <org.mozilla.fenix.settings.RadioButtonInfoPreference
         android:defaultValue="false"
         android:dependency="@string/pref_key_tracking_protection"
         android:key="@string/pref_key_tracking_protection_strict_default"
-        android:summary="@string/preference_enhanced_tracking_protection_strict_description_3"
+        android:summary="@string/preference_enhanced_tracking_protection_strict_description_4"
         android:title="@string/preference_enhanced_tracking_protection_strict" />
     <org.mozilla.fenix.settings.RadioButtonInfoPreference
         android:defaultValue="false"
@@ -76,10 +77,10 @@
         android:key="@string/pref_key_tracking_protection_redirect_trackers"
         android:layout="@layout/checkbox_left_preference_etp"
         android:title="@string/etp_redirect_trackers_title" />
-
+    <Preference android:layout="@layout/preference_divider" />
     <Preference
         android:icon="@drawable/ic_internet"
         android:key="@string/pref_key_tracking_protection_exceptions"
-        android:title="@string/preferences_tracking_protection_exceptions"
-        app:allowDividerAbove="true" />
+        android:layout="@layout/preference_no_widget"
+        android:title="@string/preferences_tracking_protection_exceptions" />
 </androidx.preference.PreferenceScreen>
