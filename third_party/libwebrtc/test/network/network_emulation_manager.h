@@ -79,9 +79,6 @@ class NetworkEmulationManagerImpl : public NetworkEmulationManager {
   EmulatedNetworkManagerInterface* CreateEmulatedNetworkManagerInterface(
       const std::vector<EmulatedEndpoint*>& endpoints) override;
 
-  void GetStats(rtc::ArrayView<EmulatedEndpoint* const> endpoints,
-                std::function<void(std::unique_ptr<EmulatedNetworkStats>)>
-                    stats_callback) override;
   void GetStats(
       rtc::ArrayView<EmulatedEndpoint* const> endpoints,
       std::function<void(EmulatedNetworkStats)> stats_callback) override;

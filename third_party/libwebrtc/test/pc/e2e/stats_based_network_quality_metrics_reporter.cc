@@ -55,11 +55,10 @@ EmulatedNetworkStats PopulateStats(std::vector<EmulatedEndpoint*> endpoints,
                                    NetworkEmulationManager* network_emulation) {
   rtc::Event stats_loaded;
   EmulatedNetworkStats stats;
-  network_emulation->GetStats(endpoints,
-                              [&](std::unique_ptr<EmulatedNetworkStats> s) {
-                                stats = *s;
-                                stats_loaded.Set();
-                              });
+  network_emulation->GetStats(endpoints, [&](EmulatedNetworkStats s) {
+    stats = std::move(s);
+    stats_loaded.Set();
+  });
   bool stats_received = stats_loaded.Wait(kStatsWaitTimeout);
   RTC_CHECK(stats_received);
   return stats;

@@ -255,19 +255,19 @@ TEST(NetworkEmulationManagerTest, Run) {
 
   const int64_t single_packet_size = data.size() + kOverheadIpv4Udp;
   std::atomic<int> received_stats_count{0};
-  nt1->GetStats([&](std::unique_ptr<EmulatedNetworkStats> st) {
-    EXPECT_EQ(st->PacketsSent(), 2000l);
-    EXPECT_EQ(st->BytesSent().bytes(), single_packet_size * 2000l);
-    EXPECT_THAT(st->local_addresses,
+  nt1->GetStats([&](EmulatedNetworkStats st) {
+    EXPECT_EQ(st.PacketsSent(), 2000l);
+    EXPECT_EQ(st.BytesSent().bytes(), single_packet_size * 2000l);
+    EXPECT_THAT(st.local_addresses,
                 ElementsAreArray({alice_endpoint->GetPeerLocalAddress()}));
-    EXPECT_EQ(st->PacketsReceived(), 2000l);
-    EXPECT_EQ(st->BytesReceived().bytes(), single_packet_size * 2000l);
-    EXPECT_EQ(st->PacketsDiscardedNoReceiver(), 0l);
-    EXPECT_EQ(st->BytesDiscardedNoReceiver().bytes(), 0l);
+    EXPECT_EQ(st.PacketsReceived(), 2000l);
+    EXPECT_EQ(st.BytesReceived().bytes(), single_packet_size * 2000l);
+    EXPECT_EQ(st.PacketsDiscardedNoReceiver(), 0l);
+    EXPECT_EQ(st.BytesDiscardedNoReceiver().bytes(), 0l);
 
     rtc::IPAddress bob_ip = bob_endpoint->GetPeerLocalAddress();
     std::map<rtc::IPAddress, EmulatedNetworkIncomingStats> source_st =
-        st->incoming_stats_per_source;
+        st.incoming_stats_per_source;
     ASSERT_EQ(source_st.size(), 1lu);
     EXPECT_EQ(source_st.at(bob_ip).packets_received, 2000l);
     EXPECT_EQ(source_st.at(bob_ip).bytes_received.bytes(),
@@ -276,17 +276,17 @@ TEST(NetworkEmulationManagerTest, Run) {
     EXPECT_EQ(source_st.at(bob_ip).bytes_discarded_no_receiver.bytes(), 0l);
 
     std::map<rtc::IPAddress, EmulatedNetworkOutgoingStats> dest_st =
-        st->outgoing_stats_per_destination;
+        st.outgoing_stats_per_destination;
     ASSERT_EQ(dest_st.size(), 1lu);
     EXPECT_EQ(dest_st.at(bob_ip).packets_sent, 2000l);
     EXPECT_EQ(dest_st.at(bob_ip).bytes_sent.bytes(),
               single_packet_size * 2000l);
 
     // No debug stats are collected by default.
-    EXPECT_TRUE(st->SentPacketsSizeCounter().IsEmpty());
-    EXPECT_TRUE(st->sent_packets_queue_wait_time_us.IsEmpty());
-    EXPECT_TRUE(st->ReceivedPacketsSizeCounter().IsEmpty());
-    EXPECT_TRUE(st->PacketsDiscardedNoReceiverSizeCounter().IsEmpty());
+    EXPECT_TRUE(st.SentPacketsSizeCounter().IsEmpty());
+    EXPECT_TRUE(st.sent_packets_queue_wait_time_us.IsEmpty());
+    EXPECT_TRUE(st.ReceivedPacketsSizeCounter().IsEmpty());
+    EXPECT_TRUE(st.PacketsDiscardedNoReceiverSizeCounter().IsEmpty());
     EXPECT_TRUE(dest_st.at(bob_ip).sent_packets_size.IsEmpty());
     EXPECT_TRUE(source_st.at(bob_ip).received_packets_size.IsEmpty());
     EXPECT_TRUE(
@@ -294,22 +294,22 @@ TEST(NetworkEmulationManagerTest, Run) {
 
     received_stats_count++;
   });
-  nt2->GetStats([&](std::unique_ptr<EmulatedNetworkStats> st) {
-    EXPECT_EQ(st->PacketsSent(), 2000l);
-    EXPECT_EQ(st->BytesSent().bytes(), single_packet_size * 2000l);
-    EXPECT_THAT(st->local_addresses,
+  nt2->GetStats([&](EmulatedNetworkStats st) {
+    EXPECT_EQ(st.PacketsSent(), 2000l);
+    EXPECT_EQ(st.BytesSent().bytes(), single_packet_size * 2000l);
+    EXPECT_THAT(st.local_addresses,
                 ElementsAreArray({bob_endpoint->GetPeerLocalAddress()}));
-    EXPECT_EQ(st->PacketsReceived(), 2000l);
-    EXPECT_EQ(st->BytesReceived().bytes(), single_packet_size * 2000l);
-    EXPECT_EQ(st->PacketsDiscardedNoReceiver(), 0l);
-    EXPECT_EQ(st->BytesDiscardedNoReceiver().bytes(), 0l);
-    EXPECT_GT(st->FirstReceivedPacketSize(), DataSize::Zero());
-    EXPECT_TRUE(st->FirstPacketReceivedTime().IsFinite());
-    EXPECT_TRUE(st->LastPacketReceivedTime().IsFinite());
+    EXPECT_EQ(st.PacketsReceived(), 2000l);
+    EXPECT_EQ(st.BytesReceived().bytes(), single_packet_size * 2000l);
+    EXPECT_EQ(st.PacketsDiscardedNoReceiver(), 0l);
+    EXPECT_EQ(st.BytesDiscardedNoReceiver().bytes(), 0l);
+    EXPECT_GT(st.FirstReceivedPacketSize(), DataSize::Zero());
+    EXPECT_TRUE(st.FirstPacketReceivedTime().IsFinite());
+    EXPECT_TRUE(st.LastPacketReceivedTime().IsFinite());
 
     rtc::IPAddress alice_ip = alice_endpoint->GetPeerLocalAddress();
     std::map<rtc::IPAddress, EmulatedNetworkIncomingStats> source_st =
-        st->incoming_stats_per_source;
+        st.incoming_stats_per_source;
     ASSERT_EQ(source_st.size(), 1lu);
     EXPECT_EQ(source_st.at(alice_ip).packets_received, 2000l);
     EXPECT_EQ(source_st.at(alice_ip).bytes_received.bytes(),
@@ -318,17 +318,17 @@ TEST(NetworkEmulationManagerTest, Run) {
     EXPECT_EQ(source_st.at(alice_ip).bytes_discarded_no_receiver.bytes(), 0l);
 
     std::map<rtc::IPAddress, EmulatedNetworkOutgoingStats> dest_st =
-        st->outgoing_stats_per_destination;
+        st.outgoing_stats_per_destination;
     ASSERT_EQ(dest_st.size(), 1lu);
     EXPECT_EQ(dest_st.at(alice_ip).packets_sent, 2000l);
     EXPECT_EQ(dest_st.at(alice_ip).bytes_sent.bytes(),
               single_packet_size * 2000l);
 
     // No debug stats are collected by default.
-    EXPECT_TRUE(st->SentPacketsSizeCounter().IsEmpty());
-    EXPECT_TRUE(st->sent_packets_queue_wait_time_us.IsEmpty());
-    EXPECT_TRUE(st->ReceivedPacketsSizeCounter().IsEmpty());
-    EXPECT_TRUE(st->PacketsDiscardedNoReceiverSizeCounter().IsEmpty());
+    EXPECT_TRUE(st.SentPacketsSizeCounter().IsEmpty());
+    EXPECT_TRUE(st.sent_packets_queue_wait_time_us.IsEmpty());
+    EXPECT_TRUE(st.ReceivedPacketsSizeCounter().IsEmpty());
+    EXPECT_TRUE(st.PacketsDiscardedNoReceiverSizeCounter().IsEmpty());
     EXPECT_TRUE(dest_st.at(alice_ip).sent_packets_size.IsEmpty());
     EXPECT_TRUE(source_st.at(alice_ip).received_packets_size.IsEmpty());
     EXPECT_TRUE(
@@ -409,23 +409,22 @@ TEST(NetworkEmulationManagerTest, DebugStatsCollectedInDebugMode) {
 
   const int64_t single_packet_size = data.size() + kOverheadIpv4Udp;
   std::atomic<int> received_stats_count{0};
-  nt1->GetStats([&](std::unique_ptr<EmulatedNetworkStats> st) {
+  nt1->GetStats([&](EmulatedNetworkStats st) {
     rtc::IPAddress bob_ip = bob_endpoint->GetPeerLocalAddress();
     std::map<rtc::IPAddress, EmulatedNetworkIncomingStats> source_st =
-        st->incoming_stats_per_source;
+        st.incoming_stats_per_source;
     ASSERT_EQ(source_st.size(), 1lu);
 
     std::map<rtc::IPAddress, EmulatedNetworkOutgoingStats> dest_st =
-        st->outgoing_stats_per_destination;
+        st.outgoing_stats_per_destination;
     ASSERT_EQ(dest_st.size(), 1lu);
 
     // No debug stats are collected by default.
-    EXPECT_EQ(st->SentPacketsSizeCounter().NumSamples(), 2000l);
-    EXPECT_EQ(st->ReceivedPacketsSizeCounter().GetAverage(),
-              single_packet_size);
-    EXPECT_EQ(st->sent_packets_queue_wait_time_us.NumSamples(), 2000l);
-    EXPECT_LT(st->sent_packets_queue_wait_time_us.GetMax(), 1);
-    EXPECT_TRUE(st->PacketsDiscardedNoReceiverSizeCounter().IsEmpty());
+    EXPECT_EQ(st.SentPacketsSizeCounter().NumSamples(), 2000l);
+    EXPECT_EQ(st.ReceivedPacketsSizeCounter().GetAverage(), single_packet_size);
+    EXPECT_EQ(st.sent_packets_queue_wait_time_us.NumSamples(), 2000l);
+    EXPECT_LT(st.sent_packets_queue_wait_time_us.GetMax(), 1);
+    EXPECT_TRUE(st.PacketsDiscardedNoReceiverSizeCounter().IsEmpty());
     EXPECT_EQ(dest_st.at(bob_ip).sent_packets_size.NumSamples(), 2000l);
     EXPECT_EQ(dest_st.at(bob_ip).sent_packets_size.GetAverage(),
               single_packet_size);
@@ -504,14 +503,14 @@ TEST(NetworkEmulationManagerTest, ThroughputStats) {
   }
 
   std::atomic<int> received_stats_count{0};
-  nt1->GetStats([&](std::unique_ptr<EmulatedNetworkStats> st) {
-    EXPECT_EQ(st->PacketsSent(), kNumPacketsSent);
-    EXPECT_EQ(st->BytesSent().bytes(), kSinglePacketSize * kNumPacketsSent);
+  nt1->GetStats([&](EmulatedNetworkStats st) {
+    EXPECT_EQ(st.PacketsSent(), kNumPacketsSent);
+    EXPECT_EQ(st.BytesSent().bytes(), kSinglePacketSize * kNumPacketsSent);
 
     const double tolerance = 0.95;  // Accept 5% tolerance for timing.
-    EXPECT_GE(st->LastPacketSentTime() - st->FirstPacketSentTime(),
+    EXPECT_GE(st.LastPacketSentTime() - st.FirstPacketSentTime(),
               (kNumPacketsSent - 1) * kDelay * tolerance);
-    EXPECT_GT(st->AverageSendRate().bps(), 0);
+    EXPECT_GT(st.AverageSendRate().bps(), 0);
     received_stats_count++;
   });
 
