@@ -1117,9 +1117,9 @@ struct nsFlexContainerFrame::PerFragmentFlexData final {
   // packing space before & in between them, and part of the packing space after
   // them.)
   //
-  // mSumOfChildrenBSize stores the sum of the D values for the current flex
-  // container fragments and for all its previous fragments
-  nscoord mSumOfChildrenBSize = 0;
+  // This variable stores the sum of the D values for the current flex container
+  // fragments and for all its previous fragments
+  nscoord mCumulativeContentBoxBSize = 0;
 
   // This variable accumulates FirstLineOrFirstItemBAxisMetrics::mBEndEdgeShift,
   // for the current flex container fragment and for all its previous fragments.
@@ -4541,7 +4541,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
     // flex item's block-end edge and the available space's block-end edge, we
     // want to record the available size of item to consume part of the packing
     // space.
-    fragmentData.mSumOfChildrenBSize +=
+    fragmentData.mCumulativeContentBoxBSize +=
         std::max(maxBlockEndEdgeOfChildren - borderPadding.BStart(wm),
                  availableSizeForItems.BSize(wm));
 
@@ -5282,7 +5282,7 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
         // theoretical/unfragmented position to be relative to the block-end
         // edge of the previous container fragment's content-box. Later, we'll
         // compute per-item position-shift to finalize its position.
-        framePos.B(flexWM) -= aFragmentData.mSumOfChildrenBSize;
+        framePos.B(flexWM) -= aFragmentData.mCumulativeContentBoxBSize;
         framePos.B(flexWM) += aFragmentData.mCumulativeBEndEdgeShift;
 
         // This helper gets the per-item position-shift in the block-axis.
