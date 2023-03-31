@@ -86,12 +86,11 @@ TaskQueuePacedSender::TaskQueuePacedSender(
       burst = slacked_burst;
     }
   }
-  // Burst can also be controlled via the `burst_interval` argument.
-  if (burst_interval.has_value() &&
-      (!burst.has_value() || burst.value() < burst_interval.value())) {
+  // If not overriden by an experiment, the burst is specified by the
+  // `burst_interval` argument.
+  if (!burst.has_value()) {
     burst = burst_interval;
   }
-
   if (burst.has_value()) {
     pacing_controller_.SetSendBurstInterval(burst.value());
   }

@@ -25,6 +25,7 @@
 #include "api/transport/network_control.h"
 #include "api/units/data_rate.h"
 #include "call/rtp_bitrate_configurator.h"
+#include "call/rtp_transport_config.h"
 #include "call/rtp_transport_controller_send_interface.h"
 #include "call/rtp_video_sender.h"
 #include "modules/congestion_controller/rtp/control_handler.h"
@@ -50,15 +51,7 @@ class RtpTransportControllerSend final
       public TransportFeedbackObserver,
       public NetworkStateEstimateObserver {
  public:
-  RtpTransportControllerSend(
-      Clock* clock,
-      RtcEventLog* event_log,
-      NetworkStatePredictorFactoryInterface* predictor_factory,
-      NetworkControllerFactoryInterface* controller_factory,
-      const BitrateConstraints& bitrate_config,
-      TaskQueueFactory* task_queue_factory,
-      const FieldTrialsView& trials,
-      absl::optional<TimeDelta> pacer_burst_interval);
+  RtpTransportControllerSend(Clock* clock, const RtpTransportConfig& config);
   ~RtpTransportControllerSend() override;
 
   RtpTransportControllerSend(const RtpTransportControllerSend&) = delete;

@@ -84,55 +84,55 @@ RtpTransportControllerSend::PacerSettings::PacerSettings(
 
 RtpTransportControllerSend::RtpTransportControllerSend(
     Clock* clock,
-    webrtc::RtcEventLog* event_log,
-    NetworkStatePredictorFactoryInterface* predictor_factory,
-    NetworkControllerFactoryInterface* controller_factory,
-    const BitrateConstraints& bitrate_config,
-    TaskQueueFactory* task_queue_factory,
-    const FieldTrialsView& trials,
-    absl::optional<TimeDelta> pacer_burst_interval)
+    const RtpTransportConfig& config)
     : clock_(clock),
-      event_log_(event_log),
-      task_queue_factory_(task_queue_factory),
-      bitrate_configurator_(bitrate_config),
+      event_log_(config.event_log),
+      task_queue_factory_(config.task_queue_factory),
+      bitrate_configurator_(config.bitrate_config),
       pacer_started_(false),
-      pacer_settings_(trials),
+      pacer_settings_(*config.trials),
       pacer_(clock,
              &packet_router_,
-             trials,
-             task_queue_factory,
+             *config.trials,
+             config.task_queue_factory,
              pacer_settings_.holdback_window.Get(),
              pacer_settings_.holdback_packets.Get(),
-             pacer_burst_interval),
+             config.pacer_burst_interval),
       observer_(nullptr),
-      controller_factory_override_(controller_factory),
+      controller_factory_override_(config.network_controller_factory),
       controller_factory_fallback_(
-          std::make_unique<GoogCcNetworkControllerFactory>(predictor_factory)),
+          std::make_unique<GoogCcNetworkControllerFactory>(
+              config.network_state_predictor_factory)),
       process_interval_(controller_factory_fallback_->GetProcessInterval()),
       last_report_block_time_(Timestamp::Millis(clock_->TimeInMilliseconds())),
       reset_feedback_on_route_change_(
-          !IsEnabled(trials, "WebRTC-Bwe-NoFeedbackReset")),
+          !IsEnabled(*config.trials, "WebRTC-Bwe-NoFeedbackReset")),
       send_side_bwe_with_overhead_(
-          !IsDisabled(trials, "WebRTC-SendSideBwe-WithOverhead")),
+          !IsDisabled(*config.trials, "WebRTC-SendSideBwe-WithOverhead")),
       add_pacing_to_cwin_(
-          IsEnabled(trials, "WebRTC-AddPacingToCongestionWindowPushback")),
+          IsEnabled(*config.trials,
+                    "WebRTC-AddPacingToCongestionWindowPushback")),
       relay_bandwidth_cap_("relay_cap", DataRate::PlusInfinity()),
       transport_overhead_bytes_per_packet_(0),
       network_available_(false),
       congestion_window_size_(DataSize::PlusInfinity()),
       is_congested_(false),
       retransmission_rate_limiter_(clock, kRetransmitWindowSizeMs),
-      task_queue_(trials, "rtp_send_controller", task_queue_factory),
-      field_trials_(trials) {
+      task_queue_(*config.trials,
+                  "rtp_send_controller",
+                  config.task_queue_factory),
+      field_trials_(*config.trials) {
   ParseFieldTrial({&relay_bandwidth_cap_},
-                  trials.Lookup("WebRTC-Bwe-NetworkRouteConstraints"));
-  initial_config_.constraints = ConvertConstraints(bitrate_config, clock_);
-  initial_config_.event_log = event_log;
-  initial_config_.key_value_config = &trials;
-  RTC_DCHECK(bitrate_config.start_bitrate_bps > 0);
+                  config.trials->Lookup("WebRTC-Bwe-NetworkRouteConstraints"));
+  initial_config_.constraints =
+      ConvertConstraints(config.bitrate_config, clock_);
+  initial_config_.event_log = config.event_log;
+  initial_config_.key_value_config = config.trials;
+  RTC_DCHECK(config.bitrate_config.start_bitrate_bps > 0);
 
-  pacer_.SetPacingRates(DataRate::BitsPerSec(bitrate_config.start_bitrate_bps),
-                        DataRate::Zero());
+  pacer_.SetPacingRates(
+      DataRate::BitsPerSec(config.bitrate_config.start_bitrate_bps),
+      DataRate::Zero());
 }
 
 RtpTransportControllerSend::~RtpTransportControllerSend() {
