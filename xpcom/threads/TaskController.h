@@ -7,6 +7,7 @@
 #ifndef mozilla_TaskController_h
 #define mozilla_TaskController_h
 
+#include "MainThreadUtils.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/IdlePeriodState.h"
 #include "mozilla/RefPtr.h"
@@ -278,21 +279,18 @@ class IdleTaskManager : public TaskManager {
 // ReprioritizeTask.
 class TaskController {
  public:
-  TaskController()
-      : mGraphMutex("TaskController::mGraphMutex"),
-        mThreadPoolCV(mGraphMutex, "TaskController::mThreadPoolCV"),
-        mMainThreadCV(mGraphMutex, "TaskController::mMainThreadCV"),
-        mRunOutOfMTTasksCounter(0) {}
+  TaskController();
 
   static TaskController* Get();
 
-  static bool Initialize();
+  static void Initialize();
 
   void SetThreadObserver(nsIThreadObserver* aObserver) {
     MutexAutoLock lock(mGraphMutex);
     mObserver = aObserver;
   }
   void SetConditionVariable(CondVar* aExternalCondVar) {
+    MutexAutoLock lock(mGraphMutex);
     mExternalCondVar = aExternalCondVar;
   }
 
@@ -338,15 +336,16 @@ class TaskController {
   uint64_t PendingMainthreadTaskCountIncludingSuspended();
 
   // Let users know whether the last main thread task runnable did work.
-  bool MTTaskRunnableProcessedTask() { return mMTTaskRunnableProcessedTask; }
+  bool MTTaskRunnableProcessedTask() {
+    MOZ_ASSERT(NS_IsMainThread());
+    return mMTTaskRunnableProcessedTask;
+  }
 
   static int32_t GetPoolThreadCount();
   static size_t GetThreadStackSize();
 
  private:
   friend void ThreadFuncPoolThread(void* aIndex);
-
-  bool InitializeInternal();
 
   void InitializeThreadPool();
 
@@ -384,13 +383,17 @@ class TaskController {
   // the main thread that need to be handled.
   Mutex mPoolInitializationMutex =
       Mutex("TaskController::mPoolInitializationMutex");
+  // Created under the PoolInitialization mutex, then never extended, and
+  // only freed when the object is freed.  mThread is set at creation time;
+  // mCurrentTask and mEffectiveTaskPriority are only accessed from the
+  // thread, so no locking is needed to access this.
+  std::vector<PoolThread> mPoolThreads;
 
   CondVar mThreadPoolCV;
   CondVar mMainThreadCV;
 
   // Variables below are protected by mGraphMutex.
 
-  std::vector<PoolThread> mPoolThreads;
   std::stack<RefPtr<Task>> mCurrentTasksMT;
 
   // A list of all tasks ordered by priority.
@@ -406,6 +409,7 @@ class TaskController {
   bool mShuttingDown = false;
 
   // This stores whether the last main thread task runnable did work.
+  // Accessed only on MainThread
   bool mMTTaskRunnableProcessedTask = false;
 
   // Whether our thread pool is initialized. We use this currently to avoid
@@ -419,6 +423,7 @@ class TaskController {
   RefPtr<nsIRunnable> mMTBlockingProcessingRunnable;
 
   // XXX - Thread observer to notify when a new event has been dispatched
+  // Set immediately, then simply accessed from any thread
   nsIThreadObserver* mObserver = nullptr;
   // XXX - External condvar to notify when we have received an event
   CondVar* mExternalCondVar = nullptr;
@@ -430,6 +435,8 @@ class TaskController {
 
   // Our tracking of our performance counter and long task state,
   // shared with nsThread.
+  // Set once when MainThread is created, never changed, only accessed from
+  // DoExecuteNextTaskOnlyMainThreadInternal()
   PerformanceCounterState* mPerformanceCounterState = nullptr;
 };
 
