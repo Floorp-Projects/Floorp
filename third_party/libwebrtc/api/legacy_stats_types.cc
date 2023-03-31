@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "api/stats_types.h"
+#include "api/legacy_stats_types.h"
 
 #include <string.h>
 
