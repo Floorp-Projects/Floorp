@@ -773,6 +773,7 @@ enum class FontStyle : int8_t { NORMAL, ITALIC, BOLD, BOLD_ITALIC };
 enum class FontHinting : int8_t { NONE, LIGHT, NORMAL, FULL };
 
 enum class CompositionOp : int8_t {
+  OP_CLEAR,
   OP_OVER,
   OP_ADD,
   OP_ATOP,

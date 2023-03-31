@@ -1519,25 +1519,6 @@ ok(!_thrown_outer, ctx.canvas.id + ' should not throw exception');
 }
 </script>
 
-<!-- [[[ test_2d.composite.operation.clear.html ]]] -->
-
-<p>Canvas test: 2d.composite.operation.clear</p>
-<canvas id="c55" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
-<script>
-
-function test_2d_composite_operation_clear() {
-
-var canvas = document.getElementById('c55');
-var ctx = canvas.getContext('2d');
-
-ctx.globalCompositeOperation = 'xor';
-ctx.globalCompositeOperation = 'clear';
-ok(ctx.globalCompositeOperation == 'xor', "ctx.globalCompositeOperation == 'xor'");
-
-
-}
-</script>
-
 <!-- [[[ test_2d.composite.operation.darker.html ]]] -->
 
 <p>Canvas test: 2d.composite.operation.darker</p>
@@ -22610,11 +22591,6 @@ function runTests() {
   test_2d_composite_operation_casesensitive();
  } catch (e) {
   ok(false, "unexpected exception thrown in: test_2d_composite_operation_casesensitive");
- }
- try {
-  test_2d_composite_operation_clear();
- } catch (e) {
-  ok(false, "unexpected exception thrown in: test_2d_composite_operation_clear");
  }
  try {
   test_2d_composite_operation_darker();

@@ -16,6 +16,8 @@ namespace gfx {
 
 static inline cairo_operator_t GfxOpToCairoOp(CompositionOp op) {
   switch (op) {
+    case CompositionOp::OP_CLEAR:
+      return CAIRO_OPERATOR_CLEAR;
     case CompositionOp::OP_OVER:
       return CAIRO_OPERATOR_OVER;
     case CompositionOp::OP_ADD:
