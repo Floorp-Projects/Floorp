@@ -815,9 +815,11 @@ ProduceRemoteInboundRtpStreamStatsFromReportBlockData(
   remote_inbound->packets_lost = report_block.packets_lost;
   remote_inbound->fraction_lost =
       static_cast<double>(report_block.fraction_lost) / (1 << 8);
-  remote_inbound->round_trip_time =
-      static_cast<double>(report_block_data.last_rtt_ms()) /
-      rtc::kNumMillisecsPerSec;
+  if (report_block_data.num_rtts() > 0) {
+    remote_inbound->round_trip_time =
+        static_cast<double>(report_block_data.last_rtt_ms()) /
+        rtc::kNumMillisecsPerSec;
+  }
   remote_inbound->total_round_trip_time =
       static_cast<double>(report_block_data.sum_rtt_ms()) /
       rtc::kNumMillisecsPerSec;
