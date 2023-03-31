@@ -77,14 +77,15 @@ open class NimbusMessagingController(
     }
 
     /**
-     * Create and return the relevant [Intent] for the given [action].
+     * Create and return the relevant [Intent] for the given [Message].
      *
-     * @param action the [Message.action] to create the [Intent] for.
-     * @return an [Intent] using the processed [Message.action].
+     * @param message the [Message] to create the [Intent] for.
+     * @return an [Intent] using the processed [Message].
      */
-    fun getIntentForMessageAction(action: String): Intent {
-        return Intent(Intent.ACTION_VIEW, convertActionIntoDeepLinkSchemeUri(action))
-    }
+    fun getIntentForMessage(message: Message) = Intent(
+        Intent.ACTION_VIEW,
+        processMessageActionToUri(message),
+    )
 
     /**
      * Will attempt to get the [Message] for the given [id].

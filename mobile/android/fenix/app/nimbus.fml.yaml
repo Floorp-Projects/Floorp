@@ -105,10 +105,10 @@ import:
                 surface: homescreen
                 action: "MAKE_DEFAULT_BROWSER"
                 trigger: [ "I_AM_NOT_DEFAULT_BROWSER","USER_ESTABLISHED_INSTALL" ]
-                style: "PERSISTENT"
+                style: PERSISTENT
                 button-label: preferences_set_as_default_browser
               default-browser-notification:
-                title: "nimbus_notification_default_browser_title"
+                title: nimbus_notification_default_browser_title
                 text: nimbus_notification_default_browser_text
                 surface: notification
                 style: NOTIFICATION

@@ -267,8 +267,15 @@ class NimbusMessagingControllerTest {
         val message = createMessage("id-1", action = "unknown")
         `when`(storage.generateUuidAndFormatAction(message.action))
             .thenReturn(Pair(null, message.action))
+        assertNull(GleanMessaging.messageClicked.testGetValue())
 
-        val actualIntent = controller.getIntentForMessageAction(message.action)
+        val actualIntent = controller.getIntentForMessage(message)
+
+        // Updated telemetry
+        assertNotNull(GleanMessaging.messageClicked.testGetValue())
+        val event = GleanMessaging.messageClicked.testGetValue()!!
+        assertEquals(1, event.size)
+        assertEquals(message.id, event.single().extra!!["message_key"])
 
         // The processed Intent data
         assertEquals(Intent.ACTION_VIEW, actualIntent.action)

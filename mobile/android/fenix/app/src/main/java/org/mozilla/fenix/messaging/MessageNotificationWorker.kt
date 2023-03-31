@@ -223,7 +223,7 @@ class NotificationClickedReceiverActivity : Activity() {
             runBlockingIncrement { nimbusMessagingController.onMessageClicked(message.metadata) }
 
             // Create the intent.
-            val intent = nimbusMessagingController.getIntentForMessageAction(message.action)
+            val intent = nimbusMessagingController.getIntentForMessage(message)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
 
