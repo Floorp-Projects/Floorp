@@ -3217,6 +3217,16 @@ INSTANTIATE_TEST_SUITE_P(
                 StreamConfig(16000, 3), StreamConfig(16000, 3),
                 ApmFormatHandlingTestParams::ExpectedOutput::kNoError},
 
+            // Supported but incompatible formats.
+            ApmFormatHandlingTestParams{
+                StreamConfig(16000, 3), StreamConfig(16000, 2),
+                ApmFormatHandlingTestParams::ExpectedOutput::
+                    kErrorAndCopyOfFirstChannel},
+            ApmFormatHandlingTestParams{
+                StreamConfig(16000, 3), StreamConfig(16000, 4),
+                ApmFormatHandlingTestParams::ExpectedOutput::
+                    kErrorAndCopyOfFirstChannel},
+
             // Unsupported format and input / output mismatch.
             ApmFormatHandlingTestParams{
                 StreamConfig(7900, 1), StreamConfig(16000, 1),
