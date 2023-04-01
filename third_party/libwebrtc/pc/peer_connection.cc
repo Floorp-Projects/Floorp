@@ -605,6 +605,16 @@ RTCError PeerConnection::Initialize(
     return parse_error;
   }
 
+  // Restrict number of TURN servers.
+  if (!trials().IsDisabled("WebRTC-LimitTurnServers") &&
+      turn_servers.size() > cricket::kMaxTurnServers) {
+    RTC_LOG(LS_WARNING) << "Number of configured TURN servers is "
+                        << turn_servers.size()
+                        << " which exceeds the maximum allowed number of "
+                        << cricket::kMaxTurnServers;
+    turn_servers.resize(cricket::kMaxTurnServers);
+  }
+
   // Add the turn logging id to all turn servers
   for (cricket::RelayServerConfig& turn_server : turn_servers) {
     turn_server.turn_logging_id = configuration.turn_logging_id;
@@ -1549,6 +1559,17 @@ RTCError PeerConnection::SetConfiguration(
   if (!parse_error.ok()) {
     return parse_error;
   }
+
+  // Restrict number of TURN servers.
+  if (!trials().IsDisabled("WebRTC-LimitTurnServers") &&
+      turn_servers.size() > cricket::kMaxTurnServers) {
+    RTC_LOG(LS_WARNING) << "Number of configured TURN servers is "
+                        << turn_servers.size()
+                        << " which exceeds the maximum allowed number of "
+                        << cricket::kMaxTurnServers;
+    turn_servers.resize(cricket::kMaxTurnServers);
+  }
+
   // Add the turn logging id to all turn servers
   for (cricket::RelayServerConfig& turn_server : turn_servers) {
     turn_server.turn_logging_id = configuration.turn_logging_id;
