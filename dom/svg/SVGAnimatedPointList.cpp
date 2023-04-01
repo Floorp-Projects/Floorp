@@ -155,7 +155,6 @@ nsresult SVGAnimatedPointList::SMILAnimatedPointList::ValueFromString(
     list->SetInfo(mElement);
     aValue = std::move(val);
   }
-  aPreventCachingOfSandwich = false;
   return rv;
 }
 

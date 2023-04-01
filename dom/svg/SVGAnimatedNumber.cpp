@@ -160,7 +160,6 @@ nsresult SVGAnimatedNumber::SMILNumber::ValueFromString(
   SMILValue val(SMILFloatType::Singleton());
   val.mU.mDouble = value;
   aValue = val;
-  aPreventCachingOfSandwich = false;
 
   return NS_OK;
 }

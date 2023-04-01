@@ -130,7 +130,6 @@ nsresult SVGAnimatedNumberList::SMILAnimatedNumberList::ValueFromString(
     nlai->SetInfo(mElement);
     aValue = std::move(val);
   }
-  aPreventCachingOfSandwich = false;
   return rv;
 }
 

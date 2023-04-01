@@ -138,7 +138,6 @@ nsresult SVGAnimatedInteger::SMILInteger::ValueFromString(
   SMILValue smilVal(SMILIntegerType::Singleton());
   smilVal.mU.mInt = val;
   aValue = smilVal;
-  aPreventCachingOfSandwich = false;
   return NS_OK;
 }
 

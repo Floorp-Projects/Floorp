@@ -268,7 +268,6 @@ nsresult SVGAnimatedViewBox::SMILViewBox ::ValueFromString(
   SMILValue val(&SVGViewBoxSMILType::sSingleton);
   *static_cast<SVGViewBox*>(val.mU.mPtr) = viewBox;
   aValue = std::move(val);
-  aPreventCachingOfSandwich = false;
 
   return NS_OK;
 }

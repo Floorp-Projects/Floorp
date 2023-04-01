@@ -456,7 +456,6 @@ nsresult SVGAnimatedOrient::SMILOrient::ValueFromString(
     val.mU.mOrient.mOrientType = SVG_MARKER_ORIENT_ANGLE;
   }
   aValue = std::move(val);
-  aPreventCachingOfSandwich = false;
 
   return NS_OK;
 }

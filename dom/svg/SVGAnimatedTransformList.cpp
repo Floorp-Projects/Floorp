@@ -190,7 +190,6 @@ nsresult SVGAnimatedTransformList::SMILAnimatedTransformList::ValueFromString(
   }
 
   ParseValue(aStr, transformType, aValue);
-  aPreventCachingOfSandwich = false;
   return aValue.IsNull() ? NS_ERROR_FAILURE : NS_OK;
 }
 

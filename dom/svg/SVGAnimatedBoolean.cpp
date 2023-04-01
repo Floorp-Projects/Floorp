@@ -155,7 +155,6 @@ nsresult SVGAnimatedBoolean::SMILBool::ValueFromString(
   SMILValue val(SMILBoolType::Singleton());
   val.mU.mBool = value;
   aValue = val;
-  aPreventCachingOfSandwich = false;
 
   return NS_OK;
 }

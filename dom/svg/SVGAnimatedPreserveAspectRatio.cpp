@@ -208,7 +208,6 @@ nsresult SMILPreserveAspectRatio::ValueFromString(
   SMILValue val(SMILEnumType::Singleton());
   val.mU.mUint = PackPreserveAspectRatio(par);
   aValue = val;
-  aPreventCachingOfSandwich = false;
   return NS_OK;
 }
 

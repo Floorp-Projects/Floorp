@@ -502,16 +502,12 @@ class MOZ_STACK_CLASS SMILValueParser
 
   bool Parse(const nsAString& aValueStr) override {
     SMILValue newValue;
-    bool tmpPreventCachingOfSandwich = false;
     if (NS_FAILED(mSMILAttr->ValueFromString(aValueStr, mSrcElement, newValue,
-                                             tmpPreventCachingOfSandwich)))
+                                             *mPreventCachingOfSandwich)))
       return false;
 
     if (!mValuesArray->AppendElement(newValue, fallible)) {
       return false;
-    }
-    if (tmpPreventCachingOfSandwich) {
-      *mPreventCachingOfSandwich = true;
     }
     return true;
   }
