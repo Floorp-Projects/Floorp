@@ -103,9 +103,6 @@ class AimdRateControl {
   // Allow the delay based estimate to only increase as long as application
   // limited region (alr) is not detected.
   const bool no_bitrate_increase_in_alr_;
-  // Use estimated link capacity lower bound if it is higher than the
-  // acknowledged rate when backing off due to overuse.
-  const bool estimate_bounded_backoff_;
   // If false, uses estimated link capacity upper bound *
   // `estimate_bounded_increase_ratio_` as upper limit for the estimate.
   FieldTrialFlag disable_estimate_bounded_increase_{"Disabled"};
