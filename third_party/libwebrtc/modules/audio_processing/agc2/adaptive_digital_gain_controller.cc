@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_processing/agc2/adaptive_digital_gain_applier.h"
+#include "modules/audio_processing/agc2/adaptive_digital_gain_controller.h"
 
 #include <algorithm>
 
@@ -116,7 +116,7 @@ void CopyAudio(AudioFrameView<const float> src,
 
 }  // namespace
 
-AdaptiveDigitalGainApplier::AdaptiveDigitalGainApplier(
+AdaptiveDigitalGainController::AdaptiveDigitalGainController(
     ApmDataDumper* apm_data_dumper,
     const AudioProcessing::Config::GainController2::AdaptiveDigital& config,
     int sample_rate_hz,
@@ -139,8 +139,8 @@ AdaptiveDigitalGainApplier::AdaptiveDigitalGainApplier(
   Initialize(sample_rate_hz, num_channels);
 }
 
-void AdaptiveDigitalGainApplier::Initialize(int sample_rate_hz,
-                                            int num_channels) {
+void AdaptiveDigitalGainController::Initialize(int sample_rate_hz,
+                                               int num_channels) {
   if (!config_.dry_run) {
     return;
   }
@@ -163,8 +163,8 @@ void AdaptiveDigitalGainApplier::Initialize(int sample_rate_hz,
   }
 }
 
-void AdaptiveDigitalGainApplier::Process(const FrameInfo& info,
-                                         AudioFrameView<float> frame) {
+void AdaptiveDigitalGainController::Process(const FrameInfo& info,
+                                            AudioFrameView<float> frame) {
   RTC_DCHECK_GE(info.speech_level_dbfs, -150.0f);
   RTC_DCHECK_GE(frame.num_channels(), 1);
   RTC_DCHECK(

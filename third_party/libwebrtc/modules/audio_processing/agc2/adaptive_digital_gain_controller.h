@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_PROCESSING_AGC2_ADAPTIVE_DIGITAL_GAIN_APPLIER_H_
-#define MODULES_AUDIO_PROCESSING_AGC2_ADAPTIVE_DIGITAL_GAIN_APPLIER_H_
+#ifndef MODULES_AUDIO_PROCESSING_AGC2_ADAPTIVE_DIGITAL_GAIN_CONTROLLER_H_
+#define MODULES_AUDIO_PROCESSING_AGC2_ADAPTIVE_DIGITAL_GAIN_CONTROLLER_H_
 
 #include <vector>
 
@@ -21,30 +21,29 @@ namespace webrtc {
 
 class ApmDataDumper;
 
-// TODO(bugs.webrtc.org/7494): Split into `GainAdaptor` and `GainApplier`.
 // Selects the target digital gain, decides when and how quickly to adapt to the
 // target and applies the current gain to 10 ms frames.
-class AdaptiveDigitalGainApplier {
+class AdaptiveDigitalGainController {
  public:
   // Information about a frame to process.
   struct FrameInfo {
-    float speech_probability;     // Probability of speech in the [0, 1] range.
-    float speech_level_dbfs;      // Estimated speech level (dBFS).
-    bool speech_level_reliable;   // True with reliable speech level estimation.
-    float noise_rms_dbfs;         // Estimated noise RMS level (dBFS).
-    float headroom_db;            // Headroom (dB).
+    float speech_probability;    // Probability of speech in the [0, 1] range.
+    float speech_level_dbfs;     // Estimated speech level (dBFS).
+    bool speech_level_reliable;  // True with reliable speech level estimation.
+    float noise_rms_dbfs;        // Estimated noise RMS level (dBFS).
+    float headroom_db;           // Headroom (dB).
     // TODO(bugs.webrtc.org/7494): Remove `limiter_envelope_dbfs`.
     float limiter_envelope_dbfs;  // Envelope level from the limiter (dBFS).
   };
 
-  AdaptiveDigitalGainApplier(
+  AdaptiveDigitalGainController(
       ApmDataDumper* apm_data_dumper,
       const AudioProcessing::Config::GainController2::AdaptiveDigital& config,
       int sample_rate_hz,
       int num_channels);
-  AdaptiveDigitalGainApplier(const AdaptiveDigitalGainApplier&) = delete;
-  AdaptiveDigitalGainApplier& operator=(const AdaptiveDigitalGainApplier&) =
-      delete;
+  AdaptiveDigitalGainController(const AdaptiveDigitalGainController&) = delete;
+  AdaptiveDigitalGainController& operator=(
+      const AdaptiveDigitalGainController&) = delete;
 
   void Initialize(int sample_rate_hz, int num_channels);
 
@@ -69,4 +68,4 @@ class AdaptiveDigitalGainApplier {
 
 }  // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AGC2_ADAPTIVE_DIGITAL_GAIN_APPLIER_H_
+#endif  // MODULES_AUDIO_PROCESSING_AGC2_ADAPTIVE_DIGITAL_GAIN_CONTROLLER_H_

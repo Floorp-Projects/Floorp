@@ -15,7 +15,7 @@
 #include <memory>
 #include <string>
 
-#include "modules/audio_processing/agc2/adaptive_digital_gain_applier.h"
+#include "modules/audio_processing/agc2/adaptive_digital_gain_controller.h"
 #include "modules/audio_processing/agc2/cpu_features.h"
 #include "modules/audio_processing/agc2/gain_applier.h"
 #include "modules/audio_processing/agc2/input_volume_controller.h"
@@ -92,8 +92,7 @@ class GainController2 {
   std::unique_ptr<InputVolumeController> input_volume_controller_;
   // TODO(bugs.webrtc.org/7494): Rename to `CrestFactorEstimator`.
   std::unique_ptr<SaturationProtector> saturation_protector_;
-  // TODO(bugs.webrtc.org/7494): Rename to `AdaptiveDigitalGainController`.
-  std::unique_ptr<AdaptiveDigitalGainApplier> adaptive_digital_controller_;
+  std::unique_ptr<AdaptiveDigitalGainController> adaptive_digital_controller_;
   Limiter limiter_;
 
   int calls_since_last_limiter_log_;

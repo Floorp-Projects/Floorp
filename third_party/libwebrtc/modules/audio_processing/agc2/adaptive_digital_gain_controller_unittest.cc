@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_processing/agc2/adaptive_digital_gain_applier.h"
+#include "modules/audio_processing/agc2/adaptive_digital_gain_controller.h"
 
 #include <algorithm>
 #include <memory>
@@ -48,28 +48,28 @@ using AdaptiveDigitalConfig =
 
 constexpr AdaptiveDigitalConfig kDefaultConfig{};
 
-// Helper to create initialized `AdaptiveDigitalGainApplier` objects.
+// Helper to create initialized `AdaptiveDigitalGainController` objects.
 struct GainApplierHelper {
   GainApplierHelper(const AdaptiveDigitalConfig& config,
                     int sample_rate_hz,
                     int num_channels)
       : apm_data_dumper(0),
         gain_applier(
-            std::make_unique<AdaptiveDigitalGainApplier>(&apm_data_dumper,
-                                                         config,
-                                                         sample_rate_hz,
-                                                         num_channels)) {}
+            std::make_unique<AdaptiveDigitalGainController>(&apm_data_dumper,
+                                                            config,
+                                                            sample_rate_hz,
+                                                            num_channels)) {}
   ApmDataDumper apm_data_dumper;
-  std::unique_ptr<AdaptiveDigitalGainApplier> gain_applier;
+  std::unique_ptr<AdaptiveDigitalGainController> gain_applier;
 };
 
 // Returns a `FrameInfo` sample to simulate noiseless speech detected with
 // maximum probability and with level, headroom and limiter envelope chosen
 // so that the resulting gain equals the default initial adaptive digital gain
 // i.e., no gain adaptation is expected.
-AdaptiveDigitalGainApplier::FrameInfo GetFrameInfoToNotAdapt(
+AdaptiveDigitalGainController::FrameInfo GetFrameInfoToNotAdapt(
     const AdaptiveDigitalConfig& config) {
-  AdaptiveDigitalGainApplier::FrameInfo info;
+  AdaptiveDigitalGainController::FrameInfo info;
   info.speech_probability = kMaxSpeechProbability;
   info.speech_level_dbfs = -config.initial_gain_db - config.headroom_db;
   info.speech_level_reliable = true;
@@ -79,7 +79,8 @@ AdaptiveDigitalGainApplier::FrameInfo GetFrameInfoToNotAdapt(
   return info;
 }
 
-TEST(GainController2AdaptiveGainApplier, GainApplierShouldNotCrash) {
+TEST(GainController2AdaptiveDigitalGainControllerTest,
+     GainApplierShouldNotCrash) {
   GainApplierHelper helper(kDefaultConfig, /*sample_rate_hz=*/48000, kStereo);
   // Make one call with reasonable audio level values and settings.
   VectorFloatFrame fake_audio(kStereo, kFrameLen10ms48kHz, 10000.0f);
@@ -88,7 +89,7 @@ TEST(GainController2AdaptiveGainApplier, GainApplierShouldNotCrash) {
 }
 
 // Checks that the maximum allowed gain is applied.
-TEST(GainController2AdaptiveGainApplier, MaxGainApplied) {
+TEST(GainController2AdaptiveDigitalGainControllerTest, MaxGainApplied) {
   constexpr int kNumFramesToAdapt =
       static_cast<int>(kDefaultConfig.max_gain_db /
                        GetMaxGainChangePerFrameDb(
@@ -96,7 +97,7 @@ TEST(GainController2AdaptiveGainApplier, MaxGainApplied) {
       kNumExtraFrames;
 
   GainApplierHelper helper(kDefaultConfig, /*sample_rate_hz=*/8000, kMono);
-  AdaptiveDigitalGainApplier::FrameInfo info =
+  AdaptiveDigitalGainController::FrameInfo info =
       GetFrameInfoToNotAdapt(kDefaultConfig);
   info.speech_level_dbfs = -60.0f;
   float applied_gain;
@@ -109,7 +110,7 @@ TEST(GainController2AdaptiveGainApplier, MaxGainApplied) {
   EXPECT_NEAR(applied_gain_db, kDefaultConfig.max_gain_db, 0.1f);
 }
 
-TEST(GainController2AdaptiveGainApplier, GainDoesNotChangeFast) {
+TEST(GainController2AdaptiveDigitalGainControllerTest, GainDoesNotChangeFast) {
   GainApplierHelper helper(kDefaultConfig, /*sample_rate_hz=*/8000, kMono);
 
   constexpr float initial_level_dbfs = -25.0f;
@@ -125,7 +126,7 @@ TEST(GainController2AdaptiveGainApplier, GainDoesNotChangeFast) {
   for (int i = 0; i < kNumFramesToAdapt; ++i) {
     SCOPED_TRACE(i);
     VectorFloatFrame fake_audio(kMono, kFrameLen10ms8kHz, 1.0f);
-    AdaptiveDigitalGainApplier::FrameInfo info =
+    AdaptiveDigitalGainController::FrameInfo info =
         GetFrameInfoToNotAdapt(kDefaultConfig);
     info.speech_level_dbfs = initial_level_dbfs;
     helper.gain_applier->Process(info, fake_audio.float_frame_view());
@@ -139,7 +140,7 @@ TEST(GainController2AdaptiveGainApplier, GainDoesNotChangeFast) {
   for (int i = 0; i < kNumFramesToAdapt; ++i) {
     SCOPED_TRACE(i);
     VectorFloatFrame fake_audio(kMono, kFrameLen10ms8kHz, 1.0f);
-    AdaptiveDigitalGainApplier::FrameInfo info =
+    AdaptiveDigitalGainController::FrameInfo info =
         GetFrameInfoToNotAdapt(kDefaultConfig);
     info.speech_level_dbfs = 0.f;
     helper.gain_applier->Process(info, fake_audio.float_frame_view());
@@ -150,13 +151,13 @@ TEST(GainController2AdaptiveGainApplier, GainDoesNotChangeFast) {
   }
 }
 
-TEST(GainController2AdaptiveGainApplier, GainIsRampedInAFrame) {
+TEST(GainController2AdaptiveDigitalGainControllerTest, GainIsRampedInAFrame) {
   GainApplierHelper helper(kDefaultConfig, /*sample_rate_hz=*/48000, kMono);
 
   constexpr float initial_level_dbfs = -25.0f;
 
   VectorFloatFrame fake_audio(kMono, kFrameLen10ms48kHz, 1.0f);
-  AdaptiveDigitalGainApplier::FrameInfo info =
+  AdaptiveDigitalGainController::FrameInfo info =
       GetFrameInfoToNotAdapt(kDefaultConfig);
   info.speech_level_dbfs = initial_level_dbfs;
   helper.gain_applier->Process(info, fake_audio.float_frame_view());
@@ -176,7 +177,7 @@ TEST(GainController2AdaptiveGainApplier, GainIsRampedInAFrame) {
   EXPECT_LE(maximal_difference, max_change_per_sample);
 }
 
-TEST(GainController2AdaptiveGainApplier, NoiseLimitsGain) {
+TEST(GainController2AdaptiveDigitalGainControllerTest, NoiseLimitsGain) {
   GainApplierHelper helper(kDefaultConfig, /*sample_rate_hz=*/48000, kMono);
 
   constexpr float initial_level_dbfs = -25.0f;
@@ -190,7 +191,7 @@ TEST(GainController2AdaptiveGainApplier, NoiseLimitsGain) {
 
   for (int i = 0; i < num_initial_frames + num_frames; ++i) {
     VectorFloatFrame fake_audio(kMono, kFrameLen10ms48kHz, 1.0f);
-    AdaptiveDigitalGainApplier::FrameInfo info =
+    AdaptiveDigitalGainController::FrameInfo info =
         GetFrameInfoToNotAdapt(kDefaultConfig);
     info.speech_level_dbfs = initial_level_dbfs;
     info.noise_rms_dbfs = kWithNoiseDbfs;
@@ -207,18 +208,19 @@ TEST(GainController2AdaptiveGainApplier, NoiseLimitsGain) {
   }
 }
 
-TEST(GainController2GainApplier, CanHandlePositiveSpeechLevels) {
+TEST(GainController2AdaptiveDigitalGainControllerTest,
+     CanHandlePositiveSpeechLevels) {
   GainApplierHelper helper(kDefaultConfig, /*sample_rate_hz=*/48000, kStereo);
 
   // Make one call with positive audio level values and settings.
   VectorFloatFrame fake_audio(kStereo, kFrameLen10ms48kHz, 10000.0f);
-  AdaptiveDigitalGainApplier::FrameInfo info =
+  AdaptiveDigitalGainController::FrameInfo info =
       GetFrameInfoToNotAdapt(kDefaultConfig);
   info.speech_level_dbfs = 5.0f;
   helper.gain_applier->Process(info, fake_audio.float_frame_view());
 }
 
-TEST(GainController2GainApplier, AudioLevelLimitsGain) {
+TEST(GainController2AdaptiveDigitalGainControllerTest, AudioLevelLimitsGain) {
   GainApplierHelper helper(kDefaultConfig, /*sample_rate_hz=*/48000, kMono);
 
   constexpr float initial_level_dbfs = -25.0f;
@@ -232,7 +234,7 @@ TEST(GainController2GainApplier, AudioLevelLimitsGain) {
 
   for (int i = 0; i < num_initial_frames + num_frames; ++i) {
     VectorFloatFrame fake_audio(kMono, kFrameLen10ms48kHz, 1.0f);
-    AdaptiveDigitalGainApplier::FrameInfo info =
+    AdaptiveDigitalGainController::FrameInfo info =
         GetFrameInfoToNotAdapt(kDefaultConfig);
     info.speech_level_dbfs = initial_level_dbfs;
     info.limiter_envelope_dbfs = 1.0f;
@@ -250,19 +252,21 @@ TEST(GainController2GainApplier, AudioLevelLimitsGain) {
   }
 }
 
-class AdaptiveDigitalGainApplierTest : public ::testing::TestWithParam<int> {
+class AdaptiveDigitalGainControllerParametrizedTest
+    : public ::testing::TestWithParam<int> {
  protected:
   int adjacent_speech_frames_threshold() const { return GetParam(); }
 };
 
-TEST_P(AdaptiveDigitalGainApplierTest,
+TEST_P(AdaptiveDigitalGainControllerParametrizedTest,
        DoNotIncreaseGainWithTooFewSpeechFrames) {
   AdaptiveDigitalConfig config;
   config.adjacent_speech_frames_threshold = adjacent_speech_frames_threshold();
   GainApplierHelper helper(config, /*sample_rate_hz=*/48000, kMono);
 
   // Lower the speech level so that the target gain will be increased.
-  AdaptiveDigitalGainApplier::FrameInfo info = GetFrameInfoToNotAdapt(config);
+  AdaptiveDigitalGainController::FrameInfo info =
+      GetFrameInfoToNotAdapt(config);
   info.speech_level_dbfs -= 12.0f;
 
   float prev_gain = 0.0f;
@@ -278,13 +282,15 @@ TEST_P(AdaptiveDigitalGainApplierTest,
   }
 }
 
-TEST_P(AdaptiveDigitalGainApplierTest, IncreaseGainWithEnoughSpeechFrames) {
+TEST_P(AdaptiveDigitalGainControllerParametrizedTest,
+       IncreaseGainWithEnoughSpeechFrames) {
   AdaptiveDigitalConfig config;
   config.adjacent_speech_frames_threshold = adjacent_speech_frames_threshold();
   GainApplierHelper helper(config, /*sample_rate_hz=*/48000, kMono);
 
   // Lower the speech level so that the target gain will be increased.
-  AdaptiveDigitalGainApplier::FrameInfo info = GetFrameInfoToNotAdapt(config);
+  AdaptiveDigitalGainController::FrameInfo info =
+      GetFrameInfoToNotAdapt(config);
   info.speech_level_dbfs -= 12.0f;
 
   float prev_gain = 0.0f;
@@ -304,17 +310,19 @@ TEST_P(AdaptiveDigitalGainApplierTest, IncreaseGainWithEnoughSpeechFrames) {
 }
 
 INSTANTIATE_TEST_SUITE_P(GainController2,
-                         AdaptiveDigitalGainApplierTest,
+                         AdaptiveDigitalGainControllerParametrizedTest,
                          ::testing::Values(1, 7, 31));
 
 // Checks that the input is never modified when running in dry run mode.
-TEST(GainController2GainApplier, DryRunDoesNotChangeInput) {
+TEST(GainController2AdaptiveDigitalGainControllerTest,
+     DryRunDoesNotChangeInput) {
   AdaptiveDigitalConfig config;
   config.dry_run = true;
   GainApplierHelper helper(config, /*sample_rate_hz=*/8000, kMono);
 
   // Simulate an input signal with log speech level.
-  AdaptiveDigitalGainApplier::FrameInfo info = GetFrameInfoToNotAdapt(config);
+  AdaptiveDigitalGainController::FrameInfo info =
+      GetFrameInfoToNotAdapt(config);
   info.speech_level_dbfs = -60.0f;
   const int num_frames_to_adapt =
       static_cast<int>(
@@ -332,12 +340,14 @@ TEST(GainController2GainApplier, DryRunDoesNotChangeInput) {
 }
 
 // Checks that no sample is modified before and after the sample rate changes.
-TEST(GainController2GainApplier, DryRunHandlesSampleRateChange) {
+TEST(GainController2AdaptiveDigitalGainControllerTest,
+     DryRunHandlesSampleRateChange) {
   AdaptiveDigitalConfig config;
   config.dry_run = true;
   GainApplierHelper helper(config, /*sample_rate_hz=*/8000, kMono);
 
-  AdaptiveDigitalGainApplier::FrameInfo info = GetFrameInfoToNotAdapt(config);
+  AdaptiveDigitalGainController::FrameInfo info =
+      GetFrameInfoToNotAdapt(config);
   info.speech_level_dbfs = -60.0f;
   constexpr float kPcmSamples = 123.456f;
   VectorFloatFrame fake_audio_8k(kMono, kFrameLen10ms8kHz, kPcmSamples);
@@ -351,12 +361,14 @@ TEST(GainController2GainApplier, DryRunHandlesSampleRateChange) {
 
 // Checks that no sample is modified before and after the number of channels
 // changes.
-TEST(GainController2GainApplier, DryRunHandlesNumChannelsChange) {
+TEST(GainController2AdaptiveDigitalGainControllerTest,
+     DryRunHandlesNumChannelsChange) {
   AdaptiveDigitalConfig config;
   config.dry_run = true;
   GainApplierHelper helper(config, /*sample_rate_hz=*/8000, kMono);
 
-  AdaptiveDigitalGainApplier::FrameInfo info = GetFrameInfoToNotAdapt(config);
+  AdaptiveDigitalGainController::FrameInfo info =
+      GetFrameInfoToNotAdapt(config);
   info.speech_level_dbfs = -60.0f;
   constexpr float kPcmSamples = 123.456f;
   VectorFloatFrame fake_audio_8k(kMono, kFrameLen10ms8kHz, kPcmSamples);
