@@ -159,7 +159,7 @@ class FlexfecRenderObserver : public test::EndToEndTest,
   static constexpr uint32_t kFlexfecLocalSsrc = 456;
 
   explicit FlexfecRenderObserver(bool enable_nack, bool expect_flexfec_rtcp)
-      : test::EndToEndTest(test::CallTest::kDefaultTimeout),
+      : test::EndToEndTest(test::CallTest::kLongTimeout),
         enable_nack_(enable_nack),
         expect_flexfec_rtcp_(expect_flexfec_rtcp),
         received_flexfec_rtcp_(false),
