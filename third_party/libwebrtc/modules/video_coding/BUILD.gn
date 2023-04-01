@@ -337,6 +337,7 @@ rtc_library("video_codec_interface") {
     ":codec_globals_headers",
     "../../api/video:video_frame",
     "../../api/video:video_rtp_headers",
+    "../../api/video_codecs:scalability_mode",
     "../../api/video_codecs:video_codecs_api",
     "../../common_video",
     "../../common_video/generic_frame_descriptor",
@@ -522,6 +523,8 @@ rtc_library("webrtc_h264") {
   deps = [
     ":video_codec_interface",
     ":video_coding_utility",
+    "../../api/transport/rtp:dependency_descriptor",
+    "../../api/video:video_codec_constants",
     "../../api/video:video_frame",
     "../../api/video:video_frame_i010",
     "../../api/video:video_rtp_headers",
@@ -636,6 +639,7 @@ rtc_library("webrtc_vp8") {
     "../../api/video:encoded_image",
     "../../api/video:video_frame",
     "../../api/video:video_rtp_headers",
+    "../../api/video_codecs:scalability_mode",
     "../../api/video_codecs:video_codecs_api",
     "../../api/video_codecs:vp8_temporal_layers_factory",
     "../../common_video",
@@ -783,6 +787,7 @@ rtc_library("webrtc_vp9") {
     "//third_party/abseil-cpp/absl/container:inlined_vector",
     "//third_party/abseil-cpp/absl/memory",
     "//third_party/abseil-cpp/absl/strings:strings",
+    "//third_party/abseil-cpp/absl/types:optional",
   ]
   if (rtc_build_libvpx) {
     deps += [ rtc_libvpx_dir ]

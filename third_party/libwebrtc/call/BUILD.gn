@@ -399,6 +399,7 @@ rtc_library("video_stream_api") {
     "../api/video:video_frame",
     "../api/video:video_rtp_headers",
     "../api/video:video_stream_encoder",
+    "../api/video_codecs:scalability_mode",
     "../api/video_codecs:video_codecs_api",
     "../common_video",
     "../common_video:frame_counts",

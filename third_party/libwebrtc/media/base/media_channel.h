@@ -35,6 +35,7 @@
 #include "api/video/video_sink_interface.h"
 #include "api/video/video_source_interface.h"
 #include "api/video/video_timing.h"
+#include "api/video_codecs/scalability_mode.h"
 #include "api/video_codecs/video_encoder_factory.h"
 #include "call/video_receive_stream.h"
 #include "common_video/include/quality_limitation_reason.h"
@@ -647,6 +648,7 @@ struct VideoSenderInfo : public MediaSenderInfo {
   uint32_t aggregated_huge_frames_sent = 0;
   absl::optional<std::string> rid;
   absl::optional<bool> power_efficient_encoder;
+  absl::optional<webrtc::ScalabilityMode> scalability_mode;
 };
 
 struct VideoReceiverInfo : public MediaReceiverInfo {

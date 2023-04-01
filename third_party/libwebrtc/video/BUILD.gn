@@ -859,6 +859,7 @@ if (rtc_include_tests) {
       "../api/video:video_frame_type",
       "../api/video:video_rtp_headers",
       "../api/video/test:video_frame_matchers",
+      "../api/video_codecs:scalability_mode",
       "../api/video_codecs:video_codecs_api",
       "../api/video_codecs:vp8_temporal_layers_factory",
       "../call:call_interfaces",
