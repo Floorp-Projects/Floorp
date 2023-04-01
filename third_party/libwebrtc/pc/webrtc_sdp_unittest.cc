@@ -4116,6 +4116,67 @@ TEST_F(WebRtcSdpTest, DeserializeMsidAttributeWithMissingTrackId) {
   EXPECT_FALSE(SdpDeserialize(sdp, &jdesc_output));
 }
 
+TEST_F(WebRtcSdpTest, DeserializeMsidAttributeWithoutColon) {
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 18446744069414584320 18446462598732840960 IN IP4 127.0.0.1\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "m=audio 9 RTP/SAVPF 111\r\n"
+      "c=IN IP4 0.0.0.0\r\n"
+      "a=rtpmap:111 opus/48000/2\r\n"
+      "a=msid\r\n";
+
+  JsepSessionDescription jdesc_output(kDummyType);
+  EXPECT_FALSE(SdpDeserialize(sdp, &jdesc_output));
+}
+
+TEST_F(WebRtcSdpTest, DeserializeMsidAttributeWithoutAttributes) {
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 18446744069414584320 18446462598732840960 IN IP4 127.0.0.1\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "m=audio 9 RTP/SAVPF 111\r\n"
+      "c=IN IP4 0.0.0.0\r\n"
+      "a=rtpmap:111 opus/48000/2\r\n"
+      "a=msid:\r\n";
+
+  JsepSessionDescription jdesc_output(kDummyType);
+  EXPECT_FALSE(SdpDeserialize(sdp, &jdesc_output));
+}
+
+TEST_F(WebRtcSdpTest, DeserializeMsidAttributeWithTooManySpaces) {
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 18446744069414584320 18446462598732840960 IN IP4 127.0.0.1\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "m=audio 9 RTP/SAVPF 111\r\n"
+      "c=IN IP4 0.0.0.0\r\n"
+      "a=rtpmap:111 opus/48000/2\r\n"
+      "a=msid:stream_id track_id bogus\r\n";
+
+  JsepSessionDescription jdesc_output(kDummyType);
+  EXPECT_FALSE(SdpDeserialize(sdp, &jdesc_output));
+}
+
+TEST_F(WebRtcSdpTest, DeserializeMsidAttributeWithDifferentTrackIds) {
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 18446744069414584320 18446462598732840960 IN IP4 127.0.0.1\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "m=audio 9 RTP/SAVPF 111\r\n"
+      "c=IN IP4 0.0.0.0\r\n"
+      "a=rtpmap:111 opus/48000/2\r\n"
+      "a=msid:stream_id track_id\r\n"
+      "a=msid:stream_id2 track_id2\r\n";
+
+  JsepSessionDescription jdesc_output(kDummyType);
+  EXPECT_FALSE(SdpDeserialize(sdp, &jdesc_output));
+}
+
 TEST_F(WebRtcSdpTest, DeserializeMsidAttributeWithoutAppData) {
   std::string sdp =
       "v=0\r\n"
@@ -4214,6 +4275,34 @@ TEST_F(WebRtcSdpTest, DeserializeMsidAttributeWithoutAppDataMixed) {
   EXPECT_EQ(stream.stream_ids()[1], "stream_id2");
 
   // Track id is taken from second line.
+  EXPECT_EQ(stream.id, "track_id");
+}
+
+TEST_F(WebRtcSdpTest, DeserializeMsidAttributeWithoutAppDataMixed2) {
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 18446744069414584320 18446462598732840960 IN IP4 127.0.0.1\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "m=audio 9 RTP/SAVPF 111\r\n"
+      "c=IN IP4 0.0.0.0\r\n"
+      "a=rtpmap:111 opus/48000/2\r\n"
+      "a=msid:stream_id track_id\r\n"
+      "a=msid:stream_id2\r\n";
+
+  JsepSessionDescription jdesc_output(kDummyType);
+  // Mixing the syntax like this is not a good idea but we accept it
+  // and the result is the second track_id.
+  EXPECT_TRUE(SdpDeserialize(sdp, &jdesc_output));
+  auto stream = jdesc_output.description()
+                    ->contents()[0]
+                    .media_description()
+                    ->streams()[0];
+  ASSERT_EQ(stream.stream_ids().size(), 2u);
+  EXPECT_EQ(stream.stream_ids()[0], "stream_id");
+  EXPECT_EQ(stream.stream_ids()[1], "stream_id2");
+
+  // Track id is taken from first line.
   EXPECT_EQ(stream.id, "track_id");
 }
 
