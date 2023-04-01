@@ -142,12 +142,8 @@ class AudioProcessingImpl : public AudioProcessing {
   // removed.
   struct GainController2ConfigOverride {
     InputVolumeController::Config input_volume_controller_config;
-    struct AdaptiveDigitalConfig {
-      float headroom_db;
-      float max_gain_db;
-      float max_gain_change_db_per_second;
-      float max_output_noise_level_dbfs;
-    } adaptive_digital_config;
+    AudioProcessing::Config::GainController2::AdaptiveDigital
+        adaptive_digital_config;
   };
 
  protected:

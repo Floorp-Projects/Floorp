@@ -28,7 +28,8 @@ class SpeechLevelEstimator {
  public:
   SpeechLevelEstimator(
       ApmDataDumper* apm_data_dumper,
-      const AudioProcessing::Config::GainController2::AdaptiveDigital& config);
+      const AudioProcessing::Config::GainController2::AdaptiveDigital& config,
+      int adjacent_speech_frames_threshold);
   SpeechLevelEstimator(const SpeechLevelEstimator&) = delete;
   SpeechLevelEstimator& operator=(const SpeechLevelEstimator&) = delete;
 

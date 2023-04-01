@@ -362,21 +362,10 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
         bool operator!=(const AdaptiveDigital& rhs) const {
           return !(*this == rhs);
         }
-
         bool enabled = false;
-        // TODO(bugs.webrtc.org/7494): Remove `dry_run`.
-        // When true, the adaptive digital controller runs but the signal is not
-        // modified.
-        bool dry_run = false;
         float headroom_db = 6.0f;
-        // TODO(bugs.webrtc.org/7494): Consider removing and inferring from
-        // `max_output_noise_level_dbfs`.
         float max_gain_db = 30.0f;
         float initial_gain_db = 8.0f;
-        // TODO(bugs.webrtc.org/7494): Hard-code and remove parameter below.
-        int vad_reset_period_ms = 1500;
-        // TODO(bugs.webrtc.org/7494): Hard-code and remove parameter below.
-        int adjacent_speech_frames_threshold = 12;
         float max_gain_change_db_per_second = 3.0f;
         float max_output_noise_level_dbfs = -50.0f;
       } adaptive_digital;
