@@ -340,9 +340,10 @@
           'linux-bionic', 'x86-64', 'perf-pool', 'timeout-3h', 'perf-output',
           'has_native_resultdb_integration', 'chromium-tester-service-account'
         ],
-        'test_suites': {
-          'isolated_scripts': 'desktop_perf_tests',
-        }
+        # TODO(b/232740856): Reenable when Fuchsia has it's own bot to run perf tests.
+        # 'test_suites': {
+        #   'isolated_scripts': 'desktop_perf_tests',
+        # }
       },
       'Perf Linux Bionic': {
         'os_type':
