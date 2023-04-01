@@ -17,6 +17,7 @@
 
 #include "absl/memory/memory.h"
 #include "api/field_trials_registry.h"
+#include "api/frame_transformer_factory.h"
 #include "api/rtp_headers.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/task_queue/task_queue_factory.h"
@@ -38,6 +39,7 @@
 #include "modules/rtp_rtcp/source/rtp_video_layers_allocation_extension.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/logging.h"
 #include "rtc_base/rate_limiter.h"
 #include "rtc_base/thread.h"
 #include "test/gmock.h"
@@ -1643,6 +1645,46 @@ TEST_F(RtpSenderVideoWithFrameTransformerTest,
   rtp_sender_video->SendEncodedImage(kPayload, kType, kTimestamp,
                                      *encoded_image, video_header,
                                      kDefaultExpectedRetransmissionTimeMs);
+}
+
+TEST_F(RtpSenderVideoWithFrameTransformerTest,
+       OnTransformedFrameSendsVideoWhenCloned) {
+  auto mock_frame_transformer =
+      rtc::make_ref_counted<NiceMock<MockFrameTransformer>>();
+  rtc::scoped_refptr<TransformedFrameCallback> callback;
+  EXPECT_CALL(*mock_frame_transformer, RegisterTransformedFrameSinkCallback)
+      .WillOnce(SaveArg<0>(&callback));
+  std::unique_ptr<RTPSenderVideo> rtp_sender_video =
+      CreateSenderWithFrameTransformer(mock_frame_transformer);
+  ASSERT_TRUE(callback);
+
+  auto encoded_image = CreateDefaultEncodedImage();
+  RTPVideoHeader video_header;
+  video_header.frame_type = VideoFrameType::kVideoFrameKey;
+  ON_CALL(*mock_frame_transformer, Transform)
+      .WillByDefault(
+          [&callback](std::unique_ptr<TransformableFrameInterface> frame) {
+            auto clone = CloneVideoFrame(
+                static_cast<TransformableVideoFrameInterface*>(frame.get()));
+            EXPECT_TRUE(clone);
+            callback->OnTransformedFrame(std::move(clone));
+          });
+  auto encoder_queue = time_controller_.GetTaskQueueFactory()->CreateTaskQueue(
+      "encoder_queue", TaskQueueFactory::Priority::NORMAL);
+  encoder_queue->PostTask([&] {
+    rtp_sender_video->SendEncodedImage(kPayload, kType, kTimestamp,
+                                       *encoded_image, video_header,
+                                       kDefaultExpectedRetransmissionTimeMs);
+  });
+  time_controller_.AdvanceTime(TimeDelta::Zero());
+  EXPECT_EQ(transport_.packets_sent(), 1);
+  encoder_queue->PostTask([&] {
+    rtp_sender_video->SendEncodedImage(kPayload, kType, kTimestamp,
+                                       *encoded_image, video_header,
+                                       kDefaultExpectedRetransmissionTimeMs);
+  });
+  time_controller_.AdvanceTime(TimeDelta::Zero());
+  EXPECT_EQ(transport_.packets_sent(), 2);
 }
 
 }  // namespace
