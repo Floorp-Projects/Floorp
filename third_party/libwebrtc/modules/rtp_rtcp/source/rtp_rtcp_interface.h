@@ -261,10 +261,6 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
   // Once set, this value can not be changed or removed.
   virtual void SetMid(absl::string_view mid) = 0;
 
-  // Sets CSRC.
-  // `csrcs` - vector of CSRCs
-  virtual void SetCsrcs(const std::vector<uint32_t>& csrcs) = 0;
-
   // Turns on/off sending RTX (RFC 4588). The modes can be set as a combination
   // of values of the enumerator RtxMode.
   virtual void SetRtxSendStatus(int modes) = 0;
