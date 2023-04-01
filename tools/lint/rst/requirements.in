@@ -16,4 +16,4 @@ Pygments==2.14.0
 pytz==2022.7.1
 urllib3==1.26.9
 # We need sphinx to avoid some rstcheck errors and warnings
-Sphinx==5.0.2
+Sphinx==5.1.1

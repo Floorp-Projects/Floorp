@@ -162,9 +162,9 @@ snowballstemmer==2.2.0 \
     # via
     #   -r ./tools/lint/rst/requirements.in
     #   sphinx
-sphinx==5.0.2 \
-    --hash=sha256:b18e978ea7565720f26019c702cd85c84376e948370f1cd43d60265010e1c7b0 \
-    --hash=sha256:d3e57663eed1d7c5c50895d191fdeda0b54ded6f44d5621b50709466c338d1e8
+sphinx==5.1.1 \
+    --hash=sha256:309a8da80cb6da9f4713438e5b55861877d5d7976b69d87e336733637ea12693 \
+    --hash=sha256:ba3224a4e206e1fbdecf98a4fae4992ef9b24b85ebf7b584bb340156eaf08d89
     # via -r ./tools/lint/rst/requirements.in
 sphinxcontrib-applehelp==1.0.2 \
     --hash=sha256:806111e5e962be97c29ec4c1e7fe277bfd19e9652fb1a4392105b43e01af885a \
