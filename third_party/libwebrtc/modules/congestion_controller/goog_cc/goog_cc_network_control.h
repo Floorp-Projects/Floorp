@@ -93,7 +93,6 @@ class GoogCcNetworkController : public NetworkControllerInterface {
   const bool ignore_probes_lower_than_network_estimate_;
   const bool limit_probes_lower_than_throughput_estimate_;
   const RateControlSettings rate_control_settings_;
-  const bool loss_based_stable_rate_;
   const bool pace_at_max_of_bwe_and_lower_link_capacity_;
 
   const std::unique_ptr<ProbeController> probe_controller_;

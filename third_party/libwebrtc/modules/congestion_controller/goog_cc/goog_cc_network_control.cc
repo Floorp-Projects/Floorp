@@ -93,8 +93,6 @@ GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config,
                     "WebRTC-Bwe-LimitProbesLowerThanThroughputEstimate")),
       rate_control_settings_(
           RateControlSettings::ParseFromKeyValueConfig(key_value_config_)),
-      loss_based_stable_rate_(
-          IsEnabled(key_value_config_, "WebRTC-Bwe-LossBasedStableRate")),
       pace_at_max_of_bwe_and_lower_link_capacity_(
           IsEnabled(key_value_config_,
                     "WebRTC-Bwe-PaceAtMaxOfBweAndLowerLinkCapacity")),
@@ -643,11 +641,7 @@ void GoogCcNetworkController::MaybeTriggerOnNetworkChanged(
   }
   DataRate stable_target_rate =
       bandwidth_estimation_->GetEstimatedLinkCapacity();
-  if (loss_based_stable_rate_) {
-    stable_target_rate = std::min(stable_target_rate, loss_based_target_rate);
-  } else {
-    stable_target_rate = std::min(stable_target_rate, pushback_target_rate);
-  }
+  stable_target_rate = std::min(stable_target_rate, pushback_target_rate);
 
   if ((loss_based_target_rate != last_loss_based_target_rate_) ||
       (fraction_loss != last_estimated_fraction_loss_) ||
