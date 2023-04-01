@@ -22,6 +22,7 @@
 #include "api/test/metrics/chrome_perf_dashboard_metrics_exporter.h"
 #include "api/test/metrics/global_metrics_logger_and_exporter.h"
 #include "api/test/metrics/metrics_exporter.h"
+#include "api/test/metrics/metrics_set_proto_file_exporter.h"
 #include "api/test/metrics/print_result_proxy_metrics_exporter.h"
 #include "api/test/metrics/stdout_metrics_exporter.h"
 #include "rtc_base/checks.h"
@@ -176,6 +177,12 @@ class TestMainImpl : public TestMain {
     std::vector<std::unique_ptr<test::MetricsExporter>> exporters;
     if (absl::GetFlag(FLAGS_export_perf_results_new_api)) {
       exporters.push_back(std::make_unique<test::StdoutMetricsExporter>());
+      if (!absl::GetFlag(FLAGS_webrtc_test_metrics_output_path).empty()) {
+        exporters.push_back(
+            std::make_unique<webrtc::test::MetricsSetProtoFileExporter>(
+                webrtc::test::MetricsSetProtoFileExporter::Options(
+                    absl::GetFlag(FLAGS_webrtc_test_metrics_output_path))));
+      }
       if (!absl::GetFlag(FLAGS_isolated_script_test_perf_output).empty()) {
         exporters.push_back(
             std::make_unique<test::ChromePerfDashboardMetricsExporter>(
