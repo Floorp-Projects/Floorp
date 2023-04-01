@@ -32,10 +32,10 @@ rtc_library("speech_level_estimator") {
   ]
 }
 
-rtc_library("adaptive_digital_gain_applier") {
+rtc_library("adaptive_digital_gain_controller") {
   sources = [
-    "adaptive_digital_gain_applier.cc",
-    "adaptive_digital_gain_applier.h",
+    "adaptive_digital_gain_controller.cc",
+    "adaptive_digital_gain_controller.h",
   ]
 
   visibility = [
@@ -309,14 +309,14 @@ rtc_library("speech_level_estimator_unittest") {
   ]
 }
 
-rtc_library("adaptive_digital_gain_applier_unittest") {
+rtc_library("adaptive_digital_gain_controller_unittest") {
   testonly = true
   configs += [ "..:apm_debug_dump" ]
 
-  sources = [ "adaptive_digital_gain_applier_unittest.cc" ]
+  sources = [ "adaptive_digital_gain_controller_unittest.cc" ]
 
   deps = [
-    ":adaptive_digital_gain_applier",
+    ":adaptive_digital_gain_controller",
     ":common",
     ":test_utils",
     "..:api",
