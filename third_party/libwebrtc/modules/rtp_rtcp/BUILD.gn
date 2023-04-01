@@ -437,6 +437,17 @@ rtc_library("rtp_video_header") {
   ]
 }
 
+rtc_source_set("rtp_video_header_unittest") {
+  testonly = true
+  sources = [ "source/rtp_video_header_unittest.cc" ]
+  deps = [
+    ":rtp_video_header",
+    "../../api/video:video_frame_metadata",
+    "../../api/video:video_frame_type",
+    "../../test:test_support",
+  ]
+}
+
 rtc_library("fec_test_helper") {
   testonly = true
   sources = [
@@ -604,6 +615,7 @@ if (rtc_include_tests) {
       ":rtp_rtcp",
       ":rtp_rtcp_format",
       ":rtp_rtcp_legacy",
+      ":rtp_video_header_unittest",
       "../../api:array_view",
       "../../api:create_time_controller",
       "../../api:field_trials_registry",

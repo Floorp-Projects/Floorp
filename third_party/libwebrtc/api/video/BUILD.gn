@@ -403,10 +403,7 @@ rtc_library("frame_buffer_unittest") {
 if (rtc_include_tests) {
   rtc_library("video_unittests") {
     testonly = true
-    sources = [
-      "video_frame_metadata_unittest.cc",
-      "video_stream_decoder_create_unittest.cc",
-    ]
+    sources = [ "video_stream_decoder_create_unittest.cc" ]
     deps = [
       ":video_frame_metadata",
       ":video_frame_type",
