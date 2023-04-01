@@ -416,23 +416,14 @@ int32_t H264EncoderImpl::Encode(
   RTC_CHECK(frame_buffer->type() == VideoFrameBuffer::Type::kI420 ||
             frame_buffer->type() == VideoFrameBuffer::Type::kI420A);
 
-  bool send_key_frame = false;
+  bool is_keyframe_needed = false;
   for (size_t i = 0; i < configurations_.size(); ++i) {
     if (configurations_[i].key_frame_request && configurations_[i].sending) {
-      send_key_frame = true;
+      // This is legacy behavior, generating a keyframe on all layers
+      // when generating one for a layer that became active for the first time
+      // or after being disabled.
+      is_keyframe_needed = true;
       break;
-    }
-  }
-
-  if (!send_key_frame && frame_types) {
-    for (size_t i = 0; i < configurations_.size(); ++i) {
-      const size_t simulcast_idx =
-          static_cast<size_t>(configurations_[i].simulcast_idx);
-      if (configurations_[i].sending && simulcast_idx < frame_types->size() &&
-          (*frame_types)[simulcast_idx] == VideoFrameType::kVideoFrameKey) {
-        send_key_frame = true;
-        break;
-      }
     }
   }
 
@@ -480,12 +471,20 @@ int32_t H264EncoderImpl::Encode(
     if (!configurations_[i].sending) {
       continue;
     }
-    if (frame_types != nullptr) {
+    if (frame_types != nullptr && i < frame_types->size()) {
       // Skip frame?
       if ((*frame_types)[i] == VideoFrameType::kEmptyFrame) {
         continue;
       }
     }
+    // Send a key frame either when this layer is configured to require one
+    // or we have explicitly been asked to.
+    const size_t simulcast_idx =
+        static_cast<size_t>(configurations_[i].simulcast_idx);
+    bool send_key_frame =
+        is_keyframe_needed ||
+        (frame_types && simulcast_idx < frame_types->size() &&
+         (*frame_types)[simulcast_idx] == VideoFrameType::kVideoFrameKey);
     if (send_key_frame) {
       // API doc says ForceIntraFrame(false) does nothing, but calling this
       // function forces a key frame regardless of the `bIDR` argument's value.
