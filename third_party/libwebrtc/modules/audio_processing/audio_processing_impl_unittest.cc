@@ -960,6 +960,55 @@ TEST(ApmWithSubmodulesExcludedTest, ToggleTransientSuppressor) {
   }
 }
 
+TEST(AudioProcessingImplTest, CanDisableTransientSuppressor) {
+  // Do not explicitly disable "WebRTC-ApmTransientSuppressorKillSwitch" since
+  // to check that, by default, it is disabled.
+  auto apm = AudioProcessingBuilder()
+                 .SetConfig({.transient_suppression = {.enabled = false}})
+                 .Create();
+  EXPECT_FALSE(apm->GetConfig().transient_suppression.enabled);
+}
+
+TEST(AudioProcessingImplTest, CanEnableTransientSuppressor) {
+  // Do not explicitly disable "WebRTC-ApmTransientSuppressorKillSwitch" since
+  // to check that, by default, it is disabled.
+  auto apm = AudioProcessingBuilder()
+                 .SetConfig({.transient_suppression = {.enabled = true}})
+                 .Create();
+  EXPECT_TRUE(apm->GetConfig().transient_suppression.enabled);
+}
+
+TEST(AudioProcessingImplTest, CanDisableTransientSuppressorIfUsageAllowed) {
+  // Disable the field trial that disallows to enable transient suppression.
+  test::ScopedFieldTrials field_trials(
+      "WebRTC-ApmTransientSuppressorKillSwitch/Disabled/");
+  auto apm = AudioProcessingBuilder()
+                 .SetConfig({.transient_suppression = {.enabled = false}})
+                 .Create();
+  EXPECT_FALSE(apm->GetConfig().transient_suppression.enabled);
+}
+
+TEST(AudioProcessingImplTest, CanEnableTransientSuppressorIfUsageAllowed) {
+  // Disable the field trial that disallows to enable transient suppression.
+  test::ScopedFieldTrials field_trials(
+      "WebRTC-ApmTransientSuppressorKillSwitch/Disabled/");
+  auto apm = AudioProcessingBuilder()
+                 .SetConfig({.transient_suppression = {.enabled = true}})
+                 .Create();
+  EXPECT_TRUE(apm->GetConfig().transient_suppression.enabled);
+}
+
+TEST(AudioProcessingImplTest,
+     CannotEnableTransientSuppressorIfUsageDisallowed) {
+  // Enable the field trial that disallows to enable transient suppression.
+  test::ScopedFieldTrials field_trials(
+      "WebRTC-ApmTransientSuppressorKillSwitch/Enabled/");
+  auto apm = AudioProcessingBuilder()
+                 .SetConfig({.transient_suppression = {.enabled = true}})
+                 .Create();
+  EXPECT_FALSE(apm->GetConfig().transient_suppression.enabled);
+}
+
 // Tests that the minimum startup volume is applied at the startup.
 TEST_P(InputVolumeStartupParameterizedTest,
        VerifyStartupMinVolumeAppliedAtStartup) {

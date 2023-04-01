@@ -191,13 +191,18 @@ class AudioProcessingImpl : public AudioProcessing {
   static std::atomic<int> instance_count_;
   const bool use_setup_specific_default_aec3_config_;
 
-  // TODO(bugs.webrtc.org/7494): Remove the the config when the field trial is
-  // removed. "WebRTC-Audio-InputVolumeControllerExperiment" field trial
-  // override for the input volume controller config.
+  // TODO(bugs.webrtc.org/7494): Remove when the linked field trial is removed.
+  // Override base on the "WebRTC-Audio-InputVolumeControllerExperiment" field
+  // trial for the AGC2 input volume controller configuration.
   const absl::optional<InputVolumeController::Config>
       input_volume_controller_config_override_;
 
   const bool use_denormal_disabler_;
+
+  // When true, the transient suppressor submodule is never created regardless
+  // of the APM configuration.
+  // TODO(bugs.webrtc.org/13663): Remove when the linked field trial is removed.
+  const bool disallow_transient_supporessor_usage_;
 
   const TransientSuppressor::VadMode transient_suppressor_vad_mode_;
 
