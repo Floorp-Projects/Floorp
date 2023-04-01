@@ -78,6 +78,8 @@ struct ProbeControllerConfig {
   // Dont send a probe if min(estimate, network state estimate) is larger than
   // this fraction of the set max bitrate.
   FieldTrialParameter<double> skip_if_estimate_larger_than_fraction_of_max;
+  // Do not send probes if network is either overusing or underusing.
+  FieldTrialParameter<bool> not_probe_if_delay_increased;
 };
 
 // Reason that bandwidth estimate is limited. Bandwidth estimate can be limited
@@ -86,7 +88,8 @@ struct ProbeControllerConfig {
 enum class BandwidthLimitedCause {
   kLossLimitedBweIncreasing = 0,
   kLossLimitedBweDecreasing = 1,
-  kDelayBasedLimited = 2
+  kDelayBasedLimited = 2,
+  kDelayBasedLimitedDelayIncreased = 3,
 };
 
 // This class controls initiation of probing to estimate initial channel
@@ -137,6 +140,11 @@ class ProbeController {
 
   ABSL_MUST_USE_RESULT std::vector<ProbeClusterConfig> Process(
       Timestamp at_time);
+
+  // Gets the value of field trial not_probe_if_delay_increased.
+  bool DontProbeIfDelayIncreased() {
+    return config_.not_probe_if_delay_increased;
+  }
 
  private:
   enum class State {
