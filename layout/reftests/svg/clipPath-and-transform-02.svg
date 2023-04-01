@@ -1,0 +1,13 @@
+<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath clipPathUnits="objectBoundingBox" id="clipPathMask" transform="scale(0.01 0.005)">
+      <rect width="100" height="100"/>
+      <rect id="r" width="100" height="100" display="none"/>
+    </clipPath>
+  </defs>
+  <rect fill="lime" height="100%" width="100%"/>
+
+  <rect fill="red" x="102" y="102" height="96" width="96"/>
+  <rect transform="translate(100, 100)" clip-path="url(#clipPathMask)" fill="lime" y="-100" height="200" width="100"/>
+</svg>
+
