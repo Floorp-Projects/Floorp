@@ -39,10 +39,6 @@ bool IsEnabled(const FieldTrialsView& field_trials, absl::string_view key) {
   return absl::StartsWith(field_trials.Lookup(key), "Enabled");
 }
 
-bool IsNotDisabled(const FieldTrialsView& field_trials, absl::string_view key) {
-  return !absl::StartsWith(field_trials.Lookup(key), "Disabled");
-}
-
 double ReadBackoffFactor(const FieldTrialsView& key_value_config) {
   std::string experiment_string =
       key_value_config.Lookup(kBweBackOffFactorExperiment);
@@ -89,9 +85,6 @@ AimdRateControl::AimdRateControl(const FieldTrialsView* key_value_config,
       no_bitrate_increase_in_alr_(
           IsEnabled(*key_value_config,
                     "WebRTC-DontIncreaseDelayBasedBweInAlr")),
-      estimate_bounded_backoff_(
-          IsNotDisabled(*key_value_config,
-                        "WebRTC-Bwe-EstimateBoundedBackoff")),
       initial_backoff_interval_("initial_backoff_interval"),
       link_capacity_fix_("link_capacity_fix") {
   ParseFieldTrial(
@@ -381,8 +374,7 @@ DataRate AimdRateControl::ClampBitrate(DataRate new_bitrate) const {
     }
     new_bitrate = std::min(upper_bound, new_bitrate);
   }
-  if (estimate_bounded_backoff_ && network_estimate_ &&
-      network_estimate_->link_capacity_lower.IsFinite() &&
+  if (network_estimate_ && network_estimate_->link_capacity_lower.IsFinite() &&
       new_bitrate < current_bitrate_) {
     new_bitrate = std::min(
         current_bitrate_,
