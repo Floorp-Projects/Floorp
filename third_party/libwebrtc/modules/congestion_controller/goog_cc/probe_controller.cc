@@ -200,17 +200,6 @@ std::vector<ProbeClusterConfig> ProbeController::SetBitrates(
       // estimate then initiate probing.
       if (!estimated_bitrate_.IsZero() && old_max_bitrate < max_bitrate_ &&
           estimated_bitrate_ < max_bitrate_) {
-        // The assumption is that if we jump more than 20% in the bandwidth
-        // estimate or if the bandwidth estimate is within 90% of the new
-        // max bitrate then the probing attempt was successful.
-        mid_call_probing_succcess_threshold_ =
-            std::min(estimated_bitrate_ * 1.2, max_bitrate_ * 0.9);
-        mid_call_probing_waiting_for_result_ = true;
-        mid_call_probing_bitrate_ = max_bitrate_;
-
-        RTC_HISTOGRAM_COUNTS_10000("WebRTC.BWE.MidCallProbing.Initiated",
-                                   max_bitrate_.kbps());
-
         return InitiateProbing(at_time, {max_bitrate_}, false);
       }
       break;
@@ -298,14 +287,6 @@ std::vector<ProbeClusterConfig> ProbeController::SetEstimatedBitrate(
   }
   estimated_bitrate_ = bitrate;
 
-  if (mid_call_probing_waiting_for_result_ &&
-      bitrate >= mid_call_probing_succcess_threshold_) {
-    RTC_HISTOGRAM_COUNTS_10000("WebRTC.BWE.MidCallProbing.Success",
-                               mid_call_probing_bitrate_.kbps());
-    RTC_HISTOGRAM_COUNTS_10000("WebRTC.BWE.MidCallProbing.ProbedKbps",
-                               bitrate.kbps());
-    mid_call_probing_waiting_for_result_ = false;
-  }
   if (state_ == State::kWaitingForProbingResult) {
     // Continue probing if probing results indicate channel has greater
     // capacity.
@@ -399,7 +380,6 @@ void ProbeController::Reset(Timestamp at_time) {
   Timestamp now = at_time;
   last_bwe_drop_probing_time_ = now;
   alr_end_time_.reset();
-  mid_call_probing_waiting_for_result_ = false;
   time_of_last_large_drop_ = now;
   bitrate_before_last_large_drop_ = DataRate::Zero();
   max_total_allocated_bitrate_ = DataRate::Zero();
@@ -450,8 +430,6 @@ bool ProbeController::TimeForNetworkStateProbe(Timestamp at_time) const {
 std::vector<ProbeClusterConfig> ProbeController::Process(Timestamp at_time) {
   if (at_time - time_last_probing_initiated_ >
       kMaxWaitingTimeForProbingResult) {
-    mid_call_probing_waiting_for_result_ = false;
-
     if (state_ == State::kWaitingForProbingResult) {
       RTC_LOG(LS_INFO) << "kWaitingForProbingResult: timeout";
       state_ = State::kProbingComplete;
