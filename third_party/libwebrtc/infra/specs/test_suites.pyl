@@ -122,6 +122,22 @@
       'common_video_unittests': {},
       'dcsctp_unittests': {},
       'low_bandwidth_audio_test': {},
+      'rtc_media_unittests': {},
+      # TODO(bugs.webrtc.org/14705): Enable when NonGlobalFieldTrialsInstanceDoesNotModifyGlobalString is fixed.
+      # TODO(bugs.webrtc.org/14700):  Enable when NetworkTest tests are fixed.
+      # 'rtc_unittests': {},
+      'rtc_pc_unittests': {},
+      'svc_tests': {},
+      'system_wrappers_unittests': {},
+      # TODO(bugs.webrtc.org/14712):  Enable once network issue is fixed.
+      # 'peerconnection_unittests': {},
+      'video_engine_tests': {},
+      'voip_unittests': {},
+      # TODO(bugs.fuchsia.dev/115601): Enable when cpu time API's are implemented in Fuchsia
+      # 'test_support_unittests': {},
+      # TODO(bugs.webrtc.org/14707): chromium.test component needs to allow creating listening ports.
+      # 'tools_unittests': {},
+      #
     },
     'ios_device_tests': {
       # TODO(bugs.webrtc.org/11362): Real XCTests fail to start on devices.
