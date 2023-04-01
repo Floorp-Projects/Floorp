@@ -33,6 +33,7 @@ class AdaptiveDigitalGainApplier {
     bool speech_level_reliable;   // True with reliable speech level estimation.
     float noise_rms_dbfs;         // Estimated noise RMS level (dBFS).
     float headroom_db;            // Headroom (dB).
+    // TODO(bugs.webrtc.org/7494): Remove `limiter_envelope_dbfs`.
     float limiter_envelope_dbfs;  // Envelope level from the limiter (dBFS).
   };
 

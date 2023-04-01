@@ -232,7 +232,7 @@ class SpeechSamplesReader {
 float UpdateRecommendedInputVolume(MonoInputVolumeController& controller,
                                    int applied_input_volume,
                                    float speech_probability,
-                                   const absl::optional<float> rms_error_dbfs) {
+                                   absl::optional<float> rms_error_dbfs) {
   controller.set_stream_analog_level(applied_input_volume);
   EXPECT_EQ(controller.recommended_analog_level(), applied_input_volume);
   controller.Process(rms_error_dbfs, speech_probability);

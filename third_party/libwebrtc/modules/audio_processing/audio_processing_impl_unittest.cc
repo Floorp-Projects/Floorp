@@ -648,11 +648,10 @@ TEST(AudioProcessingImplTest,
   rtc::scoped_refptr<AudioProcessing> apm = AudioProcessingBuilder().Create();
   ASSERT_EQ(apm->Initialize(), AudioProcessing::kNoError);
   webrtc::AudioProcessing::Config apm_config;
-  // Disable AGC1 analog.
   apm_config.gain_controller1.enabled = false;
-  // Enable AGC2 digital.
   apm_config.gain_controller2.enabled = true;
   apm_config.gain_controller2.adaptive_digital.enabled = true;
+  apm_config.transient_suppression.enabled = true;
   apm->ApplyConfig(apm_config);
   constexpr int kSampleRateHz = 48000;
   constexpr int kNumChannels = 1;
@@ -680,11 +679,10 @@ TEST(AudioProcessingImplTest,
   rtc::scoped_refptr<AudioProcessing> apm = AudioProcessingBuilder().Create();
   ASSERT_EQ(apm->Initialize(), AudioProcessing::kNoError);
   webrtc::AudioProcessing::Config apm_config;
-  // Disable AGC1 analog.
   apm_config.gain_controller1.enabled = false;
-  // Enable AGC2 digital.
   apm_config.gain_controller2.enabled = true;
   apm_config.gain_controller2.adaptive_digital.enabled = true;
+  apm_config.transient_suppression.enabled = true;
   apm->ApplyConfig(apm_config);
   constexpr int kSampleRateHz = 48000;
   constexpr int kNumChannels = 1;

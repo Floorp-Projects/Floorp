@@ -8,13 +8,6 @@
 
 import("../../../webrtc.gni")
 
-group("agc2") {
-  deps = [
-    ":adaptive_digital",
-    ":fixed_digital",
-  ]
-}
-
 rtc_library("speech_level_estimator") {
   sources = [
     "speech_level_estimator.cc",
@@ -37,35 +30,6 @@ rtc_library("speech_level_estimator") {
     "../../../rtc_base:logging",
     "../../../rtc_base:safe_minmax",
   ]
-}
-
-rtc_library("adaptive_digital") {
-  sources = [
-    "adaptive_digital_gain_controller.cc",
-    "adaptive_digital_gain_controller.h",
-  ]
-
-  visibility = [
-    "..:gain_controller2",
-    "./*",
-  ]
-
-  configs += [ "..:apm_debug_dump" ]
-
-  deps = [
-    ":adaptive_digital_gain_applier",
-    ":noise_level_estimator",
-    ":saturation_protector",
-    ":speech_level_estimator",
-    "..:api",
-    "..:apm_logging",
-    "..:audio_frame_view",
-    "../../../common_audio",
-    "../../../rtc_base:checks",
-    "../../../rtc_base:logging",
-  ]
-
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
 rtc_library("adaptive_digital_gain_applier") {
@@ -266,7 +230,6 @@ rtc_library("noise_level_estimator") {
     "noise_level_estimator.cc",
     "noise_level_estimator.h",
   ]
-  visibility = [ "./*" ]
   deps = [
     ":biquad_filter",
     "..:apm_logging",
@@ -274,6 +237,11 @@ rtc_library("noise_level_estimator") {
     "../../../api:array_view",
     "../../../rtc_base:checks",
     "../../../system_wrappers",
+  ]
+
+  visibility = [
+    "..:gain_controller2",
+    "./*",
   ]
 
   configs += [ "..:apm_debug_dump" ]
