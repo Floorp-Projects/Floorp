@@ -53,6 +53,10 @@ struct TransportControllerConfig {
 
 struct CallClientConfig {
   TransportControllerConfig transport;
+  // Allows the pacer to send out multiple packets in a burst.
+  // The number of bites that can be sent in one burst is pacer_burst_interval *
+  // current bwe. 40ms is the default Chrome setting.
+  TimeDelta pacer_burst_interval = TimeDelta::Millis(40);
   const FieldTrialsView* field_trials = nullptr;
 };
 
@@ -194,7 +198,8 @@ struct AudioStreamConfig {
     ~Encoder();
     bool allocate_bitrate = false;
     bool enable_dtx = false;
-    absl::optional<DataRate> fixed_rate;
+    DataRate fixed_rate = DataRate::KilobitsPerSec(32);
+    // Overrides fixed rate.
     absl::optional<DataRate> min_rate;
     absl::optional<DataRate> max_rate;
     TimeDelta initial_frame_length = TimeDelta::Millis(20);
@@ -203,8 +208,8 @@ struct AudioStreamConfig {
     Stream();
     Stream(const Stream&);
     ~Stream();
-    bool abs_send_time = false;
-    bool in_bandwidth_estimation = false;
+    bool abs_send_time = true;
+    bool in_bandwidth_estimation = true;
   } stream;
   struct Rendering {
     std::string sync_group;
