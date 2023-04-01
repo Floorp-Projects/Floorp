@@ -297,7 +297,6 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
     RtcpMuxPolicy rtcp_mux_policy;
     std::vector<rtc::scoped_refptr<rtc::RTCCertificate>> certificates;
     int ice_candidate_pool_size;
-    bool DEPRECATED_disable_ipv6;
     bool disable_ipv6_on_wifi;
     int max_ipv6_networks;
     bool disable_link_local_networks;
@@ -367,7 +366,6 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
          prioritize_most_likely_ice_candidate_pairs ==
              o.prioritize_most_likely_ice_candidate_pairs &&
          media_config == o.media_config &&
-         DEPRECATED_disable_ipv6 == o.DEPRECATED_disable_ipv6 &&
          disable_ipv6_on_wifi == o.disable_ipv6_on_wifi &&
          max_ipv6_networks == o.max_ipv6_networks &&
          disable_link_local_networks == o.disable_link_local_networks &&
@@ -2116,11 +2114,7 @@ PeerConnection::InitializePortAllocator_n(
   port_allocator_flags |= cricket::PORTALLOCATOR_ENABLE_SHARED_SOCKET |
                           cricket::PORTALLOCATOR_ENABLE_IPV6 |
                           cricket::PORTALLOCATOR_ENABLE_IPV6_ON_WIFI;
-  // If the disable-IPv6 flag was specified, we'll not override it
-  // by experiment.
-  if (configuration.DEPRECATED_disable_ipv6) {
-    port_allocator_flags &= ~(cricket::PORTALLOCATOR_ENABLE_IPV6);
-  } else if (trials().IsDisabled("WebRTC-IPv6Default")) {
+  if (trials().IsDisabled("WebRTC-IPv6Default")) {
     port_allocator_flags &= ~(cricket::PORTALLOCATOR_ENABLE_IPV6);
   }
   if (configuration.disable_ipv6_on_wifi) {

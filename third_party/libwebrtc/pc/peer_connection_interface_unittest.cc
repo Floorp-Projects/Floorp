@@ -1334,7 +1334,6 @@ TEST_P(PeerConnectionInterfaceTest, CreatePeerConnectionWithPooledCandidates) {
   server.uri = kStunAddressOnly;
   config.servers.push_back(server);
   config.type = PeerConnectionInterface::kRelay;
-  config.DEPRECATED_disable_ipv6 = true;
   config.tcp_candidate_policy =
       PeerConnectionInterface::kTcpCandidatePolicyDisabled;
   config.candidate_network_policy =
@@ -1347,7 +1346,6 @@ TEST_P(PeerConnectionInterfaceTest, CreatePeerConnectionWithPooledCandidates) {
           port_allocator_->GetPooledSession());
   ASSERT_NE(nullptr, session);
   EXPECT_EQ(1UL, session->stun_servers().size());
-  EXPECT_EQ(0U, session->flags() & cricket::PORTALLOCATOR_ENABLE_IPV6);
   EXPECT_LT(0U, session->flags() & cricket::PORTALLOCATOR_DISABLE_TCP);
   EXPECT_LT(0U,
             session->flags() & cricket::PORTALLOCATOR_DISABLE_COSTLY_NETWORKS);
@@ -3827,10 +3825,6 @@ TEST(RTCConfigurationTest, ComparisonOperators) {
   PeerConnectionInterface::RTCConfiguration f;
   f.ice_connection_receiving_timeout = 1337;
   EXPECT_NE(a, f);
-
-  PeerConnectionInterface::RTCConfiguration g;
-  g.DEPRECATED_disable_ipv6 = true;
-  EXPECT_NE(a, g);
 
   PeerConnectionInterface::RTCConfiguration h(
       PeerConnectionInterface::RTCConfigurationType::kAggressive);
