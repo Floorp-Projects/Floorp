@@ -65,6 +65,7 @@
       },
       'Android64 Builder arm64': {},
       'Android64 Builder x64 (dbg)': {},
+      'Fuchsia Builder': {},
       'Fuchsia Release': {
         'os_type': 'linux',
         'mixins':
@@ -319,6 +320,17 @@
         'test_suites': {
           'gtest_tests': 'android_perf_tests',
         },
+      },
+      'Perf Fuchsia': {
+        'os_type':
+        'linux',
+        'mixins': [
+          'linux-bionic', 'x86-64', 'perf-pool', 'timeout-3h', 'perf-output',
+          'has_native_resultdb_integration', 'chromium-tester-service-account'
+        ],
+        'test_suites': {
+          'isolated_scripts': 'desktop_perf_tests',
+        }
       },
       'Perf Linux Bionic': {
         'os_type':

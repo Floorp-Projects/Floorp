@@ -2094,6 +2094,7 @@
   },
   "Android64 Builder arm64": {},
   "Android64 Builder x64 (dbg)": {},
+  "Fuchsia Builder": {},
   "Fuchsia Release": {
     "isolated_scripts": [
       {
