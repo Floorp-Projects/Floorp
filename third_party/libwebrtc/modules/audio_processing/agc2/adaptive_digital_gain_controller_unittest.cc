@@ -51,16 +51,12 @@ constexpr AdaptiveDigitalConfig kDefaultConfig{};
 // Helper to create initialized `AdaptiveDigitalGainController` objects.
 struct GainApplierHelper {
   GainApplierHelper(const AdaptiveDigitalConfig& config,
-                    int adjacent_speech_frames_threshold,
-                    int sample_rate_hz,
-                    int num_channels)
+                    int adjacent_speech_frames_threshold)
       : apm_data_dumper(0),
         gain_applier(std::make_unique<AdaptiveDigitalGainController>(
             &apm_data_dumper,
             config,
-            adjacent_speech_frames_threshold,
-            sample_rate_hz,
-            num_channels)) {}
+            adjacent_speech_frames_threshold)) {}
   ApmDataDumper apm_data_dumper;
   std::unique_ptr<AdaptiveDigitalGainController> gain_applier;
 };
@@ -83,8 +79,7 @@ AdaptiveDigitalGainController::FrameInfo GetFrameInfoToNotAdapt(
 
 TEST(GainController2AdaptiveDigitalGainControllerTest,
      GainApplierShouldNotCrash) {
-  GainApplierHelper helper(kDefaultConfig, kAdjacentSpeechFramesThreshold,
-                           /*sample_rate_hz=*/48000, kStereo);
+  GainApplierHelper helper(kDefaultConfig, kAdjacentSpeechFramesThreshold);
   // Make one call with reasonable audio level values and settings.
   VectorFloatFrame fake_audio(kStereo, kFrameLen10ms48kHz, 10000.0f);
   helper.gain_applier->Process(GetFrameInfoToNotAdapt(kDefaultConfig),
@@ -99,8 +94,7 @@ TEST(GainController2AdaptiveDigitalGainControllerTest, MaxGainApplied) {
                            kDefaultConfig.max_gain_change_db_per_second)) +
       kNumExtraFrames;
 
-  GainApplierHelper helper(kDefaultConfig, kAdjacentSpeechFramesThreshold,
-                           /*sample_rate_hz=*/8000, kMono);
+  GainApplierHelper helper(kDefaultConfig, kAdjacentSpeechFramesThreshold);
   AdaptiveDigitalGainController::FrameInfo info =
       GetFrameInfoToNotAdapt(kDefaultConfig);
   info.speech_level_dbfs = -60.0f;
@@ -115,8 +109,7 @@ TEST(GainController2AdaptiveDigitalGainControllerTest, MaxGainApplied) {
 }
 
 TEST(GainController2AdaptiveDigitalGainControllerTest, GainDoesNotChangeFast) {
-  GainApplierHelper helper(kDefaultConfig, kAdjacentSpeechFramesThreshold,
-                           /*sample_rate_hz=*/8000, kMono);
+  GainApplierHelper helper(kDefaultConfig, kAdjacentSpeechFramesThreshold);
 
   constexpr float initial_level_dbfs = -25.0f;
   constexpr float kMaxGainChangeDbPerFrame =
@@ -157,8 +150,7 @@ TEST(GainController2AdaptiveDigitalGainControllerTest, GainDoesNotChangeFast) {
 }
 
 TEST(GainController2AdaptiveDigitalGainControllerTest, GainIsRampedInAFrame) {
-  GainApplierHelper helper(kDefaultConfig, kAdjacentSpeechFramesThreshold,
-                           /*sample_rate_hz=*/48000, kMono);
+  GainApplierHelper helper(kDefaultConfig, kAdjacentSpeechFramesThreshold);
 
   constexpr float initial_level_dbfs = -25.0f;
 
@@ -184,8 +176,7 @@ TEST(GainController2AdaptiveDigitalGainControllerTest, GainIsRampedInAFrame) {
 }
 
 TEST(GainController2AdaptiveDigitalGainControllerTest, NoiseLimitsGain) {
-  GainApplierHelper helper(kDefaultConfig, kAdjacentSpeechFramesThreshold,
-                           /*sample_rate_hz=*/48000, kMono);
+  GainApplierHelper helper(kDefaultConfig, kAdjacentSpeechFramesThreshold);
 
   constexpr float initial_level_dbfs = -25.0f;
   constexpr int num_initial_frames =
@@ -217,8 +208,7 @@ TEST(GainController2AdaptiveDigitalGainControllerTest, NoiseLimitsGain) {
 
 TEST(GainController2AdaptiveDigitalGainControllerTest,
      CanHandlePositiveSpeechLevels) {
-  GainApplierHelper helper(kDefaultConfig, kAdjacentSpeechFramesThreshold,
-                           /*sample_rate_hz=*/48000, kStereo);
+  GainApplierHelper helper(kDefaultConfig, kAdjacentSpeechFramesThreshold);
 
   // Make one call with positive audio level values and settings.
   VectorFloatFrame fake_audio(kStereo, kFrameLen10ms48kHz, 10000.0f);
@@ -229,8 +219,7 @@ TEST(GainController2AdaptiveDigitalGainControllerTest,
 }
 
 TEST(GainController2AdaptiveDigitalGainControllerTest, AudioLevelLimitsGain) {
-  GainApplierHelper helper(kDefaultConfig, kAdjacentSpeechFramesThreshold,
-                           /*sample_rate_hz=*/48000, kMono);
+  GainApplierHelper helper(kDefaultConfig, kAdjacentSpeechFramesThreshold);
 
   constexpr float initial_level_dbfs = -25.0f;
   constexpr int num_initial_frames =
@@ -269,8 +258,7 @@ class AdaptiveDigitalGainControllerParametrizedTest
 
 TEST_P(AdaptiveDigitalGainControllerParametrizedTest,
        DoNotIncreaseGainWithTooFewSpeechFrames) {
-  GainApplierHelper helper(kDefaultConfig, adjacent_speech_frames_threshold(),
-                           /*sample_rate_hz=*/48000, kMono);
+  GainApplierHelper helper(kDefaultConfig, adjacent_speech_frames_threshold());
 
   // Lower the speech level so that the target gain will be increased.
   AdaptiveDigitalGainController::FrameInfo info =
@@ -292,8 +280,7 @@ TEST_P(AdaptiveDigitalGainControllerParametrizedTest,
 
 TEST_P(AdaptiveDigitalGainControllerParametrizedTest,
        IncreaseGainWithEnoughSpeechFrames) {
-  GainApplierHelper helper(kDefaultConfig, adjacent_speech_frames_threshold(),
-                           /*sample_rate_hz=*/48000, kMono);
+  GainApplierHelper helper(kDefaultConfig, adjacent_speech_frames_threshold());
 
   // Lower the speech level so that the target gain will be increased.
   AdaptiveDigitalGainController::FrameInfo info =

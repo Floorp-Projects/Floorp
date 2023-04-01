@@ -1007,6 +1007,8 @@ TEST(AudioProcessingImplTest,
   EXPECT_FALSE(apm->GetConfig().transient_suppression.enabled);
 }
 
+// TODO(bugs.webrtc.org/7494): Test AGCs with different multi-channel configs.
+
 // Tests that the minimum startup volume is applied at the startup.
 TEST_P(InputVolumeStartupParameterizedTest,
        VerifyStartupMinVolumeAppliedAtStartup) {

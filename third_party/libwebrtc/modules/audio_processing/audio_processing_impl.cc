@@ -2345,7 +2345,7 @@ void AudioProcessingImpl::InitializeGainController2(bool config_has_changed) {
         gain_controller2_config_override_.has_value()
             ? gain_controller2_config_override_->input_volume_controller_config
             : InputVolumeController::Config{},
-        proc_fullband_sample_rate_hz(), num_input_channels(), use_internal_vad);
+        proc_fullband_sample_rate_hz(), num_proc_channels(), use_internal_vad);
     submodules_.gain_controller2->SetCaptureOutputUsed(
         capture_.capture_output_used);
   }
