@@ -18,6 +18,7 @@
 #include "modules/rtp_rtcp/source/rtp_descriptor_authentication.h"
 #include "modules/rtp_rtcp/source/rtp_sender_video.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/logging.h"
 
 namespace webrtc {
 namespace {
@@ -161,8 +162,9 @@ void RTPSenderVideoFrameTransformerDelegate::OnTransformedFrame(
 
   EnsureEncoderQueueCreated();
 
-  if (!sender_)
+  if (!sender_) {
     return;
+  }
   rtc::scoped_refptr<RTPSenderVideoFrameTransformerDelegate> delegate(this);
   encoder_queue_->PostTask(
       [delegate = std::move(delegate), frame = std::move(frame)]() mutable {
@@ -212,4 +214,37 @@ void RTPSenderVideoFrameTransformerDelegate::Reset() {
     sender_ = nullptr;
   }
 }
+
+std::unique_ptr<TransformableVideoFrameInterface> CloneSenderVideoFrame(
+    TransformableVideoFrameInterface* original) {
+  auto encoded_image_buffer = EncodedImageBuffer::Create(
+      original->GetData().data(), original->GetData().size());
+  EncodedImage encoded_image;
+  encoded_image.SetEncodedData(encoded_image_buffer);
+  RTPVideoHeader new_header;
+  absl::optional<VideoCodecType> new_codec_type;
+  // TODO(bugs.webrtc.org/14708): Figure out a way to get the header information
+  // without casting to TransformableVideoSenderFrame.
+  if (original->GetDirection() ==
+      TransformableFrameInterface::Direction::kSender) {
+    // TODO(bugs.webrtc.org/14708): Figure out a way to bulletproof this cast.
+    auto original_as_sender =
+        static_cast<TransformableVideoSenderFrame*>(original);
+    new_header = original_as_sender->GetHeader();
+    new_codec_type = original_as_sender->GetCodecType();
+  } else {
+    // TODO(bugs.webrtc.org/14708): Make this codec dependent
+    new_header.video_type_header.emplace<RTPVideoHeaderVP8>();
+    new_codec_type = kVideoCodecVP8;
+    // TODO(bugs.webrtc.org/14708): Fill in the new_header when it's not
+    // `Direction::kSender`
+  }
+  // TODO(bugs.webrtc.org/14708): Fill in other EncodedImage parameters
+  return std::make_unique<TransformableVideoSenderFrame>(
+      encoded_image, new_header, original->GetPayloadType(), new_codec_type,
+      original->GetTimestamp(),
+      absl::nullopt,  // expected_retransmission_time_ms
+      original->GetSsrc());
+}
+
 }  // namespace webrtc

@@ -1486,3 +1486,19 @@ rtc_library("field_trials") {
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
+
+rtc_library("frame_transformer_factory") {
+  visibility = [ "*" ]
+  sources = [
+    "frame_transformer_factory.cc",
+    "frame_transformer_factory.h",
+  ]
+  deps = [
+    ":frame_transformer_interface",
+    ":scoped_refptr",
+    "../modules/rtp_rtcp",
+    "../rtc_base:refcount",
+    "video:encoded_frame",
+    "video:video_frame_metadata",
+  ]
+}

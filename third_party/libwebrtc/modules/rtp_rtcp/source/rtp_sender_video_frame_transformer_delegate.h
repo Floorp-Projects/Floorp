@@ -87,6 +87,10 @@ class RTPSenderVideoFrameTransformerDelegate : public TransformedFrameCallback {
   std::unique_ptr<TaskQueueBase, TaskQueueDeleter> owned_encoder_queue_;
 };
 
+// Method to support cloning a Sender frame from another frame
+std::unique_ptr<TransformableVideoFrameInterface> CloneSenderVideoFrame(
+    TransformableVideoFrameInterface* original);
+
 }  // namespace webrtc
 
 #endif  // MODULES_RTP_RTCP_SOURCE_RTP_SENDER_VIDEO_FRAME_TRANSFORMER_DELEGATE_H_
