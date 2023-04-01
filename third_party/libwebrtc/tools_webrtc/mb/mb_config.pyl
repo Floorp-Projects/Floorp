@@ -184,6 +184,7 @@
       'linux_compile_rel': 'pure_release_bot_x64',
       'linux_compile_x86_dbg': 'debug_bot_x86',
       'linux_compile_x86_rel': 'pure_release_bot_x86',
+      'linux_coverage': 'code_coverage_bot_x64',
       'linux_dbg': 'debug_bot_x64',
       'linux_libfuzzer_rel': 'libfuzzer_asan_release_bot_x64',
       'linux_more_configs': {
@@ -253,6 +254,8 @@
     ['android', 'debug_static_bot', 'arm', 'bwe_test_logging'],
     'bwe_test_logging_x64': ['debug_bot', 'x64', 'bwe_test_logging'],
     'bwe_test_logging_x86': ['debug_bot', 'x86', 'bwe_test_logging'],
+    'code_coverage_bot_x64':
+    ['openh264', 'release_bot', 'x64', 'code_coverage'],
     'codesearch_gen_linux_bot': ['openh264', 'debug_bot', 'minimal_symbols'],
     'debug_bot_arm': ['openh264', 'debug_bot', 'arm'],
     'debug_bot_arm64': ['openh264', 'debug_bot', 'arm64'],
@@ -384,6 +387,9 @@
     # is_clang=true by default, this is only to guard from upstream changes.
     'clang': {
       'gn_args': 'is_clang=true',
+    },
+    'code_coverage': {
+      'gn_args': 'use_clang_coverage=true',
     },
     'dcheck_always_on': {
       'gn_args': 'dcheck_always_on=true',
