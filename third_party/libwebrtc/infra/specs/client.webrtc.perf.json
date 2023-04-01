@@ -557,7 +557,6 @@
     "isolated_scripts": [
       {
         "args": [
-          "--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.pb",
           "--nologs"
         ],
         "isolate_name": "fuchsia_perf_tests",
