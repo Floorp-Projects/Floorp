@@ -3578,11 +3578,10 @@ def writeSanctionedSimpleUnitIdentifiersFiles(all_units, sanctioned_units):
  */"""
         )
 
-        println("/* eslint-disable prettier/prettier */")
+        println("// prettier-ignore")
         println(
             "var sanctionedSimpleUnitIdentifiers = {};".format(sanctioned_units_object)
         )
-        println("/* eslint-enable prettier/prettier */")
 
     sanctioned_h_file = os.path.join(intl_components_src_dir, "MeasureUnitGenerated.h")
     with io.open(sanctioned_h_file, mode="w", encoding="utf-8", newline="") as f:
