@@ -365,7 +365,7 @@
           'isolated_scripts': 'webrtc_perf_tests',
         },
       },
-      'Perf Win7': {
+      'Perf Win 10': {
         'os_type':
         'win',
         'mixins':
