@@ -55,6 +55,10 @@
     "label": "//net/dcsctp:dcsctp_unittests",
     "type": "console_test_launcher",
   },
+  "default": {
+    "label": "//:default",
+    "type": "additional_compile_target",
+  },
   "android_instrumentation_test_apk": {
     "label": "//sdk/android:android_instrumentation_test_apk",
     "type": "console_test_launcher",
