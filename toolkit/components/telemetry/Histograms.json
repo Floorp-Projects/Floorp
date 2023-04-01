@@ -14102,11 +14102,11 @@
   "PWMGR_NUM_FORM_HAS_POSSIBLE_USERNAME_EVENT_PER_DOC": {
     "record_in_processes": ["content"],
     "products": ["firefox", "fennec"],
-    "expires_in_version": "114",
+    "expires_in_version": "130",
     "kind": "linear",
     "high": 21,
     "n_buckets" : 20,
-    "bug_numbers": [1708455, 1791929],
+    "bug_numbers": [1708455, 1791929, 1822724],
     "description": "The number of documents that receive >= bucket number 'DOMFormHasPossibleUsernameEvent' event",
     "alert_emails": ["passwords-dev@mozilla.org"],
     "releaseChannelCollection": "opt-out"
