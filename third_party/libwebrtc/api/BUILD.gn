@@ -1387,6 +1387,7 @@ if (rtc_include_tests) {
       "../rtc_base/containers:flat_set",
       "../rtc_base/task_utils:repeating_task",
       "../system_wrappers:field_trial",
+      "../test:field_trial",
       "../test:fileutils",
       "../test:rtc_expect_death",
       "../test:test_support",

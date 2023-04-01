@@ -17,6 +17,7 @@
 #include "api/transport/field_trial_based_config.h"
 #include "rtc_base/containers/flat_set.h"
 #include "system_wrappers/include/field_trial.h"
+#include "test/field_trial.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 
@@ -29,7 +30,7 @@ namespace {
 
 using ::testing::NotNull;
 using ::webrtc::field_trial::FieldTrialsAllowedInScopeForTesting;
-using ::webrtc::field_trial::InitFieldTrialsFromString;
+using ::webrtc::test::ScopedFieldTrials;
 
 TEST(FieldTrialsTest, EmptyStringHasNoEffect) {
   FieldTrialsAllowedInScopeForTesting k({"MyCoolTrial"});
@@ -54,8 +55,7 @@ TEST(FieldTrialsTest, EnabledDisabledMustBeFirstInValue) {
 
 TEST(FieldTrialsTest, FieldTrialsDoesNotReadGlobalString) {
   FieldTrialsAllowedInScopeForTesting k({"MyCoolTrial", "MyUncoolTrial"});
-  static constexpr char s[] = "MyCoolTrial/Enabled/MyUncoolTrial/Disabled/";
-  InitFieldTrialsFromString(s);
+  ScopedFieldTrials g("MyCoolTrial/Enabled/MyUncoolTrial/Disabled/");
   FieldTrials f("");
   f.RegisterKeysForTesting({"MyCoolTrial", "MyUncoolTrial"});
 
@@ -72,7 +72,7 @@ TEST(FieldTrialsTest, FieldTrialsWritesGlobalString) {
 
 TEST(FieldTrialsTest, FieldTrialsRestoresGlobalStringAfterDestruction) {
   static constexpr char s[] = "SomeString/Enabled/";
-  InitFieldTrialsFromString(s);
+  ScopedFieldTrials g(s);
   {
     FieldTrials f("SomeOtherString/Enabled/");
     EXPECT_STREQ(webrtc::field_trial::GetFieldTrialString(),
@@ -140,8 +140,7 @@ TEST(FieldTrialsTest, GlobalAndNonGlobalFieldTrialsAreDisjoint) {
 
 TEST(FieldTrialsTest, FieldTrialBasedConfigReadsGlobalString) {
   FieldTrialsAllowedInScopeForTesting k({"MyCoolTrial", "MyUncoolTrial"});
-  static constexpr char s[] = "MyCoolTrial/Enabled/MyUncoolTrial/Disabled/";
-  InitFieldTrialsFromString(s);
+  ScopedFieldTrials g("MyCoolTrial/Enabled/MyUncoolTrial/Disabled/");
   FieldTrialBasedConfig f;
   f.RegisterKeysForTesting({"MyCoolTrial", "MyUncoolTrial"});
 
