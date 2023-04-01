@@ -184,10 +184,6 @@ class ProbeController {
   DataRate max_total_allocated_bitrate_ = DataRate::Zero();
 
   const bool in_rapid_recovery_experiment_;
-  // For WebRTC.BWE.MidCallProbing.* metric.
-  bool mid_call_probing_waiting_for_result_;
-  DataRate mid_call_probing_bitrate_ = DataRate::Zero();
-  DataRate mid_call_probing_succcess_threshold_ = DataRate::Zero();
   RtcEventLog* event_log_;
 
   int32_t next_probe_cluster_id_ = 1;
