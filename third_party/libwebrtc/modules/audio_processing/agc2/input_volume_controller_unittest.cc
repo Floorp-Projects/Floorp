@@ -329,13 +329,88 @@ class InputVolumeControllerParametrizedTest
     : public ::testing::TestWithParam<int> {};
 
 TEST_P(InputVolumeControllerParametrizedTest,
-       StartupMinVolumeConfigurationIsRespected) {
+       StartupMinVolumeConfigurationRespectedWhenAppliedInputVolumeAboveMin) {
   InputVolumeControllerTestHelper helper(
       /*config=*/{.min_input_volume = GetParam()});
 
-  EXPECT_EQ(*helper.CallAgcSequence(kInitialInputVolume, kHighSpeechProbability,
-                                    kSpeechLevel),
-            kInitialInputVolume);
+  EXPECT_EQ(*helper.CallAgcSequence(/*applied_input_volume=*/128,
+                                    /*speech_probability=*/0.9f,
+                                    /*speech_level_dbfs=*/-80),
+            128);
+}
+
+TEST_P(
+    InputVolumeControllerParametrizedTest,
+    StartupMinVolumeConfigurationRespectedWhenAppliedInputVolumeMaybeBelowMin) {
+  InputVolumeControllerTestHelper helper(
+      /*config=*/{.min_input_volume = GetParam()});
+
+  EXPECT_GE(*helper.CallAgcSequence(/*applied_input_volume=*/10,
+                                    /*speech_probability=*/0.9f,
+                                    /*speech_level_dbfs=*/-80),
+            10);
+}
+
+TEST_P(InputVolumeControllerParametrizedTest,
+       StartupMinVolumeRespectedWhenAppliedVolumeNonZero) {
+  const int kMinInputVolume = GetParam();
+  InputVolumeControllerTestHelper helper(
+      /*config=*/{.min_input_volume = kMinInputVolume,
+                  .target_range_min_dbfs = -30,
+                  .update_input_volume_wait_frames = 1,
+                  .speech_probability_threshold = 0.5f,
+                  .speech_ratio_threshold = 0.5f});
+
+  // Volume change possible; speech level below the digital gain window.
+  int volume = *helper.CallAgcSequence(/*applied_input_volume=*/1,
+                                       /*speech_probability=*/0.9f,
+                                       /*speech_level_dbfs=*/-80);
+
+  EXPECT_EQ(volume, kMinInputVolume);
+}
+
+TEST_P(InputVolumeControllerParametrizedTest,
+       MinVolumeRepeatedlyRespectedWhenAppliedVolumeNonZero) {
+  const int kMinInputVolume = GetParam();
+  InputVolumeControllerTestHelper helper(
+      /*config=*/{.min_input_volume = kMinInputVolume,
+                  .target_range_min_dbfs = -30,
+                  .update_input_volume_wait_frames = 1,
+                  .speech_probability_threshold = 0.5f,
+                  .speech_ratio_threshold = 0.5f});
+
+  // Volume change possible; speech level below the digital gain window.
+  for (int i = 0; i < 100; ++i) {
+    const int volume = *helper.CallAgcSequence(/*applied_input_volume=*/1,
+                                               /*speech_probability=*/0.9f,
+                                               /*speech_level_dbfs=*/-80);
+    EXPECT_GE(volume, kMinInputVolume);
+  }
+}
+
+TEST_P(InputVolumeControllerParametrizedTest,
+       StartupMinVolumeRespectedOnceWhenAppliedVolumeZero) {
+  const int kMinInputVolume = GetParam();
+  InputVolumeControllerTestHelper helper(
+      /*config=*/{.min_input_volume = kMinInputVolume,
+                  .target_range_min_dbfs = -30,
+                  .update_input_volume_wait_frames = 1,
+                  .speech_probability_threshold = 0.5f,
+                  .speech_ratio_threshold = 0.5f});
+
+  int volume = *helper.CallAgcSequence(/*applied_input_volume=*/0,
+                                       /*speech_probability=*/0.9f,
+                                       /*speech_level_dbfs=*/-80);
+
+  EXPECT_EQ(volume, kMinInputVolume);
+
+  // No change of volume regardless of a speech level below the digital gain
+  // window; applied volume is zero.
+  volume = *helper.CallAgcSequence(/*applied_input_volume=*/0,
+                                   /*speech_probability=*/0.9f,
+                                   /*speech_level_dbfs=*/-80);
+
+  EXPECT_EQ(volume, 0);
 }
 
 TEST_P(InputVolumeControllerParametrizedTest, MicVolumeResponseToRmsError) {
