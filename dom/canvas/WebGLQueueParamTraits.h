@@ -107,6 +107,7 @@ static_assert(!IsEnumCase(dom::WebGLPowerPreference(5)));
 USE_IS_ENUM_CASE(dom::WebGLPowerPreference)
 USE_IS_ENUM_CASE(dom::PredefinedColorSpace)
 USE_IS_ENUM_CASE(webgl::AttribBaseType)
+USE_IS_ENUM_CASE(webgl::ProvokingVertex)
 
 #undef USE_IS_ENUM_CASE
 

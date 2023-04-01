@@ -90,6 +90,7 @@ static const char* const sExtensionNames[] = {
     "GL_ANGLE_framebuffer_multisample",
     "GL_ANGLE_instanced_arrays",
     "GL_ANGLE_multiview",
+    "GL_ANGLE_provoking_vertex",
     "GL_ANGLE_texture_compression_dxt3",
     "GL_ANGLE_texture_compression_dxt5",
     "GL_ANGLE_timer_query",
@@ -117,6 +118,7 @@ static const char* const sExtensionNames[] = {
     "GL_ARB_map_buffer_range",
     "GL_ARB_occlusion_query2",
     "GL_ARB_pixel_buffer_object",
+    "GL_ARB_provoking_vertex",
     "GL_ARB_robust_buffer_access_behavior",
     "GL_ARB_robustness",
     "GL_ARB_sampler_objects",
@@ -158,6 +160,7 @@ static const char* const sExtensionNames[] = {
     "GL_EXT_multisampled_render_to_texture",
     "GL_EXT_occlusion_query_boolean",
     "GL_EXT_packed_depth_stencil",
+    "GL_EXT_provoking_vertex",
     "GL_EXT_read_format_bgra",
     "GL_EXT_robustness",
     "GL_EXT_sRGB",
@@ -1497,6 +1500,17 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
     const SymLoadStruct symbols[] = {
         CORE_SYMBOL(ResolveMultisampleFramebufferAPPLE), END_SYMBOLS};
     fnLoadForExt(symbols, APPLE_framebuffer_multisample);
+  }
+
+  if (IsSupported(GLFeature::provoking_vertex)) {
+    const SymLoadStruct symbols[] = {{(PRFuncPtr*)&mSymbols.fProvokingVertex,
+                                      {{
+                                          "glProvokingVertex",
+                                          "glProvokingVertexANGLE",
+                                          "glProvokingVertexEXT",
+                                      }}},
+                                     END_SYMBOLS};
+    fnLoadForFeature(symbols, GLFeature::provoking_vertex);
   }
 
   // Load developer symbols, don't fail if we can't find them.

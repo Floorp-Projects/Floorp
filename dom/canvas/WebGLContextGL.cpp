@@ -1561,6 +1561,15 @@ void WebGLContext::PolygonOffset(GLfloat factor, GLfloat units) {
   gl->fPolygonOffset(factor, units);
 }
 
+void WebGLContext::ProvokingVertex(const webgl::ProvokingVertex mode) const {
+  const FuncScope funcScope(*this, "provokingVertex");
+  if (IsContextLost()) return;
+  MOZ_RELEASE_ASSERT(
+      IsExtensionEnabled(WebGLExtensionID::WEBGL_provoking_vertex));
+
+  gl->fProvokingVertex(UnderlyingValue(mode));
+}
+
 void WebGLContext::SampleCoverage(GLclampf value, WebGLboolean invert) {
   const FuncScope funcScope(*this, "sampleCoverage");
   if (IsContextLost()) return;

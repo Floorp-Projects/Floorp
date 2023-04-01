@@ -1209,6 +1209,15 @@ interface OES_draw_buffers_indexed {
                           GLboolean r, GLboolean g, GLboolean b, GLboolean a);
 };
 
+[Exposed=(Window,Worker), LegacyNoInterfaceObject]
+interface WEBGL_provoking_vertex {
+    const GLenum FIRST_VERTEX_CONVENTION_WEBGL = 0x8E4D;
+    const GLenum LAST_VERTEX_CONVENTION_WEBGL  = 0x8E4E; // default
+    const GLenum PROVOKING_VERTEX_WEBGL        = 0x8E4F;
+
+    undefined provokingVertexWEBGL(GLenum provokeMode);
+};
+
 // https://immersive-web.github.io/webxr/#dom-webglcontextattributes-xrcompatible
 partial dictionary WebGLContextAttributes {
     [Pref="dom.vr.webxr.enabled"]

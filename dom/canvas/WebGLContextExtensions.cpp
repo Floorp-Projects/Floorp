@@ -64,6 +64,7 @@ const char* GetExtensionName(const WebGLExtensionID ext) {
     WEBGL_EXTENSION_IDENTIFIER(WEBGL_draw_buffers)
     WEBGL_EXTENSION_IDENTIFIER(WEBGL_explicit_present)
     WEBGL_EXTENSION_IDENTIFIER(WEBGL_lose_context)
+    WEBGL_EXTENSION_IDENTIFIER(WEBGL_provoking_vertex)
 
 #undef WEBGL_EXTENSION_IDENTIFIER
   }
@@ -217,6 +218,8 @@ RefPtr<ClientWebGLExtensionBase> ClientWebGLContext::GetExtension(
           return new ClientWebGLExtensionDrawBuffers(*this);
         case WebGLExtensionID::WEBGL_explicit_present:
           return new ClientWebGLExtensionExplicitPresent(*this);
+        case WebGLExtensionID::WEBGL_provoking_vertex:
+          return new ClientWebGLExtensionProvokingVertex(*this);
 
         case WebGLExtensionID::WEBGL_lose_context:
         case WebGLExtensionID::Max:
@@ -357,6 +360,19 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const {
 
     case WebGLExtensionID::WEBGL_explicit_present:
       return WebGLExtensionExplicitPresent::IsSupported(this);
+
+    case WebGLExtensionID::WEBGL_provoking_vertex:
+      if (!gl->IsSupported(gl::GLFeature::provoking_vertex)) return false;
+
+      // > Implementations SHOULD only expose this extension when
+      // > FIRST_VERTEX_CONVENTION is more efficient than the default behavior
+      // > of LAST_VERTEX_CONVENTION.
+      if (gl->IsANGLE()) return true;  // Better on D3D.
+      if (kIsMacOS) {
+        // Better on Metal, so probably Mac in general.
+        return true;
+      }
+      return false;  // Probably not better for Win+GL, Linux, or Android.
 
     case WebGLExtensionID::Max:
       break;
@@ -507,6 +523,9 @@ void WebGLContext::RequestExtension(const WebGLExtensionID ext,
       break;
     case WebGLExtensionID::WEBGL_lose_context:
       slot.reset(new WebGLExtensionLoseContext(this));
+      break;
+    case WebGLExtensionID::WEBGL_provoking_vertex:
+      slot.reset(new WebGLExtensionProvokingVertex(this));
       break;
 
     case WebGLExtensionID::Max:

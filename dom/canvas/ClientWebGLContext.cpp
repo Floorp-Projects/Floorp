@@ -2000,6 +2000,11 @@ void ClientWebGLContext::GetParameter(JSContext* cx, GLenum pname,
       retval.set(JS::NumberValue(state.mPixelUnpackState.colorspaceConversion));
       return;
 
+    case dom::WEBGL_provoking_vertex_Binding::PROVOKING_VERTEX_WEBGL:
+      if (!IsExtensionEnabled(WebGLExtensionID::WEBGL_provoking_vertex)) break;
+      retval.set(JS::NumberValue(UnderlyingValue(state.mProvokingVertex)));
+      return;
+
     // -
     // Array returns
 
@@ -5662,6 +5667,18 @@ void ClientWebGLContext::GetSupportedProfilesASTC(
   if (limits.astcHdr) {
     retarr.AppendElement(u"hdr"_ns);
   }
+}
+
+void ClientWebGLContext::ProvokingVertex(const GLenum rawMode) const {
+  const FuncScope funcScope(*this, "provokingVertex");
+  if (IsContextLost()) return;
+
+  const auto mode = webgl::AsEnumCase<webgl::ProvokingVertex>(rawMode);
+  if (!mode) return;
+
+  Run<RPROC(ProvokingVertex)>(*mode);
+
+  funcScope.mKeepNotLostOrNull->state.mProvokingVertex = *mode;
 }
 
 // -
