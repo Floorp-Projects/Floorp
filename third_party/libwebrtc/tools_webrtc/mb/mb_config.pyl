@@ -216,7 +216,6 @@
       'win_compile_x86_clang_dbg': 'win_clang_debug_bot_x86',
       'win_compile_x86_clang_rel': 'win_clang_release_bot_x86',
       'win_x64_clang_dbg': 'win_clang_debug_bot_x64',
-      'win_x64_clang_dbg_win10': 'win_clang_debug_bot_x64',
       'win_x64_clang_rel': 'win_clang_release_bot_x64',
       'win_x86_clang_dbg': 'win_clang_debug_bot_x86',
       'win_x86_clang_rel': 'win_clang_release_bot_x86',
