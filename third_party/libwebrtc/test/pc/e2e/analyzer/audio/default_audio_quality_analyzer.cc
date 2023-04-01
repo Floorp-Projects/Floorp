@@ -136,8 +136,7 @@ void DefaultAudioQualityAnalyzer::Stop() {
         {MetricMetadataKey::kAudioStreamMetadataKey, item.first},
         {MetricMetadataKey::kPeerMetadataKey, stream_info.receiver_peer},
         {MetricMetadataKey::kReceiverMetadataKey, stream_info.receiver_peer},
-        {MetricMetadataKey::kExperimentalTestNameMetadataKey,
-         GetCurrentTestName()}};
+        {MetricMetadataKey::kExperimentalTestNameMetadataKey, test_case_name_}};
 
     metrics_logger_->LogMetric("expand_rate", GetTestCaseName(item.first),
                                item.second.expand_rate, Unit::kUnitless,

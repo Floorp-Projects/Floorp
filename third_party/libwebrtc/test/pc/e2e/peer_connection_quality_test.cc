@@ -746,15 +746,13 @@ void PeerConnectionE2EQualityTest::ReportGeneralTestResults() {
       *alice_->params().name + "_connected", test_case_name_, alice_connected_,
       Unit::kUnitless, ImprovementDirection::kBiggerIsBetter,
       {{MetricMetadataKey::kPeerMetadataKey, *alice_->params().name},
-       {MetricMetadataKey::kExperimentalTestNameMetadataKey,
-        GetCurrentTestName()}});
+       {MetricMetadataKey::kExperimentalTestNameMetadataKey, test_case_name_}});
   // TODO(bugs.webrtc.org/14757): Remove kExperimentalTestNameMetadataKey.
   metrics_logger_->LogSingleValueMetric(
       *bob_->params().name + "_connected", test_case_name_, bob_connected_,
       Unit::kUnitless, ImprovementDirection::kBiggerIsBetter,
       {{MetricMetadataKey::kPeerMetadataKey, *bob_->params().name},
-       {MetricMetadataKey::kExperimentalTestNameMetadataKey,
-        GetCurrentTestName()}});
+       {MetricMetadataKey::kExperimentalTestNameMetadataKey, test_case_name_}});
 }
 
 Timestamp PeerConnectionE2EQualityTest::Now() const {

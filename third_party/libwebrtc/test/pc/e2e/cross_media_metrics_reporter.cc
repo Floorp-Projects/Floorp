@@ -123,8 +123,7 @@ void CrossMediaMetricsReporter::StopAndReportResults() {
          pair.second.audio_stream_info.receiver_peer},
         {MetricMetadataKey::kReceiverMetadataKey,
          pair.second.audio_stream_info.receiver_peer},
-        {MetricMetadataKey::kExperimentalTestNameMetadataKey,
-         GetCurrentTestName()}};
+        {MetricMetadataKey::kExperimentalTestNameMetadataKey, test_case_name_}};
     metrics_logger_->LogMetric(
         "audio_ahead_ms",
         GetTestCaseName(pair.second.audio_stream_info.stream_label, sync_group),
@@ -141,8 +140,7 @@ void CrossMediaMetricsReporter::StopAndReportResults() {
          pair.second.video_stream_info.receiver_peer},
         {MetricMetadataKey::kReceiverMetadataKey,
          pair.second.video_stream_info.receiver_peer},
-        {MetricMetadataKey::kExperimentalTestNameMetadataKey,
-         GetCurrentTestName()}};
+        {MetricMetadataKey::kExperimentalTestNameMetadataKey, test_case_name_}};
     metrics_logger_->LogMetric(
         "video_ahead_ms",
         GetTestCaseName(pair.second.video_stream_info.stream_label, sync_group),
