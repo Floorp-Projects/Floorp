@@ -628,9 +628,13 @@ def perf_builder(name, perf_cat, **kwargs):
     properties = make_goma_properties()
     properties.update(make_reclient_properties("rbe-webrtc-trusted"))
     properties["builder_group"] = "client.webrtc.perf"
+    dimensions = {"pool": "luci.webrtc.perf", "os": "Linux"}
+    if "Android" in name:
+        # Android perf testers require more performant bots to finish under 3 hours.
+        dimensions["cores"] = "8"
     return webrtc_builder(
         name = name,
-        dimensions = {"pool": "luci.webrtc.perf", "os": "Linux"},
+        dimensions = dimensions,
         properties = properties,
         bucket = "perf",
         service_account = "webrtc-ci-builder@chops-service-accounts.iam.gserviceaccount.com",
