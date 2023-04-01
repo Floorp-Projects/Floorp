@@ -2470,6 +2470,7 @@
           "13c100",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
+          "--xctest",
           "--xcode-parallelization"
         ],
         "isolate_name": "apprtcmobile_tests",
@@ -2516,7 +2517,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "audio_decoder_unittests",
         "merge": {
@@ -2562,7 +2564,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "common_audio_unittests",
         "merge": {
@@ -2608,7 +2611,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "common_video_unittests",
         "merge": {
@@ -2654,7 +2658,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "dcsctp_unittests",
         "merge": {
@@ -2700,7 +2705,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "modules_tests",
         "merge": {
@@ -2747,7 +2753,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "modules_unittests",
         "merge": {
@@ -2795,7 +2802,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "rtc_media_unittests",
         "merge": {
@@ -2841,7 +2849,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "rtc_pc_unittests",
         "merge": {
@@ -2887,7 +2896,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "rtc_stats_unittests",
         "merge": {
@@ -2933,7 +2943,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "rtc_unittests",
         "merge": {
@@ -2981,6 +2992,7 @@
           "13c100",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
+          "--xctest",
           "--xcode-parallelization"
         ],
         "isolate_name": "sdk_framework_unittests",
@@ -3028,6 +3040,7 @@
           "13c100",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
+          "--xctest",
           "--xcode-parallelization"
         ],
         "isolate_name": "sdk_unittests",
@@ -3074,7 +3087,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "svc_tests",
         "merge": {
@@ -3122,7 +3136,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "system_wrappers_unittests",
         "merge": {
@@ -3168,7 +3183,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "test_support_unittests",
         "merge": {
@@ -3214,7 +3230,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "tools_unittests",
         "merge": {
@@ -3260,7 +3277,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "video_capture_tests",
         "merge": {
@@ -3306,7 +3324,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "video_engine_tests",
         "merge": {
@@ -3353,7 +3372,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "voip_unittests",
         "merge": {
@@ -3399,7 +3419,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {
@@ -3450,6 +3471,7 @@
           "13c100",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
+          "--xctest",
           "--xcode-parallelization"
         ],
         "isolate_name": "apprtcmobile_tests",
@@ -3496,7 +3518,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "audio_decoder_unittests",
         "merge": {
@@ -3542,7 +3565,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "common_audio_unittests",
         "merge": {
@@ -3588,7 +3612,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "common_video_unittests",
         "merge": {
@@ -3634,7 +3659,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "dcsctp_unittests",
         "merge": {
@@ -3680,7 +3706,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "modules_tests",
         "merge": {
@@ -3727,7 +3754,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "modules_unittests",
         "merge": {
@@ -3775,7 +3803,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "rtc_media_unittests",
         "merge": {
@@ -3821,7 +3850,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "rtc_pc_unittests",
         "merge": {
@@ -3867,7 +3897,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "rtc_stats_unittests",
         "merge": {
@@ -3913,7 +3944,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "rtc_unittests",
         "merge": {
@@ -3961,6 +3993,7 @@
           "13c100",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
+          "--xctest",
           "--xcode-parallelization"
         ],
         "isolate_name": "sdk_framework_unittests",
@@ -4008,6 +4041,7 @@
           "13c100",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
+          "--xctest",
           "--xcode-parallelization"
         ],
         "isolate_name": "sdk_unittests",
@@ -4054,7 +4088,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "svc_tests",
         "merge": {
@@ -4102,7 +4137,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "system_wrappers_unittests",
         "merge": {
@@ -4148,7 +4184,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "test_support_unittests",
         "merge": {
@@ -4194,7 +4231,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "tools_unittests",
         "merge": {
@@ -4240,7 +4278,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "video_capture_tests",
         "merge": {
@@ -4286,7 +4325,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "video_engine_tests",
         "merge": {
@@ -4333,7 +4373,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "voip_unittests",
         "merge": {
@@ -4379,7 +4420,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {
@@ -4430,6 +4472,7 @@
           "13c100",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
+          "--xctest",
           "--xcode-parallelization"
         ],
         "isolate_name": "apprtcmobile_tests",
@@ -4476,7 +4519,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "audio_decoder_unittests",
         "merge": {
@@ -4522,7 +4566,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "common_audio_unittests",
         "merge": {
@@ -4568,7 +4613,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "common_video_unittests",
         "merge": {
@@ -4614,7 +4660,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "dcsctp_unittests",
         "merge": {
@@ -4660,7 +4707,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "modules_tests",
         "merge": {
@@ -4707,7 +4755,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "modules_unittests",
         "merge": {
@@ -4755,7 +4804,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "rtc_media_unittests",
         "merge": {
@@ -4801,7 +4851,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "rtc_pc_unittests",
         "merge": {
@@ -4847,7 +4898,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "rtc_stats_unittests",
         "merge": {
@@ -4893,7 +4945,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "rtc_unittests",
         "merge": {
@@ -4941,6 +4994,7 @@
           "13c100",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
+          "--xctest",
           "--xcode-parallelization"
         ],
         "isolate_name": "sdk_framework_unittests",
@@ -4988,6 +5042,7 @@
           "13c100",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
+          "--xctest",
           "--xcode-parallelization"
         ],
         "isolate_name": "sdk_unittests",
@@ -5034,7 +5089,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "svc_tests",
         "merge": {
@@ -5082,7 +5138,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "system_wrappers_unittests",
         "merge": {
@@ -5128,7 +5185,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "test_support_unittests",
         "merge": {
@@ -5174,7 +5232,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "tools_unittests",
         "merge": {
@@ -5220,7 +5279,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "video_capture_tests",
         "merge": {
@@ -5266,7 +5326,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "video_engine_tests",
         "merge": {
@@ -5313,7 +5374,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "voip_unittests",
         "merge": {
@@ -5359,7 +5421,8 @@
           "--xcode-build-version",
           "13c100",
           "--out-dir",
-          "${ISOLATED_OUTDIR}"
+          "${ISOLATED_OUTDIR}",
+          "--xctest"
         ],
         "isolate_name": "webrtc_nonparallel_tests",
         "merge": {

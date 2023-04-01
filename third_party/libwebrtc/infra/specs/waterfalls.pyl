@@ -230,7 +230,7 @@
         'mixins': [
           'mac_12_x64', 'chromium-tester-service-account', 'ios-simulator-12.4',
           'xcode_13_main', 'mac_toolchain', 'has_native_resultdb_integration',
-          'out_dir_arg'
+          'out_dir_arg', 'webrtc-xctest'
         ],
         'test_suites': {
           'isolated_scripts': 'ios_simulator_tests',
@@ -240,7 +240,7 @@
         'mixins': [
           'mac_12_x64', 'chromium-tester-service-account', 'ios-simulator-13.6',
           'xcode_13_main', 'mac_toolchain', 'has_native_resultdb_integration',
-          'out_dir_arg'
+          'out_dir_arg', 'webrtc-xctest'
         ],
         'test_suites': {
           'isolated_scripts': 'ios_simulator_tests',
@@ -250,7 +250,7 @@
         'mixins': [
           'mac_12_x64', 'chromium-tester-service-account', 'ios-simulator-14.5',
           'xcode_13_main', 'mac_toolchain', 'has_native_resultdb_integration',
-          'out_dir_arg'
+          'out_dir_arg', 'webrtc-xctest'
         ],
         'test_suites': {
           'isolated_scripts': 'ios_simulator_tests',
@@ -498,7 +498,7 @@
         'mixins': [
           'mac_12_x64', 'chromium-tester-service-account', 'ios-simulator-12.4',
           'xcode_13_main', 'mac_toolchain', 'has_native_resultdb_integration',
-          'out_dir_arg'
+          'out_dir_arg', 'webrtc-xctest'
         ],
         'test_suites': {
           'isolated_scripts': 'ios_simulator_tests',
@@ -508,7 +508,7 @@
         'mixins': [
           'mac_12_x64', 'chromium-tester-service-account', 'ios-simulator-13.6',
           'xcode_13_main', 'mac_toolchain', 'has_native_resultdb_integration',
-          'out_dir_arg'
+          'out_dir_arg', 'webrtc-xctest'
         ],
         'test_suites': {
           'isolated_scripts': 'ios_simulator_tests',
@@ -518,7 +518,7 @@
         'mixins': [
           'mac_12_x64', 'chromium-tester-service-account', 'ios-simulator-14.5',
           'xcode_13_main', 'mac_toolchain', 'has_native_resultdb_integration',
-          'out_dir_arg'
+          'out_dir_arg', 'webrtc-xctest'
         ],
         'test_suites': {
           'isolated_scripts': 'ios_simulator_tests',
