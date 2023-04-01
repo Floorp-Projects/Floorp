@@ -176,7 +176,7 @@ class MockVideoEncoderFactory : public VideoEncoderFactory {
   }
   void set_init_encode_return_value(int32_t value);
   void set_requested_resolution_alignments(
-      std::vector<int> requested_resolution_alignments) {
+      std::vector<uint32_t> requested_resolution_alignments) {
     requested_resolution_alignments_ = requested_resolution_alignments;
   }
   void set_supports_simulcast(bool supports_simulcast) {
@@ -195,7 +195,7 @@ class MockVideoEncoderFactory : public VideoEncoderFactory {
   std::vector<MockVideoEncoder*> encoders_;
   std::vector<const char*> encoder_names_;
   // Keep number of entries in sync with `kMaxSimulcastStreams`.
-  std::vector<int> requested_resolution_alignments_ = {1, 1, 1};
+  std::vector<uint32_t> requested_resolution_alignments_ = {1, 1, 1};
   bool supports_simulcast_ = false;
   std::vector<VideoEncoder::ResolutionBitrateLimits> resolution_bitrate_limits_;
 };
@@ -284,7 +284,8 @@ class MockVideoEncoder : public VideoEncoder {
     scaling_settings_ = settings;
   }
 
-  void set_requested_resolution_alignment(int requested_resolution_alignment) {
+  void set_requested_resolution_alignment(
+      uint32_t requested_resolution_alignment) {
     requested_resolution_alignment_ = requested_resolution_alignment;
   }
 
@@ -332,7 +333,7 @@ class MockVideoEncoder : public VideoEncoder {
   bool supports_native_handle_ = false;
   std::string implementation_name_ = "unknown";
   VideoEncoder::ScalingSettings scaling_settings_;
-  int requested_resolution_alignment_ = 1;
+  uint32_t requested_resolution_alignment_ = 1;
   bool apply_alignment_to_all_simulcast_layers_ = false;
   bool has_trusted_rate_controller_ = false;
   bool is_hardware_accelerated_ = false;
@@ -1396,7 +1397,7 @@ TEST_F(TestSimulcastEncoderAdapterFake,
   helper_->factory()->set_requested_resolution_alignments({2, 4, 7});
   EXPECT_EQ(0, adapter_->InitEncode(&codec_, kSettings));
 
-  EXPECT_EQ(adapter_->GetEncoderInfo().requested_resolution_alignment, 28);
+  EXPECT_EQ(adapter_->GetEncoderInfo().requested_resolution_alignment, 28u);
 }
 
 TEST_F(TestSimulcastEncoderAdapterFake,
@@ -1467,7 +1468,7 @@ TEST_F(TestSimulcastEncoderAdapterFake, EncoderInfoFromFieldTrial) {
   EXPECT_EQ(0, adapter_->InitEncode(&codec_, kSettings));
   ASSERT_EQ(3u, helper_->factory()->encoders().size());
 
-  EXPECT_EQ(8, adapter_->GetEncoderInfo().requested_resolution_alignment);
+  EXPECT_EQ(8u, adapter_->GetEncoderInfo().requested_resolution_alignment);
   EXPECT_TRUE(
       adapter_->GetEncoderInfo().apply_alignment_to_all_simulcast_layers);
   EXPECT_TRUE(adapter_->GetEncoderInfo().resolution_bitrate_limits.empty());
@@ -1490,7 +1491,7 @@ TEST_F(TestSimulcastEncoderAdapterFake,
   EXPECT_EQ(0, adapter_->InitEncode(&codec_, kSettings));
   ASSERT_EQ(1u, helper_->factory()->encoders().size());
 
-  EXPECT_EQ(9, adapter_->GetEncoderInfo().requested_resolution_alignment);
+  EXPECT_EQ(9u, adapter_->GetEncoderInfo().requested_resolution_alignment);
   EXPECT_FALSE(
       adapter_->GetEncoderInfo().apply_alignment_to_all_simulcast_layers);
   EXPECT_THAT(

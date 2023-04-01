@@ -640,7 +640,7 @@ TEST(LibvpxVp8EncoderTest, GetEncoderInfoReturnsStaticInformation) {
   EXPECT_FALSE(info.is_hardware_accelerated);
   EXPECT_TRUE(info.supports_simulcast);
   EXPECT_EQ(info.implementation_name, "libvpx");
-  EXPECT_EQ(info.requested_resolution_alignment, 1);
+  EXPECT_EQ(info.requested_resolution_alignment, 1u);
   EXPECT_THAT(info.preferred_pixel_formats,
               testing::UnorderedElementsAre(VideoFrameBuffer::Type::kNV12,
                                             VideoFrameBuffer::Type::kI420));
@@ -655,7 +655,7 @@ TEST(LibvpxVp8EncoderTest, RequestedResolutionAlignmentFromFieldTrial) {
   LibvpxVp8Encoder encoder((std::unique_ptr<LibvpxInterface>(vpx)),
                            VP8Encoder::Settings());
 
-  EXPECT_EQ(encoder.GetEncoderInfo().requested_resolution_alignment, 10);
+  EXPECT_EQ(encoder.GetEncoderInfo().requested_resolution_alignment, 10u);
   EXPECT_FALSE(
       encoder.GetEncoderInfo().apply_alignment_to_all_simulcast_layers);
   EXPECT_TRUE(encoder.GetEncoderInfo().resolution_bitrate_limits.empty());
