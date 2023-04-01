@@ -153,26 +153,22 @@ void GainController2::SetFixedGainDb(float gain_db) {
 
 void GainController2::Analyze(int applied_input_volume,
                               const AudioBuffer& audio_buffer) {
+  recommended_input_volume_ = absl::nullopt;
+
   RTC_DCHECK_GE(applied_input_volume, 0);
   RTC_DCHECK_LE(applied_input_volume, 255);
 
   if (input_volume_controller_) {
-    // TODO(bugs.webrtc.org/7494): Pass applied volume to `AnalyzePreProcess()`.
-    input_volume_controller_->SetAppliedInputVolume(applied_input_volume);
-    input_volume_controller_->AnalyzePreProcess(audio_buffer);
+    input_volume_controller_->AnalyzeInputAudio(applied_input_volume,
+                                                audio_buffer);
   }
-}
-
-absl::optional<int> GainController2::GetRecommendedInputVolume() const {
-  return input_volume_controller_
-             ? absl::optional<int>(
-                   input_volume_controller_->recommended_input_volume())
-             : absl::nullopt;
 }
 
 void GainController2::Process(absl::optional<float> speech_probability,
                               bool input_volume_changed,
                               AudioBuffer* audio) {
+  recommended_input_volume_ = absl::nullopt;
+
   data_dumper_.DumpRaw("agc2_applied_input_volume_changed",
                        input_volume_changed);
   if (input_volume_changed) {
@@ -220,13 +216,12 @@ void GainController2::Process(absl::optional<float> speech_probability,
     RTC_DCHECK(speech_level.has_value());
     RTC_DCHECK(speech_probability.has_value());
     if (speech_probability.has_value()) {
-      // TODO(bugs.webrtc.org/7494): Rename `Process()` to `RecommendVolume()`
-      // and let it return the recommended input volume.
-      input_volume_controller_->Process(
-          *speech_probability,
-          speech_level->is_confident
-              ? absl::optional<float>(speech_level->rms_dbfs)
-              : absl::nullopt);
+      recommended_input_volume_ =
+          input_volume_controller_->RecommendInputVolume(
+              *speech_probability,
+              speech_level->is_confident
+                  ? absl::optional<float>(speech_level->rms_dbfs)
+                  : absl::nullopt);
     }
   }
 

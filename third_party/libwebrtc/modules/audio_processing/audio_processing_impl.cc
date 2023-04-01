@@ -2058,7 +2058,7 @@ void AudioProcessingImpl::UpdateRecommendedInputVolumeLocked() {
   if (submodules_.gain_controller2 &&
       config_.gain_controller2.input_volume_controller.enabled) {
     capture_.recommended_input_volume =
-        submodules_.gain_controller2->GetRecommendedInputVolume();
+        submodules_.gain_controller2->recommended_input_volume();
     return;
   }
 

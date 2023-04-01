@@ -153,15 +153,26 @@ void WriteAlternatingAudioBufferSamples(float samples_value,
 // Deprecated.
 // TODO(bugs.webrtc.org/7494): Delete this helper, use
 // `InputVolumeControllerTestHelper::CallAgcSequence()` instead.
-void CallPreProcessAndProcess(int num_calls,
-                              const AudioBuffer& audio_buffer,
-                              float speech_probability,
-                              absl::optional<float> speech_level_dbfs,
-                              InputVolumeController& controller) {
+int CallAnalyzeAndRecommend(int num_calls,
+                            int initial_volume,
+                            const AudioBuffer& audio_buffer,
+                            float speech_probability,
+                            absl::optional<float> speech_level_dbfs,
+                            InputVolumeController& controller) {
+  RTC_DCHECK(controller.capture_output_used());
+  int volume = initial_volume;
   for (int n = 0; n < num_calls; ++n) {
-    controller.AnalyzePreProcess(audio_buffer);
-    controller.Process(speech_probability, speech_level_dbfs);
+    controller.AnalyzeInputAudio(volume, audio_buffer);
+    const auto recommended_input_volume =
+        controller.RecommendInputVolume(speech_probability, speech_level_dbfs);
+
+    // Expect no errors: Applied volume set for every frame;
+    // `RecommendInputVolume()` returns a non-empty value.
+    EXPECT_TRUE(recommended_input_volume.has_value());
+
+    volume = *recommended_input_volume;
   }
+  return volume;
 }
 
 // Reads a given number of 10 ms chunks from a PCM file and feeds them to
@@ -190,16 +201,18 @@ class SpeechSamplesReader {
 
   // Reads `num_frames` 10 ms frames from the beginning of the PCM file, applies
   // `gain_db` and feeds the frames into `controller` by calling
-  // `AnalyzePreProcess()` and `Process()` for each frame. Reads the number of
-  // 10 ms frames available in the PCM file if `num_frames` is too large - i.e.,
-  // does not loop. `speech_probability` and `speech_level_dbfs` are passed to
-  // `Process()`.
-  void Feed(int num_frames,
-            int applied_input_volume,
-            int gain_db,
-            float speech_probability,
-            absl::optional<float> speech_level_dbfs,
-            InputVolumeController& controller) {
+  // `AnalyzeInputAudio()` and `RecommendInputVolume()` for each frame. Reads
+  // the number of 10 ms frames available in the PCM file if `num_frames` is too
+  // large - i.e., does not loop. `speech_probability` and `speech_level_dbfs`
+  // are passed to `RecommendInputVolume()`.
+  int Feed(int num_frames,
+           int applied_input_volume,
+           int gain_db,
+           float speech_probability,
+           absl::optional<float> speech_level_dbfs,
+           InputVolumeController& controller) {
+    RTC_DCHECK(controller.capture_output_used());
+
     float gain = std::pow(10.0f, gain_db / 20.0f);  // From dB to linear gain.
     is_.seekg(0, is_.beg);  // Start from the beginning of the PCM file.
 
@@ -216,11 +229,17 @@ class SpeechSamplesReader {
                        return rtc::SafeClamp(static_cast<float>(v) * gain,
                                              kMinSample, kMaxSample);
                      });
-      controller.SetAppliedInputVolume(applied_input_volume);
-      controller.AnalyzePreProcess(audio_buffer_);
-      controller.Process(speech_probability, speech_level_dbfs);
-      applied_input_volume = controller.recommended_input_volume();
+      controller.AnalyzeInputAudio(applied_input_volume, audio_buffer_);
+      const auto recommended_input_volume = controller.RecommendInputVolume(
+          speech_probability, speech_level_dbfs);
+
+      // Expect no errors: Applied volume set for every frame;
+      // `RecommendInputVolume()` returns a non-empty value.
+      EXPECT_TRUE(recommended_input_volume.has_value());
+
+      applied_input_volume = *recommended_input_volume;
     }
+    return applied_input_volume;
   }
 
  private:
@@ -287,20 +306,28 @@ class InputVolumeControllerTestHelper {
   // Calls the sequence of `InputVolumeController` methods according to the API
   // contract, namely:
   // - Sets the applied input volume;
-  // - Uses `audio_buffer` to call `AnalyzePreProcess()` and `Process()`;
+  // - Uses `audio_buffer` to call `AnalyzeInputAudio()` and
+  // `RecommendInputVolume()`;
   //  Returns the recommended input volume.
-  int CallAgcSequence(int applied_input_volume,
-                      float speech_probability,
-                      absl::optional<float> speech_level_dbfs,
-                      int num_calls = 1) {
+  absl::optional<int> CallAgcSequence(int applied_input_volume,
+                                      float speech_probability,
+                                      absl::optional<float> speech_level_dbfs,
+                                      int num_calls = 1) {
     RTC_DCHECK_GE(num_calls, 1);
-    int volume = applied_input_volume;
-
+    absl::optional<int> volume = applied_input_volume;
     for (int i = 0; i < num_calls; ++i) {
-      controller.SetAppliedInputVolume(volume);
-      controller.AnalyzePreProcess(audio_buffer);
-      controller.Process(speech_probability, speech_level_dbfs);
-      volume = controller.recommended_input_volume();
+      // Repeat the initial volume if `RecommendInputVolume()` doesn't return a
+      // value.
+      controller.AnalyzeInputAudio(volume.value_or(applied_input_volume),
+                                   audio_buffer);
+      volume = controller.RecommendInputVolume(speech_probability,
+                                               speech_level_dbfs);
+
+      // Allow deviation from the API contract: `RecommendInputVolume()` doesn't
+      // return a recommended input volume.
+      if (volume.has_value()) {
+        EXPECT_EQ(*volume, controller.recommended_input_volume());
+      }
     }
     return volume;
   }
@@ -308,24 +335,42 @@ class InputVolumeControllerTestHelper {
   // Deprecated.
   // TODO(bugs.webrtc.org/7494): Let the caller write `audio_buffer` and use
   // `CallAgcSequence()`.
-  void CallProcess(int num_calls,
-                   float speech_probability,
-                   absl::optional<float> speech_level_dbfs) {
+  int CallRecommendInputVolume(int num_calls,
+                               int initial_volume,
+                               float speech_probability,
+                               absl::optional<float> speech_level_dbfs) {
+    RTC_DCHECK(controller.capture_output_used());
+
+    // Create non-clipping audio for `AnalyzeInputAudio()`.
+    WriteAlternatingAudioBufferSamples(0.1f * kMaxSample, audio_buffer);
+    int volume = initial_volume;
     for (int i = 0; i < num_calls; ++i) {
-      controller.Process(speech_probability, speech_level_dbfs);
+      controller.AnalyzeInputAudio(volume, audio_buffer);
+      const auto recommended_input_volume = controller.RecommendInputVolume(
+          speech_probability, speech_level_dbfs);
+
+      // Expect no errors: Applied volume set for every frame;
+      // `RecommendInputVolume()` returns a non-empty value.
+      EXPECT_TRUE(recommended_input_volume.has_value());
+
+      volume = *recommended_input_volume;
     }
+    return volume;
   }
 
   // Deprecated.
   // TODO(bugs.webrtc.org/7494): Let the caller write `audio_buffer` and use
   // `CallAgcSequence()`.
-  void CallPreProc(int num_calls, float clipped_ratio) {
+  void CallAnalyzeInputAudio(int num_calls, float clipped_ratio) {
+    RTC_DCHECK(controller.capture_output_used());
+
     RTC_DCHECK_GE(clipped_ratio, 0.0f);
     RTC_DCHECK_LE(clipped_ratio, 1.0f);
     WriteAudioBufferSamples(/*samples_value=*/0.0f, clipped_ratio,
                             audio_buffer);
     for (int i = 0; i < num_calls; ++i) {
-      controller.AnalyzePreProcess(audio_buffer);
+      controller.AnalyzeInputAudio(controller.recommended_input_volume(),
+                                   audio_buffer);
     }
   }
 
@@ -353,97 +398,135 @@ TEST_P(InputVolumeControllerParametrizedTest,
        StartupMinVolumeConfigurationIsRespected) {
   InputVolumeControllerTestHelper helper;
 
-  helper.CallAgcSequence(kInitialInputVolume, kHighSpeechProbability,
-                         kSpeechLevel);
-
-  EXPECT_EQ(kInitialInputVolume, helper.controller.recommended_input_volume());
+  EXPECT_EQ(*helper.CallAgcSequence(kInitialInputVolume, kHighSpeechProbability,
+                                    kSpeechLevel),
+            kInitialInputVolume);
 }
 
 TEST_P(InputVolumeControllerParametrizedTest, MicVolumeResponseToRmsError) {
   InputVolumeControllerTestHelper helper;
-  helper.CallAgcSequence(kInitialInputVolume, kHighSpeechProbability,
-                         kSpeechLevel);
+  int volume = *helper.CallAgcSequence(kInitialInputVolume,
+                                       kHighSpeechProbability, kSpeechLevel);
 
   // Inside the digital gain's window; no change of volume.
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -23.0f);
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, -23.0f);
 
   // Inside the digital gain's window; no change of volume.
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -28.0f);
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, -28.0f);
 
   // Above the digital gain's  window; volume should be increased.
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -29.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 128);
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, -29.0f);
+  EXPECT_EQ(volume, 128);
 
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -38.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 156);
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, -38.0f);
+  EXPECT_EQ(volume, 156);
 
   // Inside the digital gain's window; no change of volume.
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -23.0f);
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -18.0f);
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, -23.0f);
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, -18.0f);
 
   // Below the digial gain's window; volume should be decreased.
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -17.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 155);
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, -17.0f);
+  EXPECT_EQ(volume, 155);
 
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -17.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 151);
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, -17.0f);
+  EXPECT_EQ(volume, 151);
 
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -9.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 119);
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, -9.0f);
+  EXPECT_EQ(volume, 119);
 }
 
 TEST_P(InputVolumeControllerParametrizedTest, MicVolumeIsLimited) {
   InputVolumeControllerTestHelper helper;
-  helper.CallAgcSequence(kInitialInputVolume, kHighSpeechProbability,
-                         kSpeechLevel);
+  int volume = *helper.CallAgcSequence(kInitialInputVolume,
+                                       kHighSpeechProbability, kSpeechLevel);
 
   // Maximum upwards change is limited.
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -48.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 183);
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, -48.0f);
+  EXPECT_EQ(volume, 183);
 
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -48.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 243);
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, -48.0f);
+  EXPECT_EQ(volume, 243);
 
   // Won't go higher than the maximum.
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -48.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 255);
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, -48.0f);
+  EXPECT_EQ(volume, 255);
 
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -17.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 254);
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, -17.0f);
+  EXPECT_EQ(volume, 254);
 
   // Maximum downwards change is limited.
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, 22.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 194);
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, 22.0f);
+  EXPECT_EQ(volume, 194);
 
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, 22.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 137);
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, 22.0f);
+  EXPECT_EQ(volume, 137);
 
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, 22.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 88);
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, 22.0f);
+  EXPECT_EQ(volume, 88);
 
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, 22.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 54);
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, 22.0f);
+  EXPECT_EQ(volume, 54);
 
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, 22.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 33);
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, 22.0f);
+  EXPECT_EQ(volume, 33);
 
   // Won't go lower than the minimum.
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, 22.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(),
-            std::max(18, GetMinInputVolume()));
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, 22.0f);
+  EXPECT_EQ(volume, std::max(18, GetMinInputVolume()));
 
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, 22.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(),
-            std::max(12, GetMinInputVolume()));
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, 22.0f);
+  EXPECT_EQ(volume, std::max(12, GetMinInputVolume()));
 }
 
 TEST_P(InputVolumeControllerParametrizedTest, NoActionWhileMuted) {
-  InputVolumeControllerTestHelper helper;
-  helper.CallAgcSequence(kInitialInputVolume, kHighSpeechProbability,
-                         kSpeechLevel);
+  InputVolumeControllerTestHelper helper_1;
+  InputVolumeControllerTestHelper helper_2;
 
-  helper.controller.HandleCaptureOutputUsedChange(false);
-  helper.controller.Process(kHighSpeechProbability, kSpeechLevel);
+  int volume_1 = *helper_1.CallAgcSequence(/*applied_input_volume=*/255,
+                                           kHighSpeechProbability, kSpeechLevel,
+                                           /*num_calls=*/1);
+  int volume_2 = *helper_2.CallAgcSequence(/*applied_input_volume=*/255,
+                                           kHighSpeechProbability, kSpeechLevel,
+                                           /*num_calls=*/1);
+
+  EXPECT_EQ(volume_1, 255);
+  EXPECT_EQ(volume_2, 255);
+
+  helper_2.controller.HandleCaptureOutputUsedChange(false);
+
+  WriteAlternatingAudioBufferSamples(kMaxSample, helper_1.audio_buffer);
+  WriteAlternatingAudioBufferSamples(kMaxSample, helper_2.audio_buffer);
+
+  volume_1 =
+      *helper_1.CallAgcSequence(volume_1, kHighSpeechProbability, kSpeechLevel,
+                                /*num_calls=*/1);
+  volume_2 =
+      *helper_2.CallAgcSequence(volume_2, kHighSpeechProbability, kSpeechLevel,
+                                /*num_calls=*/1);
+
+  EXPECT_LT(volume_1, 255);
+  EXPECT_EQ(volume_2, 255);
 }
 
 TEST_P(InputVolumeControllerParametrizedTest,
@@ -456,11 +539,12 @@ TEST_P(InputVolumeControllerParametrizedTest,
   helper.controller.HandleCaptureOutputUsedChange(true);
 
   constexpr int kInputVolume = 127;
-  helper.controller.SetAppliedInputVolume(kInputVolume);
 
   // SetMicVolume should not be called.
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, kSpeechLevel);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 127);
+  EXPECT_EQ(
+      helper.CallRecommendInputVolume(/*num_calls=*/1, kInputVolume,
+                                      kHighSpeechProbability, kSpeechLevel),
+      kInputVolume);
 }
 
 TEST_P(InputVolumeControllerParametrizedTest, UnmutingRaisesTooLowVolume) {
@@ -472,59 +556,65 @@ TEST_P(InputVolumeControllerParametrizedTest, UnmutingRaisesTooLowVolume) {
   helper.controller.HandleCaptureOutputUsedChange(true);
 
   constexpr int kInputVolume = 11;
-  helper.controller.SetAppliedInputVolume(kInputVolume);
 
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, kSpeechLevel);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), GetMinInputVolume());
+  EXPECT_EQ(
+      helper.CallRecommendInputVolume(/*num_calls=*/1, kInputVolume,
+                                      kHighSpeechProbability, kSpeechLevel),
+      GetMinInputVolume());
 }
 
 TEST_P(InputVolumeControllerParametrizedTest,
        ManualLevelChangeResultsInNoSetMicCall) {
   InputVolumeControllerTestHelper helper;
-  helper.CallAgcSequence(kInitialInputVolume, kHighSpeechProbability,
-                         kSpeechLevel);
+  int volume = *helper.CallAgcSequence(kInitialInputVolume,
+                                       kHighSpeechProbability, kSpeechLevel);
 
   // GetMicVolume returns a value outside of the quantization slack, indicating
   // a manual volume change.
-  ASSERT_NE(helper.controller.recommended_input_volume(), 154);
-  helper.controller.SetAppliedInputVolume(154);
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -29.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 154);
+  ASSERT_NE(volume, 154);
+  volume = helper.CallRecommendInputVolume(
+      /*num_calls=*/1, /*initial_volume=*/154, kHighSpeechProbability, -29.0f);
+  EXPECT_EQ(volume, 154);
 
   // Do the same thing, except downwards now.
-  helper.controller.SetAppliedInputVolume(100);
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -17.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 100);
+  volume = helper.CallRecommendInputVolume(
+      /*num_calls=*/1, /*initial_volume=*/100, kHighSpeechProbability, -17.0f);
+  EXPECT_EQ(volume, 100);
 
   // And finally verify the AGC continues working without a manual change.
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -17.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 99);
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, -17.0f);
+  EXPECT_EQ(volume, 99);
 }
 
 TEST_P(InputVolumeControllerParametrizedTest,
        RecoveryAfterManualLevelChangeFromMax) {
   InputVolumeControllerTestHelper helper;
-  helper.CallAgcSequence(kInitialInputVolume, kHighSpeechProbability,
-                         kSpeechLevel);
+  int volume = *helper.CallAgcSequence(kInitialInputVolume,
+                                       kHighSpeechProbability, kSpeechLevel);
 
   // Force the mic up to max volume. Takes a few steps due to the residual
   // gain limitation.
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -48.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 183);
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -48.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 243);
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -48.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 255);
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, -48.0f);
+  EXPECT_EQ(volume, 183);
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, -48.0f);
+  EXPECT_EQ(volume, 243);
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, -48.0f);
+  EXPECT_EQ(volume, 255);
 
   // Manual change does not result in SetMicVolume call.
-  helper.controller.SetAppliedInputVolume(50);
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -17.0f);
+  volume = helper.CallRecommendInputVolume(
+      /*num_calls=*/1, /*initial_volume=*/50, kHighSpeechProbability, -17.0f);
   EXPECT_EQ(helper.controller.recommended_input_volume(), 50);
 
   // Continues working as usual afterwards.
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -38.0f);
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, -38.0f);
 
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 65);
+  EXPECT_EQ(volume, 65);
 }
 
 // Checks that the minimum input volume is enforced during the upward adjustment
@@ -532,25 +622,28 @@ TEST_P(InputVolumeControllerParametrizedTest,
 TEST_P(InputVolumeControllerParametrizedTest,
        EnforceMinInputVolumeDuringUpwardsAdjustment) {
   InputVolumeControllerTestHelper helper;
-  helper.CallAgcSequence(kInitialInputVolume, kHighSpeechProbability,
-                         kSpeechLevel);
+  int volume = *helper.CallAgcSequence(kInitialInputVolume,
+                                       kHighSpeechProbability, kSpeechLevel);
 
   // Manual change below min, but strictly positive, otherwise no action will be
   // taken.
-  helper.controller.SetAppliedInputVolume(1);
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -17.0f);
+  volume = helper.CallRecommendInputVolume(
+      /*num_calls=*/1, /*initial_volume=*/1, kHighSpeechProbability, -17.0f);
 
   // Trigger an upward adjustment of the input volume.
-  EXPECT_EQ(helper.controller.recommended_input_volume(), GetMinInputVolume());
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -29.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), GetMinInputVolume());
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -48.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), GetMinInputVolume());
+  EXPECT_EQ(volume, GetMinInputVolume());
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, -29.0f);
+  EXPECT_EQ(volume, GetMinInputVolume());
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, -30.0f);
+  EXPECT_EQ(volume, GetMinInputVolume());
 
   // After a number of consistently low speech level observations, the input
   // volume is eventually raised above the minimum.
-  helper.CallProcess(/*num_calls=*/10, kHighSpeechProbability, -38.0f);
-  EXPECT_GT(helper.controller.recommended_input_volume(), GetMinInputVolume());
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/10, volume,
+                                           kHighSpeechProbability, -38.0f);
+  EXPECT_GT(volume, GetMinInputVolume());
 }
 
 // Checks that, when the min mic level override is specified, AGC immediately
@@ -559,14 +652,14 @@ TEST_P(InputVolumeControllerParametrizedTest,
 TEST_P(InputVolumeControllerParametrizedTest,
        RecoveryAfterManualLevelChangeBelowMin) {
   InputVolumeControllerTestHelper helper;
-  helper.CallAgcSequence(kInitialInputVolume, kHighSpeechProbability,
-                         kSpeechLevel);
+  int volume = *helper.CallAgcSequence(kInitialInputVolume,
+                                       kHighSpeechProbability, kSpeechLevel);
 
   // Manual change below min, but strictly positive, otherwise
   // AGC won't take any action.
-  helper.controller.SetAppliedInputVolume(1);
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -17.0f);
-  EXPECT_EQ(GetMinInputVolume(), helper.controller.recommended_input_volume());
+  volume = helper.CallRecommendInputVolume(
+      /*num_calls=*/1, /*initial_volume=*/1, kHighSpeechProbability, -17.0f);
+  EXPECT_EQ(volume, GetMinInputVolume());
 }
 
 TEST_P(InputVolumeControllerParametrizedTest, NoClippingHasNoImpact) {
@@ -574,7 +667,7 @@ TEST_P(InputVolumeControllerParametrizedTest, NoClippingHasNoImpact) {
   helper.CallAgcSequence(kInitialInputVolume, kHighSpeechProbability,
                          kSpeechLevel);
 
-  helper.CallPreProc(/*num_calls=*/100, /*clipped_ratio=*/0);
+  helper.CallAnalyzeInputAudio(/*num_calls=*/100, /*clipped_ratio=*/0);
   EXPECT_EQ(helper.controller.recommended_input_volume(), 128);
 }
 
@@ -584,7 +677,7 @@ TEST_P(InputVolumeControllerParametrizedTest,
   helper.CallAgcSequence(kInitialInputVolume, kHighSpeechProbability,
                          kSpeechLevel);
 
-  helper.CallPreProc(/*num_calls=*/1, /*clipped_ratio=*/0.099);
+  helper.CallAnalyzeInputAudio(/*num_calls=*/1, /*clipped_ratio=*/0.099);
   EXPECT_EQ(helper.controller.recommended_input_volume(), 128);
 }
 
@@ -593,7 +686,7 @@ TEST_P(InputVolumeControllerParametrizedTest, ClippingLowersVolume) {
   helper.CallAgcSequence(/*applied_input_volume=*/255, kHighSpeechProbability,
                          kSpeechLevel);
 
-  helper.CallPreProc(/*num_calls=*/1, /*clipped_ratio=*/0.2);
+  helper.CallAnalyzeInputAudio(/*num_calls=*/1, /*clipped_ratio=*/0.2);
   EXPECT_EQ(helper.controller.recommended_input_volume(), 240);
 }
 
@@ -603,14 +696,16 @@ TEST_P(InputVolumeControllerParametrizedTest,
   helper.CallAgcSequence(/*applied_input_volume=*/255, kHighSpeechProbability,
                          kSpeechLevel);
 
-  helper.CallPreProc(/*num_calls=*/1, /*clipped_ratio=*/kAboveClippedThreshold);
+  helper.CallAnalyzeInputAudio(/*num_calls=*/1,
+                               /*clipped_ratio=*/kAboveClippedThreshold);
   EXPECT_EQ(helper.controller.recommended_input_volume(), 240);
 
-  helper.CallPreProc(/*num_calls=*/300,
-                     /*clipped_ratio=*/kAboveClippedThreshold);
+  helper.CallAnalyzeInputAudio(/*num_calls=*/300,
+                               /*clipped_ratio=*/kAboveClippedThreshold);
   EXPECT_EQ(helper.controller.recommended_input_volume(), 240);
 
-  helper.CallPreProc(/*num_calls=*/1, /*clipped_ratio=*/kAboveClippedThreshold);
+  helper.CallAnalyzeInputAudio(/*num_calls=*/1,
+                               /*clipped_ratio=*/kAboveClippedThreshold);
   EXPECT_EQ(helper.controller.recommended_input_volume(), 225);
 }
 
@@ -619,11 +714,12 @@ TEST_P(InputVolumeControllerParametrizedTest, ClippingLoweringIsLimited) {
   helper.CallAgcSequence(/*applied_input_volume=*/180, kHighSpeechProbability,
                          kSpeechLevel);
 
-  helper.CallPreProc(/*num_calls=*/1, /*clipped_ratio=*/kAboveClippedThreshold);
+  helper.CallAnalyzeInputAudio(/*num_calls=*/1,
+                               /*clipped_ratio=*/kAboveClippedThreshold);
   EXPECT_EQ(helper.controller.recommended_input_volume(), kClippedMin);
 
-  helper.CallPreProc(/*num_calls=*/1000,
-                     /*clipped_ratio=*/kAboveClippedThreshold);
+  helper.CallAnalyzeInputAudio(/*num_calls=*/1000,
+                               /*clipped_ratio=*/kAboveClippedThreshold);
   EXPECT_EQ(helper.controller.recommended_input_volume(), kClippedMin);
 }
 
@@ -633,10 +729,12 @@ TEST_P(InputVolumeControllerParametrizedTest,
   helper.CallAgcSequence(/*applied_input_volume=*/255, kHighSpeechProbability,
                          kSpeechLevel);
 
-  helper.CallPreProc(/*num_calls=*/1, /*clipped_ratio=*/kAboveClippedThreshold);
+  helper.CallAnalyzeInputAudio(/*num_calls=*/1,
+                               /*clipped_ratio=*/kAboveClippedThreshold);
   EXPECT_EQ(helper.controller.recommended_input_volume(), 240);
 
-  helper.CallProcess(/*num_calls=*/10, kHighSpeechProbability, -48.0f);
+  helper.CallRecommendInputVolume(/*num_calls=*/10, /*initial_volume=*/240,
+                                  kHighSpeechProbability, -48.0f);
   EXPECT_EQ(helper.controller.recommended_input_volume(), 240);
 }
 
@@ -646,13 +744,17 @@ TEST_P(InputVolumeControllerParametrizedTest,
   helper.CallAgcSequence(/*applied_input_volume=*/200, kHighSpeechProbability,
                          kSpeechLevel);
 
-  helper.CallPreProc(/*num_calls=*/1, /*clipped_ratio=*/kAboveClippedThreshold);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 185);
+  helper.CallAnalyzeInputAudio(/*num_calls=*/1,
+                               /*clipped_ratio=*/kAboveClippedThreshold);
+  int volume = helper.controller.recommended_input_volume();
+  EXPECT_EQ(volume, 185);
 
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -58.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 240);
-  helper.CallProcess(/*num_calls=*/10, kHighSpeechProbability, -58.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 240);
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, -58.0f);
+  EXPECT_EQ(volume, 240);
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/10, volume,
+                                           kHighSpeechProbability, -58.0f);
+  EXPECT_EQ(volume, 240);
 }
 
 TEST_P(InputVolumeControllerParametrizedTest, UserCanRaiseVolumeAfterClipping) {
@@ -660,23 +762,27 @@ TEST_P(InputVolumeControllerParametrizedTest, UserCanRaiseVolumeAfterClipping) {
   helper.CallAgcSequence(/*applied_input_volume=*/225, kHighSpeechProbability,
                          kSpeechLevel);
 
-  helper.CallPreProc(/*num_calls=*/1, /*clipped_ratio=*/kAboveClippedThreshold);
+  helper.CallAnalyzeInputAudio(/*num_calls=*/1,
+                               /*clipped_ratio=*/kAboveClippedThreshold);
   EXPECT_EQ(helper.controller.recommended_input_volume(), 210);
 
   // User changed the volume.
-  helper.controller.SetAppliedInputVolume(250);
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -32.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 250);
+  int volume = helper.CallRecommendInputVolume(
+      /*num_calls=*/1, /*initial_volume-*/ 250, kHighSpeechProbability, -32.0f);
+  EXPECT_EQ(volume, 250);
 
   // Move down...
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -8.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 210);
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, -8.0f);
+  EXPECT_EQ(volume, 210);
   // And back up to the new max established by the user.
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -58.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 250);
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, -58.0f);
+  EXPECT_EQ(volume, 250);
   // Will not move above new maximum.
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -48.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 250);
+  volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
+                                           kHighSpeechProbability, -48.0f);
+  EXPECT_EQ(volume, 250);
 }
 
 TEST_P(InputVolumeControllerParametrizedTest,
@@ -686,8 +792,9 @@ TEST_P(InputVolumeControllerParametrizedTest,
                          kSpeechLevel);
 
   int initial_volume = helper.controller.recommended_input_volume();
-  helper.CallPreProc(/*num_calls=*/1, /*clipped_ratio=*/kAboveClippedThreshold);
-  EXPECT_EQ(initial_volume, helper.controller.recommended_input_volume());
+  helper.CallAnalyzeInputAudio(/*num_calls=*/1,
+                               /*clipped_ratio=*/kAboveClippedThreshold);
+  EXPECT_EQ(helper.controller.recommended_input_volume(), initial_volume);
 }
 
 TEST_P(InputVolumeControllerParametrizedTest, TakesNoActionOnZeroMicVolume) {
@@ -695,28 +802,29 @@ TEST_P(InputVolumeControllerParametrizedTest, TakesNoActionOnZeroMicVolume) {
   helper.CallAgcSequence(kInitialInputVolume, kHighSpeechProbability,
                          kSpeechLevel);
 
-  helper.controller.SetAppliedInputVolume(0);
-  helper.CallProcess(/*num_calls=*/10, kHighSpeechProbability, -48.0f);
-  EXPECT_EQ(helper.controller.recommended_input_volume(), 0);
+  EXPECT_EQ(
+      helper.CallRecommendInputVolume(/*num_calls=*/10, /*initial_volume=*/0,
+                                      kHighSpeechProbability, -48.0f),
+      0);
 }
 
 TEST_P(InputVolumeControllerParametrizedTest, ClippingDetectionLowersVolume) {
   InputVolumeControllerTestHelper helper;
-  int volume = helper.CallAgcSequence(/*applied_input_volume=*/255,
-                                      kHighSpeechProbability, kSpeechLevel,
-                                      /*num_calls=*/1);
+  int volume = *helper.CallAgcSequence(/*applied_input_volume=*/255,
+                                       kHighSpeechProbability, kSpeechLevel,
+                                       /*num_calls=*/1);
 
   EXPECT_EQ(volume, 255);
 
   WriteAlternatingAudioBufferSamples(0.99f * kMaxSample, helper.audio_buffer);
-  volume = helper.CallAgcSequence(volume, kHighSpeechProbability, kSpeechLevel,
-                                  /*num_calls=*/100);
+  volume = *helper.CallAgcSequence(volume, kHighSpeechProbability, kSpeechLevel,
+                                   /*num_calls=*/100);
 
   EXPECT_EQ(volume, 255);
 
   WriteAlternatingAudioBufferSamples(kMaxSample, helper.audio_buffer);
-  volume = helper.CallAgcSequence(volume, kHighSpeechProbability, kSpeechLevel,
-                                  /*num_calls=*/100);
+  volume = *helper.CallAgcSequence(volume, kHighSpeechProbability, kSpeechLevel,
+                                   /*num_calls=*/100);
 
   EXPECT_EQ(volume, 240);
 }
@@ -797,7 +905,6 @@ TEST(InputVolumeControllerTest, MinInputVolumeCheckMinLevelWithClipping) {
         CreateInputVolumeController(kClippedLevelStep, kClippedRatioThreshold,
                                     kClippedWaitFrames);
     controller->Initialize();
-    controller->SetAppliedInputVolume(kInitialInputVolume);
     return controller;
   };
   std::unique_ptr<InputVolumeController> controller = factory();
@@ -817,24 +924,23 @@ TEST(InputVolumeControllerTest, MinInputVolumeCheckMinLevelWithClipping) {
   // Simulate 4 seconds of clipping; it is expected to trigger a downward
   // adjustment of the analog gain. Use low speech probability to limit the
   // volume changes to clipping handling.
-  CallPreProcessAndProcess(/*num_calls=*/400, audio_buffer,
-                           kLowSpeechProbability, /*speech_level_dbfs=*/-42.0f,
-                           *controller);
-  CallPreProcessAndProcess(/*num_calls=*/400, audio_buffer,
-                           kLowSpeechProbability, /*speech_level_dbfs=*/-42.0f,
-                           *controller_with_override);
+  const int volume = CallAnalyzeAndRecommend(
+      /*num_calls=*/400, kInitialInputVolume, audio_buffer,
+      kLowSpeechProbability, /*speech_level_dbfs=*/-42.0f, *controller);
+  const int volume_with_override = CallAnalyzeAndRecommend(
+      /*num_calls=*/400, kInitialInputVolume, audio_buffer,
+      kLowSpeechProbability, /*speech_level_dbfs=*/-42.0f,
+      *controller_with_override);
 
   // Make sure that an adaptation occurred.
-  ASSERT_GT(controller->recommended_input_volume(), 0);
+  ASSERT_GT(volume, 0);
 
   // Check that the test signal triggers a larger downward adaptation for
   // `controller`, which is allowed to reach a lower gain.
-  EXPECT_GT(controller_with_override->recommended_input_volume(),
-            controller->recommended_input_volume());
+  EXPECT_GT(volume_with_override, volume);
   // Check that the gain selected by `controller_with_override` equals the
   // minimum value overridden via field trial.
-  EXPECT_EQ(controller_with_override->recommended_input_volume(),
-            kMinInputVolume);
+  EXPECT_EQ(volume_with_override, kMinInputVolume);
 }
 
 // Checks that, when the "WebRTC-Audio-Agc2-MinInputVolume" field trial is
@@ -854,7 +960,6 @@ TEST(InputVolumeControllerTest,
         CreateInputVolumeController(kClippedLevelStep, kClippedRatioThreshold,
                                     kClippedWaitFrames);
     controller->Initialize();
-    controller->SetAppliedInputVolume(kInitialInputVolume);
     return controller;
   };
   std::unique_ptr<InputVolumeController> controller = factory();
@@ -873,24 +978,25 @@ TEST(InputVolumeControllerTest,
 
   // Simulate 4 seconds of clipping; it is expected to trigger a downward
   // adjustment of the analog gain.
-  CallPreProcessAndProcess(
-      /*num_calls=*/400, audio_buffer, kHighSpeechProbability,
+  const int volume = CallAnalyzeAndRecommend(
+      /*num_calls=*/400, kInitialInputVolume, audio_buffer,
+      kHighSpeechProbability,
       /*speech_level_dbfs=*/-18.0f, *controller);
-  CallPreProcessAndProcess(
-      /*num_calls=*/400, audio_buffer, kHighSpeechProbability,
+  const int volume_with_override = CallAnalyzeAndRecommend(
+      /*num_calls=*/400, kInitialInputVolume, audio_buffer,
+      kHighSpeechProbability,
       /*speech_level_dbfs=*/-18.0f, *controller_with_override);
 
   // Make sure that an adaptation occurred.
-  ASSERT_GT(controller->recommended_input_volume(), 0);
+  ASSERT_GT(volume, 0);
 
   // Check that the test signal triggers a larger downward adaptation for
   // `controller`, which is allowed to reach a lower gain.
-  EXPECT_GT(controller_with_override->recommended_input_volume(),
-            controller->recommended_input_volume());
+  EXPECT_GT(volume_with_override, volume);
+
   // Check that the gain selected by `controller_with_override` equals the
   // minimum value overridden via field trial.
-  EXPECT_EQ(controller_with_override->recommended_input_volume(),
-            kMinInputVolume);
+  EXPECT_EQ(volume_with_override, kMinInputVolume);
 }
 
 // Checks that, when the "WebRTC-Audio-Agc2-MinInputVolume" field trial is
@@ -910,7 +1016,6 @@ TEST(InputVolumeControllerTest, MinInputVolumeCompareMicLevelWithClipping) {
     auto controller = std::make_unique<InputVolumeController>(
         /*num_capture_channels=*/1, config);
     controller->Initialize();
-    controller->SetAppliedInputVolume(kInitialInputVolume);
     return controller;
   };
   std::unique_ptr<InputVolumeController> controller = factory();
@@ -934,23 +1039,23 @@ TEST(InputVolumeControllerTest, MinInputVolumeCompareMicLevelWithClipping) {
   // Simulate 4 seconds of clipping; it is expected to trigger a downward
   // adjustment of the analog gain. Use low speech probability to limit the
   // volume changes to clipping handling.
-  CallPreProcessAndProcess(/*num_calls=*/400, audio_buffer,
-                           kLowSpeechProbability, /*speech_level_dbfs=*/-18,
-                           *controller);
-  CallPreProcessAndProcess(/*num_calls=*/400, audio_buffer,
-                           kLowSpeechProbability, /*speech_level_dbfs=*/-18,
-                           *controller_with_override);
+  const int volume = CallAnalyzeAndRecommend(
+      /*num_calls=*/400, kInitialInputVolume, audio_buffer,
+      kLowSpeechProbability, /*speech_level_dbfs=*/-18, *controller);
+  const int volume_with_override = CallAnalyzeAndRecommend(
+      /*num_calls=*/400, kInitialInputVolume, audio_buffer,
+      kLowSpeechProbability, /*speech_level_dbfs=*/-18,
+      *controller_with_override);
 
   // Make sure that an adaptation occurred.
-  ASSERT_GT(controller->recommended_input_volume(), 0);
+  ASSERT_GT(volume, 0);
 
   // Check that the selected analog gain is the same for both controllers and
   // that it equals the minimum level reached when clipping is handled. That is
   // expected because the minimum microphone level override is less than the
   // minimum level used when clipping is detected.
-  EXPECT_EQ(controller->recommended_input_volume(),
-            controller_with_override->recommended_input_volume());
-  EXPECT_EQ(controller_with_override->recommended_input_volume(),
+  EXPECT_EQ(volume, volume_with_override);
+  EXPECT_EQ(volume_with_override,
             kDefaultInputVolumeControllerConfig.clipped_level_min);
 }
 
@@ -975,7 +1080,6 @@ TEST(InputVolumeControllerTest,
     auto controller = std::make_unique<InputVolumeController>(
         /*num_capture_channels=*/1, config);
     controller->Initialize();
-    controller->SetAppliedInputVolume(kInitialInputVolume);
     return controller;
   };
   std::unique_ptr<InputVolumeController> controller = factory();
@@ -996,25 +1100,24 @@ TEST(InputVolumeControllerTest,
   WriteAudioBufferSamples(/*samples_value=*/4000.0f, /*clipped_ratio=*/0.8f,
                           audio_buffer);
 
-  CallPreProcessAndProcess(
-      /*num_calls=*/400, audio_buffer,
+  const int volume = CallAnalyzeAndRecommend(
+      /*num_calls=*/400, kInitialInputVolume, audio_buffer,
       /*speech_probability=*/0.7f,
       /*speech_level_dbfs=*/-18.0f, *controller);
-  CallPreProcessAndProcess(
-      /*num_calls=*/400, audio_buffer,
+  const int volume_with_override = CallAnalyzeAndRecommend(
+      /*num_calls=*/400, kInitialInputVolume, audio_buffer,
       /*speech_probability=*/0.7f,
       /*speech_level_dbfs=*/-18.0f, *controller_with_override);
 
   // Make sure that an adaptation occurred.
-  ASSERT_GT(controller->recommended_input_volume(), 0);
+  ASSERT_GT(volume, 0);
 
   // Check that the selected analog gain is the same for both controllers and
   // that it equals the minimum level reached when clipping is handled. That is
   // expected because the minimum microphone level override is less than the
   // minimum level used when clipping is detected.
-  EXPECT_EQ(controller->recommended_input_volume(),
-            controller_with_override->recommended_input_volume());
-  EXPECT_EQ(controller_with_override->recommended_input_volume(),
+  EXPECT_EQ(volume, volume_with_override);
+  EXPECT_EQ(volume_with_override,
             kDefaultInputVolumeControllerConfig.clipped_level_min);
 }
 
@@ -1078,13 +1181,15 @@ TEST_P(InputVolumeControllerParametrizedTest,
   // Expect no change if clipping prediction is enabled.
   for (int j = 0; j < 31; ++j) {
     WriteAlternatingAudioBufferSamples(0.99f * kMaxSample, helper.audio_buffer);
-    volume = helper.CallAgcSequence(volume, kLowSpeechProbability, kSpeechLevel,
-                                    /*num_calls=*/5);
+    volume =
+        *helper.CallAgcSequence(volume, kLowSpeechProbability, kSpeechLevel,
+                                /*num_calls=*/5);
 
     WriteAudioBufferSamples(0.99f * kMaxSample, /*clipped_ratio=*/0.0f,
                             helper.audio_buffer);
-    volume = helper.CallAgcSequence(volume, kLowSpeechProbability, kSpeechLevel,
-                                    /*num_calls=*/5);
+    volume =
+        *helper.CallAgcSequence(volume, kLowSpeechProbability, kSpeechLevel,
+                                /*num_calls=*/5);
 
     EXPECT_EQ(volume, 255);
   }
@@ -1117,19 +1222,19 @@ TEST_P(InputVolumeControllerParametrizedTest,
                                      helper_1.audio_buffer);
   WriteAlternatingAudioBufferSamples(kCloseToClippingPeakRatio * kMaxSample,
                                      helper_2.audio_buffer);
-  volume_1 = helper_1.CallAgcSequence(volume_1, kLowSpeechProbability,
-                                      kSpeechLevel, 5);
-  volume_2 = helper_2.CallAgcSequence(volume_2, kLowSpeechProbability,
-                                      kSpeechLevel, 5);
+  volume_1 = *helper_1.CallAgcSequence(volume_1, kLowSpeechProbability,
+                                       kSpeechLevel, 5);
+  volume_2 = *helper_2.CallAgcSequence(volume_2, kLowSpeechProbability,
+                                       kSpeechLevel, 5);
 
   WriteAudioBufferSamples(kCloseToClippingPeakRatio * kMaxSample,
                           /*clipped_ratio=*/0.0f, helper_1.audio_buffer);
   WriteAudioBufferSamples(kCloseToClippingPeakRatio * kMaxSample,
                           /*clipped_ratio=*/0.0f, helper_2.audio_buffer);
-  volume_1 = helper_1.CallAgcSequence(volume_1, kLowSpeechProbability,
-                                      kSpeechLevel, 5);
-  volume_2 = helper_2.CallAgcSequence(volume_2, kLowSpeechProbability,
-                                      kSpeechLevel, 5);
+  volume_1 = *helper_1.CallAgcSequence(volume_1, kLowSpeechProbability,
+                                       kSpeechLevel, 5);
+  volume_2 = *helper_2.CallAgcSequence(volume_2, kLowSpeechProbability,
+                                       kSpeechLevel, 5);
 
   EXPECT_EQ(volume_1, kInitialLevel - kClippedLevelStep);
   EXPECT_EQ(volume_2, kInitialLevel);
@@ -1140,19 +1245,19 @@ TEST_P(InputVolumeControllerParametrizedTest,
                                        helper_1.audio_buffer);
     WriteAlternatingAudioBufferSamples(kCloseToClippingPeakRatio * kMaxSample,
                                        helper_2.audio_buffer);
-    volume_1 = helper_1.CallAgcSequence(volume_1, kLowSpeechProbability,
-                                        kSpeechLevel, 5);
-    volume_2 = helper_2.CallAgcSequence(volume_2, kLowSpeechProbability,
-                                        kSpeechLevel, 5);
+    volume_1 = *helper_1.CallAgcSequence(volume_1, kLowSpeechProbability,
+                                         kSpeechLevel, 5);
+    volume_2 = *helper_2.CallAgcSequence(volume_2, kLowSpeechProbability,
+                                         kSpeechLevel, 5);
 
     WriteAudioBufferSamples(kCloseToClippingPeakRatio * kMaxSample,
                             /*clipped_ratio=*/0.0f, helper_1.audio_buffer);
     WriteAudioBufferSamples(kCloseToClippingPeakRatio * kMaxSample,
                             /*clipped_ratio=*/0.0f, helper_2.audio_buffer);
-    volume_1 = helper_1.CallAgcSequence(volume_1, kLowSpeechProbability,
-                                        kSpeechLevel, 5);
-    volume_2 = helper_2.CallAgcSequence(volume_2, kLowSpeechProbability,
-                                        kSpeechLevel, 5);
+    volume_1 = *helper_1.CallAgcSequence(volume_1, kLowSpeechProbability,
+                                         kSpeechLevel, 5);
+    volume_2 = *helper_2.CallAgcSequence(volume_2, kLowSpeechProbability,
+                                         kSpeechLevel, 5);
 
     EXPECT_EQ(volume_1, kInitialLevel - kClippedLevelStep);
     EXPECT_EQ(volume_2, kInitialLevel);
@@ -1163,19 +1268,19 @@ TEST_P(InputVolumeControllerParametrizedTest,
                                      helper_1.audio_buffer);
   WriteAlternatingAudioBufferSamples(kCloseToClippingPeakRatio * kMaxSample,
                                      helper_2.audio_buffer);
-  volume_1 = helper_1.CallAgcSequence(volume_1, kLowSpeechProbability,
-                                      kSpeechLevel, 5);
-  volume_2 = helper_2.CallAgcSequence(volume_2, kLowSpeechProbability,
-                                      kSpeechLevel, 5);
+  volume_1 = *helper_1.CallAgcSequence(volume_1, kLowSpeechProbability,
+                                       kSpeechLevel, 5);
+  volume_2 = *helper_2.CallAgcSequence(volume_2, kLowSpeechProbability,
+                                       kSpeechLevel, 5);
 
   WriteAudioBufferSamples(kCloseToClippingPeakRatio * kMaxSample,
                           /*clipped_ratio=*/0.0f, helper_1.audio_buffer);
   WriteAudioBufferSamples(kCloseToClippingPeakRatio * kMaxSample,
                           /*clipped_ratio=*/0.0f, helper_2.audio_buffer);
-  volume_1 = helper_1.CallAgcSequence(volume_1, kLowSpeechProbability,
-                                      kSpeechLevel, 5);
-  volume_2 = helper_2.CallAgcSequence(volume_2, kLowSpeechProbability,
-                                      kSpeechLevel, 5);
+  volume_1 = *helper_1.CallAgcSequence(volume_1, kLowSpeechProbability,
+                                       kSpeechLevel, 5);
+  volume_2 = *helper_2.CallAgcSequence(volume_2, kLowSpeechProbability,
+                                       kSpeechLevel, 5);
 
   EXPECT_EQ(volume_1, kInitialLevel - 2 * kClippedLevelStep);
   EXPECT_EQ(volume_2, kInitialLevel);
@@ -1186,19 +1291,19 @@ TEST_P(InputVolumeControllerParametrizedTest,
                                        helper_1.audio_buffer);
     WriteAlternatingAudioBufferSamples(/*samples_value=*/0.0f,
                                        helper_2.audio_buffer);
-    volume_1 = helper_1.CallAgcSequence(volume_1, kLowSpeechProbability,
-                                        kSpeechLevel, 5);
-    volume_2 = helper_2.CallAgcSequence(volume_2, kLowSpeechProbability,
-                                        kSpeechLevel, 5);
+    volume_1 = *helper_1.CallAgcSequence(volume_1, kLowSpeechProbability,
+                                         kSpeechLevel, 5);
+    volume_2 = *helper_2.CallAgcSequence(volume_2, kLowSpeechProbability,
+                                         kSpeechLevel, 5);
 
     WriteAudioBufferSamples(/*samples_value=*/0.0f, /*clipped_ratio=*/0.0f,
                             helper_1.audio_buffer);
     WriteAudioBufferSamples(/*samples_value=*/0.0f, /*clipped_ratio=*/0.0f,
                             helper_2.audio_buffer);
-    volume_1 = helper_1.CallAgcSequence(volume_1, kLowSpeechProbability,
-                                        kSpeechLevel, 5);
-    volume_2 = helper_2.CallAgcSequence(volume_2, kLowSpeechProbability,
-                                        kSpeechLevel, 5);
+    volume_1 = *helper_1.CallAgcSequence(volume_1, kLowSpeechProbability,
+                                         kSpeechLevel, 5);
+    volume_2 = *helper_2.CallAgcSequence(volume_2, kLowSpeechProbability,
+                                         kSpeechLevel, 5);
   }
 
   EXPECT_EQ(volume_1, kInitialLevel - 2 * kClippedLevelStep);
@@ -1207,10 +1312,10 @@ TEST_P(InputVolumeControllerParametrizedTest,
   // Expect a change for clipping frames.
   WriteAlternatingAudioBufferSamples(kMaxSample, helper_1.audio_buffer);
   WriteAlternatingAudioBufferSamples(kMaxSample, helper_2.audio_buffer);
-  volume_1 = helper_1.CallAgcSequence(volume_1, kLowSpeechProbability,
-                                      kSpeechLevel, 1);
-  volume_2 = helper_2.CallAgcSequence(volume_2, kLowSpeechProbability,
-                                      kSpeechLevel, 1);
+  volume_1 = *helper_1.CallAgcSequence(volume_1, kLowSpeechProbability,
+                                       kSpeechLevel, 1);
+  volume_2 = *helper_2.CallAgcSequence(volume_2, kLowSpeechProbability,
+                                       kSpeechLevel, 1);
 
   EXPECT_EQ(volume_1, kInitialLevel - 3 * kClippedLevelStep);
   EXPECT_EQ(volume_2, kInitialLevel - kClippedLevelStep);
@@ -1219,19 +1324,19 @@ TEST_P(InputVolumeControllerParametrizedTest,
   for (int i = 0; i < kClippedWaitFrames / 10; ++i) {
     WriteAlternatingAudioBufferSamples(kMaxSample, helper_1.audio_buffer);
     WriteAlternatingAudioBufferSamples(kMaxSample, helper_2.audio_buffer);
-    volume_1 = helper_1.CallAgcSequence(volume_1, kLowSpeechProbability,
-                                        kSpeechLevel, 5);
-    volume_2 = helper_2.CallAgcSequence(volume_2, kLowSpeechProbability,
-                                        kSpeechLevel, 5);
+    volume_1 = *helper_1.CallAgcSequence(volume_1, kLowSpeechProbability,
+                                         kSpeechLevel, 5);
+    volume_2 = *helper_2.CallAgcSequence(volume_2, kLowSpeechProbability,
+                                         kSpeechLevel, 5);
 
     WriteAudioBufferSamples(kMaxSample, /*clipped_ratio=*/1.0f,
                             helper_1.audio_buffer);
     WriteAudioBufferSamples(kMaxSample, /*clipped_ratio=*/1.0f,
                             helper_2.audio_buffer);
-    volume_1 = helper_1.CallAgcSequence(volume_1, kLowSpeechProbability,
-                                        kSpeechLevel, 5);
-    volume_2 = helper_2.CallAgcSequence(volume_2, kLowSpeechProbability,
-                                        kSpeechLevel, 5);
+    volume_1 = *helper_1.CallAgcSequence(volume_1, kLowSpeechProbability,
+                                         kSpeechLevel, 5);
+    volume_2 = *helper_2.CallAgcSequence(volume_2, kLowSpeechProbability,
+                                         kSpeechLevel, 5);
   }
 
   EXPECT_EQ(volume_1, kInitialLevel - 3 * kClippedLevelStep);
@@ -1240,10 +1345,10 @@ TEST_P(InputVolumeControllerParametrizedTest,
   // Expect a change for clipping frames.
   WriteAlternatingAudioBufferSamples(kMaxSample, helper_1.audio_buffer);
   WriteAlternatingAudioBufferSamples(kMaxSample, helper_2.audio_buffer);
-  volume_1 = helper_1.CallAgcSequence(volume_1, kLowSpeechProbability,
-                                      kSpeechLevel, 1);
-  volume_2 = helper_2.CallAgcSequence(volume_2, kLowSpeechProbability,
-                                      kSpeechLevel, 1);
+  volume_1 = *helper_1.CallAgcSequence(volume_1, kLowSpeechProbability,
+                                       kSpeechLevel, 1);
+  volume_2 = *helper_2.CallAgcSequence(volume_2, kLowSpeechProbability,
+                                       kSpeechLevel, 1);
 
   EXPECT_EQ(volume_1, kInitialLevel - 4 * kClippedLevelStep);
   EXPECT_EQ(volume_2, kInitialLevel - 2 * kClippedLevelStep);
@@ -1260,11 +1365,11 @@ TEST_P(InputVolumeControllerParametrizedTest, EmptyRmsErrorHasNoEffect) {
   constexpr int kNumFrames = 125;
   constexpr int kGainDb = -20;
   SpeechSamplesReader reader;
-  reader.Feed(kNumFrames, kInitialInputVolume, kGainDb, kLowSpeechProbability,
-              absl::nullopt, controller);
+  int volume = reader.Feed(kNumFrames, kInitialInputVolume, kGainDb,
+                           kLowSpeechProbability, absl::nullopt, controller);
 
   // Check that no adaptation occurs.
-  ASSERT_EQ(controller.recommended_input_volume(), kInitialInputVolume);
+  ASSERT_EQ(volume, kInitialInputVolume);
 }
 
 // Checks that the recommended input volume is not updated unless enough
@@ -1286,28 +1391,29 @@ TEST(InputVolumeControllerTest, UpdateInputVolumeWaitFramesIsEffective) {
 
   SpeechSamplesReader reader_1;
   SpeechSamplesReader reader_2;
-  reader_1.Feed(/*num_frames=*/99, kInputVolume, /*gain_db=*/0,
-                kHighSpeechProbability,
-                /*speech_level_dbfs=*/-42.0f, *controller_wait_0);
-  reader_2.Feed(/*num_frames=*/99, kInputVolume, /*gain_db=*/0,
-                kHighSpeechProbability,
-                /*speech_level_dbfs=*/-42.0f, *controller_wait_100);
+  int volume_wait_0 = reader_1.Feed(
+      /*num_frames=*/99, kInputVolume, /*gain_db=*/0, kHighSpeechProbability,
+      /*speech_level_dbfs=*/-42.0f, *controller_wait_0);
+  int volume_wait_100 = reader_2.Feed(
+      /*num_frames=*/99, kInputVolume, /*gain_db=*/0, kHighSpeechProbability,
+      /*speech_level_dbfs=*/-42.0f, *controller_wait_100);
 
   // Check that adaptation only occurs if enough frames have been processed.
-  ASSERT_GT(controller_wait_0->recommended_input_volume(), kInputVolume);
-  ASSERT_EQ(controller_wait_100->recommended_input_volume(), kInputVolume);
+  ASSERT_GT(volume_wait_0, kInputVolume);
+  ASSERT_EQ(volume_wait_100, kInputVolume);
 
-  reader_1.Feed(/*num_frames=*/1, controller_wait_0->recommended_input_volume(),
-                /*gain_db=*/0, kHighSpeechProbability,
-                /*speech_level_dbfs=*/-42.0f, *controller_wait_0);
-  reader_2.Feed(/*num_frames=*/1,
-                controller_wait_100->recommended_input_volume(), /*gain_db=*/0,
-                kHighSpeechProbability,
-                /*speech_level_dbfs=*/-42.0f, *controller_wait_100);
+  volume_wait_0 =
+      reader_1.Feed(/*num_frames=*/1, volume_wait_0,
+                    /*gain_db=*/0, kHighSpeechProbability,
+                    /*speech_level_dbfs=*/-42.0f, *controller_wait_0);
+  volume_wait_100 =
+      reader_2.Feed(/*num_frames=*/1, volume_wait_100,
+                    /*gain_db=*/0, kHighSpeechProbability,
+                    /*speech_level_dbfs=*/-42.0f, *controller_wait_100);
 
   // Check that adaptation only occurs when enough frames have been processed.
-  ASSERT_GT(controller_wait_0->recommended_input_volume(), kInputVolume);
-  ASSERT_GT(controller_wait_100->recommended_input_volume(), kInputVolume);
+  ASSERT_GT(volume_wait_0, kInputVolume);
+  ASSERT_GT(volume_wait_100, kInputVolume);
 }
 
 TEST(InputVolumeControllerTest, SpeechRatioThresholdIsEffective) {
@@ -1330,35 +1436,35 @@ TEST(InputVolumeControllerTest, SpeechRatioThresholdIsEffective) {
   SpeechSamplesReader reader_1;
   SpeechSamplesReader reader_2;
 
-  reader_1.Feed(/*num_frames=*/1, kInputVolume, /*gain_db=*/0,
-                /*speech_probability=*/0.7f, /*speech_level_dbfs=*/-42.0f,
-                *controller_1);
-  reader_2.Feed(/*num_frames=*/1, kInputVolume, /*gain_db=*/0,
-                /*speech_probability=*/0.4f, /*speech_level_dbfs=*/-42.0f,
-                *controller_2);
+  int volume_1 = reader_1.Feed(/*num_frames=*/1, kInputVolume, /*gain_db=*/0,
+                               /*speech_probability=*/0.7f,
+                               /*speech_level_dbfs=*/-42.0f, *controller_1);
+  int volume_2 = reader_2.Feed(/*num_frames=*/1, kInputVolume, /*gain_db=*/0,
+                               /*speech_probability=*/0.4f,
+                               /*speech_level_dbfs=*/-42.0f, *controller_2);
 
-  ASSERT_EQ(controller_1->recommended_input_volume(), kInputVolume);
-  ASSERT_EQ(controller_2->recommended_input_volume(), kInputVolume);
+  ASSERT_EQ(volume_1, kInputVolume);
+  ASSERT_EQ(volume_2, kInputVolume);
 
-  reader_1.Feed(
-      /*num_frames=*/2, controller_1->recommended_input_volume(), /*gain_db=*/0,
-      /*speech_probability=*/0.4f, /*speech_level_dbfs=*/-42.0f, *controller_1);
-  reader_2.Feed(
-      /*num_frames=*/2, controller_2->recommended_input_volume(), /*gain_db=*/0,
-      /*speech_probability=*/0.4f, /*speech_level_dbfs=*/-42.0f, *controller_2);
+  volume_1 = reader_1.Feed(/*num_frames=*/2, volume_1, /*gain_db=*/0,
+                           /*speech_probability=*/0.4f,
+                           /*speech_level_dbfs=*/-42.0f, *controller_1);
+  volume_2 = reader_2.Feed(/*num_frames=*/2, volume_2, /*gain_db=*/0,
+                           /*speech_probability=*/0.4f,
+                           /*speech_level_dbfs=*/-42.0f, *controller_2);
 
-  ASSERT_EQ(controller_1->recommended_input_volume(), kInputVolume);
-  ASSERT_EQ(controller_2->recommended_input_volume(), kInputVolume);
+  ASSERT_EQ(volume_1, kInputVolume);
+  ASSERT_EQ(volume_2, kInputVolume);
 
-  reader_1.Feed(
-      /*num_frames=*/7, controller_1->recommended_input_volume(), /*gain_db=*/0,
+  volume_1 = reader_1.Feed(
+      /*num_frames=*/7, volume_1, /*gain_db=*/0,
       /*speech_probability=*/0.7f, /*speech_level_dbfs=*/-42.0f, *controller_1);
-  reader_2.Feed(
-      /*num_frames=*/7, controller_2->recommended_input_volume(), /*gain_db=*/0,
+  volume_2 = reader_2.Feed(
+      /*num_frames=*/7, volume_2, /*gain_db=*/0,
       /*speech_probability=*/0.7f, /*speech_level_dbfs=*/-42.0f, *controller_2);
 
-  ASSERT_GT(controller_1->recommended_input_volume(), kInputVolume);
-  ASSERT_EQ(controller_2->recommended_input_volume(), kInputVolume);
+  ASSERT_GT(volume_1, kInputVolume);
+  ASSERT_EQ(volume_2, kInputVolume);
 }
 
 TEST(InputVolumeControllerTest, SpeechProbabilityThresholdIsEffective) {
@@ -1385,37 +1491,35 @@ TEST(InputVolumeControllerTest, SpeechProbabilityThresholdIsEffective) {
   // that make the volume to be adjusted after enough frames have been
   // processsed and `reader_2` to process inputs that won't make the volume
   // to be adjusted.
-  reader_1.Feed(/*num_frames=*/1, kInputVolume, /*gain_db=*/0,
-                /*speech_probability=*/0.5f, /*speech_level_dbfs=*/-42.0f,
+  int volume_1 = reader_1.Feed(/*num_frames=*/1, kInputVolume, /*gain_db=*/0,
+                               /*speech_probability=*/0.5f,
+                               /*speech_level_dbfs=*/-42.0f, *controller_1);
+  int volume_2 = reader_2.Feed(/*num_frames=*/1, kInputVolume, /*gain_db=*/0,
+                               /*speech_probability=*/0.49f,
+                               /*speech_level_dbfs=*/-42.0f, *controller_2);
+
+  ASSERT_EQ(volume_1, kInputVolume);
+  ASSERT_EQ(volume_2, kInputVolume);
+
+  reader_1.Feed(/*num_frames=*/2, volume_1, /*gain_db=*/0,
+                /*speech_probability=*/0.49f, /*speech_level_dbfs=*/-42.0f,
                 *controller_1);
-  reader_2.Feed(/*num_frames=*/1, kInputVolume, /*gain_db=*/0,
+  reader_2.Feed(/*num_frames=*/2, volume_2, /*gain_db=*/0,
                 /*speech_probability=*/0.49f, /*speech_level_dbfs=*/-42.0f,
                 *controller_2);
 
-  ASSERT_EQ(controller_1->recommended_input_volume(), kInputVolume);
-  ASSERT_EQ(controller_2->recommended_input_volume(), kInputVolume);
+  ASSERT_EQ(volume_1, kInputVolume);
+  ASSERT_EQ(volume_2, kInputVolume);
 
-  reader_1.Feed(/*num_frames=*/2, controller_1->recommended_input_volume(),
-                /*gain_db=*/0,
-                /*speech_probability=*/0.49f, /*speech_level_dbfs=*/-42.0f,
-                *controller_1);
-  reader_2.Feed(/*num_frames=*/2, controller_2->recommended_input_volume(),
-                /*gain_db=*/0,
-                /*speech_probability=*/0.49f, /*speech_level_dbfs=*/-42.0f,
-                *controller_2);
-
-  ASSERT_EQ(controller_1->recommended_input_volume(), kInputVolume);
-  ASSERT_EQ(controller_2->recommended_input_volume(), kInputVolume);
-
-  reader_1.Feed(
-      /*num_frames=*/7, controller_1->recommended_input_volume(), /*gain_db=*/0,
+  volume_1 = reader_1.Feed(
+      /*num_frames=*/7, volume_1, /*gain_db=*/0,
       /*speech_probability=*/0.5f, /*speech_level_dbfs=*/-42.0f, *controller_1);
-  reader_2.Feed(
-      /*num_frames=*/7, controller_2->recommended_input_volume(), /*gain_db=*/0,
+  volume_2 = reader_2.Feed(
+      /*num_frames=*/7, volume_2, /*gain_db=*/0,
       /*speech_probability=*/0.5f, /*speech_level_dbfs=*/-42.0f, *controller_2);
 
-  ASSERT_GT(controller_1->recommended_input_volume(), kInputVolume);
-  ASSERT_EQ(controller_2->recommended_input_volume(), kInputVolume);
+  ASSERT_GT(volume_1, kInputVolume);
+  ASSERT_EQ(volume_2, kInputVolume);
 }
 
 TEST(InputVolumeControllerTest,
@@ -1429,10 +1533,10 @@ TEST(InputVolumeControllerTest,
   // speech level that falls in the target range to make sure that the
   // adaptation is not made to match the target range.
   constexpr int kStartupVolume = 255;
-  reader.Feed(/*num_frames=*/14, kStartupVolume, /*gain_db=*/50,
-              kHighSpeechProbability,
-              /*speech_level_dbfs=*/-20.0f, *controller);
-  ASSERT_LT(controller->recommended_input_volume(), kStartupVolume);
+  const int volume = reader.Feed(/*num_frames=*/14, kStartupVolume,
+                                 /*gain_db=*/50, kHighSpeechProbability,
+                                 /*speech_level_dbfs=*/-20.0f, *controller);
+  ASSERT_LT(volume, kStartupVolume);
   EXPECT_METRIC_THAT(
       metrics::Samples(
           "WebRTC.Audio.Apm.RecommendedInputVolume.OnChangeToMatchTarget"),
@@ -1449,10 +1553,10 @@ TEST(InputVolumeControllerTest,
   constexpr int kStartupVolume = 100;
   // Trigger an upward volume change by inputting audio that does not clip and
   // by passing a speech level below the target range.
-  reader.Feed(/*num_frames=*/14, kStartupVolume, /*gain_db=*/-6,
-              kHighSpeechProbability,
-              /*speech_level_dbfs=*/-50.0f, *controller);
-  ASSERT_GT(controller->recommended_input_volume(), kStartupVolume);
+  const int volume = reader.Feed(/*num_frames=*/14, kStartupVolume,
+                                 /*gain_db=*/-6, kHighSpeechProbability,
+                                 /*speech_level_dbfs=*/-50.0f, *controller);
+  ASSERT_GT(volume, kStartupVolume);
   EXPECT_METRIC_THAT(
       metrics::Samples(
           "WebRTC.Audio.Apm.RecommendedInputVolume.OnChangeToMatchTarget"),
@@ -1467,13 +1571,12 @@ TEST(InputVolumeControllerTest,
   auto controller = CreateInputVolumeController();
   controller->Initialize();
   constexpr int kStartupVolume = 100;
-  controller->SetAppliedInputVolume(kStartupVolume);
   // Trigger a downward volume change by inputting audio that does not clip and
   // by passing a speech level above the target range.
-  reader.Feed(/*num_frames=*/14, kStartupVolume, /*gain_db=*/-6,
-              kHighSpeechProbability,
-              /*speech_level_dbfs=*/-5.0f, *controller);
-  ASSERT_LT(controller->recommended_input_volume(), kStartupVolume);
+  const int volume = reader.Feed(/*num_frames=*/14, kStartupVolume,
+                                 /*gain_db=*/-6, kHighSpeechProbability,
+                                 /*speech_level_dbfs=*/-5.0f, *controller);
+  ASSERT_LT(volume, kStartupVolume);
   EXPECT_METRIC_THAT(
       metrics::Samples(
           "WebRTC.Audio.Apm.RecommendedInputVolume.OnChangeToMatchTarget"),
