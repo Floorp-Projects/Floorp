@@ -70,6 +70,7 @@ Call* CreateCall(TimeController* time_controller,
   call_config.task_queue_factory = time_controller->GetTaskQueueFactory();
   call_config.network_controller_factory = network_controller_factory;
   call_config.audio_state = audio_state;
+  call_config.pacer_burst_interval = config.pacer_burst_interval;
   call_config.trials = config.field_trials;
   Clock* clock = time_controller->GetClock();
   return Call::Create(call_config, clock,
