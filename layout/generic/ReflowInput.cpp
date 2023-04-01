@@ -1296,7 +1296,7 @@ void ReflowInput::CalculateHypotheticalPosition(
       // value calculated using the absolute containing block width
       nscoord insideBoxBSizing, dummy;
       CalculateBorderPaddingMargin(eLogicalAxisBlock,
-                                   blockContentSize.BSize(wm),
+                                   blockContentSize.ISize(wm),
                                    &insideBoxBSizing, &dummy);
       boxISize.emplace(
           ComputeISizeValue(wm, blockContentSize,
