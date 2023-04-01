@@ -338,6 +338,7 @@ if (is_ios) {
       "../api/test/metrics:chrome_perf_dashboard_metrics_exporter",
       "../api/test/metrics:global_metrics_logger_and_exporter",
       "../api/test/metrics:metrics_exporter",
+      "../api/test/metrics:metrics_set_proto_file_exporter",
       "../api/test/metrics:print_result_proxy_metrics_exporter",
       "../api/test/metrics:stdout_metrics_exporter",
       "../sdk:helpers_objc",

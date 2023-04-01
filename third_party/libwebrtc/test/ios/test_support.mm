@@ -13,6 +13,7 @@
 #include "api/test/metrics/chrome_perf_dashboard_metrics_exporter.h"
 #include "api/test/metrics/global_metrics_logger_and_exporter.h"
 #include "api/test/metrics/metrics_exporter.h"
+#include "api/test/metrics/metrics_set_proto_file_exporter.h"
 #include "api/test/metrics/print_result_proxy_metrics_exporter.h"
 #include "api/test/metrics/stdout_metrics_exporter.h"
 #include "test/ios/coverage_util_ios.h"
@@ -44,6 +45,7 @@ static int g_argc;
 static char **g_argv;
 static bool g_write_perf_output;
 static bool g_export_perf_results_new_api;
+static std::string g_webrtc_test_metrics_output_path;
 static absl::optional<bool> g_is_xctest;
 static absl::optional<std::vector<std::string>> g_metrics_to_plot;
 
@@ -110,6 +112,10 @@ static absl::optional<std::vector<std::string>> g_metrics_to_plot;
             [NSString stdStringForString:outputPath]));
       }
     }
+    if (!g_webrtc_test_metrics_output_path.empty()) {
+      exporters.push_back(std::make_unique<webrtc::test::MetricsSetProtoFileExporter>(
+          webrtc::test::MetricsSetProtoFileExporter::Options(g_webrtc_test_metrics_output_path)));
+    }
   } else {
     exporters.push_back(std::make_unique<webrtc::test::PrintResultProxyMetricsExporter>());
   }
@@ -167,12 +173,14 @@ void InitTestSuite(int (*test_suite)(void),
                    char *argv[],
                    bool write_perf_output,
                    bool export_perf_results_new_api,
+                   std::string webrtc_test_metrics_output_path,
                    absl::optional<std::vector<std::string>> metrics_to_plot) {
   g_test_suite = test_suite;
   g_argc = argc;
   g_argv = argv;
   g_write_perf_output = write_perf_output;
   g_export_perf_results_new_api = export_perf_results_new_api;
+  g_webrtc_test_metrics_output_path = webrtc_test_metrics_output_path;
   g_metrics_to_plot = std::move(metrics_to_plot);
 }
 
