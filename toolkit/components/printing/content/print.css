@@ -94,18 +94,18 @@ select {
 }
 
 select:not([size], [multiple])[iconic] {
-  padding-inline-start: 28px;
+  padding-inline-start: calc(8px + 16px + 4px); /* spacing before image + image width + spacing after image */
+  background-size: auto 12px, 16px;
+  background-position: right 19px center, left 8px center;
+}
+
+select:not([size], [multiple])[iconic]:dir(rtl) {
+  background-position-x: left 19px, right 8px;
 }
 
 #printer-picker {
-  background-size: auto 12px, 16px;
   background-image: url("chrome://global/skin/icons/arrow-down-12.svg"), url("chrome://global/skin/icons/print.svg");
-  background-position: right 3px center, left 8px center;
   width: 100%;
-}
-
-#printer-picker:dir(rtl) {
-  background-position-x: left 3px, right 8px;
 }
 
 #printer-picker[output="pdf"] {
