@@ -23,8 +23,11 @@ RTPVideoHeader::~RTPVideoHeader() = default;
 
 VideoFrameMetadata RTPVideoHeader::GetAsMetadata() const {
   VideoFrameMetadata metadata;
+  metadata.SetFrameType(frame_type);
   metadata.SetWidth(width);
   metadata.SetHeight(height);
+  metadata.SetRotation(rotation);
+  metadata.SetContentType(content_type);
   if (generic) {
     metadata.SetFrameId(generic->frame_id);
     metadata.SetSpatialIndex(generic->spatial_index);
@@ -32,6 +35,9 @@ VideoFrameMetadata RTPVideoHeader::GetAsMetadata() const {
     metadata.SetFrameDependencies(generic->dependencies);
     metadata.SetDecodeTargetIndications(generic->decode_target_indications);
   }
+  metadata.SetIsLastFrameInPicture(is_last_frame_in_picture);
+  metadata.SetSimulcastIdx(simulcastIdx);
+  metadata.SetCodec(codec);
   return metadata;
 }
 

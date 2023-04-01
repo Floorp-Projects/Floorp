@@ -17,6 +17,10 @@
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "api/transport/rtp/dependency_descriptor.h"
+#include "api/video/video_codec_type.h"
+#include "api/video/video_content_type.h"
+#include "api/video/video_frame_type.h"
+#include "api/video/video_rotation.h"
 #include "rtc_base/system/rtc_export.h"
 
 namespace webrtc {
@@ -29,11 +33,20 @@ class RTC_EXPORT VideoFrameMetadata {
   VideoFrameMetadata(const VideoFrameMetadata&) = default;
   VideoFrameMetadata& operator=(const VideoFrameMetadata&) = default;
 
+  VideoFrameType GetFrameType() const;
+  void SetFrameType(VideoFrameType frame_type);
+
   uint16_t GetWidth() const;
   void SetWidth(uint16_t width);
 
   uint16_t GetHeight() const;
   void SetHeight(uint16_t height);
+
+  VideoRotation GetRotation() const;
+  void SetRotation(VideoRotation rotation);
+
+  VideoContentType GetContentType() const;
+  void SetContentType(VideoContentType content_type);
 
   absl::optional<int64_t> GetFrameId() const;
   void SetFrameId(absl::optional<int64_t> frame_id);
@@ -52,14 +65,32 @@ class RTC_EXPORT VideoFrameMetadata {
   void SetDecodeTargetIndications(
       rtc::ArrayView<const DecodeTargetIndication> decode_target_indications);
 
+  bool GetIsLastFrameInPicture() const;
+  void SetIsLastFrameInPicture(bool is_last_frame_in_picture);
+
+  uint8_t GetSimulcastIdx() const;
+  void SetSimulcastIdx(uint8_t simulcast_idx);
+
+  VideoCodecType GetCodec() const;
+  void SetCodec(VideoCodecType codec);
+
  private:
+  VideoFrameType frame_type_ = VideoFrameType::kEmptyFrame;
   int16_t width_ = 0;
   int16_t height_ = 0;
+  VideoRotation rotation_ = VideoRotation::kVideoRotation_0;
+  VideoContentType content_type_ = VideoContentType::UNSPECIFIED;
+
+  // Corresponding to GenericDescriptorInfo.
   absl::optional<int64_t> frame_id_;
   int spatial_index_ = 0;
   int temporal_index_ = 0;
   absl::InlinedVector<int64_t, 5> frame_dependencies_;
   absl::InlinedVector<DecodeTargetIndication, 10> decode_target_indications_;
+
+  bool is_last_frame_in_picture_ = true;
+  uint8_t simulcast_idx_ = 0;
+  VideoCodecType codec_ = VideoCodecType::kVideoCodecGeneric;
 };
 }  // namespace webrtc
 

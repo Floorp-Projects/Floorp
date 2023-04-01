@@ -14,6 +14,14 @@ namespace webrtc {
 
 VideoFrameMetadata::VideoFrameMetadata() = default;
 
+VideoFrameType VideoFrameMetadata::GetFrameType() const {
+  return frame_type_;
+}
+
+void VideoFrameMetadata::SetFrameType(VideoFrameType frame_type) {
+  frame_type_ = frame_type;
+}
+
 uint16_t VideoFrameMetadata::GetWidth() const {
   return width_;
 }
@@ -28,6 +36,22 @@ uint16_t VideoFrameMetadata::GetHeight() const {
 
 void VideoFrameMetadata::SetHeight(uint16_t height) {
   height_ = height;
+}
+
+VideoRotation VideoFrameMetadata::GetRotation() const {
+  return rotation_;
+}
+
+void VideoFrameMetadata::SetRotation(VideoRotation rotation) {
+  rotation_ = rotation;
+}
+
+VideoContentType VideoFrameMetadata::GetContentType() const {
+  return content_type_;
+}
+
+void VideoFrameMetadata::SetContentType(VideoContentType content_type) {
+  content_type_ = content_type;
 }
 
 absl::optional<int64_t> VideoFrameMetadata::GetFrameId() const {
@@ -73,6 +97,31 @@ void VideoFrameMetadata::SetDecodeTargetIndications(
     rtc::ArrayView<const DecodeTargetIndication> decode_target_indications) {
   decode_target_indications_.assign(decode_target_indications.begin(),
                                     decode_target_indications.end());
+}
+
+bool VideoFrameMetadata::GetIsLastFrameInPicture() const {
+  return is_last_frame_in_picture_;
+}
+
+void VideoFrameMetadata::SetIsLastFrameInPicture(
+    bool is_last_frame_in_picture) {
+  is_last_frame_in_picture_ = is_last_frame_in_picture;
+}
+
+uint8_t VideoFrameMetadata::GetSimulcastIdx() const {
+  return simulcast_idx_;
+}
+
+void VideoFrameMetadata::SetSimulcastIdx(uint8_t simulcast_idx) {
+  simulcast_idx_ = simulcast_idx;
+}
+
+VideoCodecType VideoFrameMetadata::GetCodec() const {
+  return codec_;
+}
+
+void VideoFrameMetadata::SetCodec(VideoCodecType codec) {
+  codec_ = codec;
 }
 
 }  // namespace webrtc

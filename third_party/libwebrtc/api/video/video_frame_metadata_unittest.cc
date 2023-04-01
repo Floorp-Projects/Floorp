@@ -10,6 +10,7 @@
 
 #include "api/video/video_frame_metadata.h"
 
+#include "api/video/video_frame_type.h"
 #include "modules/rtp_rtcp/source/rtp_video_header.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
@@ -19,6 +20,16 @@ namespace {
 
 using ::testing::ElementsAre;
 using ::testing::IsEmpty;
+
+// TODO(https://crbug.com/webrtc/14709): Move all of these tests to
+// rtp_video_header_unittest.cc, they're excercising GetAsMetadata().
+
+TEST(VideoFrameMetadata, GetFrameTypeReturnsCorrectValue) {
+  RTPVideoHeader video_header;
+  video_header.frame_type = VideoFrameType::kVideoFrameKey;
+  VideoFrameMetadata metadata = video_header.GetAsMetadata();
+  EXPECT_EQ(metadata.GetFrameType(), VideoFrameType::kVideoFrameKey);
+}
 
 TEST(VideoFrameMetadata, GetWidthReturnsCorrectValue) {
   RTPVideoHeader video_header;
@@ -32,6 +43,20 @@ TEST(VideoFrameMetadata, GetHeightReturnsCorrectValue) {
   video_header.height = 720u;
   VideoFrameMetadata metadata = video_header.GetAsMetadata();
   EXPECT_EQ(metadata.GetHeight(), video_header.height);
+}
+
+TEST(VideoFrameMetadata, GetRotationReturnsCorrectValue) {
+  RTPVideoHeader video_header;
+  video_header.rotation = VideoRotation::kVideoRotation_90;
+  VideoFrameMetadata metadata = video_header.GetAsMetadata();
+  EXPECT_EQ(metadata.GetRotation(), VideoRotation::kVideoRotation_90);
+}
+
+TEST(VideoFrameMetadata, GetContentTypeReturnsCorrectValue) {
+  RTPVideoHeader video_header;
+  video_header.content_type = VideoContentType::SCREENSHARE;
+  VideoFrameMetadata metadata = video_header.GetAsMetadata();
+  EXPECT_EQ(metadata.GetContentType(), VideoContentType::SCREENSHARE);
 }
 
 TEST(VideoFrameMetadata, GetFrameIdReturnsCorrectValue) {
@@ -114,6 +139,27 @@ TEST(VideoFrameMetadata,
   VideoFrameMetadata metadata = video_header.GetAsMetadata();
   ASSERT_FALSE(video_header.generic);
   EXPECT_THAT(metadata.GetDecodeTargetIndications(), IsEmpty());
+}
+
+TEST(VideoFrameMetadata, GetIsLastFrameInPictureReturnsCorrectValue) {
+  RTPVideoHeader video_header;
+  video_header.is_last_frame_in_picture = false;
+  VideoFrameMetadata metadata = video_header.GetAsMetadata();
+  EXPECT_FALSE(metadata.GetIsLastFrameInPicture());
+}
+
+TEST(VideoFrameMetadata, GetSimulcastIdxReturnsCorrectValue) {
+  RTPVideoHeader video_header;
+  video_header.simulcastIdx = 123;
+  VideoFrameMetadata metadata = video_header.GetAsMetadata();
+  EXPECT_EQ(metadata.GetSimulcastIdx(), 123);
+}
+
+TEST(VideoFrameMetadata, GetCodecReturnsCorrectValue) {
+  RTPVideoHeader video_header;
+  video_header.codec = VideoCodecType::kVideoCodecVP9;
+  VideoFrameMetadata metadata = video_header.GetAsMetadata();
+  EXPECT_EQ(metadata.GetCodec(), VideoCodecType::kVideoCodecVP9);
 }
 
 }  // namespace
