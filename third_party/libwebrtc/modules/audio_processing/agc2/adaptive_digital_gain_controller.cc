@@ -105,9 +105,7 @@ float ComputeGainChangeThisFrameDb(float target_gain_db,
 AdaptiveDigitalGainController::AdaptiveDigitalGainController(
     ApmDataDumper* apm_data_dumper,
     const AudioProcessing::Config::GainController2::AdaptiveDigital& config,
-    int adjacent_speech_frames_threshold,
-    int sample_rate_hz,
-    int num_channels)
+    int adjacent_speech_frames_threshold)
     : apm_data_dumper_(apm_data_dumper),
       gain_applier_(
           /*hard_clip_samples=*/false,

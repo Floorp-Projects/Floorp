@@ -127,7 +127,7 @@ GainController2::GainController2(
     adaptive_digital_controller_ =
         std::make_unique<AdaptiveDigitalGainController>(
             &data_dumper_, config.adaptive_digital,
-            kAdjacentSpeechFramesThreshold, sample_rate_hz, num_channels);
+            kAdjacentSpeechFramesThreshold);
   }
 }
 
