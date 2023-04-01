@@ -1420,6 +1420,8 @@ TEST(InputVolumeControllerTest, SpeechProbabilityThresholdIsEffective) {
 
 TEST(InputVolumeControllerTest,
      DoNotLogRecommendedInputVolumeOnChangeToMatchTarget) {
+  metrics::Reset();
+
   SpeechSamplesReader reader;
   auto controller = CreateInputVolumeController();
   controller->Initialize();
@@ -1439,6 +1441,8 @@ TEST(InputVolumeControllerTest,
 
 TEST(InputVolumeControllerTest,
      LogRecommendedInputVolumeOnUpwardChangeToMatchTarget) {
+  metrics::Reset();
+
   SpeechSamplesReader reader;
   auto controller = CreateInputVolumeController();
   controller->Initialize();
@@ -1457,6 +1461,8 @@ TEST(InputVolumeControllerTest,
 
 TEST(InputVolumeControllerTest,
      LogRecommendedInputVolumeOnDownwardChangeToMatchTarget) {
+  metrics::Reset();
+
   SpeechSamplesReader reader;
   auto controller = CreateInputVolumeController();
   controller->Initialize();
