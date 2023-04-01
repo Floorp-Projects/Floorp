@@ -166,6 +166,9 @@ class PacingController {
   // is considered erroneous to exceed.
   void SetCircuitBreakerThreshold(int num_iterations);
 
+  // Remove any pending packets matching this SSRC from the packet queue.
+  void RemovePacketsForSsrc(uint32_t ssrc);
+
  private:
   TimeDelta UpdateTimeAndGetElapsed(Timestamp now);
   bool ShouldSendKeepalive(Timestamp now) const;

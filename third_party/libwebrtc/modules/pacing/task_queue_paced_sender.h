@@ -70,6 +70,8 @@ class TaskQueuePacedSender : public RtpPacketPacer, public RtpPacketSender {
   // PacingController::PacketSender::SendPacket() when it's time to send.
   void EnqueuePackets(
       std::vector<std::unique_ptr<RtpPacketToSend>> packets) override;
+  // Remove any pending packets matching this SSRC from the packet queue.
+  void RemovePacketsForSsrc(uint32_t ssrc) override;
 
   // Methods implementing RtpPacketPacer.
 

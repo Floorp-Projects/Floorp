@@ -306,4 +306,58 @@ TEST(PrioritizedPacketQueue,
   }
 }
 
+TEST(PrioritizedPacketQueue, ClearsPackets) {
+  Timestamp now = Timestamp::Zero();
+  PrioritizedPacketQueue queue(now);
+  const uint32_t kSsrc = 1;
+
+  // Add two packets of each type, all using the same SSRC.
+  int sequence_number = 0;
+  for (size_t i = 0; i < kNumMediaTypes; ++i) {
+    queue.Push(now, CreatePacket(static_cast<RtpPacketMediaType>(i),
+                                 sequence_number++, kSsrc));
+    queue.Push(now, CreatePacket(static_cast<RtpPacketMediaType>(i),
+                                 sequence_number++, kSsrc));
+  }
+  EXPECT_EQ(queue.SizeInPackets(), 2 * int{kNumMediaTypes});
+
+  // Remove all of them.
+  queue.RemovePacketsForSsrc(kSsrc);
+  EXPECT_TRUE(queue.Empty());
+}
+
+TEST(PrioritizedPacketQueue, ClearPacketsAffectsOnlySpecifiedSsrc) {
+  Timestamp now = Timestamp::Zero();
+  PrioritizedPacketQueue queue(now);
+  const uint32_t kRemovingSsrc = 1;
+  const uint32_t kStayingSsrc = 2;
+
+  // Add an audio packet and a retransmission for the SSRC we will remove,
+  // ensuring they are first in line.
+  queue.Push(
+      now, CreatePacket(RtpPacketMediaType::kAudio, /*seq=*/1, kRemovingSsrc));
+  queue.Push(now, CreatePacket(RtpPacketMediaType::kRetransmission, /*seq=*/2,
+                               kRemovingSsrc));
+
+  // Add a video packet and a retransmission for the SSRC that will remain.
+  // The retransmission packets now both have pointers to their respective qeues
+  // from the same prio level.
+  queue.Push(now,
+             CreatePacket(RtpPacketMediaType::kVideo, /*seq=*/3, kStayingSsrc));
+  queue.Push(now, CreatePacket(RtpPacketMediaType::kRetransmission, /*seq=*/4,
+                               kStayingSsrc));
+
+  EXPECT_EQ(queue.SizeInPackets(), 4);
+
+  // Clear the first two packets.
+  queue.RemovePacketsForSsrc(kRemovingSsrc);
+  EXPECT_EQ(queue.SizeInPackets(), 2);
+
+  // We should get the single remaining retransmission first, then the video
+  // packet.
+  EXPECT_EQ(queue.Pop()->SequenceNumber(), 4);
+  EXPECT_EQ(queue.Pop()->SequenceNumber(), 3);
+  EXPECT_TRUE(queue.Empty());
+}
+
 }  // namespace webrtc

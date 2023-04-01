@@ -1098,4 +1098,81 @@ TEST(RtpVideoSenderTest, OverheadIsSubtractedFromTargetBitrate) {
   }
 }
 
+TEST(RtpVideoSenderTest, ClearsPendingPacketsOnInactivation) {
+  RtpVideoSenderTestFixture test({kSsrc1}, {kRtxSsrc1}, kPayloadType, {});
+  test.SetActiveModules({true});
+
+  RtpHeaderExtensionMap extensions;
+  extensions.Register<RtpDependencyDescriptorExtension>(
+      kDependencyDescriptorExtensionId);
+  std::vector<RtpPacket> sent_packets;
+  ON_CALL(test.transport(), SendRtp)
+      .WillByDefault([&](const uint8_t* packet, size_t length,
+                         const PacketOptions& options) {
+        sent_packets.emplace_back(&extensions);
+        EXPECT_TRUE(sent_packets.back().Parse(packet, length));
+        return true;
+      });
+
+  // Set a very low bitrate.
+  test.router()->OnBitrateUpdated(
+      CreateBitrateAllocationUpdate(/*rate_bps=*/30'000),
+      /*framerate=*/30);
+
+  // Create and send a large keyframe.
+  const size_t kImageSizeBytes = 10000;
+  constexpr uint8_t kPayload[kImageSizeBytes] = {'a'};
+  EncodedImage encoded_image;
+  encoded_image.SetTimestamp(1);
+  encoded_image.capture_time_ms_ = 2;
+  encoded_image._frameType = VideoFrameType::kVideoFrameKey;
+  encoded_image.SetEncodedData(
+      EncodedImageBuffer::Create(kPayload, sizeof(kPayload)));
+  EXPECT_EQ(test.router()
+                ->OnEncodedImage(encoded_image, /*codec_specific=*/nullptr)
+                .error,
+            EncodedImageCallback::Result::OK);
+
+  // Advance time a small amount, check that sent data is only part of the
+  // image.
+  test.AdvanceTime(TimeDelta::Millis(5));
+  DataSize transmittedPayload = DataSize::Zero();
+  for (const RtpPacket& packet : sent_packets) {
+    transmittedPayload += DataSize::Bytes(packet.payload_size());
+    // Make sure we don't see the end of the frame.
+    EXPECT_FALSE(packet.Marker());
+  }
+  EXPECT_GT(transmittedPayload, DataSize::Zero());
+  EXPECT_LT(transmittedPayload, DataSize::Bytes(kImageSizeBytes / 4));
+
+  // Record the RTP timestamp of the first frame.
+  const uint32_t first_frame_timestamp = sent_packets[0].Timestamp();
+  sent_packets.clear();
+
+  // Disable the sending module and advance time slightly. No packets should be
+  // sent.
+  test.SetActiveModules({false});
+  test.AdvanceTime(TimeDelta::Millis(20));
+  EXPECT_TRUE(sent_packets.empty());
+
+  // Reactive the send module - any packets should have been removed, so nothing
+  // should be transmitted.
+  test.SetActiveModules({true});
+  test.AdvanceTime(TimeDelta::Millis(33));
+  EXPECT_TRUE(sent_packets.empty());
+
+  // Send a new frame.
+  encoded_image.SetTimestamp(3);
+  encoded_image.capture_time_ms_ = 4;
+  EXPECT_EQ(test.router()
+                ->OnEncodedImage(encoded_image, /*codec_specific=*/nullptr)
+                .error,
+            EncodedImageCallback::Result::OK);
+  test.AdvanceTime(TimeDelta::Millis(33));
+
+  // Advance time, check we get new packets - but only for the second frame.
+  EXPECT_FALSE(sent_packets.empty());
+  EXPECT_NE(sent_packets[0].Timestamp(), first_frame_timestamp);
+}
+
 }  // namespace webrtc

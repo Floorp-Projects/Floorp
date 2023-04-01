@@ -13,10 +13,12 @@
 
 #include <stddef.h>
 
+#include <array>
 #include <deque>
 #include <list>
 #include <memory>
 #include <unordered_map>
+#include <vector>
 
 #include "api/units/data_size.h"
 #include "api/units/time_delta.h"
@@ -80,6 +82,9 @@ class PrioritizedPacketQueue {
   // Set the pause state, while `paused` is true queuing time is not counted.
   void SetPauseState(bool paused, Timestamp now);
 
+  // Remove any packets matching the given SSRC.
+  void RemovePacketsForSsrc(uint32_t ssrc);
+
  private:
   static constexpr int kNumPriorityLevels = 4;
 
@@ -107,17 +112,26 @@ class PrioritizedPacketQueue {
     // count for that priority level went from zero to non-zero.
     bool EnqueuePacket(QueuedPacket packet, int priority_level);
 
-    QueuedPacket DequePacket(int priority_level);
+    QueuedPacket DequeuePacket(int priority_level);
 
     bool HasPacketsAtPrio(int priority_level) const;
     bool IsEmpty() const;
     Timestamp LeadingPacketEnqueueTime(int priority_level) const;
     Timestamp LastEnqueueTime() const;
 
+    std::array<std::deque<QueuedPacket>, kNumPriorityLevels> DequeueAll();
+
    private:
     std::deque<QueuedPacket> packets_[kNumPriorityLevels];
     Timestamp last_enqueue_time_;
   };
+
+  // Remove the packet from the internal state, e.g. queue time / size etc.
+  void DequeuePacketInternal(QueuedPacket& packet);
+
+  // Check if the queue pointed to by `top_active_prio_level_` is empty and
+  // if so move it to the lowest non-empty index.
+  void MaybeUpdateTopPrioLevel();
 
   // Cumulative sum, over all packets, of time spent in the queue.
   TimeDelta queue_time_sum_;

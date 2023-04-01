@@ -60,7 +60,7 @@ bool PrioritizedPacketQueue::StreamQueue::EnqueuePacket(QueuedPacket packet,
 }
 
 PrioritizedPacketQueue::QueuedPacket
-PrioritizedPacketQueue::StreamQueue::DequePacket(int priority_level) {
+PrioritizedPacketQueue::StreamQueue::DequeuePacket(int priority_level) {
   RTC_DCHECK(!packets_[priority_level].empty());
   QueuedPacket packet = std::move(packets_[priority_level].front());
   packets_[priority_level].pop_front();
@@ -89,6 +89,16 @@ Timestamp PrioritizedPacketQueue::StreamQueue::LeadingPacketEnqueueTime(
 
 Timestamp PrioritizedPacketQueue::StreamQueue::LastEnqueueTime() const {
   return last_enqueue_time_;
+}
+
+std::array<std::deque<PrioritizedPacketQueue::QueuedPacket>,
+           PrioritizedPacketQueue::kNumPriorityLevels>
+PrioritizedPacketQueue::StreamQueue::DequeueAll() {
+  std::array<std::deque<QueuedPacket>, kNumPriorityLevels> packets_by_prio;
+  for (int i = 0; i < kNumPriorityLevels; ++i) {
+    packets_by_prio[i].swap(packets_[i]);
+  }
+  return packets_by_prio;
 }
 
 PrioritizedPacketQueue::PrioritizedPacketQueue(Timestamp creation_time)
@@ -162,54 +172,16 @@ std::unique_ptr<RtpPacketToSend> PrioritizedPacketQueue::Pop() {
 
   RTC_DCHECK_GE(top_active_prio_level_, 0);
   StreamQueue& stream_queue = *streams_by_prio_[top_active_prio_level_].front();
-  QueuedPacket packet = stream_queue.DequePacket(top_active_prio_level_);
-  --size_packets_;
-  RTC_DCHECK(packet.packet->packet_type().has_value());
-  RtpPacketMediaType packet_type = packet.packet->packet_type().value();
-  --size_packets_per_media_type_[static_cast<size_t>(packet_type)];
-  RTC_DCHECK_GE(size_packets_per_media_type_[static_cast<size_t>(packet_type)],
-                0);
-  size_payload_ -= packet.PacketSize();
-
-  // Calculate the total amount of time spent by this packet in the queue
-  // while in a non-paused state. Note that the `pause_time_sum_ms_` was
-  // subtracted from `packet.enqueue_time_ms` when the packet was pushed, and
-  // by subtracting it now we effectively remove the time spent in in the
-  // queue while in a paused state.
-  TimeDelta time_in_non_paused_state =
-      last_update_time_ - packet.enqueue_time - pause_time_sum_;
-  queue_time_sum_ -= time_in_non_paused_state;
-
-  // Set the time spent in the send queue, which is the per-packet equivalent of
-  // totalPacketSendDelay. The notion of being paused is an implementation
-  // detail that we do not want to expose, so it makes sense to report the
-  // metric excluding the pause time. This also avoids spikes in the metric.
-  // https://w3c.github.io/webrtc-stats/#dom-rtcoutboundrtpstreamstats-totalpacketsenddelay
-  packet.packet->set_time_in_send_queue(time_in_non_paused_state);
-
-  RTC_DCHECK(size_packets_ > 0 || queue_time_sum_ == TimeDelta::Zero());
-
-  RTC_CHECK(packet.enqueue_time_iterator != enqueue_times_.end());
-  enqueue_times_.erase(packet.enqueue_time_iterator);
+  QueuedPacket packet = stream_queue.DequeuePacket(top_active_prio_level_);
+  DequeuePacketInternal(packet);
 
   // Remove StreamQueue from head of fifo-queue for this prio level, and
   // and add it to the end if it still has packets.
   streams_by_prio_[top_active_prio_level_].pop_front();
   if (stream_queue.HasPacketsAtPrio(top_active_prio_level_)) {
     streams_by_prio_[top_active_prio_level_].push_back(&stream_queue);
-  } else if (streams_by_prio_[top_active_prio_level_].empty()) {
-    // No stream queues have packets at this prio level, find top priority
-    // that is not empty.
-    if (size_packets_ == 0) {
-      top_active_prio_level_ = -1;
-    } else {
-      for (int i = 0; i < kNumPriorityLevels; ++i) {
-        if (!streams_by_prio_[i].empty()) {
-          top_active_prio_level_ = i;
-          break;
-        }
-      }
-    }
+  } else {
+    MaybeUpdateTopPrioLevel();
   }
 
   return std::move(packet.packet);
@@ -274,6 +246,98 @@ void PrioritizedPacketQueue::UpdateAverageQueueTime(Timestamp now) {
 void PrioritizedPacketQueue::SetPauseState(bool paused, Timestamp now) {
   UpdateAverageQueueTime(now);
   paused_ = paused;
+}
+
+void PrioritizedPacketQueue::RemovePacketsForSsrc(uint32_t ssrc) {
+  auto kv = streams_.find(ssrc);
+  if (kv != streams_.end()) {
+    // Dequeue all packets from the queue for this SSRC.
+    StreamQueue& queue = *kv->second;
+    std::array<std::deque<QueuedPacket>, kNumPriorityLevels> packets_by_prio =
+        queue.DequeueAll();
+    for (int i = 0; i < kNumPriorityLevels; ++i) {
+      std::deque<QueuedPacket>& packet_queue = packets_by_prio[i];
+      if (packet_queue.empty()) {
+        continue;
+      }
+
+      // First erase all packets at this prio level.
+      while (!packet_queue.empty()) {
+        QueuedPacket packet = std::move(packet_queue.front());
+        packet_queue.pop_front();
+        DequeuePacketInternal(packet);
+      }
+
+      // Next, deregister this `StreamQueue` from the round-robin tables.
+      RTC_DCHECK(!streams_by_prio_[i].empty());
+      if (streams_by_prio_[i].size() == 1) {
+        // This is the last and only queue that had packets for this prio level.
+        // Update the global top prio level if neccessary.
+        RTC_DCHECK(streams_by_prio_[i].front() == &queue);
+        streams_by_prio_[i].pop_front();
+        if (i == top_active_prio_level_) {
+          MaybeUpdateTopPrioLevel();
+        }
+      } else {
+        // More than stream had packets at this prio level, filter this one out.
+        std::deque<StreamQueue*> filtered_queue;
+        for (StreamQueue* queue_ptr : streams_by_prio_[i]) {
+          if (queue_ptr != &queue) {
+            filtered_queue.push_back(queue_ptr);
+          }
+        }
+        streams_by_prio_[i].swap(filtered_queue);
+      }
+    }
+  }
+}
+
+void PrioritizedPacketQueue::DequeuePacketInternal(QueuedPacket& packet) {
+  --size_packets_;
+  RTC_DCHECK(packet.packet->packet_type().has_value());
+  RtpPacketMediaType packet_type = packet.packet->packet_type().value();
+  --size_packets_per_media_type_[static_cast<size_t>(packet_type)];
+  RTC_DCHECK_GE(size_packets_per_media_type_[static_cast<size_t>(packet_type)],
+                0);
+  size_payload_ -= packet.PacketSize();
+
+  // Calculate the total amount of time spent by this packet in the queue
+  // while in a non-paused state. Note that the `pause_time_sum_ms_` was
+  // subtracted from `packet.enqueue_time_ms` when the packet was pushed, and
+  // by subtracting it now we effectively remove the time spent in in the
+  // queue while in a paused state.
+  TimeDelta time_in_non_paused_state =
+      last_update_time_ - packet.enqueue_time - pause_time_sum_;
+  queue_time_sum_ -= time_in_non_paused_state;
+
+  // Set the time spent in the send queue, which is the per-packet equivalent of
+  // totalPacketSendDelay. The notion of being paused is an implementation
+  // detail that we do not want to expose, so it makes sense to report the
+  // metric excluding the pause time. This also avoids spikes in the metric.
+  // https://w3c.github.io/webrtc-stats/#dom-rtcoutboundrtpstreamstats-totalpacketsenddelay
+  packet.packet->set_time_in_send_queue(time_in_non_paused_state);
+
+  RTC_DCHECK(size_packets_ > 0 || queue_time_sum_ == TimeDelta::Zero());
+
+  RTC_CHECK(packet.enqueue_time_iterator != enqueue_times_.end());
+  enqueue_times_.erase(packet.enqueue_time_iterator);
+}
+
+void PrioritizedPacketQueue::MaybeUpdateTopPrioLevel() {
+  if (streams_by_prio_[top_active_prio_level_].empty()) {
+    // No stream queues have packets at this prio level, find top priority
+    // that is not empty.
+    if (size_packets_ == 0) {
+      top_active_prio_level_ = -1;
+    } else {
+      for (int i = 0; i < kNumPriorityLevels; ++i) {
+        if (!streams_by_prio_[i].empty()) {
+          top_active_prio_level_ = i;
+          break;
+        }
+      }
+    }
+  }
 }
 
 }  // namespace webrtc
