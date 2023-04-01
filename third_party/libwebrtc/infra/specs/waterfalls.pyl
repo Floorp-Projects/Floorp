@@ -537,6 +537,17 @@
       'linux_compile_arm_rel': {},
       'linux_compile_dbg': {},
       'linux_compile_rel': {},
+      'linux_coverage': {
+        'os_type':
+        'linux',
+        'mixins': [
+          'linux-bionic', 'x86-64', 'resultdb-json-format',
+          'isolate_profile_data'
+        ],
+        'test_suites': {
+          'isolated_scripts': 'linux_desktop_tests_tryserver',
+        },
+      },
       'linux_dbg': {
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
