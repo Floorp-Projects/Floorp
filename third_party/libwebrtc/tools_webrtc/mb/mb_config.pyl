@@ -91,10 +91,10 @@
         'dummy_audio_file_devices_no_protobuf_x86',
         'rtti_no_sctp': 'rtti_no_sctp_no_unicode_win_x86',
       },
-      'Win32 Builder (Clang)': 'win_clang_pure_release_bot_x86',
       'Win32 Debug (Clang)': 'win_clang_debug_bot_x86',
       'Win32 Release (Clang)': 'win_clang_release_bot_x86',
       'Win64 ASan': 'win_asan_clang_release_bot_x64',
+      'Win64 Builder (Clang)': 'win_clang_pure_release_bot_x64',
       'Win64 Debug (Clang)': 'win_clang_debug_bot_x64',
       'Win64 Release (Clang)': 'win_clang_release_bot_x64',
 
@@ -136,7 +136,7 @@
       'Perf Linux Trusty': 'release_bot_x64',
       'Perf Mac 11': 'release_bot_x64',
       'Perf Mac M1 Arm64 12': 'release_bot_x64',
-      'Perf Win7': 'release_bot_x64',
+      'Perf Win 10': 'release_bot_x64',
     },
     'internal.client.webrtc': {
       'iOS64 Debug': 'ios_internal_debug_bot_arm64',
@@ -345,11 +345,11 @@
       'debug_bot',
       'x86',
     ],
-    'win_clang_pure_release_bot_x86': [
+    'win_clang_pure_release_bot_x64': [
       'clang',
       'openh264',
       'pure_release_bot',
-      'x86',
+      'x64',
     ],
     'win_clang_release_bot_x64': [
       'clang',
