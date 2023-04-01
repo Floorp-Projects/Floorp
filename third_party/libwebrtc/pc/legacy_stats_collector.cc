@@ -1042,8 +1042,7 @@ void LegacyStatsCollector::ExtractBweInfo() {
     }
     auto* video_channel = transceiver->internal()->channel();
     if (video_channel) {
-      video_media_channels.push_back(static_cast<cricket::VideoMediaChannel*>(
-          video_channel->media_channel()));
+      video_media_channels.push_back(video_channel->video_media_send_channel());
     }
   }
 
@@ -1151,7 +1150,7 @@ class VideoMediaChannelStatsGatherer final : public MediaChannelStatsGatherer {
 };
 
 std::unique_ptr<MediaChannelStatsGatherer> CreateMediaChannelStatsGatherer(
-    cricket::MediaChannel* channel) {
+    cricket::MediaSendChannelInterface* channel) {
   RTC_DCHECK(channel);
   if (channel->media_type() == cricket::MEDIA_TYPE_AUDIO) {
     return std::make_unique<VoiceMediaChannelStatsGatherer>(
@@ -1180,7 +1179,7 @@ void LegacyStatsCollector::ExtractMediaInfo(
         continue;
       }
       std::unique_ptr<MediaChannelStatsGatherer> gatherer =
-          CreateMediaChannelStatsGatherer(channel->media_channel());
+          CreateMediaChannelStatsGatherer(channel->media_send_channel());
       gatherer->mid = channel->mid();
       gatherer->transport_name = transport_names_by_mid.at(gatherer->mid);
 

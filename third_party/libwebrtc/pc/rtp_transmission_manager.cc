@@ -78,7 +78,7 @@ cricket::VoiceMediaChannel* RtpTransmissionManager::voice_media_channel()
   RTC_DCHECK(!IsUnifiedPlan());
   auto* voice_channel = GetAudioTransceiver()->internal()->channel();
   if (voice_channel) {
-    return voice_channel->voice_media_channel();
+    return voice_channel->voice_media_send_channel();
   } else {
     return nullptr;
   }
@@ -90,7 +90,7 @@ cricket::VideoMediaChannel* RtpTransmissionManager::video_media_channel()
   RTC_DCHECK(!IsUnifiedPlan());
   auto* video_channel = GetVideoTransceiver()->internal()->channel();
   if (video_channel) {
-    return video_channel->video_media_channel();
+    return video_channel->video_media_send_channel();
   } else {
     return nullptr;
   }
