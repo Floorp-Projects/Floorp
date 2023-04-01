@@ -869,7 +869,7 @@ bool VoiceChannel::SetLocalContent_w(const MediaContentDescription* content,
       webrtc::RtpTransceiverDirectionHasRecv(content->direction()),
       &recv_params);
 
-  if (!media_send_channel()->SetRecvParameters(recv_params)) {
+  if (!media_receive_channel()->SetRecvParameters(recv_params)) {
     error_desc = StringFormat(
         "Failed to set local audio description recv parameters for m-section "
         "with mid='%s'.",
@@ -1008,7 +1008,7 @@ bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,
     }
   }
 
-  if (!media_send_channel()->SetRecvParameters(recv_params)) {
+  if (!media_receive_channel()->SetRecvParameters(recv_params)) {
     error_desc = StringFormat(
         "Failed to set local video description recv parameters for m-section "
         "with mid='%s'.",
@@ -1103,7 +1103,7 @@ bool VideoChannel::SetRemoteContent_w(const MediaContentDescription* content,
   last_send_params_ = send_params;
 
   if (needs_recv_params_update) {
-    if (!media_send_channel()->SetRecvParameters(recv_params)) {
+    if (!media_receive_channel()->SetRecvParameters(recv_params)) {
       error_desc = StringFormat(
           "Failed to set recv parameters for m-section with mid='%s'.",
           mid().c_str());

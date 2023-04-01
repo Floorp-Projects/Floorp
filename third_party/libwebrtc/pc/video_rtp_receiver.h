@@ -149,8 +149,8 @@ class VideoRtpReceiver : public RtpReceiverInternal {
   rtc::Thread* const worker_thread_;
 
   const std::string id_;
-  cricket::VideoMediaChannel* media_channel_ RTC_GUARDED_BY(worker_thread_) =
-      nullptr;
+  cricket::VideoMediaReceiveChannelInterface* media_channel_
+      RTC_GUARDED_BY(worker_thread_) = nullptr;
   absl::optional<uint32_t> ssrc_ RTC_GUARDED_BY(worker_thread_);
   // `source_` is held here to be able to change the state of the source when
   // the VideoRtpReceiver is stopped.

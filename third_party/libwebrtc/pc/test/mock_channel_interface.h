@@ -25,6 +25,7 @@ namespace cricket {
 class MockChannelInterface : public cricket::ChannelInterface {
  public:
   MOCK_METHOD(cricket::MediaType, media_type, (), (const, override));
+  MOCK_METHOD(MediaChannel*, media_channel, (), (const, override));
   MOCK_METHOD(MediaChannel*, media_send_channel, (), (const, override));
   MOCK_METHOD(VoiceMediaChannel*,
               voice_media_send_channel,

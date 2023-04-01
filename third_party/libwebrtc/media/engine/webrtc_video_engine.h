@@ -180,7 +180,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   void OnReadyToSend(bool ready) override;
   void OnNetworkRouteChanged(absl::string_view transport_name,
                              const rtc::NetworkRoute& network_route) override;
-  void SetInterface(NetworkInterface* iface) override;
+  void SetInterface(MediaChannelNetworkInterface* iface) override;
 
   // E2E Encrypted Video Frame API
   // Set a frame decryptor to a particular ssrc that will intercept all

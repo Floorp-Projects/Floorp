@@ -1174,14 +1174,14 @@ rtc::scoped_refptr<RtpSenderInterface> PeerConnection::CreateSender(
     auto audio_sender =
         AudioRtpSender::Create(worker_thread(), rtc::CreateRandomUuid(),
                                legacy_stats_.get(), rtp_manager());
-    audio_sender->SetMediaChannel(rtp_manager()->voice_media_channel());
+    audio_sender->SetMediaChannel(rtp_manager()->voice_media_send_channel());
     new_sender = RtpSenderProxyWithInternal<RtpSenderInternal>::Create(
         signaling_thread(), audio_sender);
     rtp_manager()->GetAudioTransceiver()->internal()->AddSender(new_sender);
   } else if (kind == MediaStreamTrackInterface::kVideoKind) {
     auto video_sender = VideoRtpSender::Create(
         worker_thread(), rtc::CreateRandomUuid(), rtp_manager());
-    video_sender->SetMediaChannel(rtp_manager()->video_media_channel());
+    video_sender->SetMediaChannel(rtp_manager()->video_media_send_channel());
     new_sender = RtpSenderProxyWithInternal<RtpSenderInternal>::Create(
         signaling_thread(), video_sender);
     rtp_manager()->GetVideoTransceiver()->internal()->AddSender(new_sender);
@@ -1629,15 +1629,16 @@ RTCError PeerConnection::SetConfiguration(
   }
 
   if (modified_config.allow_codec_switching.has_value()) {
-    std::vector<cricket::VideoMediaChannel*> channels;
+    std::vector<cricket::VideoMediaSendChannelInterface*> channels;
     for (const auto& transceiver : rtp_manager()->transceivers()->List()) {
       if (transceiver->media_type() != cricket::MEDIA_TYPE_VIDEO)
         continue;
 
       auto* video_channel = transceiver->internal()->channel();
       if (video_channel)
-        channels.push_back(static_cast<cricket::VideoMediaChannel*>(
-            video_channel->media_send_channel()));
+        channels.push_back(
+            static_cast<cricket::VideoMediaSendChannelInterface*>(
+                video_channel->media_send_channel()));
     }
 
     worker_thread()->BlockingCall(
