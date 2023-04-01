@@ -13,12 +13,12 @@
 
 #include "nsISupports.h"
 #include "nsMenuParentX.h"
-#include "nsMenuGroupOwnerX.h"
 #include "nsChangeObserver.h"
 #include "nsTArray.h"
 #include "nsString.h"
 
 class nsMenuBarX;
+class nsMenuGroupOwnerX;
 class nsMenuX;
 class nsIWidget;
 class nsIContent;

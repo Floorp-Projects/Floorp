@@ -21,6 +21,8 @@
 #include "mozilla/Logging.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_clipboard.h"
+#include "mozilla/StaticPrefs_widget.h"
+#include "mozilla/WindowsVersion.h"
 #include "SpecialSystemDirectory.h"
 
 #include "nsArrayUtils.h"
@@ -44,6 +46,7 @@
 #include "nsIObserverService.h"
 #include "nsMimeTypes.h"
 #include "imgITools.h"
+#include "imgIContainer.h"
 
 using mozilla::LogLevel;
 
@@ -298,7 +301,8 @@ nsresult nsClipboard::SetupNativeDataObject(
     }
   }
 
-  if (!StaticPrefs::clipboard_copyPrivateDataToClipboardCloudOrHistory()) {
+  if (!mozilla::StaticPrefs::
+          clipboard_copyPrivateDataToClipboardCloudOrHistory()) {
     // Let Clipboard know that data is sensitive and must not be copied to
     // the Cloud Clipboard, Clipboard History and similar.
     // https://docs.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats#cloud-clipboard-and-clipboard-history-formats
@@ -483,7 +487,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(int32_t aWhichClipboard) {
   }
 
 #ifdef ACCESSIBILITY
-  a11y::Compatibility::SuppressA11yForClipboardCopy();
+  mozilla::a11y::Compatibility::SuppressA11yForClipboardCopy();
 #endif
 
   RefPtr<IDataObject> dataObj;
@@ -494,7 +498,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(int32_t aWhichClipboard) {
     RepeatedlyTryOleSetClipboard(dataObj);
 
     const bool doFlush = [&] {
-      switch (StaticPrefs::widget_windows_sync_clipboard_flush()) {
+      switch (mozilla::StaticPrefs::widget_windows_sync_clipboard_flush()) {
         case 0:
           return false;
         case 1:
@@ -508,7 +512,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(int32_t aWhichClipboard) {
           // lesser of the two performance/memory evils here and force immediate
           // rendering.
           return mightNeedToFlush == MightNeedToFlush::Yes &&
-                 NeedsWindows11SuggestedActionsWorkaround();
+                 mozilla::NeedsWindows11SuggestedActionsWorkaround();
       }
     }();
     if (doFlush) {
@@ -1401,7 +1405,8 @@ nsresult nsClipboard::SaveStorageOrStream(IDataObject* aDataObject, UINT aIndex,
     return NS_ERROR_FAILURE;
   }
 
-  auto releaseMediumGuard = MakeScopeExit([&] { ReleaseStgMedium(&stm); });
+  auto releaseMediumGuard =
+      mozilla::MakeScopeExit([&] { ReleaseStgMedium(&stm); });
 
   // We do this check because, even though we *asked* for IStorage or IStream,
   // it seems that IDataObject providers can just hand us back whatever they
@@ -1437,7 +1442,7 @@ nsresult nsClipboard::SaveStorageOrStream(IDataObject* aDataObject, UINT aIndex,
     return NS_ERROR_FAILURE;
   }
 
-  auto fileCloseGuard = MakeScopeExit([&] { CloseHandle(handle); });
+  auto fileCloseGuard = mozilla::MakeScopeExit([&] { CloseHandle(handle); });
 
   const ULONG bufferSize = 4096;
   char buffer[bufferSize] = {0};

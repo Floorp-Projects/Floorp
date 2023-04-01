@@ -82,10 +82,6 @@ NS_IMPL_ISUPPORTS(AsyncDeleteAllFaviconsFromDisk, nsIRunnable)
 const char FaviconHelper::kJumpListCacheDir[] = "jumpListCache";
 const char FaviconHelper::kShortcutCacheDir[] = "shortcutCache";
 
-// Prefix for path used by NT calls.
-const wchar_t kNTPrefix[] = L"\\??\\";
-const size_t kNTPrefixLen = ArrayLength(kNTPrefix) - 1;
-
 struct CoTaskMemFreePolicy {
   void operator()(void* aPtr) { ::CoTaskMemFree(aPtr); }
 };

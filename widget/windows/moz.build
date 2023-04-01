@@ -202,5 +202,3 @@ if CONFIG["CC_TYPE"] == "clang-cl":
     ]
 
 SPHINX_TREES["/widget/windows"] = "docs"
-
-REQUIRES_UNIFIED_BUILD = True

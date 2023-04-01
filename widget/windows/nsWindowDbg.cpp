@@ -8,12 +8,16 @@
  */
 
 #include "nsWindowDbg.h"
+#include "nsToolkit.h"
+#include "WinPointerEvents.h"
 #include "nsWindowLoggedMessages.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
 #include <winuser.h>
 #include <dbt.h>
 #include <imm.h>
+#include <tpcshrd.h>
+
 #include <unordered_set>
 
 using namespace mozilla;

@@ -28,6 +28,8 @@
 #include "nsPrintfCString.h"
 
 #if defined(XP_WIN)
+#  include "windef.h"
+#  include "winnetwk.h"
 #  include "npapi.h"
 #  include "WinUtils.h"
 #endif  // #if defined (XP_WIN)
