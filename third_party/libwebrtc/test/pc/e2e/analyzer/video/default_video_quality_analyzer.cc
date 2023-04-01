@@ -936,9 +936,12 @@ void DefaultVideoQualityAnalyzer::ReportResults() {
     ReportResults(item.first, item.second,
                   stream_frame_counters_.at(item.first));
   }
-  metrics_logger_->LogSingleValueMetric("cpu_usage_%", test_label_,
-                                        GetCpuUsagePercent(), Unit::kUnitless,
-                                        ImprovementDirection::kSmallerIsBetter);
+  // TODO(bugs.webrtc.org/14757): Remove kExperimentalTestNameMetadataKey.
+  metrics_logger_->LogSingleValueMetric(
+      "cpu_usage_%", test_label_, GetCpuUsagePercent(), Unit::kUnitless,
+      ImprovementDirection::kSmallerIsBetter,
+      {{MetricMetadataKey::kExperimentalTestNameMetadataKey,
+        webrtc_pc_e2e::GetCurrentTestName()}});
   LogFrameCounters("Global", frame_counters_);
   if (!unknown_sender_frame_counters_.empty()) {
     RTC_LOG(LS_INFO) << "Received frame counters with unknown frame id:";
@@ -1030,11 +1033,14 @@ void DefaultVideoQualityAnalyzer::ReportResults(
     const FrameCounters& frame_counters) {
   TimeDelta test_duration = Now() - start_time_;
   std::string test_case_name = GetTestCaseName(ToMetricName(key));
+  // TODO(bugs.webrtc.org/14757): Remove kExperimentalTestNameMetadataKey.
   std::map<std::string, std::string> metric_metadata{
       {MetricMetadataKey::kPeerMetadataKey, peers_->name(key.sender)},
       {MetricMetadataKey::kVideoStreamMetadataKey, streams_.name(key.stream)},
       {MetricMetadataKey::kSenderMetadataKey, peers_->name(key.sender)},
-      {MetricMetadataKey::kReceiverMetadataKey, peers_->name(key.receiver)}};
+      {MetricMetadataKey::kReceiverMetadataKey, peers_->name(key.receiver)},
+      {MetricMetadataKey::kExperimentalTestNameMetadataKey,
+       webrtc_pc_e2e::GetCurrentTestName()}};
 
   double sum_squared_interframe_delays_secs = 0;
   Timestamp video_start_time = Timestamp::PlusInfinity();

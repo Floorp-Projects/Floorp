@@ -10,8 +10,16 @@
 #ifndef TEST_PC_E2E_METRIC_METADATA_KEYS_H_
 #define TEST_PC_E2E_METRIC_METADATA_KEYS_H_
 
+#include <string>
+
 namespace webrtc {
 namespace webrtc_pc_e2e {
+
+// TODO(bugs.webrtc.org/14757): Move this function to a better location once
+// kExperimentalTestNameMetadataKey has been removed (this is here just for
+// convenience since it is the value of the kExperimentalTestNameMetadataKey
+// metadata entries).
+std::string GetCurrentTestName();
 
 // All metadata fields are present only if applicable for particular metric.
 class MetricMetadataKey {
@@ -28,6 +36,13 @@ class MetricMetadataKey {
   static constexpr char kVideoStreamMetadataKey[] = "video_stream";
   // Represents name of the sync group to which stream belongs.
   static constexpr char kPeerSyncGroupMetadataKey[] = "peer_sync_group";
+  // Represents the test name (without any peer and stream data appended to it
+  // as it currently happens with the webrtc.test_metrics.Metric.test_case
+  // field). This metadata is temporary and it will be removed once this
+  // information is moved to webrtc.test_metrics.Metric.test_case.
+  // TODO(bugs.webrtc.org/14757): Remove kExperimentalTestNameMetadataKey.
+  static constexpr char kExperimentalTestNameMetadataKey[] =
+      "experimental_test_name";
 
  private:
   MetricMetadataKey() = default;

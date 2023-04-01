@@ -370,8 +370,11 @@ void StatsBasedNetworkQualityMetricsReporter::ReportStats(
     const NetworkLayerStats& network_layer_stats,
     int64_t packet_loss,
     const Timestamp& end_time) {
+  // TODO(bugs.webrtc.org/14757): Remove kExperimentalTestNameMetadataKey.
   std::map<std::string, std::string> metric_metadata{
-      {MetricMetadataKey::kPeerMetadataKey, pc_label}};
+      {MetricMetadataKey::kPeerMetadataKey, pc_label},
+      {MetricMetadataKey::kExperimentalTestNameMetadataKey,
+       GetCurrentTestName()}};
   metrics_logger_->LogSingleValueMetric(
       "bytes_discarded_no_receiver", GetTestCaseName(pc_label),
       network_layer_stats.endpoints_stats.overall_incoming_stats
@@ -438,8 +441,11 @@ void StatsBasedNetworkQualityMetricsReporter::LogNetworkLayerStats(
       stats.endpoints_stats.overall_incoming_stats.packets_received >= 2
           ? stats.endpoints_stats.overall_incoming_stats.AverageReceiveRate()
           : DataRate::Zero();
+  // TODO(bugs.webrtc.org/14757): Remove kExperimentalTestNameMetadataKey.
   std::map<std::string, std::string> metric_metadata{
-      {MetricMetadataKey::kPeerMetadataKey, peer_name}};
+      {MetricMetadataKey::kPeerMetadataKey, peer_name},
+      {MetricMetadataKey::kExperimentalTestNameMetadataKey,
+       GetCurrentTestName()}};
   rtc::StringBuilder log;
   log << "Raw network layer statistic for [" << peer_name << "]:\n"
       << "Local IPs:\n";
