@@ -334,7 +334,7 @@
         'os_type':
         'linux',
         'mixins': [
-          'linux-bionic', 'x86-64', 'perf-pool-vm', 'timeout-3h', 'perf-output',
+          'linux-bionic', 'x86-64', 'perf-pool-vm', 'timeout-3h',
           'has_native_resultdb_integration', 'chromium-tester-service-account'
         ],
         'test_suites': {
