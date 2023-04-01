@@ -184,10 +184,11 @@ class TestMainImpl : public TestMain {
     }
 
 #if defined(WEBRTC_IOS)
-    rtc::test::InitTestSuite(RUN_ALL_TESTS, argc, argv,
-                             absl::GetFlag(FLAGS_write_perf_output_on_ios),
-                             absl::GetFlag(FLAGS_export_perf_results_new_api),
-                             metrics_to_plot);
+    rtc::test::InitTestSuite(
+        RUN_ALL_TESTS, argc, argv,
+        absl::GetFlag(FLAGS_write_perf_output_on_ios),
+        absl::GetFlag(FLAGS_export_perf_results_new_api),
+        absl::GetFlag(FLAGS_webrtc_test_metrics_output_path), metrics_to_plot);
     rtc::test::RunTestsFromIOSApp();
     int exit_code = 0;
 #else
