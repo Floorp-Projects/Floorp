@@ -10,11 +10,7 @@ import("../../../webrtc.gni")
 
 rtc_library("metric_metadata_keys") {
   testonly = true
-  sources = [
-    "metric_metadata_keys.cc",
-    "metric_metadata_keys.h",
-  ]
-  deps = [ "../..:test_support" ]
+  sources = [ "metric_metadata_keys.h" ]
 }
 
 if (!build_with_chromium) {
