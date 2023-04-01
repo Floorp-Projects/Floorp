@@ -140,7 +140,6 @@ absl::optional<DataRate> PacketTransmissionAndFeedbackBlock(
 // Scenarios:
 
 void UpdatesTargetRateBasedOnLinkCapacity(absl::string_view test_name = "") {
-  ScopedFieldTrials trial("WebRTC-SendSideBwe-WithOverhead/Enabled/");
   auto factory = CreateFeedbackOnlyFactory();
   Scenario s("googcc_unit/target_capacity" + std::string(test_name), false);
   CallClientConfig config;
@@ -769,9 +768,7 @@ TEST(GoogCcScenario, CutsHighRateInSafeResetTrial) {
 }
 
 TEST(GoogCcScenario, DetectsHighRateInSafeResetTrial) {
-  ScopedFieldTrials trial(
-      "WebRTC-Bwe-SafeResetOnRouteChange/Enabled,ack/"
-      "WebRTC-SendSideBwe-WithOverhead/Enabled/");
+  ScopedFieldTrials trial("WebRTC-Bwe-SafeResetOnRouteChange/Enabled,ack/");
   const DataRate kInitialLinkCapacity = DataRate::KilobitsPerSec(200);
   const DataRate kNewLinkCapacity = DataRate::KilobitsPerSec(800);
   const DataRate kStartRate = DataRate::KilobitsPerSec(300);

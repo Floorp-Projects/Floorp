@@ -665,6 +665,7 @@ if (rtc_include_tests) {
       "../../rtc_base:threading",
       "../../rtc_base:timeutils",
       "../../system_wrappers",
+      "../../test:explicit_key_value_config",
       "../../test:field_trial",
       "../../test:mock_frame_transformer",
       "../../test:mock_transport",

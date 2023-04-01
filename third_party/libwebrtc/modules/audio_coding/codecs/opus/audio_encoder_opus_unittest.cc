@@ -373,9 +373,6 @@ TEST_P(AudioEncoderOpusTest, PacketLossRateUpperBounded) {
 }
 
 TEST_P(AudioEncoderOpusTest, DoNotInvokeSetTargetBitrateIfOverheadUnknown) {
-  test::ScopedFieldTrials override_field_trials(
-      "WebRTC-SendSideBwe-WithOverhead/Enabled/");
-
   auto states = CreateCodec(sample_rate_hz_, 2);
 
   states->encoder->OnReceivedUplinkBandwidth(kDefaultOpusRate * 2,

@@ -778,12 +778,8 @@ TEST_F(CallPerfTest, Bitrate_Kbps_NoPadWithoutMinTransmitBitrate) {
 #endif
 TEST_F(CallPerfTest, MAYBE_KeepsHighBitrateWhenReconfiguringSender) {
   static const uint32_t kInitialBitrateKbps = 400;
+  static const uint32_t kInitialBitrateOverheadKpbs = 6;
   static const uint32_t kReconfigureThresholdKbps = 600;
-
-  // We get lower bitrate than expected by this test if the following field
-  // trial is enabled.
-  test::ScopedKeyValueConfig field_trials(
-      field_trials_, "WebRTC-SendSideBwe-WithOverhead/Disabled/");
 
   class VideoStreamFactory
       : public VideoEncoderConfig::VideoStreamFactoryInterface {
@@ -824,9 +820,10 @@ TEST_F(CallPerfTest, MAYBE_KeepsHighBitrateWhenReconfiguringSender) {
         // First time initialization. Frame size is known.
         // `expected_bitrate` is affected by bandwidth estimation before the
         // first frame arrives to the encoder.
-        uint32_t expected_bitrate = last_set_bitrate_kbps_ > 0
-                                        ? last_set_bitrate_kbps_
-                                        : kInitialBitrateKbps;
+        uint32_t expected_bitrate =
+            last_set_bitrate_kbps_ > 0
+                ? last_set_bitrate_kbps_
+                : kInitialBitrateKbps - kInitialBitrateOverheadKpbs;
         EXPECT_EQ(expected_bitrate, config->startBitrate)
             << "Encoder not initialized at expected bitrate.";
         EXPECT_EQ(kDefaultWidth, config->width);

@@ -375,9 +375,6 @@ RtpVideoSender::RtpVideoSender(
     const FieldTrialsView& field_trials,
     TaskQueueFactory* task_queue_factory)
     : field_trials_(field_trials),
-      send_side_bwe_with_overhead_(!absl::StartsWith(
-          field_trials_.Lookup("WebRTC-SendSideBwe-WithOverhead"),
-          "Disabled")),
       use_frame_rate_for_overhead_(absl::StartsWith(
           field_trials_.Lookup("WebRTC-Video-UseFrameRateForOverhead"),
           "Enabled")),
@@ -409,7 +406,7 @@ RtpVideoSender::RtpVideoSender(
       frame_count_observer_(observers.frame_count_observer) {
   transport_checker_.Detach();
   RTC_DCHECK_EQ(rtp_config_.ssrcs.size(), rtp_streams_.size());
-  if (send_side_bwe_with_overhead_ && has_packet_feedback_)
+  if (has_packet_feedback_)
     transport_->IncludeOverheadInPacedSender();
   // SSRCs are assumed to be sorted in the same order as `rtp_modules`.
   for (uint32_t ssrc : rtp_config_.ssrcs) {
@@ -835,7 +832,7 @@ void RtpVideoSender::OnBitrateUpdated(BitrateAllocationUpdate update,
   DataSize max_total_packet_size = DataSize::Bytes(
       rtp_config_.max_packet_size + transport_overhead_bytes_per_packet_);
   uint32_t payload_bitrate_bps = update.target_bitrate.bps();
-  if (send_side_bwe_with_overhead_ && has_packet_feedback_) {
+  if (has_packet_feedback_) {
     DataRate overhead_rate =
         CalculateOverheadRate(update.target_bitrate, max_total_packet_size,
                               packet_overhead, Frequency::Hertz(framerate));
@@ -869,7 +866,7 @@ void RtpVideoSender::OnBitrateUpdated(BitrateAllocationUpdate update,
   loss_mask_vector_.clear();
 
   uint32_t encoder_overhead_rate_bps = 0;
-  if (send_side_bwe_with_overhead_ && has_packet_feedback_) {
+  if (has_packet_feedback_) {
     // TODO(srte): The packet size should probably be the same as in the
     // CalculateOverheadRate call above (just max_total_packet_size), it doesn't
     // make sense to use different packet rates for different overhead
@@ -882,12 +879,11 @@ void RtpVideoSender::OnBitrateUpdated(BitrateAllocationUpdate update,
         encoder_overhead_rate.bps<uint32_t>(),
         update.target_bitrate.bps<uint32_t>() - encoder_target_rate_bps_);
   }
-  // When the field trial "WebRTC-SendSideBwe-WithOverhead" is enabled
-  // protection_bitrate includes overhead.
   const uint32_t media_rate = encoder_target_rate_bps_ +
                               encoder_overhead_rate_bps +
                               packetization_rate_bps;
   RTC_DCHECK_GE(update.target_bitrate, DataRate::BitsPerSec(media_rate));
+  // `protection_bitrate_bps_` includes overhead.
   protection_bitrate_bps_ = update.target_bitrate.bps() - media_rate;
 }
 
