@@ -338,7 +338,7 @@ void FakeVideoSendStream::ReconfigureVideoEncoder(
   webrtc::InvokeSetParametersCallback(callback, webrtc::RTCError::OK());
 }
 
-void FakeVideoSendStream::UpdateActiveSimulcastLayers(
+void FakeVideoSendStream::StartPerRtpStream(
     const std::vector<bool> active_layers) {
   sending_ = false;
   for (const bool active_layer : active_layers) {

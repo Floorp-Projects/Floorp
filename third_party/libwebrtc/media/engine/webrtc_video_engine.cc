@@ -2439,7 +2439,7 @@ void WebRtcVideoChannel::WebRtcVideoSendStream::UpdateSendState() {
     }
     // This updates what simulcast layers are sending, and possibly starts
     // or stops the VideoSendStream.
-    stream_->UpdateActiveSimulcastLayers(active_layers);
+    stream_->StartPerRtpStream(active_layers);
   } else {
     if (stream_ != nullptr) {
       stream_->Stop();
@@ -2846,7 +2846,7 @@ void WebRtcVideoChannel::WebRtcVideoSendStream::RecreateWebRtcStream() {
 
   parameters_.encoder_config.encoder_specific_settings = NULL;
 
-  // Calls stream_->UpdateActiveSimulcastLayers() to start the VideoSendStream
+  // Calls stream_->StartPerRtpStream() to start the VideoSendStream
   // if necessary conditions are met.
   UpdateSendState();
 
