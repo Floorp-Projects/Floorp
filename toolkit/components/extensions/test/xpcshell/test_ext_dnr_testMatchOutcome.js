@@ -664,6 +664,7 @@ add_task(async function match_request_domains_punycode() {
 });
 
 // Tests: initiatorDomains, excludedInitiatorDomains
+// More tests in: match_initiator_moz_extension.
 add_task(async function match_initiator_domains() {
   await runAsDNRExtension({
     background: async dnrTestUtils => {
@@ -771,6 +772,210 @@ add_task(async function match_initiator_domains() {
       browser.test.notifyPass();
     },
   });
+});
+
+// Tests: initiatorDomains, excludedInitiatorDomains with moz-extension:-URLs.
+add_task(async function match_initiator_moz_extension() {
+  let extension = await runAsDNRExtension({
+    manifest: { browser_specific_settings: { gecko: { id: "other@ext" } } },
+    background: async dnrTestUtils => {
+      const dnr = browser.declarativeNetRequest;
+      const { makeDummyAction, testMatchesRequest } = dnrTestUtils;
+
+      // "modifyHeaders" is the only action that allows multiple rule matches.
+      // But we cannot use "modifyHeaders" because that feature depends on
+      // access to "triggering principal". Fortunately, the two test rules in
+      // this test case are mutually exclusive, so the block action works.
+      // TODO bug 1825824: change to makeDummyAction("modifyHeaders").
+      const action = makeDummyAction("block");
+
+      const thisExtensionUUID = location.hostname;
+      await dnr.updateSessionRules({
+        addRules: [
+          {
+            id: 1,
+            condition: {
+              initiatorDomains: [thisExtensionUUID],
+            },
+            action,
+          },
+          {
+            id: 2,
+            condition: {
+              excludedInitiatorDomains: [thisExtensionUUID],
+            },
+            action,
+          },
+        ],
+      });
+
+      const url = "https://do.not.look.here/look_at_initator_instead";
+      const type = "other";
+      // Sanity check with non-moz-extension:-schemes as initiator.
+      await testMatchesRequest(
+        { url, type, initiator: `https://${thisExtensionUUID}/` },
+        [1],
+        "https:+UUID matches initiatorDomains"
+      );
+      await testMatchesRequest(
+        { url, type, initiator: "https://random-uuid-here/" },
+        [2],
+        "https:+UUID matches excludedInitiatorDomains"
+      );
+      // Now test with moz-extension: as initiator.
+      await testMatchesRequest(
+        { url, type, initiator: location.origin },
+        [1],
+        "moz-extension: initiator matches when it should"
+      );
+      await testMatchesRequest(
+        { url, type, initiator: `moz-extension://random-uuid-here/` },
+        [],
+        "moz-extension: from unrelated extension cannot match by default"
+      );
+
+      browser.test.onMessage.addListener(async msg => {
+        browser.test.assertEq("test_with_pref", msg, "expected msg");
+        await testMatchesRequest(
+          { url, type, initiator: `moz-extension://random-uuid-here/` },
+          [2],
+          "With pref, moz-extension: from unrelated extension can match"
+        );
+        browser.test.sendMessage("test_with_pref:done");
+      });
+
+      // Notify to continue. We don't exit yet due to unloadTestAtEnd:false
+      browser.test.notifyPass();
+    },
+    // Continue running the DNR extension because we want to test the current
+    // DNR rules with other extensions.
+    unloadTestAtEnd: false,
+  });
+
+  info("Testing foreign moz-extension request within same ext, with pref on");
+  await runWithPrefs(
+    [["extensions.dnr.match_requests_from_other_extensions", true]],
+    async () => {
+      extension.sendMessage("test_with_pref");
+      await extension.awaitMessage("test_with_pref:done");
+    }
+  );
+
+  const otherExtensionUUID = extension.uuid;
+
+  await runAsDNRExtension({
+    manifest: {
+      // Pass the DNR extension UUID to this extension.
+      description: otherExtensionUUID,
+    },
+    background: async () => {
+      const otherExtensionUUID = browser.runtime.getManifest().description;
+      const dnr = browser.declarativeNetRequest;
+
+      const url = "https://do.not.look.here/look_at_initator_instead";
+      const type = "other";
+
+      browser.test.assertDeepEq(
+        { matchedRules: [] },
+        await dnr.testMatchOutcome({ url, type, initiator: location.origin }),
+        "testMatchOutcome excludes other extensions by default"
+      );
+      browser.test.assertDeepEq(
+        { matchedRules: [] },
+        await dnr.testMatchOutcome(
+          { url, type, initiator: location.origin },
+          { includeOtherExtensions: true }
+        ),
+        "No matches when initiator is moz-extension:, different from DNR ext"
+      );
+      browser.test.assertDeepEq(
+        {
+          matchedRules: [
+            { ruleId: 1, rulesetId: "_session", extensionId: "other@ext" },
+          ],
+        },
+        await dnr.testMatchOutcome(
+          { url, type, initiator: `moz-extension://${otherExtensionUUID}` },
+          { includeOtherExtensions: true }
+        ),
+        "Simulated moz-extension: for original extension finds a match"
+      );
+
+      browser.test.notifyPass();
+    },
+  });
+
+  info("Testing foreign moz-extension request in other ext, with pref on");
+  await runWithPrefs(
+    [["extensions.dnr.match_requests_from_other_extensions", true]],
+    async () => {
+      await runAsDNRExtension({
+        manifest: {
+          // Pass the DNR extension UUID to this extension.
+          description: otherExtensionUUID,
+        },
+        background: async () => {
+          const otherExtensionUUID = browser.runtime.getManifest().description;
+          const dnr = browser.declarativeNetRequest;
+
+          const url = "https://do.not.look.here/look_at_initator_instead";
+          const type = "other";
+
+          // Sanity check: testMatchOutcome for moz-extension:-URL different
+          // from the DNR extension and the current test extension.
+          browser.test.assertDeepEq(
+            {
+              matchedRules: [
+                { ruleId: 2, rulesetId: "_session", extensionId: "other@ext" },
+              ],
+            },
+            await dnr.testMatchOutcome(
+              { url, type, initiator: "moz-extension://random-uuid-here/" },
+              { includeOtherExtensions: true }
+            ),
+            "With pref, moz-extension: from unrelated extensions can match"
+          );
+
+          // Usually, DNR does not affect requests from other extensions. That
+          // was checked in the previous test extension (without pref override).
+          // Here, we check that with the pref override, testMatchOutcome can
+          // return matches from other extensions for the given extension UUID.
+          browser.test.assertDeepEq(
+            {
+              matchedRules: [
+                { ruleId: 2, rulesetId: "_session", extensionId: "other@ext" },
+              ],
+            },
+            await dnr.testMatchOutcome(
+              { url, type, initiator: location.origin },
+              { includeOtherExtensions: true }
+            ),
+            "With pref, moz-extension:-initiator different from DNR ext matches"
+          );
+
+          // Identical test as in the previous test extension (that ran without
+          // the pref override). This verifies that the pref does not affect the
+          // behavior of request matching for requests within that extension.
+          browser.test.assertDeepEq(
+            {
+              matchedRules: [
+                { ruleId: 1, rulesetId: "_session", extensionId: "other@ext" },
+              ],
+            },
+            await dnr.testMatchOutcome(
+              { url, type, initiator: `moz-extension://${otherExtensionUUID}` },
+              { includeOtherExtensions: true }
+            ),
+            "With pref, moz-extension: for DNR ext still matches"
+          );
+
+          browser.test.notifyPass();
+        },
+      });
+    }
+  );
+
+  await extension.unload();
 });
 
 // Tests: urlFilter. For more comprehensive tests, see
