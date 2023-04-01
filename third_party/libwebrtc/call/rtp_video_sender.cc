@@ -515,6 +515,17 @@ void RtpVideoSender::SetActiveModulesLocked(
       // prevent any stray packets in the pacer from asynchronously arriving
       // to a disabled module.
       transport_->packet_router()->RemoveSendRtpModule(&rtp_module);
+
+      // Clear the pacer queue of any packets pertaining to this module.
+      transport_->packet_sender()->RemovePacketsForSsrc(rtp_module.SSRC());
+      if (rtp_module.RtxSsrc().has_value()) {
+        transport_->packet_sender()->RemovePacketsForSsrc(
+            *rtp_module.RtxSsrc());
+      }
+      if (rtp_module.FlexfecSsrc().has_value()) {
+        transport_->packet_sender()->RemovePacketsForSsrc(
+            *rtp_module.FlexfecSsrc());
+      }
     }
 
     // If set to false this module won't send media.

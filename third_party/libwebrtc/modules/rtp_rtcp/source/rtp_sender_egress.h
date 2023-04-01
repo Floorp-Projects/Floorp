@@ -49,6 +49,8 @@ class RtpSenderEgress {
 
     void EnqueuePackets(
         std::vector<std::unique_ptr<RtpPacketToSend>> packets) override;
+    // Since we don't pace packets, there's no pending packets to remove.
+    void RemovePacketsForSsrc(uint32_t ssrc) override {}
 
    private:
     void PrepareForSend(RtpPacketToSend* packet);

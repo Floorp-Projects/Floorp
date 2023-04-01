@@ -102,6 +102,7 @@ class MockRtpPacketPacer : public RtpPacketSender {
               EnqueuePackets,
               (std::vector<std::unique_ptr<RtpPacketToSend>>),
               (override));
+  MOCK_METHOD(void, RemovePacketsForSsrc, (uint32_t), (override));
 };
 
 }  // namespace
