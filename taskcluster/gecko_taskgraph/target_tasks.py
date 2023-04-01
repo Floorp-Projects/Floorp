@@ -836,6 +836,25 @@ def make_desktop_nightly_filter(platforms):
     return filter
 
 
+@_target_task("sp-perftests")
+def target_tasks_speedometer_tests(full_task_graph, parameters, graph_config):
+    def filter(task):
+        platform = task.attributes.get("test_platform")
+        attributes = task.attributes
+        if attributes.get("unittest_suite") != "raptor":
+            return False
+        if "windows10-32" not in platform:
+            try_name = attributes.get("raptor_try_name")
+            if (
+                "browsertime" in try_name
+                and "speedometer" in try_name
+                and "chrome" in try_name
+            ):
+                return True
+
+    return [l for l, t in full_task_graph.tasks.items() if filter(t)]
+
+
 @_target_task("nightly_linux")
 def target_tasks_nightly_linux(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a nightly build of linux. The
