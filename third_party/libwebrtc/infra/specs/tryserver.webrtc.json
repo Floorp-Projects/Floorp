@@ -2296,6 +2296,9 @@
         "test_id_prefix": "ninja://net/dcsctp:dcsctp_unittests/"
       },
       {
+        "args": [
+          "--quick"
+        ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
           "args": [],
@@ -2379,7 +2382,8 @@
               "cpu": "x86-64",
               "os": "Ubuntu-18.04"
             }
-          ]
+          ],
+          "shards": 4
         },
         "test_id_prefix": "ninja://pc:svc_tests/"
       },
@@ -2423,7 +2427,8 @@
               "cpu": "x86-64",
               "os": "Ubuntu-18.04"
             }
-          ]
+          ],
+          "shards": 4
         },
         "test_id_prefix": "ninja://:video_engine_tests/"
       },

@@ -100,6 +100,17 @@ ABSL_FLAG(std::string,
           "Path to collect trace events (json file) for chrome://tracing. "
           "If not set, events aren't captured.");
 
+ABSL_FLAG(std::string,
+          test_launcher_shard_index,
+          "",
+          "Index of the test shard to run, from 0 to "
+          "the value specified with --test_launcher_total_shards.");
+
+ABSL_FLAG(std::string,
+          test_launcher_total_shards,
+          "",
+          "Total number of shards.");
+
 namespace webrtc {
 
 namespace {
@@ -126,6 +137,19 @@ class TestMainImpl : public TestMain {
 
     rtc::LogMessage::SetLogToStderr(absl::GetFlag(FLAGS_logs) ||
                                     absl::GetFlag(FLAGS_verbose));
+
+    // The sharding arguments take precedence over the sharding environment
+    // variables.
+    if (!absl::GetFlag(FLAGS_test_launcher_shard_index).empty() &&
+        !absl::GetFlag(FLAGS_test_launcher_total_shards).empty()) {
+      std::string shard_index =
+          "GTEST_SHARD_INDEX=" + absl::GetFlag(FLAGS_test_launcher_shard_index);
+      std::string total_shards =
+          "GTEST_TOTAL_SHARDS=" +
+          absl::GetFlag(FLAGS_test_launcher_total_shards);
+      putenv(shard_index.data());
+      putenv(total_shards.data());
+    }
 
     // InitFieldTrialsFromString stores the char*, so the char array must
     // outlive the application.
