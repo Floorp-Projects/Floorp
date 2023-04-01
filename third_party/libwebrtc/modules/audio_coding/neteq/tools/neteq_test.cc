@@ -67,11 +67,11 @@ NetEqTest::NetEqTest(const NetEq::Config& config,
                      std::unique_ptr<NetEqInput> input,
                      std::unique_ptr<AudioSink> output,
                      Callbacks callbacks)
-    : clock_(0),
+    : input_(std::move(input)),
+      clock_(Timestamp::Millis(input_->NextEventTime().value_or(0))),
       neteq_(neteq_factory
                  ? neteq_factory->CreateNetEq(config, decoder_factory, &clock_)
                  : CreateNetEq(config, &clock_, decoder_factory)),
-      input_(std::move(input)),
       output_(std::move(output)),
       callbacks_(callbacks),
       sample_rate_hz_(config.sample_rate_hz),
@@ -99,7 +99,7 @@ int64_t NetEqTest::Run() {
 NetEqTest::SimulationStepResult NetEqTest::RunToNextGetAudio() {
   SimulationStepResult result;
   const int64_t start_time_ms = *input_->NextEventTime();
-  int64_t time_now_ms = start_time_ms;
+  int64_t time_now_ms = clock_.CurrentTime().ms();
   current_state_.packet_iat_ms.clear();
 
   while (!input_->ended()) {
