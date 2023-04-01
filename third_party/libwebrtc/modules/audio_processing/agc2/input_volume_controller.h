@@ -82,7 +82,7 @@ class InputVolumeController final {
   void Initialize();
 
   // Sets the applied input volume.
-  void set_stream_analog_level(int level);
+  void SetAppliedInputVolume(int level);
 
   // TODO(bugs.webrtc.org/7494): Add argument for the applied input volume and
   // remove `set_stream_analog_level()`.
@@ -101,13 +101,11 @@ class InputVolumeController final {
   void Process(float speech_probability,
                absl::optional<float> speech_level_dbfs);
 
-  // TODO(bugs.webrtc.org/7494): Return recommended input volume and remove
-  // `recommended_analog_level()`.
   // Returns the recommended input volume. If the input volume contoller is
   // disabled, returns the input volume set via the latest
-  // `set_stream_analog_level()` call. Must be called after
-  // `AnalyzePreProcess()` and `Process()`.
-  int recommended_analog_level() const { return recommended_input_volume_; }
+  // `SetAppliedInputVolume()` call. Must be called after `AnalyzePreProcess()`
+  // and `Process()`.
+  int recommended_input_volume() const { return recommended_input_volume_; }
 
   // Stores whether the capture output will be used or not. Call when the
   // capture stream output has been flagged to be used/not-used. If unused, the
@@ -144,15 +142,17 @@ class InputVolumeController final {
   // Minimum input volume that can be recommended.
   const int min_input_volume_;
 
-  // TODO(bugs.webrtc.org/7494): Create a separate member for the applied input
-  // volume.
   // TODO(bugs.webrtc.org/7494): Once
   // `AudioProcessingImpl::recommended_stream_analog_level()` becomes a trivial
   // getter, leave uninitialized.
-  // Recommended input volume. After `set_stream_analog_level()` is called it
-  // holds the observed input volume. Possibly updated by `AnalyzePreProcess()`
-  // and `Process()`; after these calls, holds the recommended input volume.
+  // Recommended input volume. After `SetAppliedInputVolume()` is called it
+  // holds holds the observed input volume. Possibly updated by
+  // `AnalyzePreProcess()` and `Process()`; after these calls, holds the
+  // recommended input volume.
   int recommended_input_volume_ = 0;
+  // Applied input volume. After `SetAppliedInputVolume()` is called it holds
+  // the current applied volume.
+  int applied_input_volume_ = 0;
 
   bool capture_output_used_;
 
