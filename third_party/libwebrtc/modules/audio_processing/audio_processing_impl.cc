@@ -830,6 +830,10 @@ void AudioProcessingImpl::HandleCaptureOutputUsedSetting(
     submodules_.noise_suppressor->SetCaptureOutputUsage(
         capture_.capture_output_used);
   }
+  if (submodules_.gain_controller2) {
+    submodules_.gain_controller2->SetCaptureOutputUsed(
+        capture_.capture_output_used);
+  }
 }
 
 void AudioProcessingImpl::SetRuntimeSetting(RuntimeSetting setting) {
@@ -1001,7 +1005,9 @@ void AudioProcessingImpl::HandleCaptureRuntimeSettings() {
         // TODO(bugs.chromium.org/9138): Log setting handling by Aec Dump.
         break;
       case RuntimeSetting::Type::kCaptureCompressionGain: {
-        if (!submodules_.agc_manager) {
+        if (!submodules_.agc_manager &&
+            !(submodules_.gain_controller2 &&
+              config_.gain_controller2.input_volume_controller.enabled)) {
           float value;
           setting.GetFloat(&value);
           int int_value = static_cast<int>(value + .5f);
@@ -1337,6 +1343,16 @@ int AudioProcessingImpl::ProcessCaptureStreamLocked() {
     submodules_.agc_manager->AnalyzePreProcess(*capture_buffer);
   }
 
+  if (submodules_.gain_controller2 &&
+      config_.gain_controller2.input_volume_controller.enabled) {
+    // Expect the volume to be available if the input controller is enabled.
+    RTC_DCHECK(capture_.applied_input_volume.has_value());
+    if (capture_.applied_input_volume.has_value()) {
+      submodules_.gain_controller2->Analyze(*capture_.applied_input_volume,
+                                            *capture_buffer);
+    }
+  }
+
   if (submodule_states_.CaptureMultiBandSubModulesActive() &&
       SampleRateSupportsMultiBand(
           capture_nonlocked_.capture_processing_format.sample_rate_hz())) {
@@ -1490,6 +1506,8 @@ int AudioProcessingImpl::ProcessCaptureStreamLocked() {
     }
 
     if (submodules_.gain_controller2) {
+      // TODO(bugs.webrtc.org/7494): Let AGC2 detect applied input volume
+      // changes.
       submodules_.gain_controller2->Process(
           voice_probability, capture_.applied_input_volume_changed,
           capture_buffer);
@@ -1819,6 +1837,13 @@ void AudioProcessingImpl::UpdateRecommendedInputVolumeLocked() {
     return;
   }
 
+  if (submodules_.gain_controller2 &&
+      config_.gain_controller2.input_volume_controller.enabled) {
+    capture_.recommended_input_volume =
+        submodules_.gain_controller2->GetRecommendedInputVolume();
+    return;
+  }
+
   capture_.recommended_input_volume = capture_.applied_input_volume;
 }
 
@@ -2017,6 +2042,16 @@ void AudioProcessingImpl::InitializeEchoController() {
 }
 
 void AudioProcessingImpl::InitializeGainController1() {
+  if (config_.gain_controller2.enabled &&
+      config_.gain_controller2.input_volume_controller.enabled &&
+      config_.gain_controller1.enabled &&
+      (config_.gain_controller1.mode ==
+           AudioProcessing::Config::GainController1::kAdaptiveAnalog ||
+       config_.gain_controller1.analog_gain_controller.enabled)) {
+    RTC_LOG(LS_ERROR) << "APM configuration not valid: "
+                      << "Multiple input volume controllers enabled.";
+  }
+
   if (!config_.gain_controller1.enabled) {
     submodules_.agc_manager.reset();
     submodules_.gain_control.reset();
@@ -2090,6 +2125,8 @@ void AudioProcessingImpl::InitializeGainController2(bool config_has_changed) {
     submodules_.gain_controller2 = std::make_unique<GainController2>(
         config_.gain_controller2, proc_fullband_sample_rate_hz(),
         num_input_channels(), use_internal_vad);
+    submodules_.gain_controller2->SetCaptureOutputUsed(
+        capture_.capture_output_used);
   }
 }
 
