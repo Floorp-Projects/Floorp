@@ -86,22 +86,24 @@ int CountActiveStreams(const webrtc::VideoCodec& codec) {
   return active_streams_count;
 }
 
-int VerifyCodec(const webrtc::VideoCodec* inst) {
-  if (inst == nullptr) {
+int VerifyCodec(const webrtc::VideoCodec* codec_settings) {
+  if (codec_settings == nullptr) {
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
-  if (inst->maxFramerate < 1) {
+  if (codec_settings->maxFramerate < 1) {
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
   // allow zero to represent an unspecified maxBitRate
-  if (inst->maxBitrate > 0 && inst->startBitrate > inst->maxBitrate) {
+  if (codec_settings->maxBitrate > 0 &&
+      codec_settings->startBitrate > codec_settings->maxBitrate) {
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
-  if (inst->width <= 1 || inst->height <= 1) {
+  if (codec_settings->width <= 1 || codec_settings->height <= 1) {
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
-  if (inst->codecType == webrtc::kVideoCodecVP8 &&
-      inst->VP8().automaticResizeOn && CountActiveStreams(*inst) > 1) {
+  if (codec_settings->codecType == webrtc::kVideoCodecVP8 &&
+      codec_settings->VP8().automaticResizeOn &&
+      CountActiveStreams(*codec_settings) > 1) {
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
   return WEBRTC_VIDEO_CODEC_OK;
@@ -299,7 +301,7 @@ int SimulcastEncoderAdapter::Release() {
 }
 
 int SimulcastEncoderAdapter::InitEncode(
-    const VideoCodec* inst,
+    const VideoCodec* codec_settings,
     const VideoEncoder::Settings& settings) {
   RTC_DCHECK_RUN_ON(&encoder_queue_);
 
@@ -307,15 +309,15 @@ int SimulcastEncoderAdapter::InitEncode(
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
 
-  int ret = VerifyCodec(inst);
+  int ret = VerifyCodec(codec_settings);
   if (ret < 0) {
     return ret;
   }
 
   Release();
 
-  codec_ = *inst;
-  total_streams_count_ = CountAllStreams(*inst);
+  codec_ = *codec_settings;
+  total_streams_count_ = CountAllStreams(*codec_settings);
 
   // TODO(ronghuawu): Remove once this is handled in LibvpxVp8Encoder.
   if (codec_.qpMax < kDefaultMinQp) {
@@ -349,7 +351,7 @@ int SimulcastEncoderAdapter::InitEncode(
   //   (active_streams_count >= 1). SEA creates N=active_streams_count encoders
   //   and configures each to produce a single stream.
 
-  int active_streams_count = CountActiveStreams(*inst);
+  int active_streams_count = CountActiveStreams(*codec_settings);
   // If we only have a single active layer it is better to create an encoder
   // with only one configured layer than creating it with all-but-one disabled
   // layers because that way we control scaling.

@@ -1097,7 +1097,8 @@ class VideoStreamEncoderTest : public ::testing::Test {
       quality_scaling_ = b;
     }
 
-    void SetRequestedResolutionAlignment(int requested_resolution_alignment) {
+    void SetRequestedResolutionAlignment(
+        uint32_t requested_resolution_alignment) {
       MutexLock lock(&local_mutex_);
       requested_resolution_alignment_ = requested_resolution_alignment;
     }
@@ -1331,7 +1332,7 @@ class VideoStreamEncoderTest : public ::testing::Test {
     int last_input_width_ RTC_GUARDED_BY(local_mutex_) = 0;
     int last_input_height_ RTC_GUARDED_BY(local_mutex_) = 0;
     bool quality_scaling_ RTC_GUARDED_BY(local_mutex_) = true;
-    int requested_resolution_alignment_ RTC_GUARDED_BY(local_mutex_) = 1;
+    uint32_t requested_resolution_alignment_ RTC_GUARDED_BY(local_mutex_) = 1;
     bool apply_alignment_to_all_simulcast_layers_ RTC_GUARDED_BY(local_mutex_) =
         false;
     bool is_hardware_accelerated_ RTC_GUARDED_BY(local_mutex_) = false;
@@ -2472,7 +2473,7 @@ class ResolutionAlignmentTest
         scale_factors_(::testing::get<1>(GetParam())) {}
 
  protected:
-  const int requested_alignment_;
+  const uint32_t requested_alignment_;
   const std::vector<double> scale_factors_;
 };
 
@@ -2538,8 +2539,8 @@ TEST_P(ResolutionAlignmentTest, SinkWantsAlignmentApplied) {
   EXPECT_EQ(codec.numberOfSimulcastStreams, num_streams);
   // Frame size should be a multiple of the requested alignment.
   for (int i = 0; i < codec.numberOfSimulcastStreams; ++i) {
-    EXPECT_EQ(codec.simulcastStream[i].width % requested_alignment_, 0);
-    EXPECT_EQ(codec.simulcastStream[i].height % requested_alignment_, 0);
+    EXPECT_EQ(codec.simulcastStream[i].width % requested_alignment_, 0u);
+    EXPECT_EQ(codec.simulcastStream[i].height % requested_alignment_, 0u);
     // Aspect ratio should match.
     EXPECT_EQ(codec.width * codec.simulcastStream[i].height,
               codec.height * codec.simulcastStream[i].width);
