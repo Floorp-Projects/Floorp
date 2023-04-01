@@ -162,4 +162,10 @@ void InputVolumeStatsReporter::LogVolumeUpdateStats() const {
   }
 }
 
+void UpdateHistogramOnRecommendedInputVolumeChangeToMatchTarget(int volume) {
+  RTC_HISTOGRAM_COUNTS_LINEAR(
+      "WebRTC.Audio.Apm.RecommendedInputVolume.OnChangeToMatchTarget", volume,
+      1, kMaxInputVolume, 50);
+}
+
 }  // namespace webrtc

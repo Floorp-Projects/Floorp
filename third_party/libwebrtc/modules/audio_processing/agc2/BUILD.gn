@@ -208,6 +208,7 @@ rtc_library("input_volume_controller") {
   deps = [
     ":clipping_predictor",
     ":gain_map",
+    ":input_volume_stats_reporter",
     "..:api",
     "..:audio_buffer",
     "..:audio_frame_view",

@@ -17,6 +17,7 @@
 #include "common_audio/include/audio_util.h"
 #include "modules/audio_processing/agc/gain_control.h"
 #include "modules/audio_processing/agc2/gain_map_internal.h"
+#include "modules/audio_processing/agc2/input_volume_stats_reporter.h"
 #include "modules/audio_processing/include/audio_frame_view.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
@@ -650,9 +651,8 @@ void AgcManagerDirect::Process(const AudioBuffer& audio_buffer,
   if (volume_after_clipping_handling != recommended_input_volume_) {
     // The recommended input volume was adjusted in order to match the target
     // level.
-    RTC_HISTOGRAM_COUNTS_LINEAR(
-        "WebRTC.Audio.Apm.RecommendedInputVolume.OnChangeToMatchTarget",
-        recommended_input_volume_, 1, kMaxMicLevel, 50);
+    UpdateHistogramOnRecommendedInputVolumeChangeToMatchTarget(
+        recommended_input_volume_);
   }
 }
 
