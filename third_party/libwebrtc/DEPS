@@ -93,11 +93,14 @@ deps = {
   'src/buildtools/reclient': {
     'packages': [
       {
+         # https://chrome-infra-packages.appspot.com/p/infra/rbe/client/
         'package': 'infra/rbe/client/${{platform}}',
         'version': Var('reclient_version'),
       }
     ],
     'dep_type': 'cipd',
+    # Reclient doesn't have linux-arm64 package.
+    'condition': 'not (host_os == "linux" and host_cpu == "arm64")',
   },
 
   'src/buildtools/clang_format/script':
