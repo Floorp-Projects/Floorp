@@ -88,16 +88,15 @@ Who is the right person to ask for a review?
 
 -  If you have a mentored bug: ask your mentor. They will help, or can
    easily find out. It might be them!
--  Run ``hg blame`` on the file and look for the people who have touched
+-  Run ``{hg, git} blame`` on the file and look for the people who have touched
    the functions you're working on. They too are good candidates.
-   Running ``hg log`` and looking for regular reviewers might be a
+   Running ``{hg, git} log`` and looking for regular reviewers might be a
    solution too.
 -  The bug itself may contain a clear indication of the best person to
    ask for a review
 -  Are there related bugs on similar topics? The reviewer in those bugs
    might be another good choice
--  We have an out of date `list of
-   modules <https://wiki.mozilla.org/Modules>`_, which lists peers and
+-  We have a :ref:`list of modules <Governance>`, which lists peers and
    owners for the module. Some of these will be good reviewers. In a
    worst case scenario, set the module owner as the reviewer, asking
    them in the comments to pick someone more suitable
@@ -143,8 +142,7 @@ Getting code into Firefox
 
 Once your patch has been accepted, it is ready to go. Before it can be
 merged into the tree, your patch will need to complete a successful run
-through our `try
-server <https://wiki.mozilla.org/ReleaseEngineering/TryServer>`_,
+through our :ref:`try server <Pushing to Try>`,
 making sure there are no unexpected regressions. If you don't have try
 server access already, your mentor, or the person who reviewed your
 patch, will be able to help.
