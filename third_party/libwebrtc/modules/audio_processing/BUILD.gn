@@ -138,11 +138,14 @@ rtc_library("gain_controller2") {
     "../../rtc_base:logging",
     "../../rtc_base:stringutils",
     "../../system_wrappers:field_trial",
-    "agc2:adaptive_digital",
+    "agc2:adaptive_digital_gain_applier",
     "agc2:cpu_features",
     "agc2:fixed_digital",
     "agc2:gain_applier",
     "agc2:input_volume_controller",
+    "agc2:noise_level_estimator",
+    "agc2:saturation_protector",
+    "agc2:speech_level_estimator",
     "agc2:vad_wrapper",
   ]
 }

@@ -93,10 +93,11 @@ class InputVolumeController final {
   void AnalyzePreProcess(const AudioBuffer& audio_buffer);
 
   // TODO(bugs.webrtc.org/7494): Rename, audio not passed to the method anymore.
-  // Adjusts the recommended input volume upwards/downwards based on
-  // `speech_level_dbfs`. Must be called after `AnalyzePreProcess()`. The value
-  // of `speech_probability` is expected to be in the range [0.0f, 1.0f] and
-  // `speech_level_dbfs` in the the range [-90.f, 30.0f].
+  // Adjusts the recommended input volume upwards/downwards based on the result
+  // of `AnalyzePreProcess()` and on  `speech_level_dbfs` (if specified). Must
+  // be called after `AnalyzePreProcess()`. The value of `speech_probability` is
+  // expected to be in the range [0, 1] and `speech_level_dbfs` in the the range
+  // [-90, 30].
   void Process(float speech_probability,
                absl::optional<float> speech_level_dbfs);
 
@@ -205,10 +206,10 @@ class MonoInputVolumeController {
   void HandleClipping(int clipped_level_step);
 
   // TODO(bugs.webrtc.org/7494): Rename, audio not passed to the method anymore.
-  // Adjusts the recommended input volume upwards/downwards depending on
-  // whether `rms_error_dbfs` is positive or negative. Updates are only allowed
-  // for active speech segments and when `rms_error_dbfs` is not empty. Must be
-  // called after `HandleClipping()`.
+  // Adjusts the recommended input volume upwards/downwards depending on the
+  // result of `HandleClipping()` and on `rms_error_dbfs`. Updates are only
+  // allowed for active speech segments and when `rms_error_dbfs` is not empty.
+  // Must be called after `HandleClipping()`.
   void Process(absl::optional<int> rms_error_dbfs, float speech_probability);
 
   // Returns the recommended input volume. Must be called after `Process()`.

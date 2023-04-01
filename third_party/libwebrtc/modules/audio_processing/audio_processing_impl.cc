@@ -2308,7 +2308,8 @@ void AudioProcessingImpl::InitializeVoiceActivityDetector(
   const bool use_vad =
       transient_suppressor_vad_mode_ == TransientSuppressor::VadMode::kRnnVad &&
       config_.gain_controller2.enabled &&
-      config_.gain_controller2.adaptive_digital.enabled;
+      (config_.gain_controller2.adaptive_digital.enabled ||
+       config_.gain_controller2.input_volume_controller.enabled);
   if (!use_vad) {
     submodules_.voice_activity_detector.reset();
     return;
