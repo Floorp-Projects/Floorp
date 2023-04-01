@@ -15,12 +15,6 @@
 namespace webrtc {
 namespace webrtc_pc_e2e {
 
-// TODO(bugs.webrtc.org/14757): Move this function to a better location once
-// kExperimentalTestNameMetadataKey has been removed (this is here just for
-// convenience since it is the value of the kExperimentalTestNameMetadataKey
-// metadata entries).
-std::string GetCurrentTestName();
-
 // All metadata fields are present only if applicable for particular metric.
 class MetricMetadataKey {
  public:
