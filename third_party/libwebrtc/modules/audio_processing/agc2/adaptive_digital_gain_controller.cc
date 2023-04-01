@@ -79,10 +79,7 @@ void AdaptiveDigitalGainController::Process(AudioFrameView<float> frame,
   speech_level_estimator_.Update(levels.rms_dbfs, levels.peak_dbfs,
                                  info.speech_probability);
   info.speech_level_dbfs = speech_level_estimator_.level_dbfs();
-  info.speech_level_reliable = speech_level_estimator_.IsConfident();
-  apm_data_dumper_->DumpRaw("agc2_speech_level_dbfs", info.speech_level_dbfs);
-  apm_data_dumper_->DumpRaw("agc2_speech_level_reliable",
-                            info.speech_level_reliable);
+  info.speech_level_reliable = speech_level_estimator_.is_confident();
 
   info.noise_rms_dbfs = noise_level_estimator_->Analyze(frame);
   apm_data_dumper_->DumpRaw("agc2_noise_rms_dbfs", info.noise_rms_dbfs);
@@ -106,7 +103,7 @@ void AdaptiveDigitalGainController::HandleInputGainChange() {
 
 absl::optional<float>
 AdaptiveDigitalGainController::GetSpeechLevelDbfsIfConfident() const {
-  return speech_level_estimator_.IsConfident()
+  return speech_level_estimator_.is_confident()
              ? absl::optional<float>(speech_level_estimator_.level_dbfs())
              : absl::nullopt;
 }
