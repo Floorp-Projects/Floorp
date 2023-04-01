@@ -112,14 +112,9 @@ void RTPSenderVideoFrameTransformerDelegate::Init() {
       rtc::scoped_refptr<TransformedFrameCallback>(this), ssrc_);
 }
 
-bool RTPSenderVideoFrameTransformerDelegate::TransformFrame(
-    int payload_type,
-    absl::optional<VideoCodecType> codec_type,
-    uint32_t rtp_timestamp,
-    const EncodedImage& encoded_image,
-    RTPVideoHeader video_header,
-    absl::optional<int64_t> expected_retransmission_time_ms) {
+void RTPSenderVideoFrameTransformerDelegate::EnsureEncoderQueueCreated() {
   TaskQueueBase* current = TaskQueueBase::Current();
+
   if (!encoder_queue_) {
     // Save the current task queue to post the transformed frame for sending
     // once it is transformed. When there is no current task queue, i.e.
@@ -133,6 +128,18 @@ bool RTPSenderVideoFrameTransformerDelegate::TransformFrame(
       encoder_queue_ = owned_encoder_queue_.get();
     }
   }
+}
+
+bool RTPSenderVideoFrameTransformerDelegate::TransformFrame(
+    int payload_type,
+    absl::optional<VideoCodecType> codec_type,
+    uint32_t rtp_timestamp,
+    const EncodedImage& encoded_image,
+    RTPVideoHeader video_header,
+    absl::optional<int64_t> expected_retransmission_time_ms) {
+  EnsureEncoderQueueCreated();
+
+  TaskQueueBase* current = TaskQueueBase::Current();
   // DCHECK that the current queue does not change, or if does then it was due
   // to a hardware encoder fallback and thus there is an owned queue.
   RTC_DCHECK(!current || current == encoder_queue_ || owned_encoder_queue_)
@@ -152,10 +159,9 @@ void RTPSenderVideoFrameTransformerDelegate::OnTransformedFrame(
     std::unique_ptr<TransformableFrameInterface> frame) {
   MutexLock lock(&sender_lock_);
 
-  // The encoder queue normally gets destroyed after the sender;
-  // however, it might still be null by the time a previously queued frame
-  // arrives.
-  if (!sender_ || !encoder_queue_)
+  EnsureEncoderQueueCreated();
+
+  if (!sender_)
     return;
   rtc::scoped_refptr<RTPSenderVideoFrameTransformerDelegate> delegate(this);
   encoder_queue_->PostTask(
