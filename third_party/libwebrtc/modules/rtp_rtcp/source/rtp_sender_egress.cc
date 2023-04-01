@@ -28,14 +28,6 @@ constexpr int kBitrateStatisticsWindowMs = 1000;
 constexpr size_t kRtpSequenceNumberMapMaxEntries = 1 << 13;
 constexpr TimeDelta kUpdateInterval =
     TimeDelta::Millis(kBitrateStatisticsWindowMs);
-
-bool IsTrialSetTo(const FieldTrialsView* field_trials,
-                  absl::string_view name,
-                  absl::string_view value) {
-  FieldTrialBasedConfig default_trials;
-  auto& trials = field_trials ? *field_trials : default_trials;
-  return absl::StartsWith(trials.Lookup(name), value);
-}
 }  // namespace
 
 RtpSenderEgress::NonPacedPacketSender::NonPacedPacketSender(
@@ -81,10 +73,6 @@ RtpSenderEgress::RtpSenderEgress(const RtpRtcpInterface::Configuration& config,
       flexfec_ssrc_(config.fec_generator ? config.fec_generator->FecSsrc()
                                          : absl::nullopt),
       populate_network2_timestamp_(config.populate_network2_timestamp),
-      send_side_bwe_with_overhead_(
-          !IsTrialSetTo(config.field_trials,
-                        "WebRTC-SendSideBwe-WithOverhead",
-                        "Disabled")),
       clock_(config.clock),
       packet_history_(packet_history),
       transport_(config.outgoing_transport),
@@ -422,15 +410,10 @@ void RtpSenderEgress::AddPacketToTransportFeedback(
     const RtpPacketToSend& packet,
     const PacedPacketInfo& pacing_info) {
   if (transport_feedback_observer_) {
-    size_t packet_size = packet.payload_size() + packet.padding_size();
-    if (send_side_bwe_with_overhead_) {
-      packet_size = packet.size();
-    }
-
     RtpPacketSendInfo packet_info;
     packet_info.transport_sequence_number = packet_id;
     packet_info.rtp_timestamp = packet.Timestamp();
-    packet_info.length = packet_size;
+    packet_info.length = packet.size();
     packet_info.pacing_info = pacing_info;
     packet_info.packet_type = packet.packet_type();
 

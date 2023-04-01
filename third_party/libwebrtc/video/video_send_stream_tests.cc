@@ -2694,9 +2694,7 @@ TEST_F(VideoSendStreamTest, ReconfigureBitratesSetsEncoderBitratesCorrectly) {
   // bitrates than expected by this test, due to encoder pushback and subtracted
   // overhead.
   webrtc::test::ScopedKeyValueConfig field_trials(
-      field_trials_,
-      "WebRTC-VideoRateControl/bitrate_adjuster:false/"
-      "WebRTC-SendSideBwe-WithOverhead/Disabled/");
+      field_trials_, "WebRTC-VideoRateControl/bitrate_adjuster:false/");
 
   class EncoderBitrateThresholdObserver : public test::SendTest,
                                           public VideoBitrateAllocatorFactory,
@@ -2722,8 +2720,8 @@ TEST_F(VideoSendStreamTest, ReconfigureBitratesSetsEncoderBitratesCorrectly) {
       EXPECT_LE(codec.startBitrate, codec.maxBitrate);
       if (num_rate_allocator_creations_ == 0) {
         EXPECT_EQ(static_cast<unsigned int>(kMinBitrateKbps), codec.minBitrate);
-        EXPECT_EQ(static_cast<unsigned int>(kStartBitrateKbps),
-                  codec.startBitrate);
+        EXPECT_NEAR(static_cast<unsigned int>(kStartBitrateKbps),
+                    codec.startBitrate, 10);
         EXPECT_EQ(static_cast<unsigned int>(kMaxBitrateKbps), codec.maxBitrate);
       } else if (num_rate_allocator_creations_ == 1) {
         EXPECT_EQ(static_cast<unsigned int>(kLowerMaxBitrateKbps),
@@ -2749,8 +2747,8 @@ TEST_F(VideoSendStreamTest, ReconfigureBitratesSetsEncoderBitratesCorrectly) {
       EXPECT_EQ(0, num_encoder_initializations_);
       EXPECT_EQ(static_cast<unsigned int>(kMinBitrateKbps),
                 codecSettings->minBitrate);
-      EXPECT_EQ(static_cast<unsigned int>(kStartBitrateKbps),
-                codecSettings->startBitrate);
+      EXPECT_NEAR(static_cast<unsigned int>(kStartBitrateKbps),
+                  codecSettings->startBitrate, 10);
       EXPECT_EQ(static_cast<unsigned int>(kMaxBitrateKbps),
                 codecSettings->maxBitrate);
 
@@ -2775,14 +2773,18 @@ TEST_F(VideoSendStreamTest, ReconfigureBitratesSetsEncoderBitratesCorrectly) {
       FakeEncoder::SetRates(parameters);
     }
 
-    void WaitForSetRates(uint32_t expected_bitrate) {
+    void WaitForSetRates(uint32_t expected_bitrate, int abs_error) {
       // Wait for the expected rate to be set. In some cases there can be
       // more than one update pending, in which case we keep waiting
       // until the correct value has been observed.
+      // The target_bitrate_ is reduced by the calculated packet overhead.
       const int64_t start_time = rtc::TimeMillis();
       do {
         MutexLock lock(&mutex_);
-        if (target_bitrate_ == expected_bitrate) {
+
+        int error = target_bitrate_ - expected_bitrate;
+        if ((error < 0 && error >= -abs_error) ||
+            (error >= 0 && error <= abs_error)) {
           return;
         }
       } while (bitrate_changed_event_.Wait(
@@ -2790,7 +2792,7 @@ TEST_F(VideoSendStreamTest, ReconfigureBitratesSetsEncoderBitratesCorrectly) {
                    VideoSendStreamTest::kDefaultTimeout -
                        TimeDelta::Millis(rtc::TimeMillis() - start_time))));
       MutexLock lock(&mutex_);
-      EXPECT_EQ(target_bitrate_, expected_bitrate)
+      EXPECT_NEAR(target_bitrate_, expected_bitrate, abs_error)
           << "Timed out while waiting encoder rate to be set.";
     }
 
@@ -2832,7 +2834,7 @@ TEST_F(VideoSendStreamTest, ReconfigureBitratesSetsEncoderBitratesCorrectly) {
           << "Timed out while waiting for rate allocator to be created.";
       ASSERT_TRUE(init_encode_event_.Wait(VideoSendStreamTest::kDefaultTimeout))
           << "Timed out while waiting for encoder to be configured.";
-      WaitForSetRates(kStartBitrateKbps);
+      WaitForSetRates(kStartBitrateKbps, 80);
       BitrateConstraints bitrate_config;
       bitrate_config.start_bitrate_bps = kIncreasedStartBitrateKbps * 1000;
       bitrate_config.max_bitrate_bps = kIncreasedMaxBitrateKbps * 1000;
@@ -2841,7 +2843,7 @@ TEST_F(VideoSendStreamTest, ReconfigureBitratesSetsEncoderBitratesCorrectly) {
             bitrate_config);
       });
       // Encoder rate is capped by EncoderConfig max_bitrate_bps.
-      WaitForSetRates(kMaxBitrateKbps);
+      WaitForSetRates(kMaxBitrateKbps, 10);
       encoder_config_.max_bitrate_bps = kLowerMaxBitrateKbps * 1000;
       SendTask(task_queue_, [&]() {
         send_stream_->ReconfigureVideoEncoder(encoder_config_.Copy());
@@ -2851,7 +2853,7 @@ TEST_F(VideoSendStreamTest, ReconfigureBitratesSetsEncoderBitratesCorrectly) {
       EXPECT_EQ(2, num_rate_allocator_creations_)
           << "Rate allocator should have been recreated.";
 
-      WaitForSetRates(kLowerMaxBitrateKbps);
+      WaitForSetRates(kLowerMaxBitrateKbps, 10);
       EXPECT_EQ(1, num_encoder_initializations_);
 
       encoder_config_.max_bitrate_bps = kIncreasedMaxBitrateKbps * 1000;
@@ -2865,7 +2867,7 @@ TEST_F(VideoSendStreamTest, ReconfigureBitratesSetsEncoderBitratesCorrectly) {
 
       // Expected target bitrate is the start bitrate set in the call to
       // call_->GetTransportControllerSend()->SetSdpBitrateParameters.
-      WaitForSetRates(kIncreasedStartBitrateKbps);
+      WaitForSetRates(kIncreasedStartBitrateKbps, 10);
       EXPECT_EQ(1, num_encoder_initializations_);
     }
 
@@ -3701,8 +3703,6 @@ TEST_F(VideoSendStreamTest, EncoderConfigMaxFramerateReportedToSource) {
 // testing that the maximum possible target payload rate is smaller than the
 // maximum bandwidth estimate by the overhead rate.
 TEST_F(VideoSendStreamTest, RemoveOverheadFromBandwidth) {
-  test::ScopedFieldTrials override_field_trials(
-      "WebRTC-SendSideBwe-WithOverhead/Enabled/");
   class RemoveOverheadFromBandwidthTest : public test::EndToEndTest,
                                           public test::FakeEncoder {
    public:

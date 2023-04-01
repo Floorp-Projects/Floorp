@@ -178,7 +178,6 @@ class AudioSendStream final : public webrtc::AudioSendStream,
   const bool allocate_audio_without_feedback_;
   const bool force_no_audio_feedback_ = allocate_audio_without_feedback_;
   const bool enable_audio_alr_probing_;
-  const bool send_side_bwe_with_overhead_;
   const AudioAllocationConfig allocation_settings_;
 
   webrtc::AudioSendStream::Config config_

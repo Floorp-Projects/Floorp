@@ -65,10 +65,6 @@ bool IsEnabled(const FieldTrialsView& trials, absl::string_view key) {
   return absl::StartsWith(trials.Lookup(key), "Enabled");
 }
 
-bool IsDisabled(const FieldTrialsView& trials, absl::string_view key) {
-  return absl::StartsWith(trials.Lookup(key), "Disabled");
-}
-
 bool IsRelayed(const rtc::NetworkRoute& route) {
   return route.local.uses_turn() || route.remote.uses_turn();
 }
@@ -107,8 +103,6 @@ RtpTransportControllerSend::RtpTransportControllerSend(
       last_report_block_time_(Timestamp::Millis(clock_->TimeInMilliseconds())),
       reset_feedback_on_route_change_(
           !IsEnabled(*config.trials, "WebRTC-Bwe-NoFeedbackReset")),
-      send_side_bwe_with_overhead_(
-          !IsDisabled(*config.trials, "WebRTC-SendSideBwe-WithOverhead")),
       add_pacing_to_cwin_(
           IsEnabled(*config.trials,
                     "WebRTC-AddPacingToCongestionWindowPushback")),
@@ -554,9 +548,7 @@ void RtpTransportControllerSend::OnAddPacket(
     RTC_DCHECK_RUN_ON(&task_queue_);
     feedback_demuxer_.AddPacket(packet_info);
     transport_feedback_adapter_.AddPacket(
-        packet_info,
-        send_side_bwe_with_overhead_ ? transport_overhead_bytes_per_packet_ : 0,
-        creation_time);
+        packet_info, transport_overhead_bytes_per_packet_, creation_time);
   });
 }
 
