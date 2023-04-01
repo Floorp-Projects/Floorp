@@ -1188,4 +1188,282 @@ TEST(AudioProcessingImplTest,
   EXPECT_EQ(ProcessInputVolume(*apm, kOneFrame, /*initial_volume=*/135), 135);
 }
 
+TEST(AudioProcessingImplInputVolumeControllerExperimentTest,
+     ConfigAdjustedWhenExperimentEnabledAndAgc1AnalogEnabled) {
+  webrtc::test::ScopedFieldTrials field_trials(
+      "WebRTC-Audio-InputVolumeControllerExperiment/"
+      "Enabled,"
+      "enable_clipping_predictor:true,"
+      "clipped_level_min:20,"
+      "clipped_level_step:30,"
+      "clipped_ratio_threshold:0.4,"
+      "clipped_wait_frames:50,"
+      "target_range_max_dbfs:-6,"
+      "target_range_min_dbfs:-70,"
+      "update_input_volume_wait_frames:80,"
+      "speech_probability_threshold:0.9,"
+      "speech_ratio_threshold:1.0/");
+
+  AudioProcessingBuilderForTesting apm_builder;
+
+  // Set a config with analog AGC1 enabled.
+  AudioProcessing::Config config;
+  config.gain_controller1.enabled = true;
+  config.gain_controller1.analog_gain_controller.enabled = true;
+  config.gain_controller1.analog_gain_controller.enable_digital_adaptive = true;
+  config.gain_controller2.enabled = false;
+  config.gain_controller1.mode =
+      AudioProcessing::Config::GainController1::kAdaptiveAnalog;
+
+  EXPECT_FALSE(config.gain_controller2.input_volume_controller.enabled);
+
+  apm_builder.SetConfig(config);
+
+  auto apm = apm_builder.Create();
+  auto adjusted_config = apm->GetConfig();
+
+  // Expect the config to be adjusted.
+  EXPECT_FALSE(adjusted_config.gain_controller1.enabled);
+  EXPECT_FALSE(adjusted_config.gain_controller1.analog_gain_controller.enabled);
+  EXPECT_TRUE(adjusted_config.gain_controller2.enabled);
+  EXPECT_TRUE(adjusted_config.gain_controller2.adaptive_digital.enabled);
+  EXPECT_TRUE(adjusted_config.gain_controller2.input_volume_controller.enabled);
+
+  // Change config back and compare.
+  adjusted_config.gain_controller1.enabled = config.gain_controller1.enabled;
+  adjusted_config.gain_controller1.analog_gain_controller.enabled =
+      config.gain_controller1.analog_gain_controller.enabled;
+  adjusted_config.gain_controller2.enabled = config.gain_controller2.enabled;
+  adjusted_config.gain_controller2.adaptive_digital.enabled =
+      config.gain_controller2.adaptive_digital.enabled;
+  adjusted_config.gain_controller2.input_volume_controller.enabled =
+      config.gain_controller2.input_volume_controller.enabled;
+
+  EXPECT_THAT(adjusted_config.ToString(), ::testing::StrEq(config.ToString()));
+}
+
+TEST(AudioProcessingImplInputVolumeControllerExperimentTest,
+     ConfigAdjustedWhenExperimentEnabledAndHybridAgcEnabled) {
+  webrtc::test::ScopedFieldTrials field_trials(
+      "WebRTC-Audio-InputVolumeControllerExperiment/"
+      "Enabled,"
+      "enable_clipping_predictor:true,"
+      "clipped_level_min:20,"
+      "clipped_level_step:30,"
+      "clipped_ratio_threshold:0.4,"
+      "clipped_wait_frames:50,"
+      "target_range_max_dbfs:-6,"
+      "target_range_min_dbfs:-70,"
+      "update_input_volume_wait_frames:80,"
+      "speech_probability_threshold:0.9,"
+      "speech_ratio_threshold:1.0/");
+
+  AudioProcessingBuilderForTesting apm_builder;
+
+  // Set a config with hybrid AGC enabled.
+  AudioProcessing::Config config;
+  config.gain_controller1.enabled = true;
+  config.gain_controller1.analog_gain_controller.enabled = true;
+  config.gain_controller1.analog_gain_controller.enable_digital_adaptive =
+      false;
+  config.gain_controller2.enabled = true;
+  config.gain_controller2.adaptive_digital.enabled = true;
+  config.gain_controller1.mode =
+      AudioProcessing::Config::GainController1::kAdaptiveAnalog;
+
+  EXPECT_FALSE(config.gain_controller2.input_volume_controller.enabled);
+
+  apm_builder.SetConfig(config);
+
+  auto apm = apm_builder.Create();
+  auto adjusted_config = apm->GetConfig();
+
+  // Expect the config to be adjusted.
+  EXPECT_FALSE(adjusted_config.gain_controller1.enabled);
+  EXPECT_FALSE(adjusted_config.gain_controller1.analog_gain_controller.enabled);
+  EXPECT_TRUE(adjusted_config.gain_controller2.enabled);
+  EXPECT_TRUE(adjusted_config.gain_controller2.adaptive_digital.enabled);
+  EXPECT_TRUE(adjusted_config.gain_controller2.input_volume_controller.enabled);
+
+  // Change config back and compare.
+  adjusted_config.gain_controller1.enabled = config.gain_controller1.enabled;
+  adjusted_config.gain_controller1.analog_gain_controller.enabled =
+      config.gain_controller1.analog_gain_controller.enabled;
+  adjusted_config.gain_controller2.enabled = config.gain_controller2.enabled;
+  adjusted_config.gain_controller2.adaptive_digital.enabled =
+      config.gain_controller2.adaptive_digital.enabled;
+  adjusted_config.gain_controller2.input_volume_controller.enabled =
+      config.gain_controller2.input_volume_controller.enabled;
+
+  EXPECT_THAT(adjusted_config.ToString(), ::testing::StrEq(config.ToString()));
+}
+
+TEST(AudioProcessingImplInputVolumeControllerExperimentTest,
+     ConfigNotAdjustedWhenExperimentEnabledAndAgc1AnalogNotEnabled) {
+  webrtc::test::ScopedFieldTrials field_trials(
+      "WebRTC-Audio-InputVolumeControllerExperiment/"
+      "Enabled,"
+      "enable_clipping_predictor:true,"
+      "clipped_level_min:20,"
+      "clipped_level_step:30,"
+      "clipped_ratio_threshold:0.4,"
+      "clipped_wait_frames:50,"
+      "target_range_max_dbfs:-6,"
+      "target_range_min_dbfs:-70,"
+      "update_input_volume_wait_frames:80,"
+      "speech_probability_threshold:0.9,"
+      "speech_ratio_threshold:1.0/");
+
+  AudioProcessingBuilderForTesting apm_builder;
+
+  // Set a config with analog AGC1 not enabled.
+  AudioProcessing::Config config;
+  config.gain_controller1.enabled = false;
+  config.gain_controller1.analog_gain_controller.enabled = true;
+  config.gain_controller1.analog_gain_controller.enable_digital_adaptive = true;
+  config.gain_controller2.enabled = false;
+  config.gain_controller1.mode =
+      AudioProcessing::Config::GainController1::kAdaptiveAnalog;
+
+  EXPECT_FALSE(config.gain_controller2.input_volume_controller.enabled);
+
+  apm_builder.SetConfig(config);
+
+  auto apm = apm_builder.Create();
+  auto adjusted_config = apm->GetConfig();
+
+  EXPECT_EQ(config.gain_controller1.enabled,
+            adjusted_config.gain_controller1.enabled);
+  EXPECT_EQ(config.gain_controller1.analog_gain_controller.enabled,
+            adjusted_config.gain_controller1.analog_gain_controller.enabled);
+  EXPECT_EQ(config.gain_controller2.enabled,
+            adjusted_config.gain_controller2.enabled);
+  EXPECT_EQ(config.gain_controller2.adaptive_digital.enabled,
+            adjusted_config.gain_controller2.adaptive_digital.enabled);
+  EXPECT_FALSE(
+      adjusted_config.gain_controller2.input_volume_controller.enabled);
+
+  EXPECT_THAT(adjusted_config.ToString(), ::testing::StrEq(config.ToString()));
+}
+
+TEST(AudioProcessingImplInputVolumeControllerExperimentTest,
+     ConfigNotAdjustedWhenExperimentEnabledAndHybridAgcNotEnabled) {
+  webrtc::test::ScopedFieldTrials field_trials(
+      "WebRTC-Audio-InputVolumeControllerExperiment/"
+      "Enabled,"
+      "enable_clipping_predictor:true,"
+      "clipped_level_min:20,"
+      "clipped_level_step:30,"
+      "clipped_ratio_threshold:0.4,"
+      "clipped_wait_frames:50,"
+      "target_range_max_dbfs:-6,"
+      "target_range_min_dbfs:-70,"
+      "update_input_volume_wait_frames:80,"
+      "speech_probability_threshold:0.9,"
+      "speech_ratio_threshold:1.0/");
+
+  AudioProcessingBuilderForTesting apm_builder;
+
+  // Set a config with hybrid AGC analog not enabled.
+  AudioProcessing::Config config;
+  config.gain_controller1.enabled = false;
+  config.gain_controller1.analog_gain_controller.enabled = true;
+  config.gain_controller1.analog_gain_controller.enable_digital_adaptive =
+      false;
+  config.gain_controller2.enabled = true;
+  config.gain_controller2.adaptive_digital.enabled = true;
+  config.gain_controller1.mode =
+      AudioProcessing::Config::GainController1::kAdaptiveAnalog;
+
+  EXPECT_FALSE(config.gain_controller2.input_volume_controller.enabled);
+
+  apm_builder.SetConfig(config);
+
+  auto apm = apm_builder.Create();
+  auto adjusted_config = apm->GetConfig();
+
+  EXPECT_EQ(config.gain_controller1.enabled,
+            adjusted_config.gain_controller1.enabled);
+  EXPECT_EQ(config.gain_controller1.analog_gain_controller.enabled,
+            adjusted_config.gain_controller1.analog_gain_controller.enabled);
+  EXPECT_EQ(config.gain_controller2.enabled,
+            adjusted_config.gain_controller2.enabled);
+  EXPECT_EQ(config.gain_controller2.adaptive_digital.enabled,
+            adjusted_config.gain_controller2.adaptive_digital.enabled);
+  EXPECT_FALSE(
+      adjusted_config.gain_controller2.input_volume_controller.enabled);
+
+  EXPECT_THAT(adjusted_config.ToString(), ::testing::StrEq(config.ToString()));
+}
+
+TEST(AudioProcessingImplInputVolumeControllerExperimentTest,
+     ConfigNotAdjustedWhenExperimentNotEnabledAndAgc1AnalogEnabled) {
+  AudioProcessingBuilderForTesting apm_builder;
+
+  // Set a config with analog AGC1 analog enabled.
+  AudioProcessing::Config config;
+  config.gain_controller1.enabled = true;
+  config.gain_controller1.analog_gain_controller.enabled = true;
+  config.gain_controller1.analog_gain_controller.enable_digital_adaptive = true;
+  config.gain_controller2.enabled = false;
+  config.gain_controller1.mode =
+      AudioProcessing::Config::GainController1::kAdaptiveAnalog;
+
+  EXPECT_FALSE(config.gain_controller2.input_volume_controller.enabled);
+
+  apm_builder.SetConfig(config);
+
+  auto apm = apm_builder.Create();
+  auto adjusted_config = apm->GetConfig();
+
+  EXPECT_EQ(config.gain_controller1.enabled,
+            adjusted_config.gain_controller1.enabled);
+  EXPECT_EQ(config.gain_controller1.analog_gain_controller.enabled,
+            adjusted_config.gain_controller1.analog_gain_controller.enabled);
+  EXPECT_EQ(config.gain_controller2.enabled,
+            adjusted_config.gain_controller2.enabled);
+  EXPECT_EQ(config.gain_controller2.adaptive_digital.enabled,
+            adjusted_config.gain_controller2.adaptive_digital.enabled);
+  EXPECT_FALSE(
+      adjusted_config.gain_controller2.input_volume_controller.enabled);
+
+  EXPECT_THAT(adjusted_config.ToString(), ::testing::StrEq(config.ToString()));
+}
+
+TEST(AudioProcessingImplInputVolumeControllerExperimentTest,
+     ConfigNotAdjustedWhenExperimentNotEnabledAndHybridAgcEnabled) {
+  AudioProcessingBuilderForTesting apm_builder;
+
+  // Set a config with hybrid AGC enabled.
+  AudioProcessing::Config config;
+  config.gain_controller1.enabled = true;
+  config.gain_controller1.analog_gain_controller.enabled = true;
+  config.gain_controller1.analog_gain_controller.enable_digital_adaptive =
+      false;
+  config.gain_controller2.enabled = true;
+  config.gain_controller2.adaptive_digital.enabled = true;
+  config.gain_controller1.mode =
+      AudioProcessing::Config::GainController1::kAdaptiveAnalog;
+
+  EXPECT_FALSE(config.gain_controller2.input_volume_controller.enabled);
+
+  apm_builder.SetConfig(config);
+
+  auto apm = apm_builder.Create();
+  auto adjusted_config = apm->GetConfig();
+
+  EXPECT_EQ(config.gain_controller1.enabled,
+            adjusted_config.gain_controller1.enabled);
+  EXPECT_EQ(config.gain_controller1.analog_gain_controller.enabled,
+            adjusted_config.gain_controller1.analog_gain_controller.enabled);
+  EXPECT_EQ(config.gain_controller2.enabled,
+            adjusted_config.gain_controller2.enabled);
+  EXPECT_EQ(config.gain_controller2.adaptive_digital.enabled,
+            adjusted_config.gain_controller2.adaptive_digital.enabled);
+  EXPECT_FALSE(
+      adjusted_config.gain_controller2.input_volume_controller.enabled);
+
+  EXPECT_THAT(adjusted_config.ToString(), ::testing::StrEq(config.ToString()));
+}
+
 }  // namespace webrtc

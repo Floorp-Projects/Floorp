@@ -160,6 +160,9 @@ class AudioProcessingImpl : public AudioProcessing {
                            ReinitializeTransientSuppressor);
   FRIEND_TEST_ALL_PREFIXES(ApmWithSubmodulesExcludedTest,
                            BitexactWithDisabledModules);
+  FRIEND_TEST_ALL_PREFIXES(
+      AudioProcessingImplInputVolumeControllerExperimentParametrizedTest,
+      ConfigAdjustedWhenExperimentEnabled);
 
   void set_stream_analog_level_locked(int level)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
@@ -187,6 +190,12 @@ class AudioProcessingImpl : public AudioProcessing {
   const std::unique_ptr<ApmDataDumper> data_dumper_;
   static std::atomic<int> instance_count_;
   const bool use_setup_specific_default_aec3_config_;
+
+  // TODO(bugs.webrtc.org/7494): Remove the the config when the field trial is
+  // removed. "WebRTC-Audio-InputVolumeControllerExperiment" field trial
+  // override for the input volume controller config.
+  const absl::optional<InputVolumeController::Config>
+      input_volume_controller_config_override_;
 
   const bool use_denormal_disabler_;
 
