@@ -19,7 +19,6 @@ group("rtc_tools") {
     deps += [
       ":frame_analyzer",
       ":psnr_ssim_analyzer",
-      ":rgba_to_i420_converter",
       ":video_quality_analysis",
     ]
   }
@@ -27,10 +26,7 @@ group("rtc_tools") {
     deps += [ ":chart_proto" ]
   }
   if (!build_with_chromium && rtc_include_tests) {
-    deps += [
-      ":tools_unittests",
-      ":yuv_to_ivf_converter",
-    ]
+    deps += [ ":tools_unittests" ]
   }
   if (rtc_include_tests && rtc_enable_protobuf) {
     deps += [
@@ -340,24 +336,6 @@ if (!build_with_chromium) {
     ]
   }
 
-  rtc_executable("rgba_to_i420_converter") {
-    visibility = [ "*" ]
-    testonly = true
-    sources = [
-      "converter/converter.cc",
-      "converter/converter.h",
-      "converter/rgba_to_i420_converter.cc",
-    ]
-
-    deps = [
-      "../common_video",
-      "//third_party/abseil-cpp/absl/flags:flag",
-      "//third_party/abseil-cpp/absl/flags:parse",
-      "//third_party/abseil-cpp/absl/flags:usage",
-      "//third_party/libyuv",
-    ]
-  }
-
   if (rtc_enable_protobuf) {
     proto_library("chart_proto") {
       visibility = [ "*" ]
@@ -439,41 +417,6 @@ if (!build_with_chromium) {
 
 if (rtc_include_tests) {
   if (!build_with_chromium) {
-    rtc_executable("yuv_to_ivf_converter") {
-      visibility = [ "*" ]
-      testonly = true
-      sources = [ "converter/yuv_to_ivf_converter.cc" ]
-      deps = [
-        "../api:create_frame_generator",
-        "../api:frame_generator_api",
-        "../api/task_queue:default_task_queue_factory",
-        "../api/video:encoded_image",
-        "../api/video:video_frame",
-        "../api/video_codecs:video_codecs_api",
-        "../media:rtc_media_base",
-        "../modules/rtp_rtcp:rtp_rtcp_format",
-        "../modules/video_coding:video_codec_interface",
-        "../modules/video_coding:video_coding_utility",
-        "../modules/video_coding:webrtc_h264",
-        "../modules/video_coding:webrtc_vp8",
-        "../modules/video_coding:webrtc_vp9",
-        "../rtc_base:checks",
-        "../rtc_base:criticalsection",
-        "../rtc_base:logging",
-        "../rtc_base:rtc_event",
-        "../rtc_base:rtc_task_queue",
-        "../rtc_base/synchronization:mutex",
-        "../rtc_base/system:file_wrapper",
-        "../test:video_test_common",
-        "../test:video_test_support",
-        "//third_party/abseil-cpp/absl/debugging:failure_signal_handler",
-        "//third_party/abseil-cpp/absl/debugging:symbolize",
-        "//third_party/abseil-cpp/absl/flags:flag",
-        "//third_party/abseil-cpp/absl/flags:parse",
-        "//third_party/abseil-cpp/absl/strings",
-      ]
-    }
-
     if (rtc_enable_protobuf) {
       rtc_executable("event_log_visualizer") {
         # TODO(bugs.webrtc.org/14248): Remove once usage of std::tmpnam
