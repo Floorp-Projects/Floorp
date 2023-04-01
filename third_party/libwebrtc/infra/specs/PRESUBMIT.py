@@ -9,6 +9,7 @@
 # be found in the AUTHORS file in the root of the source tree.
 
 import os
+import shlex
 
 # Runs PRESUBMIT.py in py3 mode by git cl presubmit.
 USE_PYTHON3 = True
@@ -28,7 +29,8 @@ def CheckPatchFormatted(input_api, output_api):
   for f in affected_files:
     cmd = ['yapf', '-i', f.AbsoluteLocalPath()]
     if input_api.subprocess.call(cmd):
-      results.append(output_api.PresubmitError('Error calling "' + cmd + '"'))
+      results.append(
+          output_api.PresubmitError('Error calling "' + shlex.join(cmd) + '"'))
 
   if _HasLocalChanges(input_api):
     msg = ('Diff found after running "yapf -i" on modified .pyl files.\n'
