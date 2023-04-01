@@ -38,7 +38,7 @@ constexpr int kNumChannels = 1;
 constexpr int kInitialInputVolume = 128;
 constexpr int kClippedMin = 165;  // Arbitrary, but different from the default.
 constexpr float kAboveClippedThreshold = 0.2f;
-constexpr int kMinMicLevel = 12;
+constexpr int kMinMicLevel = 20;
 constexpr int kClippedLevelStep = 15;
 constexpr float kClippedRatioThreshold = 0.1f;
 constexpr int kClippedWaitFrames = 300;
@@ -56,7 +56,6 @@ using ClippingPredictorConfig = AudioProcessing::Config::GainController1::
 
 using InputVolumeControllerConfig = InputVolumeController::Config;
 
-constexpr InputVolumeControllerConfig kDefaultInputVolumeControllerConfig{};
 constexpr ClippingPredictorConfig kDefaultClippingPredictorConfig{};
 
 std::unique_ptr<InputVolumeController> CreateInputVolumeController(
@@ -66,6 +65,7 @@ std::unique_ptr<InputVolumeController> CreateInputVolumeController(
     bool enable_clipping_predictor = false,
     int update_input_volume_wait_frames = 0) {
   InputVolumeControllerConfig config{
+      .min_input_volume = kMinMicLevel,
       .clipped_level_min = kClippedMin,
       .clipped_level_step = clipped_level_step,
       .clipped_ratio_threshold = clipped_ratio_threshold,
@@ -80,34 +80,6 @@ std::unique_ptr<InputVolumeController> CreateInputVolumeController(
 
   return std::make_unique<InputVolumeController>(/*num_capture_channels=*/1,
                                                  config);
-}
-
-constexpr char kMinInputVolumeFieldTrial[] = "WebRTC-Audio-Agc2-MinInputVolume";
-
-std::string GetAgcMinInputVolumeFieldTrial(const std::string& value) {
-  char field_trial_buffer[64];
-  rtc::SimpleStringBuilder builder(field_trial_buffer);
-  builder << kMinInputVolumeFieldTrial << "/" << value << "/";
-  return builder.str();
-}
-
-std::string GetAgcMinInputVolumeFieldTrialEnabled(
-    int enabled_value,
-    const std::string& suffix = "") {
-  RTC_DCHECK_GE(enabled_value, 0);
-  RTC_DCHECK_LE(enabled_value, 255);
-  char field_trial_buffer[64];
-  rtc::SimpleStringBuilder builder(field_trial_buffer);
-  builder << kMinInputVolumeFieldTrial << "/Enabled-" << enabled_value << suffix
-          << "/";
-  return builder.str();
-}
-
-std::string GetAgcMinInputVolumeFieldTrial(absl::optional<int> volume) {
-  if (volume.has_value()) {
-    return GetAgcMinInputVolumeFieldTrialEnabled(*volume);
-  }
-  return GetAgcMinInputVolumeFieldTrial("Disabled");
 }
 
 // (Over)writes `samples_value` for the samples in `audio_buffer`.
@@ -148,31 +120,6 @@ void WriteAlternatingAudioBufferSamples(float samples_value,
       audio_buffer.channels()[ch][i + 1] = 0.0f;
     }
   }
-}
-
-// Deprecated.
-// TODO(bugs.webrtc.org/7494): Delete this helper, use
-// `InputVolumeControllerTestHelper::CallAgcSequence()` instead.
-int CallAnalyzeAndRecommend(int num_calls,
-                            int initial_volume,
-                            const AudioBuffer& audio_buffer,
-                            float speech_probability,
-                            absl::optional<float> speech_level_dbfs,
-                            InputVolumeController& controller) {
-  RTC_DCHECK(controller.capture_output_used());
-  int volume = initial_volume;
-  for (int n = 0; n < num_calls; ++n) {
-    controller.AnalyzeInputAudio(volume, audio_buffer);
-    const auto recommended_input_volume =
-        controller.RecommendInputVolume(speech_probability, speech_level_dbfs);
-
-    // Expect no errors: Applied volume set for every frame;
-    // `RecommendInputVolume()` returns a non-empty value.
-    EXPECT_TRUE(recommended_input_volume.has_value());
-
-    volume = *recommended_input_volume;
-  }
-  return volume;
 }
 
 // Reads a given number of 10 ms chunks from a PCM file and feeds them to
@@ -379,24 +326,12 @@ class InputVolumeControllerTestHelper {
 };
 
 class InputVolumeControllerParametrizedTest
-    : public ::testing::TestWithParam<absl::optional<int>> {
- protected:
-  InputVolumeControllerParametrizedTest()
-      : field_trials_(GetAgcMinInputVolumeFieldTrial(GetParam())) {}
-
-  int GetMinInputVolume() const { return GetParam().value_or(kMinMicLevel); }
-
- private:
-  test::ScopedFieldTrials field_trials_;
-};
-
-INSTANTIATE_TEST_SUITE_P(,
-                         InputVolumeControllerParametrizedTest,
-                         ::testing::Values(absl::nullopt, 12, 20));
+    : public ::testing::TestWithParam<int> {};
 
 TEST_P(InputVolumeControllerParametrizedTest,
        StartupMinVolumeConfigurationIsRespected) {
-  InputVolumeControllerTestHelper helper;
+  InputVolumeControllerTestHelper helper(
+      /*config=*/{.min_input_volume = GetParam()});
 
   EXPECT_EQ(*helper.CallAgcSequence(kInitialInputVolume, kHighSpeechProbability,
                                     kSpeechLevel),
@@ -404,7 +339,9 @@ TEST_P(InputVolumeControllerParametrizedTest,
 }
 
 TEST_P(InputVolumeControllerParametrizedTest, MicVolumeResponseToRmsError) {
-  InputVolumeControllerTestHelper helper;
+  InputVolumeControllerConfig config = GetInputVolumeControllerTestConfig();
+  config.min_input_volume = GetParam();
+  InputVolumeControllerTestHelper helper(config);
   int volume = *helper.CallAgcSequence(kInitialInputVolume,
                                        kHighSpeechProbability, kSpeechLevel);
 
@@ -446,7 +383,10 @@ TEST_P(InputVolumeControllerParametrizedTest, MicVolumeResponseToRmsError) {
 }
 
 TEST_P(InputVolumeControllerParametrizedTest, MicVolumeIsLimited) {
-  InputVolumeControllerTestHelper helper;
+  InputVolumeControllerConfig config = GetInputVolumeControllerTestConfig();
+  const int min_input_volume = GetParam();
+  config.min_input_volume = min_input_volume;
+  InputVolumeControllerTestHelper helper(config);
   int volume = *helper.CallAgcSequence(kInitialInputVolume,
                                        kHighSpeechProbability, kSpeechLevel);
 
@@ -492,16 +432,18 @@ TEST_P(InputVolumeControllerParametrizedTest, MicVolumeIsLimited) {
   // Won't go lower than the minimum.
   volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
                                            kHighSpeechProbability, 22.0f);
-  EXPECT_EQ(volume, std::max(18, GetMinInputVolume()));
+  EXPECT_EQ(volume, std::max(18, min_input_volume));
 
   volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
                                            kHighSpeechProbability, 22.0f);
-  EXPECT_EQ(volume, std::max(12, GetMinInputVolume()));
+  EXPECT_EQ(volume, std::max(12, min_input_volume));
 }
 
 TEST_P(InputVolumeControllerParametrizedTest, NoActionWhileMuted) {
-  InputVolumeControllerTestHelper helper_1;
-  InputVolumeControllerTestHelper helper_2;
+  InputVolumeControllerTestHelper helper_1(
+      /*config=*/{.min_input_volume = GetParam()});
+  InputVolumeControllerTestHelper helper_2(
+      /*config=*/{.min_input_volume = GetParam()});
 
   int volume_1 = *helper_1.CallAgcSequence(/*applied_input_volume=*/255,
                                            kHighSpeechProbability, kSpeechLevel,
@@ -531,7 +473,8 @@ TEST_P(InputVolumeControllerParametrizedTest, NoActionWhileMuted) {
 
 TEST_P(InputVolumeControllerParametrizedTest,
        UnmutingChecksVolumeWithoutRaising) {
-  InputVolumeControllerTestHelper helper;
+  InputVolumeControllerTestHelper helper(
+      /*config=*/{.min_input_volume = GetParam()});
   helper.CallAgcSequence(kInitialInputVolume, kHighSpeechProbability,
                          kSpeechLevel);
 
@@ -548,7 +491,9 @@ TEST_P(InputVolumeControllerParametrizedTest,
 }
 
 TEST_P(InputVolumeControllerParametrizedTest, UnmutingRaisesTooLowVolume) {
-  InputVolumeControllerTestHelper helper;
+  const int min_input_volume = GetParam();
+  InputVolumeControllerTestHelper helper(
+      /*config=*/{.min_input_volume = min_input_volume});
   helper.CallAgcSequence(kInitialInputVolume, kHighSpeechProbability,
                          kSpeechLevel);
 
@@ -560,12 +505,14 @@ TEST_P(InputVolumeControllerParametrizedTest, UnmutingRaisesTooLowVolume) {
   EXPECT_EQ(
       helper.CallRecommendInputVolume(/*num_calls=*/1, kInputVolume,
                                       kHighSpeechProbability, kSpeechLevel),
-      GetMinInputVolume());
+      min_input_volume);
 }
 
 TEST_P(InputVolumeControllerParametrizedTest,
        ManualLevelChangeResultsInNoSetMicCall) {
-  InputVolumeControllerTestHelper helper;
+  InputVolumeControllerConfig config = GetInputVolumeControllerTestConfig();
+  config.min_input_volume = GetParam();
+  InputVolumeControllerTestHelper helper(config);
   int volume = *helper.CallAgcSequence(kInitialInputVolume,
                                        kHighSpeechProbability, kSpeechLevel);
 
@@ -589,7 +536,9 @@ TEST_P(InputVolumeControllerParametrizedTest,
 
 TEST_P(InputVolumeControllerParametrizedTest,
        RecoveryAfterManualLevelChangeFromMax) {
-  InputVolumeControllerTestHelper helper;
+  InputVolumeControllerConfig config = GetInputVolumeControllerTestConfig();
+  config.min_input_volume = GetParam();
+  InputVolumeControllerTestHelper helper(config);
   int volume = *helper.CallAgcSequence(kInitialInputVolume,
                                        kHighSpeechProbability, kSpeechLevel);
 
@@ -621,7 +570,10 @@ TEST_P(InputVolumeControllerParametrizedTest,
 // of the input volume.
 TEST_P(InputVolumeControllerParametrizedTest,
        EnforceMinInputVolumeDuringUpwardsAdjustment) {
-  InputVolumeControllerTestHelper helper;
+  const int min_input_volume = GetParam();
+  InputVolumeControllerConfig config = GetInputVolumeControllerTestConfig();
+  config.min_input_volume = min_input_volume;
+  InputVolumeControllerTestHelper helper(config);
   int volume = *helper.CallAgcSequence(kInitialInputVolume,
                                        kHighSpeechProbability, kSpeechLevel);
 
@@ -631,19 +583,19 @@ TEST_P(InputVolumeControllerParametrizedTest,
       /*num_calls=*/1, /*initial_volume=*/1, kHighSpeechProbability, -17.0f);
 
   // Trigger an upward adjustment of the input volume.
-  EXPECT_EQ(volume, GetMinInputVolume());
+  EXPECT_EQ(volume, min_input_volume);
   volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
                                            kHighSpeechProbability, -29.0f);
-  EXPECT_EQ(volume, GetMinInputVolume());
+  EXPECT_EQ(volume, min_input_volume);
   volume = helper.CallRecommendInputVolume(/*num_calls=*/1, volume,
                                            kHighSpeechProbability, -30.0f);
-  EXPECT_EQ(volume, GetMinInputVolume());
+  EXPECT_EQ(volume, min_input_volume);
 
   // After a number of consistently low speech level observations, the input
   // volume is eventually raised above the minimum.
   volume = helper.CallRecommendInputVolume(/*num_calls=*/10, volume,
                                            kHighSpeechProbability, -38.0f);
-  EXPECT_GT(volume, GetMinInputVolume());
+  EXPECT_GT(volume, min_input_volume);
 }
 
 // Checks that, when the min mic level override is specified, AGC immediately
@@ -651,7 +603,9 @@ TEST_P(InputVolumeControllerParametrizedTest,
 // minimum gain to enforce.
 TEST_P(InputVolumeControllerParametrizedTest,
        RecoveryAfterManualLevelChangeBelowMin) {
-  InputVolumeControllerTestHelper helper;
+  const int min_input_volume = GetParam();
+  InputVolumeControllerTestHelper helper(
+      /*config=*/{.min_input_volume = min_input_volume});
   int volume = *helper.CallAgcSequence(kInitialInputVolume,
                                        kHighSpeechProbability, kSpeechLevel);
 
@@ -659,11 +613,12 @@ TEST_P(InputVolumeControllerParametrizedTest,
   // AGC won't take any action.
   volume = helper.CallRecommendInputVolume(
       /*num_calls=*/1, /*initial_volume=*/1, kHighSpeechProbability, -17.0f);
-  EXPECT_EQ(volume, GetMinInputVolume());
+  EXPECT_EQ(volume, min_input_volume);
 }
 
 TEST_P(InputVolumeControllerParametrizedTest, NoClippingHasNoImpact) {
-  InputVolumeControllerTestHelper helper;
+  InputVolumeControllerTestHelper helper(
+      /*config=*/{.min_input_volume = GetParam()});
   helper.CallAgcSequence(kInitialInputVolume, kHighSpeechProbability,
                          kSpeechLevel);
 
@@ -673,7 +628,8 @@ TEST_P(InputVolumeControllerParametrizedTest, NoClippingHasNoImpact) {
 
 TEST_P(InputVolumeControllerParametrizedTest,
        ClippingUnderThresholdHasNoImpact) {
-  InputVolumeControllerTestHelper helper;
+  InputVolumeControllerTestHelper helper(
+      /*config=*/{.min_input_volume = GetParam()});
   helper.CallAgcSequence(kInitialInputVolume, kHighSpeechProbability,
                          kSpeechLevel);
 
@@ -682,7 +638,8 @@ TEST_P(InputVolumeControllerParametrizedTest,
 }
 
 TEST_P(InputVolumeControllerParametrizedTest, ClippingLowersVolume) {
-  InputVolumeControllerTestHelper helper;
+  InputVolumeControllerTestHelper helper(
+      /*config=*/{.min_input_volume = GetParam()});
   helper.CallAgcSequence(/*applied_input_volume=*/255, kHighSpeechProbability,
                          kSpeechLevel);
 
@@ -692,7 +649,8 @@ TEST_P(InputVolumeControllerParametrizedTest, ClippingLowersVolume) {
 
 TEST_P(InputVolumeControllerParametrizedTest,
        WaitingPeriodBetweenClippingChecks) {
-  InputVolumeControllerTestHelper helper;
+  InputVolumeControllerTestHelper helper(
+      /*config=*/{.min_input_volume = GetParam()});
   helper.CallAgcSequence(/*applied_input_volume=*/255, kHighSpeechProbability,
                          kSpeechLevel);
 
@@ -710,7 +668,9 @@ TEST_P(InputVolumeControllerParametrizedTest,
 }
 
 TEST_P(InputVolumeControllerParametrizedTest, ClippingLoweringIsLimited) {
-  InputVolumeControllerTestHelper helper;
+  InputVolumeControllerConfig config = GetInputVolumeControllerTestConfig();
+  config.min_input_volume = GetParam();
+  InputVolumeControllerTestHelper helper(config);
   helper.CallAgcSequence(/*applied_input_volume=*/180, kHighSpeechProbability,
                          kSpeechLevel);
 
@@ -725,7 +685,8 @@ TEST_P(InputVolumeControllerParametrizedTest, ClippingLoweringIsLimited) {
 
 TEST_P(InputVolumeControllerParametrizedTest,
        ClippingMaxIsRespectedWhenEqualToLevel) {
-  InputVolumeControllerTestHelper helper;
+  InputVolumeControllerTestHelper helper(
+      /*config=*/{.min_input_volume = GetParam()});
   helper.CallAgcSequence(/*applied_input_volume=*/255, kHighSpeechProbability,
                          kSpeechLevel);
 
@@ -740,7 +701,9 @@ TEST_P(InputVolumeControllerParametrizedTest,
 
 TEST_P(InputVolumeControllerParametrizedTest,
        ClippingMaxIsRespectedWhenHigherThanLevel) {
-  InputVolumeControllerTestHelper helper;
+  InputVolumeControllerConfig config = GetInputVolumeControllerTestConfig();
+  config.min_input_volume = GetParam();
+  InputVolumeControllerTestHelper helper(config);
   helper.CallAgcSequence(/*applied_input_volume=*/200, kHighSpeechProbability,
                          kSpeechLevel);
 
@@ -758,7 +721,9 @@ TEST_P(InputVolumeControllerParametrizedTest,
 }
 
 TEST_P(InputVolumeControllerParametrizedTest, UserCanRaiseVolumeAfterClipping) {
-  InputVolumeControllerTestHelper helper;
+  InputVolumeControllerConfig config = GetInputVolumeControllerTestConfig();
+  config.min_input_volume = GetParam();
+  InputVolumeControllerTestHelper helper(config);
   helper.CallAgcSequence(/*applied_input_volume=*/225, kHighSpeechProbability,
                          kSpeechLevel);
 
@@ -787,7 +752,9 @@ TEST_P(InputVolumeControllerParametrizedTest, UserCanRaiseVolumeAfterClipping) {
 
 TEST_P(InputVolumeControllerParametrizedTest,
        ClippingDoesNotPullLowVolumeBackUp) {
-  InputVolumeControllerTestHelper helper;
+  InputVolumeControllerConfig config = GetInputVolumeControllerTestConfig();
+  config.min_input_volume = GetParam();
+  InputVolumeControllerTestHelper helper(config);
   helper.CallAgcSequence(/*applied_input_volume=*/80, kHighSpeechProbability,
                          kSpeechLevel);
 
@@ -798,7 +765,8 @@ TEST_P(InputVolumeControllerParametrizedTest,
 }
 
 TEST_P(InputVolumeControllerParametrizedTest, TakesNoActionOnZeroMicVolume) {
-  InputVolumeControllerTestHelper helper;
+  InputVolumeControllerTestHelper helper(
+      /*config=*/{.min_input_volume = GetParam()});
   helper.CallAgcSequence(kInitialInputVolume, kHighSpeechProbability,
                          kSpeechLevel);
 
@@ -809,7 +777,9 @@ TEST_P(InputVolumeControllerParametrizedTest, TakesNoActionOnZeroMicVolume) {
 }
 
 TEST_P(InputVolumeControllerParametrizedTest, ClippingDetectionLowersVolume) {
-  InputVolumeControllerTestHelper helper;
+  InputVolumeControllerConfig config = GetInputVolumeControllerTestConfig();
+  config.min_input_volume = GetParam();
+  InputVolumeControllerTestHelper helper(config);
   int volume = *helper.CallAgcSequence(/*applied_input_volume=*/255,
                                        kHighSpeechProbability, kSpeechLevel,
                                        /*num_calls=*/1);
@@ -827,298 +797,6 @@ TEST_P(InputVolumeControllerParametrizedTest, ClippingDetectionLowersVolume) {
                                    /*num_calls=*/100);
 
   EXPECT_EQ(volume, 240);
-}
-
-TEST(InputVolumeControllerTest, MinInputVolumeDefault) {
-  std::unique_ptr<InputVolumeController> controller =
-      CreateInputVolumeController(kClippedLevelStep, kClippedRatioThreshold,
-                                  kClippedWaitFrames);
-  EXPECT_EQ(controller->channel_controllers_[0]->min_input_volume(),
-            kMinMicLevel);
-}
-
-TEST(InputVolumeControllerTest, MinInputVolumeDisabled) {
-  for (const std::string& field_trial_suffix : {"", "_20220210"}) {
-    test::ScopedFieldTrials field_trial(
-        GetAgcMinInputVolumeFieldTrial("Disabled" + field_trial_suffix));
-    std::unique_ptr<InputVolumeController> controller =
-        CreateInputVolumeController(kClippedLevelStep, kClippedRatioThreshold,
-                                    kClippedWaitFrames);
-
-    EXPECT_EQ(controller->channel_controllers_[0]->min_input_volume(),
-              kMinMicLevel);
-  }
-}
-
-// Checks that a field-trial parameter outside of the valid range [0,255] is
-// ignored.
-TEST(InputVolumeControllerTest, MinInputVolumeOutOfRangeAbove) {
-  test::ScopedFieldTrials field_trial(
-      GetAgcMinInputVolumeFieldTrial("Enabled-256"));
-  std::unique_ptr<InputVolumeController> controller =
-      CreateInputVolumeController(kClippedLevelStep, kClippedRatioThreshold,
-                                  kClippedWaitFrames);
-  EXPECT_EQ(controller->channel_controllers_[0]->min_input_volume(),
-            kMinMicLevel);
-}
-
-// Checks that a field-trial parameter outside of the valid range [0,255] is
-// ignored.
-TEST(InputVolumeControllerTest, MinInputVolumeOutOfRangeBelow) {
-  test::ScopedFieldTrials field_trial(
-      GetAgcMinInputVolumeFieldTrial("Enabled--1"));
-  std::unique_ptr<InputVolumeController> controller =
-      CreateInputVolumeController(kClippedLevelStep, kClippedRatioThreshold,
-                                  kClippedWaitFrames);
-  EXPECT_EQ(controller->channel_controllers_[0]->min_input_volume(),
-            kMinMicLevel);
-}
-
-// Verifies that a valid experiment changes the minimum microphone level. The
-// start volume is larger than the min level and should therefore not be
-// changed.
-TEST(InputVolumeControllerTest, MinInputVolumeEnabled50) {
-  constexpr int kMinInputVolume = 50;
-  for (const std::string& field_trial_suffix : {"", "_20220210"}) {
-    SCOPED_TRACE(field_trial_suffix);
-    test::ScopedFieldTrials field_trial(GetAgcMinInputVolumeFieldTrialEnabled(
-        kMinInputVolume, field_trial_suffix));
-    std::unique_ptr<InputVolumeController> controller =
-        CreateInputVolumeController(kClippedLevelStep, kClippedRatioThreshold,
-                                    kClippedWaitFrames);
-
-    EXPECT_EQ(controller->channel_controllers_[0]->min_input_volume(),
-              kMinInputVolume);
-  }
-}
-
-// Checks that, when the "WebRTC-Audio-Agc2-MinInputVolume" field trial is
-// specified with a valid value, the mic level never gets lowered beyond the
-// override value in the presence of clipping.
-TEST(InputVolumeControllerTest, MinInputVolumeCheckMinLevelWithClipping) {
-  constexpr int kMinInputVolume = 250;
-
-  // Create and initialize two AGCs by specifying and leaving unspecified the
-  // relevant field trial.
-  const auto factory = []() {
-    std::unique_ptr<InputVolumeController> controller =
-        CreateInputVolumeController(kClippedLevelStep, kClippedRatioThreshold,
-                                    kClippedWaitFrames);
-    controller->Initialize();
-    return controller;
-  };
-  std::unique_ptr<InputVolumeController> controller = factory();
-  std::unique_ptr<InputVolumeController> controller_with_override;
-  {
-    test::ScopedFieldTrials field_trial(
-        GetAgcMinInputVolumeFieldTrialEnabled(kMinInputVolume));
-    controller_with_override = factory();
-  }
-
-  // Create a test input signal which containts 80% of clipped samples.
-  AudioBuffer audio_buffer(kSampleRateHz, 1, kSampleRateHz, 1, kSampleRateHz,
-                           1);
-  WriteAudioBufferSamples(/*samples_value=*/4000.0f, /*clipped_ratio=*/0.8f,
-                          audio_buffer);
-
-  // Simulate 4 seconds of clipping; it is expected to trigger a downward
-  // adjustment of the analog gain. Use low speech probability to limit the
-  // volume changes to clipping handling.
-  const int volume = CallAnalyzeAndRecommend(
-      /*num_calls=*/400, kInitialInputVolume, audio_buffer,
-      kLowSpeechProbability, /*speech_level_dbfs=*/-42.0f, *controller);
-  const int volume_with_override = CallAnalyzeAndRecommend(
-      /*num_calls=*/400, kInitialInputVolume, audio_buffer,
-      kLowSpeechProbability, /*speech_level_dbfs=*/-42.0f,
-      *controller_with_override);
-
-  // Make sure that an adaptation occurred.
-  ASSERT_GT(volume, 0);
-
-  // Check that the test signal triggers a larger downward adaptation for
-  // `controller`, which is allowed to reach a lower gain.
-  EXPECT_GT(volume_with_override, volume);
-  // Check that the gain selected by `controller_with_override` equals the
-  // minimum value overridden via field trial.
-  EXPECT_EQ(volume_with_override, kMinInputVolume);
-}
-
-// Checks that, when the "WebRTC-Audio-Agc2-MinInputVolume" field trial is
-// specified with a valid value, the mic level never gets lowered beyond the
-// override value in the presence of clipping when RMS error is not empty.
-// TODO(webrtc:7494): Revisit the test after moving the number of update wait
-// frames to APM config. The test passes but internally the gain update timing
-// differs.
-TEST(InputVolumeControllerTest,
-     MinInputVolumeCheckMinLevelWithClippingWithRmsError) {
-  constexpr int kMinInputVolume = 250;
-
-  // Create and initialize two AGCs by specifying and leaving unspecified the
-  // relevant field trial.
-  const auto factory = []() {
-    std::unique_ptr<InputVolumeController> controller =
-        CreateInputVolumeController(kClippedLevelStep, kClippedRatioThreshold,
-                                    kClippedWaitFrames);
-    controller->Initialize();
-    return controller;
-  };
-  std::unique_ptr<InputVolumeController> controller = factory();
-  std::unique_ptr<InputVolumeController> controller_with_override;
-  {
-    test::ScopedFieldTrials field_trial(
-        GetAgcMinInputVolumeFieldTrialEnabled(kMinInputVolume));
-    controller_with_override = factory();
-  }
-
-  // Create a test input signal which containts 80% of clipped samples.
-  AudioBuffer audio_buffer(kSampleRateHz, 1, kSampleRateHz, 1, kSampleRateHz,
-                           1);
-  WriteAudioBufferSamples(/*samples_value=*/4000.0f, /*clipped_ratio=*/0.8f,
-                          audio_buffer);
-
-  // Simulate 4 seconds of clipping; it is expected to trigger a downward
-  // adjustment of the analog gain.
-  const int volume = CallAnalyzeAndRecommend(
-      /*num_calls=*/400, kInitialInputVolume, audio_buffer,
-      kHighSpeechProbability,
-      /*speech_level_dbfs=*/-18.0f, *controller);
-  const int volume_with_override = CallAnalyzeAndRecommend(
-      /*num_calls=*/400, kInitialInputVolume, audio_buffer,
-      kHighSpeechProbability,
-      /*speech_level_dbfs=*/-18.0f, *controller_with_override);
-
-  // Make sure that an adaptation occurred.
-  ASSERT_GT(volume, 0);
-
-  // Check that the test signal triggers a larger downward adaptation for
-  // `controller`, which is allowed to reach a lower gain.
-  EXPECT_GT(volume_with_override, volume);
-
-  // Check that the gain selected by `controller_with_override` equals the
-  // minimum value overridden via field trial.
-  EXPECT_EQ(volume_with_override, kMinInputVolume);
-}
-
-// Checks that, when the "WebRTC-Audio-Agc2-MinInputVolume" field trial is
-// specified with a value lower than the `clipped_level_min`, the behavior of
-// the analog gain controller is the same as that obtained when the field trial
-// is not specified.
-TEST(InputVolumeControllerTest, MinInputVolumeCompareMicLevelWithClipping) {
-  // Create and initialize two AGCs by specifying and leaving unspecified the
-  // relevant field trial.
-  const auto factory = []() {
-    // Use a large clipped level step to more quickly decrease the analog gain
-    // with clipping.
-    InputVolumeControllerConfig config = kDefaultInputVolumeControllerConfig;
-    config.clipped_level_step = 64;
-    config.clipped_ratio_threshold = kClippedRatioThreshold;
-    config.clipped_wait_frames = kClippedWaitFrames;
-    auto controller = std::make_unique<InputVolumeController>(
-        /*num_capture_channels=*/1, config);
-    controller->Initialize();
-    return controller;
-  };
-  std::unique_ptr<InputVolumeController> controller = factory();
-  std::unique_ptr<InputVolumeController> controller_with_override;
-  {
-    constexpr int kMinInputVolume = 20;
-    static_assert(kDefaultInputVolumeControllerConfig.clipped_level_min >=
-                      kMinInputVolume,
-                  "Use a lower override value.");
-    test::ScopedFieldTrials field_trial(
-        GetAgcMinInputVolumeFieldTrialEnabled(kMinInputVolume));
-    controller_with_override = factory();
-  }
-
-  // Create a test input signal which containts 80% of clipped samples.
-  AudioBuffer audio_buffer(kSampleRateHz, 1, kSampleRateHz, 1, kSampleRateHz,
-                           1);
-  WriteAudioBufferSamples(/*samples_value=*/4000.0f, /*clipped_ratio=*/0.8f,
-                          audio_buffer);
-
-  // Simulate 4 seconds of clipping; it is expected to trigger a downward
-  // adjustment of the analog gain. Use low speech probability to limit the
-  // volume changes to clipping handling.
-  const int volume = CallAnalyzeAndRecommend(
-      /*num_calls=*/400, kInitialInputVolume, audio_buffer,
-      kLowSpeechProbability, /*speech_level_dbfs=*/-18, *controller);
-  const int volume_with_override = CallAnalyzeAndRecommend(
-      /*num_calls=*/400, kInitialInputVolume, audio_buffer,
-      kLowSpeechProbability, /*speech_level_dbfs=*/-18,
-      *controller_with_override);
-
-  // Make sure that an adaptation occurred.
-  ASSERT_GT(volume, 0);
-
-  // Check that the selected analog gain is the same for both controllers and
-  // that it equals the minimum level reached when clipping is handled. That is
-  // expected because the minimum microphone level override is less than the
-  // minimum level used when clipping is detected.
-  EXPECT_EQ(volume, volume_with_override);
-  EXPECT_EQ(volume_with_override,
-            kDefaultInputVolumeControllerConfig.clipped_level_min);
-}
-
-// Checks that, when the "WebRTC-Audio-Agc2-MinInputVolume" field trial is
-// specified with a value lower than the `clipped_level_min`, the behavior of
-// the analog gain controller is the same as that obtained when the field trial
-// is not specified.
-// TODO(webrtc:7494): Revisit the test after moving the number of update wait
-// frames to APM config. The test passes but internally the gain update timing
-// differs.
-TEST(InputVolumeControllerTest,
-     MinInputVolumeCompareMicLevelWithClippingWithRmsError) {
-  // Create and initialize two AGCs by specifying and leaving unspecified the
-  // relevant field trial.
-  const auto factory = []() {
-    // Use a large clipped level step to more quickly decrease the analog gain
-    // with clipping.
-    InputVolumeControllerConfig config = kDefaultInputVolumeControllerConfig;
-    config.clipped_level_step = 64;
-    config.clipped_ratio_threshold = kClippedRatioThreshold;
-    config.clipped_wait_frames = kClippedWaitFrames;
-    auto controller = std::make_unique<InputVolumeController>(
-        /*num_capture_channels=*/1, config);
-    controller->Initialize();
-    return controller;
-  };
-  std::unique_ptr<InputVolumeController> controller = factory();
-  std::unique_ptr<InputVolumeController> controller_with_override;
-  {
-    constexpr int kMinInputVolume = 20;
-    static_assert(kDefaultInputVolumeControllerConfig.clipped_level_min >=
-                      kMinInputVolume,
-                  "Use a lower override value.");
-    test::ScopedFieldTrials field_trial(
-        GetAgcMinInputVolumeFieldTrialEnabled(kMinInputVolume));
-    controller_with_override = factory();
-  }
-
-  // Create a test input signal which containts 80% of clipped samples.
-  AudioBuffer audio_buffer(kSampleRateHz, 1, kSampleRateHz, 1, kSampleRateHz,
-                           1);
-  WriteAudioBufferSamples(/*samples_value=*/4000.0f, /*clipped_ratio=*/0.8f,
-                          audio_buffer);
-
-  const int volume = CallAnalyzeAndRecommend(
-      /*num_calls=*/400, kInitialInputVolume, audio_buffer,
-      /*speech_probability=*/0.7f,
-      /*speech_level_dbfs=*/-18.0f, *controller);
-  const int volume_with_override = CallAnalyzeAndRecommend(
-      /*num_calls=*/400, kInitialInputVolume, audio_buffer,
-      /*speech_probability=*/0.7f,
-      /*speech_level_dbfs=*/-18.0f, *controller_with_override);
-
-  // Make sure that an adaptation occurred.
-  ASSERT_GT(volume, 0);
-
-  // Check that the selected analog gain is the same for both controllers and
-  // that it equals the minimum level reached when clipping is handled. That is
-  // expected because the minimum microphone level override is less than the
-  // minimum level used when clipping is detected.
-  EXPECT_EQ(volume, volume_with_override);
-  EXPECT_EQ(volume_with_override,
-            kDefaultInputVolumeControllerConfig.clipped_level_min);
 }
 
 // TODO(bugs.webrtc.org/12774): Test the bahavior of `clipped_level_step`.
@@ -1414,6 +1092,42 @@ TEST(InputVolumeControllerTest, UpdateInputVolumeWaitFramesIsEffective) {
   // Check that adaptation only occurs when enough frames have been processed.
   ASSERT_GT(volume_wait_0, kInputVolume);
   ASSERT_GT(volume_wait_100, kInputVolume);
+}
+
+INSTANTIATE_TEST_SUITE_P(,
+                         InputVolumeControllerParametrizedTest,
+                         ::testing::Values(12, 20));
+
+TEST(InputVolumeControllerTest,
+     MinInputVolumeEnforcedWithClippingWhenAboveClippedLevelMin) {
+  InputVolumeControllerTestHelper helper(
+      /*config=*/{.min_input_volume = 80, .clipped_level_min = 70});
+
+  // Trigger a downward adjustment caused by clipping input. Use a low speech
+  // probability to limit the volume changes to clipping handling.
+  WriteAudioBufferSamples(/*samples_value=*/4000.0f, /*clipped_ratio=*/0.8f,
+                          helper.audio_buffer);
+  constexpr int kNumCalls = 800;
+  helper.CallAgcSequence(/*applied_input_volume=*/100, kLowSpeechProbability,
+                         /*speech_level_dbfs=*/-18.0f, kNumCalls);
+
+  EXPECT_EQ(helper.controller.recommended_input_volume(), 80);
+}
+
+TEST(InputVolumeControllerTest,
+     ClippedlevelMinEnforcedWithClippingWhenAboveMinInputVolume) {
+  InputVolumeControllerTestHelper helper(
+      /*config=*/{.min_input_volume = 70, .clipped_level_min = 80});
+
+  // Trigger a downward adjustment caused by clipping input. Use a low speech
+  // probability to limit the volume changes to clipping handling.
+  WriteAudioBufferSamples(/*samples_value=*/4000.0f, /*clipped_ratio=*/0.8f,
+                          helper.audio_buffer);
+  constexpr int kNumCalls = 800;
+  helper.CallAgcSequence(/*applied_input_volume=*/100, kLowSpeechProbability,
+                         /*speech_level_dbfs=*/-18.0f, kNumCalls);
+
+  EXPECT_EQ(helper.controller.recommended_input_volume(), 80);
 }
 
 TEST(InputVolumeControllerTest, SpeechRatioThresholdIsEffective) {
