@@ -55,10 +55,9 @@ float RunAgc2WithConstantInput(GainController2& agc2,
   // Give time to the level estimator to converge.
   for (int i = 0; i < num_frames + 1; ++i) {
     SetAudioBufferSamples(input_level, ab);
-    const auto applied_volume = agc2.GetRecommendedInputVolume();
-    agc2.Analyze(i > 0 && applied_volume.has_value() ? *applied_volume
-                                                     : applied_initial_volume,
-                 ab);
+    const auto applied_volume = agc2.recommended_input_volume();
+    agc2.Analyze(applied_volume.value_or(applied_initial_volume), ab);
+
     agc2.Process(/*speech_probability=*/absl::nullopt,
                  /*input_volume_changed=*/false, &ab);
   }
@@ -179,19 +178,19 @@ TEST(GainController2,
       config, InputVolumeControllerConfig{}, kSampleRateHz, kNumChannels,
       /*use_internal_vad=*/true);
 
-  EXPECT_FALSE(gain_controller->GetRecommendedInputVolume().has_value());
+  EXPECT_FALSE(gain_controller->recommended_input_volume().has_value());
 
   // Run AGC for a signal with no clipping or detected speech.
   RunAgc2WithConstantInput(*gain_controller, kLowInputLevel, kNumFrames,
                            kSampleRateHz, kNumChannels, kInitialInputVolume);
 
-  EXPECT_FALSE(gain_controller->GetRecommendedInputVolume().has_value());
+  EXPECT_FALSE(gain_controller->recommended_input_volume().has_value());
 
   // Run AGC for a signal with clipping.
   RunAgc2WithConstantInput(*gain_controller, kHighInputLevel, kNumFrames,
                            kSampleRateHz, kNumChannels, kInitialInputVolume);
 
-  EXPECT_FALSE(gain_controller->GetRecommendedInputVolume().has_value());
+  EXPECT_FALSE(gain_controller->recommended_input_volume().has_value());
 }
 
 TEST(
@@ -211,19 +210,19 @@ TEST(
       config, kTestInputVolumeControllerConfig, kSampleRateHz, kNumChannels,
       /*use_internal_vad=*/true);
 
-  EXPECT_FALSE(gain_controller->GetRecommendedInputVolume().has_value());
+  EXPECT_FALSE(gain_controller->recommended_input_volume().has_value());
 
   // Run AGC for a signal with no clipping or detected speech.
   RunAgc2WithConstantInput(*gain_controller, kLowInputLevel, kNumFrames,
                            kSampleRateHz, kNumChannels, kInitialInputVolume);
 
-  EXPECT_FALSE(gain_controller->GetRecommendedInputVolume().has_value());
+  EXPECT_FALSE(gain_controller->recommended_input_volume().has_value());
 
   // Run AGC for a signal with clipping.
   RunAgc2WithConstantInput(*gain_controller, kHighInputLevel, kNumFrames,
                            kSampleRateHz, kNumChannels, kInitialInputVolume);
 
-  EXPECT_FALSE(gain_controller->GetRecommendedInputVolume().has_value());
+  EXPECT_FALSE(gain_controller->recommended_input_volume().has_value());
 }
 
 TEST(GainController2,
@@ -243,19 +242,19 @@ TEST(GainController2,
       config, InputVolumeControllerConfig{}, kSampleRateHz, kNumChannels,
       /*use_internal_vad=*/true);
 
-  EXPECT_TRUE(gain_controller->GetRecommendedInputVolume().has_value());
+  EXPECT_FALSE(gain_controller->recommended_input_volume().has_value());
 
   // Run AGC for a signal with no clipping or detected speech.
   RunAgc2WithConstantInput(*gain_controller, kLowInputLevel, kNumFrames,
                            kSampleRateHz, kNumChannels, kInitialInputVolume);
 
-  EXPECT_TRUE(gain_controller->GetRecommendedInputVolume().has_value());
+  EXPECT_TRUE(gain_controller->recommended_input_volume().has_value());
 
   // Run AGC for a signal with clipping.
   RunAgc2WithConstantInput(*gain_controller, kHighInputLevel, kNumFrames,
                            kSampleRateHz, kNumChannels, kInitialInputVolume);
 
-  EXPECT_TRUE(gain_controller->GetRecommendedInputVolume().has_value());
+  EXPECT_TRUE(gain_controller->recommended_input_volume().has_value());
 }
 
 TEST(
@@ -276,19 +275,19 @@ TEST(
       config, kTestInputVolumeControllerConfig, kSampleRateHz, kNumChannels,
       /*use_internal_vad=*/true);
 
-  EXPECT_TRUE(gain_controller->GetRecommendedInputVolume().has_value());
+  EXPECT_FALSE(gain_controller->recommended_input_volume().has_value());
 
   // Run AGC for a signal with no clipping or detected speech.
   RunAgc2WithConstantInput(*gain_controller, kLowInputLevel, kNumFrames,
                            kSampleRateHz, kNumChannels, kInitialInputVolume);
 
-  EXPECT_TRUE(gain_controller->GetRecommendedInputVolume().has_value());
+  EXPECT_TRUE(gain_controller->recommended_input_volume().has_value());
 
   // Run AGC for a signal with clipping.
   RunAgc2WithConstantInput(*gain_controller, kHighInputLevel, kNumFrames,
                            kSampleRateHz, kNumChannels, kInitialInputVolume);
 
-  EXPECT_TRUE(gain_controller->GetRecommendedInputVolume().has_value());
+  EXPECT_TRUE(gain_controller->recommended_input_volume().has_value());
 }
 
 // Checks that the default config is applied.

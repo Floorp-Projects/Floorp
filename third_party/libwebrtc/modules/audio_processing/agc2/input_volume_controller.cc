@@ -426,9 +426,17 @@ void InputVolumeController::Initialize() {
   AggregateChannelLevels();
   clipping_rate_log_ = 0.0f;
   clipping_rate_log_counter_ = 0;
+
+  applied_input_volume_ = absl::nullopt;
 }
 
-void InputVolumeController::AnalyzePreProcess(const AudioBuffer& audio_buffer) {
+void InputVolumeController::AnalyzeInputAudio(int applied_input_volume,
+                                              const AudioBuffer& audio_buffer) {
+  RTC_DCHECK_GE(applied_input_volume, 0);
+  RTC_DCHECK_LE(applied_input_volume, 255);
+
+  SetAppliedInputVolume(applied_input_volume);
+
   RTC_DCHECK_EQ(audio_buffer.num_channels(), channel_controllers_.size());
   const float* const* audio = audio_buffer.channels_const();
   size_t samples_per_channel = audio_buffer.num_frames();
@@ -513,13 +521,20 @@ void InputVolumeController::AnalyzePreProcess(const AudioBuffer& audio_buffer) {
   AggregateChannelLevels();
 }
 
-void InputVolumeController::Process(float speech_probability,
-                                    absl::optional<float> speech_level_dbfs) {
+absl::optional<int> InputVolumeController::RecommendInputVolume(
+    float speech_probability,
+    absl::optional<float> speech_level_dbfs) {
+  // Only process if applied input volume is set.
+  if (!applied_input_volume_.has_value()) {
+    RTC_LOG(LS_ERROR) << "[AGC2] Applied input volume not set.";
+    return absl::nullopt;
+  }
+
   AggregateChannelLevels();
   const int volume_after_clipping_handling = recommended_input_volume_;
 
   if (!capture_output_used_) {
-    return;
+    return applied_input_volume_;
   }
 
   absl::optional<int> rms_error_db;
@@ -540,6 +555,9 @@ void InputVolumeController::Process(float speech_probability,
     UpdateHistogramOnRecommendedInputVolumeChangeToMatchTarget(
         recommended_input_volume_);
   }
+
+  applied_input_volume_ = absl::nullopt;
+  return recommended_input_volume();
 }
 
 void InputVolumeController::HandleCaptureOutputUsedChange(
@@ -574,7 +592,7 @@ void InputVolumeController::AggregateChannelLevels() {
   }
 
   // Enforce the minimum input volume when a recommendation is made.
-  if (applied_input_volume_ > 0) {
+  if (applied_input_volume_.has_value() && *applied_input_volume_ > 0) {
     new_recommended_input_volume =
         std::max(new_recommended_input_volume, min_input_volume_);
   }

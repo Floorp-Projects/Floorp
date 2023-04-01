@@ -76,9 +76,9 @@ class GainController2 {
 
   AvailableCpuFeatures GetCpuFeatures() const { return cpu_features_; }
 
-  // Returns the recommended input volume if input volume controller is enabled
-  // and if a volume recommendation is available.
-  absl::optional<int> GetRecommendedInputVolume() const;
+  absl::optional<int> recommended_input_volume() const {
+    return recommended_input_volume_;
+  }
 
  private:
   static std::atomic<int> instance_count_;
@@ -96,6 +96,13 @@ class GainController2 {
   Limiter limiter_;
 
   int calls_since_last_limiter_log_;
+
+  // TODO(bugs.webrtc.org/7494): Remove intermediate storing at this level once
+  // APM refactoring is completed.
+  // Recommended input volume from `InputVolumecontroller`. Non-empty after
+  // `Process()` if input volume controller is enabled and
+  // `InputVolumeController::Process()` has returned a non-empty value.
+  absl::optional<int> recommended_input_volume_;
 };
 
 }  // namespace webrtc
