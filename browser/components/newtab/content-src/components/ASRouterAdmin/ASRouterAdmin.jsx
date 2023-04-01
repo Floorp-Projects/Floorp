@@ -1155,8 +1155,7 @@ export class ASRouterAdminInner extends React.PureComponent {
         >
           Unblock All Snippets
         </button>
-        {/* eslint-disable-next-line prettier/prettier */}
-        Show messages from {/* eslint-disable-next-line jsx-a11y/no-onchange */}
+        Show messages from{" "}
         <select
           value={this.state.messageFilter}
           onChange={this.onChangeMessageFilter}

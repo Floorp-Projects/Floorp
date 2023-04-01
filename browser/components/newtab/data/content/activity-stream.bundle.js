@@ -1711,7 +1711,7 @@ class ASRouterAdminInner extends (external_React_default()).PureComponent {
     return /*#__PURE__*/external_React_default().createElement("p", null, /*#__PURE__*/external_React_default().createElement("button", {
       className: "unblock-all ASRouterButton test-only",
       onClick: this.unblockAll
-    }, "Unblock All Snippets"), "Show messages from ", /*#__PURE__*/external_React_default().createElement("select", {
+    }, "Unblock All Snippets"), "Show messages from", " ", /*#__PURE__*/external_React_default().createElement("select", {
       value: this.state.messageFilter,
       onChange: this.onChangeMessageFilter
     }, /*#__PURE__*/external_React_default().createElement("option", {
