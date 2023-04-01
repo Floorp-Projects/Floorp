@@ -509,6 +509,7 @@ void InputVolumeController::AnalyzePreProcess(const AudioBuffer& audio_buffer) {
 void InputVolumeController::Process(float speech_probability,
                                     absl::optional<float> speech_level_dbfs) {
   AggregateChannelLevels();
+  const int volume_after_clipping_handling = recommended_input_volume_;
 
   if (!capture_output_used_) {
     return;
@@ -526,6 +527,13 @@ void InputVolumeController::Process(float speech_probability,
   }
 
   AggregateChannelLevels();
+  if (volume_after_clipping_handling != recommended_input_volume_) {
+    // The recommended input volume was adjusted in order to match the target
+    // level.
+    RTC_HISTOGRAM_COUNTS_LINEAR(
+        "WebRTC.Audio.Apm.RecommendedInputVolume.OnChangeToMatchTarget",
+        recommended_input_volume_, 1, kMaxInputVolume, 50);
+  }
 }
 
 void InputVolumeController::HandleCaptureOutputUsedChange(

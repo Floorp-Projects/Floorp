@@ -65,6 +65,7 @@ class InputVolumeStatsReporter {
 
   // Histograms.
   struct Histograms {
+    metrics::Histogram* const on_volume_change;
     metrics::Histogram* const decrease_rate;
     metrics::Histogram* const decrease_average;
     metrics::Histogram* const increase_rate;
@@ -72,8 +73,9 @@ class InputVolumeStatsReporter {
     metrics::Histogram* const update_rate;
     metrics::Histogram* const update_average;
     bool AllPointersSet() const {
-      return !!decrease_rate && !!decrease_average && !!increase_rate &&
-             !!increase_average && !!update_rate && !!update_average;
+      return !!on_volume_change && !!decrease_rate && !!decrease_average &&
+             !!increase_rate && !!increase_average && !!update_rate &&
+             !!update_average;
     }
   } histograms_;
 
