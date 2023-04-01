@@ -86,11 +86,6 @@ ABSL_FLAG(std::string,
           "",
           "Path to output an empty JSON file which Chromium infra requires.");
 
-ABSL_FLAG(bool,
-          export_perf_results_new_api,
-          false,
-          "Tells to initialize new API for exporting performance metrics");
-
 ABSL_FLAG(bool, logs, true, "print logs to stderr");
 ABSL_FLAG(bool, verbose, false, "verbose logs to stderr");
 
