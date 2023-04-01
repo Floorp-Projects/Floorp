@@ -126,16 +126,13 @@ class InputVolumeController final {
  private:
   friend class InputVolumeControllerTestHelper;
 
+  FRIEND_TEST_ALL_PREFIXES(InputVolumeControllerTest, MinInputVolumeDefault);
+  FRIEND_TEST_ALL_PREFIXES(InputVolumeControllerTest, MinInputVolumeDisabled);
   FRIEND_TEST_ALL_PREFIXES(InputVolumeControllerTest,
-                           AgcMinMicLevelExperimentDefault);
+                           MinInputVolumeOutOfRangeAbove);
   FRIEND_TEST_ALL_PREFIXES(InputVolumeControllerTest,
-                           AgcMinMicLevelExperimentDisabled);
-  FRIEND_TEST_ALL_PREFIXES(InputVolumeControllerTest,
-                           AgcMinMicLevelExperimentOutOfRangeAbove);
-  FRIEND_TEST_ALL_PREFIXES(InputVolumeControllerTest,
-                           AgcMinMicLevelExperimentOutOfRangeBelow);
-  FRIEND_TEST_ALL_PREFIXES(InputVolumeControllerTest,
-                           AgcMinMicLevelExperimentEnabled50);
+                           MinInputVolumeOutOfRangeBelow);
+  FRIEND_TEST_ALL_PREFIXES(InputVolumeControllerTest, MinInputVolumeEnabled50);
   FRIEND_TEST_ALL_PREFIXES(InputVolumeControllerParametrizedTest,
                            ClippingParametersVerified);
 
@@ -184,8 +181,8 @@ class InputVolumeController final {
 // convention.
 class MonoInputVolumeController {
  public:
-  MonoInputVolumeController(int clipped_level_min,
-                            int min_mic_level,
+  MonoInputVolumeController(int min_input_volume_after_clipping,
+                            int min_input_volume,
                             int update_input_volume_wait_frames,
                             float speech_probability_threshold,
                             float speech_ratio_threshold);
@@ -198,7 +195,9 @@ class MonoInputVolumeController {
   void HandleCaptureOutputUsedChange(bool capture_output_used);
 
   // Sets the current input volume.
-  void set_stream_analog_level(int level) { recommended_input_volume_ = level; }
+  void set_stream_analog_level(int input_volume) {
+    recommended_input_volume_ = input_volume;
+  }
 
   // Lowers the recommended input volume in response to clipping based on the
   // suggested reduction `clipped_level_step`. Must be called after
@@ -217,7 +216,9 @@ class MonoInputVolumeController {
 
   void ActivateLogging() { log_to_histograms_ = true; }
 
-  int clipped_level_min() const { return clipped_level_min_; }
+  int min_input_volume_after_clipping() const {
+    return min_input_volume_after_clipping_;
+  }
 
   // Only used for testing.
   int min_input_volume() const { return min_input_volume_; }
@@ -225,7 +226,7 @@ class MonoInputVolumeController {
  private:
   // Sets a new input volume, after first checking that it hasn't been updated
   // by the user, in which case no action is taken.
-  void SetLevel(int new_level);
+  void SetInputVolume(int new_volume);
 
   // Sets the maximum input volume that the input volume controller is allowed
   // to apply. The volume must be at least `kClippedLevelMin`.
@@ -239,9 +240,11 @@ class MonoInputVolumeController {
   void UpdateInputVolume(int rms_error_dbfs);
 
   const int min_input_volume_;
+  const int min_input_volume_after_clipping_;
+  int max_input_volume_;
 
-  int level_ = 0;
-  int max_level_;
+  // Last recommended input volume.
+  int input_volume_ = 0;
 
   bool capture_output_used_ = true;
   bool check_volume_on_next_process_ = true;
@@ -256,8 +259,6 @@ class MonoInputVolumeController {
   int recommended_input_volume_ = 0;
 
   bool log_to_histograms_ = false;
-
-  const int clipped_level_min_;
 
   // Counters for frames and speech frames since the last update in the
   // recommended input volume.
