@@ -665,11 +665,20 @@ int VideoReceiveStream2::GetBaseMinimumPlayoutDelayMs() const {
 }
 
 void VideoReceiveStream2::OnFrame(const VideoFrame& video_frame) {
-  VideoFrameMetaData frame_meta(video_frame, clock_->CurrentTime());
+  source_tracker_.OnFrameDelivered(video_frame.packet_infos());
+  config_.renderer->OnFrame(video_frame);
 
   // TODO(bugs.webrtc.org/10739): we should set local capture clock offset for
   // `video_frame.packet_infos`. But VideoFrame is const qualified here.
 
+  // For frame delay metrics, calculated in `OnRenderedFrame`, to better reflect
+  // user experience measurements must be done as close as possible to frame
+  // rendering moment. Capture current time, which is used for calculation of
+  // delay metrics in `OnRenderedFrame`, right after frame is passed to
+  // renderer. Frame may or may be not rendered by this time. This results in
+  // inaccuracy but is still the best we can do in the absence of "frame
+  // rendered" callback from the renderer.
+  VideoFrameMetaData frame_meta(video_frame, clock_->CurrentTime());
   call_->worker_thread()->PostTask(
       SafeTask(task_safety_.flag(), [frame_meta, this]() {
         RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
@@ -685,8 +694,6 @@ void VideoReceiveStream2::OnFrame(const VideoFrame& video_frame) {
         stats_proxy_.OnRenderedFrame(frame_meta);
       }));
 
-  source_tracker_.OnFrameDelivered(video_frame.packet_infos());
-  config_.renderer->OnFrame(video_frame);
   webrtc::MutexLock lock(&pending_resolution_mutex_);
   if (pending_resolution_.has_value()) {
     if (!pending_resolution_->empty() &&
