@@ -477,33 +477,24 @@ RtpVideoSender::~RtpVideoSender() {
   RTC_DCHECK(!registered_for_feedback_);
 }
 
-void RtpVideoSender::SetActive(bool active) {
+void RtpVideoSender::Stop() {
   RTC_DCHECK_RUN_ON(&transport_checker_);
   MutexLock lock(&mutex_);
-  if (active_ == active)
+  if (!active_)
     return;
 
-  const std::vector<bool> active_modules(rtp_streams_.size(), active);
+  const std::vector<bool> active_modules(rtp_streams_.size(), false);
   SetActiveModulesLocked(active_modules);
-
-  auto* feedback_provider = transport_->GetStreamFeedbackProvider();
-  if (active && !registered_for_feedback_) {
-    feedback_provider->RegisterStreamFeedbackObserver(rtp_config_.ssrcs, this);
-    registered_for_feedback_ = true;
-  } else if (!active && registered_for_feedback_) {
-    feedback_provider->DeRegisterStreamFeedbackObserver(this);
-    registered_for_feedback_ = false;
-  }
 }
 
-void RtpVideoSender::SetActiveModules(const std::vector<bool> active_modules) {
+void RtpVideoSender::SetActiveModules(const std::vector<bool>& active_modules) {
   RTC_DCHECK_RUN_ON(&transport_checker_);
   MutexLock lock(&mutex_);
   return SetActiveModulesLocked(active_modules);
 }
 
 void RtpVideoSender::SetActiveModulesLocked(
-    const std::vector<bool> active_modules) {
+    const std::vector<bool>& active_modules) {
   RTC_DCHECK_RUN_ON(&transport_checker_);
   RTC_DCHECK_EQ(rtp_streams_.size(), active_modules.size());
   active_ = false;
@@ -534,6 +525,17 @@ void RtpVideoSender::SetActiveModulesLocked(
       transport_->packet_router()->AddSendRtpModule(&rtp_module,
                                                     /*remb_candidate=*/true);
     }
+  }
+  if (!active_) {
+    auto* feedback_provider = transport_->GetStreamFeedbackProvider();
+    if (registered_for_feedback_) {
+      feedback_provider->DeRegisterStreamFeedbackObserver(this);
+      registered_for_feedback_ = false;
+    }
+  } else if (!registered_for_feedback_) {
+    auto* feedback_provider = transport_->GetStreamFeedbackProvider();
+    feedback_provider->RegisterStreamFeedbackObserver(rtp_config_.ssrcs, this);
+    registered_for_feedback_ = true;
   }
 }
 
