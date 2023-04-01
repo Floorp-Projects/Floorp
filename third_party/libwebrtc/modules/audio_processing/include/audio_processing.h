@@ -146,6 +146,12 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
   struct RTC_EXPORT Config {
     // Sets the properties of the audio processing pipeline.
     struct RTC_EXPORT Pipeline {
+      // Ways to downmix a multi-channel track to mono.
+      enum class DownmixMethod {
+        kAverageChannels,  // Average across channels.
+        kUseFirstChannel   // Use the first channel.
+      };
+
       // Maximum allowed processing rate used internally. May only be set to
       // 32000 or 48000 and any differing values will be treated as 48000.
       int maximum_internal_processing_rate = 48000;
@@ -154,6 +160,9 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
       // Allow multi-channel processing of capture audio when AEC3 is active
       // or a custom AEC is injected..
       bool multi_channel_capture = false;
+      // Indicates how to downmix multi-channel capture audio to mono (when
+      // needed).
+      DownmixMethod capture_downmix_method = DownmixMethod::kAverageChannels;
     } pipeline;
 
     // Enabled the pre-amplifier. It amplifies the capture signal
