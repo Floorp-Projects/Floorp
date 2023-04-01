@@ -32,7 +32,6 @@ constexpr int kLevelQuantizationSlack = 25;
 
 constexpr int kMaxMicLevel = 255;
 static_assert(kGainMapSize > kMaxMicLevel, "gain map too small");
-constexpr int kMinMicLevel = 12;
 
 // Prevent very large microphone level changes.
 constexpr int kMaxResidualGainChange = 15;
@@ -49,31 +48,29 @@ Agc1ClippingPredictorConfig CreateClippingPredictorConfig(bool enabled) {
   return config;
 }
 
-// If the "WebRTC-Audio-2ndAgcMinMicLevelExperiment" field trial is specified,
-// parses it and returns a value between 0 and 255 depending on the field-trial
-// string. Returns an unspecified value if the field trial is not specified, if
-// disabled or if it cannot be parsed. Example:
-// 'WebRTC-Audio-2ndAgcMinMicLevelExperiment/Enabled-80' => returns 80.
-absl::optional<int> GetMinMicLevelOverride() {
-  constexpr char kMinMicLevelFieldTrial[] =
-      "WebRTC-Audio-2ndAgcMinMicLevelExperiment";
-  if (!webrtc::field_trial::IsEnabled(kMinMicLevelFieldTrial)) {
-    return absl::nullopt;
+// Returns the minimum input volume to recommend.
+// If the "WebRTC-Audio-Agc2-MinInputVolume" field trial is specified, parses it
+// and returns the value specified after "Enabled-" if valid - i.e., in the
+// range 0-255. Otherwise returns the default value.
+// Example:
+// "WebRTC-Audio-Agc2-MinInputVolume/Enabled-80" => returns 80.
+int GetMinInputVolume() {
+  constexpr int kDefaultMinInputVolume = 12;
+  constexpr char kFieldTrial[] = "WebRTC-Audio-Agc2-MinInputVolume";
+  if (!webrtc::field_trial::IsEnabled(kFieldTrial)) {
+    return kDefaultMinInputVolume;
   }
-  const auto field_trial_string =
-      webrtc::field_trial::FindFullName(kMinMicLevelFieldTrial);
-  int min_mic_level = -1;
-  sscanf(field_trial_string.c_str(), "Enabled-%d", &min_mic_level);
-  if (min_mic_level >= 0 && min_mic_level <= 255) {
-    return min_mic_level;
-  } else {
-    RTC_LOG(LS_WARNING) << "[agc] Invalid parameter for "
-                        << kMinMicLevelFieldTrial << ", ignored.";
-    return absl::nullopt;
+  std::string field_trial_str = webrtc::field_trial::FindFullName(kFieldTrial);
+  int min_input_volume = -1;
+  sscanf(field_trial_str.c_str(), "Enabled-%d", &min_input_volume);
+  if (min_input_volume >= 0 && min_input_volume <= 255) {
+    return min_input_volume;
   }
+  RTC_LOG(LS_WARNING) << "Invalid volume for " << kFieldTrial << ", ignored.";
+  return kDefaultMinInputVolume;
 }
 
-int LevelFromGainError(int gain_error, int level, int min_mic_level) {
+int LevelFromGainError(int gain_error, int level, int min_input_volume) {
   RTC_DCHECK_GE(level, 0);
   RTC_DCHECK_LE(level, kMaxMicLevel);
   if (gain_error == 0) {
@@ -88,7 +85,7 @@ int LevelFromGainError(int gain_error, int level, int min_mic_level) {
     }
   } else {
     while (kGainMap[new_level] - kGainMap[level] > gain_error &&
-           new_level > min_mic_level) {
+           new_level > min_input_volume) {
       --new_level;
     }
   }
@@ -154,11 +151,11 @@ int GetSpeechLevelErrorDb(float speech_level_dbfs,
 
 MonoInputVolumeController::MonoInputVolumeController(
     int clipped_level_min,
-    int min_mic_level,
+    int min_input_volume,
     int update_input_volume_wait_frames,
     float speech_probability_threshold,
     float speech_ratio_threshold)
-    : min_mic_level_(min_mic_level),
+    : min_input_volume_(min_input_volume),
       max_level_(kMaxMicLevel),
       clipped_level_min_(clipped_level_min),
       update_input_volume_wait_frames_(
@@ -167,8 +164,8 @@ MonoInputVolumeController::MonoInputVolumeController(
       speech_ratio_threshold_(speech_ratio_threshold) {
   RTC_DCHECK_GE(clipped_level_min_, 0);
   RTC_DCHECK_LE(clipped_level_min_, 255);
-  RTC_DCHECK_GE(min_mic_level_, 0);
-  RTC_DCHECK_LE(min_mic_level_, 255);
+  RTC_DCHECK_GE(min_input_volume_, 0);
+  RTC_DCHECK_LE(min_input_volume_, 255);
   RTC_DCHECK_GE(update_input_volume_wait_frames_, 0);
   RTC_DCHECK_GE(speech_probability_threshold_, 0.0f);
   RTC_DCHECK_LE(speech_probability_threshold_, 1.0f);
@@ -331,8 +328,8 @@ int MonoInputVolumeController::CheckVolumeAndReset() {
   }
   RTC_DLOG(LS_INFO) << "[agc] Initial GetMicVolume()=" << level;
 
-  if (level < min_mic_level_) {
-    level = min_mic_level_;
+  if (level < min_input_volume_) {
+    level = min_input_volume_;
     RTC_DLOG(LS_INFO) << "[agc] Initial volume too low, raising to " << level;
     recommended_input_volume_ = level;
   }
@@ -357,13 +354,13 @@ void MonoInputVolumeController::UpdateInputVolume(int rms_error_dbfs) {
     return;
   }
 
-  SetLevel(LevelFromGainError(residual_gain, level_, min_mic_level_));
+  SetLevel(LevelFromGainError(residual_gain, level_, min_input_volume_));
 }
 
 InputVolumeController::InputVolumeController(int num_capture_channels,
                                              const Config& config)
     : num_capture_channels_(num_capture_channels),
-      min_mic_level_override_(GetMinMicLevelOverride()),
+      min_input_volume_(GetMinInputVolume()),
       capture_output_used_(true),
       clipped_level_step_(config.clipped_level_step),
       clipped_ratio_threshold_(config.clipped_ratio_threshold),
@@ -381,16 +378,12 @@ InputVolumeController::InputVolumeController(int num_capture_channels,
       target_range_max_dbfs_(config.target_range_max_dbfs),
       target_range_min_dbfs_(config.target_range_min_dbfs),
       channel_controllers_(num_capture_channels) {
-  const int min_mic_level = min_mic_level_override_.value_or(kMinMicLevel);
-  RTC_LOG(LS_INFO) << "[agc] Input volume controller enabled";
-  RTC_LOG(LS_INFO) << "[agc] Min mic level: " << min_mic_level
-                   << " (overridden: "
-                   << (min_mic_level_override_.has_value() ? "yes" : "no")
-                   << ")";
-
+  RTC_LOG(LS_INFO)
+      << "[agc] Input volume controller enabled (min input volume: "
+      << min_input_volume_ << ")";
   for (auto& controller : channel_controllers_) {
     controller = std::make_unique<MonoInputVolumeController>(
-        config.clipped_level_min, min_mic_level,
+        config.clipped_level_min, min_input_volume_,
         config.update_input_volume_wait_frames,
         config.speech_probability_threshold, config.speech_ratio_threshold);
   }
@@ -551,9 +544,9 @@ void InputVolumeController::AggregateChannelLevels() {
     }
   }
 
-  if (min_mic_level_override_.has_value() && new_recommended_input_volume > 0) {
+  if (new_recommended_input_volume > 0) {
     new_recommended_input_volume =
-        std::max(new_recommended_input_volume, *min_mic_level_override_);
+        std::max(new_recommended_input_volume, min_input_volume_);
   }
 
   recommended_input_volume_ = new_recommended_input_volume;

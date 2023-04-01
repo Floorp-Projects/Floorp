@@ -143,8 +143,8 @@ class InputVolumeController final {
 
   const int num_capture_channels_;
 
-  // If not empty, the value is used to override the minimum input volume.
-  const absl::optional<int> min_mic_level_override_;
+  // Minimum input volume that can be recommended.
+  const int min_input_volume_;
 
   // TODO(bugs.webrtc.org/7494): Create a separate member for the applied input
   // volume.
@@ -220,7 +220,7 @@ class MonoInputVolumeController {
   int clipped_level_min() const { return clipped_level_min_; }
 
   // Only used for testing.
-  int min_mic_level() const { return min_mic_level_; }
+  int min_input_volume() const { return min_input_volume_; }
 
  private:
   // Sets a new input volume, after first checking that it hasn't been updated
@@ -238,7 +238,7 @@ class MonoInputVolumeController {
   // action and cache the updated level.
   void UpdateInputVolume(int rms_error_dbfs);
 
-  const int min_mic_level_;
+  const int min_input_volume_;
 
   int level_ = 0;
   int max_level_;
