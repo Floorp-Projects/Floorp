@@ -333,45 +333,34 @@ void SimulcastTestFixtureImpl::UpdateActiveStreams(
   EXPECT_EQ(0, encoder_->InitEncode(&settings_, kSettings));
 }
 
+void SimulcastTestFixtureImpl::ExpectStream(VideoFrameType frame_type,
+                                            int scaleResolutionDownBy) {
+  EXPECT_CALL(
+      encoder_callback_,
+      OnEncodedImage(AllOf(Field(&EncodedImage::_frameType, frame_type),
+                           Field(&EncodedImage::_encodedWidth,
+                                 kDefaultWidth / scaleResolutionDownBy),
+                           Field(&EncodedImage::_encodedHeight,
+                                 kDefaultHeight / scaleResolutionDownBy)),
+                     _))
+      .Times(1)
+      .WillRepeatedly(Return(
+          EncodedImageCallback::Result(EncodedImageCallback::Result::OK, 0)));
+}
+
 void SimulcastTestFixtureImpl::ExpectStreams(
     VideoFrameType frame_type,
     const std::vector<bool> expected_streams_active) {
   ASSERT_EQ(static_cast<int>(expected_streams_active.size()),
             kNumberOfSimulcastStreams);
   if (expected_streams_active[0]) {
-    EXPECT_CALL(
-        encoder_callback_,
-        OnEncodedImage(
-            AllOf(Field(&EncodedImage::_frameType, frame_type),
-                  Field(&EncodedImage::_encodedWidth, kDefaultWidth / 4),
-                  Field(&EncodedImage::_encodedHeight, kDefaultHeight / 4)),
-            _))
-        .Times(1)
-        .WillRepeatedly(Return(
-            EncodedImageCallback::Result(EncodedImageCallback::Result::OK, 0)));
+    ExpectStream(frame_type, 4);
   }
   if (expected_streams_active[1]) {
-    EXPECT_CALL(
-        encoder_callback_,
-        OnEncodedImage(
-            AllOf(Field(&EncodedImage::_frameType, frame_type),
-                  Field(&EncodedImage::_encodedWidth, kDefaultWidth / 2),
-                  Field(&EncodedImage::_encodedHeight, kDefaultHeight / 2)),
-            _))
-        .Times(1)
-        .WillRepeatedly(Return(
-            EncodedImageCallback::Result(EncodedImageCallback::Result::OK, 0)));
+    ExpectStream(frame_type, 2);
   }
   if (expected_streams_active[2]) {
-    EXPECT_CALL(encoder_callback_,
-                OnEncodedImage(
-                    AllOf(Field(&EncodedImage::_frameType, frame_type),
-                          Field(&EncodedImage::_encodedWidth, kDefaultWidth),
-                          Field(&EncodedImage::_encodedHeight, kDefaultHeight)),
-                    _))
-        .Times(1)
-        .WillRepeatedly(Return(
-            EncodedImageCallback::Result(EncodedImageCallback::Result::OK, 0)));
+    ExpectStream(frame_type, 1);
   }
 }
 

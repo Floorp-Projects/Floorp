@@ -1089,6 +1089,89 @@ TEST_F(TestSimulcastEncoderAdapterFake, NativeHandleForwardingOnlyIfSupported) {
   EXPECT_EQ(0, adapter_->Encode(input_frame, &frame_types));
 }
 
+TEST_F(TestSimulcastEncoderAdapterFake, GeneratesKeyFramesOnRequestedLayers) {
+  // Set up common settings for three streams.
+  SimulcastTestFixtureImpl::DefaultSettings(
+      &codec_, static_cast<const int*>(kTestTemporalLayerProfile),
+      kVideoCodecVP8);
+  rate_allocator_.reset(new SimulcastRateAllocator(codec_));
+  adapter_->RegisterEncodeCompleteCallback(this);
+
+  // Input data.
+  rtc::scoped_refptr<VideoFrameBuffer> buffer(I420Buffer::Create(1280, 720));
+
+  // Encode with three streams.
+  codec_.startBitrate = 3000;
+  EXPECT_EQ(0, adapter_->InitEncode(&codec_, kSettings));
+
+  std::vector<VideoFrameType> frame_types;
+  frame_types.resize(3, VideoFrameType::kVideoFrameKey);
+
+  std::vector<VideoFrameType> expected_keyframe(1,
+                                                VideoFrameType::kVideoFrameKey);
+  std::vector<VideoFrameType> expected_deltaframe(
+      1, VideoFrameType::kVideoFrameDelta);
+
+  std::vector<MockVideoEncoder*> original_encoders =
+      helper_->factory()->encoders();
+  ASSERT_EQ(3u, original_encoders.size());
+  EXPECT_CALL(*original_encoders[0],
+              Encode(_, ::testing::Pointee(::testing::Eq(expected_keyframe))))
+      .WillOnce(Return(WEBRTC_VIDEO_CODEC_OK));
+  EXPECT_CALL(*original_encoders[1],
+              Encode(_, ::testing::Pointee(::testing::Eq(expected_keyframe))))
+      .WillOnce(Return(WEBRTC_VIDEO_CODEC_OK));
+  EXPECT_CALL(*original_encoders[2],
+              Encode(_, ::testing::Pointee(::testing::Eq(expected_keyframe))))
+      .WillOnce(Return(WEBRTC_VIDEO_CODEC_OK));
+  VideoFrame first_frame = VideoFrame::Builder()
+                               .set_video_frame_buffer(buffer)
+                               .set_timestamp_rtp(0)
+                               .set_timestamp_ms(0)
+                               .build();
+  EXPECT_EQ(0, adapter_->Encode(first_frame, &frame_types));
+
+  // Request [key, delta, delta].
+  EXPECT_CALL(*original_encoders[0],
+              Encode(_, ::testing::Pointee(::testing::Eq(expected_keyframe))))
+      .WillOnce(Return(WEBRTC_VIDEO_CODEC_OK));
+  EXPECT_CALL(*original_encoders[1],
+              Encode(_, ::testing::Pointee(::testing::Eq(expected_deltaframe))))
+      .WillOnce(Return(WEBRTC_VIDEO_CODEC_OK));
+  EXPECT_CALL(*original_encoders[2],
+              Encode(_, ::testing::Pointee(::testing::Eq(expected_deltaframe))))
+      .WillOnce(Return(WEBRTC_VIDEO_CODEC_OK));
+  frame_types[1] = VideoFrameType::kVideoFrameKey;
+  frame_types[1] = VideoFrameType::kVideoFrameDelta;
+  frame_types[2] = VideoFrameType::kVideoFrameDelta;
+  VideoFrame second_frame = VideoFrame::Builder()
+                                .set_video_frame_buffer(buffer)
+                                .set_timestamp_rtp(10000)
+                                .set_timestamp_ms(100000)
+                                .build();
+  EXPECT_EQ(0, adapter_->Encode(second_frame, &frame_types));
+
+  // Request [delta, key, delta].
+  EXPECT_CALL(*original_encoders[0],
+              Encode(_, ::testing::Pointee(::testing::Eq(expected_deltaframe))))
+      .WillOnce(Return(WEBRTC_VIDEO_CODEC_OK));
+  EXPECT_CALL(*original_encoders[1],
+              Encode(_, ::testing::Pointee(::testing::Eq(expected_keyframe))))
+      .WillOnce(Return(WEBRTC_VIDEO_CODEC_OK));
+  EXPECT_CALL(*original_encoders[2],
+              Encode(_, ::testing::Pointee(::testing::Eq(expected_deltaframe))))
+      .WillOnce(Return(WEBRTC_VIDEO_CODEC_OK));
+  frame_types[0] = VideoFrameType::kVideoFrameDelta;
+  frame_types[1] = VideoFrameType::kVideoFrameKey;
+  frame_types[2] = VideoFrameType::kVideoFrameDelta;
+  VideoFrame third_frame = VideoFrame::Builder()
+                               .set_video_frame_buffer(buffer)
+                               .set_timestamp_rtp(20000)
+                               .set_timestamp_ms(200000)
+                               .build();
+  EXPECT_EQ(0, adapter_->Encode(third_frame, &frame_types));
+}
+
 TEST_F(TestSimulcastEncoderAdapterFake, TestFailureReturnCodesFromEncodeCalls) {
   SimulcastTestFixtureImpl::DefaultSettings(
       &codec_, static_cast<const int*>(kTestTemporalLayerProfile),
