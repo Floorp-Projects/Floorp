@@ -178,6 +178,12 @@ class WebGLExtensionMultiview : public WebGLExtensionBase {
   static bool IsSupported(const WebGLContext*);
 };
 
+class WebGLExtensionProvokingVertex : public WebGLExtensionBase {
+ public:
+  explicit WebGLExtensionProvokingVertex(WebGLContext* webgl)
+      : WebGLExtensionBase(webgl) {}
+};
+
 class WebGLExtensionSRGB : public WebGLExtensionBase {
  public:
   explicit WebGLExtensionSRGB(WebGLContext*);
