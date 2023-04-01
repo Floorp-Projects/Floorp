@@ -47,6 +47,7 @@ if (!build_with_chromium && !build_with_mozilla) {
     }
     if (rtc_include_tests) {
       deps += [
+        ":fuchsia_perf_tests",
         ":rtc_unittests",
         ":video_engine_tests",
         ":voip_unittests",
