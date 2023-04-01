@@ -86,7 +86,6 @@ AimdRateControl::AimdRateControl(const FieldTrialsView* key_value_config,
       in_alr_(false),
       rtt_(kDefaultRtt),
       send_side_(send_side),
-      in_experiment_(!AdaptiveThresholdExperimentIsDisabled(*key_value_config)),
       no_bitrate_increase_in_alr_(
           IsEnabled(*key_value_config,
                     "WebRTC-DontIncreaseDelayBasedBweInAlr")),
@@ -233,7 +232,7 @@ double AimdRateControl::GetNearMaxIncreaseRateBpsPerSecond() const {
 
   // Approximate the over-use estimator delay to 100 ms.
   TimeDelta response_time = rtt_ + TimeDelta::Millis(100);
-  if (in_experiment_)
+
     response_time = response_time * 2;
   double increase_rate_bps_per_second =
       (avg_packet_size / response_time).bps<double>();

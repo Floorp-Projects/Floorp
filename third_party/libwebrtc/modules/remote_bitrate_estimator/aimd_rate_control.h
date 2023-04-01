@@ -100,7 +100,6 @@ class AimdRateControl {
   bool in_alr_;
   TimeDelta rtt_;
   const bool send_side_;
-  const bool in_experiment_;
   // Allow the delay based estimate to only increase as long as application
   // limited region (alr) is not detected.
   const bool no_bitrate_increase_in_alr_;
