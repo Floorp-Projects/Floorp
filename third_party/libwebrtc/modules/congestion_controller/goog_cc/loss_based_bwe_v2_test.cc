@@ -746,7 +746,7 @@ TEST_P(LossBasedBweV2Test,
       "ObservationWindowSize:2,ObservationDurationLowerBound:200ms,"
       "InstantUpperBoundBwBalance:10000kbps,"
       "DelayBasedCandidate:true,MaxIncreaseFactor:1.5,BwRampupUpperBoundFactor:"
-      "2.0/");
+      "2.0,NotIncreaseIfInherentLossLessThanAverageLoss:false/");
   LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
   DataRate delay_based_estimate = DataRate::KilobitsPerSec(5000);
   DataRate acked_rate = DataRate::KilobitsPerSec(300);
@@ -792,7 +792,7 @@ TEST_P(LossBasedBweV2Test,
       "InstantUpperBoundBwBalance:10000kbps,"
       "DelayBasedCandidate:true,MaxIncreaseFactor:100,"
       "BwRampupUpperBoundFactor:"
-      "2.0/");
+      "2.0,NotIncreaseIfInherentLossLessThanAverageLoss:false/");
   LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
   DataRate delay_based_estimate = DataRate::KilobitsPerSec(600);
   DataRate acked_rate = DataRate::KilobitsPerSec(300);
@@ -879,14 +879,19 @@ TEST_P(LossBasedBweV2Test,
       enough_feedback_2, delay_based_estimate, BandwidthUsage::kBwNormal,
       /*probe_estimate=*/absl::nullopt,
       /*upper_link_capacity=*/DataRate::PlusInfinity());
-  EXPECT_EQ(loss_based_bandwidth_estimator.GetLossBasedResult().state,
-            LossBasedState::kIncreasing);
+  EXPECT_NE(loss_based_bandwidth_estimator.GetLossBasedResult().state,
+            LossBasedState::kDelayBasedEstimate);
 }
 
 // After loss based bwe backs off, the next estimate is capped by
 // a factor of acked bitrate.
 TEST_P(LossBasedBweV2Test,
        IncreaseByFactorOfAckedBitrateAfterLossBasedBweBacksOff) {
+  ExplicitKeyValueConfig key_value_config(
+      "WebRTC-Bwe-LossBasedBweV2/"
+      "Enabled:true,LossThresholdOfHighBandwidthPreference:0.99,"
+      "BwRampupUpperBoundFactor:1.2,"
+      "InherentLossUpperBoundOffset:0.9,ObservationDurationLowerBound:200ms/");
   std::vector<PacketResult> enough_feedback_1 =
       CreatePacketResultsWith100pLossRate(
           /*first_packet_timestamp=*/Timestamp::Zero());
@@ -894,9 +899,6 @@ TEST_P(LossBasedBweV2Test,
       CreatePacketResultsWith10pLossRate(
           /*first_packet_timestamp=*/Timestamp::Zero() +
           kObservationDurationLowerBound);
-  ExplicitKeyValueConfig key_value_config(
-      Config(/*enabled=*/true, /*valid=*/true,
-             /*trendline_integration_enabled=*/GetParam()));
   LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
   DataRate delay_based_estimate = DataRate::KilobitsPerSec(5000);
 
@@ -1075,7 +1077,7 @@ TEST_P(LossBasedBweV2Test,
       "DelayBasedCandidate:true,InstantUpperBoundBwBalance:100kbps,"
       "ObservationDurationLowerBound:200ms,HigherBwBiasFactor:1000,"
       "HigherLogBwBiasFactor:1000,LossThresholdOfHighBandwidthPreference:0."
-      "20/");
+      "20,NotIncreaseIfInherentLossLessThanAverageLoss:false/");
   LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
   DataRate delay_based_estimate = DataRate::KilobitsPerSec(5000);
 
