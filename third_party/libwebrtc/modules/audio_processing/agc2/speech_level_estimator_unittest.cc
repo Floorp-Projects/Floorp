@@ -42,13 +42,6 @@ void RunOnConstantLevel(int num_iterations,
   }
 }
 
-constexpr AdaptiveDigitalConfig GetAdaptiveDigitalConfig(
-    int adjacent_speech_frames_threshold) {
-  AdaptiveDigitalConfig config;
-  config.adjacent_speech_frames_threshold = adjacent_speech_frames_threshold;
-  return config;
-}
-
 constexpr float kNoSpeechProbability = 0.0f;
 constexpr float kLowSpeechProbability = kVadConfidenceThreshold / 2.0f;
 constexpr float kMaxSpeechProbability = 1.0f;
@@ -59,7 +52,8 @@ struct TestLevelEstimator {
       : data_dumper(0),
         estimator(std::make_unique<SpeechLevelEstimator>(
             &data_dumper,
-            GetAdaptiveDigitalConfig(adjacent_speech_frames_threshold))),
+            AdaptiveDigitalConfig{},
+            adjacent_speech_frames_threshold)),
         initial_speech_level_dbfs(estimator->level_dbfs()),
         level_rms_dbfs(initial_speech_level_dbfs / 2.0f),
         level_peak_dbfs(initial_speech_level_dbfs / 3.0f) {

@@ -14,6 +14,7 @@
 #include <utility>
 
 #include "common_audio/include/audio_util.h"
+#include "modules/audio_processing/agc2/agc2_common.h"
 #include "modules/audio_processing/agc2/cpu_features.h"
 #include "modules/audio_processing/audio_buffer.h"
 #include "modules/audio_processing/include/audio_frame_view.h"
@@ -102,14 +103,10 @@ GainController2::GainController2(
       config.adaptive_digital.enabled) {
     // Create dependencies.
     speech_level_estimator_ = std::make_unique<SpeechLevelEstimator>(
-        &data_dumper_, config.adaptive_digital);
-    if (use_internal_vad) {
-      // TODO(bugs.webrtc.org/7494): Move `vad_reset_period_ms` from adaptive
-      // digital to gain controller 2 config.
+        &data_dumper_, config.adaptive_digital, kAdjacentSpeechFramesThreshold);
+    if (use_internal_vad)
       vad_ = std::make_unique<VoiceActivityDetectorWrapper>(
-          config.adaptive_digital.vad_reset_period_ms, cpu_features_,
-          sample_rate_hz);
-    }
+          kVadResetPeriodMs, cpu_features_, sample_rate_hz);
   }
 
   if (config.input_volume_controller.enabled) {
@@ -124,14 +121,13 @@ GainController2::GainController2(
     // Create dependencies.
     noise_level_estimator_ = CreateNoiseFloorEstimator(&data_dumper_);
     saturation_protector_ = CreateSaturationProtector(
-        kSaturationProtectorInitialHeadroomDb,
-        config.adaptive_digital.adjacent_speech_frames_threshold,
+        kSaturationProtectorInitialHeadroomDb, kAdjacentSpeechFramesThreshold,
         &data_dumper_);
     // Create controller.
     adaptive_digital_controller_ =
         std::make_unique<AdaptiveDigitalGainController>(
-            &data_dumper_, config.adaptive_digital, sample_rate_hz,
-            num_channels);
+            &data_dumper_, config.adaptive_digital,
+            kAdjacentSpeechFramesThreshold, sample_rate_hz, num_channels);
   }
 }
 

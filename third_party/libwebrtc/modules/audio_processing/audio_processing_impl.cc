@@ -378,6 +378,9 @@ GetGainController2ConfigOverride() {
   FieldTrialConstrained<double> max_gain_db(
       "max_gain_db", kDefaultAdaptiveDigitalConfig.max_gain_db, 0,
       absl::nullopt);
+  FieldTrialConstrained<double> initial_gain_db(
+      "initial_gain_db", kDefaultAdaptiveDigitalConfig.initial_gain_db, 0,
+      absl::nullopt);
   FieldTrialConstrained<double> max_gain_change_db_per_second(
       "max_gain_change_db_per_second",
       kDefaultAdaptiveDigitalConfig.max_gain_change_db_per_second, 0,
@@ -392,46 +395,51 @@ GetGainController2ConfigOverride() {
   const std::string field_trial_name =
       field_trial::FindFullName(kFieldTrialName);
 
-  ParseFieldTrial({&enabled, &clipped_level_min, &clipped_level_step,
-                   &clipped_ratio_threshold, &clipped_wait_frames,
-                   &enable_clipping_predictor, &target_range_max_dbfs,
-                   &target_range_min_dbfs, &update_input_volume_wait_frames,
-                   &speech_probability_threshold, &speech_ratio_threshold,
-                   &headroom_db, &max_gain_db, &max_gain_change_db_per_second,
-                   &max_output_noise_level_dbfs},
-                  field_trial_name);
+  ParseFieldTrial(
+      {&enabled, &clipped_level_min, &clipped_level_step,
+       &clipped_ratio_threshold, &clipped_wait_frames,
+       &enable_clipping_predictor, &target_range_max_dbfs,
+       &target_range_min_dbfs, &update_input_volume_wait_frames,
+       &speech_probability_threshold, &speech_ratio_threshold, &headroom_db,
+       &max_gain_db, &initial_gain_db, &max_gain_change_db_per_second,
+       &max_output_noise_level_dbfs},
+      field_trial_name);
 
   // Checked already by `IsEnabled()` before parsing, therefore always true.
   RTC_DCHECK(enabled);
 
   return AudioProcessingImpl::GainController2ConfigOverride{
-      InputVolumeController::Config{
-          .clipped_level_min = static_cast<int>(clipped_level_min.Get()),
-          .clipped_level_step = static_cast<int>(clipped_level_step.Get()),
-          .clipped_ratio_threshold =
-              static_cast<float>(clipped_ratio_threshold.Get()),
-          .clipped_wait_frames = static_cast<int>(clipped_wait_frames.Get()),
-          .enable_clipping_predictor =
-              static_cast<bool>(enable_clipping_predictor.Get()),
-          .target_range_max_dbfs =
-              static_cast<int>(target_range_max_dbfs.Get()),
-          .target_range_min_dbfs =
-              static_cast<int>(target_range_min_dbfs.Get()),
-          .update_input_volume_wait_frames =
-              static_cast<int>(update_input_volume_wait_frames.Get()),
-          .speech_probability_threshold =
-              static_cast<float>(speech_probability_threshold.Get()),
-          .speech_ratio_threshold =
-              static_cast<float>(speech_ratio_threshold.Get()),
-      },
-      AudioProcessingImpl::GainController2ConfigOverride::AdaptiveDigitalConfig{
-          .headroom_db = static_cast<float>(headroom_db.Get()),
-          .max_gain_db = static_cast<float>(max_gain_db.Get()),
-          .max_gain_change_db_per_second =
-              static_cast<float>(max_gain_change_db_per_second.Get()),
-          .max_output_noise_level_dbfs =
-              static_cast<float>(max_output_noise_level_dbfs.Get()),
-      },
+      .input_volume_controller_config =
+          {
+              .clipped_level_min = static_cast<int>(clipped_level_min.Get()),
+              .clipped_level_step = static_cast<int>(clipped_level_step.Get()),
+              .clipped_ratio_threshold =
+                  static_cast<float>(clipped_ratio_threshold.Get()),
+              .clipped_wait_frames =
+                  static_cast<int>(clipped_wait_frames.Get()),
+              .enable_clipping_predictor =
+                  static_cast<bool>(enable_clipping_predictor.Get()),
+              .target_range_max_dbfs =
+                  static_cast<int>(target_range_max_dbfs.Get()),
+              .target_range_min_dbfs =
+                  static_cast<int>(target_range_min_dbfs.Get()),
+              .update_input_volume_wait_frames =
+                  static_cast<int>(update_input_volume_wait_frames.Get()),
+              .speech_probability_threshold =
+                  static_cast<float>(speech_probability_threshold.Get()),
+              .speech_ratio_threshold =
+                  static_cast<float>(speech_ratio_threshold.Get()),
+          },
+      .adaptive_digital_config =
+          {
+              .headroom_db = static_cast<float>(headroom_db.Get()),
+              .max_gain_db = static_cast<float>(max_gain_db.Get()),
+              .initial_gain_db = static_cast<float>(initial_gain_db.Get()),
+              .max_gain_change_db_per_second =
+                  static_cast<float>(max_gain_change_db_per_second.Get()),
+              .max_output_noise_level_dbfs =
+                  static_cast<float>(max_output_noise_level_dbfs.Get()),
+          },
   };
 }
 
@@ -489,21 +497,10 @@ AudioProcessing::Config AdjustConfig(
       adjusted_config.gain_controller1.analog_gain_controller.enabled = false;
 
       adjusted_config.gain_controller2.enabled = true;
-      adjusted_config.gain_controller2.adaptive_digital.enabled = true;
       adjusted_config.gain_controller2.input_volume_controller.enabled = true;
-
-      auto& adjusted_adaptive_digital =  // Alias.
-          adjusted_config.gain_controller2.adaptive_digital;
-      const auto& adaptive_digital_override =  // Alias.
+      adjusted_config.gain_controller2.adaptive_digital =
           gain_controller2_config_override->adaptive_digital_config;
-      adjusted_adaptive_digital.headroom_db =
-          adaptive_digital_override.headroom_db;
-      adjusted_adaptive_digital.max_gain_db =
-          adaptive_digital_override.max_gain_db;
-      adjusted_adaptive_digital.max_gain_change_db_per_second =
-          adaptive_digital_override.max_gain_change_db_per_second;
-      adjusted_adaptive_digital.max_output_noise_level_dbfs =
-          adaptive_digital_override.max_output_noise_level_dbfs;
+      adjusted_config.gain_controller2.adaptive_digital.enabled = true;
     }
   }
 
@@ -2373,7 +2370,6 @@ void AudioProcessingImpl::InitializeVoiceActivityDetector(
     // TODO(bugs.webrtc.org/13663): Cache CPU features in APM and use here.
     submodules_.voice_activity_detector =
         std::make_unique<VoiceActivityDetectorWrapper>(
-            config_.gain_controller2.adaptive_digital.vad_reset_period_ms,
             submodules_.gain_controller2->GetCpuFeatures(),
             proc_fullband_sample_rate_hz());
   }

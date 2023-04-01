@@ -46,11 +46,11 @@ float SpeechLevelEstimator::LevelEstimatorState::Ratio::GetRatio() const {
 
 SpeechLevelEstimator::SpeechLevelEstimator(
     ApmDataDumper* apm_data_dumper,
-    const AudioProcessing::Config::GainController2::AdaptiveDigital& config)
+    const AudioProcessing::Config::GainController2::AdaptiveDigital& config,
+    int adjacent_speech_frames_threshold)
     : apm_data_dumper_(apm_data_dumper),
       initial_speech_level_dbfs_(GetInitialSpeechLevelEstimateDbfs(config)),
-      adjacent_speech_frames_threshold_(
-          config.adjacent_speech_frames_threshold),
+      adjacent_speech_frames_threshold_(adjacent_speech_frames_threshold),
       level_dbfs_(initial_speech_level_dbfs_),
       // TODO(bugs.webrtc.org/7494): Remove init below when AGC2 input volume
       // controller temporal dependency removed.

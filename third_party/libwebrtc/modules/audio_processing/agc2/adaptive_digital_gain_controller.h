@@ -39,6 +39,7 @@ class AdaptiveDigitalGainController {
   AdaptiveDigitalGainController(
       ApmDataDumper* apm_data_dumper,
       const AudioProcessing::Config::GainController2::AdaptiveDigital& config,
+      int adjacent_speech_frames_threshold,
       int sample_rate_hz,
       int num_channels);
   AdaptiveDigitalGainController(const AdaptiveDigitalGainController&) = delete;
@@ -56,14 +57,12 @@ class AdaptiveDigitalGainController {
   GainApplier gain_applier_;
 
   const AudioProcessing::Config::GainController2::AdaptiveDigital config_;
+  const int adjacent_speech_frames_threshold_;
   const float max_gain_change_db_per_10ms_;
 
   int calls_since_last_gain_log_;
   int frames_to_gain_increase_allowed_;
   float last_gain_db_;
-
-  std::vector<std::vector<float>> dry_run_frame_;
-  std::vector<float*> dry_run_channels_;
 };
 
 }  // namespace webrtc

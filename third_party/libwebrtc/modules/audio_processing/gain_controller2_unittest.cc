@@ -613,8 +613,7 @@ TEST(GainController2,
   GainController2 agc2_reference(config, /*input_volume_controller_config=*/{},
                                  kSampleRateHz, kStereo,
                                  /*use_internal_vad=*/true);
-  VoiceActivityDetectorWrapper vad(config.adaptive_digital.vad_reset_period_ms,
-                                   GetAvailableCpuFeatures(), kSampleRateHz);
+  VoiceActivityDetectorWrapper vad(GetAvailableCpuFeatures(), kSampleRateHz);
   test::InputAudioFile input_file(
       test::GetApmCaptureTestVectorFileName(kSampleRateHz),
       /*loop_at_end=*/true);
