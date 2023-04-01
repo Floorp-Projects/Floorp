@@ -551,7 +551,9 @@ void InputVolumeController::HandleCaptureOutputUsedChange(
   capture_output_used_ = capture_output_used;
 }
 
-void InputVolumeController::set_stream_analog_level(int input_volume) {
+void InputVolumeController::SetAppliedInputVolume(int input_volume) {
+  applied_input_volume_ = input_volume;
+
   for (auto& controller : channel_controllers_) {
     controller->set_stream_analog_level(input_volume);
   }
@@ -572,7 +574,7 @@ void InputVolumeController::AggregateChannelLevels() {
   }
 
   // Enforce the minimum input volume when a recommendation is made.
-  if (new_recommended_input_volume > 0) {
+  if (applied_input_volume_ > 0) {
     new_recommended_input_volume =
         std::max(new_recommended_input_volume, min_input_volume_);
   }
