@@ -2091,6 +2091,16 @@ function getMatchedRulesForRequest(request, extension) {
   if (extension) {
     ruleManagers = ruleManagers.filter(rm => rm.extension === extension);
   }
+  // While this simulated request is not really from another extension, apply
+  // the same access control checks from NetworkIntegration.startDNREvaluation
+  // for consistency.
+  if (
+    !lazy.gMatchRequestsFromOtherExtensions &&
+    requestDetails.initiatorURI?.schemeIs("moz-extension")
+  ) {
+    const extUuid = requestDetails.initiatorURI.host;
+    ruleManagers = ruleManagers.filter(rm => rm.extension.uuid === extUuid);
+  }
   return RequestEvaluator.evaluateRequest(requestDetails, ruleManagers);
 }
 
