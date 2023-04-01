@@ -35,6 +35,9 @@ class InputVolumeController final {
  public:
   // Config for the constructor.
   struct Config {
+    // Minimum input volume that can be recommended. Not enforced when the
+    // applied input volume is zero outside startup.
+    int min_input_volume = 20;
     // Lowest input volume level that will be applied in response to clipping.
     int clipped_level_min = 70;
     // Amount input volume level is lowered with every clipping event. Limited
@@ -52,13 +55,9 @@ class InputVolumeController final {
     // [`target_range_min_dbfs`, `target_range_max_dbfs`], no input volume
     // adjustments are done based on the speech level. For speech levels below
     // and above the range, the targets `target_range_min_dbfs` and
-    // `target_range_max_dbfs` are used, respectively. The example values
-    // `target_range_max_dbfs` -18 and `target_range_min_dbfs` -48 refer to a
-    // configuration where the zero-digital-gain target is -18 dBFS and the
-    // digital gain control is expected to compensate for speech level errors
-    // up to -30 dB.
-    int target_range_max_dbfs = -18;
-    int target_range_min_dbfs = -48;
+    // `target_range_max_dbfs` are used, respectively.
+    int target_range_max_dbfs = -30;
+    int target_range_min_dbfs = -50;
     // Number of wait frames between the recommended input volume updates.
     int update_input_volume_wait_frames = 100;
     // Speech probability threshold: speech probabilities below the threshold

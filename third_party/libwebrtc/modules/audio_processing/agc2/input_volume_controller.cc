@@ -50,29 +50,6 @@ Agc1ClippingPredictorConfig CreateClippingPredictorConfig(bool enabled) {
   return config;
 }
 
-// Returns the minimum input volume to recommend.
-// If the "WebRTC-Audio-Agc2-MinInputVolume" field trial is specified, parses it
-// and returns the value specified after "Enabled-" if valid - i.e., in the
-// range 0-255. Otherwise returns the default value.
-// Example:
-// "WebRTC-Audio-Agc2-MinInputVolume/Enabled-80" => returns 80.
-int GetMinInputVolume() {
-  constexpr int kDefaultMinInputVolume = 12;
-  constexpr char kFieldTrial[] = "WebRTC-Audio-Agc2-MinInputVolume";
-  if (!webrtc::field_trial::IsEnabled(kFieldTrial)) {
-    return kDefaultMinInputVolume;
-  }
-  std::string field_trial_str = webrtc::field_trial::FindFullName(kFieldTrial);
-  int min_input_volume = -1;
-  sscanf(field_trial_str.c_str(), "Enabled-%d", &min_input_volume);
-  if (min_input_volume >= 0 && min_input_volume <= 255) {
-    return min_input_volume;
-  }
-  RTC_LOG(LS_WARNING) << "[AGC2] Invalid volume for " << kFieldTrial
-                      << ", ignored.";
-  return kDefaultMinInputVolume;
-}
-
 // Returns an input volume in the [`min_input_volume`, `kMaxInputVolume`] range
 // that reduces `gain_error_db`, which is a gain error estimated when
 // `input_volume` was applied, according to a fixed gain map.
@@ -377,7 +354,7 @@ void MonoInputVolumeController::UpdateInputVolume(int rms_error_db) {
 InputVolumeController::InputVolumeController(int num_capture_channels,
                                              const Config& config)
     : num_capture_channels_(num_capture_channels),
-      min_input_volume_(GetMinInputVolume()),
+      min_input_volume_(config.min_input_volume),
       capture_output_used_(true),
       clipped_level_step_(config.clipped_level_step),
       clipped_ratio_threshold_(config.clipped_ratio_threshold),
