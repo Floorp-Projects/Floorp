@@ -442,6 +442,19 @@ const AudioProcessing::Config AdjustConfig(
   return adjusted_config;
 }
 
+using DownmixMethod = AudioProcessing::Config::Pipeline::DownmixMethod;
+
+void SetDownmixMethod(AudioBuffer& buffer, DownmixMethod method) {
+  switch (method) {
+    case DownmixMethod::kAverageChannels:
+      buffer.set_downmixing_by_averaging();
+      break;
+    case DownmixMethod::kUseFirstChannel:
+      buffer.set_downmixing_to_specific_channel(/*channel=*/0);
+      break;
+  }
+}
+
 constexpr int kUnspecifiedDataDumpInputVolume = -100;
 
 }  // namespace
@@ -689,6 +702,8 @@ void AudioProcessingImpl::InitializeLocked() {
       formats_.api_format.output_stream().num_channels(),
       formats_.api_format.output_stream().sample_rate_hz(),
       formats_.api_format.output_stream().num_channels()));
+  SetDownmixMethod(*capture_.capture_audio,
+                   config_.pipeline.capture_downmix_method);
 
   if (capture_nonlocked_.capture_processing_format.sample_rate_hz() <
           formats_.api_format.output_stream().sample_rate_hz() &&
@@ -700,6 +715,8 @@ void AudioProcessingImpl::InitializeLocked() {
                         formats_.api_format.output_stream().num_channels(),
                         formats_.api_format.output_stream().sample_rate_hz(),
                         formats_.api_format.output_stream().num_channels()));
+    SetDownmixMethod(*capture_.capture_fullband_audio,
+                     config_.pipeline.capture_downmix_method);
   } else {
     capture_.capture_fullband_audio.reset();
   }
@@ -821,7 +838,9 @@ void AudioProcessingImpl::ApplyConfig(const AudioProcessing::Config& config) {
       config_.pipeline.multi_channel_capture !=
           adjusted_config.pipeline.multi_channel_capture ||
       config_.pipeline.maximum_internal_processing_rate !=
-          adjusted_config.pipeline.maximum_internal_processing_rate;
+          adjusted_config.pipeline.maximum_internal_processing_rate ||
+      config_.pipeline.capture_downmix_method !=
+          adjusted_config.pipeline.capture_downmix_method;
 
   const bool aec_config_changed =
       config_.echo_canceller.enabled !=
