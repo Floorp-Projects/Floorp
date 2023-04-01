@@ -100,7 +100,8 @@ impl RenderNotifier for Notifier {
 
     fn new_frame_ready(&self, _: DocumentId,
                        scrolled: bool,
-                       _composite_needed: bool) {
+                       _composite_needed: bool,
+                       _: FramePublishId) {
         self.update(!scrolled);
     }
 }

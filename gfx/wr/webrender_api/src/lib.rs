@@ -163,6 +163,35 @@ impl PipelineId {
     pub const INVALID: Self = PipelineId(!0, !0);
 }
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct FramePublishId(pub u64);
+
+impl FramePublishId {
+    /// Returns a FramePublishId corresponding to the first frame.
+    ///
+    /// Note that we use 0 as the internal id here because the current code
+    /// increments the frame publish id just before ResultMsg::PublishDocument,
+    /// and we want the first id to be 1.
+    pub fn first() -> Self {
+        FramePublishId(0)
+    }
+
+    /// Advances this FramePublishId to the next.
+    pub fn advance(&mut self) {
+        self.0 += 1;
+    }
+
+    /// An invalid sentinel FramePublishId, which will always compare less than
+    /// any valid FrameId.
+    pub const INVALID: Self = FramePublishId(0);
+}
+
+impl Default for FramePublishId {
+    fn default() -> Self {
+        FramePublishId::INVALID
+    }
+}
 
 /// An opaque pointer-sized value.
 #[repr(C)]
@@ -220,7 +249,7 @@ pub trait RenderNotifier: Send {
         composite_needed: bool,
     );
     /// Notify the thread containing the `Renderer` that a new frame is ready.
-    fn new_frame_ready(&self, _: DocumentId, scrolled: bool, composite_needed: bool);
+    fn new_frame_ready(&self, _: DocumentId, scrolled: bool, composite_needed: bool, frame_publish_id: FramePublishId);
     /// A Gecko-specific notification mechanism to get some code executed on the
     /// `Renderer`'s thread, mostly replaced by `NotificationHandler`. You should
     /// probably use the latter instead.

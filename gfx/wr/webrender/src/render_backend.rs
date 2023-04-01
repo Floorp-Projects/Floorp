@@ -12,7 +12,7 @@ use api::{DebugFlags, Parameter, BoolParameter, PrimitiveFlags};
 use api::{DocumentId, ExternalScrollId, HitTestResult};
 use api::{IdNamespace, PipelineId, RenderNotifier, SampledScrollOffset};
 use api::{NotificationRequest, Checkpoint, QualitySettings};
-use api::{PrimitiveKeyKind, RenderReasons};
+use api::{FramePublishId, PrimitiveKeyKind, RenderReasons};
 use api::units::*;
 use api::channel::{single_msg_channel, Sender, Receiver};
 use crate::AsyncPropertySampler;
@@ -717,6 +717,9 @@ pub struct RenderBackend {
     /// A map of tile caches. These are stored in the backend as they are
     /// persisted between both frame and scenes.
     tile_caches: FastHashMap<SliceId, Box<TileCacheInstance>>,
+
+    /// The id of the latest PublishDocument
+    frame_publish_id: FramePublishId,
 }
 
 impl RenderBackend {
@@ -752,6 +755,7 @@ impl RenderBackend {
             #[cfg(feature = "replay")]
             loaded_resource_sequence_id: 0,
             tile_caches: FastHashMap::default(),
+            frame_publish_id: FramePublishId::first(),
         }
     }
 
@@ -1493,7 +1497,9 @@ impl RenderBackend {
             self.result_tx.send(msg).unwrap();
 
             // Publish the frame
+            self.frame_publish_id.advance();
             let msg = ResultMsg::PublishDocument(
+                self.frame_publish_id,
                 document_id,
                 rendered_document,
                 pending_update,
@@ -1528,7 +1534,7 @@ impl RenderBackend {
             } else if render_frame {
                 doc.rendered_frame_is_valid = true;
             }
-            self.notifier.new_frame_ready(document_id, scroll, render_frame);
+            self.notifier.new_frame_ready(document_id, scroll, render_frame, self.frame_publish_id);
         }
 
         if !doc.hit_tester_is_valid {
@@ -1895,7 +1901,9 @@ impl RenderBackend {
                     let msg_update = ResultMsg::UpdateGpuCache(self.gpu_cache.extract_updates());
                     self.result_tx.send(msg_update).unwrap();
 
+                    self.frame_publish_id.advance();
                     let msg_publish = ResultMsg::PublishDocument(
+                        self.frame_publish_id,
                         id,
                         RenderedDocument {
                             frame,
@@ -1908,7 +1916,7 @@ impl RenderBackend {
                     );
                     self.result_tx.send(msg_publish).unwrap();
 
-                    self.notifier.new_frame_ready(id, false, true);
+                    self.notifier.new_frame_ready(id, false, true, self.frame_publish_id);
 
                     // We deserialized the state of the frame so we don't want to build
                     // it (but we do want to update the scene builder's state)

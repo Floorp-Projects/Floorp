@@ -4,6 +4,7 @@
 
 use api::{ColorF, DocumentId, ExternalImageId, PrimitiveFlags, Parameter, RenderReasons};
 use api::{ImageFormat, NotificationRequest, Shadow, FilterOp, ImageBufferKind};
+use api::FramePublishId;
 use api::units::*;
 use api;
 use crate::render_api::DebugCommand;
@@ -716,6 +717,7 @@ pub enum ResultMsg {
     },
     PublishPipelineInfo(PipelineInfo),
     PublishDocument(
+        FramePublishId,
         DocumentId,
         RenderedDocument,
         ResourceUpdateList,
