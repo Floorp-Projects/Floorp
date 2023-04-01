@@ -28,11 +28,11 @@ namespace webrtc {
 namespace {
 
 using ::testing::NotNull;
+using ::webrtc::field_trial::FieldTrialsAllowedInScopeForTesting;
 using ::webrtc::field_trial::InitFieldTrialsFromString;
-using ::webrtc::field_trial::ScopedGlobalFieldTrialsForTesting;
 
 TEST(FieldTrialsTest, EmptyStringHasNoEffect) {
-  ScopedGlobalFieldTrialsForTesting g({"MyCoolTrial"});
+  FieldTrialsAllowedInScopeForTesting k({"MyCoolTrial"});
   FieldTrials f("");
   f.RegisterKeysForTesting({"MyCoolTrial"});
 
@@ -53,7 +53,7 @@ TEST(FieldTrialsTest, EnabledDisabledMustBeFirstInValue) {
 }
 
 TEST(FieldTrialsTest, FieldTrialsDoesNotReadGlobalString) {
-  ScopedGlobalFieldTrialsForTesting g({"MyCoolTrial", "MyUncoolTrial"});
+  FieldTrialsAllowedInScopeForTesting k({"MyCoolTrial", "MyUncoolTrial"});
   static constexpr char s[] = "MyCoolTrial/Enabled/MyUncoolTrial/Disabled/";
   InitFieldTrialsFromString(s);
   FieldTrials f("");
@@ -64,7 +64,7 @@ TEST(FieldTrialsTest, FieldTrialsDoesNotReadGlobalString) {
 }
 
 TEST(FieldTrialsTest, FieldTrialsWritesGlobalString) {
-  ScopedGlobalFieldTrialsForTesting g({"MyCoolTrial", "MyUncoolTrial"});
+  FieldTrialsAllowedInScopeForTesting k({"MyCoolTrial", "MyUncoolTrial"});
   FieldTrials f("MyCoolTrial/Enabled/MyUncoolTrial/Disabled/");
   EXPECT_TRUE(webrtc::field_trial::IsEnabled("MyCoolTrial"));
   EXPECT_TRUE(webrtc::field_trial::IsDisabled("MyUncoolTrial"));
@@ -95,7 +95,7 @@ TEST(FieldTrialsTest, FieldTrialsSupportsSeparateInstances) {
 }
 
 TEST(FieldTrialsTest, NonGlobalFieldTrialsInstanceDoesNotModifyGlobalString) {
-  ScopedGlobalFieldTrialsForTesting g({"SomeString"});
+  FieldTrialsAllowedInScopeForTesting k({"SomeString"});
   std::unique_ptr<FieldTrials> f =
       FieldTrials::CreateNoGlobal("SomeString/Enabled/");
   ASSERT_THAT(f, NotNull());
@@ -123,7 +123,7 @@ TEST(FieldTrialsTest, NonGlobalFieldTrialsSupportSimultaneousInstances) {
 }
 
 TEST(FieldTrialsTest, GlobalAndNonGlobalFieldTrialsAreDisjoint) {
-  ScopedGlobalFieldTrialsForTesting g({"SomeString", "SomeOtherString"});
+  FieldTrialsAllowedInScopeForTesting k({"SomeString", "SomeOtherString"});
   FieldTrials f1("SomeString/Enabled/");
   std::unique_ptr<FieldTrials> f2 =
       FieldTrials::CreateNoGlobal("SomeOtherString/Enabled/");
@@ -139,7 +139,7 @@ TEST(FieldTrialsTest, GlobalAndNonGlobalFieldTrialsAreDisjoint) {
 }
 
 TEST(FieldTrialsTest, FieldTrialBasedConfigReadsGlobalString) {
-  ScopedGlobalFieldTrialsForTesting g({"MyCoolTrial", "MyUncoolTrial"});
+  FieldTrialsAllowedInScopeForTesting k({"MyCoolTrial", "MyUncoolTrial"});
   static constexpr char s[] = "MyCoolTrial/Enabled/MyUncoolTrial/Disabled/";
   InitFieldTrialsFromString(s);
   FieldTrialBasedConfig f;
