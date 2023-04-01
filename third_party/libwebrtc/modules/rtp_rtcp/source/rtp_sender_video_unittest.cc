@@ -1204,6 +1204,24 @@ TEST_F(RtpSenderVideoTest, AbsoluteCaptureTime) {
       absolute_capture_time->estimated_capture_clock_offset.has_value());
 }
 
+TEST_F(RtpSenderVideoTest,
+       AbsoluteCaptureTimeNotForwardedWhenImageHasNoCaptureTime) {
+  uint8_t kFrame[kMaxPacketLength];
+  rtp_module_->RegisterRtpHeaderExtension(AbsoluteCaptureTimeExtension::Uri(),
+                                          kAbsoluteCaptureTimeExtensionId);
+
+  RTPVideoHeader hdr;
+  hdr.frame_type = VideoFrameType::kVideoFrameKey;
+  rtp_sender_video_->SendVideo(kPayload, kType, kTimestamp,
+                               /*capture_time_ms=*/0, kFrame, hdr,
+                               kDefaultExpectedRetransmissionTimeMs);
+  // No absolute capture time should be set as the capture_time_ms was the
+  // default value.
+  for (const RtpPacketReceived& packet : transport_.sent_packets()) {
+    EXPECT_FALSE(packet.HasExtension<AbsoluteCaptureTimeExtension>());
+  }
+}
+
 // Essentially the same test as AbsoluteCaptureTime but with a field trial.
 // After the field trial is experimented, we will remove AbsoluteCaptureTime.
 TEST_F(RtpSenderVideoTest, AbsoluteCaptureTimeWithCaptureClockOffset) {
