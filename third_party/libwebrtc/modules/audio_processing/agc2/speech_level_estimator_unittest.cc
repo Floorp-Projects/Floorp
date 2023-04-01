@@ -99,7 +99,7 @@ TEST(GainController2SpeechLevelEstimator, IsNotConfident) {
                      level_estimator.level_rms_dbfs,
                      level_estimator.level_peak_dbfs, kMaxSpeechProbability,
                      *level_estimator.estimator);
-  EXPECT_FALSE(level_estimator.estimator->IsConfident());
+  EXPECT_FALSE(level_estimator.estimator->is_confident());
 }
 
 // Checks that the level controller becomes confident when enough speech frames
@@ -110,7 +110,7 @@ TEST(GainController2SpeechLevelEstimator, IsConfident) {
                      level_estimator.level_rms_dbfs,
                      level_estimator.level_peak_dbfs, kMaxSpeechProbability,
                      *level_estimator.estimator);
-  EXPECT_TRUE(level_estimator.estimator->IsConfident());
+  EXPECT_TRUE(level_estimator.estimator->is_confident());
 }
 
 // Checks that the estimated level is not affected by the level of non-speech
@@ -156,7 +156,7 @@ TEST(GainController2SpeechLevelEstimator, ConvergenceSpeedAfterConfidence) {
   // No estimate change should occur, but confidence is achieved.
   ASSERT_FLOAT_EQ(level_estimator.estimator->level_dbfs(),
                   level_estimator.initial_speech_level_dbfs);
-  ASSERT_TRUE(level_estimator.estimator->IsConfident());
+  ASSERT_TRUE(level_estimator.estimator->is_confident());
   // After confidence.
   constexpr float kConvergenceTimeAfterConfidenceNumFrames = 600;  // 6 seconds.
   static_assert(

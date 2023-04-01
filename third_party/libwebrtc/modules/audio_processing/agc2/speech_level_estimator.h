@@ -37,7 +37,7 @@ class SpeechLevelEstimator {
   // Returns the estimated speech plus noise level.
   float level_dbfs() const { return level_dbfs_; }
   // Returns true if the estimator is confident on its current estimate.
-  bool IsConfident() const;
+  bool is_confident() const { return is_confident_; }
 
   void Reset();
 
@@ -58,6 +58,8 @@ class SpeechLevelEstimator {
   };
   static_assert(std::is_trivially_copyable<LevelEstimatorState>::value, "");
 
+  void UpdateIsConfident();
+
   void ResetLevelEstimatorState(LevelEstimatorState& state) const;
 
   void DumpDebugData() const;
@@ -69,6 +71,7 @@ class SpeechLevelEstimator {
   LevelEstimatorState preliminary_state_;
   LevelEstimatorState reliable_state_;
   float level_dbfs_;
+  bool is_confident_;
   int num_adjacent_speech_frames_;
 };
 
