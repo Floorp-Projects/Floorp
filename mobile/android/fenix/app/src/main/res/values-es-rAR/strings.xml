@@ -309,36 +309,36 @@
     <!-- Juno first user onboarding flow experiment -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" tools:ignore="UnusedResources">Hacer que %s sea tu navegador habitual</string>
+    <string name="juno_onboarding_default_browser_title">Hacer que %s sea tu navegador habitual</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description" tools:ignore="UnusedResources">%1$s pone a las personas por sobre las ganancias y defiende tu privacidad bloqueando rastreadores de sitios cruzados.\n\nConocé más en nuestra %2$s.</string>
+    <string name="juno_onboarding_default_browser_description">%1$s pone a las personas por sobre las ganancias y defiende tu privacidad bloqueando rastreadores de sitios cruzados.\n\nConocé más en nuestra %2$s.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">nota de privacidad</string>
+    <string name="juno_onboarding_default_browser_description_link_text">nota de privacidad</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Establecer como navegador predeterminado</string>
+    <string name="juno_onboarding_default_browser_positive_button">Establecer como navegador predeterminado</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">No ahora</string>
+    <string name="juno_onboarding_default_browser_negative_button">No ahora</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Cambiá de teléfono a computadora y viceversa</string>
+    <string name="juno_onboarding_sign_in_title">Cambiá de teléfono a computadora y viceversa</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Traé las pestañas y contraseñas de tus otros dispositivos para continuar donde lo habías dejado.</string>
+    <string name="juno_onboarding_sign_in_description">Traé las pestañas y contraseñas de tus otros dispositivos para continuar donde lo habías dejado.</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Iniciar sesión</string>
+    <string name="juno_onboarding_sign_in_positive_button">Iniciar sesión</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">No ahora</string>
+    <string name="juno_onboarding_sign_in_negative_button">No ahora</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" tools:ignore="UnusedResources">Las notificaciones te ayudan a hacer más con %s</string>
+    <string name="juno_onboarding_enable_notifications_title">Las notificaciones te ayudan a hacer más con %s</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description" tools:ignore="UnusedResources">Enviá pestañas entre dispositivos, admisistrá descargas y recibí consejos para obtener el máximo de %s.</string>
+    <string name="juno_onboarding_enable_notifications_description">Enviá pestañas entre dispositivos, admisistrá descargas y recibí consejos para obtener el máximo de %s.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Habilitar notificaciones</string>
+    <string name="juno_onboarding_enable_notifications_positive_button">Habilitar notificaciones</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">No ahora</string>
+    <string name="juno_onboarding_enable_notifications_negative_button">No ahora</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->

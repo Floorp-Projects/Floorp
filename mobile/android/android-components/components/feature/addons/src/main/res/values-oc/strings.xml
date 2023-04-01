@@ -45,7 +45,7 @@
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Telecargar de fichièrs, consultar e modificar l’istoric dels telecargaments del navigator</string>
     <!-- Description for downloads_open permission. -->
-    <string name="mozac_feature_addons_permissions_downloads_open_description">Dobrir los fichièrs telecargats a vòstre ordenador</string>
+    <string name="mozac_feature_addons_permissions_downloads_open_description">Dobrir los fichièrs telecargats sus vòstre aparelh</string>
     <!-- Description for find permission. -->
     <string name="mozac_feature_addons_permissions_find_description">Legir lo tèxte de totes los onglets dobèrts</string>
     <!-- Description for geolocation permission. -->

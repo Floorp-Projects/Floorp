@@ -308,23 +308,36 @@
     <!-- Juno first user onboarding flow experiment -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" tools:ignore="UnusedResources">Aseta %s selaimeksesi</string>
+    <string name="juno_onboarding_default_browser_title">Aseta %s selaimeksesi</string>
+    <!-- Description for set firefox as default browser screen.
+        The first parameter is the Firefox brand name.
+        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
+    <string name="juno_onboarding_default_browser_description">%1$s asettaa ihmiset voittojen edelle ja suojaa yksityisyyttäsi estämällä sivustojen väliset seuraimet.\n\nLisätietoja on %2$s.</string>
+    <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
+    This is part of the string with the key "juno_onboarding_default_browser_description". -->
+    <string name="juno_onboarding_default_browser_description_link_text">tietosuojaselosteessamme</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Aseta oletusselaimeksi</string>
+    <string name="juno_onboarding_default_browser_positive_button">Aseta oletusselaimeksi</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Ei nyt</string>
+    <string name="juno_onboarding_default_browser_negative_button">Ei nyt</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Hyppää puhelimelta kannettavalle tietokoneelle ja takaisin</string>
+    <string name="juno_onboarding_sign_in_title">Hyppää puhelimelta kannettavalle tietokoneelle ja takaisin</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Nappaa välilehdet ja salasanat muilta laitteiltasi ja jatka siitä, mihin jäit.</string>
+    <string name="juno_onboarding_sign_in_description">Nappaa välilehdet ja salasanat muilta laitteiltasi ja jatka siitä, mihin jäit.</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Kirjaudu sisään</string>
+    <string name="juno_onboarding_sign_in_positive_button">Kirjaudu sisään</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Ei nyt</string>
+    <string name="juno_onboarding_sign_in_negative_button">Ei nyt</string>
+    <!-- Title for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_title">Ilmoitukset auttavat sinua tekemään enemmän %silla</string>
+    <!-- Description for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_description">Lähetä välilehtiä laitteiden välillä, hallitse latauksia ja saa vinkkejä, joiden avulla saat kaiken irti %sista.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Ota ilmoitukset käyttöön</string>
+    <string name="juno_onboarding_enable_notifications_positive_button">Ota ilmoitukset käyttöön</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Ei nyt</string>
+    <string name="juno_onboarding_enable_notifications_negative_button">Ei nyt</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->

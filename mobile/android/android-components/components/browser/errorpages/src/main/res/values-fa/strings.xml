@@ -92,7 +92,13 @@
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">این صفحه درست تغییر مسیر نمی‌دهد</string>
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
-    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>مرورگر تلاش برای دریافت مورد درخواستی را پایان داده است. وب‌گاه به صورتی درخواست را تغییر مسیر می‌دهد که این کار هیچ‌گاه به پایان نخواهد رسید.</p><ul><li>آیا کوکی‌های احتمالی مورد نیاز این وب‌گاه را غیرفعال ساخته‌اید؟</li><li><em>توجه</em>: اگر پذیرفتن کوکی‌های وب‌گاه مشکل را حل نکرد، به احتمال زیاد این مشکلی در تنظیمات کارگزار است و به رایانه شما مربوط نیست.</li></ul>]]></string>
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+ <p>مرورگر تلاش برای دریافت مورد درخواستی را پایان داده است. وب‌گاه به صورتی درخواست را تغییر مسیر می‌دهد که این کار هیچ‌گاه به پایان نخواهد رسید.</p>
+ <ul>
+ <li>آیا کلوچک‌های احتمالی مورد نیاز این وبگاه را غیرفعال ساخته‌اید؟</li>
+ <li>اگر پذیرفتن کلوچک‌های وبگاه مشکل را حل نکرد، به احتمال زیاد این مشکلی در تنظیمات کارگزار است و به رایانه شما مربوط نیست.</li>
+ </ul>
+ ]]></string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">حالت آفلاین</string>

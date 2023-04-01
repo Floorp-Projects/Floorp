@@ -40,6 +40,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Scriver datas en l\'archiv provisoric</string>
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">Bloccar cuntegn sin n\'emporta betg tge pagina</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">Leger tia cronologia da navigaziun</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Telechargiar datotecas e leger e modifitgar la cronologia da telechargiadas dal navigatur</string>
     <!-- Description for downloads_open permission. -->

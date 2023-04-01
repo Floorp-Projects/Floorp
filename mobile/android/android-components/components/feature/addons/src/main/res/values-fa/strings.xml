@@ -33,7 +33,7 @@
     <!-- Description for browser_setting permission. -->
     <string name="mozac_feature_addons_permissions_browser_setting_description">خواندن و تغییر تنظیمات مرورگر</string>
     <!-- Description for browser_data permission. -->
-    <string name="mozac_feature_addons_permissions_browser_data_description">پاک کردن تاریخچه مرور اخیر،‌ کوکی‌ها و اطلاعات مرتبط</string>
+    <string name="mozac_feature_addons_permissions_browser_data_description">پاک کردن تاریخچهٔ مرور اخیر،‌ کلوچک‌ها و اطلاعات مرتبط</string>
     <!-- Description for clipboard_read permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_read_description">دریافت اطلاعات از تخته نسخه برداری</string>
     <!-- Description for clipboard_write permission. -->

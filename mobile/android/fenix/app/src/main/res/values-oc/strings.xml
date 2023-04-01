@@ -61,7 +61,7 @@
     <!-- Private Browsing -->
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description_2">%1$s escafa vòstre istoric de recèrcas e de navegacion quand quitatz l’aplicacion o tampatz totes los onglets e fenèstras de navegacion privada. Malgrat qu’aquò vos faga pas venir anonim pels sites web o vòstre provesidor Internet, fa venir mai simple de gardar privat çò que fasètz en linha pels autres qu’utilizan aqueste ordenador.</string>
+    <string name="private_browsing_placeholder_description_2">%1$s escafa vòstre istoric de recèrcas e de navegacion quand quitatz l’aplicacion o tampatz totes los onglets e fenèstras de navegacion privada. Malgrat qu’aquò vos faga pas venir anonim pels sites web o vòstre provesidor Internet, fa venir mai simple de gardar privat çò que fasètz en linha pels autres qu’utilizan aqueste aparelh.</string>
     <string name="private_browsing_common_myths">Mites màgers de la navegacion privada</string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
@@ -302,29 +302,36 @@
     <!-- Juno first user onboarding flow experiment -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" tools:ignore="UnusedResources">Far de %s vòstre navegador per defaut</string>
+    <string name="juno_onboarding_default_browser_title">Far de %s vòstre navegador per defaut</string>
+    <!-- Description for set firefox as default browser screen.
+        The first parameter is the Firefox brand name.
+        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
+    <string name="juno_onboarding_default_browser_description">%1$s considèra la gent abans l’argent e defend vòstra vida privada en blocant los traçadors intersites.\n\nAprenètz-ne mai dins nòstre %2$s.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">politica de confidencialitat</string>
+    <string name="juno_onboarding_default_browser_description_link_text">politica de confidencialitat</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Definir coma navegador per defaut</string>
+    <string name="juno_onboarding_default_browser_positive_button">Definir coma navegador per defaut</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Pas ara</string>
+    <string name="juno_onboarding_default_browser_negative_button">Pas ara</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Basculatz del mobil a l’ordenador e invèrsament</string>
+    <string name="juno_onboarding_sign_in_title">Basculatz del mobil a l’ordenador e invèrsament</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Trapatz los onglets e senhals d’autres aparelhs per tornar ont eratz.</string>
+    <string name="juno_onboarding_sign_in_description">Trapatz los onglets e senhals d’autres aparelhs per tornar ont eratz.</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Connexion</string>
+    <string name="juno_onboarding_sign_in_positive_button">Connexion</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Pas ara</string>
+    <string name="juno_onboarding_sign_in_negative_button">Pas ara</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" tools:ignore="UnusedResources">Las notificacions vos ajudan a ne far mai amb %s</string>
+    <string name="juno_onboarding_enable_notifications_title">Las notificacions vos ajudan a ne far mai amb %s</string>
+    <!-- Description for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_description">Enviatz los onglets d’un aparelh a l’autre, gerissètz los telecargaments e obtenètz de conselhs per ne far encara mai amb %s.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Activar las notificacions</string>
+    <string name="juno_onboarding_enable_notifications_positive_button">Activar las notificacions</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Mai tard</string>
+    <string name="juno_onboarding_enable_notifications_negative_button">Mai tard</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->

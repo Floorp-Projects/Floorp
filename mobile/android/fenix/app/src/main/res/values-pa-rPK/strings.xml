@@ -14,8 +14,10 @@
     <string name="content_description_private_browsing_button">نجی ورتوں چالو کرو</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">نجی ورتوں چالو نہ کرو</string>
-    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
     <string name="search_hint">پتہ پایو</string>
+    <!-- Placeholder text shown in the search bar before a user enters text for a general engine -->
+    <string name="search_hint_general_engine">ویب دی کھوج</string>
     <!-- Placeholder text shown in search bar when using history search -->
     <string name="history_search_hint">پچھلیاں کھوجاں</string>
     <!-- Placeholder text shown in search bar when using bookmarks search -->
@@ -65,12 +67,10 @@
     </string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message -->
-    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">تہاڈی مکھ سکرین توں نجی ٹیباں کھولھݨ لئی شارٹ کٹ جوڑو۔</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
-    <string name="private_mode_cfr_message">اگلی نجی ٹیب نوں اکو ٹھونگے نال چالو کر دیو۔</string>
-    <!-- Text for the positive button -->
-    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">شارٹ کٹ جوڑو</string>
+    <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">اگلی نجی ٹیب نوں اکو ٹھونگے نال چالو کر دیو۔</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message_2">آپݨی اگلی نجی ٹیب نوں چھوہ کے چلاؤ۔</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">مکھ سکرین تے جوڑو</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
@@ -84,8 +84,11 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">بند کرو</string>
 
-    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
-    <string name="cfr_dismiss_button_default_content_description">بند کرو</string>
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">ایہہ پردہ داری دا اوزار ٹوہ لاوݨ والی سائٹاں نوں ڈکا ماردا۔</string>
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">پوری کوکی حفاظت بارے جاݨو</string>
 
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
     <string name="camera_permissions_needed_positive_button_text">سیٹنگاں نوں جاؤ</string>
@@ -125,6 +128,8 @@
     <string name="browser_menu_back">پچھے</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
     <string name="browser_menu_forward">اگے</string>
+    <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
+    <string name="browser_menu_refresh">تازہ کرو</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">روکو</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -165,7 +170,7 @@
     <!-- Menu option in the search selector menu to open the search settings -->
     <string name="search_settings_menu_item">کھوج دیاں سیٹنگاں</string>
     <!-- Header text for the search selector menu -->
-    <string moz:RemovedIn="109" name="search_header_menu_item" tools:ignore="UnusedResources">ہݨے ایہہ کھوجو –</string>
+    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">ہݨے ایہہ کھوجو –</string>
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">ہݨے ایہنوں کھوجو –</string>
 
@@ -207,9 +212,14 @@
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">اضافی</string>
 
+    <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">اجازت دیو</string>
+    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
+    <string name="reduce_cookie_banner_dialog_change_setting_button">اجازت دیو</string>
+
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on">چالو</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">چالو</string>
+    <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">بند</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">ہور جاݨو</string>
@@ -244,9 +254,6 @@
     <string name="customize_addon_collection_ok">ٹھیک اے</string>
     <!-- Button caption to abort the add-on collection configuration -->
     <string name="customize_addon_collection_cancel">رد کرو</string>
-
-    <!-- Title for the customize home screen section with Pocket. -->
-    <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">پتیاں دا جیب</string>
 
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">ویکھو</string>
@@ -292,6 +299,8 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">بند کرو</string>
 
+    <!-- Dialog button text for confirming open all tabs -->
+    <string name="open_all_warning_confirm">ساریاں کھولھو</string>
     <!-- Dialog button text for canceling open all tabs -->
     <string name="open_all_warning_cancel">رد کرو</string>
 
@@ -438,7 +447,7 @@
     <!-- Preference for altering the microphone access for all websites -->
     <string name="preference_phone_feature_microphone">مائیکروفون</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">چالو</string>
+    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">چالو</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">بند</string>
 
@@ -477,6 +486,9 @@
     <string name="share_button_content_description">سانجھا کرو</string>
      <!-- Text displayed when sync is offline and cannot be accessed -->
     <string name="sync_offline">آفلائن</string>
+
+    <!-- Confirmation dialog button -->
+    <string name="sync_confirmation_button">ٹھیک اے</string>
 
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">موڑو</string>

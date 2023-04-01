@@ -108,7 +108,7 @@
     <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Lo navegador a quitat d’esperar una responsa del site. Lo site crèa una redireccion d’un biais que fa qu’acabarà pas jamai.</p>
       <ul>
         <li>Avètz desactivat o blocat los cookies necessaris per aqueste site ?</li>
-        <li>Se lo problèma es pas resolgut en acceptant los cookies d’aqueste site, s’agís probablament d’un problèma de configuracion del servidor e non pas de vòstre ordenador.</li></ul>]]></string>
+        <li>Se lo problèma es pas resolgut en acceptant los cookies d’aqueste site, s’agís probablament d’un problèma de configuracion del servidor e non pas de vòstre aparelh.</li></ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Mòde fòra connexion</string>

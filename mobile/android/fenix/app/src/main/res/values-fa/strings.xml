@@ -907,9 +907,9 @@
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d نشانی‌ها</string>
     <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">کوکی‌ها</string>
+    <string name="preferences_delete_browsing_data_cookies">کلوچک‌ها</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies_subtitle">از بیشتر سایتها خارج خواهید شد</string>
+    <string name="preferences_delete_browsing_data_cookies_subtitle">از بیشتر پایگاه‌ها خارج خواهید شد</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files">تصاویر و پرونده های ذخیره شده</string>
     <!-- Subtitle for the cached images and files item in Delete browsing data -->
@@ -1033,16 +1033,16 @@
     <string name="preference_enhanced_tracking_protection_custom_info_button">آنچه توسط حفاظت ردیابی سفارشی مسدود شده است</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies">کوکی‌ها</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies">کلوچک‌ها</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_1">ردیاب های متقابل و رسانه های اجتماعی</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">ردیاب‌های میان‌پایگاهی و رسانه‌های اجتماعی</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_2">کوکی‌ها از وب‌سایت‌های مشاهده نشده</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">کلوچک‌ها از پایگاه‌های مشاهده نشده</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_3">تمام کوکی‌های متفرقه (ممکن است باعث از کار افتادن سایت‌ها شود)</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">تمام کلوچک‌های متفرقه (ممکن است باعث از کار افتادن پایگاه‌ها شود)</string>
 
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_4">تمام کوکی‌ها (باعث خرابی وب‌سایت‌ها خواهد شد)</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">تمام کلوچک‌ها (باعث خرابی وبگاه‌ها خواهد شد)</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">محتوای ردیابی</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1064,9 +1064,9 @@
     <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_description">توانایی شبکه های اجتماعی را برای ردیابی فعالیت مرور شما در وب محدود می کند.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_title">کوکی‌هایِ ردیابِ بین-سایتی</string>
+    <string name="etp_cookies_title">کلوچک‌هایِ ردیابِ میان‌پایگاهی</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_description">کوکی هایی را که شبکه های تبلیغاتی و شرکتهای تحلیلی از آنها استفاده می کنند ، برای گردآوری داده های مرور شما در بسیاری از سایتها مسدود می کند.</string>
+    <string name="etp_cookies_description">کلوچک‌هایی را که شبکه‌های تبلیغاتی و شرکت‌های تحلیلی از آن‌ها استفاده می‌کنند، برای گردآوری داده‌های مرور شما در بسیاری از پایگاه‌ها مسدود می‌کند.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">استخراج کننده‌های رمزارزها</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
@@ -1097,7 +1097,7 @@
     <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_title">ردیاب‌هایِ تغییر مسیر</string>
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_redirect_trackers_description">کوکی‌های تنظیم شده توسطِ تغییر مسیر به وبسایت‌های ردیابیِ شناخته شده را پاک می‌کند.</string>
+    <string name="etp_redirect_trackers_description">کلوچک‌های تنظیم شده توسطِ تغییر مسیر به وبگاه‌های ردیابیِ شناخته شده را پاک می‌کند.</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">پشتیبانی</string>
