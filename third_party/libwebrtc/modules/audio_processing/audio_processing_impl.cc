@@ -201,9 +201,21 @@ std::pair<int, FormatErrorOutputOption> ChooseErrorOutputOption(
   AudioFormatValidity input_validity = ValidateAudioFormat(input_config);
   AudioFormatValidity output_validity = ValidateAudioFormat(output_config);
 
+  if (input_validity == AudioFormatValidity::kValidAndSupported &&
+      output_validity == AudioFormatValidity::kValidAndSupported &&
+      (output_config.num_channels() == 1 ||
+       output_config.num_channels() == input_config.num_channels())) {
+    return {AudioProcessing::kNoError, FormatErrorOutputOption::kDoNothing};
+  }
+
   int error_code = AudioFormatValidityToErrorCode(input_validity);
   if (error_code == AudioProcessing::kNoError) {
     error_code = AudioFormatValidityToErrorCode(output_validity);
+  }
+  if (error_code == AudioProcessing::kNoError) {
+    // The individual formats are valid but there is some error - must be
+    // channel mismatch.
+    error_code = AudioProcessing::kBadNumberChannelsError;
   }
 
   FormatErrorOutputOption output_option;
