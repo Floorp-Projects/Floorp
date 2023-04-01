@@ -279,10 +279,8 @@ function makeRuleset(coeffs, biases) {
     );
 
     // Use the selector to grab the descendants:
-    return setDefault(
-      selectorToDescendants, // eslint-disable-line prettier/prettier
-      selector,
-      () => Array.from(element.querySelectorAll(selector))
+    return setDefault(selectorToDescendants, selector, () =>
+      Array.from(element.querySelectorAll(selector))
     );
   }
 

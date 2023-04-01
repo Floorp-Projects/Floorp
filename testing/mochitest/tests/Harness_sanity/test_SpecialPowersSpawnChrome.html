@@ -8,8 +8,6 @@
 <body>
 
 <script>
-/* eslint-disable prettier/prettier */
-
   add_task(async function() {
     let { browsingContextId, innerWindowId } = await SpecialPowers.spawnChrome([12, { b: 42 }], (a, b) => {
       Assert.equal(a, 12, "Arg 1");

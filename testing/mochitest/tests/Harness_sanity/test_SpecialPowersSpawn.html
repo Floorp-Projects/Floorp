@@ -12,7 +12,6 @@
 <span id="hello">World.</span>
 
 <script>
-/* eslint-disable prettier/prettier */
 /* globals SpecialPowers, content */
 
   add_task(async function() {
@@ -55,7 +54,7 @@
 
     is(result, "Hello there.", "Got correct element text from browsing context");
 
-    let line = 59; // Keep this in sync with the line number where the callback function starts.
+    let line = 58; // Keep this in sync with the line number where the callback function starts.
     let callback = () => {
       let e = new Error("Hello.");
       return { filename: e.fileName, lineNumber: e.lineNumber };
