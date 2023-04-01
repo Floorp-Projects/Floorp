@@ -69,6 +69,8 @@ const gRuleManagers = [];
  *  - allow / allowAllRequests
  */
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(
@@ -86,6 +88,13 @@ const { ExtensionUtils } = ChromeUtils.import(
   "resource://gre/modules/ExtensionUtils.jsm"
 );
 const { ExtensionError } = ExtensionUtils;
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "gMatchRequestsFromOtherExtensions",
+  "extensions.dnr.match_requests_from_other_extensions",
+  false
+);
 
 // As documented above:
 // Ruleset precedence: session > dynamic > static (order from manifest.json).
@@ -1814,12 +1823,21 @@ const NetworkIntegration = {
   startDNREvaluation(channel) {
     let ruleManagers = gRuleManagers;
     if (!channel.canModify) {
+      // Ignore system requests or requests to restricted domains.
       ruleManagers = [];
     }
     if (channel.loadInfo.originAttributes.privateBrowsingId > 0) {
       ruleManagers = ruleManagers.filter(
         rm => rm.extension.privateBrowsingAllowed
       );
+    }
+    if (ruleManagers.length && !lazy.gMatchRequestsFromOtherExtensions) {
+      const policy = channel.loadInfo.loadingPrincipal?.addonPolicy;
+      if (policy) {
+        ruleManagers = ruleManagers.filter(
+          rm => rm.extension.policy === policy
+        );
+      }
     }
     let matchedRules;
     if (ruleManagers.length) {

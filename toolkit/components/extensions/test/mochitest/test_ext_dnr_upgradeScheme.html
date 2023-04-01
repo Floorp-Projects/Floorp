@@ -20,6 +20,7 @@ add_setup(async () => {
     set: [
       ["extensions.manifestV3.enabled", true],
       ["extensions.dnr.enabled", true],
+      ["extensions.dnr.match_requests_from_other_extensions", true],
     ],
   });
 });
@@ -71,6 +72,10 @@ add_task(async function upgradeScheme_with_dnr() {
   await extension.startup();
   await extension.awaitMessage("dnr_registered");
 
+  // The request made by otherExtension is affected by the DNR rule from the
+  // extension because extensions.dnr.match_requests_from_other_extensions was
+  // set to true. A realistic alternative would have been to trigger the fetch
+  // requests from a content page instead of the extension.
   let otherExtension = ExtensionTestUtils.loadExtension({
     async background() {
       let firstRequestPromise = new Promise(resolve => {
