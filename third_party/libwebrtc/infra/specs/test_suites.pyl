@@ -190,7 +190,7 @@
         'mixins': ['shards-2'],
       },
       'modules_unittests': {
-        'mixins': ['shards-6'],
+        'mixins': ['shards-6', 'cores-12'],
       },
       'rtc_media_unittests': {},
       'rtc_pc_unittests': {},
