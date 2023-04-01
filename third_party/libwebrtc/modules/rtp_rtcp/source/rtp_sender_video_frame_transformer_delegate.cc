@@ -35,7 +35,7 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
       uint32_t ssrc)
       : encoded_data_(encoded_image.GetEncodedData()),
         header_(video_header),
-        metadata_(header_),
+        metadata_(header_.GetAsMetadata()),
         frame_type_(encoded_image._frameType),
         payload_type_(payload_type),
         codec_type_(codec_type),

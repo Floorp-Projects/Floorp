@@ -21,6 +21,7 @@
 #include "api/video/color_space.h"
 #include "api/video/video_codec_type.h"
 #include "api/video/video_content_type.h"
+#include "api/video/video_frame_metadata.h"
 #include "api/video/video_frame_type.h"
 #include "api/video/video_rotation.h"
 #include "api/video/video_timing.h"
@@ -61,6 +62,9 @@ struct RTPVideoHeader {
   RTPVideoHeader(const RTPVideoHeader& other);
 
   ~RTPVideoHeader();
+
+  // The subset of RTPVideoHeader that is exposed in the Insertable Streams API.
+  VideoFrameMetadata GetAsMetadata() const;
 
   absl::optional<GenericDescriptorInfo> generic;
 

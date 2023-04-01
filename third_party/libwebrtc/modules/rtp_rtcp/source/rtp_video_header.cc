@@ -12,13 +12,27 @@
 
 namespace webrtc {
 
-RTPVideoHeader::RTPVideoHeader() : video_timing() {}
-RTPVideoHeader::RTPVideoHeader(const RTPVideoHeader& other) = default;
-RTPVideoHeader::~RTPVideoHeader() = default;
-
 RTPVideoHeader::GenericDescriptorInfo::GenericDescriptorInfo() = default;
 RTPVideoHeader::GenericDescriptorInfo::GenericDescriptorInfo(
     const GenericDescriptorInfo& other) = default;
 RTPVideoHeader::GenericDescriptorInfo::~GenericDescriptorInfo() = default;
+
+RTPVideoHeader::RTPVideoHeader() : video_timing() {}
+RTPVideoHeader::RTPVideoHeader(const RTPVideoHeader& other) = default;
+RTPVideoHeader::~RTPVideoHeader() = default;
+
+VideoFrameMetadata RTPVideoHeader::GetAsMetadata() const {
+  VideoFrameMetadata metadata;
+  metadata.SetWidth(width);
+  metadata.SetHeight(height);
+  if (generic) {
+    metadata.SetFrameId(generic->frame_id);
+    metadata.SetSpatialIndex(generic->spatial_index);
+    metadata.SetTemporalIndex(generic->temporal_index);
+    metadata.SetFrameDependencies(generic->dependencies);
+    metadata.SetDecodeTargetIndications(generic->decode_target_indications);
+  }
+  return metadata;
+}
 
 }  // namespace webrtc
