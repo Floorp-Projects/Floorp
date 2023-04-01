@@ -328,22 +328,35 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
       } analog_gain_controller;
     } gain_controller1;
 
-    // Enables the next generation AGC functionality. This feature replaces the
-    // standard methods of gain control in the previous AGC. Enabling this
-    // submodule enables an adaptive digital AGC followed by a limiter. By
-    // setting `fixed_gain_db`, the limiter can be turned into a compressor that
-    // first applies a fixed gain. The adaptive digital AGC can be turned off by
-    // setting |adaptive_digital_mode=false|.
+    // Parameters for AGC2, an Automatic Gain Control (AGC) sub-module which
+    // replaces the AGC sub-module parametrized by `gain_controller1`.
+    // AGC2 brings the captured audio signal to the desired level by combining
+    // three different controllers (namely, input volume controller, adapative
+    // digital controller and fixed digital controller) and a limiter.
+    // TODO(bugs.webrtc.org:7494): Name `GainController` when AGC1 removed.
     struct RTC_EXPORT GainController2 {
       bool operator==(const GainController2& rhs) const;
       bool operator!=(const GainController2& rhs) const {
         return !(*this == rhs);
       }
 
+      // AGC2 must be created if and only if `enabled` is true.
       bool enabled = false;
-      struct FixedDigital {
-        float gain_db = 0.0f;
-      } fixed_digital;
+
+      // Parameters for the input volume controller, which adjusts the input
+      // volume applied when the audio is captured (e.g., microphone volume on
+      // a soundcard, input volume on HAL).
+      struct InputVolumeController {
+        bool operator==(const InputVolumeController& rhs) const;
+        bool operator!=(const InputVolumeController& rhs) const {
+          return !(*this == rhs);
+        }
+        bool enabled = false;
+      } input_volume_controller;
+
+      // Parameters for the adaptive digital controller, which adjusts and
+      // applies a digital gain after echo cancellation and after noise
+      // suppression.
       struct RTC_EXPORT AdaptiveDigital {
         bool operator==(const AdaptiveDigital& rhs) const;
         bool operator!=(const AdaptiveDigital& rhs) const {
@@ -351,6 +364,7 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
         }
 
         bool enabled = false;
+        // TODO(bugs.webrtc.org/7494): Remove `dry_run`.
         // When true, the adaptive digital controller runs but the signal is not
         // modified.
         bool dry_run = false;
@@ -359,20 +373,22 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
         // `max_output_noise_level_dbfs`.
         float max_gain_db = 30.0f;
         float initial_gain_db = 8.0f;
+        // TODO(bugs.webrtc.org/7494): Hard-code and remove parameter below.
         int vad_reset_period_ms = 1500;
+        // TODO(bugs.webrtc.org/7494): Hard-code and remove parameter below.
         int adjacent_speech_frames_threshold = 12;
         float max_gain_change_db_per_second = 3.0f;
         float max_output_noise_level_dbfs = -50.0f;
       } adaptive_digital;
 
-      // Enables input volume control in AGC2.
-      struct InputVolumeController {
-        bool operator==(const InputVolumeController& rhs) const;
-        bool operator!=(const InputVolumeController& rhs) const {
-          return !(*this == rhs);
-        }
-        bool enabled = false;
-      } input_volume_controller;
+      // Parameters for the fixed digital controller, which applies a fixed
+      // digital gain after the adaptive digital controller and before the
+      // limiter.
+      struct FixedDigital {
+        // By setting `gain_db` to a value greater than zero, the limiter can be
+        // turned into a compressor that first applies a fixed gain.
+        float gain_db = 0.0f;
+      } fixed_digital;
     } gain_controller2;
 
     std::string ToString() const;
