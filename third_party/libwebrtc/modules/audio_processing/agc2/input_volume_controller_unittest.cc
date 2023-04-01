@@ -120,34 +120,32 @@ void CallPreProcessAudioBuffer(int num_calls,
   }
 }
 
-constexpr char kMinMicLevelFieldTrial[] =
-    "WebRTC-Audio-2ndAgcMinMicLevelExperiment";
+constexpr char kMinInputVolumeFieldTrial[] = "WebRTC-Audio-Agc2-MinInputVolume";
 
-std::string GetAgcMinMicLevelExperimentFieldTrial(const std::string& value) {
+std::string GetAgcMinInputVolumeFieldTrial(const std::string& value) {
   char field_trial_buffer[64];
   rtc::SimpleStringBuilder builder(field_trial_buffer);
-  builder << kMinMicLevelFieldTrial << "/" << value << "/";
+  builder << kMinInputVolumeFieldTrial << "/" << value << "/";
   return builder.str();
 }
 
-std::string GetAgcMinMicLevelExperimentFieldTrialEnabled(
+std::string GetAgcMinInputVolumeFieldTrialEnabled(
     int enabled_value,
     const std::string& suffix = "") {
   RTC_DCHECK_GE(enabled_value, 0);
   RTC_DCHECK_LE(enabled_value, 255);
   char field_trial_buffer[64];
   rtc::SimpleStringBuilder builder(field_trial_buffer);
-  builder << kMinMicLevelFieldTrial << "/Enabled-" << enabled_value << suffix
+  builder << kMinInputVolumeFieldTrial << "/Enabled-" << enabled_value << suffix
           << "/";
   return builder.str();
 }
 
-std::string GetAgcMinMicLevelExperimentFieldTrial(
-    absl::optional<int> min_mic_level) {
-  if (min_mic_level.has_value()) {
-    return GetAgcMinMicLevelExperimentFieldTrialEnabled(*min_mic_level);
+std::string GetAgcMinInputVolumeFieldTrial(absl::optional<int> volume) {
+  if (volume.has_value()) {
+    return GetAgcMinInputVolumeFieldTrialEnabled(*volume);
   }
-  return GetAgcMinMicLevelExperimentFieldTrial("Disabled");
+  return GetAgcMinInputVolumeFieldTrial("Disabled");
 }
 
 // (Over)writes `samples_value` for the samples in `audio_buffer`.
@@ -382,7 +380,7 @@ class InputVolumeControllerParametrizedTest
     : public ::testing::TestWithParam<absl::optional<int>> {
  protected:
   InputVolumeControllerParametrizedTest()
-      : field_trials_(GetAgcMinMicLevelExperimentFieldTrial(GetParam())) {}
+      : field_trials_(GetAgcMinInputVolumeFieldTrial(GetParam())) {}
 
   bool IsMinMicLevelOverridden() const { return GetParam().has_value(); }
   int GetMinMicLevel() const { return GetParam().value_or(kMinMicLevel); }
@@ -573,34 +571,30 @@ TEST_P(InputVolumeControllerParametrizedTest,
   EXPECT_EQ(65, helper.manager.recommended_analog_level());
 }
 
-// Checks that, when the min mic level override is not specified, AGC ramps up
-// towards the minimum mic level after the mic level is manually set below the
-// minimum gain to enforce.
+// Checks that the minimum input volume is enforced during the upward adjustment
+// of the input volume.
 TEST_P(InputVolumeControllerParametrizedTest,
-       RecoveryAfterManualLevelChangeBelowMinWithoutMinMicLevelOverride) {
-  if (IsMinMicLevelOverridden()) {
-    GTEST_SKIP() << "Skipped. Min mic level overridden.";
-  }
-
+       EnforceMinInputVolumeDuringUpwardsAdjustment) {
   InputVolumeControllerTestHelper helper;
   helper.CallAgcSequence(kInitialInputVolume, kHighSpeechProbability,
                          kSpeechLevel);
 
-  // Manual change below min, but strictly positive, otherwise AGC won't take
-  // any action.
+  // Manual change below min, but strictly positive, otherwise no action will be
+  // taken.
   helper.manager.set_stream_analog_level(1);
   helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -17.0f);
-  EXPECT_EQ(1, helper.manager.recommended_analog_level());
 
-  // Continues working as usual afterwards.
+  // Trigger an upward adjustment of the input volume.
+  EXPECT_EQ(helper.manager.recommended_analog_level(), GetMinMicLevel());
   helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -29.0f);
-  EXPECT_EQ(1, helper.manager.recommended_analog_level());
-
+  EXPECT_EQ(helper.manager.recommended_analog_level(), GetMinMicLevel());
   helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -48.0f);
-  EXPECT_EQ(10, helper.manager.recommended_analog_level());
+  EXPECT_EQ(helper.manager.recommended_analog_level(), GetMinMicLevel());
 
-  helper.CallProcess(/*num_calls=*/1, kHighSpeechProbability, -38.0f);
-  EXPECT_EQ(16, helper.manager.recommended_analog_level());
+  // After a number of consistently low speech level observations, the input
+  // volume is eventually raised above the minimum.
+  helper.CallProcess(/*num_calls=*/10, kHighSpeechProbability, -38.0f);
+  EXPECT_GT(helper.manager.recommended_analog_level(), GetMinMicLevel());
 }
 
 // Checks that, when the min mic level override is specified, AGC immediately
@@ -608,10 +602,6 @@ TEST_P(InputVolumeControllerParametrizedTest,
 // minimum gain to enforce.
 TEST_P(InputVolumeControllerParametrizedTest,
        RecoveryAfterManualLevelChangeBelowMin) {
-  if (!IsMinMicLevelOverridden()) {
-    GTEST_SKIP() << "Skipped. Min mic level not overridden.";
-  }
-
   InputVolumeControllerTestHelper helper;
   helper.CallAgcSequence(kInitialInputVolume, kHighSpeechProbability,
                          kSpeechLevel);
@@ -783,18 +773,19 @@ TEST_P(InputVolumeControllerParametrizedTest,
 TEST(InputVolumeControllerTest, AgcMinMicLevelExperimentDefault) {
   std::unique_ptr<InputVolumeController> manager = CreateInputVolumeController(
       kClippedLevelStep, kClippedRatioThreshold, kClippedWaitFrames);
-  EXPECT_EQ(manager->channel_controllers_[0]->min_mic_level(), kMinMicLevel);
+  EXPECT_EQ(manager->channel_controllers_[0]->min_input_volume(), kMinMicLevel);
 }
 
 TEST(InputVolumeControllerTest, AgcMinMicLevelExperimentDisabled) {
   for (const std::string& field_trial_suffix : {"", "_20220210"}) {
     test::ScopedFieldTrials field_trial(
-        GetAgcMinMicLevelExperimentFieldTrial("Disabled" + field_trial_suffix));
+        GetAgcMinInputVolumeFieldTrial("Disabled" + field_trial_suffix));
     std::unique_ptr<InputVolumeController> manager =
         CreateInputVolumeController(kClippedLevelStep, kClippedRatioThreshold,
                                     kClippedWaitFrames);
 
-    EXPECT_EQ(manager->channel_controllers_[0]->min_mic_level(), kMinMicLevel);
+    EXPECT_EQ(manager->channel_controllers_[0]->min_input_volume(),
+              kMinMicLevel);
   }
 }
 
@@ -802,20 +793,20 @@ TEST(InputVolumeControllerTest, AgcMinMicLevelExperimentDisabled) {
 // ignored.
 TEST(InputVolumeControllerTest, AgcMinMicLevelExperimentOutOfRangeAbove) {
   test::ScopedFieldTrials field_trial(
-      GetAgcMinMicLevelExperimentFieldTrial("Enabled-256"));
+      GetAgcMinInputVolumeFieldTrial("Enabled-256"));
   std::unique_ptr<InputVolumeController> manager = CreateInputVolumeController(
       kClippedLevelStep, kClippedRatioThreshold, kClippedWaitFrames);
-  EXPECT_EQ(manager->channel_controllers_[0]->min_mic_level(), kMinMicLevel);
+  EXPECT_EQ(manager->channel_controllers_[0]->min_input_volume(), kMinMicLevel);
 }
 
 // Checks that a field-trial parameter outside of the valid range [0,255] is
 // ignored.
 TEST(InputVolumeControllerTest, AgcMinMicLevelExperimentOutOfRangeBelow) {
   test::ScopedFieldTrials field_trial(
-      GetAgcMinMicLevelExperimentFieldTrial("Enabled--1"));
+      GetAgcMinInputVolumeFieldTrial("Enabled--1"));
   std::unique_ptr<InputVolumeController> manager = CreateInputVolumeController(
       kClippedLevelStep, kClippedRatioThreshold, kClippedWaitFrames);
-  EXPECT_EQ(manager->channel_controllers_[0]->min_mic_level(), kMinMicLevel);
+  EXPECT_EQ(manager->channel_controllers_[0]->min_input_volume(), kMinMicLevel);
 }
 
 // Verifies that a valid experiment changes the minimum microphone level. The
@@ -825,14 +816,13 @@ TEST(InputVolumeControllerTest, AgcMinMicLevelExperimentEnabled50) {
   constexpr int kMinMicLevelOverride = 50;
   for (const std::string& field_trial_suffix : {"", "_20220210"}) {
     SCOPED_TRACE(field_trial_suffix);
-    test::ScopedFieldTrials field_trial(
-        GetAgcMinMicLevelExperimentFieldTrialEnabled(kMinMicLevelOverride,
-                                                     field_trial_suffix));
+    test::ScopedFieldTrials field_trial(GetAgcMinInputVolumeFieldTrialEnabled(
+        kMinMicLevelOverride, field_trial_suffix));
     std::unique_ptr<InputVolumeController> manager =
         CreateInputVolumeController(kClippedLevelStep, kClippedRatioThreshold,
                                     kClippedWaitFrames);
 
-    EXPECT_EQ(manager->channel_controllers_[0]->min_mic_level(),
+    EXPECT_EQ(manager->channel_controllers_[0]->min_input_volume(),
               kMinMicLevelOverride);
   }
 }
@@ -858,7 +848,7 @@ TEST(InputVolumeControllerTest,
   std::unique_ptr<InputVolumeController> manager_with_override;
   {
     test::ScopedFieldTrials field_trial(
-        GetAgcMinMicLevelExperimentFieldTrialEnabled(kMinMicLevelOverride));
+        GetAgcMinInputVolumeFieldTrialEnabled(kMinMicLevelOverride));
     manager_with_override = factory();
   }
 
@@ -915,7 +905,7 @@ TEST(InputVolumeControllerTest,
   std::unique_ptr<InputVolumeController> manager_with_override;
   {
     test::ScopedFieldTrials field_trial(
-        GetAgcMinMicLevelExperimentFieldTrialEnabled(kMinMicLevelOverride));
+        GetAgcMinInputVolumeFieldTrialEnabled(kMinMicLevelOverride));
     manager_with_override = factory();
   }
 
@@ -976,7 +966,7 @@ TEST(InputVolumeControllerTest,
                       kMinMicLevelOverride,
                   "Use a lower override value.");
     test::ScopedFieldTrials field_trial(
-        GetAgcMinMicLevelExperimentFieldTrialEnabled(kMinMicLevelOverride));
+        GetAgcMinInputVolumeFieldTrialEnabled(kMinMicLevelOverride));
     manager_with_override = factory();
   }
 
@@ -1041,7 +1031,7 @@ TEST(InputVolumeControllerTest,
                       kMinMicLevelOverride,
                   "Use a lower override value.");
     test::ScopedFieldTrials field_trial(
-        GetAgcMinMicLevelExperimentFieldTrialEnabled(kMinMicLevelOverride));
+        GetAgcMinInputVolumeFieldTrialEnabled(kMinMicLevelOverride));
     manager_with_override = factory();
   }
 
