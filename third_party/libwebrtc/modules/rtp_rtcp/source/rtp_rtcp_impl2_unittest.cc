@@ -709,6 +709,36 @@ TEST_P(RtpRtcpImpl2Test, ConfigurableRtcpReportInterval) {
   EXPECT_EQ(sender_.transport_.NumRtcpSent(), 2u);
 }
 
+TEST_P(RtpRtcpImpl2Test, RtpSenderEgressTimestampOffset) {
+  // RTP timestamp offset not explicitly set, default to random value.
+  uint16_t seqno = sender_.impl_->GetRtpState().sequence_number;
+  uint32_t media_rtp_ts = 1001;
+  uint32_t rtp_ts = media_rtp_ts + sender_.impl_->StartTimestamp();
+  EXPECT_TRUE(SendFrame(&sender_, sender_video_.get(), kBaseLayerTid, rtp_ts,
+                        /*capture_time_ms=*/0));
+  AdvanceTime(kOneWayNetworkDelay);
+  EXPECT_THAT(
+      sender_.impl_->GetSentRtpPacketInfos(std::vector<uint16_t>{seqno}),
+      ElementsAre(Field(&RtpSequenceNumberMap::Info::timestamp, media_rtp_ts)));
+
+  RtpState saved_rtp_state = sender_.impl_->GetRtpState();
+
+  // Change RTP timestamp offset.
+  sender_.impl_->SetStartTimestamp(2000);
+
+  // Restores RtpState and make sure the old timestamp offset is in place.
+  sender_.impl_->SetRtpState(saved_rtp_state);
+  seqno = sender_.impl_->GetRtpState().sequence_number;
+  media_rtp_ts = 1031;
+  rtp_ts = media_rtp_ts + sender_.impl_->StartTimestamp();
+  EXPECT_TRUE(SendFrame(&sender_, sender_video_.get(), kBaseLayerTid, rtp_ts,
+                        /*capture_time_ms=*/0));
+  AdvanceTime(kOneWayNetworkDelay);
+  EXPECT_THAT(
+      sender_.impl_->GetSentRtpPacketInfos(std::vector<uint16_t>{seqno}),
+      ElementsAre(Field(&RtpSequenceNumberMap::Info::timestamp, media_rtp_ts)));
+}
+
 TEST_P(RtpRtcpImpl2Test, StoresPacketInfoForSentPackets) {
   const uint32_t kStartTimestamp = 1u;
   SetUp();
