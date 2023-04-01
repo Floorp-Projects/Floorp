@@ -33,6 +33,7 @@ using ::testing::Eq;
 using ::testing::Optional;
 
 using Agc2Config = AudioProcessing::Config::GainController2;
+using InputVolumeControllerConfig = InputVolumeController::Config;
 
 // Sets all the samples in `ab` to `value`.
 void SetAudioBufferSamples(float value, AudioBuffer& ab) {
@@ -73,10 +74,24 @@ std::unique_ptr<GainController2> CreateAgc2FixedDigitalMode(
   config.adaptive_digital.enabled = false;
   config.fixed_digital.gain_db = fixed_gain_db;
   EXPECT_TRUE(GainController2::Validate(config));
-  return std::make_unique<GainController2>(config, sample_rate_hz,
-                                           /*num_channels=*/1,
-                                           /*use_internal_vad=*/true);
+  return std::make_unique<GainController2>(
+      config, InputVolumeControllerConfig{}, sample_rate_hz,
+      /*num_channels=*/1,
+      /*use_internal_vad=*/true);
 }
+
+constexpr InputVolumeControllerConfig kTestInputVolumeControllerConfig{
+    .clipped_level_min = 20,
+    .clipped_level_step = 30,
+    .clipped_ratio_threshold = 0.4,
+    .clipped_wait_frames = 50,
+    .enable_clipping_predictor = true,
+    .target_range_max_dbfs = -6,
+    .target_range_min_dbfs = -70,
+    .update_input_volume_wait_frames = 100,
+    .speech_probability_threshold = 0.9,
+    .speech_ratio_threshold = 1,
+};
 
 }  // namespace
 
@@ -160,9 +175,41 @@ TEST(GainController2,
   Agc2Config config;
   config.input_volume_controller.enabled = false;
 
-  auto gain_controller =
-      std::make_unique<GainController2>(config, kSampleRateHz, kNumChannels,
-                                        /*use_internal_vad=*/true);
+  auto gain_controller = std::make_unique<GainController2>(
+      config, InputVolumeControllerConfig{}, kSampleRateHz, kNumChannels,
+      /*use_internal_vad=*/true);
+
+  EXPECT_FALSE(gain_controller->GetRecommendedInputVolume().has_value());
+
+  // Run AGC for a signal with no clipping or detected speech.
+  RunAgc2WithConstantInput(*gain_controller, kLowInputLevel, kNumFrames,
+                           kSampleRateHz, kNumChannels, kInitialInputVolume);
+
+  EXPECT_FALSE(gain_controller->GetRecommendedInputVolume().has_value());
+
+  // Run AGC for a signal with clipping.
+  RunAgc2WithConstantInput(*gain_controller, kHighInputLevel, kNumFrames,
+                           kSampleRateHz, kNumChannels, kInitialInputVolume);
+
+  EXPECT_FALSE(gain_controller->GetRecommendedInputVolume().has_value());
+}
+
+TEST(
+    GainController2,
+    CheckGetRecommendedInputVolumeWhenInputVolumeControllerNotEnabledAndSpecificConfigUsed) {
+  constexpr float kHighInputLevel = 32767.0f;
+  constexpr float kLowInputLevel = 1000.0f;
+  constexpr int kInitialInputVolume = 100;
+  constexpr int kNumChannels = 2;
+  constexpr int kNumFrames = 5;
+  constexpr int kSampleRateHz = 16000;
+
+  Agc2Config config;
+  config.input_volume_controller.enabled = false;
+
+  auto gain_controller = std::make_unique<GainController2>(
+      config, kTestInputVolumeControllerConfig, kSampleRateHz, kNumChannels,
+      /*use_internal_vad=*/true);
 
   EXPECT_FALSE(gain_controller->GetRecommendedInputVolume().has_value());
 
@@ -192,9 +239,42 @@ TEST(GainController2,
   config.input_volume_controller.enabled = true;
   config.adaptive_digital.enabled = true;
 
-  auto gain_controller =
-      std::make_unique<GainController2>(config, kSampleRateHz, kNumChannels,
-                                        /*use_internal_vad=*/true);
+  auto gain_controller = std::make_unique<GainController2>(
+      config, InputVolumeControllerConfig{}, kSampleRateHz, kNumChannels,
+      /*use_internal_vad=*/true);
+
+  EXPECT_TRUE(gain_controller->GetRecommendedInputVolume().has_value());
+
+  // Run AGC for a signal with no clipping or detected speech.
+  RunAgc2WithConstantInput(*gain_controller, kLowInputLevel, kNumFrames,
+                           kSampleRateHz, kNumChannels, kInitialInputVolume);
+
+  EXPECT_TRUE(gain_controller->GetRecommendedInputVolume().has_value());
+
+  // Run AGC for a signal with clipping.
+  RunAgc2WithConstantInput(*gain_controller, kHighInputLevel, kNumFrames,
+                           kSampleRateHz, kNumChannels, kInitialInputVolume);
+
+  EXPECT_TRUE(gain_controller->GetRecommendedInputVolume().has_value());
+}
+
+TEST(
+    GainController2,
+    CheckGetRecommendedInputVolumeWhenInputVolumeControllerEnabledAndSpecificConfigUsed) {
+  constexpr float kHighInputLevel = 32767.0f;
+  constexpr float kLowInputLevel = 1000.0f;
+  constexpr int kInitialInputVolume = 100;
+  constexpr int kNumChannels = 2;
+  constexpr int kNumFrames = 5;
+  constexpr int kSampleRateHz = 16000;
+
+  Agc2Config config;
+  config.input_volume_controller.enabled = true;
+  config.adaptive_digital.enabled = true;
+
+  auto gain_controller = std::make_unique<GainController2>(
+      config, kTestInputVolumeControllerConfig, kSampleRateHz, kNumChannels,
+      /*use_internal_vad=*/true);
 
   EXPECT_TRUE(gain_controller->GetRecommendedInputVolume().has_value());
 
@@ -214,7 +294,8 @@ TEST(GainController2,
 // Checks that the default config is applied.
 TEST(GainController2, ApplyDefaultConfig) {
   auto gain_controller2 = std::make_unique<GainController2>(
-      Agc2Config{}, /*sample_rate_hz=*/16000, /*num_channels=*/2,
+      Agc2Config{}, InputVolumeControllerConfig{},
+      /*sample_rate_hz=*/16000, /*num_channels=*/2,
       /*use_internal_vad=*/true);
   EXPECT_TRUE(gain_controller2.get());
 }
@@ -330,7 +411,8 @@ TEST(GainController2, CheckFinalGainWithAdaptiveDigitalController) {
   Agc2Config config;
   config.fixed_digital.gain_db = 0.0f;
   config.adaptive_digital.enabled = true;
-  GainController2 agc2(config, kSampleRateHz, kStereo,
+  GainController2 agc2(config, /*input_volume_controller_config=*/{},
+                       kSampleRateHz, kStereo,
                        /*use_internal_vad=*/true);
 
   test::InputAudioFile input_file(
@@ -385,9 +467,11 @@ TEST(GainController2,
   Agc2Config config;
   config.fixed_digital.gain_db = 0.0f;
   config.adaptive_digital.enabled = true;
-  GainController2 agc2(config, kSampleRateHz, kStereo,
+  GainController2 agc2(config, /*input_volume_controller_config=*/{},
+                       kSampleRateHz, kStereo,
                        /*use_internal_vad=*/true);
-  GainController2 agc2_reference(config, kSampleRateHz, kStereo,
+  GainController2 agc2_reference(config, /*input_volume_controller_config=*/{},
+                                 kSampleRateHz, kStereo,
                                  /*use_internal_vad=*/true);
 
   test::InputAudioFile input_file(
@@ -452,9 +536,11 @@ TEST(GainController2,
   Agc2Config config;
   config.fixed_digital.gain_db = 0.0f;
   config.adaptive_digital.enabled = true;
-  GainController2 agc2(config, kSampleRateHz, kStereo,
+  GainController2 agc2(config, /*input_volume_controller_config=*/{},
+                       kSampleRateHz, kStereo,
                        /*use_internal_vad=*/false);
-  GainController2 agc2_reference(config, kSampleRateHz, kStereo,
+  GainController2 agc2_reference(config, /*input_volume_controller_config=*/{},
+                                 kSampleRateHz, kStereo,
                                  /*use_internal_vad=*/true);
 
   test::InputAudioFile input_file(
@@ -521,9 +607,11 @@ TEST(GainController2,
   Agc2Config config;
   config.fixed_digital.gain_db = 0.0f;
   config.adaptive_digital.enabled = true;
-  GainController2 agc2(config, kSampleRateHz, kStereo,
+  GainController2 agc2(config, /*input_volume_controller_config=*/{},
+                       kSampleRateHz, kStereo,
                        /*use_internal_vad=*/false);
-  GainController2 agc2_reference(config, kSampleRateHz, kStereo,
+  GainController2 agc2_reference(config, /*input_volume_controller_config=*/{},
+                                 kSampleRateHz, kStereo,
                                  /*use_internal_vad=*/true);
   VoiceActivityDetectorWrapper vad(config.adaptive_digital.vad_reset_period_ms,
                                    GetAvailableCpuFeatures(), kSampleRateHz);

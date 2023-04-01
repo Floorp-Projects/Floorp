@@ -34,10 +34,12 @@ class GainController2 {
  public:
   // Ctor. If `use_internal_vad` is true, an internal voice activity
   // detector is used for digital adaptive gain.
-  GainController2(const AudioProcessing::Config::GainController2& config,
-                  int sample_rate_hz,
-                  int num_channels,
-                  bool use_internal_vad);
+  GainController2(
+      const AudioProcessing::Config::GainController2& config,
+      const InputVolumeController::Config& input_volume_controller_config,
+      int sample_rate_hz,
+      int num_channels,
+      bool use_internal_vad);
   GainController2(const GainController2&) = delete;
   GainController2& operator=(const GainController2&) = delete;
   ~GainController2();

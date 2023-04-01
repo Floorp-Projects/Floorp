@@ -27,6 +27,7 @@ namespace webrtc {
 namespace {
 
 using Agc2Config = AudioProcessing::Config::GainController2;
+using InputVolumeControllerConfig = InputVolumeController::Config;
 
 constexpr int kLogLimiterStatsPeriodMs = 30'000;
 constexpr int kFrameLengthMs = 10;
@@ -64,10 +65,10 @@ std::unique_ptr<AdaptiveDigitalGainController> CreateAdaptiveDigitalController(
 // Creates an input volume controller if `enabled` is true.
 std::unique_ptr<InputVolumeController> CreateInputVolumeController(
     bool enabled,
+    const InputVolumeControllerConfig& config,
     int num_channels) {
   if (enabled) {
-    return std::make_unique<InputVolumeController>(
-        num_channels, InputVolumeController::Config());
+    return std::make_unique<InputVolumeController>(num_channels, config);
   }
   return nullptr;
 }
@@ -76,10 +77,12 @@ std::unique_ptr<InputVolumeController> CreateInputVolumeController(
 
 std::atomic<int> GainController2::instance_count_(0);
 
-GainController2::GainController2(const Agc2Config& config,
-                                 int sample_rate_hz,
-                                 int num_channels,
-                                 bool use_internal_vad)
+GainController2::GainController2(
+    const Agc2Config& config,
+    const InputVolumeControllerConfig& input_volume_controller_config,
+    int sample_rate_hz,
+    int num_channels,
+    bool use_internal_vad)
     : cpu_features_(GetAllowedCpuFeatures()),
       data_dumper_(instance_count_.fetch_add(1) + 1),
       fixed_gain_applier_(
@@ -92,6 +95,7 @@ GainController2::GainController2(const Agc2Config& config,
                                           &data_dumper_)),
       input_volume_controller_(
           CreateInputVolumeController(config.input_volume_controller.enabled,
+                                      input_volume_controller_config,
                                       num_channels)),
       limiter_(sample_rate_hz, &data_dumper_, /*histogram_name_prefix=*/"Agc2"),
       calls_since_last_limiter_log_(0) {

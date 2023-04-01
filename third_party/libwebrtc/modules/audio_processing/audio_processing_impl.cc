@@ -31,6 +31,7 @@
 #include "modules/audio_processing/logging/apm_data_dumper.h"
 #include "modules/audio_processing/optionally_built_submodule_creators.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
@@ -143,8 +144,6 @@ void PackRenderAudioBufferForEchoDetector(const AudioBuffer& audio,
   packed_buffer.insert(packed_buffer.end(), audio.channels_const()[0],
                        audio.channels_const()[0] + audio.num_frames());
 }
-
-constexpr int kUnspecifiedDataDumpInputVolume = -100;
 
 // Options for gracefully handling processing errors.
 enum class FormatErrorOutputOption {
@@ -326,6 +325,125 @@ int HandleUnsupportedAudioFormats(const float* const* src,
   return error_code;
 }
 
+const absl::optional<InputVolumeController::Config>
+GetInputVolumeControllerConfigOverride() {
+  constexpr char kInputVolumeControllerFieldTrial[] =
+      "WebRTC-Audio-InputVolumeControllerExperiment";
+
+  if (!field_trial::IsEnabled(kInputVolumeControllerFieldTrial)) {
+    return absl::nullopt;
+  }
+
+  constexpr InputVolumeController::Config kDefaultConfig;
+
+  FieldTrialFlag enabled("Enabled", false);
+  FieldTrialConstrained<int> clipped_level_min(
+      "clipped_level_min", kDefaultConfig.clipped_level_min, 0, 255);
+  FieldTrialConstrained<int> clipped_level_step(
+      "clipped_level_step", kDefaultConfig.clipped_level_step, 0, 255);
+  FieldTrialConstrained<double> clipped_ratio_threshold(
+      "clipped_ratio_threshold", kDefaultConfig.clipped_ratio_threshold, 0, 1);
+  FieldTrialConstrained<int> clipped_wait_frames(
+      "clipped_wait_frames", kDefaultConfig.clipped_wait_frames, 0,
+      absl::nullopt);
+  FieldTrialParameter<bool> enable_clipping_predictor(
+      "enable_clipping_predictor", kDefaultConfig.enable_clipping_predictor);
+  FieldTrialConstrained<int> target_range_max_dbfs(
+      "target_range_max_dbfs", kDefaultConfig.target_range_max_dbfs, -90, 30);
+  FieldTrialConstrained<int> target_range_min_dbfs(
+      "target_range_min_dbfs", kDefaultConfig.target_range_min_dbfs, -90, 30);
+  FieldTrialConstrained<int> update_input_volume_wait_frames(
+      "update_input_volume_wait_frames",
+      kDefaultConfig.update_input_volume_wait_frames, 0, absl::nullopt);
+  FieldTrialConstrained<double> speech_probability_threshold(
+      "speech_probability_threshold",
+      kDefaultConfig.speech_probability_threshold, 0, 1);
+  FieldTrialConstrained<double> speech_ratio_threshold(
+      "speech_ratio_threshold", kDefaultConfig.speech_ratio_threshold, 0, 1);
+
+  // Field-trial based override for the input volume controller config.
+  const std::string field_trial_name =
+      field_trial::FindFullName(kInputVolumeControllerFieldTrial);
+
+  ParseFieldTrial({&enabled, &clipped_level_min, &clipped_level_step,
+                   &clipped_ratio_threshold, &clipped_wait_frames,
+                   &enable_clipping_predictor, &target_range_max_dbfs,
+                   &target_range_min_dbfs, &update_input_volume_wait_frames,
+                   &speech_probability_threshold, &speech_ratio_threshold},
+                  field_trial_name);
+
+  // Checked already by `IsEnabled()` before parsing, therefore always true.
+  RTC_DCHECK(enabled);
+
+  return InputVolumeController::Config{
+      .clipped_level_min = static_cast<int>(clipped_level_min.Get()),
+      .clipped_level_step = static_cast<int>(clipped_level_step.Get()),
+      .clipped_ratio_threshold =
+          static_cast<float>(clipped_ratio_threshold.Get()),
+      .clipped_wait_frames = static_cast<int>(clipped_wait_frames.Get()),
+      .enable_clipping_predictor =
+          static_cast<bool>(enable_clipping_predictor.Get()),
+      .target_range_max_dbfs = static_cast<int>(target_range_max_dbfs.Get()),
+      .target_range_min_dbfs = static_cast<int>(target_range_min_dbfs.Get()),
+      .update_input_volume_wait_frames =
+          static_cast<int>(update_input_volume_wait_frames.Get()),
+      .speech_probability_threshold =
+          static_cast<float>(speech_probability_threshold.Get()),
+      .speech_ratio_threshold =
+          static_cast<float>(speech_ratio_threshold.Get()),
+  };
+}
+
+// Switches all gain control to AGC2 if experimenting with input volume
+// controller.
+const AudioProcessing::Config AdjustConfig(
+    const AudioProcessing::Config& config,
+    const absl::optional<InputVolumeController::Config>&
+        input_volume_controller_config_override) {
+  const bool analog_agc_enabled =
+      config.gain_controller1.enabled &&
+      (config.gain_controller1.mode ==
+           AudioProcessing::Config::GainController1::kAdaptiveAnalog ||
+       config.gain_controller1.analog_gain_controller.enabled);
+
+  // Do not update the config if none of the analog AGCs is active
+  // regardless of the input volume controller override.
+  if (!analog_agc_enabled ||
+      !input_volume_controller_config_override.has_value()) {
+    return config;
+  }
+
+  const bool hybrid_agc_config_detected =
+      config.gain_controller1.enabled &&
+      config.gain_controller1.analog_gain_controller.enabled &&
+      !config.gain_controller1.analog_gain_controller.enable_digital_adaptive &&
+      config.gain_controller2.enabled &&
+      config.gain_controller2.adaptive_digital.enabled;
+
+  const bool full_agc1_config_detected =
+      config.gain_controller1.enabled &&
+      config.gain_controller1.analog_gain_controller.enabled &&
+      config.gain_controller1.analog_gain_controller.enable_digital_adaptive &&
+      !config.gain_controller2.enabled;
+
+  if (hybrid_agc_config_detected == full_agc1_config_detected ||
+      config.gain_controller2.input_volume_controller.enabled) {
+    RTC_LOG(LS_ERROR) << "Unexpected AGC config: Config not adjusted.";
+    return config;
+  }
+
+  AudioProcessing::Config adjusted_config = config;
+  adjusted_config.gain_controller1.enabled = false;
+  adjusted_config.gain_controller1.analog_gain_controller.enabled = false;
+  adjusted_config.gain_controller2.enabled = true;
+  adjusted_config.gain_controller2.adaptive_digital.enabled = true;
+  adjusted_config.gain_controller2.input_volume_controller.enabled = true;
+
+  return adjusted_config;
+}
+
+constexpr int kUnspecifiedDataDumpInputVolume = -100;
+
 }  // namespace
 
 // Throughout webrtc, it's assumed that success is represented by zero.
@@ -448,6 +566,8 @@ AudioProcessingImpl::AudioProcessingImpl(
     : data_dumper_(new ApmDataDumper(instance_count_.fetch_add(1) + 1)),
       use_setup_specific_default_aec3_config_(
           UseSetupSpecificDefaultAec3Congfig()),
+      input_volume_controller_config_override_(
+          GetInputVolumeControllerConfigOverride()),
       use_denormal_disabler_(
           !field_trial::IsEnabled("WebRTC-ApmDenormalDisablerKillSwitch")),
       transient_suppressor_vad_mode_(GetTransientSuppressorVadMode()),
@@ -456,7 +576,7 @@ AudioProcessingImpl::AudioProcessingImpl(
       capture_runtime_settings_enqueuer_(&capture_runtime_settings_),
       render_runtime_settings_enqueuer_(&render_runtime_settings_),
       echo_control_factory_(std::move(echo_control_factory)),
-      config_(config),
+      config_(AdjustConfig(config, input_volume_controller_config_override_)),
       submodule_states_(!!capture_post_processor,
                         !!render_pre_processor,
                         !!capture_analyzer),
@@ -489,6 +609,8 @@ AudioProcessingImpl::AudioProcessingImpl(
   if (!DenormalDisabler::IsSupported()) {
     RTC_LOG(LS_INFO) << "Denormal disabler unsupported";
   }
+
+  RTC_LOG(LS_INFO) << "AudioProcessing: " << config_.ToString();
 
   // Mark Echo Controller enabled if a factory is injected.
   capture_nonlocked_.echo_controller_enabled =
@@ -681,46 +803,57 @@ void AudioProcessingImpl::InitializeLocked(const ProcessingConfig& config) {
 }
 
 void AudioProcessingImpl::ApplyConfig(const AudioProcessing::Config& config) {
-  RTC_LOG(LS_INFO) << "AudioProcessing::ApplyConfig: " << config.ToString();
-
   // Run in a single-threaded manner when applying the settings.
   MutexLock lock_render(&mutex_render_);
   MutexLock lock_capture(&mutex_capture_);
 
+  // TODO(bugs.webrtc.org/7494): Replace `adjusted_config` with `config` after
+  // "WebRTC-Audio-InputVolumeControllerExperiment" field trial is removed.
+  const auto adjusted_config =
+      AdjustConfig(config, input_volume_controller_config_override_);
+
+  RTC_LOG(LS_INFO) << "AudioProcessing::ApplyConfig: "
+                   << adjusted_config.ToString();
+
   const bool pipeline_config_changed =
       config_.pipeline.multi_channel_render !=
-          config.pipeline.multi_channel_render ||
+          adjusted_config.pipeline.multi_channel_render ||
       config_.pipeline.multi_channel_capture !=
-          config.pipeline.multi_channel_capture ||
+          adjusted_config.pipeline.multi_channel_capture ||
       config_.pipeline.maximum_internal_processing_rate !=
-          config.pipeline.maximum_internal_processing_rate;
+          adjusted_config.pipeline.maximum_internal_processing_rate;
 
   const bool aec_config_changed =
-      config_.echo_canceller.enabled != config.echo_canceller.enabled ||
-      config_.echo_canceller.mobile_mode != config.echo_canceller.mobile_mode;
+      config_.echo_canceller.enabled !=
+          adjusted_config.echo_canceller.enabled ||
+      config_.echo_canceller.mobile_mode !=
+          adjusted_config.echo_canceller.mobile_mode;
 
   const bool agc1_config_changed =
-      config_.gain_controller1 != config.gain_controller1;
+      config_.gain_controller1 != adjusted_config.gain_controller1;
 
   const bool agc2_config_changed =
-      config_.gain_controller2 != config.gain_controller2;
+      config_.gain_controller2 != adjusted_config.gain_controller2;
 
   const bool ns_config_changed =
-      config_.noise_suppression.enabled != config.noise_suppression.enabled ||
-      config_.noise_suppression.level != config.noise_suppression.level;
+      config_.noise_suppression.enabled !=
+          adjusted_config.noise_suppression.enabled ||
+      config_.noise_suppression.level !=
+          adjusted_config.noise_suppression.level;
 
   const bool ts_config_changed = config_.transient_suppression.enabled !=
-                                 config.transient_suppression.enabled;
+                                 adjusted_config.transient_suppression.enabled;
 
   const bool pre_amplifier_config_changed =
-      config_.pre_amplifier.enabled != config.pre_amplifier.enabled ||
+      config_.pre_amplifier.enabled != adjusted_config.pre_amplifier.enabled ||
       config_.pre_amplifier.fixed_gain_factor !=
-          config.pre_amplifier.fixed_gain_factor;
+          adjusted_config.pre_amplifier.fixed_gain_factor;
 
   const bool gain_adjustment_config_changed =
-      config_.capture_level_adjustment != config.capture_level_adjustment;
+      config_.capture_level_adjustment !=
+      adjusted_config.capture_level_adjustment;
 
-  config_ = config;
+  config_ = adjusted_config;
 
   if (aec_config_changed) {
     InitializeEchoController();
@@ -2123,8 +2256,10 @@ void AudioProcessingImpl::InitializeGainController2(bool config_has_changed) {
     const bool use_internal_vad =
         transient_suppressor_vad_mode_ != TransientSuppressor::VadMode::kRnnVad;
     submodules_.gain_controller2 = std::make_unique<GainController2>(
-        config_.gain_controller2, proc_fullband_sample_rate_hz(),
-        num_input_channels(), use_internal_vad);
+        config_.gain_controller2,
+        input_volume_controller_config_override_.value_or(
+            InputVolumeController::Config{}),
+        proc_fullband_sample_rate_hz(), num_input_channels(), use_internal_vad);
     submodules_.gain_controller2->SetCaptureOutputUsed(
         capture_.capture_output_used);
   }
