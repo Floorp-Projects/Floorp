@@ -121,7 +121,7 @@ def _RunGN(args):
 
 def _RunNinja(output_directory, args):
   cmd = [
-      os.path.join(find_depot_tools.DEPOT_TOOLS_PATH, 'ninja'), '-C',
+      os.path.join(SRC_DIR, 'third_party', 'ninja', 'ninja'), '-C',
       output_directory
   ]
   cmd.extend(args)
