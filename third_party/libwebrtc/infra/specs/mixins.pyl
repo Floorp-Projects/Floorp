@@ -224,8 +224,7 @@
   },
   'quick-perf-tests': {
     '$mixin_append': {
-      'args':
-      ['--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/', '--nologs']
+      'args': ['--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/', '--nologs']
     }
   },
   'redfin': {
