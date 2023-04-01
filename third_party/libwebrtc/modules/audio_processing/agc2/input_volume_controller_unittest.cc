@@ -801,11 +801,11 @@ TEST(InputVolumeControllerTest, MinInputVolumeCheckMinLevelWithClipping) {
     return controller;
   };
   std::unique_ptr<InputVolumeController> controller = factory();
-  std::unique_ptr<InputVolumeController> manager_with_override;
+  std::unique_ptr<InputVolumeController> controller_with_override;
   {
     test::ScopedFieldTrials field_trial(
         GetAgcMinInputVolumeFieldTrialEnabled(kMinInputVolume));
-    manager_with_override = factory();
+    controller_with_override = factory();
   }
 
   // Create a test input signal which containts 80% of clipped samples.
@@ -822,18 +822,19 @@ TEST(InputVolumeControllerTest, MinInputVolumeCheckMinLevelWithClipping) {
                            *controller);
   CallPreProcessAndProcess(/*num_calls=*/400, audio_buffer,
                            kLowSpeechProbability, /*speech_level_dbfs=*/-42.0f,
-                           *manager_with_override);
+                           *controller_with_override);
 
   // Make sure that an adaptation occurred.
   ASSERT_GT(controller->recommended_analog_level(), 0);
 
   // Check that the test signal triggers a larger downward adaptation for
   // `controller`, which is allowed to reach a lower gain.
-  EXPECT_GT(manager_with_override->recommended_analog_level(),
+  EXPECT_GT(controller_with_override->recommended_analog_level(),
             controller->recommended_analog_level());
-  // Check that the gain selected by `manager_with_override` equals the
+  // Check that the gain selected by `controller_with_override` equals the
   // minimum value overridden via field trial.
-  EXPECT_EQ(manager_with_override->recommended_analog_level(), kMinInputVolume);
+  EXPECT_EQ(controller_with_override->recommended_analog_level(),
+            kMinInputVolume);
 }
 
 // Checks that, when the "WebRTC-Audio-Agc2-MinInputVolume" field trial is
@@ -857,11 +858,11 @@ TEST(InputVolumeControllerTest,
     return controller;
   };
   std::unique_ptr<InputVolumeController> controller = factory();
-  std::unique_ptr<InputVolumeController> manager_with_override;
+  std::unique_ptr<InputVolumeController> controller_with_override;
   {
     test::ScopedFieldTrials field_trial(
         GetAgcMinInputVolumeFieldTrialEnabled(kMinInputVolume));
-    manager_with_override = factory();
+    controller_with_override = factory();
   }
 
   // Create a test input signal which containts 80% of clipped samples.
@@ -877,18 +878,19 @@ TEST(InputVolumeControllerTest,
       /*speech_level_dbfs=*/-18.0f, *controller);
   CallPreProcessAndProcess(
       /*num_calls=*/400, audio_buffer, kHighSpeechProbability,
-      /*speech_level_dbfs=*/-18.0f, *manager_with_override);
+      /*speech_level_dbfs=*/-18.0f, *controller_with_override);
 
   // Make sure that an adaptation occurred.
   ASSERT_GT(controller->recommended_analog_level(), 0);
 
   // Check that the test signal triggers a larger downward adaptation for
   // `controller`, which is allowed to reach a lower gain.
-  EXPECT_GT(manager_with_override->recommended_analog_level(),
+  EXPECT_GT(controller_with_override->recommended_analog_level(),
             controller->recommended_analog_level());
-  // Check that the gain selected by `manager_with_override` equals the minimum
-  // value overridden via field trial.
-  EXPECT_EQ(manager_with_override->recommended_analog_level(), kMinInputVolume);
+  // Check that the gain selected by `controller_with_override` equals the
+  // minimum value overridden via field trial.
+  EXPECT_EQ(controller_with_override->recommended_analog_level(),
+            kMinInputVolume);
 }
 
 // Checks that, when the "WebRTC-Audio-Agc2-MinInputVolume" field trial is
@@ -912,7 +914,7 @@ TEST(InputVolumeControllerTest, MinInputVolumeCompareMicLevelWithClipping) {
     return controller;
   };
   std::unique_ptr<InputVolumeController> controller = factory();
-  std::unique_ptr<InputVolumeController> manager_with_override;
+  std::unique_ptr<InputVolumeController> controller_with_override;
   {
     constexpr int kMinInputVolume = 20;
     static_assert(kDefaultInputVolumeControllerConfig.clipped_level_min >=
@@ -920,7 +922,7 @@ TEST(InputVolumeControllerTest, MinInputVolumeCompareMicLevelWithClipping) {
                   "Use a lower override value.");
     test::ScopedFieldTrials field_trial(
         GetAgcMinInputVolumeFieldTrialEnabled(kMinInputVolume));
-    manager_with_override = factory();
+    controller_with_override = factory();
   }
 
   // Create a test input signal which containts 80% of clipped samples.
@@ -937,7 +939,7 @@ TEST(InputVolumeControllerTest, MinInputVolumeCompareMicLevelWithClipping) {
                            *controller);
   CallPreProcessAndProcess(/*num_calls=*/400, audio_buffer,
                            kLowSpeechProbability, /*speech_level_dbfs=*/-18,
-                           *manager_with_override);
+                           *controller_with_override);
 
   // Make sure that an adaptation occurred.
   ASSERT_GT(controller->recommended_analog_level(), 0);
@@ -947,8 +949,8 @@ TEST(InputVolumeControllerTest, MinInputVolumeCompareMicLevelWithClipping) {
   // expected because the minimum microphone level override is less than the
   // minimum level used when clipping is detected.
   EXPECT_EQ(controller->recommended_analog_level(),
-            manager_with_override->recommended_analog_level());
-  EXPECT_EQ(manager_with_override->recommended_analog_level(),
+            controller_with_override->recommended_analog_level());
+  EXPECT_EQ(controller_with_override->recommended_analog_level(),
             kDefaultInputVolumeControllerConfig.clipped_level_min);
 }
 
@@ -977,7 +979,7 @@ TEST(InputVolumeControllerTest,
     return controller;
   };
   std::unique_ptr<InputVolumeController> controller = factory();
-  std::unique_ptr<InputVolumeController> manager_with_override;
+  std::unique_ptr<InputVolumeController> controller_with_override;
   {
     constexpr int kMinInputVolume = 20;
     static_assert(kDefaultInputVolumeControllerConfig.clipped_level_min >=
@@ -985,7 +987,7 @@ TEST(InputVolumeControllerTest,
                   "Use a lower override value.");
     test::ScopedFieldTrials field_trial(
         GetAgcMinInputVolumeFieldTrialEnabled(kMinInputVolume));
-    manager_with_override = factory();
+    controller_with_override = factory();
   }
 
   // Create a test input signal which containts 80% of clipped samples.
@@ -1001,7 +1003,7 @@ TEST(InputVolumeControllerTest,
   CallPreProcessAndProcess(
       /*num_calls=*/400, audio_buffer,
       /*speech_probability=*/0.7f,
-      /*speech_level_dbfs=*/-18.0f, *manager_with_override);
+      /*speech_level_dbfs=*/-18.0f, *controller_with_override);
 
   // Make sure that an adaptation occurred.
   ASSERT_GT(controller->recommended_analog_level(), 0);
@@ -1011,8 +1013,8 @@ TEST(InputVolumeControllerTest,
   // expected because the minimum microphone level override is less than the
   // minimum level used when clipping is detected.
   EXPECT_EQ(controller->recommended_analog_level(),
-            manager_with_override->recommended_analog_level());
-  EXPECT_EQ(manager_with_override->recommended_analog_level(),
+            controller_with_override->recommended_analog_level());
+  EXPECT_EQ(controller_with_override->recommended_analog_level(),
             kDefaultInputVolumeControllerConfig.clipped_level_min);
 }
 
@@ -1028,14 +1030,14 @@ TEST_P(InputVolumeControllerParametrizedTest, ClippingParametersVerified) {
   EXPECT_EQ(controller->clipped_level_step_, kClippedLevelStep);
   EXPECT_EQ(controller->clipped_ratio_threshold_, kClippedRatioThreshold);
   EXPECT_EQ(controller->clipped_wait_frames_, kClippedWaitFrames);
-  std::unique_ptr<InputVolumeController> manager_custom =
+  std::unique_ptr<InputVolumeController> controller_custom =
       CreateInputVolumeController(/*clipped_level_step=*/10,
                                   /*clipped_ratio_threshold=*/0.2f,
                                   /*clipped_wait_frames=*/50);
-  manager_custom->Initialize();
-  EXPECT_EQ(manager_custom->clipped_level_step_, 10);
-  EXPECT_EQ(manager_custom->clipped_ratio_threshold_, 0.2f);
-  EXPECT_EQ(manager_custom->clipped_wait_frames_, 50);
+  controller_custom->Initialize();
+  EXPECT_EQ(controller_custom->clipped_level_step_, 10);
+  EXPECT_EQ(controller_custom->clipped_ratio_threshold_, 0.2f);
+  EXPECT_EQ(controller_custom->clipped_wait_frames_, 50);
 }
 
 TEST_P(InputVolumeControllerParametrizedTest,

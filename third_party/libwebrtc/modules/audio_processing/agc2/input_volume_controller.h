@@ -244,8 +244,7 @@ class MonoInputVolumeController {
   const int min_input_volume_after_clipping_;
   int max_input_volume_;
 
-  // Last recommended input volume.
-  int input_volume_ = 0;
+  int last_recommended_input_volume_ = 0;
 
   bool capture_output_used_ = true;
   bool check_volume_on_next_process_ = true;

@@ -237,16 +237,17 @@ void MonoInputVolumeController::HandleClipping(int clipped_level_step) {
   SetMaxLevel(std::max(min_input_volume_after_clipping_,
                        max_input_volume_ - clipped_level_step));
   if (log_to_histograms_) {
-    RTC_HISTOGRAM_BOOLEAN(
-        "WebRTC.Audio.AgcClippingAdjustmentAllowed",
-        input_volume_ - clipped_level_step >= min_input_volume_after_clipping_);
+    RTC_HISTOGRAM_BOOLEAN("WebRTC.Audio.AgcClippingAdjustmentAllowed",
+                          last_recommended_input_volume_ - clipped_level_step >=
+                              min_input_volume_after_clipping_);
   }
-  if (input_volume_ > min_input_volume_after_clipping_) {
+  if (last_recommended_input_volume_ > min_input_volume_after_clipping_) {
     // Don't try to adjust the input volume if we're already below the limit. As
     // a consequence, if the user has brought the input volume above the limit,
     // we will still not react until the postproc updates the input volume.
-    SetInputVolume(std::max(min_input_volume_after_clipping_,
-                            input_volume_ - clipped_level_step));
+    SetInputVolume(
+        std::max(min_input_volume_after_clipping_,
+                 last_recommended_input_volume_ - clipped_level_step));
     frames_since_update_input_volume_ = 0;
     speech_frames_since_update_input_volume_ = 0;
     is_first_frame_ = false;
@@ -267,18 +268,21 @@ void MonoInputVolumeController::SetInputVolume(int new_volume) {
   }
 
   // Detect manual input volume adjustments by checking if the
-  // `applied_input_volume` is outside of the `[input_volume_ -
-  // kVolumeQuantizationSlack, input_volume_ + kVolumeQuantizationSlack]` range.
-  if (applied_input_volume > input_volume_ + kVolumeQuantizationSlack ||
-      applied_input_volume < input_volume_ - kVolumeQuantizationSlack) {
+  // `applied_input_volume` is outside of the `[last_recommended_input_volume_ -
+  // kVolumeQuantizationSlack, last_recommended_input_volume_ +
+  // kVolumeQuantizationSlack]` range.
+  if (applied_input_volume >
+          last_recommended_input_volume_ + kVolumeQuantizationSlack ||
+      applied_input_volume <
+          last_recommended_input_volume_ - kVolumeQuantizationSlack) {
     RTC_DLOG(LS_INFO)
         << "[AGC2] The input volume was manually adjusted. Updating "
            "stored input volume from "
-        << input_volume_ << " to " << applied_input_volume;
-    input_volume_ = applied_input_volume;
+        << last_recommended_input_volume_ << " to " << applied_input_volume;
+    last_recommended_input_volume_ = applied_input_volume;
     // Always allow the user to increase the volume.
-    if (input_volume_ > max_input_volume_) {
-      SetMaxLevel(input_volume_);
+    if (last_recommended_input_volume_ > max_input_volume_) {
+      SetMaxLevel(last_recommended_input_volume_);
     }
     // Take no action in this case, since we can't be sure when the volume
     // was manually adjusted.
@@ -289,15 +293,16 @@ void MonoInputVolumeController::SetInputVolume(int new_volume) {
   }
 
   new_volume = std::min(new_volume, max_input_volume_);
-  if (new_volume == input_volume_) {
+  if (new_volume == last_recommended_input_volume_) {
     return;
   }
 
   recommended_input_volume_ = new_volume;
   RTC_DLOG(LS_INFO) << "[AGC2] Applied input volume: " << applied_input_volume
-                    << " | last recommended input volume: " << input_volume_
+                    << " | last recommended input volume: "
+                    << last_recommended_input_volume_
                     << " | newly recommended input volume: " << new_volume;
-  input_volume_ = new_volume;
+  last_recommended_input_volume_ = new_volume;
 }
 
 void MonoInputVolumeController::SetMaxLevel(int input_volume) {
@@ -346,7 +351,7 @@ int MonoInputVolumeController::CheckVolumeAndReset() {
     recommended_input_volume_ = input_volume;
   }
 
-  input_volume_ = input_volume;
+  last_recommended_input_volume_ = input_volume;
   startup_ = false;
   frames_since_update_input_volume_ = 0;
   speech_frames_since_update_input_volume_ = 0;
@@ -364,8 +369,8 @@ void MonoInputVolumeController::UpdateInputVolume(int rms_error_db) {
   if (rms_error_db == 0) {
     return;
   }
-  SetInputVolume(
-      ComputeVolumeUpdate(rms_error_db, input_volume_, min_input_volume_));
+  SetInputVolume(ComputeVolumeUpdate(
+      rms_error_db, last_recommended_input_volume_, min_input_volume_));
 }
 
 InputVolumeController::InputVolumeController(int num_capture_channels,
