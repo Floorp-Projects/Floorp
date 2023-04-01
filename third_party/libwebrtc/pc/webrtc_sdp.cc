@@ -2379,7 +2379,11 @@ static bool ParseMsidAttribute(absl::string_view line,
     return ParseFailed(line, "Missing stream ID in msid attribute.", error);
   }
   // The special value "-" indicates "no MediaStream".
-  if (new_stream_id.compare(kNoStreamMsid) != 0) {
+  if (new_stream_id.compare(kNoStreamMsid) != 0 &&
+      !absl::c_any_of(*stream_ids,
+                      [&new_stream_id](const std::string& existing_stream_id) {
+                        return new_stream_id == existing_stream_id;
+                      })) {
     stream_ids->push_back(new_stream_id);
   }
   return true;
