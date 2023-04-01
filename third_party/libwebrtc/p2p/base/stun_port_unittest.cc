@@ -58,6 +58,29 @@ static const int kHighCostPortKeepaliveLifetimeMs = 2 * 60 * 1000;
 
 constexpr uint64_t kTiebreakerDefault = 44444;
 
+class FakeMdnsResponder : public webrtc::MdnsResponderInterface {
+ public:
+  void CreateNameForAddress(const rtc::IPAddress& addr,
+                            NameCreatedCallback callback) override {
+    callback(addr, std::string("unittest-mdns-host-name.local"));
+  }
+
+  void RemoveNameForAddress(const rtc::IPAddress& addr,
+                            NameRemovedCallback callback) override {}
+};
+
+class FakeMdnsResponderProvider : public rtc::MdnsResponderProvider {
+ public:
+  FakeMdnsResponderProvider() : mdns_responder_(new FakeMdnsResponder()) {}
+
+  webrtc::MdnsResponderInterface* GetMdnsResponder() const override {
+    return mdns_responder_.get();
+  }
+
+ private:
+  std::unique_ptr<webrtc::MdnsResponderInterface> mdns_responder_;
+};
+
 // Base class for tests connecting a StunPort to a fake STUN server
 // (cricket::StunServer).
 class StunPortTestBase : public ::testing::Test, public sigslot::has_slots<> {
@@ -74,6 +97,7 @@ class StunPortTestBase : public ::testing::Test, public sigslot::has_slots<> {
         socket_factory_(ss_.get()),
         stun_server_1_(cricket::TestStunServer::Create(ss_.get(), kStunAddr1)),
         stun_server_2_(cricket::TestStunServer::Create(ss_.get(), kStunAddr2)),
+        mdns_responder_provider_(new FakeMdnsResponderProvider()),
         done_(false),
         error_(false),
         stun_keepalive_delay_(1),
@@ -169,6 +193,10 @@ class StunPortTestBase : public ::testing::Test, public sigslot::has_slots<> {
                                      /* packet_time_us */ -1);
   }
 
+  void EnableMdnsObfuscation() {
+    network_.set_mdns_responder_provider(mdns_responder_provider_.get());
+  }
+
  protected:
   static void SetUpTestSuite() {
     // Ensure the RNG is inited.
@@ -206,6 +234,7 @@ class StunPortTestBase : public ::testing::Test, public sigslot::has_slots<> {
   std::unique_ptr<cricket::TestStunServer> stun_server_1_;
   std::unique_ptr<cricket::TestStunServer> stun_server_2_;
   std::unique_ptr<rtc::AsyncPacketSocket> socket_;
+  std::unique_ptr<rtc::MdnsResponderProvider> mdns_responder_provider_;
   bool done_;
   bool error_;
   int stun_keepalive_delay_;
@@ -354,6 +383,41 @@ TEST_F(StunPortTestWithRealClock,
   std::string data = "some random data, sending to cricket::Port.";
   SendData(data.c_str(), data.length());
   // No crash is success.
+}
+
+// Test that a stun candidate (srflx candidate) is discarded whose address is
+// equal to that of a local candidate if mDNS obfuscation is not enabled.
+TEST_F(StunPortTest, TestStunCandidateDiscardedWithMdnsObfuscationNotEnabled) {
+  CreateSharedUdpPort(kStunAddr1, nullptr);
+  PrepareAddress();
+  EXPECT_TRUE_SIMULATED_WAIT(done(), kTimeoutMs, fake_clock);
+  ASSERT_EQ(1U, port()->Candidates().size());
+  EXPECT_TRUE(kLocalAddr.EqualIPs(port()->Candidates()[0].address()));
+  EXPECT_EQ(port()->Candidates()[0].type(), cricket::LOCAL_PORT_TYPE);
+}
+
+// Test that a stun candidate (srflx candidate) is generated whose address is
+// equal to that of a local candidate if mDNS obfuscation is enabled.
+TEST_F(StunPortTest, TestStunCandidateGeneratedWithMdnsObfuscationEnabled) {
+  EnableMdnsObfuscation();
+  CreateSharedUdpPort(kStunAddr1, nullptr);
+  PrepareAddress();
+  EXPECT_TRUE_SIMULATED_WAIT(done(), kTimeoutMs, fake_clock);
+  ASSERT_EQ(2U, port()->Candidates().size());
+
+  // The addresses of the candidates are both equal to kLocalAddr.
+  EXPECT_TRUE(kLocalAddr.EqualIPs(port()->Candidates()[0].address()));
+  EXPECT_TRUE(kLocalAddr.EqualIPs(port()->Candidates()[1].address()));
+
+  // One of the generated candidates is a local candidate and the other is a
+  // stun candidate.
+  EXPECT_NE(port()->Candidates()[0].type(), port()->Candidates()[1].type());
+  if (port()->Candidates()[0].type() == cricket::LOCAL_PORT_TYPE) {
+    EXPECT_EQ(port()->Candidates()[1].type(), cricket::STUN_PORT_TYPE);
+  } else {
+    EXPECT_EQ(port()->Candidates()[0].type(), cricket::STUN_PORT_TYPE);
+    EXPECT_EQ(port()->Candidates()[1].type(), cricket::LOCAL_PORT_TYPE);
+  }
 }
 
 // Test that the same address is added only once if two STUN servers are in
