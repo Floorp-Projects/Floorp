@@ -1560,7 +1560,7 @@ class nsLayoutUtils {
    */
   static nscoord ComputeCBDependentValue(nscoord aPercentBasis,
                                          const LengthPercentage& aCoord) {
-    NS_WARNING_ASSERTION(
+    NS_ASSERTION(
         aPercentBasis != NS_UNCONSTRAINEDSIZE,
         "have unconstrained width or height; this should only result from very "
         "large sizes, not attempts at intrinsic size calculation");

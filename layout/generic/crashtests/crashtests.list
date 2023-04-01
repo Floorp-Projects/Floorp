@@ -817,3 +817,4 @@ load 1799749.html
 pref(layout.css.content-visibility.enabled,true) asserts(1-4) load 1807958.html # asserts from integer overflow & bogus sizes
 load 1816574.html
 load 1821603.html
+load 1825434.html

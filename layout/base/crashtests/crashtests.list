@@ -365,7 +365,7 @@ asserts(0-2) pref(dom.disable_open_during_load,false) load 735943.html # the ass
 asserts(0-2) load 736389-1.xhtml # sometimes the above assertions are delayed and is reported on this test instead
 load 736924-1.html
 load 749816-1.html
-load 763223-1.html
+asserts(1-1) load 763223-1.html # bogus size
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) load 763702.xhtml
 load 767593-1.html
 load 767593-2.html
