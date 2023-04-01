@@ -41,10 +41,62 @@ rtc_library("speech_level_estimator") {
 
 rtc_library("adaptive_digital") {
   sources = [
-    "adaptive_digital_gain_applier.cc",
-    "adaptive_digital_gain_applier.h",
     "adaptive_digital_gain_controller.cc",
     "adaptive_digital_gain_controller.h",
+  ]
+
+  visibility = [
+    "..:gain_controller2",
+    "./*",
+  ]
+
+  configs += [ "..:apm_debug_dump" ]
+
+  deps = [
+    ":adaptive_digital_gain_applier",
+    ":noise_level_estimator",
+    ":saturation_protector",
+    ":speech_level_estimator",
+    "..:api",
+    "..:apm_logging",
+    "..:audio_frame_view",
+    "../../../common_audio",
+    "../../../rtc_base:checks",
+    "../../../rtc_base:logging",
+  ]
+
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+}
+
+rtc_library("adaptive_digital_gain_applier") {
+  sources = [
+    "adaptive_digital_gain_applier.cc",
+    "adaptive_digital_gain_applier.h",
+  ]
+
+  visibility = [
+    "..:gain_controller2",
+    "./*",
+  ]
+
+  configs += [ "..:apm_debug_dump" ]
+
+  deps = [
+    ":common",
+    ":gain_applier",
+    "..:api",
+    "..:apm_logging",
+    "..:audio_frame_view",
+    "../../../common_audio",
+    "../../../rtc_base:checks",
+    "../../../rtc_base:logging",
+    "../../../rtc_base:safe_minmax",
+    "../../../system_wrappers:metrics",
+  ]
+}
+
+rtc_library("saturation_protector") {
+  sources = [
     "saturation_protector.cc",
     "saturation_protector.h",
     "saturation_protector_buffer.cc",
@@ -60,19 +112,10 @@ rtc_library("adaptive_digital") {
 
   deps = [
     ":common",
-    ":gain_applier",
-    ":noise_level_estimator",
-    ":speech_level_estimator",
-    "..:api",
     "..:apm_logging",
-    "..:audio_frame_view",
-    "../../../api:array_view",
-    "../../../common_audio",
     "../../../rtc_base:checks",
-    "../../../rtc_base:logging",
     "../../../rtc_base:safe_compare",
     "../../../rtc_base:safe_minmax",
-    "../../../system_wrappers:metrics",
   ]
 
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
@@ -298,27 +341,51 @@ rtc_library("speech_level_estimator_unittest") {
   ]
 }
 
-rtc_library("adaptive_digital_unittests") {
+rtc_library("adaptive_digital_gain_applier_unittest") {
   testonly = true
   configs += [ "..:apm_debug_dump" ]
 
-  sources = [
-    "adaptive_digital_gain_applier_unittest.cc",
-    "gain_applier_unittest.cc",
-    "saturation_protector_buffer_unittest.cc",
-    "saturation_protector_unittest.cc",
-  ]
+  sources = [ "adaptive_digital_gain_applier_unittest.cc" ]
+
   deps = [
-    ":adaptive_digital",
+    ":adaptive_digital_gain_applier",
     ":common",
-    ":gain_applier",
     ":test_utils",
     "..:api",
     "..:apm_logging",
     "..:audio_frame_view",
-    "../../../api:array_view",
     "../../../common_audio",
-    "../../../rtc_base:checks",
+    "../../../rtc_base:gunit_helpers",
+    "../../../test:test_support",
+  ]
+}
+
+rtc_library("gain_applier_unittest") {
+  testonly = true
+  configs += [ "..:apm_debug_dump" ]
+
+  sources = [ "gain_applier_unittest.cc" ]
+  deps = [
+    ":gain_applier",
+    ":test_utils",
+    "..:audio_frame_view",
+    "../../../rtc_base:gunit_helpers",
+    "../../../test:test_support",
+  ]
+}
+
+rtc_library("saturation_protector_unittest") {
+  testonly = true
+  configs += [ "..:apm_debug_dump" ]
+
+  sources = [
+    "saturation_protector_buffer_unittest.cc",
+    "saturation_protector_unittest.cc",
+  ]
+  deps = [
+    ":common",
+    ":saturation_protector",
+    "..:apm_logging",
     "../../../rtc_base:gunit_helpers",
     "../../../test:test_support",
   ]
