@@ -187,12 +187,14 @@ void GainController2::Process(absl::optional<float> speech_probability,
     }
   }
 
-  fixed_gain_applier_.ApplyGain(float_frame);
   if (adaptive_digital_controller_) {
     RTC_DCHECK(speech_probability.has_value());
     adaptive_digital_controller_->Process(
         float_frame, speech_probability.value(), limiter_.LastAudioLevel());
   }
+
+  fixed_gain_applier_.ApplyGain(float_frame);
+
   limiter_.Process(float_frame);
 
   // Periodically log limiter stats.
