@@ -81,6 +81,7 @@ fuzzy(0-1,0-10000) == clip-surface-clone-01.svg clip-surface-clone-01-ref.svg
 == clipPath-and-mask-on-outflowElement-01b.html clipPath-on-outflowElement-01-ref.html
 fuzzy(0-1,0-630) == clipPath-and-shape-rendering-01.svg clipPath-and-shape-rendering-01-ref.svg # bug 614840
 == clipPath-and-transform-01.svg pass.svg
+== clipPath-and-transform-02.svg pass.svg
 == clipPath-basic-01.svg pass.svg
 == clipPath-basic-02.svg pass.svg
 == clipPath-basic-03.svg pass.svg
