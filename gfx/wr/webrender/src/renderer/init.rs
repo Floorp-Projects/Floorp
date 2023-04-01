@@ -769,6 +769,8 @@ pub fn create_webrender_instance(
         max_primitive_instance_count,
         enable_instancing: options.enable_instancing,
         consecutive_oom_frames: 0,
+        target_frame_publish_id: None,
+        pending_result_msg: None,
     };
 
     // We initially set the flags to default and then now call set_debug_flags

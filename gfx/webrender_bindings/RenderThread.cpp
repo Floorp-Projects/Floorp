@@ -1412,7 +1412,8 @@ void wr_notifier_wake_up(mozilla::wr::WrWindowId aWindowId,
 }
 
 void wr_notifier_new_frame_ready(mozilla::wr::WrWindowId aWindowId,
-                                 bool aCompositeNeeded) {
+                                 bool aCompositeNeeded,
+                                 mozilla::wr::FramePublishId aPublishId) {
   auto* renderThread = mozilla::wr::RenderThread::Get();
   renderThread->DecPendingFrameBuildCount(aWindowId);
 
