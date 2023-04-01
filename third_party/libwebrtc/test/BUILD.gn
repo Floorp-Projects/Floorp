@@ -451,6 +451,7 @@ rtc_library("video_test_support") {
     "../api:sequence_checker",
     "../api/test/video:video_frame_writer",
     "../api/video:encoded_image",
+    "../api/video:resolution",
     "../api/video:video_frame",
     "../api/video_codecs:video_codecs_api",
     "../common_video",
