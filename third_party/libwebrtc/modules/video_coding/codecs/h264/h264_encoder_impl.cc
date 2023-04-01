@@ -21,6 +21,9 @@
 #include <string>
 
 #include "absl/strings/match.h"
+#include "absl/types/optional.h"
+#include "api/video/video_codec_constants.h"
+#include "api/video_codecs/scalability_mode.h"
 #include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "modules/video_coding/svc/create_scalability_structure.h"
 #include "modules/video_coding/utility/simulcast_rate_allocator.h"
@@ -84,6 +87,23 @@ VideoFrameType ConvertToVideoFrameType(EVideoFrameType type) {
   }
   RTC_DCHECK_NOTREACHED() << "Unexpected/invalid frame type: " << type;
   return VideoFrameType::kEmptyFrame;
+}
+
+absl::optional<ScalabilityMode> ScalabilityModeFromTemporalLayers(
+    int num_temporal_layers) {
+  switch (num_temporal_layers) {
+    case 0:
+      break;
+    case 1:
+      return ScalabilityMode::kL1T1;
+    case 2:
+      return ScalabilityMode::kL1T2;
+    case 3:
+      return ScalabilityMode::kL1T3;
+    default:
+      RTC_DCHECK_NOTREACHED();
+  }
+  return absl::nullopt;
 }
 
 }  // namespace
@@ -199,6 +219,7 @@ int32_t H264EncoderImpl::InitEncode(const VideoCodec* inst,
   encoders_.resize(number_of_streams);
   pictures_.resize(number_of_streams);
   svc_controllers_.resize(number_of_streams);
+  scalability_modes_.resize(number_of_streams);
   configurations_.resize(number_of_streams);
   tl0sync_limit_.resize(number_of_streams);
 
@@ -284,25 +305,10 @@ int32_t H264EncoderImpl::InitEncode(const VideoCodec* inst,
     encoded_images_[i].set_size(0);
 
     tl0sync_limit_[i] = configurations_[i].num_temporal_layers;
-    absl::optional<ScalabilityMode> scalability_mode;
-    switch (configurations_[i].num_temporal_layers) {
-      case 0:
-        break;
-      case 1:
-        scalability_mode = ScalabilityMode::kL1T1;
-        break;
-      case 2:
-        scalability_mode = ScalabilityMode::kL1T2;
-        break;
-      case 3:
-        scalability_mode = ScalabilityMode::kL1T3;
-        break;
-      default:
-        RTC_DCHECK_NOTREACHED();
-    }
-    if (scalability_mode.has_value()) {
-      svc_controllers_[i] =
-          CreateScalabilityStructure(scalability_mode.value());
+    scalability_modes_[i] = ScalabilityModeFromTemporalLayers(
+        configurations_[i].num_temporal_layers);
+    if (scalability_modes_[i].has_value()) {
+      svc_controllers_[i] = CreateScalabilityStructure(*scalability_modes_[i]);
       if (svc_controllers_[i] == nullptr) {
         RTC_LOG(LS_ERROR) << "Failed to create scalability structure";
         Release();
@@ -335,6 +341,7 @@ int32_t H264EncoderImpl::Release() {
   pictures_.clear();
   tl0sync_limit_.clear();
   svc_controllers_.clear();
+  scalability_modes_.clear();
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
@@ -568,6 +575,7 @@ int32_t H264EncoderImpl::Encode(
           codec_specific.template_structure =
               svc_controllers_[i]->DependencyStructure();
         }
+        codec_specific.scalability_mode = scalability_modes_[i];
       }
       encoded_image_callback_->OnEncodedImage(encoded_images_[i],
                                               &codec_specific);

@@ -39,6 +39,7 @@
 #include "api/video/video_sink_interface.h"
 #include "api/video/video_source_interface.h"
 #include "api/video/video_timing.h"
+#include "api/video_codecs/scalability_mode.h"
 #include "common_video/include/quality_limitation_reason.h"
 #include "media/base/media_channel.h"
 #include "modules/audio_processing/include/audio_processing_statistics.h"
@@ -2835,6 +2836,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCOutboundRTPStreamStats_Video) {
   video_media_info.senders[0].frames_sent = 5;
   video_media_info.senders[0].huge_frames_sent = 2;
   video_media_info.senders[0].active = false;
+  video_media_info.senders[0].scalability_mode = ScalabilityMode::kL3T3_KEY;
   video_media_info.aggregated_senders.push_back(video_media_info.senders[0]);
   RtpCodecParameters codec_parameters;
   codec_parameters.payload_type = 42;
@@ -2894,6 +2896,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCOutboundRTPStreamStats_Video) {
   expected_video.huge_frames_sent = 2;
   expected_video.active = false;
   expected_video.power_efficient_encoder = false;
+  expected_video.scalability_mode = "L3T3_KEY";
   // `expected_video.content_type` should be undefined.
   // `expected_video.qp_sum` should be undefined.
   // `expected_video.encoder_implementation` should be undefined.

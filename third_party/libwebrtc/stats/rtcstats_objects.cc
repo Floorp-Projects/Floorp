@@ -678,7 +678,8 @@ WEBRTC_RTCSTATS_IMPL(
     &nack_count,
     &qp_sum,
     &active,
-    &power_efficient_encoder)
+    &power_efficient_encoder,
+    &scalability_mode)
 // clang-format on
 
 RTCOutboundRTPStreamStats::RTCOutboundRTPStreamStats(const std::string& id,
@@ -719,7 +720,8 @@ RTCOutboundRTPStreamStats::RTCOutboundRTPStreamStats(std::string&& id,
       nack_count("nackCount"),
       qp_sum("qpSum"),
       active("active"),
-      power_efficient_encoder("powerEfficientEncoder") {}
+      power_efficient_encoder("powerEfficientEncoder"),
+      scalability_mode("scalabilityMode") {}
 
 RTCOutboundRTPStreamStats::RTCOutboundRTPStreamStats(
     const RTCOutboundRTPStreamStats& other) = default;

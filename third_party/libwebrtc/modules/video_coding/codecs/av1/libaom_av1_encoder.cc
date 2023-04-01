@@ -23,6 +23,7 @@
 #include "api/video/encoded_image.h"
 #include "api/video/i420_buffer.h"
 #include "api/video/video_frame.h"
+#include "api/video_codecs/scalability_mode.h"
 #include "api/video_codecs/video_codec.h"
 #include "api/video_codecs/video_encoder.h"
 #include "modules/video_coding/include/video_codec_interface.h"
@@ -109,6 +110,7 @@ class LibaomAv1Encoder final : public VideoEncoder {
   void MaybeRewrapImgWithFormat(const aom_img_fmt_t fmt);
 
   std::unique_ptr<ScalableVideoController> svc_controller_;
+  absl::optional<ScalabilityMode> scalability_mode_;
   bool inited_;
   bool rates_configured_;
   absl::optional<aom_svc_params_t> svc_params_;
@@ -185,16 +187,15 @@ int LibaomAv1Encoder::InitEncode(const VideoCodec* codec_settings,
     RTC_LOG(LS_WARNING) << "Simulcast is not implemented by LibaomAv1Encoder.";
     return result;
   }
-  absl::optional<ScalabilityMode> scalability_mode =
-      encoder_settings_.GetScalabilityMode();
-  if (!scalability_mode.has_value()) {
+  scalability_mode_ = encoder_settings_.GetScalabilityMode();
+  if (!scalability_mode_.has_value()) {
     RTC_LOG(LS_WARNING) << "Scalability mode is not set, using 'L1T1'.";
-    scalability_mode = ScalabilityMode::kL1T1;
+    scalability_mode_ = ScalabilityMode::kL1T1;
   }
-  svc_controller_ = CreateScalabilityStructure(*scalability_mode);
+  svc_controller_ = CreateScalabilityStructure(*scalability_mode_);
   if (svc_controller_ == nullptr) {
     RTC_LOG(LS_WARNING) << "Failed to set scalability mode "
-                        << static_cast<int>(*scalability_mode);
+                        << static_cast<int>(*scalability_mode_);
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
 
@@ -709,6 +710,7 @@ int32_t LibaomAv1Encoder::Encode(
       CodecSpecificInfo codec_specific_info;
       codec_specific_info.codecType = kVideoCodecAV1;
       codec_specific_info.end_of_picture = end_of_picture;
+      codec_specific_info.scalability_mode = scalability_mode_;
       bool is_keyframe = layer_frame->IsKeyframe();
       codec_specific_info.generic_frame_info =
           svc_controller_->OnEncodeDone(*layer_frame);

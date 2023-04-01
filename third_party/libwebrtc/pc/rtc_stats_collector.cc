@@ -33,6 +33,7 @@
 #include "api/stats/rtcstats_objects.h"
 #include "api/units/time_delta.h"
 #include "api/video/video_content_type.h"
+#include "api/video_codecs/scalability_mode.h"
 #include "common_video/include/quality_limitation_reason.h"
 #include "media/base/media_channel.h"
 #include "modules/audio_processing/include/audio_processing_statistics.h"
@@ -791,6 +792,10 @@ void SetOutboundRTPStreamStatsFromVideoSenderInfo(
   if (video_sender_info.power_efficient_encoder.has_value()) {
     outbound_video->power_efficient_encoder =
         video_sender_info.power_efficient_encoder.value();
+  }
+  if (video_sender_info.scalability_mode) {
+    outbound_video->scalability_mode = std::string(
+        ScalabilityModeToString(*video_sender_info.scalability_mode));
   }
 }
 

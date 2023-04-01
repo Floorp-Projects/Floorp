@@ -20,6 +20,7 @@
 
 #include "api/fec_controller_override.h"
 #include "api/field_trials_view.h"
+#include "api/video_codecs/scalability_mode.h"
 #include "api/video_codecs/video_encoder.h"
 #include "api/video_codecs/vp9_profile.h"
 #include "common_video/include/video_frame_buffer_pool.h"
@@ -155,6 +156,7 @@ class LibvpxVp9Encoder : public VP9Encoder {
   uint8_t num_cores_;
 
   std::unique_ptr<ScalableVideoController> svc_controller_;
+  absl::optional<ScalabilityMode> scalability_mode_;
   std::vector<FramerateControllerDeprecated> framerate_controller_;
 
   // Used for flexible mode.
