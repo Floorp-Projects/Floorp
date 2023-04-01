@@ -8,9 +8,26 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "media/base/media_channel.h"
+#include "media/base/media_channel_impl.h"
 
+#include <map>
+#include <string>
+#include <utility>
+
+#include "absl/functional/any_invocable.h"
+#include "api/audio_options.h"
+#include "api/media_stream_interface.h"
+#include "api/rtc_error.h"
+#include "api/rtp_sender_interface.h"
+#include "api/units/time_delta.h"
+#include "api/video/video_timing.h"
+#include "common_video/include/quality_limitation_reason.h"
+#include "media/base/codec.h"
+#include "media/base/media_channel.h"
 #include "media/base/rtp_utils.h"
+#include "media/base/stream_params.h"
+#include "modules/rtp_rtcp/include/report_block_data.h"
+#include "rtc_base/checks.h"
 
 namespace cricket {
 using webrtc::FrameDecryptorInterface;
@@ -34,7 +51,7 @@ MediaChannel::~MediaChannel() {
   RTC_DCHECK(!network_interface_);
 }
 
-void MediaChannel::SetInterface(NetworkInterface* iface) {
+void MediaChannel::SetInterface(MediaChannelNetworkInterface* iface) {
   RTC_DCHECK_RUN_ON(network_thread_);
   iface ? network_safety_->SetAlive() : network_safety_->SetNotAlive();
   network_interface_ = iface;
@@ -57,8 +74,6 @@ void MediaChannel::SetFrameDecryptor(
   // Placeholder should be pure virtual once internal supports it.
 }
 
-void MediaChannel::SetVideoCodecSwitchingEnabled(bool enabled) {}
-
 bool MediaChannel::SendPacket(rtc::CopyOnWriteBuffer* packet,
                               const rtc::PacketOptions& options) {
   return DoSendPacket(packet, false, options);
@@ -69,7 +84,7 @@ bool MediaChannel::SendRtcp(rtc::CopyOnWriteBuffer* packet,
   return DoSendPacket(packet, true, options);
 }
 
-int MediaChannel::SetOption(NetworkInterface::SocketType type,
+int MediaChannel::SetOption(MediaChannelNetworkInterface::SocketType type,
                             rtc::Socket::Option opt,
                             int option) {
   RTC_DCHECK_RUN_ON(network_thread_);
@@ -101,7 +116,7 @@ void MediaChannel::SetDepacketizerToDecoderFrameTransformer(
     uint32_t ssrc,
     rtc::scoped_refptr<FrameTransformerInterface> frame_transformer) {}
 
-int MediaChannel::SetOptionLocked(NetworkInterface::SocketType type,
+int MediaChannel::SetOptionLocked(MediaChannelNetworkInterface::SocketType type,
                                   rtc::Socket::Option opt,
                                   int option) {
   if (!network_interface_)
@@ -145,10 +160,11 @@ rtc::scoped_refptr<PendingTaskSafetyFlag> MediaChannel::network_safety() {
 void MediaChannel::UpdateDscp() {
   rtc::DiffServCodePoint value =
       enable_dscp_ ? preferred_dscp_ : rtc::DSCP_DEFAULT;
-  int ret =
-      SetOptionLocked(NetworkInterface::ST_RTP, rtc::Socket::OPT_DSCP, value);
+  int ret = SetOptionLocked(MediaChannelNetworkInterface::ST_RTP,
+                            rtc::Socket::OPT_DSCP, value);
   if (ret == 0)
-    SetOptionLocked(NetworkInterface::ST_RTCP, rtc::Socket::OPT_DSCP, value);
+    SetOptionLocked(MediaChannelNetworkInterface::ST_RTCP,
+                    rtc::Socket::OPT_DSCP, value);
 }
 
 bool MediaChannel::DoSendPacket(rtc::CopyOnWriteBuffer* packet,
@@ -259,5 +275,7 @@ std::map<std::string, std::string> VideoSendParameters::ToStringMap() const {
 cricket::MediaType VideoMediaChannel::media_type() const {
   return cricket::MediaType::MEDIA_TYPE_VIDEO;
 }
+
+void VideoMediaChannel::SetVideoCodecSwitchingEnabled(bool enabled) {}
 
 }  // namespace cricket

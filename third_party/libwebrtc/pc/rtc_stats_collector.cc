@@ -36,6 +36,7 @@
 #include "api/video_codecs/scalability_mode.h"
 #include "common_video/include/quality_limitation_reason.h"
 #include "media/base/media_channel.h"
+#include "media/base/media_channel_impl.h"
 #include "modules/audio_processing/include/audio_processing_statistics.h"
 #include "modules/rtp_rtcp/include/report_block_data.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
@@ -2366,13 +2367,15 @@ void RTCStatsCollector::PrepareTransceiverStatsInfosAndCallStats_s_w_n() {
 
       if (media_type == cricket::MEDIA_TYPE_AUDIO) {
         cricket::VoiceMediaChannel* voice_channel =
-            channel->voice_media_send_channel();
+            static_cast<cricket::VoiceMediaChannel*>(
+                channel->voice_media_send_channel());
         RTC_DCHECK(voice_stats.find(voice_channel) == voice_stats.end());
         voice_stats.insert(
             std::make_pair(voice_channel, cricket::VoiceMediaInfo()));
       } else if (media_type == cricket::MEDIA_TYPE_VIDEO) {
         cricket::VideoMediaChannel* video_channel =
-            channel->video_media_send_channel();
+            static_cast<cricket::VideoMediaChannel*>(
+                channel->video_media_send_channel());
         RTC_DCHECK(video_stats.find(video_channel) == video_stats.end());
         video_stats.insert(
             std::make_pair(video_channel, cricket::VideoMediaInfo()));
@@ -2411,12 +2414,14 @@ void RTCStatsCollector::PrepareTransceiverStatsInfosAndCallStats_s_w_n() {
         cricket::MediaType media_type = transceiver->media_type();
         if (media_type == cricket::MEDIA_TYPE_AUDIO) {
           cricket::VoiceMediaChannel* voice_channel =
-              channel->voice_media_send_channel();
+              static_cast<cricket::VoiceMediaChannel*>(
+                  channel->voice_media_send_channel());
           RTC_DCHECK(voice_stats.find(voice_channel) != voice_stats.end());
           voice_media_info = std::move(voice_stats[voice_channel]);
         } else if (media_type == cricket::MEDIA_TYPE_VIDEO) {
           cricket::VideoMediaChannel* video_channel =
-              channel->video_media_send_channel();
+              static_cast<cricket::VideoMediaChannel*>(
+                  channel->video_media_send_channel());
           RTC_DCHECK(video_stats.find(video_channel) != video_stats.end());
           video_media_info = std::move(video_stats[video_channel]);
         }

@@ -66,7 +66,7 @@ TEST_F(AudioRtpReceiverTest, SetOutputVolumeIsCalled) {
 
   receiver_->track();
   receiver_->track()->set_enabled(true);
-  receiver_->SetMediaChannel(&media_channel_);
+  receiver_->SetMediaChannel(media_channel_.AsVoiceReceiveChannel());
   EXPECT_CALL(media_channel_, SetDefaultRawAudioSink(_)).Times(0);
   receiver_->SetupMediaChannel(kSsrc);
 
@@ -86,7 +86,7 @@ TEST_F(AudioRtpReceiverTest, VolumesSetBeforeStartingAreRespected) {
   receiver_->OnSetVolume(kVolume);
 
   receiver_->track()->set_enabled(true);
-  receiver_->SetMediaChannel(&media_channel_);
+  receiver_->SetMediaChannel(media_channel_.AsVoiceReceiveChannel());
 
   // The previosly set initial volume should be propagated to the provided
   // media_channel_ as soon as SetupMediaChannel is called.

@@ -238,6 +238,24 @@ class RtpHelper : public Base {
     rtcp_packets_.push_back(std::string(packet->cdata<char>(), packet->size()));
   }
 
+  // Stuff that deals with encryptors, transformers and the like
+  void SetFrameEncryptor(uint32_t ssrc,
+                         rtc::scoped_refptr<webrtc::FrameEncryptorInterface>
+                             frame_encryptor) override {}
+  void SetEncoderToPacketizerFrameTransformer(
+      uint32_t ssrc,
+      rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer)
+      override {}
+
+  void SetFrameDecryptor(uint32_t ssrc,
+                         rtc::scoped_refptr<webrtc::FrameDecryptorInterface>
+                             frame_decryptor) override {}
+
+  void SetDepacketizerToDecoderFrameTransformer(
+      uint32_t ssrc,
+      rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer)
+      override {}
+
  protected:
   bool MuteStream(uint32_t ssrc, bool mute) {
     if (!HasSendStream(ssrc) && ssrc != 0) {
