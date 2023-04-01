@@ -23,14 +23,14 @@ using ::testing::IsEmpty;
 TEST(VideoFrameMetadata, GetWidthReturnsCorrectValue) {
   RTPVideoHeader video_header;
   video_header.width = 1280u;
-  VideoFrameMetadata metadata(video_header);
+  VideoFrameMetadata metadata = video_header.GetAsMetadata();
   EXPECT_EQ(metadata.GetWidth(), video_header.width);
 }
 
 TEST(VideoFrameMetadata, GetHeightReturnsCorrectValue) {
   RTPVideoHeader video_header;
   video_header.height = 720u;
-  VideoFrameMetadata metadata(video_header);
+  VideoFrameMetadata metadata = video_header.GetAsMetadata();
   EXPECT_EQ(metadata.GetHeight(), video_header.height);
 }
 
@@ -39,13 +39,13 @@ TEST(VideoFrameMetadata, GetFrameIdReturnsCorrectValue) {
   RTPVideoHeader::GenericDescriptorInfo& generic =
       video_header.generic.emplace();
   generic.frame_id = 10;
-  VideoFrameMetadata metadata(video_header);
+  VideoFrameMetadata metadata = video_header.GetAsMetadata();
   EXPECT_EQ(metadata.GetFrameId().value(), 10);
 }
 
 TEST(VideoFrameMetadata, HasNoFrameIdForHeaderWithoutGeneric) {
   RTPVideoHeader video_header;
-  VideoFrameMetadata metadata(video_header);
+  VideoFrameMetadata metadata = video_header.GetAsMetadata();
   ASSERT_FALSE(video_header.generic);
   EXPECT_EQ(metadata.GetFrameId(), absl::nullopt);
 }
@@ -55,13 +55,13 @@ TEST(VideoFrameMetadata, GetSpatialIndexReturnsCorrectValue) {
   RTPVideoHeader::GenericDescriptorInfo& generic =
       video_header.generic.emplace();
   generic.spatial_index = 2;
-  VideoFrameMetadata metadata(video_header);
+  VideoFrameMetadata metadata = video_header.GetAsMetadata();
   EXPECT_EQ(metadata.GetSpatialIndex(), 2);
 }
 
 TEST(VideoFrameMetadata, SpatialIndexIsZeroForHeaderWithoutGeneric) {
   RTPVideoHeader video_header;
-  VideoFrameMetadata metadata(video_header);
+  VideoFrameMetadata metadata = video_header.GetAsMetadata();
   ASSERT_FALSE(video_header.generic);
   EXPECT_EQ(metadata.GetSpatialIndex(), 0);
 }
@@ -71,13 +71,13 @@ TEST(VideoFrameMetadata, GetTemporalIndexReturnsCorrectValue) {
   RTPVideoHeader::GenericDescriptorInfo& generic =
       video_header.generic.emplace();
   generic.temporal_index = 3;
-  VideoFrameMetadata metadata(video_header);
+  VideoFrameMetadata metadata = video_header.GetAsMetadata();
   EXPECT_EQ(metadata.GetTemporalIndex(), 3);
 }
 
 TEST(VideoFrameMetadata, TemporalIndexIsZeroForHeaderWithoutGeneric) {
   RTPVideoHeader video_header;
-  VideoFrameMetadata metadata(video_header);
+  VideoFrameMetadata metadata = video_header.GetAsMetadata();
   ASSERT_FALSE(video_header.generic);
   EXPECT_EQ(metadata.GetTemporalIndex(), 0);
 }
@@ -87,13 +87,13 @@ TEST(VideoFrameMetadata, GetFrameDependenciesReturnsCorrectValue) {
   RTPVideoHeader::GenericDescriptorInfo& generic =
       video_header.generic.emplace();
   generic.dependencies = {5, 6, 7};
-  VideoFrameMetadata metadata(video_header);
+  VideoFrameMetadata metadata = video_header.GetAsMetadata();
   EXPECT_THAT(metadata.GetFrameDependencies(), ElementsAre(5, 6, 7));
 }
 
 TEST(VideoFrameMetadata, FrameDependencyVectorIsEmptyForHeaderWithoutGeneric) {
   RTPVideoHeader video_header;
-  VideoFrameMetadata metadata(video_header);
+  VideoFrameMetadata metadata = video_header.GetAsMetadata();
   ASSERT_FALSE(video_header.generic);
   EXPECT_THAT(metadata.GetFrameDependencies(), IsEmpty());
 }
@@ -103,7 +103,7 @@ TEST(VideoFrameMetadata, GetDecodeTargetIndicationsReturnsCorrectValue) {
   RTPVideoHeader::GenericDescriptorInfo& generic =
       video_header.generic.emplace();
   generic.decode_target_indications = {DecodeTargetIndication::kSwitch};
-  VideoFrameMetadata metadata(video_header);
+  VideoFrameMetadata metadata = video_header.GetAsMetadata();
   EXPECT_THAT(metadata.GetDecodeTargetIndications(),
               ElementsAre(DecodeTargetIndication::kSwitch));
 }
@@ -111,7 +111,7 @@ TEST(VideoFrameMetadata, GetDecodeTargetIndicationsReturnsCorrectValue) {
 TEST(VideoFrameMetadata,
      DecodeTargetIndicationsVectorIsEmptyForHeaderWithoutGeneric) {
   RTPVideoHeader video_header;
-  VideoFrameMetadata metadata(video_header);
+  VideoFrameMetadata metadata = video_header.GetAsMetadata();
   ASSERT_FALSE(video_header.generic);
   EXPECT_THAT(metadata.GetDecodeTargetIndications(), IsEmpty());
 }
