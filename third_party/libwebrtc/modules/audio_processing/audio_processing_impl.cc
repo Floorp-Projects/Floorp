@@ -325,83 +325,124 @@ int HandleUnsupportedAudioFormats(const float* const* src,
   return error_code;
 }
 
-const absl::optional<InputVolumeController::Config>
-GetInputVolumeControllerConfigOverride() {
-  constexpr char kInputVolumeControllerFieldTrial[] =
-      "WebRTC-Audio-InputVolumeControllerExperiment";
+const absl::optional<AudioProcessingImpl::GainController2ConfigOverride>
+GetGainController2ConfigOverride() {
+  constexpr char kFieldTrialName[] = "WebRTC-Audio-GainController2";
 
-  if (!field_trial::IsEnabled(kInputVolumeControllerFieldTrial)) {
+  if (!field_trial::IsEnabled(kFieldTrialName)) {
     return absl::nullopt;
   }
 
-  constexpr InputVolumeController::Config kDefaultConfig;
+  constexpr InputVolumeController::Config kDefaultInputVolumeControllerConfig;
 
   FieldTrialFlag enabled("Enabled", false);
   FieldTrialConstrained<int> clipped_level_min(
-      "clipped_level_min", kDefaultConfig.clipped_level_min, 0, 255);
+      "clipped_level_min",
+      kDefaultInputVolumeControllerConfig.clipped_level_min, 0, 255);
   FieldTrialConstrained<int> clipped_level_step(
-      "clipped_level_step", kDefaultConfig.clipped_level_step, 0, 255);
+      "clipped_level_step",
+      kDefaultInputVolumeControllerConfig.clipped_level_step, 0, 255);
   FieldTrialConstrained<double> clipped_ratio_threshold(
-      "clipped_ratio_threshold", kDefaultConfig.clipped_ratio_threshold, 0, 1);
+      "clipped_ratio_threshold",
+      kDefaultInputVolumeControllerConfig.clipped_ratio_threshold, 0, 1);
   FieldTrialConstrained<int> clipped_wait_frames(
-      "clipped_wait_frames", kDefaultConfig.clipped_wait_frames, 0,
+      "clipped_wait_frames",
+      kDefaultInputVolumeControllerConfig.clipped_wait_frames, 0,
       absl::nullopt);
   FieldTrialParameter<bool> enable_clipping_predictor(
-      "enable_clipping_predictor", kDefaultConfig.enable_clipping_predictor);
+      "enable_clipping_predictor",
+      kDefaultInputVolumeControllerConfig.enable_clipping_predictor);
   FieldTrialConstrained<int> target_range_max_dbfs(
-      "target_range_max_dbfs", kDefaultConfig.target_range_max_dbfs, -90, 30);
+      "target_range_max_dbfs",
+      kDefaultInputVolumeControllerConfig.target_range_max_dbfs, -90, 30);
   FieldTrialConstrained<int> target_range_min_dbfs(
-      "target_range_min_dbfs", kDefaultConfig.target_range_min_dbfs, -90, 30);
+      "target_range_min_dbfs",
+      kDefaultInputVolumeControllerConfig.target_range_min_dbfs, -90, 30);
   FieldTrialConstrained<int> update_input_volume_wait_frames(
       "update_input_volume_wait_frames",
-      kDefaultConfig.update_input_volume_wait_frames, 0, absl::nullopt);
+      kDefaultInputVolumeControllerConfig.update_input_volume_wait_frames, 0,
+      absl::nullopt);
   FieldTrialConstrained<double> speech_probability_threshold(
       "speech_probability_threshold",
-      kDefaultConfig.speech_probability_threshold, 0, 1);
+      kDefaultInputVolumeControllerConfig.speech_probability_threshold, 0, 1);
   FieldTrialConstrained<double> speech_ratio_threshold(
-      "speech_ratio_threshold", kDefaultConfig.speech_ratio_threshold, 0, 1);
+      "speech_ratio_threshold",
+      kDefaultInputVolumeControllerConfig.speech_ratio_threshold, 0, 1);
 
-  // Field-trial based override for the input volume controller config.
+  constexpr AudioProcessing::Config::GainController2::AdaptiveDigital
+      kDefaultAdaptiveDigitalConfig;
+
+  FieldTrialConstrained<double> headroom_db(
+      "headroom_db", kDefaultAdaptiveDigitalConfig.headroom_db, 0,
+      absl::nullopt);
+  FieldTrialConstrained<double> max_gain_db(
+      "max_gain_db", kDefaultAdaptiveDigitalConfig.max_gain_db, 0,
+      absl::nullopt);
+  FieldTrialConstrained<double> max_gain_change_db_per_second(
+      "max_gain_change_db_per_second",
+      kDefaultAdaptiveDigitalConfig.max_gain_change_db_per_second, 0,
+      absl::nullopt);
+  FieldTrialConstrained<double> max_output_noise_level_dbfs(
+      "max_output_noise_level_dbfs",
+      kDefaultAdaptiveDigitalConfig.max_output_noise_level_dbfs, absl::nullopt,
+      0);
+
+  // Field-trial based override for the input volume controller and adaptive
+  // digital configs.
   const std::string field_trial_name =
-      field_trial::FindFullName(kInputVolumeControllerFieldTrial);
+      field_trial::FindFullName(kFieldTrialName);
 
   ParseFieldTrial({&enabled, &clipped_level_min, &clipped_level_step,
                    &clipped_ratio_threshold, &clipped_wait_frames,
                    &enable_clipping_predictor, &target_range_max_dbfs,
                    &target_range_min_dbfs, &update_input_volume_wait_frames,
-                   &speech_probability_threshold, &speech_ratio_threshold},
+                   &speech_probability_threshold, &speech_ratio_threshold,
+                   &headroom_db, &max_gain_db, &max_gain_change_db_per_second,
+                   &max_output_noise_level_dbfs},
                   field_trial_name);
 
   // Checked already by `IsEnabled()` before parsing, therefore always true.
   RTC_DCHECK(enabled);
 
-  return InputVolumeController::Config{
-      .clipped_level_min = static_cast<int>(clipped_level_min.Get()),
-      .clipped_level_step = static_cast<int>(clipped_level_step.Get()),
-      .clipped_ratio_threshold =
-          static_cast<float>(clipped_ratio_threshold.Get()),
-      .clipped_wait_frames = static_cast<int>(clipped_wait_frames.Get()),
-      .enable_clipping_predictor =
-          static_cast<bool>(enable_clipping_predictor.Get()),
-      .target_range_max_dbfs = static_cast<int>(target_range_max_dbfs.Get()),
-      .target_range_min_dbfs = static_cast<int>(target_range_min_dbfs.Get()),
-      .update_input_volume_wait_frames =
-          static_cast<int>(update_input_volume_wait_frames.Get()),
-      .speech_probability_threshold =
-          static_cast<float>(speech_probability_threshold.Get()),
-      .speech_ratio_threshold =
-          static_cast<float>(speech_ratio_threshold.Get()),
+  return AudioProcessingImpl::GainController2ConfigOverride{
+      InputVolumeController::Config{
+          .clipped_level_min = static_cast<int>(clipped_level_min.Get()),
+          .clipped_level_step = static_cast<int>(clipped_level_step.Get()),
+          .clipped_ratio_threshold =
+              static_cast<float>(clipped_ratio_threshold.Get()),
+          .clipped_wait_frames = static_cast<int>(clipped_wait_frames.Get()),
+          .enable_clipping_predictor =
+              static_cast<bool>(enable_clipping_predictor.Get()),
+          .target_range_max_dbfs =
+              static_cast<int>(target_range_max_dbfs.Get()),
+          .target_range_min_dbfs =
+              static_cast<int>(target_range_min_dbfs.Get()),
+          .update_input_volume_wait_frames =
+              static_cast<int>(update_input_volume_wait_frames.Get()),
+          .speech_probability_threshold =
+              static_cast<float>(speech_probability_threshold.Get()),
+          .speech_ratio_threshold =
+              static_cast<float>(speech_ratio_threshold.Get()),
+      },
+      AudioProcessingImpl::GainController2ConfigOverride::AdaptiveDigitalConfig{
+          .headroom_db = static_cast<float>(headroom_db.Get()),
+          .max_gain_db = static_cast<float>(max_gain_db.Get()),
+          .max_gain_change_db_per_second =
+              static_cast<float>(max_gain_change_db_per_second.Get()),
+          .max_output_noise_level_dbfs =
+              static_cast<float>(max_output_noise_level_dbfs.Get()),
+      },
   };
 }
 
 // If `disallow_transient_supporessor_usage` is true, disables transient
-// suppression. When `input_volume_controller_config_override` is specified,
+// suppression. When `gain_controller2_config_override` is specified,
 // switches all gain control to AGC2.
 AudioProcessing::Config AdjustConfig(
     const AudioProcessing::Config& config,
     bool disallow_transient_supporessor_usage,
-    const absl::optional<InputVolumeController::Config>&
-        input_volume_controller_config_override) {
+    const absl::optional<AudioProcessingImpl::GainController2ConfigOverride>&
+        gain_controller2_config_override) {
   AudioProcessing::Config adjusted_config = config;
 
   // Override the transient suppressor configuration.
@@ -410,15 +451,14 @@ AudioProcessing::Config AdjustConfig(
   }
 
   // Override the auto gain control configuration if the AGC1 analog gain
-  // controller is active and `input_volume_controller_config_override` is
+  // controller is active and `gain_controller2_config_override` is
   // specified.
   const bool agc1_analog_enabled =
       config.gain_controller1.enabled &&
       (config.gain_controller1.mode ==
            AudioProcessing::Config::GainController1::kAdaptiveAnalog ||
        config.gain_controller1.analog_gain_controller.enabled);
-  if (agc1_analog_enabled &&
-      input_volume_controller_config_override.has_value()) {
+  if (agc1_analog_enabled && gain_controller2_config_override.has_value()) {
     // Check that the unadjusted AGC config meets the preconditions.
     const bool hybrid_agc_config_detected =
         config.gain_controller1.enabled &&
@@ -447,9 +487,23 @@ AudioProcessing::Config AdjustConfig(
     } else {
       adjusted_config.gain_controller1.enabled = false;
       adjusted_config.gain_controller1.analog_gain_controller.enabled = false;
+
       adjusted_config.gain_controller2.enabled = true;
       adjusted_config.gain_controller2.adaptive_digital.enabled = true;
       adjusted_config.gain_controller2.input_volume_controller.enabled = true;
+
+      auto& adjusted_adaptive_digital =  // Alias.
+          adjusted_config.gain_controller2.adaptive_digital;
+      const auto& adaptive_digital_override =  // Alias.
+          gain_controller2_config_override->adaptive_digital_config;
+      adjusted_adaptive_digital.headroom_db =
+          adaptive_digital_override.headroom_db;
+      adjusted_adaptive_digital.max_gain_db =
+          adaptive_digital_override.max_gain_db;
+      adjusted_adaptive_digital.max_gain_change_db_per_second =
+          adaptive_digital_override.max_gain_change_db_per_second;
+      adjusted_adaptive_digital.max_output_noise_level_dbfs =
+          adaptive_digital_override.max_output_noise_level_dbfs;
     }
   }
 
@@ -593,8 +647,7 @@ AudioProcessingImpl::AudioProcessingImpl(
     : data_dumper_(new ApmDataDumper(instance_count_.fetch_add(1) + 1)),
       use_setup_specific_default_aec3_config_(
           UseSetupSpecificDefaultAec3Congfig()),
-      input_volume_controller_config_override_(
-          GetInputVolumeControllerConfigOverride()),
+      gain_controller2_config_override_(GetGainController2ConfigOverride()),
       use_denormal_disabler_(
           !field_trial::IsEnabled("WebRTC-ApmDenormalDisablerKillSwitch")),
       disallow_transient_supporessor_usage_(
@@ -607,7 +660,7 @@ AudioProcessingImpl::AudioProcessingImpl(
       echo_control_factory_(std::move(echo_control_factory)),
       config_(AdjustConfig(config,
                            disallow_transient_supporessor_usage_,
-                           input_volume_controller_config_override_)),
+                           gain_controller2_config_override_)),
       submodule_states_(!!capture_post_processor,
                         !!render_pre_processor,
                         !!capture_analyzer),
@@ -844,7 +897,7 @@ void AudioProcessingImpl::ApplyConfig(const AudioProcessing::Config& config) {
 
   const auto adjusted_config =
       AdjustConfig(config, disallow_transient_supporessor_usage_,
-                   input_volume_controller_config_override_);
+                   gain_controller2_config_override_);
   RTC_LOG(LS_INFO) << "AudioProcessing::ApplyConfig: "
                    << adjusted_config.ToString();
 
@@ -2292,8 +2345,9 @@ void AudioProcessingImpl::InitializeGainController2(bool config_has_changed) {
         transient_suppressor_vad_mode_ != TransientSuppressor::VadMode::kRnnVad;
     submodules_.gain_controller2 = std::make_unique<GainController2>(
         config_.gain_controller2,
-        input_volume_controller_config_override_.value_or(
-            InputVolumeController::Config{}),
+        gain_controller2_config_override_.has_value()
+            ? gain_controller2_config_override_->input_volume_controller_config
+            : InputVolumeController::Config{},
         proc_fullband_sample_rate_hz(), num_input_channels(), use_internal_vad);
     submodules_.gain_controller2->SetCaptureOutputUsed(
         capture_.capture_output_used);
