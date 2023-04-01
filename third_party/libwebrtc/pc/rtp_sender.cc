@@ -186,7 +186,8 @@ void RtpSenderBase::SetEncoderSelectorOnChannel() {
   }
 }
 
-void RtpSenderBase::SetMediaChannel(cricket::MediaChannel* media_channel) {
+void RtpSenderBase::SetMediaChannel(
+    cricket::MediaSendChannelInterface* media_channel) {
   RTC_DCHECK(media_channel == nullptr ||
              media_channel->media_type() == media_type());
   media_channel_ = media_channel;

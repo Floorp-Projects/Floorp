@@ -111,7 +111,8 @@ class AudioRtpReceiver : public ObserverInterface,
   void SetJitterBufferMinimumDelay(
       absl::optional<double> delay_seconds) override;
 
-  void SetMediaChannel(cricket::MediaChannel* media_channel) override;
+  void SetMediaChannel(
+      cricket::MediaReceiveChannelInterface* media_channel) override;
 
   std::vector<RtpSource> GetSources() const override;
   int AttachmentId() const override { return attachment_id_; }

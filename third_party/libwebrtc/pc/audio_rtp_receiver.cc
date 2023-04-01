@@ -314,7 +314,8 @@ void AudioRtpReceiver::SetJitterBufferMinimumDelay(
     media_channel_->SetBaseMinimumPlayoutDelayMs(*ssrc_, delay_.GetMs());
 }
 
-void AudioRtpReceiver::SetMediaChannel(cricket::MediaChannel* media_channel) {
+void AudioRtpReceiver::SetMediaChannel(
+    cricket::MediaReceiveChannelInterface* media_channel) {
   RTC_DCHECK_RUN_ON(worker_thread_);
   RTC_DCHECK(media_channel == nullptr ||
              media_channel->media_type() == media_type());

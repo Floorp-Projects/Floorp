@@ -155,14 +155,25 @@ class BaseChannel : public ChannelInterface,
   // RtpPacketSinkInterface overrides.
   void OnRtpPacket(const webrtc::RtpPacketReceived& packet) override;
 
-  MediaChannel* media_channel() const override {
+  MediaSendChannelInterface* media_send_channel() const override {
     return media_channel_.get();
   }
-  VideoMediaChannel* video_media_channel() const override {
+  VideoMediaChannel* video_media_send_channel() const override {
     RTC_CHECK(false) << "Attempt to fetch video channel from non-video";
     return nullptr;
   }
-  VoiceMediaChannel* voice_media_channel() const override {
+  VoiceMediaChannel* voice_media_send_channel() const override {
+    RTC_CHECK(false) << "Attempt to fetch voice channel from non-voice";
+    return nullptr;
+  }
+  MediaReceiveChannelInterface* media_receive_channel() const override {
+    return media_channel_.get();
+  }
+  VideoMediaChannel* video_media_receive_channel() const override {
+    RTC_CHECK(false) << "Attempt to fetch video channel from non-video";
+    return nullptr;
+  }
+  VoiceMediaChannel* voice_media_receive_channel() const override {
     RTC_CHECK(false) << "Attempt to fetch voice channel from non-voice";
     return nullptr;
   }
@@ -368,12 +379,22 @@ class VoiceChannel : public BaseChannel {
   ~VoiceChannel();
 
   // downcasts a MediaChannel
-  VoiceMediaChannel* media_channel() const override {
-    return static_cast<VoiceMediaChannel*>(BaseChannel::media_channel());
+  VoiceMediaChannel* media_send_channel() const override {
+    return static_cast<VoiceMediaChannel*>(BaseChannel::media_send_channel());
   }
 
-  VoiceMediaChannel* voice_media_channel() const override {
-    return static_cast<VoiceMediaChannel*>(media_channel());
+  VoiceMediaChannel* voice_media_send_channel() const override {
+    return static_cast<VoiceMediaChannel*>(media_send_channel());
+  }
+
+  // downcasts a MediaChannel
+  VoiceMediaChannel* media_receive_channel() const override {
+    return static_cast<VoiceMediaChannel*>(
+        BaseChannel::media_receive_channel());
+  }
+
+  VoiceMediaChannel* voice_media_receive_channel() const override {
+    return static_cast<VoiceMediaChannel*>(media_receive_channel());
   }
 
   cricket::MediaType media_type() const override {
@@ -414,12 +435,22 @@ class VideoChannel : public BaseChannel {
   ~VideoChannel();
 
   // downcasts a MediaChannel
-  VideoMediaChannel* media_channel() const override {
-    return static_cast<VideoMediaChannel*>(BaseChannel::media_channel());
+  VideoMediaChannel* media_send_channel() const override {
+    return static_cast<VideoMediaChannel*>(BaseChannel::media_send_channel());
   }
 
-  VideoMediaChannel* video_media_channel() const override {
-    return static_cast<cricket::VideoMediaChannel*>(media_channel());
+  VideoMediaChannel* video_media_send_channel() const override {
+    return static_cast<cricket::VideoMediaChannel*>(media_send_channel());
+  }
+
+  // downcasts a MediaChannel
+  VideoMediaChannel* media_receive_channel() const override {
+    return static_cast<VideoMediaChannel*>(
+        BaseChannel::media_receive_channel());
+  }
+
+  VideoMediaChannel* video_media_receive_channel() const override {
+    return static_cast<cricket::VideoMediaChannel*>(media_receive_channel());
   }
 
   cricket::MediaType media_type() const override {

@@ -2361,13 +2361,13 @@ void RTCStatsCollector::PrepareTransceiverStatsInfosAndCallStats_s_w_n() {
 
       if (media_type == cricket::MEDIA_TYPE_AUDIO) {
         cricket::VoiceMediaChannel* voice_channel =
-            static_cast<cricket::VoiceMediaChannel*>(channel->media_channel());
+            channel->voice_media_send_channel();
         RTC_DCHECK(voice_stats.find(voice_channel) == voice_stats.end());
         voice_stats.insert(
             std::make_pair(voice_channel, cricket::VoiceMediaInfo()));
       } else if (media_type == cricket::MEDIA_TYPE_VIDEO) {
         cricket::VideoMediaChannel* video_channel =
-            static_cast<cricket::VideoMediaChannel*>(channel->media_channel());
+            channel->video_media_send_channel();
         RTC_DCHECK(video_stats.find(video_channel) == video_stats.end());
         video_stats.insert(
             std::make_pair(video_channel, cricket::VideoMediaInfo()));
@@ -2406,14 +2406,12 @@ void RTCStatsCollector::PrepareTransceiverStatsInfosAndCallStats_s_w_n() {
         cricket::MediaType media_type = transceiver->media_type();
         if (media_type == cricket::MEDIA_TYPE_AUDIO) {
           cricket::VoiceMediaChannel* voice_channel =
-              static_cast<cricket::VoiceMediaChannel*>(
-                  channel->media_channel());
+              channel->voice_media_send_channel();
           RTC_DCHECK(voice_stats.find(voice_channel) != voice_stats.end());
           voice_media_info = std::move(voice_stats[voice_channel]);
         } else if (media_type == cricket::MEDIA_TYPE_VIDEO) {
           cricket::VideoMediaChannel* video_channel =
-              static_cast<cricket::VideoMediaChannel*>(
-                  channel->media_channel());
+              channel->video_media_send_channel();
           RTC_DCHECK(video_stats.find(video_channel) != video_stats.end());
           video_media_info = std::move(video_stats[video_channel]);
         }

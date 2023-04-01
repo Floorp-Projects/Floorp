@@ -57,7 +57,10 @@ class MockRtpReceiverInternal : public RtpReceiverInternal {
 
   // RtpReceiverInternal methods.
   MOCK_METHOD(void, Stop, (), (override));
-  MOCK_METHOD(void, SetMediaChannel, (cricket::MediaChannel*), (override));
+  MOCK_METHOD(void,
+              SetMediaChannel,
+              (cricket::MediaReceiveChannelInterface*),
+              (override));
   MOCK_METHOD(void, SetupMediaChannel, (uint32_t), (override));
   MOCK_METHOD(void, SetupUnsignaledMediaChannel, (), (override));
   MOCK_METHOD(uint32_t, ssrc, (), (const, override));

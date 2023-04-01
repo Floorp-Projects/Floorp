@@ -1637,7 +1637,7 @@ RTCError PeerConnection::SetConfiguration(
       auto* video_channel = transceiver->internal()->channel();
       if (video_channel)
         channels.push_back(static_cast<cricket::VideoMediaChannel*>(
-            video_channel->media_channel()));
+            video_channel->media_send_channel()));
     }
 
     worker_thread()->BlockingCall(

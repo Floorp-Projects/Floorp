@@ -54,7 +54,8 @@ class RtpSenderInternal : public RtpSenderInterface {
   // A VoiceMediaChannel should be used for audio RtpSenders and
   // a VideoMediaChannel should be used for video RtpSenders.
   // Must call SetMediaChannel(nullptr) before the media channel is destroyed.
-  virtual void SetMediaChannel(cricket::MediaChannel* media_channel) = 0;
+  virtual void SetMediaChannel(
+      cricket::MediaSendChannelInterface* media_channel) = 0;
 
   // Used to set the SSRC of the sender, once a local description has been set.
   // If `ssrc` is 0, this indiates that the sender should disconnect from the
@@ -120,7 +121,8 @@ class RtpSenderBase : public RtpSenderInternal, public ObserverInterface {
   // A VoiceMediaChannel should be used for audio RtpSenders and
   // a VideoMediaChannel should be used for video RtpSenders.
   // Must call SetMediaChannel(nullptr) before the media channel is destroyed.
-  void SetMediaChannel(cricket::MediaChannel* media_channel) override;
+  void SetMediaChannel(
+      cricket::MediaSendChannelInterface* media_channel) override;
 
   bool SetTrack(MediaStreamTrackInterface* track) override;
   rtc::scoped_refptr<MediaStreamTrackInterface> track() const override {
@@ -267,7 +269,7 @@ class RtpSenderBase : public RtpSenderInternal, public ObserverInterface {
   // a guard or lock. Internally there are also several Invoke()s that we could
   // remove since the upstream code may already be performing several operations
   // on the worker thread.
-  cricket::MediaChannel* media_channel_ = nullptr;
+  cricket::MediaSendChannelInterface* media_channel_ = nullptr;
   rtc::scoped_refptr<MediaStreamTrackInterface> track_;
 
   rtc::scoped_refptr<DtlsTransportInterface> dtls_transport_;
