@@ -14,7 +14,6 @@
 #include <memory>
 #include <vector>
 
-#include "api/transport/field_trial_based_config.h"
 #include "api/transport/network_control.h"
 #include "api/units/data_rate.h"
 #include "api/units/time_delta.h"
@@ -78,7 +77,6 @@ class ReceiveSideCongestionController : public CallStatsObserver {
   void PickEstimator() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   Clock& clock_;
-  const FieldTrialBasedConfig field_trial_config_;
   RembThrottler remb_throttler_;
   RemoteEstimatorProxy remote_estimator_proxy_;
 
