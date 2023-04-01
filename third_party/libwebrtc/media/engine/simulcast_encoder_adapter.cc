@@ -461,24 +461,14 @@ int SimulcastEncoderAdapter::Encode(
     }
   }
 
-  // All active streams should generate a key frame if
-  // a key frame is requested by any stream.
   bool is_keyframe_needed = false;
-  if (frame_types) {
-    for (const auto& frame_type : *frame_types) {
-      if (frame_type == VideoFrameType::kVideoFrameKey) {
-        is_keyframe_needed = true;
-        break;
-      }
-    }
-  }
-
-  if (!is_keyframe_needed) {
-    for (const auto& layer : stream_contexts_) {
-      if (layer.is_keyframe_needed()) {
-        is_keyframe_needed = true;
-        break;
-      }
+  for (const auto& layer : stream_contexts_) {
+    if (layer.is_keyframe_needed()) {
+      // This is legacy behavior, generating a keyframe on all layers
+      // when generating one for a layer that became active for the first time
+      // or after being disabled
+      is_keyframe_needed = true;
+      break;
     }
   }
 
@@ -501,17 +491,38 @@ int SimulcastEncoderAdapter::Encode(
     // frame types for all streams should be passed to the encoder unchanged.
     // Otherwise a single per-encoder frame type is passed.
     std::vector<VideoFrameType> stream_frame_types(
-        bypass_mode_ ? total_streams_count_ : 1);
+        bypass_mode_ ? total_streams_count_ : 1,
+        VideoFrameType::kVideoFrameDelta);
+    bool keyframe_requested = false;
     if (is_keyframe_needed) {
       std::fill(stream_frame_types.begin(), stream_frame_types.end(),
                 VideoFrameType::kVideoFrameKey);
-      layer.OnKeyframe(frame_timestamp);
-    } else {
-      if (layer.ShouldDropFrame(frame_timestamp)) {
-        continue;
+      keyframe_requested = true;
+    } else if (frame_types) {
+      if (bypass_mode_) {
+        // In bypass mode, requesting a key frame on any layer triggers a
+        // key frame request on all layers.
+        for (const auto& frame_type : *frame_types) {
+          if (frame_type == VideoFrameType::kVideoFrameKey) {
+            std::fill(stream_frame_types.begin(), stream_frame_types.end(),
+                      VideoFrameType::kVideoFrameKey);
+            keyframe_requested = true;
+            break;
+          }
+        }
+      } else {
+        size_t stream_idx = static_cast<size_t>(layer.stream_idx());
+        if (frame_types->size() >= stream_idx &&
+            (*frame_types)[stream_idx] == VideoFrameType::kVideoFrameKey) {
+          stream_frame_types[0] = VideoFrameType::kVideoFrameKey;
+          keyframe_requested = true;
+        }
       }
-      std::fill(stream_frame_types.begin(), stream_frame_types.end(),
-                VideoFrameType::kVideoFrameDelta);
+    }
+    if (keyframe_requested) {
+      layer.OnKeyframe(frame_timestamp);
+    } else if (layer.ShouldDropFrame(frame_timestamp)) {
+      continue;
     }
 
     // If scaling isn't required, because the input resolution
