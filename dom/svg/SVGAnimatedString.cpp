@@ -68,7 +68,6 @@ nsresult SVGAnimatedString::SMILString::ValueFromString(
 
   *static_cast<nsAString*>(val.mU.mPtr) = aStr;
   aValue = std::move(val);
-  aPreventCachingOfSandwich = false;
   return NS_OK;
 }
 

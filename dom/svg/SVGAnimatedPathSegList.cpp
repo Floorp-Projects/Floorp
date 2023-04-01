@@ -166,7 +166,6 @@ nsresult SVGAnimatedPathSegList::SMILAnimatedPathSegList::ValueFromString(
     list->SetElement(mElement);
     aValue = std::move(val);
   }
-  aPreventCachingOfSandwich = false;
   return rv;
 }
 

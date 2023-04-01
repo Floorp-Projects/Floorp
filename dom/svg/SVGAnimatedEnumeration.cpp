@@ -163,7 +163,6 @@ nsresult SVGAnimatedEnumeration::SMILEnum::ValueFromString(
         SMILValue val(SMILEnumType::Singleton());
         val.mU.mUint = mapping->mVal;
         aValue = val;
-        aPreventCachingOfSandwich = false;
         return NS_OK;
       }
       mapping++;

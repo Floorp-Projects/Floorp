@@ -675,14 +675,9 @@ bool SMILAnimationFunction::ParseAttr(nsAtom* aAttName,
                                       bool& aPreventCachingOfSandwich) const {
   nsAutoString attValue;
   if (GetAttr(aAttName, attValue)) {
-    bool preventCachingOfSandwich = false;
     nsresult rv = aSMILAttr.ValueFromString(attValue, mAnimationElement,
-                                            aResult, preventCachingOfSandwich);
+                                            aResult, aPreventCachingOfSandwich);
     if (NS_FAILED(rv)) return false;
-
-    if (preventCachingOfSandwich) {
-      aPreventCachingOfSandwich = true;
-    }
   }
   return true;
 }

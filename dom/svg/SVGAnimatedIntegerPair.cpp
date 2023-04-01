@@ -216,7 +216,6 @@ nsresult SVGAnimatedIntegerPair::SMILIntegerPair::ValueFromString(
   val.mU.mIntPair[0] = values[0];
   val.mU.mIntPair[1] = values[1];
   aValue = val;
-  aPreventCachingOfSandwich = false;
 
   return NS_OK;
 }
