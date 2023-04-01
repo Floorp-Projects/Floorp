@@ -44,6 +44,7 @@ const int kMaxBitrates[kNumberOfSimulcastStreams] = {150, 600, 1200};
 const int kMinBitrates[kNumberOfSimulcastStreams] = {50, 150, 600};
 const int kTargetBitrates[kNumberOfSimulcastStreams] = {100, 450, 1000};
 const float kMaxFramerates[kNumberOfSimulcastStreams] = {30, 30, 30};
+const int kScaleResolutionDownBy[kNumberOfSimulcastStreams] = {4, 2, 1};
 const int kDefaultTemporalLayerProfile[3] = {3, 3, 3};
 const int kNoTemporalLayerProfile[3] = {0, 0, 0};
 
@@ -353,14 +354,10 @@ void SimulcastTestFixtureImpl::ExpectStreams(
     const std::vector<bool> expected_streams_active) {
   ASSERT_EQ(static_cast<int>(expected_streams_active.size()),
             kNumberOfSimulcastStreams);
-  if (expected_streams_active[0]) {
-    ExpectStream(frame_type, 4);
-  }
-  if (expected_streams_active[1]) {
-    ExpectStream(frame_type, 2);
-  }
-  if (expected_streams_active[2]) {
-    ExpectStream(frame_type, 1);
+  for (size_t i = 0; i < kNumberOfSimulcastStreams; i++) {
+    if (expected_streams_active[i]) {
+      ExpectStream(frame_type, kScaleResolutionDownBy[i]);
+    }
   }
 }
 
@@ -389,8 +386,8 @@ void SimulcastTestFixtureImpl::VerifyTemporalIdxAndSyncForAllSpatialLayers(
   }
 }
 
-// We currently expect all active streams to generate a key frame even though
-// a key frame was only requested for some of them.
+// For some codecs (VP8) expect all active streams to generate a key frame even
+// though a key frame was only requested for some of them.
 void SimulcastTestFixtureImpl::TestKeyFrameRequestsOnAllStreams() {
   SetRates(kMaxBitrates[2], 30);  // To get all three streams.
   std::vector<VideoFrameType> frame_types(kNumberOfSimulcastStreams,
@@ -418,6 +415,69 @@ void SimulcastTestFixtureImpl::TestKeyFrameRequestsOnAllStreams() {
             VideoFrameType::kVideoFrameDelta);
   frame_types[2] = VideoFrameType::kVideoFrameKey;
   ExpectStreams(VideoFrameType::kVideoFrameKey, kNumberOfSimulcastStreams);
+  input_frame_->set_timestamp(input_frame_->timestamp() + 3000);
+  EXPECT_EQ(0, encoder_->Encode(*input_frame_, &frame_types));
+
+  std::fill(frame_types.begin(), frame_types.end(),
+            VideoFrameType::kVideoFrameDelta);
+  ExpectStreams(VideoFrameType::kVideoFrameDelta, kNumberOfSimulcastStreams);
+  input_frame_->set_timestamp(input_frame_->timestamp() + 3000);
+  EXPECT_EQ(0, encoder_->Encode(*input_frame_, &frame_types));
+}
+
+// For some codecs (H264) expect only particular active streams to generate a
+// key frame when a key frame was only requested for some of them.
+void SimulcastTestFixtureImpl::TestKeyFrameRequestsOnSpecificStreams() {
+  SetRates(kMaxBitrates[2], 30);  // To get all three streams.
+  std::vector<VideoFrameType> frame_types(kNumberOfSimulcastStreams,
+                                          VideoFrameType::kVideoFrameDelta);
+  ExpectStreams(VideoFrameType::kVideoFrameKey, kNumberOfSimulcastStreams);
+  EXPECT_EQ(0, encoder_->Encode(*input_frame_, &frame_types));
+
+  ExpectStreams(VideoFrameType::kVideoFrameDelta, kNumberOfSimulcastStreams);
+  input_frame_->set_timestamp(input_frame_->timestamp() + 3000);
+  EXPECT_EQ(0, encoder_->Encode(*input_frame_, &frame_types));
+
+  frame_types[0] = VideoFrameType::kVideoFrameKey;
+  ExpectStream(VideoFrameType::kVideoFrameKey, kScaleResolutionDownBy[0]);
+  ExpectStream(VideoFrameType::kVideoFrameDelta, kScaleResolutionDownBy[1]);
+  ExpectStream(VideoFrameType::kVideoFrameDelta, kScaleResolutionDownBy[2]);
+  input_frame_->set_timestamp(input_frame_->timestamp() + 3000);
+  EXPECT_EQ(0, encoder_->Encode(*input_frame_, &frame_types));
+
+  std::fill(frame_types.begin(), frame_types.end(),
+            VideoFrameType::kVideoFrameDelta);
+  frame_types[1] = VideoFrameType::kVideoFrameKey;
+  ExpectStream(VideoFrameType::kVideoFrameDelta, kScaleResolutionDownBy[0]);
+  ExpectStream(VideoFrameType::kVideoFrameKey, kScaleResolutionDownBy[1]);
+  ExpectStream(VideoFrameType::kVideoFrameDelta, kScaleResolutionDownBy[2]);
+  input_frame_->set_timestamp(input_frame_->timestamp() + 3000);
+  EXPECT_EQ(0, encoder_->Encode(*input_frame_, &frame_types));
+
+  std::fill(frame_types.begin(), frame_types.end(),
+            VideoFrameType::kVideoFrameDelta);
+  frame_types[2] = VideoFrameType::kVideoFrameKey;
+  ExpectStream(VideoFrameType::kVideoFrameDelta, kScaleResolutionDownBy[0]);
+  ExpectStream(VideoFrameType::kVideoFrameDelta, kScaleResolutionDownBy[1]);
+  ExpectStream(VideoFrameType::kVideoFrameKey, kScaleResolutionDownBy[2]);
+  input_frame_->set_timestamp(input_frame_->timestamp() + 3000);
+  EXPECT_EQ(0, encoder_->Encode(*input_frame_, &frame_types));
+
+  std::fill(frame_types.begin(), frame_types.end(),
+            VideoFrameType::kVideoFrameDelta);
+  frame_types[0] = VideoFrameType::kVideoFrameKey;
+  frame_types[2] = VideoFrameType::kVideoFrameKey;
+  ExpectStream(VideoFrameType::kVideoFrameKey, kScaleResolutionDownBy[0]);
+  ExpectStream(VideoFrameType::kVideoFrameDelta, kScaleResolutionDownBy[1]);
+  ExpectStream(VideoFrameType::kVideoFrameKey, kScaleResolutionDownBy[2]);
+  input_frame_->set_timestamp(input_frame_->timestamp() + 3000);
+  EXPECT_EQ(0, encoder_->Encode(*input_frame_, &frame_types));
+
+  std::fill(frame_types.begin(), frame_types.end(),
+            VideoFrameType::kVideoFrameKey);
+  ExpectStream(VideoFrameType::kVideoFrameKey, kScaleResolutionDownBy[0]);
+  ExpectStream(VideoFrameType::kVideoFrameKey, kScaleResolutionDownBy[1]);
+  ExpectStream(VideoFrameType::kVideoFrameKey, kScaleResolutionDownBy[2]);
   input_frame_->set_timestamp(input_frame_->timestamp() + 3000);
   EXPECT_EQ(0, encoder_->Encode(*input_frame_, &frame_types));
 
