@@ -368,3 +368,13 @@ jobs:
           - mozilla-central
       when:
           - {hour: 0, minute: 00}
+
+    - name: sp-perftests
+      job:
+          type: decision-task
+          treeherder-symbol: sp-perftests
+          target-tasks-method: sp-perftests
+      run-on-projects:
+          - mozilla-central
+      when:
+          - {hour: 0, minute: 00}
