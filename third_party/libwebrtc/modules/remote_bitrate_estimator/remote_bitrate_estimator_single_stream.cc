@@ -63,7 +63,7 @@ RemoteBitrateEstimatorSingleStream::RemoteBitrateEstimatorSingleStream(
     : clock_(clock),
       incoming_bitrate_(kBitrateWindowMs, 8000),
       last_valid_incoming_bitrate_(0),
-      remote_rate_(new AimdRateControl(&field_trials_)),
+      remote_rate_(&field_trials_),
       observer_(observer),
       last_process_time_(-1),
       process_interval_ms_(kProcessIntervalMs),
@@ -144,7 +144,7 @@ void RemoteBitrateEstimatorSingleStream::IncomingPacket(
         incoming_bitrate_.Rate(now_ms);
     if (incoming_bitrate_bps &&
         (prior_state != BandwidthUsage::kBwOverusing ||
-         GetRemoteRate()->TimeToReduceFurther(
+         remote_rate_.TimeToReduceFurther(
              Timestamp::Millis(now_ms),
              DataRate::BitsPerSec(*incoming_bitrate_bps)))) {
       // The first overuse should immediately trigger a new estimate.
@@ -193,14 +193,13 @@ void RemoteBitrateEstimatorSingleStream::UpdateEstimate(int64_t now_ms) {
   if (overuse_detectors_.empty()) {
     return;
   }
-  AimdRateControl* remote_rate = GetRemoteRate();
 
   const RateControlInput input(
       bw_state, OptionalRateFromOptionalBps(incoming_bitrate_.Rate(now_ms)));
   uint32_t target_bitrate =
-      remote_rate->Update(&input, Timestamp::Millis(now_ms)).bps<uint32_t>();
-  if (remote_rate->ValidEstimate()) {
-    process_interval_ms_ = remote_rate->GetFeedbackInterval().ms();
+      remote_rate_.Update(&input, Timestamp::Millis(now_ms)).bps<uint32_t>();
+  if (remote_rate_.ValidEstimate()) {
+    process_interval_ms_ = remote_rate_.GetFeedbackInterval().ms();
     RTC_DCHECK_GT(process_interval_ms_, 0);
     std::vector<uint32_t> ssrcs;
     GetSsrcs(&ssrcs);
@@ -212,7 +211,7 @@ void RemoteBitrateEstimatorSingleStream::UpdateEstimate(int64_t now_ms) {
 void RemoteBitrateEstimatorSingleStream::OnRttUpdate(int64_t avg_rtt_ms,
                                                      int64_t max_rtt_ms) {
   MutexLock lock(&mutex_);
-  GetRemoteRate()->SetRtt(TimeDelta::Millis(avg_rtt_ms));
+  remote_rate_.SetRtt(TimeDelta::Millis(avg_rtt_ms));
 }
 
 void RemoteBitrateEstimatorSingleStream::RemoveStream(unsigned int ssrc) {
@@ -226,10 +225,10 @@ void RemoteBitrateEstimatorSingleStream::RemoveStream(unsigned int ssrc) {
 
 DataRate RemoteBitrateEstimatorSingleStream::LatestEstimate() const {
   MutexLock lock(&mutex_);
-  if (!remote_rate_->ValidEstimate() || overuse_detectors_.empty()) {
+  if (!remote_rate_.ValidEstimate() || overuse_detectors_.empty()) {
     return DataRate::Zero();
   }
-  return remote_rate_->LatestEstimate();
+  return remote_rate_.LatestEstimate();
 }
 
 void RemoteBitrateEstimatorSingleStream::GetSsrcs(
@@ -241,12 +240,6 @@ void RemoteBitrateEstimatorSingleStream::GetSsrcs(
        it != overuse_detectors_.end(); ++it, ++i) {
     (*ssrcs)[i] = it->first;
   }
-}
-
-AimdRateControl* RemoteBitrateEstimatorSingleStream::GetRemoteRate() {
-  if (!remote_rate_)
-    remote_rate_.reset(new AimdRateControl(&field_trials_));
-  return remote_rate_.get();
 }
 
 }  // namespace webrtc
