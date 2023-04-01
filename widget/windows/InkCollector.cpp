@@ -6,12 +6,14 @@
  */
 
 #include "InkCollector.h"
+#include "nsDebug.h"
+#include "nsISupportsUtils.h"
 
 // Msinkaut_i.c and Msinkaut.h should both be included
 // https://msdn.microsoft.com/en-us/library/windows/desktop/ms695519.aspx
 #include <msinkaut_i.c>
 
-StaticAutoPtr<InkCollector> InkCollector::sInkCollector;
+mozilla::StaticAutoPtr<InkCollector> InkCollector::sInkCollector;
 
 InkCollector::~InkCollector() {
   Shutdown();

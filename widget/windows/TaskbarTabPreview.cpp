@@ -185,7 +185,6 @@ TaskbarTabPreview::WndProc(UINT nMsg, WPARAM wParam, LPARAM lParam) {
       return wParam == SC_CLOSE
                  ? ::DefWindowProcW(mProxyWindow, WM_SYSCOMMAND, wParam, lParam)
                  : ::SendMessageW(mWnd, WM_SYSCOMMAND, wParam, lParam);
-      return 0;
   }
   return TaskbarPreview::WndProc(nMsg, wParam, lParam);
 }

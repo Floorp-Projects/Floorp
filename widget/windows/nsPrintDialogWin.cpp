@@ -6,6 +6,7 @@
 #include "nsPrintDialogWin.h"
 
 #include "nsArray.h"
+#include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIBaseWindow.h"
 #include "nsIBrowserChild.h"
@@ -18,6 +19,7 @@
 #include "nsPrintDialogUtil.h"
 #include "nsIPrintSettings.h"
 #include "nsIWebBrowserChrome.h"
+#include "nsServiceManagerUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsQueryObject.h"
 

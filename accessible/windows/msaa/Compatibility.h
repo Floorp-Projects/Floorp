@@ -9,6 +9,8 @@
 
 #include <windows.h>
 #include "mozilla/Maybe.h"
+#include "nsString.h"
+
 #include <stdint.h>
 
 namespace mozilla {

@@ -1398,7 +1398,6 @@ void NativeKey::InitIsSkippableForKeyOrChar(const MSG& aLastKeyMSG) {
           // by the auto-repeat feature.
           return;
       }
-      return;
     case WM_APPCOMMAND:
       MOZ_ASSERT_UNREACHABLE(
           "WM_APPCOMMAND should be handled in "

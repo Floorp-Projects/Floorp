@@ -1137,8 +1137,6 @@ PuppetWidget::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
     default:
       return NS_ERROR_NOT_IMPLEMENTED;
   }
-
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP_(IMENotificationRequests)

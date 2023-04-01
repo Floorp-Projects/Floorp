@@ -13,10 +13,10 @@
 #include "nsStubMutationObserver.h"
 #include "nsHashKeys.h"
 #include "nsIObserver.h"
+#include "nsMenuBarX.h"
 #include "nsTHashMap.h"
 #include "nsString.h"
 
-class nsMenuBarX;
 class nsMenuItemX;
 class nsChangeObserver;
 class nsIWidget;
