@@ -105,7 +105,7 @@ WgcCaptureSession::~WgcCaptureSession() {
   RemoveEventHandlers();
 }
 
-HRESULT WgcCaptureSession::StartCapture() {
+HRESULT WgcCaptureSession::StartCapture(const DesktopCaptureOptions& options) {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
   RTC_DCHECK(!is_capture_started_);
 
@@ -185,6 +185,15 @@ HRESULT WgcCaptureSession::StartCapture() {
   if (FAILED(hr)) {
     RecordStartCaptureResult(StartCaptureResult::kCreateCaptureSessionFailed);
     return hr;
+  }
+
+  if (!options.prefer_cursor_embedded()) {
+    ComPtr<ABI::Windows::Graphics::Capture::IGraphicsCaptureSession2> session2;
+    if (SUCCEEDED(session_->QueryInterface(
+            ABI::Windows::Graphics::Capture::IID_IGraphicsCaptureSession2,
+            &session2))) {
+      session2->put_IsCursorCaptureEnabled(false);
+    }
   }
 
   hr = session_->StartCapture();
