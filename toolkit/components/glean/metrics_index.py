@@ -61,6 +61,7 @@ background_update_metrics = [
 background_tasks_metrics = [
     "toolkit/components/backgroundtasks/metrics.yaml",
     "toolkit/components/crashes/metrics.yaml",
+    "browser/components/metrics.yaml",
 ]
 
 # Test metrics
