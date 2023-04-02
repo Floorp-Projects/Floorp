@@ -54,6 +54,8 @@ add_task(async function test_openPopup_requires_user_interaction() {
         default_panel: "panel.html",
       },
     },
+    // We don't want the panel open automatically, so need a non-default reason.
+    startupReason: "APP_STARTUP",
 
     files: {
       "tab.html": `
