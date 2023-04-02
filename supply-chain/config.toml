@@ -100,24 +100,24 @@ audit-as-crates-io = false
 notes = "The crates.io version of this is just a placeholder to allow public crates to depend on mozbuild."
 
 [policy.mozdevice]
-audit-as-crates-io = true
-notes = "This is a first-party crate which is also published to crates.io, but we should publish audits for it for the benefit of the ecosystem."
+audit-as-crates-io = false
+notes = "This is a first-party crate which is also published to crates.io. We certify audits for this crate as part of the documented release process, but that step happens after the version bump lands on central so we don't enforce it here."
 
 [policy.mozglue-static]
 dependency-criteria = { rustc_version = "safe-to-run" }
 notes = "The rustc_version dependency is only used in the build script, and does not generate any runtime code"
 
 [policy.mozprofile]
-audit-as-crates-io = true
-notes = "This is a first-party crate which is also published to crates.io, but we should publish audits for it for the benefit of the ecosystem."
+audit-as-crates-io = false
+notes = "This is a first-party crate which is also published to crates.io. We certify audits for this crate as part of the documented release process, but that step happens after the version bump lands on central so we don't enforce it here."
 
 [policy.mozrunner]
-audit-as-crates-io = true
-notes = "This is a first-party crate which is also published to crates.io, but we should publish audits for it for the benefit of the ecosystem."
+audit-as-crates-io = false
+notes = "This is a first-party crate which is also published to crates.io. We certify audits for this crate as part of the documented release process, but that step happens after the version bump lands on central so we don't enforce it here."
 
 [policy.mozversion]
-audit-as-crates-io = true
-notes = "This is a first-party crate which is also published to crates.io, but we should publish audits for it for the benefit of the ecosystem."
+audit-as-crates-io = false
+notes = "This is a first-party crate which is also published to crates.io. We certify audits for this crate as part of the documented release process, but that step happens after the version bump lands on central so we don't enforce it here."
 
 [policy.naga]
 audit-as-crates-io = true
