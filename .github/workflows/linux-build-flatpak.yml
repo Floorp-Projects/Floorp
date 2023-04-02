@@ -46,7 +46,7 @@ jobs:
     - name: Create environment 🌲
       run: |
         sudo apt update
-        sudo apt install gzip gpg dpkg-dev
+        sudo apt install gzip gpg dpkg-dev imagemagick openbox obconf xorg
         export WORKDIR=`pwd`
         echo "Current Workdir: $WORKDIR"
         git clone https://github.com/floorp-projects/l10n-central.git
@@ -77,7 +77,7 @@ jobs:
     - name: Build 🔨
       run: |
         rm -rf /home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/l10n-central/.git
-        Xvfb :2 -screen 0 1024x768x24 &
+        Xvfb :2 -screen 0 1920x1080x24 &
         export DISPLAY=:2
         export WORKDIR=`pwd`
         echo "Current Workdir: $WORKDIR"
@@ -126,6 +126,24 @@ jobs:
         cd ./flatpak_build/tmp
         tar -Jcf flatpak-base-$DISPVER.tar.xz *
         mv flatpak-base-$DISPVER.tar.xz ../public/
+        sleep 5
+        /usr/bin/openbox-session &
+        sleep 5
+        floorp -foreground -height 1080 -width 1920 &
+        sleep 5
+        pkill floorp
+        floorp -foreground about:newtab &
+        sleep 10
+        import -window root -crop 1920x1080+0+0 $(pwd)/flathub-screenshot.png
+        mkdir publish
+        echo "${{ secrets.FTP_INIT_SCRIPT }}" > init_script.txt
+        echo "${{ secrets.FTP_FINISH_SCRIPT }}" > finish_script.txt
+        cd publish
+        ftp -n -p < ../init_script.txt
+        cp -f ../flathub-screenshot.png ./
+        ftp -n -p < ../finish_script.txt
+        cd ../
+        rm init_script.txt finish_script.txt
         cd ../..
         ls ./flatpak_build/public
 
