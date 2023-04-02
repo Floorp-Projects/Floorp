@@ -991,7 +991,7 @@ static bool ContainingBlockChangeAffectsDescendants(
         nsIFrame* outOfFlow = nsPlaceholderFrame::GetRealFrameForPlaceholder(f);
         // If SVG text frames could appear here, they could confuse us since
         // they ignore their position style ... but they can't.
-        NS_ASSERTION(!SVGUtils::IsInSVGTextSubtree(outOfFlow),
+        NS_ASSERTION(!outOfFlow->IsInSVGTextSubtree(),
                      "SVG text frames can't be out of flow");
         // Top-layer frames don't change containing block based on direct
         // ancestors.

@@ -21,7 +21,6 @@
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPresData.h"
 #include "mozilla/SVGTextFrame.h"
-#include "mozilla/SVGUtils.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/BinarySearch.h"
@@ -608,8 +607,7 @@ static void InvalidateFrameDueToGlyphsChanged(nsIFrame* aFrame) {
     // to reflow the SVGTextFrame. (This is similar to reflowing the
     // SVGTextFrame in response to style changes, in
     // SVGTextFrame::DidSetComputedStyle.)
-    if (SVGUtils::IsInSVGTextSubtree(f) &&
-        f->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
+    if (f->IsInSVGTextSubtree() && f->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
       auto* svgTextFrame = static_cast<SVGTextFrame*>(
           nsLayoutUtils::GetClosestFrameOfType(f, LayoutFrameType::SVGText));
       svgTextFrame->ScheduleReflowSVGNonDisplayText(IntrinsicDirty::None);
@@ -1405,7 +1403,7 @@ static void BuildTextRuns(DrawTarget* aDrawTarget, nsTextFrame* aForFrame,
   }
 
   nsPresContext* presContext = aLineContainer->PresContext();
-  bool doLineBreaking = !SVGUtils::IsInSVGTextSubtree(aForFrame);
+  bool doLineBreaking = !aForFrame->IsInSVGTextSubtree();
   BuildTextRunsScanner scanner(presContext, aDrawTarget, aLineContainer,
                                aWhichTextRun, doLineBreaking);
 
@@ -1748,7 +1746,7 @@ static gfxFloat GetMinTabAdvanceAppUnits(const gfxTextRun* aTextRun) {
 }
 
 static float GetSVGFontSizeScaleFactor(nsIFrame* aFrame) {
-  if (!SVGUtils::IsInSVGTextSubtree(aFrame)) {
+  if (!aFrame->IsInSVGTextSubtree()) {
     return 1.0f;
   }
   auto* container =
@@ -1758,7 +1756,7 @@ static float GetSVGFontSizeScaleFactor(nsIFrame* aFrame) {
 }
 
 static nscoord LetterSpacing(nsIFrame* aFrame, const nsStyleText& aStyleText) {
-  if (SVGUtils::IsInSVGTextSubtree(aFrame)) {
+  if (aFrame->IsInSVGTextSubtree()) {
     // SVG text can have a scaling factor applied so that very small or very
     // large font-sizes don't suffer from poor glyph placement due to app unit
     // rounding. The used letter-spacing value must be scaled by the same
@@ -1774,7 +1772,7 @@ static nscoord LetterSpacing(nsIFrame* aFrame, const nsStyleText& aStyleText) {
 // This function converts non-coord values (e.g. percentages) to nscoord.
 static nscoord WordSpacing(nsIFrame* aFrame, const gfxTextRun* aTextRun,
                            const nsStyleText& aStyleText) {
-  if (SVGUtils::IsInSVGTextSubtree(aFrame)) {
+  if (aFrame->IsInSVGTextSubtree()) {
     // SVG text can have a scaling factor applied so that very small or very
     // large font-sizes don't suffer from poor glyph placement due to app unit
     // rounding. The used word-spacing value must be scaled by the same
@@ -1913,7 +1911,7 @@ bool BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1,
     // as there are too many things SVG might be doing (like applying per-
     // element positioning) that wouldn't make sense with shaping across
     // the boundary.
-    if (SVGUtils::IsInSVGTextSubtree(ancestor)) {
+    if (ancestor->IsInSVGTextSubtree()) {
       return false;
     }
 
@@ -2200,7 +2198,7 @@ already_AddRefed<gfxTextRun> BuildTextRunsScanner::BuildTextRunForFrames(
 
   uint32_t nextBreakIndex = 0;
   nsTextFrame* nextBreakBeforeFrame = GetNextBreakBeforeFrame(&nextBreakIndex);
-  bool isSVG = SVGUtils::IsInSVGTextSubtree(mLineContainer);
+  bool isSVG = mLineContainer->IsInSVGTextSubtree();
   bool enabledJustification =
       (mLineContainer->StyleText()->mTextAlign == StyleTextAlign::Justify ||
        mLineContainer->StyleText()->mTextAlignLast ==
@@ -4235,7 +4233,7 @@ void nsTextFrame::InvalidateFrame(uint32_t aDisplayItemKey,
                                   bool aRebuildDisplayItems) {
   InvalidateSelectionState();
 
-  if (SVGUtils::IsInSVGTextSubtree(this)) {
+  if (IsInSVGTextSubtree()) {
     nsIFrame* svgTextFrame = nsLayoutUtils::GetClosestFrameOfType(
         GetParent(), LayoutFrameType::SVGText);
     svgTextFrame->InvalidateFrame();
@@ -4249,7 +4247,7 @@ void nsTextFrame::InvalidateFrameWithRect(const nsRect& aRect,
                                           bool aRebuildDisplayItems) {
   InvalidateSelectionState();
 
-  if (SVGUtils::IsInSVGTextSubtree(this)) {
+  if (IsInSVGTextSubtree()) {
     nsIFrame* svgTextFrame = nsLayoutUtils::GetClosestFrameOfType(
         GetParent(), LayoutFrameType::SVGText);
     svgTextFrame->InvalidateFrame();
@@ -4488,7 +4486,7 @@ void nsTextFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       NS_GET_A(st->mWebkitTextStrokeColor.CalcColor(this)) == 0;
   if ((HasAnyStateBits(TEXT_NO_RENDERED_GLYPHS) ||
        (isTextTransparent && !StyleText()->HasTextShadow())) &&
-      aBuilder->IsForPainting() && !SVGUtils::IsInSVGTextSubtree(this)) {
+      aBuilder->IsForPainting() && !IsInSVGTextSubtree()) {
     if (!IsSelected()) {
       TextDecorations textDecs;
       GetTextDecorations(PresContext(), eResolvedColors, textDecs);
@@ -4680,7 +4678,7 @@ void nsTextFrame::GetTextDecorations(
       nscolor color;
       if (useOverride) {
         color = overrideColor;
-      } else if (SVGUtils::IsInSVGTextSubtree(this)) {
+      } else if (IsInSVGTextSubtree()) {
         // XXX We might want to do something with text-decoration-color when
         //     painting SVG text, but it's not clear what we should do.  We
         //     at least need SVG text decorations to paint with 'fill' if
@@ -4760,7 +4758,7 @@ void nsTextFrame::GetTextDecorations(
 
 static float GetInflationForTextDecorations(nsIFrame* aFrame,
                                             nscoord aInflationMinFontSize) {
-  if (SVGUtils::IsInSVGTextSubtree(aFrame)) {
+  if (aFrame->IsInSVGTextSubtree()) {
     auto* container =
         nsLayoutUtils::GetClosestFrameOfType(aFrame, LayoutFrameType::SVGText);
     MOZ_ASSERT(container);
@@ -6192,7 +6190,7 @@ nscolor nsTextFrame::GetCaretColorAt(int32_t aOffset) {
   }
 
   bool isSolidTextColor = true;
-  if (SVGUtils::IsInSVGTextSubtree(this)) {
+  if (IsInSVGTextSubtree()) {
     const nsStyleSVG* style = StyleSVG();
     if (!style->mFill.kind.IsNone() && !style->mFill.kind.IsColor()) {
       isSolidTextColor = false;
@@ -6383,7 +6381,7 @@ void nsTextFrame::PaintText(const PaintTextParams& aParams,
                             const bool aIsSelected,
                             float aOpacity /* = 1.0f */) {
 #ifdef DEBUG
-  if (SVGUtils::IsInSVGTextSubtree(this)) {
+  if (IsInSVGTextSubtree()) {
     auto* container =
         nsLayoutUtils::GetClosestFrameOfType(this, LayoutFrameType::SVGText);
     MOZ_ASSERT(container);
@@ -9473,7 +9471,7 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
        lineContainer->StyleText()->mTextAlignLast ==
            StyleTextAlignLast::Justify ||
        shouldSuppressLineBreak) &&
-      !SVGUtils::IsInSVGTextSubtree(lineContainer)) {
+      !lineContainer->IsInSVGTextSubtree()) {
     AddStateBits(TEXT_JUSTIFICATION_ENABLED);
     Range range(uint32_t(offset), uint32_t(offset + charsFit));
     aLineLayout.SetJustificationInfo(provider.ComputeJustification(range));

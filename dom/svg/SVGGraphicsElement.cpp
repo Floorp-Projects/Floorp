@@ -61,7 +61,7 @@ already_AddRefed<SVGRect> SVGGraphicsElement::GetBBox(
   ISVGDisplayableFrame* svgframe = do_QueryFrame(frame);
 
   if (!svgframe) {
-    if (!SVGUtils::IsInSVGTextSubtree(frame)) {
+    if (!frame->IsInSVGTextSubtree()) {
       return ZeroBBox(*this);
     }
 

@@ -10,7 +10,6 @@
 #include "gfxUserFontSet.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/RestyleManager.h"
-#include "mozilla/SVGUtils.h"
 #include "nsFontMetrics.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
@@ -125,7 +124,7 @@ static FontUsageKind FrameFontUsage(nsIFrame* aFrame,
 // TODO(emilio): Can we use the restyle-hint machinery instead of this?
 static void ScheduleReflow(PresShell* aPresShell, nsIFrame* aFrame) {
   nsIFrame* f = aFrame;
-  if (f->IsFrameOfType(nsIFrame::eSVG) || SVGUtils::IsInSVGTextSubtree(f)) {
+  if (f->IsFrameOfType(nsIFrame::eSVG) || f->IsInSVGTextSubtree()) {
     // SVG frames (and the non-SVG descendants of an SVGTextFrame) need special
     // reflow handling.  We need to search upwards for the first displayed
     // SVGOuterSVGFrame or non-SVG frame, which is the frame we can call
@@ -142,7 +141,7 @@ static void ScheduleReflow(PresShell* aPresShell, nsIFrame* aFrame) {
             return;
           }
           if (!f->HasAnyStateBits(NS_FRAME_SVG_LAYOUT) ||
-              !SVGUtils::IsInSVGTextSubtree(f)) {
+              !f->IsInSVGTextSubtree()) {
             break;
           }
           f->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);

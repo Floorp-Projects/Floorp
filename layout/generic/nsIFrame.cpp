@@ -543,7 +543,7 @@ static bool IsFontSizeInflationContainer(nsIFrame* aFrame,
 }
 
 static void MaybeScheduleReflowSVGNonDisplayText(nsIFrame* aFrame) {
-  if (!SVGUtils::IsInSVGTextSubtree(aFrame)) {
+  if (!aFrame->IsInSVGTextSubtree()) {
     return;
   }
 
@@ -1570,7 +1570,7 @@ void nsIFrame::CreateView() {
 nsMargin nsIFrame::GetUsedMargin() const {
   nsMargin margin(0, 0, 0, 0);
   if (((mState & NS_FRAME_FIRST_REFLOW) && !(mState & NS_FRAME_IN_REFLOW)) ||
-      SVGUtils::IsInSVGTextSubtree(this))
+      IsInSVGTextSubtree())
     return margin;
 
   nsMargin* m = GetProperty(UsedMarginProperty());
@@ -1591,7 +1591,7 @@ nsMargin nsIFrame::GetUsedMargin() const {
 nsMargin nsIFrame::GetUsedBorder() const {
   nsMargin border(0, 0, 0, 0);
   if (((mState & NS_FRAME_FIRST_REFLOW) && !(mState & NS_FRAME_IN_REFLOW)) ||
-      SVGUtils::IsInSVGTextSubtree(this))
+      IsInSVGTextSubtree())
     return border;
 
   // Theme methods don't use const-ness.
@@ -1620,7 +1620,7 @@ nsMargin nsIFrame::GetUsedBorder() const {
 nsMargin nsIFrame::GetUsedPadding() const {
   nsMargin padding(0, 0, 0, 0);
   if (((mState & NS_FRAME_FIRST_REFLOW) && !(mState & NS_FRAME_IN_REFLOW)) ||
-      SVGUtils::IsInSVGTextSubtree(this))
+      IsInSVGTextSubtree())
     return padding;
 
   // Theme methods don't use const-ness.
@@ -5637,7 +5637,7 @@ static FrameTarget GetSelectionClosestFrame(nsIFrame* aFrame,
       kid->FindCloserFrameForSelection(aPoint, &closest);
     }
     if (closest.mFrame) {
-      if (SVGUtils::IsInSVGTextSubtree(closest.mFrame))
+      if (closest.mFrame->IsInSVGTextSubtree())
         return FrameTarget{closest.mFrame, false, false};
       return GetSelectionClosestFrameForChild(closest.mFrame, aPoint, aFlags);
     }
@@ -5754,7 +5754,7 @@ nsIFrame::ContentOffsets nsIFrame::GetContentOffsetsFromPoint(
 
   nsPoint pt;
   if (closest.frame != this) {
-    if (SVGUtils::IsInSVGTextSubtree(closest.frame)) {
+    if (closest.frame->IsInSVGTextSubtree()) {
       pt = nsLayoutUtils::TransformAncestorPointToFrame(
           RelativeTo{closest.frame}, aPoint, RelativeTo{this});
     } else {
@@ -10622,7 +10622,7 @@ static StyleVerticalAlignKeyword ConvertSVGDominantBaselineToVerticalAlign(
 }
 
 Maybe<StyleVerticalAlignKeyword> nsIFrame::VerticalAlignEnum() const {
-  if (SVGUtils::IsInSVGTextSubtree(this)) {
+  if (IsInSVGTextSubtree()) {
     StyleDominantBaseline dominantBaseline = StyleSVG()->mDominantBaseline;
     return Some(ConvertSVGDominantBaselineToVerticalAlign(dominantBaseline));
   }
