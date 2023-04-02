@@ -25,6 +25,14 @@ start = "2019-09-24"
 end = "2024-02-24"
 notes = "The Glean SDKs are maintained by the Glean Team at Mozilla."
 
+[[wildcard-audits.marionette]]
+who = "Henrik Skupin <mail@hskupin.info>"
+criteria = "safe-to-run"
+user-id = 22262
+start = "2020-11-03"
+end = "2024-03-31"
+notes = "Maintained by the DevTools team at Mozilla and has no unsafe code."
+
 [[wildcard-audits.ohttp]]
 who = "Martin Thomson <mt@lowentropy.net>"
 criteria = "safe-to-deploy"
@@ -1303,17 +1311,6 @@ This was originally servo code which I put on crates.io some years ago but didn'
 examine at the time, so I examined it now. I didn't perform a full logic review
 but convinced myself that any generated code will be entirely safe to deploy.
 """
-
-[[audits.marionette]]
-who = "Henrik Skupin <mail@hskupin.info>"
-criteria = "safe-to-run"
-version = "0.2.1"
-notes = "Maintained by the DevTools team at Mozilla and has no unsafe code."
-
-[[audits.marionette]]
-who = "Henrik Skupin <mail@hskupin.info>"
-criteria = "safe-to-run"
-delta = "0.2.1 -> 0.3.0"
 
 [[audits.matches]]
 who = "Bobby Holley <bobbyholley@gmail.com>"
