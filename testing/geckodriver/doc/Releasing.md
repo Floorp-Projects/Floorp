@@ -48,32 +48,42 @@ For each crate:
 1. Change into the crates folder.
 2. Bump the version number in `Cargo.toml` based on [semantic versioning rules],
    and also update the version dependency for other in-tree crates using the
-   currently modified crate. Note that running `cargo update` (see next step)
-   will fail if you missed updating a crate's dependency. Also use the
-   [cargo-semver-checks] command to validate the version change:
+   currently modified crate. Note that running `cargo update` will fail if you
+   missed updating a crate's dependency.
+
+3. Use the [cargo-semver-checks] command to validate the version change:
 
     ```shell
     % cargo semver-checks check-release
     ```
 
-3. Update the crate: `cargo update -p <crate name>`
-4. We also publish audit information for the crates based on Mozilla's
-   [audit criteria], and that must be updated for each release. To do that run:
+4. Update the crate:
 
-    ```shell
-    % ./mach cargo vet certify <name> <version> --force
-    ```
+   ```shell
+   % cargo update -p <crate name>
+   ```
 
-5. Commit the changes for the modified [Cargo.toml] files, [Cargo.lock] and the
-   [supply-chain/] folder, which can be found in the repositories root folder.
-   Use a commit message like `Bug XYZ - [rust-<name>] Release version <version>`.
+5. We also publish audit information for the crates based on Mozilla's
+   [audit criteria]. Because we use [wildcard audit entries] make sure that the
+   latest day of publication is still within the `end` date. The related entry
+   of the crate can be found at the top of [audits.toml]. If the date is over,
+   then update its value to at most 1 year in the future.
+
+6. Commit the changes for the modified [Cargo.toml] files, [Cargo.lock] and
+   [audits.toml].
+
+   ```shell
+   % git add Cargo.toml Cargo.lock audits.toml testing
+   % git commit -m "Bug XYZ - [rust-<name>] Release version <version>"
+   ```
 
 [semantic versioning rules]: https://semver.org/
 [cargo-semver-checks]: https://crates.io/crates/cargo-semver-checks
 [audit criteria]: https://mozilla.github.io/cargo-vet/audit-criteria.html
+[wildcard audit entries]: https://mozilla.github.io/cargo-vet/wildcard-audit-entries.html
 [Cargo.toml]: https://searchfox.org/mozilla-central/source/testing/geckodriver/Cargo.toml
 [Cargo.lock]: https://searchfox.org/mozilla-central/source/Cargo.lock
-[supply-chain/]: https://searchfox.org/mozilla-central/source/supply-chain
+[audits.toml]: https://searchfox.org/mozilla-central/source/supply-chain/audits.toml
 
 ## Update the change log
 
