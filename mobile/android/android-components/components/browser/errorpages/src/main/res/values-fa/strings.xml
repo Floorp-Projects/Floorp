@@ -41,12 +41,35 @@
         <label>وب‌سایت‌ها هویت خود را از طریق گواهینامه‌ها اثبات می‌کنند. %1$s به <b>%2$s</b> اعتماد ندارد، زیرا صادرکننده گواهینامه آن ناشناخته است ، گواهینامه خود-امضا است یا سرور در حال ارسال گواهینامه‌های واسط صحیح نیست.</label>
     ]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
-    <string name="mozac_browser_errorpages_security_bad_cert_back">بازگشت (توصیه شده)</string>
+    <string name="mozac_browser_errorpages_security_bad_cert_back">بازگشت (پیشنهاد می‌شود)</string>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">پذیرش خطر و ادامه</string>
 
     <!-- The document title and heading of the error page shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">این وب سایت به یک پیوند ایمن نیاز دارد.</string>
+
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+ <ul>
+ <li>صفحه‌ای را که می‌خواهید مشاهده کنید نمیتواند نمایش داده شود زیرا این وبگاه به اتصال ایمن نیاز دارد.</li>
+ <li>مشکل به احتمال زیاد مربوط به وبگاه است و کاری برای حل آن نمی توانید انجام دهید.</li>
+ <li>می‌توانید مشکل را به مدیر وبگاه اطلاع دهید.</li>
+ </ul>
+ ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">پیش‌رفته…</string>
+
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
+ <label> <b>%1$s</b> یک خط‌مشی امنیتی به نام HTTP Strict Transport Security (HSTS) دارد، به این معنی که <b>%2$s</b> فقط می‌تواند به صورت ایمن به آن متصل شود. شما نمی‌توانید استثنایی برای بازدید از این پایگاه اضافه کنید.
+ ]]></string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+ <label> <b>%1$s</b> یک خط‌مشی امنیتی به نام HTTP Strict Transport Security (HSTS) دارد، به این معنی که <b>%2$s</b> فقط می‌تواند به صورت ایمن به آن متصل شود. شما نمی‌توانید استثنایی برای بازدید از این پایگاه اضافه کنید. </label>
+ ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">بازگشت</string>
 
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">اتّصال قطع شد</string>
@@ -155,10 +178,10 @@
     <!-- The main body text of this error page. It will be shown beneath the title -->
     <string name="mozac_browser_errorpages_no_internet_message">اتصال شبکه خود را بررسی کنید یا در چند لحظه بارگیری مجدد صفحه را امتحان کنید.</string>
     <!-- Text that will show up on the button at the bottom of the error page -->
-    <string name="mozac_browser_errorpages_no_internet_refresh_button">بارگیری مجدد</string>
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">بارگیری دوباره</string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_malformed_uri_title">این نشانی معتبر نیست</string>
+    <string name="mozac_browser_errorpages_malformed_uri_title">نشانی نامعتبر</string>
     <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>نشانی فراهم‌شده دارای قالب معتبری نیست. لطفاً از عدم وجود اشتباه در نوار مکان اطمینان حاصل کنید و دوباره تلاش نمایید.</p>]]></string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">نشانی معتبر نیست</string>
@@ -185,7 +208,7 @@
     <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>مرورگر برای استفاده از یک کارگزار پیش‌کار پیکربندی شده است، ولی پیشکار از اتصال خودداری می‌کند.</p><ul><li>آیا تنظیمات کارگزار پیشکار مرورگر صحیح است؟ تنظیمات را کنترل کنید و دوباره تلاش نمایید.</li><li>آیا پیشکار اجازهٔ اتصال از این شبکه را می‌دهد؟</li><li>هنوز هم مشکل دارید؟  برای دریافت کمک با مدیر سیستم یا فراهم‌کنندهٔ اتصال اینترنت خود مشورت کنید.</li></ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_unknown_proxy_host_title">کارگزار پیشکار پیدا نشد</string>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">کارساز پیشکار پیدا نشد</string>
     <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>مرورگر برای استفاده از یک کارگزار پیش‌کار پیکربندی شده است، ولی پیشکار از اتصال خودداری می‌کند.</p><ul><li>آیا تنظیمات کارگزار پیشکار مرورگر صحیح است؟ تنظیمات را کنترل کنید و دوباره تلاش نمایید.</li><li>آیا پیشکار اجازهٔ اتصال از این شبکه را می‌دهد؟</li><li>هنوز هم مشکل دارید؟  برای دریافت کمک با مدیر سیستم یا فراهم‌کنندهٔ اتصال اینترنت خود مشورت کنید.</li></ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
@@ -208,6 +231,8 @@
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>صفحه %1$s به عنوان یک پایگاه وب گمراه‌کننده گزارش شده و بر اساس ترجیحات امنیتی شما مسدود شده است.</p>]]></string>
 
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">پایگاه ایمن در دسترس نیست</string>
     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
     <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[تنها حالت HTTPS برای امنیت بیشتر فعال شده است و نسخه HTTPS از <em>%1$s</em> در دسترس نیست.]]></string>
     <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->

@@ -35,4 +35,7 @@
     <string name="mozac_feature_sitepermissions_persistent_storage_title">آیا شما به %1$s اجازه‌ می‌دهید تا اطلاعات را در حافظه دائمی دستگاه ذخیره کند؟</string>
     <!-- Title of a dialog to use EME. %1$s will be replaced with the URL of the current page -->
     <string name="mozac_feature_sitepermissions_media_key_system_access_title">به%1$s اجازه پخش محتوای کنترل شده با DRM را می دهید؟</string>
+    <!-- Title of a dialog to use cross origin storage permission. %1$s is the name of the site URL (www.site1.example) trying to track the user's activity.
+     %2$s is the name of the site URL (www.site2.example) that the user is visiting.  This is the same domain name displayed in the address bar -->
+    <string name="mozac_feature_sitepermissions_storage_access_title">به %1$s اجازهٔ استفاده از کلوچک‌های خود در %2$s را می‌دهید؟</string>
     </resources>

@@ -220,6 +220,11 @@
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">افزودن میان‌بر مرور خصوصی</string>
 
+    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
+    <string name="reduce_cookie_banner_option_off">خاموش</string>
+    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
+    <string name="reduce_cookie_banner_option_on">روشن</string>
+
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">دسترسی‌پذیری</string>
     <!-- Preference to override the Firefox Account server -->
@@ -1043,6 +1048,8 @@
 
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">تمام کلوچک‌ها (باعث خرابی وبگاه‌ها خواهد شد)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">قرنطینهٔ کلوچک‌های میان‌پایگاهی</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">محتوای ردیابی</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1065,6 +1072,8 @@
     <string name="etp_social_media_trackers_description">توانایی شبکه های اجتماعی را برای ردیابی فعالیت مرور شما در وب محدود می کند.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">کلوچک‌هایِ ردیابِ میان‌پایگاهی</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">کلوچک‌های میان‌پایگاهی</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">کلوچک‌هایی را که شبکه‌های تبلیغاتی و شرکت‌های تحلیلی از آن‌ها استفاده می‌کنند، برای گردآوری داده‌های مرور شما در بسیاری از پایگاه‌ها مسدود می‌کند.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
@@ -1341,6 +1350,10 @@
     <!-- Third step for the allowing a permission (Fore example: Camera) -->
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. تغییر <b>%1$s</b> را به ON تغییر دهید]]></string>
 
+    <!-- Label to clear site data -->
+    <string name="clear_site_data">پاک‌سازی کلوچک‌ها و داده‌های پایگاه</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site -->
+    <string name="confirm_clear_site_data"><![CDATA[آیا مطمئن هستید که می‌خواهید تمام کلوچک‌ها و داده‌های پایگاه <b>%s</b> را پاک کنید؟]]></string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">آیا مطمئن هستید که می خواهید همه مجوزها را در همه سایت ها پاک کنید؟</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
