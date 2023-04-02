@@ -150,6 +150,10 @@ bool RequiresEncoderReset(const VideoCodec& prev_send_codec,
   if (new_send_codec.codecType == kVideoCodecVP9) {
     size_t num_spatial_layers = new_send_codec.VP9().numberOfSpatialLayers;
     for (unsigned char i = 0; i < num_spatial_layers; ++i) {
+      if (!new_send_codec.spatialLayers[i].active) {
+        // No need to reset when layer is inactive.
+        continue;
+      }
       if (new_send_codec.spatialLayers[i].width !=
               prev_send_codec.spatialLayers[i].width ||
           new_send_codec.spatialLayers[i].height !=
@@ -157,7 +161,8 @@ bool RequiresEncoderReset(const VideoCodec& prev_send_codec,
           new_send_codec.spatialLayers[i].numberOfTemporalLayers !=
               prev_send_codec.spatialLayers[i].numberOfTemporalLayers ||
           new_send_codec.spatialLayers[i].qpMax !=
-              prev_send_codec.spatialLayers[i].qpMax) {
+              prev_send_codec.spatialLayers[i].qpMax ||
+          !prev_send_codec.spatialLayers[i].active) {
         return true;
       }
     }
