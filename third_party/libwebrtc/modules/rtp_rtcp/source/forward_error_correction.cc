@@ -573,7 +573,13 @@ bool ForwardErrorCorrection::FinishPacketRecovery(
                            "typical IP packet, and is thus dropped.";
     return false;
   }
+  size_t old_size = recovered_packet->pkt->data.size();
   recovered_packet->pkt->data.SetSize(new_size);
+  data = recovered_packet->pkt->data.MutableData();
+  if (new_size > old_size) {
+    memset(data + old_size, 0, new_size - old_size);
+  }
+
   // Set the SN field.
   ByteWriter<uint16_t>::WriteBigEndian(&data[2], recovered_packet->seq_num);
   // Set the SSRC field.
