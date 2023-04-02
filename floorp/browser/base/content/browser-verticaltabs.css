@@ -32,8 +32,8 @@
  }
 
  #sidebar-box {
-  min-width: 3em !important;
   max-width: 50em !important;
+  min-width: 3em !important;
  }
 
  #tabbrowser-tabs[haspinnedtabs]:not([positionpinnedtabs]) > #tabbrowser-arrowscrollbox > .tabbrowser-tab[first-visible-unpinned-tab] {
@@ -52,7 +52,9 @@
   width: -moz-available !important;
   min-width: -moz-available !important;
   max-width: -moz-available !important;
- }
+  padding-inline-start: 5px !important;
+  padding-inline-end: 5px !important;
+}
 
  #tabbrowser-tabs[positionpinnedtabs] > #tabbrowser-arrowscrollbox > .tabbrowser-tab[pinned] {
   position: unset !important;
@@ -113,4 +115,17 @@
 
   #sidebar-button {
     display: none !important;
+  }
+
+  /* UI size */
+  :root[uidensity=touch]  .tabbrowser-tab[pinned] {
+    max-width: 3.2em !important;
+    width: 3.2em !important;
+    min-width: 3.2em !important;
+  }
+
+  :root[uidensity=compact]  .tabbrowser-tab[pinned] {
+    max-width: 2.5em !important;
+    width: 2.5em !important;
+    min-width: 2.5em !important;
   }
