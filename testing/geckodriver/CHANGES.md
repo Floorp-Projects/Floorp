@@ -3,6 +3,56 @@
 
 All notable changes to this program are documented in this file.
 
+## 0.33.0  (2023-04-03)
+
+### Known problems
+
+- _Startup hang with Firefox running in a container (e.g. snap, flatpak):_
+
+  When Firefox is packaged inside a container (like the default Firefox browser
+  shipped with Ubuntu 22.04), it may see a different filesystem to the host.
+  This can affect access to the generated profile directory, which may result
+  in a hang when starting Firefox. Workarounds are listed in the geckodriver
+  [usage documentation].
+
+- _Potential hang with `moz:debuggerAddress` capability set to `true`:_
+
+  After enabling the site-isolation feature in Firefox with geckodriver 0.32.1
+  some WebDriver clients like Selenium that use the Chrome DevTools Protocol (CDP)
+  by default for logging events could trigger a hang in Firefox's experimental CDP
+  implementation. The fix for this problem will be shipped with Firefox 112.
+  Until then the following Firefox preferences should be set:
+
+  - `fission.bfcacheInParent: false`
+  - `fission.webContentIsolationStrategy: 0`
+
+### Added
+
+- Support for [Get Computed Label] and [Get Computed Role]
+
+  The command [Get Computed Label] returns the accessibility label (sometimes
+  also referred to as Accessible Name), which is a short string that labels the
+  function of the control (e.g. the string "Comment" or "Sign In" on a button).
+
+  The command [Get Computed Role] returns the reserved token value (in ARIA,
+  button, heading, etc.) that describes the type of control or content in the
+  element.
+
+  Note that the minimum required Firefox version is 113.0.
+
+- Support for [Find Element From Shadow Root] and [Find Elements From Shadow Root]
+
+  The commands allow a lookup of individual elements or collections of elements
+  within an open or closed Shadow DOM. All location strategies except `Tag name` and
+  `XPath selector` are currently supported.
+
+  Note that the minimum required Firefox version is 113.0.
+
+### Changed
+
+- The Mozilla specific capability `moz:useNonSpecCompliantPointerOrigin` has been
+  marked as deprecated. Its removal is planned for the Firefox 116.0 release.
+
 ## 0.32.2  (2023-02-08, `602aa16c20d4`)
 
 ### Known problems
@@ -1746,8 +1796,11 @@ and greater.
 [webdriver crate]: https://crates.io/crates/webdriver
 
 [Actions]: https://w3c.github.io/webdriver/webdriver-spec.html#actions
-[Delete Session]: https://w3c.github.io/webdriver/webdriver-spec.html#delete-session
 [Element Click]: https://w3c.github.io/webdriver/webdriver-spec.html#element-click
+[Find Element From Shadow Root]: https://w3c.github.io/webdriver/#dfn-find-element-from-shadow-root
+[Find Elements From Shadow Root]: https://w3c.github.io/webdriver/#dfn-find-elements-from-shadow-root
+[Get Computed Label]: https://w3c.github.io/webdriver/#get-computed-label
+[Get Computed Role]: https://w3c.github.io/webdriver/#get-computed-role
 [Get Element Shadow Root]: https://w3c.github.io/webdriver/#get-element-shadow-root
 [Get Timeouts]: https://w3c.github.io/webdriver/webdriver-spec.html#get-timeouts
 [Get Window Rect]: https://w3c.github.io/webdriver/webdriver-spec.html#get-window-rect
