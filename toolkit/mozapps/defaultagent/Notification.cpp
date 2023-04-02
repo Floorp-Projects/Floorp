@@ -76,14 +76,6 @@ static bool GetFollowupNotificationSuppressed() {
       .valueOr(false);
 }
 
-// Note that the "Request Time" represents the time at which a followup was
-// requested, not the time at which it is supposed to be shown.
-static bool SetFollowupNotificationRequestTime(ULONGLONG time) {
-  return !RegistrySetValueQword(IsPrefixed::Unprefixed, L"FollowupRequestTime",
-                                time)
-              .isErr();
-}
-
 // Returns 0 if no value is set.
 static ULONGLONG GetFollowupNotificationRequestTime() {
   return RegistryGetValueQword(IsPrefixed::Unprefixed, L"FollowupRequestTime")
@@ -180,13 +172,13 @@ static bool GetStrings(Strings& strings) {
                        &strings.initialToast.text2);
   stringsReader.AddKey("DefaultBrowserNotificationText",
                        &strings.followupToast.text2);
-  stringsReader.AddKey("DefaultBrowserNotificationRemindMeLater",
+  stringsReader.AddKey("DefaultBrowserNotificationMakeFirefoxDefault",
                        &strings.initialToast.action1);
-  stringsReader.AddKey("DefaultBrowserNotificationDontShowAgain",
+  stringsReader.AddKey("DefaultBrowserNotificationMakeFirefoxDefault",
                        &strings.followupToast.action1);
-  stringsReader.AddKey("DefaultBrowserNotificationMakeFirefoxDefault",
+  stringsReader.AddKey("DefaultBrowserNotificationDontShowAgain",
                        &strings.initialToast.action2);
-  stringsReader.AddKey("DefaultBrowserNotificationMakeFirefoxDefault",
+  stringsReader.AddKey("DefaultBrowserNotificationDontShowAgain",
                        &strings.followupToast.action2);
   int result = stringsReader.Read();
   if (result != OK) {
@@ -290,17 +282,13 @@ static HANDLE gHandlerMutex = INVALID_HANDLE_VALUE;
 class ToastHandler : public WinToastLib::IWinToastHandler {
  private:
   NotificationType mWhichNotification;
-  bool mIsLocalizedNotification;
   HANDLE mEvent;
   const std::wstring mAumiStr;
 
  public:
-  ToastHandler(NotificationType whichNotification, bool isEnglishInstall,
-               HANDLE event, const wchar_t* aumi)
-      : mWhichNotification(whichNotification),
-        mIsLocalizedNotification(!isEnglishInstall),
-        mEvent(event),
-        mAumiStr(aumi) {}
+  ToastHandler(NotificationType whichNotification, HANDLE event,
+               const wchar_t* aumi)
+      : mWhichNotification(whichNotification), mEvent(event), mAumiStr(aumi) {}
 
   void FinishHandler(NotificationActivities& returnData) const {
     SetReturnData(returnData);
@@ -359,34 +347,17 @@ class ToastHandler : public WinToastLib::IWinToastHandler {
     // Override this below
     activitiesPerformed.action = NotificationAction::NoAction;
 
-    // The if conditionals here are a little confusing to read because on the
-    // initial and followup notifications, the "Make Firefox the default" button
-    // is on the right, but on the localized notification, the equivalent button
-    // ("Yes") is on the left side.
-    if ((actionIndex == 0 && !mIsLocalizedNotification) ||
-        (actionIndex == 1 && mIsLocalizedNotification)) {
-      if (mWhichNotification == NotificationType::Initial &&
-          !mIsLocalizedNotification) {
-        // "Remind me later" button
-        activitiesPerformed.action = NotificationAction::RemindMeLater;
-        if (!SetFollowupNotificationRequestTime(GetCurrentTimestamp())) {
-          LOG_ERROR_MESSAGE(L"Unable to schedule followup notification");
-        }
-      } else {
-        // "Don't ask again" button on the followup notification, or "No" on the
-        // localized notification.
-        // Do nothing. As long as we don't call
-        // SetFollowupNotificationRequestTime, there will be no followup
-        // notification.
-        activitiesPerformed.action = NotificationAction::DismissedByButton;
-      }
-    } else if ((actionIndex == 1 && !mIsLocalizedNotification) ||
-               (actionIndex == 0 && mIsLocalizedNotification)) {
+    if (actionIndex == 0) {
       // "Make Firefox the default" button, on both the initial and followup
       // notifications. "Yes" button on the localized notification.
       activitiesPerformed.action = NotificationAction::MakeFirefoxDefaultButton;
 
       SetDefaultBrowserFromNotification(mAumiStr.c_str());
+    } else if (actionIndex == 1) {
+      // Do nothing. As long as we don't call
+      // SetFollowupNotificationRequestTime, there will be no followup
+      // notification.
+      activitiesPerformed.action = NotificationAction::DismissedByButton;
     }
 
     FinishHandler(activitiesPerformed);
@@ -525,7 +496,7 @@ static NotificationActivities ShowNotification(
   toastTemplate.setImagePath(absImagePath.get());
   toastTemplate.setScenario(WinToastTemplate::Scenario::Reminder);
   ToastHandler* handler =
-      new ToastHandler(whichNotification, isEnglishInstall, event.get(), aumi);
+      new ToastHandler(whichNotification, event.get(), aumi);
   INT64 id = WinToast::instance()->showToast(toastTemplate, handler, &error);
   if (id < 0) {
     LOG_ERROR_MESSAGE(WinToast::strerror(error).c_str());
