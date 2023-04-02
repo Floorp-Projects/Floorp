@@ -397,17 +397,14 @@ HRESULT WgcCaptureSession::OnItemClosed(WGC::IGraphicsCaptureItem* sender,
 
   RTC_LOG(LS_INFO) << "Capture target has been closed.";
   item_closed_ = true;
-  is_capture_started_ = false;
 
   RemoveEventHandlers();
 
-  mapped_texture_ = nullptr;
-  session_ = nullptr;
-  frame_pool_ = nullptr;
-  direct3d_device_ = nullptr;
-  item_ = nullptr;
-  d3d11_device_ = nullptr;
-
+  // Do not attempt to free resources in the OnItemClosed handler, as this
+  // causes a race where we try to delete the item that is calling us. Removing
+  // the event handlers and setting `item_closed_` above is sufficient to ensure
+  // that the resources are no longer used, and the next time the capturer tries
+  // to get a frame, we will report a permanent failure and be destroyed.
   return S_OK;
 }
 
