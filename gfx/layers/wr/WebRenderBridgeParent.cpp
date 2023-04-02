@@ -1109,10 +1109,8 @@ bool WebRenderBridgeParent::SetDisplayList(
         LayoutDeviceIntRect(LayoutDeviceIntPoint(), widgetSize);
     aTxn.SetDocumentView(rect);
   }
-  gfx::DeviceColor clearColor(0.f, 0.f, 0.f, 0.f);
-  aTxn.SetDisplayList(clearColor, aWrEpoch,
-                      wr::ToLayoutSize(RoundedToInt(aRect).Size()), mPipelineId,
-                      aDLDesc, dlItems, dlCache, dlSpatialTreeData);
+  aTxn.SetDisplayList(aWrEpoch, mPipelineId, aDLDesc, dlItems, dlCache,
+                      dlSpatialTreeData);
 
   if (aObserveLayersUpdate) {
     aTxn.Notify(

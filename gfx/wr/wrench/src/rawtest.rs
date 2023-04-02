@@ -86,17 +86,13 @@ impl<'a> RawtestHarness<'a> {
     fn submit_dl(
         &mut self,
         epoch: &mut Epoch,
-        layout_size: LayoutSize,
         mut builder: DisplayListBuilder,
         mut txn: Transaction,
     ) {
-        let root_background_color = Some(ColorF::new(1.0, 1.0, 1.0, 1.0));
         txn.use_scene_builder_thread();
 
         txn.set_display_list(
             *epoch,
-            root_background_color,
-            layout_size,
             builder.end(),
         );
         epoch.0 += 1;
@@ -135,8 +131,6 @@ impl<'a> RawtestHarness<'a> {
         // between tiled and non-tiled.
         // The resource cache should be able to handle this without crashing.
 
-        let layout_size = LayoutSize::new(800., 800.);
-
         let mut txn = Transaction::new();
         let img = self.wrench.api.generate_image_key();
 
@@ -163,7 +157,7 @@ impl<'a> RawtestHarness<'a> {
 
         let mut epoch = Epoch(0);
 
-        self.submit_dl(&mut epoch, layout_size, builder, txn);
+        self.submit_dl(&mut epoch, builder, txn);
         self.rx.recv().unwrap();
         self.wrench.render();
 
@@ -189,7 +183,7 @@ impl<'a> RawtestHarness<'a> {
             ColorF::WHITE,
         );
 
-        self.submit_dl(&mut epoch, layout_size, builder, txn);
+        self.submit_dl(&mut epoch, builder, txn);
         self.rx.recv().unwrap();
         self.wrench.render();
 
@@ -215,7 +209,7 @@ impl<'a> RawtestHarness<'a> {
             ColorF::WHITE,
         );
 
-        self.submit_dl(&mut epoch, layout_size, builder, txn);
+        self.submit_dl(&mut epoch, builder, txn);
         self.rx.recv().unwrap();
         self.wrench.render();
 
@@ -227,7 +221,6 @@ impl<'a> RawtestHarness<'a> {
     fn test_tile_decomposition(&mut self) {
         println!("\ttile decomposition...");
         // This exposes a crash in tile decomposition
-        let layout_size = LayoutSize::new(800., 800.);
         let mut txn = Transaction::new();
 
         let blob_img = self.wrench.api.generate_blob_image_key();
@@ -258,7 +251,7 @@ impl<'a> RawtestHarness<'a> {
 
         let mut epoch = Epoch(0);
 
-        self.submit_dl(&mut epoch, layout_size, builder, txn);
+        self.submit_dl(&mut epoch, builder, txn);
 
         self.rx.recv().unwrap();
         self.wrench.render();
@@ -283,7 +276,6 @@ impl<'a> RawtestHarness<'a> {
         );
 
         // This exposes a crash in tile decomposition
-        let layout_size = LayoutSize::new(800., 800.);
         let mut txn = Transaction::new();
 
         let blob_img = self.wrench.api.generate_blob_image_key();
@@ -333,7 +325,7 @@ impl<'a> RawtestHarness<'a> {
 
         let mut epoch = Epoch(0);
 
-        self.submit_dl(&mut epoch, layout_size, builder, txn);
+        self.submit_dl(&mut epoch, builder, txn);
 
         let pixels = self.render_and_get_pixels(window_rect);
 
@@ -370,7 +362,6 @@ impl<'a> RawtestHarness<'a> {
             FramebufferIntPoint::new(0, window_size.height - test_size.height),
             test_size,
         );
-        let layout_size = LayoutSize::new(800.0, 800.0);
         let mut txn = Transaction::new();
 
         let blob_img = self.wrench.api.generate_blob_image_key();
@@ -416,7 +407,7 @@ impl<'a> RawtestHarness<'a> {
         );
         let mut epoch = Epoch(0);
 
-        self.submit_dl(&mut epoch, layout_size, builder, txn);
+        self.submit_dl(&mut epoch, builder, txn);
 
         let pixels = self.render_and_get_pixels(window_rect);
 
@@ -466,7 +457,6 @@ impl<'a> RawtestHarness<'a> {
             FramebufferIntPoint::new(0, window_size.height - test_size.height),
             test_size,
         );
-        let layout_size = LayoutSize::new(800.0, 800.0);
         let mut txn = Transaction::new();
 
         let blob_img = self.wrench.api.generate_blob_image_key();
@@ -513,7 +503,7 @@ impl<'a> RawtestHarness<'a> {
         // Render the first display list. We don't care about the result but we
         // want to make sure the next display list updates an already rendered
         // state.
-        self.submit_dl(&mut epoch, layout_size, builder, txn);
+        self.submit_dl(&mut epoch, builder, txn);
         let _ = self.render_and_get_pixels(window_rect);
 
         // Now render a similar scene with an updated blob visible area.
@@ -555,7 +545,7 @@ impl<'a> RawtestHarness<'a> {
             ColorF::WHITE,
         );
 
-        self.submit_dl(&mut epoch, layout_size, builder, txn);
+        self.submit_dl(&mut epoch, builder, txn);
         let resized_pixels = self.render_and_get_pixels(window_rect);
 
         // Now render the same scene with a new blob image created with the same
@@ -604,7 +594,7 @@ impl<'a> RawtestHarness<'a> {
         );
         let mut epoch = Epoch(0);
 
-        self.submit_dl(&mut epoch, layout_size, builder, txn);
+        self.submit_dl(&mut epoch, builder, txn);
 
         let reference_pixels = self.render_and_get_pixels(window_rect);
 
@@ -629,7 +619,6 @@ impl<'a> RawtestHarness<'a> {
 
         // This exposes a crash in tile decomposition
         let mut txn = Transaction::new();
-        let layout_size = LayoutSize::new(800., 800.);
 
         let blob_img = self.wrench.api.generate_blob_image_key();
         txn.add_blob_image(
@@ -661,7 +650,7 @@ impl<'a> RawtestHarness<'a> {
 
         let mut epoch = Epoch(0);
 
-        self.submit_dl(&mut epoch, layout_size, builder, txn);
+        self.submit_dl(&mut epoch, builder, txn);
 
         let original_pixels = self.render_and_get_pixels(window_rect);
 
@@ -686,7 +675,7 @@ impl<'a> RawtestHarness<'a> {
             ColorF::WHITE,
         );
 
-        self.submit_dl(&mut epoch, layout_size, builder, Transaction::new());
+        self.submit_dl(&mut epoch, builder, Transaction::new());
 
         let _offscreen_pixels = self.render_and_get_pixels(window_rect);
 
@@ -721,7 +710,7 @@ impl<'a> RawtestHarness<'a> {
 
         let mut epoch = Epoch(2);
 
-        self.submit_dl(&mut epoch, layout_size, builder, txn);
+        self.submit_dl(&mut epoch, builder, txn);
 
         let pixels = self.render_and_get_pixels(window_rect);
 
@@ -744,7 +733,6 @@ impl<'a> RawtestHarness<'a> {
             FramebufferIntPoint::new(0, window_size.height - test_size.height),
             test_size,
         );
-        let layout_size = LayoutSize::new(400., 400.);
 
         let mut txn = Transaction::new();
         {
@@ -783,7 +771,7 @@ impl<'a> RawtestHarness<'a> {
 
         let mut epoch = Epoch(0);
 
-        self.submit_dl(&mut epoch, layout_size, builder, txn);
+        self.submit_dl(&mut epoch, builder, txn);
 
         let pixels_first = self.render_and_get_pixels(window_rect);
 
@@ -807,7 +795,7 @@ impl<'a> RawtestHarness<'a> {
         let mut txn = Transaction::new();
         txn.resource_updates.clear();
 
-        self.submit_dl(&mut epoch, layout_size, builder, txn);
+        self.submit_dl(&mut epoch, builder, txn);
 
         let pixels_second = self.render_and_get_pixels(window_rect);
 
@@ -833,7 +821,6 @@ impl<'a> RawtestHarness<'a> {
             point2(0, window_size.height - test_size.height),
             test_size,
         );
-        let layout_size = LayoutSize::new(400., 400.);
 
         let mut txn = Transaction::new();
         let (blob_img, blob_img2) = {
@@ -904,7 +891,7 @@ impl<'a> RawtestHarness<'a> {
 
         let mut epoch = Epoch(0);
 
-        self.submit_dl(&mut epoch, layout_size, builder, txn);
+        self.submit_dl(&mut epoch, builder, txn);
         let _pixels_first = self.render_and_get_pixels(window_rect);
 
         // update and redraw both images
@@ -927,7 +914,7 @@ impl<'a> RawtestHarness<'a> {
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
         builder.begin();
         push_images(&mut builder);
-        self.submit_dl(&mut epoch, layout_size, builder, txn);
+        self.submit_dl(&mut epoch, builder, txn);
         let _pixels_second = self.render_and_get_pixels(window_rect);
 
         // only update the first image
@@ -943,7 +930,7 @@ impl<'a> RawtestHarness<'a> {
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
         builder.begin();
         push_images(&mut builder);
-        self.submit_dl(&mut epoch, layout_size, builder, txn);
+        self.submit_dl(&mut epoch, builder, txn);
         let _pixels_third = self.render_and_get_pixels(window_rect);
 
         // the first image should be requested 3 times
@@ -964,7 +951,6 @@ impl<'a> RawtestHarness<'a> {
             point2(0, window_size.height - test_size.height),
             test_size,
         );
-        let layout_size = LayoutSize::new(400., 400.);
         let mut txn = Transaction::new();
 
         let blob_img = {
@@ -995,7 +981,7 @@ impl<'a> RawtestHarness<'a> {
 
         let mut epoch = Epoch(0);
 
-        self.submit_dl(&mut epoch, layout_size, builder, txn);
+        self.submit_dl(&mut epoch, builder, txn);
         let pixels_first = self.render_and_get_pixels(window_rect);
 
         // draw the blob image a second time after updating it with the same color
@@ -1021,7 +1007,7 @@ impl<'a> RawtestHarness<'a> {
             ColorF::WHITE,
         );
 
-        self.submit_dl(&mut epoch, layout_size, builder, txn);
+        self.submit_dl(&mut epoch, builder, txn);
         let pixels_second = self.render_and_get_pixels(window_rect);
 
         // draw the blob image a third time after updating it with a different color
@@ -1047,7 +1033,7 @@ impl<'a> RawtestHarness<'a> {
             ColorF::WHITE,
         );
 
-        self.submit_dl(&mut epoch, layout_size, builder, txn);
+        self.submit_dl(&mut epoch, builder, txn);
         let pixels_third = self.render_and_get_pixels(window_rect);
 
         assert!(pixels_first != pixels_third);
@@ -1064,7 +1050,6 @@ impl<'a> RawtestHarness<'a> {
             point2(0, window_size.height - test_size.height),
             test_size,
         );
-        let layout_size = LayoutSize::new(400., 400.);
 
         let mut do_test = |should_try_and_fail| {
             let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
@@ -1149,7 +1134,7 @@ impl<'a> RawtestHarness<'a> {
 
             let txn = Transaction::new();
 
-            self.submit_dl(&mut Epoch(0), layout_size, builder, txn);
+            self.submit_dl(&mut Epoch(0), builder, txn);
 
             self.render_and_get_pixels(window_rect)
         };
@@ -1171,7 +1156,6 @@ impl<'a> RawtestHarness<'a> {
             point2(0, window_size.height - test_size.height),
             test_size,
         );
-        let layout_size = LayoutSize::new(400., 400.);
 
         let mut do_test = |shadow_is_red| {
             let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
@@ -1202,7 +1186,7 @@ impl<'a> RawtestHarness<'a> {
             builder.pop_all_shadows();
 
             let txn = Transaction::new();
-            self.submit_dl(&mut Epoch(0), layout_size, builder, txn);
+            self.submit_dl(&mut Epoch(0), builder, txn);
 
             self.render_and_get_pixels(window_rect)
         };
@@ -1251,8 +1235,6 @@ impl<'a> RawtestHarness<'a> {
 
         txn.set_display_list(
             Epoch(0),
-            Some(ColorF::new(1.0, 1.0, 1.0, 1.0)),
-            layout_size,
             builder.end(),
         );
         txn.generate_frame(0, RenderReasons::TESTING);
@@ -1272,8 +1254,6 @@ impl<'a> RawtestHarness<'a> {
         let mut txn = Transaction::new();
         txn.set_display_list(
             Epoch(1),
-            Some(ColorF::new(1.0, 0.0, 0.0, 1.0)),
-            layout_size,
             builder.end(),
         );
         self.wrench.api.send_transaction(self.wrench.document_id, txn);
@@ -1318,8 +1298,6 @@ impl<'a> RawtestHarness<'a> {
         txn.set_root_pipeline(self.wrench.root_pipeline_id);
         txn.set_display_list(
             Epoch(1),
-            Some(ColorF::new(1.0, 0.0, 0.0, 1.0)),
-            layout_size,
             builder.end(),
         );
         txn.generate_frame(0, RenderReasons::TESTING);
@@ -1400,7 +1378,7 @@ impl<'a> RawtestHarness<'a> {
 
         let mut epoch = Epoch(0);
         let txn = Transaction::new();
-        self.submit_dl(&mut epoch, layout_size, builder, txn);
+        self.submit_dl(&mut epoch, builder, txn);
 
         // We render to ensure that the hit tester is up to date with the current scene.
         self.rx.recv().unwrap();
@@ -1459,13 +1437,12 @@ impl<'a> RawtestHarness<'a> {
 
         self.wrench.api.send_message(ApiMsg::DebugCommand(DebugCommand::ClearCaches(ClearCache::all())));
 
-        let layout_size = LayoutSize::new(400., 400.);
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id);
         builder.begin();
 
         let txn = Transaction::new();
         let mut epoch = Epoch(0);
-        self.submit_dl(&mut epoch, layout_size, builder, txn);
+        self.submit_dl(&mut epoch, builder, txn);
 
         self.rx.recv().unwrap();
         self.wrench.render();

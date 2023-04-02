@@ -88,7 +88,7 @@ use euclid::approxeq::ApproxEq;
 use std::{f32, mem, usize};
 use std::collections::vec_deque::VecDeque;
 use std::sync::Arc;
-use crate::util::{VecHelper};
+use crate::util::{VecHelper, MaxRect};
 use crate::filterdata::{SFilterDataComponent, SFilterData, SFilterDataKey};
 
 /// Offsets primitives (and clips) by the external scroll offset
@@ -544,11 +544,6 @@ impl<'a> SceneBuilder<'a> {
         // We checked that the root pipeline is available on the render backend.
         let root_pipeline_id = scene.root_pipeline_id.unwrap();
         let root_pipeline = scene.pipelines.get(&root_pipeline_id).unwrap();
-
-        let background_color = root_pipeline
-            .background_color
-            .and_then(|color| if color.a > 0.0 { Some(color) } else { None });
-
         let root_reference_frame_index = spatial_tree.root_reference_frame_index();
 
         // During scene building, we assume a 1:1 picture -> raster pixel scale
@@ -589,7 +584,10 @@ impl<'a> SceneBuilder<'a> {
             clip_tree_builder: ClipTreeBuilder::new(),
         };
 
-        builder.build_all(&root_pipeline);
+        builder.build_all(
+            root_pipeline_id,
+            &root_pipeline,
+        );
 
         // Construct the picture cache primitive instance(s) from the tile cache builder
         let (tile_cache_config, tile_cache_pictures) = builder.tile_cache_builder.build(
@@ -616,7 +614,6 @@ impl<'a> SceneBuilder<'a> {
             has_root_pipeline: scene.has_root_pipeline(),
             pipeline_epochs: scene.pipeline_epochs.clone(),
             output_rect: view.device_rect.size().into(),
-            background_color,
             hit_testing_scene: Arc::new(builder.hit_testing_scene),
             prim_store: builder.prim_store,
             clip_store: builder.clip_store,
@@ -757,7 +754,11 @@ impl<'a> SceneBuilder<'a> {
         });
     }
 
-    fn build_all(&mut self, root_pipeline: &ScenePipeline) {
+    fn build_all(
+        &mut self,
+        root_pipeline_id: PipelineId,
+        root_pipeline: &ScenePipeline,
+    ) {
         enum ContextKind<'a> {
             Root,
             StackingContext {
@@ -775,21 +776,20 @@ impl<'a> SceneBuilder<'a> {
 
         self.id_to_index_mapper_stack.push(NodeIdToIndexMapper::default());
 
-        let instance_id = self.get_next_instance_id_for_pipeline(root_pipeline.pipeline_id);
+        let instance_id = self.get_next_instance_id_for_pipeline(root_pipeline_id);
 
         self.push_root(
-            root_pipeline.pipeline_id,
-            &root_pipeline.viewport_size,
+            root_pipeline_id,
             instance_id,
         );
         self.build_spatial_tree_for_display_list(
             &root_pipeline.display_list.display_list,
-            root_pipeline.pipeline_id,
+            root_pipeline_id,
             instance_id,
         );
 
         let mut stack = vec![BuildContext {
-            pipeline_id: root_pipeline.pipeline_id,
+            pipeline_id: root_pipeline_id,
             kind: ContextKind::Root,
         }];
         let mut traversal = root_pipeline.display_list.iter();
@@ -2554,7 +2554,6 @@ impl<'a> SceneBuilder<'a> {
     fn push_root(
         &mut self,
         pipeline_id: PipelineId,
-        viewport_size: &LayoutSize,
         instance: PipelineInstanceId,
     ) {
         let spatial_node_index = self.push_reference_frame(
@@ -2572,10 +2571,7 @@ impl<'a> SceneBuilder<'a> {
             SpatialNodeUid::root_reference_frame(pipeline_id, instance),
         );
 
-        let viewport_rect = self.snap_rect(
-            &LayoutRect::from_size(*viewport_size),
-            spatial_node_index,
-        );
+        let viewport_rect = LayoutRect::max_rect();
 
         self.add_scroll_frame(
             SpatialId::root_scroll_node(pipeline_id),

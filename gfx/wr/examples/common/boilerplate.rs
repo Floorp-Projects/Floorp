@@ -193,7 +193,6 @@ pub fn main_wrapper<E: Example>(
 
     let epoch = Epoch(0);
     let pipeline_id = PipelineId(0, 0);
-    let layout_size = device_size.to_f32() / euclid::Scale::new(device_pixel_ratio);
     let mut builder = DisplayListBuilder::new(pipeline_id);
     let mut txn = Transaction::new();
     builder.begin();
@@ -208,8 +207,6 @@ pub fn main_wrapper<E: Example>(
     );
     txn.set_display_list(
         epoch,
-        Some(ColorF::new(0.3, 0.0, 0.0, 1.0)),
-        layout_size,
         builder.end(),
     );
     txn.set_root_pipeline(pipeline_id);
@@ -307,8 +304,6 @@ pub fn main_wrapper<E: Example>(
             );
             txn.set_display_list(
                 epoch,
-                Some(ColorF::new(0.3, 0.0, 0.0, 1.0)),
-                layout_size,
                 builder.end(),
             );
             txn.generate_frame(0, RenderReasons::empty());

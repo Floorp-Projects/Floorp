@@ -112,9 +112,7 @@ class TransactionBuilder final {
 
   void RemovePipeline(PipelineId aPipelineId);
 
-  void SetDisplayList(const gfx::DeviceColor& aBgColor, Epoch aEpoch,
-                      const wr::LayoutSize& aViewportSize,
-                      wr::WrPipelineId pipeline_id,
+  void SetDisplayList(Epoch aEpoch, wr::WrPipelineId pipeline_id,
                       wr::BuiltDisplayListDescriptor dl_descriptor,
                       wr::Vec<uint8_t>& dl_items_data,
                       wr::Vec<uint8_t>& dl_cache_data,

@@ -473,9 +473,7 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
 
   wr::BuiltDisplayList dl;
   aPipeline->mDLBuilder.End(dl);
-  aSceneBuilderTxn.SetDisplayList(gfx::DeviceColor(0.f, 0.f, 0.f, 0.f), aEpoch,
-                                  wr::ToLayoutSize(aPipeline->mScBounds.Size()),
-                                  aPipelineId, dl.dl_desc, dl.dl_items,
+  aSceneBuilderTxn.SetDisplayList(aEpoch, aPipelineId, dl.dl_desc, dl.dl_items,
                                   dl.dl_cache, dl.dl_spatial_tree);
 }
 
@@ -529,9 +527,8 @@ void AsyncImagePipelineManager::SetEmptyDisplayList(
 
   wr::BuiltDisplayList dl;
   builder.End(dl);
-  txn.SetDisplayList(gfx::DeviceColor(0.f, 0.f, 0.f, 0.f), epoch,
-                     wr::ToLayoutSize(pipeline->mScBounds.Size()), aPipelineId,
-                     dl.dl_desc, dl.dl_items, dl.dl_cache, dl.dl_spatial_tree);
+  txn.SetDisplayList(epoch, aPipelineId, dl.dl_desc, dl.dl_items, dl.dl_cache,
+                     dl.dl_spatial_tree);
 }
 
 void AsyncImagePipelineManager::HoldExternalImage(
