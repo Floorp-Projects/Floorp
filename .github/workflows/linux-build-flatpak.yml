@@ -130,7 +130,7 @@ jobs:
         sleep 5
         /usr/bin/openbox-session &
         sleep 5
-        floorp -foreground -height 1080 -width 1920 &
+        ./lib/floorp/floorp -foreground -height 1080 -width 1920 &
         sleep 5
         pkill floorp
         ./lib/floorp/floorp -foreground about:newtab &
