@@ -119,6 +119,14 @@ class UnwrappedSequenceNumber {
     return value_ <= other.value_;
   }
 
+  // Const accessors for underlying value.
+  constexpr const int64_t* operator->() const { return &value_; }
+  constexpr const int64_t& operator*() const& { return value_; }
+  constexpr const int64_t&& operator*() const&& { return std::move(value_); }
+  constexpr const int64_t& value() const& { return value_; }
+  constexpr const int64_t&& value() const&& { return std::move(value_); }
+  constexpr explicit operator const int64_t&() const& { return value_; }
+
   // Increments the value.
   void Increment() { ++value_; }
 
