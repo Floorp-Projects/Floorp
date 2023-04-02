@@ -538,8 +538,6 @@ impl SceneBuilderThread {
                 SceneMsg::SetDisplayList {
                     epoch,
                     pipeline_id,
-                    background,
-                    viewport_size,
                     display_list,
                 } => {
                     let (builder_start_time_ns, builder_end_time_ns, send_time_ns) =
@@ -568,8 +566,6 @@ impl SceneBuilderThread {
                         pipeline_id,
                         epoch,
                         display_list,
-                        background,
-                        viewport_size,
                     );
                 }
                 SceneMsg::SetRootPipeline(pipeline_id) => {

@@ -276,8 +276,6 @@ impl Window {
 
         txn.set_display_list(
             self.epoch,
-            None,
-            layout_size,
             builder.end(),
         );
         txn.set_root_pipeline(self.pipeline_id);

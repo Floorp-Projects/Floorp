@@ -1895,16 +1895,12 @@ pub extern "C" fn wr_transaction_remove_pipeline(txn: &mut Transaction, pipeline
 pub extern "C" fn wr_transaction_set_display_list(
     txn: &mut Transaction,
     epoch: WrEpoch,
-    background: ColorF,
-    viewport_size: LayoutSize,
     pipeline_id: WrPipelineId,
     dl_descriptor: BuiltDisplayListDescriptor,
     dl_items_data: &mut WrVecU8,
     dl_cache_data: &mut WrVecU8,
     dl_spatial_tree_data: &mut WrVecU8,
 ) {
-    let color = if background.a == 0.0 { None } else { Some(background) };
-
     let payload = DisplayListPayload {
         items_data: dl_items_data.flush_into_vec(),
         cache_data: dl_cache_data.flush_into_vec(),
@@ -1913,7 +1909,7 @@ pub extern "C" fn wr_transaction_set_display_list(
 
     let dl = BuiltDisplayList::from_data(payload, dl_descriptor);
 
-    txn.set_display_list(epoch, color, viewport_size, (pipeline_id, dl));
+    txn.set_display_list(epoch, (pipeline_id, dl));
 }
 
 #[no_mangle]
@@ -2200,7 +2196,7 @@ pub unsafe extern "C" fn wr_transaction_clear_display_list(
     let mut frame_builder = WebRenderFrameBuilder::new(pipeline_id);
     frame_builder.dl_builder.begin();
 
-    txn.set_display_list(epoch, None, LayoutSize::new(0.0, 0.0), frame_builder.dl_builder.end());
+    txn.set_display_list(epoch, frame_builder.dl_builder.end());
 }
 
 #[no_mangle]

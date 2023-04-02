@@ -173,9 +173,6 @@ impl SceneProperties {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Clone)]
 pub struct ScenePipeline {
-    pub pipeline_id: PipelineId,
-    pub viewport_size: LayoutSize,
-    pub background_color: Option<ColorF>,
     pub display_list: DisplayListWithCache,
 }
 
@@ -207,8 +204,6 @@ impl Scene {
         pipeline_id: PipelineId,
         epoch: Epoch,
         display_list: BuiltDisplayList,
-        background_color: Option<ColorF>,
-        viewport_size: LayoutSize,
     ) {
         // Adds a cache to the given display list. If this pipeline already had
         // a display list before, that display list is updated and used instead.
@@ -221,9 +216,6 @@ impl Scene {
         };
 
         let new_pipeline = ScenePipeline {
-            pipeline_id,
-            viewport_size,
-            background_color,
             display_list,
         };
 
@@ -281,7 +273,6 @@ pub struct BuiltScene {
     pub has_root_pipeline: bool,
     pub pipeline_epochs: FastHashMap<PipelineId, Epoch>,
     pub output_rect: DeviceIntRect,
-    pub background_color: Option<ColorF>,
     pub prim_store: PrimitiveStore,
     pub clip_store: ClipStore,
     pub config: FrameBuilderConfig,
@@ -301,7 +292,6 @@ impl BuiltScene {
             has_root_pipeline: false,
             pipeline_epochs: FastHashMap::default(),
             output_rect: DeviceIntRect::zero(),
-            background_color: None,
             prim_store: PrimitiveStore::new(&PrimitiveStoreStats::empty()),
             clip_store: ClipStore::new(),
             hit_testing_scene: Arc::new(HitTestingScene::new(&HitTestingSceneStats::empty())),
