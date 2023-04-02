@@ -6,5 +6,5 @@
 const EXPORTED_SYMBOLS = ["EscapeShell"];
 
 function EscapeShell(text) {
-    return `"${text.replaceAll("\\", "\\\\").replaceAll('"', '\\"').replaceAll("`", "\\`").replaceAll("$", "\\$")}"`;
+    return `'${text.replaceAll("'", "'\\''")}'`;
 }
