@@ -421,12 +421,6 @@ class SVGUtils final {
                                  const gfxRect& aBBox,
                                  const dom::UserSpaceMetrics& aMetrics);
 
-  /**
-   * Find the first frame, starting with aStartFrame and going up its
-   * parent chain, that is not an svgAFrame.
-   */
-  static nsIFrame* GetFirstNonAAncestorFrame(nsIFrame* aStartFrame);
-
   static bool OuterSVGIsCallingReflowSVG(nsIFrame* aFrame);
   static bool AnyOuterSVGIsCallingReflowSVG(nsIFrame* aFrame);
 

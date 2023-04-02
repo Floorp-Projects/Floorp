@@ -1217,16 +1217,6 @@ gfxMatrix SVGUtils::AdjustMatrixForUnits(const gfxMatrix& aMatrix,
   return aMatrix;
 }
 
-nsIFrame* SVGUtils::GetFirstNonAAncestorFrame(nsIFrame* aStartFrame) {
-  for (nsIFrame* ancestorFrame = aStartFrame; ancestorFrame;
-       ancestorFrame = ancestorFrame->GetParent()) {
-    if (!ancestorFrame->IsSVGAFrame()) {
-      return ancestorFrame;
-    }
-  }
-  return nullptr;
-}
-
 bool SVGUtils::GetNonScalingStrokeTransform(const nsIFrame* aFrame,
                                             gfxMatrix* aUserToOuterSVG) {
   if (aFrame->GetContent()->IsText()) {
