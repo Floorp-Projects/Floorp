@@ -3338,8 +3338,7 @@ const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindTextData(const Text& aTextContent,
                                     nsIFrame* aParentFrame) {
   if (aParentFrame && IsFrameForSVG(aParentFrame)) {
-    nsIFrame* ancestorFrame = SVGUtils::GetFirstNonAAncestorFrame(aParentFrame);
-    if (!ancestorFrame || !SVGUtils::IsInSVGTextSubtree(ancestorFrame)) {
+    if (!SVGUtils::IsInSVGTextSubtree(aParentFrame)) {
       return nullptr;
     }
 
