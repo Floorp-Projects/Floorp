@@ -85,6 +85,7 @@ jobs:
 
     - name: Package 📦
       run: |
+        export DISPLAY=:2
         export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ja-KA ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
         for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
         AB_CD=multi ./mach package
@@ -132,7 +133,7 @@ jobs:
         floorp -foreground -height 1080 -width 1920 &
         sleep 5
         pkill floorp
-        ./bin/floorp -foreground about:newtab &
+        ./lib/floorp/floorp -foreground about:newtab &
         sleep 10
         import -window root -crop 1920x1080+0+0 $(pwd)/flathub-screenshot.png
         mkdir publish
