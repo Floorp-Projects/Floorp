@@ -88,7 +88,7 @@ bool nsTextPaintStyle::EnsureSufficientContrast(nscolor* aForeColor,
 }
 
 nscolor nsTextPaintStyle::GetTextColor() {
-  if (SVGUtils::IsInSVGTextSubtree(mFrame)) {
+  if (mFrame->IsInSVGTextSubtree()) {
     if (!mResolveColors) {
       return NS_SAME_AS_FOREGROUND_COLOR;
     }
@@ -559,14 +559,14 @@ nscolor nsTextPaintStyle::GetResolvedForeColor(nscolor aColor,
 }
 
 nscolor nsTextPaintStyle::GetWebkitTextStrokeColor() {
-  if (mozilla::SVGUtils::IsInSVGTextSubtree(mFrame)) {
+  if (mFrame->IsInSVGTextSubtree()) {
     return 0;
   }
   return mFrame->StyleText()->mWebkitTextStrokeColor.CalcColor(mFrame);
 }
 
 float nsTextPaintStyle::GetWebkitTextStrokeWidth() {
-  if (mozilla::SVGUtils::IsInSVGTextSubtree(mFrame)) {
+  if (mFrame->IsInSVGTextSubtree()) {
     return 0.0f;
   }
   nscoord coord = mFrame->StyleText()->mWebkitTextStrokeWidth;

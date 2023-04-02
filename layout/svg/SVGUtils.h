@@ -588,11 +588,6 @@ class SVGUtils final {
    */
   static gfxMatrix GetCSSPxToDevPxMatrix(const nsIFrame* aNonSVGFrame);
 
-  static bool IsInSVGTextSubtree(const nsIFrame* aFrame) {
-    // Returns true if the frame is an SVGTextFrame or one of its descendants.
-    return aFrame->HasAnyStateBits(NS_FRAME_IS_SVG_TEXT);
-  }
-
   /**
    * It is a replacement of
    * SVGElement::PrependLocalTransformsTo(eUserSpaceToParent).

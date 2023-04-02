@@ -119,7 +119,6 @@
 #include "mozilla/dom/SVGFilters.h"
 #include "mozilla/dom/SVGTests.h"
 #include "mozilla/SVGGradientFrame.h"
-#include "mozilla/SVGUtils.h"
 
 #include "nsRefreshDriver.h"
 #include "nsTextNode.h"
@@ -286,8 +285,7 @@ static inline bool IsDisplayContents(const nsIContent* aContent) {
  * frame being used for SVG text.
  */
 static bool IsFrameForSVG(const nsIFrame* aFrame) {
-  return aFrame->IsFrameOfType(nsIFrame::eSVG) ||
-         SVGUtils::IsInSVGTextSubtree(aFrame);
+  return aFrame->IsFrameOfType(nsIFrame::eSVG) || aFrame->IsInSVGTextSubtree();
 }
 
 static bool IsLastContinuationForColumnContent(const nsIFrame* aFrame) {
@@ -935,8 +933,7 @@ nsContainerFrame* nsFrameConstructorState::GetGeometricParent(
   // XXXbz couldn't we just force position to "static" on roots and
   // float to "none"?  That's OK per CSS 2.1, as far as I can tell.
 
-  if (aContentParentFrame &&
-      SVGUtils::IsInSVGTextSubtree(aContentParentFrame)) {
+  if (aContentParentFrame && aContentParentFrame->IsInSVGTextSubtree()) {
     return aContentParentFrame;
   }
 
@@ -3338,7 +3335,7 @@ const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindTextData(const Text& aTextContent,
                                     nsIFrame* aParentFrame) {
   if (aParentFrame && IsFrameForSVG(aParentFrame)) {
-    if (!SVGUtils::IsInSVGTextSubtree(aParentFrame)) {
+    if (!aParentFrame->IsInSVGTextSubtree()) {
       return nullptr;
     }
 
@@ -4578,7 +4575,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructNonScrollableBlock(
   if ((aDisplay->IsAbsolutelyPositionedStyle() || aDisplay->IsFloatingStyle() ||
        aDisplay->DisplayInside() == StyleDisplayInside::FlowRoot ||
        clipPaginatedOverflow) &&
-      !SVGUtils::IsInSVGTextSubtree(aParentFrame)) {
+      !aParentFrame->IsInSVGTextSubtree()) {
     flags = NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS;
     if (clipPaginatedOverflow) {
       flags |= NS_BLOCK_CLIP_PAGINATED_OVERFLOW;
@@ -5151,7 +5148,7 @@ void nsCSSFrameConstructor::AddFrameConstructionItems(
   RefPtr<ComputedStyle> computedStyle = ResolveComputedStyle(aContent);
   auto flags = aFlags + ItemFlag::AllowPageBreak;
   if (parentFrame) {
-    if (SVGUtils::IsInSVGTextSubtree(parentFrame)) {
+    if (parentFrame->IsInSVGTextSubtree()) {
       flags += ItemFlag::IsWithinSVGText;
     }
     if (parentFrame->IsBlockFrame() && parentFrame->GetParent() &&
@@ -10134,8 +10131,7 @@ void nsCSSFrameConstructor::CreateLetterFrame(
     // Create the right type of first-letter frame
     const nsStyleDisplay* display = sc->StyleDisplay();
     nsFirstLetterFrame* letterFrame;
-    if (display->IsFloatingStyle() &&
-        !SVGUtils::IsInSVGTextSubtree(aParentFrame)) {
+    if (display->IsFloatingStyle() && !aParentFrame->IsInSVGTextSubtree()) {
       // Make a floating first-letter frame
       letterFrame = CreateFloatingLetterFrame(state, aTextContent, textFrame,
                                               aParentFrame, parentComputedStyle,

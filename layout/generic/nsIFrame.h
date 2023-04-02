@@ -4514,6 +4514,13 @@ class nsIFrame : public nsQueryFrame {
   }
 
   /**
+   * Returns true if the frame is an SVGTextFrame or one of its descendants.
+   */
+  bool IsInSVGTextSubtree() const {
+    return HasAnyStateBits(NS_FRAME_IS_SVG_TEXT);
+  }
+
+  /**
    * Return whether this frame keeps track of overflow areas. (Frames for
    * non-display SVG elements -- e.g. <clipPath> -- do not maintain overflow
    * areas, because they're never painted.)

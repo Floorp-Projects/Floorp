@@ -494,9 +494,9 @@ void SVGTextPathObserver::OnRenderingChange() {
     return;
   }
 
-  MOZ_ASSERT(frame->IsFrameOfType(nsIFrame::eSVG) ||
-                 SVGUtils::IsInSVGTextSubtree(frame),
-             "SVG frame expected");
+  MOZ_ASSERT(
+      frame->IsFrameOfType(nsIFrame::eSVG) || frame->IsInSVGTextSubtree(),
+      "SVG frame expected");
 
   MOZ_ASSERT(frame->GetContent()->IsSVGElement(nsGkAtoms::textPath),
              "expected frame for a <textPath> element");
