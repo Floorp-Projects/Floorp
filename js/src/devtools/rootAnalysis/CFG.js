@@ -908,39 +908,22 @@ function basicBlockEatsVariable(variable, body, startpoint)
     return false;
 }
 
-var PROP_REFCNT          = 1 << 0;
-var PROP_SHARED_PTR_DTOR = 1 << 1;
+var PROP_REFCNT = 1 << 0;
 
 function getCalleeProperties(calleeName) {
     let props = 0;
 
     if (isRefcountedDtor(calleeName)) {
-        props |= PROP_REFCNT;
-    }
-    if (calleeName.includes("~shared_ptr()")) {
-        props |= PROP_SHARED_PTR_DTOR;
+        props = props | PROP_REFCNT;
     }
     return props;
 }
 
-// Basic C++ ABI mangling: prefix an identifier with its length, in decimal.
-function mangle(name) {
-    return name.length + name;
-}
-
-function synthesizeDestructorName(className) {
-    const parts = className.split("::");
-    const mangled_dtor = "_ZN" + parts.map(p => mangle(p)).join("") + "D2Ev";
-    const pretty_dtor = `void ${className}::~${parts.at(-1)}()`;
-    return mangled_dtor + "$" + pretty_dtor;
-}
-
 function getCallEdgeProperties(body, edge, calleeName, functionBodies) {
     let attrs = 0;
-    let extraCalls = [];
 
     if (edge.Kind !== "Call") {
-        return { attrs, extraCalls };
+        return { attrs };
     }
 
     const props = getCalleeProperties(calleeName);
@@ -955,19 +938,8 @@ function getCallEdgeProperties(body, edge, calleeName, functionBodies) {
         }
     }
 
-    if (props & PROP_SHARED_PTR_DTOR) {
-        const m = calleeName.match(/shared_ptr<(.*?)>::~shared_ptr()/);
-        assert(m);
-        const className = m[1];
-        attrs |= ATTR_REPLACED;
-        extraCalls.push({
-            attrs: ATTR_SYNTHETIC,
-            name: synthesizeDestructorName(className),
-        });
-    }
-
     if ((props & PROP_REFCNT) == 0) {
-        return { attrs, extraCalls };
+        return { attrs };
     }
 
     let callee = edge.Exp[0];
@@ -978,7 +950,7 @@ function getCallEdgeProperties(body, edge, calleeName, functionBodies) {
     const instance = edge.PEdgeCallInstance.Exp;
     if (instance.Kind !== "Var") {
         // TODO: handle field destructors
-        return { attrs, extraCalls };
+        return { attrs };
     }
 
     // Test whether the dtor call is dominated by operations on the variable
@@ -1034,7 +1006,7 @@ function getCallEdgeProperties(body, edge, calleeName, functionBodies) {
     if (edgeIsNonReleasingDtor) {
         attrs |= ATTR_GC_SUPPRESSED | ATTR_NONRELEASING;
     }
-    return { attrs, extraCalls };
+    return { attrs };
 }
 
 // gcc uses something like "__dt_del " for virtual destructors that it
