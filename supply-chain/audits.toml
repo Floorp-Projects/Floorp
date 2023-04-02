@@ -33,6 +33,14 @@ start = "2022-08-04"
 end = "2024-03-09"
 notes = "This code contains two cryptographic back ends.  No unsafe code is contained if the Rust `hpke` crate is used (the `rust-hpke` feature).  Using NSS (the `nss` feature) involves extensive use of bindings to the native code provided by NSS.  This interface uses wrappers that attempt to add safety to a fundamentally very dangerous library, but those wrappers have only been validated for use following the needs of this crate."
 
+[[wildcard-audits.webdriver]]
+who = "Henrik Skupin <mail@hskupin.info>"
+criteria = "safe-to-deploy"
+user-id = 22262
+start = "2020-11-03"
+end = "2024-03-31"
+notes = "Maintained by the DevTools team at Mozilla and has no unsafe code."
+
 [[audits.aa-stroke]]
 who = "Lee Salzman <lsalzman@mozilla.com>"
 criteria = "safe-to-deploy"
@@ -2825,22 +2833,6 @@ delta = "46.0.0 -> 47.0.0"
 who = "Ryan Hunt <rhunt@eqrion.net>"
 criteria = "safe-to-deploy"
 delta = "48.0.0 -> 49.0.0"
-
-[[audits.webdriver]]
-who = "Henrik Skupin <mail@hskupin.info>"
-criteria = "safe-to-deploy"
-version = "0.46.0"
-notes = "Maintained by the DevTools team at Mozilla and has no unsafe code."
-
-[[audits.webdriver]]
-who = "Henrik Skupin <mail@hskupin.info>"
-criteria = "safe-to-deploy"
-delta = "0.46.0 -> 0.47.0"
-
-[[audits.webdriver]]
-who = "Henrik Skupin <mail@hskupin.info>"
-criteria = "safe-to-deploy"
-delta = "0.47.0 -> 0.47.1"
 
 [[audits.webrtc-sdp]]
 who = "Byron Campen <docfaraday@gmail.com>"
