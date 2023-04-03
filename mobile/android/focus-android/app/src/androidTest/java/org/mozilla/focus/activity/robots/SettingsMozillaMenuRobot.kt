@@ -35,6 +35,8 @@ class SettingsMozillaMenuRobot {
         helpPageLink.check(matches(isDisplayed()))
         yourRightsLink.check(matches(isDisplayed()))
         privacyNoticeLink.check(matches(isDisplayed()))
+        licenseInfo.check(matches(isDisplayed()))
+        librariesUsedLink.check(matches(isDisplayed()))
     }
 
     fun verifyVersionNumbers() {
@@ -67,6 +69,11 @@ class SettingsMozillaMenuRobot {
         }
     }
 
+    fun verifyLibrariesUsedTitle() {
+        librariesUsedTitle
+            .check(matches(isDisplayed()))
+    }
+
     class Transition {
         fun openAboutPage(interact: SettingsMozillaMenuRobot.() -> Unit): Transition {
             aboutFocusPageLink
@@ -90,6 +97,24 @@ class SettingsMozillaMenuRobot {
                 .perform(click())
 
             BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
+        fun openLicenseInformation(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            licenseInfo
+                .check(matches(isDisplayed()))
+                .perform(click())
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
+        fun openLibrariesUsedPage(interact: SettingsMozillaMenuRobot.() -> Unit): BrowserRobot.Transition {
+            librariesUsedLink
+                .check(matches(isDisplayed()))
+                .perform(click())
+
+            SettingsMozillaMenuRobot().interact()
             return BrowserRobot.Transition()
         }
 
@@ -147,3 +172,16 @@ private val privacyNoticeLink =
             ),
         ),
     )
+
+private val licenseInfo =
+    onView(
+        allOf(
+            withText("Licensing information"),
+            withParent(
+                hasSibling(withId(R.id.icon_frame)),
+            ),
+        ),
+    )
+
+private val librariesUsedLink = onView(withText("Libraries that we use"))
+private val librariesUsedTitle = onView(withText("$appName | OSS Libraries"))

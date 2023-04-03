@@ -38,6 +38,8 @@
     <string name="pref_key_help" translatable="false"><xliff:g id="preference_key">pref_help</xliff:g></string>
     <string name="pref_key_rights" translatable="false"><xliff:g id="preference_key">pref_rights</xliff:g></string>
     <string name="pref_key_privacy_notice" translatable="false"><xliff:g id="preference_key">pref_privacy_notice</xliff:g></string>
+    <string name="pref_key_licensing_info" translatable="false"><xliff:g id="preference_key">pref_licensing_info</xliff:g></string>
+    <string name="pref_key_libraries_we_use" translatable="false"><xliff:g id="preference_key">pref_libraries_we_use</xliff:g></string>
 
     <string name="pref_key_locale" translatable="false"><xliff:g id="preference_key">pref_locale</xliff:g></string>
     <string name="pref_in_app_review_openings" translatable="false"><xliff:g id="preference_key">pref_in_app_review_openings</xliff:g></string>

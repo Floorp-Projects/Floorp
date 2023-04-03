@@ -6,6 +6,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-parcelize'
 apply plugin: 'jacoco'
+apply plugin: 'com.google.android.gms.oss-licenses-plugin'
 apply from: "$project.rootDir/tools/gradle/versionCode.gradle"
 
 import com.android.build.OutputFile
@@ -282,6 +283,7 @@ dependencies {
     implementation project(':support-utils')
     implementation project(':support-rusthttp')
     implementation project(':support-rustlog')
+    implementation project(':support-license')
 
     implementation project(':ui-autocomplete')
     implementation project(':ui-colors')

@@ -55,6 +55,7 @@ projects:
     - support-base
     - support-images
     - support-ktx
+    - support-license
     - support-locale
     - support-rusthttp
     - support-rustlog

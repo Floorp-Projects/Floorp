@@ -103,6 +103,30 @@ class MozillaSupportPagesTest {
 
     @SmokeTest
     @Test
+    fun openLibrariesThatWeUse() {
+        homeScreen {
+        }.openMainMenu {
+        }.openSettings {
+        }.openMozillaSettingsMenu {
+        }.openLibrariesUsedPage {
+            verifyLibrariesUsedTitle()
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun openAboutLicenses() {
+        homeScreen {
+        }.openMainMenu {
+        }.openSettings {
+        }.openMozillaSettingsMenu {
+        }.openLicenseInformation {
+            verifyPageURL("about:license")
+        }
+    }
+
+    @SmokeTest
+    @Test
     fun openPrivacyNoticeTest() {
         homeScreen {
         }.openMainMenu {

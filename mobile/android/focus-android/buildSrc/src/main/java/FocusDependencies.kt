@@ -64,6 +64,7 @@ object FocusVersions {
 
     object ThirdParty {
         const val leakcanary = "2.10"
+        const val osslicenses_plugin = "0.10.4"
         const val sentry = "6.15.0"
     }
 
@@ -117,6 +118,7 @@ object FocusDependencies {
 
     const val adjust = "com.adjust.sdk:adjust-android:${FocusVersions.Adjust.adjust}"
     const val install_referrer = "com.android.installreferrer:installreferrer:${FocusVersions.Adjust.install_referrer}"
+    const val osslicenses_plugin = "com.google.android.gms:oss-licenses-plugin:${FocusVersions.ThirdParty.osslicenses_plugin}"
 
     const val androidx_junit_ktx = "androidx.test.ext:junit-ktx:${FocusVersions.Testing.androidx_ext_junit}"
     const val androidx_orchestrator = "androidx.test:orchestrator:${FocusVersions.Testing.androidx_orchestrator}"

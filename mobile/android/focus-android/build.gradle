@@ -18,6 +18,7 @@ buildscript {
     dependencies {
         classpath FocusDependencies.android_gradle_plugin
         classpath FocusDependencies.kotlin_gradle_plugin
+        classpath FocusDependencies.osslicenses_plugin
         classpath "org.mozilla.telemetry:glean-gradle-plugin:${Versions.mozilla_glean}"
         classpath "org.mozilla.appservices:tooling-nimbus-gradle:${Versions.mozilla_appservices}"
 

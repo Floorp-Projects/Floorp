@@ -16,6 +16,9 @@ permalink: /changelog/
 * **concept-sync**, **service-firefox-accounts**
   * Removed unused `AccountSharing` from sync and accounts.
 
+* **support-license**
+  * 🆕 New component to display generated license information.
+
 # 112.0.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v111...releases_v112)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v112/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)

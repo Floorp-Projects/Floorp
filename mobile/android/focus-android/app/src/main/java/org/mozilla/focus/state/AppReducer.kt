@@ -302,6 +302,7 @@ private fun navigateUp(state: AppState, action: AppAction.NavigateUp): AppState 
             page = Screen.Settings.Page.SearchAutocompleteList,
         )
         Screen.Settings.Page.About -> Screen.Settings(page = Screen.Settings.Page.Mozilla)
+        Screen.Settings.Page.Licenses -> Screen.Settings(page = Screen.Settings.Page.Mozilla)
         Screen.Settings.Page.Locale -> Screen.Settings(page = Screen.Settings.Page.General)
         Screen.Settings.Page.CookieBanner -> Screen.Settings(page = Screen.Settings.Page.Privacy)
     }

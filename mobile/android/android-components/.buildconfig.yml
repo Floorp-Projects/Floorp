@@ -1964,6 +1964,12 @@ projects:
     - support-utils
     - tooling-lint
     - ui-icons
+  support-license:
+    description: A component to help display licensing agreements.
+    path: components/support/license
+    publish: true
+    upstream_dependencies:
+    - tooling-lint
   support-locale:
     description: A component to allow apps to change the system defined language by
       their custom one

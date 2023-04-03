@@ -102,6 +102,7 @@ sealed class Screen {
             Advanced,
             Mozilla,
             About,
+            Licenses,
             Locale,
 
             PrivacyExceptions,

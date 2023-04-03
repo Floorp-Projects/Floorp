@@ -73,6 +73,20 @@ class MozillaSettingsFragment :
                 )
                 requireComponents.appStore.dispatch(AppAction.OpenTab(tabId))
             }
+            resources.getString(R.string.pref_key_licensing_info) -> {
+                val tabId = activity.components.tabsUseCases.addTab(
+                    "about:license",
+                    source = SessionState.Source.Internal.Menu,
+                    selectTab = true,
+                    private = true,
+                )
+                requireComponents.appStore.dispatch(AppAction.OpenTab(tabId))
+            }
+            resources.getString(R.string.pref_key_libraries_we_use) -> {
+                requireComponents.appStore.dispatch(
+                    AppAction.OpenSettings(Screen.Settings.Page.Licenses),
+                )
+            }
         }
         return super.onPreferenceTreeClick(preference)
     }

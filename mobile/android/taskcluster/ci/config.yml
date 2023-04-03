@@ -127,6 +127,7 @@ treeherder:
         support-base: support-base
         support-images: support-images
         support-ktx: support-ktx
+        support-license: support-license
         support-locale: support-locale
         support-migration: support-migration
         support-rusthttp: support-rusthttp

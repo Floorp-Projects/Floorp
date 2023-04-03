@@ -30,6 +30,7 @@ import org.mozilla.focus.locale.screen.LanguageFragment
 import org.mozilla.focus.nimbus.FocusNimbus
 import org.mozilla.focus.nimbus.Onboarding
 import org.mozilla.focus.searchwidget.SearchWidgetUtils
+import org.mozilla.focus.settings.AboutLibrariesFragment
 import org.mozilla.focus.settings.GeneralSettingsFragment
 import org.mozilla.focus.settings.InstalledSearchEnginesSettingsFragment
 import org.mozilla.focus.settings.ManualAddSearchEngineSettingsFragment
@@ -284,6 +285,7 @@ class MainActivityNavigation(
             Screen.Settings.Page.SearchAutocompleteAdd -> AutocompleteAddFragment()
             Screen.Settings.Page.SearchAutocompleteRemove -> AutocompleteRemoveFragment()
             Screen.Settings.Page.About -> AboutFragment()
+            Screen.Settings.Page.Licenses -> AboutLibrariesFragment()
             Screen.Settings.Page.Locale -> LanguageFragment()
             Screen.Settings.Page.CookieBanner -> CookieBannerFragment()
         }
