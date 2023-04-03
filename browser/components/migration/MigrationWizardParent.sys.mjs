@@ -28,6 +28,11 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * the associated MigrationWizardChild.
  */
 export class MigrationWizardParent extends JSWindowActorParent {
+  constructor() {
+    super();
+    Services.telemetry.setEventRecordingEnabled("browser.migration", true);
+  }
+
   /**
    * General message handler function for messages received from the
    * associated MigrationWizardChild JSWindowActor.
@@ -91,9 +96,32 @@ export class MigrationWizardParent extends JSWindowActorParent {
           this.browsingContext.topChromeWindow
         );
       }
+
+      case "RecordEvent": {
+        this.#recordEvent(message.data.type, message.data.args);
+        break;
+      }
     }
 
     return null;
+  }
+
+  /**
+   * Used for recording telemetry in the migration wizard.
+   *
+   * @param {string} type
+   *   The type of event being recorded.
+   * @param {object} args
+   *   The data to pass to telemetry when the event is recorded.
+   */
+  #recordEvent(type, args = null) {
+    Services.telemetry.recordEvent(
+      "browser.migration",
+      type,
+      "wizard",
+      null,
+      args
+    );
   }
 
   /**
