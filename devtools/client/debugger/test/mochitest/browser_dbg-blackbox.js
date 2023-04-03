@@ -35,7 +35,6 @@ add_task(async function testAllBlackBox() {
   const source = findSource(dbg, file);
 
   await selectSource(dbg, source);
-  await waitForSelectedSource(dbg, source);
 
   await addBreakpoint(dbg, file, 8);
 
@@ -54,7 +53,6 @@ add_task(async function testBlackBoxOnReload() {
   const source = findSource(dbg, file);
 
   await selectSource(dbg, source);
-  await waitForSelectedSource(dbg, source);
 
   // Adding 2 breakpoints in funcB() and funcC() which
   // would be hit in order.
@@ -105,6 +103,49 @@ add_task(async function testBlackBoxOnReload() {
   await onReloaded2;
 
   assertNotPaused(dbg);
+});
+
+add_task(async function testBlackBoxOnToolboxRestart() {
+  await pushPref("devtools.debugger.features.blackbox-lines", true);
+
+  const dbg = await initDebugger("doc-command-click.html", "simple4.js");
+  const source = findSource(dbg, "simple4.js");
+
+  await selectSource(dbg, source);
+
+  const onReloaded = reload(dbg, "simple4.js");
+  await waitForPaused(dbg);
+
+  info("Assert it paused at the debugger statement");
+  assertPausedAtSourceAndLine(dbg, source.id, 2);
+  await resume(dbg);
+  await onReloaded;
+
+  info("Ignoring line 2 using the gutter context menu");
+  await openContextMenu(dbg, "gutter", 2);
+  await selectBlackBoxContextMenuItem(dbg, "blackbox-line");
+
+  await reloadBrowser();
+  // Wait a little bit incase of a pause
+  await wait(1000);
+
+  info("Assert that the debugger no longer pauses on the debugger statement");
+  assertNotPaused(dbg);
+
+  info("Close the toolbox");
+  await dbg.toolbox.closeToolbox();
+
+  info("Reopen the toolbox on the debugger");
+  const toolbox = await openToolboxForTab(gBrowser.selectedTab, "jsdebugger");
+  const dbg2 = createDebuggerContext(toolbox);
+  await waitForSelectedSource(dbg2, findSource(dbg2, "simple4.js"));
+
+  await reloadBrowser();
+  // Wait a little incase of a pause
+  await wait(1000);
+
+  info("Assert that debbuger still does not pause on the debugger statement");
+  assertNotPaused(dbg2);
 });
 
 async function testBlackBoxSource(dbg, source) {
