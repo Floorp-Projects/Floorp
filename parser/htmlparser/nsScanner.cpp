@@ -215,7 +215,7 @@ nsresult nsScanner::Append(const char* aBuffer, uint32_t aLen) {
             AsBytes(mozilla::Span(aBuffer, aLen)),
             mozilla::Span(unichars, needed.value()),
             false);  // Retain bug about failure to handle EOF
-    MOZ_ASSERT(result != kOutputFull);
+    MOZ_ASSERT(result != mozilla::kOutputFull);
     MOZ_ASSERT(read <= aLen);
     MOZ_ASSERT(written <= needed.value());
     if (result != mozilla::kInputEmpty) {
