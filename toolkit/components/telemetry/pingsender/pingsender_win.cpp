@@ -9,6 +9,8 @@
 #include <windows.h>
 #include <wininet.h>
 
+#include "pingsender.h"
+
 namespace PingSender {
 
 using std::string;
