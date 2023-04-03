@@ -3,6 +3,18 @@
 
 "use strict";
 
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
+);
+
+const PIP_URLBAR_EVENTS = [
+  {
+    category: "pictureinpicture",
+    method: "opened_method",
+    object: "urlBar",
+  },
+];
+
 add_task(async function test_urlbar_toggle_multiple_contexts() {
   await BrowserTestUtils.withNewTab(
     {
@@ -10,6 +22,7 @@ add_task(async function test_urlbar_toggle_multiple_contexts() {
       gBrowser,
     },
     async browser => {
+      Services.telemetry.clearEvents();
       await ensureVideosReady(browser);
       await ensureVideosReady(browser.browsingContext.children[0]);
 
@@ -58,6 +71,18 @@ add_task(async function test_urlbar_toggle_multiple_contexts() {
         browser.browsingContext.children[0],
         "video"
       );
+
+      let filter = {
+        category: "pictureinpicture",
+        method: "opened_method",
+        object: "urlBar",
+      };
+      await waitForTelemeryEvents(filter, PIP_URLBAR_EVENTS.length, "content");
+
+      TelemetryTestUtils.assertEvents(PIP_URLBAR_EVENTS, filter, {
+        clear: true,
+        process: "content",
+      });
 
       let domWindowClosed = BrowserTestUtils.domWindowClosed(win);
       pipUrlbarToggle.click();
