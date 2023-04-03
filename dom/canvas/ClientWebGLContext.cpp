@@ -5382,11 +5382,16 @@ GLenum ClientWebGLContext::ClientWaitSync(WebGLSyncJS& sync,
   const bool canBeAvailable =
       (sync.mCanBeAvailable || StaticPrefs::webgl_allow_immediate_queries());
   if (!canBeAvailable) {
-    if (!sync.mHasWarnedNotAvailable) {
-      EnqueueWarning(
-          "ClientWaitSync must return TIMEOUT_EXPIRED until control has"
-          " returned to the user agent's main loop. (only warns once)");
-      sync.mHasWarnedNotAvailable = true;
+    constexpr uint8_t WARN_AT = 100;
+    if (sync.mNumQueriesBeforeFirstFrameBoundary <= WARN_AT) {
+      sync.mNumQueriesBeforeFirstFrameBoundary += 1;
+      if (sync.mNumQueriesBeforeFirstFrameBoundary == WARN_AT) {
+        EnqueueWarning(
+            "ClientWaitSync must return TIMEOUT_EXPIRED until control has"
+            " returned to the user agent's main loop, but was polled %hhu "
+            "times. Are you spin-locking? (only warns once)",
+            sync.mNumQueriesBeforeFirstFrameBoundary);
+      }
     }
     return LOCAL_GL_TIMEOUT_EXPIRED;
   }
