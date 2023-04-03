@@ -2815,11 +2815,6 @@ nscoord nsPresContext::PhysicalMillimetersToAppUnits(float aMM) const {
       inches * float(DeviceContext()->AppUnitsPerPhysicalInch()));
 }
 
-bool nsPresContext::IsDeviceSizePageSize() {
-  nsIDocShell* docShell = GetDocShell();
-  return docShell && docShell->GetDeviceSizeIsPageSize();
-}
-
 uint64_t nsPresContext::GetRestyleGeneration() const {
   if (!mRestyleManager) {
     return 0;

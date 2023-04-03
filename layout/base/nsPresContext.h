@@ -1055,8 +1055,6 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   bool HasEverBuiltInvisibleText() const { return mHasEverBuiltInvisibleText; }
   void SetBuiltInvisibleText() { mHasEverBuiltInvisibleText = true; }
 
-  bool IsDeviceSizePageSize();
-
   bool HasWarnedAboutTooLargeDashedOrDottedRadius() const {
     return mHasWarnedAboutTooLargeDashedOrDottedRadius;
   }

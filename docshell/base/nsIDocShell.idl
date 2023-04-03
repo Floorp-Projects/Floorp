@@ -623,18 +623,6 @@ interface nsIDocShell : nsIDocShellTreeItem
   [noscript,notxpcom,nostdcall] Document getExtantDocument();
 
   /**
-   * If deviceSizeIsPageSize is set to true, device-width/height media queries
-   * will be calculated from the page size, not the device size.
-   *
-   * Used by the Responsive Design Mode and B2G Simulator.
-   *
-   * Default is False.
-   * Default value can be overriden with
-   * docshell.device_size_is_page_size pref.
-   */
-  [infallible] attribute boolean deviceSizeIsPageSize;
-
-  /**
    * Notify DocShell when the browser is about to start executing JS, and after
    * that execution has stopped.  This only occurs when the Timeline devtool
    * is collecting information.

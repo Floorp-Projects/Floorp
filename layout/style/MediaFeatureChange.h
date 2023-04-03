@@ -16,7 +16,7 @@
 
 namespace mozilla {
 
-enum class MediaFeatureChangeReason : uint16_t {
+enum class MediaFeatureChangeReason : uint8_t {
   // The viewport size the document has used has changed.
   //
   // This affects size media queries like min-width.
@@ -34,16 +34,13 @@ enum class MediaFeatureChangeReason : uint16_t {
   // A system metric or multiple have changed. This affects all the media
   // features that expose the presence of a system metric directly.
   SystemMetricsChange = 1 << 5,
-  // The fact of whether the device size is the page size has changed, thus
-  // resolution media queries can change.
-  DeviceSizeIsPageSizeChange = 1 << 6,
   // display-mode changed on the document, thus the display-mode media queries
   // may have changed.
-  DisplayModeChange = 1 << 7,
+  DisplayModeChange = 1 << 6,
   // A preference that affects media query results has changed. For
   // example, changes to document_color_use will affect
   // prefers-contrast.
-  PreferenceChange = 1 << 8,
+  PreferenceChange = 1 << 7,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(MediaFeatureChangeReason)

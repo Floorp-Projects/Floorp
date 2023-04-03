@@ -352,7 +352,6 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
       mAllowAuth(mItemType == typeContent),
       mAllowKeywordFixup(false),
       mDisableMetaRefreshWhenInactive(false),
-      mDeviceSizeIsPageSize(false),
       mWindowDraggingAllowed(false),
       mInFrameSwap(false),
       mFiredUnloadEvent(false),
@@ -441,9 +440,6 @@ bool nsDocShell::Initialize() {
   mDisableMetaRefreshWhenInactive =
       Preferences::GetBool("browser.meta_refresh_when_inactive.disabled",
                            mDisableMetaRefreshWhenInactive);
-
-  mDeviceSizeIsPageSize = Preferences::GetBool(
-      "docshell.device_size_is_page_size", mDeviceSizeIsPageSize);
 
   if (nsCOMPtr<nsIObserverService> serv = services::GetObserverService()) {
     const char* msg = mItemType == typeContent ? NS_WEBNAVIGATION_CREATE
@@ -3193,26 +3189,6 @@ nsDocShell::GetMessageManager(ContentFrameMessageManager** aMessageManager) {
 NS_IMETHODIMP
 nsDocShell::GetIsNavigating(bool* aOut) {
   *aOut = mIsNavigating;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::SetDeviceSizeIsPageSize(bool aValue) {
-  if (mDeviceSizeIsPageSize != aValue) {
-    mDeviceSizeIsPageSize = aValue;
-    RefPtr<nsPresContext> presContext = GetPresContext();
-    if (presContext) {
-      presContext->MediaFeatureValuesChanged(
-          {MediaFeatureChangeReason::DeviceSizeIsPageSizeChange},
-          MediaFeatureChangePropagation::JustThisDocument);
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetDeviceSizeIsPageSize(bool* aValue) {
-  *aValue = mDeviceSizeIsPageSize;
   return NS_OK;
 }
 
