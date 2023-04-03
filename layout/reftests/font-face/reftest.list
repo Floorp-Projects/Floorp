@@ -176,7 +176,7 @@ skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-64,0-596) == colrv1-0
 skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-64,0-596) == colrv1-01.html#H colrv1-01-ref.html#H
 skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-64,0-10100) == colrv1-01.html#I colrv1-01-ref.html#I
 skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-64,0-6806) == colrv1-01.html#J colrv1-01-ref.html#J
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-1,0-748) fuzzy-if(OSX,255-255,8752-8804) == colrv1-01.html#K colrv1-01-ref.html#K
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-1,0-748) == colrv1-01.html#K colrv1-01-ref.html#K
 skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-67,0-9494) == colrv1-01.html#L colrv1-01-ref.html#L
 skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-64,0-3578) == colrv1-01.html#M colrv1-01-ref.html#M
 skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-64,0-6116) == colrv1-01.html#N colrv1-01-ref.html#N
@@ -188,8 +188,8 @@ skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-255,0-373) == colrv1-
 skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-237,0-477) == colrv1-01.html#T colrv1-01-ref.html#T
 
 skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-1,0-1) == colrv1-03.html colrv1-03-ref.html
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-1,0-1800) fuzzy-if(OSX,128-128,3582-3582) fuzzy-if(Android,0-64,0-37100) == colrv1-04.html colrv1-04-ref.html
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(Android,8-8,1484-1484) fuzzy-if(OSX,64-64,1200-1200) == colrv1-05.html colrv1-05-ref.html
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-1,0-1800) fuzzy-if(Android,0-64,0-37100) == colrv1-04.html colrv1-04-ref.html
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(Android,8-8,1484-1484) == colrv1-05.html colrv1-05-ref.html
 skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-1,0-291) == colrv1-06.html colrv1-06-ref.html
 skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-128,0-264) == colrv1-07.html colrv1-07-ref.html
 skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == colrv1-08.html colrv1-08-ref.html

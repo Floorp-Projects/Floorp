@@ -27,7 +27,7 @@ fuzzy(0-15,0-152) == svg-glyph-mask.svg svg-glyph-mask-ref.svg
 == svg-glyph-transform.svg svg-glyph-transform-ref.svg
 == svg-glyph-extents.html svg-glyph-extents-ref.html
 == svg-glyph-compressed.html svg-glyph-compressed-ref.html
-fuzzy(46-77,300-600) == bug1320197-1.html bug1320197-1-ref.html
+fuzzy-if(cocoaWidget,0-1,0-33) == bug1320197-1.html bug1320197-1-ref.html
 fuzzy-if(winWidget,0-137,0-198) fuzzy-if(Android,0-81,0-96) == svg-in-ot-bitmap-1.html svg-in-ot-bitmap-1-ref.html
 
 defaults
