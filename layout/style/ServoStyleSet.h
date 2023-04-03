@@ -29,7 +29,7 @@
 #include "nsSize.h"
 
 namespace mozilla {
-enum class MediaFeatureChangeReason : uint16_t;
+enum class MediaFeatureChangeReason : uint8_t;
 enum class StylePageSizeOrientation : uint8_t;
 enum class StyleRuleChangeKind : uint32_t;
 
