@@ -508,6 +508,138 @@ add_task(async function searchTipWhilePageLoads() {
   resetSearchTipsProvider();
 });
 
+// Search tips modify the userTypedValue of a tab. The next time
+// the pageproxystate is updated, the existence of the userTypedValue
+// can change the pageproxystate. In the case of the Persist Search Tip,
+// we don't want to change the pageproxystate while the Urlbar is non-focused,
+// so check that when an event causes the pageproxystate to update
+// (e.g. a SERP pushing state), the pageproxystate remains the same.
+add_task(async function persistSearchTipAfterPushState() {
+  await setDefaultEngine("Example");
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.showSearchTerms.featureGate", true]],
+  });
+
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
+    url: SEARCH_SERP_URL,
+  });
+
+  // Ensure the search tip is visible.
+  await checkTip(window, UrlbarProviderSearchTips.TIP_TYPE.PERSIST, false);
+  Assert.equal(
+    gURLBar.getAttribute("pageproxystate"),
+    "valid",
+    "Urlbar is should be in a valid pageproxystate."
+  );
+
+  // Mock the default SERP using the History API on an exising website.
+  // This is to trigger another call to setURI.
+  await SpecialPowers.spawn(tab.linkedBrowser, [SEARCH_SERP_URL], async url => {
+    content.history.pushState({}, "", url);
+  });
+
+  Assert.equal(
+    gURLBar.getAttribute("pageproxystate"),
+    "valid",
+    "Urlbar is should be in a valid pageproxystate."
+  );
+
+  // Clean up.
+  await SpecialPowers.popPrefEnv();
+  resetSearchTipsProvider();
+  BrowserTestUtils.removeTab(tab);
+});
+
+// Ensure a the Persist Search Tip is non-visible when a PopupNotification
+// is already visible.
+add_task(async function persistSearchTipBeforePopupShown() {
+  await setDefaultEngine("Example");
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.showSearchTerms.featureGate", true]],
+  });
+
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
+    url: SEARCH_SERP_URL,
+  });
+
+  let promisePopupShown = BrowserTestUtils.waitForEvent(
+    PopupNotifications.panel,
+    "popupshown"
+  );
+  PopupNotifications.show(
+    gBrowser.selectedBrowser,
+    "test-notification",
+    "This is a sample popup.",
+    "geo-notification-icon"
+  );
+  await promisePopupShown;
+
+  // Wait roughly for the amount of time it would take for the
+  // persist search tip to show.
+  await new Promise(resolve =>
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    setTimeout(resolve, UrlbarProviderSearchTips.SHOW_PERSIST_TIP_DELAY_MS * 2)
+  );
+
+  // Check the search tip didn't show while the page was loading.
+  Assert.equal(
+    UrlbarPrefs.get(
+      `tipShownCount.${UrlbarProviderSearchTips.TIP_TYPE.PERSIST}`
+    ),
+    0,
+    "The shownCount pref should be 0."
+  );
+  Assert.equal(false, window.gURLBar.view.isOpen, "Urlbar should be closed.");
+
+  // Clean up.
+  await SpecialPowers.popPrefEnv();
+  resetSearchTipsProvider();
+  BrowserTestUtils.removeTab(tab);
+});
+
+// The Persist Search Tip should be hidden when a PopupNotification appears.
+add_task(async function persistSearchTipAfterPopupShown() {
+  await setDefaultEngine("Example");
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.showSearchTerms.featureGate", true]],
+  });
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
+    url: SEARCH_SERP_URL,
+  });
+
+  // Ensure the search tip is visible.
+  await checkTip(window, UrlbarProviderSearchTips.TIP_TYPE.PERSIST, false);
+
+  // Show a popup after the search tip is shown.
+  let promisePopupShown = BrowserTestUtils.waitForEvent(
+    PopupNotifications.panel,
+    "popupshown"
+  );
+  PopupNotifications.show(
+    gBrowser.selectedBrowser,
+    "test-notification",
+    "This is a sample popup.",
+    "geo-notification-icon"
+  );
+  await promisePopupShown;
+
+  // The search tip should not be visible.
+  Assert.equal(false, window.gURLBar.view.isOpen, "Urlbar should be closed.");
+  Assert.equal(
+    gURLBar.getAttribute("pageproxystate"),
+    "valid",
+    "Urlbar is should be in a valid pageproxystate."
+  );
+
+  // Clean up.
+  await SpecialPowers.popPrefEnv();
+  resetSearchTipsProvider();
+  BrowserTestUtils.removeTab(tab);
+});
+
 function waitForBrowserWindowActive(win) {
   return new Promise(resolve => {
     if (Services.focus.activeWindow == win) {
