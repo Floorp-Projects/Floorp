@@ -19,6 +19,8 @@ import {
 import { initialBreakpointsState } from "./reducers/breakpoints";
 import { initialSourcesState } from "./reducers/sources";
 import { initialUIState } from "./reducers/ui";
+import { initialSourceBlackBoxState } from "./reducers/source-blackbox";
+
 const { sanitizeBreakpoints } = require("devtools/client/shared/thread-utils");
 
 async function syncBreakpoints() {
@@ -64,8 +66,8 @@ async function loadInitialState(commands, toolbox) {
   const blackboxedRanges = await asyncStore.blackboxedRanges;
   const eventListenerBreakpoints = await asyncStore.eventListenerBreakpoints;
   const breakpoints = initialBreakpointsState(xhrBreakpoints);
+  const sourceBlackBox = initialSourceBlackBoxState({ blackboxedRanges });
   const sources = initialSourcesState({
-    blackboxedRanges,
     // @backward-compat { version 112 } Checks if the server supports override
     // Remove once fully supported
     isOverridesSupported: toolbox.target.getTrait("isOverridesSupported"),
@@ -81,6 +83,7 @@ async function loadInitialState(commands, toolbox) {
     breakpoints,
     eventListenerBreakpoints,
     sources,
+    sourceBlackBox,
     ui,
   };
 }

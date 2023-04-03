@@ -17,7 +17,6 @@ add_task(async function() {
   const source = findSource(dbg, "simple4.js");
 
   await selectSource(dbg, source);
-  await waitForSelectedSource(dbg, source);
 
   invokeInTab("funcA");
   await waitForPaused(dbg);
