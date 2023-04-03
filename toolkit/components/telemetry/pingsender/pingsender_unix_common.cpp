@@ -12,6 +12,8 @@
 #include "mozilla/Unused.h"
 #include "third_party/curl/curl.h"
 
+#include "pingsender.h"
+
 namespace PingSender {
 
 using std::string;
@@ -199,7 +201,7 @@ bool FallbackIsValidDestination(const string& aUrl) {
   unsigned long portStart = url.find_last_of(":");
   url = (portStart == std::string::npos) ? url : url.substr(0, portStart);
 
-  return ::IsValidDestination(url);
+  return PingSender::IsValidDestination(url);
 }
 
 bool CurlWrapper::IsValidDestination(const string& aUrl) {
@@ -222,7 +224,7 @@ bool CurlWrapper::IsValidDestination(const string& aUrl) {
     goto cleanup;
   }
 
-  ret = ::IsValidDestination(host);
+  ret = PingSender::IsValidDestination(host);
   curl_free(host);
 
 cleanup:
