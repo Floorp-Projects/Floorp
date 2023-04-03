@@ -166,7 +166,7 @@ class MediaDecoderOwner {
   // size of the image has changed, or the video needs to be be repainted
   // for some other reason.
   virtual void Invalidate(bool aImageSizeChanged,
-                          Maybe<nsIntSize>& aNewIntrinsicSize,
+                          const Maybe<nsIntSize>& aNewIntrinsicSize,
                           bool aForceInvalidate) {}
 
   // Called after the MediaStream we're playing rendered a frame to aContainer
