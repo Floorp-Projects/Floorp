@@ -46,7 +46,7 @@ jobs:
     - name: Create environment 🌲
       run: |
         sudo apt update
-        sudo apt install gzip gpg dpkg-dev imagemagick openbox obconf xorg
+        sudo apt install gzip gpg dpkg-dev
         export WORKDIR=`pwd`
         echo "Current Workdir: $WORKDIR"
         git clone https://github.com/floorp-projects/l10n-central.git
@@ -85,7 +85,6 @@ jobs:
 
     - name: Package 📦
       run: |
-        export DISPLAY=:2
         export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ja-KA ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
         for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
         AB_CD=multi ./mach package
@@ -127,25 +126,13 @@ jobs:
         cd ./flatpak_build/tmp
         tar -Jcf flatpak-base-$DISPVER.tar.xz *
         mv flatpak-base-$DISPVER.tar.xz ../public/
-        sleep 5
-        /usr/bin/openbox-session &
-        sleep 5
-        ./lib/floorp/floorp -foreground -height 1080 -width 1920 &
-        sleep 5
-        pkill floorp
-        ./lib/floorp/floorp -foreground about:newtab &
-        sleep 10
-        import -window root -crop 1920x1080+0+0 $(pwd)/flathub-screenshot.png
-        mkdir publish
-        echo "${{ secrets.FTP_INIT_SCRIPT }}" > init_script.txt
-        echo "${{ secrets.FTP_FINISH_SCRIPT }}" > finish_script.txt
-        cd publish
-        ftp -n -p < ../init_script.txt
-        cp -f ../flathub-screenshot.png ./
-        ftp -n -p < ../finish_script.txt
-        cd ../
-        rm init_script.txt finish_script.txt
-        cd ../..
+        curl -L \
+          -X POST \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${{ secrets.PAT_KEY }}"\
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          https://api.github.com/repos/Floorp-Projects/About-Floorp-Projects/actions/workflows/update-flathub-picture.yml/dispatches \
+          -d '{"ref":"main"}'
         ls ./flatpak_build/public
 
     - name: Publish 🎁
