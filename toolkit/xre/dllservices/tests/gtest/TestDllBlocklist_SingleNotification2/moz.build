@@ -1,0 +1,17 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DIST_INSTALL = False
+
+SharedLibrary("TestDllBlocklist_SingleNotification2")
+
+UNIFIED_SOURCES = [
+    "TestDllBlocklist_SingleNotification2.cpp",
+]
+
+RCFILE = "TestDllBlocklist_SingleNotification2.rc"
+
+if CONFIG["COMPILE_ENVIRONMENT"]:
+    TEST_HARNESS_FILES.gtest += ["!TestDllBlocklist_SingleNotification2.dll"]
