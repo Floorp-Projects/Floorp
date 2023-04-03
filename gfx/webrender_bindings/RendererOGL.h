@@ -55,6 +55,8 @@ class RendererOGL {
  public:
   wr::WrExternalImageHandler GetExternalImageHandler();
 
+  void SetFramePublishId(FramePublishId aPublishId);
+
   /// This can be called on the render thread only.
   void Update();
 
