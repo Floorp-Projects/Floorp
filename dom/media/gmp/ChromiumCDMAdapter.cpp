@@ -69,7 +69,8 @@ static cdm::HostFile TakeToCDMHostFile(HostFileData& aHostFileData) {
 GMPErr ChromiumCDMAdapter::GMPInit(const GMPPlatformAPI* aPlatformAPI) {
   GMP_LOG_DEBUG("ChromiumCDMAdapter::GMPInit");
   sPlatform = aPlatformAPI;
-  if (!mLib) {
+  if (NS_WARN_IF(!mLib)) {
+    MOZ_CRASH("Missing library!");
     return GMPGenericErr;
   }
 
@@ -85,12 +86,14 @@ GMPErr ChromiumCDMAdapter::GMPInit(const GMPPlatformAPI* aPlatformAPI) {
     }
     bool result = verify(files.Elements(), files.Length());
     GMP_LOG_DEBUG("%s VerifyCdmHost_0 returned %d", __func__, result);
+    MOZ_DIAGNOSTIC_ASSERT(result, "Verification failed!");
   }
 #endif
 
   auto init = reinterpret_cast<decltype(::INITIALIZE_CDM_MODULE)*>(
       PR_FindFunctionSymbol(mLib, MOZ_STRINGIFY(INITIALIZE_CDM_MODULE)));
   if (!init) {
+    MOZ_CRASH("Missing init method!");
     return GMPGenericErr;
   }
 
