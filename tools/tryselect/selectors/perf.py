@@ -364,6 +364,15 @@ class PerfParser(CompareParser):
             },
             "tasks": [],
         },
+        "Speedometer 3": {
+            "query": {
+                Suites.RAPTOR.value: ["'browsertime 'speedometer3"],
+            },
+            "variant-restrictions": {Suites.RAPTOR.value: [Variants.NO_FISSION.value]},
+            "suites": [Suites.RAPTOR.value],
+            "app-restrictions": {},
+            "tasks": [],
+        },
         "Responsiveness": {
             "query": {
                 Suites.RAPTOR.value: ["'browsertime 'responsive"],
