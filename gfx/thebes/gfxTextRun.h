@@ -258,7 +258,7 @@ class gfxTextRun : public gfxShapedText {
     gfxPattern* textStrokePattern = nullptr;
     const mozilla::gfx::StrokeOptions* strokeOpts = nullptr;
     const mozilla::gfx::DrawOptions* drawOpts = nullptr;
-    PropertyProvider* provider = nullptr;
+    const PropertyProvider* provider = nullptr;
     // If non-null, the advance width of the substring is set.
     gfxFloat* advanceWidth = nullptr;
     mozilla::SVGContextPaint* contextPaint = nullptr;
@@ -297,7 +297,7 @@ class gfxTextRun : public gfxShapedText {
    */
   void DrawEmphasisMarks(gfxContext* aContext, gfxTextRun* aMark,
                          gfxFloat aMarkAdvance, mozilla::gfx::Point aPt,
-                         Range aRange, PropertyProvider* aProvider) const;
+                         Range aRange, const PropertyProvider* aProvider) const;
 
   /**
    * Computes the ReflowMetrics for a substring.
@@ -306,11 +306,11 @@ class gfxTextRun : public gfxShapedText {
    */
   Metrics MeasureText(Range aRange, gfxFont::BoundingBoxType aBoundingBoxType,
                       DrawTarget* aDrawTargetForTightBoundingBox,
-                      PropertyProvider* aProvider) const;
+                      const PropertyProvider* aProvider) const;
 
   Metrics MeasureText(gfxFont::BoundingBoxType aBoundingBoxType,
                       DrawTarget* aDrawTargetForTightBoundingBox,
-                      PropertyProvider* aProvider = nullptr) const {
+                      const PropertyProvider* aProvider = nullptr) const {
     return MeasureText(Range(this), aBoundingBoxType,
                        aDrawTargetForTightBoundingBox, aProvider);
   }
@@ -328,7 +328,7 @@ class gfxTextRun : public gfxShapedText {
    * the substring would be returned in it. NOTE: the spacing is
    * included in the advance width.
    */
-  gfxFloat GetAdvanceWidth(Range aRange, PropertyProvider* aProvider,
+  gfxFloat GetAdvanceWidth(Range aRange, const PropertyProvider* aProvider,
                            PropertyProvider::Spacing* aSpacing = nullptr) const;
 
   gfxFloat GetAdvanceWidth() const {
@@ -415,20 +415,19 @@ class gfxTextRun : public gfxShapedText {
    * @param aLineBreakBefore set to true if and only if there is an actual
    * line break at the start of this string.
    * @param aSuppressBreak what break should be suppressed.
-   * @param aTrimmableWhitespace if non-null, returns the advance of any
+   * @param aOutTrimmableWhitespace if non-null, returns the advance of any
    * run of trailing spaces that might be trimmed if the run ends up at
    * end-of-line.
    * Trimmable spaces are still counted in the "characters fit" result, and
    * contribute to the returned Metrics values.
-   * @param aMetrics if non-null, we fill this in for the returned substring.
+   * @param aOutMetrics we fill this in for the returned substring.
    * If a hyphenation break was used, the hyphen is NOT included in the returned
    * metrics.
    * @param aBoundingBoxType whether to make the bounding box in aMetrics tight
-   * @param aDrawTargetForTightBoundingbox a reference DrawTarget to get the
-   * tight bounding box, if requested
-   * @param aUsedHyphenation if non-null, records if we selected a hyphenation
-   * break
-   * @param aLastBreak if non-null and result is aMaxLength, we set this to
+   * @param aRefDrawTarget a reference DrawTarget to get the tight bounding box,
+   * if requested
+   * @param aOutUsedHyphenation records if we selected a hyphenation break
+   * @param aOutLastBreak if result is aMaxLength, we set this to
    * the maximal N such that
    *       N < aMaxLength && line break at N &&
    *       GetAdvanceWidth(Range(aStart, N), aProvider) <= aWidth
@@ -452,12 +451,14 @@ class gfxTextRun : public gfxShapedText {
    */
   uint32_t BreakAndMeasureText(
       uint32_t aStart, uint32_t aMaxLength, bool aLineBreakBefore,
-      gfxFloat aWidth, PropertyProvider* aProvider,
-      SuppressBreak aSuppressBreak, gfxFloat* aTrimmableWhitespace,
-      Metrics* aMetrics, gfxFont::BoundingBoxType aBoundingBoxType,
-      DrawTarget* aDrawTargetForTightBoundingBox, bool* aUsedHyphenation,
-      uint32_t* aLastBreak, bool aCanWordWrap, bool aCanWhitespaceWrap,
-      gfxBreakPriority* aBreakPriority);
+      gfxFloat aWidth, const PropertyProvider& aProvider,
+      SuppressBreak aSuppressBreak, gfxFont::BoundingBoxType aBoundingBoxType,
+      DrawTarget* aRefDrawTarget, bool aCanWordWrap, bool aCanWhitespaceWrap,
+      // Output parameters:
+      gfxFloat* aOutTrimmableWhitespace,  // may be null
+      Metrics& aOutMetrics, bool& aOutUsedHyphenation, uint32_t& aOutLastBreak,
+      // In/out:
+      gfxBreakPriority& aBreakPriority);
 
   // Utility getters
 
@@ -810,7 +811,7 @@ class gfxTextRun : public gfxShapedText {
   // This is useful to protect aProvider from being passed character indices
   // it is not currently able to handle.
   bool GetAdjustedSpacingArray(
-      Range aRange, PropertyProvider* aProvider, Range aSpacingRange,
+      Range aRange, const PropertyProvider* aProvider, Range aSpacingRange,
       nsTArray<PropertyProvider::Spacing>* aSpacing) const;
 
   CompressedGlyph& EnsureComplexGlyph(uint32_t aIndex) {
@@ -824,12 +825,12 @@ class gfxTextRun : public gfxShapedText {
 
   // if aProvider is null then mBeforeSpacing and mAfterSpacing are set to zero
   LigatureData ComputeLigatureData(Range aPartRange,
-                                   PropertyProvider* aProvider) const;
+                                   const PropertyProvider* aProvider) const;
   gfxFloat ComputePartialLigatureWidth(Range aPartRange,
-                                       PropertyProvider* aProvider) const;
+                                       const PropertyProvider* aProvider) const;
   void DrawPartialLigature(gfxFont* aFont, Range aRange,
                            mozilla::gfx::Point* aPt,
-                           PropertyProvider* aProvider,
+                           const PropertyProvider* aProvider,
                            TextRunDrawParams& aParams,
                            mozilla::gfx::ShapedTextFlags aOrientation) const;
   // Advance aRange.start to the start of the nearest ligature, back
@@ -839,23 +840,24 @@ class gfxTextRun : public gfxShapedText {
   bool ShrinkToLigatureBoundaries(Range* aRange) const;
   // result in appunits
   gfxFloat GetPartialLigatureWidth(Range aRange,
-                                   PropertyProvider* aProvider) const;
+                                   const PropertyProvider* aProvider) const;
   void AccumulatePartialLigatureMetrics(
       gfxFont* aFont, Range aRange, gfxFont::BoundingBoxType aBoundingBoxType,
-      DrawTarget* aRefDrawTarget, PropertyProvider* aProvider,
+      DrawTarget* aRefDrawTarget, const PropertyProvider* aProvider,
       mozilla::gfx::ShapedTextFlags aOrientation, Metrics* aMetrics) const;
 
   // **** measurement helper ****
   void AccumulateMetricsForRun(gfxFont* aFont, Range aRange,
                                gfxFont::BoundingBoxType aBoundingBoxType,
                                DrawTarget* aRefDrawTarget,
-                               PropertyProvider* aProvider, Range aSpacingRange,
+                               const PropertyProvider* aProvider,
+                               Range aSpacingRange,
                                mozilla::gfx::ShapedTextFlags aOrientation,
                                Metrics* aMetrics) const;
 
   // **** drawing helper ****
   void DrawGlyphs(gfxFont* aFont, Range aRange, mozilla::gfx::Point* aPt,
-                  PropertyProvider* aProvider, Range aSpacingRange,
+                  const PropertyProvider* aProvider, Range aSpacingRange,
                   TextRunDrawParams& aParams,
                   mozilla::gfx::ShapedTextFlags aOrientation) const;
 

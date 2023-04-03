@@ -9100,8 +9100,6 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
 
   uint32_t transformedOffset = provider.GetStart().GetSkippedOffset();
 
-  // The metrics for the text go in here
-  gfxTextRun::Metrics textMetrics;
   gfxFont::BoundingBoxType boundingBoxType = gfxFont::LOOSE_INK_EXTENTS;
   if (IsFloatingFirstLetterChild() || IsInitialLetterChild()) {
     if (nsFirstLetterFrame* firstLetter = do_QueryFrame(GetParent())) {
@@ -9138,8 +9136,9 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     iter.SetOriginalOffset(offset + limitLength);
     transformedLength = iter.GetSkippedOffset() - transformedOffset;
   }
+  gfxTextRun::Metrics textMetrics;
   uint32_t transformedLastBreak = 0;
-  bool usedHyphenation;
+  bool usedHyphenation = false;
   gfxFloat trimmableWidth = 0;
   gfxFloat availWidth = aAvailableWidth;
   if (Style()->IsTextCombined()) {
@@ -9149,7 +9148,6 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   }
   bool canTrimTrailingWhitespace = !textStyle->WhiteSpaceIsSignificant() ||
                                    HasAnyStateBits(TEXT_IS_IN_TOKEN_MATHML);
-
   bool isBreakSpaces = textStyle->mWhiteSpace == StyleWhiteSpace::BreakSpaces;
   // allow whitespace to overflow the container
   bool whitespaceCanHang = textStyle->WhiteSpaceCanHangOrVisuallyCollapse();
@@ -9163,12 +9161,14 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   }
   uint32_t transformedCharsFit = mTextRun->BreakAndMeasureText(
       transformedOffset, transformedLength, HasAnyStateBits(TEXT_START_OF_LINE),
-      availWidth, &provider, suppressBreak,
+      availWidth, provider, suppressBreak, boundingBoxType, aDrawTarget,
+      textStyle->WordCanWrap(this), isBreakSpaces,
+      // The following are output parameters:
       canTrimTrailingWhitespace || whitespaceCanHang ? &trimmableWidth
                                                      : nullptr,
-      &textMetrics, boundingBoxType, aDrawTarget, &usedHyphenation,
-      &transformedLastBreak, textStyle->WordCanWrap(this), isBreakSpaces,
-      &breakPriority);
+      textMetrics, usedHyphenation, transformedLastBreak,
+      // In/out
+      breakPriority);
   if (!length && !textMetrics.mAscent && !textMetrics.mDescent) {
     // If we're measuring a zero-length piece of text, update
     // the height manually.
