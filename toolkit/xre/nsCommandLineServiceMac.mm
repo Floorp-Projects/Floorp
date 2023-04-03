@@ -5,6 +5,8 @@
 
 #include "nsCommandLineServiceMac.h"
 #include "MacApplicationDelegate.h"
+#include <cstring>
+#include <Cocoa/Cocoa.h>
 
 namespace CommandLineServiceMac {
 

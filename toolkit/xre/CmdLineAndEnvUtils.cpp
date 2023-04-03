@@ -4,8 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsCOMPtr.h"
+#include "nsIFile.h"
 #include "nsDependentString.h"
 #include "prenv.h"
+
+#ifdef XP_WIN
+#  include <windows.h>
+#endif
 
 namespace mozilla {
 

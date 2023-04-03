@@ -287,5 +287,3 @@ FINAL_TARGET_PP_FILES += ["platform.ini"]
 
 if CONFIG["ENABLE_TESTS"]:
     DIRS += ["test/gtest"]
-
-REQUIRES_UNIFIED_BUILD = True
