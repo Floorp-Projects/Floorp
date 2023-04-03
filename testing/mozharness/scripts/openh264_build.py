@@ -176,6 +176,8 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
                 return "openh264-macosx{bits}{suffix}-{version}.zip".format(
                     version=version, bits=bits, suffix=suffix
                 )
+            elif self.config["arch"] == "aarch64":
+                return "openh264-linux64-aarch64-{version}.zip".format(version=version)
             else:
                 return "openh264-linux{bits}-{version}.zip".format(
                     version=version, bits=bits

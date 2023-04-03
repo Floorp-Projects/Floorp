@@ -75,6 +75,31 @@ jobs:
                 - linux64-dump_syms
                 - linux64-nasm
                 - sysroot-x86_64-linux-gnu
+    linux64-aarch64/opt:
+        attributes:
+            build_platform: linux64-aarch64
+            build_type: opt
+        treeherder:
+            platform: linux64-aarch64/opt
+        worker-type: b-linux-gcp
+        worker:
+            max-run-time: 1800
+            artifacts:
+                - name: private/openh264
+                  path: /builds/worker/workspace/openh264/artifacts
+                  type: directory
+        run:
+            using: mozharness
+            script: mozharness/scripts/openh264_build.py
+            config:
+                - openh264/linux64-aarch64.py
+        fetches:
+            toolchain:
+                - linux64-binutils
+                - linux64-clang
+                - linux64-dump_syms
+                - sysroot-x86_64-linux-gnu
+                - sysroot-aarch64-linux-gnu
     macosx64/opt:
         attributes:
             build_platform: macosx64
