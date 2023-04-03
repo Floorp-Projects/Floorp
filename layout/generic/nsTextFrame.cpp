@@ -9140,7 +9140,7 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   }
   uint32_t transformedLastBreak = 0;
   bool usedHyphenation;
-  gfxFloat trimmedWidth = 0;
+  gfxFloat trimmableWidth = 0;
   gfxFloat availWidth = aAvailableWidth;
   if (Style()->IsTextCombined()) {
     // If text-combine-upright is 'all', we would compress whatever long
@@ -9164,7 +9164,8 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   uint32_t transformedCharsFit = mTextRun->BreakAndMeasureText(
       transformedOffset, transformedLength, HasAnyStateBits(TEXT_START_OF_LINE),
       availWidth, &provider, suppressBreak,
-      canTrimTrailingWhitespace ? &trimmedWidth : nullptr, whitespaceCanHang,
+      canTrimTrailingWhitespace || whitespaceCanHang ? &trimmableWidth
+                                                     : nullptr,
       &textMetrics, boundingBoxType, aDrawTarget, &usedHyphenation,
       &transformedLastBreak, textStyle->WordCanWrap(this), isBreakSpaces,
       &breakPriority);
@@ -9224,31 +9225,27 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     AddStateBits(TEXT_NO_RENDERED_GLYPHS);
   }
 
-  gfxFloat trimmableWidth = 0;
   bool brokeText = forceBreak >= 0 || transformedCharsFit < transformedLength;
-  if (canTrimTrailingWhitespace) {
-    // Optimization: if we trimmed trailing whitespace, and we can be sure
-    // this frame will be at the end of the line, then leave it trimmed off.
-    // Otherwise we have to undo the trimming, in case we're not at the end of
-    // the line. (If we actually do end up at the end of the line, we'll have
-    // to trim it off again in TrimTrailingWhiteSpace, and we'd like to avoid
-    // having to re-do it.)
-    if (brokeText || HasAnyStateBits(TEXT_IS_IN_TOKEN_MATHML)) {
-      // We're definitely going to break so our trailing whitespace should
-      // definitely be trimmed. Record that we've already done it.
-      AddStateBits(TEXT_TRIMMED_TRAILING_WHITESPACE);
-    } else if (!HasAnyStateBits(TEXT_IS_IN_TOKEN_MATHML)) {
-      // We might not be at the end of the line. (Note that even if this frame
-      // ends in breakable whitespace, it might not be at the end of the line
-      // because it might be followed by breakable, but preformatted,
-      // whitespace.) Undo the trimming.
-      textMetrics.mAdvanceWidth += trimmedWidth;
-      trimmableWidth = trimmedWidth;
-      if (mTextRun->IsRightToLeft()) {
-        // Space comes before text, so the bounding box is moved to the
-        // right by trimmdWidth
-        textMetrics.mBoundingBox.MoveBy(gfxPoint(trimmedWidth, 0));
+  if (trimmableWidth > 0.0) {
+    if (canTrimTrailingWhitespace) {
+      // Optimization: if we we can be sure this frame will be at end of line,
+      // then trim the whitespace now.
+      if (brokeText || HasAnyStateBits(TEXT_IS_IN_TOKEN_MATHML)) {
+        // We're definitely going to break so our trailing whitespace should
+        // definitely be trimmed. Record that we've already done it.
+        AddStateBits(TEXT_TRIMMED_TRAILING_WHITESPACE);
+        textMetrics.mAdvanceWidth -= trimmableWidth;
+        trimmableWidth = 0.0;
       }
+    } else if (whitespaceCanHang) {
+      // Figure out how much will hang.
+      // XXX This probably needs to be passed down and handled by nsLineLayout
+      // rather than here, e.g. for bug 1712703 and 1253840.
+      gfxFloat hang =
+          std::min(std::max(0.0, textMetrics.mAdvanceWidth - availWidth),
+                   trimmableWidth);
+      textMetrics.mAdvanceWidth -= hang;
+      trimmableWidth = 0.0;
     }
   }
 
