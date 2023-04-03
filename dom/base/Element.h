@@ -1257,7 +1257,7 @@ class Element : public FragmentOrElement {
    * Sets an attribute element for the given attribute.
    * https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#explicitly-set-attr-element
    */
-  void ExplicitlySetAttrElement(Element* aElement, nsAtom* aAttr);
+  void ExplicitlySetAttrElement(nsAtom* aAttr, Element* aElement);
 
   PseudoStyleType GetPseudoElementType() const {
     nsresult rv = NS_OK;
