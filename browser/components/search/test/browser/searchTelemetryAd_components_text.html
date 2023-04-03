@@ -1,0 +1,88 @@
+<!--
+  Text ads reuse the data-ad element in multiple components to make it
+  difficult to determine which component it belongs to, similar to Bing.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" type="text/css" href="./serp.css" />
+</head>
+<body>
+  <section id="searchresults">
+    <div class="lhs">
+      <div class="moz_ad">
+        <h5 test-label>ad_sitelink</h5>
+        <a href="https://example.com/ad">
+          <h2>Example Result</h2>
+        </a>
+        <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Cras ac velit sed tellus facilisis euismod.</p>
+        <span><a href="https://example.com/ad">Ad link that says there are 10 Locations nearby</a></span>
+        <div class="multi-col">
+          <div>
+            <a href="https://example.com/ad">
+              <h2>New Releases</h2>
+            </a>
+            <span>Cras ac velit sed tellus</span>
+          </div>
+          <div>
+            <a href="https://example.com/ad">
+              <h2>Men's</h2>
+            </a>
+            <span>Cras ac velit sed tellus</span>
+          </div>
+          <div>
+            <a href="https://example.com/ad">
+              <h2>Women's</h2>
+            </a>
+            <span>Cras ac velit sed tellus</span>
+          </div>
+          <div>
+            <!-- Ensure ads encoded in data-attributes are also recorded properly -->
+            <a data-moz-attr="https://example.com/ad" href="https://example.com/normal-link">
+              <h2>Sale</h2>
+            </a>
+            <span>Cras ac velit sed tellus</span>
+          </div>
+        </div>
+      </div>
+      <div class="moz_ad">
+        <h5 test-label>ad_link</h5>
+        <a href="https://example.com/ad">
+          <h2>Example Shop</h2>
+        </a>
+        <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Cras ac velit sed tellus facilisis euismod.</p>
+        <div class="factrow">
+          <a href="https://example.com/ad">Home Page</a>
+          <a href="https://example.com/ad">Products</a>
+          <a href="https://example.com/ad">Sales</a>
+        </div>
+      </div>
+      <div class="moz_ad">
+        <h5 test-label>ad_link</h5>
+        <a href="https://example.com/ad">
+          <h2>Example Shop</h2>
+        </a>
+        <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Cras ac velit sed tellus facilisis euismod.</p>
+        <div class="factrow">
+          <a href="https://example.com/ad">Home Page</a>
+          <a href="https://example.com/ad">Products</a>
+          <a href="https://example.com/ad">Sales</a>
+        </div>
+      </div>
+    </div>
+    <div class="rhs">
+      <h5 test-label>ad_sidebar</h5>
+      <div class="moz_ad">
+        <a href="https://example.com/ad">
+          <div class="mock-image">Mock ad image</div>
+        </a>
+        <a href="https://example.com/ad">
+          <h3>Buy Example Now</h3>
+        </a>
+        <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit.</p>
+        <a href="https://example.com/ad">Buy Now</a>
+      </div>
+    </div>
+  </section>
+</body>
+</html>

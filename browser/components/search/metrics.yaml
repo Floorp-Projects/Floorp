@@ -202,6 +202,7 @@ serp:
       Recorded when a user loads a SERP and ads are detected.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1816728
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1816729
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1816728
     data_sensitivity:
@@ -214,8 +215,12 @@ serp:
       impression_id: *impression_id
       component:
         description: >
-          Type of components on a SERP. Possible values are
-          `ad_carousel`, and `ad_link`. Defaults to `ad_link`.
+          Type of components on a SERP. Possible values are:
+          `ad_carousel`,
+          `ad_link`,
+          `ad_sidebar`,
+          `ad_sitelink`.
+          Defaults to `ad_link`.
         type: string
       ads_loaded:
         description: >

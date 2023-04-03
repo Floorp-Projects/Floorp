@@ -310,6 +310,11 @@ class SearchAdImpression {
         continue;
       }
 
+      // The anchor shouldn't belong to a specific parent component.
+      if (anchor.closest(component.excluded?.parent?.selector)) {
+        continue;
+      }
+
       // Find the parent of the anchor.
       let parent = anchor.closest(component.included.parent.selector);
 
@@ -318,13 +323,10 @@ class SearchAdImpression {
         continue;
       }
 
-      // If we've already inspected the parent, either:
-      // Increment the number of ads seen for this element,
-      // or if its child elements have already been counted, return null.
+      // If we've already inspected the parent, return null because
+      // we don't want to increment number of ads seen.
       if (this.#elementToAdDataMap.has(parent)) {
-        return !this.#childElementsCounted(parent)
-          ? { element: parent, count: 1, childElements: [anchor] }
-          : null;
+        return null;
       }
 
       // If the component has no defined children, return the parent element.
@@ -337,7 +339,7 @@ class SearchAdImpression {
             if (childElements.length) {
               return {
                 element: parent,
-                type: component.type,
+                type: child.type ?? component.type,
                 count: childElements.length,
                 countChildren: child.countChildren,
                 childElements,
@@ -346,7 +348,7 @@ class SearchAdImpression {
           } else if (parent.querySelector(child.selector)) {
             return {
               element: parent,
-              type: component.type,
+              type: child.type ?? component.type,
               count: 1,
               childElements: [anchor],
             };
@@ -374,9 +376,15 @@ class SearchAdImpression {
   /**
    * Determines whether or not an ad was visible or hidden.
    *
-   * An ad is considered visible if it has non-zero dimensions, and is in
-   * the possible viewing area of the users window at the time the ad
-   * impression is recorded.
+   * An ad is considered visible if the parent element containing the
+   * component has non-zero dimensions, and all child element in the
+   * component have non-zero dimensions and fits within the window
+   * at the time when the impression was takent.
+   *
+   * For some components, like text ads, we don't send every child
+   * element for visibility, just the first text ad. For other components
+   * like carousels, we send all child elements because we do care about
+   * counting how many elements of the carousel were visible.
    *
    * @param {Element} element
    *  Element to be inspected
@@ -405,14 +413,14 @@ class SearchAdImpression {
     for (let child of childElements) {
       let itemRect = child.getBoundingClientRect();
 
-      // If the element we're inspecting has no dimension, it is hidden.
+      // If the child element we're inspecting has no dimension, it is hidden.
       if (itemRect.height == 0 || itemRect.width == 0) {
         adsHidden += 1;
         continue;
       }
 
-      // If the element is to the left of the containing element, or to the
-      // right of the containing element, skip it.
+      // If the child element is to the left of the containing element, or to
+      // the right of the containing element, skip it.
       if (
         itemRect.x < elementRect.x ||
         itemRect.x + itemRect.width > elementRect.x + elementRect.width
@@ -420,8 +428,8 @@ class SearchAdImpression {
         continue;
       }
 
-      // If the element is too far down, skip it.
-      if (this.#scrollFromTop + this.#innerWindowHeight < elementRect.y) {
+      // If the child element is too far down, skip it.
+      if (this.#innerWindowHeight < itemRect.y + itemRect.height) {
         continue;
       }
       ++adsVisible;
@@ -467,6 +475,9 @@ class SearchAdImpression {
         recordedValues.childElements = recordedValues.childElements.concat(
           childElements
         );
+      }
+      if (type) {
+        recordedValues.type = type;
       }
     } else {
       this.#elementToAdDataMap.set(element, {
@@ -574,7 +585,13 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
         searchAdImpression.providerInfo = providerInfo;
         searchAdImpression.scrollFromTop = this.contentWindow.scrollY;
         searchAdImpression.innerWindowHeight = this.contentWindow.innerHeight;
+        let start = Cu.now();
         let adImpressions = searchAdImpression.resultFromAnchors(anchors);
+        ChromeUtils.addProfilerMarker(
+          "SearchSERPTelemetryChild._checkForAdLink",
+          start,
+          "Checked anchors for visibility"
+        );
         this.sendAsyncMessage("SearchTelemetry:AdImpressions", {
           adImpressions,
           url,

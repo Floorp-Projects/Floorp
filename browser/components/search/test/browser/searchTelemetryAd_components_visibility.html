@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" type="text/css" href="./serp.css" />
+</head>
+<body>
+  <section id="top">
+    <div style="display: flex;">
+      <div>
+        <h5 test-label="true">ad_link</h5>
+        <!-- The parent size exceeds the window height but the first ad link is above the fold. -->
+        <div class="moz_ad" style="padding-bottom: 000px;">
+          <a href="https://example.com/ad">Ad Link</a>
+        </div>
+      </div>
+      <div>
+        <h5 test-label="true">ad_link</h5>
+        <!-- The ad link is below the fold but the test will scroll to it before the impression is recorded. -->
+        <div id="second-ad" class="moz_ad" style="padding-top: 2000px;">
+          <a href="https://example.com/ad">Ad Link</a>
+        </div>
+      </div>
+      <div>
+        <h5 test-label="true">ad_link</h5>
+        <!-- The parent is above the fold, but the ad link is below the fold and never viewed in the test. -->
+        <div class="moz_ad" style="padding-top: 4000px;">
+          <a href="https://example.com/ad">Ad Link</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</body>
+</html>
