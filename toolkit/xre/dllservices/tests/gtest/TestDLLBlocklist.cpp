@@ -348,6 +348,10 @@ DWORD __stdcall LoadSingleNotificationModules(LPVOID aThreadParameter) {
   return 0;
 }
 
+// The next test is only relevant if we hook LdrLoadDll, so we reflect the
+// hooking condition from browser/app/winlauncher/DllBlocklistInit.cpp.
+#if !defined(MOZ_ASAN) && !defined(_M_ARM64)
+
 // This test relies on the fact that blocked DLL loads generate a DLL load
 // notification.
 TEST(TestDllBlocklist, SingleNotification)
@@ -410,3 +414,5 @@ TEST(TestDllBlocklist, SingleNotification)
   EXPECT_EQ(obs->NonMainThreadNotificationsCount(),
             kSingleNotificationDll1Loads + kSingleNotificationDll2Loads);
 }
+
+#endif  // !defined(MOZ_ASAN) && !defined(_M_ARM64)
