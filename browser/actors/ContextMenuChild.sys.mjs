@@ -117,28 +117,30 @@ export class ContextMenuChild extends JSWindowActorChild {
                 }
                 break;
               case "pictureinpicture":
-                Services.telemetry.keyedScalarAdd(
-                  "pictureinpicture.opened_method",
-                  "contextmenu",
-                  1
-                );
-                let args = {
-                  method: "contextMenu",
-                  firstTimeToggle: (!Services.prefs.getBoolPref(
-                    "media.videocontrols.picture-in-picture.video-toggle.has-used"
-                  )).toString(),
-                };
-                Services.telemetry.recordEvent(
-                  "pictureinpicture",
-                  "opened_method",
-                  "method",
-                  null,
-                  args
-                );
+                if (!media.isCloningElementVisually) {
+                  Services.telemetry.keyedScalarAdd(
+                    "pictureinpicture.opened_method",
+                    "contextmenu",
+                    1
+                  );
+                  let args = {
+                    firstTimeToggle: (!Services.prefs.getBoolPref(
+                      "media.videocontrols.picture-in-picture.video-toggle.has-used"
+                    )).toString(),
+                  };
+                  Services.telemetry.recordEvent(
+                    "pictureinpicture",
+                    "opened_method",
+                    "contextMenu",
+                    null,
+                    args
+                  );
+                }
                 let event = new this.contentWindow.CustomEvent(
                   "MozTogglePictureInPicture",
                   {
                     bubbles: true,
+                    detail: { reason: "contextMenu" },
                   },
                   this.contentWindow
                 );
