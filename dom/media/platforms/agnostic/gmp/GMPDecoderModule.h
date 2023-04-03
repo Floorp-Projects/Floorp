@@ -44,8 +44,9 @@ class GMPDecoderModule : public PlatformDecoderModule {
       const nsACString& aMimeType,
       DecoderDoctorDiagnostics* aDiagnostics) const override;
 
-  static media::DecodeSupportSet SupportsMimeType(const nsACString& aMimeType,
-                                                  const Maybe<nsCString>& aGMP);
+  static media::DecodeSupportSet SupportsMimeType(
+      const nsACString& aMimeType, const nsACString& aApi,
+      const Maybe<nsCString>& aKeySystem);
 
  private:
   GMPDecoderModule() = default;

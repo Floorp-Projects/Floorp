@@ -31,7 +31,8 @@ class GeckoMediaPluginServiceChild : public GeckoMediaPluginService,
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIASYNCSHUTDOWNBLOCKER
 
-  NS_IMETHOD HasPluginForAPI(const nsACString& aAPI, nsTArray<nsCString>* aTags,
+  NS_IMETHOD HasPluginForAPI(const nsACString& aAPI,
+                             const nsTArray<nsCString>& aTags,
                              bool* aRetVal) override;
   NS_IMETHOD GetNodeId(const nsAString& aOrigin,
                        const nsAString& aTopLevelOrigin,

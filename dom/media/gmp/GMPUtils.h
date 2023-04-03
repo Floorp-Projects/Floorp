@@ -68,7 +68,7 @@ class GMPInfoFileParser {
 
 bool ReadIntoString(nsIFile* aFile, nsCString& aOutDst, size_t aMaxLength);
 
-bool HaveGMPFor(const nsCString& aAPI, nsTArray<nsCString>&& aTags);
+bool HaveGMPFor(const nsACString& aAPI, const nsTArray<nsCString>& aTags);
 
 void LogToConsole(const nsAString& aMsg);
 

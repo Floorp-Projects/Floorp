@@ -284,7 +284,7 @@ void GeckoMediaPluginServiceChild::BeginShutdown() {
 
 NS_IMETHODIMP
 GeckoMediaPluginServiceChild::HasPluginForAPI(const nsACString& aAPI,
-                                              nsTArray<nsCString>* aTags,
+                                              const nsTArray<nsCString>& aTags,
                                               bool* aHasPlugin) {
   StaticMutexAutoLock lock(sGMPCapabilitiesMutex);
   if (!sGMPCapabilities) {
@@ -294,7 +294,7 @@ GeckoMediaPluginServiceChild::HasPluginForAPI(const nsACString& aAPI,
 
   nsCString api(aAPI);
   for (const GMPCapabilityAndVersion& plugin : *sGMPCapabilities) {
-    if (GMPCapability::Supports(plugin.mCapabilities, api, *aTags)) {
+    if (GMPCapability::Supports(plugin.mCapabilities, api, aTags)) {
       *aHasPlugin = true;
       return NS_OK;
     }
