@@ -3,7 +3,7 @@
 
 All notable changes to this program are documented in this file.
 
-## 0.33.0  (2023-04-03)
+## 0.33.0  (2023-04-03, `a80e5fd61076`)
 
 ### Known problems
 
