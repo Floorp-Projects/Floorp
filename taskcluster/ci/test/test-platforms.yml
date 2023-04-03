@@ -63,6 +63,11 @@ linux1804-64-shippable-qr/opt:
         - browsertime
         - browsertime-profiling
 
+linux1804-64-nightlyasrelease-qr/opt:
+    build-platform: linux64-nightlyasrelease/opt
+    test-sets:
+        - browsertime
+
 linux1804-64-qr/debug:
     build-platform: linux64/debug
     test-sets:
@@ -188,6 +193,11 @@ windows10-64-shippable-qr/opt:
     build-platform: win64-shippable/opt
     test-sets:
         - windows-talos
+        - browsertime
+
+windows10-64-nightlyasrelease-qr/opt:
+    build-platform: win64-nightlyasrelease/opt
+    test-sets:
         - browsertime
 
 # win10-64 2004
@@ -321,6 +331,11 @@ macosx1015-64-shippable-qr/opt:
         - talos-profiling
         - web-platform-tests
         - web-platform-tests-backlog
+
+macosx1015-64-nightlyasrelease-qr/opt:
+    build-platform: macosx64-nightlyasrelease/opt
+    test-sets:
+        - browsertime
 
 macosx1015-64-devedition-qr/opt:
     build-platform: macosx64-devedition/opt
