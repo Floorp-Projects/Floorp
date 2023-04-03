@@ -1745,16 +1745,18 @@ Element* Element::GetAttrAssociatedElement(nsAtom* aAttr) const {
   return nullptr;
 }
 
-void Element::ExplicitlySetAttrElement(Element* aElement, nsAtom* aAttr) {
+void Element::ExplicitlySetAttrElement(nsAtom* aAttr, Element* aElement) {
   if (aElement) {
     nsExtendedDOMSlots* slots = ExtendedDOMSlots();
     slots->mExplicitlySetAttrElements.InsertOrUpdate(
         aAttr, do_GetWeakReference(aElement));
+    SetAttr(aAttr, EmptyString(), IgnoreErrors());
     return;
   }
 
   if (auto* slots = GetExistingExtendedDOMSlots()) {
     slots->mExplicitlySetAttrElements.Remove(aAttr);
+    UnsetAttr(aAttr, IgnoreErrors());
   }
 }
 

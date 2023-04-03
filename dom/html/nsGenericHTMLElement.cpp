@@ -2797,15 +2797,12 @@ bool nsGenericHTMLFormControlElementWithState::ParseAttribute(
 
 mozilla::dom::Element*
 nsGenericHTMLFormControlElementWithState::GetPopoverTargetElement() const {
-  // TODO: implement attr-associated element algorithm, see
-  // https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#attr-associated-element
-  return nullptr;
+  return GetAttrAssociatedElement(nsGkAtoms::popovertarget);
 }
 
 void nsGenericHTMLFormControlElementWithState::SetPopoverTargetElement(
-    mozilla::dom::Element*) {
-  // TODO: implement attr-associated element algorithm, see setter steps at
-  // https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#attr-associated-element
+    mozilla::dom::Element* aElement) {
+  ExplicitlySetAttrElement(nsGkAtoms::popovertarget, aElement);
 }
 
 void nsGenericHTMLFormControlElementWithState::GenerateStateKey() {
