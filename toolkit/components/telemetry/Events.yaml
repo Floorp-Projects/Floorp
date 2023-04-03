@@ -1059,6 +1059,169 @@ browser.launched_to_handle:
         The `action` of the system (chrome privileged) alert that Firefox was
         launched to complete.
 
+browser.migration:
+  opened:
+    objects: ["legacy_wizard", "wizard"]
+    description: >
+      Recorded when the migration wizard opens.
+    bug_numbers:
+      - 1824786
+    notification_emails:
+      - mconley@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes: [main]
+    release_channel_collection: opt-out
+    expiry_version: never
+  no_browsers_found:
+    objects: ["legacy_wizard", "wizard"]
+    description: >
+      Recorded when the migration wizard reports that there are no browsers to migrate from.
+    bug_numbers:
+      - 1824786
+    notification_emails:
+      - mconley@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes: [main]
+    release_channel_collection: opt-out
+    expiry_version: never
+  browser_selected:
+    objects: ["legacy_wizard", "wizard"]
+    description: >
+      Recorded when the user selects a browser to migrate from.
+    bug_numbers:
+      - 1824786
+    notification_emails:
+      - mconley@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes: [main]
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      migrator_key: The key of the browser that was selected.
+  profile_selected:
+    objects: ["legacy_wizard", "wizard"]
+    description: >
+      Recorded when the user selects a profile to migrate from. If the browser doesn't
+      support multiple profiles, this will not be recorded.
+    bug_numbers:
+      - 1824786
+    notification_emails:
+      - mconley@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes: [main]
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      migrator_key: The key of the browser that had a profile selected for it.
+  resources_selected:
+    objects: ["legacy_wizard", "wizard"]
+    description: >
+      Recorded when the user selects resources from the browser / profile to import.
+    bug_numbers:
+      - 1824786
+    notification_emails:
+      - mconley@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes: [main]
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      migrator_key: The key of the browser that had resources selected for it.
+      history: >
+        "1" if history was selected. "0" otherwise.
+      formdata: >
+        "1" if form data was selected. "0" otherwise.
+      passwords: >
+        "1" if passwords was selected. "0" otherwise.
+      bookmarks: >
+        "1" if bookmarks were selected. "0" otherwise.
+      other: A count of the number of other resource types that were selected.
+      configured: >
+        "1" if Variant 2 of the new Migration Wizard was being used, and the list of
+        resources was expanded. "0" otherwise.
+  safari_perms:
+    objects: ["legacy_wizard", "wizard"]
+    description: >
+      Recorded if the user is on macOS, chose to migrate from Safari, and was presented with
+      the page of the wizard requesting permission to read from the Safari profile folder.
+    bug_numbers:
+      - 1824786
+    notification_emails:
+      - mconley@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes: [main]
+    release_channel_collection: opt-out
+    expiry_version: never
+  safari_password_file:
+    objects: ["wizard"]
+    description: >
+      Recorded if the user is on macOS, chose to migrate from Safari, and was presented with
+      the page of the wizard requesting to import passwords from a file. This only gets recorded
+      in the new migration wizard.
+    bug_numbers:
+      - 1824786
+    notification_emails:
+      - mconley@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes: [main]
+    release_channel_collection: opt-out
+    expiry_version: never
+  migration_started:
+    objects: ["legacy_wizard", "wizard"]
+    description: >
+      Recorded when the user begins a migration.
+    bug_numbers:
+      - 1824786
+    notification_emails:
+      - mconley@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes: [main]
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      migrator_key: The key of the migrator that will perform the migration.
+      history: >
+        "1" if history is being migrated. "0" otherwise.
+      formdata: >
+        "1" if form data is being migrated. "0" otherwise.
+      passwords: >
+        "1" if passwords are being migrated. "0" otherwise.
+      bookmarks: >
+        "1" if bookmarks are being migrated. "0" otherwise.
+      other: A count of the number of other resource types that are being migrated.
+  migration_finished:
+    objects: ["legacy_wizard", "wizard"]
+    description: >
+      Recorded when the user finishes a migration.
+    bug_numbers:
+      - 1824786
+    notification_emails:
+      - mconley@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes: [main]
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      migrator_key: The key of the migrator that will perform the migration.
+      history: >
+        "1" if history was migrated. "0" otherwise.
+      formdata: >
+        "1" if form data was migrated. "0" otherwise.
+      passwords: >
+        "1" if passwords were migrated. "0" otherwise.
+      bookmarks: >
+        "1" if bookmarks were migrated. "0" otherwise.
+      other: A count of the number of other resource types that were migrated.
+
 pwmgr:
   open_management:
     objects: ["aboutprotections", "autocomplete", "capturedoorhanger", "contextmenu", "direct", "fxamenu", "mainmenu", "pageinfo", "preferences", "snippet"]

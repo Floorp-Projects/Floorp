@@ -40,8 +40,11 @@ var MigrationWizard = {
   _migrator: null,
   _autoMigrate: null,
   _receivedPermissions: new Set(),
+  _succeededMigrationEventArgs: null,
 
   init() {
+    Services.telemetry.setEventRecordingEnabled("browser.migration", true);
+
     let os = Services.obs;
     os.addObserver(this, "Migration:Started");
     os.addObserver(this, "Migration:ItemBeforeMigrate");
@@ -155,6 +158,8 @@ var MigrationWizard = {
         MigrationWizard.onImportSourcePageAdvanced(e);
       });
 
+    this.recordEvent("opened");
+
     this.onImportSourcePageShow();
   },
 
@@ -166,6 +171,24 @@ var MigrationWizard = {
     os.removeObserver(this, "Migration:ItemError");
     os.removeObserver(this, "Migration:Ended");
     MigrationUtils.finishMigration();
+  },
+
+  /**
+   * Used for recording telemetry in the migration wizard.
+   *
+   * @param {string} type
+   *   The type of event being recorded.
+   * @param {object} args
+   *   The data to pass to telemetry when the event is recorded.
+   */
+  recordEvent(type, args = null) {
+    Services.telemetry.recordEvent(
+      "browser.migration",
+      type,
+      "legacy_wizard",
+      null,
+      args
+    );
   },
 
   spinResolve(promise) {
@@ -239,6 +262,7 @@ var MigrationWizard = {
     if (selectedMigrator) {
       group.selectedItem = selectedMigrator;
     } else {
+      this.recordEvent("no_browsers_found");
       // We didn't find a migrator, notify the user
       document.getElementById("noSources").hidden = false;
 
@@ -257,6 +281,8 @@ var MigrationWizard = {
   onImportSourcePageAdvanced(event) {
     var newSource = document.getElementById("importSourceGroup").selectedItem
       .id;
+
+    this.recordEvent("browser_selected", { migrator_key: newSource });
 
     if (newSource == "nothing") {
       // Need to do telemetry here because we're closing the dialog before we get to
@@ -339,6 +365,9 @@ var MigrationWizard = {
   },
 
   onSelectProfilePageAdvanced() {
+    this.recordEvent("profile_selected", {
+      migrator_key: this._source,
+    });
     var profiles = document.getElementById("profiles");
     let sourceProfiles = this.spinResolve(this._migrator.getSourceProfiles());
     this._selectedProfile =
@@ -383,17 +412,57 @@ var MigrationWizard = {
 
   onImportItemsPageRewound() {
     this._wiz.canAdvance = true;
-    this.onImportItemsPageAdvanced();
+    this.onImportItemsPageAdvanced(true /* viaRewind */);
   },
 
-  onImportItemsPageAdvanced() {
+  onImportItemsPageAdvanced(viaRewind = false) {
+    let extraKeys = {
+      migrator_key: this._source,
+      history: "0",
+      formdata: "0",
+      passwords: "0",
+      bookmarks: "0",
+
+      // "other" will get incremented, so we keep this as a number for
+      // now, and will cast to a string before submitting to Event telemetry.
+      other: 0,
+
+      configured: "0",
+    };
+
     var dataSources = document.getElementById("dataSources");
     this._itemsFlags = 0;
+
     for (var i = 0; i < dataSources.childNodes.length; ++i) {
       var checkbox = dataSources.childNodes[i];
       if (checkbox.localName == "checkbox" && checkbox.checked) {
+        let flag = parseInt(checkbox.id);
+
+        switch (flag) {
+          case MigrationUtils.resourceTypes.HISTORY:
+            extraKeys.history = "1";
+            break;
+          case MigrationUtils.resourceTypes.FORMDATA:
+            extraKeys.formdata = "1";
+            break;
+          case MigrationUtils.resourceTypes.PASSWORDS:
+            extraKeys.passwords = "1";
+            break;
+          case MigrationUtils.resourceTypes.BOOKMARKS:
+            extraKeys.bookmarks = "1";
+            break;
+          default:
+            extraKeys.other++;
+        }
+
         this._itemsFlags |= parseInt(checkbox.id);
       }
+    }
+
+    extraKeys.other = String(extraKeys.other);
+
+    if (!viaRewind) {
+      this.recordEvent("resources_selected", extraKeys);
     }
 
     this._updateNextPageForPermissions();
@@ -437,6 +506,7 @@ var MigrationWizard = {
 
       if (!havePermissions) {
         this._wiz.currentPage.next = "importPermissions";
+        this.recordEvent("safari_perms");
       }
     }
   },
@@ -531,10 +601,68 @@ var MigrationWizard = {
     }
   },
 
+  recordResourceMigration(obj, resourceType) {
+    // Sometimes, the resourceType that gets passed here is a string, which
+    // is bizarre. We'll hold our nose and accept either a string or a
+    // number.
+    resourceType = parseInt(resourceType, 10);
+
+    switch (resourceType) {
+      case MigrationUtils.resourceTypes.HISTORY:
+        obj.history = "1";
+        break;
+      case MigrationUtils.resourceTypes.FORMDATA:
+        obj.formdata = "1";
+        break;
+      case MigrationUtils.resourceTypes.PASSWORDS:
+        obj.passwords = "1";
+        break;
+      case MigrationUtils.resourceTypes.BOOKMARKS:
+        obj.bookmarks = "1";
+        break;
+      default:
+        obj.other++;
+    }
+  },
+
+  recordMigrationStartEvent(resourceFlags) {
+    let extraKeys = {
+      migrator_key: this._source,
+      history: "0",
+      formdata: "0",
+      passwords: "0",
+      bookmarks: "0",
+      // "other" will get incremented, so we keep this as a number for
+      // now, and will cast to a string before submitting to Event telemetry.
+      other: 0,
+    };
+
+    for (let resourceTypeKey in MigrationUtils.resourceTypes) {
+      let resourceType = MigrationUtils.resourceTypes[resourceTypeKey];
+      if (resourceFlags & resourceType) {
+        this.recordResourceMigration(extraKeys, resourceType);
+      }
+    }
+
+    extraKeys.other = String(extraKeys.other);
+    this.recordEvent("migration_started", extraKeys);
+  },
+
   observe(aSubject, aTopic, aData) {
     var label;
     switch (aTopic) {
       case "Migration:Started":
+        this._succeededMigrationEventArgs = {
+          migrator_key: this._source,
+          history: "0",
+          formdata: "0",
+          passwords: "0",
+          bookmarks: "0",
+          // "other" will get incremented, so we keep this as a number for
+          // now, and will cast to a string before submitting to Event telemetry.
+          other: 0,
+        };
+        this.recordMigrationStartEvent(this._itemsFlags);
         break;
       case "Migration:ItemBeforeMigrate":
         label = document.getElementById(aData + "_migrated");
@@ -543,12 +671,21 @@ var MigrationWizard = {
         }
         break;
       case "Migration:ItemAfterMigrate":
+        this.recordResourceMigration(this._succeededMigrationEventArgs, aData);
         label = document.getElementById(aData + "_migrated");
         if (label) {
           label.removeAttribute("style");
         }
         break;
       case "Migration:Ended":
+        this._succeededMigrationEventArgs.other = String(
+          this._succeededMigrationEventArgs.other
+        );
+        this.recordEvent(
+          "migration_finished",
+          this._succeededMigrationEventArgs
+        );
+
         if (this.isInitialMigration) {
           // Ensure errors in reporting data recency do not affect the rest of the migration.
           try {
