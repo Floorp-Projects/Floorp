@@ -108,10 +108,6 @@ class CharacterData : public nsIContent {
 
   void UnbindFromTree(bool aNullParent = true) override;
 
-  already_AddRefed<nsINodeList> GetChildren(uint32_t aFilter) final {
-    return nullptr;
-  }
-
   const nsTextFragment* GetText() override { return &mText; }
   uint32_t TextLength() const final { return TextDataLength(); }
 

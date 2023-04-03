@@ -137,12 +137,6 @@ class nsIContent : public nsINode {
   };
 
   /**
-   * Return the flattened tree children of the node, depending on the filter, as
-   * well as native anonymous children.
-   */
-  virtual already_AddRefed<nsINodeList> GetChildren(uint32_t aFilter) = 0;
-
-  /**
    * Makes this content anonymous
    * @see nsIAnonymousContentCreator
    */
