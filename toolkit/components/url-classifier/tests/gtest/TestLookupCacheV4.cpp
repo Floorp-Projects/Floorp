@@ -5,8 +5,11 @@
 
 #include "Classifier.h"
 #include "LookupCacheV4.h"
+#include "nsAppDirectoryServiceDefs.h"
 
 #include "Common.h"
+
+#define GTEST_SAFEBROWSING_DIR "safebrowsing"_ns
 
 static void TestHasPrefix(const nsCString& aURL, bool aExpectedHas,
                           bool aExpectedComplete) {

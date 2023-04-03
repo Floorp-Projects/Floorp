@@ -7,7 +7,6 @@
 
 #include "Classifier.h"
 #include "HashStore.h"
-#include "LookupCacheV4.h"
 #include "mozilla/Components.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/Unused.h"
@@ -19,19 +18,6 @@
 
 using namespace mozilla;
 using namespace mozilla::safebrowsing;
-
-#define GTEST_SAFEBROWSING_DIR "safebrowsing"_ns
-
-template <typename Function>
-void RunTestInNewThread(Function&& aFunction) {
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      "RunTestInNewThread", std::forward<Function>(aFunction));
-  nsCOMPtr<nsIThread> testingThread;
-  nsresult rv =
-      NS_NewNamedThread("Testing Thread", getter_AddRefs(testingThread), r);
-  ASSERT_EQ(rv, NS_OK);
-  testingThread->Shutdown();
-}
 
 nsresult SyncApplyUpdates(TableUpdateArray& aUpdates) {
   // We need to spin a new thread specifically because the callback
@@ -192,56 +178,6 @@ void CheckContent(LookupCacheV4* aCache, const _PrefixArray& aPrefixArray) {
 
     ASSERT_TRUE(resultPrefix->Equals(*expectedPrefix));
   }
-}
-
-static nsresult BuildCache(LookupCacheV2* cache,
-                           const _PrefixArray& aPrefixArray) {
-  AddPrefixArray prefixes;
-  AddCompleteArray completions;
-  nsresult rv = PrefixArrayToAddPrefixArray(aPrefixArray, prefixes);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  return cache->Build(prefixes, completions);
-}
-
-static nsresult BuildCache(LookupCacheV4* cache,
-                           const _PrefixArray& aPrefixArray) {
-  PrefixStringMap map;
-  PrefixArrayToPrefixStringMap(aPrefixArray, map);
-  return cache->Build(map);
-}
-
-template <typename T>
-RefPtr<T> SetupLookupCache(const _PrefixArray& aPrefixArray,
-                           nsCOMPtr<nsIFile>& aFile) {
-  RefPtr<T> cache = new T(GTEST_TABLE_V4, ""_ns, aFile);
-
-  nsresult rv = cache->Init();
-  EXPECT_EQ(rv, NS_OK);
-
-  rv = BuildCache(cache, aPrefixArray);
-  EXPECT_EQ(rv, NS_OK);
-
-  return cache;
-}
-
-template <typename T>
-RefPtr<T> SetupLookupCache(const _PrefixArray& aPrefixArray) {
-  nsCOMPtr<nsIFile> file;
-  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
-
-  file->AppendNative(GTEST_SAFEBROWSING_DIR);
-
-  RefPtr<T> cache = new T(GTEST_TABLE_V4, ""_ns, file);
-  nsresult rv = cache->Init();
-  EXPECT_EQ(rv, NS_OK);
-
-  rv = BuildCache(cache, aPrefixArray);
-  EXPECT_EQ(rv, NS_OK);
-
-  return cache;
 }
 
 nsresult BuildLookupCache(const RefPtr<Classifier>& classifier,

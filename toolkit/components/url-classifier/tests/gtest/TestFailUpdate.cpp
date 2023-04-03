@@ -49,7 +49,7 @@ TEST(UrlClassifierFailUpdate, CheckTableReset)
   // Apply V2 update
   {
     RefPtr<TableUpdateV2> update = new TableUpdateV2(GTEST_TABLE_V2);
-    Unused << update->NewAddChunk(1);
+    mozilla::Unused << update->NewAddChunk(1);
 
     ApplyUpdate(update);
 
