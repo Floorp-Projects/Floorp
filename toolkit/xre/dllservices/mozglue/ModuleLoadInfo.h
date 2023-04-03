@@ -145,6 +145,11 @@ struct ModuleLoadInfo final {
            mStatus == ModuleLoadInfo::Status::Redirected;
   }
 
+  /**
+   * Returns true for a DLL load which was blocked by our blocklist.
+   */
+  bool WasBlocked() const { return mStatus == ModuleLoadInfo::Status::Blocked; }
+
   // Timestamp for the creation of this event
   LARGE_INTEGER mBeginTimestamp;
   // Duration of the LdrLoadDll call

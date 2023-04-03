@@ -266,6 +266,8 @@ ALL_PROCESSES_TESTS += [
     DllBlocklistEntry("testdllblocklist_allowbyversion.dll", (5, 5, 5, 5)),
     RedirectToNoOpEntryPoint("testdllblocklist_noopentrypoint.dll",
                              (5, 5, 5, 5)),
+    DllBlocklistEntry("testdllblocklist_singlenotification1.dll", ALL_VERSIONS),
+    DllBlocklistEntry("testdllblocklist_singlenotification2.dll", (5, 5, 5, 5)),
 ]
 
 BROWSER_PROCESS += [
