@@ -11,8 +11,10 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -45,7 +47,9 @@ class NimbusMessagingStorageTest {
     private lateinit var storage: NimbusMessagingStorage
     private lateinit var messagingFeature: FeatureHolder<Messaging>
     private var malformedWasReported = false
+    private var malformedMessageIds = mutableSetOf<String>()
     private val reportMalformedMessage: (String) -> Unit = {
+        malformedMessageIds.add(it)
         malformedWasReported = true
     }
     private lateinit var featuresInterface: FeaturesInterface
@@ -56,7 +60,6 @@ class NimbusMessagingStorageTest {
     @Before
     fun setup() {
         MockitoAnnotations.openMocks(this)
-        malformedWasReported = false
         NullVariables.instance.setContext(testContext)
 
         val (messagingFeatureTmp, featuresInterfaceTmp) = createMessagingFeature()
@@ -79,6 +82,12 @@ class NimbusMessagingStorageTest {
             gleanPlumb,
             messagingFeature,
         )
+    }
+
+    @After
+    fun tearDown() {
+        malformedWasReported = false
+        malformedMessageIds.clear()
     }
 
     @Test
@@ -654,7 +663,34 @@ class NimbusMessagingStorageTest {
             assertEquals(null, storage.getMessage("no-message")?.id)
         }
 
+    @Test
+    fun `GIVEN a message without text THEN reject the message and report it as malformed`() = runTest {
+        val (feature, _) = createMessagingFeature(
+            styles = mapOf(
+                "style-1" to createStyle(priority = 100),
+            ),
+            triggers = mapOf("trigger-1" to "://trigger-1"),
+            messages = mapOf(
+                "missing-text" to createMessageData(text = ""),
+                "ok" to createMessageData(),
+            ),
+        )
+        val storage = NimbusMessagingStorage(
+            testContext,
+            metadataStorage,
+            reportMalformedMessage,
+            gleanPlumb,
+            feature,
+        )
+
+        assertNotNull(storage.getMessage("ok"))
+        assertNull(storage.getMessage("missing-text"))
+        assertTrue(malformedMessageIds.contains("missing-text"))
+        assertFalse(malformedMessageIds.contains("ok"))
+    }
+
     private fun createMessageData(
+        text: String = "text-1",
         action: String = "action-1",
         style: String = "style-1",
         triggers: List<String> = listOf("trigger-1"),
@@ -666,6 +702,7 @@ class NimbusMessagingStorageTest {
         trigger = triggers,
         surface = surface,
         isControl = isControl,
+        text = Res.string(text),
     )
 
     private fun createMessagingFeature(
@@ -676,6 +713,7 @@ class NimbusMessagingStorageTest {
             "message-1" to createMessageData(surface = HOMESCREEN),
             "message-2" to createMessageData(surface = NOTIFICATION),
             "malformed" to createMessageData(action = "malformed-action"),
+            "blanktext" to createMessageData(text = ""),
         ),
     ): Pair<FeatureHolder<Messaging>, FeaturesInterface> {
         val messaging = Messaging(

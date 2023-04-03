@@ -54,20 +54,27 @@ class NimbusMessagingStorage(
     /**
      * Returns the [Message] for the given [key] or returns null if none found.
      */
+    suspend fun getMessage(key: String): Message? =
+        createMessage(messagingFeature.value(), key)
+
     @Suppress("ReturnCount")
-    suspend fun getMessage(key: String): Message? {
-        val featureValue = messagingFeature.value()
-        val value = featureValue.messages[key] ?: return null
-        val trigger = sanitizeTriggers(key, value.trigger, featureValue.triggers) ?: return null
-        val action = sanitizeAction(key, value.action, featureValue.actions, value.isControl) ?: return null
+    private suspend fun createMessage(featureValue: Messaging, key: String): Message? {
+        val message = featureValue.messages[key] ?: return null
+        if (message.text.isBlank()) {
+            reportMalformedMessage(key)
+            return null
+        }
+
+        val trigger = sanitizeTriggers(key, message.trigger, featureValue.triggers) ?: return null
+        val action = sanitizeAction(key, message.action, featureValue.actions, message.isControl) ?: return null
         val defaultStyle = StyleData()
         val storageMetadata = metadataStorage.getMetadata()
 
         return Message(
             id = key,
-            data = value,
+            data = message,
             action = action,
-            style = featureValue.styles[value.style] ?: defaultStyle,
+            style = featureValue.styles[message.style] ?: defaultStyle,
             metadata = storageMetadata[key] ?: addMetadata(key),
             triggers = trigger,
         )
@@ -79,27 +86,10 @@ class NimbusMessagingStorage(
      */
     suspend fun getMessages(): List<Message> {
         val featureValue = messagingFeature.value()
-        val nimbusTriggers = featureValue.triggers
-        val nimbusStyles = featureValue.styles
-        val nimbusActions = featureValue.actions
-
         val nimbusMessages = featureValue.messages
-        val defaultStyle = StyleData()
-        val storageMetadata = metadataStorage.getMetadata()
-
-        return nimbusMessages
-            .mapNotNull { (key, value) ->
-                val action = sanitizeAction(key, value.action, nimbusActions, value.isControl)
-                    ?: return@mapNotNull null
-                Message(
-                    id = key,
-                    data = value,
-                    action = action,
-                    style = nimbusStyles[value.style] ?: defaultStyle,
-                    metadata = storageMetadata[key] ?: addMetadata(key),
-                    triggers = sanitizeTriggers(key, value.trigger, nimbusTriggers)
-                        ?: return@mapNotNull null,
-                )
+        return nimbusMessages.keys
+            .mapNotNull { key ->
+                createMessage(featureValue, key)
             }.filter {
                 !it.isExpired &&
                     !it.metadata.dismissed &&
