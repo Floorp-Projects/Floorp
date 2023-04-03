@@ -116,6 +116,26 @@ namespace ChromeUtils {
   HeapSnapshot readHeapSnapshot(DOMString filePath);
 
   /**
+   * Efficient way to know if DevTools are active in the current process.
+   *
+   * This doesn't help know what particular context is being debugged,
+   * but can help strip off code entirely when DevTools aren't used at all.
+   *
+   * BrowsingContext.isWatchedByDevTools is a more precise way to know
+   * when one precise tab is being debugged.
+   */
+  boolean isDevToolsOpened();
+
+  /**
+   * API exposed to DevTools JS code in order to know when devtools are being active in the current process.
+   *
+   * This API counts the number of calls to these methods, allowing to track many DevTools instances.
+   */
+  undefined notifyDevToolsOpened();
+  undefined notifyDevToolsClosed();
+
+
+  /**
    * Return the keys in a weak map.  This operation is
    * non-deterministic because it is affected by the scheduling of the
    * garbage collector and the cycle collector.
