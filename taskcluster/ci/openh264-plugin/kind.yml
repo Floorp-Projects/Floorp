@@ -99,7 +99,7 @@ jobs:
                 - linux64-clang
                 - linux64-dump_syms
                 - linux64-nasm
-                - macosx64-sdk-10.11
+                - macosx64-sdk-toolchain
     macosx64-aarch64/opt:
         attributes:
             build_platform: macosx64-aarch64
@@ -123,7 +123,7 @@ jobs:
                 - linux64-cctools-port
                 - linux64-clang
                 - linux64-dump_syms
-                - macosx64-sdk-11.0
+                - macosx64-sdk-toolchain
     win32/opt:
         attributes:
             build_platform: win32
