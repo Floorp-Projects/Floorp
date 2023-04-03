@@ -514,6 +514,11 @@ class nsINode : public mozilla::dom::EventTarget {
   mozilla::dom::Element* GetNearestInclusiveTargetPopoverForInvoker() const;
 
   /**
+   * https://html.spec.whatwg.org/multipage/popover.html#popover-target-element
+   */
+  mozilla::dom::Element* GetEffectivePopoverTargetElement() const;
+
+  /**
    * https://html.spec.whatwg.org/multipage/popover.html#topmost-clicked-popover
    */
   mozilla::dom::Element* GetTopmostClickedPopover() const;
