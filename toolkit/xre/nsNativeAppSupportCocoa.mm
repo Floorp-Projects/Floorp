@@ -11,6 +11,7 @@
 #include "nsCOMPtr.h"
 #include "nsCocoaFeatures.h"
 #include "nsNativeAppSupportBase.h"
+#include "nsServiceManagerUtils.h"
 
 #include "nsIBaseWindow.h"
 #include "nsCommandLine.h"

@@ -50,6 +50,12 @@
 #  include "va/va.h"
 #endif
 
+#include <vector>
+#include <sys/wait.h>
+#include "nsString.h"
+#include "mozilla/ScopeExit.h"
+#include "mozilla/Sprintf.h"
+
 #ifdef MOZ_X11
 // stuff from glx.h
 typedef struct __GLXcontextRec* GLXContext;
@@ -256,7 +262,6 @@ static int x_error_handler(Display*, XErrorEvent* ev) {
       ev->error_code, ev->request_code, ev->minor_code);
   record_flush();
   _exit(EXIT_FAILURE);
-  return 0;
 }
 #endif
 

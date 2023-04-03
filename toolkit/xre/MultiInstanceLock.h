@@ -10,6 +10,7 @@
 #ifdef XP_WIN
 #  include <windows.h>
 #endif
+#include "nsIFile.h"
 
 // These functions manage "multi-instance locks", which are a type of lock
 // specifically designed to allow instances of an application, process, or other

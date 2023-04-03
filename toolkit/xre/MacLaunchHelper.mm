@@ -39,7 +39,7 @@ void LaunchChildMac(int aArgc, char** aArgv, pid_t* aPid) {
   }
 }
 
-BOOL InstallPrivilegedHelper() {
+bool InstallPrivilegedHelper() {
   AuthorizationRef authRef = NULL;
   OSStatus status = AuthorizationCreate(
       NULL, kAuthorizationEmptyEnvironment,
