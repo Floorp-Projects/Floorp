@@ -314,6 +314,14 @@ mochitest-browser-a11y:
             default: 1800
     mozharness:
         mochitest-flavor: browser
+        chunked:
+            by-test-platform:
+                .*tsan.*: true
+                default: false
+    chunks:
+        by-test-platform:
+            .*tsan.*: 2
+            default: 1
     instance-size: default
     allow-software-gl-layers: false
     virtualization: virtual
