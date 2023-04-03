@@ -46,13 +46,24 @@ static bool ProxySetOnExpando(JSContext* cx, HandleObject proxy, HandleId id,
 
   // SetPrivateElementOperation checks for hasOwn first, which ensures the
   // expando exsists.
-  MOZ_ASSERT(expando);
+  //
+  // If we don't have an expando, then we're probably misusing debugger apis and
+  // should just throw.
+  if (!expando) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_SET_MISSING_PRIVATE);
+    return false;
+  }
 
   Rooted<mozilla::Maybe<PropertyDescriptor>> ownDesc(cx);
   if (!GetOwnPropertyDescriptor(cx, expando, id, &ownDesc)) {
     return false;
   }
-  MOZ_ASSERT(ownDesc.isSome());
+  if (ownDesc.isNothing()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_SET_MISSING_PRIVATE);
+    return false;
+  }
 
   RootedValue expandoValue(cx, proxy->as<ProxyObject>().expando());
   return SetPropertyIgnoringNamedGetter(cx, expando, id, v, expandoValue,
@@ -79,7 +90,11 @@ static bool ProxyGetOnExpando(JSContext* cx, HandleObject proxy,
 
   // We must have the expando, or GetPrivateElemOperation didn't call
   // hasPrivate first.
-  MOZ_ASSERT(expando);
+  if (!expando) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_GET_MISSING_PRIVATE);
+    return false;
+  }
 
   // Because we controlled the creation of the expando, we know it's not a
   // proxy, and so can safely call internal methods on it without worrying about
@@ -89,7 +104,11 @@ static bool ProxyGetOnExpando(JSContext* cx, HandleObject proxy,
     return false;
   }
   // We must have the object, same reasoning as the expando.
-  MOZ_ASSERT(desc.isSome());
+  if (desc.isNothing()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_SET_MISSING_PRIVATE);
+    return false;
+  }
 
   // If the private name has a getter, delegate to that.
   if (desc->hasGetter()) {
