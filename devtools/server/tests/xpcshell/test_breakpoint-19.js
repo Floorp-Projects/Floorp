@@ -11,7 +11,8 @@
 const URL = "test.js";
 
 function setUpCode(debuggee) {
-  /* eslint-disable */
+  /* eslint-disable mozilla/var-only-at-top-level, no-unused-vars */
+  // prettier-ignore
   Cu.evalInSandbox(
     "" + function test() { // 1
       var a = 1;           // 2
@@ -22,7 +23,7 @@ function setUpCode(debuggee) {
     "1.8",
     URL
   );
-  /* eslint-enable */
+  /* eslint-enable mozilla/var-only-at-top-level, no-unused-vars */
 }
 
 add_task(

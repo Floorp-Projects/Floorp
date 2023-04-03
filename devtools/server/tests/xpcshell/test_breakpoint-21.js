@@ -36,9 +36,10 @@ add_task(
   })
 );
 
-/* eslint-disable */
 function evalCode(debuggee) {
   // Start a new script
+  /* eslint-disable mozilla/var-only-at-top-level, max-nested-callbacks, no-unused-vars */
+  // prettier-ignore
   Cu.evalInSandbox(
     "var line0 = Error().lineNumber;\n(" + function () {
       debugger;
@@ -57,4 +58,5 @@ function evalCode(debuggee) {
     } + ")()",
     debuggee
   );
+  /* eslint-enable mozilla/var-only-at-top-level, max-nested-callbacks, no-unused-vars */
 }

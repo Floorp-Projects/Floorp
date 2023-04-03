@@ -55,18 +55,17 @@ add_task(
 );
 
 function evaluateTestCode(debuggee) {
-  /* eslint-disable */
-      Cu.evalInSandbox("var line0 = Error().lineNumber;\n" +
-                       "function foo(stop) {\n" + // line0 + 1
-                       "  this.a = 1;\n" +        // line0 + 2
-                       "  if (stop) return;\n" +  // line0 + 3
-                       "  delete this.a;\n" +     // line0 + 4
-                       "  foo(true);\n" +         // line0 + 5
-                       "}\n" +                    // line0 + 6
-                       "debugger;\n" +            // line0 + 7
-                       "foo();\n",                // line0 + 8
-                       debuggee);
-      /* eslint-enable */
+  // prettier-ignore
+  Cu.evalInSandbox("var line0 = Error().lineNumber;\n" +
+                    "function foo(stop) {\n" + // line0 + 1
+                    "  this.a = 1;\n" +        // line0 + 2
+                    "  if (stop) return;\n" +  // line0 + 3
+                    "  delete this.a;\n" +     // line0 + 4
+                    "  foo(true);\n" +         // line0 + 5
+                    "}\n" +                    // line0 + 6
+                    "debugger;\n" +            // line0 + 7
+                    "foo();\n",                // line0 + 8
+                    debuggee);
   if (!done) {
     Assert.ok(false);
   }

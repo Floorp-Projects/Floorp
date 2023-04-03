@@ -12,6 +12,7 @@ devtools/client/shared/sourceeditor/codemirror/
 devtools/client/shared/sourceeditor/test/cm_mode_ruby.js
 devtools/client/shared/sourceeditor/test/codemirror/
 devtools/client/shared/vendor/
+devtools/client/inspector/markup/test/helper_diff.js
 devtools/shared/acorn/
 devtools/shared/heapsnapshot/CoreDump.pb.cc
 devtools/shared/heapsnapshot/CoreDump.pb.h

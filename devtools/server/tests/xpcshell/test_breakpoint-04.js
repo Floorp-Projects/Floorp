@@ -42,7 +42,7 @@ add_task(
 );
 
 function evaluateTestCode(debuggee) {
-  /* eslint-disable */
+  // prettier-ignore
   Cu.evalInSandbox(
     "var line0 = Error().lineNumber;\n" +
     "function foo() {\n" + // line0 + 1
@@ -53,5 +53,4 @@ function evaluateTestCode(debuggee) {
     "foo();\n",            // line0 + 6
     debuggee
   );
-  /* eslint-disable */
 }

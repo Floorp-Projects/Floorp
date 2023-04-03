@@ -35,7 +35,7 @@ add_task(
 );
 
 function evaluateTestCode(debuggee) {
-  /* eslint-disable */
+  // prettier-ignore
   Cu.evalInSandbox(
     `                                   // 1
     function stopMe() {                 // 2
@@ -50,5 +50,4 @@ function evaluateTestCode(debuggee) {
     "test_pause_exceptions-03.js",
     1
   );
-  /* eslint-disable */
 }

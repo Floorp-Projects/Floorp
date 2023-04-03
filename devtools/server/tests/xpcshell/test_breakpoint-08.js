@@ -52,7 +52,7 @@ add_task(
         threadFront.resume();
       });
 
-      /* eslint-disable */
+      // prettier-ignore
       Cu.evalInSandbox("var line0 = Error().lineNumber;\n" +
                        "function foo() {\n" + // line0 + 1
                        "  this.a = 1;\n" +    // line0 + 2
@@ -63,13 +63,13 @@ add_task(
                        "1.7",
                        "script1.js");
 
+      // prettier-ignore
       Cu.evalInSandbox("var line1 = Error().lineNumber;\n" +
                        "debugger;\n" +        // line1 + 1
                        "foo();\n",           // line1 + 2
                        debuggee,
                        "1.7",
                        "script2.js");
-      /* eslint-enable */
     });
   })
 );

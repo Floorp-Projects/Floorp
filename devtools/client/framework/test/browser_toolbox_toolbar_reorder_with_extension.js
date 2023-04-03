@@ -46,9 +46,13 @@ add_task(async function() {
                            </body>
                          </html>`,
       "extension.js": async () => {
-        // eslint-disable-next-line
-        await browser.devtools.panels.create("extension", "fake-icon.png", "empty.html");
-        // eslint-disable-next-line
+        // eslint-disable-next-line no-undef
+        await browser.devtools.panels.create(
+          "extension",
+          "fake-icon.png",
+          "empty.html"
+        );
+        // eslint-disable-next-line no-undef
         browser.test.sendMessage("devtools-page-ready");
       },
       "empty.html": "",

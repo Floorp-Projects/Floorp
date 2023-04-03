@@ -41,7 +41,7 @@ function evaluateTestCode(debuggee) {
    * along with the debuggee's.
    */
   do_timeout(0, () => {
-    /* eslint-disable */
+    // prettier-ignore
     Cu.evalInSandbox(
       "var line0 = Error().lineNumber;\n" +
       "debugger;\n" + // line0 + 1
@@ -49,6 +49,5 @@ function evaluateTestCode(debuggee) {
       "var b = 2;\n", // line0 + 3
       debuggee
     );
-    /* eslint-enable */
   });
 }

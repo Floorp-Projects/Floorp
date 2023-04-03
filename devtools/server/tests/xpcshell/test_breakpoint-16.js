@@ -44,13 +44,12 @@ add_task(
 );
 
 function evaluateTestCode(debuggee) {
-  /* eslint-disable */
-      Cu.evalInSandbox(
-        "var line0 = Error().lineNumber;\n" +
-        "(function () { debugger; this.acc = 0; for (var i = 0; i < 3; i++) this.acc++; }());",
-        debuggee
-      );
-      /* eslint-enable */
+  // prettier-ignore
+  Cu.evalInSandbox(
+    "var line0 = Error().lineNumber;\n" +
+    "(function () { debugger; this.acc = 0; for (var i = 0; i < 3; i++) this.acc++; }());",
+    debuggee
+  );
 }
 
 async function testAssertions(

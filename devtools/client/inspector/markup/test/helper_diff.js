@@ -25,8 +25,6 @@
  * THE SOFTWARE.
  */
 
-/* eslint-disable */
-
 /**
  * USAGE:
  *   diff(text1, text2);

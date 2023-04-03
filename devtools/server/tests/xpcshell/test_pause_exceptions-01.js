@@ -28,7 +28,8 @@ add_task(
 );
 
 function evaluateTestCode(debuggee) {
-  /* eslint-disable */
+  /* eslint-disable no-throw-literal */
+  // prettier-ignore
   debuggee.eval("(" + function () {
     function stopMe() {
       debugger;
@@ -38,5 +39,5 @@ function evaluateTestCode(debuggee) {
       stopMe();
     } catch (e) {}
   } + ")()");
-  /* eslint-enable */
+  /* eslint-enable no-throw-literal */
 }

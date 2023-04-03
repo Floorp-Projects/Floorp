@@ -42,18 +42,17 @@ dom/base/test/file_bug687859-charset.js
 dom/base/test/file_bug687859-inherit.js
 
 # Ignore devtools debugger files
-# Keep in sync with devtools/client/debugger/.prettierignore
-devtools/client/debugger/src/workers/parser/tests/fixtures/functionNames.js
-devtools/client/debugger/src/workers/parser/tests/fixtures/scopes/*.js
-devtools/client/debugger/src/workers/parser/tests/fixtures/pause/*.js
-devtools/client/debugger/src/test/mochitest/examples/babel/polyfill-bundle.js
-devtools/client/debugger/src/test/mochitest/examples/babel/fixtures/*/input.js
-devtools/client/debugger/src/test/mochitest/examples/babel/fixtures/*/output.js
-devtools/client/debugger/src/test/mochitest/examples/babel/fixtures/*/output.js.map
-devtools/client/debugger/src/test/mochitest/examples/ember/quickstart
+devtools/client/debugger/src/test/examples/**
+devtools/client/debugger/src/test/integration/**
+devtools/client/debugger/src/test/unit-sources/**
+devtools/client/debugger/src/**/fixtures/**
+devtools/client/debugger/src/test/mochitest/**
 
 # These are source mapped and the locations are asserted in the test case.
 devtools/client/webconsole/test/browser/test-mangled-function.*
+
+# This file is based on another and we want to keep the syntax the same.
+devtools/shared/plural-form.js
 
 # Ignore backgroundtasks preferences files.
 toolkit/components/backgroundtasks/defaults

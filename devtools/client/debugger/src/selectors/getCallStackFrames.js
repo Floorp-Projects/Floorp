@@ -45,8 +45,7 @@ export function formatCallStackFrames(
   return annotateFrames(formattedFrames);
 }
 
-// eslint-disable-next-line
-export const getCallStackFrames = (createSelector)(
+export const getCallStackFrames = createSelector(
   getCurrentThreadFrames,
   getSelectedSource,
   getBlackBoxRanges,

@@ -42,7 +42,8 @@ add_task(
 );
 
 function evalCode(debuggee) {
-  /* eslint-disable */
+  /* eslint-disable mozilla/var-only-at-top-level, no-unused-vars */
+  // prettier-ignore
   Cu.evalInSandbox(
     "doTest();\n" +
     function doTest() {
@@ -54,5 +55,5 @@ function evalCode(debuggee) {
     },
     debuggee
   );
-  /* eslint-enable */
+  /* eslint-enable mozilla/var-only-at-top-level, no-unused-vars */
 }
