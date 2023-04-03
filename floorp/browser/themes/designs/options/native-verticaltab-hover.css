@@ -1,0 +1,60 @@
+/*-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+  #sidebar {
+    max-width: none !important;
+    min-width: 0px !important;
+  }
+  
+  #sidebar-splitter {
+    display: none !important;
+  }
+  
+  #sidebar-header {
+    display: none !important;
+  }
+  
+  
+  /*shared*/
+  #sidebar-box {
+    position: relative !important;
+    clip-path: inset(0) !important;
+    z-index: 1 !important;
+  }
+  
+  :root {
+    --default-vertitaltab-width: 3em;
+    --hoverd-verticaltab-width: 20em;
+  }
+    
+  
+  
+  /*close*/
+  #sidebar-box {
+    min-width: var(--default-vertitaltab-width) !important;
+    max-width: var(--default-vertitaltab-width) !important;
+    width: var(--default-vertitaltab-width) !important;
+    transition: all 200ms !important;
+    transition-delay: 0.2s !important;
+  }
+  
+  /*open*/
+  #sidebar-box:hover {
+    min-width: var(--hoverd-verticaltab-width) !important;
+    max-width: var(--hoverd-verticaltab-width) !important;
+    transition: all 200ms !important;
+    transition-delay: 0.2s !important;
+  }
+  
+  
+  /*left*/
+  #sidebar-box:not([positionend="true"]):hover {
+    margin-right: calc((var(--hoverd-verticaltab-width) - var(--default-vertitaltab-width)) * -1) !important;
+  }
+  
+  /*right*/
+  #sidebar-box[positionend="true"]:hover {
+    margin-left: calc((var(--hoverd-verticaltab-width) - var(--default-vertitaltab-width)) * -1) !important;
+  }
+  

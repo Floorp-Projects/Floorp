@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg transform="scale(-1,1)" stroke-width="1.2" width="16" height="16" preserveAspectRatio="xMidYMid meet" viewBox="0 0 17 16" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+  <path d="M0 17 L0 16 A16 16 0 0 0 16 0 L 18 0 L 18 17 Z" fill="context-fill"></path>
+  <path d="M0 16 A16 16 0 0 0 16 0" stroke="context-stroke" stroke-width="0.5" fill="transparent"></path>
+</svg>

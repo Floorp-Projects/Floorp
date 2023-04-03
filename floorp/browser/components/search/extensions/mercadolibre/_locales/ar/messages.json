@@ -1,0 +1,17 @@
+{
+  "extensionName": {
+    "message": "MercadoLibre Argentina"
+  },
+  "extensionDescription": {
+    "message": "MercadoLibre Argentina"
+  },
+  "searchUrl": {
+    "message": "https://www.mercadolibre.com.ar/jm/search"
+  },
+  "searchForm": {
+    "message": "https://www.mercadolibre.com.ar/"
+  },
+  "searchUrlGetParams": {
+    "message": "as_word={searchTerms}"
+  }
+}

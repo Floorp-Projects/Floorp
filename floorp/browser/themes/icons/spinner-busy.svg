@@ -1,0 +1,28 @@
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+	<style>
+		:root
+		{
+			--radius: calc(2 * 3.1415926536 * 37.5%);
+			--max-gap: calc(var(--radius) * .99);
+			--min-gap: calc(var(--radius) * .5);
+		}
+	
+		@keyframes stroke-rotate
+		{
+			0% {   stroke-dashoffset: var(--max-gap); }
+			100% { stroke-dashoffset: var(--min-gap); }
+		}
+		
+		circle
+		{
+			fill: transparent;
+			stroke: context-fill;
+			stroke-width: 12.5%;
+			stroke-dasharray: var(--radius);
+			stroke-linecap: round;
+			transform-origin: center;
+			animation: stroke-rotate 1.333s cubic-bezier(.35, 0, .25, 1) both;
+		}
+	</style>
+	<circle cx="50%" cy="50%" r="37.5%"/>
+</svg>

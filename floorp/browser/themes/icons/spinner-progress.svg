@@ -1,0 +1,43 @@
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+	<style>
+		:root
+		{
+			--radius: calc(2 * 3.1415926536 * 37.5%);
+			--max-gap: calc(var(--radius) * .99);
+			--min-gap: calc(var(--radius) * .25);
+		}
+
+		@keyframes stroke-rotate
+		{
+			0% {			  stroke-dashoffset: var(--max-gap);		 }
+			12.5% {			  stroke-dashoffset: var(--min-gap);
+							  transform: rotate(0);						 }
+			12.5001%, 25% {	  transform: rotateX(180deg) rotate(90deg);	 }
+			25% {			  stroke-dashoffset: var(--max-gap); 	 	 }
+			25.0001%, 37.5% { transform: rotate(270deg); 				 }
+			37.5% {			  stroke-dashoffset: var(--min-gap); 	 	 }
+			37.5001%, 50% {	  transform: rotateX(180deg) rotate(180deg); }
+			50% {			  stroke-dashoffset: var(--max-gap); 	 	 }
+			50.0001%, 62.5% { transform: rotate(180deg); 				 }
+			62.5% {			  stroke-dashoffset: var(--min-gap); 	 	 }
+			62.5001%, 75% {	  transform: rotateX(180deg) rotate(270deg); }
+			75% {			  stroke-dashoffset: var(--max-gap); 	 	 }
+			75.0001%, 87.5% { transform: rotate(90deg); 				 }
+			87.5% {			  stroke-dashoffset: var(--min-gap); 	 	 }
+			87.5001%, 100% {  transform: rotateX(180deg) rotate(360deg); }
+			100% {			  stroke-dashoffset: var(--max-gap); 	 	 }
+		}
+		
+		circle
+		{
+			fill: transparent;
+			stroke-dasharray: var(--radius);
+			stroke: context-fill;
+			stroke-width: 12.5%;
+			stroke-linecap: round;
+			transform-origin: center;
+			animation: stroke-rotate calc(1.333s * 4) cubic-bezier(.35, 0, .25, 1) infinite both;
+		}
+	</style>
+	<circle cx="50%" cy="50%" r="37.5%"/>
+</svg>

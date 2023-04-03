@@ -1,0 +1,20 @@
+{
+  "extensionName": {
+    "message": "Wikipedia (ms)"
+  },
+  "extensionDescription": {
+    "message": "Wikipedia, ensiklopedia bebas"
+  },
+  "searchUrl": {
+    "message": "https://ms.wikipedia.org/wiki/Khas:Gelintar"
+  },
+  "searchForm": {
+    "message": "https://ms.wikipedia.org/wiki/Khas:Gelintar?search={searchTerms}&sourceid=Mozilla-search"
+  },
+  "suggestUrl": {
+    "message": "https://ms.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
+  },
+  "searchUrlGetParams": {
+    "message": "search={searchTerms}&sourceid=Mozilla-search"
+  }
+}

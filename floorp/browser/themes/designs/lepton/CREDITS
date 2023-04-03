@@ -1,0 +1,176 @@
+    This is at least a partial credits-file of people that have contributed to the 'Firefox-UI-Fix' project.
+    It is sorted by name.
+        The fields are: name (N), email (E), web-address(W), Copyright(C), license(L).
+    Thanks,
+
+                 black7375
+----------
+    Reference Projects & Resources
+
+N: Compact Mode Firefox Css
+W: https://github.com/Godiesc/compactmodefirefoxcss
+C: Copyright (c) 2021 Godiesc
+L: MPL 2.0
+
+N: EdgeFox
+W: https://github.com/23Bluemaster23/EdgeFox
+C: Copyright (c) 2021 23Bluemaster23
+L: Unspecified License (Copyright holder approved)
+
+N: EdgeTabSeparater.userChrome.css
+W: https://gist.github.com/mmis1000/08d8de4bbe70c04423f0b966bcc286b1
+C: Copyright (c) 2021 Mmis1000 <mmis10002@gmail.com>
+L: MIT
+
+N: firefox-csshacks
+W: https://github.com/MrOtherGuy/firefox-csshacks
+C: Copyright (c) 2018 MrOtherGuy
+L: MPL 2.0
+
+N: Fluent UI System Icons
+W: https://github.com/microsoft/fluentui-system-icons
+C: Copyright (c) 2020 Microsoft Corporation
+L: MIT
+
+N: gecko-dev
+W: https://hg.mozilla.org/mozilla-central/
+C: Copyright (c) 1998–2021 The Mozilla Foundation
+L: MPL 2.0
+
+N: MaterialFox
+W: https://github.com/muckSponge/MaterialFox
+C: Copyright (c) 2018 muckSponge
+L: MIT
+
+N: Multi-Account-Containers
+W: https://github.com/mozilla/multi-account-containers
+C: Copyright (c) 1998–2021 The Mozilla Foundation
+L: MPL 2.0
+
+N: PS-Menu
+W: https://github.com/chrisseroka/ps-menu
+C: Copyright (c) 2016 chrisseroka
+L: MIT
+
+N: Quantum Nox Firefox Dark Full Theme
+W: https://github.com/Izheil/Quantum-Nox-Firefox-Dark-Full-Theme
+C: Copyright (c) 2017 Izheil
+L: MPL 2.0
+
+N: quietfox
+W: https://github.com/coekuss/quietfox
+C: Copyright (c) 2019 coekuss
+L: MIT
+
+N: ShadowFox
+W: https://github.com/overdodactyl/ShadowFox
+C: Copyright (c) 2017 overdodactyl
+L: MIT
+
+N: SVG Repo
+E: info@svgrepo.com
+W: https://www.svgrepo.com
+C: Copyright (c) 2017 svgrepo.com
+L: CC0
+
+N: uc.css.js
+W: https://github.com/aminomancer/uc.css.js
+C: Copyright (c) 2019 aminomancer
+L: CC BY-NC-SA 4.0
+
+N: userChrome.csshacks
+W: https://gist.github.com/DCzajkowski/baaf7bc81aae5278d690eaae951a823b
+C: Copyright (c) 2021 Dariusz Czajkowski
+L: CC0
+
+N: userChrome.css
+W: https://gist.github.com/Dragoner7/ec2319e5038a6b4722d3e692713f9471
+C: Copyright (c) 2021 Dragoner7
+L: MPL 2.0
+
+N: userChrome.org
+W: https://www.userchrome.org/what-is-userchrome-css.html
+C: Copyright (c) 2021 Jefferson Scher
+L: CC BY 4.0
+
+----------
+    Major Contributors
+
+N: AveYo
+E: aveyo@yahoo.com
+W: https://github.com/AveYo
+
+N: Jan Janssen
+E: medhefgo@web.de
+W: https://github.com/medhefgo
+
+N: Yunsup Sim
+E: pedogunu@gmail.com
+W: https://ethansup.net
+
+----------
+    Contributors
+
+N: 7k5x
+E: 7k5xlp0onfire@gmail.com
+W: https://github.com/7k5x
+
+N: Ajith-stark
+E: ajith.kum.12342@gmail.com
+W: https://github.com/Ajith-stark
+
+N: badprogramshere
+W: https://github.com/badprogramshere
+
+N: Burak Yigit Kaya
+E: ben@byk.im
+W: https://byk.im/
+
+N: dr460nf1r3
+E: njcrypted@protonmail.com
+W: https://dr460nf1r3.me/
+
+N: hellojaccc
+E: kim@taekyeong.me
+W: https://github.com/hellojaccc
+
+N: James Upjohn
+E: jammehcow@jammehcow.co.nz
+W: https://github.com/jammehcow
+
+N: Jonta
+W: https://github.com/Jonta
+
+N: mamen
+W: https://www.mamen.at
+
+N: MarNicGit
+W: https://github.com/MarNicGit
+
+N: ph3b3
+E: phoebeleong8@gmail.com
+W: https://phoebe-leong.github.io/
+
+N: Rahul Ramkumar
+E: rahulram226@gmail.com
+W: https://rahulramkumar.dev
+
+N: Roel
+E: Nyubis@gmail.com
+W: https://github.com/Nyubis
+
+N: SanderTheDragon
+E: sanderthedragon@zoho.com
+W: https://gitlab.com/SanderTheDragon
+
+N: sean z
+E: ean@vsxd.com
+W: https://vsxd.com/
+
+N: Sylvain
+E: B00ze64@hotmail.com
+W: https://github.com/B00ze64
+
+N: Tatsuyuki Ishi
+E: ishitatsuyuki@gmail.com
+W: https://github.com/ishitatsuyuki

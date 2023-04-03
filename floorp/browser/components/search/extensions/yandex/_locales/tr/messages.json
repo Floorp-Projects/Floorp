@@ -1,0 +1,38 @@
+{
+  "extensionName": {
+    "message": "Yandex"
+  },
+  "extensionDescription": {
+    "message": "Yandex Türkiye arama motoru"
+  },
+  "searchUrl": {
+    "message": "https://yandex.com.tr/search"
+  },
+  "searchForm": {
+    "message": "https://www.yandex.com.tr/"
+  },
+  "suggestUrl": {
+    "message": "https://suggest.yandex.com.tr/suggest-ff.cgi?part={searchTerms}"
+  },
+  "searchUrlGetParams": {
+    "message": "text={searchTerms}"
+  },
+  "param_searchbar": {
+    "message": "2186618"
+  },
+  "param_keyword": {
+    "message": "2186621"
+  },
+  "param_contextmenu": {
+    "message": "2186623"
+  },
+  "param_homepage": {
+    "message": "2186617"
+  },
+  "param_newtab": {
+    "message": "2186620"
+  },
+  "extensionIcon": {
+    "message": "yandex-en.ico"
+  }
+}

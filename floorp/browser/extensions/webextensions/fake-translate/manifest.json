@@ -1,0 +1,11 @@
+{
+    "manifest_version": 2,
+    "name": "Translate Web Pages",
+    "version": "1.0.0",
+    "hidden": true,
+    "applications": {
+        "gecko": {
+            "id": "{036a55b4-5e72-4d05-a06c-cba2dfcc134a}"
+        }
+    }
+}

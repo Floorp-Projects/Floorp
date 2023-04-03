@@ -1,0 +1,50 @@
+{
+  "extensionName": {
+    "message": "Floorp System",
+    "description": "拡張機能の名前です。"
+  },
+  "browserActionTitle": {
+    "message": "Check for Updates",
+    "description": "browserActionのタイトル"
+  },
+  "start": {
+    "message": "Download Start",
+    "description": "ダウンロード開始"
+  },
+  "finish": {
+    "message": "Download Finish !",
+    "description": "ダウンロード完了"
+  },
+  "notificationTitle": {
+    "message": "Update notification",
+    "description": "Title"
+  },
+  "notificationContent": {
+    "message": "The latest version of Floorp has been released!\nClick to download the installer.\nCurrent Version:$OLD$\nLatest Version:$NEW$",
+    "description": "Tells the user which link they clicked.",
+    "placeholders": {
+      "old" : {
+        "content" : "$1",
+        "example" : "https://developer.mozilla.org"
+      },
+      "new" : {
+        "content" : "$2",
+        "example" : "https://developer.mozilla.org"
+      }
+    }
+  },
+  "notificationContent-last": {
+    "message": "The Floorp you are using is the latest version.\n No update is required.\nThank you for using Floorp browser.",
+    "description": "リンクをクリックした時通知を表示",
+    "placeholders": {
+      "old" : {
+        "content" : "$1",
+        "example" : "https://developer.mozilla.org"
+      },
+      "new" : {
+        "content" : "$2",
+        "example" : "https://developer.mozilla.org"
+      }
+    }
+  }
+}

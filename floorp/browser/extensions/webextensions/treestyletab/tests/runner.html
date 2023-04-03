@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <script type="module" src="./runner.js"></script>
+    <style type="text/css">
+      body {
+        background: white;
+        color: black;
+      }
+
+      pre {
+        white-space: pre-wrap;
+      }
+
+
+      #results .success {
+        color: green;
+      }
+
+      #results .failure {
+        background: red;
+        color: white;
+      }
+
+      #results .error {
+        background: orange;
+        color: white;
+      }
+
+
+      ul#logs {
+        margin: 1em 0 0;
+        padding: 0;
+      }
+
+      ul#logs li {
+        border-top: 1px solid;
+        list-style: none;
+        margin: 0;
+        padding: 1em;
+      }
+
+      ul#logs li.failure .description {
+        background: pink;
+      }
+      ul#logs li.failure .description::before {
+        content: "Failure: ";
+      }
+
+      ul#logs li.error .description {
+        background: orange;
+      }
+      ul#logs li.error .description::before {
+        content: "Error: ";
+      }
+
+
+      .diff {
+        background: white;
+        padding: 0.5em;
+      }
+
+      .diff .line {
+        display: block;
+      }
+
+      .diff .deleted {
+        background: pink;
+      }
+
+      .diff .inserted {
+        background: lime;
+      }
+    </style>
+  </head>
+  <body>
+    <p>If there are failed tests, debug them with these steps:</p>
+    <ol>
+      <li>Go to definitions of failed tests. Assume that <code>testMoveAttachedTabBeforeHiddenTab</code> failed.</li>
+      <li>Set test functions' property <code>.runnable</code> to <code>true</code>, like: <code>testMoveAttachedTabBeforeHiddenTab.runnable = true;</code> then only those tests are ran and others are ignored.</li>
+      <li>Debug them until all tests become green.</li>
+      <li>Revert lines setting <code>.runnable</code> and run all tests again.</li>
+      <li>Back to the step 1 if there is any failed test.</li>
+    </ol>
+    <hr>
+    <p id="results"></ul>
+    <ul id="logs"></ul>
+  </body>
+</html>

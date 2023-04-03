@@ -16,6 +16,9 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
+try {
+  ChromeUtils.import("resource:///modules/FloorpStartup.jsm");
+} catch (e) { console.error(e) }
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
@@ -1640,12 +1643,12 @@ BrowserGlue.prototype = {
       if (updateChannel) {
         let uninstalledValue = WindowsRegistry.readRegKey(
           Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-          "Software\\Mozilla\\Firefox",
+          "Software\\Ablaze\\Floorp",
           `Uninstalled-${updateChannel}`
         );
         let removalSuccessful = WindowsRegistry.removeRegKey(
           Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-          "Software\\Mozilla\\Firefox",
+          "Software\\Ablaze\\Floorp",
           `Uninstalled-${updateChannel}`
         );
         if (removalSuccessful && uninstalledValue == "True") {

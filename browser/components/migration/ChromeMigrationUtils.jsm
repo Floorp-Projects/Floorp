@@ -265,6 +265,7 @@ var ChromeMigrationUtils = {
         Canary: ["Google", "Chrome SxS"],
         Edge: ["Microsoft", "Edge"],
         "Edge Beta": ["Microsoft", "Edge Beta"],
+        Vivaldi: ["Vivaldi"],
         "360 SE": ["360se6"],
       },
       macosx: {
@@ -274,6 +275,7 @@ var ChromeMigrationUtils = {
         Canary: ["Google", "Chrome Canary"],
         Edge: ["Microsoft Edge"],
         "Edge Beta": ["Microsoft Edge Beta"],
+        Vivaldi: ["Vivaldi"],
       },
       linux: {
         Brave: ["BraveSoftware", "Brave-Browser"],
@@ -281,6 +283,7 @@ var ChromeMigrationUtils = {
         "Chrome Beta": ["google-chrome-beta"],
         "Chrome Dev": ["google-chrome-unstable"],
         Chromium: ["chromium"],
+        Vivaldi: ["vivaldi"],
         // Canary is not available on Linux.
         // Edge is not available on Linux.
       },

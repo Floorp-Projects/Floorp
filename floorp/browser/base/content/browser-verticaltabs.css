@@ -1,0 +1,131 @@
+/*-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("chrome://browser/skin/tabbar/verticaltab.css");
+
+  .tabbrowser-tab {
+    display: block !important;
+  }
+
+ #TabsToolbar-customization-target {
+  width: -moz-available !important;
+  min-width: -moz-available !important;;
+  max-width: -moz-available !important;
+  height: 100% !important;
+  background: var(--lwt-accent-color);
+ }
+ 
+ #toolbar-items-verticaltabs {
+  -moz-box-ordinal-group: 0 !important;
+  display: block; 
+  width:15em;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  min-height: 0px;
+ }
+
+ /* Hide tabtoolber custom elem */
+ #main-window[tabsintitlebar="true"]:not([extradragspace="true"]) #TabsToolbar > .toolbar-items {
+  display: none !important;
+ }
+
+ #sidebar-box {
+  max-width: 50em !important;
+  min-width: 3em !important;
+ }
+
+ #tabbrowser-tabs[haspinnedtabs]:not([positionpinnedtabs]) > #tabbrowser-arrowscrollbox > .tabbrowser-tab[first-visible-unpinned-tab] {
+  margin-inline-start: 0 !important
+}
+
+#tabbrowser-tabs[overflow] .tabbrowser-tab[last-visible-tab]:not([pinned], [style*="max-width"])[fadein] {
+  margin-inline-end: 0 !important
+}
+
+.tab-icon-image:not([pinned]) {
+  padding-inline-end: 1px;
+}
+
+ .tabbrowser-tab.tabbrowser-tab:not([pinned]){
+  width: -moz-available !important;
+  min-width: -moz-available !important;
+  max-width: -moz-available !important;
+  padding-inline-start: 5px !important;
+  padding-inline-end: 5px !important;
+}
+
+ #tabbrowser-tabs[positionpinnedtabs] > #tabbrowser-arrowscrollbox > .tabbrowser-tab[pinned] {
+  position: unset !important;
+ }
+
+ :root:not([uidensity="touch"]) #tabbrowser-arrowscrollbox {
+  --scrollbtn-inner-padding: 0px;
+  --scrollbtn-outer-padding: 0px;
+}
+
+ #tabbrowser-tabs[positionpinnedtabs] > #tabbrowser-arrowscrollbox::part(scrollbox) {
+  padding-inline: 0 !important;
+}
+
+ #tabs-newtab-button {
+  display: block !important;
+  width: -moz-available;
+ }
+
+ #alltabs-button, #new-tab-button {
+  display: none !important;
+ }
+
+ #tabs-newtab-button > .toolbarbutton-text {
+  display: none ;
+ }
+ 
+ .tabbrowser-tab {
+  width: -moz-available !important;
+  min-width: -moz-available !important;
+  max-width: -moz-available !important;
+ }
+
+ .tabbrowser-tab[pinned] {
+  position: unset !important;
+  max-width: 3em !important;
+  width: 3em !important;
+  min-width: 3em !important;
+ }
+
+ .tab-label-container[pinned] {
+   display: none !important;
+ }
+
+ #tabbrowser-arrowscrollbox {
+  display: block;
+ }
+ 
+  /* disable Firefox's sidebar features */
+
+  #sidebar-header {
+    display: none !important;
+  }
+
+  #sidebar {
+    display: none !important;
+  }
+
+  #sidebar-button {
+    display: none !important;
+  }
+
+  /* UI size */
+  :root[uidensity=touch]  .tabbrowser-tab[pinned] {
+    max-width: 3.2em !important;
+    width: 3.2em !important;
+    min-width: 3.2em !important;
+  }
+
+  :root[uidensity=compact]  .tabbrowser-tab[pinned] {
+    max-width: 2.5em !important;
+    width: 2.5em !important;
+    min-width: 2.5em !important;
+  }

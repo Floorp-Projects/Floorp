@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src="util.js"></script>
+<body>
+<pre contenteditable id="test">
+</pre>
+<script>
+window.onload = function() {
+  // Create 10000 lines of editable text.
+  let text = "";
+  for (let i = 0; i < 10000; i++) {
+    text += "Line " + i + "\n";
+  }
+  testElem = document.getElementById("test");
+  testElem.textContent = text;
+  testElem.focus();
+  flush_layout();
+  perf_start();
+  // Move the selection down through 2000 lines...
+  let sel = document.getSelection();
+  for (let i = 0; i < 2000; i++) {
+    sel.modify("move", "forward", "line");
+  }
+  // ...then go to the end, and back up by 2000 lines.
+  sel.setPosition(testElem, 1);
+  for (let i = 0; i < 2000; i++) {
+    sel.modify("move", "backward", "line");
+  }
+  perf_finish();
+}
+</script>

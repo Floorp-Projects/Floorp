@@ -1,0 +1,368 @@
+/*
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+*/
+
+@import url(/resources/ui-base.css);
+@import url(/resources/ui-color.css);
+
+:root > * {
+  transition: opacity 0.25s ease-out;
+}
+:root:not(.initialized) > * {
+  opacity: 0;
+}
+
+/*
+body {
+  background: var(--in-content-box-background);
+  color: var(--text-color);
+}
+*/
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background: var(--in-content-box-background);
+    color: var(--text-color);
+  }
+}
+
+body.independent {
+  background: var(--bg-color);
+  box-sizing: border-box;
+  color: var(--text-color);
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+  font: caption;
+  margin: 0;
+  padding: 1em 1em 100%;
+  -moz-user-select: none;
+}
+
+em {
+  font-style: normal;
+  font-weight: bold;
+}
+
+p, ul {
+  margin: 0 0 0.5em 0;
+  padding: 0;
+}
+
+ul,
+ul li {
+  list-style: none;
+}
+
+p.sub,
+div.sub {
+  padding-left: 2em;
+}
+
+ul p.sub,
+ul div.sub p {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+pre {
+  white-space: pre-wrap;
+}
+
+label[disabled="true"],
+input[disabled="true"] {
+  opacity: 0.5;
+}
+label[disabled="true"] input,
+label[disabled="true"] button {
+  opacity: 1;
+}
+
+label.has-checkbox:not(.inline),
+label.has-radio:not(.inline) {
+  margin-left: 2em;
+  text-indent: -2em;
+  display: block;
+  width: -moz-fit-content;
+}
+
+
+#style-radiogroup {
+  align-content: flex-start;
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  padding: 0;
+}
+
+#style-radiogroup li {
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  margin-bottom: 0.5em;
+  padding: 0;
+  width: calc(1em + 100px + 8em); /* radio + image + label */
+}
+
+#style-radiogroup li img {
+  max-width: 100px;
+}
+
+.style-name {
+  white-space: pre;
+}
+
+#applyThemeColorToIcon ~ img {
+  max-width: 85px;
+}
+
+#showTabDragBehaviorNotification ~ img {
+  max-width: 120px;
+}
+
+label input[type="radio"] ~ img,
+label input[type="checkbox"] ~ img {
+  border: 1px solid ThreeDShadow;
+  vertical-align: middle;
+  margin-top: 0.15em;
+  margin-bottom: 0.15em;
+}
+
+#syncTabsToDeviceOptions label input[type="radio"] ~ img {
+  border: 0 none;
+}
+
+.preview-image {
+  background: no-repeat;
+  background-size: contain;
+  box-shadow: 0.25em 0.25em 0.5em rgba(0, 0, 0, 0.45);
+  display: inline-block;
+  height: 125px /*83px*/;
+  margin-left: 0.5em;
+  opacity: 0;
+  pointer-events: none;
+  position: fixed;
+  right: 0;
+  top: 1.5em;
+  transition: opacity 0.25s ease-out;
+  width: 120px /*80px*/;
+}
+.has-preview-image:not([data-value="-1"]):hover .preview-image {
+  opacity: 1;
+}
+.has-preview-image[data-value="0"] .preview-image {
+  background-image: url("as-independent.png");
+}
+.has-preview-image[data-value="1"] .preview-image {
+  background-image: url("as-child.png");
+}
+.has-preview-image[data-value="2"] .preview-image {
+  background-image: url("as-sibling.png");
+}
+.has-preview-image[data-value="3"] .preview-image,
+.has-preview-image[data-value="4"] .preview-image {
+  background-image: url("as-next-sibling.png");
+}
+
+
+
+#browserThemeCustomRules {
+  -moz-user-select: text;
+  cursor: text;
+}
+
+#tooLargeUserStyleRulesCaution {
+  color: var(--red-50);
+  margin-bottom: 0;
+  visibility: hidden;
+}
+#tooLargeUserStyleRulesCaution.invalid {
+  visibility: visible;
+}
+
+#userStyleRulesField {
+  margin: 0 -5px;
+  min-height: 10em;
+  overflow: hidden;
+  resize: vertical;
+}
+
+#userStyleRulesField > .CodeMirror {
+  border: thin solid;
+  height: calc(100% - 10px);
+  margin: 5px;
+}
+
+#userStyleRulesField > .CodeMirror.CodeMirror-focused {
+  border-color: var(--in-content-border-focus);
+  box-shadow: 0 0 0 1px var(--in-content-border-active),
+              0 0 0 4px var(--in-content-border-active-shadow);
+}
+
+#userStyleRulesField.invalid > .CodeMirror {
+  border-color: var(--red-50);
+  --in-content-border-active: var(--red-50);
+  --in-content-border-active-shadow: var(--red-50-a30);
+}
+
+#userStyleRulesField.invalid .CodeMirror-scroll {
+  background-color: var(--red-50-a10);
+}
+
+.CodeMirror-wrap pre.CodeMirror-line,
+.CodeMirror-wrap pre.CodeMirror-line-like {
+  word-break: break-all !important;
+}
+
+#userStyleRules-footer-bar {
+  display: flex;
+  flex-direction: row;
+}
+
+#userStyleRules-footer-bar button {
+  margin-right: 0.5em;
+}
+
+#userStyleRules-footer-bar .spacer {
+  display: flex;
+  flex-grow: 1;
+}
+
+
+table {
+  border-collapse: collapse;
+}
+th + *,
+td + * {
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
+}
+tbody tr {
+  border-top: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+
+.contextConfigs tbody th,
+.tabDragBehaviorConfigs tbody th {
+  font-weight: normal;
+}
+
+.contextConfigs tbody th,
+.tabDragBehaviorConfigs thead th,
+.tabDragBehaviorConfigs tbody th {
+  text-align: left;
+}
+
+.contextConfigs td,
+.tabDragBehaviorConfigs td {
+  text-align: center;
+}
+
+.contextConfigs table input[type="checkbox"],
+.tabDragBehaviorConfigs table input[type="radio"] {
+  margin-left: 1.5em;
+  margin-right: 1.5em;
+}
+
+
+#externalAddonPermissionsGroup td:nth-child(2) {
+  text-align: center;
+}
+#externalAddonPermissionsGroup td:nth-child(2) input[type="checkbox"] {
+  margin-left: 3em;
+  margin-right: 3em;
+}
+
+
+fieldset.collapsible.collapsed > *:not(legend):not(div) /* "div" is for the container of "import" and "export" buttons */ {
+  display: none;
+}
+
+fieldset.collapsible > legend::before,
+body > section > h1:first-child::before {
+  content: "▼";
+  display: inline-block;
+  font-size: 65%;
+  margin-right: 0.5em;
+  position: relative;
+  transition: transform 0.2s ease;
+}
+
+fieldset.collapsible.collapsed > legend::before,
+body > section.collapsed > h1:first-child::before {
+  transform: rotate(-90deg);
+}
+
+
+:root.successor-tab-support .without-successor-tab-support,
+:root:not(.successor-tab-support) .with-successor-tab-support {
+  display: none;
+}
+
+
+body > section {
+  margin-top: 1em;
+  overflow: hidden;
+  transition: max-height 0.2s ease-out;
+}
+body > section:not(.collapsed) {
+  max-height: none !important;
+}
+
+body > section > h1:first-child {
+  margin-top: 0;
+  cursor: pointer;
+}
+
+body > section > h1:first-child ~ * {
+  opacity: 1;
+  transition: opacity 0.2s ease-out;
+}
+body > section.collapsed > h1:first-child ~ * {
+  opacity: 0;
+}
+
+
+#defaultBookmarkParentChooser {
+  max-width: 100%;
+}
+
+:target {
+  box-shadow: 0 0 0.5em highlight;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+
+:root:not(.show-expert-options) .expert {
+  display: none;
+}
+
+.expert {
+  background: var(--in-content-box-info-background);
+  box-shadow: 0 0 0.5em var(--in-content-box-info-background),
+              0 0 0.5em var(--in-content-box-info-background),
+              0 0 0.5em var(--in-content-box-info-background);
+}
+
+
+#link-optionsPage-top {
+  float: right;
+  padding-right: 1em;
+}
+
+body.independent #link-optionsPage-top {
+  display: none;
+}
+
+
+input[type="checkbox"].missing-permission {
+  opacity: 0.5;
+}
+input[type="checkbox"].missing-permission,
+input[type="checkbox"].missing-permission ~ * {
+  cursor: help;
+}

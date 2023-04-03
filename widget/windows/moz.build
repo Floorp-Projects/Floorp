@@ -178,12 +178,16 @@ LOCAL_INCLUDES += [
 ]
 
 DEFINES["MOZ_UNICODE"] = True
+DEFINES["MOZ_APP_NAME"] = '"%s"' % CONFIG["MOZ_APP_NAME"]
+# Turn `firefox` into `Firefox`.
+DEFINES["MOZ_TOAST_APP_NAME"] = '"%s"' % CONFIG["MOZ_APP_NAME"].title()
 
 for var in ("MOZ_ENABLE_D3D10_LAYER", "MOZ_BACKGROUNDTASKS"):
     if CONFIG[var]:
         DEFINES[var] = True
 
 OS_LIBS += [
+    "ktmw32",
     "rpcrt4",
     "urlmon",
 ]

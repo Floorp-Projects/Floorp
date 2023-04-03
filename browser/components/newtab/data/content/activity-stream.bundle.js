@@ -3467,14 +3467,12 @@ function mapBundleSync(iterable, ids) {
     return getBundleForId(iterable, ids);
   }
 
-  return ids.map(
-    id => getBundleForId(iterable, id)
-  );
+  return ids.map(id => getBundleForId(iterable, id));
 }
-
 /*
  * Find the best `FluentBundle` with the translation for `id`.
  */
+
 function getBundleForId(iterable, id) {
   for (const bundle of iterable) {
     if (bundle.hasMessage(id)) {
@@ -3484,7 +3482,6 @@ function getBundleForId(iterable, id) {
 
   return null;
 }
-
 ;// CONCATENATED MODULE: ./node_modules/fluent-sequence/src/map_async.js
 /*
  * Asynchronously map an identifier or an array of identifiers to the best
@@ -3511,9 +3508,9 @@ async function mapBundleAsync(iterable, ids) {
       if (!foundBundles[index] && bundle.hasMessage(id)) {
         foundBundles[index] = bundle;
         remainingCount--;
-      }
+      } // Return early when all ids have been mapped to contexts.
 
-      // Return early when all ids have been mapped to contexts.
+
       if (remainingCount === 0) {
         return foundBundles;
       }
@@ -3522,14 +3519,11 @@ async function mapBundleAsync(iterable, ids) {
 
   return foundBundles;
 }
-
 ;// CONCATENATED MODULE: ./node_modules/fluent-sequence/src/index.js
 /*
  * @module fluent-sequence
  * @overview Manage ordered sequences of FluentBundles.
  */
-
-
 
 
 ;// CONCATENATED MODULE: ./node_modules/cached-iterable/src/cached_iterable.mjs
@@ -11538,6 +11532,8 @@ class TopSiteLink extends (external_React_default()).PureComponent {
       onDragEnter: this.onDragEvent,
       onDragLeave: this.onDragEvent
     }, draggableProps), /*#__PURE__*/external_React_default().createElement("div", {
+      className: "background"
+    }), /*#__PURE__*/external_React_default().createElement("div", {
       className: "top-site-inner"
     }, /*#__PURE__*/external_React_default().createElement("a", {
       className: "top-site-button",
@@ -14258,12 +14254,80 @@ class _Search extends (external_React_default()).PureComponent {
 const Search_Search = (0,external_ReactRedux_namespaceObject.connect)(state => ({
   Prefs: state.Prefs
 }))(_Search);
+;// CONCATENATED MODULE: ./content-src/components/Background/Background.jsx
+
+const imgLength = 100;
+function Background(props) {
+  if (props.className == "random_image") {
+    let [imgSrc] = (0,external_React_namespaceObject.useState)(`chrome://browser/skin/newtabbg-${Math.floor(Math.random() * imgLength)}.webp`);
+    return /*#__PURE__*/external_React_default().createElement("div", {
+      id: "background_back",
+      className: props.className
+    }, /*#__PURE__*/external_React_default().createElement("div", {
+      id: "background",
+      style: {
+        "--background-url": `url(${imgSrc})`
+      }
+    }));
+  }
+
+  console.log(props.imageList);
+
+  if (props.className == "selected_folder" && props.imageList != undefined) {
+    let [fileImgSrc, setFileImgSrc] = (0,external_React_namespaceObject.useState)({
+      "url": props.imageList.urls.length != 0 ? props.imageList.urls[Math.floor(Math.random() * props.imageList.urls.length)] : ""
+    });
+
+    if (props.imageList.urls.length != 0) {
+      if (props.imageList.urls.indexOf(fileImgSrc.url) == -1) {
+        fileImgSrc.url = props.imageList.urls.length != 0 ? props.imageList.urls[Math.floor(Math.random() * props.imageList.urls.length)] : "";
+        if ("blobData" in fileImgSrc) delete fileImgSrc.blobData;
+      }
+
+      if (!("blobData" in fileImgSrc)) {
+        setImgData(props.imageList.data[fileImgSrc.url].data, fileImgSrc.url, props.imageList.data[fileImgSrc.url].type, setFileImgSrc);
+      } else {
+        return /*#__PURE__*/external_React_default().createElement("div", {
+          id: "background_back",
+          className: props.className
+        }, /*#__PURE__*/external_React_default().createElement("div", {
+          id: "background",
+          style: {
+            "--background-url": `url(${fileImgSrc.blobData})`
+          }
+        }));
+      }
+    } else if (fileImgSrc.url != "") {
+      setFileImgSrc({
+        "url": ""
+      });
+    }
+  }
+
+  return /*#__PURE__*/external_React_default().createElement("div", {
+    id: "background_back",
+    className: props.className
+  }, /*#__PURE__*/external_React_default().createElement("div", {
+    id: "background"
+  }));
+}
+
+async function setImgData(data, url, type, result) {
+  let blobURL = URL.createObjectURL(new Blob([data], {
+    type: type
+  }));
+  result({
+    "url": url,
+    "blobData": blobURL
+  });
+}
 ;// CONCATENATED MODULE: ./content-src/components/Base/Base.jsx
 function Base_extends() { Base_extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return Base_extends.apply(this, arguments); }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 
 
 
@@ -14370,8 +14434,11 @@ class BaseContent extends (external_React_default()).PureComponent {
   }
 
   componentDidMount() {
+    var _document$querySelect;
+
     __webpack_require__.g.addEventListener("scroll", this.onWindowScroll);
     __webpack_require__.g.addEventListener("keydown", this.handleOnKeyDown);
+    (_document$querySelect = document.querySelector(".darkreader")) === null || _document$querySelect === void 0 ? void 0 : _document$querySelect.remove();
   }
 
   componentWillUnmount() {
@@ -14464,7 +14531,30 @@ class BaseContent extends (external_React_default()).PureComponent {
     } = prefs;
     const outerClassName = ["outer-wrapper", isDiscoveryStream && pocketEnabled && "ds-outer-wrapper-search-alignment", isDiscoveryStream && "ds-outer-wrapper-breakpoint-override", prefs.showSearch && this.state.fixedSearch && !noSectionsEnabled && "fixed-search", prefs.showSearch && noSectionsEnabled && "only-search", prefs["logowordmark.alwaysVisible"] && "visible-logo"].filter(v => v).join(" ");
     const hasSnippet = prefs["feeds.snippets"] && this.props.adminContent && this.props.adminContent.message && this.props.adminContent.message.id;
-    return /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement(CustomizeMenu, {
+    let Background_ClassName = "";
+
+    switch (prefs["floorp.background.type"]) {
+      case 1:
+        Background_ClassName = "random_image";
+        break;
+
+      case 2:
+        Background_ClassName = "gradation";
+        break;
+
+      case 3:
+        Background_ClassName = "selected_folder";
+        break;
+
+      default:
+        Background_ClassName = "not_background";
+        break;
+    }
+
+    return /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement(Background, {
+      className: Background_ClassName,
+      imageList: prefs["backgroundPaths"]
+    }), /*#__PURE__*/external_React_default().createElement(CustomizeMenu, {
       onClose: this.closeCustomizationMenu,
       onOpen: this.openCustomizationMenu,
       openPreferences: this.openPreferences,
@@ -14494,7 +14584,28 @@ class BaseContent extends (external_React_default()).PureComponent {
       className: "borderless-error"
     }, /*#__PURE__*/external_React_default().createElement(DiscoveryStreamBase, {
       locale: props.App.locale
-    })) : /*#__PURE__*/external_React_default().createElement(Sections_Sections, null)), /*#__PURE__*/external_React_default().createElement(ConfirmDialog, null))));
+    })) : /*#__PURE__*/external_React_default().createElement(Sections_Sections, null)), /*#__PURE__*/external_React_default().createElement(ConfirmDialog, null))), /*#__PURE__*/external_React_default().createElement("div", {
+      id: "floorp"
+    }, /*#__PURE__*/external_React_default().createElement("a", {
+      class: "releasenote",
+      href: "https://support.ablaze.one",
+      target: "_blank"
+    }, "Support"), /*#__PURE__*/external_React_default().createElement("br", null), /*#__PURE__*/external_React_default().createElement("br", null), /*#__PURE__*/external_React_default().createElement("a", {
+      class: "releasenote",
+      href: "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp",
+      target: "_blank"
+    }, "Release Note")), /*#__PURE__*/external_React_default().createElement("a", {
+      href: "https://unsplash.com/",
+      style: {
+        position: "fixed",
+        bottom: "1em",
+        left: "1em",
+        fontSize: "16px",
+        color: "#ffffff"
+      },
+      target: "_blank",
+      id: "unsplash"
+    }, "Unsplash"));
   }
 
 }

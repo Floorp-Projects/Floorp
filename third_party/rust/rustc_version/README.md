@@ -1,12 +1,19 @@
 rustc-version-rs
-==============
+================
+
+[![Documentation](https://docs.rs/rustc_version/badge.svg)](https://docs.rs/rustc_version/)
+[![Crates.io](https://img.shields.io/crates/v/rustc_version.svg)](https://crates.io/crates/rustc_version)
+[![Build status](https://github.com/Kimundi/rustc-version-rs/workflows/CI/badge.svg)](https://github.com/Kimundi/rustc-version-rs/actions?query=workflow%3ACI)
 
 A library for querying the version of a `rustc` compiler.
 
 This can be used by build scripts or other tools dealing with Rust sources
-to make decisions based on the version of the compiler.
+to make decisions based on the version of the compiler. Current MSRV is 1.32.0.
 
-[![Travis-CI Status](https://travis-ci.org/Kimundi/rustc-version-rs.png?branch=master)](https://travis-ci.org/Kimundi/rustc-version-rs)
+If this is of interest, also consider looking at these other crates:
+
+* [autocfg](https://crates.io/crates/autocfg/), which helps with feature detection instead of depending on compiler versions
+* [rustversion](https://github.com/dtolnay/rustversion) provides a procedural macro with no other dependencies
 
 # Getting Started
 
@@ -22,14 +29,13 @@ Add the following dependency to your Cargo manifest...
 rustc_version = "0.2"
 ```
 
-...and see the [docs](http://kimundi.github.io/rustc-version-rs/rustc_version/index.html) for how to use it.
+... and see the [docs](https://docs.rs/rustc_version) for how to use it.
 
 # Example
 
 ```rust
 // This could be a cargo build script
 
-extern crate rustc_version;
 use rustc_version::{version, version_meta, Channel, Version};
 
 fn main() {
