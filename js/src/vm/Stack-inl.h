@@ -105,21 +105,6 @@ inline void InterpreterFrame::unaliasedForEachActual(Op op) {
   }
 }
 
-struct CopyTo {
-  Value* dst;
-  explicit CopyTo(Value* dst) : dst(dst) {}
-  void operator()(const Value& src) { *dst++ = src; }
-};
-
-struct CopyToHeap {
-  GCPtr<Value>* dst;
-  explicit CopyToHeap(GCPtr<Value>* dst) : dst(dst) {}
-  void operator()(const Value& src) {
-    dst->init(src);
-    ++dst;
-  }
-};
-
 inline ArgumentsObject& InterpreterFrame::argsObj() const {
   MOZ_ASSERT(script()->needsArgsObj());
   MOZ_ASSERT(flags_ & HAS_ARGS_OBJ);
