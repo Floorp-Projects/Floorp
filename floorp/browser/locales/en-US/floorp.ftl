@@ -277,7 +277,7 @@ balance-memory =
     .label = Balance Memory Usage and Performance
 
 max-memory = 
-    .label = Best Speed and Performance (high memory usage) 
+    .label = Best Speed and Performance (high memory usage)
 
 delete-border-and-roundup-option =
   .label = Delete the border and round up { -brand-short-name }'s corners
