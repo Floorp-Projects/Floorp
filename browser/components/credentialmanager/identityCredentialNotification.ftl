@@ -17,5 +17,8 @@ identity-credential-cancel-button =
 identity-credential-accept-button =
     .label = Continue
     .accesskey = C
+identity-credential-sign-in-button =
+    .label = Sign In
+    .accesskey = S
 identity-credential-policy-title = Use { $provider } as a login provider
 identity-credential-policy-description = Logging in to { $host } with a { $provider } account is subject to { $provider }’s <label data-l10n-name="privacy-url">Privacy Policy</label> and <label data-l10n-name="tos-url">Terms of Service</label>.

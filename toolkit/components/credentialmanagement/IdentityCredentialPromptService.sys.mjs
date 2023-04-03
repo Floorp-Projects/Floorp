@@ -447,7 +447,7 @@ export class IdentityCredentialPromptService {
       }
     );
     let [accept, cancel] = localization.formatMessagesSync([
-      { id: "identity-credential-accept-button" },
+      { id: "identity-credential-sign-in-button" },
       { id: "identity-credential-cancel-button" },
     ]);
 
