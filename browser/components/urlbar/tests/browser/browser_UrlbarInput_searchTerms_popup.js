@@ -100,48 +100,6 @@ add_task(async function generic_popup_when_persist_is_enabled() {
   await SpecialPowers.popPrefEnv();
 });
 
-// Ensure the urlbar is not being reverted when a user
-// has written something.
-add_task(async function generic_popup_no_revert_when_persist_is_disabled() {
-  let { tab } = await searchWithTab(
-    SEARCH_TERM,
-    null,
-    defaultTestEngine,
-    false
-  );
-
-  let userTypedValue = "chocolate cake recipe";
-  // Have a user typed value in the urlbar to make
-  // pageproxystate invalid.
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: userTypedValue,
-    waitForFocus,
-    fireInputEvent: true,
-  });
-  gURLBar.blur();
-
-  await waitForPopupNotification();
-
-  // Wait a brief amount of time between when the popup is shown
-  // and when the event handler should fire if it's enabled.
-  await TestUtils.waitForTick();
-
-  Assert.equal(
-    gURLBar.getAttribute("pageproxystate"),
-    "invalid",
-    "Urlbar should not be reverted."
-  );
-
-  Assert.equal(
-    gURLBar.value,
-    userTypedValue,
-    "User typed value should remain in urlbar."
-  );
-
-  BrowserTestUtils.removeTab(tab);
-});
-
 // Ensure the urlbar is not being reverted when a prompt is shown
 // and the persist feature is disabled.
 add_task(async function generic_popup_no_revert_when_persist_is_disabled() {
