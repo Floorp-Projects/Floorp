@@ -505,10 +505,10 @@
 
 .permission-popup-permission-remove-button {
   appearance: none;
+  min-width: auto;
   margin: 0;
   margin-inline-start: 2px;
   border-width: 0;
-  min-width: 0;
   padding: 2px;
   padding-inline-end: 6px;
   background-color: var(--button-bgcolor);
