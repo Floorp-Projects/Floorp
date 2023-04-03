@@ -1418,6 +1418,8 @@ const PreflightCacheCleaner = {
   },
 };
 
+// TODO: Re-enable cleaner after Bug 1823655 has been resolved.
+// eslint-disable-next-line no-unused-vars
 const IdentityCredentialStorageCleaner = {
   async deleteAll() {
     lazy.IdentityCredentialStorageService.clear();
@@ -1571,10 +1573,12 @@ const FLAGS_MAP = [
     cleaners: [PreflightCacheCleaner],
   },
 
-  {
-    flag: Ci.nsIClearDataService.CLEAR_CREDENTIAL_MANAGER_STATE,
-    cleaners: [IdentityCredentialStorageCleaner],
-  },
+  // Disable the cleaner so we don't run the IdentityCredentialStorageService
+  // with crash Bug 1823655.
+  // {
+  //   flag: Ci.nsIClearDataService.CLEAR_CREDENTIAL_MANAGER_STATE, cleaners:
+  //   [IdentityCredentialStorageCleaner],
+  // },
 ];
 
 export function ClearDataService() {
