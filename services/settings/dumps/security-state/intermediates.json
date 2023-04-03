@@ -1,6 +1,42 @@
 {
   "data": [
     {
+      "schema": 1680511689525,
+      "derHash": "9vi81BPJczFm6FhDtGjdNucnFS2aN7FRKcDnZI7O5jk=",
+      "subject": "CN=SHECA OV Server CA G7,O=UniTrust,C=CN",
+      "subjectDN": "MEAxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDEeMBwGA1UEAwwVU0hFQ0EgT1YgU2VydmVyIENBIEc3",
+      "whitelist": false,
+      "attachment": {
+        "hash": "74f8b64ebb878cae50637037ba71ed194776d06db80a0d99d9d7bb69aa72bd2c",
+        "size": 2003,
+        "filename": "Avi_QOpi59uZzfLmkrdh6vjem03c1I8chB3tK_OFL7M=.pem",
+        "location": "security-state-staging/intermediates/e61bfabc-0234-47bf-902a-9b8818738a56.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "Avi/QOpi59uZzfLmkrdh6vjem03c1I8chB3tK/OFL7M=",
+      "crlite_enrolled": false,
+      "id": "b6aa83f8-f475-4f5c-8d7e-dcb466827c22",
+      "last_modified": 1680512223621
+    },
+    {
+      "schema": 1680270493771,
+      "derHash": "PdacW+Fw+UP4BNHTH+j5FsDAImzd166pqpoM39NHQ2E=",
+      "subject": "CN=UCA Global G2 Root,O=UniTrust,C=CN",
+      "subjectDN": "MD0xCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDEbMBkGA1UEAwwSVUNBIEdsb2JhbCBHMiBSb290",
+      "whitelist": false,
+      "attachment": {
+        "hash": "731abf0288a65056be76b95961168ac9cefd34f85f98777eeb686e5ba6c912a2",
+        "size": 2052,
+        "filename": "ElXKvoFS-mTflC96R0F-KflsHOEb-MhOy-KBXMEoCBA=.pem",
+        "location": "security-state-staging/intermediates/457d9552-723c-4b98-97ad-990c5a4bedd6.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "ElXKvoFS+mTflC96R0F+KflsHOEb+MhOy+KBXMEoCBA=",
+      "crlite_enrolled": false,
+      "id": "cafda296-6d89-431c-a92d-0bd54e535030",
+      "last_modified": 1680271023541
+    },
+    {
       "schema": 1679518190665,
       "derHash": "uLGLq6y2qU6r5pKMa6z09qLYQjXX+GZIa194RHO+cIw=",
       "subject": "CN=CATrust ECC DV SSL CA,O=Zhejiang Xinya Network Technology Co.\\, Ltd.,C=CN",
@@ -8999,24 +9035,6 @@
       "crlite_enrolled": false,
       "id": "f18dd59f-ebc7-4e0d-9963-60e432ae1d44",
       "last_modified": 1666727869270
-    },
-    {
-      "schema": 1666727353324,
-      "derHash": "dqxae3TjELnmJOf30Rg4DKloW0DEFsa4meSm1Cm+ej8=",
-      "subject": "CN=TLS RSA ICA R1,O=Public Key Infrastructure Ltd,L=Victoria,ST=Mahé,C=SC",
-      "subjectDN": "MHExCzAJBgNVBAYTAlNDMQ4wDAYDVQQIDAVNYWjDqTERMA8GA1UEBwwIVmljdG9yaWExJjAkBgNVBAoMHVB1YmxpYyBLZXkgSW5mcmFzdHJ1Y3R1cmUgTHRkMRcwFQYDVQQDDA5UTFMgUlNBIElDQSBSMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "07805d7a273057b5374a9a0d3d4f5b9798c42802984c1a7a1293a3517d8e8a75",
-        "size": 2146,
-        "filename": "U9LfjT2tp7DInjOaxZZKrKVVV0njtruyUezjKlI9ECI=.pem",
-        "location": "security-state-staging/intermediates/f63bb3d1-0f61-4eb3-8110-2dcb2dd89f9f.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "U9LfjT2tp7DInjOaxZZKrKVVV0njtruyUezjKlI9ECI=",
-      "crlite_enrolled": false,
-      "id": "a7b96ff4-2c19-4bf8-b220-36ee57cf2fe4",
-      "last_modified": 1666727869256
     },
     {
       "schema": 1666727413717,
@@ -20215,24 +20233,6 @@
       "last_modified": 1656593824346
     },
     {
-      "schema": 1656593437897,
-      "derHash": "YTvHs5w3gkHulTuhpRno9f4wIjsEV/EMw14wpJM7oT8=",
-      "subject": "CN=EV TLS RSA ICA R1,O=Public Key Infrastructure Ltd,L=Victoria,ST=Mahé,C=SC",
-      "subjectDN": "MHQxCzAJBgNVBAYTAlNDMQ4wDAYDVQQIDAVNYWjDqTERMA8GA1UEBwwIVmljdG9yaWExJjAkBgNVBAoMHVB1YmxpYyBLZXkgSW5mcmFzdHJ1Y3R1cmUgTHRkMRowGAYDVQQDDBFFViBUTFMgUlNBIElDQSBSMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "fbe36d0fa1ad5d6d988f5f830844c59500d80d4149af2056825c684ac8ef5d9b",
-        "size": 2162,
-        "filename": "gBX99XA0NOEUd6rWyM2Sljn_RHatTUjnhh-CTUMNF9Y=.pem",
-        "location": "security-state-staging/intermediates/22134104-5ce1-42ac-854b-0e9140df8eb5.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "gBX99XA0NOEUd6rWyM2Sljn/RHatTUjnhh+CTUMNF9Y=",
-      "crlite_enrolled": false,
-      "id": "41e8228f-c39f-4e86-a653-69a80795066d",
-      "last_modified": 1656593824337
-    },
-    {
       "schema": 1656593435988,
       "derHash": "o2wcxiPs8+2JmprBT91WIJGYWOYh5od+Ae9Q2h22o6s=",
       "subject": "CN=E-Tugra EV TLS ECC SubCA R1,O=E-TUGRA EBG BILISIM TEKNOLOJILERI VE HIZMETLERI ANONIM SIRKETI,C=TR",
@@ -20287,24 +20287,6 @@
       "last_modified": 1656593824210
     },
     {
-      "schema": 1656593425074,
-      "derHash": "pfS4JqWGN/kStp/oWZByQ73+qnGgLcRCnQZk4hSgqds=",
-      "subject": "CN=EV TLS ECC ICA R1,O=Public Key Infrastructure Ltd,L=Victoria,ST=Mahé,C=SC",
-      "subjectDN": "MHQxCzAJBgNVBAYTAlNDMQ4wDAYDVQQIDAVNYWjDqTERMA8GA1UEBwwIVmljdG9yaWExJjAkBgNVBAoMHVB1YmxpYyBLZXkgSW5mcmFzdHJ1Y3R1cmUgTHRkMRowGAYDVQQDDBFFViBUTFMgRUNDIElDQSBSMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "dcc0d85bdf90fcf9cf7180560e60a2a8735444b0cf4bcd9483a97388169a84d0",
-        "size": 1341,
-        "filename": "Hm-YeyBPf0CgyqM7jDoHDoSn9_W6pVfgP9SsXIGh6d4=.pem",
-        "location": "security-state-staging/intermediates/5ce080da-dabc-4e36-8b5a-0e36fecb1504.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "Hm+YeyBPf0CgyqM7jDoHDoSn9/W6pVfgP9SsXIGh6d4=",
-      "crlite_enrolled": false,
-      "id": "3eeb12fb-0aad-47f1-a573-fd1113a062d0",
-      "last_modified": 1656593824201
-    },
-    {
       "schema": 1656593424089,
       "derHash": "eF/TI2TEV+KutDU6qVgI83GqiQbhHEDhPDOKaz7nO+E=",
       "subject": "CN=MuaSSL.com EV TLS Issuing ECC CA R1,O=Hao Quang Viet Software Company Limited,C=VN",
@@ -20357,24 +20339,6 @@
       "crlite_enrolled": false,
       "id": "ffdd3c38-1c78-4fe8-8e61-51d74d34cbdf",
       "last_modified": 1656593824138
-    },
-    {
-      "schema": 1656593412481,
-      "derHash": "7R/0Bw8IaOsgoDGfxgGRmAD25e/YI6YVayf4nLBLLCY=",
-      "subject": "CN=TLS ECC ICA R1,O=Public Key Infrastructure Ltd,L=Victoria,ST=Mahé,C=SC",
-      "subjectDN": "MHExCzAJBgNVBAYTAlNDMQ4wDAYDVQQIDAVNYWjDqTERMA8GA1UEBwwIVmljdG9yaWExJjAkBgNVBAoMHVB1YmxpYyBLZXkgSW5mcmFzdHJ1Y3R1cmUgTHRkMRcwFQYDVQQDDA5UTFMgRUNDIElDQSBSMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "e07516a3d91d1c5a8b3fc6ec9cd8ad2b76925600350276269dcc00fe8df93cce",
-        "size": 1329,
-        "filename": "x0b-nG3FvmwYXc4hymUVggr-35gjXzG-RtqvVgdjLaY=.pem",
-        "location": "security-state-staging/intermediates/a994028c-43d8-4c39-93e5-ed4c3d460e02.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "x0b+nG3FvmwYXc4hymUVggr+35gjXzG+RtqvVgdjLaY=",
-      "crlite_enrolled": false,
-      "id": "f9fab06a-de8a-425a-9a91-57e2c36a06b7",
-      "last_modified": 1656593824092
     },
     {
       "schema": 1656593398913,
@@ -27433,5 +27397,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1680101823404
+  "timestamp": 1680512223621
 }
