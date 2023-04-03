@@ -341,6 +341,9 @@ class TabsTrayFragmentTest {
             every { getTabAt(any()) } returns tab
         }
 
+        every { fragment.context } returns testContext
+        every { testContext.settings().enableTabsTrayToCompose } returns false
+
         mockkStatic(ViewBindings::class) {
             every { ViewBindings.findChildViewById<View>(tabsTrayBinding.root, tabsTrayBinding.tabsTray.id) } returns tabsTray
             every { ViewBindings.findChildViewById<View>(tabsTrayBinding.root, tabsTrayBinding.tabLayout.id) } returns tabLayout

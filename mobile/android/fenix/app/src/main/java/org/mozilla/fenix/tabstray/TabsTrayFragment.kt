@@ -224,6 +224,9 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                         displayTabsInGrid = requireContext().settings().gridTabView,
                         shouldShowInactiveTabsAutoCloseDialog =
                         requireContext().settings()::shouldShowInactiveTabsAutoCloseDialog,
+                        onTabPageClick = { page ->
+                            tabsTrayInteractor.onTrayPositionSelected(page.ordinal, false)
+                        },
                         onTabClose = { tab ->
                             tabsTrayInteractor.onTabClosed(tab, TABS_TRAY_FEATURE_NAME)
                         },
@@ -619,8 +622,10 @@ class TabsTrayFragment : AppCompatDialogFragment() {
 
     @VisibleForTesting
     internal fun selectTabPosition(position: Int, smoothScroll: Boolean) {
-        tabsTrayBinding.tabsTray.setCurrentItem(position, smoothScroll)
-        tabsTrayBinding.tabLayout.getTabAt(position)?.select()
+        if (!requireContext().settings().enableTabsTrayToCompose) {
+            tabsTrayBinding.tabsTray.setCurrentItem(position, smoothScroll)
+            tabsTrayBinding.tabLayout.getTabAt(position)?.select()
+        }
     }
 
     @VisibleForTesting
