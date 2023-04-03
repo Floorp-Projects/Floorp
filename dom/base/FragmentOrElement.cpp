@@ -727,16 +727,6 @@ FragmentOrElement::~FragmentOrElement() {
   }
 }
 
-already_AddRefed<nsINodeList> FragmentOrElement::GetChildren(uint32_t aFilter) {
-  RefPtr<nsSimpleContentList> list = new nsSimpleContentList(this);
-  AllChildrenIterator iter(this, aFilter);
-  while (nsIContent* kid = iter.GetNextChild()) {
-    list->AppendElement(kid);
-  }
-
-  return list.forget();
-}
-
 static nsINode* FindChromeAccessOnlySubtreeOwner(nsINode* aNode) {
   if (!aNode->ChromeOnlyAccess()) {
     return aNode;

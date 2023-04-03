@@ -10,6 +10,7 @@
 
 #include "gfxTextRun.h"
 #include "nsArray.h"
+#include "nsContentList.h"
 #include "nsString.h"
 #include "nsIContentInlines.h"
 #include "nsIScrollableFrame.h"
@@ -141,41 +142,32 @@ bool InspectorUtils::IsIgnorableWhitespace(CharacterData& aDataNode) {
 /* static */
 nsINode* InspectorUtils::GetParentForNode(nsINode& aNode,
                                           bool aShowingAnonymousContent) {
-  // First do the special cases -- document nodes and anonymous content
-  nsINode* parent = nullptr;
-
   if (aNode.IsDocument()) {
-    parent = inLayoutUtils::GetContainerFor(*aNode.AsDocument());
-  } else if (aShowingAnonymousContent) {
-    if (aNode.IsContent()) {
-      parent = aNode.AsContent()->GetFlattenedTreeParent();
-    }
+    return inLayoutUtils::GetContainerFor(*aNode.AsDocument());
   }
-
-  if (!parent) {
-    // Ok, just get the normal DOM parent node
-    return aNode.GetParentNode();
+  if (aShowingAnonymousContent && aNode.IsContent()) {
+    return aNode.AsContent()->GetFlattenedTreeParentNode();
   }
-
-  return parent;
+  // Ok, just get the normal DOM parent node
+  return aNode.GetParentNode();
 }
 
 /* static */
 already_AddRefed<nsINodeList> InspectorUtils::GetChildrenForNode(
     nsINode& aNode, bool aShowingAnonymousContent) {
   nsCOMPtr<nsINodeList> kids;
-
-  if (aShowingAnonymousContent) {
-    if (aNode.IsContent()) {
-      kids = aNode.AsContent()->GetChildren(nsIContent::eAllChildren);
+  if (aShowingAnonymousContent && aNode.IsContent()) {
+    // XXX It's weird that `aShowingAnonymousContent` really means "show the
+    // flat tree", but alright.
+    AllChildrenIterator iter(aNode.AsContent(), nsIContent::eAllChildren);
+    RefPtr list = new nsSimpleContentList(&aNode);
+    while (nsIContent* kid = iter.GetNextChild()) {
+      list->AppendElement(kid);
     }
+    return list.forget();
   }
 
-  if (!kids) {
-    kids = aNode.ChildNodes();
-  }
-
-  return kids.forget();
+  return do_AddRef(aNode.ChildNodes());
 }
 
 /* static */

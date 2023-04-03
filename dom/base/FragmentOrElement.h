@@ -97,14 +97,13 @@ class FragmentOrElement : public nsIContent {
                                       mozilla::ErrorResult& aError) override;
 
   // nsIContent interface methods
-  virtual already_AddRefed<nsINodeList> GetChildren(uint32_t aFilter) override;
-  virtual const nsTextFragment* GetText() override;
-  virtual uint32_t TextLength() const override;
-  virtual bool TextIsOnlyWhitespace() override;
-  virtual bool ThreadSafeTextIsOnlyWhitespace() const override;
+  const nsTextFragment* GetText() override;
+  uint32_t TextLength() const override;
+  bool TextIsOnlyWhitespace() override;
+  bool ThreadSafeTextIsOnlyWhitespace() const override;
 
-  virtual void DestroyContent() override;
-  virtual void SaveSubtreeState() override;
+  void DestroyContent() override;
+  void SaveSubtreeState() override;
 
   nsIHTMLCollection* Children();
   uint32_t ChildElementCount() {
