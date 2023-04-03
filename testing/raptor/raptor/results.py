@@ -388,6 +388,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
         test_summary,
         subtest_name_filters,
         handle_custom_data,
+        **kwargs
     ):
         """
         Receive a json blob that contains the results direct from the browsertime tool. Parse
@@ -509,7 +510,6 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
            }
         """
         LOG.info("parsing results from browsertime json")
-
         # bt to raptor names
         conversion = (
             ("fnbpaint", "firstPaint"),
@@ -661,7 +661,8 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                             bt_result["measurements"].setdefault(
                                 "perfstat-" + metric, []
                             ).append(cycle[metric])
-                _extract_cpu_vals()
+                if kwargs.get("gather_cpuTime", None):
+                    _extract_cpu_vals()
             else:
                 # extracting values from browserScripts and statistics
                 for bt, raptor in conversion:
@@ -954,6 +955,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                 test.get("test_summary", "pageload"),
                 test.get("subtest_name_filters", ""),
                 test.get("custom_data", False) == "true",
+                gather_cpuTime=test.get("gather_cpuTime", None),
             ):
 
                 def _new_standard_result(new_result, subtest_unit="ms"):
