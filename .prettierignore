@@ -56,3 +56,7 @@ devtools/shared/plural-form.js
 
 # Ignore backgroundtasks preferences files.
 toolkit/components/backgroundtasks/defaults
+
+# A mainly-imported file, that we don't want to format, but want to keep an eye
+# on with the other imported files.
+toolkit/components/formautofill/CreditCardRuleset.jsm
