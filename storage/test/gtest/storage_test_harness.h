@@ -44,46 +44,13 @@
 
 #define do_check_ok(aInvoc) do_check_true((aInvoc) == SQLITE_OK)
 
-already_AddRefed<mozIStorageService> getService() {
-  nsCOMPtr<mozIStorageService> ss =
-      do_CreateInstance("@mozilla.org/storage/service;1");
-  do_check_true(ss);
-  return ss.forget();
-}
+already_AddRefed<mozIStorageService> getService();
 
-already_AddRefed<mozIStorageConnection> getMemoryDatabase() {
-  nsCOMPtr<mozIStorageService> ss = getService();
-  nsCOMPtr<mozIStorageConnection> conn;
-  nsresult rv = ss->OpenSpecialDatabase(
-      kMozStorageMemoryStorageKey, VoidCString(),
-      mozIStorageService::CONNECTION_DEFAULT, getter_AddRefs(conn));
-  do_check_success(rv);
-  return conn.forget();
-}
+already_AddRefed<mozIStorageConnection> getMemoryDatabase();
 
 already_AddRefed<mozIStorageConnection> getDatabase(
     nsIFile* aDBFile = nullptr,
-    uint32_t aConnectionFlags = mozIStorageService::CONNECTION_DEFAULT) {
-  nsCOMPtr<nsIFile> dbFile;
-  nsresult rv;
-  if (!aDBFile) {
-    MOZ_RELEASE_ASSERT(NS_IsMainThread(), "Can't get tmp dir off mainthread.");
-    (void)NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                                 getter_AddRefs(dbFile));
-    NS_ASSERTION(dbFile, "The directory doesn't exists?!");
-
-    rv = dbFile->Append(u"storage_test_db.sqlite"_ns);
-    do_check_success(rv);
-  } else {
-    dbFile = aDBFile;
-  }
-
-  nsCOMPtr<mozIStorageService> ss = getService();
-  nsCOMPtr<mozIStorageConnection> conn;
-  rv = ss->OpenDatabase(dbFile, aConnectionFlags, getter_AddRefs(conn));
-  do_check_success(rv);
-  return conn.forget();
-}
+    uint32_t aConnectionFlags = mozIStorageService::CONNECTION_DEFAULT);
 
 class AsyncStatementSpinner : public mozIStorageStatementCallback,
                               public mozIStorageCompletionCallback {
@@ -103,59 +70,6 @@ class AsyncStatementSpinner : public mozIStorageStatementCallback,
   volatile bool mCompleted;
 };
 
-NS_IMPL_ISUPPORTS(AsyncStatementSpinner, mozIStorageStatementCallback,
-                  mozIStorageCompletionCallback)
-
-AsyncStatementSpinner::AsyncStatementSpinner()
-    : completionReason(0), mCompleted(false) {}
-
-NS_IMETHODIMP
-AsyncStatementSpinner::HandleResult(mozIStorageResultSet* aResultSet) {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-AsyncStatementSpinner::HandleError(mozIStorageError* aError) {
-  int32_t result;
-  nsresult rv = aError->GetResult(&result);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsAutoCString message;
-  rv = aError->GetMessage(message);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoCString warnMsg;
-  warnMsg.AppendLiteral(
-      "An error occurred while executing an async statement: ");
-  warnMsg.AppendInt(result);
-  warnMsg.Append(' ');
-  warnMsg.Append(message);
-  NS_WARNING(warnMsg.get());
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-AsyncStatementSpinner::HandleCompletion(uint16_t aReason) {
-  completionReason = aReason;
-  mCompleted = true;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-AsyncStatementSpinner::Complete(nsresult, nsISupports*) {
-  mCompleted = true;
-  return NS_OK;
-}
-
-void AsyncStatementSpinner::SpinUntilCompleted() {
-  nsCOMPtr<nsIThread> thread(::do_GetCurrentThread());
-  nsresult rv = NS_OK;
-  bool processed = true;
-  while (!mCompleted && NS_SUCCEEDED(rv)) {
-    rv = thread->ProcessNextEvent(true, &processed);
-  }
-}
-
 #define NS_DECL_ASYNCSTATEMENTSPINNER \
   NS_IMETHOD HandleResult(mozIStorageResultSet* aResultSet) override;
 
@@ -166,24 +80,13 @@ void AsyncStatementSpinner::SpinUntilCompleted() {
  * Execute an async statement, blocking the main thread until we get the
  * callback completion notification.
  */
-void blocking_async_execute(mozIStorageBaseStatement* stmt) {
-  RefPtr<AsyncStatementSpinner> spinner(new AsyncStatementSpinner());
-
-  nsCOMPtr<mozIStoragePendingStatement> pendy;
-  (void)stmt->ExecuteAsync(spinner, getter_AddRefs(pendy));
-  spinner->SpinUntilCompleted();
-}
+void blocking_async_execute(mozIStorageBaseStatement* stmt);
 
 /**
  * Invoke AsyncClose on the given connection, blocking the main thread until we
  * get the completion notification.
  */
-void blocking_async_close(mozIStorageConnection* db) {
-  RefPtr<AsyncStatementSpinner> spinner(new AsyncStatementSpinner());
-
-  db->AsyncClose(spinner);
-  spinner->SpinUntilCompleted();
-}
+void blocking_async_close(mozIStorageConnection* db);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Mutex Watching
@@ -197,11 +100,11 @@ void blocking_async_close(mozIStorageConnection* db) {
  * current function pointers being used and then provide a new set.
  */
 
-sqlite3_mutex_methods orig_mutex_methods;
-sqlite3_mutex_methods wrapped_mutex_methods;
+extern sqlite3_mutex_methods orig_mutex_methods;
+extern sqlite3_mutex_methods wrapped_mutex_methods;
 
-bool mutex_used_on_watched_thread = false;
-PRThread* watched_thread = nullptr;
+extern bool mutex_used_on_watched_thread;
+extern PRThread* watched_thread;
 /**
  * Ugly hack to let us figure out what a connection's async thread is.  If we
  * were MOZILLA_INTERNAL_API and linked as such we could just include
@@ -211,25 +114,15 @@ PRThread* watched_thread = nullptr;
  * When the thread a mutex is invoked on isn't watched_thread we save it to this
  * variable.
  */
-nsIThread* last_non_watched_thread = nullptr;
+extern nsIThread* last_non_watched_thread;
 
 /**
  * Set a flag if the mutex is used on the thread we are watching, but always
  * call the real mutex function.
  */
-extern "C" void wrapped_MutexEnter(sqlite3_mutex* mutex) {
-  if (PR_GetCurrentThread() == watched_thread)
-    mutex_used_on_watched_thread = true;
-  else
-    last_non_watched_thread = NS_GetCurrentThread();
-  orig_mutex_methods.xMutexEnter(mutex);
-}
+extern "C" void wrapped_MutexEnter(sqlite3_mutex* mutex);
 
-extern "C" int wrapped_MutexTry(sqlite3_mutex* mutex) {
-  if (::PR_GetCurrentThread() == watched_thread)
-    mutex_used_on_watched_thread = true;
-  return orig_mutex_methods.xMutexTry(mutex);
-}
+extern "C" int wrapped_MutexTry(sqlite3_mutex* mutex);
 
 class HookSqliteMutex {
  public:
@@ -260,10 +153,7 @@ class HookSqliteMutex {
  * this method was last called.  Since we're talking about the current thread,
  * there are no race issues to be concerned about
  */
-void watch_for_mutex_use_on_this_thread() {
-  watched_thread = ::PR_GetCurrentThread();
-  mutex_used_on_watched_thread = false;
-}
+void watch_for_mutex_use_on_this_thread();
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Thread Wedgers
@@ -311,24 +201,6 @@ class ThreadWedger : public mozilla::Runnable {
  * creating a statement and async dispatching we can tell from the mutex who
  * is the async thread, PRThread style.  Then we map that to an nsIThread.
  */
-already_AddRefed<nsIThread> get_conn_async_thread(mozIStorageConnection* db) {
-  // Make sure we are tracking the current thread as the watched thread
-  watch_for_mutex_use_on_this_thread();
-
-  // - statement with nothing to bind
-  nsCOMPtr<mozIStorageAsyncStatement> stmt;
-  db->CreateAsyncStatement("SELECT 1"_ns, getter_AddRefs(stmt));
-  blocking_async_execute(stmt);
-  stmt->Finalize();
-
-  nsCOMPtr<nsIThread> asyncThread = last_non_watched_thread;
-
-  // Additionally, check that the thread we get as the background thread is the
-  // same one as the one we report from getInterface.
-  nsCOMPtr<nsIEventTarget> target = do_GetInterface(db);
-  nsCOMPtr<nsIThread> allegedAsyncThread = do_QueryInterface(target);
-  do_check_eq(allegedAsyncThread, asyncThread);
-  return asyncThread.forget();
-}
+already_AddRefed<nsIThread> get_conn_async_thread(mozIStorageConnection* db);
 
 #endif  // storage_test_harness_h__
