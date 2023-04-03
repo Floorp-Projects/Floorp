@@ -405,8 +405,10 @@
          window.bmsController = bmsController
  
          // Set TST URL
-         window.setTimeout(async () => {
-            BrowserManagerSidebar.STATIC_SIDEBAR_DATA["floorp//tst"].url = await BrowserManagerSidebar.getAdoonSidebarPage("treestyletab@piro.sakura.ne.jp")
-         }, 1250);
+         if("floorp//tst" in BROWSER_SIDEBAR_DATA.data){
+          window.setTimeout(async () => {
+             BrowserManagerSidebar.STATIC_SIDEBAR_DATA["floorp//tst"].url = await BrowserManagerSidebar.getAdoonSidebarPage("treestyletab@piro.sakura.ne.jp")
+          }, 1250);
+         }
      })()
  }

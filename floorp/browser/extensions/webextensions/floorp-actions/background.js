@@ -1,10 +1,6 @@
 async function handle_actions(action, options) {
     console.log(action);
     switch (action) {
-        case "open-tree-style-tab":
-            var widgetId = await browser.floorpActions.getExtensionWidgetId("treestyletab@piro.sakura.ne.jp");
-            await browser.floorpActions.openInSidebar(`${widgetId}-sidebar-action`);
-            break;
         case "open-extension-sidebar":
             if (!options.extensionId) throw '"extensionId" must be specified.';
             var widgetId = await browser.floorpActions.getExtensionWidgetId(options.extensionId);
@@ -43,22 +39,3 @@ async function handle_actions(action, options) {
     }
 }
 
-function handleMessage(message, sender) {
-    if (sender.id === "{506e023c-7f2b-40a3-8066-bc5deb40aebe}") {
-        const example_obj = {
-            "action": "tree-style-tab-open"
-        }
-        let message_obj =
-            typeof message === "string" ?
-                JSON.parse(message) :
-                message
-        handle_actions(
-            message_obj["action"],
-            message_obj["options"] ?
-                message_obj["options"] :
-                {}
-        );
-    }
-}
-
-browser.runtime.onMessageExternal.addListener(handleMessage);

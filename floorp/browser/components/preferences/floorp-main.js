@@ -75,11 +75,6 @@ window.addEventListener("pageshow", async function() {
     await window.open(addon.optionsURL, '_blank');
   });
 
-  document.getElementById("treestyletaboption").addEventListener("click", async function opentreestyletaboption() {
-    const addon = await AddonManager.getAddonByID("treestyletab@piro.sakura.ne.jp");
-    await window.open(addon.optionsURL, '_blank');
-  });
-
   {
     let prefName = "floorp.browser.sidebar2.global.webpanel.width";
     let elem = document.getElementById("GlobalWidth");

@@ -80,11 +80,6 @@ hover-vertical-tab =
 
 vertical-tab-reverse-position = Reverse VerticalTab Position
 
-treestyletabSettings-l10 = Tree Style vertical tab settings
-treestyletab-Settings =
- .label = Expand TreeStyleTab when hovering the mouse cursor
-treestyletab-open-option = TreeStyleTab Settings
-
 bookmarks-bar-settings = Bookmark Bar Settings (Can`t be used in parallel)
 bookmarks-focus-mode =
  .label = Show the bookmark bar when the mouse is focused on the toolbar

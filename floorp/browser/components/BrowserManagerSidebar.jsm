@@ -38,10 +38,12 @@ let BrowserManagerSidebar = {
           "defaultWidth":500,
           "enabled": Services.prefs.getBoolPref("floorp.browser.note.enabled", false)
       },
+        //TST is removed from Floorp.
         "floorp//tst":{
             "url":"none",
             "l10n":`TST-sidebar`,
-            "defaultWidth":415
+            "defaultWidth":415,
+            "enabled": false
         },
     },
 
