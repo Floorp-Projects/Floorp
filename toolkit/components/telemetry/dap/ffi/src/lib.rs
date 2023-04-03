@@ -20,7 +20,8 @@ use prg::PrgAes128Alt;
 use prio::codec::Encode;
 use prio::codec::{encode_u32_items, Decode};
 use prio::field::Field128;
-use prio::flp::types::Sum;
+use prio::flp::gadgets::{BlindPolyEval, ParallelSum};
+use prio::flp::types::{CountVec, Sum};
 use prio::vdaf::prio3::Prio3;
 use prio::vdaf::Client;
 use prio::vdaf::VdafError;
@@ -28,6 +29,8 @@ use prio::vdaf::VdafError;
 use crate::types::HpkeCiphertext;
 
 type Prio3Aes128SumAlt = Prio3<Sum<Field128>, PrgAes128Alt, 16>;
+type Prio3Aes128CountVecAlt =
+    Prio3<CountVec<Field128, ParallelSum<Field128, BlindPolyEval<Field128>>>, PrgAes128Alt, 16>;
 
 extern "C" {
     pub fn dapHpkeEncryptOneshot(
@@ -44,7 +47,7 @@ extern "C" {
     ) -> bool;
 }
 
-pub fn new_prio(num_aggregators: u8, bits: u32) -> Result<Prio3Aes128SumAlt, VdafError> {
+pub fn new_prio_u8(num_aggregators: u8, bits: u32) -> Result<Prio3Aes128SumAlt, VdafError> {
     if bits > 64 {
         return Err(VdafError::Uncategorized(format!(
             "bit length ({}) exceeds limit for aggregate type (64)",
@@ -53,6 +56,13 @@ pub fn new_prio(num_aggregators: u8, bits: u32) -> Result<Prio3Aes128SumAlt, Vda
     }
 
     Prio3::new(num_aggregators, Sum::new(bits as usize)?)
+}
+
+pub fn new_prio_vecu16(
+    num_aggregators: u8,
+    len: usize,
+) -> Result<Prio3Aes128CountVecAlt, VdafError> {
+    Prio3::new(num_aggregators, CountVec::new(len))
 }
 
 enum Role {
@@ -93,6 +103,38 @@ fn hpke_encrypt_wrapper(
     })
 }
 
+trait Shardable {
+    fn shard(&self) -> Result<Vec<Vec<u8>>, Box<dyn std::error::Error>>;
+}
+
+impl Shardable for ThinVec<u16> {
+    fn shard(&self) -> Result<Vec<Vec<u8>>, Box<dyn std::error::Error>> {
+        let prio = new_prio_vecu16(2, self.len())?;
+
+        let measurement: Vec<u128> = self.iter().map(|e| (*e as u128)).collect();
+        let (public_share, input_shares) = prio.shard(&measurement)?;
+
+        debug_assert_eq!(input_shares.len(), 2);
+        debug_assert_eq!(public_share, ());
+
+        let encoded_input_shares = input_shares.iter().map(|s| s.get_encoded()).collect();
+        Ok(encoded_input_shares)
+    }
+}
+impl Shardable for u8 {
+    fn shard(&self) -> Result<Vec<Vec<u8>>, Box<dyn std::error::Error>> {
+        let prio = new_prio_u8(2, 2)?;
+
+        let (public_share, input_shares) = prio.shard(&(*self as u128))?;
+
+        debug_assert_eq!(input_shares.len(), 2);
+        debug_assert_eq!(public_share, ());
+
+        let encoded_input_shares = input_shares.iter().map(|s| s.get_encoded()).collect();
+        Ok(encoded_input_shares)
+    }
+}
+
 /// Pre-fill the info part of the HPKE sealing with the constants from the standard.
 fn make_base_info() -> Vec<u8> {
     let mut info = Vec::<u8>::new();
@@ -108,20 +150,17 @@ fn make_base_info() -> Vec<u8> {
 ///
 /// To do that it also needs the HPKE configurations for the endpoints and some
 /// additional data which is part of the authentication.
-fn get_dap_report_internal(
+fn get_dap_report_internal<T: Shardable>(
     leader_hpke_config_encoded: &ThinVec<u8>,
     helper_hpke_config_encoded: &ThinVec<u8>,
-    measurement: u32,
+    measurement: &T,
     task_id: &[u8; 32],
     time_precision: u64,
 ) -> Result<Report, Box<dyn std::error::Error>> {
     let leader_hpke_config = HpkeConfig::decode(&mut Cursor::new(leader_hpke_config_encoded))?;
     let helper_hpke_config = HpkeConfig::decode(&mut Cursor::new(helper_hpke_config_encoded))?;
 
-    let prio = new_prio(2, 2)?;
-    let (public_share, input_shares) = prio.shard(&(measurement as u128))?;
-    debug_assert_eq!(input_shares.len(), 2);
-    debug_assert_eq!(public_share, ());
+    let encoded_input_shares = measurement.shard()?;
     let public_share = Vec::new(); // the encoding wants an empty vector not ()
 
     let metadata = ReportMetadata {
@@ -143,21 +182,13 @@ fn get_dap_report_internal(
 
     info.push(Role::Leader as u8);
 
-    let leader_payload = hpke_encrypt_wrapper(
-        &input_shares[0].get_encoded(),
-        &aad,
-        &info,
-        &leader_hpke_config,
-    )?;
+    let leader_payload =
+        hpke_encrypt_wrapper(&encoded_input_shares[0], &aad, &info, &leader_hpke_config)?;
 
     *info.last_mut().unwrap() = Role::Helper as u8;
 
-    let helper_payload = hpke_encrypt_wrapper(
-        &input_shares[1].get_encoded(),
-        &aad,
-        &info,
-        &helper_hpke_config,
-    )?;
+    let helper_payload =
+        hpke_encrypt_wrapper(&encoded_input_shares[1], &aad, &info, &helper_hpke_config)?;
 
     Ok(Report {
         task_id: TaskID(*task_id),
@@ -170,17 +201,44 @@ fn get_dap_report_internal(
 /// Wraps the function above with minor C interop.
 /// Mostly it turns any error result into a return value of false.
 #[no_mangle]
-pub extern "C" fn dapGetReport(
+pub extern "C" fn dapGetReportU8(
     leader_hpke_config_encoded: &ThinVec<u8>,
     helper_hpke_config_encoded: &ThinVec<u8>,
-    measurement: u32,
+    measurement: u8,
     task_id: &ThinVec<u8>,
     time_precision: u64,
     out_report: &mut ThinVec<u8>,
 ) -> bool {
     assert_eq!(task_id.len(), 32);
 
-    if let Ok(report) = get_dap_report_internal(
+    if let Ok(report) = get_dap_report_internal::<u8>(
+        leader_hpke_config_encoded,
+        helper_hpke_config_encoded,
+        &measurement,
+        &task_id.as_slice().try_into().unwrap(),
+        time_precision,
+    ) {
+        let encoded_report = report.get_encoded();
+        out_report.extend(encoded_report);
+
+        true
+    } else {
+        false
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn dapGetReportVecU16(
+    leader_hpke_config_encoded: &ThinVec<u8>,
+    helper_hpke_config_encoded: &ThinVec<u8>,
+    measurement: &ThinVec<u16>,
+    task_id: &ThinVec<u8>,
+    time_precision: u64,
+    out_report: &mut ThinVec<u8>,
+) -> bool {
+    assert_eq!(task_id.len(), 32);
+
+    if let Ok(report) = get_dap_report_internal::<ThinVec<u16>>(
         leader_hpke_config_encoded,
         helper_hpke_config_encoded,
         measurement,
