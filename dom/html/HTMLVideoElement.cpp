@@ -221,21 +221,16 @@ bool HTMLVideoElement::IsInteractiveHTMLContent() const {
 }
 
 gfx::IntSize HTMLVideoElement::GetVideoIntrinsicDimensions() {
-  layers::ImageContainer* container = GetImageContainer();
+  const auto& sz = mMediaInfo.mVideo.mDisplay;
+
   // Prefer the size of the container as it's more up to date.
-  if (container && container->GetCurrentSize().width != 0) {
-    // But adjust to the aspect ratio of the container.
-    float dar = static_cast<float>(mMediaInfo.mVideo.mDisplay.width) /
-                mMediaInfo.mVideo.mDisplay.height;
-    gfx::IntSize size = container->GetCurrentSize();
-    float imageDar = static_cast<float>(size.width) / size.height;
-    return gfx::IntSize(int(size.width * (dar / imageDar)), size.height);
-  }
-  return mMediaInfo.mVideo.mDisplay;
+  return ToMaybeRef(mVideoFrameContainer.get())
+      .map([&](auto& aVFC) { return aVFC.CurrentIntrinsicSize().valueOr(sz); })
+      .valueOr(sz);
 }
 
 uint32_t HTMLVideoElement::VideoWidth() {
-  if (!mMediaInfo.HasVideo()) {
+  if (!HasVideo()) {
     return 0;
   }
   gfx::IntSize size = GetVideoIntrinsicDimensions();
@@ -247,7 +242,7 @@ uint32_t HTMLVideoElement::VideoWidth() {
 }
 
 uint32_t HTMLVideoElement::VideoHeight() {
-  if (!mMediaInfo.HasVideo()) {
+  if (!HasVideo()) {
     return 0;
   }
   gfx::IntSize size = GetVideoIntrinsicDimensions();
