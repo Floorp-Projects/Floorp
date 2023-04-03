@@ -13,7 +13,7 @@ with Files("ContentSearch*.sys.mjs"):
 with Files("AboutReaderParent.jsm"):
     BUG_COMPONENT = ("Toolkit", "Reader Mode")
 
-with Files("LightweightThemeChild.jsm"):
+with Files("LightweightThemeChild.sys.mjs"):
     BUG_COMPONENT = ("WebExtensions", "Themes")
 
 with Files("PageInfoChild.sys.mjs"):
@@ -64,7 +64,7 @@ FINAL_TARGET_FILES.actors += [
     "EncryptedMediaParent.sys.mjs",
     "FormValidationChild.sys.mjs",
     "FormValidationParent.sys.mjs",
-    "LightweightThemeChild.jsm",
+    "LightweightThemeChild.sys.mjs",
     "LinkHandlerChild.sys.mjs",
     "LinkHandlerParent.sys.mjs",
     "PageInfoChild.sys.mjs",
