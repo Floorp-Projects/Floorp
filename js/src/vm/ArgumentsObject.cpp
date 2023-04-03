@@ -73,16 +73,13 @@ bool ArgumentsObject::markElementDeleted(JSContext* cx, uint32_t i) {
 }
 
 static void CopyStackFrameArguments(const AbstractFramePtr frame,
-                                    GCPtr<Value>* dst, unsigned totalArgs) {
+                                    GCPtr<Value>* dst, unsigned numActuals) {
   MOZ_ASSERT_IF(frame.isInterpreterFrame(),
                 !frame.asInterpreterFrame()->runningInJit());
 
-  MOZ_ASSERT(std::max(frame.numActualArgs(), frame.numFormalArgs()) ==
-             totalArgs);
-
   /* Copy arguments. */
   Value* src = frame.argv();
-  Value* end = src + totalArgs;
+  Value* end = src + numActuals;
   while (src != end) {
     (dst++)->init(*src++);
   }
@@ -127,8 +124,8 @@ struct CopyFrameArgs {
 
   explicit CopyFrameArgs(AbstractFramePtr frame) : frame_(frame) {}
 
-  void copyArgs(GCPtr<Value>* dst, unsigned totalArgs) const {
-    CopyStackFrameArguments(frame_, dst, totalArgs);
+  void copyActualArgs(GCPtr<Value>* dst, unsigned numActuals) const {
+    CopyStackFrameArguments(frame_, dst, numActuals);
   }
 
   /*
@@ -147,27 +144,13 @@ struct CopyJitFrameArgs {
   CopyJitFrameArgs(jit::JitFrameLayout* frame, HandleObject callObj)
       : frame_(frame), callObj_(callObj) {}
 
-  void copyArgs(GCPtr<Value>* dstBase, unsigned totalArgs) const {
-    unsigned numActuals = frame_->numActualArgs();
-    unsigned numFormals =
-        jit::CalleeTokenToFunction(frame_->calleeToken())->nargs();
-    MOZ_ASSERT(numActuals <= totalArgs);
-    MOZ_ASSERT(numFormals <= totalArgs);
-    MOZ_ASSERT(std::max(numActuals, numFormals) == totalArgs);
+  void copyActualArgs(GCPtr<Value>* dst, unsigned numActuals) const {
+    MOZ_ASSERT(frame_->numActualArgs() == numActuals);
 
-    /* Copy all arguments. */
     Value* src = frame_->actualArgs();
     Value* end = src + numActuals;
-    GCPtr<Value>* dst = dstBase;
     while (src != end) {
       (dst++)->init(*src++);
-    }
-
-    if (numActuals < numFormals) {
-      GCPtr<Value>* dstEnd = dstBase + totalArgs;
-      while (dst != dstEnd) {
-        (dst++)->init(UndefinedValue());
-      }
     }
   }
 
@@ -202,21 +185,11 @@ struct CopyScriptFrameIterArgs {
     return true;
   }
 
-  void copyArgs(GCPtr<Value>* dstBase, unsigned totalArgs) const {
-    unsigned numActuals = actualArgs_.length();
-    unsigned numFormals = iter_.calleeTemplate()->nargs();
-    MOZ_ASSERT(numActuals <= totalArgs);
-    MOZ_ASSERT(numFormals <= totalArgs);
-    MOZ_ASSERT(std::max(numActuals, numFormals) == totalArgs);
+  void copyActualArgs(GCPtr<Value>* dst, unsigned numActuals) const {
+    MOZ_ASSERT(actualArgs_.length() == numActuals);
 
-    // Append actual arguments.
     for (Value v : actualArgs_) {
-      (dstBase++)->init(v);
-    }
-
-    // Append |undefined| for missing formals.
-    for (size_t i = numActuals; i < numFormals; i++) {
-      (dstBase++)->init(UndefinedValue());
+      (dst++)->init(v);
     }
   }
 
@@ -236,31 +209,16 @@ struct CopyInlinedArgs {
   HandleValueArray args_;
   HandleObject callObj_;
   HandleFunction callee_;
-  uint32_t numActuals_;
 
   CopyInlinedArgs(HandleValueArray args, HandleObject callObj,
-                  HandleFunction callee, uint32_t numActuals)
-      : args_(args),
-        callObj_(callObj),
-        callee_(callee),
-        numActuals_(numActuals) {}
+                  HandleFunction callee)
+      : args_(args), callObj_(callObj), callee_(callee) {}
 
-  void copyArgs(GCPtr<Value>* dstBase, unsigned totalArgs) const {
-    uint32_t numFormals = callee_->nargs();
-    MOZ_ASSERT(std::max(numActuals_, numFormals) == totalArgs);
+  void copyActualArgs(GCPtr<Value>* dst, unsigned numActuals) const {
+    MOZ_ASSERT(numActuals <= args_.length());
 
-    // Copy actual arguments.
-    GCPtr<Value>* dst = dstBase;
-    for (uint32_t i = 0; i < numActuals_; i++) {
+    for (uint32_t i = 0; i < numActuals; i++) {
       (dst++)->init(args_[i]);
-    }
-
-    // Fill in missing arguments with |undefined|.
-    if (numActuals_ < numFormals) {
-      GCPtr<Value>* dstEnd = dstBase + totalArgs;
-      while (dst != dstEnd) {
-        (dst++)->init(UndefinedValue());
-      }
     }
   }
 
@@ -371,8 +329,15 @@ ArgumentsObject* ArgumentsObject::create(JSContext* cx, HandleFunction callee,
   obj->initFixedSlot(INITIAL_LENGTH_SLOT,
                      Int32Value(numActuals << PACKED_BITS_COUNT));
 
-  // Copy [0, numArgs) into data->args.
-  copy.copyArgs(data->args, numArgs);
+  // Copy [0, numActuals) into data->args.
+  GCPtr<Value>* args = data->args;
+  copy.copyActualArgs(args, numActuals);
+
+  // Fill in missing arguments with |undefined|.
+  for (size_t i = numActuals; i < numArgs; i++) {
+    args[i].init(UndefinedValue());
+  }
+
   copy.maybeForwardToCallObject(obj, data);
 
   MOZ_ASSERT(obj->initialLength() == numActuals);
@@ -430,7 +395,7 @@ ArgumentsObject* ArgumentsObject::createFromValueArray(
   MOZ_ASSERT(numActuals <= MaxInlinedArgs);
   RootedObject callObj(
       cx, scopeChain->is<CallObject>() ? scopeChain.get() : nullptr);
-  CopyInlinedArgs copy(argsArray, callObj, callee, numActuals);
+  CopyInlinedArgs copy(argsArray, callObj, callee);
   return create(cx, callee, numActuals, copy);
 }
 
@@ -476,7 +441,13 @@ ArgumentsObject* ArgumentsObject::finishPure(
   obj->initFixedSlot(MAYBE_CALL_SLOT, UndefinedValue());
   obj->initFixedSlot(CALLEE_SLOT, ObjectValue(*callee));
 
-  copy.copyArgs(data->args, numArgs);
+  GCPtr<Value>* args = data->args;
+  copy.copyActualArgs(args, numActuals);
+
+  // Fill in missing arguments with |undefined|.
+  for (size_t i = numActuals; i < numArgs; i++) {
+    args[i].init(UndefinedValue());
+  }
 
   if (callObj && callee->needsCallObject()) {
     copy.maybeForwardToCallObject(obj, data);
@@ -521,7 +492,7 @@ ArgumentsObject* ArgumentsObject::finishInlineForIonPure(
   HandleValueArray argsArray =
       HandleValueArray::fromMarkedLocation(numActuals, args);
 
-  CopyInlinedArgs copy(argsArray, callObj, callee, numActuals);
+  CopyInlinedArgs copy(argsArray, callObj, callee);
 
   return finishPure(cx, obj, callee, callObj, numActuals, copy);
 }
