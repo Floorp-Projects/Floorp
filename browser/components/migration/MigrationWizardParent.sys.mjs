@@ -11,7 +11,7 @@ const lazy = {};
 XPCOMUtils.defineLazyGetter(lazy, "gFluentStrings", function() {
   return new Localization([
     "branding/brand.ftl",
-    "locales-preview/migrationWizard.ftl",
+    "browser/migrationWizard.ftl",
   ]);
 });
 

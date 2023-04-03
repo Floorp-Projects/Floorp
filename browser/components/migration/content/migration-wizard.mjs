@@ -193,9 +193,7 @@ export class MigrationWizard extends HTMLElement {
 
     if (window.MozXULElement) {
       window.MozXULElement.insertFTLIfNeeded("branding/brand.ftl");
-      window.MozXULElement.insertFTLIfNeeded(
-        "locales-preview/migrationWizard.ftl"
-      );
+      window.MozXULElement.insertFTLIfNeeded("browser/migrationWizard.ftl");
     }
     document.l10n.connectRoot(shadow);
 
