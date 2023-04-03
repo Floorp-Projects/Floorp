@@ -10,6 +10,7 @@
 #include "mozilla/Logging.h"
 #include "prnetdb.h"
 #include "prprf.h"
+#include "Classifier.h"
 
 #include "nsUrlClassifierDBService.h"
 #include "nsUrlClassifierUtils.h"
@@ -21,10 +22,14 @@
 #include "mozilla/IntegerPrintfMacros.h"
 
 // MOZ_LOG=UrlClassifierProtocolParser:5
+extern mozilla::LazyLogModule gUrlClassifierDbServiceLog;
 mozilla::LazyLogModule gUrlClassifierProtocolParserLog(
     "UrlClassifierProtocolParser");
 #define PARSER_LOG(args) \
   MOZ_LOG(gUrlClassifierProtocolParserLog, mozilla::LogLevel::Debug, args)
+
+#define LOG_ENABLED() \
+  MOZ_LOG_TEST(gUrlClassifierDbServiceLog, mozilla::LogLevel::Debug)
 
 namespace mozilla {
 namespace safebrowsing {

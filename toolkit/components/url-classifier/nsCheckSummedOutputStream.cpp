@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsCRT.h"
+#include "nsComponentManagerUtils.h"
 #include "nsISupportsImpl.h"
 #include "nsCheckSummedOutputStream.h"
 #include "crc32c.h"

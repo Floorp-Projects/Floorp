@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "LookupCache.h"
+#include "LookupCacheV4.h"
 #include "HashStore.h"
 #include "nsIFileStreams.h"
 #include "nsISeekableStream.h"
@@ -16,6 +17,8 @@
 #include "prprf.h"
 #include "Classifier.h"
 #include "nsUrlClassifierInfo.h"
+#include "nsUrlClassifierUtils.h"
+#include "nsUrlClassifierDBService.h"
 
 // We act as the main entry point for all the real lookups,
 // so note that those are not done to the actual HashStore.
@@ -83,8 +86,37 @@ struct ValueTraits<nsACString> {
   }
 };
 
+void CStringToHexString(const nsACString& aIn, nsACString& aOut) {
+  static const char* const lut = "0123456789ABCDEF";
+
+  size_t len = aIn.Length();
+  MOZ_ASSERT(len <= COMPLETE_SIZE);
+
+  aOut.SetCapacity(2 * len);
+  for (size_t i = 0; i < aIn.Length(); ++i) {
+    const char c = static_cast<char>(aIn[i]);
+    aOut.Append(lut[(c >> 4) & 0x0F]);
+    aOut.Append(lut[c & 15]);
+  }
+}
+
+#ifdef DEBUG
+nsCString GetFormattedTimeString(int64_t aCurTimeSec) {
+  PRExplodedTime pret;
+  PR_ExplodeTime(aCurTimeSec * PR_USEC_PER_SEC, PR_GMTParameters, &pret);
+
+  return nsPrintfCString("%04d-%02d-%02d %02d:%02d:%02d UTC", pret.tm_year,
+                         pret.tm_month + 1, pret.tm_mday, pret.tm_hour,
+                         pret.tm_min, pret.tm_sec);
+}
+#endif
+
+}  // end of unnamed namespace.
+////////////////////////////////////////////////////////////////////////
+
 template <typename T>
-static nsresult WriteValue(nsIOutputStream* aOutputStream, const T& aValue) {
+nsresult LookupCache::WriteValue(nsIOutputStream* aOutputStream,
+                                 const T& aValue) {
   uint32_t writeLength = ValueTraits<T>::Length(aValue);
   MOZ_ASSERT(writeLength <= LookupCacheV4::MAX_METADATA_VALUE_LENGTH,
              "LookupCacheV4::MAX_METADATA_VALUE_LENGTH is too small.");
@@ -107,7 +139,7 @@ static nsresult WriteValue(nsIOutputStream* aOutputStream, const T& aValue) {
 }
 
 template <typename T>
-static nsresult ReadValue(nsIInputStream* aInputStream, T& aValue) {
+nsresult LookupCache::ReadValue(nsIInputStream* aInputStream, T& aValue) {
   nsresult rv;
 
   uint32_t readLength;
@@ -137,33 +169,13 @@ static nsresult ReadValue(nsIInputStream* aInputStream, T& aValue) {
   return rv;
 }
 
-void CStringToHexString(const nsACString& aIn, nsACString& aOut) {
-  static const char* const lut = "0123456789ABCDEF";
-
-  size_t len = aIn.Length();
-  MOZ_ASSERT(len <= COMPLETE_SIZE);
-
-  aOut.SetCapacity(2 * len);
-  for (size_t i = 0; i < aIn.Length(); ++i) {
-    const char c = static_cast<char>(aIn[i]);
-    aOut.Append(lut[(c >> 4) & 0x0F]);
-    aOut.Append(lut[c & 15]);
-  }
-}
-
-#ifdef DEBUG
-nsCString GetFormattedTimeString(int64_t aCurTimeSec) {
-  PRExplodedTime pret;
-  PR_ExplodeTime(aCurTimeSec * PR_USEC_PER_SEC, PR_GMTParameters, &pret);
-
-  return nsPrintfCString("%04d-%02d-%02d %02d:%02d:%02d UTC", pret.tm_year,
-                         pret.tm_month + 1, pret.tm_mday, pret.tm_hour,
-                         pret.tm_min, pret.tm_sec);
-}
-#endif
-
-}  // end of unnamed namespace.
-////////////////////////////////////////////////////////////////////////
+// These symbols are referenced from another compilation unit, but their
+// implementation depends on local symbols. Workaround this by forcing their
+// instantiation there.
+template nsresult mozilla::safebrowsing::LookupCache::WriteValue(
+    nsIOutputStream*, nsTSubstring<char> const&);
+template nsresult mozilla::safebrowsing::LookupCache::ReadValue(
+    nsIInputStream*, nsTSubstring<char>&);
 
 LookupCache::LookupCache(const nsACString& aTableName,
                          const nsACString& aProvider,
