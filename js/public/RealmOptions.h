@@ -210,13 +210,13 @@ class JS_PUBLIC_API RealmCreationOptions {
     arrayGrouping_ = flag;
     return *this;
   }
+#endif
 
   bool getArrayFromAsyncEnabled() const { return arrayFromAsync_; }
   RealmCreationOptions& setArrayFromAsyncEnabled(bool flag) {
     arrayFromAsync_ = flag;
     return *this;
   }
-#endif
 
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   bool getChangeArrayByCopyEnabled() const { return changeArrayByCopy_; }
@@ -279,8 +279,8 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool shadowRealms_ = false;
 #ifdef NIGHTLY_BUILD
   bool arrayGrouping_ = false;
-  bool arrayFromAsync_ = false;
 #endif
+  bool arrayFromAsync_ = false;
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   bool changeArrayByCopy_ = false;
 #endif
