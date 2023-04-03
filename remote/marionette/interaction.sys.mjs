@@ -769,5 +769,6 @@ interaction.isElementSelected = function(el, strict = false) {
 };
 
 function getWindow(el) {
-  return el.ownerDocument.defaultView;  // eslint-disable-line
+  // eslint-disable-next-line mozilla/use-ownerGlobal
+  return el.ownerDocument.defaultView;
 }
