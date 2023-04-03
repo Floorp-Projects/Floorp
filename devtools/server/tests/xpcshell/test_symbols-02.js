@@ -17,7 +17,8 @@ add_task(
 
 async function testSymbols(threadFront, debuggee) {
   const evalCode = () => {
-    /* eslint-disable */
+    /* eslint-disable mozilla/var-only-at-top-level, no-extend-native, no-unused-vars */
+    // prettier-ignore
     Cu.evalInSandbox(
       "(" + function () {
         Symbol.prototype.toString = () => {
@@ -31,7 +32,7 @@ async function testSymbols(threadFront, debuggee) {
       URL,
       1
     );
-    /* eslint-enable */
+    /* eslint-enable mozilla/var-only-at-top-level, no-extend-native, no-unused-vars */
   };
 
   const packet = await executeOnNextTickAndWaitForPause(evalCode, threadFront);

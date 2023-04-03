@@ -97,7 +97,8 @@ const testBlackBox = async function() {
 };
 
 function evalCode() {
-  /* eslint-disable */
+  /* eslint-disable mozilla/var-only-at-top-level, no-undef */
+  // prettier-ignore
   Cu.evalInSandbox(
     "" + function doStuff(k) { // line 1
       var arg = 15;            // line 2 - Step in here
@@ -109,6 +110,7 @@ function evalCode() {
     1
   );
 
+  // prettier-ignore
   Cu.evalInSandbox(
     "" + function runTest() { // line 1
       doStuff(                // line 2 - Break here
@@ -124,7 +126,6 @@ function evalCode() {
     SOURCE_URL,
     1
   );
-  /* eslint-enable */
 }
 
 const runTest = async function(onSteppedLocation, onDebuggerStatementFrames) {

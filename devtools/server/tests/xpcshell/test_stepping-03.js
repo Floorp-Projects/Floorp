@@ -25,7 +25,7 @@ add_task(
 );
 
 function evaluateTestCode(debuggee) {
-  /* eslint-disable */
+  // prettier-ignore
   Cu.evalInSandbox(
     `                                   // 1
     function f() {                      // 2
@@ -40,5 +40,4 @@ function evaluateTestCode(debuggee) {
     "test_stepping-01-test-code.js",
     1
   );
-  /* eslint-disable */
 }

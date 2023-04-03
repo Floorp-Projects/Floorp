@@ -1,9 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Test that we can read core dumps into HeapSnapshot instances in a worker.
-// eslint-disable-next-line
-add_task(async function () {
+add_task(async function() {
   const worker = new ChromeWorker("resource://test/heap-snapshot-worker.js");
   worker.postMessage({});
 

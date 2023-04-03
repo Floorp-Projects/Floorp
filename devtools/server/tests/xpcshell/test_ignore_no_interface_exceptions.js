@@ -28,7 +28,7 @@ add_task(
 );
 
 function evaluateTestCode(debuggee) {
-  /* eslint-disable */
+  // prettier-ignore
   Cu.evalInSandbox(`                    // 1
     function QueryInterface() {         // 2
       throw Cr.NS_ERROR_NO_INTERFACE;   // 3
@@ -47,5 +47,4 @@ function evaluateTestCode(debuggee) {
     "test_ignore_no_interface_exceptions.js",
     1
   );
-  /* eslint-disable */
 }

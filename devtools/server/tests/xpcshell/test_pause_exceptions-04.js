@@ -76,7 +76,7 @@ add_task(
 async function evaluateTestCode(debuggee, throwValue) {
   await waitForTick();
   try {
-    /* eslint-disable */
+    // prettier-ignore
     Cu.evalInSandbox(
       `                                   // 1
       function stopMeAgain() {            // 2
@@ -89,6 +89,5 @@ async function evaluateTestCode(debuggee, throwValue) {
       "test_pause_exceptions-04.js",
       1
     );
-    /* eslint-enable */
   } catch (e) {}
 }

@@ -27,7 +27,8 @@ add_task(
 );
 
 function evaluateTestCode(debuggee) {
-  /* eslint-disable */
+  /* eslint-disable no-throw-literal */
+  // prettier-ignore
   debuggee.eval("(" + function () {    // 1
     function stopMe() {                // 2
       throw 42;                        // 3
@@ -36,5 +37,4 @@ function evaluateTestCode(debuggee) {
       stopMe();                        // 6
     } catch (e) {}                     // 7
   } + ")()");
-  /* eslint-enable */
 }

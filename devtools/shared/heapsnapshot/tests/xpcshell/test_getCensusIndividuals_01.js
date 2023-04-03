@@ -25,8 +25,8 @@ function run_test() {
         CensusUtils.countToBucketBreakdown(BREAKDOWN)
       );
 
-      /* eslint-disable */
       //                                DFS Index
+      // prettier-ignore
       return new Map([               // 0
         [stack1, {                   // 1
           JSObject: [101, 102, 103], // 2
@@ -45,7 +45,6 @@ function run_test() {
           JSString: [411, 412, 413], // 12
         }],
       ]);
-      /* eslint-enable */
     },
   };
 

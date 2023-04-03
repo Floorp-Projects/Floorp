@@ -45,7 +45,7 @@ add_task(
         });
       });
 
-      /* eslint-disable */
+      // prettier-ignore
       Cu.evalInSandbox(
         "var line0 = Error().lineNumber;\n" +
         "function foo() {\n" +     // line0 + 1
@@ -63,7 +63,6 @@ add_task(
         "foo();\n",               // line0 + 13
         debuggee
       );
-      /* eslint-enable */
     });
   })
 );
