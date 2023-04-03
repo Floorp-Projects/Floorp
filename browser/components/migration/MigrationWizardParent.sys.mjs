@@ -68,12 +68,21 @@ export class MigrationWizardParent extends JSWindowActorParent {
         // or an Array of them, so we flatten them out and filter out
         // any that ended up going wrong and returning null from the
         // #getMigratorAndProfiles call.
-        return results
+        let filteredResults = results
           .flat()
           .filter(result => result)
           .sort((a, b) => {
             return b.lastModifiedDate - a.lastModifiedDate;
           });
+
+        for (let result of filteredResults) {
+          Services.telemetry.keyedScalarAdd(
+            "migration.discovered_migrators",
+            result.key,
+            1
+          );
+        }
+        return filteredResults;
       }
 
       case "Migrate": {

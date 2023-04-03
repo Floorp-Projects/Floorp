@@ -8182,7 +8182,23 @@ migration:
       - main
     operating_systems:
       - windows
-
+  discovered_migrators:
+    bug_numbers:
+      - 1825655
+    description: >
+      A keyed uint recording how many times the migration wizard detected a browser / profile
+      pair for a particular browser. This is incremented every time the discovery occurs,
+      so multiple openings of the wizard will increase the counts each time.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - mconley@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
 
 contextual.services.topsites:
   impression:

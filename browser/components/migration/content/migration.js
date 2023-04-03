@@ -240,6 +240,22 @@ var MigrationWizard = {
           if (!selectedMigrator || this._source == migratorKey) {
             selectedMigrator = group.childNodes[i];
           }
+
+          let profiles = this.spinResolve(migrator.getSourceProfiles());
+          if (profiles?.length) {
+            Services.telemetry.keyedScalarAdd(
+              "migration.discovered_migrators",
+              migratorKey,
+              profiles.length
+            );
+          } else {
+            Services.telemetry.keyedScalarAdd(
+              "migration.discovered_migrators",
+              migratorKey,
+              1
+            );
+          }
+
           this._availableMigrators.push([migratorKey, migrator]);
         } else {
           // Hide this option
