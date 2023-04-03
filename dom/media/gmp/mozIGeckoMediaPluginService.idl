@@ -48,6 +48,7 @@ public:
 %}
 
 [ptr] native TagArray(nsTArray<nsCString>);
+[ref] native ConstTagArrayRef(const nsTArray<nsCString>);
 native GetGMPDecryptorCallback(mozilla::UniquePtr<GetGMPDecryptorCallback>&&);
 native GetGMPVideoDecoderCallback(mozilla::UniquePtr<GetGMPVideoDecoderCallback>&&);
 native GetGMPVideoEncoderCallback(mozilla::UniquePtr<GetGMPVideoEncoderCallback>&&);
@@ -74,7 +75,7 @@ interface mozIGeckoMediaPluginService : nsISupports
    * Callable on any thread
    */
   [noscript]
-  boolean hasPluginForAPI(in ACString api, in TagArray tags);
+  boolean hasPluginForAPI(in ACString api, in ConstTagArrayRef tags);
 
   /**
    * Get a video decoder that supports the specified tags.

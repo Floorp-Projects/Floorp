@@ -58,33 +58,32 @@ already_AddRefed<MediaDataDecoder> GMPDecoderModule::CreateAudioDecoder(
 
 /* static */
 media::DecodeSupportSet GMPDecoderModule::SupportsMimeType(
-    const nsACString& aMimeType, const Maybe<nsCString>& aGMP) {
-  bool isSupported = false;
-  if (aGMP.isNothing()) {
+    const nsACString& aMimeType, const nsACString& aApi,
+    const Maybe<nsCString>& aKeySystem) {
+  AutoTArray<nsCString, 2> tags;
+  if (MP4Decoder::IsH264(aMimeType)) {
+    tags.AppendElement("h264"_ns);
+  } else if (VPXDecoder::IsVP9(aMimeType)) {
+    tags.AppendElement("vp9"_ns);
+  } else if (VPXDecoder::IsVP8(aMimeType)) {
+    tags.AppendElement("vp8"_ns);
+  } else {
     return media::DecodeSupport::Unsupported;
   }
 
-  nsCString api = nsLiteralCString(CHROMIUM_CDM_API);
-
-  if (MP4Decoder::IsH264(aMimeType)) {
-    isSupported = HaveGMPFor(api, {"h264"_ns, aGMP.value()});
-  } else if (VPXDecoder::IsVP9(aMimeType)) {
-    isSupported = HaveGMPFor(api, {"vp9"_ns, aGMP.value()});
-  } else if (VPXDecoder::IsVP8(aMimeType)) {
-    isSupported = HaveGMPFor(api, {"vp8"_ns, aGMP.value()});
+  // Optional tag for EME GMP plugins.
+  if (aKeySystem) {
+    tags.AppendElement(*aKeySystem);
   }
 
-  // TODO: Note that we do not yet distinguish between SW/HW decode support.
-  //       Will be done in bug 1754239.
-  if (isSupported) {
-    return media::DecodeSupport::SoftwareDecode;
-  }
-  return media::DecodeSupport::Unsupported;
+  // GMP plugins are always software based.
+  return HaveGMPFor(aApi, tags) ? media::DecodeSupport::SoftwareDecode
+                                : media::DecodeSupport::Unsupported;
 }
 
 media::DecodeSupportSet GMPDecoderModule::SupportsMimeType(
     const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
-  return media::DecodeSupport::Unsupported;
+  return SupportsMimeType(aMimeType, "decode-video"_ns, Nothing());
 }
 
 /* static */

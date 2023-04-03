@@ -48,7 +48,8 @@ class GeckoMediaPluginServiceParent final
   NS_DECL_NSIASYNCSHUTDOWNBLOCKER
 
   // mozIGeckoMediaPluginService
-  NS_IMETHOD HasPluginForAPI(const nsACString& aAPI, nsTArray<nsCString>* aTags,
+  NS_IMETHOD HasPluginForAPI(const nsACString& aAPI,
+                             const nsTArray<nsCString>& aTags,
                              bool* aRetVal) override;
   NS_IMETHOD GetNodeId(const nsAString& aOrigin,
                        const nsAString& aTopLevelOrigin,

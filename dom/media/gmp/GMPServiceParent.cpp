@@ -783,9 +783,9 @@ GeckoMediaPluginServiceParent::RemoveAndDeletePluginDirectory(
 
 NS_IMETHODIMP
 GeckoMediaPluginServiceParent::HasPluginForAPI(const nsACString& aAPI,
-                                               nsTArray<nsCString>* aTags,
+                                               const nsTArray<nsCString>& aTags,
                                                bool* aHasPlugin) {
-  NS_ENSURE_ARG(aTags && aTags->Length() > 0);
+  NS_ENSURE_ARG(!aTags.IsEmpty());
   NS_ENSURE_ARG(aHasPlugin);
 
   nsresult rv = EnsurePluginsOnDiskScanned();
@@ -798,7 +798,7 @@ GeckoMediaPluginServiceParent::HasPluginForAPI(const nsACString& aAPI,
     MutexAutoLock lock(mMutex);
     nsCString api(aAPI);
     size_t index = 0;
-    RefPtr<GMPParent> gmp = FindPluginForAPIFrom(index, api, *aTags, &index);
+    RefPtr<GMPParent> gmp = FindPluginForAPIFrom(index, api, aTags, &index);
     *aHasPlugin = !!gmp;
   }
 

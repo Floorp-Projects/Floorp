@@ -466,9 +466,10 @@ EMEDecoderModule::AsyncCreateDecoder(const CreateDecoderParams& aParams) {
 
 media::DecodeSupportSet EMEDecoderModule::SupportsMimeType(
     const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
-  Maybe<nsCString> gmp;
-  gmp.emplace(NS_ConvertUTF16toUTF8(mProxy->KeySystem()));
-  return GMPDecoderModule::SupportsMimeType(aMimeType, gmp);
+  Maybe<nsCString> keySystem;
+  keySystem.emplace(NS_ConvertUTF16toUTF8(mProxy->KeySystem()));
+  return GMPDecoderModule::SupportsMimeType(
+      aMimeType, nsLiteralCString(CHROMIUM_CDM_API), keySystem);
 }
 
 }  // namespace mozilla
