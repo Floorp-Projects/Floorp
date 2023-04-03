@@ -1,3 +1,0 @@
-. "$topsrcdir/browser/config/mozconfigs/macosx64/nightly"
-
-ac_add_options --as-milestone=release
