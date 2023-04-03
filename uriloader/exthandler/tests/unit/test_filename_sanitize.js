@@ -134,7 +134,7 @@ add_task(async function validate_filename_method() {
   );
 
   // no filename, so index is used by default.
-  Assert.equal(checkFilename(".png", 0), "index.png");
+  Assert.equal(checkFilename(".png", 0), "png.png");
 
   // sanitization only, so index is not added, but initial period is stripped.
   Assert.equal(

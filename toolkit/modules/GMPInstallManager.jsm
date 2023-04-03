@@ -642,8 +642,11 @@ GMPAddon.prototype = {
   get isInstalled() {
     return (
       this.version &&
+      !!this.hashValue &&
       GMPPrefs.getString(GMPPrefs.KEY_PLUGIN_VERSION, "", this.id) ===
-        this.version
+        this.version &&
+      GMPPrefs.getString(GMPPrefs.KEY_PLUGIN_HASHVALUE, "", this.id) ===
+        this.hashValue
     );
   },
   get isEME() {
@@ -768,6 +771,13 @@ GMPDownloader.prototype = {
             let abi = GMPUtils._expectedABI(gmpAddon);
             log.info("Setting ABI to '" + abi + "' for " + gmpAddon.id);
             GMPPrefs.setString(GMPPrefs.KEY_PLUGIN_ABI, abi, gmpAddon.id);
+            // We use the combination of the hash and version to ensure we are
+            // up to date.
+            GMPPrefs.setString(
+              GMPPrefs.KEY_PLUGIN_HASHVALUE,
+              gmpAddon.hashValue,
+              gmpAddon.id
+            );
             // Setting the version pref signals installation completion to consumers,
             // if you need to set other prefs etc. do it before this.
             GMPPrefs.setString(

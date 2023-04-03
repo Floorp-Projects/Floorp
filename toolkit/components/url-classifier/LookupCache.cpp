@@ -171,7 +171,8 @@ LookupCache::LookupCache(const nsACString& aTableName,
     : mPrimed(false),
       mTableName(aTableName),
       mProvider(aProvider),
-      mRootStoreDirectory(aRootStoreDir) {
+      mRootStoreDirectory(aRootStoreDir),
+      mVLPrefixSet(nullptr) {
   UpdateRootDirHandle(mRootStoreDirectory);
 }
 
@@ -192,6 +193,8 @@ nsresult LookupCache::Open() {
 }
 
 nsresult LookupCache::Init() {
+  MOZ_ASSERT(!mVLPrefixSet);
+
   mVLPrefixSet = new VariableLengthPrefixSet();
   nsresult rv = mVLPrefixSet->Init(mTableName);
   NS_ENSURE_SUCCESS(rv, rv);

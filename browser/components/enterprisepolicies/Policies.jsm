@@ -31,6 +31,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BookmarksPolicies: "resource:///modules/policies/BookmarksPolicies.jsm",
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
+  PdfJsDefaultPreferences: "resource://pdf.js/PdfJsDefaultPreferences.jsm",
   ProxyPolicies: "resource:///modules/policies/ProxyPolicies.jsm",
   WebsiteFilter: "resource:///modules/policies/WebsiteFilter.jsm",
 });
@@ -1669,7 +1670,7 @@ var Policies = {
 
   Preferences: {
     onBeforeAddons(manager, param) {
-      const allowedPrefixes = [
+      let allowedPrefixes = [
         "accessibility.",
         "app.update.",
         "browser.",
@@ -1695,6 +1696,9 @@ var Policies = {
         "ui.",
         "widget.",
       ];
+      if (!AppConstants.MOZ_REQUIRE_SIGNING) {
+        allowedPrefixes.push("xpinstall.signatures.required");
+      }
       const allowedSecurityPrefs = [
         "security.block_fileuri_script_with_wrong_mime",
         "security.default_personal_cert",
@@ -1770,7 +1774,22 @@ var Policies = {
                 // automatically converting these values to booleans.
                 // Since we allow arbitrary prefs now, we have to do
                 // something different. See bug 1666836.
-                if (
+                // Even uglier, because pdfjs prefs are set async, we need
+                // to get their type from PdfJsDefaultPreferences.
+                if (preference.startsWith("pdfjs.")) {
+                  let preferenceTail = preference.replace("pdfjs.", "");
+                  if (
+                    preferenceTail in PdfJsDefaultPreferences &&
+                    typeof PdfJsDefaultPreferences[preferenceTail] == "number"
+                  ) {
+                    prefBranch.setIntPref(preference, param[preference].Value);
+                  } else {
+                    prefBranch.setBoolPref(
+                      preference,
+                      !!param[preference].Value
+                    );
+                  }
+                } else if (
                   prefBranch.getPrefType(preference) == prefBranch.PREF_INT ||
                   ![0, 1].includes(param[preference].Value)
                 ) {

@@ -376,7 +376,8 @@ nsUnknownContentTypeDialog.prototype = {
               // overwriting it does the right thing.
               if (
                 result.exists() &&
-                this.getFinalLeafName(result.leafName) == result.leafName
+                this.getFinalLeafName(result.leafName, "", true) ==
+                  result.leafName
               ) {
                 allowOverwrite = true;
               }
@@ -395,7 +396,8 @@ nsUnknownContentTypeDialog.prototype = {
                 newDir,
                 result.leafName,
                 null,
-                allowOverwrite
+                allowOverwrite,
+                true
               );
             } catch (ex) {
               // When the chosen download directory is write-protected,
@@ -416,10 +418,12 @@ nsUnknownContentTypeDialog.prototype = {
     })().catch(Cu.reportError);
   },
 
-  getFinalLeafName(aLeafName, aFileExt) {
+  getFinalLeafName(aLeafName, aFileExt, aAfterFilePicker) {
     return (
-      DownloadPaths.sanitize(aLeafName) ||
-      "unnamed" + (aFileExt ? "." + aFileExt : "")
+      DownloadPaths.sanitize(aLeafName, {
+        compressWhitespaces: !aAfterFilePicker,
+        allowInvalidFilenames: aAfterFilePicker,
+      }) || "unnamed" + (aFileExt ? "." + aFileExt : "")
     );
   },
 
@@ -438,12 +442,20 @@ nsUnknownContentTypeDialog.prototype = {
    *          if aLeafName is non-empty
    * @param   aAllowExisting
    *          if set to true, avoid creating a unique file.
+   * @param   aAfterFilePicker
+   *          if set to true, this was a file entered by the user from a file picker.
    * @return  nsIFile
    *          the created file
    * @throw   an error such as permission doesn't allow creation of
    *          file, etc.
    */
-  validateLeafName(aLocalFolder, aLeafName, aFileExt, aAllowExisting = false) {
+  validateLeafName(
+    aLocalFolder,
+    aLeafName,
+    aFileExt,
+    aAllowExisting = false,
+    aAfterFilePicker = false
+  ) {
     if (!(aLocalFolder && isUsableDirectory(aLocalFolder))) {
       throw new Components.Exception(
         "Destination directory non-existing or permission error",
@@ -451,7 +463,7 @@ nsUnknownContentTypeDialog.prototype = {
       );
     }
 
-    aLeafName = this.getFinalLeafName(aLeafName, aFileExt);
+    aLeafName = this.getFinalLeafName(aLeafName, aFileExt, aAfterFilePicker);
     aLocalFolder.append(aLeafName);
 
     if (!aAllowExisting) {

@@ -29,8 +29,6 @@ class AbstractSandboxBroker {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AbstractSandboxBroker)
 
-  static AbstractSandboxBroker* Create(GeckoProcessType aProcessType);
-
   virtual void Shutdown() = 0;
   virtual bool LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
                          base::EnvironmentMap& aEnvironment,

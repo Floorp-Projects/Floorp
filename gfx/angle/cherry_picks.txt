@@ -1,3 +1,11 @@
+commit 568b727a61e6a78702a0deaab5efe68b6cd061ff
+Author: Kelsey Gilbert <kelsey.gilbert@mozilla.com>
+Date:   Wed Mar 29 16:13:39 2023 -0700
+
+    Add ShCompileOptions.initGLPointSize.
+    
+    Change-Id: I1d998867f3e829ed0dc8181fa76be5fe701dde70
+
 commit 23851a53779dfd3239b4cceb7f93df9ea6efb9c3
 Author: Jeff Gilbert <jgilbert@mozilla.com>
 Date:   Tue Sep 14 18:11:05 2021 -0700

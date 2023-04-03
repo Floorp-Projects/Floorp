@@ -7189,7 +7189,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2023-02-22T15:15:03Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2023-03-18T15:13:13Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -8898,9 +8898,6 @@ limo
 // lincoln : 2014-11-13 Ford Motor Company
 lincoln
 
-// linde : 2014-12-04 Linde Aktiengesellschaft
-linde
-
 // link : 2013-11-14 Nova Registry Ltd
 link
 
@@ -8966,9 +8963,6 @@ luxe
 
 // luxury : 2013-10-17 Luxury Partners, LLC
 luxury
-
-// macys : 2015-07-31 Macys, Inc.
-macys
 
 // madrid : 2014-05-01 Comunidad de Madrid
 madrid

@@ -192,7 +192,7 @@ nsresult nsLocalFile::RevealFile(const nsString& aResolvedPath) {
 }
 
 // static
-void nsLocalFile::CheckForReservedFileName(nsString& aFileName) {
+bool nsLocalFile::CheckForReservedFileName(const nsString& aFileName) {
   static const char* forbiddenNames[] = {
       "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7",  "COM8",
       "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6",  "LPT7",
@@ -205,10 +205,12 @@ void nsLocalFile::CheckForReservedFileName(nsString& aFileName) {
       // invalid name is either the entire string, or a prefix with a period
       if (aFileName.Length() == nameLen ||
           aFileName.CharAt(nameLen) == char16_t('.')) {
-        aFileName.Truncate();
+        return true;
       }
     }
   }
+
+  return false;
 }
 
 class nsDriveEnumerator : public nsSimpleEnumerator,
@@ -1859,13 +1861,27 @@ nsresult nsLocalFile::CopySingleFile(nsIFile* aSourceFile, nsIFile* aDestParent,
     ::GetNamedSecurityInfoW((LPWSTR)destPath.get(), SE_FILE_OBJECT,
                             DACL_SECURITY_INFORMATION, nullptr, nullptr,
                             &pOldDACL, nullptr, &pSD);
-    if (pOldDACL)
-      ::SetNamedSecurityInfoW(
-          (LPWSTR)destPath.get(), SE_FILE_OBJECT,
-          DACL_SECURITY_INFORMATION | UNPROTECTED_DACL_SECURITY_INFORMATION,
-          nullptr, nullptr, pOldDACL, nullptr);
-    if (pSD) {
-      LocalFree((HLOCAL)pSD);
+    UniquePtr<VOID, LocalFreeDeleter> autoFreeSecDesc(pSD);
+    if (pOldDACL) {
+      // Test the current DACL, if we find one that is inherited then we can
+      // skip the reset. This avoids a request for SeTcbPrivilege, which can
+      // cause a lot of audit events if enabled (Bug 1816694).
+      bool inherited = false;
+      for (DWORD i = 0; i < pOldDACL->AceCount; ++i) {
+        VOID* pAce = nullptr;
+        if (::GetAce(pOldDACL, i, &pAce) &&
+            static_cast<PACE_HEADER>(pAce)->AceFlags & INHERITED_ACE) {
+          inherited = true;
+          break;
+        }
+      }
+
+      if (!inherited) {
+        ::SetNamedSecurityInfoW(
+            (LPWSTR)destPath.get(), SE_FILE_OBJECT,
+            DACL_SECURITY_INFORMATION | UNPROTECTED_DACL_SECURITY_INFORMATION,
+            nullptr, nullptr, pOldDACL, nullptr);
+      }
     }
   }
 

@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ARIAMap.h"
 #include "CachedTableAccessible.h"
 #include "DocAccessibleParent.h"
 #include "mozilla/a11y/Platform.h"
@@ -145,6 +146,10 @@ uint32_t DocAccessibleParent::AddSubtree(
     aParent->AddChildAt(aIdxInParent, newProxy);
     newProxy->SetParent(aParent);
   } else {
+    if (!aria::IsRoleMapIndexValid(newChild.RoleMapEntryIndex())) {
+      MOZ_ASSERT_UNREACHABLE("Invalid role map entry index");
+      return 0;
+    }
     newProxy = new RemoteAccessible(
         newChild.ID(), aParent, this, newChild.Role(), newChild.Type(),
         newChild.GenericTypes(), newChild.RoleMapEntryIndex());
@@ -246,8 +251,18 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvHideEvent(
     return IPC_OK();
   }
 
+#ifdef XP_WIN
+  WeakPtr<RemoteAccessible> parent = root->RemoteParent();
+#else
   RemoteAccessible* parent = root->RemoteParent();
+#endif
   ProxyShowHideEvent(root, parent, false, aFromUser);
+#ifdef XP_WIN
+  if (!parent) {
+    MOZ_ASSERT(!StaticPrefs::accessibility_cache_enabled_AtStartup());
+    return IPC_FAIL(this, "Parent removed while removing child");
+  }
+#endif
 
   RefPtr<xpcAccHideEvent> event = nullptr;
   if (nsCoreUtils::AccEventObserversExist()) {
@@ -726,7 +741,12 @@ ipc::IPCResult DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
     return IPC_FAIL(this, "binding to nonexistant proxy!");
   }
 
+#ifdef XP_WIN
+  WeakPtr<RemoteAccessible> outerDoc = e->mProxy;
+#else
   RemoteAccessible* outerDoc = e->mProxy;
+#endif
+
   MOZ_ASSERT(outerDoc);
 
   // OuterDocAccessibles are expected to only have a document as a child.
@@ -781,6 +801,9 @@ ipc::IPCResult DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
 #  endif  // defined(MOZ_SANDBOX)
           }
         }
+        if (!outerDoc) {
+          return IPC_FAIL(this, "OuterDoc removed while adding child doc");
+        }
         // Send a COM proxy for the embedder OuterDocAccessible to the embedded
         // document process. This will be returned as the parent of the
         // embedded document.
@@ -817,6 +840,9 @@ ipc::IPCResult DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
                 topDocHolder.GetPreservedStream();
 #  endif  // defined(MOZ_SANDBOX)
           }
+        }
+        if (!outerDoc) {
+          return IPC_FAIL(this, "OuterDoc removed while adding child doc");
         }
       }
       if (nsWinUtils::IsWindowEmulationStarted()) {

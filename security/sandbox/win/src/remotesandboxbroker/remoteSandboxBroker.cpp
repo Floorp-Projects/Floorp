@@ -11,7 +11,8 @@
 
 namespace mozilla {
 
-RemoteSandboxBroker::RemoteSandboxBroker() {}
+RemoteSandboxBroker::RemoteSandboxBroker(uint32_t aLaunchArch)
+    : mLaunchArch(aLaunchArch) {}
 
 RemoteSandboxBroker::~RemoteSandboxBroker() {
   MOZ_ASSERT(
@@ -86,7 +87,7 @@ bool RemoteSandboxBroker::LaunchApp(
   // TaskQueue) to resolve our promise as it will be blocked until we return
   // from this function.
   nsCOMPtr<nsISerialEventTarget> target = NS_GetCurrentThread();
-  mParent.Launch(mParameters.shareHandles(), target)
+  mParent.Launch(mLaunchArch, mParameters.shareHandles(), target)
       ->Then(target, __func__, std::move(resolve), std::move(reject));
 
   // Spin the event loop while the sandbox launcher process launches.
@@ -102,6 +103,7 @@ bool RemoteSandboxBroker::LaunchApp(
   bool rv = mParent.SendLaunchApp(std::move(mParameters), &ok, &handle) && ok;
   mParameters.shareHandles().Clear();
   if (!rv) {
+    mParent.Shutdown();
     return false;
   }
 
@@ -110,6 +112,7 @@ bool RemoteSandboxBroker::LaunchApp(
   HANDLE ourChildHandle = 0;
   bool dh = mParent.DuplicateFromLauncher((HANDLE)handle, &ourChildHandle);
   if (!dh) {
+    mParent.Shutdown();
     return false;
   }
 
@@ -162,10 +165,6 @@ bool RemoteSandboxBroker::SetSecurityLevelForUtilityProcess(
     mozilla::ipc::SandboxingKind aSandbox) {
   MOZ_CRASH(
       "RemoteSandboxBroker::SetSecurityLevelForUtilityProcess not Implemented");
-}
-
-AbstractSandboxBroker* CreateRemoteSandboxBroker() {
-  return new RemoteSandboxBroker();
 }
 
 }  // namespace mozilla

@@ -529,7 +529,9 @@ void nsFilePicker::InitNative(nsIWidget* aParent, const nsAString& aTitle) {
 
 NS_IMETHODIMP
 nsFilePicker::AppendFilter(const nsAString& aTitle, const nsAString& aFilter) {
-  mComFilterList.Append(aTitle, aFilter);
+  nsAutoString sanitizedFilter(aFilter);
+  sanitizedFilter.ReplaceChar('%', '_');
+  mComFilterList.Append(aTitle, sanitizedFilter);
   return NS_OK;
 }
 

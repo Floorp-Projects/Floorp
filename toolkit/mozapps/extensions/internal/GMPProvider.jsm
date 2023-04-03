@@ -618,6 +618,7 @@ GMPWrapper.prototype = {
       gmpService.removeAndDeletePluginDirectory(this.gmpPath);
     }
     GMPPrefs.reset(GMPPrefs.KEY_PLUGIN_VERSION, this.id);
+    GMPPrefs.reset(GMPPrefs.KEY_PLUGIN_HASHVALUE, this.id);
     GMPPrefs.reset(GMPPrefs.KEY_PLUGIN_ABI, this.id);
     GMPPrefs.reset(GMPPrefs.KEY_PLUGIN_LAST_UPDATE, this.id);
     AddonManagerPrivate.callAddonListeners("onUninstalled", this);
@@ -757,7 +758,14 @@ var GMPProvider = {
     try {
       let greDir = Services.dirsvc.get(NS_GRE_DIR, Ci.nsIFile);
       let path = greDir.path;
-      if (GMPUtils._isWindowsOnARM64()) {
+      if (
+        GMPUtils._isWindowsOnARM64() &&
+        GMPPrefs.getBool(
+          GMPPrefs.KEY_PLUGIN_ALLOW_X64_ON_ARM64,
+          true,
+          CLEARKEY_PLUGIN_ID
+        )
+      ) {
         path = PathUtils.join(path, "i686");
       }
       let clearkeyPath = PathUtils.join(

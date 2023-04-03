@@ -66,6 +66,7 @@ const ATTR_CODE_KEYS = [
   "ua",
   "dltoken",
   "msstoresignedin",
+  "dlsource",
 ];
 
 let gCachedAttrData = null;

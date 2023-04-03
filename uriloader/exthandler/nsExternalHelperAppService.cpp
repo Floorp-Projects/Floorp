@@ -3303,6 +3303,13 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
                       aMimeType.EqualsLiteral(BINARY_OCTET_STREAM) ||
                       aMimeType.EqualsLiteral("application/x-msdownload");
 
+  // We don't want to save hidden files starting with a dot, so remove any
+  // leading periods. This is done first, so that the remainder will be
+  // treated as the filename, and not an extension.
+  // Also, Windows ignores terminating dots. So we have to as well, so
+  // that our security checks do "the right thing"
+  fileName.Trim(".");
+
   // We get the mime service here even though we're the default implementation
   // of it, so it's possible to override only the mime service and not need to
   // reimplement the whole external helper app service itself.
@@ -3316,8 +3323,9 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
         nsAutoCString leafName;
         url->GetFileName(leafName);
         if (!leafName.IsEmpty()) {
-          if (NS_SUCCEEDED(UnescapeFragment(leafName, url, fileName))) {
-            CopyUTF8toUTF16(leafName, aFileName);  // use escaped name
+          if (NS_FAILED(UnescapeFragment(leafName, url, fileName))) {
+            CopyUTF8toUTF16(leafName, fileName);  // use escaped name instead
+            fileName.Trim(".");
           }
         }
 
@@ -3377,10 +3385,6 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
       }
     }
   }
-
-  // Windows ignores terminating dots. So we have to as well, so
-  // that our security checks do "the right thing"
-  fileName.Trim(".", false);
 
   // If an empty filename is allowed, then return early. It will be saved
   // using the filename of the temporary file that was created for the download.
@@ -3456,24 +3460,20 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
     }
   }
 
-#ifdef XP_WIN
-  nsLocalFile::CheckForReservedFileName(fileName);
-#endif
+  CheckDefaultFileName(fileName, aFlags);
 
-  // If the extension is one these types, replace it with .download, as these
-  // types of files can have signifance on Windows. This happens for any file,
-  // not just those with the shortcut mime type.
-  if (StringEndsWith(fileName, u".lnk"_ns, nsCaseInsensitiveStringComparator) ||
-      StringEndsWith(fileName, u".local"_ns,
-                     nsCaseInsensitiveStringComparator) ||
-      StringEndsWith(fileName, u".url"_ns, nsCaseInsensitiveStringComparator) ||
-      StringEndsWith(fileName, u".scf"_ns, nsCaseInsensitiveStringComparator)) {
-    fileName.AppendLiteral(".download");
-  }
+  // Make the filename safe for the filesystem.
+  SanitizeFileName(fileName, aFlags);
 
+  aFileName = fileName;
+  return mimeInfo.forget();
+}
+
+void nsExternalHelperAppService::CheckDefaultFileName(nsAString& aFileName,
+                                                      uint32_t aFlags) {
   // If no filename is present, use a default filename.
   if (!(aFlags & VALIDATE_NO_DEFAULT_FILENAME) &&
-      (fileName.Length() == 0 || fileName.RFind(".") == 0)) {
+      (aFileName.Length() == 0 || aFileName.RFind(u".") == 0)) {
     nsCOMPtr<nsIStringBundleService> stringService =
         mozilla::components::StringBundle::Service();
     if (stringService) {
@@ -3484,21 +3484,15 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
         nsAutoString defaultFileName;
         bundle->GetStringFromName("DefaultSaveFileName", defaultFileName);
         // Append any existing extension to the default filename.
-        fileName = defaultFileName + fileName;
+        aFileName = defaultFileName + aFileName;
       }
     }
 
-    // Use 'index' as a last resort.
-    if (!fileName.Length()) {
-      fileName.AssignLiteral("index");
+    // Use 'Untitled' as a last resort.
+    if (!aFileName.Length()) {
+      aFileName.AssignLiteral("Untitled");
     }
   }
-
-  // Make the filename safe for the filesystem.
-  SanitizeFileName(fileName, aFlags);
-
-  aFileName = fileName;
-  return mimeInfo.forget();
 }
 
 void nsExternalHelperAppService::SanitizeFileName(nsAString& aFileName,
@@ -3687,6 +3681,32 @@ void nsExternalHelperAppService::SanitizeFileName(nsAString& aFileName,
     // Otherwise, the filename wasn't too long, so just trim off the
     // extra whitespace and periods at the end.
     outFileName.Truncate(lastNonTrimmable);
+  }
+
+#ifdef XP_WIN
+  if (nsLocalFile::CheckForReservedFileName(outFileName)) {
+    outFileName.Truncate();
+    CheckDefaultFileName(outFileName, aFlags);
+  }
+
+#endif
+
+  if (!(aFlags & VALIDATE_ALLOW_INVALID_FILENAMES)) {
+    // If the extension is one these types, replace it with .download, as these
+    // types of files can have significance on Windows or Linux.
+    // This happens for any file, not just those with the shortcut mime type.
+    if (StringEndsWith(outFileName, u".lnk"_ns,
+                       nsCaseInsensitiveStringComparator) ||
+        StringEndsWith(outFileName, u".local"_ns,
+                       nsCaseInsensitiveStringComparator) ||
+        StringEndsWith(outFileName, u".url"_ns,
+                       nsCaseInsensitiveStringComparator) ||
+        StringEndsWith(outFileName, u".scf"_ns,
+                       nsCaseInsensitiveStringComparator) ||
+        StringEndsWith(outFileName, u".desktop"_ns,
+                       nsCaseInsensitiveStringComparator)) {
+      outFileName.AppendLiteral(".download");
+    }
   }
 
   aFileName = outFileName;

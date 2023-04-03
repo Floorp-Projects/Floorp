@@ -51,8 +51,10 @@ wr::WrExternalImage RenderBufferTextureHost::Lock(
     uint8_t aChannelIndex, gl::GLContext* aGL, wr::ImageRendering aRendering) {
   if (!mLocked) {
     if (!GetBuffer()) {
-      // We hit some problems to get the shmem.
-      gfxCriticalNote << "GetBuffer Failed";
+      if (!mDestroyed) {
+        // We hit some problems to get the shmem.
+        gfxCriticalNote << "GetBuffer Failed";
+      }
       return InvalidToWrExternalImage();
     }
     if (mFormat != gfx::SurfaceFormat::YUV) {
@@ -196,8 +198,10 @@ bool RenderBufferTextureHost::MapPlane(RenderCompositor* aCompositor,
                                        uint8_t aChannelIndex,
                                        PlaneInfo& aPlaneInfo) {
   if (!mBuffer) {
-    // We hit some problems to get the shmem.
-    gfxCriticalNote << "GetBuffer Failed";
+    if (!mDestroyed) {
+      // We hit some problems to get the shmem.
+      gfxCriticalNote << "GetBuffer Failed";
+    }
     return false;
   }
 
@@ -240,6 +244,11 @@ bool RenderBufferTextureHost::MapPlane(RenderCompositor* aCompositor,
 }
 
 void RenderBufferTextureHost::UnmapPlanes() {}
+
+void RenderBufferTextureHost::Destroy() {
+  mBuffer = nullptr;
+  mDestroyed = true;
+}
 
 }  // namespace wr
 }  // namespace mozilla

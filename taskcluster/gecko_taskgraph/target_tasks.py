@@ -993,13 +993,6 @@ def target_tasks_build_linux64_clang_trunk_perf(
     return [l for l, t in full_task_graph.tasks.items() if filter(t.label)]
 
 
-# Run Updatebot's cron job 4 times daily.
-@_target_task("updatebot_cron")
-def target_tasks_updatebot_cron(full_task_graph, parameters, graph_config):
-    """Select tasks required to run Updatebot's cron job"""
-    return ["updatebot-cron"]
-
-
 @_target_task("customv8_update")
 def target_tasks_customv8_update(full_task_graph, parameters, graph_config):
     """Select tasks required for building latest d8/v8 version."""

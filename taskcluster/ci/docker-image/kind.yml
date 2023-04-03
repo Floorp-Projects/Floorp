@@ -194,9 +194,6 @@ jobs:
         symbol: I(PR)
         parent: debian10-base
         definition: partner-repack
-    updatebot:
-        symbol: I(3rdp)
-        parent: push-to-try
     periodic-updates:
         symbol: I(file)
         parent: ubuntu1804-base

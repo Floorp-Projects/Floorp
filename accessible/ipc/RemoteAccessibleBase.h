@@ -11,6 +11,7 @@
 #include "mozilla/a11y/CacheConstants.h"
 #include "mozilla/a11y/HyperTextAccessibleBase.h"
 #include "mozilla/a11y/Role.h"
+#include "mozilla/WeakPtr.h"
 #include "AccAttributes.h"
 #include "nsIAccessibleText.h"
 #include "nsIAccessibleTypes.h"
@@ -27,7 +28,13 @@ class RemoteAccessible;
 enum class RelationType;
 
 template <class Derived>
+#ifdef XP_WIN
+class RemoteAccessibleBase : public Accessible,
+                             public HyperTextAccessibleBase,
+                             public SupportsWeakPtr {
+#else
 class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
+#endif
  public:
   virtual ~RemoteAccessibleBase() { MOZ_ASSERT(!mWrapper); }
 
