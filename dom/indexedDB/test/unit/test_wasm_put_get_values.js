@@ -21,7 +21,7 @@ function* testSteps() {
   }
 
   // js -e 'print(wasmTextToBinary(`(module (func (export "run") (result i32) (i32.const 13)))`))'
-  // eslint-disable-next-line
+  // prettier-ignore
   let binary = new Uint8Array([0,97,115,109,1,0,0,0,1,5,1,96,0,1,127,3,2,1,0,7,7,1,3,114,117,110,0,0,10,6,1,4,0,65,13,11]);
 
   wasmData.value = getWasmModule(binary);
