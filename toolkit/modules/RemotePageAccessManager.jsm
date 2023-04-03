@@ -52,6 +52,7 @@ let RemotePageAccessManager = {
         "security.certerror.hideAddException",
       ],
       RPMGetIntPref: [
+        "security.dialog_enable_delay",
         "services.settings.clock_skew_seconds",
         "services.settings.last_update_seconds",
       ],

@@ -153,18 +153,16 @@ function setupAdvancedButton() {
     .addEventListener("click", togglePanelVisibility);
 
   function togglePanelVisibility() {
-    panel.hidden = !panel.hidden;
-    if (gIsCertError) {
-      // Toggling the advanced panel must ensure that the debugging
-      // information panel is hidden as well, since it's opened by the
-      // error code link in the advanced panel.
-      toggleCertErrorDebugInfoVisibility(false);
-    }
+    if (panel.hidden) {
+      // Reveal
+      revealAdvancedPanelSlowlyAsync();
 
-    if (panel.style.display == "block") {
       // send event to trigger telemetry ping
       var event = new CustomEvent("AboutNetErrorUIExpanded", { bubbles: true });
       document.dispatchEvent(event);
+    } else {
+      // Hide
+      panel.hidden = true;
     }
   }
 
@@ -173,10 +171,47 @@ function setupAdvancedButton() {
   }
 
   if (getCSSClass() == "expertBadCert") {
-    panel.hidden = false;
+    revealAdvancedPanelSlowlyAsync();
   }
 
   disallowCertOverridesIfNeeded();
+}
+
+async function revealAdvancedPanelSlowlyAsync() {
+  const badCertAdvancedPanel = document.getElementById("badCertAdvancedPanel");
+  const exceptionDialogButton = document.getElementById(
+    "exceptionDialogButton"
+  );
+
+  // Toggling the advanced panel must ensure that the debugging
+  // information panel is hidden as well, since it's opened by the
+  // error code link in the advanced panel.
+  toggleCertErrorDebugInfoVisibility(false);
+
+  // Reveal, but disabled (and grayed-out) for 3.0s.
+  badCertAdvancedPanel.hidden = false;
+  exceptionDialogButton.disabled = true;
+
+  // -
+
+  if (exceptionDialogButton.resetReveal) {
+    exceptionDialogButton.resetReveal(); // Reset if previous is pending.
+  }
+  let wasReset = false;
+  exceptionDialogButton.resetReveal = () => {
+    wasReset = true;
+  };
+
+  // Wait another Nms (default: 1000) for the user to be very sure. (Sorry speed readers!)
+  const securityDelayMs = RPMGetIntPref("security.dialog_enable_delay", 1000);
+  await new Promise(go => setTimeout(go, securityDelayMs));
+
+  if (wasReset) {
+    return;
+  }
+
+  // Enable and un-gray-out.
+  exceptionDialogButton.disabled = false;
 }
 
 function disallowCertOverridesIfNeeded() {
@@ -973,7 +1008,6 @@ async function setTechnicalDetailsOnCertError(
   }
 
   let cssClass = getCSSClass();
-  let error = gErrorCode;
 
   let hostString = HOST_NAME;
   let port = document.location.port;
@@ -1084,14 +1118,10 @@ async function setTechnicalDetailsOnCertError(
         // If we set a link, meaning there's something helpful for
         // the user here, expand the section by default
         if (href && cssClass != "expertBadCert") {
-          document.getElementById("badCertAdvancedPanel").style.display =
-            "block";
-          if (error == "nssBadCert") {
-            // Toggling the advanced panel must ensure that the debugging
-            // information panel is hidden as well, since it's opened by the
-            // error code link in the advanced panel.
-            toggleCertErrorDebugInfoVisibility(false);
-          }
+          // Previously, this would cause AboutNetErrorUIExpanded to send to
+          // telemetry, but we probably don't want to do that when
+          // auto-revealing.
+          revealAdvancedPanelSlowlyAsync();
         }
 
         // Set the link if we want it.
