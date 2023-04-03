@@ -44,7 +44,7 @@ class VideoFrameContainer {
                        const TimeStamp& aTargetTime);
   // Returns the last principalHandle we notified mElement about.
   PrincipalHandle GetLastPrincipalHandle();
-  PrincipalHandle GetLastPrincipalHandleLocked();
+  PrincipalHandle GetLastPrincipalHandleLocked() MOZ_REQUIRES(mMutex);
   // We will notify mElement that aPrincipalHandle has been applied when all
   // FrameIDs prior to aFrameID have been flushed out.
   // aFrameID is ignored if aPrincipalHandle already is our pending
@@ -53,7 +53,7 @@ class VideoFrameContainer {
                                        const ImageContainer::FrameID& aFrameID);
   void UpdatePrincipalHandleForFrameIDLocked(
       const PrincipalHandle& aPrincipalHandle,
-      const ImageContainer::FrameID& aFrameID);
+      const ImageContainer::FrameID& aFrameID) MOZ_REQUIRES(mMutex);
   void SetCurrentFrames(
       const gfx::IntSize& aIntrinsicSize,
       const nsTArray<ImageContainer::NonOwningImage>& aImages);
@@ -93,7 +93,8 @@ class VideoFrameContainer {
  protected:
   void SetCurrentFramesLocked(
       const gfx::IntSize& aIntrinsicSize,
-      const nsTArray<ImageContainer::NonOwningImage>& aImages);
+      const nsTArray<ImageContainer::NonOwningImage>& aImages)
+      MOZ_REQUIRES(mMutex);
 
   // Non-addreffed pointer to the owner. The owner calls ForgetElement
   // to clear this reference when the owner is destroyed.
@@ -116,24 +117,24 @@ class VideoFrameContainer {
     bool mIntrinsicSizeChanged = false;
   } mMainThreadState;
 
-  // mMutex protects all the fields below.
-  Mutex mMutex MOZ_UNANNOTATED;
+  Mutex mMutex;
   // The intrinsic size is the ideal size which we should render the
   // ImageContainer's current Image at.
   // This can differ from the Image's actual size when the media resource
   // specifies that the Image should be stretched to have the correct aspect
   // ratio.
-  gfx::IntSize mIntrinsicSize;
+  gfx::IntSize mIntrinsicSize MOZ_GUARDED_BY(mMutex);
   // We maintain our own mFrameID which is auto-incremented at every
   // SetCurrentFrame() or NewFrameID() call.
   ImageContainer::FrameID mFrameID;
   // The last PrincipalHandle we notified mElement about.
-  PrincipalHandle mLastPrincipalHandle;
+  PrincipalHandle mLastPrincipalHandle MOZ_GUARDED_BY(mMutex);
   // The PrincipalHandle the client has notified us is changing with FrameID
   // mFrameIDForPendingPrincipalHandle.
-  PrincipalHandle mPendingPrincipalHandle;
+  PrincipalHandle mPendingPrincipalHandle MOZ_GUARDED_BY(mMutex);
   // The FrameID for which mPendingPrincipal is first valid.
-  ImageContainer::FrameID mFrameIDForPendingPrincipalHandle;
+  ImageContainer::FrameID mFrameIDForPendingPrincipalHandle
+      MOZ_GUARDED_BY(mMutex);
 
   const RefPtr<AbstractThread> mMainThread;
 };
