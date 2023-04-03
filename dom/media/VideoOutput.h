@@ -67,6 +67,10 @@ class VideoOutput : public DirectMediaTrackListener {
       return;
     }
 
+    if (!mEnabled && mDisabledBlackImageSent) {
+      return;
+    }
+
     // Collect any new frames produced in this iteration.
     AutoTArray<ImageContainer::NonOwningImage, 16> images;
     PrincipalHandle lastPrincipalHandle = PRINCIPAL_HANDLE_NONE;
@@ -100,6 +104,12 @@ class VideoOutput : public DirectMediaTrackListener {
           image, chunk.mTimeStamp, frameId, mProducerID));
 
       lastPrincipalHandle = chunk.GetPrincipalHandle();
+
+      if (!mEnabled && mBlackImage) {
+        MOZ_ASSERT(images.Length() == 1);
+        mDisabledBlackImageSent = true;
+        break;
+      }
     }
 
     if (images.IsEmpty()) {
@@ -190,6 +200,9 @@ class VideoOutput : public DirectMediaTrackListener {
     MutexAutoLock lock(mMutex);
     mEnabled = aEnabled;
     DropPastFrames();
+    if (mEnabled) {
+      mDisabledBlackImageSent = false;
+    }
     if (!mEnabled || mFrames.Length() > 1) {
       // Re-send frames when disabling, as new frames may not arrive. When
       // enabling we keep them black until new frames arrive, or re-send if we
@@ -218,6 +231,8 @@ class VideoOutput : public DirectMediaTrackListener {
   // Once the frame is forced to black, we initialize mBlackImage for use in any
   // following forced-black frames.
   RefPtr<Image> mBlackImage;
+  // True once mBlackImage has been sent due to mEnabled being false.
+  bool mDisabledBlackImageSent = false;
   bool mEnabled = true;
   // This array is accessed from both the direct video thread, and the graph
   // thread. Protected by mMutex.
