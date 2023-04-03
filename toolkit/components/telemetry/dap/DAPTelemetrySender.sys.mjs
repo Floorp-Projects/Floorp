@@ -41,15 +41,9 @@ export const DAPTelemetrySender = new (class {
     }
   }
 
-  /**
-   * For testing: sends a hard coded report for a hard coded task.
-   *
-   * @param {number} measurement
-   */
-  async sendVerificationTaskReport(measurement) {
-    lazy.logConsole.info("Trying to send verification task.");
+  async sendTestReports() {
+    /** @typedef { 'u8' | 'vecu16'} measurementtype */
 
-    // For now there is only a single task which is hardcoded here.
     /**
      * @typedef {object} Task
      * @property {string} id_hexstring - The task's ID hex encoded.
@@ -57,17 +51,57 @@ export const DAPTelemetrySender = new (class {
      * @property {string} leader_endpoint - Base URL for the leader.
      * @property {string} helper_endpoint - Base URL for the helper.
      * @property {number} time_precision - Timestamps (in s) are rounded to the nearest multiple of this.
+     * @property {measurementtype} measurement_type - Defines measurements and aggregations used by this task. Effectively specifying the VDAF.
      */
-    const task = {
-      // Note that this does not exactly match the task definition from the standard linked-to above.
-      id_hexstring:
-        "4ad95d3b67332ff89a505da296315b88b88d4f1c5535d3c780fbae1162c79ec9",
-      id_base64: "StldO2czL_iaUF2iljFbiLiNTxxVNdPHgPuuEWLHnsk",
-      leader_endpoint: null,
-      helper_endpoint: null,
-      time_precision: 600,
-    };
 
+    // For now tasks are hardcoded here.
+    const tasks = [
+      {
+        // this is load testing task 1
+        id_hexstring:
+          "423303e27f25fcc1c1a0badb09f2d3162f210b6eb87c2e7d48a1cfbe23c5d2af",
+        id_base64: "QjMD4n8l_MHBoLrbCfLTFi8hC264fC59SKHPviPF0q8",
+        leader_endpoint: null,
+        helper_endpoint: null,
+        time_precision: 60, // TODO what is a reasonable value
+        measurement_type: "u8",
+      },
+      {
+        // this is load testing task 2
+        id_hexstring:
+          "0d2646305876ea10585cd68abe12ff3780070373f99439f5f689f5bc53c1c493",
+        id_base64: "DSZGMFh26hBYXNaKvhL_N4AHA3P5lDn19on1vFPBxJM",
+        leader_endpoint: null,
+        helper_endpoint: null,
+        time_precision: 60,
+        measurement_type: "vecu16",
+      },
+    ];
+
+    for (let task of tasks) {
+      let measurement;
+      if (task.measurement_type == "u8") {
+        measurement = 3;
+      } else if (task.measurement_type == "vecu16") {
+        measurement = new Uint16Array(1024);
+        let r = Math.floor(Math.random() * 10);
+        measurement[r] += 1;
+        measurement[1000] += 1;
+      }
+
+      await this.sendTestReport(task, measurement);
+    }
+  }
+
+  /**
+   * Creates a DAP report for a specific task from a measurement and sends it.
+   *
+   * @param {Task} task
+   *   Definition of the task for which the measurement was taken.
+   * @param {number} measurement
+   *   The measured value for which a report is generated.
+   */
+  async sendTestReport(task, measurement) {
     task.leader_endpoint = lazy.LEADER;
     if (!task.leader_endpoint) {
       lazy.logConsole.error('Preference "' + PREF_LEADER + '" not set');
@@ -112,14 +146,29 @@ export const DAPTelemetrySender = new (class {
     ]);
     let task_id = hexString2Binary(task.id_hexstring);
     let report = {};
-    Services.DAPTelemetry.GetReport(
-      leader_config_bytes,
-      helper_config_bytes,
-      measurement,
-      task_id,
-      task.time_precision,
-      report
-    );
+    if (task.measurement_type == "u8") {
+      Services.DAPTelemetry.GetReportU8(
+        leader_config_bytes,
+        helper_config_bytes,
+        measurement,
+        task_id,
+        task.time_precision,
+        report
+      );
+    } else if (task.measurement_type == "vecu16") {
+      Services.DAPTelemetry.GetReportVecU16(
+        leader_config_bytes,
+        helper_config_bytes,
+        measurement,
+        task_id,
+        task.time_precision,
+        report
+      );
+    } else {
+      throw new Error(
+        `Unknown measurement type for task ${task.id_base64}: ${task.measurement_type}`
+      );
+    }
     let reportData = new Uint8Array(report.value);
     return reportData;
   }
@@ -167,10 +216,20 @@ export const DAPTelemetrySender = new (class {
       });
 
       if (response.status != 200) {
-        let error = await response.json();
-        lazy.logConsole.error(
-          `Sending failed. HTTP response: ${response.status} ${response.statusText}. Error: ${error.type} ${error.title}`
-        );
+        const content_type = response.headers.get("content-type");
+        if (content_type && content_type === "application/json") {
+          // A JSON error from the DAP server.
+          let error = await response.json();
+          lazy.logConsole.error(
+            `Sending failed. HTTP response: ${response.status} ${response.statusText}. Error: ${error.type} ${error.title}`
+          );
+        } else {
+          // A different error, e.g. from a load-balancer.
+          let error = await response.text();
+          lazy.logConsole.error(
+            `Sending failed. HTTP response: ${response.status} ${response.statusText}. Error: ${error}`
+          );
+        }
 
         Glean.dap.uploadStatus.failure.add(1);
       } else {

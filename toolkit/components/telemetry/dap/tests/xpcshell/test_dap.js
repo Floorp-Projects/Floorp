@@ -33,7 +33,9 @@ let server_addr;
 
 function hpkeConfigHandler(request, response) {
   if (
-    request.queryString == "task_id=StldO2czL_iaUF2iljFbiLiNTxxVNdPHgPuuEWLHnsk"
+    request.queryString ==
+      "task_id=QjMD4n8l_MHBoLrbCfLTFi8hC264fC59SKHPviPF0q8" ||
+    request.queryString == "task_id=DSZGMFh26hBYXNaKvhL_N4AHA3P5lDn19on1vFPBxJM"
   ) {
     let config_bytes;
     if (request.path.startsWith("/leader")) {
@@ -139,8 +141,13 @@ function uploadHandler(request, response) {
     "application/dap-report",
     "Wrong Content-Type header."
   );
+
   let body = new BinaryInputStream(request.bodyInputStream);
-  Assert.equal(body.available(), 432, "Wrong request body size.");
+  Assert.equal(
+    true,
+    body.available() == 432 || body.available() == 20720,
+    "Wrong request body size."
+  );
   received = true;
   response.setStatusLine(request.httpVersion, 200);
 }
@@ -175,9 +182,9 @@ add_setup(async function() {
 add_task(async function testVerificationTask() {
   Services.fog.testResetFOG();
   let before = Glean.dap.uploadStatus.success.testGetValue() ?? 0;
-  await lazy.DAPTelemetrySender.sendVerificationTaskReport();
+  await lazy.DAPTelemetrySender.sendTestReports();
   let after = Glean.dap.uploadStatus.success.testGetValue();
-  Assert.equal(before + 1, after, "Successful submissions should be counted.");
+  Assert.equal(before + 2, after, "Successful submissions should be counted.");
   Assert.ok(received, "Report upload successful.");
 });
 
@@ -185,10 +192,10 @@ add_task(async function testNetworkError() {
   Services.fog.testResetFOG();
   let before = Glean.dap.reportGenerationStatus.failure.testGetValue() ?? 0;
   Services.prefs.setStringPref(PREF_LEADER, server_addr + "/invalid-endpoint");
-  await lazy.DAPTelemetrySender.sendVerificationTaskReport();
+  await lazy.DAPTelemetrySender.sendTestReports();
   let after = Glean.dap.reportGenerationStatus.failure.testGetValue() ?? 0;
   Assert.equal(
-    before + 1,
+    before + 2,
     after,
     "Failed report generation should be counted."
   );
