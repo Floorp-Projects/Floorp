@@ -335,6 +335,26 @@ add_task(async function test_interaction_telemetry() {
     Services.prefs.getBoolPref(PASSWORDS_PREF),
     "Passwords pref should have been set."
   );
+
+  // Now make sure that we still record these if we migrate a
+  // series of resources at the same time.
+  Services.prefs.clearUserPref(BOOKMARKS_PREF);
+  Services.prefs.clearUserPref(HISTORY_PREF);
+  Services.prefs.clearUserPref(PASSWORDS_PREF);
+
+  await testingMigrator.migrate(MigrationUtils.resourceTypes.ALL, false, {});
+  Assert.ok(
+    Services.prefs.getBoolPref(BOOKMARKS_PREF),
+    "Bookmarks pref should have been set."
+  );
+  Assert.ok(
+    Services.prefs.getBoolPref(HISTORY_PREF),
+    "History pref should have been set."
+  );
+  Assert.ok(
+    Services.prefs.getBoolPref(PASSWORDS_PREF),
+    "Passwords pref should have been set."
+  );
 });
 
 /**
