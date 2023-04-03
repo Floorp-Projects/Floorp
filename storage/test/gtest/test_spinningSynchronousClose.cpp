@@ -7,6 +7,8 @@
 #include "storage_test_harness.h"
 #include "prinrval.h"
 
+using namespace mozilla;
+
 /**
  * Helper to verify that the event loop was spun.  As long as this is dispatched
  * prior to a call to Close()/SpinningSynchronousClose() we are guaranteed this
