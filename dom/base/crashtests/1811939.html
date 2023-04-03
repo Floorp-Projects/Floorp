@@ -1,0 +1,7 @@
+<html class="reftest-wait">
+<script>
+  import("data:text/javascript,0").catch(x => 0);
+  import("data:text/javascript,0").catch(x => 0);
+  setTimeout('document.documentElement.className = ""', 500);
+  window.stop();
+</script>
