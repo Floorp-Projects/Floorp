@@ -347,47 +347,32 @@ ArgumentsObject* ArgumentsObject::create(JSContext* cx, HandleFunction callee,
   unsigned numArgs = std::max(numActuals, numFormals);
   unsigned numBytes = ArgumentsData::bytesRequired(numArgs);
 
-  Rooted<ArgumentsObject*> obj(cx);
-  ArgumentsData* data = nullptr;
-  {
-    // The copyArgs call below can allocate objects, so add this block scope
-    // to make sure we set the metadata for this arguments object first.
-    AutoSetNewObjectMetadata metadata(cx);
-
-    JSObject* base =
-        NativeObject::create(cx, FINALIZE_KIND, gc::DefaultHeap, shape);
-    if (!base) {
-      return nullptr;
-    }
-    obj = &base->as<ArgumentsObject>();
-
-    data = reinterpret_cast<ArgumentsData*>(
-        AllocateObjectBuffer<uint8_t>(cx, obj, numBytes));
-    if (!data) {
-      // Make the object safe for GC.
-      obj->initFixedSlot(DATA_SLOT, PrivateValue(nullptr));
-      return nullptr;
-    }
-
-    data->numArgs = numArgs;
-    data->rareData = nullptr;
-
-    // Initialize |args| with a pattern that is safe for GC tracing.
-    for (unsigned i = 0; i < numArgs; i++) {
-      data->args[i].init(UndefinedValue());
-    }
-
-    InitReservedSlot(obj, DATA_SLOT, data, numBytes, MemoryUse::ArgumentsData);
-    obj->initFixedSlot(CALLEE_SLOT, ObjectValue(*callee));
+  AutoSetNewObjectMetadata metadata(cx);
+  JSObject* base =
+      NativeObject::create(cx, FINALIZE_KIND, gc::DefaultHeap, shape);
+  if (!base) {
+    return nullptr;
   }
-  MOZ_ASSERT(data != nullptr);
+  ArgumentsObject* obj = &base->as<ArgumentsObject>();
 
-  /* Copy [0, numArgs) into data->slots. */
-  copy.copyArgs(data->args, numArgs);
+  ArgumentsData* data = reinterpret_cast<ArgumentsData*>(
+      AllocateObjectBuffer<uint8_t>(cx, obj, numBytes));
+  if (!data) {
+    // Make the object safe for GC.
+    obj->initFixedSlot(DATA_SLOT, PrivateValue(nullptr));
+    return nullptr;
+  }
 
+  data->numArgs = numArgs;
+  data->rareData = nullptr;
+
+  InitReservedSlot(obj, DATA_SLOT, data, numBytes, MemoryUse::ArgumentsData);
+  obj->initFixedSlot(CALLEE_SLOT, ObjectValue(*callee));
   obj->initFixedSlot(INITIAL_LENGTH_SLOT,
                      Int32Value(numActuals << PACKED_BITS_COUNT));
 
+  // Copy [0, numArgs) into data->args.
+  copy.copyArgs(data->args, numArgs);
   copy.maybeForwardToCallObject(obj, data);
 
   MOZ_ASSERT(obj->initialLength() == numActuals);
