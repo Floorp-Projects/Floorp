@@ -657,7 +657,7 @@ void SandboxBroker::ThreadMain(void) {
   (void)NS_GetCurrentThread();
 
   char threadName[16];
-  SprintfLiteral(threadName, "FS Broker %d", mChildPid);
+  SprintfLiteral(threadName, "FSBroker%d", mChildPid);
   PlatformThread::SetName(threadName);
 
   AUTO_PROFILER_REGISTER_THREAD(threadName);
