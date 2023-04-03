@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Common.h"
+#include "LookupCacheV4.h"
 
 #define EXPIRED_TIME_SEC (PR_Now() / PR_USEC_PER_SEC - 3600)
 #define NOTEXPIRED_TIME_SEC (PR_Now() / PR_USEC_PER_SEC + 3600)
@@ -22,10 +23,10 @@ static void SetupCacheEntry(LookupCacheV2* aLookupCache,
   MissPrefixArray misses;
   MissPrefixArray emptyMisses;
 
-  AddComplete* add = completes.AppendElement(fallible);
+  AddComplete* add = completes.AppendElement(mozilla::fallible);
   add->complete.FromPlaintext(aCompletion);
 
-  Prefix* prefix = misses.AppendElement(fallible);
+  Prefix* prefix = misses.AppendElement(mozilla::fallible);
   prefix->FromPlaintext(aCompletion);
 
   // Setup positive cache first otherwise negative cache expiry will be
@@ -231,7 +232,7 @@ TEST(UrlClassifierCaching, NegativeCacheExpireV2)
       do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
 
   MissPrefixArray misses;
-  Prefix* prefix = misses.AppendElement(fallible);
+  Prefix* prefix = misses.AppendElement(mozilla::fallible);
   prefix->FromPlaintext(NEG_CACHE_EXPIRED_URL);
 
   AddCompleteArray dummy;

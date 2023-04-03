@@ -11,6 +11,8 @@
 #include "nsIFile.h"
 #include "nsThreadUtils.h"
 #include "string.h"
+#include "LookupCacheV4.h"
+#include "nsUrlClassifierUtils.h"
 
 #include "Common.h"
 

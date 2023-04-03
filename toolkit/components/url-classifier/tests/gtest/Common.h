@@ -7,11 +7,16 @@
 #define nsUrlClassifierGTestCommon_h__
 
 #include "Entries.h"
+#include "nsAppDirectoryServiceDefs.h"
 #include "nsIFile.h"
 #include "nsTArray.h"
+#include "nsIThread.h"
+#include "nsThreadUtils.h"
+#include "HashStore.h"
 
 #include "gtest/gtest.h"
 #include "mozilla/gtest/MozAssertions.h"
+#include "LookupCacheV4.h"
 
 using namespace mozilla::safebrowsing;
 
@@ -23,15 +28,25 @@ class TableUpdate;
 }  // namespace safebrowsing
 }  // namespace mozilla
 
+#define GTEST_SAFEBROWSING_DIR "safebrowsing"_ns
 #define GTEST_TABLE_V4 "gtest-malware-proto"_ns
 #define GTEST_TABLE_V2 "gtest-malware-simple"_ns
 
 template <typename Function>
-void RunTestInNewThread(Function&& aFunction);
+void RunTestInNewThread(Function&& aFunction) {
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+      "RunTestInNewThread", std::forward<Function>(aFunction));
+  nsCOMPtr<nsIThread> testingThread;
+  nsresult rv =
+      NS_NewNamedThread("Testing Thread", getter_AddRefs(testingThread), r);
+  ASSERT_EQ(rv, NS_OK);
+  testingThread->Shutdown();
+}
 
 // Synchronously apply updates by calling Classifier::AsyncApplyUpdates.
 nsresult SyncApplyUpdates(Classifier* aClassifier,
                           nsTArray<TableUpdate*>* aUpdates);
+nsresult SyncApplyUpdates(TableUpdateArray& aUpdates);
 
 // Return nsIFile with root directory - NS_APP_USER_PROFILE_50_DIR
 // Sub-directories are passed in path argument.
@@ -70,13 +85,56 @@ void CheckContent(LookupCacheV4* cache, const _PrefixArray& aPrefixArray);
  * Utility function to generate safebrowsing internal structure
  */
 
+static inline nsresult BuildCache(LookupCacheV2* cache,
+                                  const _PrefixArray& aPrefixArray) {
+  AddPrefixArray prefixes;
+  AddCompleteArray completions;
+  nsresult rv = PrefixArrayToAddPrefixArray(aPrefixArray, prefixes);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  return cache->Build(prefixes, completions);
+}
+
+static inline nsresult BuildCache(LookupCacheV4* cache,
+                                  const _PrefixArray& aPrefixArray) {
+  PrefixStringMap map;
+  PrefixArrayToPrefixStringMap(aPrefixArray, map);
+  return cache->Build(map);
+}
+
 // Create a LookupCacheV4 object with sepecified prefix array.
 template <typename T>
-RefPtr<T> SetupLookupCache(const _PrefixArray& aPrefixArray);
+RefPtr<T> SetupLookupCache(const _PrefixArray& aPrefixArray,
+                           nsCOMPtr<nsIFile>& aFile) {
+  RefPtr<T> cache = new T(GTEST_TABLE_V4, ""_ns, aFile);
+
+  nsresult rv = cache->Init();
+  EXPECT_EQ(rv, NS_OK);
+
+  rv = BuildCache(cache, aPrefixArray);
+  EXPECT_EQ(rv, NS_OK);
+
+  return cache;
+}
 
 template <typename T>
-RefPtr<T> SetupLookupCache(const _PrefixArray& aPrefixArray,
-                           nsCOMPtr<nsIFile>& aFile);
+RefPtr<T> SetupLookupCache(const _PrefixArray& aPrefixArray) {
+  nsCOMPtr<nsIFile> file;
+  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
+
+  file->AppendNative(GTEST_SAFEBROWSING_DIR);
+
+  RefPtr<T> cache = new T(GTEST_TABLE_V4, ""_ns, file);
+  nsresult rv = cache->Init();
+  EXPECT_EQ(rv, NS_OK);
+
+  rv = BuildCache(cache, aPrefixArray);
+  EXPECT_EQ(rv, NS_OK);
+
+  return cache;
+}
 
 /**
  * Retrieve Classifer class

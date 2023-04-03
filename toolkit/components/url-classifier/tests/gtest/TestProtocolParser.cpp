@@ -32,7 +32,7 @@ static bool InitUpdateResponse(ListUpdateResponse* aUpdateResponse,
     auto prefixes = rawHashes->mutable_raw_hashes();
     for (auto p : aFixedLengthPrefixes) {
       char buffer[4];
-      NativeEndian::copyAndSwapToBigEndian(buffer, &p, 1);
+      mozilla::NativeEndian::copyAndSwapToBigEndian(buffer, &p, 1);
       prefixes->append(buffer, 4);
     }
     return true;
@@ -102,7 +102,7 @@ TEST(UrlClassifierProtocolParser, SingleValueEncoding)
                           nsCString("check\x0sum", 9), true,
                           // As per spec, we should interpret the prefix as
                           // uint32 in little endian before encoding.
-                          {LittleEndian::readUint32(expectedPrefix)},
+                          {mozilla::LittleEndian::readUint32(expectedPrefix)},
                           true /* aDoPrefixEncoding */)) {
     printf("Failed to initialize update response.");
     ASSERT_TRUE(false);

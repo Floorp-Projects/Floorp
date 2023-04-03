@@ -9,6 +9,8 @@
 
 #include "Common.h"
 
+using namespace mozilla;
+
 template <size_t N>
 static void ToBase64EncodedStringArray(nsCString (&aInput)[N],
                                        nsTArray<nsCString>& aEncodedArray) {
