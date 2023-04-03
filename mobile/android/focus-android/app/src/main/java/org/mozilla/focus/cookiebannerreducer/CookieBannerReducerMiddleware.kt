@@ -103,6 +103,7 @@ class CookieBannerReducerMiddleware(
                 CookieBannerReducerStatus.CookieBannerUnsupportedSiteRequestWasSubmitted,
             ),
         )
+        ioScope.launch { cookieBannersStorage.saveSiteDomain(action.siteToReport) }
     }
 
     private fun initCookieBannerReducer(
@@ -119,6 +120,9 @@ class CookieBannerReducerMiddleware(
             return
         }
         ioScope.launch {
+            if (isSiteDomainReported(context)) {
+                return@launch
+            }
             val hasException =
                 cookieBannersStorage.hasException(currentTab.content.url, true)
             withContext(Dispatchers.Main) {
@@ -183,6 +187,23 @@ class CookieBannerReducerMiddleware(
         return appContext.settings.isCookieBannerEnable &&
             appContext.settings.getCurrentCookieBannerOptionFromSharePref() !=
             CookieBannerOption.CookieBannerDisabled()
+    }
+
+    private suspend fun isSiteDomainReported(
+        context: MiddlewareContext<CookieBannerReducerState, CookieBannerReducerAction>,
+    ): Boolean {
+        val host = currentTab.content.url.toUri().host.orEmpty()
+        val siteDomain =
+            appContext.components.publicSuffixList.getPublicSuffixPlusOne(host).await()
+        if (siteDomain != null && cookieBannersStorage.isSiteDomainReported(siteDomain)) {
+            context.store.dispatch(
+                CookieBannerReducerAction.UpdateCookieBannerReducerStatus(
+                    CookieBannerReducerStatus.CookieBannerUnsupportedSiteRequestWasSubmitted,
+                ),
+            )
+            return true
+        }
+        return false
     }
 
     private suspend fun clearSiteData() {

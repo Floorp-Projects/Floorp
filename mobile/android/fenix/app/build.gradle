@@ -610,6 +610,7 @@ dependencies {
     implementation FenixDependencies.androidx_transition
     implementation FenixDependencies.androidx_work_ktx
     implementation FenixDependencies.androidx_datastore
+    implementation FenixDependencies.androidx_data_store_preferences
     implementation FenixDependencies.protobuf_javalite
     implementation FenixDependencies.google_material
 

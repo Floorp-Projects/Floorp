@@ -168,6 +168,9 @@ class DefaultCookieBannerDetailsController(
                             FenixSnackbar.LENGTH_LONG,
                         )
                     }
+                    withContext(Dispatchers.IO) {
+                        cookieBannersStorage.saveSiteDomain(domain)
+                    }
                 }
             }
         }

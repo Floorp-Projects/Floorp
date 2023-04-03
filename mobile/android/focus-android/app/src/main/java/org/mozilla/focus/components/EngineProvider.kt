@@ -5,8 +5,10 @@
 package org.mozilla.focus.components
 
 import android.content.Context
+import androidx.datastore.preferences.preferencesDataStore
 import mozilla.components.browser.engine.gecko.GeckoEngine
 import mozilla.components.browser.engine.gecko.cookiebanners.GeckoCookieBannersStorage
+import mozilla.components.browser.engine.gecko.cookiebanners.ReportSiteDomainsRepository
 import mozilla.components.browser.engine.gecko.fetch.GeckoViewFetchClient
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
@@ -18,6 +20,9 @@ import org.mozilla.geckoview.GeckoRuntimeSettings
 
 object EngineProvider {
     private var runtime: GeckoRuntime? = null
+    private val Context.dataStore by preferencesDataStore(
+        name = ReportSiteDomainsRepository.REPORT_SITE_DOMAINS_REPOSITORY_NAME,
+    )
 
     @Synchronized
     private fun getOrCreateRuntime(context: Context): GeckoRuntime {
@@ -44,7 +49,7 @@ object EngineProvider {
     fun createCookieBannerStorage(context: Context): GeckoCookieBannersStorage {
         val runtime = getOrCreateRuntime(context)
 
-        return GeckoCookieBannersStorage(runtime)
+        return GeckoCookieBannersStorage(runtime, ReportSiteDomainsRepository(context.dataStore))
     }
 
     fun createClient(context: Context): Client {

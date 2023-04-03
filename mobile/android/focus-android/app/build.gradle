@@ -229,6 +229,7 @@ dependencies {
     implementation FocusDependencies.androidx_splashscreen
     implementation FocusDependencies.androidx_transition
     implementation FocusDependencies.androidx_work_ktx
+    implementation FocusDependencies.androidx_data_store_preferences
 
     implementation FocusDependencies.google_accompanist_insets_ui
     implementation FocusDependencies.google_play

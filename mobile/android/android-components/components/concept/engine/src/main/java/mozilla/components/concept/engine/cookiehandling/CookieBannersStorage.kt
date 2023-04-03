@@ -21,6 +21,19 @@ interface CookieBannersStorage {
     )
 
     /**
+     * Check if the given site's domain url is saved locally.
+     * @param siteDomain the [siteDomain] that will be checked.
+     */
+    suspend fun isSiteDomainReported(siteDomain: String): Boolean
+
+    /**
+     * Save the given site's domain url in datastore to keep it persistent locally.
+     * This method gets called after the site domain was reported with Nimbus.
+     * @param siteDomain the [siteDomain] that will be saved.
+     */
+    suspend fun saveSiteDomain(siteDomain: String)
+
+    /**
      * Set persistently the [CookieBannerHandlingMode.DISABLED] mode for the given [uri] in
      * private browsing.
      * @param uri the [uri] for the site to be updated.

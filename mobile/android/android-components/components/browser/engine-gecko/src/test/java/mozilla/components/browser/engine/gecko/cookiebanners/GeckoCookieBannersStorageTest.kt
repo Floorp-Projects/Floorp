@@ -28,15 +28,17 @@ class GeckoCookieBannersStorageTest {
     private lateinit var runtime: GeckoRuntime
     private lateinit var geckoStorage: GeckoCookieBannersStorage
     private lateinit var storageController: StorageController
+    private lateinit var reportSiteDomainsRepository: ReportSiteDomainsRepository
 
     @Before
     fun setup() {
         storageController = mock()
         runtime = mock()
+        reportSiteDomainsRepository = mock()
 
         whenever(runtime.storageController).thenReturn(storageController)
 
-        geckoStorage = spy(GeckoCookieBannersStorage(runtime))
+        geckoStorage = spy(GeckoCookieBannersStorage(runtime, reportSiteDomainsRepository))
     }
 
     @Test
@@ -109,5 +111,25 @@ class GeckoCookieBannersStorageTest {
             geckoStorage.addPersistentExceptionInPrivateMode(uri = uri)
 
             verify(geckoStorage).setPersistentPrivateGeckoException(uri, DISABLED)
+        }
+
+    @Test
+    fun `GIVEN site domain url WHEN checking if site domain is reported THEN the report site domain repository gets called`() =
+        runTest {
+            val reportSiteDomainUrl = "mozilla.org"
+
+            geckoStorage.isSiteDomainReported(reportSiteDomainUrl)
+
+            verify(reportSiteDomainsRepository).isSiteDomainReported(reportSiteDomainUrl)
+        }
+
+    @Test
+    fun `GIVEN site domain url  WHEN saving a site domain THEN the save method from repository should get called`() =
+        runTest {
+            val reportSiteDomainUrl = "mozilla.org"
+
+            geckoStorage.saveSiteDomain(reportSiteDomainUrl)
+
+            verify(reportSiteDomainsRepository).saveSiteDomain(reportSiteDomainUrl)
         }
 }

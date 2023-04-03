@@ -5,10 +5,12 @@
 package org.mozilla.fenix.settings.quicksettings.protections.cookiebanners
 
 import android.content.Context
+import androidx.core.net.toUri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.cookiehandling.CookieBannersStorage
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.trackingprotection.CookieBannerUIMode
 import kotlin.coroutines.resume
@@ -22,9 +24,20 @@ suspend fun CookieBannersStorage.getCookieBannerUIMode(
     tab: SessionState,
 ): CookieBannerUIMode {
     return if (context.settings().shouldUseCookieBanner) {
+        val isSiteDomainReported = withContext(Dispatchers.IO) {
+            val host = tab.content.url.toUri().host.orEmpty()
+            val siteDomain = context.components.publicSuffixList.getPublicSuffixPlusOne(host).await()
+            siteDomain?.let { isSiteDomainReported(it) }
+        }
+
+        if (isSiteDomainReported == true) {
+            return CookieBannerUIMode.REQUEST_UNSUPPORTED_SITE_SUBMITTED
+        }
+
         val hasException = withContext(Dispatchers.IO) {
             hasException(tab.content.url, tab.content.private)
         }
+
         if (hasException) {
             CookieBannerUIMode.DISABLE
         } else {

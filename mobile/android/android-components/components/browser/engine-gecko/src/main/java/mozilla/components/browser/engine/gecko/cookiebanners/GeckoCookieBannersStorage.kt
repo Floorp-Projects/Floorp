@@ -21,6 +21,7 @@ import org.mozilla.geckoview.StorageController
  */
 class GeckoCookieBannersStorage(
     runtime: GeckoRuntime,
+    private val reportSiteDomainsRepository: ReportSiteDomainsRepository,
 ) : CookieBannersStorage {
 
     private val geckoStorage: StorageController = runtime.storageController
@@ -31,6 +32,14 @@ class GeckoCookieBannersStorage(
         privateBrowsing: Boolean,
     ) {
         setGeckoException(uri, DISABLED, privateBrowsing)
+    }
+
+    override suspend fun isSiteDomainReported(siteDomain: String): Boolean {
+        return reportSiteDomainsRepository.isSiteDomainReported(siteDomain)
+    }
+
+    override suspend fun saveSiteDomain(siteDomain: String) {
+        reportSiteDomainsRepository.saveSiteDomain(siteDomain)
     }
 
     override suspend fun addPersistentExceptionInPrivateMode(uri: String) {

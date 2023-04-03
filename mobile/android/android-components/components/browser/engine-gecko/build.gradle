@@ -62,6 +62,9 @@ dependencies {
     api ComponentsDependencies.mozilla_geckoview
 
     implementation ComponentsDependencies.androidx_paging
+    implementation ComponentsDependencies.androidx_data_store_preferences
+    implementation ComponentsDependencies.androidx_lifecycle_livedata
+
     testImplementation ComponentsDependencies.androidx_test_core
     testImplementation ComponentsDependencies.androidx_test_junit
     testImplementation ComponentsDependencies.testing_robolectric

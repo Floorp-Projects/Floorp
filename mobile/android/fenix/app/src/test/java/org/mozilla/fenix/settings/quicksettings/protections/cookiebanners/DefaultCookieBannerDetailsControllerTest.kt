@@ -234,7 +234,7 @@ internal class DefaultCookieBannerDetailsControllerTest {
                 ),
             )
             every { testContext.components.core.store } returns store
-            coEvery { controller.getTabDomain(any()) } returns "https://www.amazon.de"
+            coEvery { controller.getTabDomain(any()) } returns "mozilla.org"
             every { protectionsStore.dispatch(any()) } returns mockk()
 
             controller.handleRequestSiteSupportPressed()
@@ -242,13 +242,13 @@ internal class DefaultCookieBannerDetailsControllerTest {
             assertNotNull(CookieBanners.reportDomainSiteButton.testGetValue())
             Pings.cookieBannerReportSite.testBeforeNextSubmit {
                 assertNotNull(CookieBanners.reportSiteDomain.testGetValue())
-                assertEquals("https://www.amazon.de", CookieBanners.reportSiteDomain.testGetValue())
+                assertEquals("mozilla.org", CookieBanners.reportSiteDomain.testGetValue())
             }
             advanceUntilIdle()
             coVerifyOrder {
                 protectionsStore.dispatch(
                     ProtectionsAction.RequestReportSiteDomain(
-                        "https://www.amazon.de",
+                        "mozilla.org",
                     ),
                 )
                 protectionsStore.dispatch(
@@ -256,6 +256,7 @@ internal class DefaultCookieBannerDetailsControllerTest {
                         cookieBannerUIMode = CookieBannerUIMode.REQUEST_UNSUPPORTED_SITE_SUBMITTED,
                     ),
                 )
+                cookieBannersStorage.saveSiteDomain("mozilla.org")
             }
         }
 }
