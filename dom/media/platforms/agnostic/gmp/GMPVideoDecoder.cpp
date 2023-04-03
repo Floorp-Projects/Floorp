@@ -7,6 +7,7 @@
 #include "GMPVideoDecoder.h"
 #include "GMPDecoderModule.h"
 #include "GMPVideoHost.h"
+#include "GMPLog.h"
 #include "MediaData.h"
 #include "mozilla/EndianUtils.h"
 #include "nsServiceManagerUtils.h"
@@ -50,8 +51,9 @@ nsCString GMPVideoDecoder::GetCodecName() const {
 }
 
 void GMPVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame) {
-  GMPUniquePtr<GMPVideoi420Frame> decodedFrame(aDecodedFrame);
+  GMP_LOG_DEBUG("GMPVideoDecoder::Decoded");
 
+  GMPUniquePtr<GMPVideoi420Frame> decodedFrame(aDecodedFrame);
   MOZ_ASSERT(IsOnGMPThread());
 
   VideoData::YCbCrBuffer b;
@@ -114,14 +116,17 @@ void GMPVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame) {
 }
 
 void GMPVideoDecoder::ReceivedDecodedReferenceFrame(const uint64_t aPictureId) {
+  GMP_LOG_DEBUG("GMPVideoDecoder::ReceivedDecodedReferenceFrame");
   MOZ_ASSERT(IsOnGMPThread());
 }
 
 void GMPVideoDecoder::ReceivedDecodedFrame(const uint64_t aPictureId) {
+  GMP_LOG_DEBUG("GMPVideoDecoder::ReceivedDecodedFrame");
   MOZ_ASSERT(IsOnGMPThread());
 }
 
 void GMPVideoDecoder::InputDataExhausted() {
+  GMP_LOG_DEBUG("GMPVideoDecoder::InputDataExhausted");
   MOZ_ASSERT(IsOnGMPThread());
   mStreamOffsets.Clear();
   mDecodePromise.ResolveIfExists(std::move(mDecodedData), __func__);
@@ -129,6 +134,7 @@ void GMPVideoDecoder::InputDataExhausted() {
 }
 
 void GMPVideoDecoder::DrainComplete() {
+  GMP_LOG_DEBUG("GMPVideoDecoder::DrainComplete");
   MOZ_ASSERT(IsOnGMPThread());
   mStreamOffsets.Clear();
   mDrainPromise.ResolveIfExists(std::move(mDecodedData), __func__);
@@ -136,12 +142,14 @@ void GMPVideoDecoder::DrainComplete() {
 }
 
 void GMPVideoDecoder::ResetComplete() {
+  GMP_LOG_DEBUG("GMPVideoDecoder::ResetComplete");
   MOZ_ASSERT(IsOnGMPThread());
   mPerformanceRecorder.Record(std::numeric_limits<int64_t>::max());
   mFlushPromise.ResolveIfExists(true, __func__);
 }
 
 void GMPVideoDecoder::Error(GMPErr aErr) {
+  GMP_LOG_DEBUG("GMPVideoDecoder::Error");
   MOZ_ASSERT(IsOnGMPThread());
   auto error = MediaResult(aErr == GMPDecodeErr ? NS_ERROR_DOM_MEDIA_DECODE_ERR
                                                 : NS_ERROR_DOM_MEDIA_FATAL_ERR,
@@ -152,6 +160,7 @@ void GMPVideoDecoder::Error(GMPErr aErr) {
 }
 
 void GMPVideoDecoder::Terminated() {
+  GMP_LOG_DEBUG("GMPVideoDecoder::Terminated");
   MOZ_ASSERT(IsOnGMPThread());
   Error(GMPErr::GMPAbortedErr);
 }

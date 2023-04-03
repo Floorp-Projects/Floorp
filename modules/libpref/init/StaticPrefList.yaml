@@ -10309,7 +10309,14 @@
   value: 2500
   mirror: always
 
+# True if we allow use of any decoders found in GMP plugins.
 - name: media.gmp.decoder.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# True if we want to try using the GMP plugin decoders first.
+- name: media.gmp.decoder.preferred
   type: RelaxedAtomicBool
   value: false
   mirror: always
