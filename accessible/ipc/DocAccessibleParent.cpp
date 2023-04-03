@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ARIAMap.h"
 #include "CachedTableAccessible.h"
 #include "DocAccessibleParent.h"
 #include "mozilla/a11y/Platform.h"
@@ -196,6 +197,10 @@ uint32_t DocAccessibleParent::AddSubtree(
     aParent->AddChildAt(aIdxInParent, newProxy);
     newProxy->SetParent(aParent);
   } else {
+    if (!aria::IsRoleMapIndexValid(newChild.RoleMapEntryIndex())) {
+      MOZ_ASSERT_UNREACHABLE("Invalid role map entry index");
+      return 0;
+    }
     newProxy = new RemoteAccessible(
         newChild.ID(), aParent, this, newChild.Role(), newChild.Type(),
         newChild.GenericTypes(), newChild.RoleMapEntryIndex());
