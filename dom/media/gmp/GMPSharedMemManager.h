@@ -26,7 +26,7 @@ class GMPSharedMem {
   // returned to the parent pool (which is not included).  If more than
   // this are needed, we presume the client has either crashed or hung
   // (perhaps temporarily).
-  static const uint32_t kGMPBufLimit = 20;
+  static const uint32_t kGMPBufLimit = 40;
 
   GMPSharedMem() {
     for (size_t i = 0; i < sizeof(mGmpAllocated) / sizeof(mGmpAllocated[0]);
