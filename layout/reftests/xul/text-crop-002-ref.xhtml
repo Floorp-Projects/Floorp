@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<window
+    xmlns:html="http://www.w3.org/1999/xhtml"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <html:style type="text/css">
+    @font-face {
+      font-family: firasans;
+      src: url(../fonts/fira/FiraSans-Regular.otf);
+    }
+    hbox {
+      font-family: firasans;
+      font-size: 40px;
+    }
+    image {
+      background-color: purple;
+    }
+    label {
+      width: 230px;
+      color: green;
+      background-color: blue;
+    }
+    .with-padding {
+      padding-inline: 10px 50px;
+    }
+  </html:style>
+  <hbox style="width: 230px">
+    <image style="width: 40px; height: 40px"/>
+    <label value="abcd…xyz"/>
+  </hbox>
+  <hbox style="width: 230px">
+    <image style="width: 40px; height: 40px"/>
+    <label class="with-padding" value="abc…yz"/>
+  </hbox>
+</window>
