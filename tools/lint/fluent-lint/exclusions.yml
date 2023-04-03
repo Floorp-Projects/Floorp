@@ -150,6 +150,8 @@ CO01:
         - identity-description-custom-root
         # browser/locales/en-US/browser/migration.ftl
         - import-from-firefox
+        # browser/locales/en-US/browser/migrationWizard.ftl
+        - migration-wizard-migrator-display-name-firefox
         # browser/locales/en-US/browser/newtab/onboarding.ftl
         - mr1-onboarding-welcome-image-caption
         - mr2022-onboarding-gratitude-subtitle
