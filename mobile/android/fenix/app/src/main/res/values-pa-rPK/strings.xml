@@ -90,19 +90,34 @@
     <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
     <string name="tcp_cfr_learn_more">پوری کوکی حفاظت بارے جاݨو</string>
 
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">کیمرے لئی پہنچ چاہیدی اے۔ فون دیاں سیٹنگاں تے جاؤ، اجازتاں نوں چھوہو تے اجازت دیݨ دی چوݨ نوں چھوہو۔</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
     <string name="camera_permissions_needed_positive_button_text">سیٹنگاں نوں جاؤ</string>
     <!-- Text for the negative action button to dismiss the dialog. -->
     <string name="camera_permissions_needed_negative_button_text">بند کرو</string>
 
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">کھولھیاں ٹیباں نوں آپݨے آپ بند کرنا نیت کرو، جو کہ پچھلے دن، ہفتے جاں مہینے وچ ویکھیاں گئیاں۔</string>
     <!-- Text for the positive action button to go to Settings for auto close tabs. -->
     <string name="tab_tray_close_tabs_banner_positive_button_text">چوݨاں ویکھو</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">بند کرو</string>
+    <!-- Text for the banner message to tell users about our inactive tabs feature. -->
+    <string name="tab_tray_inactive_onboarding_message">پچھلے دو ہفتیاں وچ تہاڈے ولوں نہ ویکھیاں ٹیباں نوں اتھے بھیجیا جاندا اے۔</string>
     <!-- Text for the action link to go to Settings for inactive tabs. -->
     <string name="tab_tray_inactive_onboarding_button_text">سیٹنگاں چ بند کرو</string>
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">اک مہینے بعد آپے بند کرنا اے؟</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs.
+        The first parameter is the name of the application.-->
+    <string name="tab_tray_inactive_auto_close_body_2">جو تسیں پچھلے مہینے توں ودھ دوران ٹیباں نہیں ویکھیاں تاں %1$s اوہناں نوں بند کر سکدا اے۔</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">بند کرو</string>
+
+
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button_2">آپے بند کرنا چالو کرو</string>
 
 
     <!-- Home screen icons - Long press shortcuts -->
@@ -111,17 +126,33 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">نجی ٹیب کھولھو</string>
 
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">واپس جاؤ</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">سبھ ویکھو</string>
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string name="recent_tabs_show_all_content_description_2">ساریاں حالیہ ٹیباں دا بٹن ویکھاؤ</string>
+    <!-- Text for button in synced tab card that opens synced tabs tray -->
+    <string name="recent_tabs_see_all_synced_tabs_button_text">ساریاں جوڑیاں ٹیباں ویکھو</string>
+    <!-- Accessibility description for device icon used for recent synced tab -->
+    <string name="recent_tabs_synced_device_icon_content_description">فون دا جوڑ</string>
     <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
     <string name="recent_synced_tab_menu_item_remove">ہٹاؤ</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">ہٹاؤ</string>
 
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_2">حال دے کھولھیاں گئیاں</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recently_visited_menu_item_remove">ہٹاؤ</string>
+
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string name="past_explorations_show_all_content_description_2">ساریاں پچھلیاں چھاݨ بیݨاں ویکھاؤ</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
@@ -134,31 +165,76 @@
     <string name="browser_menu_stop">روکو</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">وادھے والے</string>
+    <!-- Browser menu button that opens account settings -->
+    <string name="browser_menu_account_settings">کھاتے دی جاݨکاری</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">کوئی وادھے والے نہیں اے</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">مدد</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">نویں کیہہ آں</string>
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">سیٹنگاں</string>
     <!-- Browser menu button that opens a user's library -->
     <string name="browser_menu_library">لائبریری</string>
+    <!-- Browser menu toggle that requests a desktop site -->
+    <string name="browser_menu_desktop_site">ڈیسک‌ٹاپ سائٹ</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">مکھ سکرین تے جوڑو</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">اینسٹال کرو</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">مڑ جوڑ کرو</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page">صفحے چ لبھو</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection_2">بھنڈار چ سنبھالو</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">سانجھا کرو</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">%1$s نال کھولھو</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by">%1$s دی طاقت نال چل رہا</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by2">%1$s دی طاقت نال چل رہا</string>
+    <!-- Browser menu button to put the current page in reader mode -->
+    <string name="browser_menu_read">پڑھاکو جھلک</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">پڑھن جھلک بند کرو</string>
+    <!-- Browser menu button to open the current page in an external app -->
+    <string name="browser_menu_open_app_link">ایپ وچ کھولھو</string>
+    <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
+    <string name="browser_menu_customize_reader_view">پڑھن جھلک دیاں ترجیحاں</string>
     <!-- Browser menu label for adding a bookmark -->
     <string name="browser_menu_add">پتہ پایو</string>
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">سودھو</string>
 
 
+    <!-- Button shown on the home page that opens the Customize home settings -->
+    <string name="browser_menu_customize_home_1">مکھ صفحے دیاں ترجیحاں</string>
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">مکھ سکرین</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">چݨی بولی</string>
+    <!-- Text for default locale item -->
+    <string name="default_locale_text">فون دی لگی بولی ورتو</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="locale_search_hint">کھوج دی بولی</string>
 
+    <!-- Search Fragment -->
+    <!-- Button in the search view that lets a user search by scanning a QR code -->
+    <string name="search_scan_button">سکین کرو</string>
+    <!-- Button in the search view that lets a user change their search engine -->
+    <string name="search_engine_button">کھوج انجݨ</string>
+    <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
+    <string name="search_shortcuts_engine_settings">کھوج انجݨ دیاں ترجیحاں</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_allow_button">اجازت دیو</string>
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
@@ -188,6 +264,9 @@
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">ویب دی کھوج</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">آواز دی کھوج</string>
+
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">سیٹنگاں</string>
@@ -212,6 +291,10 @@
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">اضافی</string>
 
+    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
+    <string name="reduce_cookie_banner_option_off">بند</string>
+    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
+    <string name="reduce_cookie_banner_option_on">چالو</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">اجازت دیو</string>
     <!-- Change setting text button, for the cookie banner re-engagement dialog -->

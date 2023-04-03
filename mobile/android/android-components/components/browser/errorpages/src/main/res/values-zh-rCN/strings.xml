@@ -203,7 +203,7 @@
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_no_internet_title">没有互联网连接</string>
+    <string name="mozac_browser_errorpages_no_internet_title">无互联网连接</string>
     <!-- The main body text of this error page. It will be shown beneath the title -->
     <string name="mozac_browser_errorpages_no_internet_message">请检查您的网络连接，或在稍后尝试重新加载页面。</string>
     <!-- Text that will show up on the button at the bottom of the error page -->

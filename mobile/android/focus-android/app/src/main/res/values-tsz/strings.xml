@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -19,6 +19,8 @@
 
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
     <string name="feedback_erase">Ampe mankari jirinhant\'apka mirikurhisti ya.</string>
+
+    <string name="feedback_erase2">Kentitanhasti jirinhantskuechani</string>
 
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
     <string name="feedback_erase_custom_tab">Jirinhantskata ampe kéntitanhasti ya.</string>
@@ -45,6 +47,11 @@
 
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">Wénakwarhu kúparhatani</string>
+
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">Jurhikutakuecharhu kuparata</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">Jurhikutakuaecharhu kentita </string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
     <string name="menu_whats_new">Jimpanhi ampe</string>
@@ -113,8 +120,21 @@
 
 
     <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">Jirinhakuari</string>
+         Focus is hard coded since we can't use variables in this context.
+         Do not translate or transliterate Focus.-->
+    <string name="text_selection_search_action_focus">Focusiorhu jirinhantsi</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+             Klar is hard coded since we can't use variables in this context.
+             Do not translate or transliterate Klar.-->
+    <string name="text_selection_search_action_klar">Klariorhu jirinhantsi</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+            Focus Beta is hard coded since we can't use variables in this context.
+            Do not translate or transliterate Focus Beta.-->
+    <string name="text_selection_search_action_focus_beta">Focus Betarhu jirinhantsi</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+          Focus Nightly is hard coded since we can't use variables in this context.
+          Do not translate or transliterate Focus Nightly.-->
+    <string name="text_selection_search_action_focus_nightly">Focus Nightlyrhu jirinhantsi </string>
 
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Kwatakwa &amp; Jískakwa</string>
@@ -131,6 +151,9 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">Jarhoap\'ekwa ankueri %1$s,</string>
 
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">Sesimintu kuatakua</string>
+
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">Eranharhikwaeri Jatakwa</string>
 
@@ -139,6 +162,9 @@
 
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">Yámu</string>
+
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">Jirinhatarantskuarhu uantakuani, pentani</string>
 
     <!-- Preference category for settings about sending usage data -->
     <string name="preference_category_data_collection_use">Jatakwa T\'antakwa &amp; Úrani</string>
@@ -169,6 +195,17 @@
     <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
     <string name="preference_switch_autocomplete_topsites">Erakukuhikwaecha</string>
 
+    <!-- Summary for the toggle to enable autocomplete for the topsites list
+    %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_topsite_summary2">Apakerani jimpoka %s karakurintaaka kari 450 URLs miyurakuarhu.</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
+    <string name="preference_switch_autocomplete_user_list">Eranharhikukuaechani kúparhatani</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list
+     %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_user_list_summary2">Ampakerani jimpoka %s karanharhikuntaaka chari URLs erakukataecha.</string>
+
     <!-- Preference category: Manage (user-defined) sites -->
     <string name="preference_category_autocomplete_manage_sites">Eranharhikwaechani xanhatani</string>
 
@@ -178,11 +215,20 @@
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ Kúrhuta máteru pékurhintskwa URL</string>
 
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">Karakukurhintakuaecha jatakua:</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">Kuparhatani URL</string>
+
     <!-- Title of the screen for adding custom autocomplete URLs. -->
     <string name="preference_autocomplete_title_add">Kúrhuta máteru pékurhintskwa URL</string>
 
     <!-- Label for the button to quick add custom autocomplete URLs. -->
     <string name="custom_autocomplete_quick_add">Kúrhuta máteru pékurhintskwa URL</string>
+
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">Miyurakuani karakukurhikuaecharhu kuparhata</string>
 
     <!-- Preference category for settings about cookies and site data -->
     <string name="preference_category_cookies">Exepakwa ka Eranharhikukwaeri Jatakwa</string>
@@ -239,14 +285,14 @@
     <string name="preference_privacy_block_content_summary2">Máru eranharhikwaecha nantarkuni úati énkari ampakeraka</string>
     <string name="preference_privacy_category_cookies">Exepakwani kwarhukuani</string>
 
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option2">No diosï meyamua je</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Materuechaeri estakuechani kuarhukowa</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Exepakwaechani 3rd kwarhukuani</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Úratarakwani mítani mítitarantskwani úraparini</string>
-    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
-        open when the app was last run to ensure that only the phone's owner can view a previous session.
-        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_security_biometric_summary">Ch\'éeti mítitarantskwa %1$s áamku mitanki énka í URL úratarakwa mítatini jatsïaka. Exetku étskuntaati.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
@@ -303,10 +349,6 @@
 
     <!-- Action for dding an additional search engine to the list -->
     <string name="preference_search_add3">Jirinhatarantskwa ma kúparhatani</string>
-
-    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
-     a user first launches the app. -->
-    <string name="preference_homescreen_tips">Arhistsïkwaechani exerpini</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Jirinhatarantskwa kúparhatani</string>
@@ -550,17 +592,6 @@
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">USB/Wi-Fi weratini ampakerant\'ani</string>
 
-    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     %1$s is replaced with the app name -->
-    <string name="biometric_auth_title">Mítani %1$s</string>
-
-    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string name="biometric_auth_description">Xanhatakari mítitarantskwani p\'anharhikupani.</string>
-
-    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string name="biometric_auth_new_session">Mítani</string>
-
     <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
     <string name="biometric_auth_image_description">Mítitarantskwaeri p\'ítakata</string>
 
@@ -608,9 +639,6 @@
     <!-- Preference for switching to a new tab immediately after opening -->
     <string name="preference_open_new_tab">Móptakuni jimpanhi eranharhikwarhu</string>
 
-    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string name="preference_category_safe_browsing">Kwatakata jirinhant\'ani</string>
-
     <!-- Menu item to remove existing exceptions. -->
     <string name="preference_exceptions_menu_remove">Kéntitani</string>
     <!-- Button to remove all websites from the exception list -->
@@ -630,5 +658,7 @@
     <string name="crash_report_send_crash_label">Mozillani ayankuni íni xerekurhikwa</string>
 
     <!-- Tracking protection bottom sheet -->
+
+     <!-- Promote SearchWidget Dialog -->
 
     </resources>

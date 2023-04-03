@@ -13,8 +13,10 @@
     <string name="content_description_private_browsing_button">Gaitu nabigatze pribatua</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">Desgaitu nabigatze pribatua</string>
-    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
     <string name="search_hint">Bilatu edo idatzi helbidea</string>
+    <!-- Placeholder text shown in the search bar before a user enters text for a general engine -->
+    <string name="search_hint_general_engine">Bilatu webean</string>
     <!-- Placeholder text shown in search bar when using history search -->
     <string name="history_search_hint">Bilatu historia</string>
     <!-- Placeholder text shown in search bar when using bookmarks search -->
@@ -82,9 +84,6 @@
     <string name="open_in_app_cfr_positive_button_text">Joan ezarpenetara</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Baztertu</string>
-
-    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
-    <string name="cfr_dismiss_button_default_content_description" moz:removedIn="110" tools:ignore="UnusedResources">Baztertu</string>
 
     <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
     <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
@@ -303,6 +302,40 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">Une honetan ez</string>
 
+    <!-- Juno first user onboarding flow experiment -->
+    <!-- Title for set firefox as default browser screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_default_browser_title">Egizu %s zure lehenengo nabigatzailea</string>
+    <!-- Description for set firefox as default browser screen.
+        The first parameter is the Firefox brand name.
+        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
+    <string name="juno_onboarding_default_browser_description">%1$s(e)k jendea jartzen  du irabazi-asmoen aurretik eta zure pribatutasuna defendatzen du guneen arteko jarraipen-elementuak blokeatuz.\n\nArgibide gehiago gure %2$s.</string>
+    <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
+    This is part of the string with the key "juno_onboarding_default_browser_description". -->
+    <string name="juno_onboarding_default_browser_description_link_text">pribatutasun-oharrean</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
+    <string name="juno_onboarding_default_browser_positive_button">Ezarri nabigatzaile lehenetsi gisa</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_default_browser_negative_button">Une honetan ez</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title">Egin salto telefonotik ordenagailu eramangarrira eta atzera</string>
+    <!-- Description for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_description">Erabili zure beste gailuetako fitxak eta pasahitzak, utzitako lekutik jarraitu ahal izateko.</string>
+    <!-- Text for the button to sign in to sync on the device -->
+    <string name="juno_onboarding_sign_in_positive_button">Hasi saioa</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_sign_in_negative_button">Une honetan ez</string>
+    <!-- Title for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_title">Jakinarazpenek %s(r)i zuku gehiago ateratzen laguntzen dute</string>
+    <!-- Description for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_description">Bidali fitxak gailuen artean, kudeatu deskargak eta eskuratu %s(r)i zuku gehien ateratzeko aholkuak.</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="juno_onboarding_enable_notifications_positive_button">Aktibatu jakinarazpenak</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_enable_notifications_negative_button">Une honetan ez</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Ireki %1$s fitxa berria</string>
@@ -362,8 +395,6 @@
     <string name="reduce_cookie_banner_option_off">Desaktibatuta</string>
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
     <string name="reduce_cookie_banner_option_on">Aktibatuta</string>
-    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox automatikoki saiatzen da cookie iragarki-bandetako eskaerak ukatzen. Ukatzeko aukera ez badago erabilgarri, Firefoxek cookie guztiak onar litzake iragarki-banda baztertzeko.</string>
 
     <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
     <string name="reduce_cookie_banner_summary_1">Cookie iragarki-bandetako eskaerak automatikoki ukatzen saiatzen da %1$s.</string>
@@ -379,44 +410,43 @@
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">Desaktibatu cookie iragarki-banden murrizpena %1$s gunerako?</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s(e)k gune honetako cookieak garbitu eta orria berrituko du. Cookie guztiak garbitzean, saioak amaitu edo erosketa-orgak hustu litezke.</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s saia daiteke cookie iragarki-bandetako eskaerak automatikoki ukatzen. Ukatzeko aukera ez badago erabilgarri, %2$s(e)k cookie guztiak onar litzake iragarki-banda baztertzeko.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s automatikoki saia daiteke cookie-eskaerak ukatzen.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">Cookie eskaerak automatikoki ukatzen saiatzen da %1$s.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_title">Cookie iragarki-bandak kanpora!</string>
-    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Ahal bada, ukatu automatikoki cookie eskaerak. Bestela, onartu cookie guztiak iragarki-bandak baztertzeko.</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Cookie iragarki-bandak kanpora!</string>
+    <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_title">Baimendu %1$s(r)i cookie iragarki-bandak ukatzen?</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Ahal bada, automatikoki ukatu cookie eskaerak.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_2">Baimendu %1$s(r)i ahal duenean cookie eskaerak automatikoki ukatzen?</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_2" moz:RemovedIn="112" tools:ignore="UnusedResources">Baimendu %1$s(r)i ahal duenean cookie eskaerak automatikoki ukatzen?</string>
+    <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_body">%1$s(e)k automatikoki uka ditzake cookie iragarki-bandetako eskaerak.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Une honetan ez</string>
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button">Baztertu iragarki-bandak</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Baztertu iragarki-bandak</string>
     <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
     <string name="reduce_cookie_banner_dialog_snackbar_text">Cookie eskaera gutxiago ikusiko dituzu</string>
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">Ikusi cookie laster-leiho gutxiago</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Ikusi cookie laster-leiho gutxiago</string>
 
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Erantzun automatikoki cookie laster-leihoak distraziorik gabe nabigatzeko. Ahal bada, eskaera guztiak ukatuko ditu %1$s(e)k, edo ezin bada, guztiak onartuko ditu.</string>
-    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1">Erantzun automatikoki cookie laster-leihoak distraziorik gabe nabigatzeko. Ahal bada, eskaera guztiak ukatuko ditu %1$s(e)k.</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Erantzun automatikoki cookie laster-leihoak distraziorik gabe nabigatzeko. Ahal bada, eskaera guztiak ukatuko ditu %1$s(e)k.</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Baztertu laster-leihoak</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Baztertu laster-leihoak</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Cookie iragarki-banden murrizpena</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Cookie iragarki-banden murrizpena</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Baimendu %1$s(e)k gune baten cookie onespen-eskaera ukatzea edo ezin bada, baimendu cookietarako sarbidea?</string>
-    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1">Baimendu %1$s(e)k ahal bada gune bateko cookie onespen-eskaera ukatzea?</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Baimendu %1$s(e)k ahal bada gune bateko cookie onespen-eskaera ukatzea?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">Baimendu</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Baimendu</string>
+
+    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
+    <string name="reduce_cookie_banner_dialog_change_setting_button">Baimendu</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Automatikoki saiatzen da guneetara konektatzen HTTPS zifratze-protokoloa erabiliz, segurtasun gehiago lortzeko.</string>
@@ -498,6 +528,12 @@
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Ireki loturak aplikazioetan</string>
 
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">Beti</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">Galdetu ireki aurretik</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">Inoiz ez</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Kanpoko deskarga-kudeatzailea</string>
     <!-- Preference for add_ons -->
@@ -1223,6 +1259,26 @@
     %1$s is a placeholder that will be replaced by the app name. -->
     <string name="notification_re_engagement_text">Nabigatu cookie edo historiarik gorde gabe %1$s(e)n</string>
 
+    <!-- Title A shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_A_title">Nabigatu lorratzik utzi gabe</string>
+
+    <!-- Text A shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_A_text">%1$s(e)n nabigatze pribatuak ez du zure informaziorik gordetzen.</string>
+    <!-- Title B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_title">Hasi zure lehenengo bilaketarekin</string>
+    <!-- Text B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_text">Bilatu inguruko zerbait. Edo aurkitu zerbait dibertigarria.</string>
+
+    <!-- Survey -->
+    <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_survey_message_text" tools:ignore="UnusedResources">Lagundu Firefox hobetzen inkesta txiki bat betez.</string>
+    <!-- Preference for taking the short survey. -->
+    <string name="preferences_take_survey" tools:ignore="UnusedResources">Bete inkesta</string>
+    <!-- Preference for not taking the short survey. -->
+    <string name="preferences_not_take_survey" tools:ignore="UnusedResources">Ez, eskerrik asko</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Bilduma ezabatuta</string>
@@ -1439,20 +1495,28 @@
     <string name="preference_enhanced_tracking_protection">Jarraipenaren babes hobetua</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">Nabigatu inor segika izan gabe</string>
+    <!-- Preference summary for enhanced tracking protection settings on/off switch -->
+    <string name="preference_enhanced_tracking_protection_summary" tools:ignore="UnusedResources">Orain cookien erabateko babesarekin, guneen arteko jarraipen-elementuetarako gure oztopo boteretsuena.</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation">Mantendu zure datuak zuretzat. Lineako zure jardueraren jarraipena egiten duten elementu ohikoenetatik babesten zaitu %s(e)k.</string>
+    <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">Lineako zure jardueraren jarraipena egiten duten elementu ohikoenetatik babesten zaitu %s(e)k.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Argibide gehiago</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Oinarrizkoa (lehenetsia)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_4">Pribatutasunerako eta errendimendurako orekatua. Orriak ohi bezala kargatuko dira.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_5" tools:ignore="UnusedResources">Orriak ohi bezala kargatuko dira baina jarraipen-elementu gutxiago blokeatuko dira.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Jarraipenaren oinarrizko babesak blokeatzen duena</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Zorrotza</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_3">Jarraipen-elementu gehiago blokeatzen ditu orriak azkarrago karga daitezen baina orriko zenbait eginbide hauts litezke.</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_4" tools:ignore="UnusedResources">Jarraipenaren babes sendoagoa eta errendimendu hobea baina baliteke zenbait gune ondo ez ibiltzea.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Jarraipenaren babes zorrotzak blokeatzen duena</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->

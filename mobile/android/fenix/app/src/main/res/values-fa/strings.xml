@@ -14,6 +14,8 @@
     <string name="content_description_disable_private_browsing_button">غیرفعال کردن حالت مرور خصوصی</string>
     <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
     <string name="search_hint">جست‌وجو یا ورود آدرس</string>
+    <!-- Placeholder text shown in the search bar when using application search engines -->
+    <string name="application_search_hint">عبارت جستجو را وارد کنید</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">زبانه‌های باز شما در اینجا نشان داده می‌شوند.</string>
 
@@ -35,6 +37,11 @@
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">انتخاب شده</string>
 
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description_2">نمایش همه نشانک های ذخیره شده</string>
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="recently_saved_menu_item_remove">حذف</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s توسط موزیلا تولید شده است.</string>
 
@@ -49,6 +56,9 @@
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">نه، ممنون</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. The first parameter is the name of the application.-->
+    <string name="open_in_app_cfr_info_message_2">شما می‌توانید %1$s را برای گشودن خودکار پیوندهای درون برنامه‌ها، تنظیم کنید.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">برو به تنظیمات</string>
 
@@ -70,6 +80,22 @@
     <string name="tab_tray_close_tabs_banner_negative_button_text">رد کردن</string>
 
 
+    <!-- Text for the banner message to tell users about our inactive tabs feature. -->
+    <string name="tab_tray_inactive_onboarding_message">زبانه‌هایی که دو هفته است ندیده‌اید به اینجا منتقل می‌شوند.</string>
+    <!-- Text for the action link to go to Settings for inactive tabs. -->
+    <string name="tab_tray_inactive_onboarding_button_text">خاموش کردن در تنظیمات</string>
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">بسته شدن خودکار بعد از یک ماه؟</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs.
+        The first parameter is the name of the application.-->
+    <string name="tab_tray_inactive_auto_close_body_2">%1$s می‌تواند زبانه‌هایی را که در ماه گذشته مشاهده نکرده‌اید؛ ببندد.</string>
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">بستن</string>
+
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button_2">فعال‌سازی بستن خودکار</string>
+
+
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">زبانهٔ جدید</string>
@@ -81,6 +107,26 @@
     <string name="recent_tabs_header">برگردید به داخل</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">نمایش همه</string>
+
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string name="recent_tabs_show_all_content_description_2">نمایش دکمه همه زبانه‌های اخیر</string>
+    <!-- Text for button in synced tab card that opens synced tabs tray -->
+    <string name="recent_tabs_see_all_synced_tabs_button_text">نمایش همه زبانه‌های همگام‌سازی شده</string>
+    <!-- Accessibility description for device icon used for recent synced tab -->
+    <string name="recent_tabs_synced_device_icon_content_description">دستگاه‌ همگام‌سازی شده</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recent_tab_menu_item_remove">حذف</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_2">بازدیدهای اخیر</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recently_visited_menu_item_remove">حذف</string>
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string name="past_explorations_show_all_content_description_2">نمایش تمام اکتشافات گذشته</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
@@ -140,6 +186,8 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">ویرایش</string>
 
+    <!-- Button shown on the home page that opens the Customize home settings -->
+    <string name="browser_menu_customize_home_1">سفارشی‌سازی صفحه خانه</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">صفحه خانگی</string>
@@ -175,6 +223,12 @@
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">مستقیماً از نوار آدرس جستجو کنید</string>
 
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">تنظیمات جستجو</string>
+
+    <!-- Search Widget -->
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">یک زبانه %1$s جدید باز کنید</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">جست‌وجو</string>
     <!-- Text preview for larger sized widgets -->
@@ -220,11 +274,30 @@
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">افزودن میان‌بر مرور خصوصی</string>
 
+    <!-- Preference for enabling "HTTPS-Only" mode -->
+    <string name="preferences_https_only_title">حالت فقط-Https</string>
+
     <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
     <string name="reduce_cookie_banner_option_off">خاموش</string>
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
     <string name="reduce_cookie_banner_option_on">روشن</string>
 
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preferences_https_only_summary">به طور خودکار برای افزایش امنیت تلاش می کند با استفاده از پروتکل رمزگذاری HTTPS به سایت ها متصل شود.</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">روشن</string>
+    <!-- Summary of https only preference if https only is set to off -->
+    <string name="preferences_https_only_off">خاموش</string>
+    <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
+    <string name="preferences_http_only_learn_more">بیشتر بدانید</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_all_tabs">فعال کردن در تمام برگه ها</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">فقط در برگه های خصوصی فعال شود</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">سایت امن در دسترس نیست</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
+    <string name="errorpage_httpsonly_message_title">به احتمال زیاد، وب سایت از HTTPS پشتیبانی نمی کند.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">دسترسی‌پذیری</string>
     <!-- Preference to override the Firefox Account server -->

@@ -12,13 +12,26 @@
     ]]></string>
 
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
-    <string name="mozac_browser_errorpages_security_ssl_title">Tesu welik muchiwa se musalulis nejmachnaj</string>
+    <string name="mozac_browser_errorpages_security_ssl_title">Tesu welik muchiwa se musalulis seguruj</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      <ul>
+        <li>Ne iswat tikejekua tikitta tesu weli muneshtia ika ne autenticidad ipal ne dajdatoj tamakatuk tesu welik muneltilia.</li>
+        <li>Shiknutza ne itekuyu ne tzawalsitioj pal tikilwia ipanpa ini uwijkayut.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
-    <string name="mozac_browser_errorpages_security_bad_cert_title">Tesu welik muchiwa se musalulis nejmachnaj</string>
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Tesu welik muchiwa se musalulis seguruj</string>
 
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Chayawtuk…</string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">Shimukwepa (tanawatilis)</string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Chayawtuk…</string>
 
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Shimukwepa</string>
