@@ -415,14 +415,11 @@ class gfxTextRun : public gfxShapedText {
    * @param aLineBreakBefore set to true if and only if there is an actual
    * line break at the start of this string.
    * @param aSuppressBreak what break should be suppressed.
-   * @param aTrimWhitespace if non-null, then we allow a trailing run of
-   * spaces to be trimmed; the width of the space(s) will not be included in
-   * the measured string width for comparison with the limit aWidth, and
-   * trimmed spaces will not be included in returned metrics. The width
-   * of the trimmed spaces will be returned in aTrimWhitespace.
-   * Trimmed spaces are still counted in the "characters fit" result.
-   * @param aHangWhitespace true if we allow whitespace to overflow the
-   * container at a soft-wrap
+   * @param aTrimmableWhitespace if non-null, returns the advance of any
+   * run of trailing spaces that might be trimmed if the run ends up at
+   * end-of-line.
+   * Trimmable spaces are still counted in the "characters fit" result, and
+   * contribute to the returned Metrics values.
    * @param aMetrics if non-null, we fill this in for the returned substring.
    * If a hyphenation break was used, the hyphen is NOT included in the returned
    * metrics.
@@ -453,17 +450,14 @@ class gfxTextRun : public gfxShapedText {
    * Note that negative advance widths are possible especially if negative
    * spacing is provided.
    */
-  uint32_t BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
-                               bool aLineBreakBefore, gfxFloat aWidth,
-                               PropertyProvider* aProvider,
-                               SuppressBreak aSuppressBreak,
-                               gfxFloat* aTrimWhitespace, bool aHangWhitespace,
-                               Metrics* aMetrics,
-                               gfxFont::BoundingBoxType aBoundingBoxType,
-                               DrawTarget* aDrawTargetForTightBoundingBox,
-                               bool* aUsedHyphenation, uint32_t* aLastBreak,
-                               bool aCanWordWrap, bool aCanWhitespaceWrap,
-                               gfxBreakPriority* aBreakPriority);
+  uint32_t BreakAndMeasureText(
+      uint32_t aStart, uint32_t aMaxLength, bool aLineBreakBefore,
+      gfxFloat aWidth, PropertyProvider* aProvider,
+      SuppressBreak aSuppressBreak, gfxFloat* aTrimmableWhitespace,
+      Metrics* aMetrics, gfxFont::BoundingBoxType aBoundingBoxType,
+      DrawTarget* aDrawTargetForTightBoundingBox, bool* aUsedHyphenation,
+      uint32_t* aLastBreak, bool aCanWordWrap, bool aCanWhitespaceWrap,
+      gfxBreakPriority* aBreakPriority);
 
   // Utility getters
 

@@ -924,7 +924,7 @@ void gfxTextRun::ClassifyAutoHyphenations(uint32_t aStart, Range aRange,
 uint32_t gfxTextRun::BreakAndMeasureText(
     uint32_t aStart, uint32_t aMaxLength, bool aLineBreakBefore,
     gfxFloat aWidth, PropertyProvider* aProvider, SuppressBreak aSuppressBreak,
-    gfxFloat* aTrimWhitespace, bool aWhitespaceCanHang, Metrics* aMetrics,
+    gfxFloat* aTrimmableWhitespace, Metrics* aMetrics,
     gfxFont::BoundingBoxType aBoundingBoxType, DrawTarget* aRefDrawTarget,
     bool* aUsedHyphenation, uint32_t* aLastBreak, bool aCanWordWrap,
     bool aCanWhitespaceWrap, gfxBreakPriority* aBreakPriority) {
@@ -1126,7 +1126,7 @@ uint32_t gfxTextRun::BreakAndMeasureText(
     }
 
     advance += charAdvance;
-    if (aTrimWhitespace || aWhitespaceCanHang) {
+    if (aTrimmableWhitespace) {
       if (mCharacterGlyphs[i].CharIsSpace()) {
         ++trimmableChars;
         trimmableAdvance += charAdvance;
@@ -1169,26 +1169,13 @@ uint32_t gfxTextRun::BreakAndMeasureText(
 
   if (aMetrics) {
     auto fitEnd = aStart + charsFit;
-    // Initially, measure everything, so that our bounding box includes
-    // any trimmable or hanging whitespace.
+    // Get the overall metrics if requested (this includes any potentially
+    // trimmable or hanging whitespace).
     *aMetrics = MeasureText(Range(aStart, fitEnd), aBoundingBoxType,
                             aRefDrawTarget, aProvider);
-    if (aTrimWhitespace || aWhitespaceCanHang) {
-      // Measure trailing whitespace that is to be trimmed/hung.
-      Metrics trimOrHangMetrics =
-          MeasureText(Range(fitEnd - trimmableChars, fitEnd), aBoundingBoxType,
-                      aRefDrawTarget, aProvider);
-      if (aTrimWhitespace) {
-        aMetrics->mAdvanceWidth -= trimOrHangMetrics.mAdvanceWidth;
-      } else if (aMetrics->mAdvanceWidth > aWidth) {
-        // Restrict width of hanging whitespace so it doesn't overflow.
-        aMetrics->mAdvanceWidth = std::max(
-            aWidth, aMetrics->mAdvanceWidth - trimOrHangMetrics.mAdvanceWidth);
-      }
-    }
   }
-  if (aTrimWhitespace) {
-    *aTrimWhitespace = trimmableAdvance;
+  if (aTrimmableWhitespace) {
+    *aTrimmableWhitespace = trimmableAdvance;
   }
   if (aUsedHyphenation) {
     *aUsedHyphenation = usedHyphenation;
