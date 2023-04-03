@@ -438,6 +438,7 @@ export class MigratorBase {
                   : "Migration:ItemError",
                 migrationType
               );
+              collectMigrationTelemetry(migrationType);
 
               aProgressCallback(migrationType);
 
@@ -457,7 +458,6 @@ export class MigratorBase {
 
               if (resourcesGroupedByItems.size == 0) {
                 collectQuantityTelemetry();
-                collectMigrationTelemetry(migrationType);
 
                 notify("Migration:Ended");
               }
