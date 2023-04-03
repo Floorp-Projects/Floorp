@@ -141,7 +141,7 @@ Maybe<CSSIntSize> HTMLVideoElement::GetVideoSize() const {
 }
 
 void HTMLVideoElement::Invalidate(bool aImageSizeChanged,
-                                  Maybe<nsIntSize>& aNewIntrinsicSize,
+                                  const Maybe<nsIntSize>& aNewIntrinsicSize,
                                   bool aForceInvalidate) {
   HTMLMediaElement::Invalidate(aImageSizeChanged, aNewIntrinsicSize,
                                aForceInvalidate);
