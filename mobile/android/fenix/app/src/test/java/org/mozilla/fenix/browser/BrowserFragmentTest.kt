@@ -267,18 +267,15 @@ class BrowserFragmentTest {
 
     @Test
     fun `WHEN isPullToRefreshEnabledInBrowser is disabled THEN pull down refresh is disabled`() {
-        every { FeatureFlags.pullToRefreshEnabled } returns true
         every { context.settings().isPullToRefreshEnabledInBrowser } returns true
         assertTrue(browserFragment.shouldPullToRefreshBeEnabled(false))
 
-        every { FeatureFlags.pullToRefreshEnabled } returns true
         every { context.settings().isPullToRefreshEnabledInBrowser } returns false
         assertTrue(!browserFragment.shouldPullToRefreshBeEnabled(false))
     }
 
     @Test
     fun `WHEN in fullscreen THEN pull down refresh is disabled`() {
-        every { FeatureFlags.pullToRefreshEnabled } returns true
         every { context.settings().isPullToRefreshEnabledInBrowser } returns true
         assertTrue(browserFragment.shouldPullToRefreshBeEnabled(false))
         assertTrue(!browserFragment.shouldPullToRefreshBeEnabled(true))
