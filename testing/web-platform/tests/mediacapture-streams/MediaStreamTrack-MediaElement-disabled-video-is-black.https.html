@@ -37,8 +37,8 @@ promise_test(async t => {
   vid.play();
   await new Promise(r => vid.onloadeddata = r);
 
-  cv.width = vid.offsetWidth;
-  cv.height = vid.offsetHeight;
+  cv.width = vid.videoWidth;
+  cv.height = vid.videoHeight;
   const ctx = cv.getContext("2d");
   ctx.drawImage(vid,0,0);
   const imageData = ctx.getImageData(0, 0, cv.width, cv.height);
