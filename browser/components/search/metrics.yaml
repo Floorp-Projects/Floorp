@@ -219,7 +219,9 @@ serp:
           `ad_carousel`,
           `ad_link`,
           `ad_sidebar`,
-          `ad_sitelink`.
+          `ad_sitelink`,
+          `refined_search_buttons`
+          `shopping_tab`,
           Defaults to `ad_link`.
         type: string
       ads_loaded:

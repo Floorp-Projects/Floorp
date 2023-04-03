@@ -51,11 +51,27 @@ class SearchProviders {
       return null;
     }
 
-    // Filter-out non-ad providers so that we're not trying to match against
-    // those unnecessarily.
     this._searchProviderInfo = this._searchProviderInfo
+      // Filter-out non-ad providers so that we're not trying to match against
+      // those unnecessarily.
       .filter(p => "extraAdServersRegexps" in p)
+      // Pre-build the regular expressions.
       .map(p => {
+        if (p.components) {
+          p.components.forEach(component => {
+            if (component.included?.regexps) {
+              component.included.regexps = component.included.regexps.map(
+                r => new RegExp(r)
+              );
+            }
+            if (component.excluded?.regexps) {
+              component.excluded.regexps = component.excluded.regexps.map(
+                r => new RegExp(r)
+              );
+            }
+            return component;
+          });
+        }
         return {
           ...p,
           searchPageRegexp: new RegExp(p.searchPageRegexp),
@@ -125,6 +141,17 @@ class SearchAdImpression {
   }
 
   /**
+   * An array containing RegExps that wouldn't be caught in
+   * lists of ad expressions.
+   */
+  #nonAdRegexps = [];
+
+  /**
+   * An array of components to do a top-down search.
+   */
+  #topDownComponents = [];
+
+  /**
    * A reference the providerInfo for this SERP.
    *
    * @type {object}
@@ -137,10 +164,22 @@ class SearchAdImpression {
     }
 
     this.#providerInfo = providerInfo;
+
+    // Reset values.
+    this.#nonAdRegexps = [];
+    this.#topDownComponents = [];
+
     for (let component of this.#providerInfo.components) {
       if (component.included?.default) {
         this.#defaultComponent = component;
-        break;
+      }
+      if (component.nonAd && component.included?.regexps) {
+        this.#nonAdRegexps = this.#nonAdRegexps.concat(
+          component.included.regexps
+        );
+      }
+      if (component.topDown) {
+        this.#topDownComponents.push(component);
       }
     }
   }
@@ -155,42 +194,32 @@ class SearchAdImpression {
   }
 
   /**
-   * Given a list of anchor elements, group them into ad components
-   * and count the number of loaded, visible, and hidden ads.
+   * Examine the list of anchors and the document object and find components
+   * on the page.
    *
-   * The first step in the process is to check if the anchor should be
-   * inspected. This is based on whether it contains an href or a
-   * data-attribute values that matches an ad link.
+   * With the list of anchors, go through each and find the component it
+   * belongs to and save it in elementToAdDataMap.
    *
-   * If it looks like an ad link, determine which ad component it belongs to
-   * and the number of ads for the component. The heuristic is described in
-   * findAdDataForAnchor. If there was a result and we haven't seen it before,
-   * save in elementToAdDataMap.
+   * Then, with the document object find components and save the results to
+   * elementToAdDataMap.
    *
-   * Once all the links have been parsed, go through each component
-   * in elementToAdDataMap and check if the ad was visible to the user.
+   * Lastly, combine the results together in a new Map that contains the number
+   * of loaded, visible, and blocked results for the component.
    *
    * @param {HTMLCollectionOf<HTMLAnchorElement>} anchors
-   *  Anchors to inspect.
+   * @param {Document} document
+   *
    * @returns {Map<string, object>}
    *  A map where the key is a string containing the type of ad component
    *  and the value is an object containing the number of adsLoaded,
    *  adsVisible, and adsHidden within the component.
    */
-  resultFromAnchors(anchors) {
-    for (let anchor of anchors) {
-      if (this.#shouldInspectAnchor(anchor)) {
-        let result = this.#findAdDataForAnchor(anchor);
-        if (result) {
-          this.#recordElementData(result.element, {
-            type: result.type,
-            count: result.count,
-            countChildren: result.countChildren,
-            childElements: result.childElements,
-          });
-        }
-      }
-    }
+  categorize(anchors, document) {
+    // Bottom up approach.
+    this.#categorizeAnchors(anchors);
+
+    // Top down approach.
+    this.#categorizeDocument(document);
 
     let componentToVisibilityMap = new Map();
     // Count the number of visible and hidden ads within each cached
@@ -223,6 +252,85 @@ class SearchAdImpression {
   }
 
   /**
+   * Given a list of anchor elements, group them into ad components.
+   *
+   * The first step in the process is to check if the anchor should be
+   * inspected. This is based on whether it contains an href or a
+   * data-attribute values that matches an ad link, or if it contains a
+   * pattern caught by a components included regular expression.
+   *
+   * Determine which component it belongs to and the number of matches for
+   * the component. The heuristic is described in findDataForAnchor.
+   * If there was a result and we haven't seen it before, save it in
+   * elementToAdDataMap.
+   *
+   * @param {HTMLCollectionOf<HTMLAnchorElement>} anchors
+   *  The list of anchors to inspect.
+   */
+  #categorizeAnchors(anchors) {
+    for (let anchor of anchors) {
+      if (this.#shouldInspectAnchor(anchor)) {
+        let result = this.#findDataForAnchor(anchor);
+        if (result) {
+          this.#recordElementData(result.element, {
+            type: result.type,
+            count: result.count,
+            countChildren: result.countChildren,
+            childElements: result.childElements,
+          });
+        }
+      }
+    }
+  }
+
+  /**
+   * Find components from the document object. This is mostly relevant for
+   * components that are non-ads and don't have an obvious regular expression
+   * that could match the pattern of the href.
+   *
+   * @param {Document} document
+   */
+  #categorizeDocument(document) {
+    // using the subset of components that are top down,
+    // go through each one.
+    for (let component of this.#topDownComponents) {
+      // Top-down searches must have the topDown attribute.
+      if (!component.topDown) {
+        continue;
+      }
+      // Top down searches must include a parent.
+      if (!component.included?.parent) {
+        continue;
+      }
+      let parents = document.querySelectorAll(
+        component.included.parent.selector
+      );
+      if (parents.length) {
+        for (let parent of parents) {
+          if (component.included.children) {
+            for (let child of component.included.children) {
+              let childElements = parent.querySelectorAll(child.selector);
+              if (childElements) {
+                this.#recordElementData(parent, {
+                  type: component.type,
+                  count: 1,
+                  childElements,
+                });
+                break;
+              }
+            }
+          } else {
+            this.#recordElementData(parent, {
+              type: component.type,
+              count: 1,
+            });
+          }
+        }
+      }
+    }
+  }
+
+  /**
    * Evaluates whether an anchor should be inspected based on matching
    * regular expressions on either its href or specified data-attribute values.
    *
@@ -248,11 +356,15 @@ class SearchAdImpression {
     if (regexps.some(regexp => regexp.test(anchor.href))) {
       return true;
     }
+    // Anchors can contain hrefs matching non-ad regular expressions.
+    if (this.#nonAdRegexps.some(regexp => regexp.test(anchor.href))) {
+      return true;
+    }
     return false;
   }
 
   /**
-   * Find the ad data for an anchor.
+   * Find the component data for an anchor.
    *
    * To categorize the anchor, we iterate over the list of possible components
    * the anchor could be categorized. If the component is default, we skip
@@ -294,13 +406,17 @@ class SearchAdImpression {
    *  the component, the type of component, how many ads were counted,
    *  and whether or not the count was of all the children.
    */
-  #findAdDataForAnchor(anchor) {
+  #findDataForAnchor(anchor) {
     for (let component of this.#providerInfo.components) {
       // First, check various conditions for skipping a component.
 
-      // A component should always have at least one included statement,
-      // and a included statement with a parent.
-      if (!component.included || !component.included.parent) {
+      // A component should always have at least one included statement.
+      if (!component.included) {
+        continue;
+      }
+
+      // Top down searches are done after the bottom up search.
+      if (component.topDown) {
         continue;
       }
 
@@ -310,15 +426,38 @@ class SearchAdImpression {
         continue;
       }
 
-      // The anchor shouldn't belong to a specific parent component.
+      // The anchor shouldn't belong to an excluded parent component.
       if (anchor.closest(component.excluded?.parent?.selector)) {
         continue;
+      }
+
+      // The anchor should not belong to an excluded regexp (if provided).
+      if (component.excluded?.regexps?.some(r => r.test(anchor.href))) {
+        continue;
+      }
+
+      // The anchor should belong to an included regexp (if provided).
+      if (
+        component.included.regexps &&
+        !component.included.regexps.some(r => r.test(anchor.href))
+      ) {
+        continue;
+      }
+
+      // If no parent was provided, but it passed a previous regular
+      // expression check, return the anchor. This might be because there
+      // was no clear parent for the anchor to match against.
+      if (!component.included.parent && component.included?.regexps) {
+        return {
+          element: anchor,
+          type: component.type,
+          count: 1,
+        };
       }
 
       // Find the parent of the anchor.
       let parent = anchor.closest(component.included.parent.selector);
 
-      // If no parent was found, this wasn't the right component.
       if (!parent) {
         continue;
       }
@@ -361,7 +500,6 @@ class SearchAdImpression {
         element: parent,
         type: component.type,
         count: 1,
-        childElements: [anchor],
       };
     }
     // If no component was found, use default values.
@@ -369,7 +507,6 @@ class SearchAdImpression {
       element: anchor,
       type: this.#defaultComponent.type,
       count: 1,
-      childElements: [anchor],
     };
   }
 
@@ -405,6 +542,21 @@ class SearchAdImpression {
       return {
         adsVisible: 0,
         adsHidden: adsLoaded,
+      };
+    }
+
+    // Since the parent element has dimensions but no child elements we want
+    // to inspect, check the parent itself is within the viewable area.
+    if (!childElements || !childElements.length) {
+      if (this.#innerWindowHeight < elementRect.y + elementRect.height) {
+        return {
+          adsVisible: 0,
+          adsHidden: 0,
+        };
+      }
+      return {
+        adsVisible: 1,
+        adsHidden: 0,
       };
     }
 
@@ -586,7 +738,7 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
         searchAdImpression.scrollFromTop = this.contentWindow.scrollY;
         searchAdImpression.innerWindowHeight = this.contentWindow.innerHeight;
         let start = Cu.now();
-        let adImpressions = searchAdImpression.resultFromAnchors(anchors);
+        let adImpressions = searchAdImpression.categorize(anchors, doc);
         ChromeUtils.addProfilerMarker(
           "SearchSERPTelemetryChild._checkForAdLink",
           start,
