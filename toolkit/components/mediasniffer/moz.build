@@ -31,5 +31,3 @@ LOCAL_INCLUDES += [
     "/netwerk/base",
     "/netwerk/protocol/http",
 ]
-
-REQUIRES_UNIFIED_BUILD = True
