@@ -14,9 +14,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiSelector
-import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers.allOf
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
@@ -33,9 +31,6 @@ class SettingsSubMenuDeleteBrowsingDataRobot {
 
     fun verifyNavigationToolBarHeader() = assertNavigationToolBarHeader()
     fun verifyDeleteBrowsingDataButton() = assertDeleteBrowsingDataButton()
-    fun verifyMessageInDialogBox() = assertMessageInDialogBox()
-    fun verifyDeleteButtonInDialogBox() = assertDeleteButtonInDialogBox()
-    fun verifyCancelButtonInDialogBox() = assertCancelButtonInDialogBox()
     fun verifyAllOptionsAndCheckBoxes() = assertAllOptionsAndCheckBoxes()
     fun verifyAllCheckBoxesAreChecked() = assertAllCheckBoxesAreChecked()
     fun verifyOpenTabsCheckBox(status: Boolean) = assertOpenTabsCheckBox(status)
@@ -47,10 +42,10 @@ class SettingsSubMenuDeleteBrowsingDataRobot {
     fun verifyOpenTabsDetails(tabNumber: String) = assertOpenTabsDescription(tabNumber)
     fun verifyBrowsingHistoryDetails(addresses: String) = assertBrowsingHistoryDescription(addresses)
 
-    fun verifyDialogElements() {
-        verifyMessageInDialogBox()
-        verifyDeleteButtonInDialogBox()
-        verifyCancelButtonInDialogBox()
+    fun verifyDeleteBrowsingDataDialog() {
+        dialogMessage().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        dialogCancelButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        dialogDeleteButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
     }
 
     fun switchOpenTabsCheckBox() = clickOpenTabsCheckBox()
@@ -138,25 +133,9 @@ class SettingsSubMenuDeleteBrowsingDataRobot {
         assertDownloadsCheckBox(false)
     }
 
-    fun clickCancelButtonInDialogBoxAndVerifyContentsInDialogBox() {
-        mDevice.wait(
-            Until.findObject(By.text("Delete browsing data")),
-            waitingTime,
-        )
-        clickDeleteBrowsingDataButton()
-        verifyDialogElements()
-        cancelButton().click()
-    }
     fun confirmDeletionAndAssertSnackbar() {
         dialogDeleteButton().click()
         assertDeleteBrowsingDataSnackbar()
-    }
-
-    fun verifyDeleteBrowsingDataSubMenuItems() {
-        verifyDeleteBrowsingDataButton()
-        clickCancelButtonInDialogBoxAndVerifyContentsInDialogBox()
-        verifyAllOptionsAndCheckBoxes()
-        verifyAllCheckBoxesAreChecked()
     }
 
     class Transition {
@@ -187,9 +166,6 @@ private fun assertNavigationToolBarHeader() =
 
 private fun assertDeleteBrowsingDataButton() =
     deleteBrowsingDataButton().check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
-
-private fun cancelButton() =
-    mDevice.findObject(UiSelector().textStartsWith("CANCEL"))
 
 private fun dialogDeleteButton() = onView(withText("Delete")).inRoot(isDialog())
 
@@ -241,15 +217,6 @@ private fun downloadsCheckBox() =
 private fun dialogMessage() =
     onView(withText("$appName will delete the selected browsing data."))
         .inRoot(isDialog())
-
-private fun assertMessageInDialogBox() =
-    dialogMessage().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-private fun assertDeleteButtonInDialogBox() =
-    dialogDeleteButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-private fun assertCancelButtonInDialogBox() =
-    dialogCancelButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertAllOptionsAndCheckBoxes() {
     openTabsSubsection().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))

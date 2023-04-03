@@ -119,6 +119,7 @@ class SettingsDeleteBrowsingDataTest {
             verifyAllCheckBoxesAreChecked()
             selectOnlyOpenTabsCheckBox()
             clickDeleteBrowsingDataButton()
+            verifyDeleteBrowsingDataDialog()
             confirmDeletionAndAssertSnackbar()
         }
         settingsScreen {
@@ -140,9 +141,11 @@ class SettingsDeleteBrowsingDataTest {
             verifyAllCheckBoxesAreChecked()
             selectOnlyOpenTabsCheckBox()
             clickDeleteBrowsingDataButton()
+            verifyDeleteBrowsingDataDialog()
             clickDialogCancelButton()
             verifyOpenTabsCheckBox(true)
             clickDeleteBrowsingDataButton()
+            verifyDeleteBrowsingDataDialog()
             confirmDeletionAndAssertSnackbar()
         }
         settingsScreen {
@@ -174,9 +177,11 @@ class SettingsDeleteBrowsingDataTest {
             verifyBrowsingHistoryDetails("2")
             selectOnlyBrowsingHistoryCheckBox()
             clickDeleteBrowsingDataButton()
+            verifyDeleteBrowsingDataDialog()
             clickDialogCancelButton()
             verifyBrowsingHistoryDetails(true)
             clickDeleteBrowsingDataButton()
+            verifyDeleteBrowsingDataDialog()
             confirmDeletionAndAssertSnackbar()
             verifyBrowsingHistoryDetails("0")
             exitMenu()
@@ -213,6 +218,7 @@ class SettingsDeleteBrowsingDataTest {
         }.openSettingsSubMenuDeleteBrowsingData {
             selectOnlyCookiesCheckBox()
             clickDeleteBrowsingDataButton()
+            verifyDeleteBrowsingDataDialog()
             confirmDeletionAndAssertSnackbar()
             exitMenu()
         }
@@ -242,6 +248,7 @@ class SettingsDeleteBrowsingDataTest {
         }.openSettingsSubMenuDeleteBrowsingData {
             selectOnlyCachedFilesCheckBox()
             clickDeleteBrowsingDataButton()
+            verifyDeleteBrowsingDataDialog()
             confirmDeletionAndAssertSnackbar()
             exitMenu()
         }
