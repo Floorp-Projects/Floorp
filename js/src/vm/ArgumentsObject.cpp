@@ -127,7 +127,7 @@ struct CopyFrameArgs {
 
   explicit CopyFrameArgs(AbstractFramePtr frame) : frame_(frame) {}
 
-  void copyArgs(JSContext*, GCPtr<Value>* dst, unsigned totalArgs) const {
+  void copyArgs(GCPtr<Value>* dst, unsigned totalArgs) const {
     CopyStackFrameArguments(frame_, dst, totalArgs);
   }
 
@@ -147,7 +147,7 @@ struct CopyJitFrameArgs {
   CopyJitFrameArgs(jit::JitFrameLayout* frame, HandleObject callObj)
       : frame_(frame), callObj_(callObj) {}
 
-  void copyArgs(JSContext*, GCPtr<Value>* dstBase, unsigned totalArgs) const {
+  void copyArgs(GCPtr<Value>* dstBase, unsigned totalArgs) const {
     unsigned numActuals = frame_->numActualArgs();
     unsigned numFormals =
         jit::CalleeTokenToFunction(frame_->calleeToken())->nargs();
@@ -183,27 +183,40 @@ struct CopyJitFrameArgs {
 
 struct CopyScriptFrameIterArgs {
   ScriptFrameIter& iter_;
+  RootedValueVector actualArgs_;
 
-  explicit CopyScriptFrameIterArgs(ScriptFrameIter& iter) : iter_(iter) {}
+  explicit CopyScriptFrameIterArgs(JSContext* cx, ScriptFrameIter& iter)
+      : iter_(iter), actualArgs_(cx) {}
 
-  void copyArgs(JSContext* cx, GCPtr<Value>* dstBase,
-                unsigned totalArgs) const {
-    /* Copy actual arguments. */
-    iter_.unaliasedForEachActual(cx, CopyToHeap(dstBase));
-
-    /* Define formals which are not part of the actuals. */
+  // Used to copy arguments to actualArgs_ to simplify copyArgs and
+  // ArgumentsObject allocation.
+  [[nodiscard]] bool init(JSContext* cx) {
     unsigned numActuals = iter_.numActualArgs();
+    if (!actualArgs_.reserve(numActuals)) {
+      return false;
+    }
+
+    // Append actual arguments.
+    iter_.unaliasedForEachActual(
+        cx, [this](const Value& v) { actualArgs_.infallibleAppend(v); });
+    return true;
+  }
+
+  void copyArgs(GCPtr<Value>* dstBase, unsigned totalArgs) const {
+    unsigned numActuals = actualArgs_.length();
     unsigned numFormals = iter_.calleeTemplate()->nargs();
     MOZ_ASSERT(numActuals <= totalArgs);
     MOZ_ASSERT(numFormals <= totalArgs);
     MOZ_ASSERT(std::max(numActuals, numFormals) == totalArgs);
 
-    if (numActuals < numFormals) {
-      GCPtr<Value>* dst = dstBase + numActuals;
-      GCPtr<Value>* dstEnd = dstBase + totalArgs;
-      while (dst != dstEnd) {
-        (dst++)->init(UndefinedValue());
-      }
+    // Append actual arguments.
+    for (Value v : actualArgs_) {
+      (dstBase++)->init(v);
+    }
+
+    // Append |undefined| for missing formals.
+    for (size_t i = numActuals; i < numFormals; i++) {
+      (dstBase++)->init(UndefinedValue());
     }
   }
 
@@ -232,7 +245,7 @@ struct CopyInlinedArgs {
         callee_(callee),
         numActuals_(numActuals) {}
 
-  void copyArgs(JSContext*, GCPtr<Value>* dstBase, unsigned totalArgs) const {
+  void copyArgs(GCPtr<Value>* dstBase, unsigned totalArgs) const {
     uint32_t numFormals = callee_->nargs();
     MOZ_ASSERT(std::max(numActuals_, numFormals) == totalArgs);
 
@@ -370,7 +383,7 @@ ArgumentsObject* ArgumentsObject::create(JSContext* cx, HandleFunction callee,
   MOZ_ASSERT(data != nullptr);
 
   /* Copy [0, numArgs) into data->slots. */
-  copy.copyArgs(cx, data->args, numArgs);
+  copy.copyArgs(data->args, numArgs);
 
   obj->initFixedSlot(INITIAL_LENGTH_SLOT,
                      Int32Value(numActuals << PACKED_BITS_COUNT));
@@ -399,7 +412,10 @@ ArgumentsObject* ArgumentsObject::createExpected(JSContext* cx,
 ArgumentsObject* ArgumentsObject::createUnexpected(JSContext* cx,
                                                    ScriptFrameIter& iter) {
   RootedFunction callee(cx, iter.callee(cx));
-  CopyScriptFrameIterArgs copy(iter);
+  CopyScriptFrameIterArgs copy(cx, iter);
+  if (!copy.init(cx)) {
+    return nullptr;
+  }
   return create(cx, callee, iter.numActualArgs(), copy);
 }
 
@@ -475,7 +491,7 @@ ArgumentsObject* ArgumentsObject::finishPure(
   obj->initFixedSlot(MAYBE_CALL_SLOT, UndefinedValue());
   obj->initFixedSlot(CALLEE_SLOT, ObjectValue(*callee));
 
-  copy.copyArgs(cx, data->args, numArgs);
+  copy.copyArgs(data->args, numArgs);
 
   if (callObj && callee->needsCallObject()) {
     copy.maybeForwardToCallObject(obj, data);
