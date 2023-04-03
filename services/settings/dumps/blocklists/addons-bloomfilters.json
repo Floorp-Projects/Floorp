@@ -2,6 +2,17 @@
   "data": [
     {
       "stash": {
+        "blocked": [],
+        "unblocked": []
+      },
+      "schema": 1680115045364,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1680201308515,
+      "id": "384a2d2e-dc8a-435a-bdbc-ecb82e41acc1",
+      "last_modified": 1680201445669
+    },
+    {
+      "stash": {
         "blocked": [
           "sba4b_firefox_quantum@checkpoint.com:990.86.40",
           "sba4b_firefox_quantum@checkpoint.com:990.70.9",
@@ -1319,5 +1330,5 @@
       "last_modified": 1673354326131
     }
   ],
-  "timestamp": 1680115045300
+  "timestamp": 1680201445669
 }
