@@ -130,6 +130,10 @@ wr::WrExternalImageHandler RendererOGL::GetExternalImageHandler() {
   };
 }
 
+void RendererOGL::SetFramePublishId(FramePublishId aPublishId) {
+  wr_renderer_set_target_frame_publish_id(mRenderer, aPublishId);
+}
+
 void RendererOGL::Update() {
   mCompositor->Update();
   if (mCompositor->MakeCurrent()) {
