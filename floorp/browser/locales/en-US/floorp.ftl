@@ -8,29 +8,17 @@ about-floorp = <label data-l10n-name="floorp-browser-link">{ -brand-product-name
 icon-creator = Icon creator <label data-l10n-name="browser-logo-twitter">@CutterKnife_</label> and <label data-l10n-name="brand-logo-twitter">@mwxdxx.</label>
 contributors = A list of <label data-l10n-name="about-contributor">contributors and Developers</label>
 
-######################################################################### Themes #########################################################################
-
-extension-floorp-material-name= Material Theme
-extension-floorp-material-description=Follow the operating system setting for buttons, menus, and windows
-
-extension-floorp-photon-name= Firefox Photon Theme
-extension-floorp-photon-description= Follow the operating system setting for buttons, menus, and windows
-
 #################################################################### about:preferences ####################################################################
 
 feature-requires-restart = A reboot is required to change the settings
 
-floorp-preference = Experimet Preferences
-browser-design-settings = Tab Bar Settings
-
-auto-reboot = If you change any of the settings below, your browser will be restarted to apply the changes. Please save the data you are working with before making any changes.
 tab-width = Minimum width of tabs
 preferences-tabs-newtab-position = New Tab Position
-open-new-tab-use-default = 
+open-new-tab-use-default =
  .label = Open new tabs at default position
 open-new-tab-at-the-end =
  .label = Open new tabs at the end of the tab bar
-open-new-tab-next-to-current = 
+open-new-tab-next-to-current =
  .label = Open new tabs right of the current tab
 enable-multitab = 
  .label = Enable multi-row tabs
@@ -42,15 +30,13 @@ multirow-tabs-value = Number of rows when multi-row tabs are enabled
 enable-tab-sleep = 
  .label = Enable Tab Sleep
 tab-sleep-timeout-minutes-value = Time to put tabs to sleep (minutes)
-enable-tab-scroll-change = 
+enable-tab-scroll-change =
  .label = Switch Tabs by Scrolling
-enable-doble-click-block = 
+enable-doble-click-block =
  .label = Double-click to Close the Tab
 enable-show-pinned-tabs-title =
  .label = Show the title of pinned tabs
-operation-settings = 
-  .label = Browser Operation Settings
-Mouse-side-button = 
+Mouse-side-button =
   .label = Optimise browser for mouse with side buttons
 
 tabbar-preference = Tabbar
@@ -58,16 +44,16 @@ tabbar-preference = Tabbar
 None-mode = 
  .label= Normal mode
 
-hide-horizontality-tabs = 
+hide-horizontality-tabs =
  .label= Hide horizontal tabbar
 
-verticalTab-setting = 
+verticalTab-setting =
  .label = Optimise browser for vertical tabs
 
 move-tabbar-position =
  .label = Show tabbar at the bottom of the toolbar
 
-tabbar-on-bottom = 
+tabbar-on-bottom =
  .label = Display tabbar at the bottom of the window
 
 native-tabbar = Native Vertical Tabbar
@@ -101,9 +87,7 @@ disable-extension-check-compatibility-option =
  .label = Do not check for compatibility with add-ons
 other-preference = Other Preferences
 
-operation-settings = Browser Operation
-
-enable-userscript = 
+enable-userscript =
  .label = Enable legacy components
 about-legacy-components = Enabling this feature may cause unexpected bugs or fatal errors
 
@@ -119,9 +103,9 @@ disable-fullscreen-notification =
  .label = Disable video fullscreen notification
 
 floorp-updater = { -brand-short-name } Updater Settings
-enable-floorp-updater = 
+enable-floorp-updater =
  .label = Check for { -brand-short-name } updates at startup
-floorp-update-latest = 
+floorp-update-latest =
  .label = Notification that { -brand-short-name } is up-to-date during automatic update checks
 
 ## system theme color
@@ -132,10 +116,10 @@ preferences-theme-appearance-header = Setting the system theme
 system-theme-dark =
  .label = Enforce dark mode
 
-system-theme-light = 
+system-theme-light =
  .label = Enforce light mode
- 
-system-theme-auto =  
+
+system-theme-auto =
  .label = Default mode
 
 ## user interface prefernces
@@ -149,10 +133,10 @@ firefox-proton =
 firefox-proton-fix =
  .label = Firefox Proton FIX UI
 
-firefox-photon-lepton = 
+firefox-photon-lepton =
  .label = Firefox Photon・Lepton UI
  
-floorp-legacy =  
+floorp-legacy =
  .label = Floorp Legacy material UI・Unsupported
 
 floorp-fluentUI =
@@ -163,52 +147,12 @@ floorp-fluerialUI =
 
 floorp-gnomeUI =
  .label = Gnome Theme
- 
-waterfox-lepton =
- .label = Firefox Lepton UI
-
-## BlockMoreTracker
-
-privacy-hub-header = Privacy Hub
-
-block-more-tracker = Block more Ads and Trackers
-block-tracker = This section contains a set of extensions designed to block ads and trackers
-
-view-at-AMO = View at AMO
-uBlock-Origin = uBlock Origin
-about-uboori = uBlock Origin blocks ads, extensive trackers, and additional dangerous sites.
-
-Privacy-Badger = Privacy Badger
-about-PBadger = Privacy Badger automatically learns to block hidden trackers based on their behaviour across websites.
-
-Duck-Duck-Go = DuckDuckGo Privacy Essentials
-about-DDG = DuckDuckGo Privacy Essentials replaces a default search engine with DuckDuckGo while blocking trackers on visited sites.
-
-## Fingerprint
-
-fingerprint-header = Resist Fingerprinting & IP address leak
-block-fingerprint = Fingerprinting is a tracking mechanism that relies on the unique features of your browser and operating system. This section contains settings to further enhance this protection beyond the default blocking.
-enable-firefox-fingerprint-protections = Enable strong protection against fingerprinting
-about-firefox-fingerprint-protection = Enabling protection by Firefox includes forced light mode, disabling some APIs, etc. Some sites may be broken.
-fingerprint-Protection =
- .label =  Anti-fingerprinting protections
-html5-canvas-prompt-settings =
- .label =  Automatically approve access confirmation prompts for HTML5 image data
-canvas-prompt = Automatically reject the canvas-reading prompt
-disable-webgl =
- .label =  Disable WebGL
-about-webgl = WebGL is a Javascript API used to render graphics, which can be used to identify GPU.
-Canvas-Blocker = Canvas Blocker
-about-CB = This add-on spoofs data used by fingerprinting techniques.
-WebRTC-connection = WebRTC is a standard that provides real-time calling. If you disable this setting, you will not be able to use Discord, etc.
-WebRTC = 
- .label = Enable WebRTC Connection
 
 ## download mgr
 download-notification-preferences = Download Notification
 start-always-notify =
  .label = Notify only at start
-finish-always-notify = 
+finish-always-notify =
  .label = Notify only when finished
 always-notify =
  .label = Notify both at start and end
@@ -249,7 +193,7 @@ custom-useragent-value =
 download-mgr-UI =
  .label = Use a Simple UI download manager
 downloading-red-color =
- .label = Highlight the Download Manager icon in red during download  
+ .label = Highlight the Download Manager icon in red during download
 
 sidebar-preferences = Sidebar
 view-sidebar2-right = 
@@ -257,11 +201,8 @@ view-sidebar2-right =
 enable-sidebar2 =
  .label = Enable the Browser Manager Sidebar
 
-sidebar2-restore =
- .label = Restore the Sidebar mode when { -brand-short-name } is restarted or load new window
-
 custom-URL-option = Set Webpanel URLs
-set-custom-URL-button = 
+set-custom-URL-button =
     .label = Set Custom URLs...
     .accesskey = S
 bsb-header = Browser Manager Sidebar
@@ -385,7 +326,7 @@ lepton-preference-button =
 lepton-header = Lepton Preferences
 
 lepton-preference = Lepton UI Settings
-photon-mode = 
+photon-mode =
     .label = Photon Mode
 
 lepton-mode = 
@@ -597,18 +538,10 @@ edit-userChromeCss-editor =
 edit-userContentCss-editor =
     .label = Edit userContent.css file
 
-test-chrome-css =
-    .label = Test userChrome.css
-    .accesskey = C
-test-content-css =
-    .label = Test userContent.css
-    .accesskey = W
-
 not-found-editor-path = Could not find the editor path.
 set-pref-description = Set the path to the editor you want to use.
 rebuild-complete = Rebuild has been completed.
 please-enter-filename = Please enter a file name.
-confirmed-update = Confirmed the update of "{ $leafName }".
 
 ################################################################### Undo-Closed-Tab ###############################################################
 
@@ -688,7 +621,7 @@ update-portable-notification-failed-redirector-message = Update failed. Restarti
 update-portable-notification-failed-prepare-message = Failed to prepare update.
 
 ##################################################################### Open link in external ###############################################################
-openInExternal-title = Open in External Browser 
+openInExternal-title = Open in External Browser
 open-link-in-external-enabled-option =
  .label = Enable "Open in external browser" feature
 open-link-in-external-select-browser-option = Choose the browser you want to open in "Open in external browser"
