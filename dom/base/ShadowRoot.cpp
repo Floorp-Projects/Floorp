@@ -58,7 +58,6 @@ ShadowRoot::ShadowRoot(Element* aElement, ShadowRootMode aMode,
       mMode(aMode),
       mDelegatesFocus(aDelegatesFocus),
       mSlotAssignment(aSlotAssignment),
-      mIsUAWidget(false),
       mIsDetailsShadowTree(aElement->IsHTMLElement(nsGkAtoms::details)),
       mIsAvailableToElementInternals(false) {
   SetHost(aElement);
@@ -746,7 +745,7 @@ Element* ShadowRoot::GetActiveElement() {
 nsINode* ShadowRoot::ImportNodeAndAppendChildAt(nsINode& aParentNode,
                                                 nsINode& aNode, bool aDeep,
                                                 mozilla::ErrorResult& rv) {
-  MOZ_ASSERT(mIsUAWidget);
+  MOZ_ASSERT(IsUAWidget());
 
   if (!aParentNode.IsInUAWidget()) {
     rv.Throw(NS_ERROR_INVALID_ARG);
@@ -764,7 +763,7 @@ nsINode* ShadowRoot::ImportNodeAndAppendChildAt(nsINode& aParentNode,
 nsINode* ShadowRoot::CreateElementAndAppendChildAt(nsINode& aParentNode,
                                                    const nsAString& aTagName,
                                                    mozilla::ErrorResult& rv) {
-  MOZ_ASSERT(mIsUAWidget);
+  MOZ_ASSERT(IsUAWidget());
 
   if (!aParentNode.IsInUAWidget()) {
     rv.Throw(NS_ERROR_INVALID_ARG);
