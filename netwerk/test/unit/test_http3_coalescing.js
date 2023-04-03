@@ -31,7 +31,9 @@ registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("network.dns.upgrade_with_https_rr");
   Services.prefs.clearUserPref("network.dns.use_https_rr_as_altsvc");
   Services.prefs.clearUserPref("network.dns.echconfig.enabled");
-  Services.prefs.clearUserPref("network.dns.echconfig.fallback_to_origin");
+  Services.prefs.clearUserPref(
+    "network.dns.echconfig.fallback_to_origin_when_all_failed"
+  );
   Services.prefs.clearUserPref("network.dns.httpssvc.reset_exclustion_list");
   Services.prefs.clearUserPref("network.http.http3.enable");
   Services.prefs.clearUserPref(

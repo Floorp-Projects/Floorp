@@ -69,7 +69,9 @@ registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("network.dns.use_https_rr_as_altsvc");
   Services.prefs.clearUserPref("network.dns.echconfig.enabled");
   Services.prefs.clearUserPref("network.dns.http3_echconfig.enabled");
-  Services.prefs.clearUserPref("network.dns.echconfig.fallback_to_origin");
+  Services.prefs.clearUserPref(
+    "network.dns.echconfig.fallback_to_origin_when_all_failed"
+  );
   Services.prefs.clearUserPref("network.http.speculative-parallel-limit");
   Services.prefs.clearUserPref("network.dns.port_prefixed_qname_https_rr");
   Services.prefs.clearUserPref("security.tls.ech.grease_http3");
