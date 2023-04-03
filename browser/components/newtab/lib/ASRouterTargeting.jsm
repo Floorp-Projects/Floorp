@@ -119,6 +119,24 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.newtabpage.activity-stream.feeds.snippets",
   false
 );
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "hasMigratedBookmarks",
+  "browser.migrate.interactions.bookmarks",
+  false
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "hasMigratedHistory",
+  "browser.migrate.interactions.history",
+  false
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "hasMigratedPasswords",
+  "browser.migrate.interactions.passwords",
+  false
+);
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {
   AUS: ["@mozilla.org/updates/update-service;1", "nsIApplicationUpdateService"],
@@ -877,6 +895,30 @@ const TargetingGetters = {
         })
         .then(addresses => addresses?.length ?? 0) ?? 0
     );
+  },
+
+  /**
+   * Has the user ever used the Migration Wizard to migrate bookmarks?
+   * @return {boolean} `true` if bookmark migration has occurred.
+   */
+  get hasMigratedBookmarks() {
+    return lazy.hasMigratedBookmarks;
+  },
+
+  /**
+   * Has the user ever used the Migration Wizard to migrate history?
+   * @return {boolean} `true` if history migration has occurred.
+   */
+  get hasMigratedHistory() {
+    return lazy.hasMigratedHistory;
+  },
+
+  /**
+   * Has the user ever used the Migration Wizard to migrate passwords?
+   * @return {boolean} `true` if password migration has occurred.
+   */
+  get hasMigratedPasswords() {
+    return lazy.hasMigratedPasswords;
   },
 };
 
