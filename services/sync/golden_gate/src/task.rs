@@ -129,10 +129,7 @@ impl FerryTask {
         uploaded_ids: &[nsCString],
         callback: &mozIBridgedSyncEngineCallback,
     ) -> Result<FerryTask> {
-        let uploaded_ids = uploaded_ids
-            .iter()
-            .map(|id| Guid::from_slice(id))
-            .collect();
+        let uploaded_ids = uploaded_ids.iter().map(|id| Guid::from_slice(id)).collect();
         Self::with_ferry(
             engine,
             Ferry::SetUploaded(server_modified_millis, uploaded_ids),
