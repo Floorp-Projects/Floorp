@@ -51,6 +51,7 @@ export let RemotePageAccessManager = {
         "network.trr.display_fallback_warning",
       ],
       RPMGetIntPref: [
+        "security.dialog_enable_delay",
         "services.settings.clock_skew_seconds",
         "services.settings.last_update_seconds",
       ],
