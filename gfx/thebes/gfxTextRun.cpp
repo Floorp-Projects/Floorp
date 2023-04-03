@@ -256,7 +256,7 @@ bool gfxTextRun::SetPotentialLineBreaks(Range aRange,
 }
 
 gfxTextRun::LigatureData gfxTextRun::ComputeLigatureData(
-    Range aPartRange, PropertyProvider* aProvider) const {
+    Range aPartRange, const PropertyProvider* aProvider) const {
   NS_ASSERTION(aPartRange.start < aPartRange.end,
                "Computing ligature data for empty range");
   NS_ASSERTION(aPartRange.end <= GetLength(), "Character length overflow");
@@ -337,7 +337,7 @@ gfxTextRun::LigatureData gfxTextRun::ComputeLigatureData(
 }
 
 gfxFloat gfxTextRun::ComputePartialLigatureWidth(
-    Range aPartRange, PropertyProvider* aProvider) const {
+    Range aPartRange, const PropertyProvider* aProvider) const {
   if (aPartRange.start >= aPartRange.end) return 0;
   LigatureData data = ComputeLigatureData(aPartRange, aProvider);
   return data.mPartWidth;
@@ -353,11 +353,13 @@ int32_t gfxTextRun::GetAdvanceForGlyphs(Range aRange) const {
 
 static void GetAdjustedSpacing(
     const gfxTextRun* aTextRun, gfxTextRun::Range aRange,
-    gfxTextRun::PropertyProvider* aProvider,
+    const gfxTextRun::PropertyProvider& aProvider,
     gfxTextRun::PropertyProvider::Spacing* aSpacing) {
-  if (aRange.start >= aRange.end) return;
+  if (aRange.start >= aRange.end) {
+    return;
+  }
 
-  aProvider->GetSpacing(aRange, aSpacing);
+  aProvider.GetSpacing(aRange, aSpacing);
 
 #ifdef DEBUG
   // Check to see if we have spacing inside ligatures
@@ -379,7 +381,7 @@ static void GetAdjustedSpacing(
 }
 
 bool gfxTextRun::GetAdjustedSpacingArray(
-    Range aRange, PropertyProvider* aProvider, Range aSpacingRange,
+    Range aRange, const PropertyProvider* aProvider, Range aSpacingRange,
     nsTArray<PropertyProvider::Spacing>* aSpacing) const {
   if (!aProvider || !(mFlags & gfx::ShapedTextFlags::TEXT_ENABLE_SPACING)) {
     return false;
@@ -389,7 +391,7 @@ bool gfxTextRun::GetAdjustedSpacingArray(
   }
   auto spacingOffset = aSpacingRange.start - aRange.start;
   memset(aSpacing->Elements(), 0, sizeof(gfxFont::Spacing) * spacingOffset);
-  GetAdjustedSpacing(this, aSpacingRange, aProvider,
+  GetAdjustedSpacing(this, aSpacingRange, *aProvider,
                      aSpacing->Elements() + spacingOffset);
   memset(aSpacing->Elements() + spacingOffset + aSpacingRange.Length(), 0,
          sizeof(gfxFont::Spacing) * (aRange.end - aSpacingRange.end));
@@ -419,8 +421,8 @@ bool gfxTextRun::ShrinkToLigatureBoundaries(Range* aRange) const {
 }
 
 void gfxTextRun::DrawGlyphs(gfxFont* aFont, Range aRange, gfx::Point* aPt,
-                            PropertyProvider* aProvider, Range aSpacingRange,
-                            TextRunDrawParams& aParams,
+                            const PropertyProvider* aProvider,
+                            Range aSpacingRange, TextRunDrawParams& aParams,
                             gfx::ShapedTextFlags aOrientation) const {
   AutoTArray<PropertyProvider::Spacing, 200> spacingBuffer;
   bool haveSpacing =
@@ -452,7 +454,7 @@ static void ClipPartialLigature(const gfxTextRun* aTextRun, gfxFloat* aStart,
 
 void gfxTextRun::DrawPartialLigature(gfxFont* aFont, Range aRange,
                                      gfx::Point* aPt,
-                                     PropertyProvider* aProvider,
+                                     const PropertyProvider* aProvider,
                                      TextRunDrawParams& aParams,
                                      gfx::ShapedTextFlags aOrientation) const {
   if (aRange.start >= aRange.end) {
@@ -710,7 +712,7 @@ void gfxTextRun::Draw(const Range aRange, const gfx::Point aPt,
 void gfxTextRun::DrawEmphasisMarks(gfxContext* aContext, gfxTextRun* aMark,
                                    gfxFloat aMarkAdvance, gfx::Point aPt,
                                    Range aRange,
-                                   PropertyProvider* aProvider) const {
+                                   const PropertyProvider* aProvider) const {
   MOZ_ASSERT(aRange.end <= GetLength());
 
   EmphasisMarkDrawParams params;
@@ -752,7 +754,7 @@ void gfxTextRun::DrawEmphasisMarks(gfxContext* aContext, gfxTextRun* aMark,
 
 void gfxTextRun::AccumulateMetricsForRun(
     gfxFont* aFont, Range aRange, gfxFont::BoundingBoxType aBoundingBoxType,
-    DrawTarget* aRefDrawTarget, PropertyProvider* aProvider,
+    DrawTarget* aRefDrawTarget, const PropertyProvider* aProvider,
     Range aSpacingRange, gfx::ShapedTextFlags aOrientation,
     Metrics* aMetrics) const {
   AutoTArray<PropertyProvider::Spacing, 200> spacingBuffer;
@@ -766,7 +768,7 @@ void gfxTextRun::AccumulateMetricsForRun(
 
 void gfxTextRun::AccumulatePartialLigatureMetrics(
     gfxFont* aFont, Range aRange, gfxFont::BoundingBoxType aBoundingBoxType,
-    DrawTarget* aRefDrawTarget, PropertyProvider* aProvider,
+    DrawTarget* aRefDrawTarget, const PropertyProvider* aProvider,
     gfx::ShapedTextFlags aOrientation, Metrics* aMetrics) const {
   if (aRange.start >= aRange.end) return;
 
@@ -801,7 +803,7 @@ void gfxTextRun::AccumulatePartialLigatureMetrics(
 
 gfxTextRun::Metrics gfxTextRun::MeasureText(
     Range aRange, gfxFont::BoundingBoxType aBoundingBoxType,
-    DrawTarget* aRefDrawTarget, PropertyProvider* aProvider) const {
+    DrawTarget* aRefDrawTarget, const PropertyProvider* aProvider) const {
   NS_ASSERTION(aRange.end <= GetLength(), "Substring out of range");
 
   Metrics accumulatedMetrics;
@@ -923,11 +925,12 @@ void gfxTextRun::ClassifyAutoHyphenations(uint32_t aStart, Range aRange,
 
 uint32_t gfxTextRun::BreakAndMeasureText(
     uint32_t aStart, uint32_t aMaxLength, bool aLineBreakBefore,
-    gfxFloat aWidth, PropertyProvider* aProvider, SuppressBreak aSuppressBreak,
-    gfxFloat* aTrimmableWhitespace, Metrics* aMetrics,
-    gfxFont::BoundingBoxType aBoundingBoxType, DrawTarget* aRefDrawTarget,
-    bool* aUsedHyphenation, uint32_t* aLastBreak, bool aCanWordWrap,
-    bool aCanWhitespaceWrap, gfxBreakPriority* aBreakPriority) {
+    gfxFloat aWidth, const PropertyProvider& aProvider,
+    SuppressBreak aSuppressBreak, gfxFont::BoundingBoxType aBoundingBoxType,
+    DrawTarget* aRefDrawTarget, bool aCanWordWrap, bool aCanWhitespaceWrap,
+    gfxFloat* aOutTrimmableWhitespace, Metrics& aOutMetrics,
+    bool& aOutUsedHyphenation, uint32_t& aOutLastBreak,
+    gfxBreakPriority& aBreakPriority) {
   aMaxLength = std::min(aMaxLength, GetLength() - aStart);
 
   NS_ASSERTION(aStart + aMaxLength <= GetLength(), "Substring out of range");
@@ -935,8 +938,7 @@ uint32_t gfxTextRun::BreakAndMeasureText(
   Range bufferRange(
       aStart, aStart + std::min<uint32_t>(aMaxLength, MEASUREMENT_BUFFER_SIZE));
   PropertyProvider::Spacing spacingBuffer[MEASUREMENT_BUFFER_SIZE];
-  bool haveSpacing =
-      aProvider && !!(mFlags & gfx::ShapedTextFlags::TEXT_ENABLE_SPACING);
+  bool haveSpacing = !!(mFlags & gfx::ShapedTextFlags::TEXT_ENABLE_SPACING);
   if (haveSpacing) {
     GetAdjustedSpacing(this, bufferRange, aProvider, spacingBuffer);
   }
@@ -944,14 +946,13 @@ uint32_t gfxTextRun::BreakAndMeasureText(
   HyphenationState wordState;
   wordState.mostRecentBoundary = aStart;
   bool haveHyphenation =
-      aProvider &&
-      (aProvider->GetHyphensOption() == StyleHyphens::Auto ||
-       (aProvider->GetHyphensOption() == StyleHyphens::Manual &&
+      (aProvider.GetHyphensOption() == StyleHyphens::Auto ||
+       (aProvider.GetHyphensOption() == StyleHyphens::Manual &&
         !!(mFlags & gfx::ShapedTextFlags::TEXT_ENABLE_HYPHEN_BREAKS)));
   if (haveHyphenation) {
     if (hyphenBuffer.AppendElements(bufferRange.Length(), fallible)) {
-      aProvider->GetHyphenationBreaks(bufferRange, hyphenBuffer.Elements());
-      if (aProvider->GetHyphensOption() == StyleHyphens::Auto) {
+      aProvider.GetHyphenationBreaks(bufferRange, hyphenBuffer.Elements());
+      if (aProvider.GetHyphensOption() == StyleHyphens::Auto) {
         ClassifyAutoHyphenations(aStart, bufferRange, hyphenBuffer, &wordState);
       }
     } else {
@@ -1005,9 +1006,9 @@ uint32_t gfxTextRun::BreakAndMeasureText(
       }
       if (haveHyphenation) {
         if (hyphenBuffer.AppendElements(bufferRange.Length(), fallible)) {
-          aProvider->GetHyphenationBreaks(
+          aProvider.GetHyphenationBreaks(
               bufferRange, hyphenBuffer.Elements() + oldHyphenBufferLength);
-          if (aProvider->GetHyphensOption() == StyleHyphens::Auto) {
+          if (aProvider.GetHyphensOption() == StyleHyphens::Auto) {
             uint32_t prevMostRecentWordBoundary = wordState.mostRecentBoundary;
             ClassifyAutoHyphenations(aStart, bufferRange, hyphenBuffer,
                                      &wordState);
@@ -1048,7 +1049,7 @@ uint32_t gfxTextRun::BreakAndMeasureText(
       bool atBreak = atNaturalBreak || atHyphenationBreak;
       bool wordWrapping = aCanWordWrap &&
                           mCharacterGlyphs[i].IsClusterStart() &&
-                          *aBreakPriority <= gfxBreakPriority::eWordWrapBreak;
+                          aBreakPriority <= gfxBreakPriority::eWordWrapBreak;
 
       bool whitespaceWrapping = false;
       if (i > aStart) {
@@ -1062,7 +1063,7 @@ uint32_t gfxTextRun::BreakAndMeasureText(
       if (atBreak || wordWrapping || whitespaceWrapping) {
         gfxFloat hyphenatedAdvance = advance;
         if (atHyphenationBreak) {
-          hyphenatedAdvance += aProvider->GetHyphenWidth();
+          hyphenatedAdvance += aProvider.GetHyphenWidth();
         }
 
         if (lastBreak < 0 ||
@@ -1072,9 +1073,9 @@ uint32_t gfxTextRun::BreakAndMeasureText(
           lastBreakTrimmableChars = trimmableChars;
           lastBreakTrimmableAdvance = trimmableAdvance;
           lastBreakUsedHyphenation = atHyphenationBreak;
-          *aBreakPriority = (atBreak || whitespaceWrapping)
-                                ? gfxBreakPriority::eNormalBreak
-                                : gfxBreakPriority::eWordWrapBreak;
+          aBreakPriority = (atBreak || whitespaceWrapping)
+                               ? gfxBreakPriority::eNormalBreak
+                               : gfxBreakPriority::eWordWrapBreak;
         }
 
         width += advance;
@@ -1101,7 +1102,7 @@ uint32_t gfxTextRun::BreakAndMeasureText(
           lastCandidateBreakTrimmableChars = lastBreakTrimmableChars;
           lastCandidateBreakTrimmableAdvance = lastBreakTrimmableAdvance;
           lastCandidateBreakUsedHyphenation = lastBreakUsedHyphenation;
-          lastCandidateBreakPriority = *aBreakPriority;
+          lastCandidateBreakPriority = aBreakPriority;
         }
       }
     }
@@ -1122,11 +1123,11 @@ uint32_t gfxTextRun::BreakAndMeasureText(
         charAdvance += space->mBefore + space->mAfter;
       }
     } else {
-      charAdvance = ComputePartialLigatureWidth(Range(i, i + 1), aProvider);
+      charAdvance = ComputePartialLigatureWidth(Range(i, i + 1), &aProvider);
     }
 
     advance += charAdvance;
-    if (aTrimmableWhitespace) {
+    if (aOutTrimmableWhitespace) {
       if (mCharacterGlyphs[i].CharIsSpace()) {
         ++trimmableChars;
         trimmableAdvance += charAdvance;
@@ -1148,7 +1149,7 @@ uint32_t gfxTextRun::BreakAndMeasureText(
   // 3) none of the text fits before a break opportunity (width > aWidth &&
   //    lastBreak < 0)
   uint32_t charsFit;
-  bool usedHyphenation = false;
+  aOutUsedHyphenation = false;
   if (width - trimmableAdvance <= aWidth) {
     charsFit = aMaxLength;
   } else if (lastBreak >= 0) {
@@ -1157,34 +1158,30 @@ uint32_t gfxTextRun::BreakAndMeasureText(
       lastBreakTrimmableChars = lastCandidateBreakTrimmableChars;
       lastBreakTrimmableAdvance = lastCandidateBreakTrimmableAdvance;
       lastBreakUsedHyphenation = lastCandidateBreakUsedHyphenation;
-      *aBreakPriority = lastCandidateBreakPriority;
+      aBreakPriority = lastCandidateBreakPriority;
     }
     charsFit = lastBreak - aStart;
     trimmableChars = lastBreakTrimmableChars;
     trimmableAdvance = lastBreakTrimmableAdvance;
-    usedHyphenation = lastBreakUsedHyphenation;
+    aOutUsedHyphenation = lastBreakUsedHyphenation;
   } else {
     charsFit = aMaxLength;
   }
 
-  if (aMetrics) {
-    auto fitEnd = aStart + charsFit;
-    // Get the overall metrics if requested (this includes any potentially
-    // trimmable or hanging whitespace).
-    *aMetrics = MeasureText(Range(aStart, fitEnd), aBoundingBoxType,
-                            aRefDrawTarget, aProvider);
+  // Get the overall metrics of the range that fit (including any potentially
+  // trimmable or hanging whitespace).
+  aOutMetrics = MeasureText(Range(aStart, aStart + charsFit), aBoundingBoxType,
+                            aRefDrawTarget, &aProvider);
+
+  if (aOutTrimmableWhitespace) {
+    *aOutTrimmableWhitespace = trimmableAdvance;
   }
-  if (aTrimmableWhitespace) {
-    *aTrimmableWhitespace = trimmableAdvance;
-  }
-  if (aUsedHyphenation) {
-    *aUsedHyphenation = usedHyphenation;
-  }
-  if (aLastBreak && charsFit == aMaxLength) {
+
+  if (charsFit == aMaxLength) {
     if (lastBreak < 0) {
-      *aLastBreak = UINT32_MAX;
+      aOutLastBreak = UINT32_MAX;
     } else {
-      *aLastBreak = lastBreak - aStart;
+      aOutLastBreak = lastBreak - aStart;
     }
   }
 
@@ -1192,7 +1189,7 @@ uint32_t gfxTextRun::BreakAndMeasureText(
 }
 
 gfxFloat gfxTextRun::GetAdvanceWidth(
-    Range aRange, PropertyProvider* aProvider,
+    Range aRange, const PropertyProvider* aProvider,
     PropertyProvider::Spacing* aSpacing) const {
   NS_ASSERTION(aRange.end <= GetLength(), "Substring out of range");
 
@@ -1216,7 +1213,7 @@ gfxFloat gfxTextRun::GetAdvanceWidth(
     uint32_t i;
     AutoTArray<PropertyProvider::Spacing, 200> spacingBuffer;
     if (spacingBuffer.AppendElements(aRange.Length(), fallible)) {
-      GetAdjustedSpacing(this, ligatureRange, aProvider,
+      GetAdjustedSpacing(this, ligatureRange, *aProvider,
                          spacingBuffer.Elements());
       for (i = 0; i < ligatureRange.Length(); ++i) {
         PropertyProvider::Spacing* space = &spacingBuffer[i];
