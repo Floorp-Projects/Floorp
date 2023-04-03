@@ -133,13 +133,11 @@ void VideoFrameContainer::SetCurrentFramesLocked(
     const nsTArray<ImageContainer::NonOwningImage>& aImages) {
   mMutex.AssertCurrentThreadOwns();
 
-  if (aIntrinsicSize != mIntrinsicSize) {
-    mIntrinsicSize = aIntrinsicSize;
-    RefPtr<VideoFrameContainer> self = this;
+  if (auto size = Some(aIntrinsicSize); size != mIntrinsicSize) {
+    mIntrinsicSize = size;
     mMainThread->Dispatch(NS_NewRunnableFunction(
-        "IntrinsicSizeChanged", [this, self, aIntrinsicSize]() {
-          mMainThreadState.mIntrinsicSize = aIntrinsicSize;
-          mMainThreadState.mIntrinsicSizeChanged = true;
+        "IntrinsicSizeChanged", [this, self = RefPtr(this), size]() {
+          mMainThreadState.mNewIntrinsicSize = size;
         }));
   }
 
@@ -246,14 +244,10 @@ void VideoFrameContainer::InvalidateWithFlags(uint32_t aFlags) {
   bool imageSizeChanged = mMainThreadState.mImageSizeChanged;
   mMainThreadState.mImageSizeChanged = false;
 
-  Maybe<nsIntSize> intrinsicSize;
-  if (mMainThreadState.mIntrinsicSizeChanged) {
-    intrinsicSize = Some(mMainThreadState.mIntrinsicSize);
-    mMainThreadState.mIntrinsicSizeChanged = false;
-  }
+  auto newIntrinsicSize = std::move(mMainThreadState.mNewIntrinsicSize);
 
   bool forceInvalidate = aFlags & INVALIDATE_FORCE;
-  mOwner->Invalidate(imageSizeChanged, intrinsicSize, forceInvalidate);
+  mOwner->Invalidate(imageSizeChanged, newIntrinsicSize, forceInvalidate);
 }
 
 }  // namespace mozilla

@@ -90,7 +90,7 @@ class VideoFrameContainer {
     return mImageContainer->GetDroppedImageCount();
   }
 
-  gfx::IntSize CurrentIntrinsicSize() {
+  Maybe<gfx::IntSize> CurrentIntrinsicSize() {
     MutexAutoLock lock(mMutex);
     return mIntrinsicSize;
   }
@@ -112,14 +112,14 @@ class VideoFrameContainer {
     // frame is fully invalidated instead of just invalidating for the image
     // change in the ImageLayer.
     bool mImageSizeChanged = false;
-    // The main thread mirror of the member of the same name below.
-    gfx::IntSize mIntrinsicSize;
-    // True when the intrinsic size has been changed by SetCurrentFrame() since
-    // the last call to Invalidate().
-    // The next call to Invalidate() will recalculate
-    // and update the intrinsic size on the element, request a frame reflow and
-    // then reset this flag.
-    bool mIntrinsicSizeChanged = false;
+    // The main thread mirror of the member of the same name below, in case it
+    // has changed.
+    // Set to some size when the intrinsic size has been changed by
+    // SetCurrentFrame() since the last call to Invalidate().
+    // The next call to Invalidate() will recalculate and update the intrinsic
+    // size on the element, request a frame reflow and then reset this to
+    // Nothing.
+    Maybe<gfx::IntSize> mNewIntrinsicSize;
   } mMainThreadState;
 
   Mutex mMutex;
@@ -128,7 +128,7 @@ class VideoFrameContainer {
   // This can differ from the Image's actual size when the media resource
   // specifies that the Image should be stretched to have the correct aspect
   // ratio.
-  gfx::IntSize mIntrinsicSize MOZ_GUARDED_BY(mMutex);
+  Maybe<gfx::IntSize> mIntrinsicSize MOZ_GUARDED_BY(mMutex);
   // We maintain our own mFrameID which is auto-incremented at every
   // SetCurrentFrame() or NewFrameID() call.
   ImageContainer::FrameID mFrameID;
