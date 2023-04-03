@@ -90,6 +90,11 @@ class VideoFrameContainer {
     return mImageContainer->GetDroppedImageCount();
   }
 
+  gfx::IntSize CurrentIntrinsicSize() {
+    MutexAutoLock lock(mMutex);
+    return mIntrinsicSize;
+  }
+
  protected:
   void SetCurrentFramesLocked(
       const gfx::IntSize& aIntrinsicSize,
