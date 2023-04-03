@@ -63,6 +63,18 @@ let BrowserManagerSidebar = {
             defaultPref.index.push(`w${elem}`)
         }
         Services.prefs.getDefaultBranch(null).setStringPref("floorp.browser.sidebar2.data", JSON.stringify( defaultPref))
+
+        if(Services.prefs.prefHasUserValue("floorp.browser.sidebar2.data") && Services.prefs.getStringPref("floorp.browser.sidebar2.data").includes("floorp//tst")){
+          let prefTemp = JSON.parse( Services.prefs.getStringPref("floorp.browser.sidebar2.data"))
+          let setPref = {data:{},index:[]}
+          for(let elem of prefTemp.index){
+            if(prefTemp.data[elem].url != "floorp//tst"){
+              setPref.data[elem] = prefTemp.data[elem]
+              setPref.index.push(elem)
+            }
+          }
+          Services.prefs.setStringPref("floorp.browser.sidebar2.data", JSON.stringify( setPref))
+        }
         
     },
     getFavicon:function(sbar_url,elem){
