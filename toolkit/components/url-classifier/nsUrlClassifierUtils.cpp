@@ -8,6 +8,7 @@
 #include "nsIURI.h"
 #include "nsIURIMutator.h"
 #include "nsIURL.h"
+#include "nsIXULRuntime.h"
 #include "nsUrlClassifierUtils.h"
 #include "nsTArray.h"
 #include "nsReadableUtils.h"

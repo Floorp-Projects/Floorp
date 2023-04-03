@@ -3,6 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "RiceDeltaDecoder.h"
+#include "mozilla/Logging.h"
+
+extern mozilla::LazyLogModule gUrlClassifierDbServiceLog;
+#define LOG(args) \
+  MOZ_LOG(gUrlClassifierDbServiceLog, mozilla::LogLevel::Debug, args)
 
 namespace {
 

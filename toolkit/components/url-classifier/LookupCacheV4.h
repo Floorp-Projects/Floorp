@@ -43,10 +43,10 @@ class LookupCacheV4 final : public LookupCache {
 
   virtual nsresult LoadMozEntries() override;
 
-  static const int VER;
-  static const uint32_t MAX_METADATA_VALUE_LENGTH;
-  static const uint32_t VLPSET_MAGIC;
-  static const uint32_t VLPSET_VERSION;
+  static constexpr int VER = 4;
+  static constexpr uint32_t MAX_METADATA_VALUE_LENGTH = 256;
+  static constexpr uint32_t VLPSET_MAGIC = 1;
+  static constexpr uint32_t VLPSET_VERSION = 0x36044a35;
 
  protected:
   virtual nsCString GetPrefixSetSuffix() const override;

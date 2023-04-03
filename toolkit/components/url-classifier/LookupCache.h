@@ -297,6 +297,11 @@ class LookupCache {
   FullHashResponseMap mFullHashCache;
 
   RefPtr<VariableLengthPrefixSet> mVLPrefixSet;
+
+  template <typename T>
+  static nsresult WriteValue(nsIOutputStream* aOutputStream, const T& aValue);
+  template <typename T>
+  static nsresult ReadValue(nsIInputStream* aInputStream, T& aValue);
 };
 
 typedef nsTArray<RefPtr<LookupCache>> LookupCacheArray;
