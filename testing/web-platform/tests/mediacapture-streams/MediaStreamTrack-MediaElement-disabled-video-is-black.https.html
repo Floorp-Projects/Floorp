@@ -22,9 +22,15 @@ MediaStream is rendered as blackness.</p>
 <script>
 const vid = document.getElementById("vid");
 const cv = document.createElement("canvas");
-promise_test(async () => {
+promise_test(async t => {
   await setMediaPermission("granted", ["camera"]);
   const stream = await navigator.mediaDevices.getUserMedia({video: true});
+  t.add_cleanup(() => {
+    for (let track of stream.getTracks()) {
+      track.stop();
+    }
+    vid.srcObject = null;
+  });
 
   stream.getTracks()[0].enabled = false;
   vid.srcObject = stream;
