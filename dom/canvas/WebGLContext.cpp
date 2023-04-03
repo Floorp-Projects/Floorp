@@ -285,9 +285,30 @@ bool WebGLContext::CreateAndInitGL(
   bool tryNativeGL = true;
   bool tryANGLE = false;
 
-  if (forceEnabled) {
-    flags |= gl::CreateContextFlags::FORCE_ENABLE_HARDWARE;
+  // -
+
+  if (StaticPrefs::webgl_forbid_hardware()) {
+    flags |= gl::CreateContextFlags::FORBID_HARDWARE;
   }
+  if (StaticPrefs::webgl_forbid_software()) {
+    flags |= gl::CreateContextFlags::FORBID_SOFTWARE;
+  }
+
+  if (forceEnabled) {
+    flags &= ~gl::CreateContextFlags::FORBID_HARDWARE;
+    flags &= ~gl::CreateContextFlags::FORBID_SOFTWARE;
+  }
+
+  if ((flags & gl::CreateContextFlags::FORBID_HARDWARE) &&
+      (flags & gl::CreateContextFlags::FORBID_SOFTWARE)) {
+    FailureReason reason;
+    reason.info = "Both hardware and software were forbidden by config.";
+    out_failReasons->push_back(reason);
+    GenerateWarning("%s", reason.info.BeginReading());
+    return false;
+  }
+
+  // -
 
   if (StaticPrefs::webgl_cgl_multithreaded()) {
     flags |= gl::CreateContextFlags::PREFER_MULTITHREADED;

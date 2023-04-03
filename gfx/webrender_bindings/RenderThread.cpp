@@ -1373,7 +1373,7 @@ static already_AddRefed<gl::GLContext> CreateGLContextCGL() {
   nsCString failureUnused;
   return gl::GLContextProvider::CreateHeadless(
       {gl::CreateContextFlags::ALLOW_OFFLINE_RENDERER |
-       gl::CreateContextFlags::FORCE_ENABLE_HARDWARE},
+       gl::CreateContextFlags::FORBID_SOFTWARE},
       &failureUnused);
 }
 #endif

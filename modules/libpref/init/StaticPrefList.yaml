@@ -14772,6 +14772,18 @@
   value: 10*1000*1000  # 10M as vec4 is count*4*4 = 160MB
   mirror: always
 
+# Only works on Mac for now.
+- name: webgl.forbid-hardware
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# Only works on Mac for now.
+- name: webgl.forbid-software
+  type: RelaxedAtomicBool
+  value: true  # It's generally better to encourage fallback to e.g. canvas2d.
+  mirror: always
+
 - name: webgl.force-enabled
   type: RelaxedAtomicBool
   value: false
