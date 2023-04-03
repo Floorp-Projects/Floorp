@@ -116,9 +116,8 @@ impl Log for LogSink {
                     level: record.metadata().level(),
                     message,
                 };
-                let _ =
-                    TaskRunnable::new("extension_storage_sync::Logger::log", Box::new(task))
-                        .and_then(|r| TaskRunnable::dispatch(r, logger.owning_thread()));
+                let _ = TaskRunnable::new("extension_storage_sync::Logger::log", Box::new(task))
+                    .and_then(|r| TaskRunnable::dispatch(r, logger.owning_thread()));
             }
         }
     }
