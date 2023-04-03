@@ -65,6 +65,9 @@ Please note that some targeting attributes require stricter controls on the tele
 * [inMr2022Holdback](#inmr2022holdback)
 * [distributionId](#distributionid)
 * [fxViewButtonAreaType](#fxviewbuttonareatype)
+* [hasMigratedBookmarks](#hasmigratedbookmarks)
+* [hasMigratedHistory](#hasmigratedhistory)
+* [hasMigratedPasswords](#hasmigratedpasswords)
 
 ## Detailed usage
 
@@ -953,3 +956,15 @@ is no distribution associated with the build.
 ### `fxViewButtonAreaType`
 
 A string of the name of the container where the Firefox View button is shown, null if the button has been removed.
+
+### `hasMigratedBookmarks`
+
+A boolean. `true` if the user ever used the Migration Wizard to migrate bookmarks.
+
+### `hasMigratedHistory`
+
+A boolean. `true` if the user ever used the Migration Wizard to migrate history.
+
+### `hasMigratedPasswords`
+
+A boolean. `true` if the user ever used the Migration Wizard to migrate passwords.

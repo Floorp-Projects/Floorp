@@ -1461,3 +1461,45 @@ add_task(async function test_addressesSaved() {
 
   await removeAutofillRecords();
 });
+
+add_task(async function test_migrationInteractions() {
+  await pushPrefs(
+    ["browser.migrate.interactions.bookmarks", false],
+    ["browser.migrate.interactions.history", false],
+    ["browser.migrate.interactions.passwords", false]
+  );
+
+  ok(!(await ASRouterTargeting.Environment.hasMigratedBookmarks));
+  ok(!(await ASRouterTargeting.Environment.hasMigratedHistory));
+  ok(!(await ASRouterTargeting.Environment.hasMigratedPasswords));
+
+  await pushPrefs(
+    ["browser.migrate.interactions.bookmarks", true],
+    ["browser.migrate.interactions.history", false],
+    ["browser.migrate.interactions.passwords", false]
+  );
+
+  ok(await ASRouterTargeting.Environment.hasMigratedBookmarks);
+  ok(!(await ASRouterTargeting.Environment.hasMigratedHistory));
+  ok(!(await ASRouterTargeting.Environment.hasMigratedPasswords));
+
+  await pushPrefs(
+    ["browser.migrate.interactions.bookmarks", true],
+    ["browser.migrate.interactions.history", true],
+    ["browser.migrate.interactions.passwords", false]
+  );
+
+  ok(await ASRouterTargeting.Environment.hasMigratedBookmarks);
+  ok(await ASRouterTargeting.Environment.hasMigratedHistory);
+  ok(!(await ASRouterTargeting.Environment.hasMigratedPasswords));
+
+  await pushPrefs(
+    ["browser.migrate.interactions.bookmarks", true],
+    ["browser.migrate.interactions.history", true],
+    ["browser.migrate.interactions.passwords", true]
+  );
+
+  ok(await ASRouterTargeting.Environment.hasMigratedBookmarks);
+  ok(await ASRouterTargeting.Environment.hasMigratedHistory);
+  ok(await ASRouterTargeting.Environment.hasMigratedPasswords);
+});
