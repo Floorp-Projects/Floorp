@@ -267,6 +267,11 @@ const nsRoleMapEntry* GetRoleMapFromIndex(uint8_t aRoleMapIndex);
 uint8_t GetIndexFromRoleMap(const nsRoleMapEntry* aRoleMap);
 
 /**
+ * Determine whether a role map entry index is valid.
+ */
+bool IsRoleMapIndexValid(uint8_t aRoleMapIndex);
+
+/**
  * Return accessible state from ARIA universal states applied to the given
  * element.
  */
