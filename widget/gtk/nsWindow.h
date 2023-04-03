@@ -155,6 +155,7 @@ class nsWindow final : public nsBaseWidget {
   void SetParent(nsIWidget* aNewParent) override;
   void SetModal(bool aModal) override;
   bool IsVisible() const override;
+  bool IsMapped() const override;
   void ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY) override;
   void SetSizeConstraints(const SizeConstraints& aConstraints) override;
   void LockAspectRatio(bool aShouldLock) override;
@@ -281,7 +282,6 @@ class nsWindow final : public nsBaseWidget {
   nsIFrame* GetFrame() const;
   nsWindow* GetEffectiveParent();
   bool IsDestroyed() const { return mIsDestroyed; }
-  bool IsMapped() const { return mIsMapped; }
   bool IsPopup() const;
   bool IsWaylandPopup() const;
   bool IsPIPWindow() const { return mIsPIPWindow; };
