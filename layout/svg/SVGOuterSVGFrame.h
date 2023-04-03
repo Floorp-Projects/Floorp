@@ -143,18 +143,17 @@ class SVGOuterSVGFrame final : public SVGDisplayContainerFrame,
    * being used as an image.
    */
   bool IsRootOfImage();
-  float ComputeFullZoom() const;
 
   void MaybeSendIntrinsicSizeAndRatioToEmbedder();
   void MaybeSendIntrinsicSizeAndRatioToEmbedder(Maybe<IntrinsicSize>,
                                                 Maybe<AspectRatio>);
 
-  float mFullZoom = 1.0f;
+  float mFullZoom;
 
-  bool mCallingReflowSVG = false;
-  bool mIsRootContent = false;
-  bool mIsInObjectOrEmbed = false;
-  bool mIsInIframe = false;
+  bool mCallingReflowSVG;
+  bool mIsRootContent;
+  bool mIsInObjectOrEmbed;
+  bool mIsInIframe;
 };
 
 ////////////////////////////////////////////////////////////////////////
