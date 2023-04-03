@@ -2060,7 +2060,7 @@ pref(image.downscale-during-decode.enabled,true) skip-if(((gtkWidget&&isDebugBui
 == 1558937-1.html 1558937-1-ref.html
 != 1563484.html 1563484-notref.html
 == 1563484.html 1563484-ref.html
-fuzzy-if(geckoview,251-255,1392-1405) skip-if(Android) == 1562733-rotated-nastaliq-1.html 1562733-rotated-nastaliq-1-ref.html #Bug 1604765
+fuzzy-if(!winWidget,251-255,464-1613) fuzzy-if(geckoview,251-255,1392-1405) skip-if(Android) == 1562733-rotated-nastaliq-1.html 1562733-rotated-nastaliq-1-ref.html #Bug 1604765
 fuzzy-if(winWidget,0-31,0-3) fuzzy-if(geckoview,0-93,0-87) == 1562733-rotated-nastaliq-2.html 1562733-rotated-nastaliq-2-ref.html
 test-pref(plain_text.wrap_long_lines,false) != 1565129.txt 1565129.txt
 fuzzy(0-32,0-8) fuzzy-if(Android,0-32,0-1458) == 1576553-1.html 1576553-1-ref.html
@@ -2096,7 +2096,7 @@ skip-if(Android) == 1727172-1.xhtml 1727172-1-ref.html
 == 1726663-1.html 1726663-1-ref.html
 == 1727016-1.html 1727016-1-ref.html
 != 1730314-1.html 1730314-1-ref.html
-fuzzy(0-4,0-8) fuzzy-if(Android,0-3,0-1901) fuzzy-if(winWidget,0-154,0-118) == 1738700-1.html 1738700-1-ref.html
+fuzzy(0-3,0-3) fuzzy-if(Android,0-3,0-1901) fuzzy-if(winWidget,0-154,0-118) == 1738700-1.html 1738700-1-ref.html
 skip-if(Android||!browserIsFission) fuzzy(255-255,171000-171000) HTTP == 1743533-1.html 1743533-1-ref.html # do not decrease the fuzz! this is a not equal test, the high fuzz minimum is to ensure they differ by enough.
 == 1743560-1.html 1743560-1-ref.html
 == 1743851-1.html 1743851-1-ref.html

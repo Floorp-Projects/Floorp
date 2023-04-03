@@ -23,9 +23,9 @@ test-pref(font.minimum-size.ja,16) == min-font-size-1.html min-font-size-1-ref.h
 load nested-ruby-1.html
 
 # Inter-character ruby is not enabled, and its spec is not considered stable enough.
-pref(layout.css.ruby.intercharacter.enabled,true) fuzzy-if(OSX||Android,0-198,0-70) == ruby-intercharacter-1.htm ruby-intercharacter-1-ref.htm
+pref(layout.css.ruby.intercharacter.enabled,true) fuzzy-if(Android,0-198,0-70) == ruby-intercharacter-1.htm ruby-intercharacter-1-ref.htm
 pref(layout.css.ruby.intercharacter.enabled,false) != ruby-intercharacter-1.htm ruby-intercharacter-1-ref.htm
-pref(layout.css.ruby.intercharacter.enabled,true) fuzzy-if(OSX||Android,0-83,0-186) == ruby-intercharacter-2.htm ruby-intercharacter-2-ref.htm
+pref(layout.css.ruby.intercharacter.enabled,true) == ruby-intercharacter-2.htm ruby-intercharacter-2-ref.htm
 pref(layout.css.ruby.intercharacter.enabled,false) != ruby-intercharacter-2.htm ruby-intercharacter-2-ref.htm
 
 # Testing a specific bug for RTL handling.
