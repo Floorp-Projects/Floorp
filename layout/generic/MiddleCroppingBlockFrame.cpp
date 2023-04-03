@@ -164,10 +164,11 @@ void MiddleCroppingBlockFrame::Reflow(nsPresContext* aPresContext,
     nscoord currentICoord = aReflowInput.mLineLayout
                                 ? aReflowInput.mLineLayout->GetCurrentICoord()
                                 : 0;
-    nscoord availSize = aReflowInput.AvailableISize() - currentICoord;
-    if (LinesBegin()->ISize() > availSize) {
+    const nscoord availSize = aReflowInput.AvailableISize() - currentICoord;
+    const nscoord sizeToFit = std::min(aReflowInput.ComputedISize(), availSize);
+    if (LinesBegin()->ISize() > sizeToFit) {
       // The value overflows - crop it and reflow again (once).
-      if (CropTextToWidth(*aReflowInput.mRenderingContext, availSize, value)) {
+      if (CropTextToWidth(*aReflowInput.mRenderingContext, sizeToFit, value)) {
         nsBlockFrame::DidReflow(aPresContext, &aReflowInput);
         aStatus.Reset();
         MarkSubtreeDirty();

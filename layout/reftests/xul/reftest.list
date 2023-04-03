@@ -8,6 +8,7 @@ fuzzy-if(xulRuntime.widgetToolkit=="gtk",0-1,0-11) fuzzy-if(winWidget,0-1,0-1) =
 skip-if(!cocoaWidget) == chrome://reftest/content/xul/mac-tab-toolbar.xhtml chrome://reftest/content/xul/mac-tab-toolbar-ref.xhtml
 != chrome://reftest/content/xul/tree-row-outline-1.xhtml chrome://reftest/content/xul/tree-row-outline-1-notref.xhtml
 == chrome://reftest/content/xul/text-crop.xhtml chrome://reftest/content/xul/text-crop-ref.xhtml
+== chrome://reftest/content/xul/text-crop-002.xhtml chrome://reftest/content/xul/text-crop-002-ref.xhtml
 == chrome://reftest/content/xul/text-small-caps-1.xhtml chrome://reftest/content/xul/text-small-caps-1-ref.xhtml
 fuzzy(0-1,0-2500) == chrome://reftest/content/xul/inactive-fixed-bg-bug1205630.xhtml inactive-fixed-bg-bug1205630-ref.html
 fuzzy(0-1,0-2500) == chrome://reftest/content/xul/inactive-fixed-bg-bug1272525.xhtml inactive-fixed-bg-bug1272525-ref.html
