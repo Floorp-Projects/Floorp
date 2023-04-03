@@ -394,6 +394,12 @@ var DevToolsServer = {
       connID = "server" + loader.id + ".conn" + this._nextConnID++ + ".";
     }
 
+    // Notify the platform code that DevTools is running in the current process
+    // when we are wiring the very first connection
+    if (!this.hasConnection()) {
+      ChromeUtils.notifyDevToolsOpened();
+    }
+
     const conn = new DevToolsServerConnection(
       connID,
       transport,
@@ -425,13 +431,20 @@ var DevToolsServer = {
     delete this._connections[connection.prefix];
     this.emit("connectionchange", "closed", connection);
 
+    const hasConnection = this.hasConnection();
+
+    // Notify the platform code that we stopped running DevTools code in the current process
+    if (!hasConnection) {
+      ChromeUtils.notifyDevToolsClosed();
+    }
+
     // If keepAlive isn't explicitely set to true, destroy the server once its
     // last connection closes. Multiple JSWindowActor may use the same DevToolsServer
     // and in this case, let the server destroy itself once the last connection closes.
     // Otherwise we set keepAlive to true when starting a listening server, receiving
     // client connections. Typically when running server on phones, or on desktop
     // via `--start-debugger-server`.
-    if (this.hasConnection() || this.keepAlive) {
+    if (hasConnection || this.keepAlive) {
       return;
     }
 
