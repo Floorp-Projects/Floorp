@@ -272,8 +272,11 @@ nsIFrame::SizeComputationResult SVGOuterSVGFrame::ComputeSize(
                  "root should not have auto-width/height containing block");
 
     if (!mIsInIframe) {
-      cbSize.ISize(aWritingMode) *= mFullZoom;
-      cbSize.BSize(aWritingMode) *= mFullZoom;
+      // NOTE: We can't just use mFullZoom because this can run before Reflow()
+      // updates it.
+      const float zoom = ComputeFullZoom();
+      cbSize.ISize(aWritingMode) *= zoom;
+      cbSize.BSize(aWritingMode) *= zoom;
     }
 
     // We also need to honour the width and height attributes' default values
