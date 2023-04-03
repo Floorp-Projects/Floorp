@@ -15,6 +15,7 @@
 #  include "PerformanceRecorder.h"
 #  include "PlatformDecoderModule.h"
 #  include "mozIGeckoMediaPluginService.h"
+#  include "nsHashtablesFwd.h"
 
 namespace mozilla {
 
@@ -91,6 +92,7 @@ class GMPVideoDecoder : public MediaDataDecoder,
   RefPtr<GMPCrashHelper> mCrashHelper;
 
   int64_t mLastStreamOffset = 0;
+  nsTHashMap<nsUint64HashKey, int64_t> mStreamOffsets;
   RefPtr<layers::ImageContainer> mImageContainer;
   RefPtr<layers::KnowsCompositor> mKnowsCompositor;
   PerformanceRecorderMulti<DecodeStage> mPerformanceRecorder;
