@@ -98,6 +98,10 @@ function withFullyLoadedAboutHome(taskFn) {
  *       timeout when shutting down. If false, such timeouts will result in
  *       test failures. Defaults to false.
  *
+ *     skipAboutHomeLoad (boolean, optional):
+ *       If true, doesn't automatically load about:home after the simulated
+ *       restart. Defaults to false.
+ *
  * @returns Promise
  * @resolves undefined
  *   Resolves once the restart simulation is complete, and the <xul:browser>
@@ -110,6 +114,7 @@ async function simulateRestart(
     withAutoShutdownWrite = true,
     ensureCacheWinsRace = true,
     expectTimeout = false,
+    skipAboutHomeLoad = false,
   } = {}
 ) {
   info("Simulating restart of the browser");
@@ -174,11 +179,13 @@ async function simulateRestart(
     }
   }
 
-  info("Waiting for about:home to load");
-  let loaded = BrowserTestUtils.browserLoaded(browser, false, "about:home");
-  BrowserTestUtils.loadURIString(browser, "about:home");
-  await loaded;
-  info("about:home loaded");
+  if (!skipAboutHomeLoad) {
+    info("Waiting for about:home to load");
+    let loaded = BrowserTestUtils.browserLoaded(browser, false, "about:home");
+    BrowserTestUtils.loadURIString(browser, "about:home");
+    await loaded;
+    info("about:home loaded");
+  }
 }
 
 /**

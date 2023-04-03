@@ -97,6 +97,7 @@ const AboutHomeStartupCacheChild = {
     PAGE_CONSUMED: 2,
     PAGE_AND_SCRIPT_CONSUMED: 3,
     FAILED: 4,
+    DISQUALIFIED: 5,
   },
   REQUEST_TYPE: {
     PAGE: 0,
@@ -381,6 +382,19 @@ const AboutHomeStartupCacheChild = {
       );
     }
   },
+
+  /**
+   * If the cache hasn't been used, transitions it into the DISQUALIFIED
+   * state so that it cannot be used. This should be called if it's been
+   * determined that about:newtab is going to be loaded, which doesn't
+   * use the cache.
+   */
+  disqualifyCache() {
+    if (this._state === this.STATES.UNCONSUMED) {
+      this.setState(this.STATES.DISQUALIFIED);
+      this.reportUsageResult(false /* success */);
+    }
+  },
 };
 
 /**
@@ -483,6 +497,20 @@ class AboutNewTabChildService extends BaseAboutNewTabService {
     );
     fileChannel.originalURI = uri;
     return fileChannel;
+  }
+
+  get defaultURL() {
+    if (IS_PRIVILEGED_PROCESS) {
+      // This is a bit of a hack, but attempting to load about:newtab will
+      // enter this code path in order to get at the expected URL, and we
+      // can use that to disqualify the about:home cache, since we don't
+      // use it for about:newtab loads, and we don't want the about:home
+      // cache to be wildly out of date when about:home is eventually
+      // loaded (for example, in the first new window).
+      AboutHomeStartupCacheChild.disqualifyCache();
+    }
+
+    return super.defaultURL;
   }
 }
 
