@@ -5,6 +5,7 @@
 import copy
 import enum
 import itertools
+import json
 import os
 import pathlib
 import re
@@ -12,6 +13,7 @@ import shutil
 import subprocess
 import sys
 from contextlib import redirect_stdout
+from datetime import datetime, timedelta
 
 from mozbuild.base import MozbuildObject
 from mozversioncontrol import get_repository_object
@@ -28,6 +30,7 @@ from .compare import CompareParser
 
 here = os.path.abspath(os.path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here)
+cache_file = pathlib.Path(build.statedir, "try_perf_revision_cache.json")
 
 PERFHERDER_BASE_URL = (
     "https://treeherder.mozilla.org/perfherder/"
@@ -1206,6 +1209,67 @@ class PerfParser(CompareParser):
 
         return categories
 
+    def check_cached_revision(base_commit=None):
+        """
+        If the base_commit parameter does not exist, remove expired cache data.
+        Cache data format:
+        {
+                base_commit[str]: {
+                        "base_revision_treeherder": "2b04563b5",
+                        "date": "2023-03-12"
+                }
+        }
+
+        :param base_commit: The base commit to search
+        :return: The base_revision_treeherder if found, else None
+        """
+        today = datetime.now()
+        expired_date = (today - timedelta(weeks=2)).strftime("%Y-%m-%d")
+        today = today.strftime("%Y-%m-%d")
+
+        if not cache_file.is_file():
+            return
+
+        with cache_file.open("r") as f:
+            cache_data = json.load(f)
+        # Remove expired cache data
+        if base_commit is None:
+            for cached_base_commit in list(cache_data):
+                if cache_data[cached_base_commit]["date"] < expired_date:
+                    cache_data.pop(cached_base_commit)
+            with cache_file.open("w") as f:
+                json.dump(cache_data, f, indent=4)
+
+        cached_base_commit = cache_data.get(base_commit, None)
+        if cached_base_commit:
+            return cached_base_commit["base_revision_treeherder"]
+
+    def save_revision_treeherder(base_commit, base_revision_treeherder):
+        """
+        Save the base revision of treeherder to the cache.
+        See "check_cached_revision" for more information about the data structure.
+
+        :param base_commit: The base commit to save
+        :param base_revision_treeherder: The base revision of treeherder to save
+        :return: None
+        """
+        today = datetime.now().strftime("%Y-%m-%d")
+        new_revision = {
+            "base_revision_treeherder": base_revision_treeherder,
+            "date": today,
+        }
+        cache_data = {}
+
+        if cache_file.is_file():
+            with cache_file.open("r") as f:
+                cache_data = json.load(f)
+                cache_data[base_commit] = new_revision
+        else:
+            cache_data[base_commit] = new_revision
+
+        with cache_file.open(mode="w") as f:
+            json.dump(cache_data, f, indent=4)
+
     def perf_push_to_try(
         selected_tasks, selected_categories, queries, try_config, dry_run, single_run
     ):
@@ -1240,7 +1304,8 @@ class PerfParser(CompareParser):
             # Push the base revision first. This lets the new revision appear
             # first in the Treeherder view, and it also lets us enhance the new
             # revision with information about the base run.
-            if not (dry_run or single_run):
+            base_revision_treeherder = PerfParser.check_cached_revision(compare_commit)
+            if not (dry_run or single_run or base_revision_treeherder):
                 vcs.update(compare_commit)
                 updated = True
 
@@ -1261,6 +1326,9 @@ class PerfParser(CompareParser):
                     )
 
                 base_revision_treeherder = log_processor.revision
+                PerfParser.save_revision_treeherder(
+                    compare_commit, base_revision_treeherder
+                )
 
                 # Reset updated since we no longer need to worry
                 # about failing while we're on a base commit
@@ -1482,6 +1550,7 @@ def run(**kwargs):
     # Make sure the categories are following
     # the rules we've setup
     PerfParser.run_category_checks()
+    PerfParser.check_cached_revision()
 
     revisions = PerfParser.run(
         profile=kwargs.get("try_config", {}).get("gecko-profile", False),
