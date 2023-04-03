@@ -220,41 +220,35 @@ static bool ResolveLinks(nsCOMPtr<nsIFile>& aPath) {
 bool GMPChild::GetUTF8LibPath(nsACString& aOutLibPath) {
   nsCOMPtr<nsIFile> libFile;
 
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-#  define GMP_DIAGNOSTIC_CRASH(explain)                    \
-    do {                                                   \
-      nsAutoString path;                                   \
-      if (!libFile || NS_FAILED(libFile->GetPath(path))) { \
-        path = mPluginPath;                                \
-      }                                                    \
-      CrashReporter::AnnotateCrashReport(                  \
-          CrashReporter::Annotation::GMPLibraryPath,       \
-          NS_ConvertUTF16toUTF8(path));                    \
-      MOZ_CRASH(explain);                                  \
-    } while (false)
-#else
-#  define GMP_ANNOTATE_DIAGNOSTIC_CRASH(explain) \
-    do {                                         \
-    } while (false)
-#endif
+#define GMP_PATH_CRASH(explain)                          \
+  do {                                                   \
+    nsAutoString path;                                   \
+    if (!libFile || NS_FAILED(libFile->GetPath(path))) { \
+      path = mPluginPath;                                \
+    }                                                    \
+    CrashReporter::AnnotateCrashReport(                  \
+        CrashReporter::Annotation::GMPLibraryPath,       \
+        NS_ConvertUTF16toUTF8(path));                    \
+    MOZ_CRASH(explain);                                  \
+  } while (false)
 
   nsresult rv = NS_NewLocalFile(mPluginPath, true, getter_AddRefs(libFile));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    GMP_DIAGNOSTIC_CRASH("Failed to create file for plugin path");
+    GMP_PATH_CRASH("Failed to create file for plugin path");
     return false;
   }
 
   nsCOMPtr<nsIFile> parent;
   rv = libFile->GetParent(getter_AddRefs(parent));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    GMP_DIAGNOSTIC_CRASH("Failed to get parent file for plugin file");
+    GMP_PATH_CRASH("Failed to get parent file for plugin file");
     return false;
   }
 
   nsAutoString parentLeafName;
   rv = parent->GetLeafName(parentLeafName);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    GMP_DIAGNOSTIC_CRASH("Failed to get leaf for plugin file");
+    GMP_PATH_CRASH("Failed to get leaf for plugin file");
     return false;
   }
 
@@ -272,7 +266,7 @@ bool GMPChild::GetUTF8LibPath(nsACString& aOutLibPath) {
 #endif
   rv = libFile->AppendRelativePath(binaryName);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    GMP_DIAGNOSTIC_CRASH("Failed to append lib to plugin file");
+    GMP_PATH_CRASH("Failed to append lib to plugin file");
     return false;
   }
 
@@ -281,24 +275,24 @@ bool GMPChild::GetUTF8LibPath(nsACString& aOutLibPath) {
   // denied errors.
   rv = libFile->Normalize();
   if (rv != NS_ERROR_FILE_ACCESS_DENIED && NS_WARN_IF(NS_FAILED(rv))) {
-    GMP_DIAGNOSTIC_CRASH("Failed to normalize plugin file");
+    GMP_PATH_CRASH("Failed to normalize plugin file");
     return false;
   }
 
   if (NS_WARN_IF(!ResolveLinks(libFile))) {
-    GMP_DIAGNOSTIC_CRASH("Failed to resolve links in plugin file");
+    GMP_PATH_CRASH("Failed to resolve links in plugin file");
     return false;
   }
 
   if (NS_WARN_IF(!FileExists(libFile))) {
-    GMP_DIAGNOSTIC_CRASH("Plugin file does not exist");
+    GMP_PATH_CRASH("Plugin file does not exist");
     return false;
   }
 
   nsAutoString path;
   rv = libFile->GetPath(path);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    GMP_DIAGNOSTIC_CRASH("Failed to get path for plugin file");
+    GMP_PATH_CRASH("Failed to get path for plugin file");
     return false;
   }
 
