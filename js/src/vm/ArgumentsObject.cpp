@@ -72,19 +72,6 @@ bool ArgumentsObject::markElementDeleted(JSContext* cx, uint32_t i) {
   return true;
 }
 
-static void CopyStackFrameArguments(const AbstractFramePtr frame,
-                                    GCPtr<Value>* dst, unsigned numActuals) {
-  MOZ_ASSERT_IF(frame.isInterpreterFrame(),
-                !frame.asInterpreterFrame()->runningInJit());
-
-  /* Copy arguments. */
-  Value* src = frame.argv();
-  Value* end = src + numActuals;
-  while (src != end) {
-    (dst++)->init(*src++);
-  }
-}
-
 /* static */
 void ArgumentsObject::MaybeForwardToCallObject(AbstractFramePtr frame,
                                                ArgumentsObject* obj,
@@ -125,7 +112,15 @@ struct CopyFrameArgs {
   explicit CopyFrameArgs(AbstractFramePtr frame) : frame_(frame) {}
 
   void copyActualArgs(GCPtr<Value>* dst, unsigned numActuals) const {
-    CopyStackFrameArguments(frame_, dst, numActuals);
+    MOZ_ASSERT_IF(frame_.isInterpreterFrame(),
+                  !frame_.asInterpreterFrame()->runningInJit());
+
+    // Copy arguments.
+    Value* src = frame_.argv();
+    Value* end = src + numActuals;
+    while (src != end) {
+      (dst++)->init(*src++);
+    }
   }
 
   /*
