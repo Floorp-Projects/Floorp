@@ -43,6 +43,16 @@ extern JS_PUBLIC_API already_AddRefed<JS::Stencil> CompileGlobalScriptToStencil(
     JS::NativeStackLimit stackLimit, JS::SourceText<char16_t>& srcBuf,
     js::UniquePtr<js::frontend::CompilationInput>& stencilInput);
 
+extern JS_PUBLIC_API already_AddRefed<JS::Stencil> CompileModuleScriptToStencil(
+    JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& options,
+    JS::NativeStackLimit stackLimit, JS::SourceText<mozilla::Utf8Unit>& srcBuf,
+    js::UniquePtr<js::frontend::CompilationInput>& stencilInput);
+
+extern JS_PUBLIC_API already_AddRefed<JS::Stencil> CompileModuleScriptToStencil(
+    JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& options,
+    JS::NativeStackLimit stackLimit, JS::SourceText<char16_t>& srcBuf,
+    js::UniquePtr<js::frontend::CompilationInput>& stencilInput);
+
 extern JS_PUBLIC_API bool PrepareForInstantiate(
     JS::FrontendContext* fc, js::frontend::CompilationInput& input,
     JS::Stencil& stencil, JS::InstantiationStorage& storage);
