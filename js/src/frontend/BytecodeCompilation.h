@@ -64,7 +64,7 @@ CompileGlobalScriptToExtensibleStencil(
 // PrepareForInstantiate is GC-free operation that can be performed
 // off-main-thread without parse global.
 [[nodiscard]] extern bool PrepareForInstantiate(
-    JSContext* cx, FrontendContext* fc, CompilationInput& input,
+    JSContext* maybeCx, FrontendContext* fc, CompilationInput& input,
     const CompilationStencil& stencil, CompilationGCOutput& gcOutput);
 
 [[nodiscard]] extern bool InstantiateStencils(JSContext* cx,

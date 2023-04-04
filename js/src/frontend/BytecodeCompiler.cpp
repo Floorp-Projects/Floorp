@@ -464,13 +464,13 @@ bool frontend::InstantiateStencils(JSContext* cx, CompilationInput& input,
   return true;
 }
 
-bool frontend::PrepareForInstantiate(JSContext* cx, FrontendContext* fc,
+bool frontend::PrepareForInstantiate(JSContext* maybeCx, FrontendContext* fc,
                                      CompilationInput& input,
                                      const CompilationStencil& stencil,
                                      CompilationGCOutput& gcOutput) {
   Maybe<AutoGeckoProfilerEntry> pseudoFrame;
-  if (cx) {
-    pseudoFrame.emplace(cx, "stencil instantiate",
+  if (maybeCx) {
+    pseudoFrame.emplace(maybeCx, "stencil instantiate",
                         JS::ProfilingCategoryPair::JS_Parsing);
   }
 
