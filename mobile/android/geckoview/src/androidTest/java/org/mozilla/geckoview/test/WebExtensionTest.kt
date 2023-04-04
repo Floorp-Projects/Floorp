@@ -219,6 +219,19 @@ class WebExtensionTest : BaseSessionTest() {
             }
         })
 
+        sessionRule.addExternalDelegateUntilTestEnd(
+            WebExtensionController.AddonManagerDelegate::class,
+            { delegate -> controller.setAddonManagerDelegate(delegate) },
+            { controller.setAddonManagerDelegate(null) },
+            object : WebExtensionController.AddonManagerDelegate {
+                @AssertCalled(count = 3)
+                override fun onEnabled(extension: WebExtension) {}
+
+                @AssertCalled(count = 3)
+                override fun onDisabled(extension: WebExtension) {}
+            }
+        )
+
         // First let's check that the color of the border is empty before loading
         // the WebExtension
         assertBodyBorderEqualTo("")
@@ -2506,6 +2519,9 @@ class WebExtensionTest : BaseSessionTest() {
             { delegate -> controller.setAddonManagerDelegate(delegate) },
             { controller.setAddonManagerDelegate(null) },
             object : WebExtensionController.AddonManagerDelegate {
+                @AssertCalled(count = 0)
+                override fun onEnabled(extension: WebExtension) {}
+
                 @AssertCalled(count = 1)
                 override fun onDisabled(extension: WebExtension) {}
             }
