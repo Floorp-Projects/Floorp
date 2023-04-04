@@ -12,6 +12,7 @@
 
 #include "NamespaceImports.h"
 
+#include "ds/LifoAlloc.h"
 #include "frontend/FunctionSyntaxKind.h"
 #include "js/SourceText.h"
 #include "js/Stack.h"      // JS::NativeStackLimit
@@ -132,21 +133,21 @@ ModuleObject* CompileModule(JSContext* cx, FrontendContext* fc,
 // compile a module as a user, use CompileModule above.
 already_AddRefed<CompilationStencil> ParseModuleToStencil(
     JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
-    CompilationInput& input, ScopeBindingCache* scopeCache,
-    JS::SourceText<char16_t>& srcBuf);
+    js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
+    ScopeBindingCache* scopeCache, JS::SourceText<char16_t>& srcBuf);
 already_AddRefed<CompilationStencil> ParseModuleToStencil(
     JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
-    CompilationInput& input, ScopeBindingCache* scopeCache,
-    JS::SourceText<mozilla::Utf8Unit>& srcBuf);
+    js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
+    ScopeBindingCache* scopeCache, JS::SourceText<mozilla::Utf8Unit>& srcBuf);
 
 UniquePtr<ExtensibleCompilationStencil> ParseModuleToExtensibleStencil(
     JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
-    CompilationInput& input, ScopeBindingCache* scopeCache,
-    JS::SourceText<char16_t>& srcBuf);
+    js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
+    ScopeBindingCache* scopeCache, JS::SourceText<char16_t>& srcBuf);
 UniquePtr<ExtensibleCompilationStencil> ParseModuleToExtensibleStencil(
     JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
-    CompilationInput& input, ScopeBindingCache* scopeCache,
-    JS::SourceText<mozilla::Utf8Unit>& srcBuf);
+    js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
+    ScopeBindingCache* scopeCache, JS::SourceText<mozilla::Utf8Unit>& srcBuf);
 
 //
 // Compile a single function. The source in srcBuf must match the ECMA-262
