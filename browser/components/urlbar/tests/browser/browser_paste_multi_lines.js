@@ -126,6 +126,14 @@ const TEST_DATA = [
       type: UrlbarUtils.RESULT_TYPE.URL,
     },
   },
+  {
+    input: "\r\n\r\n\r\n\r\n\r\n",
+    expected: {
+      urlbar: "",
+      autocomplete: "",
+      type: UrlbarUtils.RESULT_TYPE.SEARCH,
+    },
+  },
 ];
 
 add_setup(async function() {
@@ -186,6 +194,14 @@ async function assertResult(expected) {
     "Title of autocomplete is correct"
   );
   Assert.equal(result.type, expected.type, "Type of autocomplete is correct");
+
+  if (gURLBar.value) {
+    Assert.equal(gURLBar.getAttribute("usertyping"), "true");
+    Assert.ok(BrowserTestUtils.is_visible(gURLBar.goButton));
+  } else {
+    Assert.ok(!gURLBar.hasAttribute("usertyping"));
+    Assert.ok(BrowserTestUtils.is_hidden(gURLBar.goButton));
+  }
 }
 
 async function paste(input) {
