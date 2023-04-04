@@ -2891,11 +2891,10 @@ pictureinpicture:
     expiry_version: "never"
     release_channel_collection: opt-out
   opened_method:
-    objects: ["method"]
+    objects: ["toggle", "contextMenu", "urlBar"]
     description: >
       Records the method for opening the Picture-in-Picture window.
     extra_keys:
-      method: Will be "toggle" or "contextMenu"
       firstTimeToggle: If the user has used Picture-in-Picture before
     notification_emails:
       - mconley@mozilla.com
@@ -2907,11 +2906,9 @@ pictureinpicture:
     expiry_version: "never"
     release_channel_collection: opt-out
   closed_method:
-    objects: ["method"]
+    objects: ["closeButton", "unpip", "pagehide", "fullscreen", "setupFailure", "closePlayerShortcut", "contextMenu", "videoElRemove", "videoElEmptied", "urlBar"]
     description: >
       Records the method for closing the Picture-in-Picture window.
-    extra_keys:
-      reason: Will be "close-button", "unpip", "pagehide", "fullscreen", "setup-failure", "close-player-shortcut", "context-menu", "video-el-remove", or "video-el-emptied"
     notification_emails:
       - mconley@mozilla.com
       - mtigley@mozilla.com
@@ -2941,10 +2938,102 @@ pictureinpicture:
       - 1772546
     expiry_version: "never"
     release_channel_collection: opt-out
+  backward:
+    objects: ["player"]
+    description: >
+      Recorded when the user clicks the seek backward button
+    notification_emails:
+      - mconley@mozilla.com
+      - mhowell@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - "main"
+    bug_numbers:
+      - 1822395
+    expiry_version: "116"
+    release_channel_collection: opt-out
+  backward_sequence:
+    objects: ["player"]
+    description: >
+      Recorded when the user clicks the seek backward button 3 times in a 2 second interval
+    notification_emails:
+      - mconley@mozilla.com
+      - mhowell@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - "main"
+    bug_numbers:
+      - 1822395
+    expiry_version: "116"
+    release_channel_collection: opt-out
+  forward:
+    objects: ["player"]
+    description: >
+      Recorded when the user clicks the seek forward button
+    notification_emails:
+      - mconley@mozilla.com
+      - mhowell@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - "main"
+    bug_numbers:
+      - 1822395
+    expiry_version: "116"
+    release_channel_collection: opt-out
+  forward_sequence:
+    objects: ["player"]
+    description: >
+      Recorded when the user clicks the seek forward button 3 times in a 2 second interval
+    notification_emails:
+      - mconley@mozilla.com
+      - mhowell@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - "main"
+    bug_numbers:
+      - 1822395
+    expiry_version: "116"
+    release_channel_collection: opt-out
+  seek:
+    objects: ["player"]
+    description: >
+      Recorded when the user interacts with the seek bar
+    notification_emails:
+      - mconley@mozilla.com
+      - mhowell@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - "main"
+    bug_numbers:
+      - 1822395
+    expiry_version: "116"
+    release_channel_collection: opt-out
+  fullscreen:
+    objects: ["player"]
+    extra_keys:
+      enter: true if entering fullscreen, false if exiting fullscreen
+    description: >
+      Recorded when the user clicks the fullscreen button
+    notification_emails:
+      - mconley@mozilla.com
+      - mhowell@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - "main"
+    bug_numbers:
+      - 1822395
+    expiry_version: "never"
+    release_channel_collection: opt-out
 
 pictureinpicture.settings:
   enable:
-    objects: ["player"]
+    objects: ["settings"]
     description: Recorded when Picture-in-Picture is enabled.
     notification_emails:
       - mconley@mozilla.com
@@ -2957,8 +3046,10 @@ pictureinpicture.settings:
     expiry_version: "never"
     release_channel_collection: opt-out
   disable:
-    objects: ["player"]
-    description: Recorded when Picture-in-Picture is disabled.
+    objects: ["player", "settings"]
+    description: >
+      Recorded with "settings" object when Picture-in-Picture is disabled via settings
+      Recorded with "player" object when Picture-in-Picture is disabled via PiP context menu
     notification_emails:
       - mconley@mozilla.com
     products:
