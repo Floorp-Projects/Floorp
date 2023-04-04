@@ -563,11 +563,11 @@ describe("CFRPageActions", () => {
         // .toFixed to sort out some floating precision errors
         assert.equal(
           footerFilledStars.style.width,
-          `${(4.2 * 17).toFixed(1)}px`
+          `${(4.2 * 16).toFixed(1)}px`
         );
         assert.equal(
           footerEmptyStars.style.width,
-          `${(0.8 * 17).toFixed(1)}px`
+          `${(0.8 * 16).toFixed(1)}px`
         );
       });
       it("should add the number of users correctly", async () => {

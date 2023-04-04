@@ -379,10 +379,15 @@ class PageAction {
     const { rating } = content.addon;
     if (rating) {
       const MAX_RATING = 5;
-      const STARS_WIDTH = 17 * MAX_RATING;
+      const STARS_WIDTH = 16 * MAX_RATING;
       const calcWidth = stars => `${(stars / MAX_RATING) * STARS_WIDTH}px`;
-      footerFilledStars.style.width = calcWidth(rating);
-      footerEmptyStars.style.width = calcWidth(MAX_RATING - rating);
+      const filledWidth =
+        rating <= MAX_RATING ? calcWidth(rating) : calcWidth(MAX_RATING);
+      const emptyWidth =
+        rating <= MAX_RATING ? calcWidth(MAX_RATING - rating) : calcWidth(0);
+
+      footerFilledStars.style.width = filledWidth;
+      footerEmptyStars.style.width = emptyWidth;
 
       const ratingString = await this.getStrings(
         {
