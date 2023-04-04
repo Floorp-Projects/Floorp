@@ -1015,6 +1015,15 @@ struct ParamTraitsIPC<mozilla::UniqueMachSendRight> {
 template <class P>
 struct ParamTraitsMozilla : ParamTraitsIPC<P> {};
 
+// Sending-only specialization for mozilla::Span<T const>. Uses an identical
+// serialization format as `const nsTArray<T>&`.
+template <class T>
+struct ParamTraitsMozilla<mozilla::Span<const T>> {
+  static void Write(MessageWriter* writer, mozilla::Span<const T> p) {
+    WriteSequenceParam<const T>(writer, p.Elements(), p.Length());
+  }
+};
+
 template <>
 struct ParamTraitsMozilla<nsresult> {
   typedef nsresult param_type;

@@ -366,6 +366,7 @@ class Type(Node):
         ptrconstptr=False,
         ref=False,
         rvalref=False,
+        rightconst=False,
         hasimplicitcopyctor=True,
         T=None,
         inner=None,
@@ -384,6 +385,8 @@ class Type(Node):
           rvalref        => T&&
 
         Any type, naked or pointer, can be const (const T) or ref (T&)."""
+        # XXX(nika): This type is complex enough at this point, perhaps we
+        # should get "fancy with recursive types" to simplify it.
         assert isinstance(name, str)
         assert isinstance(const, bool)
         assert isinstance(ptr, bool)
@@ -391,6 +394,7 @@ class Type(Node):
         assert isinstance(ptrconstptr, bool)
         assert isinstance(ref, bool)
         assert isinstance(rvalref, bool)
+        assert isinstance(rightconst, bool)
         assert not isinstance(T, str)
 
         Node.__init__(self)
@@ -401,6 +405,7 @@ class Type(Node):
         self.ptrconstptr = ptrconstptr
         self.ref = ref
         self.rvalref = rvalref
+        self.rightconst = rightconst
         self.hasimplicitcopyctor = hasimplicitcopyctor
         self.T = T
         self.inner = inner
@@ -416,6 +421,7 @@ class Type(Node):
             ptrconstptr=self.ptrconstptr,
             ref=self.ref,
             rvalref=self.rvalref,
+            rightconst=self.rightconst,
             T=copy.deepcopy(self.T, memo),
             inner=copy.deepcopy(self.inner, memo),
         )
