@@ -122,6 +122,7 @@ class TracerActor extends Actor {
             styles: [],
             level: "logTrace",
             chromeContext: this.isChromeContext,
+            timeStamp: ChromeUtils.dateNow(),
           });
           this.throttleLogMessages();
         }
@@ -157,6 +158,7 @@ class TracerActor extends Actor {
           styles: CONSOLE_ARGS_STYLES,
           level: "logTrace",
           chromeContext: this.isChromeContext,
+          timeStamp: ChromeUtils.dateNow(),
           sourceId: script.source.id,
         });
         this.throttleLogMessages();

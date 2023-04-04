@@ -130,10 +130,16 @@ class ConsoleMessageWatcher {
       throw new Error("This target actor isn't listening to console messages");
     }
     this.onAvailable(
-      messages.map(message => ({
-        resourceType: CONSOLE_MESSAGE,
-        message: prepareConsoleMessageForRemote(this.targetActor, message),
-      }))
+      messages.map(message => {
+        if (!message.timeStamp) {
+          throw new Error("timeStamp property is mandatory");
+        }
+
+        return {
+          resourceType: CONSOLE_MESSAGE,
+          message: prepareConsoleMessageForRemote(this.targetActor, message),
+        };
+      })
     );
   }
 }
@@ -230,7 +236,7 @@ function prepareConsoleMessageForRemote(targetActor, message) {
     // messages emitted from Console.sys.mjs don't have a microSecondTimeStamp property
     timeStamp: message.microSecondTimeStamp
       ? message.microSecondTimeStamp / 1000
-      : message.timeStamp,
+      : message.timeStamp || ChromeUtils.dateNow(),
     sourceId: getActorIdForInternalSourceId(targetActor, message.sourceId),
     innerWindowID: message.innerID,
   };

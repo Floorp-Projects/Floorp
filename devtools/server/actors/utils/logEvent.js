@@ -78,6 +78,7 @@ function logEvent({ threadActor, frame, level, expression, bindings }) {
     columnNumber: column,
     arguments: value,
     level,
+    timeStamp: ChromeUtils.dateNow(),
     chromeContext:
       targetActor.actorID &&
       /conn\d+\.parentProcessTarget\d+/.test(targetActor.actorID),

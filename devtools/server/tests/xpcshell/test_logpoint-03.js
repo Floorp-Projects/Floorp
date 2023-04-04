@@ -59,6 +59,7 @@ add_task(
     if (lastMessage) {
       Assert.equal(lastMessage.level, "logPointError");
       Assert.equal(lastMessage.arguments[0], "c is not defined");
+      Assert.ok(/\d+\.\d+/.test(lastMessage.timeStamp));
     } else {
       Assert.equal(lastExpression.text, "console.log(...[c])");
       Assert.equal(lastExpression.lineNumber, 3);
