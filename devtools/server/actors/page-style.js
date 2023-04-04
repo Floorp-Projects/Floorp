@@ -691,7 +691,7 @@ class PageStyleActor extends Actor {
       case "::marker":
         return this._nodeIsListItem(node);
       case "::backdrop":
-        return node.matches(":fullscreen");
+        return node.matches(":modal");
       case "::cue":
         return node.nodeName == "VIDEO";
       case "::file-selector-button":

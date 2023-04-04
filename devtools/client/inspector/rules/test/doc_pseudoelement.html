@@ -110,6 +110,10 @@ p:first-letter {
     color: purple;
 }
 
+dialog::backdrop {
+    background-color: tomato;
+}
+
     </style>
   </head>
   <body>
@@ -135,5 +139,11 @@ p:first-letter {
         <li id="list" class="box">List element</li>
     </ol>
 
+    <dialog>In dialog</dialog>
+    <script>
+        "use strict";
+        // This is the only way to have the ::backdrop style to be applied
+        document.querySelector("dialog").showModal()
+    </script>
   </body>
 </html>

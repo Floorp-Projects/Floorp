@@ -21,6 +21,7 @@ add_task(async function() {
   await testParagraph(inspector, view);
   await testBody(inspector, view);
   await testList(inspector, view);
+  await testDialogBackdrop(inspector, view);
 });
 
 async function testTopLeft(inspector, view) {
@@ -283,6 +284,15 @@ async function testList(inspector, view) {
   assertGutters(view);
 }
 
+async function testDialogBackdrop(inspector, view) {
+  await assertPseudoElementRulesNumbers("dialog", inspector, view, {
+    elementRulesNb: 3,
+    backdropRules: 1,
+  });
+
+  assertGutters(view);
+}
+
 function convertTextPropsToString(textProps) {
   return textProps.map(t => t.name + ": " + t.value).join("; ");
 }
@@ -321,41 +331,44 @@ async function assertPseudoElementRulesNumbers(
     afterRules: elementStyle.rules.filter(
       rule => rule.pseudoElement === "::after"
     ),
+    backdropRules: elementStyle.rules.filter(
+      rule => rule.pseudoElement === "::backdrop"
+    ),
   };
 
   is(
     rules.elementRules.length,
-    ruleNbs.elementRulesNb,
+    ruleNbs.elementRulesNb || 0,
     selector + " has the correct number of non pseudo element rules"
   );
   is(
     rules.firstLineRules.length,
-    ruleNbs.firstLineRulesNb,
+    ruleNbs.firstLineRulesNb || 0,
     selector + " has the correct number of ::first-line rules"
   );
   is(
     rules.firstLetterRules.length,
-    ruleNbs.firstLetterRulesNb,
+    ruleNbs.firstLetterRulesNb || 0,
     selector + " has the correct number of ::first-letter rules"
   );
   is(
     rules.selectionRules.length,
-    ruleNbs.selectionRulesNb,
+    ruleNbs.selectionRulesNb || 0,
     selector + " has the correct number of ::selection rules"
   );
   is(
     rules.markerRules.length,
-    ruleNbs.markerRulesNb,
+    ruleNbs.markerRulesNb || 0,
     selector + " has the correct number of ::marker rules"
   );
   is(
     rules.beforeRules.length,
-    ruleNbs.beforeRulesNb,
+    ruleNbs.beforeRulesNb || 0,
     selector + " has the correct number of ::before rules"
   );
   is(
     rules.afterRules.length,
-    ruleNbs.afterRulesNb,
+    ruleNbs.afterRulesNb || 0,
     selector + " has the correct number of ::after rules"
   );
 
