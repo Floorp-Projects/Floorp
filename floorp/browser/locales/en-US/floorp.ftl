@@ -468,13 +468,6 @@ sidebar2-TST-sidebar = Tree Style Tab
 show-TST-sidebar =
   .tooltiptext = Show { sidebar2-TST-sidebar } Sidebar
 
-
-show-CustomURL-sidebar =
- .label = Show Custom URL Sidebar
-
-Edit-Custom-URL =
- .label = Edit Custom URL in Sidebar
-
 sidebar-add-button =
   .tooltiptext = { bsb-add }
 
