@@ -45,7 +45,11 @@ __FBSDID("$FreeBSD$");
 #if defined(_KERNEL) || defined(__Userspace__)
 
 #if !defined(__Userspace__)
+#if defined(__FreeBSD__)
+extern struct protosw sctp_seqpacket_protosw, sctp_stream_protosw;
+#else
 extern struct pr_usrreqs sctp_usrreqs;
+#endif
 #endif
 
 #define sctp_feature_on(inp, feature)  (inp->sctp_features |= feature)
@@ -372,6 +376,8 @@ int sctp_disconnect(struct socket *so);
 #if !defined(__Userspace__)
 #if defined(__APPLE__) && !defined(APPLE_LEOPARD) && !defined(APPLE_SNOWLEOPARD) && !defined(APPLE_LION) && !defined(APPLE_MOUNTAINLION) && !defined(APPLE_ELCAPITAN)
 void sctp_ctlinput(int, struct sockaddr *, void *, struct ifnet * SCTP_UNUSED);
+#elif defined(__FreeBSD__)
+ipproto_ctlinput_t sctp_ctlinput;
 #else
 void sctp_ctlinput(int, struct sockaddr *, void *);
 #endif
@@ -394,7 +400,9 @@ void sctp_input(struct mbuf *,...);
 void *sctp_ctlinput(int, struct sockaddr *, void *);
 int sctp_ctloutput(int, struct socket *, int, int, struct mbuf **);
 #endif
+#if !(defined(__FreeBSD__) && !defined(__Userspace__))
 void sctp_drain(void);
+#endif
 #if defined(__Userspace__)
 void sctp_init(uint16_t,
                int (*)(void *addr, void *buffer, size_t length, uint8_t tos, uint8_t set_df),

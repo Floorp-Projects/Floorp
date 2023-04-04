@@ -389,6 +389,96 @@ sctp_notify(struct sctp_inpcb *inp,
 #endif
 
 #if !defined(__Userspace__)
+#if defined(__FreeBSD__)
+void sctp_ctlinput(struct icmp *icmp)
+{
+	struct ip *inner_ip, *outer_ip;
+	struct sctphdr *sh;
+	struct sctp_inpcb *inp;
+	struct sctp_tcb *stcb;
+	struct sctp_nets *net;
+	struct sctp_init_chunk *ch;
+	struct sockaddr_in src, dst;
+
+	if (icmp_errmap(icmp) == 0)
+		return;
+
+	outer_ip = (struct ip *)((caddr_t)icmp - sizeof(struct ip));
+	inner_ip = &icmp->icmp_ip;
+	sh = (struct sctphdr *)((caddr_t)inner_ip + (inner_ip->ip_hl << 2));
+	memset(&src, 0, sizeof(struct sockaddr_in));
+	src.sin_family = AF_INET;
+	src.sin_len = sizeof(struct sockaddr_in);
+	src.sin_port = sh->src_port;
+	src.sin_addr = inner_ip->ip_src;
+	memset(&dst, 0, sizeof(struct sockaddr_in));
+	dst.sin_family = AF_INET;
+	dst.sin_len = sizeof(struct sockaddr_in);
+	dst.sin_port = sh->dest_port;
+	dst.sin_addr = inner_ip->ip_dst;
+	/*
+	 * 'dst' holds the dest of the packet that failed to be sent.
+	 * 'src' holds our local endpoint address. Thus we reverse
+	 * the dst and the src in the lookup.
+	 */
+	inp = NULL;
+	net = NULL;
+	stcb = sctp_findassociation_addr_sa((struct sockaddr *)&dst,
+	                                    (struct sockaddr *)&src,
+	                                    &inp, &net, 1,
+	                                    SCTP_DEFAULT_VRFID);
+	if ((stcb != NULL) &&
+	    (net != NULL) &&
+	    (inp != NULL)) {
+		/* Check the verification tag */
+		if (ntohl(sh->v_tag) != 0) {
+			/*
+			 * This must be the verification tag used for
+			 * sending out packets. We don't consider
+			 * packets reflecting the verification tag.
+			 */
+			if (ntohl(sh->v_tag) != stcb->asoc.peer_vtag) {
+				SCTP_TCB_UNLOCK(stcb);
+				return;
+			}
+		} else {
+			if (ntohs(outer_ip->ip_len) >=
+			    sizeof(struct ip) +
+			    8 + (inner_ip->ip_hl << 2) + 20) {
+				/*
+				 * In this case we can check if we
+				 * got an INIT chunk and if the
+				 * initiate tag matches.
+				 */
+				ch = (struct sctp_init_chunk *)(sh + 1);
+				if ((ch->ch.chunk_type != SCTP_INITIATION) ||
+				    (ntohl(ch->init.initiate_tag) != stcb->asoc.my_vtag)) {
+					SCTP_TCB_UNLOCK(stcb);
+					return;
+				}
+			} else {
+				SCTP_TCB_UNLOCK(stcb);
+				return;
+			}
+		}
+		sctp_notify(inp, stcb, net,
+		            icmp->icmp_type,
+		            icmp->icmp_code,
+		            ntohs(inner_ip->ip_len),
+		            (uint32_t)ntohs(icmp->icmp_nextmtu));
+	} else {
+		if ((stcb == NULL) && (inp != NULL)) {
+			/* reduce ref-count */
+			SCTP_INP_WLOCK(inp);
+			SCTP_INP_DECR_REF(inp);
+			SCTP_INP_WUNLOCK(inp);
+		}
+		if (stcb) {
+			SCTP_TCB_UNLOCK(stcb);
+		}
+	}
+}
+#else
 void
 #if defined(__APPLE__) && !defined(APPLE_LEOPARD) && !defined(APPLE_SNOWLEOPARD) && !defined(APPLE_LION) && !defined(APPLE_MOUNTAINLION) && !defined(APPLE_ELCAPITAN)
 sctp_ctlinput(int cmd, struct sockaddr *sa, void *vip, struct ifnet *ifp SCTP_UNUSED)
@@ -396,24 +486,20 @@ sctp_ctlinput(int cmd, struct sockaddr *sa, void *vip, struct ifnet *ifp SCTP_UN
 sctp_ctlinput(int cmd, struct sockaddr *sa, void *vip)
 #endif
 {
-#if defined(__FreeBSD__) && !defined(__Userspace__)
-	struct ip *outer_ip;
-#endif
 	struct ip *inner_ip;
 	struct sctphdr *sh;
 	struct icmp *icmp;
 	struct sctp_inpcb *inp;
 	struct sctp_tcb *stcb;
 	struct sctp_nets *net;
-#if defined(__FreeBSD__) && !defined(__Userspace__)
-	struct sctp_init_chunk *ch;
-#endif
 	struct sockaddr_in src, dst;
 
+#if !defined(__FreeBSD__) && !defined(__Userspace__)
 	if (sa->sa_family != AF_INET ||
 	    ((struct sockaddr_in *)sa)->sin_addr.s_addr == INADDR_ANY) {
 		return;
 	}
+#endif
 	if (PRC_IS_REDIRECT(cmd)) {
 		vip = NULL;
 	} else if ((unsigned)cmd >= PRC_NCMDS || inetctlerrmap[cmd] == 0) {
@@ -423,9 +509,6 @@ sctp_ctlinput(int cmd, struct sockaddr *sa, void *vip)
 		inner_ip = (struct ip *)vip;
 		icmp = (struct icmp *)((caddr_t)inner_ip -
 		    (sizeof(struct icmp) - sizeof(struct ip)));
-#if defined(__FreeBSD__) && !defined(__Userspace__)
-		outer_ip = (struct ip *)((caddr_t)icmp - sizeof(struct ip));
-#endif
 		sh = (struct sctphdr *)((caddr_t)inner_ip + (inner_ip->ip_hl << 2));
 		memset(&src, 0, sizeof(struct sockaddr_in));
 		src.sin_family = AF_INET;
@@ -467,38 +550,13 @@ sctp_ctlinput(int cmd, struct sockaddr *sa, void *vip)
 					return;
 				}
 			} else {
-#if defined(__FreeBSD__) && !defined(__Userspace__)
-				if (ntohs(outer_ip->ip_len) >=
-				    sizeof(struct ip) +
-				    8 + (inner_ip->ip_hl << 2) + 20) {
-					/*
-					 * In this case we can check if we
-					 * got an INIT chunk and if the
-					 * initiate tag matches.
-					 */
-					ch = (struct sctp_init_chunk *)(sh + 1);
-					if ((ch->ch.chunk_type != SCTP_INITIATION) ||
-					    (ntohl(ch->init.initiate_tag) != stcb->asoc.my_vtag)) {
-						SCTP_TCB_UNLOCK(stcb);
-						return;
-					}
-				} else {
-					SCTP_TCB_UNLOCK(stcb);
-					return;
-				}
-#else
 				SCTP_TCB_UNLOCK(stcb);
 				return;
-#endif
 			}
 			sctp_notify(inp, stcb, net,
 			            icmp->icmp_type,
 			            icmp->icmp_code,
-#if defined(__FreeBSD__) && !defined(__Userspace__)
-			            ntohs(inner_ip->ip_len),
-#else
 			            inner_ip->ip_len,
-#endif
 			            (uint32_t)ntohs(icmp->icmp_nextmtu));
 #if defined(__Userspace__)
 			if (((stcb->sctp_ep->sctp_flags & SCTP_PCB_FLAGS_SOCKET_GONE) == 0) &&
@@ -532,6 +590,7 @@ sctp_ctlinput(int cmd, struct sockaddr *sa, void *vip)
 	}
 	return;
 }
+#endif
 #endif
 #endif
 
@@ -7736,6 +7795,21 @@ sctp_setopt(struct socket *so, int optname, void *optval, size_t optsize,
 		}
 		break;
 	}
+	case SCTP_ACCEPT_ZERO_CHECKSUM:
+	{
+		uint32_t *value;
+
+		SCTP_CHECK_AND_CAST(value, optval, uint32_t, optsize);
+		SCTP_INP_WLOCK(inp);
+		if (*value != 0) {
+			inp->zero_checksum = 1;
+		} else {
+			inp->zero_checksum = 0;
+		}
+		SCTP_INP_WUNLOCK(inp);
+		break;
+	}
+
 	default:
 		SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_USRREQ, ENOPROTOOPT);
 		error = ENOPROTOOPT;
@@ -8809,27 +8883,43 @@ sctp_peeraddr(struct socket *so, struct mbuf *nam)
 }
 
 #if !defined(__Userspace__)
-struct pr_usrreqs sctp_usrreqs = {
 #if defined(__FreeBSD__)
-	.pru_abort = sctp_abort,
-	.pru_accept = sctp_accept,
-	.pru_attach = sctp_attach,
-	.pru_bind = sctp_bind,
-	.pru_connect = sctp_connect,
-	.pru_control = in_control,
-	.pru_close = sctp_close,
-	.pru_detach = sctp_close,
-	.pru_sopoll = sopoll_generic,
-	.pru_flush = sctp_flush,
-	.pru_disconnect = sctp_disconnect,
-	.pru_listen = sctp_listen,
-	.pru_peeraddr = sctp_peeraddr,
-	.pru_send = sctp_sendm,
-	.pru_shutdown = sctp_shutdown,
-	.pru_sockaddr = sctp_ingetaddr,
-	.pru_sosend = sctp_sosend,
-	.pru_soreceive = sctp_soreceive
-#elif defined(__APPLE__)
+#define	SCTP_PROTOSW						\
+	.pr_protocol =	IPPROTO_SCTP,				\
+	.pr_ctloutput =	sctp_ctloutput,				\
+	.pr_abort =	sctp_abort,				\
+	.pr_accept =	sctp_accept,				\
+	.pr_attach =	sctp_attach,				\
+	.pr_bind =	sctp_bind,				\
+	.pr_connect =	sctp_connect,				\
+	.pr_control =	in_control,				\
+	.pr_close =	sctp_close,				\
+	.pr_detach =	sctp_close,				\
+	.pr_sopoll =	sopoll_generic,				\
+	.pr_flush =	sctp_flush,				\
+	.pr_disconnect = sctp_disconnect,			\
+	.pr_listen =	sctp_listen,				\
+	.pr_peeraddr =	sctp_peeraddr,				\
+	.pr_send =	sctp_sendm,				\
+	.pr_shutdown =	sctp_shutdown,				\
+	.pr_sockaddr =	sctp_ingetaddr,				\
+	.pr_sosend =	sctp_sosend,				\
+	.pr_soreceive =	sctp_soreceive				\
+
+struct protosw sctp_seqpacket_protosw = {
+	.pr_type =	SOCK_SEQPACKET,
+	.pr_flags =	PR_WANTRCVD,
+	SCTP_PROTOSW
+};
+
+struct protosw sctp_stream_protosw = {
+	.pr_type =      SOCK_STREAM,
+	.pr_flags =	PR_CONNREQUIRED | PR_WANTRCVD,
+	SCTP_PROTOSW
+};
+#else
+struct pr_usrreqs sctp_usrreqs = {
+#if defined(__APPLE__)
 	.pru_abort = sctp_abort,
 	.pru_accept = sctp_accept,
 	.pru_attach = sctp_attach,
@@ -8876,127 +8966,7 @@ struct pr_usrreqs sctp_usrreqs = {
 	sctp_close
 #endif
 };
-#elif !defined(__Userspace__)
-int
-sctp_usrreq(so, req, m, nam, control)
-	struct socket *so;
-	int req;
-	struct mbuf *m, *nam, *control;
-{
-	struct proc *p = curproc;
-	int error;
-	int family;
-	struct sctp_inpcb *inp = (struct sctp_inpcb *)so->so_pcb;
-
-	error = 0;
-	family = so->so_proto->pr_domain->dom_family;
-	if (req == PRU_CONTROL) {
-		switch (family) {
-		case PF_INET:
-			error = in_control(so, (long)m, (caddr_t)nam,
-			    (struct ifnet *)control);
-			break;
-#ifdef INET6
-		case PF_INET6:
-			error = in6_control(so, (long)m, (caddr_t)nam,
-			    (struct ifnet *)control, p);
-			break;
 #endif
-		default:
-			SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_USRREQ, EAFNOSUPPORT);
-			error = EAFNOSUPPORT;
-		}
-		return (error);
-	}
-	switch (req) {
-	case PRU_ATTACH:
-		error = sctp_attach(so, family, p);
-		break;
-	case PRU_DETACH:
-		error = sctp_detach(so);
-		break;
-	case PRU_BIND:
-		if (nam == NULL) {
-			SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_USRREQ, EINVAL);
-			return (EINVAL);
-		}
-		error = sctp_bind(so, nam, p);
-		break;
-	case PRU_LISTEN:
-		error = sctp_listen(so, p);
-		break;
-	case PRU_CONNECT:
-		if (nam == NULL) {
-			SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_USRREQ, EINVAL);
-			return (EINVAL);
-		}
-		error = sctp_connect(so, nam, p);
-		break;
-	case PRU_DISCONNECT:
-		error = sctp_disconnect(so);
-		break;
-	case PRU_ACCEPT:
-		if (nam == NULL) {
-			SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_USRREQ, EINVAL);
-			return (EINVAL);
-		}
-		error = sctp_accept(so, nam);
-		break;
-	case PRU_SHUTDOWN:
-		error = sctp_shutdown(so);
-		break;
-
-	case PRU_RCVD:
-		/*
-		 * For Open and Net BSD, this is real ugly. The mbuf *nam
-		 * that is passed (by soreceive()) is the int flags c ast as
-		 * a (mbuf *) yuck!
-		 */
-		break;
-
-	case PRU_SEND:
-		/* Flags are ignored */
-		{
-			struct sockaddr *addr;
-
-			if (nam == NULL)
-				addr = NULL;
-			else
-				addr = mtod(nam, struct sockaddr *);
-
-			error = sctp_sendm(so, 0, m, addr, control, p);
-		}
-		break;
-	case PRU_ABORT:
-		error = sctp_abort(so);
-		break;
-
-	case PRU_SENSE:
-		error = 0;
-		break;
-	case PRU_RCVOOB:
-		SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_USRREQ, EAFNOSUPPORT);
-		error = EAFNOSUPPORT;
-		break;
-	case PRU_SENDOOB:
-		SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_USRREQ, EAFNOSUPPORT);
-		error = EAFNOSUPPORT;
-		break;
-	case PRU_PEERADDR:
-		error = sctp_peeraddr(so, nam);
-		break;
-	case PRU_SOCKADDR:
-		error = sctp_ingetaddr(so, nam);
-		break;
-	case PRU_SLOWTIMO:
-		error = 0;
-		break;
-	default:
-		break;
-	}
-	return (error);
-}
-
 #endif
 #endif
 

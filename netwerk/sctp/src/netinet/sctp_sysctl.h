@@ -111,7 +111,6 @@ struct sctp_sysctl {
 	uint32_t sctp_rttvar_eqret;
 	uint32_t sctp_steady_step;
 	uint32_t sctp_use_dccc_ecn;
-	uint32_t sctp_diag_info_code;
 #if defined(SCTP_LOCAL_TRACE_BUF)
 #if defined(_WIN32) && !defined(__Userspace__)
 	struct sctp_log *sctp_log;
@@ -126,6 +125,8 @@ struct sctp_sysctl {
 	uint32_t sctp_initial_cwnd;
 	uint32_t sctp_blackhole;
 	uint32_t sctp_sendall_limit;
+	uint32_t sctp_diag_info_code;
+	uint32_t sctp_ootb_with_zero_cksum;
 #if defined(SCTP_DEBUG)
 	uint32_t sctp_debug_on;
 #endif
@@ -575,6 +576,11 @@ struct sctp_sysctl {
 #define SCTPCTL_DIAG_INFO_CODE_MIN	0
 #define SCTPCTL_DIAG_INFO_CODE_MAX	65535
 #define SCTPCTL_DIAG_INFO_CODE_DEFAULT	0
+
+#define SCTPCTL_OOTB_WITH_ZERO_CKSUM_DESC	"Accept OOTB packets with zero checksum"
+#define SCTPCTL_OOTB_WITH_ZERO_CKSUM_MIN	0
+#define SCTPCTL_OOTB_WITH_ZERO_CKSUM_MAX	1
+#define SCTPCTL_OOTB_WITH_ZERO_CKSUM_DEFAULT	0
 
 #if defined(SCTP_DEBUG)
 /* debug: Configure debug output */

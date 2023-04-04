@@ -1146,6 +1146,7 @@ USRSCTP_SYSCTL_DECL(sctp_steady_step)
 USRSCTP_SYSCTL_DECL(sctp_use_dccc_ecn)
 USRSCTP_SYSCTL_DECL(sctp_buffer_splitting)
 USRSCTP_SYSCTL_DECL(sctp_initial_cwnd)
+USRSCTP_SYSCTL_DECL(sctp_ootb_with_zero_cksum)
 #ifdef SCTP_DEBUG
 USRSCTP_SYSCTL_DECL(sctp_debug_on)
 /* More specific values can be found in sctp_constants, but
@@ -1304,7 +1305,9 @@ struct sctpstat {
 	uint32_t  sctps_send_cwnd_avoid;     /* Send cwnd full  avoidance, already max burst inflight to net */
 	uint32_t  sctps_fwdtsn_map_over;     /* number of map array over-runs via fwd-tsn's */
 	uint32_t  sctps_queue_upd_ecne;      /* Number of times we queued or updated an ECN chunk on send queue */
-	uint32_t  sctps_reserved[31];        /* Future ABI compat - remove int's from here when adding new */
+	uint32_t  sctps_recvzerocrc;         /* Number of accepted packets with zero CRC */
+	uint32_t  sctps_sendzerocrc;         /* Number of packets sent with zero CRC */
+	uint32_t  sctps_reserved[29];        /* Future ABI compat - remove int's from here when adding new */
 };
 
 void

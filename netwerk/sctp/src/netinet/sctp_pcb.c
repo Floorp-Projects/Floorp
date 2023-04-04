@@ -2797,6 +2797,7 @@ sctp_inpcb_alloc(struct socket *so, uint32_t vrf_id)
 	inp->nrsack_supported = (uint8_t)SCTP_BASE_SYSCTL(sctp_nrsack_enable);
 	inp->pktdrop_supported = (uint8_t)SCTP_BASE_SYSCTL(sctp_pktdrop_enable);
 	inp->idata_supported = 0;
+	inp->zero_checksum = 0;
 
 #if defined(__FreeBSD__) && !defined(__Userspace__)
 	inp->fibnum = so->so_fibnum;
@@ -7411,6 +7412,14 @@ sctp_load_addresses_from_init(struct sctp_tcb *stcb, struct mbuf *m,
 		} else if (ptype == SCTP_PRSCTP_SUPPORTED) {
 			/* Peer supports pr-sctp */
 			peer_supports_prsctp = 1;
+		} else if (ptype == SCTP_ZERO_CHECKSUM_ACCEPTABLE) {
+			/*
+			 * Only send zero checksums if the upper layer has
+			 * also enabled the support for this.
+			 */
+			if (stcb->asoc.zero_checksum == 1) {
+				stcb->asoc.zero_checksum = 2;
+			}
 		} else if (ptype == SCTP_SUPPORTED_CHUNK_EXT) {
 			/* A supported extension chunk */
 			struct sctp_supported_chunk_types_param *pr_supported;
@@ -7949,16 +7958,18 @@ sctp_drain_mbufs(struct sctp_tcb *stcb)
 	 */
 }
 
+#if defined(__FreeBSD__) && !defined(__Userspace__)
+static void
+#else
 void
+#endif
 sctp_drain(void)
 {
-	/*
-	 * We must walk the PCB lists for ALL associations here. The system
-	 * is LOW on MBUF's and needs help. This is where reneging will
-	 * occur. We really hope this does NOT happen!
-	 */
 #if defined(__FreeBSD__) && !defined(__Userspace__)
+	struct epoch_tracker et;
 	VNET_ITERATOR_DECL(vnet_iter);
+
+	NET_EPOCH_ENTER(et);
 #else
 	struct sctp_inpcb *inp;
 	struct sctp_tcb *stcb;
@@ -7968,6 +7979,11 @@ sctp_drain(void)
 		return;
 	}
 #endif
+	/*
+	 * We must walk the PCB lists for ALL associations here. The system
+	 * is LOW on MBUF's and needs help. This is where reneging will
+	 * occur. We really hope this does NOT happen!
+	 */
 #if defined(__FreeBSD__) && !defined(__Userspace__)
 	VNET_LIST_RLOCK_NOSLEEP();
 	VNET_FOREACH(vnet_iter) {
@@ -7982,6 +7998,7 @@ sctp_drain(void)
 #ifdef VIMAGE
 			continue;
 #else
+			NET_EPOCH_EXIT(et);
 			return;
 #endif
 		}
@@ -8003,8 +8020,13 @@ sctp_drain(void)
 		CURVNET_RESTORE();
 	}
 	VNET_LIST_RUNLOCK_NOSLEEP();
+	NET_EPOCH_EXIT(et);
 #endif
 }
+#if defined(__FreeBSD__) && !defined(__Userspace__)
+EVENTHANDLER_DEFINE(vm_lowmem, sctp_drain, NULL, LOWMEM_PRI_DEFAULT);
+EVENTHANDLER_DEFINE(mbuf_lowmem, sctp_drain, NULL, LOWMEM_PRI_DEFAULT);
+#endif
 
 /*
  * start a new iterator

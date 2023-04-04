@@ -534,8 +534,6 @@ sctp_process_init_ack(struct mbuf *m, int iphlen, int offset,
 			       SCTP_FROM_SCTP_INPUT,
 			       __LINE__);
 	}
-	stcb->asoc.overall_error_count = 0;
-	net->error_count = 0;
 
 	/*
 	 * Cancel the INIT timer, We do this first before queueing the
@@ -547,8 +545,12 @@ sctp_process_init_ack(struct mbuf *m, int iphlen, int offset,
 	    asoc->primary_destination, SCTP_FROM_SCTP_INPUT + SCTP_LOC_3);
 
 	/* calculate the RTO */
-	sctp_calculate_rto(stcb, asoc, net, &asoc->time_entered,
-	                   SCTP_RTT_FROM_NON_DATA);
+	if (asoc->overall_error_count == 0) {
+		sctp_calculate_rto(stcb, asoc, net, &asoc->time_entered,
+		                   SCTP_RTT_FROM_NON_DATA);
+	}
+	stcb->asoc.overall_error_count = 0;
+	net->error_count = 0;
 #if defined(__Userspace__)
 	if (stcb->sctp_ep->recv_callback) {
 		if (stcb->sctp_socket) {
@@ -1498,7 +1500,6 @@ sctp_process_cookie_existing(struct mbuf *m, int iphlen, int offset,
 	struct sctp_queued_to_read *sq, *nsq;
 	struct sctp_nets *net;
 	struct mbuf *op_err;
-	struct timeval old;
 	int init_offset, initack_offset, i;
 	int retval;
 	int spec_flag = 0;
@@ -1669,16 +1670,7 @@ sctp_process_cookie_existing(struct mbuf *m, int iphlen, int offset,
 				}
 				/* notify upper layer */
 				*notification = SCTP_NOTIFY_ASSOC_UP;
-				/*
-				 * since we did not send a HB make sure we
-				 * don't double things
-				 */
-				old.tv_sec = cookie->time_entered.tv_sec;
-				old.tv_usec = cookie->time_entered.tv_usec;
 				net->hb_responded = 1;
-				sctp_calculate_rto(stcb, asoc, net, &old,
-				                   SCTP_RTT_FROM_NON_DATA);
-
 				if (stcb->asoc.sctp_autoclose_ticks &&
 				    (sctp_is_feature_on(inp, SCTP_PCB_FLAGS_AUTOCLOSE))) {
 					sctp_timer_start(SCTP_TIMER_TYPE_AUTOCLOSE,
@@ -2081,6 +2073,7 @@ sctp_process_cookie_existing(struct mbuf *m, int iphlen, int offset,
 			}
 			SCTP_ZONE_FREE(SCTP_BASE_INFO(ipi_zone_asconf_ack), aack);
 		}
+		asoc->zero_checksum = cookie->zero_checksum;
 
 		/* process the INIT-ACK info (my info) */
 		asoc->my_vtag = ntohl(initack_cp->init.initiate_tag);
@@ -2317,6 +2310,7 @@ sctp_process_cookie_new(struct mbuf *m, int iphlen, int offset,
 #endif
 		return (NULL);
 	}
+	asoc->zero_checksum = cookie->zero_checksum;
 	/* process the INIT-ACK info (my info) */
 	asoc->my_rwnd = ntohl(initack_cp->init.a_rwnd);
 
@@ -2512,17 +2506,11 @@ sctp_process_cookie_new(struct mbuf *m, int iphlen, int offset,
 	(void)SCTP_GETTIME_TIMEVAL(&stcb->asoc.time_entered);
 	*netp = sctp_findnet(stcb, init_src);
 	if (*netp != NULL) {
-		struct timeval old;
-
 		/*
 		 * Since we did not send a HB, make sure we don't double
 		 * things.
 		 */
 		(*netp)->hb_responded = 1;
-		/* Calculate the RTT. */
-		old.tv_sec = cookie->time_entered.tv_sec;
-		old.tv_usec = cookie->time_entered.tv_usec;
-		sctp_calculate_rto(stcb, asoc, *netp, &old, SCTP_RTT_FROM_NON_DATA);
 	}
 	/* respond with a COOKIE-ACK */
 	sctp_send_cookie_ack(stcb);
@@ -3188,7 +3176,6 @@ sctp_handle_cookie_ack(struct sctp_cookie_ack_chunk *cp SCTP_UNUSED,
 			       SCTP_FROM_SCTP_INPUT,
 			       __LINE__);
 	}
-	asoc->overall_error_count = 0;
 	sctp_stop_all_cookie_timers(stcb);
 	/* process according to association state */
 	if (SCTP_GET_STATE(stcb) == SCTP_STATE_COOKIE_ECHOED) {
@@ -3207,6 +3194,12 @@ sctp_handle_cookie_ack(struct sctp_cookie_ack_chunk *cp SCTP_UNUSED,
 			sctp_calculate_rto(stcb, asoc, net, &asoc->time_entered,
 			                   SCTP_RTT_FROM_NON_DATA);
 		}
+		/*
+		 * Since we did not send a HB make sure we don't double
+		 * things.
+		 */
+		asoc->overall_error_count = 0;
+		net->hb_responded = 1;
 		(void)SCTP_GETTIME_TIMEVAL(&asoc->time_entered);
 		sctp_ulp_notify(SCTP_NOTIFY_ASSOC_UP, stcb, 0, NULL, SCTP_SO_NOT_LOCKED);
 		if ((stcb->sctp_ep->sctp_flags & SCTP_PCB_FLAGS_TCPTYPE) ||
@@ -3231,11 +3224,6 @@ sctp_handle_cookie_ack(struct sctp_cookie_ack_chunk *cp SCTP_UNUSED,
 			SCTP_SOCKET_UNLOCK(so, 1);
 #endif
 		}
-		/*
-		 * since we did not send a HB make sure we don't double
-		 * things
-		 */
-		net->hb_responded = 1;
 
 		if (stcb->asoc.state & SCTP_STATE_CLOSED_SOCKET) {
 			/* We don't need to do the asconf thing,
@@ -5746,78 +5734,136 @@ sctp_common_input_processing(struct mbuf **mm, int iphlen, int offset, int lengt
 #endif
                              uint32_t vrf_id, uint16_t port)
 {
-	uint32_t high_tsn;
-	int fwd_tsn_seen = 0, data_processed = 0;
-	struct mbuf *m = *mm, *op_err;
 	char msg[SCTP_DIAG_INFO_LEN];
-	int un_sent;
-	int cnt_ctrl_ready = 0;
+	struct mbuf *m = *mm, *op_err;
 	struct sctp_inpcb *inp = NULL, *inp_decr = NULL;
 	struct sctp_tcb *stcb = NULL;
 	struct sctp_nets *net = NULL;
 #if defined(__Userspace__)
 	struct socket *upcall_socket = NULL;
 #endif
+	uint32_t high_tsn;
+	uint32_t cksum_in_hdr;
+	int un_sent;
+	int cnt_ctrl_ready = 0;
+	int fwd_tsn_seen = 0, data_processed = 0;
+	bool cksum_validated, stcb_looked_up;
 
 	SCTP_STAT_INCR(sctps_recvdatagrams);
 #ifdef SCTP_AUDITING_ENABLED
 	sctp_audit_log(0xE0, 1);
 	sctp_auditing(0, inp, stcb, net);
 #endif
-	if (compute_crc != 0) {
-		uint32_t check, calc_check;
 
-		check = sh->checksum;
-		sh->checksum = 0;
-		calc_check = sctp_calculate_cksum(m, iphlen);
-		sh->checksum = check;
-		if (calc_check != check) {
-			SCTPDBG(SCTP_DEBUG_INPUT1, "Bad CSUM on SCTP packet calc_check:%x check:%x  m:%p mlen:%d iphlen:%d\n",
-			        calc_check, check, (void *)m, length, iphlen);
-			stcb = sctp_findassociation_addr(m, offset, src, dst,
-			                                 sh, ch, &inp, &net, vrf_id);
-#if defined(INET) || defined(INET6)
-			if ((ch->chunk_type != SCTP_INITIATION) &&
-			    (net != NULL) && (net->port != port)) {
-				if (net->port == 0) {
-					/* UDP encapsulation turned on. */
-					net->mtu -= sizeof(struct udphdr);
-					if (stcb->asoc.smallest_mtu > net->mtu) {
-						sctp_pathmtu_adjustment(stcb, net->mtu, true);
+	stcb_looked_up = false;
+	if (compute_crc != 0) {
+		cksum_validated = false;
+		cksum_in_hdr = sh->checksum;
+		if (cksum_in_hdr != htonl(0)) {
+			uint32_t cksum_calculated;
+
+validate_cksum:
+			sh->checksum = 0;
+			cksum_calculated = sctp_calculate_cksum(m, iphlen);
+			sh->checksum = cksum_in_hdr;
+			if (cksum_calculated != cksum_in_hdr) {
+				if (stcb_looked_up) {
+					/*
+					 * The packet has a zero checksum, which
+					 * is not the correct CRC, no stcb has
+					 * been found or an stcb has been found
+					 * but an incorrect zero checksum is not
+					 * acceptable.
+					 */
+					KASSERT(cksum_in_hdr == htonl(0),
+					        ("cksum in header not zero: %x",
+					         ntohl(cksum_in_hdr)));
+					if ((inp == NULL) &&
+					    (SCTP_BASE_SYSCTL(sctp_ootb_with_zero_cksum) == 1)) {
+						/*
+						 * This is an OOTB packet,
+						 * depending on the sysctl
+						 * variable, pretend that the
+						 * checksum is acceptable,
+						 * to allow an appropriate
+						 * response (ABORT, for examlpe)
+						 * to be sent.
+						 */
+						KASSERT(stcb == NULL,
+						        ("stcb is %p", stcb));
+						SCTP_STAT_INCR(sctps_recvzerocrc);
+						goto cksum_validated;
 					}
-				} else if (port == 0) {
-					/* UDP encapsulation turned off. */
-					net->mtu += sizeof(struct udphdr);
-					/* XXX Update smallest_mtu */
+				} else {
+					stcb = sctp_findassociation_addr(m, offset, src, dst,
+					                                 sh, ch, &inp, &net, vrf_id);
 				}
-				net->port = port;
-			}
+				SCTPDBG(SCTP_DEBUG_INPUT1, "Bad cksum in SCTP packet:%x calculated:%x m:%p mlen:%d iphlen:%d\n",
+				        ntohl(cksum_in_hdr), ntohl(cksum_calculated), (void *)m, length, iphlen);
+#if defined(INET) || defined(INET6)
+				if ((ch->chunk_type != SCTP_INITIATION) &&
+				    (net != NULL) && (net->port != port)) {
+					if (net->port == 0) {
+						/* UDP encapsulation turned on. */
+						net->mtu -= sizeof(struct udphdr);
+						if (stcb->asoc.smallest_mtu > net->mtu) {
+							sctp_pathmtu_adjustment(stcb, net->mtu, true);
+						}
+					} else if (port == 0) {
+						/* UDP encapsulation turned off. */
+						net->mtu += sizeof(struct udphdr);
+						/* XXX Update smallest_mtu */
+					}
+					net->port = port;
+				}
 #endif
 #if defined(__FreeBSD__) && !defined(__Userspace__)
-			if (net != NULL) {
-				net->flowtype = mflowtype;
-				net->flowid = mflowid;
-			}
-			SCTP_PROBE5(receive, NULL, stcb, m, stcb, sh);
+				if (net != NULL) {
+					net->flowtype = mflowtype;
+					net->flowid = mflowid;
+				}
+				SCTP_PROBE5(receive, NULL, stcb, m, stcb, sh);
 #endif
-			if ((inp != NULL) && (stcb != NULL)) {
-				sctp_send_packet_dropped(stcb, net, m, length, iphlen, 1);
-				sctp_chunk_output(inp, stcb, SCTP_OUTPUT_FROM_INPUT_ERROR, SCTP_SO_NOT_LOCKED);
-			} else if ((inp != NULL) && (stcb == NULL)) {
-				inp_decr = inp;
+				if ((inp != NULL) && (stcb != NULL)) {
+					if (stcb->asoc.pktdrop_supported) {
+						sctp_send_packet_dropped(stcb, net, m, length, iphlen, 1);
+						sctp_chunk_output(inp, stcb, SCTP_OUTPUT_FROM_INPUT_ERROR, SCTP_SO_NOT_LOCKED);
+					}
+				} else if ((inp != NULL) && (stcb == NULL)) {
+					inp_decr = inp;
+				}
+				SCTP_STAT_INCR(sctps_badsum);
+				SCTP_STAT_INCR_COUNTER32(sctps_checksumerrors);
+				goto out;
+			} else {
+				cksum_validated = true;
 			}
-			SCTP_STAT_INCR(sctps_badsum);
-			SCTP_STAT_INCR_COUNTER32(sctps_checksumerrors);
-			goto out;
+		}
+		KASSERT(cksum_validated || cksum_in_hdr == htonl(0),
+		        ("cksum 0x%08x not zero and not validated", ntohl(cksum_in_hdr)));
+		if (!cksum_validated) {
+			stcb = sctp_findassociation_addr(m, offset, src, dst,
+			                                 sh, ch, &inp, &net, vrf_id);
+			stcb_looked_up = true;
+			if ((stcb == NULL) || (stcb->asoc.zero_checksum == 0)) {
+				goto validate_cksum;
+			}
+			SCTP_STAT_INCR(sctps_recvzerocrc);
 		}
 	}
+cksum_validated:
 	/* Destination port of 0 is illegal, based on RFC4960. */
-	if (sh->dest_port == 0) {
+	if (sh->dest_port == htons(0)) {
 		SCTP_STAT_INCR(sctps_hdrops);
+		if ((stcb == NULL) && (inp != NULL)) {
+			inp_decr = inp;
+		}
 		goto out;
 	}
-	stcb = sctp_findassociation_addr(m, offset, src, dst,
-	                                 sh, ch, &inp, &net, vrf_id);
+	if (!stcb_looked_up) {
+		stcb = sctp_findassociation_addr(m, offset, src, dst,
+		                                 sh, ch, &inp, &net, vrf_id);
+	}
 #if defined(INET) || defined(INET6)
 	if ((ch->chunk_type != SCTP_INITIATION) &&
 	    (net != NULL) && (net->port != port)) {
@@ -5842,11 +5888,9 @@ sctp_common_input_processing(struct mbuf **mm, int iphlen, int offset, int lengt
 	}
 #endif
 	if (inp == NULL) {
-#if defined(__FreeBSD__) && !defined(__Userspace__)
-		SCTP_PROBE5(receive, NULL, stcb, m, stcb, sh);
-#endif
 		SCTP_STAT_INCR(sctps_noport);
 #if defined(__FreeBSD__) && !defined(__Userspace__)
+		SCTP_PROBE5(receive, NULL, stcb, m, stcb, sh);
 		if (badport_bandlim(BANDLIM_SCTP_OOTB) < 0) {
 			goto out;
 		}
