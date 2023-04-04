@@ -86,63 +86,6 @@ add_task(async function check_fluent_ids() {
  * through importing those logins.
  */
 add_task(async function import_suggestion_wizard() {
-  // We currently support both the legacy and the new migration wizard. The
-  // legacy migration wizard opens in a top-level XUL dialog. The new migration
-  // wizard opens as an HTML dialog within about:preferences.
-  //
-  // This test intentionally doesn't test either of those wizards in-depth -
-  // however, it tests that these wizards open if there's more than one
-  // profile that the user might want to import passwords from.
-  //
-  // This variable is true if the new migration wizard that loads in
-  // about:preferences is being used.
-  //
-  // The legacy wizard codepaths can be removed once bug 1824851 lands.
-  const USING_LEGACY_WIZARD = !Services.prefs.getBoolPref(
-    "browser.migrate.content-modal.enabled",
-    false
-  );
-
-  // A helper function for this test that returns a Promise that resolves
-  // once either the legacy or new migration wizard appears.
-  //
-  // @returns {Promise<Element>}
-  //   Resolves to the dialog window in the legacy case, and the
-  //   about:preferences tab otherwise.
-  let waitForWizard = async () => {
-    if (USING_LEGACY_WIZARD) {
-      return BrowserTestUtils.waitForCondition(
-        () => Services.wm.getMostRecentWindow("Browser:MigrationWizard"),
-        "Wait for migration wizard to open"
-      );
-    }
-
-    let wizardReady = BrowserTestUtils.waitForEvent(
-      window,
-      "MigrationWizard:Ready"
-    );
-    let wizardTab = await BrowserTestUtils.waitForNewTab(gBrowser, url => {
-      return url.startsWith("about:preferences");
-    });
-    await wizardReady;
-
-    return wizardTab;
-  };
-
-  // Closes the migration wizard.
-  //
-  // @param {Element} wizardWindowOrTab
-  //   The XUL dialog window for the migration wizard in the legacy case, and
-  //   the about:preferences tab otherwise.
-  // @returns {Promise<undefined>}
-  let closeWizard = wizardWindowOrTab => {
-    if (USING_LEGACY_WIZARD) {
-      return BrowserTestUtils.closeWindow(wizardWindowOrTab);
-    }
-
-    return BrowserTestUtils.removeTab(wizardWindowOrTab);
-  };
-
   let wizard;
 
   await BrowserTestUtils.withNewTab(
@@ -169,7 +112,7 @@ add_task(async function import_suggestion_wizard() {
       gTestMigrator.profiles.length = 2;
 
       info("Clicking on importable suggestion");
-      const wizardPromise = waitForWizard();
+      const wizardPromise = BrowserTestUtils.waitForMigrationWizard(window);
 
       // The modal window blocks execution, so avoid calling directly.
       executeSoon(() => EventUtils.synthesizeMouseAtCenter(importableItem, {}));
@@ -189,7 +132,7 @@ add_task(async function import_suggestion_wizard() {
   // Close the wizard in the end of the test. If we close the wizard when the tab
   // is still opened, the username field will be focused again, which triggers another
   // importable suggestion.
-  await closeWizard(wizard);
+  await BrowserTestUtils.closeMigrationWizard(wizard);
 });
 
 add_task(async function import_suggestion_learn_more() {
