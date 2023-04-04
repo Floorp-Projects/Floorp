@@ -5,6 +5,7 @@
 loader: gecko_taskgraph.loader.single_dep:loader
 
 transforms:
+    - gecko_taskgraph.transforms.release:run_on_releases
     - gecko_taskgraph.transforms.beetmover_apt:transforms
     - gecko_taskgraph.transforms.task:transforms
 
@@ -19,3 +20,7 @@ only-for-build-platforms:
     - linux64-shippable/opt
     - linux-devedition/opt
     - linux64-devedition/opt
+
+job-template:
+    run-on-releases:
+        - nightly
