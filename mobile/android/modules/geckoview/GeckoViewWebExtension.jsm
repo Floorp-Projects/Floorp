@@ -540,6 +540,28 @@ class ExtensionPromptObserver {
 
 new ExtensionPromptObserver();
 
+class AddonManagerListener {
+  constructor() {
+    lazy.AddonManager.addAddonListener(this);
+  }
+
+  async onDisabled(aAddon) {
+    debug`onDisabled ${aAddon.id}`;
+
+    const extension = await exportExtension(
+      aAddon,
+      aAddon.userPermissions,
+      /* aSourceURI */ null
+    );
+    lazy.EventDispatcher.instance.sendRequestForResult({
+      type: "GeckoView:WebExtension:OnDisabled",
+      extension,
+    });
+  }
+}
+
+new AddonManagerListener();
+
 class MobileWindowTracker extends EventEmitter {
   constructor() {
     super();
