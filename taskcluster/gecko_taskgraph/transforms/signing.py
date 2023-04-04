@@ -16,7 +16,10 @@ from gecko_taskgraph.util.attributes import (
     copy_attributes_from_dependent_job,
     release_level,
 )
-from gecko_taskgraph.util.scriptworker import get_signing_cert_scope_per_platform
+from gecko_taskgraph.util.scriptworker import (
+    add_scope_prefix,
+    get_signing_cert_scope_per_platform,
+)
 
 transforms = TransformSequence()
 
@@ -207,6 +210,9 @@ def make_task_description(config, jobs):
         # build-mac-{signing,notarization} uses signingscript instead of iscript
         if "macosx" in build_platform and config.kind == "build-mac-notarization":
             task["worker"]["mac-behavior"] = "apple_notarization"
+            task["scopes"] = [
+                add_scope_prefix(config, "signing:cert:release-apple-notarization")
+            ]
         elif "macosx" in build_platform:
             # iscript overrides
             shippable = "false"
