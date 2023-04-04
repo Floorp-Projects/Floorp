@@ -47,11 +47,25 @@ var origins =
    //['https://example.com:443'],
    //['https://sub1.test1.example.com:443'],
 
-window.addEventListener("message", function(e) {
-  gen.next(e.data);
-});
 
-gen = runTest();
+function initTest() {
+  // Allow all cookies, then do the actual test initialization
+  SpecialPowers.pushPrefEnv({
+    "set": [
+      // Some of this test relies on redirecting to data: URLs from http.
+      ["network.allow_redirect_to_data", true],
+      ]
+  }).then(initTestCallback);
+}
+
+function initTestCallback() {
+  window.addEventListener("message", function(e) {
+    gen.next(e.data);
+  });
+
+  gen = runTest();
+  gen.next();
+}
 
 function* runTest() {
   var loader = document.getElementById('loader');
@@ -158,9 +172,8 @@ function* runTest() {
   SimpleTest.finish();
 }
 
-addLoadEvent(function() {
-  gen.next();
-});
+addLoadEvent(initTest);
+
 </script>
 </pre>
 </body>
