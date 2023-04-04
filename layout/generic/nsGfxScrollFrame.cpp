@@ -6934,8 +6934,6 @@ bool ScrollFrameHelper::ReflowFinished() {
       scrollPos = GetVisualViewportOffset();
     }
 
-    // If modifying the logic here, be sure to modify the corresponding
-    // compositor-side calculation in ScrollThumbUtils::ApplyTransformForAxis().
     AutoWeakFrame weakFrame(mOuter);
     if (vScroll) {
       const double kScrollMultiplier =
