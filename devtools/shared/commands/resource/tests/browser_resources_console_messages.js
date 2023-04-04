@@ -304,6 +304,11 @@ function getExpectedRuntimeConsoleCalls(documentFilename) {
     {
       ...defaultProperties,
       level: "log",
+      arguments: ["BigInt 123 and 456"],
+    },
+    {
+      ...defaultProperties,
+      level: "log",
       arguments: ["message with ", "style"],
       styles: ["color: blue;", "background: red; font-size: 2em;"],
     },
@@ -555,6 +560,7 @@ async function logRuntimeMessages(browser, executeInIframe) {
     console.log("Float from not a number: %f", "foo");
     console.log("Float from string: %f", "1.2");
     console.log("Float from number: %f", 1.3);
+    console.log("BigInt %d and %i", 123n, 456n);
     console.log(
       "%cmessage with %cstyle",
       "color: blue;",

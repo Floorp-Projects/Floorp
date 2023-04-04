@@ -1981,6 +1981,20 @@ static bool ProcessArguments(JSContext* aCx, const Sequence<JS::Value>& aData,
         if (index < aData.Length()) {
           JS::Rooted<JS::Value> value(aCx, aData[index++]);
 
+          if (value.isBigInt()) {
+            JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, value));
+            if (NS_WARN_IF(!jsString)) {
+              return false;
+            }
+
+            nsAutoJSString v;
+            if (NS_WARN_IF(!v.init(aCx, jsString))) {
+              return false;
+            }
+            output.Append(v);
+            break;
+          }
+
           int32_t v;
           if (NS_WARN_IF(!JS::ToInt32(aCx, value, &v))) {
             return false;
