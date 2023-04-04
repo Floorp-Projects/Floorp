@@ -15,7 +15,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   element: "chrome://remote/content/marionette/element.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   evaluate: "chrome://remote/content/marionette/evaluate.sys.mjs",
-  event: "chrome://remote/content/marionette/event.sys.mjs",
   interaction: "chrome://remote/content/marionette/interaction.sys.mjs",
   json: "chrome://remote/content/marionette/json.sys.mjs",
   legacyaction: "chrome://remote/content/marionette/legacyaction.sys.mjs",
@@ -528,13 +527,8 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
     if (this.actionState === null) {
       return;
     }
-    this.actionState.inputsToCancel.reverse();
-    await this.actionState.inputsToCancel.dispatch(
-      this.actionState,
-      this.document.defaultView
-    );
+    await this.actionState.release(this.document.defaultView);
     this.actionState = null;
-    lazy.event.DoubleClickTracker.resetClick();
   }
 
   /*

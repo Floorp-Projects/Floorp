@@ -86,6 +86,18 @@ action.State = class {
   }
 
   /**
+   * Reset state stored in this object.
+   * It is an error to use the State object after calling release().
+   *
+   * @param {WindowProxy} win Current window global.
+   */
+  async release(win) {
+    this.inputsToCancel.reverse();
+    await this.inputsToCancel.dispatch(this, win);
+    lazy.event.DoubleClickTracker.resetClick();
+  }
+
+  /**
    * Get the state for a given input source.
    *
    * @param {string} id Input source id.

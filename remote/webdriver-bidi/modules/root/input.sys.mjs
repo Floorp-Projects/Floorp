@@ -8,6 +8,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
+  error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
   WindowGlobalMessageHandler:
     "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.sys.mjs",
@@ -37,6 +38,49 @@ class InputModule extends Module {
       params: {
         actions,
       },
+    });
+
+    return {};
+  }
+
+  /**
+   * Reset the input state in the provided browsing context.
+   *
+   * @param {Object=} options
+   * @param {string} options.context
+   *     Id of the browsing context to reset the input state.
+   *
+   * @throws {InvalidArgumentError}
+   *     If <var>context</var> is not valid type.
+   * @throws {NoSuchFrameError}
+   *     If the browsing context cannot be found.
+   */
+  async releaseActions(options = {}) {
+    this.assertExperimentalCommandsEnabled("input.releaseActions");
+    const { context: contextId } = options;
+
+    lazy.assert.string(
+      contextId,
+      `Expected "context" to be a string, got ${contextId}`
+    );
+
+    const context = lazy.TabManager.getBrowsingContextById(contextId);
+    if (!context) {
+      throw new lazy.error.NoSuchFrameError(
+        `Browsing context with id ${contextId} not found`
+      );
+    }
+
+    // Bug 1821460: Fetch top-level browsing context.
+
+    await this.messageHandler.forwardCommand({
+      moduleName: "input",
+      commandName: "releaseActions",
+      destination: {
+        type: lazy.WindowGlobalMessageHandler.type,
+        id: context.id,
+      },
+      params: {},
     });
 
     return {};
