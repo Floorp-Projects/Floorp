@@ -367,7 +367,7 @@ inline WasmGcObject* WasmGcObject::create(
   }
 
   obj->initShape(typeDefData->shape);
-  obj->typeDef_ = typeDefData->typeDef;
+  obj->superTypeVector_ = typeDefData->superTypeVector;
 
   js::gc::gcprobes::CreateObject(obj);
   probes::CreateObject(cx, obj);
@@ -418,7 +418,8 @@ bool WasmGcObject::loadValue(JSContext* cx,
   return ToJSValue(cx, arrayObj.data_ + offset.get(), type, vp);
 }
 
-bool WasmGcObject::isRuntimeSubtype(const wasm::TypeDef* parentTypeDef) const {
+bool WasmGcObject::isRuntimeSubtypeOf(
+    const wasm::TypeDef* parentTypeDef) const {
   return TypeDef::isSubTypeOf(&typeDef(), parentTypeDef);
 }
 

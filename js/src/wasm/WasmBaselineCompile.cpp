@@ -6377,12 +6377,12 @@ RegPtr BaseCompiler::loadTypeDefInstanceData(uint32_t typeIndex) {
   return rp;
 }
 
-RegPtr BaseCompiler::loadTypeDef(uint32_t typeIndex) {
+RegPtr BaseCompiler::loadSuperTypeVector(uint32_t typeIndex) {
   RegPtr rp = needPtr();
 #  ifndef RABALDR_PIN_INSTANCE
   fr.loadInstancePtr(InstanceReg);
 #  endif
-  masm.loadWasmGlobalPtr(moduleEnv_.offsetOfTypeDef(typeIndex), rp);
+  masm.loadWasmGlobalPtr(moduleEnv_.offsetOfSuperTypeVector(typeIndex), rp);
   return rp;
 }
 
@@ -6407,7 +6407,7 @@ void BaseCompiler::branchGcObjectType(RegRef object, uint32_t typeIndex,
                                       Label* label, bool succeedOnNull,
                                       bool onSuccess) {
   const TypeDef& castTypeDef = (*moduleEnv_.types)[typeIndex];
-  RegPtr superTypeDef = loadTypeDef(typeIndex);
+  RegPtr superSuperTypeVector = loadSuperTypeVector(typeIndex);
   RegPtr scratch1 = needPtr();
   RegI32 scratch2;
   if (castTypeDef.subTypingDepth() >= MinSuperTypeVectorLength) {
@@ -6420,17 +6420,18 @@ void BaseCompiler::branchGcObjectType(RegRef object, uint32_t typeIndex,
   Label* nullLabel = succeedOnNull ? successLabel : failLabel;
   masm.branchTestPtr(Assembler::Zero, object, object, nullLabel);
   masm.branchTestObjectIsWasmGcObject(false, object, scratch1, failLabel);
-  masm.loadPtr(Address(object, WasmGcObject::offsetOfTypeDef()), scratch1);
-  masm.branchWasmTypeDefIsSubtype(scratch1, superTypeDef, scratch2,
-                                  castTypeDef.subTypingDepth(), label,
-                                  onSuccess);
+  masm.loadPtr(Address(object, WasmGcObject::offsetOfSuperTypeVector()),
+               scratch1);
+  masm.branchWasmSuperTypeVectorIsSubtype(
+      scratch1, superSuperTypeVector, scratch2, castTypeDef.subTypingDepth(),
+      label, onSuccess);
   masm.bind(&fallthrough);
 
   if (castTypeDef.subTypingDepth() >= MinSuperTypeVectorLength) {
     freeI32(scratch2);
   }
   freePtr(scratch1);
-  freePtr(superTypeDef);
+  freePtr(superSuperTypeVector);
 }
 
 RegPtr BaseCompiler::emitGcArrayGetData(RegRef rp) {

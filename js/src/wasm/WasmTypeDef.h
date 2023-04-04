@@ -476,18 +476,23 @@ using ArrayTypeVector = Vector<ArrayType, 0, SystemAllocPolicy>;
 // ## Example
 //
 // For the following type section:
-//   0: (type (struct))
-//   1: (type (sub 1 (struct)))
-//   2: (type (sub 2 (struct)))
-//   3: (type (sub 3 (struct)))
+//   ..
+//   12: (type (struct))
+//   ..
+//   34: (type (sub 12 (struct)))
+//   ..
+//   56: (type (sub 34 (struct)))
+//   ..
+//   78: (type (sub 56 (struct)))
+//   ..
 //
-// (type 0) would have the following super type vector:
-//   [(type 0)]
+// (type 12) would have the following super type vector:
+//   [(type 12)]
 //
-// (type 3) would have the following super type vector:
-//   [(type 0), (type 1), (type 2), (type 3)]
+// (type 78) would have the following super type vector:
+//   [(type 12), (type 34), (type 56), (type 78)]
 //
-// Checking that (type 3) <: (type 0) can use the fact that (type 0) will
+// Checking that (type 78) <: (type 12) can use the fact that (type 12) will
 // always be present at depth 0 of any super type vector it is in, and
 // therefore check the vector at that index.
 //
@@ -498,28 +503,54 @@ using ArrayTypeVector = Vector<ArrayType, 0, SystemAllocPolicy>;
 // against indices that we know statically are at/below that can skip bounds
 // checking. Extra entries added to reach the minimum size are initialized to
 // null.
-struct SuperTypeVector {
+class SuperTypeVector {
+  SuperTypeVector() : typeDef_(nullptr), length_(0) {}
+
+  // The TypeDef for which this is the supertype vector.  That TypeDef should
+  // point back to this SuperTypeVector.
+  const TypeDef* typeDef_;
+
+  // The length of types stored inline below.
+  uint32_t length_;
+
+ public:
+  // Raw pointers to the super types of this type definition. Ordered from
+  // least-derived to most-derived.  Do not add any fields after this point.
+  const SuperTypeVector* types_[0];
+
   // Batch allocate super type vectors for all the types in a recursion group.
   // Returns a pointer to the first super type vector, which can be used to
   // free all vectors.
   [[nodiscard]] static const SuperTypeVector* createMultipleForRecGroup(
       RecGroup* recGroup);
 
+  const TypeDef* typeDef() const { return typeDef_; }
+  void setTypeDef(const TypeDef* typeDef) { typeDef_ = typeDef; }
+
+  uint32_t length() const { return length_; }
+  void setLength(uint32_t length) { length_ = length; }
+
+  const SuperTypeVector* type(size_t index) const {
+    MOZ_ASSERT(index < length_);
+    return types_[index];
+  }
+  void setType(size_t index, const SuperTypeVector* type) {
+    MOZ_ASSERT(index < length_);
+    types_[index] = type;
+  }
+
   // The length of a super type vector for a specific type def.
   static size_t lengthForTypeDef(const TypeDef& typeDef);
   // The byte size of a super type vector for a specific type def.
   static size_t byteSizeForTypeDef(const TypeDef& typeDef);
 
-  static size_t offsetOfLength() { return offsetof(SuperTypeVector, length); }
+  static size_t offsetOfLength() { return offsetof(SuperTypeVector, length_); }
   static size_t offsetOfTypeDefInVector(uint32_t typeDefDepth);
-
-  // The length of types stored inline below.
-  uint32_t length;
-
-  // Raw pointers to the super types of this type definition. Ordered from
-  // least-derived to most-derived.
-  const TypeDef* types[0];
 };
+
+// Ensure it is safe to use `sizeof(SuperTypeVector)` to find the offset of
+// `types_[0]`.
+static_assert(offsetof(SuperTypeVector, types_) == sizeof(SuperTypeVector));
 
 // A tagged container for the various types that can be present in a wasm
 // module's type section.
@@ -533,7 +564,11 @@ enum class TypeDefKind : uint8_t {
 
 class TypeDef {
   uint32_t offsetToRecGroup_;
+
+  // The supertype vector for this TypeDef.  That SuperTypeVector should point
+  // back to this TypeDef.
   const SuperTypeVector* superTypeVector_;
+
   const TypeDef* superTypeDef_;
   uint16_t subTypingDepth_;
   TypeDefKind kind_;
@@ -736,36 +771,46 @@ class TypeDef {
     subTypingDepth_ = superTypeDef_->subTypingDepth_ + 1;
   }
 
-  // Checks if `subType` is a declared sub type of `superType`.
-  static bool isSubTypeOf(const TypeDef* subType, const TypeDef* superType) {
+  // Checks if `subTypeDef` is a declared sub type of `superTypeDef`.
+  static bool isSubTypeOf(const TypeDef* subTypeDef,
+                          const TypeDef* superTypeDef) {
     // Fast path for when the types are equal
-    if (MOZ_LIKELY(subType == superType)) {
+    if (MOZ_LIKELY(subTypeDef == superTypeDef)) {
       return true;
     }
-    const SuperTypeVector* subSuperTypes = subType->superTypeVector();
+    const SuperTypeVector* subSuperTypeVector = subTypeDef->superTypeVector();
 
     // During construction of a recursion group, the super type vector may not
     // have been computed yet, in which case we need to fall back to a linear
     // search.
-    if (!subSuperTypes) {
-      while (subType) {
-        if (subType == superType) {
+    if (!subSuperTypeVector) {
+      while (subTypeDef) {
+        if (subTypeDef == superTypeDef) {
           return true;
         }
-        subType = subType->superTypeDef();
+        subTypeDef = subTypeDef->superTypeDef();
       }
       return false;
     }
 
-    // Otherwise, we need to check if `superType` is one of `subType`s super
-    // types by checking in `subType`s super type vector. We can use the static
-    // information of the depth of `superType` to index directly into the
+    // The supertype vector does exist.  So check it points back here.
+    MOZ_ASSERT(subSuperTypeVector->typeDef() == subTypeDef);
+
+    // We need to check if `superTypeDef` is one of `subTypeDef`s super types
+    // by checking in `subTypeDef`s super type vector. We can use the static
+    // information of the depth of `superTypeDef` to index directly into the
     // vector.
-    uint32_t subTypingDepth = superType->subTypingDepth();
-    if (subTypingDepth >= subSuperTypes->length) {
+    uint32_t subTypingDepth = superTypeDef->subTypingDepth();
+    if (subTypingDepth >= subSuperTypeVector->length()) {
       return false;
     }
-    return subSuperTypes->types[subTypingDepth] == superType;
+
+    const SuperTypeVector* superSuperTypeVector =
+        superTypeDef->superTypeVector();
+    MOZ_ASSERT(superSuperTypeVector);
+    MOZ_ASSERT(superSuperTypeVector->typeDef() == superTypeDef);
+
+    return subSuperTypeVector->type(subTypingDepth) == superSuperTypeVector;
   }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;

@@ -354,7 +354,7 @@ size_t TypeDef::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
 
 /* static */
 size_t SuperTypeVector::offsetOfTypeDefInVector(uint32_t typeDefDepth) {
-  return offsetof(SuperTypeVector, types) + sizeof(void*) * typeDefDepth;
+  return offsetof(SuperTypeVector, types_) + sizeof(void*) * typeDefDepth;
 }
 
 /* static */
@@ -401,21 +401,22 @@ const SuperTypeVector* SuperTypeVector::createMultipleForRecGroup(
     // Compute the size again to know where the next vector can be found.
     size_t vectorByteSize = SuperTypeVector::byteSizeForTypeDef(typeDef);
 
-    // Link the corresponding typeDef to this vector.
+    // Make the typedef and the vector point at each other.
     typeDef.setSuperTypeVector(currentVector);
+    currentVector->setTypeDef(&typeDef);
 
     // Every vector stores all ancestor types and itself.
-    currentVector->length = SuperTypeVector::lengthForTypeDef(typeDef);
+    currentVector->setLength(SuperTypeVector::lengthForTypeDef(typeDef));
 
     // Initialize the entries in the vector
     const TypeDef* currentTypeDef = &typeDef;
-    for (uint32_t index = 0; index < currentVector->length; index++) {
-      uint32_t reverseIndex = currentVector->length - index - 1;
+    for (uint32_t index = 0; index < currentVector->length(); index++) {
+      uint32_t reverseIndex = currentVector->length() - index - 1;
 
       // If this entry is required just to hit the minimum size, then
       // initialize it to null.
       if (reverseIndex > typeDef.subTypingDepth()) {
-        currentVector->types[reverseIndex] = nullptr;
+        currentVector->setType(reverseIndex, nullptr);
         continue;
       }
 
@@ -423,7 +424,7 @@ const SuperTypeVector* SuperTypeVector::createMultipleForRecGroup(
       // currentTypeDef.
       MOZ_ASSERT(reverseIndex == currentTypeDef->subTypingDepth());
 
-      currentVector->types[reverseIndex] = currentTypeDef;
+      currentVector->setType(reverseIndex, currentTypeDef->superTypeVector());
       currentTypeDef = currentTypeDef->superTypeDef();
     }
 

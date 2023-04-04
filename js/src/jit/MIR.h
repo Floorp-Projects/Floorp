@@ -11380,16 +11380,17 @@ class MWasmStoreFieldRefKA : public MAryInstruction<4>,
 #endif
 };
 
-// Tests if the WasmGcObject, `object`, is a subtype of `superTypeDef`. The
-// actual super type definition must be known at compile time, so that the
+// Tests if the WasmGcObject, `object`, is a subtype of `superSuperTypeVector`.
+// The actual super type definition must be known at compile time, so that the
 // subtyping depth of super type depth can be used.
 class MWasmGcObjectIsSubtypeOf : public MBinaryInstruction,
                                  public NoTypePolicy::Data {
   uint32_t subTypingDepth_;
   bool succeedOnNull_;
-  MWasmGcObjectIsSubtypeOf(MDefinition* object, MDefinition* superTypeDef,
+  MWasmGcObjectIsSubtypeOf(MDefinition* object,
+                           MDefinition* superSuperTypeVector,
                            uint32_t subTypingDepth, bool succeedOnNull)
-      : MBinaryInstruction(classOpcode, object, superTypeDef),
+      : MBinaryInstruction(classOpcode, object, superSuperTypeVector),
         subTypingDepth_(subTypingDepth),
         succeedOnNull_(succeedOnNull) {
     setResultType(MIRType::Int32);
@@ -11399,7 +11400,7 @@ class MWasmGcObjectIsSubtypeOf : public MBinaryInstruction,
  public:
   INSTRUCTION_HEADER(WasmGcObjectIsSubtypeOf)
   TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, object), (1, superTypeDef))
+  NAMED_OPERANDS((0, object), (1, superSuperTypeVector))
 
   uint32_t subTypingDepth() const { return subTypingDepth_; }
   bool succeedOnNull() const { return succeedOnNull_; }
@@ -11408,7 +11409,7 @@ class MWasmGcObjectIsSubtypeOf : public MBinaryInstruction,
     return congruentIfOperandsEqual(ins) &&
            ins->toWasmGcObjectIsSubtypeOf()->subTypingDepth() ==
                subTypingDepth() &&
-           succeedOnNull_ == ins->toWasmGcObjectIsSubtypeOf()->succeedOnNull();
+           succeedOnNull() == ins->toWasmGcObjectIsSubtypeOf()->succeedOnNull();
   }
 
   HashNumber valueHash() const override {
