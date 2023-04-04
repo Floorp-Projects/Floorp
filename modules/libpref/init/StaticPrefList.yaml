@@ -12538,11 +12538,6 @@
   value: 1
   mirror: always
 
-- name: network.allow_redirect_to_data
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 - name: network.allow_raw_sockets_in_content_processes
   type: bool
   value: false
