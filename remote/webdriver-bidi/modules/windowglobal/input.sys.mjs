@@ -30,6 +30,14 @@ class InputModule extends Module {
 
     await actionChain.dispatch(this.#actionState, this.messageHandler.window);
   }
+
+  async releaseActions() {
+    if (this.#actionState === null) {
+      return;
+    }
+    await this.#actionState.release(this.messageHandler.window);
+    this.#actionState = null;
+  }
 }
 
 export const input = InputModule;
