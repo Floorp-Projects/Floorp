@@ -248,6 +248,7 @@ EXPORTS.js.experimental += [
     "../public/experimental/Intl.h",
     "../public/experimental/JitInfo.h",
     "../public/experimental/JSStencil.h",
+    "../public/experimental/ParseScript.h",
     "../public/experimental/PCCountProfiling.h",
     "../public/experimental/SourceHook.h",
     "../public/experimental/TypedData.h",
