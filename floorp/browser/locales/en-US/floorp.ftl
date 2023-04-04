@@ -173,7 +173,7 @@ appmenuitem-reboot =
 
 ## useagent
 
-UserAgent-preference = UserAgent
+UserAgent-preference = User Agent
 default-useragent-mode =
  .label = Use Firefox User Agent (Default)
 windows-chrome-useragent-mode =
