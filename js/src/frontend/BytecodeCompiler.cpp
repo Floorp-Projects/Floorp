@@ -23,6 +23,7 @@
 #include "frontend/FrontendContext.h"  // AutoReportFrontendContext
 #include "frontend/ModuleSharedContext.h"
 #include "js/experimental/JSStencil.h"
+#include "js/Modules.h"  // JS::ImportAssertionVector
 #include "js/SourceText.h"
 #include "js/Stack.h"  // JS::NativeStackLimit
 #include "js/UniquePtr.h"
@@ -767,8 +768,7 @@ bool ModuleCompiler<Unit>::compile(JSContext* maybeCx, FrontendContext* fc) {
     return false;
   }
 
-  // TODO bug 1773319 ModuleBuilder doesn't expect nullptr for cx
-  ModuleBuilder builder(maybeCx, fc, parser.ptr());
+  ModuleBuilder builder(fc, parser.ptr());
 
   const auto& options = compilationState_.input.options;
 
