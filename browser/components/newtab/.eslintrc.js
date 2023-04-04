@@ -2,6 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+let prettierRules = { "prettier/prettier": "error" };
+
+if (process.env.MOZ_SEPARATE_PRETTIER) {
+  prettierRules = { "prettier/prettier": "off" };
+}
+
 module.exports = {
   // When adding items to this file please check for effects on sub-directories.
   parserOptions: {
@@ -25,7 +31,6 @@ module.exports = {
     "eslint:recommended",
     "plugin:jsx-a11y/recommended", // require("eslint-plugin-jsx-a11y")
     "plugin:mozilla/recommended", // require("eslint-plugin-mozilla") require("eslint-plugin-fetch-options") require("eslint-plugin-html") require("eslint-plugin-no-unsanitized")
-    "plugin:prettier/recommended", // require("eslint-plugin-prettier")
     "prettier", // require("eslint-config-prettier")
   ],
   overrides: [
@@ -113,6 +118,8 @@ module.exports = {
     },
   ],
   rules: {
+    ...prettierRules,
+
     "fetch-options/no-fetch-credentials": "error",
 
     "react/jsx-boolean-value": ["error", "always"],
