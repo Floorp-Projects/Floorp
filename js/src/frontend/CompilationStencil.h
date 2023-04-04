@@ -562,6 +562,7 @@ struct CompilationAtomCache {
   bool allocate(FrontendContext* fc, size_t length);
 
   bool empty() const { return atoms_.empty(); }
+  size_t size() const { return atoms_.length(); }
 
   void stealBuffer(AtomCacheVector& atoms);
   void releaseBuffer(AtomCacheVector& atoms);
