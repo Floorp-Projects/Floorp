@@ -336,8 +336,6 @@ const SymbolicAddressSignature SASigArrayCopy = {
     _FailOnNegI32,
     7,
     {_PTR, _RoN, _I32, _RoN, _I32, _I32, _I32, _END}};
-const SymbolicAddressSignature SASigRefTest = {
-    SymbolicAddress::RefTest, _I32, _Infallible, 3, {_PTR, _RoN, _PTR, _END}};
 
 #define DECL_SAS_FOR_INTRINSIC(op, export, sa_name, abitype, entry, idx) \
   const SymbolicAddressSignature SASig##sa_name = {                      \
@@ -1338,11 +1336,6 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       MOZ_ASSERT(*abiType == ToABIType(SASigArrayCopy));
       return FuncCast(Instance::arrayCopy, *abiType);
 
-    case SymbolicAddress::RefTest:
-      *abiType = Args_Int32_GeneralGeneralGeneral;
-      MOZ_ASSERT(*abiType == ToABIType(SASigRefTest));
-      return FuncCast(Instance::refTest, *abiType);
-
     case SymbolicAddress::ExceptionNew:
       *abiType = Args_General2;
       MOZ_ASSERT(*abiType == ToABIType(SASigExceptionNew));
@@ -1523,7 +1516,6 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::ArrayNewData:
     case SymbolicAddress::ArrayNewElem:
     case SymbolicAddress::ArrayCopy:
-    case SymbolicAddress::RefTest:
 #define OP(op, export, sa_name, abitype, entry, idx) \
   case SymbolicAddress::sa_name:
       FOR_EACH_INTRINSIC(OP)
