@@ -33,19 +33,19 @@ struct ExtensibleCompilationStencil;
 class ScopeBindingCache;
 
 extern already_AddRefed<CompilationStencil> CompileGlobalScriptToStencil(
-    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
+    JSContext* maybeCx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
     js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
     ScopeBindingCache* scopeCache, JS::SourceText<char16_t>& srcBuf,
     ScopeKind scopeKind);
 
 extern already_AddRefed<CompilationStencil> CompileGlobalScriptToStencil(
-    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
+    JSContext* maybeCx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
     js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
     ScopeBindingCache* scopeCache, JS::SourceText<mozilla::Utf8Unit>& srcBuf,
     ScopeKind scopeKind);
 
 extern UniquePtr<ExtensibleCompilationStencil>
-CompileGlobalScriptToExtensibleStencil(JSContext* cx, FrontendContext* fc,
+CompileGlobalScriptToExtensibleStencil(JSContext* maybeCx, FrontendContext* fc,
                                        JS::NativeStackLimit stackLimit,
                                        CompilationInput& input,
                                        ScopeBindingCache* scopeCache,
@@ -54,7 +54,7 @@ CompileGlobalScriptToExtensibleStencil(JSContext* cx, FrontendContext* fc,
 
 extern UniquePtr<ExtensibleCompilationStencil>
 CompileGlobalScriptToExtensibleStencil(
-    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
+    JSContext* maybeCx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
     CompilationInput& input, ScopeBindingCache* scopeCache,
     JS::SourceText<mozilla::Utf8Unit>& srcBuf, ScopeKind scopeKind);
 
@@ -72,13 +72,13 @@ CompileGlobalScriptToExtensibleStencil(
                                               const CompilationStencil& stencil,
                                               CompilationGCOutput& gcOutput);
 
-extern JSScript* CompileGlobalScript(JSContext* cx, FrontendContext* fc,
+extern JSScript* CompileGlobalScript(JSContext* maybeCx, FrontendContext* fc,
                                      JS::NativeStackLimit stackLimit,
                                      const JS::ReadOnlyCompileOptions& options,
                                      JS::SourceText<char16_t>& srcBuf,
                                      ScopeKind scopeKind);
 
-extern JSScript* CompileGlobalScript(JSContext* cx, FrontendContext* fc,
+extern JSScript* CompileGlobalScript(JSContext* maybeCx, FrontendContext* fc,
                                      JS::NativeStackLimit stackLimit,
                                      const JS::ReadOnlyCompileOptions& options,
                                      JS::SourceText<mozilla::Utf8Unit>& srcBuf,
