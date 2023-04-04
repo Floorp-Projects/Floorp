@@ -43,6 +43,8 @@ include ../../editor/composer/crashtests/crashtests.list
 include ../../editor/libeditor/crashtests/crashtests.list
 include ../../editor/txmgr/tests/crashtests/crashtests.list
 
+include ../../extensions/spellcheck/hunspell/tests/crashtests/crashtests.list
+
 include ../../gfx/tests/crashtests/crashtests.list
 
 include ../../image/test/crashtests/crashtests.list

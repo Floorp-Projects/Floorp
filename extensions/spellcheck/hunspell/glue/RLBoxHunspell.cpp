@@ -160,14 +160,26 @@ RLBoxHunspell::~RLBoxHunspell() {
   mozHunspellCallbacks::Clear();
 }
 
+// Invoking hunspell with words larger than a certain size will cause the
+// Hunspell sandbox to run out of memory. So we pick an arbitrary limit of
+// 200000 here to ensure this doesn't happen.
+static const size_t gWordSizeLimit = 200000;
+
 int RLBoxHunspell::spell(const std::string& stdWord) {
   MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
+
+  const int ok = 1;
+
+  if (stdWord.length() >= gWordSizeLimit) {
+    // Fail gracefully assuming the word is spelt correctly
+    return ok;
+  }
+
   // Copy word into the sandbox
   tainted_hunspell<char*> t_word = allocStrInSandbox(*mSandbox, stdWord);
   if (!t_word) {
     // Ran out of memory in the hunspell sandbox
     // Fail gracefully assuming the word is spelt correctly
-    const int ok = 1;
     return ok;
   }
 
@@ -189,6 +201,11 @@ const std::string& RLBoxHunspell::get_dict_encoding() const {
 // sandbox, we return empty suggestion list
 std::vector<std::string> RLBoxHunspell::suggest(const std::string& stdWord) {
   MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
+
+  if (stdWord.length() >= gWordSizeLimit) {
+    return {};
+  }
+
   // Copy word into the sandbox
   tainted_hunspell<char*> t_word = allocStrInSandbox(*mSandbox, stdWord);
   if (!t_word) {
