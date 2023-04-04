@@ -7594,7 +7594,17 @@ void CodeGenerator::emitGetInlinedArgument(GetInlinedArgument* lir,
                                            Register index,
                                            ValueOperand output) {
   uint32_t numActuals = lir->mir()->numActuals();
-  MOZ_ASSERT(numActuals > 0 && numActuals <= ArgumentsObject::MaxInlinedArgs);
+  MOZ_ASSERT(numActuals <= ArgumentsObject::MaxInlinedArgs);
+
+  // The index has already been bounds-checked, so the code we
+  // generate here should be unreachable. We can end up in this
+  // situation in self-hosted code using GetArgument(), or in a
+  // monomorphically inlined function if we've inlined some CacheIR
+  // that was created for a different caller.
+  if (numActuals == 0) {
+    masm.assumeUnreachable("LGetInlinedArgument: invalid index");
+    return;
+  }
 
   // Check the first n-1 possible indices.
   Label done;
