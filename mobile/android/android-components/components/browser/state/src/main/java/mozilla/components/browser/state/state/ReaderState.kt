@@ -16,6 +16,8 @@ package mozilla.components.browser.state.state
  * content script is required.
  * @property baseUrl the base URL of the reader view extension page.
  * @property activeUrl the URL of the page currently displayed in reader view.
+ * @property scrollY the vertical scroll position of the page currently
+ * displayed in reader view.
  */
 data class ReaderState(
     val readerable: Boolean = false,

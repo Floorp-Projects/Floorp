@@ -66,6 +66,7 @@ class BrowserStateWriterReaderTest {
         assertEquals(engineState, restoredTab.engineSessionState)
         assertFalse(restoredTab.state.readerState.active)
         assertNull(restoredTab.state.readerState.activeUrl)
+        assertNull(restoredTab.state.readerState.scrollY)
     }
 
     @Test
@@ -77,7 +78,7 @@ class BrowserStateWriterReaderTest {
             url = "https://www.mozilla.org",
             title = "Mozilla",
             contextId = "work",
-            readerState = ReaderState(active = true, activeUrl = "https://www.example.org"),
+            readerState = ReaderState(active = true, activeUrl = "https://www.example.org", scrollY = 1234),
         )
 
         val writer = BrowserStateWriter()
@@ -94,6 +95,7 @@ class BrowserStateWriterReaderTest {
 
         assertTrue(restoredTab.state.readerState.active)
         assertEquals("https://www.example.org", restoredTab.state.readerState.activeUrl)
+        assertEquals(1234, restoredTab.state.readerState.scrollY)
     }
 
     @Test

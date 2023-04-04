@@ -112,6 +112,11 @@ private fun JsonWriter.tab(
             value(tab.readerState.activeUrl)
         }
 
+        if (tab.readerState.active && tab.readerState.scrollY != null) {
+            name(Keys.SESSION_READER_MODE_SCROLLY_KEY)
+            value(tab.readerState.scrollY)
+        }
+
         val metadata = tab.historyMetadata
         if (metadata != null) {
             name(Keys.SESSION_HISTORY_METADATA_URL)

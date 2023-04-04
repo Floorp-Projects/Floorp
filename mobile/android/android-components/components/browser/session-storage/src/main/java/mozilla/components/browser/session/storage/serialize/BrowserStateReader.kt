@@ -180,6 +180,7 @@ private fun JsonReader.tabSession(): RecoverableTab {
 
     var readerStateActive: Boolean? = null
     var readerActiveUrl: String? = null
+    var readerScrollY: Int? = null
 
     var historyMetadataUrl: String? = null
     var historyMetadataSearchTerm: String? = null
@@ -201,6 +202,7 @@ private fun JsonReader.tabSession(): RecoverableTab {
             Keys.SESSION_SEARCH_TERM -> searchTerm = nextStringOrNull() ?: ""
             Keys.SESSION_READER_MODE_KEY -> readerStateActive = nextBooleanOrNull()
             Keys.SESSION_READER_MODE_ACTIVE_URL_KEY -> readerActiveUrl = nextStringOrNull()
+            Keys.SESSION_READER_MODE_SCROLLY_KEY -> readerScrollY = nextIntOrNull()
             Keys.SESSION_HISTORY_METADATA_URL -> historyMetadataUrl = nextStringOrNull()
             Keys.SESSION_HISTORY_METADATA_SEARCH_TERM -> historyMetadataSearchTerm = nextStringOrNull()
             Keys.SESSION_HISTORY_METADATA_REFERRER_URL -> historyMetadataReferrerUrl = nextStringOrNull()
@@ -231,6 +233,7 @@ private fun JsonReader.tabSession(): RecoverableTab {
             readerState = ReaderState(
                 active = readerStateActive ?: false,
                 activeUrl = readerActiveUrl,
+                scrollY = readerScrollY,
             ),
             historyMetadata = if (historyMetadataUrl != null) {
                 HistoryMetadataKey(
