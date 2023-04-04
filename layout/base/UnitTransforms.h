@@ -72,11 +72,6 @@ enum class PixelCastJustification : uint8_t {
   // The proportion does not need to be scaled when converting between
   // units (the page length that it's mutlipled by will be scaled instead).
   DeltaIsPageProportion,
-  // Used to cast between CSS and OuterCSS pixels when moving between code
-  // that deals with content outside a scroll frame generically (which would
-  // use CSS pixels) and code related to the scroll frame in APZ (which wants
-  // such quantities in OuterCSS pixels).
-  CSSPixelsOfSurroundingContent,
 };
 
 template <class TargetUnits, class SourceUnits>

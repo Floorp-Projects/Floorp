@@ -931,7 +931,7 @@ PointerEventsConsumableFlags AsyncPanZoomController::ArePointerEventsConsumable(
 
 nsEventStatus AsyncPanZoomController::HandleDragEvent(
     const MouseInput& aEvent, const AsyncDragMetrics& aDragMetrics,
-    OuterCSSCoord aInitialThumbPos) {
+    CSSCoord aInitialThumbPos) {
   // RDM is a special case where touch events will be synthesized in response
   // to mouse events, and APZ will receive both even though RDM prevent-defaults
   // the mouse events. This is because mouse events don't opt into APZ waiting
@@ -1013,7 +1013,7 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(
   }
 
   RecursiveMutexAutoLock lock(mRecursiveMutex);
-  OuterCSSCoord thumbPosition;
+  CSSCoord thumbPosition;
   if (isMouseAwayFromThumb) {
     thumbPosition = aInitialThumbPos;
   } else {
@@ -1021,7 +1021,7 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(
                     aDragMetrics.mScrollbarDragOffset;
   }
 
-  OuterCSSCoord maxThumbPos = scrollbarData.mScrollTrackLength;
+  CSSCoord maxThumbPos = scrollbarData.mScrollTrackLength;
   maxThumbPos -= scrollbarData.mThumbLength;
 
   float scrollPercent =
@@ -1912,7 +1912,7 @@ Maybe<LayoutDevicePoint> AsyncPanZoomController::ConvertToGecko(
   return Nothing();
 }
 
-OuterCSSCoord AsyncPanZoomController::ConvertScrollbarPoint(
+CSSCoord AsyncPanZoomController::ConvertScrollbarPoint(
     const ParentLayerPoint& aScrollbarPoint,
     const ScrollbarData& aThumbData) const {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
@@ -1925,13 +1925,12 @@ OuterCSSCoord AsyncPanZoomController::ConvertScrollbarPoint(
 
   // The scrollbar can be transformed with the frame but the pres shell
   // resolution is only applied to the scroll frame.
-  OuterCSSPoint outerScrollbarPoint =
-      scrollbarPoint * Metrics().GetCSSToOuterCSSScale();
+  scrollbarPoint = scrollbarPoint * Metrics().GetPresShellResolution();
 
   // Now, get it to be relative to the beginning of the scroll track.
-  OuterCSSRect cssCompositionBound =
-      Metrics().CalculateCompositionBoundsInOuterCssPixels();
-  return GetAxisStart(*aThumbData.mDirection, outerScrollbarPoint) -
+  CSSRect cssCompositionBound =
+      Metrics().CalculateCompositionBoundsInCssPixelsOfSurroundingContent();
+  return GetAxisStart(*aThumbData.mDirection, scrollbarPoint) -
          GetAxisStart(*aThumbData.mDirection, cssCompositionBound) -
          aThumbData.mScrollTrackStart;
 }

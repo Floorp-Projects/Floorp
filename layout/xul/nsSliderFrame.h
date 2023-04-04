@@ -219,8 +219,6 @@ class nsSliderFrame final : public nsBoxFrame {
   // been shifted due to async scrollbar drag.
   Maybe<uint64_t> mAPZDragInitiated;
 
-  nscoord mThumbMinLength;
-
   static bool gMiddlePref;
   static int32_t gSnapMultiplier;
 };  // class nsSliderFrame

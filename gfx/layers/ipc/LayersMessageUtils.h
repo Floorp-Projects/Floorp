@@ -1030,7 +1030,6 @@ struct ParamTraits<mozilla::layers::ScrollbarData> {
     WriteParam(aWriter, aParam.mThumbRatio);
     WriteParam(aWriter, aParam.mThumbStart);
     WriteParam(aWriter, aParam.mThumbLength);
-    WriteParam(aWriter, aParam.mThumbMinLength);
     WriteParam(aWriter, aParam.mThumbIsAsyncDraggable);
     WriteParam(aWriter, aParam.mScrollTrackStart);
     WriteParam(aWriter, aParam.mScrollTrackLength);
@@ -1043,7 +1042,6 @@ struct ParamTraits<mozilla::layers::ScrollbarData> {
            ReadParam(aReader, &aResult->mThumbRatio) &&
            ReadParam(aReader, &aResult->mThumbStart) &&
            ReadParam(aReader, &aResult->mThumbLength) &&
-           ReadParam(aReader, &aResult->mThumbMinLength) &&
            ReadParam(aReader, &aResult->mThumbIsAsyncDraggable) &&
            ReadParam(aReader, &aResult->mScrollTrackStart) &&
            ReadParam(aReader, &aResult->mScrollTrackLength) &&

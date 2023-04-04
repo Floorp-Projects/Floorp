@@ -90,8 +90,7 @@ nsSliderFrame::nsSliderFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
       mDragFinished(true),
       mUserChanged(false),
       mScrollingWithAPZ(false),
-      mSuppressionActive(false),
-      mThumbMinLength(0) {}
+      mSuppressionActive(false) {}
 
 // stop timer
 nsSliderFrame::~nsSliderFrame() {
@@ -459,10 +458,9 @@ void nsSliderFrame::BuildDisplayListForChildren(
       MOZ_ASSERT(scrollDirection.isSome());
       const bool isHorizontal =
           *scrollDirection == ScrollDirection::eHorizontal;
-      const OuterCSSCoord thumbLength = OuterCSSPixel::FromAppUnits(
-          isHorizontal ? thumbRect.width : thumbRect.height);
-      const OuterCSSCoord minThumbLength =
-          OuterCSSPixel::FromAppUnits(mThumbMinLength);
+      const float appUnitsPerCss = float(AppUnitsPerCSSPixel());
+      const CSSCoord thumbLength = NSAppUnitsToFloatPixels(
+          isHorizontal ? thumbRect.width : thumbRect.height, appUnitsPerCss);
 
       nsIFrame* scrollbarBox = GetScrollbar();
       bool isAsyncDraggable = !UsesCustomScrollbarMediator(scrollbarBox);
@@ -478,12 +476,13 @@ void nsSliderFrame::BuildDisplayListForChildren(
       // This rect is the range in which the scroll thumb can slide in.
       sliderTrack = sliderTrack + GetRect().TopLeft() +
                     scrollbarBox->GetPosition() - scrollPortOrigin;
-      const OuterCSSCoord sliderTrackStart = OuterCSSPixel::FromAppUnits(
-          isHorizontal ? sliderTrack.x : sliderTrack.y);
-      const OuterCSSCoord sliderTrackLength = OuterCSSPixel::FromAppUnits(
-          isHorizontal ? sliderTrack.width : sliderTrack.height);
-      const OuterCSSCoord thumbStart =
-          OuterCSSPixel::FromAppUnits(isHorizontal ? thumbRect.x : thumbRect.y);
+      const CSSCoord sliderTrackStart = NSAppUnitsToFloatPixels(
+          isHorizontal ? sliderTrack.x : sliderTrack.y, appUnitsPerCss);
+      const CSSCoord sliderTrackLength = NSAppUnitsToFloatPixels(
+          isHorizontal ? sliderTrack.width : sliderTrack.height,
+          appUnitsPerCss);
+      const CSSCoord thumbStart = NSAppUnitsToFloatPixels(
+          isHorizontal ? thumbRect.x : thumbRect.y, appUnitsPerCss);
 
       const nsRect overflow = thumb->InkOverflowRectRelativeToParent();
       nsSize refSize = aBuilder->RootReferenceFrame()->GetSize();
@@ -533,7 +532,7 @@ void nsSliderFrame::BuildDisplayListForChildren(
           /* aIndex = */ nsDisplayOwnLayer::OwnLayerForScrollThumb, &masterList,
           ownLayerASR, nsDisplayOwnLayerFlags::None,
           ScrollbarData::CreateForThumb(*scrollDirection, GetThumbRatio(),
-                                        thumbStart, thumbLength, minThumbLength,
+                                        thumbStart, thumbLength,
                                         isAsyncDraggable, sliderTrackStart,
                                         sliderTrackLength, scrollTargetId),
           true, false);
@@ -581,12 +580,9 @@ nsSliderFrame::DoXULLayout(nsBoxLayoutState& aState) {
   maxPos = std::max(minPos, maxPos);
   curPos = clamped(curPos, minPos, maxPos);
 
-  // If modifying the logic here, be sure to modify the corresponding
-  // compositor-side calculation in ScrollThumbUtils::ApplyTransformForAxis().
   nscoord& availableLength =
       IsXULHorizontal() ? clientRect.width : clientRect.height;
   nscoord& thumbLength = IsXULHorizontal() ? thumbSize.width : thumbSize.height;
-  mThumbMinLength = thumbLength;
 
   if ((pageIncrement + maxPos - minPos) > 0 && thumbBox->GetXULFlex() > 0) {
     float ratio = float(pageIncrement) / float(maxPos - minPos + pageIncrement);
@@ -1146,7 +1142,7 @@ void nsSliderFrame::StartAPZDrag(WidgetGUIEvent* aEvent) {
   uint32_t presShellId = presShell->GetPresShellId();
   AsyncDragMetrics dragMetrics(
       scrollTargetId, presShellId, inputblockId,
-      OuterCSSPixel::FromAppUnits(mDragStart),
+      NSAppUnitsToFloatPixels(mDragStart, float(AppUnitsPerCSSPixel())),
       isHorizontal ? ScrollDirection::eHorizontal : ScrollDirection::eVertical);
 
   // It's important to set this before calling

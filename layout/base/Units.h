@@ -27,7 +27,6 @@ struct IsPixel : std::false_type {};
 
 // See struct declaration for a description of each unit type.
 struct CSSPixel;
-struct OuterCSSPixel;
 struct LayoutDevicePixel;
 struct LayerPixel;
 struct CSSTransformedLayerPixel;
@@ -40,8 +39,6 @@ struct ExternalPixel;
 
 template <>
 struct IsPixel<CSSPixel> : std::true_type {};
-template <>
-struct IsPixel<OuterCSSPixel> : std::true_type {};
 template <>
 struct IsPixel<LayoutDevicePixel> : std::true_type {};
 template <>
@@ -72,18 +69,6 @@ typedef gfx::IntRectTyped<CSSPixel> CSSIntRect;
 typedef gfx::MarginTyped<CSSPixel> CSSMargin;
 typedef gfx::IntMarginTyped<CSSPixel> CSSIntMargin;
 typedef gfx::IntRegionTyped<CSSPixel> CSSIntRegion;
-
-typedef gfx::CoordTyped<OuterCSSPixel> OuterCSSCoord;
-typedef gfx::IntCoordTyped<OuterCSSPixel> OuterCSSIntCoord;
-typedef gfx::PointTyped<OuterCSSPixel> OuterCSSPoint;
-typedef gfx::IntPointTyped<OuterCSSPixel> OuterCSSIntPoint;
-typedef gfx::SizeTyped<OuterCSSPixel> OuterCSSSize;
-typedef gfx::IntSizeTyped<OuterCSSPixel> OuterCSSIntSize;
-typedef gfx::RectTyped<OuterCSSPixel> OuterCSSRect;
-typedef gfx::IntRectTyped<OuterCSSPixel> OuterCSSIntRect;
-typedef gfx::MarginTyped<OuterCSSPixel> OuterCSSMargin;
-typedef gfx::IntMarginTyped<OuterCSSPixel> OuterCSSIntMargin;
-typedef gfx::IntRegionTyped<OuterCSSPixel> OuterCSSIntRegion;
 
 typedef gfx::CoordTyped<LayoutDevicePixel> LayoutDeviceCoord;
 typedef gfx::IntCoordTyped<LayoutDevicePixel> LayoutDeviceIntCoord;
@@ -189,14 +174,11 @@ typedef gfx::IntMarginTyped<ExternalPixel> ExternalIntMargin;
 typedef gfx::IntRegionTyped<ExternalPixel> ExternalIntRegion;
 
 typedef gfx::ScaleFactor<CSSPixel, CSSPixel> CSSToCSSScale;
-typedef gfx::ScaleFactor<CSSPixel, OuterCSSPixel> CSSToOuterCSSScale;
 typedef gfx::ScaleFactor<CSSPixel, LayoutDevicePixel> CSSToLayoutDeviceScale;
 typedef gfx::ScaleFactor<CSSPixel, LayerPixel> CSSToLayerScale;
 typedef gfx::ScaleFactor<CSSPixel, ScreenPixel> CSSToScreenScale;
 typedef gfx::ScaleFactor<CSSPixel, ParentLayerPixel> CSSToParentLayerScale;
 typedef gfx::ScaleFactor<CSSPixel, DesktopPixel> CSSToDesktopScale;
-typedef gfx::ScaleFactor<OuterCSSPixel, LayoutDevicePixel>
-    OuterCSSToLayoutDeviceScale;
 typedef gfx::ScaleFactor<LayoutDevicePixel, CSSPixel> LayoutDeviceToCSSScale;
 typedef gfx::ScaleFactor<LayoutDevicePixel, LayerPixel>
     LayoutDeviceToLayerScale;
@@ -402,18 +384,6 @@ struct CSSPixel {
   static CSSCoord FromPoints(float aCoord) {
     // One inch / 72.
     return aCoord * 96.0f / 72.0f;
-  }
-};
-
-/*
- * In the context of a scroll frame that is zoomable, OuterCSSPixel is
- * used to disambiguate CSS pixels of the content outside of the scroll
- * frame (which is not subject to the zoom) from CSS pixels of the content
- * inside the scroll frame (which is, and for which CSSPixel is used).
- */
-struct OuterCSSPixel {
-  static OuterCSSCoord FromAppUnits(nscoord aCoord) {
-    return NSAppUnitsToFloatPixels(aCoord, float(AppUnitsPerCSSPixel()));
   }
 };
 

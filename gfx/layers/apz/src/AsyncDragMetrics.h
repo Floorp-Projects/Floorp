@@ -33,8 +33,7 @@ class AsyncDragMetrics {
 
   AsyncDragMetrics(const ScrollableLayerGuid::ViewID& aViewId,
                    uint32_t aPresShellId, uint64_t aDragStartSequenceNumber,
-                   OuterCSSCoord aScrollbarDragOffset,
-                   ScrollDirection aDirection)
+                   CSSCoord aScrollbarDragOffset, ScrollDirection aDirection)
       : mViewId(aViewId),
         mPresShellId(aPresShellId),
         mDragStartSequenceNumber(aDragStartSequenceNumber),
@@ -44,7 +43,7 @@ class AsyncDragMetrics {
   ScrollableLayerGuid::ViewID mViewId;
   uint32_t mPresShellId;
   uint64_t mDragStartSequenceNumber;
-  OuterCSSCoord mScrollbarDragOffset;  // relative to the thumb's start offset
+  CSSCoord mScrollbarDragOffset;  // relative to the thumb's start offset
   Maybe<ScrollDirection> mDirection;
 };
 
