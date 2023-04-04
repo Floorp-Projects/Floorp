@@ -13249,12 +13249,6 @@
   value: false
   mirror: always
 
-#  Partition the websocket pending connection queue by OriginAttributes.
-- name: privacy.partition.network_state.ws_connection_queue
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # Partition the service workers unconditionally when dFPI is enabled.
 - name: privacy.partition.serviceWorkers
   type: RelaxedAtomicBool
