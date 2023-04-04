@@ -19,33 +19,26 @@ import org.mozilla.fenix.settings.SupportUtils
 @Suppress("LongParameterList")
 internal fun mapToOnboardingPageState(
     onboardingPageType: JunoOnboardingPageType,
-    scrollToNextPageOrDismiss: () -> Unit,
     onMakeFirefoxDefaultClick: () -> Unit,
+    onMakeFirefoxDefaultSkipClick: () -> Unit,
     onPrivacyPolicyClick: (String) -> Unit,
     onSignInButtonClick: () -> Unit,
+    onSignInSkipClick: () -> Unit,
     onNotificationPermissionButtonClick: () -> Unit,
+    onNotificationPermissionSkipClick: () -> Unit,
 ): OnboardingPageState = when (onboardingPageType) {
     JunoOnboardingPageType.DEFAULT_BROWSER -> defaultBrowserPageState(
-        onPositiveButtonClick = {
-            onMakeFirefoxDefaultClick()
-            scrollToNextPageOrDismiss()
-        },
-        onNegativeButtonClick = scrollToNextPageOrDismiss,
+        onPositiveButtonClick = onMakeFirefoxDefaultClick,
+        onNegativeButtonClick = onMakeFirefoxDefaultSkipClick,
         onUrlClick = onPrivacyPolicyClick,
     )
     JunoOnboardingPageType.SYNC_SIGN_IN -> syncSignInPageState(
-        onPositiveButtonClick = {
-            onSignInButtonClick()
-            scrollToNextPageOrDismiss()
-        },
-        onNegativeButtonClick = scrollToNextPageOrDismiss,
+        onPositiveButtonClick = onSignInButtonClick,
+        onNegativeButtonClick = onSignInSkipClick,
     )
     JunoOnboardingPageType.NOTIFICATION_PERMISSION -> notificationPermissionPageState(
-        onPositiveButtonClick = {
-            onNotificationPermissionButtonClick()
-            scrollToNextPageOrDismiss()
-        },
-        onNegativeButtonClick = scrollToNextPageOrDismiss,
+        onPositiveButtonClick = onNotificationPermissionButtonClick,
+        onNegativeButtonClick = onNotificationPermissionSkipClick,
     )
 }
 

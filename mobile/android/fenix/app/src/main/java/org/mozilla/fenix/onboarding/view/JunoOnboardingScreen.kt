@@ -15,6 +15,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -32,30 +33,34 @@ import org.mozilla.fenix.compose.PagerIndicator
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.theme.FirefoxTheme
 
-private val OnboardingPageTypeList = listOf(
-    JunoOnboardingPageType.DEFAULT_BROWSER,
-    JunoOnboardingPageType.NOTIFICATION_PERMISSION,
-    JunoOnboardingPageType.SYNC_SIGN_IN,
-)
-
 /**
  * A screen for displaying juno onboarding.
  *
- * @param onMakeFirefoxDefaultClick Invoked when the positive button on default browser page is
- * clicked.
+ * @param onboardingPageTypeList List of pages to be displayed in onboarding pager ui.
+ * @param onMakeFirefoxDefaultClick Invoked when positive button on default browser page is clicked.
+ * @param onSkipDefaultClick Invoked when negative button on default browser page is clicked.
  * @param onPrivacyPolicyClick Invoked when the privacy policy link text is clicked.
  * @param onSignInButtonClick Invoked when the positive button on the sign in page is clicked.
- * @param onNotificationPermissionButtonClick Invoked when the positive button on notification
- * page is clicked.
+ * @param onSkipSignInClick Invoked when the negative button on the sign in page is clicked.
+ * @param onNotificationPermissionButtonClick Invoked when positive button on notification page is
+ * clicked.
+ * @param onSkipNotificationClick Invoked when negative button on notification page is clicked.
  * @param onFinish Invoked when the onboarding is completed.
+ * @param onImpression Invoked when a page in the pager is displayed.
  */
 @Composable
+@Suppress("LongParameterList")
 fun JunoOnboardingScreen(
+    onboardingPageTypeList: List<JunoOnboardingPageType>,
     onMakeFirefoxDefaultClick: () -> Unit,
-    onPrivacyPolicyClick: (String) -> Unit,
+    onSkipDefaultClick: () -> Unit = {},
+    onPrivacyPolicyClick: (url: String) -> Unit,
     onSignInButtonClick: () -> Unit,
+    onSkipSignInClick: () -> Unit = {},
     onNotificationPermissionButtonClick: () -> Unit,
+    onSkipNotificationClick: () -> Unit = {},
     onFinish: () -> Unit,
+    onImpression: (pageType: JunoOnboardingPageType) -> Unit = {},
 ) {
     val coroutineScope = rememberCoroutineScope()
     val pagerState = rememberPagerState()
@@ -84,25 +89,57 @@ fun JunoOnboardingScreen(
         }
     }
 
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.currentPage }.collect { page ->
+            onImpression(onboardingPageTypeList[page])
+        }
+    }
+
     JunoOnboardingContent(
+        onboardingPageTypeList = onboardingPageTypeList,
         pagerState = pagerState,
-        scrollToNextPageOrDismiss = scrollToNextPageOrDismiss,
-        onMakeFirefoxDefaultClick = onMakeFirefoxDefaultClick,
-        onPrivacyPolicyClick = onPrivacyPolicyClick,
-        onSignInButtonClick = onSignInButtonClick,
-        onNotificationPermissionButtonClick = onNotificationPermissionButtonClick,
+        onMakeFirefoxDefaultClick = {
+            scrollToNextPageOrDismiss()
+            onMakeFirefoxDefaultClick()
+        },
+        onMakeFirefoxDefaultSkipClick = {
+            scrollToNextPageOrDismiss()
+            onSkipDefaultClick()
+        },
+        onPrivacyPolicyClick = {
+            onPrivacyPolicyClick(it)
+        },
+        onSignInButtonClick = {
+            onSignInButtonClick()
+            scrollToNextPageOrDismiss()
+        },
+        onSignInSkipClick = {
+            scrollToNextPageOrDismiss()
+            onSkipSignInClick()
+        },
+        onNotificationPermissionButtonClick = {
+            scrollToNextPageOrDismiss()
+            onNotificationPermissionButtonClick()
+        },
+        onNotificationPermissionSkipClick = {
+            scrollToNextPageOrDismiss()
+            onSkipNotificationClick()
+        },
     )
 }
 
 @Composable
 @Suppress("LongParameterList")
 private fun JunoOnboardingContent(
+    onboardingPageTypeList: List<JunoOnboardingPageType>,
     pagerState: PagerState,
-    scrollToNextPageOrDismiss: () -> Unit,
     onMakeFirefoxDefaultClick: () -> Unit,
+    onMakeFirefoxDefaultSkipClick: () -> Unit,
     onPrivacyPolicyClick: (String) -> Unit,
     onSignInButtonClick: () -> Unit,
+    onSignInSkipClick: () -> Unit,
     onNotificationPermissionButtonClick: () -> Unit,
+    onNotificationPermissionSkipClick: () -> Unit,
 ) {
     val nestedScrollConnection = remember { DisableForwardSwipeNestedScrollConnection(pagerState) }
 
@@ -113,21 +150,23 @@ private fun JunoOnboardingContent(
             .navigationBarsPadding(),
     ) {
         HorizontalPager(
-            count = OnboardingPageTypeList.size,
+            count = onboardingPageTypeList.size,
             state = pagerState,
-            key = { OnboardingPageTypeList[it] },
+            key = { onboardingPageTypeList[it] },
             modifier = Modifier
                 .weight(1f)
                 .nestedScroll(nestedScrollConnection),
         ) { pageIndex ->
-            val onboardingPageType = OnboardingPageTypeList[pageIndex]
+            val onboardingPageType = onboardingPageTypeList[pageIndex]
             val pageState = mapToOnboardingPageState(
                 onboardingPageType = onboardingPageType,
-                scrollToNextPageOrDismiss = scrollToNextPageOrDismiss,
                 onMakeFirefoxDefaultClick = onMakeFirefoxDefaultClick,
+                onMakeFirefoxDefaultSkipClick = onMakeFirefoxDefaultSkipClick,
                 onPrivacyPolicyClick = onPrivacyPolicyClick,
                 onSignInButtonClick = onSignInButtonClick,
+                onSignInSkipClick = onSignInSkipClick,
                 onNotificationPermissionButtonClick = onNotificationPermissionButtonClick,
+                onNotificationPermissionSkipClick = onNotificationPermissionSkipClick,
             )
             OnboardingPage(pageState = pageState)
         }
@@ -171,12 +210,19 @@ private class DisableForwardSwipeNestedScrollConnection(
 private fun JunoOnboardingScreenPreview() {
     FirefoxTheme {
         JunoOnboardingContent(
+            onboardingPageTypeList = listOf(
+                JunoOnboardingPageType.DEFAULT_BROWSER,
+                JunoOnboardingPageType.SYNC_SIGN_IN,
+                JunoOnboardingPageType.NOTIFICATION_PERMISSION,
+            ),
             pagerState = PagerState(0),
             onMakeFirefoxDefaultClick = {},
+            onMakeFirefoxDefaultSkipClick = {},
             onPrivacyPolicyClick = {},
             onSignInButtonClick = {},
+            onSignInSkipClick = {},
             onNotificationPermissionButtonClick = {},
-            scrollToNextPageOrDismiss = {},
+            onNotificationPermissionSkipClick = {},
         )
     }
 }
