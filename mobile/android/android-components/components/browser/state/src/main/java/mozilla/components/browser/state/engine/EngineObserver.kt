@@ -12,6 +12,7 @@ import mozilla.components.browser.state.action.CookieBannerAction
 import mozilla.components.browser.state.action.CrashAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.MediaSessionAction
+import mozilla.components.browser.state.action.ReaderAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.AppIntentState
@@ -44,6 +45,11 @@ internal class EngineObserver(
     private val tabId: String,
     private val store: Store<BrowserState, BrowserAction>,
 ) : EngineSession.Observer {
+
+    override fun onScrollChange(scrollX: Int, scrollY: Int) {
+        store.dispatch(ReaderAction.UpdateReaderScrollYAction(tabId, scrollY))
+    }
+
     override fun onNavigateBack() {
         store.dispatch(ContentAction.UpdateSearchTermsAction(tabId, ""))
     }

@@ -116,6 +116,31 @@ class ReaderActionTest {
     }
 
     @Test
+    fun `UpdateReaderScrollYAction - Updates scrollY of ReaderState when active`() {
+        assertFalse(readerState().active)
+
+        store.dispatch(ReaderAction.UpdateReaderActiveAction(tabId = tab.id, active = true))
+            .joinBlocking()
+
+        assertTrue(readerState().active)
+
+        store.dispatch(ReaderAction.UpdateReaderScrollYAction(tabId = tab.id, scrollY = 1234))
+            .joinBlocking()
+
+        assertEquals(1234, readerState().scrollY)
+    }
+
+    @Test
+    fun `UpdateReaderScrollYAction - Does not update scrollY of ReaderState when not active`() {
+        assertFalse(readerState().active)
+
+        store.dispatch(ReaderAction.UpdateReaderScrollYAction(tabId = tab.id, scrollY = 1234))
+            .joinBlocking()
+
+        assertNull(readerState().scrollY)
+    }
+
+    @Test
     fun `ClearReaderActiveUrlAction - Clears active url of ReaderState`() {
         assertNull(readerState().activeUrl)
 

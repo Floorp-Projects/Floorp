@@ -1306,6 +1306,7 @@ class GeckoEngineSession(
     private fun createScrollDelegate() = object : GeckoSession.ScrollDelegate {
         override fun onScrollChanged(session: GeckoSession, scrollX: Int, scrollY: Int) {
             this@GeckoEngineSession.scrollY = scrollY
+            notifyObservers { onScrollChange(scrollX, scrollY) }
         }
     }
 

@@ -24,4 +24,5 @@ data class ReaderState(
     val connectRequired: Boolean = false,
     val baseUrl: String? = null,
     val activeUrl: String? = null,
+    val scrollY: Int? = null,
 )

@@ -33,6 +33,14 @@ abstract class EngineSession(
      * Interface to be implemented by classes that want to observe this engine session.
      */
     interface Observer {
+        /**
+         * Event to indicate the scroll position of the content has changed.
+         *
+         * @param scrollX The new horizontal scroll position in pixels.
+         * @param scrollY The new vertical scroll position in pixels.
+         */
+        fun onScrollChange(scrollX: Int, scrollY: Int) = Unit
+
         fun onLocationChange(url: String) = Unit
         fun onTitleChange(title: String) = Unit
 

@@ -37,6 +37,13 @@ internal object ReaderStateReducer {
         is ReaderAction.ClearReaderActiveUrlAction -> state.copyWithReaderState(action.tabId) {
             it.copy(activeUrl = null)
         }
+        is ReaderAction.UpdateReaderScrollYAction -> state.copyWithReaderState(action.tabId) {
+            if (it.active) {
+                it.copy(scrollY = action.scrollY)
+            } else {
+                it
+            }
+        }
     }
 }
 

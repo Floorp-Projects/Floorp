@@ -275,6 +275,16 @@ class ReaderViewFeatureTest {
             ReaderViewFeature.ColorScheme.LIGHT.name.lowercase(Locale.ROOT),
             config[ReaderViewFeature.ACTION_VALUE_SHOW_COLOR_SCHEME],
         )
+        assertFalse(config.has(ReaderViewFeature.ACTION_VALUE_SCROLLY))
+    }
+
+    @Test
+    fun `pass scrollY for showing reader view`() {
+        val message = ReaderViewFeature.createShowReaderMessage(null, 1234)
+        assertEquals(ReaderViewFeature.ACTION_SHOW, message[ReaderViewFeature.ACTION_MESSAGE_KEY])
+        val config = message[ReaderViewFeature.ACTION_VALUE] as JSONObject?
+        assertNotNull(config)
+        assertEquals(1234, config!![ReaderViewFeature.ACTION_VALUE_SCROLLY])
     }
 
     @Test

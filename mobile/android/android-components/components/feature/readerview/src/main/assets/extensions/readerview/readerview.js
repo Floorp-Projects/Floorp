@@ -56,6 +56,9 @@ class ReaderView {
     this.setFontSize(options.fontSize);
     this.setFontType(options.fontType);
     this.setColorScheme(options.colorScheme);
+    if (options.scrollY) {
+      window.scrollTo({top: options.scrollY, left: 0, behavior: "instant"});
+    }
   }
 
   /**

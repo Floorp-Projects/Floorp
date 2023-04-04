@@ -123,6 +123,7 @@ class GeckoEngineSessionTest {
     private lateinit var mediaDelegate: ArgumentCaptor<GeckoSession.MediaDelegate>
     private lateinit var contentDelegate: ArgumentCaptor<GeckoSession.ContentDelegate>
     private lateinit var permissionDelegate: ArgumentCaptor<GeckoSession.PermissionDelegate>
+    private lateinit var scrollDelegate: ArgumentCaptor<GeckoSession.ScrollDelegate>
     private lateinit var contentBlockingDelegate: ArgumentCaptor<ContentBlocking.Delegate>
     private lateinit var historyDelegate: ArgumentCaptor<GeckoSession.HistoryDelegate>
 
@@ -153,6 +154,7 @@ class GeckoEngineSessionTest {
         mediaDelegate = ArgumentCaptor.forClass(GeckoSession.MediaDelegate::class.java)
         contentDelegate = ArgumentCaptor.forClass(GeckoSession.ContentDelegate::class.java)
         permissionDelegate = ArgumentCaptor.forClass(GeckoSession.PermissionDelegate::class.java)
+        scrollDelegate = ArgumentCaptor.forClass(GeckoSession.ScrollDelegate::class.java)
         contentBlockingDelegate = ArgumentCaptor.forClass(ContentBlocking.Delegate::class.java)
         historyDelegate = ArgumentCaptor.forClass(GeckoSession.HistoryDelegate::class.java)
 
@@ -165,6 +167,7 @@ class GeckoEngineSessionTest {
         verify(geckoSession).progressDelegate = progressDelegate.capture()
         verify(geckoSession).contentDelegate = contentDelegate.capture()
         verify(geckoSession).permissionDelegate = permissionDelegate.capture()
+        verify(geckoSession).scrollDelegate = scrollDelegate.capture()
         verify(geckoSession).contentBlockingDelegate = contentBlockingDelegate.capture()
         verify(geckoSession).historyDelegate = historyDelegate.capture()
         verify(geckoSession).mediaDelegate = mediaDelegate.capture()
@@ -522,6 +525,41 @@ class GeckoEngineSessionTest {
         assertEquals("originMedia", observedContentPermissionRequests[2].uri)
         assertEquals("about:blank", observedContentPermissionRequests[3].uri)
         assertEquals(2, observedAppPermissionRequests.size)
+    }
+
+    @Test
+    fun scrollDelegateNotifiesObservers() {
+        val engineSession = GeckoEngineSession(
+            mock(),
+            geckoSessionProvider = geckoSessionProvider,
+        )
+
+        val observedScrollChanges: MutableList<Pair<Int, Int>> = mutableListOf()
+        engineSession.register(
+            object : EngineSession.Observer {
+                override fun onScrollChange(scrollX: Int, scrollY: Int) {
+                    observedScrollChanges.add(Pair(scrollX, scrollY))
+                }
+            },
+        )
+
+        captureDelegates()
+
+        scrollDelegate.value.onScrollChanged(
+            geckoSession,
+            1234,
+            4321,
+        )
+
+        scrollDelegate.value.onScrollChanged(
+            geckoSession,
+            2345,
+            5432,
+        )
+
+        assertEquals(2, observedScrollChanges.size)
+        assertEquals(Pair(1234, 4321), observedScrollChanges[0])
+        assertEquals(Pair(2345, 5432), observedScrollChanges[1])
     }
 
     @Test

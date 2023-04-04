@@ -13,6 +13,7 @@ import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.CookieBannerAction
 import mozilla.components.browser.state.action.CrashAction
+import mozilla.components.browser.state.action.ReaderAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.selector.findTab
@@ -1546,6 +1547,21 @@ class EngineObserverTest {
                     HistoryItem("Mozilla", "http://mozilla.org"),
                 ),
                 currentIndex = 1,
+            ),
+        )
+    }
+
+    @Test
+    fun `onScrollChange dispatches UpdateReaderScrollYAction`() {
+        val store: BrowserStore = mock()
+        whenever(store.state).thenReturn(mock())
+        val observer = EngineObserver("tab-id", store)
+
+        observer.onScrollChange(4321, 1234)
+        verify(store).dispatch(
+            ReaderAction.UpdateReaderScrollYAction(
+                "tab-id",
+                1234,
             ),
         )
     }

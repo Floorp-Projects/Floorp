@@ -1231,6 +1231,11 @@ sealed class ReaderAction : BrowserAction() {
         ReaderAction()
 
     /**
+     * Updates the [ReaderState.scrollY].
+     */
+    data class UpdateReaderScrollYAction(val tabId: String, val scrollY: Int) : ReaderAction()
+
+    /**
      * Clears the [ReaderState.activeUrl].
      */
     data class ClearReaderActiveUrlAction(val tabId: String) : ReaderAction()

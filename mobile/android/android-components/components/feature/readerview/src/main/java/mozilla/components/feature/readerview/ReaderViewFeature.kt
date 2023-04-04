@@ -264,7 +264,7 @@ class ReaderViewFeature(
                 val baseUrl = message.getString(BASE_URL_RESPONSE_MESSAGE_KEY)
                 store.dispatch(ReaderAction.UpdateReaderBaseUrlAction(sessionId, baseUrl))
 
-                port.postMessage(createShowReaderMessage(config.get()))
+                port.postMessage(createShowReaderMessage(config.get(), store.state.selectedTab?.readerState?.scrollY))
 
                 val activeUrl = message.getString(ACTIVE_URL_RESPONSE_MESSAGE_KEY)
                 store.dispatch(ReaderAction.UpdateReaderActiveUrlAction(sessionId, activeUrl))
@@ -301,6 +301,7 @@ class ReaderViewFeature(
         internal const val ACTION_VALUE_SHOW_FONT_SIZE = "fontSize"
         internal const val ACTION_VALUE_SHOW_FONT_TYPE = "fontType"
         internal const val ACTION_VALUE_SHOW_COLOR_SCHEME = "colorScheme"
+        internal const val ACTION_VALUE_SCROLLY = "scrollY"
         internal const val READERABLE_RESPONSE_MESSAGE_KEY = "readerable"
         internal const val BASE_URL_RESPONSE_MESSAGE_KEY = "baseUrl"
         internal const val ACTIVE_URL_RESPONSE_MESSAGE_KEY = "activeUrl"
@@ -316,7 +317,7 @@ class ReaderViewFeature(
             return JSONObject().put(ACTION_MESSAGE_KEY, ACTION_CHECK_READER_STATE)
         }
 
-        internal fun createShowReaderMessage(config: ReaderViewConfig?): JSONObject {
+        internal fun createShowReaderMessage(config: ReaderViewConfig?, scrollY: Int? = null): JSONObject {
             if (config == null) {
                 logger.warn("No config provided. Falling back to default values.")
             }
@@ -328,7 +329,9 @@ class ReaderViewFeature(
                 .put(ACTION_VALUE_SHOW_FONT_SIZE, fontSize)
                 .put(ACTION_VALUE_SHOW_FONT_TYPE, fontType.value.lowercase(Locale.ROOT))
                 .put(ACTION_VALUE_SHOW_COLOR_SCHEME, colorScheme.name.lowercase(Locale.ROOT))
-
+            if (scrollY != null) {
+                configJson.put(ACTION_VALUE_SCROLLY, scrollY)
+            }
             return JSONObject()
                 .put(ACTION_MESSAGE_KEY, ACTION_SHOW)
                 .put(ACTION_VALUE, configJson)
