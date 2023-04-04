@@ -71,6 +71,7 @@ class L10nMutations final : public nsStubMultiMutationObserver,
  private:
   bool mObserving = false;
   bool mBlockingLoad = false;
+  bool mPendingBlockingLoadFlush = false;
   uint32_t mPendingPromises = 0;
   RefPtr<nsRefreshDriver> mRefreshDriver;
   DOMLocalization* mDOMLocalization;
@@ -88,6 +89,7 @@ class L10nMutations final : public nsStubMultiMutationObserver,
   void StopRefreshObserver();
   void L10nElementChanged(Element* aElement);
   MOZ_CAN_RUN_SCRIPT void FlushPendingTranslations();
+  MOZ_CAN_RUN_SCRIPT void FlushPendingTranslationsBeforeLoad();
   MOZ_CAN_RUN_SCRIPT void MaybeFirePendingTranslationsFinished();
 
   ~L10nMutations();

@@ -152,18 +152,22 @@ void L10nMutations::L10nElementChanged(Element* aElement) {
     if (doc && doc->GetReadyStateEnum() != Document::READYSTATE_COMPLETE) {
       doc->BlockOnload();
       mBlockingLoad = true;
-      // We want to make sure we flush translations and don't block the load
-      // indefinitely (and, in fact, that we do it rather soon, even if the
-      // refresh driver is not ticking yet).
-      //
-      // In some platforms (mainly Wayland) the load of the main document
-      // causes vsync to start running and start ticking the refresh driver,
-      // so we can't rely on the refresh driver ticking yet.
-      RefPtr<nsIRunnable> task =
-          NewRunnableMethod("FlushPendingTranslationsBeforeLoad", this,
-                            &L10nMutations::FlushPendingTranslations);
-      nsThreadManager::get().DispatchDirectTaskToCurrentThread(task);
     }
+  }
+
+  if (mBlockingLoad && !mPendingBlockingLoadFlush) {
+    // We want to make sure we flush translations and don't block the load
+    // indefinitely (and, in fact, that we do it rather soon, even if the
+    // refresh driver is not ticking yet).
+    //
+    // In some platforms (mainly Wayland) the load of the main document
+    // causes vsync to start running and start ticking the refresh driver,
+    // so we can't rely on the refresh driver ticking yet.
+    RefPtr<nsIRunnable> task =
+        NewRunnableMethod("FlushPendingTranslationsBeforeLoad", this,
+                          &L10nMutations::FlushPendingTranslationsBeforeLoad);
+    nsThreadManager::get().DispatchDirectTaskToCurrentThread(task);
+    mPendingBlockingLoadFlush = true;
   }
 }
 
@@ -226,6 +230,12 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(L10nMutationFinalizationHandler)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(L10nMutationFinalizationHandler)
+
+void L10nMutations::FlushPendingTranslationsBeforeLoad() {
+  MOZ_ASSERT(mPendingBlockingLoadFlush);
+  mPendingBlockingLoadFlush = false;
+  FlushPendingTranslations();
+}
 
 void L10nMutations::FlushPendingTranslations() {
   if (!mDOMLocalization) {
