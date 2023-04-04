@@ -163,7 +163,7 @@ def make_job_description(config, jobs):
 
         worker = {
             "chain-of-trust": True,
-            "max-run-time": 7200 if build_platform.startswith("win") else 3600,
+            "max-run-time": 3600,
             "taskcluster-proxy": True if get_artifact_prefix(dep_job) else False,
             "env": {
                 "REPACK_ID": repack_id,

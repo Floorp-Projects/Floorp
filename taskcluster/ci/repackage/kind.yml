@@ -39,6 +39,11 @@ only-for-build-platforms:
 
 job-template:
     worker-type: b-linux-gcp
+    worker:
+        max-run-time:
+            by-build-platform:
+                .*asan.*: 2700
+                default: 900
     mozharness:
         config:
             by-build-platform:
