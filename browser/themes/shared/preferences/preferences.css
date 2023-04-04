@@ -467,6 +467,11 @@ richlistitem[selected] .actionsMenu:focus-visible {
   margin-inline-start: 0;
 }
 
+a[is="moz-support-link"] {
+  display: inline-block;
+  white-space: initial;
+}
+
 /* Search Pane */
 
 #engineList {
