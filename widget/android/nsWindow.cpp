@@ -806,7 +806,14 @@ class NPZCSupport final
       if (!win) {
         return;
       }
-      nsWindow* gkWindow = win->GetNsWindow();
+      RefPtr<nsWindow> gkWindow = win->GetNsWindow();
+      if (!gkWindow) {
+        return;
+      }
+      MutexAutoLock lock(gkWindow->GetDestroyMutex());
+      if (gkWindow->Destroyed()) {
+        return;
+      }
       jni::NativeWeakPtr<NPZCSupport> weakPtrToThis =
           gkWindow->GetNPZCSupportWeakPtr();
       mObserver = Observer::Create(std::move(weakPtrToThis));
@@ -1966,7 +1973,8 @@ nsWindow::nsWindow()
       mDynamicToolbarMaxHeight(0),
       mSizeMode(nsSizeMode_Normal),
       mIsFullScreen(false),
-      mCompositorWidgetDelegate(nullptr) {}
+      mCompositorWidgetDelegate(nullptr),
+      mDestroyMutex("nsWindow::mDestroyMutex") {}
 
 nsWindow::~nsWindow() {
   gTopLevelWindows.RemoveElement(this);
@@ -2035,6 +2043,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 }
 
 void nsWindow::Destroy() {
+  MutexAutoLock lock(mDestroyMutex);
+
   nsBaseWidget::mOnDestroyCalled = true;
 
   // Disassociate our native object from GeckoView.
