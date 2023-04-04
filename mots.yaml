@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-03-29T09:29:53.741754'
+updated_at: '2023-04-04T10:50:59.346928'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -552,6 +552,10 @@ people:
     bmo_id: 274246
     name: Karl Tomlinson
     nick: karlt
+  - &kcochrane
+    bmo_id: 707663
+    name: Kelly Cochrane
+    nick: kcochrane
   - &keeler
     bmo_id: 349244
     name: Dana Keeler
@@ -3256,6 +3260,7 @@ modules:
           - *sclements
         peers:
           - *sfoster
+          - *kcochrane
         meta:
       - name: Form Autofill
         description: Form detection and autocomplete.
@@ -4078,5 +4083,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 4fa77257b438fffbab9ffce4e8f73bb23a5650d0
-  export: 7d55d5457734f1fd0242112af7318a52330a37fb
+  config: 6dcd6203d12824b5ee47fcb31ea5bbdca588d06e
+  export: 4e8ece19caf52a866630717755b1006885b07f63
