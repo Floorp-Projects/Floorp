@@ -336,7 +336,10 @@ void FetchStreamReader::ChunkSteps(JSContext* aCx, JS::Handle<JS::Value> aChunk,
   mBufferOffset = 0;
   mBufferRemaining = chunk.Length();
 
-  Process(aCx);
+  nsresult rv = WriteBuffer();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    CloseAndRelease(aCx, NS_ERROR_DOM_ABORT_ERR);
+  }
 }
 
 void FetchStreamReader::CloseSteps(JSContext* aCx, ErrorResult& aRv) {
@@ -352,11 +355,11 @@ void FetchStreamReader::ErrorSteps(JSContext* aCx, JS::Handle<JS::Value> aError,
 }
 
 nsresult FetchStreamReader::WriteBuffer() {
-  MOZ_ASSERT(!mBuffer.IsEmpty());
+  MOZ_ASSERT(mBuffer.Length() == (mBufferOffset + mBufferRemaining));
 
   char* data = reinterpret_cast<char*>(mBuffer.Elements());
 
-  while (1) {
+  while (mBufferRemaining > 0) {
     uint32_t written = 0;
     nsresult rv =
         mPipeOut->Write(data + mBufferOffset, mBufferRemaining, &written);
