@@ -179,6 +179,15 @@ async function doPasteAndGo(data) {
 async function doTest(testFn) {
   await Services.fog.testFlushAllChildren();
   Services.fog.testResetFOG();
+  // Enable recording telemetry for abandonment, engagement and impression.
+  Services.fog.setMetricsFeatureConfig(
+    JSON.stringify({
+      "urlbar.abandonment": false,
+      "urlbar.engagement": false,
+      "urlbar.impression": false,
+    })
+  );
+
   gURLBar.controller.engagementEvent.reset();
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
@@ -189,7 +198,11 @@ async function doTest(testFn) {
   await QuickSuggest.blockedSuggestions._test_readyPromise;
   await updateTopSites(() => true);
 
-  await BrowserTestUtils.withNewTab(gBrowser, testFn);
+  try {
+    await BrowserTestUtils.withNewTab(gBrowser, testFn);
+  } finally {
+    Services.fog.setMetricsFeatureConfig("{}");
+  }
 }
 
 async function initGroupTest() {
@@ -214,15 +227,6 @@ async function initNCharsAndNWordsTest() {
   /* import-globals-from head-n_chars_n_words.js */
   Services.scriptloader.loadSubScript(
     "chrome://mochitests/content/browser/browser/components/urlbar/tests/engagementTelemetry/browser/head-n_chars_n_words.js",
-    this
-  );
-  await setup();
-}
-
-async function initPreferencesTest() {
-  /* import-globals-from head-preferences.js */
-  Services.scriptloader.loadSubScript(
-    "chrome://mochitests/content/browser/browser/components/urlbar/tests/engagementTelemetry/browser/head-preferences.js",
     this
   );
   await setup();

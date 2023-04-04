@@ -17,13 +17,15 @@ ChromeUtils.defineESModuleGetters(this, {
 add_setup(async function() {
   makeProfileResettable();
 
+  Services.fog.setMetricsFeatureConfig(
+    JSON.stringify({ "urlbar.engagement": false })
+  );
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.searchEngagementTelemetry.enabled", true],
-      ["browser.urlbar.quickactions.enabled", false],
-    ],
+    set: [["browser.urlbar.quickactions.enabled", false]],
   });
+
   registerCleanupFunction(async function() {
+    Services.fog.setMetricsFeatureConfig("{}");
     await SpecialPowers.popPrefEnv();
   });
 });
