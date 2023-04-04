@@ -156,72 +156,24 @@ function setupAdvancedButton() {
     .addEventListener("click", togglePanelVisibility);
 
   function togglePanelVisibility() {
-    if (panel.hidden) {
-      // Reveal
-      revealAdvancedPanelSlowlyAsync();
+    panel.hidden = !panel.hidden;
 
+    // Toggling the advanced panel must ensure that the debugging
+    // information panel is hidden as well, since it's opened by the
+    // error code link in the advanced panel.
+    toggleCertErrorDebugInfoVisibility(false);
+
+    if (!panel.hidden) {
       // send event to trigger telemetry ping
       document.dispatchEvent(
         new CustomEvent("AboutNetErrorUIExpanded", { bubbles: true })
       );
-    } else {
-      // Hide
-      panel.hidden = true;
     }
   }
 
   if (getCSSClass() == "expertBadCert") {
-    revealAdvancedPanelSlowlyAsync();
+    panel.hidden = false;
   }
-}
-
-async function revealAdvancedPanelSlowlyAsync() {
-  const badCertAdvancedPanel = document.getElementById("badCertAdvancedPanel");
-  const exceptionDialogButton = document.getElementById(
-    "exceptionDialogButton"
-  );
-
-  // Toggling the advanced panel must ensure that the debugging
-  // information panel is hidden as well, since it's opened by the
-  // error code link in the advanced panel.
-  toggleCertErrorDebugInfoVisibility(false);
-
-  // Reveal, but disabled (and grayed-out) for 3.0s.
-  badCertAdvancedPanel.hidden = false;
-  exceptionDialogButton.disabled = true;
-
-  // -
-
-  if (exceptionDialogButton.resetReveal) {
-    exceptionDialogButton.resetReveal(); // Reset if previous is pending.
-  }
-  let wasReset = false;
-  exceptionDialogButton.resetReveal = () => {
-    wasReset = true;
-  };
-
-  // Wait for 10 frames to ensure that the warning text is rendered
-  // and gets all the way to the screen for the user to read it.
-  // This is only ~0.160s at 60Hz, so it's not too much extra time that we're
-  // taking to ensure that we're caught up with rendering, on top of the
-  // (by default) whole second(s) we're going to wait based on the
-  // security.dialog_enable_delay pref.
-  // The catching-up to rendering is the important part, not the
-  // N-frame-delay here.
-  for (let i = 0; i < 10; i++) {
-    await new Promise(requestAnimationFrame);
-  }
-
-  // Wait another Nms (default: 1000) for the user to be very sure. (Sorry speed readers!)
-  const securityDelayMs = RPMGetIntPref("security.dialog_enable_delay", 1000);
-  await new Promise(go => setTimeout(go, securityDelayMs));
-
-  if (wasReset) {
-    return;
-  }
-
-  // Enable and un-gray-out.
-  exceptionDialogButton.disabled = false;
 }
 
 function disallowCertOverridesIfNeeded() {
@@ -1310,7 +1262,7 @@ function setTechnicalDetailsOnCertError(
     technicalInfo.addEventListener("click", event => {
       if (event.target.id === "errorCode") {
         event.preventDefault();
-        revealAdvancedPanelSlowlyAsync();
+        toggleCertErrorDebugInfoVisibility();
         recordClickTelemetry(event);
       }
     });
@@ -1437,7 +1389,12 @@ function setTechnicalDetailsOnCertError(
             // If we set a link, meaning there's something helpful for
             // the user here, expand the section by default
             if (getCSSClass() != "expertBadCert") {
-              revealAdvancedPanelSlowlyAsync();
+              document.getElementById("badCertAdvancedPanel").hidden = false;
+
+              // Toggling the advanced panel must ensure that the debugging
+              // information panel is hidden as well, since it's opened by the
+              // error code link in the advanced panel.
+              toggleCertErrorDebugInfoVisibility(false);
             }
           } else {
             addLabel("cert-error-domain-mismatch-single-nolink", l10nArgs);
