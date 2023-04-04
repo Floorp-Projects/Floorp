@@ -558,7 +558,6 @@ struct ParamTraits<mozilla::layers::ScrollMetadata>
     WriteParam(aWriter, aParam.mMetrics);
     WriteParam(aWriter, aParam.mSnapInfo);
     WriteParam(aWriter, aParam.mScrollParentId);
-    WriteParam(aWriter, aParam.mBackgroundColor);
     WriteParam(aWriter, aParam.GetContentDescription());
     WriteParam(aWriter, aParam.mLineScrollAmount);
     WriteParam(aWriter, aParam.mPageScrollAmount);
@@ -591,7 +590,6 @@ struct ParamTraits<mozilla::layers::ScrollMetadata>
     return (ReadParam(aReader, &aResult->mMetrics) &&
             ReadParam(aReader, &aResult->mSnapInfo) &&
             ReadParam(aReader, &aResult->mScrollParentId) &&
-            ReadParam(aReader, &aResult->mBackgroundColor) &&
             ReadContentDescription(aReader, aResult) &&
             ReadParam(aReader, &aResult->mLineScrollAmount) &&
             ReadParam(aReader, &aResult->mPageScrollAmount) &&
