@@ -111,7 +111,8 @@ NS_IMPL_ISUPPORTS_INHERITED(nsCocoaWindow, Inherited, nsPIWidgetCocoa)
 // widget - whether or not the sheet is showing. |[mWindow isSheet]| will return
 // true *only when the sheet is actually showing*. Choose your test wisely.
 
-static void RollUpPopups() {
+static void RollUpPopups(
+    nsIRollupListener::AllowAnimations aAllowAnimations = nsIRollupListener::AllowAnimations::Yes) {
   nsIRollupListener* rollupListener = nsBaseWidget::GetActiveRollupListener();
   NS_ENSURE_TRUE_VOID(rollupListener);
 
@@ -120,8 +121,12 @@ static void RollUpPopups() {
   }
 
   nsCOMPtr<nsIWidget> rollupWidget = rollupListener->GetRollupWidget();
-  if (!rollupWidget) return;
-  rollupListener->Rollup({0, nsIRollupListener::FlushViews::Yes});
+  if (!rollupWidget) {
+    return;
+  }
+  nsIRollupListener::RollupOptions options{0, nsIRollupListener::FlushViews::Yes, nullptr,
+                                           aAllowAnimations};
+  rollupListener->Rollup(options);
 }
 
 nsCocoaWindow::nsCocoaWindow()
@@ -969,7 +974,9 @@ void nsCocoaWindow::Show(bool bState) {
     }
   } else {
     // roll up any popups if a top-level window is going away
-    if (mWindowType == WindowType::TopLevel || mWindowType == WindowType::Dialog) RollUpPopups();
+    if (mWindowType == WindowType::TopLevel || mWindowType == WindowType::Dialog) {
+      RollUpPopups();
+    }
 
     // now get rid of the window/sheet
     if (mWindowType == WindowType::Sheet) {
@@ -3036,7 +3043,8 @@ void nsCocoaWindow::CocoaWindowDidResize() {
 - (void)windowDidResignKey:(NSNotification*)aNotification {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
-  RollUpPopups();
+  RollUpPopups(nsIRollupListener::AllowAnimations::No);
+
   ChildViewMouseTracker::ReEvaluateMouseEnterState();
 
   // If a sheet just resigned key then we should paint the menu bar
