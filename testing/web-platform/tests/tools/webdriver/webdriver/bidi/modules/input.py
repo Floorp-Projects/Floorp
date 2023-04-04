@@ -68,11 +68,11 @@ class PointerAction(Action):
         self.y = y
         self.duration = duration
         self.origin = origin
-        self.width = width,
+        self.width = width
         self.height = height
         self.pressure = pressure
         self.tangential_pressure = tangential_pressure
-        self.tilt_x = tilt_x,
+        self.tilt_x = tilt_x
         self.tilt_y = tilt_y
         self.twist = twist
         self.altitude_angle = altitude_angle
@@ -112,7 +112,7 @@ class PointerAction(Action):
 
 
 class PointerDownAction(PointerAction):
-    type = "pointerDown"
+    action_type = "pointerDown"
 
     def __init__(self,
                  button: int,
@@ -133,7 +133,7 @@ class PointerDownAction(PointerAction):
 
 
 class PointerUpAction(PointerAction):
-    type = "pointerUp"
+    action_type = "pointerUp"
 
     def __init__(self,
                  button: int,
@@ -154,7 +154,7 @@ class PointerUpAction(PointerAction):
 
 
 class PointerMoveAction(PointerAction):
-    type = "pointerMove"
+    action_type = "pointerMove"
 
     def __init__(self,
                  x: int,
@@ -178,7 +178,7 @@ class PointerMoveAction(PointerAction):
 
 
 class WheelScrollAction(Action):
-    type = "scroll"
+    action_type = "scroll"
 
     def __init__(self,
                  x: int,
@@ -353,4 +353,9 @@ class Input(BidiModule):
             params["actions"] = actions.to_json()
         else:
             params["actions"] = actions
+        return params
+
+    @command
+    def release_actions(self, context: str) -> Mapping[str, Any]:
+        params: MutableMapping[str, Any] = {"context": context}
         return params
