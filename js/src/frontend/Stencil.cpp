@@ -4453,9 +4453,13 @@ void CompilationInput::dumpFields(js::JSONPrinter& json) const {
     json.endObject();
   }
 
-  json.beginObjectProperty("enclosingScope");
-  DumpInputScopeFields(json, enclosingScope);
-  json.endObject();
+  if (enclosingScope.isNull()) {
+    json.nullProperty("enclosingScope");
+  } else {
+    json.beginObjectProperty("enclosingScope");
+    DumpInputScopeFields(json, enclosingScope);
+    json.endObject();
+  }
 
   // TODO: Support printing the atomCache and the source fields.
 }
