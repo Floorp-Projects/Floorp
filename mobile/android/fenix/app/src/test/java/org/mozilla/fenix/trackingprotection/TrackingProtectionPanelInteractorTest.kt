@@ -14,26 +14,21 @@ import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
 import io.mockk.slot
-import io.mockk.spyk
 import io.mockk.verify
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.concept.engine.cookiehandling.CookieBannersStorage
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.feature.session.TrackingProtectionUseCases
-import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
-@RunWith(FenixRobolectricTestRunner::class)
 class TrackingProtectionPanelInteractorTest {
 
     private lateinit var context: Context
@@ -67,7 +62,7 @@ class TrackingProtectionPanelInteractorTest {
         MockKAnnotations.init(this)
         learnMoreClicked = false
 
-        context = spyk(testContext)
+        context = mockk()
         tab = createTab("https://mozilla.org")
         val cookieBannersStorage: CookieBannersStorage = mockk(relaxed = true)
 
