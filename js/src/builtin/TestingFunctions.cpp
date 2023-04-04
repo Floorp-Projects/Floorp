@@ -6502,15 +6502,15 @@ static bool CompileToStencil(JSContext* cx, uint32_t argc, Value* vp) {
 
   AutoReportFrontendContext fc(cx);
   RefPtr<JS::Stencil> stencil;
-  JS::Rooted<UniquePtr<js::frontend::CompilationInput>> stencilInput(cx);
+  JS::CompilationStorage compileStorage;
   if (isModule) {
     stencil = JS::CompileModuleScriptToStencil(
         &fc, options, cx->stackLimitForCurrentPrincipal(), srcBuf,
-        stencilInput.get());
+        compileStorage);
   } else {
     stencil = JS::CompileGlobalScriptToStencil(
         &fc, options, cx->stackLimitForCurrentPrincipal(), srcBuf,
-        stencilInput.get());
+        compileStorage);
   }
   if (!stencil) {
     return false;
@@ -6522,8 +6522,7 @@ static bool CompileToStencil(JSContext* cx, uint32_t argc, Value* vp) {
 
   JS::InstantiationStorage storage;
   if (prepareForInstantiate) {
-    if (!JS::PrepareForInstantiate(&fc, *stencilInput.get(), *stencil,
-                                   storage)) {
+    if (!JS::PrepareForInstantiate(&fc, compileStorage, *stencil, storage)) {
       return false;
     }
   }

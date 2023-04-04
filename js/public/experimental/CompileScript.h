@@ -12,6 +12,7 @@
 
 #include "jspubtd.h"
 #include "js/experimental/JSStencil.h"
+#include "js/GCAnnotations.h"
 #include "js/Modules.h"
 #include "js/Stack.h"
 #include "js/UniquePtr.h"
@@ -19,8 +20,6 @@
 namespace js {
 class FrontendContext;
 namespace frontend {
-// TODO Create wrapper type around CompilationInput because it is opaque, which
-// means UniquePtr can't perform deletion on it
 struct CompilationInput;
 }  // namespace frontend
 }  // namespace js
@@ -43,28 +42,96 @@ JS_PUBLIC_API bool SetSupportedImportAssertions(
     JS::FrontendContext* fc,
     const JS::ImportAssertionVector& supportedImportAssertions);
 
+// Temporary storage used during compiling and preparing to instantiate a
+// Stencil.
+//
+// Off-thread consumers can allocate this instance off main thread, and pass it
+// back to the main thread, in order to reduce the main thread allocation.
+struct CompilationStorage {
+ private:
+  // Owned CompilationInput.
+  //
+  // This uses raw pointer instead of UniquePtr because CompilationInput
+  // is opaque.
+  JS_HAZ_NON_GC_POINTER js::frontend::CompilationInput* input_ = nullptr;
+
+  friend JS_PUBLIC_API already_AddRefed<JS::Stencil>
+  CompileGlobalScriptToStencil(JS::FrontendContext* fc,
+                               const JS::ReadOnlyCompileOptions& options,
+                               JS::NativeStackLimit stackLimit,
+                               JS::SourceText<mozilla::Utf8Unit>& srcBuf,
+                               JS::CompilationStorage& compileStorage);
+
+  friend JS_PUBLIC_API already_AddRefed<JS::Stencil>
+  CompileGlobalScriptToStencil(JS::FrontendContext* fc,
+                               const JS::ReadOnlyCompileOptions& options,
+                               JS::NativeStackLimit stackLimit,
+                               JS::SourceText<char16_t>& srcBuf,
+                               JS::CompilationStorage& compileStorage);
+
+  friend JS_PUBLIC_API already_AddRefed<JS::Stencil>
+  CompileModuleScriptToStencil(JS::FrontendContext* fc,
+                               const JS::ReadOnlyCompileOptions& options,
+                               JS::NativeStackLimit stackLimit,
+                               JS::SourceText<mozilla::Utf8Unit>& srcBuf,
+                               JS::CompilationStorage& compileStorage);
+
+  friend JS_PUBLIC_API already_AddRefed<JS::Stencil>
+  CompileModuleScriptToStencil(JS::FrontendContext* fc,
+                               const JS::ReadOnlyCompileOptions& options,
+                               JS::NativeStackLimit stackLimit,
+                               JS::SourceText<char16_t>& srcBuf,
+                               JS::CompilationStorage& compileStorage);
+
+  friend JS_PUBLIC_API bool PrepareForInstantiate(
+      JS::FrontendContext* fc, JS::CompilationStorage& compileStorage,
+      JS::Stencil& stencil, JS::InstantiationStorage& storage);
+
+ public:
+  CompilationStorage() = default;
+  CompilationStorage(CompilationStorage&& other) : input_(other.input_) {
+    other.input_ = nullptr;
+  }
+
+  ~CompilationStorage();
+
+ private:
+  CompilationStorage(const CompilationStorage& other) = delete;
+  void operator=(const CompilationStorage& aOther) = delete;
+
+ public:
+  bool hasInput() { return !!input_; }
+
+  js::frontend::CompilationInput& getInput() {
+    MOZ_ASSERT(hasInput());
+    return *input_;
+  }
+
+  void trace(JSTracer* trc);
+};
+
 extern JS_PUBLIC_API already_AddRefed<JS::Stencil> CompileGlobalScriptToStencil(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& options,
     JS::NativeStackLimit stackLimit, JS::SourceText<mozilla::Utf8Unit>& srcBuf,
-    js::UniquePtr<js::frontend::CompilationInput>& stencilInput);
+    JS::CompilationStorage& compileStorage);
 
 extern JS_PUBLIC_API already_AddRefed<JS::Stencil> CompileGlobalScriptToStencil(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& options,
     JS::NativeStackLimit stackLimit, JS::SourceText<char16_t>& srcBuf,
-    js::UniquePtr<js::frontend::CompilationInput>& stencilInput);
+    JS::CompilationStorage& compileStorage);
 
 extern JS_PUBLIC_API already_AddRefed<JS::Stencil> CompileModuleScriptToStencil(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& options,
     JS::NativeStackLimit stackLimit, JS::SourceText<mozilla::Utf8Unit>& srcBuf,
-    js::UniquePtr<js::frontend::CompilationInput>& stencilInput);
+    JS::CompilationStorage& compileStorage);
 
 extern JS_PUBLIC_API already_AddRefed<JS::Stencil> CompileModuleScriptToStencil(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& options,
     JS::NativeStackLimit stackLimit, JS::SourceText<char16_t>& srcBuf,
-    js::UniquePtr<js::frontend::CompilationInput>& stencilInput);
+    JS::CompilationStorage& compileStorage);
 
 extern JS_PUBLIC_API bool PrepareForInstantiate(
-    JS::FrontendContext* fc, js::frontend::CompilationInput& input,
+    JS::FrontendContext* fc, JS::CompilationStorage& compileStorage,
     JS::Stencil& stencil, JS::InstantiationStorage& storage);
 
 }  // namespace JS
