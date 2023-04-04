@@ -3,6 +3,23 @@
 
 "use strict";
 
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
+);
+
+const REWIND_EVENTS = [
+  {
+    category: "pictureinpicture",
+    method: "seek",
+    object: "player",
+  },
+  {
+    category: "pictureinpicture",
+    method: "seek",
+    object: "player",
+  },
+];
+
 const TEST_PAGE_LONG = TEST_ROOT + "test-video-selection.html";
 
 const IMPROVED_CONTROLS_ENABLED_PREF =
@@ -255,6 +272,20 @@ add_task(async function testVideoScrubber() {
         expectedVideoTime,
         "Video current time is 7.96..."
       );
+
+      let filter = {
+        category: "pictureinpicture",
+        method: "seek",
+        object: "player",
+      };
+      await waitForTelemeryEvents(filter, REWIND_EVENTS.length, "parent");
+
+      TelemetryTestUtils.assertEvents(REWIND_EVENTS, filter, {
+        clear: true,
+        process: "parent",
+      });
+
+      await ensureMessageAndClosePiP(browser, videoID, pipWin, false);
     }
   );
 });

@@ -333,6 +333,17 @@ var gMainPane = {
       )
     ) {
       document.getElementById("pictureInPictureBox").hidden = false;
+      setEventListener("pictureInPictureToggleEnabled", "command", function(
+        event
+      ) {
+        if (!event.target.checked) {
+          Services.telemetry.recordEvent(
+            "pictureinpicture.settings",
+            "disable",
+            "settings"
+          );
+        }
+      });
     }
 
     if (AppConstants.platform == "win") {

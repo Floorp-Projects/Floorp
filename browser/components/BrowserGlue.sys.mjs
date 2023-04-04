@@ -4878,13 +4878,7 @@ BrowserGlue.prototype = {
           Services.telemetry.recordEvent(
             "pictureinpicture.settings",
             "enable",
-            "player"
-          );
-        } else {
-          Services.telemetry.recordEvent(
-            "pictureinpicture.settings",
-            "disable",
-            "player"
+            "settings"
           );
         }
       }
