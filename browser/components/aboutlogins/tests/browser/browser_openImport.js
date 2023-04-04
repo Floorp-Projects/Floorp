@@ -25,7 +25,7 @@ add_setup(async function() {
 });
 
 add_task(async function test_open_import() {
-  let promiseImportWindow = BrowserTestUtils.waitForMigrationWizard(window);
+  let promiseImportWindow = BrowserTestUtils.domWindowOpenedAndLoaded();
 
   let browser = gBrowser.selectedBrowser;
   await BrowserTestUtils.synthesizeMouseAtCenter("menu-button", {}, browser);
@@ -56,5 +56,5 @@ add_task(async function test_open_import() {
     { process: "content" }
   );
 
-  await BrowserTestUtils.closeMigrationWizard(importWindow);
+  importWindow.close();
 });
