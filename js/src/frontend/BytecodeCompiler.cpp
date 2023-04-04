@@ -57,8 +57,8 @@ class MOZ_RAII AutoAssertReportedException {
   bool check_;
 
  public:
-  explicit AutoAssertReportedException(JSContext* cx, FrontendContext* fc)
-      : maybeCx_(cx), fc_(fc), check_(true) {}
+  explicit AutoAssertReportedException(JSContext* maybeCx, FrontendContext* fc)
+      : maybeCx_(maybeCx), fc_(fc), check_(true) {}
   void reset() { check_ = false; }
   ~AutoAssertReportedException() {
     if (!check_) {
@@ -357,6 +357,7 @@ template <typename Unit>
 
     output.as<RefPtr<CompilationStencil>>() = std::move(stencil);
   } else {
+    MOZ_ASSERT(maybeCx);
     BorrowingCompilationStencil borrowingStencil(compiler.stencil());
     if (!InstantiateStencils(maybeCx, input, borrowingStencil,
                              *(output.as<CompilationGCOutput*>()))) {
@@ -479,34 +480,34 @@ bool frontend::PrepareForInstantiate(JSContext* maybeCx, FrontendContext* fc,
 
 template <typename Unit>
 static JSScript* CompileGlobalScriptImpl(
-    JSContext* maybeCx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
     const JS::ReadOnlyCompileOptions& options, JS::SourceText<Unit>& srcBuf,
     ScopeKind scopeKind) {
-  Rooted<CompilationInput> input(maybeCx, CompilationInput(options));
-  Rooted<CompilationGCOutput> gcOutput(maybeCx);
+  Rooted<CompilationInput> input(cx, CompilationInput(options));
+  Rooted<CompilationGCOutput> gcOutput(cx);
   BytecodeCompilerOutput output(gcOutput.address());
   NoScopeBindingCache scopeCache;
   if (!CompileGlobalScriptToStencilAndMaybeInstantiate(
-          maybeCx, fc, stackLimit, maybeCx->tempLifoAlloc(), input.get(),
-          &scopeCache, srcBuf, scopeKind, output)) {
+          cx, fc, stackLimit, cx->tempLifoAlloc(), input.get(), &scopeCache,
+          srcBuf, scopeKind, output)) {
     return nullptr;
   }
   return gcOutput.get().script;
 }
 
 JSScript* frontend::CompileGlobalScript(
-    JSContext* maybeCx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
     const JS::ReadOnlyCompileOptions& options, JS::SourceText<char16_t>& srcBuf,
     ScopeKind scopeKind) {
-  return CompileGlobalScriptImpl(maybeCx, fc, stackLimit, options, srcBuf,
+  return CompileGlobalScriptImpl(cx, fc, stackLimit, options, srcBuf,
                                  scopeKind);
 }
 
 JSScript* frontend::CompileGlobalScript(
-    JSContext* maybeCx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
     const JS::ReadOnlyCompileOptions& options, JS::SourceText<Utf8Unit>& srcBuf,
     ScopeKind scopeKind) {
-  return CompileGlobalScriptImpl(maybeCx, fc, stackLimit, options, srcBuf,
+  return CompileGlobalScriptImpl(cx, fc, stackLimit, options, srcBuf,
                                  scopeKind);
 }
 
@@ -586,7 +587,7 @@ class MOZ_STACK_CLASS ModuleCompiler final : public SourceAwareCompiler<Unit> {
   using Base::init;
   using Base::stencil;
 
-  [[nodiscard]] bool compile(JSContext* cx, FrontendContext* fc);
+  [[nodiscard]] bool compile(JSContext* maybeCx, FrontendContext* fc);
 };
 
 template <typename Unit>
@@ -758,7 +759,7 @@ bool ScriptCompiler<Unit>::compile(JSContext* maybeCx, SharedContext* sc) {
 }
 
 template <typename Unit>
-bool ModuleCompiler<Unit>::compile(JSContext* cx, FrontendContext* fc) {
+bool ModuleCompiler<Unit>::compile(JSContext* maybeCx, FrontendContext* fc) {
   // Emplace the topLevel stencil
   MOZ_ASSERT(compilationState_.scriptData.length() ==
              CompilationStencil::TopLevelIndex);
@@ -766,7 +767,8 @@ bool ModuleCompiler<Unit>::compile(JSContext* cx, FrontendContext* fc) {
     return false;
   }
 
-  ModuleBuilder builder(cx, fc, parser.ptr());
+  // TODO bug 1773319 ModuleBuilder doesn't expect nullptr for cx
+  ModuleBuilder builder(maybeCx, fc, parser.ptr());
 
   const auto& options = compilationState_.input.options;
 
@@ -889,7 +891,7 @@ bool StandaloneFunctionCompiler<Unit>::compile(
 //   * CompilationGCOutput (with instantiation).
 template <typename Unit>
 [[nodiscard]] static bool ParseModuleToStencilAndMaybeInstantiate(
-    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
+    JSContext* maybeCx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
     js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
     ScopeBindingCache* scopeCache, SourceText<Unit>& srcBuf,
     BytecodeCompilerOutput& output) {
@@ -899,7 +901,7 @@ template <typename Unit>
     return false;
   }
 
-  AutoAssertReportedException assertException(cx, fc);
+  AutoAssertReportedException assertException(maybeCx, fc);
 
   LifoAllocScope parserAllocScope(&tempLifoAlloc);
   ModuleCompiler<Unit> compiler(fc, stackLimit, parserAllocScope, input,
@@ -908,7 +910,7 @@ template <typename Unit>
     return false;
   }
 
-  if (!compiler.compile(cx, fc)) {
+  if (!compiler.compile(maybeCx, fc)) {
     return false;
   }
 
@@ -922,8 +924,8 @@ template <typename Unit>
     output.as<UniquePtr<ExtensibleCompilationStencil>>() = std::move(stencil);
   } else if (output.is<RefPtr<CompilationStencil>>()) {
     Maybe<AutoGeckoProfilerEntry> pseudoFrame;
-    if (cx) {
-      pseudoFrame.emplace(cx, "script emit",
+    if (maybeCx) {
+      pseudoFrame.emplace(maybeCx, "script emit",
                           JS::ProfilingCategoryPair::JS_Parsing);
     }
 
@@ -943,8 +945,9 @@ template <typename Unit>
 
     output.as<RefPtr<CompilationStencil>>() = std::move(stencil);
   } else {
+    MOZ_ASSERT(maybeCx);
     BorrowingCompilationStencil borrowingStencil(compiler.stencil());
-    if (!InstantiateStencils(cx, input, borrowingStencil,
+    if (!InstantiateStencils(maybeCx, input, borrowingStencil,
                              *(output.as<CompilationGCOutput*>()))) {
       return false;
     }
@@ -956,12 +959,12 @@ template <typename Unit>
 
 template <typename Unit>
 already_AddRefed<CompilationStencil> ParseModuleToStencilImpl(
-    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
+    JSContext* maybeCx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
     js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
     ScopeBindingCache* scopeCache, SourceText<Unit>& srcBuf) {
   using OutputType = RefPtr<CompilationStencil>;
   BytecodeCompilerOutput output((OutputType()));
-  if (!ParseModuleToStencilAndMaybeInstantiate(cx, fc, stackLimit,
+  if (!ParseModuleToStencilAndMaybeInstantiate(maybeCx, fc, stackLimit,
                                                tempLifoAlloc, input, scopeCache,
                                                srcBuf, output)) {
     return nullptr;
@@ -970,18 +973,18 @@ already_AddRefed<CompilationStencil> ParseModuleToStencilImpl(
 }
 
 already_AddRefed<CompilationStencil> frontend::ParseModuleToStencil(
-    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
+    JSContext* maybeCx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
     js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
     ScopeBindingCache* scopeCache, SourceText<char16_t>& srcBuf) {
-  return ParseModuleToStencilImpl(cx, fc, stackLimit, tempLifoAlloc, input,
+  return ParseModuleToStencilImpl(maybeCx, fc, stackLimit, tempLifoAlloc, input,
                                   scopeCache, srcBuf);
 }
 
 already_AddRefed<CompilationStencil> frontend::ParseModuleToStencil(
-    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
+    JSContext* maybeCx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
     js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
     ScopeBindingCache* scopeCache, SourceText<Utf8Unit>& srcBuf) {
-  return ParseModuleToStencilImpl(cx, fc, stackLimit, tempLifoAlloc, input,
+  return ParseModuleToStencilImpl(maybeCx, fc, stackLimit, tempLifoAlloc, input,
                                   scopeCache, srcBuf);
 }
 
