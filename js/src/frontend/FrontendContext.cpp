@@ -190,3 +190,18 @@ JS_PUBLIC_API bool js::CheckWasiRecursionLimit(FrontendContext* fc) {
   return fc->checkWasiRecursionLimit();
 }
 #endif  // __wasi__
+
+FrontendContext* js::NewFrontendContext() {
+  UniquePtr<FrontendContext> fc = MakeUnique<FrontendContext>();
+  if (!fc) {
+    return nullptr;
+  }
+
+  if (!fc->allocateOwnedPool()) {
+    return nullptr;
+  }
+
+  return fc.release();
+}
+
+void js::DestroyFrontendContext(FrontendContext* fc) { js_delete_poison(fc); }
