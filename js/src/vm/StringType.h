@@ -843,6 +843,17 @@ class JSLinearString : public JSString {
       JSContext* cx, js::UniquePtr<CharT[], JS::FreePolicy> chars,
       size_t length, js::gc::InitialHeap heap);
 
+  JSExtensibleString& makeExtensible(size_t capacity) {
+    MOZ_ASSERT(!isDependent());
+    MOZ_ASSERT(!isInline());
+    MOZ_ASSERT(!isAtom());
+    MOZ_ASSERT(!isExternal());
+    MOZ_ASSERT(capacity >= length());
+    setLengthAndFlags(length(), flags() | EXTENSIBLE_FLAGS);
+    d.s.u3.capacity = capacity;
+    return asExtensible();
+  }
+
   template <typename CharT>
   MOZ_ALWAYS_INLINE const CharT* nonInlineChars(
       const JS::AutoRequireNoGC& nogc) const;

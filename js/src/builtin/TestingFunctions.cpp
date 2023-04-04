@@ -3268,28 +3268,53 @@ static bool NewString(JSContext* cx, unsigned argc, Value* vp) {
   bool wantTwoByte = false;
   bool forceExternal = false;
   bool maybeExternal = false;
+  uint32_t capacity = 0;
 
   if (args.get(1).isObject()) {
     RootedObject options(cx, &args[1].toObject());
     RootedValue v(cx);
     bool requestTenured = false;
-    struct Setting {
+    struct BoolSetting {
       const char* name;
       bool* value;
     };
     for (auto [name, setting] :
-         {Setting{"tenured", &requestTenured}, Setting{"twoByte", &wantTwoByte},
-          Setting{"external", &forceExternal},
-          Setting{"maybeExternal", &maybeExternal}}) {
+         {BoolSetting{"tenured", &requestTenured},
+          BoolSetting{"twoByte", &wantTwoByte},
+          BoolSetting{"external", &forceExternal},
+          BoolSetting{"maybeExternal", &maybeExternal}}) {
       if (!JS_GetProperty(cx, options, name, &v)) {
         return false;
       }
       *setting = ToBoolean(v);  // false if not given (or otherwise undefined)
     }
+    struct Uint32Setting {
+      const char* name;
+      uint32_t* value;
+    };
+    for (auto [name, setting] : {Uint32Setting{"capacity", &capacity}}) {
+      if (!JS_GetProperty(cx, options, name, &v)) {
+        return false;
+      }
+      int32_t i32;
+      if (!ToInt32(cx, v, &i32)) {
+        return false;
+      }
+      if (i32 < 0) {
+        JS_ReportErrorASCII(cx, "nonnegative value required");
+        return false;
+      }
+      *setting = static_cast<uint32_t>(i32);
+    }
 
     heap = requestTenured ? gc::TenuredHeap : gc::DefaultHeap;
     if (forceExternal || maybeExternal) {
       wantTwoByte = true;
+      if (capacity != 0) {
+        JS_ReportErrorASCII(cx,
+                            "strings cannot be both external and extensible");
+        return false;
+      }
     }
   }
 
@@ -3329,7 +3354,33 @@ static bool NewString(JSContext* cx, unsigned argc, Value* vp) {
         return false;
       }
     }
-    if (wantTwoByte) {
+    if (capacity) {
+      if (capacity < len) {
+        capacity = len;
+      }
+      if (stable.isLatin1()) {
+        auto news = cx->make_pod_arena_array<JS::Latin1Char>(
+            js::StringBufferArena, capacity);
+        if (!news) {
+          return false;
+        }
+        mozilla::PodCopy(news.get(), stable.latin1Chars(), len);
+        dest = JSLinearString::newValidLength<CanGC>(cx, std::move(news), len,
+                                                     heap);
+      } else {
+        auto news =
+            cx->make_pod_arena_array<char16_t>(js::StringBufferArena, capacity);
+        if (!news) {
+          return false;
+        }
+        mozilla::PodCopy(news.get(), stable.twoByteChars(), len);
+        dest = JSLinearString::newValidLength<CanGC>(cx, std::move(news), len,
+                                                     heap);
+      }
+      if (dest) {
+        dest->asLinear().makeExtensible(capacity);
+      }
+    } else if (wantTwoByte) {
       dest = NewStringCopyNDontDeflate<CanGC>(cx, stable.twoByteChars(), len,
                                               heap);
     } else if (stable.isLatin1()) {

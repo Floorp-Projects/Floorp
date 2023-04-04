@@ -788,7 +788,7 @@ first_visit_node : {
     str = &left.asRope();
     goto first_visit_node;
   }
-  if (!(reuseLeftmostBuffer && &left == leftmostChild)) {
+  if (!(reuseLeftmostBuffer && pos == wholeChars)) {
     CopyChars(pos, left.asLinear());
   }
   pos += left.length();
