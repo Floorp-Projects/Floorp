@@ -101,6 +101,8 @@ using u8 = unsigned char;
 */
 #define OBFS_PGSZ 8192
 
+#define WAL_FRAMEHDRSIZE 24
+
 using namespace mozilla;
 using namespace mozilla::dom::quota;
 
@@ -273,6 +275,7 @@ static void obfsDecode(ObfsFile* p, /* File containing page to be obfuscated */
       Span{a + nByte - kReservedBytes, kIvBytes},
       Span{a + i, static_cast<unsigned>(payloadLength)},
       Span{a + i, static_cast<unsigned>(payloadLength)});
+  memset(a + nByte - kReservedBytes, 0, kIvBytes);
 }
 
 /*
@@ -310,8 +313,9 @@ static int obfsRead(sqlite3_file* pFile, void* zBuf, int iAmt,
   pFile = ORIGFILE(pFile);
   rc = pFile->pMethods->xRead(pFile, zBuf, iAmt, iOfst);
   if (rc == SQLITE_OK) {
-    if (iAmt == OBFS_PGSZ && !p->inCkpt) {
-      obfsDecode(p, (u8*)zBuf, iAmt);
+    if ((iAmt == OBFS_PGSZ || iAmt == OBFS_PGSZ + WAL_FRAMEHDRSIZE) &&
+        !p->inCkpt) {
+      obfsDecode(p, ((u8*)zBuf) + iAmt - OBFS_PGSZ, OBFS_PGSZ);
     }
   } else if (rc == SQLITE_IOERR_SHORT_READ && iOfst == 0 && iAmt >= 100) {
     static const unsigned char aEmptyDb[] = {
