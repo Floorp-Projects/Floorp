@@ -188,17 +188,6 @@ function allAnonymousContentTreeWalkerFilter(node) {
 }
 
 /**
- * This DeepTreeWalker filter only accepts <scrollbar> anonymous content.
- */
-function scrollbarTreeWalkerFilter(node) {
-  if (node.nodeName === "scrollbar" && nodeHasSize(node)) {
-    return nodeFilterConstants.FILTER_ACCEPT;
-  }
-
-  return nodeFilterConstants.FILTER_SKIP;
-}
-
-/**
  * Is the given node a text node composed of whitespace only?
  * @param {DOMNode} node
  * @return {Boolean}
@@ -577,7 +566,6 @@ module.exports = {
   imageToImageData,
   isNodeDead,
   nodeDocument,
-  scrollbarTreeWalkerFilter,
   standardTreeWalkerFilter,
   noAnonymousContentTreeWalkerFilter,
 };
