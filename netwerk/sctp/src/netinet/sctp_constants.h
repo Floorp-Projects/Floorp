@@ -419,7 +419,7 @@ extern void getwintimeofday(struct timeval *tv);
 
 /*************0x8000 series*************/
 #define SCTP_ECN_CAPABLE		0x8000
-
+#define SCTP_ZERO_CHECKSUM_ACCEPTABLE	0x8001
 /* RFC 4895 */
 #define SCTP_RANDOM			0x8002
 #define SCTP_CHUNK_LIST			0x8003
