@@ -70,6 +70,21 @@ To Setup Firefox On macOS and Linux
 
 More information :ref:`for Linux <Building Firefox On Linux>` and :ref:`for MacOS <Building Firefox On MacOS>`
 
+To set up your editor
+---------------------
+
+.. note::
+
+    Visual Studio Code is the recommended editor for Firefox development.
+    Not because it is better than the other editors but because we decided to
+    focus our energy on a single editor.
+
+Setting up your editor is an important part of the contributing process. Having
+linting and other features integrated, saves you time and will help with reducing
+build and reviews cycles.
+
+See our :ref:`editor page for more information about how to set up your favorite editor <Editor / IDE integration>`.
+
 To build & run
 --------------
 
