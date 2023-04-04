@@ -299,6 +299,15 @@
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_default_browser_title">Igi %s via ĉefa retumilo</string>
+    <!-- Description for set firefox as default browser screen.
+        The first parameter is the Firefox brand name.
+        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
+    <string name="juno_onboarding_default_browser_description">%1$s metas personojn antaŭ profiton kaj defendas vian privatecon per blokado de interretejaj spuriloj.\n\nPli da informo en nia %2$s.</string>
+    <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
+    This is part of the string with the key "juno_onboarding_default_browser_description". -->
+    <string name="juno_onboarding_default_browser_description_link_text">rimarko pri privateco</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
+    <string name="juno_onboarding_default_browser_positive_button">Difini kiel norman retumilon</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_default_browser_negative_button">Ne nun</string>
     <!-- Title for sign in to sync screen. -->
@@ -1249,6 +1258,20 @@
     <!-- Title A shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_A_title">Retumu sen lasi spurojn</string>
 
+    <!-- Text A shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_A_text">En privata retumo de %1$s, neniu informo via estas konservita.</string>
+    <!-- Title B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_title">Komencu vian unua serĉon</string>
+    <!-- Text B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_text">Serĉu ion proksime. Aŭ malkovru ion amuzan.</string>
+
+    <!-- Survey -->
+    <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_survey_message_text" tools:ignore="UnusedResources">Bonvolu helpi nin plibonigi Firefox per mallonga enketo.</string>
+    <!-- Preference for taking the short survey. -->
+    <string name="preferences_take_survey" tools:ignore="UnusedResources">Respondi enketon</string>
     <!-- Preference for not taking the short survey. -->
     <string name="preferences_not_take_survey" tools:ignore="UnusedResources">Ne, dankon</string>
 
@@ -1471,20 +1494,28 @@
     <string name="preference_enhanced_tracking_protection">Plibonigita protekto kontraŭ spurado</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">Retumu sen esti observata</string>
+    <!-- Preference summary for enhanced tracking protection settings on/off switch -->
+    <string name="preference_enhanced_tracking_protection_summary" tools:ignore="UnusedResources">Inkluzivita nun estas la kompleta protekto kontraŭ kuketoj, nia ĝisnuna plej pova barilo kontraŭ interretejaj spuriloj.</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation">Gardu viajn datumojn por vi mem. %s protektas vin de pluraj el la plej oftaj spuriloj, kiuj sekvas vian retumon.</string>
+    <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">%s protektas vin kontraŭ pluraj el la plej oftaj spuriloj, kiuj sekvas kion vi faras dum retumo.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Pli da informo</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Norma</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_4">Ekvilibrita por privateco kaj efikeco. Paĝoj ŝargiĝos normale.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_5" tools:ignore="UnusedResources">Paĝoj normale ŝargiĝos, sed malpli da spuriloj estos blokitaj.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Aferoj blokitaj de la norma protekto kontraŭ spurado</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Rigora</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_3">Pli da spuriloj blokitaj signifas ke paĝoj ŝargiĝos pli rapide, sed kelkaj misfunkcioj povus okazi.</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_4" tools:ignore="UnusedResources">Plej bona protekto kontraŭ spurado, kaj plej bona efikeco, sed kelkaj retejoj povus ne bone funkcii.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Aferoj blokitaj de la rigora protekto kontraŭ spurado</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
