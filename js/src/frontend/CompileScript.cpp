@@ -132,6 +132,7 @@ already_AddRefed<JS::Stencil> JS::CompileModuleScriptToStencil(
                                           compileStorage.input_);
 }
 
+#ifdef DEBUG
 // We don't need to worry about GC if the CompilationInput has no GC pointers
 static bool isGCSafe(js::frontend::CompilationInput* input_) {
   if (!input_) {
@@ -149,6 +150,7 @@ static bool isGCSafe(js::frontend::CompilationInput* input_) {
 
   return isGlobalOrModule && scopeHasNoGC && scriptHasNoGC && cacheHasNoGC;
 }
+#endif  // DEBUG
 
 bool JS::PrepareForInstantiate(JS::FrontendContext* fc,
                                JS::CompilationStorage& compileStorage,
