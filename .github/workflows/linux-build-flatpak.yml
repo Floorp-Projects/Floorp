@@ -50,7 +50,7 @@ jobs:
         export WORKDIR=`pwd`
         echo "Current Workdir: $WORKDIR"
         git clone https://github.com/floorp-projects/l10n-central.git
-        ./mach bootstrap
+        ./mach --no-interactive bootstrap --application-choice browser
         echo 'ac_add_options --with-app-name=floorp' >> mozconfig
         echo 'ac_add_options --with-app-basename=Floorp' >> mozconfig
         echo 'ac_add_options --with-branding=browser/branding/official' >> mozconfig
