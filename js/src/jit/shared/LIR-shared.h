@@ -3757,11 +3757,11 @@ class LWasmGcObjectIsSubtypeOfAndBranch
   LIR_HEADER(WasmGcObjectIsSubtypeOfAndBranch)
 
   static constexpr uint32_t Object = 0;
-  static constexpr uint32_t SuperTypeDef = 1;
+  static constexpr uint32_t SuperSuperTypeVector = 1;
 
   LWasmGcObjectIsSubtypeOfAndBranch(MBasicBlock* ifTrue, MBasicBlock* ifFalse,
                                     const LAllocation& object,
-                                    const LAllocation& superTypeDef,
+                                    const LAllocation& superSuperTypeVector,
                                     uint32_t subTypingDepth, bool succeedOnNull,
                                     const LDefinition& temp0,
                                     const LDefinition& temp1)
@@ -3771,7 +3771,7 @@ class LWasmGcObjectIsSubtypeOfAndBranch
     setSuccessor(0, ifTrue);
     setSuccessor(1, ifFalse);
     setOperand(Object, object);
-    setOperand(SuperTypeDef, superTypeDef);
+    setOperand(SuperSuperTypeVector, superSuperTypeVector);
     setTemp(0, temp0);
     setTemp(1, temp1);
   }
@@ -3783,7 +3783,9 @@ class LWasmGcObjectIsSubtypeOfAndBranch
   MBasicBlock* ifFalse() const { return getSuccessor(1); }
 
   const LAllocation* object() { return getOperand(Object); }
-  const LAllocation* superTypeDef() { return getOperand(SuperTypeDef); }
+  const LAllocation* superSuperTypeVector() {
+    return getOperand(SuperSuperTypeVector);
+  }
   const LDefinition* temp0() { return getTemp(0); }
   const LDefinition* temp1() { return getTemp(1); }
 };

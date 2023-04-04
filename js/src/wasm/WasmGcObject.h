@@ -27,7 +27,7 @@ namespace js {
 
 class WasmGcObject : public JSObject {
  protected:
-  const wasm::TypeDef* typeDef_;
+  const wasm::SuperTypeVector* superTypeVector_;
 
   static const ObjectOps objectOps_;
 
@@ -100,13 +100,21 @@ class WasmGcObject : public JSObject {
                  wasm::FieldType type, MutableHandleValue vp);
 
  public:
-  const wasm::TypeDef& typeDef() const { return *typeDef_; }
+  const wasm::SuperTypeVector& superTypeVector() const {
+    return *superTypeVector_;
+  }
 
-  static size_t offsetOfTypeDef() { return offsetof(WasmGcObject, typeDef_); }
+  static size_t offsetOfSuperTypeVector() {
+    return offsetof(WasmGcObject, superTypeVector_);
+  }
 
-  wasm::TypeDefKind kind() const { return typeDef().kind(); }
+  // These are both expensive in that they involve a double indirection.
+  // Avoid them if possible.
+  const wasm::TypeDef& typeDef() const { return *superTypeVector().typeDef(); }
+  wasm::TypeDefKind kind() const { return superTypeVector().typeDef()->kind(); }
 
-  [[nodiscard]] bool isRuntimeSubtype(const wasm::TypeDef* parentTypeDef) const;
+  [[nodiscard]] bool isRuntimeSubtypeOf(
+      const wasm::TypeDef* parentTypeDef) const;
 
   [[nodiscard]] static bool obj_newEnumerate(JSContext* cx, HandleObject obj,
                                              MutableHandleIdVector properties,

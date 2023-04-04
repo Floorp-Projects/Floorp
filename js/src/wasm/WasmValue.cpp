@@ -267,7 +267,7 @@ bool wasm::CheckTypeRefValue(JSContext* cx, const TypeDef* typeDef,
   if (v.isObject()) {
     JSObject& obj = v.toObject();
     if (obj.is<WasmGcObject>() &&
-        obj.as<WasmGcObject>().isRuntimeSubtype(typeDef)) {
+        obj.as<WasmGcObject>().isRuntimeSubtypeOf(typeDef)) {
       vp.set(AnyRef::fromJSObject(&obj.as<WasmGcObject>()));
       return true;
     }

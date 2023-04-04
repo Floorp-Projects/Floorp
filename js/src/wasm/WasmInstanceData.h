@@ -49,6 +49,7 @@ using ExportFuncPtr = int32_t (*)(ExportArg*, Instance*);
 struct TypeDefInstanceData {
   TypeDefInstanceData()
       : typeDef(nullptr),
+        superTypeVector(nullptr),
         shape(nullptr),
         clasp(nullptr),
         allocSite(nullptr),
@@ -57,6 +58,11 @@ struct TypeDefInstanceData {
   // The canonicalized pointer to this type definition. This is kept alive by
   // the type context associated with the instance.
   const wasm::TypeDef* typeDef;
+
+  // The supertype vector for this type definition.  This is also kept alive
+  // by the type context associated with the instance.
+  //
+  const wasm::SuperTypeVector* superTypeVector;
 
   // The remaining fields are only meaningful for, and used by, structs and
   // arrays.

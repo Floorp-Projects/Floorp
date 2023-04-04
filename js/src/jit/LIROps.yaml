@@ -306,7 +306,7 @@
   mir_op: true
   operands:
     object: WordSized
-    superTypeDef: WordSized
+    superSuperTypeVector: WordSized
   result_type: WordSized
   num_temps: 2
 

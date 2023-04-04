@@ -52,11 +52,11 @@ static const uint32_t MaxInlineMemoryFillLength = 0;
 #endif
 
 // The size we round all super type vectors to. All accesses below this length
-// can avoid bounds checks. The value of three was chosen here to match V8,
-// eventually we should get data of our own to support this.
+// can avoid bounds checks. The value of 8 was chosen after a bit of profiling
+// with the Dart Barista benchmark.
 //
-// Keep wasm/gc/casting.js in sync with this constant.
-static const uint32_t MinSuperTypeVectorLength = 3;
+// Keep jit-tests/tests/wasm/gc/casting.js in sync with this constant.
+static const uint32_t MinSuperTypeVectorLength = 8;
 
 // An exported wasm function may have a 'jit entry' stub attached that can be
 // called using the JS JIT ABI. This relies on the pointer we store in the

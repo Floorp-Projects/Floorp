@@ -4758,12 +4758,10 @@ void MacroAssembler::wasmCallRef(const wasm::CallSiteDesc& desc,
   bind(&done);
 }
 
-void MacroAssembler::branchWasmTypeDefIsSubtype(Register subTypeDef,
-                                                Register superTypeDef,
-                                                Register scratch,
-                                                uint32_t subTypingDepth,
-                                                Label* label, bool onSuccess) {
-  MOZ_ASSERT_IF(subTypingDepth >= wasm::MinSuperTypeVectorLength,
+void MacroAssembler::branchWasmSuperTypeVectorIsSubtype(
+    Register subSuperTypeVector, Register superSuperTypeVector,
+    Register scratch, uint32_t superTypeDepth, Label* label, bool onSuccess) {
+  MOZ_ASSERT_IF(superTypeDepth >= wasm::MinSuperTypeVectorLength,
                 scratch != Register::Invalid());
 
   // We generate just different enough code for 'is' subtype vs 'is not'
@@ -4771,53 +4769,55 @@ void MacroAssembler::branchWasmTypeDefIsSubtype(Register subTypeDef,
   if (onSuccess) {
     Label failed;
 
-    // Fast path for the type defs being equal.
-    branchPtr(Assembler::Equal, subTypeDef, superTypeDef, label);
-
-    // Slower path for checking the supertype vector of `subTypeDef`. We don't
-    // need `subTypeDef` at this point, so we use it as a scratch for storing
-    // the super type vector and entry from it.
-    loadPtr(Address(subTypeDef, wasm::TypeDef::offsetOfSuperTypeVector()),
-            subTypeDef);
+    // At this point, we could generate a fast success check which jumps to
+    // `label` if `subSuperTypeVector == superSuperTypeVector`.  However,
+    // profiling of Barista-3 seems to show this is hardly worth anything,
+    // whereas it is worth us generating smaller code and in particular one
+    // fewer conditional branch.  So it is omitted:
+    //
+    //   branchPtr(Assembler::Equal, subSuperTypeVector, superSuperTypeVector,
+    //   label);
 
     // Emit a bounds check if the super type depth may be out-of-bounds.
-    if (subTypingDepth >= wasm::MinSuperTypeVectorLength) {
+    if (superTypeDepth >= wasm::MinSuperTypeVectorLength) {
       // Slowest path for having a bounds check of the super type vector
-      load32(Address(subTypeDef, wasm::SuperTypeVector::offsetOfLength()),
-             scratch);
-      branch32(Assembler::LessThanOrEqual, scratch, Imm32(subTypingDepth),
+      load32(
+          Address(subSuperTypeVector, wasm::SuperTypeVector::offsetOfLength()),
+          scratch);
+      branch32(Assembler::LessThanOrEqual, scratch, Imm32(superTypeDepth),
                &failed);
     }
 
-    // Load the `subTypingDepth` entry from subTypeDef's super type vector. This
-    // will be `superTypeDef` if `subTypeDef` is indeed a subtype.
-    loadPtr(Address(subTypeDef, wasm::SuperTypeVector::offsetOfTypeDefInVector(
-                                    subTypingDepth)),
-            subTypeDef);
-    branchPtr(Assembler::Equal, subTypeDef, superTypeDef, label);
+    // Load the `superTypeDepth` entry from subSuperTypeVector. This
+    // will be `superSuperTypeVector` if `subSuperTypeVector` is indeed a
+    // subtype.
+    loadPtr(
+        Address(subSuperTypeVector,
+                wasm::SuperTypeVector::offsetOfTypeDefInVector(superTypeDepth)),
+        subSuperTypeVector);
+    branchPtr(Assembler::Equal, subSuperTypeVector, superSuperTypeVector,
+              label);
 
     // Fallthrough to the failed case
     bind(&failed);
     return;
   }
 
-  // Load the super type vector from subTypeDef
-  loadPtr(Address(subTypeDef, wasm::TypeDef::offsetOfSuperTypeVector()),
-          subTypeDef);
-
   // Emit a bounds check if the super type depth may be out-of-bounds.
-  if (subTypingDepth >= wasm::MinSuperTypeVectorLength) {
-    load32(Address(subTypeDef, wasm::SuperTypeVector::offsetOfLength()),
+  if (superTypeDepth >= wasm::MinSuperTypeVectorLength) {
+    load32(Address(subSuperTypeVector, wasm::SuperTypeVector::offsetOfLength()),
            scratch);
-    branch32(Assembler::LessThanOrEqual, scratch, Imm32(subTypingDepth), label);
+    branch32(Assembler::LessThanOrEqual, scratch, Imm32(superTypeDepth), label);
   }
 
-  // Load the `subTypingDepth` entry from subTypeDef's super type vector. This
-  // will be `superTypeDef` if `subTypeDef` is indeed a subtype.
-  loadPtr(Address(subTypeDef, wasm::SuperTypeVector::offsetOfTypeDefInVector(
-                                  subTypingDepth)),
-          subTypeDef);
-  branchPtr(Assembler::NotEqual, subTypeDef, superTypeDef, label);
+  // Load the `superTypeDepth` entry from subSuperTypeVector. This will be
+  // `superSuperTypeVector` if `subSuperTypeVector` is indeed a subtype.
+  loadPtr(
+      Address(subSuperTypeVector,
+              wasm::SuperTypeVector::offsetOfTypeDefInVector(superTypeDepth)),
+      subSuperTypeVector);
+  branchPtr(Assembler::NotEqual, subSuperTypeVector, superSuperTypeVector,
+            label);
   // Fallthrough to the success case
 }
 

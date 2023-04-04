@@ -1069,14 +1069,15 @@ void LIRGenerator::visitTest(MTest* test) {
   if (opd->isWasmGcObjectIsSubtypeOf() && opd->isEmittedAtUses()) {
     MWasmGcObjectIsSubtypeOf* isSubTypeOf = opd->toWasmGcObjectIsSubtypeOf();
     LAllocation object = useRegister(isSubTypeOf->object());
-    LAllocation superTypeDef = useRegister(isSubTypeOf->superTypeDef());
+    LAllocation superSuperTypeVector =
+        useRegister(isSubTypeOf->superSuperTypeVector());
     uint32_t subTypingDepth = isSubTypeOf->subTypingDepth();
     LDefinition subTypeDepth = temp();
     LDefinition scratch = subTypingDepth >= wasm::MinSuperTypeVectorLength
                               ? temp()
                               : LDefinition();
     add(new (alloc()) LWasmGcObjectIsSubtypeOfAndBranch(
-            ifTrue, ifFalse, object, superTypeDef, subTypingDepth,
+            ifTrue, ifFalse, object, superSuperTypeVector, subTypingDepth,
             isSubTypeOf->succeedOnNull(), subTypeDepth, scratch),
         test);
     return;
@@ -7046,12 +7047,12 @@ void LIRGenerator::visitWasmGcObjectIsSubtypeOf(MWasmGcObjectIsSubtypeOf* ins) {
   }
 
   LAllocation object = useRegister(ins->object());
-  LAllocation superTypeDef = useRegister(ins->superTypeDef());
+  LAllocation superSuperTypeVector = useRegister(ins->superSuperTypeVector());
   uint32_t subTypingDepth = ins->subTypingDepth();
   LDefinition subTypeDepth = temp();
   LDefinition scratch =
       subTypingDepth >= wasm::MinSuperTypeVectorLength ? temp() : LDefinition();
-  define(new (alloc()) LWasmGcObjectIsSubtypeOf(object, superTypeDef,
+  define(new (alloc()) LWasmGcObjectIsSubtypeOf(object, superSuperTypeVector,
                                                 subTypeDepth, scratch),
          ins);
 }
