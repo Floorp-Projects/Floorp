@@ -94,9 +94,6 @@ public class XpcshellTestRunnerService extends Service {
               }
             });
 
-    webExtensionController()
-        .setAddonManagerDelegate(new WebExtensionController.AddonManagerDelegate() {});
-
     sRuntime.setDelegate(
         () -> {
           stopSelf();
