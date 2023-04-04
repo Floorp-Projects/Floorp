@@ -177,6 +177,11 @@ if (browser_.runtime.id == "{506e023c-7f2b-40a3-8066-bc5deb40aebe}") {
     observerFunction: function () {
       let valueJSON = JSON.parse(document.querySelector("#gesturePopupCommandSelect").getAttribute("value") ?? `{"settings":{"extensionId":""}}`)
       if(document.querySelector("#gesturePopup").getAttribute("open") === "" && valueJSON.settings != undefined &&  valueJSON.settings.extensionId == "floorp-actions@floorp.ablaze.one"){
+        if(JSON.parse(valueJSON.settings.message).action == "open-tree-style-tab"){
+          document.querySelector("#gesturePopupCommandSelect").setAttribute("value", `{"name":"SendMessageToOtherAddon","settings":{"extensionId":"floorp-actions@floorp.ablaze.one","message":"{\\"action\\": \\"open-extension-sidebar\\",\\"options\\":{\\"extensionId\\":\\"treestyletab@piro.sakura.ne.jp\\"}}"}}`)
+          valueJSON = JSON.parse(document.querySelector("#gesturePopupCommandSelect").getAttribute("value"))
+          if(document.querySelector("#gesturePopupLabelInput").value.startsWith("[Floorp]")) document.querySelector("#gesturePopupLabelInput").value = gesturefyController.l10n["gf-floorp-open-extension-sidebar-name"]
+        }
         this.popupCommandSet(JSON.parse(valueJSON.settings.message).action,JSON.parse(valueJSON.settings.message).options)
         if(this.l10n["gf-floorp-" + JSON.parse(valueJSON.settings.message).action + "-name"] == document.querySelector("#gesturePopupLabelInput").value){
           document.querySelector("#gesturePopupLabelInput").style.color = "gray"
