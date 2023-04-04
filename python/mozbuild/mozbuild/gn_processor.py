@@ -172,7 +172,7 @@ def find_deps(all_targets, target):
 
 
 def filter_gn_config(path, gn_result, sandbox_vars, input_vars, gn_target):
-    gen_path = (Path(path) / "gen").resolve()
+    gen_path = path / "gen"
     # Translates the raw output of gn into just what we'll need to generate a
     # mozbuild configuration.
     gn_out = {"targets": {}, "sandbox_vars": sandbox_vars}
@@ -693,16 +693,21 @@ def generate_gn_config(
         ["%s=%s" % (k, str_for_arg(v)) for k, v in six.iteritems(input_variables)]
     )
     with tempfile.TemporaryDirectory() as tempdir:
-        gen_args = [gn_binary, "gen", tempdir, gn_args, "--ide=json"]
+        # On Mac, `tempdir` starts with /var which is a symlink to /private/var.
+        # We resolve the symlinks in `tempdir` here so later usage with
+        # relpath() does not lead to unexpected results, should it be used
+        # together with another path that has symlinks resolved.
+        resolved_tempdir = Path(tempdir).resolve()
+        gen_args = [gn_binary, "gen", str(resolved_tempdir), gn_args, "--ide=json"]
         print('Running "%s"' % " ".join(gen_args), file=sys.stderr)
         subprocess.check_call(gen_args, cwd=srcdir, stderr=subprocess.STDOUT)
 
-        gn_config_file = mozpath.join(tempdir, "project.json")
+        gn_config_file = resolved_tempdir / "project.json"
 
         with open(gn_config_file, "r") as fh:
             gn_out = json.load(fh)
             gn_out = filter_gn_config(
-                tempdir, gn_out, sandbox_variables, input_variables, gn_target
+                resolved_tempdir, gn_out, sandbox_variables, input_variables, gn_target
             )
             return gn_out
 
