@@ -366,7 +366,11 @@ def run(
                 return 1
             paths = lint.linters[0]["local_exclude"]
 
-        if not paths and Path.cwd() == Path(lint.root) and not (outgoing or workdir):
+        if (
+            not paths
+            and Path.cwd() == Path(lint.root)
+            and not (outgoing or workdir or rev)
+        ):
             print(
                 "warning: linting the entire repo takes a long time, using --outgoing and "
                 "--workdir instead. If you want to lint the entire repo, run `./mach lint .`"
