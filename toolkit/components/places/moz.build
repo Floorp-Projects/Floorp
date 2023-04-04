@@ -68,7 +68,6 @@ if CONFIG["MOZ_PLACES"]:
         "PlacesExpiration.sys.mjs",
         "PlacesFrecencyRecalculator.sys.mjs",
         "PlacesPreviews.sys.mjs",
-        "PlacesQuery.sys.mjs",
         "PlacesSyncUtils.sys.mjs",
         "PlacesTransactions.sys.mjs",
         "PlacesUtils.sys.mjs",
