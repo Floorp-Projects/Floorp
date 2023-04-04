@@ -450,6 +450,7 @@ AudioProcessingImpl::GetGainController2ExperimentParams() {
                   },
               .adaptive_digital_controller =
                   {
+                      .enabled = false,
                       .headroom_db = static_cast<float>(headroom_db.Get()),
                       .max_gain_db = static_cast<float>(max_gain_db.Get()),
                       .initial_gain_db =
