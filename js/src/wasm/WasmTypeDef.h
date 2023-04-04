@@ -39,6 +39,9 @@ using mozilla::MallocSizeOf;
 
 class RecGroup;
 
+//=========================================================================
+// Function types
+
 // The FuncType class represents a WebAssembly function signature which takes a
 // list of value types and returns an expression type. The engine uses two
 // in-memory representations of the argument Vector's memory (when elements do
@@ -220,8 +223,9 @@ class FuncType {
   WASM_DECLARE_FRIEND_SERIALIZE(FuncType);
 };
 
-// Structure type.
-//
+//=========================================================================
+// Structure types
+
 // The Module owns a dense array of StructType values that represent the
 // structure types that the module knows about.  It is created from the sparse
 // array of types in the ModuleEnvironment when the Module is created.
@@ -377,7 +381,8 @@ class StructLayout {
   CheckedInt32 close();
 };
 
-// Array type
+//=========================================================================
+// Array types
 
 class ArrayType {
  public:
@@ -445,6 +450,9 @@ class ArrayType {
 WASM_DECLARE_CACHEABLE_POD(ArrayType);
 
 using ArrayTypeVector = Vector<ArrayType, 0, SystemAllocPolicy>;
+
+//=========================================================================
+// SuperTypeVector
 
 // [SMDOC] Super type vector
 //
@@ -551,6 +559,9 @@ class SuperTypeVector {
 // Ensure it is safe to use `sizeof(SuperTypeVector)` to find the offset of
 // `types_[0]`.
 static_assert(offsetof(SuperTypeVector, types_) == sizeof(SuperTypeVector));
+
+//=========================================================================
+// TypeDef and supporting types
 
 // A tagged container for the various types that can be present in a wasm
 // module's type section.
@@ -827,6 +838,9 @@ using TypeDefPtrToIndexMap =
     HashMap<const TypeDef*, uint32_t, PointerHasher<const TypeDef*>,
             SystemAllocPolicy>;
 
+//=========================================================================
+// RecGroup
+
 // A recursion group is a set of type definitions that may refer to each other
 // or to type definitions in another recursion group. There is an ordering
 // restriction on type references such that references across recursion groups
@@ -1032,6 +1046,9 @@ using SharedRecGroup = RefPtr<const RecGroup>;
 using MutableRecGroup = RefPtr<RecGroup>;
 using SharedRecGroupVector = Vector<SharedRecGroup, 0, SystemAllocPolicy>;
 
+//=========================================================================
+// TypeContext
+
 // A type context holds the recursion groups and corresponding type definitions
 // defined in a module.
 class TypeContext : public AtomicRefCounted<TypeContext> {
@@ -1167,6 +1184,9 @@ class TypeContext : public AtomicRefCounted<TypeContext> {
 using SharedTypeContext = RefPtr<const TypeContext>;
 using MutableTypeContext = RefPtr<TypeContext>;
 
+//=========================================================================
+// TypeHandle
+
 // An unambiguous strong reference to a type definition in a specific type
 // context.
 class TypeHandle {
@@ -1189,6 +1209,9 @@ class TypeHandle {
   uint32_t index() const { return index_; }
   const TypeDef& def() const { return context_->type(index_); }
 };
+
+//=========================================================================
+// misc
 
 /* static */
 inline uintptr_t TypeDef::forMatch(const TypeDef* typeDef,
@@ -1274,6 +1297,7 @@ inline bool RefType::isSubTypeOf(RefType subType, RefType superType) {
   return false;
 }
 
+//=========================================================================
 // [SMDOC] Signatures and runtime types
 //
 // TypeIdDesc describes the runtime representation of a TypeDef suitable for

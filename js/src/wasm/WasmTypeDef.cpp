@@ -70,6 +70,9 @@ using mozilla::IsPowerOfTwo;
 // to the pointer representation.
 //
 
+//=========================================================================
+// ImmediateType
+
 // ImmediateType is 32-bits to ensure it's easy to materialize the constant
 // on all platforms.
 using ImmediateType = uint32_t;
@@ -212,6 +215,9 @@ static ImmediateType EncodeImmediateFuncType(const FuncType& funcType) {
   return immediate;
 }
 
+//=========================================================================
+// FuncType
+
 void FuncType::initImmediateTypeId() {
   if (!IsImmediateFuncType(*this)) {
     immediateTypeId_ = NO_IMMEDIATE_TYPE_ID;
@@ -236,6 +242,9 @@ bool FuncType::canHaveJitExit() const {
 size_t FuncType::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   return args_.sizeOfExcludingThis(mallocSizeOf);
 }
+
+//=========================================================================
+// StructType and StructLayout
 
 static inline CheckedInt32 RoundUpToAlignment(CheckedInt32 address,
                                               uint32_t align) {
@@ -352,6 +361,9 @@ size_t TypeDef::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   return 0;
 }
 
+//=========================================================================
+// SuperTypeVector
+
 /* static */
 size_t SuperTypeVector::offsetOfTypeDefInVector(uint32_t typeDefDepth) {
   return offsetof(SuperTypeVector, types_) + sizeof(void*) * typeDefDepth;
@@ -438,6 +450,9 @@ const SuperTypeVector* SuperTypeVector::createMultipleForRecGroup(
 
   return firstVector;
 }
+
+//=========================================================================
+// TypeIdSet and TypeContext
 
 struct RecGroupHashPolicy {
   using Lookup = const SharedRecGroup&;
