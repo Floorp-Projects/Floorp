@@ -1237,7 +1237,7 @@ class AForm {
     if (!actions) {
       actions = [];
       this._dateActionsCache.set(cFormat, actions);
-      cFormat.replace(/(d+)|(m+)|(y+)|(H+)|(M+)|(s+)/g, function (match, d, m, y, H, M, s) {
+      cFormat.replaceAll(/(d+)|(m+)|(y+)|(H+)|(M+)|(s+)/g, function (match, d, m, y, H, M, s) {
         if (d) {
           actions.push((n, date) => {
             if (n >= 1 && n <= 31) {
@@ -3764,7 +3764,7 @@ class Util extends _pdf_object.PDFObject {
     const ZERO = 4;
     const HASH = 8;
     let i = 0;
-    return args[0].replace(pattern, function (match, nDecSep, cFlags, nWidth, nPrecision, cConvChar) {
+    return args[0].replaceAll(pattern, function (match, nDecSep, cFlags, nWidth, nPrecision, cConvChar) {
       if (cConvChar !== "d" && cConvChar !== "f" && cConvChar !== "s" && cConvChar !== "x") {
         const buf = ["%"];
         for (const str of [nDecSep, cFlags, nWidth, nPrecision, cConvChar]) {
@@ -3956,7 +3956,7 @@ class Util extends _pdf_object.PDFObject {
       seconds: oDate.getSeconds()
     };
     const patterns = /(mmmm|mmm|mm|m|dddd|ddd|dd|d|yyyy|yy|HH|H|hh|h|MM|M|ss|s|tt|t|\\.)/g;
-    return cFormat.replace(patterns, function (match, pattern) {
+    return cFormat.replaceAll(patterns, function (match, pattern) {
       if (pattern in handlers) {
         return handlers[pattern](data);
       }
@@ -4175,10 +4175,10 @@ class Util extends _pdf_object.PDFObject {
           }
         }
       };
-      const escapedFormat = cFormat.replace(/[.*+\-?^${}()|[\]\\]/g, "\\$&");
+      const escapedFormat = cFormat.replaceAll(/[.*+\-?^${}()|[\]\\]/g, "\\$&");
       const patterns = /(mmmm|mmm|mm|m|dddd|ddd|dd|d|yyyy|yy|HH|H|hh|h|MM|M|ss|s|tt|t)/g;
       const actions = [];
-      const re = escapedFormat.replace(patterns, function (match, patternElement) {
+      const re = escapedFormat.replaceAll(patterns, function (match, patternElement) {
         const {
           pattern,
           action
@@ -4258,8 +4258,8 @@ Object.defineProperty(exports, "initSandbox", ({
   }
 }));
 var _initialization = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.5.80';
-const pdfjsBuild = 'b1e0253f2';
+const pdfjsVersion = '3.6.9';
+const pdfjsBuild = '184076fe7';
 })();
 
 /******/ 	return __webpack_exports__;
