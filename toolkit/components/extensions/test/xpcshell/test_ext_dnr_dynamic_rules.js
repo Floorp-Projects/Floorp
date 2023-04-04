@@ -586,6 +586,20 @@ add_task(async function test_save_and_load_dynamic_rules() {
     expectedRules: getSchemaNormalizedRules(extension, rules),
   });
 
+  // Verify the dynamic rules are converted back into Rule class instances
+  // as expected when loaded back from the DNR store file
+  Assert.ok(
+    !!dnrStore._data.get(extUUID).dynamicRuleset.length,
+    "Expected dynamic rules to have been loaded back from the DNR store file"
+  );
+  Assert.deepEqual(
+    dnrStore._data
+      .get(extUUID)
+      .dynamicRuleset.filter(rule => rule.constructor.name !== "Rule"),
+    [],
+    "Expect dynamic rules loaded back from the DNR store file to be converted to Rule class instances"
+  );
+
   Assert.deepEqual(
     dnrStore._data.get(extUUID).dynamicRuleset,
     getSchemaNormalizedRules(extension, rules),

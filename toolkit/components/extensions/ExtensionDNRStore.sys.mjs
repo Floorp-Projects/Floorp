@@ -1334,6 +1334,7 @@ class RulesetsStore {
       let ruleQuotaCounter = new lazy.ExtensionDNR.RuleQuotaCounter();
       try {
         ruleQuotaCounter.tryAddRules("_dynamic", validatedDynamicRules);
+        data.dynamicRuleset = validatedDynamicRules;
       } catch (e) {
         // This should not happen in practice, because updateDynamicRules
         // rejects quota errors. If we get here, the data on disk may have been
