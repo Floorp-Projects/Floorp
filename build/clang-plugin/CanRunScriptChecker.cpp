@@ -90,7 +90,7 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
 
   // A matcher that matches various things that are known to be live directly,
   // without making any assumptions about operators.
-  auto KnownLiveBase = anyOf(
+  auto KnownLiveBaseExceptRef = anyOf(
       // Things that are known to be a stack or immutable refptr.
       KnownLiveSmartPtr,
       // MOZ_KnownLive() calls.
@@ -101,6 +101,49 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
       KnownLiveMemberOfParam,
       // Constexpr things.
       declRefExpr(to(varDecl(isConstexpr()))));
+
+  // A reference of smart ptr which is initialized with known live thing is OK.
+  // FIXME: This does not allow nested references.
+  auto RefToKnownLivePtr = ignoreTrivials(declRefExpr(to(varDecl(
+      hasAutomaticStorageDuration(), hasType(referenceType()),
+      hasInitializer(anyOf(
+          KnownLiveSmartPtr, KnownLiveParam, KnownLiveMemberOfParam,
+          conditionalOperator(
+              hasFalseExpression(ignoreTrivials(anyOf(
+                  KnownLiveSmartPtr, KnownLiveParam, KnownLiveMemberOfParam,
+                  declRefExpr(to(varDecl(isConstexpr()))),
+                  // E.g., for RefPtr<T>::operator*()
+                  cxxOperatorCallExpr(
+                      hasOverloadedOperatorName("*"),
+                      hasAnyArgument(
+                          anyOf(KnownLiveBaseExceptRef,
+                                ignoreTrivials(KnownLiveMemberOfParam))),
+                      argumentCountIs(1)),
+                  // E.g., for *T
+                  unaryOperator(unaryDereferenceOperator(),
+                                hasUnaryOperand(
+                                    ignoreTrivials(KnownLiveBaseExceptRef)))))),
+              hasTrueExpression(ignoreTrivials(anyOf(
+                  KnownLiveSmartPtr, KnownLiveParam, KnownLiveMemberOfParam,
+                  declRefExpr(to(varDecl(isConstexpr()))),
+                  // E.g., for RefPtr<T>::operator*()
+                  cxxOperatorCallExpr(
+                      hasOverloadedOperatorName("*"),
+                      hasAnyArgument(
+                          anyOf(KnownLiveBaseExceptRef,
+                                ignoreTrivials(KnownLiveMemberOfParam))),
+                      argumentCountIs(1)),
+                  // E.g., for *T
+                  unaryOperator(unaryDereferenceOperator(),
+                                hasUnaryOperand(ignoreTrivials(
+                                    KnownLiveBaseExceptRef)))))))))))));
+
+  // A matcher that matches various things that are known to be live directly,
+  // without making any assumptions about operators.
+  auto KnownLiveBase =
+      anyOf(KnownLiveBaseExceptRef,
+            // Smart pointer refs initialized with known live smart ptrs.
+            RefToKnownLivePtr);
 
   // A matcher that matches various known-live things that don't involve
   // non-unary operators.
@@ -119,8 +162,7 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
                    KnownLiveMemberOfParam))),
       // operator* or operator-> on a thing that is already known to be live.
       cxxOperatorCallExpr(
-          anyOf(hasOverloadedOperatorName("*"),
-                hasOverloadedOperatorName("->")),
+          hasAnyOverloadedOperatorName("*", "->"),
           hasAnyArgument(
               anyOf(KnownLiveBase, ignoreTrivials(KnownLiveMemberOfParam))),
           argumentCountIs(1)),
