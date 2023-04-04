@@ -295,6 +295,7 @@ def handle_keyed_by(config, jobs):
     fields = [
         "mozharness.config",
         "package-formats",
+        "worker.max-run-time",
     ]
     for job in jobs:
         job = copy_task(job)  # don't overwrite dict values here
@@ -514,11 +515,11 @@ def make_job_description(config, jobs):
         worker.update(
             {
                 "chain-of-trust": True,
-                "max-run-time": 7200 if build_platform.startswith("win") else 3600,
                 # Don't add generic artifact directory.
                 "skip-artifacts": True,
             }
         )
+        worker.setdefault("max-run-time", 3600)
 
         if locale:
             # Make sure we specify the locale-specific upload dir

@@ -28,6 +28,8 @@ only-for-build-platforms:
 
 job-template:
     worker-type: b-linux-gcp
+    worker:
+        max-run-time: 2700
     # This is for fast try iteration; `repackage-shippable-l10n-msix` is the "real one".
     run-on-projects: []
     mozharness:
