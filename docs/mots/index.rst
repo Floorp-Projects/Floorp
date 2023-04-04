@@ -2964,6 +2964,7 @@ The Firefox View page and its modules.
     * - Peer(s)
       -
         | `Sam Foster (sfoster) <https://people.mozilla.org/s?query=sfoster>`__
+        | `Kelly Cochrane (kcochrane) <https://people.mozilla.org/s?query=kcochrane>`__
     * - Includes
       -
         | `browser/components/firefoxview/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=browser/components/firefoxview/\*\*/\*>`__
