@@ -12,6 +12,7 @@
 
 #include "jspubtd.h"
 #include "js/experimental/JSStencil.h"
+#include "js/Modules.h"
 #include "js/Stack.h"
 #include "js/UniquePtr.h"
 
@@ -32,6 +33,15 @@ JS_PUBLIC_API JS::FrontendContext* NewFrontendContext();
 
 // Destroy a front-end context allocated with NewFrontendContext.
 JS_PUBLIC_API void DestroyFrontendContext(JS::FrontendContext* fc);
+
+/*
+ * Set supported import assertions on a FrontendContext to be used with
+ * CompileModuleScriptToStencil. May only be set once for each FrontendContext.
+ * The default list of supported import assertions is empty.
+ */
+JS_PUBLIC_API bool SetSupportedImportAssertions(
+    JS::FrontendContext* fc,
+    const JS::ImportAssertionVector& supportedImportAssertions);
 
 extern JS_PUBLIC_API already_AddRefed<JS::Stencil> CompileGlobalScriptToStencil(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& options,
