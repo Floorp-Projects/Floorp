@@ -7,8 +7,8 @@
 /* JavaScript API for compiling scripts to stencil without depending on
  * JSContext. */
 
-#ifndef js_experimental_ParseScript_h
-#define js_experimental_ParseScript_h
+#ifndef js_experimental_CompileScript_h
+#define js_experimental_CompileScript_h
 
 #include "jspubtd.h"
 #include "js/experimental/JSStencil.h"
@@ -30,15 +30,15 @@ using FrontendContext = js::FrontendContext;
 // Create a new front-end context.
 JS_PUBLIC_API JS::FrontendContext* NewFrontendContext();
 
-// Destroy a front-end context allocated with JS_NewFrontendContext.
+// Destroy a front-end context allocated with NewFrontendContext.
 JS_PUBLIC_API void DestroyFrontendContext(JS::FrontendContext* fc);
 
-extern JS_PUBLIC_API already_AddRefed<JS::Stencil> ParseGlobalScript(
+extern JS_PUBLIC_API already_AddRefed<JS::Stencil> CompileGlobalScriptToStencil(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& options,
     JS::NativeStackLimit stackLimit, JS::SourceText<mozilla::Utf8Unit>& srcBuf,
     js::UniquePtr<js::frontend::CompilationInput>& stencilInput);
 
-extern JS_PUBLIC_API already_AddRefed<JS::Stencil> ParseGlobalScript(
+extern JS_PUBLIC_API already_AddRefed<JS::Stencil> CompileGlobalScriptToStencil(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& options,
     JS::NativeStackLimit stackLimit, JS::SourceText<char16_t>& srcBuf,
     js::UniquePtr<js::frontend::CompilationInput>& stencilInput);
@@ -49,4 +49,4 @@ extern JS_PUBLIC_API bool PrepareForInstantiate(
 
 }  // namespace JS
 
-#endif  // js_experimental_ParseScript_h
+#endif  // js_experimental_CompileScript_h
