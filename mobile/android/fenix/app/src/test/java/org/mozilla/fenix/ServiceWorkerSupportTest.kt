@@ -4,46 +4,41 @@
 
 package org.mozilla.fenix
 
-import android.content.Context
-import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
-import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
 import io.mockk.verify
 import io.mockk.verifyOrder
 import mozilla.components.browser.engine.gecko.GeckoEngine
-import mozilla.components.browser.state.state.SessionState.Source.Internal.None
+import mozilla.components.browser.state.state.SessionState
+import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.feature.tabs.TabsUseCases.AddNewTabUseCase
-import mozilla.components.support.test.eq
-import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mozilla.fenix.BrowserDirection.FromHome
 import org.mozilla.fenix.ext.components
 
-@RunWith(AndroidJUnit4::class)
 class ServiceWorkerSupportTest {
+    private lateinit var activity: HomeActivity
+    private lateinit var feature: ServiceWorkerSupportFeature
+    private lateinit var engine: GeckoEngine
+    private lateinit var addNewTabUseCase: AddNewTabUseCase
+
     @Before
     fun setup() {
-        // Needed to mock the response of the "Context.components" extension property.
-        mockkStatic("org.mozilla.fenix.ext.ContextKt")
-    }
-
-    @After
-    fun teardown() {
-        unmockkStatic("org.mozilla.fenix.ext.ContextKt")
+        activity = mockk()
+        engine = mockk(relaxed = true)
+        feature = ServiceWorkerSupportFeature(activity)
+        addNewTabUseCase = mockk(relaxed = true)
+        every { activity.components.core.engine } returns engine
+        every { activity.components.useCases.tabsUseCases.addTab } returns addNewTabUseCase
+        every { activity.openToBrowser(BrowserDirection.FromHome) } just Runs
     }
 
     @Test
     fun `GIVEN the feature is registered for lifecycle events WHEN the owner is created THEN register itself as a service worker delegate`() {
-        val engine: GeckoEngine = mockk(relaxed = true)
-        every { any<Context>().components.core.engine } returns engine
-        val feature = ServiceWorkerSupportFeature(mockk(relaxed = true))
-
         feature.onCreate(mockk())
 
         verify { engine.registerServiceWorkerDelegate(feature) }
@@ -51,10 +46,6 @@ class ServiceWorkerSupportTest {
 
     @Test
     fun `GIVEN the feature is registered for lifecycle events WHEN the owner is destroyed THEN unregister itself as a service worker delegate`() {
-        val engine: GeckoEngine = mockk(relaxed = true)
-        every { any<Context>().components.core.engine } returns engine
-        val feature = ServiceWorkerSupportFeature(mockk(relaxed = true))
-
         feature.onDestroy(mockk())
 
         verify { engine.unregisterServiceWorkerDelegate() }
@@ -62,40 +53,31 @@ class ServiceWorkerSupportTest {
 
     @Test
     fun `WHEN a new tab is requested THEN navigate to browser then add a new tab`() {
-        val addNewTabUseCase: AddNewTabUseCase = mockk(relaxed = true)
-        every { any<Context>().components.useCases.tabsUseCases.addTab } returns addNewTabUseCase
-        val activity: HomeActivity = mockk(relaxed = true)
-        val feature = ServiceWorkerSupportFeature(activity)
-
-        feature.addNewTab(mockk())
+        val engineSession: EngineSession = mockk()
+        feature.addNewTab(engineSession)
 
         verifyOrder {
-            activity.openToBrowser(FromHome)
+            activity.openToBrowser(BrowserDirection.FromHome)
 
             addNewTabUseCase(
-                url = eq("about:blank"),
-                selectTab = eq(true), // default
-                startLoading = eq(true), // default
-                parentId = eq(null), // default
-                flags = eq(LoadUrlFlags.external()),
-                contextId = eq(null), // default
-                engineSession = any(),
-                source = eq(None),
-                searchTerms = eq(""), // default
-                private = eq(false), // default
-                historyMetadata = eq(null), // default
+                url = "about:blank",
+                selectTab = true,
+                startLoading = true,
+                parentId = null,
+                flags = LoadUrlFlags.external(),
+                contextId = null,
+                engineSession = engineSession,
+                source = SessionState.Source.Internal.None,
+                searchTerms = "",
+                private = false,
+                historyMetadata = null,
+                isSearch = false,
             )
         }
     }
 
     @Test
     fun `WHEN a new tab is requested THEN return true`() {
-        val addNewTabUseCase: AddNewTabUseCase = mockk(relaxed = true)
-        every { any<Context>().components.useCases.tabsUseCases.addTab } returns addNewTabUseCase
-
-        val activity: HomeActivity = mockk(relaxed = true)
-        val feature = ServiceWorkerSupportFeature(activity)
-
         val result = feature.addNewTab(mockk())
 
         assertTrue(result)
