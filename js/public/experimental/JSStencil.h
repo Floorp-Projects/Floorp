@@ -48,6 +48,8 @@ struct CompilationInput;
 
 namespace JS {
 
+struct CompilationStorage;
+
 using Stencil = js::frontend::CompilationStencil;
 using FrontendContext = js::FrontendContext;
 
@@ -71,8 +73,8 @@ struct InstantiationStorage {
       JSContext* cx, const InstantiateOptions& options, Stencil* stencil,
       InstantiationStorage* storage);
 
-  friend JS_PUBLIC_API JS_PUBLIC_API bool PrepareForInstantiate(
-      JS::FrontendContext* fc, js::frontend::CompilationInput& input,
+  friend JS_PUBLIC_API bool PrepareForInstantiate(
+      JS::FrontendContext* fc, JS::CompilationStorage& compileStorage,
       JS::Stencil& stencil, JS::InstantiationStorage& storage);
 
   friend struct js::ParseTask;
