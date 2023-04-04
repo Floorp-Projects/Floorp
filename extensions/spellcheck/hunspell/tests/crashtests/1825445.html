@@ -1,0 +1,12 @@
+<html>
+<p id="targetParagraph">
+
+<script>
+    document.designMode = 'on';
+
+    function crash() {
+        for(var i=0; i<850; i++) { targetParagraph.insertAdjacentText("afterEnd", "S".repeat(8567)); }
+    }
+    crash();
+</script>
+</html>
