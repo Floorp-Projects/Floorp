@@ -401,7 +401,7 @@ floorp-home-mode-choice-default =
 floorp-home-prefs-content-header = Floorp Home Content
 floorp-home-prefs-content-description = Choose what content you want on your Floorp Home screen.
 
-## tool attribute
+
 ################################################################### browser ###############################################################
 
 rest-mode = Taking a break...
