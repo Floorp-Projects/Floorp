@@ -5,7 +5,7 @@ import pytest
 from webdriver.bidi.modules.input import Actions
 from webdriver.bidi.modules.script import ContextTarget
 
-from tests.support.helpers import filter_dict
+from tests.support.helpers import filter_supported_key_events
 
 pytestmark = pytest.mark.asyncio
 
@@ -74,11 +74,7 @@ async def test_printable_key_sends_correct_events(bidi_session, top_context, url
         {"code": code, "key": value, "type": "keyup"},
     ]
 
-    events = [filter_dict(e, expected[0]) for e in all_events]
-    if len(events) > 0 and events[0]["code"] is None:
-        # Remove 'code' entry if browser doesn't support it
-        expected = [filter_dict(e, {"key": "", "type": ""}) for e in expected]
-        events = [filter_dict(e, expected[0]) for e in events]
+    (events, expected) = filter_supported_key_events(all_events, expected)
     assert events == expected
 
     keys_value = await bidi_session.script.call_function(function_declaration="""
