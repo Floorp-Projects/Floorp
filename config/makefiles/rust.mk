@@ -437,10 +437,7 @@ force-cargo-library-build:
 	$(REPORT_BUILD)
 	$(call CARGO_BUILD) --lib $(cargo_target_flag) $(rust_features_flag) -- $(cargo_rustc_flags)
 
-RUST_LIBRARY_DEP_FILE := $(patsubst %.a,%.d,$(RUST_LIBRARY_FILE))
-RUST_LIBRARY_DEPS := $(wordlist 2, 10000000, $(if $(wildcard $(RUST_LIBRARY_DEP_FILE)),$(shell cat $(RUST_LIBRARY_DEP_FILE))))
-$(RUST_LIBRARY_FILE): $(CARGO_FILE) $(if $(RUST_LIBRARY_DEPS),$(RUST_LIBRARY_DEPS), force-cargo-library-build)
-	$(if $(RUST_LIBRARY_DEPS),+$(MAKE) force-cargo-library-build,:)
+$(RUST_LIBRARY_FILE): force-cargo-library-build
 # When we are building in --enable-release mode; we add an additional check to confirm
 # that we are not importing any networking-related functions in rust code. This reduces
 # the chance of proxy bypasses originating from rust code.
