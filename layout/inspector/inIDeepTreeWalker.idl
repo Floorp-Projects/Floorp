@@ -22,7 +22,7 @@ interface inIDeepTreeWalker : nsISupports
   // by setting this flag to true this behavior can be altered.
   attribute boolean showDocumentsAsNodes;
 
-  void init(in Node aRoot, in unsigned long aWhatToShow);
+  void init(in Node aRoot);
 
   // Methods and attributes that look like TreeWalker.
   // Note: normally parentNode cannot go further up on the tree once it reached
@@ -31,7 +31,6 @@ interface inIDeepTreeWalker : nsISupports
   // continued from there, and once we reach a node that is 'under' the root, the
   // limitation for the parentNode will work again.
   readonly attribute Node             root;
-  readonly attribute unsigned long    whatToShow;
            attribute Node             currentNode;
 
   Node         parentNode();

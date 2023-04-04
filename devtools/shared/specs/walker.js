@@ -28,7 +28,6 @@ var nodeArrayMethod = {
     maxNodes: Option(1),
     center: Option(1, "domnode"),
     start: Option(1, "domnode"),
-    whatToShow: Option(1),
   },
   response: RetVal(
     types.addDictType("domtraversalarray", {
@@ -40,7 +39,6 @@ var nodeArrayMethod = {
 var traversalMethod = {
   request: {
     node: Arg(0, "domnode"),
-    whatToShow: Option(1),
   },
   response: {
     node: RetVal("nullable:domnode"),

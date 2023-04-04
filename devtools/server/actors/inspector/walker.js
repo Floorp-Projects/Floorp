@@ -335,25 +335,23 @@ class WalkerActor extends Actor {
     return "[WalkerActor " + this.actorID + "]";
   }
 
-  getAnonymousDocumentWalker(node, whatToShow, skipTo) {
+  getAnonymousDocumentWalker(node, skipTo) {
     // Allow native anon content (like <video> controls) if preffed on
     const filter = this.showAllAnonymousContent
       ? allAnonymousContentTreeWalkerFilter
       : standardTreeWalkerFilter;
 
     return new DocumentWalker(node, this.rootWin, {
-      whatToShow,
       filter,
       skipTo,
       showAnonymousContent: true,
     });
   }
 
-  getNonAnonymousDocumentWalker(node, whatToShow, skipTo) {
+  getNonAnonymousDocumentWalker(node, skipTo) {
     const nodeFilter = standardTreeWalkerFilter;
 
     return new DocumentWalker(node, this.rootWin, {
-      whatToShow,
       nodeFilter,
       skipTo,
       showAnonymousContent: false,
@@ -364,11 +362,11 @@ class WalkerActor extends Actor {
    * Will first try to create a regular anonymous document walker. If it fails, will fall
    * back on a non-anonymous walker.
    */
-  getDocumentWalker(node, whatToShow, skipTo) {
+  getDocumentWalker(node, skipTo) {
     try {
-      return this.getAnonymousDocumentWalker(node, whatToShow, skipTo);
+      return this.getAnonymousDocumentWalker(node, skipTo);
     } catch (e) {
-      return this.getNonAnonymousDocumentWalker(node, whatToShow, skipTo);
+      return this.getNonAnonymousDocumentWalker(node, skipTo);
     }
   }
 
@@ -883,8 +881,6 @@ class WalkerActor extends Actor {
    *    `center`: If a node is specified, the given node will be as centered
    *       as possible in the list, given how close to the ends of the child
    *       list it is.  Mutually exclusive with `start`.
-   *    `whatToShow`: A bitmask of node types that should be included.  See
-   *       https://developer.mozilla.org/en-US/docs/Web/API/NodeFilter.
    *
    * @returns an object with three items:
    *    hasFirst: true if the first child of the node is included in the list.
@@ -961,11 +957,7 @@ class WalkerActor extends Actor {
     let isUnslottedHostChild = false;
     if (directShadowHostChild) {
       try {
-        this.getDocumentWalker(
-          node.rawNode,
-          options.whatToShow,
-          SKIP_TO_SIBLING
-        );
+        this.getDocumentWalker(node.rawNode, SKIP_TO_SIBLING);
       } catch (e) {
         isUnslottedHostChild = true;
       }
@@ -977,8 +969,6 @@ class WalkerActor extends Actor {
     // We're going to create a few document walkers with the same filter,
     // make it easier.
     const getFilteredWalker = documentWalkerNode => {
-      const { whatToShow } = options;
-
       // Use SKIP_TO_SIBLING to force the walker to use a sibling of the provided node
       // in case this one is incompatible with the walker's filter function.
       const skipTo = SKIP_TO_SIBLING;
@@ -994,13 +984,9 @@ class WalkerActor extends Actor {
         //   while we want to return the direct children of the shadow host.
         // - unslotted host child: if a shadow host child is not slotted, it is not part
         //   of any anonymous tree and cannot be used with anonymous tree walkers.
-        return this.getNonAnonymousDocumentWalker(
-          documentWalkerNode,
-          whatToShow,
-          skipTo
-        );
+        return this.getNonAnonymousDocumentWalker(documentWalkerNode, skipTo);
       }
-      return this.getDocumentWalker(documentWalkerNode, whatToShow, skipTo);
+      return this.getDocumentWalker(documentWalkerNode, skipTo);
     };
 
     // Need to know the first and last child.
@@ -1130,18 +1116,13 @@ class WalkerActor extends Actor {
   /**
    * Get the next sibling of a given node.  Getting nodes one at a time
    * might be inefficient, be careful.
-   *
-   * @param object options
-   *    Named options:
-   *    `whatToShow`: A bitmask of node types that should be included.  See
-   *       https://developer.mozilla.org/en-US/docs/Web/API/NodeFilter.
    */
-  nextSibling(node, options = {}) {
+  nextSibling(node) {
     if (isNodeDead(node)) {
       return null;
     }
 
-    const walker = this.getDocumentWalker(node.rawNode, options.whatToShow);
+    const walker = this.getDocumentWalker(node.rawNode);
     const sibling = walker.nextSibling();
     return sibling ? this._getOrCreateNodeActor(sibling) : null;
   }
@@ -1149,18 +1130,13 @@ class WalkerActor extends Actor {
   /**
    * Get the previous sibling of a given node.  Getting nodes one at a time
    * might be inefficient, be careful.
-   *
-   * @param object options
-   *    Named options:
-   *    `whatToShow`: A bitmask of node types that should be included.  See
-   *       https://developer.mozilla.org/en-US/docs/Web/API/NodeFilter.
    */
-  previousSibling(node, options = {}) {
+  previousSibling(node) {
     if (isNodeDead(node)) {
       return null;
     }
 
-    const walker = this.getDocumentWalker(node.rawNode, options.whatToShow);
+    const walker = this.getDocumentWalker(node.rawNode);
     const sibling = walker.previousSibling();
     return sibling ? this._getOrCreateNodeActor(sibling) : null;
   }

@@ -52,9 +52,6 @@ class inDeepTreeWalker final : public inIDeepTreeWalker {
 
   // Index of mCurrentNode in the mSiblings list.
   int32_t mCurrentIndex;
-
-  // Currently unused. Should be a filter for nodes.
-  uint32_t mWhatToShow;
 };
 
 // {BFCB82C2-5611-4318-90D6-BAF4A7864252}

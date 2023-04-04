@@ -78,7 +78,6 @@ async function testNativeAnonymousStartingNode(walker) {
         content.document.querySelector("select"),
         content,
         {
-          whatToShow: nodeFilterConstants.SHOW_ALL,
           filter: () => {
             return nodeFilterConstants.FILTER_ACCEPT;
           },
