@@ -34,14 +34,14 @@ class PingServer(Layer):
     def _wait_for_server(self, endpoint):
         import requests
 
-        start = time.time()
+        start = time.monotonic()
         while True:
             try:
                 requests.get(endpoint, timeout=0.1)
                 return
             except Exception:
                 # we want to wait at most 5sec.
-                if time.time() - start > 5.0:
+                if time.monotonic() - start > 5.0:
                     raise
                 time.sleep(0.01)
 

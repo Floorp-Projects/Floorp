@@ -11,11 +11,11 @@ def log_build_task(f, *args, **kwargs):
     """Run the given function, representing an entire build task, and log the
     BUILDTASK metadata row to stdout.
     """
-    start = time.time()
+    start = time.monotonic()
     try:
         return f(*args, **kwargs)
     finally:
-        end = time.time()
+        end = time.monotonic()
         print(
             "BUILDTASK %s"
             % json.dumps(

@@ -46,12 +46,12 @@ def run_cmd(cmd, **kwargs):
     if "env" in kwargs:
         kwargs["env"] = merge_env(kwargs["env"])
     try:
-        t = time.time()
+        t = time.monotonic()
         log.info("command: output:")
         return subprocess.check_call(cmd, **kwargs)
     except subprocess.CalledProcessError:
         log.info("command: ERROR", exc_info=True)
         raise
     finally:
-        elapsed = time.time() - t
+        elapsed = time.monotonic() - t
         log.info("command: END (%.2fs elapsed)\n", elapsed)

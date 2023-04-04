@@ -269,7 +269,7 @@ def artifact_toolchain(
     from mozbuild.action.tooltool import FileRecord, open_manifest, unpack_file
     from mozbuild.artifacts import ArtifactCache
 
-    start = time.time()
+    start = time.monotonic()
     command_context._set_log_level(verbose)
     # Normally, we'd use command_context.log_manager.enable_unstructured(),
     # but that enables all logging, while we only really want tooltool's
@@ -588,7 +588,7 @@ def artifact_toolchain(
             json.dump(artifacts, fh, indent=4, sort_keys=True)
 
     if "MOZ_AUTOMATION" in os.environ:
-        end = time.time()
+        end = time.monotonic()
 
         perfherder_data = {
             "framework": {"name": "build_metrics"},

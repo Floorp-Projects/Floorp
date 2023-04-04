@@ -730,12 +730,12 @@ def repackage_msix(
     output_dir = mozpath.abspath(output_dir)
     ensureParentDir(output_dir)
 
-    start = time.time()
+    start = time.monotonic()
     result = copier.copy(
         output_dir, remove_empty_directories=True, skip_if_older=not force
     )
     if log:
-        log_copy_result(log, time.time() - start, output_dir, result)
+        log_copy_result(log, time.monotonic() - start, output_dir, result)
 
     if verbose:
         # Dump AppxManifest.xml contents for ease of debugging.

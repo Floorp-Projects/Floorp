@@ -841,7 +841,7 @@ def main(argv):
         raise Exception("expected tar.gz or zip output file")
 
     file_count = 0
-    t_start = time.time()
+    t_start = time.monotonic()
     ensureParentDir(out_file)
     res = find_files(args.archive)
     with open(out_file, "wb") as fh:
@@ -863,7 +863,7 @@ def main(argv):
         else:
             raise Exception("unhandled file extension: %s" % out_file)
 
-    duration = time.time() - t_start
+    duration = time.monotonic() - t_start
     zip_size = os.path.getsize(args.outputfile)
     basename = os.path.basename(args.outputfile)
     print(

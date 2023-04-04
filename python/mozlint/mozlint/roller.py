@@ -67,7 +67,7 @@ def _run_worker(config, paths, **lintargs):
         lintargs["include_thirdparty"] = True
 
     func = supported_types[config["type"]]
-    start_time = time.time()
+    start_time = time.monotonic()
     try:
         res = func(paths, config, **lintargs)
         # Some linters support fixed operations
@@ -86,7 +86,7 @@ def _run_worker(config, paths, **lintargs):
     except (KeyboardInterrupt, SystemExit):
         return result
     finally:
-        end_time = time.time()
+        end_time = time.monotonic()
         log.debug("Finished in {:.2f} seconds".format(end_time - start_time))
         sys.stdout.flush()
 
@@ -229,13 +229,13 @@ class LintRoller(object):
                 )
                 if virtualenv_manager is not None:
                     setupargs["virtualenv_manager"] = virtualenv_manager
-                start_time = time.time()
+                start_time = time.monotonic()
                 res = findobject(linter["setup"])(
                     **setupargs,
                 )
                 self.log.debug(
                     f"setup for {linter['name']} finished in "
-                    f"{round(time.time() - start_time, 2)} seconds"
+                    f"{round(time.monotonic() - start_time, 2)} seconds"
                 )
             except Exception:
                 traceback.print_exc()

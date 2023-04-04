@@ -151,10 +151,10 @@ class TreeMetadataEmitter(LoggingMixin):
                 # Keep all contexts around, we will need them later.
                 contexts[os.path.normcase(out.objdir)] = out
 
-                start = time.time()
+                start = time.monotonic()
                 # We need to expand the generator for the timings to work.
                 objs = list(emitfn(out))
-                self._emitter_time += time.time() - start
+                self._emitter_time += time.monotonic() - start
 
                 for o in emit_objs(objs):
                     yield o
@@ -164,9 +164,9 @@ class TreeMetadataEmitter(LoggingMixin):
 
         # Don't emit Linkable objects when COMPILE_ENVIRONMENT is not set
         if self.config.substs.get("COMPILE_ENVIRONMENT"):
-            start = time.time()
+            start = time.monotonic()
             objs = list(self._emit_libs_derived(contexts))
-            self._emitter_time += time.time() - start
+            self._emitter_time += time.monotonic() - start
 
             for o in emit_objs(objs):
                 yield o
