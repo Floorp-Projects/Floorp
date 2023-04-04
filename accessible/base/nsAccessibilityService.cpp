@@ -271,7 +271,8 @@ bool nsAccessibilityService::ShouldCreateImgAccessible(
 /**
  * Return true if the SVG element should be accessible
  */
-static bool MustSVGElementBeAccessible(nsIContent* aContent) {
+static bool MustSVGElementBeAccessible(nsIContent* aContent,
+                                       DocAccessible* aDocument) {
   // https://w3c.github.io/svg-aam/#include_elements
   for (nsIContent* childElm = aContent->GetFirstChild(); childElm;
        childElm = childElm->GetNextSibling()) {
@@ -279,7 +280,7 @@ static bool MustSVGElementBeAccessible(nsIContent* aContent) {
       return true;
     }
   }
-  return false;
+  return MustBeAccessible(aContent, aDocument);
 }
 
 /**
@@ -1331,21 +1332,21 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
         // Shape elements: rect, circle, ellipse, line, path, polygon,
         // and polyline. 'use' and 'text' graphic elements require
         // special support.
-        if (MustSVGElementBeAccessible(content)) {
+        if (MustSVGElementBeAccessible(content, document)) {
           newAcc = new EnumRoleAccessible<roles::GRAPHIC>(content, document);
         }
       } else if (content->IsSVGElement(nsGkAtoms::text)) {
         newAcc = new HyperTextAccessibleWrap(content->AsElement(), document);
       } else if (content->IsSVGElement(nsGkAtoms::svg)) {
-        // An <svg> element could contain <foreignobject>, which contains HTML
+        // An <svg> element could contain <foreignObject>, which contains HTML
         // but does not normally create its own Accessible. This means that the
         // <svg> Accessible could have TextLeafAccessible children, so it must
         // be a HyperTextAccessible.
         newAcc =
             new EnumRoleHyperTextAccessible<roles::DIAGRAM>(content, document);
       } else if (content->IsSVGElement(nsGkAtoms::g) &&
-                 MustSVGElementBeAccessible(content)) {
-        // <g> can also contain <foreignobject>.
+                 MustSVGElementBeAccessible(content, document)) {
+        // <g> can also contain <foreignObject>.
         newAcc =
             new EnumRoleHyperTextAccessible<roles::GROUPING>(content, document);
       }
