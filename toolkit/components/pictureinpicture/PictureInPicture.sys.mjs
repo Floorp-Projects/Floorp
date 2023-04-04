@@ -26,6 +26,10 @@ const PLAYER_FEATURES = `chrome,alwaysontop,lockaspectratio,resizable,dialog,tit
 const WINDOW_TYPE = "Toolkit:PictureInPicture";
 const TOGGLE_ENABLED_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.enabled";
+const TOGGLE_FIRST_SEEN_PREF =
+  "media.videocontrols.picture-in-picture.video-toggle.first-seen-secs";
+const TOGGLE_HAS_USED_PREF =
+  "media.videocontrols.picture-in-picture.video-toggle.has-used";
 const TOGGLE_POSITION_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.position";
 const TOGGLE_POSITION_RIGHT = "right";
@@ -86,6 +90,17 @@ export class PictureInPictureToggleParent extends JSWindowActorParent {
         let { count } = aMessage.data;
         PictureInPicture.updateEligiblePipVideoCount(browsingContext, count);
         PictureInPicture.updateUrlbarToggle(browser);
+        break;
+      }
+      case "PictureInPicture:SetFirstSeen": {
+        let { dateSeconds } = aMessage.data;
+        PictureInPicture.setFirstSeen(dateSeconds);
+        break;
+      }
+      case "PictureInPicture:SetHasUsed": {
+        let { hasUsed } = aMessage.data;
+        PictureInPicture.setHasUsed(hasUsed);
+        break;
       }
     }
   }
@@ -642,10 +657,7 @@ export var PictureInPicture = {
     win.setScrubberPosition(videoData.scrubberPosition);
     win.setTimestamp(videoData.timestamp);
 
-    Services.prefs.setBoolPref(
-      "media.videocontrols.picture-in-picture.video-toggle.has-used",
-      true
-    );
+    Services.prefs.setBoolPref(TOGGLE_HAS_USED_PREF, true);
 
     let args = {
       width: win.innerWidth.toString(),
@@ -1422,5 +1434,17 @@ export var PictureInPicture = {
     );
 
     return { top, left, width, height };
+  },
+
+  setFirstSeen(dateSeconds) {
+    if (!dateSeconds) {
+      return;
+    }
+
+    Services.prefs.setIntPref(TOGGLE_FIRST_SEEN_PREF, dateSeconds);
+  },
+
+  setHasUsed(hasUsed) {
+    Services.prefs.setBoolPref(TOGGLE_HAS_USED_PREF, !!hasUsed);
   },
 };

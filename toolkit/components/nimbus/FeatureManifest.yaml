@@ -860,6 +860,9 @@ pictureinpicture:
     oldToggle:
       type: boolean
       description: Whether to show the control style (true) or variant style (false) for the first time PiP toggle
+    displayDuration:
+      type: int
+      description: Duration of PiP first time toggle display in days before switching to PiP icon toggle
 
 glean:
   description: "The Glean data collection SDK within Firefox Desktop"
