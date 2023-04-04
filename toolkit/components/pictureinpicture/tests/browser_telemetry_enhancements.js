@@ -28,131 +28,22 @@ const EXPECTED_EVENT_CREATE_WITH_TEXT_TRACKS = [
 ];
 
 const EXPECTED_EVENT_CLOSED_METHOD_CLOSE_BUTTON = [
-  {
-    category: "pictureinpicture",
-    method: "closed_method",
-    object: "closeButton",
-  },
+  [
+    "pictureinpicture",
+    "closed_method",
+    "method",
+    null,
+    { reason: "close-button" },
+  ],
 ];
 
 const videoID = "with-controls";
 
 const EXPECTED_EVENT_CLOSED_METHOD_UNPIP = [
-  {
-    category: "pictureinpicture",
-    method: "closed_method",
-    object: "unpip",
-  },
+  ["pictureinpicture", "closed_method", "method", null, { reason: "unpip" }],
 ];
 
-const FULLSCREEN_EVENTS = [
-  {
-    category: "pictureinpicture",
-    method: "fullscreen",
-    object: "player",
-    extraKey: { enter: "true" },
-  },
-  {
-    category: "pictureinpicture",
-    method: "fullscreen",
-    object: "player",
-    extraKey: { enter: "true" },
-  },
-];
-
-const FORWARD_EVENTS = [
-  {
-    category: "pictureinpicture",
-    method: "forward",
-    object: "player",
-  },
-  {
-    category: "pictureinpicture",
-    method: "forward",
-    object: "player",
-  },
-  {
-    category: "pictureinpicture",
-    method: "forward",
-    object: "player",
-  },
-  {
-    category: "pictureinpicture",
-    method: "forward",
-    object: "player",
-  },
-  {
-    category: "pictureinpicture",
-    method: "forward",
-    object: "player",
-  },
-  {
-    category: "pictureinpicture",
-    method: "forward",
-    object: "player",
-  },
-];
-
-const FORWARD_SEQUENCE_EVENTS = [
-  {
-    category: "pictureinpicture",
-    method: "forward_sequence",
-    object: "player",
-  },
-  {
-    category: "pictureinpicture",
-    method: "forward_sequence",
-    object: "player",
-  },
-];
-
-const BACKWARD_EVENTS = [
-  {
-    category: "pictureinpicture",
-    method: "backward",
-    object: "player",
-  },
-  {
-    category: "pictureinpicture",
-    method: "backward",
-    object: "player",
-  },
-  {
-    category: "pictureinpicture",
-    method: "backward",
-    object: "player",
-  },
-  {
-    category: "pictureinpicture",
-    method: "backward",
-    object: "player",
-  },
-  {
-    category: "pictureinpicture",
-    method: "backward",
-    object: "player",
-  },
-  {
-    category: "pictureinpicture",
-    method: "backward",
-    object: "player",
-  },
-];
-
-const BACKWARD_SEQUENCE_EVENTS = [
-  {
-    category: "pictureinpicture",
-    method: "backward_sequence",
-    object: "player",
-  },
-  {
-    category: "pictureinpicture",
-    method: "backward_sequence",
-    object: "player",
-  },
-];
-
-add_task(async function testCreateAndCloseButtonTelemetry() {
+add_task(async () => {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -166,41 +57,64 @@ add_task(async function testCreateAndCloseButtonTelemetry() {
       let pipWin = await triggerPictureInPicture(browser, videoID);
       ok(pipWin, "Got Picture-in-Picture window.");
 
-      let filter = {
-        category: "pictureinpicture",
-        method: "create",
-        object: "player",
-      };
-      await waitForTelemeryEvents(
-        filter,
-        EXPECTED_EVENT_CREATE.length,
-        "parent"
+      let events = Services.telemetry.snapshotEvents(
+        Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+        false
+      ).parent;
+
+      await TestUtils.waitForCondition(
+        () => {
+          events = Services.telemetry.snapshotEvents(
+            Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+            false
+          ).parent;
+          return events && events.length >= 1;
+        },
+        "Waiting for one create pictureinpicture telemetry event.",
+        200,
+        100
       );
 
-      TelemetryTestUtils.assertEvents(EXPECTED_EVENT_CREATE, filter, {
-        clear: true,
-        process: "parent",
-      });
+      TelemetryTestUtils.assertEvents(
+        EXPECTED_EVENT_CREATE,
+        {
+          category: "pictureinpicture",
+          method: "create",
+          object: "player",
+        },
+        { clear: true, process: "parent" }
+      );
 
       let pipClosed = BrowserTestUtils.domWindowClosed(pipWin);
       let closeButton = pipWin.document.getElementById("close");
       EventUtils.synthesizeMouseAtCenter(closeButton, {}, pipWin);
       await pipClosed;
 
-      filter = {
-        category: "pictureinpicture",
-        method: "closed_method",
-        object: "closeButton",
-      };
-      await waitForTelemeryEvents(
-        filter,
-        EXPECTED_EVENT_CLOSED_METHOD_CLOSE_BUTTON.length,
-        "parent"
+      events = Services.telemetry.snapshotEvents(
+        Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+        false
+      ).parent;
+
+      await TestUtils.waitForCondition(
+        () => {
+          events = Services.telemetry.snapshotEvents(
+            Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+            false
+          ).parent;
+          return events && events.length >= 1;
+        },
+        "Waiting for one closed_method pictureinpicture telemetry event.",
+        200,
+        100
       );
 
       TelemetryTestUtils.assertEvents(
         EXPECTED_EVENT_CLOSED_METHOD_CLOSE_BUTTON,
-        filter,
+        {
+          category: "pictureinpicture",
+          method: "closed_method",
+          object: "method",
+        },
         { clear: true, process: "parent" }
       );
 
@@ -213,7 +127,7 @@ add_task(async function testCreateAndCloseButtonTelemetry() {
   );
 });
 
-add_task(async function textTextTracksAndUnpipTelemetry() {
+add_task(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [
@@ -236,20 +150,31 @@ add_task(async function textTextTracksAndUnpipTelemetry() {
       let pipWin = await triggerPictureInPicture(browser, videoID);
       ok(pipWin, "Got Picture-in-Picture window.");
 
-      let filter = {
-        category: "pictureinpicture",
-        method: "create",
-        object: "player",
-      };
-      await waitForTelemeryEvents(
-        filter,
-        EXPECTED_EVENT_CREATE_WITH_TEXT_TRACKS.length,
-        "parent"
+      let events = Services.telemetry.snapshotEvents(
+        Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+        false
+      ).parent;
+
+      await TestUtils.waitForCondition(
+        () => {
+          events = Services.telemetry.snapshotEvents(
+            Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+            false
+          ).parent;
+          return events && events.length >= 1;
+        },
+        "Waiting for one create pictureinpicture telemetry event.",
+        200,
+        100
       );
 
       TelemetryTestUtils.assertEvents(
         EXPECTED_EVENT_CREATE_WITH_TEXT_TRACKS,
-        filter,
+        {
+          category: "pictureinpicture",
+          method: "create",
+          object: "player",
+        },
         { clear: true, process: "parent" }
       );
 
@@ -258,166 +183,33 @@ add_task(async function textTextTracksAndUnpipTelemetry() {
       EventUtils.synthesizeMouseAtCenter(unpipButton, {}, pipWin);
       await pipClosed;
 
-      filter = {
-        category: "pictureinpicture",
-        method: "closed_method",
-        object: "unpip",
-      };
-      await waitForTelemeryEvents(
-        filter,
-        EXPECTED_EVENT_CLOSED_METHOD_UNPIP.length,
-        "parent"
+      events = Services.telemetry.snapshotEvents(
+        Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+        false
+      ).parent;
+
+      await TestUtils.waitForCondition(
+        () => {
+          events = Services.telemetry.snapshotEvents(
+            Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+            false
+          ).parent;
+          return events && events.length >= 1;
+        },
+        "Waiting for one closed_method pictureinpicture telemetry event.",
+        200,
+        100
       );
 
       TelemetryTestUtils.assertEvents(
         EXPECTED_EVENT_CLOSED_METHOD_UNPIP,
-        filter,
+        {
+          category: "pictureinpicture",
+          method: "closed_method",
+          object: "method",
+        },
         { clear: true, process: "parent" }
       );
-    }
-  );
-});
-
-add_task(async function test_fullscreen_events() {
-  await BrowserTestUtils.withNewTab(
-    {
-      url: TEST_PAGE,
-      gBrowser,
-    },
-    async browser => {
-      Services.telemetry.clearEvents();
-
-      await ensureVideosReady(browser);
-
-      let pipWin = await triggerPictureInPicture(browser, videoID);
-      ok(pipWin, "Got Picture-in-Picture window.");
-
-      let fullscreenBtn = pipWin.document.getElementById("fullscreen");
-
-      await promiseFullscreenEntered(pipWin, () => {
-        fullscreenBtn.click();
-      });
-
-      await promiseFullscreenExited(pipWin, () => {
-        fullscreenBtn.click();
-      });
-
-      let filter = {
-        category: "pictureinpicture",
-        method: "fullscreen",
-        object: "player",
-      };
-      await waitForTelemeryEvents(filter, FULLSCREEN_EVENTS.length, "parent");
-
-      TelemetryTestUtils.assertEvents(FULLSCREEN_EVENTS, filter, {
-        clear: true,
-        process: "parent",
-      });
-
-      await ensureMessageAndClosePiP(browser, videoID, pipWin, false);
-    }
-  );
-});
-
-add_task(async function test_seek_forward_and_backward_events() {
-  await BrowserTestUtils.withNewTab(
-    {
-      url: TEST_PAGE,
-      gBrowser,
-    },
-    async browser => {
-      let waitForVideoEvent = eventType => {
-        return BrowserTestUtils.waitForContentEvent(browser, eventType, true);
-      };
-
-      Services.telemetry.clearEvents();
-
-      await ensureVideosReady(browser);
-
-      let pipWin = await triggerPictureInPicture(browser, videoID);
-      ok(pipWin, "Got Picture-in-Picture window.");
-
-      let seekBackwardBtn = pipWin.document.getElementById("seekBackward");
-      let seekForwardBtn = pipWin.document.getElementById("seekForward");
-
-      // Test seek forward
-      let seekedForwardPromise = waitForVideoEvent("seeked");
-      EventUtils.synthesizeMouseAtCenter(seekForwardBtn, {}, pipWin);
-      EventUtils.synthesizeMouseAtCenter(seekForwardBtn, {}, pipWin);
-      EventUtils.synthesizeMouseAtCenter(seekForwardBtn, {}, pipWin);
-      EventUtils.synthesizeMouseAtCenter(seekForwardBtn, {}, pipWin);
-      EventUtils.synthesizeMouseAtCenter(seekForwardBtn, {}, pipWin);
-      EventUtils.synthesizeMouseAtCenter(seekForwardBtn, {}, pipWin);
-      ok(await seekedForwardPromise, "The Forward button triggers");
-
-      let filter = {
-        category: "pictureinpicture",
-        method: "forward",
-        object: "player",
-      };
-      await waitForTelemeryEvents(filter, FORWARD_EVENTS.length, "parent");
-
-      TelemetryTestUtils.assertEvents(FORWARD_EVENTS, filter, {
-        clear: false,
-        process: "parent",
-      });
-
-      filter = {
-        category: "pictureinpicture",
-        method: "forward_sequence",
-        object: "player",
-      };
-      await waitForTelemeryEvents(
-        filter,
-        FORWARD_SEQUENCE_EVENTS.length,
-        "parent"
-      );
-
-      TelemetryTestUtils.assertEvents(FORWARD_SEQUENCE_EVENTS, filter, {
-        clear: true,
-        process: "parent",
-      });
-
-      Services.telemetry.clearEvents();
-
-      let seekedBackwardPromise = waitForVideoEvent("seeked");
-      EventUtils.synthesizeMouseAtCenter(seekBackwardBtn, {}, pipWin);
-      EventUtils.synthesizeMouseAtCenter(seekBackwardBtn, {}, pipWin);
-      EventUtils.synthesizeMouseAtCenter(seekBackwardBtn, {}, pipWin);
-      EventUtils.synthesizeMouseAtCenter(seekBackwardBtn, {}, pipWin);
-      EventUtils.synthesizeMouseAtCenter(seekBackwardBtn, {}, pipWin);
-      EventUtils.synthesizeMouseAtCenter(seekBackwardBtn, {}, pipWin);
-      ok(await seekedBackwardPromise, "The Forward button triggers");
-
-      filter = {
-        category: "pictureinpicture",
-        method: "backward",
-        object: "player",
-      };
-      await waitForTelemeryEvents(filter, BACKWARD_EVENTS.length, "parent");
-
-      TelemetryTestUtils.assertEvents(BACKWARD_EVENTS, filter, {
-        clear: false,
-        process: "parent",
-      });
-
-      filter = {
-        category: "pictureinpicture",
-        method: "backward_sequence",
-        object: "player",
-      };
-      await waitForTelemeryEvents(
-        filter,
-        BACKWARD_SEQUENCE_EVENTS.length,
-        "parent"
-      );
-
-      TelemetryTestUtils.assertEvents(BACKWARD_SEQUENCE_EVENTS, filter, {
-        clear: true,
-        process: "parent",
-      });
-
-      await ensureMessageAndClosePiP(browser, videoID, pipWin, false);
     }
   );
 });

@@ -171,13 +171,6 @@ let Player = {
   deferredResize: null,
 
   /**
-   * Stores the previous events for seek forward/backward to correctly
-   * record the sequence if 3 clicks happen within a 1 second interval
-   */
-  backwardSequence: [],
-  forwardSequence: [],
-
-  /**
    * Initializes the player browser, and sets up the initial state.
    *
    * @param {Number} id
@@ -242,9 +235,6 @@ let Player = {
     });
     this.scrubber.addEventListener("change", event => {
       this.handleScrubbingDone(event);
-    });
-    this.scrubber.addEventListener("pointerdown", event => {
-      this.recordEvent("seek", {});
     });
 
     for (let radio of document.querySelectorAll(
@@ -600,35 +590,11 @@ let Player = {
 
       case "seekBackward": {
         this.actor.sendAsyncMessage("PictureInPicture:SeekBackward");
-        this.recordEvent("backward", {});
-
-        let secondPreviousEvent = this.backwardSequence.at(-2);
-        if (
-          secondPreviousEvent &&
-          event.timeStamp - secondPreviousEvent < 2000
-        ) {
-          this.recordEvent("backward_sequence", {});
-          this.backwardSequence = [];
-        } else {
-          this.backwardSequence.push(event.timeStamp);
-        }
         break;
       }
 
       case "seekForward": {
         this.actor.sendAsyncMessage("PictureInPicture:SeekForward");
-        this.recordEvent("forward", {});
-
-        let secondPreviousEvent = this.forwardSequence.at(-2);
-        if (
-          secondPreviousEvent &&
-          event.timeStamp - secondPreviousEvent < 2000
-        ) {
-          this.recordEvent("forward_sequence", {});
-          this.forwardSequence = [];
-        } else {
-          this.forwardSequence.push(event.timeStamp);
-        }
         break;
       }
 
@@ -645,9 +611,6 @@ let Player = {
 
       case "fullscreen": {
         this.fullscreenModeToggle();
-        this.recordEvent("fullscreen", {
-          enter: (!this.isFullscreen).toString(),
-        });
         break;
       }
     }
@@ -678,7 +641,7 @@ let Player = {
     this.actor.sendAsyncMessage("PictureInPicture:Pause", {
       reason: "pip-closed",
     });
-    this.closePipWindow({ reason: "closeButton" });
+    this.closePipWindow({ reason: "close-button" });
   },
 
   fullscreenModeToggle() {
