@@ -238,9 +238,6 @@ bsb-notes-sidebar =
 bsb-TST-sidebar =
   .label = { sidebar2-TST-sidebar }
 
-bsb-notes-sidebar =
-  .label = { sidebar2-notes-sidebar }
-
 bsb-website = 
   .label = Website
 
