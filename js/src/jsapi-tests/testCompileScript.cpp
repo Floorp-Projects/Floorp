@@ -8,8 +8,8 @@
 
 #include "frontend/CompilationStencil.h"  // JS::Stencil
 #include "js/CompileOptions.h"  // JS::CompileOptions, JS::InstantiateOptions
-#include "js/experimental/ParseScript.h"  // JS::NewFrontendContext
-#include "js/SourceText.h"                // JS::Source{Ownership,Text}
+#include "js/experimental/CompileScript.h"  // JS::NewFrontendContext
+#include "js/SourceText.h"                  // JS::Source{Ownership,Text}
 #include "jsapi-tests/tests.h"
 #include "vm/ErrorReporting.h"
 
@@ -24,7 +24,7 @@ static void dump(const T& data) {
   printer.put("\n");
 }
 
-BEGIN_TEST(testParseScript) {
+BEGIN_TEST(testCompileScript) {
   CHECK(testCompile());
   CHECK(testPrepareForInstantiate());
 
@@ -51,7 +51,7 @@ bool testCompile() {
                      JS::SourceOwnership::Borrowed));
 
     js::UniquePtr<js::frontend::CompilationInput> stencilInput;
-    RefPtr<JS::Stencil> stencil = ParseGlobalScript(
+    RefPtr<JS::Stencil> stencil = CompileGlobalScriptToStencil(
         fc, options, cx->stackLimitForCurrentPrincipal(), buf16, stencilInput);
     CHECK(stencil);
     CHECK(stencil->scriptExtra.size() == 1);
@@ -69,7 +69,7 @@ bool testCompile() {
         buf8.init(cx, src.data(), src.length(), JS::SourceOwnership::Borrowed));
 
     js::UniquePtr<js::frontend::CompilationInput> stencilInput;
-    RefPtr<JS::Stencil> stencil = ParseGlobalScript(
+    RefPtr<JS::Stencil> stencil = CompileGlobalScriptToStencil(
         fc, options, cx->stackLimitForCurrentPrincipal(), buf8, stencilInput);
     CHECK(stencil);
     CHECK(stencil->scriptExtra.size() == 1);
@@ -88,7 +88,7 @@ bool testCompile() {
                       JS::SourceOwnership::Borrowed));
 
     js::UniquePtr<js::frontend::CompilationInput> stencilInput;
-    RefPtr<JS::Stencil> stencil = ParseGlobalScript(
+    RefPtr<JS::Stencil> stencil = CompileGlobalScriptToStencil(
         fc, options, cx->stackLimitForCurrentPrincipal(), srcBuf, stencilInput);
     CHECK(!stencil);
     CHECK(fc->maybeError().isSome());
@@ -119,7 +119,7 @@ bool testPrepareForInstantiate() {
       mozilla::MakeScopeExit([fc] { JS::DestroyFrontendContext(fc); });
 
   js::UniquePtr<js::frontend::CompilationInput> stencilInput;
-  RefPtr<JS::Stencil> stencil = ParseGlobalScript(
+  RefPtr<JS::Stencil> stencil = CompileGlobalScriptToStencil(
       fc, options, cx->stackLimitForCurrentPrincipal(), buf16, stencilInput);
   CHECK(stencil);
   CHECK(stencil->scriptData.size() == 2);
@@ -137,4 +137,4 @@ bool testPrepareForInstantiate() {
 
   return true;
 }
-END_TEST(testParseScript);
+END_TEST(testCompileScript);
