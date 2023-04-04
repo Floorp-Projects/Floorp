@@ -137,10 +137,10 @@ firefox-photon-lepton =
  .label = Firefox Photon・Lepton UI
  
 floorp-legacy =
- .label = Floorp Legacy material UI・Unsupported
+ .label = Floorp Legacy UI・Unsupported
 
 floorp-fluentUI =
- .label = fluentUI
+ .label = Microsoft Fluent UI
  
 floorp-fluerialUI =
  .label = Floorp Fluerial UI
