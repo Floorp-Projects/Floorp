@@ -5025,7 +5025,9 @@ nsresult Preferences::InitInitialObjects(bool aIsStartup) {
                                 NS_PREFSERVICE_APPDEFAULTS_TOPIC_ID);
 
   nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(!observerService)) {
+    return NS_ERROR_FAILURE;
+  }
 
   observerService->NotifyObservers(nullptr, NS_PREFSERVICE_APPDEFAULTS_TOPIC_ID,
                                    nullptr);
