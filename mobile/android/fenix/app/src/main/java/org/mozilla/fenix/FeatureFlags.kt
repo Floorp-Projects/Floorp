@@ -50,7 +50,7 @@ object FeatureFlags {
     /**
      * Enables the Unified Search feature.
      */
-    val unifiedSearchFeature = Config.channel.isNightlyOrDebug
+    const val unifiedSearchFeature = true
 
     /**
      * Enables compose on the tabs tray items.
