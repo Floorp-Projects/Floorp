@@ -316,6 +316,11 @@ class TabsTrayFragment : AppCompatDialogFragment() {
             displayMetrics = requireContext().resources.displayMetrics,
         )
 
+        setupBackgroundDismissalListener {
+            TabsTray.closed.record(NoExtras())
+            dismissAllowingStateLoss()
+        }
+
         if (!requireContext().settings().enableTabsTrayToCompose) {
             val activity = activity as HomeActivity
 
@@ -331,11 +336,6 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                 store = tabsTrayStore,
                 trayInteractor = tabsTrayInteractor,
             )
-
-            setupBackgroundDismissalListener {
-                TabsTray.closed.record(NoExtras())
-                dismissAllowingStateLoss()
-            }
 
             tabsTrayCtaBinding.set(
                 feature = TabsTrayInfoBannerBinding(
@@ -602,7 +602,9 @@ class TabsTrayFragment : AppCompatDialogFragment() {
     @VisibleForTesting
     internal fun setupBackgroundDismissalListener(block: (View) -> Unit) {
         tabsTrayDialogBinding.tabLayout.setOnClickListener(block)
-        tabsTrayBinding.handle.setOnClickListener(block)
+        if (!requireContext().settings().enableTabsTrayToCompose) {
+            tabsTrayBinding.handle.setOnClickListener(block)
+        }
     }
 
     @VisibleForTesting

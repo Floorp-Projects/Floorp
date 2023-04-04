@@ -291,6 +291,8 @@ class TabsTrayFragmentTest {
     fun `WHEN setupBackgroundDismissalListener is called THEN it sets a click listener for tray's tabLayout and handle`() {
         var clickCount = 0
         val callback: (View) -> Unit = { clickCount++ }
+        every { fragment.context } returns testContext
+        every { testContext.settings().enableTabsTrayToCompose } returns false
 
         fragment.setupBackgroundDismissalListener(callback)
 
