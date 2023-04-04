@@ -7154,7 +7154,7 @@
 # Whether to allow decoding of animated AVIF sequences.
 - name: image.avif.sequence.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether AVIF files containing sequences should be animated even when the
