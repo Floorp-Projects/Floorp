@@ -21,21 +21,18 @@ import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.session.behavior.EngineViewBrowserToolbarBehavior
-import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.ui.widgets.VerticalSwipeRefreshLayout
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.utils.Settings
 
-@RunWith(FenixRobolectricTestRunner::class)
 class BaseBrowserFragmentTest {
     private lateinit var fragment: TestBaseBrowserFragment
     private lateinit var swipeRefreshLayout: VerticalSwipeRefreshLayout
     private lateinit var engineView: EngineView
     private lateinit var settings: Settings
+    private lateinit var testContext: Context
 
     @Before
     fun setup() {
@@ -43,6 +40,8 @@ class BaseBrowserFragmentTest {
         swipeRefreshLayout = mockk(relaxed = true)
         engineView = mockk(relaxed = true)
         settings = mockk(relaxed = true)
+        testContext = mockk(relaxed = true)
+
         every { testContext.components.settings } returns settings
         every { fragment.isAdded } returns true
         every { fragment.activity } returns mockk()
@@ -145,6 +144,7 @@ class BaseBrowserFragmentTest {
         val download = DownloadState(
             url = "",
             sessionId = "1",
+            destinationDirectory = "/",
         )
 
         val status = DownloadState.Status.values()
@@ -165,6 +165,7 @@ class BaseBrowserFragmentTest {
         val download = DownloadState(
             url = "",
             sessionId = "1",
+            destinationDirectory = "/",
         )
 
         val status = DownloadState.Status.values()
@@ -185,6 +186,7 @@ class BaseBrowserFragmentTest {
         val download = DownloadState(
             url = "",
             sessionId = "2",
+            destinationDirectory = "/",
         )
 
         val status = DownloadState.Status.values()
