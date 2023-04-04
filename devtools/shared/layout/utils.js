@@ -4,7 +4,6 @@
 
 "use strict";
 
-const nodeFilterConstants = require("resource://devtools/shared/dom-node-filter-constants.js");
 loader.lazyRequireGetter(
   this,
   "DevToolsUtils",
@@ -368,7 +367,7 @@ function safelyGetContentWindow(frame) {
   );
   walker.showSubDocuments = true;
   walker.showDocumentsAsNodes = true;
-  walker.init(frame, nodeFilterConstants.SHOW_ALL);
+  walker.init(frame);
   walker.currentNode = frame;
 
   const document = walker.nextNode();

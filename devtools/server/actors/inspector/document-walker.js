@@ -35,8 +35,6 @@ class DocumentWalker {
    * @param {DOMNode} node
    * @param {Window} rootWin
    * @param {Object}
-   *        - {Number} whatToShow
-   *          See nodeFilterConstants / inIDeepTreeWalker for options.
    *        - {Function} filter
    *          A custom filter function Taking in a DOMNode and returning an Int. See
    *          WalkerActor.nodeFilter for an example.
@@ -54,7 +52,6 @@ class DocumentWalker {
     node,
     rootWin,
     {
-      whatToShow = nodeFilterConstants.SHOW_ALL,
       filter = standardTreeWalkerFilter,
       skipTo = SKIP_TO_PARENT,
       showAnonymousContent = true,
@@ -70,7 +67,7 @@ class DocumentWalker {
     this.walker.showAnonymousContent = showAnonymousContent;
     this.walker.showSubDocuments = true;
     this.walker.showDocumentsAsNodes = true;
-    this.walker.init(rootWin.document, whatToShow);
+    this.walker.init(rootWin.document);
     this.filter = filter;
 
     // Make sure that the walker knows about the initial node (which could
@@ -78,9 +75,6 @@ class DocumentWalker {
     this.walker.currentNode = this.getStartingNode(node, skipTo);
   }
 
-  get whatToShow() {
-    return this.walker.whatToShow;
-  }
   get currentNode() {
     return this.walker.currentNode;
   }
