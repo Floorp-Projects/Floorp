@@ -20,7 +20,6 @@ exclude: true
   ([bug 1820567]({{bugzilla}}1820567))
 - Add `ViewportMode` annotation to [`viewportMode`][113.7], [`getViewportMode`][113.8] and [`setViewportMode`][113.9].
   ([bug 1820567]({{bugzilla}}1820567))
-- Add [`WebExtensionController.AddonManagerDelegate`][113.10] ([bug 1822763]({{bugzilla}}1822763))
 
 [113.1]: {{javadoc_uri}}/GeckoSessionSettings.Builder.html#displayMode(int)
 [113.2]: {{javadoc_uri}}/GeckoSessionSettings.html#getDisplayMode()
@@ -31,7 +30,6 @@ exclude: true
 [113.7]: {{javadoc_uri}}/GeckoSessionSettings.Builder.html#userViewportMode(int)
 [113.8]: {{javadoc_uri}}/GeckoSessionSettings.html#getViewportMode()
 [113.9]: {{javadoc_uri}}/GeckoSessionSettings.html#setViewportMode(int)
-[113.10]: {{javadoc_uri}}/WebExtensionController.AddonManagerDelegate.html
 
 ## v112
 - Added `GeckoSession.LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE`, see ([bug 1809269]({{bugzilla}}1809269)).
@@ -1346,4 +1344,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 04715b0dddf7887089933ed90637737e336fe190
+[api-version]: 0dd3d3ba710abf1adf347fac91094a1d186185d7
