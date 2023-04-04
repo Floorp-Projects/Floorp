@@ -86,6 +86,7 @@ redirects:
     contributing/build/linux_build.html: setup/linux_build.html
     contributing/mercurial.html: contributing/vcs/mercurial.html
     contributing/mercurial_bundles.html: contributing/vcs/mercurial_bundles.html
+    contributing/vscode.html: contributing/editors/vscode.html
     dom/dom: dom
     layout/layout: layout
     gfx/gfx: gfx
