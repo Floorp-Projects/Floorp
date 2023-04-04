@@ -246,6 +246,12 @@ checkbox {
   font-weight: 600;
 }
 
+@supports not -moz-bool-pref("browser.migrate.preferences-entrypoint.enabled") {
+  #dataMigrationGroup {
+    display: none;
+  }
+}
+
 #browserContainersExtensionContent {
   padding-block: 5px;
 }

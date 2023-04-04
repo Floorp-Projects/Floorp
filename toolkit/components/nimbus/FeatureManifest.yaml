@@ -1160,6 +1160,7 @@ migrationWizard:
   description: Prefs to control the Migration Wizard UI.
   owner: mconley@mozilla.com
   hasExposure: false
+  isEarlyStartup: true
   variables:
     useNewWizard:
       description: True if the "Variant 2" of the Migration Wizard browser / profile selection UI should be used.
@@ -1169,6 +1170,10 @@ migrationWizard:
       description: True if the "Variant 2" of the Migration Wizard browser / profile selection UI should be used. This is only meaningful in the new Migration Wizard.
       type: boolean
       setPref: browser.migrate.content-modal.import-all.enabled
+    showPreferencesEntrypoint:
+      description: True if an entrypoint to the migration wizard should be visible in about:preferences.
+      type: boolean
+      setPref: browser.migrate.preferences-entrypoint.enabled
 
 mixedContentUpgrading:
   description: Prefs to control whether we upgrade mixed passive content (images, audio, video) from http to https
