@@ -20,17 +20,6 @@ buildCache {
     }
 }
 
-gradle.projectsLoaded { ->
-    if (gradle.rootProject.hasProperty("nightlyVersion")) {
-        version = gradle.rootProject.nightlyVersion
-    } else if (gradle.rootProject.hasProperty("local")) {
-    // To support local auto-publication workflow, we use a version prefix we wouldn't normally encounter.
-        version = "0.0.1"
-    } else if (gradle.hasProperty("localProperties.branchBuild.android-components.version")) {
-        version = gradle.getProperty("localProperties.branchBuild.android-components.version")
-    }
-}
-
 def runCmd(cmd, workingDir, successMessage) {
     def proc = cmd.execute(null, new File(workingDir))
     proc.consumeProcessOutput(System.out, System.err)

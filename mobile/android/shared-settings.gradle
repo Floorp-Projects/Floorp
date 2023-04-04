@@ -69,12 +69,22 @@ buildconfig.projects.each { project ->
 gradle.projectsLoaded { ->
     def componentsVersion = new File(rootDir, '../version.txt').text.stripTrailing()
     def configData = yaml.load(new File(rootDir, '../android-components/.config.yml').newInputStream())
+    String version = componentsVersion
+
+    if (gradle.rootProject.hasProperty("nightlyVersion")) {
+        version = gradle.rootProject.nightlyVersion
+    } else if (gradle.rootProject.hasProperty("local")) {
+        // To support local auto-publication workflow, we use a version prefix we wouldn't normally encounter.
+        version = "0.0.1"
+    } else if (gradle.hasProperty("localProperties.branchBuild.android-components.version")) {
+        version = gradle.getProperty("localProperties.branchBuild.android-components.version")
+    }
 
     // Wait until root project is "loaded" before we set "config"
     // Note that since this is set on "rootProject.ext", it will be "in scope" during the evaluation of all projects'
     // gradle files. This means that they can just access "config.<value>", and it'll function properly
     gradle.rootProject.ext.config = new Config(
-            componentsVersion,
+            version,
             configData.componentsGroupId,
             configData.compileSdkVersion,
             configData.minSdkVersion,
