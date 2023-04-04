@@ -1967,17 +1967,7 @@ bool ScriptSource::setDisplayURL(FrontendContext* fc, const char16_t* url) {
 
 bool ScriptSource::setDisplayURL(FrontendContext* fc,
                                  UniqueTwoByteChars&& url) {
-  if (hasDisplayURL()) {
-    // FIXME: filename() should be UTF-8 (bug 987069).
-    JSContext* maybeCx = fc->maybeCurrentJSContext();
-    if (maybeCx && !maybeCx->isHelperThreadContext()) {
-      if (!!WarnNumberLatin1(maybeCx, JSMSG_ALREADY_HAS_PRAGMA, filename(),
-                             "//# sourceURL")) {
-        return false;
-      }
-    }
-  }
-
+  MOZ_ASSERT(!hasDisplayURL());
   MOZ_ASSERT(url);
   if (url[0] == '\0') {
     return true;
