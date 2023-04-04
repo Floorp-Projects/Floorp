@@ -2160,6 +2160,108 @@ describe("Top Sites Feed", () => {
       assert.equal(feed._contile.sites.length, 0);
     });
 
+    it("should still return two tiles when Contile provides more than 2 tiles and filtering results in more than 2 tiles", async () => {
+      fakeNimbusFeatures.newtab.getVariable.reset();
+      fakeNimbusFeatures.newtab.getVariable.onCall(0).returns(true);
+      fakeNimbusFeatures.newtab.getVariable.onCall(1).returns(true);
+
+      fetchStub.resolves({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            tiles: [
+              {
+                url: "https://www.test.com",
+                image_url: "images/test-com.png",
+                click_url: "https://www.test-click.com",
+                impression_url: "https://www.test-impression.com",
+                name: "test",
+              },
+              {
+                url: "https://foo.com",
+                image_url: "images/foo-com.png",
+                click_url: "https://www.foo-click.com",
+                impression_url: "https://www.foo-impression.com",
+                name: "foo",
+              },
+              {
+                url: "https://bar.com",
+                image_url: "images/bar-com.png",
+                click_url: "https://www.bar-click.com",
+                impression_url: "https://www.bar-impression.com",
+                name: "bar",
+              },
+              {
+                url: "https://test1.com",
+                image_url: "images/test1-com.png",
+                click_url: "https://www.test1-click.com",
+                impression_url: "https://www.test1-impression.com",
+                name: "test1",
+              },
+              {
+                url: "https://test2.com",
+                image_url: "images/test2-com.png",
+                click_url: "https://www.test2-click.com",
+                impression_url: "https://www.test2-impression.com",
+                name: "test2",
+              },
+            ],
+          }),
+      });
+
+      const fetched = await feed._contile._fetchSites();
+
+      assert.ok(fetched);
+      // Both "foo" and "bar" should be filtered
+      assert.equal(feed._contile.sites.length, 2);
+      assert.equal(feed._contile.sites[0].url, "https://www.test.com");
+      assert.equal(feed._contile.sites[1].url, "https://test1.com");
+    });
+
+    it("should still return two tiles when Contile provides more than 2 tiles", async () => {
+      fakeNimbusFeatures.newtab.getVariable.reset();
+      fakeNimbusFeatures.newtab.getVariable.onCall(0).returns(true);
+      fakeNimbusFeatures.newtab.getVariable.onCall(1).returns(null);
+      fetchStub.resolves({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            tiles: [
+              {
+                url: "https://www.test.com",
+                image_url: "images/test-com.png",
+                click_url: "https://www.test-click.com",
+                impression_url: "https://www.test-impression.com",
+                name: "test",
+              },
+              {
+                url: "https://test1.com",
+                image_url: "images/test1-com.png",
+                click_url: "https://www.test1-click.com",
+                impression_url: "https://www.test1-impression.com",
+                name: "test1",
+              },
+              {
+                url: "https://test2.com",
+                image_url: "images/test2-com.png",
+                click_url: "https://www.test2-click.com",
+                impression_url: "https://www.test2-impression.com",
+                name: "test2",
+              },
+            ],
+          }),
+      });
+
+      const fetched = await feed._contile._fetchSites();
+
+      assert.ok(fetched);
+      assert.equal(feed._contile.sites.length, 2);
+      assert.equal(feed._contile.sites[0].url, "https://www.test.com");
+      assert.equal(feed._contile.sites[1].url, "https://test1.com");
+    });
+
     it("should filter the blocked sponsors", async () => {
       fetchStub.resolves({
         ok: true,

@@ -364,6 +364,9 @@ newtab:
       type: boolean
       fallbackPref: browser.topsites.contile.enabled
       description: Enable the Contile integration for Sponsored Top Sites
+    topSitesUseAdditionalTilesFromContile:
+      type: boolean
+      description: Allow Contile to use additonal sponsored top sites
 
 pocketNewtab:
   description: The Pocket section in newtab
