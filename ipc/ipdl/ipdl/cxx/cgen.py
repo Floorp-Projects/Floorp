@@ -76,8 +76,6 @@ class CxxCodeGen(CodePrinter, Visitor):
             ts += "&"
         elif t.rvalref:
             ts += "&&"
-        elif t.rightconst:
-            ts += " const"
 
         self.write(ts)
 
