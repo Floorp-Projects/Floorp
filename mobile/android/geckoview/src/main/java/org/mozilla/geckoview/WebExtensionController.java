@@ -335,6 +335,14 @@ public class WebExtensionController {
      */
     @UiThread
     default void onDisabled(final @NonNull WebExtension extension) {}
+
+    /**
+     * Called whenever an extension has been enabled.
+     *
+     * @param extension The {@link WebExtension} that is being enabled.
+     */
+    @UiThread
+    default void onEnabled(final @NonNull WebExtension extension) {}
   }
 
   /**
@@ -405,10 +413,12 @@ public class WebExtensionController {
   public void setAddonManagerDelegate(final @Nullable AddonManagerDelegate delegate) {
     if (delegate == null && mAddonManagerDelegate != null) {
       EventDispatcher.getInstance()
-          .unregisterUiThreadListener(mInternals, "GeckoView:WebExtension:OnDisabled");
+          .unregisterUiThreadListener(
+              mInternals, "GeckoView:WebExtension:OnDisabled", "GeckoView:WebExtension:OnEnabled");
     } else if (delegate != null && mAddonManagerDelegate == null) {
       EventDispatcher.getInstance()
-          .registerUiThreadListener(mInternals, "GeckoView:WebExtension:OnDisabled");
+          .registerUiThreadListener(
+              mInternals, "GeckoView:WebExtension:OnDisabled", "GeckoView:WebExtension:OnEnabled");
     }
 
     mAddonManagerDelegate = delegate;
@@ -765,6 +775,9 @@ public class WebExtensionController {
     } else if ("GeckoView:WebExtension:OnDisabled".equals(event)) {
       onDisabled(bundle);
       return;
+    } else if ("GeckoView:WebExtension:OnEnabled".equals(event)) {
+      onEnabled(bundle);
+      return;
     }
 
     extensionFromBundle(bundle)
@@ -959,6 +972,17 @@ public class WebExtensionController {
     final GeckoBundle extensionBundle = bundle.getBundle("extension");
     final WebExtension extension = new WebExtension(mDelegateControllerProvider, extensionBundle);
     mAddonManagerDelegate.onDisabled(extension);
+  }
+
+  private void onEnabled(final GeckoBundle bundle) {
+    if (mAddonManagerDelegate == null) {
+      Log.e(LOGTAG, "no AddonManager delegate registered");
+      return;
+    }
+
+    final GeckoBundle extensionBundle = bundle.getBundle("extension");
+    final WebExtension extension = new WebExtension(mDelegateControllerProvider, extensionBundle);
+    mAddonManagerDelegate.onEnabled(extension);
   }
 
   @SuppressLint("WrongThread") // for .toGeckoBundle
