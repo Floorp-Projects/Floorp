@@ -222,10 +222,6 @@ urlbar:
       type: boolean
       setPref: browser.urlbar.resultMenu
       description: Enable the per-result three-dot menu with options such as Dismiss and Learn More.
-    searchEngagementTelemetryEnabled:
-      type: boolean
-      fallbackPref: browser.urlbar.searchEngagementTelemetry.enabled
-      description: Whether search engagement telemetry should be enabled.
     showSearchTermsFeatureGate:
       type: boolean
       fallbackPref: browser.urlbar.showSearchTerms.featureGate
