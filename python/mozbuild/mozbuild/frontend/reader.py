@@ -1138,7 +1138,7 @@ class BuildReader(object):
 
         self._read_files.add(path)
 
-        time_start = time.time()
+        time_start = time.monotonic()
 
         topobjdir = config.topobjdir
 
@@ -1156,7 +1156,7 @@ class BuildReader(object):
         context = Context(VARIABLES, config, self.finder)
         sandbox = MozbuildSandbox(context, metadata=metadata, finder=self.finder)
         sandbox.exec_file(path)
-        self._execution_time += time.time() - time_start
+        self._execution_time += time.monotonic() - time_start
         self._file_count += len(context.all_paths)
 
         # Yield main context before doing any processing. This gives immediate

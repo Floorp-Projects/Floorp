@@ -128,7 +128,7 @@ def config_status(
         write_mozinfo(f, env, os.environ)
 
     cpu_start = process_time()
-    time_start = time.time()
+    time_start = time.monotonic()
 
     # Make appropriate backend instances, defaulting to RecursiveMakeBackend,
     # or what is in BUILD_BACKENDS.
@@ -164,7 +164,7 @@ def config_status(
             print(summary, file=sys.stderr)
 
     cpu_time = process_time() - cpu_start
-    wall_time = time.time() - time_start
+    wall_time = time.monotonic() - time_start
     efficiency = cpu_time / wall_time if wall_time else 100
     untracked = wall_time - execution_time
 

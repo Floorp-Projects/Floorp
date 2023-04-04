@@ -119,10 +119,10 @@ class BuildBackend(LoggingMixin):
                 )
 
         for obj in objs:
-            obj_start = time.time()
+            obj_start = time.monotonic()
             if not self.consume_object(obj) and not isinstance(self, PartialBackend):
                 raise Exception("Unhandled object of type %s" % type(obj))
-            self._execution_time += time.time() - obj_start
+            self._execution_time += time.monotonic() - obj_start
 
             if isinstance(obj, ContextDerived) and not isinstance(self, PartialBackend):
                 self.backend_input_files |= obj.context_all_paths
@@ -133,9 +133,9 @@ class BuildBackend(LoggingMixin):
             iter_modules_in_path(self.environment.topsrcdir, self.environment.topobjdir)
         )
 
-        finished_start = time.time()
+        finished_start = time.monotonic()
         self.consume_finished()
-        self._execution_time += time.time() - finished_start
+        self._execution_time += time.monotonic() - finished_start
 
         # Purge backend files created in previous run, but not created anymore
         delete_files = backend_output_list - self._backend_output_files

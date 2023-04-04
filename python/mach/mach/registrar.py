@@ -106,7 +106,7 @@ class MachRegistrar(object):
             profile = Profile()
             profile.enable()
 
-        start_time = time.time()
+        start_time = time.monotonic()
 
         if debug_command:
             import pdb
@@ -115,7 +115,7 @@ class MachRegistrar(object):
         else:
             result = fn(instance, **kwargs)
 
-        end_time = time.time()
+        end_time = time.monotonic()
 
         if profile_command:
             profile.disable()

@@ -164,7 +164,7 @@ class Daemon(object):
                 "Contents",
                 "Resources",
             )
-            start = time.time()
+            start = time.monotonic()
             result = copier.copy(
                 bundledir,
                 skip_if_older=not force,
@@ -172,10 +172,12 @@ class Daemon(object):
                 remove_all_directory_symlinks=False,
                 remove_empty_directories=False,
             )
-            print_copy_result(time.time() - start, bundledir, result, verbose=verbose)
+            print_copy_result(
+                time.monotonic() - start, bundledir, result, verbose=verbose
+            )
 
         destdir = mozpath.join(self.config_environment.topobjdir, "dist", "bin")
-        start = time.time()
+        start = time.monotonic()
         result = copier.copy(
             destdir,
             skip_if_older=not force,
@@ -183,7 +185,7 @@ class Daemon(object):
             remove_all_directory_symlinks=False,
             remove_empty_directories=False,
         )
-        print_copy_result(time.time() - start, destdir, result, verbose=verbose)
+        print_copy_result(time.monotonic() - start, destdir, result, verbose=verbose)
 
     def input_changes(self, verbose=True):
         """

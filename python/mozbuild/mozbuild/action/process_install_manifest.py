@@ -97,7 +97,7 @@ def main(argv):
 
     args = parser.parse_args(argv)
 
-    start = time.time()
+    start = time.monotonic()
 
     result = process_manifest(
         args.destdir,
@@ -107,7 +107,7 @@ def main(argv):
         defines=args.defines,
     )
 
-    elapsed = time.time() - start
+    elapsed = time.monotonic() - start
 
     print(
         COMPLETE.format(
