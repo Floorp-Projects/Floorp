@@ -89,9 +89,9 @@ void FrontendContext::recoverFromOutOfMemory() {
 
 const JSErrorFormatString* FrontendContext::gcSafeCallback(
     JSErrorCallback callback, void* userRef, const unsigned errorNumber) {
+  mozilla::Maybe<gc::AutoSuppressGC> suppressGC;
   if (maybeCx_) {
-    gc::AutoSuppressGC suppressGC(maybeCx_);
-    return callback(userRef, errorNumber);
+    suppressGC.emplace(maybeCx_);
   }
 
   return callback(userRef, errorNumber);
