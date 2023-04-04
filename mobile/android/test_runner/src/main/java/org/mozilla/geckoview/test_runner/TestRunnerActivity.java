@@ -461,9 +461,6 @@ public class TestRunnerActivity extends Activity {
                 extension.setTabDelegate(mTabDelegate);
               });
 
-      webExtensionController()
-          .setAddonManagerDelegate(new WebExtensionController.AddonManagerDelegate() {});
-
       sRuntime.setDelegate(
           () -> {
             mKillProcessOnDestroy = true;
