@@ -186,8 +186,6 @@ mobile-chrome-useragent-mode =
  .label = Spoof Chrome on iOS
 use-custom-useragent-mode =
  .label = Use Custom User Agent
-custom-useragent-value =
-  .label = Custom User Agent
 
 ## DMR UI
 download-mgr-UI =
