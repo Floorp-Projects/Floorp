@@ -32,7 +32,7 @@ enable-tab-sleep =
 tab-sleep-timeout-minutes-value = Time to put tabs to sleep (minutes)
 enable-tab-scroll-change =
  .label = Switch Tabs by Scrolling
-enable-doble-click-block =
+enable-double-click-block =
  .label = Double-click to Close the Tab
 enable-show-pinned-tabs-title =
  .label = Show the title of pinned tabs
@@ -400,6 +400,7 @@ floorp-home-mode-choice-default =
     .label = Floorp Home (Default)
 floorp-home-prefs-content-header = Floorp Home Content
 floorp-home-prefs-content-description = Choose what content you want on your Floorp Home screen.
+
 
 ################################################################### browser ###############################################################
 
