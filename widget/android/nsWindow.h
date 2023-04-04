@@ -129,6 +129,8 @@ class nsWindow final : public nsBaseWidget {
 
   void DetachNatives();
 
+  mozilla::Mutex& GetDestroyMutex() { return mDestroyMutex; }
+
   //
   // nsIWidget
   //
@@ -281,6 +283,8 @@ class nsWindow final : public nsBaseWidget {
   GetUiCompositorControllerChild();
 
   mozilla::widget::PlatformCompositorWidgetDelegate* mCompositorWidgetDelegate;
+
+  mozilla::Mutex mDestroyMutex;
 
   friend class mozilla::widget::GeckoViewSupport;
   friend class mozilla::widget::LayerViewSupport;
