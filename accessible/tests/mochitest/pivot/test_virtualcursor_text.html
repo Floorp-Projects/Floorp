@@ -241,6 +241,10 @@
       gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", CHAR_BOUNDARY, [1, 2],
                   getAccessible(doc.getElementById("image-desc-link"), nsIAccessibleText)));
 
+      gQueue.push(new setVCRangeInvoker(docAcc, getAccessible(doc.getElementById("image-end-line")), [3, 3]));
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", LINE_BOUNDARY, [0, 2],
+                  getAccessible(doc.getElementById("image-end-line"), nsIAccessibleText)));
+
       gQueue.invoke();
     }
 
