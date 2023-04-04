@@ -278,3 +278,185 @@ add_task(
     );
   }
 );
+
+add_task(async function test_bss_gecko_android() {
+  const addonId = "some@id";
+  const isAndroid = AppConstants.platform == "android";
+
+  const TEST_CASES = [
+    {
+      title: "gecko_android overrides gecko",
+      browser_specific_settings: {
+        gecko: {
+          id: addonId,
+          strict_min_version: "2",
+          strict_max_version: "2",
+        },
+        gecko_android: {
+          strict_min_version: "1",
+          strict_max_version: "1",
+        },
+      },
+      expectedError: isAndroid
+        ? `Add-on ${addonId} is not compatible with application version. add-on minVersion: 1. add-on maxVersion: 1.`
+        : `Add-on ${addonId} is not compatible with application version. add-on minVersion: 2. add-on maxVersion: 2.`,
+    },
+    {
+      title:
+        "strict_min_version in gecko_android overrides gecko.strict_min_version",
+      browser_specific_settings: {
+        gecko: {
+          id: addonId,
+          strict_min_version: "2",
+          strict_max_version: "3",
+        },
+        gecko_android: {
+          strict_min_version: "3",
+        },
+      },
+      expectedError: isAndroid
+        ? `Add-on ${addonId} is not compatible with application version. add-on minVersion: 3. add-on maxVersion: 3.`
+        : `Add-on ${addonId} is not compatible with application version. add-on minVersion: 2. add-on maxVersion: 3.`,
+    },
+    {
+      title:
+        "strict_max_version in gecko_android overrides gecko.strict_max_version",
+      browser_specific_settings: {
+        gecko: {
+          id: addonId,
+          strict_min_version: "2",
+          strict_max_version: "2",
+        },
+        gecko_android: {
+          strict_max_version: "3",
+        },
+      },
+      expectedError: isAndroid
+        ? `Add-on ${addonId} is not compatible with application version. add-on minVersion: 2. add-on maxVersion: 3.`
+        : `Add-on ${addonId} is not compatible with application version. add-on minVersion: 2. add-on maxVersion: 2.`,
+    },
+    {
+      title: "no gecko_android",
+      browser_specific_settings: {
+        gecko: {
+          id: addonId,
+          strict_min_version: "2",
+          strict_max_version: "2",
+        },
+      },
+      expectedError: `Add-on ${addonId} is not compatible with application version. add-on minVersion: 2. add-on maxVersion: 2.`,
+    },
+    {
+      title: "empty gecko_android",
+      browser_specific_settings: {
+        gecko: {
+          id: addonId,
+          strict_min_version: "2",
+          strict_max_version: "2",
+        },
+        gecko_android: {},
+      },
+      expectedError: `Add-on ${addonId} is not compatible with application version. add-on minVersion: 2. add-on maxVersion: 2.`,
+    },
+    {
+      title: "empty strict min/max versions in gecko_android",
+      browser_specific_settings: {
+        gecko: {
+          id: addonId,
+          strict_min_version: "2",
+          strict_max_version: "2",
+        },
+        gecko_android: {
+          strict_min_version: "",
+          strict_max_version: "",
+        },
+      },
+      expectedError: `Add-on ${addonId} is not compatible with application version. add-on minVersion: 2. add-on maxVersion: 2.`,
+    },
+    {
+      title: "unsupported prop in gecko_android",
+      browser_specific_settings: {
+        gecko: {
+          id: addonId,
+          strict_min_version: "2",
+          strict_max_version: "2",
+        },
+        gecko_android: {
+          aPropThatIsNotSupported: "aPropThatIsNotSupported",
+        },
+      },
+      expectedError: `Add-on ${addonId} is not compatible with application version. add-on minVersion: 2. add-on maxVersion: 2.`,
+    },
+    {
+      title: "only strict min/max version in gecko_android",
+      browser_specific_settings: {
+        gecko: {
+          id: addonId,
+        },
+        gecko_android: {
+          strict_min_version: "3",
+          strict_max_version: "4",
+        },
+      },
+      expectedError: isAndroid
+        ? `Add-on ${addonId} is not compatible with application version. add-on minVersion: 3. add-on maxVersion: 4.`
+        : null,
+    },
+    {
+      title: "only strict_min_version in gecko_android",
+      browser_specific_settings: {
+        gecko: {
+          id: addonId,
+        },
+        gecko_android: {
+          // The app version is set to `42` at the top of the file.
+          strict_min_version: "100",
+        },
+      },
+      expectedError: isAndroid
+        ? `Add-on ${addonId} is not compatible with application version. add-on minVersion: 100.`
+        : null,
+    },
+  ];
+
+  for (const {
+    title,
+    browser_specific_settings,
+    expectedError,
+  } of TEST_CASES) {
+    info(`verifying: ${title}`);
+
+    // This task is mainly about verifying `bss.gecko_android` and some test
+    // cases require a "valid" compatibility range by default, which would
+    // break the assumption below (that the install is going to fail). This is
+    // why we skip null errors, but only on non-Android builds.
+    if (expectedError === null) {
+      notEqual(
+        AppConstants.platform,
+        "android",
+        `${title} - expected no error on a non-Android build`
+      );
+      continue;
+    }
+
+    const manifest = {
+      manifest_version: 2,
+      version: "1.0",
+      browser_specific_settings,
+    };
+
+    const extension = ExtensionTestUtils.loadExtension({
+      manifest,
+      useAddonManager: "temporary",
+    });
+
+    await Assert.rejects(
+      extension.startup(),
+      new RegExp(expectedError),
+      `${title} - expected error: ${expectedError}`
+    );
+
+    const addon = await AddonManager.getAddonByID(addonId);
+    equal(addon, null, "add-on is not installed");
+  }
+});

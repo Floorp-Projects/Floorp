@@ -188,3 +188,21 @@ add_task(async function test_manifest_allowInsecureRequests_throws() {
   );
   Services.prefs.clearUserPref("extensions.manifestV3.enabled");
 });
+
+add_task(async function test_gecko_android_key_in_applications() {
+  const extensionData = {
+    manifest: {
+      manifest_version: 2,
+      applications: {
+        gecko_android: {},
+      },
+    },
+  };
+  const extension = ExtensionTestUtils.loadExtension(extensionData);
+
+  await Assert.rejects(
+    extension.startup(),
+    /applications: Property "gecko_android" is unsupported by Firefox/,
+    "expected applications.gecko_android to be invalid"
+  );
+});
