@@ -60,6 +60,7 @@ add_task(
     if (lastMessage) {
       Assert.equal(lastMessage.level, "logPoint");
       Assert.equal(lastMessage.arguments[0], 5);
+      Assert.ok(/\d+\.\d+/.test(lastMessage.timeStamp));
     } else {
       Assert.equal(lastExpression.text, "console.log(...[a])");
       Assert.equal(lastExpression.lineNumber, 4);
