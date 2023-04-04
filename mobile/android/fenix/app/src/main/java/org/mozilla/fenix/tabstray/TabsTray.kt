@@ -12,10 +12,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -27,7 +27,6 @@ import androidx.compose.ui.unit.dp
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
-import kotlinx.coroutines.launch
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.lib.state.ext.observeAsComposableState
@@ -94,22 +93,19 @@ fun TabsTray(
         .observeAsComposableState { state -> state.inactiveTabsExpanded }.value ?: false
     val inactiveTabs = tabsTrayStore
         .observeAsComposableState { state -> state.inactiveTabs }.value ?: emptyList()
-    val pagerState = rememberPagerState(initialPage = 0)
-    val scope = rememberCoroutineScope()
+    val pagerState = rememberPagerState(initialPage = selectedPage.ordinal)
     val isInMultiSelectMode = multiselectMode is TabsTrayState.Mode.Select
 
-    val onTabPageIndicatorClicked: ((Page) -> Unit) = { page ->
-        onTabPageClick(page)
-        scope.launch {
-            pagerState.animateScrollToPage(page.ordinal)
-        }
-    }
     val handleTabClick: ((TabSessionState) -> Unit) = { tab ->
         if (isInMultiSelectMode) {
             onTabMultiSelectClick(tab)
         } else {
             onTabClick(tab)
         }
+    }
+
+    LaunchedEffect(selectedPage) {
+        pagerState.animateScrollToPage(selectedPage.ordinal)
     }
 
     Column(
@@ -123,7 +119,7 @@ fun TabsTray(
                 isInMultiSelectMode = isInMultiSelectMode,
                 selectedPage = selectedPage,
                 normalTabCount = normalTabs.size + inactiveTabs.size,
-                onTabPageIndicatorClicked = onTabPageIndicatorClicked,
+                onTabPageIndicatorClicked = onTabPageClick,
             )
         }
 
@@ -233,6 +229,23 @@ private fun TabsTrayInactiveTabsPreview() {
         inactiveTabs = generateFakeTabsList(),
         inactiveTabsExpanded = true,
         showInactiveTabsAutoCloseDialog = true,
+    )
+}
+
+@LightDarkPreview
+@Composable
+private fun TabsTrayPrivateTabsPreview() {
+    TabsTrayPreviewRoot(
+        selectedPage = Page.PrivateTabs,
+        privateTabs = generateFakeTabsList(),
+    )
+}
+
+@LightDarkPreview
+@Composable
+private fun TabsTraySyncedTabsPreview() {
+    TabsTrayPreviewRoot(
+        selectedPage = Page.SyncedTabs,
     )
 }
 

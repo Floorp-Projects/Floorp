@@ -19,6 +19,7 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.toolbar.FenixTabCounterMenu
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.tabstray.Page
 
 /**
  * Helper class for building the [FenixTabCounterMenu].
@@ -63,7 +64,12 @@ class TabCounterView(
 
             navController.nav(
                 R.id.homeFragment,
-                HomeFragmentDirections.actionGlobalTabsTrayFragment(),
+                HomeFragmentDirections.actionGlobalTabsTrayFragment(
+                    page = when (browsingModeManager.mode) {
+                        BrowsingMode.Normal -> Page.NormalTabs
+                        BrowsingMode.Private -> Page.PrivateTabs
+                    },
+                ),
             )
         }
     }
