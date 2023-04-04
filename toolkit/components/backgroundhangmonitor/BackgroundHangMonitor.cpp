@@ -6,6 +6,7 @@
 
 #include "mozilla/BackgroundHangMonitor.h"
 
+#include <string_view>
 #include <utility>
 
 #include "GeckoProfiler.h"
@@ -39,11 +40,6 @@
 // don't want to enable it for beta users at the moment. We can scale this up in
 // the future.
 #define BHR_BETA_MOD INT32_MAX;
-
-// Maximum depth of the call stack in the reported thread hangs. This value
-// represents the 99.9th percentile of the thread hangs stack depths reported by
-// Telemetry.
-static const size_t kMaxThreadHangStackDepth = 30;
 
 // Interval at which we check the global and per-process CPU usage in order to
 // determine if there is high external CPU usage.
@@ -596,7 +592,11 @@ void BackgroundHangMonitor::Startup() {
       mozilla::services::GetObserverService();
   MOZ_ASSERT(observerService);
 
-  if (!strcmp(MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL), "beta")) {
+#  ifdef __clang__
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wunreachable-code"
+#  endif
+  if constexpr (std::string_view(MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL)) == "beta") {
     if (XRE_IsParentProcess()) {  // cached ClientID hasn't been read yet
       BackgroundHangThread::Startup();
       new BackgroundHangManager();
@@ -609,6 +609,9 @@ void BackgroundHangMonitor::Startup() {
       return;
     }
   }
+#  ifdef __clang__
+#    pragma clang diagnostic pop
+#  endif
 
   BackgroundHangThread::Startup();
   new BackgroundHangManager();
