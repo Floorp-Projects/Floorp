@@ -1290,6 +1290,29 @@ class ExtensionData {
       manifest.applications = manifest.browser_specific_settings;
     }
 
+    // On Android, override the browser specific settings with those found in
+    // `bss.gecko_android`, if any.
+    //
+    // It is also worth noting that the `gecko_android` key in `applications`
+    // is marked as "unsupported" in the JSON schema.
+    if (
+      AppConstants.platform == "android" &&
+      manifest.browser_specific_settings?.gecko_android
+    ) {
+      const {
+        strict_min_version,
+        strict_max_version,
+      } = manifest.browser_specific_settings.gecko_android;
+
+      if (strict_min_version?.length) {
+        manifest.applications.gecko.strict_min_version = strict_min_version;
+      }
+
+      if (strict_max_version?.length) {
+        manifest.applications.gecko.strict_max_version = strict_max_version;
+      }
+    }
+
     if (
       this.manifestVersion < 3 &&
       manifest.background &&
