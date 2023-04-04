@@ -122,7 +122,6 @@ enum class SymbolicAddress {
   TableSet,
   TableSize,
   RefFunc,
-  RefTest,
   PostBarrier,
   PostBarrierPrecise,
   PostBarrierPreciseWithOffset,
@@ -263,7 +262,6 @@ extern const SymbolicAddressSignature SASigArrayNewUninit;
 extern const SymbolicAddressSignature SASigArrayNewData;
 extern const SymbolicAddressSignature SASigArrayNewElem;
 extern const SymbolicAddressSignature SASigArrayCopy;
-extern const SymbolicAddressSignature SASigRefTest;
 #define EXT_INTR_SA_DECL(op, export, sa_name, abitype, entry, idx) \
   extern const SymbolicAddressSignature SASig##sa_name;
 FOR_EACH_INTRINSIC(EXT_INTR_SA_DECL)

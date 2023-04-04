@@ -1530,22 +1530,6 @@ static int32_t MemDiscardShared(Instance* instance, I byteOffset, I byteLen,
   return -1;
 }
 
-/* static */ int32_t Instance::refTest(Instance* instance, void* refPtr,
-                                       const wasm::TypeDef* typeDef) {
-  MOZ_ASSERT(SASigRefTest.failureMode == FailureMode::Infallible);
-
-  if (!refPtr) {
-    return 0;
-  }
-
-  JSContext* cx = instance->cx();
-
-  ASSERT_ANYREF_IS_JSOBJECT;
-  Rooted<WasmGcObject*> ref(
-      cx, (WasmGcObject*)AnyRef::fromCompiledCode(refPtr).asJSObject());
-  return int32_t(ref->isRuntimeSubtype(typeDef));
-}
-
 /* static */ int32_t Instance::intrI8VecMul(Instance* instance, uint32_t dest,
                                             uint32_t src1, uint32_t src2,
                                             uint32_t len, uint8_t* memBase) {
