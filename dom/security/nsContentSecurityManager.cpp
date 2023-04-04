@@ -131,10 +131,18 @@ bool nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
     return true;
   }
 
+  ReportBlockedDataURI(uri, loadInfo);
+
+  return false;
+}
+
+void nsContentSecurityManager::ReportBlockedDataURI(nsIURI* aURI,
+                                                    nsILoadInfo* aLoadInfo,
+                                                    bool aIsRedirect) {
   // We're going to block the request, construct the localized error message to
   // report to the console.
   nsAutoCString dataSpec;
-  uri->GetSpec(dataSpec);
+  aURI->GetSpec(dataSpec);
   if (dataSpec.Length() > 50) {
     dataSpec.Truncate(50);
     dataSpec.AppendLiteral("...");
@@ -142,18 +150,20 @@ bool nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
   AutoTArray<nsString, 1> params;
   CopyUTF8toUTF16(NS_UnescapeURL(dataSpec), *params.AppendElement());
   nsAutoString errorText;
-  rv = nsContentUtils::FormatLocalizedString(
-      nsContentUtils::eSECURITY_PROPERTIES, "BlockTopLevelDataURINavigation",
-      params, errorText);
-  NS_ENSURE_SUCCESS(rv, false);
+  const char* stringID =
+      aIsRedirect ? "BlockRedirectToDataURI" : "BlockTopLevelDataURINavigation";
+  nsresult rv = nsContentUtils::FormatLocalizedString(
+      nsContentUtils::eSECURITY_PROPERTIES, stringID, params, errorText);
+  if (NS_FAILED(rv)) {
+    return;
+  }
 
   // Report the localized error message to the console for the loading
   // BrowsingContext's current inner window.
-  RefPtr<BrowsingContext> target = loadInfo->GetBrowsingContext();
+  RefPtr<BrowsingContext> target = aLoadInfo->GetBrowsingContext();
   nsContentUtils::ReportToConsoleByWindowID(
       errorText, nsIScriptError::warningFlag, "DATA_URI_BLOCKED"_ns,
       target ? target->GetCurrentInnerWindowId() : 0);
-  return false;
 }
 
 /* static */
@@ -181,23 +191,8 @@ bool nsContentSecurityManager::AllowInsecureRedirectToDataURI(
     return true;
   }
 
-  nsAutoCString dataSpec;
-  newURI->GetSpec(dataSpec);
-  if (dataSpec.Length() > 50) {
-    dataSpec.Truncate(50);
-    dataSpec.AppendLiteral("...");
-  }
-  nsCOMPtr<Document> doc;
-  nsINode* node = loadInfo->LoadingNode();
-  if (node) {
-    doc = node->OwnerDoc();
-  }
-  AutoTArray<nsString, 1> params;
-  CopyUTF8toUTF16(NS_UnescapeURL(dataSpec), *params.AppendElement());
-  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  "DATA_URI_BLOCKED"_ns, doc,
-                                  nsContentUtils::eSECURITY_PROPERTIES,
-                                  "BlockSubresourceRedirectToData", params);
+  ReportBlockedDataURI(newURI, loadInfo, true);
+
   return false;
 }
 
