@@ -10548,6 +10548,7 @@ const INITIAL_STATE = {
     // Have we received real data from the app yet?
     initialized: false,
     locale: "",
+    isForStartupCache: false,
   },
   ASRouter: { initialized: false },
   Snippets: { initialized: false },
@@ -10632,6 +10633,12 @@ function App(prevState = INITIAL_STATE.App, action) {
     case actionTypes.INIT:
       return Object.assign({}, prevState, action.data || {}, {
         initialized: true,
+      });
+    case actionTypes.TOP_SITES_UPDATED:
+      // Toggle `isForStartupCache` when receiving the `TOP_SITES_UPDATE` action
+      // so that sponsored tiles can be rendered as usual. See Bug 1826360.
+      return Object.assign({}, prevState, action.data || {}, {
+        isForStartupCache: false,
       });
     default:
       return prevState;
@@ -11640,6 +11647,7 @@ function TopSite_extends() { TopSite_extends = Object.assign || function (target
 
 
 
+
 const SPOC_TYPE = "SPOC";
 const NEWTAB_SOURCE = "newtab"; // For cases if we want to know if this is sponsored by either sponsored_position or type.
 // We have two sources for sponsored topsites, and
@@ -12234,7 +12242,7 @@ class TopSitePlaceholder extends (external_React_default()).PureComponent {
   }
 
 }
-class TopSiteList extends (external_React_default()).PureComponent {
+class _TopSiteList extends (external_React_default()).PureComponent {
   static get DEFAULT_STATE() {
     return {
       activeIndex: null,
@@ -12247,7 +12255,7 @@ class TopSiteList extends (external_React_default()).PureComponent {
 
   constructor(props) {
     super(props);
-    this.state = TopSiteList.DEFAULT_STATE;
+    this.state = _TopSiteList.DEFAULT_STATE;
     this.onDragEvent = this.onDragEvent.bind(this);
     this.onActivate = this.onActivate.bind(this);
   }
@@ -12259,7 +12267,7 @@ class TopSiteList extends (external_React_default()).PureComponent {
 
       if (prevTopSites && prevTopSites[this.state.draggedIndex] && prevTopSites[this.state.draggedIndex].url === this.state.draggedSite.url && (!newTopSites[this.state.draggedIndex] || newTopSites[this.state.draggedIndex].url !== this.state.draggedSite.url)) {
         // We got the new order from the redux store via props. We can clear state now.
-        this.setState(TopSiteList.DEFAULT_STATE);
+        this.setState(_TopSiteList.DEFAULT_STATE);
       }
     }
   }
@@ -12288,7 +12296,7 @@ class TopSiteList extends (external_React_default()).PureComponent {
       case "dragend":
         if (!this.dropped) {
           // If there was no drop event, reset the state to the default.
-          this.setState(TopSiteList.DEFAULT_STATE);
+          this.setState(_TopSiteList.DEFAULT_STATE);
         }
 
         break;
@@ -12434,13 +12442,22 @@ class TopSiteList extends (external_React_default()).PureComponent {
         slotProps.className = "hide-for-narrow";
       }
 
-      topSitesUI.push(!link ? /*#__PURE__*/external_React_default().createElement(TopSitePlaceholder, TopSite_extends({}, slotProps, commonProps)) : /*#__PURE__*/external_React_default().createElement(TopSite, TopSite_extends({
-        link: link,
-        activeIndex: this.state.activeIndex,
-        onActivate: this.onActivate
-      }, slotProps, commonProps, {
-        colors: props.colors
-      })));
+      let topSiteLink; // Use a placeholder if the link is empty or it's rendering a sponsored
+      // tile for the about:home startup cache.
+
+      if (!link || props.App.isForStartupCache && isSponsored(link)) {
+        topSiteLink = /*#__PURE__*/external_React_default().createElement(TopSitePlaceholder, TopSite_extends({}, slotProps, commonProps));
+      } else {
+        topSiteLink = /*#__PURE__*/external_React_default().createElement(TopSite, TopSite_extends({
+          link: link,
+          activeIndex: this.state.activeIndex,
+          onActivate: this.onActivate
+        }, slotProps, commonProps, {
+          colors: props.colors
+        }));
+      }
+
+      topSitesUI.push(topSiteLink);
     }
 
     return /*#__PURE__*/external_React_default().createElement("ul", {
@@ -12449,6 +12466,9 @@ class TopSiteList extends (external_React_default()).PureComponent {
   }
 
 }
+const TopSiteList = (0,external_ReactRedux_namespaceObject.connect)(state => ({
+  App: state.App
+}))(_TopSiteList);
 ;// CONCATENATED MODULE: ./content-src/components/TopSites/TopSiteForm.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
