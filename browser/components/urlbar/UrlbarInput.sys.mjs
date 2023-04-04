@@ -3507,6 +3507,12 @@ export class UrlbarInput {
       this.inputField.value = oldStart + pasteData + oldEnd;
       this._untrimmedValue = this.inputField.value;
 
+      if (this._untrimmedValue) {
+        this.setAttribute("usertyping", "true");
+      } else {
+        this.removeAttribute("usertyping");
+      }
+
       // Fix up cursor/selection:
       let newCursorPos = oldStart.length + pasteData.length;
       this.inputField.setSelectionRange(newCursorPos, newCursorPos);
