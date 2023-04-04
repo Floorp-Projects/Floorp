@@ -34,8 +34,8 @@ static already_AddRefed<JS::Stencil> CompileGlobalScriptToStencilImpl(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& options,
     JS::NativeStackLimit stackLimit, JS::SourceText<CharT>& srcBuf,
     js::UniquePtr<js::frontend::CompilationInput>& stencilInput) {
-  ScopeKind scopeKind = ScopeKind::Global;
-  // TODO bug 1773319 nonsyntactic scope
+  ScopeKind scopeKind =
+      options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
 
   JS::SourceText<CharT> data(std::move(srcBuf));
 
