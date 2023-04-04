@@ -8982,20 +8982,6 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
     metadata.SetHasScrollgrab(true);
   }
 
-  // Also compute and set the background color.
-  // This is needed for APZ overscrolling support.
-  if (aScrollFrame) {
-    if (isRootScrollFrame) {
-      metadata.SetBackgroundColor(
-          sRGBColor::FromABGR(presShell->GetCanvasBackground()));
-    } else if (const auto* backgroundStyle =
-                   nsCSSRendering::FindBackground(aScrollFrame)) {
-      nscolor backgroundColor =
-          backgroundStyle->StyleBackground()->BackgroundColor(backgroundStyle);
-      metadata.SetBackgroundColor(sRGBColor::FromABGR(backgroundColor));
-    }
-  }
-
   if (ShouldDisableApzForElement(aContent)) {
     metadata.SetForceDisableApz(true);
   }

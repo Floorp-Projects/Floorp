@@ -323,8 +323,7 @@ std::ostream& operator<<(std::ostream& aStream,
 std::ostream& operator<<(std::ostream& aStream,
                          const ScrollMetadata& aMetadata) {
   aStream << "{ [description=" << aMetadata.GetContentDescription()
-          << "] [metrics=" << aMetadata.GetMetrics()
-          << "] [color=" << aMetadata.GetBackgroundColor();
+          << "] [metrics=" << aMetadata.GetMetrics();
   if (aMetadata.GetScrollParentId() != ScrollableLayerGuid::NULL_SCROLL_ID) {
     aStream << "] [scrollParent=" << aMetadata.GetScrollParentId();
   }
@@ -335,11 +334,6 @@ std::ostream& operator<<(std::ostream& aStream,
           << aMetadata.GetScrollUpdates().Length() << " scrollupdates"
           << "] }";
   return aStream;
-}
-
-void ScrollMetadata::SetBackgroundColor(
-    const gfx::sRGBColor& aBackgroundColor) {
-  mBackgroundColor = gfx::ToDeviceColor(aBackgroundColor);
 }
 
 StaticAutoPtr<const ScrollMetadata> ScrollMetadata::sNullMetadata;
