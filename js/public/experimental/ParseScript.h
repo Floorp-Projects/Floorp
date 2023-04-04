@@ -13,10 +13,16 @@
 #include "jspubtd.h"
 #include "js/experimental/JSStencil.h"
 #include "js/Stack.h"
+#include "js/UniquePtr.h"
 
 namespace js {
 class FrontendContext;
-}
+namespace frontend {
+// TODO Create wrapper type around CompilationInput because it is opaque, which
+// means UniquePtr can't perform deletion on it
+struct CompilationInput;
+}  // namespace frontend
+}  // namespace js
 
 namespace JS {
 using FrontendContext = js::FrontendContext;
@@ -29,11 +35,13 @@ JS_PUBLIC_API void DestroyFrontendContext(JS::FrontendContext* fc);
 
 extern JS_PUBLIC_API already_AddRefed<JS::Stencil> ParseGlobalScript(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& options,
-    JS::NativeStackLimit stackLimit, JS::SourceText<mozilla::Utf8Unit>& srcBuf);
+    JS::NativeStackLimit stackLimit, JS::SourceText<mozilla::Utf8Unit>& srcBuf,
+    js::UniquePtr<js::frontend::CompilationInput>& stencilInput);
 
 extern JS_PUBLIC_API already_AddRefed<JS::Stencil> ParseGlobalScript(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& options,
-    JS::NativeStackLimit stackLimit, JS::SourceText<char16_t>& srcBuf);
+    JS::NativeStackLimit stackLimit, JS::SourceText<char16_t>& srcBuf,
+    js::UniquePtr<js::frontend::CompilationInput>& stencilInput);
 
 }  // namespace JS
 
