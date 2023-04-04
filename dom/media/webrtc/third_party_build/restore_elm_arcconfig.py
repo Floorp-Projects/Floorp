@@ -17,7 +17,7 @@ ret = run(
         "hg",
         "import",
         "-m",
-        "Bug 1729988 - FLOAT REPO-elm - update .arcconfig repo callsign r=bgrins",
+        "Bug 1729988 - FLOAT - REPO-elm - update .arcconfig repo callsign r=bgrins",
         "dom/media/webrtc/third_party_build/elm_arcconfig.patch",
     ]
 ).returncode
