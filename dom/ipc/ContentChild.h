@@ -481,7 +481,7 @@ class ContentChild final : public PContentChild,
 #endif
 
   PContentPermissionRequestChild* AllocPContentPermissionRequestChild(
-      Span<const PermissionRequest> aRequests, nsIPrincipal* aPrincipal,
+      const nsTArray<PermissionRequest>& aRequests, nsIPrincipal* aPrincipal,
       nsIPrincipal* aTopLevelPrincipal, const bool& aIsHandlingUserInput,
       const bool& aMaybeUnsafePermissionDelegate, const TabId& aTabId);
   bool DeallocPContentPermissionRequestChild(
@@ -565,7 +565,7 @@ class ContentChild final : public PContentChild,
 
   // PURLClassifierLocalChild
   PURLClassifierLocalChild* AllocPURLClassifierLocalChild(
-      nsIURI* aUri, Span<const IPCURLClassifierFeature> aFeatures);
+      nsIURI* aUri, const nsTArray<IPCURLClassifierFeature>& aFeatures);
   bool DeallocPURLClassifierLocalChild(PURLClassifierLocalChild* aActor);
 
   PLoginReputationChild* AllocPLoginReputationChild(nsIURI* aUri);
