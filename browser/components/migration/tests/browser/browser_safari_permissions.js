@@ -29,7 +29,7 @@ add_task(async function test_safari_permissions() {
   });
 
   let safariMigrator = new SafariProfileMigrator();
-  sinon.stub(MigrationUtils, "getMigrator").resolves(safariMigrator);
+  sandbox.stub(MigrationUtils, "getMigrator").resolves(safariMigrator);
 
   sandbox
     .stub(SafariProfileMigrator.prototype, "hasPermissions")
