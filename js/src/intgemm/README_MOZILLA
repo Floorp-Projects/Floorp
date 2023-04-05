@@ -12,7 +12,7 @@ To update to a specific upstream git tag or commit, use
 
   ./mach vendor third_party/gemmology/moz.yaml -r <commit>
 
-The upstream git repository is https://github.com/serge-sans-paille/gemmology
+The upstream git repository is https://github.com/mozilla/gemmology
 
 To view the information about the current version, check the
 'origin' section of moz.yaml.
