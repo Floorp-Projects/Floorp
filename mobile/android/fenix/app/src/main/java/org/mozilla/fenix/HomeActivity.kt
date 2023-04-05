@@ -267,7 +267,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         }
 
         if (settings().shouldShowJunoOnboarding(intent.toSafeIntent().isLauncherIntent)) {
-            navHost.navController.navigate(NavGraphDirections.actionGlobalHomeJunoOnboarding())
+            // Unless activity is recreated due to config change, navigate to onboarding
+            if (savedInstanceState == null) {
+                navHost.navController.navigate(NavGraphDirections.actionGlobalHomeJunoOnboarding())
+            }
         } else {
             // Unless the activity is recreated, navigate to home first (without rendering it)
             // to add it to the back stack.
