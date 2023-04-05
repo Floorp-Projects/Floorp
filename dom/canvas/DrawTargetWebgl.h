@@ -75,7 +75,10 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   RefPtr<WebGLFramebufferJS> mFramebuffer;
   RefPtr<WebGLTextureJS> mTex;
   RefPtr<WebGLTextureJS> mClipMask;
+  // The integer-aligned, scissor-compatible conservative bounds of the clip.
   IntRect mClipBounds;
+  // The fractional, AA'd bounds of the clip rect, if applicable.
+  Rect mClipAARect;
   RefPtr<DrawTargetSkia> mSkia;
   // Skia DT pointing to the same pixel data, but without any applied clips.
   RefPtr<DrawTargetSkia> mSkiaNoClip;
@@ -166,7 +169,10 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
 
     WeakPtr<DrawTargetWebgl> mCurrentTarget;
     IntSize mViewportSize;
+    // The current integer-aligned scissor rect.
     IntRect mClipRect;
+    // The current fractional AA'd clip rect bounds.
+    Rect mClipAARect;
 
     RefPtr<ClientWebGLContext> mWebgl;
 
@@ -174,8 +180,12 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     RefPtr<WebGLProgramJS> mLastProgram;
     RefPtr<WebGLTextureJS> mLastTexture;
     RefPtr<WebGLTextureJS> mLastClipMask;
+    // Whether the shader viewport state requires updating.
     bool mDirtyViewport = true;
+    // Whether the shader anti-aliasing state requires updating.
     bool mDirtyAA = true;
+    // Whether the shader clip AA bounds require updating.
+    bool mDirtyClip = true;
 
     // WebGL shader resources
     RefPtr<WebGLBufferJS> mPathVertexBuffer;
@@ -198,6 +208,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     RefPtr<WebGLUniformLocationJS> mSolidProgramTransform;
     RefPtr<WebGLUniformLocationJS> mSolidProgramColor;
     RefPtr<WebGLUniformLocationJS> mSolidProgramClipMask;
+    RefPtr<WebGLUniformLocationJS> mSolidProgramClipBounds;
     RefPtr<WebGLProgramJS> mImageProgram;
     RefPtr<WebGLUniformLocationJS> mImageProgramViewport;
     RefPtr<WebGLUniformLocationJS> mImageProgramAA;
@@ -208,6 +219,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     RefPtr<WebGLUniformLocationJS> mImageProgramSwizzle;
     RefPtr<WebGLUniformLocationJS> mImageProgramSampler;
     RefPtr<WebGLUniformLocationJS> mImageProgramClipMask;
+    RefPtr<WebGLUniformLocationJS> mImageProgramClipBounds;
 
     // Scratch framebuffer used to wrap textures for miscellaneous utility ops.
     RefPtr<WebGLFramebufferJS> mScratchFramebuffer;
@@ -268,7 +280,8 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     void SetBlendState(CompositionOp aOp,
                        const Maybe<DeviceColor>& aBlendColor = Nothing());
 
-    void SetClipRect(const IntRect& aClipRect) { mClipRect = aClipRect; }
+    void SetClipRect(const Rect& aClipRect);
+    void SetClipRect(const IntRect& aClipRect) { SetClipRect(Rect(aClipRect)); }
     bool SetClipMask(const RefPtr<WebGLTextureJS>& aTex);
     bool SetNoClipMask();
     bool HasClipMask() const {
@@ -563,7 +576,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   // that clip state is restored after the context is used.
   struct AutoRestoreContext {
     DrawTargetWebgl* mTarget;
-    IntRect mClipRect;
+    Rect mClipAARect;
     RefPtr<WebGLTextureJS> mLastClipMask;
 
     explicit AutoRestoreContext(DrawTargetWebgl* aTarget);
