@@ -25,7 +25,7 @@ class GMPProcessChild final : public mozilla::ipc::ProcessChild {
   void CleanUp() override;
 
  private:
-  GMPChild mPlugin;
+  const RefPtr<GMPChild> mPlugin = new GMPChild;
 };
 
 }  // namespace mozilla::gmp
