@@ -339,9 +339,10 @@ def lib_path_for(host_or_target):
         vc_path,
         valid_windows_sdk_dir,
         valid_ucrt_sdk_dir,
+        c_compiler,
     )
     @imports("os")
-    def lib_path(target, is_host, vc_path, windows_sdk_dir, ucrt_sdk_dir):
+    def lib_path(target, is_host, vc_path, windows_sdk_dir, ucrt_sdk_dir, compiler):
         if not vc_path:
             return
         sdk_target = {
@@ -371,6 +372,15 @@ def lib_path_for(host_or_target):
                 os.path.join(ucrt_sdk_dir.lib, "ucrt", sdk_target),
             )
         )
+        if compiler.type == "clang-cl":
+            runtime_dir = check_cmd_output(
+                compiler.compiler,
+                "/clang:--print-runtime-dir",
+                *compiler.flags,
+                onerror=lambda: None
+            ).strip()
+            if runtime_dir and os.path.exists(runtime_dir):
+                libs.append(runtime_dir)
         return libs
 
     return lib_path

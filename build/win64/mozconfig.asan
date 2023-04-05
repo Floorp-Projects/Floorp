@@ -3,7 +3,6 @@
 if [ -d "$MOZ_FETCHES_DIR/clang" ]; then
     CLANG_LIB_DIR="$(cd $MOZ_FETCHES_DIR/clang/lib/clang/* && cd lib/windows && pwd)"
 
-    export LIB=$CLANG_LIB_DIR
     export LDFLAGS="clang_rt.asan_dynamic-x86_64.lib clang_rt.asan_dynamic_runtime_thunk-x86_64.lib"
 
     export MOZ_COPY_PDBS=1
