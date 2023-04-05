@@ -153,6 +153,7 @@ void RenderTextureHostSWGL::CleanupPlanes() {
     return;
   }
   if (!mPlanes.empty()) {
+    MOZ_RELEASE_ASSERT(!mLocked, "Can't clear locked planes.");
     wr_swgl_make_current(mContext);
     for (const auto& plane : mPlanes) {
       wr_swgl_delete_texture(mContext, plane.mTexture);
