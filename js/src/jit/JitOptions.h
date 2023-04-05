@@ -60,6 +60,7 @@ struct DefaultJitOptions {
   bool disableCacheIR;
   bool disableSink;
   bool disableRedundantShapeGuards;
+  bool disableRedundantGCBarriers;
   bool disableBailoutLoopCheck;
   bool baselineInterpreter;
   bool baselineJit;

@@ -27,6 +27,8 @@
 --ion-offthread-compile=off
 --ion-optimize-shapeguards=off
 --ion-optimize-shapeguards=on
+--ion-optimize-gcbarriers=off
+--ion-optimize-gcbarriers=on
 --ion-osr=off
 --ion-osr=on
 --ion-pruning=off

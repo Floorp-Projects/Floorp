@@ -120,6 +120,9 @@ DefaultJitOptions::DefaultJitOptions() {
   // Toggles whether redundant shape guard elimination is globally disabled.
   SET_DEFAULT(disableRedundantShapeGuards, false);
 
+  // Toggles whether redundant GC barrier elimination is globally disabled.
+  SET_DEFAULT(disableRedundantGCBarriers, false);
+
   // Toggles whether we verify that we don't recompile with the same CacheIR.
   SET_DEFAULT(disableBailoutLoopCheck, false);
 

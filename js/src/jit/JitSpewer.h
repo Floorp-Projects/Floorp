@@ -63,6 +63,8 @@ namespace jit {
   _(CacheFlush)                            \
   /* Info about redundant shape guards */  \
   _(RedundantShapeGuards)                  \
+  /* Info about redundant GC barriers */   \
+  _(RedundantGCBarriers)                   \
   /* Output a list of MIR expressions */   \
   _(MIRExpressions)                        \
   /* Spew Tracelogger summary stats */     \
