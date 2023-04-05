@@ -197,8 +197,8 @@ async function testBookmarks(migratorKey, subDirs) {
 
   Assert.equal(
     postUnfiledCount - initialUnfiledCount,
-    105,
-    "Should have seen 105 items in unsorted bookmarks"
+    210,
+    "Should have seen 210 items in unsorted bookmarks"
   );
   Assert.equal(
     postToolbarCount - initialToolbarCount,
@@ -213,8 +213,8 @@ async function testBookmarks(migratorKey, subDirs) {
 
   PlacesUtils.observers.removeListener(["bookmark-added"], listener);
 
-  Assert.equal(itemsSeen.bookmarks, 200, "Should have seen 200 bookmarks.");
-  Assert.equal(itemsSeen.folders, 10, "Should have seen 10 folders.");
+  Assert.equal(itemsSeen.bookmarks, 300, "Should have seen 300 bookmarks.");
+  Assert.equal(itemsSeen.folders, 15, "Should have seen 15 folders.");
   Assert.equal(
     MigrationUtils._importQuantities.bookmarks,
     itemsSeen.bookmarks + itemsSeen.folders,
