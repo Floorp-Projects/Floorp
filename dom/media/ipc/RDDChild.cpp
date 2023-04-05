@@ -34,11 +34,9 @@ namespace mozilla {
 using namespace layers;
 using namespace gfx;
 
-RDDChild::RDDChild(RDDProcessHost* aHost) : mHost(aHost) {
-  MOZ_COUNT_CTOR(RDDChild);
-}
+RDDChild::RDDChild(RDDProcessHost* aHost) : mHost(aHost) {}
 
-RDDChild::~RDDChild() { MOZ_COUNT_DTOR(RDDChild); }
+RDDChild::~RDDChild() = default;
 
 bool RDDChild::Init() {
   Maybe<FileDescriptor> brokerFd;
@@ -210,17 +208,17 @@ void RDDChild::ActorDestroy(ActorDestroyReason aWhy) {
 
 class DeferredDeleteRDDChild : public Runnable {
  public:
-  explicit DeferredDeleteRDDChild(UniquePtr<RDDChild>&& aChild)
+  explicit DeferredDeleteRDDChild(RefPtr<RDDChild>&& aChild)
       : Runnable("gfx::DeferredDeleteRDDChild"), mChild(std::move(aChild)) {}
 
   NS_IMETHODIMP Run() override { return NS_OK; }
 
  private:
-  UniquePtr<RDDChild> mChild;
+  RefPtr<RDDChild> mChild;
 };
 
 /* static */
-void RDDChild::Destroy(UniquePtr<RDDChild>&& aChild) {
+void RDDChild::Destroy(RefPtr<RDDChild>&& aChild) {
   NS_DispatchToMainThread(new DeferredDeleteRDDChild(std::move(aChild)));
 }
 

@@ -26,7 +26,7 @@ class RDDProcessImpl final : public ipc::ProcessChild {
   void CleanUp() override;
 
  private:
-  RDDParent mRDD;
+  RefPtr<RDDParent> mRDD = new RDDParent;
 
 #if defined(XP_WIN)
   // This object initializes and configures COM.
