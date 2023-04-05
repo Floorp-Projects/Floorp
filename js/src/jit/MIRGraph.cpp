@@ -505,6 +505,9 @@ MBasicBlock* MBasicBlock::NewFakeLoopPredecessor(MIRGraph& graph,
   // Create fake defs to use as inputs for any phis in |header|.
   for (MPhiIterator iter(header->phisBegin()), end(header->phisEnd());
        iter != end; ++iter) {
+    if (!graph.alloc().ensureBallast()) {
+      return nullptr;
+    }
     MPhi* phi = *iter;
     auto* fakeDef = MUnreachableResult::New(graph.alloc(), phi->type());
     fake->add(fakeDef);
