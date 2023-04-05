@@ -169,3 +169,4 @@ extensions.apis.dnr:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1803363#c11
     data_sensitivity:
       - technical
+    telemetry_mirror: EXTENSIONS_APIS_DNR_EVALUATE_RULES_COUNT_MAX

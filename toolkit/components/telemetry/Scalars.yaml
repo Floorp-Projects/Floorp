@@ -1627,6 +1627,19 @@ extensions.apis.dnr:
       - 'firefox'
     record_in_processes:
       - main
+  evaluate_rules_count_max:
+    bug_numbers:
+      - 1803363
+    description: >
+      Max amount of DNR rules being evaluated.
+    expires: '120'
+    kind: uint
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
 
 extensions.startupCache:
   write_byteLength:
