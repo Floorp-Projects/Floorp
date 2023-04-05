@@ -7000,6 +7000,20 @@ policies:
       - 'firefox'
     record_in_processes:
       - main
+  is_enterprise:
+    bug_numbers:
+      - 1803804
+    description: >-
+      Attempt to determine if the user is an enterprise user based on various signals.
+    expires: never
+    kind: boolean
+    notification_emails:
+      - mkaply@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
 
 urlbar:
   abandonment:
