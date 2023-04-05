@@ -26,7 +26,7 @@ namespace mozilla {
 // profiles from us.
 class ProfilerChild final : public PProfilerChild,
                             public mozilla::ipc::IShmemAllocator {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ProfilerChild)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ProfilerChild, final)
 
   ProfilerChild();
 

@@ -31,7 +31,7 @@ class ProfilerParentTracker;
 // and handles shutdown.
 class ProfilerParent final : public PProfilerParent {
  public:
-  NS_INLINE_DECL_REFCOUNTING(ProfilerParent)
+  NS_INLINE_DECL_REFCOUNTING(ProfilerParent, final)
 
   static mozilla::ipc::Endpoint<PProfilerChild> CreateForProcess(
       base::ProcessId aOtherPid);
@@ -101,11 +101,9 @@ class ProfilerParent final : public PProfilerParent {
 
   void Init();
   void ActorDestroy(ActorDestroyReason aActorDestroyReason) override;
-  void ActorDealloc() override;
 
   void RequestChunkManagerUpdate();
 
-  RefPtr<ProfilerParent> mSelfRef;
   base::ProcessId mChildPid;
   nsTArray<MozPromiseHolder<SingleProcessProfilePromise>>
       mPendingRequestedProfiles;
