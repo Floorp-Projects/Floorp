@@ -95,7 +95,7 @@ class BrowsingContextModule extends Module {
    * Capture a base64-encoded screenshot of the provided browsing context.
    *
    * @param {object=} options
-   * @param {string} context
+   * @param {string} options.context
    *     Id of the browsing context to screenshot.
    *
    * @throws {NoSuchFrameError}
@@ -138,7 +138,7 @@ class BrowsingContextModule extends Module {
    * Close the provided browsing context.
    *
    * @param {object=} options
-   * @param {string} context
+   * @param {string} options.context
    *     Id of the browsing context to close.
    *
    * @throws {NoSuchFrameError}
@@ -292,10 +292,10 @@ class BrowsingContextModule extends Module {
    * given context, or all top-level contexts when no root is provided.
    *
    * @param {object=} options
-   * @param {number=} maxDepth
+   * @param {number=} options.maxDepth
    *     Depth of the browsing context tree to traverse. If not specified
    *     the whole tree is returned.
-   * @param {string=} root
+   * @param {string=} options.root
    *     Id of the root browsing context.
    *
    * @returns {BrowsingContextGetTreeResult}
@@ -351,11 +351,11 @@ class BrowsingContextModule extends Module {
    * Navigate the given context to the provided url, with the provided wait condition.
    *
    * @param {object=} options
-   * @param {string} context
+   * @param {string} options.context
    *     Id of the browsing context to navigate.
-   * @param {string} url
+   * @param {string} options.url
    *     Url for the navigation.
-   * @param {WaitCondition=} wait
+   * @param {WaitCondition=} options.wait
    *     Wait condition for the navigation, one of "none", "interactive", "complete".
    *
    * @returns {BrowsingContextNavigateResult}
@@ -685,10 +685,10 @@ class BrowsingContextModule extends Module {
    * @param {BrowsingContext} context
    *     The browsing context to get the information from.
    * @param {object=} options
-   * @param {boolean=} isRoot
+   * @param {boolean=} options.isRoot
    *     Flag that indicates if this browsing context is the root of all the
    *     browsing contexts to be returned. Defaults to true.
-   * @param {number=} maxDepth
+   * @param {number=} options.maxDepth
    *     Depth of the browsing context tree to traverse. If not specified
    *     the whole tree is returned.
    * @returns {BrowsingContextInfo}

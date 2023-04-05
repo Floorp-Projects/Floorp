@@ -90,7 +90,7 @@ export class NodeCache {
    * @param {object=} options
    * @param {boolean=} options.all
    *     Clear all references from any browsing context. Defaults to false.
-   * @param {BrowsingContext=} browsingContext
+   * @param {BrowsingContext=} options.browsingContext
    *     Clear all references living in that browsing context.
    */
   clear(options = {}) {

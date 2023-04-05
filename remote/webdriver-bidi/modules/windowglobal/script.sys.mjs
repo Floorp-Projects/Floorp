@@ -289,20 +289,20 @@ class ScriptModule extends Module {
    * Call a function in the current window global.
    *
    * @param {object} options
-   * @param {boolean} awaitPromise
+   * @param {boolean} options.awaitPromise
    *     Determines if the command should wait for the return value of the
    *     expression to resolve, if this return value is a Promise.
-   * @param {Array<RemoteValue>=} commandArguments
+   * @param {Array<RemoteValue>=} options.commandArguments
    *     The arguments to pass to the function call.
-   * @param {string} functionDeclaration
+   * @param {string} options.functionDeclaration
    *     The body of the function to call.
-   * @param {string=} realmId
+   * @param {string=} options.realmId
    *     The id of the realm.
-   * @param {OwnershipModel} resultOwnership
+   * @param {OwnershipModel} options.resultOwnership
    *     The ownership model to use for the results of this evaluation.
-   * @param {string=} sandbox
+   * @param {string=} options.sandbox
    *     The name of the sandbox.
-   * @param {RemoteValue=} thisParameter
+   * @param {RemoteValue=} options.thisParameter
    *     The value of the this keyword for the function call.
    *
    * @returns {object}
@@ -354,11 +354,11 @@ class ScriptModule extends Module {
    * sandbox name.
    *
    * @param {object=} options
-   * @param {Array<string>} handles
+   * @param {Array<string>} options.handles
    *     Array of handle ids to disown.
-   * @param {string=} realmId
+   * @param {string=} options.realmId
    *     The id of the realm.
-   * @param {string=} sandbox
+   * @param {string=} options.sandbox
    *     The name of the sandbox.
    */
   disownHandles(options) {
@@ -373,16 +373,16 @@ class ScriptModule extends Module {
    * Evaluate a provided expression in the current window global.
    *
    * @param {object} options
-   * @param {boolean} awaitPromise
+   * @param {boolean} options.awaitPromise
    *     Determines if the command should wait for the return value of the
    *     expression to resolve, if this return value is a Promise.
-   * @param {string} expression
+   * @param {string} options.expression
    *     The expression to evaluate.
-   * @param {string=} realmId
+   * @param {string=} options.realmId
    *     The id of the realm.
-   * @param {OwnershipModel} resultOwnership
+   * @param {OwnershipModel} options.resultOwnership
    *     The ownership model to use for the results of this evaluation.
-   * @param {string=} sandbox
+   * @param {string=} options.sandbox
    *     The name of the sandbox.
    *
    * @returns {object}

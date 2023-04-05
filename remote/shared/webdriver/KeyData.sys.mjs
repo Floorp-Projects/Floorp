@@ -311,7 +311,7 @@ export const keyData = {
   /**
    * Get key event data for a given key character.
    *
-   * @param {string} key
+   * @param {string} rawKey
    *     Key for which to get data. This can either be the key codepoint
    *     itself or one of the codepoints in the range U+E000-U+E05D that
    *     WebDriver uses to represent keys not corresponding directly to

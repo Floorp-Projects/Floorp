@@ -145,7 +145,7 @@ action.State = class {
    * pointer gets a unique id.
    *
    * @param {string} id Pointer id.
-   * @param {string} id Pointer type.
+   * @param {string} type Pointer type.
    * @returns {number} Numerical pointer id.
    */
   getPointerId(id, type) {
@@ -325,6 +325,7 @@ class PointerInputSource extends InputSource {
   static type = "pointer";
 
   /**
+   * @param {string} id InputSource id.
    * @param {Pointer} pointer Object representing the specific pointer
    * type associated with this input source.
    */
@@ -549,7 +550,7 @@ class Action {
 
   /**
    * @param {string} type - Input source type.
-   * @param {string} type - Input source id.
+   * @param {string} id - Input source id.
    * @param {object} actionItem - Object representing a single action.
    *
    * @returns {Action} - An action that can be dispatched.
@@ -1499,6 +1500,9 @@ for (const cls of [
  * @param {Array.<Array>} startCoords
  *    Array of initial [x, y] coordinates for each input source involved
  *    in the move.
+ * @param {Array.<Array>} targetCoords
+ *    Array of target [x, y] coordinates for each input source involved
+ *    in the move.
  * @param {number} duration - Time in ms the move will take.
  * @param {Function} callback
  *    Function that actually performs the move. This takes a single parameter
@@ -1769,6 +1773,7 @@ action.Chain = class extends Array {
   }
 
   /**
+   * @param {State} state - Actions state.
    * @param {Array.<object>} actions - Array of objects that each
    * represent an action sequence.
    * @returns {action.Chain} - Object that allows dispatching a chain
@@ -2064,7 +2069,7 @@ class MultiTouchEventData extends PointerEventData {
    * Add the data from one pointer to the event.
    *
    * @param {InputSource} inputSource - State of the pointer.
-   * @param {PointerAction} - Action for the pointer.
+   * @param {PointerAction} action - Action for the pointer.
    */
   addPointerEventData(inputSource, action) {
     this.x.push(inputSource.x);

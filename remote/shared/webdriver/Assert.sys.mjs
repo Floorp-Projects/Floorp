@@ -229,7 +229,7 @@ assert.positiveNumber = function(obj, msg = "") {
  *
  * @param {?} obj
  *     Value to test.
- * @param {Array<number>} Range
+ * @param {Array<number>} range
  *     Array range [lower, upper]
  * @param {string=} msg
  *     Custom error message.
@@ -329,7 +329,7 @@ assert.positiveInteger = function(obj, msg = "") {
  *
  * @param {?} obj
  *     Value to test.
- * @param {Array<number>} Range
+ * @param {Array<number>} range
  *     Array range [lower, upper]
  * @param {string=} msg
  *     Custom error message.
@@ -467,7 +467,7 @@ assert.array = function(obj, msg = "") {
  *     is thrown with <var>message</var>.
  * @param {string=} message
  *     Custom error message.
- * @param {Error=} error
+ * @param {Error=} err
  *     Custom error type by its class.
  *
  * @returns {function(?): ?}

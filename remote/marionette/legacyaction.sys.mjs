@@ -126,12 +126,14 @@ action.Chain.prototype.dispatchActions = function(
  *     Current document.
  * @param {string} type
  *     Type of event to dispatch.
- * @param {number} clickCount
- *     Number of clicks, button notes the mouse button.
  * @param {number} elClientX
  *     X coordinate of the mouse relative to the viewport.
  * @param {number} elClientY
  *     Y coordinate of the mouse relative to the viewport.
+ * @param {number} button
+ *     The button number.
+ * @param {number} clickCount
+ *     Number of clicks, button notes the mouse button.
  * @param {object} modifiers
  *     An object of modifier keys present.
  */
@@ -464,12 +466,18 @@ action.Chain.prototype.getCoordinateInfo = function(el, corx, cory) {
 };
 
 /**
+ * @param {string} type
+ *     The event type (eg "tap", "press", ...).
  * @param {number} x
  *     X coordinate of the location to generate the event that is relative
  *     to the viewport.
  * @param {number} y
  *     Y coordinate of the location to generate the event that is relative
  *     to the viewport.
+ * @param {number} touchId
+ *     The current touch id.
+ * @param {Element} target
+ *     The Element on which the events should be created.
  */
 action.Chain.prototype.generateEvents = function(
   type,

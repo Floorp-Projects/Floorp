@@ -63,7 +63,7 @@ export class WebDriverProcessDataChild extends JSProcessActorChild {
    * Clean up all the process specific data.
    *
    * @param {object=} options
-   * @param {BrowsingContext=} browsingContext
+   * @param {BrowsingContext=} options.browsingContext
    *     If specified only clear data living in that browsing context.
    */
   cleanUp(options = {}) {

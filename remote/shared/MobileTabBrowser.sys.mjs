@@ -56,13 +56,16 @@ export class MobileTabBrowser {
   /**
    * Create a new tab.
    *
-   * @param url URL to load within the newly opended tab.
+   * @param {string} uriString
+   *     The URI string to load within the newly opened tab.
    *
-   * @returns {Promise<Tab>} The created tab.
-   * @throws {Error} Throws an error if the tab cannot be created.
+   * @returns {Promise<Tab>}
+   *     The created tab.
+   * @throws {Error}
+   *     Throws an error if the tab cannot be created.
    */
-  addTab(url) {
-    return lazy.GeckoViewTabUtil.createNewTab(url);
+  addTab(uriString) {
+    return lazy.GeckoViewTabUtil.createNewTab(uriString);
   }
 
   getTabForBrowser(browser) {

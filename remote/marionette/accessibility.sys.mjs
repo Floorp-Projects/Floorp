@@ -405,7 +405,7 @@ accessibility.Checks = class {
    *
    * @param {nsIAccessible} accessible
    *     Accessible object.
-   * @param {DOMElement|XULElement}
+   * @param {DOMElement|XULElement} element
    *     Element associated with |accessible|.
    * @param {boolean} selected
    *     The |element|s selected state.

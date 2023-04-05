@@ -215,7 +215,7 @@ export class MessageHandler extends EventEmitter {
    *     The name of the module.
    * @param {Destination} destination
    *     The destination.
-   * @returns {Array.<class<Module>=>}
+   * @returns {Array.<class<Module>|null>}
    *     An array of Module classes.
    */
   getAllModuleClasses(moduleName, destination) {

@@ -297,6 +297,8 @@ export class Page extends ContentProcessDomain {
   }
 
   /**
+   * @param {string} name
+   *     The event name.
    * @param {object=} options
    * @param {number} options.windowId
    *     The inner window id of the window the script has been loaded for.

@@ -251,7 +251,7 @@ async function seleniumClickElement(el, a11y) {
  * which for obvious reasons is not ideal, but at the current point in
  * time considered to be good enough.
  *
- * @param {HTMLOptionElement} option
+ * @param {HTMLOptionElement} el
  *     Option element to select.
  *
  * @throws {TypeError}
@@ -575,11 +575,12 @@ interaction.setFormControlValue = function(el, value) {
  *     Element to send key events to.
  * @param {Array.<string>} value
  *     Sequence of keystrokes to send to the element.
- * @param {boolean=} strictFileInteractability
+ * @param {object=} options
+ * @param {boolean=} options.strictFileInteractability
  *     Run interactability checks on `<input type=file>` elements.
- * @param {boolean=} accessibilityChecks
+ * @param {boolean=} options.accessibilityChecks
  *     Enforce strict accessibility tests.
- * @param {boolean=} webdriverClick
+ * @param {boolean=} options.webdriverClick
  *     Use WebDriver specification compatible interactability definition.
  */
 interaction.sendKeysToElement = async function(

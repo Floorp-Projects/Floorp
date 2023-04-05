@@ -48,10 +48,10 @@ class SessionModule extends Module {
   /**
    * Enable certain events either globally, or for a list of browsing contexts.
    *
-   * @params {object=} params
-   * @params {Array<string>} events
+   * @param {object=} params
+   * @param {Array<string>} params.events
    *     List of events to subscribe to.
-   * @params {Array<string>=} contexts
+   * @param {Array<string>=} params.contexts
    *     Optional list of top-level browsing context ids
    *     to subscribe the events for.
    *
@@ -85,10 +85,10 @@ class SessionModule extends Module {
   /**
    * Disable certain events either globally, or for a list of browsing contexts.
    *
-   * @params {object=} params
-   * @params {Array<string>} events
+   * @param {object=} params
+   * @param {Array<string>} params.events
    *     List of events to unsubscribe from.
-   * @params {Array<string>=} contexts
+   * @param {Array<string>=} params.contexts
    *     Optional list of top-level browsing context ids
    *     to unsubscribe the events from.
    *

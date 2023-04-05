@@ -17,7 +17,7 @@ export var TabManager = {
   /**
    * Retrieve all the browser elements from tabs as contained in open windows.
    *
-   * @returns {Array<xul:browser>}
+   * @returns {Array<XULBrowser>}
    *     All the found <xul:browser>s. Will return an empty array if
    *     no windows and tabs can be found.
    */
@@ -79,7 +79,7 @@ export var TabManager = {
    * @param {Tab} tab
    *     The tab whose browser needs to be returned.
    *
-   * @returns {xul:browser}
+   * @returns {XULBrowser}
    *     The linked browser for the tab or null if no browser can be found.
    */
   getBrowserForTab(tab) {
@@ -169,7 +169,7 @@ export var TabManager = {
    *
    * @param {string} id
    *     A browser unique id created by getIdForBrowser.
-   * @returns {xul:browser}
+   * @returns {XULBrowser}
    *     The <xul:browser> corresponding to the provided id. Will return null if
    *     no matching browser element is found.
    */
@@ -212,7 +212,7 @@ export var TabManager = {
    * in case of working with browser element of a tab, since we can not guarantee
    * that browsing context is attached to it.
    *
-   * @param {xul:browser} browserElement
+   * @param {XULBrowser} browserElement
    *     The <xul:browser> for which we want to retrieve the id.
    * @returns {string} The unique id for this browser.
    */

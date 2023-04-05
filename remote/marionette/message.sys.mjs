@@ -174,7 +174,7 @@ export class Command extends Message {
   /**
    * Converts a data packet into {@link Command}.
    *
-   * @param {Array.<number, number, ?, ?>} data
+   * @param {Array.<number, number, *, *>} payload
    *     A four element array where the elements, in sequence, signifies
    *     message type, message ID, command name, and parameters.
    *
@@ -304,7 +304,7 @@ export class Response extends Message {
   /**
    * Converts a data packet into {@link Response}.
    *
-   * @param {Array.<number, number, ?, ?>} data
+   * @param {Array.<number, number, ?, ?>} payload
    *     A four element array where the elements, in sequence, signifies
    *     message type, message ID, error, and result.
    *

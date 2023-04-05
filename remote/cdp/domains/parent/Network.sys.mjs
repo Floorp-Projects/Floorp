@@ -74,14 +74,14 @@ export class Network extends Domain {
    * Deletes browser cookies with matching name and url or domain/path pair.
    *
    * @param {object} options
-   * @param {string} name
+   * @param {string} options.name
    *     Name of the cookies to remove.
-   * @param {string=} url
+   * @param {string=} options.url
    *     If specified, deletes all the cookies with the given name
    *     where domain and path match provided URL.
-   * @param {string=} domain
+   * @param {string=} options.domain
    *     If specified, deletes only cookies with the exact domain.
-   * @param {string=} path
+   * @param {string=} options.path
    *     If specified, deletes only cookies with the exact path.
    */
   async deleteCookies(options = {}) {
@@ -128,7 +128,7 @@ export class Network extends Domain {
    * Activates emulation of network conditions.
    *
    * @param {object} options
-   * @param {boolean} offline
+   * @param {boolean} options.offline
    *     True to emulate internet disconnection.
    */
   emulateNetworkConditions(options = {}) {
@@ -164,7 +164,7 @@ export class Network extends Domain {
    * Returns all browser cookies for the current URL.
    *
    * @param {object} options
-   * @param {Array<string>=} urls
+   * @param {Array<string>=} options.urls
    *     The list of URLs for which applicable cookies will be fetched.
    *     Defaults to the currently open URL.
    *
@@ -232,23 +232,23 @@ export class Network extends Domain {
    * Note that it may overwrite equivalent cookies if they exist.
    *
    * @param {object} cookie
-   * @param {string} name
+   * @param {string} cookie.name
    *     Cookie name.
-   * @param {string} value
+   * @param {string} cookie.value
    *     Cookie value.
-   * @param {string=} domain
+   * @param {string=} cookie.domain
    *     Cookie domain.
-   * @param {number=} expires
+   * @param {number=} cookie.expires
    *     Cookie expiration date, session cookie if not set.
-   * @param {boolean=} httpOnly
+   * @param {boolean=} cookie.httpOnly
    *     True if cookie is http-only.
-   * @param {string=} path
+   * @param {string=} cookie.path
    *     Cookie path.
-   * @param {string=} sameSite
+   * @param {string=} cookie.sameSite
    *     Cookie SameSite type.
-   * @param {boolean=} secure
+   * @param {boolean=} cookie.secure
    *     True if cookie is secure.
-   * @param {string=} url
+   * @param {string=} cookie.url
    *     The request-URI to associate with the setting of the cookie.
    *     This value can affect the default domain and path values of the
    *     created cookie.
@@ -341,7 +341,7 @@ export class Network extends Domain {
    * Sets given cookies.
    *
    * @param {object} options
-   * @param {Array.<Cookie>} cookies
+   * @param {Array.<Cookie>} options.cookies
    *     Cookies to be set.
    */
   setCookies(options = {}) {
@@ -457,7 +457,7 @@ export class Network extends Domain {
   /**
    * Creates an array of all Urls in the page context
    *
-   * @param {Array<string>=} urls
+   * @returns {Array<string>=}
    */
   _getDefaultUrls() {
     const urls = this.session.target.browsingContext

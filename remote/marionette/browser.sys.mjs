@@ -64,7 +64,7 @@ Context.Content = "content";
  */
 browser.Context = class {
   /**
-   * @param {ChromeWindow} win
+   * @param {ChromeWindow} window
    *     ChromeWindow that contains the top-level browsing context.
    * @param {GeckoDriver} driver
    *     Reference to driver instance.
@@ -325,7 +325,7 @@ browser.Context = class {
    * if it is not already assigned, and if a) we already have a session
    * or b) we're starting a new session and it is the right start frame.
    *
-   * @param {xul:browser} target
+   * @param {XULBrowser} target
    *     The <xul:browser> that was the target of the originating message.
    */
   register(target) {

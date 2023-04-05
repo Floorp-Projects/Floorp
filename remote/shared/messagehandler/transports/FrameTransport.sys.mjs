@@ -28,7 +28,7 @@ const MAX_RETRY_ATTEMPTS = 10;
  */
 export class FrameTransport {
   /**
-   * @param {MessageHandler}
+   * @param {MessageHandler} messageHandler
    *     The MessageHandler instance which owns this FrameTransport instance.
    */
   constructor(messageHandler) {

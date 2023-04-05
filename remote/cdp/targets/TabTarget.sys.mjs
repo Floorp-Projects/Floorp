@@ -26,8 +26,8 @@ XPCOMUtils.defineLazyServiceGetter(
  */
 export class TabTarget extends Target {
   /**
-   * @param TargetList targetList
-   * @param BrowserElement browser
+   * @param {TargetList} targetList
+   * @param {BrowserElement} browser
    */
   constructor(targetList, browser) {
     super(targetList, lazy.TabSession);
@@ -92,7 +92,7 @@ export class TabTarget extends Target {
     return null;
   }
 
-  /** @returns {Promise.<String=>} */
+  /** @returns {Promise<string|null>} */
   get faviconUrl() {
     return new Promise((resolve, reject) => {
       lazy.Favicons.getFaviconURLForPage(this.browser.currentURI, url => {

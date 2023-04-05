@@ -79,12 +79,12 @@ element.Strategy = {
  *     Selector search pattern.  The selector must be compatible with
  *     the chosen search <var>strategy</var>.
  * @param {object=} options
- * @param {boolean=} all
+ * @param {boolean=} options.all
  *     If true, a multi-element search selector is used and a sequence of
  *     elements will be returned, otherwise a single element. Defaults to false.
- * @param {Element=} startNode
+ * @param {Element=} options.startNode
  *     Element to use as the root of the search.
- * @param {number=} timeout
+ * @param {number=} options.timeout
  *     Duration to wait before timing out the search.  If <code>all</code>
  *     is false, a {@link NoSuchElementError} is thrown if unable to
  *     find the element within the timeout duration.
@@ -843,7 +843,7 @@ element.isEditingHost = function(el) {
  * <li>It belongs to a document in design mode.
  * </ul>
  *
- * @param {Element}
+ * @param {Element} el
  *     Element to test if editable.
  *
  * @returns {boolean}
@@ -1391,7 +1391,7 @@ export class WebReference {
    *     Optional unique identifier of the WebReference if already known.
    *     If not defined a new unique identifier will be created.
    *
-   * @returns {WebReference)}
+   * @returns {WebReference}
    *     Web reference for <var>node</var>.
    *
    * @throws {InvalidArgumentError}

@@ -15,8 +15,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
  */
 export class Target {
   /**
-   * @param TargetList targetList
-   * @param Class sessionClass
+   * @param {TargetList} targetList
+   * @param {Class} sessionClass
    */
   constructor(targetList, sessionClass) {
     // Save a reference to TargetList instance in order to expose it to:

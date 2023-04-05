@@ -394,10 +394,10 @@ BulkPacket.prototype.toString = function() {
  * RawPacket is used to test the transport's error handling of malformed
  * packets, by writing data directly onto the stream.
  *
- * @param transport DebuggerTransport
- *        The transport instance that will own the packet.
- * @param data string
- *        The raw string to send out onto the stream.
+ * @param {DebuggerTransport} transport
+ *     The transport instance that will own the packet.
+ * @param {string} data
+ *     The raw string to send out onto the stream.
  */
 export function RawPacket(transport, data) {
   Packet.call(this, transport);

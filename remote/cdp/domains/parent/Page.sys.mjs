@@ -397,8 +397,9 @@ export class Page extends Domain {
    *     {number} height
    *         Height of scrollable area
    *
-   * @returns {Promise}
-   * @resolves {layoutViewport, visualViewport, contentSize}
+   * @returns {Promise<object>}
+   *     Promise which resolves with an object with the following properties
+   *     layoutViewport and contentSize
    */
   async getLayoutMetrics() {
     return {
@@ -410,7 +411,9 @@ export class Page extends Domain {
   /**
    * Returns navigation history for the current page.
    *
-   * @returns {currentIndex:number, entries:Array<NavigationEntry>}
+   * @returns {Promise<object>}
+   *     Promise which resolves with an object with the following properties
+   *     currentIndex (number) and entries (Array<NavigationEntry>).
    */
   async getNavigationHistory() {
     const { window } = this.session.target;

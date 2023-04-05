@@ -26,7 +26,7 @@ export const cookie = {
 /**
  * @name Cookie
  *
- * @returns {Object.<string, (number|boolean|string)>
+ * @returns {Object<string, (number|boolean|string)>}
  */
 
 /**
@@ -107,9 +107,10 @@ cookie.fromJSON = function(json) {
  *
  * @param {Cookie} newCookie
  *     Cookie to add.
- * @param {string=} restrictToHost
+ * @param {object} options
+ * @param {string=} options.restrictToHost
  *     Perform test that ``newCookie``'s domain matches this.
- * @param {string=} protocol
+ * @param {string=} options.protocol
  *     The protocol of the caller. It can be `http:` or `https:`.
  *
  * @throws {TypeError}

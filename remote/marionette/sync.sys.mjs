@@ -67,11 +67,12 @@ export function executeSoon(func) {
  *
  * @param {Condition} func
  *     Function to run off the main thread.
- * @param {number=} [timeout] timeout
+ * @param {object=} options
+ * @param {number=} options.timeout
  *     Desired timeout if wanted.  If 0 or less than the runtime evaluation
  *     time of ``func``, ``func`` is guaranteed to run at least once.
  *     Defaults to using no timeout.
- * @param {number=} [interval=10] interval
+ * @param {number=} options.interval
  *     Duration between each poll of ``func`` in milliseconds.
  *     Defaults to 10 milliseconds.
  *
@@ -156,23 +157,23 @@ export function PollPromise(func, { timeout = null, interval = 10 } = {}) {
  *
  * In contrast to a regular Promise, it times out after ``timeout``.
  *
- * @param {Condition} func
+ * @param {Function} fn
  *     Function to run, which will have its ``reject``
  *     callback invoked after the ``timeout`` duration is reached.
  *     It is given two callbacks: ``resolve(value)`` and
  *     ``reject(error)``.
  * @param {object=} options
- * @param {string} [options.errorMessage]
+ * @param {string} options.errorMessage
  *     Message to use for the thrown error.
  * @param {number=} options.timeout
  *     ``condition``'s ``reject`` callback will be called
  *     after this timeout, given in milliseconds.
  *     By default 1500 ms in an optimised build and 4500 ms in
  *     debug builds.
- * @param {Error=} [options.throws=TimeoutError]
+ * @param {Error=} options.throws
  *     When the ``timeout`` is hit, this error class will be
  *     thrown.  If it is null, no error is thrown and the promise is
- *     instead resolved on timeout.
+ *     instead resolved on timeout with a TimeoutError.
  *
  * @returns {Promise.<*>}
  *     Timed promise.
@@ -319,7 +320,7 @@ export function MessageManagerDestroyedPromise(messageManager) {
  * @param {ChromeWindow} win
  *     Window to request the animation frame from.
  *
- * @returns Promise
+ * @returns {Promise}
  */
 export function IdlePromise(win) {
   const animationFramePromise = new Promise(resolve => {

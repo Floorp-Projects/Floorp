@@ -18,7 +18,7 @@ export class Branch {
    *
    * @param {string} pref
    *     Preference name.
-   * @param {?=} fallback
+   * @param {*=} fallback
    *     Fallback value to return if `pref` does not exist.
    *
    * @returns {(string|boolean|number)}
@@ -150,7 +150,7 @@ export class EnvironmentPrefs {
    * @param {string} key
    *     Environment variable.
    *
-   * @returns {Iterable.<string, (string|boolean|number)>
+   * @returns {Iterable.<string, (string|boolean|number)>}
    */
   static *from(key) {
     if (!Services.env.exists(key)) {
