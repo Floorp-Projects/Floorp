@@ -1542,7 +1542,16 @@ add_task(async function test_static_rules_telemetry() {
   );
 
   assertDNRTelemetryMetricsNoSamples(
-    ["validateRulesTime", "evaluateRulesTime"],
+    [
+      {
+        metric: "validateRulesTime",
+        mirroredName: "WEBEXT_DNR_VALIDATE_RULES_MS",
+        mirroredType: "histogram",
+      },
+      {
+        metric: "evaluateRulesTime",
+      },
+    ],
     "before test extension have been loaded"
   );
 
@@ -1552,7 +1561,13 @@ add_task(async function test_static_rules_telemetry() {
   await assertDNRGetEnabledRulesets(extension, []);
 
   assertDNRTelemetryMetricsNoSamples(
-    ["validateRulesTime"],
+    [
+      {
+        metric: "validateRulesTime",
+        mirroredName: "WEBEXT_DNR_VALIDATE_RULES_MS",
+        mirroredType: "histogram",
+      },
+    ],
     "after test extension loaded with all static rulesets disabled"
   );
 
@@ -1567,8 +1582,14 @@ add_task(async function test_static_rules_telemetry() {
   // Expect one sample after enabling ruleset1.
   let expectedValidateRulesTimeSamples = 1;
   assertDNRTelemetryMetricsSamplesCount(
-    ["validateRulesTime"],
-    expectedValidateRulesTimeSamples,
+    [
+      {
+        metric: "validateRulesTime",
+        mirroredName: "WEBEXT_DNR_VALIDATE_RULES_MS",
+        mirroredType: "histogram",
+        expectedSamplesCount: expectedValidateRulesTimeSamples,
+      },
+    ],
     "after enabling static rulesets1"
   );
 
@@ -1583,16 +1604,28 @@ add_task(async function test_static_rules_telemetry() {
   // Expect one new sample after enabling ruleset2.
   expectedValidateRulesTimeSamples += 1;
   assertDNRTelemetryMetricsSamplesCount(
-    ["validateRulesTime"],
-    expectedValidateRulesTimeSamples,
+    [
+      {
+        metric: "validateRulesTime",
+        mirroredName: "WEBEXT_DNR_VALIDATE_RULES_MS",
+        mirroredType: "histogram",
+        expectedSamplesCount: expectedValidateRulesTimeSamples,
+      },
+    ],
     "after enabling static rulesets2"
   );
 
   await extension.addon.disable();
 
   assertDNRTelemetryMetricsSamplesCount(
-    ["validateRulesTime"],
-    expectedValidateRulesTimeSamples,
+    [
+      {
+        metric: "validateRulesTime",
+        mirroredName: "WEBEXT_DNR_VALIDATE_RULES_MS",
+        mirroredType: "histogram",
+        expectedSamplesCount: expectedValidateRulesTimeSamples,
+      },
+    ],
     "no new samples expected after disabling test extension"
   );
 
@@ -1604,8 +1637,14 @@ add_task(async function test_static_rules_telemetry() {
   // the 2 rulesets enabled being loaded from the DNR store file.
   expectedValidateRulesTimeSamples += 2;
   assertDNRTelemetryMetricsSamplesCount(
-    ["validateRulesTime"],
-    expectedValidateRulesTimeSamples,
+    [
+      {
+        metric: "validateRulesTime",
+        mirroredName: "WEBEXT_DNR_VALIDATE_RULES_MS",
+        mirroredType: "histogram",
+        expectedSamplesCount: expectedValidateRulesTimeSamples,
+      },
+    ],
     "after re-enabling test extension"
   );
 
@@ -1619,8 +1658,14 @@ add_task(async function test_static_rules_telemetry() {
   await assertDNRGetEnabledRulesets(extension, ["ruleset2"]);
 
   assertDNRTelemetryMetricsSamplesCount(
-    ["validateRulesTime"],
-    expectedValidateRulesTimeSamples,
+    [
+      {
+        metric: "validateRulesTime",
+        mirroredName: "WEBEXT_DNR_VALIDATE_RULES_MS",
+        mirroredType: "histogram",
+        expectedSamplesCount: expectedValidateRulesTimeSamples,
+      },
+    ],
     "no new validation should be hit after disabling ruleset1"
   );
 
@@ -1633,7 +1678,7 @@ add_task(async function test_static_rules_telemetry() {
   await assertDNRGetEnabledRulesets(extension, ["ruleset1"]);
 
   assertDNRTelemetryMetricsNoSamples(
-    ["evaluateRulesTime", "evaluateRulesCountMax"],
+    [{ metric: "evaluateRulesTime" }, { metric: "evaluateRulesCountMax" }],
     "before any request have been intercepted"
   );
 
@@ -1644,7 +1689,7 @@ add_task(async function test_static_rules_telemetry() {
   );
 
   assertDNRTelemetryMetricsNoSamples(
-    ["evaluateRulesTime", "evaluateRulesCountMax"],
+    [{ metric: "evaluateRulesTime" }, { metric: "evaluateRulesCountMax" }],
     "after restricted request have been intercepted (but no rules evaluated)"
   );
 
@@ -1666,15 +1711,23 @@ add_task(async function test_static_rules_telemetry() {
   // top level navigation.
   let expectedEvaluateRulesTimeSamples = 1;
   assertDNRTelemetryMetricsSamplesCount(
-    ["evaluateRulesTime"],
-    expectedEvaluateRulesTimeSamples,
+    [
+      {
+        metric: "evaluateRulesTime",
+        expectedSamplesCount: expectedEvaluateRulesTimeSamples,
+      },
+    ],
     "evaluateRulesTime should be collected after evaluated rulesets"
   );
   // Expect 1 rule with only one ruleset enabled.
   let expectedEvaluateRulesCountMax = 1;
   assertDNRTelemetryMetricsGetValueEq(
-    ["evaluateRulesCountMax"],
-    expectedEvaluateRulesCountMax,
+    [
+      {
+        metric: "evaluateRulesCountMax",
+        expectedGetValue: expectedEvaluateRulesCountMax,
+      },
+    ],
     "evaluateRulesCountMax should be collected after evaluated rulesets"
   );
 
@@ -1684,8 +1737,12 @@ add_task(async function test_static_rules_telemetry() {
   // top level navigation.
   expectedEvaluateRulesTimeSamples += 1;
   assertDNRTelemetryMetricsSamplesCount(
-    ["evaluateRulesTime"],
-    expectedEvaluateRulesTimeSamples,
+    [
+      {
+        metric: "evaluateRulesTime",
+        expectedSamplesCount: expectedEvaluateRulesTimeSamples,
+      },
+    ],
     "evaluateRulesTime should be collected after evaluated rulesets"
   );
 
@@ -1700,8 +1757,12 @@ add_task(async function test_static_rules_telemetry() {
   // Expect two rules with both rulesets enabled.
   expectedEvaluateRulesCountMax += 1;
   assertDNRTelemetryMetricsGetValueEq(
-    ["evaluateRulesCountMax"],
-    expectedEvaluateRulesCountMax,
+    [
+      {
+        metric: "evaluateRulesCountMax",
+        expectedGetValue: expectedEvaluateRulesCountMax,
+      },
+    ],
     "evaluateRulesCountMax should have been increased"
   );
 
@@ -1714,8 +1775,12 @@ add_task(async function test_static_rules_telemetry() {
   await callPageFetch();
 
   assertDNRTelemetryMetricsGetValueEq(
-    ["evaluateRulesCountMax"],
-    expectedEvaluateRulesCountMax,
+    [
+      {
+        metric: "evaluateRulesCountMax",
+        expectedGetValue: expectedEvaluateRulesCountMax,
+      },
+    ],
     "evaluateRulesCountMax should have not been decreased"
   );
 

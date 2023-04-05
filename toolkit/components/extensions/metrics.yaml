@@ -46,6 +46,7 @@ extensions.apis.dnr:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1803363#c11
     data_sensitivity:
       - technical
+    telemetry_mirror: WEBEXT_DNR_STARTUPCACHE_READ_BYTES
 
   startup_cache_read_time:
     type: timing_distribution
@@ -62,6 +63,7 @@ extensions.apis.dnr:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1803363#c11
     data_sensitivity:
       - technical
+    telemetry_mirror: WEBEXT_DNR_STARTUPCACHE_READ_MS
 
   startup_cache_write_size:
     type: memory_distribution
@@ -78,6 +80,7 @@ extensions.apis.dnr:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1803363#c11
     data_sensitivity:
       - technical
+    telemetry_mirror: WEBEXT_DNR_STARTUPCACHE_WRITE_BYTES
 
   startup_cache_write_time:
     type: timing_distribution
@@ -94,6 +97,7 @@ extensions.apis.dnr:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1803363#c11
     data_sensitivity:
       - technical
+    telemetry_mirror: WEBEXT_DNR_STARTUPCACHE_WRITE_MS
 
   startup_cache_entries:
     type: labeled_counter
@@ -130,6 +134,7 @@ extensions.apis.dnr:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1803363#c11
     data_sensitivity:
       - technical
+    telemetry_mirror: WEBEXT_DNR_VALIDATE_RULES_MS
 
   evaluate_rules_time:
     type: timing_distribution

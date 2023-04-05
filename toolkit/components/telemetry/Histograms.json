@@ -15796,6 +15796,64 @@
     "description": "The number of times a browserAction popup is preloaded and results in one of the categories, keyed by addon id.",
     "keyed": true
   },
+  "WEBEXT_DNR_STARTUPCACHE_READ_BYTES": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["addons-dev-internal@mozilla.com"],
+    "bug_numbers": [1803363],
+    "expires_in_version": "122",
+    "kind": "exponential",
+    "high": 50000000,
+    "n_buckets": 50,
+    "description": "Amount of data read from the DNR startup cache file."
+  },
+  "WEBEXT_DNR_STARTUPCACHE_READ_MS": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["addons-dev-internal@mozilla.com"],
+    "bug_numbers": [1803363],
+    "expires_in_version": "120",
+    "kind": "exponential",
+    "releaseChannelCollection": "opt-out",
+    "high": 100000,
+    "n_buckets": 100,
+    "description": "Amount of time it takes to read data from the DNR startup cache file."
+  },
+  "WEBEXT_DNR_STARTUPCACHE_WRITE_BYTES": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["addons-dev-internal@mozilla.com"],
+    "bug_numbers": [1803363],
+    "expires_in_version": "122",
+    "kind": "exponential",
+    "high": 50000000,
+    "n_buckets": 50,
+    "description": "Amount of data written to the DNR startup cache file."
+  },
+  "WEBEXT_DNR_STARTUPCACHE_WRITE_MS": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["addons-dev-internal@mozilla.com"],
+    "bug_numbers": [1803363],
+    "expires_in_version": "120",
+    "kind": "exponential",
+    "releaseChannelCollection": "opt-out",
+    "high": 100000,
+    "n_buckets": 100,
+    "description": "Amount of time it takes to write data to the DNR startup cache file."
+  },
+  "WEBEXT_DNR_VALIDATE_RULES_MS": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["addons-dev-internal@mozilla.com"],
+    "bug_numbers": [1803363],
+    "expires_in_version": "120",
+    "kind": "exponential",
+    "releaseChannelCollection": "opt-out",
+    "high": 100000,
+    "n_buckets": 100,
+    "description": "Amount of time it takes to validate DNR rules."
+  },
   "WEBEXT_EVENTPAGE_RUNNING_TIME_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
