@@ -12,6 +12,7 @@
 #include "js/SourceText.h"                  // JS::Source{Ownership,Text}
 #include "jsapi-tests/tests.h"
 #include "vm/ErrorReporting.h"
+#include "vm/JSONPrinter.h"  // js::JSONPrinter
 
 using namespace JS;
 
