@@ -19,7 +19,7 @@
 
 namespace mozilla {
 
-SandboxTestingChild* SandboxTestingChild::sInstance = nullptr;
+StaticRefPtr<SandboxTestingChild> SandboxTestingChild::sInstance;
 
 bool SandboxTestingChild::IsTestThread() { return mThread->IsOnThread(); }
 
@@ -55,6 +55,8 @@ SandboxTestingChild::SandboxTestingChild(
       "SandboxTestingChild::Bind", this, &SandboxTestingChild::Bind,
       std::move(aEndpoint)));
 }
+
+SandboxTestingChild::~SandboxTestingChild() = default;
 
 void SandboxTestingChild::Bind(Endpoint<PSandboxTestingChild>&& aEndpoint) {
   MOZ_RELEASE_ASSERT(mThread->IsOnThread());
@@ -125,7 +127,6 @@ void SandboxTestingChild::ActorDestroy(ActorDestroyReason aWhy) {
 void SandboxTestingChild::Destroy() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(sInstance);
-  delete sInstance;
   sInstance = nullptr;
 }
 
