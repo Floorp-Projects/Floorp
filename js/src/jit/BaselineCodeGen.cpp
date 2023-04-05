@@ -4064,6 +4064,27 @@ bool BaselineCodeGen<Handler>::emit_SetArg() {
   return emitFormalArgAccess(JSOp::SetArg);
 }
 
+template <>
+bool BaselineInterpreterCodeGen::emit_GetFrameArg() {
+  frame.syncStack(0);
+
+  Register argReg = R1.scratchReg();
+  LoadUint16Operand(masm, argReg);
+
+  BaseValueIndex addr(FramePointer, argReg,
+                      JitFrameLayout::offsetOfActualArgs());
+  masm.loadValue(addr, R0);
+  frame.push(R0);
+  return true;
+}
+
+template <>
+bool BaselineCompilerCodeGen::emit_GetFrameArg() {
+  uint32_t arg = GET_ARGNO(handler.pc());
+  frame.pushArg(arg);
+  return true;
+}
+
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_ArgumentsLength() {
   frame.syncStack(0);

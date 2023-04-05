@@ -206,6 +206,9 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
     slots_[stackPosition_++] = ins;
   }
   void pushArg(uint32_t arg) { pushVariable(info_.argSlot(arg)); }
+  void pushArgUnchecked(uint32_t arg) {
+    pushVariable(info_.argSlotUnchecked(arg));
+  }
   void pushLocal(uint32_t local) { pushVariable(info_.localSlot(local)); }
   void pushSlot(uint32_t slot) { pushVariable(slot); }
   void setEnvironmentChain(MDefinition* ins);

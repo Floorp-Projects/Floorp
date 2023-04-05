@@ -3747,6 +3747,12 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(GetArg)
 
+    CASE(GetFrameArg) {
+      uint32_t i = GET_ARGNO(REGS.pc);
+      PUSH_COPY(REGS.fp()->unaliasedFormal(i, DONT_CHECK_ALIASING));
+    }
+    END_CASE(GetFrameArg)
+
     CASE(SetArg) {
       unsigned i = GET_ARGNO(REGS.pc);
       if (script->argsObjAliasesFormals()) {

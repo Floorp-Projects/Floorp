@@ -2841,6 +2841,17 @@
      */ \
     MACRO(GetArg, get_arg, NULL, 3, 0, 1, JOF_QARG|JOF_NAME) \
     /*
+     * Push the value of an argument that is stored in the stack frame. Like
+     * `JSOp::GetArg`, but ignores the frame's `ArgumentsObject` and doesn't
+     * assert the argument is unaliased.
+     *
+     *   Category: Variables and scopes
+     *   Type: Getting binding values
+     *   Operands: uint16_t argno
+     *   Stack: => arguments[argno]
+     */ \
+    MACRO(GetFrameArg, get_frame_arg, NULL, 3, 0, 1, JOF_QARG|JOF_NAME) \
+    /*
      * Push the value of an optimized local variable.
      *
      * If the variable is an uninitialized lexical, push
@@ -3552,14 +3563,13 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
-  IF_RECORD_TUPLE(/* empty */, MACRO(229))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(230))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(231))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(232))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(233))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(234))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(235))     \
-  MACRO(236)                                   \
+  IF_RECORD_TUPLE(/* empty */, MACRO(236))     \
   MACRO(237)                                   \
   MACRO(238)                                   \
   MACRO(239)                                   \
