@@ -90,11 +90,6 @@ pref("extensions.formautofill.addresses.capture.enabled", true);
 pref("browser.formfill.debug", false);
 pref("extensions.formautofill.loglevel", "Warn");
 
-// Bug 1809922 to enable window.print in StaticPrefList.yaml for release
-#ifdef NIGHTLY_BUILD
-pref("dom.enable_window_print", true);
-#endif
-
 // PDF.js (enabled in StaticPrefList.yaml)
 // Try to convert PDFs sent as octet-stream
 pref("pdfjs.handleOctetStream", true);
