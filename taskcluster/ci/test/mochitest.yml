@@ -974,7 +974,7 @@ mochitest-webgpu:
             default:
                 by-test-platform:
                     android.*: []
-                    .*mingw.*: ["release"]
+                    .*mingw.*: ["mozilla-central"]
                     .*shippable.*: ["mozilla-central"]
                     .*ccov.*: ['mozilla-central']
                     .*tsan.*: ['trunk']
