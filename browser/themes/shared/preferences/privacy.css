@@ -4,7 +4,7 @@
 
 /* Permissions */
 
-.highlighting-group {
+#trackingGroup {
   --section-highlight-background-color: color-mix(in srgb, var(--in-content-accent-color) 20%, transparent);
 }
 
@@ -16,7 +16,7 @@
 }
 
 .permission-icon,
-.privacy-detailedoption .checkbox-label-box,
+.content-blocking-category .checkbox-label-box,
 .extra-information-label > image,
 .arrowhead,
 .reload-tabs-button,
@@ -79,7 +79,7 @@
   margin-inline-end: 10px;
 }
 
-.privacy-detailedoption,
+.content-blocking-category,
 #fpiIncompatibilityWarning {
   margin: 3px 0;
 }
@@ -93,19 +93,19 @@
   margin-top: 16px;
 }
 
-.privacy-detailedoption {
+.content-blocking-category {
   border-color: var(--in-content-box-border-color);
 }
 
-.privacy-detailedoption.disabled {
+.content-blocking-category.disabled {
   opacity: 0.5;
 }
 
-.privacy-detailedoption.disabled .radio-check {
+.content-blocking-category.disabled .radio-check {
   opacity: 1;
 }
 
-.privacy-detailedoption > .indent {
+.content-blocking-category > .indent {
   margin-inline-end: 22px;
 }
 
@@ -128,7 +128,7 @@
   list-style-image: url("chrome://global/skin/icons/arrow-up-12.svg");
 }
 
-.privacy-detailedoption.expanded:not(.selected) .reload-tabs {
+.content-blocking-category.expanded:not(.selected) .reload-tabs {
   display: none;
 }
 
@@ -169,40 +169,40 @@
   color: inherit;
 }
 
-.privacy-detailedoption.selected .content-blocking-warning {
+.content-blocking-category.selected .content-blocking-warning {
   background-color: var(--section-highlight-background-color);
 }
 
-.privacy-detailedoption.selected .arrowhead {
+.content-blocking-category.selected .arrowhead {
   display: none;
 }
 
-.privacy-detailedoption.selected {
+.content-blocking-category.selected {
   border-color: var(--in-content-accent-color);
 }
 
 @media (prefers-contrast) {
-  .privacy-detailedoption.selected {
+  .content-blocking-category.selected {
     outline: 2px solid var(--in-content-accent-color);
   }
 }
 
 @media not (prefers-contrast) {
-  .privacy-detailedoption {
+  .content-blocking-category {
     background-color: rgba(215, 215, 219, 0.1);
   }
 
-  .privacy-detailedoption.selected {
+  .content-blocking-category.selected {
     background-color: var(--section-highlight-background-color);
   }
 }
 
 .content-blocking-warning-title,
-.privacy-detailedoption .radio-label-box {
+.content-blocking-category .radio-label-box {
   font-weight: bold;
 }
 
-.privacy-detailedoption:not(.expanded, .selected) .privacy-extra-information {
+.content-blocking-category:not(.expanded, .selected) .content-blocking-extra-information {
   visibility: collapse;
 }
 
@@ -213,22 +213,22 @@
 /* Apply display: block to the containers of all the category information, as
  * without this the flex-wrapped blocks inside don't stretch vertically to
  * enclose their content. */
-.privacy-detailedoption > .indent {
+.content-blocking-category > .indent {
   display: block;
 }
 
-.privacy-detailedoption.expanded .privacy-extra-information,
-.privacy-detailedoption.selected .privacy-extra-information {
+.content-blocking-category.expanded .content-blocking-extra-information,
+.content-blocking-category.selected .content-blocking-extra-information {
   display: flex;
   flex-direction: column;
   align-content: stretch;
 }
 
-.privacy-extra-information > .indent {
+.content-blocking-extra-information > .indent {
   margin-bottom: 18px;
 }
 
-.privacy-extra-information > .custom-option {
+.content-blocking-extra-information > .custom-option {
   margin: 10px 0;
 }
 
@@ -248,8 +248,7 @@
   top: 0.65em;
 }
 
-.content-blocking-label,
-.doh-label {
+.content-blocking-label {
   display: list-item;
   line-height: 1.2em;
 }
@@ -278,7 +277,7 @@
   width: 100%;
 }
 
-.privacy-detailedoption-description {
+.content-blocking-category-description {
   font-size: 90%;
   opacity: 0.6;
 }
@@ -336,10 +335,4 @@
 #dismissedSuggestions,
 #openSearchEnginePreferences.extraMargin {
   margin-block-start: 2em;
-}
-
-#dohDescription,
-#dohLearnMore,
-#dohStatusSection {
-  line-height: 1.8em;
 }
