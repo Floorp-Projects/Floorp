@@ -10,11 +10,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import mozilla.components.browser.state.action.AppLifecycleAction
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.SessionPriority.DEFAULT
@@ -53,7 +55,7 @@ class SessionPrioritizationMiddleware(
                 activeTab?.engineState?.engineSession?.updateSessionPriority(DEFAULT)
                 logger.info("Update the tab ${activeTab?.id} priority to ${DEFAULT.name}")
             }
-            is ContentAction.CheckForFormDataAction -> {
+            is ContentAction.UpdateHasFormDataAction -> {
                 val tab = context.state.findTab(action.tabId)
                 if (action.containsFormData) {
                     tab?.engineState?.engineSession?.updateSessionPriority(HIGH)
@@ -65,7 +67,6 @@ class SessionPrioritizationMiddleware(
                     tab?.engineState?.engineSession?.updateSessionPriority(DEFAULT)
                     logger.info("Update the tab ${tab?.id} priority to ${DEFAULT.name}")
                 }
-                return // Do not let the action continue through to the reducer
             }
             is ContentAction.UpdatePriorityToDefaultAfterTimeoutAction -> {
                 // remove finished job from map
@@ -74,6 +75,12 @@ class SessionPrioritizationMiddleware(
                 logger.info("Update the tab ${tab?.id} priority back to ${DEFAULT.name}")
                 updatePriorityToDefaultJobs.remove(action.tabId)
                 return // Do not let the action continue through to the reducer
+            }
+            is AppLifecycleAction.PauseAction -> {
+                // Check for form data for the selected tab when the app is backgrounded.
+                mainScope.launch {
+                    context.state.selectedTab?.engineState?.engineSession?.checkForFormData()
+                }
             }
             else -> {
                 // no-op

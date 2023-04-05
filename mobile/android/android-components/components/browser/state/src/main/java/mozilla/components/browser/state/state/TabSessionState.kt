@@ -100,6 +100,7 @@ fun createTab(
     searchTerms: String = "",
     initialLoadFlags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none(),
     previewImageUrl: String? = null,
+    hasFormData: Boolean = false,
 ): TabSessionState {
     return TabSessionState(
         id = id,
@@ -110,6 +111,7 @@ fun createTab(
             webAppManifest = webAppManifest,
             searchTerms = searchTerms,
             previewImageUrl = previewImageUrl,
+            hasFormData = hasFormData,
         ),
         parentId = parentId ?: parent?.id,
         extensionState = extensions,

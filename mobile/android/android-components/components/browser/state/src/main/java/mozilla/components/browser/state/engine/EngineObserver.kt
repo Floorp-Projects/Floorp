@@ -432,7 +432,7 @@ internal class EngineObserver(
     }
 
     override fun onCheckForFormData(containsFormData: Boolean) {
-        store.dispatch(ContentAction.CheckForFormDataAction(tabId, containsFormData))
+        store.dispatch(ContentAction.UpdateHasFormDataAction(tabId, containsFormData))
     }
 
     override fun onCheckForFormDataException(throwable: Throwable) {

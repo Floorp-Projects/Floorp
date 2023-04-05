@@ -194,7 +194,18 @@ sealed class AppAction : Action {
     }
 
     /**
-     * Indicates that the app has been resumed and metrics that relate to that should be sent.
+     * [AppAction] implementations related to the application lifecycle.
      */
-    object ResumedMetricsAction : AppAction()
+    sealed class AppLifecycleAction : AppAction() {
+
+        /**
+         * The application has received an ON_RESUME event.
+         */
+        object ResumeAction : AppLifecycleAction()
+
+        /**
+         * The application has received an ON_PAUSE event.
+         */
+        object PauseAction : AppLifecycleAction()
+    }
 }

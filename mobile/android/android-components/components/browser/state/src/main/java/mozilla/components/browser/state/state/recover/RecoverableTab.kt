@@ -51,6 +51,7 @@ data class TabState(
     val historyMetadata: HistoryMetadataKey? = null,
     val source: Source = Source.Internal.None,
     val index: Int = -1,
+    val hasFormData: Boolean = false,
 )
 
 /**
@@ -85,6 +86,7 @@ fun TabSessionState.toRecoverableTab(index: Int = -1): RecoverableTab {
             historyMetadata = historyMetadata,
             source = source,
             index = index,
+            hasFormData = content.hasFormData,
         ),
     )
 }
@@ -108,6 +110,7 @@ fun RecoverableTab.toTabSessionState() = createTab(
     historyMetadata = state.historyMetadata,
     source = state.source,
     restored = true,
+    hasFormData = state.hasFormData,
 )
 
 /**

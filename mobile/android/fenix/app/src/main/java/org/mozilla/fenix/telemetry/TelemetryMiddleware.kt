@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.telemetry
 
+import android.content.Context
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.DownloadAction
@@ -26,6 +27,7 @@ import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.GleanMetrics.EngineTab as EngineMetrics
 
@@ -36,6 +38,7 @@ import org.mozilla.fenix.GleanMetrics.EngineTab as EngineMetrics
  * @property metrics [MetricController] to pass events that have been mapped from actions
  */
 class TelemetryMiddleware(
+    private val context: Context,
     private val settings: Settings,
     private val metrics: MetricController,
     private val crashReporting: CrashReporting? = null,
@@ -50,6 +53,7 @@ class TelemetryMiddleware(
         action: BrowserAction,
     ) {
         // Pre process actions
+
         when (action) {
             is ContentAction.UpdateLoadingStateAction -> {
                 context.state.findTab(action.sessionId)?.let { tab ->
@@ -120,6 +124,13 @@ class TelemetryMiddleware(
         // Increment the counter of killed foreground/background tabs
         val tabKillLabel = if (isSelected) { "foreground" } else { "background" }
         EngineMetrics.kills[tabKillLabel].add()
+        EngineMetrics.tabKilled.record(
+            EngineMetrics.TabKilledExtra(
+                foregroundTab = isSelected,
+                appForeground = context.components.appStore.state.isForeground,
+                hadFormData = tab.content.hasFormData,
+            ),
+        )
 
         // Record the age of the engine session of the killed foreground/background tab.
         if (isSelected && age != null) {

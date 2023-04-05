@@ -302,7 +302,9 @@ internal object ContentStateReducer {
             is ContentAction.UpdateExpandedToolbarStateAction -> updateContentState(state, action.sessionId) {
                 it.copy(showToolbarAsExpanded = action.expanded)
             }
-            is ContentAction.CheckForFormDataAction,
+            is ContentAction.UpdateHasFormDataAction -> updateContentState(state, action.tabId) {
+                it.copy(hasFormData = action.containsFormData)
+            }
             is ContentAction.UpdatePriorityToDefaultAfterTimeoutAction,
             is ContentAction.CheckForFormDataExceptionAction,
             -> {

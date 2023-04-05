@@ -130,7 +130,8 @@ internal object AppStoreReducer {
             )
         }
         is AppAction.PocketStoriesCategoriesChange -> {
-            val updatedCategoriesState = state.copy(pocketStoriesCategories = action.storiesCategories)
+            val updatedCategoriesState =
+                state.copy(pocketStoriesCategories = action.storiesCategories)
             // Whenever categories change stories to be displayed needs to also be changed.
             updatedCategoriesState.copy(
                 pocketStories = updatedCategoriesState.getFilteredStories(),
@@ -220,7 +221,12 @@ internal object AppStoreReducer {
             val wallpaperState = state.wallpaperState.copy(availableWallpapers = wallpapers)
             state.copy(wallpaperState = wallpaperState)
         }
-        is AppAction.ResumedMetricsAction -> state
+        is AppAction.AppLifecycleAction.ResumeAction -> {
+            state.copy(isForeground = true)
+        }
+        is AppAction.AppLifecycleAction.PauseAction -> {
+            state.copy(isForeground = false)
+        }
     }
 }
 

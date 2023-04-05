@@ -7752,6 +7752,31 @@ engine_tab:
     metadata:
       tags:
         - Performance
+  tab_killed:
+    type: event
+    description: |
+      A tab was killed by the engine to free memory.
+    extra_keys:
+      foreground_tab:
+        description: |
+          Whether or not the tab was the currently active tab.
+        type: boolean
+      app_foreground:
+        description: |
+          Whether or not the app was in the foreground when the tab was killed.
+        type: boolean
+      had_form_data:
+        description: |
+          Whether or not the tab had unsubmitted form data when it was killed.
+        type: boolean
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1820211
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/1343#issuecomment-1478535296
+    notification_emails:
+      - android-probes@mozilla.com
+      - kbrosnan@mozilla.com
+    expires: never
 
 synced_tabs:
   synced_tabs_suggestion_clicked:

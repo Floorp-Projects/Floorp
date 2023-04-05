@@ -65,10 +65,10 @@ class SessionPrioritizationMiddlewareTest {
         val engineSession1: EngineSession = mock()
 
         store.dispatch(EngineAction.LinkEngineSessionAction("1", engineSession1)).joinBlocking()
-        store.dispatch(ContentAction.CheckForFormDataAction("1", false)).joinBlocking()
+        store.dispatch(ContentAction.UpdateHasFormDataAction("1", false)).joinBlocking()
         verify(engineSession1).updateSessionPriority(DEFAULT)
 
-        store.dispatch(ContentAction.CheckForFormDataAction("1", true)).joinBlocking()
+        store.dispatch(ContentAction.UpdateHasFormDataAction("1", true)).joinBlocking()
         verify(engineSession1).updateSessionPriority(HIGH)
 
         dispatcher.scheduler.advanceUntilIdle()

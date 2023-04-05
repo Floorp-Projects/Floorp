@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.state.reducer
 
+import mozilla.components.browser.state.action.AppLifecycleAction
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContainerAction
 import mozilla.components.browser.state.action.ContentAction
@@ -47,6 +48,7 @@ internal object BrowserStateReducer {
     fun reduce(state: BrowserState, action: BrowserAction): BrowserState {
         return when (action) {
             is InitAction -> state
+            is AppLifecycleAction -> state
             is RestoreCompleteAction -> state.copy(restoreComplete = true)
             is ContainerAction -> ContainerReducer.reduce(state, action)
             is RecentlyClosedAction -> RecentlyClosedReducer.reduce(state, action)

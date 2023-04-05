@@ -852,4 +852,21 @@ class ContentActionTest {
 
         assertNull(tab.content.appIntent)
     }
+
+    @Test
+    fun `CheckForFormDataAction updates hasFormData`() {
+        assertFalse(tab.content.hasFormData)
+
+        store.dispatch(
+            ContentAction.UpdateHasFormDataAction(tab.id, true),
+        ).joinBlocking()
+
+        assertTrue(tab.content.hasFormData)
+
+        store.dispatch(
+            ContentAction.UpdateHasFormDataAction(tab.id, false),
+        ).joinBlocking()
+
+        assertFalse(tab.content.hasFormData)
+    }
 }
