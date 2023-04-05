@@ -6,6 +6,7 @@
 
 #include "jit/InterpreterEntryTrampoline.h"
 #include "jit/JitRuntime.h"
+#include "jit/Linker.h"
 
 #include "gc/Marking-inl.h"
 
@@ -52,3 +53,123 @@ void EntryTrampolineMap::checkScriptsAfterMovingGC() {
   }
 }
 #endif
+
+void JitRuntime::generateBaselineInterpreterEntryTrampoline(
+    MacroAssembler& masm) {
+  AutoCreatedBy acb(masm,
+                    "JitRuntime::generateBaselineInterpreterEntryTrampoline");
+  masm.push(FramePointer);
+  masm.moveStackPtrTo(FramePointer);
+
+  AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+  Register nargs = regs.takeAny();
+  Register callee = regs.takeAny();
+  Register scratch = regs.takeAny();
+
+  // Load callee token and keep it in a register as it will be used often
+  Address calleeTokenAddr(
+      FramePointer, BaselineInterpreterEntryFrameLayout::offsetOfCalleeToken());
+  masm.loadPtr(calleeTokenAddr, callee);
+
+  // Load argc into nargs.
+  masm.loadNumActualArgs(FramePointer, nargs);
+
+  Label notFunction;
+  {
+    // Check if calleetoken is script or function
+    masm.branchTestPtr(Assembler::NonZero, callee, Imm32(CalleeTokenScriptBit),
+                       &notFunction);
+
+    // CalleeToken is a function, load |nformals| into scratch
+    masm.movePtr(callee, scratch);
+    masm.andPtr(Imm32(uint32_t(CalleeTokenMask)), scratch);
+    masm.loadFunctionArgCount(scratch, scratch);
+
+    // Take max(nformals, argc).
+    Label noUnderflow;
+    masm.branch32(Assembler::AboveOrEqual, nargs, scratch, &noUnderflow);
+    { masm.movePtr(scratch, nargs); }
+    masm.bind(&noUnderflow);
+
+    // Add 1 to nargs if constructing.
+    static_assert(
+        CalleeToken_FunctionConstructing == 1,
+        "Ensure that we can use the constructing bit to count the value");
+    masm.movePtr(callee, scratch);
+    masm.and32(Imm32(uint32_t(CalleeToken_FunctionConstructing)), scratch);
+    masm.addPtr(scratch, nargs);
+  }
+  masm.bind(&notFunction);
+
+  // Align stack
+  masm.alignJitStackBasedOnNArgs(nargs, /*countIncludesThis = */ false);
+
+  // Point argPtr to the topmost argument.
+  static_assert(sizeof(Value) == 8,
+                "Using TimesEight for scale of sizeof(Value).");
+  BaseIndex topPtrAddr(FramePointer, nargs, TimesEight,
+                       sizeof(BaselineInterpreterEntryFrameLayout));
+  Register argPtr = nargs;
+  masm.computeEffectiveAddress(topPtrAddr, argPtr);
+
+  // Load the end address into scratch, which is the callee token.
+  masm.computeEffectiveAddress(calleeTokenAddr, scratch);
+
+  // Copy |this|+arguments
+  Label loop;
+  masm.bind(&loop);
+  {
+    masm.pushValue(Address(argPtr, 0));
+    masm.subPtr(Imm32(sizeof(Value)), argPtr);
+    masm.branchPtr(Assembler::Above, argPtr, scratch, &loop);
+  }
+
+  // Copy callee token
+  masm.push(callee);
+
+  // Save a new descriptor using BaselineInterpreterEntry frame type.
+  masm.loadNumActualArgs(FramePointer, scratch);
+  masm.pushFrameDescriptorForJitCall(FrameType::BaselineInterpreterEntry,
+                                     scratch, scratch);
+
+  // Call into baseline interpreter
+  uint8_t* blinterpAddr = baselineInterpreter().codeRaw();
+  masm.assertStackAlignment(JitStackAlignment, 2 * sizeof(uintptr_t));
+  masm.call(ImmPtr(blinterpAddr));
+
+  masm.moveToStackPtr(FramePointer);
+  masm.pop(FramePointer);
+  masm.ret();
+}
+
+JitCode* JitRuntime::generateEntryTrampolineForScript(JSContext* cx,
+                                                      JSScript* script) {
+  if (JitSpewEnabled(JitSpew_Codegen)) {
+    UniqueChars funName;
+    if (script->function() && script->function()->displayAtom()) {
+      funName = AtomToPrintableString(cx, script->function()->displayAtom());
+    }
+
+    JitSpew(JitSpew_Codegen,
+            "# Emitting Interpreter Entry Trampoline for %s (%s:%u:%u)",
+            funName ? funName.get() : "*", script->filename(), script->lineno(),
+            script->column());
+  }
+
+  TempAllocator temp(&cx->tempLifoAlloc());
+  JitContext jctx(cx);
+  StackMacroAssembler masm(cx, temp);
+  PerfSpewerRangeRecorder rangeRecorder(masm);
+
+  generateBaselineInterpreterEntryTrampoline(masm);
+  rangeRecorder.recordOffset("BaselineInterpreter", cx, script);
+
+  Linker linker(masm);
+  JitCode* code = linker.newCode(cx, CodeKind::Other);
+  if (!code) {
+    return nullptr;
+  }
+  rangeRecorder.collectRangesForJitCode(code);
+  JitSpew(JitSpew_Codegen, "# code = %p", code->raw());
+  return code;
+}

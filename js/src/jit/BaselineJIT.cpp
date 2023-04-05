@@ -335,6 +335,39 @@ bool jit::CanBaselineInterpretScript(JSScript* script) {
   return true;
 }
 
+static bool MaybeCreateBaselineInterpreterEntryScript(JSContext* cx,
+                                                      JSScript* script) {
+  MOZ_ASSERT(script->hasJitScript());
+
+  JitRuntime* jitRuntime = cx->runtime()->jitRuntime();
+  if (script->jitCodeRaw() != jitRuntime->baselineInterpreter().codeRaw()) {
+    // script already has an updated interpreter trampoline.
+#ifdef DEBUG
+    auto p = jitRuntime->getInterpreterEntryMap()->lookup(script);
+    MOZ_ASSERT(p);
+    MOZ_ASSERT(p->value().raw() == script->jitCodeRaw());
+#endif
+    return true;
+  }
+
+  auto p = jitRuntime->getInterpreterEntryMap()->lookupForAdd(script);
+  if (!p) {
+    Rooted<JitCode*> code(
+        cx, jitRuntime->generateEntryTrampolineForScript(cx, script));
+    if (!code) {
+      return false;
+    }
+
+    EntryTrampoline entry(cx, code);
+    if (!jitRuntime->getInterpreterEntryMap()->add(p, script, entry)) {
+      return false;
+    }
+  }
+
+  script->updateJitCodeRaw(cx->runtime());
+  return true;
+}
+
 static MethodStatus CanEnterBaselineInterpreter(JSContext* cx,
                                                 JSScript* script) {
   MOZ_ASSERT(IsBaselineInterpreterEnabled());
@@ -362,6 +395,11 @@ static MethodStatus CanEnterBaselineInterpreter(JSContext* cx,
     return Method_Error;
   }
 
+  if (JitOptions.emitInterpreterEntryTrampoline) {
+    if (!MaybeCreateBaselineInterpreterEntryScript(cx, script)) {
+      return Method_Error;
+    }
+  }
   return Method_Compiled;
 }
 
