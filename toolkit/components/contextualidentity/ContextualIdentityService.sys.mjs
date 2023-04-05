@@ -68,41 +68,34 @@ function _ContextualIdentityService(path) {
 _ContextualIdentityService.prototype = {
   LAST_CONTAINERS_JSON_VERSION,
 
-  _defaultIdentities: [
+  _userIdentities: [
     {
-      userContextId: 1,
-      public: true,
       icon: "fingerprint",
       color: "blue",
       l10nID: "userContextPersonal.label",
       accessKey: "userContextPersonal.accesskey",
     },
     {
-      userContextId: 2,
-      public: true,
       icon: "briefcase",
       color: "orange",
       l10nID: "userContextWork.label",
       accessKey: "userContextWork.accesskey",
     },
     {
-      userContextId: 3,
-      public: true,
       icon: "dollar",
       color: "green",
       l10nID: "userContextBanking.label",
       accessKey: "userContextBanking.accesskey",
     },
     {
-      userContextId: 4,
-      public: true,
       icon: "cart",
       color: "pink",
       l10nID: "userContextShopping.label",
       accessKey: "userContextShopping.accesskey",
     },
+  ],
+  _systemIdentities: [
     {
-      userContextId: 5,
       public: false,
       icon: "",
       color: "",
@@ -123,6 +116,8 @@ _ContextualIdentityService.prototype = {
     },
   ],
 
+  _defaultIdentities: [],
+
   _identities: null,
   _openedIdentities: new Set(),
   _lastUserContextId: 0,
@@ -136,6 +131,34 @@ _ContextualIdentityService.prototype = {
     this._path = path;
 
     Services.prefs.addObserver(CONTEXTUAL_IDENTITY_ENABLED_PREF, this);
+
+    // Initialize default identities based on policy if available
+    this._defaultIdentities = [];
+    let userContextId = 1;
+    let policyIdentities = Services.policies?.getActivePolicies()?.Containers
+      ?.Default;
+    if (policyIdentities) {
+      for (let identity of policyIdentities) {
+        identity.public = true;
+        identity.userContextId = userContextId;
+        userContextId++;
+        this._defaultIdentities.push(identity);
+      }
+    } else {
+      for (let identity of this._userIdentities) {
+        identity.public = true;
+        identity.userContextId = userContextId;
+        userContextId++;
+        this._defaultIdentities.push(identity);
+      }
+    }
+    for (let identity of this._systemIdentities) {
+      if (!("userContextId" in identity)) {
+        identity.userContextId = userContextId;
+        userContextId++;
+      }
+      this._defaultIdentities.push(identity);
+    }
   },
 
   async observe(aSubject, aTopic) {

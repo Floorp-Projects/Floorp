@@ -175,6 +175,31 @@
       }
     },
 
+    "Containers": {
+      "type": "object",
+      "properties": {
+        "Default": {
+          "type": ["array", "JSON"],
+          "items": {
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "icon": {
+                "type": "string",
+                "enum": ["fingerprint", "briefcase", "dollar", "cart", "vacation", "gift", "food", "fruit", "pet", "tree", "chill", "circle", "fence"]
+              },
+              "color": {
+                "type": "string",
+                "enum": ["blue", "turquoise", "green", "yellow", "orange", "red", "pink", "purple", "toolbar"]
+              }
+            },
+            "type": "object"
+          }
+        }
+      }
+    },
+
     "Cookies": {
       "type": "object",
       "properties": {

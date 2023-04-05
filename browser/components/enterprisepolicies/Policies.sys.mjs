@@ -483,6 +483,10 @@ export var Policies = {
     },
   },
 
+  Containers: {
+    // Queried directly by ContextualIdentityService.sys.mjs
+  },
+
   Cookies: {
     onBeforeUIStartup(manager, param) {
       addAllowDenyPermissions("cookie", param.Allow, param.Block);
