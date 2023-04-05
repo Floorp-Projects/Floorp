@@ -688,6 +688,14 @@ class nsIWidget : public nsISupports {
   virtual bool IsVisible() const = 0;
 
   /**
+   * Returns whether the window has allocated resources so
+   * we can paint into it.
+   * Recently it's used on Linux/Gtk where we should not paint
+   * to invisible window.
+   */
+  virtual bool IsMapped() const { return true; }
+
+  /**
    * Perform platform-dependent sanity check on a potential window position.
    * This is guaranteed to work only for top-level windows.
    *
