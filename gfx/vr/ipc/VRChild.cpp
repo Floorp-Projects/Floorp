@@ -74,6 +74,8 @@ VRChild::VRChild(VRProcessParent* aHost) : mHost(aHost), mVRReady(false) {
   MOZ_ASSERT(XRE_IsParentProcess());
 }
 
+VRChild::~VRChild() = default;
+
 mozilla::ipc::IPCResult VRChild::RecvAddMemoryReport(
     const MemoryReport& aReport) {
   if (mMemoryReportRequest) {
@@ -194,17 +196,17 @@ void VRChild::OnVarChanged(const GfxVarUpdate& aVar) { SendUpdateVar(aVar); }
 
 class DeferredDeleteVRChild : public Runnable {
  public:
-  explicit DeferredDeleteVRChild(UniquePtr<VRChild>&& aChild)
+  explicit DeferredDeleteVRChild(RefPtr<VRChild>&& aChild)
       : Runnable("gfx::DeferredDeleteVRChild"), mChild(std::move(aChild)) {}
 
   NS_IMETHODIMP Run() override { return NS_OK; }
 
  private:
-  UniquePtr<VRChild> mChild;
+  RefPtr<VRChild> mChild;
 };
 
 /* static */
-void VRChild::Destroy(UniquePtr<VRChild>&& aChild) {
+void VRChild::Destroy(RefPtr<VRChild>&& aChild) {
   NS_DispatchToMainThread(new DeferredDeleteVRChild(std::move(aChild)));
 }
 

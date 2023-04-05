@@ -39,11 +39,9 @@ VRProcessParent::VRProcessParent(Listener* aListener)
       mListener(aListener),
       mLaunchPhase(LaunchPhase::Unlaunched),
       mChannelClosed(false),
-      mShutdownRequested(false) {
-  MOZ_COUNT_CTOR(VRProcessParent);
-}
+      mShutdownRequested(false) {}
 
-VRProcessParent::~VRProcessParent() { MOZ_COUNT_DTOR(VRProcessParent); }
+VRProcessParent::~VRProcessParent() = default;
 
 bool VRProcessParent::Launch() {
   MOZ_ASSERT(mLaunchPhase == LaunchPhase::Unlaunched);
@@ -161,7 +159,7 @@ bool VRProcessParent::InitAfterConnect(bool aSucceeded) {
       return false;
     }
 
-    mVRChild = MakeUnique<VRChild>(this);
+    mVRChild = MakeRefPtr<VRChild>(this);
 
     DebugOnly<bool> rv = TakeInitialEndpoint().Bind(mVRChild.get());
     MOZ_ASSERT(rv);
