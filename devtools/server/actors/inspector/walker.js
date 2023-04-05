@@ -1104,8 +1104,8 @@ class WalkerActor extends Actor {
 
     const nodes = [];
     while (node) {
-      // We only want native anonymous content here.
-      if (isNativeAnonymous(node)) {
+      // We only want direct native anonymous children here.
+      if (isNativeAnonymous(node) && node.parentNode == rawNode) {
         nodes.push(node);
       }
       node = walker.nextSibling();
