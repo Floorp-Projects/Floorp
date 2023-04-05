@@ -9017,12 +9017,24 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
       if (prop->is<ClassMethod>()) {
         ClassMethod& method = prop->as<ClassMethod>();
         if (method.decorators() && !method.decorators()->empty()) {
-          DecoratorEmitter de(this);
+          DecoratorEmitter::Kind kind;
+          switch (method.accessorType()) {
+            case AccessorType::Getter:
+              kind = DecoratorEmitter::Getter;
+              break;
+            case AccessorType::Setter:
+              kind = DecoratorEmitter::Setter;
+              break;
+            case AccessorType::None:
+              kind = DecoratorEmitter::Method;
+              break;
+          }
+
           // The decorators are applied to the current value on the stack,
           // possibly replacing it.
+          DecoratorEmitter de(this);
           if (!de.emitApplyDecoratorsToElementDefinition(
-                  DecoratorEmitter::Method, key, method.decorators(),
-                  method.isStatic())) {
+                  kind, key, method.decorators(), method.isStatic())) {
             //        [stack] CTOR? OBJ CTOR? KEY? VAL
             return false;
           }

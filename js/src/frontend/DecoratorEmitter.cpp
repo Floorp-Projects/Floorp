@@ -586,8 +586,11 @@ bool DecoratorEmitter::emitUpdateDecorationState() {
       //          [stack] VAL? CALLEE THIS undefined
       return false;
     }
-  } else if (kind == Kind::Method) {
+  } else if (kind == Kind::Getter || kind == Kind::Method ||
+             kind == Kind::Setter) {
     //     5.d. If kind is method, set value to elementRecord.[[Value]].
+    //     5.e. Else if kind is getter, set value to elementRecord.[[Get]].
+    //     5.f. Else if kind is setter, set value to elementRecord.[[Set]].
     // The DecoratorEmitter expects the method to already be on the stack.
     // We dup the value here so we can use it as an argument to the decorator.
     if (!bce_->emitDupAt(2)) {
@@ -595,9 +598,6 @@ bool DecoratorEmitter::emitUpdateDecorationState() {
       return false;
     }
   }
-  //     5.e. Else if kind is getter, set value to elementRecord.[[Get]].
-  //     5.f. Else if kind is setter, set value to elementRecord.[[Set]].
-  // TODO: See https://bugzilla.mozilla.org/show_bug.cgi?id=1793960.
   //     5.g. Else if kind is accessor, then
   //         5.g.i. Set value to OrdinaryObjectCreate(%Object.prototype%).
   //         5.g.ii. Perform ! CreateDataPropertyOrThrow(accessor, "get",
@@ -697,6 +697,22 @@ bool DecoratorEmitter::emitCreateDecoratorContextObject(Kind kind,
       //          [stack] context "method"
       return false;
     }
+  } else if (kind == Kind::Getter) {
+    // 3. Else if kind is getter, let kindStr be "getter".
+    if (!bce_->emitStringOp(
+            JSOp::String,
+            frontend::TaggedParserAtomIndex::WellKnown::getter())) {
+      //          [stack] context "getter"
+      return false;
+    }
+  } else if (kind == Kind::Setter) {
+    // 4. Else if kind is setter, let kindStr be "setter".
+    if (!bce_->emitStringOp(
+            JSOp::String,
+            frontend::TaggedParserAtomIndex::WellKnown::setter())) {
+      //          [stack] context "setter"
+      return false;
+    }
   } else if (kind == Kind::Field) {
     // 6. Else if kind is field, let kindStr be "field".
     if (!bce_->emitStringOp(
@@ -707,8 +723,8 @@ bool DecoratorEmitter::emitCreateDecoratorContextObject(Kind kind,
     }
   } else {
     // clang-format off
-    // 3. Else if kind is getter, let kindStr be "getter".
-    // 4. Else if kind is setter, let kindStr be "setter".
+
+
     // TODO: See https://bugzilla.mozilla.org/show_bug.cgi?id=1793960.
     // 5. Else if kind is accessor, let kindStr be "accessor".
     // TODO: See https://bugzilla.mozilla.org/show_bug.cgi?id=1793961.
