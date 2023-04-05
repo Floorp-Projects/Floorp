@@ -335,6 +335,15 @@ bool FunctionScriptEmitter::prepareForParameters() {
   tdzCache_.emplace(bce_);
   functionEmitterScope_.emplace(bce_);
 
+  if (!functionEmitterScope_->enterFunction(bce_, funbox_)) {
+    return false;
+  }
+
+  if (!emitInitializeClosedOverArgumentBindings()) {
+    //              [stack]
+    return false;
+  }
+
   if (funbox_->hasParameterExprs) {
     // There's parameter exprs, emit them in the main section.
     //
@@ -344,10 +353,6 @@ bool FunctionScriptEmitter::prepareForParameters() {
     // call object, setting '.this', etc) need to go in the prologue, else it
     // messes up breakpoint tests.
     bce_->switchToMain();
-  }
-
-  if (!functionEmitterScope_->enterFunction(bce_, funbox_)) {
-    return false;
   }
 
   if (!bce_->emitInitializeFunctionSpecialNames()) {
@@ -383,6 +388,77 @@ bool FunctionScriptEmitter::prepareForParameters() {
 #ifdef DEBUG
   state_ = State::Parameters;
 #endif
+  return true;
+}
+
+bool FunctionScriptEmitter::emitInitializeClosedOverArgumentBindings() {
+  // Initialize CallObject slots for closed-over arguments. If the function has
+  // parameter expressions, these are lexical bindings and we initialize the
+  // slots to the magic TDZ value. If the function doesn't have parameter
+  // expressions, we copy the frame's arguments.
+
+  MOZ_ASSERT(bce_->inPrologue());
+
+  auto* bindings = funbox_->functionScopeBindings();
+  if (!bindings) {
+    return true;
+  }
+
+  const bool hasParameterExprs = funbox_->hasParameterExprs;
+
+  bool pushedUninitialized = false;
+  for (ParserPositionalFormalParameterIter fi(*bindings, hasParameterExprs); fi;
+       fi++) {
+    if (!fi.closedOver()) {
+      continue;
+    }
+
+    if (hasParameterExprs) {
+      NameLocation nameLoc = bce_->lookupName(fi.name());
+      if (!pushedUninitialized) {
+        if (!bce_->emit1(JSOp::Uninitialized)) {
+          //          [stack] UNINITIALIZED
+          return false;
+        }
+        pushedUninitialized = true;
+      }
+      if (!bce_->emitEnvCoordOp(JSOp::InitAliasedLexical,
+                                nameLoc.environmentCoordinate())) {
+        //            [stack] UNINITIALIZED
+        return false;
+      }
+    } else {
+      NameOpEmitter noe(bce_, fi.name(), NameOpEmitter::Kind::Initialize);
+      if (!noe.prepareForRhs()) {
+        //            [stack]
+        return false;
+      }
+
+      if (!bce_->emitArgOp(JSOp::GetFrameArg, fi.argumentSlot())) {
+        //            [stack] VAL
+        return false;
+      }
+
+      if (!noe.emitAssignment()) {
+        //            [stack] VAL
+        return false;
+      }
+
+      if (!bce_->emit1(JSOp::Pop)) {
+        //            [stack]
+        return false;
+      }
+    }
+  }
+
+  if (pushedUninitialized) {
+    MOZ_ASSERT(hasParameterExprs);
+    if (!bce_->emit1(JSOp::Pop)) {
+      //              [stack]
+      return false;
+    }
+  }
+
   return true;
 }
 
