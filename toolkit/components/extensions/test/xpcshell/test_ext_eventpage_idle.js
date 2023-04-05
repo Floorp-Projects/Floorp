@@ -516,16 +516,17 @@ add_task(
     // to verify they gets rejected as expected when the background page browser element
     // is going to be destroyed.
     await extension.unload();
-    equal(
-      runListenerPromises.size,
-      0,
-      "Expect no remaining pending runListener promises"
-    );
 
     await Assert.rejects(
       pendingPromise,
       /Actor 'Conduits' destroyed before query 'RunListener' was resolved/,
       "Previously pending runListener promise rejected with the expected error"
+    );
+
+    equal(
+      runListenerPromises.size,
+      0,
+      "Expect no remaining pending runListener promises"
     );
   }
 );
