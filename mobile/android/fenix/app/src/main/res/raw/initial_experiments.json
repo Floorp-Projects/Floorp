@@ -141,7 +141,7 @@
       "channel": "release",
       "userFacingName": "[release] Android Sign to Sync onboarding page",
       "userFacingDescription": "This experiement moves the sign-in to sync panel to the top of the onboarding page, where it previously was under themes and toolbar positioning.",
-      "isEnrollmentPaused": false,
+      "isEnrollmentPaused": true,
       "isRollout": false,
       "bucketConfig": {
         "randomizationUnit": "nimbus_id",
@@ -185,7 +185,7 @@
       ],
       "targeting": "((is_already_enrolled) || ((isFirstRun == 'true') && (app_version|versionCompare('111.!') >= 0)))",
       "startDate": "2023-02-27",
-      "enrollmentEndDate": "2023-04-01",
+      "enrollmentEndDate": "2023-04-05",
       "endDate": null,
       "proposedDuration": 61,
       "proposedEnrollment": 33,
