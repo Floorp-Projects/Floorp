@@ -14,11 +14,8 @@ namespace mozilla {
 namespace wr {
 
 bool RenderTextureHostSWGL::UpdatePlanes(RenderCompositor* aCompositor) {
-  size_t planeCount = GetPlaneCount();
-  if (!planeCount) {
-    return false;
-  }
   wr_swgl_make_current(mContext);
+  size_t planeCount = GetPlaneCount();
   bool texInit = false;
   if (mPlanes.size() < planeCount) {
     mPlanes.reserve(planeCount);
@@ -153,7 +150,6 @@ void RenderTextureHostSWGL::CleanupPlanes() {
     return;
   }
   if (!mPlanes.empty()) {
-    MOZ_RELEASE_ASSERT(!mLocked, "Can't clear locked planes.");
     wr_swgl_make_current(mContext);
     for (const auto& plane : mPlanes) {
       wr_swgl_delete_texture(mContext, plane.mTexture);
