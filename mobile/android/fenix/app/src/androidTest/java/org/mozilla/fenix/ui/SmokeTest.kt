@@ -17,7 +17,6 @@ import mozilla.components.concept.engine.mediasession.MediaSession
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.IntentReceiverActivity
@@ -25,12 +24,11 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.Constants.PackageName.YOUTUBE_APP
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
-import org.mozilla.fenix.helpers.TestHelper.assertNativeAppOpens
+import org.mozilla.fenix.helpers.TestHelper.assertYoutubeAppOpens
 import org.mozilla.fenix.helpers.TestHelper.createCustomTabIntent
 import org.mozilla.fenix.helpers.TestHelper.registerAndCleanupIdlingResources
 import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
@@ -244,7 +242,6 @@ class SmokeTest {
 
     // Device or AVD requires a Google Services Android OS installation with Play Store installed
     // Verifies the Open in app button when an app is installed
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1824928")
     @Test
     fun mainMenuOpenInAppTest() {
         val youtubeURL = "https://m.youtube.com/user/mozilla?cbrd=1"
@@ -254,7 +251,7 @@ class SmokeTest {
             verifyNotificationDotOnMainMenu()
         }.openThreeDotMenu {
         }.clickOpenInApp {
-            assertNativeAppOpens(YOUTUBE_APP, youtubeURL)
+            assertYoutubeAppOpens()
         }
     }
 

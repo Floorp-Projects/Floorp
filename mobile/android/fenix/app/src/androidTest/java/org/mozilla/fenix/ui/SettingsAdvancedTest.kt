@@ -10,16 +10,14 @@ import mozilla.components.concept.engine.utils.EngineReleaseChannel
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.Constants.PackageName.YOUTUBE_APP
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
-import org.mozilla.fenix.helpers.TestHelper.assertNativeAppOpens
+import org.mozilla.fenix.helpers.TestHelper.assertYoutubeAppOpens
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.runWithCondition
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -117,8 +115,7 @@ class SettingsAdvancedTest {
         }
     }
 
-    // Assumes Play Store is installed and enabled
-    @SmokeTest
+    // Assumes Youtube is installed and enabled
     @Test
     fun neverOpenLinkInAppTest() {
         runWithCondition(
@@ -149,8 +146,7 @@ class SettingsAdvancedTest {
         }
     }
 
-    // Assumes Play Store is installed and enabled
-    @SmokeTest
+    // Assumes Youtube is installed and enabled
     @Test
     fun privateBrowsingNeverOpenLinkInAppTest() {
         runWithCondition(
@@ -184,87 +180,7 @@ class SettingsAdvancedTest {
         }
     }
 
-    // Assumes Play Store is installed and enabled
-    @SmokeTest
-    @Test
-    fun cancelOpeningLinkInAppTest() {
-        runWithCondition(
-            // Returns the GeckoView channel set for the current version, if a feature is limited to Nightly or Beta.
-            // Once this feature lands in RC we should remove the wrapper.
-            activityIntentTestRule.activity.components.core.engine.version.releaseChannel == EngineReleaseChannel.NIGHTLY ||
-                activityIntentTestRule.activity.components.core.engine.version.releaseChannel == EngineReleaseChannel.BETA,
-        ) {
-            val defaultWebPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
-
-            homeScreen {
-            }.openThreeDotMenu {
-            }.openSettings {
-                verifyOpenLinksInAppsButton()
-                verifySettingsOptionSummary("Open links in apps", "Never")
-            }.openOpenLinksInAppsMenu {
-                verifyOpenLinksInAppsView("Never")
-                clickOpenLinkInAppOption("Ask before opening")
-                verifySelectedOpenLinksInAppOption("Ask before opening")
-            }.goBack {
-                verifySettingsOptionSummary("Open links in apps", "Ask before opening")
-            }
-
-            exitMenu()
-
-            navigationToolbar {
-            }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-                clickLinkMatchingText("Youtube link")
-                verifyOpenLinkInAnotherAppPrompt()
-                cancelOpenLinkInAnotherApp()
-                waitForPageToLoad()
-                verifyUrl("youtube.com")
-            }
-        }
-    }
-
-    // Assumes Play Store is installed and enabled
-    @SmokeTest
-    @Test
-    fun privateBrowsingCancelOpeningLinkInAppTest() {
-        runWithCondition(
-            // Returns the GeckoView channel set for the current version, if a feature is limited to Nightly or Beta.
-            // Once this feature lands in RC we should remove the wrapper.
-            activityIntentTestRule.activity.components.core.engine.version.releaseChannel == EngineReleaseChannel.NIGHTLY ||
-                activityIntentTestRule.activity.components.core.engine.version.releaseChannel == EngineReleaseChannel.BETA,
-        ) {
-            val defaultWebPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
-
-            homeScreen {
-            }.togglePrivateBrowsingMode()
-
-            homeScreen {
-            }.openThreeDotMenu {
-            }.openSettings {
-                verifyOpenLinksInAppsButton()
-                verifySettingsOptionSummary("Open links in apps", "Never")
-            }.openOpenLinksInAppsMenu {
-                verifyOpenLinksInAppsView("Never")
-                clickOpenLinkInAppOption("Ask before opening")
-                verifySelectedOpenLinksInAppOption("Ask before opening")
-            }.goBack {
-                verifySettingsOptionSummary("Open links in apps", "Ask before opening")
-            }
-
-            exitMenu()
-
-            navigationToolbar {
-            }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-                clickLinkMatchingText("Youtube link")
-                verifyPrivateBrowsingOpenLinkInAnotherAppPrompt("youtube.com")
-                cancelOpenLinkInAnotherApp()
-                waitForPageToLoad()
-                verifyUrl("youtube.com")
-            }
-        }
-    }
-
-    // Assumes Play Store is installed and enabled
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1824928")
+    // Assumes Youtube is installed and enabled
     @SmokeTest
     @Test
     fun askBeforeOpeningLinkInAppTest() {
@@ -295,15 +211,23 @@ class SettingsAdvancedTest {
             }.enterURLAndEnterToBrowser(defaultWebPage.url) {
                 clickLinkMatchingText("Youtube link")
                 verifyOpenLinkInAnotherAppPrompt()
+                cancelOpenLinkInAnotherApp()
+                waitForPageToLoad()
+                verifyUrl("youtube.com")
+            }
+
+            navigationToolbar {
+            }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+                clickLinkMatchingText("Youtube link")
+                verifyOpenLinkInAnotherAppPrompt()
                 confirmOpenLinkInAnotherApp()
                 mDevice.waitForIdle()
-                assertNativeAppOpens(YOUTUBE_APP, defaultWebPage.url.toString())
+                assertYoutubeAppOpens()
             }
         }
     }
 
-    // Assumes Play Store is installed and enabled
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1824928")
+    // Assumes Youtube is installed and enabled
     @SmokeTest
     @Test
     fun privateBrowsingAskBeforeOpeningLinkInAppTest() {
@@ -337,16 +261,23 @@ class SettingsAdvancedTest {
             }.enterURLAndEnterToBrowser(defaultWebPage.url) {
                 clickLinkMatchingText("Youtube link")
                 verifyPrivateBrowsingOpenLinkInAnotherAppPrompt("youtube.com")
+                cancelOpenLinkInAnotherApp()
+                waitForPageToLoad()
+                verifyUrl("youtube.com")
+            }
+
+            navigationToolbar {
+            }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+                clickLinkMatchingText("Youtube link")
+                verifyPrivateBrowsingOpenLinkInAnotherAppPrompt("youtube.com")
                 confirmOpenLinkInAnotherApp()
                 mDevice.waitForIdle()
-                assertNativeAppOpens(YOUTUBE_APP, defaultWebPage.url.toString())
+                assertYoutubeAppOpens()
             }
         }
     }
 
-    // Assumes Play Store is installed and enabled
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1824928")
-    @SmokeTest
+    // Assumes Youtube is installed and enabled
     @Test
     fun alwaysOpenLinkInAppTest() {
         runWithCondition(
@@ -376,14 +307,12 @@ class SettingsAdvancedTest {
             }.enterURLAndEnterToBrowser(defaultWebPage.url) {
                 clickLinkMatchingText("Youtube link")
                 mDevice.waitForIdle()
-                assertNativeAppOpens(YOUTUBE_APP, defaultWebPage.url.toString())
+                assertYoutubeAppOpens()
             }
         }
     }
 
-    // Assumes Play Store is installed and enabled
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1824928")
-    @SmokeTest
+    // Assumes Youtube is installed and enabled
     @Test
     fun privateBrowsingAlwaysOpenLinkInAppTest() {
         runWithCondition(
@@ -416,9 +345,18 @@ class SettingsAdvancedTest {
             }.enterURLAndEnterToBrowser(defaultWebPage.url) {
                 clickLinkMatchingText("Youtube link")
                 verifyPrivateBrowsingOpenLinkInAnotherAppPrompt("youtube.com")
+                cancelOpenLinkInAnotherApp()
+                waitForPageToLoad()
+                verifyUrl("youtube.com")
+            }
+
+            navigationToolbar {
+            }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+                clickLinkMatchingText("Youtube link")
+                verifyPrivateBrowsingOpenLinkInAnotherAppPrompt("youtube.com")
                 confirmOpenLinkInAnotherApp()
                 mDevice.waitForIdle()
-                assertNativeAppOpens(YOUTUBE_APP, defaultWebPage.url.toString())
+                assertYoutubeAppOpens()
             }
         }
     }

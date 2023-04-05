@@ -64,6 +64,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.helpers.Constants.PackageName.YOUTUBE_APP
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.ext.waitNotNull
@@ -266,17 +267,7 @@ object TestHelper {
         }
     }
 
-    fun assertPlayStoreOpens() {
-        if (isPackageInstalled(Constants.PackageName.GOOGLE_PLAY_SERVICES)) {
-            try {
-                intended(toPackage(Constants.PackageName.GOOGLE_PLAY_SERVICES))
-            } catch (e: AssertionFailedError) {
-                BrowserRobot().verifyRateOnGooglePlayURL()
-            }
-        } else {
-            BrowserRobot().verifyRateOnGooglePlayURL()
-        }
-    }
+    fun assertYoutubeAppOpens() = intended(toPackage(YOUTUBE_APP))
 
     /**
      * Checks whether the latest activity of the application is used for custom tabs or PWAs.
