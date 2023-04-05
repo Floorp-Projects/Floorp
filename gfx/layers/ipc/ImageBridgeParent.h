@@ -42,7 +42,8 @@ class ImageBridgeParent final : public PImageBridgeParent,
   ImageBridgeParent(nsISerialEventTarget* aThread, ProcessId aChildProcessId);
 
  public:
-  virtual ~ImageBridgeParent();
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(ImageBridgeParent,
+                                       CompositableParentManager)
 
   /**
    * Creates the globals of ImageBridgeParent.
@@ -116,13 +117,12 @@ class ImageBridgeParent final : public PImageBridgeParent,
   void Bind(Endpoint<PImageBridgeParent>&& aEndpoint);
 
  private:
+  virtual ~ImageBridgeParent();
+
   static void ShutdownInternal();
 
   void DeferredDestroy();
   nsCOMPtr<nsISerialEventTarget> mThread;
-  // This keeps us alive until ActorDestroy(), at which point we do a
-  // deferred destruction of ourselves.
-  RefPtr<ImageBridgeParent> mSelfRef;
 
   bool mClosed;
 
