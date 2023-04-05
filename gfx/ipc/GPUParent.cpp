@@ -678,15 +678,15 @@ void GPUParent::ActorDestroy(ActorDestroyReason aWhy) {
 
   // Wait until all RemoteDecoderManagerParent have closed.
   mShutdownBlockers.WaitUntilClear(10 * 1000 /* 10s timeout*/)
-      ->Then(GetCurrentSerialEventTarget(), __func__, [this]() {
-        if (mProfilerController) {
-          mProfilerController->Shutdown();
-          mProfilerController = nullptr;
+      ->Then(GetCurrentSerialEventTarget(), __func__, [self = RefPtr{this}]() {
+        if (self->mProfilerController) {
+          self->mProfilerController->Shutdown();
+          self->mProfilerController = nullptr;
         }
 
-        if (mVsyncBridge) {
-          mVsyncBridge->Shutdown();
-          mVsyncBridge = nullptr;
+        if (self->mVsyncBridge) {
+          self->mVsyncBridge->Shutdown();
+          self->mVsyncBridge = nullptr;
         }
         VideoBridgeParent::Shutdown();
         // This could be running on either the Compositor or the Renderer

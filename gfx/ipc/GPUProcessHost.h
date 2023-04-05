@@ -141,7 +141,7 @@ class GPUProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
   enum class LaunchPhase { Unlaunched, Waiting, Complete };
   LaunchPhase mLaunchPhase;
 
-  UniquePtr<GPUChild> mGPUChild;
+  RefPtr<GPUChild> mGPUChild;
   uint64_t mProcessToken;
 
   UniquePtr<mozilla::ipc::SharedPreferenceSerializer> mPrefSerializer;
