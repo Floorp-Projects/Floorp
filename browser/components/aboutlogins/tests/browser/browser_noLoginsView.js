@@ -13,6 +13,14 @@ add_setup(async function() {
 
 add_task(async function test_no_logins_class() {
   let { platform } = AppConstants;
+  let wizardPromise;
+
+  // The import link is hidden on Linux, so we don't wait for the migration
+  // wizard to open on that platform.
+  if (AppConstants.platform != "linux") {
+    wizardPromise = BrowserTestUtils.waitForMigrationWizard(window);
+  }
+
   await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [platform],
@@ -100,15 +108,9 @@ add_task(async function test_no_logins_class() {
     // End the test now for Linux since the link is hidden.
     return;
   }
-  await TestUtils.waitForCondition(() => {
-    let win = Services.wm.getMostRecentWindow("Browser:MigrationWizard");
-    return win && win.document && win.document.readyState == "complete";
-  }, "Migrator window loaded");
-  let migratorWindow = Services.wm.getMostRecentWindow(
-    "Browser:MigrationWizard"
-  );
-  Assert.ok(migratorWindow, "Migrator window opened");
-  await BrowserTestUtils.closeWindow(migratorWindow);
+  let wizard = await wizardPromise;
+  Assert.ok(wizard, "Migrator window opened");
+  await BrowserTestUtils.closeMigrationWizard(wizard);
 });
 
 add_task(

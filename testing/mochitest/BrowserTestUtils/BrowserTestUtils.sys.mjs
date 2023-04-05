@@ -2719,12 +2719,68 @@ export var BrowserTestUtils = {
       return val;
     });
   },
+
+  /**
+   * A helper function for this test that returns a Promise that resolves
+   * once either the legacy or new migration wizard appears.
+   *
+   * @param {DOMWindow} window
+   *   The top-level window that the about:preferences tab is likely to open
+   *   in if the new migration wizard is enabled.
+   * @returns {Promise<Element>}
+   *   Resolves to the dialog window in the legacy case, and the
+   *   about:preferences tab otherwise.
+   */
+  async waitForMigrationWizard(window) {
+    if (!this._usingNewMigrationWizard) {
+      return this.waitForCondition(() => {
+        let win = Services.wm.getMostRecentWindow("Browser:MigrationWizard");
+        if (win?.document?.readyState == "complete") {
+          return win;
+        }
+        return false;
+      }, "Wait for migration wizard to open");
+    }
+
+    let wizardReady = this.waitForEvent(window, "MigrationWizard:Ready");
+    let wizardTab = await this.waitForNewTab(window.gBrowser, url => {
+      return url.startsWith("about:preferences");
+    });
+    await wizardReady;
+
+    return wizardTab;
+  },
+
+  /**
+   * Closes the migration wizard.
+   *
+   * @param {Element} wizardWindowOrTab
+   *   The XUL dialog window for the migration wizard in the legacy case, and
+   *   the about:preferences tab otherwise. In general, it's probably best to
+   *   just pass whatever BrowserTestUtils.waitForMigrationWizard resolved to
+   *   into this in order to handle both the old and new migration wizard.
+   * @returns {Promise<undefined>}
+   */
+  closeMigrationWizard(wizardWindowOrTab) {
+    if (!this._usingNewMigrationWizard) {
+      return BrowserTestUtils.closeWindow(wizardWindowOrTab);
+    }
+
+    return BrowserTestUtils.removeTab(wizardWindowOrTab);
+  },
 };
 
 XPCOMUtils.defineLazyPreferenceGetter(
   BrowserTestUtils,
   "_httpsFirstEnabled",
   "dom.security.https_first",
+  false
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  BrowserTestUtils,
+  "_usingNewMigrationWizard",
+  "browser.migrate.content-modal.enabled",
   false
 );
 
