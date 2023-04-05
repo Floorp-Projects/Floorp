@@ -259,6 +259,9 @@ already_AddRefed<gfxPattern> SVGContextPaintImpl::Paint::GetPattern(
       pattern = mPaintDefinition.mPaintServerFrame->GetPaintServerPattern(
           mFrame, aDrawTarget, mContextMatrix, aFillOrStroke, aOpacity,
           aImgParams);
+      if (!pattern) {
+        return nullptr;
+      }
       {
         // m maps original-user-space to pattern space
         gfxMatrix m = pattern->GetMatrix();
