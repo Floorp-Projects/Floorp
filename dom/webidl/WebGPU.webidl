@@ -64,7 +64,6 @@ interface GPU {
     // May reject with DOMException
     [NewObject]
     Promise<GPUAdapter?> requestAdapter(optional GPURequestAdapterOptions options = {});
-    GPUTextureFormat getPreferredCanvasFormat();
 };
 
 // Add a "webgpu" member to Navigator/Worker that contains the global instance of a "WebGPU"
@@ -1077,6 +1076,7 @@ interface GPUCanvasContext {
     undefined configure(GPUCanvasConfiguration descriptor);
     undefined unconfigure();
 
+    GPUTextureFormat getPreferredFormat(GPUAdapter adapter);
     [Throws]
     GPUTexture getCurrentTexture();
 };
