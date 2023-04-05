@@ -5229,15 +5229,6 @@ nsresult nsHttpChannel::AsyncProcessRedirection(uint32_t redirectType) {
     return NS_ERROR_CORRUPTED_CONTENT;
   }
 
-  if (!StaticPrefs::network_allow_redirect_to_data() &&
-      !mLoadInfo->GetAllowInsecureRedirectToDataURI() &&
-      mRedirectURI->SchemeIs("data")) {
-    LOG(("Invalid data URI for redirect!"));
-    nsContentSecurityManager::ReportBlockedDataURI(mRedirectURI, mLoadInfo,
-                                                   true);
-    return NS_ERROR_DOM_BAD_URI;
-  }
-
   // Perform the URL query string stripping for redirects. We will only strip
   // the query string if it is redirecting to a third-party URI in the top
   // level.

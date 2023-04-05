@@ -37,9 +37,6 @@ function finish_test(request, buffer) {
 }
 
 function run_test() {
-  // Enable data redirects because the test uses it to test.
-  Services.prefs.setBoolPref("network.allow_redirect_to_data", true);
-
   httpServer = new HttpServer();
   httpServer.registerPathHandler(randomPath, redirectHandler);
   httpServer.start(-1);
