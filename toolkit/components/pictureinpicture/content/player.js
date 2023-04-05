@@ -668,9 +668,29 @@ let Player = {
     if (options?.forceHide || settingsPanelVisible) {
       this.settingsPanel.classList.add("hide");
       this.controls.removeAttribute("donthide");
+
+      if (
+        this.controls.getAttribute("keying") ||
+        this.isCurrentHover ||
+        this.controls.getAttribute("showing")
+      ) {
+        return;
+      }
+
+      this.actor.sendAsyncMessage("PictureInPicture:HideVideoControls", {
+        isFullscreen: this.isFullscreen,
+        isVideoControlsShowing: false,
+        playerBottomControlsDOMRect: null,
+      });
     } else {
       this.settingsPanel.classList.remove("hide");
       this.controls.setAttribute("donthide", true);
+      this.actor.sendAsyncMessage("PictureInPicture:ShowVideoControls", {
+        isFullscreen: this.isFullscreen,
+        isVideoControlsShowing: true,
+        playerBottomControlsDOMRect: this.controlsBottom.getBoundingClientRect(),
+        isScrubberShowing: !this.scrubber.hidden,
+      });
     }
   },
 
@@ -977,11 +997,12 @@ let Player = {
   },
 
   onMouseLeave() {
-    if (!this.isFullscreen && !this.controls.getAttribute("donthide")) {
+    if (!this.isFullscreen) {
       this.isCurrentHover = false;
       if (
         !this.controls.getAttribute("showing") &&
-        !this.controls.getAttribute("keying")
+        !this.controls.getAttribute("keying") &&
+        !this.controls.getAttribute("donthide")
       ) {
         this.actor.sendAsyncMessage("PictureInPicture:HideVideoControls", {
           isFullscreen: this.isFullscreen,
@@ -1034,6 +1055,7 @@ let Player = {
    *  Event context data object
    */
   onResize(event) {
+    this.toggleSubtitlesSettingsPanel({ forceHide: true });
     this.resizeDebouncer.disarm();
     this.resizeDebouncer.arm();
   },
@@ -1186,14 +1208,15 @@ let Player = {
       });
     }
 
-    if (!revealIndefinitely && !this.controls.getAttribute("donthide")) {
+    if (!revealIndefinitely) {
       this.showingTimeout = setTimeout(() => {
         this.controls.removeAttribute("showing");
 
         if (
           !this.isFullscreen &&
           !this.isCurrentHover &&
-          !this.controls.getAttribute("keying")
+          !this.controls.getAttribute("keying") &&
+          !this.controls.getAttribute("donthide")
         ) {
           this.actor.sendAsyncMessage("PictureInPicture:HideVideoControls", {
             isFullscreen: false,
