@@ -168,7 +168,7 @@ void RDDProcessHost::InitAfterConnect(bool aSucceeded) {
     return;
   }
   mProcessToken = ++sRDDProcessTokenCounter;
-  mRDDChild = MakeRefPtr<RDDChild>(this);
+  mRDDChild = MakeUnique<RDDChild>(this);
   DebugOnly<bool> rv = TakeInitialEndpoint().Bind(mRDDChild.get());
   MOZ_ASSERT(rv);
 

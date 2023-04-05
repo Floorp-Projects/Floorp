@@ -44,7 +44,7 @@ class ProcessHangMonitor final : public nsIObserver {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  static already_AddRefed<PProcessHangMonitorParent> AddProcess(
+  static PProcessHangMonitorParent* AddProcess(
       dom::ContentParent* aContentParent);
   static void RemoveProcess(PProcessHangMonitorParent* aParent);
 

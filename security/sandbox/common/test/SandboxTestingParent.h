@@ -25,8 +25,6 @@ class SandboxTestingParent : public PSandboxTestingParent {
       Endpoint<PSandboxTestingParent>&& aParentEnd);
   static void Destroy(SandboxTestingParent* aInstance);
 
-  NS_INLINE_DECL_REFCOUNTING(SandboxTestingParent, override)
-
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   mozilla::ipc::IPCResult RecvReportTestResults(const nsCString& testName,
@@ -40,7 +38,7 @@ class SandboxTestingParent : public PSandboxTestingParent {
  private:
   explicit SandboxTestingParent(SandboxTestingThread* aThread,
                                 Endpoint<PSandboxTestingParent>&& aParentEnd);
-  virtual ~SandboxTestingParent();
+  virtual ~SandboxTestingParent() = default;
   void ShutdownSandboxTestThread();
   void Bind(Endpoint<PSandboxTestingParent>&& aEnd);
 

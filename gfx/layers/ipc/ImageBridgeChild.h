@@ -331,6 +331,7 @@ class ImageBridgeChild final : public PImageBridgeChild,
   void MarkShutDown();
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDealloc() override;
 
   bool CanSend() const;
   bool CanPostTask() const;

@@ -29,6 +29,7 @@ static Atomic<bool> sVideoBridgeParentShutDown(false);
 VideoBridgeParent::VideoBridgeParent(VideoBridgeSource aSource)
     : mCompositorThreadHolder(CompositorThreadHolder::GetSingleton()),
       mClosed(false) {
+  mSelfRef = this;
   auto videoBridgeFromProcess = sVideoBridgeFromProcess.Lock();
   switch (aSource) {
     case VideoBridgeSource::RddProcess:
@@ -99,9 +100,6 @@ void VideoBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
   }
   // Can't alloc/dealloc shmems from now on.
   mClosed = true;
-
-  mCompositorThreadHolder = nullptr;
-  ReleaseCompositorThread();
 }
 
 /* static */
@@ -141,6 +139,12 @@ void VideoBridgeParent::DoUnregisterExternalImages() {
 
 void VideoBridgeParent::ReleaseCompositorThread() {
   mCompositorThreadHolder = nullptr;
+}
+
+void VideoBridgeParent::ActorDealloc() {
+  mCompositorThreadHolder = nullptr;
+  ReleaseCompositorThread();
+  mSelfRef = nullptr;
 }
 
 PTextureParent* VideoBridgeParent::AllocPTextureParent(

@@ -41,9 +41,11 @@ namespace gfx {
 
 using namespace layers;
 
-GPUChild::GPUChild(GPUProcessHost* aHost) : mHost(aHost), mGPUReady(false) {}
+GPUChild::GPUChild(GPUProcessHost* aHost) : mHost(aHost), mGPUReady(false) {
+  MOZ_COUNT_CTOR(GPUChild);
+}
 
-GPUChild::~GPUChild() = default;
+GPUChild::~GPUChild() { MOZ_COUNT_DTOR(GPUChild); }
 
 void GPUChild::Init() {
   nsTArray<GfxVarUpdate> updates = gfxVars::FetchNonDefaultVars();
@@ -348,17 +350,17 @@ mozilla::ipc::IPCResult GPUChild::RecvFOGData(ByteBuf&& aBuf) {
 
 class DeferredDeleteGPUChild : public Runnable {
  public:
-  explicit DeferredDeleteGPUChild(RefPtr<GPUChild>&& aChild)
+  explicit DeferredDeleteGPUChild(UniquePtr<GPUChild>&& aChild)
       : Runnable("gfx::DeferredDeleteGPUChild"), mChild(std::move(aChild)) {}
 
   NS_IMETHODIMP Run() override { return NS_OK; }
 
  private:
-  RefPtr<GPUChild> mChild;
+  UniquePtr<GPUChild> mChild;
 };
 
 /* static */
-void GPUChild::Destroy(RefPtr<GPUChild>&& aChild) {
+void GPUChild::Destroy(UniquePtr<GPUChild>&& aChild) {
   NS_DispatchToMainThread(new DeferredDeleteGPUChild(std::move(aChild)));
 }
 

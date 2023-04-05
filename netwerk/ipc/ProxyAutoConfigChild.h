@@ -18,7 +18,7 @@ class ProxyAutoConfig;
 
 class ProxyAutoConfigChild final : public PProxyAutoConfigChild {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ProxyAutoConfigChild, final)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ProxyAutoConfigChild)
 
   static bool Create(Endpoint<PProxyAutoConfigChild>&& aEndpoint);
   static bool CreatePACThread();

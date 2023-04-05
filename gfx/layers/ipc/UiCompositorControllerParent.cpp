@@ -163,9 +163,12 @@ UiCompositorControllerParent::RecvEnableLayerUpdateNotifications(
   return IPC_OK();
 }
 
-void UiCompositorControllerParent::ActorDestroy(ActorDestroyReason aWhy) {
+void UiCompositorControllerParent::ActorDestroy(ActorDestroyReason aWhy) {}
+
+void UiCompositorControllerParent::ActorDealloc() {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   Shutdown();
+  Release();  // For AddRef in Initialize()
 }
 
 void UiCompositorControllerParent::ToolbarAnimatorMessageFromCompositor(
@@ -260,6 +263,7 @@ void UiCompositorControllerParent::InitializeForOutOfProcess() {
 
 void UiCompositorControllerParent::Initialize() {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  AddRef();
   LayerTreeState* state =
       CompositorBridgeParent::GetIndirectShadowTree(mRootLayerTreeId);
   MOZ_ASSERT(state);

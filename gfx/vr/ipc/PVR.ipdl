@@ -18,7 +18,7 @@ include protocol PVRGPU;
 namespace mozilla {
 namespace gfx {
 
-[NeedsOtherPid, ChildImpl="VRChild", ParentImpl="VRParent"]
+[ManualDealloc, NeedsOtherPid, ChildImpl="VRChild", ParentImpl="VRParent"]
 async protocol PVR
 {
 parent:

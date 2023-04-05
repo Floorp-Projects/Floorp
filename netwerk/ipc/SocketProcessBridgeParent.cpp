@@ -13,13 +13,16 @@
 namespace mozilla {
 namespace net {
 
-SocketProcessBridgeParent::SocketProcessBridgeParent(ProcessId aId)
+SocketProcessBridgeParent::SocketProcessBridgeParent(
+    ProcessId aId, Endpoint<PSocketProcessBridgeParent>&& aEndpoint)
     : mId(aId), mClosed(false) {
   LOG(
       ("CONSTRUCT SocketProcessBridgeParent::SocketProcessBridgeParent "
        "mId=%" PRIPID "\n",
        mId));
   MOZ_COUNT_CTOR(SocketProcessBridgeParent);
+  DebugOnly<bool> ok = aEndpoint.Bind(this);
+  MOZ_ASSERT(ok);
 }
 
 SocketProcessBridgeParent::~SocketProcessBridgeParent() {

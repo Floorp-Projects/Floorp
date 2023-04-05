@@ -53,7 +53,7 @@ class RemoteSandboxBroker : public AbstractSandboxBroker {
   // Parameters that we use to launch the child process.
   LaunchParameters mParameters;
 
-  RefPtr<RemoteSandboxBrokerParent> mParent;
+  RemoteSandboxBrokerParent mParent;
 
   // We bind the RemoteSandboxBrokerParent to the IPC launch thread.
   // As such, we must close its channel on the same thread. So we save

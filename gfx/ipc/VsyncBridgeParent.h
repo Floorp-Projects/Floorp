@@ -18,7 +18,7 @@ namespace gfx {
 
 class VsyncBridgeParent final : public PVsyncBridgeParent {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VsyncBridgeParent, final)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VsyncBridgeParent)
 
   static RefPtr<VsyncBridgeParent> Start(
       Endpoint<PVsyncBridgeParent>&& aEndpoint);
@@ -26,6 +26,7 @@ class VsyncBridgeParent final : public PVsyncBridgeParent {
   mozilla::ipc::IPCResult RecvNotifyVsync(const VsyncEvent& aVsync,
                                           const LayersId& aLayersId);
   void ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDealloc() override;
 
   void Shutdown();
 

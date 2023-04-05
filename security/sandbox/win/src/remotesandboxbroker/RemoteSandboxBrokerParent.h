@@ -19,8 +19,6 @@ class RemoteSandboxBrokerParent
   friend class PRemoteSandboxBrokerParent;
 
  public:
-  NS_INLINE_DECL_REFCOUNTING(RemoteSandboxBrokerParent, override)
-
   bool DuplicateFromLauncher(HANDLE aLauncherHandle, LPHANDLE aOurHandle);
 
   void Shutdown();
@@ -34,8 +32,6 @@ class RemoteSandboxBrokerParent
                                 nsISerialEventTarget* aThread);
 
  private:
-  ~RemoteSandboxBrokerParent() = default;
-
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   RemoteSandboxBrokerProcessParent* mProcess = nullptr;
