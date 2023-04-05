@@ -38,6 +38,7 @@
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefsAll.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryEventEnums.h"
@@ -1468,7 +1469,7 @@ struct CompareStr {
   }
 };
 typedef std::map<const char*, AntiFootgunCallback, CompareStr> AntiFootgunMap;
-static AntiFootgunMap* gOnceStaticPrefsAntiFootgun;
+static StaticAutoPtr<AntiFootgunMap> gOnceStaticPrefsAntiFootgun;
 #endif
 
 // The callback list contains all the priority callbacks followed by the
@@ -1482,7 +1483,7 @@ static CallbackNode* gLastPriorityNode = nullptr;
 
 #ifdef ACCESS_COUNTS
 using AccessCountsHashTable = nsTHashMap<nsCStringHashKey, uint32_t>;
-static AccessCountsHashTable* gAccessCounts = nullptr;
+static StaticAutoPtr<AccessCountsHashTable> gAccessCounts;
 
 static void AddAccessCount(const nsACString& aPrefName) {
   // FIXME: Servo reads preferences from background threads in unsafe ways (bug
@@ -3553,7 +3554,7 @@ class AddPreferencesMemoryReporterRunnable : public Runnable {
 }  // namespace
 
 // A list of changed prefs sent from the parent via shared memory.
-static nsTArray<dom::Pref>* gChangedDomPrefs;
+static StaticAutoPtr<nsTArray<dom::Pref>> gChangedDomPrefs;
 
 static const char kTelemetryPref[] = "toolkit.telemetry.enabled";
 static const char kChannelPref[] = "app.update.channel";
@@ -3686,7 +3687,6 @@ already_AddRefed<Preferences> Preferences::GetInstanceForService() {
     for (unsigned int i = 0; i < gChangedDomPrefs->Length(); i++) {
       Preferences::SetPreference(gChangedDomPrefs->ElementAt(i));
     }
-    delete gChangedDomPrefs;
     gChangedDomPrefs = nullptr;
 
 #ifndef MOZ_WIDGET_ANDROID
@@ -3793,12 +3793,11 @@ Preferences::~Preferences() {
   HashTable() = nullptr;
 
 #ifdef DEBUG
-  delete gOnceStaticPrefsAntiFootgun;
   gOnceStaticPrefsAntiFootgun = nullptr;
 #endif
 
 #ifdef ACCESS_COUNTS
-  delete gAccessCounts;
+  gAccessCounts = nullptr;
 #endif
 
   gSharedMap = nullptr;
