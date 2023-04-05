@@ -1,5 +1,3 @@
-#[cfg(all(feature = "beta", not(target_arch = "aarch64")))]
-use core::arch::asm;
 use winapi::shared::basetsd::{DWORD64, SIZE_T, ULONG64};
 use winapi::shared::minwindef::DWORD;
 use winapi::um::winnt::{HANDLE, PVOID};
@@ -8,23 +6,10 @@ use winapi::um::winnt::{HANDLE, PVOID};
 pub const fn UInt32x32To64(a: u32, b: u32) -> u64 {
     a as u64 * b as u64
 }
-#[cfg(all(feature = "beta", not(target_arch = "aarch64")))]
+#[cfg(not(target_arch = "aarch64"))]
 IFDEF!{
+use core::arch::asm;
 use crate::ntpebteb::TEB;
-#[inline]
-#[cfg(target_pointer_width = "64")]
-pub unsafe fn _bittest64(Base: *const i64, Offset: i64) -> u8 {
-    let out: u8;
-    asm!(
-        "bt {1}, {2}",
-        "setb {0}",
-        out(reg_byte) out,
-        in(reg) Base,
-        in(reg) Offset,
-        options(nostack, pure, readonly),
-    );
-    out
-}
 #[inline]
 pub unsafe fn __readfsdword(Offset: DWORD) -> DWORD {
     let out: u32;

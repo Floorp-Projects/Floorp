@@ -19,7 +19,7 @@ use winapi::um::winnt::{
     PROCESS_MITIGATION_STRICT_HANDLE_CHECK_POLICY, PROCESS_MITIGATION_SYSTEM_CALL_DISABLE_POLICY,
     PROCESS_MITIGATION_SYSTEM_CALL_FILTER_POLICY, PSECURITY_QUALITY_OF_SERVICE,
 };
-#[cfg(all(feature = "beta", not(target_arch = "aarch64")))]
+#[cfg(not(target_arch = "aarch64"))]
 use crate::winapi_local::um::winnt::NtCurrentTeb;
 pub const GDI_HANDLE_BUFFER_SIZE32: usize = 34;
 pub const GDI_HANDLE_BUFFER_SIZE64: usize = 60;
@@ -932,7 +932,7 @@ pub const NtCurrentThread: HANDLE = -2isize as *mut c_void;
 pub const ZwCurrentThread: HANDLE = NtCurrentThread;
 pub const NtCurrentSession: HANDLE = -3isize as *mut c_void;
 pub const ZwCurrentSession: HANDLE = NtCurrentSession;
-#[inline] #[cfg(all(feature = "beta", not(target_arch = "aarch64")))]
+#[inline] #[cfg(not(target_arch = "aarch64"))]
 pub unsafe fn NtCurrentPeb() -> PPEB {
     (*NtCurrentTeb()).ProcessEnvironmentBlock
 }
@@ -940,11 +940,11 @@ pub const NtCurrentProcessToken: HANDLE = -4isize as *mut c_void;
 pub const NtCurrentThreadToken: HANDLE = -5isize as *mut c_void;
 pub const NtCurrentEffectiveToken: HANDLE = -6isize as *mut c_void;
 pub const NtCurrentSilo: HANDLE = -1isize as *mut c_void;
-#[inline] #[cfg(all(feature = "beta", not(target_arch = "aarch64")))]
+#[inline] #[cfg(not(target_arch = "aarch64"))]
 pub unsafe fn NtCurrentProcessId() -> HANDLE {
     (*NtCurrentTeb()).ClientId.UniqueProcess
 }
-#[inline] #[cfg(all(feature = "beta", not(target_arch = "aarch64")))]
+#[inline] #[cfg(not(target_arch = "aarch64"))]
 pub unsafe fn NtCurrentThreadId() -> HANDLE {
     (*NtCurrentTeb()).ClientId.UniqueThread
 }
@@ -1121,14 +1121,22 @@ ENUM!{enum PS_ATTRIBUTE_NUM {
 }}
 #[inline]
 pub const fn PsAttributeValue(
-    Number: PS_ATTRIBUTE_NUM,
+    mut Number: PS_ATTRIBUTE_NUM,
     Thread: bool,
     Input: bool,
     Additive: bool,
-) -> ULONG_PTR { //fixme
-    (Number & PS_ATTRIBUTE_NUMBER_MASK | [0, PS_ATTRIBUTE_THREAD][Thread as usize]
-    | [0, PS_ATTRIBUTE_INPUT][Input as usize] | [0, PS_ATTRIBUTE_ADDITIVE][Additive as usize]
-    ) as usize
+) -> ULONG_PTR {
+    Number &= PS_ATTRIBUTE_NUMBER_MASK;
+    if Thread {
+        Number |= PS_ATTRIBUTE_THREAD;
+    }
+    if Input {
+        Number |= PS_ATTRIBUTE_INPUT;
+    }
+    if Additive {
+        Number |= PS_ATTRIBUTE_ADDITIVE;
+    }
+    Number as _
 }
 pub const PS_ATTRIBUTE_PARENT_PROCESS: ULONG_PTR = 0x00060000;
 pub const PS_ATTRIBUTE_DEBUG_PORT: ULONG_PTR = 0x00060001;

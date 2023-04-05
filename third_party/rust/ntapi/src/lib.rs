@@ -3,26 +3,7 @@
 //! **`impl-default`** -- Implement [`Default`] for structs and unions.<br/>
 //! **`user`** *(default)* -- Link to `ntdll`.<br/>
 //! **`kernel`** -- Link to `ntoskrnl` on MSVC targets.<br/>
-//! **`beta`** --  Unlock unstable features that require a beta compiler:
-//! - [`NtCurrentTeb`]
-//! - [`__readfsdword`]
-//! - [`__readgsqword`]
-//! - [`_bittest64`]
-//! - [`NtCurrentPeb`]
-//! - [`NtCurrentProcessId`]
-//! - [`NtCurrentThreadId`]
-//! - [`RtlProcessHeap`]
-//! - [`RtlCheckBit`] implementation using [`_bittest64`] on x86_64.
 //!
-//! [`NtCurrentTeb`]: winapi_local/um/winnt/fn.NtCurrentTeb.html
-//! [`__readfsdword`]: winapi_local/um/winnt/fn.__readfsdword.html
-//! [`__readgsqword`]: winapi_local/um/winnt/fn.__readgsqword.html
-//! [`_bittest64`]: winapi_local/um/winnt/fn._bittest64.html
-//! [`NtCurrentPeb`]: ntpsapi/fn.NtCurrentPeb.html
-//! [`NtCurrentProcessId`]: ntpsapi/fn.NtCurrentProcessId.html
-//! [`NtCurrentThreadId`]: ntpsapi/fn.NtCurrentThreadId.html
-//! [`RtlProcessHeap`]: ntrtl/fn.RtlProcessHeap.html
-//! [`RtlCheckBit`]: ntrtl/fn.RtlCheckBit.html
 //! [fn_ptr]: https://doc.rust-lang.org/reference/types.html#function-pointer-types
 //! [`Default`]: https://doc.rust-lang.org/std/default/trait.Default.html#tymethod.default
 #![cfg(all(windows, any(target_arch = "x86", target_arch = "x86_64", target_arch = "aarch64")))]
