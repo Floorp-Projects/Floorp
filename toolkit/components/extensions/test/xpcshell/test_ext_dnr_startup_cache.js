@@ -213,8 +213,18 @@ add_task(async function test_dnr_startup_cache_save_and_load() {
         mirroredName: "WEBEXT_DNR_STARTUPCACHE_READ_MS",
         mirroredType: "histogram",
       },
-      { metric: "startupCacheEntries", label: "miss" },
-      { metric: "startupCacheEntries", label: "hit" },
+      {
+        metric: "startupCacheEntries",
+        label: "miss",
+        mirroredName: "extensions.apis.dnr.startup_cache_entries",
+        mirroredType: "keyedScalar",
+      },
+      {
+        metric: "startupCacheEntries",
+        label: "hit",
+        mirroredName: "extensions.apis.dnr.startup_cache_entries",
+        mirroredType: "keyedScalar",
+      },
     ],
     "on loading dnr rules for newly installed extension"
   );
@@ -299,13 +309,30 @@ add_task(async function test_dnr_startup_cache_save_and_load() {
         "after app startup and expected startup cache hit"
       );
       assertDNRTelemetryMetricsGetValueEq(
-        [{ metric: "startupCacheEntries", label: "hit", expectedGetValue: 1 }],
+        [
+          {
+            metric: "startupCacheEntries",
+            label: "hit",
+            expectedGetValue: 1,
+            mirroredName: "extensions.apis.dnr.startup_cache_entries",
+            mirroredType: "keyedScalar",
+          },
+        ],
         "after app startup and expected startup cache hit"
       );
       assertDNRTelemetryMetricsNoSamples(
         [
-          { metric: "validateRulesTime" },
-          { metric: "startupCacheEntries", label: "miss" },
+          {
+            metric: "validateRulesTime",
+            mirroredName: "WEBEXT_DNR_VALIDATE_RULES_MS",
+            mirroredType: "histogram",
+          },
+          {
+            metric: "startupCacheEntries",
+            label: "miss",
+            mirroredName: "extensions.apis.dnr.startup_cache_entries",
+            mirroredType: "keyedScalar",
+          },
         ],
         "after DNR store loaded startup cache data"
       );
@@ -334,11 +361,26 @@ add_task(async function test_dnr_startup_cache_save_and_load() {
         "after app startup and expected startup cache miss"
       );
       assertDNRTelemetryMetricsGetValueEq(
-        [{ metric: "startupCacheEntries", label: "miss", expectedGetValue: 1 }],
+        [
+          {
+            metric: "startupCacheEntries",
+            label: "miss",
+            expectedGetValue: 1,
+            mirroredName: "extensions.apis.dnr.startup_cache_entries",
+            mirroredType: "keyedScalar",
+          },
+        ],
         "after app startup and expected startup cache miss"
       );
       assertDNRTelemetryMetricsNoSamples(
-        [{ metric: "startupCacheEntries", label: "hit" }],
+        [
+          {
+            metric: "startupCacheEntries",
+            label: "hit",
+            mirroredName: "extensions.apis.dnr.startup_cache_entries",
+            mirroredType: "keyedScalar",
+          },
+        ],
         "after DNR store loaded startup cache data"
       );
     }
