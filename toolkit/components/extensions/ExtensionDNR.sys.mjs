@@ -2159,6 +2159,7 @@ async function initExtension(extension) {
         `Aborted ExtensionDNR.initExtension call, extension "${extension.id}" is not active anymore`
       );
     }
+    extension.once("shutdown", () => clearRuleManager(extension));
     await lazy.ExtensionDNRStore.initExtension(extension);
   }
 }
