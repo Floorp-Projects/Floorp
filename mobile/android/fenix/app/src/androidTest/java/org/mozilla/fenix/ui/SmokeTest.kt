@@ -38,7 +38,6 @@ import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.customTabScreen
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
-import org.mozilla.fenix.ui.robots.notificationShade
 
 /**
  * Test Suite that contains a part of the Smoke and Sanity tests defined in TestRail:
@@ -608,39 +607,6 @@ class SmokeTest {
         }.clickOpenInBrowserButton {
             verifyTabCounter("1")
         }
-    }
-
-    @Test
-    fun audioPlaybackSystemNotificationTest() {
-        val audioTestPage = TestAssetHelper.getAudioPageAsset(mockWebServer)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(audioTestPage.url) {
-            mDevice.waitForIdle()
-            clickMediaPlayerPlayButton()
-            assertPlaybackState(browserStore, MediaSession.PlaybackState.PLAYING)
-        }.openNotificationShade {
-            verifySystemNotificationExists(audioTestPage.title)
-            clickMediaNotificationControlButton("Pause")
-            verifyMediaSystemNotificationButtonState("Play")
-        }
-
-        mDevice.pressBack()
-
-        browserScreen {
-            assertPlaybackState(browserStore, MediaSession.PlaybackState.PAUSED)
-        }.openTabDrawer {
-            closeTab()
-        }
-
-        mDevice.openNotification()
-
-        notificationShade {
-            verifySystemNotificationGone(audioTestPage.title)
-        }
-
-        // close notification shade before the next test
-        mDevice.pressBack()
     }
 
     @Test
