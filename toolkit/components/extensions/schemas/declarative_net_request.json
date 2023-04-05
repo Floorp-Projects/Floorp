@@ -10,24 +10,21 @@
         "$extend": "Permission",
         "choices": [{
           "type": "string",
-          "enum": ["declarativeNetRequest"],
-          "min_manifest_version": 3
+          "enum": ["declarativeNetRequest"]
         }]
       },
       {
         "$extend": "OptionalPermission",
         "choices": [{
           "type": "string",
-          "enum": ["declarativeNetRequestFeedback"],
-          "min_manifest_version": 3
+          "enum": ["declarativeNetRequestFeedback"]
         }]
       }, 
       {
         "$extend": "PermissionNoPrompt",
         "choices": [{
           "type": "string",
-          "enum": ["declarativeNetRequestWithHostAccess"],
-          "min_manifest_version": 3
+          "enum": ["declarativeNetRequestWithHostAccess"]
         }]
       },
       {
@@ -35,7 +32,6 @@
         "properties": {
           "declarative_net_request": {
             "type": "object",
-            "min_manifest_version": 3,
             "optional": true,
             "additionalProperties": { "$ref": "UnrecognizedProperty" },
             "properties": {
