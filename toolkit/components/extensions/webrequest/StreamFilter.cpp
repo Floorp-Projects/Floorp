@@ -103,9 +103,6 @@ void StreamFilter::FinishConnect(
   if (aEndpoint.IsValid()) {
     MOZ_RELEASE_ASSERT(aEndpoint.Bind(mActor));
     mActor->RecvInitialized(true);
-
-    // IPC now owns this reference.
-    Unused << do_AddRef(mActor);
   } else {
     mActor->RecvInitialized(false);
   }

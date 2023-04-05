@@ -31,7 +31,7 @@ class StreamFilterChild final : public PStreamFilterChild,
   friend class PStreamFilterChild;
 
  public:
-  NS_INLINE_DECL_REFCOUNTING(StreamFilterChild)
+  NS_INLINE_DECL_REFCOUNTING(StreamFilterChild, final)
 
   StreamFilterChild() : mState(State::Uninitialized), mReceivedOnStop(false) {}
 
@@ -99,8 +99,6 @@ class StreamFilterChild final : public PStreamFilterChild,
   IPCResult RecvSuspended();
   IPCResult RecvResumed();
   IPCResult RecvFlushData();
-
-  virtual void ActorDealloc() override;
 
   void SetStreamFilter(StreamFilter* aStreamFilter) {
     mStreamFilter = aStreamFilter;
