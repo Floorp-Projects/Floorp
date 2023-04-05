@@ -28,3 +28,86 @@ extensions:
     data_sensitivity:
       - technical
     telemetry_mirror: EXTENSIONS_STARTUPCACHE_LOAD_TIME
+
+extensions.apis.dnr:
+
+  startup_cache_read_size:
+    type: memory_distribution
+    memory_unit: byte
+    expires: 120
+    description: |
+      Amount of data read from the DNR startup cache file.
+    lifetime: application
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1803363/
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1803363#c11
+    data_sensitivity:
+      - technical
+
+  startup_cache_read_time:
+    type: timing_distribution
+    time_unit: millisecond
+    expires: 120
+    description: |
+      Amount of time it takes to read data into the DNR startup cache file.
+    lifetime: application
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1803363/
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1803363#c11
+    data_sensitivity:
+      - technical
+
+  startup_cache_write_size:
+    type: memory_distribution
+    memory_unit: byte
+    expires: 120
+    description: |
+      Amount of data written to the DNR startup cache file.
+    lifetime: application
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1803363/
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1803363#c11
+    data_sensitivity:
+      - technical
+
+  startup_cache_write_time:
+    type: timing_distribution
+    time_unit: millisecond
+    expires: 120
+    description: |
+      Amount of time it takes to write data into the DNR startup cache file.
+    lifetime: application
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1803363/
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1803363#c11
+    data_sensitivity:
+      - technical
+
+  validate_rules_time:
+    type: timing_distribution
+    time_unit: millisecond
+    expires: 120
+    description: |
+      Amount of time it takes to validate DNR rules of individual ruleset
+      when dynamic or static rulesets have been loaded from disk.
+    lifetime: application
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1803363/
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1803363#c11
+    data_sensitivity:
+      - technical

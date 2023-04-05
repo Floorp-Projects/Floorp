@@ -934,6 +934,7 @@ class RulesetsStore {
     { logRuleValidationError = err => Cu.reportError(err) } = {}
   ) {
     const startTime = Cu.now();
+    const validatedRulesTimerId = Glean.extensionsApisDnr.validateRulesTime.start();
     try {
       const ruleValidator = new lazy.ExtensionDNR.RuleValidator([]);
       // Normalize rules read from JSON.
@@ -990,6 +991,9 @@ class RulesetsStore {
         "ExtensionDNRStore",
         { startTime },
         `#getValidatedRules, addonId: ${extension.id}`
+      );
+      Glean.extensionsApisDnr.validateRulesTime.stopAndAccumulate(
+        validatedRulesTimerId
       );
     }
   }
@@ -1070,11 +1074,13 @@ class RulesetsStore {
           )
         );
       }
-      // TODO(Bug 1803363): consider collecting telemetry about cache load time and cache size.
+
       const startTime = Cu.now();
+      const timerId = Glean.extensionsApisDnr.startupCacheReadTime.start();
       this._ensureCacheLoaded = (async () => {
         const cacheFilePath = this.#getCacheFilePath();
-        const { buffer } = await IOUtils.read(cacheFilePath);
+        const { buffer, byteLength } = await IOUtils.read(cacheFilePath);
+        Glean.extensionsApisDnr.startupCacheReadSize.accumulate(byteLength);
         const decodedData = lazy.aomStartup.decodeBlob(buffer);
         const emptyOrCorruptedCache = !(decodedData?.cacheData instanceof Map);
         if (emptyOrCorruptedCache) {
@@ -1119,6 +1125,9 @@ class RulesetsStore {
             "ExtensionDNRStore",
             { startTime },
             "_ensureCacheLoaded"
+          );
+          Glean.extensionsApisDnr.startupCacheReadTime.stopAndAccumulate(
+            timerId
           );
         });
     }
@@ -1411,6 +1420,7 @@ class RulesetsStore {
 
   async #saveCacheDataNow() {
     const startTime = Cu.now();
+    const timerId = Glean.extensionsApisDnr.startupCacheWriteTime.start();
     try {
       const cacheFilePath = this.#getCacheFilePath();
       const { filteredData, seenLastUpdateTags } = this.getStartupCacheData();
@@ -1423,6 +1433,7 @@ class RulesetsStore {
       await IOUtils.write(cacheFilePath, data, {
         tmpPath: `${cacheFilePath}.tmp`,
       });
+      Glean.extensionsApisDnr.startupCacheWriteSize.accumulate(data.byteLength);
 
       if (this.detectStartupCacheDataChanged(seenLastUpdateTags)) {
         this.scheduleCacheDataSave();
@@ -1433,6 +1444,7 @@ class RulesetsStore {
         { startTime },
         "#saveCacheDataNow"
       );
+      Glean.extensionsApisDnr.startupCacheWriteTime.stopAndAccumulate(timerId);
     }
   }
 

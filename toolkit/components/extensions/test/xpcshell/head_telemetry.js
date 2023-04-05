@@ -2,7 +2,9 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-/* exported IS_OOP, valueSum, clearHistograms, getSnapshots, promiseTelemetryRecorded */
+/* exported IS_ANDROID_BUILD, IS_OOP, valueSum, clearHistograms, getSnapshots, promiseTelemetryRecorded,
+            assertDNRTelemetryMetricsDefined, assertDNRTelemetryMetricsNoSamples, assertDNRTelemetryMetricsSamplesCount,
+            resetTelemetryData, setupTelemetryForTests */
 
 ChromeUtils.defineESModuleGetters(this, {
   ContentTaskUtils: "resource://testing-common/ContentTaskUtils.sys.mjs",
@@ -18,6 +20,13 @@ Services.prefs.setBoolPref(
 );
 
 const IS_OOP = Services.prefs.getBoolPref("extensions.webextensions.remote");
+
+// Initializing and asserting the expected telemetry is currently conditioned
+// on this const.
+// TODO(Bug 1752139) remove this along with initializing and asserting the expected
+// telemetry also for android build, once `Services.fog.testResetFOG()` is implemented
+// for Android builds.
+const IS_ANDROID_BUILD = AppConstants.platform === "android";
 
 const WEBEXT_EVENTPAGE_RUNNING_TIME_MS = "WEBEXT_EVENTPAGE_RUNNING_TIME_MS";
 const WEBEXT_EVENTPAGE_RUNNING_TIME_MS_BY_ADDONID =
@@ -169,4 +178,89 @@ function assertHistogramCategoryNotEmpty(
     },
     message
   );
+}
+
+function setupTelemetryForTests() {
+  // FOG needs a profile directory to put its data in.
+  do_get_profile();
+  // FOG needs to be initialized in order for data to flow.
+  Services.fog.initializeFOG();
+}
+
+function resetTelemetryData() {
+  if (IS_ANDROID_BUILD) {
+    info("Skip testResetFOG on android builds");
+    return;
+  }
+  Services.fog.testResetFOG();
+}
+
+function assertDNRTelemetryMetricsDefined(metrics) {
+  const metricsFound = Object.keys(Glean.extensionsApisDnr);
+  const metricsNotFound = metrics.filter(
+    metric => !metricsFound.includes(metric)
+  );
+  Assert.deepEqual(
+    metricsNotFound,
+    [],
+    `All expected extensionsApisDnr Glean metrics should be found in ${metricsFound}`
+  );
+}
+
+function assertDNRTelemetryMetricsNoSamples(metrics, msg) {
+  assertDNRTelemetryMetricsDefined(metrics);
+  for (const metric of metrics) {
+    if (IS_ANDROID_BUILD) {
+      info(
+        `Skip assertions on collected samples for extensionsApisDnr.${metric} on android builds`
+      );
+      return;
+    }
+    const gleanData = Glean.extensionsApisDnr[metric].testGetValue();
+    Assert.deepEqual(
+      gleanData,
+      undefined,
+      `Expect no sample for Glean metric extensionApisDnr.${metric} (${msg}): ${gleanData}`
+    );
+  }
+}
+
+function assertDNRTelemetryMetricsSamplesCount(
+  metrics,
+  expectedSamplesCount,
+  msg
+) {
+  assertDNRTelemetryMetricsDefined(metrics);
+  for (const metric of metrics) {
+    if (IS_ANDROID_BUILD) {
+      info(
+        `Skip assertions on collected samples for extensionsApisDnr.${metric} on android builds`
+      );
+      return;
+    }
+    const gleanData = Glean.extensionsApisDnr[metric].testGetValue();
+    Assert.notEqual(
+      gleanData,
+      undefined,
+      `Got some sample for Glean metric extensionApisDnr.${metric}: ${gleanData &&
+        JSON.stringify(gleanData)}`
+    );
+    const toBucketSum = (acc, bucket) => {
+      acc += gleanData.values[bucket];
+      return acc;
+    };
+    Assert.equal(
+      Object.keys(gleanData.values).reduce(toBucketSum, 0),
+      expectedSamplesCount,
+      `Got the expected number of samples for Glean metric extensionsApisDnr.${metric} (${msg})`
+    );
+    // Make sure we are accumulating meaningfull values in the sample,
+    // if we do have samples for the bucket "0" it likely means we have
+    // not been collecting the value correctly (e.g. typo in the property
+    // name being collected).
+    Assert.ok(
+      !gleanData.values["0"],
+      `No sample for Glean metric extensionsApisDnr.${metric} should be collected for the bucket "0"`
+    );
+  }
 }
