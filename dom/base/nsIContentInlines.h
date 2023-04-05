@@ -16,23 +16,6 @@
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/dom/ShadowRoot.h"
 
-inline bool nsINode::IsUAWidget() const {
-  auto* shadow = mozilla::dom::ShadowRoot::FromNode(this);
-  return shadow && shadow->IsUAWidget();
-}
-
-inline bool nsINode::IsInUAWidget() const {
-  if (!IsInShadowTree()) {
-    return false;
-  }
-  mozilla::dom::ShadowRoot* shadow = AsContent()->GetContainingShadow();
-  return shadow && shadow->IsUAWidget();
-}
-
-inline bool nsINode::IsRootOfChromeAccessOnlySubtree() const {
-  return IsRootOfNativeAnonymousSubtree() || IsUAWidget();
-}
-
 inline bool nsIContent::IsInHTMLDocument() const {
   return OwnerDoc()->IsHTMLDocument();
 }
@@ -194,18 +177,10 @@ inline bool nsINode::IsInDesignMode() const {
 
   // If the shadow host is not in design mode, this can never be in design
   // mode.  Otherwise, the content is never editable by design mode of
-  // composed document.
-  if (IsInUAWidget()) {
-    nsIContent* host = GetContainingShadowHost();
-    MOZ_DIAGNOSTIC_ASSERT(host != this);
-    return host && host->IsInDesignMode();
-  }
-  MOZ_ASSERT(!IsUAWidget());
-
-  // If we're in a native anonymous subtree, we should consider it with the
-  // host.
+  // composed document. If we're in a native anonymous subtree, we should
+  // consider it with the host.
   if (IsInNativeAnonymousSubtree()) {
-    nsIContent* host = GetClosestNativeAnonymousSubtreeRootParent();
+    nsIContent* host = GetClosestNativeAnonymousSubtreeRootParentOrHost();
     MOZ_DIAGNOSTIC_ASSERT(host != this);
     return host && host->IsInDesignMode();
   }

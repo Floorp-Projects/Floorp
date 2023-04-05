@@ -657,7 +657,7 @@ void DocAccessible::HandleScroll(nsINode* aTarget) {
   if (!targetAcc && target->IsInNativeAnonymousSubtree()) {
     // The scroll event for textareas comes from a native anonymous div. We need
     // the closest non-anonymous ancestor to get the right Accessible.
-    target = target->GetClosestNativeAnonymousSubtreeRootParent();
+    target = target->GetClosestNativeAnonymousSubtreeRootParentOrHost();
     targetAcc = GetAccessible(target);
   }
   // Regardless of our scroll timer, we need to send a cache update

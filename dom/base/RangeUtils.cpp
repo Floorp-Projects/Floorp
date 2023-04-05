@@ -47,7 +47,8 @@ nsINode* RangeUtils::ComputeRootNode(nsINode* aNode) {
     }
 
     // If the node is in NAC, then the NAC parent should be the root.
-    if (nsINode* root = content->GetClosestNativeAnonymousSubtreeRootParent()) {
+    if (nsINode* root =
+            content->GetClosestNativeAnonymousSubtreeRootParentOrHost()) {
       return root;
     }
   }

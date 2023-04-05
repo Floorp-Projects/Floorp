@@ -1810,11 +1810,10 @@ nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
   if (aParent.IsInNativeAnonymousSubtree()) {
     SetFlags(NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE);
   }
-  if (aParent.HasFlag(NODE_HAS_BEEN_IN_UA_WIDGET)) {
-    SetFlags(NODE_HAS_BEEN_IN_UA_WIDGET);
-  }
   if (IsRootOfNativeAnonymousSubtree()) {
     aParent.SetMayHaveAnonymousChildren();
+  } else if (aParent.HasFlag(NODE_HAS_BEEN_IN_UA_WIDGET)) {
+    SetFlags(NODE_HAS_BEEN_IN_UA_WIDGET);
   }
   if (aParent.HasFlag(ELEMENT_IS_DATALIST_OR_HAS_DATALIST_ANCESTOR)) {
     SetFlags(ELEMENT_IS_DATALIST_OR_HAS_DATALIST_ANCESTOR);

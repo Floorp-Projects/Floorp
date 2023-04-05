@@ -416,11 +416,10 @@ nsresult CharacterData::BindToTree(BindContext& aContext, nsINode& aParent) {
   if (aParent.IsInNativeAnonymousSubtree()) {
     SetFlags(NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE);
   }
-  if (aParent.HasFlag(NODE_HAS_BEEN_IN_UA_WIDGET)) {
-    SetFlags(NODE_HAS_BEEN_IN_UA_WIDGET);
-  }
   if (IsRootOfNativeAnonymousSubtree()) {
     aParent.SetMayHaveAnonymousChildren();
+  } else if (aParent.HasFlag(NODE_HAS_BEEN_IN_UA_WIDGET)) {
+    SetFlags(NODE_HAS_BEEN_IN_UA_WIDGET);
   }
 
   // Set parent

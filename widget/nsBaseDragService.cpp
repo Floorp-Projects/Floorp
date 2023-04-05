@@ -322,7 +322,7 @@ nsBaseDragService::InvokeDragSession(
   mIsDraggingTextInTextControl =
       mSourceNode->IsInNativeAnonymousSubtree() &&
       TextControlElement::FromNodeOrNull(
-          mSourceNode->GetClosestNativeAnonymousSubtreeRootParent());
+          mSourceNode->GetClosestNativeAnonymousSubtreeRootParentOrHost());
   mContentPolicyType = aContentPolicyType;
   mEndDragPoint = LayoutDeviceIntPoint(0, 0);
 

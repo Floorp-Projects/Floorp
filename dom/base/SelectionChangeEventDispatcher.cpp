@@ -132,7 +132,7 @@ void SelectionChangeEventDispatcher::OnSelectionChange(Document* aDoc,
       maybeHasSelectionChangeEventListeners) {
     if (const nsFrameSelection* fs = aSel->GetFrameSelection()) {
       if (nsCOMPtr<nsIContent> root = fs->GetLimiter()) {
-        textControl = root->GetClosestNativeAnonymousSubtreeRootParent();
+        textControl = root->GetClosestNativeAnonymousSubtreeRootParentOrHost();
         MOZ_ASSERT_IF(textControl,
                       textControl->IsTextControlElement() &&
                           !textControl->IsInNativeAnonymousSubtree());

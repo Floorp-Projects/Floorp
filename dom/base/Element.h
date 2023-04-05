@@ -154,7 +154,7 @@ already_AddRefed<nsContentList> NS_GetContentList(nsINode* aRootNode,
   NODE_FLAG_BIT(NODE_TYPE_SPECIFIC_BITS_OFFSET + (n_))
 
 // Element-specific flags
-enum {
+enum : uint32_t {
   // Whether this node has dirty descendants for Servo's style system.
   ELEMENT_HAS_DIRTY_DESCENDANTS_FOR_SERVO = ELEMENT_FLAG_BIT(0),
   // Whether this node has dirty descendants for animation-only restyle for

@@ -1375,9 +1375,10 @@ class EditorDOMRangeBase final {
     if (mStart.IsInNativeAnonymousSubtree()) {
       nsIContent* parent = nullptr;
       for (parent = mStart.template ContainerAs<nsIContent>()
-                        ->GetClosestNativeAnonymousSubtreeRootParent();
+                        ->GetClosestNativeAnonymousSubtreeRootParentOrHost();
            parent && parent->IsInNativeAnonymousSubtree();
-           parent = parent->GetClosestNativeAnonymousSubtreeRootParent()) {
+           parent =
+               parent->GetClosestNativeAnonymousSubtreeRootParentOrHost()) {
       }
       if (MOZ_UNLIKELY(!parent)) {
         return false;
@@ -1387,9 +1388,10 @@ class EditorDOMRangeBase final {
     if (mEnd.IsInNativeAnonymousSubtree()) {
       nsIContent* parent = nullptr;
       for (parent = mEnd.template ContainerAs<nsIContent>()
-                        ->GetClosestNativeAnonymousSubtreeRootParent();
+                        ->GetClosestNativeAnonymousSubtreeRootParentOrHost();
            parent && parent->IsInNativeAnonymousSubtree();
-           parent = parent->GetClosestNativeAnonymousSubtreeRootParent()) {
+           parent =
+               parent->GetClosestNativeAnonymousSubtreeRootParentOrHost()) {
       }
       if (MOZ_UNLIKELY(!parent)) {
         return false;

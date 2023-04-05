@@ -92,7 +92,7 @@ nsNumberControlFrame* nsNumberControlFrame::GetNumberControlFrameForSpinButton(
   // be wrapped around any of the elements between aFrame and the
   // nsNumberControlFrame that we're looking for (e.g. flex wrappers).
   nsIContent* content = aFrame->GetContent();
-  auto* nacHost = content->GetClosestNativeAnonymousSubtreeRootParent();
+  auto* nacHost = content->GetClosestNativeAnonymousSubtreeRootParentOrHost();
   if (!nacHost) {
     return nullptr;
   }
