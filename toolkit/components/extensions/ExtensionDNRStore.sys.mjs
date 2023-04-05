@@ -1212,6 +1212,7 @@ class RulesetsStore {
     await this.#promiseStartupCacheLoaded();
 
     if (!this._startupCacheData.has(extension.uuid)) {
+      Glean.extensionsApisDnr.startupCacheEntries.miss.add(1);
       return;
     }
 
@@ -1220,9 +1221,11 @@ class RulesetsStore {
 
     if (extCacheData.extVersion != extension.version) {
       StoreData.clearLastUpdateTagPref(extension.uuid);
+      Glean.extensionsApisDnr.startupCacheEntries.miss.add(1);
       return;
     }
 
+    Glean.extensionsApisDnr.startupCacheEntries.hit.add(1);
     for (const ruleset of extCacheData.staticRulesets.values()) {
       ruleset.rules = ruleset.rules.map(rule =>
         lazy.ExtensionDNR.RuleValidator.deserializeRule(rule)

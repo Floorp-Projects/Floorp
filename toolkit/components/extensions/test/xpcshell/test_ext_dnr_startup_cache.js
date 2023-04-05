@@ -185,6 +185,8 @@ add_task(async function test_dnr_startup_cache_save_and_load() {
       // Expected no startup cache file to be loaded or used for a newly installed extension.
       "startupCacheReadSize",
       "startupCacheReadTime",
+      "startupCacheEntries.miss",
+      "startupCacheEntries.hit",
     ],
     "on loading dnr rules for newly installed extension"
   );
@@ -242,17 +244,31 @@ add_task(async function test_dnr_startup_cache_save_and_load() {
       assertDNRTelemetryMetricsSamplesCount(
         ["startupCacheReadSize", "startupCacheReadTime"],
         1,
-        "after DNR store loaded startup cache data"
+        "after app startup and expected startup cache hit"
+      );
+      assertDNRTelemetryMetricsGetValueEq(
+        ["startupCacheEntries.hit"],
+        1,
+        "after app startup and expected startup cache hit"
       );
       assertDNRTelemetryMetricsNoSamples(
-        ["validateRulesTime"],
+        ["validateRulesTime", "startupCacheEntries.miss"],
         "after DNR store loaded startup cache data"
       );
     } else {
       assertDNRTelemetryMetricsSamplesCount(
         ["validateRulesTime", "startupCacheReadTime", "startupCacheReadSize"],
         1,
-        "after DNR store load with expected startup cache miss"
+        "after app startup and expected startup cache miss"
+      );
+      assertDNRTelemetryMetricsGetValueEq(
+        ["startupCacheEntries.miss"],
+        1,
+        "after app startup and expected startup cache miss"
+      );
+      assertDNRTelemetryMetricsNoSamples(
+        ["startupCacheEntries.hit"],
+        "after DNR store loaded startup cache data"
       );
     }
 
