@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// On debug osx test machine, verify chaos mode takes slightly too long
+requestLongerTimeout(2);
+
 Services.prefs.setBoolPref("network.early-hints.enabled", true);
 
 const { request_count_checking } = ChromeUtils.importESModule(
