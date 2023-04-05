@@ -451,6 +451,39 @@ function parseAboutPageURL(url) {
   return ret;
 }
 
+/**
+ * Get the number of records in autofill storage, e.g. credit cards/addresses.
+ *
+ * @param  {Object} [data]
+ * @param  {string} [data.collectionName]
+ *         The name used to specify which collection to retrieve records.
+ * @param  {string} [data.searchString]
+ *         The typed string for filtering out the matched records.
+ * @param  {string} [data.info]
+ *         The input autocomplete property's information.
+ * @returns {Promise<number>} The number of matched records.
+ * @see FormAutofillParent._getRecords
+ */
+async function getAutofillRecords(data) {
+  let actor;
+  try {
+    const win = Services.wm.getMostRecentBrowserWindow();
+    actor = win.gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getActor(
+      "FormAutofill"
+    );
+  } catch (error) {
+    // If the actor is not available, we can't get the records. We could import
+    // the records directly from FormAutofillStorage to avoid the messiness of
+    // JSActors, but that would import a lot of code for a targeting attribute.
+    return 0;
+  }
+  let records = await actor?.receiveMessage({
+    name: "FormAutofill:GetRecords",
+    data,
+  });
+  return records?.length ?? 0;
+}
+
 const TargetingGetters = {
   get locale() {
     return Services.locale.appLocaleAsBCP47;
@@ -868,33 +901,11 @@ const TargetingGetters = {
   },
 
   get creditCardsSaved() {
-    return (
-      Services.wm
-        .getMostRecentBrowserWindow()
-        ?.gBrowser?.selectedBrowser?.browsingContext.currentWindowGlobal.getActor(
-          "FormAutofill"
-        )
-        ?.receiveMessage({
-          name: "FormAutofill:GetRecords",
-          data: { collectionName: "creditCards" },
-        })
-        .then(cards => cards?.length ?? 0) ?? 0
-    );
+    return getAutofillRecords({ collectionName: "creditCards" });
   },
 
   get addressesSaved() {
-    return (
-      Services.wm
-        .getMostRecentBrowserWindow()
-        ?.gBrowser?.selectedBrowser?.browsingContext.currentWindowGlobal.getActor(
-          "FormAutofill"
-        )
-        ?.receiveMessage({
-          name: "FormAutofill:GetRecords",
-          data: { collectionName: "addresses" },
-        })
-        .then(addresses => addresses?.length ?? 0) ?? 0
-    );
+    return getAutofillRecords({ collectionName: "addresses" });
   },
 
   /**

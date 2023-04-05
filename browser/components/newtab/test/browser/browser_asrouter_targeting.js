@@ -1365,6 +1365,13 @@ add_task(async function test_fxViewButtonAreaType_removed() {
 });
 
 add_task(async function test_creditCardsSaved() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["extensions.formautofill.creditCards.supported", "on"],
+      ["extensions.formautofill.creditCards.enabled", true],
+    ],
+  });
+
   is(
     await ASRouterTargeting.Environment.creditCardsSaved,
     0,
@@ -1426,9 +1433,18 @@ add_task(async function test_creditCardsSaved() {
     );
     await removeAutofillRecords();
   }
+
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_addressesSaved() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["extensions.formautofill.addresses.supported", "on"],
+      ["extensions.formautofill.addresses.enabled", true],
+    ],
+  });
+
   is(
     await ASRouterTargeting.Environment.addressesSaved,
     0,
@@ -1460,6 +1476,7 @@ add_task(async function test_addressesSaved() {
   );
 
   await removeAutofillRecords();
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_migrationInteractions() {
