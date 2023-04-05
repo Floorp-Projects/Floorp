@@ -23,7 +23,7 @@ struct LaunchParameters {
   bool enableLogging;
 };
 
-[ManualDealloc, NeedsOtherPid, NestedUpTo=inside_sync]
+[NeedsOtherPid, NestedUpTo=inside_sync]
 sync protocol PRemoteSandboxBroker
 {
 parent:
