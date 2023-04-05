@@ -57,6 +57,11 @@ function clearHistograms() {
   Services.telemetry.getSnapshotForKeyedHistograms("main", true /* clear */);
 }
 
+function clearScalars() {
+  Services.telemetry.getSnapshotForScalars("main", true /* clear */);
+  Services.telemetry.getSnapshotForKeyedScalars("main", true /* clear */);
+}
+
 function getSnapshots(process) {
   return Services.telemetry.getSnapshotForHistograms("main", false /* clear */)[
     process
@@ -200,6 +205,7 @@ function resetTelemetryData() {
   // in the related mirrored unified telemetry probe after we
   // have reset Glean metrics data using testResetFOG).
   clearHistograms();
+  clearScalars();
 }
 
 function assertDNRTelemetryMetricsDefined(metrics) {
@@ -255,6 +261,16 @@ function assertDNRTelemetryMirrored({
         .parent[unifiedName];
       break;
     }
+    case "keyedScalar": {
+      const snapshot = Services.telemetry.getSnapshotForKeyedScalars(
+        "main",
+        false
+      );
+      if (unifiedName in (snapshot?.parent || {})) {
+        unifiedData = snapshot.parent[unifiedName][gleanLabel];
+      }
+      break;
+    }
     default:
       Assert.ok(
         false,
@@ -270,11 +286,24 @@ function assertDNRTelemetryMirrored({
       `Expect mirrored unified telemetry ${unifiedType} ${unifiedName} has no samples as Glean ${gleanMetric}`
     );
   } else {
-    Assert.deepEqual(
-      valueSum(unifiedData.values),
-      valueSum(gleanData.values),
-      `Expect mirrored unified telemetry ${unifiedType} ${unifiedName} has samples mirrored from Glean ${gleanMetric}`
-    );
+    switch (unifiedType) {
+      case "histogram": {
+        Assert.deepEqual(
+          valueSum(unifiedData.values),
+          valueSum(gleanData.values),
+          `Expect mirrored unified telemetry ${unifiedType} ${unifiedName} has samples mirrored from Glean ${gleanMetric}`
+        );
+        break;
+      }
+      case "keyedScalar": {
+        Assert.deepEqual(
+          unifiedData,
+          gleanData,
+          `Expect mirrored unified telemetry ${unifiedType} ${unifiedName} has samples mirrored from Glean ${gleanMetric}`
+        );
+        break;
+      }
+    }
   }
 }
 
@@ -327,6 +356,16 @@ function assertDNRTelemetryMetricsGetValueEq(metrics, msg) {
       expectedGetValue,
       `Got expected value set on Glean metric extensionApisDnr.${metric}.${label} (${msg})`
     );
+
+    if (metricDetails.mirroredName) {
+      const { mirroredName, mirroredType } = metricDetails;
+      assertDNRTelemetryMirrored({
+        gleanMetric: metric,
+        gleanLabel: label,
+        unifiedName: mirroredName,
+        unifiedType: mirroredType,
+      });
+    }
   }
 }
 
