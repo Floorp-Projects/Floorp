@@ -735,7 +735,6 @@ var gPermissionPanel = {
 
   _createStateLabel(aPermission, idNoSuffix) {
     let label = document.createXULElement("label");
-    label.setAttribute("flex", "1");
     label.setAttribute("class", "permission-popup-permission-state-label");
     let labelId = `permission-popup-permission-state-label-${idNoSuffix}-${this
       ._permissionLabelIndex++}`;
