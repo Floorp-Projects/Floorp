@@ -35,7 +35,7 @@ ObliviousHttpService::ObliviousHttpService()
     obs->AddObserver(this, "xpcom-shutdown", false);
     obs->AddObserver(this, "network:captive-portal-connectivity-changed",
                      false);
-    obs->AddObserver(this, "network:trr-confirmation", false);
+    obs->AddObserver(this, "trrservice-confirmation-failed", false);
   }
 
   ReadPrefs("*"_ns);
@@ -194,11 +194,10 @@ ObliviousHttpService::Observe(nsISupports* subject, const char* topic,
             mozilla::services::GetObserverService()) {
       obs->RemoveObserver(this, "xpcom-shutdown");
       obs->RemoveObserver(this, "network:captive-portal-connectivity-changed");
-      obs->RemoveObserver(this, "network:trr-confirmation");
+      obs->RemoveObserver(this, "trrservice-confirmation-failed");
     }
   } else if (!strcmp(topic, "network:captive-portal-connectivity-changed") ||
-             (!strcmp(topic, "network:trr-confirmation") &&
-              u"CONFIRM_FAILED"_ns.Equals(data))) {
+             !strcmp(topic, "trrservice-confirmation-failed")) {
     FetchConfig(false);
   }
   return NS_OK;
