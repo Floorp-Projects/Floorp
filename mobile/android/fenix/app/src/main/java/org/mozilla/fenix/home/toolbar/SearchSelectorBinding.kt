@@ -10,12 +10,14 @@ import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.menu.Orientation
 import mozilla.components.lib.state.helpers.AbstractBinding
 import mozilla.components.service.glean.private.NoExtras
+import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.GleanMetrics.UnifiedSearch
 import org.mozilla.fenix.R
@@ -69,6 +71,12 @@ class SearchSelectorBinding(
                         context.resources.getDimensionPixelSize(R.dimen.preference_icon_drawable_size)
                     BitmapDrawable(context.resources, searchEngine.icon).apply {
                         setBounds(0, 0, iconSize, iconSize)
+                        // Setting tint manually for icons that were converted from Drawable
+                        // to Bitmap. Search Engine icons are stored as Bitmaps, hence
+                        // theming/attribute mechanism won't work.
+                        if (searchEngine.type == SearchEngine.Type.APPLICATION) {
+                            setTint(context.getColorFromAttr(R.attr.textPrimary))
+                        }
                     }
                 }
 

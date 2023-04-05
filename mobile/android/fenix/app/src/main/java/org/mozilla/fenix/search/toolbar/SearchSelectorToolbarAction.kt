@@ -18,6 +18,7 @@ import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.concept.menu.Orientation
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.lib.state.ext.flow
+import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.android.view.toScope
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
@@ -89,7 +90,14 @@ class SearchSelectorToolbarAction(
                     .ifChanged()
                     .collect { searchEngine ->
                         view.setIcon(
-                            icon = searchEngine.getScaledIcon(view.context),
+                            icon = searchEngine.getScaledIcon(view.context).apply {
+                                // Setting tint manually for icons that were converted from Drawable
+                                // to Bitmap. Search Engine icons are stored as Bitmaps, hence
+                                // theming/attribute mechanism won't work.
+                                if (searchEngine.type == SearchEngine.Type.APPLICATION) {
+                                    setTint(view.context.getColorFromAttr(R.attr.textPrimary))
+                                }
+                            },
                             contentDescription = searchEngine.name,
                         )
                     }
