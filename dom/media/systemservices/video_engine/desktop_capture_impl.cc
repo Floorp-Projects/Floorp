@@ -712,6 +712,11 @@ void DesktopCaptureImpl::ShutdownOnThread() {
 void DesktopCaptureImpl::CaptureFrameOnThread() {
   MOZ_DIAGNOSTIC_ASSERT(mCaptureThreadChecker.IsCurrent());
 
+#if defined(WEBRTC_MAC)
+  // Give cycles to the RunLoop so frame callbacks can happen
+  CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.01, true);
+#endif
+
   auto start = mozilla::TimeStamp::Now();
   mCapturer->CaptureFrame();
   auto end = mozilla::TimeStamp::Now();
