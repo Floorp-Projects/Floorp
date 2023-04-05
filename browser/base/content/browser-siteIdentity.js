@@ -166,6 +166,7 @@ var gIdentityHandler = {
 
   _popupInitialized: false,
   _initializePopup() {
+    window.ensureCustomElements("moz-support-link");
     if (!this._popupInitialized) {
       let wrapper = document.getElementById("template-identity-popup");
       wrapper.replaceWith(wrapper.content);
@@ -930,11 +931,6 @@ var gIdentityHandler = {
     let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
     this._identityPopupMixedContentLearnMore.forEach(e =>
       e.setAttribute("href", baseURL + "mixed-content")
-    );
-
-    this._identityPopupCustomRootLearnMore.setAttribute(
-      "href",
-      baseURL + "enterprise-roots"
     );
 
     let customRoot = false;
