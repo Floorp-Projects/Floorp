@@ -5,19 +5,20 @@
 
 import copy
 
-from voluptuous import Required
-
 from taskgraph.task import Task
 from taskgraph.util.schema import Schema
+from voluptuous import Required
 
 from . import group_tasks
 
-schema = Schema({
-    Required(
-        'dependent-tasks',
-        'dictionary of dependent tasks, keyed by kind',
-    ): {str: Task},
-})
+schema = Schema(
+    {
+        Required(
+            "dependent-tasks",
+            "dictionary of dependent tasks, keyed by kind",
+        ): {str: Task},
+    }
+)
 
 
 def loader(kind, path, config, params, loaded_tasks):
@@ -32,10 +33,10 @@ def loader(kind, path, config, params, loaded_tasks):
     Optional ``task-template`` kind configuration value, if specified, will be used to
     pass configuration down to the specified transforms used.
     """
-    task_template = config.get('task-template')
+    task_template = config.get("task-template")
 
     for dep_tasks in group_tasks(config, loaded_tasks):
-        task = {'dependent-tasks': {dep.label: dep for dep in dep_tasks}}
+        task = {"dependent-tasks": {dep.label: dep for dep in dep_tasks}}
         if task_template:
             task.update(copy.deepcopy(task_template))
 

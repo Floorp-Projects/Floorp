@@ -10,22 +10,25 @@ kind.
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
 
-
 transforms = TransformSequence()
 
 
 @transforms.add
 def resolve_keys(config, tasks):
     for task in tasks:
-        for key in ("worker.github-project", "worker.is-prerelease", "worker.release-name"):
+        for key in (
+            "worker.github-project",
+            "worker.is-prerelease",
+            "worker.release-name",
+        ):
             resolve_keyed_by(
                 task,
                 key,
                 item_name=task["name"],
                 **{
-                    'build-type': task["attributes"]["build-type"],
-                    'level': config.params["level"],
-                    'release-type': config.params["release_type"],
+                    "build-type": task["attributes"]["build-type"],
+                    "level": config.params["level"],
+                    "release-type": config.params["release_type"],
                 }
             )
         yield task
@@ -41,7 +44,9 @@ def build_worker_definition(config, tasks):
             head_tag=config.params["head_tag"],
         )
         worker["git-revision"] = config.params["head_rev"]
-        worker["release-name"] = task["worker"]["release-name"].format(version=config.params["version"])
+        worker["release-name"] = task["worker"]["release-name"].format(
+            version=config.params["version"]
+        )
 
         yield task
 
@@ -61,9 +66,7 @@ def _build_artifact_map(task):
     for upstream_artifact_metadata in task["worker"]["upstream-artifacts"]:
         artifacts = {"paths": {}, "taskId": upstream_artifact_metadata["taskId"]}
         for path in upstream_artifact_metadata["paths"]:
-            artifacts["paths"][path] = {
-                "destinations": [github_names_per_path[path]]
-            }
+            artifacts["paths"][path] = {"destinations": [github_names_per_path[path]]}
 
         artifact_map.append(artifacts)
 

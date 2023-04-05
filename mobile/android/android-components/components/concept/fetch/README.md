@@ -41,7 +41,7 @@ val request = Request(
    url = "...",
    method = Request.Method.POST,
    body = Request.Body.fromStream(stream))
-   
+
 client.fetch(request).use { response ->
    if (response.success) {
        // ...
@@ -76,13 +76,13 @@ val request = Request(
        "Content-Type", "text/x-markdown; charset=utf-8"
    ),
    body = Request.Body.fromFile(file))
-   
+
 client.fetch(request).use { response ->
    if (request.success) {
       // Upload was successful!
    }
 }
-   
+
 ```
 
 #### Asynchronous requests

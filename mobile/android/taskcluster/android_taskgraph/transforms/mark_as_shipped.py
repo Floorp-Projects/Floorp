@@ -10,7 +10,6 @@ kind.
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
 
-
 transforms = TransformSequence()
 
 
@@ -23,8 +22,8 @@ def resolve_keys(config, tasks):
                 key,
                 item_name=task["name"],
                 **{
-                    'build-type': task["attributes"]["build-type"],
-                    'level': config.params["level"],
+                    "build-type": task["attributes"]["build-type"],
+                    "level": config.params["level"],
                 }
             )
         yield task
@@ -36,10 +35,12 @@ def make_task_description(config, tasks):
         product = "Firefox-android"  # shipit exactly uses this case
         # {ver} is just a magic string to show "this isn't right"
         # https://github.com/mozilla-mobile/fenix/pull/7306/files#r360248631
-        version = config.params['version'] or "{ver}"
-        task['worker']['release-name'] = '{product}-{version}-build{build_number}'.format(
+        version = config.params["version"] or "{ver}"
+        task["worker"][
+            "release-name"
+        ] = "{product}-{version}-build{build_number}".format(
             product=product,
             version=version,
-            build_number=config.params.get('build_number', 1)
+            build_number=config.params.get("build_number", 1),
         )
         yield task

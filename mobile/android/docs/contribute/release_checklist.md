@@ -12,7 +12,7 @@ These are instructions for preparing a release branch for Firefox Android and st
 
 1. Create a branch name with the format `releases_v[beta_version]` off of the `main` branch (for example, `releases_v109`) through the GitHub UI.
 `[beta_version]` should follow the Firefox Beta release number. See [Firefox Release Calendar](https://wiki.mozilla.org/Release_Management/Calendar).
-2. In `main` [version.txt](https://github.com/mozilla-mobile/firefox-android/blob/main/version.txt): 
+2. In `main` [version.txt](https://github.com/mozilla-mobile/firefox-android/blob/main/version.txt):
    - Update the version from `[previous_nightly_version].0a1` to `[nightly_version].0a1`. For example:
     ```diff
     diff --git a/version.txt b/version.txt
@@ -50,7 +50,7 @@ These are instructions for preparing a release branch for Firefox Android and st
     -    val channel = GeckoChannel.NIGHTLY
     +    val channel = GeckoChannel.BETA
      }
-    
+
      /**
     ```
 7. Create a commit named `Switch to GeckoView Beta` for this change. This change can either be directly committed to the `releases_v[beta_version]` branch or a pull request can be created against it and then merged. Once landed, it is expected that this change will temporarily break builds on the branch. The next step will fix them.

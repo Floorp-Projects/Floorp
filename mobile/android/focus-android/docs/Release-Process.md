@@ -44,7 +44,7 @@ After the Beta cut, another task is to renew/remove all soon to expire telemetry
 3. Note that `metrics.yaml` is also modified.  Once the review is over, continue to modify `metrics.yaml` to match the decision made in the Google sheet.  Make sure to add the PR link and if the telemetry never expires, add the email of the owner as contact.
 4. Create a PR for review.  Modify `[release_version add 2]`_renewal_request.txt and paste it to the PR for data review.  Make sure to add the answers for:
  - When will this collection now expire?
- - Why was the initial period of collection insufficient? 
+ - Why was the initial period of collection insufficient?
 
 
 ### Ask for Help

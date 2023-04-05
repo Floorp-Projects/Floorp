@@ -4,14 +4,14 @@
 """
 Add github links for release notifications
 """
-from datetime import datetime
 import os
 import re
+from datetime import datetime
 
 from mozilla_version.mobile import MobileVersion
-from taskgraph.util.vcs import get_repository
-from taskgraph.util.taskcluster import find_task_id, get_task_definition
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.taskcluster import find_task_id, get_task_definition
+from taskgraph.util.vcs import get_repository
 
 transforms = TransformSequence()
 

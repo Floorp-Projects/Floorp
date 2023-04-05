@@ -6,7 +6,7 @@ The main tests are:
 Simulates a COLD MAIN (app icon launch) launch to report FullyDrawn, e.g when the user sees the app fully drawn after launching it.
 
 * COLD VIEW Nav start:
-An app link launch to load a page. It measures until "navigation starts" which is an internal Gecko event that indicates we're starting to load a page. 
+An app link launch to load a page. It measures until "navigation starts" which is an internal Gecko event that indicates we're starting to load a page.
 
 ### What to do after a performance regression is reported.
 
@@ -27,7 +27,7 @@ On the reported [ticket](https://github.com/mozilla-mobile/fenix/issues/25253), 
 
 ![image](https://user-images.githubusercontent.com/773158/174879320-ace21f51-2892-4b1c-8c25-a10ee8d0174e.png)
 
-We can find each commit hash date by downloading the APKs, from Task Cluster and going to the about page. 
+We can find each commit hash date by downloading the APKs, from Task Cluster and going to the about page.
 
 For example:
 
@@ -51,7 +51,7 @@ https://github.com/mozilla-mobile/fenix/compare/98455c01eeba7c63775f18817cd079f5
 
 
 
-With it we can see each commit that could introduced the regression. 
+With it we can see each commit that could introduced the regression.
 
 ### Using backfill.py
 
@@ -62,8 +62,8 @@ perf-tools-main % python3 backfill.py --tests cold_main_first_frame --startcommi
 ```
 
 Where:
-*  **cold_main_first_frame**: it's the test we would like to run, we could also pass `cold_view_nav_start` depending on the regression type.  
-*  **--startcommit**: it's the commit before the regression.  
+*  **cold_main_first_frame**: it's the test we would like to run, we could also pass `cold_view_nav_start` depending on the regression type.
+*  **--startcommit**: it's the commit before the regression.
 *  **--endcommit** it's the commit where the regression appears.
 *  **--repository_to_test_path** is the path where your local Fenix repository is.
 
@@ -89,7 +89,7 @@ These files are the output of the script:
 * **Cold_main_first_frame-durations.txt**: Will contain the raw information of each repetition of the test.
 
 
-With these files, we can identify which commit, introduced the regression by checking file by file which results are closer to the ones reported one the regression ticket. 
+With these files, we can identify which commit, introduced the regression by checking file by file which results are closer to the ones reported one the regression ticket.
 
 After we found the regressing commit, we just have to update the ticket, posting our finding and tagging the person that introduced to research how to optimize the patch. Normally if the regression is significant we will ask to undo the commit until the patch is optimized.
 
@@ -98,7 +98,7 @@ After we found the regressing commit, we just have to update the ticket, posting
 * If you would like to graph the results you can use `python3 analyze_durations.py --graph results.txt`.
 *Just keep in mind, the results provide from the Performance team are from running the tests on a Moto G 5. Running on a more powerful device could cause the results to diverge.
 * In case, you need to start recording a profile in startup https://profiler.firefox.com/docs/#/./guide-startup-shutdown?id=firefox-for-android.
-  
+
 
 ### Identifying the source of the regression.
-Our main task, when looking for a performance regression is just to identify the faulty commit, but if we would like to figure out what is the exact cause, we will need to take [profile](https://wiki.mozilla.org/Performance/Fenix/Performance_reviews#Profile) from regressing version, and the version before to try to identify what could be causing the issue, checking the code path of the regressing commit could give us some hints to where to look. 
+Our main task, when looking for a performance regression is just to identify the faulty commit, but if we would like to figure out what is the exact cause, we will need to take [profile](https://wiki.mozilla.org/Performance/Fenix/Performance_reviews#Profile) from regressing version, and the version before to try to identify what could be causing the issue, checking the code path of the regressing commit could give us some hints to where to look.

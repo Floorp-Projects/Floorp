@@ -11,21 +11,26 @@ from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
 
-
 transforms = TransformSequence()
 
 
 @transforms.add
 def resolve_keys(config, tasks):
     for task in tasks:
-        for key in ("worker.channel", "worker.dep", "worker.certificate-alias", "worker.product", "routes"):
+        for key in (
+            "worker.channel",
+            "worker.dep",
+            "worker.certificate-alias",
+            "worker.product",
+            "routes",
+        ):
             resolve_keyed_by(
                 task,
                 key,
                 item_name=task["name"],
                 **{
-                    'build-type': task["attributes"]["build-type"],
-                    'level': config.params["level"],
+                    "build-type": task["attributes"]["build-type"],
+                    "level": config.params["level"],
                 }
             )
         yield task

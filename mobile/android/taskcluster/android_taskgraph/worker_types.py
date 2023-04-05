@@ -3,10 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-from voluptuous import Any, Required, Optional
-
-from taskgraph.util.schema import taskref_or_string
 from taskgraph.transforms.task import payload_builder
+from taskgraph.util.schema import taskref_or_string
+from voluptuous import Any, Optional, Required
 
 
 @payload_builder(
@@ -47,10 +46,7 @@ def build_scriptworker_signing_payload(config, task, task_def):
         "{}:signing:cert:{}".format(scope_prefix, worker["signing-type"])
     )
     task_def["scopes"].extend(
-        [
-            f"{scope_prefix}:signing:format:{format}"
-            for format in sorted(formats)
-        ]
+        [f"{scope_prefix}:signing:format:{format}" for format in sorted(formats)]
     )
 
 
@@ -59,21 +55,25 @@ def build_scriptworker_signing_payload(config, task, task_def):
     schema={
         Required("action"): str,
         Required("version"): str,
-        Required("artifact-map"): [{
-            Required("paths"): {
-                Any(str): {
-                    Required("destinations"): [str],
+        Required("artifact-map"): [
+            {
+                Required("paths"): {
+                    Any(str): {
+                        Required("destinations"): [str],
+                    },
                 },
-            },
-            Required("taskId"): taskref_or_string,
-        }],
+                Required("taskId"): taskref_or_string,
+            }
+        ],
         Required("beetmover-application-name"): str,
         Required("bucket"): str,
-        Required("upstream-artifacts"): [{
-            Required("taskId"): taskref_or_string,
-            Required("taskType"): str,
-            Required("paths"): [str],
-        }],
+        Required("upstream-artifacts"): [
+            {
+                Required("taskId"): taskref_or_string,
+                Required("taskType"): str,
+                Required("paths"): [str],
+            }
+        ],
     },
 )
 def build_scriptworker_beetmover_payload(config, task, task_def):
@@ -91,14 +91,16 @@ def build_scriptworker_beetmover_payload(config, task, task_def):
         "artifactMap": worker["artifact-map"],
         "releaseProperties": {"appName": worker.pop("beetmover-application-name")},
         "upstreamArtifacts": worker["upstream-artifacts"],
-        "version": worker["version"]
+        "version": worker["version"],
     }
 
     scope_prefix = config.graph_config["scriptworker"]["scope-prefix"]
-    task_def["scopes"].extend([
-        "{}:beetmover:action:{}".format(scope_prefix, worker["action"]),
-        "{}:beetmover:bucket:{}".format(scope_prefix, worker["bucket"]),
-    ])
+    task_def["scopes"].extend(
+        [
+            "{}:beetmover:action:{}".format(scope_prefix, worker["action"]),
+            "{}:beetmover:bucket:{}".format(scope_prefix, worker["bucket"]),
+        ]
+    )
 
 
 @payload_builder(
@@ -135,10 +137,12 @@ def build_github_release_payload(config, task, task_def):
     }
 
     scope_prefix = config.graph_config["scriptworker"]["scope-prefix"]
-    task_def["scopes"].extend([
-        "{}:github:project:{}".format(scope_prefix, worker["github-project"]),
-        "{}:github:action:{}".format(scope_prefix, worker["action"]),
-    ])
+    task_def["scopes"].extend(
+        [
+            "{}:github:project:{}".format(scope_prefix, worker["github-project"]),
+            "{}:github:action:{}".format(scope_prefix, worker["action"]),
+        ]
+    )
 
 
 @payload_builder(
@@ -189,9 +193,7 @@ def build_shipit_payload(config, task, task_def):
 
     task_def["tags"]["worker-implementation"] = "scriptworker"
 
-    task_def['payload'] = {
-        'release_name': worker['release-name']
-    }
+    task_def["payload"] = {"release_name": worker["release-name"]}
 
 
 @payload_builder(
@@ -214,24 +216,24 @@ def build_version_bump_payload(config, task, task_def):
     worker = task["worker"]
     task_def["tags"]["worker-implementation"] = "scriptworker"
 
-    task_def['payload'] = {'actions': []}
-    actions = task_def['payload']['actions']
+    task_def["payload"] = {"actions": []}
+    actions = task_def["payload"]["actions"]
 
-    if worker['bump']:
-        if not worker['bump-files']:
+    if worker["bump"]:
+        if not worker["bump-files"]:
             raise Exception("Version Bump requested without bump-files")
 
         bump_info = {}
         bump_info["next_version"] = config.params["next_version"]
-        bump_info['files'] = worker['bump-files']
-        task_def['payload']['version_bump_info'] = bump_info
-        actions.append('version_bump')
+        bump_info["files"] = worker["bump-files"]
+        task_def["payload"]["version_bump_info"] = bump_info
+        actions.append("version_bump")
 
     if worker["push"]:
-        task_def['payload']['push'] = True
+        task_def["payload"]["push"] = True
 
-    if worker.get('force-dry-run'):
-        task_def['payload']['dry_run'] = True
+    if worker.get("force-dry-run"):
+        task_def["payload"]["dry_run"] = True
 
     if worker.get("branch"):
         task_def["payload"]["branch"] = worker["branch"]

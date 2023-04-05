@@ -197,7 +197,7 @@ Once you have the OAuth info, you can start adding `FxAClient` to your Android p
 As part of the OAuth flow your application will be opening up a WebView or a Custom Tab.
 Currently the SDK does not provide the WebView, you have to write it yourself.
 
-Create a global `account` object: 
+Create a global `account` object:
 
 ```kotlin
 var account: FirefoxAccount? = null
@@ -269,14 +269,14 @@ Finally, complete the OAuth flow, retrieve the profile information, then save yo
 
 ```kotlin
 launch {
-    // Complete authentication flow    
+    // Complete authentication flow
     account.completeOAuthFlow(code, state).await()
 
     // Display profile information
-    val profile = account.getProfile().await()    
+    val profile = account.getProfile().await()
     txtView.txt = profile.displayName
 
-    // Persist login state    
+    // Persist login state
     val json = account.toJSONString()
     getSharedPreferences(FXA_STATE_PREFS_KEY, Context.MODE_PRIVATE).edit()
         .putString(FXA_STATE_KEY, json).apply()

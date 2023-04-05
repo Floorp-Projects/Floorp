@@ -1,6 +1,6 @@
 For an overview of our current architecture, please see [this document](https://github.com/mozilla-mobile/fenix/blob/master/docs/architecture-overview.md)
 
---- 
+---
 
 These are some of the major architecture decisions we've made so far in Fenix. [Why?](http://thinkrelevance.com/blog/2011/11/15/documenting-architecture-decisions)
 
@@ -90,4 +90,3 @@ We will experiment with writing new components using MVI unidirectional principl
 Because all changes can be represented by a single, merged and serialized Observable or Flowable, we should be able to use this for debugging. All ViewStates, Changes, and Actions/Intents will be easily loggable to observe the causes of state issues.
 
 ---
-

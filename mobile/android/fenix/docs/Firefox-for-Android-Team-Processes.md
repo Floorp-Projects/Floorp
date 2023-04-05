@@ -15,7 +15,7 @@ Purpose: meet any time we start design for a new feature (esp large ones) to dis
 * Any existing technical constraints or dependencies (on Android OS, or other Firefox Mobile teams like GV or A-C)
 * Alignment on user stories
 
-Design Handoff 
+Design Handoff
 Who: designer, engineer, product manager, QA lead
 Purpose: before engineering sprint for a feature starts to discuss:
 * Overall purpose of feature and how it relates to or interacts with existing features
@@ -54,7 +54,7 @@ Purpose: before engineering sprint for a feature starts to discuss:
 * Engineers will remove the “waiting” label and re-apply the appropriate label (“in progress,” “QA needed”).
 
 ## UX Review
-IF a user story has a UX component that needs review, when it is ready for review: 
+IF a user story has a UX component that needs review, when it is ready for review:
 * Consider hopping on a call to do a ‘desk check’ with the Designer*
 * Engineer will add a gif/screenshot/apk (as applicable to the issue)
 * Engineer will @mention the designer in the user story and ping the Designer on Slack, and add the `needs:UX-feedback` label
@@ -79,7 +79,7 @@ Use tags on open PRs to show which part of the process it is on. Some notable on
 4. [pr:waiting-for-authors](https://github.com/mozilla-mobile/fenix/labels/pr%3Awaiting-for-authors) - PR that has been approved and awaiting any changes before they can land. Usually a PR might be approved, but has not been landed because it is waiting for followup changes.
 
 ## QA
-* Engineers will label stories as [eng:qa:needed](https://github.com/mozilla-mobile/fenix/labels/eng%3Aqa%3Aneeded) when the ticket is ready to be tested (which will move the ticket to the ‘Ready for QA’ column’). 
+* Engineers will label stories as [eng:qa:needed](https://github.com/mozilla-mobile/fenix/labels/eng%3Aqa%3Aneeded) when the ticket is ready to be tested (which will move the ticket to the ‘Ready for QA’ column’).
 * QA will review the ticket and determine whether it can be manually tested. If no QA is needed, QA will close the ticket and move it to the ‘Done’ column.
 
 IF a defect is found:

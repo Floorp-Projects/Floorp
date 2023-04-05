@@ -6,7 +6,6 @@
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.treeherder import inherit_treeherder_from_dep, join_symbol
 
-
 transforms = TransformSequence()
 
 

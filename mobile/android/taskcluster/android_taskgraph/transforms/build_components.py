@@ -5,13 +5,11 @@
 
 import datetime
 
+from mozilla_version.mobile import MobileVersion
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
 
-from mozilla_version.mobile import MobileVersion
-
-from ..build_config import get_version, get_path, get_extensions
-
+from ..build_config import get_extensions, get_path, get_version
 
 transforms = TransformSequence()
 
@@ -20,20 +18,22 @@ transforms = TransformSequence()
 def resolve_keys(config, tasks):
     for task in tasks:
         for field in (
-            'attributes.code-review',
-            'expose-artifacts',
-            'include-coverage',
-            'shipping-phase',
-            'run-on-tasks-for',
-            'run.gradlew',
-            'treeherder.symbol',
+            "attributes.code-review",
+            "expose-artifacts",
+            "include-coverage",
+            "shipping-phase",
+            "run-on-tasks-for",
+            "run.gradlew",
+            "treeherder.symbol",
         ):
             resolve_keyed_by(
-                task, field, item_name=task["name"],
+                task,
+                field,
+                item_name=task["name"],
                 **{
-                    'build-type': task["attributes"]["build-type"],
-                    'component': task["attributes"]["component"],
-                }
+                    "build-type": task["attributes"]["build-type"],
+                    "component": task["attributes"]["component"],
+                },
             )
 
         yield task
@@ -42,8 +42,8 @@ def resolve_keys(config, tasks):
 @transforms.add
 def handle_coverage(config, tasks):
     for task in tasks:
-        if task.pop('include-coverage', False):
-            task['run']['gradlew'].insert(0, '-Pcoverage')
+        if task.pop("include-coverage", False):
+            task["run"]["gradlew"].insert(0, "-Pcoverage")
         yield task
 
 
@@ -54,7 +54,7 @@ def interpolate_missing_values(config, tasks):
     nightly_version = get_nightly_version(config, version)
 
     for task in tasks:
-        for field in ('description', 'run.gradlew', 'treeherder.symbol'):
+        for field in ("description", "run.gradlew", "treeherder.symbol"):
             component = task["attributes"]["component"]
             _deep_format(
                 task,
@@ -71,11 +71,11 @@ def interpolate_missing_values(config, tasks):
 def _get_timestamp(config):
     push_date_string = config.params["moz_build_date"]
     push_date_time = datetime.datetime.strptime(push_date_string, "%Y%m%d%H%M%S")
-    return push_date_time.strftime('%Y%m%d.%H%M%S-1')
+    return push_date_time.strftime("%Y%m%d.%H%M%S-1")
 
 
 def _get_buildid(config):
-    return config.params.moz_build_date.strftime('%Y%m%d%H%M%S')
+    return config.params.moz_build_date.strftime("%Y%m%d%H%M%S")
 
 
 def get_nightly_version(config, version):
@@ -89,13 +89,13 @@ def craft_path_version(version, build_type, nightly_version):
     path section"""
     path_version = version
     # XXX: for nightly releases we need to s/X.0.0/X.0.<buildid>/g in versions
-    if build_type == 'nightly':
+    if build_type == "nightly":
         path_version = path_version.replace(version, nightly_version)
     return path_version
 
 
 def _deep_format(object, field, **format_kwargs):
-    keys = field.split('.')
+    keys = field.split(".")
     last_key = keys[-1]
     for key in keys[:-1]:
         object = object[key]
@@ -106,9 +106,11 @@ def _deep_format(object, field, **format_kwargs):
     if isinstance(object, str):
         one_before_last_object[last_key] = object.format(**format_kwargs)
     elif isinstance(object, list):
-        one_before_last_object[last_key] = [item.format(**format_kwargs) for item in object]
+        one_before_last_object[last_key] = [
+            item.format(**format_kwargs) for item in object
+        ]
     else:
-        raise ValueError(f'Unsupported type for object: {object}')
+        raise ValueError(f"Unsupported type for object: {object}")
 
 
 @transforms.add
@@ -117,7 +119,9 @@ def set_external_gradle_dependencies(config, tasks):
         component = task["attributes"]["component"]
 
         dependencies = task.setdefault("dependencies", {})
-        dependencies["external-gradle-dependencies"] = f"external-gradle-dependencies-{component}"
+        dependencies[
+            "external-gradle-dependencies"
+        ] = f"external-gradle-dependencies-{component}"
 
         yield task
 
@@ -133,52 +137,71 @@ def add_artifacts(config, tasks):
         task["attributes"]["artifacts"] = artifacts = {}
 
         component = task["attributes"]["component"]
-        build_artifact_definitions = task.setdefault("worker", {}).setdefault("artifacts", [])
+        build_artifact_definitions = task.setdefault("worker", {}).setdefault(
+            "artifacts", []
+        )
 
-        for key in ["tests-artifact-template", "lint-artifact-template", "text-artifact-template", "jacoco-coverage-template"]:
+        for key in [
+            "tests-artifact-template",
+            "lint-artifact-template",
+            "text-artifact-template",
+            "jacoco-coverage-template",
+        ]:
             if key in task:
                 optional_artifact_template = task.pop(key, {})
-                build_artifact_definitions.append({
-                    "type": optional_artifact_template["type"],
-                    "name": optional_artifact_template["name"],
-                    "path": optional_artifact_template["path"].format(
-                        component_path=get_path(component)
-                    ),
-                })
+                build_artifact_definitions.append(
+                    {
+                        "type": optional_artifact_template["type"],
+                        "name": optional_artifact_template["name"],
+                        "path": optional_artifact_template["path"].format(
+                            component_path=get_path(component)
+                        ),
+                    }
+                )
 
         if task.pop("expose-artifacts", False):
             all_extensions = get_extensions(component)
             artifact_file_names_per_extension = {
-                extension: '{component}-{version}{timestamp}{extension}'.format(
+                extension: "{component}-{version}{timestamp}{extension}".format(
                     component=component,
                     version=version,
-                    timestamp='',
+                    timestamp="",
                     extension=extension,
                 )
                 for extension in all_extensions
             }
             # XXX: rather than adding more complex logic above, we simply post-adjust the
             # dictionary for `nightly` types of graphs
-            if task['attributes']['build-type'] == 'nightly':
+            if task["attributes"]["build-type"] == "nightly":
                 for ext, path in artifact_file_names_per_extension.items():
                     if version in path:
-                        artifact_file_names_per_extension[ext] = path.replace(version, nightly_version)
+                        artifact_file_names_per_extension[ext] = path.replace(
+                            version, nightly_version
+                        )
 
-            for extension, artifact_file_name in artifact_file_names_per_extension.items():
+            for (
+                extension,
+                artifact_file_name,
+            ) in artifact_file_names_per_extension.items():
                 artifact_full_name = artifact_template["name"].format(
                     artifact_file_name=artifact_file_name,
                 )
-                build_artifact_definitions.append({
-                    "type": artifact_template["type"],
-                    "name": artifact_full_name,
-                    "path": artifact_template["path"].format(
-                        component_path=get_path(component),
-                        component=component,
-                        version=craft_path_version(version,
-                                task["attributes"]["build-type"], nightly_version),
-                        artifact_file_name=artifact_file_name,
-                    ),
-                })
+                build_artifact_definitions.append(
+                    {
+                        "type": artifact_template["type"],
+                        "name": artifact_full_name,
+                        "path": artifact_template["path"].format(
+                            component_path=get_path(component),
+                            component=component,
+                            version=craft_path_version(
+                                version,
+                                task["attributes"]["build-type"],
+                                nightly_version,
+                            ),
+                            artifact_file_name=artifact_file_name,
+                        ),
+                    }
+                )
 
                 artifacts[extension] = artifact_full_name
 

@@ -1,7 +1,7 @@
 # Automated UI Testing
 _This document is intended to explain how various technologies are used together to conduct automated UI testing for Android at Mozila. This document is accessible for all developers including those that are new to the Mozilla community._
 
-Recall, that the primary problem we try to solve with automated testing is preventing unintended changes, which offten lead to bugs or poor user experiences. This problem is most common -- thus we benefit the most from throrough testing. 
+Recall, that the primary problem we try to solve with automated testing is preventing unintended changes, which offten lead to bugs or poor user experiences. This problem is most common -- thus we benefit the most from throrough testing.
 
 When a Pull Request or merge request is created, we want to ensure that the changes are tested before they are merged. This is done by running a series of UI tests on the code. These tests are ran on Firebase Test Lab on virtual devices.
 
@@ -35,7 +35,7 @@ For a more detailed document on testing styles and technologies used by the Andr
 
 # Treeherder
 
-[Treeherder](https://treeherder.mozilla.org/) is a reporting dashboard for Mozilla check-ins. It allows users to see result of automatic builds and their respective tests. A common use case is looking at a particular check-in and pulling up test logs and artifacts from the UI test job. 
+[Treeherder](https://treeherder.mozilla.org/) is a reporting dashboard for Mozilla check-ins. It allows users to see result of automatic builds and their respective tests. A common use case is looking at a particular check-in and pulling up test logs and artifacts from the UI test job.
 
 For all Android applications, UI tests are classfied under the `ui-test-x86` job symbol.
 

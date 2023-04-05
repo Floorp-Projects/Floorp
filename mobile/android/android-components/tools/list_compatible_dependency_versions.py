@@ -55,7 +55,8 @@ PATH_GV_VERSION=os.path.join('plugins', 'dependencies', 'src', 'main', 'java', '
 ### SECTION: USAGE AND ARGS ###
 def print_usage(exit=False):
     print(USAGE, file=sys.stderr)
-    if exit: sys.exit(1)
+    if exit:
+        sys.exit(1)
 
 def maybe_display_usage():
     if '--help' in sys.argv or '-h' in sys.argv:
@@ -90,7 +91,8 @@ def get_hash_from_pom(pom_str, debug_pom_url = None):
     mc_hash = 0
     for line in pom_str.split(b'\n'):
         stripped = line.strip()
-        if not stripped.startswith(b'<tag>'): continue
+        if not stripped.startswith(b'<tag>'):
+            continue
         close_tag_index = stripped.find(b'</tag>')
         mc_hash = stripped[5:close_tag_index]  # also remove open tag.
 
@@ -115,7 +117,8 @@ def fenix_checkout_to_ac_version(fenix_path):
             stripped = line.strip()
 
             # Expected format: const val VERSION = "58.0.20200910190642"
-            if not stripped.startswith('const val VERSION = "'): continue
+            if not stripped.startswith('const val VERSION = "'):
+                continue
             return extract_str_inside_quotes(stripped)
     raise Exception('Unable to find ac version from fenix repository file "{}". This is likely a bug where the file path or format has changed.'.format(ac_version_path))
 

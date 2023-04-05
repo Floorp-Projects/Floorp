@@ -13,8 +13,8 @@ Firefox for Android is the first step in building a better mobile browser: one t
 
 ## Download
 
-* Google Play: [Release](https://play.google.com/store/apps/details?id=org.mozilla.firefox) 
-* Google Play: [Beta](https://play.google.com/store/apps/details?id=org.mozilla.firefox_beta) 
+* Google Play: [Release](https://play.google.com/store/apps/details?id=org.mozilla.firefox)
+* Google Play: [Beta](https://play.google.com/store/apps/details?id=org.mozilla.firefox_beta)
 * Google Play: [Nightly](https://play.google.com/store/apps/details?id=org.mozilla.fenix)
 * Release APKs: https://github.com/mozilla-mobile/fenix/releases
 * Nightly APKs: https://firefox-ci-tc.services.mozilla.com/tasks/index/mobile.v2.fenix.nightly.latest
@@ -28,4 +28,4 @@ Firefox for Android is the first step in building a better mobile browser: one t
 ## Communication
 * External: [#fenix](https://chat.mozilla.org/#/room/#fenix:mozilla.org) on [Element](https://wiki.mozilla.org/Matrix)
 * External: [Firefox on Android discourse](https://discourse.mozilla.org/c/firefox-android/468)
-* Internal: Find us on slack #fenix-team 
+* Internal: Find us on slack #fenix-team

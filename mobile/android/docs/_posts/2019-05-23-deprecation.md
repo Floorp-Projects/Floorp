@@ -21,4 +21,4 @@ This component allowed apps to create "doorhangers" - floating heads-up popup th
 
 The `AnimatedProgressBar` was first introduced in Firefox for Android and later used in Firefox Focus and Firefox Lite. A recent performance measurement revealed that the animation of the progress bar can have a negative impact on page load performance. While there was no noticeable difference on the latest high-end devices, on older devices, like a Nexus 5, we saw pages load about ~400ms slower.
 
-![](/assets/images/blog/progress-performance.png) 
+![](/assets/images/blog/progress-performance.png)

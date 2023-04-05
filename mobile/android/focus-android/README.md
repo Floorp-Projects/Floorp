@@ -1,6 +1,6 @@
 # Firefox Focus for Android
 
-_Browse like no one’s watching. The new Firefox Focus automatically blocks a wide range of online trackers — from the moment you launch it to the second you leave it. Easily erase your history, passwords and cookies, so you won’t get followed by things like unwanted ads._ 
+_Browse like no one’s watching. The new Firefox Focus automatically blocks a wide range of online trackers — from the moment you launch it to the second you leave it. Easily erase your history, passwords and cookies, so you won’t get followed by things like unwanted ads._
 
 Firefox Focus provides automatic ad blocking and tracking protection on an easy-to-use private browser.
 
@@ -15,7 +15,7 @@ Firefox Focus provides automatic ad blocking and tracking protection on an easy-
 ## Getting Involved
 
 
-We encourage you to participate in this open source project. We love Pull Requests, Bug Reports, ideas, (security) code reviews or any other kind of positive contribution. 
+We encourage you to participate in this open source project. We love Pull Requests, Bug Reports, ideas, (security) code reviews or any other kind of positive contribution.
 
 Before you attempt to make a contribution please read the [Community Participation Guidelines](https://www.mozilla.org/en-US/about/governance/policies/participation/).
 

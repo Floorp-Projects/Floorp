@@ -21,7 +21,7 @@ This is a basic and non-exhaustive list of features, for all details you can vie
 * Get experiment associated metadata
 * Override a specific experiment (force activate / deactivate it)
 * Override device values (such as the appId, version, etc)
-* Update experiment list from the server manually or using JobScheduler 
+* Update experiment list from the server manually or using JobScheduler
 * Update experiment list using WorkManager (blocked waiting for a non-alpha version of WorkManager to be released by Google)
 * Default source implementation for Kinto
     * Uses diff requests to reduce bandwith usage

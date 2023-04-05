@@ -15,7 +15,7 @@ The original version of the networking solution consisted of adding wallpaper im
 <root>/mobile-wallpapers/android/<resolution>/<orientation>/<light/dark>/<wallpaper collection>/<wallpaper name>
 ```
 
-This directory structure was confusing and difficult to manage. Copying several versions of a file to different locations was painful, even when automated. Automation would require consistent file naming for each new set of wallpapers, which can be hard to guarantee. 
+This directory structure was confusing and difficult to manage. Copying several versions of a file to different locations was painful, even when automated. Automation would require consistent file naming for each new set of wallpapers, which can be hard to guarantee.
 
 Additionally, downloads were started automatically during app startup if a wallpaper was missing.
 

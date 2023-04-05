@@ -1,5 +1,5 @@
 ### Sync Integration Tests
-The aim of these tests is to check that the synchronization is working between Fenix and Desktop. The intention is to add tests for History, Bookmarks, Tabs and Logins. 
+The aim of these tests is to check that the synchronization is working between Fenix and Desktop. The intention is to add tests for History, Bookmarks, Tabs and Logins.
 At this moment only tests for History and Bookmarks are defined.
 
 ### Steps to Run
@@ -16,11 +16,11 @@ The process for example for History item Desktop -> Fenix, would be:
 
 
 ### Results
-Due to the set up necessary these tests do not run as part of the regular CI, via Taskcluster. 
+Due to the set up necessary these tests do not run as part of the regular CI, via Taskcluster.
 The idea is to have them running on Jenkins periodically (TBD how often).
 Once they finish there is a slack notificattion received informing about the result (so far that is configured for #firefox-ios-alerts)
 
 A html file is generated with all the info, for each step to make it easy to debug in case of failure.
 
 ## Notes
-More detailed info can be found [`here`](https://docs.google.com/document/d/1dhxlbGQBA6aJi2Xz-CsJZuGJPRReoL7nfm9cYu4HcZI/edit?usp=sharing) 
+More detailed info can be found [`here`](https://docs.google.com/document/d/1dhxlbGQBA6aJi2Xz-CsJZuGJPRReoL7nfm9cYu4HcZI/edit?usp=sharing)

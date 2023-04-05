@@ -5,14 +5,13 @@
 import os
 import re
 from subprocess import CalledProcessError
-from redo import retry
 
+from android_taskgraph.release_type import does_task_match_release_type
 from mozilla_version.maven import MavenVersion
+from redo import retry
 from taskgraph.target_tasks import _target_task, target_tasks_default
 from taskgraph.util.taskcluster import find_task_id
 from taskgraph.util.vcs import get_repository
-
-from android_taskgraph.release_type import does_task_match_release_type
 
 
 def index_exists(index_path, reason=""):
@@ -52,13 +51,17 @@ def target_tasks_nightly(full_task_graph, parameters, graph_config):
 def target_tasks_nightly_test(full_task_graph, parameters, graph_config):
     def filter(task, parameters):
         return task.attributes.get("nightly-test", False)
+
     return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]
 
 
 @_target_task("promote")
 def target_tasks_promote(full_task_graph, parameters, graph_config):
     return _filter_release_promotion(
-        full_task_graph, parameters, filtered_for_candidates=[], shipping_phase="promote"
+        full_task_graph,
+        parameters,
+        filtered_for_candidates=[],
+        shipping_phase="promote",
     )
 
 
@@ -86,15 +89,18 @@ def target_tasks_ship(full_task_graph, parameters, graph_config):
     )
 
 
-def _filter_release_promotion(full_task_graph, parameters, filtered_for_candidates, shipping_phase):
+def _filter_release_promotion(
+    full_task_graph, parameters, filtered_for_candidates, shipping_phase
+):
     def filter(task, parameters):
         # Include promotion tasks; these will be optimized out
         if task.label in filtered_for_candidates:
             return True
 
-        if (
-            task.attributes.get("shipping_phase") == shipping_phase
-            and does_task_match_release_type(task, parameters["release_type"])
+        if task.attributes.get(
+            "shipping_phase"
+        ) == shipping_phase and does_task_match_release_type(
+            task, parameters["release_type"]
         ):
             return True
 
@@ -124,9 +130,7 @@ def target_tasks_ac_default(full_task_graph, parameters, graph_config):
 
 def get_gv_version(repo, revision):
     gecko_kt_path = get_gecko_kt_path(repo, revision)
-    gecko_kt = repo.run(
-        "show", f"{revision}:{gecko_kt_path}"
-    )
+    gecko_kt = repo.run("show", f"{revision}:{gecko_kt_path}")
     match = re.search(r'version = "([^"]*)"', gecko_kt, re.MULTILINE)
     if not match:
         raise Exception(f"Couldn't parse geckoview version on commit {revision}")
@@ -142,9 +146,7 @@ def get_gecko_kt_path(repo, revision):
         # is an ancestor of the latter
         #
         # https://git-scm.com/docs/git-merge-base#Documentation/git-merge-base.txt---is-ancestor
-        repo.run(
-            "merge-base", "--is-ancestor", GECKO_KT_MOVED_REVISION, revision
-        )
+        repo.run("merge-base", "--is-ancestor", GECKO_KT_MOVED_REVISION, revision)
         return "android-components/plugins/dependencies/src/main/java/Gecko.kt"
     except CalledProcessError:
         return "android-components/buildSrc/src/main/java/Gecko.kt"

@@ -8,23 +8,23 @@ A script to help generate telemetry renewal csv and request template.
 This script also modifies metrics.yaml to mark soon to expired telemetry entries.
 """
 
-import os
 import csv
-import yaml
 import json
+import os
 import sys
 
+import yaml
 from yaml.loader import FullLoader
 
 METRICS_FILENAME = "../app/metrics.yaml"
 NEW_METRICS_FILENAME = "../app/metrics_new.yaml"
 
-# This is to make sure we only write headers for the csv file once 
+# This is to make sure we only write headers for the csv file once
 write_header = True
-# The number of soon to expired telemetry detected 
+# The number of soon to expired telemetry detected
 total_count = 0
 
-USAGE="""usage: ./{script_name} future_fenix_version_number""" 
+USAGE = """usage: ./{script_name} future_fenix_version_number"""
 
 # list of values that we care about
 _KEY_FILTER = [
@@ -38,6 +38,7 @@ _KEY_FILTER = [
     "expires",
 ]
 
+
 def response(last_key, content, expire_version, writer, renewal):
     global write_header
     global total_count
@@ -45,13 +46,15 @@ def response(last_key, content, expire_version, writer, renewal):
         if (key == "$schema") or (key == "no_lint"):
             continue
 
-        if ("expires" in value) and ((value["expires"] == "never") or (not value["expires"] <= expire_version)):
+        if ("expires" in value) and (
+            (value["expires"] == "never") or (not value["expires"] <= expire_version)
+        ):
             continue
 
-        if (key == "type"):
+        if key == "type":
             remove_keys = []
             for key in content.keys():
-                if (key not in _KEY_FILTER):
+                if key not in _KEY_FILTER:
                     remove_keys.append(key)
 
             for key in remove_keys:
@@ -60,16 +63,16 @@ def response(last_key, content, expire_version, writer, renewal):
             total_count += 1
 
             # name of the telemtry
-            result = {"#": total_count, "name" : last_key.lstrip('.')}
+            result = {"#": total_count, "name": last_key.lstrip(".")}
             result.update(content)
 
             # add columns for product to fille out, these should always be added at the end
-            result.update({"keep(Y/N)" : ""})
-            result.update({"new expiry version" : ""})
-            result.update({"reason to extend" : ""})
+            result.update({"keep(Y/N)": ""})
+            result.update({"new expiry version": ""})
+            result.update({"reason to extend": ""})
 
             # output data-renewal request template
-            if (write_header):
+            if write_header:
                 header = result.keys()
                 writer.writerow(header)
                 write_header = False
@@ -80,8 +83,10 @@ def response(last_key, content, expire_version, writer, renewal):
 
             writer.writerow(result.values())
 
-            renewal.write("`" + last_key.lstrip('.') + "`:\n")
-            renewal.write("1) Provide a link to the initial Data Collection Review Request for this collection.\n")
+            renewal.write("`" + last_key.lstrip(".") + "`:\n")
+            renewal.write(
+                "1) Provide a link to the initial Data Collection Review Request for this collection.\n"
+            )
             renewal.write("    - " + content["data_reviews"][0] + "\n")
             renewal.write("\n")
             renewal.write("2) When will this collection now expire?\n")
@@ -94,13 +99,14 @@ def response(last_key, content, expire_version, writer, renewal):
             return
 
         if type(value) is dict:
-            response(last_key + "." +  key, value, expire_version, writer, renewal)
+            response(last_key + "." + key, value, expire_version, writer, renewal)
 
-with open(METRICS_FILENAME, 'r') as f:
+
+with open(METRICS_FILENAME, "r") as f:
     try:
         arg1 = sys.argv[1]
     except:
-        print ("usage is to include argument of the form `100`")
+        print("usage is to include argument of the form `100`")
         quit()
 
     # parse metrics.yaml to json
@@ -127,9 +133,9 @@ with open(METRICS_FILENAME, 'r') as f:
         print("remove old metrics yaml file")
         os.remove(NEW_METRICS_FILENAME)
 
-    data_file = open(csv_filename, 'w')
+    data_file = open(csv_filename, "w")
     csv_writer = csv.writer(data_file)
-    renewal_file = open(renewal_filename, 'w')
+    renewal_file = open(renewal_filename, "w")
 
     response("", content, current_version, csv_writer, renewal_file)
     renewal_file.close()
@@ -140,26 +146,33 @@ with open(METRICS_FILENAME, 'r') as f:
     verify_count = 0
     f.seek(0, 0)
     data = f.readlines()
-    with open(NEW_METRICS_FILENAME, 'w') as f2:
+    with open(NEW_METRICS_FILENAME, "w") as f2:
         for line in data:
-            if (line.lstrip(' ').startswith("expires: ") and not(line.lstrip(' ').startswith("expires: never"))):
-               start_pos = len("expires: ")
-               version = int(line.lstrip(' ')[start_pos:])
-               if (version <= current_version):
-                   verify_count += 1
-                   f2.writelines(line.rstrip('\n') + " /* TODO <" + str(verify_count) + "> require renewal */\n")
-               else:
-                   f2.writelines(line)
+            if line.lstrip(" ").startswith("expires: ") and not (
+                line.lstrip(" ").startswith("expires: never")
+            ):
+                start_pos = len("expires: ")
+                version = int(line.lstrip(" ")[start_pos:])
+                if version <= current_version:
+                    verify_count += 1
+                    f2.writelines(
+                        line.rstrip("\n")
+                        + " /* TODO <"
+                        + str(verify_count)
+                        + "> require renewal */\n"
+                    )
+                else:
+                    f2.writelines(line)
             else:
                 f2.writelines(line)
         f2.close()
-        
-        print ("\n==============================")
-        if (total_count != verify_count):
+
+        print("\n==============================")
+        if total_count != verify_count:
             print("!!! Count check failed !!!")
         else:
             print("Count check passed")
-        print ("==============================")
+        print("==============================")
 
         os.remove(METRICS_FILENAME)
         os.rename(NEW_METRICS_FILENAME, METRICS_FILENAME)

@@ -8,7 +8,6 @@ Resolve keys for the jobs defined in the trigger-nightly kind.
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
 
-
 transforms = TransformSequence()
 
 

@@ -14,7 +14,7 @@ layout: page
 
 # Updates
 
-<div class="blog-index">  
+<div class="blog-index">
 {% for post in site.posts limit:5 %}
   {% assign post = post  %}
   {% assign content = post.content %}

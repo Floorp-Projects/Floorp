@@ -34,7 +34,7 @@ val result = jexl.evaluate("75 > 42")
 // evaluate() returns an object of type JexlValue. Calling toKotlin() converts this
 // into a matching Kotlin type (in this case a Boolean).
 println(result.value) // Prints "true"
-```   
+```
 
 Often expressions should return a `Boolean`value. In this case `evaluateBooleanExpression` is a helper that always returns a Kotlin `Boolean` and never throws an exception (Returns false).
 

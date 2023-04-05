@@ -3,7 +3,6 @@ from taskgraph.transforms.base import TransformSequence
 from ..build_config import get_path, get_upstream_deps_for_all_gradle_projects
 from ..gradle import get_gradle_project
 
-
 transforms = TransformSequence()
 
 
@@ -24,17 +23,22 @@ def add_components_optimization(config, tasks):
         #
         # Any change that impacts all a-c (e.g. a change in the a-c gradle config)
         # should also trigger APK builds and tests.
-        if all(type_ not in ("nightly", "beta", "release") for type_ in (build_type, release_type)):
+        if all(
+            type_ not in ("nightly", "beta", "release")
+            for type_ in (build_type, release_type)
+        ):
             optimization = task.setdefault("optimization", {})
             skip_unless_changed = optimization.setdefault("skip-unless-changed", [])
-            skip_unless_changed.extend([
-                "android-components/build.gradle",
-                "android-components/settings.gradle",
-                "android-components/buildSrc.*",
-                "android-components/gradle.properties",
-                "android-components/gradle/wrapper/gradle-wrapper.properties",
-                "android-components/plugins/dependencies/**",
-            ])
+            skip_unless_changed.extend(
+                [
+                    "android-components/build.gradle",
+                    "android-components/settings.gradle",
+                    "android-components/buildSrc.*",
+                    "android-components/gradle.properties",
+                    "android-components/gradle/wrapper/gradle-wrapper.properties",
+                    "android-components/plugins/dependencies/**",
+                ]
+            )
 
         yield task
 
@@ -57,10 +61,14 @@ def extend_optimization_if_one_already_exists(config, tasks):
                 dependencies = deps_per_component[gradle_project]
                 gradle_project_and_deps = [gradle_project] + dependencies
 
-                skip_unless_changed.extend(sorted([
-                    _get_path(gradle_project)
-                    for gradle_project in gradle_project_and_deps
-                ]))
+                skip_unless_changed.extend(
+                    sorted(
+                        [
+                            _get_path(gradle_project)
+                            for gradle_project in gradle_project_and_deps
+                        ]
+                    )
+                )
 
         yield task
 

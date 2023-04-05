@@ -34,7 +34,7 @@ Make sure you use the same Google Account for both steps.
 ![](https://raw.githubusercontent.com/mozilla-mobile/focus-android/master/app/src/focusBeta/res/mipmap-xxxhdpi/ic_launcher.png)
 * Updates to the Beta track will typically be 1-2 times weekly.
 
-## How to sign up for beta 
+## How to sign up for beta
 To get Focus Beta on your device, follow these steps:
 1) Visit https://groups.google.com/g/firefox-focus-pre-release and join the Google Group
 2) After you have joined the group opt-in to receive Beta builds, again with the same Google account: https://play.google.com/apps/testing/org.mozilla.focus.beta

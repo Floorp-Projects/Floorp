@@ -7,12 +7,11 @@ Transform the beetmover task into an actual task description.
 
 import logging
 
-from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by
+from android_taskgraph.util.scriptworker import generate_beetmover_artifact_map
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.task import task_description_schema
+from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by
 from voluptuous import Optional, Required, Schema
-
-from android_taskgraph.util.scriptworker import generate_beetmover_artifact_map
 
 logger = logging.getLogger(__name__)
 
@@ -77,11 +76,12 @@ def make_task_description(config, tasks):
 
 _STAGING_PREFIX = "staging-"
 
+
 def craft_release_properties(config, task):
     params = config.params
 
     return {
-        "app-name": "fenix",    # TODO: Support focus
+        "app-name": "fenix",  # TODO: Support focus
         "app-version": str(params["version"]),
         "branch": params["project"],
         "build-id": str(params["moz_build_date"]),

@@ -70,7 +70,7 @@ the issue you're fixing.*
 intended to fix.
   - If your PR closes an issue, include `Closes #...` in one of your commit messages. This
   will automatically close the linked issue ([more info][auto close]).
-  - If your PR has to go through a longer process, for example QA verification, use the 
+  - If your PR has to go through a longer process, for example QA verification, use the
   `For #...` syntax to allow the linked issue to be closed at a later, more appropriate time.
 - Prefer "micro commits".
   - A micro commit is a small commit that generally changes one thing.

@@ -4,42 +4,49 @@
 # Dependencies: None
 # Usage: ./automation/publish_to_maven_local_if_modified.py
 
-from pathlib import Path
-import sys
-import os
-import time
-import hashlib
 import argparse
-import re
+import hashlib
+import os
 import subprocess
+import sys
+import time
+from pathlib import Path
+
 
 def fatal_err(msg):
     print(f"\033[31mError: {msg}\033[0m")
     exit(1)
+
 
 def run_cmd_checked(*args, **kwargs):
     """Run a command, throwing an exception if it exits with non-zero status."""
     kwargs["check"] = True
     return subprocess.run(*args, **kwargs)
 
+
 def find_project_root():
     """Find the absolute path of the project repository root."""
-    # As a convention, we expect this file in [project-root]/automation/. 
+    # As a convention, we expect this file in [project-root]/automation/.
     automation_dir = Path(__file__).parent
 
     # Therefore the automation dir's parent is the project root we're looking for.
     return automation_dir.parent
 
+
 LAST_CONTENTS_HASH_FILE = ".lastAutoPublishContentsHash"
 
 GITIGNORED_FILES_THAT_AFFECT_THE_BUILD = ["local.properties"]
 
-parser = argparse.ArgumentParser(description="Publish android packages to local maven repo, but only if changed since last publish")
+parser = argparse.ArgumentParser(
+    description="Publish android packages to local maven repo, but only if changed since last publish"
+)
 parser.parse_args()
 
 root_dir = find_project_root()
 if str(root_dir) != os.path.abspath(os.curdir):
-    fatal_err(f"This only works if run from the repo root ({root_dir!r} != {os.path.abspath(os.curdir)!r})")
+    fatal_err(
+        f"This only works if run from the repo root ({root_dir!r} != {os.path.abspath(os.curdir)!r})"
+    )
 
 # Calculate a hash reflecting the current state of the repo.
 
@@ -67,7 +74,9 @@ untracked_files = []
 # -o is for getting other (i.e. untracked) files
 # --exclude-standard is to handle standard Git exclusions: .git/info/exclude, .gitignore in each directory,
 # and the user's global exclusion file.
-changes_others = run_cmd_checked(["git", "ls-files", "-o", "--exclude-standard"], capture_output=True).stdout
+changes_others = run_cmd_checked(
+    ["git", "ls-files", "-o", "--exclude-standard"], capture_output=True
+).stdout
 changes_lines = iter(ln.strip() for ln in changes_others.split(b"\n"))
 
 try:
@@ -107,9 +116,14 @@ if contents_hash == last_contents_hash:
 else:
     print("Contents have changed, publishing")
     if sys.platform.startswith("win"):
-        run_cmd_checked(["gradlew.bat", "publishToMavenLocal", f"-Plocal={time.time_ns()}"], shell=True)
+        run_cmd_checked(
+            ["gradlew.bat", "publishToMavenLocal", f"-Plocal={time.time_ns()}"],
+            shell=True,
+        )
     else:
-        run_cmd_checked(["./gradlew", "publishToMavenLocal", f"-Plocal={time.time_ns()}"])
+        run_cmd_checked(
+            ["./gradlew", "publishToMavenLocal", f"-Plocal={time.time_ns()}"]
+        )
     with open(LAST_CONTENTS_HASH_FILE, "w") as f:
         f.write(contents_hash)
         f.write("\n")

@@ -1,6 +1,5 @@
 from taskgraph.transforms.base import TransformSequence
 
-
 transforms = TransformSequence()
 
 
@@ -14,9 +13,11 @@ def set_component_attribute(config, tasks):
         if not component_name:
             task_name = task["name"]
             if task_name.startswith(_ANDROID_TASK_NAME_PREFIX):
-                component_name = task_name[len(_ANDROID_TASK_NAME_PREFIX):]
+                component_name = task_name[len(_ANDROID_TASK_NAME_PREFIX) :]
             else:
-                raise NotImplementedError(f"Cannot determine component name from task {task_name}")
+                raise NotImplementedError(
+                    f"Cannot determine component name from task {task_name}"
+                )
 
         attributes = task.setdefault("attributes", {})
         attributes["component"] = component_name
@@ -30,7 +31,12 @@ def define_ui_test_command_line(config, tasks):
         run = task.setdefault("run", {})
         post_gradlew = run.setdefault("post-gradlew", [])
         post_gradlew.append(
-            ['automation/taskcluster/androidTest/ui-test.sh', task["attributes"]["component"], 'arm', '1']
+            [
+                "automation/taskcluster/androidTest/ui-test.sh",
+                task["attributes"]["component"],
+                "arm",
+                "1",
+            ]
         )
 
         yield task
@@ -48,5 +54,8 @@ def define_treeherder_symbol(config, tasks):
 @transforms.add
 def define_description(config, tasks):
     for task in tasks:
-        task.setdefault("description", f"Run unit/ui tests on device for {task['attributes']['component']}")
+        task.setdefault(
+            "description",
+            f"Run unit/ui tests on device for {task['attributes']['component']}",
+        )
         yield task

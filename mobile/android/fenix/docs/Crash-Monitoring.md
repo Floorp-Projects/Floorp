@@ -23,7 +23,7 @@
 ## When a crash report requires actions:
 * Is this a crash due to a recent change? If so, contact the developer.
   * The histogram on the right side can help determine this along with checking the Firefox-Beta and Firefox Sentry products.
-* Triage the crash to determine if the issue is real and requires a Bugzilla issue to track it. 
+* Triage the crash to determine if the issue is real and requires a Bugzilla issue to track it.
   * When filing an issue add a link to it as a comment in the Sentry crash for the products (nightly, beta, release) where the crash appears.
 * Notify the relevant teams on Slack/Matrix that there's a new crash in Nightly that needs urgent attention, e.g. **#synced-client-integrations** for all things involving application services (A-S), **#nimbus-rust-sdk** for Nimbus, and **[GeckoView on Matrix](https://chat.mozilla.org/#/room/#geckoview:mozilla.org)**.
 

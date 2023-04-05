@@ -5,7 +5,6 @@
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
 
-
 transforms = TransformSequence()
 
 
@@ -18,7 +17,7 @@ def resolve_keys(config, tasks):
                 key,
                 item_name=task["name"],
                 **{
-                    'level': config.params["level"],
+                    "level": config.params["level"],
                 }
             )
         yield task

@@ -312,7 +312,7 @@ For testing purposes, create a collection with an id of `nimbus-mobile-experimen
   "additionalProperties": true
 }
 ```
-  
+
 ## UI Schema
 
 ```JSON
@@ -344,7 +344,7 @@ For testing purposes, create a collection with an id of `nimbus-mobile-experimen
 }
 
 ```
-  
+
 ## License
 
     This Source Code Form is subject to the terms of the Mozilla Public

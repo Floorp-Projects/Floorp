@@ -52,7 +52,7 @@ class MyClass {
      // Will log a DEBUG message with tag MyClassLogger
      logger.debug("Hello World")
    }
-   
+
    fun couldThrow() {
      try {
        // ..
@@ -61,7 +61,7 @@ class MyClass {
        logger.error("Oops!", e)
      )
    }
-   
+
    fun generic() {
      // You can also use the Logger class directly if no custom tag is needed:
      Logger.info("Hello World!")

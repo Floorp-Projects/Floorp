@@ -8,12 +8,12 @@ from copy import deepcopy
 from datetime import datetime
 
 import jsone
-
-from ..release_promotion import read_version_file
 from taskgraph.util.memoize import memoize
 from taskgraph.util.schema import resolve_keyed_by
 from taskgraph.util.taskcluster import get_artifact_prefix
 from taskgraph.util.yaml import load_yaml
+
+from ..release_promotion import read_version_file
 
 cached_load_yaml = memoize(load_yaml)
 

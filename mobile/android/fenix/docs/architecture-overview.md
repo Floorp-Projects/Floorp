@@ -128,7 +128,7 @@ The view defines the mapping of State to UI. This includes initial setup of View
 
 Views should be as dumb as possible, and should include little or no conditional logic. Ideally, each primitive value in a State object is set on some field of a UI element, with no other logic included.
 
-Views set listeners on to UI elements, which trigger calls to one or more Interactors. 
+Views set listeners on to UI elements, which trigger calls to one or more Interactors.
 
 -------
 
@@ -162,7 +162,7 @@ These link to the architectural code that accomplishes those features:
 ## Known Limitations
 There are a few known edge cases and potential problems with our architecture, that in certain circumstances can be confusing.
 
-- Since [Stores](#store) live at the fragment level, our architecture does not define any way to set data outside of that scope. 
+- Since [Stores](#store) live at the fragment level, our architecture does not define any way to set data outside of that scope.
   - For example, if it is determined during application startup that we need to run in private mode, it must eventually be passed to a fragment, but we don't specify how it will be handled until that point.
   - We have no defined way to set values shared by all fragments. They must either be passed as an argument to every individual fragment, or use some system outside of our architecture (e.g., by accessing SharedPreferences).
 - There isn't always a clear logical distinction between what should provoke a state change (by dispatching an [Action](#action) to a [Store](#store)), and what should start a new fragment. Passing arguments while creating a new fragment causes changes to the new [State](#state) object, while taking a very different code path than the rest of our app would.

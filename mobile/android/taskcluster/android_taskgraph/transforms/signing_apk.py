@@ -9,7 +9,6 @@ kind.
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
 
-
 transforms = TransformSequence()
 
 PRODUCTION_SIGNING_BUILD_TYPES = [
@@ -38,15 +37,20 @@ SIGNING_BUILD_TYPES = PRODUCTION_SIGNING_BUILD_TYPES + [
 @transforms.add
 def resolve_keys(config, tasks):
     for task in tasks:
-        for key in ("run-on-tasks-for", "signing-format", "notify", "treeherder.platform"):
+        for key in (
+            "run-on-tasks-for",
+            "signing-format",
+            "notify",
+            "treeherder.platform",
+        ):
             resolve_keyed_by(
                 task,
                 key,
                 item_name=task["name"],
                 **{
-                    'build-type': task["attributes"]["build-type"],
-                    'level': config.params["level"],
-                    'tasks-for': config.params["tasks_for"],
+                    "build-type": task["attributes"]["build-type"],
+                    "level": config.params["level"],
+                    "tasks-for": config.params["tasks_for"],
                 }
             )
         yield task
@@ -70,9 +74,10 @@ def set_worker_type(config, tasks):
 def set_signing_type(config, tasks):
     for task in tasks:
         signing_type = "dep-signing"
-        if (
-            str(config.params["level"]) == "3"
-            and config.params["tasks_for"] in ("cron", "github-release", "action")
+        if str(config.params["level"]) == "3" and config.params["tasks_for"] in (
+            "cron",
+            "github-release",
+            "action",
         ):
             if task["attributes"]["build-type"] in ("fenix-beta", "fenix-release"):
                 signing_type = "fennec-production-signing"

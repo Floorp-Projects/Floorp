@@ -8,16 +8,21 @@ from taskgraph.util.schema import resolve_keyed_by
 
 from ..build_config import CHECKSUMS_EXTENSIONS
 
-
 transforms = TransformSequence()
 
 
 @transforms.add
 def resolve_keys(config, tasks):
     for task in tasks:
-        for key in ("index", "worker-type", "worker.signing-type", "treeherder.job-symbol"):
+        for key in (
+            "index",
+            "worker-type",
+            "worker.signing-type",
+            "treeherder.job-symbol",
+        ):
             resolve_keyed_by(
-                task, key,
+                task,
+                key,
                 item_name=task["name"],
                 **{
                     "build-type": task["attributes"]["build-type"],
@@ -53,14 +58,16 @@ def filter_out_checksums(config, tasks):
         yield task
 
 
-_DETACHED_SIGNATURE_EXTENSION = '.asc'
+_DETACHED_SIGNATURE_EXTENSION = ".asc"
 
 
 @transforms.add
 def set_detached_signature_artifacts(config, tasks):
     for task in tasks:
         task["attributes"]["artifacts"] = {
-            extension + _DETACHED_SIGNATURE_EXTENSION: path + _DETACHED_SIGNATURE_EXTENSION
+            extension
+            + _DETACHED_SIGNATURE_EXTENSION: path
+            + _DETACHED_SIGNATURE_EXTENSION
             for extension, path in task["attributes"]["artifacts"].items()
         }
 

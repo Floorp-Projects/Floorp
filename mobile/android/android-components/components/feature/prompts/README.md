@@ -25,7 +25,7 @@ implementation "org.mozilla.components:feature-prompts:{latest-version}"
   }
 
   val promptFeature = PromptFeature(fragment = this,
-      fragment = fragment, 
+      fragment = fragment,
       store = store,
       fragmentManager= fragmentManager,
       onNeedToRequestPermissions = onNeedToRequestPermissions
@@ -52,7 +52,7 @@ implementation "org.mozilla.components:feature-prompts:{latest-version}"
    * promptFeature.PermissionsResult.
    */
   override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-    when (requestCode) {        
+    when (requestCode) {
         MY_PROMPT_PERMISSION_REQUEST_CODE -> promptFeature.onPermissionsResult(permissions, grantResults)
     }
   }

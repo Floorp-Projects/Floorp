@@ -44,7 +44,7 @@ TODO: fill this out!
 We haven't written any ktlint rules so we're lacking knowledge here.
 
 ## Android Lint
-Custom Android lint checks are a great way to prohibit or warn about usages of certain classes and resources in a codebase and can be customized to give alternative suggestions. 
+Custom Android lint checks are a great way to prohibit or warn about usages of certain classes and resources in a codebase and can be customized to give alternative suggestions.
 
 To add a lint check:
 - Create a custom Detector that will scour the codebase for Issues to report (and add tests!)

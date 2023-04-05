@@ -35,7 +35,7 @@ In addition to the data structure, we want to provide a set of actions to manipu
 
 ## Reference-level explanation
 
-We will add tab partitions and groups to our browser state without affecting the existing data structures. 
+We will add tab partitions and groups to our browser state without affecting the existing data structures.
 
 ### State
 
@@ -262,7 +262,7 @@ class SearchTermTabGroupMiddleware : Middleware<BrowserState, BrowserAction> {
 
 ```
 
-This middleware automatically adds and removes tabs once they're associated/disassociated with search terms based on history metadata. `AUTOMATIC_SEARCH_TERM_GROUPS` is the ID of the partition, the search terms (e.g. "Toronto") are used as group names. 
+This middleware automatically adds and removes tabs once they're associated/disassociated with search terms based on history metadata. `AUTOMATIC_SEARCH_TERM_GROUPS` is the ID of the partition, the search terms (e.g. "Toronto") are used as group names.
 
 Using middlewares provides all the flexibility we could need e.g., a middleware can put tabs in one or multiple groups, and generally is capable of observing all state changes in the system for grouping/ungrouping purposes.
 

@@ -2,11 +2,13 @@
 
 from __future__ import print_function
 
-import sys
 import argparse
-from pathlib import Path
 import json
+import sys
+from pathlib import Path
+
 import yaml
+
 
 def parse_args(cmdln_args):
     parser = argparse.ArgumentParser(description="Parse UI test logs an results")
@@ -41,7 +43,7 @@ def main():
 
     log = args.log.read()
     matrix_ids = json.loads(args.results.joinpath("matrix_ids.json").read_text())
-    #with args.results.joinpath("flank.yml") as f:
+    # with args.results.joinpath("flank.yml") as f:
     #    flank_config = yaml.safe_load(f)
 
     android_args = extract_android_args(log)
@@ -55,9 +57,12 @@ def main():
     print("| matrix | result | logs | details \n")
     print("| --- | --- | --- | --- |\n")
     for matrix, matrix_result in matrix_ids.items():
-        print("| {matrixId} | {outcome} | [logs]({webLink}) | {axes[0][details]}\n".format(**matrix_result))
+        print(
+            "| {matrixId} | {outcome} | [logs]({webLink}) | {axes[0][details]}\n".format(
+                **matrix_result
+            )
+        )
 
 
 if __name__ == "__main__":
     main()
-

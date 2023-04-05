@@ -1,6 +1,6 @@
 See https://github.com/mozilla-mobile/fenix/wiki/Telemetry-Checklist for the steps to implement new probes.
 
-# Creating Glean Annotations 
+# Creating Glean Annotations
 
 Glean Annotations repository: https://github.com/mozilla/glean-annotations
 
@@ -11,12 +11,12 @@ More info [here](https://mozilla.github.io/glean-annotations/contributing/creati
 
 # Data review
 
-Data reviews are needed on all PRs that add new telemetry or modify existing telemetry. 
+Data reviews are needed on all PRs that add new telemetry or modify existing telemetry.
 
 1. The implementer must complete the forms for [data renewal](https://github.com/mozilla/data-review/blob/main/renewal_request.md) or [a new data request](https://github.com/mozilla/data-review/blob/main/request.md) and put them as a comment in their PR.
 2. Once the form is complete, contact a [Data Steward](https://wiki.mozilla.org/Data_Collection) to arrange a review. Note: a data review does not replace code review! The PR should not land without both a data review and a code review.
 3. Once the data review is complete, add the link to the approval in the `data_reviews` sub-section of your metric in the `metrics.yaml` file.
-Example: 
+Example:
 
 ```
 download_notification:
@@ -62,7 +62,7 @@ Make sure you are selecting the correct Category of data that is being collected
 
 ## Approval process
 
-For each telemetry probe that we want to renew, the data-review will ask us [these questions](https://github.com/mozilla/data-review/blob/main/renewal_request.md). Each probe/group of related probes should have answers to those questions ([example](https://github.com/mozilla-mobile/fenix/pull/20517#issuecomment-887038794)). 
+For each telemetry probe that we want to renew, the data-review will ask us [these questions](https://github.com/mozilla/data-review/blob/main/renewal_request.md). Each probe/group of related probes should have answers to those questions ([example](https://github.com/mozilla-mobile/fenix/pull/20517#issuecomment-887038794)).
 
 ### Example renewal data request
 ```

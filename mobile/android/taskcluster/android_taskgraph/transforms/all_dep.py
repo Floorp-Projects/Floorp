@@ -13,10 +13,7 @@ transforms = TransformSequence()
 def build_name_and_attributes(config, tasks):
     for task in tasks:
         all_dependent_tasks = list(task.pop("dependent-tasks").values())
-        task["dependencies"] = {
-            dep.label: dep.label
-            for dep in all_dependent_tasks
-        }
+        task["dependencies"] = {dep.label: dep.label for dep in all_dependent_tasks}
         first_dep = all_dependent_tasks[0]
         copy_of_attributes = first_dep.attributes.copy()
         task.setdefault("attributes", copy_of_attributes)
@@ -24,7 +21,7 @@ def build_name_and_attributes(config, tasks):
         task["attributes"]["component"] = "all"
 
         # run_on_tasks_for is set as an attribute later in the pipeline
-        task.setdefault("run-on-tasks-for", copy_of_attributes['run_on_tasks_for'])
-        task["name"] = task["attributes"][config.config['group-by']]
+        task.setdefault("run-on-tasks-for", copy_of_attributes["run_on_tasks_for"])
+        task["name"] = task["attributes"][config.config["group-by"]]
 
         yield task

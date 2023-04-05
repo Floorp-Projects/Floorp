@@ -15,18 +15,18 @@ import sys
 try:
     version = sys.argv[1]
 except:
-    print ("usage is to include arguments of the form <version>")
+    print("usage is to include arguments of the form <version>")
     quit()
 
 expiry_filename = version + "_expiry_list.csv"
 filled_renewal_filename = version + "_filled_renewal_request.txt"
 
-csv_reader = csv.DictReader(open(expiry_filename, 'r'))
+csv_reader = csv.DictReader(open(expiry_filename, "r"))
 output_string = ""
 total_count = 0
 updated_version = int(version) + 13
 for row in csv_reader:
-    if row["keep(Y/N)"] == 'n':
+    if row["keep(Y/N)"] == "n":
         continue
     total_count += 1
     output_string += f'` {row["name"]}`\n'
@@ -35,7 +35,7 @@ for row in csv_reader:
     output_string += "\n"
     output_string += "2) When will this collection now expire?\n"
     if len(row["new expiry version"]) == 0:
-        output_string += f'    - {updated_version}\n'
+        output_string += f"    - {updated_version}\n"
     else:
         output_string += f'    - {row["new expiry version"]}\n'
 
@@ -47,9 +47,9 @@ for row in csv_reader:
 
 header = "# Request for Data Collection Renewal\n"
 header += "### Renew for 1 year\n"
-header += f'Total: {total_count}\n'
+header += f"Total: {total_count}\n"
 header += "———\n\n"
 
-with open(filled_renewal_filename, 'w+') as out:
+with open(filled_renewal_filename, "w+") as out:
     out.write(header + output_string)
     out.close()

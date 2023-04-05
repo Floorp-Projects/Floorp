@@ -38,7 +38,7 @@ The various situations when we try to request a thumbnail:
 
 When we receive new thumbnails, we may want to persist them to disk as these images can be quite large.
 
-To do this, we need to add the `BrowserMiddleware` to receive the image from the store 
+To do this, we need to add the `BrowserMiddleware` to receive the image from the store
 and put it in our storage:
 
 ```kotlin

@@ -8,11 +8,11 @@ kind.
 
 import copy
 import json
-
 from copy import deepcopy
+
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.treeherder import inherit_treeherder_from_dep
 from taskgraph.util.schema import resolve_keyed_by
+from taskgraph.util.treeherder import inherit_treeherder_from_dep
 
 transforms = TransformSequence()
 
@@ -159,8 +159,8 @@ def setup_nofis(config, tasks):
         task["run"]["command"].append("--disable-fission")
 
         # Build taskcluster group and symol
-        task["treeherder"]["symbol"] = (
-            task["treeherder"]["symbol"].replace("Btime", "Btime-nofis")
+        task["treeherder"]["symbol"] = task["treeherder"]["symbol"].replace(
+            "Btime", "Btime-nofis"
         )
         task["name"] += "-nofis"
 

@@ -40,7 +40,7 @@ With this minimal setup the crash reporting library will capture "uncaught excep
 
 Using the `CrashReporter` instance to record crash breadcrumbs.  These breadcrumbs will then be sent when a crash occurs to aid in debugging.  Breadcrumbs are reported only if the underlying crash reporter service supports it.
 
-⚠️ Note: Directly using Sentry's breadcrumb will not work as expected on Android 10 or above.  Using the `CrashReporter` breadcrumb is preferred. 
+⚠️ Note: Directly using Sentry's breadcrumb will not work as expected on Android 10 or above.  Using the `CrashReporter` breadcrumb is preferred.
 
 ```Kotlin
 crashReporter.recordCrashBreadcrumb(
@@ -74,13 +74,13 @@ SentryService(
 		"build_flavor" to BuildConfig.FLAVOR,
 		"build_type" to BuildConfig.BUILD_TYPE
 	),
-	
-	// Send an event to Sentry for every native code crash. Native code crashes 
+
+	// Send an event to Sentry for every native code crash. Native code crashes
 	// can't be uploaded to Sentry currently. But sending an event to Sentry
 	// gives you an idea about how often native code crashes. For sending native
 	// crash reports add additional services like Socorro.
 	sendEventForNativeCrashes = true
-)	
+)
 ```
 
 ### Sending crash reports to Mozilla Socorro
@@ -104,10 +104,10 @@ CrashReporter(
 
 ### Sending crash reports to Glean
 
-[Glean](https://docs.telemetry.mozilla.org/concepts/glean/glean.html) is a new way to collect telemetry by Mozilla. 
+[Glean](https://docs.telemetry.mozilla.org/concepts/glean/glean.html) is a new way to collect telemetry by Mozilla.
 This will record crash counts as a labeled counter with each label corresponding to a specific type of crash (`fatal_native_code_crash`, `nonfatal_native_code_crash`, `caught_exception`, `uncaught_exception`, currently).
 The list of collected metrics is available in the [metrics.yaml file](metrics.yaml), with their documentation [living here](docs/metrics.md).
-Due to the fact that Glean can only be recorded to in the main process and lib-crash runs in a separate process when it runs to handle the crash, 
+Due to the fact that Glean can only be recorded to in the main process and lib-crash runs in a separate process when it runs to handle the crash,
 lib-crash persists the data in a file format and then reads and records the data from the main process when the application is next run since the `GleanCrashReporterService`
 constructor is loaded from the main process.
 
@@ -135,13 +135,13 @@ The behavior can be controlled using the `shouldPrompt` parameter:
 CrashReporter(
     // Always prompt
     shouldPrompt = CrashReporter.Prompt.ALWAYS,
-    
+
     // Or: Only prompt for native crashes
     shouldPrompt = CrashReporter.Prompt.ONLY_NATIVE_CRASH,
-    
+
     // Or: Never show the prompt
     shouldPrompt = CrashReporter.Prompt.NEVER,
-    
+
     // ..
 ).install(applicationContext)
 ```
@@ -201,9 +201,9 @@ In your component that receives the Intent (e.g. `Activity`) you can use `Crash.
 // In your crash handling component (e.g. Activity)
 if (Crash.isCrashIntent(intent) {
 	val crash = Crash.fromIntent(intent)
-	
+
 	...
-}	
+}
 
 // Once the user has confirmed sending a crash report:
 crashReporter.submitReport(crash)

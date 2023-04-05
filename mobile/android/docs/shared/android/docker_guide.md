@@ -41,7 +41,7 @@ Running this command requires that you have an account, are added to the "mozill
 
 Once the docker image is pushed, make sure your `taskcluster.yml` is referencing the new docker image with the correct tag number under `payload`.
 
-Note: If there is a failure while building the docker image, this often comes from lack of memory.  Try increasing the memory and swap space on GUI and/or `-m 5g` build argument. 
+Note: If there is a failure while building the docker image, this often comes from lack of memory.  Try increasing the memory and swap space on GUI and/or `-m 5g` build argument.
 
 ## Debugging errors
 If you receive an error on TaskCluster that you can't reproduce locally, you may need to use Docker locally to reproduce the TaskCluster build environment.

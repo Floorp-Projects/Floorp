@@ -38,7 +38,7 @@ git push origin ci-for-my-fun-branch1
 
 **Once you create this PR, the CI for both the original and the duplicate PRs will run. When everything is green, you can merge either of them.**
 
-5. To land the duplicate, close the original PR first, refresh mergify (`@Mergifyio refresh`), and then add `needs-landing` label to your PR. 
+5. To land the duplicate, close the original PR first, refresh mergify (`@Mergifyio refresh`), and then add `needs-landing` label to your PR.
 
 * Mergify won’t merge the duplicate while the original is open, since they both have the same SHA and mergify does honour the first one over those created consequently.
 
@@ -46,7 +46,7 @@ OR
 
 5. To land the original:
 * i. Make sure that contributor's branch hasn't diverged from yours (they must have the same SHA).
-* ii. The change has to be on the top of the main branch when it is first in line in the merge queue. 
-* iii. It requires the needs-landing label. 
+* ii. The change has to be on the top of the main branch when it is first in line in the merge queue.
+* iii. It requires the needs-landing label.
 
 **NB**: Adding `needs-landing` label while failing to ensure the same SHA will block the mergify queue and will require manual intervention: mergify will trigger CI for the original PR again and wait for it to finish, but CI won’t run all the checks because there is no PR with the same SHA any more that backs it up. If that happens, talk to the release team.

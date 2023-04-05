@@ -5,23 +5,22 @@
 
 import copy
 
-from voluptuous import Required
-
 from taskgraph.task import Task
 from taskgraph.util.attributes import sorted_unique_list
 from taskgraph.util.schema import Schema
+from voluptuous import Required
 
 from . import group_tasks
 
-
-schema = Schema({
-    Required('primary-dependency', 'primary dependency task'): Task,
-    Required(
-        'dependent-tasks',
-        'dictionary of dependent tasks, keyed by kind',
-    ): {str: Task},
-})
-
+schema = Schema(
+    {
+        Required("primary-dependency", "primary dependency task"): Task,
+        Required(
+            "dependent-tasks",
+            "dictionary of dependent tasks, keyed by kind",
+        ): {str: Task},
+    }
+)
 
 
 def loader(kind, path, config, params, loaded_tasks):
@@ -42,18 +41,19 @@ def loader(kind, path, config, params, loaded_tasks):
     Optional ``task-template`` kind configuration value, if specified, will be used to
     pass configuration down to the specified transforms used.
     """
-    task_template = config.get('task-template')
+    task_template = config.get("task-template")
 
     for dep_tasks in group_tasks(config, loaded_tasks):
         kinds = [dep.kind for dep in dep_tasks]
         assert_unique_members(
-            kinds, error_msg="multi_dep.py should have filtered down to one task per kind"
+            kinds,
+            error_msg="multi_dep.py should have filtered down to one task per kind",
         )
 
         dep_tasks_per_kind = {dep.kind: dep for dep in dep_tasks}
 
-        task = {'dependent-tasks': dep_tasks_per_kind}
-        task['primary-dependency'] = get_primary_dep(config, dep_tasks_per_kind)
+        task = {"dependent-tasks": dep_tasks_per_kind}
+        task["primary-dependency"] = get_primary_dep(config, dep_tasks_per_kind)
         if task_template:
             task.update(copy.deepcopy(task_template))
 
@@ -74,7 +74,7 @@ def get_primary_dep(config, dep_tasks):
     is the primary dependency. If it's undefined, return the first dep.
 
     """
-    primary_dependencies = config.get('primary-dependency')
+    primary_dependencies = config.get("primary-dependency")
     if isinstance(primary_dependencies, str):
         primary_dependencies = [primary_dependencies]
     if not primary_dependencies:
@@ -84,13 +84,16 @@ def get_primary_dep(config, dep_tasks):
     for primary_kind in primary_dependencies:
         for dep_kind in dep_tasks:
             if dep_kind == primary_kind:
-                assert primary_dep is None, \
-                    "Too many primary dependent tasks in dep_tasks: {}!".format(
-                        [t.label for t in dep_tasks]
-                    )
+                assert (
+                    primary_dep is None
+                ), "Too many primary dependent tasks in dep_tasks: {}!".format(
+                    [t.label for t in dep_tasks]
+                )
                 primary_dep = dep_tasks[dep_kind]
     if primary_dep is None:
-        raise Exception("Can't find dependency of {}: {}".format(
-            config['primary-dependency'], config
-        ))
+        raise Exception(
+            "Can't find dependency of {}: {}".format(
+                config["primary-dependency"], config
+            )
+        )
     return primary_dep

@@ -1,5 +1,5 @@
 # Retrieving crash reports from the application
-* Open Firefox 
+* Open Firefox
 * Tap on the `3 dot menu`
 * Tap `Settings`
 * Scroll to the bottom of Settings
@@ -15,14 +15,14 @@
 
 # Using adb logcat to get crash information
 
-Please use the above directions as a first way to get info. Use the following directions if your crash does not show up in the crash window of Firefox or if the crash prevents you from accessing the settings of Firefox. 
+Please use the above directions as a first way to get info. Use the following directions if your crash does not show up in the crash window of Firefox or if the crash prevents you from accessing the settings of Firefox.
 
-To get information about a crash you will need an Android device that reproduces a crash, a computer running Windows, macOS or Linux and a USB cable that connects your device to your computer. 
+To get information about a crash you will need an Android device that reproduces a crash, a computer running Windows, macOS or Linux and a USB cable that connects your device to your computer.
 
 ## Configuring your phone
-* Enable Developer Mode 
-  * On stock Android open the Android Settings and use the search at the top to find `build number` 
-  * Tap the build number 7 times 
+* Enable Developer Mode
+  * On stock Android open the Android Settings and use the search at the top to find `build number`
+  * Tap the build number 7 times
   * For other devices use your favorite search engine or YouTube to find steps for your device.
 * Enable Android USB debugging
   * On stock Android Open the Android Settings and use the search at the top to find `USB debugging` and enable it

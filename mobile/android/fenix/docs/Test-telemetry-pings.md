@@ -1,6 +1,6 @@
 Watch a step by step [video](https://user-images.githubusercontent.com/6579541/170517089-7266b93e-7ff8-4ebb-ae01-4f2a7e558c66.mp4)
 
-1. To send data by default. apply this patch: 
+1. To send data by default. apply this patch:
 ``` diff
 
 diff --git a/app/src/main/java/org/mozilla/fenix/FenixApplication.kt b/app/src/main/java/org/mozilla/fenix/FenixApplication.kt
@@ -15,7 +15,7 @@ index 4cb11de43..0c6fab136 100644
 
      }
 
- 
+
 
      private fun startMetricsIfEnabled() {
 
@@ -27,7 +27,7 @@ index 4cb11de43..0c6fab136 100644
 
 +        components.analytics.metrics.start(MetricServiceType.Data)
 
- 
+
 
          if (settings().isMarketingTelemetryEnabled) {
 
