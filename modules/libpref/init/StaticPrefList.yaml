@@ -11441,6 +11441,14 @@
   value: false
   mirror: always
 
+# Whether windows-sso is enabled for the default (0) container.
+# To enable SSO for additional containers, add a new pref like
+# `network.http.windows-sso.container-enabled.${containerId}` = true
+- name: network.http.windows-sso.container-enabled.0
+  type: bool
+  value: true
+  mirror: never
+
 # The factor by which to increase the keepalive timeout when the
 # NS_HTTP_LARGE_KEEPALIVE flag is used for a connection
 - name: network.http.largeKeepaliveFactor
