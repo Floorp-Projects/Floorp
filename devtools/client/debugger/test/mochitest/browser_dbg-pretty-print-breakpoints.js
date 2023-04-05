@@ -29,6 +29,15 @@ add_task(async function() {
   );
 
   await resume(dbg);
+
+  info("Wait for another pause because of a debugger statement on line 8");
+  await waitForPaused(dbg);
+
+  await resume(dbg);
+  assertNotPaused(dbg);
+
+  await closeTab(dbg, "pretty.js");
+  await closeTab(dbg, "pretty.js:formatted");
 });
 
 // Tests that breakpoints appear and work when you reload a page
