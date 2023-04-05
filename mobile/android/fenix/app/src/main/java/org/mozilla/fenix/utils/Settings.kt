@@ -670,7 +670,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     /**
      * Indicates if the re-engagement notification feature is enabled
      */
-    public val reEngagementNotificationType: Int
+    val reEngagementNotificationType: Int
         get() =
             FxNimbus.features.reEngagementNotification.value().type
 
@@ -1592,11 +1592,8 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     /**
      * Indicates if juno onboarding feature is enabled.
      */
-    var junoOnboardingEnabled by lazyFeatureFlagPreference(
-        key = appContext.getPreferenceKey(R.string.pref_key_juno_onboarding_enabled),
-        default = { FxNimbus.features.junoOnboarding.value().enabled },
-        featureFlag = FeatureFlags.junoOnboardingEnabled,
-    )
+    val junoOnboardingEnabled: Boolean
+        get() = FxNimbus.features.junoOnboarding.value().enabled
 
     /**
      * Indicates if the juno onboarding has been shown to the user.

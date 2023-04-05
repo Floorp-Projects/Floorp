@@ -71,9 +71,4 @@ object FeatureFlags {
      * Enables the notification pre permission prompt.
      */
     const val notificationPrePermissionPromptEnabled = true
-
-    /**
-     * Enables the redesigned onboarding.
-     */
-    const val junoOnboardingEnabled = false
 }

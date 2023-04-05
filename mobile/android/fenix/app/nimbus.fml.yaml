@@ -311,6 +311,13 @@ features:
         description: if true, juno onboarding is shown to the user.
         type: Boolean
         default: false
+    defaults:
+      - channel: nightly
+        value:
+          enabled: true
+      - channel: developer
+        value:
+          enabled: true
 
   onboarding:
     description: "A feature that configures the new user onboarding page.
