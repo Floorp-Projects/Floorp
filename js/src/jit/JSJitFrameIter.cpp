@@ -374,10 +374,6 @@ void JSJitFrameIter::dump() const {
       }
       break;
     }
-    case FrameType::BaselineInterpreterEntry:
-      fprintf(stderr, " Baseline Interpreter Entry frame\n");
-      fprintf(stderr, "  Caller frame ptr: %p\n", current()->callerFramePtr());
-      break;
     case FrameType::Rectifier:
       fprintf(stderr, " Rectifier frame\n");
       fprintf(stderr, "  Caller frame ptr: %p\n", current()->callerFramePtr());
@@ -714,27 +710,9 @@ void JSJitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame) {
    * |    ^--- Entry Frame (CppToJSJit)
    * |
    * ^--- Entry Frame (CppToJSJit)
-   * |
-   * ^--- Entry Frame (BaselineInterpreter)
-   * |    ^
-   * |    |
-   * |    ^--- Ion
-   * |    |
-   * |    ^--- Baseline Stub <---- Baseline
-   * |    |
-   * |    ^--- WasmToJSJit <--- (other wasm frames)
-   * |    |
-   * |    ^--- Entry Frame (CppToJSJit)
-   * |    |
-   * |    ^--- Arguments Rectifier
    *
    * NOTE: Keep this in sync with JitRuntime::generateProfilerExitFrameTailStub!
    */
-
-  // Unwrap baseline interpreter entry frame.
-  if (frame->prevType() == FrameType::BaselineInterpreterEntry) {
-    frame = GetPreviousRawFrame<BaselineInterpreterEntryFrameLayout*>(frame);
-  }
 
   // Unwrap rectifier frames.
   if (frame->prevType() == FrameType::Rectifier) {
@@ -784,13 +762,12 @@ void JSJitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame) {
       type_ = FrameType::CppToJSJit;
       return;
 
-    case FrameType::BaselineInterpreterEntry:
     case FrameType::Rectifier:
     case FrameType::Exit:
     case FrameType::Bailout:
     case FrameType::JSJitToWasm:
-      // Rectifier and Baseline Interpreter entry frames are handled before
-      // this switch. The other frame types can't call JS functions directly.
+      // Rectifier frames are handled before this switch. The other frame types
+      // can't call JS functions directly.
       break;
   }
 

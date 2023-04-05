@@ -178,13 +178,10 @@ class PerfSpewerRangeRecorder {
 
   MacroAssembler& masm;
 
-  void appendEntry(UniqueChars& desc);
-
  public:
   explicit PerfSpewerRangeRecorder(MacroAssembler& masm_) : masm(masm_){};
-  void recordOffset(const char* name);
-  void recordOffset(const char* name, JSContext* cx, JSScript* script);
-  void collectRangesForJitCode(JitCode* code);
+  void RecordOffset(const char* name);
+  void CollectRangesForJitCode(JitCode* code);
 };
 
 }  // namespace js::jit

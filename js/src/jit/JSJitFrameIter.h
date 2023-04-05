@@ -41,11 +41,6 @@ enum class FrameType {
   // into the Ion world.
   CppToJSJit,
 
-  // This entry frame sits right before the baseline interpreter
-  // so that external profilers can identify which function is being
-  // interpreted. Only used under the --emit-interpreter-entry option.
-  BaselineInterpreterEntry,
-
   // A rectifier frame sits in between two JS frames, adapting argc != nargs
   // mismatches in calls.
   Rectifier,
@@ -171,9 +166,6 @@ class JSJitFrameIter {
   bool isIonICCall() const { return type_ == FrameType::IonICCall; }
   bool isBailoutJS() const { return type_ == FrameType::Bailout; }
   bool isBaselineStub() const { return type_ == FrameType::BaselineStub; }
-  bool isBaselineInterpreterEntry() const {
-    return type_ == FrameType::BaselineInterpreterEntry;
-  }
   bool isRectifier() const { return type_ == FrameType::Rectifier; }
   bool isBareExit() const;
   bool isUnwoundJitExit() const;
