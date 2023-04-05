@@ -20,6 +20,10 @@
 #include "nsUrlClassifierUtils.h"
 #include "nsUrlClassifierDBService.h"
 
+#ifdef DEBUG
+#  include "nsPrintfCString.h"
+#endif
+
 // We act as the main entry point for all the real lookups,
 // so note that those are not done to the actual HashStore.
 // The latter solely exists to store the data needed to handle
