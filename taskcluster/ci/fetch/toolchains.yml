@@ -286,7 +286,7 @@ bomutils:
     fetch:
         type: git
         repo: https://github.com/hogliux/bomutils
-        revision: 3f7dc2dbbc36ca1c957ec629970026f45594a52c
+        revision: 0e7dc7eefefb3a0ba2ef3a432cdc1089ac40740c
 
 rust-size:
     description: rust-size source code
