@@ -3838,11 +3838,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         self.cls.addstmts([dtor, Whitespace.NL])
 
         if ptype.isRefcounted():
-            self.cls.addcode(
-                """
-                NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
-                """
-            )
+            if not ptype.isToplevel():
+                self.cls.addcode(
+                    """
+                    NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+                    """
+                )
             self.cls.addstmt(Label.PROTECTED)
             self.cls.addcode(
                 """

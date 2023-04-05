@@ -1278,6 +1278,9 @@ class GatherDecls(TcheckVisitor):
         if not p.decl.type.isToplevel() and p.decl.type.needsotherpid:
             self.error(p.loc, "[NeedsOtherPid] only applies to toplevel protocols")
 
+        if p.decl.type.isToplevel() and not p.decl.type.isRefcounted():
+            self.error(p.loc, "Toplevel protocols cannot be [ManualDealloc]")
+
         # FIXME/cjones declare all the little C++ thingies that will
         # be generated.  they're not relevant to IPDL itself, but
         # those ("invisible") symbols can clash with others in the
