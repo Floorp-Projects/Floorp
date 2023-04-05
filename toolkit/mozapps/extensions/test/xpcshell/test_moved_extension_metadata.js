@@ -13,12 +13,14 @@
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 // Enable loading extensions from the user and system scopes
-Services.prefs.setIntPref("extensions.enabledScopes",
-                          AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_USER);
+Services.prefs.setIntPref(
+  "extensions.enabledScopes",
+  AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_USER
+);
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2", "1.9.2");
 
-var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
+var testserver = AddonTestUtils.createHttpServer({ hosts: ["example.com"] });
 testserver.registerDirectory("/data/", do_get_file("data"));
 
 var userDir = gProfD.clone();
@@ -28,8 +30,7 @@ userDir.append(gAppInfo.ID);
 var dirProvider = {
   getFile(aProp, aPersistent) {
     aPersistent.value = false;
-    if (aProp == "XREUSysExt")
-      return userDir.parent;
+    if (aProp == "XREUSysExt") return userDir.parent;
     return null;
   },
 
@@ -43,11 +44,13 @@ var addon1 = {
   name: "Test 1",
   bootstrap: true,
   updateURL: "http://example.com/data/test_bug655254.json",
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "1",
-  }],
+  targetApplications: [
+    {
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "1",
+    },
+  ],
 };
 
 const ADDONS = [
@@ -56,10 +59,13 @@ const ADDONS = [
       id: "addon2@tests.mozilla.org",
       name: "Test 2",
 
-      targetApplications: [{
-        id: "xpcshell@tests.mozilla.org",
-        minVersion: "2",
-        maxVersion: "2"}],
+      targetApplications: [
+        {
+          id: "xpcshell@tests.mozilla.org",
+          minVersion: "2",
+          maxVersion: "2",
+        },
+      ],
     },
     "bootstrap.js": `
       /* exported startup, shutdown */
@@ -85,8 +91,10 @@ add_task(async function test_1() {
 
   await promiseStartupManager();
 
-  let [a1, a2] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                                                    "addon2@tests.mozilla.org"]);
+  let [a1, a2] = await AddonManager.getAddonsByIDs([
+    "addon1@tests.mozilla.org",
+    "addon2@tests.mozilla.org",
+  ]);
   Assert.notEqual(a1, null);
   Assert.ok(a1.appDisabled);
   Assert.ok(!a1.isActive);
@@ -98,7 +106,10 @@ add_task(async function test_1() {
   Assert.ok(isExtensionInBootstrappedList(userDir, a2.id));
   Assert.equal(Services.prefs.getIntPref("bootstraptest.active_version"), 1);
 
-  await AddonTestUtils.promiseFindAddonUpdates(a1, AddonManager.UPDATE_WHEN_USER_REQUESTED);
+  await AddonTestUtils.promiseFindAddonUpdates(
+    a1,
+    AddonManager.UPDATE_WHEN_USER_REQUESTED
+  );
 
   await promiseRestartManager();
 
@@ -120,8 +131,10 @@ add_task(async function test_1() {
 
   await promiseStartupManager();
 
-  let [a1_3, a2_3] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                                                        "addon2@tests.mozilla.org"]);
+  let [a1_3, a2_3] = await AddonManager.getAddonsByIDs([
+    "addon1@tests.mozilla.org",
+    "addon2@tests.mozilla.org",
+  ]);
   Assert.notEqual(a1_3, null);
   Assert.ok(!a1_3.appDisabled);
   Assert.ok(a1_3.isActive);
@@ -137,35 +150,37 @@ add_task(async function test_1() {
 // Set up the profile
 add_task(async function test_2() {
   let a2 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
- Assert.notEqual(a2, null);
- Assert.ok(!a2.appDisabled);
- Assert.ok(a2.isActive);
- Assert.ok(isExtensionInBootstrappedList(userDir, a2.id));
- Assert.equal(Services.prefs.getIntPref("bootstraptest.active_version"), 1);
+  Assert.notEqual(a2, null);
+  Assert.ok(!a2.appDisabled);
+  Assert.ok(a2.isActive);
+  Assert.ok(isExtensionInBootstrappedList(userDir, a2.id));
+  Assert.equal(Services.prefs.getIntPref("bootstraptest.active_version"), 1);
 
- await a2.disable();
- Assert.equal(Services.prefs.getIntPref("bootstraptest.active_version"), 0);
+  await a2.disable();
+  Assert.equal(Services.prefs.getIntPref("bootstraptest.active_version"), 0);
 
- await promiseShutdownManager();
+  await promiseShutdownManager();
 
- userDir.parent.moveTo(gProfD, "extensions4");
- userDir = gProfD.clone();
- userDir.append("extensions4");
- userDir.append(gAppInfo.ID);
- Assert.ok(userDir.exists());
+  userDir.parent.moveTo(gProfD, "extensions4");
+  userDir = gProfD.clone();
+  userDir.append("extensions4");
+  userDir.append(gAppInfo.ID);
+  Assert.ok(userDir.exists());
 
- await promiseStartupManager();
+  await promiseStartupManager();
 
- let [a1_2, a2_2] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                              "addon2@tests.mozilla.org"]);
- Assert.notEqual(a1_2, null);
- Assert.ok(!a1_2.appDisabled);
- Assert.ok(a1_2.isActive);
- Assert.ok(isExtensionInBootstrappedList(userDir, a1_2.id));
+  let [a1_2, a2_2] = await AddonManager.getAddonsByIDs([
+    "addon1@tests.mozilla.org",
+    "addon2@tests.mozilla.org",
+  ]);
+  Assert.notEqual(a1_2, null);
+  Assert.ok(!a1_2.appDisabled);
+  Assert.ok(a1_2.isActive);
+  Assert.ok(isExtensionInBootstrappedList(userDir, a1_2.id));
 
- Assert.notEqual(a2_2, null);
- Assert.ok(a2_2.userDisabled);
- Assert.ok(!a2_2.isActive);
- Assert.ok(!isExtensionInBootstrappedList(userDir, a2_2.id));
- Assert.equal(Services.prefs.getIntPref("bootstraptest.active_version"), 0);
+  Assert.notEqual(a2_2, null);
+  Assert.ok(a2_2.userDisabled);
+  Assert.ok(!a2_2.isActive);
+  Assert.ok(!isExtensionInBootstrappedList(userDir, a2_2.id));
+  Assert.equal(Services.prefs.getIntPref("bootstraptest.active_version"), 0);
 });

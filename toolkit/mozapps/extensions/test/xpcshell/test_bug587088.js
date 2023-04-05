@@ -14,43 +14,42 @@ profileDir.append("extensions");
 const ADDONS = [
   {
     "install.rdf": {
-      "id": "addon1@tests.mozilla.org",
-      "version": "1.0",
-      "name": "Bug 587088 Test",
-      "targetApplications": [
+      id: "addon1@tests.mozilla.org",
+      version: "1.0",
+      name: "Bug 587088 Test",
+      targetApplications: [
         {
-          "id": "xpcshell@tests.mozilla.org",
-          "minVersion": "1",
-          "maxVersion": "1"
-        }
-      ]
+          id: "xpcshell@tests.mozilla.org",
+          minVersion: "1",
+          maxVersion: "1",
+        },
+      ],
     },
-    "testfile": "",
-    "testfile1": "",
+    testfile: "",
+    testfile1: "",
   },
 
   {
     "install.rdf": {
-      "id": "addon1@tests.mozilla.org",
-      "version": "2.0",
-      "name": "Bug 587088 Test",
-      "targetApplications": [
+      id: "addon1@tests.mozilla.org",
+      version: "2.0",
+      name: "Bug 587088 Test",
+      targetApplications: [
         {
-          "id": "xpcshell@tests.mozilla.org",
-          "minVersion": "1",
-          "maxVersion": "1"
-        }
-      ]
+          id: "xpcshell@tests.mozilla.org",
+          minVersion: "1",
+          maxVersion: "1",
+        },
+      ],
     },
-    "testfile": "",
-    "testfile2": "",
+    testfile: "",
+    testfile2: "",
   },
 ];
 
 add_task(async function setup() {
   // This is only an issue on windows.
-  if (!("nsIWindowsRegKey" in Ci))
-    return;
+  if (!("nsIWindowsRegKey" in Ci)) return;
 
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
@@ -118,11 +117,11 @@ add_task(async function test_1() {
 
   // Lock either install.rdf for unpacked add-ons or the xpi for packed add-ons.
   let uri = a1.getResourceURI("install.rdf");
-  if (uri instanceof Ci.nsIJARURI)
-    uri = uri.JARFile;
+  if (uri instanceof Ci.nsIJARURI) uri = uri.JARFile;
 
-  let fstream = Cc["@mozilla.org/network/file-input-stream;1"].
-                createInstance(Ci.nsIFileInputStream);
+  let fstream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+    Ci.nsIFileInputStream
+  );
   fstream.init(uri.QueryInterface(Ci.nsIFileURL).file, -1, 0, 0);
 
   await AddonTestUtils.promiseInstallXPI(ADDONS[1]);
@@ -161,11 +160,11 @@ add_task(async function test_2() {
 
   // Lock either install.rdf for unpacked add-ons or the xpi for packed add-ons.
   let uri = a1.getResourceURI("install.rdf");
-  if (uri instanceof Ci.nsIJARURI)
-    uri = uri.JARFile;
+  if (uri instanceof Ci.nsIJARURI) uri = uri.JARFile;
 
-  let fstream = Cc["@mozilla.org/network/file-input-stream;1"].
-                createInstance(Ci.nsIFileInputStream);
+  let fstream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+    Ci.nsIFileInputStream
+  );
   fstream.init(uri.QueryInterface(Ci.nsIFileURL).file, -1, 0, 0);
 
   await a1.uninstall();
