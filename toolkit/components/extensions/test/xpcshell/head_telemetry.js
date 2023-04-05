@@ -271,6 +271,13 @@ function assertDNRTelemetryMirrored({
       }
       break;
     }
+    case "scalar": {
+      const snapshot = Services.telemetry.getSnapshotForScalars("main", false);
+      if (unifiedName in (snapshot?.parent || {})) {
+        unifiedData = snapshot.parent[unifiedName];
+      }
+      break;
+    }
     default:
       Assert.ok(
         false,
@@ -295,6 +302,7 @@ function assertDNRTelemetryMirrored({
         );
         break;
       }
+      case "scalar":
       case "keyedScalar": {
         Assert.deepEqual(
           unifiedData,
