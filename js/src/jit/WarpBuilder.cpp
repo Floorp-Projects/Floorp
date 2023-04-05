@@ -962,6 +962,11 @@ bool WarpBuilder::build_GetArg(BytecodeLocation loc) {
   return true;
 }
 
+bool WarpBuilder::build_GetFrameArg(BytecodeLocation loc) {
+  current->pushArgUnchecked(loc.arg());
+  return true;
+}
+
 bool WarpBuilder::build_SetArg(BytecodeLocation loc) {
   MOZ_ASSERT(script_->jitScript()->modifiesArguments());
 
