@@ -386,10 +386,10 @@ void U2FTokenManager::DoRegister(const WebAuthnMakeCredentialInfo& aInfo,
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [tid](WebAuthnMakeCredentialResult&& aResult) {
-            U2FTokenManager* mgr = U2FTokenManager::Get();
-            mgr->MaybeConfirmRegister(tid, aResult);
             Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                                  u"U2FRegisterFinish"_ns, 1);
+            U2FTokenManager* mgr = U2FTokenManager::Get();
+            mgr->MaybeConfirmRegister(tid, aResult);
           },
           [tid](nsresult rv) {
             MOZ_ASSERT(NS_FAILED(rv));
@@ -399,9 +399,9 @@ void U2FTokenManager::DoRegister(const WebAuthnMakeCredentialInfo& aInfo,
               // PIN-related errors. Let the dialog show to inform the user
               shouldCancelActiveDialog = false;
             }
-            mgr->MaybeAbortRegister(tid, rv, shouldCancelActiveDialog);
             Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                                  u"U2FRegisterAbort"_ns, 1);
+            mgr->MaybeAbortRegister(tid, rv, shouldCancelActiveDialog);
           })
       ->Track(mRegisterPromise);
 }
@@ -460,12 +460,12 @@ void U2FTokenManager::DoSign(const WebAuthnGetAssertionInfo& aTransactionInfo) {
           GetCurrentSerialEventTarget(), __func__,
           [tid, origin](nsTArray<WebAuthnGetAssertionResultWrapper>&& aResult) {
             U2FTokenManager* mgr = U2FTokenManager::Get();
+            Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
+                                 u"U2FSignFinish"_ns, 1);
             if (aResult.Length() == 1) {
               WebAuthnGetAssertionResult result = aResult[0].assertion;
               mgr->MaybeConfirmSign(tid, result);
             }
-            Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                                 u"U2FSignFinish"_ns, 1);
           },
           [tid](nsresult rv) {
             MOZ_ASSERT(NS_FAILED(rv));
@@ -475,9 +475,9 @@ void U2FTokenManager::DoSign(const WebAuthnGetAssertionInfo& aTransactionInfo) {
               // PIN-related errors. Let the dialog show to inform the user
               shouldCancelActiveDialog = false;
             }
-            mgr->MaybeAbortSign(tid, rv, shouldCancelActiveDialog);
             Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                                  u"U2FSignAbort"_ns, 1);
+            mgr->MaybeAbortSign(tid, rv, shouldCancelActiveDialog);
           })
       ->Track(mSignPromise);
 }
