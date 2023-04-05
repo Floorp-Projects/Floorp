@@ -332,7 +332,7 @@ set_config("MOZ_CLANG_PATH", bindgen_config_paths.clang_path)
     cxx_compiler,
     bindgen_cflags_android,
     bindgen_config_paths.clang_flags,
-    all_arm_flags,
+    all_clang_arm_flags,
 )
 def basic_bindgen_cflags(
     target, is_unix, compiler_info, android_cflags, clang_flags, all_arm_flags
