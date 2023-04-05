@@ -279,13 +279,6 @@ class JitFrameLayout : public CommonFrameLayout {
   static inline size_t Size() { return sizeof(JitFrameLayout); }
 };
 
-class BaselineInterpreterEntryFrameLayout : public JitFrameLayout {
- public:
-  static inline size_t Size() {
-    return sizeof(BaselineInterpreterEntryFrameLayout);
-  }
-};
-
 class RectifierFrameLayout : public JitFrameLayout {
  public:
   static inline size_t Size() { return sizeof(RectifierFrameLayout); }
