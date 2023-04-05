@@ -143,3 +143,43 @@ add_task(async function dnr_ignores_css_import_at_restrictedDomains() {
   await contentPage.close();
   await extension.unload();
 });
+
+add_task(
+  { pref_set: [["extensions.dnr.feedback", true]] },
+  async function testMatchOutcome_and_restrictedDomains() {
+    let extension = ExtensionTestUtils.loadExtension({
+      async background() {
+        await browser.declarativeNetRequest.updateSessionRules({
+          addRules: [{ id: 1, condition: {}, action: { type: "block" } }],
+        });
+        const type = "other"; // matches the condition of the above rule.
+
+        browser.test.assertDeepEq(
+          { matchedRules: [] },
+          await browser.declarativeNetRequest.testMatchOutcome({
+            url: "http://restricted/",
+            type,
+          }),
+          "testMatchOutcome ignores restricted url"
+        );
+        browser.test.assertDeepEq(
+          { matchedRules: [] },
+          await browser.declarativeNetRequest.testMatchOutcome({
+            url: "http://example.com/",
+            initiator: "http://restricted/",
+            type,
+          }),
+          "testMatchOutcome ignores restricted initiator"
+        );
+        browser.test.sendMessage("done");
+      },
+      manifest: {
+        manifest_version: 3,
+        permissions: ["declarativeNetRequest", "declarativeNetRequestFeedback"],
+      },
+    });
+    await extension.startup();
+    await extension.awaitMessage("done");
+    await extension.unload();
+  }
+);

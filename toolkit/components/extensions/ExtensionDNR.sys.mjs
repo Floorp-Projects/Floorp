@@ -2114,7 +2114,7 @@ function clearRuleManager(extension) {
 
 /**
  * Finds all matching rules for a request, optionally restricted to one
- * extension.
+ * extension. Used by declarativeNetRequest.testMatchOutcome.
  *
  * @param {object|RequestDetails} request
  * @param {Extension} [extension]
@@ -2125,6 +2125,15 @@ function getMatchedRulesForRequest(request, extension) {
   let ruleManagers = gRuleManagers;
   if (extension) {
     ruleManagers = ruleManagers.filter(rm => rm.extension === extension);
+  }
+  if (
+    WebExtensionPolicy.isRestrictedURI(requestDetails.requestURI) ||
+    (requestDetails.initiatorURI &&
+      WebExtensionPolicy.isRestrictedURI(requestDetails.initiatorURI))
+  ) {
+    // Equivalent to NetworkIntegration.startDNREvaluation's channel.canModify
+    // check, which excludes system requests and restricted domains.
+    ruleManagers = [];
   }
   // While this simulated request is not really from another extension, apply
   // the same access control checks from NetworkIntegration.startDNREvaluation
