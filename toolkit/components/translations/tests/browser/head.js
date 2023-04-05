@@ -69,6 +69,8 @@ async function openAboutTranslations({
     translationTextarea: "textarea#translation-from",
     translationResult: "#translation-to",
     translationResultBlank: "#translation-to-blank",
+    translationInfo: "#translation-info",
+    noSupportMessage: "[data-l10n-id='about-translations-no-support']",
   };
 
   // Start the tab at a blank page.
@@ -78,13 +80,10 @@ async function openAboutTranslations({
     true // waitForLoad
   );
 
-  // Before loading about:translations, handle the mocking of the actor.
-  if (!languagePairs) {
-    throw new Error(
-      "Expected language pairs for mocking the translations engine."
-    );
+  if (languagePairs) {
+    // Before loading about:translations, handle the mocking of the actor.
+    TranslationsParent.mockLanguagePairs(languagePairs);
   }
-  TranslationsParent.mockLanguagePairs(languagePairs);
   TranslationsParent.mockLanguageIdentification(
     detectedLanguageLabel ?? "en",
     detectedLanguageConfidence ?? "0.5"

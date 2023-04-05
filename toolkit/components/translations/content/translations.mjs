@@ -65,20 +65,28 @@ class TranslationsState {
    */
   translationsEngine = null;
 
-  constructor() {
+  /**
+   * @param {boolean} isSupported
+   */
+  constructor(isSupported) {
     /**
      * Is the engine supported by the device?
      * @type {boolean}
      */
-    this.isTranslationEngineSupported = AT_isTranslationEngineSupported();
+    this.isTranslationEngineSupported = isSupported;
 
     /**
      * Allow code to wait for the engine to be created.
      * @type {Promise<void>}
      */
-    this.languageIdEngineCreated = AT_createLanguageIdEngine();
+    this.languageIdEngineCreated = isSupported
+      ? AT_createLanguageIdEngine()
+      : Promise.resolve();
 
-    this.supportedLanguages = AT_getSupportedLanguages();
+    this.supportedLanguages = isSupported
+      ? AT_getSupportedLanguages()
+      : Promise.resolve([]);
+
     this.ui = new TranslationsUI(this);
     this.ui.setup();
   }
@@ -343,12 +351,13 @@ class TranslationsUI {
    * Do the initial setup.
    */
   setup() {
-    this.setupDropdowns();
-    this.setupTextarea();
-
     if (!this.state.isTranslationEngineSupported) {
       this.showInfo("about-translations-no-support");
+      this.disableUI();
+      return;
     }
+    this.setupDropdowns();
+    this.setupTextarea();
   }
 
   /**
@@ -533,6 +542,12 @@ class TranslationsUI {
     });
   }
 
+  disableUI() {
+    this.translationFrom.disabled = true;
+    this.languageFrom.disabled = true;
+    this.languageTo.disabled = true;
+  }
+
   /**
    * @param {string} message
    */
@@ -561,7 +576,9 @@ window.addEventListener("AboutTranslationsChromeToContent", ({ detail }) => {
       if (window.translationsState) {
         throw new Error("about:translations was already initialized.");
       }
-      window.translationsState = new TranslationsState();
+      AT_isTranslationEngineSupported().then(isSupported => {
+        window.translationsState = new TranslationsState(isSupported);
+      });
       document.body.style.visibility = "visible";
       break;
     }
