@@ -1540,6 +1540,9 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
 //
 // Each JS builtin can have several overloads. These must all be enumerated in
 // PopulateTypedNatives() so they can be included in the process-wide thunk set.
+// Additionally to the traditional overloading based on types, every builtin
+// can also have a version implemented by fdlibm or the native math library.
+// This is useful for fingerprinting resistance.
 
 #define FOR_EACH_SIN_COS_TAN_NATIVE(_) \
   _(math_sin, MathSin)                 \
@@ -1571,12 +1574,12 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
   _(ecmaHypot, MathHypot)         \
   _(ecmaPow, MathPow)
 
-#define DEFINE_SIN_COS_TAN_FLOAT_WRAPPER(func, _)  \
-  static float func##_impl_f32(float x) {          \
-    if (math_use_fdlibm_for_sin_cos_tan()) {       \
-      return float(func##_fdlibm_impl(double(x))); \
-    }                                              \
-    return float(func##_native_impl(double(x)));   \
+#define DEFINE_SIN_COS_TAN_FLOAT_WRAPPER(func, _) \
+  static float func##_native_impl_f32(float x) {  \
+    return float(func##_native_impl(double(x)));  \
+  }                                               \
+  static float func##_fdlibm_impl_f32(float x) {  \
+    return float(func##_fdlibm_impl(double(x)));  \
   }
 
 #define DEFINE_UNARY_FLOAT_WRAPPER(func, _) \
@@ -1599,16 +1602,20 @@ FOR_EACH_BINARY_NATIVE(DEFINE_BINARY_FLOAT_WRAPPER)
 struct TypedNative {
   InlinableNative native;
   ABIFunctionType abiType;
+  enum class FdlibmImpl : uint8_t { No, Yes } fdlibm;
 
-  TypedNative(InlinableNative native, ABIFunctionType abiType)
-      : native(native), abiType(abiType) {}
+  TypedNative(InlinableNative native, ABIFunctionType abiType,
+              FdlibmImpl fdlibm)
+      : native(native), abiType(abiType), fdlibm(fdlibm) {}
 
   using Lookup = TypedNative;
   static HashNumber hash(const Lookup& l) {
-    return HashGeneric(uint32_t(l.native), uint32_t(l.abiType));
+    return HashGeneric(uint32_t(l.native), uint32_t(l.abiType),
+                       uint32_t(l.fdlibm));
   }
   static bool match(const TypedNative& lhs, const Lookup& rhs) {
-    return lhs.native == rhs.native && lhs.abiType == rhs.abiType;
+    return lhs.native == rhs.native && lhs.abiType == rhs.abiType &&
+           lhs.fdlibm == rhs.fdlibm;
   }
 };
 
@@ -1616,26 +1623,25 @@ using TypedNativeToFuncPtrMap =
     HashMap<TypedNative, void*, TypedNative, SystemAllocPolicy>;
 
 static bool PopulateTypedNatives(TypedNativeToFuncPtrMap* typedNatives) {
-#define ADD_OVERLOAD(funcName, native, abiType)                            \
-  if (!typedNatives->putNew(TypedNative(InlinableNative::native, abiType), \
-                            FuncCast(funcName, abiType)))                  \
+#define ADD_OVERLOAD(funcName, native, abiType, fdlibm)                   \
+  if (!typedNatives->putNew(TypedNative(InlinableNative::native, abiType, \
+                                        TypedNative::FdlibmImpl::fdlibm), \
+                            FuncCast(funcName, abiType)))                 \
     return false;
 
-#define ADD_SIN_COS_TAN_OVERLOADS(funcName, native)                  \
-  if (math_use_fdlibm_for_sin_cos_tan()) {                           \
-    ADD_OVERLOAD(funcName##_fdlibm_impl, native, Args_Double_Double) \
-  } else {                                                           \
-    ADD_OVERLOAD(funcName##_native_impl, native, Args_Double_Double) \
-  }                                                                  \
-  ADD_OVERLOAD(funcName##_impl_f32, native, Args_Float32_Float32)
+#define ADD_SIN_COS_TAN_OVERLOADS(funcName, native)                          \
+  ADD_OVERLOAD(funcName##_native_impl, native, Args_Double_Double, No)       \
+  ADD_OVERLOAD(funcName##_fdlibm_impl, native, Args_Double_Double, Yes)      \
+  ADD_OVERLOAD(funcName##_native_impl_f32, native, Args_Float32_Float32, No) \
+  ADD_OVERLOAD(funcName##_fdlibm_impl_f32, native, Args_Float32_Float32, Yes)
 
-#define ADD_UNARY_OVERLOADS(funcName, native)               \
-  ADD_OVERLOAD(funcName##_impl, native, Args_Double_Double) \
-  ADD_OVERLOAD(funcName##_impl_f32, native, Args_Float32_Float32)
+#define ADD_UNARY_OVERLOADS(funcName, native)                   \
+  ADD_OVERLOAD(funcName##_impl, native, Args_Double_Double, No) \
+  ADD_OVERLOAD(funcName##_impl_f32, native, Args_Float32_Float32, No)
 
-#define ADD_BINARY_OVERLOADS(funcName, native)             \
-  ADD_OVERLOAD(funcName, native, Args_Double_DoubleDouble) \
-  ADD_OVERLOAD(funcName##_f32, native, Args_Float32_Float32Float32)
+#define ADD_BINARY_OVERLOADS(funcName, native)                 \
+  ADD_OVERLOAD(funcName, native, Args_Double_DoubleDouble, No) \
+  ADD_OVERLOAD(funcName##_f32, native, Args_Float32_Float32Float32, No)
 
   FOR_EACH_SIN_COS_TAN_NATIVE(ADD_SIN_COS_TAN_OVERLOADS)
   FOR_EACH_UNARY_NATIVE(ADD_UNARY_OVERLOADS)
@@ -1910,9 +1916,24 @@ void* wasm::MaybeGetBuiltinThunk(JSFunction* f, const FuncType& funcType) {
     return nullptr;
   }
 
-  TypedNative typedNative(f->jitInfo()->inlinableNative, *abiType);
-
   const BuiltinThunks& thunks = *builtinThunks;
+
+  // If this function should resist fingerprinting first try to lookup
+  // the fdlibm version. If that version doesn't exist we still fallback to
+  // the normal native.
+  if (math_use_fdlibm_for_sin_cos_tan() ||
+      f->realm()->behaviors().shouldResistFingerprinting()) {
+    TypedNative typedNative(f->jitInfo()->inlinableNative, *abiType,
+                            TypedNative::FdlibmImpl::Yes);
+    auto p =
+        thunks.typedNativeToCodeRange.readonlyThreadsafeLookup(typedNative);
+    if (p) {
+      return thunks.codeBase + thunks.codeRanges[p->value()].begin();
+    }
+  }
+
+  TypedNative typedNative(f->jitInfo()->inlinableNative, *abiType,
+                          TypedNative::FdlibmImpl::No);
   auto p = thunks.typedNativeToCodeRange.readonlyThreadsafeLookup(typedNative);
   if (!p) {
     return nullptr;
