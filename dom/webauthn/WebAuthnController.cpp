@@ -411,9 +411,9 @@ void WebAuthnController::RunFinishRegister(
       // PIN-related errors. Let the dialog show to inform the user
       shouldCancelActiveDialog = false;
     }
-    AbortTransaction(aTransactionId, status, shouldCancelActiveDialog);
     Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                          u"CTAPRegisterAbort"_ns, 1);
+    AbortTransaction(aTransactionId, status, shouldCancelActiveDialog);
     return;
   }
 
@@ -443,10 +443,10 @@ void WebAuthnController::RunFinishRegister(
   WebAuthnMakeCredentialResult result(clientDataJson, attObj, credentialId,
                                       regData, extensions);
 
-  Unused << mTransactionParent->SendConfirmRegister(aTransactionId, result);
-  ClearTransaction(true);
   Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                        u"CTAPRegisterFinish"_ns, 1);
+  Unused << mTransactionParent->SendConfirmRegister(aTransactionId, result);
+  ClearTransaction(true);
 }
 
 void WebAuthnController::Sign(PWebAuthnTransactionParent* aTransactionParent,
@@ -546,9 +546,9 @@ void WebAuthnController::RunFinishSign(
   }
 
   if (aResult.Length() == 0) {
-    AbortTransaction(aTransactionId, NS_ERROR_DOM_UNKNOWN_ERR, true);
     Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                          u"CTAPSignAbort"_ns, 1);
+    AbortTransaction(aTransactionId, NS_ERROR_DOM_UNKNOWN_ERR, true);
     return;
   }
 
@@ -562,9 +562,9 @@ void WebAuthnController::RunFinishSign(
         // the user
         shouldCancelActiveDialog = false;
       }
-      AbortTransaction(aTransactionId, status, shouldCancelActiveDialog);
       Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                            u"CTAPSignAbort"_ns, 1);
+      AbortTransaction(aTransactionId, status, shouldCancelActiveDialog);
       return;
     }
     mPendingSignResults = aResult.Clone();
@@ -578,9 +578,9 @@ void WebAuthnController::RunFinishSign(
     nsresult status;
     assertion->GetStatus(&status);
     if (NS_WARN_IF(NS_FAILED(status))) {
-      AbortTransaction(aTransactionId, status, true);
       Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                            u"CTAPSignAbort"_ns, 1);
+      AbortTransaction(aTransactionId, status, true);
       return;
     }
   }
@@ -681,10 +681,10 @@ void WebAuthnController::RunResumeWithSelectedSignResult(
                                     credentialId, signature, authenticatorData,
                                     extensions, signatureData, userHandle);
 
-  Unused << mTransactionParent->SendConfirmSign(aTransactionId, result);
-  ClearTransaction(true);
   Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                        u"CTAPSignFinish"_ns, 1);
+  Unused << mTransactionParent->SendConfirmSign(aTransactionId, result);
+  ClearTransaction(true);
 }
 
 NS_IMETHODIMP
