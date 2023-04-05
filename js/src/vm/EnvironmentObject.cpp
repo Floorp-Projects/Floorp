@@ -118,8 +118,8 @@ CallObject* CallObject::createWithShape(JSContext* cx,
  */
 CallObject* CallObject::create(JSContext* cx, HandleScript script,
                                HandleObject enclosing, gc::InitialHeap heap) {
-  Rooted<FunctionScope*> scope(cx, &script->bodyScope()->as<FunctionScope>());
-  Rooted<SharedShape*> shape(cx, scope->environmentShape());
+  Rooted<SharedShape*> shape(
+      cx, script->bodyScope()->as<FunctionScope>().environmentShape());
   MOZ_ASSERT(shape->getObjectClass() == &class_);
 
   // The JITs assume the result is nursery allocated unless we collected the
@@ -132,18 +132,6 @@ CallObject* CallObject::create(JSContext* cx, HandleScript script,
 
   if (enclosing) {
     callObj->initEnclosingEnvironment(enclosing);
-  }
-
-  if (scope->hasParameterExprs()) {
-    // If there are parameter expressions, all parameters are lexical and
-    // have TDZ.
-    for (BindingIter bi(script->bodyScope()); bi; bi++) {
-      BindingLocation loc = bi.location();
-      if (loc.kind() == BindingLocation::Kind::Environment &&
-          BindingKindIsLexical(bi.kind())) {
-        callObj->initSlot(loc.slot(), MagicValue(JS_UNINITIALIZED_LEXICAL));
-      }
-    }
   }
 
   return callObj;
@@ -169,20 +157,6 @@ CallObject* CallObject::create(JSContext* cx, AbstractFramePtr frame) {
   }
 
   callobj->initFixedSlot(CALLEE_SLOT, ObjectValue(*callee));
-
-  if (!frame.script()->bodyScope()->as<FunctionScope>().hasParameterExprs()) {
-    // If there are no defaults, copy the aliased arguments into the call
-    // object manually. If there are defaults, bytecode is generated to do
-    // the copying.
-
-    for (PositionalFormalParameterIter fi(frame.script()); fi; fi++) {
-      if (!fi.closedOver()) {
-        continue;
-      }
-      callobj->setAliasedBinding(
-          fi, frame.unaliasedFormal(fi.argumentSlot(), DONT_CHECK_ALIASING));
-    }
-  }
 
   return callobj;
 }

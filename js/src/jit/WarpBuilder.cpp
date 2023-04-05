@@ -371,46 +371,6 @@ MInstruction* WarpBuilder::buildCallObject(MDefinition* callee,
   current->add(
       MStoreFixedSlot::NewUnbarriered(alloc(), callObj, calleeSlot, callee));
 
-  // Copy closed-over argument slots if there aren't parameter expressions.
-  MSlots* slots = nullptr;
-  for (PositionalFormalParameterIter fi(script_); fi; fi++) {
-    if (!fi.closedOver()) {
-      continue;
-    }
-
-    if (!alloc().ensureBallast()) {
-      return nullptr;
-    }
-
-    uint32_t slot = fi.location().slot();
-    uint32_t formal = fi.argumentSlot();
-    uint32_t numFixedSlots = templateObj->numFixedSlots();
-    MDefinition* param;
-    if (script_->functionHasParameterExprs()) {
-      param = constant(MagicValue(JS_UNINITIALIZED_LEXICAL));
-    } else {
-      param = current->getSlot(info().argSlotUnchecked(formal));
-    }
-
-#ifdef DEBUG
-    // Assert in debug mode we can elide the post write barrier.
-    current->add(MAssertCanElidePostWriteBarrier::New(alloc(), callObj, param));
-#endif
-
-    if (slot >= numFixedSlots) {
-      if (!slots) {
-        slots = MSlots::New(alloc(), callObj);
-        current->add(slots);
-      }
-      uint32_t dynamicSlot = slot - numFixedSlots;
-      current->add(MStoreDynamicSlot::NewUnbarriered(alloc(), slots,
-                                                     dynamicSlot, param));
-    } else {
-      current->add(
-          MStoreFixedSlot::NewUnbarriered(alloc(), callObj, slot, param));
-    }
-  }
-
   return callObj;
 }
 

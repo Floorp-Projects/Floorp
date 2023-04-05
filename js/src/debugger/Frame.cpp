@@ -1606,9 +1606,10 @@ static bool DebuggerArguments_getArg(JSContext* cx, unsigned argc, Value* vp) {
     if (unsigned(i) < frame.numFormalArgs()) {
       for (PositionalFormalParameterIter fi(script); fi; fi++) {
         if (fi.argumentSlot() == unsigned(i)) {
-          // We might've been called before the CallObject was
-          // created.
-          if (fi.closedOver() && frame.hasInitialEnvironment()) {
+          // We might've been called before the CallObject was created or
+          // initialized in the prologue.
+          if (fi.closedOver() && frame.hasInitialEnvironment() &&
+              iter.pc() >= script->main()) {
             arg = frame.callObj().aliasedBinding(fi);
           } else {
             arg = frame.unaliasedActual(i, DONT_CHECK_ALIASING);

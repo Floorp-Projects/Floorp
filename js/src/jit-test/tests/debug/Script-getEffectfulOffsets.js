@@ -31,7 +31,7 @@ test("a[b]++", base + 1);
 test("return a[b]", base + 0);
 test("a = 0", base + 0);
 test("d = 0", base + 1);
-test("with (a) { b = 0; }", base + 4);
+test("with (a) { b = 0; }", base + 7);
 test("let o = {}; ({x: o.x} = { x: 10 })", base + 1);
 test("var x", base + 0);
 

@@ -252,6 +252,7 @@ class MOZ_STACK_CLASS FunctionScriptEmitter {
 
  private:
   [[nodiscard]] bool emitExtraBodyVarScope();
+  [[nodiscard]] bool emitInitializeClosedOverArgumentBindings();
 };
 
 // Class for emitting function parameters.
