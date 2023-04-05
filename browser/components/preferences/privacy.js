@@ -888,6 +888,11 @@ var gPrivacyPane = {
       gPrivacyPane.showHttpsOnlyModeExceptions
     );
     setEventListener(
+      "dohExceptionsButton",
+      "command",
+      gPrivacyPane.showDoHExceptions
+    );
+    setEventListener(
       "clearDataSettings",
       "command",
       gPrivacyPane.showClearPrivateDataSettings
@@ -2207,6 +2212,13 @@ var gPrivacyPane = {
       "chrome://browser/content/preferences/dialogs/permissions.xhtml",
       undefined,
       params
+    );
+  },
+
+  showDoHExceptions() {
+    gSubDialog.open(
+      "chrome://browser/content/preferences/dialogs/dohExceptions.xhtml",
+      undefined
     );
   },
 
