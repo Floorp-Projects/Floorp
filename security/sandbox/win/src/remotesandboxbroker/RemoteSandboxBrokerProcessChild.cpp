@@ -17,7 +17,7 @@ RemoteSandboxBrokerProcessChild::~RemoteSandboxBrokerProcessChild() {}
 
 bool RemoteSandboxBrokerProcessChild::Init(int aArgc, char* aArgv[]) {
   BackgroundHangMonitor::Startup();
-  return mSandboxBrokerChild.Init(TakeInitialEndpoint());
+  return mSandboxBrokerChild->Init(TakeInitialEndpoint());
 }
 
 void RemoteSandboxBrokerProcessChild::CleanUp() {
