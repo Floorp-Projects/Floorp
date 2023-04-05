@@ -279,6 +279,18 @@ interface nsIDNSService : nsISupports
     ACString getTRRSkipReasonName(in nsITRRSkipReason_value value);
 
     /**
+     * The channel status of the last TRR confirmation attempt.
+     * In strict mode it reflects the channel status of the last TRR request.
+     */
+    readonly attribute nsresult lastConfirmationStatus;
+
+    /**
+     * The TRR skip reason of the last TRR confirmation attempt.
+     * In strict mode it reflects the TRR skip reason of the last TRR request.
+     */
+    readonly attribute nsITRRSkipReason_value lastConfirmationSkipReason;
+
+    /**
      * Notifies the DNS service that we failed to connect to this alternative
      * endpoint.
      * @param aOwnerName

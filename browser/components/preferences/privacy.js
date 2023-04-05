@@ -608,8 +608,12 @@ var gPrivacyPane = {
 
     let status = document.getElementById("dohStatus");
 
-    async function setStatus(localizedStringName) {
-      let statusString = await document.l10n.formatValue(localizedStringName);
+    async function setStatus(localizedStringName, options) {
+      let opts = options || {};
+      let statusString = await document.l10n.formatValue(
+        localizedStringName,
+        opts
+      );
       document.l10n.setAttributes(status, "preferences-doh-status", {
         status: statusString,
       });
@@ -635,10 +639,22 @@ var gPrivacyPane = {
       return "preferences-doh-status-disabled";
     }
 
+    let errReason = "";
+    let confirmationStatus = Services.dns.lastConfirmationStatus;
+    if (confirmationStatus != Cr.NS_OK) {
+      errReason = ChromeUtils.getXPCOMErrorName(confirmationStatus);
+    } else {
+      errReason = Services.dns.getTRRSkipReasonName(
+        Services.dns.lastConfirmationSkipReason
+      );
+    }
     let statusLabel = computeStatus();
     // setStatus will format and set the statusLabel asynchronously.
-    setStatus(statusLabel);
+    setStatus(statusLabel, { reason: errReason });
     dohResolver.hidden = statusLabel == "preferences-doh-status-disabled";
+
+    let statusLearnMore = document.getElementById("dohStatusLearnMore");
+    statusLearnMore.hidden = statusLabel != "preferences-doh-status-not-active";
 
     // No need to set the resolver name since we're not going to show it.
     if (statusLabel == "preferences-doh-status-disabled") {

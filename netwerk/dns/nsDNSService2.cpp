@@ -1578,6 +1578,24 @@ nsDNSService::ResetExcludedSVCDomainName(const nsACString& aOwnerName) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDNSService::GetLastConfirmationStatus(nsresult* aConfirmationStatus) {
+  if (!mTrrService) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  *aConfirmationStatus = mTrrService->LastConfirmationStatus();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDNSService::GetLastConfirmationSkipReason(
+    TRRSkippedReason* aSkipReason) {
+  if (!mTrrService) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  *aSkipReason = mTrrService->LastConfirmationSkipReason();
+  return NS_OK;
+}
+
 namespace mozilla::net {
 nsresult GetTRRSkipReasonName(TRRSkippedReason aReason, nsACString& aName) {
   static_assert(TRRSkippedReason::TRR_UNSET == 0);
