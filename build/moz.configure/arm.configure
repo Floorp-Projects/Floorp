@@ -151,16 +151,25 @@ check_and_add_flag(
 )
 
 
+# The set of flags that clang understands
 @depends(
     arch_option,
     thumb_option,
-    thumb_interwork_option,
     fpu_option,
     float_abi_option,
     soft_float_option,
 )
-def all_arm_flags(arch, thumb, interwork, fpu, float_abi, soft_float):
-    return arch + thumb + interwork + fpu + float_abi + soft_float
+def all_clang_arm_flags(arch, thumb, fpu, float_abi, soft_float):
+    return arch + thumb + fpu + float_abi + soft_float
+
+
+# All the flags the compiler understands. When the compiler is clang, this
+# still includes unsupported flags, but we live it to configure to fail
+# during a compiler check. These checks aren't available for clang as used
+# by bindgen, so we keep the separate set of flags for clang for bindgen.
+@depends(all_clang_arm_flags, thumb_interwork_option)
+def all_arm_flags(flags, interwork):
+    return flags + interwork
 
 
 add_old_configure_assignment("_ARM_FLAGS", all_arm_flags)
