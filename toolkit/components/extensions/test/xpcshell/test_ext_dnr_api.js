@@ -83,13 +83,6 @@ async function testAvailability({
 }
 
 add_setup(async () => {
-  // TODO bug 1782685: Remove this check.
-  Assert.equal(
-    Services.prefs.getBoolPref("extensions.dnr.enabled", false),
-    false,
-    "DNR is disabled by default"
-  );
-  Services.prefs.setBoolPref("extensions.dnr.enabled", true);
   Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
 
   // test_optional_declarativeNetRequestFeedback calls permission.request().
@@ -100,12 +93,11 @@ add_setup(async () => {
   );
 });
 
-// Verifies that DNR is disabled by default (until true in bug 1782685).
 add_task(
   {
     pref_set: [["extensions.dnr.enabled", false]],
   },
-  async function dnr_disabled_by_default() {
+  async function extensions_dnr_enabled_pref_disabled_dnr_feature() {
     let { messages } = await promiseConsoleOutput(async () => {
       await testAvailability({
         allowDNRFeedback: PREF_DNR_FEEDBACK_DEFAULT_VALUE,
