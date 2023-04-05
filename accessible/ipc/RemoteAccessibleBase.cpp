@@ -699,7 +699,11 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
           // happens in this loop instead of both inside and outside of
           // the loop (like ApplyTransform).
           // Never apply scroll offsets past a fixed container.
-          const bool hasScrollArea = remoteAcc->ApplyScrollOffset(bounds);
+          // XXX: ApplyScrollOffset wrapped in an immediately-invoked lambda
+          // to work around a suspected gcc bug. See Bug 1825516.
+          const bool hasScrollArea = [&]() {
+            return remoteAcc->ApplyScrollOffset(bounds);
+          }();
 
           // If we are hit testing and the Accessible has a scroll area, ensure
           // that the bounds we've calculated so far are constrained to the
