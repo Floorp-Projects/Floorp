@@ -33,11 +33,6 @@ known_errors = [
         "filename": "RemoteSettingsClient",
     },
     {
-        # The search service complains on new profiles - bug 1826316.
-        "message": "No settings file exists, new profile?",
-        "filename": "SearchSettings",
-    },
-    {
         # Triggered as soon as anything tries to use shortcut keys.
         # The browser toolbox shortcut is not portable.
         "message": "key_browserToolbox",

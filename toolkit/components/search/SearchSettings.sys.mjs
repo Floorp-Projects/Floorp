@@ -137,7 +137,7 @@ export class SearchSettings {
         throw new Error("no engine in the file");
       }
     } catch (ex) {
-      lazy.logConsole.warn("get: No settings file exists, new profile?", ex);
+      lazy.logConsole.debug("get: No settings file exists, new profile?", ex);
       json = {};
     }
 
