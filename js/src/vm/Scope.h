@@ -60,6 +60,9 @@ class BaseAbstractBindingIter;
 template <typename NameT>
 class AbstractBindingIter;
 
+template <typename NameT>
+class AbstractPositionalFormalParameterIter;
+
 using BindingIter = AbstractBindingIter<JSAtom>;
 
 class AbstractScopePtr;
@@ -648,7 +651,7 @@ class ClassBodyScope : public Scope {
 class FunctionScope : public Scope {
   friend class GCMarker;
   friend class AbstractBindingIter<JSAtom>;
-  friend class PositionalFormalParameterIter;
+  friend class AbstractPositionalFormalParameterIter<JSAtom>;
   friend class Scope;
   friend class AbstractScopePtr;
   static const ScopeKind classScopeKind_ = ScopeKind::Function;
@@ -1576,27 +1579,65 @@ SharedShape* EmptyEnvironmentShape(JSContext* cx) {
 }
 
 //
-// A refinement BindingIter that only iterates over positional formal
-// parameters of a function.
+// PositionalFormalParameterIter is a refinement BindingIter that only iterates
+// over positional formal parameters of a function.
 //
-class PositionalFormalParameterIter : public BindingIter {
+template <typename NameT>
+class BasePositionalFormalParamterIter : public AbstractBindingIter<NameT> {
+  using Base = AbstractBindingIter<NameT>;
+
+ protected:
   void settle() {
-    if (index_ >= nonPositionalFormalStart_) {
-      index_ = length_;
+    if (this->index_ >= this->nonPositionalFormalStart_) {
+      this->index_ = this->length_;
     }
   }
 
  public:
-  explicit PositionalFormalParameterIter(Scope* scope);
-  explicit PositionalFormalParameterIter(JSScript* script);
+  using Base::Base;
 
   void operator++(int) {
-    BindingIter::operator++(1);
+    Base::operator++(1);
     settle();
   }
 
-  bool isDestructured() const { return !name(); }
+  bool isDestructured() const { return !this->name(); }
 };
+
+template <typename NameT>
+class AbstractPositionalFormalParameterIter;
+
+template <>
+class AbstractPositionalFormalParameterIter<JSAtom>
+    : public BasePositionalFormalParamterIter<JSAtom> {
+  using Base = BasePositionalFormalParamterIter<JSAtom>;
+
+ public:
+  explicit AbstractPositionalFormalParameterIter(Scope* scope);
+  explicit AbstractPositionalFormalParameterIter(JSScript* script);
+
+  using Base::Base;
+};
+
+template <>
+class AbstractPositionalFormalParameterIter<frontend::TaggedParserAtomIndex>
+    : public BasePositionalFormalParamterIter<frontend::TaggedParserAtomIndex> {
+  using Base =
+      BasePositionalFormalParamterIter<frontend::TaggedParserAtomIndex>;
+
+ public:
+  AbstractPositionalFormalParameterIter(
+      FunctionScope::AbstractData<frontend::TaggedParserAtomIndex>& data,
+      bool hasParameterExprs)
+      : Base(data, hasParameterExprs) {
+    settle();
+  }
+
+  using Base::Base;
+};
+
+using PositionalFormalParameterIter =
+    AbstractPositionalFormalParameterIter<JSAtom>;
 
 //
 // Iterator for walking the scope chain.

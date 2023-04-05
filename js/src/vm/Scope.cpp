@@ -1261,8 +1261,9 @@ template void BaseAbstractBindingIter<JSAtom>::init(
 template void BaseAbstractBindingIter<frontend::TaggedParserAtomIndex>::init(
     WasmFunctionScope::AbstractData<frontend::TaggedParserAtomIndex>&);
 
-PositionalFormalParameterIter::PositionalFormalParameterIter(Scope* scope)
-    : BindingIter(scope) {
+AbstractPositionalFormalParameterIter<
+    JSAtom>::AbstractPositionalFormalParameterIter(Scope* scope)
+    : Base(scope) {
   // Reinit with flags = 0, i.e., iterate over all positional parameters.
   if (scope->is<FunctionScope>()) {
     init(scope->as<FunctionScope>().data(), /* flags = */ 0);
@@ -1270,8 +1271,9 @@ PositionalFormalParameterIter::PositionalFormalParameterIter(Scope* scope)
   settle();
 }
 
-PositionalFormalParameterIter::PositionalFormalParameterIter(JSScript* script)
-    : PositionalFormalParameterIter(script->bodyScope()) {}
+AbstractPositionalFormalParameterIter<
+    JSAtom>::AbstractPositionalFormalParameterIter(JSScript* script)
+    : AbstractPositionalFormalParameterIter(script->bodyScope()) {}
 
 void js::DumpBindings(JSContext* cx, Scope* scopeArg) {
   Rooted<Scope*> scope(cx, scopeArg);
