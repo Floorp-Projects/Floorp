@@ -5,6 +5,7 @@
 
 package org.mozilla.geckoview;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.BlendMode;
 import android.graphics.Canvas;
@@ -43,6 +44,7 @@ public final class OverscrollEdgeEffect {
 
   private static Field sPaintField;
 
+  @SuppressLint("DiscouragedPrivateApi")
   private void setBlendMode(final EdgeEffect edgeEffect) {
     if (Build.VERSION.SDK_INT < 29) {
       // setBlendMode is only supported on SDK_INT >= 29 and above.
