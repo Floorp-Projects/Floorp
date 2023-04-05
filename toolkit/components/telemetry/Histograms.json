@@ -15796,6 +15796,18 @@
     "description": "The number of times a browserAction popup is preloaded and results in one of the categories, keyed by addon id.",
     "keyed": true
   },
+  "WEBEXT_DNR_EVALUATE_RULES_MS": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["addons-dev-internal@mozilla.com"],
+    "bug_numbers": [1803363],
+    "expires_in_version": "120",
+    "kind": "exponential",
+    "releaseChannelCollection": "opt-out",
+    "high": 100000,
+    "n_buckets": 100,
+    "description": "Amount of time it takes to evaluate DNR rules."
+  },
   "WEBEXT_DNR_STARTUPCACHE_READ_BYTES": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
