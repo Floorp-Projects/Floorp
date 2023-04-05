@@ -4,6 +4,7 @@
 
 package org.mozilla.gecko.mozglue;
 
+import android.annotation.SuppressLint;
 import android.os.MemoryFile;
 import android.os.Parcel;
 import android.os.ParcelFileDescriptor;
@@ -13,6 +14,7 @@ import java.io.FileDescriptor;
 import java.io.IOException;
 import java.lang.reflect.Method;
 
+@SuppressLint("DiscouragedPrivateApi")
 public class SharedMemory implements Parcelable {
   private static final String LOGTAG = "GeckoShmem";
   private static final Method sGetFDMethod;
