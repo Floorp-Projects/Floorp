@@ -102,6 +102,7 @@ namespace jit {
   _(js_free)                                                          \
   _(js::hypot3)                                                       \
   _(js::hypot4)                                                       \
+  _(js::Interpret)                                                    \
   _(js::Int32ToStringPure)                                            \
   _(js::irregexp::CaseInsensitiveCompareNonUnicode)                   \
   _(js::irregexp::CaseInsensitiveCompareUnicode)                      \

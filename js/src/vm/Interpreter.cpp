@@ -354,9 +354,6 @@ static bool AddRecordSpreadOperation(JSContext* cx, HandleValue recHandle,
 }
 #endif
 
-static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
-                                                              RunState& state);
-
 InterpreterFrame* InvokeState::pushInterpreterFrame(JSContext* cx) {
   return cx->interpreterStack().pushInvokeFrame(cx, args_, construct_);
 }
@@ -371,6 +368,36 @@ InterpreterFrame* RunState::pushInterpreterFrame(JSContext* cx) {
     return asInvoke()->pushInterpreterFrame(cx);
   }
   return asExecute()->pushInterpreterFrame(cx);
+}
+
+static MOZ_ALWAYS_INLINE bool MaybeEnterInterpreterTrampoline(JSContext* cx,
+                                                              RunState& state) {
+#ifdef NIGHTLY_BUILD
+  if (jit::JitOptions.emitInterpreterEntryTrampoline &&
+      cx->runtime()->hasJitRuntime()) {
+    js::jit::JitRuntime* jitRuntime = cx->runtime()->jitRuntime();
+    JSScript* script = state.script();
+
+    uint8_t* codeRaw = nullptr;
+    auto p = jitRuntime->getInterpreterEntryMap()->lookup(script);
+    if (p) {
+      codeRaw = p->value().raw();
+    } else if (js::jit::JitCode* code =
+                   jitRuntime->generateEntryTrampolineForScript(cx, script)) {
+      js::jit::EntryTrampoline entry(cx, code);
+      if (!jitRuntime->getInterpreterEntryMap()->put(script, entry)) {
+        return false;
+      }
+      codeRaw = code->raw();
+    }
+
+    MOZ_ASSERT(codeRaw, "Should have a valid trampoline here.");
+    // The C++ entry thunk is located at the vmInterpreterEntryOffset offset.
+    codeRaw += jitRuntime->vmInterpreterEntryOffset();
+    return js::jit::EnterInterpreterEntryTrampoline(codeRaw, cx, &state);
+  }
+#endif
+  return Interpret(cx, state);
 }
 
 // MSVC with PGO inlines a lot of functions in RunScript, resulting in large
@@ -428,7 +455,7 @@ bool js::RunScript(JSContext* cx, RunState& state) {
       break;
   }
 
-  bool ok = Interpret(cx, state);
+  bool ok = MaybeEnterInterpreterTrampoline(cx, state);
 
   return ok;
 }
@@ -1954,8 +1981,8 @@ void js::ReportInNotObjectError(JSContext* cx, HandleValue lref,
                             InformalValueTypeName(rref));
 }
 
-static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
-                                                              RunState& state) {
+bool MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER js::Interpret(JSContext* cx,
+                                                           RunState& state) {
 /*
  * Define macros for an interpreter loop. Opcode dispatch is done by
  * indirect goto (aka a threaded interpreter), which is technically
@@ -3416,6 +3443,21 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
             case jit::EnterJitStatus::NotEntered:
               break;
           }
+
+#ifdef NIGHTLY_BUILD
+          // If entry trampolines are enabled, call back into
+          // MaybeEnterInterpreterTrampoline so we can generate an
+          // entry trampoline for the new frame.
+          if (jit::JitOptions.emitInterpreterEntryTrampoline) {
+            if (MaybeEnterInterpreterTrampoline(cx, state)) {
+              interpReturnOK = true;
+              CHECK_BRANCH();
+              REGS.sp = args.spAfterCall();
+              goto jit_return;
+            }
+            goto error;
+          }
+#endif
         }
 
         funScript = fun->nonLazyScript();

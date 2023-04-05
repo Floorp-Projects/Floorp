@@ -179,6 +179,10 @@ class JitRuntime {
   // Code for trampolines and VMFunction wrappers.
   WriteOnceData<JitCode*> trampolineCode_{nullptr};
 
+  // Thunk that calls into the C++ interpreter from the interpreter
+  // entry trampoline that is generated with --emit-interpreter-entry
+  WriteOnceData<uint32_t> vmInterpreterEntryOffset_{0};
+
   // Maps VMFunctionId to the offset of the wrapper code in trampolineCode_.
   using VMWrapperOffsets = Vector<uint32_t, 0, SystemAllocPolicy>;
   VMWrapperOffsets functionWrapperOffsets_;
@@ -265,6 +269,7 @@ class JitRuntime {
   }
 
   void generateBaselineInterpreterEntryTrampoline(MacroAssembler& masm);
+  void generateInterpreterEntryTrampoline(MacroAssembler& masm);
 
  public:
   JitCode* generateEntryTrampolineForScript(JSContext* cx, JSScript* script);
@@ -328,6 +333,8 @@ class JitRuntime {
     }
     return trampolineCode(argumentsRectifierOffset_);
   }
+
+  uint32_t vmInterpreterEntryOffset() { return vmInterpreterEntryOffset_; }
 
   TrampolinePtr getArgumentsRectifierReturnAddr() const {
     return trampolineCode(argumentsRectifierReturnOffset_);
