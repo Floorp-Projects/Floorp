@@ -277,10 +277,7 @@ void RemoteDecoderManagerParent::Open(
     // We can't recover from this.
     MOZ_CRASH("Failed to bind RemoteDecoderManagerParent to endpoint");
   }
-  AddRef();
 }
-
-void RemoteDecoderManagerParent::ActorDealloc() { Release(); }
 
 mozilla::ipc::IPCResult RemoteDecoderManagerParent::RecvReadback(
     const SurfaceDescriptorGPUVideo& aSD, SurfaceDescriptor* aResult) {
