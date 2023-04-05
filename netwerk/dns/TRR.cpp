@@ -950,7 +950,7 @@ void TRR::ReportStatus(nsresult aStatusCode) {
   // it as failed; otherwise it can cause the confirmation to fail.
   if (UseDefaultServer() && aStatusCode != NS_ERROR_ABORT) {
     // Bad content is still considered "okay" if the HTTP response is okay
-    TRRService::Get()->RecordTRRStatus(aStatusCode);
+    TRRService::Get()->RecordTRRStatus(this);
   }
 }
 
@@ -999,7 +999,7 @@ TRR::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
     }
   }
 
-  ReportStatus(aStatusCode);
+  auto scopeExit = MakeScopeExit([&] { ReportStatus(aStatusCode); });
 
   nsresult rv = NS_OK;
   // if status was "fine", parse the response and pass on the answer
