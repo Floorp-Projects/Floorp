@@ -1312,11 +1312,11 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
       pipWrapper.classList.remove("experiment");
     }
 
-    if (nimbusExperimentVariables.title && nimbusExperimentVariables.message) {
+    if (nimbusExperimentVariables.title) {
       let pipExplainer = shadowRoot.querySelector(".pip-explainer");
       let pipLabel = shadowRoot.querySelector(".pip-label");
 
-      if (pipExplainer) {
+      if (pipExplainer && nimbusExperimentVariables.message) {
         pipExplainer.innerText = nimbusExperimentVariables.message;
       }
       pipLabel.innerText = nimbusExperimentVariables.title;
