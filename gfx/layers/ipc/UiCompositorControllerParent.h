@@ -23,7 +23,7 @@ class UiCompositorControllerParent final
   friend class UiCompositorControllerChild;
 
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(UiCompositorControllerParent)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(UiCompositorControllerParent, final)
 
   static RefPtr<UiCompositorControllerParent> GetFromRootLayerTreeId(
       const LayersId& aRootLayerTreeId);
@@ -46,7 +46,6 @@ class UiCompositorControllerParent final
   mozilla::ipc::IPCResult RecvEnableLayerUpdateNotifications(
       const bool& aEnable);
   void ActorDestroy(ActorDestroyReason aWhy) override;
-  void ActorDealloc() override;
 
   // Class specific functions
   void ToolbarAnimatorMessageFromCompositor(int32_t aMessage);
