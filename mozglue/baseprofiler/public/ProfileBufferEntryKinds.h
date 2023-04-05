@@ -60,9 +60,7 @@ static constexpr size_t ProfileBufferEntryNumChars = 8;
 // more efficient kinds of entries (e.g., stack frames could be stored in one
 // bigger entry, instead of multiple `ProfileBufferEntry`s); then we could
 // discard `ProfileBufferEntry` and move this enum to a more appropriate spot.
-using ProfileBufferEntryKindUnderlyingType = uint8_t;
-
-enum class ProfileBufferEntryKind : ProfileBufferEntryKindUnderlyingType {
+enum class ProfileBufferEntryKind : uint8_t {
   INVALID = 0,
 #define KIND(KIND, TYPE, SIZE) KIND,
   FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(KIND)
@@ -97,8 +95,7 @@ enum class ProfileBufferEntryKind : ProfileBufferEntryKindUnderlyingType {
   MODERN_LIMIT
 };
 
-using MarkerPayloadTypeUnderlyingType = uint8_t;
-enum class MarkerPayloadType : MarkerPayloadTypeUnderlyingType {
+enum class MarkerPayloadType : uint8_t {
   Cpp,
   Rust,
 };
