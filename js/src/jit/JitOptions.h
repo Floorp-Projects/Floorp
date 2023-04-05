@@ -85,6 +85,7 @@ struct DefaultJitOptions {
   bool enableWasmImportCallSpew;
   bool enableWasmFuncCallSpew;
 #endif
+  bool emitInterpreterEntryTrampoline;
   uint32_t baselineInterpreterWarmUpThreshold;
   uint32_t baselineJitWarmUpThreshold;
   uint32_t trialInliningWarmUpThreshold;
