@@ -307,36 +307,36 @@
     <!-- Juno first user onboarding flow experiment -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" tools:ignore="UnusedResources">將 %s 設為主力瀏覽器</string>
+    <string name="juno_onboarding_default_browser_title">將 %s 設為主力瀏覽器</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description" tools:ignore="UnusedResources">%1$s 將人們看得比利潤更重要，並且透過封鎖跨網站追蹤器等機制來捍衛您的隱私。\n\n可到我們的%2$s了解更多資訊。</string>
+    <string name="juno_onboarding_default_browser_description">%1$s 將人們看得比利潤更重要，並且透過封鎖跨網站追蹤器等機制來捍衛您的隱私。\n\n可到我們的%2$s了解更多資訊。</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">隱私權公告</string>
+    <string name="juno_onboarding_default_browser_description_link_text">隱私權公告</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">設為預設瀏覽器</string>
+    <string name="juno_onboarding_default_browser_positive_button">設為預設瀏覽器</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">現在不要</string>
+    <string name="juno_onboarding_default_browser_negative_button">現在不要</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">在手機與筆電間快速切換</string>
+    <string name="juno_onboarding_sign_in_title">在手機與筆電間快速切換</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">同步您其他裝置上的分頁與密碼，從中斷的地方繼續上網。</string>
+    <string name="juno_onboarding_sign_in_description">同步您其他裝置上的分頁與密碼，從中斷的地方繼續上網。</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">登入</string>
+    <string name="juno_onboarding_sign_in_positive_button">登入</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">現在不要</string>
+    <string name="juno_onboarding_sign_in_negative_button">現在不要</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" tools:ignore="UnusedResources">透過通知，可幫助您使用 %s 做到更多事</string>
+    <string name="juno_onboarding_enable_notifications_title">透過通知，可幫助您使用 %s 做到更多事</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description" tools:ignore="UnusedResources">在不同裝置間發送分頁標籤、管理下載項目並獲得能完整發揮 %s 威力的使用秘訣。</string>
+    <string name="juno_onboarding_enable_notifications_description">在不同裝置間發送分頁標籤、管理下載項目並獲得能完整發揮 %s 威力的使用秘訣。</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">開啟通知</string>
+    <string name="juno_onboarding_enable_notifications_positive_button">開啟通知</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">現在不要</string>
+    <string name="juno_onboarding_enable_notifications_negative_button">現在不要</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -402,14 +402,26 @@
     <string name="reduce_cookie_banner_summary_1">%1$s 會自動嘗試拒絕網站 Cookie 橫幅上的設定請求。</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">對此網站關閉</string>
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">取消</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button">請求技術支援</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title">減少 Cookie 橫幅</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text">已送出對此網站的需求。</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">對此網站開啟</string>
+    <!-- Text for indicating that a request for unsupported site was sent to nimbus, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted">已送出對此網站的需求</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">目前不支援的網站</string>
+    <string name="reduce_cookie_banner_unsupported_site">目前不支援的網站</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">要為 %1$s 開啟減少 Cookie 橫幅功能嗎？</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">要為 %1$s 關閉減少 Cookie 橫幅功能嗎？</string>
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request">「減少 Cookie 橫幅」功能目前暫不支援此網站。您想要將此網站回報給我們的團隊，看看是否未來有機會支援嗎？</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s 將清除此網站的 Cookie 並重新載入頁面。清除 Cookie 可能會將您從網站登出，或清空購物車。</string>
 
@@ -1518,29 +1530,29 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">加強型追蹤保護</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">上網不被追蹤</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">上網不被追蹤</string>
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
-    <string name="preference_enhanced_tracking_protection_summary" tools:ignore="UnusedResources">現在提供 Total Cookie Protection 功能，這是我們針對跨網站追蹤器迄今最強大的屏障。</string>
+    <string name="preference_enhanced_tracking_protection_summary">現在提供 Total Cookie Protection 功能，這是我們針對跨網站追蹤器迄今最強大的屏障。</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">自己保留自己的資料。%s 不讓常見的追蹤器記錄您的上網行為。</string>
+    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">自己保留自己的資料。%s 不讓常見的追蹤器記錄您的上網行為。</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">%s 不讓常見的追蹤器記錄您的上網行為。</string>
+    <string name="preference_enhanced_tracking_protection_explanation_2">%s 不讓常見的追蹤器記錄您的上網行為。</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">了解更多</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">標準（預設）</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">隱私權保護與效能兼顧。網站可正常運作。</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">隱私權保護與效能兼顧。網站可正常運作。</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_5" tools:ignore="UnusedResources">頁面可正常載入，但封鎖少一點追蹤器。</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_5">頁面可正常載入，但封鎖少一點追蹤器。</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">標準追蹤保護會封鎖哪些內容</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">嚴格</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3">封鎖更多追蹤器，讓網頁可以更快載入，但頁面上的某些功能可能會故障。</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">封鎖更多追蹤器，讓網頁可以更快載入，但頁面上的某些功能可能會故障。</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_4" tools:ignore="UnusedResources">更強大的追蹤保護功能與更快的效能，但某些網站會無法正常運作。</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_4">更強大的追蹤保護功能與更快的效能，但某些網站會無法正常運作。</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">嚴格追蹤保護會封鎖哪些內容</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1627,6 +1639,10 @@
     <string name="preference_etp_smartblock_description">由於您已與此頁面中的部分追蹤器互動過，已解除封鎖下列標示的追蹤器 *。</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">了解更多</string>
+
+    <!-- Content description (not visible, for screen readers etc.):
+    Enhanced tracking protection exception preference icon for ETP settings. -->
+    <string name="preference_etp_exceptions_icon_description">加強型追蹤保護例外設定圖示</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">技術支援</string>

@@ -310,36 +310,36 @@
     <!-- Juno first user onboarding flow experiment -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" tools:ignore="UnusedResources">%s를 기본 브라우저로 설정해 보세요</string>
+    <string name="juno_onboarding_default_browser_title">%s를 기본 브라우저로 설정해 보세요</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description" tools:ignore="UnusedResources">%1$s는 이익보다 사람을 우선시하고 교차 사이트 추적기를 차단하여 개인 정보를 보호합니다.\n\n%2$s에서 더 알아보세요.</string>
+    <string name="juno_onboarding_default_browser_description">%1$s는 이익보다 사람을 우선시하고 교차 사이트 추적기를 차단하여 개인 정보를 보호합니다.\n\n%2$s에서 더 알아보세요.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">개인정보처리방침</string>
+    <string name="juno_onboarding_default_browser_description_link_text">개인정보처리방침</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">기본 브라우저로 설정</string>
+    <string name="juno_onboarding_default_browser_positive_button">기본 브라우저로 설정</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">나중에</string>
+    <string name="juno_onboarding_default_browser_negative_button">나중에</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">휴대전화에서 노트북으로 왔다가 다시 돌아가기</string>
+    <string name="juno_onboarding_sign_in_title">휴대전화에서 노트북으로 왔다가 다시 돌아가기</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">다른 기기에서 탭과 비밀번호를 가져와 중단한 부분부터 다시 시작하세요.</string>
+    <string name="juno_onboarding_sign_in_description">다른 기기에서 탭과 비밀번호를 가져와 중단한 부분부터 다시 시작하세요.</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">로그인</string>
+    <string name="juno_onboarding_sign_in_positive_button">로그인</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">나중에</string>
+    <string name="juno_onboarding_sign_in_negative_button">나중에</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" tools:ignore="UnusedResources">알림은 %s로 더 많은 작업을 수행하는 데 도움이 됩니다</string>
+    <string name="juno_onboarding_enable_notifications_title">알림은 %s로 더 많은 작업을 수행하는 데 도움이 됩니다</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description" tools:ignore="UnusedResources">기기 간에 탭을 보내고, 다운로드를 관리하고, %s를 최대한 활용하기 위한 팁을 얻으세요.</string>
+    <string name="juno_onboarding_enable_notifications_description">기기 간에 탭을 보내고, 다운로드를 관리하고, %s를 최대한 활용하기 위한 팁을 얻으세요.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">알림 켜기</string>
+    <string name="juno_onboarding_enable_notifications_positive_button">알림 켜기</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">나중에</string>
+    <string name="juno_onboarding_enable_notifications_negative_button">나중에</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -405,15 +405,27 @@
     <string name="reduce_cookie_banner_summary_1">%1$s는 자동으로 쿠키 배너에서 쿠키 요청을 거부하려고 시도합니다.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">이 사이트에서 꺼짐</string>
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">취소</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button">지원 요청</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title">쿠키 배너 감소</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text">사이트 지원 요청이 제출되었습니다.</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">이 사이트에서 켜짐</string>
+    <!-- Text for indicating that a request for unsupported site was sent to nimbus, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted">사이트 지원 요청이 제출됨</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">현재 지원되지 않는 사이트</string>
+    <string name="reduce_cookie_banner_unsupported_site">현재 지원되지 않는 사이트</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">%1$s에 대해 쿠키 배너 감소를 켜시겠습니까?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">%1$s에 대해 쿠키 배너 감소를 끄시겠습니까?</string>
 
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request">이 사이트는 현재 쿠키 배너 감소가 지원되지 않습니다. 저희 팀이 이 웹 사이트를 검토하고 향후 지원을 추가하기를 원하십니까?</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s는 이 사이트의 쿠키를 지우고 페이지를 새로 고침합니다. 모든 쿠키를 삭제하면 로그아웃되거나 장바구니가 비워질 수 있습니다.</string>
 
@@ -1530,29 +1542,29 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">향상된 추적 방지 기능</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">브라우저 추적 차단하기</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">브라우저 추적 차단하기</string>
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
-    <string name="preference_enhanced_tracking_protection_summary" tools:ignore="UnusedResources">이제 크로스 사이트 추적기에 대한 우리의 가장 강력한 기능인 전체 쿠키 보호 기능을 제공합니다.</string>
+    <string name="preference_enhanced_tracking_protection_summary">이제 크로스 사이트 추적기에 대한 우리의 가장 강력한 기능인 전체 쿠키 보호 기능을 제공합니다.</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">자신의 데이터를 보호하세요. %s는 온라인에서 하는 일을 추적하는 가장 일반적인 많은 추적기로부터 사용자를 보호합니다.</string>
+    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">자신의 데이터를 보호하세요. %s는 온라인에서 하는 일을 추적하는 가장 일반적인 많은 추적기로부터 사용자를 보호합니다.</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">%s는 온라인 활동을 추적하는 가장 일반적인 여러 추적기로부터 사용자를 보호합니다.</string>
+    <string name="preference_enhanced_tracking_protection_explanation_2">%s는 온라인 활동을 추적하는 가장 일반적인 여러 추적기로부터 사용자를 보호합니다.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">더 알아보기</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">표준 (기본값)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">개인 정보 보호와 성능사이의 균형이 잡혀 있습니다. 페이지가 정상적으로 로드됩니다.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">개인 정보 보호와 성능사이의 균형이 잡혀 있습니다. 페이지가 정상적으로 로드됩니다.</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_5" tools:ignore="UnusedResources">페이지는 정상적으로 로드되지만, 더 적은 추적기를 차단합니다.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_5">페이지는 정상적으로 로드되지만, 더 적은 추적기를 차단합니다.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">표준 추적 방지 기능에 의해 차단된 것</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">엄격</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3">더 많은 추적기를 차단하여 페이지가 더 빨리 로드되지만, 일부 페이지의 기능이 손상될 수 있습니다.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">더 많은 추적기를 차단하여 페이지가 더 빨리 로드되지만, 일부 페이지의 기능이 손상될 수 있습니다.</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_4" tools:ignore="UnusedResources">더 강력한 추적 방지 기능과 더 빠른 성능을 사용하지만, 일부 사이트는 제대로 동작하지 않을 수 있습니다.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_4">더 강력한 추적 방지 기능과 더 빠른 성능을 사용하지만, 일부 사이트는 제대로 동작하지 않을 수 있습니다.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">엄격 추적 방지 기능에 의해 차단된 것</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1641,6 +1653,10 @@
     <string name="preference_etp_smartblock_description">아래에 표시된 일부 추적기는 사용자가 *과 상호 작용했기 때문에 이 페이지에서 부분적으로 차단 해제되었습니다.</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">더 알아보기</string>
+
+    <!-- Content description (not visible, for screen readers etc.):
+    Enhanced tracking protection exception preference icon for ETP settings. -->
+    <string name="preference_etp_exceptions_icon_description">향상된 추적 보호 예외 설정 아이콘</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">지원</string>

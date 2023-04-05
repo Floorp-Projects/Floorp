@@ -991,7 +991,7 @@
     <string name="onboarding_privacy_notice_header">आपली गोपनीयता</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">आपण ऑनलाईन आणि आमच्यासोबत काय शेअर करता 
+    <string name="onboarding_privacy_notice_description">आपण ऑनलाईन आणि आमच्यासोबत काय शेअर करता
         यावर नियंत्रण देण्यासाठी आम्ही %s ची रचना केली आहे.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">आमचे गोपनीयता धोरण वाचा</string>
@@ -1295,7 +1295,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">वापरण्यासाठी शोध स्ट्रिंग</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">क्वेरी “%s” ने बदला. उदा: \nhttps://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">क्वेरी “%s” ने बदला. उदा: \nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">अधिक जाणा</string>
 

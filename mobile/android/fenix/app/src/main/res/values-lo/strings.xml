@@ -301,37 +301,37 @@
     <!-- Juno first user onboarding flow experiment -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" tools:ignore="UnusedResources">ເຮັດໃຫ້ %s ໄປຫາຕົວທ່ອງເວັບຂອງທ່ານ</string>
+    <string name="juno_onboarding_default_browser_title">ເຮັດໃຫ້ %s ໄປຫາຕົວທ່ອງເວັບຂອງທ່ານ</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description" tools:ignore="UnusedResources">%1$s ເຮັດໃຫ້ຄົນຫຼາຍກວ່າຜົນກຳໄລ ແລະປົກປ້ອງຄວາມເປັນສ່ວນຕົວຂອງທ່ານໂດຍການບລັອກຕົວຕິດຕາມຂ້າມເວັບໄຊ.\n\nສຶກສາເພີ່ມເຕີມໃນ %2$s ຂອງພວກເຮົາ.</string>
+    <string name="juno_onboarding_default_browser_description">%1$s ເຮັດໃຫ້ຄົນຫຼາຍກວ່າຜົນກຳໄລ ແລະປົກປ້ອງຄວາມເປັນສ່ວນຕົວຂອງທ່ານໂດຍການບລັອກຕົວຕິດຕາມຂ້າມເວັບໄຊ.\n\nສຶກສາເພີ່ມເຕີມໃນ %2$s ຂອງພວກເຮົາ.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">ແຈ້ງການຄວາມເປັນສ່ວນຕົວ</string>
+    <string name="juno_onboarding_default_browser_description_link_text">ແຈ້ງການຄວາມເປັນສ່ວນຕົວ</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">ຕັ້ງໃຫ້ເປັນບຣາວເຊີຫລັກ</string>
+    <string name="juno_onboarding_default_browser_positive_button">ຕັ້ງໃຫ້ເປັນບຣາວເຊີຫລັກ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">ບໍ່ແມ່ນຕອນນີ້</string>
+    <string name="juno_onboarding_default_browser_negative_button">ບໍ່ແມ່ນຕອນນີ້</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">ເລື່ອນຈາກໂທລະສັບໄປຫາແລັບທັອບ ແລະຫຼັງ</string>
+    <string name="juno_onboarding_sign_in_title">ເລື່ອນຈາກໂທລະສັບໄປຫາແລັບທັອບ ແລະຫຼັງ</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">ດຶງເອົາແຖບ ແລະ ລະຫັດຜ່ານຈາກອຸປະກອນອື່ນຂອງທ່ານອອກຈາກບ່ອນທີ່ເຈົ້າຄ້າງໄວ້.</string>
+    <string name="juno_onboarding_sign_in_description">ດຶງເອົາແຖບ ແລະ ລະຫັດຜ່ານຈາກອຸປະກອນອື່ນຂອງທ່ານອອກຈາກບ່ອນທີ່ເຈົ້າຄ້າງໄວ້.</string>
 
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">ເຂົ້າສູ່ລະບົບ</string>
+    <string name="juno_onboarding_sign_in_positive_button">ເຂົ້າສູ່ລະບົບ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">ບໍ່ແມ່ນຕອນນີ້</string>
+    <string name="juno_onboarding_sign_in_negative_button">ບໍ່ແມ່ນຕອນນີ້</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" tools:ignore="UnusedResources">ການແຈ້ງເຕືອນຊ່ວຍໃຫ້ທ່ານເຮັດໄດ້ຫຼາຍຂຶ້ນກັບ %s</string>
+    <string name="juno_onboarding_enable_notifications_title">ການແຈ້ງເຕືອນຊ່ວຍໃຫ້ທ່ານເຮັດໄດ້ຫຼາຍຂຶ້ນກັບ %s</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description" tools:ignore="UnusedResources">ສົ່ງແຖບລະຫວ່າງອຸປະກອນ, ຈັດການການດາວໂຫຼດ, ແລະຮັບຄຳແນະນຳໃນການໄດ້ຮັບປະໂຫຍດສູງສຸດຈາກ %s.</string>
+    <string name="juno_onboarding_enable_notifications_description">ສົ່ງແຖບລະຫວ່າງອຸປະກອນ, ຈັດການການດາວໂຫຼດ, ແລະຮັບຄຳແນະນຳໃນການໄດ້ຮັບປະໂຫຍດສູງສຸດຈາກ %s.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">ເປີດການແຈ້ງເຕືອນ</string>
+    <string name="juno_onboarding_enable_notifications_positive_button">ເປີດການແຈ້ງເຕືອນ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">ບໍ່​ແມ່ນ​ຕອນ​ນີ້</string>
+    <string name="juno_onboarding_enable_notifications_negative_button">ບໍ່​ແມ່ນ​ຕອນ​ນີ້</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -396,14 +396,26 @@
     <string name="reduce_cookie_banner_summary_1">%1$s ພະຍາຍາມປະຕິເສດການຮ້ອງຂໍຄຸກກີໂດຍອັດຕະໂນມັດໃນປ້າຍໂຄສະນາຄຸກກີ.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">ປິດສໍາລັບເວັບໄຊທ໌ນີ້</string>
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">ຍົກເລີກ</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button">ຮ້ອງຂໍການຊ່ວຍເຫຼືອ</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title">ການຫຼຸດປ້າຍໂຄສະນາຄຸກກີ</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text">ຮ້ອງຂໍໃຫ້ສະຫນັບສະຫນູນເວັບໄຊທີ່ສົ່ງ.</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">ເປິດສຳລັບເວັບໄຊນີ້</string>
+    <!-- Text for indicating that a request for unsupported site was sent to nimbus, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted">ຮ້ອງຂໍໃຫ້ສະຫນັບສະຫນູນເວັບໄຊທີ່ສົ່ງ</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">ຕອນນີ້ບໍ່ຮອງຮັບເວັບໄຊ</string>
+    <string name="reduce_cookie_banner_unsupported_site">ຕອນນີ້ບໍ່ຮອງຮັບເວັບໄຊ</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">ເປີດໃຊ້ການຫຼຸດປ້າຍໂຄສະນາຄຸກກີສຳລັບ %1$s ບໍ?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">ປິດການຫຼຸດປ້າຍໂຄສະນາຄຸກກີສຳລັບ %1$s ບໍ?</string>
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request">ຕອນນີ້ເວັບໄຊນີ້ບໍ່ຮອງຮັບການຫຼຸດປ້າຍໂຄສະນາຄຸກກີ. ທ່ານຕ້ອງການໃຫ້ທີມງານຂອງພວກເຮົາທົບທວນຄືນເວັບໄຊທ໌ນີ້ແລະເພີ່ມການສະຫນັບສະຫນູນໃນອະນາຄົດບໍ?</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s ຈະລຶບລ້າງຄຸກກີ້ຂອງເວັບໄຊນີ້ ແລະໂຫຼດໜ້ານີ້ຄືນໃໝ່. ການລຶບລ້າງຄຸກກີ້ທັງໝົດອາດເຮັດໃຫ້ເຈົ້າອອກຈາກລະບົບ ຫຼືກະຕ່າຊື້ເຄື່ອງຫວ່າງເປົ່າ.</string>
 
@@ -1504,29 +1516,29 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">ເພີ່ມການປ້ອງກັນການຕິດຕາມ</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">ທ່ອງເວັບໂດຍບໍ່ມີການຕິດຕາມ</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">ທ່ອງເວັບໂດຍບໍ່ມີການຕິດຕາມ</string>
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
-    <string name="preference_enhanced_tracking_protection_summary" tools:ignore="UnusedResources">ຕອນນີ້ມີການປົກປ້ອງຄຸກກີ້ທັງໝົດ, ເປັນອຸປະສັກທີ່ມີປະສິດທິພາບທີ່ສຸດຂອງພວກເຮົາຕໍ່ກັບຕົວຕິດຕາມຂ້າມເວັບໄຊ.</string>
+    <string name="preference_enhanced_tracking_protection_summary">ຕອນນີ້ມີການປົກປ້ອງຄຸກກີ້ທັງໝົດ, ເປັນອຸປະສັກທີ່ມີປະສິດທິພາບທີ່ສຸດຂອງພວກເຮົາຕໍ່ກັບຕົວຕິດຕາມຂ້າມເວັບໄຊ.</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">ຮັກສາຂໍ້ມູນຂອງທ່ານໃຫ້ກັບຕົວທ່ານເອງ. %s ປົກປ້ອງທ່ານຈາກຫຼາຍຕົວຕິດຕາມທົ່ວໄປທີ່ສຸດທີ່ຕິດຕາມສິ່ງທີ່ທ່ານເຮັດອອນໄລນ໌.</string>
+    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">ຮັກສາຂໍ້ມູນຂອງທ່ານໃຫ້ກັບຕົວທ່ານເອງ. %s ປົກປ້ອງທ່ານຈາກຫຼາຍຕົວຕິດຕາມທົ່ວໄປທີ່ສຸດທີ່ຕິດຕາມສິ່ງທີ່ທ່ານເຮັດອອນໄລນ໌.</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">%s ປົກປ້ອງທ່ານຈາກຫຼາຍຕົວຕິດຕາມທົ່ວໄປທີ່ສຸດທີ່ຕິດຕາມສິ່ງທີ່ທ່ານເຮັດອອນໄລນ໌.</string>
+    <string name="preference_enhanced_tracking_protection_explanation_2">%s ປົກປ້ອງທ່ານຈາກຫຼາຍຕົວຕິດຕາມທົ່ວໄປທີ່ສຸດທີ່ຕິດຕາມສິ່ງທີ່ທ່ານເຮັດອອນໄລນ໌.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">ມາດຕະຖານ (ຄ່າພື້ນຖານ)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">ຄວາມເປັນສ່ວນຕົວ ແລະ ປະສິດທິພາບແບບສົມດຸ່ນ. ໜ້າເວັບຈະໂຫຼດເປັນປົກະຕິ.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">ຄວາມເປັນສ່ວນຕົວ ແລະ ປະສິດທິພາບແບບສົມດຸ່ນ. ໜ້າເວັບຈະໂຫຼດເປັນປົກະຕິ.</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_5" tools:ignore="UnusedResources">ຫນ້າຕ່າງໆຈະໂຫລດຕາມປົກກະຕິ, ແຕ່ບລັອກຕົວຕິດຕາມຫນ້ອຍລົງ.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_5">ຫນ້າຕ່າງໆຈະໂຫລດຕາມປົກກະຕິ, ແຕ່ບລັອກຕົວຕິດຕາມຫນ້ອຍລົງ.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">ສິ່ງທີ່ຈະຖືກບັອກໂດຍການປ້ອງກັນການຕິດຕາມແບບມາດຕະຖານ</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">ເຂັ້ມງວດ</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3">ປິດກັ້ນຕົວຕິດຕາມຫຼາຍຂຶ້ນເພື່ອໃຫ້ຫນ້າໂຫລດໄວຂຶ້ນ, ແຕ່ບາງຫນ້າທີ່ຢູ່ໃນຫນ້າອາດຈະພັງ.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">ປິດກັ້ນຕົວຕິດຕາມຫຼາຍຂຶ້ນເພື່ອໃຫ້ຫນ້າໂຫລດໄວຂຶ້ນ, ແຕ່ບາງຫນ້າທີ່ຢູ່ໃນຫນ້າອາດຈະພັງ.</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_4" tools:ignore="UnusedResources">ການປ້ອງກັນການຕິດຕາມທີ່ເຂັ້ມແຂງແລະປະສິດທິພາບໄວຂຶ້ນ, ແຕ່ບາງສະຖານທີ່ອາດຈະເຮັດວຽກບໍ່ຖືກຕ້ອງ.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_4">ການປ້ອງກັນການຕິດຕາມທີ່ເຂັ້ມແຂງແລະປະສິດທິພາບໄວຂຶ້ນ, ແຕ່ບາງສະຖານທີ່ອາດຈະເຮັດວຽກບໍ່ຖືກຕ້ອງ.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">ສິ່ງທີ່ຈະຖືກບັອກໂດຍການປ້ອງກັນການຕິດຕາມຢ່າງເຂັ້ມງວດ</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1620,6 +1632,10 @@
     <string name="preference_etp_smartblock_description">ບາງຕົວຕິດຕາມທີ່ໝາຍໄວ້ຂ້າງລຸ່ມນີ້ໄດ້ປົດບລັອກບາງສ່ວນຢູ່ໃນໜ້ານີ້ ເພາະວ່າທ່ານໄດ້ໂຕ້ຕອບກັບພວກມັນ *.</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
+
+    <!-- Content description (not visible, for screen readers etc.):
+    Enhanced tracking protection exception preference icon for ETP settings. -->
+    <string name="preference_etp_exceptions_icon_description">ໄອຄອນການຍົກເວັ້ນການປ້ອງກັນການຕິດຕາມທີ່ປັບປຸງໃຫ້ດີຂຶ້ນ</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">ສະຫນັບສະຫນູນ</string>

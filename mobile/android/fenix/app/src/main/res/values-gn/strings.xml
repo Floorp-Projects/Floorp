@@ -392,10 +392,18 @@
     <string name="reduce_cookie_banner_summary_1">%1$s omboykese ijehegui kookie mba’ejerure kookie marandu ñemurãme.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Ogue ko tendápe</string>
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">Heja</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button">Ejerure pytyvõ</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title">Kookie Banner Ñemomichĩ</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Hendy ko tendápe</string>
+    <!-- Text for indicating that a request for unsupported site was sent to nimbus, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted">Emba’ejerure oñepytyvõ hag̃ua tenda</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">Tenda ko’ág̃a ojokupyty’ỹva</string>
+    <string name="reduce_cookie_banner_unsupported_site">Tenda ko’ág̃a ojokupyty’ỹva</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">¿Emyandy kookie ñemurã momichĩ %1$s peg̃uarã?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
@@ -1264,6 +1272,9 @@
     <!-- Title A shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_A_title">Eikundaha jehekaha’ỹre</string>
 
+    <!-- Title B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_title">Eheka ñepyrũ</string>
+
     <!-- Preference for taking the short survey. -->
     <string name="preferences_take_survey" tools:ignore="UnusedResources">Ejapo encuesta</string>
     <!-- Preference for not taking the short survey. -->
@@ -1486,22 +1497,22 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Tapykueho mo’ãha iporãvéva</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">Eikundaha ejehapykueho’ỹre</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Eikundaha ejehapykueho’ỹre</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Emo’ã ne mba’ekuaarã. %s nemo’ãta heta tapykuehohágui ohecháva mba’etépa ejapo ñandutípe.</string>
+    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Emo’ã ne mba’ekuaarã. %s nemo’ãta heta tapykuehohágui ohecháva mba’etépa ejapo ñandutípe.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Kuaave</string>
 
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Ypyguaite (ijypygua)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">Imbytéva ñemo’ã ha tembiapokuépe g̃uarã. Umi kuatiarogue henyhẽta hekoitépe.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">Imbytéva ñemo’ã ha tembiapokuépe g̃uarã. Umi kuatiarogue henyhẽta hekoitépe.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Mba’e umi ojokóva tapykuehoha moãha ypyguáva renondépe</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Mbaretépe</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3">Ejoko tapykuehoha kuatiarogue henyhẽ pya’eve hag̃ua, hákatu ojavykuaa peteĩva kuatiarogue rembiapoite.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">Ejoko tapykuehoha kuatiarogue henyhẽ pya’eve hag̃ua, hákatu ojavykuaa peteĩva kuatiarogue rembiapoite.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Mba’e umi ojokóva tapykuehoha mo’ãha imbaretéva</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->

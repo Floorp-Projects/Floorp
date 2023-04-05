@@ -909,4 +909,7 @@
 
     <!-- Promote SearchWidget Dialog -->
 
+    <!-- This is the title of promote search widget dialog. -->
+    <string name="promote_search_widget_dialog_title">¡Koo ña ntsinu ! 🎉</string>
+
     </resources>

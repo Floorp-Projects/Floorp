@@ -306,36 +306,36 @@
     <!-- Juno first user onboarding flow experiment -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" tools:ignore="UnusedResources">Rendi %s il tuo browser di riferimento</string>
+    <string name="juno_onboarding_default_browser_title">Rendi %s il tuo browser di riferimento</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description" tools:ignore="UnusedResources">%1$s antepone le persone al profitto e protegge la tua privacy bloccando gli elementi traccianti intersito.\n\n Ulteriori informazioni nella nostra %2$s.</string>
+    <string name="juno_onboarding_default_browser_description">%1$s antepone le persone al profitto e protegge la tua privacy bloccando gli elementi traccianti intersito.\n\n Ulteriori informazioni nella nostra %2$s.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">informativa sulla privacy</string>
+    <string name="juno_onboarding_default_browser_description_link_text">informativa sulla privacy</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Imposta come browser predefinito</string>
+    <string name="juno_onboarding_default_browser_positive_button">Imposta come browser predefinito</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Non adesso</string>
+    <string name="juno_onboarding_default_browser_negative_button">Non adesso</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Passa dal computer al telefono, e viceversa</string>
+    <string name="juno_onboarding_sign_in_title">Passa dal computer al telefono, e viceversa</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Recupera le schede e le password dagli altri dispositivi e riprendi esattamente da dove eri rimasto</string>
+    <string name="juno_onboarding_sign_in_description">Recupera le schede e le password dagli altri dispositivi e riprendi esattamente da dove eri rimasto</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Accedi</string>
+    <string name="juno_onboarding_sign_in_positive_button">Accedi</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Non adesso</string>
+    <string name="juno_onboarding_sign_in_negative_button">Non adesso</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" tools:ignore="UnusedResources">Le notifiche ti aiutano a ottenere di più da %s</string>
+    <string name="juno_onboarding_enable_notifications_title">Le notifiche ti aiutano a ottenere di più da %s</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description" tools:ignore="UnusedResources">Invia schede tra dispositivi, gestisci download e ricevi suggerimenti su come ottenere il massimo da %s.</string>
+    <string name="juno_onboarding_enable_notifications_description">Invia schede tra dispositivi, gestisci download e ricevi suggerimenti su come ottenere il massimo da %s.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Attiva le notifiche</string>
+    <string name="juno_onboarding_enable_notifications_positive_button">Attiva le notifiche</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Non adesso</string>
+    <string name="juno_onboarding_enable_notifications_negative_button">Non adesso</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -402,14 +402,26 @@
     <string name="reduce_cookie_banner_summary_1">%1$s cerca automaticamente di rifiutare le richieste di cookie quando viene visualizzato un banner per i cookie.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Disattivata per questo sito</string>
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">Annulla</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button">Richiedi supporto</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title">Riduzione banner per i cookie</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text">Richiesta di supportare il sito inviata.</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Attiva per questo sito</string>
+    <!-- Text for indicating that a request for unsupported site was sent to nimbus, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted">Richiesta di supportare il sito inviata</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">Sito attualmente non supportato</string>
+    <string name="reduce_cookie_banner_unsupported_site">Sito attualmente non supportato</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">Attivare la riduzione banner per i cookie su %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">Disattivare la riduzione banner per i cookie su %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request">Questo sito non è attualmente supportato dalla funzione per ridurre i banner per i cookie. Vuoi chiedere al nostro team di valutare questo sito web e aggiungere supporto in futuro?</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s eliminerà i cookie per questo sito e aggiornerà la pagina. L’eliminazione dei cookie potrebbe disconnetterti dal sito o svuotare eventuali carrelli in sospeso.</string>
 
@@ -1520,29 +1532,29 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Protezione antitracciamento avanzata</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">Naviga senza lasciarti seguire</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Naviga senza lasciarti seguire</string>
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
-    <string name="preference_enhanced_tracking_protection_summary" tools:ignore="UnusedResources">Adesso con Protezione totale per i cookie, la barriera più potente che abbiamo finora realizzato contro gli elementi traccianti intersito.</string>
+    <string name="preference_enhanced_tracking_protection_summary">Adesso con Protezione totale per i cookie, la barriera più potente che abbiamo finora realizzato contro gli elementi traccianti intersito.</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Mantieni i tuoi dati al riparo da occhi indiscreti. %s ti protegge dagli elementi traccianti più comuni che cercano di seguire le tue attività online.</string>
+    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Mantieni i tuoi dati al riparo da occhi indiscreti. %s ti protegge dagli elementi traccianti più comuni che cercano di seguire le tue attività online.</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">%s ti protegge dagli elementi traccianti più comuni che cercano di seguire le tue attività online.</string>
+    <string name="preference_enhanced_tracking_protection_explanation_2">%s ti protegge dagli elementi traccianti più comuni che cercano di seguire le tue attività online.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Ulteriori informazioni</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Normale (predefinita)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">Equilibrio tra privacy e prestazioni. Le pagine verranno caricate normalmente.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">Equilibrio tra privacy e prestazioni. Le pagine verranno caricate normalmente.</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_5" tools:ignore="UnusedResources">Le pagine verranno caricate normalmente, ma verranno bloccati meno elementi traccianti.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_5">Le pagine verranno caricate normalmente, ma verranno bloccati meno elementi traccianti.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Elementi bloccati nella protezione antitracciamento normale</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Restrittiva</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3">Blocca più elementi traccianti. Le pagine verranno caricate più velocemente, ma alcune caratteristiche della pagina potrebbero non funzionare correttamente.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">Blocca più elementi traccianti. Le pagine verranno caricate più velocemente, ma alcune caratteristiche della pagina potrebbero non funzionare correttamente.</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_4" tools:ignore="UnusedResources">Maggiore protezione dal tracciamento e prestazioni più veloci, alcuni siti potrebbero non funzionare correttamente.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_4">Maggiore protezione dal tracciamento e prestazioni più veloci, alcuni siti potrebbero non funzionare correttamente.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Elementi bloccati nella protezione antitracciamento restrittiva</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1630,6 +1642,10 @@
     <string name="preference_etp_smartblock_description">Alcuni elementi traccianti, indicati in seguito, sono stati parzialmente sbloccati in quanto hai interagito con loro *.</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">Ulteriori informazioni</string>
+
+    <!-- Content description (not visible, for screen readers etc.):
+    Enhanced tracking protection exception preference icon for ETP settings. -->
+    <string name="preference_etp_exceptions_icon_description">Icona delle preferenze per le eccezioni della protezione antitracciamento avanzata</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Supporto</string>

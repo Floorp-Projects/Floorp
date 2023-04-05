@@ -301,36 +301,36 @@
     <!-- Juno first user onboarding flow experiment -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" tools:ignore="UnusedResources">Gwnewch %s eich hoff borwr</string>
+    <string name="juno_onboarding_default_browser_title">Gwnewch %s eich hoff borwr</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description" tools:ignore="UnusedResources">Mae %1$s yn rhoi pobl dros elw ac yn diogelu eich preifatrwydd drwy rwystro tracwyr traws-gwefan.\n\nDysgu rhagor yn ein %2$s.</string>
+    <string name="juno_onboarding_default_browser_description">Mae %1$s yn rhoi pobl dros elw ac yn diogelu eich preifatrwydd drwy rwystro tracwyr traws-gwefan.\n\nDysgu rhagor yn ein %2$s.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">hysbysiad preifatrwydd</string>
+    <string name="juno_onboarding_default_browser_description_link_text">hysbysiad preifatrwydd</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Gosod fel y porwr ragosodedig</string>
+    <string name="juno_onboarding_default_browser_positive_button">Gosod fel y porwr ragosodedig</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Nid nawr</string>
+    <string name="juno_onboarding_default_browser_negative_button">Nid nawr</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Ewch o’r ffôn i’r gliniadur ac yn ôl</string>
+    <string name="juno_onboarding_sign_in_title">Ewch o’r ffôn i’r gliniadur ac yn ôl</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Cipiwch dabiau a chyfrineiriau o’ch dyfeisiau eraill i barhau lle roeddech chi gynt.</string>
+    <string name="juno_onboarding_sign_in_description">Cipiwch dabiau a chyfrineiriau o’ch dyfeisiau eraill i barhau lle roeddech chi gynt.</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Mewngofnodi</string>
+    <string name="juno_onboarding_sign_in_positive_button">Mewngofnodi</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Nid nawr</string>
+    <string name="juno_onboarding_sign_in_negative_button">Nid nawr</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" tools:ignore="UnusedResources">Mae hysbysiadau yn eich helpu i wneud mwy gyda %s</string>
+    <string name="juno_onboarding_enable_notifications_title">Mae hysbysiadau yn eich helpu i wneud mwy gyda %s</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description" tools:ignore="UnusedResources">Anfonwch dabiau rhwng dyfeisiau, rheoli llwytho a chael awgrymiadau ar sut i gael y gorau o %s.</string>
+    <string name="juno_onboarding_enable_notifications_description">Anfonwch dabiau rhwng dyfeisiau, rheoli llwytho a chael awgrymiadau ar sut i gael y gorau o %s.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Troi hysbysiadau ymlaen</string>
+    <string name="juno_onboarding_enable_notifications_positive_button">Troi hysbysiadau ymlaen</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Nid nawr</string>
+    <string name="juno_onboarding_enable_notifications_negative_button">Nid nawr</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -396,11 +396,19 @@
     <string name="reduce_cookie_banner_summary_1">Mae %1$s yn ceisio gwrthod ceisiadau cwci ar faneri cwci yn awtomatig.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Diffodd ar gyfer y wefan hon</string>
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">Diddymu</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button">Gofyn am gymorth</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title">Cyfyngu Baneri Cwcis</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text">Cais i’r wefan cymorth wedi’i gyflwyno.</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Ymlaen ar gyfer y wefan hon</string>
 
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">Nid yw’r wefan yn cael ei chefnogi ar hyn o bryd</string>
+    <string name="reduce_cookie_banner_unsupported_site">Nid yw’r wefan yn cael ei chefnogi ar hyn o bryd</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">Troi Llai o Faneri Cwcis ymlaen ar %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
@@ -1263,11 +1271,11 @@
     <!-- Survey -->
     <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
     The app name is in the text, due to limitations with localizing Nimbus experiments -->
-    <string name="nimbus_survey_message_text" tools:ignore="UnusedResources">Helpwch i wneud Firefox yn well drwy lanw arolwg byr.</string>
+    <string name="nimbus_survey_message_text">Helpwch i wneud Firefox yn well drwy lanw arolwg byr.</string>
     <!-- Preference for taking the short survey. -->
-    <string name="preferences_take_survey" tools:ignore="UnusedResources">Llenwch yr Arolwg</string>
+    <string name="preferences_take_survey">Llenwch yr Arolwg</string>
     <!-- Preference for not taking the short survey. -->
-    <string name="preferences_not_take_survey" tools:ignore="UnusedResources">Dim Diolch</string>
+    <string name="preferences_not_take_survey">Dim Diolch</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
@@ -1482,29 +1490,29 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Diogelwch Uwch Rhag Tracio</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">Pori heb gael eich dilyn</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Pori heb gael eich dilyn</string>
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
-    <string name="preference_enhanced_tracking_protection_summary" tools:ignore="UnusedResources">Nawr yn cynnwys Diogelwch Cwci Llwyr, ein rhwystr mwyaf pwerus eto yn erbyn tracwyr traws-gwefan.</string>
+    <string name="preference_enhanced_tracking_protection_summary">Nawr yn cynnwys Diogelwch Cwci Llwyr, ein rhwystr mwyaf pwerus eto yn erbyn tracwyr traws-gwefan.</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Cadwch eich data i chi’ch hun. Mae %s yn eich diogelu rhag llawer o’r tracwyr mwyaf cyffredin sy’n eich dilyn ar-lein.</string>
+    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Cadwch eich data i chi’ch hun. Mae %s yn eich diogelu rhag llawer o’r tracwyr mwyaf cyffredin sy’n eich dilyn ar-lein.</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">Mae %s yn eich diogelu rhag llawer o’r tracwyr mwyaf cyffredin sy’n dilyn yr hyn rydych chi’n ei wneud ar-lein.</string>
+    <string name="preference_enhanced_tracking_protection_explanation_2">Mae %s yn eich diogelu rhag llawer o’r tracwyr mwyaf cyffredin sy’n dilyn yr hyn rydych chi’n ei wneud ar-lein.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Dysgu rhagor</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Safonol (rhagosodedig)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">Cydbwysedd rhwng diogelwch a pherfformiad. Bydd tudalennau’n llwytho fel arfer.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">Cydbwysedd rhwng diogelwch a pherfformiad. Bydd tudalennau’n llwytho fel arfer.</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_5" tools:ignore="UnusedResources">Bydd tudalennau’n llwytho fel arfer, ond yn rhwystro llai o dracwyr.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_5">Bydd tudalennau’n llwytho fel arfer, ond yn rhwystro llai o dracwyr.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Beth sydd wedi’i rwystro gan ddiogelu tracio safonol</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Llym</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3">Yn rhwystro mwy o dracwyr fel bod tudalennau’n llwytho’n gyflymach, ond gall dorri rhai swyddogaethau ar y dudalen.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">Yn rhwystro mwy o dracwyr fel bod tudalennau’n llwytho’n gyflymach, ond gall dorri rhai swyddogaethau ar y dudalen.</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_4" tools:ignore="UnusedResources">Diogelwch tracio cryfach a pherfformiad cyflymach, ond efallai na fydd rhai gwefannau’n gweithio’n iawn.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_4">Diogelwch tracio cryfach a pherfformiad cyflymach, ond efallai na fydd rhai gwefannau’n gweithio’n iawn.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Beth sydd wedi’i rwystro gan ddiogelu tracio llym</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1592,6 +1600,10 @@
     <string name="preference_etp_smartblock_description">Mae rhai tracwyr sydd wedi’u marcio isod wedi cael eu dad-rwystr’n rhannol ar y dudalen hon oherwydd i chi ryngweithio â nhw *.</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">Dysgu rhagor</string>
+
+    <!-- Content description (not visible, for screen readers etc.):
+    Enhanced tracking protection exception preference icon for ETP settings. -->
+    <string name="preference_etp_exceptions_icon_description">Eicon dewis eithriad diogelu tracio gwell</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Cefnogaeth</string>

@@ -305,38 +305,38 @@
     <!-- Juno first user onboarding flow experiment -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" tools:ignore="UnusedResources">Зробіть %s своїм щоденним браузером</string>
+    <string name="juno_onboarding_default_browser_title">Зробіть %s своїм щоденним браузером</string>
 
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description" tools:ignore="UnusedResources">%1$s цінує людей понад прибуток і захищає вашу приватність, блокуючи стеження між сайтами.\n\nДізнайтеся більше у нашій %2$s.</string>
+    <string name="juno_onboarding_default_browser_description">%1$s цінує людей понад прибуток і захищає вашу приватність, блокуючи стеження між сайтами.\n\nДізнайтеся більше у нашій %2$s.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">політиці приватності</string>
+    <string name="juno_onboarding_default_browser_description_link_text">політиці приватності</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Встановити типовим браузером</string>
+    <string name="juno_onboarding_default_browser_positive_button">Встановити типовим браузером</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Не зараз</string>
+    <string name="juno_onboarding_default_browser_negative_button">Не зараз</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Перемикайтеся між телефоном і комп’ютером</string>
+    <string name="juno_onboarding_sign_in_title">Перемикайтеся між телефоном і комп’ютером</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Продовжуйте роботу зі своїми вкладками та паролями з інших пристроїв.</string>
+    <string name="juno_onboarding_sign_in_description">Продовжуйте роботу зі своїми вкладками та паролями з інших пристроїв.</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Увійти</string>
+    <string name="juno_onboarding_sign_in_positive_button">Увійти</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Не зараз</string>
+    <string name="juno_onboarding_sign_in_negative_button">Не зараз</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" tools:ignore="UnusedResources">Сповіщення допомагають вам ефективніше взаємодіяти з %s</string>
+    <string name="juno_onboarding_enable_notifications_title">Сповіщення допомагають вам ефективніше взаємодіяти з %s</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description" tools:ignore="UnusedResources">Надсилайте вкладки на інші пристрої, керуйте завантаженнями, а також отримуйте поради про можливості %s.</string>
+    <string name="juno_onboarding_enable_notifications_description">Надсилайте вкладки на інші пристрої, керуйте завантаженнями, а також отримуйте поради про можливості %s.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Увімкнути сповіщення</string>
+    <string name="juno_onboarding_enable_notifications_positive_button">Увімкнути сповіщення</string>
 
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Не зараз</string>
+    <string name="juno_onboarding_enable_notifications_negative_button">Не зараз</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -402,14 +402,26 @@
     <string name="reduce_cookie_banner_summary_1">%1$s намагається автоматично відхиляти запити банерів кук.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Вимкнено для цього сайту</string>
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">Скасувати</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button">Звернутися по підтримку</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title">Зменшення кількості банерів кук</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text">Запит на підтримку сайту надіслано.</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Увімкнено для цього сайту</string>
+    <!-- Text for indicating that a request for unsupported site was sent to nimbus, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted">Запит на підтримку сайту надіслано</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">Сайт наразі не підтримується</string>
+    <string name="reduce_cookie_banner_unsupported_site">Сайт наразі не підтримується</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">Увімкнути зменшення кількості банерів кук для %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">Вимкнути зменшення кількості банерів кук для %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request">Цей сайт наразі не підтримується функцією зменшення кількості банерів кук. Бажаєте, щоб наша команда перевірила цей сайт і забезпечила його підтримку в майбутньому?</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s очистить куки цього сайту та оновить сторінку. Очищення всіх кук може призвести до виходу з облікових записів або спорожнення кошика для покупок.</string>
 
@@ -1496,29 +1508,29 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Розширений захист від стеження</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">Переглядайте без стеження</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Переглядайте без стеження</string>
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
-    <string name="preference_enhanced_tracking_protection_summary" tools:ignore="UnusedResources">Тепер із функцією Total Cookie Protection, наша найпотужніша перепона від стеження між сайтами.</string>
+    <string name="preference_enhanced_tracking_protection_summary">Тепер із функцією Total Cookie Protection, наша найпотужніша перепона від стеження між сайтами.</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Зберігайте свої дані при собі. %s захищає вас від численних найпоширеніших елементів стеження, що переслідують вас в мережі.</string>
+    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Зберігайте свої дані при собі. %s захищає вас від численних найпоширеніших елементів стеження, що переслідують вас в мережі.</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">%s захищає вас від численних найпоширеніших елементів стеження, що переслідують вас в мережі.</string>
+    <string name="preference_enhanced_tracking_protection_explanation_2">%s захищає вас від численних найпоширеніших елементів стеження, що переслідують вас в мережі.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Докладніше</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Стандартний (типово)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">Баланс приватності та швидкодії. Сторінки завантажуються нормально.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">Баланс приватності та швидкодії. Сторінки завантажуються нормально.</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_5" tools:ignore="UnusedResources">Нормальне завантаження сторінок за меншого блокування елементів стеження.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_5">Нормальне завантаження сторінок за меншого блокування елементів стеження.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Що блокується стандартним рівнем захисту від стеження</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Надійний</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3">Блокує більше стеження, тому сторінки завантажуються швидше, однак можливі порушення їх роботи.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">Блокує більше стеження, тому сторінки завантажуються швидше, однак можливі порушення їх роботи.</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_4" tools:ignore="UnusedResources">Кращий захист від стеження і швидкодія, але деякі сайти можуть працювати неправильно.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_4">Кращий захист від стеження і швидкодія, але деякі сайти можуть працювати неправильно.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Що блокується надійним рівнем захисту від стеження</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1606,6 +1618,10 @@
     <string name="preference_etp_smartblock_description">Деякі елементи стеження, зазначені нижче, були частково розблоковані на цій сторінці, тому що ви взаємодіяли з ними *.</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">Докладніше</string>
+
+    <!-- Content description (not visible, for screen readers etc.):
+    Enhanced tracking protection exception preference icon for ETP settings. -->
+    <string name="preference_etp_exceptions_icon_description">Піктограма налаштувань винятків розширеного захисту від стеження</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Підтримка</string>

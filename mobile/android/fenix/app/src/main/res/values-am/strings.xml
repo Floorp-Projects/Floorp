@@ -371,10 +371,20 @@
     <string name="reduce_cookie_banner_summary_1">%1$s በኩኪ ሰንደቆች ላይ የኩኪ ጥያቄዎችን በራስ-ሰር ውድቅ ለማድረግ ይሞክራል።</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">ለዚህ ድረ-ገፅ ጠፍቷል</string>
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">ተወው</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button">ድጋፍ ይጠይቁ</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title">የኩኪ ሰሌዳ ቅነሳ</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text">የድረ-ገጽ ድጋፍ ጥያቄ ገብቷል።</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">ለዚህ ድረ-ገፅ በርቷል</string>
+    <!-- Text for indicating that a request for unsupported site was sent to nimbus, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted">የድረ-ገጽ ድጋፍ ጥያቄ ገብቷል</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">በአሁኑ ጊዜ የማይደገፍ ድረ-ገፅ</string>
+    <string name="reduce_cookie_banner_unsupported_site">በአሁኑ ጊዜ የማይደገፍ ድረ-ገፅ</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">ለ%1$s የኩኪ ሰሌዳ ቅነሳ ይብራ?</string>
 
@@ -1414,25 +1424,25 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">የተሻሻለ የመከታተያ ጥበቃ</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">ያለተከታታይ ያስሱ</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">ያለተከታታይ ያስሱ</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">%s በመስመር ላይ የሚያደርጉትን ከሚከተሉ ብዙ በጣም የተለመዱ መከታተያዎች ይጠብቅዎታል።</string>
+    <string name="preference_enhanced_tracking_protection_explanation_2">%s በመስመር ላይ የሚያደርጉትን ከሚከተሉ ብዙ በጣም የተለመዱ መከታተያዎች ይጠብቅዎታል።</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">የበለጠ ለማወቅ</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">መደበኛ (ነባሪ)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">ለግላዊነት እና ለአፈጻጸም የተመጣጠነ። ገጾች በመደበኛነት ይጫናሉ።</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">ለግላዊነት እና ለአፈጻጸም የተመጣጠነ። ገጾች በመደበኛነት ይጫናሉ።</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_5" tools:ignore="UnusedResources">ገጾች በመደበኛነት ይጫናሉ፣ ነገር ግን ጥቂት መከታተያዎችን ያግዳል።</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_5">ገጾች በመደበኛነት ይጫናሉ፣ ነገር ግን ጥቂት መከታተያዎችን ያግዳል።</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">በመደበኛ የመከታተያ ጥበቃ የታገደው</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">ጥብቅ</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3">ገፆች በፍጥነት እንዲጫኑ ተጨማሪ መከታተያዎችን ያግዳል፣ ነገር ግን አንዳንድ በገጽ ላይ ያሉ ተግባራት ላይሰሩ ይችላሉ።</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">ገፆች በፍጥነት እንዲጫኑ ተጨማሪ መከታተያዎችን ያግዳል፣ ነገር ግን አንዳንድ በገጽ ላይ ያሉ ተግባራት ላይሰሩ ይችላሉ።</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_4" tools:ignore="UnusedResources">ጠንካራ የመከታተያ ጥበቃ እና ፈጣን አፈጻጸም፣ ነገር ግን አንዳንድ ጣቢያዎች በትክክል ላይሰሩ ይችላሉ።</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_4">ጠንካራ የመከታተያ ጥበቃ እና ፈጣን አፈጻጸም፣ ነገር ግን አንዳንድ ጣቢያዎች በትክክል ላይሰሩ ይችላሉ።</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">በጥብቅ የመከታተያ ጥበቃ የታገደው</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1692,6 +1702,8 @@
     <string name="addresses_middle_name">የአባት ስም</string>
     <!-- The header for the last name of an address -->
     <string name="addresses_last_name">የአያት ስም</string>
+    <!-- The header for the street address of an address -->
+    <string name="addresses_street_address">የአድራሻ ጎዳና</string>
     <!-- The header for the city of an address -->
     <string name="addresses_city">ከተማ</string>
     <!-- The header for the subregion of an address when "state" should be used -->
@@ -1785,6 +1797,10 @@
     <string name="confirm_clear_permissions_on_all_sites">እርግጠኛ ነዎት በሁሉም ድረ-ገፆች ላይ ያሉትን ሁሉንም ፈቃዶች ማጽዳት ይፈልጋሉ?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
     <string name="confirm_clear_permissions_site">እርግጠኛ ነዎት የዚህ ድረ-ገፅ ሁሉንም ፈቃዶች ማጽዳት ይፈልጋሉ?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">እርግጠኛ ነዎት የዚህን ድረ-ገፅ ፈቃድ ማጽዳት ይፈልጋሉ?</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">ምንም የተለየ ድረ-ገፅ የለም</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">እርግጠኛ ነዎት ይህን እልባት መሰረዝ ይፈልጋሉ?</string>
     <!-- Browser menu button that adds a shortcut to the home fragment -->

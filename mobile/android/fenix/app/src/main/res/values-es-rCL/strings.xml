@@ -396,14 +396,26 @@
     <string name="reduce_cookie_banner_summary_1">%1$s intenta rechazar automáticamente las solicitudes de cookies en los anuncios de cookies.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">DESACTIVADA para este sitio</string>
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">Cancelar</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button">Pedir que funcione</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title">Reducción de anuncios de cookies</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text">Solicitud para compatibilizar el sitio enviada.</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Activada para este sitio</string>
+    <!-- Text for indicating that a request for unsupported site was sent to nimbus, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted">Solicitud para compatibilizar el sitio enviada</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">Sitio actualmente no soportado</string>
+    <string name="reduce_cookie_banner_unsupported_site">Sitio actualmente no soportado</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">¿Activar la reducción de anuncios de cookies para %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">¿Desactivar la reducción de anuncios de cookies para %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request">Actualmente, este sitio no es compatible con la reducción de anuncios de cookies. ¿Te gustaría que nuestro equipo revise este sitio web y sea compatible en el futuro?</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s borrará las cookies de este sitio y recargará la página. Borrar todas las cookies puede cerrar tu sesión o vaciar los carritos de compras.</string>
 
@@ -1481,29 +1493,29 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Protección de seguimiento mejorada</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">Navega sin ser seguido</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Navega sin ser seguido</string>
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
-    <string name="preference_enhanced_tracking_protection_summary" tools:ignore="UnusedResources">Ahora con protección total contra cookies, nuestra barrera más poderosa hasta el momento contra los rastreadores entre sitios.</string>
+    <string name="preference_enhanced_tracking_protection_summary">Ahora con protección total contra cookies, nuestra barrera más poderosa hasta el momento contra los rastreadores entre sitios.</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Mantén tus datos privados. %s te protege de la mayoría de los rastreadores comunes que siguen lo que haces en línea.</string>
+    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Mantén tus datos privados. %s te protege de la mayoría de los rastreadores comunes que siguen lo que haces en línea.</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">%s te protege de la mayoría de los rastreadores comunes que siguen lo que haces en línea.</string>
+    <string name="preference_enhanced_tracking_protection_explanation_2">%s te protege de la mayoría de los rastreadores comunes que siguen lo que haces en línea.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Aprender más</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Estándar (por defecto)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">Equilibrado para privacidad y rendimiento. Las páginas se cargan de forma normal.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">Equilibrado para privacidad y rendimiento. Las páginas se cargan de forma normal.</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_5" tools:ignore="UnusedResources">Las páginas se cargarán adecuadamente, pero se bloquearán menos rastreadores.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_5">Las páginas se cargarán adecuadamente, pero se bloquearán menos rastreadores.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Qué bloquea la protección de seguimiento estándar</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Estricta</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3">Bloquea más rastreadores para que las páginas se carguen más rápido, pero algunas funcionalidades de la página pueden fallar.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">Bloquea más rastreadores para que las páginas se carguen más rápido, pero algunas funcionalidades de la página pueden fallar.</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_4" tools:ignore="UnusedResources">Una mayor protección de seguimiento y un mejor rendimiento, pero algunos sitios podrían no funcionar adecuadamente.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_4">Una mayor protección de seguimiento y un mejor rendimiento, pero algunos sitios podrían no funcionar adecuadamente.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Qué bloquea la protección de seguimiento estricta</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1590,6 +1602,10 @@
     <string name="preference_etp_smartblock_description">Algunos rastreadores marcados a continuación han sido parcialmente desbloqueados en esta página porque interactuaste con ellos *.</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">Aprender más</string>
+
+    <!-- Content description (not visible, for screen readers etc.):
+    Enhanced tracking protection exception preference icon for ETP settings. -->
+    <string name="preference_etp_exceptions_icon_description">Ícono de preferencia de excepción de la protección de seguimiento mejorada</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Ayuda</string>

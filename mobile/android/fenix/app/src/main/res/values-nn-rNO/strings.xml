@@ -306,36 +306,36 @@
     <!-- Juno first user onboarding flow experiment -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" tools:ignore="UnusedResources">Bruk %s som favorittnettlesar</string>
+    <string name="juno_onboarding_default_browser_title">Bruk %s som favorittnettlesar</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description" tools:ignore="UnusedResources">%1$s set menneske over forteneste og forsvarar retten din til personvern ved å blokkere sporarar på fleire nettstadar.\n\nLes meir i %2$s.</string>
+    <string name="juno_onboarding_default_browser_description">%1$s set menneske over forteneste og forsvarar retten din til personvern ved å blokkere sporarar på fleire nettstadar.\n\nLes meir i %2$s.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">peronvernerklæring</string>
+    <string name="juno_onboarding_default_browser_description_link_text">peronvernerklæring</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Bruk som standard nettleser</string>
+    <string name="juno_onboarding_default_browser_positive_button">Bruk som standard nettleser</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Ikkje no</string>
+    <string name="juno_onboarding_default_browser_negative_button">Ikkje no</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Hopp frå telefonen til datamaskina og tilbake</string>
+    <string name="juno_onboarding_sign_in_title">Hopp frå telefonen til datamaskina og tilbake</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Hent faner og passord frå dei andre einingane dine for å halde fram der du slapp.</string>
+    <string name="juno_onboarding_sign_in_description">Hent faner og passord frå dei andre einingane dine for å halde fram der du slapp.</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Logg inn</string>
+    <string name="juno_onboarding_sign_in_positive_button">Logg inn</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Ikkje no</string>
+    <string name="juno_onboarding_sign_in_negative_button">Ikkje no</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" tools:ignore="UnusedResources">Varsel hjelper deg å gjere meir med %s</string>
+    <string name="juno_onboarding_enable_notifications_title">Varsel hjelper deg å gjere meir med %s</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description" tools:ignore="UnusedResources">Send faner mellom einingar, administrer nedlastingar og få tips om korleis du får mest muleg ut av %s.</string>
+    <string name="juno_onboarding_enable_notifications_description">Send faner mellom einingar, administrer nedlastingar og få tips om korleis du får mest muleg ut av %s.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Slå på varsel</string>
+    <string name="juno_onboarding_enable_notifications_positive_button">Slå på varsel</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Ikkje no</string>
+    <string name="juno_onboarding_enable_notifications_negative_button">Ikkje no</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -400,11 +400,19 @@
     <string name="reduce_cookie_banner_summary_1">%1$s prøver automatisk å avvise infokapselførespurnadar på infokapselbanner.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Av for denne nettstaden</string>
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">Avbryt</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button">Be om brukarstøtte</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title">Redusering av infokapselbanner</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text">Førespurnad om støtte av nettstad er sendt inn.</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">På for denne nettstaden</string>
 
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">Nettstaden er for augneblinken ikkje støtta</string>
+    <string name="reduce_cookie_banner_unsupported_site">Nettstaden er for augneblinken ikkje støtta</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">Vill du aktivere reduksjon av infokapselbanner for %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
@@ -1497,29 +1505,29 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Utvida sporingsvern</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">Bruk nettet utan å bli overvaka</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Bruk nettet utan å bli overvaka</string>
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
-    <string name="preference_enhanced_tracking_protection_summary" tools:ignore="UnusedResources">No med totalt vern mot infokapslar, den mest kraftfulle barrieren vår til no mot sporarar på fleire nettstadar.</string>
+    <string name="preference_enhanced_tracking_protection_summary">No med totalt vern mot infokapslar, den mest kraftfulle barrieren vår til no mot sporarar på fleire nettstadar.</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Behald dine data for deg sjølv. %s beskyttear deg mot mange av dei vanlegaste sporingsteknologiar som følgjer det du gjer på nettet.</string>
+    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Behald dine data for deg sjølv. %s beskyttear deg mot mange av dei vanlegaste sporingsteknologiar som følgjer det du gjer på nettet.</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">%s vernar deg frå mange av dei vanlegaste sporarane som følgjer det du gjer på nettet.</string>
+    <string name="preference_enhanced_tracking_protection_explanation_2">%s vernar deg frå mange av dei vanlegaste sporarane som følgjer det du gjer på nettet.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Les meir</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standard (standard)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">Balansert mellom privatliv og yting. Sider vil laste normalt.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">Balansert mellom privatliv og yting. Sider vil laste normalt.</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_5" tools:ignore="UnusedResources">Sider vil normalt laste inn, men blokkerer færre sporfølgjarar.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_5">Sider vil normalt laste inn, men blokkerer færre sporfølgjarar.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Kva er blokkert av standard sporingsvern</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Streng</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3">Blokkerer fleire sporings-mekanismar. Sider vert lasta inn raskare, men enkelte sider fungerer kanskje ikkje skikkeleg.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">Blokkerer fleire sporings-mekanismar. Sider vert lasta inn raskare, men enkelte sider fungerer kanskje ikkje skikkeleg.</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_4" tools:ignore="UnusedResources">Sterkare sporingsvern og raskare yting, men nokre nettstadar fungerer kanskje ikkje slik dei skal.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_4">Sterkare sporingsvern og raskare yting, men nokre nettstadar fungerer kanskje ikkje slik dei skal.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Kva er blokkert av strengt sporingsvern?</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
