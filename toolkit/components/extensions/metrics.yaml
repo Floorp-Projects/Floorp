@@ -95,6 +95,25 @@ extensions.apis.dnr:
     data_sensitivity:
       - technical
 
+  startup_cache_entries:
+    type: labeled_counter
+    expires: 120
+    description: |
+      Counters for startup cache data hits or misses on initializating
+      DNR rules for extensions loaded on application startup.
+    lifetime: application
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1803363/
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1803363#c11
+    data_sensitivity:
+      - technical
+    labels:
+      - hit
+      - miss
+
   validate_rules_time:
     type: timing_distribution
     time_unit: millisecond

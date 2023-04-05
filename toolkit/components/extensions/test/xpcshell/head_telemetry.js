@@ -3,8 +3,8 @@
 "use strict";
 
 /* exported IS_ANDROID_BUILD, IS_OOP, valueSum, clearHistograms, getSnapshots, promiseTelemetryRecorded,
-            assertDNRTelemetryMetricsDefined, assertDNRTelemetryMetricsNoSamples, assertDNRTelemetryMetricsSamplesCount,
-            resetTelemetryData, setupTelemetryForTests */
+            assertDNRTelemetryMetricsDefined, assertDNRTelemetryMetricsNoSamples, assertDNRTelemetryMetricsGetValueEq,
+            assertDNRTelemetryMetricsSamplesCount, resetTelemetryData, setupTelemetryForTests */
 
 ChromeUtils.defineESModuleGetters(this, {
   ContentTaskUtils: "resource://testing-common/ContentTaskUtils.sys.mjs",
@@ -197,9 +197,22 @@ function resetTelemetryData() {
 
 function assertDNRTelemetryMetricsDefined(metrics) {
   const metricsFound = Object.keys(Glean.extensionsApisDnr);
-  const metricsNotFound = metrics.filter(
-    metric => !metricsFound.includes(metric)
-  );
+  const metricsNotFound = metrics.filter(metricAndLabel => {
+    const [metric, label, ...rest] = metricAndLabel.split(".");
+    if (label && rest.length) {
+      // If we got a rest, then the string isn't a valid composition of the
+      // metric and label to be asserted, we raise an error to trigger an
+      // explicit test failure.
+      throw new Error(
+        `${metricAndLabel} is not a valid labeled counter metric name`
+      );
+    }
+    if (label && metricsFound.includes(metric)) {
+      return !Glean.extensionsApisDnr[metric][label];
+    }
+
+    return !metricsFound.includes(metric);
+  });
   Assert.deepEqual(
     metricsNotFound,
     [],
@@ -209,18 +222,43 @@ function assertDNRTelemetryMetricsDefined(metrics) {
 
 function assertDNRTelemetryMetricsNoSamples(metrics, msg) {
   assertDNRTelemetryMetricsDefined(metrics);
-  for (const metric of metrics) {
+  for (const metricAndLabel of metrics) {
     if (IS_ANDROID_BUILD) {
       info(
-        `Skip assertions on collected samples for extensionsApisDnr.${metric} on android builds`
+        `Skip assertions on collected samples for extensionsApisDnr.${metricAndLabel} on android builds (${msg})`
       );
       return;
     }
-    const gleanData = Glean.extensionsApisDnr[metric].testGetValue();
+    const [metric, label] = metricAndLabel.split(".");
+    const gleanData = label
+      ? Glean.extensionsApisDnr[metric][label].testGetValue()
+      : Glean.extensionsApisDnr[metric].testGetValue();
     Assert.deepEqual(
       gleanData,
       undefined,
       `Expect no sample for Glean metric extensionApisDnr.${metric} (${msg}): ${gleanData}`
+    );
+  }
+}
+
+function assertDNRTelemetryMetricsGetValueEq(metrics, expectGetValue, msg) {
+  assertDNRTelemetryMetricsDefined(metrics);
+  for (const metricAndLabel of metrics) {
+    if (IS_ANDROID_BUILD) {
+      info(
+        `Skip assertions on collected samples for extensionsApisDnr.${metricAndLabel} on android builds`
+      );
+      return;
+    }
+
+    const [metric, label] = metricAndLabel.split(".");
+    const gleanData = label
+      ? Glean.extensionsApisDnr[metric][label].testGetValue()
+      : Glean.extensionsApisDnr[metric].testGetValue();
+    Assert.deepEqual(
+      gleanData,
+      expectGetValue,
+      `Got expected value set on Glean metric extensionApisDnr.${metric}.${label} (${msg})`
     );
   }
 }
@@ -231,6 +269,16 @@ function assertDNRTelemetryMetricsSamplesCount(
   msg
 ) {
   assertDNRTelemetryMetricsDefined(metrics);
+
+  // This assertion helpers doesn't expect to be used for labeled metrics,
+  // raise an explicit error to catch if one is included by mistake.
+  const labeledMetricsFound = metrics.filter(metric => metric.includes("."));
+  if (labeledMetricsFound.length) {
+    throw new Error(
+      `Unexpected labeled metrics in call to assertDNRTelemetryMetricsSamplesCount: ${labeledMetricsFound}`
+    );
+  }
+
   for (const metric of metrics) {
     if (IS_ANDROID_BUILD) {
       info(
