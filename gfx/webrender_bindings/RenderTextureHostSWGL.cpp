@@ -14,8 +14,11 @@ namespace mozilla {
 namespace wr {
 
 bool RenderTextureHostSWGL::UpdatePlanes(RenderCompositor* aCompositor) {
-  wr_swgl_make_current(mContext);
   size_t planeCount = GetPlaneCount();
+  if (!planeCount) {
+    return false;
+  }
+  wr_swgl_make_current(mContext);
   bool texInit = false;
   if (mPlanes.size() < planeCount) {
     mPlanes.reserve(planeCount);
