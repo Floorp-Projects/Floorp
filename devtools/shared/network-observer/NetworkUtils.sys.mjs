@@ -203,7 +203,7 @@ function getChannelPriority(channel) {
 
 /**
  * Get the channel HTTP version as an uppercase string starting with "HTTP/"
- * (eg "HTTP/2.0").
+ * (eg "HTTP/2").
  *
  * @param {nsIChannel} channel
  * @returns {string}
@@ -214,7 +214,13 @@ function getHttpVersion(channel) {
   const httpVersionMin = {};
 
   channel.QueryInterface(Ci.nsIHttpChannelInternal);
-  channel.getRequestVersion(httpVersionMaj, httpVersionMin);
+  channel.getResponseVersion(httpVersionMaj, httpVersionMin);
+
+  // The official name HTTP version 2.0 and 3.0 are HTTP/2 and HTTP/3, omit the
+  // trailing `.0`.
+  if (httpVersionMin.value == 0) {
+    return "HTTP/" + httpVersionMaj.value;
+  }
 
   return "HTTP/" + httpVersionMaj.value + "." + httpVersionMin.value;
 }
