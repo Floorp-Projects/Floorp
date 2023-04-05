@@ -295,8 +295,8 @@ def _makePromise(returns, side, resolver=False):
 
 def _resolveType(returns, side):
     if len(returns) > 1:
-        return _tuple([d.inType(side) for d in returns])
-    return returns[0].inType(side)
+        return _tuple([d.inType(side, "send") for d in returns])
+    return returns[0].inType(side, "send")
 
 
 def _makeResolver(returns, side):
@@ -305,6 +305,14 @@ def _makeResolver(returns, side):
 
 def _cxxArrayType(basetype, const=False, ref=False):
     return Type("nsTArray", T=basetype, const=const, ref=ref, hasimplicitcopyctor=False)
+
+
+def _cxxSpanType(basetype, const=False, ref=False):
+    basetype = deepcopy(basetype)
+    basetype.rightconst = True
+    return Type(
+        "mozilla::Span", T=basetype, const=const, ref=ref, hasimplicitcopyctor=True
+    )
 
 
 def _cxxMaybeType(basetype, const=False, ref=False):
@@ -735,13 +743,13 @@ def _cxxConstPtrToType(ipdltype, side):
     return t
 
 
-def _cxxInType(ipdltype, side):
+def _cxxInType(ipdltype, side, direction):
     t = _cxxBareType(ipdltype, side)
     if ipdltype.isIPDL() and ipdltype.isActor():
         return t
     if ipdltype.isIPDL() and ipdltype.isNotNull():
         # If the inner type chooses to use a raw pointer, wrap that instead.
-        inner = _cxxInType(ipdltype.basetype, side)
+        inner = _cxxInType(ipdltype.basetype, side, direction)
         if inner.ptr:
             t = _cxxNotNullType(inner)
             return t
@@ -758,7 +766,12 @@ def _cxxInType(ipdltype, side):
             t = Type("nsACString")
         if ipdltype.name() == "nsString":
             t = Type("nsAString")
-        # TODO: Maybe use Span<> rather than nsTArray<> for array types?
+    # Use Span<T const> rather than nsTArray<T> for array types which aren't
+    # `_cxxTypeNeedsMoveForSend`. This is only done for the "send" side, and not
+    # for recv signatures.
+    if direction == "send" and ipdltype.isIPDL() and ipdltype.isArray():
+        inner = _cxxBareType(ipdltype.basetype, side)
+        return _cxxSpanType(inner)
 
     t.const = True
     t.ref = True
@@ -811,9 +824,9 @@ class _HybridDecl:
     def constPtrToType(self, side):
         return _cxxConstPtrToType(self.ipdltype, side)
 
-    def inType(self, side):
+    def inType(self, side, direction):
         """Return this decl's C++ Type with sending inparam semantics."""
-        return _cxxInType(self.ipdltype, side)
+        return _cxxInType(self.ipdltype, side, direction)
 
     def outType(self, side):
         """Return this decl's C++ Type with outparam semantics."""
@@ -855,9 +868,6 @@ class _CompoundTypeComponent(_HybridDecl):
 
     def constPtrToType(self, side=None):
         return _HybridDecl.constPtrToType(self, side)
-
-    def inType(self, side=None):
-        return _HybridDecl.inType(self, side)
 
     def forceMoveType(self, side=None):
         return _HybridDecl.forceMoveType(self, side)
@@ -1147,7 +1157,7 @@ class MessageDecl(ipdl.ast.MessageDecl):
                 return Decl(Type("Tainted", T=d.bareType(side)), d.name)
 
             if sems == "in":
-                t = d.inType(side)
+                t = d.inType(side, direction)
                 # If this is the `recv` side, and we're not using "move"
                 # semantics, that means we're an alloc method, and cannot accept
                 # values by rvalue reference. Downgrade to an lvalue reference.
@@ -1163,7 +1173,7 @@ class MessageDecl(ipdl.ast.MessageDecl):
                     t = d.bareType(side)
                     t.rvalref = True
                     return Decl(t, d.name)
-                return Decl(d.inType(side), d.name)
+                return Decl(d.inType(side, direction), d.name)
             elif sems == "out":
                 return Decl(d.outType(side), d.name)
             else:
