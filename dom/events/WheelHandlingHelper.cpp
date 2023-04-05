@@ -90,7 +90,7 @@ WheelHandlingUtils::GetDisregardedWheelScrollDirection(const nsIFrame* aFrame) {
   }
   TextControlElement* textControlElement = TextControlElement::FromNodeOrNull(
       content->IsInNativeAnonymousSubtree()
-          ? content->GetClosestNativeAnonymousSubtreeRootParent()
+          ? content->GetClosestNativeAnonymousSubtreeRootParentOrHost()
           : content);
   if (!textControlElement || !textControlElement->IsSingleLineTextControl()) {
     return Nothing();

@@ -1157,7 +1157,7 @@ bool EventStateManager::LookForAccessKeyAndExecute(
     start = mAccessKeys.IndexOf(focusedElement);
     if (start == -1 && focusedElement->IsInNativeAnonymousSubtree()) {
       start = mAccessKeys.IndexOf(Element::FromNodeOrNull(
-          focusedElement->GetClosestNativeAnonymousSubtreeRootParent()));
+          focusedElement->GetClosestNativeAnonymousSubtreeRootParentOrHost()));
     }
   }
   RefPtr<Element> element;
@@ -1935,7 +1935,7 @@ void EventStateManager::BeginTrackingRemoteDragGesture(
   mGestureDownInTextControl =
       aContent && aContent->IsInNativeAnonymousSubtree() &&
       TextControlElement::FromNodeOrNull(
-          aContent->GetClosestNativeAnonymousSubtreeRootParent());
+          aContent->GetClosestNativeAnonymousSubtreeRootParentOrHost());
   mGestureDownDragStartData = aDragStartData;
 }
 
@@ -5887,7 +5887,8 @@ void EventStateManager::TextControlRootWillBeRemoved(
   // caused by reframing aTextControlElement which may not be intended by the
   // user.
   if (&aTextControlElement ==
-      mGestureDownFrameOwner->GetClosestNativeAnonymousSubtreeRootParent()) {
+      mGestureDownFrameOwner
+          ->GetClosestNativeAnonymousSubtreeRootParentOrHost()) {
     mGestureDownFrameOwner = &aTextControlElement;
   }
 }

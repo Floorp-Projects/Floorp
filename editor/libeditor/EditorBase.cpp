@@ -4344,9 +4344,9 @@ nsresult EditorBase::HandleDropEvent(DragEvent* aDropEvent) {
       // If the source node is in native anonymous tree, it must be in
       // <input> or <textarea> element.  If so, its TextEditor can remove it.
       if (sourceNode->IsInNativeAnonymousSubtree()) {
-        if (RefPtr<TextControlElement> textControlElement =
-                TextControlElement::FromNodeOrNull(
-                    sourceNode->GetClosestNativeAnonymousSubtreeRootParent())) {
+        if (RefPtr textControlElement = TextControlElement::FromNodeOrNull(
+                sourceNode
+                    ->GetClosestNativeAnonymousSubtreeRootParentOrHost())) {
           editorToDeleteSelection = textControlElement->GetTextEditor();
         }
       }
@@ -5296,7 +5296,7 @@ Element* EditorBase::GetExposedRoot() const {
     return rootElement;
   }
   return Element::FromNodeOrNull(
-      rootElement->GetClosestNativeAnonymousSubtreeRootParent());
+      rootElement->GetClosestNativeAnonymousSubtreeRootParentOrHost());
 }
 
 nsresult EditorBase::DetermineCurrentDirection() {

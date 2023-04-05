@@ -115,7 +115,7 @@ enum class CallerType : uint32_t;
 #define NODE_FLAG_BIT(n_) \
   (nsWrapperCache::FlagsType(1U) << (WRAPPER_CACHE_FLAGS_BITS_USED + (n_)))
 
-enum {
+enum : uint32_t {
   // This bit will be set if the node has a listener manager.
   NODE_HAS_LISTENERMANAGER = NODE_FLAG_BIT(0),
 
@@ -1034,7 +1034,19 @@ class nsINode : public mozilla::dom::EventTarget {
    */
   nsINode* GetParentNode() const { return mParent; }
 
-  nsINode* GetParentOrShadowHostNode() const;
+ private:
+  nsIContent* DoGetShadowHost() const;
+
+ public:
+  nsINode* GetParentOrShadowHostNode() const {
+    if (MOZ_LIKELY(mParent)) {
+      return mParent;
+    }
+    // We could put this in nsIContentInlines.h or such to avoid this
+    // reinterpret_cast, but it doesn't seem worth it.
+    return IsInShadowTree() ? reinterpret_cast<nsINode*>(DoGetShadowHost())
+                            : nullptr;
+  }
 
   enum FlattenedParentType { eNotForStyle, eForStyle };
 
@@ -1416,16 +1428,24 @@ class nsINode : public mozilla::dom::EventTarget {
   /**
    * If |this| or any ancestor is native anonymous, return the parent of the
    * native anonymous subtree. Note that in case of nested native anonymous
-   * content, this returns the parent of the innermost root, not the outermost.
+   * content, this returns the parent or host of the innermost root, not the
+   * outermost.
    */
-  nsIContent* GetClosestNativeAnonymousSubtreeRootParent() const {
-    const nsIContent* root = GetClosestNativeAnonymousSubtreeRoot();
+  nsIContent* GetClosestNativeAnonymousSubtreeRootParentOrHost() const {
+    // We could put this in nsIContentInlines.h or such to avoid this
+    // reinterpret_cast, but it doesn't seem worth it.
+    const auto* root = reinterpret_cast<const nsINode*>(
+        GetClosestNativeAnonymousSubtreeRoot());
     if (!root) {
       return nullptr;
     }
-    // We could put this in nsIContentInlines.h or such to avoid this
-    // reinterpret_cast, but it doesn't seem worth it.
-    return reinterpret_cast<const nsINode*>(root)->GetParent();
+    if (nsIContent* parent = root->GetParent()) {
+      return parent;
+    }
+    if (MOZ_UNLIKELY(root->IsInShadowTree())) {
+      return root->DoGetShadowHost();
+    }
+    return nullptr;
   }
 
   /**
@@ -1456,20 +1476,10 @@ class nsINode : public mozilla::dom::EventTarget {
 
   // True for native anonymous content and for content in UA widgets.
   // Only nsIContent can fulfill this condition.
-  bool ChromeOnlyAccess() const {
-    return HasFlag(NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE |
-                   NODE_HAS_BEEN_IN_UA_WIDGET);
-  }
+  bool ChromeOnlyAccess() const { return IsInNativeAnonymousSubtree(); }
 
   const nsIContent* GetChromeOnlyAccessSubtreeRootParent() const {
-    if (!ChromeOnlyAccess()) {
-      return nullptr;
-    }
-    // We can have NAC in UA widgets, but not the other way around.
-    if (IsInNativeAnonymousSubtree()) {
-      return GetClosestNativeAnonymousSubtreeRootParent();
-    }
-    return GetContainingShadowHost();
+    return GetClosestNativeAnonymousSubtreeRootParentOrHost();
   }
 
   bool IsInShadowTree() const { return HasFlag(NODE_IS_IN_SHADOW_TREE); }
@@ -1486,12 +1496,10 @@ class nsINode : public mozilla::dom::EventTarget {
     return HasFlag(NODE_IS_NATIVE_ANONYMOUS_ROOT);
   }
 
-  // Whether this node is a UA Widget ShadowRoot.
-  inline bool IsUAWidget() const;
-  // Whether this node is currently in a UA Widget Shadow tree.
-  inline bool IsInUAWidget() const;
   // Whether this node is the root of a ChromeOnlyAccess DOM subtree.
-  inline bool IsRootOfChromeAccessOnlySubtree() const;
+  bool IsRootOfChromeAccessOnlySubtree() const {
+    return IsRootOfNativeAnonymousSubtree();
+  }
 
   /**
    * Returns true if |this| node is the closest common inclusive ancestor

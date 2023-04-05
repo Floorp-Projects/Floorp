@@ -1244,7 +1244,7 @@ static bool IsMarqueeScrollbox(const nsIFrame& aScrollFrame) {
   if (!aScrollFrame.GetContent()) {
     return false;
   }
-  if (MOZ_LIKELY(!aScrollFrame.GetContent()->IsInUAWidget())) {
+  if (MOZ_LIKELY(!aScrollFrame.GetContent()->HasBeenInUAWidget())) {
     return false;
   }
   MOZ_ASSERT(aScrollFrame.GetParent() &&
@@ -5486,7 +5486,7 @@ bool nsHTMLScrollFrame::IsForTextControlWithNoScrollbars() const {
   if (!content) {
     return false;
   }
-  auto* input = content->GetClosestNativeAnonymousSubtreeRootParent();
+  auto* input = content->GetClosestNativeAnonymousSubtreeRootParentOrHost();
   return input && input->IsHTMLElement(nsGkAtoms::input);
 }
 

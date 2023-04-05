@@ -2389,7 +2389,7 @@ int16_t nsIFrame::DetermineDisplaySelection() {
 static Element* FindElementAncestorForMozSelection(nsIContent* aContent) {
   NS_ENSURE_TRUE(aContent, nullptr);
   while (aContent && aContent->IsInNativeAnonymousSubtree()) {
-    aContent = aContent->GetClosestNativeAnonymousSubtreeRootParent();
+    aContent = aContent->GetClosestNativeAnonymousSubtreeRootParentOrHost();
   }
   NS_ASSERTION(aContent, "aContent isn't in non-anonymous tree?");
   return aContent ? aContent->GetAsElementOrParentElement() : nullptr;

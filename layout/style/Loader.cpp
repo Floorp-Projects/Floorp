@@ -1857,8 +1857,8 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadStyleLink(
     if (!aInfo.mContent) {
       return false;
     }
-    const bool privilegedShadowTree = aInfo.mContent->IsInUAWidget() ||
-                                      (aInfo.mContent->IsInShadowTree() &&
+    const bool privilegedShadowTree = aInfo.mContent->IsInShadowTree() &&
+                                      (aInfo.mContent->ChromeOnlyAccess() ||
                                        aInfo.mContent->IsInChromeDocument());
     if (!privilegedShadowTree) {
       return false;

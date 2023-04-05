@@ -420,7 +420,7 @@ Element* nsINode::GetAnonymousRootElementOfTextEditor(
   RefPtr<TextControlElement> textControlElement;
   if (IsInNativeAnonymousSubtree()) {
     textControlElement = TextControlElement::FromNodeOrNull(
-        GetClosestNativeAnonymousSubtreeRootParent());
+        GetClosestNativeAnonymousSubtreeRootParentOrHost());
   } else {
     textControlElement = TextControlElement::FromNode(this);
   }
@@ -472,15 +472,6 @@ nsIContent* nsINode::GetFirstChildOfTemplateOrNode() {
   }
 
   return GetFirstChild();
-}
-
-nsINode* nsINode::GetParentOrShadowHostNode() const {
-  if (mParent) {
-    return mParent;
-  }
-
-  const ShadowRoot* shadowRoot = ShadowRoot::FromNode(this);
-  return shadowRoot ? shadowRoot->GetHost() : nullptr;
 }
 
 nsINode* nsINode::SubtreeRoot() const {
@@ -795,6 +786,11 @@ std::ostream& operator<<(std::ostream& aStream, const nsINode& aNode) {
 
   NS_ConvertUTF16toUTF8 str(elemDesc);
   return aStream << str.get();
+}
+
+nsIContent* nsINode::DoGetShadowHost() const {
+  MOZ_ASSERT(IsShadowRoot());
+  return static_cast<const ShadowRoot*>(this)->GetHost();
 }
 
 ShadowRoot* nsINode::GetContainingShadow() const {
@@ -3614,12 +3610,12 @@ nsINode* nsINode::GetFlattenedTreeParentNodeNonInline() const {
 
 ParentObject nsINode::GetParentObject() const {
   ParentObject p(OwnerDoc());
-  // Note that mReflectionScope is a no-op for chrome, and other places
-  // where we don't check this value.
-  if (ShouldUseNACScope(this)) {
-    p.mReflectionScope = ReflectionScope::NAC;
-  } else if (ShouldUseUAWidgetScope(this)) {
+  // Note that mReflectionScope is a no-op for chrome, and other places where we
+  // don't check this value.
+  if (ShouldUseUAWidgetScope(this)) {
     p.mReflectionScope = ReflectionScope::UAWidget;
+  } else if (ShouldUseNACScope(this)) {
+    p.mReflectionScope = ReflectionScope::NAC;
   }
   return p;
 }

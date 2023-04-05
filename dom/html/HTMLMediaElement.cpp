@@ -4660,7 +4660,7 @@ void HTMLMediaElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
         return;
       }
       HTMLInputElement* el = nullptr;
-      if (node->IsInNativeAnonymousSubtree() || node->IsInUAWidget()) {
+      if (node->ChromeOnlyAccess()) {
         if (node->IsHTMLElement(nsGkAtoms::input)) {
           // The node is a <input type="range">
           el = static_cast<HTMLInputElement*>(node);
