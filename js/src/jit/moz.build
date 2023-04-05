@@ -41,6 +41,7 @@ UNIFIED_SOURCES += [
     "FoldLinearArithConstants.cpp",
     "InlinableNatives.cpp",
     "InstructionReordering.cpp",
+    "InterpreterEntryTrampoline.cpp",
     "Ion.cpp",
     "IonAnalysis.cpp",
     "IonCacheIRCompiler.cpp",
