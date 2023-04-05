@@ -69,7 +69,7 @@ class VRProcessParent final : public mozilla::ipc::GeckoChildProcessHost {
   bool InitAfterConnect(bool aSucceeded);
   void KillHard(const char* aReason);
 
-  RefPtr<VRChild> mVRChild;
+  UniquePtr<VRChild> mVRChild;
   mozilla::ipc::TaskFactory<VRProcessParent> mTaskFactory;
   nsCOMPtr<nsIThread> mLaunchThread;
   Listener* mListener;

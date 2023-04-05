@@ -36,8 +36,6 @@ SandboxTestingParent::SandboxTestingParent(
           std::move(aParentEnd)));
 }
 
-SandboxTestingParent::~SandboxTestingParent() = default;
-
 void SandboxTestingParent::Bind(Endpoint<PSandboxTestingParent>&& aEnd) {
   MOZ_RELEASE_ASSERT(mThread->IsOnThread());
   DebugOnly<bool> ok = aEnd.Bind(this);
@@ -71,6 +69,8 @@ void SandboxTestingParent::Destroy(SandboxTestingParent* aInstance) {
       aInstance->mMonitor.Wait();
     }
   }
+
+  delete aInstance;
 }
 
 void SandboxTestingParent::ActorDestroy(ActorDestroyReason aWhy) {

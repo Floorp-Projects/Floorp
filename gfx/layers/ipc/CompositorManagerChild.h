@@ -23,7 +23,7 @@ class CompositorManagerParent;
 class WebRenderLayerManager;
 
 class CompositorManagerChild : public PCompositorManagerChild {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorManagerChild, override)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorManagerChild)
 
  public:
   static bool IsInitialized(uint64_t aProcessToken);
@@ -103,6 +103,8 @@ class CompositorManagerChild : public PCompositorManagerChild {
                          uint64_t aProcessToken, uint32_t aNamespace);
 
   virtual ~CompositorManagerChild() = default;
+
+  void ActorDealloc() override;
 
   void SetReplyTimeout();
 

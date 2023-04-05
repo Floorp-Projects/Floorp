@@ -24,8 +24,7 @@ class RemoteSandboxBrokerProcessChild final
   void CleanUp() override;
 
  private:
-  RefPtr<RemoteSandboxBrokerChild> mSandboxBrokerChild =
-      new RemoteSandboxBrokerChild;
+  RemoteSandboxBrokerChild mSandboxBrokerChild;
 };
 
 }  // namespace mozilla

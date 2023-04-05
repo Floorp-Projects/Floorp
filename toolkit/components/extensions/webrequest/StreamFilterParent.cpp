@@ -169,6 +169,9 @@ void StreamFilterParent::Attach(nsIChannel* aChannel,
   }
 
   self->Init(aChannel);
+
+  // IPC owns this reference now.
+  Unused << self.forget();
 }
 
 void StreamFilterParent::Disconnect(const nsACString& aReason) {
@@ -809,6 +812,10 @@ void StreamFilterParent::ActorDestroy(ActorDestroyReason aWhy) {
   if (mState != State::Disconnected && mState != State::Closed) {
     Broken();
   }
+}
+
+void StreamFilterParent::ActorDealloc() {
+  RefPtr<StreamFilterParent> self = dont_AddRef(this);
 }
 
 NS_INTERFACE_MAP_BEGIN(StreamFilterParent)

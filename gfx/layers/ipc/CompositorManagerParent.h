@@ -26,7 +26,7 @@ class CompositorThreadHolder;
 #endif
 
 class CompositorManagerParent final : public PCompositorManagerParent {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorManagerParent, final)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorManagerParent)
 
  public:
   static already_AddRefed<CompositorManagerParent> CreateSameProcess();
@@ -76,6 +76,8 @@ class CompositorManagerParent final : public PCompositorManagerParent {
   virtual ~CompositorManagerParent();
 
   void Bind(Endpoint<PCompositorManagerParent>&& aEndpoint, bool aIsRoot);
+
+  void ActorDealloc() override;
 
   void DeferredDestroy();
 

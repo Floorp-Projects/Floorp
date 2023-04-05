@@ -27,9 +27,8 @@ class GPUChild final : public ipc::CrashReporterHelper<GeckoProcessType_GPU>,
   typedef mozilla::dom::MemoryReportRequestHost MemoryReportRequestHost;
 
  public:
-  NS_INLINE_DECL_REFCOUNTING(GPUChild, final)
-
   explicit GPUChild(GPUProcessHost* aHost);
+  virtual ~GPUChild();
 
   void Init();
 
@@ -89,11 +88,9 @@ class GPUChild final : public ipc::CrashReporterHelper<GeckoProcessType_GPU>,
                                const bool& aMinimizeMemoryUsage,
                                const Maybe<ipc::FileDescriptor>& aDMDFile);
 
-  static void Destroy(RefPtr<GPUChild>&& aChild);
+  static void Destroy(UniquePtr<GPUChild>&& aChild);
 
  private:
-  virtual ~GPUChild();
-
   GPUProcessHost* mHost;
   UniquePtr<MemoryReportRequestHost> mMemoryReportRequest;
   bool mGPUReady;

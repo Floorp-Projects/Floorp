@@ -25,9 +25,8 @@ class GMPChild : public PGMPChild {
   friend class PGMPChild;
 
  public:
-  NS_INLINE_DECL_REFCOUNTING(GMPChild, override)
-
   GMPChild();
+  virtual ~GMPChild();
 
   bool Init(const nsAString& aPluginPath,
             mozilla::ipc::UntypedEndpoint&& aEndpoint);
@@ -43,8 +42,6 @@ class GMPChild : public PGMPChild {
 
  private:
   friend class GMPContentChild;
-
-  virtual ~GMPChild();
 
   bool GetUTF8LibPath(nsACString& aOutLibPath);
 

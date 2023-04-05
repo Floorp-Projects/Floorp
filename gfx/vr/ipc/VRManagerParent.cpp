@@ -96,7 +96,7 @@ void VRManagerParent::Bind(Endpoint<PVRManagerParent>&& aEndpoint) {
   if (!aEndpoint.Bind(this)) {
     return;
   }
-  mCompositorThreadHolder = CompositorThreadHolder::GetSingleton();
+  mSelfRef = this;
 
   RegisterWithManager();
 }
@@ -108,14 +108,15 @@ void VRManagerParent::RegisterVRManagerInCompositorThread(
 }
 
 /*static*/
-already_AddRefed<VRManagerParent> VRManagerParent::CreateSameProcess() {
+VRManagerParent* VRManagerParent::CreateSameProcess() {
   RefPtr<VRManagerParent> vmp =
       new VRManagerParent(base::GetCurrentProcId(), false);
   vmp->mCompositorThreadHolder = CompositorThreadHolder::GetSingleton();
+  vmp->mSelfRef = vmp;
   CompositorThread()->Dispatch(
       NewRunnableFunction("RegisterVRManagerIncompositorThreadRunnable",
                           RegisterVRManagerInCompositorThread, vmp.get()));
-  return vmp.forget();
+  return vmp.get();
 }
 
 bool VRManagerParent::CreateForGPUProcess(
@@ -123,6 +124,7 @@ bool VRManagerParent::CreateForGPUProcess(
   RefPtr<VRManagerParent> vmp =
       new VRManagerParent(aEndpoint.OtherPid(), false);
   vmp->mCompositorThreadHolder = CompositorThreadHolder::GetSingleton();
+  vmp->mSelfRef = vmp;
   CompositorThread()->Dispatch(NewRunnableMethod<Endpoint<PVRManagerParent>&&>(
       "gfx::VRManagerParent::Bind", vmp, &VRManagerParent::Bind,
       std::move(aEndpoint)));
@@ -146,9 +148,20 @@ void VRManagerParent::Shutdown() {
       }));
 }
 
-void VRManagerParent::ActorDestroy(ActorDestroyReason why) {
+void VRManagerParent::ActorDestroy(ActorDestroyReason why) {}
+
+void VRManagerParent::ActorAlloc() {
+  // FIXME: This actor should probably use proper refcounting instead of manual
+  // reference management, and probably shouldn't manage
+  // `mCompositorThreadHolder` in the alloc/dealloc methods.
+  PVRManagerParent::ActorAlloc();
+  mCompositorThreadHolder = CompositorThreadHolder::GetSingleton();
+}
+
+void VRManagerParent::ActorDealloc() {
   UnregisterFromManager();
   mCompositorThreadHolder = nullptr;
+  mSelfRef = nullptr;
 }
 
 mozilla::ipc::IPCResult VRManagerParent::RecvDetectRuntimes() {

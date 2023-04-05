@@ -21,9 +21,8 @@ class VsyncBridgeParent;
 
 class GPUParent final : public PGPUParent {
  public:
-  NS_INLINE_DECL_REFCOUNTING(GPUParent, final)
-
   GPUParent();
+  ~GPUParent();
 
   static GPUParent* GetSingleton();
 
@@ -112,8 +111,6 @@ class GPUParent final : public PGPUParent {
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
-  ~GPUParent();
-
   const TimeStamp mLaunchTime;
   RefPtr<VsyncBridgeParent> mVsyncBridge;
   RefPtr<ChildProfilerController> mProfilerController;

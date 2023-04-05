@@ -22,14 +22,14 @@ namespace gfx {
 class VRManager;
 
 class VRManagerParent final : public PVRManagerParent {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRManagerParent, final);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRManagerParent);
 
   friend class PVRManagerParent;
 
  public:
   explicit VRManagerParent(ProcessId aChildProcessId, bool aIsContentChild);
 
-  static already_AddRefed<VRManagerParent> CreateSameProcess();
+  static VRManagerParent* CreateSameProcess();
   static bool CreateForGPUProcess(Endpoint<PVRManagerParent>&& aEndpoint);
   static bool CreateForContent(Endpoint<PVRManagerParent>&& aEndpoint);
   static void Shutdown();
@@ -73,6 +73,8 @@ class VRManagerParent final : public PVRManagerParent {
   mozilla::ipc::IPCResult RecvResetPuppet();
 
  private:
+  void ActorAlloc() override;
+  void ActorDealloc() override;
   void RegisterWithManager();
   void UnregisterFromManager();
 
@@ -80,6 +82,9 @@ class VRManagerParent final : public PVRManagerParent {
 
   static void RegisterVRManagerInCompositorThread(VRManagerParent* aVRManager);
 
+  // This keeps us alive until ActorDestroy(), at which point we do a
+  // deferred destruction of ourselves.
+  RefPtr<VRManagerParent> mSelfRef;
   // Keep the compositor thread alive, until we have destroyed ourselves.
   RefPtr<CompositorThreadHolder> mCompositorThreadHolder;
 

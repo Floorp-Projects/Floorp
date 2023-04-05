@@ -287,8 +287,8 @@ SandboxTest::StartTests(const nsTArray<nsCString>& aProcessesList) {
     RefPtr<ProcessPromise> aPromise(processPromise);
     aPromise->Then(
         GetMainThreadSerialEventTarget(), __func__,
-        [self](RefPtr<SandboxTestingParent> aValue) {
-          self->mSandboxTestingParents.AppendElement(std::move(aValue));
+        [self](SandboxTestingParent* aValue) {
+          self->mSandboxTestingParents.AppendElement(aValue);
           return NS_OK;
         },
         [](nsresult aError) {

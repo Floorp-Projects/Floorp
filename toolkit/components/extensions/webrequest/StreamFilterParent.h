@@ -102,6 +102,8 @@ class StreamFilterParent final : public PStreamFilterParent,
   IPCResult RecvDisconnect();
   IPCResult RecvDestroy();
 
+  virtual void ActorDealloc() override;
+
  private:
   bool IPCActive() {
     return (mState != State::Closed && mState != State::Disconnecting &&

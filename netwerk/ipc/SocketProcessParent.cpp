@@ -293,18 +293,18 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvCachePushCheck(
 class DeferredDeleteSocketProcessParent : public Runnable {
  public:
   explicit DeferredDeleteSocketProcessParent(
-      RefPtr<SocketProcessParent>&& aParent)
+      UniquePtr<SocketProcessParent>&& aParent)
       : Runnable("net::DeferredDeleteSocketProcessParent"),
         mParent(std::move(aParent)) {}
 
   NS_IMETHODIMP Run() override { return NS_OK; }
 
  private:
-  RefPtr<SocketProcessParent> mParent;
+  UniquePtr<SocketProcessParent> mParent;
 };
 
 /* static */
-void SocketProcessParent::Destroy(RefPtr<SocketProcessParent>&& aParent) {
+void SocketProcessParent::Destroy(UniquePtr<SocketProcessParent>&& aParent) {
   NS_DispatchToMainThread(
       new DeferredDeleteSocketProcessParent(std::move(aParent)));
 }

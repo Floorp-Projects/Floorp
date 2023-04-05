@@ -50,6 +50,8 @@ Endpoint<PProfilerChild> ProfilerParent::CreateForProcess(
     MOZ_CRASH("Failed to bind parent actor for PProfiler!");
   }
 
+  // mSelfRef will be cleared in DeallocPProfilerParent.
+  actor->mSelfRef = actor;
   actor->Init();
 #endif
 
@@ -992,6 +994,8 @@ void ProfilerParent::ActorDestroy(ActorDestroyReason aActorDestroyReason) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   mDestroyed = true;
 }
+
+void ProfilerParent::ActorDealloc() { mSelfRef = nullptr; }
 
 #endif
 

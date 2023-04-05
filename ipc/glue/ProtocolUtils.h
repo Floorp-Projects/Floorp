@@ -385,9 +385,6 @@ class IToplevelProtocol : public IProtocol {
   ~IToplevelProtocol() = default;
 
  public:
-  // All top-level protocols are refcounted.
-  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
-
   // Shadow methods on IProtocol which are implemented directly on toplevel
   // actors.
   int32_t Register(IProtocol* aRouted);
