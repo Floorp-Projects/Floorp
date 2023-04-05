@@ -2501,6 +2501,16 @@ class WebExtensionTest : BaseSessionTest() {
         mainSession.reload()
         sessionRule.waitForPageStop()
 
+        sessionRule.addExternalDelegateUntilTestEnd(
+            WebExtensionController.AddonManagerDelegate::class,
+            { delegate -> controller.setAddonManagerDelegate(delegate) },
+            { controller.setAddonManagerDelegate(null) },
+            object : WebExtensionController.AddonManagerDelegate {
+                @AssertCalled(count = 1)
+                override fun onDisabled(extension: WebExtension) {}
+            }
+        )
+
         val disabledWebExtension = sessionRule.waitForResult(controller.disable(webExtension, source))
 
         when (source) {
