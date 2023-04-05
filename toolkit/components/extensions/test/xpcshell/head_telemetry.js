@@ -362,7 +362,9 @@ function assertDNRTelemetryMetricsGetValueEq(metrics, msg) {
     Assert.deepEqual(
       gleanData,
       expectedGetValue,
-      `Got expected value set on Glean metric extensionApisDnr.${metric}.${label} (${msg})`
+      `Got expected value set on Glean metric extensionApisDnr.${metric}${
+        label ? `.${label}` : ""
+      } (${msg})`
     );
 
     if (metricDetails.mirroredName) {
