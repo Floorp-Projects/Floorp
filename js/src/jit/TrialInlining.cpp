@@ -600,12 +600,11 @@ TrialInliningDecision TrialInliner::getInliningDecision(JSFunction* target,
   JitScript* jitScript = targetScript->jitScript();
   ICScript* icScript = jitScript->icScript();
 
-  // Here we check for any ICs which have entered a megamorphic or
-  // generic state. It seems the sweet spot happens when we do
-  // trial inlining to have a chance of avoiding going megamorphic,
-  // but do the cheaper monomorphic inlining for everything else.
-  // NOTE: if we're able to reduce the cost of trial inlining, we
-  // need to reevaluate this heuristic.
+  // Check for any ICs which are not monomorphic. The observation here is that
+  // trial inlining can help us a lot in cases where it lets us further
+  // specialize a script. But if it's already monomorphic, it's unlikely that
+  // we will see significant specialization wins from trial inlining, so we
+  // can use a cheaper and simpler inlining strategy.
   for (size_t i = 0; i < icScript->numICEntries(); i++) {
     ICEntry& entry = icScript->icEntry(i);
     ICFallbackStub* fallback = icScript->fallbackStub(i);
