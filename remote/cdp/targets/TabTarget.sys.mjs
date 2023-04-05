@@ -76,7 +76,7 @@ export class TabTarget extends Target {
    * We determine this by checking if the <browser> element
    * is still attached to the DOM.
    *
-   * @return {boolean}
+   * @returns {boolean}
    *     True if target's browser is still attached,
    *     false if it has been disconnected.
    */
@@ -92,7 +92,7 @@ export class TabTarget extends Target {
     return null;
   }
 
-  /** @return {Promise.<String=>} */
+  /** @returns {Promise.<String=>} */
   get faviconUrl() {
     return new Promise((resolve, reject) => {
       lazy.Favicons.getFaviconURLForPage(this.browser.currentURI, url => {

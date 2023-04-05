@@ -29,7 +29,7 @@ export class RootMessageHandler extends MessageHandler {
   /**
    * Returns the RootMessageHandler module path.
    *
-   * @return {String}
+   * @returns {string}
    */
   static get modulePath() {
     return "root";
@@ -38,7 +38,7 @@ export class RootMessageHandler extends MessageHandler {
   /**
    * Returns the RootMessageHandler type.
    *
-   * @return {String}
+   * @returns {string}
    */
   static get type() {
     return "ROOT";
@@ -55,7 +55,7 @@ export class RootMessageHandler extends MessageHandler {
   /**
    * Create a new RootMessageHandler instance.
    *
-   * @param {String} sessionId
+   * @param {string} sessionId
    *     ID of the session the handler is used for.
    */
   constructor(sessionId) {
@@ -90,10 +90,10 @@ export class RootMessageHandler extends MessageHandler {
   /**
    * Emit a public protocol event. This event will be sent over to the client.
    *
-   * @param {String} name
+   * @param {string} name
    *     Name of the event. Protocol level events should be of the
    *     form [module name].[event name].
-   * @param {Object} data
+   * @param {object} data
    *     The event's data.
    */
   emitProtocolEvent(name, data) {
@@ -110,7 +110,7 @@ export class RootMessageHandler extends MessageHandler {
    *
    * @param {Command} command
    *     The command to forward. See type definition in MessageHandler.js
-   * @return {Promise}
+   * @returns {Promise}
    *     Returns a promise that resolves with the result of the command.
    */
   forwardCommand(command) {

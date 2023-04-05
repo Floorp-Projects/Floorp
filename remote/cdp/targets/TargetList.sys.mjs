@@ -125,7 +125,7 @@ export class TargetList {
    * @param {string} id
    *     Target id
    *
-   * @return {Target}
+   * @returns {Target}
    */
   getById(id) {
     return this._targets.get(id);

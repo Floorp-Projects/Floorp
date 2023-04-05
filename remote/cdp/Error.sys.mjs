@@ -55,12 +55,12 @@ export class RemoteAgentError extends Error {
    * error serialisation to include discrete fields for each data
    * property.
    *
-   * @param {Object} json
+   * @param {object} json
    *     CDP error encoded as a JSON object, which must have a
    *     "message" field, where the first line will make out the error
    *     message and the subsequent lines the stacktrace.
    *
-   * @return {RemoteAgentError}
+   * @returns {RemoteAgentError}
    */
   static fromJSON(json) {
     const [message, ...stack] = json.message.split("\n");

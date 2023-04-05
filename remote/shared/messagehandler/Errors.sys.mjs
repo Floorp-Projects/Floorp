@@ -26,7 +26,7 @@ class MessageHandlerError extends RemoteError {
   }
 
   /**
-   * @return {Object.<string, string>}
+   * @returns {Object<string, string>}
    *     JSON serialisation of error prototype.
    */
   toJSON() {
@@ -41,10 +41,10 @@ class MessageHandlerError extends RemoteError {
    * Unmarshals a JSON error representation to the appropriate MessageHandler
    * error type.
    *
-   * @param {Object.<string, string>} json
+   * @param {Object<string, string>} json
    *     Error object.
    *
-   * @return {Error}
+   * @returns {Error}
    *     Error prototype.
    */
   static fromJSON(json) {

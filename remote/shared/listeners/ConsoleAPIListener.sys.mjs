@@ -32,7 +32,7 @@ XPCOMUtils.defineLazyGetter(lazy, "ConsoleAPIStorage", () => {
  * };
  * ```
  *
- * @emits message
+ * @fires message
  *    The ConsoleAPIListener emits "message" events, with the following object as
  *    payload:
  *      - {Array<Object>} arguments - Arguments as passed-in when the method was called.
@@ -48,7 +48,7 @@ export class ConsoleAPIListener {
   /**
    * Create a new ConsolerListener instance.
    *
-   * @param {Number} innerWindowId
+   * @param {number} innerWindowId
    *     The inner window id to filter the messages for.
    */
   constructor(innerWindowId) {

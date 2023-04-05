@@ -41,7 +41,7 @@ export const l10n = {};
  * @param {string} id
  *     The ID of the entity to retrieve the localized string for.
  *
- * @return {string}
+ * @returns {string}
  *     The localized string for the requested entity.
  */
 l10n.localizeEntity = function(urls, id) {
@@ -79,7 +79,7 @@ l10n.localizeEntity = function(urls, id) {
  * @param {string} id
  *     The ID of the property to retrieve the localized string for.
  *
- * @return {string}
+ * @returns {string}
  *     The localized string for the requested property.
  */
 l10n.localizeProperty = function(urls, id) {

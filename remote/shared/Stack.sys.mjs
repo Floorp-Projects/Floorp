@@ -5,20 +5,20 @@
 /**
  * An object that contains details of a stack frame.
  *
- * @typedef {Object} StackFrame
+ * @typedef {object} StackFrame
  * @see nsIStackFrame
  *
- * @property {String=} asyncCause
+ * @property {string=} asyncCause
  *     Type of asynchronous call by which this frame was invoked.
- * @property {Number} columnNumber
+ * @property {number} columnNumber
  *     The column number for this stack frame.
- * @property {String} filename
+ * @property {string} filename
  *     The source URL for this stack frame.
- * @property {String} function
+ * @property {string} function
  *     SpiderMonkey’s inferred name for this stack frame’s function, or null.
- * @property {Number} lineNumber
+ * @property {number} lineNumber
  *     The line number for this stack frame (starts with 1).
- * @property {Number} sourceId
+ * @property {number} sourceId
  *     The process-unique internal integer ID of this source.
  */
 
@@ -27,7 +27,7 @@
  *
  * Convert stack objects to the JSON attributes expected by consumers.
  *
- * @param {Object} stack
+ * @param {object} stack
  *     The native stack object to process.
  *
  * @returns {Array<StackFrame>=}
@@ -59,7 +59,7 @@ export function getFramesFromStack(stack) {
 /**
  * Check if a frame is from chrome scope.
  *
- * @param {Object} frame
+ * @param {object} frame
  *     The frame to check
  *
  * @returns {boolean}

@@ -29,7 +29,7 @@ export const modal = {
  * @param {browser.Context} context
  *     Reference to the browser context to check for existent dialogs.
  *
- * @return {modal.Dialog}
+ * @returns {modal.Dialog}
  *     Returns instance of the Dialog class, or `null` if no modal dialog
  *     is present.
  */
@@ -101,7 +101,7 @@ modal.findModalDialogs = function(context) {
  * @param {function(): browser.Context} curBrowserFn
  *     Function that returns the current |browser.Context|.
  *
- * @return {modal.DialogObserver}
+ * @returns {modal.DialogObserver}
  *     Returns instance of the DialogObserver class.
  */
 modal.DialogObserver = class {
@@ -227,7 +227,7 @@ modal.DialogObserver = class {
   /**
    * Add dialog handler by function reference.
    *
-   * @param {function} callback
+   * @param {Function} callback
    *     The handler to be added.
    */
   add(callback) {
@@ -240,7 +240,7 @@ modal.DialogObserver = class {
   /**
    * Remove dialog handler by function reference.
    *
-   * @param {function} callback
+   * @param {Function} callback
    *     The handler to be removed.
    */
   remove(callback) {

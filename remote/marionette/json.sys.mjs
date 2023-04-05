@@ -26,7 +26,7 @@ export const json = {};
 /**
  * Clone an object including collections.
  *
- * @param {Object} value
+ * @param {object} value
  *     Object to be cloned.
  * @param {Set} seen
  *     List of objects already processed.
@@ -34,7 +34,7 @@ export const json = {};
  *     The clone algorithm to invoke for individual list entries or object
  *     properties.
  *
- * @return {Object}
+ * @returns {object}
  *     The cloned object.
  */
 function cloneObject(value, seen, cloneAlgorithm) {
@@ -90,12 +90,12 @@ function cloneObject(value, seen, cloneAlgorithm) {
  *
  * - If a cyclic references is detected a JavaScriptError is thrown.
  *
- * @param {Object} value
+ * @param {object} value
  *     Object to be cloned.
  * @param {NodeCache} nodeCache
  *     Node cache that holds already seen WebElement and ShadowRoot references.
  *
- * @return {Object}
+ * @returns {object}
  *     Same object as provided by `value` with the WebDriver specific
  *     elements replaced by WebReference's.
  *
@@ -183,14 +183,14 @@ json.clone = function(value, nodeCache) {
 /**
  * Deserialize an arbitrary object.
  *
- * @param {Object} value
+ * @param {object} value
  *     Arbitrary object.
  * @param {NodeCache} nodeCache
  *     Node cache that holds already seen WebElement and ShadowRoot references.
  * @param {WindowProxy} win
  *     Current window.
  *
- * @return {Object}
+ * @returns {object}
  *     Same object as provided by `value` with the WebDriver specific
  *     references replaced with real JavaScript objects.
  *

@@ -26,7 +26,7 @@ export class WindowGlobalMessageHandler extends MessageHandler {
   /**
    * Returns the WindowGlobalMessageHandler module path.
    *
-   * @return {String}
+   * @returns {string}
    */
   static get modulePath() {
     return "windowglobal";
@@ -35,7 +35,7 @@ export class WindowGlobalMessageHandler extends MessageHandler {
   /**
    * Returns the WindowGlobalMessageHandler type.
    *
-   * @return {String}
+   * @returns {string}
    */
   static get type() {
     return "WINDOW_GLOBAL";
@@ -48,7 +48,7 @@ export class WindowGlobalMessageHandler extends MessageHandler {
    * @param {BrowsingContext} context
    *     WindowGlobalMessageHandler contexts are expected to be
    *     BrowsingContexts.
-   * @return {String}
+   * @returns {string}
    *     The browsing context id.
    */
   static getIdFromContext(context) {

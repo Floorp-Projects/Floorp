@@ -58,7 +58,7 @@ capture.Format = {
  *     If true, read back a snapshot of the pixel data currently in the
  *     compositor/window. Defaults to false.
  *
- * @return {HTMLCanvasElement}
+ * @returns {HTMLCanvasElement}
  *     The canvas on which the selection from the window's framebuffer
  *     has been painted on.
  */
@@ -156,7 +156,7 @@ capture.canvas = async function(
  * @param {HTMLCanvasElement} canvas
  *     The canvas to encode.
  *
- * @return {string}
+ * @returns {string}
  *     A Base64 encoded string.
  */
 capture.toBase64 = function(canvas) {
@@ -170,7 +170,7 @@ capture.toBase64 = function(canvas) {
  * @param {HTMLCanvasElement} canvas
  *     The canvas to encode.
  *
- * @return {string}
+ * @returns {string}
  *     A hex digest of the SHA-256 hash of the base64 encoded string.
  */
 capture.toHash = function(canvas) {
@@ -185,7 +185,7 @@ capture.toHash = function(canvas) {
  * @param {ArrayBuffer} buffer
  *     The buffer containing the data to convert to hex.
  *
- * @return {string}
+ * @returns {string}
  *     A hex digest of the input buffer.
  */
 function hex(buffer) {

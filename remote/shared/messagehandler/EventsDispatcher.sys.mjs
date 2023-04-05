@@ -30,7 +30,7 @@ export class EventsDispatcher {
   #messageHandler;
 
   /**
-   * @typedef {Object} EventListenerInfo
+   * @typedef {object} EventListenerInfo
    * @property {ContextDescriptor} contextDescriptor
    *     The ContextDescriptor to which those callbacks are associated
    * @property {Set<Function>} callbacks
@@ -69,9 +69,9 @@ export class EventsDispatcher {
    *     Name of the event to unsubscribe from.
    * @param {ContextDescriptor} contextDescriptor
    *     Context descriptor for this event.
-   * @param {function} callback
+   * @param {Function} callback
    *     Event listener callback.
-   * @return {Promise}
+   * @returns {Promise}
    *     Promise which resolves when the event fully unsubscribed, including
    *     propagating the necessary session data.
    */
@@ -87,9 +87,9 @@ export class EventsDispatcher {
    *     Name of the event to subscribe to.
    * @param {ContextDescriptor} contextDescriptor
    *     Context descriptor for this event.
-   * @param {function} callback
+   * @param {Function} callback
    *     Event listener callback.
-   * @return {Promise}
+   * @returns {Promise}
    *     Promise which resolves when the event fully subscribed to, including
    *     propagating the necessary session data.
    */
@@ -107,7 +107,7 @@ export class EventsDispatcher {
    *     Name of the event to subscribe/unsubscribe to.
    * @param {ContextDescriptor} contextDescriptor
    *     Context descriptor for this event.
-   * @param {function} callback
+   * @param {Function} callback
    *     Event listener callback.
    * @param {boolean} enable
    *     True, if we need to subscribe to an event.
@@ -121,7 +121,7 @@ export class EventsDispatcher {
    * @param {Array<Subscription>} subscriptions
    *     The list of information to subscribe/unsubscribe to.
    *
-   * @return {Promise}
+   * @returns {Promise}
    *     Promise which resolves when the events fully subscribed/unsubscribed to,
    *     including propagating the necessary session data.
    */

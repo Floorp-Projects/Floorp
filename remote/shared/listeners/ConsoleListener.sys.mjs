@@ -35,7 +35,7 @@ XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
  * listener.stopListening();
  * ```
  *
- * @emits message
+ * @fires message
  *    The ConsoleListener emits "error", "warn" and "info" events, with the
  *    following object as payload:
  *      - {String} level - Importance, one of `info`, `warn`, `error`,
@@ -53,7 +53,7 @@ export class ConsoleListener {
   /**
    * Create a new ConsolerListener instance.
    *
-   * @param {Number} innerWindowId
+   * @param {number} innerWindowId
    *     The inner window id to filter the messages for.
    */
   constructor(innerWindowId) {

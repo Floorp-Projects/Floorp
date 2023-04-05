@@ -22,7 +22,7 @@ XPCOMUtils.defineLazyGetter(lazy, "sharedData", () => {
  * Returns a snapshot of the session data map, which is cloned from the
  * sessionDataMap singleton of SessionData.jsm.
  *
- *  @return {Map.<string, Array<SessionDataItem>>}
+ *  @returns {Map.<string, Array<SessionDataItem>>}
  *     Map of session id to arrays of SessionDataItems.
  */
 export const readSessionData = () =>

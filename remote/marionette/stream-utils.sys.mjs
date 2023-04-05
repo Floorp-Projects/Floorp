@@ -58,7 +58,7 @@ const BUFFER_SIZE = 0x8000;
  * @param {number} length
  *        Amount of data that needs to be copied.
  *
- * @return {Promise}
+ * @returns {Promise}
  *     Promise is resolved when copying completes or rejected if any
  *     (unexpected) errors occur.
  */
@@ -217,7 +217,7 @@ StreamCopier.prototype = {
  * @param {number} count
  *     Max number of characters to read while searching.
  *
- * @return {string}
+ * @returns {string}
  *     Collected data.  If the delimiter was found, this string will
  *     end with it.
  */

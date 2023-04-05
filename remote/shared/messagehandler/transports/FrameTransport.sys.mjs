@@ -45,7 +45,7 @@ export class FrameTransport {
    *
    * @param {Command} command
    *     The command to forward. See type definition in MessageHandler.js
-   * @return {Promise}
+   * @returns {Promise}
    *     Returns a promise that resolves with the result of the command after
    *     being processed by WINDOW_GLOBAL MessageHandlers.
    */
@@ -165,10 +165,10 @@ export class FrameTransport {
   /**
    * Get all browsing contexts, optionally matching the provided options.
    *
-   * @param {Object} options
-   * @param {String=} options.browserId
+   * @param {object} options
+   * @param {string=} options.browserId
    *    The id of the browser to filter the browsing contexts by (optional).
-   * @return {Array<BrowsingContext>}
+   * @returns {Array<BrowsingContext>}
    *    The browsing contexts matching the provided options or all browsing contexts
    *    if no options are provided.
    */

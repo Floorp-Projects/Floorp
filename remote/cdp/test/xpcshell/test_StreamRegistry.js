@@ -124,13 +124,13 @@ add_task(async function test_removeForInvalidHandle() {
  *
  * @param {string} contents
  *     Contents of the file.
- * @param {Object} options
+ * @param {object} options
  * @param {string=} options.path
  *     Path of the file. Defaults to the temporary directory.
  * @param {boolean=} options.remove
  *     If true, automatically remove the file after the test. Defaults to true.
  *
- * @return {Promise<Stream>}
+ * @returns {Promise<Stream>}
  */
 async function createFileStream(contents, options = {}) {
   let { path = null, remove = true } = options;

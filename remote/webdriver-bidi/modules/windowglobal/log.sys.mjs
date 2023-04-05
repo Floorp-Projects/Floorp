@@ -66,7 +66,7 @@ class LogModule extends Module {
    * @param {Array<StackFrame>=} stackTrace
    *     Stack frames to process.
    *
-   * @returns {Object=} Object, containing the list of frames as `callFrames`.
+   * @returns {object=} Object, containing the list of frames as `callFrames`.
    */
   #buildStackTrace(stackTrace) {
     if (stackTrace == undefined) {

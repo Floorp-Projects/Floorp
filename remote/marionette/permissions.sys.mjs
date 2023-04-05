@@ -16,7 +16,7 @@ export const permissions = {};
  * Set a permission's state.
  * Note: Currently just a shim to support testdriver's set_permission.
  *
- * @param {Object} descriptor
+ * @param {object} descriptor
  *     Descriptor with the `name` property.
  * @param {string} state
  *     State of the permission. It can be `granted`, `denied` or `prompt`.

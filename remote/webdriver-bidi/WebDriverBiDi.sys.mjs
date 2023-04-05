@@ -60,7 +60,7 @@ export class WebDriverBiDi {
   /**
    * Create a new WebDriver session.
    *
-   * @param {Object.<string, *>=} capabilities
+   * @param {Object<string, *>=} capabilities
    *     JSON Object containing any of the recognised capabilities as listed
    *     on the `WebDriverSession` class.
    *
@@ -68,7 +68,7 @@ export class WebDriverBiDi {
    *     Optional connection that is not yet accociated with a WebDriver
    *     session, and has to be associated with the new WebDriver session.
    *
-   * @return {Object<String, Capabilities>}
+   * @returns {Object<string, Capabilities>}
    *     Object containing the current session ID, and all its capabilities.
    *
    * @throws {SessionNotCreatedError}
@@ -149,7 +149,7 @@ export class WebDriverBiDi {
    *
    * See https://w3c.github.io/webdriver-bidi/#command-session-status
    *
-   * @return {Object}
+   * @returns {object}
    *     The readiness state.
    */
   getSessionReadinessStatus() {

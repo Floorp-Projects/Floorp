@@ -29,13 +29,13 @@ XPCOMUtils.defineLazyGetter(lazy, "unicodeConverter", () => {
  * instantiated for each incoming or outgoing packet.
  *
  * A complete Packet type should expose at least the following:
- *   * read(stream, scriptableStream)
+ *   read(stream, scriptableStream)
  *     Called when the input stream has data to read
- *   * write(stream)
+ *   write(stream)
  *     Called when the output stream is ready to write
- *   * get done()
+ *   get done()
  *     Returns true once the packet is done being read / written
- *   * destroy()
+ *   destroy()
  *     Called to clean up at the end of use
  */
 
@@ -74,7 +74,7 @@ export function Packet(transport) {
  * @param {DebuggerTransport} transport
  *     Transport instance that will own the packet.
  *
- * @return {Packet}
+ * @returns {Packet}
  *     Parsed packet of the matching type, or null if no types matched.
  */
 Packet.fromHeader = function(header, transport) {
@@ -131,7 +131,7 @@ export function JSONPacket(transport) {
  * @param {DebuggerTransport} transport
  *     Transport instance that will own the packet.
  *
- * @return {JSONPacket}
+ * @returns {JSONPacket}
  *     Parsed packet, or null if it's not a match.
  */
 JSONPacket.fromHeader = function(header, transport) {
@@ -260,7 +260,7 @@ export function BulkPacket(transport) {
  * @param {DebuggerTransport} transport
  *     Transport instance that will own the packet.
  *
- * @return {BulkPacket}
+ * @returns {BulkPacket}
  *     Parsed packet, or null if it's not a match.
  */
 BulkPacket.fromHeader = function(header, transport) {
@@ -393,6 +393,7 @@ BulkPacket.prototype.toString = function() {
 /**
  * RawPacket is used to test the transport's error handling of malformed
  * packets, by writing data directly onto the stream.
+ *
  * @param transport DebuggerTransport
  *        The transport instance that will own the packet.
  * @param data string

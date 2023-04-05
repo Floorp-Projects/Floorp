@@ -100,11 +100,11 @@ export class ModuleCache {
    * A command's method must be implemented in one of the classes returned by
    * getAllModuleClasses in order to be successfully handled.
    *
-   * @param {String} moduleName
+   * @param {string} moduleName
    *     The name of the module.
    * @param {Destination} destination
    *     The destination.
-   * @return {Array.<class<Module>=>}
+   * @returns {Array.<class<Module>=>}
    *     An array of Module classes.
    */
   getAllModuleClasses(moduleName, destination) {
@@ -132,12 +132,12 @@ export class ModuleCache {
    * will attempt to import the module file and create a new instance, which
    * will then be cached and returned for subsequent calls.
    *
-   * @param {String} moduleName
+   * @param {string} moduleName
    *     The name of the module which should implement the command.
    * @param {CommandDestination} destination
    *     The destination of the command for which we need to instantiate a
    *     module. See MessageHandler.jsm for the CommandDestination typedef.
-   * @return {Object=}
+   * @returns {object=}
    *     A module instance corresponding to the provided moduleName and
    *     destination, or null if it could not be instantiated.
    */
@@ -175,11 +175,11 @@ export class ModuleCache {
   /**
    * Check if the given module exists for the destination.
    *
-   * @param {String} moduleName
+   * @param {string} moduleName
    *     The name of the module.
    * @param {Destination} destination
    *     The destination.
-   * @returns {Boolean}
+   * @returns {boolean}
    *     True if the module exists.
    */
   hasModule(moduleName, destination) {

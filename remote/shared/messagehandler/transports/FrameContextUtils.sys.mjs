@@ -33,10 +33,10 @@ function isParentProcess(browsingContext) {
  *
  * @param {BrowsingContext} browsingContext
  *     The browsing context to check.
- * @param {Object=} options
- * @param {String=} options.browserId
+ * @param {object=} options
+ * @param {string=} options.browserId
  *    The id of the browser to filter the browsing contexts by (optional).
- * @return {Boolean}
+ * @returns {boolean}
  *     True if the browsing context is valid, false otherwise.
  */
 export function isBrowsingContextCompatible(browsingContext, options = {}) {

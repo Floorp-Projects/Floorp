@@ -19,7 +19,7 @@ export class Log {
    * Get a logger instance. For each provided type, a dedicated logger instance
    * will be returned, but all loggers are relying on the same preference.
    *
-   * @param {String} type
+   * @param {string} type
    *     The type of logger to use. Protocol-specific modules should use the
    *     corresponding logger type. Eg. files under /marionette should use
    *     Log.TYPES.MARIONETTE.

@@ -34,9 +34,9 @@ export class Domain {
    *
    * This can only be called from parent domains managed by a TabSession.
    *
-   * @param {String} method
+   * @param {string} method
    *        Name of the method to call on the child domain.
-   * @param {Object} params
+   * @param {object} params
    *        Optional parameters. Must be serializable.
    */
   executeInChild(method, params) {

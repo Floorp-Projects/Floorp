@@ -58,7 +58,7 @@ export class MobileTabBrowser {
    *
    * @param url URL to load within the newly opended tab.
    *
-   * @return {Promise<Tab>} The created tab.
+   * @returns {Promise<Tab>} The created tab.
    * @throws {Error} Throws an error if the tab cannot be created.
    */
   addTab(url) {

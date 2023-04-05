@@ -62,26 +62,26 @@ const PACKET_HEADER_MAX = 200;
  *
  * - onBulkPacket(packet) - called when we have switched to bulk packet
  *   receiving mode. |packet| is an object containing:
- *   * actor:  Name of actor that will receive the packet
- *   * type:   Name of actor's method that should be called on receipt
- *   * length: Size of the data to be read
- *   * stream: This input stream should only be used directly if you
+ *   actor:  Name of actor that will receive the packet
+ *   type:   Name of actor's method that should be called on receipt
+ *   length: Size of the data to be read
+ *   stream: This input stream should only be used directly if you
  *             can ensure that you will read exactly |length| bytes and
  *             will not close the stream when reading is complete
- *   * done:   If you use the stream directly (instead of |copyTo|
+ *   done:   If you use the stream directly (instead of |copyTo|
  *             below), you must signal completion by resolving/rejecting
  *             this deferred.  If it's rejected, the transport will
  *             be closed.  If an Error is supplied as a rejection value,
  *             it will be logged via |dump|.  If you do use |copyTo|,
  *             resolving is taken care of for you when copying completes.
- *   * copyTo: A helper function for getting your data out of the
+ *   copyTo: A helper function for getting your data out of the
  *             stream that meets the stream handling requirements above,
  *             and has the following signature:
  *
  *             @param nsIAsyncOutputStream {output}
  *                 The stream to copy to.
  *
- *             @return {Promise}
+ *             @returns {Promise}
  *                 The promise is resolved when copying completes or
  *                 rejected if any (unexpected) errors occur.  This object
  *                 also emits "progress" events for each chunk that is
@@ -148,7 +148,7 @@ DebuggerTransport.prototype = {
    * will continue to be used by this transport afterwards.  Most users
    * should instead use the provided |copyFrom| function instead.
    *
-   * @param {Object} header
+   * @param {object} header
    *     This is modeled after the format of JSON packets above, but does
    *     not actually contain the data, but is instead just a routing
    *     header:
@@ -157,7 +157,7 @@ DebuggerTransport.prototype = {
    *       - type:   Name of actor's method that should be called on receipt
    *       - length: Size of the data to be sent
    *
-   * @return {Promise}
+   * @returns {Promise}
    *     The promise will be resolved when you are allowed to write to
    *     the stream with an object containing:
    *
@@ -180,7 +180,7 @@ DebuggerTransport.prototype = {
    *                   @param {nsIAsyncInputStream} input
    *                       The stream to copy from.
    *
-   *                   @return {Promise}
+   *                   @returns {Promise}
    *                       The promise is resolved when copying completes
    *                       or rejected if any (unexpected) errors occur.
    *                       This object also emits "progress" events for
@@ -382,7 +382,7 @@ DebuggerTransport.prototype = {
    * its data is ready for delivery by calling one of this transport's
    * _on*Ready methods (see ./packets.js and the _on*Ready methods below).
    *
-   * @return {boolean}
+   * @returns {boolean}
    *     Whether incoming stream processing should continue for any
    *     remaining data.
    */
@@ -442,7 +442,7 @@ DebuggerTransport.prototype = {
    * up a complete packet header (which terminates with ":").  We'll only
    * read up to PACKET_HEADER_MAX characters.
    *
-   * @return {boolean}
+   * @returns {boolean}
    *     True if we now have a complete header.
    */
   _readHeader() {

@@ -29,7 +29,7 @@ const OBSERVER_TOPIC_SET_EMBEDDER = "browsing-context-did-set-embedder";
  * };
  * ```
  *
- * @emits message
+ * @fires message
  *    The BrowsingContextListener emits "attached" and "discarded" events,
  *    with the following object as payload:
  *      - {BrowsingContext} browsingContext

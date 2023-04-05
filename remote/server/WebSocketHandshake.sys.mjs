@@ -105,7 +105,7 @@ function writeHttpResponse(output, headers, body = "") {
  *
  * @param {nsIURI} uri
  *     The URI to check.
- * @return {boolean}
+ * @returns {boolean}
  */
 function isIPAddress(uri) {
   try {

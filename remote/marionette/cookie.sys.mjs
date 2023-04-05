@@ -26,7 +26,7 @@ export const cookie = {
 /**
  * @name Cookie
  *
- * @return {Object.<string, (number|boolean|string)>
+ * @returns {Object.<string, (number|boolean|string)>
  */
 
 /**
@@ -36,7 +36,7 @@ export const cookie = {
  * will produce the errors expected by WebDriver if the input is
  * not valid.
  *
- * @param {Object.<string, (number|boolean|string)>} json
+ * @param {Object<string, (number | boolean | string)>} json
  *     Cookie to be deserialised. ``name`` and ``value`` are required
  *     fields which must be strings.  The ``path`` and ``domain`` fields
  *     are optional, but must be a string if provided.  The ``secure``,
@@ -44,7 +44,7 @@ export const cookie = {
  *     Likewise, the ``expiry`` field is optional but must be
  *     unsigned integer.
  *
- * @return {Cookie}
+ * @returns {Cookie}
  *     Valid cookie object.
  *
  * @throws {InvalidArgumentError}
@@ -252,7 +252,7 @@ cookie.remove = function(toDelete) {
  *     Optionally filter the cookies for ``host`` for the specific path.
  *     Defaults to ``/``, meaning all cookies for ``host`` are included.
  *
- * @return {Iterable.<Cookie>}
+ * @returns {Iterable.<Cookie>}
  *     Iterator.
  */
 cookie.iter = function*(host, currentPath = "/") {

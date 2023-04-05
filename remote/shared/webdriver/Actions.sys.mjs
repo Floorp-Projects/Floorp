@@ -101,7 +101,7 @@ action.State = class {
    * Get the state for a given input source.
    *
    * @param {string} id Input source id.
-   * @return {InputSource} Input source state.
+   * @returns {InputSource} Input source state.
    */
   getInputSource(id) {
     return this.inputStateMap.get(id);
@@ -127,7 +127,7 @@ action.State = class {
    * Iterate over all input states of a given type
    *
    * @param {string} type Input source type name (e.g. "pointer").
-   * @return {Iterator} Iterator over [id, input source].
+   * @returns {Iterator} Iterator over [id, input source].
    */
   *inputSourcesByType(type) {
     for (const [id, inputSource] of this.inputStateMap) {
@@ -146,7 +146,7 @@ action.State = class {
    *
    * @param {string} id Pointer id.
    * @param {string} id Pointer type.
-   * @return {number} Numerical pointer id.
+   * @returns {number} Numerical pointer id.
    */
   getPointerId(id, type) {
     let pointerId = this.pointerIdMap.get(id);
@@ -192,7 +192,7 @@ class InputSource {
    * @param {State} state Actions state.
    * @param {Sequence} actionSequence Actions for a specific input source.
    *
-   * @return {InputSource}
+   * @returns {InputSource}
    *     An {@link InputSource} object for the type of the
    *     {@link actionSequence}.
    *
@@ -284,7 +284,7 @@ class KeyInputSource extends InputSource {
    * @param {string} key
    *     Normalized key value.
    *
-   * @return {boolean}
+   * @returns {boolean}
    *     True if |key| is in set of pressed keys.
    */
   isPressed(key) {
@@ -297,7 +297,7 @@ class KeyInputSource extends InputSource {
    * @param {string} key
    *     Normalized key value.
    *
-   * @return {boolean}
+   * @returns {boolean}
    *     True if |key| is in list of pressed keys.
    */
   press(key) {
@@ -310,7 +310,7 @@ class KeyInputSource extends InputSource {
    * @param {string} key
    *     Normalized key value.
    *
-   * @return {boolean}
+   * @returns {boolean}
    *     True if |key| was present before removal, false otherwise.
    */
   release(key) {
@@ -342,7 +342,7 @@ class PointerInputSource extends InputSource {
    * @param {number} button
    *     Positive integer that refers to a mouse button.
    *
-   * @return {boolean}
+   * @returns {boolean}
    *     True if |button| is in set of pressed buttons.
    */
   isPressed(button) {
@@ -356,7 +356,7 @@ class PointerInputSource extends InputSource {
    * @param {number} button
    *     Positive integer that refers to a mouse button.
    *
-   * @return {Set}
+   * @returns {Set}
    *     Set of pressed buttons.
    */
   press(button) {
@@ -370,7 +370,7 @@ class PointerInputSource extends InputSource {
    * @param {number} button
    *     A positive integer that refers to a mouse button.
    *
-   * @return {boolean}
+   * @returns {boolean}
    *     True if |button| was present before removals, false otherwise.
    */
   release(button) {
@@ -446,7 +446,7 @@ class Origin {
   /**
    * @param {Element|string=} origin - Type of orgin, one of "viewport", "pointer", element or undefined.
    *
-   * @return {Origin} - An origin object representing the origin.
+   * @returns {Origin} - An origin object representing the origin.
    *
    * @throws {InvalidArgumentError}
    *     If <code>origin</code> isn't a valid origin.
@@ -539,7 +539,7 @@ class Action {
    * @param {InputSource} inputSource - State of the current input device.
    * @param {number} tickDuration - Length of the current tick, in ms.
    * @param {WindowProxy} win - Current window global.
-   * @return {Promise} - Promise that is resolved once the action is complete.
+   * @returns {Promise} - Promise that is resolved once the action is complete.
    */
   dispatch(state, inputSource, tickDuration, win) {
     throw new Error(
@@ -550,9 +550,9 @@ class Action {
   /**
    * @param {string} type - Input source type.
    * @param {string} type - Input source id.
-   * @param {Object} actionItem - Object representing a single action.
+   * @param {object} actionItem - Object representing a single action.
    *
-   * @return {Action} - An action that can be dispatched.
+   * @returns {Action} - An action that can be dispatched.
    *
    * @throws {InvalidArgumentError}
    *     If any <code>actionSequence</code> or <code>actionItem</code>
@@ -589,7 +589,7 @@ class NullAction extends Action {
  * Action that waits for a given duration.
  *
  * @param {string} id - Input source ID.
- * @param {Object} options - Named arguments.
+ * @param {object} options - Named arguments.
  * @param {number} options.duration - Time to pause, in ms.
  */
 class PauseAction extends NullAction {
@@ -609,7 +609,7 @@ class PauseAction extends NullAction {
    * @param {InputSource} inputSource - State of the current input device.
    * @param {number} tickDuration - Length of the current tick, in ms.
    * @param {WindowProxy} win - Current window global.
-   * @return {Promise} - Promise that is resolved once the action is complete.
+   * @returns {Promise} - Promise that is resolved once the action is complete.
    */
   dispatch(state, inputSource, tickDuration, win) {
     const ms = this.duration ?? tickDuration;
@@ -635,7 +635,7 @@ class PauseAction extends NullAction {
  * Action associated with a keyboard input device
  *
  * @param {string} id - Input source ID.
- * @param {Object} options - Named arguments.
+ * @param {object} options - Named arguments.
  * @param {string} options.value - Key character.
  */
 class KeyAction extends Action {
@@ -736,7 +736,7 @@ class KeyUpAction extends KeyAction {
  * Action associated with a pointer input device
  *
  * @param {string} id - Input source ID.
- * @param {Object} options - Named arguments.
+ * @param {object} options - Named arguments.
  * @param {number=} options.width - Pointer width in pixels.
  * @param {number=} options.height - Pointer height in pixels.
  * @param {number=} options.pressure - Pointer pressure.
@@ -777,7 +777,7 @@ class PointerAction extends Action {
   /**
    * Validate properties common to all pointer types
    *
-   * @param {Object} actionItem - Object representing a single action.
+   * @param {object} actionItem - Object representing a single action.
    */
   static validateCommon(actionItem) {
     const {
@@ -872,7 +872,7 @@ class PointerAction extends Action {
  * Action associated with a pointer input device being depressed.
  *
  * @param {string} id - Input source ID.
- * @param {Object} options - Named arguments.
+ * @param {object} options - Named arguments.
  * @param {number} options.button - Button being pressed. For devices without buttons (e.g. touch), this should be 0.
  * @param {number=} options.width - Pointer width in pixels.
  * @param {number=} options.height - Pointer height in pixels.
@@ -927,7 +927,7 @@ class PointerDownAction extends PointerAction {
  * Action associated with a pointer input device being released.
  *
  * @param {string} id - Input source ID.
- * @param {Object} options - Named arguments.
+ * @param {object} options - Named arguments.
  * @param {number} options.button - Button being released. For devices without buttons (e.g. touch), this should be 0.
  * @param {number=} options.width - Pointer width in pixels.
  * @param {number=} options.height - Pointer height in pixels.
@@ -981,7 +981,7 @@ class PointerUpAction extends PointerAction {
  * Action associated with a pointer input device being moved.
  *
  * @param {string} id - Input source ID.
- * @param {Object} options - Named arguments.
+ * @param {object} options - Named arguments.
  * @param {number=} options.width - Pointer width in pixels.
  * @param {number=} options.height - Pointer height in pixels.
  * @param {number=} options.pressure - Pointer pressure.
@@ -1035,7 +1035,7 @@ class PointerMoveAction extends PointerAction {
    *
    * @param {State} state - Actions state.
    * @param {InputSource} inputSource - State of the current input device.
-   * @param {Array<Array<Number>>} targets - Array of [x, y] arrays
+   * @param {Array<Array<number>>} targets - Array of [x, y] arrays
    * specifying the viewport coordinates to move to.
    * @param {WindowProxy} win - Current window global.
    */
@@ -1262,7 +1262,7 @@ class TouchActionGroup {
    *     with {@link Action.dispatch}.
    * @param {number} tickDuration - Length of the current tick, in ms.
    * @param {WindowProxy} win - Current window global.
-   * @return {Promise} - Promise that is resolved once the action is complete.
+   * @returns {Promise} - Promise that is resolved once the action is complete.
    */
   dispatch(state, inputSource, tickDuration, win) {
     throw new Error(
@@ -1642,7 +1642,7 @@ class Pointer {
   /**
    * @param {number} pointerId - Numeric pointer id.
    * @param {string} pointerType - Pointer type.
-   * @return {Pointer} - The pointer class for {@link pointerType}
+   * @returns {Pointer} - The pointer class for {@link pointerType}
    *
    * @throws {InvalidArgumentError} - If {@link pointerType} is not a valid pointer type.
    */
@@ -1754,7 +1754,7 @@ action.Chain = class extends Array {
    *
    * @param {State} state - Actions state.
    * @param {WindowProxy} win - Current window global.
-   * @return {Promise} - Promise that is resolved once the action
+   * @returns {Promise} - Promise that is resolved once the action
    * chain is complete.
    */
   dispatch(state, win) {
@@ -1769,9 +1769,9 @@ action.Chain = class extends Array {
   }
 
   /**
-   * @param {Array.<Object>} actions - Array of objects that each
+   * @param {Array.<object>} actions - Array of objects that each
    * represent an action sequence.
-   * @return {action.Chain} - Object that allows dispatching a chain
+   * @returns {action.Chain} - Object that allows dispatching a chain
    * of actions.
    * @throws {InvalidArgumentError} - If actions doesn't correspond to
    * a valid action chain.
@@ -1804,7 +1804,7 @@ class TickActions extends Array {
   /**
    * Tick duration in milliseconds.
    *
-   * @return {number} - Longest action duration in |tickActions| if any, or 0.
+   * @returns {number} - Longest action duration in |tickActions| if any, or 0.
    */
   getDuration() {
     let max = 0;
@@ -1830,7 +1830,7 @@ class TickActions extends Array {
    * @param {State} state - Actions state.
    * @param {WindowProxy} win - Current window global.
    *
-   * @return {Promise} - Promise that resolves when tick is complete.
+   * @returns {Promise} - Promise that resolves when tick is complete.
    */
   dispatch(state, win) {
     const tickDuration = this.getDuration();
@@ -1849,7 +1849,7 @@ class TickActions extends Array {
    * actions into {@link TouchActionGroup} instances.
    *
    * @param {State} state - Actions state.
-   * @return {Array.<Array.<InputSource?,Action|TouchActionGroup>>}
+   * @returns {Array.<Array.<InputSource?,Action|TouchActionGroup>>}
    *    Array of pairs. For ungrouped actions each element is
    *    [InputSource, Action] For touch actions there are multiple
    *    pointers handled at once, so the first item of the array is
@@ -1894,9 +1894,9 @@ class Sequence extends Array {
 
   /**
    * @param {State} state - Actions state.
-   * @param {Object} actionSequence
+   * @param {object} actionSequence
    *     Protocol representation of the actions for a specific input source.
-   * @return {Array.<Array>} - Array of [InputSource?,Action|TouchActionGroup]
+   * @returns {Array.<Array>} - Array of [InputSource?,Action|TouchActionGroup]
    */
   static fromJSON(state, actionSequence) {
     // used here to validate 'type' in addition to InputSource type below
@@ -2020,7 +2020,7 @@ class MouseEventData extends PointerEventData {
 /**
  * Representation of a wheel scroll event
  *
- * @param {Object} options - Named arguments.
+ * @param {object} options - Named arguments.
  * @param {number} options.deltaX - Scroll delta X.
  * @param {number} options.deltaY - Scroll delta Y.
  * @param {number} options.deltaY - Scroll delta Z (current always 0).

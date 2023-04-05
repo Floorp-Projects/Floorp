@@ -392,7 +392,7 @@ function clearResettableElement(el) {
  * @param {Element} el
  *     Element that is expected to receive the click.
  *
- * @return {Promise}
+ * @returns {Promise}
  *     Promise is resolved once <var>el</var> has been clicked
  *     (its <code>click</code> event fires), the document is unloaded,
  *     or a 500 ms timeout is reached.
@@ -469,7 +469,7 @@ interaction.moveCaretToEnd = function(el) {
  * @param {Element} el
  *     Element to check.
  *
- * @return {boolean}
+ * @returns {boolean}
  *     True if element is keyboard-interactable, false otherwise.
  */
 interaction.isKeyboardInteractable = function(el) {
@@ -688,7 +688,7 @@ async function legacySendKeysToElement(el, value, a11y) {
  * @param {boolean=} [strict=false] strict
  *     Enforce strict accessibility tests.
  *
- * @return {boolean}
+ * @returns {boolean}
  *     True if element is displayed, false otherwise.
  */
 interaction.isElementDisplayed = function(el, strict = false) {
@@ -708,7 +708,7 @@ interaction.isElementDisplayed = function(el, strict = false) {
  * @param {DOMElement|XULElement} el
  *     Element to test if is enabled.
  *
- * @return {boolean}
+ * @returns {boolean}
  *     True if enabled, false otherwise.
  */
 interaction.isElementEnabled = function(el, strict = false) {
@@ -752,7 +752,7 @@ interaction.isElementEnabled = function(el, strict = false) {
  * @param {boolean=} [strict=false] strict
  *     Enforce strict accessibility tests.
  *
- * @return {boolean}
+ * @returns {boolean}
  *     True if element is selected, false otherwise.
  *
  * @throws {ElementNotAccessibleError}

@@ -17,14 +17,14 @@ XPCOMUtils.defineLazyGetter(lazy, "dbg", () => {
 
 /**
  * @typedef {string} RealmType
- **/
+ */
 
 /**
  * Enum of realm types.
  *
  * @readonly
  * @enum {RealmType}
- **/
+ */
 export const RealmType = {
   AudioWorklet: "audio-worklet",
   DedicatedWorker: "dedicated-worker",
@@ -71,7 +71,7 @@ export class Realm {
   /**
    * Get the unique identifier of the realm instance.
    *
-   * @return {string} The unique identifier.
+   * @returns {string} The unique identifier.
    */
   get id() {
     return this.#id;
@@ -89,10 +89,10 @@ export class Realm {
   /**
    * Ensure the provided object can be used within this realm.
 
-   * @param {Object} object
+   * @param {object} object
    *     Any non-primitive object.
 
-   * @return {Object}
+   * @returns {object}
    *     An object usable in the current realm.
    */
   cloneIntoRealm(obj) {
@@ -113,9 +113,9 @@ export class Realm {
    * Get a new unique handle for the provided object, creating a strong
    * reference on the object.
    *
-   * @param {Object} object
+   * @param {object} object
    *     Any non-primitive object.
-   * @return {string} The unique handle created for this strong reference.
+   * @returns {string} The unique handle created for this strong reference.
    */
   getHandleForObject(object) {
     const handle = getUUID();
@@ -126,7 +126,7 @@ export class Realm {
   /**
    * Get the basic realm information.
    *
-   * @return {BaseRealmInfo}
+   * @returns {BaseRealmInfo}
    */
   getInfo() {
     return {
@@ -140,7 +140,7 @@ export class Realm {
    *
    * @param {string} handle
    *     The unique handle of an object reference tracked in this realm.
-   * @return {Object} object
+   * @returns {object} object
    *     Any non-primitive object.
    */
   getObjectForHandle(handle) {
@@ -163,7 +163,7 @@ export class WindowRealm extends Realm {
    *
    * @param {Window} window
    *     The window global to wrap.
-   * @param {Object} options
+   * @param {object} options
    * @param {string=} options.sandboxName
    *     Name of the sandbox to create if specified. Defaults to `null`.
    */
@@ -225,10 +225,10 @@ export class WindowRealm extends Realm {
    * Clone the provided object into the scope of this Realm (either a window
    * global, or a sandbox).
    *
-   * @param {Object} obj
+   * @param {object} obj
    *     Any non-primitive object.
    *
-   * @return {Object}
+   * @returns {object}
    *     The cloned object.
    */
   cloneIntoRealm(obj) {
@@ -241,7 +241,7 @@ export class WindowRealm extends Realm {
    * @param {string} expression
    *     The expression to evaluate.
    *
-   * @return {Object}
+   * @returns {object}
    *     - evaluationStatus {EvaluationStatus} One of "normal", "throw".
    *     - exceptionDetails {ExceptionDetails=} the details of the exception if
    *       the evaluation status was "throw".
@@ -259,12 +259,12 @@ export class WindowRealm extends Realm {
    *
    * @param {string} functionDeclaration
    *     The body of the function to call.
-   * @param {Array<Object>} functionArguments
+   * @param {Array<object>} functionArguments
    *     The arguments to pass to the function call.
-   * @param {Object} thisParameter
+   * @param {object} thisParameter
    *     The value of the `this` keyword for the function call.
    *
-   * @return {Object}
+   * @returns {object}
    *     - evaluationStatus {EvaluationStatus} One of "normal", "throw".
    *     - exceptionDetails {ExceptionDetails=} the details of the exception if
    *       the evaluation status was "throw".
@@ -298,7 +298,7 @@ export class WindowRealm extends Realm {
   /**
    * Get the realm information.
    *
-   * @return {Object}
+   * @returns {object}
    *     - context {BrowsingContext} The browsing context, associated with the realm.
    *     - id {string} The realm unique identifier.
    *     - origin {string} The serialization of an origin.

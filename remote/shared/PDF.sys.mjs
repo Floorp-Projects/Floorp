@@ -142,7 +142,7 @@ print.getPrintSettings = function(settings) {
  *     Page ranges to print, e.g., ['1-5', '8', '11-13'].
  *     Defaults to the empty string, which means print all pages.
  *
- * @return {Array.<number>}
+ * @returns {Array.<number>}
  *     Even-length array containing page range limits
  */
 function parseRanges(ranges) {

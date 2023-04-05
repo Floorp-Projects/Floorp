@@ -29,7 +29,7 @@ export class NetworkEventRecord {
 
   /**
    *
-   * @param {Object} networkEvent
+   * @param {object} networkEvent
    *     The initial network event information (see createNetworkEvent() in
    *     NetworkUtils.sys.mjs).
    * @param {nsIChannel} channel
@@ -95,7 +95,7 @@ export class NetworkEventRecord {
    *
    * Required API for a NetworkObserver event owner.
    *
-   * @param {Object} postData
+   * @param {object} postData
    *     The request POST data.
    */
   addRequestPostData(postData) {
@@ -149,7 +149,7 @@ export class NetworkEventRecord {
    *
    * Not used for RemoteAgent.
    *
-   * @param {Object} info
+   * @param {object} info
    *     The object containing security information.
    * @param {boolean} isRacing
    *     True if the corresponding channel raced the cache and network requests.
@@ -165,9 +165,9 @@ export class NetworkEventRecord {
    *
    * @param {number} total
    *     The total time for the request.
-   * @param {Object} timings
+   * @param {object} timings
    *     The har-like timings.
-   * @param {Object} offsets
+   * @param {object} offsets
    *     The har-like timings, but as offset from the request start.
    * @param {Array} serverTimings
    *     The server timings.
@@ -181,7 +181,7 @@ export class NetworkEventRecord {
    *
    * Not used for RemoteAgent.
    *
-   * @param {Object} options
+   * @param {object} options
    *     An object which contains a single responseCache property.
    */
   addResponseCache(options) {}
@@ -191,9 +191,9 @@ export class NetworkEventRecord {
    *
    * Required API for a NetworkObserver event owner.
    *
-   * @param {Object} response
+   * @param {object} response
    *     An object which represents the response content.
-   * @param {Object} responseInfo
+   * @param {object} responseInfo
    *     Additional meta data about the response.
    */
   addResponseContent(response, responseInfo) {
