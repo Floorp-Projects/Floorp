@@ -33,6 +33,7 @@ import:
               DAY_3_AFTER_INSTALL: days_since_install == 3
               DAY_4_AFTER_INSTALL: days_since_install == 4
               DAY_5_AFTER_INSTALL: days_since_install == 5
+              MORE_THAN_24H_SINCE_INSTALLED_OR_UPDATED: days_since_update >= 1
 
               # Using custom attributes for the browser
               I_AM_DEFAULT_BROWSER: "is_default_browser"
@@ -86,7 +87,7 @@ import:
                 max-display-count: 5
               SURVEY:
                 priority: 55
-                max-display-count: 10
+                max-display-count: 1
               PERSISTENT:
                 priority: 50
                 max-display-count: 20

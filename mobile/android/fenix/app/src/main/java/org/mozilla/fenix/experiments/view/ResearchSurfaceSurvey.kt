@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.experiments.view
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,12 +16,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -45,6 +53,36 @@ private const val FULLSCREEN_HEIGHT = 0.8f
 private const val BUTTON_WIDTH = 0.9f
 
 /**
+ * Values used in slide in animation.
+ * These values were confirmed through demo builds and UX review.
+ */
+private const val INITIAL_OFFSET = 1000
+private const val ANIMATION_DURATION_MS = 500
+
+@Composable
+private fun SlideInFromBottomAnimation(
+    content: @Composable () -> Unit,
+) {
+    var offsetY by remember { mutableStateOf(INITIAL_OFFSET) }
+    val offsetState by animateDpAsState(
+        targetValue = offsetY.dp,
+        animationSpec = tween(durationMillis = ANIMATION_DURATION_MS),
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .offset(y = offsetState),
+    ) {
+        content()
+    }
+
+    LaunchedEffect(Unit) {
+        offsetY = 0
+    }
+}
+
+/**
  * A full screen for displaying a research surface.
  *
  * @param messageText The research surface message text to be displayed.
@@ -61,50 +99,52 @@ fun ResearchSurfaceSurvey(
     onDismiss: () -> Unit,
     onAccept: () -> Unit,
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .navigationBarsPadding(),
-    ) {
-        Column(
+    SlideInFromBottomAnimation {
+        Box(
             modifier = Modifier
-                .fillMaxHeight(FULLSCREEN_HEIGHT)
-                .align(Alignment.Center)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween,
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding(),
         ) {
-            Spacer(Modifier)
             Column(
-                modifier = Modifier.padding(horizontal = 16.dp),
+                modifier = Modifier
+                    .fillMaxHeight(FULLSCREEN_HEIGHT)
+                    .align(Alignment.Center)
+                    .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween,
             ) {
-                Image(
-                    painter = painterResource(R.drawable.ic_firefox),
-                    contentDescription = null,
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = messageText,
-                    color = FirefoxTheme.colors.textPrimary,
-                    textAlign = TextAlign.Center,
-                    style = FirefoxTheme.typography.headline6,
-                )
-            }
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth(BUTTON_WIDTH),
-            ) {
-                PrimaryButton(
-                    text = onAcceptButtonText,
-                    onClick = onAccept,
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                SecondaryButton(
-                    text = onDismissButtonText,
-                    onClick = onDismiss,
-                )
+                Spacer(Modifier)
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.ic_firefox),
+                        contentDescription = null,
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = messageText,
+                        color = FirefoxTheme.colors.textPrimary,
+                        textAlign = TextAlign.Center,
+                        style = FirefoxTheme.typography.headline6,
+                    )
+                }
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth(BUTTON_WIDTH),
+                ) {
+                    PrimaryButton(
+                        text = onAcceptButtonText,
+                        onClick = onAccept,
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    SecondaryButton(
+                        text = onDismissButtonText,
+                        onClick = onDismiss,
+                    )
+                }
             }
         }
     }
