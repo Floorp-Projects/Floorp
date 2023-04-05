@@ -130,3 +130,19 @@ extensions.apis.dnr:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1803363#c11
     data_sensitivity:
       - technical
+
+  evaluate_rules_time:
+    type: timing_distribution
+    time_unit: millisecond
+    expires: 120
+    description: |
+      Amount of time it takes to evaluate DNR rules for one network request.
+    lifetime: application
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1803363/
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1803363#c11
+    data_sensitivity:
+      - technical

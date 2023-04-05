@@ -1841,8 +1841,17 @@ const NetworkIntegration = {
     }
     let matchedRules;
     if (ruleManagers.length) {
-      const request = RequestDetails.fromChannelWrapper(channel);
-      matchedRules = RequestEvaluator.evaluateRequest(request, ruleManagers);
+      const evaluateRulesTimerId = Glean.extensionsApisDnr.evaluateRulesTime.start();
+      try {
+        const request = RequestDetails.fromChannelWrapper(channel);
+        matchedRules = RequestEvaluator.evaluateRequest(request, ruleManagers);
+      } finally {
+        if (evaluateRulesTimerId !== undefined) {
+          Glean.extensionsApisDnr.evaluateRulesTime.stopAndAccumulate(
+            evaluateRulesTimerId
+          );
+        }
+      }
     }
     // Cache for later. In case of redirects, _dnrMatchedRules may exist for
     // the pre-redirect HTTP channel, and is overwritten here again.

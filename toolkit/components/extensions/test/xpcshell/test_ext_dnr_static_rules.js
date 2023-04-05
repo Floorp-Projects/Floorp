@@ -18,6 +18,12 @@ Services.scriptloader.loadSubScript(
   this
 );
 
+const server = createHttpServer({ hosts: ["example.com"] });
+server.registerPathHandler("/", (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.write("response from server");
+});
+
 function backgroundWithDNRAPICallHandlers() {
   browser.test.onMessage.addListener(async (msg, ...args) => {
     let result;
@@ -1617,6 +1623,62 @@ add_task(async function test_static_rules_telemetry() {
     expectedValidateRulesTimeSamples,
     "no new validation should be hit after disabling ruleset1"
   );
+
+  info("Verify telemetry recorded on rules evaluation");
+  extension.sendMessage("updateEnabledRulesets", {
+    enableRulesetIds: ["ruleset1"],
+  });
+  await extension.awaitMessage("updateEnabledRulesets:done");
+  await assertDNRGetEnabledRulesets(extension, ["ruleset1", "ruleset2"]);
+
+  assertDNRTelemetryMetricsNoSamples(
+    ["evaluateRulesTime"],
+    "before any request have been intercepted"
+  );
+
+  Assert.equal(
+    await fetch("http://example.com/").then(res => res.text()),
+    "response from server",
+    "DNR should not block system requests"
+  );
+
+  assertDNRTelemetryMetricsNoSamples(
+    ["evaluateRulesTime"],
+    "after restricted request have been intercepted (but no rules evaluated)"
+  );
+
+  const page = await ExtensionTestUtils.loadContentPage("http://example.com");
+
+  // Expect one sample recorded on evaluating rules for the
+  // top level navigation.
+  let expectedEvaluateRulesTimeSamples = 1;
+  assertDNRTelemetryMetricsSamplesCount(
+    ["evaluateRulesTime"],
+    expectedEvaluateRulesTimeSamples,
+    "evaluateRulesTime should be collected after evaluated rulesets"
+  );
+
+  Assert.equal(
+    await page.spawn([], () => {
+      return this.content.fetch("http://example.com/").then(
+        res => res.text(),
+        err => err.message
+      );
+    }),
+    "NetworkError when attempting to fetch resource.",
+    "DNR should have blocked test request to example.com"
+  );
+
+  // Expect one new sample reported on evaluating rules for the
+  // top level navigation.
+  expectedEvaluateRulesTimeSamples += 1;
+  assertDNRTelemetryMetricsSamplesCount(
+    ["evaluateRulesTime"],
+    expectedEvaluateRulesTimeSamples,
+    "evaluateRulesTime should be collected after evaluated rulesets"
+  );
+
+  await page.close();
 
   await extension.unload();
 });
