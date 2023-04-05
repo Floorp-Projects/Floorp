@@ -4003,6 +4003,114 @@ bool jit::EliminateRedundantShapeGuards(MIRGraph& graph) {
   return true;
 }
 
+static bool TryEliminateGCBarriersForAllocation(TempAllocator& alloc,
+                                                MInstruction* allocation) {
+  MOZ_ASSERT(allocation->type() == MIRType::Object);
+
+  JitSpew(JitSpew_RedundantGCBarriers, "Analyzing allocation %s",
+          allocation->opName());
+
+  MBasicBlock* block = allocation->block();
+  MInstructionIterator insIter(block->begin(allocation));
+
+  // Skip `allocation`.
+  MOZ_ASSERT(*insIter == allocation);
+  insIter++;
+
+  // Try to optimize the other instructions in the block.
+  while (insIter != block->end()) {
+    MInstruction* ins = *insIter;
+    insIter++;
+    switch (ins->op()) {
+      case MDefinition::Opcode::Constant:
+      case MDefinition::Opcode::Box:
+      case MDefinition::Opcode::Unbox:
+      case MDefinition::Opcode::AssertCanElidePostWriteBarrier:
+        // These instructions can't trigger GC or affect this analysis in other
+        // ways.
+        break;
+      case MDefinition::Opcode::StoreFixedSlot: {
+        auto* store = ins->toStoreFixedSlot();
+        if (store->object() != allocation) {
+          JitSpew(JitSpew_RedundantGCBarriers,
+                  "Stopped at StoreFixedSlot for other object");
+          return true;
+        }
+        store->setNeedsBarrier(false);
+        JitSpew(JitSpew_RedundantGCBarriers, "Elided StoreFixedSlot barrier");
+        break;
+      }
+      case MDefinition::Opcode::PostWriteBarrier: {
+        auto* barrier = ins->toPostWriteBarrier();
+        if (barrier->object() != allocation) {
+          JitSpew(JitSpew_RedundantGCBarriers,
+                  "Stopped at PostWriteBarrier for other object");
+          return true;
+        }
+#ifdef DEBUG
+        if (!alloc.ensureBallast()) {
+          return false;
+        }
+        MDefinition* value = barrier->value();
+        if (value->type() != MIRType::Value) {
+          value = MBox::New(alloc, value);
+          block->insertBefore(barrier, value->toInstruction());
+        }
+        auto* assert =
+            MAssertCanElidePostWriteBarrier::New(alloc, allocation, value);
+        block->insertBefore(barrier, assert);
+#endif
+        block->discard(barrier);
+        JitSpew(JitSpew_RedundantGCBarriers, "Elided PostWriteBarrier");
+        break;
+      }
+      default:
+        JitSpew(JitSpew_RedundantGCBarriers,
+                "Stopped at unsupported instruction %s", ins->opName());
+        return true;
+    }
+  }
+
+  return true;
+}
+
+bool jit::EliminateRedundantGCBarriers(MIRGraph& graph) {
+  // Peephole optimization for the following pattern:
+  //
+  //   0: MNewCallObject
+  //   1: MStoreFixedSlot(0, ...)
+  //   2: MStoreFixedSlot(0, ...)
+  //   3: MPostWriteBarrier(0, ...)
+  //
+  // If the instructions immediately following the allocation instruction can't
+  // trigger GC and we are storing to the new object's slots, we can elide the
+  // pre-barrier.
+  //
+  // We also eliminate the post barrier and (in debug builds) replace it with an
+  // assertion.
+  //
+  // See also the similar optimizations in WarpBuilder::buildCallObject.
+
+  JitSpew(JitSpew_RedundantGCBarriers, "Begin");
+
+  for (ReversePostorderIterator block = graph.rpoBegin();
+       block != graph.rpoEnd(); block++) {
+    for (MInstructionIterator insIter(block->begin());
+         insIter != block->end();) {
+      MInstruction* ins = *insIter;
+      insIter++;
+
+      if (ins->isNewCallObject()) {
+        if (!TryEliminateGCBarriersForAllocation(graph.alloc(), ins)) {
+          return false;
+        }
+      }
+    }
+  }
+
+  return true;
+}
+
 static bool NeedsKeepAlive(MInstruction* slotsOrElements, MInstruction* use) {
   MOZ_ASSERT(slotsOrElements->type() == MIRType::Elements ||
              slotsOrElements->type() == MIRType::Slots);

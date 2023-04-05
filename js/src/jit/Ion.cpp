@@ -1407,6 +1407,17 @@ bool OptimizeMIR(MIRGenerator* mir) {
     AssertGraphCoherency(graph);
   }
 
+  // Run the GC Barrier Elimination pass after instruction reordering, to
+  // ensure we don't move instructions that can trigger GC between stores we
+  // optimize here.
+  if (mir->optimizationInfo().eliminateRedundantGCBarriersEnabled()) {
+    if (!EliminateRedundantGCBarriers(graph)) {
+      return false;
+    }
+    gs.spewPass("GC Barrier Elimination");
+    AssertGraphCoherency(graph);
+  }
+
   if (!mir->compilingWasm() && !mir->outerInfo().hadUnboxFoldingBailout()) {
     if (!FoldLoadsWithUnbox(mir, graph)) {
       return false;

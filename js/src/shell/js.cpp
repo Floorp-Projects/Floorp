@@ -11459,6 +11459,9 @@ bool InitOptionParser(OptionParser& op) {
       !op.addStringOption(
           '\0', "ion-optimize-shapeguards", "on/off",
           "Eliminate redundant shape guards (default: on, off to disable)") ||
+      !op.addStringOption(
+          '\0', "ion-optimize-gcbarriers", "on/off",
+          "Eliminate redundant GC barriers (default: on, off to disable)") ||
       !op.addStringOption('\0', "ion-iterator-indices", "on/off",
                           "Optimize property access in for-in loops "
                           "(default: on, off to disable)") ||
@@ -12216,6 +12219,16 @@ bool SetContextJITOptions(JSContext* cx, const OptionParser& op) {
       jit::JitOptions.disableRedundantShapeGuards = true;
     } else {
       return OptionFailure("ion-optimize-shapeguards", str);
+    }
+  }
+
+  if (const char* str = op.getStringOption("ion-optimize-gcbarriers")) {
+    if (strcmp(str, "on") == 0) {
+      jit::JitOptions.disableRedundantGCBarriers = false;
+    } else if (strcmp(str, "off") == 0) {
+      jit::JitOptions.disableRedundantGCBarriers = true;
+    } else {
+      return OptionFailure("ion-optimize-gcbarriers", str);
     }
   }
 
