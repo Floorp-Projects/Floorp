@@ -129,6 +129,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Applies URL highlighting and other styling to the text in the urlbar input.
   ["formatting.enabled", true],
 
+  // Whether search engagement telemetry should be recorded. This pref is a
+  // fallback for the Nimbus variable `searchEngagementTelemetryEnabled`.
+  ["searchEngagementTelemetry.enabled", false],
+
   // Interval time until taking pause impression telemetry.
   ["searchEngagementTelemetry.pauseImpressionIntervalMs", 1000],
 
