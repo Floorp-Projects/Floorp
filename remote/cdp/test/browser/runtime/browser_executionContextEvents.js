@@ -119,7 +119,7 @@ add_task(async function eventsWhenNavigatingFrameSet({ client }) {
     // Bug 1644657: The cleared event should come last but we emit destroy events
     // for the top-level context and for frames afterward. Chrome only sends out
     // the cleared event on navigation.
-    expectedEvents: [DESTROYED, CLEARED, DESTROYED, CREATED],
+    expectedEvents: [DESTROYED, CLEARED, CREATED, DESTROYED],
   });
 
   const destroyedContextIds = historyFrom.findEvents(DESTROYED);
