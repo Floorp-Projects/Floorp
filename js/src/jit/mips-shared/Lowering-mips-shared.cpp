@@ -413,7 +413,8 @@ void LIRGenerator::visitWasmLoad(MWasmLoad* ins) {
   MDefinition* base = ins->base();
   // 'base' is a GPR but may be of either type. If it is 32-bit, it is
   // sign-extended on mips64 platform and we should explicitly promote it to
-  // 64-bit when use it as an index register in memory accesses.
+  // 64-bit by zero-extension when use it as an index register in memory
+  // accesses.
   MOZ_ASSERT(base->type() == MIRType::Int32 || base->type() == MIRType::Int64);
 
   LAllocation ptr;
