@@ -30,19 +30,12 @@ inline void ArgumentsObject::setElement(uint32_t i, const Value& v) {
   MOZ_ASSERT(isElement(i));
   GCPtr<Value>& lhs = data()->args[i];
   if (IsMagicScopeSlotValue(lhs)) {
-    uint32_t slot = SlotFromMagicScopeSlotValue(lhs);
     CallObject& callobj =
         getFixedSlot(MAYBE_CALL_SLOT).toObject().as<CallObject>();
-    for (SharedShapePropertyIter<NoGC> iter(callobj.sharedShape());
-         !iter.done(); iter++) {
-      if (iter->slot() == slot) {
-        callobj.setAliasedFormalFromArguments(lhs, v);
-        return;
-      }
-    }
-    MOZ_CRASH("Bad Arguments::setElement");
+    callobj.setAliasedFormalFromArguments(lhs, v);
+  } else {
+    lhs = v;
   }
-  lhs = v;
 }
 
 inline bool ArgumentsObject::maybeGetElements(uint32_t start, uint32_t count,
