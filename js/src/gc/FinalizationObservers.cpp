@@ -185,6 +185,10 @@ void FinalizationObservers::traceRoots(JSTracer* trc) {
 }
 
 void FinalizationObservers::traceWeakEdges(JSTracer* trc) {
+  // Removing dead pointers from vectors may reorder live pointers to gray
+  // things in the vector. This is OK.
+  AutoTouchingGrayThings atgt;
+
   traceWeakWeakRefEdges(trc);
   traceWeakFinalizationRegistryEdges(trc);
 }
