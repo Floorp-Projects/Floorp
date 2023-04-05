@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <functional>
 #include <utility>
+#include <type_traits>
 #include "gtest/MozGtestFriend.h"
 #include "js/ProfilingCategory.h"
 #include "mozilla/Attributes.h"
@@ -30,7 +31,8 @@ struct JSContext;
 
 class ProfileBufferEntry {
  public:
-  using KindUnderlyingType = mozilla::ProfileBufferEntryKindUnderlyingType;
+  using KindUnderlyingType =
+      std::underlying_type_t<::mozilla::ProfileBufferEntryKind>;
   using Kind = mozilla::ProfileBufferEntryKind;
 
   ProfileBufferEntry();

@@ -23,6 +23,7 @@
 
 #include <limits>
 #include <tuple>
+#include <type_traits>
 
 namespace mozilla::baseprofiler {
 // Implemented in platform.cpp
@@ -407,8 +408,8 @@ void DeserializeAfterKindAndStream(
         }
 
         auto payloadType = static_cast<mozilla::MarkerPayloadType>(
-            aEntryReader
-                .ReadObject<mozilla::MarkerPayloadTypeUnderlyingType>());
+            aEntryReader.ReadObject<
+                std::underlying_type_t<mozilla::MarkerPayloadType>>());
 
         // Stream the payload, including the type.
         switch (payloadType) {

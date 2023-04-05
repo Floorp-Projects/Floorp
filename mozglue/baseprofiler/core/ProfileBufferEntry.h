@@ -19,13 +19,15 @@
 #include "mozilla/Vector.h"
 
 #include <string>
+#include <type_traits>
 
 namespace mozilla {
 namespace baseprofiler {
 
 class ProfileBufferEntry {
  public:
-  using KindUnderlyingType = ::mozilla::ProfileBufferEntryKindUnderlyingType;
+  using KindUnderlyingType =
+      std::underlying_type_t<::mozilla::ProfileBufferEntryKind>;
   using Kind = ::mozilla::ProfileBufferEntryKind;
 
   ProfileBufferEntry();
