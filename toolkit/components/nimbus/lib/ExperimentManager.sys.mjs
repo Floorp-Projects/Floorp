@@ -355,6 +355,7 @@ export class _ExperimentManager {
       userFacingDescription,
       featureIds,
       isRollout,
+      localizations,
     },
     branch,
     source,
@@ -375,6 +376,7 @@ export class _ExperimentManager {
       lastSeen: new Date().toJSON(),
       featureIds,
       prefs,
+      localizations,
     };
 
     if (typeof isRollout !== "undefined") {
