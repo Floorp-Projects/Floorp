@@ -89,10 +89,6 @@ void CanvasContext::Unconfigure() {
   mGfxFormat = gfx::SurfaceFormat::UNKNOWN;
 }
 
-dom::GPUTextureFormat CanvasContext::GetPreferredFormat(Adapter&) const {
-  return dom::GPUTextureFormat::Bgra8unorm;
-}
-
 RefPtr<Texture> CanvasContext::GetCurrentTexture(ErrorResult& aRv) {
   if (!mTexture) {
     aRv.ThrowOperationError("Canvas not configured");
