@@ -40,6 +40,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.translations.enable"
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "simulateUnsupportedEnginePref",
+  "browser.translations.simulateUnsupportedEngine"
+);
+
 // Do the slow/safe thing of always verifying the signature when the data is
 // loaded from the file system. This restriction could be eased in the future if it
 // proves to be a performance problem, and the security risk is acceptable.
@@ -117,6 +123,57 @@ export class TranslationsParent extends JSWindowActorParent {
    */
   static #mockedLanguageIdConfidence = null;
 
+  /**
+   * @type {null | Promise<boolean>}
+   */
+  static #isTranslationsEngineSupported = null;
+
+  /**
+   * Detect if Wasm SIMD is supported, and cache the value. It's better to check
+   * for support before downloading large binary blobs to a user who can't even
+   * use the feature. This function also respects mocks and simulating unsupported
+   * engines.
+   *
+   * @type {Promise<boolean>}
+   */
+  static getIsTranslationsEngineSupported() {
+    if (lazy.simulateUnsupportedEnginePref) {
+      // Use the non-lazy console.log so that the user is always informed as to why
+      // the translations engine is not working.
+      console.log(
+        "Translations: The translations engine is disabled through the pref " +
+          '"browser.translations.simulateUnsupportedEngine".'
+      );
+
+      // The user is manually testing unsupported engines.
+      return Promise.resolve(false);
+    }
+
+    if (TranslationsParent.#mockedLanguagePairs) {
+      // A mocked translations engine is always supported.
+      return Promise.resolve(true);
+    }
+
+    if (TranslationsParent.#isTranslationsEngineSupported === null) {
+      TranslationsParent.#isTranslationsEngineSupported = detectSimdSupport();
+
+      TranslationsParent.#isTranslationsEngineSupported.then(
+        isSupported => () => {
+          // Use the non-lazy console.log so that the user is always informed as to why
+          // the translations engine is not working.
+          if (!isSupported) {
+            console.log(
+              "Translations: The translations engine is not supported on your device as " +
+                "it does not support Wasm SIMD operations."
+            );
+          }
+        }
+      );
+    }
+
+    return TranslationsParent.#isTranslationsEngineSupported;
+  }
+
   async receiveMessage({ name, data }) {
     switch (name) {
       case "Translations:GetBergamotWasmArrayBuffer": {
@@ -133,6 +190,9 @@ export class TranslationsParent extends JSWindowActorParent {
       }
       case "Translations:GetIsTranslationsEngineMocked": {
         return Boolean(TranslationsParent.#mockedLanguagePairs);
+      }
+      case "Translations:GetIsTranslationsEngineSupported": {
+        return TranslationsParent.getIsTranslationsEngineSupported();
       }
       case "Translations:GetLanguageTranslationModelFiles": {
         const { fromLanguage, toLanguage } = data;
@@ -747,4 +807,25 @@ function bypassSignatureVerificationIfDev(client) {
     );
     client.verifySignature = false;
   }
+}
+
+/**
+ * WebAssembly modules must be instantiated from a Worker, since it's considered
+ * unsafe eval.
+ */
+function detectSimdSupport() {
+  return new Promise(resolve => {
+    lazy.console.log("Loading wasm simd detector worker.");
+
+    const worker = new Worker(
+      "chrome://global/content/translations/simd-detect-worker.js"
+    );
+
+    // This should pretty much immediately resolve, so it does not need Firefox shutdown
+    // detection.
+    worker.addEventListener("message", ({ data }) => {
+      resolve(data.isSimdSupported);
+      worker.terminate();
+    });
+  });
 }

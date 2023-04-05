@@ -3788,6 +3788,10 @@ pref("browser.translations.useHTML", false);
 // so that the page automatically performs a translation if one is detected as being
 // required.
 pref("browser.translations.autoTranslate", false);
+// Simulate the behavior of using a device that does not support the translations engine.
+// Requires restart.
+pref("browser.translations.simulateUnsupportedEngine", false);
+
 
 // When a user cancels this number of authentication dialogs coming from
 // a single web page in a row, all following authentication dialogs will

@@ -679,10 +679,8 @@ export class TranslationsChild extends JSWindowActorChild {
   async maybeOfferTranslation() {
     const translationsStart = this.docShell.now();
 
-    if (!(await this.isTranslationsEngineSupported())) {
-      lazy.console.log(
-        "The translations engine is not supported on this device."
-      );
+    const isSupported = await this.isTranslationsEngineSupported;
+    if (!isSupported) {
       return;
     }
 
@@ -696,13 +694,18 @@ export class TranslationsChild extends JSWindowActorChild {
     }
   }
 
-  async isTranslationsEngineSupported() {
-    if (await this.#isTranslationsEngineMocked) {
-      // A mocked engine is always supported.
-      return true;
-    }
-    // Bergamot requires intgemm support.
-    return Boolean(WebAssembly.mozIntGemm);
+  /**
+   * Lazily initialize this value. It doesn't change after being set.
+   *
+   * @type {Promise<boolean>}
+   */
+  get isTranslationsEngineSupported() {
+    // Delete the getter and set the real value directly onto the TranslationsChild's
+    // prototype. This value never changes while a browser is open.
+    delete TranslationsChild.isTranslationsEngineSupported;
+    return (TranslationsChild.isTranslationsEngineSupported = this.sendQuery(
+      "Translations:GetIsTranslationsEngineSupported"
+    ));
   }
 
   /**

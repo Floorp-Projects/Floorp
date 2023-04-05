@@ -600,3 +600,48 @@ add_task(async function test_about_translations_language_identification() {
     },
   });
 });
+
+/**
+ * Test that the page is properly disabled when the engine isn't supported.
+ */
+add_task(async function test_about_translations_() {
+  await openAboutTranslations({
+    prefs: [["browser.translations.simulateUnsupportedEngine", true]],
+    runInPage: async ({ selectors }) => {
+      const { document, window } = content;
+
+      info('Checking for the "no support" message.');
+      await ContentTaskUtils.waitForCondition(
+        () => document.querySelector(selectors.noSupportMessage),
+        'Waiting for the "no support" message.'
+      );
+
+      /** @type {HTMLSelectElement} */
+      const fromSelect = document.querySelector(selectors.fromLanguageSelect);
+      /** @type {HTMLSelectElement} */
+      const toSelect = document.querySelector(selectors.toLanguageSelect);
+      /** @type {HTMLTextAreaElement} */
+      const translationTextarea = document.querySelector(
+        selectors.translationTextarea
+      );
+
+      ok(fromSelect.disabled, "The from select is disabled");
+      ok(toSelect.disabled, "The to select is disabled");
+      ok(translationTextarea.disabled, "The textarea is disabled");
+
+      function checkElementIsVisible(expectVisible, name) {
+        const expected = expectVisible ? "visible" : "hidden";
+        const element = document.querySelector(selectors[name]);
+        ok(Boolean(element), `Element ${name} was found.`);
+        const { visibility } = window.getComputedStyle(element);
+        is(
+          visibility,
+          expected,
+          `Element ${name} was not ${expected} but should be.`
+        );
+      }
+
+      checkElementIsVisible(true, "translationInfo");
+    },
+  });
+});
