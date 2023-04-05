@@ -1550,6 +1550,8 @@ add_task(async function test_static_rules_telemetry() {
       },
       {
         metric: "evaluateRulesTime",
+        mirroredName: "WEBEXT_DNR_EVALUATE_RULES_MS",
+        mirroredType: "histogram",
       },
     ],
     "before test extension have been loaded"
@@ -1678,7 +1680,14 @@ add_task(async function test_static_rules_telemetry() {
   await assertDNRGetEnabledRulesets(extension, ["ruleset1"]);
 
   assertDNRTelemetryMetricsNoSamples(
-    [{ metric: "evaluateRulesTime" }, { metric: "evaluateRulesCountMax" }],
+    [
+      {
+        metric: "evaluateRulesTime",
+        mirroredName: "WEBEXT_DNR_EVALUATE_RULES_MS",
+        mirroredType: "histogram",
+      },
+      { metric: "evaluateRulesCountMax" },
+    ],
     "before any request have been intercepted"
   );
 
@@ -1689,7 +1698,14 @@ add_task(async function test_static_rules_telemetry() {
   );
 
   assertDNRTelemetryMetricsNoSamples(
-    [{ metric: "evaluateRulesTime" }, { metric: "evaluateRulesCountMax" }],
+    [
+      {
+        metric: "evaluateRulesTime",
+        mirroredName: "WEBEXT_DNR_EVALUATE_RULES_MS",
+        mirroredType: "histogram",
+      },
+      { metric: "evaluateRulesCountMax" },
+    ],
     "after restricted request have been intercepted (but no rules evaluated)"
   );
 
@@ -1714,6 +1730,8 @@ add_task(async function test_static_rules_telemetry() {
     [
       {
         metric: "evaluateRulesTime",
+        mirroredName: "WEBEXT_DNR_EVALUATE_RULES_MS",
+        mirroredType: "histogram",
         expectedSamplesCount: expectedEvaluateRulesTimeSamples,
       },
     ],
@@ -1740,6 +1758,8 @@ add_task(async function test_static_rules_telemetry() {
     [
       {
         metric: "evaluateRulesTime",
+        mirroredName: "WEBEXT_DNR_EVALUATE_RULES_MS",
+        mirroredType: "histogram",
         expectedSamplesCount: expectedEvaluateRulesTimeSamples,
       },
     ],
