@@ -104,11 +104,13 @@ const InitiatorType = {
  * @property {Initiator} initiator
  */
 
+/* eslint-disable jsdoc/valid-types */
 /**
  * Parameters for the BeforeRequestSent event
  *
  * @typedef {BaseParameters & BeforeRequestSentParametersProperties} BeforeRequestSentParameters
  */
+/* eslint-enable jsdoc/valid-types */
 
 /**
  * @typedef {object} ResponseContent
@@ -138,22 +140,26 @@ const InitiatorType = {
  * @property {ResponseData} response
  */
 
+/* eslint-disable jsdoc/valid-types */
 /**
  * Parameters for the ResponseStarted event
  *
  * @typedef {BaseParameters & ResponseStartedParametersProperties} ResponseStartedParameters
  */
+/* eslint-enable jsdoc/valid-types */
 
 /**
  * @typedef {object} ResponseCompletedParametersProperties
  * @property {ResponseData} response
  */
 
+/* eslint-disable jsdoc/valid-types */
 /**
  * Parameters for the ResponseCompleted event
  *
  * @typedef {BaseParameters & ResponseCompletedParametersProperties} ResponseCompletedParameters
  */
+/* eslint-enable jsdoc/valid-types */
 
 class NetworkModule extends Module {
   #networkListener;

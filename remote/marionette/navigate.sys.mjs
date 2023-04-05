@@ -190,12 +190,12 @@ navigate.refresh = async function(browsingContext) {
  * @param {Function} callback
  *     Callback to execute that might trigger a navigation.
  * @param {object} options
- * @param {BrowsingContext=} browsingContext
+ * @param {BrowsingContext=} options.browsingContext
  *     Browsing context to observe. Defaults to the current browsing context.
- * @param {boolean=} loadEventExpected
+ * @param {boolean=} options.loadEventExpected
  *     If false, return immediately and don't wait for
  *     the navigation to be completed. Defaults to true.
- * @param {boolean=} requireBeforeUnload
+ * @param {boolean=} options.requireBeforeUnload
  *     If false and no beforeunload event is fired, abort waiting
  *     for the navigation. Defaults to true.
  */

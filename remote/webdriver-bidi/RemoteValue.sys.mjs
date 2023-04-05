@@ -930,7 +930,7 @@ function setInternalIdsIfNeeded(serializationInternalMap, remoteValue, object) {
 /**
  * Safely stringify a value.
  *
- * @param {object} value
+ * @param {object} obj
  *     Value of any type to be stringified.
  *
  * @returns {string} String representation of the value.

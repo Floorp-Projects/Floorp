@@ -136,16 +136,11 @@ export class MessageHandlerRegistry extends EventEmitter {
   }
 
   /**
-   * Retrieve an already registered MessageHandler instance matching the
-   * provided parameters.
+   * Retrieve the MessageHandler instance registered for the provided session
+   * id. Will create and register a MessageHander if no instance was found.
    *
    * @param {string} sessionId
    *     ID of the session the handler is used for.
-   * @param {string} type
-   *     MessageHandler type, one of MessageHandler.type.
-   * @param {object=} context
-   *     The context object, which depends on the type. Can be null for ROOT
-   *     type MessageHandlers.
    * @returns {MessageHandler}
    *     A MessageHandler instance.
    */

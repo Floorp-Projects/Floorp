@@ -123,7 +123,7 @@ export class ExecutionContext {
    *
    * @param {string} expression
    *   The JS expression to evaluate against the JS context.
-   * @param {boolean} options.awaitPromise
+   * @param {boolean} awaitPromise
    *     Whether execution should `await` for resulting value
    *     and return once awaited promise is resolved.
    * @param {boolean} returnByValue
@@ -518,7 +518,7 @@ export class ExecutionContext {
   /**
    * Convert a given `Debugger.Object` to an object.
    *
-   * @param {Debugger.Object} obj
+   * @param {Debugger.Object} debuggerObj
    *  The object to convert
    *
    * @returns {object}

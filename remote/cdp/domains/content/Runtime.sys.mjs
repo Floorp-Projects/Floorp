@@ -547,11 +547,11 @@ export class Runtime extends ContentProcessDomain {
    * @param {string} name
    *     Event name
    * @param {object=} options
-   * @param {number} id
+   * @param {number} options.id
    *     The execution context id to destroy.
-   * @param {number} windowId
+   * @param {number} options.windowId
    *     The inner-window id of the execution context to destroy.
-   * @param {number} frameId
+   * @param {number} options.frameId
    *     The frame id of execution context to destroy.
    * Either `id` or `frameId` or `windowId` is passed.
    */
@@ -612,7 +612,7 @@ export class Runtime extends ContentProcessDomain {
    * "exceptionThrown" event if it's a Javascript error, otherwise a
    * "consoleAPICalled" event.
    *
-   * @param {nsIConsoleMessage} message
+   * @param {nsIConsoleMessage} subject
    *     Console message.
    */
   observe(subject, topic, data) {

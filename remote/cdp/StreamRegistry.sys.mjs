@@ -83,8 +83,8 @@ export class StreamRegistry {
   /**
    * Add a new stream to the registry.
    *
-   * @param {string} path
-   *      The path to the file to use as a stream.
+   * @param {Stream} stream
+   *      The stream to use.
    *
    * @returns {string}
    *     Stream handle (uuid)

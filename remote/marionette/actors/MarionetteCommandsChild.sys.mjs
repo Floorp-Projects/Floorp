@@ -238,11 +238,11 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
    * Find an element in the current browsing context's document using the
    * given search strategy.
    *
-   * @param {object} options
+   * @param {object=} options
+   * @param {string} options.strategy
+   * @param {string} options.selector
    * @param {object} options.opts
-   * @param {Element} opts.startNode
-   * @param {string} opts.strategy
-   * @param {string} opts.selector
+   * @param {Element} options.opts.startNode
    *
    */
   async findElement(options = {}) {
@@ -258,11 +258,11 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
    * Find elements in the current browsing context's document using the
    * given search strategy.
    *
-   * @param {object} options
+   * @param {object=} options
+   * @param {string} options.strategy
+   * @param {string} options.selector
    * @param {object} options.opts
-   * @param {Element} opts.startNode
-   * @param {string} opts.strategy
-   * @param {string} opts.selector
+   * @param {Element} options.opts.startNode
    *
    */
   async findElements(options = {}) {

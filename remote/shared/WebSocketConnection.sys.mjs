@@ -74,7 +74,7 @@ export class WebSocketConnection {
    *
    * Needs to be implemented in the sub class.
    *
-   * @param Session session
+   * @param {Session} session
    *     The session to register.
    */
   registerSession(session) {

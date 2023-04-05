@@ -27,11 +27,11 @@ ChromeUtils.defineESModuleGetters(lazy, {
  */
 export class Session {
   /**
-   * @param Connection connection
+   * @param {Connection} connection
    *        The connection used to communicate with the server.
-   * @param Target target
+   * @param {Target} target
    *        The target to which this session communicates with.
-   * @param Number id (optional)
+   * @param {number=} id
    *        If this session isn't the default one used for the HTTP endpoint we
    *        connected to, the session requires an id to distinguish it from the default
    *        one. This id is used to filter our request, responses and events between

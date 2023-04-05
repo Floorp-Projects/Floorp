@@ -44,7 +44,7 @@ export class IO extends Domain {
    *     Maximum number of bytes to read (left upon the agent
    *     discretion if not specified).
    *
-   * @returns {string, boolean, boolean}
+   * @returns {object}
    *     Data that were read, including flags for base64-encoded, and end-of-file reached.
    */
   async read(options = {}) {

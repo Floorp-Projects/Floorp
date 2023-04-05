@@ -94,24 +94,25 @@ export function Deferred() {
  * @param {string} eventName
  *     Case-sensitive string representing the event name to listen for.
  * @param {object=} options
- * @param {boolean=} [false] options.capture
+ * @param {boolean=} options.capture
  *     Indicates the event will be despatched to this subject,
  *     before it bubbles down to any EventTarget beneath it in the
- *     DOM tree.
- * @param {Function=} [null] options.checkFn
+ *     DOM tree. Defaults to false.
+ * @param {Function=} options.checkFn
  *     Called with the Event object as argument, should return true if the
  *     event is the expected one, or false if it should be ignored and
  *     listening should continue. If not specified, the first event with
- *     the specified name resolves the returned promise.
- * @param {number=} [null] options.timeout
+ *     the specified name resolves the returned promise. Defaults to null.
+ * @param {number=} options.timeout
  *     Timeout duration in milliseconds, if provided.
  *     If specified, then the returned promise will be rejected with
  *     TimeoutError, if not already resolved, after this duration has elapsed.
- *     If not specified, then no timeout is used.
- * @param {boolean=} [false] options.mozSystemGroup
- *     Determines whether to add listener to the system group.
- * @param {boolean=} [false] options.wantUntrusted
- *     Receive synthetic events despatched by web content.
+ *     If not specified, then no timeout is used. Defaults to null.
+ * @param {boolean=} options.mozSystemGroup
+ *     Determines whether to add listener to the system group. Defaults to
+ *     false.
+ * @param {boolean=} options.wantUntrusted
+ *     Receive synthetic events despatched by web content. Defaults to false.
  *
  * @returns {Promise<Event>}
  *     Either fulfilled with the first described event, satisfying
@@ -238,11 +239,12 @@ export function executeSoon(fn) {
  *
  * @param {Condition} func
  *     Function to run off the main thread.
- * @param {number=} [timeout] timeout
+ * @param {object=} options
+ * @param {number=} options.timeout
  *     Desired timeout if wanted.  If 0 or less than the runtime evaluation
  *     time of ``func``, ``func`` is guaranteed to run at least once.
  *     Defaults to using no timeout.
- * @param {number=} [interval=10] interval
+ * @param {number=} options.interval
  *     Duration between each poll of ``func`` in milliseconds.
  *     Defaults to 10 milliseconds.
  *

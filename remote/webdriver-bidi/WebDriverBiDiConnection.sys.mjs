@@ -54,9 +54,6 @@ export class WebDriverBiDiConnection extends WebSocketConnection {
 
   /**
    * Unregister the already set WebDriver session.
-   *
-   * @param {Session} session
-   *     The WebDriverSession to register.
    */
   unregisterSession() {
     if (!this.session) {
@@ -138,8 +135,8 @@ export class WebDriverBiDiConnection extends WebSocketConnection {
    * This packet is sent by a WebDriver BiDi client and is meant to execute
    * a particular method on a given module.
    *
-   * @param Object packet
-   *        JSON-serializable object sent by the client
+   * @param {object} packet
+   *     JSON-serializable object sent by the client
    */
   async onPacket(packet) {
     super.onPacket(packet);

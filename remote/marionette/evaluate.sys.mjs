@@ -52,15 +52,17 @@ export const evaluate = {};
  *     Script to evaluate.
  * @param {Array.<?>=} args
  *     A sequence of arguments to call the script with.
- * @param {boolean=} [async=false] async
+ * @param {object=} options
+ * @param {boolean=} options.async
  *     Indicates if the script should return immediately or wait for
- *     the callback to be invoked before returning.
- * @param {string=} [file="dummy file"] file
- *     File location of the program in the client.
- * @param {number=} [line=0] line
- *     Line number of th eprogram in the client.
- * @param {number=} [timeout=DEFAULT_TIMEOUT] timeout
- *     Duration in milliseconds before interrupting the script.
+ *     the callback to be invoked before returning. Defaults to false.
+ * @param {string=} options.file
+ *     File location of the program in the client. Defaults to "dummy file".
+ * @param {number=} options.line
+ *     Line number of the program in the client. Defaults to 0.
+ * @param {number=} options.timeout
+ *     Duration in milliseconds before interrupting the script. Defaults to
+ *     DEFAULT_TIMEOUT.
  *
  * @returns {Promise}
  *     A promise that when resolved will give you the return value from

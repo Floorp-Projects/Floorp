@@ -78,14 +78,14 @@ const PACKET_HEADER_MAX = 200;
  *             stream that meets the stream handling requirements above,
  *             and has the following signature:
  *
- *             @param nsIAsyncOutputStream {output}
- *                 The stream to copy to.
- *
- *             @returns {Promise}
- *                 The promise is resolved when copying completes or
- *                 rejected if any (unexpected) errors occur.  This object
- *                 also emits "progress" events for each chunk that is
- *                 copied.  See stream-utils.js.
+ *             - params
+ *                {nsIAsyncOutputStream} output
+ *                  The stream to copy to.
+ *             - returns {Promise}
+ *                  The promise is resolved when copying completes or
+ *                  rejected if any (unexpected) errors occur.  This object
+ *                  also emits "progress" events for each chunk that is
+ *                  copied.  See stream-utils.js.
  *
  * - onClosed(reason) - called when the connection is closed. |reason|
  *   is an optional nsresult or object, typically passed when the
@@ -177,10 +177,10 @@ DebuggerTransport.prototype = {
    *                   stream that meets the stream handling requirements
    *                   above, and has the following signature:
    *
-   *                   @param {nsIAsyncInputStream} input
+   *                   - params
+   *                     {nsIAsyncInputStream} input
    *                       The stream to copy from.
-   *
-   *                   @returns {Promise}
+   *                   - returns {Promise}
    *                       The promise is resolved when copying completes
    *                       or rejected if any (unexpected) errors occur.
    *                       This object also emits "progress" events for

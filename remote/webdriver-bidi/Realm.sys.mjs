@@ -89,7 +89,7 @@ export class Realm {
   /**
    * Ensure the provided object can be used within this realm.
 
-   * @param {object} object
+   * @param {object} obj
    *     Any non-primitive object.
 
    * @returns {object}

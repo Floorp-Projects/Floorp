@@ -73,11 +73,11 @@ function createFrameForUri(uri) {
 /**
  * Create a XUL browser element in the provided XUL tab, with the provided type.
  *
- * @param {xul:tab} tab
+ * @param {XULTab} tab
  *     The XUL tab in which the browser element should be inserted.
  * @param {string} type
  *     The type attribute of the browser element, "chrome" or "content".
- * @returns {xul:browser}
+ * @returns {XULBrowser}
  *     The created browser element.
  */
 function createParentBrowserElement(tab, type) {
