@@ -488,6 +488,21 @@ async function GetBookmarksResource(aProfileFolder, aBrowserKey) {
           );
         }
 
+        // Importing synced Bookmarks items
+        if (roots.synced.children && roots.synced.children.length) {
+          // Synced  Bookmarks
+          let parentGuid = lazy.PlacesUtils.bookmarks.unfiledGuid;
+          let bookmarks = convertBookmarks(
+            roots.synced.children,
+            bookmarkURLAccumulator,
+            errorGatherer
+          );
+          await MigrationUtils.insertManyBookmarksWrapper(
+            bookmarks,
+            parentGuid
+          );
+        }
+
         // Find all favicons with associated bookmarks
         let favicons = [];
         for (let bookmark of bookmarkURLAccumulator) {
