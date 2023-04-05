@@ -310,6 +310,12 @@ BROWSER_PROCESS += [
 
     # ExplorerPatcher (bug 1798707)
     DllBlocklistEntry("explorerpatcher.amd64.dll", ALL_VERSIONS),
+
+    # Sonic Studio 3 (bug 1540883)
+    DllBlocklistEntry("ss3devprops.dll", ALL_VERSIONS),
+
+    # Nahimic audio driver (bug 1540883)
+    DllBlocklistEntry("audiodevprops2.dll", (2, 6, 14, 0)),
 ]
 
 CHILD_PROCESSES += [
