@@ -146,3 +146,19 @@ extensions.apis.dnr:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1803363#c11
     data_sensitivity:
       - technical
+
+  evaluate_rules_count_max:
+    type: quantity
+    unit: rules
+    expires: 120
+    description: |
+      Max amount of DNR rules being evaluated.
+    lifetime: ping
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1803363/
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1803363#c11
+    data_sensitivity:
+      - technical

@@ -1627,12 +1627,13 @@ add_task(async function test_static_rules_telemetry() {
   info("Verify telemetry recorded on rules evaluation");
   extension.sendMessage("updateEnabledRulesets", {
     enableRulesetIds: ["ruleset1"],
+    disableRulesetIds: ["ruleset2"],
   });
   await extension.awaitMessage("updateEnabledRulesets:done");
-  await assertDNRGetEnabledRulesets(extension, ["ruleset1", "ruleset2"]);
+  await assertDNRGetEnabledRulesets(extension, ["ruleset1"]);
 
   assertDNRTelemetryMetricsNoSamples(
-    ["evaluateRulesTime"],
+    ["evaluateRulesTime", "evaluateRulesCountMax"],
     "before any request have been intercepted"
   );
 
@@ -1643,11 +1644,23 @@ add_task(async function test_static_rules_telemetry() {
   );
 
   assertDNRTelemetryMetricsNoSamples(
-    ["evaluateRulesTime"],
+    ["evaluateRulesTime", "evaluateRulesCountMax"],
     "after restricted request have been intercepted (but no rules evaluated)"
   );
 
   const page = await ExtensionTestUtils.loadContentPage("http://example.com");
+  const callPageFetch = async () => {
+    Assert.equal(
+      await page.spawn([], () => {
+        return this.content.fetch("http://example.com/").then(
+          res => res.text(),
+          err => err.message
+        );
+      }),
+      "NetworkError when attempting to fetch resource.",
+      "DNR should have blocked test request to example.com"
+    );
+  };
 
   // Expect one sample recorded on evaluating rules for the
   // top level navigation.
@@ -1657,17 +1670,15 @@ add_task(async function test_static_rules_telemetry() {
     expectedEvaluateRulesTimeSamples,
     "evaluateRulesTime should be collected after evaluated rulesets"
   );
-
-  Assert.equal(
-    await page.spawn([], () => {
-      return this.content.fetch("http://example.com/").then(
-        res => res.text(),
-        err => err.message
-      );
-    }),
-    "NetworkError when attempting to fetch resource.",
-    "DNR should have blocked test request to example.com"
+  // Expect 1 rule with only one ruleset enabled.
+  let expectedEvaluateRulesCountMax = 1;
+  assertDNRTelemetryMetricsGetValueEq(
+    ["evaluateRulesCountMax"],
+    expectedEvaluateRulesCountMax,
+    "evaluateRulesCountMax should be collected after evaluated rulesets"
   );
+
+  await callPageFetch();
 
   // Expect one new sample reported on evaluating rules for the
   // top level navigation.
@@ -1676,6 +1687,36 @@ add_task(async function test_static_rules_telemetry() {
     ["evaluateRulesTime"],
     expectedEvaluateRulesTimeSamples,
     "evaluateRulesTime should be collected after evaluated rulesets"
+  );
+
+  extension.sendMessage("updateEnabledRulesets", {
+    enableRulesetIds: ["ruleset2"],
+  });
+  await extension.awaitMessage("updateEnabledRulesets:done");
+  await assertDNRGetEnabledRulesets(extension, ["ruleset1", "ruleset2"]);
+
+  await callPageFetch();
+
+  // Expect two rules with both rulesets enabled.
+  expectedEvaluateRulesCountMax += 1;
+  assertDNRTelemetryMetricsGetValueEq(
+    ["evaluateRulesCountMax"],
+    expectedEvaluateRulesCountMax,
+    "evaluateRulesCountMax should have been increased"
+  );
+
+  extension.sendMessage("updateEnabledRulesets", {
+    disableRulesetIds: ["ruleset2"],
+  });
+  await extension.awaitMessage("updateEnabledRulesets:done");
+  await assertDNRGetEnabledRulesets(extension, ["ruleset1"]);
+
+  await callPageFetch();
+
+  assertDNRTelemetryMetricsGetValueEq(
+    ["evaluateRulesCountMax"],
+    expectedEvaluateRulesCountMax,
+    "evaluateRulesCountMax should have not been decreased"
   );
 
   await page.close();
