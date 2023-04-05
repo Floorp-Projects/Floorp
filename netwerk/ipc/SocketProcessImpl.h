@@ -26,7 +26,7 @@ class SocketProcessImpl final : public mozilla::ipc::ProcessChild {
   void CleanUp() override;
 
  private:
-  SocketProcessChild mSocketProcessChild;
+  RefPtr<SocketProcessChild> mSocketProcessChild = new SocketProcessChild;
 };
 
 }  // namespace net

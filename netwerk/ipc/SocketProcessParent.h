@@ -31,8 +31,9 @@ class SocketProcessParent final
  public:
   friend class SocketProcessHost;
 
+  NS_INLINE_DECL_REFCOUNTING(SocketProcessParent, final)
+
   explicit SocketProcessParent(SocketProcessHost* aHost);
-  ~SocketProcessParent();
 
   static SocketProcessParent* GetSingleton();
 
@@ -112,10 +113,12 @@ class SocketProcessParent final
 #endif  // defined(XP_WIN)
 
  private:
+  ~SocketProcessParent();
+
   SocketProcessHost* mHost;
   UniquePtr<dom::MemoryReportRequestHost> mMemoryReportRequest;
 
-  static void Destroy(UniquePtr<SocketProcessParent>&& aParent);
+  static void Destroy(RefPtr<SocketProcessParent>&& aParent);
 };
 
 }  // namespace net
