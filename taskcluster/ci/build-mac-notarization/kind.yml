@@ -5,6 +5,7 @@
 loader: gecko_taskgraph.loader.single_dep:loader
 
 transforms:
+    - gecko_taskgraph.transforms.mac_notarization:transforms
     - gecko_taskgraph.transforms.name_sanity:transforms
     - gecko_taskgraph.transforms.signing:transforms
     - gecko_taskgraph.transforms.task:transforms
