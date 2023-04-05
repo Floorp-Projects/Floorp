@@ -200,13 +200,6 @@ void UiCompositorControllerChild::ActorDestroy(ActorDestroyReason aWhy) {
   }
 }
 
-void UiCompositorControllerChild::ActorDealloc() {
-  if (mParent) {
-    mParent = nullptr;
-  }
-  Release();
-}
-
 void UiCompositorControllerChild::ProcessingError(Result aCode,
                                                   const char* aReason) {
   if (aCode != MsgDropped) {
@@ -272,7 +265,6 @@ void UiCompositorControllerChild::OpenForSameProcess() {
   }
 
   mParent->InitializeForSameProcess();
-  AddRef();
   SendCachedValues();
   // Let Ui thread know the connection is open;
   RecvToolbarAnimatorMessageFromCompositor(COMPOSITOR_CONTROLLER_OPEN);
@@ -293,7 +285,6 @@ void UiCompositorControllerChild::OpenForGPUProcess(
     return;
   }
 
-  AddRef();
   SendCachedValues();
   // Let Ui thread know the connection is open;
   RecvToolbarAnimatorMessageFromCompositor(COMPOSITOR_CONTROLLER_OPEN);
