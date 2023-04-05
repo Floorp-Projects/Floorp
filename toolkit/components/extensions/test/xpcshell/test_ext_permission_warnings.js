@@ -471,20 +471,6 @@ add_task(async function nativeMessaging_permission() {
   }
 });
 
-add_task(async function declarativeNetRequest_unavailable_by_default() {
-  let manifestPermissions = await getManifestPermissions({
-    manifest: {
-      manifest_version: 3,
-      permissions: ["declarativeNetRequest", "declarativeNetRequestFeedback"],
-    },
-  });
-  deepEqual(
-    manifestPermissions,
-    { origins: [], permissions: [] },
-    "Expected declarativeNetRequest permission to be ignored/stripped"
-  );
-});
-
 add_task(
   { pref_set: [["extensions.dnr.enabled", true]] },
   async function declarativeNetRequest_permission_with_warning() {
