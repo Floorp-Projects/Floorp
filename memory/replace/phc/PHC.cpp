@@ -304,7 +304,7 @@ static const size_t kPageSize =
 //
 // These page kinds are interleaved; each allocation page has a guard page on
 // either side.
-static const size_t kNumAllocPages = 64;
+static const size_t kNumAllocPages = kPageSize == 4096 ? 4096 : 1024;
 static const size_t kNumAllPages = kNumAllocPages * 2 + 1;
 
 // The total size of the allocation pages and guard pages.
@@ -327,7 +327,7 @@ static const Time kMaxTime = ~(Time(0));
 // The average delay before doing any page allocations at the start of a
 // process. Note that roughly 1 million allocations occur in the main process
 // while starting the browser. The delay range is 1..kAvgFirstAllocDelay*2.
-static const Delay kAvgFirstAllocDelay = 512 * 1024;
+static const Delay kAvgFirstAllocDelay = 64 * 1024;
 
 // The average delay until the next attempted page allocation, once we get past
 // the first delay. The delay range is 1..kAvgAllocDelay*2.
