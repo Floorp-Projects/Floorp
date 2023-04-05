@@ -208,11 +208,6 @@ void nsRFPService::UpdateRFPPref() {
   JS::SetReduceMicrosecondTimePrecisionCallback(
       nsRFPService::ReduceTimePrecisionAsUSecsWrapper);
 
-  // set fdlibm pref
-  JS::SetUseFdlibmForSinCosTan(
-      StaticPrefs::javascript_options_use_fdlibm_for_sin_cos_tan() ||
-      resistFingerprinting);
-
   // The JavaScript engine can already set the timezone per realm/global,
   // but we think there are still other users of libc that rely
   // on the TZ environment variable.

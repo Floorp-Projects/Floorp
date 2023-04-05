@@ -19,11 +19,14 @@ using UnaryMathFunctionType = double (*)(double);
 // Note that this list does not include all unary Math functions: abs and sqrt
 // for example are missing because the JITs optimize them without a C++ call.
 enum class UnaryMathFunction : uint8_t {
+  SinNative,
+  SinFdlibm,
+  CosNative,
+  CosFdlibm,
+  TanNative,
+  TanFdlibm,
   Log,
-  Sin,
-  Cos,
   Exp,
-  Tan,
   ACos,
   ASin,
   ATan,
@@ -91,17 +94,14 @@ extern bool math_use_fdlibm_for_sin_cos_tan();
 
 extern double math_sin_fdlibm_impl(double x);
 extern double math_sin_native_impl(double x);
-extern double math_sin_impl(double x);
 
 extern double math_cos_fdlibm_impl(double x);
 extern double math_cos_native_impl(double x);
-extern double math_cos_impl(double x);
 
 extern double math_exp_impl(double x);
 
 extern double math_tan_fdlibm_impl(double x);
 extern double math_tan_native_impl(double x);
-extern double math_tan_impl(double x);
 
 extern double ecmaHypot(double x, double y);
 
