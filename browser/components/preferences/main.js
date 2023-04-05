@@ -809,6 +809,10 @@ var gMainPane = {
       return true;
     }
 
+    if (subcategory == "migrate-autoclose") {
+      this.showMigrationWizardDialog({ closeTabWhenDone: true });
+    }
+
     return false;
   },
 
@@ -1753,7 +1757,7 @@ var gMainPane = {
   /**
    * Displays the migration wizard dialog in an HTML dialog.
    */
-  async showMigrationWizardDialog() {
+  async showMigrationWizardDialog({ closeTabWhenDone = false } = {}) {
     let migrationWizardDialog = document.getElementById(
       "migrationWizardDialog"
     );
@@ -1778,6 +1782,11 @@ var gMainPane = {
       migrationWizardDialog.appendChild(wizard);
     }
     migrationWizardDialog.firstElementChild.requestState();
+
+    if (closeTabWhenDone) {
+      migrationWizardDialog.addEventListener("close", () => window.close());
+    }
+
     migrationWizardDialog.showModal();
   },
 
