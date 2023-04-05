@@ -1492,7 +1492,8 @@ bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
              prevFrameType == FrameType::BaselineStub ||
              prevFrameType == FrameType::Rectifier ||
              prevFrameType == FrameType::IonICCall ||
-             prevFrameType == FrameType::BaselineJS);
+             prevFrameType == FrameType::BaselineJS ||
+             prevFrameType == FrameType::BaselineInterpreterEntry);
 #endif
 
   // All incoming frames are going to look like this:
