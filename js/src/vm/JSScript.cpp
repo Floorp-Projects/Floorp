@@ -3193,7 +3193,17 @@ void JSScript::updateJitCodeRaw(JSRuntime* rt) {
   } else if (hasBaselineScript()) {
     setJitCodeRaw(baselineScript()->method()->raw());
   } else if (hasJitScript() && js::jit::IsBaselineInterpreterEnabled()) {
-    setJitCodeRaw(rt->jitRuntime()->baselineInterpreter().codeRaw());
+    bool usingEntryTrampoline = false;
+    if (js::jit::JitOptions.emitInterpreterEntryTrampoline) {
+      auto p = rt->jitRuntime()->getInterpreterEntryMap()->lookup(this);
+      if (p) {
+        setJitCodeRaw(p->value().raw());
+        usingEntryTrampoline = true;
+      }
+    }
+    if (!usingEntryTrampoline) {
+      setJitCodeRaw(rt->jitRuntime()->baselineInterpreter().codeRaw());
+    }
   } else {
     setJitCodeRaw(rt->jitRuntime()->interpreterStub().value);
   }
