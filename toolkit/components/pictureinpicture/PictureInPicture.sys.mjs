@@ -6,6 +6,8 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
+import { ShortcutUtils } from "resource://gre/modules/ShortcutUtils.sys.mjs";
+
 const lazy = {};
 XPCOMUtils.defineLazyServiceGetters(lazy, {
   WindowsUIUtils: ["@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils"],
@@ -456,6 +458,20 @@ export var PictureInPicture = {
   },
 
   /**
+   * This function updates the hover text on the urlbar PiP button when we enter or exit PiP
+   * @param {Document} document The window document
+   * @param {Element} pipToggle The urlbar PiP button
+   * @param {String} dataL10nId The data l10n id of the string we want to show
+   */
+  updateUrlbarHoverText(document, pipToggle, dataL10nId) {
+    let shortcut = document.getElementById("key_togglePictureInPicture");
+
+    document.l10n.setAttributes(pipToggle, dataL10nId, {
+      shortcut: ShortcutUtils.prettifyShortcut(shortcut),
+    });
+  },
+
+  /**
    * Toggles the visibility of the PiP urlbar button. If the total video count
    * is 1, then we will show the button. Otherwise the button is hidden.
    * @param {Browser} browser The selected browser
@@ -474,6 +490,11 @@ export var PictureInPicture = {
 
     let pipToggle = win.document.getElementById("picture-in-picture-button");
     pipToggle.hidden = !(totalPipCount === 1);
+
+    let dataL10nId = pipToggle.getAttribute("pipactive")
+      ? "picture-in-picture-urlbar-button-close"
+      : "picture-in-picture-urlbar-button-open";
+    this.updateUrlbarHoverText(win.document, pipToggle, dataL10nId);
   },
 
   /**
@@ -507,6 +528,12 @@ export var PictureInPicture = {
   setUrlbarPipIconActive(win) {
     let pipToggle = win.document.getElementById("picture-in-picture-button");
     pipToggle.toggleAttribute("pipactive", true);
+
+    this.updateUrlbarHoverText(
+      win.document,
+      pipToggle,
+      "picture-in-picture-urlbar-button-close"
+    );
   },
 
   /**
@@ -522,6 +549,12 @@ export var PictureInPicture = {
     let win = browser.ownerGlobal;
     let pipToggle = win.document.getElementById("picture-in-picture-button");
     pipToggle.toggleAttribute("pipactive", false);
+
+    this.updateUrlbarHoverText(
+      win.document,
+      pipToggle,
+      "picture-in-picture-urlbar-button-open"
+    );
   },
 
   /**
