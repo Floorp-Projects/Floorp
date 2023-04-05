@@ -1522,9 +1522,6 @@ static bool WasmLosslessInvoke(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  // Switch to the function's realm
-  AutoRealm ar(cx, func);
-
   // Get the instance and funcIndex for calling the function
   wasm::Instance& instance = wasm::ExportedFunctionToInstance(func);
   uint32_t funcIndex = wasm::ExportedFunctionToFuncIndex(func);
