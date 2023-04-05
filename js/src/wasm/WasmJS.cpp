@@ -1012,6 +1012,9 @@ static JSString* UTF8CharsToString(JSContext* cx, const char* chars) {
 [[nodiscard]] static JSObject* ValTypesToArray(JSContext* cx,
                                                const ValTypeVector& valTypes) {
   Rooted<ArrayObject*> arrayObj(cx, NewDenseEmptyArray(cx));
+  if (!arrayObj) {
+    return nullptr;
+  }
   for (ValType valType : valTypes) {
     RootedString type(cx,
                       UTF8CharsToString(cx, ToString(valType, nullptr).get()));
