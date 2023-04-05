@@ -7765,6 +7765,23 @@ AttachDecision InlinableNativeIRGenerator::tryAttachMathFunction(
     return AttachDecision::NoAction;
   }
 
+  if (math_use_fdlibm_for_sin_cos_tan() ||
+      callee_->realm()->behaviors().shouldResistFingerprinting()) {
+    switch (fun) {
+      case UnaryMathFunction::SinNative:
+        fun = UnaryMathFunction::SinFdlibm;
+        break;
+      case UnaryMathFunction::CosNative:
+        fun = UnaryMathFunction::CosFdlibm;
+        break;
+      case UnaryMathFunction::TanNative:
+        fun = UnaryMathFunction::TanFdlibm;
+        break;
+      default:
+        break;
+    }
+  }
+
   // Initialize the input operand.
   initializeInputOperand();
 
@@ -10480,11 +10497,11 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
     case InlinableNative::MathATan2:
       return tryAttachMathATan2();
     case InlinableNative::MathSin:
-      return tryAttachMathFunction(UnaryMathFunction::Sin);
+      return tryAttachMathFunction(UnaryMathFunction::SinNative);
     case InlinableNative::MathTan:
-      return tryAttachMathFunction(UnaryMathFunction::Tan);
+      return tryAttachMathFunction(UnaryMathFunction::TanNative);
     case InlinableNative::MathCos:
-      return tryAttachMathFunction(UnaryMathFunction::Cos);
+      return tryAttachMathFunction(UnaryMathFunction::CosNative);
     case InlinableNative::MathExp:
       return tryAttachMathFunction(UnaryMathFunction::Exp);
     case InlinableNative::MathLog:

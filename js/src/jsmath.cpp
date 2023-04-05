@@ -54,9 +54,15 @@ JS_PUBLIC_API void JS::SetUseFdlibmForSinCosTan(bool value) {
   sUseFdlibmForSinCosTan = value;
 }
 
+bool js::math_use_fdlibm_for_sin_cos_tan() { return sUseFdlibmForSinCosTan; }
+
+static inline bool UseFdlibmForSinCosTan(const CallArgs& args) {
+  return sUseFdlibmForSinCosTan ||
+         args.callee().nonCCWRealm()->behaviors().shouldResistFingerprinting();
+}
+
 template <UnaryMathFunctionType F>
-static bool math_function(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
+static bool math_function(JSContext* cx, CallArgs& args) {
   if (args.length() == 0) {
     args.rval().setNaN();
     return true;
@@ -102,7 +108,8 @@ double js::math_acos_impl(double x) {
 }
 
 static bool math_acos(JSContext* cx, unsigned argc, Value* vp) {
-  return math_function<math_acos_impl>(cx, argc, vp);
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return math_function<math_acos_impl>(cx, args);
 }
 
 double js::math_asin_impl(double x) {
@@ -111,7 +118,8 @@ double js::math_asin_impl(double x) {
 }
 
 static bool math_asin(JSContext* cx, unsigned argc, Value* vp) {
-  return math_function<math_asin_impl>(cx, argc, vp);
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return math_function<math_asin_impl>(cx, args);
 }
 
 double js::math_atan_impl(double x) {
@@ -120,7 +128,8 @@ double js::math_atan_impl(double x) {
 }
 
 static bool math_atan(JSContext* cx, unsigned argc, Value* vp) {
-  return math_function<math_atan_impl>(cx, argc, vp);
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return math_function<math_atan_impl>(cx, args);
 }
 
 double js::ecmaAtan2(double y, double x) {
@@ -190,10 +199,7 @@ static bool math_clz32(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-bool js::math_use_fdlibm_for_sin_cos_tan() { return sUseFdlibmForSinCosTan; }
-
 double js::math_cos_fdlibm_impl(double x) {
-  MOZ_ASSERT(sUseFdlibmForSinCosTan);
   AutoUnsafeCallWithABI unsafe;
   return fdlibm::cos(x);
 }
@@ -204,18 +210,12 @@ double js::math_cos_native_impl(double x) {
   return std::cos(x);
 }
 
-double js::math_cos_impl(double x) {
-  if (sUseFdlibmForSinCosTan) {
-    return math_cos_fdlibm_impl(x);
-  }
-  return math_cos_native_impl(x);
-}
-
 static bool math_cos(JSContext* cx, unsigned argc, Value* vp) {
-  if (sUseFdlibmForSinCosTan) {
-    return math_function<math_cos_fdlibm_impl>(cx, argc, vp);
+  CallArgs args = CallArgsFromVp(argc, vp);
+  if (UseFdlibmForSinCosTan(args)) {
+    return math_function<math_cos_fdlibm_impl>(cx, args);
   }
-  return math_function<math_cos_native_impl>(cx, argc, vp);
+  return math_function<math_cos_native_impl>(cx, args);
 }
 
 double js::math_exp_impl(double x) {
@@ -224,7 +224,8 @@ double js::math_exp_impl(double x) {
 }
 
 static bool math_exp(JSContext* cx, unsigned argc, Value* vp) {
-  return math_function<math_exp_impl>(cx, argc, vp);
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return math_function<math_exp_impl>(cx, args);
 }
 
 double js::math_floor_impl(double x) {
@@ -308,7 +309,8 @@ double js::math_log_impl(double x) {
 }
 
 static bool math_log(JSContext* cx, unsigned argc, Value* vp) {
-  return math_function<math_log_impl>(cx, argc, vp);
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return math_function<math_log_impl>(cx, args);
 }
 
 double js::math_max_impl(double x, double y) {
@@ -593,7 +595,6 @@ static bool math_round(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 double js::math_sin_fdlibm_impl(double x) {
-  MOZ_ASSERT(sUseFdlibmForSinCosTan);
   AutoUnsafeCallWithABI unsafe;
   return fdlibm::sin(x);
 }
@@ -604,18 +605,12 @@ double js::math_sin_native_impl(double x) {
   return std::sin(x);
 }
 
-double js::math_sin_impl(double x) {
-  if (sUseFdlibmForSinCosTan) {
-    return math_sin_fdlibm_impl(x);
-  }
-  return math_sin_native_impl(x);
-}
-
 static bool math_sin(JSContext* cx, unsigned argc, Value* vp) {
-  if (sUseFdlibmForSinCosTan) {
-    return math_function<math_sin_fdlibm_impl>(cx, argc, vp);
+  CallArgs args = CallArgsFromVp(argc, vp);
+  if (UseFdlibmForSinCosTan(args)) {
+    return math_function<math_sin_fdlibm_impl>(cx, args);
   }
-  return math_function<math_sin_native_impl>(cx, argc, vp);
+  return math_function<math_sin_native_impl>(cx, args);
 }
 
 double js::math_sqrt_impl(double x) {
@@ -624,11 +619,11 @@ double js::math_sqrt_impl(double x) {
 }
 
 static bool math_sqrt(JSContext* cx, unsigned argc, Value* vp) {
-  return math_function<math_sqrt_impl>(cx, argc, vp);
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return math_function<math_sqrt_impl>(cx, args);
 }
 
 double js::math_tan_fdlibm_impl(double x) {
-  MOZ_ASSERT(sUseFdlibmForSinCosTan);
   AutoUnsafeCallWithABI unsafe;
   return fdlibm::tan(x);
 }
@@ -639,18 +634,12 @@ double js::math_tan_native_impl(double x) {
   return std::tan(x);
 }
 
-double js::math_tan_impl(double x) {
-  if (sUseFdlibmForSinCosTan) {
-    return math_tan_fdlibm_impl(x);
-  }
-  return math_tan_native_impl(x);
-}
-
 static bool math_tan(JSContext* cx, unsigned argc, Value* vp) {
-  if (sUseFdlibmForSinCosTan) {
-    return math_function<math_tan_fdlibm_impl>(cx, argc, vp);
+  CallArgs args = CallArgsFromVp(argc, vp);
+  if (UseFdlibmForSinCosTan(args)) {
+    return math_function<math_tan_fdlibm_impl>(cx, args);
   }
-  return math_function<math_tan_native_impl>(cx, argc, vp);
+  return math_function<math_tan_native_impl>(cx, args);
 }
 
 double js::math_log10_impl(double x) {
@@ -659,7 +648,8 @@ double js::math_log10_impl(double x) {
 }
 
 static bool math_log10(JSContext* cx, unsigned argc, Value* vp) {
-  return math_function<math_log10_impl>(cx, argc, vp);
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return math_function<math_log10_impl>(cx, args);
 }
 
 double js::math_log2_impl(double x) {
@@ -668,7 +658,8 @@ double js::math_log2_impl(double x) {
 }
 
 static bool math_log2(JSContext* cx, unsigned argc, Value* vp) {
-  return math_function<math_log2_impl>(cx, argc, vp);
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return math_function<math_log2_impl>(cx, args);
 }
 
 double js::math_log1p_impl(double x) {
@@ -677,7 +668,8 @@ double js::math_log1p_impl(double x) {
 }
 
 static bool math_log1p(JSContext* cx, unsigned argc, Value* vp) {
-  return math_function<math_log1p_impl>(cx, argc, vp);
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return math_function<math_log1p_impl>(cx, args);
 }
 
 double js::math_expm1_impl(double x) {
@@ -686,7 +678,8 @@ double js::math_expm1_impl(double x) {
 }
 
 static bool math_expm1(JSContext* cx, unsigned argc, Value* vp) {
-  return math_function<math_expm1_impl>(cx, argc, vp);
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return math_function<math_expm1_impl>(cx, args);
 }
 
 double js::math_cosh_impl(double x) {
@@ -695,7 +688,8 @@ double js::math_cosh_impl(double x) {
 }
 
 static bool math_cosh(JSContext* cx, unsigned argc, Value* vp) {
-  return math_function<math_cosh_impl>(cx, argc, vp);
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return math_function<math_cosh_impl>(cx, args);
 }
 
 double js::math_sinh_impl(double x) {
@@ -704,7 +698,8 @@ double js::math_sinh_impl(double x) {
 }
 
 static bool math_sinh(JSContext* cx, unsigned argc, Value* vp) {
-  return math_function<math_sinh_impl>(cx, argc, vp);
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return math_function<math_sinh_impl>(cx, args);
 }
 
 double js::math_tanh_impl(double x) {
@@ -713,7 +708,8 @@ double js::math_tanh_impl(double x) {
 }
 
 static bool math_tanh(JSContext* cx, unsigned argc, Value* vp) {
-  return math_function<math_tanh_impl>(cx, argc, vp);
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return math_function<math_tanh_impl>(cx, args);
 }
 
 double js::math_acosh_impl(double x) {
@@ -722,7 +718,8 @@ double js::math_acosh_impl(double x) {
 }
 
 static bool math_acosh(JSContext* cx, unsigned argc, Value* vp) {
-  return math_function<math_acosh_impl>(cx, argc, vp);
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return math_function<math_acosh_impl>(cx, args);
 }
 
 double js::math_asinh_impl(double x) {
@@ -731,7 +728,8 @@ double js::math_asinh_impl(double x) {
 }
 
 static bool math_asinh(JSContext* cx, unsigned argc, Value* vp) {
-  return math_function<math_asinh_impl>(cx, argc, vp);
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return math_function<math_asinh_impl>(cx, args);
 }
 
 double js::math_atanh_impl(double x) {
@@ -740,7 +738,8 @@ double js::math_atanh_impl(double x) {
 }
 
 static bool math_atanh(JSContext* cx, unsigned argc, Value* vp) {
-  return math_function<math_atanh_impl>(cx, argc, vp);
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return math_function<math_atanh_impl>(cx, args);
 }
 
 double js::ecmaHypot(double x, double y) {
@@ -895,7 +894,8 @@ double js::math_cbrt_impl(double x) {
 }
 
 static bool math_cbrt(JSContext* cx, unsigned argc, Value* vp) {
-  return math_function<math_cbrt_impl>(cx, argc, vp);
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return math_function<math_cbrt_impl>(cx, args);
 }
 
 static bool math_toSource(JSContext* cx, unsigned argc, Value* vp) {
@@ -906,25 +906,22 @@ static bool math_toSource(JSContext* cx, unsigned argc, Value* vp) {
 
 UnaryMathFunctionType js::GetUnaryMathFunctionPtr(UnaryMathFunction fun) {
   switch (fun) {
+    case UnaryMathFunction::SinNative:
+      return math_sin_native_impl;
+    case UnaryMathFunction::SinFdlibm:
+      return math_sin_fdlibm_impl;
+    case UnaryMathFunction::CosNative:
+      return math_cos_native_impl;
+    case UnaryMathFunction::CosFdlibm:
+      return math_cos_fdlibm_impl;
+    case UnaryMathFunction::TanNative:
+      return math_tan_native_impl;
+    case UnaryMathFunction::TanFdlibm:
+      return math_tan_fdlibm_impl;
     case UnaryMathFunction::Log:
       return math_log_impl;
-    case UnaryMathFunction::Sin:
-      if (sUseFdlibmForSinCosTan) {
-        return math_sin_fdlibm_impl;
-      }
-      return math_sin_native_impl;
-    case UnaryMathFunction::Cos:
-      if (sUseFdlibmForSinCosTan) {
-        return math_cos_fdlibm_impl;
-      }
-      return math_cos_native_impl;
     case UnaryMathFunction::Exp:
       return math_exp_impl;
-    case UnaryMathFunction::Tan:
-      if (sUseFdlibmForSinCosTan) {
-        return math_tan_fdlibm_impl;
-      }
-      return math_tan_native_impl;
     case UnaryMathFunction::ATan:
       return math_atan_impl;
     case UnaryMathFunction::ASin:
@@ -967,16 +964,22 @@ UnaryMathFunctionType js::GetUnaryMathFunctionPtr(UnaryMathFunction fun) {
 
 const char* js::GetUnaryMathFunctionName(UnaryMathFunction fun) {
   switch (fun) {
+    case UnaryMathFunction::SinNative:
+      return "Sin (native)";
+    case UnaryMathFunction::SinFdlibm:
+      return "Sin (fdlibm)";
+    case UnaryMathFunction::CosNative:
+      return "Cos (native)";
+    case UnaryMathFunction::CosFdlibm:
+      return "Cos (fdlibm)";
+    case UnaryMathFunction::TanNative:
+      return "Tan (native)";
+    case UnaryMathFunction::TanFdlibm:
+      return "Tan (fdlibm)";
     case UnaryMathFunction::Log:
       return "Log";
-    case UnaryMathFunction::Sin:
-      return "Sin";
-    case UnaryMathFunction::Cos:
-      return "Cos";
     case UnaryMathFunction::Exp:
       return "Exp";
-    case UnaryMathFunction::Tan:
-      return "Tan";
     case UnaryMathFunction::ACos:
       return "ACos";
     case UnaryMathFunction::ASin:

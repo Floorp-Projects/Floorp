@@ -1854,8 +1854,10 @@ void MArrayPush::computeRange(TempAllocator& alloc) {
 void MMathFunction::computeRange(TempAllocator& alloc) {
   Range opRange(getOperand(0));
   switch (function()) {
-    case UnaryMathFunction::Sin:
-    case UnaryMathFunction::Cos:
+    case UnaryMathFunction::SinNative:
+    case UnaryMathFunction::SinFdlibm:
+    case UnaryMathFunction::CosNative:
+    case UnaryMathFunction::CosFdlibm:
       if (!opRange.canBeInfiniteOrNaN()) {
         setRange(Range::NewDoubleRange(alloc, -1.0, 1.0));
       }
