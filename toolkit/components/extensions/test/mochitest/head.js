@@ -9,13 +9,6 @@ var { AppTestDelegate } = SpecialPowers.ChromeUtils.importESModule(
   "resource://specialpowers/AppTestDelegate.sys.mjs"
 );
 
-let remote = SpecialPowers.getBoolPref("extensions.webextensions.remote");
-if (remote) {
-  // We don't want to reset this at the end of the test, so that we don't have
-  // to spawn a new extension child process for each test unit.
-  SpecialPowers.setIntPref("dom.ipc.keepProcessesAlive.extension", 1);
-}
-
 {
   let chromeScript = SpecialPowers.loadChromeScript(
     SimpleTest.getTestFileURL("chrome_cleanup_script.js")
