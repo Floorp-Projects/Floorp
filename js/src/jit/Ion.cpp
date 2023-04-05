@@ -89,6 +89,10 @@ JitRuntime::~JitRuntime() {
   // By this point, the jitcode global table should be empty.
   MOZ_ASSERT_IF(jitcodeGlobalTable_, jitcodeGlobalTable_->empty());
   js_delete(jitcodeGlobalTable_.ref());
+
+  // interpreterEntryMap should be cleared out during finishRoots()
+  MOZ_ASSERT_IF(interpreterEntryMap_, interpreterEntryMap_->empty());
+  js_delete(interpreterEntryMap_.ref());
 }
 
 uint32_t JitRuntime::startTrampolineCode(MacroAssembler& masm) {
@@ -118,6 +122,13 @@ bool JitRuntime::initialize(JSContext* cx) {
   jitcodeGlobalTable_ = cx->new_<JitcodeGlobalTable>();
   if (!jitcodeGlobalTable_) {
     return false;
+  }
+
+  if (JitOptions.emitInterpreterEntryTrampoline) {
+    interpreterEntryMap_ = cx->new_<EntryTrampolineMap>();
+    if (!interpreterEntryMap_) {
+      return false;
+    }
   }
 
   if (!GenerateBaselineInterpreter(cx, baselineInterpreter_)) {

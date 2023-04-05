@@ -130,6 +130,11 @@ void js::BaseScript::finalize(JS::GCContext* gcx) {
   // the script itself will not be marked as having bytecode.
   if (hasBytecode()) {
     JSScript* script = this->asJSScript();
+    JSRuntime* rt = gcx->runtime();
+
+    if (rt->hasJitRuntime() && rt->jitRuntime()->hasInterpreterEntryMap()) {
+      rt->jitRuntime()->getInterpreterEntryMap()->remove(script);
+    }
 
     if (coverage::IsLCovEnabled()) {
       coverage::CollectScriptCoverage(script, true);
