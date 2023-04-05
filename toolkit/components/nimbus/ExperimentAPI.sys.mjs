@@ -514,10 +514,41 @@ export class _ExperimentFeature {
    * @param {unknown} values The values to perform substitutions upon.
    * @param {Record<string, string>} localizations The localization
    *        substitutions for a specific locale.
+   * @param {Set<string>?} missingIds An optional set to collect all the IDs of
+   *        all missing l10n entries.
    *
    * @returns {any} The values, potentially locale substituted.
    */
-  static substituteLocalizations(values, localizations) {
+  static substituteLocalizations(
+    values,
+    localizations,
+    missingIds = undefined
+  ) {
+    const result = _ExperimentFeature._substituteLocalizations(
+      values,
+      localizations,
+      missingIds
+    );
+
+    if (missingIds?.size) {
+      throw new ExperimentLocalizationError("l10n-missing-entry");
+    }
+
+    return result;
+  }
+
+  /**
+   * The implementation of localization substitution.
+   *
+   * @param {unknown} values The values to perform substitutions upon.
+   * @param {Record<string, string>} localizations The localization
+   *        substitutions for a specific locale.
+   * @param {Set<string>?} missingIds An optional set to collect all the IDs of
+   *        all missing l10n entries.
+   *
+   * @returns {any} The values, potentially locale substituted.
+   */
+  static _substituteLocalizations(values, localizations, missingIds) {
     // If the recipe is not localized, we don't need to do anything.
     // Likewise, if the value we are attempting to localize is not an object,
     // there is nothing to localize.
@@ -531,7 +562,11 @@ export class _ExperimentFeature {
 
     if (Array.isArray(values)) {
       return values.map(value =>
-        _ExperimentFeature.substituteLocalizations(value, localizations)
+        _ExperimentFeature._substituteLocalizations(
+          value,
+          localizations,
+          missingIds
+        )
       );
     }
 
@@ -545,15 +580,21 @@ export class _ExperimentFeature {
         value?.id
       ) {
         if (!Object.hasOwn(localizations, value.id)) {
-          throw new ExperimentLocalizationError("l10n-missing-entry");
+          if (missingIds) {
+            missingIds.add(value.id);
+            break;
+          } else {
+            throw new ExperimentLocalizationError("l10n-missing-entry");
+          }
         }
 
         return localizations[value.id];
       }
 
-      substituted[key] = _ExperimentFeature.substituteLocalizations(
+      substituted[key] = _ExperimentFeature._substituteLocalizations(
         value,
-        localizations
+        localizations,
+        missingIds
       );
     }
 
