@@ -201,7 +201,7 @@ pub const fn LDR_IS_IMAGEMAPPING(DllHandle: ULONG_PTR) -> bool {
 }
 #[inline]
 pub const fn LDR_IS_RESOURCE(DllHandle: ULONG_PTR) -> bool {
-    (LDR_IS_IMAGEMAPPING(DllHandle) | LDR_IS_DATAFILE(DllHandle)) as u8 != 0 //fixme
+    LDR_IS_IMAGEMAPPING(DllHandle) || LDR_IS_DATAFILE(DllHandle)
 }
 EXTERN!{extern "system" {
     fn LdrLoadDll(

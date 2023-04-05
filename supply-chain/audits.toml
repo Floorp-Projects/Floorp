@@ -1498,6 +1498,11 @@ criteria = "safe-to-deploy"
 version = "0.2.1"
 notes = "Maintained by the CryptoEng team at Mozilla."
 
+[[audits.ntapi]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.3.7 -> 0.4.0"
+
 [[audits.num]]
 who = "Josh Stone <jistone@redhat.com>"
 criteria = "safe-to-deploy"
