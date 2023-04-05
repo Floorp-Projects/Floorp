@@ -751,6 +751,10 @@ class GMut {
     MOZ_RELEASE_ASSERT(mNumPageAllocs <= kNumAllocPages);
   }
 
+#if PHC_LOGGING
+  Time GetFreeTime(uintptr_t aIndex) const { return mFreeTime[aIndex]; }
+#endif
+
   void ResizePageInUse(GMutLock aLock, uintptr_t aIndex,
                        const Maybe<arena_id_t>& aArenaId, uint8_t* aNewBaseAddr,
                        const StackTrace& aAllocStack) {
@@ -792,7 +796,11 @@ class GMut {
     // page.mAllocStack is left unchanged, for reporting on UAF.
 
     page.mFreeStack = Some(aFreeStack);
-    page.mReuseTime = GAtomic::Now() + aReuseDelay;
+    Time now = GAtomic::Now();
+#if PHC_LOGGING
+    mFreeTime[aIndex] = now;
+#endif
+    page.mReuseTime = now + aReuseDelay;
 
     MOZ_RELEASE_ASSERT(mNumPageAllocs > 0);
     mNumPageAllocs--;
@@ -972,6 +980,9 @@ class GMut {
   non_crypto::XorShift128PlusRNG mRNG;
 
   AllocPageInfo mAllocPages[kNumAllocPages];
+#if PHC_LOGGING
+  Time mFreeTime[kNumAllocPages];
+#endif
 
   // How many page allocs are currently in use (the max is kNumAllocPages).
   size_t mNumPageAllocs;
@@ -1070,6 +1081,9 @@ static void* MaybePageAlloc(const Maybe<arena_id_t>& aArenaId, size_t aReqSize,
       continue;
     }
 
+#if PHC_LOGGING
+    Time lifetime = 0;
+#endif
     pagePtr = gConst->AllocPagePtr(i);
     MOZ_ASSERT(pagePtr);
     bool ok =
@@ -1090,6 +1104,11 @@ static void* MaybePageAlloc(const Maybe<arena_id_t>& aArenaId, size_t aReqSize,
             (reinterpret_cast<uintptr_t>(ptr) & ~(aAlignment - 1)));
       }
 
+#if PHC_LOGGING
+      Time then = gMut->GetFreeTime(i);
+      lifetime = then != 0 ? now - then : 0;
+#endif
+
       gMut->SetPageInUse(lock, i, aArenaId, ptr, allocStack);
 
       if (aZero) {
@@ -1103,11 +1122,11 @@ static void* MaybePageAlloc(const Maybe<arena_id_t>& aArenaId, size_t aReqSize,
 
     gMut->IncPageAllocHits(lock);
     LOG("PageAlloc(%zu, %zu) -> %p[%zu]/%p (%zu) (z%zu), sAllocDelay <- %zu, "
-        "fullness %zu/%zu, hits %zu/%zu (%zu%%)\n",
+        "fullness %zu/%zu, hits %zu/%zu (%zu%%), lifetime %zu\n",
         aReqSize, aAlignment, pagePtr, i, ptr, usableSize, size_t(aZero),
         size_t(newAllocDelay), gMut->NumPageAllocs(lock), kNumAllocPages,
         gMut->PageAllocHits(lock), gMut->PageAllocAttempts(lock),
-        gMut->PageAllocHitRate(lock));
+        gMut->PageAllocHitRate(lock), lifetime);
     break;
   }
 
