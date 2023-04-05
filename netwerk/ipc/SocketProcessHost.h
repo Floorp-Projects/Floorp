@@ -115,7 +115,7 @@ class SocketProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
   enum class LaunchPhase { Unlaunched, Waiting, Complete };
   LaunchPhase mLaunchPhase;
 
-  UniquePtr<SocketProcessParent> mSocketProcessParent;
+  RefPtr<SocketProcessParent> mSocketProcessParent;
   // mShutdownRequested is set to true only when Shutdown() is called.
   // If mShutdownRequested is false and the IPC channel is closed,
   // OnProcessUnexpectedShutdown will be invoked.
