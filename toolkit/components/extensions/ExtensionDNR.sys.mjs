@@ -1808,6 +1808,8 @@ class RequestEvaluator {
 }
 
 const NetworkIntegration = {
+  maxEvaluatedRulesCount: 0,
+
   register() {
     // We register via WebRequest.jsm to ensure predictable ordering of DNR and
     // WebRequest behavior.
@@ -1851,6 +1853,14 @@ const NetworkIntegration = {
             evaluateRulesTimerId
           );
         }
+      }
+      const evaluateRulesCount = ruleManagers.reduce(
+        (sum, ruleManager) => sum + ruleManager.getRulesCount(),
+        0
+      );
+      if (evaluateRulesCount > this.maxEvaluatedRulesCount) {
+        Glean.extensionsApisDnr.evaluateRulesCountMax.set(evaluateRulesCount);
+        this.maxEvaluatedRulesCount = evaluateRulesCount;
       }
     }
     // Cache for later. In case of redirects, _dnrMatchedRules may exist for
@@ -1980,6 +1990,7 @@ class RuleManager {
     this.hasBlockPermission = extension.hasPermission("declarativeNetRequest");
     this.hasRulesWithTabIds = false;
     this.hasRulesWithAllowAllRequests = false;
+    this.totalRulesCount = 0;
   }
 
   get availableStaticRuleCount() {
@@ -2002,7 +2013,10 @@ class RuleManager {
   }
 
   setSessionRules(validatedSessionRules) {
+    let oldRulesCount = this.sessionRules.rules.length;
+    let newRulesCount = validatedSessionRules.length;
     this.sessionRules.rules = validatedSessionRules;
+    this.totalRulesCount += newRulesCount - oldRulesCount;
     this.hasRulesWithTabIds = !!this.sessionRules.rules.find(rule => {
       return rule.condition.tabIds || rule.condition.excludedTabIds;
     });
@@ -2011,7 +2025,10 @@ class RuleManager {
   }
 
   setDynamicRules(validatedDynamicRules) {
+    let oldRulesCount = this.dynamicRules.rules.length;
+    let newRulesCount = validatedDynamicRules.length;
     this.dynamicRules.rules = validatedDynamicRules;
+    this.totalRulesCount += newRulesCount - oldRulesCount;
     this.#updateAllowAllRequestRules();
   }
 
@@ -2030,7 +2047,12 @@ class RuleManager {
         this.makeRuleset(id, idx + PRECEDENCE_STATIC_RULESETS_BASE, rules)
       );
     }
+    const countRules = rulesets =>
+      rulesets.reduce((sum, ruleset) => sum + ruleset.rules.length, 0);
+    const oldRulesCount = countRules(this.enabledStaticRules);
+    const newRulesCount = countRules(rulesets);
     this.enabledStaticRules = rulesets;
+    this.totalRulesCount += newRulesCount - oldRulesCount;
     this.#updateAllowAllRequestRules();
   }
 
@@ -2040,6 +2062,10 @@ class RuleManager {
 
   getDynamicRules() {
     return this.dynamicRules.rules;
+  }
+
+  getRulesCount() {
+    return this.totalRulesCount;
   }
 
   #updateAllowAllRequestRules() {
