@@ -30,7 +30,9 @@ flat varying highp ivec2 v_op_table_address_vec;
 #define v_op v_op_table_address_vec.x
 #define v_table_address v_op_table_address_vec.y
 
-flat varying mediump mat4 v_color_mat;
+// We must keep this as highp as we encoutered shader compilation crashes on
+// Mali-T devices when mediump.
+flat varying highp mat4 v_color_mat;
 // The function to use for each component of a component transfer filter. Using a int[4]
 // or ivec4 (with each element or component containing the function for each component) has
 // ran in to bugs 1695912 and 1731758, so instead use a vec4 and cast the values to/from floats.
