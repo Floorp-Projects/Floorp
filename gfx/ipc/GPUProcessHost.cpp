@@ -143,7 +143,7 @@ void GPUProcessHost::InitAfterConnect(bool aSucceeded) {
 
   if (aSucceeded) {
     mProcessToken = ++sProcessTokenCounter;
-    mGPUChild = MakeUnique<GPUChild>(this);
+    mGPUChild = MakeRefPtr<GPUChild>(this);
     DebugOnly<bool> rv = TakeInitialEndpoint().Bind(mGPUChild.get());
     MOZ_ASSERT(rv);
 
