@@ -8,13 +8,24 @@ import android.content.res.Configuration
 import android.util.DisplayMetrics
 import android.view.View
 import androidx.annotation.VisibleForTesting
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HIDDEN
 import mozilla.components.support.ktx.android.util.dpToPx
 
 @VisibleForTesting internal const val EXPANDED_OFFSET_IN_LANDSCAPE_DP = 0
 
 @VisibleForTesting internal const val EXPANDED_OFFSET_IN_PORTRAIT_DP = 40
+
+/**
+ * The default max dim value of the [TabsTrayDialog].
+ */
+private const val DEFAULT_MAX_DIM = 0.6f
+
+/**
+ * The dim amount is 0.0 - 1.0 inclusive. We use this to convert the view element to the dim scale.
+ */
+private const val DIM_CONVERSION = 1000f
 
 /**
  * Helper class for updating how the tray looks and behaves depending on app state / internal tray state.
@@ -23,7 +34,6 @@ import mozilla.components.support.ktx.android.util.dpToPx
  * @param orientation current Configuration.ORIENTATION_* of the device.
  * @param maxNumberOfTabs highest number of tabs in each tray page.
  * @param numberForExpandingTray limit depending on which the tray should be collapsed or expanded.
- * @param navigationInteractor [NavigationInteractor] used for tray updates / navigation.
  * @param displayMetrics [DisplayMetrics] used for adapting resources to the current display.
  */
 internal class TabSheetBehaviorManager(
@@ -31,18 +41,12 @@ internal class TabSheetBehaviorManager(
     orientation: Int,
     private val maxNumberOfTabs: Int,
     private val numberForExpandingTray: Int,
-    navigationInteractor: NavigationInteractor,
     private val displayMetrics: DisplayMetrics,
 ) {
     @VisibleForTesting
     internal var currentOrientation = orientation
 
     init {
-        behavior.skipCollapsed = true
-        behavior.addBottomSheetCallback(
-            TraySheetBehaviorCallback(behavior, navigationInteractor),
-        )
-
         val isInLandscape = isLandscape(orientation)
         updateBehaviorExpandedOffset(isInLandscape)
         updateBehaviorState(isInLandscape)
@@ -83,21 +87,78 @@ internal class TabSheetBehaviorManager(
     internal fun isLandscape(orientation: Int) = Configuration.ORIENTATION_LANDSCAPE == orientation
 }
 
-@VisibleForTesting
 internal class TraySheetBehaviorCallback(
     @get:VisibleForTesting internal val behavior: BottomSheetBehavior<out View>,
     @get:VisibleForTesting internal val trayInteractor: NavigationInteractor,
+    private val tabsTrayDialog: TabsTrayDialog,
+    private var newTabFab: View,
 ) : BottomSheetBehavior.BottomSheetCallback() {
 
+    @VisibleForTesting
+    var draggedLowestSheetTop: Int? = null
+
     override fun onStateChanged(bottomSheet: View, newState: Int) {
-        if (newState == STATE_HIDDEN) {
-            trayInteractor.onTabTrayDismissed()
-        } else if (newState == BottomSheetBehavior.STATE_HALF_EXPANDED) {
+        when (newState) {
+            BottomSheetBehavior.STATE_HIDDEN -> trayInteractor.onTabTrayDismissed()
+
             // We only support expanded and collapsed states.
             // Otherwise the tray may be left in an unusable state. See #14980.
-            behavior.state = STATE_HIDDEN
+            BottomSheetBehavior.STATE_HALF_EXPANDED ->
+                behavior.state = BottomSheetBehavior.STATE_HIDDEN
+
+            // Reset the dragged lowest top value
+            BottomSheetBehavior.STATE_EXPANDED, BottomSheetBehavior.STATE_COLLAPSED -> {
+                draggedLowestSheetTop = null
+            }
+
+            BottomSheetBehavior.STATE_DRAGGING, BottomSheetBehavior.STATE_SETTLING -> {
+                // Do nothing. Both cases are handled in the onSlide function.
+            }
         }
     }
 
-    override fun onSlide(bottomSheet: View, slideOffset: Float) = Unit
+    override fun onSlide(bottomSheet: View, slideOffset: Float) {
+        setTabsTrayDialogDimAmount(bottomSheet.top)
+        setFabY(bottomSheet.top)
+    }
+
+    private fun setTabsTrayDialogDimAmount(bottomSheetTop: Int) {
+        // Get any displayed bottom system bar.
+        val bottomSystemBarHeight =
+            ViewCompat.getRootWindowInsets(newTabFab)
+                ?.getInsets(WindowInsetsCompat.Type.systemBars())?.bottom ?: 0
+
+        // Calculate and convert delta to dim amount.
+        val appVisibleBottom = newTabFab.rootView.bottom - bottomSystemBarHeight
+        val trayTopAppBottomDelta = appVisibleBottom - bottomSheetTop
+        val convertedDimValue = trayTopAppBottomDelta / DIM_CONVERSION
+
+        if (convertedDimValue < DEFAULT_MAX_DIM) {
+            tabsTrayDialog.window?.setDimAmount(convertedDimValue)
+        }
+    }
+
+    private fun setFabY(bottomSheetTop: Int) {
+        if (behavior.state == BottomSheetBehavior.STATE_DRAGGING) {
+            draggedLowestSheetTop = getDraggedLowestSheetTop(bottomSheetTop)
+
+            val dynamicSheetButtonDelta = newTabFab.top - draggedLowestSheetTop!!
+            newTabFab.y = getUpdatedFabY(bottomSheetTop, dynamicSheetButtonDelta)
+        }
+
+        if (behavior.state == BottomSheetBehavior.STATE_SETTLING) {
+            val dynamicSheetButtonDelta = newTabFab.top - getDraggedLowestSheetTop(bottomSheetTop)
+            newTabFab.y = getUpdatedFabY(bottomSheetTop, dynamicSheetButtonDelta)
+        }
+    }
+
+    private fun getDraggedLowestSheetTop(currentBottomSheetTop: Int) =
+        if (draggedLowestSheetTop == null || currentBottomSheetTop < draggedLowestSheetTop!!) {
+            currentBottomSheetTop
+        } else {
+            draggedLowestSheetTop!!
+        }
+
+    private fun getUpdatedFabY(bottomSheetTop: Int, dynamicSheetButtonDelta: Int) =
+        (bottomSheetTop + dynamicSheetButtonDelta).toFloat()
 }
