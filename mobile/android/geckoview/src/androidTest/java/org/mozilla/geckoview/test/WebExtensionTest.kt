@@ -229,6 +229,9 @@ class WebExtensionTest : BaseSessionTest() {
 
                 @AssertCalled(count = 3)
                 override fun onDisabled(extension: WebExtension) {}
+
+                @AssertCalled(count = 1)
+                override fun onUninstalled(extension: WebExtension) {}
             }
         )
 
@@ -2524,6 +2527,9 @@ class WebExtensionTest : BaseSessionTest() {
 
                 @AssertCalled(count = 1)
                 override fun onDisabled(extension: WebExtension) {}
+
+                @AssertCalled(count = 1)
+                override fun onUninstalled(extension: WebExtension) {}
             }
         )
 
