@@ -125,9 +125,9 @@
                        when-connection="secure secure-ev secure-cert-user-overridden"/>
           <description id="identity-popup-content-verifier-unknown"
                        class="identity-popup-warning-box identity-popup-warning-gray"
-                       when-customroot="true">
-            <label data-l10n-id="identity-description-custom-root2"/>
-            <html:a is="moz-support-link" id="identity-popup-custom-root-learn-more" support-page="enterprise-roots"/>
+                       when-customroot="true"
+                       data-l10n-id="identity-description-custom-root">
+            <label data-l10n-name="link" id="identity-popup-custom-root-learn-more" is="text-link"/>
           </description>
 
           <!-- Remove Certificate Exception -->
